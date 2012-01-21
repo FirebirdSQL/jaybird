@@ -2939,17 +2939,17 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
 //  private static final short cstring_type = 40;
     private static final short blob_type = 261;
 
-    private int getDataType (short fieldType, short fieldSubType, short fieldScale) {
+    private static int getDataType (short fieldType, short fieldSubType, short fieldScale) {
         switch (fieldType) {
             case smallint_type:
-                if (fieldSubType == 1)
+                if (fieldSubType == 1 || (fieldSubType == 0 && fieldScale < 0))
                     return Types.NUMERIC;
                 else if (fieldSubType == 2)
                     return Types.DECIMAL;
                 else
                     return Types.SMALLINT;
             case integer_type:
-                if (fieldSubType == 1)
+                if (fieldSubType == 1 || (fieldSubType == 0 && fieldScale < 0))
                     return Types.NUMERIC;
                 else if (fieldSubType == 2)
                     return Types.DECIMAL;
@@ -2971,7 +2971,7 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
             case date_type:
                 return Types.DATE;
             case int64_type:
-                if (fieldSubType == 1)
+                if (fieldSubType == 1 || (fieldSubType == 0 && fieldScale < 0))
                     return Types.NUMERIC;
                 else if (fieldSubType == 2)
                     return Types.DECIMAL;
@@ -2993,17 +2993,17 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
         }
     }
 
-    static String getDataTypeName(short sqltype, short sqlsubtype, short sqlscale) {
+    private static String getDataTypeName(short sqltype, short sqlsubtype, short sqlscale) {
         switch (sqltype) {
             case smallint_type:
-                if (sqlsubtype == 1)
+                if (sqlsubtype == 1 || (sqlsubtype == 0 && sqlscale < 0))
                     return "NUMERIC";
                 else if (sqlsubtype == 2)
                     return "DECIMAL";
                 else
                     return "SMALLINT";
             case integer_type:
-                if (sqlsubtype == 1)
+                if (sqlsubtype == 1 || (sqlsubtype == 0 && sqlscale < 0))
                     return "NUMERIC";
                 else if (sqlsubtype == 2)
                     return "DECIMAL";
@@ -3025,7 +3025,7 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
             case date_type:
                 return "DATE";
             case int64_type:
-                if (sqlsubtype == 1)
+                if (sqlsubtype == 1 || (sqlsubtype == 0 && sqlscale < 0))
                     return "NUMERIC";
                 else if (sqlsubtype == 2)
                     return "DECIMAL";
