@@ -5346,8 +5346,7 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
         xsqlvars[3].relname = "UDT";
 
         xsqlvars[4] = new XSQLVAR();
-        xsqlvars[4].sqltype = ISCConstants.SQL_VARYING;
-        xsqlvars[4].sqllen = 31;
+        xsqlvars[4].sqltype = ISCConstants.SQL_LONG;
         xsqlvars[4].sqlname = "DATA_TYPE";
         xsqlvars[4].relname = "UDT";
 
@@ -5357,10 +5356,10 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
         xsqlvars[5].sqlname = "REMARKS";
         xsqlvars[5].relname = "UDT";
         
-        xsqlvars[5] = new XSQLVAR();
-        xsqlvars[5].sqltype = ISCConstants.SQL_SHORT;
-        xsqlvars[5].sqlname = "BASE_TYPE";
-        xsqlvars[5].relname = "UDT";
+        xsqlvars[6] = new XSQLVAR();
+        xsqlvars[6].sqltype = ISCConstants.SQL_SHORT;
+        xsqlvars[6].sqlname = "BASE_TYPE";
+        xsqlvars[6].relname = "UDT";
 
         ArrayList rows = new ArrayList(0);
 
