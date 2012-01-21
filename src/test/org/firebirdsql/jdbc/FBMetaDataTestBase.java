@@ -131,16 +131,16 @@ public abstract class FBMetaDataTestBase<T extends Enum & MetaDataInfo> extends 
     /**
      * Validates the current row in the ResultSet for the supplied rules.
      * 
-     * @param tables
+     * @param metaData
      *            ResultSet
      * @param valueRules
      *            Validation rules for column values
      * @throws SQLException
      */
-    protected void validateRowValues(ResultSet tables, Map<T, Object> valueRules)
+    protected void validateRowValues(ResultSet metaData, Map<T, Object> valueRules)
             throws SQLException {
         for (Map.Entry<T, Object> rule : valueRules.entrySet()) {
-            rule.getKey().getValidator().assertColumnValue(tables, rule.getValue());
+            rule.getKey().getValidator().assertColumnValue(metaData, rule.getValue());
         }
     }
     
