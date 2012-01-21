@@ -24,7 +24,6 @@ import java.sql.ResultSet;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.EnumMap;
-import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -109,11 +108,7 @@ public class TestFBDatabaseMetaDataTables extends FBMetaDataTestBase<TestFBDatab
     public void testTableMetaDataColumns() throws Exception {
         ResultSet tables = dbmd.getTables(null, null, null, null);
         try {
-            for (TableMetaData column : EnumSet.allOf(TableMetaData.class)) {
-                MetaDataValidator<?> validator = column.getValidator();
-                validator.assertColumnPosition(tables);
-                validator.assertColumnType(tables);
-            }
+            validateResultSetColumns(tables);
         } finally {
             closeQuietly(tables);
         }

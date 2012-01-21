@@ -143,6 +143,19 @@ public abstract class FBMetaDataTestBase<T extends Enum & MetaDataInfo> extends 
             rule.getKey().getValidator().assertColumnValue(tables, rule.getValue());
         }
     }
+    
+    /**
+     * Validates the columns in the metadata resultset for position and type.
+     * 
+     * @param metaDataResultSet A metadata resultset for the metadata represented by T
+     */
+    protected void validateResultSetColumns(ResultSet metaDataResultSet) throws Exception {
+        for (T column : EnumSet.<T>allOf(metaDataInfoClass)) {
+            MetaDataValidator<?> validator = column.getValidator();
+            validator.assertColumnPosition(metaDataResultSet);
+            validator.assertColumnType(metaDataResultSet);
+        }
+    }
 
     /**
      * The default values for the validation rules for the columns in a row of

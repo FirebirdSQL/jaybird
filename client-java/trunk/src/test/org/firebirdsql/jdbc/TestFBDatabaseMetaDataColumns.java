@@ -109,11 +109,7 @@ public class TestFBDatabaseMetaDataColumns extends FBMetaDataTestBase<TestFBData
     public void testColumnMetaDataColumns() throws Exception {
         ResultSet columns = dbmd.getColumns(null, null, null, null);
         try {
-            for (ColumnMetaData column : getRequiredMetaData()) {
-                MetaDataValidator<?> validator = column.getValidator();
-                validator.assertColumnPosition(columns);
-                validator.assertColumnType(columns);
-            }
+            validateResultSetColumns(columns);
         } finally {
             closeQuietly(columns);
         }
