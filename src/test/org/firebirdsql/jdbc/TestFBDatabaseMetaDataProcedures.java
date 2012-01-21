@@ -155,6 +155,15 @@ public class TestFBDatabaseMetaDataProcedures extends
         validateProcedures(procedures, expectedProcedures);
     }
     
+    /**
+     * Tests getProcedures with specific procedure name (quoted), expecting only that specific procedure to be returned.
+     */
+    public void testProcedureMetaData_specificProcedureQuoted() throws Exception {
+        List<ProcedureTestData> expectedProcedures = Arrays.asList(ProcedureTestData.QUOTED_PROC_NO_RETURN);
+        ResultSet procedures = dbmd.getProcedures(null, null, expectedProcedures.get(0).getName());
+        validateProcedures(procedures, expectedProcedures);
+    }
+    
     // TODO Add tests for more complex patterns
 
     /**
@@ -166,13 +175,12 @@ public class TestFBDatabaseMetaDataProcedures extends
     private void validateProcedures(ResultSet procedures, List<ProcedureTestData> expectedProcedures) throws Exception {
         int procedureCount = 0;
         while(procedures.next()) {
-            if (procedureCount > expectedProcedures.size()) {
-                continue;
+            if (procedureCount < expectedProcedures.size()) {
+                ProcedureTestData expectedProcedure = expectedProcedures.get(procedureCount);
+                Map<ProcedureMetaData, Object> rules = expectedProcedure.getSpecificValidationRules(getDefaultValueValidationRules());
+                checkValidationRulesComplete(rules);
+                validateRowValues(procedures, rules);
             }
-            ProcedureTestData expectedProcedure = expectedProcedures.get(procedureCount);
-            Map<ProcedureMetaData, Object> rules = expectedProcedure.getSpecificValidationRules(getDefaultValueValidationRules());
-            checkValidationRulesComplete(rules);
-            validateRowValues(procedures, rules);
             procedureCount++;
         }
         assertEquals("Unexpected number of procedures returned", expectedProcedures.size(), procedureCount);
