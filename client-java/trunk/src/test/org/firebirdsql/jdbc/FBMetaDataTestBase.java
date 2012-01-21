@@ -150,7 +150,7 @@ public abstract class FBMetaDataTestBase<T extends Enum & MetaDataInfo> extends 
      * @param metaDataResultSet A metadata resultset for the metadata represented by T
      */
     protected void validateResultSetColumns(ResultSet metaDataResultSet) throws Exception {
-        for (T column : EnumSet.<T>allOf(metaDataInfoClass)) {
+        for (T column : getRequiredMetaData()) {
             MetaDataValidator<?> validator = column.getValidator();
             validator.assertColumnPosition(metaDataResultSet);
             validator.assertColumnType(metaDataResultSet);
