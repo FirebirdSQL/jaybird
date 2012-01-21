@@ -548,6 +548,9 @@ public class TestFBDatabaseMetaDataTables extends FBMetaDataTestBase<TestFBDatab
         return new EnumMap<TableMetaData, Object>(DEFAULT_COLUMN_VALUES);
     }
 
+    /**
+     * Columns defined for the getTables() metadata.
+     */
     enum TableMetaData implements MetaDataInfo {
         TABLE_CAT(1, String.class), 
         TABLE_SCHEM(2, String.class), 
