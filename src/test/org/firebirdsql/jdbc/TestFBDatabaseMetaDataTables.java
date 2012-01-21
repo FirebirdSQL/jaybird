@@ -247,15 +247,15 @@ public class TestFBDatabaseMetaDataTables extends FBMetaDataTestBase<TestFBDatab
         // Expected selection of expected system tables (some that existed in Firebird 1.0); we don't check all system tables
         Set<String> expectedTables = new HashSet(Arrays.asList("RDB$FIELDS", "RDB$GENERATORS",
                 "RDB$ROLES", "RDB$DATABASE", "RDB$TRIGGERS"));
+        Map<TableMetaData, Object> rules = getDefaultValueValidationRules();
+        rules.put(TableMetaData.TABLE_TYPE, SYSTEM_TABLE);
         try {
             while (tables.next()) {
                 String tableName = tables.getString(TableMetaData.TABLE_NAME.name());
-                Map<TableMetaData, Object> rules = getDefaultValueValidationRules();
                 assertTrue("TABLE_NAME is not allowed to be null or empty", 
                         tableName != null && tableName.length() > 0);
                 expectedTables.remove(tableName);
-
-                rules.put(TableMetaData.TABLE_TYPE, SYSTEM_TABLE);
+                
                 if (!(tableName.startsWith("RDB$") || tableName.startsWith("MON$"))) {
                     fail("Only expect tablenames starting with RDB$ or MON$, retrieved " + tableName);
                 }
@@ -317,16 +317,16 @@ public class TestFBDatabaseMetaDataTables extends FBMetaDataTestBase<TestFBDatab
         // Expected normal tables
         Set<String> expectedTables = new HashSet(Arrays.asList("TEST_NORMAL_TABLE",
                 "test_quoted_normal_table"));
+        Set<String> retrievedTables = new HashSet<String>();
+        Map<TableMetaData, Object> rules = getDefaultValueValidationRules();
+        rules.put(TableMetaData.TABLE_TYPE, TABLE);
         try {
-            Set<String> retrievedTables = new HashSet<String>();
             while (tables.next()) {
                 String tableName = tables.getString(TableMetaData.TABLE_NAME.name());
-                Map<TableMetaData, Object> rules = getDefaultValueValidationRules();
                 assertTrue("TABLE_NAME is not allowed to be null or empty",
                         tableName != null && tableName.length() > 0);
                 retrievedTables.add(tableName);
-
-                rules.put(TableMetaData.TABLE_TYPE, TABLE);
+                
                 if ((tableName.startsWith("RDB$") || tableName.startsWith("MON$"))) {
                     fail("Only expect normal tables, not starting with RDB$ or MON$, retrieved " + tableName);
                 }
@@ -388,16 +388,16 @@ public class TestFBDatabaseMetaDataTables extends FBMetaDataTestBase<TestFBDatab
         // Expected normal tables
         Set<String> expectedTables = new HashSet(Arrays.asList("TEST_NORMAL_VIEW",
                 "test_quoted_normal_view"));
+        Set<String> retrievedTables = new HashSet<String>();
+        Map<TableMetaData, Object> rules = getDefaultValueValidationRules();
+        rules.put(TableMetaData.TABLE_TYPE, VIEW);
         try {
-            Set<String> retrievedTables = new HashSet<String>();
             while (tables.next()) {
                 String tableName = tables.getString(TableMetaData.TABLE_NAME.name());
-                Map<TableMetaData, Object> rules = getDefaultValueValidationRules();
                 assertTrue("TABLE_NAME is not allowed to be null or empty", 
                         tableName != null && tableName.length() > 0);
                 retrievedTables.add(tableName);
 
-                rules.put(TableMetaData.TABLE_TYPE, VIEW);
                 if ((tableName.startsWith("RDB$") || tableName.startsWith("MON$"))) {
                     fail("Only expect views, not starting with RDB$ or MON$, retrieved " + tableName);
                 }

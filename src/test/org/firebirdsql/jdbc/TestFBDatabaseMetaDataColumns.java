@@ -724,6 +724,8 @@ public class TestFBDatabaseMetaDataColumns extends FBMetaDataTestBase<TestFBData
 
         validate("test_column_metadata", "col_blob_binary", validationRules);
     }
+    
+    // TODO: Add more extensive tests of patterns
 
     /**
      * Method to validate the column metadata for a single column of a table (does not support quoted identifiers).
