@@ -173,17 +173,21 @@ public class TestFBDatabaseMetaDataProcedures extends
      * @param expectedProcedures List of expected procedures (in expected order)
      */
     private void validateProcedures(ResultSet procedures, List<ProcedureTestData> expectedProcedures) throws Exception {
-        int procedureCount = 0;
-        while(procedures.next()) {
-            if (procedureCount < expectedProcedures.size()) {
-                ProcedureTestData expectedProcedure = expectedProcedures.get(procedureCount);
-                Map<ProcedureMetaData, Object> rules = expectedProcedure.getSpecificValidationRules(getDefaultValueValidationRules());
-                checkValidationRulesComplete(rules);
-                validateRowValues(procedures, rules);
+        try {
+            int procedureCount = 0;
+            while(procedures.next()) {
+                if (procedureCount < expectedProcedures.size()) {
+                    ProcedureTestData expectedProcedure = expectedProcedures.get(procedureCount);
+                    Map<ProcedureMetaData, Object> rules = expectedProcedure.getSpecificValidationRules(getDefaultValueValidationRules());
+                    checkValidationRulesComplete(rules);
+                    validateRowValues(procedures, rules);
+                }
+                procedureCount++;
             }
-            procedureCount++;
+            assertEquals("Unexpected number of procedures returned", expectedProcedures.size(), procedureCount);
+        } finally {
+            closeQuietly(procedures);
         }
-        assertEquals("Unexpected number of procedures returned", expectedProcedures.size(), procedureCount);
     }
 
     private static final Map<ProcedureMetaData, Object> DEFAULT_COLUMN_VALUES;
