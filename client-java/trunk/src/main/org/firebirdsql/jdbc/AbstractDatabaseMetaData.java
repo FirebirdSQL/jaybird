@@ -1939,12 +1939,20 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
         + " F.RDB$FIELD_SCALE as FIELD_SCALE,"
         + " F.RDB$FIELD_LENGTH as FIELD_LENGTH,"
         + " F.RDB$NULL_FLAG as NULL_FLAG,"
-        + " PP.RDB$DESCRIPTION as REMARKS "
+        + " PP.RDB$DESCRIPTION as REMARKS,"
+        + "         CASE"
+        + "                  WHEN F.RDB$CHARACTER_LENGTH IS NULL" 
+        + "                  AND      F.RDB$FIELD_TYPE IN (14," 
+        + "                                                37)" 
+        + "                  THEN F.RDB$FIELD_LENGTH"
+        + "                  ELSE F.RDB$CHARACTER_LENGTH"
+        + "         END                   AS CHAR_LEN,"
+        + " PP.RDB$PARAMETER_NUMBER AS PARAMETER_NUMBER " 
         + "from"
         + " RDB$PROCEDURE_PARAMETERS PP,"
         + " RDB$FIELDS F "
         + "where ";
-    private static final String GET_PROCEDURE_COLUMNS_END =  " PP.RDB$FIELD_SOURCE = F.RDB$FIELD_NAME "
+    private static final String GET_PROCEDURE_COLUMNS_END = " PP.RDB$FIELD_SOURCE = F.RDB$FIELD_NAME "
         + "order by"
         + " PP.RDB$PROCEDURE_NAME,"
         + " PP.RDB$PARAMETER_TYPE desc,"
@@ -2204,6 +2212,8 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
             row[3] = getBytes(rs.getString("COLUMN_NAME").trim());
 
             short columnType = rs.getShort("COLUMN_TYPE");
+            // TODO: Unsure if procedureColumnOut is correct, maybe procedureColumnResult, or need ODS dependent use of RDB$PROCEDURE_TYPE to decide on selectable or executable?
+            // TODO: ResultSet columns should not be first according to JDBC 4.1 description
             row[4] = (columnType == 0) ? xsqlvars[0].encodeShort((short)procedureColumnIn) : xsqlvars[0].encodeShort((short)procedureColumnOut);
 
             short fieldType = rs.getShort("FIELD_TYPE");
@@ -2212,21 +2222,64 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
             int dataType = getDataType(fieldType, fieldSubType, fieldScale);
 
             row[5] = xsqlvars[0].encodeInt(dataType);
-
             row[6] = getBytes(getDataTypeName(fieldType, fieldSubType, fieldScale));
-
-            row[7] = null;
-            if (dataType == Types.DECIMAL || dataType == Types.NUMERIC) {
-                row[7] = xsqlvars[0].encodeInt(rs.getShort("FIELD_PRECISION"));
-            } else {
-                row[7] = xsqlvars[0].encodeInt(rs.getShort("FIELD_LENGTH"));
-            }
-
-            row[8] = xsqlvars[0].encodeInt(rs.getShort("FIELD_LENGTH"));
-            row[9] = xsqlvars[0].encodeShort((short)(fieldScale * (-1)));
-            row[10] = xsqlvars[0].encodeShort((short)10); // RADIX
             
-            // TODO: Find out what the difference is with NULL_FLAG in RDB$PROCEDURE_PARAMETERS 
+            row[8] = xsqlvars[0].encodeInt(rs.getShort("FIELD_LENGTH"));
+            
+            // Defaults: some are overridden in the switch
+            row[7] = null;
+            row[9] = null;
+            row[10] = null;
+            row[16] = null;
+            switch (dataType){
+                case Types.DECIMAL:
+                case Types.NUMERIC:
+                   row[7] = xsqlvars[0].encodeInt(rs.getShort("FIELD_PRECISION"));
+                   row[9] = xsqlvars[0].encodeShort((short)(fieldScale * (-1)));
+                   row[10] = xsqlvars[0].encodeShort((short)10);
+                   break;
+                case Types.CHAR:
+                case Types.VARCHAR:
+                   row[7] = xsqlvars[0].encodeInt(rs.getShort("CHAR_LEN"));
+                   row[16] = row[8];
+                   break;
+                case Types.FLOAT:
+                   row[7] = xsqlvars[0].encodeInt(7);
+                   row[10] = xsqlvars[0].encodeShort((short)10);
+                   break;
+                case Types.DOUBLE:
+                   row[7] = xsqlvars[0].encodeInt(15);
+                   row[10] = xsqlvars[0].encodeShort((short)10);
+                   break;
+                case Types.BIGINT:
+                    row[7] = xsqlvars[0].encodeInt(19);
+                    row[9] = xsqlvars[0].encodeShort((short)0);
+                    row[10] = xsqlvars[0].encodeShort((short)10);
+                    break;
+                case Types.INTEGER:
+                   row[7] = xsqlvars[0].encodeInt(10);
+                   row[9] = xsqlvars[0].encodeShort((short)0);
+                   row[10] = xsqlvars[0].encodeShort((short)10);
+                   break;
+                case Types.SMALLINT:
+                   row[7] = xsqlvars[0].encodeInt(5);
+                   row[9] = xsqlvars[0].encodeShort((short)0);
+                   row[10] = xsqlvars[0].encodeShort((short)10);
+                   break;
+                case Types.DATE:
+                   row[7] = xsqlvars[0].encodeInt(10);
+                   break;
+                case Types.TIME:
+                   row[7] = xsqlvars[0].encodeInt(8);
+                   break;
+                case Types.TIMESTAMP:
+                   row[7] = xsqlvars[0].encodeInt(19);
+                   break;
+                default:
+                   row[7] = null;
+            }
+            
+            // TODO: Find out what the difference is with NULL_FLAG in RDB$PROCEDURE_PARAMETERS (might be ODS dependent) 
             short nullFlag = rs.getShort("NULL_FLAG");
             row[11] = (nullFlag == 1) ? xsqlvars[0].encodeShort((short)procedureNoNulls) :
                                         xsqlvars[0].encodeShort((short)procedureNullable);
@@ -2239,18 +2292,8 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
             row[13] = null; // TODO From 2.0 defaults for procedure parameters
             row[14] = null;
             row[15] = null;
-            switch (dataType) {
-            case Types.CHAR:
-            case Types.VARCHAR:
-            case Types.BINARY:
-            case Types.VARBINARY:
-                row[16] = row[8];
-                break;
-            default:
-                row[16] = null;
-            }
-            // TODO: Find correct value for ORDINAL_POSITION (+ intent)
-            row[17] = null;
+            // TODO: Find correct value for ORDINAL_POSITION (+ order of columns and intent, see JDBC-229)
+            row[17] = xsqlvars[0].encodeInt(rs.getInt("PARAMETER_NUMBER") + 1);
             // TODO: Find out if there is a conceptual difference with NULLABLE (idx 11)
             row[18] = (nullFlag == 1) ? getBytes("NO") : getBytes("YES");
             row[19] = row[2];
