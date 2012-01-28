@@ -4878,55 +4878,31 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
 
     }
 
-    /**
-     * A possible value for column <code>SEARCHABLE</code> in the
-     * <code>ResultSet</code> object returned by the method
-     * <code>getTypeInfo</code>.
-     * <p>Indicates that all <code>WHERE</code> search clauses can be
-     * based on this type.
-     */
-    //int typeSearchable  = 3;
-
-    private static final String GET_INDEX_INFO_COLUMN_LIST = ""
-        + "  NULL as TABLE_CAT "
-        + ", NULL as TABLE_SCHEM "
-        + ", ind.RDB$RELATION_NAME AS TABLE_NAME "
-        + ", ind.RDB$UNIQUE_FLAG AS NON_UNIQUE "
-        + ", NULL as INDEX_QUALIFIER "
-        + ", ind.RDB$INDEX_NAME as INDEX_NAME "
-        + ", NULL as ITYPE "
-        + ", ise.rdb$field_position+1 as ORDINAL_POSITION "
-        + ", ise.rdb$field_name as COLUMN_NAME "
+    private static final String GET_INDEX_INFO_START = "SELECT "
+        + "  ind.RDB$RELATION_NAME AS TABLE_NAME"
+        + ", ind.RDB$UNIQUE_FLAG AS UNIQUE_FLAG"
+        + ", ind.RDB$INDEX_NAME as INDEX_NAME"
+        + ", ise.rdb$field_position+1 as ORDINAL_POSITION"
+        + ", ise.rdb$field_name as COLUMN_NAME"
+        + ", ind.RDB$EXPRESSION_SOURCE as EXPRESSION_SOURCE"
         + ", ind.RDB$INDEX_TYPE as ASC_OR_DESC "
-        + ", 0 as CARDINALITY "
-        + ", 0 as IPAGES "
-        + ", null as FILTER_CONDITION "
+        + "FROM "
+        + "  rdb$indices ind "
+        + "  LEFT JOIN rdb$index_segments ise ON ind.rdb$index_name = ise.rdb$index_name "
         ;
     
-    private static final String GET_INDEX_INFO = "" 
-        + "SELECT"
-        +   GET_INDEX_INFO_COLUMN_LIST
-        + "FROM "
-        + "  rdb$indices ind, "
-        + "  rdb$index_segments ise "
-        + "WHERE "
-        + "  ind.rdb$index_name = ise.rdb$index_name "
-        + "AND " 
+    private static final String GET_INDEX_INFO =
+        GET_INDEX_INFO_START
+        + "WHERE " 
         + "  ind.rdb$relation_name = ? "
-        + "ORDER BY 4, 6, 8"
+        + "ORDER BY 2, 3, 4"
         ;
     
-    private static final String GET_INDEX_INFO_UPPER = ""
-        + "SELECT"
-        +   GET_INDEX_INFO_COLUMN_LIST
-        + "FROM "
-        + "  rdb$indices ind, "
-        + "  rdb$index_segments ise "
-        + "WHERE "
-        + "  ind.rdb$index_name = ise.rdb$index_name "
-        + "AND " 
+    private static final String GET_INDEX_INFO_UPPER =
+        GET_INDEX_INFO_START
+        + "WHERE " 
         + "  UPPER(ind.rdb$relation_name) = ? "
-        + "ORDER BY 4, 6, 8"
+        + "ORDER BY 2, 3, 4"
         ;
 
     /**
@@ -5062,6 +5038,10 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
         xsqlvars[12].relname = "INDEXINFO";
 
         ArrayList rows = new ArrayList();
+        
+        if (table == null) {
+            return new FBResultSet(xsqlvars, rows);
+        }
 
         ArrayList params = new ArrayList();
         params.add(table);
@@ -5070,8 +5050,7 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
 
         // if no direct match happened, check the uppercased match
         if (!rs.next()) {
-            params.clear();
-            params.add(table.toUpperCase());
+            params.set(0, table.toUpperCase());
             rs = doQuery(GET_INDEX_INFO_UPPER, params);
             
             // open the second result set and check whether we have rows
@@ -5086,24 +5065,45 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
             byte[][] row = new byte[13][];
             row[0] = null;
             row[1] = null;
-            row[2] = getBytes(rs.getString("TABLE_NAME").trim());
-            int nonUnique = rs.getInt("NON_UNIQUE");
-            if (nonUnique==0)
-                row[3] = getBytes("T");
-            else
-                row[3] = getBytes("F");
+            row[2] = getBytes(rs.getString("TABLE_NAME"));
+            boolean isNotUnique = (rs.getInt("UNIQUE_FLAG") == 0);
+            if (unique && isNotUnique) {
+                // Skip indices that are not unique, as requested
+                continue;
+            }
+            row[3] = getBytes(isNotUnique ? "T" : "F");
             row[4] = null;
-            row[5] = getBytes(rs.getString("INDEX_NAME").trim());
+            row[5] = getBytes(rs.getString("INDEX_NAME"));
             row[6] = xsqlvars[0].encodeShort((short) DatabaseMetaData.tableIndexOther);
-            row[7] = xsqlvars[0].encodeShort(rs.getShort("ORDINAL_POSITION"));
-            row[8] = getBytes(rs.getString("COLUMN_NAME").trim());
-            int index_type = rs.getInt("ASC_OR_DESC");
-            if (index_type == 1)
-                row[9] = getBytes("D");
-            else
+            String columnName = rs.getString("COLUMN_NAME");
+            if (rs.wasNull()) {
+                row[7] = xsqlvars[0].encodeShort((short)1);
+                String expressionSource = rs.getString("EXPRESSION_SOURCE");
+                if (expressionSource != null) {
+                    row[8] = getBytes(expressionSource);
+                    if (expressionSource.length() > xsqlvars[8].sqllen) {
+                        xsqlvars[8].sqllen = expressionSource.length();
+                    }
+                } else {
+                    row[8] = null;
+                }
+            } else {
+                row[7] = xsqlvars[0].encodeShort(rs.getShort("ORDINAL_POSITION"));
+                row[8] = getBytes(columnName.trim());
+            }
+            int ascOrDesc = rs.getInt("ASC_OR_DESC");
+            if (ascOrDesc == 0) {
                 row[9] = getBytes("A");
-            row[10] = xsqlvars[0].encodeInt(0);
-            row[11] = xsqlvars[0].encodeInt(0);
+            } else if (ascOrDesc == 1) {
+                row[9] = getBytes("D");
+            } else {
+                row[9] = null;
+            }
+            // NOTE: We are setting CARDINALITY and PAGES to NULL as we don't have this info; might contravene JDBC spec
+            // TODO use 1 / RDB$STATISTICS for approximation of CARDINALITY?
+            row[10] = null;
+            // TODO query RDB$PAGES for PAGES information?
+            row[11] = null;
             row[12] = null;
 
             rows.add(row);
