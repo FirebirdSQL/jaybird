@@ -341,6 +341,9 @@ public class TestFBDatabaseMetaDataProcedureColumns extends FBMetaDataTestBase<T
         return new EnumMap(DEFAULT_COLUMN_VALUES);
     }
     
+    /**
+     * Columns defined for the getProcedureColumns() metadata.
+     */
     enum ProcedureColumnMetaData implements MetaDataInfo {
         PROCEDURE_CAT(1, String.class), 
         PROCEDURE_SCHEM(2, String.class), 
