@@ -1911,7 +1911,7 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
             byte[][] row = new byte[9][];
             row[0] = null;
             row[1] = null;
-            row[2] = getBytes(rs.getString("PROCEDURE_NAME").trim());
+            row[2] = getBytes(rs.getString("PROCEDURE_NAME"));
             row[3] = null;
             row[4] = null;
             row[5] = null;
@@ -1941,7 +1941,7 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
         + " F.RDB$NULL_FLAG as NULL_FLAG,"
         + " PP.RDB$DESCRIPTION as REMARKS,"
         + " F.RDB$CHARACTER_LENGTH AS CHAR_LEN,"
-        + " PP.RDB$PARAMETER_NUMBER AS PARAMETER_NUMBER " 
+        + " PP.RDB$PARAMETER_NUMBER + 1 AS PARAMETER_NUMBER " 
         + "from"
         + " RDB$PROCEDURE_PARAMETERS PP,"
         + " RDB$FIELDS F "
@@ -2202,8 +2202,8 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
             byte[][] row = new byte[20][];
             row[0] = null;
             row[1] = null;
-            row[2] = getBytes(rs.getString("PROCEDURE_NAME").trim());
-            row[3] = getBytes(rs.getString("COLUMN_NAME").trim());
+            row[2] = getBytes(rs.getString("PROCEDURE_NAME"));
+            row[3] = getBytes(rs.getString("COLUMN_NAME"));
 
             short columnType = rs.getShort("COLUMN_TYPE");
             // TODO: Unsure if procedureColumnOut is correct, maybe procedureColumnResult, or need ODS dependent use of RDB$PROCEDURE_TYPE to decide on selectable or executable?
@@ -2292,7 +2292,7 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
             row[14] = null;
             row[15] = null;
             // TODO: Find correct value for ORDINAL_POSITION (+ order of columns and intent, see JDBC-229)
-            row[17] = xsqlvars[0].encodeInt(rs.getInt("PARAMETER_NUMBER") + 1);
+            row[17] = xsqlvars[0].encodeInt(rs.getInt("PARAMETER_NUMBER"));
             // TODO: Find out if there is a conceptual difference with NULLABLE (idx 11)
             row[18] = (nullFlag == 1) ? getBytes("NO") : getBytes("YES");
             row[19] = row[2];
@@ -2545,7 +2545,7 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
     		"         F.RDB$CHARACTER_LENGTH AS CHAR_LEN       ," + 
     		"         RF.RDB$DESCRIPTION    AS REMARKS         ," + 
     		"         RF.RDB$DEFAULT_SOURCE AS DEFAULT_SOURCE  ," + 
-    		"         RF.RDB$FIELD_POSITION AS FIELD_POSITION  ," + 
+    		"         RF.RDB$FIELD_POSITION + 1 AS FIELD_POSITION  ," + 
     		"         RF.RDB$NULL_FLAG      AS NULL_FLAG       ," + 
     		"         F.RDB$NULL_FLAG       AS SOURCE_NULL_FLAG," +
     		"         F.RDB$COMPUTED_BLR    AS COMPUTED_BLR " +
@@ -2833,8 +2833,8 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
             byte[][] row = new byte[24][];
             row[0] = null;
             row[1] = null;
-            row[2] = getBytes(rs.getString("RELATION_NAME").trim());
-            row[3] = getBytes(rs.getString("FIELD_NAME").trim());
+            row[2] = getBytes(rs.getString("RELATION_NAME"));
+            row[3] = getBytes(rs.getString("FIELD_NAME"));
 
             short fieldType = rs.getShort("FIELD_TYPE");
             short fieldSubType = rs.getShort("FIELD_SUB_TYPE");
@@ -2915,20 +2915,18 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
                 xsqlvars[11].sqllen = remarks.length();
             
             String column_def = rs.getString("DEFAULT_SOURCE");
-            if (column_def!=null) {
-                String defaultValue = column_def.trim();
-                
-                int defaultPos = defaultValue.toUpperCase().indexOf("DEFAULT");
+            if (column_def != null) {
+                int defaultPos = column_def.toUpperCase().indexOf("DEFAULT");
                 if (defaultPos >= 0)
-                    defaultValue = defaultValue.substring(7).trim();
+                    column_def = column_def.substring(7).trim();
                 
-            	row[12] = getBytes(defaultValue);
+            	row[12] = getBytes(column_def);
             } else
             	row[12] = null;
             
             row[13] = null;
             row[14] = null;
-            row[16] = xsqlvars[0].encodeInt(rs.getShort("FIELD_POSITION") + 1);
+            row[16] = xsqlvars[0].encodeInt(rs.getInt("FIELD_POSITION"));
             row[17] = (nullFlag == 1 || sourceNullFlag == 1) ? 
                         getBytes("NO") : getBytes("YES");
             row[18] = null;
@@ -3585,7 +3583,7 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
         while (rs.next()) {
             byte[][] row = new byte[8][];
             row[0] = xsqlvars[0].encodeShort((short)scope);
-            row[1] = getBytes(rs.getString("COLUMN_NAME").trim());
+            row[1] = getBytes(rs.getString("COLUMN_NAME"));
             row[2] = xsqlvars[0].encodeShort((short)getDataType(rs.getShort("FIELD_TYPE"), 
                 rs.getShort("FIELD_SUB_TYPE"), rs.getShort("FIELD_SCALE")));
             row[3] = getBytes(getDataTypeName(rs.getShort("FIELD_TYPE"), 
@@ -3795,8 +3793,8 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
             byte[][] row = new byte[6][];
             row[0] = null;
             row[1] = null;
-            row[2] = getBytes(rs.getString("TABLE_NAME").trim());
-            row[3] = getBytes(rs.getString("COLUMN_NAME").trim());
+            row[2] = getBytes(rs.getString("TABLE_NAME"));
+            row[3] = getBytes(rs.getString("COLUMN_NAME"));
             row[4] = xsqlvars[0].encodeShort(rs.getShort("KEY_SEQ"));
             row[5] = getBytes(rs.getString("PK_NAME"));
 
@@ -4025,12 +4023,12 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
             byte[][] row = new byte[14][];
             row[0] = null;
             row[1] = null;
-            row[2] = getBytes(rs.getString("PKTABLE_NAME").trim());
-            row[3] = getBytes(rs.getString("PKCOLUMN_NAME").trim());
+            row[2] = getBytes(rs.getString("PKTABLE_NAME"));
+            row[3] = getBytes(rs.getString("PKCOLUMN_NAME"));
             row[4] = null;
             row[5] = null;
-            row[6] = getBytes(rs.getString("FKTABLE_NAME").trim());
-            row[7] = getBytes(rs.getString("FKCOLUMN_NAME").trim());
+            row[6] = getBytes(rs.getString("FKTABLE_NAME"));
+            row[7] = getBytes(rs.getString("FKCOLUMN_NAME"));
             row[8] = xsqlvars[0].encodeShort(rs.getShort("KEY_SEQ"));
             String updateRule = rs.getString("UPDATE_RULE");
             if (updateRule.equals("NO ACTION") || updateRule.equals("RESTRICT"))
@@ -4278,12 +4276,12 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
             byte[][] row = new byte[14][];
             row[0] = null;
             row[1] = null;
-            row[2] = getBytes(rs.getString("PKTABLE_NAME").trim());
-            row[3] = getBytes(rs.getString("PKCOLUMN_NAME").trim());
+            row[2] = getBytes(rs.getString("PKTABLE_NAME"));
+            row[3] = getBytes(rs.getString("PKCOLUMN_NAME"));
             row[4] = null;
             row[5] = null;
-            row[6] = getBytes(rs.getString("FKTABLE_NAME").trim());
-            row[7] = getBytes(rs.getString("FKCOLUMN_NAME").trim());
+            row[6] = getBytes(rs.getString("FKTABLE_NAME"));
+            row[7] = getBytes(rs.getString("FKCOLUMN_NAME"));
             row[8] = xsqlvars[0].encodeShort(rs.getShort("KEY_SEQ"));
             String updateRule = rs.getString("UPDATE_RULE");
             if (updateRule.equals("NO ACTION") || updateRule.equals("RESTRICT"))
@@ -4554,12 +4552,12 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
             byte[][] row = new byte[14][];
             row[0] = null;
             row[1] = null;
-            row[2] = getBytes(rs.getString("PKTABLE_NAME").trim());
-            row[3] = getBytes(rs.getString("PKCOLUMN_NAME").trim());
+            row[2] = getBytes(rs.getString("PKTABLE_NAME"));
+            row[3] = getBytes(rs.getString("PKCOLUMN_NAME"));
             row[4] = null;
             row[5] = null;
-            row[6] = getBytes(rs.getString("FKTABLE_NAME").trim());
-            row[7] = getBytes(rs.getString("FKCOLUMN_NAME").trim());
+            row[6] = getBytes(rs.getString("FKTABLE_NAME"));
+            row[7] = getBytes(rs.getString("FKCOLUMN_NAME"));
             row[8] = xsqlvars[0].encodeShort(rs.getShort("KEY_SEQ"));
             String updateRule = rs.getString("UPDATE_RULE");
             if (updateRule.equals("NO ACTION") || updateRule.equals("RESTRICT"))
@@ -4877,7 +4875,7 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
         + "  ind.RDB$RELATION_NAME AS TABLE_NAME"
         + ", ind.RDB$UNIQUE_FLAG AS UNIQUE_FLAG"
         + ", ind.RDB$INDEX_NAME as INDEX_NAME"
-        + ", ise.rdb$field_position+1 as ORDINAL_POSITION"
+        + ", ise.rdb$field_position + 1 as ORDINAL_POSITION"
         + ", ise.rdb$field_name as COLUMN_NAME"
         + ", ind.RDB$EXPRESSION_SOURCE as EXPRESSION_SOURCE"
         + ", ind.RDB$INDEX_TYPE as ASC_OR_DESC "
@@ -5084,7 +5082,7 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
                 }
             } else {
                 row[7] = xsqlvars[0].encodeShort(rs.getShort("ORDINAL_POSITION"));
-                row[8] = getBytes(columnName.trim());
+                row[8] = getBytes(columnName);
             }
             int ascOrDesc = rs.getInt("ASC_OR_DESC");
             if (ascOrDesc == 0) {
