@@ -1940,13 +1940,7 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
         + " F.RDB$FIELD_LENGTH as FIELD_LENGTH,"
         + " F.RDB$NULL_FLAG as NULL_FLAG,"
         + " PP.RDB$DESCRIPTION as REMARKS,"
-        + "         CASE"
-        + "                  WHEN F.RDB$CHARACTER_LENGTH IS NULL" 
-        + "                  AND      F.RDB$FIELD_TYPE IN (14," 
-        + "                                                37)" 
-        + "                  THEN F.RDB$FIELD_LENGTH"
-        + "                  ELSE F.RDB$CHARACTER_LENGTH"
-        + "         END                   AS CHAR_LEN,"
+        + " F.RDB$CHARACTER_LENGTH AS CHAR_LEN,"
         + " PP.RDB$PARAMETER_NUMBER AS PARAMETER_NUMBER " 
         + "from"
         + " RDB$PROCEDURE_PARAMETERS PP,"
@@ -2240,7 +2234,12 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
                    break;
                 case Types.CHAR:
                 case Types.VARCHAR:
-                   row[7] = xsqlvars[0].encodeInt(rs.getShort("CHAR_LEN"));
+                   short charLen = rs.getShort("CHAR_LEN");
+                   if (!rs.wasNull()) {
+                       row[7] = xsqlvars[0].encodeInt(charLen);
+                   } else {
+                       row[7] = row[8];
+                   }
                    row[16] = row[8];
                    break;
                 case Types.FLOAT:
@@ -2543,23 +2542,13 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
     		"         F.RDB$FIELD_PRECISION AS FIELD_PRECISION ," + 
     		"         F.RDB$FIELD_SCALE     AS FIELD_SCALE     ," + 
     		"         F.RDB$FIELD_LENGTH    AS FIELD_LENGTH    ," + 
-    		"         CASE" + 
-    		"                  WHEN F.RDB$CHARACTER_LENGTH IS NULL" + 
-    		"                  AND      F.RDB$FIELD_TYPE IN (14," + 
-    		"                                                37)" + 
-    		"                  THEN F.RDB$FIELD_LENGTH" + 
-    		"                  ELSE F.RDB$CHARACTER_LENGTH" + 
-    		"         END                   AS CHAR_LEN        ," + 
+    		"         F.RDB$CHARACTER_LENGTH AS CHAR_LEN       ," + 
     		"         RF.RDB$DESCRIPTION    AS REMARKS         ," + 
     		"         RF.RDB$DEFAULT_SOURCE AS DEFAULT_SOURCE  ," + 
     		"         RF.RDB$FIELD_POSITION AS FIELD_POSITION  ," + 
     		"         RF.RDB$NULL_FLAG      AS NULL_FLAG       ," + 
     		"         F.RDB$NULL_FLAG       AS SOURCE_NULL_FLAG," +
-    		"         CASE" +
-    		"                  WHEN F.RDB$COMPUTED_BLR IS NULL" +
-    		"                  THEN 'NO'" +
-    		"                  ELSE 'YES'" +
-    		"         END                   AS IS_GENERATED " +
+    		"         F.RDB$COMPUTED_BLR    AS COMPUTED_BLR " +
     		"FROM     RDB$RELATION_FIELDS RF," + 
     		"         RDB$FIELDS F " + 
     		"WHERE ";
@@ -2870,8 +2859,13 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
                    break;
                 case Types.CHAR:
                 case Types.VARCHAR:
-                   row[6] = xsqlvars[0].encodeInt(rs.getShort("CHAR_LEN"));
-                   row[15] = xsqlvars[0].encodeInt(rs.getShort("FIELD_LENGTH"));
+                    row[15] = xsqlvars[0].encodeInt(rs.getShort("FIELD_LENGTH"));
+                   short charLen = rs.getShort("CHAR_LEN");
+                   if (!rs.wasNull()) {
+                       row[6] = xsqlvars[0].encodeInt(charLen);
+                   } else {
+                       row[6] = row[15];
+                   }
                    break;
                 case Types.FLOAT:
                    row[6] = xsqlvars[0].encodeInt(7);
@@ -2963,7 +2957,8 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
                 // All other types are never autoincrement
                 row[22] = getBytes("NO");
             }
-            row[23] = getBytes(rs.getString("IS_GENERATED"));
+            rs.getString("COMPUTED_BLR");
+            row[23] = getBytes(rs.wasNull() ? "NO" : "YES");
 
             rows.add(row);
         } while (rs.next());
