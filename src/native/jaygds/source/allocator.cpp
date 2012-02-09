@@ -18,42 +18,25 @@
  */
 
 #include "platform.h"
-
 #include "allocator.h"
-
 #include "exceptions.h"
-
-
 
 /*
  * Classes used for managing heap allocated memory. These are the only 
  * classes that directly allocate heap memory.
  */
 
-
 // ScratchPadAllocator Class -------------------------------------------------------------------
 
-/*
- *
- *
- */
 ScratchPadAllocator::ScratchPadAllocator() : mMemoryChunkHead(NULL)
 	{
 	}
 
-/*
- *
- *
- */
 ScratchPadAllocator::~ScratchPadAllocator()
 	{
 	FreeMemory();
 	}
 
-/*
- *
- *
- */
 char* ScratchPadAllocator::AllocateMemory( int size )
 	{
 	// Will be set if we dont return in the for loop so we can append a chunk.
@@ -70,7 +53,7 @@ char* ScratchPadAllocator::AllocateMemory( int size )
 		}
 
 	// Get a suitable new chunk ensuring we can get our memory from it.
-	MemoryChunk* newMemoryChunk = allocateAndInitilizeChunk(size);
+	MemoryChunk* newMemoryChunk = allocateAndInitializeChunk(size);
 	char* returnValue = newMemoryChunk->TryToAllocate( size );
 	if(returnValue == NULL)
 		throw InternalException("mMemoryChunkHead->TryToAllocate( size ) should always sucseed here.");
@@ -84,10 +67,6 @@ char* ScratchPadAllocator::AllocateMemory( int size )
 	return returnValue;
 	}
 
-/*
- *
- *
- */
 char* ScratchPadAllocator::MemoryChunk::TryToAllocate( long sizeToAllocate )
 	{
 	// Ensure that all allocations are on an 8 byte boundary.
@@ -105,11 +84,7 @@ char* ScratchPadAllocator::MemoryChunk::TryToAllocate( long sizeToAllocate )
 	return NULL;
 	}
 
-/*
- *
- *
- */
-ScratchPadAllocator::MemoryChunk*	ScratchPadAllocator::allocateAndInitilizeChunk(int size)
+ScratchPadAllocator::MemoryChunk* ScratchPadAllocator::allocateAndInitializeChunk(int size)
 	{
 	size += sizeof(MemoryChunk);
 	size += 8;
@@ -125,10 +100,6 @@ ScratchPadAllocator::MemoryChunk*	ScratchPadAllocator::allocateAndInitilizeChunk
 	return returnValue;
 	}
 
-/*
- *
- *
- */
 void ScratchPadAllocator::FreeMemory()
 	{
 	MemoryChunk* current = mMemoryChunkHead;
@@ -143,10 +114,6 @@ void ScratchPadAllocator::FreeMemory()
 	mMemoryChunkHead = NULL;
 	}
 
-/*
- *
- *
- */
 void ScratchPadAllocator::ClearMemory()
 	{
 	MemoryChunk* current = mMemoryChunkHead;
@@ -159,32 +126,18 @@ void ScratchPadAllocator::ClearMemory()
 		}
 	}
 
-
-
 // Buffer Class -------------------------------------------------------------------
 
-/*
- *
- *
- */
 Buffer::Buffer( int size )
 	{
 	mBuffer = new char[size];
 	}
 
-/*
- *
- *
- */
 Buffer::~Buffer()
 	{
 	delete[] mBuffer;
 	}
 
-/*
- *
- *
- */
 char* Buffer::access()
 	{
 	return mBuffer;

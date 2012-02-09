@@ -27,7 +27,8 @@
 #include "ibase.h"
 #include "jni.h"
 
-/* Class used to map between the org.firbirdsql.gds.XSQLDA class and 
+/* 
+ * Class used to map between the org.firbirdsql.gds.XSQLDA class and 
  * firebirds native XSQLDA structure.
  *
  * Static Initilize must be called before class is used.
@@ -36,7 +37,8 @@ class JXSqlda
 	{
 	public:
 
-	/* Creates a JXSqlda object representing the given java XSQLDA object.
+	/* 
+	 * Creates a JXSqlda object representing the given java XSQLDA object.
 	 * The RawAccess method will return a native XSQLDA instance that mirrors
 	 * the java object. This structure can be modified and the Resync used to
 	 * write these modifications to the java object.
@@ -46,8 +48,8 @@ class JXSqlda
 	 */
 	JXSqlda( JNIEnv* javaEnvironment, jobject handle, bool isFetching = false );
 
-
-	/* Creates a JXSqlda object that does not represent an existing java XSQLDA
+	/* 
+	 * Creates a JXSqlda object that does not represent an existing java XSQLDA
 	 * object. The RawAccess method will return a native XSQLDA instance.
 	 * Once data is writen to this instance a java object can be created 
 	 * using the AllocateJavaXSqlda 
@@ -57,68 +59,27 @@ class JXSqlda
 	 */
 	JXSqlda( JNIEnv* jEnv, bool isFetching = false );
 	
-
-	/*
-	 *	
-	 */
 	virtual ~JXSqlda();
 
-
-	/*
-	 *	
-	 */
 	XSQLDA* RawAccess();
 	
-
-	/*
-	 *	
-	 */
 	void Resize(short n);
 
-
-
-	/*
-	 *	
-	 */
 	void Resync(JNIEnv* javaEnvironment);
 
-
-	/*
-	 *	
-	 */
 	jobject AllocateJavaXSqlda( JNIEnv* javaEnvironment );
 
-	/*
-	 *	
-	 */
-	static void		Initilize( JNIEnv* jEnv );
-
-
+	static void Initilize( JNIEnv* jEnv );
 
 	private:
 
-	/*
-	 *	
-	 */
 	JXSqlda& operator=( const JXSqlda& other );
 
-	/*
-	 *	
-	 */
 	JXSqlda( const JXSqlda& other );
 
-
-	/*
-	 *	
-	 */
 	jobject AllocateJavaXSqlda( JNIEnv* javaEnvironment, XSQLDA* xsqlda );
 
-
-	/*
-	 *	
-	 */
 	jobject AllocateJavaXsqlvar( JNIEnv* javaEnvironment, XSQLVAR& xsqlvar );
-
 	
 	XSQLDA*				mXsqlda;	
 	
@@ -128,13 +89,12 @@ class JXSqlda
 
 	ScratchPadAllocator mAllocator;
 
-	static JClassBinding  sXSQLDAClassBinding;
-	static JClassBinding  sXSQLVARClassBinding;
-
+	// static
+	static JClassBinding sXSQLDAClassBinding;
+	static JClassBinding sXSQLVARClassBinding;
 	static JFieldBinding sXSQLDAFieldBinding_sqln;
 	static JFieldBinding sXSQLDAFieldBinding_sqld;
 	static JFieldBinding sXSQLDAFieldBinding_sqlvar;
-
 	static JFieldBinding sXSQLVARFieldBinding_sqltype;
 	static JFieldBinding sXSQLVARFieldBinding_sqlscale;
 	static JFieldBinding sXSQLVARFieldBinding_sqlsubtype;
@@ -144,10 +104,7 @@ class JXSqlda
 	static JFieldBinding sXSQLVARFieldBinding_relname;
 	static JFieldBinding sXSQLVARFieldBinding_ownname;
 	static JFieldBinding sXSQLVARFieldBinding_aliasname;
-	
-	// static
-	static bool		sIsInitilized;
-	
+	static bool sIsInitilized;
 	};
 
 #endif

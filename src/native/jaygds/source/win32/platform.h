@@ -22,10 +22,8 @@
  * Platform specific includes, code and defines for win32
  */
 
-
 #ifndef _JNGDS__Platform
 #define _JNGDS__Platform
-
 
 // Windows includes and stuff 
 
@@ -36,7 +34,6 @@
 #define WIN32_LEAN_AND_MEAN 
 
 #include <windows.h>
-
 
 #include <malloc.h>
 #include <stdio.h>
@@ -53,7 +50,6 @@ typedef HMODULE SHARED_LIBRARY_HANDLE;
 
 void processFailedEntryPoint(const char* const message);
 
-
 #define FB_ENTRYPOINT(X) \
             if ((FirebirdApiBinding::X = (prototype_##X*)GetProcAddress(sHandle, #X)) == NULL) \
                 processFailedEntryPoint("FirebirdApiBinding:Initialize() - Entry-point "#X" not found")
@@ -67,10 +63,10 @@ void PlatformUnLoadLibrary(SHARED_LIBRARY_HANDLE);
 
 template <typename T> T PlatformFindSymbol(SHARED_LIBRARY_HANDLE library,
 	const char* symbolName, T& pointer)
-{
+	{
 	pointer = reinterpret_cast<T>(GetProcAddress(library, symbolName));
 	return pointer;
-}
+	}
 
 #define OFFSETA(struct, fld)     ((size_t) ((struct) NULL)->fld)
 
@@ -82,6 +78,5 @@ template <typename T> T PlatformFindSymbol(SHARED_LIBRARY_HANDLE library,
 
 #define CALL_API(X) DEF_CALL_API(X)\
     X
-
 
 #endif // ifndef(_JNGDS__Platform)

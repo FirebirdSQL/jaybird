@@ -40,64 +40,34 @@ class ScratchPadAllocator
 	{
 	public:
 
-	/*
-	 *
-	 *
-	 */
 	ScratchPadAllocator();
 
-	/*
-	 *
-	 *
-	 */
 	virtual ~ScratchPadAllocator();
 
-	
-	/*
-	 *
-	 *
-	 */
 	char* AllocateMemory( int size );
 	
-	/*
-	 *
-	 *
-	 */
 	void FreeMemory();
 
-	/*
-	 *
-	 *
-	 */
 	void ClearMemory();
-
 
 	private:
 
-	/*
-	 *	
-	 */
 	ScratchPadAllocator& operator=( const ScratchPadAllocator& other );
 
-	/*
-	 *	
-	 */
 	ScratchPadAllocator( const ScratchPadAllocator& other );
 
 	struct MemoryChunk
 		{
-		int				size;
-		int				allocOffset;
-		MemoryChunk*	nextChunk;
+		int	size;
+		int	allocOffset;
+		MemoryChunk* nextChunk;
 
-		char*			TryToAllocate( long size );
+		char* TryToAllocate( long size );
 		};
 
+	MemoryChunk* allocateAndInitializeChunk(int size);
 
-	MemoryChunk*	allocateAndInitilizeChunk(int size);
-
-	MemoryChunk*	mMemoryChunkHead;
-	
+	MemoryChunk* mMemoryChunkHead;
 	};
 
 
@@ -107,41 +77,24 @@ class ScratchPadAllocator
  * Simply allocates a buffer and provides access to it.
  *
  * This buffer is freed when the object goes out of scope.
- *
  */
 class Buffer
 	{
 	public:
 
-	/*
-	 *	
-	 */
 	Buffer( int size );
 
-	/*
-	 *	
-	 */
 	~Buffer();
 
-	/*
-	 *	
-	 */
 	char* access();
 
 	private:
 	
-	/*
-	 *	
-	 */
 	Buffer& operator=( const Buffer& other );
 
-	/*
-	 *	
-	 */
 	Buffer( const Buffer& other );
 
 	char* mBuffer;
-
 	};
 
 #endif // _JNGDS__Allocator

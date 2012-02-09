@@ -18,29 +18,16 @@
  */
 
 #include "platform.h"
-
 #include "jni_helpers.h"
-
 #include "exceptions.h"
-
-
 #include "jni.h"
-
-
 
 // JClassBinding
 
-
-/* 
- * 
- */
 JClassBinding::JClassBinding( ) : mJavaClassName(NULL), mJavaClassHandle(NULL)
 	{
 	}
 
-/* 
- * 
- */
 JClassBinding::JClassBinding( JNIEnv* javaEnvironment, const char* const className ) : mJavaClassName(className)
 	{
 	mJavaClassHandle = (jclass)javaEnvironment->NewGlobalRef(javaEnvironment->FindClass(className));
@@ -48,18 +35,12 @@ JClassBinding::JClassBinding( JNIEnv* javaEnvironment, const char* const classNa
 		throw InternalException( "Failed to javaEnvironment->FindClass for %s ", className );
 	}
 
-/* 
- * 
- */
 void JClassBinding::checkObjectIsInitilized() const
 	{
 	if( mJavaClassHandle == NULL || mJavaClassName == NULL )
 		throw InternalException("JClassBinding not initilized.");
 	}
 
-/* 
- * 
- */
 jclass JClassBinding::GetHandle() const
 	{
 	checkObjectIsInitilized();
@@ -67,9 +48,6 @@ jclass JClassBinding::GetHandle() const
 	return mJavaClassHandle;
 	}
 
-/* 
- * 
- */
 JMethodBinding JClassBinding::GetMethodBinding( JNIEnv* javaEnvironment, const char* const methodName, const char* const methodSigniture ) const 
 	{
 	checkObjectIsInitilized();
@@ -81,10 +59,6 @@ JMethodBinding JClassBinding::GetMethodBinding( JNIEnv* javaEnvironment, const c
 	return JMethodBinding( *this, methodId );
 	}
 
-
-/* 
- * 
- */
 JFieldBinding JClassBinding::GetFieldBinding( JNIEnv* javaEnvironment, const char* const methodName, const char* const methodSigniture ) const
 	{
 	checkObjectIsInitilized();
@@ -96,10 +70,6 @@ JFieldBinding JClassBinding::GetFieldBinding( JNIEnv* javaEnvironment, const cha
 	return JFieldBinding( *this, fieldId );
 	}
 
-
-/* 
- * 
- */
 jobject	JClassBinding::CreateNewInstance( JNIEnv* javaEnvironment, const char* const signiture, ... ) const
 	{
 	checkObjectIsInitilized();
@@ -118,28 +88,16 @@ jobject	JClassBinding::CreateNewInstance( JNIEnv* javaEnvironment, const char* c
 	return object;
 	}
 
-
-
 // JMethodBinding
 
-/* 
- * 
- */
 JMethodBinding::JMethodBinding() : mJavaClassBinding(), mMethodID(NULL)
 	{
 	}
 
-/* 
- * 
- */
 JMethodBinding::JMethodBinding( const JClassBinding& classBinding, jmethodID methodID ) : mJavaClassBinding(classBinding), mMethodID(methodID)
 	{
 	}
 
-
-/* 
- * 
- */
 int  JMethodBinding::CallInteger(JNIEnv* javaEnvironment, jobject object, ...) const
 	{
 	va_list parameters;
@@ -154,10 +112,6 @@ int  JMethodBinding::CallInteger(JNIEnv* javaEnvironment, jobject object, ...) c
 	return returnValue;
 	}
 
-
-/* 
- * 
- */
 jlong  JMethodBinding::CallLong(JNIEnv* javaEnvironment, jobject object, ...) const 
 	{
 	va_list parameters;
@@ -172,10 +126,6 @@ jlong  JMethodBinding::CallLong(JNIEnv* javaEnvironment, jobject object, ...) co
 	return returnValue;
 	}
 
-
-/* 
- * 
- */
 jboolean  JMethodBinding::CallBoolean(JNIEnv* javaEnvironment, jobject object, ...) const
 	{
 	va_list parameters;
@@ -190,10 +140,6 @@ jboolean  JMethodBinding::CallBoolean(JNIEnv* javaEnvironment, jobject object, .
 	return returnValue;
 	}
 
-
-/* 
- * 
- */
 void JMethodBinding::CallVoid(JNIEnv* javaEnvironment, jobject object, ...) const
 	{
 	va_list parameters;
@@ -206,136 +152,71 @@ void JMethodBinding::CallVoid(JNIEnv* javaEnvironment, jobject object, ...) cons
 		throw InternalException( "Failed to javaEnvironment->CallVoidMethod" );
 	}
 
-
-/* 
- * 
- */
 jmethodID JMethodBinding::GetMethodId() const
 	{
 	return mMethodID;
 	}
 
-
-
-
-
-
 // JFieldBinding
 
-/* 
- * 
- */
 JFieldBinding::JFieldBinding( ) : mJavaClassBinding(), mFieldID(NULL)
 	{
 	}
 
-/* 
- * 
- */
 JFieldBinding::JFieldBinding( const JClassBinding& classBinding, jfieldID fieldID ) : mJavaClassBinding(classBinding), mFieldID(fieldID)
 	{
 	}
 
-
-/* 
- * 
- */
 void JFieldBinding::SetBoolean(JNIEnv* javaEnvironment, jobject object, bool value ) const
 	{
 	javaEnvironment->SetBooleanField( object, mFieldID, value );
 	}
 
-
-/* 
- * 
- */
 void JFieldBinding::SetInt(JNIEnv* javaEnvironment, jobject object, jint value ) const
 	{
 	javaEnvironment->SetIntField( object, mFieldID, value );
 	}
 
-
-/* 
- * 
- */
 jint JFieldBinding::GetInt(JNIEnv* javaEnvironment, jobject object) const
 	{
-		return javaEnvironment->GetIntField( object, mFieldID );
+	return javaEnvironment->GetIntField( object, mFieldID );
 	}
 
-
-/* 
- * 
- */
 void JFieldBinding::SetByteArray( JNIEnv* javaEnvironment, jobject object, JByteArray& byteArray ) const
 	{
 	javaEnvironment->SetObjectField( object, mFieldID, byteArray.GetHandle() );
 	}
 
-
-
-/* 
- * 
- */
 void JFieldBinding::SetByteArrayNull( JNIEnv* javaEnvironment, jobject object ) const
 	{
 	javaEnvironment->SetObjectField( object, mFieldID, 0 );
 	}
 
-
-
-/* 
- * 
- */
 JByteArray JFieldBinding::GetByteArray(JNIEnv* javaEnvironment, jobject object) const
 	{
 	return JByteArray( javaEnvironment, (jbyteArray)javaEnvironment->GetObjectField(object, mFieldID) );
 	}
 
-
-
-/* 
- * 
- */
 void JFieldBinding::SetObjectArray( JNIEnv* javaEnvironment, jobject object, JObjectArray& byteArray ) const
 	{
-		javaEnvironment->SetObjectField( object, mFieldID, byteArray.GetHandle() );
+	javaEnvironment->SetObjectField( object, mFieldID, byteArray.GetHandle() );
 	}
 
-
-
-/* 
- * 
- */
 JObjectArray JFieldBinding::GetObjectArray(JNIEnv* javaEnvironment, jobject object) const
 	{
-		return JObjectArray( javaEnvironment, (jobjectArray)javaEnvironment->GetObjectField(object, mFieldID) );
+	return JObjectArray( javaEnvironment, (jobjectArray)javaEnvironment->GetObjectField(object, mFieldID) );
 	}
 
-
-/* 
- * 
- */
 void JFieldBinding::SetString( JNIEnv* javaEnvironment, jobject object, JString& byteArray ) const
 	{
-		javaEnvironment->SetObjectField( object, mFieldID, byteArray.AsJString() );
+	javaEnvironment->SetObjectField( object, mFieldID, byteArray.AsJString() );
 	}
 
-
-
-/* 
- * 
- */
 JString JFieldBinding::GetString(JNIEnv* javaEnvironment, jobject object) const
 	{
-		return JString( javaEnvironment, (jstring)javaEnvironment->GetObjectField(object, mFieldID) );
+	return JString( javaEnvironment, (jstring)javaEnvironment->GetObjectField(object, mFieldID) );
 	}
  
-
-
-/* 
- * 
- */
 jfieldID JFieldBinding::GetFieldId() const
 	{
 	return mFieldID;
@@ -343,17 +224,12 @@ jfieldID JFieldBinding::GetFieldId() const
 
 // JByteArray
 
-/* 
- *
- * 
- */
 JByteArray::JByteArray() : 
 			mJavaEnvironment(NULL), mArrayHandle(NULL), mBuffer(NULL)
 	{
 	}
 
 /* 
- *
  * Creates a copy of 'other'. Only the handle is copied. The buffer pointer is
  * owned by this object - is created when accessed and released in the destructor.
  */
@@ -363,7 +239,6 @@ JByteArray::JByteArray( const JByteArray& other ) :
 	}
 
 /* 
- *
  * Creates a an object for the suplied jbyteArray.The buffer pointer is
  * owned by this object - is created when accessed and released in the destructor.
  */
@@ -373,7 +248,6 @@ JByteArray::JByteArray( JNIEnv* javaEnvironment, jbyteArray byteArrayHandle  ) :
 	}
 
 /* 
- * 
  * Creates a an object for the suplied data. A java object is created for the
  *  data. The byteArray parameter is only used during the execution of this method.
  *  Thereafter if the data is accesses it hapens in the same way as normal.
@@ -387,7 +261,6 @@ JByteArray::JByteArray( JNIEnv* javaEnvironment, const char* const byteArray, in
 
 	if( byteArray != NULL )
 		{
-
 		mBuffer = javaEnvironment->GetByteArrayElements( mArrayHandle, NULL );
 		if( mBuffer == NULL )
 			throw InternalException( "Failed to javaEnvironment->GetByteArrayElements" );
@@ -401,8 +274,8 @@ JByteArray::JByteArray( JNIEnv* javaEnvironment, const char* const byteArray, in
 		}
 	}
 
-/*	Creates a an object representing an array of the suplied length.
- *	
+/*	
+ * Creates a an object representing an array of the suplied length.
  */
 JByteArray::JByteArray( JNIEnv* javaEnvironment, int length ) :
 	mJavaEnvironment(javaEnvironment), mBuffer(NULL)
@@ -412,10 +285,7 @@ JByteArray::JByteArray( JNIEnv* javaEnvironment, int length ) :
 		throw InternalException( "Failed to javaEnvironment->NewIntArray" );
 	}
 
-/*
- *	
- */
-JByteArray&  JByteArray::operator=(const JByteArray& other)
+JByteArray& JByteArray::operator=(const JByteArray& other)
 	{
 	mJavaEnvironment = other.mJavaEnvironment;
 	mArrayHandle = other.mArrayHandle;
@@ -424,19 +294,13 @@ JByteArray&  JByteArray::operator=(const JByteArray& other)
 	return *this;
 	}
 
-/*
- *	
- */
 JByteArray::~JByteArray()
 	{
 	if(mBuffer != NULL)
 		mJavaEnvironment->ReleaseByteArrayElements(mArrayHandle, mBuffer, 0);
 	}
 
-/*
- *	
- */
-jint	JByteArray::Size() const
+jint JByteArray::Size() const
 	{
 	if(mArrayHandle == NULL)
 		return 0;
@@ -444,44 +308,29 @@ jint	JByteArray::Size() const
 	return mJavaEnvironment->GetArrayLength(mArrayHandle);
 	}
 
-/*
- *	
- */
-char*	JByteArray::Read()
+char* JByteArray::Read()
 	{
 	if(mBuffer == NULL && mArrayHandle != NULL)
 		{
 		mBuffer = mJavaEnvironment->GetByteArrayElements( mArrayHandle, NULL );
-			if( mJavaEnvironment->ExceptionCheck() )
-				throw InternalException( "Failed to javaEnvironment->GetByteArrayElements" );
+		if( mJavaEnvironment->ExceptionCheck() )
+			throw InternalException( "Failed to javaEnvironment->GetByteArrayElements" );
 		}
 
 	return (char*)mBuffer;
 	}
-
-/*
- *	
- */
 
 jbyteArray JByteArray::GetHandle() const
 	{
 	return mArrayHandle;
 	}
 
-
-
 // JObjectArray
 
-/*
- *	
- */
 JObjectArray::JObjectArray( JNIEnv* javaEnvironment, jobjectArray handle ) : mArrayHandle(handle), mJavaEnvironment(javaEnvironment)
 	{
 	}
 
-/*
- *	
- */
 JObjectArray::JObjectArray( JNIEnv* javaEnvironment, jclass claszz, int length ) : mJavaEnvironment(javaEnvironment)
 	{
 	mArrayHandle = javaEnvironment->NewObjectArray( length, claszz, 0 );
@@ -489,34 +338,22 @@ JObjectArray::JObjectArray( JNIEnv* javaEnvironment, jclass claszz, int length )
 		throw InternalException( "Failed to javaEnvironment->NewIntArray" );
 	}
 
-/*
- *	
- */
-jint	JObjectArray::Size() const
+jint JObjectArray::Size() const
 	{
 	return mJavaEnvironment->GetArrayLength(mArrayHandle);
 	}
 
-/*
- *	
- */
-jobjectArray	JObjectArray::GetHandle() const
+jobjectArray JObjectArray::GetHandle() const
 	{
 	return mArrayHandle;
 	}
 
-/*
- *	
- */
-void	JObjectArray::Set(JNIEnv* javaEnvironment, int index, jobject value)
+void JObjectArray::Set(JNIEnv* javaEnvironment, int index, jobject value)
 	{
 	mJavaEnvironment->SetObjectArrayElement ( mArrayHandle, index, value );
 	}
 
-/*
- *	
- */
-jobject	JObjectArray::Get(JNIEnv* javaEnvironment, int index) const
+jobject JObjectArray::Get(JNIEnv* javaEnvironment, int index) const
 	{
 	return mJavaEnvironment->GetObjectArrayElement ( mArrayHandle, index );
 	}
@@ -525,42 +362,28 @@ jobject	JObjectArray::Get(JNIEnv* javaEnvironment, int index) const
 
 // JString
 
-bool	JString::HasAValue()
+bool JString::HasAValue()
 	{
 	return mJavaEnvironment != NULL;
 	}
 
-/* 
- * 
- */
 JString::JString( ) :
 		mJavaEnvironment(NULL), mStringHandle(NULL), mStringBuffer(NULL)
 	{
 
 	}
 
-/* 
- * 
- */
 JString::JString( const JString& other ) :
 		mJavaEnvironment(other.mJavaEnvironment), mStringHandle(other.mStringHandle), mStringBuffer(NULL)
 	{
 
 	}
 
-/* 
- * 
- */
 JString::JString( JNIEnv* javaEnvironment, jstring stringHandle ) :
 		mJavaEnvironment(javaEnvironment), mStringHandle(stringHandle), mStringBuffer(NULL)
 	{
-//	
-
 	}
 
-/* 
- * 
- */
 JString::JString( JNIEnv* javaEnvironment, const char* const string ) :
 		mJavaEnvironment(javaEnvironment), mStringBuffer(NULL)
 	{
@@ -569,9 +392,6 @@ JString::JString( JNIEnv* javaEnvironment, const char* const string ) :
 		throw InternalException( "Failed to javaEnvironment->NewIntArray" );
 	}
 
-/* 
- * 
- */
 JString::JString( JNIEnv* javaEnvironment, const char* const string, jint Length ) :
 		mJavaEnvironment(javaEnvironment), mStringBuffer(NULL)
 	{
@@ -585,30 +405,21 @@ JString::JString( JNIEnv* javaEnvironment, const char* const string, jint Length
 		throw InternalException( "Failed to javaEnvironment->NewIntArray" );
 	}
 
-/*
- *	
- */
 JString& JString::operator=(const JString& other)
-{
+	{
 	mJavaEnvironment = other.mJavaEnvironment;
 	mStringHandle = other.mStringHandle;
 	mStringBuffer = NULL;
 
 	return *this;
-}
+	}
 
-/*
- *	
- */
-jint	JString::GetLength()
-{
-return mJavaEnvironment->GetStringUTFLength( mStringHandle );
-}
+jint JString::GetLength()
+	{
+	return mJavaEnvironment->GetStringUTFLength( mStringHandle );
+	}
 
-/* 
- * 
- */
-const char*				JString::AsCString()
+const char* JString::AsCString()
 	{
 	if( mStringBuffer == NULL )
 		{
@@ -620,17 +431,11 @@ const char*				JString::AsCString()
 	return mStringBuffer;
 	}
 
-/* 
- * 
- */
-jstring				JString::AsJString()
-{
+jstring JString::AsJString()
+	{
 	return mStringHandle;
-}
+	}
 
-/* 
- * 
- */
 JString:: ~JString()
 	{
 	if( mStringBuffer != NULL )

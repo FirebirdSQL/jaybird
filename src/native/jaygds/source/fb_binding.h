@@ -20,7 +20,6 @@
 #ifndef _JNGDS__FirebirdBinding
 #define _JNGDS__FirebirdBinding
 
-
 #include "ibase.h"
 #include <jni.h>
 
@@ -34,7 +33,6 @@ typedef ISC_STATUS ISC_EXPORT prototype_isc_attach_database(ISC_STATUS *,
                                           short,
                                           char *);
 
-
 typedef ISC_STATUS ISC_EXPORT prototype_isc_blob_info(ISC_STATUS *,
                                     isc_blob_handle *,
                                     short,
@@ -42,10 +40,8 @@ typedef ISC_STATUS ISC_EXPORT prototype_isc_blob_info(ISC_STATUS *,
                                     short,
                                     char *);
 
-
 typedef ISC_STATUS ISC_EXPORT prototype_isc_cancel_blob(ISC_STATUS *,
                                       isc_blob_handle *);
-
 
 typedef ISC_STATUS ISC_EXPORT prototype_isc_close_blob(ISC_STATUS *,
                                      isc_blob_handle *);
@@ -199,15 +195,11 @@ typedef void ISC_EXPORT prototype_isc_encode_sql_time(void *,
 typedef void ISC_EXPORT prototype_isc_encode_timestamp(void *,
                                      ISC_TIMESTAMP *);
 
-
-
-
 typedef ISC_STATUS ISC_EXPORT prototype_isc_get_segment(ISC_STATUS *,
                                       isc_blob_handle *,
                                       unsigned short *,
                                       unsigned short,
                                       char *);
-
 
 typedef ISC_STATUS ISC_EXPORT prototype_isc_interprete(char *,
                                      ISC_STATUS * *);
@@ -252,10 +244,8 @@ typedef ISC_STATUS ISC_EXPORT prototype_isc_put_slice(ISC_STATUS *,
                                     ISC_LONG,
                                     void *);
 
-
 typedef ISC_STATUS ISC_EXPORT prototype_isc_rollback_retaining(ISC_STATUS *,
                                              isc_tr_handle *);
-
 
 typedef ISC_STATUS ISC_EXPORT prototype_isc_rollback_transaction(ISC_STATUS *,
                                                isc_tr_handle *);
@@ -275,23 +265,17 @@ typedef ISC_STATUS ISC_EXPORT_VARARG prototype_isc_reconnect_transaction(ISC_STA
                                                    short, 
                                                    char*);
 
-
 typedef ISC_LONG ISC_EXPORT prototype_isc_sqlcode(ISC_STATUS *);
 
 typedef void ISC_EXPORT prototype_isc_sql_interprete(short,
                                    char *,
                                    short);
 
-
-
-
 typedef ISC_STATUS ISC_EXPORT prototype_isc_seek_blob(ISC_STATUS *,
                                     isc_blob_handle *,
                                     short,
                                     ISC_LONG,
                                     ISC_LONG *);
-
-
 
 typedef ISC_STATUS ISC_EXPORT prototype_isc_service_attach(ISC_STATUS *,
                                          unsigned short,
@@ -365,14 +349,11 @@ typedef void ISC_EXPORT prototype_fb_cancel_operation(
         isc_db_handle*,
         short);
 
-
-
-
 class FirebirdApiBinding
         {
         public:
         prototype_isc_attach_database*      isc_attach_database;
-        prototype_isc_blob_info*                isc_blob_info;
+        prototype_isc_blob_info*            isc_blob_info;
         prototype_isc_cancel_blob*          isc_cancel_blob;
         prototype_isc_close_blob*           isc_close_blob;
         prototype_isc_commit_retaining*     isc_commit_retaining;
@@ -380,7 +361,7 @@ class FirebirdApiBinding
         prototype_isc_create_blob*          isc_create_blob;
         prototype_isc_create_blob2*         isc_create_blob2;
         prototype_isc_create_database*      isc_create_database;
-        prototype_isc_database_info*            isc_database_info;
+        prototype_isc_database_info*        isc_database_info;
         prototype_isc_decode_date*          isc_decode_date;
         prototype_isc_decode_sql_date*      isc_decode_sql_date;
         prototype_isc_decode_sql_time*      isc_decode_sql_time;
@@ -401,14 +382,14 @@ class FirebirdApiBinding
         prototype_isc_dsql_insert*          isc_dsql_insert; 
         prototype_isc_dsql_prepare*         isc_dsql_prepare;
         prototype_isc_dsql_set_cursor_name* isc_dsql_set_cursor_name;
-        prototype_isc_dsql_sql_info*            isc_dsql_sql_info;
+        prototype_isc_dsql_sql_info*        isc_dsql_sql_info;
         prototype_isc_encode_date*          isc_encode_date;
         prototype_isc_encode_sql_date*      isc_encode_sql_date;
         prototype_isc_encode_sql_time*      isc_encode_sql_time;
         prototype_isc_encode_timestamp*     isc_encode_timestamp;
         prototype_isc_get_segment*          isc_get_segment;
         prototype_isc_interprete*           isc_interprete;
-        prototype_isc_open_blob*                isc_open_blob;
+        prototype_isc_open_blob*            isc_open_blob;
         prototype_isc_open_blob2*           isc_open_blob2;
         prototype_isc_prepare_transaction2* isc_prepare_transaction2;
         prototype_isc_print_sqlerror*       isc_print_sqlerror;
@@ -417,29 +398,29 @@ class FirebirdApiBinding
         prototype_isc_rollback_retaining*   isc_rollback_retaining;
         prototype_isc_rollback_transaction* isc_rollback_transaction;
         prototype_isc_start_transaction*        isc_start_transaction;
-        prototype_isc_reconnect_transaction*        isc_reconnect_transaction;
+        prototype_isc_reconnect_transaction*    isc_reconnect_transaction;
         prototype_isc_sqlcode*              isc_sqlcode;
         prototype_isc_sql_interprete*       isc_sql_interprete;
-        prototype_isc_seek_blob*                isc_seek_blob;
-        prototype_isc_service_attach*           isc_service_attach;
-        prototype_isc_service_detach*           isc_service_detach;
-        prototype_isc_service_query*            isc_service_query;
-        prototype_isc_service_start*            isc_service_start;
+        prototype_isc_seek_blob*            isc_seek_blob;
+        prototype_isc_service_attach*       isc_service_attach;
+        prototype_isc_service_detach*       isc_service_detach;
+        prototype_isc_service_query*        isc_service_query;
+        prototype_isc_service_start*        isc_service_start;
         prototype_isc_transaction_info*     isc_transaction_info;
-        prototype_isc_que_events*                        isc_que_events;
-        prototype_isc_event_block*                       isc_event_block;
-        prototype_isc_wait_for_event*                    isc_wait_for_event;
-        prototype_isc_event_counts*                      isc_event_counts;
-        prototype_isc_cancel_events*                     isc_cancel_events;
-        prototype_isc_free*         isc_free;
-		prototype_fb_cancel_operation*	fb_cancel_operation;
+        prototype_isc_que_events*           isc_que_events;
+        prototype_isc_event_block*          isc_event_block;
+        prototype_isc_wait_for_event*       isc_wait_for_event;
+        prototype_isc_event_counts*         isc_event_counts;
+        prototype_isc_cancel_events*        isc_cancel_events;
+        prototype_isc_free*                 isc_free;
+		prototype_fb_cancel_operation*	    fb_cancel_operation;
         
         public:
         bool operator==(const FirebirdApiBinding &v); 
         void        Load(SHARED_LIBRARY_HANDLE  sHandle);
         
-          enum{
-            enum_isc_attach_database,       
+        enum{
+			enum_isc_attach_database,       
             enum_isc_blob_info,             
             enum_isc_cancel_blob,               
             enum_isc_close_blob,                
