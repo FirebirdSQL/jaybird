@@ -480,7 +480,7 @@ JNIEXPORT jobject JNICALL Java_org_firebirdsql_gds_impl_jni_JniGDSImpl_native_1i
 
         xsqlda.Resize( xsqlda.RawAccess()->sqld );
 
-        CALL_API(isc_dsql_describe_bind)( status.RawAccess(), &rawStatementHandle, jDaVersion, xsqlda.RawAccess() );
+       isc_dsql_describe( status.RawAccess(), &rawStatementHandle, jDaVersion, xsqlda.RawAccess() );
 
         statementHandle.SetHandleValue(rawStatementHandle);
 
