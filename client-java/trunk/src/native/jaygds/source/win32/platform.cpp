@@ -24,27 +24,24 @@
 
 #include "platform.h"
 
-
 #include "exceptions.h"
-
 
 static HINSTANCE hInstance = NULL;
 
-
 BOOL WINAPI DllMain(HINSTANCE h, DWORD reason, LPVOID reserved)
-{
-	switch (reason)
 	{
+	switch (reason)
+		{
 		case DLL_PROCESS_ATTACH:
 			hInstance = h;
 			break;
 
 		default:
 			break;
-	}
+		}
 
 	return TRUE;
-}
+	}
 
 void processFailedEntryPoint(const char* const message)
     {
@@ -55,41 +52,40 @@ SHARED_LIBRARY_HANDLE PlatformLoadLibrary(const char* const name)
     {
     SHARED_LIBRARY_HANDLE handle = LoadLibraryEx(name, NULL, LOAD_WITH_ALTERED_SEARCH_PATH);
     if (handle == NULL) 
-            { 
-			DWORD dwReturn = GetLastError();
+        { 
+		DWORD dwReturn = GetLastError();
 
-			char buffer[MAX_PATH];
-			DWORD dw;
+		char buffer[MAX_PATH];
+		DWORD dw;
 
-			if ((dw = GetModuleFileName(hInstance, buffer, sizeof(buffer))) != 0)
+		if ((dw = GetModuleFileName(hInstance, buffer, sizeof(buffer))) != 0)
 			{
-				for (char* p = buffer + dw -1; p >= buffer; --p)
+			for (char* p = buffer + dw -1; p >= buffer; --p)
 				{
-					if (*p == '\\')
+				if (*p == '\\')
 					{
-						*p = '\0';
-						break;
+					*p = '\0';
+					break;
 					}
 				}
 
-				strcat(buffer, "\\");
-				strcat(buffer, name);
+			strcat(buffer, "\\");
+			strcat(buffer, name);
 
-				handle = LoadLibraryEx(buffer, NULL, LOAD_WITH_ALTERED_SEARCH_PATH);
+			handle = LoadLibraryEx(buffer, NULL, LOAD_WITH_ALTERED_SEARCH_PATH);
 			}
-			char message[200];
-			int n;
-			n = sprintf(message, "FirebirdApiBinding::Initialize - Could not find or load the client library / embeded server. Error [%d].", dwReturn);
+		char message[200];
+		int n;
+		n = sprintf(message, "FirebirdApiBinding::Initialize - Could not find or load the client library / embeded server. Error [%d].", dwReturn);
 
-			if (handle == NULL)
-				throw InternalException(message); 
-            }
+		if (handle == NULL)
+			throw InternalException(message); 
+        }
     return handle; 
     }
 
 
-    void PlatformUnLoadLibrary(SHARED_LIBRARY_HANDLE handle)
+void PlatformUnLoadLibrary(SHARED_LIBRARY_HANDLE handle)
     {
         FreeLibrary(handle);
-
     }

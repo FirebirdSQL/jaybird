@@ -17,7 +17,6 @@
  * All rights reserved.
  */
 
-
 #ifndef _JNGDS__INTERFACEMANAGER
 #define _JNGDS__INTERFACEMANAGER
 
@@ -27,54 +26,79 @@
 
 #include "locks.h"
 
-
 class InterfaceManager
-{
-public:
+	{
+	public:
+	
 	InterfaceManager();
+	
 	~InterfaceManager();
 
-	// load library and returns handle to interface 
+	/* 
+	 * load library and returns handle to interface 
+	 */
 	long LoadInterface(const char *);
 
-	// release interest in interface by its handle
+	/* 
+	 * release interest in interface by its handle
+	 */
 	long ReleaseInterface(const long);
 
-	// returns interface pointer by interface handle
+	/*
+	 * returns interface pointer by interface handle
+	 */
 	FirebirdApiBinding* GetInterface(const long);
 
-	// Add interface is specific name and returns handle to interface 
+	/* 
+	 * Add interface is specific name and returns handle to interface 
+	 */
 	long AddInterface(const char *, FirebirdApiBinding*);
-protected:
-	// OS function to load dll\so
+
+	protected:
+	
+	/*
+	 * OS function to load dll\so
+	 */
 	SHARED_LIBRARY_HANDLE loadLibrary(const char *);
-	// OS function to unload dll\so
+
+	/* 
+	 * OS function to unload dll\so
+	 */
 	void unloadLibrary(SHARED_LIBRARY_HANDLE);
 
-	// allocate memory for interface and get 
-	// entrypoints from dll\so
+	/* 
+	 * allocate memory for interface and get 
+	 * entrypoints from dll\so
+	 */
 	virtual FirebirdApiBinding* getInterface(SHARED_LIBRARY_HANDLE);
 
-	// release interface memory
+	/* 
+	 * release interface memory
+	 */
 	virtual void releaseInterface(FirebirdApiBinding*);
 
-private:
+	private:
 
 	struct intfLib
-	{
+		{
 		char*	libName;
 		SHARED_LIBRARY_HANDLE libHandle;
 		FirebirdApiBinding*	intfPtr;	// you can use typed pointer here
 		long	useCount;
-	};
+		};
 
 	intfLib* libs; 
-	size_t	size;	// count of allocated libs
 
-	Mutex	lock;	
+	/*
+	 * count of allocated libs
+	 */
+	size_t size;
+
+	Mutex lock;	
 
 	void grow(const size_t = 4);
+
 	size_t findLib(const char *);
-};
+	};
 
 #endif

@@ -23,10 +23,6 @@
 
 // InternalException -------------------------------------------------------------------
 
-/*
- *
- *
- */
 InternalException::InternalException(const char* const message, ... )
 	{
 	va_list args;
@@ -36,14 +32,7 @@ InternalException::InternalException(const char* const message, ... )
 	va_end(args);
 	}
 
-/*
- *
- *
- */
 const char* InternalException::getMessage()
 	{
 	return mBuffer;
 	}
-
-
-
