@@ -103,8 +103,8 @@ public abstract class JniGDSImpl extends BaseGDSImpl {
                 // then we need to throw an exception.
                 if (i == clientLibraryList.length - 1)
                     throw new RuntimeException(
-                            "Failed to initilize Jaybird native library. " +
-                            "This is most likley due to a failure to load the " +
+                            "Failed to initialize Jaybird native library. " +
+                            "This is most likely due to a failure to load the " +
                             "firebird client library.");
 
                 // Otherwise we continue to next client library
