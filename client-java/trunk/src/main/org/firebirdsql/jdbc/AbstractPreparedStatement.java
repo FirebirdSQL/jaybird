@@ -1267,9 +1267,8 @@ public abstract class AbstractPreparedStatement extends AbstractStatement implem
      */
     public void setNull(int parameterIndex, int sqlType, String typeName)
             throws SQLException {
-        setNull(parameterIndex, sqlType); // all nulls are represented the
-                                            // same... a null reference
-        isParamSet[parameterIndex - 1] = true;
+        // all nulls are represented the same irrespective of type
+        setNull(parameterIndex, sqlType); 
     }
 
     /**
@@ -1292,9 +1291,6 @@ public abstract class AbstractPreparedStatement extends AbstractStatement implem
         fields = new FBField[inSqlda.sqln];
 
         for (int i = 0; i < isParamSet.length; i++) {
-            // this is probably redundant, JVM initializes members to false
-            isParamSet[i] = false;
-
             final int fieldPos = i;
 
             FieldDataProvider dataProvider = new FieldDataProvider() {
