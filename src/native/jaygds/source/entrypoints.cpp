@@ -478,9 +478,12 @@ JNIEXPORT jobject JNICALL Java_org_firebirdsql_gds_impl_jni_JniGDSImpl_native_1i
         
         CALL_API(isc_dsql_describe)( status.RawAccess(), &rawStatementHandle, jDaVersion, xsqlda.RawAccess() );
 
-        xsqlda.Resize( xsqlda.RawAccess()->sqld );
+		if ( xsqlda.RawAccess()->sqln != xsqlda.RawAccess()->sqld )
+			{
+			xsqlda.Resize( xsqlda.RawAccess()->sqld );
 
-       isc_dsql_describe( status.RawAccess(), &rawStatementHandle, jDaVersion, xsqlda.RawAccess() );
+			isc_dsql_describe( status.RawAccess(), &rawStatementHandle, jDaVersion, xsqlda.RawAccess() );
+			}
 
         statementHandle.SetHandleValue(rawStatementHandle);
 
@@ -507,9 +510,12 @@ JNIEXPORT jobject JNICALL Java_org_firebirdsql_gds_impl_jni_JniGDSImpl_native_1i
         
         CALL_API(isc_dsql_describe_bind)( status.RawAccess(), &rawStatementHandle, jDaVersion, xsqlda.RawAccess() );
 
-        xsqlda.Resize( xsqlda.RawAccess()->sqld );
+		if ( xsqlda.RawAccess()->sqln != xsqlda.RawAccess()->sqld )
+			{
+			xsqlda.Resize( xsqlda.RawAccess()->sqld );
 
-        isc_dsql_describe_bind( status.RawAccess(), &rawStatementHandle, jDaVersion, xsqlda.RawAccess() );
+			isc_dsql_describe_bind( status.RawAccess(), &rawStatementHandle, jDaVersion, xsqlda.RawAccess() );
+			}
 
         statementHandle.SetHandleValue(rawStatementHandle);
 
