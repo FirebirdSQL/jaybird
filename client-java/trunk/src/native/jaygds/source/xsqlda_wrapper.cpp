@@ -143,7 +143,6 @@ JXSqlda::JXSqlda( JNIEnv* javaEnvironment, jobject handle, bool isFetching ) : m
 				}
 			else
 				{
-				*((short*)currentXsqlvar.sqldata) = (short)byteArray.Size();
 				memcpy( currentXsqlvar.sqldata, byteArray.Read(), byteArray.Size());
 				}
 			}
