@@ -1,4 +1,6 @@
 /*
+ * $Id$
+ * 
  * Firebird Open Source J2ee connector - jdbc driver
  *
  * Distributable under LGPL license.
@@ -16,12 +18,8 @@
  *
  * All rights reserved.
  */
-
 package org.firebirdsql.jca;
 
-
-
-import java.io.PrintWriter;
 import java.io.Serializable;
 
 import javax.resource.ResourceException;
@@ -38,12 +36,14 @@ import org.firebirdsql.logging.LoggerFactory;
  * There is no pooling or other features..
  *
  * @author <a href="mailto:d_jencks@users.sourceforge.net">David Jencks</a>
+ * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @version 1.0
  */
 public class FBStandAloneConnectionManager 
-    implements ConnectionManager, ConnectionEventListener, Serializable
-{
+    implements ConnectionManager, ConnectionEventListener, Serializable {
 
+    private static final long serialVersionUID = -4933951275930670896L;
+    
     private transient final static Logger log = 
         LoggerFactory.getLogger(FBStandAloneConnectionManager.class,false);
         
@@ -83,14 +83,12 @@ public class FBStandAloneConnectionManager
      * @param ce contains information about the connection that has be closed
      */
     public void connectionClosed(ConnectionEvent ce) {
-        PrintWriter externalLog = ((FBManagedConnection)ce.getSource()).getLogWriter();
         try {
             ((FBManagedConnection)ce.getSource()).destroy();
         }
         catch (ResourceException e) {
-            if (externalLog != null) externalLog.println("Exception closing unmanaged connection: " + e);
+            if (log!=null) log.debug("Exception closing unmanaged connection: ", e);
         }
-
     }
 
     /**
@@ -101,14 +99,12 @@ public class FBStandAloneConnectionManager
      * @param ce contains information about the connection 
      */
     public void connectionErrorOccurred(ConnectionEvent ce) {
-        PrintWriter externalLog = ((FBManagedConnection)ce.getSource()).getLogWriter();
         if (log!=null) log.debug("ConnectionErrorOccurred, ", ce.getException());
         try {
             ((FBManagedConnection)ce.getSource()).destroy();
         }
         catch (ResourceException e) {
             if (log!=null) log.debug("further problems destroying connection: ", e);
-            if (externalLog != null) externalLog.println("Exception closing unmanaged connection: " + e);
         }
     }
 
