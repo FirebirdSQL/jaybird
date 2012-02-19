@@ -58,13 +58,6 @@ abstract public class AbstractDriverConnectionPoolDataSource extends BasicAbstra
     private DriverPooledConnectionManager connectionManager = 
         new DriverPooledConnectionManager();
         
-    /**
-     * Create instance of this class.
-     */
-    public AbstractDriverConnectionPoolDataSource() {
-        super();
-    }
-
     public String getJdbcUrl() {
         return jdbcUrl;
     }

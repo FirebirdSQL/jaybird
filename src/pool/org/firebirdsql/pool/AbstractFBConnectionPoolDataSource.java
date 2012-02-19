@@ -177,13 +177,6 @@ abstract public class AbstractFBConnectionPoolDataSource extends BasicAbstractCo
     private FBConnectionProperties connectionProperties = new FBConnectionProperties();
 
     /**
-     * Create instance of this class.
-     */
-    public AbstractFBConnectionPoolDataSource() {
-        super();
-    }
-    
-    /**
      * Get connection properties. This method returns a live object where 
      * connection properties can be set. Usually application does not need to
      * call this method, since this class implements appropriate interface and
