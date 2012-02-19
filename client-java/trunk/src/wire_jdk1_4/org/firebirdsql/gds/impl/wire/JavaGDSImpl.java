@@ -26,7 +26,7 @@ public class JavaGDSImpl extends AbstractJavaGDSImpl {
 	 * @see org.firebirdsql.gds.impl.wire.AbstractJavaGDSImpl#getSocket(java.lang.String,
 	 *      int)
 	 */
-	public Socket getSocket(String server, int port) throws IOException,
+	protected Socket getSocket(String server, int port) throws IOException,
 			UnknownHostException {
 
 		// Check for a valid ip address.
