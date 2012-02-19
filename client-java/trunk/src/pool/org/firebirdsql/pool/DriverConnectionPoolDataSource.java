@@ -19,13 +19,12 @@
 package org.firebirdsql.pool;
 
 import java.util.Hashtable;
-import java.util.Properties;
 
 import javax.naming.Context;
 import javax.naming.Name;
-import javax.naming.RefAddr;
-import javax.naming.Reference;
 import javax.naming.spi.ObjectFactory;
+
+import org.firebirdsql.pool.AbstractDriverConnectionPoolDataSource;
 
 /**
  * Implementation of the javax.naming.spi.ObjectFactory interface.
@@ -38,15 +37,8 @@ import javax.naming.spi.ObjectFactory;
  * @author <a href="mailto:sjardine@users.sourceforge.net">Steve Jardine</a>
  * @deprecated Use {@link org.firebirdsql.ds.FBConnectionPoolDataSource}
  */
-public class FBConnectionPoolDataSource extends
-        AbstractFBConnectionPoolDataSource implements ObjectFactory {
-
-    /**
-     * Default Constructor.
-     */
-    public FBConnectionPoolDataSource() {
-        super();
-    }
+public class DriverConnectionPoolDataSource extends
+        AbstractDriverConnectionPoolDataSource implements ObjectFactory {
 
     /*
      * (non-Javadoc)
@@ -56,14 +48,8 @@ public class FBConnectionPoolDataSource extends
      */
     public Object getObjectInstance(Object obj, Name name, Context nameCtx,
             Hashtable<?,?> environment) throws Exception {
-        if (!(obj instanceof Reference))
-            return null;
-
-        Reference ref = (Reference) obj;
-        ref = (Reference) ref.clone();
-
-        FBConnectionPoolDataSource ds = 
-            (FBConnectionPoolDataSource)super.getObjectInstance(ref);
-        return processObjectInstance(ds,ref);
+        DriverConnectionPoolDataSource ds = (
+            DriverConnectionPoolDataSource)super.getObjectInstance(obj);
+        return processObjectInstance(ds,obj);
     }
 }
