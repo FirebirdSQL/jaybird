@@ -759,7 +759,7 @@ public class TestFBPreparedStatement extends FBTestBase {
                         // empty
                     }
                 }
-            });
+            }, "cancel-thread");
 
             cancelThread.start();
             
