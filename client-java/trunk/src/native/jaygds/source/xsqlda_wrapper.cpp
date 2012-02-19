@@ -305,9 +305,10 @@ jobject JXSqlda::AllocateJavaXsqlvar( JNIEnv* javaEnvironment, XSQLVAR& xsqlvar 
 			}
 
 		if(dataPtr == NULL)
+			{
 			dataPtr = mAllocator.AllocateMemory(1);
-
-		dataPtr[0] = 0;
+			dataPtr[0] = 0;
+			}
 
 		sqlData = JByteArray(javaEnvironment, dataPtr, dataLength );
 		}
