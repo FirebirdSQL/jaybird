@@ -38,6 +38,7 @@
 // Defines for fb_binding.h and fb_binding.cpp
 typedef void* SHARED_LIBRARY_HANDLE;
 
+void processFailedEntryPoint(const char* const message);
 
 #define FB_ENTRYPOINT(X) \
 			if ((X = (prototype_##X*)dlsym(sHandle, #X)) == NULL) \
