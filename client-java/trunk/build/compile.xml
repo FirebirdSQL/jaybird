@@ -110,6 +110,7 @@
     <mkdir dir="${build.classes}"/>
     
     <echo message="${jdk1.3}"/>
+    <echo message="Architecture: ${os.arch}"/>
 	<echo message="${ant.java.version}"/>
     <echo message="${toString:source.java.openoffice}"/>
     <echo message="${toString:source.java.additional}"/>

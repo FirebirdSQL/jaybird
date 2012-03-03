@@ -233,8 +233,13 @@
 
     <!--
     Determine if native code has been built and if so set 'native_library_present' property
+    For amd64 it is set to jaybird22_x64 (note: detection depends on the bitness of the JVM used to run ANT!)
     -->
-    <property name="native.library.name" value="jaybird22"/>
+    <condition property="native.library.name" value="jaybird22" else="jaybird22_x64">
+    	<not>
+    		<os arch="amd64"/>
+    	</not>
+    </condition>
     <property name="native.library.location" value="${module.output}/native"/>
     <condition property="native_library_present">
         <available file="${native.library.location}/${native.library.name}.dll"/>

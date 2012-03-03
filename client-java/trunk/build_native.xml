@@ -18,14 +18,17 @@
 
 	Currently Supported Platforms:
 
-	Platform		    Compiler/Linker
-
-   AIX             xlC (Visual Age compiler)
-   HP-UX           aCC (HP aCC+ compiler)
-	Linux           GCC
-   MVS z/OS        os390 (c++) 
-	Solaris         GCC, CC (Sun ONE compiler)
+	Platform        Compiler/Linker
+	
 	Windows         MSVC 6
+	Linux           GCC
+
+	Untested (but might work)
+	AIX             xlC (Visual Age compiler)
+	HP-UX           aCC (HP aCC+ compiler)
+	MVS z/OS        os390 (c++) 
+	Solaris         GCC, CC (Sun ONE compiler)
+	
 
    MVS Requirements:
    =================
@@ -89,8 +92,14 @@
         <!-- 
         	Name of the output library. On Windows this will be 
         	resolved to jaybird.dll, on Linux it will be libjaybird.so
+        	
+        	For amd64 it is set to jaybird22_x64 (note: detection depends on the bitness of the JVM used to run ANT!)
         -->
-        <property name="build.native.name" value="jaybird22"/>
+    	<condition property="build.native.name" value="jaybird22" else="jaybird22_x64">
+			<not>
+				<os arch="amd64"/>
+			</not>
+		</condition>
 
         <!--  -->
         <property name="source.native" value="${module.source}/native/jaygds/source"/>
