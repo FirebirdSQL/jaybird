@@ -20,7 +20,7 @@
 
 	Platform        Compiler/Linker
 	
-	Windows         MSVC 6
+	Windows         MSVC 6 / MSVC 10
 	Linux           GCC
 
 	Untested (but might work)
