@@ -44,7 +44,7 @@ import org.firebirdsql.jdbc.field.FieldDataProvider;
  * <li>If base table columns not included in the result set allow NULL values,
  * result set allows inserting rows into it.
  * 
- * <li>The result set’s SELECT statement does not contain subqueries, a
+ * <li>The result set's SELECT statement does not contain subqueries, a
  * DISTINCT predicate, a HAVING clause, aggregate functions, joined tables,
  * user-defined functions, or stored procedures.
  * </ul>
