@@ -1,3 +1,945 @@
+2012-03-03 17:19  mrotteveel
+
+	* client-java/native/: libjaybird22.so, libjaybird22_x64.so:
+
+	Linux libraries
+
+2012-03-03 17:15  mrotteveel
+
+	* client-java/build_native.xml:
+
+	MSVC 10 supported (MSVC 6 probably still works)
+
+2012-03-03 16:48  mrotteveel
+
+	* client-java/: build_native.xml, build/init.xml,
+	build/compile.xml:
+
+	JDBC-239: Set correct modulename on native build on 64 bit
+	AMD/Intel
+
+2012-03-03 15:15  mrotteveel
+
+	* client-java/build.sh:
+
+	Remove unnecessary XML parser config (is part of Java)
+
+2012-03-03 14:16  mrotteveel
+
+	* client-java/src/main/org/firebirdsql/jdbc/:
+	AbstractStatement.java, FBRowUpdater.java:
+
+	Fix Linux compilation errors with UTF-8 file encoding as default
+
+2012-03-03 13:53  mrotteveel
+
+	* client-java/src/native/jaygds/source/generic_unix/platform.h:
+
+	Method definition missing from generic unix platform.h
+
+2012-02-19 19:26  mrotteveel
+
+	* client-java/src/native/jaygds/source/xsqlda_wrapper.cpp:
+
+	JDBC-235: Inconsistency in handling Xsqlvar in AllocateJavaXsqlvar
+	and Resync
+
+2012-02-19 19:16  mrotteveel
+
+	* client-java/src/:
+	main/org/firebirdsql/gds/impl/wire/AbstractJavaGDSImpl.java,
+	wire_jdk1_3/org/firebirdsql/gds/impl/wire/JavaGDSImpl.java,
+	wire_jdk1_4/org/firebirdsql/gds/impl/wire/JavaGDSImpl.java:
+
+	Reduce visibility of the getSocket method as it is an
+	implementation detail.
+
+2012-02-19 19:07  mrotteveel
+
+	* client-java/src/:
+	pool_jdk1_4/org/firebirdsql/pool/DriverConnectionPoolDataSource.java,
+	pool_jdk1_4/org/firebirdsql/pool/FBConnectionPoolDataSource.java,
+	pool/org/firebirdsql/pool/AbstractDriverConnectionPoolDataSource.java,
+	pool/org/firebirdsql/pool/AbstractFBConnectionPoolDataSource.java,
+	pool/org/firebirdsql/pool/DriverConnectionPoolDataSource.java,
+	pool/org/firebirdsql/pool/FBConnectionPoolDataSource.java,
+	pool_jdk1_5/org/firebirdsql/pool/DriverConnectionPoolDataSource.java,
+	pool_jdk1_5/org/firebirdsql/pool/FBConnectionPoolDataSource.java,
+	pool_jdk1_6/org/firebirdsql/pool/DriverConnectionPoolDataSource.java,
+	pool_jdk1_6/org/firebirdsql/pool/FBConnectionPoolDataSource.java:
+
+	JDBC-194: move identical classes from jdk-specific to the normal
+	src/pool folder Also removed default constructors as they are
+	generated anyway.
+
+2012-02-19 18:32  mrotteveel
+
+	*
+	client-java/src/test/org/firebirdsql/jdbc/TestFBPreparedStatement.java:
+
+	Name thread for easier identification in debugger.
+
+2012-02-12 17:40  mrotteveel
+
+	*
+	client-java/src/test/org/firebirdsql/jdbc/TestFBPreparedStatement.java:
+
+	* Cleanup of resource handling in tests * Attempt to make test of
+	cancel more consistent.
+
+2012-02-12 16:46  mrotteveel
+
+	*
+	client-java/src/main/org/firebirdsql/jca/FBStandAloneConnectionManager.java:
+
+	Remove logging to logWriter, as it is always null
+
+2012-02-12 15:28  mrotteveel
+
+	* client-java/src/native/jaygds/builds/msvc10/: .cvsignore,
+	java_gds.dsp, java_gds.dsw, java_gds.sln, java_gds.suo,
+	java_gds.vcproj, java_gds.vcxproj, java_gds.vcxproj.filters,
+	java_gds.vcxproj.user:
+
+	VC10 project files
+
+2012-02-12 14:55  mrotteveel
+
+	* client-java/native/: debug/jaybird22.dll,
+	debug/jaybird22_x64.dll, jaybird22.dll, jaybird22_x64.dll:
+
+	Updated (VC10) binaries
+
+2012-02-12 14:27  mrotteveel
+
+	* client-java/src/native/jaygds/source/xsqlda_wrapper.cpp:
+
+	JDBC-233 Attempt to insert in CHAR(1) UTF8 (and connection UTF8)
+	throws string truncation error on native/embedded
+
+2012-02-11 20:37  mrotteveel
+
+	*
+	client-java/src/main/org/firebirdsql/jdbc/field/FBStringField.java:
+
+	* Add whitespace between methods * setBoolean could also work on
+	(VAR)CHAR fields between 2 and 4 in length
+
+2012-02-11 20:34  mrotteveel
+
+	*
+	client-java/src/main/org/firebirdsql/jdbc/AbstractPreparedStatement.java:
+
+	Minor cleanup: remove unnecessary initialization
+
+2012-02-11 15:16  mrotteveel
+
+	* client-java/src/native/jaygds/source/entrypoints.cpp:
+
+	Only resize XSQLDA when necessary in describe and describe_bind
+	(same as in prepare)
+
+2012-02-09 23:15  mrotteveel
+
+	*
+	client-java/src/main/org/firebirdsql/gds/impl/jni/JniGDSImpl.java:
+
+	Fix typo in error message
+
+2012-02-09 23:06  mrotteveel
+
+	* client-java/src/native/jaygds/source/entrypoints.cpp:
+
+	JDBC-234: isc_dsql_describe native implementation call
+	isc_dsql_describe_bind
+
+2012-02-09 22:41  mrotteveel
+
+	* client-java/src/native/jaygds/source/: allocator.h,
+	exceptions.cpp, fb_binding.cpp, fb_binding.h, fb_helpers.cpp,
+	handle_wrappers.cpp, interface_manager.cpp, interface_manager.h,
+	jni_helpers.h, xsqlda_wrapper.cpp, xsqlda_wrapper.h, allocator.cpp,
+	entrypoints.cpp, exceptions.h, fb_helpers.h, handle_wrappers.h,
+	jni_helpers.cpp, win32/platform.cpp, win32/platform.h:
+
+	* Make formatting of native code more consistent in whitespace use
+	and brace-style * Remove empty comments * Remove commented out code
+
+2012-01-28 14:27  mrotteveel
+
+	*
+	client-java/src/main/org/firebirdsql/jdbc/AbstractDatabaseMetaData.java:
+
+	Misc changes: * Calculate ORDINAL_POSITION inside query * remove
+	superfluous calls to trim() (doQuery() creates a FBResultSet that
+	automatically trims column values)
+
+2012-01-28 13:44  mrotteveel
+
+	*
+	client-java/src/main/org/firebirdsql/jdbc/AbstractDatabaseMetaData.java:
+
+	JDBC-193: Remove CASE construct from metadata queries to ensure
+	compatibility with Firebird 1.0
+
+2012-01-28 13:25  mrotteveel
+
+	*
+	client-java/src/test/org/firebirdsql/jdbc/TestFBDatabaseMetaDataIndexInfo.java:
+
+	JDBC-228: Add test for getIndexInfo()
+
+2012-01-28 13:24  mrotteveel
+
+	* client-java/src/:
+	main/org/firebirdsql/jdbc/AbstractDatabaseMetaData.java,
+	test/org/firebirdsql/jdbc/TestFBDatabaseMetaDataProcedureColumns.java:
+
+	JDBC-228: * Include expression indexes in getIndexInfo() * When
+	parameter unique is true, return only unique indexes * Add basic
+	test for getIndexInfo()
+
+2012-01-27 17:10  mrotteveel
+
+	* client-java/src/:
+	main/org/firebirdsql/jdbc/AbstractDatabaseMetaData.java,
+	test/org/firebirdsql/jdbc/TestFBDatabaseMetaDataProcedureColumns.java:
+
+	JDBC-193 * Fix getProcedureColumns to comply with expectations
+	defined in JDBC spec and javadoc (or add TODOs to investigate
+	further) * Add (basic) tests for getProcedureColumns()
+
+2012-01-27 17:09  mrotteveel
+
+	*
+	client-java/src/test/org/firebirdsql/jdbc/TestFBDatabaseMetaDataProcedures.java:
+
+	Close result after test
+
+2012-01-21 19:20  mrotteveel
+
+	*
+	client-java/src/test/org/firebirdsql/jdbc/TestFBDatabaseMetaDataProcedures.java:
+
+	JDBC-193: Add test for quoted procedure name + invert logic for
+	checking expected procedures to get count of all returned
+	procedures
+
+2012-01-21 18:25  mrotteveel
+
+	* client-java/src/:
+	main/org/firebirdsql/jdbc/AbstractDatabaseMetaData.java,
+	test/org/firebirdsql/jdbc/FBMetaDataTestBase.java,
+	test/org/firebirdsql/jdbc/TestFBDatabaseMetaDataProcedures.java,
+	test/org/firebirdsql/jdbc/TestFBDatabaseMetaDataTables.java,
+	test/org/firebirdsql/jdbc/TestFBDatabaseMetaDataUDTs.java:
+
+	JDBC-193: Tests for getProcedures() + fix case where empty string
+	is passed as procedureNamePattern to bring it in line with
+	behaviour of getColumns() and getTables().
+
+2012-01-21 16:18  mrotteveel
+
+	*
+	client-java/src/main/org/firebirdsql/jdbc/AbstractDatabaseMetaData.java:
+
+	Partial reversion because of Firebird-devel discussion 'Wrong
+	rdb$field_sub_type for numeric computed column': integral types
+	with negative scale and subtype 0 will be identified as NUMERIC
+
+2012-01-21 15:54  mrotteveel
+
+	* client-java/src/:
+	test/org/firebirdsql/jdbc/TestFBDatabaseMetaDataTables.java,
+	test/org/firebirdsql/jdbc/TestFBDatabaseMetaDataUDTs.java,
+	main/org/firebirdsql/jdbc/AbstractDatabaseMetaData.java:
+
+	JDBC-193: Add test for getUDTs() metadata + fix DATA_TYPE resultset
+	type for getUDTs()
+
+2012-01-21 15:13  mrotteveel
+
+	* client-java/src/test/org/firebirdsql/jdbc/:
+	TestFBDatabaseMetaDataColumns.java,
+	TestFBDatabaseMetaDataTables.java:
+
+	JDBC-193: misc	changes
+
+2012-01-21 14:01  mrotteveel
+
+	*
+	client-java/src/test/org/firebirdsql/jdbc/FBMetaDataTestBase.java:
+
+	Use getRequiredMetaData() in resultset validation
+
+2012-01-21 13:57  mrotteveel
+
+	* client-java/src/test/org/firebirdsql/jdbc/:
+	FBMetaDataTestBase.java, TestFBDatabaseMetaDataColumns.java,
+	TestFBDatabaseMetaDataTables.java:
+
+	JDBC-193: Simplify resultset column check
+
+2012-01-05 17:54  mrotteveel
+
+	* client-java/src/test/org/firebirdsql/jdbc/:
+	FBMetaDataTestBase.java, MetaDataValidator.java,
+	TestFBDatabaseMetaDataTables.java:
+
+	JDBC-193: Add tests for getTables() metadata (work in progress)
+
+2012-01-05 17:51  mrotteveel
+
+	*
+	client-java/src/main/org/firebirdsql/jdbc/AbstractDatabaseMetaData.java:
+
+	JDBC-193: Factor duplicated query string parts to separate
+	constants
+
+2012-01-05 16:15  mrotteveel
+
+	* client-java/src/test/org/firebirdsql/jdbc/:
+	FBMetaDataTestBase.java, TestFBDatabaseMetaDataColumns.java:
+
+	JDBC-193: Introduce base test class to share common code for
+	testing metadata resultsets
+
+2012-01-05 16:10  mrotteveel
+
+	*
+	client-java/src/test/org/firebirdsql/jdbc/FBTestGeneratedKeysBase.java:
+
+	* Make test base classes abstract as they are not actually tests
+	(makes Eclipse testrunner ignore them)
+
+2012-01-05 15:27  mrotteveel
+
+	* client-java/src/: test/org/firebirdsql/common/FBTestBase.java,
+	test/org/firebirdsql/common/SimpleFBTestBase.java,
+	main/org/firebirdsql/gds/ISCConstants.java,
+	test/org/firebirdsql/jca/TestXABase.java:
+
+	* Make test base classes abstract as they are not actually tests
+	(makes Eclipse testrunner ignore them) * Ignore errors when
+	dropping non-existent views (+ add message code) * Some cleanup of
+	commented code in TestXABase
+
+2012-01-05 13:40  mrotteveel
+
+	* client-java/src/test/org/firebirdsql/jdbc/:
+	MetaDataValidator.java, TestFBDatabaseMetaDataColumns.java:
+
+	JDBC-193: Preparation for testing metadata of other methods
+
+2012-01-05 09:58  mrotteveel
+
+	* client-java/src/:
+	test/org/firebirdsql/jdbc/TestFBDatabaseMetaDataColumns.java,
+	main/org/firebirdsql/jdbc/AbstractDatabaseMetaData.java:
+
+	JDBC-193: Add test for getColumns resultset column types, correct
+	some column types
+
+2012-01-05 09:36  mrotteveel
+
+	* client-java/src/main/org/firebirdsql/jdbc/parser/JaybirdSql.g3:
+
+	JDBC-192: delete duplicate grammar file
+
+2012-01-04 01:53  mrotteveel
+
+	*
+	client-java/src/test/org/firebirdsql/jdbc/TestFBDatabaseMetaDataColumns.java:
+
+	JDBC-193: Rewrote entire test to reduce duplication and avoid
+	potential errors with typos Added tests for IS_GENERATEDCOLUMN and
+	ordinal position of columns in metadata resultset of getColumns()
+
+2012-01-04 01:52  mrotteveel
+
+	*
+	client-java/src/main/org/firebirdsql/jdbc/AbstractDatabaseMetaData.java:
+
+	JDBC-193: Add support for IS_GENERATEDCOLUMN
+
+2012-01-03 21:17  mrotteveel
+
+	*
+	client-java/src/test/org/firebirdsql/jdbc/TestFBDatabaseMetaDataColumns.java:
+
+	JDBC-193: Added column metadata tests for defaults, commenta and
+	not null constraint
+
+2012-01-02 22:22  mrotteveel
+
+	* client-java/src/:
+	main/org/firebirdsql/jdbc/AbstractDatabaseMetaData.java,
+	test/org/firebirdsql/jdbc/TestFBDatabaseMetaDataColumns.java:
+
+	JDBC-193: Added test for FBDatabaseMetaData#getColumns(..) + some
+	changes to the returned metadata
+
+2012-01-02 18:27  mrotteveel
+
+	* client-java/src/: test/org/firebirdsql/common/FBTestBase.java,
+	main/org/firebirdsql/gds/ISCConstants.java:
+
+	Make sure executeDropTable for tests does not throw exception when
+	the table does not exist (related to  JDBC-221)
+
+2011-12-31 16:41  mrotteveel
+
+	*
+	client-java/src/main/org/firebirdsql/jdbc/AbstractDatabaseMetaData.java:
+
+	JDBC-220 Column metadata of system tables always has COLUMN_SIZE
+	null
+
+2011-12-30 14:36  mrotteveel
+
+	*
+	client-java/src/main/org/firebirdsql/jdbc/AbstractDatabaseMetaData.java:
+
+	JDBC-193: Forgot to increase some array sizes
+
+2011-12-26 15:09  mrotteveel
+
+	* client-java/src/etc/release_notes.odt:
+
+	Updated releasenotes for JDBC-193
+
+2011-12-26 14:57  mrotteveel
+
+	*
+	client-java/src/main/org/firebirdsql/jdbc/AbstractDatabaseMetaData.java:
+
+	JDBC-193: Add Jaybird specific COLUMN_NAME to javadoc, forgot break
+	in switch-case.
+
+2011-12-26 14:45  mrotteveel
+
+	*
+	client-java/src/main/org/firebirdsql/jdbc/AbstractDatabaseMetaData.java:
+
+	JDBC-193: Add additional columns to metadata (WiP)
+
+2011-12-25 17:34  mrotteveel
+
+	*
+	client-java/src/main/org/firebirdsql/jdbc/AbstractPreparedStatement.java:
+
+	setNCharacterStream and setNClob only have the (int, Reader, long)
+	variant, and not the (int, Reader, int) version that almost all
+	other equivalent methods have so the previous change causes an
+	infinite loop
+
+2011-12-25 17:01  mrotteveel
+
+	* client-java/src/etc/release_notes.odt:
+
+	Updated releasenotes
+
+2011-12-24 13:42  mrotteveel
+
+	* client-java/src/etc/release_notes.odt:
+
+	Updated releasenotes
+
+2011-12-18 18:12  mrotteveel
+
+	* client-java/src/:
+	jdbc_30/org/firebirdsql/jdbc/FBCallableStatement.java,
+	jdbc_40/org/firebirdsql/jdbc/FBCallableStatement.java,
+	main/org/firebirdsql/jdbc/AbstractCallableStatement.java,
+	main/org/firebirdsql/jdbc/AbstractPreparedStatement.java:
+
+	JDBC-213: Add basic support for JDBC 4.0 stream/reader methods on
+	PreparedStatement and CallableStatement (+ some cleanup)
+
+2011-12-18 16:16  mrotteveel
+
+	* client-java/src/main/org/firebirdsql/jdbc/:
+	AbstractCallableStatement.java, field/FBField.java,
+	field/TypeConversionException.java,
+	field/TypeConvertionException.java:
+
+	Refactor parts of AbstractCallableStatement to improve readability,
+	fix typo in classname
+
+2011-12-18 14:47  mrotteveel
+
+	* client-java/src/:
+	jdbc_30/org/firebirdsql/jdbc/FBResultSetMetaData.java,
+	jdbc_40/org/firebirdsql/jdbc/FBResultSetMetaData.java,
+	main/org/firebirdsql/jdbc/AbstractResultSetMetaData.java,
+	main/org/firebirdsql/jdbc/FBResultSetMetaData.java:
+
+	JDBC-194: Move FBResultSetMetaData to src/main
+
+2011-12-18 14:42  mrotteveel
+
+	* client-java/src/: jdbc_30/org/firebirdsql/jdbc/FBResultSet.java,
+	jdbc_40/org/firebirdsql/jdbc/FBResultSet.java,
+	main/org/firebirdsql/jdbc/AbstractResultSet.java:
+
+	JDBC-194: Move methods of FBResultSet up in hierarchy
+
+2011-12-18 13:47  mrotteveel
+
+	*
+	client-java/src/main/org/firebirdsql/jdbc/FirebirdConnection.java:
+
+	Add createBlob() method back, as it isn't defined in the Java 5
+	Connection interface.
+
+2011-12-18 13:24  mrotteveel
+
+	* client-java/src/:
+	jdbc_40/org/firebirdsql/jdbc/FBDatabaseMetaData.java,
+	main/org/firebirdsql/jdbc/AbstractDatabaseMetaData.java:
+
+	JDBC-194: Move JDBC4.1 methods which don't use Java 6 or 7 specific
+	classes down to AbstractDatabaseMetaData
+
+2011-12-18 13:20  mrotteveel
+
+	* client-java/src/:
+	jdbc_30/org/firebirdsql/jdbc/FBDatabaseMetaData.java,
+	main/org/firebirdsql/jdbc/AbstractDatabaseMetaData.java,
+	main/org/firebirdsql/jdbc/FBStatementFactory.java:
+
+	JDBC-194: AbstractDatabaseMetaData#getJdbcMajor/MinorVersion() down
+	to src/jdbc30
+
+2011-12-18 13:11  mrotteveel
+
+	* client-java/src/:
+	main/org/firebirdsql/jdbc/AbstractConnection.java,
+	main/org/firebirdsql/jdbc/FBStatementFactory.java,
+	main/org/firebirdsql/jdbc/FirebirdConnection.java,
+	main/org/firebirdsql/jdbc/FirebirdSavepoint.java,
+	jdbc_40/org/firebirdsql/jdbc/FBSavepoint.java,
+	main/org/firebirdsql/jdbc/AbstractSavepoint.java,
+	main/org/firebirdsql/jdbc/FBSavepoint.java,
+	jdbc_30/org/firebirdsql/jdbc/FBSavepoint.java,
+	main/org/firebirdsql/gds/ClassFactory.java:
+
+	JDBC-194: Move FBSavepoint to src/main + some cleanup
+
+2011-12-18 12:29  mrotteveel
+
+	* client-java/src/: jdbc_30/org/firebirdsql/jdbc/FBConnection.java,
+	main/org/firebirdsql/jdbc/AbstractConnection.java,
+	jdbc_40/org/firebirdsql/jdbc/FBConnection.java:
+
+	JDBC-194: move methods for FBConnection up as far in the hierarchy
+	as possible
+
+2011-12-17 16:57  mrotteveel
+
+	*
+	client-java/src/test/org/firebirdsql/jdbc/TestGeneratedKeysQuery.java:
+
+	Update test to use new SQL state for invalid value of
+	autoGeneratedKeys
+
+2011-12-17 16:17  mrotteveel
+
+	* client-java/src/main/org/firebirdsql/gds/impl/GDSHelper.java:
+
+	Correct typo in comment
+
+2011-12-17 16:13  mrotteveel
+
+	*
+	client-java/src/main/org/firebirdsql/jdbc/AbstractDatabaseMetaData.java:
+
+	Simplify version checks
+
+2011-12-17 16:03  mrotteveel
+
+	* client-java/src/: main/org/firebirdsql/gds/impl/GDSHelper.java,
+	main/org/firebirdsql/jdbc/AbstractConnection.java,
+	main/org/firebirdsql/jdbc/AbstractStatement.java,
+	test/org/firebirdsql/gds/impl/TestGDSHelper.java:
+
+	JDBC-192: Throw FBDriverNotCapableException on Firebird version
+	that does not support RETURNING
+
+2011-12-17 15:12  mrotteveel
+
+	* client-java/src/main/org/firebirdsql/jdbc/:
+	AbstractGeneratedKeysQuery.java, FBSQLException.java:
+
+	JDBC-192: add SQLstate for incorrect generated keys option
+
+2011-12-13 17:27  mrotteveel
+
+	* client-java/src/main/org/firebirdsql/gds/impl/:
+	AbstractIscDbHandle.java, jni/isc_db_handle_impl.java,
+	wire/isc_db_handle_impl.java:
+
+	JDBC-206: reduce visibility of resp_data field
+
+2011-12-13 17:17  mrotteveel
+
+	*
+	client-java/src/main/org/firebirdsql/gds/impl/AbstractIscDbHandle.java:
+
+	JDBC-206: field does not need to be protected, private is
+	sufficient access
+
+2011-12-13 17:11  mrotteveel
+
+	* client-java/src/: main/org/firebirdsql/gds/impl/GDSHelper.java,
+	main/org/firebirdsql/jca/FBManagedConnection.java,
+	main/org/firebirdsql/jca/FBManagedConnectionFactory.java,
+	main/org/firebirdsql/jca/FBManagedConnectionMetaData.java,
+	main/org/firebirdsql/jdbc/AbstractDatabaseMetaData.java,
+	test/org/firebirdsql/gds/TestReconnectTransaction.java:
+
+	JDBC-206: * Remove now unnecessary casts from IscDbHandle to
+	AbstractIscDbHandle * Replace fields of type AbstractIscDbHandle by
+	IscDbHandle if possible
+
+2011-12-13 17:05  mrotteveel
+
+	* client-java/src/:
+	test/org/firebirdsql/gds/impl/wire/TestGds.java,
+	main/org/firebirdsql/gds/IscDbHandle.java,
+	main/org/firebirdsql/gds/impl/AbstractIscDbHandle.java,
+	main/org/firebirdsql/gds/impl/jni/isc_db_handle_impl.java,
+	main/org/firebirdsql/gds/impl/wire/AbstractJavaGDSImpl.java,
+	main/org/firebirdsql/gds/impl/wire/isc_db_handle_impl.java:
+
+	Changes for JDBC-206 Refactor IscDbHandle descendants * Move common
+	implementation of isc_db_handle_impl to AbstractIscDbHandle * Add
+	methods regularly used with casting IscDbHandle down to
+	AbstractIscDbHandle or lower to interface definition * Change
+	license of AbstractIscDbHandle from BSD to LGPL with attribution
+
+2011-12-04 16:04  mrotteveel
+
+	* client-java/src/main/org/firebirdsql/jdbc/FBClob.java:
+
+	* Ensure we actually skip requested number of characters * Ensure
+	reading and writing correct length * Remove unnecessary String
+	conversion before writing to StringBuffer
+
+2011-12-04 16:02  mrotteveel
+
+	*
+	client-java/src/main/org/firebirdsql/jdbc/AbstractConnection.java:
+
+	Ensure consistent synchronization for autoCommit,
+	transactionIsolation and warnings
+
+2011-12-04 16:01  mrotteveel
+
+	* client-java/src/main/org/firebirdsql/gds/impl/GDSType.java:
+
+	Make FindBugs happy by removing potentially incorrect lazy init
+
+2011-12-04 16:00  mrotteveel
+
+	* client-java/src/main/org/firebirdsql/gds/impl/GDSHelper.java:
+
+	* Ensure consistent synchronization of currentTr * Make FindBugs
+	happy by adding a break after switch-case
+
+2011-12-04 15:59  mrotteveel
+
+	* client-java/src/main/org/firebirdsql/gds/impl/GDSFactory.java:
+
+	* Do not use reader.ready() to check if there is more to read *
+	Close resources after reading
+
+2011-12-04 15:57  mrotteveel
+
+	*
+	client-java/src/main/org/firebirdsql/encodings/EncodingFactory.java:
+
+	Replace iterator over keySet() with iterator over entrySet()
+
+2011-12-04 14:05  mrotteveel
+
+	* client-java/src/main/org/firebirdsql/jdbc/FBProcedureCall.java:
+
+	Remove unnecessary null-check
+
+2011-12-04 14:04  mrotteveel
+
+	*
+	client-java/src/main/org/firebirdsql/gds/impl/jni/BaseGDSImpl.java:
+
+	* Remove potential NPE * Reduce size of synchronization block
+
+2011-12-04 14:03  mrotteveel
+
+	* client-java/src/main/org/firebirdsql/gds/impl/:
+	DbAttachInfo.java, jni/NativeGDSImpl.java,
+	wire/AbstractJavaGDSImpl.java:
+
+	* Factor out DbAttachInfo which is duplicated exactly in both
+	NativeGDSImpl and AbstractJavaGDSImpl * Some other cleanup
+	(formatting, comments)
+
+2011-12-04 13:58  mrotteveel
+
+	* client-java/src/test/org/firebirdsql/jdbc/field/:
+	BaseTestFBField.java, TestFBIntegerField.java:
+
+	Modify test to use assertEquals instead of assertTrue with equals,
+	and fail instead of assertTrue with false.
+
+2011-12-04 13:53  mrotteveel
+
+	* client-java/src/test/org/firebirdsql/jdbc/: TestFBEncodings.java,
+	TestFBLongVarCharEncodings.java:
+
+	Fix for JDBC-204
+
+2011-12-03 15:22  mrotteveel
+
+	* client-java/build/: archive.xml, compile.xml, dist.xml, init.xml:
+
+	* JDBC-203: include sane sources jar in distribution
+
+2011-12-03 13:55  mrotteveel
+
+	* client-java/build/: compile.xml, dist.xml:
+
+	Preparation for JDBC-203: consolidate setting sources with a
+	separate task
+
+2011-12-03 13:23  mrotteveel
+
+	* client-java/src/:
+	main/org/firebirdsql/management/FBStatisticsManager.java,
+	main/org/firebirdsql/management/MaintenanceManager.java,
+	main/org/firebirdsql/management/NBackupManager.java,
+	main/org/firebirdsql/management/UserManager.java,
+	main/org/firebirdsql/event/EventManager.java,
+	main/org/firebirdsql/event/FBEventManager.java,
+	main/org/firebirdsql/gds/GDS.java,
+	main/org/firebirdsql/jca/FBManagedConnection.java,
+	main/org/firebirdsql/jca/FBXAConnectionHandle.java,
+	main/org/firebirdsql/jdbc/AbstractPreparedStatement.java,
+	main/org/firebirdsql/jdbc/FBConnectionHelper.java,
+	main/org/firebirdsql/jdbc/FBFetcher.java,
+	main/org/firebirdsql/jdbc/FBObjectListener.java,
+	main/org/firebirdsql/jdbc/FBSQLException.java,
+	main/org/firebirdsql/jdbc/FirebirdCallableStatement.java,
+	main/org/firebirdsql/jdbc/FirebirdParameterMetaData.java,
+	pool/org/firebirdsql/pool/PooledPreparedStatementHandler.java,
+	pool/org/firebirdsql/pool/XStatementManager.java,
+	pool/org/firebirdsql/pool/AbstractPingablePooledConnection.java,
+	pool/org/firebirdsql/pool/BlockingStack.java,
+	pool/org/firebirdsql/pool/PooledConnectionManager.java:
+
+	* Fix javadoc warnings * Correct some documentation * Removed
+	duplicate documentation which is also defined on its interface
+
+2011-12-03 12:05  mrotteveel
+
+	* client-java/build/dist.xml:
+
+	Also include the src/pool sources
+
+2011-12-03 12:00  mrotteveel
+
+	* client-java/build/: dist.xml, init.xml:
+
+	* Update copyright notice in javadoc * Add org.firebirdsql.ds to
+	javadoc + make sure all non-test source folders are considered
+
+2011-11-26 12:27  mrotteveel
+
+	*
+	client-java/src/main/org/firebirdsql/jdbc/AbstractDatabaseMetaData.java:
+
+	Fix for JDBC-202: locatorsUpdateCopy() should return true
+
+2011-11-26 12:03  mrotteveel
+
+	*
+	client-java/src/test/org/firebirdsql/jca/InternalConnectionManager.java:
+
+	Remove TODOs and unnecessary comments, add license
+
+2011-11-26 11:56  mrotteveel
+
+	* client-java/src/main/org/firebirdsql/gds/impl/: GDSFactory.java,
+	GDSType.java:
+
+	Add suppress warning for GDSFactory init, add todos to consider
+	different way
+
+2011-11-26 11:54  mrotteveel
+
+	* client-java/src/test/org/firebirdsql/jdbc/TestFBConnection.java:
+
+	Mark intentional use of deprecated method
+
+2011-11-26 11:53  mrotteveel
+
+	*
+	client-java/src/main/org/firebirdsql/jdbc/InternalTransactionCoordinator.java:
+
+	Mark explicit use of unused variable
+
+2011-11-26 11:52  mrotteveel
+
+	* client-java/src/test/org/firebirdsql/jdbc/TestFBBlobStream.java:
+
+	Remove unused variable
+
+2011-11-26 11:48  mrotteveel
+
+	*
+	client-java/src/test/org/firebirdsql/jca/TestFBDatabaseMetaData.java:
+
+	* Cleanup formatting * Replace assertTrue with equals to
+	assertEquals * Replace assertTrue with negative condition with
+	assertFalse * Add some additional checks
+
+2011-11-26 09:08  mrotteveel
+
+	* client-java/src/test/org/firebirdsql/jdbc/TestFBEncodings.java:
+
+	* Cleanup formatting * Replace assertTrue with equals to
+	assertEquals * Replace assertTrue with negative condition with
+	assertFalse * Add some additional checks
+
+2011-11-25 15:56  mrotteveel
+
+	*
+	client-java/src/test/org/firebirdsql/jdbc/TestFBPreparedStatement.java:
+
+	Cleanup test: convert assertTrue comparisons to assertEquals,
+	assertTrue with negative condition to assertFalse
+
+2011-11-24 18:18  mrotteveel
+
+	* client-java/src/test/org/firebirdsql/:
+	jdbc/TestFBBlobStream.java, jdbc/TestFBConnection.java,
+	jdbc/TestFBDriver.java, jdbc/TestFBEncodings.java,
+	jdbc/TestFBResultSet.java, jdbc/TestMultithreadedAccess.java,
+	jdbc/TestTableReservation.java, gds/TestReconnectTransaction.java,
+	gds/impl/jni/TestJaybirdBlobBackupProblem.java,
+	gds/impl/jni/TestServicesAPI.java, jca/TestFBDatabaseMetaData.java,
+	jca/TestFBManagedConnectionFactory.java, jca/TestFBResultSet.java,
+	jca/TestFBTpbMapper.java, jdbc/TestFBEscapedCallParser.java,
+	jdbc/parser/TestGrammar.java:
+
+	Eliminate warnings for unused fields, variables and imports (or add
+	TODOs for further research) Change some test conditions from
+	assertTrue(..., false) to fail, assertTrue(...equals(...)) to
+	assertEquals
+
+2011-11-24 18:14  mrotteveel
+
+	* client-java/src/main/org/firebirdsql/:
+	gds/impl/DatabaseParameterBufferExtension.java,
+	gds/impl/jni/BaseGDSImpl.java, jdbc/AbstractDatabaseMetaData.java,
+	jdbc/AbstractResultSetMetaData.java, jdbc/FBParameterMetaData.java,
+	jdbc/field/FBLongVarCharField.java,
+	jdbc/field/FBWorkaroundStringField.java,
+	logging/LoggerFactory.java, event/FBEventManager.java,
+	gds/impl/wire/XdrOutputStream.java, jca/FBXAConnectionHandle.java,
+	management/TraceManager.java:
+
+	Eliminate warnings for unused fields, variables and imports (or add
+	TODOs for further research)
+
+2011-11-24 18:10  mrotteveel
+
+	*
+	client-java/src/wire_jdk1_4/org/firebirdsql/gds/impl/wire/JavaGDSImpl.java:
+
+	Remove unused imports pt 2
+
+2011-11-24 18:10  mrotteveel
+
+	* client-java/src/pool_jdk1_6/org/firebirdsql/pool/:
+	DriverConnectionPoolDataSource.java,
+	FBConnectionPoolDataSource.java:
+
+	Remove unused imports
+
+2011-11-21 20:57  mrotteveel
+
+	* client-java/src/test/org/firebirdsql/common/FBTestBase.java:
+
+	Remove empty comments and commented out code
+
+2011-11-20 18:24  mrotteveel
+
+	* client-java/src/main/org/firebirdsql/ds/: DataSourceFactory.java,
+	FBAbstractCommonDataSource.java:
+
+	JDBC-198 Add all properties defined in FirebirdConnectionProperties
+
+2011-11-20 18:06  mrotteveel
+
+	* client-java/build/test.xml:
+
+	* Exclude embedded or pure java only tests  from native test
+	execution
+
+2011-11-20 18:05  mrotteveel
+
+	* client-java/src/test/org/firebirdsql/gds/impl/jni/:
+	TestNgds.java, TestNgdsBlobReadBug.java:
+
+	* Fix TPB usage of tests * Cleanup excessive usage of whitespace
+
+2011-11-20 17:07  mrotteveel
+
+	* client-java/src/:
+	test/org/firebirdsql/gds/TestReconnectTransaction.java,
+	main/org/firebirdsql/jca/FBTpb.java:
+
+	Remove commented out method
+
+2011-11-20 15:43  mrotteveel
+
+	* client-java/lib/cpptasks.jar:
+
+	Update cpptasks to 1.0b5
+
+2011-11-20 15:08  mrotteveel
+
+	* client-java/build.bat:
+
+	Simplify build.bat
+
+2011-11-20 15:07  mrotteveel
+
+	* client-java/lib/junit.jar:
+
+	Update junit 3.8.1 to 3.8.2
+
+2011-11-20 15:07  mrotteveel
+
+	* client-java/: bin/ant, bin/ant.bat, bin/ant.cmd, bin/antRun,
+	bin/antRun.bat, bin/antRun.pl, bin/antenv.cmd,
+	bin/complete-ant-cmd.pl, bin/envset.cmd, bin/lcp.bat,
+	bin/runant.pl, bin/runant.py, bin/runrc.cmd, lib/ant-launcher.jar,
+	lib/ant-trax.jar, lib/ant.jar, lib/serializer-2.7.1.jar,
+	lib/xerces.jar, lib/xercesImpl.jar, lib/ant-junit.jar,
+	lib/xalan-2.7.1.jar, lib/xalan.jar, lib/xml-apis.jar:
+
+	Update to Ant 1.8.2
+
+2011-11-14 21:30  mrotteveel
+
+	* client-java/: build_native.xml, build/init.xml,
+	lib/antlr-runtime-3.0.1.jar:
+
+	Fix build: * correct dependency location for antlr-runtime * native
+	build fixes
+
 2011-11-13 14:01  mrotteveel
 
 	* client-java/src/etc/release_notes.odt:
