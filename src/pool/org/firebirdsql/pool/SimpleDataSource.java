@@ -33,6 +33,9 @@ import org.firebirdsql.jdbc.FBDriverNotCapableException;
  * {@link ConnectionPoolDataSource} as connection provider.
  * 
  * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
+ * @deprecated Use {@link FBSimpleDataSource} for non-pooling, this implementation 
+ * only works correctly with the deprecated {@link FBConnectionPoolDataSource} and 
+ * {@link DriverConnectionPoolDataSource} classes
  */
 public class SimpleDataSource extends RootCommonDataSource implements DataSource {
 	
