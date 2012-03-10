@@ -1,0 +1,174 @@
+<project
+	xmlns="http://maven.apache.org/POM/4.0.0"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<groupId>org.firebirdsql.jdbc</groupId>
+	<artifactId>jaybird-jdkXX</artifactId>
+	<version>2.2.0-beta-1-SNAPSHOT</version>
+	<packaging>jar</packaging>
+	<name>Jaybird JDBC Driver</name>
+	<description>JDBC Driver for the Firebird RDBMS</description>
+	<url>http://www.firebirdsql.org/en/development-jdbc-driver/</url>
+	<!--
+		Initial check-in was 2001-05-09 by "d_jencks" according to changelog here:
+		http://firebird.cvs.sourceforge.net/viewvc/firebird/client-java/ChangeLog?revision=1.1&view=markup
+	-->
+	<inceptionYear>2001</inceptionYear>
+	<developers>
+		<developer>
+			<id>rrokytskyy</id>
+			<name>Roman Rokytskyy</name>
+			<roles>
+				<role>Administrator</role>
+				<role>Developer</role>
+			</roles>
+		</developer>
+		<developer>
+			<id>mrotteveel</id>
+			<name>Mark Rotteveel</name>
+			<email>mrotteveel@users.sourceforge.net</email>
+			<roles>
+				<role>Developer</role>
+			</roles>
+		</developer>
+		<developer>
+			<id>d_jencks</id>
+			<name>David Jencks</name>
+			<roles>
+				<role>Developer</role>
+			</roles>
+		</developer>
+		<developer>
+			<id>brodsom</id>
+			<name>Blas Rodriguez Somoza</name>
+			<roles>
+				<role>Developer</role>
+			</roles>
+		</developer>
+		<developer>
+			<id>gab_reid</id>
+			<name>Gabriel Reid</name>
+			<roles>
+				<role>Developer</role>
+			</roles>
+		</developer>
+		<developer>
+			<id>ryanbaldwin</id>
+			<name>Ryan Baldwin</name>
+			<roles>
+				<role>Developer</role>
+			</roles>
+		</developer>
+		<developer>
+			<id>sjardine</id>
+			<name>Steven Jardine</name>
+			<roles>
+				<role>Developer</role>
+			</roles>
+		</developer>
+		<developer>
+			<id>alberola</id>
+			<name>Alejandro Alberola Arias</name>
+			<roles>
+				<role>Developer</role>
+			</roles>
+		</developer>
+		<developer>
+			<id>rfincher</id>
+			<name>Rick Fincher</name>
+			<roles>
+				<role>Developer</role>
+			</roles>
+		</developer>
+		<developer>
+			<id>skywalker</id>
+			<name>Mark ODonohue</name>
+			<roles>
+				<role>Developer</role>
+			</roles>
+		</developer>
+		<developer>
+			<id>skidder</id>
+			<name>Nikolay Samofatov</name>
+			<roles>
+				<role>Developer</role>
+			</roles>
+		</developer>
+		<developer>
+			<id>lorban</id>
+			<name>Ludovic Orban</name>
+			<roles>
+				<role>Developer</role>
+			</roles>
+		</developer>
+		<developer>
+			<id>tsteinmaurer</id>
+			<name>Thomas Steinmaurer</name>
+			<roles>
+				<role>Developer</role>
+			</roles>
+		</developer>
+	</developers>
+	
+	<licenses>
+		<license>
+			<name>GNU Lesser General Public License</name>
+			<url>http://www.gnu.org/copyleft/lesser.html</url>
+			<distribution>repo</distribution>
+			<comments>
+                The JayBird JCA/JDBC driver is distributed free of charge under the 
+                GNU Lesser General Public License (LGPL). Text of the license can be 
+                obtained from http://www.gnu.org/copyleft/lesser.html
+			</comments>
+		</license>
+		<license>
+			<name>Modified BSD (3-clause) License</name>
+			<url>http://www.opensource.org/licenses/BSD-3-Clause</url>
+			<distribution>repo</distribution>
+			<comments>
+				The extension interfaces of Jaybird are defined under a modified BSD license
+			</comments>
+		</license>
+	</licenses>
+	
+	<scm>
+		<connection>scm:cvs:pserver:anonymous@firebird.cvs.sourceforge.net:/cvsroot/firebird:client-java</connection>
+		<developerConnection>scm:cvs:ext:@firebird.cvs.sourceforge.net:/cvsroot/firebird:client-java</developerConnection>
+		<url>http://firebird.cvs.sourceforge.net/viewvc/firebird/client-java/</url>
+	</scm>
+	
+	<issueManagement>
+		<system>JIRA Tracker</system>
+		<url>http://tracker.firebirdsql.org/browse/JDBC</url>
+	</issueManagement>
+	
+	<dependencies>
+		<dependency>
+			<groupId>geronimo-spec</groupId>
+			<artifactId>geronimo-spec-j2ee</artifactId>
+			<version>1.4-rc4</version>
+		</dependency>
+		<dependency>
+			<groupId>log4j</groupId>
+			<artifactId>log4j</artifactId>
+			<version>1.2.15</version>
+			<exclusions>
+				<exclusion>
+					<groupId>com.sun.jdmk</groupId>
+					<artifactId>jmxtools</artifactId>
+				</exclusion>
+				<exclusion>
+					<groupId>com.sun.jmx</groupId>
+					<artifactId>jmxri</artifactId>
+				</exclusion>
+			</exclusions>
+			<optional>true</optional>
+		</dependency>
+		<dependency>
+			<groupId>org.antlr</groupId>
+			<artifactId>antlr-runtime</artifactId>
+			<version>3.4</version>
+		</dependency>
+	</dependencies>
+</project>
