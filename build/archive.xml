@@ -1,7 +1,7 @@
   <!-- =================================================================== -->
   <!-- Creates the jar archives                                            -->
   <!-- =================================================================== -->
-  <target name="jars" depends="jar-j2ee, rar, jar-test, jar-sources"/>
+  <target name="jars" depends="jar-j2ee, rar, jar-test, jar-sources, jar-javadoc"/>
 
   <!-- Not really a jar operation but necessary :) -->
   <target name="jar-j2ee" depends="compile">
@@ -97,6 +97,14 @@
 		<zipfileset dir="${source.resources}/META-INF" prefix="META-INF">
 			<include name="services/**/*"/>
 		</zipfileset>
+  	</jar>
+  </target>
+  
+  <target name="jar-javadoc" depends="javadocs">
+  	<mkdir dir="${build.lib}"/>
+  	<jar jarfile="${build.lib}/${archive.name.javadoc}" update="true">
+  		<fileset dir="${build.docs}">
+  		</fileset>
   	</jar>
   </target>
 
