@@ -33,20 +33,18 @@ import org.firebirdsql.jdbc.FBSQLException;
  */
 public class FBTraceManager extends FBServiceManager implements TraceManager {
 	
-    private class TraceStartThread extends Thread {
+    private class TraceTask implements Runnable {
     	
-    	private FBTraceManager ftm;
     	private ServiceRequestBuffer srb;
     	
-    	public TraceStartThread(FBTraceManager ftm, ServiceRequestBuffer srb) {
-    		this.ftm = ftm;
+    	public TraceTask(ServiceRequestBuffer srb) {
     		this.srb = srb;
     	}
     	
     	public void run() {
     		try {
     			System.out.println("Start trace");
-    			ftm.executeServicesOperation(srb);
+    			executeServicesOperation(srb);
     			System.out.println("Trace stopped");
     		} catch (FBSQLException e) {
     			
@@ -58,9 +56,7 @@ public class FBTraceManager extends FBServiceManager implements TraceManager {
      * Create a new instance of <code>FBTraceManager</code> based on
      * the default GDSType.
      */
-    public FBTraceManager()
-    {
-    	super();
+    public FBTraceManager() {
     }
 
     /**
@@ -69,8 +65,7 @@ public class FBTraceManager extends FBServiceManager implements TraceManager {
      * 
      * @param gdsType type must be PURE_JAVA, EMBEDDED, or NATIVE
      */
-    public FBTraceManager(String gdsType)
-    {
+    public FBTraceManager(String gdsType) {
     	super(gdsType);
     }
 
@@ -146,11 +141,8 @@ public class FBTraceManager extends FBServiceManager implements TraceManager {
     		traceSessionName = "";
     	}
     	
-    	TraceStartThread t = new TraceStartThread(this, getTraceSPB(ISCConstants.isc_action_svc_trace_start, traceSessionName, configuration));
+    	Thread t = new Thread(new TraceTask(getTraceSPB(ISCConstants.isc_action_svc_trace_start, traceSessionName, configuration)));
     	t.start();
-    	
-    	//executeServicesOperation(getTraceSPB(ISCConstants.isc_action_svc_trace_start, traceSessionName, configuration));
-    	
     }
 
     /**
