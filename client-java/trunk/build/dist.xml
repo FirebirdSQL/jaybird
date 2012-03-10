@@ -43,6 +43,7 @@
         <include name="${archive.name.pool}"/>
         <include name="${archive.name.simple}"/>
         <include name="${archive.name.sources}"/>
+        <include name="${archive.name.javadoc}"/>
       </fileset>
       <fileset dir="${module.etc}">
         <include name="release_notes.pdf"/>
@@ -59,6 +60,7 @@
       </zipfileset>
       <zipfileset dir="${module.thirdparty}" prefix="lib">
         <include name="log4j-core.jar"/>
+        <include name="antlr-runtime-3.4.jar"/>
       </zipfileset>
       <zipfileset dir="${source.examples}" prefix="examples">
       	<include name="*"/>

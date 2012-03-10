@@ -163,6 +163,7 @@
 	<property name="archive.name.simple" value="${archive.name.main}-${archive.name.version}.jar"/>
 	<property name="archive.name.test" value="${archive.name.main}-test-${archive.name.version}.jar"/>
 	<property name="archive.name.sources" value="${archive.name.main}-${archive.name.version}-sources.jar"/>
+	<property name="archive.name.javadoc" value="${archive.name.main}-${archive.name.version}-javadoc.jar"/>
 
     <property name="junit.timeout" value="600000"/> <!-- 10 minutes -->
     <property name="junit.batchtest.todir" value="${build.reports}"/>
