@@ -194,7 +194,6 @@
 
     <path id="javac.j2ee.classpath">
       <pathelement location="${module.thirdparty}/mini-j2ee.jar"/>
-      <pathelement location="${module.thirdparty}/jaas.jar"/>
     </path>
 
     <path id="javac.driver.classpath">
