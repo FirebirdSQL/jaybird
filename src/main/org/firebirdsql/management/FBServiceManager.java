@@ -150,14 +150,14 @@ public class FBServiceManager implements ServiceManager {
     /**
      * @return Returns the out.
      */
-    public OutputStream getLogger() {
+    public synchronized OutputStream getLogger() {
         return logger;
     }
     
     /**
      * @param logger The out to set.
      */
-    public void setLogger(OutputStream logger) {
+    public synchronized void setLogger(OutputStream logger) {
         this.logger = logger;
     }
 

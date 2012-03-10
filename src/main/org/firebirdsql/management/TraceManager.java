@@ -65,7 +65,7 @@ public interface TraceManager extends ServiceManager {
      * @param configuration The trace configuration. For an example, look into fbtrace.conf in the root directory of your Firebird installation
 	 * @throws SQLException
      */
-    public void startTraceSession(String traceSessionName, String configuration) throws SQLException;
+    void startTraceSession(String traceSessionName, String configuration) throws SQLException;
 
     /**
      * Stops a trace session with the given trace session ID
@@ -73,7 +73,7 @@ public interface TraceManager extends ServiceManager {
      * @param traceSessionId The trace session ID
 	 * @throws SQLException
      */
-    public void stopTraceSession(int traceSessionId) throws SQLException;
+    void stopTraceSession(int traceSessionId) throws SQLException;
     
     /**
      * Suspends a trace session with the given trace session ID
@@ -81,7 +81,7 @@ public interface TraceManager extends ServiceManager {
      * @param traceSessionId The trace session ID
 	 * @throws SQLException
      */
-    public void suspendTraceSession(int traceSessionId) throws SQLException;
+    void suspendTraceSession(int traceSessionId) throws SQLException;
     
     /**
      * Resumes a trace session with the given trace session ID
@@ -89,14 +89,14 @@ public interface TraceManager extends ServiceManager {
      * @param traceSessionId The trace session ID
 	 * @throws SQLException
      */
-    public void resumeTraceSession(int traceSessionId) throws SQLException;
+    void resumeTraceSession(int traceSessionId) throws SQLException;
     
     /**
      * List all currently registered trace sessions
      * 
 	 * @throws SQLException
      */
-    public void listTraceSessions() throws SQLException;
+    void listTraceSessions() throws SQLException;
     
 	/**
 	 * Loads a configuration from the specified fileName
@@ -104,6 +104,20 @@ public interface TraceManager extends ServiceManager {
 	 * @throws FileNotFoundException
 	 * @throws IOException
 	 */
-    public String loadConfigurationFromFile(String fileName) throws FileNotFoundException, IOException;
+    String loadConfigurationFromFile(String fileName) throws FileNotFoundException, IOException;
+    
+    /**
+     * Gets the sessionId for the given name.
+     * <p>
+     * Returns null if the sessionName does not exist or hasn't been initialized yet.
+     * </p>
+     * <p>
+     * If multiple sessions are started with the same name, the last one is returned.
+     * </p>
+     * 
+     * @param sessionName Name of the session
+     * @return Id of the session or null otherwise
+     */
+    Integer getSessionId(String sessionName);
     
 }

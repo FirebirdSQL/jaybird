@@ -19,6 +19,9 @@
 package org.firebirdsql.management;
 
 import java.sql.SQLException;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 import java.io.*;
 
 import org.firebirdsql.gds.ISCConstants;
@@ -32,6 +35,8 @@ import org.firebirdsql.jdbc.FBSQLException;
  * @author <a href="mailto:tsteinmaurer@users.sourceforge.net">Thomas Steinmaurer</a>
  */
 public class FBTraceManager extends FBServiceManager implements TraceManager {
+    
+    private Map<String, Integer> traceSessions = Collections.synchronizedMap(new HashMap<String, Integer>());
 	
     private class TraceTask implements Runnable {
     	
@@ -141,8 +146,16 @@ public class FBTraceManager extends FBServiceManager implements TraceManager {
     		traceSessionName = "";
     	}
     	
-    	Thread t = new Thread(new TraceTask(getTraceSPB(ISCConstants.isc_action_svc_trace_start, traceSessionName, configuration)));
-    	t.start();
+    	synchronized (this) {
+        	OutputStream currentLogger = getLogger();
+        	if (currentLogger instanceof TraceStream) {
+        	    currentLogger = ((TraceStream) currentLogger).unwrap();
+        	}
+        	setLogger(new TraceStream(currentLogger, traceSessionName));
+        	
+        	Thread t = new Thread(new TraceTask(getTraceSPB(ISCConstants.isc_action_svc_trace_start, traceSessionName, configuration)));
+        	t.start();
+    	}
     }
 
     /**
@@ -186,6 +199,22 @@ public class FBTraceManager extends FBServiceManager implements TraceManager {
 	}
 	
 	/**
+	 * Gets the sessionId for the given name.
+	 * <p>
+	 * Returns null if the sessionName does not exist or hasn't been initialized yet.
+	 * </p>
+	 * <p>
+	 * If multiple sessions are started with the same name, the last one is returned.
+	 * </p>
+	 * 
+	 * @param sessionName Name of the session
+	 * @return Id of the session or null otherwise
+	 */
+	public Integer getSessionId(String sessionName) {
+	    return traceSessions.get(sessionName);
+	}
+	
+	/**
 	 * Loads a configuration from the specified fileName
 	 *
 	 * @throws FileNotFoundException
@@ -207,6 +236,58 @@ public class FBTraceManager extends FBServiceManager implements TraceManager {
 		}
 		
 		return sb.toString();
+	}
+	
+	private class TraceStream extends FilterOutputStream {
+	    private static final String START_TEXT = "Trace session ID ";
+	    
+	    private final String sessionName;
+	    private volatile boolean lookForSessionId = true;
+
+        public TraceStream(OutputStream out, String sessionName) {
+            super(out);
+            this.sessionName = sessionName;
+        }
+	    
+        public void write(byte b[], int off, int len) throws IOException {
+            if (lookForSessionId) {
+                findSessionId(b, off, len);
+                lookForSessionId = false;
+            }
+            
+            super.write(b, off, len);
+        }
+
+        /**
+         * Tries to find the session ID
+         * @param b
+         * @param off
+         * @param len
+         */
+        private void findSessionId(byte[] b, int off, int len) {
+            String sessionStart = new String(b, off, len);
+            int traceStartIdx = sessionStart.indexOf(START_TEXT);
+            int sessionIdStart = -1;
+            int sessionIdEnd = -1;
+            if (traceStartIdx >= 0) {
+                sessionIdStart = traceStartIdx + START_TEXT.length();
+                if (sessionIdStart < sessionStart.length()) {
+                    sessionIdEnd = sessionStart.indexOf(' ', sessionIdStart);
+                }
+            }
+            if (sessionIdStart >= 0 && sessionIdEnd > sessionIdStart && sessionIdEnd < sessionStart.length()) {
+                try {
+                    int sessionId = Integer.parseInt(sessionStart.substring(sessionIdStart, sessionIdEnd));
+                    traceSessions.put(sessionName, Integer.valueOf(sessionId));
+                } catch (NumberFormatException ex) {
+                    // ignore
+                }
+            }
+        }
+        
+        public OutputStream unwrap() {
+            return out;
+        }
 	}
 	
 }
