@@ -23,7 +23,6 @@ package org.firebirdsql.jdbc;
 import java.sql.*;
 import java.util.*;
 
-import org.apache.tools.ant.taskdefs.Get.DownloadProgress;
 import org.firebirdsql.gds.*;
 import org.firebirdsql.gds.impl.AbstractGDS;
 import org.firebirdsql.gds.impl.AbstractIscDbHandle;
@@ -59,7 +58,7 @@ import org.firebirdsql.logging.LoggerFactory;
 public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaData {
 
     private final static Logger log = LoggerFactory.getLogger(FBDatabaseMetaData.class,false);
-    private static final String SPACES = "                               ";//31 spaces
+    public static final String SPACES = "                               ";//31 spaces
 
     private GDSHelper gdsHelper;
     private AbstractConnection connection;
@@ -68,16 +67,16 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
 
     //PreparedStatement tables = null;
 
-    AbstractDatabaseMetaData(GDSHelper gdsHelper) {
+    protected AbstractDatabaseMetaData(GDSHelper gdsHelper) {
         this.gdsHelper = gdsHelper;
     }
     
-    AbstractDatabaseMetaData(AbstractConnection c) throws GDSException {
+    protected AbstractDatabaseMetaData(AbstractConnection c) throws GDSException {
         this.gdsHelper = c.getGDSHelper();
         this.connection = c;
     }
 
-    void close() {
+    protected void close() {
         try {
             Iterator i = statements.values().iterator();
             while(i.hasNext()) {
@@ -2428,17 +2427,7 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
      * @exception SQLException if a database access error occurs
      */
     public  ResultSet getSchemas() throws SQLException {
-        XSQLVAR[] xsqlvars = new XSQLVAR[1];
-
-        xsqlvars[0] = new XSQLVAR();
-        xsqlvars[0].sqltype = ISCConstants.SQL_VARYING;
-        xsqlvars[0].sqllen = 31;
-        xsqlvars[0].sqlname = "TABLE_SCHEM";
-        xsqlvars[0].relname = "TABLESCHEMAS";
-
-        ArrayList rows = new ArrayList(0);
-
-        return new FBResultSet(xsqlvars, rows);
+        return getSchemas(null, null);
     }
 
 
@@ -3430,7 +3419,7 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
         if (!tables.next())
             return new FBResultSet(xsqlvars, new ArrayList());
         
-        ArrayList rows = getPrimaryKeyIdentifier(table, scope, xsqlvars);
+        ArrayList rows = getPrimaryKeyIdentifier(tables.getString(3), scope, xsqlvars);
 
         // if no primary key exists, add RDB$DB_KEY as pseudo-column
         if (rows.size() == 0) {
@@ -5013,6 +5002,7 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
         switch (type){
             case ResultSet.TYPE_FORWARD_ONLY:
             case ResultSet.TYPE_SCROLL_INSENSITIVE :
+            case ResultSet.TYPE_SCROLL_SENSITIVE :
                 return true;
             default:
                 return false;
@@ -5037,6 +5027,7 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
         switch(type) {
             case ResultSet.TYPE_FORWARD_ONLY:
             case ResultSet.TYPE_SCROLL_INSENSITIVE :
+            case ResultSet.TYPE_SCROLL_SENSITIVE :
                 return concurrency == ResultSet.CONCUR_READ_ONLY || 
                     concurrency == ResultSet.CONCUR_UPDATABLE;
             default:
@@ -5575,6 +5566,24 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
     public int getDatabaseMinorVersion() throws SQLException {
         return ((AbstractIscDbHandle)gdsHelper.getIscDBHandle()).getDatabaseProductMinorVersion();
     }
+    
+    /**
+     * Get the major version of the ODS (On-Disk Structure) of the database.
+     * @return The major version number
+     * @exception SQLException if a database access error occurs
+     */
+    public int getOdsMajorVersion() throws SQLException {
+    	return ((AbstractIscDbHandle)gdsHelper.getIscDBHandle()).getODSMajorVersion();
+    }
+    
+    /**
+     * Get the minor version of the ODS (On-Disk Structure) of the database.
+     * @return The minor version number
+     * @exception SQLException if a database access error occurs
+     */
+    public int getOdsMinorVersion() throws SQLException {
+    	return ((AbstractIscDbHandle)gdsHelper.getIscDBHandle()).getODSMinorVersion();
+    }
 
     /**
      * Get the JDBC major version for this driver.
@@ -5608,11 +5617,279 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
         return 1; // same value as sqlStateXOpen, but makes JDK 1.3 happy.
     }
 
+    //-------------------------- JDBC 4.0 -------------------------------------
     
-    //-------------------------------------------------------------------------
+    public boolean supportsStoredFunctionsUsingCallSyntax() throws SQLException {
+        return false;
+    }
     
-    //private
-    private boolean isAllCondition(String pattern) {
+    public boolean autoCommitFailureClosesAllResultSets() throws SQLException {
+        // the holdable result sets remain open, others are closed, but this
+        // happens before the statement is executed
+        return false;
+    }
+
+    /**
+     * Retrieves a list of the client info properties 
+     * that the driver supports.  The result set contains the following columns
+     * <p>
+         * <ol>
+     * <li><b>NAME</b> String=> The name of the client info property<br>
+     * <li><b>MAX_LEN</b> int=> The maximum length of the value for the property<br>
+     * <li><b>DEFAULT_VALUE</b> String=> The default value of the property<br>
+     * <li><b>DESCRIPTION</b> String=> A description of the property.  This will typically 
+     *                      contain information as to where this property is 
+     *                      stored in the database.
+     * </ol>
+         * <p>
+     * The <code>ResultSet</code> is sorted by the NAME column
+     * <p>
+     * @return  A <code>ResultSet</code> object; each row is a supported client info
+         * property
+     * <p>
+     *  @exception SQLException if a database access error occurs
+     * <p>
+     * @since 1.6
+     */
+    public ResultSet getClientInfoProperties() throws SQLException {
+        XSQLVAR[] xsqlvars = new XSQLVAR[4];
+
+        xsqlvars[0] = new XSQLVAR();
+        xsqlvars[0].sqltype = ISCConstants.SQL_VARYING;
+        xsqlvars[0].sqllen = 31;
+        xsqlvars[0].sqlname = "NAME";
+        xsqlvars[0].relname = "UDT";
+
+        xsqlvars[1] = new XSQLVAR();
+        xsqlvars[1].sqltype = ISCConstants.SQL_LONG;
+        xsqlvars[1].sqllen = 4;
+        xsqlvars[1].sqlname = "MAX_LEN";
+        xsqlvars[1].relname = "UDT";
+
+        xsqlvars[2] = new XSQLVAR();
+        xsqlvars[2].sqltype = ISCConstants.SQL_VARYING;
+        xsqlvars[2].sqllen = 31;
+        xsqlvars[2].sqlname = "DEFAULT";
+        xsqlvars[2].relname = "UDT";
+
+        xsqlvars[3] = new XSQLVAR();
+        xsqlvars[3].sqltype = ISCConstants.SQL_VARYING;
+        xsqlvars[3].sqllen = 31;
+        xsqlvars[3].sqlname = "DESCRIPTION";
+        xsqlvars[3].relname = "UDT";
+
+        ArrayList rows = new ArrayList(0);
+
+        return new FBResultSet(xsqlvars, rows);
+    }
+
+    /**
+     * Retrieves a description of the given catalog's system or user 
+     * function parameters and return type.
+     *
+     * <P>Only descriptions matching the schema,  function and
+     * parameter name criteria are returned. They are ordered by
+     * <code>FUNCTION_CAT</code>, <code>FUNCTION_SCHEM</code>,
+     * <code>FUNCTION_NAME</code> and 
+     * <code>SPECIFIC_ NAME</code>. Within this, the return value,
+     * if any, is first. Next are the parameter descriptions in call
+     * order. The column descriptions follow in column number order.
+     *
+     * <P>Each row in the <code>ResultSet</code> 
+     * is a parameter description, column description or
+     * return type description with the following fields:
+     *  <OL>
+     *  <LI><B>FUNCTION_CAT</B> String => function catalog (may be <code>null</code>)
+     *  <LI><B>FUNCTION_SCHEM</B> String => function schema (may be <code>null</code>)
+     *  <LI><B>FUNCTION_NAME</B> String => function name.  This is the name 
+     * used to invoke the function
+     *  <LI><B>COLUMN_NAME</B> String => column/parameter name 
+     *  <LI><B>COLUMN_TYPE</B> Short => kind of column/parameter:
+     *      <UL>
+     *      <LI> functionColumnUnknown - nobody knows
+     *      <LI> functionColumnIn - IN parameter
+     *      <LI> functionColumnInOut - INOUT parameter
+     *      <LI> functionColumnOut - OUT parameter
+     *      <LI> functionColumnReturn - function return value
+     *      <LI> functionColumnResult - Indicates that the parameter or column
+     *  is a column in the <code>ResultSet</code>
+     *      </UL>
+     *  <LI><B>DATA_TYPE</B> int => SQL type from java.sql.Types
+     *  <LI><B>TYPE_NAME</B> String => SQL type name, for a UDT type the
+     *  type name is fully qualified
+     *  <LI><B>PRECISION</B> int => precision
+     *  <LI><B>LENGTH</B> int => length in bytes of data
+     *  <LI><B>SCALE</B> short => scale -  null is returned for data types where  
+     * SCALE is not applicable.
+     *  <LI><B>RADIX</B> short => radix
+     *  <LI><B>NULLABLE</B> short => can it contain NULL.
+     *      <UL>
+     *      <LI> functionNoNulls - does not allow NULL values
+     *      <LI> functionNullable - allows NULL values
+     *      <LI> functionNullableUnknown - nullability unknown
+     *      </UL>
+     *  <LI><B>REMARKS</B> String => comment describing column/parameter
+     *  <LI><B>CHAR_OCTET_LENGTH</B> int  => the maximum length of binary 
+     * and character based parameters or columns.  For any other datatype the returned value 
+     * is a NULL
+     *  <LI><B>ORDINAL_POSITION</B> int  => the ordinal position, starting 
+     * from 1, for the input and output parameters. A value of 0
+     * is returned if this row describes the function's return value. 
+     * For result set columns, it is the
+     * ordinal position of the column in the result set starting from 1.  
+     *  <LI><B>IS_NULLABLE</B> String  => ISO rules are used to determine 
+     * the nullability for a parameter or column.
+     *       <UL>
+     *       <LI> YES           --- if the parameter or column can include NULLs
+     *       <LI> NO            --- if the parameter or column  cannot include NULLs
+     *       <LI> empty string  --- if the nullability for the 
+     * parameter  or column is unknown
+     *       </UL>
+     *  <LI><B>SPECIFIC_NAME</B> String  => the name which uniquely identifies 
+     * this function within its schema.  This is a user specified, or DBMS
+     * generated, name that may be different then the <code>FUNCTION_NAME</code> 
+     * for example with overload functions
+     *  </OL>
+     * 
+     * <p>The PRECISION column represents the specified column size for the given 
+     * parameter or column. 
+     * For numeric data, this is the maximum precision.  For character data, this is the length in characters. 
+     * For datetime datatypes, this is the length in characters of the String representation (assuming the 
+     * maximum allowed precision of the fractional seconds component). For binary data, this is the length in bytes.  For the ROWID datatype, 
+     * this is the length in bytes. Null is returned for data types where the
+     * column size is not applicable.
+     * @param catalog a catalog name; must match the catalog name as it
+     *        is stored in the database; "" retrieves those without a catalog;
+     *        <code>null</code> means that the catalog name should not be used to narrow
+     *        the search
+     * @param schemaPattern a schema name pattern; must match the schema name
+     *        as it is stored in the database; "" retrieves those without a schema;
+     *        <code>null</code> means that the schema name should not be used to narrow
+     *        the search
+     * @param functionNamePattern a procedure name pattern; must match the
+     *        function name as it is stored in the database 
+     * @param columnNamePattern a parameter name pattern; must match the 
+     * parameter or column name as it is stored in the database 
+     * @return <code>ResultSet</code> - each row describes a 
+     * user function parameter, column  or return type
+     *
+     * @exception SQLException if a database access error occurs
+     * @see #getSearchStringEscape 
+     * @since 1.6
+     */
+    public ResultSet getFunctionColumns(String catalog, String schemaPattern, String functionNamePattern, String columnNamePattern) throws SQLException {
+        // FIXME implement this method
+        throw new FBDriverNotCapableException();
+    }
+
+    /**
+     * Retrieves a description of the  system and user functions available 
+     * in the given catalog.
+     * <P>
+     * Only system and user function descriptions matching the schema and
+     * function name criteria are returned.  They are ordered by
+     * <code>FUNCTION_CAT</code>, <code>FUNCTION_SCHEM</code>,
+     * <code>FUNCTION_NAME</code> and 
+     * <code>SPECIFIC_ NAME</code>.
+     *
+     * <P>Each function description has the the following columns:
+     *  <OL>
+     *  <LI><B>FUNCTION_CAT</B> String => function catalog (may be <code>null</code>)
+     *  <LI><B>FUNCTION_SCHEM</B> String => function schema (may be <code>null</code>)
+     *  <LI><B>FUNCTION_NAME</B> String => function name.  This is the name 
+     * used to invoke the function
+     *  <LI><B>REMARKS</B> String => explanatory comment on the function
+     * <LI><B>FUNCTION_TYPE</B> short => kind of function:
+     *      <UL>
+     *      <LI>functionResultUnknown - Cannot determine if a return value
+     *       or table will be returned
+     *      <LI> functionNoTable- Does not return a table
+     *      <LI> functionReturnsTable - Returns a table
+     *      </UL>
+     *  <LI><B>SPECIFIC_NAME</B> String  => the name which uniquely identifies 
+     *  this function within its schema.  This is a user specified, or DBMS
+     * generated, name that may be different then the <code>FUNCTION_NAME</code> 
+     * for example with overload functions
+     *  </OL>
+     * <p>
+     * A user may not have permission to execute any of the functions that are
+     * returned by <code>getFunctions</code>
+     *
+     * @param catalog a catalog name; must match the catalog name as it
+     *        is stored in the database; "" retrieves those without a catalog;
+     *        <code>null</code> means that the catalog name should not be used to narrow
+     *        the search
+     * @param schemaPattern a schema name pattern; must match the schema name
+     *        as it is stored in the database; "" retrieves those without a schema;
+     *        <code>null</code> means that the schema name should not be used to narrow
+     *        the search
+     * @param functionNamePattern a function name pattern; must match the
+     *        function name as it is stored in the database 
+     * @return <code>ResultSet</code> - each row is a function description 
+     * @exception SQLException if a database access error occurs
+     * @see #getSearchStringEscape 
+     * @since 1.6
+     */
+    public ResultSet getFunctions(String catalog, String schemaPattern, String functionNamePattern) throws SQLException {
+        throw new FBDriverNotCapableException();
+    }
+
+    /**
+     * Retrieves the schema names available in this database.  The results
+     * are ordered by <code>TABLE_CATALOG</code> and 
+     * <code>TABLE_SCHEM</code>.
+     *
+     * <P>The schema columns are:
+     *  <OL>
+     *  <LI><B>TABLE_SCHEM</B> String => schema name
+     *  <LI><B>TABLE_CATALOG</B> String => catalog name (may be <code>null</code>)
+     *  </OL>
+     *
+     *
+     * @param catalog a catalog name; must match the catalog name as it is stored
+     * in the database;"" retrieves those without a catalog; null means catalog
+     * name should not be used to narrow down the search.
+     * @param schemaPattern a schema name; must match the schema name as it is
+     * stored in the database; null means
+     * schema name should not be used to narrow down the search.
+     * @return a <code>ResultSet</code> object in which each row is a
+     *         schema description
+     * @exception SQLException if a database access error occurs
+     * @see #getSearchStringEscape 
+     * @since 1.6
+     */
+    public ResultSet getSchemas(String catalog, String schemaPattern) throws SQLException {
+        XSQLVAR[] xsqlvars = new XSQLVAR[2];
+
+        xsqlvars[0] = new XSQLVAR();
+        xsqlvars[0].sqltype = ISCConstants.SQL_VARYING;
+        xsqlvars[0].sqllen = 31;
+        xsqlvars[0].sqlname = "TABLE_SCHEM";
+        xsqlvars[0].relname = "TABLESCHEMAS";
+        
+        xsqlvars[1] = new XSQLVAR();
+        xsqlvars[1].sqltype = ISCConstants.SQL_VARYING;
+        xsqlvars[1].sqllen = 31;
+        xsqlvars[1].sqlname = "TABLE_CATALOG";
+        xsqlvars[1].relname = "TABLESCHEMAS";
+
+        ArrayList rows = new ArrayList(0);
+
+        return new FBResultSet(xsqlvars, rows);
+    }
+
+    public boolean isWrapperFor(Class arg0) throws SQLException {
+        return arg0 != null && arg0.isAssignableFrom(FBDatabaseMetaData.class);
+    }
+
+    public Object unwrap(Class arg0) throws SQLException {
+        if (!isWrapperFor(arg0))
+            throw new FBSQLException("No compatible class found.");
+        
+        return this;
+    }    
+    
+    public boolean isAllCondition(String pattern) {
         if ("%".equals(pattern)) {
             //asks for everything, no condition needed
             return true;
@@ -5674,7 +5951,7 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
         return stripped.toString();
     }
 
-    private String getWantsSystemTables(String[] types) {
+    protected String getWantsSystemTables(String[] types) {
         for (int i = 0; i < types.length; i++) {
             if (SYSTEM_TABLE.equals(types[i])) {
                 return "T";
@@ -5683,7 +5960,7 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
         return "F";
     }
 
-    private String getWantsTables(String[] types) {
+    protected String getWantsTables(String[] types) {
         for (int i = 0; i < types.length; i++) {
             if (TABLE.equals(types[i])) {
                 return "T";
@@ -5692,7 +5969,7 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
         return "F";
     }
 
-    private String getWantsViews(String[] types) {
+    protected String getWantsViews(String[] types) {
         for (int i = 0; i < types.length; i++) {
             if (VIEW.equals(types[i])) {
                 return "T";
@@ -5814,7 +6091,7 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
             }
             else {
                 value = stripQuotes(pattern, true) + SPACES + "%";
-                originalCaseValue = stripQuotes(pattern, false) + "%";
+                originalCaseValue = stripQuotes(pattern, false) + SPACES + "%";
                 condition = columnName + " || '" + SPACES + "' like ? escape '\\' and ";
             }
         }
@@ -5832,7 +6109,8 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
         }
     }
 
-    private byte[] getBytes(String value){
+
+    protected byte[] getBytes(String value){
         if (value !=null)
             return value.getBytes();
         else
@@ -5891,6 +6169,4 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
 
         return s.executeMetaDataQuery();
     }
-    
-    
 }
