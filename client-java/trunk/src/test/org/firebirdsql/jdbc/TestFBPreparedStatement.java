@@ -587,58 +587,42 @@ public class TestFBPreparedStatement extends FBTestBase {
             closeQuietly(stmt);
         }
     }
-
-    public void testGetStatementType() throws SQLException {
+    
+    protected void checkStatementType(String query, int expectedStatementType, String assertionMessage) throws SQLException {
         AbstractPreparedStatement stmt = (AbstractPreparedStatement) con
-                .prepareStatement("SELECT * FROM TESTTAB");
+                .prepareStatement(query);
         try {
             assertEquals(
-            		"TYPE_SELECT should be returned for a SELECT statement",
-                    FirebirdPreparedStatement.TYPE_SELECT, stmt.getStatementType());
+                    assertionMessage,
+                    expectedStatementType, stmt.getStatementType());
         } finally {
             closeQuietly(stmt);
         }
-
-        stmt = (AbstractPreparedStatement) con
-                .prepareStatement("INSERT INTO testtab(id, field1, field6) VALUES(?, ?, ?)");
-        try {
-            assertEquals(
-            		"TYPE_INSERT should be returned for an INSERT statement",
-                    FirebirdPreparedStatement.TYPE_INSERT, stmt.getStatementType());
-        } finally {
-            closeQuietly(stmt);
-        }
-        
-        stmt = (AbstractPreparedStatement) con
-                .prepareStatement("DELETE FROM TESTTAB WHERE ID = ?");
-        try {
-            assertEquals(
-            		"TYPE_DELETE should be returned for a DELETE statement",
-                    FirebirdPreparedStatement.TYPE_DELETE, stmt.getStatementType());
-        } finally {
-            closeQuietly(stmt);
-        }
-        
-        stmt = (AbstractPreparedStatement) con
-                .prepareStatement("UPDATE TESTTAB SET FIELD1 = ? WHERE ID = ?");
-        try {
-            assertEquals(
-            		"TYPE_UPDATE should be returned for an UPDATE statement",
-                    FirebirdPreparedStatement.TYPE_UPDATE, stmt.getStatementType());
-        } finally {
-            closeQuietly(stmt);
-        }
-
-        stmt = (AbstractPreparedStatement) con
-                .prepareStatement("INSERT INTO testtab(field1) VALUES(?) RETURNING id");
-        try {
-            assertEquals(
-            		"TYPE_EXEC_PROCEDURE should be returned for an UPDATE statement",
-                    FirebirdPreparedStatement.TYPE_EXEC_PROCEDURE,
-                    stmt.getStatementType());
-        } finally {
-            closeQuietly(stmt);
-        }
+    }
+    
+    public void testGetStatementType_Select() throws SQLException {
+        checkStatementType("SELECT * FROM TESTTAB", FirebirdPreparedStatement.TYPE_SELECT, 
+                "TYPE_SELECT should be returned for a SELECT statement");
+    }
+    
+    public void testGetStatementType_Insert() throws SQLException {
+        checkStatementType("INSERT INTO testtab(id, field1, field6) VALUES(?, ?, ?)", FirebirdPreparedStatement.TYPE_INSERT, 
+                "TYPE_INSERT should be returned for an INSERT statement");
+    }
+    
+    public void testGetStatementType_Delete() throws SQLException {
+        checkStatementType("DELETE FROM TESTTAB WHERE ID = ?", FirebirdPreparedStatement.TYPE_DELETE, 
+                "TYPE_DELETE should be returned for a DELETE statement");
+    }
+    
+    public void testGetStatementType_Update() throws SQLException {
+        checkStatementType("UPDATE TESTTAB SET FIELD1 = ? WHERE ID = ?", FirebirdPreparedStatement.TYPE_UPDATE, 
+                "TYPE_UPDATE should be returned for an UPDATE statement");
+    }
+    
+    public void testGetStatementType_InsertReturning() throws SQLException {
+        checkStatementType("INSERT INTO testtab(field1) VALUES(?) RETURNING id", FirebirdPreparedStatement.TYPE_EXEC_PROCEDURE, 
+                "TYPE_EXEC_PROCEDURE should be returned for an INSERT ... RETURNING statement");
     }
 
     public void _testLikeFullLength() throws Exception {
