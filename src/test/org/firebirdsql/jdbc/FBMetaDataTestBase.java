@@ -62,19 +62,24 @@ public abstract class FBMetaDataTestBase<T extends Enum & MetaDataInfo> extends 
     protected DatabaseMetaData dbmd;
 
     protected final void setUp() throws Exception {
-        super.setUp();
-        con = getConnectionViaDriverManager();
-        for (String dropStatement : getDropStatements()) {
-            executeDropTable(con, dropStatement);
+        try {
+            super.setUp();
+            con = getConnectionViaDriverManager();
+            for (String dropStatement : getDropStatements()) {
+                executeDropTable(con, dropStatement);
+            }
+    
+            for (String createStatement : getCreateStatements()) {
+                executeCreateTable(con, createStatement);
+            }
+    
+            dbmd = con.getMetaData();
+    
+            additionalSetup();
+        } catch (Exception ex) {
+            tearDown();
+            throw ex;
         }
-
-        for (String createStatement : getCreateStatements()) {
-            executeCreateTable(con, createStatement);
-        }
-
-        dbmd = con.getMetaData();
-
-        additionalSetup();
     }
 
     protected final void tearDown() throws Exception {
