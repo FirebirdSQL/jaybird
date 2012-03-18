@@ -25,10 +25,13 @@ import javax.resource.spi.ConnectionManager;
 
 import org.firebirdsql.gds.GDSException;
 import org.firebirdsql.gds.ISCConstants;
+import org.firebirdsql.gds.impl.GDSHelper;
 import org.firebirdsql.gds.impl.GDSType;
 import org.firebirdsql.jca.FBManagedConnectionFactory;
 import org.firebirdsql.jca.InternalConnectionManager;
+import org.firebirdsql.jdbc.FBConnection;
 import org.firebirdsql.jdbc.FBDriver;
+import org.firebirdsql.jdbc.FBSQLException;
 import org.firebirdsql.jdbc.FirebirdConnection;
 import org.firebirdsql.logging.Logger;
 import org.firebirdsql.logging.LoggerFactory;
@@ -120,7 +123,22 @@ public abstract class FBTestBase extends SimpleFBTestBase {
     }
     
     protected void executeDropTable(Connection connection, String sql) throws SQLException {
-        executeDDL(connection, sql, new int[]{ISCConstants.isc_no_meta_update, ISCConstants.isc_dsql_table_not_found, ISCConstants.isc_dsql_view_not_found});
+        executeDDL(connection, sql, getDropIgnoreErrors(connection));
+    }
+    
+    private int[] getDropIgnoreErrors(Connection connection) throws SQLException {
+    	GDSHelper gdsHelper;
+        try {
+            gdsHelper = ((FBConnection)connection).getGDSHelper();
+            if (gdsHelper.compareToVersion(2, 0) < 0) {
+                // Firebird 1.5 and earlier do not always return specific error codes
+                return new int[] {ISCConstants.isc_dsql_error, ISCConstants.isc_no_meta_update, ISCConstants.isc_dsql_table_not_found, ISCConstants.isc_dsql_view_not_found};
+            } else {
+                return new int[]{ISCConstants.isc_no_meta_update, ISCConstants.isc_dsql_table_not_found, ISCConstants.isc_dsql_view_not_found};
+            }
+        } catch (GDSException e) {
+        	throw new FBSQLException(e);
+        }
     }
 
     protected void executeDDL(Connection connection, String sql, int[] ignoreErrors) throws SQLException {
