@@ -41,9 +41,9 @@ abstract class FBTestGeneratedKeysBase extends FBTestBase {
                 + " TEXT Varchar(200),\n"
                 + " CONSTRAINT PK_TABLE_WITH_TRIGGER_1 PRIMARY KEY (ID)\n" 
                 + ")";
-    private static final String DROP_SEQUENCE = "DROP SEQUENCE GEN_TABLE_WITH_TRIGGER_ID";
-    private static final String CREATE_SEQUENCE = "CREATE SEQUENCE GEN_TABLE_WITH_TRIGGER_ID";
-    private static final String INIT_SEQUENCE = "ALTER SEQUENCE GEN_TABLE_WITH_TRIGGER_ID RESTART WITH 512";
+    private static final String DROP_SEQUENCE = "DROP GENERATOR GEN_TABLE_WITH_TRIGGER_ID";
+    private static final String CREATE_SEQUENCE = "CREATE GENERATOR GEN_TABLE_WITH_TRIGGER_ID";
+    private static final String INIT_SEQUENCE = "SET GENERATOR GEN_TABLE_WITH_TRIGGER_ID TO 512";
     private static final String DROP_TRIGGER = "DROP TRIGGER TABLE_WITH_TRIGGER_BI";
     private static final String CREATE_TRIGGER = "CREATE TRIGGER TABLE_WITH_TRIGGER_BI FOR TABLE_WITH_TRIGGER ACTIVE\n" + 
         		"BEFORE INSERT POSITION 0\n" + 
