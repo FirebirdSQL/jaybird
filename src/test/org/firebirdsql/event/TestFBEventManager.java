@@ -44,7 +44,7 @@ public class TestFBEventManager extends FBTestBase {
 
         eventManager = new FBEventManager(getGdsType());
         if (getGdsType() == GDSType.getType("PURE_JAVA") ||  getGdsType() == GDSType.getType("NATIVE")) {
-            eventManager.setHost("localhost");
+            eventManager.setHost(DB_SERVER_URL);
         }
         eventManager.setUser(DB_USER);
         eventManager.setPassword(DB_PASSWORD);
