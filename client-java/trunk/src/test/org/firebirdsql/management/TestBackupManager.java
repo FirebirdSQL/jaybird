@@ -9,16 +9,12 @@ import java.sql.SQLException;
 import org.firebirdsql.common.FBTestBase;
 import org.firebirdsql.gds.impl.GDSType;
 
-
 /**
- * 
+ * TODO: This test assumes it is run against localhost 
  */
 public class TestBackupManager extends FBTestBase {
-
         
     private BackupManager backupManager;
-
-//    private FBManager fbManager;
 
     private static final String TEST_TABLE = "CREATE TABLE TEST (A INT)";
 
@@ -32,16 +28,6 @@ public class TestBackupManager extends FBTestBase {
     protected void setUp() throws Exception {
         super.setUp();
         
-//        fbManager = createFBManager();
-//        if (getGdsType() == GDSType.getType("PURE_JAVA") || getGdsType() == GDSType.getType("NATIVE")) {
-//            fbManager.setServer(DB_SERVER_URL);
-//            fbManager.setPort(DB_SERVER_PORT);
-//        }
-//        fbManager.start();
-//
-//        fbManager.setForceCreate(true);
-//        fbManager.createDatabase(getDatabasePath(), DB_USER, DB_PASSWORD);
-
         backupManager = new FBBackupManager(getGdsType());
         if (getGdsType() == GDSType.getType("PURE_JAVA") || getGdsType() == GDSType.getType("NATIVE")) {
             backupManager.setHost(DB_SERVER_URL);
@@ -69,8 +55,6 @@ public class TestBackupManager extends FBTestBase {
 
     protected void tearDown() throws Exception {
         try {
-            // fbManager.dropDatabase(getDatabasePath(), DB_USER, DB_PASSWORD);
-            // fbManager.stop();
             try {
                 // Drop database.
                 super.tearDown();
