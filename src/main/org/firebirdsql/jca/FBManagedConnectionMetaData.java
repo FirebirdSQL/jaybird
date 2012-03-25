@@ -16,16 +16,12 @@
  *
  * All rights reserved.
  */
-
 package org.firebirdsql.jca;
 
-
 import javax.resource.spi.ManagedConnectionMetaData;
-
 import javax.resource.ResourceException;
 
 import org.firebirdsql.gds.GDSException;
-import org.firebirdsql.gds.impl.AbstractIscDbHandle;
 
 
 /**
