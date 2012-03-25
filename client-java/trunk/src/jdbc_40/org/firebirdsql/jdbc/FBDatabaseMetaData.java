@@ -20,14 +20,11 @@ package org.firebirdsql.jdbc;
 
 import java.security.AccessController;
 import java.security.PrivilegedAction;
-import java.sql.ResultSet;
 import java.sql.RowIdLifetime;
 import java.sql.SQLException;
 
 import org.firebirdsql.gds.GDSException;
 import org.firebirdsql.gds.impl.GDSHelper;
-import org.firebirdsql.jdbc.FBDriverNotCapableException;
-
 
 public class FBDatabaseMetaData extends AbstractDatabaseMetaData {
 
