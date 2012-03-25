@@ -6,7 +6,7 @@
   <!-- calling this unjar a compile is stretching the truth a bit-->
   <target name="compile-j2ee" depends="init">
     <mkdir dir="${build.j2ee}"/>
-    <unjar src="${module.thirdparty}/mini-j2ee.jar" dest="${build.j2ee}"/>
+    <unjar src="${module.thirdparty}/connector-api-1.5.jar" dest="${build.j2ee}"/>
   </target>
 
   <target name="compile-native" depends="init">

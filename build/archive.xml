@@ -7,7 +7,7 @@
   <target name="jar-j2ee" depends="compile">
  
     <mkdir dir="${build.lib}"/>
-    <copy file="${module.thirdparty}/mini-j2ee.jar" tofile="${build.lib}/mini-j2ee.jar"/>
+    <copy file="${module.thirdparty}/connector-api-1.5.jar" tofile="${build.lib}/connector-api-1.5.jar"/>
   </target>
 
   <target name="jar-ra" depends="compile">

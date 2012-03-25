@@ -56,7 +56,7 @@
         <include name="*"/>
       </fileset>
       <zipfileset dir="${build.lib}" prefix="lib">
-        <include name="mini-j2ee.jar"/>
+        <include name="connector-api-1.5.jar"/>
       </zipfileset>
       <zipfileset dir="${module.thirdparty}" prefix="lib">
         <include name="log4j-core.jar"/>

@@ -145,9 +145,9 @@
 	
 	<dependencies>
 		<dependency>
-			<groupId>geronimo-spec</groupId>
-			<artifactId>geronimo-spec-j2ee</artifactId>
-			<version>1.4-rc4</version>
+			<groupId>javax.resource</groupId>
+			<artifactId>connector-api</artifactId>
+			<version>1.5</version>
 		</dependency>
 		<dependency>
 			<groupId>log4j</groupId>
