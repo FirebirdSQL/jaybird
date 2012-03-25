@@ -14,7 +14,6 @@
 	<classpathentry kind="src" path="src/test_40"/>
 	<classpathentry kind="src" path="src/openoffice"/>
 	<classpathentry kind="lib" path="src/lib/fscontext.jar"/>
-	<classpathentry kind="lib" path="src/lib/mini-j2ee.jar"/>
 	<classpathentry kind="lib" path="src/lib/providerutil.jar"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
 	<classpathentry kind="lib" path="src/lib/log4j-core.jar"/>
@@ -28,5 +27,6 @@
 	<classpathentry kind="lib" path="lib/test/jmock-legacy-2.5.1.jar"/>
 	<classpathentry kind="lib" path="lib/test/objenesis-1.0.jar"/>
 	<classpathentry kind="lib" path="src/lib/antlr-runtime-3.4.jar"/>
+	<classpathentry kind="lib" path="src/lib/connector-api-1.5.jar"/>
 	<classpathentry kind="output" path="classes"/>
 </classpath>

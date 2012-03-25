@@ -194,7 +194,7 @@
     <property name="build.compiler" value="modern"/>
 
     <path id="javac.j2ee.classpath">
-      <pathelement location="${module.thirdparty}/mini-j2ee.jar"/>
+      <pathelement location="${module.thirdparty}/connector-api-1.5.jar"/>
     </path>
 
     <path id="javac.driver.classpath">

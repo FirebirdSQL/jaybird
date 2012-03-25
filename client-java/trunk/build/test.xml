@@ -36,7 +36,7 @@
 
         <pathelement location="${build.lib}/${archive.name.simple}"/>
         <pathelement location="${build.lib}/${archive.name.test}"/>
-        <pathelement location="${build.lib}/mini-j2ee.jar"/>
+        <pathelement location="${build.lib}/connector-api-1.5.jar"/>
 
         <fileset dir="lib">
           <include name="**/*.jar"/>
@@ -102,7 +102,7 @@
 
         <pathelement location="${build.lib}/${archive.name.simple}"/>
         <pathelement location="${build.lib}/${archive.name.test}"/>
-        <pathelement location="${build.lib}/mini-j2ee.jar"/>
+        <pathelement location="${build.lib}/connector-api-1.5.jar"/>
 
         <fileset dir="lib">
           <include name="**/*.jar"/>
@@ -171,7 +171,7 @@
 
         <pathelement location="${build.lib}/${archive.name.simple}"/>
         <pathelement location="${build.lib}/${archive.name.test}"/>
-        <pathelement location="${build.lib}/mini-j2ee.jar"/>
+        <pathelement location="${build.lib}/connector-api-1.5.jar"/>
 
         <fileset dir="lib">
           <include name="**/*.jar"/>
