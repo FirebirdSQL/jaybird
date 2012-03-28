@@ -16,9 +16,7 @@
  *
  * All rights reserved.
  */
-
 package org.firebirdsql.jdbc;
-
 
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
@@ -73,36 +71,22 @@ public class TestFBUnmanagedConnection extends FBTestBase {
 
     protected void setUp() throws Exception {
        super.setUp();
-        Class.forName(FBDriver.class.getName());
-        connection = this.getConnectionViaDriverManager();
+        connection = getConnectionViaDriverManager();
     }
-    protected void tearDown() throws Exception {
-        try 
-        {
-            if (!connection.getAutoCommit()) 
-            {
-                connection.commit();
-            } // end of if ()
-        } catch (Exception e) 
-        {
-            //these messages are too annoying.
-            //if (log!=null) log.debug("Possible problem committing before close of connection-- possibly not a problem", e);
-        } // end of try-catch
 
-        connection.close();
+    protected void tearDown() throws Exception {
+        closeQuietly(connection);
         super.tearDown();
     }
 
     public void testCommit() throws Exception {
-//        try{
-            connection.setAutoCommit(false);
-            Statement statement = connection.createStatement();
-            try {
-               statement.execute(DROP_TEST_TABLE);
-           }
-           catch (Exception e) {}
-           statement.executeUpdate(CREATE_TEST_TABLE);
-            connection.commit();
+        connection.setAutoCommit(false);
+        executeDropTable(connection, DROP_TEST_TABLE);
+        connection.commit();
+        executeCreateTable(connection, CREATE_TEST_TABLE);
+        connection.commit();
+        Statement statement = connection.createStatement();
+        try {
             statement.executeUpdate(INSERT_TEST_TABLE);
             connection.commit();
             ResultSet rs = null;
@@ -110,19 +94,15 @@ public class TestFBUnmanagedConnection extends FBTestBase {
                 rs = statement.executeQuery(SELECT_TEST_TABLE);
                 assertTrue("ResultSet is empty", rs.next());
                 int value = rs.getInt(1);
-                assertTrue("Commit failed: expecting value=1, received value=" + value, value == 1);
+                assertEquals("Commit failed", 1, value);
             } finally {
-                if (rs != null) rs.close();
+            	closeQuietly(rs);
             }
-            statement.executeUpdate(DROP_TEST_TABLE);
-            connection.commit();
-//        } catch(Exception ex) {
-//
-//            if (log!=null) log.warn("failing testCommit",  ex);
-//
-//            assertTrue(ex.getMessage(), false);
-//
-//        }
+        } finally {
+            closeQuietly(statement);
+        }
+        executeDropTable(connection, DROP_TEST_TABLE);
+        connection.commit();
     }
 
     public void testCreateStatement() throws Exception {
