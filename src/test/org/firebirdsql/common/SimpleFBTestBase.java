@@ -47,7 +47,7 @@ public abstract class SimpleFBTestBase extends TestCase {
 	/**
 	 * Default name of database file to use for the test case.
 	 */
-	protected final String DB_NAME = "fbtest.fdb";
+	protected static final String DB_NAME = "fbtest.fdb";
 
 	protected final String DB_USER = getProperty("test.user", "sysdba");
 	protected final String DB_PASSWORD = getProperty("test.password", "masterkey");
