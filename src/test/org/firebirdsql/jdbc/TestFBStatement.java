@@ -28,14 +28,10 @@ public class TestFBStatement extends FBTestBase {
         con = this.getConnectionViaDriverManager();
 
         try {
-            Statement ddlStmt = con.createStatement();
-            try {
-                ddlStmt.execute(DROP_TABLE);
-            } catch (Exception ex) {}
-            ddlStmt.execute(CREATE_TABLE);
+            executeDropTable(con, DROP_TABLE);
+            
+            executeCreateTable(con, CREATE_TABLE);
             prepareTestData();
-
-            closeQuietly(ddlStmt);
         } finally {
             closeQuietly(con);
         }
@@ -44,9 +40,7 @@ public class TestFBStatement extends FBTestBase {
 
     protected void tearDown() throws Exception {
         try {
-            Statement stmt = con.createStatement();
-            stmt.execute(DROP_TABLE);
-            closeQuietly(stmt);
+            executeDropTable(con, DROP_TABLE);
         } finally {
             closeQuietly(con);
             super.tearDown();
