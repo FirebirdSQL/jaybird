@@ -1350,7 +1350,7 @@ public abstract class AbstractCallableStatement extends FBPreparedStatement impl
     }
 
     public void setBoolean(int parameterIndex, boolean x) throws SQLException {
-        procedureCall.getInputParam(parameterIndex).setValue(new Boolean(x));
+        procedureCall.getInputParam(parameterIndex).setValue(Boolean.valueOf(x));
     }
 
     public void setByte(int parameterIndex, byte x) throws SQLException {

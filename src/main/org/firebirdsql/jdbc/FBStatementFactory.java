@@ -89,8 +89,8 @@ public class FBStatementFactory {
             return (AbstractPreparedStatement) constructor.newInstance(new Object[] { gdsHelper,
                     sql, new Integer(resultSetType), new Integer(resultSetConcurrency),
                     new Integer(resultSetHoldability), statementListener, blobListener,
-                    new Boolean(metadata), new Boolean(standaloneStatement), 
-                    new Boolean(generatedKeys)});
+                    Boolean.valueOf(metadata), Boolean.valueOf(standaloneStatement), 
+                    Boolean.valueOf(generatedKeys)});
 
         } catch(InvocationTargetException ex) {
             

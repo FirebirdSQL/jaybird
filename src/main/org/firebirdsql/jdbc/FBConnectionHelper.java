@@ -152,7 +152,7 @@ public class FBConnectionHelper {
         
         switch(type.intValue()) {
             case TYPE_BOOLEAN : 
-                return "".equals(value) ? Boolean.TRUE : new Boolean((String)value);
+                return "".equals(value) ? Boolean.TRUE : Boolean.valueOf((String)value);
             
             case TYPE_BYTE : 
                 return new Byte((String)value);

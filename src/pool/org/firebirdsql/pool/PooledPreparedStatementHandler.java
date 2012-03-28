@@ -165,7 +165,7 @@ public class PooledPreparedStatementHandler implements InvocationHandler {
                 return Void.TYPE;
             } else
             if (method.equals(PREPARED_STATEMENT_IS_CACHED)) {
-                return new Boolean(handleIsCached());
+                return Boolean.valueOf(handleIsCached());
             } else {
                 
                 Object result = method.invoke(preparedStatement, args);
