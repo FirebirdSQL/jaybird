@@ -154,11 +154,11 @@ public class XPreparedStatementModel {
     }
     
     private boolean equalsGeneratedKeys2(XPreparedStatementModel key) {
-        return sql.equals(key.sql) & Arrays.equals(keyIndexes, key.keyIndexes);
+        return sql.equals(key.sql) && Arrays.equals(keyIndexes, key.keyIndexes);
     }
     
     private boolean equalsGeneratedKeys3(XPreparedStatementModel key) {
-        return sql.equals(key.sql) & Arrays.equals(keyColumns, key.keyColumns);
+        return sql.equals(key.sql) && Arrays.equals(keyColumns, key.keyColumns);
     }
     
     public boolean equals(Object obj) {
