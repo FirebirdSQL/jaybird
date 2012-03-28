@@ -21,7 +21,6 @@
 package org.firebirdsql.jdbc;
 
 import java.sql.Connection;
-import java.sql.Statement;
 
 import org.firebirdsql.common.FBTestBase;
 
@@ -35,7 +34,7 @@ import org.firebirdsql.common.FBTestBase;
  */
 abstract class FBTestGeneratedKeysBase extends FBTestBase {
 
-    private static final String DROP_TABLE = "DROP TABLE_WITH_TRIGGER";
+    private static final String DROP_TABLE = "DROP TABLE TABLE_WITH_TRIGGER";
     private static final String CREATE_TABLE = "CREATE TABLE TABLE_WITH_TRIGGER (\n"
                 + " ID Integer NOT NULL,\n" 
                 + " TEXT Varchar(200),\n"
@@ -69,22 +68,14 @@ abstract class FBTestGeneratedKeysBase extends FBTestBase {
         
         Connection con = getConnectionViaDriverManager();
         try {
-            Statement stmt = con.createStatement();
-            try {
-                stmt.executeUpdate(DROP_TRIGGER);
-            } catch (Exception ex) { }
-            try {
-                stmt.executeUpdate(DROP_SEQUENCE);
-            } catch (Exception ex) { }
-            try {
-                stmt.executeUpdate(DROP_TABLE);
-            } catch (Exception ex) { }
+            executeDropTable(con, DROP_TRIGGER);
+            executeDropTable(con, DROP_SEQUENCE);
+            executeDropTable(con, DROP_TABLE);
             
-            stmt.executeUpdate(CREATE_TABLE);
-            stmt.executeUpdate(CREATE_SEQUENCE);
-            stmt.executeUpdate(INIT_SEQUENCE);
-            stmt.executeUpdate(CREATE_TRIGGER);
-            closeQuietly(stmt);
+            executeCreateTable(con, CREATE_TABLE);
+            executeCreateTable(con, CREATE_SEQUENCE);
+            executeCreateTable(con, INIT_SEQUENCE);
+            executeCreateTable(con, CREATE_TRIGGER);
         } finally {
             closeQuietly(con);
         }
@@ -93,21 +84,13 @@ abstract class FBTestGeneratedKeysBase extends FBTestBase {
     public void tearDown() throws Exception {
         Connection con = getConnectionViaDriverManager();
         try {
-            Statement stmt = con.createStatement();
-            try {
-                stmt.executeUpdate(DROP_TRIGGER);
-            } catch (Exception ex) { }
-            try {
-                stmt.executeUpdate(DROP_SEQUENCE);
-            } catch (Exception ex) { }
-            try {
-                stmt.executeUpdate(DROP_TABLE);
-            } catch (Exception ex) { }
-            closeQuietly(stmt);
+            executeDropTable(con, DROP_TRIGGER);
+            executeDropTable(con, DROP_SEQUENCE);
+            executeDropTable(con, DROP_TABLE);
         } finally {
             closeQuietly(con);
+            super.tearDown();
         }
-        super.tearDown();
     }
 
 }
