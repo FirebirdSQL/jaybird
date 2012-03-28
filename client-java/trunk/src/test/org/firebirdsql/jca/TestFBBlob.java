@@ -121,7 +121,7 @@ public class TestFBBlob extends TestXABase {
         PreparedStatement p = c.prepareStatement("insert into T1 values (?, ?)");
         Blob blob = c.createBlob();
         OutputStream os = ((FBBlob)blob).setBinaryStream(1);//with  jdbc 3, just blob.setBinaryStrean(0);
-        byte[] a = new String("a").getBytes();
+        byte[] a = "a".getBytes();
         byte[] testbuf = new byte[bloblength];
         Arrays.fill(testbuf, a[0]);
         os.write(testbuf);
@@ -146,7 +146,7 @@ public class TestFBBlob extends TestXABase {
 
         t.begin();
         PreparedStatement p = c.prepareStatement("insert into T2 values (?, ?)");
-        byte[] a = new String("a").getBytes();
+        byte[] a = "a".getBytes();
         byte[] testbuf = new byte[bloblength];
         Arrays.fill(testbuf, a[0]);
         InputStream bais = new ByteArrayInputStream(testbuf);
@@ -170,7 +170,7 @@ public class TestFBBlob extends TestXABase {
 
         t.begin();
         PreparedStatement p = c.prepareStatement("insert into T3 values (?, ?)");
-        byte[] a = new String("a").getBytes();
+        byte[] a = "a".getBytes();
         byte[] testbuf = new byte[bloblength];
         Arrays.fill(testbuf, a[0]);
         p.setBytes(2, testbuf);
