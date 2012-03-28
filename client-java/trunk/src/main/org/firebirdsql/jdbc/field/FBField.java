@@ -573,8 +573,8 @@ public abstract class FBField {
                     return getBigDecimal(scale);
                 
             case Types.BIT :
-            case 16 : // 16 is a value of Types.BOOLEAN in JDBC 3.0
-                    return new Boolean(getBoolean());
+            case Types.BOOLEAN : 
+                    return Boolean.valueOf(getBoolean());
                 
             case Types.TINYINT :
             case Types.SMALLINT :
