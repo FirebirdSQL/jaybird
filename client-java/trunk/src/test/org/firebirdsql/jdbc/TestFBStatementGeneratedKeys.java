@@ -95,7 +95,7 @@ public class TestFBStatementGeneratedKeys extends FBTestGeneratedKeysBase {
             assertNotNull("Expected a non-null resultset from getGeneratedKeys", rs);
             
             ResultSetMetaData metaData = rs.getMetaData();
-            assertEquals("Expected resultset with 2 columns", 2, metaData.getColumnCount());
+            assertEquals("Expected resultset with 3 columns", 3, metaData.getColumnCount());
             assertEquals("Unexpected first column", "ID", metaData.getColumnName(1));
             assertEquals("Unexpected second column", "TEXT", metaData.getColumnName(2));
             
@@ -189,6 +189,42 @@ public class TestFBStatementGeneratedKeys extends FBTestGeneratedKeysBase {
             
             assertTrue("Expected first row in resultset", rs.next());
             assertEquals(513, rs.getInt(1));
+            assertFalse("Expected no second row", rs.next());
+            
+            closeQuietly(rs);
+            closeQuietly(stmt);
+        } finally {
+            closeQuietly(con);
+        }
+    }
+    
+    /**
+     * Test for {@link FBStatement#execute(String, int[])} with multiple indexes, one for a column which requires a quoted name.
+     * <p>
+     * Expected: single row resultset with only the specified columns.
+     * </p>
+     * 
+     * @throws Exception
+     */
+    public void testExecute_INSERT_columnIndexes_quotedColumn() throws Exception {
+        Connection con = getConnectionViaDriverManager();
+        try {
+            Statement stmt = con.createStatement();
+
+            boolean producedResultSet = stmt.execute(TEST_INSERT_QUERY, new int[] {1, 3});
+            assertTrue("Expected execute to report true (has resultset) for INSERT with generated keys returned", producedResultSet);
+            
+            ResultSet rs = stmt.getGeneratedKeys();
+            assertNotNull("Expected a non-null resultset from getGeneratedKeys", rs);
+            
+            ResultSetMetaData metaData = rs.getMetaData();
+            assertEquals("Expected resultset with 2 column", 2, metaData.getColumnCount());
+            assertEquals("Unexpected first column", "ID", metaData.getColumnName(1));
+            assertEquals("Unexpected second column", "quote_column", metaData.getColumnName(2));
+            
+            assertTrue("Expected first row in resultset", rs.next());
+            assertEquals(513, rs.getInt(1));
+            assertEquals(2, rs.getInt(2));
             assertFalse("Expected no second row", rs.next());
             
             closeQuietly(rs);

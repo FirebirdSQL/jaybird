@@ -38,6 +38,7 @@ abstract class FBTestGeneratedKeysBase extends FBTestBase {
     private static final String CREATE_TABLE = "CREATE TABLE TABLE_WITH_TRIGGER (\n"
                 + " ID Integer NOT NULL,\n" 
                 + " TEXT Varchar(200),\n"
+                + " \"quote_column\" INTEGER DEFAULT 2,\n"
                 + " CONSTRAINT PK_TABLE_WITH_TRIGGER_1 PRIMARY KEY (ID)\n" 
                 + ")";
     private static final String DROP_SEQUENCE = "DROP GENERATOR GEN_TABLE_WITH_TRIGGER_ID";
