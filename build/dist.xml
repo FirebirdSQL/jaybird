@@ -53,7 +53,7 @@
         <include name="ChangeLog"/>
       </fileset>
       <fileset dir="native">
-        <include name="*"/>
+        <include name="**/*"/>
       </fileset>
       <zipfileset dir="${build.lib}" prefix="lib">
         <include name="connector-api-1.5.jar"/>
