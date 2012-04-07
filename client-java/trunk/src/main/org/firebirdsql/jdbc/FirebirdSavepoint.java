@@ -32,7 +32,10 @@ import java.sql.Savepoint;
 /**
  * Savepoint interface, corresponds to the <code>java.sql.Savepoint</code>
  * interface defined in JDBC 3.0, but can be used in JDBC 2.0 applications.
+ * 
+ * @deprecated This interface will be removed in Jaybird 2.3, switch to {@link java.sql.Savepoint}
  */
+@Deprecated
 public interface FirebirdSavepoint extends Savepoint {
     /* Empty interface retained for backwards compatibility */
 }

@@ -150,7 +150,9 @@ public interface FirebirdConnection extends Connection {
      *
      * @return instance of {@link FirebirdSavepoint}
      * @throws SQLException if a an error occured.
+     * @deprecated This method will be removed in Jaybird 2.3, use {@link java.sql.Connection#setSavepoint()}
      */
+    @Deprecated
     FirebirdSavepoint setFirebirdSavepoint() throws SQLException;
 
     /**
@@ -164,7 +166,9 @@ public interface FirebirdConnection extends Connection {
      * 
      * @return instance of {@link FirebirdSavepoint}
      * @throws SQLException if a an error occured.
+     * @deprecated This method will be removed in Jaybird 2.3, use {@link java.sql.Connection#setSavepoint(String)}
      */
+    @Deprecated
     FirebirdSavepoint setFirebirdSavepoint(String name) throws SQLException;
 
     /**
@@ -177,7 +181,9 @@ public interface FirebirdConnection extends Connection {
      * @param savepoint the {@link FirebirdSavepoint} object to roll back to
      * 
      * @exception SQLException if a database access error occurs.
+     * @deprecated This method will be removed in Jaybird 2.3, use {@link java.sql.Connection#rollback(java.sql.Savepoint)}
      */
+    @Deprecated
     void rollback(FirebirdSavepoint savepoint) throws SQLException;
 
     /**
@@ -190,6 +196,8 @@ public interface FirebirdConnection extends Connection {
      *
      * @param savepoint the <code>FirebirdSavepoint</code> object to be removed
      * @exception SQLException if a database access error occurs
+     * @deprecated This method will be removed in Jaybird 2.3, use {@link java.sql.Connection#releaseSavepoint(java.sql.Savepoint)}
      */
+    @Deprecated
     void releaseSavepoint(FirebirdSavepoint savepoint) throws SQLException;
 }
