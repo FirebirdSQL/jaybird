@@ -1308,10 +1308,12 @@ public abstract class AbstractConnection implements FirebirdConnection {
         return (Savepoint)setFirebirdSavepoint(name);
     }
 
+    @SuppressWarnings("deprecation")
     public void rollback(Savepoint savepoint) throws SQLException {
         rollback((FirebirdSavepoint)savepoint);
     }
 
+    @SuppressWarnings("deprecation")
     public void releaseSavepoint(Savepoint savepoint) throws SQLException {
         releaseSavepoint((FirebirdSavepoint)savepoint);
     }
@@ -1332,7 +1334,9 @@ public abstract class AbstractConnection implements FirebirdConnection {
      *            or this <code>Connection</code> object is currently in
      *            auto-commit mode
      * @see Savepoint
+     * @deprecated This method will be removed in Jaybird 2.3, use {@link java.sql.Connection#setSavepoint()}
      */
+    @Deprecated
     public synchronized FirebirdSavepoint setFirebirdSavepoint() throws SQLException {
         FBSavepoint savepoint = new FBSavepoint(getNextSavepointCounter());
         setSavepoint(savepoint);
@@ -1377,7 +1381,9 @@ public abstract class AbstractConnection implements FirebirdConnection {
      *            or this <code>Connection</code> object is currently in
      *            auto-commit mode
      * @see Savepoint
+     * @deprecated This method will be removed in Jaybird 2.3, use {@link java.sql.Connection#setSavepoint()}
      */
+    @Deprecated
     public synchronized FirebirdSavepoint setFirebirdSavepoint(String name) throws SQLException {
         FBSavepoint savepoint = new FBSavepoint(name);
         setSavepoint(savepoint);
@@ -1398,7 +1404,9 @@ public abstract class AbstractConnection implements FirebirdConnection {
      *            auto-commit mode
      * @see Savepoint
      * @see #rollback
+     * @deprecated This method will be removed in Jaybird 2.3, use {@link java.sql.Connection#rollback(Savepoint)}
      */
+    @Deprecated
     public synchronized void rollback(FirebirdSavepoint savepoint) throws SQLException {
         
         if (getAutoCommit())
@@ -1435,7 +1443,9 @@ public abstract class AbstractConnection implements FirebirdConnection {
      * @exception SQLException if a database access error occurs or
      *            the given <code>Savepoint</code> object is not a valid 
      *            savepoint in the current transaction
+     * @deprecated This method will be removed in Jaybird 2.3, use {@link java.sql.Connection#releaseSavepoint(Savepoint)}
      */
+    @Deprecated
     public synchronized void releaseSavepoint(FirebirdSavepoint savepoint) throws SQLException {
         
         if (getAutoCommit())

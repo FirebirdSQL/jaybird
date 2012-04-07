@@ -21,13 +21,15 @@
 package org.firebirdsql.jdbc;
 
 import java.sql.SQLException;
+import java.sql.Savepoint;
 
 /**
  * Savepoint implementation.
  * 
  * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
  */
-public class FBSavepoint implements FirebirdSavepoint {
+@SuppressWarnings("deprecation")
+public class FBSavepoint implements Savepoint, FirebirdSavepoint {
     public static final String SAVEPOINT_ID_PREFIX = "svpt";
 
     private boolean valid = true;
