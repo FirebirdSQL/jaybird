@@ -1,3 +1,217 @@
+2012-04-07 11:17  mrotteveel
+
+	* client-java/build/: archive.xml, init.xml:
+
+	JDBC-245: Remove jaybird-pool jar from distribution (merge with
+	(simple) jaybird jar)
+
+2012-04-07 11:16  mrotteveel
+
+	* client-java/build/dist.xml:
+
+	Also include files in native/debug in distribution
+
+2012-04-04 20:31  mrotteveel
+
+	* client-java/src/:
+	test/org/firebirdsql/jdbc/TestGeneratedKeysQuery.java,
+	main/org/firebirdsql/jdbc/AbstractGeneratedKeysQuery.java,
+	test/org/firebirdsql/jdbc/FBTestGeneratedKeysBase.java,
+	test/org/firebirdsql/jdbc/TestFBPreparedStatementGeneratedKeys.java,
+	test/org/firebirdsql/jdbc/TestFBStatementGeneratedKeys.java:
+
+	Changes to generated keys implementation: * Attempt to load parser
+	once at class load, not on each instance creation * Ensure
+	NO_GENERATED_KEYS works even if parser could not be loaded (per
+	JDBC spec) * Quote column names retrieved from metadata to allow
+	for mixed case columns
+
+2012-03-28 17:01  mrotteveel
+
+	*
+	client-java/src/test/org/firebirdsql/jdbc/TestFBUnmanagedConnection.java:
+
+	Cleanup test + formatting
+
+2012-03-28 17:00  mrotteveel
+
+	* client-java/src/test/org/firebirdsql/jdbc/TestBoundary.java:
+
+	Cleanup formatting of test + separate out setup() and tearDown()
+
+2012-03-28 16:59  mrotteveel
+
+	* client-java/src/test/org/firebirdsql/jdbc/:
+	FBTestGeneratedKeysBase.java, TestFBStatement.java:
+
+	Simplify drop / create sequence of tests (+ fix missing TABLE in
+	drop statement)
+
+2012-03-28 16:50  mrotteveel
+
+	* client-java/src/test/org/firebirdsql/:
+	common/SimpleFBTestBase.java, jca/TestFBBlob.java:
+
+	Fix minor FindBugs nags
+
+2012-03-28 16:46  mrotteveel
+
+	*
+	client-java/src/pool/org/firebirdsql/pool/XPreparedStatementModel.java:
+
+	Replace full boolean eval with short-circuit
+
+2012-03-28 16:46  mrotteveel
+
+	* client-java/src/:
+	main/org/firebirdsql/jdbc/AbstractCallableStatement.java,
+	main/org/firebirdsql/jdbc/FBConnectionHelper.java,
+	main/org/firebirdsql/jdbc/FBStatementFactory.java,
+	main/org/firebirdsql/jdbc/field/FBField.java,
+	pool/org/firebirdsql/pool/PooledPreparedStatementHandler.java:
+
+	Replace Boolean object instantiation with valueOf call + replace
+	magic 16 with JDBC constant Types.Boolean
+
+2012-03-26 20:34  mrotteveel
+
+	* client-java/src/main/org/firebirdsql/jdbc/:
+	AbstractGeneratedKeysQuery.java, parser/StatementParser.java,
+	parser/StatementParserImpl.java:
+
+	Make Jaybird work if antlr-runtime dependency is not on the
+	classpath by separating parsing part and loading through
+	reflection: throw FBDriverNotCapableException if this fails
+
+2012-03-25 15:42  mrotteveel
+
+	* client-java/src/:
+	jdbc_40/org/firebirdsql/jdbc/FBDatabaseMetaData.java,
+	main/org/firebirdsql/jca/FBManagedConnectionMetaData.java:
+
+	Remove unused imports
+
+2012-03-25 15:36  mrotteveel
+
+	* client-java/src/etc/: release_notes.pdf, release_notes.html:
+
+	PDF and HTML version of current releasenotes
+
+2012-03-25 14:58  mrotteveel
+
+	* client-java/src/etc/release_notes.odt:
+
+	* Include maven information * Changes from mini-j2ee.jar to
+	connector-api-1.5.jar
+
+2012-03-25 14:21  mrotteveel
+
+	* client-java/: build/archive.xml, build/compile.xml,
+	build/dist.xml, build/init.xml, build/test.xml, .classpath,
+	build/maven-release/jaybird-example.pom,
+	src/lib/connector-api-1.5.jar, src/lib/mini-j2ee.jar:
+
+	Switch to connector-api 1.5 (JCA)
+
+2012-03-18 17:02  mrotteveel
+
+	* client-java/src/test/org/firebirdsql/common/FBTestBase.java:
+
+	Firebird 1.0 and 1.5 do not always return specific error codes on
+	drop of non existent tables; workaround
+
+2012-03-18 17:01  mrotteveel
+
+	*
+	client-java/src/test/org/firebirdsql/jdbc/FBMetaDataTestBase.java:
+
+	Testrunner does not call tearDown() after failure in setUp(), so
+	call it explicitly
+
+2012-03-18 16:59  mrotteveel
+
+	*
+	client-java/src/test/org/firebirdsql/jdbc/TestFBPreparedStatement.java:
+
+	* Split single statement type test into individual tests so failure
+	of INSERT ... RETURNING on earlier Firebird versions does not
+	obscure results for other types
+
+2012-03-18 16:57  mrotteveel
+
+	*
+	client-java/src/test/org/firebirdsql/jdbc/FBTestGeneratedKeysBase.java:
+
+	* Replace use of SEQUENCE with GENERATOR to make the error when
+	testing with older versions of Firebird more specific
+
+2012-03-18 16:56  mrotteveel
+
+	*
+	client-java/src/test/org/firebirdsql/management/TestBackupManager.java:
+
+	* Cleanup commented out code * Add TODO comment as test assumes it
+	is running on localhost
+
+2012-03-18 13:10  mrotteveel
+
+	*
+	client-java/src/test/org/firebirdsql/event/TestFBEventManager.java:
+
+	Connect to configured test server host, not to localhost
+
+2012-03-10 18:38  mrotteveel
+
+	* client-java/src/main/org/firebirdsql/management/:
+	FBServiceManager.java, FBTraceManager.java, TraceManager.java:
+
+	Add detection of trace session Id
+
+2012-03-10 17:41  mrotteveel
+
+	*
+	client-java/src/main/org/firebirdsql/management/FBTraceManager.java:
+
+	JDBC-148 Replace Thread implementation with a Runnable
+
+2012-03-10 16:40  mrotteveel
+
+	* client-java/build/maven-release/: instructions.txt,
+	jaybird-example.pom:
+
+	JDBC-241 Rough first version of maven deployment instructions
+
+2012-03-10 14:36  mrotteveel
+
+	* client-java/build/: archive.xml, dist.xml, init.xml:
+
+	* Build maven-like javadoc jar * Include antlr-runtime-3.4 in
+	distribution
+
+2012-03-10 12:42  mrotteveel
+
+	* client-java/.classpath:
+
+	Remove JAAS dependency as it is provide by the runtime environment
+
+2012-03-10 12:38  mrotteveel
+
+	* client-java/: src/lib/jaas.jar, build/dist.xml, build/init.xml:
+
+	Remove JAAS dependency as it is provide by the runtime environment
+
+2012-03-09 23:33  mrotteveel
+
+	* client-java/src/pool/org/firebirdsql/pool/SimpleDataSource.java:
+
+	Add deprecation mark to SimpleDataSource
+
+2012-03-04 15:04  mrotteveel
+
+	* client-java/src/etc/release_notes.odt:
+
+	Updated releasenotes
+
 2012-03-03 17:19  mrotteveel
 
 	* client-java/native/: libjaybird22.so, libjaybird22_x64.so:
