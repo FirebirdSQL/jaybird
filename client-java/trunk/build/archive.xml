@@ -5,8 +5,7 @@
 
   <!-- Not really a jar operation but necessary :) -->
   <target name="jar-j2ee" depends="compile">
- 
-    <mkdir dir="${build.lib}"/>
+     <mkdir dir="${build.lib}"/>
     <copy file="${module.thirdparty}/connector-api-1.5.jar" tofile="${build.lib}/connector-api-1.5.jar"/>
   </target>
 
@@ -16,6 +15,9 @@
        <fileset dir="${build.classes}">
          <include name="org/firebirdsql/**"/>
        </fileset>
+       <fileset dir="${build.pool}">
+         <include name="org/firebirdsql/**"/>
+       </fileset>
        <fileset dir="${build.resources}">
          <exclude name="log4j.properties"/>
          <include name="**/*.properties"/>
@@ -23,12 +25,6 @@
        <zipfileset dir="${build.resources}/META-INF" prefix="META-INF">
          <include name="services/**/*"/>
        </zipfileset>
-    </jar>
-
-    <jar jarfile="${build.lib}/${archive.name.pool}" manifest="${build.etc}/default.mf">
-       <fileset dir="${build.pool}">
-         <include name="org/firebirdsql/**"/>
-       </fileset>
     </jar>
 
     <jar jarfile="${build.lib}/${archive.name.full}" manifest="${build.etc}/default.mf">
