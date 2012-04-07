@@ -1,0 +1,70 @@
+Instructions for releasing Jaybird to Maven
+
+Author: Mark Rotteveel
+
+Prerequisites:
+To release artifacts to Maven you need access to the repository. To get access, add a request to:
+https://issues.sonatype.org/browse/OSSRH-3069
+
+You will also need a PGP/GPG key to sign the artifacts
+
+Additional information:
+http://tracker.firebirdsql.org/browse/JDBC-241
+http://maven.apache.org/guides/mini/guide-central-repository-upload.html
+https://docs.sonatype.org/display/Repository/Central+Sync+Requirements
+https://docs.sonatype.org/display/Repository/Choosing+your+Coordinates
+
+Repository URLs:
+Deploy snapshot artifacts into repository https://oss.sonatype.org/content/repositories/snapshots
+Deploy release artifacts into the staging repository https://oss.sonatype.org/service/local/staging/deploy/maven2
+Promote staged artifacts into repository 'Releases'
+Download snapshot and release artifacts from group https://oss.sonatype.org/content/groups/public
+Download snapshot, release and staged artifacts from staging group https://oss.sonatype.org/content/groups/staging
+
+Instructions:
+
+WARNING:
+The release of Jaybird to Maven is largely a manual process as Jaybird itself is not build using Maven.
+
+For actual releases (not snapshots), first tag the repository content and build from that tag.
+
+Step 1: 
+Build the distribution zips for each JDK version to be released
+
+Unzip the distribution zips to separate folders (one for each JDK version)
+(you only need to jaybird-<version>.jar, jaybird-<version>-sources.jar and jaybird-<version>-javadoc.jar)
+
+Step 2:
+Prepare the POM file.
+* Copy the jaybird-example.pom to each JDK folder as jaybird.pom
+* Modify the POM:
+	- Change artifactId from jaybird-jdkXX to the right jdk version (eg jaybird-jdk17 for Java 7)
+	- Change the version to reflect the release version, examples:
+		For the 2.2.0 release: <version>2.2.0</version>
+		For the 2.2.1 beta release: <version>2.2.1-beta-1</version>
+		For a 2.2.1 SNAPSHOT: <version>2.2.1-SNAPSHOT</version
+* Check if the dependencies are still valid
+
+Step 3:
+TODO: Research if deploying bundled artifacts isn't easier (see 7b on https://docs.sonatype.org/display/Repository/Sonatype+OSS+Maven+Repository+Usage+Guide)
+
+Sign and deploy jar-files (replace paths, url and repositoryId as necessary; example deploys to snapshot repository)
+JDK 15:
+mvn gpg:sign-and-deploy-file -DpomFile=Jaybird-2.2.0beta1JDK_1.5\jaybird-jdk15.pom -Dfile=Jaybird-2.2.0beta1JDK_1.5\jaybird-2.2.0.jar -Durl=https://oss.sonatype.org/content/repositories/snapshots -DrepositoryId=sonatype-nexus-snapshots
+mvn gpg:sign-and-deploy-file -DpomFile=Jaybird-2.2.0beta1JDK_1.5\jaybird-jdk15.pom -Dfile=Jaybird-2.2.0beta1JDK_1.5\jaybird-2.2.0-sources.jar -Dclassifier=sources -Durl=https://oss.sonatype.org/content/repositories/snapshots -DrepositoryId=sonatype-nexus-snapshots
+mvn gpg:sign-and-deploy-file -DpomFile=Jaybird-2.2.0beta1JDK_1.5\jaybird-jdk15.pom -Dfile=Jaybird-2.2.0beta1JDK_1.5\jaybird-2.2.0-javadoc.jar -Dclassifier=javadoc -Durl=https://oss.sonatype.org/content/repositories/snapshots -DrepositoryId=sonatype-nexus-snapshots
+
+JDK 16:
+mvn gpg:sign-and-deploy-file -DpomFile=Jaybird-2.2.0beta1JDK_1.6\jaybird-jdk16.pom -Dfile=Jaybird-2.2.0beta1JDK_1.6\jaybird-2.2.0.jar -Durl=https://oss.sonatype.org/content/repositories/snapshots -DrepositoryId=sonatype-nexus-snapshots
+mvn gpg:sign-and-deploy-file -DpomFile=Jaybird-2.2.0beta1JDK_1.6\jaybird-jdk16.pom -Dfile=Jaybird-2.2.0beta1JDK_1.6\jaybird-2.2.0-sources.jar -Dclassifier=sources -Durl=https://oss.sonatype.org/content/repositories/snapshots -DrepositoryId=sonatype-nexus-snapshots
+mvn gpg:sign-and-deploy-file -DpomFile=Jaybird-2.2.0beta1JDK_1.6\jaybird-jdk16.pom -Dfile=Jaybird-2.2.0beta1JDK_1.6\jaybird-2.2.0-javadoc.jar -Dclassifier=javadoc -Durl=https://oss.sonatype.org/content/repositories/snapshots -DrepositoryId=sonatype-nexus-snapshots
+
+JDK 17:
+mvn gpg:sign-and-deploy-file -DpomFile=Jaybird-2.2.0beta1JDK_1.7\jaybird-jdk17.pom -Dfile=Jaybird-2.2.0beta1JDK_1.7\jaybird-2.2.0.jar -Durl=https://oss.sonatype.org/content/repositories/snapshots -DrepositoryId=sonatype-nexus-snapshots
+mvn gpg:sign-and-deploy-file -DpomFile=Jaybird-2.2.0beta1JDK_1.7\jaybird-jdk17.pom -Dfile=Jaybird-2.2.0beta1JDK_1.7\jaybird-2.2.0-sources.jar -Dclassifier=sources -Durl=https://oss.sonatype.org/content/repositories/snapshots -DrepositoryId=sonatype-nexus-snapshots
+mvn gpg:sign-and-deploy-file -DpomFile=Jaybird-2.2.0beta1JDK_1.7\jaybird-jdk17.pom -Dfile=Jaybird-2.2.0beta1JDK_1.7\jaybird-2.2.0-javadoc.jar -Dclassifier=javadoc -Durl=https://oss.sonatype.org/content/repositories/snapshots -DrepositoryId=sonatype-nexus-snapshots
+
+NOTE: When deploying a snapshot, signing is optional
+
+Step 4: (release only)
+Promote the artifact following steps in section 8 of https://docs.sonatype.org/display/Repository/Sonatype+OSS+Maven+Repository+Usage+Guide

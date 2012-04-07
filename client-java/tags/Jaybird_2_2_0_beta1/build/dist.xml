@@ -1,0 +1,98 @@
+  <!-- =================================================================== -->
+  <!-- Creates the API documentation                                       -->
+  <!-- =================================================================== -->
+  <target name="javadocs" depends="init,set-driver-sources,set-pool-sources">
+    <mkdir dir="${build.docs}"/>
+    <javadoc packagenames="${packages}"
+             destdir="${build.docs}"
+             author="true"
+             version="true"
+             windowtitle="${Name} API"
+             doctitle="${Name}"
+             extdirs="${module.thirdparty}"
+             bottom="Copyright &#169; 2001-2012 Jaybird (Firebird JDBC/JCA) team. All rights reserved.">
+      <classpath refid="javac.driver.classpath"/>
+      <classpath refid="javac.pool.classpath"/>
+      <sourcepath>
+		<pathelement path="${source.java}"/>
+		<pathelement path="${source.pool}"/>
+      </sourcepath>
+      <sourcepath refid="source.java.openoffice"/>
+      <sourcepath refid="source.java.additional"/>
+      <sourcepath refid="source.java.pool"/>
+      <sourcepath refid="source.java.wire"/>
+      <sourcepath refid="source.java.jca"/>
+    </javadoc>
+  </target>
+
+  <!-- =================================================================== -->
+  <!-- Creates the html documentation                                      -->
+  <!-- =================================================================== -->
+  <target name="docs" depends="init">
+  </target>
+
+  <!-- =================================================================== -->
+  <!-- Creates the distribution                                            -->
+  <!-- =================================================================== -->
+  <target name="dist" depends="jars,javadocs">
+    <mkdir dir="${build.dist}"/>
+    <zip zipfile="${build.dist}/${Name}-${version.full}.zip">
+      <fileset dir="${build.lib}">
+        <include name="${archive.name.rar}"/>
+        <include name="${archive.name.full}"/>
+        <include name="${archive.name.pool}"/>
+        <include name="${archive.name.simple}"/>
+        <include name="${archive.name.sources}"/>
+        <include name="${archive.name.javadoc}"/>
+      </fileset>
+      <fileset dir="${module.etc}">
+        <include name="release_notes.pdf"/>
+        <include name="release_notes.html"/>
+      </fileset>
+      <fileset dir=".">
+        <include name="ChangeLog"/>
+      </fileset>
+      <fileset dir="native">
+        <include name="**/*"/>
+      </fileset>
+      <zipfileset dir="${build.lib}" prefix="lib">
+        <include name="connector-api-1.5.jar"/>
+      </zipfileset>
+      <zipfileset dir="${module.thirdparty}" prefix="lib">
+        <include name="log4j-core.jar"/>
+        <include name="antlr-runtime-3.4.jar"/>
+      </zipfileset>
+      <zipfileset dir="${source.examples}" prefix="examples">
+      	<include name="*"/>
+      </zipfileset>
+      <zipfileset dir="${module.etc}" prefix="docs">
+        <include name="faq.html"/>
+      </zipfileset>
+      <zipfileset dir="${build.docs}" prefix="docs/api">
+        <include name="**/*"/>
+      </zipfileset>
+    </zip>
+  </target>
+
+  <!-- =================================================================== -->
+  <!-- Packages the source files with ZIP                                  -->
+  <!-- Also see task jar-sources in archive.xml                            -->
+  <!-- =================================================================== -->
+  <target name="src-zip" depends="init">
+    <zip zipfile="${Name}-src-${version.full}.zip" basedir="../.." includes="clients/java/**" excludes="clients/java/**.zip"/>
+  </target>
+
+  <!-- =================================================================== -->
+  <!-- Packages the distribution with ZIP                                  -->
+  <!-- =================================================================== -->
+  <target name="dist-zip" depends="dist">
+    <zip zipfile="${Name}-${version.full}.zip" basedir="${dist.dir}" includes="src/**"/>
+  </target>
+
+  <!-- =================================================================== -->
+  <!-- Packages the distribution with TAR-GZIP                             -->
+  <!-- =================================================================== -->
+  <target name="dist-tgz" depends="dist">
+    <tar tarfile="${Name}-${version.full}.tar" basedir="${dist.dir}" includes="src/**"/>
+    <gzip zipfile="${Name}-${version.full}.tar.gz" src="${Name}-${version}.tar"/>
+  </target>
