@@ -197,7 +197,7 @@ abstract public class AbstractFBConnectionPoolDataSource extends BasicAbstractCo
      * 
      * @param props instance of {@link FBConnectionProperties}.
      * 
-     * @throws IllegalPoolStateException if managed connection factory is already
+     * @throws IllegalStateException if managed connection factory is already
      * initialized.
      */
     public void setConnectionProperties(FBConnectionProperties props) {
@@ -557,8 +557,6 @@ abstract public class AbstractFBConnectionPoolDataSource extends BasicAbstractCo
      * <li><code>"EMBEDDED"</code> for type 2 JDBC driver that will use embedded
      * version of the server. 
      * </ul>
-     * 
-     * @throws SQLException if specified type is not known.
      */
     public void setType(String type) {
         checkNotStarted();

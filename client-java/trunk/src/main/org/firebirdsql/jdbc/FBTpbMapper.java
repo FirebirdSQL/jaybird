@@ -323,7 +323,7 @@ public class FBTpbMapper implements Serializable, Cloneable {
      * 
      * @return set with TPB parameters.
      * 
-     * @throws FBResourceException if specified transaction isolation level
+     * @throws IllegalArgumentException if specified transaction isolation level
      * is unknown.
      */
     public TransactionParameterBuffer getMapping(int transactionIsolation) {
@@ -355,7 +355,7 @@ public class FBTpbMapper implements Serializable, Cloneable {
      * @param transactionIsolation transaction isolation level.
      * @param tpb TPB parameters.
      * 
-     * @throws FBResourceException if incorrect isolation level is specified.
+     * @throws IllegalArgumentException if incorrect isolation level is specified.
      */
     public void setMapping(int transactionIsolation, TransactionParameterBuffer tpb) {
         switch (transactionIsolation) {

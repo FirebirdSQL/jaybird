@@ -5238,7 +5238,6 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
      * Indicates whether inserts made by others are visible.
      *
      * @param type result set type, i.e. ResultSet.TYPE_XXX
-     * @return true if updates are visible for the result set type
      * @return <code>true</code> if inserts made by others
      * are visible for the result set type;
      *        <code>false</code> otherwise

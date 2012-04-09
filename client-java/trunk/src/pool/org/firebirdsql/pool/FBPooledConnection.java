@@ -91,7 +91,8 @@ class FBPooledConnection extends PingablePooledConnection
      * @param managedConnection instance of {@link FBManagedConnection}
      * @param cri connection request information.
      * @param statementPooling <code>true</code> if statement pooling is enabled.
-     * @param transactionIsolation transaction isolation for connection.
+     * @param maxStatements Maximum number of statements to pools
+     * @param keepStatements Keep statements after closing logical connection obtained from this pooled connection
      * 
      * @throws SQLException if some SQL error happened.
      * @throws ResourceException if resource management error happened.
@@ -179,7 +180,7 @@ class FBPooledConnection extends PingablePooledConnection
      * result set if there is one. Note, it works only for statements 
      * implementing {@link FirebirdStatement} interface.
      * 
-     * @param statement SQL statement that was closed.
+     * @param key Key to SQL statement that was closed.
      * @param proxy corresponding proxy.
      * 
      * @throws SQLException if something went wrong.

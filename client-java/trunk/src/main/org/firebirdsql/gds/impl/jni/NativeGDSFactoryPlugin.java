@@ -43,7 +43,7 @@ public class NativeGDSFactoryPlugin implements GDSFactoryPlugin {
     public String getDatabasePath(String server, Integer port, String path) throws GDSException{
         if (server == null)
             throw new GDSException("Server name/address is required " +
-                    "for pure Java implementation.");
+                    "for native implementation.");
         
         if (path == null)
             throw new GDSException("Database name/path is required.");

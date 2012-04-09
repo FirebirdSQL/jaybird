@@ -222,7 +222,7 @@ public class FBWrappingDataSource extends RootCommonDataSource implements DataSo
     /**
      * Get JDBC connection for the specified user name and password.
      * 
-     * @link instance of {@link Connection}
+     * @return instance of {@link Connection}
      * 
      * @throws SQLException if something went wrong.
      */

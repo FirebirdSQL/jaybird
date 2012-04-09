@@ -1099,11 +1099,10 @@ public abstract class AbstractResultSet implements ResultSet, Synchronizable, FB
      * of this <code>ResultSet</code> object as a
      * <code>java.io.Reader</code> object.
      *
+     * @param columnName the name of the column
      * @return a <code>java.io.Reader</code> object that contains the column
      * value; if the value is SQL <code>NULL</code>, the value returned is
      * <code>null</code> in the Java programming language.
-     * @param columnName the name of the column
-     * @return the value in the specified column as a <code>java.io.Reader</code>
      * @since 1.2
      * @see <a href="package-summary.html#2.0 API">What Is in the JDBC
      *      2.0 API</a>

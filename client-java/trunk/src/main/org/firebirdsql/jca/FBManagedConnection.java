@@ -16,7 +16,6 @@
  *
  * All rights reserved.
  */
-
 package org.firebirdsql.jca;
 
 import java.io.ByteArrayInputStream;
@@ -157,6 +156,7 @@ public class FBManagedConnection implements ManagedConnection, XAResource, GDSHe
      * Get instance of {@link GDSHelper} connected with this managed connection.
      * 
      * @return instance of {@link GDSHelper}.
+     * @throws GDSException If this connection has no GDSHelper
      */
     public GDSHelper getGDSHelper() throws GDSException {
         if (gdsHelper == null)
@@ -184,7 +184,7 @@ public class FBManagedConnection implements ManagedConnection, XAResource, GDSHe
         // connection handle about the state change.
         if (!connectionSharing) {
             if (connectionHandles.size() > 1)
-                throw new java.lang.IllegalStateException(
+                throw new javax.resource.spi.IllegalStateException(
                     "Multiple connections associated with this managed " +
                     "connection in non-sharing mode.");
             
@@ -220,10 +220,11 @@ public class FBManagedConnection implements ManagedConnection, XAResource, GDSHe
      * 
      * @param connectionSharing <code>true</code> if connection sharing must be
      * enabled.
+     * @throws ResourceException If connection sharing state cannot be changed
      */
-    public void setConnectionSharing(boolean connectionSharing) {
+    public void setConnectionSharing(boolean connectionSharing) throws ResourceException {
         if (!connectionHandles.isEmpty())
-            throw new java.lang.IllegalStateException(
+            throw new javax.resource.spi.IllegalStateException(
                 "Cannot change connection sharing with active connection handles.");
         
         this.connectionSharing = connectionSharing;
@@ -236,7 +237,7 @@ public class FBManagedConnection implements ManagedConnection, XAResource, GDSHe
      * @return LocalTransaction instance
      * @throws ResourceException
      *             generic exception if operation fails
-     * @throws NotSupportedException
+     * @throws javax.resource.NotSupportedException
      *             if the operation is not supported
      * @throws ResourceAdapterInternalException
      *             resource adapter internal error condition
@@ -254,7 +255,7 @@ public class FBManagedConnection implements ManagedConnection, XAResource, GDSHe
      * @return ManagedConnectionMetaData instance
      * @throws ResourceException
      *             generic exception if operation fails
-     * @throws NotSupportedException
+     * @throws javax.resource.NotSupportedException
      *             if the operation is not supported
      */
     public ManagedConnectionMetaData getMetaData() throws ResourceException {
@@ -348,7 +349,7 @@ public class FBManagedConnection implements ManagedConnection, XAResource, GDSHe
      * @throws ResourceException
      *             Failed to associate the connection handle with this
      *             ManagedConnection instance
-     * @throws IllegalStateException
+     * @throws javax.resource.spi.IllegalStateException
      *             Illegal state for invoking this method
      * @throws ResourceAdapterInternalException
      *             Resource adapter internal error condition
@@ -396,7 +397,7 @@ public class FBManagedConnection implements ManagedConnection, XAResource, GDSHe
      *             generic exception if operation fails
      * @throws ResourceAdapterInternalException
      *             resource adapter internal error condition
-     * @throws IllegalStateException
+     * @throws javax.resource.spi.IllegalStateException
      *             Illegal state for calling connection cleanup. Example - if a
      *             local transaction is in progress that doesn't allow
      *             connection cleanup
@@ -463,7 +464,7 @@ public class FBManagedConnection implements ManagedConnection, XAResource, GDSHe
      *             generic exception if operation fails
      * @throws ResourceAdapterInternalException
      *             resource adapter internal error condition
-     * @throws SecurityException
+     * @throws javax.resource.spi.SecurityException
      *             security related error condition
      * @throws CommException
      *             failed communication with EIS instance
@@ -502,7 +503,7 @@ public class FBManagedConnection implements ManagedConnection, XAResource, GDSHe
      * 
      * @throws ResourceException
      *             generic exception if operation failed
-     * @throws IllegalStateException
+     * @throws javax.resource.spi.IllegalStateException
      *             illegal state for destroying connection
      */
     public void destroy() throws ResourceException {
@@ -510,7 +511,7 @@ public class FBManagedConnection implements ManagedConnection, XAResource, GDSHe
             return;
         
         if (gdsHelper.inTransaction()) 
-            throw new java.lang.IllegalStateException(
+            throw new javax.resource.spi.IllegalStateException(
                 "Can't destroy managed connection  with active transaction");
         
         try {
@@ -1121,6 +1122,8 @@ public class FBManagedConnection implements ManagedConnection, XAResource, GDSHe
      *            resource
      * @param flags
      *            One of TMNOFLAGS, TMJOIN, or TMRESUME
+     * @throws XAException If the transaction is already started, or this connection cannot participate in the distributed transaction
+     * @throws GDSException
      */
     public void internalStart(Xid id, int flags) throws XAException, GDSException {
         if (log != null) log.trace("start called: " + id);

@@ -222,7 +222,7 @@ public interface MaintenanceManager extends ServiceManager {
      *        <code>PAGE_FILL_FULL</code> or <code>PAGE_FILL_RESERVE</code>
      * @throws SQLException if a database access error occurs
      */
-    public void setPageFill(int pageFill) throws Exception;
+    public void setPageFill(int pageFill) throws SQLException;
 
 
     //----------- Database Shutdown -------------------

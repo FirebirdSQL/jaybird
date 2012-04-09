@@ -206,6 +206,8 @@ public class FBConnectionHelper {
      * <code>"TRANSACTION_READ_COMMITTED"</code>.
      * </ul>
      * 
+     * @param gds GDS object
+     * @param connectionProperties FirebirdConnectionProperties to set transaction state
      * @param info connection parameters passed into a driver.
      * 
      * @throws FBResourceException if specified mapping is incorrect.
