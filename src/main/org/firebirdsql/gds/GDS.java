@@ -42,6 +42,8 @@
 
 package org.firebirdsql.gds;
 
+import org.firebirdsql.gds.impl.GDSType;
+
 /**
  * The interface <code>GDS</code> has most of the C client interface functions
  * lightly mapped to java, as well as the constants returned from the server.
@@ -901,4 +903,11 @@ public interface GDS {
      */
     void fbCancelOperation(IscDbHandle dbHandle, int kind) 
         throws GDSException;
+    
+    /**
+     * Get type of this instance.
+     * 
+     * @return instance of {@link GDSType}.
+     */
+    GDSType getType();
 }
