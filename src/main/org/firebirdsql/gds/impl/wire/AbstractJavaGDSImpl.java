@@ -2559,15 +2559,6 @@ public abstract class AbstractJavaGDSImpl extends AbstractGDS implements GDS {
 						log.debug("isc_info_sql_alias "
 								+ xsqlda.sqlvar[index - 1].aliasname);
 					break;
-//                case ISCConstants.isc_info_sql_relation_alias:
-//                    len = iscVaxInteger(info, i, 2);
-//                    i += 2;
-//                    xsqlda.sqlvar[index - 1].relname = new String(info, i, len);
-//                    i += len;
-//                    if (debug)
-//                        log.debug("isc_info_sql_relation "
-//                                + xsqlda.sqlvar[index - 1].relname);
-//                    break;
 				case ISCConstants.isc_info_truncated:
 					if (debug)
 						log.debug("isc_info_truncated ");
