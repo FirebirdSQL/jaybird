@@ -55,7 +55,7 @@ public class isc_db_handle_impl extends AbstractIscDbHandle {
 
     protected void invalidate() throws IOException {
 
-        if (invalid)
+        if (!isValid())
             return;
         
         // TODO: Shouldn't this synchronize on *this*?
@@ -67,7 +67,7 @@ public class isc_db_handle_impl extends AbstractIscDbHandle {
         out = null;
         socket = null;
 
-        invalid = true;
+        invalidateHandle();
     }
 
     void addTransaction(isc_tr_handle_impl tr) {

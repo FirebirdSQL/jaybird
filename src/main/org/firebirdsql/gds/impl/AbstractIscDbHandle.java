@@ -47,7 +47,7 @@ public abstract class AbstractIscDbHandle implements IscDbHandle {
     
     // TODO: Consider to introduce generics on isc_tr_handle_impl (so methods can be moved up from isc_db_handle_impl)
 
-    protected boolean invalid;
+    private volatile boolean invalid;
     private int rdb_id;
     private Subject subject;
     private List rdb_warnings = new ArrayList();
@@ -208,6 +208,10 @@ public abstract class AbstractIscDbHandle implements IscDbHandle {
 
     public long getResp_blob_id() {
         return resp_blob_id;
+    }
+    
+    protected final synchronized void invalidateHandle() {
+        invalid = true;
     }
    
 }

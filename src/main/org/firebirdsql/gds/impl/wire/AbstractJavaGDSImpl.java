@@ -893,6 +893,8 @@ public abstract class AbstractJavaGDSImpl extends AbstractGDS implements GDS {
 			throw new GDSException(ISCConstants.isc_bad_trans_handle);
 		}
 		isc_db_handle_impl db = (isc_db_handle_impl) tr.getDbHandle();
+		if (db == null || !db.isValid())
+            throw new GDSException(ISCConstants.isc_bad_db_handle);
 
 		synchronized (db) {
 			if (tr.getState() != AbstractIscTrHandle.TRANSACTIONSTARTED
@@ -989,6 +991,8 @@ public abstract class AbstractJavaGDSImpl extends AbstractGDS implements GDS {
 			throw new GDSException(ISCConstants.isc_bad_trans_handle);
 		}
 		isc_db_handle_impl db = (isc_db_handle_impl) tr.getDbHandle();
+		if (db == null || !db.isValid())
+            throw new GDSException(ISCConstants.isc_bad_db_handle);
 
 		synchronized (db) {
 
@@ -1022,6 +1026,8 @@ public abstract class AbstractJavaGDSImpl extends AbstractGDS implements GDS {
 			throw new GDSException(ISCConstants.isc_bad_trans_handle);
 		}
 		isc_db_handle_impl db = (isc_db_handle_impl) tr.getDbHandle();
+		if (db == null || !db.isValid())
+            throw new GDSException(ISCConstants.isc_bad_db_handle);
 
 		synchronized (db) {
 			if (tr.getState() != AbstractIscTrHandle.TRANSACTIONSTARTED

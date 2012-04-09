@@ -41,7 +41,7 @@ public final class isc_db_handle_impl extends AbstractIscDbHandle {
     private int rdb_id_ptr;
 
     protected void invalidate() {
-        invalid = true;
+        invalidateHandle();
     }
 
     void setRdb_id_ptr(int rdb_id_ptr, int value) {
