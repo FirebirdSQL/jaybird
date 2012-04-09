@@ -32,6 +32,7 @@ import javax.sql.PooledConnection;
 
 import org.firebirdsql.common.FBTestBase;
 import org.firebirdsql.common.SimpleFBTestBase;
+import org.firebirdsql.gds.impl.GDSType;
 
 public class TestFBConnectionPoolDataSource extends FBTestBase {
 
@@ -48,8 +49,11 @@ public class TestFBConnectionPoolDataSource extends FBTestBase {
 
         FBConnectionPoolDataSource newDs = new FBConnectionPoolDataSource();
         newDs.setType(SimpleFBTestBase.getProperty("test.gds_type", null));
-        newDs.setServerName(DB_SERVER_URL);
-        newDs.setPortNumber(DB_SERVER_PORT);
+        if (getGdsType() == GDSType.getType("PURE_JAVA")
+                || getGdsType() == GDSType.getType("NATIVE")) {
+            newDs.setServerName(DB_SERVER_URL);
+            newDs.setPortNumber(DB_SERVER_PORT);
+        }
         newDs.setDatabaseName(getDatabasePath());
         newDs.setUser(DB_USER);
         newDs.setPassword(DB_PASSWORD);
@@ -61,10 +65,7 @@ public class TestFBConnectionPoolDataSource extends FBTestBase {
         Iterator iter = connections.iterator();
         while (iter.hasNext()) {
             PooledConnection pc = (PooledConnection) iter.next();
-            try {
-                pc.close();
-            } catch (SQLException ex) {
-            }
+            closeQuietly(pc);
         }
         super.tearDown();
     }
