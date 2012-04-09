@@ -67,7 +67,8 @@
     </junit>
   </target>
 
-  <target name="all-tests-native" depends="jars,compile-native,copy_native_to_test_path">
+  <target name="all-tests-native" depends="jars,compile-native,copy_native_to_test_path,all-tests-native-only"/>
+  <target name="all-tests-native-only" depends="init">
 
    <!-- Override JUnit defaults -->
 
@@ -136,7 +137,8 @@
     </junit>
   </target>
 
-  <target name="all-tests-embedded" depends="jars,compile-native,copy_native_to_test_path">
+  <target name="all-tests-embedded" depends="jars,compile-native,copy_native_to_test_path,all-tests-embedded-only"/>
+  <target name="all-tests-embedded-only" depends="init">
 
    <!-- Override JUnit defaults -->
     <property name="test.gds_type" value="EMBEDDED"/>
