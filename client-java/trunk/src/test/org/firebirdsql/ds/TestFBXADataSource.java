@@ -35,6 +35,7 @@ import javax.transaction.xa.Xid;
 
 import org.firebirdsql.common.FBTestBase;
 import org.firebirdsql.common.SimpleFBTestBase;
+import org.firebirdsql.gds.impl.GDSType;
 import org.firebirdsql.jca.TestXABase.XidImpl;
 import org.firebirdsql.jdbc.FBSQLException;
 
@@ -59,8 +60,11 @@ public class TestFBXADataSource extends FBTestBase {
 
         FBXADataSource newDs = new FBXADataSource();
         newDs.setType(SimpleFBTestBase.getProperty("test.gds_type", null));
-        newDs.setServerName(DB_SERVER_URL);
-        newDs.setPortNumber(DB_SERVER_PORT);
+        if (getGdsType() == GDSType.getType("PURE_JAVA")
+                || getGdsType() == GDSType.getType("NATIVE")) {
+            newDs.setServerName(DB_SERVER_URL);
+            newDs.setPortNumber(DB_SERVER_PORT);
+        }
         newDs.setDatabaseName(getDatabasePath());
         newDs.setUser(DB_USER);
         newDs.setPassword(DB_PASSWORD);
@@ -72,10 +76,7 @@ public class TestFBXADataSource extends FBTestBase {
         Iterator iter = connections.iterator();
         while (iter.hasNext()) {
             XAConnection pc = (XAConnection) iter.next();
-            try {
-                pc.close();
-            } catch (SQLException ex) {
-            }
+            closeQuietly(pc);
         }
         super.tearDown();
     }

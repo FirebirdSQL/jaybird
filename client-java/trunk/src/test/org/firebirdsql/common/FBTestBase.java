@@ -22,6 +22,7 @@ import java.sql.*;
 import java.util.*;
 
 import javax.resource.spi.ConnectionManager;
+import javax.sql.PooledConnection;
 
 import org.firebirdsql.gds.GDSException;
 import org.firebirdsql.gds.ISCConstants;
@@ -278,6 +279,22 @@ public abstract class FBTestBase extends SimpleFBTestBase {
         }
         try {
             rs.close();
+        } catch (SQLException ex) {
+            //ignore
+        }
+    }
+    
+    /**
+     * Helper method to quietly close pooled connections.
+     * 
+     * @param stmt Statement object
+     */
+    protected void closeQuietly(PooledConnection con) {
+        if (con == null) {
+            return;
+        }
+        try {
+            con.close();
         } catch (SQLException ex) {
             //ignore
         }
