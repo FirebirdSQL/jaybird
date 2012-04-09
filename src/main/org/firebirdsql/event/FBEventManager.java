@@ -100,8 +100,8 @@ public class FBEventManager implements EventManager {
         DatabaseParameterBuffer dpb = gds.createDatabaseParameterBuffer();
         dpb.addArgument(DatabaseParameterBuffer.USER, user);
         dpb.addArgument(DatabaseParameterBuffer.PASSWORD, password);
-        String connString = host + "/" + port + ":" + database;
         try {
+            String connString = GDSFactory.getDatabasePath(gds.getType(), host, port, database);
             gds.iscAttachDatabase(connString, dbHandle, dpb);
         } catch (GDSException e){
             throw new FBSQLException(e);
