@@ -255,7 +255,7 @@ public abstract class FBTestBase extends SimpleFBTestBase {
     /**
      * Helper method to quietly close connections.
      * 
-     * @param stmt Statement object
+     * @param con Connection object
      */
     protected void closeQuietly(Connection con) {
         if (con == null) {
@@ -271,7 +271,7 @@ public abstract class FBTestBase extends SimpleFBTestBase {
     /**
      * Helper method to quietly close resultsets.
      * 
-     * @param stmt Statement object
+     * @param rs ResultSet object
      */
     protected void closeQuietly(ResultSet rs) {
         if (rs == null) {
@@ -287,7 +287,7 @@ public abstract class FBTestBase extends SimpleFBTestBase {
     /**
      * Helper method to quietly close pooled connections.
      * 
-     * @param stmt Statement object
+     * @param con PooledConnection object
      */
     protected void closeQuietly(PooledConnection con) {
         if (con == null) {
