@@ -181,6 +181,9 @@ public abstract class BaseGDSImpl extends AbstractGDS {
         if (tr == null) { throw new GDSException(
                 ISCConstants.isc_bad_trans_handle); }
         isc_db_handle_impl db = (isc_db_handle_impl) tr.getDbHandle();
+        
+        if (db == null || !db.isValid())
+            throw new GDSException(ISCConstants.isc_bad_db_handle);
 
         synchronized (db) {
             if (tr.getState() != AbstractIscTrHandle.TRANSACTIONSTARTED
@@ -198,8 +201,13 @@ public abstract class BaseGDSImpl extends AbstractGDS {
     // isc_commit_transaction
     // ---------------------------------------------------------------------------------------------
     public void iscCommitTransaction(IscTrHandle tr_handle) throws GDSException {
+        if (tr_handle == null) {
+            throw new GDSException(ISCConstants.isc_bad_trans_handle);
+        }
         isc_tr_handle_impl tr = (isc_tr_handle_impl) tr_handle;
         isc_db_handle_impl db = (isc_db_handle_impl) tr.getDbHandle();
+        if (db == null || !db.isValid())
+            throw new GDSException(ISCConstants.isc_bad_db_handle);
 
         synchronized (db) {
             if (tr.getState() != AbstractIscTrHandle.TRANSACTIONSTARTED
@@ -791,6 +799,8 @@ public abstract class BaseGDSImpl extends AbstractGDS {
         if (tr == null) { throw new GDSException(
                 ISCConstants.isc_bad_trans_handle); }
         isc_db_handle_impl db = (isc_db_handle_impl) tr.getDbHandle();
+        if (db == null || !db.isValid())
+            throw new GDSException(ISCConstants.isc_bad_db_handle);
 
         synchronized (db) {
             if (tr.getState() != AbstractIscTrHandle.TRANSACTIONSTARTED
@@ -812,6 +822,8 @@ public abstract class BaseGDSImpl extends AbstractGDS {
         if (tr == null) { throw new GDSException(
                 ISCConstants.isc_bad_trans_handle); }
         isc_db_handle_impl db = (isc_db_handle_impl) tr.getDbHandle();
+        if (db == null || !db.isValid())
+            throw new GDSException(ISCConstants.isc_bad_db_handle);
 
         synchronized (db) {
             if (tr.getState() == AbstractIscTrHandle.NOTRANSACTION) { throw new GDSException(
@@ -1351,7 +1363,6 @@ public abstract class BaseGDSImpl extends AbstractGDS {
 
         synchronized (this) {
             native_fb_cancel_operation(dbHandle, kind);
-            ((isc_db_handle_impl) dbHandle).invalidate();
         }
     }
 }
