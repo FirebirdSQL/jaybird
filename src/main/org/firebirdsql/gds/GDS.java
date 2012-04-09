@@ -531,6 +531,7 @@ public interface GDS {
      *            {@link ISCConstants#DSQL_drop}, the statement will be
      *            deallocated, if the value is {@link ISCConstants#DSQL_close},
      *            the statement will only be closed
+     * @throws GDSException If an error occurs freeing the statement
      */
     void iscDsqlFreeStatement(IscStmtHandle stmtHandle, int option)
             throws GDSException;

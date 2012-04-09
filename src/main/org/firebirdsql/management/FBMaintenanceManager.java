@@ -192,7 +192,7 @@ public class FBMaintenanceManager extends FBServiceManager
      *        <code>PAGE_FILL_FULL</code> or <code>PAGE_FILL_RESERVE</code>
      * @throws SQLException if a database access error occurs
      */
-    public void setPageFill(int pageFill) throws Exception {
+    public void setPageFill(int pageFill) throws SQLException {
         if (pageFill != PAGE_FILL_FULL && pageFill != PAGE_FILL_RESERVE){
             throw new IllegalArgumentException( "Page fill must be either "
                     + "PAGE_FILL_FULL or PAGE_FILL_RESERVE");

@@ -242,7 +242,7 @@ public class GDSFactory {
      *            database name or path to the database
      * 
      * @return full connection string that can be passed to
-     *         {@link GDS#iscAttachDatabase(String, IscDbHandle, DatabaseParameterBuffer)}
+     *         {@link GDS#iscAttachDatabase(String, org.firebirdsql.gds.IscDbHandle, org.firebirdsql.gds.DatabaseParameterBuffer)}
      *         method.
      * 
      * @throws GDSException

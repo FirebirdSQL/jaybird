@@ -86,8 +86,9 @@ class PooledConnectionQueue {
      * 
      * @param connectionManager instance of {@link PooledConnectionManager}.
      * @param logger instance of {@link Logger}.
-     * @param configuration instance of {@link Configuration}.
+     * @param configuration instance of {@link ConnectionPoolConfiguration}.
      * @param queueName name of this queue.
+     * @param key Key used for this instance
      */
     public PooledConnectionQueue(PooledConnectionManager connectionManager,
         Logger logger, ConnectionPoolConfiguration configuration, 

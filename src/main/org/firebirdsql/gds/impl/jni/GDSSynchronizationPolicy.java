@@ -37,11 +37,9 @@ public class GDSSynchronizationPolicy {
     
     /**
      * Apply synchronization policy on the specfied instance of {@link GDS}.
-     * Depending on the <code>gdsType</code> specified implementation might
-     * be wrapped by dyna 
      * 
      * @param gds instance of {@link GDS} to wrap.
-     * @param gdsType type of the GDS implementation
+     * @param syncPolicy Synchronization policy to apply
      * @return instance {@link GDS} to which synchronization policy was applied.
      */
     public static GDS applySyncronizationPolicy(GDS gds, AbstractSynchronizationPolicy syncPolicy) {

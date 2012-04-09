@@ -18,7 +18,6 @@
  */
 package org.firebirdsql.encodings;
 
-import java.io.IOException;
 import java.util.*;
 
 import org.firebirdsql.jdbc.FBSQLException;
@@ -62,7 +61,7 @@ public class CharacterTranslator {
      * @param mappingPath path to the .properties file with the corresponding 
      * mapping.
      * 
-     * @throws IOException if I/O error occured or specified mapping is 
+     * @throws FBSQLException if I/O error occured or specified mapping is 
      * incorrect or cannot be found.
      */
     public void init(String mappingPath) throws FBSQLException {
