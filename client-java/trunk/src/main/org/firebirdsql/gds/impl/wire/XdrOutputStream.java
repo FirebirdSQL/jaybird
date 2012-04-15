@@ -393,7 +393,12 @@ public class XdrOutputStream {
      *         underlying stream
      */
     public void close() throws IOException {
-        out.close();
+        try {
+            out.close();
+        } finally {
+            buf = null;
+            out = null;
+        }
     }
 
 

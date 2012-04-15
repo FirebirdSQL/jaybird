@@ -54,20 +54,42 @@ public class isc_db_handle_impl extends AbstractIscDbHandle {
     }
 
     protected void invalidate() throws IOException {
-
         if (!isValid())
             return;
+
+        IOException ioeToThrow = null;
         
         // TODO: Shouldn't this synchronize on *this*?
-        in.close();
-        out.close();
-        socket.close();
-
-        in = null;
-        out = null;
-        socket = null;
-
-        invalidateHandle();
+        try {
+            try {
+                in.close();
+            } catch (IOException e) {
+                ioeToThrow = e;
+            }
+            try {
+                out.close();
+            } catch (IOException e) {
+                if (ioeToThrow == null) {
+                    ioeToThrow = e;
+                }
+            }
+            try {
+                socket.close();
+            } catch (IOException e) {
+                if (ioeToThrow == null) {
+                    ioeToThrow = e;
+                }
+            }
+        } finally {
+            in = null;
+            out = null;
+            socket = null;
+    
+            invalidateHandle();
+            if (ioeToThrow != null) {
+                throw ioeToThrow;
+            }
+        }
     }
 
     void addTransaction(isc_tr_handle_impl tr) {
