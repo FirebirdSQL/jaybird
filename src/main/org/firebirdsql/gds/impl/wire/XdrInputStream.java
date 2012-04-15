@@ -253,6 +253,8 @@ public class XdrInputStream {
             int readn = in.read(buf, 0, defaultBufferSize);
             if (readn > 0)
                 count = readn;
+            else 
+                throw new EOFException();
         }
         return buf[pos++] & 0xff;
     }
@@ -266,8 +268,11 @@ public class XdrInputStream {
     public void close() throws IOException {
         if (in == null)
             return;
-        in.close();
-        in = null;
-        buf = null;
+        try {
+            in.close();
+        } finally {
+            in = null;
+            buf = null;
+        }
     }
 }

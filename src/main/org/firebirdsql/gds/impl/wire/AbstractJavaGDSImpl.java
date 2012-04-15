@@ -3067,9 +3067,6 @@ public abstract class AbstractJavaGDSImpl extends AbstractGDS implements GDS {
         private int handle;
         private String ipAddress;
         private int port;
-        private Socket socket;
-        private XdrOutputStream out;
-        private WireXdrInputStream in;
         private int eventsId = 0;
         isc_db_handle_impl db;
         private Map globMap = new HashMap();
@@ -3143,16 +3140,24 @@ public abstract class AbstractJavaGDSImpl extends AbstractGDS implements GDS {
                             break;
                     }
                 }                 
-                doClose();
-            } catch (IOException ioe){
-                throw new RuntimeException(
-                        "IOException in event loop: " + ioe.getMessage());
-            } catch (GDSException gdse){
-                throw new RuntimeException(
-                        "GDSException in event loop: " + gdse.getMessage());
+            } catch (IOException ioe) {
+                if (log != null) {
+                    log.fatal("IOException in event loop: " + ioe.getMessage(), ioe);
+                }
+            } catch (GDSException gdse) {
+                if (log != null) {
+                    log.fatal("GDSException in event loop: " + gdse.getMessage(), gdse);
+                }
+            } finally {
+                try {
+                    doClose();
+                } catch (IOException e) {
+                    if (log != null && log.isDebugEnabled()) {
+                        log.debug("IOException closing event connection", e);
+                    }
+                }
             }
         }
-
         
         /**
          * Connect to receive event callbacks
@@ -3160,12 +3165,10 @@ public abstract class AbstractJavaGDSImpl extends AbstractGDS implements GDS {
         private void connect() throws GDSException {
             try {
                 db = new isc_db_handle_impl();
-                socket = new Socket(ipAddress, port);
-                socket.setTcpNoDelay(true);
-                out = new XdrOutputStream(socket.getOutputStream());
-                in = new WireXdrInputStream(socket.getInputStream());
-                db.in = in;
-                db.out = out;
+                db.socket = new Socket(ipAddress, port);
+                db.socket.setTcpNoDelay(true);
+                db.out = new XdrOutputStream(db.socket.getOutputStream());
+                db.in = new WireXdrInputStream(db.socket.getInputStream());
             } catch (UnknownHostException uhe){
                 throw new GDSException(
                         ISCConstants.isc_arg_gds, 
@@ -3184,21 +3187,8 @@ public abstract class AbstractJavaGDSImpl extends AbstractGDS implements GDS {
         }
 
         private void doClose() throws IOException {
-            if (in != null){
-                in.close();
-                in = null;
-            }
-            if (out != null){
-                out.close();
-                out = null;
-            }
-            if (socket != null){
-                socket.close();
-                socket = null;
-            }
-
+            db.invalidate();
         }
-
 
         public void queueEvents(isc_db_handle_impl mainDb, 
                 EventHandleImp eventHandle, 
@@ -3252,7 +3242,6 @@ public abstract class AbstractJavaGDSImpl extends AbstractGDS implements GDS {
             return this.eventHandle;
         }
     }
-
 
     public void fbCancelOperation(IscDbHandle dbHandle, int kind)
             throws GDSException {
