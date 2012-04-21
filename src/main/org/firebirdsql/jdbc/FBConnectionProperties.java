@@ -17,7 +17,6 @@
  *
  * All rights reserved.
  */
-
 package org.firebirdsql.jdbc;
 
 import java.io.Serializable;
@@ -38,7 +37,7 @@ import org.firebirdsql.jca.FBResourceException;
 public class FBConnectionProperties implements FirebirdConnectionProperties, Serializable, Cloneable {
 
     private static final long serialVersionUID = 611228437520889118L;
-
+    
     public static final String DATABASE_PROPERTY = "database";
     public static final String TYPE_PROPERTY = "type";
     public static final String ISOLATION_PROPERTY = "isolation";
@@ -121,14 +120,10 @@ public class FBConnectionProperties implements FirebirdConnectionProperties, Ser
 
     public int hashCode() {
         int result = 17;
-
-        result = result * 151 + properties.hashCode();
+        
+        // Hash is built only from fields that are least likely to change (see JDBC-249)
         result = result * 151 + (type != null ? type.hashCode() : 0);
         result = result * 151 + (database != null ? database.hashCode() : 0);
-        result = result * 151 + (tpbMapping != null ? tpbMapping.hashCode() : 0);
-        result = result * 151 + defaultTransactionIsolation;
-        result = result * 151 + customMapping.hashCode();
-        result = result * 151 + (mapper != null ? mapper.hashCode() : 0);
 
         return result;
     }
@@ -150,7 +145,8 @@ public class FBConnectionProperties implements FirebirdConnectionProperties, Ser
         result &= this.tpbMapping != null ? this.tpbMapping.equals(that.tpbMapping) : that.tpbMapping == null;
         result &= this.defaultTransactionIsolation == that.defaultTransactionIsolation;
         result &= this.customMapping.equals(that.customMapping);
-        result &= this.mapper != null ? this.mapper.equals(that.mapper) : that.mapper == null;
+        // If one or both are null we are identical (see also JDBC-249)
+        result &= (this.mapper == null || that.mapper == null) ? true : this.mapper.equals(that.mapper);
 
         return result;
     }
@@ -168,10 +164,6 @@ public class FBConnectionProperties implements FirebirdConnectionProperties, Ser
             throw new Error("Assertion failure: clone not supported"); // Can't happen
         }
     }
-
-    /*
-     * **********************************************************************
-     */
 
     public String getDatabase() {
         return database;
@@ -398,19 +390,8 @@ public class FBConnectionProperties implements FirebirdConnectionProperties, Ser
     }
 
     public DatabaseParameterBuffer getDatabaseParameterBuffer() throws SQLException {
-        GDSType gdsType = GDSType.getType(type);
-
-        if (gdsType == null && type != null)
-            throw new IllegalArgumentException("Unknown GDS type " + type);
-
-        GDS gds;
-        if (gdsType != null)
-            gds = GDSFactory.getGDSForType(gdsType);
-        else
-            gds = GDSFactory.getDefaultGDS();
-
+        GDS gds = getGds();
         DatabaseParameterBuffer dpb = gds.createDatabaseParameterBuffer();
-
         for (Iterator iter = properties.entrySet().iterator(); iter.hasNext();) {
             Map.Entry entry = (Map.Entry) iter.next();
 
@@ -456,10 +437,9 @@ public class FBConnectionProperties implements FirebirdConnectionProperties, Ser
     }
 
     public void setDefaultTransactionIsolation(int defaultIsolationLevel) {
+        defaultTransactionIsolation = defaultIsolationLevel;
         if (mapper != null)
             mapper.setDefaultTransactionIsolation(defaultIsolationLevel);
-        else
-            this.defaultTransactionIsolation = defaultIsolationLevel;
     }
 
     public String getDefaultIsolation() {
@@ -478,27 +458,16 @@ public class FBConnectionProperties implements FirebirdConnectionProperties, Ser
     }
 
     public void setTransactionParameters(int isolation, TransactionParameterBuffer tpb) {
+        customMapping.put(Integer.valueOf(isolation), tpb);
         if (mapper != null)
             mapper.setMapping(isolation, tpb);
-        else
-            customMapping.put(Integer.valueOf(isolation), tpb);
     }
 
     public FBTpbMapper getMapper() throws FBResourceException {
         if (mapper != null)
             return mapper;
 
-        GDSType gdsType = GDSType.getType(type);
-
-        if (gdsType == null && type != null)
-            throw new IllegalArgumentException("Unknown GDS type " + type);
-
-        GDS gds;
-        if (gdsType != null)
-            gds = GDSFactory.getGDSForType(gdsType);
-        else
-            gds = GDSFactory.getDefaultGDS();
-
+        GDS gds = getGds();
         if (tpbMapping == null)
             mapper = FBTpbMapper.getDefaultMapper(gds);
         else
@@ -516,6 +485,21 @@ public class FBConnectionProperties implements FirebirdConnectionProperties, Ser
         }
 
         return mapper;
+    }
+    
+    /**
+     * Returns the GDS instance for value of field type.
+     * <p>
+     * Will return the default GDS if type is not set.
+     * </p>
+     * @return GDS instance
+     * @throws IllegalArgumentException if the value of type does not match a loaded GDSType
+     */
+    private GDS getGds() {
+        GDSType gdsType = GDSType.getType(type);
+        if (gdsType == null && type != null)
+            throw new IllegalArgumentException("Unknown GDS type " + type);
+        return GDSFactory.getGDSForType(gdsType);
     }
 
 }

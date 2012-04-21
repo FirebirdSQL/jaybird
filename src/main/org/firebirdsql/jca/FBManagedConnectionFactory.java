@@ -62,7 +62,7 @@ public class FBManagedConnectionFactory implements ManagedConnectionFactory,
      * The <code>mcfInstances</code> weak hash map is used in deserialization
      * to find the correct instance of a mcf after deserializing.
      */
-    private final static Map mcfInstances = new WeakHashMap();
+    private final static Map mcfInstances = Collections.synchronizedMap(new WeakHashMap());
 
     // /**
     // * @todo Claudio suggests this should be 1024*64 -1, we should find out I
@@ -606,9 +606,7 @@ public class FBManagedConnectionFactory implements ManagedConnectionFactory,
     private void start() {
         synchronized (startLock) {
             if (!started) {
-                synchronized (mcfInstances) {
-                    mcfInstances.put(this, this);
-                }
+                mcfInstances.put(this, this);
                 started = true;
             } // end of if ()
         }
