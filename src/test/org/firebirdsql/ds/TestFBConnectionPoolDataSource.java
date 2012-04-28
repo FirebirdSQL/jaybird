@@ -132,4 +132,38 @@ public class TestFBConnectionPoolDataSource extends FBTestBase {
         
         assertEquals("someValue", ds.getNonStandardProperty("someProperty"));
     }
+    
+    /**
+     * Test if closing the logical connection does not produce errors when 
+     * it is closed with statements open.
+     * <p>
+     * See JDBC-250
+     * </p>
+     */
+    public void testStatementOnConnectionClose() throws SQLException {
+        PooledConnection pc = getPooledConnection();
+        Connection con = pc.getConnection();
+        Statement stmt = con.createStatement();
+        
+        con.close();
+        assertTrue("Statement should be closed", stmt.isClosed());
+        assertTrue("Connection should be closed", con.isClosed());
+    }
+    
+    /**
+     * Test if obtaining a new logical connection while one is open does not produce errors 
+     * when the older logical connection is closed with statements open.
+     * <p>
+     * See JDBC-250
+     * </p>
+     */
+    public void testStatementOnConnectionReuse() throws SQLException {
+        PooledConnection pc = getPooledConnection();
+        Connection con = pc.getConnection();
+        Statement stmt = con.createStatement();
+
+        pc.getConnection();
+        assertTrue("Statement should be closed", stmt.isClosed());
+        assertTrue("Connection should be closed", con.isClosed());
+    }
 }

@@ -30,6 +30,7 @@ import java.lang.reflect.Proxy;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -233,7 +234,9 @@ class PooledConnectionHandler implements InvocationHandler {
     protected void closeStatements() throws SQLException {
         SQLException sqle = null;
         synchronized (openStatements) {
-            Iterator iter = openStatements.iterator();
+            // Make copy as the StatementHandler close will remove itself from openStatements
+            List statementsCopy = new ArrayList(openStatements);
+            Iterator iter = statementsCopy.iterator();
             while (iter.hasNext()) {
                 StatementHandler stmt = (StatementHandler) iter.next();
                 try {
@@ -251,6 +254,7 @@ class PooledConnectionHandler implements InvocationHandler {
                     iter.remove();
                 }
             }
+            openStatements.clear();
         }
         if (sqle != null) {
             throw sqle;
