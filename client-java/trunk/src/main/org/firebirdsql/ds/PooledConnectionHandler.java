@@ -250,8 +250,6 @@ class PooledConnectionHandler implements InvocationHandler {
                     // TODO : Log, ignore, something else?
                 } catch (Throwable t) {
                     // ignore?
-                } finally {
-                    iter.remove();
                 }
             }
             openStatements.clear();
