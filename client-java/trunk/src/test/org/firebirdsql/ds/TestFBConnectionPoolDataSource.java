@@ -24,56 +24,18 @@ import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
 
 import javax.sql.PooledConnection;
 
-import org.firebirdsql.common.FBTestBase;
-import org.firebirdsql.common.SimpleFBTestBase;
-import org.firebirdsql.gds.impl.GDSType;
-
-public class TestFBConnectionPoolDataSource extends FBTestBase {
-
-    private List connections = new ArrayList();
+/**
+ * Tests for {@link FBConnectionPoolDataSource}
+ * 
+ * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ */
+public class TestFBConnectionPoolDataSource extends FBConnectionPoolTestBase {
 
     public TestFBConnectionPoolDataSource(String name) {
         super(name);
-    }
-
-    protected FBConnectionPoolDataSource ds;
-
-    public void setUp() throws Exception {
-        super.setUp();
-
-        FBConnectionPoolDataSource newDs = new FBConnectionPoolDataSource();
-        newDs.setType(SimpleFBTestBase.getProperty("test.gds_type", null));
-        if (getGdsType() == GDSType.getType("PURE_JAVA")
-                || getGdsType() == GDSType.getType("NATIVE")) {
-            newDs.setServerName(DB_SERVER_URL);
-            newDs.setPortNumber(DB_SERVER_PORT);
-        }
-        newDs.setDatabaseName(getDatabasePath());
-        newDs.setUser(DB_USER);
-        newDs.setPassword(DB_PASSWORD);
-
-        ds = newDs;
-    }
-
-    public void tearDown() throws Exception {
-        Iterator iter = connections.iterator();
-        while (iter.hasNext()) {
-            PooledConnection pc = (PooledConnection) iter.next();
-            closeQuietly(pc);
-        }
-        super.tearDown();
-    }
-    
-    protected PooledConnection getPooledConnection() throws SQLException {
-        PooledConnection pc = ds.getPooledConnection();
-        connections.add(pc);
-        return pc;
     }
 
     /**
@@ -97,7 +59,7 @@ public class TestFBConnectionPoolDataSource extends FBTestBase {
         Connection con = pc.getConnection();
 
         assertTrue("Autocommit should be true", con.getAutoCommit());
-        assertTrue("Read-only should be false", !con.isReadOnly());
+        assertFalse("Read-only should be false", con.isReadOnly());
         assertEquals("Tx isolation level should be read committed.",
                 Connection.TRANSACTION_READ_COMMITTED, con.getTransactionIsolation());
 
@@ -131,39 +93,5 @@ public class TestFBConnectionPoolDataSource extends FBTestBase {
         ds.setNonStandardProperty("someProperty", "someValue");
         
         assertEquals("someValue", ds.getNonStandardProperty("someProperty"));
-    }
-    
-    /**
-     * Test if closing the logical connection does not produce errors when 
-     * it is closed with statements open.
-     * <p>
-     * See JDBC-250
-     * </p>
-     */
-    public void testStatementOnConnectionClose() throws SQLException {
-        PooledConnection pc = getPooledConnection();
-        Connection con = pc.getConnection();
-        Statement stmt = con.createStatement();
-        
-        con.close();
-        assertTrue("Statement should be closed", stmt.isClosed());
-        assertTrue("Connection should be closed", con.isClosed());
-    }
-    
-    /**
-     * Test if obtaining a new logical connection while one is open does not produce errors 
-     * when the older logical connection is closed with statements open.
-     * <p>
-     * See JDBC-250
-     * </p>
-     */
-    public void testStatementOnConnectionReuse() throws SQLException {
-        PooledConnection pc = getPooledConnection();
-        Connection con = pc.getConnection();
-        Statement stmt = con.createStatement();
-
-        pc.getConnection();
-        assertTrue("Statement should be closed", stmt.isClosed());
-        assertTrue("Connection should be closed", con.isClosed());
     }
 }
