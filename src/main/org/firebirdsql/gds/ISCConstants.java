@@ -42,7 +42,7 @@ package org.firebirdsql.gds;
  * @author <a href="mailto:d_jencks@users.sourceforge.net">David Jencks</a>
  * @version 1.0
  */
-public final class ISCConstants {
+public interface ISCConstants {
 
     public final static int SQLDA_VERSION1             = 1;
     public final static int SQL_DIALECT_V5             = 1;
@@ -319,28 +319,28 @@ public final class ISCConstants {
      * Parameters for isc_action_svc_properties *
      ********************************************/
 
-    public final static int isc_spb_prp_page_buffers		=5;
-    public final static int isc_spb_prp_sweep_interval		=6;
-    public final static int isc_spb_prp_shutdown_db			=7;
-    public final static int isc_spb_prp_deny_new_attachments	=9;
-    public final static int isc_spb_prp_deny_new_transactions	=10;
-    public final static int isc_spb_prp_reserve_space		=11;
-    public final static int isc_spb_prp_write_mode			=12;
-    public final static int isc_spb_prp_access_mode			=13;
-    public final static int isc_spb_prp_set_sql_dialect		=14;
-    public final static int isc_spb_prp_activate			=0x0100;
-    public final static int isc_spb_prp_db_online			=0x0200;
+    public final static int isc_spb_prp_page_buffers          = 5;
+    public final static int isc_spb_prp_sweep_interval        = 6;
+    public final static int isc_spb_prp_shutdown_db	          = 7;
+    public final static int isc_spb_prp_deny_new_attachments  = 9;
+    public final static int isc_spb_prp_deny_new_transactions = 10;
+    public final static int isc_spb_prp_reserve_space		  = 11;
+    public final static int isc_spb_prp_write_mode			  = 12;
+    public final static int isc_spb_prp_access_mode			  = 13;
+    public final static int isc_spb_prp_set_sql_dialect		  = 14;
+    public final static int isc_spb_prp_activate			  = 0x0100;
+    public final static int isc_spb_prp_db_online			  = 0x0200;
     
     // New shutdown/online modes - New with Firebird 2.5
-    public final static int isc_spb_prp_force_shutdown = 41;
+    public final static int isc_spb_prp_force_shutdown        = 41;
     public final static int isc_spb_prp_attachments_shutdown  = 42;
     public final static int isc_spb_prp_transactions_shutdown = 43;
     public final static int isc_spb_prp_shutdown_mode         = 44;
     public final static int isc_spb_prp_online_mode           = 45;
-    public final static int isc_spb_prp_sm_normal = 0;
-    public final static int isc_spb_prp_sm_multi = 1;
-    public final static int isc_spb_prp_sm_single = 2;
-    public final static int isc_spb_prp_sm_full = 3;
+    public final static int isc_spb_prp_sm_normal             = 0;
+    public final static int isc_spb_prp_sm_multi              = 1;
+    public final static int isc_spb_prp_sm_single             = 2;
+    public final static int isc_spb_prp_sm_full               = 3;
 
 
     /********************************************
@@ -439,31 +439,6 @@ public final class ISCConstants {
     public final static int isc_spb_sts_table       =   0x40;
     public final static int isc_spb_sts_nocreation  =   0x80;
 
-
-
-    /*public final static Integer isc_tpb_version1                = 1;
-    public final static Integer isc_tpb_version3                = 3;
-    public final static Integer isc_tpb_consistency             = 1;
-    public final static Integer isc_tpb_concurrency             = 2;
-    public final static Integer isc_tpb_shared                  = 3;
-    public final static Integer isc_tpb_protected               = 4;
-    public final static Integer isc_tpb_exclusive               = 5;
-    public final static Integer isc_tpb_wait                    = 6;
-    public final static Integer isc_tpb_nowait                  = 7;
-    public final static Integer isc_tpb_read                    = 8;
-    public final static Integer isc_tpb_write                   = 9;
-    public final static Integer isc_tpb_lock_read               = 10;
-    public final static Integer isc_tpb_lock_write              = 11;
-    public final static Integer isc_tpb_verb_time               = 12;
-    public final static Integer isc_tpb_commit_time             = 13;
-    public final static Integer isc_tpb_ignore_limbo            = 14;
-    public final static Integer isc_tpb_read_committed          = 15;
-    public final static Integer isc_tpb_autocommit              = 16;
-    public final static Integer isc_tpb_rec_version             = 17;
-    public final static Integer isc_tpb_no_rec_version          = 18;
-    public final static Integer isc_tpb_restart_requests        = 19;
-    public final static Integer isc_tpb_no_auto_undo            = 20;
-    */
     /****************************/
     /* Common, structural codes */
     /****************************/
