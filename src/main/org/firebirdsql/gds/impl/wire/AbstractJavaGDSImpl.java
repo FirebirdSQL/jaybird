@@ -389,6 +389,10 @@ public abstract class AbstractJavaGDSImpl extends AbstractGDS implements GDS {
 	    internalAttachDatabase(dbai, db_handle, databaseParameterBuffer, true);
 	}
 
+	/**
+	 * @deprecated This method will be removed in Jaybird 2.3
+	 */
+	@Deprecated
 	public void internalAttachDatabase(String host, Integer port,
 			String file_name, IscDbHandle db_handle,
 			DatabaseParameterBuffer databaseParameterBuffer)
@@ -3266,13 +3270,7 @@ public abstract class AbstractJavaGDSImpl extends AbstractGDS implements GDS {
 
             } catch (IOException ex) {
                 throw new GDSException(ISCConstants.isc_network_error);
-            } finally {
-//                try {
-//                    disconnect(db);
-//                } catch (IOException ex2) {
-//                    throw new GDSException(ISCConstants.isc_network_error);
-//                }
-            }
+            } 
         //}
     }
     
