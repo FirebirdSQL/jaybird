@@ -28,6 +28,7 @@ import java.sql.SQLException;
 import java.sql.Statement;
 
 import org.firebirdsql.jdbc.FBSQLException;
+import org.firebirdsql.jdbc.FirebirdStatement;
 
 import static org.firebirdsql.ds.ReflectionHelper.*;
 
@@ -88,7 +89,7 @@ class StatementHandler implements InvocationHandler {
         }
 
         // Methods of statement and subinterfaces
-        if (method.equals(STATEMENT_IS_CLOSED)) {
+        if (method.equals(STATEMENT_IS_CLOSED) || method.equals(FIREBIRDSTATEMENT_IS_CLOSED)) {
             return Boolean.valueOf(isClosed());
         }
         if (isClosed() && !method.equals(STATEMENT_CLOSE)) {
@@ -98,10 +99,9 @@ class StatementHandler implements InvocationHandler {
         
         try {
             if (method.equals(STATEMENT_CLOSE)) {
-                if (isClosed()) {
-                    return null;
+                if (!isClosed()) {
+                    handleClose();
                 }
-                handleClose();
                 return null;
             }
             if (method.equals(GET_CONNECTION)) {
@@ -167,6 +167,8 @@ class StatementHandler implements InvocationHandler {
 
     // Statement methods
     private final static Method STATEMENT_IS_CLOSED = findMethod(Statement.class, "isClosed",
+            new Class[0]);
+    private final static Method FIREBIRDSTATEMENT_IS_CLOSED = findMethod(FirebirdStatement.class, "isClosed", 
             new Class[0]);
     private final static Method STATEMENT_CLOSE = findMethod(Statement.class, "close", new Class[0]);
     private final static Method GET_CONNECTION = findMethod(Statement.class, "getConnection", new Class[0]);

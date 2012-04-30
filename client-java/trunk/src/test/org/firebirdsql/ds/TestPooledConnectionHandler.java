@@ -22,9 +22,10 @@ package org.firebirdsql.ds;
 
 import java.sql.Connection;
 import java.sql.SQLException;
-import java.sql.Statement;
 
 import javax.sql.PooledConnection;
+
+import org.firebirdsql.jdbc.FirebirdStatement;
 
 /**
  * Tests for {@link PooledConnectionHandler} and its proxy object (obtained from {@link FBConnectionPoolDataSource}).
@@ -47,7 +48,8 @@ public class TestPooledConnectionHandler extends FBConnectionPoolTestBase {
     public void testStatementOnConnectionClose() throws SQLException {
         PooledConnection pc = getPooledConnection();
         Connection con = pc.getConnection();
-        Statement stmt = con.createStatement();
+        // Cast to FirebirdStatement to make this work with Java 5 / JDBC 3
+        FirebirdStatement stmt = (FirebirdStatement)con.createStatement();
         
         con.close();
         assertTrue("Statement should be closed", stmt.isClosed());
@@ -64,7 +66,8 @@ public class TestPooledConnectionHandler extends FBConnectionPoolTestBase {
     public void testStatementOnConnectionReuse() throws SQLException {
         PooledConnection pc = getPooledConnection();
         Connection con = pc.getConnection();
-        Statement stmt = con.createStatement();
+        // Cast to FirebirdStatement to make this work with Java 5 / JDBC 3
+        FirebirdStatement stmt = (FirebirdStatement)con.createStatement();
 
         pc.getConnection();
         assertTrue("Statement should be closed", stmt.isClosed());
