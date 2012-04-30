@@ -21,10 +21,10 @@ package org.firebirdsql.pool;
 
 import java.sql.*;
 import java.util.*;
-import java.util.Iterator;
 
 import org.firebirdsql.logging.Logger;
 import org.firebirdsql.logging.LoggerFactory;
+import org.firebirdsql.util.SQLExceptionChainBuilder;
 
 /**
  * This class represents a cache of prepared statements corresponding to 
@@ -200,7 +200,7 @@ class XPreparedStatementCache {
         key = null;
         
         // clear free references
-        SQLException error = null;
+        SQLExceptionChainBuilder chain = new SQLExceptionChainBuilder();
         while(!freeReferences.isEmpty()) {
             try {
                 XCachablePreparedStatement result =
@@ -210,10 +210,7 @@ class XPreparedStatementCache {
             } catch(InterruptedException ex) {
                 // ignore
             } catch(SQLException ex) {
-                if (error == null)
-                    error = ex;
-                else
-                    error.setNextException(ex);
+                chain.append(ex);
             }
         }
         
@@ -229,16 +226,13 @@ class XPreparedStatementCache {
             try {
                 item.forceClose();
             } catch(SQLException ex) {
-                if (error == null)
-                    error = ex;
-                else
-                    error.setNextException(ex);
+                chain.append(ex);
             }
         }
         workingReferences.clear();
         
-        if (error != null)
-            throw error;
+        if (chain.hasException())
+            throw chain.getException();
     }
 
 }

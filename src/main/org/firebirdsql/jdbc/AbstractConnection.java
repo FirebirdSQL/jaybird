@@ -54,6 +54,7 @@ import org.firebirdsql.jca.FBConnectionRequestInfo;
 import org.firebirdsql.jca.FBLocalTransaction;
 import org.firebirdsql.jca.FBManagedConnection;
 import org.firebirdsql.jca.FirebirdLocalTransaction;
+import org.firebirdsql.util.SQLExceptionChainBuilder;
 
 /**
  * The class <code>AbstractConnection</code> is a handle to a 
@@ -161,21 +162,18 @@ public abstract class AbstractConnection implements FirebirdConnection {
         
         // iterate through the set, close statements and collect exceptions
         Iterator iter = statements.iterator();
-        SQLException e = null;
+        SQLExceptionChainBuilder chain = new SQLExceptionChainBuilder();
         while(iter.hasNext()) {
             try {
                 AbstractStatement stmt = (AbstractStatement)iter.next();
                 stmt.close(true);
             } catch(SQLException ex) {
-                if (e != null)
-                    e.setNextException(ex);
-                else
-                    e = ex;
+                chain.append(ex);
             }
         }
         
         // throw exception if there is any
-        if (e != null) throw e;
+        if (chain.hasException()) throw chain.getException();
     }
 
     /**

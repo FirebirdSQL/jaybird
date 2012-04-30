@@ -8,6 +8,7 @@ import java.util.Iterator;
 import javax.resource.ResourceException;
 
 import org.firebirdsql.jca.FirebirdLocalTransaction;
+import org.firebirdsql.util.SQLExceptionChainBuilder;
 
 
 /**
@@ -128,7 +129,7 @@ public class InternalTransactionCoordinator implements FBObjectListener.Statemen
             this.statements.addAll(statements);
         }
         protected void completeStatements() throws SQLException {
-            SQLException resultEx = null;
+            SQLExceptionChainBuilder chain = new SQLExceptionChainBuilder();
             
             // we have to loop through the array, since the 
             // statement.completeStatement() call causes the 
@@ -142,10 +143,7 @@ public class InternalTransactionCoordinator implements FBObjectListener.Statemen
                 try {
                     statement.completeStatement();
                 } catch(SQLException ex) {
-                    if (resultEx == null)
-                        resultEx = ex;
-                    else
-                        resultEx.setNextException(ex);
+                    chain.append(ex);
                 }
             }
             
@@ -160,8 +158,8 @@ public class InternalTransactionCoordinator implements FBObjectListener.Statemen
                 throw new FBSQLException(ex);
             }
             
-            if (resultEx != null)
-                throw resultEx;
+            if (chain.hasException())
+                throw chain.getException();
         }
         
         public abstract void ensureTransaction() throws SQLException;
@@ -390,7 +388,7 @@ public class InternalTransactionCoordinator implements FBObjectListener.Statemen
          * @see org.firebirdsql.jdbc.InternalTransactionCoordinator.AbstractTransactionCoordinator#completeStatements()
          */
         protected void completeStatements() throws SQLException {
-            SQLException resultEx = null;
+            SQLExceptionChainBuilder chain = new SQLExceptionChainBuilder();
 
             // we have to loop through the array, since the 
             // statement.completeStatement() call causes the 
@@ -404,39 +402,45 @@ public class InternalTransactionCoordinator implements FBObjectListener.Statemen
                 try {
                     statement.completeStatement();
                 } catch(SQLException ex) {
-                    if (resultEx == null)
-                        resultEx = ex;
-                    else
-                        resultEx.setNextException(ex);
+                    chain.append(ex);
                 }
             }
             
             statements.clear();
+            
+            if (chain.hasException()) {
+                throw chain.getException();
+            }
         }
+        
         /* (non-Javadoc)
          * @see org.firebirdsql.jdbc.InternalTransactionCoordinator.AbstractTransactionCoordinator#ensureTransaction()
          */
         public void ensureTransaction() throws SQLException {
             // do nothing, we are in managed environment.
         }
+        
         /* (non-Javadoc)
          * @see org.firebirdsql.jdbc.FBObjectListener.StatementListener#executionStarted(java.sql.Statement)
          */
         public void executionStarted(AbstractStatement stmt) throws SQLException {
             // NO TRANSACTION MANAGEMENT HERE - empty method
         }
+        
         /* (non-Javadoc)
          * @see org.firebirdsql.jdbc.InternalTransactionCoordinator#commit()
          */
         public void commit() throws SQLException {
             // do nothing, we are in managed environment.
         }
+        
         /* (non-Javadoc)
          * @see org.firebirdsql.jdbc.InternalTransactionCoordinator#rollback()
          */
         public void rollback() throws SQLException {
             // do nothing, we are in managed environment.
         }
+        
         /* (non-Javadoc)
          * @see org.firebirdsql.jdbc.FBObjectListener.BlobListener#executionStarted(org.firebirdsql.jdbc.FirebirdBlob)
          */

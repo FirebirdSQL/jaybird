@@ -92,19 +92,20 @@ public abstract class AbstractPooledConnection implements PooledConnection {
     }
 
     public synchronized void close() throws SQLException {
-        SQLException receivedException = null;
+    	SQLException receivedException = null;
         if (handler != null) {
             try {
                 handler.close();
             } catch (SQLException se) {
-                receivedException = se;
+            	receivedException = se;
             }
         }
         if (connection != null) {
             try {
                 connection.close();
             } catch (SQLException se) {
-                if (receivedException != null) {
+            	// We want the exception of closing the physical connection to be the first
+            	if (receivedException != null) {
                     se.setNextException(receivedException);
                 }
                 receivedException = se;
@@ -202,7 +203,7 @@ public abstract class AbstractPooledConnection implements PooledConnection {
     }
     
     /**
-     * Releases the current handler if it is equal to <code>pch</code>.
+     * Releases the current handler if it is equal to the handler passed in <code>pch</code>.
      * <p>
      * To be called by the PooledConnectionHandler when it has been closed.
      * </p>

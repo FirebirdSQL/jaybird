@@ -29,6 +29,7 @@ import org.firebirdsql.gds.impl.GDSHelper;
 import org.firebirdsql.jdbc.field.FBField;
 import org.firebirdsql.jdbc.field.FBFlushableField;
 import org.firebirdsql.jdbc.field.FieldDataProvider;
+import org.firebirdsql.util.SQLExceptionChainBuilder;
 
 
 /**
@@ -165,33 +166,26 @@ public class FBRowUpdater implements FirebirdRowUpdater  {
         this.processing = false;
     }
 
-    private SQLException deallocateStatement(AbstractIscStmtHandle handle, SQLException previousException) {
+    private void deallocateStatement(AbstractIscStmtHandle handle, SQLExceptionChainBuilder chain) {
     	try {
     		if (handle != null)
     			gdsHelper.closeStatement(handle, true);
-    		
-    		return null;
-    		
     	} catch(GDSException ex) {
-    		if (previousException == null)
-    			previousException = new FBSQLException(ex);
-    		else
-    			previousException.setNextException(new FBSQLException(ex));
-    		
-    		return previousException;
+    	    chain.append(new FBSQLException(ex));
     	}
     }
     
     public void close() throws SQLException {
     	
-    	SQLException possibleError = null;
-    	possibleError = deallocateStatement(selectStatement, possibleError);
-    	possibleError = deallocateStatement(insertStatement, possibleError);
-    	possibleError = deallocateStatement(updateStatement, possibleError);
-    	possibleError = deallocateStatement(deleteStatement, possibleError);
+    	SQLExceptionChainBuilder chain = new SQLExceptionChainBuilder();
+    	deallocateStatement(selectStatement, chain);
+    	deallocateStatement(insertStatement, chain);
+    	deallocateStatement(updateStatement, chain);
+    	deallocateStatement(deleteStatement, chain);
     	
-    	if (possibleError != null)
-    		throw possibleError;
+    	// TODO: Close not completed by throw at this point?
+    	if (chain.hasException())
+    		throw chain.getException();
     	
         this.closed = true;
         if (processing)

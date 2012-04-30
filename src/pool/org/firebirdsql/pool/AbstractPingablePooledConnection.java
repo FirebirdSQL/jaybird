@@ -29,6 +29,7 @@ import javax.sql.*;
 import org.firebirdsql.jdbc.*;
 import org.firebirdsql.logging.Logger;
 import org.firebirdsql.logging.LoggerFactory;
+import org.firebirdsql.util.SQLExceptionChainBuilder;
 
 import java.util.*;
 
@@ -602,7 +603,7 @@ public abstract class AbstractPingablePooledConnection implements PooledConnecti
 
         }
         
-        SQLException error = null;
+        SQLExceptionChainBuilder chain = new SQLExceptionChainBuilder();
         
         synchronized (statements) {
             Iterator iter = statements.entrySet().iterator();
@@ -617,16 +618,13 @@ public abstract class AbstractPingablePooledConnection implements PooledConnecti
                 try {
                     stmtCache.invalidate();
                 } catch(SQLException ex) {
-                    if (error == null)
-                        error = ex;
-                    else
-                        error.setNextException(ex);
+                    chain.append(ex);
                 }
             }
         }
         
-        if (error != null)
-                throw error;
+        if (chain.hasException())
+                throw chain.getException();
     }
 
     /**
