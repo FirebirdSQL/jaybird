@@ -39,6 +39,7 @@ import java.util.List;
 import java.util.Set;
 
 import org.firebirdsql.jdbc.FBSQLException;
+import org.firebirdsql.util.SQLExceptionChainBuilder;
 
 /**
  * InvocationHandler for the logical connection returned by FBPooledConnection.
@@ -104,10 +105,9 @@ class PooledConnectionHandler implements InvocationHandler {
         try {
             // Life cycle methods
             if (method.equals(CONNECTION_CLOSE)) {
-                if (isClosed()) {
-                    return null;
+                if (!isClosed()) {
+                    handleClose(true);
                 }
-                handleClose(true);
                 return null;
             }
 
@@ -157,31 +157,23 @@ class PooledConnectionHandler implements InvocationHandler {
      *             if underlying connection threw an exception.
      */
     protected void handleClose(boolean notifyOwner) throws SQLException {
-        SQLException sqle = null;
+        SQLExceptionChainBuilder chain = new SQLExceptionChainBuilder();
         try {
             closeStatements();
         } catch (SQLException ex) {
-            sqle = ex;
+            chain.append(ex);
         }
         if (isRollbackAllowed()) {
             try {
                 connection.rollback();
             } catch (SQLException ex) {
-                if (sqle != null) {
-                    sqle.setNextException(ex);
-                } else {
-                    sqle = ex;
-                }
+                chain.append(ex);
             }
         }
         try {
             connection.clearWarnings();
         } catch (SQLException ex) {
-            if (sqle != null) {
-                sqle.setNextException(ex);
-            } else {
-                sqle = ex;
-            }
+            chain.append(ex);
         }
         proxy = null;
         connection = null;
@@ -189,8 +181,8 @@ class PooledConnectionHandler implements InvocationHandler {
         if (notifyOwner) {
             owner.fireConnectionClosed();
         }
-        if (sqle != null) {
-            throw sqle;
+        if (chain.hasException()) {
+            throw chain.getException();
         }
     }
 
@@ -232,7 +224,7 @@ class PooledConnectionHandler implements InvocationHandler {
     }
 
     protected void closeStatements() throws SQLException {
-        SQLException sqle = null;
+        SQLExceptionChainBuilder chain = new SQLExceptionChainBuilder();
         synchronized (openStatements) {
             // Make copy as the StatementHandler close will remove itself from openStatements
             List statementsCopy = new ArrayList(openStatements);
@@ -242,11 +234,7 @@ class PooledConnectionHandler implements InvocationHandler {
                 try {
                     stmt.close();
                 } catch (SQLException ex) {
-                    if (sqle != null) {
-                        sqle.setNextException(ex);
-                    } else {
-                        sqle = ex;
-                    }
+                    chain.append(ex);
                     // TODO : Log, ignore, something else?
                 } catch (Throwable t) {
                     // ignore?
@@ -254,8 +242,8 @@ class PooledConnectionHandler implements InvocationHandler {
             }
             openStatements.clear();
         }
-        if (sqle != null) {
-            throw sqle;
+        if (chain.hasException()) {
+            throw chain.getException();
         }
     }
 

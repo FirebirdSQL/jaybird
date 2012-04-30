@@ -26,6 +26,7 @@ import java.util.Iterator;
 
 import org.firebirdsql.jdbc.FBSQLException;
 import org.firebirdsql.logging.Logger;
+import org.firebirdsql.util.SQLExceptionChainBuilder;
 
 /**
  * Implementation of free connection queue.
@@ -348,7 +349,8 @@ class PooledConnectionQueue {
 
         PooledObject result = null;
         
-        SQLException pendingExceptions = null;
+        // TODO Pending exceptions are only thrown on timeout, is that correct?
+        SQLExceptionChainBuilder pendingExceptions = new SQLExceptionChainBuilder();
 
         try {
 
@@ -362,8 +364,8 @@ class PooledConnectionQueue {
                                 "blocking timeout (" + blockingTimeout + " ms)";
                             
                             FBSQLException ex = new FBSQLException(message, FBSQLException.SQL_STATE_CONNECTION_FAILURE);
-                            if (pendingExceptions != null) {
-                                ex.setNextException(ex);
+                            if (pendingExceptions.hasException()) {
+                                ex.setNextException(pendingExceptions.getException());
                             }
                                 
                             throw ex;
@@ -382,12 +384,11 @@ class PooledConnectionQueue {
                             // could not add connection... bad luck
                             // let's wait more
                             
-                            if (pendingExceptions == null)
-                                pendingExceptions = sqlex;
-                            else
-                            if (pendingExceptions.getErrorCode() != sqlex.getErrorCode())
-                                pendingExceptions.setNextException(sqlex);
-    
+                            if (!pendingExceptions.hasException()) {
+                                pendingExceptions.append(sqlex);
+                            } else if (pendingExceptions.getException().getErrorCode() != sqlex.getErrorCode()) {
+                                pendingExceptions.append(sqlex);
+                            }
                         }
     
                         if (!connectionAdded) {

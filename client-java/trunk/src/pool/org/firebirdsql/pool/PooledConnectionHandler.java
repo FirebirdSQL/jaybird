@@ -31,14 +31,17 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
 
 import org.firebirdsql.jdbc.FBSQLException;
 import org.firebirdsql.jdbc.FirebirdResultSet;
 import org.firebirdsql.jdbc.FirebirdStatement;
 import org.firebirdsql.logging.Logger;
 import org.firebirdsql.logging.LoggerFactory;
+import org.firebirdsql.util.SQLExceptionChainBuilder;
 
 /**
  * This is a wrapper for {@link Connection} instances that caches prepared
@@ -407,23 +410,23 @@ class PooledConnectionHandler implements InvocationHandler {
      * @throws SQLException if some error happened during close.
      */
     synchronized void closeOpenStatements() throws SQLException {
-        SQLException error = null;
+        SQLExceptionChainBuilder chain = new SQLExceptionChainBuilder();
         
-        for (Iterator iter = openStatements.iterator(); iter.hasNext();) {
+        // Copy to prevent ConcurrentModificationException
+        List copyStatements = new ArrayList(openStatements);
+        for (Iterator iter = copyStatements.iterator(); iter.hasNext();) {
             StatementHandler handler = (StatementHandler) iter.next();
             
             try {
                 handler.getWrappedObject().close();
             } catch(SQLException ex) {
-                if (error == null)
-                    error = ex;
-                else
-                    error.setNextException(ex);
+                chain.append(ex);
             }
         }
+        openStatements.clear();
         
-        if (error != null)
-            throw error;
+        if (chain.hasException())
+            throw chain.getException();
     }
     
     /**

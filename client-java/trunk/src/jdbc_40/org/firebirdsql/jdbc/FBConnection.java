@@ -28,6 +28,7 @@ import java.util.Properties;
 import java.util.concurrent.Executor;
 
 import org.firebirdsql.jca.FBManagedConnection;
+import org.firebirdsql.util.SQLExceptionChainBuilder;
 
 /**
  * Firebird connection class implementing JDBC 3.0 methods.
@@ -124,8 +125,7 @@ public class FBConnection extends AbstractConnection {
     }
 
     public void setClientInfo(Properties properties) throws SQLClientInfoException {
-
-        SQLClientInfoException firstCause = null;
+        SQLExceptionChainBuilder<SQLClientInfoException> chain = new SQLExceptionChainBuilder<SQLClientInfoException>();
 
         try {
             PreparedStatement stmt = prepareStatement(SET_CLIENT_INFO_SQL);
@@ -137,10 +137,7 @@ public class FBConnection extends AbstractConnection {
                     try {
                         setClientInfo(stmt, (String) entry.getKey(), (String) entry.getValue());
                     } catch (SQLClientInfoException ex) {
-                        if (firstCause != null)
-                            firstCause.setNextException(ex);
-                        else
-                            firstCause = ex;
+                        chain.append(ex);
                     }
 
                 }
@@ -152,8 +149,8 @@ public class FBConnection extends AbstractConnection {
             throw new SQLClientInfoException(ex.getMessage(), ex.getSQLState(), null, ex);
         }
 
-        if (firstCause != null)
-            throw firstCause;
+        if (chain.hasException())
+            throw chain.getException();
     }
 
     public void setClientInfo(String name, String value) throws SQLClientInfoException {
