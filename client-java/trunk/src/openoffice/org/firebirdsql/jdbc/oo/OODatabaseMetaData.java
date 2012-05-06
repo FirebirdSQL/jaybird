@@ -18,14 +18,6 @@ public class OODatabaseMetaData extends FBDatabaseMetaData {
         super(gdsHelper);
     }
 
-    public static final String TABLE = "TABLE";
-
-    public static final String SYSTEM_TABLE = "SYSTEM TABLE";
-
-    public static final String VIEW = "VIEW";
-
-    public static final String[] ALL_TYPES = { TABLE, SYSTEM_TABLE, VIEW};
-
     private static final String DEFAULT_SCHEMA = "DEFAULT";
 
     public ResultSet getSchemas() throws SQLException {
@@ -40,7 +32,7 @@ public class OODatabaseMetaData extends FBDatabaseMetaData {
         ArrayList rows = new ArrayList(1);
         rows.add(new byte[][] { getBytes(DEFAULT_SCHEMA)});
 
-        return new OOResultSet(xsqlvars, rows);
+        return new FBResultSet(xsqlvars, rows);
     }
 
     public ResultSet getTables(String catalog, String schemaPattern,
@@ -187,16 +179,16 @@ public class OODatabaseMetaData extends FBDatabaseMetaData {
     }
     
     private static final String GET_TABLE_PRIVILEGES_START_1 = 
-            "SELECT " + 
-            "null as TABLE_CAT, " + 
-            "null as TABLE_SCHEM, " + 
-            "RDB$RELATION_NAME as TABLE_NAME, " + 
-            "RDB$GRANTOR as GRANTOR, " + 
-            "RDB$USER as GRANTEE, " + 
-            "RDB$PRIVILEGE as PRIVILEGE, " + 
-            "RDB$GRANT_OPTION as IS_GRANTABLE " + 
-            "FROM RDB$USER_PRIVILEGES " + 
-            "WHERE ";
+        "SELECT " + 
+        "null as TABLE_CAT, " + 
+        "null as TABLE_SCHEM, " + 
+        "RDB$RELATION_NAME as TABLE_NAME, " + 
+        "RDB$GRANTOR as GRANTOR, " + 
+        "RDB$USER as GRANTEE, " + 
+        "RDB$PRIVILEGE as PRIVILEGE, " + 
+        "RDB$GRANT_OPTION as IS_GRANTABLE " + 
+        "FROM RDB$USER_PRIVILEGES " + 
+        "WHERE ";
     private static final String GET_TABLE_PRIVILEGES_END_1 = 
         " CURRENT_USER IN (RDB$USER, RDB$GRANTOR) AND RDB$FIELD_NAME IS NULL AND RDB$OBJECT_TYPE = 0";
     private static final String GET_TABLE_PRIVILEGES_START_2 =
