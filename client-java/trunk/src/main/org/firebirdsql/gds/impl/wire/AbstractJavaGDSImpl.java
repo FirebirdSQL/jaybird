@@ -1640,7 +1640,7 @@ public abstract class AbstractJavaGDSImpl extends AbstractGDS implements GDS {
 		stmt.setDeleteCount(0);
 		stmt.setSelectCount(0);
 		
-		byte[] buffer = iscDsqlSqlInfo(stmt, /* stmtInfo.length, */stmtInfo, INFO_SIZE);
+		byte[] buffer = iscDsqlSqlInfo(stmt, stmtInfo, INFO_SIZE);
 		int pos = 0;
 		int length;
 		int type;
