@@ -212,7 +212,7 @@ public class OODatabaseMetaData extends FBDatabaseMetaData {
         "FROM RDB$USER_PRIVILEGES " + 
         "WHERE ";
     private static final String GET_TABLE_PRIVILEGES_END_2 =
-        " RDB$USER = CURRENT_ROLE AND RDB$FIELD_NAME IS NULL AND RDB$OBJECT_TYPE = 0 " + 
+        " RDB$USER IN (CURRENT_ROLE, 'PUBLIC') AND RDB$FIELD_NAME IS NULL AND RDB$OBJECT_TYPE = 0 " + 
         "ORDER BY 3, 6";
 
     public ResultSet getTablePrivileges(String catalog, String schemaPattern,
