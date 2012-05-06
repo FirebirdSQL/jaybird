@@ -3261,8 +3261,6 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
         return new FBResultSet(xsqlvars, rows);
     }
 
-
-
     private static final String GET_TABLE_PRIVILEGES_START = "select"
         + " null as TABLE_CAT, "
         + " null as TABLE_SCHEM,"
@@ -3316,6 +3314,40 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
         checkCatalogAndSchema(catalog, schemaPattern);
         tableNamePattern = stripQuotes(stripEscape(tableNamePattern), true);
 
+        XSQLVAR[] xsqlvars = buildTablePrivilegeRSMetaData();
+
+        Clause tableClause = new Clause("RDB$RELATION_NAME", tableNamePattern);
+        
+        String sql = GET_TABLE_PRIVILEGES_START;
+        sql += tableClause.getCondition();
+        sql += GET_TABLE_PRIVILEGES_END;
+        
+        // check the original case identifiers first
+        ArrayList params = new ArrayList();
+        if (!tableClause.getCondition().equals("")) {
+            params.add(tableClause.getOriginalCaseValue());
+        }
+
+        ResultSet rs = doQuery(sql, params);
+        
+        // if nothing found, check the uppercased identifiers
+        if (!rs.next()) {
+            params.clear();
+            if (!tableClause.getCondition().equals("")) {
+                params.add(tableClause.getValue());
+            }
+            
+            rs = doQuery(sql, params);
+            
+            // if nothing found, return an empty result set
+            if (!rs.next())
+                return new FBResultSet(xsqlvars, new ArrayList());
+        }
+        
+        return processTablePrivileges(xsqlvars, rs);
+    }
+    
+    protected final XSQLVAR[] buildTablePrivilegeRSMetaData() {
         XSQLVAR[] xsqlvars = new XSQLVAR[7];
 
         xsqlvars[0] = new XSQLVAR();
@@ -3359,45 +3391,21 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
         xsqlvars[6].sqllen = 31;
         xsqlvars[6].sqlname = "IS_GRANTABLE";
         xsqlvars[6].relname = "TABLEPRIV";
-
-        Clause tableClause = new Clause("RDB$RELATION_NAME", tableNamePattern);
         
-        String sql = GET_TABLE_PRIVILEGES_START;
-        sql += tableClause.getCondition();
-        sql += GET_TABLE_PRIVILEGES_END;
-        
-        // check the original case identifiers first
-        ArrayList params = new ArrayList();
-        if (!tableClause.getCondition().equals("")) {
-            params.add(tableClause.getOriginalCaseValue());
-        }
-
+        return xsqlvars;
+    }
+    
+    protected final FBResultSet processTablePrivileges(XSQLVAR[] xsqlvars, ResultSet fbTablePrivileges) throws SQLException {
         ArrayList rows = new ArrayList();
-        ResultSet rs = doQuery(sql, params);
-        
-        // if nothing found, check the uppercased identifiers
-        if (!rs.next()) {
-            params.clear();
-            if (!tableClause.getCondition().equals("")) {
-                params.add(tableClause.getValue());
-            }
-            
-            rs = doQuery(sql, params);
-            
-            // if nothing found, return an empty result set
-            if (!rs.next())
-                return new FBResultSet(xsqlvars, rows);
-            
-        }
         
         do {
             byte[][] row = new byte[7][];
             row[0] = null;
             row[1] = null;
-            row[2] = getBytes(rs.getString("TABLE_NAME"));
-            row[3] = getBytes(rs.getString("GRANTOR"));
-            row[4] = getBytes(rs.getString("GRANTEE"));
-            String privilege = rs.getString("PRIVILEGE");
+            row[2] = getBytes(fbTablePrivileges.getString("TABLE_NAME"));
+            row[3] = getBytes(fbTablePrivileges.getString("GRANTOR"));
+            row[4] = getBytes(fbTablePrivileges.getString("GRANTEE"));
+            String privilege = fbTablePrivileges.getString("PRIVILEGE");
             if (privilege.equals("A"))
                 row[5] = getBytes("ALL");
             else if (privilege.equals("S"))
@@ -3409,17 +3417,17 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
             else if (privilege.equals("U"))
                 row[5] = getBytes("UPDATE");
             else if (privilege.equals("R"))
-                row[5] = getBytes("REFERENCE");
+                row[5] = getBytes("REFERENCE"); // TODO: JDBC spec specifies REFRENCES (yes: typo and + S)
             else if (privilege.equals("M"))
                 row[5] = getBytes("MEMBEROF");
-            int isGrantable = rs.getShort("IS_GRANTABLE");
+            int isGrantable = fbTablePrivileges.getShort("IS_GRANTABLE");
             if (isGrantable==0)
                 row[6] = getBytes("NO");
             else
                 row[6] = getBytes("YES");
 
             rows.add(row);
-        } while (rs.next());
+        } while (fbTablePrivileges.next());
         
         return new FBResultSet(xsqlvars, rows);
     }
@@ -6154,14 +6162,14 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
     }
 
     
-    private void checkCatalogAndSchema(String catalog, String schema) throws SQLException {
+    protected void checkCatalogAndSchema(String catalog, String schema) throws SQLException {
         /* 
          * we ignore incorrect catalog and schema specification as 
          * suggested by Thomas Kellerer in JDBC Forum 
         */
     }
 
-    private class Clause {
+    protected class Clause {
         private String condition = "";
         private String value;
         private String originalCaseValue;

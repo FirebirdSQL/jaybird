@@ -185,13 +185,84 @@ public class OODatabaseMetaData extends FBDatabaseMetaData {
 
         return super.getSuperTypes(catalog, schemaPattern, tableNamePattern);
     }
+    
+    private static final String GET_TABLE_PRIVILEGES_START_1 = 
+            "SELECT " + 
+            "null as TABLE_CAT, " + 
+            "null as TABLE_SCHEM, " + 
+            "RDB$RELATION_NAME as TABLE_NAME, " + 
+            "RDB$GRANTOR as GRANTOR, " + 
+            "RDB$USER as GRANTEE, " + 
+            "RDB$PRIVILEGE as PRIVILEGE, " + 
+            "RDB$GRANT_OPTION as IS_GRANTABLE " + 
+            "FROM RDB$USER_PRIVILEGES " + 
+            "WHERE ";
+    private static final String GET_TABLE_PRIVILEGES_END_1 = 
+        " CURRENT_USER IN (RDB$USER, RDB$GRANTOR) AND RDB$FIELD_NAME IS NULL AND RDB$OBJECT_TYPE = 0";
+    private static final String GET_TABLE_PRIVILEGES_START_2 =
+        "UNION " + 
+        "SELECT " + 
+        "null as TABLE_CAT, " + 
+        "null as TABLE_SCHEM, " + 
+        "RDB$RELATION_NAME as TABLE_NAME, " + 
+        "RDB$GRANTOR as GRANTOR, " + 
+        "CURRENT_USER as GRANTEE, " + 
+        "RDB$PRIVILEGE as PRIVILEGE, " + 
+        "RDB$GRANT_OPTION as IS_GRANTABLE " + 
+        "FROM RDB$USER_PRIVILEGES " + 
+        "WHERE ";
+    private static final String GET_TABLE_PRIVILEGES_END_2 =
+        " RDB$USER = CURRENT_ROLE AND RDB$FIELD_NAME IS NULL AND RDB$OBJECT_TYPE = 0 " + 
+        "ORDER BY 3, 6";
 
     public ResultSet getTablePrivileges(String catalog, String schemaPattern,
             String tableNamePattern) throws SQLException {
         if (DEFAULT_SCHEMA.equals(schemaPattern)) schemaPattern = null;
 
-        return super.getTablePrivileges(catalog, schemaPattern,
-            tableNamePattern);
+        checkCatalogAndSchema(catalog, schemaPattern);
+        tableNamePattern = stripQuotes(stripEscape(tableNamePattern), true);
+
+        XSQLVAR[] xsqlvars = buildTablePrivilegeRSMetaData();
+
+        Clause tableClause1 = new Clause("RDB$RELATION_NAME", tableNamePattern);
+        Clause tableClause2 = new Clause("RDB$RELATION_NAME", tableNamePattern);
+        
+        String sql = GET_TABLE_PRIVILEGES_START_1;
+        sql += tableClause1.getCondition();
+        sql += GET_TABLE_PRIVILEGES_END_1;
+        sql += GET_TABLE_PRIVILEGES_START_2;
+        sql += tableClause2.getCondition();
+        sql += GET_TABLE_PRIVILEGES_END_2;
+        
+        // check the original case identifiers first
+        ArrayList params = new ArrayList();
+        if (!tableClause1.getCondition().equals("")) {
+            params.add(tableClause1.getOriginalCaseValue());
+        }
+        if (!tableClause2.getCondition().equals("")) {
+            params.add(tableClause2.getOriginalCaseValue());
+        }
+
+        ResultSet rs = doQuery(sql, params);
+        
+        // if nothing found, check the uppercased identifiers
+        if (!rs.next()) {
+            params.clear();
+            if (!tableClause1.getCondition().equals("")) {
+                params.add(tableClause1.getValue());
+            }
+            if (!tableClause2.getCondition().equals("")) {
+                params.add(tableClause2.getValue());
+            }
+            
+            rs = doQuery(sql, params);
+            
+            // if nothing found, return an empty result set
+            if (!rs.next())
+                return new FBResultSet(xsqlvars, new ArrayList());
+        }
+        
+        return processTablePrivileges(xsqlvars, rs);
     }
 
     public String stripEscape(String pattern) {
@@ -206,36 +277,4 @@ public class OODatabaseMetaData extends FBDatabaseMetaData {
             return pattern;
         }
     }
-
-    private class Clause {
-
-        private String condition = "";
-
-        private String value;
-
-        public Clause(String columnName, String pattern) {
-            if (pattern == null) {
-                return;
-            } else if (isAllCondition(pattern)) {
-                // do nothing to tableCondition
-                return;
-            } else if (hasNoWildcards(pattern)) {
-                value = stripQuotes(stripEscape(pattern));
-                condition = columnName + " = ? and ";
-            } else {
-                value = stripQuotes(pattern) + SPACES + "%";
-                condition = columnName + " || '" + SPACES
-                        + "' like ? escape '\\' and ";
-            }
-        }
-
-        public String getCondition() {
-            return condition;
-        }
-
-        public String getValue() {
-            return value;
-        }
-    }
-
 }
