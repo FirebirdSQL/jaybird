@@ -6,7 +6,7 @@
 	<META NAME="GENERATOR" CONTENT="LibreOffice 3.5  (Windows)">
 	<META NAME="CREATED" CONTENT="20040723;10395200">
 	<META NAME="CHANGEDBY" CONTENT="Mark Rotteveel">
-	<META NAME="CHANGED" CONTENT="20120407;15404940">
+	<META NAME="CHANGED" CONTENT="20120506;18583157">
 	<META NAME="Info 1" CONTENT="">
 	<META NAME="Info 2" CONTENT="">
 	<META NAME="Info 3" CONTENT="">
@@ -274,6 +274,22 @@ support</H3>
 What's new in Jaybird 2.2</H2>
 <P CLASS="western">Jaybird 2.2 introduces the following new features
 and fixes:</P>
+<H3 CLASS="western">Changes and fixes since Jaybird 2.2.0 beta 1</H3>
+<P CLASS="western">The following was changed or fixed after the
+release of Jaybird 2.2.0 beta 1:</P>
+<UL>
+	<LI><P CLASS="western"><FONT FACE="Courier New, monospace"><FONT SIZE=2>ConcurrentModificationException</FONT></FONT>
+	when closing connection obtained from
+	<FONT FACE="Courier New, monospace"><FONT SIZE=2>org.firebirdsql.ds.FBConnectionPoolDataSource</FONT></FONT>
+	with statements open <I>(<A CLASS="western" HREF="http://tracker.firebirdsql.org/browse/JDBC-250">JDBC-250</A>)</I></P>
+	<LI><P CLASS="western"><SPAN STYLE="font-style: normal">Memory leak
+	when obtaining multiple connections for the same URL </SPAN><I>(<A CLASS="western" HREF="http://tracker.firebirdsql.org/browse/JDBC-249">JDBC-249</A>)</I></P>
+	<LI><P CLASS="western"><SPAN STYLE="font-style: normal">CPU spikes
+	to 100% when using events and Firebird Server is stopped or
+	unreachable </SPAN><I>(<A CLASS="western" HREF="http://tracker.firebirdsql.org/browse/JDBC-232">JDBC-232</A>)</I></P>
+	<LI><P CLASS="western"><SPAN STYLE="font-style: normal">Events do
+	not work on Embedded </SPAN><I>(<A CLASS="western" HREF="http://tracker.firebirdsql.org/browse/JDBC-247">JDBC-247</A>)</I></P>
+</UL>
 <H3 CLASS="western"><A NAME="__RefHeading__6629_1850987433"></A>Support
 for <FONT FACE="Courier New, monospace">getGeneratedKeys()</FONT></H3>
 <P CLASS="western">Support was added for the <FONT FACE="Courier New, monospace"><FONT SIZE=2>getGeneratedKeys()</FONT></FONT>
@@ -407,6 +423,26 @@ enhancements:</P>
 	<LI><P CLASS="western">Support for Trace/Audit via Services API in
 	Firebird 2.5</P>
 </UL>
+<H3 CLASS="western">Improved support for OpenOffice / LibreOffice
+Base</H3>
+<P CLASS="western">The interpretation of the JDBC standard by Jaybird
+differs from the interpretation by OpenOffice / LibreOffice. To
+address some of the problems caused by these differences, Jaybird now
+provides a separate protocol for OpenOffice / LibreOffice.</P>
+<P CLASS="western">When connecting from Base, use the protocol prefix
+<FONT FACE="Courier New, monospace"><FONT SIZE=2>jdbc:firebirdsql:oo:</FONT></FONT><FONT FACE="Times New Roman, serif"><FONT SIZE=3>.
+Be aware that this is a variant of the pure Java wire protocol and
+not the native or embedded protocol.</FONT></FONT></P>
+<P CLASS="western">Issues addressed by this protocol:</P>
+<UL>
+	<LI><P CLASS="western">ResultSets are not closed  when a statements
+	is finished (eg fully read ResultSet or when creating a new
+	Statement in autoCommit mode)</P>
+	<LI><P CLASS="western"><FONT FACE="Courier New, monospace"><FONT SIZE=2>DatabaseMetaData#getTablePrivileges(...)</FONT></FONT>
+	 reports privileges granted to <FONT FACE="Courier New, monospace"><FONT SIZE=2>PUBLIC</FONT></FONT>
+	and to the current role (as reported by <FONT FACE="Courier New, monospace"><FONT SIZE=2>CURRENT_ROLE</FONT></FONT>)
+	as being granted to the user <I>(after Jaybird 2.2.0 beta 1)</I>.</P>
+</UL>
 <H3 CLASS="western"><A NAME="__RefHeading__3644_1575618738"></A>Other
 fixes and changes</H3>
 <UL>
@@ -438,10 +474,20 @@ fixes and changes</H3>
 	now correctly limits the returned indexes to unique indexes when
 	parameter <FONT FACE="Courier New, monospace"><FONT SIZE=2>unique</FONT></FONT>
 	is set to <FONT FACE="Courier New, monospace"><FONT SIZE=2>true</FONT></FONT>.</P>
-	<LI><P CLASS="western">The connection property <FONT FACE="Courier New, monospace"><FONT SIZE=2>octetsAsByte</FONT></FONT><FONT FACE="Courier New, monospace"><FONT SIZE=2>s</FONT></FONT>
+	<LI><P CLASS="western">The connection property <FONT FACE="Courier New, monospace"><FONT SIZE=2>octetsAsBytes</FONT></FONT>
 	can be used to identify fields with <FONT FACE="Courier New, monospace"><FONT SIZE=2>CHARACTER
 	SET OCTETS</FONT></FONT> as being <FONT FACE="Courier New, monospace"><FONT SIZE=2>(VAR)BINARY</FONT></FONT>
 	(in the resultsetmetadata only)</P>
+	<LI><P CLASS="western">The <FONT FACE="Courier New, monospace"><FONT SIZE=2>getTime(</FONT></FONT>),
+	<FONT FACE="Courier New, monospace"><FONT SIZE=2>getDate()</FONT></FONT>,
+	<FONT FACE="Courier New, monospace"><FONT SIZE=2>getTimestamp()</FONT></FONT>
+	methods which take a <FONT FACE="Courier New, monospace"><FONT SIZE=2>Calendar</FONT></FONT>
+	object now correctly handle conversions around Daylight Savings Time
+	(DST) changes. Before the time was first converted to the local JVM
+	timezone, and then to the timezone of the provided <FONT FACE="Courier New, monospace"><FONT SIZE=2>Calendar</FONT></FONT>,
+	this could lose up to an hour in time. Now the time is converted
+	directly to the timezone of the provided <FONT FACE="Courier New, monospace"><FONT SIZE=2>Calendar</FONT></FONT>.
+	<I>(<A CLASS="western" HREF="http://tracker.firebirdsql.org/browse/JDBC-154">JDBC-154</A>)</I></P>
 </UL>
 <P CLASS="western">A full list of changes is available at:</P>
 <P CLASS="western"><A CLASS="western" HREF="http://tracker.firebirdsql.org/secure/ReleaseNote.jspa?version=10053&amp;styleName=Text&amp;projectId=10002&amp;Create=Create">http://tracker.firebirdsql.org/secure/ReleaseNote.jspa?version=10053&amp;styleName=Text&amp;projectId=10002&amp;Create=Create</A></P>
