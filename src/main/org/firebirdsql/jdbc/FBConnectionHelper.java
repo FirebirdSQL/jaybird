@@ -132,13 +132,7 @@ public class FBConnectionHelper {
         // for the sake of unification we allow passing boolean, byte and integer
         // types too, we loose some cycles here, but that is called relatively
         // rarely, a tradeoff between code maintainability and CPU cycles.
-        if (value instanceof Boolean)
-            return value;
-        else
-        if (value instanceof Byte)
-            return value;
-        else
-        if (value instanceof Integer)
+        if (value instanceof Boolean || value instanceof Byte || value instanceof Integer)
             return value;
         
         // if passed value is not string, throw an exception
@@ -165,35 +159,28 @@ public class FBConnectionHelper {
                 
             case TYPE_UNKNOWN :
             default :
-                
-                // set the value of the DPB by probing to convert string
-                // into int or byte value, this method gives very good result 
-                // for guessing the method to call from the actual value;
-                // null values are assumed to be booleans.
-                
-                if (value == null)
+                /* set the value of the DPB by probing to convert string
+                 * into int or byte value, this method gives very good result
+                 * for guessing the method to call from the actual value;
+                 * null values and empty strings are assumed to be booleans.
+                 */
+                if (value == null || "".equals(value))
                     return Boolean.TRUE;
             
                 try {
-
-                    // try to deal with a value as a byte
+                    // try to deal with a value as a byte or int
                     int intValue = Integer.parseInt((String)value);
-
                     if (intValue < 256)
                         return new Byte((byte) intValue);
                     else
                         return new Integer(intValue);
-
                 } catch (NumberFormatException nfex) {
-
-                    // ok, that's not a byte, then set it as string
-                    if ("".equals(value))
-                        return Boolean.TRUE;
-                    else
-                        return value;
+                    // all else fails: return as is (string)
+                    return value;
                 }
         }
     }
+    
     /**
      * This method extracts TPB mapping information from the connection 
      * parameters and adds it to the connectionProperties. Two formats are supported:
