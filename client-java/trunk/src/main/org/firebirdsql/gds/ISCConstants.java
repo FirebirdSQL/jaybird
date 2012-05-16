@@ -136,6 +136,11 @@ public interface ISCConstants {
     public final static int isc_dpb_trusted_auth            = 73;
     public final static int isc_dpb_process_name            = 74;
     
+    // Firebird 2.5 constants
+    public final static int isc_dpb_trusted_role            = 75;
+    public final static int isc_dpb_org_filename            = 76;
+    public final static int isc_dpb_utf8_filename           = 77;
+    public final static int isc_dpb_ext_call_depth          = 78;
     
     /*
      * Driver-specific DPB params that will be removed before sending them
