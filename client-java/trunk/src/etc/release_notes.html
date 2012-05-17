@@ -6,7 +6,7 @@
 	<META NAME="GENERATOR" CONTENT="LibreOffice 3.5  (Windows)">
 	<META NAME="CREATED" CONTENT="20040723;10395200">
 	<META NAME="CHANGEDBY" CONTENT="Mark Rotteveel">
-	<META NAME="CHANGED" CONTENT="20120506;18583157">
+	<META NAME="CHANGED" CONTENT="20120517;11452576">
 	<META NAME="Info 1" CONTENT="">
 	<META NAME="Info 2" CONTENT="">
 	<META NAME="Info 3" CONTENT="">
@@ -73,6 +73,8 @@ Notes v 2.2.0 beta 1</H1>
 	support</A></FONT></P>
 	<P STYLE="margin-left: 0.5cm; margin-bottom: 0cm"><A CLASS="western" HREF="#__RefHeading__2743_1560579136">What's
 	new in Jaybird 2.2</A></P>
+	<P STYLE="margin-left: 1cm; margin-bottom: 0cm"><FONT SIZE=2 STYLE="font-size: 11pt"><A CLASS="western" HREF="#__RefHeading__3759_663895651">Changes
+	and fixes since Jaybird 2.2.0 beta 1</A></FONT></P>
 	<P STYLE="margin-left: 1cm; margin-bottom: 0cm"><FONT SIZE=2 STYLE="font-size: 11pt"><A CLASS="western" HREF="#__RefHeading__6629_1850987433">Support
 	for getGeneratedKeys()</A></FONT></P>
 	<P STYLE="margin-left: 1cm; margin-bottom: 0cm"><FONT SIZE=2 STYLE="font-size: 11pt"><A CLASS="western" HREF="#__RefHeading__2745_1560579136">Java
@@ -85,6 +87,8 @@ Notes v 2.2.0 beta 1</H1>
 	and Embedded (JNI) 64-bit Windows and Linux support</A></FONT></P>
 	<P STYLE="margin-left: 1cm; margin-bottom: 0cm"><FONT SIZE=2 STYLE="font-size: 11pt"><A CLASS="western" HREF="#__RefHeading__2749_1560579136">Support
 	for Firebird 2.5</A></FONT></P>
+	<P STYLE="margin-left: 1cm; margin-bottom: 0cm"><FONT SIZE=2 STYLE="font-size: 11pt"><A CLASS="western" HREF="#__RefHeading__3761_663895651">Improved
+	support for OpenOffice / LibreOffice Base</A></FONT></P>
 	<P STYLE="margin-left: 1cm; margin-bottom: 0cm"><FONT SIZE=2 STYLE="font-size: 11pt"><A CLASS="western" HREF="#__RefHeading__3644_1575618738">Other
 	fixes and changes</A></FONT></P>
 	<P STYLE="margin-left: 1cm; margin-bottom: 0cm"><FONT SIZE=2 STYLE="font-size: 11pt"><A CLASS="western" HREF="#__RefHeading__2751_1560579136">Compatibility
@@ -274,7 +278,8 @@ support</H3>
 What's new in Jaybird 2.2</H2>
 <P CLASS="western">Jaybird 2.2 introduces the following new features
 and fixes:</P>
-<H3 CLASS="western">Changes and fixes since Jaybird 2.2.0 beta 1</H3>
+<H3 CLASS="western"><A NAME="__RefHeading__3759_663895651"></A>Changes
+and fixes since Jaybird 2.2.0 beta 1</H3>
 <P CLASS="western">The following was changed or fixed after the
 release of Jaybird 2.2.0 beta 1:</P>
 <UL>
@@ -286,9 +291,13 @@ release of Jaybird 2.2.0 beta 1:</P>
 	when obtaining multiple connections for the same URL </SPAN><I>(<A CLASS="western" HREF="http://tracker.firebirdsql.org/browse/JDBC-249">JDBC-249</A>)</I></P>
 	<LI><P CLASS="western"><SPAN STYLE="font-style: normal">CPU spikes
 	to 100% when using events and Firebird Server is stopped or
-	unreachable </SPAN><I>(<A CLASS="western" HREF="http://tracker.firebirdsql.org/browse/JDBC-232">JDBC-232</A>)</I></P>
+	unreachable </SPAN><I>(<A CLASS="western" HREF="http://tracker.firebirdsql.org/browse/JDBC-232">JDBC-</A><A CLASS="western" HREF="http://tracker.firebirdsql.org/browse/JDBC-232">232</A>)</I></P>
 	<LI><P CLASS="western"><SPAN STYLE="font-style: normal">Events do
 	not work on Embedded </SPAN><I>(<A CLASS="western" HREF="http://tracker.firebirdsql.org/browse/JDBC-247">JDBC-247</A>)</I></P>
+	<LI><P CLASS="western" STYLE="font-style: normal">Provide workaround
+	for characterset transliteration problems in database filenames and
+	other connection properties <I>(<A CLASS="western" HREF="http://tracker.firebirdsql.org/browse/JDBC-253">JDBC-253</A>)</I>;
+	see also Support for Firebird 2.5.</P>
 </UL>
 <H3 CLASS="western"><A NAME="__RefHeading__6629_1850987433"></A>Support
 for <FONT FACE="Courier New, monospace">getGeneratedKeys()</FONT></H3>
@@ -423,8 +432,26 @@ enhancements:</P>
 	<LI><P CLASS="western">Support for Trace/Audit via Services API in
 	Firebird 2.5</P>
 </UL>
-<H3 CLASS="western">Improved support for OpenOffice / LibreOffice
-Base</H3>
+<P CLASS="western">Since Firebird 2.5, Firebird supports full UTF-8
+database filenames and other connection properties (Database
+Parameter Buffer values). Jaybird does not yet support these changes,
+but a workaround is available:</P>
+<P CLASS="western">This workaround consists of two steps</P>
+<OL>
+	<LI><P CLASS="western">Ensure your Java application is executed with
+	the system property <FONT FACE="Courier New, monospace"><FONT SIZE=2>file.encoding=UTF-8</FONT></FONT>
+	(either <FONT FACE="Times New Roman, serif">because that is the
+	default encoding for your OS, or by explicitly specifying this
+	property on the commandline of your application using
+	</FONT><FONT FACE="Courier New, monospace"><FONT SIZE=2>-Dfile.encoding=UTF-8</FONT></FONT><FONT FACE="Times New Roman, serif">)</FONT></P>
+	<LI><P CLASS="western"><FONT FACE="Times New Roman, serif">Include
+	property </FONT><FONT FACE="Courier New, monospace"><FONT SIZE=2>utf8_filename=1</FONT></FONT><FONT FACE="Times New Roman, serif">
+	in the JDBC URL or (non-standard) properties of the datasource</FONT></P>
+</OL>
+<P CLASS="western"><FONT FACE="Times New Roman, serif">This will only
+work if the Firebird server is version 2.5 or higher.</FONT></P>
+<H3 CLASS="western"><A NAME="__RefHeading__3761_663895651"></A>Improved
+support for OpenOffice / LibreOffice Base</H3>
 <P CLASS="western">The interpretation of the JDBC standard by Jaybird
 differs from the interpretation by OpenOffice / LibreOffice. To
 address some of the problems caused by these differences, Jaybird now
@@ -435,7 +462,7 @@ Be aware that this is a variant of the pure Java wire protocol and
 not the native or embedded protocol.</FONT></FONT></P>
 <P CLASS="western">Issues addressed by this protocol:</P>
 <UL>
-	<LI><P CLASS="western">ResultSets are not closed  when a statements
+	<LI><P CLASS="western">ResultSets are not closed when a statements
 	is finished (eg fully read ResultSet or when creating a new
 	Statement in autoCommit mode)</P>
 	<LI><P CLASS="western"><FONT FACE="Courier New, monospace"><FONT SIZE=2>DatabaseMetaData#getTablePrivileges(...)</FONT></FONT>
@@ -459,7 +486,7 @@ fixes and changes</H3>
 	compliance to the JDBC specification, <FONT FACE="Courier New, monospace"><FONT SIZE=2>getColumnLabel(int)</FONT></FONT>
 	will still return the alias (or the column name if no alias is
 	defined). See Compatibility with com.sun.rowset.* for potential
-	problems when using the reference implementation of CachedRowSet.</P>
+	problems when using the reference implementation of <FONT FACE="Courier New, monospace"><FONT SIZE=2>CachedRowSet</FONT></FONT>.</P>
 	<LI><P CLASS="western"><FONT FACE="Courier New, monospace"><FONT SIZE=2>FBDatabaseMetaData</FONT></FONT>
 	has been updated to include metadata columns defined by JDBC 3.0,
 	4.0 and 4.1. This also changes the position of <FONT FACE="Courier New, monospace"><FONT SIZE=2>OWNER_NAME</FONT></FONT>
@@ -480,14 +507,14 @@ fixes and changes</H3>
 	(in the resultsetmetadata only)</P>
 	<LI><P CLASS="western">The <FONT FACE="Courier New, monospace"><FONT SIZE=2>getTime(</FONT></FONT>),
 	<FONT FACE="Courier New, monospace"><FONT SIZE=2>getDate()</FONT></FONT>,
-	<FONT FACE="Courier New, monospace"><FONT SIZE=2>getTimestamp()</FONT></FONT>
+	<FONT FACE="Courier New, monospace"><FONT SIZE=2>getTime</FONT></FONT><FONT FACE="Courier New, monospace"><FONT SIZE=2>stamp()</FONT></FONT>
 	methods which take a <FONT FACE="Courier New, monospace"><FONT SIZE=2>Calendar</FONT></FONT>
 	object now correctly handle conversions around Daylight Savings Time
 	(DST) changes. Before the time was first converted to the local JVM
 	timezone, and then to the timezone of the provided <FONT FACE="Courier New, monospace"><FONT SIZE=2>Calendar</FONT></FONT>,
 	this could lose up to an hour in time. Now the time is converted
 	directly to the timezone of the provided <FONT FACE="Courier New, monospace"><FONT SIZE=2>Calendar</FONT></FONT>.
-	<I>(<A CLASS="western" HREF="http://tracker.firebirdsql.org/browse/JDBC-154">JDBC-154</A>)</I></P>
+	<I>(</I><A CLASS="western" HREF="http://tracker.firebirdsql.org/browse/JDBC-154"><I>JDBC-154</I></A><I>)</I></P>
 </UL>
 <P CLASS="western">A full list of changes is available at:</P>
 <P CLASS="western"><A CLASS="western" HREF="http://tracker.firebirdsql.org/secure/ReleaseNote.jspa?version=10053&amp;styleName=Text&amp;projectId=10002&amp;Create=Create">http://tracker.firebirdsql.org/secure/ReleaseNote.jspa?version=10053&amp;styleName=Text&amp;projectId=10002&amp;Create=Create</A></P>
@@ -517,8 +544,8 @@ and <FONT FACE="Courier New, monospace"><FONT SIZE=2>org.firebirdsql.pool.sun</F
 contain several bugs with regard to pool and connection management
 when used by a JavaEE application server. The decision was made to
 write new implementations in the package <FONT FACE="Courier New, monospace"><FONT SIZE=2>org.firebirdsql.ds</FONT></FONT>.</P>
-<P CLASS="western">The following implementations have been deprecated
-and will be removed in Jaybird 2.3:</P>
+<P CLASS="western">The following implementation classess have been
+deprecated and will be removed in Jaybird 2.3:</P>
 <UL>
 	<LI><P CLASS="western"><FONT FACE="Courier New, monospace"><FONT SIZE=2>org.firebirdsql.pool.DriverConnectionPoolDataSource</FONT></FONT></P>
 	<LI><P CLASS="western"><FONT FACE="Courier New, monospace"><FONT SIZE=2>org.firebirdsql.pool.FBConnectionPoolDataSource</FONT></FONT></P>
@@ -535,8 +562,8 @@ and will be removed in Jaybird 2.3:</P>
 	(a normal <FONT FACE="Courier New, monospace"><FONT SIZE=2>DataSource</FONT></FONT>)</P>
 </UL>
 <P CLASS="western">We strongly urge you to switch to these new
-implementations if you are using them in an application server. The
-bugs are described in <A CLASS="western" HREF="http://tracker.firebirdsql.org/browse/JDBC-86">JDBC-86</A>,
+implementations if you are using themthese classes in an application
+server. The bugs are described in <A CLASS="western" HREF="http://tracker.firebirdsql.org/browse/JDBC-86">JDBC-86</A>,
 <A CLASS="western" HREF="http://tracker.firebirdsql.org/browse/JDBC-93">JDBC-93</A>,
 <A CLASS="western" HREF="http://tracker.firebirdsql.org/browse/JDBC-131">JDBC-131</A>
 and <A CLASS="western" HREF="http://tracker.firebirdsql.org/browse/JDBC-144">JDBC-144</A>.</P>
@@ -708,7 +735,8 @@ distribution, and is available on-line in several places.
 </P>
 <P CLASS="western">JaybirdWiki is available at
 <A CLASS="western" HREF="http://jaybirdwiki.firebirdsql.org/">http://Jaybirdwiki.firebirdsql.org</A>.
-<I>(note: this resource is out of date)</I></P>
+<I>(note: this resource is out of date and will be discontinued in
+the near future)</I></P>
 <P CLASS="western">Jaybird 2.1 Programmers Manual:
 <A CLASS="western" HREF="http://www.firebirdsql.org/file/documentation/drivers_documentation/Jaybird_2_1_JDBC_driver_manual.pdf">http://www.firebirdsql.org/file/documentation/drivers_documentation/Jaybird_2_1_JDBC_driver_manual.pdf</A></P>
 <H3 CLASS="western"><A NAME="__RefHeading__2823_1560579136"></A>Where
@@ -856,7 +884,7 @@ Jaybird 2.1 or earlier.</STRONG></P>
 	checked out sources.</P>
 </UL>
 <P CLASS="western">After making Jaybird JNI library available to the
-JVM application has to tell driver to start using this by either
+JVM, the application has to tell driver to start using this by either
 specifying TYPE2 or LOCAL type in the connection pool or data source
 properties or using appropriate JDBC URL when connecting via
 <CODE CLASS="western"><FONT FACE="Courier New, monospace">java.sql.DriverManager</FONT></CODE>.</P>
@@ -2699,8 +2727,8 @@ log when appropriate system properties are set to <CODE CLASS="western"><FONT FA
 </DIV>
 <DIV ID="sdfootnote5">
 	<P CLASS="sdfootnote-western"><A CLASS="sdfootnotesym" NAME="sdfootnote5sym" HREF="#sdfootnote5anc">5</A>See
-	JDBC-162 and
-	<A CLASS="western" HREF="http://bugs.sun.com/bugdatabase/view_bug.do?bug_id=7046875">http://bugs.sun.com/bugdatabase/view_bug.do?bug_id=7046875</A>
+	<A CLASS="western" HREF="http://tracker.firebirdsql.org/browse/JDBC-162">JDBC-162</A>
+	and <A CLASS="western" HREF="http://bugs.sun.com/bugdatabase/view_bug.do?bug_id=7046875">http://bugs.sun.com/bugdatabase/view_bug.do?bug_id=7046875</A>
 	for details</P>
 </DIV>
 </BODY>
