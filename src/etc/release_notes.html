@@ -6,7 +6,7 @@
 	<META NAME="GENERATOR" CONTENT="LibreOffice 3.5  (Windows)">
 	<META NAME="CREATED" CONTENT="20040723;10395200">
 	<META NAME="CHANGEDBY" CONTENT="Mark Rotteveel">
-	<META NAME="CHANGED" CONTENT="20120517;11452576">
+	<META NAME="CHANGED" CONTENT="20120608;16275298">
 	<META NAME="Info 1" CONTENT="">
 	<META NAME="Info 2" CONTENT="">
 	<META NAME="Info 3" CONTENT="">
@@ -201,12 +201,12 @@ versions has been dropped<A CLASS="sdfootnoteanc" NAME="sdfootnote1anc" HREF="#s
 <H3 CLASS="western"><A NAME="__RefHeading__2741_1560579136"></A>Specification
 support</H3>
 <P CLASS="western">Driver supports the following specifications:</P>
-<TABLE WIDTH=100% CELLPADDING=4 CELLSPACING=0 FRAME=HSIDES RULES=ROWS STYLE="page-break-before: auto; page-break-after: auto; page-break-inside: auto">
+<TABLE WIDTH=100% CELLPADDING=4 CELLSPACING=0 STYLE="page-break-before: auto; page-break-after: auto; page-break-inside: auto">
 	<COL WIDTH=39*>
 	<COL WIDTH=217*>
 	<THEAD>
 		<TR VALIGN=TOP>
-			<TD WIDTH=15% STYLE="; border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: none; border-right: none; padding: 0.11cm 0cm">
+			<TD WIDTH=15% STYLE="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: none; border-right: none; padding: 0.11cm 0cm">
 				<P CLASS="western">JDBC 4.1</P>
 			</TD>
 			<TD WIDTH=85% STYLE="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: none; border-right: none; padding: 0.11cm 0cm">
@@ -286,18 +286,21 @@ release of Jaybird 2.2.0 beta 1:</P>
 	<LI><P CLASS="western"><FONT FACE="Courier New, monospace"><FONT SIZE=2>ConcurrentModificationException</FONT></FONT>
 	when closing connection obtained from
 	<FONT FACE="Courier New, monospace"><FONT SIZE=2>org.firebirdsql.ds.FBConnectionPoolDataSource</FONT></FONT>
-	with statements open <I>(<A CLASS="western" HREF="http://tracker.firebirdsql.org/browse/JDBC-250">JDBC-250</A>)</I></P>
+	with statements open <I>(</I><A CLASS="western" HREF="http://tracker.firebirdsql.org/browse/JDBC-250"><I>JDBC-250</I></A><I>)</I></P>
 	<LI><P CLASS="western"><SPAN STYLE="font-style: normal">Memory leak
-	when obtaining multiple connections for the same URL </SPAN><I>(<A CLASS="western" HREF="http://tracker.firebirdsql.org/browse/JDBC-249">JDBC-249</A>)</I></P>
+	when obtaining mu</SPAN><SPAN STYLE="font-style: normal">ltiple
+	connections for the same URL </SPAN><I>(</I><A CLASS="western" HREF="http://tracker.firebirdsql.org/browse/JDBC-249"><I>JDBC-249</I></A><I>)</I></P>
 	<LI><P CLASS="western"><SPAN STYLE="font-style: normal">CPU spikes
 	to 100% when using events and Firebird Server is stopped or
-	unreachable </SPAN><I>(<A CLASS="western" HREF="http://tracker.firebirdsql.org/browse/JDBC-232">JDBC-</A><A CLASS="western" HREF="http://tracker.firebirdsql.org/browse/JDBC-232">232</A>)</I></P>
+	unreachable </SPAN><I>(</I><A CLASS="western" HREF="http://tracker.firebirdsql.org/browse/JDBC-232"><I>JDBC-</I></A><A CLASS="western" HREF="http://tracker.firebirdsql.org/browse/JDBC-232"><I>232</I></A><I>)</I></P>
 	<LI><P CLASS="western"><SPAN STYLE="font-style: normal">Events do
-	not work on Embedded </SPAN><I>(<A CLASS="western" HREF="http://tracker.firebirdsql.org/browse/JDBC-247">JDBC-247</A>)</I></P>
+	not work on Embedded </SPAN><I>(</I><A CLASS="western" HREF="http://tracker.firebirdsql.org/browse/JDBC-247"><I>JDBC-247</I></A><I>)</I></P>
 	<LI><P CLASS="western" STYLE="font-style: normal">Provide workaround
 	for characterset transliteration problems in database filenames and
 	other connection properties <I>(<A CLASS="western" HREF="http://tracker.firebirdsql.org/browse/JDBC-253">JDBC-253</A>)</I>;
 	see also Support for Firebird 2.5.</P>
+	<LI><P CLASS="western" STYLE="font-style: normal">FBBackupManager
+	does not allow 16kb page size for restore (<A CLASS="western" HREF="http://tracker.firebirdsql.org/browse/JDBC-255"><I>JDBC-255</I></A>)</P>
 </UL>
 <H3 CLASS="western"><A NAME="__RefHeading__6629_1850987433"></A>Support
 for <FONT FACE="Courier New, monospace">getGeneratedKeys()</FONT></H3>
@@ -448,8 +451,8 @@ but a workaround is available:</P>
 	property </FONT><FONT FACE="Courier New, monospace"><FONT SIZE=2>utf8_filename=1</FONT></FONT><FONT FACE="Times New Roman, serif">
 	in the JDBC URL or (non-standard) properties of the datasource</FONT></P>
 </OL>
-<P CLASS="western"><FONT FACE="Times New Roman, serif">This will only
-work if the Firebird server is version 2.5 or higher.</FONT></P>
+<P CLASS="western"><FONT FACE="Times New Roman, serif">This wi</FONT><FONT FACE="Times New Roman, serif">ll
+only work if the Firebird server is version 2.5 or higher.</FONT></P>
 <H3 CLASS="western"><A NAME="__RefHeading__3761_663895651"></A>Improved
 support for OpenOffice / LibreOffice Base</H3>
 <P CLASS="western">The interpretation of the JDBC standard by Jaybird
@@ -735,8 +738,8 @@ distribution, and is available on-line in several places.
 </P>
 <P CLASS="western">JaybirdWiki is available at
 <A CLASS="western" HREF="http://jaybirdwiki.firebirdsql.org/">http://Jaybirdwiki.firebirdsql.org</A>.
-<I>(note: this resource is out of date and will be discontinued in
-the near future)</I></P>
+<I>(note: this resource is out of date</I><I> and will be
+discontinued in the near future</I><I>)</I></P>
 <P CLASS="western">Jaybird 2.1 Programmers Manual:
 <A CLASS="western" HREF="http://www.firebirdsql.org/file/documentation/drivers_documentation/Jaybird_2_1_JDBC_driver_manual.pdf">http://www.firebirdsql.org/file/documentation/drivers_documentation/Jaybird_2_1_JDBC_driver_manual.pdf</A></P>
 <H3 CLASS="western"><A NAME="__RefHeading__2823_1560579136"></A>Where
@@ -1057,14 +1060,14 @@ from the legal point of view. All classes belong to
 <CODE CLASS="western"><FONT FACE="Courier New, monospace">org.firebirdsql.jdbc.*</FONT></CODE>
 package. The table below shows all JDBC extensions present in Jaybird
 with a driver version in which the extension was introduced.</P>
-<TABLE WIDTH=100% CELLPADDING=4 CELLSPACING=0 FRAME=HSIDES RULES=ROWS STYLE="page-break-inside: auto">
+<TABLE WIDTH=100% CELLPADDING=4 CELLSPACING=0 STYLE="page-break-inside: auto">
 	<COL WIDTH=65*>
 	<COL WIDTH=18*>
 	<COL WIDTH=90*>
 	<COL WIDTH=82*>
 	<THEAD>
 		<TR>
-			<TH COLSPAN=4 WIDTH=100% VALIGN=TOP STYLE="; border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: none; border-right: none; padding: 0.11cm 0cm">
+			<TH COLSPAN=4 WIDTH=100% VALIGN=TOP STYLE="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: none; border-right: none; padding: 0.11cm 0cm">
 				<P CLASS="western">JDBC extensions</P>
 			</TH>
 		</TR>
@@ -1541,14 +1544,14 @@ parameters have the corresponding getter and setter methods, the rest
 of the Database Parameters Block parameters can be set using
 <CODE CLASS="western"><FONT FACE="Courier New, monospace">setNonStandardProperty</FONT></CODE>
 setter method.</P>
-<TABLE WIDTH=100% CELLPADDING=4 CELLSPACING=0 FRAME=HSIDES RULES=ROWS STYLE="page-break-inside: auto">
+<TABLE WIDTH=100% CELLPADDING=4 CELLSPACING=0 STYLE="page-break-inside: auto">
 	<COL WIDTH=64*>
 	<COL WIDTH=45*>
 	<COL WIDTH=44*>
 	<COL WIDTH=103*>
 	<THEAD>
 		<TR VALIGN=TOP>
-			<TH WIDTH=25% STYLE="; border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: none; border-right: none; padding: 0.11cm 0cm">
+			<TH WIDTH=25% STYLE="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: none; border-right: none; padding: 0.11cm 0cm">
 				<P CLASS="western">Property</P>
 			</TH>
 			<TH WIDTH=18% STYLE="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: none; border-right: none; padding: 0.11cm 0cm">
@@ -2145,7 +2148,7 @@ like? Here's the example</P>
 	<COL WIDTH=239*>
 	<THEAD>
 		<TR>
-			<TH COLSPAN=2 WIDTH=100% VALIGN=TOP STYLE="; border: none; padding: 0cm">
+			<TH COLSPAN=2 WIDTH=100% VALIGN=TOP STYLE="border: none; padding: 0cm">
 				<P CLASS="western">Example 1. Typical JDBC code with statement
 				pooling</P>
 			</TH>
@@ -2211,12 +2214,12 @@ object that is returned to the pool in line 016.</P>
 Pool Classes (deprecated)</H3>
 <P CLASS="western">Jaybird connection pooling classes belong to
 <CODE CLASS="western">org.firebirdsql.pool.*</CODE> package.</P>
-<TABLE WIDTH=100% CELLPADDING=4 CELLSPACING=0 FRAME=HSIDES RULES=ROWS STYLE="page-break-inside: auto">
+<TABLE WIDTH=100% CELLPADDING=4 CELLSPACING=0 STYLE="page-break-inside: auto">
 	<COL WIDTH=103*>
 	<COL WIDTH=153*>
 	<THEAD>
 		<TR>
-			<TH COLSPAN=2 WIDTH=100% VALIGN=TOP STYLE="; border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: none; border-right: none; padding: 0.11cm 0cm">
+			<TH COLSPAN=2 WIDTH=100% VALIGN=TOP STYLE="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: none; border-right: none; padding: 0.11cm 0cm">
 				<P CLASS="western">Description of some connection pool classes.</P>
 			</TH>
 		</TR>
@@ -2323,14 +2326,14 @@ interfaces and can participate in distributed JTA transactions.</P>
 <H4 CLASS="western">Standard JDBC Properties</H4>
 <P CLASS="western">This group contains properties defined in the JDBC
 specification and should be standard to all connection pools.</P>
-<TABLE WIDTH=100% CELLPADDING=4 CELLSPACING=0 FRAME=HSIDES RULES=ROWS STYLE="page-break-inside: auto">
+<TABLE WIDTH=100% CELLPADDING=4 CELLSPACING=0 STYLE="page-break-inside: auto">
 	<COL WIDTH=64*>
 	<COL WIDTH=45*>
 	<COL WIDTH=44*>
 	<COL WIDTH=103*>
 	<THEAD>
 		<TR VALIGN=TOP>
-			<TH WIDTH=25% STYLE="; border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: none; border-right: none; padding: 0.11cm 0cm">
+			<TH WIDTH=25% STYLE="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: none; border-right: none; padding: 0.11cm 0cm">
 				<P CLASS="western">Property</P>
 			</TH>
 			<TH WIDTH=18% STYLE="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: none; border-right: none; padding: 0.11cm 0cm">
@@ -2413,14 +2416,14 @@ specification and should be standard to all connection pools.</P>
 <H4 CLASS="western">Pool Properties</H4>
 <P CLASS="western">This group of properties are specific to the
 Jaybird  implementation of the connection pooling classes.</P>
-<TABLE WIDTH=100% CELLPADDING=4 CELLSPACING=0 FRAME=HSIDES RULES=ROWS STYLE="page-break-inside: auto">
+<TABLE WIDTH=100% CELLPADDING=4 CELLSPACING=0 STYLE="page-break-inside: auto">
 	<COL WIDTH=64*>
 	<COL WIDTH=45*>
 	<COL WIDTH=44*>
 	<COL WIDTH=103*>
 	<THEAD>
 		<TR VALIGN=TOP>
-			<TH WIDTH=25% STYLE="; border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: none; border-right: none; padding: 0.11cm 0cm">
+			<TH WIDTH=25% STYLE="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: none; border-right: none; padding: 0.11cm 0cm">
 				<P CLASS="western">Property</P>
 			</TH>
 			<TH WIDTH=18% STYLE="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: none; border-right: none; padding: 0.11cm 0cm">
@@ -2534,14 +2537,14 @@ Properties</H4>
 <P CLASS="western" STYLE="page-break-before: auto; page-break-after: avoid">
 This group contains read-only properties that provide information
 about the state of the pool.</P>
-<TABLE WIDTH=100% CELLPADDING=4 CELLSPACING=0 FRAME=HSIDES RULES=ROWS STYLE="page-break-inside: auto">
+<TABLE WIDTH=100% CELLPADDING=4 CELLSPACING=0 STYLE="page-break-inside: auto">
 	<COL WIDTH=64*>
 	<COL WIDTH=45*>
 	<COL WIDTH=44*>
 	<COL WIDTH=103*>
 	<THEAD>
 		<TR VALIGN=TOP>
-			<TH WIDTH=25% STYLE="; border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: none; border-right: none; padding: 0.11cm 0cm">
+			<TH WIDTH=25% STYLE="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: none; border-right: none; padding: 0.11cm 0cm">
 				<P CLASS="western">Property</P>
 			</TH>
 			<TH WIDTH=18% STYLE="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: none; border-right: none; padding: 0.11cm 0cm">
@@ -2634,7 +2637,7 @@ was obtained from the pool, when it was released back to the pool,
 when the statement was prepared. Such information is written into the
 log when appropriate system properties are set to <CODE CLASS="western"><FONT FACE="Courier New, monospace">true</FONT></CODE>.</P>
 <H4 CLASS="western">List of properties</H4>
-<TABLE WIDTH=100% CELLPADDING=4 CELLSPACING=0 FRAME=HSIDES RULES=ROWS>
+<TABLE WIDTH=100% CELLPADDING=4 CELLSPACING=0>
 	<COL WIDTH=75*>
 	<COL WIDTH=181*>
 	<THEAD>
