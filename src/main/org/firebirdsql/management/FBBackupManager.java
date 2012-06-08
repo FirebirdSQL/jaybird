@@ -133,8 +133,7 @@ public class FBBackupManager extends FBServiceManager implements BackupManager {
     /**
      * Initialize necessary parameters.
      */
-    private void init()
-    {
+    private void init() {
         verbose = false;
         restoreBufferCount = -1;
         restorePageSize = -1;
@@ -262,7 +261,6 @@ public class FBBackupManager extends FBServiceManager implements BackupManager {
         executeServicesOperation(getRestoreSRB(options));
     }
 
-
     /**
      * Set whether the operations of this <code>BackupManager</code> will
      * result in verbose logging to the configured logger.
@@ -289,17 +287,17 @@ public class FBBackupManager extends FBServiceManager implements BackupManager {
 
     /**
      * Set the page size that will be used for a restored database. The value 
-     * for <code>pageSize</code> must be one of: 1024, 2048, 4096, or 8192. The
-     * default value is 1024.
+     * for <code>pageSize</code> must be one of: 1024, 2048, 4096, 8192 or 16384. The
+     * default value depends on the Firebird version.
      *
      * @param pageSize The page size to be used in a restored database,
-     *        one of 1024, 2048, 4196 or 8192
+     *        one of 1024, 2048, 4196, 8192 or 16384
      */
     public void setRestorePageSize(int pageSize) {
         if (pageSize != 1024 && pageSize != 2048 
-                && pageSize != 4096 && pageSize != 8192){
+                && pageSize != 4096 && pageSize != 8192 && pageSize != 16384){
             throw new IllegalArgumentException(
-                    "Page size must be one of 1024, 2048, 4096 or 8192");
+                    "Page size must be one of 1024, 2048, 4096, 8192 or 16384");
         }
         this.restorePageSize = pageSize;
     }
