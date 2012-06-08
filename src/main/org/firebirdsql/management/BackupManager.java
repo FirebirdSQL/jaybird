@@ -233,11 +233,11 @@ public interface BackupManager extends ServiceManager {
 
     /**
      * Set the page size that will be used for a restored database. The value 
-     * for <code>pageSize</code> must be one of: 1024, 2048, 4096, or 8192. The
-     * default value is 1024.
+     * for <code>pageSize</code> must be one of: 1024, 2048, 4096, 8192 or 16384. The
+     * default value depends on the Firebird version.
      *
-     * @param pageSize The page size to be used in a restored database, one
-     *        of 1024, 2048, 4196, 8192
+     * @param pageSize The page size to be used in a restored database,
+     *        one of 1024, 2048, 4196, 8192 or 16384
      */
     public void setRestorePageSize(int pageSize);
 
