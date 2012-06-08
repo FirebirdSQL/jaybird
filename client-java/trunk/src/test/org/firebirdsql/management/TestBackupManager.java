@@ -3,11 +3,14 @@ package org.firebirdsql.management;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.sql.Connection;
+import java.sql.ResultSet;
 import java.sql.Statement;
 import java.sql.SQLException;
 
 import org.firebirdsql.common.FBTestBase;
+import org.firebirdsql.gds.impl.GDSHelper;
 import org.firebirdsql.gds.impl.GDSType;
+import org.firebirdsql.jdbc.FBConnection;
 
 /**
  * TODO: This test assumes it is run against localhost 
@@ -70,7 +73,6 @@ public class TestBackupManager extends FBTestBase {
     }
     
     public void testBackup() throws Exception {
-        
         backupManager.backupDatabase();
         
         fbManager.dropDatabase(getDatabasePath(), DB_USER, DB_PASSWORD);
@@ -88,8 +90,6 @@ public class TestBackupManager extends FBTestBase {
         
         Connection c = getConnectionViaDriverManager();
         c.close();
-        
-        
     }
 
     public void testSetBadBufferCount() {
@@ -105,11 +105,21 @@ public class TestBackupManager extends FBTestBase {
     public void testSetBadPageSize() {
         try {
             backupManager.setRestorePageSize(4000);
-            fail("Page size must be one of 1024, 2048, 4196 or 8192)");
+            fail("Page size must be one of 1024, 2048, 4196, 8192 or 16384)");
         } catch (IllegalArgumentException e) {
             // Ignore
         }
         backupManager.setRestorePageSize(4096);
+    }
+    
+    /**
+     * Tests the valid page sizes expected to be accepted by the BackupManager
+     */
+    public void testValidPageSizes() {
+        final int[] pageSizes = {1024, 2048, 4096, 8192, 16384};
+        for (int pageSize : pageSizes) {
+            backupManager.setRestorePageSize(pageSize);
+        }
     }
 
     public void testRestoreReadOnly() throws Exception {
@@ -144,9 +154,7 @@ public class TestBackupManager extends FBTestBase {
             stmt = conn.createStatement();
             stmt.executeUpdate("INSERT INTO TEST VALUES (3)");
         } finally {
-            if (conn != null){
-                conn.close();
-            }
+            closeQuietly(conn);
         }
      }
 
@@ -162,6 +170,37 @@ public class TestBackupManager extends FBTestBase {
         
         backupManager.setRestoreReplace(true);
         backupManager.restoreDatabase();
+    }
+    
+    /**
+     * Test if restoring a database to page size 16384 works.
+     */
+    public void testRestorePageSize16384() throws Exception {
+        backupManager.backupDatabase();
+        
+        backupManager.setRestoreReplace(true);
+        backupManager.setRestorePageSize(16384);
+        backupManager.restoreDatabase();
+        
+        Connection con = null;
+        try {
+            con = getConnectionViaDriverManager();
+            GDSHelper gdsHelper = ((FBConnection)con).getGDSHelper();
+            if (gdsHelper.compareToVersion(2, 1) < 0) {
+                // No support for MON$DATABASE, skipping test for actual page size
+                return;
+            }
+            
+            Statement stmt = con.createStatement();
+            ResultSet rs = stmt.executeQuery("SELECT MON$PAGE_SIZE FROM MON$DATABASE");
+            if (rs.next()) {
+                assertEquals("Expected restored database to have pagesize 16384", 16384, rs.getInt(1));
+            } else {
+                fail("Expected at least one record");
+            }
+        } finally {
+            closeQuietly(con);
+        }
     }
 
     public void testBackupMultiple() throws Exception {
