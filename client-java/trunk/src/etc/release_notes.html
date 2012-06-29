@@ -5,8 +5,7 @@
 	<TITLE></TITLE>
 	<META NAME="GENERATOR" CONTENT="LibreOffice 3.5  (Windows)">
 	<META NAME="CREATED" CONTENT="20040723;10395200">
-	<META NAME="CHANGEDBY" CONTENT="Mark Rotteveel">
-	<META NAME="CHANGED" CONTENT="20120608;16275298">
+	<META NAME="CHANGED" CONTENT="20120629;15424158">
 	<META NAME="Info 1" CONTENT="">
 	<META NAME="Info 2" CONTENT="">
 	<META NAME="Info 3" CONTENT="">
@@ -191,7 +190,7 @@ platforms are shipped in the default installation, other platforms
 require porting/building the JNI library for that platform. 
 </P>
 <P CLASS="western">This driver does not supports InterBase servers
-due to a Firebird-specific changes in the protocol and the database
+due to Firebird-specific changes in the protocol and database
 attachment parameters that are sent to the server.</P>
 <H3 CLASS="western"><A NAME="__RefHeading__6627_1850987433"></A>Supported
 Java versions</H3>
@@ -297,7 +296,7 @@ release of Jaybird 2.2.0 beta 1:</P>
 	not work on Embedded </SPAN><I>(</I><A CLASS="western" HREF="http://tracker.firebirdsql.org/browse/JDBC-247"><I>JDBC-247</I></A><I>)</I></P>
 	<LI><P CLASS="western" STYLE="font-style: normal">Provide workaround
 	for characterset transliteration problems in database filenames and
-	other connection properties <I>(<A CLASS="western" HREF="http://tracker.firebirdsql.org/browse/JDBC-253">JDBC-253</A>)</I>;
+	other connection properties <I>(</I><A CLASS="western" HREF="http://tracker.firebirdsql.org/browse/JDBC-253"><I>JDBC-253</I></A><I>)</I>;
 	see also Support for Firebird 2.5.</P>
 	<LI><P CLASS="western" STYLE="font-style: normal">FBBackupManager
 	does not allow 16kb page size for restore (<A CLASS="western" HREF="http://tracker.firebirdsql.org/browse/JDBC-255"><I>JDBC-255</I></A>)</P>
@@ -547,7 +546,7 @@ and <FONT FACE="Courier New, monospace"><FONT SIZE=2>org.firebirdsql.pool.sun</F
 contain several bugs with regard to pool and connection management
 when used by a JavaEE application server. The decision was made to
 write new implementations in the package <FONT FACE="Courier New, monospace"><FONT SIZE=2>org.firebirdsql.ds</FONT></FONT>.</P>
-<P CLASS="western">The following implementation classess have been
+<P CLASS="western">The following implementation classes have been
 deprecated and will be removed in Jaybird 2.3:</P>
 <UL>
 	<LI><P CLASS="western"><FONT FACE="Courier New, monospace"><FONT SIZE=2>org.firebirdsql.pool.DriverConnectionPoolDataSource</FONT></FONT></P>
@@ -565,7 +564,7 @@ deprecated and will be removed in Jaybird 2.3:</P>
 	(a normal <FONT FACE="Courier New, monospace"><FONT SIZE=2>DataSource</FONT></FONT>)</P>
 </UL>
 <P CLASS="western">We strongly urge you to switch to these new
-implementations if you are using themthese classes in an application
+implementations if you are using these classes in an application
 server. The bugs are described in <A CLASS="western" HREF="http://tracker.firebirdsql.org/browse/JDBC-86">JDBC-86</A>,
 <A CLASS="western" HREF="http://tracker.firebirdsql.org/browse/JDBC-93">JDBC-93</A>,
 <A CLASS="western" HREF="http://tracker.firebirdsql.org/browse/JDBC-131">JDBC-131</A>
@@ -636,13 +635,11 @@ instead.</P>
 <P CLASS="western">From Jaybird 2.3 on <FONT FACE="Courier New, monospace"><FONT SIZE=2>(VAR)CHAR
 CHARACTER SET OCTETS</FONT></FONT> will be considered to be of
 <FONT FACE="Courier New, monospace"><FONT SIZE=2>java.sql.Types</FONT></FONT>
-type <FONT FACE="Courier New, monospace"><FONT SIZE=2>(VAR)BINAR</FONT></FONT><FONT FACE="Courier New, monospace"><FONT SIZE=2>Y</FONT></FONT><FONT FACE="Times New Roman, serif"><FONT SIZE=3>.
-This should not impact normal use of methods li</FONT></FONT><FONT FACE="Times New Roman, serif"><FONT SIZE=3>ke
-</FONT></FONT><FONT FACE="Courier New, monospace"><FONT SIZE=2>get/setString()</FONT></FONT><FONT FACE="Times New Roman, serif"><FONT SIZE=3>,
+type <FONT FACE="Courier New, monospace"><FONT SIZE=2>(VAR)BINARY</FONT></FONT><FONT FACE="Times New Roman, serif"><FONT SIZE=3>.
+This should not impact normal use of methods like </FONT></FONT><FONT FACE="Courier New, monospace"><FONT SIZE=2>get/setString()</FONT></FONT><FONT FACE="Times New Roman, serif"><FONT SIZE=3>,
 but will impact the metadata and the type of object returned by
 </FONT></FONT><FONT FACE="Courier New, monospace"><FONT SIZE=2>getObject()</FONT></FONT><FONT FACE="Times New Roman, serif"><FONT SIZE=3>
-</FONT></FONT><FONT FACE="Times New Roman, serif"><FONT SIZE=3>(a
-byte array instead of a String).</FONT></FONT></P>
+(a byte array instead of a String).</FONT></FONT></P>
 <P CLASS="western"><BR><BR>
 </P>
 <H2 CLASS="western" STYLE="page-break-before: always"><A NAME="__RefHeading__8761_1080388197"></A>
@@ -2101,6 +2098,24 @@ lookup (which is either the alias or the original column name if no
 alias was defined).</FONT></FONT></P>
 <H2 CLASS="western" STYLE="page-break-before: always"><A NAME="__RefHeading__2807_1560579136"></A>
 Connection pooling with Jaybird</H2>
+<P CLASS="western">As described in Important changes to Datasources,
+the <FONT FACE="Courier New, monospace"><FONT SIZE=2>ConnectionPoolDataSource
+</FONT></FONT>implementations in <FONT FACE="Courier New, monospace"><FONT SIZE=2>org.firebirdsql.pool</FONT></FONT>
+contain some serious issues. The connection pool capability <FONT FACE="Times New Roman, serif">which
+depends on these classes</FONT> will be removed in Jaybird 2.3.</P>
+<P CLASS="western">This change leaves only the
+<FONT FACE="Courier New, monospace"><FONT SIZE=2>ConnectionPoolDataSource</FONT></FONT>
+implementations in <FONT FACE="Courier New, monospace"><FONT SIZE=2>org.firebirdsql.ds</FONT></FONT>
+(for use by application server connection pools). There are no plans
+to reintroduce a new standalone connection pooling capability. We
+probably will migrate some of the features like statement pooling to
+the normal JDBC driver.</P>
+<P CLASS="western">If you require standalone connection pooling, or
+use an application server which has no built-in connectionpool,
+please consider using <FONT FACE="Times New Roman, serif"><FONT SIZE=3>a
+third-party connection pool like C3P0, DBCP or BoneCP.</FONT></FONT></P>
+<H3 CLASS="western">Description of deprecated <FONT FACE="Courier New, monospace">or</FONT><FONT FACE="Courier New, monospace">g.firebirdsql.pool</FONT>
+classes</H3>
 <DIV ID="Warning deprecation" DIR="LTR" STYLE="background: #c0c0c0">
 	<P CLASS="western"><B>WARNING: This section provides information on
 	deprecated classes,</B></P>
