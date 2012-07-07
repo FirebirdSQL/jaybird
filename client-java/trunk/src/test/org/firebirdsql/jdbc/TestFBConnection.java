@@ -23,6 +23,7 @@ import java.util.Properties;
 
 import org.firebirdsql.common.FBTestBase;
 import org.firebirdsql.gds.*;
+import org.firebirdsql.jca.FBManagedConnection;
 
 /**
  * Test cases for FirebirdConnection interface.
@@ -429,6 +430,52 @@ public class TestFBConnection extends FBTestBase {
             }
         } finally {
             connection.close();
+        }
+    }
+    
+    /**
+     * Test if not explicitly specifying a connection characterset results in a warning on the connection.
+     */
+    public void testNoCharactersetWarning() throws Exception {
+        try {
+            Class.forName(FBDriver.class.getName());
+        } catch (ClassNotFoundException ex) {
+            throw new SQLException("No suitable driver.");
+        }
+
+        Properties props = getDefaultPropertiesForConnection();
+        props.remove("lc_ctype");
+        Connection con = null;
+        try {
+            con = DriverManager.getConnection(getUrl(), props);
+            SQLWarning warnings = con.getWarnings();
+            assertNotNull("Expected a warning for not specifying connection characterset", warnings);
+            assertEquals("Unexpected warning message for not specifying connection characterset", FBManagedConnection.WARNING_NO_CHARSET, warnings.getMessage());
+        } finally {
+            closeQuietly(con);
+        }
+    }
+    
+    /**
+     * Test if explicitly specifying a connection characterset does not add a warning on the connection.
+     */
+    public void testCharactersetNoWarning() throws Exception {
+        try {
+            Class.forName(FBDriver.class.getName());
+        } catch (ClassNotFoundException ex) {
+            throw new SQLException("No suitable driver.");
+        }
+
+        Properties props = getDefaultPropertiesForConnection();
+        props.setProperty("lc_ctype", "UTF8");
+        
+        Connection con = null;
+        try {
+            con = DriverManager.getConnection(getUrl(), props);
+            SQLWarning warnings = con.getWarnings();
+            assertNull("Expected no warning when specifying connection characterset", warnings);
+        } finally {
+            closeQuietly(con);
         }
     }
 }
