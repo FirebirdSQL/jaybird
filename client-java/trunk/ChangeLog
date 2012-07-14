@@ -1,3 +1,329 @@
+2012-07-14 08:47  mrotteveel
+
+	* client-java/build/init.xml:
+
+	Update version info
+
+2012-07-14 08:47  mrotteveel
+
+	* client-java/build/maven-release/instructions.txt:
+
+	Updated maven deployment instruction
+
+2012-07-14 08:22  mrotteveel
+
+	* client-java/src/native/jaygds/builds/msvc10/:
+	java_gds.vcxproj.user, java_gds.rc, java_gds.suo:
+
+	Tweaks to version information
+
+2012-07-14 08:21  mrotteveel
+
+	* client-java/native/: debug/jaybird22.dll, debug/jaybird22.pdb,
+	debug/jaybird22_x64.dll, debug/jaybird22_x64.pdb, jaybird22.dll,
+	jaybird22_x64.dll:
+
+	Updated windows DLL builds (now include version info)
+
+2012-07-13 21:08  mrotteveel
+
+	* client-java/src/native/jaygds/builds/msvc10/: .cvsignore,
+	java_gds.rc, java_gds.suo, java_gds.vcxproj,
+	java_gds.vcxproj.filters, resource.h:
+
+	Include version information in jaybird22.dll
+
+2012-07-13 19:29  mrotteveel
+
+	* client-java/src/etc/: release_notes.html, release_notes.odt,
+	release_notes.pdf:
+
+	Update of release notes (info about upcoming change to characterset
+	handling, minor typos)
+
+2012-07-07 21:35  mrotteveel
+
+	* client-java/src/: main/org/firebirdsql/gds/GDSWarning.java,
+	main/org/firebirdsql/jca/FBManagedConnection.java,
+	test/org/firebirdsql/jdbc/TestFBConnection.java:
+
+	Log warning (and add warning to connection) when no explicit
+	connection characterset was specified (preparation for JDBC-257)
+
+2012-06-29 17:01  mrotteveel
+
+	* client-java/src/etc/: release_notes.html, release_notes.odt,
+	release_notes.pdf:
+
+	Add additional info on connection pooling changes.
+
+2012-06-08 16:30  mrotteveel
+
+	* client-java/src/etc/: release_notes.pdf, release_notes.html,
+	release_notes.odt:
+
+	Update releasenotes with JDBC-255
+
+2012-06-08 16:24  mrotteveel
+
+	*
+	client-java/src/main/org/firebirdsql/management/BackupManager.java:
+
+	Update comment in interface as well
+
+2012-06-08 16:19  mrotteveel
+
+	* client-java/src/:
+	main/org/firebirdsql/management/FBBackupManager.java,
+	test/org/firebirdsql/management/TestBackupManager.java:
+
+	JDBC-255 : Allow restore with pagesize of 16384 bytes
+
+2012-05-17 11:52  mrotteveel
+
+	* client-java/src/etc/: release_notes.html, release_notes.odt,
+	release_notes.pdf:
+
+	Update releasenotes with recent fixes and changes
+
+2012-05-16 16:18  mrotteveel
+
+	* client-java/src/main/org/firebirdsql/: gds/ISCConstants.java,
+	jdbc/FBConnectionHelper.java:
+
+	JDBC-251: Add FB 2.5 dpb parameters so they can be set in JDBC url
+	/ nonstandard properties
+
+2012-05-06 19:02  mrotteveel
+
+	* client-java/src/etc/: release_notes.html, release_notes.odt,
+	release_notes.pdf:
+
+	Update releasenotes with things fixed since Jaybird 2.2.0 beta 1,
+	Openoffice/LibreOffice fixes and other changes missed from previous
+	version of release notes
+
+2012-05-06 18:44  mrotteveel
+
+	* client-java/src/openoffice/org/firebirdsql/jdbc/oo/:
+	OODatabaseMetaData.java, OOResultSet.java, OOStatement.java:
+
+	* Remove unnecessary OOResultSet class * Remove unnecessary fields
+	in OODatabaseMetaData * Remove unnecessarily overridden methods in
+	OOStatement
+
+2012-05-06 18:01  mrotteveel
+
+	*
+	client-java/src/openoffice/org/firebirdsql/jdbc/oo/OODatabaseMetaData.java:
+
+	JDBC-226 / JDBC-252 : Also take PUBLIC into account
+
+2012-05-06 17:53  mrotteveel
+
+	* client-java/src/:
+	main/org/firebirdsql/jdbc/AbstractDatabaseMetaData.java,
+	openoffice/org/firebirdsql/jdbc/oo/OODatabaseMetaData.java:
+
+	JDBC-226 / JDBC-252 : Workaround for read only tables in OpenOffice
+	/ LibreOffice Base when using roles to connect
+
+2012-05-06 10:55  mrotteveel
+
+	* client-java/src/main/org/firebirdsql/gds/:
+	impl/wire/AbstractJavaGDSImpl.java, XSQLVAR.java:
+
+	Cleanup comments
+
+2012-04-30 14:11  mrotteveel
+
+	* client-java/src/:
+	main/org/firebirdsql/ds/AbstractPooledConnection.java,
+	main/org/firebirdsql/ds/PooledConnectionHandler.java,
+	jdbc_40/org/firebirdsql/jdbc/FBConnection.java,
+	main/org/firebirdsql/jca/FBManagedConnection.java,
+	main/org/firebirdsql/jdbc/AbstractConnection.java,
+	main/org/firebirdsql/jdbc/FBRowUpdater.java,
+	main/org/firebirdsql/jdbc/InternalTransactionCoordinator.java,
+	main/org/firebirdsql/util/SQLExceptionChainBuilder.java,
+	pool/org/firebirdsql/pool/AbstractPingablePooledConnection.java,
+	pool/org/firebirdsql/pool/PooledConnectionHandler.java,
+	pool/org/firebirdsql/pool/PooledConnectionQueue.java,
+	pool/org/firebirdsql/pool/XPreparedStatementCache.java,
+	test/org/firebirdsql/util/TestSQLExceptionChainBuilder.java:
+
+	Simplify creating SQLException chains
+
+2012-04-30 13:59  mrotteveel
+
+	* client-java/src/: main/org/firebirdsql/ds/StatementHandler.java,
+	main/org/firebirdsql/jdbc/FirebirdStatement.java,
+	test/org/firebirdsql/ds/TestPooledConnectionHandler.java:
+
+	JDBC-250: Make test work with Java 5 as well (and add isClosed() to
+	FirebirdStatement so it is available for Java 5 users, even with
+	proxied classes)
+
+2012-04-29 14:50  mrotteveel
+
+	* client-java/examples/DriverExample.java:
+
+	JDBC-215: Cleanup DriverExample
+
+2012-04-29 13:39  mrotteveel
+
+	* client-java/src/main/org/firebirdsql/gds/ISCConstants.java:
+
+	Convert ISCConstants to interface, remove commented out, duplicated
+	values
+
+2012-04-29 13:22  mrotteveel
+
+	* client-java/src/test/org/firebirdsql/ds/:
+	FBConnectionPoolTestBase.java, TestFBConnectionPoolDataSource.java,
+	TestPooledConnectionHandler.java:
+
+	Restructure tests to bring separation between tests of
+	ConnectionPoolDataSource and (logical) connections obtained from
+	that datasource
+
+2012-04-29 13:20  mrotteveel
+
+	*
+	client-java/src/main/org/firebirdsql/gds/impl/wire/AbstractJavaGDSImpl.java:
+
+	* Deprecate unused method (+ announce removal) * Delete commented
+	out code
+
+2012-04-28 12:42  mrotteveel
+
+	*
+	client-java/src/main/org/firebirdsql/ds/PooledConnectionHandler.java:
+
+	No need to remove statement from statementCopy
+
+2012-04-28 12:41  mrotteveel
+
+	* client-java/src/:
+	test/org/firebirdsql/ds/TestFBConnectionPoolDataSource.java,
+	main/org/firebirdsql/ds/PooledConnectionHandler.java:
+
+	Fix for JDBC-250 : ConcurrentModificationException using
+	FBConnectionPoolDataSource when statements are open on connection
+	close
+
+2012-04-21 13:34  mrotteveel
+
+	* client-java/src/main/org/firebirdsql/: jdbc/AbstractDriver.java,
+	jdbc/FBConnectionProperties.java,
+	jca/FBManagedConnectionFactory.java:
+
+	JDBC-249 : memory leak due to hashCode instability (+ related
+	changes) * Changed FBConnectionProperties.hashCode() to only
+	include the fields least likely to change to be sure the hashCode
+	is likely to remain stable over its lifetime (no guarantee though)
+	* Made changes to storing isolation level and mapping of isolation
+	levels to be sure equals remains consistent if these values are
+	changed * Ensure thread safety of mapping of mcf to itself and to
+	datasource * Prevent potential memory leak of mapping of mcf to
+	datasource by use of WeakHashMap
+
+2012-04-15 12:26  mrotteveel
+
+	* client-java/src/main/org/firebirdsql/gds/impl/wire/:
+	AbstractJavaGDSImpl.java, XdrInputStream.java,
+	XdrOutputStream.java, isc_db_handle_impl.java:
+
+	Fix for JDBC-232 : event Thread consumes 100% CPU time after
+	Firebird shutdown/crash + Improved robustness of closing connection
+	and XdrInputStream / XdrOutputStream
+
+2012-04-09 16:58  mrotteveel
+
+	*
+	client-java/src/main/org/firebirdsql/gds/impl/wire/AbstractJavaGDSImpl.java:
+
+	Remove commented out (incorrect) code
+
+2012-04-09 15:46  mrotteveel
+
+	* client-java/build/test.xml:
+
+	Exclude test that only works for pure Java / Type 4
+
+2012-04-09 15:46  mrotteveel
+
+	* client-java/src/main/org/firebirdsql/gds/impl/:
+	wire/AbstractJavaGDSImpl.java, wire/isc_db_handle_impl.java,
+	AbstractIscDbHandle.java, jni/BaseGDSImpl.java,
+	jni/isc_db_handle_impl.java:
+
+	Check validity of database handle before commit and rollback
+
+2012-04-09 14:25  mrotteveel
+
+	* client-java/src/main/org/firebirdsql/gds/GDS.java:
+
+	JDBC-247 : Expose gdsType from GDS interface
+
+2012-04-09 14:23  mrotteveel
+
+	* client-java/src/main/org/firebirdsql/event/FBEventManager.java:
+
+	JDBC-247: Make Events work on Embedded as well
+
+2012-04-09 13:50  mrotteveel
+
+	* client-java/src/:
+	main/org/firebirdsql/jdbc/AbstractConnection.java,
+	main/org/firebirdsql/jdbc/AbstractDatabaseMetaData.java,
+	main/org/firebirdsql/jdbc/AbstractResultSet.java,
+	main/org/firebirdsql/jdbc/FBConnectionHelper.java,
+	main/org/firebirdsql/jdbc/FBTpbMapper.java,
+	main/org/firebirdsql/encodings/CharacterTranslator.java,
+	main/org/firebirdsql/gds/GDS.java,
+	main/org/firebirdsql/gds/impl/GDSFactory.java,
+	main/org/firebirdsql/gds/impl/jni/GDSSynchronizationPolicy.java,
+	main/org/firebirdsql/gds/impl/jni/NativeGDSFactoryPlugin.java,
+	main/org/firebirdsql/jca/FBManagedConnection.java,
+	main/org/firebirdsql/management/FBMaintenanceManager.java,
+	main/org/firebirdsql/management/MaintenanceManager.java,
+	pool/org/firebirdsql/pool/AbstractFBConnectionPoolDataSource.java,
+	pool/org/firebirdsql/pool/FBPooledConnection.java,
+	pool/org/firebirdsql/pool/FBWrappingDataSource.java,
+	pool/org/firebirdsql/pool/PooledConnectionHandler.java,
+	pool/org/firebirdsql/pool/PooledConnectionQueue.java:
+
+	Fixes to javadoc (missing parameters or throws) + changing type of
+	some the exceptions thrown
+
+2012-04-09 12:21  mrotteveel
+
+	* client-java/src/test/org/firebirdsql/common/FBTestBase.java:
+
+	Fix copy/paste javadoc error
+
+2012-04-09 12:10  mrotteveel
+
+	* client-java/src/test/org/firebirdsql/:
+	ds/TestFBConnectionPoolDataSource.java, ds/TestFBXADataSource.java,
+	common/FBTestBase.java:
+
+	Change test so it also works with embedded
+
+2012-04-09 11:23  mrotteveel
+
+	* client-java/build/test.xml:
+
+	Simplify execution of native and embedded test with existing
+	jaybird DLL/SO (does require manually copying)
+
+2012-04-07 15:53  mrotteveel
+
+	* client-java/build/init.xml:
+
+	Restore normal 'tag'
+
 2012-04-07 15:47  mrotteveel
 
 	* client-java/build/init.xml:
