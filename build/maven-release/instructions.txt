@@ -48,6 +48,13 @@ Prepare the POM file.
 Step 3:
 TODO: Research if deploying bundled artifacts isn't easier (see 7b on https://docs.sonatype.org/display/Repository/Sonatype+OSS+Maven+Repository+Usage+Guide)
 
+Bundling is easier:
+
+gpg -ab every individual file
+jar -cvf bundle.jar *
+
+Upload according to above link
+
 Sign and deploy jar-files (replace paths, url and repositoryId as necessary; example deploys to snapshot repository)
 JDK 15:
 mvn gpg:sign-and-deploy-file -DpomFile=Jaybird-2.2.0beta1JDK_1.5\jaybird-jdk15.pom -Dfile=Jaybird-2.2.0beta1JDK_1.5\jaybird-2.2.0.jar -Durl=https://oss.sonatype.org/content/repositories/snapshots -DrepositoryId=sonatype-nexus-snapshots
