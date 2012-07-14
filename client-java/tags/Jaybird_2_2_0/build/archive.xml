@@ -1,0 +1,120 @@
+  <!-- =================================================================== -->
+  <!-- Creates the jar archives                                            -->
+  <!-- =================================================================== -->
+  <target name="jars" depends="jar-j2ee, rar, jar-test, jar-sources, jar-javadoc"/>
+
+  <!-- Not really a jar operation but necessary :) -->
+  <target name="jar-j2ee" depends="compile">
+     <mkdir dir="${build.lib}"/>
+    <copy file="${module.thirdparty}/connector-api-1.5.jar" tofile="${build.lib}/connector-api-1.5.jar"/>
+  </target>
+
+  <target name="jar-ra" depends="compile">
+    <mkdir dir="${build.lib}"/>
+    <jar jarfile="${build.lib}/${archive.name.simple}" manifest="${build.etc}/default.mf">
+       <fileset dir="${build.classes}">
+         <include name="org/firebirdsql/**"/>
+       </fileset>
+       <fileset dir="${build.pool}">
+         <include name="org/firebirdsql/**"/>
+       </fileset>
+       <fileset dir="${build.resources}">
+         <exclude name="log4j.properties"/>
+         <include name="**/*.properties"/>
+       </fileset>
+       <zipfileset dir="${build.resources}/META-INF" prefix="META-INF">
+         <include name="services/**/*"/>
+       </zipfileset>
+    </jar>
+
+    <jar jarfile="${build.lib}/${archive.name.full}" manifest="${build.etc}/default.mf">
+       <fileset dir="${build.classes}">
+         <include name="org/firebirdsql/**"/>
+       </fileset>
+       <fileset dir="${build.pool}">
+         <include name="org/firebirdsql/**"/>
+       </fileset>
+       <fileset dir="${build.compatibility}">
+         <include name="org/firebirdsql/**"/>
+       </fileset>
+       <fileset dir="${build.resources}">
+         <exclude name="log4j.properties"/>
+         <include name="**/*.properties"/>
+       </fileset>
+       <fileset dir="${build.j2ee}">
+         <include name="javax/**"/>
+       </fileset>
+       <zipfileset dir="${build.resources}/META-INF" prefix="META-INF">
+         <include name="services/**/*"/>
+       </zipfileset>
+    </jar>
+  </target>
+
+  <target name="jar-test" depends="compile">
+    <mkdir dir="${build.lib}"/>
+    <jar jarfile="${build.lib}/${archive.name.test}" manifest="${build.etc}/default.mf">
+       <fileset dir="${build.test}">
+         <include name="org/firebirdsql/**"/>
+       </fileset>
+       <fileset dir="${build.resources}">
+         <include name="**/*.properties"/>
+       </fileset>
+    </jar>
+  </target>
+  
+  <target name="jar-sources" depends="set-driver-sources,set-pool-sources">
+  	<mkdir dir="${build.lib}"/>
+  	<jar jarfile="${build.lib}/${archive.name.sources}" update="true">
+      	<fileset dir="${source.java}">
+      		<include name="**/*.java"/>
+      	</fileset>
+      	<fileset dir="${source.pool}">
+      		<include name="**/*.java"/>
+      	</fileset>
+      	<fileset dir="${toString:source.java.openoffice}">
+	  		<include name="**/*.java"/>
+	  	</fileset>
+  		<fileset dir="${toString:source.java.additional}">
+	  		<include name="**/*.java"/>
+	  	</fileset>
+	  	<fileset dir="${toString:source.java.pool}">
+	  		<include name="**/*.java"/>
+	  	</fileset>
+	  	<fileset dir="${toString:source.java.wire}">
+	  		<include name="**/*.java"/>
+	  	</fileset>
+	  	<fileset dir="${toString:source.java.jca}">
+	  		<include name="**/*.java"/>
+	  	</fileset>
+		<fileset dir="${source.resources}">
+			<exclude name="log4j.properties"/>
+			<include name="**/*.properties"/>
+		</fileset>
+		<zipfileset dir="${source.resources}/META-INF" prefix="META-INF">
+			<include name="services/**/*"/>
+		</zipfileset>
+  	</jar>
+  </target>
+  
+  <target name="jar-javadoc" depends="javadocs">
+  	<mkdir dir="${build.lib}"/>
+  	<jar jarfile="${build.lib}/${archive.name.javadoc}" update="true">
+  		<fileset dir="${build.docs}">
+  		</fileset>
+  	</jar>
+  </target>
+
+
+  <!-- =================================================================== -->
+  <!-- Creates the rar archives                                            -->
+  <!-- =================================================================== -->
+  <target name="rar" depends="jar-ra">
+    <jar jarfile="${build.lib}/${archive.name.rar}" manifest="${build.etc}/default.mf">
+      <fileset dir="${build.lib}">
+        <include name="${archive.name.simple}"/>
+      </fileset>
+      <fileset dir="${build.resources}">
+        <include name="META-INF/ra.xml"/>
+      </fileset>
+    </jar>
+  </target>
