@@ -87,7 +87,7 @@
 	   jvm="${junit.jvm}">
 
       <jvmarg value="${junit.jvm.options}"/>
-      <sysproperty key="java.library.path" value="${module.output}/native"/>
+      <sysproperty key="java.library.path" value="${native.library.location}"/>
       <sysproperty key="jbosstest.deploy.dir" file="${build.lib}"/>
       <sysproperty key="log4j.properties" file="${build.resources}/log4j.properties"/>
       <sysproperty key="test.db.dir" value="${test.db.dir}"/>
