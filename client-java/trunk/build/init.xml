@@ -241,10 +241,10 @@
     </condition>
     <property name="native.library.location" value="${module.output}/native"/>
     <condition property="native_library_present">
-        <available file="${native.library.location}/${native.library.name}.dll"/>
-    </condition>
-    <condition property="native_library_present">
-        <available file="${native.library.location}/lib${native.library.name}.so"/>
+    	<or>
+        	<available file="${native.library.location}/${native.library.name}.dll"/>
+        	<available file="${native.library.location}/lib${native.library.name}.so"/>
+        </or>
     </condition>
     <condition property="no_type2_tests">
         <not><isset property="native_library_present"/></not>
