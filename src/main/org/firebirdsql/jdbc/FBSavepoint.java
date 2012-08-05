@@ -21,15 +21,13 @@
 package org.firebirdsql.jdbc;
 
 import java.sql.SQLException;
-import java.sql.Savepoint;
 
 /**
  * Savepoint implementation.
  * 
  * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
  */
-@SuppressWarnings("deprecation")
-public class FBSavepoint implements Savepoint, FirebirdSavepoint {
+public class FBSavepoint implements FirebirdSavepoint {
     public static final String SAVEPOINT_ID_PREFIX = "svpt";
 
     private boolean valid = true;
@@ -43,8 +41,8 @@ public class FBSavepoint implements Savepoint, FirebirdSavepoint {
      * @param id ID of the savepoint.
      */
     public FBSavepoint(int id) {
-        this.savepointId = id;
-        this.serverId = getSavepointServerId(id);
+        savepointId = id;
+        serverId = getSavepointServerId(id);
     }
     
     /**
@@ -54,7 +52,7 @@ public class FBSavepoint implements Savepoint, FirebirdSavepoint {
      */
     public FBSavepoint(String name) {
         this.name = name;
-        this.serverId = getSavepointServerId(name);
+        serverId = getSavepointServerId(name);
     }
     
     /**
@@ -75,17 +73,18 @@ public class FBSavepoint implements Savepoint, FirebirdSavepoint {
      * @return valid savepoint ID.
      */
     private String getSavepointServerId(String name) {
-        StringBuffer sb = new StringBuffer();
+        StringBuilder sb = new StringBuilder();
         
         sb.append('"');
         
-        char[] data = name.toCharArray();
-        for (int i = 0; i < data.length; i++) {
-            
+        for (int i = 0; i < name.length(); i++) {
+            char currentChar = name.charAt(i);
             // we have to double quote quotes
-            if (data[i] == '"') sb.append('"');
+            if (currentChar == '"') {
+            	sb.append('"');
+            }
             
-            sb.append(data[i]);
+            sb.append(currentChar);
         }
         
         sb.append('"');

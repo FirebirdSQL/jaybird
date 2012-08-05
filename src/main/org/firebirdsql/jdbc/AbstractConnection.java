@@ -39,6 +39,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.resource.ResourceException;
 
@@ -1296,44 +1297,14 @@ public abstract class AbstractConnection implements FirebirdConnection {
      * Savepoint stuff.  
      */
     
+    private final AtomicInteger savepointCounter = new AtomicInteger();
+    private final List<FBSavepoint> savepoints = new LinkedList<FBSavepoint>();
+
+    private int getNextSavepointCounter() {
+        return savepointCounter.getAndIncrement();
+    }
+    
     public Savepoint setSavepoint() throws SQLException {
-        return (Savepoint)setFirebirdSavepoint();
-    }
-
-    public Savepoint setSavepoint(String name) throws SQLException {
-        return (Savepoint)setFirebirdSavepoint(name);
-    }
-
-    @SuppressWarnings("deprecation")
-    public void rollback(Savepoint savepoint) throws SQLException {
-        rollback((FirebirdSavepoint)savepoint);
-    }
-
-    @SuppressWarnings("deprecation")
-    public void releaseSavepoint(Savepoint savepoint) throws SQLException {
-        releaseSavepoint((FirebirdSavepoint)savepoint);
-    }
-    
-    private int savepointCounter = 0;
-    private List savepoints = new LinkedList();
-
-    private synchronized int getNextSavepointCounter() {
-        return savepointCounter++;
-    }
-    
-    /**
-     * Creates an unnamed savepoint in the current transaction and 
-     * returns the new <code>Savepoint</code> object that represents it.
-     *
-     * @return the new <code>Savepoint</code> object
-     * @exception SQLException if a database access error occurs
-     *            or this <code>Connection</code> object is currently in
-     *            auto-commit mode
-     * @see Savepoint
-     * @deprecated This method will be removed in Jaybird 2.3, use {@link java.sql.Connection#setSavepoint()}
-     */
-    @Deprecated
-    public synchronized FirebirdSavepoint setFirebirdSavepoint() throws SQLException {
         FBSavepoint savepoint = new FBSavepoint(getNextSavepointCounter());
         setSavepoint(savepoint);
         
@@ -1347,7 +1318,7 @@ public abstract class AbstractConnection implements FirebirdConnection {
      * 
      * @throws SQLException if something went wrong.
      */
-    private void setSavepoint(FBSavepoint savepoint) throws SQLException {
+    private synchronized void setSavepoint(FBSavepoint savepoint) throws SQLException {
         if (getAutoCommit()) {
             throw new SQLException("Connection.setSavepoint() method cannot " + 
                     "be used in auto-commit mode.", FBSQLException.SQL_STATE_INVALID_TX_STATE);
@@ -1367,48 +1338,20 @@ public abstract class AbstractConnection implements FirebirdConnection {
         }
     }
 
-    /**
-     * Creates a savepoint with the given name in the current transaction
-     * and returns the new <code>Savepoint</code> object that represents it.
-     *
-     * @param name a <code>String</code> containing the name of the savepoint
-     * @return the new <code>Savepoint</code> object
-     * @exception SQLException if a database access error occurs
-     *            or this <code>Connection</code> object is currently in
-     *            auto-commit mode
-     * @see Savepoint
-     * @deprecated This method will be removed in Jaybird 2.3, use {@link java.sql.Connection#setSavepoint()}
-     */
-    @Deprecated
-    public synchronized FirebirdSavepoint setFirebirdSavepoint(String name) throws SQLException {
+    public Savepoint setSavepoint(String name) throws SQLException {
         FBSavepoint savepoint = new FBSavepoint(name);
         setSavepoint(savepoint);
         
         return savepoint;
     }
     
-    /**
-     * Undoes all changes made after the given <code>Savepoint</code> object
-     * was set. 
-     * <P>
-     * This method should be used only when auto-commit has been disabled.
-     *
-     * @param savepoint the <code>Savepoint</code> object to roll back to
-     * @exception SQLException if a database access error occurs,
-     *            the <code>Savepoint</code> object is no longer valid,
-     *            or this <code>Connection</code> object is currently in
-     *            auto-commit mode
-     * @see Savepoint
-     * @see #rollback
-     * @deprecated This method will be removed in Jaybird 2.3, use {@link java.sql.Connection#rollback(Savepoint)}
-     */
-    @Deprecated
-    public synchronized void rollback(FirebirdSavepoint savepoint) throws SQLException {
+    public synchronized void rollback(Savepoint savepoint) throws SQLException {
         
         if (getAutoCommit())
             throw new SQLException("Connection.setSavepoint() method cannot " + 
                     "be used in auto-commit mode.");
         
+        // TODO The error message and actual condition do not match
         if (!(savepoint instanceof FBSavepoint))
             throw new SQLException(
                     "Specified savepoint was not obtained from this connection.");
@@ -1430,24 +1373,13 @@ public abstract class AbstractConnection implements FirebirdConnection {
         }
     }
 
-    /**
-     * Removes the given <code>Savepoint</code> object from the current 
-     * transaction. Any reference to the savepoint after it have been removed 
-     * will cause an <code>SQLException</code> to be thrown.
-     *
-     * @param savepoint the <code>Savepoint</code> object to be removed
-     * @exception SQLException if a database access error occurs or
-     *            the given <code>Savepoint</code> object is not a valid 
-     *            savepoint in the current transaction
-     * @deprecated This method will be removed in Jaybird 2.3, use {@link java.sql.Connection#releaseSavepoint(Savepoint)}
-     */
-    @Deprecated
-    public synchronized void releaseSavepoint(FirebirdSavepoint savepoint) throws SQLException {
+    public synchronized void releaseSavepoint(Savepoint savepoint) throws SQLException {
         
         if (getAutoCommit())
             throw new SQLException("Connection.setSavepoint() method cannot " + 
                     "be used in auto-commit mode.");
         
+        // TODO The error message and actual condition do not match
         if (!(savepoint instanceof FBSavepoint))
             throw new SQLException(
                     "Specified savepoint was not obtained from this connection.");
@@ -1473,9 +1405,9 @@ public abstract class AbstractConnection implements FirebirdConnection {
      * Invalidate all savepoints.
      */
     protected synchronized void invalidateSavepoints() {
-        Iterator iter = savepoints.iterator();
-        while(iter.hasNext())
-            ((FBSavepoint)iter.next()).invalidate();
+    	for (FBSavepoint savepoint : savepoints) {
+    		savepoint.invalidate();
+    	}
         
         savepoints.clear();
     }    

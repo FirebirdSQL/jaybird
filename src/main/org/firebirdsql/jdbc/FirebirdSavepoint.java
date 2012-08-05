@@ -31,10 +31,7 @@ import java.sql.Savepoint;
 
 /**
  * Firebird-specific extensions to the {@link java.sql.Savepoint} interface.
- * 
- * TODO Remove deprecated annotation after JDBC-211 is done
  */
-@Deprecated
 public interface FirebirdSavepoint extends Savepoint {
 
 }
