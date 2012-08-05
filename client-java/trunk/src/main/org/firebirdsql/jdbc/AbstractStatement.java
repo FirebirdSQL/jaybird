@@ -1010,15 +1010,15 @@ public abstract class AbstractStatement implements FirebirdStatement, Synchroniz
      * @see #execute
      */
     public boolean getMoreResults() throws  SQLException {
-        return getMoreResults(FirebirdStatement.CLOSE_ALL_RESULTS);
+        return getMoreResults(Statement.CLOSE_ALL_RESULTS);
     }
         
     public boolean getMoreResults(int mode) throws SQLException {
         
         hasMoreResults = false;
 
-        boolean closeResultSet = mode == FirebirdStatement.CLOSE_ALL_RESULTS
-                || mode == FirebirdStatement.CLOSE_CURRENT_RESULT;
+        boolean closeResultSet = mode == Statement.CLOSE_ALL_RESULTS
+                || mode == Statement.CLOSE_CURRENT_RESULT;
         
         if (closeResultSet && currentRs != null) {
             try {

@@ -427,7 +427,7 @@ public abstract class AbstractPingablePooledConnection implements PooledConnecti
         if (!isStatementPooling()) {
             if (keyIndexes == null && keyColumns == null)
                 return jdbcConnection.prepareStatement(
-                    statement, FirebirdStatement.RETURN_GENERATED_KEYS);
+                    statement, Statement.RETURN_GENERATED_KEYS);
             else
             if (keyIndexes != null)
                 return jdbcConnection.prepareStatement(statement, keyIndexes);
@@ -442,7 +442,7 @@ public abstract class AbstractPingablePooledConnection implements PooledConnecti
             XPreparedStatementModel key;
             
             if (keyIndexes == null && keyColumns == null)
-                key = new XPreparedStatementModel(statement, FirebirdStatement.RETURN_GENERATED_KEYS);
+                key = new XPreparedStatementModel(statement, Statement.RETURN_GENERATED_KEYS);
             else
             if (keyIndexes != null)
                 key = new XPreparedStatementModel(statement, keyIndexes);
@@ -540,7 +540,7 @@ public abstract class AbstractPingablePooledConnection implements PooledConnecti
         PreparedStatement stmt;
         if (key.getKeyIndexes() == null && key.getKeyColumns() == null)
             stmt = jdbcConnection.prepareStatement(
-                key.getSql(), FirebirdStatement.RETURN_GENERATED_KEYS);
+                key.getSql(), Statement.RETURN_GENERATED_KEYS);
         else
         if (key.getKeyIndexes() != null)
             stmt = jdbcConnection.prepareStatement(key.getSql(), key.getKeyIndexes());

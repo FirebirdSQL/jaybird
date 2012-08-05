@@ -154,7 +154,7 @@ public class TestFBDatabaseMetaData extends TestXABase {
         }
 
         int sysTableCount;
-        FirebirdDatabaseMetaData metaData = (FirebirdDatabaseMetaData) c.getMetaData();
+        DatabaseMetaData metaData = c.getMetaData();
         if (metaData.getDatabaseMajorVersion() < 2)
             sysTableCount = 32;
         else if (metaData.getDatabaseMajorVersion() == 2 && metaData.getDatabaseMinorVersion() == 0)

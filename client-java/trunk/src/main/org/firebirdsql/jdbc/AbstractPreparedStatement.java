@@ -1337,6 +1337,6 @@ public abstract class AbstractPreparedStatement extends AbstractStatement implem
     }
 
     public ParameterMetaData getParameterMetaData() throws SQLException {
-        return new FBParameterMetaData(fixedStmt.getInSqlda().sqlvar, gdsHelper);
+        return getFirebirdParameterMetaData();
     }
 }
