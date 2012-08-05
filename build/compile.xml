@@ -28,12 +28,6 @@
       <classpath refid="javac.examples.classpath"/>
     </javac>
   </target>
-
-  <target name="set-jdbc-20-src" if="jdbc.20">
-    <path id="source.java.additional">
-      <pathelement path="${source.jdbc.20}"/>
-    </path>
-  </target>
   
   <target name="set-jdbc-30-src" if="jdbc.30">
     <path id="source.java.additional">
@@ -47,21 +41,9 @@
     </path>
   </target>
 
-  <target name="set-wire1.3-src" if="jdk1.3">
-    <path id="source.java.wire">
-      <pathelement path="${source.wire1.3}"/>
-    </path>
-  </target>
-
   <target name="set-wire1.4-src" unless="jdk1.3">
     <path id="source.java.wire">
       <pathelement path="${source.wire1.4}"/>
-    </path>
-  </target>
-
-  <target name="set-pool1.4-src" if="jdk1.4">
-    <path id="source.java.pool">
-      <pathelement path="${source.pool1.4}"/>
     </path>
   </target>
 
@@ -84,12 +66,6 @@
   	</path>
   </target>
 
-  <target name="set-openoffice-src-13" if="jdk1.3">
-  	<echo message="No OpenOffice support!"/>
-  	<path id="source.java.openoffice">
-  	</path>
-  </target>
-
   <target name="set-jca-src-14" unless="jdbc.40">
   	<path id="source.java.jca">
     	<pathelement path="${source.jca1.4}"/>
@@ -102,14 +78,13 @@
     </path>
   </target>
   
-  <target name="set-driver-sources" depends="init,set-jdbc-20-src,set-jdbc-30-src,set-jdbc-40-src,set-wire1.3-src,set-wire1.4-src,set-openoffice-src-13,set-openoffice-src-14,set-jca-src-14,set-jca-src-16"/>
+  <target name="set-driver-sources" depends="init,set-jdbc-30-src,set-jdbc-40-src,set-wire1.4-src,set-openoffice-src-14,set-jca-src-14,set-jca-src-16"/>
   
-  <target name="set-pool-sources" depends="init,set-pool1.4-src,set-pool1.5-src,set-pool1.6-src"/>
+  <target name="set-pool-sources" depends="init,set-pool1.5-src,set-pool1.6-src"/>
 
   <target name="compile-driver" depends="set-driver-sources">
     <mkdir dir="${build.classes}"/>
     
-    <echo message="${jdk1.3}"/>
     <echo message="Architecture: ${os.arch}"/>
 	<echo message="${ant.java.version}"/>
     <echo message="${toString:source.java.openoffice}"/>
@@ -167,11 +142,6 @@
     </javac>
   </target>
 
-  <target name="set-jdbc-20-test" if="jdbc.20">
-    <path id="source.test.additional">
-    </path>
-  </target>
-
   <target name="set-jdbc-30-test" if="jdbc.30">
     <path id="source.test.additional">
       <pathelement path="${source.test.30}"/>
@@ -185,7 +155,7 @@
     </path>
   </target>
 
-  <target name="compile-tests" depends="compile-pool,set-jdbc-20-test,set-jdbc-30-test,set-jdbc-40-test">
+  <target name="compile-tests" depends="compile-pool,set-jdbc-30-test,set-jdbc-40-test">
     <mkdir dir="${build.test}"/>
     <javac 
            destdir="${build.test}"

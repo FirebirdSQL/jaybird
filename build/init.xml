@@ -6,21 +6,10 @@
       <format property="YEAR" pattern="yyyy"/>
     </tstamp>
     <property name="build.id" value="${build.number}"/>
-
-        <condition property="jdbc.20" value="true">
-            <or>
-                <equals arg1="${ant.java.version}" arg2="1.1"/>
-                <equals arg1="${ant.java.version}" arg2="1.2"/>
-                <equals arg1="${ant.java.version}" arg2="1.3"/>
-            </or> 
-        </condition>
 	
-	<!-- We set jdbc.30 property if JDK version is 1.4 -->
+	<!-- We set jdbc.30 property if JDK version is 1.5 -->
 	<condition property="jdbc.30" value="true">
-	  <or>
-		<equals arg1="${ant.java.version}" arg2="1.4"/>
 		<equals arg1="${ant.java.version}" arg2="1.5"/>
-	  </or>		
 	</condition>
 
 	<condition property="jdbc.40" value="true">
@@ -29,16 +18,6 @@
 			<!-- Technically JDK 1.7 is JDBC 4.1, we use this here as an indication to use the jdbc4.0 sources -->
 			<equals arg1="${ant.java.version}" arg2="1.7"/>
 		</or>
-	</condition>
-	
-	<!-- We set jdk1.3 property if JDK version is 1.3 -->
-	<condition property="jdk1.3" value="true">
-		<equals arg1="${ant.java.version}" arg2="1.3"/>
-	</condition>
-
-	<!-- We set jdk1.4 property if JDK version is 1.4 -->
-	<condition property="jdk1.4" value="true">
-		<equals arg1="${ant.java.version}" arg2="1.4"/>
 	</condition>
 
 	<!-- We set jdk1.5 property if JDK version is 1.5 -->
@@ -106,12 +85,9 @@
     <!-- Where source files live -->
     <property name="source.java" value="${module.source}/main"/>
     <property name="source.openoffice" value="${module.source}/openoffice"/>
-    <property name="source.jdbc.20" value="${module.source}/jdbc_20"/>
     <property name="source.jdbc.30" value="${module.source}/jdbc_30"/>
     <property name="source.jdbc.40" value="${module.source}/jdbc_40"/>
-    <property name="source.wire1.3" value="${module.source}/wire_jdk1_3"/>
     <property name="source.wire1.4" value="${module.source}/wire_jdk1_4"/>
-    <property name="source.pool1.4" value="${module.source}/pool_jdk1_4"/>
     <property name="source.pool1.5" value="${module.source}/pool_jdk1_5"/>
 	<property name="source.pool1.6" value="${module.source}/pool_jdk1_6"/>
 	<property name="source.jca1.4" value="${module.source}/jca_jdk1_4"/>
