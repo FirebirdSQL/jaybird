@@ -30,12 +30,11 @@ package org.firebirdsql.jdbc;
 import java.sql.Savepoint;
 
 /**
- * Savepoint interface, corresponds to the <code>java.sql.Savepoint</code>
- * interface defined in JDBC 3.0, but can be used in JDBC 2.0 applications.
+ * Firebird-specific extensions to the {@link java.sql.Savepoint} interface.
  * 
- * @deprecated This interface will be removed in Jaybird 2.3, switch to {@link java.sql.Savepoint}
+ * TODO Remove deprecated annotation after JDBC-211 is done
  */
 @Deprecated
 public interface FirebirdSavepoint extends Savepoint {
-    /* Empty interface retained for backwards compatibility */
+
 }

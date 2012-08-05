@@ -418,8 +418,7 @@ public abstract class AbstractPingablePooledConnection implements PooledConnecti
 
     public PreparedStatement getPreparedStatement(String sql,
             int resultSetType, int resultSetConcurrency) throws SQLException {
-        return getPreparedStatement(sql, resultSetType, resultSetConcurrency,
-            FirebirdResultSet.CLOSE_CURSORS_AT_COMMIT);
+        return getPreparedStatement(sql, resultSetType, resultSetConcurrency, ResultSet.CLOSE_CURSORS_AT_COMMIT);
     }
 
     public PreparedStatement getPreparedStatement(String statement, int[] keyIndexes,
@@ -522,7 +521,7 @@ public abstract class AbstractPingablePooledConnection implements PooledConnecti
         
         return prepareStatement(
             new XPreparedStatementModel(sql, resultSetType, resultSetConcurrency,
-                    FirebirdResultSet.CLOSE_CURSORS_AT_COMMIT), cached);
+                    ResultSet.CLOSE_CURSORS_AT_COMMIT), cached);
     }
 
     private XCachablePreparedStatement prepareStatementNoGeneratedKeys(
