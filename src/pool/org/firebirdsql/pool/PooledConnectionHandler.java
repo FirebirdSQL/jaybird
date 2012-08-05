@@ -37,7 +37,6 @@ import java.util.Iterator;
 import java.util.List;
 
 import org.firebirdsql.jdbc.FBSQLException;
-import org.firebirdsql.jdbc.FirebirdStatement;
 import org.firebirdsql.logging.Logger;
 import org.firebirdsql.logging.LoggerFactory;
 import org.firebirdsql.util.SQLExceptionChainBuilder;
@@ -258,7 +257,7 @@ class PooledConnectionHandler implements InvocationHandler {
                 String statement = (String)args[0];
                 Integer returnGeneratedKeys = (Integer)args[1];
                 
-                if (returnGeneratedKeys.intValue() == FirebirdStatement.RETURN_GENERATED_KEYS)
+                if (returnGeneratedKeys.intValue() == Statement.RETURN_GENERATED_KEYS)
                     return handlePrepareStatement(statement, null, null);
                 else
                     return handlePrepareStatement(
