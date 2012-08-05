@@ -363,7 +363,7 @@ public class TestFBConnection extends FBTestBase {
         try {
             
             AbstractStatement stmt1 = (AbstractStatement)connection.createStatement();
-            assertEquals(FirebirdResultSet.HOLD_CURSORS_OVER_COMMIT, stmt1.getResultSetHoldability());
+            assertEquals(ResultSet.HOLD_CURSORS_OVER_COMMIT, stmt1.getResultSetHoldability());
             
             Statement stmt2 = connection.createStatement();
             

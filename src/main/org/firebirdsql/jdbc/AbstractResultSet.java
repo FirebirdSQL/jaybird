@@ -38,7 +38,7 @@ import org.firebirdsql.jdbc.field.*;
  * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  */
-public abstract class AbstractResultSet implements ResultSet, Synchronizable, FBObjectListener.FetcherListener {
+public abstract class AbstractResultSet implements FirebirdResultSet, Synchronizable, FBObjectListener.FetcherListener {
 
     private AbstractStatement fbStatement;
     private FBFetcher fbFetcher;
@@ -70,7 +70,7 @@ public abstract class AbstractResultSet implements ResultSet, Synchronizable, FB
     
     private int rsType = ResultSet.TYPE_FORWARD_ONLY;
     private int rsConcurrency = ResultSet.CONCUR_READ_ONLY;
-    private int rsHoldability = FirebirdResultSet.CLOSE_CURSORS_AT_COMMIT;
+    private int rsHoldability = ResultSet.CLOSE_CURSORS_AT_COMMIT;
     
     /* (non-Javadoc)
      * @see org.firebirdsql.jdbc.FBObjectListener.FetcherListener#allRowsFetched(org.firebirdsql.jdbc.FBFetcher)
@@ -214,7 +214,7 @@ public abstract class AbstractResultSet implements ResultSet, Synchronizable, FB
      * @throws SQLException if statement is closed.
      */
     protected void checkCursorMove() throws SQLException {
-        if (closed && rsHoldability != FirebirdResultSet.HOLD_CURSORS_OVER_COMMIT) 
+        if (closed && rsHoldability != ResultSet.HOLD_CURSORS_OVER_COMMIT) 
             throw new FBSQLException("The result set is closed");
         
         closeFields();
@@ -313,7 +313,7 @@ public abstract class AbstractResultSet implements ResultSet, Synchronizable, FB
 
             }
             
-            if (rsHoldability != FirebirdResultSet.HOLD_CURSORS_OVER_COMMIT)
+            if (rsHoldability != ResultSet.HOLD_CURSORS_OVER_COMMIT)
                 fbFetcher = null;
         }
     }
@@ -629,7 +629,7 @@ public abstract class AbstractResultSet implements ResultSet, Synchronizable, FB
      * Factory method for the field access objects
      */
     public FBField getField(int columnIndex, boolean checkRowPosition) throws SQLException {
-        if (closed && rsHoldability != FirebirdResultSet.HOLD_CURSORS_OVER_COMMIT) 
+        if (closed && rsHoldability != ResultSet.HOLD_CURSORS_OVER_COMMIT) 
             throw new FBSQLException("The resultSet is closed");
         
         if (checkRowPosition && row == null && rowUpdater == null)
@@ -655,7 +655,7 @@ public abstract class AbstractResultSet implements ResultSet, Synchronizable, FB
      * @throws SQLException if the field cannot be retrieved
      */
     public FBField getField(String columnName) throws SQLException {
-        if (closed && rsHoldability != FirebirdResultSet.HOLD_CURSORS_OVER_COMMIT) 
+        if (closed && rsHoldability != ResultSet.HOLD_CURSORS_OVER_COMMIT) 
             throw new FBSQLException("The resultSet is closed");
         
         if (row == null && rowUpdater == null)

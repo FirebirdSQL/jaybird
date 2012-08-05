@@ -983,7 +983,7 @@ public class TestFBResultSet extends FBTestBase {
     }
     
     public void testHoldability() throws Exception {
-        ((FirebirdConnection)connection).setHoldability(FirebirdResultSet.HOLD_CURSORS_OVER_COMMIT);
+        ((FirebirdConnection)connection).setHoldability(ResultSet.HOLD_CURSORS_OVER_COMMIT);
         
         
         Statement stmt = connection.createStatement(

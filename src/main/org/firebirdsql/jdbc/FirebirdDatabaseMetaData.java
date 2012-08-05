@@ -70,25 +70,6 @@ public interface FirebirdDatabaseMetaData extends DatabaseMetaData {
      */
     public String getViewSourceCode(String viewName) throws SQLException;
     
-    
-    // ---- Backported for JDK 1.3 compatibility ----
-    
-    /**
-     * Retrieves the major version number of the underlying database.
-     *
-     * @return the underlying database's major version
-     * @throws SQLException if a database access error occurs
-     */
-    int getDatabaseMajorVersion() throws SQLException;
-
-    /**
-     * Retrieves the minor version number of the underlying database.
-     *
-     * @return underlying database's minor version
-     * @throws SQLException if a database access error occurs
-     */
-    int getDatabaseMinorVersion() throws SQLException;
-    
     /**
      * Get the major version of the ODS (On-Disk Structure) of the database.
      * 
