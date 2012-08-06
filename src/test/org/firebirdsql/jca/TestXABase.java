@@ -18,7 +18,6 @@
  */
 package org.firebirdsql.jca;
 
-
 import java.io.Serializable;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
@@ -26,6 +25,8 @@ import java.net.UnknownHostException;
 import javax.transaction.xa.Xid;
 
 import org.firebirdsql.common.FBTestBase;
+
+import static org.firebirdsql.common.SimpleFBTestBase.*;
 
 /**
  * THIS FILE INCLUDES AN XID IMPLEMENTATION FROM THE JBOSS PROJECT

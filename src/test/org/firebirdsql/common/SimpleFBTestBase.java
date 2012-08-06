@@ -22,13 +22,11 @@ import java.io.File;
 import java.util.MissingResourceException;
 import java.util.ResourceBundle;
 
-import junit.framework.TestCase;
-
 /**
  * Base class for test cases which can be run against only a single GDS
  * implementation.
  */
-public abstract class SimpleFBTestBase extends TestCase {
+public final class SimpleFBTestBase {
 	private static ResourceBundle testDefaults = ResourceBundle.getBundle("unit_test_defaults");
 
 	public static String getProperty(String property) {
@@ -37,8 +35,7 @@ public abstract class SimpleFBTestBase extends TestCase {
 	
 	public static String getProperty(String property, String defaultValue) {
 		try {
-			return System.getProperty(property, testDefaults
-					.getString(property));
+			return System.getProperty(property, testDefaults.getString(property));
 		} catch (MissingResourceException ex) {
 			return System.getProperty(property, defaultValue);
 		}
@@ -47,20 +44,24 @@ public abstract class SimpleFBTestBase extends TestCase {
 	/**
 	 * Default name of database file to use for the test case.
 	 */
-	protected static final String DB_NAME = "fbtest.fdb";
+	public static final String DB_NAME = "fbtest.fdb";
 
-	protected final String DB_USER = getProperty("test.user", "sysdba");
-	protected final String DB_PASSWORD = getProperty("test.password", "masterkey");
+	public static final String DB_USER = getProperty("test.user", "sysdba");
+	public static final String DB_PASSWORD = getProperty("test.password", "masterkey");
 
-	protected static final String DB_PATH = getProperty("test.db.dir", "");
-	protected static final String DB_SERVER_URL = getProperty("test.db.host", "localhost");
-	protected static final int DB_SERVER_PORT = Integer.parseInt(getProperty("test.db.port", "3050"));
+	public static final String DB_PATH = getProperty("test.db.dir", "");
+	public static final String DB_SERVER_URL = getProperty("test.db.host", "localhost");
+	public static final int DB_SERVER_PORT = Integer.parseInt(getProperty("test.db.port", "3050"));
 
-    protected String getDatabasePath() {
+    public static String getDatabasePath() {
+        return getDatabasePath(DB_NAME);
+    }
+    
+    public static String getDatabasePath(String name) {
         if (!"127.0.0.1".equals(DB_SERVER_URL) && !"localhost".equals(DB_SERVER_URL))
-            return DB_PATH + "/" + DB_NAME;
+            return DB_PATH + "/" + name;
         else
-            return new File(DB_PATH + "/" + DB_NAME).getAbsolutePath();
+            return new File(DB_PATH, name).getAbsolutePath();
     }
 
 
@@ -71,25 +72,15 @@ public abstract class SimpleFBTestBase extends TestCase {
 	 * @param name
 	 * @return
 	 */
-	protected String getdbpath(String name) {
-		if ("EMBEDDED".equalsIgnoreCase(getProperty("test.gds_type", null)))
-			return new File(DB_PATH + "/" + name).getAbsolutePath();
-		else if ("LOCAL".equalsIgnoreCase(getProperty("test.gds_type", null)))
-			return new File(DB_PATH + "/" + name).getAbsolutePath();
-		else {
-		    if (!"127.0.0.1".equals(DB_SERVER_URL) && !"localhost".equals(DB_SERVER_URL))
-	            return DB_SERVER_URL + "/" + DB_SERVER_PORT + ":" + DB_PATH + "/" + name;
-		    else
-    			return DB_SERVER_URL + "/" + DB_SERVER_PORT + ":" + 
-    			    (new File(DB_PATH + "/" + name).getAbsolutePath());
-		}
-	}
+    public static String getdbpath(String name) {
+        final String gdsType = getProperty("test.gds_type", null);
+        if ("EMBEDDED".equalsIgnoreCase(gdsType) || "LOCAL".equalsIgnoreCase(gdsType)) {
+            return new File(DB_PATH, name).getAbsolutePath();
+        } else {
+            return DB_SERVER_URL + "/" + DB_SERVER_PORT + ":" + getDatabasePath(name);
+        }
+    }
 
-	/**
-	 * 
-	 * @param s
-	 */
-	protected SimpleFBTestBase(String s) {
-		super(s);
+	private SimpleFBTestBase() {
 	}
 }

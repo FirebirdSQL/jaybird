@@ -24,6 +24,7 @@ import org.firebirdsql.common.FBTestBase;
 import junit.framework.Test;
 import junit.framework.TestSuite;
 
+import static org.firebirdsql.common.SimpleFBTestBase.*;
 
 /**
  * Describe class <code>TestFBManager</code> here.

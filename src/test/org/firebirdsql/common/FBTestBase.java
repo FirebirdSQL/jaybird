@@ -24,6 +24,8 @@ import java.util.*;
 import javax.resource.spi.ConnectionManager;
 import javax.sql.PooledConnection;
 
+import junit.framework.TestCase;
+
 import org.firebirdsql.gds.GDSException;
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.impl.GDSHelper;
@@ -41,11 +43,13 @@ import org.firebirdsql.pool.AbstractFBConnectionPoolDataSource;
 import org.firebirdsql.pool.FBPooledDataSourceFactory;
 import org.firebirdsql.pool.FBWrappingDataSource;
 
+import static org.firebirdsql.common.SimpleFBTestBase.*;
+
 /**
  * Base class for test cases which could be run against more then a single GDS
  * implementation.
  */
-public abstract class FBTestBase extends SimpleFBTestBase {
+public abstract class FBTestBase extends TestCase {
 
     protected final Logger log = LoggerFactory.getLogger(getClass(), true);
 

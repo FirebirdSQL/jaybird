@@ -22,7 +22,8 @@ package org.firebirdsql.gds.impl.jni;
 
 import java.util.Arrays;
 
-import org.firebirdsql.common.SimpleFBTestBase;
+import junit.framework.TestCase;
+
 import org.firebirdsql.gds.BlobParameterBuffer;
 import org.firebirdsql.gds.DatabaseParameterBuffer;
 import org.firebirdsql.gds.GDS;
@@ -37,10 +38,12 @@ import org.firebirdsql.jca.FBTpb;
 import org.firebirdsql.logging.Logger;
 import org.firebirdsql.logging.LoggerFactory;
 
+import static org.firebirdsql.common.SimpleFBTestBase.*;
+
 /**
  * Performs basic low level tests of the ngds package.
  */
-public class TestNgds extends SimpleFBTestBase {
+public class TestNgds extends TestCase {
 
     private Logger log = LoggerFactory.getLogger(getClass(), false);
 
