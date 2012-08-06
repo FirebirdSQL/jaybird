@@ -39,6 +39,8 @@ import org.firebirdsql.gds.impl.GDSType;
 import org.firebirdsql.jca.TestXABase.XidImpl;
 import org.firebirdsql.jdbc.FBSQLException;
 
+import static org.firebirdsql.common.SimpleFBTestBase.*;
+
 /**
  * Test for XADataSource. Note behavior of XAResource (ManagedConnection) is tested in {@link org.firebirdsql.jca.TestFBXAResource}.
  * 

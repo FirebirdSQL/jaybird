@@ -31,6 +31,8 @@ import org.firebirdsql.common.FBTestBase;
 import org.firebirdsql.common.SimpleFBTestBase;
 import org.firebirdsql.gds.impl.GDSType;
 
+import static org.firebirdsql.common.SimpleFBTestBase.*;
+
 /**
  * Common testbase for tests using {@link FBConnectionPoolDataSource}
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>

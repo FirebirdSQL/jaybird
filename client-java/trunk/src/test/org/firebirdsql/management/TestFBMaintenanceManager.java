@@ -18,6 +18,8 @@ import org.firebirdsql.gds.DatabaseParameterBuffer;
 import org.firebirdsql.gds.TransactionParameterBuffer;
 import org.firebirdsql.gds.impl.GDSType;
 
+import static org.firebirdsql.common.SimpleFBTestBase.*;
+
 /** 
  * Test the FBMaintenanceManager class
  */

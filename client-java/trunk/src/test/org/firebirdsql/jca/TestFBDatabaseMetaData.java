@@ -30,6 +30,8 @@ import javax.sql.DataSource;
 
 import org.firebirdsql.jdbc.*;
 
+import static org.firebirdsql.common.SimpleFBTestBase.*;
+
 /**
  * Describe class <code>TestFBDatabaseMetaData</code> here.
  * 

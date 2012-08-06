@@ -24,7 +24,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import org.firebirdsql.common.SimpleFBTestBase;
+import junit.framework.TestCase;
+
 import org.firebirdsql.gds.BlobParameterBuffer;
 import org.firebirdsql.gds.DatabaseParameterBuffer;
 import org.firebirdsql.gds.GDS;
@@ -43,6 +44,8 @@ import org.firebirdsql.jca.FBTpb;
 import org.firebirdsql.logging.Logger;
 import org.firebirdsql.logging.LoggerFactory;
 
+import static org.firebirdsql.common.SimpleFBTestBase.*;
+
 /**
  * Performs test to reproduce bug found in blob reading done by type 2 driver.
  * 
@@ -51,7 +54,7 @@ import org.firebirdsql.logging.LoggerFactory;
  * If a blob greater then 65536 bytes in length is written to a database using
  * jaybird in type 4 mode it will not be possible to read it in type 2 mode.
  */
-public class TestNgdsBlobReadBug extends SimpleFBTestBase {
+public class TestNgdsBlobReadBug extends TestCase {
 
     private Logger log = LoggerFactory.getLogger(getClass(), false);
 
