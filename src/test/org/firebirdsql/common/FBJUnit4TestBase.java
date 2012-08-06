@@ -56,7 +56,7 @@ public abstract class FBJUnit4TestBase {
      * @throws Exception
      */
     @After
-    protected void basicTearDown() throws Exception {
+    public void basicTearDown() throws Exception {
         defaultDatabaseTearDown(fbManager);
         fbManager = null;
     }
