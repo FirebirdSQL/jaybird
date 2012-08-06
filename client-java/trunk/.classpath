@@ -20,7 +20,6 @@
 	<classpathentry kind="lib" path="lib/junit.jar"/>
 	<classpathentry kind="lib" path="lib/test/jmock-2.5.1.jar"/>
 	<classpathentry kind="lib" path="lib/test/jmock-junit3-2.5.1.jar"/>
-	<classpathentry kind="lib" path="lib/test/hamcrest-core-1.1.jar"/>
 	<classpathentry kind="lib" path="lib/test/hamcrest-library-1.1.jar"/>
 	<classpathentry kind="lib" path="lib/test/cglib-nodep-2.1_3.jar"/>
 	<classpathentry kind="lib" path="lib/test/jmock-legacy-2.5.1.jar"/>
