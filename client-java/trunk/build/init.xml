@@ -98,7 +98,6 @@
     <property name="source.resources" value="${module.source}/resources"/>
     <property name="source.stylesheets" value="${module.source}/stylesheets"/>
     <property name="source.test" value="${module.source}/test"/>
-    <property name="source.test.30" value="${module.source}/test_30"/>
     <property name="source.test.40" value="${module.source}/test_40"/>
     <property name="source.pool" value="${module.source}/pool"/>
     <property name="source.compatibility" value="${module.source}/compatibility"/>
@@ -106,7 +105,6 @@
     <property name="thirdparty" value="${module.root}/thirdparty"/>
     <property name="jboss.source.root"
 	    location="${thirdparty}/jboss/"/>
-
 
     <!-- Where build generated files will go -->
     <property name="build.j2ee" value="${module.output}/j2ee"/>
@@ -162,7 +160,6 @@
     <property name="test.db.port" value="3050"/>
     <property name="test.db.dir" value="${module.output}/db"/>
     <property name="test.db.lc_ctype" value="NONE"/>
-
 
     <property name="packages" value="org.firebirdsql.ds,org.firebirdsql.gds,org.firebirdsql.jca,org.firebirdsql.jdbc,org.firebirdsql.management,org.firebirdsql.pool,org.firebirdsql.event"/>
 

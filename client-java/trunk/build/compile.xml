@@ -144,13 +144,11 @@
 
   <target name="set-jdbc-30-test" if="jdbc.30">
     <path id="source.test.additional">
-      <pathelement path="${source.test.30}"/>
     </path>
   </target>
   
   <target name="set-jdbc-40-test" if="jdbc.40">
     <path id="source.test.additional">
-      <pathelement path="${source.test.30}"/>
       <pathelement path="${source.test.40}"/>
     </path>
   </target>
