@@ -18,7 +18,6 @@
  */
 package org.firebirdsql.jca;
 
-
 import java.sql.Connection;
 
 import org.firebirdsql.gds.ISCConstants;
@@ -26,6 +25,8 @@ import org.firebirdsql.gds.TransactionParameterBuffer;
 import org.firebirdsql.jdbc.FBTpbMapper;
 
 import org.firebirdsql.common.FBTestBase;
+
+import static org.firebirdsql.common.FBTestProperties.*;
 
 /**
  * <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
@@ -44,9 +45,8 @@ public class TestFBTpbMapper extends FBTestBase {
     protected void setUp() throws Exception {
         super.setUp();
         
-        mcf = super.createFBManagedConnectionFactory();//new FBManagedConnectionFactory();
+        mcf = createFBManagedConnectionFactory();
     }
-    
 
     /**
      * Test if default isolation level is Connection.TRANSACTION_READ_COMMITTED

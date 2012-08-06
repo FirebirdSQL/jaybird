@@ -26,6 +26,10 @@ import java.util.Calendar;
 import java.util.Properties;
 import java.util.TimeZone;
 
+import static org.firebirdsql.common.DdlHelper.*;
+import static org.firebirdsql.common.JdbcResourceHelper.*;
+import static org.firebirdsql.common.FBTestProperties.*;
+
 /**
  * Describe class <code>TestFBPreparedStatement</code> here.
  * 

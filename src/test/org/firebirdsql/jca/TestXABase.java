@@ -26,7 +26,7 @@ import javax.transaction.xa.Xid;
 
 import org.firebirdsql.common.FBTestBase;
 
-import static org.firebirdsql.common.SimpleFBTestBase.*;
+import static org.firebirdsql.common.FBTestProperties.*;
 
 /**
  * THIS FILE INCLUDES AN XID IMPLEMENTATION FROM THE JBOSS PROJECT

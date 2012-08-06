@@ -26,6 +26,8 @@ import org.firebirdsql.gds.ClassFactory;
 import org.firebirdsql.gds.impl.GDSType;
 import org.firebirdsql.jdbc.FBDriver;
 
+import static org.firebirdsql.common.FBTestProperties.*;
+
 /**
  *
  * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>

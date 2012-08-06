@@ -34,12 +34,12 @@ import javax.transaction.xa.XAResource;
 import javax.transaction.xa.Xid;
 
 import org.firebirdsql.common.FBTestBase;
-import org.firebirdsql.common.SimpleFBTestBase;
 import org.firebirdsql.gds.impl.GDSType;
 import org.firebirdsql.jca.TestXABase.XidImpl;
 import org.firebirdsql.jdbc.FBSQLException;
 
-import static org.firebirdsql.common.SimpleFBTestBase.*;
+import static org.firebirdsql.common.JdbcResourceHelper.*;
+import static org.firebirdsql.common.FBTestProperties.*;
 
 /**
  * Test for XADataSource. Note behavior of XAResource (ManagedConnection) is tested in {@link org.firebirdsql.jca.TestFBXAResource}.
@@ -61,7 +61,7 @@ public class TestFBXADataSource extends FBTestBase {
         super.setUp();
 
         FBXADataSource newDs = new FBXADataSource();
-        newDs.setType(SimpleFBTestBase.getProperty("test.gds_type", null));
+        newDs.setType(getProperty("test.gds_type", null));
         if (getGdsType() == GDSType.getType("PURE_JAVA")
                 || getGdsType() == GDSType.getType("NATIVE")) {
             newDs.setServerName(DB_SERVER_URL);

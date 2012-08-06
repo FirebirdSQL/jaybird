@@ -25,6 +25,9 @@ import org.firebirdsql.common.FBTestBase;
 import org.firebirdsql.gds.*;
 import org.firebirdsql.jca.FBManagedConnection;
 
+import static org.firebirdsql.common.JdbcResourceHelper.*;
+import static org.firebirdsql.common.FBTestProperties.*;
+
 /**
  * Test cases for FirebirdConnection interface.
  * 

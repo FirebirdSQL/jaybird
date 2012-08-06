@@ -7,6 +7,9 @@ import java.sql.Statement;
 
 import org.firebirdsql.common.FBTestBase;
 
+import static org.firebirdsql.common.DdlHelper.*;
+import static org.firebirdsql.common.JdbcResourceHelper.*;
+
 public class TestFBStatement extends FBTestBase {
 
     private Connection con;

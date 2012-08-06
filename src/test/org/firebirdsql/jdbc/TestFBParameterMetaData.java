@@ -27,6 +27,8 @@ import java.sql.ParameterMetaData;
 import java.sql.Statement;
 import java.util.Properties;
 
+import static org.firebirdsql.common.FBTestProperties.*;
+
 /**
  * This method tests correctness of {@link FBParameterMetaData} class.
  *
@@ -66,10 +68,10 @@ public class TestFBParameterMetaData extends FBTestBase {
         Class.forName(FBDriver.class.getName());
         
         Properties props = new Properties();
-        props.putAll(this.getDefaultPropertiesForConnection());
+        props.putAll(getDefaultPropertiesForConnection());
         props.put("lc_ctype", "UNICODE_FSS");
         
-        Connection connection = DriverManager.getConnection(this.getUrl(), props);
+        Connection connection = DriverManager.getConnection(getUrl(), props);
         
         Statement stmt = connection.createStatement();
         try {
@@ -89,10 +91,10 @@ public class TestFBParameterMetaData extends FBTestBase {
     
     public void testParameterMetaData() throws Exception {
         Properties props = new Properties();
-        props.putAll(this.getDefaultPropertiesForConnection());
+        props.putAll(getDefaultPropertiesForConnection());
         props.put("lc_ctype", "UNICODE_FSS");
         
-        Connection connection = DriverManager.getConnection(this.getUrl(), props);
+        Connection connection = DriverManager.getConnection(getUrl(), props);
         
         FirebirdPreparedStatement stmt = 
             (FirebirdPreparedStatement)connection.prepareStatement(TEST_QUERY);

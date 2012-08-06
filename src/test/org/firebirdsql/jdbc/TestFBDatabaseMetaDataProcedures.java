@@ -31,6 +31,8 @@ import java.util.Map;
 
 import org.firebirdsql.jdbc.MetaDataValidator.MetaDataInfo;
 
+import static org.firebirdsql.common.JdbcResourceHelper.*;
+
 /**
  * Tests for {@link FBDatabaseMetaData} for procedure related metadata.
  * 

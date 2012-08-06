@@ -28,10 +28,10 @@ import java.util.List;
 import javax.sql.PooledConnection;
 
 import org.firebirdsql.common.FBTestBase;
-import org.firebirdsql.common.SimpleFBTestBase;
 import org.firebirdsql.gds.impl.GDSType;
 
-import static org.firebirdsql.common.SimpleFBTestBase.*;
+import static org.firebirdsql.common.JdbcResourceHelper.*;
+import static org.firebirdsql.common.FBTestProperties.*;
 
 /**
  * Common testbase for tests using {@link FBConnectionPoolDataSource}
@@ -50,7 +50,7 @@ public abstract class FBConnectionPoolTestBase extends FBTestBase {
         super.setUp();
     
         FBConnectionPoolDataSource newDs = new FBConnectionPoolDataSource();
-        newDs.setType(SimpleFBTestBase.getProperty("test.gds_type", null));
+        newDs.setType(getProperty("test.gds_type", null));
         if (getGdsType() == GDSType.getType("PURE_JAVA")
                 || getGdsType() == GDSType.getType("NATIVE")) {
             newDs.setServerName(DB_SERVER_URL);

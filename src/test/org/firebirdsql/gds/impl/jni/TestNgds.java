@@ -38,7 +38,7 @@ import org.firebirdsql.jca.FBTpb;
 import org.firebirdsql.logging.Logger;
 import org.firebirdsql.logging.LoggerFactory;
 
-import static org.firebirdsql.common.SimpleFBTestBase.*;
+import static org.firebirdsql.common.FBTestProperties.*;
 
 /**
  * Performs basic low level tests of the ngds package.

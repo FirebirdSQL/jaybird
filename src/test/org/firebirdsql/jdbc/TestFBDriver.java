@@ -30,6 +30,8 @@ import junit.framework.Test;
 import junit.framework.TestSuite;
 import org.firebirdsql.common.FBTestBase;
 
+import static org.firebirdsql.common.FBTestProperties.*;
+
 /**
  * Test suite for the FBDriver class implementation.
  *

@@ -30,6 +30,8 @@ import javax.transaction.xa.Xid;
 import org.firebirdsql.common.FBTestBase;
 import org.firebirdsql.gds.ISCConstants;
 
+import static org.firebirdsql.common.FBTestProperties.*;
+
 /**
  * Test suite for XADataSource implementation.
  * 

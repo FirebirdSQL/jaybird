@@ -32,6 +32,9 @@ import java.util.Set;
 import org.firebirdsql.common.FBTestBase;
 import org.firebirdsql.jdbc.MetaDataValidator.MetaDataInfo;
 
+import static org.firebirdsql.common.DdlHelper.*;
+import static org.firebirdsql.common.JdbcResourceHelper.*;
+
 /**
  * Base test class for testing and validating the various DatabaseMetaData
  * methods returning a ResultSet.

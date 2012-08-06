@@ -44,7 +44,7 @@ import org.firebirdsql.gds.impl.GDSType;
 import org.firebirdsql.jdbc.FirebirdConnection;
 import org.firebirdsql.jdbc.FirebirdPreparedStatement;
 
-import static org.firebirdsql.common.SimpleFBTestBase.*;
+import static org.firebirdsql.common.FBTestProperties.*;
 
 /**
  * Test suite for JDBC connection pool.
