@@ -20,28 +20,29 @@ package org.firebirdsql.jdbc;
 
 import java.sql.*;
 
-import org.firebirdsql.common.FBTestBase;
+import org.firebirdsql.common.FBJUnit4TestBase;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
+
+import static org.firebirdsql.common.FBTestProperties.*;
+import static org.junit.Assert.*;
 
 /**
  * Tests for savepoint handling.
  * 
  * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
  */
-public class TestFBSavepoint extends FBTestBase {
+public class TestFBSavepoint extends FBJUnit4TestBase {
 
-    
     private FirebirdConnection connection;
     
-    public TestFBSavepoint(String name) {
-        super(name);
-    }
-    
-    protected void setUp() throws Exception {
-        super.setUp();
+    @Before
+    public void setUp() throws Exception {
         
         Class.forName(FBDriver.class.getName());
         
-        connection = (FirebirdConnection)getConnectionViaDriverManager();
+        connection = getConnectionViaDriverManager();
         
         Statement stmt = connection.createStatement();
         try {
@@ -59,7 +60,8 @@ public class TestFBSavepoint extends FBTestBase {
         }
     }
 
-    protected void tearDown() throws Exception {
+    @After
+    public void tearDown() throws Exception {
         
         Statement stmt = connection.createStatement();
         
@@ -72,8 +74,6 @@ public class TestFBSavepoint extends FBTestBase {
         }
         
         connection.close();
-        
-        super.tearDown();
     }
 
     /**
@@ -81,6 +81,7 @@ public class TestFBSavepoint extends FBTestBase {
      * 
      * @throws Exception if something went wrong.
      */
+    @Test
     public void testBasicSavepoint() throws Exception {
         
         connection.setAutoCommit(true);
@@ -128,6 +129,7 @@ public class TestFBSavepoint extends FBTestBase {
      * 
      * @throws Exception if something went wrong.
      */
+    @Test
     public void testNamedSavepoint() throws Exception {
         
         connection.setAutoCommit(false);
@@ -175,6 +177,7 @@ public class TestFBSavepoint extends FBTestBase {
      * 
      * @throws Exception if something went wrong.
      */
+    @Test
     public void testSavepointRelease() throws Exception {
         connection.setAutoCommit(false);
         
