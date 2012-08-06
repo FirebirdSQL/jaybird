@@ -33,7 +33,7 @@ import org.firebirdsql.pool.FBWrappingDataSource;
 import org.firebirdsql.common.FBTestBase;
 import org.firebirdsql.gds.impl.GDSType;
 
-import static org.firebirdsql.common.SimpleFBTestBase.*;
+import static org.firebirdsql.common.FBTestProperties.*;
 
 /**
  * Describe class <code>TestFBWrappingDataSource</code> here.

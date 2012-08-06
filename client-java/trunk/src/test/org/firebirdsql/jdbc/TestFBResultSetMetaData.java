@@ -24,6 +24,8 @@ import org.firebirdsql.common.FBTestBase;
 import java.sql.*;
 import java.util.Properties;
 
+import static org.firebirdsql.common.FBTestProperties.*;
+
 /**
  * This method tests correctness of {@link FBResultSetMetaData} class.
  *
@@ -65,10 +67,10 @@ public class TestFBResultSetMetaData extends FBTestBase {
         Class.forName(FBDriver.class.getName());
         
         Properties props = new Properties();
-        props.putAll(this.getDefaultPropertiesForConnection());
+        props.putAll(getDefaultPropertiesForConnection());
         props.put("lc_ctype", "UNICODE_FSS");
         
-        Connection connection = DriverManager.getConnection(this.getUrl(), props);
+        Connection connection = DriverManager.getConnection(getUrl(), props);
         
         Statement stmt = connection.createStatement();
         try {
@@ -102,10 +104,10 @@ public class TestFBResultSetMetaData extends FBTestBase {
     
     public void testResultSetMetaData() throws Exception {
         Properties props = new Properties();
-        props.putAll(this.getDefaultPropertiesForConnection());
+        props.putAll(getDefaultPropertiesForConnection());
         props.put("lc_ctype", "UNICODE_FSS");
         
-        Connection connection = DriverManager.getConnection(this.getUrl(), props);
+        Connection connection = DriverManager.getConnection(getUrl(), props);
         
         Statement stmt = connection.createStatement();
         
@@ -137,10 +139,10 @@ public class TestFBResultSetMetaData extends FBTestBase {
     
     public void testResultSetMetaData2() throws Exception {
         Properties props = new Properties();
-        props.putAll(this.getDefaultPropertiesForConnection());
+        props.putAll(getDefaultPropertiesForConnection());
         props.put("lc_ctype", "UNICODE_FSS");
         
-        Connection connection = DriverManager.getConnection(this.getUrl(), props);
+        Connection connection = DriverManager.getConnection(getUrl(), props);
         
         FBDatabaseMetaData dmd = (FBDatabaseMetaData)connection.getMetaData();
         int firebirdVersion = dmd.getDatabaseMajorVersion();
@@ -178,11 +180,11 @@ public class TestFBResultSetMetaData extends FBTestBase {
 	public void testColumnTypeName() throws Exception {
 		
 		Properties props = new Properties();
-		props.putAll(this.getDefaultPropertiesForConnection());
+		props.putAll(getDefaultPropertiesForConnection());
 		props.put("lc_ctype", "UNICODE_FSS");
 
 		Connection connection = 
-			DriverManager.getConnection(this.getUrl(), props);
+			DriverManager.getConnection(getUrl(), props);
 
 		Statement stmt = connection.createStatement();
 

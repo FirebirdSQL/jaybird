@@ -24,7 +24,7 @@ import java.sql.SQLException;
 
 import org.firebirdsql.common.FBTestBase;
 
-import static org.firebirdsql.common.SimpleFBTestBase.*;
+import static org.firebirdsql.common.FBTestProperties.*;
 
 /**
  * Tests the UserManager class which uses the Services API to display, add,

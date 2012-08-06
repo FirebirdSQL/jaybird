@@ -28,6 +28,8 @@ import javax.resource.spi.ManagedConnection;
 import javax.transaction.xa.XAResource;
 import javax.transaction.xa.Xid;
 
+import static org.firebirdsql.common.FBTestProperties.*;
+
 /**
  * Describe class <code>TestFBXAResource</code> here.
  *

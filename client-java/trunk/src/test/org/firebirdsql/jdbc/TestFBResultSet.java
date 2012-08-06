@@ -31,6 +31,8 @@ import java.util.Random;
 
 import junit.textui.TestRunner;
 
+import static org.firebirdsql.common.FBTestProperties.*;
+
 public class TestFBResultSet extends FBTestBase {
     
     public static final String SELECT_STATEMENT = ""

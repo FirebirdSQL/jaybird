@@ -32,7 +32,7 @@ import org.firebirdsql.gds.impl.wire.isc_db_handle_impl;
 import org.firebirdsql.gds.impl.wire.isc_stmt_handle_impl;
 import org.firebirdsql.jca.FBTpb;
 
-import static org.firebirdsql.common.SimpleFBTestBase.*;
+import static org.firebirdsql.common.FBTestProperties.*;
 
 /**
  * @author <a href="mailto:alberola@users.sourceforge.net">Alejandro

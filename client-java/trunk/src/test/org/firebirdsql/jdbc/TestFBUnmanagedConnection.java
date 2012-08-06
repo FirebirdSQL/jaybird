@@ -26,7 +26,11 @@ import java.util.Map;
 
 import junit.framework.Test;
 import junit.framework.TestSuite;
+
 import org.firebirdsql.common.FBTestBase;
+
+import static org.firebirdsql.common.DdlHelper.*;
+import static org.firebirdsql.common.JdbcResourceHelper.*;
 
 /**
  * Describe class <code>TestFBUnmanagedConnection</code> here.
