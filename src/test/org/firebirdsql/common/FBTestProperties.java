@@ -187,6 +187,40 @@ public final class FBTestProperties {
                 getDefaultPropertiesForConnection());
     }
 
+    /**
+     * Creates the default test database.
+     * 
+     * @return Configured FBManager instance used for creation of the database
+     * @throws Exception
+     */
+    protected static FBManager defaultDatabaseSetUp() throws Exception {
+        FBManager fbManager = createFBManager();
+
+        if (getGdsType() == GDSType.getType("PURE_JAVA")
+                || getGdsType() == GDSType.getType("NATIVE")) {
+            fbManager.setServer(DB_SERVER_URL);
+            fbManager.setPort(DB_SERVER_PORT);
+        }
+        fbManager.start();
+        fbManager.setForceCreate(true);
+        fbManager.createDatabase(getDatabasePath(), DB_USER, DB_PASSWORD);
+
+        return fbManager;
+    }
+
+    /**
+     * Deletes the default test database using the supplied FBManager (in
+     * general this should be the same instance as was used for creating it).
+     * 
+     * @param fbManager
+     *            FBManager instance
+     * @throws Exception
+     */
+    protected static void defaultDatabaseTearDown(FBManager fbManager) throws Exception {
+        fbManager.dropDatabase(getDatabasePath(), DB_USER, DB_PASSWORD);
+        fbManager.stop();
+    }
+
     private FBTestProperties() {
     }
 }

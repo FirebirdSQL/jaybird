@@ -19,40 +19,44 @@
  */
 package org.firebirdsql.common;
 
-import java.sql.*;
+import static org.firebirdsql.common.FBTestProperties.defaultDatabaseSetUp;
+import static org.firebirdsql.common.FBTestProperties.defaultDatabaseTearDown;
 
-import junit.framework.TestCase;
-
-import org.firebirdsql.jdbc.FirebirdConnection;
 import org.firebirdsql.logging.Logger;
 import org.firebirdsql.logging.LoggerFactory;
 import org.firebirdsql.management.FBManager;
-
-import static org.firebirdsql.common.FBTestProperties.*;
+import org.junit.After;
+import org.junit.Before;
 
 /**
- * Base class for JUnit 3 test cases which could be run against more then a
+ * Base class for JUnit 4 test cases which could be run against more then a
  * single GDS implementation.
+ * 
+ * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  */
-public abstract class FBTestBase extends TestCase {
+public abstract class FBJUnit4TestBase {
 
     protected final Logger log = LoggerFactory.getLogger(getClass(), true);
 
     protected FBManager fbManager = null;
 
-    protected FBTestBase(String name) {
-        super(name);
-    }
-
-    protected final FirebirdConnection getConnectionViaDriverManager() throws SQLException {
-        return FBTestProperties.getConnectionViaDriverManager();
-    }
-
-    protected void setUp() throws Exception {
+    /**
+     * Basic setup of the test database.
+     * 
+     * @throws Exception
+     */
+    @Before
+    public void basicSetUp() throws Exception {
         fbManager = defaultDatabaseSetUp();
     }
 
-    protected void tearDown() throws Exception {
+    /**
+     * Basic teardown of the test database
+     * 
+     * @throws Exception
+     */
+    @After
+    protected void basicTearDown() throws Exception {
         defaultDatabaseTearDown(fbManager);
         fbManager = null;
     }
