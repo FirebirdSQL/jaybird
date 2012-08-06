@@ -1,4 +1,5 @@
 /*
+ * $Id$
  * Firebird Open Source J2ee connector - jdbc driver
  *
  * Distributable under LGPL license.
@@ -23,8 +24,7 @@ import java.util.MissingResourceException;
 import java.util.ResourceBundle;
 
 /**
- * Base class for test cases which can be run against only a single GDS
- * implementation.
+ * Helper class for test properties (database user, password, paths etc)
  */
 public final class SimpleFBTestBase {
 	private static ResourceBundle testDefaults = ResourceBundle.getBundle("unit_test_defaults");
