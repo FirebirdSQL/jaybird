@@ -109,7 +109,7 @@ public class TestFBConnectionPoolDataSource extends FBTestBase {
 
         Properties props = new Properties();
         props.put(Context.INITIAL_CONTEXT_FACTORY, JNDI_FACTORY);
-        props.put(Context.OBJECT_FACTORIES, ClassFactory.get(ClassFactory.FBConnectionPoolDataSource).getName());
+        props.put(Context.OBJECT_FACTORIES, FBConnectionPoolDataSource.class.getName());
         props.put(Context.PROVIDER_URL, "file:.");
         
         checkJNDI(props);
@@ -185,7 +185,7 @@ public class TestFBConnectionPoolDataSource extends FBTestBase {
     }
     
     public void testReferenceSupport() throws Exception {
-        Reference ref = new Reference(ClassFactory.get(ClassFactory.FBConnectionPoolDataSource).getName());
+        Reference ref = new Reference(FBConnectionPoolDataSource.class.getName());
         
         fillReference(ref);
         
@@ -193,7 +193,7 @@ public class TestFBConnectionPoolDataSource extends FBTestBase {
 
         Properties props = new Properties();
         props.put(Context.INITIAL_CONTEXT_FACTORY, JNDI_FACTORY);
-        props.put(Context.OBJECT_FACTORIES,ClassFactory.get(ClassFactory.FBConnectionPoolDataSource).getName());
+        props.put(Context.OBJECT_FACTORIES, FBConnectionPoolDataSource.class.getName());
         
         Context ctx = new InitialContext(props);
         try {

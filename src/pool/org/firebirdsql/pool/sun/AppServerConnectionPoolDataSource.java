@@ -30,8 +30,8 @@ import javax.sql.ConnectionPoolDataSource;
 import javax.sql.PooledConnection;
 
 import org.firebirdsql.ds.RootCommonDataSource;
-import org.firebirdsql.gds.ClassFactory;
 import org.firebirdsql.pool.AbstractFBConnectionPoolDataSource;
+import org.firebirdsql.pool.FBConnectionPoolDataSource;
 import org.firebirdsql.pool.FBPooledDataSourceFactory;
 
 /**
@@ -347,8 +347,8 @@ public class AppServerConnectionPoolDataSource extends RootCommonDataSource impl
         if (!getClass().getName().equals(passedRef.getClassName()))
             return null;
 
-        Reference ref = new Reference(ClassFactory.FBConnectionPoolDataSource,
-                ClassFactory.FBConnectionPoolDataSource, null);
+        Reference ref = new Reference(FBConnectionPoolDataSource.class.getName(),
+                FBConnectionPoolDataSource.class.getName(), null);
 
         convertReference(ref, passedRef);
 

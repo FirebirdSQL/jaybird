@@ -844,8 +844,8 @@ public abstract class AbstractConnection implements FirebirdConnection {
         checkHoldability(resultSetType, resultSetHoldability);
         
         try {
-            Statement stmt = FBStatementFactory.createStatement(getGDSHelper(), resultSetType,
-                    resultSetConcurrency, resultSetHoldability, txCoordinator);
+            Statement stmt = new FBStatement(getGDSHelper(), resultSetType, resultSetConcurrency, 
+                    resultSetHoldability, txCoordinator);
             
             activeStatements.add(stmt);
             return stmt;
@@ -1185,7 +1185,7 @@ public abstract class AbstractConnection implements FirebirdConnection {
               else
                   blobCoordinator = txCoordinator;
               
-              stmt = FBStatementFactory.createPreparedStatement(
+              stmt = new FBPreparedStatement(
                       getGDSHelper(), sql, resultSetType, resultSetConcurrency, 
                       resultSetHoldability, coordinator, blobCoordinator, 
                       metaData, false, generatedKeys);
@@ -1231,8 +1231,7 @@ public abstract class AbstractConnection implements FirebirdConnection {
             resultSetType = ResultSet.TYPE_SCROLL_INSENSITIVE;
         }
         
-		if (resultSetType == ResultSet.TYPE_SCROLL_SENSITIVE)
-		{
+		if (resultSetType == ResultSet.TYPE_SCROLL_SENSITIVE) {
             addWarning(new FBSQLWarning("Scroll-sensitive result sets are not supported."));
             resultSetType = ResultSet.TYPE_SCROLL_INSENSITIVE;
         }
@@ -1250,7 +1249,7 @@ public abstract class AbstractConnection implements FirebirdConnection {
         }
         
         try {
-            stmt = FBStatementFactory.createCallableStatement(getGDSHelper(), sql, resultSetType,
+            stmt = new FBCallableStatement(getGDSHelper(), sql, resultSetType,
                     resultSetConcurrency, resultSetHoldability, storedProcedureMetaData, txCoordinator, txCoordinator);
             activeStatements.add(stmt);
             
