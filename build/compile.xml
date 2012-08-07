@@ -41,12 +41,6 @@
     </path>
   </target>
 
-  <target name="set-wire1.4-src" unless="jdk1.3">
-    <path id="source.java.wire">
-      <pathelement path="${source.wire1.4}"/>
-    </path>
-  </target>
-
   <target name="set-pool1.5-src" if="jdk1.5">
     <path id="source.java.pool">
       <pathelement path="${source.pool1.5}"/>
@@ -78,7 +72,7 @@
     </path>
   </target>
   
-  <target name="set-driver-sources" depends="init,set-jdbc-30-src,set-jdbc-40-src,set-wire1.4-src,set-openoffice-src-14,set-jca-src-14,set-jca-src-16"/>
+  <target name="set-driver-sources" depends="init,set-jdbc-30-src,set-jdbc-40-src,set-openoffice-src-14,set-jca-src-14,set-jca-src-16"/>
   
   <target name="set-pool-sources" depends="init,set-pool1.5-src,set-pool1.6-src"/>
 
@@ -89,7 +83,6 @@
 	<echo message="${ant.java.version}"/>
     <echo message="${toString:source.java.openoffice}"/>
     <echo message="${toString:source.java.additional}"/>
-    <echo message="${toString:source.java.wire}"/>
     <echo message="${toString:source.java.jca}"/>
     
     <javac destdir="${build.classes}"
@@ -105,7 +98,6 @@
       <src path="${source.java}"/>
       <src refid="source.java.openoffice"/>
       <src refid="source.java.additional"/>
-      <src refid="source.java.wire"/>
       <src refid="source.java.jca"/>
     </javac>
   </target>

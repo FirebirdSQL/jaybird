@@ -87,7 +87,6 @@
     <property name="source.openoffice" value="${module.source}/openoffice"/>
     <property name="source.jdbc.30" value="${module.source}/jdbc_30"/>
     <property name="source.jdbc.40" value="${module.source}/jdbc_40"/>
-    <property name="source.wire1.4" value="${module.source}/wire_jdk1_4"/>
     <property name="source.pool1.5" value="${module.source}/pool_jdk1_5"/>
 	<property name="source.pool1.6" value="${module.source}/pool_jdk1_6"/>
 	<property name="source.jca1.4" value="${module.source}/jca_jdk1_4"/>
