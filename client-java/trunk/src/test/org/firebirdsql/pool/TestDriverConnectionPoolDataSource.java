@@ -22,7 +22,6 @@ import java.util.Properties;
 
 import javax.naming.Context;
 
-import org.firebirdsql.gds.ClassFactory;
 import org.firebirdsql.gds.impl.GDSType;
 import org.firebirdsql.jdbc.FBDriver;
 
@@ -74,7 +73,7 @@ public class TestDriverConnectionPoolDataSource extends
 
         Properties props = new Properties();
         props.put(Context.INITIAL_CONTEXT_FACTORY, JNDI_FACTORY);
-        props.put(Context.OBJECT_FACTORIES, ClassFactory.get(ClassFactory.DriverConnectionPoolDataSource).getName());
+        props.put(Context.OBJECT_FACTORIES, DriverConnectionPoolDataSource.class.getName());
         
         checkJNDI(props);
     }

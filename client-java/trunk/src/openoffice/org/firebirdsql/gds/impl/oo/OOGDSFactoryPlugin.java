@@ -3,6 +3,8 @@ package org.firebirdsql.gds.impl.oo;
 import org.firebirdsql.gds.*;
 import org.firebirdsql.gds.impl.GDSFactoryPlugin;
 import org.firebirdsql.gds.impl.wire.AbstractJavaGDSImpl;
+import org.firebirdsql.gds.impl.wire.JavaGDSImpl;
+import org.firebirdsql.jdbc.oo.OOConnection;
 
 public class OOGDSFactoryPlugin implements GDSFactoryPlugin {
 
@@ -28,7 +30,7 @@ public class OOGDSFactoryPlugin implements GDSFactoryPlugin {
     }
 
     public Class getConnectionClass() {
-        return ClassFactory.get("org.firebirdsql.jdbc.oo.OOConnection");
+        return OOConnection.class;
     }
 
     public String[] getSupportedProtocols() {
@@ -36,7 +38,8 @@ public class OOGDSFactoryPlugin implements GDSFactoryPlugin {
     }
 
     public GDS getGDS() {
-        if (gdsImpl == null) gdsImpl = GDSObjectFactory.createJavaGDSImpl();
+        if (gdsImpl == null) 
+            gdsImpl = new JavaGDSImpl();
 
         return gdsImpl;
     }

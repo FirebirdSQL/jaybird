@@ -6232,7 +6232,7 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
             InternalTransactionCoordinator.MetaDataTransactionCoordinator metaDataTransactionCoordinator = 
                 new InternalTransactionCoordinator.MetaDataTransactionCoordinator();
             
-            s = FBStatementFactory.createPreparedStatement(gdsHelper, sql,
+            s = new FBPreparedStatement(gdsHelper, sql,
                     ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY,
                     ResultSet.CLOSE_CURSORS_AT_COMMIT, 
                     metaDataTransactionCoordinator, metaDataTransactionCoordinator,

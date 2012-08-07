@@ -1,10 +1,9 @@
 package org.firebirdsql.gds.impl.wire;
 
-import org.firebirdsql.gds.ClassFactory;
 import org.firebirdsql.gds.GDS;
 import org.firebirdsql.gds.GDSException;
-import org.firebirdsql.gds.GDSObjectFactory;
 import org.firebirdsql.gds.impl.GDSFactoryPlugin;
+import org.firebirdsql.jdbc.FBConnection;
 
 public class WireGDSFactoryPlugin implements GDSFactoryPlugin {
 
@@ -26,7 +25,7 @@ public class WireGDSFactoryPlugin implements GDSFactoryPlugin {
     }
 
     public Class getConnectionClass() {
-        return ClassFactory.get(ClassFactory.FBConnection);
+        return FBConnection.class;
     }
 
     public String[] getSupportedProtocols() {
@@ -35,7 +34,7 @@ public class WireGDSFactoryPlugin implements GDSFactoryPlugin {
 
     public GDS getGDS() {
         if (gdsImpl == null)
-            gdsImpl = GDSObjectFactory.createJavaGDSImpl();
+            gdsImpl = new JavaGDSImpl();
 
         return gdsImpl;
     }

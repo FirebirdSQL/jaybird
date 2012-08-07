@@ -27,7 +27,6 @@ import javax.naming.Context;
 import javax.naming.Name;
 import javax.naming.Reference;
 
-import org.firebirdsql.gds.ClassFactory;
 import org.firebirdsql.jdbc.FBSQLException;
 import org.firebirdsql.logging.Logger;
 import org.firebirdsql.logging.LoggerFactory;
@@ -48,8 +47,7 @@ public class FBPooledDataSourceFactory {
 
         try {
 
-            return (AbstractDriverConnectionPoolDataSource) ClassFactory.get(
-                    ClassFactory.DriverConnectionPoolDataSource).newInstance();
+            return new DriverConnectionPoolDataSource();
 
         } catch (Exception e) {
 
@@ -66,8 +64,7 @@ public class FBPooledDataSourceFactory {
 
         try {
 
-            return (AbstractFBConnectionPoolDataSource) ClassFactory.get(
-                    ClassFactory.FBConnectionPoolDataSource).newInstance();
+            return new FBConnectionPoolDataSource();
 
         } catch (Exception e) {
 

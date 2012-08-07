@@ -29,8 +29,8 @@ import javax.naming.spi.ObjectFactory;
 import javax.sql.*;
 
 import org.firebirdsql.ds.RootCommonDataSource;
-import org.firebirdsql.gds.ClassFactory;
 import org.firebirdsql.pool.AbstractFBConnectionPoolDataSource;
+import org.firebirdsql.pool.FBConnectionPoolDataSource;
 import org.firebirdsql.pool.FBPooledDataSourceFactory;
 
 /**
@@ -337,8 +337,8 @@ public class AppServerXADataSource extends RootCommonDataSource
 			return null;
 
 
-        Reference ref = new Reference(ClassFactory.FBConnectionPoolDataSource,
-                ClassFactory.FBConnectionPoolDataSource, null);
+        Reference ref = new Reference(FBConnectionPoolDataSource.class.getName(),
+                FBConnectionPoolDataSource.class.getName(), null);
 
         convertReference(ref, passedRef);
 
