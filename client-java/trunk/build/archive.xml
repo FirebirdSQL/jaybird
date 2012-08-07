@@ -80,9 +80,6 @@
 	  	<fileset dir="${toString:source.java.pool}">
 	  		<include name="**/*.java"/>
 	  	</fileset>
-	  	<fileset dir="${toString:source.java.wire}">
-	  		<include name="**/*.java"/>
-	  	</fileset>
 	  	<fileset dir="${toString:source.java.jca}">
 	  		<include name="**/*.java"/>
 	  	</fileset>

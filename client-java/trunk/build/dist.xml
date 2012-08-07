@@ -20,7 +20,6 @@
       <sourcepath refid="source.java.openoffice"/>
       <sourcepath refid="source.java.additional"/>
       <sourcepath refid="source.java.pool"/>
-      <sourcepath refid="source.java.wire"/>
       <sourcepath refid="source.java.jca"/>
     </javadoc>
   </target>
