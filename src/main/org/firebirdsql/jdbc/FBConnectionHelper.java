@@ -142,17 +142,17 @@ public class FBConnectionHelper {
         Integer type = (Integer)dpbParameterTypes.get(name);
         
         if (type == null)
-            type = new Integer(TYPE_UNKNOWN);
+            type = Integer.valueOf(TYPE_UNKNOWN);
         
         switch(type.intValue()) {
             case TYPE_BOOLEAN : 
                 return "".equals(value) ? Boolean.TRUE : Boolean.valueOf((String)value);
             
             case TYPE_BYTE : 
-                return new Byte((String)value);
+                return Byte.valueOf((String)value);
                 
             case TYPE_INT :
-                return new Integer((String)value);
+                return Integer.valueOf((String)value);
                 
             case TYPE_STRING : 
                 return value;
@@ -170,10 +170,10 @@ public class FBConnectionHelper {
                 try {
                     // try to deal with a value as a byte or int
                     int intValue = Integer.parseInt((String)value);
-                    if (intValue < 256)
-                        return new Byte((byte) intValue);
+                    if (intValue >= Byte.MIN_VALUE && intValue <= Byte.MAX_VALUE)
+                        return Byte.valueOf((byte) intValue);
                     else
-                        return new Integer(intValue);
+                        return Integer.valueOf(intValue);
                 } catch (NumberFormatException nfex) {
                     // all else fails: return as is (string)
                     return value;
@@ -291,23 +291,20 @@ public class FBConnectionHelper {
             String shortKey = key.substring(DPB_PREFIX.length());
             String value = (String)entry.getValue();
             
+            Integer typeValue;
             if ("boolean".equals(value)) {
-                dpbParameterTypes.put(key, new Integer(TYPE_BOOLEAN));
-                dpbParameterTypes.put(shortKey, new Integer(TYPE_BOOLEAN));
-            } else
-            if ("byte".equals(value)) {
-                dpbParameterTypes.put(key, new Integer(TYPE_BYTE));
-                dpbParameterTypes.put(shortKey, new Integer(TYPE_BYTE));
-            } else
-            if ("int".equals(value)) {
-                dpbParameterTypes.put(key, new Integer(TYPE_INT));
-                dpbParameterTypes.put(shortKey, new Integer(TYPE_INT));
-            } else
-            if ("string".equals(value)) {
-                dpbParameterTypes.put(key, new Integer(TYPE_STRING));
-                dpbParameterTypes.put(shortKey, new Integer(TYPE_STRING));
-            } else
+                typeValue = Integer.valueOf(TYPE_BOOLEAN);
+            } else if ("byte".equals(value)) {
+                typeValue = Integer.valueOf(TYPE_BYTE);
+            } else if ("int".equals(value)) {
+                typeValue = Integer.valueOf(TYPE_INT);
+            } else if ("string".equals(value)) {
+                typeValue = Integer.valueOf(TYPE_STRING);
+            } else {
                 continue;
+            }
+            dpbParameterTypes.put(key, typeValue);
+            dpbParameterTypes.put(shortKey, typeValue);
         }
     }
 }

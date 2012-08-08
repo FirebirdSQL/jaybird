@@ -951,7 +951,7 @@ public abstract class AbstractPreparedStatement extends AbstractStatement implem
 
                             int updateCount = getUpdateCount();
 
-                            results.add(new Integer(updateCount));
+                            results.add(Integer.valueOf(updateCount));
 
                         } catch (SQLException ex) {
                             throw new BatchUpdateException(ex.getMessage(), ex

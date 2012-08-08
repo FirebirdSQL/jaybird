@@ -295,7 +295,7 @@ class PooledConnectionQueue {
                 
             		// save timestamp when connection was returned to queue
             		connectionIdleTime.put(
-            				connection, new Long(System.currentTimeMillis()));
+            				connection, Long.valueOf(System.currentTimeMillis()));
     
             		size++;
             	}

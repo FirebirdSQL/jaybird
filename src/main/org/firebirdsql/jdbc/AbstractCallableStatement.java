@@ -176,7 +176,7 @@ public abstract class AbstractCallableStatement extends FBPreparedStatement impl
             if (internalExecute(!isSelectableProcedure()))
                 throw new BatchUpdateException(toArray(results));
 
-            results.add(new Integer(getUpdateCount()));
+            results.add(Integer.valueOf(getUpdateCount()));
         } catch (GDSException ex) {
             throw new BatchUpdateException(ex.getMessage(), "", ex.getFbErrorCode(),
                     toArray(results));
@@ -1354,7 +1354,7 @@ public abstract class AbstractCallableStatement extends FBPreparedStatement impl
     }
 
     public void setByte(int parameterIndex, byte x) throws SQLException {
-        procedureCall.getInputParam(parameterIndex).setValue(new Byte(x));
+        procedureCall.getInputParam(parameterIndex).setValue(Byte.valueOf(x));
     }
 
     public void setBytes(int parameterIndex, byte[] x) throws SQLException {
@@ -1387,11 +1387,11 @@ public abstract class AbstractCallableStatement extends FBPreparedStatement impl
     }
 
     public void setInt(int parameterIndex, int x) throws SQLException {
-        procedureCall.getInputParam(parameterIndex).setValue(new Integer(x));
+        procedureCall.getInputParam(parameterIndex).setValue(Integer.valueOf(x));
     }
 
     public void setLong(int parameterIndex, long x) throws SQLException {
-        procedureCall.getInputParam(parameterIndex).setValue(new Long(x));
+        procedureCall.getInputParam(parameterIndex).setValue(Long.valueOf(x));
     }
 
     public void setNull(int parameterIndex, int sqlType, String typeName) throws SQLException {
@@ -1420,7 +1420,7 @@ public abstract class AbstractCallableStatement extends FBPreparedStatement impl
     }
 
     public void setShort(int parameterIndex, short x) throws SQLException {
-        procedureCall.getInputParam(parameterIndex).setValue(new Short(x));
+        procedureCall.getInputParam(parameterIndex).setValue(Short.valueOf(x));
     }
 
     public void setString(int parameterIndex, String x) throws SQLException {

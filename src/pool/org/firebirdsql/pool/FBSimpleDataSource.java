@@ -81,7 +81,7 @@ public final class FBSimpleDataSource extends RootCommonDataSource implements Da
      * @return length of BLOB buffer.
      */
     public Integer getBlobBufferLength() {
-        return new Integer(mcf.getBlobBufferSize());
+        return Integer.valueOf(mcf.getBlobBufferSize());
     }
     
     /**
