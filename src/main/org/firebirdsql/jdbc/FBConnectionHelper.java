@@ -170,7 +170,8 @@ public class FBConnectionHelper {
                 try {
                     // try to deal with a value as a byte or int
                     int intValue = Integer.parseInt((String)value);
-                    if (intValue >= Byte.MIN_VALUE && intValue <= Byte.MAX_VALUE)
+                    // TODO Find out if this is intentional
+                    if (intValue < 256)
                         return Byte.valueOf((byte) intValue);
                     else
                         return Integer.valueOf(intValue);
