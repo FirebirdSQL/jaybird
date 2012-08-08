@@ -673,7 +673,7 @@ public abstract class AbstractResultSet implements FirebirdResultSet, Synchroniz
         // If it is the first time the columnName is used
         if (fieldNum == null){
             int colNum = findColumn(columnName);
-            fieldNum = new Integer(colNum);
+            fieldNum = Integer.valueOf(colNum);
             colNames.put(columnName, fieldNum);
         }
         int colNum = fieldNum.intValue();

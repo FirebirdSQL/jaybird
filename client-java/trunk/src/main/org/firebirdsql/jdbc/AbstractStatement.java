@@ -1271,7 +1271,7 @@ public abstract class AbstractStatement implements FirebirdStatement, Synchroniz
                                 throw new BatchUpdateException(
                                         toArray(responses));
                             else
-                                responses.add(new Integer(getUpdateCount()));
+                                responses.add(Integer.valueOf(getUpdateCount()));
                         } catch (GDSException ge) {
 
                             throw new BatchUpdateException(ge.getMessage(),
