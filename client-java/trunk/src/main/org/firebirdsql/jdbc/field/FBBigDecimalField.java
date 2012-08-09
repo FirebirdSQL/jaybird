@@ -60,7 +60,7 @@ public class FBBigDecimalField extends FBField {
 
         long longValue = getLong();
 
-        // check if value is withing bounds
+        // check if value is within bounds
         if (longValue > MAX_BYTE_VALUE ||
             longValue < MIN_BYTE_VALUE)
                 throw (SQLException)createException(
@@ -84,17 +84,16 @@ public class FBBigDecimalField extends FBField {
     public float getFloat() throws SQLException {
         if (getFieldData()==null) return FLOAT_NULL_VALUE;
 
-        double doubleValue = getDouble();
+        double value = getDouble();
 
-        // check if value is withing bounds
-        if (doubleValue > MAX_FLOAT_VALUE ||
-            doubleValue < MIN_FLOAT_VALUE)
-                throw (SQLException)createException(
-                    FLOAT_CONVERSION_ERROR).fillInStackTrace();
+        float cValue = (float) value;
+        // check if value is within bounds
+        if (cValue == Float.POSITIVE_INFINITY || 
+        	cValue == Float.NEGATIVE_INFINITY)
+            throw (SQLException)createException(
+                FLOAT_CONVERSION_ERROR + " " + value).fillInStackTrace();
 
-
-        return (float)doubleValue;
-
+        return cValue;
     }
 
     public int getInt() throws SQLException {
@@ -102,19 +101,16 @@ public class FBBigDecimalField extends FBField {
 
         long longValue = getLong();
 
-        // check if value is withing bounds
+        // check if value is within bounds
         if (longValue > MAX_INT_VALUE ||
             longValue < MIN_INT_VALUE)
                 throw (SQLException)createException(
                     INT_CONVERSION_ERROR).fillInStackTrace();
 
-
         return (int)longValue;
-
     }
 
     public long getLong() throws SQLException {
-        
         BigDecimal value = getBigDecimal();
         
         if (value == BIGDECIMAL_NULL_VALUE)
@@ -134,12 +130,11 @@ public class FBBigDecimalField extends FBField {
 
         long longValue = getLong();
 
-        // check if value is withing bounds
+        // check if value is within bounds
         if (longValue > MAX_SHORT_VALUE ||
             longValue < MIN_SHORT_VALUE)
                 throw (SQLException)createException(
                     SHORT_CONVERSION_ERROR).fillInStackTrace();
-
 
         return (short)longValue;
     }
@@ -178,7 +173,7 @@ public class FBBigDecimalField extends FBField {
     //--- setXXX methods
 
     public void setBoolean(boolean value) throws SQLException {
-        setInteger(value ? 1 : 0);
+        setLong(value ? 1 : 0);
     }
 
     public void setByte(byte value) throws SQLException {
@@ -229,7 +224,7 @@ public class FBBigDecimalField extends FBField {
 
         if (fieldType == 1) {
 
-            // check if value is withing bounds
+            // check if value is within bounds
             if (value.unscaledValue().compareTo(MAX_SHORT) > 0 ||
                 value.unscaledValue().compareTo(MIN_SHORT) < 0)
                     throw (SQLException)createException(
@@ -239,7 +234,7 @@ public class FBBigDecimalField extends FBField {
         } else
         if (fieldType == 2) {
 
-            // check if value is withing bounds
+            // check if value is within bounds
             if (value.unscaledValue().compareTo(MAX_INT) > 0 ||
                 value.unscaledValue().compareTo(MIN_INT) < 0)
                     throw (SQLException)createException(
@@ -249,7 +244,7 @@ public class FBBigDecimalField extends FBField {
         } else
         if (fieldType == 3) {
             
-            // check if value is withing bounds
+            // check if value is within bounds
             if (value.unscaledValue().compareTo(MAX_LONG) > 0 ||
                 value.unscaledValue().compareTo(MIN_LONG) < 0)
                     throw (SQLException)createException(
@@ -261,7 +256,5 @@ public class FBBigDecimalField extends FBField {
                 BIGDECIMAL_CONVERSION_ERROR).fillInStackTrace();
 
     }
-
-
 
 }

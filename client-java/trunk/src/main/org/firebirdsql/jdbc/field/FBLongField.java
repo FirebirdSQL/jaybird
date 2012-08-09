@@ -32,6 +32,9 @@ import java.math.BigDecimal;
  * @version 1.0
  */
 class FBLongField extends FBField {
+    private static final BigDecimal BD_MAX_LONG = BigDecimal.valueOf(MAX_LONG_VALUE);
+    private static final BigDecimal BD_MIN_LONG = BigDecimal.valueOf(MIN_LONG_VALUE);
+
     FBLongField(XSQLVAR field, FieldDataProvider dataProvider, int requiredType) 
         throws SQLException 
     {
@@ -41,57 +44,63 @@ class FBLongField extends FBField {
     public byte getByte() throws SQLException {
         if (getFieldData()==null) return BYTE_NULL_VALUE;
 
-        Long value = new Long(field.decodeLong(getFieldData()));
+        long value = field.decodeLong(getFieldData());
 
-        // check if value is withing bounds
-        if (value.longValue() > MAX_BYTE_VALUE ||
-            value.longValue() < MIN_BYTE_VALUE)
+        // check if value is within bounds
+        if (value > MAX_BYTE_VALUE ||
+            value < MIN_BYTE_VALUE)
                 throw (SQLException)createException(
-                    BYTE_CONVERSION_ERROR+" "+value).fillInStackTrace();
+                    BYTE_CONVERSION_ERROR + " " + value).fillInStackTrace();
 
-        return value.byteValue();
+        return (byte) value;
     }
+    
     public short getShort() throws SQLException {
         if (getFieldData()==null) return SHORT_NULL_VALUE;
 
-        Long value = new Long(field.decodeLong(getFieldData()));
+        long value = field.decodeLong(getFieldData());
 
-        // check if value is withing bounds
-        if (value.longValue() > MAX_SHORT_VALUE ||
-            value.longValue() < MIN_SHORT_VALUE)
+        // check if value is within bounds
+        if (value > MAX_SHORT_VALUE ||
+            value < MIN_SHORT_VALUE)
                 throw (SQLException)createException(
-                    BYTE_CONVERSION_ERROR+" "+value).fillInStackTrace();
+                    SHORT_CONVERSION_ERROR + " " + value).fillInStackTrace();
 
-        return value.shortValue();
+        return (short) value;
     }
+    
     public int getInt() throws SQLException {
         if (getFieldData()==null) return INT_NULL_VALUE;
 
-        Long value = new Long(field.decodeLong(getFieldData()));
+        long value = field.decodeLong(getFieldData());
 
-        // check if value is withing bounds
-        if (value.longValue() > MAX_INT_VALUE ||
-            value.longValue() < MIN_INT_VALUE)
+        // check if value is within bounds
+        if (value > MAX_INT_VALUE ||
+            value < MIN_INT_VALUE)
                 throw (SQLException)createException(
-                    INT_CONVERSION_ERROR+" "+value).fillInStackTrace();
+                    INT_CONVERSION_ERROR + " " + value).fillInStackTrace();
 
-        return value.intValue();
+        return (int) value;
     }
+    
     public long getLong() throws SQLException {
         if (getFieldData()==null) return LONG_NULL_VALUE;
 
         return field.decodeLong(getFieldData());
     }
+    
     public float getFloat() throws SQLException {
         if (getFieldData()==null) return FLOAT_NULL_VALUE;
 
         return (float) field.decodeLong(getFieldData());
     }
+    
     public double getDouble() throws SQLException {
         if (getFieldData()==null) return DOUBLE_NULL_VALUE;
 
         return (double) field.decodeLong(getFieldData());
     }
+    
     public BigDecimal getBigDecimal() throws SQLException {
         if (getFieldData()==null) return BIGDECIMAL_NULL_VALUE;
 
@@ -111,6 +120,7 @@ class FBLongField extends FBField {
 
         return field.decodeLong(getFieldData()) == 1;
     }
+    
     public String getString() throws SQLException {
         if (getFieldData()==null) return STRING_NULL_VALUE;
 
@@ -129,42 +139,50 @@ class FBLongField extends FBField {
             setLong(Long.parseLong(value));
         } catch(NumberFormatException nfex) {
             throw (SQLException)createException(
-                LONG_CONVERSION_ERROR+" "+value).fillInStackTrace();
+                LONG_CONVERSION_ERROR + " " + value).fillInStackTrace();
         }
     }
+    
     public void setShort(short value) throws SQLException {
-        setLong((long)value);
+        setLong(value);
     }
+    
     public void setBoolean(boolean value) throws SQLException {
         setLong(value ? 1 : 0);
     }
+    
     public void setFloat(float value) throws SQLException {
         // check if value is within bounds
         if (value > MAX_LONG_VALUE ||
             value < MIN_LONG_VALUE)
                 throw (SQLException)createException(
-                    FLOAT_CONVERSION_ERROR+" "+value).fillInStackTrace();
+                    LONG_CONVERSION_ERROR + " " + value).fillInStackTrace();
 
-        setLong((long)value);
+        setLong((long) value);
     }
+    
     public void setDouble(double value) throws SQLException {
         // check if value is within bounds
         if (value > MAX_LONG_VALUE ||
             value < MIN_LONG_VALUE)
                 throw (SQLException)createException(
-                    DOUBLE_CONVERSION_ERROR+" "+value).fillInStackTrace();
+                    LONG_CONVERSION_ERROR + " " + value).fillInStackTrace();
 
-        setLong((long)value);
+        setLong((long) value);
     }
+    
     public void setLong(long value) throws SQLException {
         setFieldData(field.encodeLong(value));
     }
+    
     public void setInteger(int value) throws SQLException {
-        setLong((long)value);
+        setLong(value);
     }
+    
     public void setByte(byte value) throws SQLException {
-        setLong((long)value);
+        setLong(value);
     }
+    
     public void setBigDecimal(BigDecimal value) throws SQLException {
         if (value == BIGDECIMAL_NULL_VALUE) {
             setNull();
@@ -172,10 +190,10 @@ class FBLongField extends FBField {
         }
 
         // check if value is within bounds
-        if (value.compareTo(BigDecimal.valueOf(MAX_LONG_VALUE)) > 0 ||
-            value.compareTo(BigDecimal.valueOf(MIN_LONG_VALUE)) < 0)
+        if (value.compareTo(BD_MAX_LONG) > 0 ||
+            value.compareTo(BD_MIN_LONG) < 0)
                 throw (SQLException)createException(
-                    BIGDECIMAL_CONVERSION_ERROR+" "+value).fillInStackTrace();
+                    LONG_CONVERSION_ERROR + " " + value).fillInStackTrace();
 
         setLong(value.longValue());
     }
