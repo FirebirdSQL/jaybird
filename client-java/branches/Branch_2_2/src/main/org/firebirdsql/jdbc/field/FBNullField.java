@@ -265,6 +265,10 @@ public class FBNullField extends FBField {
 
     @Override
     public void setString(String value) throws SQLException {
+        if (value == STRING_NULL_VALUE) {
+            setNull();
+            return;
+        }
         setObject(DUMMY_OBJECT);
     }
 }

@@ -768,17 +768,14 @@ public class TestFBPreparedStatement extends FBTestBase {
         }
     }
 
-    public void testParameterIsNullQuery() throws Throwable {
-        Statement stmt = con.createStatement();
-        try {
-            stmt.executeUpdate("INSERT INTO testtab(id, field1, field2) VALUES (1, '1', 'a')");
-            stmt.executeUpdate("INSERT INTO testtab(id, field1, field2) VALUES (2, '2', NULL)");
-        } finally {
-            stmt.close();
-        }
+    /**
+     * Tests NULL parameter when using {@link PreparedStatement#setNull(int, int)}
+     */
+    public void testParameterIsNullQuerySetNull() throws Throwable {
+        createIsNullTestData();
 
         PreparedStatement ps = con.prepareStatement(
-        		"SELECT id FROM testtab WHERE field2 = ? OR ? IS NULL ORDER BY 1");
+                "SELECT id FROM testtab WHERE field2 = ? OR ? IS NULL ORDER BY 1");
         ResultSet rs;
         try {
             ps.setNull(1, Types.VARCHAR);
@@ -786,35 +783,78 @@ public class TestFBPreparedStatement extends FBTestBase {
 
             rs = ps.executeQuery();
 
-            boolean hasRecord = rs.next();
-
-            assertTrue("Step 1.1 - should get a record.", hasRecord);
-            assertEquals("Step 1.1 - ID should be equal 2", 1, rs.getInt(1));
-
-            hasRecord = rs.next();
-
-            assertTrue("Step 1.2 - should get a record.", hasRecord);
+            assertTrue("Step 1.1 - should get a record.", rs.next());
+            assertEquals("Step 1.1 - ID should be equal 1", 1, rs.getInt(1));
+            assertTrue("Step 1.2 - should get a record.", rs.next());
             assertEquals("Step 1.2 - ID should be equal 2", 2, rs.getInt(1));
-
-            ps.clearParameters();
-
-            ps.setString(1, "a");
-            ps.setString(2, "a");
-
-            rs = ps.executeQuery();
-
-            hasRecord = rs.next();
-            assertTrue("Step 2.1 - should get a record.", hasRecord);
-            assertEquals("Step 2.1 - ID should be equal 1", 1, rs.getInt(1));
-
-            hasRecord = rs.next();
-            assertFalse("Step 2 - should get only one record.", hasRecord);
-
         } catch (Throwable ex) {
             ex.printStackTrace();
             throw ex;
         } finally {
             closeQuietly(ps);
+        }
+    }
+
+    /**
+     * Tests NULL parameter when using actual (non-null) value in {@link PreparedStatement#setString(int, String)}
+     */
+    public void testParameterIsNullQueryWithValues() throws Throwable {
+        createIsNullTestData();
+
+        PreparedStatement ps = con.prepareStatement(
+                "SELECT id FROM testtab WHERE field2 = ? OR ? IS NULL ORDER BY 1");
+        ResultSet rs;
+        try {
+            ps.setString(1, "a");
+            ps.setString(2, "a");
+
+            rs = ps.executeQuery();
+
+            assertTrue("Step 2.1 - should get a record.", rs.next());
+            assertEquals("Step 2.1 - ID should be equal 1", 1, rs.getInt(1));
+            assertFalse("Step 2 - should get only one record.", rs.next());
+        } catch (Throwable ex) {
+            ex.printStackTrace();
+            throw ex;
+        } finally {
+            closeQuietly(ps);
+        }
+    }
+    
+    /**
+     * Tests NULL parameter when using null value in {@link PreparedStatement#setString(int, String)}
+     */
+    public void testParameterIsNullQueryWithNull() throws Throwable {
+        createIsNullTestData();
+
+        PreparedStatement ps = con.prepareStatement(
+                "SELECT id FROM testtab WHERE field2 = ? OR ? IS NULL ORDER BY 1");
+        ResultSet rs;
+        try {
+            ps.setString(1, null);
+            ps.setString(2, null);
+
+            rs = ps.executeQuery();
+
+            assertTrue("Step 1.1 - should get a record.", rs.next());
+            assertEquals("Step 1.1 - ID should be equal 1", 1, rs.getInt(1));
+            assertTrue("Step 1.2 - should get a record.", rs.next());
+            assertEquals("Step 1.2 - ID should be equal 2", 2, rs.getInt(1));
+        } catch (Throwable ex) {
+            ex.printStackTrace();
+            throw ex;
+        } finally {
+            closeQuietly(ps);
+        }
+    }
+
+    private void createIsNullTestData() throws SQLException {
+        Statement stmt = con.createStatement();
+        try {
+            stmt.executeUpdate("INSERT INTO testtab(id, field1, field2) VALUES (1, '1', 'a')");
+            stmt.executeUpdate("INSERT INTO testtab(id, field1, field2) VALUES (2, '2', NULL)");
+        } finally {
+            stmt.close();
         }
     }
 
