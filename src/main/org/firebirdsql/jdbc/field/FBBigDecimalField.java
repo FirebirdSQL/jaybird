@@ -19,6 +19,7 @@
 
 package org.firebirdsql.jdbc.field;
 
+import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.XSQLVAR;
 
 import java.sql.SQLException;
@@ -42,13 +43,15 @@ public class FBBigDecimalField extends FBField {
     private static final BigInteger MAX_LONG = BigInteger.valueOf(Long.MAX_VALUE);
     private static final BigInteger MIN_LONG = BigInteger.valueOf(Long.MIN_VALUE);
 
-    private int fieldType = 0; // 1.- Short, 2.- Integer, 3.- Long
+    private final FieldDataSize fieldDataSize;
 
-    FBBigDecimalField(XSQLVAR field, FieldDataProvider dataProvider, int fieldType, 
-        int requiredType) throws SQLException 
+    FBBigDecimalField(XSQLVAR field, FieldDataProvider dataProvider, int requiredType) throws SQLException 
     {
         super(field, dataProvider, requiredType);
-        this.fieldType = fieldType;
+        fieldDataSize = FieldDataSize.getFieldDataSize(field);
+        if (fieldDataSize == null) {
+            throw new SQLException("FBBigDecimal, unsupported field sqltype: " + field.sqltype);
+        }
     }
 
     public boolean getBoolean() throws SQLException {
@@ -71,8 +74,6 @@ public class FBBigDecimalField extends FBField {
     }
 
     public double getDouble() throws SQLException {
-        if (getFieldData()==null) return DOUBLE_NULL_VALUE;
-
         BigDecimal value = getBigDecimal();
         
         if (value == BIGDECIMAL_NULL_VALUE)
@@ -82,18 +83,12 @@ public class FBBigDecimalField extends FBField {
     }
 
     public float getFloat() throws SQLException {
-        if (getFieldData()==null) return FLOAT_NULL_VALUE;
-
-        double value = getDouble();
-
-        float cValue = (float) value;
-        // check if value is within bounds
-        if (cValue == Float.POSITIVE_INFINITY || 
-        	cValue == Float.NEGATIVE_INFINITY)
-            throw (SQLException)createException(
-                FLOAT_CONVERSION_ERROR + " " + value).fillInStackTrace();
-
-        return cValue;
+        BigDecimal value = getBigDecimal();
+        
+        if (value == BIGDECIMAL_NULL_VALUE)
+            return FLOAT_NULL_VALUE;
+        
+        return value.floatValue();
     }
 
     public int getInt() throws SQLException {
@@ -140,8 +135,6 @@ public class FBBigDecimalField extends FBField {
     }
 
     public String getString() throws SQLException {
-        if (getFieldData()==null) return STRING_NULL_VALUE;
-        
         BigDecimal value = getBigDecimal();
         
         if (value == BIGDECIMAL_NULL_VALUE)
@@ -153,21 +146,7 @@ public class FBBigDecimalField extends FBField {
     public BigDecimal getBigDecimal() throws SQLException {
         if (getFieldData()==null) return BIGDECIMAL_NULL_VALUE;
 
-        long longValue;
-
-        if (fieldType==2)
-            longValue = field.decodeInt(getFieldData());
-        else
-        if (fieldType==3)
-            longValue = field.decodeLong(getFieldData());
-        else
-        if (fieldType==1)
-            longValue = field.decodeShort(getFieldData());
-        else
-            throw (SQLException)createException(
-                BIGDECIMAL_CONVERSION_ERROR).fillInStackTrace();
-
-        return BigDecimal.valueOf(longValue, -field.sqlscale);
+        return fieldDataSize.decode(field, getFieldData());
     }
 
     //--- setXXX methods
@@ -181,7 +160,7 @@ public class FBBigDecimalField extends FBField {
     }
 
     public void setDouble(double value) throws SQLException {
-        setBigDecimal(new BigDecimal(Double.toString(value)));
+        setBigDecimal(BigDecimal.valueOf(value));
     }
 
     public void setFloat(float value) throws SQLException {
@@ -219,42 +198,113 @@ public class FBBigDecimalField extends FBField {
             setNull();
             return;
         }
+
+        setFieldData(fieldDataSize.encode(field, value));
+    }
+    
+    /**
+     * Enum for handling the different fielddata sizes of NUMERIC/DECIMAL fields.
+     * 
+     * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+     */
+    private enum FieldDataSize {
+        SHORT {
+            @Override
+            protected BigDecimal decode(final XSQLVAR field, final byte[] fieldData) {
+                long value = field.decodeShort(fieldData);
+                return BigDecimal.valueOf(value, -field.sqlscale);
+            }
+
+            @Override
+            protected byte[] encode(final XSQLVAR field, final BigDecimal value) throws SQLException {
+                BigInteger unscaledValue = normalize(value, -field.sqlscale);
+                if (unscaledValue.compareTo(MAX_SHORT) > 0 || unscaledValue.compareTo(MIN_SHORT) < 0) {
+                    throw (SQLException)createException(BIGDECIMAL_CONVERSION_ERROR).fillInStackTrace();
+                }
+                return field.encodeShort(unscaledValue.shortValue());
+            }
+        },
+        INTEGER {
+            @Override
+            protected BigDecimal decode(final XSQLVAR field, final byte[] fieldData) {
+                long value = field.decodeInt(fieldData);
+                return BigDecimal.valueOf(value, -field.sqlscale);
+            }
+
+            @Override
+            protected byte[] encode(final XSQLVAR field, final BigDecimal value) throws SQLException {
+                BigInteger unscaledValue = normalize(value, -field.sqlscale);
+                if (unscaledValue.compareTo(MAX_INT) > 0 || unscaledValue.compareTo(MIN_INT) < 0) {
+                    throw (SQLException)createException(BIGDECIMAL_CONVERSION_ERROR).fillInStackTrace();
+                }
+                return field.encodeInt(unscaledValue.intValue());
+            }
+        },
+        LONG {
+            @Override
+            protected BigDecimal decode(final XSQLVAR field, final byte[] fieldData) {
+                long value = field.decodeLong(fieldData);
+                return BigDecimal.valueOf(value, -field.sqlscale);
+            }
+
+            @Override
+            protected byte[] encode(final XSQLVAR field, final BigDecimal value) throws SQLException {
+                BigInteger unscaledValue = normalize(value, -field.sqlscale);
+                if (unscaledValue.compareTo(MAX_LONG) > 0 || unscaledValue.compareTo(MIN_LONG) < 0) {
+                    throw (SQLException)createException(BIGDECIMAL_CONVERSION_ERROR).fillInStackTrace();
+                }
+                return field.encodeLong(unscaledValue.longValue());
+            }
+        };
         
-        value = value.setScale(-field.sqlscale, BigDecimal.ROUND_HALF_UP);
+        /**
+         * Decodes the provided fieldData to a BigDecimal
+         * 
+         * @param field XSQLVAR field instance
+         * @param fieldData encoded data
+         * @return BigDecimal instance
+         */
+        protected abstract BigDecimal decode(final XSQLVAR field, final byte[] fieldData);
 
-        if (fieldType == 1) {
-
-            // check if value is within bounds
-            if (value.unscaledValue().compareTo(MAX_SHORT) > 0 ||
-                value.unscaledValue().compareTo(MIN_SHORT) < 0)
-                    throw (SQLException)createException(
-                        BIGDECIMAL_CONVERSION_ERROR).fillInStackTrace();
-
-            setFieldData(field.encodeShort(value.unscaledValue().shortValue()));
-        } else
-        if (fieldType == 2) {
-
-            // check if value is within bounds
-            if (value.unscaledValue().compareTo(MAX_INT) > 0 ||
-                value.unscaledValue().compareTo(MIN_INT) < 0)
-                    throw (SQLException)createException(
-                        BIGDECIMAL_CONVERSION_ERROR).fillInStackTrace();
-
-            setFieldData(field.encodeInt(value.unscaledValue().intValue()));
-        } else
-        if (fieldType == 3) {
-            
-            // check if value is within bounds
-            if (value.unscaledValue().compareTo(MAX_LONG) > 0 ||
-                value.unscaledValue().compareTo(MIN_LONG) < 0)
-                    throw (SQLException)createException(
-                        BIGDECIMAL_CONVERSION_ERROR).fillInStackTrace();
-            
-            setFieldData(field.encodeLong(value.unscaledValue().longValue()));
-        } else
-            throw (SQLException)createException(
-                BIGDECIMAL_CONVERSION_ERROR).fillInStackTrace();
-
+        /**
+         * Encodes the provided BigDecimal to fieldData
+         * @param field XSQLVAR field instance
+         * @param value BigDecimal instance
+         * @return encoded data
+         * @throws SQLException
+         */
+        protected abstract byte[] encode(final XSQLVAR field, final BigDecimal value) throws SQLException;
+        
+        /**
+         * Helper method to rescale the BigDecimal to the provided scale and return the unscaled value of
+         * the resulting BigDecimal.
+         * 
+         * @param value BigDecimal instance
+         * @param scale Required scale
+         * @return Unscaled value of the rescaled BigDecimal
+         */
+        private static BigInteger normalize(final BigDecimal value, final int scale) {
+            BigDecimal valueToScale = value.setScale(scale, BigDecimal.ROUND_HALF_UP);
+            return valueToScale.unscaledValue();
+        }
+        
+        /**
+         * Returns the FieldDataSize instance for the provided field.
+         * @param field XSQLVAR field instance
+         * @return FieldDataSize for the field, or null if none match
+         */
+        protected static FieldDataSize getFieldDataSize(XSQLVAR field) {
+            switch (field.sqltype & ~1) {
+            case ISCConstants.SQL_SHORT:
+                return SHORT;
+            case ISCConstants.SQL_LONG:
+                return INTEGER;
+            case ISCConstants.SQL_INT64:
+                return LONG;
+            default:
+                return null;
+            }
+        }
     }
 
 }

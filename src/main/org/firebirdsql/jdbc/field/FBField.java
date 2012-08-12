@@ -364,19 +364,19 @@ public abstract class FBField {
             if (field.sqlscale == 0)
                 return new FBShortField(field, dataProvider, Types.SMALLINT);
             else
-                return new FBBigDecimalField(field, dataProvider, 1, Types.NUMERIC);
+                return new FBBigDecimalField(field, dataProvider, field.sqlsubtype == 2 ? Types.DECIMAL : Types.NUMERIC);
         else
         if (isType(field, Types.INTEGER))
             if (field.sqlscale == 0)
                 return new FBIntegerField(field, dataProvider, Types.INTEGER);
             else
-                return new FBBigDecimalField(field, dataProvider,2, Types.NUMERIC);
+                return new FBBigDecimalField(field, dataProvider, field.sqlsubtype == 2 ? Types.DECIMAL : Types.NUMERIC);
         else
         if (isType(field, Types.BIGINT))
             if (field.sqlscale == 0)
                 return new FBLongField(field, dataProvider, Types.BIGINT);
             else
-                return new FBBigDecimalField(field, dataProvider,3, Types.NUMERIC);
+                return new FBBigDecimalField(field, dataProvider, field.sqlsubtype == 2 ? Types.DECIMAL : Types.NUMERIC);
         else
         if (isType(field, Types.FLOAT))
             return new FBFloatField(field, dataProvider, Types.FLOAT);
