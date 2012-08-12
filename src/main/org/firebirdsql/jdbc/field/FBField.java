@@ -342,8 +342,7 @@ public abstract class FBField {
     public final static boolean isNullType(XSQLVAR field) {
         int tempType = field.sqltype & ~1;
 
-        return tempType == ISCConstants.SQL_NULL
-                || field.sqltype == ISCConstants.SQL_NULL;
+        return tempType == ISCConstants.SQL_NULL;
     }
     
     /**
@@ -440,6 +439,7 @@ public abstract class FBField {
             throw (SQLException)createException(SQL_ARRAY_NOT_SUPPORTED);
         else
         if (isNullType(field))
+            // TODO Shouldn't this be Types.NULL ?
             return new FBNullField(field, dataProvider, Types.VARCHAR);
         else
             throw (SQLException)createException(SQL_TYPE_NOT_SUPPORTED);
