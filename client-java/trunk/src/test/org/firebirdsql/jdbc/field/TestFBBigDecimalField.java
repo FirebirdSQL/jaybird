@@ -28,88 +28,108 @@ import java.sql.Types;
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.XSQLVAR;
 import org.jmock.Expectations;
-import org.jmock.Mockery;
-import org.jmock.integration.junit4.JMock;
-import org.jmock.integration.junit4.JUnit4Mockery;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 
 /**
  * Tests for {@link FBBigDecimalField}
+ * 
+ * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  */
-@RunWith(JMock.class)
-public class TestFBBigDecimalField {
-    Mockery context = new JUnit4Mockery();
-    
-    private FieldDataProvider fieldData;
+public class TestFBBigDecimalField extends BaseJUnit4TestFBField<FBBigDecimalField, BigDecimal> {
     
     @Before
-    public void setUp() {
-        fieldData = context.mock(FieldDataProvider.class);
+    @Override
+    public void setUp() throws Exception {
+        super.setUp();
+        // NOTE This definition is necessary for the tests in the superclass, this is overridden by most tests in the class itself
+        xsqlvar.sqltype = ISCConstants.SQL_LONG;
+        xsqlvar.sqlscale = -2;
+        field = new FBBigDecimalField(xsqlvar, fieldData, Types.NUMERIC);
     }
     
     // TODO Add set<PrimitiveNumber> tests for out of range condition; in current implementation duplicates setBigDecimal out of range tests
-    // TODO Add tests for unsupported conversions
     // TODO Add set/getObject test
 
     @Test
     public void getBigDecimalNull() throws SQLException {
-        final XSQLVAR xsqlvar = createIntegerXSQLVAR();
+        xsqlvar = createIntegerXSQLVAR();
         xsqlvar.sqlscale = -2;
+        field = new FBBigDecimalField(xsqlvar, fieldData, Types.NUMERIC);
         toReturnNullExpectations();
-        FBBigDecimalField field = new FBBigDecimalField(xsqlvar, fieldData, Types.NUMERIC);
         
         assertNull("Expected null result", field.getBigDecimal());
     }
     
+    @Test
+    @Ignore
+    @Override
+    public void getBigDecimalNonNull() throws SQLException {
+        // Ignore in favor of more specific tests
+    }
+    
+    @Test
+    @Ignore
+    @Override
+    public void getBigDecimalIntNonNull() throws SQLException {
+        // TODO: Implement test for getBigDecimal(int)
+    }
+    
     @Test 
     public void getBigDecimalShort() throws SQLException {
-        final XSQLVAR xsqlvar = createShortXSQLVAR();
+        xsqlvar = createShortXSQLVAR();
         xsqlvar.sqlscale = -1;
+        field = new FBBigDecimalField(xsqlvar, fieldData, Types.NUMERIC);
         context.checking(new Expectations() {{
             atLeast(1).of(fieldData).getFieldData(); will(returnValue(xsqlvar.encodeShort((short) 231)));
         }});
-        FBBigDecimalField field = new FBBigDecimalField(xsqlvar, fieldData, Types.NUMERIC);
         
         BigDecimal expectedValue = new BigDecimal("23.1");
-        assertEquals(expectedValue, field.getBigDecimal());
+        assertEquals("Unexpected value for short BigDecimal", expectedValue, field.getBigDecimal());
     }
     
     @Test 
     public void getBigDecimalInteger() throws SQLException {
-        final XSQLVAR xsqlvar = createIntegerXSQLVAR();
+        xsqlvar = createIntegerXSQLVAR();
         xsqlvar.sqlscale = -4;
+        field = new FBBigDecimalField(xsqlvar, fieldData, Types.NUMERIC);
         context.checking(new Expectations() {{
             atLeast(1).of(fieldData).getFieldData(); will(returnValue(xsqlvar.encodeInt(34)));
         }});
-        FBBigDecimalField field = new FBBigDecimalField(xsqlvar, fieldData, Types.NUMERIC);
         
         BigDecimal expectedValue = new BigDecimal("0.0034");
-        assertEquals(expectedValue, field.getBigDecimal());
+        assertEquals("Unexpected value for integer BigDecimal", expectedValue, field.getBigDecimal());
     }
     
     @Test 
     public void getBigDecimalLong() throws SQLException {
-        final XSQLVAR xsqlvar = createLongXSQLVAR();
+        xsqlvar = createLongXSQLVAR();
         xsqlvar.sqlscale = -8;
+        field = new FBBigDecimalField(xsqlvar, fieldData, Types.NUMERIC);
         context.checking(new Expectations() {{
             atLeast(1).of(fieldData).getFieldData(); will(returnValue(xsqlvar.encodeLong(51300000000L)));
         }});
-        FBBigDecimalField field = new FBBigDecimalField(xsqlvar, fieldData, Types.NUMERIC);
         
         BigDecimal expectedValue = new BigDecimal("513.00000000");
-        assertEquals(expectedValue, field.getBigDecimal());
+        assertEquals("Unexpected value for long BigDecimal", expectedValue, field.getBigDecimal());
+    }
+    
+    @Test
+    @Ignore
+    @Override
+    public void setBigDecimalNonNull() throws SQLException {
+        // Ignore in favor of more specific tests
     }
     
     @Test
     public void setBigDecimalShort() throws SQLException {
-        final XSQLVAR xsqlvar = createShortXSQLVAR();
+        xsqlvar = createShortXSQLVAR();
         xsqlvar.sqlscale = -2;
+        field = new FBBigDecimalField(xsqlvar, fieldData, Types.NUMERIC);
         context.checking(new Expectations() {{
             oneOf(fieldData).setFieldData(xsqlvar.encodeShort((short)4320));
         }});
-        FBBigDecimalField field = new FBBigDecimalField(xsqlvar, fieldData, Types.NUMERIC);
         
         // TODO Might need to add separate test for the rescaling applied here
         field.setBigDecimal(new BigDecimal("43.2"));
@@ -117,89 +137,89 @@ public class TestFBBigDecimalField {
     
     @Test(expected = TypeConversionException.class) 
     public void setBigDecimalShortTooHigh() throws SQLException {
-        final XSQLVAR xsqlvar = createShortXSQLVAR();
+        xsqlvar = createShortXSQLVAR();
         xsqlvar.sqlscale = -2;
-        FBBigDecimalField field = new FBBigDecimalField(xsqlvar, fieldData, Types.NUMERIC);
+        field = new FBBigDecimalField(xsqlvar, fieldData, Types.NUMERIC);
         
         field.setBigDecimal(BigDecimal.valueOf(Short.MAX_VALUE + 1, 2));
     }
     
     @Test(expected = TypeConversionException.class) 
     public void setBigDecimalShortTooLow() throws SQLException {
-        final XSQLVAR xsqlvar = createShortXSQLVAR();
+        xsqlvar = createShortXSQLVAR();
         xsqlvar.sqlscale = -2;
-        FBBigDecimalField field = new FBBigDecimalField(xsqlvar, fieldData, Types.NUMERIC);
+        field = new FBBigDecimalField(xsqlvar, fieldData, Types.NUMERIC);
         
         field.setBigDecimal(BigDecimal.valueOf(Short.MIN_VALUE - 1, 2));
     }
     
     @Test
     public void setBigDecimalShortNull() throws SQLException {
-        final XSQLVAR xsqlvar = createShortXSQLVAR();
+        xsqlvar = createShortXSQLVAR();
         xsqlvar.sqlscale = -1;
+        field = new FBBigDecimalField(xsqlvar, fieldData, Types.NUMERIC);
         setNullExpectations();
-        FBBigDecimalField field = new FBBigDecimalField(xsqlvar, fieldData, Types.NUMERIC);
         
         field.setBigDecimal(null);
     }
     
     @Test
     public void setBigDecimalInteger() throws SQLException {
-        final XSQLVAR xsqlvar = createIntegerXSQLVAR();
+        xsqlvar = createIntegerXSQLVAR();
         xsqlvar.sqlscale = -3;
+        field = new FBBigDecimalField(xsqlvar, fieldData, Types.NUMERIC);
         context.checking(new Expectations() {{
             oneOf(fieldData).setFieldData(xsqlvar.encodeInt(1234567));
         }});
-        FBBigDecimalField field = new FBBigDecimalField(xsqlvar, fieldData, Types.NUMERIC);
         
         field.setBigDecimal(new BigDecimal("1234.567"));
     }
     
     @Test(expected = TypeConversionException.class) 
     public void setBigDecimalIntegerTooHigh() throws SQLException {
-        final XSQLVAR xsqlvar = createIntegerXSQLVAR();
+        xsqlvar = createIntegerXSQLVAR();
         xsqlvar.sqlscale = -2;
-        FBBigDecimalField field = new FBBigDecimalField(xsqlvar, fieldData, Types.NUMERIC);
+        field = new FBBigDecimalField(xsqlvar, fieldData, Types.NUMERIC);
         
         field.setBigDecimal(BigDecimal.valueOf(Integer.MAX_VALUE + 1L, 2));
     }
     
     @Test(expected = TypeConversionException.class) 
     public void setBigDecimalIntegerTooLow() throws SQLException {
-        final XSQLVAR xsqlvar = createIntegerXSQLVAR();
+        xsqlvar = createIntegerXSQLVAR();
         xsqlvar.sqlscale = -2;
-        FBBigDecimalField field = new FBBigDecimalField(xsqlvar, fieldData, Types.NUMERIC);
+        field = new FBBigDecimalField(xsqlvar, fieldData, Types.NUMERIC);
         
         field.setBigDecimal(BigDecimal.valueOf(Integer.MIN_VALUE - 1L, 2));
     }
     
     @Test
     public void setBigDecimalIntegerNull() throws SQLException {
-        final XSQLVAR xsqlvar = createIntegerXSQLVAR();
+        xsqlvar = createIntegerXSQLVAR();
         xsqlvar.sqlscale = -1;
+        field = new FBBigDecimalField(xsqlvar, fieldData, Types.NUMERIC);
         setNullExpectations();
-        FBBigDecimalField field = new FBBigDecimalField(xsqlvar, fieldData, Types.NUMERIC);
         
         field.setBigDecimal(null);
     }
     
     @Test
     public void setBigDecimalLong() throws SQLException {
-        final XSQLVAR xsqlvar = createLongXSQLVAR();
+        xsqlvar = createLongXSQLVAR();
         xsqlvar.sqlscale = -5;
+        field = new FBBigDecimalField(xsqlvar, fieldData, Types.NUMERIC);
         context.checking(new Expectations() {{
             oneOf(fieldData).setFieldData(xsqlvar.encodeLong(1234567890123L));
         }});
-        FBBigDecimalField field = new FBBigDecimalField(xsqlvar, fieldData, Types.NUMERIC);
         
         field.setBigDecimal(new BigDecimal("12345678.90123"));
     }
     
     @Test(expected = TypeConversionException.class) 
     public void setBigDecimalLongTooHigh() throws SQLException {
-        final XSQLVAR xsqlvar = createLongXSQLVAR();
+        xsqlvar = createLongXSQLVAR();
         xsqlvar.sqlscale = -2;
-        FBBigDecimalField field = new FBBigDecimalField(xsqlvar, fieldData, Types.NUMERIC);
+        field = new FBBigDecimalField(xsqlvar, fieldData, Types.NUMERIC);
         
         BigInteger value = BigInteger.valueOf(Long.MAX_VALUE).add(BigInteger.ONE);
         field.setBigDecimal(new BigDecimal(value, 2));
@@ -207,9 +227,9 @@ public class TestFBBigDecimalField {
     
     @Test(expected = TypeConversionException.class) 
     public void setBigDecimalLongTooLow() throws SQLException {
-        final XSQLVAR xsqlvar = createLongXSQLVAR();
+        xsqlvar = createLongXSQLVAR();
         xsqlvar.sqlscale = -2;
-        FBBigDecimalField field = new FBBigDecimalField(xsqlvar, fieldData, Types.NUMERIC);
+        field = new FBBigDecimalField(xsqlvar, fieldData, Types.NUMERIC);
         
         BigInteger value = BigInteger.valueOf(Long.MIN_VALUE).subtract(BigInteger.ONE);
         field.setBigDecimal(new BigDecimal(value, 2));
@@ -217,393 +237,433 @@ public class TestFBBigDecimalField {
     
     @Test
     public void setBigDecimalLongNull() throws SQLException {
-        final XSQLVAR xsqlvar = createLongXSQLVAR();
+        xsqlvar = createLongXSQLVAR();
         xsqlvar.sqlscale = -1;
         setNullExpectations();
-        FBBigDecimalField field = new FBBigDecimalField(xsqlvar, fieldData, Types.NUMERIC);
+        field = new FBBigDecimalField(xsqlvar, fieldData, Types.NUMERIC);
         
         field.setBigDecimal(null);
     }
     
     @Test
+    @Ignore
+    @Override
+    public void getBooleanNonNull() throws SQLException {
+        // Ignore in favor of more specific tests
+    }
+    
+    @Test
     public void getBooleanTrue() throws SQLException {
-        final XSQLVAR xsqlvar = createShortXSQLVAR();
+        xsqlvar = createShortXSQLVAR();
         // NOTE: We could use 0 for the test, but in that case Jaybird would not have create a FBBigDecimalField
         xsqlvar.sqlscale = -1;
+        field = new FBBigDecimalField(xsqlvar, fieldData, Types.NUMERIC);
         context.checking(new Expectations() {{
             atLeast(1).of(fieldData).getFieldData(); will(returnValue(xsqlvar.encodeShort((short)10)));
         }});
-        FBBigDecimalField field = new FBBigDecimalField(xsqlvar, fieldData, Types.NUMERIC);
         
         assertTrue("Expected true from getBoolean", field.getBoolean());
     }
     
     @Test
     public void getBooleanFalse() throws SQLException {
-        final XSQLVAR xsqlvar = createShortXSQLVAR();
+        xsqlvar = createShortXSQLVAR();
         // NOTE: We could use 0 for the test, but in that case Jaybird would not have create a FBBigDecimalField
         xsqlvar.sqlscale = -1;
+        field = new FBBigDecimalField(xsqlvar, fieldData, Types.NUMERIC);
         context.checking(new Expectations() {{
             // NOTE Any value other than 10 would do
             atLeast(1).of(fieldData).getFieldData(); will(returnValue(xsqlvar.encodeShort((short)0)));
         }});
-        FBBigDecimalField field = new FBBigDecimalField(xsqlvar, fieldData, Types.NUMERIC);
         
         assertFalse("Expected false from getBoolean", field.getBoolean());
     }
     
     @Test
+    @Ignore
+    @Override
+    public void setBoolean() throws SQLException {
+        // Ignore in favor of more specific tests
+    }
+    
+    @Test
     public void setBooleanTrue() throws SQLException {
-        final XSQLVAR xsqlvar = createShortXSQLVAR();
+        xsqlvar = createShortXSQLVAR();
         // NOTE: We could use 0 for the test, but in that case Jaybird would not have create a FBBigDecimalField
         xsqlvar.sqlscale = -1;
+        field = new FBBigDecimalField(xsqlvar, fieldData, Types.NUMERIC);
         context.checking(new Expectations() {{
             oneOf(fieldData).setFieldData(xsqlvar.encodeShort((short)10));
         }});
-        FBBigDecimalField field = new FBBigDecimalField(xsqlvar, fieldData, Types.NUMERIC);
         
         field.setBoolean(true);
     }
     
     @Test
     public void setBooleanFalse() throws SQLException {
-        final XSQLVAR xsqlvar = createShortXSQLVAR();
+        xsqlvar = createShortXSQLVAR();
         // NOTE: We could use 0 for the test, but in that case Jaybird would not have create a FBBigDecimalField
         xsqlvar.sqlscale = -1;
+        field = new FBBigDecimalField(xsqlvar, fieldData, Types.NUMERIC);
         context.checking(new Expectations() {{
             oneOf(fieldData).setFieldData(xsqlvar.encodeShort((short)0));
         }});
-        FBBigDecimalField field = new FBBigDecimalField(xsqlvar, fieldData, Types.NUMERIC);
         
         field.setBoolean(false);
     }
     
     @Test
     public void getByteNull() throws SQLException {
-        final XSQLVAR xsqlvar = createIntegerXSQLVAR();
+        xsqlvar = createIntegerXSQLVAR();
         xsqlvar.sqlscale = -6;
+        field = new FBBigDecimalField(xsqlvar, fieldData, Types.NUMERIC);
         toReturnNullExpectations();
-        FBBigDecimalField field = new FBBigDecimalField(xsqlvar, fieldData, Types.NUMERIC);
         
         assertEquals("Expected getByte() to return 0 for NULL value", 0, field.getByte());
     }
     
     @Test
-    public void getByte() throws SQLException {
-        final XSQLVAR xsqlvar = createIntegerXSQLVAR();
+    @Override
+    public void getByteNonNull() throws SQLException {
+        xsqlvar = createIntegerXSQLVAR();
         xsqlvar.sqlscale = -2;
+        field = new FBBigDecimalField(xsqlvar, fieldData, Types.NUMERIC);
         context.checking(new Expectations() {{
             atLeast(1).of(fieldData).getFieldData(); will(returnValue(xsqlvar.encodeInt(Byte.MIN_VALUE * 100)));
         }});
-        FBBigDecimalField field = new FBBigDecimalField(xsqlvar, fieldData, Types.NUMERIC);
         
         assertEquals("Unexpected value for getByte()", Byte.MIN_VALUE, field.getByte());
     }
     
     @Test(expected = TypeConversionException.class)
     public void getByteTooHigh() throws SQLException {
-        final XSQLVAR xsqlvar = createIntegerXSQLVAR();
+        xsqlvar = createIntegerXSQLVAR();
         xsqlvar.sqlscale = -2;
+        field = new FBBigDecimalField(xsqlvar, fieldData, Types.NUMERIC);
         context.checking(new Expectations() {{
             atLeast(1).of(fieldData).getFieldData(); will(returnValue(xsqlvar.encodeInt((Byte.MAX_VALUE + 1)* 100)));
         }});
-        FBBigDecimalField field = new FBBigDecimalField(xsqlvar, fieldData, Types.NUMERIC);
         
         field.getByte();
     }
     
     @Test(expected = TypeConversionException.class)
     public void getByteTooLow() throws SQLException {
-        final XSQLVAR xsqlvar = createIntegerXSQLVAR();
+        xsqlvar = createIntegerXSQLVAR();
         xsqlvar.sqlscale = -2;
+        field = new FBBigDecimalField(xsqlvar, fieldData, Types.NUMERIC);
         context.checking(new Expectations() {{
             atLeast(1).of(fieldData).getFieldData(); will(returnValue(xsqlvar.encodeInt((Byte.MIN_VALUE - 1)* 100)));
         }});
-        FBBigDecimalField field = new FBBigDecimalField(xsqlvar, fieldData, Types.NUMERIC);
         
         field.getByte();
     }
     
     @Test
     public void setByte() throws SQLException {
-        final XSQLVAR xsqlvar = createLongXSQLVAR();
+        xsqlvar = createLongXSQLVAR();
         xsqlvar.sqlscale = -7;
+        field = new FBBigDecimalField(xsqlvar, fieldData, Types.NUMERIC);
         context.checking(new Expectations() {{
             oneOf(fieldData).setFieldData(xsqlvar.encodeLong(-340000000L));
         }});
-        FBBigDecimalField field = new FBBigDecimalField(xsqlvar, fieldData, Types.NUMERIC);
         
         field.setByte((byte) -34);
     }
     
     @Test
     public void getDoubleNull() throws SQLException {
-        final XSQLVAR xsqlvar = createIntegerXSQLVAR();
+        xsqlvar = createIntegerXSQLVAR();
         xsqlvar.sqlscale = -6;
+        field = new FBBigDecimalField(xsqlvar, fieldData, Types.NUMERIC);
         toReturnNullExpectations();
-        FBBigDecimalField field = new FBBigDecimalField(xsqlvar, fieldData, Types.NUMERIC);
         
         assertEquals("Expected getDouble() to return 0.0 for NULL value", 0.0, field.getDouble(), 0.0);
     }
     
     @Test
-    public void getDouble() throws SQLException {
-        final XSQLVAR xsqlvar = createLongXSQLVAR();
+    @Override
+    public void getDoubleNonNull() throws SQLException {
+        xsqlvar = createLongXSQLVAR();
         xsqlvar.sqlscale = -2;
+        field = new FBBigDecimalField(xsqlvar, fieldData, Types.NUMERIC);
         context.checking(new Expectations() {{
             atLeast(1).of(fieldData).getFieldData(); will(returnValue(xsqlvar.encodeLong(Long.MIN_VALUE)));
         }});
-        FBBigDecimalField field = new FBBigDecimalField(xsqlvar, fieldData, Types.NUMERIC);
         
         assertEquals("Unexpected value for getDouble()", Long.MIN_VALUE / 100.0, field.getDouble(), 0.0);
     }
     
     @Test
     public void setDouble() throws SQLException {
-        final XSQLVAR xsqlvar = createShortXSQLVAR();
+        xsqlvar = createShortXSQLVAR();
         xsqlvar.sqlscale = -1;
+        field = new FBBigDecimalField(xsqlvar, fieldData, Types.NUMERIC);
         context.checking(new Expectations() {{
             oneOf(fieldData).setFieldData(xsqlvar.encodeShort((short)4691));
         }});
-        FBBigDecimalField field = new FBBigDecimalField(xsqlvar, fieldData, Types.NUMERIC);
         
         field.setDouble(469.1234567);
     }
     
     @Test
     public void getFloatNull() throws SQLException {
-        final XSQLVAR xsqlvar = createIntegerXSQLVAR();
+        xsqlvar = createIntegerXSQLVAR();
         xsqlvar.sqlscale = -6;
+        field = new FBBigDecimalField(xsqlvar, fieldData, Types.NUMERIC);
         toReturnNullExpectations();
-        FBBigDecimalField field = new FBBigDecimalField(xsqlvar, fieldData, Types.NUMERIC);
         
         assertEquals("Expected getFloat() to return 0.0 for NULL value", 0.0, field.getFloat(), 0.0);
     }
     
     @Test
-    public void getFloat() throws SQLException {
-        final XSQLVAR xsqlvar = createLongXSQLVAR();
+    @Override
+    public void getFloatNonNull() throws SQLException {
+        xsqlvar = createLongXSQLVAR();
         xsqlvar.sqlscale = -2;
         context.checking(new Expectations() {{
             atLeast(1).of(fieldData).getFieldData(); will(returnValue(xsqlvar.encodeLong(Long.MAX_VALUE)));
         }});
-        FBBigDecimalField field = new FBBigDecimalField(xsqlvar, fieldData, Types.NUMERIC);
+        field = new FBBigDecimalField(xsqlvar, fieldData, Types.NUMERIC);
         
         assertEquals("Unexpected value for getFloat()", Long.MAX_VALUE / 100.0f, field.getFloat(), 0.0);
     }
     
     @Test
+    @Override
     public void setFloat() throws SQLException {
-        final XSQLVAR xsqlvar = createLongXSQLVAR();
+        xsqlvar = createLongXSQLVAR();
         xsqlvar.sqlscale = -5;
+        field = new FBBigDecimalField(xsqlvar, fieldData, Types.NUMERIC);
         context.checking(new Expectations() {{
             oneOf(fieldData).setFieldData(xsqlvar.encodeLong(46912344L));
         }});
-        FBBigDecimalField field = new FBBigDecimalField(xsqlvar, fieldData, Types.NUMERIC);
 
         field.setFloat(469.1234567f);
     }
     
     @Test
     public void getIntNull() throws SQLException {
-        final XSQLVAR xsqlvar = createIntegerXSQLVAR();
+        xsqlvar = createIntegerXSQLVAR();
         xsqlvar.sqlscale = -1;
+        field = new FBBigDecimalField(xsqlvar, fieldData, Types.NUMERIC);
         toReturnNullExpectations();
-        FBBigDecimalField field = new FBBigDecimalField(xsqlvar, fieldData, Types.NUMERIC);
         
         assertEquals("Expected getInt() to return 0 for NULL value", 0, field.getInt());
     }
     
     @Test
-    public void getInt() throws SQLException {
-        final XSQLVAR xsqlvar = createLongXSQLVAR();
+    @Override
+    public void getIntNonNull() throws SQLException {
+        xsqlvar = createLongXSQLVAR();
         xsqlvar.sqlscale = -6;
+        field = new FBBigDecimalField(xsqlvar, fieldData, Types.NUMERIC);
         context.checking(new Expectations() {{
             atLeast(1).of(fieldData).getFieldData(); will(returnValue(xsqlvar.encodeLong(987654321098765L)));
         }});
-        FBBigDecimalField field = new FBBigDecimalField(xsqlvar, fieldData, Types.NUMERIC);
         
         assertEquals("Unexpected value from getInt()", 987654321, field.getInt());
     }
     
     @Test(expected = TypeConversionException.class)
     public void getIntTooHigh() throws SQLException {
-        final XSQLVAR xsqlvar = createLongXSQLVAR();
+        xsqlvar = createLongXSQLVAR();
         xsqlvar.sqlscale = -2;
+        field = new FBBigDecimalField(xsqlvar, fieldData, Types.NUMERIC);
         context.checking(new Expectations() {{
             atLeast(1).of(fieldData).getFieldData(); will(returnValue(xsqlvar.encodeLong((Integer.MAX_VALUE + 1L) * 100)));
         }});
-        FBBigDecimalField field = new FBBigDecimalField(xsqlvar, fieldData, Types.NUMERIC);
         
         field.getInt();
     }
     
     @Test(expected = TypeConversionException.class)
     public void getIntTooLow() throws SQLException {
-        final XSQLVAR xsqlvar = createLongXSQLVAR();
+        xsqlvar = createLongXSQLVAR();
         xsqlvar.sqlscale = -2;
+        field = new FBBigDecimalField(xsqlvar, fieldData, Types.NUMERIC);
         context.checking(new Expectations() {{
             atLeast(1).of(fieldData).getFieldData(); will(returnValue(xsqlvar.encodeLong((Integer.MIN_VALUE - 1L) * 100)));
         }});
-        FBBigDecimalField field = new FBBigDecimalField(xsqlvar, fieldData, Types.NUMERIC);
         
         field.getInt();
     }
     
     @Test
+    @Override
     public void setInteger() throws SQLException {
-        final XSQLVAR xsqlvar = createIntegerXSQLVAR();
+        xsqlvar = createIntegerXSQLVAR();
         xsqlvar.sqlscale = -1;
+        field = new FBBigDecimalField(xsqlvar, fieldData, Types.NUMERIC);
         context.checking(new Expectations() {{
             oneOf(fieldData).setFieldData(xsqlvar.encodeInt(1234560));
         }});
-        FBBigDecimalField field = new FBBigDecimalField(xsqlvar, fieldData, Types.NUMERIC);
         
         field.setInteger(123456);
     }
     
     @Test
     public void getLongNull() throws SQLException {
-        final XSQLVAR xsqlvar = createIntegerXSQLVAR();
+        xsqlvar = createIntegerXSQLVAR();
         xsqlvar.sqlscale = -1;
+        field = new FBBigDecimalField(xsqlvar, fieldData, Types.NUMERIC);
         toReturnNullExpectations();
-        FBBigDecimalField field = new FBBigDecimalField(xsqlvar, fieldData, Types.NUMERIC);
         
         assertEquals("Expected getLong() to return 0 for NULL value", 0, field.getLong());
     }
     
     @Test
-    public void getLong() throws SQLException {
-        final XSQLVAR xsqlvar = createLongXSQLVAR();
+    @Override
+    public void getLongNonNull() throws SQLException {
+        xsqlvar = createLongXSQLVAR();
         xsqlvar.sqlscale = -2;
+        field = new FBBigDecimalField(xsqlvar, fieldData, Types.NUMERIC);
         context.checking(new Expectations() {{
             atLeast(1).of(fieldData).getFieldData(); will(returnValue(xsqlvar.encodeLong(Long.MAX_VALUE)));
         }});
-        FBBigDecimalField field = new FBBigDecimalField(xsqlvar, fieldData, Types.NUMERIC);
         
         assertEquals("Unexpected value from getLong()", Long.MAX_VALUE / 100, field.getLong());
     }
     
     @Test
+    @Override
     public void setLong() throws SQLException {
-        final XSQLVAR xsqlvar = createShortXSQLVAR();
+        xsqlvar = createShortXSQLVAR();
         xsqlvar.sqlscale = -2;
+        field = new FBBigDecimalField(xsqlvar, fieldData, Types.NUMERIC);
         context.checking(new Expectations() {{
             oneOf(fieldData).setFieldData(xsqlvar.encodeShort((short)3500));
         }});
-        FBBigDecimalField field = new FBBigDecimalField(xsqlvar, fieldData, Types.NUMERIC);
         
         field.setLong(35);
     }
     
     @Test
     public void setNull() throws SQLException {
-        final XSQLVAR xsqlvar = createIntegerXSQLVAR();
+        xsqlvar = createIntegerXSQLVAR();
         xsqlvar.sqlscale = -1;
+        field = new FBBigDecimalField(xsqlvar, fieldData, Types.NUMERIC);
         setNullExpectations();
-        FBBigDecimalField field = new FBBigDecimalField(xsqlvar, fieldData, Types.NUMERIC);
         
         field.setNull();
     }
     
     @Test
+    @Ignore
+    @Override
+    public void getObjectNonNull() throws SQLException {
+        // TODO : implement
+    }
+    
+    @Test
+    @Ignore
+    @Override
+    public void setObjectNonNull() throws SQLException {
+        // TODO : implement
+    }
+    
+    @Test
     public void getShortNull() throws SQLException {
-        final XSQLVAR xsqlvar = createLongXSQLVAR();
+        xsqlvar = createLongXSQLVAR();
         xsqlvar.sqlscale = -1;
+        field = new FBBigDecimalField(xsqlvar, fieldData, Types.NUMERIC);
         toReturnNullExpectations();
-        FBBigDecimalField field = new FBBigDecimalField(xsqlvar, fieldData, Types.NUMERIC);
         
         assertEquals("Expected getShort() to return 0 for NULL value", 0, field.getShort());
     }
     
     @Test
-    public void getShort() throws SQLException {
-        final XSQLVAR xsqlvar = createIntegerXSQLVAR();
+    @Override
+    public void getShortNonNull() throws SQLException {
+        xsqlvar = createIntegerXSQLVAR();
         xsqlvar.sqlscale = -4;
+        field = new FBBigDecimalField(xsqlvar, fieldData, Types.NUMERIC);
         context.checking(new Expectations() {{
             atLeast(1).of(fieldData).getFieldData(); will(returnValue(xsqlvar.encodeInt(123456789)));
         }});
-        FBBigDecimalField field = new FBBigDecimalField(xsqlvar, fieldData, Types.NUMERIC);
         
         assertEquals("Unexpected value from getShort()", 12345, field.getShort());
     }
     
     @Test(expected = TypeConversionException.class)
     public void getShortTooHigh() throws SQLException {
-        final XSQLVAR xsqlvar = createIntegerXSQLVAR();
+        xsqlvar = createIntegerXSQLVAR();
         xsqlvar.sqlscale = -1;
+        field = new FBBigDecimalField(xsqlvar, fieldData, Types.NUMERIC);
         context.checking(new Expectations() {{
             atLeast(1).of(fieldData).getFieldData(); will(returnValue(xsqlvar.encodeInt((Short.MAX_VALUE + 1) * 100)));
         }});
-        FBBigDecimalField field = new FBBigDecimalField(xsqlvar, fieldData, Types.NUMERIC);
         
         field.getShort();
     }
     
     @Test(expected = TypeConversionException.class)
     public void getShortTooLow() throws SQLException {
-        final XSQLVAR xsqlvar = createIntegerXSQLVAR();
+        xsqlvar = createIntegerXSQLVAR();
         xsqlvar.sqlscale = -1;
+        field = new FBBigDecimalField(xsqlvar, fieldData, Types.NUMERIC);
         context.checking(new Expectations() {{
             atLeast(1).of(fieldData).getFieldData(); will(returnValue(xsqlvar.encodeInt((Short.MIN_VALUE - 1) * 100)));
         }});
-        FBBigDecimalField field = new FBBigDecimalField(xsqlvar, fieldData, Types.NUMERIC);
         
         field.getShort();
     }
     
     @Test
+    @Override
     public void setShort() throws SQLException {
-        final XSQLVAR xsqlvar = createLongXSQLVAR();
+        xsqlvar = createLongXSQLVAR();
         xsqlvar.sqlscale = -3;
+        field = new FBBigDecimalField(xsqlvar, fieldData, Types.NUMERIC);
         context.checking(new Expectations() {{
             oneOf(fieldData).setFieldData(xsqlvar.encodeLong(Short.MIN_VALUE * 1000L));
         }});
-        FBBigDecimalField field = new FBBigDecimalField(xsqlvar, fieldData, Types.NUMERIC);
         
         field.setShort(Short.MIN_VALUE);
     }
     
     @Test
     public void getStringNull() throws SQLException {
-        final XSQLVAR xsqlvar = createLongXSQLVAR();
+        xsqlvar = createLongXSQLVAR();
         xsqlvar.sqlscale = -1;
+        field = new FBBigDecimalField(xsqlvar, fieldData, Types.NUMERIC);
         toReturnNullExpectations();
-        FBBigDecimalField field = new FBBigDecimalField(xsqlvar, fieldData, Types.NUMERIC);
         
         assertNull(field.getString());
     }
     
     @Test
-    public void getString() throws SQLException {
-        final XSQLVAR xsqlvar = createLongXSQLVAR();
+    @Override
+    public void getStringNonNull() throws SQLException {
+        xsqlvar = createLongXSQLVAR();
         xsqlvar.sqlscale = -2;
+        field = new FBBigDecimalField(xsqlvar, fieldData, Types.NUMERIC);
         context.checking(new Expectations() {{
             atLeast(1).of(fieldData).getFieldData(); will(returnValue(xsqlvar.encodeLong(456789123)));
         }});
-        FBBigDecimalField field = new FBBigDecimalField(xsqlvar, fieldData, Types.NUMERIC);
         
         assertEquals("Unexpected value from getString()", "4567891.23", field.getString());
     }
     
     @Test
-    public void setString() throws SQLException {
-        final XSQLVAR xsqlvar = createIntegerXSQLVAR();
+    @Override
+    public void setStringNonNull() throws SQLException {
+        xsqlvar = createIntegerXSQLVAR();
         xsqlvar.sqlscale = -1;
+        field = new FBBigDecimalField(xsqlvar, fieldData, Types.NUMERIC);
         context.checking(new Expectations() {{
             oneOf(fieldData).setFieldData(xsqlvar.encodeInt(789123));
         }});
-        FBBigDecimalField field = new FBBigDecimalField(xsqlvar, fieldData, Types.NUMERIC);
         
         field.setString("78912.3456");
     }
     
     @Test
     public void setStringNull() throws SQLException {
-        final XSQLVAR xsqlvar = createIntegerXSQLVAR();
+        xsqlvar = createIntegerXSQLVAR();
         xsqlvar.sqlscale = -1;
+        field = new FBBigDecimalField(xsqlvar, fieldData, Types.NUMERIC);
         setNullExpectations();
-        FBBigDecimalField field = new FBBigDecimalField(xsqlvar, fieldData, Types.NUMERIC);
         
         field.setString(null);
     }
@@ -619,28 +679,10 @@ public class TestFBBigDecimalField {
     
     @Test(expected = SQLException.class)
     public void constructWithUnsupportedSqlType() throws SQLException {
-        final XSQLVAR xsqlvar = new XSQLVAR();
+        xsqlvar = new XSQLVAR();
         xsqlvar.sqltype = ISCConstants.SQL_VARYING;
         
         new FBBigDecimalField(xsqlvar, fieldData, Types.VARCHAR);
-    }
-    
-    /**
-     * Expectations to return null from fieldData.
-     */
-    private void toReturnNullExpectations() {
-        context.checking(new Expectations() {{
-            atLeast(1).of(fieldData).getFieldData(); will(returnValue(null));
-        }});
-    }
-    
-    /**
-     * Expectations for setting field to null
-     */
-    private void setNullExpectations() {
-        context.checking(new Expectations() {{
-            one(fieldData).setFieldData(null);
-        }});
     }
     
     private static XSQLVAR createShortXSQLVAR() {
@@ -659,5 +701,10 @@ public class TestFBBigDecimalField {
         XSQLVAR xsqlvar = new XSQLVAR();
         xsqlvar.sqltype = ISCConstants.SQL_INT64;
         return xsqlvar;
+    }
+
+    @Override
+    protected BigDecimal getNonNullObject() {
+        return BigDecimal.ONE;
     }
 }
