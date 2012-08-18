@@ -148,6 +148,7 @@
     <property name="junit.haltonerror"  value="true"/>
     <property name="junit.haltonfailure"  value="true"/>
     <property name="junit.fork" value="true"/>
+    <property name="junit.forkmode" value="perTest"/>
     <property name="junit.timeout" value="60000"/>
     <!--property name="junit.jvm" value="true"/-->
 
