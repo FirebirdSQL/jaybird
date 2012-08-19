@@ -38,7 +38,7 @@ public class TestDataSourceFactory extends TestCase {
     
     private static final String ROLE_NAME = "someRoleName";
     private static final int LOGIN_TIMEOUT = 513;
-    private static final String CHAR_SET = "WIN1252";
+    private static final String ENCODING = "WIN1252";
     private static final String PASSWORD = "somePassword";
     private static final String USER = "someUser";
     private static final String DATABASE_NAME = "/some/path/to/database.fdb";
@@ -62,7 +62,7 @@ public class TestDataSourceFactory extends TestCase {
         instance.setDatabaseName(DATABASE_NAME);
         instance.setUser(USER);
         instance.setPassword(PASSWORD);
-        instance.setCharSet(CHAR_SET);
+        instance.setEncoding(ENCODING);
         instance.setLoginTimeout(LOGIN_TIMEOUT);
         instance.setRoleName(ROLE_NAME);
     }
@@ -81,7 +81,7 @@ public class TestDataSourceFactory extends TestCase {
         assertEquals(DATABASE_NAME, instance.getDatabaseName());
         assertEquals(USER, instance.getUser());
         assertEquals(PASSWORD, instance.getPassword());
-        assertEquals(CHAR_SET, instance.getCharSet());
+        assertEquals(ENCODING, instance.getEncoding());
         assertEquals(LOGIN_TIMEOUT, instance.getLoginTimeout());
         assertEquals(ROLE_NAME, instance.getRoleName());
     }
