@@ -87,7 +87,7 @@ void JXSqlda::Initilize( JNIEnv* javaEnvironment )
  * xsqlind field is initilized.
  */
 JXSqlda::JXSqlda( JNIEnv* javaEnvironment, jobject handle, bool isFetching ) : mJavaObjectHandle(handle), mXsqlda(NULL)
-	{
+{
 	if( handle == NULL )
 		return; // Initializer list is all we need.
 
@@ -101,7 +101,7 @@ JXSqlda::JXSqlda( JNIEnv* javaEnvironment, jobject handle, bool isFetching ) : m
 	JObjectArray objectArray(sXSQLDAFieldBinding_sqlvar.GetObjectArray(javaEnvironment, handle));
 
 	for( int i = 0; i < mXsqlda->sqln; i++ )
-		{
+	{
 		jobject currentJavaXsqlvar = objectArray.Get(javaEnvironment, i);
 
 		XSQLVAR& currentXsqlvar = mXsqlda->sqlvar[i];
@@ -116,41 +116,52 @@ JXSqlda::JXSqlda( JNIEnv* javaEnvironment, jobject handle, bool isFetching ) : m
 
 		const bool isVarying = ( (currentXsqlvar.sqltype & ~1) == SQL_VARYING );
 		const int dataSizeToAllocate = isVarying ? currentXsqlvar.sqllen + 3 :  currentXsqlvar.sqllen + 1;
+		const bool dataIsNull = byteArray.Read() == NULL;
 		
-		currentXsqlvar.sqldata = mAllocator.AllocateMemory(dataSizeToAllocate);
+		currentXsqlvar.sqldata = mAllocator.AllocateMemory(dataIsNull && isVarying ? 4 : dataSizeToAllocate);
 		if( isVarying )
+		{
+			if (dataIsNull) 
 			{
-			memset(currentXsqlvar.sqldata, 0, 2);
-			memset(currentXsqlvar.sqldata+2, ' ', currentXsqlvar.sqllen);
-			currentXsqlvar.sqldata[currentXsqlvar.sqllen+2] = '\0';
+				memset(currentXsqlvar.sqldata, 0, 4);
 			}
-		else if( ( (currentXsqlvar.sqltype & ~1) == SQL_TEXT ) )
+			else
 			{
+				memset(currentXsqlvar.sqldata, 0, 2);
+				memset(currentXsqlvar.sqldata+2, ' ', currentXsqlvar.sqllen);
+				currentXsqlvar.sqldata[currentXsqlvar.sqllen+2] = '\0';
+			}
+		}
+		else if( ( (currentXsqlvar.sqltype & ~1) == SQL_TEXT ) )
+		{
 			memset(currentXsqlvar.sqldata, ' ', currentXsqlvar.sqllen);
 			currentXsqlvar.sqldata[currentXsqlvar.sqllen] = '\0';
-			}
+		}
 		else
-			{
+		{
 			memset(currentXsqlvar.sqldata, 0, dataSizeToAllocate);
-			}
+		}
 
-		if(byteArray.Read() != NULL)
-			{
+		if(!dataIsNull)
+		{
 			if( isVarying )
-				{
-				*((short*)currentXsqlvar.sqldata) = (short)byteArray.Size();
-				memcpy( currentXsqlvar.sqldata + 2, byteArray.Read(), byteArray.Size());
-				}
-			else
-				{
-				memcpy( currentXsqlvar.sqldata, byteArray.Read(), byteArray.Size());
-				}
-			}
-		else
 			{
-			if( isFetching == false )
+				*((short*)currentXsqlvar.sqldata) = (short)byteArray.Size();
+				memcpy(currentXsqlvar.sqldata + 2, byteArray.Read(), byteArray.Size());
+			}
+			else
+			{
+				memcpy( currentXsqlvar.sqldata, byteArray.Read(), byteArray.Size());
+			}
+		}
+		else
+		{
+			if (isFetching == false)
+			{
+				currentXsqlvar.sqltype |= 1;
 				*((short*)currentXsqlvar.sqlind) = -1;
 			}
+		}
 		 
 		JString sqlname = sXSQLVARFieldBinding_sqlname.GetString( javaEnvironment, currentJavaXsqlvar);
 		JString relname = sXSQLVARFieldBinding_relname.GetString( javaEnvironment, currentJavaXsqlvar);
@@ -164,8 +175,8 @@ JXSqlda::JXSqlda( JNIEnv* javaEnvironment, jobject handle, bool isFetching ) : m
 		memcpy( currentXsqlvar.ownname,  ownname.AsCString(), currentXsqlvar.ownname_length );
 		currentXsqlvar.aliasname_length = (short)aliasname.GetLength();
 		memcpy( currentXsqlvar.aliasname,  aliasname.AsCString(), currentXsqlvar.aliasname_length );
-		}
 	}
+}
 
 /* 
  * Creates a JXSqlda object that does not represent an existing java XSQLDA
