@@ -920,6 +920,27 @@ public class TestFBPreparedStatement extends FBTestBase {
             closeQuietly(connection);
         }
     }
+    
+    /**
+     * Tests if a parameter with a CAST around it will correctly be NULL when set
+     * <p>
+     * See JDBC-271 for rationale of this test.
+     * </p>
+     *  
+     * @throws Exception
+     */
+    public void testNullParameterWithCast() throws Exception {
+        PreparedStatement stmt = con.prepareStatement("SELECT CAST(? AS VARCHAR(1)) FROM RDB$DATABASE");
+        try {
+            stmt.setObject(1, null);
+            ResultSet rs = stmt.executeQuery();
+            assertTrue("Expected a row", rs.next());
+            assertNull("Expected column to have NULL value", rs.getString(1));
+            rs.close();
+        } finally {
+            closeQuietly(stmt);
+        }
+    }
 
     // Other closeOnCompletion behavior considered to be sufficiently tested in TestFBStatement
 
