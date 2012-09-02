@@ -47,20 +47,8 @@
   		<pathelement path="${source.openoffice}"/>
   	</path>
   </target>
-
-  <target name="set-jca-src-14" unless="jdbc.40">
-  	<path id="source.java.jca">
-    	<pathelement path="${source.jca1.4}"/>
-    </path>
-  </target>
-
-  <target name="set-jca-src-16" if="jdbc.40">
-  	<path id="source.java.jca">
-    	<pathelement path="${source.jca1.6}"/>
-    </path>
-  </target>
   
-  <target name="set-driver-sources" depends="init,set-jdbc-30-src,set-jdbc-40-src,set-openoffice-src-14,set-jca-src-14,set-jca-src-16"/>
+  <target name="set-driver-sources" depends="init,set-jdbc-30-src,set-jdbc-40-src,set-openoffice-src-14"/>
 
   <target name="compile-driver" depends="set-driver-sources">
     <mkdir dir="${build.classes}"/>
@@ -69,7 +57,6 @@
 	<echo message="${ant.java.version}"/>
     <echo message="${toString:source.java.openoffice}"/>
     <echo message="${toString:source.java.additional}"/>
-    <echo message="${toString:source.java.jca}"/>
     
     <javac destdir="${build.classes}"
            target="${ant.java.version}"
@@ -84,7 +71,6 @@
       <src path="${source.java}"/>
       <src refid="source.java.openoffice"/>
       <src refid="source.java.additional"/>
-      <src refid="source.java.jca"/>
     </javac>
   </target>
 

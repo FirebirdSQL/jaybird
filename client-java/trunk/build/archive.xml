@@ -68,9 +68,6 @@
   		<fileset dir="${toString:source.java.additional}">
 	  		<include name="**/*.java"/>
 	  	</fileset>
-	  	<fileset dir="${toString:source.java.jca}">
-	  		<include name="**/*.java"/>
-	  	</fileset>
 		<fileset dir="${source.resources}">
 			<exclude name="log4j.properties"/>
 			<include name="**/*.properties"/>
