@@ -31,10 +31,6 @@
       <sysproperty key="test.gds_type" value="PURE_JAVA"/>
 
       <classpath>
-        <!-- pathelement location="${build.classes}"/ -->
-        <!-- pathelement location="${build.test}"/ -->
-        <!-- pathelement location="${build.resources}"/ -->
-
         <pathelement location="${build.lib}/${archive.name.simple}"/>
         <pathelement location="${build.lib}/${archive.name.test}"/>
         <pathelement location="${build.lib}/connector-api-1.5.jar"/>

@@ -1,7 +1,7 @@
   <!-- =================================================================== -->
   <!-- Compiles the source code                                            -->
   <!-- =================================================================== -->
-  <target name="compile" depends="compile-j2ee, compile-driver, compile-pool, compile-compatibility, compile-tests, compile-etc, compile-examples, compile-resources, compile-stylesheets"/>
+  <target name="compile" depends="compile-j2ee, compile-driver, compile-compatibility, compile-tests, compile-etc, compile-examples, compile-resources, compile-stylesheets"/>
 
   <!-- calling this unjar a compile is stretching the truth a bit-->
   <target name="compile-j2ee" depends="init">
@@ -40,18 +40,6 @@
       <pathelement path="${source.jdbc.40}"/>
     </path>
   </target>
-
-  <target name="set-pool1.5-src" if="jdk1.5">
-    <path id="source.java.pool">
-      <pathelement path="${source.pool1.5}"/>
-    </path>
-  </target>
-
-  <target name="set-pool1.6-src" if="jdbc.40">
-	<path id="source.java.pool">
-      <pathelement path="${source.pool1.6}"/>
-    </path>
-  </target>
   
   <target name="set-openoffice-src-14" unless="jdk1.3">
   	<echo message="OpenOffice support"/>
@@ -73,8 +61,6 @@
   </target>
   
   <target name="set-driver-sources" depends="init,set-jdbc-30-src,set-jdbc-40-src,set-openoffice-src-14,set-jca-src-14,set-jca-src-16"/>
-  
-  <target name="set-pool-sources" depends="init,set-pool1.5-src,set-pool1.6-src"/>
 
   <target name="compile-driver" depends="set-driver-sources">
     <mkdir dir="${build.classes}"/>
@@ -92,7 +78,7 @@
            deprecation="on"
            optimize="on"
            includes="org/**"
-           excludes="**/temp*,org/firebirdsql/pool/**"
+           excludes="**/temp*"
     >
       <classpath refid="javac.driver.classpath"/>
       <src path="${source.java}"/>
@@ -102,25 +88,7 @@
     </javac>
   </target>
 
-  <target name="compile-pool" depends="set-pool-sources,compile-driver">
-    <mkdir dir="${build.pool}"/>
-	<echo message="${toString:source.java.pool}"/>
-    <javac srcdir="${source.pool}"
-           destdir="${build.pool}"
-           target="${ant.java.version}"
-		   source="${ant.java.version}"
-           debug="on"
-           deprecation="on"
-           optimize="on"
-           includes="org/firebirdsql/pool/**"
-           excludes="**/temp*"
-    >
-      <classpath refid="javac.pool.classpath"/>
-      <src refid="source.java.pool"/>
-    </javac>
-  </target>
-  
-  <target name="compile-compatibility" depends="compile-pool">
+  <target name="compile-compatibility" depends="compile-driver">
   	<mkdir dir="${build.compatibility}"/>
     <javac srcdir="${source.compatibility}"
            destdir="${build.compatibility}"
@@ -145,7 +113,7 @@
     </path>
   </target>
 
-  <target name="compile-tests" depends="compile-pool,set-jdbc-30-test,set-jdbc-40-test">
+  <target name="compile-tests" depends="compile-driver,set-jdbc-30-test,set-jdbc-40-test">
     <mkdir dir="${build.test}"/>
     <javac 
            destdir="${build.test}"

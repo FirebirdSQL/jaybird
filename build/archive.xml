@@ -15,9 +15,6 @@
        <fileset dir="${build.classes}">
          <include name="org/firebirdsql/**"/>
        </fileset>
-       <fileset dir="${build.pool}">
-         <include name="org/firebirdsql/**"/>
-       </fileset>
        <fileset dir="${build.resources}">
          <exclude name="log4j.properties"/>
          <include name="**/*.properties"/>
@@ -29,9 +26,6 @@
 
     <jar jarfile="${build.lib}/${archive.name.full}" manifest="${build.etc}/default.mf">
        <fileset dir="${build.classes}">
-         <include name="org/firebirdsql/**"/>
-       </fileset>
-       <fileset dir="${build.pool}">
          <include name="org/firebirdsql/**"/>
        </fileset>
        <fileset dir="${build.compatibility}">
@@ -62,22 +56,16 @@
     </jar>
   </target>
   
-  <target name="jar-sources" depends="set-driver-sources,set-pool-sources">
+  <target name="jar-sources" depends="set-driver-sources">
   	<mkdir dir="${build.lib}"/>
   	<jar jarfile="${build.lib}/${archive.name.sources}" update="true">
       	<fileset dir="${source.java}">
-      		<include name="**/*.java"/>
-      	</fileset>
-      	<fileset dir="${source.pool}">
       		<include name="**/*.java"/>
       	</fileset>
       	<fileset dir="${toString:source.java.openoffice}">
 	  		<include name="**/*.java"/>
 	  	</fileset>
   		<fileset dir="${toString:source.java.additional}">
-	  		<include name="**/*.java"/>
-	  	</fileset>
-	  	<fileset dir="${toString:source.java.pool}">
 	  		<include name="**/*.java"/>
 	  	</fileset>
 	  	<fileset dir="${toString:source.java.jca}">
