@@ -197,7 +197,7 @@ public class FBConnectionProperties implements FirebirdConnectionProperties, Ser
         if (charSet == null)
             return;
 
-        setStringProperty(LOCAL_ENCODING_PROPERTY, charSet);
+        setStringProperty(LOCAL_ENCODING_PROPERTY, EncodingFactory.getJavaEncodingForAlias(charSet));
 
         String encoding = getStringProperty(LOCAL_ENCODING_PROPERTY);
         if (encoding != null)
