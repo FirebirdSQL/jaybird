@@ -45,10 +45,6 @@ import org.firebirdsql.jdbc.FBSQLException;
 
 /**
  * Bare-bones implementation of {@link javax.sql.XADataSource}.
- * <p>
- * Use this class instead of the broken implementation of
- * {@link org.firebirdsql.pool.FBConnectionPoolDataSource}.
- * </p>
  * 
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @since 2.2

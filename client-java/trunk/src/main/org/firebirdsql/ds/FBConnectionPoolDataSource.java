@@ -38,10 +38,6 @@ import org.firebirdsql.jdbc.FBSQLException;
 /**
  * Bare-bones implementation of {@link javax.sql.ConnectionPoolDataSource}.
  * <p>
- * Use this class instead of the broken implementation of
- * {@link org.firebirdsql.pool.FBConnectionPoolDataSource}.
- * </p>
- * <p>
  * Please be aware that this is not a connectionpool. This class provides
  * PooledConnection objects for connection pool implementations (eg as provided
  * by a JEE application server). If you need a standalone connectionpool,

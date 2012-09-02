@@ -36,9 +36,6 @@ import org.firebirdsql.jca.InternalConnectionManager;
 import org.firebirdsql.jdbc.FBDriver;
 import org.firebirdsql.jdbc.FirebirdConnection;
 import org.firebirdsql.management.FBManager;
-import org.firebirdsql.pool.AbstractFBConnectionPoolDataSource;
-import org.firebirdsql.pool.FBPooledDataSourceFactory;
-import org.firebirdsql.pool.FBWrappingDataSource;
 
 /**
  * Helper class for test properties (database user, password, paths etc)
@@ -144,16 +141,6 @@ public final class FBTestProperties {
     // bound to the
     // appropriate GDS implementation.
 
-    public static AbstractFBConnectionPoolDataSource createFBConnectionPoolDataSource()
-            throws SQLException {
-        final AbstractFBConnectionPoolDataSource returnValue = FBPooledDataSourceFactory
-                .createFBConnectionPoolDataSource();
-
-        returnValue.setType(getGdsType().toString());
-
-        return returnValue;
-    }
-
     public static FBManagedConnectionFactory createFBManagedConnectionFactory() {
         return new FBManagedConnectionFactory(getGdsType());
     }
@@ -166,14 +153,6 @@ public final class FBTestProperties {
 
     public static FBManager createFBManager() {
         return new FBManager(getGdsType());
-    }
-
-    public static FBWrappingDataSource createFBWrappingDataSource() throws SQLException {
-        final FBWrappingDataSource returnValue = new FBWrappingDataSource();
-
-        returnValue.setType(getGdsType().toString());
-
-        return returnValue;
     }
 
     public static FirebirdConnection getConnectionViaDriverManager() throws SQLException {

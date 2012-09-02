@@ -30,8 +30,7 @@ import java.sql.SQLException;
 import org.firebirdsql.jdbc.FirebirdConnectionProperties;
 
 /**
- * Configuration for the {@link org.firebirdsql.pool.FBWrappingDataSource} and
- * {@link org.firebirdsql.pool.FBConnectionPoolDataSource} objects.
+ * Configuration for the DataSource objects.
  * 
  * Following properties are supported:
  * <ul>
