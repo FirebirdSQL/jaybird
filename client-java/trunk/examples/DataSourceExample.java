@@ -24,8 +24,8 @@ public final class DataSourceExample
   {
     // Create an Firebird data source manually;
     
-	org.firebirdsql.pool.FBSimpleDataSource dataSource = 
-        new org.firebirdsql.pool.FBSimpleDataSource();
+	org.firebirdsql.ds.FBSimpleDataSource dataSource = 
+        new org.firebirdsql.ds.FBSimpleDataSource();
 
     // Set the standard properties
     dataSource.setDatabase ("localhost/3050:c:/database/test_charset.fdb");

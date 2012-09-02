@@ -17,7 +17,7 @@
  * All rights reserved.
  */
  
-package org.firebirdsql.pool;
+package org.firebirdsql.ds;
 
 import org.firebirdsql.ds.RootCommonDataSource;
 import org.firebirdsql.gds.DatabaseParameterBuffer;
@@ -45,11 +45,12 @@ import javax.naming.NamingException;
  * This is a simple implementation of {@link DataSource} interface. Connections
  * are physically opened in {@link DataSource#getConnection()} method and
  * physically closed in {@link Connection#close()} method.
+ * 
  * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
  * @author <a href="mailto:d_jencks@users.sourceforge.net">David Jencks</a>
  * @version 1.0
  */
-public final class FBSimpleDataSource extends RootCommonDataSource implements DataSource, Serializable, Referenceable, FirebirdConnectionProperties {
+public class FBSimpleDataSource extends RootCommonDataSource implements DataSource, Serializable, Referenceable, FirebirdConnectionProperties {
     
     private static final long serialVersionUID = 3156578540634970427L;
     
