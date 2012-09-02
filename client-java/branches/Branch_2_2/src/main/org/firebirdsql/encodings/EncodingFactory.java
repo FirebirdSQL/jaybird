@@ -16,15 +16,16 @@
  *
  * All rights reserved.
  */
-
 package org.firebirdsql.encodings;
 
 import java.io.*;
+import java.nio.charset.Charset;
 import java.sql.SQLException;
 import java.util.*;
+import java.util.Map.Entry;
 
 public class EncodingFactory {
-    
+   
     private static final int[][] CHARSET_MAXIMUM_SIZE = new int[][] {
         { 0, 1}   // NONE
       , { 1, 1}   // OCTETS
@@ -74,17 +75,18 @@ public class EncodingFactory {
       , {63, 1}   // KOI8R
       , {64, 1}   // KOI8U
       , {65, 1}   // WIN1258
-  };
+    };
+    
     /**
      * Default mapping table, provides an "identity" mapping.
      */
     public static final char[] DEFAULT_MAPPING = new char[256 * 256];
 
-    static String defaultEncoding = null;
+    static final String defaultEncoding;
 
-    private static boolean encodingSizesLoaded = false;
+    private static volatile boolean encodingSizesLoaded = false;
     
-    private static boolean encodingsLoaded = false;
+    private static volatile boolean encodingsLoaded = false;
     
     public static final String ISC_ENCODING_SIZE_RESOURCE = 
         "isc_encoding_size.properties";
@@ -92,11 +94,13 @@ public class EncodingFactory {
     public static final String ISC_ENCODINGS_RESOURCE =
         "isc_encodings.properties";
 
-    private static final HashMap iscEncodings = new HashMap();
+    private static final Map<String, String> iscEncodings = new HashMap<String, String>();
         
-    private static final HashMap iscEncodingSizes = new HashMap();
+    private static final Map<String, Byte> iscEncodingSizes = new HashMap<String, Byte>();
     
-    private static final HashMap javaEncodings = new HashMap();
+    private static final Map<String, String> javaEncodings = new HashMap<String, String>();
+    
+    private static final Map<String, String> javaAliases = new HashMap<String, String>();
 
     private static final Map translations = Collections.synchronizedMap(new HashMap());
     static {
@@ -104,6 +108,7 @@ public class EncodingFactory {
             DEFAULT_MAPPING[i] = (char)i;
         }
     }
+    
     static {
         InputStreamReader reader = new InputStreamReader(new ByteArrayInputStream(new byte[2])); 
         defaultEncoding = reader.getEncoding();
@@ -115,8 +120,14 @@ public class EncodingFactory {
     }
     
     public static Encoding createEncoding(String encoding) {
-        if (encoding.equals("NONE"))
+        if (encoding.equals("NONE")) {
             encoding = defaultEncoding;
+        } else {
+            String tempEncoding = javaAliases.get(encoding);
+            if (tempEncoding != null) {
+                encoding = tempEncoding;
+            }
+        }
         
         if (encoding.equals("Cp1250"))
             return new Encoding_Cp1250();
@@ -213,8 +224,14 @@ public class EncodingFactory {
     }
 
     public static Encoding getEncoding(String encoding, char[] charMapping){
-        if (encoding == null || encoding.equals("NONE"))
+        if (encoding == null || encoding.equals("NONE")) {
             encoding = defaultEncoding;
+        } else {
+            String tempEncoding = javaAliases.get(encoding);
+            if (tempEncoding != null) {
+                encoding = tempEncoding;
+            }
+        }
         
         if (encoding.equals("Cp1250"))
             return new Encoding_Cp1250(charMapping);
@@ -287,7 +304,6 @@ public class EncodingFactory {
     }
     
     public static Encoding getEncoding(String encoding, String mappingPath) throws SQLException {
-        
         if (mappingPath == null)
             return getEncoding(encoding);
         
@@ -304,13 +320,13 @@ public class EncodingFactory {
      * found.
      */
     public static String getIscEncoding(String javaEncoding) {
-        if ("UTF8".equals(javaEncoding))
-            javaEncoding = "UTF-8";
-        
+        if (javaEncoding == null) {
+            return null;
+        }
         if (!encodingsLoaded)
             loadEncodings();
 
-        return (String)javaEncodings.get(javaEncoding);
+        return javaEncodings.get(javaEncoding.toLowerCase());
     }
     
     /**
@@ -321,10 +337,13 @@ public class EncodingFactory {
      * not found.
      */
     public static int getIscEncodingSize(String iscEncoding) {
+        if (iscEncoding == null) {
+            return 1;
+        }
         if (!encodingSizesLoaded)
             loadEncodingSizes();
-            
-        Byte result = (Byte)iscEncodingSizes.get(iscEncoding);
+        
+        Byte result = iscEncodingSizes.get(iscEncoding.toLowerCase());
         if (result == null)
             return 1;
         else
@@ -338,6 +357,9 @@ public class EncodingFactory {
      * @return corresponding Java encoding or <code>null</code> if none found.
      */
     public static String getJavaEncoding(String iscEncoding) {
+        if (iscEncoding == null) {
+            return null;
+        }
         if (!encodingsLoaded)
             loadEncodings();
 
@@ -345,8 +367,34 @@ public class EncodingFactory {
         // very important for performance
         // if javaEncoding is the default one, set to null
         //
-        String javaEncoding = (String)iscEncodings.get(iscEncoding);
-        String defaultEncoding = System.getProperty("file.encoding");
+        String javaEncoding = iscEncodings.get(iscEncoding.toLowerCase());
+        if (javaEncoding == null || javaEncoding.equalsIgnoreCase(defaultEncoding)) 
+            return null;
+        else 
+            return javaEncoding;
+    }
+    
+    /**
+     * Get Java language encoding for a given Java encoding alias.
+     * <p>
+     * Ensures that naming is consistent even if a different alias was used.
+     * </p>
+     * 
+     * @param javaAlias Java alias for the encoding
+     * @return
+     */
+    public static String getJavaEncodingForAlias(String javaAlias) {
+        if (javaAlias == null) {
+            return null;
+        }
+        if (!encodingsLoaded)
+            loadEncodings();
+        
+        // 
+        // very important for performance
+        // if javaEncoding is the default one, set to null
+        //
+        String javaEncoding = javaAliases.get(javaAlias.toLowerCase());
         if (javaEncoding == null || javaEncoding.equalsIgnoreCase(defaultEncoding)) 
             return null;
         else 
@@ -372,7 +420,6 @@ public class EncodingFactory {
      * mapping using the classloader that loaded this class.
      */
     private synchronized static void loadEncodings() {
-        
         if (encodingsLoaded)
             return;
         
@@ -385,12 +432,10 @@ public class EncodingFactory {
         } 
 
         // fill the direct and inversed mappings
-        iscEncodings.putAll(props);
-
-        Iterator iterator = props.entrySet().iterator();
-        while(iterator.hasNext()) {
-            Map.Entry entry = (Map.Entry)iterator.next();
-            String iscEncoding = (String)entry.getKey();
+        for (Entry<Object, Object> entry : props.entrySet()) {
+            String iscEncoding = (String) entry.getKey();
+            String javaEncoding = (String) entry.getValue();
+            iscEncodings.put(iscEncoding.toLowerCase(), javaEncoding);
             
             // special handling for UTF8 and UNICODE_FSS encodings
             // since UTF8 is an alias for UNICODE_FSS in Firebird 1.x
@@ -398,8 +443,18 @@ public class EncodingFactory {
             if ("UNICODE_FSS".equals(iscEncoding))
                 continue;
             
-            String javaEncoding = (String)entry.getValue();
-            javaEncodings.put(javaEncoding, iscEncoding);
+            Charset javaCharset = Charset.forName(javaEncoding);
+            // TODO: Remove iscEncoding if javaCharset is null?
+            // TODO: Replace mapping for iscEncoding to javaEncoding with canonical name?
+            
+            String canonicalNameLowerCase = javaCharset.name().toLowerCase();
+            javaEncodings.put(canonicalNameLowerCase, iscEncoding);
+            javaAliases.put(canonicalNameLowerCase, javaEncoding);
+            for (String alias : javaCharset.aliases()) {
+                String lowerCaseAlias = alias.toLowerCase();
+                javaEncodings.put(lowerCaseAlias, iscEncoding);
+                javaAliases.put(lowerCaseAlias, javaEncoding);
+            }
         }
 
         encodingsLoaded = true;
@@ -427,7 +482,8 @@ public class EncodingFactory {
             Map.Entry entry = (Map.Entry)iterator.next();
             String iscEncoding = (String)entry.getKey();
             String size = (String)entry.getValue();
-            iscEncodingSizes.put(iscEncoding, new Byte(size));
+            byte byteSize = Byte.parseByte(size);
+            iscEncodingSizes.put(iscEncoding.toLowerCase(), Byte.valueOf(byteSize));
         }
 
         encodingSizesLoaded = true;
