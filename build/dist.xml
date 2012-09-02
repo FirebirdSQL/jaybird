@@ -17,7 +17,6 @@
       </sourcepath>
       <sourcepath refid="source.java.openoffice"/>
       <sourcepath refid="source.java.additional"/>
-      <sourcepath refid="source.java.jca"/>
     </javadoc>
   </target>
 
