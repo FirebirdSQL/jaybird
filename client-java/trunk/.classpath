@@ -1,13 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <classpath>
 	<classpathentry kind="src" path="examples"/>
-	<classpathentry kind="src" path="src/pool_jdk1_6"/>
 	<classpathentry kind="src" path="src/jdbc_40"/>
 	<classpathentry kind="src" path="src/jca_jdk1_6"/>
 	<classpathentry kind="src" path="src/messages"/>
 	<classpathentry kind="src" path="src/resources"/>
 	<classpathentry kind="src" path="src/main"/>
-	<classpathentry kind="src" path="src/pool"/>
 	<classpathentry excluding="org/firebirdsql/hibernate/" kind="src" path="src/test"/>
 	<classpathentry kind="src" path="src/test_40"/>
 	<classpathentry kind="src" path="src/openoffice"/>
