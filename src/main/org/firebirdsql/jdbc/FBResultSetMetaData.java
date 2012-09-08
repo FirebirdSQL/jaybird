@@ -681,8 +681,6 @@ public class FBResultSetMetaData implements FirebirdResultSetMetaData {
 
     private int estimatePrecision(int columnIndex) {
         int sqltype = getXsqlvar(columnIndex).sqltype & ~1;
-        // TODO: Why unused?
-        int sqlscale = getXsqlvar(columnIndex).sqlscale;
 
         switch(sqltype) {
             case ISCConstants.SQL_SHORT : return 5;

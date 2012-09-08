@@ -53,21 +53,21 @@ public abstract class AbstractStatement implements FirebirdStatement, Synchroniz
     //The normally retrieved resultset. (no autocommit, not a cached rs).
     private FBResultSet currentRs;
 
-    private boolean closed;
+    private boolean closed = false;
     protected boolean completed = true;
     private boolean escapedProcessing = true;
     private volatile boolean closeOnCompletion = false;
 
-	 protected SQLWarning firstWarning = null;
+	protected SQLWarning firstWarning;
 
 	 // If the last executedStatement returns ResultSet or UpdateCount
 	protected boolean isResultSet;
     protected boolean hasMoreResults;
 
-    protected int maxRows = 0;	 
-    protected int fetchSize = 0;
-    private int maxFieldSize = 0;
-    private int queryTimeout = 0;
+    protected int maxRows;	 
+    protected int fetchSize;
+    private int maxFieldSize;
+    private int queryTimeout;
     private String cursorName;
 
     private int rsConcurrency;
