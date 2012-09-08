@@ -48,9 +48,9 @@ public abstract class AbstractResultSet implements FirebirdResultSet, Synchroniz
 
     public XSQLVAR[] xsqlvars;
 
-    public byte[][] row = null;
+    public byte[][] row;
 
-    private int maxRows = 0;
+    private int maxRows;
      
     private boolean wasNull = false;
     private boolean wasNullValid = false;
@@ -60,10 +60,10 @@ public abstract class AbstractResultSet implements FirebirdResultSet, Synchroniz
     //might be a bit of a kludge, or a useful feature.
     private boolean trimStrings;
 
-    private SQLWarning firstWarning = null;
+    private SQLWarning firstWarning;
      
-    private FBField[] fields = null;
-    private java.util.HashMap colNames = new java.util.HashMap();
+    private FBField[] fields;
+    private java.util.Map<String, Integer> colNames;
     
     private String cursorName;
     private FBObjectListener.ResultSetListener listener;
@@ -180,7 +180,7 @@ public abstract class AbstractResultSet implements FirebirdResultSet, Synchroniz
     
     private void prepareVars(boolean cached) throws SQLException {
         fields = new FBField[xsqlvars.length];
-        colNames = new HashMap(xsqlvars.length,1);
+        colNames = new HashMap<String, Integer>(xsqlvars.length, 1);
         for (int i=0; i<xsqlvars.length; i++){
             final int fieldPosition = i;
             
@@ -669,7 +669,7 @@ public abstract class AbstractResultSet implements FirebirdResultSet, Synchroniz
                     FBSQLException.SQL_STATE_INVALID_COLUMN);
         }
 
-        Integer fieldNum = (Integer) colNames.get(columnName);
+        Integer fieldNum = colNames.get(columnName);
         // If it is the first time the columnName is used
         if (fieldNum == null){
             int colNum = findColumn(columnName);
