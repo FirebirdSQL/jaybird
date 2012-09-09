@@ -34,13 +34,14 @@ import org.firebirdsql.gds.impl.GDSHelper;
  * Implementation of {@link java.sql.ResultSetMetaData} interface.
  *
  * @author <a href="mailto:d_jencks@users.sourceforge.net">David Jencks</a>
- * @version 1.0
+ * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  */
 public class FBResultSetMetaData implements FirebirdResultSetMetaData {
 
     private final XSQLVAR[] xsqlvars;
     private Map extendedInfo;
     private final GDSHelper connection;
+    private final ColumnStrategy columnStrategy;
 
     /**
      * Creates a new <code>FBResultSetMetaData</code> instance.
@@ -55,6 +56,13 @@ public class FBResultSetMetaData implements FirebirdResultSetMetaData {
     protected FBResultSetMetaData(XSQLVAR[] xsqlvars, GDSHelper connection) throws SQLException {
         this.xsqlvars = xsqlvars;
         this.connection = connection;
+        
+        // Decide how to handle column names and column labels
+        if (connection != null && connection.getDatabaseParameterBuffer().hasArgument(ISCConstants.isc_dpb_column_label_for_name)) {
+            columnStrategy = ColumnStrategy.COLUMN_LABEL_FOR_NAME;
+        } else {
+            columnStrategy = ColumnStrategy.DEFAULT;
+        }
     }
 
     private String getIscEncoding() {
@@ -73,7 +81,6 @@ public class FBResultSetMetaData implements FirebirdResultSetMetaData {
         return xsqlvars.length;
     }
 
-
     /**
      * Indicates whether the designated column is automatically numbered, thus read-only.
      *
@@ -83,7 +90,6 @@ public class FBResultSetMetaData implements FirebirdResultSetMetaData {
     public  boolean isAutoIncrement(int column) {
         return false;
     }
-
 
     /**
      * Indicates whether a column's case matters.
@@ -95,7 +101,6 @@ public class FBResultSetMetaData implements FirebirdResultSetMetaData {
     public  boolean isCaseSensitive(int column) throws  SQLException {
         return true;
     }
-
 
     /**
      * Indicates whether the designated column can be used in a where clause.
@@ -114,7 +119,6 @@ public class FBResultSetMetaData implements FirebirdResultSetMetaData {
         }
     }
 
-
     /**
      * Indicates whether the designated column is a cash value.
      *
@@ -125,7 +129,6 @@ public class FBResultSetMetaData implements FirebirdResultSetMetaData {
     public  boolean isCurrency(int column) throws  SQLException {
         return false;
     }
-
 
     /**
      * Indicates the nullability of values in the designated column.
@@ -143,7 +146,6 @@ public class FBResultSetMetaData implements FirebirdResultSetMetaData {
             return columnNoNulls;
         }
     }
-
 
     /**
      * The constant indicating that a
@@ -183,7 +185,6 @@ public class FBResultSetMetaData implements FirebirdResultSetMetaData {
                 return false;
         }
     }
-
 
     /**
      * Indicates the designated column's normal maximum width in characters.
@@ -234,9 +235,8 @@ public class FBResultSetMetaData implements FirebirdResultSetMetaData {
             default:
 
                return 0;
-            }
         }
-
+    }
 
     /**
      * Gets the designated column's suggested title for use in printouts and
@@ -246,12 +246,9 @@ public class FBResultSetMetaData implements FirebirdResultSetMetaData {
      * @return the suggested column title
      * @exception SQLException if a database access error occurs
      */
-    public  String getColumnLabel(int column) throws  SQLException {
-        return (getXsqlvar(column).aliasname == null) ?
-            (getXsqlvar(column).sqlname != null ? getXsqlvar(column).sqlname : "") : 
-                getXsqlvar(column).aliasname;
+    public String getColumnLabel(int column) throws  SQLException {
+        return columnStrategy.getColumnLabel(getXsqlvar(column));
     }
-
 
     /**
      * Get the designated column's name.
@@ -261,10 +258,7 @@ public class FBResultSetMetaData implements FirebirdResultSetMetaData {
      * @exception SQLException if a database access error occurs
      */
     public  String getColumnName(int column) throws  SQLException {
-        if (getXsqlvar(column).sqlname == null)
-            return getColumnLabel(column);
-        else
-            return getXsqlvar(column).sqlname;
+        return columnStrategy.getColumnName(getXsqlvar(column));
     }
 
     public String getSourceColumnName(int column) throws SQLException {
@@ -287,7 +281,6 @@ public class FBResultSetMetaData implements FirebirdResultSetMetaData {
         //not really implemented
         return "";
     }
-
 
     /**
      * Get the designated column's number of decimal digits.
@@ -338,9 +331,8 @@ public class FBResultSetMetaData implements FirebirdResultSetMetaData {
                 return 19;
             default:
                 return 0;
-            }
         }
-
+    }
 
     /**
      * Gets the designated column's number of digits to right of the decimal point.
@@ -352,7 +344,6 @@ public class FBResultSetMetaData implements FirebirdResultSetMetaData {
     public  int getScale(int column) throws  SQLException {
         return getXsqlvar(column).sqlscale * (-1);
     }
-
 
     /**
      * Gets the designated column's table name.
@@ -380,7 +371,6 @@ public class FBResultSetMetaData implements FirebirdResultSetMetaData {
         return result;
     }
 
-    
     /**
      * Gets the designated column's table's catalog name.
      *
@@ -391,7 +381,6 @@ public class FBResultSetMetaData implements FirebirdResultSetMetaData {
     public String getCatalogName(int column) throws  SQLException {
         return "";
     }
-
 
     /**
      * Retrieves the designated column's SQL type.
@@ -474,7 +463,7 @@ public class FBResultSetMetaData implements FirebirdResultSetMetaData {
      * a user-defined type, then a fully-qualified type name is returned.
      * @exception SQLException if a database access error occurs
      */
-    public  String getColumnTypeName(int column) throws  SQLException {    	
+    public  String getColumnTypeName(int column) throws  SQLException {
         // Must return the same value as DatabaseMetaData getColumns Type_Name
         int sqltype = getXsqlvar(column).sqltype & ~1;
         int sqlscale = getXsqlvar(column).sqlscale;
@@ -538,10 +527,7 @@ public class FBResultSetMetaData implements FirebirdResultSetMetaData {
             default:
                 return "NULL";
         }
-        
     }
-
-
 
     /**
      * Indicates whether the designated column is definitely not writable.
@@ -551,10 +537,9 @@ public class FBResultSetMetaData implements FirebirdResultSetMetaData {
      * @exception SQLException if a database access error occurs
      */
     public  boolean isReadOnly(int column) throws  SQLException {
-        //Need to consider priveleges!!
+        // TODO Need to consider privileges!!
         return false;
     }
-
 
     /**
      * Indicates whether it is possible for a write on the designated column to succeed.
@@ -564,7 +549,7 @@ public class FBResultSetMetaData implements FirebirdResultSetMetaData {
      * @exception SQLException if a database access error occurs
      */
     public  boolean isWritable(int column) throws  SQLException {
-        //Needs priveleges???
+        // TODO Needs privileges?
         return true;
     }
 
@@ -579,7 +564,6 @@ public class FBResultSetMetaData implements FirebirdResultSetMetaData {
         //Need to consider privileges!!!
         return true;
     }
-
 
     //--------------------------JDBC 2.0-----------------------------------
 
@@ -656,11 +640,9 @@ public class FBResultSetMetaData implements FirebirdResultSetMetaData {
         }
     }
 
-
     //private methods
 
     private XSQLVAR getXsqlvar(int columnIndex) {
-        //return stmt.getOutSqlda().sqlvar[columnIndex - 1];
         return xsqlvars[columnIndex - 1];
     }
 
@@ -690,7 +672,6 @@ public class FBResultSetMetaData implements FirebirdResultSetMetaData {
             default : return 0;
         }
     }
-
 
     private static final String GET_FIELD_INFO = "SELECT "
         + "  RF.RDB$RELATION_NAME as RELATION_NAME"
@@ -781,8 +762,6 @@ public class FBResultSetMetaData implements FirebirdResultSetMetaData {
             result = 23 * result + (fieldName != null ? fieldName.hashCode() : 0);
             return result;
         }
-
-
     }
 
     /**
@@ -795,14 +774,11 @@ public class FBResultSetMetaData implements FirebirdResultSetMetaData {
      * @throws SQLException if extended field information cannot be obtained.
      */
     private Map getExtendedFieldInfo(GDSHelper gdsHelper) throws SQLException {
-
         if (gdsHelper == null) return Collections.EMPTY_MAP;
 
-        //
         // Apparently there is a limit in the UNION
         // It is necesary to split in several querys
         // Although the problem reported with 93 UNION use only 70
-        //
         int pending = xsqlvars.length;
         HashMap result = new HashMap();
         while (pending > 0){
@@ -824,14 +800,12 @@ public class FBResultSetMetaData implements FirebirdResultSetMetaData {
 
                 if (i < maxLength - 1)
                     sb.append("\n").append("UNION").append("\n");
-
             }
 
             FBDatabaseMetaData metaData = new FBDatabaseMetaData(gdsHelper);
             ResultSet rs = metaData.doQuery(sb.toString(), params);
 
             try {
-
                 while(rs.next()) {
                     ExtendedFieldInfo fieldInfo = new ExtendedFieldInfo();
 
@@ -870,5 +844,75 @@ public class FBResultSetMetaData implements FirebirdResultSetMetaData {
             throw new FBDriverNotCapableException();
         
         return iface.cast(this);
+    }
+    
+    /**
+     * Strategy for retrieving column labels and column names
+     */
+    private enum ColumnStrategy {
+        /**
+         * Default, JDBC-compliant, strategy for column naming. 
+         * <p>
+         * columnLabel is the AS clause (xsqlvar.aliasname) if specified, 
+         * otherwise xsqlvar.sqlname.
+         * </p>
+         * <p>
+         * columnName is xsqlvar.sqlname if specified, otherwise xsqlvar.aliasname (TODO: change this?)
+         * <p>
+         */
+        DEFAULT {
+            @Override
+            String getColumnName(XSQLVAR xsqlvar) {
+                if (xsqlvar.sqlname == null) {
+                    return getColumnLabel(xsqlvar);
+                } else {
+                    return xsqlvar.sqlname;
+                }
+            }
+        },
+        /**
+         * Alternative strategy for column naming (related to columnLabelForName connection property)
+         * <p>
+         * This strategy is not JDBC-compliant, but is provided as a workaround for use with com.sun.rowset.CachedRowSetImpl and
+         * for people expecting the old behavior.
+         * <p>
+         * columnLabel is the AS clause (xsqlvar.aliasname) if specified, 
+         * otherwise xsqlvar.sqlname.
+         * </p>
+         * <p>
+         * columnName is identical to columnLabel.
+         * </p>
+         */
+        COLUMN_LABEL_FOR_NAME {
+            @Override
+            String getColumnName(XSQLVAR xsqlvar) {
+                return getColumnLabel(xsqlvar);
+            }
+        }        
+        ;       
+        
+        /**
+         * Retrieve the columnName for the specified column.
+         * 
+         * @param xsqlvar Column XSQLVAR
+         * @return value for the columnName
+         */
+        abstract String getColumnName(XSQLVAR xsqlvar);
+        
+        /**
+         * Retrieve the columnLabel for the specified column.
+         * 
+         * @param xsqlvar Column XSQLVAR
+         * @return value for the columnLabel
+         */
+        String getColumnLabel(XSQLVAR xsqlvar) {
+            if (xsqlvar.aliasname != null) {
+                return xsqlvar.aliasname;
+            } else if (xsqlvar.sqlname != null) {
+                return xsqlvar.sqlname;
+            } else {
+                return "";
+            }
+        }
     }
 }
