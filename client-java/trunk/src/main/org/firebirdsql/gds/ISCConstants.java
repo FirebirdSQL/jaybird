@@ -159,6 +159,7 @@ public interface ISCConstants {
     public final static int isc_dpb_filename_charset        = 139;
     public final static int isc_dpb_octets_as_bytes         = 140;
     public final static int isc_dpb_so_timeout              = 141;
+    public final static int isc_dpb_column_label_for_name   = 142;
     
     /*************************************/
     /* Transaction parameter block stuff */

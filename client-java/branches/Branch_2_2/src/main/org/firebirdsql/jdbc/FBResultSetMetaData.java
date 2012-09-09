@@ -34,13 +34,14 @@ import org.firebirdsql.gds.impl.GDSHelper;
  * Implementation of {@link java.sql.ResultSetMetaData} interface.
  *
  * @author <a href="mailto:d_jencks@users.sourceforge.net">David Jencks</a>
- * @version 1.0
+ * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  */
 public class FBResultSetMetaData implements FirebirdResultSetMetaData {
 
     private final XSQLVAR[] xsqlvars;
     private Map extendedInfo;
     private final GDSHelper connection;
+    private final ColumnStrategy columnStrategy;
 
     /**
      * Creates a new <code>FBResultSetMetaData</code> instance.
@@ -55,6 +56,13 @@ public class FBResultSetMetaData implements FirebirdResultSetMetaData {
     protected FBResultSetMetaData(XSQLVAR[] xsqlvars, GDSHelper connection) throws SQLException {
         this.xsqlvars = xsqlvars;
         this.connection = connection;
+        
+        // Decide how to handle column names and column labels
+        if (connection != null && connection.getDatabaseParameterBuffer().hasArgument(ISCConstants.isc_dpb_column_label_for_name)) {
+            columnStrategy = ColumnStrategy.COLUMN_LABEL_FOR_NAME;
+        } else {
+            columnStrategy = ColumnStrategy.DEFAULT;
+        }
     }
 
     private String getIscEncoding() {
@@ -247,9 +255,7 @@ public class FBResultSetMetaData implements FirebirdResultSetMetaData {
      * @exception SQLException if a database access error occurs
      */
     public  String getColumnLabel(int column) throws  SQLException {
-        return (getXsqlvar(column).aliasname == null) ?
-            (getXsqlvar(column).sqlname != null ? getXsqlvar(column).sqlname : "") : 
-                getXsqlvar(column).aliasname;
+        return columnStrategy.getColumnLabel(getXsqlvar(column));
     }
 
 
@@ -261,10 +267,7 @@ public class FBResultSetMetaData implements FirebirdResultSetMetaData {
      * @exception SQLException if a database access error occurs
      */
     public  String getColumnName(int column) throws  SQLException {
-        if (getXsqlvar(column).sqlname == null)
-            return getColumnLabel(column);
-        else
-            return getXsqlvar(column).sqlname;
+        return columnStrategy.getColumnName(getXsqlvar(column));
     }
 
     public String getSourceColumnName(int column) throws SQLException {
@@ -872,5 +875,75 @@ public class FBResultSetMetaData implements FirebirdResultSetMetaData {
             throw new FBDriverNotCapableException();
         
         return iface.cast(this);
+    }
+    
+    /**
+     * Strategy for retrieving column labels and column names
+     */
+    private enum ColumnStrategy {
+        /**
+         * Default, JDBC-compliant, strategy for column naming. 
+         * <p>
+         * columnLabel is the AS clause (xsqlvar.aliasname) if specified, 
+         * otherwise xsqlvar.sqlname.
+         * </p>
+         * <p>
+         * columnName is xsqlvar.sqlname if specified, otherwise xsqlvar.aliasname (TODO: change this?)
+         * <p>
+         */
+        DEFAULT {
+            @Override
+            String getColumnName(XSQLVAR xsqlvar) {
+                if (xsqlvar.sqlname == null) {
+                    return getColumnLabel(xsqlvar);
+                } else {
+                    return xsqlvar.sqlname;
+                }
+            }
+        },
+        /**
+         * Alternative strategy for column naming (related to columnLabelForName connection property)
+         * <p>
+         * This strategy is not JDBC-compliant, but is provided as a workaround for use with com.sun.rowset.CachedRowSetImpl and
+         * for people expecting the old behavior.
+         * <p>
+         * columnLabel is the AS clause (xsqlvar.aliasname) if specified, 
+         * otherwise xsqlvar.sqlname.
+         * </p>
+         * <p>
+         * columnName is identical to columnLabel.
+         * </p>
+         */
+        COLUMN_LABEL_FOR_NAME {
+            @Override
+            String getColumnName(XSQLVAR xsqlvar) {
+                return getColumnLabel(xsqlvar);
+            }
+        }        
+        ;       
+        
+        /**
+         * Retrieve the columnName for the specified column.
+         * 
+         * @param xsqlvar Column XSQLVAR
+         * @return value for the columnName
+         */
+        abstract String getColumnName(XSQLVAR xsqlvar);
+        
+        /**
+         * Retrieve the columnLabel for the specified column.
+         * 
+         * @param xsqlvar Column XSQLVAR
+         * @return value for the columnLabel
+         */
+        String getColumnLabel(XSQLVAR xsqlvar) {
+            if (xsqlvar.aliasname != null) {
+                return xsqlvar.aliasname;
+            } else if (xsqlvar.sqlname != null) {
+                return xsqlvar.sqlname;
+            } else {
+                return "";
+            }
+        }
     }
 }
