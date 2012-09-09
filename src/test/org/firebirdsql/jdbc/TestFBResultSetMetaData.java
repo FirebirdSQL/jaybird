@@ -16,24 +16,26 @@
  *
  * All rights reserved.
  */
-
 package org.firebirdsql.jdbc;
 
 import org.firebirdsql.common.DdlHelper;
-import org.firebirdsql.common.FBTestBase;
+import org.firebirdsql.common.FBJUnit4TestBase;
 import org.firebirdsql.common.JdbcResourceHelper;
+import org.junit.Before;
+import org.junit.Test;
 
 import java.sql.*;
 import java.util.Properties;
 
 import static org.firebirdsql.common.FBTestProperties.*;
+import static junit.framework.Assert.*;
 
 /**
  * This method tests correctness of {@link FBResultSetMetaData} class.
  *
  * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
  */
-public class TestFBResultSetMetaData extends FBTestBase {
+public class TestFBResultSetMetaData extends FBJUnit4TestBase {
     
     public static String CREATE_TABLE = 
         "CREATE TABLE test_rs_metadata (" + 
@@ -58,14 +60,8 @@ public class TestFBResultSetMetaData extends FBTestBase {
     public static String DROP_TABLE = 
         "DROP TABLE test_rs_metadata";
     
-    public TestFBResultSetMetaData(String testName) {
-        super(testName);
-    }
-    
-    @Override
-    protected void setUp() throws Exception {
-        super.setUp();
-        
+    @Before
+    public void setUp() throws Exception {
         Class.forName(FBDriver.class.getName());
         
         Properties props = new Properties();
@@ -80,11 +76,7 @@ public class TestFBResultSetMetaData extends FBTestBase {
         JdbcResourceHelper.closeQuietly(connection);
     }
 
-    @Override
-    protected void tearDown() throws Exception {
-        super.tearDown();
-    }
-    
+    @Test
     public void testResultSetMetaData() throws Exception {
         Properties props = new Properties();
         props.putAll(getDefaultPropertiesForConnection());
@@ -120,6 +112,7 @@ public class TestFBResultSetMetaData extends FBTestBase {
         }
     }
     
+    @Test
     public void testResultSetMetaData2() throws Exception {
         Properties props = new Properties();
         props.putAll(getDefaultPropertiesForConnection());
@@ -161,6 +154,7 @@ public class TestFBResultSetMetaData extends FBTestBase {
         }
     }
     
+    @Test
 	public void testColumnTypeName() throws Exception {
 		Properties props = new Properties();
 		props.putAll(getDefaultPropertiesForConnection());
@@ -195,5 +189,4 @@ public class TestFBResultSetMetaData extends FBTestBase {
 		    JdbcResourceHelper.closeQuietly(connection);
 		}
 	}
-
 }
