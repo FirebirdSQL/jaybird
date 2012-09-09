@@ -16,19 +16,22 @@
  *
  * All rights reserved.
  */
-
 package org.firebirdsql.jdbc;
 
 import org.firebirdsql.common.FBTestBase;
 
+import com.sun.rowset.CachedRowSetImpl;
+
 import java.sql.*;
 import java.util.Properties;
+
+import javax.sql.rowset.CachedRowSet;
 
 /**
  * This method tests correctness of {@link FBResultSetMetaData} class.
  *
  * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
- * @version 1.0
+ * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  */
 public class TestFBResultSetMetaData extends FBTestBase {
     
@@ -212,5 +215,112 @@ public class TestFBResultSetMetaData extends FBTestBase {
 		connection.close();
 		
 	}
+	
+    /**
+     * Tests the default strategy for retrieving columnNames and columnLabels, where the columnName is the original column name
+     * and the label is the AS clause (if specified), or the original column name otherwise.
+     * <p>
+     * This is the JDBC-compliant behavior
+     * </p>
+     */
+    public void columnNameAndLabel_Default() throws Exception {
+        Connection con = getConnectionViaDriverManager();
+        try {
+            Statement stmt = con.createStatement();
+            ResultSet rs = stmt.executeQuery("SELECT " + 
+                "simple_field AS column1Alias, two_byte_field, 1 + 1, 2 - 2 AS column4Alias " +
+                "FROM test_rs_metadata");
+            ResultSetMetaData metaData = rs.getMetaData();
+            
+            assertEquals("Column 1, unexpected columnName", "SIMPLE_FIELD", metaData.getColumnName(1));
+            assertEquals("Column 1, unexpected columnLabel", "COLUMN1ALIAS", metaData.getColumnLabel(1));
+            
+            assertEquals("Column 2, unexpected columnName", "TWO_BYTE_FIELD", metaData.getColumnName(2));
+            assertEquals("Column 2, unexpected columnLabel", "TWO_BYTE_FIELD", metaData.getColumnLabel(2));
+
+            // TODO: Investigate difference between column 3 and 4
+            assertEquals("Column 3, unexpected columnName", "ADD", metaData.getColumnName(3));
+            assertEquals("Column 3, unexpected columnLabel", "ADD", metaData.getColumnLabel(3));
+            
+            assertEquals("Column 4, unexpected columnName", "", metaData.getColumnName(4));
+            assertEquals("Column 4, unexpected columnLabel", "COLUMN4ALIAS", metaData.getColumnLabel(4));
+            
+            stmt.close();
+        } finally {
+            closeQuietly(con);
+        }
+    }
+    
+    /**
+     * Tests for columnLabelForName strategy of retrieving columnNames and columnLabels, 
+     * where the columnName has the same value as the label.
+     * <p>
+     * This strategy is enabled by specifying the columnLabelForName property (value true)
+     * in the connection properties
+     * </p>
+     */
+    public void columnNameAndLabel_ColumnLabelForName() throws Exception {
+        Properties props = new Properties();
+        props.putAll(getDefaultPropertiesForConnection());
+        props.put("columnLabelForName", "true");
+        
+        Connection con = DriverManager.getConnection(getUrl(), props);
+        try {
+            Statement stmt = con.createStatement();
+            ResultSet rs = stmt.executeQuery("SELECT " + 
+                "simple_field AS column1Alias, two_byte_field, 1 + 1, 2 - 2 AS column4Alias " +
+                "FROM test_rs_metadata");
+            ResultSetMetaData metaData = rs.getMetaData();
+            
+            assertEquals("Column 1, unexpected columnName", "COLUMN1ALIAS", metaData.getColumnName(1));
+            assertEquals("Column 1, unexpected columnLabel", "COLUMN1ALIAS", metaData.getColumnLabel(1));
+            
+            assertEquals("Column 2, unexpected columnName", "TWO_BYTE_FIELD", metaData.getColumnName(2));
+            assertEquals("Column 2, unexpected columnLabel", "TWO_BYTE_FIELD", metaData.getColumnLabel(2));
+
+            assertEquals("Column 3, unexpected columnName", "ADD", metaData.getColumnName(3));
+            assertEquals("Column 3, unexpected columnLabel", "ADD", metaData.getColumnLabel(3));
+            
+            assertEquals("Column 4, unexpected columnName", "COLUMN4ALIAS", metaData.getColumnName(4));
+            assertEquals("Column 4, unexpected columnLabel", "COLUMN4ALIAS", metaData.getColumnLabel(4));
+            
+            stmt.close();
+        } finally {
+            closeQuietly(con);
+        }
+    }
+    
+    /**
+     * Tests if the columnLabelForName strategy allows com.sun.rowset.CachedRowSetImpl to
+     * access rows by their columnLabel.
+     */
+    public void cachedRowSetImpl_columnLabelForName() throws Exception {
+        Properties props = new Properties();
+        props.putAll(getDefaultPropertiesForConnection());
+        props.put("columnLabelForName", "true");
+        
+        Connection con = DriverManager.getConnection(getUrl(), props);
+        try {
+            Statement stmt = con.createStatement();
+            ResultSet rs = stmt.executeQuery("SELECT id, simple_field AS column2, int_field AS column3, 2 - 1 AS column4 FROM test_rs_metadata");
+            CachedRowSet rowSet = new CachedRowSetImpl();
+            rowSet.populate(rs);
+            
+            assertEquals(1, rowSet.findColumn("id"));
+            assertEquals(2, rowSet.findColumn("column2"));
+            assertEquals(3, rowSet.findColumn("column3"));
+            assertEquals(4, rowSet.findColumn("column4"));
+            
+            try {
+                rowSet.findColumn("simple_field");
+                fail("Looking up column with original column name should fail with columnLabelForName strategy");
+            } catch (SQLException ex) {
+                // expected
+            }
+            stmt.close();
+        } finally {
+            closeQuietly(con);
+        }
+    }
 
 }
