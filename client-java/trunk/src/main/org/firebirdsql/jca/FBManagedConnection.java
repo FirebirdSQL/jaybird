@@ -22,6 +22,8 @@ import java.io.ByteArrayInputStream;
 import java.io.PrintWriter;
 import java.sql.*;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 import javax.resource.ResourceException;
 import javax.resource.spi.*;
@@ -56,12 +58,13 @@ public class FBManagedConnection implements ManagedConnection, XAResource, GDSHe
 
     private final FBManagedConnectionFactory mcf;
 
-    private final ArrayList connectionEventListeners = new ArrayList();
-    private final ArrayList connectionHandles = new ArrayList();
+    private final List<ConnectionEventListener> connectionEventListeners = new CopyOnWriteArrayList<ConnectionEventListener>();
+    // TODO Review synchronization of connectionHandles (especially in blocks like in disassociateConnections, setConnectionSharing etc)
+    private final List<AbstractConnection> connectionHandles = Collections.synchronizedList(new ArrayList<AbstractConnection>());
 
     private int timeout = 0;
 
-    private final Map xidMap = Collections.synchronizedMap(new HashMap());
+    private final Map<Xid, AbstractIscTrHandle> xidMap = new ConcurrentHashMap<Xid, AbstractIscTrHandle>();
     
     private final GDS gds;
     private final IscDbHandle dbHandle;
@@ -369,8 +372,9 @@ public class FBManagedConnection implements ManagedConnection, XAResource, GDSHe
             disassociateConnections();
         
         try {
-            ((AbstractConnection) connection).setManagedConnection(this);
-            connectionHandles.add(connection);
+            final AbstractConnection abstractConnection = (AbstractConnection) connection;
+            abstractConnection.setManagedConnection(this);
+            connectionHandles.add(abstractConnection);
         } catch (ClassCastException cce) {
             throw new FBResourceException(
                     "invalid connection supplied to associateConnection.", cce);
@@ -430,18 +434,14 @@ public class FBManagedConnection implements ManagedConnection, XAResource, GDSHe
         SQLExceptionChainBuilder chain = new SQLExceptionChainBuilder();
         
         // Iterate over copy of list as connection.close() will remove connection
-        List connectionHandleCopy = new ArrayList(connectionHandles);
-        for (Iterator i = connectionHandleCopy.iterator(); i.hasNext();) {
-            AbstractConnection connection = (AbstractConnection) i.next();
-            
+        List<AbstractConnection> connectionHandleCopy = new ArrayList<AbstractConnection>(connectionHandles);
+        for (AbstractConnection connection : connectionHandleCopy) {
             try {
                 connection.close();
             } catch(SQLException sqlex) {
                 chain.append(sqlex);
             }
         }
-        
-        connectionHandles.clear();
         
         if (chain.hasException())
             throw new FBResourceException(chain.getException());
@@ -551,7 +551,7 @@ public class FBManagedConnection implements ManagedConnection, XAResource, GDSHe
     // --------------------------------------------------------------
 
     boolean isXidActive(Xid xid) {
-        IscTrHandle trHandle = (IscTrHandle)xidMap.get(xid); //mcf.getTrHandleForXid(xid);
+        IscTrHandle trHandle = xidMap.get(xid);
 
         if (trHandle == null) return false;
 
@@ -594,7 +594,7 @@ public class FBManagedConnection implements ManagedConnection, XAResource, GDSHe
     void internalCommit(Xid xid, boolean onePhase) throws XAException,
             GDSException {
         if (log != null) log.trace("Commit called: " + xid);
-        AbstractIscTrHandle committingTr = (AbstractIscTrHandle)xidMap.get(xid);
+        AbstractIscTrHandle committingTr = xidMap.get(xid);
         
         // check that prepare has NOT been called when onePhase = true
         if (onePhase && isPrepared(xid))
@@ -670,7 +670,7 @@ public class FBManagedConnection implements ManagedConnection, XAResource, GDSHe
      */
     void internalEnd(Xid xid, int flags) throws XAException {
         if (log != null) log.debug("End called: " + xid);
-        IscTrHandle endingTr = (IscTrHandle)xidMap.get(xid);
+        IscTrHandle endingTr = xidMap.get(xid);
         
         if (endingTr == null)
             throw new FBXAException("Unrecognized transaction", XAException.XAER_NOTA);
@@ -863,7 +863,7 @@ public class FBManagedConnection implements ManagedConnection, XAResource, GDSHe
 
     int internalPrepare(Xid xid) throws FBXAException, GDSException {
         if (log != null) log.trace("prepare called: " + xid);
-        AbstractIscTrHandle committingTr = (AbstractIscTrHandle)xidMap.get(xid);
+        AbstractIscTrHandle committingTr = xidMap.get(xid);
         if (committingTr == null)
             throw new FBXAException("Prepare called with unknown transaction",
                     XAException.XAER_NOTA);
@@ -1037,7 +1037,7 @@ public class FBManagedConnection implements ManagedConnection, XAResource, GDSHe
 
     void internalRollback(Xid xid) throws XAException, GDSException {
         if (log != null) log.trace("rollback called: " + xid);
-        AbstractIscTrHandle committingTr = (AbstractIscTrHandle)xidMap.get(xid); //mcf.getTrHandleForXid(id);
+        AbstractIscTrHandle committingTr = xidMap.get(xid);
         if (committingTr == null) {
             throw new FBXAException ("Rollback called with unknown transaction: " + xid);
         }
@@ -1195,7 +1195,7 @@ public class FBManagedConnection implements ManagedConnection, XAResource, GDSHe
         gdsHelper.setCurrentTrHandle(null);
         
         if (flags == XAResource.TMRESUME) {
-            AbstractIscTrHandle trHandle = (AbstractIscTrHandle) xidMap.get(xid);
+            AbstractIscTrHandle trHandle = xidMap.get(xid);
             if (trHandle == null) {
                 throw new FBXAException(
                         "You are trying to resume a transaction that is not attached to this XAResource",
@@ -1225,17 +1225,9 @@ public class FBManagedConnection implements ManagedConnection, XAResource, GDSHe
     }
     
     void notify(CELNotifier notifier, ConnectionEvent ce) {
-        if (connectionEventListeners.size() == 0) { return; }
-        if (connectionEventListeners.size() == 1) {
-            ConnectionEventListener cel = (ConnectionEventListener) connectionEventListeners
-                    .get(0);
+        for (ConnectionEventListener cel : connectionEventListeners) {
             notifier.notify(cel, ce);
-            return;
-        } // end of if ()
-        ArrayList cels = (ArrayList) connectionEventListeners.clone();
-        for (Iterator i = cels.iterator(); i.hasNext();) {
-            notifier.notify((ConnectionEventListener) i.next(), ce);
-        } // end of for ()
+        }
     }
 
     interface CELNotifier {

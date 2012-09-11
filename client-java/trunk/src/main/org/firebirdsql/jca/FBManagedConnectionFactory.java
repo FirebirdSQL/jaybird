@@ -18,7 +18,6 @@
  *
  * All rights reserved.
  */
-
 package org.firebirdsql.jca;
 
 import java.io.*;
@@ -26,6 +25,7 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.sql.SQLException;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 import javax.resource.NotSupportedException;
 import javax.resource.ResourceException;
@@ -52,7 +52,6 @@ import org.firebirdsql.jdbc.*;
  * 
  * @author <a href="mailto:d_jencks@users.sourceforge.net">David Jencks </a>
  */
-
 public class FBManagedConnectionFactory implements ManagedConnectionFactory,
         Serializable, FirebirdConnectionProperties {
     
@@ -62,25 +61,16 @@ public class FBManagedConnectionFactory implements ManagedConnectionFactory,
      * The <code>mcfInstances</code> weak hash map is used in deserialization
      * to find the correct instance of a mcf after deserializing.
      */
-    private final static Map mcfInstances = Collections.synchronizedMap(new WeakHashMap());
-
-    // /**
-    // * @todo Claudio suggests this should be 1024*64 -1, we should find out I
-    // * thought this was the largest value I could make work, but I didn't
-    // * write down my experiments.
-    // */
-    // public final static int MAX_BLOB_BUFFER_LENGTH = 1024 * 32 - 1;
-    //
-    // public final static int MIN_BLOB_BUFFER_LENGTH = 1024;
-
+    private final static Map<FBManagedConnectionFactory, FBManagedConnectionFactory> mcfInstances = 
+            Collections.synchronizedMap(new WeakHashMap<FBManagedConnectionFactory, FBManagedConnectionFactory>());
 
     private ConnectionManager defaultCm;
     private int hashCode;
     private GDSType gdsType;
 
     // Maps supplied XID to internal transaction handle.
-    // a concurrent reader map would be better
-    private transient final Map xidMap = Collections.synchronizedMap(new HashMap());
+    private transient final Map<Xid, FBManagedConnection> xidMap = 
+            new ConcurrentHashMap<Xid, FBManagedConnection>();
 
     private transient final Object startLock = new Object();
     private transient boolean started = false;
@@ -520,7 +510,7 @@ public class FBManagedConnectionFactory implements ManagedConnectionFactory,
         while (i.hasNext()) {
             FBManagedConnection mc = (FBManagedConnection) i.next();
 
-            if (mc.matches(subject, (FBConnectionRequestInfo) cxRequestInfo))
+            if (mc.matches(subject, cxRequestInfo))
                 return mc;
         }
         return null;
@@ -576,8 +566,7 @@ public class FBManagedConnectionFactory implements ManagedConnectionFactory,
 
     // Serialization support
     private Object readResolve() throws ObjectStreamException {
-        FBManagedConnectionFactory mcf = 
-            (FBManagedConnectionFactory) mcfInstances.get(this);
+        FBManagedConnectionFactory mcf = mcfInstances.get(this);
         
         if (mcf != null)  return mcf; 
         
@@ -595,7 +584,7 @@ public class FBManagedConnectionFactory implements ManagedConnectionFactory,
      * @return a <code>FBManagedConnectionFactory</code> value
      */
     public FBManagedConnectionFactory canonicalize() {
-        FBManagedConnectionFactory mcf = (FBManagedConnectionFactory) mcfInstances.get(this);
+        FBManagedConnectionFactory mcf = mcfInstances.get(this);
         
         if (mcf != null) 
             return mcf;
@@ -622,7 +611,7 @@ public class FBManagedConnectionFactory implements ManagedConnectionFactory,
 
     int notifyPrepare(FBManagedConnection mc, Xid xid) throws GDSException,
             XAException {
-        FBManagedConnection targetMc = (FBManagedConnection) xidMap.get(xid);
+        FBManagedConnection targetMc = xidMap.get(xid);
 
         if (targetMc == null)
             throw new FBXAException("Commit called with unknown transaction",
@@ -634,7 +623,7 @@ public class FBManagedConnectionFactory implements ManagedConnectionFactory,
     void notifyCommit(FBManagedConnection mc, Xid xid, boolean onePhase)
             throws GDSException, XAException {
 
-        FBManagedConnection targetMc = (FBManagedConnection) xidMap.get(xid);
+        FBManagedConnection targetMc = xidMap.get(xid);
 
         if (targetMc == null)
             tryCompleteInLimboTransaction(getGDS(), xid, true);
@@ -646,7 +635,7 @@ public class FBManagedConnectionFactory implements ManagedConnectionFactory,
 
     void notifyRollback(FBManagedConnection mc, Xid xid) throws GDSException,
             XAException {
-        FBManagedConnection targetMc = (FBManagedConnection) xidMap.get(xid);
+        FBManagedConnection targetMc = xidMap.get(xid);
 
         if (targetMc == null)
             tryCompleteInLimboTransaction(getGDS(), xid, false);
