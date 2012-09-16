@@ -29,12 +29,12 @@ import java.io.Serializable;
 import java.sql.Connection;
 import java.util.Enumeration;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Locale;
 import java.util.Map;
 import java.util.MissingResourceException;
 import java.util.ResourceBundle;
 import java.util.StringTokenizer;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * This class is provides mapping capabilities between standard JDBC
@@ -147,7 +147,8 @@ public class FBTpbMapper implements Serializable, Cloneable {
             throw new IllegalArgumentException("Invalid isolation name.");
     }
 
-    private HashMap mapping = new HashMap();
+    // ConcurrentHashMap because changes can - potentially - be made concurrently
+    private Map<Integer, TransactionParameterBuffer> mapping = new ConcurrentHashMap<Integer, TransactionParameterBuffer>();
     private int defaultIsolationLevel = Connection.TRANSACTION_READ_COMMITTED;
 
     /**
@@ -211,7 +212,7 @@ public class FBTpbMapper implements Serializable, Cloneable {
      * 
      * @throws FBResourceException if mapping contains incorrect values.
      */
-    public FBTpbMapper(GDS gds, Map stringMapping) throws FBResourceException {
+    public FBTpbMapper(GDS gds, Map<String, String> stringMapping) throws FBResourceException {
         this(gds);
         processMapping(gds, stringMapping);
     }
@@ -224,34 +225,19 @@ public class FBTpbMapper implements Serializable, Cloneable {
      * 
      * @throws FBResourceException if mapping contains incorrect values.
      */
-    private void processMapping(GDS gds, Map stringMapping) throws FBResourceException {
-
-        Iterator iter = stringMapping.entrySet().iterator();
-        while (iter.hasNext()) {
-            Map.Entry entry = (Map.Entry) iter.next();
-
-            String jdbcTxIsolation = (String) entry.getKey();
-
-            if (TRANSACTION_SERIALIZABLE.equalsIgnoreCase(jdbcTxIsolation))
-                mapping.put(
-                		Integer.valueOf(Connection.TRANSACTION_SERIALIZABLE),
-                        processMapping(gds, (String) entry.getValue()));
-            else if (TRANSACTION_REPEATABLE_READ.equalsIgnoreCase(jdbcTxIsolation))
-                mapping.put(
-                		Integer.valueOf(Connection.TRANSACTION_REPEATABLE_READ),
-                        processMapping(gds, (String) entry.getValue()));
-            else if (TRANSACTION_READ_COMMITTED.equalsIgnoreCase(jdbcTxIsolation))
-                mapping.put(
-                		Integer.valueOf(Connection.TRANSACTION_READ_COMMITTED),
-                        processMapping(gds, (String) entry.getValue()));
-            else if (TRANSACTION_READ_UNCOMMITTED.equalsIgnoreCase(jdbcTxIsolation))
-                mapping.put(
-                		Integer.valueOf(Connection.TRANSACTION_READ_UNCOMMITTED),
-                        processMapping(gds, (String) entry.getValue()));
-            else
+    private void processMapping(GDS gds, Map<String, String> stringMapping) throws FBResourceException {
+        for (Map.Entry<String, String> entry : stringMapping.entrySet()) {
+            String jdbcTxIsolation = entry.getKey();
+            Integer isolationLevel;
+            try {
+                isolationLevel = Integer.valueOf(getTransactionIsolationLevel(jdbcTxIsolation));
+            } catch (IllegalArgumentException ex) {
                 throw new FBResourceException(
-                		"Transaction isolation " + jdbcTxIsolation +
-                		" is not supported.");
+                        "Transaction isolation " + jdbcTxIsolation +
+                        " is not supported.");
+            }
+            TransactionParameterBuffer tpb = processMapping(gds, entry.getValue());
+            mapping.put(isolationLevel, tpb);
         }
     }
 
@@ -271,11 +257,11 @@ public class FBTpbMapper implements Serializable, Cloneable {
             ResourceBundle res = ResourceBundle.getBundle(
             		mappingResource, Locale.getDefault(), cl);
 
-            HashMap mapping = new HashMap();
+            Map<String, String> mapping = new HashMap<String, String>();
 
-            Enumeration en = res.getKeys();
+            Enumeration<String> en = res.getKeys();
             while (en.hasMoreElements()) {
-                String key = (String) en.nextElement();
+                String key = en.nextElement();
                 String value = res.getString(key);
                 mapping.put(key, value);
             }
@@ -333,13 +319,11 @@ public class FBTpbMapper implements Serializable, Cloneable {
         case Connection.TRANSACTION_SERIALIZABLE:
         case Connection.TRANSACTION_REPEATABLE_READ:
         case Connection.TRANSACTION_READ_COMMITTED:
-            return ((TransactionParameterBuffer) mapping.get(
-            		Integer.valueOf(transactionIsolation))).deepCopy();
+            return mapping.get(Integer.valueOf(transactionIsolation)).deepCopy();
 
             // promote transaction
         case Connection.TRANSACTION_READ_UNCOMMITTED:
-            return ((TransactionParameterBuffer) mapping.get(
-            		Integer.valueOf(Connection.TRANSACTION_READ_COMMITTED))).deepCopy();
+            return mapping.get(Integer.valueOf(Connection.TRANSACTION_READ_COMMITTED)).deepCopy();
 
         case Connection.TRANSACTION_NONE:
         default:
@@ -382,7 +366,7 @@ public class FBTpbMapper implements Serializable, Cloneable {
      * @return mapping for the default transaction isolation level.
      */
     public TransactionParameterBuffer getDefaultMapping() {
-        return (TransactionParameterBuffer) mapping.get(Integer.valueOf(defaultIsolationLevel));
+        return mapping.get(Integer.valueOf(defaultIsolationLevel));
     }
 
     public int getDefaultTransactionIsolation() {
@@ -412,7 +396,7 @@ public class FBTpbMapper implements Serializable, Cloneable {
 
     public int hashCode() {
         int result = 31;
-
+        // TODO both these values are mutable, so potentially unstable hashcode
         result = result * 83 + mapping.hashCode();
         result = result * 83 + defaultIsolationLevel;
         return result;
@@ -422,7 +406,7 @@ public class FBTpbMapper implements Serializable, Cloneable {
         try {
             FBTpbMapper clone = (FBTpbMapper) super.clone();
 
-            clone.mapping = (HashMap) mapping.clone();
+            clone.mapping = new ConcurrentHashMap<Integer, TransactionParameterBuffer>(mapping);
 
             return clone;
         } catch (CloneNotSupportedException ex) {
