@@ -29,7 +29,7 @@ public class OOGDSFactoryPlugin implements GDSFactoryPlugin {
         return TYPE_ALIASES;
     }
 
-    public Class getConnectionClass() {
+    public Class<?> getConnectionClass() {
         return OOConnection.class;
     }
 

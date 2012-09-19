@@ -33,7 +33,7 @@ import static junit.framework.Assert.*;
  *
  * @param <T> Enum type, implementing {@link MetaDataInfo} for metadata column information
  */
-public class MetaDataValidator<T extends Enum & MetaDataValidator.MetaDataInfo> {
+public class MetaDataValidator<T extends Enum<T> & MetaDataValidator.MetaDataInfo> {
     
     private T mdi;
     

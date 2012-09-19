@@ -247,7 +247,7 @@ public class TestFBConnection extends FBTestBase {
     
     public void testLockTable() throws Exception {
         FirebirdConnection connection = 
-            (FirebirdConnection)getConnectionViaDriverManager();
+            getConnectionViaDriverManager();
         
         try {
             Statement stmt = connection.createStatement();
@@ -260,7 +260,7 @@ public class TestFBConnection extends FBTestBase {
             connection.close();
         }
 
-        connection = (FirebirdConnection)getConnectionViaDriverManager();
+        connection = getConnectionViaDriverManager();
         try {
             
             Statement stmt = connection.createStatement();
@@ -280,7 +280,7 @@ public class TestFBConnection extends FBTestBase {
                 connection.setAutoCommit(false);
                 
                 FirebirdConnection anotherConnection = 
-                    (FirebirdConnection)getConnectionViaDriverManager();
+                    getConnectionViaDriverManager();
                 anotherConnection.setAutoCommit(false);
                 
                 try {

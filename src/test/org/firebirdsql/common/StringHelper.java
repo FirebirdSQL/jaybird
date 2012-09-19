@@ -16,23 +16,28 @@
  *
  * All rights reserved.
  */
-package org.firebirdsql.jdbc.field;
+package org.firebirdsql.common;
 
-import java.sql.SQLException;
-import java.util.List;
-
-import org.firebirdsql.gds.XSQLVAR;
-import org.firebirdsql.jdbc.FBResultSet;
+import java.math.BigInteger;
 
 /**
- * ResultSet implementation to test fields.
+ * Helper class for converting (test) output to string.
  * 
- * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
+ * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  */
-public class FBFieldResultSet extends FBResultSet {
+public class StringHelper {
 
-	public FBFieldResultSet(XSQLVAR[] xsqlvars, List<byte[][]> rows) throws SQLException {
-		super(xsqlvars, rows);
-	}
-
+    private StringHelper() {
+    }
+    
+    /**
+     * Converts a byte array to hexadecimal output.
+     * 
+     * @param bytes Byte array
+     * @return hexadecimal form of bytes
+     */
+    public static String toHex(byte[] bytes) {
+        BigInteger bi = new BigInteger(1, bytes);
+        return String.format("%0" + (bytes.length << 1) + "X", bi);
+    }
 }

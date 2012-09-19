@@ -94,7 +94,7 @@ public abstract class Encoding_OneByte implements Encoding{
 
     public int decodeFromCharset(char[] byteToChar, byte[] in, int off, int len, char[] out){
         for (int i = off; i< off+len; i++)
-            out[i] = byteToChar[(int) in[i] & 0xFF];
+            out[i] = byteToChar[in[i] & 0xFF];
         return len;
     }
 }

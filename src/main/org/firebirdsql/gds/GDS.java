@@ -413,6 +413,7 @@ public interface GDS {
      * @deprecated use
      *             {@link #iscDsqlExecuteImmediate(IscDbHandle, IscTrHandle, byte[], int, XSQLDA)}
      */
+    @Deprecated
     void iscDsqlExecuteImmediate(IscDbHandle dbHandle, IscTrHandle trHandle,
             String statement, String encoding, int dialect, XSQLDA xsqlda)
             throws GDSException;
@@ -471,6 +472,7 @@ public interface GDS {
      * @deprecated use
      *             {@link #iscDsqlExecImmed2(IscDbHandle, IscTrHandle, byte[], int, XSQLDA, XSQLDA)}
      */
+    @Deprecated
     void iscDsqlExecImmed2(IscDbHandle dbHandle, IscTrHandle trHandle,
             String statement, String encoding, int dialect, XSQLDA inXSQLDA,
             XSQLDA outXSQLDA) throws GDSException;
@@ -563,6 +565,7 @@ public interface GDS {
      * @deprecated use
      *             {@link #iscDsqlPrepare(IscTrHandle, IscStmtHandle, byte[], int)}
      */
+    @Deprecated
     XSQLDA iscDsqlPrepare(IscTrHandle trHandle, IscStmtHandle stmtHandle,
             String statement, String encoding, int dialect) throws GDSException;
 

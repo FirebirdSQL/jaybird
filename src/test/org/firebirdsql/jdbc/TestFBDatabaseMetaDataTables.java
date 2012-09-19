@@ -171,7 +171,7 @@ public class TestFBDatabaseMetaDataTables extends FBMetaDataTestBase<TestFBDatab
         // TODO: Should quoted table names be returned quoted?
         // Expected user tables + a selection of expected system tables (some that existed in Firebird 1.0)
         // TODO Add test for order?
-        Set<String> expectedTables = new HashSet(Arrays.asList("TEST_NORMAL_TABLE",
+        Set<String> expectedTables = new HashSet<String>(Arrays.asList("TEST_NORMAL_TABLE",
                 "test_quoted_normal_table", "TEST_NORMAL_VIEW", "test_quoted_normal_view",
                 "RDB$FIELDS", "RDB$GENERATORS", "RDB$ROLES", "RDB$DATABASE", "RDB$TRIGGERS"));
         try {
@@ -248,7 +248,7 @@ public class TestFBDatabaseMetaDataTables extends FBMetaDataTestBase<TestFBDatab
         ResultSet tables = dbmd.getTables(null, null, tableNamePattern,
                 new String[] { SYSTEM_TABLE });
         // Expected selection of expected system tables (some that existed in Firebird 1.0); we don't check all system tables
-        Set<String> expectedTables = new HashSet(Arrays.asList("RDB$FIELDS", "RDB$GENERATORS",
+        Set<String> expectedTables = new HashSet<String>(Arrays.asList("RDB$FIELDS", "RDB$GENERATORS",
                 "RDB$ROLES", "RDB$DATABASE", "RDB$TRIGGERS"));
         Map<TableMetaData, Object> rules = getDefaultValueValidationRules();
         rules.put(TableMetaData.TABLE_TYPE, SYSTEM_TABLE);
@@ -318,7 +318,7 @@ public class TestFBDatabaseMetaDataTables extends FBMetaDataTestBase<TestFBDatab
         ResultSet tables = dbmd.getTables(null, null, tableNamePattern, new String[] { TABLE });
         // TODO: Should quoted table names be returned quoted?
         // Expected normal tables
-        Set<String> expectedTables = new HashSet(Arrays.asList("TEST_NORMAL_TABLE",
+        Set<String> expectedTables = new HashSet<String>(Arrays.asList("TEST_NORMAL_TABLE",
                 "test_quoted_normal_table"));
         Set<String> retrievedTables = new HashSet<String>();
         Map<TableMetaData, Object> rules = getDefaultValueValidationRules();
@@ -389,7 +389,7 @@ public class TestFBDatabaseMetaDataTables extends FBMetaDataTestBase<TestFBDatab
         ResultSet tables = dbmd.getTables(null, null, tableNamePattern, new String[] { VIEW });
         // TODO: Should quoted table names be returned quoted?
         // Expected normal tables
-        Set<String> expectedTables = new HashSet(Arrays.asList("TEST_NORMAL_VIEW",
+        Set<String> expectedTables = new HashSet<String>(Arrays.asList("TEST_NORMAL_VIEW",
                 "test_quoted_normal_view"));
         Set<String> retrievedTables = new HashSet<String>();
         Map<TableMetaData, Object> rules = getDefaultValueValidationRules();

@@ -70,7 +70,7 @@ public class TestReconnectTransaction extends FBTestBase {
         }
         
         public byte[] getFieldData() {
-            return ((byte[][])stmtHandle.getRows()[row])[fieldPos];
+            return stmtHandle.getRows()[row][fieldPos];
         }
         public void setFieldData(byte[] data) {
             throw new UnsupportedOperationException();

@@ -199,7 +199,7 @@ public abstract class TestXABase extends FBTestBase {
         */
        public byte[] getGlobalTransactionId()
        {
-          return (byte[])globalId.clone();
+          return globalId.clone();
        }
 
        /**
@@ -210,7 +210,7 @@ public abstract class TestXABase extends FBTestBase {
           if (branchId.length == 0)
              return branchId; // Zero length arrays are immutable.
           else
-             return (byte[])branchId.clone();
+             return branchId.clone();
        }
 
        /**
@@ -282,7 +282,7 @@ public abstract class TestXABase extends FBTestBase {
         */
        public byte[] getInternalGlobalTransactionId()
        {
-          return (byte[])globalId.clone();
+          return globalId.clone();
        }
 
     }

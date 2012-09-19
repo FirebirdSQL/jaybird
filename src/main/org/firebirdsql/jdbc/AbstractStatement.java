@@ -556,7 +556,7 @@ public abstract class AbstractStatement implements FirebirdStatement, Synchroniz
         checkValidity();
         ResultSet rs = getResultSet();
         if (rs == null) {
-            rs = new FBResultSet(new XSQLVAR[0], new ArrayList());
+            rs = new FBResultSet(new XSQLVAR[0], Collections.<byte[][]>emptyList());
         }
         return rs;
     }
@@ -1159,7 +1159,7 @@ public abstract class AbstractStatement implements FirebirdStatement, Synchroniz
         return rsHoldability;
     }
 
-    private LinkedList batchList = new LinkedList();
+    private List<String> batchList = new LinkedList<String>();
 
     /**
      * Adds an SQL command to the current batch of commmands for this
@@ -1176,7 +1176,6 @@ public abstract class AbstractStatement implements FirebirdStatement, Synchroniz
     public void addBatch( String sql ) throws  SQLException {
         batchList.add(sql);
     }
-
 
     /**
      * Makes the set of commands in the current batch empty.
@@ -1257,13 +1256,10 @@ public abstract class AbstractStatement implements FirebirdStatement, Synchroniz
 
             boolean success = false;
             try {
-            	LinkedList responses = new LinkedList();
+            	List<Integer> responses = new LinkedList<Integer>();
 
                 try {
-
-                    Iterator iter = batchList.iterator();
-                    while (iter.hasNext()) {
-                        String sql = (String) iter.next();
+                    for (String sql : batchList) {
                         try {
                             boolean hasResultSet = internalExecute(sql);
 
@@ -1302,16 +1298,14 @@ public abstract class AbstractStatement implements FirebirdStatement, Synchroniz
      * 
      * @return array of int.
      */
-    protected int[] toArray(Collection list) {
+    protected int[] toArray(Collection<Integer> list) {
         int[] result = new int[list.size()];
         int counter = 0;
-        Iterator iter = list.iterator();
-        while(iter.hasNext()) {
-        	result[counter++] = ((Integer)iter.next()).intValue();
+        for (Integer value : list) {
+        	result[counter++] = value.intValue();
         }
         return result;
     }
-
 
     /**
      * Returns the <code>Connection</code> object that produced this 
@@ -1494,7 +1488,7 @@ public abstract class AbstractStatement implements FirebirdStatement, Synchroniz
     private void populateStatementInfo() throws FBSQLException {
         if (fixedStmt.getExecutionPlan() == null){
             try {
-                gdsHelper.populateStatementInfo((AbstractIscStmtHandle)fixedStmt);
+                gdsHelper.populateStatementInfo(fixedStmt);
             } catch(GDSException ex) {
                 throw new FBSQLException(ex);
             }

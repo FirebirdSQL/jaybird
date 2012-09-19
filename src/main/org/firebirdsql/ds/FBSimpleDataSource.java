@@ -105,6 +105,7 @@ public class FBSimpleDataSource extends RootCommonDataSource implements DataSour
      * @deprecated use {@link #getDatabase} instead for the sake of naming
      * compatibility.
      */
+    @Deprecated
     public String getDatabaseName() {
         return getDatabase();
     }
@@ -119,6 +120,7 @@ public class FBSimpleDataSource extends RootCommonDataSource implements DataSour
      * @deprecated use {@link #setDatabase(String)} instead for the sake of 
      * naming compatibility.
      */
+    @Deprecated
     public void setDatabaseName(String name) {
         setDatabase(name);
     }
@@ -152,6 +154,7 @@ public class FBSimpleDataSource extends RootCommonDataSource implements DataSour
      * @deprecated use {@link #getUserName()} instead for the sake of naming
      * compatibility.
      */
+    @Deprecated
     public String getUser() {
         return getUserName();
     }
@@ -164,6 +167,7 @@ public class FBSimpleDataSource extends RootCommonDataSource implements DataSour
      * @deprecated use {@link #setUserName(String)} instead for the sake of
      * naming compatibility.
      */
+    @Deprecated
     public void setUser(String user) {
         setUserName(user);
     }

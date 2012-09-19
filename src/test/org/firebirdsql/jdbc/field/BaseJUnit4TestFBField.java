@@ -272,7 +272,7 @@ public abstract class BaseJUnit4TestFBField<T extends FBField, O> {
     
     @Test(expected = FBDriverNotCapableException.class)
     public void getObjectMapNonNull() throws SQLException {
-        field.getObject(new HashMap());
+        field.getObject(new HashMap<String,Class<?>>());
     }
     
     @Test(expected = FBDriverNotCapableException.class)

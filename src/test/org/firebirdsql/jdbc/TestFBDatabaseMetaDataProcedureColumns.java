@@ -340,7 +340,7 @@ public class TestFBDatabaseMetaDataProcedureColumns extends FBMetaDataTestBase<T
 
     @Override
     protected Map<ProcedureColumnMetaData, Object> getDefaultValueValidationRules() throws Exception {
-        return new EnumMap(DEFAULT_COLUMN_VALUES);
+        return new EnumMap<ProcedureColumnMetaData, Object>(DEFAULT_COLUMN_VALUES);
     }
     
     /**

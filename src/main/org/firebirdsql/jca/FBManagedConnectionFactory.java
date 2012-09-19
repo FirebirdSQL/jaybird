@@ -121,6 +121,7 @@ public class FBManagedConnectionFactory implements ManagedConnectionFactory,
     /**
      * @deprecated use {@link #getBlobBufferSize()}
      */
+    @Deprecated
     public int getBlobBufferLength() {
         return getBlobBufferSize();
     }
@@ -128,6 +129,7 @@ public class FBManagedConnectionFactory implements ManagedConnectionFactory,
     /**
      * @deprecated use {@link #setBlobBufferSize(int)}
      */
+    @Deprecated
     public void setBlobBufferLength(int value) {
         setBlobBufferSize(value);
     }
@@ -135,6 +137,7 @@ public class FBManagedConnectionFactory implements ManagedConnectionFactory,
     /**
      * @deprecated use {@link #getDefaultTransactionIsolation()}
      */
+    @Deprecated
     public Integer getTransactionIsolation() {
         return Integer.valueOf(getDefaultTransactionIsolation());
     }
@@ -142,6 +145,7 @@ public class FBManagedConnectionFactory implements ManagedConnectionFactory,
     /**
      * @deprecated use {@link #setDefaultTransactionIsolation(int)}
      */
+    @Deprecated
     public void setTransactionIsolation(Integer value) {
         if (value != null)
             setDefaultTransactionIsolation(value.intValue());
@@ -150,6 +154,7 @@ public class FBManagedConnectionFactory implements ManagedConnectionFactory,
     /**
      * @deprecated use {@link #getDefaultIsolation()}
      */
+    @Deprecated
     public String getTransactionIsolationName() {
         return getDefaultIsolation();
     }
@@ -157,6 +162,7 @@ public class FBManagedConnectionFactory implements ManagedConnectionFactory,
     /**
      * @deprecated use {@link #setDefaultIsolation(String)} 
      */
+    @Deprecated
     public void setTransactionIsolationName(String name) {
         setDefaultIsolation(name);
     }
@@ -164,6 +170,7 @@ public class FBManagedConnectionFactory implements ManagedConnectionFactory,
     /**
      * @deprecated use {@link #getCharSet()} instead.
      */
+    @Deprecated
     public String getLocalEncoding() {
         return getCharSet();
     }
@@ -171,6 +178,7 @@ public class FBManagedConnectionFactory implements ManagedConnectionFactory,
     /**
      * @deprecated use {@link #setCharSet(String)} instead.
      */
+    @Deprecated
     public void setLocalEncoding(String localEncoding) {
         setCharSet(localEncoding);
     }
@@ -508,7 +516,9 @@ public class FBManagedConnectionFactory implements ManagedConnectionFactory,
         
         Iterator i = connectionSet.iterator();
         while (i.hasNext()) {
-            FBManagedConnection mc = (FBManagedConnection) i.next();
+            Object connection = i.next();
+            if (!(connection instanceof FBManagedConnection)) continue;
+            FBManagedConnection mc = (FBManagedConnection) connection;
 
             if (mc.matches(subject, cxRequestInfo))
                 return mc;
@@ -769,7 +779,7 @@ public class FBManagedConnectionFactory implements ManagedConnectionFactory,
 
     AbstractConnection newConnection(FBManagedConnection mc)
             throws ResourceException {
-        Class connectionClass = GDSFactory.getConnectionClass(getGDSType());
+        Class<?> connectionClass = GDSFactory.getConnectionClass(getGDSType());
 
         if (!AbstractConnection.class.isAssignableFrom(connectionClass))
             throw new IllegalArgumentException("Specified connection class"
@@ -777,7 +787,7 @@ public class FBManagedConnectionFactory implements ManagedConnectionFactory,
                     + " class");
 
         try {
-            Constructor constructor = connectionClass
+            Constructor<?> constructor = connectionClass
                     .getConstructor(new Class[] { FBManagedConnection.class});
 
             return (AbstractConnection) constructor

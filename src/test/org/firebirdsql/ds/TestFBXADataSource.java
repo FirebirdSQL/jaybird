@@ -26,7 +26,6 @@ import java.sql.SQLException;
 import java.sql.Savepoint;
 import java.sql.Statement;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 
 import javax.sql.XAConnection;
@@ -49,7 +48,7 @@ import static org.firebirdsql.common.FBTestProperties.*;
  */
 public class TestFBXADataSource extends FBTestBase {
     
-    private List connections = new ArrayList();
+    private List<XAConnection> connections = new ArrayList<XAConnection>();
 
     public TestFBXADataSource(String name) {
         super(name);
@@ -75,9 +74,7 @@ public class TestFBXADataSource extends FBTestBase {
     }
 
     public void tearDown() throws Exception {
-        Iterator iter = connections.iterator();
-        while (iter.hasNext()) {
-            XAConnection pc = (XAConnection) iter.next();
+        for (XAConnection pc : connections) {
             closeQuietly(pc);
         }
         super.tearDown();

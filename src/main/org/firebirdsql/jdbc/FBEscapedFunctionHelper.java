@@ -33,7 +33,7 @@ public class FBEscapedFunctionHelper {
     /*
      * This map contains mapping between JDBC function names and Firebird ones.
      */
-    private static final HashMap FUNCTION_MAP = new HashMap();
+    private static final Map<String, String> FUNCTION_MAP = new HashMap<String, String>();
     static {
         
         /* Numeric Functions */
@@ -160,7 +160,7 @@ public class FBEscapedFunctionHelper {
      * 
      * @throws FBSQLParseException if parse error occurs.
      */
-    public static List parseArguments(String functionCall) throws FBSQLParseException {
+    public static List<String> parseArguments(String functionCall) throws FBSQLParseException {
         functionCall = functionCall.trim();
         
         checkSyntax(functionCall);
@@ -170,7 +170,7 @@ public class FBEscapedFunctionHelper {
         String paramsString = functionCall.substring(
             parenthesisStart + 1, functionCall.length() - 1);
             
-        List params = new ArrayList();
+        List<String> params = new ArrayList<String>();
         StringBuffer sb = new StringBuffer();
         boolean inQuotes = false;
         boolean inDoubleQuotes = false;
@@ -243,9 +243,9 @@ public class FBEscapedFunctionHelper {
      */
     public static String convertTemplate(String functionCall, int mode) throws FBSQLParseException {
         String name = parseFunction(functionCall);
-        String[] params = (String[])parseArguments(functionCall).toArray(new String[0]);
+        String[] params = parseArguments(functionCall).toArray(new String[0]);
         
-        String firebirdTemplate = (String)FUNCTION_MAP.get(name.toUpperCase());
+        String firebirdTemplate = FUNCTION_MAP.get(name.toUpperCase());
 
         if (firebirdTemplate != null) 
             return MessageFormat.format(firebirdTemplate, (Object[])params);

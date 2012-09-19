@@ -24,6 +24,7 @@ import java.util.Arrays;
 
 import junit.framework.TestCase;
 
+import org.firebirdsql.common.StringHelper;
 import org.firebirdsql.gds.BlobParameterBuffer;
 import org.firebirdsql.gds.DatabaseParameterBuffer;
 import org.firebirdsql.gds.GDS;
@@ -308,8 +309,8 @@ public class TestNgds extends TestCase {
                 ISCConstants.SQL_DIALECT_CURRENT, null, xsqlda);
 
         if (log != null)
-            log.info("test- retrieved inserted row C1 = " + xsqlda.sqlvar[0].sqldata + "     "
-                    + "C2 = " + xsqlda.sqlvar[1].sqldata);
+            log.info("test- retrieved inserted row C1 = " + StringHelper.toHex(xsqlda.sqlvar[0].sqldata) + "     "
+                    + "C2 = " + StringHelper.toHex(xsqlda.sqlvar[1].sqldata));
 
         commit(t1);
         teardownTable(db1);
@@ -442,9 +443,9 @@ public class TestNgds extends TestCase {
             StringBuilder out = new StringBuilder();
 
             for (int i = 0; i < out_xsqlda.sqld; i++) {
-                Object data = row[i];
+                byte[] data = row[i];
 
-                out.append("column: ").append(i).append(", value: ").append(data);
+                out.append("column: ").append(i).append(", value: ").append(StringHelper.toHex(data));
             }
 
             if (log != null) log.info("fetch returned: " + out);
@@ -532,9 +533,9 @@ public class TestNgds extends TestCase {
             StringBuilder out = new StringBuilder();
 
             for (int i = 0; i < out_xsqlda.sqld; i++) {
-                Object data = row[i];
+                byte[] data = row[i];
 
-                out.append("column: ").append(i).append(", value: ").append(data);
+                out.append("column: ").append(i).append(", value: ").append(StringHelper.toHex(data));
             }
 
             if (log != null) log.info(out);
@@ -632,9 +633,9 @@ public class TestNgds extends TestCase {
             StringBuilder out = new StringBuilder();
 
             for (int i = 0; i < out_xsqlda.sqld; i++) {
-                Object data = row[i];
+                byte[] data = row[i];
 
-                out.append("column: ").append(i).append(", value: ").append(data);
+                out.append("column: ").append(i).append(", value: ").append(StringHelper.toHex(data));
             }
 
             if (log != null) log.info(out);
@@ -733,9 +734,9 @@ public class TestNgds extends TestCase {
             StringBuilder out = new StringBuilder();
 
             for (int i = 0; i < out_xsqlda.sqld; i++) {
-                Object data = row[i];
+                byte[] data = row[i];
 
-                out.append("column: ").append(i).append(", value: ").append(data);
+                out.append("column: ").append(i).append(", value: ").append(StringHelper.toHex(data));
             }
 
             if (log != null) log.info(out);

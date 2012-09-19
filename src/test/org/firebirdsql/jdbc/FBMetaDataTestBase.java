@@ -44,7 +44,7 @@ import static org.firebirdsql.common.JdbcResourceHelper.*;
  * @param <T>
  *            Enum containing the metadata columns to be validated.
  */
-public abstract class FBMetaDataTestBase<T extends Enum & MetaDataInfo> extends FBTestBase {
+public abstract class FBMetaDataTestBase<T extends Enum<T> & MetaDataInfo> extends FBTestBase {
 
     private Class<T> metaDataInfoClass;
 

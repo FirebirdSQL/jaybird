@@ -26,17 +26,18 @@ package org.firebirdsql.gds.impl;
 
 import java.io.Serializable;
 import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Type-safe "enumeration" of the GDS types registered in the system. 
  */
 public final class GDSType implements Serializable {
     
-    private final static HashMap typeMap = new HashMap();
+    private final static Map<String, GDSType> typeMap = new HashMap<String, GDSType>();
 
     // Getter for the typeMap variable, please note that static initializer of
     // the GDSFactory class will access the registerType(String) method
-    private static HashMap getTypeMap() {
+    private static Map<String, GDSType> getTypeMap() {
         return typeMap;
     }
     
@@ -71,7 +72,7 @@ public final class GDSType implements Serializable {
         if (type == null)
             return null;
             
-        return (GDSType)getTypeMap().get(type.toUpperCase());
+        return getTypeMap().get(type.toUpperCase());
     }
     
     /**
@@ -84,11 +85,11 @@ public final class GDSType implements Serializable {
      * name.
      */
     static GDSType registerType(String typeName) {
-        HashMap typeMap = getTypeMap();
+        Map<String, GDSType> typeMap = getTypeMap();
         
         synchronized(typeMap) {
             if (typeMap.containsKey(typeName))
-                return (GDSType)typeMap.get(typeName);
+                return typeMap.get(typeName);
             
             GDSType type = new GDSType(typeName);
             typeMap.put(typeName, type);

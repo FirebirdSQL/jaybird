@@ -166,7 +166,7 @@ public class FBRowUpdater implements FirebirdRowUpdater  {
         this.processing = false;
     }
 
-    private void deallocateStatement(AbstractIscStmtHandle handle, SQLExceptionChainBuilder chain) {
+    private void deallocateStatement(AbstractIscStmtHandle handle, SQLExceptionChainBuilder<SQLException> chain) {
     	try {
     		if (handle != null)
     			gdsHelper.closeStatement(handle, true);
@@ -177,7 +177,7 @@ public class FBRowUpdater implements FirebirdRowUpdater  {
     
     public void close() throws SQLException {
     	
-    	SQLExceptionChainBuilder chain = new SQLExceptionChainBuilder();
+    	SQLExceptionChainBuilder<SQLException> chain = new SQLExceptionChainBuilder<SQLException>();
     	deallocateStatement(selectStatement, chain);
     	deallocateStatement(insertStatement, chain);
     	deallocateStatement(updateStatement, chain);

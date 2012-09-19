@@ -35,6 +35,7 @@ import java.net.UnknownHostException;
 
 import java.security.AccessController;
 import java.security.PrivilegedAction;
+import java.util.Collections;
 import java.util.Map;
 import java.util.HashMap;
 
@@ -499,8 +500,8 @@ public abstract class AbstractJavaGDSImpl extends AbstractGDS implements GDS {
     }
 
 	private String getSystemPropertyPrivileged(final String propertyName) {
-	    return (String)AccessController.doPrivileged(new PrivilegedAction() {
-	       public Object run() {
+	    return AccessController.doPrivileged(new PrivilegedAction<String>() {
+	       public String run() {
 	           return System.getProperty(propertyName);
 	       } 
 	    });
@@ -2293,7 +2294,6 @@ public abstract class AbstractJavaGDSImpl extends AbstractGDS implements GDS {
 
 	public static void calculateBLR(XSQLDA xsqlda) throws GDSException {
 		int blr_len = 0;
-		// byte[] blr = null;
 
 		if (xsqlda != null) {
 			// Determine the BLR length
@@ -2991,9 +2991,9 @@ public abstract class AbstractJavaGDSImpl extends AbstractGDS implements GDS {
                     byte[] ipBytes = db.in.readRawBuffer(4);
                     respLen -= 4;
                     
-                    StringBuffer ipBuf = new StringBuffer();
+                    StringBuilder ipBuf = new StringBuilder();
                     for (int i = 0; i < 4; i++){
-                        ipBuf.append((int)(ipBytes[i] & 0xff));
+                        ipBuf.append(ipBytes[i] & 0xff);
                         if (i < 3) ipBuf.append(".");
                     }
                     String ipAddress = ipBuf.toString();
@@ -3034,7 +3034,6 @@ public abstract class AbstractJavaGDSImpl extends AbstractGDS implements GDS {
         handleImp.calculateCount();
     }
 
-
     public void iscCancelEvents(IscDbHandle dbHandle, EventHandle eventHandle)
             throws GDSException {
         isc_db_handle_impl db = (isc_db_handle_impl)dbHandle;
@@ -3065,7 +3064,6 @@ public abstract class AbstractJavaGDSImpl extends AbstractGDS implements GDS {
         return new EventHandleImp(eventName);
     }
 
-
     class EventCoordinatorImp implements EventCoordinator, Runnable {
 
         private int handle;
@@ -3073,7 +3071,7 @@ public abstract class AbstractJavaGDSImpl extends AbstractGDS implements GDS {
         private int port;
         private int eventsId = 0;
         isc_db_handle_impl db;
-        private Map globMap = new HashMap();
+        private final Map<String, EventGlob> globMap = Collections.synchronizedMap(new HashMap<String, EventGlob>());
         private boolean running = true;
 
         public EventCoordinatorImp(int handle, String ipAddress, int port) 
@@ -3088,12 +3086,9 @@ public abstract class AbstractJavaGDSImpl extends AbstractGDS implements GDS {
         }
 
         public boolean cancelEvents(EventHandleImp eventHandle){
-            synchronized (globMap){
-                return globMap.remove(
+            return globMap.remove(
                     Integer.toString(eventHandle.getLocalId())) != null;
-            }
         }
-
 
         public void run(){
             try {
@@ -3132,11 +3127,7 @@ public abstract class AbstractJavaGDSImpl extends AbstractGDS implements GDS {
                                 }
                             }
 
-                            EventGlob glob = null;
-                            synchronized (globMap){
-                                glob = (EventGlob)globMap.remove(
-                                        Integer.toString(eventId));
-                            }
+                            EventGlob glob = globMap.remove(Integer.toString(eventId));
                             if (glob != null){
                                 glob.getEventHandle().setInternalCount(count);
                                 glob.getEventHandler().eventOccurred();
@@ -3200,16 +3191,15 @@ public abstract class AbstractJavaGDSImpl extends AbstractGDS implements GDS {
             synchronized (mainDb){
                 try {
                     synchronized (globMap){
-                        eventHandle.setLocalId(++this.eventsId);
+                        eventHandle.setLocalId(++eventsId);
                         mainDb.out.writeInt(op_que_events);
-                        mainDb.out.writeInt(this.handle);
+                        mainDb.out.writeInt(handle);
                         byte [] epb = eventHandle.toByteArray();
                         mainDb.out.writeBuffer(epb);
                         mainDb.out.writeInt(0); // Address of ast
                         mainDb.out.writeInt(0); // Address of ast arg
                         mainDb.out.writeInt(eventHandle.getLocalId());
                         mainDb.out.flush();
-
 
                         receiveResponse(mainDb,-1);
                         int eventId = mainDb.getResp_object();

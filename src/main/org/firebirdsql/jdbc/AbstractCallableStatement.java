@@ -144,8 +144,8 @@ public abstract class AbstractCallableStatement extends FBPreparedStatement impl
             try {
                 notifyStatementStarted();
 
-                List results = new ArrayList(batchList.size());
-                Iterator iterator = batchList.iterator();
+                List<Integer> results = new ArrayList<Integer>(batchList.size());
+                Iterator<Object> iterator = batchList.iterator();
 
                 try {
                     while (iterator.hasNext()) {
@@ -164,7 +164,7 @@ public abstract class AbstractCallableStatement extends FBPreparedStatement impl
         }
     }
     
-    private void executeSingleForBatch(List results) throws SQLException {
+    private void executeSingleForBatch(List<Integer> results) throws SQLException {
         /*
          * TODO: array given to BatchUpdateException might not be JDBC-compliant
          * (should set Statement.EXECUTE_FAILED and throwing it right away
@@ -200,13 +200,9 @@ public abstract class AbstractCallableStatement extends FBPreparedStatement impl
      * @throws SQLException if something went wrong.
      */
     protected void setRequiredTypes() throws SQLException {
-
         FBResultSet resultSet = (FBResultSet) getCurrentResultSet();
 
-        Iterator iter = procedureCall.getOutputParams().iterator();
-        while (iter.hasNext()) {
-            FBProcedureParam param = (FBProcedureParam) iter.next();
-
+        for (FBProcedureParam param : procedureCall.getOutputParams()) {
             if (param == null)
                 continue;
 
@@ -366,11 +362,7 @@ public abstract class AbstractCallableStatement extends FBPreparedStatement impl
 
         int counter = 0;
 
-        List inputParams = procedureCall.getInputParams();
-        Iterator iter = inputParams.iterator();
-        while (iter.hasNext()) {
-            FBProcedureParam param = (FBProcedureParam) iter.next();
-
+        for (FBProcedureParam param : procedureCall.getInputParams()) {
             if (param != null && param.isParam()) {
 
                 counter++;
@@ -640,6 +632,7 @@ public abstract class AbstractCallableStatement extends FBPreparedStatement impl
      * @exception SQLException if a database access error occurs
      * @deprecated
      */
+    @Deprecated
     public BigDecimal getBigDecimal(int parameterIndex, int scale)
         throws SQLException
     {
@@ -754,13 +747,13 @@ public abstract class AbstractCallableStatement extends FBPreparedStatement impl
     * @since 1.2
     * @see <a href="package-summary.html#2.0 API">What Is in the JDBC 2.0 API</a>
     */
-    public Object getObject(int parameterIndex, Map map) throws SQLException {
+    public Object getObject(int parameterIndex, Map<String, Class<?>> map) throws SQLException {
         assertHasData(getCurrentResultSet());
         parameterIndex = procedureCall.mapOutParamIndexToPosition(parameterIndex);
         return getCurrentResultSet().getObject(parameterIndex, map);
     }
     
-    public Object getObject(String colName, Map map) throws SQLException {
+    public Object getObject(String colName, Map<String, Class<?>> map) throws SQLException {
         return getObject(findOutParameter(colName), map);
     }
     

@@ -83,9 +83,9 @@ public interface FirebirdConnection extends Connection {
      * @deprecated use {@link #setTransactionParameters(int, TransactionParameterBuffer)}
      * instead.
      */
+    @Deprecated
     void setTransactionParameters(int isolationLevel, int[] parameters)
         throws SQLException;
-    
     
     /**
      * Get transaction parameters for the specified transaction isolation level.

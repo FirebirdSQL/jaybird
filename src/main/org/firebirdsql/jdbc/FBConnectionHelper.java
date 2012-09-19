@@ -71,7 +71,7 @@ public class FBConnectionHelper {
     static {
         final Map<String, Integer> tempDpbTypes = new HashMap<String, Integer>();
         final Map<String, Integer> tempTpbTypes = new HashMap<String, Integer>();
-        Class iscClass = ISCConstants.class;
+        Class<ISCConstants> iscClass = ISCConstants.class;
 
         Field[] fields = iscClass.getFields();
 

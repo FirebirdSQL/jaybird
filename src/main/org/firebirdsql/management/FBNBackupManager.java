@@ -20,7 +20,7 @@ package org.firebirdsql.management;
 
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.Iterator;
+import java.util.List;
 
 import org.firebirdsql.gds.GDS;
 import org.firebirdsql.gds.ISCConstants;
@@ -36,7 +36,7 @@ import org.firebirdsql.jdbc.FBSQLException;
  */
 public class FBNBackupManager extends FBServiceManager implements NBackupManager {
 
-    private ArrayList backupFiles = new ArrayList();
+    private final List<String> backupFiles = new ArrayList<String>();
     
     private int backupLevel = 0;
     private boolean noDBTriggers = false;
@@ -82,14 +82,14 @@ public class FBNBackupManager extends FBServiceManager implements NBackupManager
      * @see org.firebirdsql.management.NBackupManager#addBackupFile(java.lang.String)
      */
     public void addBackupFile(String backupFile) {
-        this.backupFiles.add(backupFile);
+        backupFiles.add(backupFile);
     }
     
     /**
      * @see org.firebirdsql.management.NBackupManager#clearBackupFiles()
      */
     public void clearBackupFiles() {
-        this.backupFiles.clear();
+        backupFiles.clear();
     }
     
     /**
@@ -118,17 +118,15 @@ public class FBNBackupManager extends FBServiceManager implements NBackupManager
                 ISCConstants.isc_action_svc_nbak);
 
         backupSPB.addArgument(ISCConstants.isc_spb_dbname, getDatabase());
-        Iterator it = this.backupFiles.iterator();
-        if (it.hasNext()) {
-            String backupFile = (String) it.next();
-            
-            backupSPB.addArgument(ISCConstants.isc_spb_nbk_file, backupFile);
-            backupSPB.addArgument(ISCConstants.isc_spb_nbk_level, this.backupLevel);
-            if (this.noDBTriggers)
-            	backupSPB.addArgument(ISCConstants.isc_spb_options, ISCConstants.isc_spb_nbk_no_triggers);
-        } else {
-        	throw new FBSQLException("No backup file specified");
+        if (backupFiles.size() == 0) {
+            throw new FBSQLException("No backup file specified");
         }
+        String backupFile = backupFiles.get(0);
+        
+        backupSPB.addArgument(ISCConstants.isc_spb_nbk_file, backupFile);
+        backupSPB.addArgument(ISCConstants.isc_spb_nbk_level, backupLevel);
+        if (noDBTriggers)
+        	backupSPB.addArgument(ISCConstants.isc_spb_options, ISCConstants.isc_spb_nbk_no_triggers);
         
         return backupSPB;
     }
@@ -154,15 +152,12 @@ public class FBNBackupManager extends FBServiceManager implements NBackupManager
 
         restoreSPB.addArgument(ISCConstants.isc_spb_dbname, getDatabase());
         
-        Iterator it = this.backupFiles.iterator();
-        if (it.hasNext()) {
-        	while (it.hasNext()) {
-                String backupFile = (String) it.next();
-                restoreSPB.addArgument(ISCConstants.isc_spb_nbk_file, backupFile);
-        	}
-        } else {
-        	throw new FBSQLException("No backup file specified");
+        if (backupFiles.size() == 0) {
+            throw new FBSQLException("No backup file specified");
         }
+    	for (String backupFile : backupFiles) {
+            restoreSPB.addArgument(ISCConstants.isc_spb_nbk_file, backupFile);
+    	}
 
         return restoreSPB;
     }

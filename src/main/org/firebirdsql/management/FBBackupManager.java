@@ -21,6 +21,7 @@ package org.firebirdsql.management;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
 
 import org.firebirdsql.gds.GDS;
 import org.firebirdsql.gds.ISCConstants;
@@ -31,8 +32,7 @@ import org.firebirdsql.jdbc.FBSQLException;
 /**
  * Implements the backup and restore functionality of Firebird Services API.
  * 
- * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy
- *         </a>
+ * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
  */
 public class FBBackupManager extends FBServiceManager implements BackupManager {
 
@@ -77,10 +77,10 @@ public class FBBackupManager extends FBServiceManager implements BackupManager {
     }
 
     private boolean noLimitBackup = false;
-    private ArrayList backupPaths = new ArrayList();
+    private List<PathSizeStruct> backupPaths = new ArrayList<PathSizeStruct>();
     
     private boolean noLimitRestore = false;
-    private ArrayList restorePaths = new ArrayList();
+    private List<PathSizeStruct> restorePaths = new ArrayList<PathSizeStruct>();
     
     private boolean verbose;
 
@@ -226,8 +226,8 @@ public class FBBackupManager extends FBServiceManager implements BackupManager {
 
         backupSPB.addArgument(ISCConstants.isc_spb_dbname, getDatabase());
         
-        for (Iterator iter = backupPaths.iterator(); iter.hasNext();) {
-            PathSizeStruct pathSize = (PathSizeStruct) iter.next();
+        for (Iterator<PathSizeStruct> iter = backupPaths.iterator(); iter.hasNext();) {
+            PathSizeStruct pathSize = iter.next();
             
             backupSPB.addArgument(ISCConstants.isc_spb_bkp_file, pathSize.getPath());
             
@@ -340,15 +340,13 @@ public class FBBackupManager extends FBServiceManager implements BackupManager {
                 .createServiceRequestBuffer(ISCConstants.isc_action_svc_restore);
 
         // backup files without sizes
-        for (Iterator iter = backupPaths.iterator(); iter.hasNext();) {
-            PathSizeStruct pathSize = (PathSizeStruct) iter.next();
-            
+        for (PathSizeStruct pathSize : backupPaths) {
             restoreSPB.addArgument(ISCConstants.isc_spb_bkp_file, pathSize.getPath());            
         }
         
         // restore files with sizes except the last one
-        for (Iterator iter = restorePaths.iterator(); iter.hasNext();) {
-            PathSizeStruct pathSize = (PathSizeStruct) iter.next();
+        for (Iterator<PathSizeStruct> iter = restorePaths.iterator(); iter.hasNext();) {
+            PathSizeStruct pathSize = iter.next();
             
             restoreSPB.addArgument(ISCConstants.isc_spb_dbname, pathSize.getPath());
             

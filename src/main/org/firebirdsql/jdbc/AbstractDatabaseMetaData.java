@@ -20,7 +20,6 @@
  */
 package org.firebirdsql.jdbc;
 
-
 import java.sql.*;
 import java.util.*;
 
@@ -63,9 +62,7 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
     private GDSHelper gdsHelper;
     private AbstractConnection connection;
 
-    HashMap statements = new HashMap();
-
-    //PreparedStatement tables = null;
+    protected final Map<String, AbstractPreparedStatement> statements = new HashMap<String, AbstractPreparedStatement>();
 
     protected AbstractDatabaseMetaData(GDSHelper gdsHelper) {
         this.gdsHelper = gdsHelper;
@@ -78,9 +75,7 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
 
     protected void close() {
         try {
-            Iterator i = statements.values().iterator();
-            while(i.hasNext()) {
-                AbstractStatement stmt = (AbstractPreparedStatement)i.next();
+            for (AbstractStatement stmt : statements.values()) {
                 if (!stmt.isClosed())
                     stmt.close();
             }
@@ -1885,13 +1880,13 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
         sql += GET_PROCEDURES_END;
         
         // check the original case identifiers first
-        ArrayList params = new ArrayList();
+        List<String> params = new ArrayList<String>();
         if (!procedureClause.getCondition().equals("")) {
             params.add(procedureClause.getOriginalCaseValue());
         }
 
         ResultSet rs = doQuery(sql, params);
-        ArrayList rows = new ArrayList();
+        ArrayList<byte[][]> rows = new ArrayList<byte[][]>();
         
         // if nothing found, check the uppercased identifiers
         if (!rs.next()) {
@@ -2170,7 +2165,7 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
         sql += GET_PROCEDURE_COLUMNS_END;
         
         // check the original case identifiers first
-        ArrayList params = new ArrayList();
+        List<String> params = new ArrayList<String>();
         if (!procedureClause.getCondition().equals("")) {
             params.add(procedureClause.getOriginalCaseValue());
         }
@@ -2179,7 +2174,7 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
         }
 
         ResultSet rs = doQuery(sql, params);
-        ArrayList rows = new ArrayList();
+        List<byte[][]> rows = new ArrayList<byte[][]>();
         
         // if nothing found, check the uppercased identifiers
         if (!rs.next()) {
@@ -2427,7 +2422,7 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
             types = ALL_TYPES;
         }
         String sql;
-        ArrayList params = new ArrayList();
+        List<String> params = new ArrayList<String>();
         if (isAllCondition(tableNamePattern)) {
             sql = GET_TABLES_ALL;
             params.add(getWantsSystemTables(types));
@@ -2498,7 +2493,7 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
         xsqlvars[0].sqlname = "TABLE_CAT";
         xsqlvars[0].relname = "TABLECATALOGS";
 
-        ArrayList rows = new ArrayList(0);
+        List<byte[][]> rows = Collections.emptyList();
 
         return new FBResultSet(xsqlvars, rows);
     }
@@ -2527,7 +2522,7 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
         xsqlvars[0].sqlname = "TABLE_TYPE";
         xsqlvars[0].relname = "TABLETYPES";
 
-        ArrayList rows = new ArrayList(ALL_TYPES.length);
+        List<byte[][]> rows = new ArrayList<byte[][]>(ALL_TYPES.length);
         for(int i = 0; i < ALL_TYPES.length; i++)
           rows.add(new byte[][] {getBytes(ALL_TYPES[i])});
 
@@ -2797,7 +2792,7 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
         sql += columnClause.getCondition();
         sql += GET_COLUMNS_END;
         
-        ArrayList params = new ArrayList();
+        List<String> params = new ArrayList<String>();
         
         // check first original case values
         if (!tableClause.getCondition().equals("")) {
@@ -2808,7 +2803,7 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
         }
         
         ResultSet rs = doQuery(sql, params);
-        ArrayList rows = new ArrayList();
+        List<byte[][]> rows = new ArrayList<byte[][]>();
 
         // if no direct match happened, check the uppercased match
         if (!rs.next()) {
@@ -3199,7 +3194,7 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
         sql += columnClause.getCondition();
         sql += GET_COLUMN_PRIVILEGES_END;
         
-        ArrayList params = new ArrayList();
+        List<String> params = new ArrayList<String>();
         
         // check the original case first
         table = stripQuotes(stripEscape(table), false);
@@ -3208,7 +3203,7 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
             params.add(columnClause.getOriginalCaseValue());
         }
         
-        ArrayList rows = new ArrayList();
+        List<byte[][]> rows = new ArrayList<byte[][]>();
         ResultSet rs = doQuery(sql, params);
         
         // if nothing was found, check the uppercased identifiers
@@ -3323,7 +3318,7 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
         sql += GET_TABLE_PRIVILEGES_END;
         
         // check the original case identifiers first
-        ArrayList params = new ArrayList();
+        List<String> params = new ArrayList<String>();
         if (!tableClause.getCondition().equals("")) {
             params.add(tableClause.getOriginalCaseValue());
         }
@@ -3341,7 +3336,7 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
             
             // if nothing found, return an empty result set
             if (!rs.next())
-                return new FBResultSet(xsqlvars, new ArrayList());
+                return new FBResultSet(xsqlvars, new ArrayList<byte[][]>());
         }
         
         return processTablePrivileges(xsqlvars, rs);
@@ -3396,7 +3391,7 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
     }
     
     protected final FBResultSet processTablePrivileges(XSQLVAR[] xsqlvars, ResultSet fbTablePrivileges) throws SQLException {
-        ArrayList rows = new ArrayList();
+        List<byte[][]> rows = new ArrayList<byte[][]>();
         
         do {
             byte[][] row = new byte[7][];
@@ -3544,9 +3539,9 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
         ResultSet tables = getTables(catalog, schema, table, null);
         
         if (!tables.next())
-            return new FBResultSet(xsqlvars, new ArrayList());
+            return new FBResultSet(xsqlvars, new ArrayList<byte[][]>());
         
-        ArrayList rows = getPrimaryKeyIdentifier(tables.getString(3), scope, xsqlvars);
+        List<byte[][]> rows = getPrimaryKeyIdentifier(tables.getString(3), scope, xsqlvars);
 
         // if no primary key exists, add RDB$DB_KEY as pseudo-column
         if (rows.size() == 0) {
@@ -3579,10 +3574,10 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
      * 
      * @throws SQLException if something went wrong.
      */
-    private ArrayList getPrimaryKeyIdentifier(String table, int scope, XSQLVAR[] xsqlvars) throws SQLException {
-        ArrayList rows = new ArrayList(0);
+    private List<byte[][]> getPrimaryKeyIdentifier(String table, int scope, XSQLVAR[] xsqlvars) throws SQLException {
+        List<byte[][]> rows = new ArrayList<byte[][]>();
 
-        ArrayList params = new ArrayList(2);
+        List<String> params = new ArrayList<String>(2);
         params.add(table);
         params.add(table);
         
@@ -3682,7 +3677,7 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
         xsqlvars[7].sqlname = "PSEUDO_COLUMN";
         xsqlvars[7].relname = "VERSIONCOL";
 
-        ArrayList rows = new ArrayList(0);
+        List<byte[][]> rows = Collections.emptyList();
 
         return new FBResultSet(xsqlvars, rows);
     }
@@ -3775,12 +3770,12 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
         sql += GET_PRIMARY_KEYS_END;
         
         // check the original case identifiers
-        ArrayList params = new ArrayList();
+        List<String> params = new ArrayList<String>();
         if (!tableClause.getCondition().equals("")) {
             params.add(tableClause.getOriginalCaseValue());
         }
         
-        ArrayList rows = new ArrayList();
+        List<byte[][]> rows = new ArrayList<byte[][]>();
         ResultSet rs = doQuery(sql, params);
         
         // if nothing found, check the uppercased identifier
@@ -4005,12 +4000,12 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
         sql += GET_IMPORTED_KEYS_END;
 
         // check the original case identifiers first
-        ArrayList params = new ArrayList();
+        List<String> params = new ArrayList<String>();
         if (!tableClause.getCondition().equals("")) {
             params.add(tableClause.getOriginalCaseValue());
         }
         
-        ArrayList rows = new ArrayList();
+        List<byte[][]> rows = new ArrayList<byte[][]>();
         ResultSet rs = doQuery(sql, params);
         
         // if nothing found, check the uppercased identifiers
@@ -4258,12 +4253,12 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
         sql += GET_EXPORTED_KEYS_END;
         
         // check the original case identifiers first
-        ArrayList params = new ArrayList();
+        List<String> params = new ArrayList<String>();
         if (!tableClause.getCondition().equals("")) {
             params.add(tableClause.getOriginalCaseValue());
         }
 
-        ArrayList rows = new ArrayList();
+        List<byte[][]> rows = new ArrayList<byte[][]>();
         ResultSet rs = doQuery(sql, params);
         
         // if nothing found, check the uppercased identifiers
@@ -4526,7 +4521,7 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
         sql += foreignTableClause.getCondition();
         sql += GET_CROSS_KEYS_END;
         
-        ArrayList params = new ArrayList();
+        List<String> params = new ArrayList<String>();
         
         // check the original case first
         if (!primaryTableClause.getCondition().equals("")) {
@@ -4536,7 +4531,7 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
             params.add(foreignTableClause.getOriginalCaseValue());
         }
 
-        ArrayList rows = new ArrayList();
+        List<byte[][]> rows = new ArrayList<byte[][]>();
         ResultSet rs = doQuery(sql, params);
 
         // if nothing found, check the uppercased identifiers
@@ -4777,7 +4772,7 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
         xsqlvars[17].relname = "TYPEINFO";
 
         //dialect 3 only
-        ArrayList rows = new ArrayList();
+        List<byte[][]> rows = new ArrayList<byte[][]>();
 
         //BIGINT=-5
         rows.add(new byte[][] {getBytes("BIGINT"), createShort(Types.BIGINT)
@@ -5038,13 +5033,13 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
         xsqlvars[12].sqlname = "FILTER_CONDITION";
         xsqlvars[12].relname = "INDEXINFO";
 
-        ArrayList rows = new ArrayList();
+        List<byte[][]> rows = new ArrayList<byte[][]>();
         
         if (table == null) {
             return new FBResultSet(xsqlvars, rows);
         }
 
-        ArrayList params = new ArrayList();
+        List<String> params = new ArrayList<String>();
         params.add(table);
 
         ResultSet rs = doQuery(GET_INDEX_INFO, params);
@@ -5075,7 +5070,7 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
             row[3] = getBytes(isNotUnique ? "T" : "F");
             row[4] = null;
             row[5] = getBytes(rs.getString("INDEX_NAME"));
-            row[6] = xsqlvars[0].encodeShort((short) DatabaseMetaData.tableIndexOther);
+            row[6] = xsqlvars[0].encodeShort(DatabaseMetaData.tableIndexOther);
             String columnName = rs.getString("COLUMN_NAME");
             if (rs.wasNull()) {
                 row[7] = xsqlvars[0].encodeShort((short)1);
@@ -5408,7 +5403,7 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
         xsqlvars[6].sqlname = "BASE_TYPE";
         xsqlvars[6].relname = "UDT";
 
-        ArrayList rows = new ArrayList(0);
+        List<byte[][]> rows = new ArrayList<byte[][]>(0);
 
         return new FBResultSet(xsqlvars, rows);
     }
@@ -5565,7 +5560,7 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
         xsqlvars[5].sqlname = "SUPERTYPE_NAME";
         xsqlvars[5].relname = "SUPERTYPES";
 
-        ArrayList rows = new ArrayList(0);
+        List<byte[][]> rows = Collections.emptyList();
 
         return new FBResultSet(xsqlvars, rows);
     }
@@ -5634,7 +5629,7 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
         xsqlvars[3].sqlname = "SUPERTABLE_NAME";
         xsqlvars[3].relname = "SUPERTABLES";
 
-        ArrayList rows = new ArrayList(0);
+        List<byte[][]> rows = Collections.emptyList();
 
         return new FBResultSet(xsqlvars, rows);
     }
@@ -5773,7 +5768,7 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
         xsqlvars[3].sqlname = "DESCRIPTION";
         xsqlvars[3].relname = "UDT";
 
-        ArrayList rows = new ArrayList(0);
+        List<byte[][]> rows = Collections.emptyList();
 
         return new FBResultSet(xsqlvars, rows);
     }
@@ -5968,20 +5963,20 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
         xsqlvars[1].sqlname = "TABLE_CATALOG";
         xsqlvars[1].relname = "TABLESCHEMAS";
 
-        ArrayList rows = new ArrayList(0);
+        List<byte[][]> rows = Collections.emptyList();
 
         return new FBResultSet(xsqlvars, rows);
     }
 
-    public boolean isWrapperFor(Class arg0) throws SQLException {
-        return arg0 != null && arg0.isAssignableFrom(FBDatabaseMetaData.class);
+    public boolean isWrapperFor(Class<?> iface) throws SQLException {
+        return iface != null && iface.isAssignableFrom(FBDatabaseMetaData.class);
     }
 
-    public Object unwrap(Class arg0) throws SQLException {
-        if (!isWrapperFor(arg0))
+    public <T> T unwrap(Class<T> iface) throws SQLException {
+        if (!isWrapperFor(iface))
             throw new FBSQLException("No compatible class found.");
         
-        return this;
+        return iface.cast(this);
     }    
     
     public boolean isAllCondition(String pattern) {
@@ -5989,9 +5984,7 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
             //asks for everything, no condition needed
             return true;
         }
-        else {
-            return false;
-        }
+        return false;
     }
 
     /**
@@ -6116,7 +6109,7 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
         String sResult = null;
         String sql = "Select RDB$PROCEDURE_SOURCE From RDB$PROCEDURES Where "
                 + "RDB$PROCEDURE_NAME = ?";
-        ArrayList params = new ArrayList();
+        List<String> params = new ArrayList<String>();
         params.add(procedureName);
         ResultSet rs = doQuery(sql, params);
         if (rs.next()) sResult = rs.getString(1);
@@ -6134,7 +6127,7 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
         String sResult = null;
         String sql = "Select RDB$TRIGGER_SOURCE From RDB$TRIGGERS Where "
                 + "RDB$TRIGGER_NAME = ?";
-        ArrayList params = new ArrayList();
+        List<String> params = new ArrayList<String>();
         params.add(triggerName);
         ResultSet rs = doQuery(sql, params);
         if (rs.next()) sResult = rs.getString(1);
@@ -6152,7 +6145,7 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
         String sResult = null;
         String sql = "Select RDB$VIEW_SOURCE From RDB$RELATIONS Where "
                 + "RDB$RELATION_NAME = ?";
-        ArrayList params = new ArrayList();
+        List<String> params = new ArrayList<String>();
         params.add(viewName);
         ResultSet rs = doQuery(sql, params);
         if (rs.next()) sResult = rs.getString(1);
@@ -6161,7 +6154,6 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
         return sResult;
     }
 
-    
     protected void checkCatalogAndSchema(String catalog, String schema) throws SQLException {
         /* 
          * we ignore incorrect catalog and schema specification as 
@@ -6207,7 +6199,6 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
         }
     }
 
-
     protected byte[] getBytes(String value){
         if (value !=null)
             return value.getBytes();
@@ -6216,9 +6207,7 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
     }
     
     private AbstractPreparedStatement getStatement(String sql) throws SQLException {
-        
-        AbstractPreparedStatement s = 
-            (AbstractPreparedStatement)statements.get(sql);
+        AbstractPreparedStatement s = statements.get(sql);
         
         if (s != null && s.isClosed()) {
             statements.remove(sql);
@@ -6257,13 +6246,13 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
      * @throws SQLException
      *             if a database access error occurs
      */
-    public ResultSet doQuery(String sql, List params)
+    public ResultSet doQuery(String sql, List<String> params)
             throws SQLException {
         
         AbstractPreparedStatement s = getStatement(sql);
         
         for (int i = 0; i < params.size(); i++)
-            s.setStringForced(i + 1, (String) params.get(i));
+            s.setStringForced(i + 1, params.get(i));
 
         return s.executeMetaDataQuery();
     }

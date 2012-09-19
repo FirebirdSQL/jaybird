@@ -150,7 +150,7 @@ class FBXid implements Xid {
      */
     public byte[] getGlobalTransactionId()
     {
-       return (byte[])globalId.clone();
+       return globalId.clone();
     }
 
     /**
@@ -158,7 +158,7 @@ class FBXid implements Xid {
      */
     public byte[] getBranchQualifier()
     {
-        return (byte[])branchId.clone();
+        return branchId.clone();
     }
 
     /**
