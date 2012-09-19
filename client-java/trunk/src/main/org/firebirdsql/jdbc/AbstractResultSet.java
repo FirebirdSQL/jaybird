@@ -171,7 +171,7 @@ public abstract class AbstractResultSet implements FirebirdResultSet, Synchroniz
         }
     }
 
-    protected AbstractResultSet(XSQLVAR[] xsqlvars, ArrayList rows) throws SQLException {
+    protected AbstractResultSet(XSQLVAR[] xsqlvars, List<byte[][]> rows) throws SQLException {
         maxRows = 0;
         fbFetcher = new FBCachedFetcher(rows,this);
         this.xsqlvars = xsqlvars;
@@ -591,6 +591,7 @@ public abstract class AbstractResultSet implements FirebirdResultSet, Synchroniz
     /**
      * @deprecated
      */
+    @Deprecated
     public InputStream getUnicodeStream(int columnIndex) throws SQLException {
         return getField(columnIndex).getUnicodeStream();
     }
@@ -696,6 +697,7 @@ public abstract class AbstractResultSet implements FirebirdResultSet, Synchroniz
      * @exception SQLException if a database access error occurs
      * @deprecated
      */
+    @Deprecated
     public BigDecimal getBigDecimal(int columnIndex, int scale) throws  SQLException {
         return getField(columnIndex).getBigDecimal(scale);
     }
@@ -817,6 +819,7 @@ public abstract class AbstractResultSet implements FirebirdResultSet, Synchroniz
      * @throws SQLException if the given column cannot be retrieved
      * @deprecated
      */
+    @Deprecated
     public BigDecimal getBigDecimal(String columnName, int scale) throws  SQLException {
         return getField(columnName).getBigDecimal(scale);
     }
@@ -890,6 +893,7 @@ public abstract class AbstractResultSet implements FirebirdResultSet, Synchroniz
      * @throws SQLException if the given column cannot be retrieved
      * @deprecated
      */
+    @Deprecated
     public InputStream getUnicodeStream(String columnName) throws  SQLException {
         return getField(columnName).getUnicodeStream();
     }
@@ -2715,7 +2719,7 @@ public abstract class AbstractResultSet implements FirebirdResultSet, Synchroniz
      * @see <a href="package-summary.html#2.0 API">What Is in the JDBC
      *      2.0 API</a>
      */
-    public Object getObject(int i, Map map) throws  SQLException {
+    public Object getObject(int i, Map<String, Class<?>> map) throws  SQLException {
         return getField(i).getObject(map);
     }
 
@@ -2781,7 +2785,7 @@ public abstract class AbstractResultSet implements FirebirdResultSet, Synchroniz
      * @see <a href="package-summary.html#2.0 API">What Is in the JDBC
      *      2.0 API</a>
      */
-    public Object getObject(String columnName, Map map) throws  SQLException {
+    public Object getObject(String columnName, Map<String, Class<?>> map) throws  SQLException {
         return getField(columnName).getObject(map);
     }
 

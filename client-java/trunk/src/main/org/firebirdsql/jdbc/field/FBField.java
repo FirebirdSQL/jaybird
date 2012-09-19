@@ -597,7 +597,7 @@ public abstract class FBField {
         }
         
     }
-    public Object getObject(Map map) throws  SQLException {
+    public Object getObject(Map<String, Class<?>> map) throws  SQLException {
               throw new FBDriverNotCapableException();
     }
     public InputStream getAsciiStream() throws SQLException {

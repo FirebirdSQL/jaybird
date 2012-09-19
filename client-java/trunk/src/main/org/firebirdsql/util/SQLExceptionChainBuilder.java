@@ -63,7 +63,7 @@ public final class SQLExceptionChainBuilder<E extends SQLException> {
      * @param sqle SQLException to add to the chain.
      * @return this SQLExceptionChainBuilder
      */
-    public SQLExceptionChainBuilder append(E sqle) {
+    public SQLExceptionChainBuilder<E> append(E sqle) {
         if (root == null) {
             root = sqle;
         } else {

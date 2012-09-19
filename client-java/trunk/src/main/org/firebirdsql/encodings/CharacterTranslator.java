@@ -72,17 +72,14 @@ public class CharacterTranslator {
             ResourceBundle res = ResourceBundle.getBundle(
                 mappingPath, Locale.getDefault(), getClass().getClassLoader());
                 
-            Enumeration en = res.getKeys();
+            Enumeration<String> en = res.getKeys();
             while(en.hasMoreElements()) {
-                String key = (String)en.nextElement();
+                String key = en.nextElement();
                 String value = res.getString(key);
                 props.put(key, value);
             }
     
-            
-            for (Iterator iter = props.entrySet().iterator(); iter.hasNext();) {
-                Map.Entry entry = (Map.Entry) iter.next();
-                
+            for (Map.Entry<Object, Object> entry : props.entrySet()) {
                 String key = (String)entry.getKey();
                 String value = (String)entry.getValue();
                 

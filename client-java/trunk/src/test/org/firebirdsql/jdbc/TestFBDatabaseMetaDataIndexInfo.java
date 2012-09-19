@@ -246,7 +246,7 @@ public class TestFBDatabaseMetaDataIndexInfo extends FBMetaDataTestBase<TestFBDa
 
     @Override
     protected Map<IndexInfoMetaData, Object> getDefaultValueValidationRules() throws Exception {
-        return new EnumMap(DEFAULT_COLUMN_VALUES);
+        return new EnumMap<IndexInfoMetaData, Object>(DEFAULT_COLUMN_VALUES);
     }
 
     /**

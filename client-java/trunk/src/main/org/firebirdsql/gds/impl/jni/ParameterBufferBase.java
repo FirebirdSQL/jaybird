@@ -16,7 +16,6 @@
  *
  * All rights reserved.
  */
-
 package org.firebirdsql.gds.impl.jni;
 
 import java.util.List;
@@ -42,9 +41,7 @@ abstract class ParameterBufferBase implements java.io.Serializable {
     }
 
     public void addArgument(int argumentType, byte value) {
-
         getArgumentsList().add(new NumericArgument(argumentType, value) {
-
             protected void writeValue(ByteArrayOutputStream outputStream,
                     final int value) {
                 outputStream.write((byte) value);
@@ -61,38 +58,40 @@ abstract class ParameterBufferBase implements java.io.Serializable {
     }
 
     public String getArgumentAsString(int type) {
-        final List argumentsList = getArgumentsList();
+        final List<Argument> argumentsList = getArgumentsList();
         for (int i = 0, n = argumentsList.size(); i < n; i++) {
-            final Argument argument = (Argument) argumentsList.get(i);
-            if (argument.getType() == type) { return argument
-                    .getValueAsString(); }
+            final Argument argument = argumentsList.get(i);
+            if (argument.getType() == type) { 
+                return argument.getValueAsString(); 
+            }
         }
         return null;
     }
 
     public int getArgumentAsInt(int type) {
-        final List argumentsList = getArgumentsList();
+        final List<Argument> argumentsList = getArgumentsList();
         for (int i = 0, n = argumentsList.size(); i < n; i++) {
-            final Argument argument = (Argument) argumentsList.get(i);
-            if (argument.getType() == type) { return argument.getValueAsInt(); }
+            final Argument argument = argumentsList.get(i);
+            if (argument.getType() == type) { 
+                return argument.getValueAsInt(); 
+            }
         }
         return 0;
     }
 
     public boolean hasArgument(int type) {
-        final List argumentsList = getArgumentsList();
-
+        final List<Argument> argumentsList = getArgumentsList();
         for (int i = 0, n = argumentsList.size(); i < n; i++) {
-            final Argument argument = (Argument) argumentsList.get(i);
+            final Argument argument = argumentsList.get(i);
             if (argument.getType() == type) return true;
         }
         return false;
     }
 
     public void removeArgument(int type) {
-        final List argumentsList = getArgumentsList();
+        final List<Argument> argumentsList = getArgumentsList();
         for (int i = 0, n = argumentsList.size(); i < n; i++) {
-            final Argument argument = (Argument) argumentsList.get(i);
+            final Argument argument = argumentsList.get(i);
             if (argument.getType() == type) {
                 argumentsList.remove(i);
                 return;
@@ -103,7 +102,7 @@ abstract class ParameterBufferBase implements java.io.Serializable {
     // Object Implementation
 
     public boolean equals(Object other) {
-        if (other == null || other instanceof ParameterBufferBase == false)
+        if (other == null || !(other instanceof ParameterBufferBase))
             return false;
 
         final ParameterBufferBase otherServiceBufferBase = (ParameterBufferBase) other;
@@ -120,19 +119,19 @@ abstract class ParameterBufferBase implements java.io.Serializable {
 
     protected void writeArgumentsTo(ByteArrayOutputStream outputStream) {
         for (int i = 0, n = arguments.size(); i < n; i++) {
-            final Argument currentArgument = ((Argument) arguments.get(i));
+            final Argument currentArgument = arguments.get(i);
 
             currentArgument.writeTo(outputStream);
         }
     }
 
-    protected List getArgumentsList() {
+    protected List<Argument> getArgumentsList() {
         return arguments;
     }
 
     // PRIVATE MEMBERS
 
-    private final List arguments = new ArrayList();
+    private final List<Argument> arguments = new ArrayList<Argument>();
 
     // ---------------------------------------------------------------------------
     // Inner Classes

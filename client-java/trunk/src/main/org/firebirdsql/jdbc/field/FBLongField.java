@@ -92,13 +92,13 @@ class FBLongField extends FBField {
     public float getFloat() throws SQLException {
         if (getFieldData()==null) return FLOAT_NULL_VALUE;
 
-        return (float) field.decodeLong(getFieldData());
+        return field.decodeLong(getFieldData());
     }
     
     public double getDouble() throws SQLException {
         if (getFieldData()==null) return DOUBLE_NULL_VALUE;
 
-        return (double) field.decodeLong(getFieldData());
+        return field.decodeLong(getFieldData());
     }
     
     public BigDecimal getBigDecimal() throws SQLException {

@@ -22,7 +22,6 @@ package org.firebirdsql.ds;
 
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 
 import javax.sql.PooledConnection;
@@ -39,7 +38,7 @@ import static org.firebirdsql.common.FBTestProperties.*;
  */
 public abstract class FBConnectionPoolTestBase extends FBTestBase {
 
-    private List connections = new ArrayList();
+    private List<PooledConnection> connections = new ArrayList<PooledConnection>();
     protected FBConnectionPoolDataSource ds;
 
     public FBConnectionPoolTestBase(String name) {
@@ -64,9 +63,7 @@ public abstract class FBConnectionPoolTestBase extends FBTestBase {
     }
 
     public void tearDown() throws Exception {
-        Iterator iter = connections.iterator();
-        while (iter.hasNext()) {
-            PooledConnection pc = (PooledConnection) iter.next();
+        for (PooledConnection pc : connections) {
             closeQuietly(pc);
         }
         super.tearDown();

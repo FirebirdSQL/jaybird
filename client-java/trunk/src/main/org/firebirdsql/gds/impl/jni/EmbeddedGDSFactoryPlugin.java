@@ -27,7 +27,7 @@ public class EmbeddedGDSFactoryPlugin implements GDSFactoryPlugin {
         return TYPE_ALIASES;
     }
 
-    public Class getConnectionClass() {
+    public Class<?> getConnectionClass() {
         return FBConnection.class;
     }
 

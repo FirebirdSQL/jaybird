@@ -26,6 +26,7 @@ import java.util.List;
 
 import junit.framework.TestCase;
 
+import org.firebirdsql.common.StringHelper;
 import org.firebirdsql.gds.BlobParameterBuffer;
 import org.firebirdsql.gds.DatabaseParameterBuffer;
 import org.firebirdsql.gds.GDS;
@@ -125,7 +126,7 @@ public class TestNgdsBlobReadBug extends TestCase {
 
     private byte[] readAndBlobRecord(GDS gds, IscDbHandle database_handle) throws Exception {
         int readcount = 0;
-        final List results = new ArrayList();
+        final List<byte[]> results = new ArrayList<byte[]>();
         IscTrHandle transaction_handle = startTransaction(gds, database_handle);
 
         try {
@@ -151,14 +152,14 @@ public class TestNgdsBlobReadBug extends TestCase {
             int size = statement_handle.size();
 
             for (int rowNum = 0; rowNum < size; rowNum++) {
-                row = (byte[][]) rows[rowNum];
+                row = rows[rowNum];
 
                 StringBuilder out = new StringBuilder();
 
                 for (int i = 0; i < out_xsqlda.sqld; i++) {
-                    Object data = row[i];
+                    byte[] data = row[i];
 
-                    out.append("column: ").append(i).append(", value: ").append(data);
+                    out.append("column: ").append(i).append(", value: ").append(StringHelper.toHex(data));
                 }
 
                 if (log != null) log.info(out);
@@ -194,7 +195,7 @@ public class TestNgdsBlobReadBug extends TestCase {
         int currentWritePosition = 0;
         final byte[] returnValue = new byte[readcount];
         for (int i = 0, n = results.size(); i < n; i++) {
-            final byte[] currentArray = (byte[]) results.get(i);
+            final byte[] currentArray = results.get(i);
             System.arraycopy(currentArray, 0, returnValue, currentWritePosition,
                     currentArray.length);
             currentWritePosition += currentArray.length;

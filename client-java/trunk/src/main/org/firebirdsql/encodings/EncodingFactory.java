@@ -102,7 +102,7 @@ public class EncodingFactory {
     
     private static final Map<String, String> javaAliases = new HashMap<String, String>();
 
-    private static final Map translations = Collections.synchronizedMap(new HashMap());
+    private static final Map<String, CharacterTranslator> translations = Collections.synchronizedMap(new HashMap<String, CharacterTranslator>());
     static {
         for (int i = 0; i < DEFAULT_MAPPING.length; i++) {
             DEFAULT_MAPPING[i] = (char)i;
@@ -405,7 +405,7 @@ public class EncodingFactory {
     public static CharacterTranslator getTranslator(String mappingPath) throws SQLException {
         CharacterTranslator translator;
         
-        translator = (CharacterTranslator)translations.get(mappingPath);
+        translator = translations.get(mappingPath);
         
         if (translator == null) {
             translator = new CharacterTranslator();
@@ -477,9 +477,7 @@ public class EncodingFactory {
             return;
         }
 
-        Iterator iterator = props.entrySet().iterator();
-        while(iterator.hasNext()) {
-            Map.Entry entry = (Map.Entry)iterator.next();
+        for (Map.Entry<Object, Object> entry : props.entrySet()) {
             String iscEncoding = (String)entry.getKey();
             String size = (String)entry.getValue();
             byte byteSize = Byte.parseByte(size);

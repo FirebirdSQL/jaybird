@@ -1,15 +1,33 @@
+/*
+ * Firebird Open Source J2ee connector - jdbc driver
+ *
+ * Distributable under LGPL license.
+ * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * LGPL License for more details.
+ *
+ * This file was created by members of the firebird development team.
+ * All individual contributions remain the Copyright (C) of those
+ * individuals.  Contributors to this file are either listed here or
+ * can be obtained from a CVS history command.
+ *
+ * All rights reserved.
+ */
 package org.firebirdsql.jdbc;
 
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
+import java.util.List;
 
 import javax.resource.ResourceException;
 
 import org.firebirdsql.jca.FirebirdLocalTransaction;
 import org.firebirdsql.util.SQLExceptionChainBuilder;
-
 
 /**
  * Transaction coordinator for the {@link org.firebirdsql.jdbc.FBConnection} class.
@@ -25,8 +43,8 @@ public class InternalTransactionCoordinator implements FBObjectListener.Statemen
     public Object getSynchronizationObject() throws SQLException {
         if (coordinator instanceof AutoCommitCoordinator)
             return coordinator.getConnection();
-        else
-            return new Object();
+        // TODO Suspicious using new sync-object every time
+        return new Object();
     }
 
     public InternalTransactionCoordinator(AbstractTransactionCoordinator coordinator) {
@@ -105,7 +123,7 @@ public class InternalTransactionCoordinator implements FBObjectListener.Statemen
         protected FirebirdLocalTransaction localTransaction;
         protected AbstractConnection connection;
         
-        protected Collection statements = new ArrayList();
+        protected Collection<AbstractStatement> statements = new ArrayList<AbstractStatement>();
 
         protected AbstractTransactionCoordinator(AbstractConnection connection, FirebirdLocalTransaction localTransaction) {
             this.localTransaction = localTransaction;
@@ -121,15 +139,15 @@ public class InternalTransactionCoordinator implements FBObjectListener.Statemen
             return connection;
         }
         
-        protected Collection getStatements() {
+        protected Collection<AbstractStatement> getStatements() {
             return statements;
         }
         
-        protected void setStatements(Collection statements) {
+        protected void setStatements(Collection<AbstractStatement> statements) {
             this.statements.addAll(statements);
         }
         protected void completeStatements() throws SQLException {
-            SQLExceptionChainBuilder chain = new SQLExceptionChainBuilder();
+            SQLExceptionChainBuilder<SQLException> chain = new SQLExceptionChainBuilder<SQLException>();
             
             // we have to loop through the array, since the 
             // statement.completeStatement() call causes the 
@@ -179,17 +197,18 @@ public class InternalTransactionCoordinator implements FBObjectListener.Statemen
                 FirebirdLocalTransaction localTransaction) {
             super(connection, localTransaction);
         }
+        
         /* (non-Javadoc)
          * @see org.firebirdsql.jdbc.FBObjectListener.StatementListener#executionStarted(java.sql.Statement)
          */
         public void executionStarted(AbstractStatement stmt) throws SQLException {
 
-            ArrayList tempList = new ArrayList(statements);
+            List<AbstractStatement> tempList = new ArrayList<AbstractStatement>(statements);
             
             // complete all open statements for the connection
             // (there should be only one anyway)
-            for (Iterator iter = tempList.iterator(); iter.hasNext();) {
-                AbstractStatement tempStatement = (AbstractStatement) iter.next();
+            for (Iterator<AbstractStatement> iter = tempList.iterator(); iter.hasNext();) {
+                AbstractStatement tempStatement = iter.next();
                 
                 // enable re-entrancy for the same statement
                 if (tempStatement == stmt) {
@@ -222,6 +241,7 @@ public class InternalTransactionCoordinator implements FBObjectListener.Statemen
                 throw new FBSQLException(ex);
             }
         }
+        
         /* (non-Javadoc)
          * @see org.firebirdsql.jdbc.FBObjectListener.StatementListener#statementClosed(java.sql.Statement)
          */
@@ -233,6 +253,7 @@ public class InternalTransactionCoordinator implements FBObjectListener.Statemen
         public void statementCompleted(AbstractStatement stmt) throws SQLException {
             statementCompleted(stmt, true);
         }
+        
         /* (non-Javadoc)
          * @see org.firebirdsql.jdbc.FBObjectListener.StatementListener#statementCompleted(java.sql.Statement)
          */
@@ -268,12 +289,14 @@ public class InternalTransactionCoordinator implements FBObjectListener.Statemen
             @SuppressWarnings("unused")
             int i = 0;
         }
+        
         /* (non-Javadoc)
          * @see org.firebirdsql.jdbc.FBObjectListener.BlobListener#executionStarted(org.firebirdsql.jdbc.FirebirdBlob)
          */
         public void executionStarted(FirebirdBlob blob) throws SQLException {
             ensureTransaction();
         }
+        
         /* (non-Javadoc)
          * @see org.firebirdsql.jdbc.InternalTransactionCoordinator#commit()
          */
@@ -281,6 +304,7 @@ public class InternalTransactionCoordinator implements FBObjectListener.Statemen
             throw new FBSQLException(
                     "Calling commit() in auto-commit mode is not allowed.");
         }
+        
         /* (non-Javadoc)
          * @see org.firebirdsql.jdbc.InternalTransactionCoordinator#rollback()
          */
@@ -388,7 +412,7 @@ public class InternalTransactionCoordinator implements FBObjectListener.Statemen
          * @see org.firebirdsql.jdbc.InternalTransactionCoordinator.AbstractTransactionCoordinator#completeStatements()
          */
         protected void completeStatements() throws SQLException {
-            SQLExceptionChainBuilder chain = new SQLExceptionChainBuilder();
+            SQLExceptionChainBuilder<SQLException> chain = new SQLExceptionChainBuilder<SQLException>();
 
             // we have to loop through the array, since the 
             // statement.completeStatement() call causes the 

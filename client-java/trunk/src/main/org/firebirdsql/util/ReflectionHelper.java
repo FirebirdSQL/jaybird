@@ -18,7 +18,7 @@
  *
  * All rights reserved.
  */
-package org.firebirdsql.ds;
+package org.firebirdsql.util;
 
 import java.lang.reflect.Method;
 import java.util.HashSet;
@@ -41,17 +41,16 @@ public final class ReflectionHelper {
      * 
      * @return array of all implemented interfaces.
      */
-    public static Class[] getAllInterfaces(Class clazz) {
-        Set result = new HashSet();
+    public static Class<?>[] getAllInterfaces(Class<?> clazz) {
+        Set<Class<?>> result = new HashSet<Class<?>>();
         do {
-            Class[] interfaces = clazz.getInterfaces();
+            Class<?>[] interfaces = clazz.getInterfaces();
             for (int i = 0; i < interfaces.length; i++) {
                 result.add(interfaces[i]);
             }
             clazz = clazz.getSuperclass();
         } while(clazz.getSuperclass() != null);
-        
-        return (Class[])result.toArray(new Class[result.size()]);
+        return result.toArray(new Class<?>[result.size()]);
     }
     
     /**
@@ -67,7 +66,7 @@ public final class ReflectionHelper {
      * @return instance of {@link Method} corresponding to specified name and
      *         param types.
      */
-    public static Method findMethod(Class clazz, String name, Class[] args) {
+    public static Method findMethod(Class<?> clazz, String name, Class<?>[] args) {
         try {
             return clazz.getMethod(name, args);
         } catch (NoSuchMethodException nmex) {

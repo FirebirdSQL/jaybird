@@ -86,6 +86,7 @@ public class FBSQLException extends SQLException {
      *             {@link #FBSQLException(String, String)} in combination with
      *             {@link #setNextException(SQLException)}.
      */
+    @Deprecated
     public FBSQLException(String message, SQLException ex) {
         this(message);
         setNextException(ex);
@@ -106,6 +107,7 @@ public class FBSQLException extends SQLException {
     /**
      * @deprecated use {@link #getCause()} instead.
      */
+    @Deprecated
     public Exception getInternalException() {
         return (Exception) getCause();
     }

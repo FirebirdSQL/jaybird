@@ -21,7 +21,6 @@ package org.firebirdsql.jdbc;
 import java.sql.SQLException;
 import java.util.*;
 
-
 /**
  * Represents procedure call.
  */
@@ -37,29 +36,23 @@ public class FBProcedureCall implements Cloneable {
 			FBProcedureCall newProcedureCall = (FBProcedureCall)super.clone();
 			
 			//Copy each input parameter.
-			Vector params = new Vector();
-			Iterator iterator = inputParams.iterator();
-			while (iterator.hasNext()) {
-				FBProcedureParam param = (FBProcedureParam)iterator.next();
-				params.add(param == null ? null : param.clone());
+			Vector<FBProcedureParam> newInputParams = new Vector<FBProcedureParam>();
+			for (FBProcedureParam param : inputParams) {
+				newInputParams.add((FBProcedureParam) (param == null ? null : param.clone()));
 			}
-			newProcedureCall.inputParams = params;
+			newProcedureCall.inputParams = newInputParams;
 			
 			//Copy each output parameter.
-			params = new Vector();
-			iterator = outputParams.iterator();
-			while (iterator.hasNext()) {
-				FBProcedureParam param = (FBProcedureParam)iterator.next();
-				params.add(param == null ? null : param.clone());
+			Vector<FBProcedureParam> newOutputParams = new Vector<FBProcedureParam>();
+			for (FBProcedureParam param : outputParams) {
+				newOutputParams.add((FBProcedureParam) (param == null ? null : param.clone()));
 			}
-			newProcedureCall.outputParams = params;
+			newProcedureCall.outputParams = newOutputParams;
 
 			return newProcedureCall;
 			
 		} catch (CloneNotSupportedException e){
-			
 			return null;
-			
 		}
 	}
     
@@ -70,8 +63,9 @@ public class FBProcedureCall implements Cloneable {
     public static final boolean OLD_CALLABLE_STATEMENT_COMPATIBILITY = true;
 
     private String name;
-    private Vector inputParams = new Vector();
-    private Vector outputParams = new Vector();
+    // TODO Replace Vector with a List
+    private Vector<FBProcedureParam> inputParams = new Vector<FBProcedureParam>();
+    private Vector<FBProcedureParam> outputParams = new Vector<FBProcedureParam>();
 
     /**
      * Get the name of the procedure to be called.
@@ -134,11 +128,8 @@ public class FBProcedureCall implements Cloneable {
      * 
      * @return instance of {@link FBProcedureParam}.
      */
-    private FBProcedureParam getParam(Collection params, int index) {
-        Iterator iter = params.iterator();
-        while(iter.hasNext()) {
-            FBProcedureParam param = (FBProcedureParam)iter.next();
-            
+    private FBProcedureParam getParam(Collection<FBProcedureParam> params, int index) {
+        for (FBProcedureParam param : params) {
             if (param != null && param.getIndex() == index) 
                 return param;
         }
@@ -183,10 +174,7 @@ public class FBProcedureCall implements Cloneable {
         
     	int position = -1;
 
-        Iterator iter = outputParams.iterator();
-        while(iter.hasNext()) {
-        	FBProcedureParam param = (FBProcedureParam)iter.next();
-            
+        for (FBProcedureParam param : outputParams) {
             if (param != null && param.isParam()) {
                position++;
                
@@ -212,7 +200,7 @@ public class FBProcedureCall implements Cloneable {
      *
      * @return A list of all input parameters
      */
-    public List getInputParams() {
+    public List<FBProcedureParam> getInputParams() {
     	return inputParams;
     }
     
@@ -221,7 +209,7 @@ public class FBProcedureCall implements Cloneable {
      *
      * @return A list of all output parameters
      */
-    public List getOutputParams() {
+    public List<FBProcedureParam> getOutputParams() {
         return outputParams;
     }
     
@@ -287,7 +275,7 @@ public class FBProcedureCall implements Cloneable {
         FBProcedureParam callParam = 
             new FBProcedureParam(position, param);
         
-        Vector params;
+        Vector<FBProcedureParam> params;
         
         if (isInputParam)
             params = inputParams;
@@ -341,7 +329,7 @@ public class FBProcedureCall implements Cloneable {
      * @return native SQL that can be executed by the database server.
      */
     public String getSQL(boolean select) throws FBSQLException {
-        StringBuffer sb = new StringBuffer();
+        StringBuilder sb = new StringBuilder();
         if (select)
             sb.append(AbstractCallableStatement.NATIVE_SELECT_COMMAND);
         else
@@ -350,13 +338,10 @@ public class FBProcedureCall implements Cloneable {
         sb.append(" ");
         sb.append(name);
         
-        StringBuffer paramsBuffer = new StringBuffer();
+        StringBuilder paramsBuffer = new StringBuilder();
         
         boolean firstParam = true;
-        Iterator iter = inputParams.iterator();
-        while(iter.hasNext()) {
-            FBProcedureParam param = (FBProcedureParam)iter.next();
-            
+        for (FBProcedureParam param : inputParams) {
             if (param == null)
                 continue;
             

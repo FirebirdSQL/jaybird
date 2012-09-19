@@ -118,7 +118,7 @@ public final class FBTestProperties {
         return gdsType;
     }
 
-    private static final Map gdsTypeToUrlPrefixMap = new HashMap();
+    private static final Map<GDSType, String> gdsTypeToUrlPrefixMap = new HashMap<GDSType, String>();
     static {
         gdsTypeToUrlPrefixMap.put(GDSType.getType("PURE_JAVA"), "jdbc:firebirdsql:");
         gdsTypeToUrlPrefixMap.put(GDSType.getType("EMBEDDED"), "jdbc:firebirdsql:embedded:");

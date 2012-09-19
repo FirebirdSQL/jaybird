@@ -16,7 +16,6 @@
  *
  * All rights reserved.
  */
-
 package org.firebirdsql.jdbc;
 
 import org.firebirdsql.common.FBTestBase;
@@ -40,8 +39,8 @@ import static org.firebirdsql.common.FBTestProperties.*;
  */
 public class TestFBEncodings extends FBTestBase {
 
-    Vector encJava = new Vector();
-    Vector encFB = new Vector();
+    List<String> encJava = new ArrayList<String>();
+    List<String> encFB = new ArrayList<String>();
 
     public static String CREATE_TABLE = 
     		"CREATE TABLE test_encodings (" +
@@ -138,11 +137,11 @@ public class TestFBEncodings extends FBTestBase {
         String CREATE_TABLE_UNIVERSAL = "CREATE TABLE test_encodings_universal (" +
                 "  id INTEGER ";
         for (int encN = 0; encN < encJava.size(); encN++) {
-            CREATE_TABLE_UNIVERSAL = CREATE_TABLE_UNIVERSAL + "," + (String) encJava.elementAt(encN)
-                    + "_field VARCHAR(50) CHARACTER SET " + (String) encFB.elementAt(encN);
+            CREATE_TABLE_UNIVERSAL = CREATE_TABLE_UNIVERSAL + "," + encJava.get(encN)
+                    + "_field VARCHAR(50) CHARACTER SET " + encFB.get(encN);
         }
         for (int encN = 0; encN < encJava.size(); encN++) {
-            CREATE_TABLE_UNIVERSAL = CREATE_TABLE_UNIVERSAL + ", uc_" + (String) encJava.elementAt(encN)
+            CREATE_TABLE_UNIVERSAL = CREATE_TABLE_UNIVERSAL + ", uc_" + encJava.get(encN)
                     + "_field VARCHAR(50) CHARACTER SET UNICODE_FSS ";
         }
         CREATE_TABLE_UNIVERSAL = CREATE_TABLE_UNIVERSAL + ")";
@@ -632,7 +631,7 @@ public class TestFBEncodings extends FBTestBase {
 
             stmt.setInt(1, UNIVERSAL_TEST_ID);
             for (int col = 0; col < encJava.size(); col++) {
-                String value = new String(UNIVERSAL_TEST_BYTES, (String) encJava.elementAt(col));
+                String value = new String(UNIVERSAL_TEST_BYTES, encJava.get(col));
                 stmt.setString(col + 2, value);
                 stmt.setString(col + encJava.size() + 2, value);
             }
@@ -654,10 +653,10 @@ public class TestFBEncodings extends FBTestBase {
                 String charsetValue = rs.getString(col + 2);
                 String unicodeValue = rs.getString(col + encJava.size() + 2);
 
-                assertEquals("charsetValue " + encJava.elementAt(col) + " should be the same that unicode",
+                assertEquals("charsetValue " + encJava.get(col) + " should be the same that unicode",
                         unicodeValue, charsetValue);
-                assertEquals("charsetValue " + encJava.elementAt(col) + " should be == string", new String(
-                        UNIVERSAL_TEST_BYTES, (String) encJava.elementAt(col)), charsetValue);
+                assertEquals("charsetValue " + encJava.get(col) + " should be == string", new String(
+                        UNIVERSAL_TEST_BYTES, encJava.get(col)), charsetValue);
             }
             assertFalse("Should have exactly one row", rs.next());
 

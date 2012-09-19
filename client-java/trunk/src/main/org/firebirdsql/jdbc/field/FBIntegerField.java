@@ -137,7 +137,7 @@ class FBIntegerField extends FBField {
     }
     
     public void setShort(short value) throws SQLException {
-        setInteger((int)value);
+        setInteger(value);
     }
     
     public void setBoolean(boolean value) throws SQLException {

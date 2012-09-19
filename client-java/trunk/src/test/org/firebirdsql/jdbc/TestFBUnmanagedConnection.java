@@ -127,7 +127,7 @@ public class TestFBUnmanagedConnection extends FBTestBase {
     }
 
     public void testGetTypeMap() throws Exception {
-        Map typeMap = connection.getTypeMap();
+        Map<String, Class<?>> typeMap = connection.getTypeMap();
         assertTrue("TypeMap is null", typeMap != null);
     }
 

@@ -289,7 +289,7 @@ public class TestFBDatabaseMetaData extends TestXABase {
 
         t.begin();
         ResultSet rs = dmd.getColumns(null, null, "TABLE_A", "%");
-        Set tableNames = new HashSet();
+        Set<String> tableNames = new HashSet<String>();
         while (rs.next()) {
             tableNames.add(rs.getString(3));
         }

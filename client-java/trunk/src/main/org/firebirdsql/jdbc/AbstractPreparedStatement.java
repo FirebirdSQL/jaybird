@@ -583,6 +583,7 @@ public abstract class AbstractPreparedStatement extends AbstractStatement implem
      * 
      * I really have no idea if there is anything else we should be doing here
      */
+    @Deprecated
     public void setUnicodeStream(int parameterIndex, InputStream x, int length)
             throws SQLException {
         setBinaryStream(parameterIndex, x, length);
@@ -815,7 +816,8 @@ public abstract class AbstractPreparedStatement extends AbstractStatement implem
         }
     }
 
-    protected final List batchList = new LinkedList();
+    // TODO: AbstractCallableStatement adds FBProcedureCall, while AbstractPreparedStatement adds XSQLVAR[]: separate?
+    protected final List<Object> batchList = new LinkedList<Object>();
 
     /**
      * Adds a set of parameters to this <code>PreparedStatement</code>
@@ -925,8 +927,8 @@ public abstract class AbstractPreparedStatement extends AbstractStatement implem
             try {
                 notifyStatementStarted();
 
-                ArrayList results = new ArrayList(batchList.size());
-                Iterator iter = batchList.iterator();
+                List<Integer> results = new ArrayList<Integer>(batchList.size());
+                Iterator<Object> iter = batchList.iterator();
 
                 try {
                     while (iter.hasNext()) {

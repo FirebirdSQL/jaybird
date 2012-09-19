@@ -56,7 +56,7 @@ public interface IscSvcHandle {
      *         {@link GDSException}representing server warnings (method
      *         {@link GDSException#isWarning()}returns <code>true</code>).
      */
-    List getWarnings();
+    List<GDSException> getWarnings();
 
     /**
      * Clear warning list associated with this connection.

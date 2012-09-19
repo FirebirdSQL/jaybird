@@ -3,6 +3,8 @@ package org.firebirdsql.jdbc.oo;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 import org.firebirdsql.gds.*;
 import org.firebirdsql.gds.impl.GDSHelper;
@@ -29,8 +31,8 @@ public class OODatabaseMetaData extends FBDatabaseMetaData {
         xsqlvars[0].sqlname = "TABLE_SCHEM";
         xsqlvars[0].relname = "TABLESCHEMAS";
 
-        ArrayList rows = new ArrayList(1);
-        rows.add(new byte[][] { getBytes(DEFAULT_SCHEMA)});
+        List<byte[][]> rows = new ArrayList<byte[][]>(1);
+        rows.add(new byte[][] { getBytes(DEFAULT_SCHEMA) });
 
         return new FBResultSet(xsqlvars, rows);
     }
@@ -227,7 +229,7 @@ public class OODatabaseMetaData extends FBDatabaseMetaData {
         sql += GET_TABLE_PRIVILEGES_END_2;
         
         // check the original case identifiers first
-        ArrayList params = new ArrayList();
+        List<String> params = new ArrayList<String>();
         if (!tableClause1.getCondition().equals("")) {
             params.add(tableClause1.getOriginalCaseValue());
         }
@@ -251,7 +253,7 @@ public class OODatabaseMetaData extends FBDatabaseMetaData {
             
             // if nothing found, return an empty result set
             if (!rs.next())
-                return new FBResultSet(xsqlvars, new ArrayList());
+                return new FBResultSet(xsqlvars, Collections.<byte[][]>emptyList());
         }
         
         return processTablePrivileges(xsqlvars, rs);

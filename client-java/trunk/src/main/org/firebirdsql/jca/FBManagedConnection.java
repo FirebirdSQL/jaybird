@@ -76,7 +76,7 @@ public class FBManagedConnection implements ManagedConnection, XAResource, GDSHe
 
     private volatile boolean managedEnvironment = true;
     private volatile boolean connectionSharing = true;
-    private final Set preparedXid = Collections.synchronizedSet(new HashSet());
+    private final Set<Xid> preparedXid = Collections.synchronizedSet(new HashSet<Xid>());
     private volatile boolean inDistributedTransaction = false;
 
     FBManagedConnection(Subject subject, ConnectionRequestInfo cri,
@@ -142,7 +142,7 @@ public class FBManagedConnection implements ManagedConnection, XAResource, GDSHe
             if (subject != null) {
                 // see connector spec, section 8.2.6, contract for
                 // ManagedConnectinFactory, option A.
-                for (Iterator i = subject.getPrivateCredentials().iterator(); i
+                for (Iterator<?> i = subject.getPrivateCredentials().iterator(); i
                         .hasNext();) {
                     Object cred = i.next();
                     if (cred instanceof PasswordCredential
@@ -202,9 +202,7 @@ public class FBManagedConnection implements ManagedConnection, XAResource, GDSHe
                     "connection in non-sharing mode.");
             
             // there will be at most one connection.
-            for (Iterator iter = connectionHandles.iterator(); iter.hasNext();) {
-                AbstractConnection connection = (AbstractConnection) iter.next();
-                
+            for (AbstractConnection connection : connectionHandles) {
                 try {
                     connection.setManagedEnvironment(managedEnvironment);
                 } catch(SQLException ex) {
@@ -428,10 +426,9 @@ public class FBManagedConnection implements ManagedConnection, XAResource, GDSHe
 
     /**
      * Disassociate connections from current managed connection.
-     *
      */
     private void disassociateConnections() throws ResourceException {
-        SQLExceptionChainBuilder chain = new SQLExceptionChainBuilder();
+        SQLExceptionChainBuilder<SQLException> chain = new SQLExceptionChainBuilder<SQLException>();
         
         // Iterate over copy of list as connection.close() will remove connection
         List<AbstractConnection> connectionHandleCopy = new ArrayList<AbstractConnection>(connectionHandles);
@@ -930,7 +927,7 @@ public class FBManagedConnection implements ManagedConnection, XAResource, GDSHe
 //            if ((flags & XAResource.TMENDRSCAN) == 0 && (flags & XAResource.TMNOFLAGS) == 0)
 //                return new Xid[0];
             
-            ArrayList xids = new ArrayList();
+            List<FBXid> xids = new ArrayList<FBXid>();
             
             AbstractIscTrHandle trHandle2 = (AbstractIscTrHandle)gds.createIscTrHandle();
             gds.iscStartTransaction(trHandle2, gdsHelper.getCurrentDbHandle(), tpb.getTransactionParameterBuffer());
@@ -983,7 +980,7 @@ public class FBManagedConnection implements ManagedConnection, XAResource, GDSHe
             gdsHelper2.closeStatement(stmtHandle2, true);
             gds.iscCommitTransaction(trHandle2);
             
-            return (FBXid[])xids.toArray(new FBXid[xids.size()]);
+            return xids.toArray(new FBXid[xids.size()]);
 
         } catch(GDSException ex) {
             throw new FBXAException("can't perform query to fetch xids", XAException.XAER_RMFAIL, ex);
@@ -1009,7 +1006,7 @@ public class FBManagedConnection implements ManagedConnection, XAResource, GDSHe
         }
         
         public byte[] getFieldData() {
-            return ((byte[][])stmtHandle.getRows()[row])[fieldPos];
+            return stmtHandle.getRows()[row][fieldPos];
         }
         public void setFieldData(byte[] data) {
             throw new UnsupportedOperationException();
@@ -1206,9 +1203,7 @@ public class FBManagedConnection implements ManagedConnection, XAResource, GDSHe
             return;
         }
         
-        Iterator it = xidMap.keySet().iterator();
-        while (it.hasNext()) {
-            Xid knownXid = (Xid) it.next();
+        for (Xid knownXid : xidMap.keySet()) {
             boolean sameFormatId = knownXid.getFormatId() == xid.getFormatId();
             boolean sameGtrid = Arrays.equals(knownXid.getGlobalTransactionId(), xid.getGlobalTransactionId());
             boolean sameBqual = Arrays.equals(knownXid.getBranchQualifier(), xid.getBranchQualifier());
@@ -1280,7 +1275,7 @@ public class FBManagedConnection implements ManagedConnection, XAResource, GDSHe
             return false;
         
         try {
-            return this.cri.equals(getCombinedConnectionRequestInfo(subj, (FBConnectionRequestInfo)cri));
+            return this.cri.equals(getCombinedConnectionRequestInfo(subj, cri));
         } catch (ResourceException re) {
             return false;
         }

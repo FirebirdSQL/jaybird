@@ -34,7 +34,6 @@ import java.sql.Statement;
 import java.sql.Struct;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -83,7 +82,7 @@ public abstract class AbstractConnection implements FirebirdConnection {
      
     // This set contains all allocated but not closed statements
     // It is used to close them before the connection is closed
-    protected HashSet activeStatements = new HashSet();
+    protected Set<Statement> activeStatements = new HashSet<Statement>();
     
     private int resultSetHoldability = ResultSet.CLOSE_CURSORS_AT_COMMIT;
     
@@ -102,7 +101,7 @@ public abstract class AbstractConnection implements FirebirdConnection {
         
         this.txCoordinator = new InternalTransactionCoordinator();
         
-        FBConnectionRequestInfo cri = (FBConnectionRequestInfo)mc.getConnectionRequestInfo();
+        FBConnectionRequestInfo cri = mc.getConnectionRequestInfo();
         
         if (cri.hasArgument(DatabaseParameterBufferExtension.RESULT_SET_HOLDABLE))
             resultSetHoldability = ResultSet.HOLD_CURSORS_OVER_COMMIT;
@@ -158,16 +157,14 @@ public abstract class AbstractConnection implements FirebirdConnection {
      * to close gracefully.
      */
     private void freeStatements() throws SQLException {
-        // clone statements to avoid concurrent modification exception
-        Set statements = (Set)activeStatements.clone();
+        // copy statements to avoid concurrent modification exception
+        Set<Statement> statements = new HashSet<Statement>(activeStatements);
         
         // iterate through the set, close statements and collect exceptions
-        Iterator iter = statements.iterator();
-        SQLExceptionChainBuilder chain = new SQLExceptionChainBuilder();
-        while(iter.hasNext()) {
+        SQLExceptionChainBuilder<SQLException> chain = new SQLExceptionChainBuilder<SQLException>();
+        for (Statement stmt : statements) {
             try {
-                AbstractStatement stmt = (AbstractStatement)iter.next();
-                stmt.close(true);
+                stmt.close();
             } catch(SQLException ex) {
                 chain.append(ex);
             }
@@ -1259,7 +1256,6 @@ public abstract class AbstractConnection implements FirebirdConnection {
         }
     }
 
-
     /**
      *
      * Gets the type map object associated with this connection.
@@ -1271,10 +1267,9 @@ public abstract class AbstractConnection implements FirebirdConnection {
      * @since 1.2
      * @see <a href="package-summary.html#2.0 API">What Is in the JDBC 2.0 API</a>
      */
-    public Map getTypeMap() throws SQLException {
-    	return new HashMap();
+    public Map<String,Class<?>> getTypeMap() throws SQLException {
+    	return new HashMap<String,Class<?>>();
     }
-
 
     /**
      * Installs the given type map as the type map for
@@ -1287,10 +1282,9 @@ public abstract class AbstractConnection implements FirebirdConnection {
      * @since 1.2
      * @see <a href="package-summary.html#2.0 API">What Is in the JDBC 2.0 API</a>
      */
-    public void setTypeMap(Map map) throws SQLException {
+    public void setTypeMap(Map<String,Class<?>> map) throws SQLException {
         throw new FBDriverNotCapableException();
     }
-    
     
     /*
      * Savepoint stuff.  
@@ -1492,21 +1486,20 @@ public abstract class AbstractConnection implements FirebirdConnection {
       * @return instance of {@link SQLWarning} that is the first warning in 
       * a linked list of warnings.
       */
-     private SQLWarning getIscWarnings() throws SQLException {
+    private SQLWarning getIscWarnings() throws SQLException {
          try {
              SQLWarning firstWarning = null;
              SQLWarning lastWarning = null;
-             Iterator iter = getGDSHelper().getWarnings().iterator();
-             while (iter.hasNext()) {
-                 GDSException item = (GDSException)iter.next();
-                 
+
+             for (GDSException item : getGDSHelper().getWarnings()) {
                  FBSQLWarning warning = new FBSQLWarning(item);
                  if (firstWarning == null) {
                      firstWarning = warning;
-                     lastWarning = firstWarning;
+                     lastWarning = warning;
                  } else {
-                    lastWarning.setNextWarning(warning);
-                    lastWarning = warning;
+                     // Null warning can be ignored: lastwarning is not null here
+                     lastWarning.setNextWarning(warning);
+                     lastWarning = warning;
                  }
              }
              return firstWarning;

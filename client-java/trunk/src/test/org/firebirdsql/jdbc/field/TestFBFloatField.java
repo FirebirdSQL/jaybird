@@ -105,7 +105,7 @@ public class TestFBFloatField extends BaseTestFBField {
 		}
 	}
 	public void testBigDecimal() throws SQLException {
-		BigDecimal testBigDecimal =	new BigDecimal((double)TEST_FLOAT);
+		BigDecimal testBigDecimal =	new BigDecimal(TEST_FLOAT);
 		field.setBigDecimal(testBigDecimal);
 		field.copyOI();		
 		assertTrue(field.getBigDecimal().equals(testBigDecimal));
@@ -139,14 +139,14 @@ public class TestFBFloatField extends BaseTestFBField {
 		// so we can test only float values...
 		field.setLong(TEST_INT);
 		field.copyOI();		
-		assertTrue(field.getFloat() == (float)TEST_INT);
+		assertTrue(field.getFloat() == TEST_INT);
 	}
 	public void testLong() throws SQLException {
 		// unfortunately (long)((float)myLong) != myLong....
 		// so we can test only float values...
 		field.setLong(TEST_LONG);
 		field.copyOI();		
-		assertTrue(field.getFloat() == (float)TEST_LONG);
+		assertTrue(field.getFloat() == TEST_LONG);
 	}
 	public void testDouble() throws SQLException {
 		try {
