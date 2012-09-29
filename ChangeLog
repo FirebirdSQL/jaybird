@@ -1,3 +1,110 @@
+2012-09-29 09:47  mrotteveel
+
+	* native/libjaybird22.so:
+	  
+	  Update lib for Linux x86
+
+2012-09-23 08:38  mrotteveel
+
+	* native/debug/jaybird22.dll, native/debug/jaybird22.pdb,
+	  native/debug/jaybird22_x64.dll, native/debug/jaybird22_x64.pdb,
+	  native/jaybird22.dll, native/jaybird22_x64.dll,
+	  src/native/jaygds/builds/msvc10/java_gds.rc,
+	  src/native/jaygds/source/xsqlda_wrapper.cpp:
+	  
+	  Fix memory corruption caused by change for JDBC-271
+
+2012-09-22 11:47  mrotteveel
+
+	* native/debug/jaybird22.dll, native/debug/jaybird22.pdb,
+	  native/debug/jaybird22_x64.dll, native/debug/jaybird22_x64.pdb,
+	  native/jaybird22.dll, native/jaybird22_x64.dll,
+	  src/native/jaygds/builds/msvc10/java_gds.rc:
+	  
+	  Build Jaybird 2.2.1 native libraries for Windows (32/64)
+
+2012-09-22 11:40  mrotteveel
+
+	* src/etc/release_notes.html, src/etc/release_notes.odt,
+	  src/etc/release_notes.pdf:
+	  
+	  Updated release notes for Jaybird 2.2.1
+
+2012-09-09 09:28  mrotteveel
+
+	* src/main/org/firebirdsql/gds/ISCConstants.java,
+	  src/main/org/firebirdsql/gds/impl/DatabaseParameterBufferExtension.java,
+	  src/main/org/firebirdsql/jdbc/FBResultSetMetaData.java,
+	  src/resources/driver_property_info.properties,
+	  src/resources/isc_dpb_types.properties,
+	  src/test/org/firebirdsql/jdbc/TestFBResultSetMetaData.java:
+	  
+	  JDBC-260: provide connection property to report columnLabel as
+	  the columnName.
+
+2012-09-02 09:30  mrotteveel
+
+	* src/main/org/firebirdsql/encodings/EncodingFactory.java,
+	  src/main/org/firebirdsql/jdbc/FBConnectionProperties.java,
+	  src/test/org/firebirdsql/ds/TestDataSourceFactory.java:
+	  
+	  Backport changes for JDBC-267 and JDBC-268
+
+2012-09-01 12:36  mrotteveel
+
+	* .:
+	  
+	  Ignore output folder
+
+2012-09-01 12:29  mrotteveel
+
+	* src/test/org/firebirdsql/jdbc/TestFBPreparedStatement.java:
+	  
+	  Test for JDBC-271
+
+2012-09-01 12:15  mrotteveel
+
+	* src/native/jaygds/source/xsqlda_wrapper.cpp:
+	  
+	  JDBC-271 backport
+
+2012-09-01 11:52  mrotteveel
+
+	* src/native/jaygds/builds/msvc10:
+	  
+	  Ignore user-specific solution file
+
+2012-09-01 11:37  mrotteveel
+
+	* src/native/jaygds/builds/msvc10/java_gds.suo:
+	  
+	  Delete user-specific solution file
+
+2012-08-12 09:52  mrotteveel
+
+	* src/main/org/firebirdsql/jdbc/field/FBNullField.java,
+	  src/test/org/firebirdsql/jdbc/TestFBPreparedStatement.java:
+	  
+	  JDBC-264 : Backport fix + tests for FBNullField.setString(null)
+
+2012-08-11 09:41  mrotteveel
+
+	* build_native.xml:
+	  
+	  JDBC-259 Fix incorrectly linked library on Linux
+
+2012-08-11 09:21  mrotteveel
+
+	* ., build_native.xml:
+	  
+	  Fix formatting of native build file
+
+2012-07-14 15:49  mrotteveel
+
+	* build/init.xml:
+	  
+	  Branch specific tag
+
 2012-07-14 11:41  mrotteveel
 
 	* client-java/build/: init.xml, test.xml:
