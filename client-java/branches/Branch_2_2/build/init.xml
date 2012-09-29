@@ -61,13 +61,13 @@
 
     <property name="version.major" value="2"/>
     <property name="version.minor" value="2"/>
-    <property name="version.revision" value="0"/>
+    <property name="version.revision" value="1"/>
     <property name="version.tag" value=""/>
     <property name="version.name" value="JDK_${ant.java.version}"/>
 
     <property name="version.full" value="${version.major}.${version.minor}.${version.revision}${version.tag}${version.name}"/>
 
-    <!-- This must be set to the CVS tag for any release -->
+    <!-- This must be set to the SVN tag for any release -->
     <property name="version.cvstag" value="Branch_2_2"/>
 
     <!-- Manifest version info -->
@@ -78,7 +78,7 @@
     <property name="implementation.title" value="Jaybird"/>
     <property name="implementation.url" value="http://www.firebirdsql.org"/>
     <property name="implementation.version"
-            value="${version.full} (build: CVSTag=${version.cvstag} date=${build.id})"/>
+            value="${version.full} (build: SVNTag=${version.cvstag} date=${build.id})"/>
     <property name="implementation.vendor" value="Firebird project"/>
     <property name="implementation.vendor.id" value="${implementation.url}"/>
 
