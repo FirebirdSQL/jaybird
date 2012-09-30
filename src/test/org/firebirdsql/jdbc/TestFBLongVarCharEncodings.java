@@ -26,8 +26,6 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.util.Properties;
 
-import static org.firebirdsql.common.FBTestProperties.*;
-
 /**
  * This test case tests encodings in text blobs.
  *

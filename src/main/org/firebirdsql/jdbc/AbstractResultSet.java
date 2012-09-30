@@ -38,7 +38,7 @@ import org.firebirdsql.jdbc.field.*;
  * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  */
-public abstract class AbstractResultSet implements FirebirdResultSet, Synchronizable, FBObjectListener.FetcherListener {
+public abstract class AbstractResultSet implements ResultSet, Synchronizable, FBObjectListener.FetcherListener {
 
     private AbstractStatement fbStatement;
     private FBFetcher fbFetcher;
@@ -48,9 +48,9 @@ public abstract class AbstractResultSet implements FirebirdResultSet, Synchroniz
 
     public XSQLVAR[] xsqlvars;
 
-    public byte[][] row;
+    public byte[][] row = null;
 
-    private int maxRows;
+    private int maxRows = 0;
      
     private boolean wasNull = false;
     private boolean wasNullValid = false;
@@ -60,17 +60,17 @@ public abstract class AbstractResultSet implements FirebirdResultSet, Synchroniz
     //might be a bit of a kludge, or a useful feature.
     private boolean trimStrings;
 
-    private SQLWarning firstWarning;
+    private SQLWarning firstWarning = null;
      
-    private FBField[] fields;
-    private java.util.Map<String, Integer> colNames;
+    private FBField[] fields = null;
+    private java.util.HashMap colNames = new java.util.HashMap();
     
     private String cursorName;
     private FBObjectListener.ResultSetListener listener;
     
     private int rsType = ResultSet.TYPE_FORWARD_ONLY;
     private int rsConcurrency = ResultSet.CONCUR_READ_ONLY;
-    private int rsHoldability = ResultSet.CLOSE_CURSORS_AT_COMMIT;
+    private int rsHoldability = FirebirdResultSet.CLOSE_CURSORS_AT_COMMIT;
     
     /* (non-Javadoc)
      * @see org.firebirdsql.jdbc.FBObjectListener.FetcherListener#allRowsFetched(org.firebirdsql.jdbc.FBFetcher)
@@ -171,7 +171,7 @@ public abstract class AbstractResultSet implements FirebirdResultSet, Synchroniz
         }
     }
 
-    protected AbstractResultSet(XSQLVAR[] xsqlvars, List<byte[][]> rows) throws SQLException {
+    protected AbstractResultSet(XSQLVAR[] xsqlvars, ArrayList rows) throws SQLException {
         maxRows = 0;
         fbFetcher = new FBCachedFetcher(rows,this);
         this.xsqlvars = xsqlvars;
@@ -180,7 +180,7 @@ public abstract class AbstractResultSet implements FirebirdResultSet, Synchroniz
     
     private void prepareVars(boolean cached) throws SQLException {
         fields = new FBField[xsqlvars.length];
-        colNames = new HashMap<String, Integer>(xsqlvars.length, 1);
+        colNames = new HashMap(xsqlvars.length,1);
         for (int i=0; i<xsqlvars.length; i++){
             final int fieldPosition = i;
             
@@ -214,7 +214,7 @@ public abstract class AbstractResultSet implements FirebirdResultSet, Synchroniz
      * @throws SQLException if statement is closed.
      */
     protected void checkCursorMove() throws SQLException {
-        if (closed && rsHoldability != ResultSet.HOLD_CURSORS_OVER_COMMIT) 
+        if (closed && rsHoldability != FirebirdResultSet.HOLD_CURSORS_OVER_COMMIT) 
             throw new FBSQLException("The result set is closed");
         
         closeFields();
@@ -313,7 +313,7 @@ public abstract class AbstractResultSet implements FirebirdResultSet, Synchroniz
 
             }
             
-            if (rsHoldability != ResultSet.HOLD_CURSORS_OVER_COMMIT)
+            if (rsHoldability != FirebirdResultSet.HOLD_CURSORS_OVER_COMMIT)
                 fbFetcher = null;
         }
     }
@@ -591,7 +591,6 @@ public abstract class AbstractResultSet implements FirebirdResultSet, Synchroniz
     /**
      * @deprecated
      */
-    @Deprecated
     public InputStream getUnicodeStream(int columnIndex) throws SQLException {
         return getField(columnIndex).getUnicodeStream();
     }
@@ -630,7 +629,7 @@ public abstract class AbstractResultSet implements FirebirdResultSet, Synchroniz
      * Factory method for the field access objects
      */
     public FBField getField(int columnIndex, boolean checkRowPosition) throws SQLException {
-        if (closed && rsHoldability != ResultSet.HOLD_CURSORS_OVER_COMMIT) 
+        if (closed && rsHoldability != FirebirdResultSet.HOLD_CURSORS_OVER_COMMIT) 
             throw new FBSQLException("The resultSet is closed");
         
         if (checkRowPosition && row == null && rowUpdater == null)
@@ -656,7 +655,7 @@ public abstract class AbstractResultSet implements FirebirdResultSet, Synchroniz
      * @throws SQLException if the field cannot be retrieved
      */
     public FBField getField(String columnName) throws SQLException {
-        if (closed && rsHoldability != ResultSet.HOLD_CURSORS_OVER_COMMIT) 
+        if (closed && rsHoldability != FirebirdResultSet.HOLD_CURSORS_OVER_COMMIT) 
             throw new FBSQLException("The resultSet is closed");
         
         if (row == null && rowUpdater == null)
@@ -670,11 +669,11 @@ public abstract class AbstractResultSet implements FirebirdResultSet, Synchroniz
                     FBSQLException.SQL_STATE_INVALID_COLUMN);
         }
 
-        Integer fieldNum = colNames.get(columnName);
+        Integer fieldNum = (Integer) colNames.get(columnName);
         // If it is the first time the columnName is used
         if (fieldNum == null){
             int colNum = findColumn(columnName);
-            fieldNum = Integer.valueOf(colNum);
+            fieldNum = new Integer(colNum);
             colNames.put(columnName, fieldNum);
         }
         int colNum = fieldNum.intValue();
@@ -697,7 +696,6 @@ public abstract class AbstractResultSet implements FirebirdResultSet, Synchroniz
      * @exception SQLException if a database access error occurs
      * @deprecated
      */
-    @Deprecated
     public BigDecimal getBigDecimal(int columnIndex, int scale) throws  SQLException {
         return getField(columnIndex).getBigDecimal(scale);
     }
@@ -819,7 +817,6 @@ public abstract class AbstractResultSet implements FirebirdResultSet, Synchroniz
      * @throws SQLException if the given column cannot be retrieved
      * @deprecated
      */
-    @Deprecated
     public BigDecimal getBigDecimal(String columnName, int scale) throws  SQLException {
         return getField(columnName).getBigDecimal(scale);
     }
@@ -893,7 +890,6 @@ public abstract class AbstractResultSet implements FirebirdResultSet, Synchroniz
      * @throws SQLException if the given column cannot be retrieved
      * @deprecated
      */
-    @Deprecated
     public InputStream getUnicodeStream(String columnName) throws  SQLException {
         return getField(columnName).getUnicodeStream();
     }
@@ -2719,7 +2715,7 @@ public abstract class AbstractResultSet implements FirebirdResultSet, Synchroniz
      * @see <a href="package-summary.html#2.0 API">What Is in the JDBC
      *      2.0 API</a>
      */
-    public Object getObject(int i, Map<String, Class<?>> map) throws  SQLException {
+    public Object getObject(int i, Map map) throws  SQLException {
         return getField(i).getObject(map);
     }
 
@@ -2785,7 +2781,7 @@ public abstract class AbstractResultSet implements FirebirdResultSet, Synchroniz
      * @see <a href="package-summary.html#2.0 API">What Is in the JDBC
      *      2.0 API</a>
      */
-    public Object getObject(String columnName, Map<String, Class<?>> map) throws  SQLException {
+    public Object getObject(String columnName, Map map) throws  SQLException {
         return getField(columnName).getObject(map);
     }
 

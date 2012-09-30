@@ -30,8 +30,6 @@ import javax.sql.DataSource;
 
 import org.firebirdsql.jdbc.*;
 
-import static org.firebirdsql.common.FBTestProperties.*;
-
 /**
  * Describe class <code>TestFBDatabaseMetaData</code> here.
  * 
@@ -156,7 +154,7 @@ public class TestFBDatabaseMetaData extends TestXABase {
         }
 
         int sysTableCount;
-        DatabaseMetaData metaData = c.getMetaData();
+        FirebirdDatabaseMetaData metaData = (FirebirdDatabaseMetaData) c.getMetaData();
         if (metaData.getDatabaseMajorVersion() < 2)
             sysTableCount = 32;
         else if (metaData.getDatabaseMajorVersion() == 2 && metaData.getDatabaseMinorVersion() == 0)
@@ -289,7 +287,7 @@ public class TestFBDatabaseMetaData extends TestXABase {
 
         t.begin();
         ResultSet rs = dmd.getColumns(null, null, "TABLE_A", "%");
-        Set<String> tableNames = new HashSet<String>();
+        Set tableNames = new HashSet();
         while (rs.next()) {
             tableNames.add(rs.getString(3));
         }

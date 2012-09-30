@@ -20,8 +20,8 @@
  */
 package org.firebirdsql.ds;
 
-import static org.firebirdsql.util.ReflectionHelper.findMethod;
-import static org.firebirdsql.util.ReflectionHelper.getAllInterfaces;
+import static org.firebirdsql.ds.ReflectionHelper.findMethod;
+import static org.firebirdsql.ds.ReflectionHelper.getAllInterfaces;
 
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.InvocationTargetException;
@@ -33,6 +33,7 @@ import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
@@ -59,7 +60,7 @@ class PooledConnectionHandler implements InvocationHandler {
     protected volatile Connection proxy;
     protected volatile boolean forcedClose;
 
-    private final List<StatementHandler> openStatements = Collections.synchronizedList(new LinkedList<StatementHandler>());
+    private final List openStatements = Collections.synchronizedList(new LinkedList());
 
     protected PooledConnectionHandler(Connection connection, AbstractPooledConnection owner) {
         this.connection = connection;
@@ -156,7 +157,7 @@ class PooledConnectionHandler implements InvocationHandler {
      *             if underlying connection threw an exception.
      */
     protected void handleClose(boolean notifyOwner) throws SQLException {
-        SQLExceptionChainBuilder<SQLException> chain = new SQLExceptionChainBuilder<SQLException>();
+        SQLExceptionChainBuilder chain = new SQLExceptionChainBuilder();
         try {
             closeStatements();
         } catch (SQLException ex) {
@@ -223,10 +224,13 @@ class PooledConnectionHandler implements InvocationHandler {
     }
 
     protected void closeStatements() throws SQLException {
-        SQLExceptionChainBuilder<SQLException> chain = new SQLExceptionChainBuilder<SQLException>();
+        SQLExceptionChainBuilder chain = new SQLExceptionChainBuilder();
         synchronized (openStatements) {
             // Make copy as the StatementHandler close will remove itself from openStatements
-            for (StatementHandler stmt : new ArrayList<StatementHandler>(openStatements)) {
+            List statementsCopy = new ArrayList(openStatements);
+            Iterator iter = statementsCopy.iterator();
+            while (iter.hasNext()) {
+                StatementHandler stmt = (StatementHandler) iter.next();
                 try {
                     stmt.close();
                 } catch (SQLException ex) {
@@ -249,9 +253,9 @@ class PooledConnectionHandler implements InvocationHandler {
     private final static Method CONNECTION_CLOSE = findMethod(Connection.class, "close",
             new Class[0]);
     
-    private static final Set<String> STATEMENT_CREATION_METHOD_NAMES;
+    private static final Set STATEMENT_CREATION_METHOD_NAMES;
     static {
-        Set<String> temp = new HashSet<String>();
+        Set temp = new HashSet();
         temp.add("createStatement");
         temp.add("prepareCall");
         temp.add("prepareStatement");

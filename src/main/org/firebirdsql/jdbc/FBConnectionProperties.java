@@ -23,6 +23,7 @@ import java.io.Serializable;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 
 import org.firebirdsql.encodings.EncodingFactory;
@@ -58,13 +59,13 @@ public class FBConnectionProperties implements FirebirdConnectionProperties, Ser
     public static final String DEFAULT_HOLDABLE_RS_PROPERTY = "defaultHoldable";
     public static final String SO_TIMEOUT = "soTimeout";
 
-    private Map<String, Object> properties = new HashMap<String, Object>();
+    private HashMap properties = new HashMap();
     private String type;
     private String database;
 
     private String tpbMapping;
     private int defaultTransactionIsolation = Connection.TRANSACTION_READ_COMMITTED;
-    private Map<Integer, TransactionParameterBuffer> customMapping = new HashMap<Integer, TransactionParameterBuffer>();
+    private HashMap customMapping = new HashMap();
     private FBTpbMapper mapper;
 
     private int getIntProperty(String name) {
@@ -154,8 +155,8 @@ public class FBConnectionProperties implements FirebirdConnectionProperties, Ser
         try {
             FBConnectionProperties clone = (FBConnectionProperties) super.clone();
 
-            clone.properties = new HashMap<String, Object>(properties);
-            clone.customMapping = new HashMap<Integer, TransactionParameterBuffer>(customMapping);
+            clone.properties = (HashMap) properties.clone();
+            clone.customMapping = (HashMap) customMapping.clone();
             clone.mapper = mapper != null ? (FBTpbMapper) mapper.clone() : null;
 
             return clone;
@@ -391,9 +392,10 @@ public class FBConnectionProperties implements FirebirdConnectionProperties, Ser
     public DatabaseParameterBuffer getDatabaseParameterBuffer() throws SQLException {
         GDS gds = getGds();
         DatabaseParameterBuffer dpb = gds.createDatabaseParameterBuffer();
-        for (Map.Entry<String, Object> entry : properties.entrySet()) {
+        for (Iterator iter = properties.entrySet().iterator(); iter.hasNext();) {
+            Map.Entry entry = (Map.Entry) iter.next();
 
-            String propertyName = entry.getKey();
+            String propertyName = (String) entry.getKey();
             Object value = entry.getValue();
 
             Integer dpbType = FBConnectionHelper.getDpbKey(propertyName);
@@ -452,7 +454,7 @@ public class FBConnectionProperties implements FirebirdConnectionProperties, Ser
         if (mapper != null)
             return mapper.getMapping(isolation);
         else
-            return customMapping.get(Integer.valueOf(isolation));
+            return (TransactionParameterBuffer) customMapping.get(Integer.valueOf(isolation));
     }
 
     public void setTransactionParameters(int isolation, TransactionParameterBuffer tpb) {
@@ -473,9 +475,11 @@ public class FBConnectionProperties implements FirebirdConnectionProperties, Ser
 
         mapper.setDefaultTransactionIsolation(defaultTransactionIsolation);
 
-        for (Map.Entry<Integer, TransactionParameterBuffer> entry : customMapping.entrySet()) {
-            Integer isolation = entry.getKey();
-            TransactionParameterBuffer tpb = entry.getValue();
+        for (Iterator iter = customMapping.entrySet().iterator(); iter.hasNext();) {
+            Map.Entry entry = (Map.Entry) iter.next();
+
+            Integer isolation = (Integer) entry.getKey();
+            TransactionParameterBuffer tpb = (TransactionParameterBuffer) entry.getValue();
 
             mapper.setMapping(isolation.intValue(), tpb);
         }

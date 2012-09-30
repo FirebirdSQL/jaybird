@@ -31,8 +31,6 @@ import java.util.Map;
 
 import org.firebirdsql.jdbc.MetaDataValidator.MetaDataInfo;
 
-import static org.firebirdsql.common.JdbcResourceHelper.*;
-
 /**
  * Tests for {@link FBDatabaseMetaData} for index info related metadata.
  * 
@@ -246,7 +244,7 @@ public class TestFBDatabaseMetaDataIndexInfo extends FBMetaDataTestBase<TestFBDa
 
     @Override
     protected Map<IndexInfoMetaData, Object> getDefaultValueValidationRules() throws Exception {
-        return new EnumMap<IndexInfoMetaData, Object>(DEFAULT_COLUMN_VALUES);
+        return new EnumMap(DEFAULT_COLUMN_VALUES);
     }
 
     /**

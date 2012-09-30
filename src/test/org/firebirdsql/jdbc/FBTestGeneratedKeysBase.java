@@ -24,9 +24,6 @@ import java.sql.Connection;
 
 import org.firebirdsql.common.FBTestBase;
 
-import static org.firebirdsql.common.DdlHelper.*;
-import static org.firebirdsql.common.JdbcResourceHelper.*;
-
 /**
  * Test base for tests of retrieval of auto generated keys.
  * <p>

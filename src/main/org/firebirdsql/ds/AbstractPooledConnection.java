@@ -24,6 +24,7 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -44,8 +45,7 @@ import org.firebirdsql.jdbc.FBSQLException;
  */
 public abstract class AbstractPooledConnection implements PooledConnection {
 
-    private final List<ConnectionEventListener> connectionEventListeners = 
-            Collections.synchronizedList(new LinkedList<ConnectionEventListener>());
+    private final List connectionEventListeners = Collections.synchronizedList(new LinkedList());
 
     protected Connection connection;
     protected volatile PooledConnectionHandler handler;
@@ -128,11 +128,10 @@ public abstract class AbstractPooledConnection implements PooledConnection {
     protected void fireFatalConnectionError(SQLException ex) {
         ConnectionEvent evt = new ConnectionEvent(this, ex);
         // Make a copy to prevent errors when listeners remove themselves
-        List<ConnectionEventListener> listeners;
-        synchronized (connectionEventListeners) {
-            listeners = new ArrayList<ConnectionEventListener>(connectionEventListeners);
-        }
-        for (ConnectionEventListener listener : listeners) {
+        List listeners = new ArrayList(connectionEventListeners);
+        Iterator iter = listeners.iterator();
+        while (iter.hasNext()) {
+            ConnectionEventListener listener = (ConnectionEventListener) iter.next();
             listener.connectionErrorOccurred(evt);
         }
     }
@@ -195,11 +194,10 @@ public abstract class AbstractPooledConnection implements PooledConnection {
     protected void fireConnectionClosed() {
         ConnectionEvent evt = new ConnectionEvent(this);
         // Make a copy to prevent errors when listeners remove themselves
-        List<ConnectionEventListener> listeners;
-        synchronized (connectionEventListeners) {
-            listeners = new ArrayList<ConnectionEventListener>(connectionEventListeners);
-        }
-        for (ConnectionEventListener listener : listeners) {
+        List listeners = new ArrayList(connectionEventListeners);
+        Iterator iter = listeners.iterator();
+        while (iter.hasNext()) {
+            ConnectionEventListener listener = (ConnectionEventListener) iter.next();
             listener.connectionClosed(evt);
         }
     }

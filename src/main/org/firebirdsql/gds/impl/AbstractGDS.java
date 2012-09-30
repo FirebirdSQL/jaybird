@@ -53,7 +53,6 @@ public abstract class AbstractGDS implements GDS, Externalizable {
      * 
      * @deprecated use {@link #getType()}instead.
      */
-    @Deprecated
     public GDSType getGdsType() {
         return getType();
     }

@@ -68,7 +68,7 @@ public class LoggerFactory{
             return null;
     }
     
-    public static Logger getLogger(Class<?> clazz, boolean def) {
+    public static Logger getLogger(Class clazz, boolean def) {
         return getLogger(clazz.getName(), def);
     }
 }

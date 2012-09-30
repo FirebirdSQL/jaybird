@@ -6,10 +6,21 @@
       <format property="YEAR" pattern="yyyy"/>
     </tstamp>
     <property name="build.id" value="${build.number}"/>
+
+        <condition property="jdbc.20" value="true">
+            <or>
+                <equals arg1="${ant.java.version}" arg2="1.1"/>
+                <equals arg1="${ant.java.version}" arg2="1.2"/>
+                <equals arg1="${ant.java.version}" arg2="1.3"/>
+            </or> 
+        </condition>
 	
-	<!-- We set jdbc.30 property if JDK version is 1.5 -->
+	<!-- We set jdbc.30 property if JDK version is 1.4 -->
 	<condition property="jdbc.30" value="true">
+	  <or>
+		<equals arg1="${ant.java.version}" arg2="1.4"/>
 		<equals arg1="${ant.java.version}" arg2="1.5"/>
+	  </or>		
 	</condition>
 
 	<condition property="jdbc.40" value="true">
@@ -18,6 +29,16 @@
 			<!-- Technically JDK 1.7 is JDBC 4.1, we use this here as an indication to use the jdbc4.0 sources -->
 			<equals arg1="${ant.java.version}" arg2="1.7"/>
 		</or>
+	</condition>
+	
+	<!-- We set jdk1.3 property if JDK version is 1.3 -->
+	<condition property="jdk1.3" value="true">
+		<equals arg1="${ant.java.version}" arg2="1.3"/>
+	</condition>
+
+	<!-- We set jdk1.4 property if JDK version is 1.4 -->
+	<condition property="jdk1.4" value="true">
+		<equals arg1="${ant.java.version}" arg2="1.4"/>
 	</condition>
 
 	<!-- We set jdk1.5 property if JDK version is 1.5 -->
@@ -39,15 +60,15 @@
     <property name="name" value="jaybird"/>
 
     <property name="version.major" value="2"/>
-    <property name="version.minor" value="3"/>
-    <property name="version.revision" value="0"/>
-    <property name="version.tag" value="snapshot"/>
+    <property name="version.minor" value="2"/>
+    <property name="version.revision" value="1"/>
+    <property name="version.tag" value=""/>
     <property name="version.name" value="JDK_${ant.java.version}"/>
 
     <property name="version.full" value="${version.major}.${version.minor}.${version.revision}${version.tag}${version.name}"/>
 
-    <!-- This must be set to the Subversion tag for any release -->
-    <property name="version.svntag" value="HEAD"/>
+    <!-- This must be set to the SVN tag for any release -->
+    <property name="version.cvstag" value="Jaybird_2_2_1"/>
 
     <!-- Manifest version info -->
     <property name="specification.title" value="Firebird Jaybird"/>
@@ -57,7 +78,7 @@
     <property name="implementation.title" value="Jaybird"/>
     <property name="implementation.url" value="http://www.firebirdsql.org"/>
     <property name="implementation.version"
-            value="${version.full} (build: SVNTag=${version.svntag} date=${build.id})"/>
+            value="${version.full} (build: SVNTag=${version.cvstag} date=${build.id})"/>
     <property name="implementation.vendor" value="Firebird project"/>
     <property name="implementation.vendor.id" value="${implementation.url}"/>
 
@@ -85,23 +106,36 @@
     <!-- Where source files live -->
     <property name="source.java" value="${module.source}/main"/>
     <property name="source.openoffice" value="${module.source}/openoffice"/>
+    <property name="source.jdbc.20" value="${module.source}/jdbc_20"/>
     <property name="source.jdbc.30" value="${module.source}/jdbc_30"/>
     <property name="source.jdbc.40" value="${module.source}/jdbc_40"/>
+    <property name="source.wire1.3" value="${module.source}/wire_jdk1_3"/>
+    <property name="source.wire1.4" value="${module.source}/wire_jdk1_4"/>
+    <property name="source.pool1.4" value="${module.source}/pool_jdk1_4"/>
+    <property name="source.pool1.5" value="${module.source}/pool_jdk1_5"/>
+	<property name="source.pool1.6" value="${module.source}/pool_jdk1_6"/>
+	<property name="source.jca1.4" value="${module.source}/jca_jdk1_4"/>
+	<property name="source.jca1.6" value="${module.source}/jca_jdk1_6"/>
     <property name="source.etc" value="${module.source}/etc"/>
     <property name="source.examples" value="${module.examples}"/>
+    <property name="source.examples" value="${module.root}/examples"/>
     <property name="source.resources" value="${module.source}/resources"/>
     <property name="source.stylesheets" value="${module.source}/stylesheets"/>
     <property name="source.test" value="${module.source}/test"/>
+    <property name="source.test.30" value="${module.source}/test_30"/>
     <property name="source.test.40" value="${module.source}/test_40"/>
+    <property name="source.pool" value="${module.source}/pool"/>
     <property name="source.compatibility" value="${module.source}/compatibility"/>
 
     <property name="thirdparty" value="${module.root}/thirdparty"/>
     <property name="jboss.source.root"
 	    location="${thirdparty}/jboss/"/>
 
+
     <!-- Where build generated files will go -->
     <property name="build.j2ee" value="${module.output}/j2ee"/>
     <property name="build.classes" value="${module.output}/classes"/>
+    <property name="build.pool" value="${module.output}/pool"/>
     <property name="build.compatibility" value="${module.output}/compatibility"/>
     <property name="build.test" value="${module.output}/test"/>
     <property name="build.lib" value="${module.output}/lib"/>
@@ -141,7 +175,6 @@
     <property name="junit.haltonerror"  value="true"/>
     <property name="junit.haltonfailure"  value="true"/>
     <property name="junit.fork" value="true"/>
-    <property name="junit.forkmode" value="perTest"/>
     <property name="junit.timeout" value="60000"/>
     <!--property name="junit.jvm" value="true"/-->
 
@@ -153,6 +186,7 @@
     <property name="test.db.port" value="3050"/>
     <property name="test.db.dir" value="${module.output}/db"/>
     <property name="test.db.lc_ctype" value="NONE"/>
+
 
     <property name="packages" value="org.firebirdsql.ds,org.firebirdsql.gds,org.firebirdsql.jca,org.firebirdsql.jdbc,org.firebirdsql.management,org.firebirdsql.pool,org.firebirdsql.event"/>
 
@@ -168,6 +202,11 @@
       <pathelement location="${module.thirdparty}/log4j-core.jar"/>
 	  <pathelement location="${module.thirdparty}/antlr-runtime-3.4.jar"/>
     </path>
+
+    <path id="javac.pool.classpath">
+      <path refid="javac.driver.classpath"/>
+      <pathelement location="${build.classes}"/>
+    </path>
     
     <path id="javac.compatibility.classpath">
       <path refid="javac.driver.classpath"/>
@@ -178,6 +217,7 @@
     <path id="javac.test.classpath">
       <path refid="javac.driver.classpath"/>
       <pathelement location="${build.classes}"/>
+      <pathelement location="${build.pool}"/>
       <pathelement location="${lib.dir}/junit.jar"/>
       <pathelement location="${module.thirdparty}/fscontext.jar"/>
       <pathelement location="${module.thirdparty}/providerutil.jar"/>

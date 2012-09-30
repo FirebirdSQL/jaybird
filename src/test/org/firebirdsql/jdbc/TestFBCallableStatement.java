@@ -22,8 +22,6 @@ import org.firebirdsql.common.FBTestBase;
 
 import java.sql.*;
 
-import static org.firebirdsql.common.JdbcResourceHelper.*;
-
 /**
  * This test case checks callable statements by executing procedure through
  * {@link java.sql.CallableStatement} and {@link java.sql.PreparedStatement}.

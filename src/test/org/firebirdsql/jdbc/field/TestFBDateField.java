@@ -16,264 +16,178 @@
  *
  * All rights reserved.
  */
+
 package org.firebirdsql.jdbc.field;
 
-import static org.junit.Assert.*;
 
+import java.math.BigDecimal;
 import java.sql.Date;
 import java.sql.SQLException;
-import java.sql.Timestamp;
-import java.sql.Types;
-import java.util.Calendar;
-import java.util.TimeZone;
 
+import org.firebirdsql.gds.XSQLVAR;
 import org.firebirdsql.gds.ISCConstants;
-import org.jmock.Expectations;
-import org.junit.Before;
-import org.junit.Ignore;
-import org.junit.Test;
+
+
+import junit.framework.Test;
+import junit.framework.TestSuite;
 
 /**
- * Tests for {@link FBDateField}
- * 
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * Describe class <code>TestFBDateField</code> here.
+ *
+ * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
+ * @version 1.0
  */
-public class TestFBDateField extends BaseJUnit4TestFBField<FBDateField, java.sql.Date> {
+public class TestFBDateField extends BaseTestFBField {
+	public TestFBDateField(String testName) {
+		super(testName);
+	}
+	public static Test suite() {
+		return new TestSuite(TestFBDateField.class);
+	}
+	protected void setUp() throws SQLException{
+        final XSQLVAR[] xsqlvars = new XSQLVAR[1];
+        xsqlvars[0] = createXSQLVAR();
+        xsqlvars[0].sqltype = ISCConstants.SQL_TYPE_DATE;
+        
+		field = FBField.createField(xsqlvars[0], createDataProvider(xsqlvars), null, false);
+	}
+	protected void tearDown() {
+	}
+	public void testShort() throws SQLException {
+		try {
+			super.testShort();
+			assertTrue("This method should fail.", false);
+		} catch(SQLException ex) {
+			//everything is ok :)
+		}
+	}
+	public void testDouble() throws SQLException {
+		try {
+			super.testDouble();
+			assertTrue("This method should fail.", false);
+		} catch(SQLException ex) {
+			//everything is ok :)
+		}
+	}
+	public void testLong() throws SQLException {
+		try {
+			super.testLong();
+			assertTrue("This method should fail.", false);
+		} catch(SQLException ex) {
+			//everything is ok :)
+		}
+	}
+	public void testUnicodeStream() throws SQLException {
+		try {
+			super.testUnicodeStream();
+			assertTrue("This method should fail.", false);
+		} catch(SQLException ex) {
+			//everything is ok :)
+		}
+	}
+	public void testByte() throws SQLException {
+		try {
+			super.testByte();
+			assertTrue("This method should fail.", false);
+		} catch(SQLException ex) {
+			//everything is ok :)
+		}
+	}
+	public void testBoolean() throws SQLException {
+		try {
+			super.testBoolean();
+			assertTrue("This method should fail.", false);
+		} catch(SQLException ex) {
+			//everything is ok :)
+		}
+	}
+	public void testBinaryStream() throws SQLException {
+		try {
+			super.testBinaryStream();
+			assertTrue("This method should fail.", false);
+		} catch(SQLException ex) {
+			//everything is ok :)
+		}
+	}
+	public void testFloat() throws SQLException {
+		try {
+			super.testFloat();
+			assertTrue("This method should fail.", false);
+		} catch(SQLException ex) {
+			//everything is ok :)
+		}
+	}
+	public void testBytes() throws SQLException {
+		try {
+			super.testBytes();
+			assertTrue("This method should fail.", false);
+		} catch(SQLException ex) {
+			//everything is ok :)
+		}
+	}
+	public void testAsciiStream() throws SQLException {
+		try {
+			super.testAsciiStream();
+			assertTrue("This method should fail.", false);
+		} catch(SQLException ex) {
+			//everything is ok :)
+		}
+	}
+	public void testInteger() throws SQLException {
+		try {
+			super.testInteger();
+			assertTrue("This method should fail.", false);
+		} catch(SQLException ex) {
+			//everything is ok :)
+		}
+	}
+	public void testBigDecimal() throws SQLException {
+		try {
+			field.setBigDecimal(new BigDecimal(TEST_DOUBLE));
+			assertTrue("This method should fail.", false);
+		} catch(SQLException ex) {
+			//everything is ok :)
+		}
+	}
 
-    // TODO Check if a calendar with a bigger offset might be better
-    // TODO Check if dynamic selection of timezone is needed to prevent location-dependent and/or summer/winter time issues
-    private static final Calendar TZ_CALENDAR = Calendar.getInstance(TimeZone.getTimeZone("GMT+1:00"));
-    private static final java.sql.Date TEST_SQL_DATE = java.sql.Date.valueOf("2012-03-11");
+	//--- real test methods
 
-    @Before
-    @Override
-    public void setUp() throws Exception {
-        super.setUp();
-        xsqlvar.sqltype = ISCConstants.SQL_TYPE_DATE;
-        field = new FBDateField(xsqlvar, fieldData, Types.DATE);
-    }
-    
-    // TODO Add tests for unsupported conversions
-    // TODO Add set/getObject test
-
-    @Test
-    public void getDateNull() throws SQLException {
-        toReturnNullExpectations();
-
-        assertNull("Expected null for getDate()", field.getDate());
-    }
-    
-    @Test
-    @Override
-    public void getDateNonNull() throws SQLException {
-        toReturnTestSqlDateExpectations();
-        
-        assertEquals("Unexpected value for getDate()", TEST_SQL_DATE, field.getDate());
-    }
-
-    @Test
-    public void setDateNull() throws SQLException {
-        setNullExpectations();
-        
-        field.setDate(null);
-    }
-    
-    @Test
-    @Override
-    public void setDateNonNull() throws SQLException {
-        setTestSqlDateExpectations();
-        
-        field.setDate(TEST_SQL_DATE);
-    }
-
-    @Test
-    public void getDateCalendarNull() throws SQLException {
-        toReturnNullExpectations();
-        
-        assertNull("Expected null for getDate(Calendar)", field.getDate(TZ_CALENDAR));
-    }
-    
-    @Test
-    @Override
-    public void getDateCalendarNonNull() throws SQLException {
-        toReturnTestSqlDateExpectations();
-        
-        // TODO Not sure if this is the correct result given the Javadoc of java.sql.Date
-        // TODO Expected time portion to be an hour earlier (as Date is in GMT)
-        assertEquals("Unexpected value for getDate(Calendar)", TEST_SQL_DATE, field.getDate(TZ_CALENDAR));
-    }
-    
-    @Test
-    public void setDateCalendarNull() throws SQLException {
-        setNullExpectations();
-        
-        field.setDate(null, TZ_CALENDAR);
-    }
-    
-    @Test
-    @Override
-    public void setDateCalendarNonNull() throws SQLException {
-        setTestSqlDateExpectations();
-        
-        // TODO Not sure if this is the correct result given the Javadoc of java.sql.Date
-        // In GMT+1 the date is 2012-03-12, not 2012-03-11
-        field.setDate(TEST_SQL_DATE, TZ_CALENDAR);
-        
-//        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ");
-//        dateFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
-//        System.out.println(dateFormat.format(TEST_DATE_2012_03_11));
-    }
-    
-    @Test
-    public void setNull() throws SQLException {
-        setNullExpectations();
-        
-        field.setNull();
-    }
-    
-    @Test
-    @Ignore
-    @Override
-    public void getObjectNonNull() throws SQLException {
-        // TODO Implement
-    }
-    
-    @Test
-    @Ignore
-    @Override
-    public void setObjectNonNull() throws SQLException {
-        // TODO Implement
-    }
-    
-    @Test
-    public void getStringNull() throws SQLException {
-        toReturnNullExpectations();
-        
-        assertNull("Expected null for getString()", field.getString());
-    }
-    
-    @Test
-    @Override
-    public void getStringNonNull() throws SQLException {
-        toReturnTestSqlDateExpectations();
-        
-        assertEquals("Unexpected value for getString()", "2012-03-11", field.getString());
-    }
-    
-    @Test
-    public void setStringNull() throws SQLException {
-        setNullExpectations();
-        
-        field.setString(null);
-    }
-    
-    @Test
-    @Override
-    public void setStringNonNull() throws SQLException {
-        setTestSqlDateExpectations();
-        
-        field.setString("2012-03-11");
-    }
-    
-    @Test
-    public void getTimestampNull() throws SQLException {
-        toReturnNullExpectations();
-        
-        assertNull("Expected null for getTimestamp()", field.getTimestamp());
-    }
-    
-    @Test
-    @Override
-    public void getTimestampNonNull() throws SQLException {
-        toReturnTestSqlDateExpectations();
-        
-        //TODO Verify assumptions about the conversion to timestamp
-        Timestamp expectedTimestamp = new java.sql.Timestamp(TEST_SQL_DATE.getTime());
-        
-        assertEquals("Unexpected value for getTimestamp()", expectedTimestamp, field.getTimestamp());
-    }
-    
-    @Test
-    public void setTimestampNull() throws SQLException {
-        setNullExpectations();
-        
-        field.setTimestamp(null);
-    }
-    
-    @Test
-    @Override
-    public void setTimestampNonNull() throws SQLException {
-        setTestSqlDateExpectations();
-
-        // NOTE Time varies with execution
-        Calendar calendar = Calendar.getInstance();
-        calendar.set(Calendar.DAY_OF_MONTH, 11);
-        calendar.set(Calendar.MONTH, Calendar.MARCH);
-        calendar.set(Calendar.YEAR, 2012);
-        
-        Timestamp timestamp = new java.sql.Timestamp(calendar.getTimeInMillis());
-        
-        field.setTimestamp(timestamp);
-    }
-    
-    @Test
-    public void getTimestampCalendarNull() throws SQLException {
-        toReturnNullExpectations();
-        
-        assertNull("Expected no for getTimestamp(Calendar)", field.getTimestamp(TZ_CALENDAR));
-    }
-    
-    @Test
-    @Override
-    public void getTimestampCalendarNonNull() throws SQLException {
-        toReturnTestSqlDateExpectations();
-        
-        //TODO Verify assumptions about the conversion to timestamp
-        Timestamp expectedTimestamp = new java.sql.Timestamp(TEST_SQL_DATE.getTime());
-        
-        assertEquals("Unexpected value for getTimestamp(Calendar)", expectedTimestamp, field.getTimestamp(TZ_CALENDAR));
-    }
-    
-    @Test
-    public void setTimestampCalendarNull() throws SQLException {
-        setNullExpectations();
-        
-        field.setTimestamp(null, TZ_CALENDAR);
-    }
-    
-    @Test
-    @Override
-    public void setTimestampCalendarNonNull() throws SQLException {
-        setTestSqlDateExpectations();
-        
-        // NOTE Time varies with execution
-        Calendar calendar = Calendar.getInstance();
-        calendar.set(Calendar.DAY_OF_MONTH, 11);
-        calendar.set(Calendar.MONTH, Calendar.MARCH);
-        calendar.set(Calendar.YEAR, 2012);
-        
-        Timestamp timestamp = new java.sql.Timestamp(calendar.getTimeInMillis());
-        
-        field.setTimestamp(timestamp, TZ_CALENDAR);
-    }
-    
-    /**
-     * Expectations to return {@link TEST_SQL_DATE} from fieldData
-     */
-    private void toReturnTestSqlDateExpectations() {
-        context.checking(new Expectations() {{
-            atLeast(1).of(fieldData).getFieldData(); will(returnValue(xsqlvar.encodeDate(TEST_SQL_DATE)));
-        }});
-    }
-    
-    private void setTestSqlDateExpectations() {
-        context.checking(new Expectations() {{
-            oneOf(fieldData).setFieldData(xsqlvar.encodeDate(TEST_SQL_DATE));
-        }});
-    }
-
-    @Override
-    protected Date getNonNullObject() {
-        return TEST_SQL_DATE;
-    }
+	public void testTime() throws SQLException {
+		try {
+			super.testTime();
+			assertTrue("This method should fail.", false);
+		} catch(SQLException ex) {
+			//everything is ok :)
+		}
+	}
+	public void testTimestamp() throws SQLException {
+		String dateStr = new Date(TEST_TIMESTAMP.getTime()).toString();
+		field.setTimestamp(TEST_TIMESTAMP);
+      field.copyOI();
+		// we have to test string representation, because of conversion problem
+		assertTrue("Timestamp value test failure.",
+			field.getDate().toString().equals(dateStr));
+	}
+	public void testString() throws SQLException {
+		field.setString(TEST_DATE.toString());
+		field.copyOI();
+		// we have to test string representation, because java.sql.Date
+		// keeps the time part of the timestamp after creation, but
+		// usually loses it after some conversions. So, date might
+		// be the same, by object will differ. String comparison produces
+		// stable results.
+		assertTrue("String value test failure",
+			field.getString().equals(TEST_DATE.toString()));
+	}
+	public void testObject() throws SQLException {
+		field.setObject(TEST_DATE);
+		field.copyOI();
+		// we have to test string representation, because java.sql.Date
+		// keeps the time part of the timestamp after creation, but
+		// usually loses it after some conversions. So, date might
+		// be the same, by object will differ. String comparison produces
+		// stable results.
+		assertTrue("Object value test failure",
+			field.getString().equals(TEST_DATE.toString()));
+	}
 }

@@ -18,6 +18,7 @@
  *
  * All rights reserved.
  */
+
 package org.firebirdsql.jca;
 
 import java.io.*;
@@ -25,7 +26,6 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.sql.SQLException;
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
 
 import javax.resource.NotSupportedException;
 import javax.resource.ResourceException;
@@ -52,6 +52,7 @@ import org.firebirdsql.jdbc.*;
  * 
  * @author <a href="mailto:d_jencks@users.sourceforge.net">David Jencks </a>
  */
+
 public class FBManagedConnectionFactory implements ManagedConnectionFactory,
         Serializable, FirebirdConnectionProperties {
     
@@ -61,16 +62,25 @@ public class FBManagedConnectionFactory implements ManagedConnectionFactory,
      * The <code>mcfInstances</code> weak hash map is used in deserialization
      * to find the correct instance of a mcf after deserializing.
      */
-    private final static Map<FBManagedConnectionFactory, FBManagedConnectionFactory> mcfInstances = 
-            Collections.synchronizedMap(new WeakHashMap<FBManagedConnectionFactory, FBManagedConnectionFactory>());
+    private final static Map mcfInstances = Collections.synchronizedMap(new WeakHashMap());
+
+    // /**
+    // * @todo Claudio suggests this should be 1024*64 -1, we should find out I
+    // * thought this was the largest value I could make work, but I didn't
+    // * write down my experiments.
+    // */
+    // public final static int MAX_BLOB_BUFFER_LENGTH = 1024 * 32 - 1;
+    //
+    // public final static int MIN_BLOB_BUFFER_LENGTH = 1024;
+
 
     private ConnectionManager defaultCm;
     private int hashCode;
     private GDSType gdsType;
 
     // Maps supplied XID to internal transaction handle.
-    private transient final Map<Xid, FBManagedConnection> xidMap = 
-            new ConcurrentHashMap<Xid, FBManagedConnection>();
+    // a concurrent reader map would be better
+    private transient final Map xidMap = Collections.synchronizedMap(new HashMap());
 
     private transient final Object startLock = new Object();
     private transient boolean started = false;
@@ -121,7 +131,6 @@ public class FBManagedConnectionFactory implements ManagedConnectionFactory,
     /**
      * @deprecated use {@link #getBlobBufferSize()}
      */
-    @Deprecated
     public int getBlobBufferLength() {
         return getBlobBufferSize();
     }
@@ -129,7 +138,6 @@ public class FBManagedConnectionFactory implements ManagedConnectionFactory,
     /**
      * @deprecated use {@link #setBlobBufferSize(int)}
      */
-    @Deprecated
     public void setBlobBufferLength(int value) {
         setBlobBufferSize(value);
     }
@@ -137,7 +145,6 @@ public class FBManagedConnectionFactory implements ManagedConnectionFactory,
     /**
      * @deprecated use {@link #getDefaultTransactionIsolation()}
      */
-    @Deprecated
     public Integer getTransactionIsolation() {
         return Integer.valueOf(getDefaultTransactionIsolation());
     }
@@ -145,7 +152,6 @@ public class FBManagedConnectionFactory implements ManagedConnectionFactory,
     /**
      * @deprecated use {@link #setDefaultTransactionIsolation(int)}
      */
-    @Deprecated
     public void setTransactionIsolation(Integer value) {
         if (value != null)
             setDefaultTransactionIsolation(value.intValue());
@@ -154,7 +160,6 @@ public class FBManagedConnectionFactory implements ManagedConnectionFactory,
     /**
      * @deprecated use {@link #getDefaultIsolation()}
      */
-    @Deprecated
     public String getTransactionIsolationName() {
         return getDefaultIsolation();
     }
@@ -162,7 +167,6 @@ public class FBManagedConnectionFactory implements ManagedConnectionFactory,
     /**
      * @deprecated use {@link #setDefaultIsolation(String)} 
      */
-    @Deprecated
     public void setTransactionIsolationName(String name) {
         setDefaultIsolation(name);
     }
@@ -170,7 +174,6 @@ public class FBManagedConnectionFactory implements ManagedConnectionFactory,
     /**
      * @deprecated use {@link #getCharSet()} instead.
      */
-    @Deprecated
     public String getLocalEncoding() {
         return getCharSet();
     }
@@ -178,7 +181,6 @@ public class FBManagedConnectionFactory implements ManagedConnectionFactory,
     /**
      * @deprecated use {@link #setCharSet(String)} instead.
      */
-    @Deprecated
     public void setLocalEncoding(String localEncoding) {
         setCharSet(localEncoding);
     }
@@ -516,11 +518,9 @@ public class FBManagedConnectionFactory implements ManagedConnectionFactory,
         
         Iterator i = connectionSet.iterator();
         while (i.hasNext()) {
-            Object connection = i.next();
-            if (!(connection instanceof FBManagedConnection)) continue;
-            FBManagedConnection mc = (FBManagedConnection) connection;
+            FBManagedConnection mc = (FBManagedConnection) i.next();
 
-            if (mc.matches(subject, cxRequestInfo))
+            if (mc.matches(subject, (FBConnectionRequestInfo) cxRequestInfo))
                 return mc;
         }
         return null;
@@ -576,7 +576,8 @@ public class FBManagedConnectionFactory implements ManagedConnectionFactory,
 
     // Serialization support
     private Object readResolve() throws ObjectStreamException {
-        FBManagedConnectionFactory mcf = mcfInstances.get(this);
+        FBManagedConnectionFactory mcf = 
+            (FBManagedConnectionFactory) mcfInstances.get(this);
         
         if (mcf != null)  return mcf; 
         
@@ -594,7 +595,7 @@ public class FBManagedConnectionFactory implements ManagedConnectionFactory,
      * @return a <code>FBManagedConnectionFactory</code> value
      */
     public FBManagedConnectionFactory canonicalize() {
-        FBManagedConnectionFactory mcf = mcfInstances.get(this);
+        FBManagedConnectionFactory mcf = (FBManagedConnectionFactory) mcfInstances.get(this);
         
         if (mcf != null) 
             return mcf;
@@ -621,7 +622,7 @@ public class FBManagedConnectionFactory implements ManagedConnectionFactory,
 
     int notifyPrepare(FBManagedConnection mc, Xid xid) throws GDSException,
             XAException {
-        FBManagedConnection targetMc = xidMap.get(xid);
+        FBManagedConnection targetMc = (FBManagedConnection) xidMap.get(xid);
 
         if (targetMc == null)
             throw new FBXAException("Commit called with unknown transaction",
@@ -633,7 +634,7 @@ public class FBManagedConnectionFactory implements ManagedConnectionFactory,
     void notifyCommit(FBManagedConnection mc, Xid xid, boolean onePhase)
             throws GDSException, XAException {
 
-        FBManagedConnection targetMc = xidMap.get(xid);
+        FBManagedConnection targetMc = (FBManagedConnection) xidMap.get(xid);
 
         if (targetMc == null)
             tryCompleteInLimboTransaction(getGDS(), xid, true);
@@ -645,7 +646,7 @@ public class FBManagedConnectionFactory implements ManagedConnectionFactory,
 
     void notifyRollback(FBManagedConnection mc, Xid xid) throws GDSException,
             XAException {
-        FBManagedConnection targetMc = xidMap.get(xid);
+        FBManagedConnection targetMc = (FBManagedConnection) xidMap.get(xid);
 
         if (targetMc == null)
             tryCompleteInLimboTransaction(getGDS(), xid, false);
@@ -779,7 +780,7 @@ public class FBManagedConnectionFactory implements ManagedConnectionFactory,
 
     AbstractConnection newConnection(FBManagedConnection mc)
             throws ResourceException {
-        Class<?> connectionClass = GDSFactory.getConnectionClass(getGDSType());
+        Class connectionClass = GDSFactory.getConnectionClass(getGDSType());
 
         if (!AbstractConnection.class.isAssignableFrom(connectionClass))
             throw new IllegalArgumentException("Specified connection class"
@@ -787,7 +788,7 @@ public class FBManagedConnectionFactory implements ManagedConnectionFactory,
                     + " class");
 
         try {
-            Constructor<?> constructor = connectionClass
+            Constructor constructor = connectionClass
                     .getConstructor(new Class[] { FBManagedConnection.class});
 
             return (AbstractConnection) constructor

@@ -51,7 +51,7 @@ public interface IscDbHandle {
      * {@link GDSException} representing server warnings (method 
      * {@link GDSException#isWarning()} returns <code>true</code>).
      */
-    List<GDSException> getWarnings();
+    List getWarnings();
     
     /**
      * Add a warning from the server to this connection.

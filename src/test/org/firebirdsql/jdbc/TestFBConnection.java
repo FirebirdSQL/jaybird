@@ -25,9 +25,6 @@ import org.firebirdsql.common.FBTestBase;
 import org.firebirdsql.gds.*;
 import org.firebirdsql.jca.FBManagedConnection;
 
-import static org.firebirdsql.common.JdbcResourceHelper.*;
-import static org.firebirdsql.common.FBTestProperties.*;
-
 /**
  * Test cases for FirebirdConnection interface.
  * 
@@ -247,7 +244,7 @@ public class TestFBConnection extends FBTestBase {
     
     public void testLockTable() throws Exception {
         FirebirdConnection connection = 
-            getConnectionViaDriverManager();
+            (FirebirdConnection)getConnectionViaDriverManager();
         
         try {
             Statement stmt = connection.createStatement();
@@ -260,7 +257,7 @@ public class TestFBConnection extends FBTestBase {
             connection.close();
         }
 
-        connection = getConnectionViaDriverManager();
+        connection = (FirebirdConnection)getConnectionViaDriverManager();
         try {
             
             Statement stmt = connection.createStatement();
@@ -280,7 +277,7 @@ public class TestFBConnection extends FBTestBase {
                 connection.setAutoCommit(false);
                 
                 FirebirdConnection anotherConnection = 
-                    getConnectionViaDriverManager();
+                    (FirebirdConnection)getConnectionViaDriverManager();
                 anotherConnection.setAutoCommit(false);
                 
                 try {
@@ -366,7 +363,7 @@ public class TestFBConnection extends FBTestBase {
         try {
             
             AbstractStatement stmt1 = (AbstractStatement)connection.createStatement();
-            assertEquals(ResultSet.HOLD_CURSORS_OVER_COMMIT, stmt1.getResultSetHoldability());
+            assertEquals(FirebirdResultSet.HOLD_CURSORS_OVER_COMMIT, stmt1.getResultSetHoldability());
             
             Statement stmt2 = connection.createStatement();
             

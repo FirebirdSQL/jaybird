@@ -21,8 +21,6 @@ package org.firebirdsql.gds.impl.wire;
 
 import java.util.Arrays;
 
-import junit.framework.TestCase;
-
 import org.firebirdsql.logging.Logger;
 import org.firebirdsql.logging.LoggerFactory;
 import org.firebirdsql.gds.*;
@@ -31,15 +29,14 @@ import org.firebirdsql.gds.impl.wire.isc_blob_handle_impl;
 import org.firebirdsql.gds.impl.wire.isc_db_handle_impl;
 import org.firebirdsql.gds.impl.wire.isc_stmt_handle_impl;
 import org.firebirdsql.jca.FBTpb;
-
-import static org.firebirdsql.common.FBTestProperties.*;
+import org.firebirdsql.common.SimpleFBTestBase;
 
 /**
  * @author <a href="mailto:alberola@users.sourceforge.net">Alejandro
  *         Alberola</a>
  * @author <a href="mailto:d_jencks@users.sourceforge.net">David Jencks</a>
  */
-public class TestGds extends TestCase {
+public class TestGds extends SimpleFBTestBase {
 
     private Logger log = LoggerFactory.getLogger(getClass(), true);
 

@@ -312,7 +312,7 @@ public abstract class AbstractGeneratedKeysQuery {
         } finally {
             rs.close();
         }
-        columnNames = columns.toArray(new String[0]);
+        columnNames = (String[]) columns.toArray(new String[0]);
         addReturningClause();
     }
 
@@ -338,7 +338,7 @@ public abstract class AbstractGeneratedKeysQuery {
         } finally {
             rs.close();
         }
-        columnNames = columns.toArray(new String[0]);
+        columnNames = (String[]) columns.toArray(new String[0]);
         addReturningClause();
     }
 

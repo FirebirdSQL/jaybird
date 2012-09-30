@@ -35,8 +35,6 @@ import java.util.Properties;
 
 import org.firebirdsql.common.FBTestBase;
 
-import static org.firebirdsql.common.FBTestProperties.*;
-
 public class TestFBClob extends FBTestBase {
 
 	private static final String PLAIN_BLOB = "plain_blob";

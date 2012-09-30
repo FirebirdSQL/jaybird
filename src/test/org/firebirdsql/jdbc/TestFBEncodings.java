@@ -16,20 +16,18 @@
  *
  * All rights reserved.
  */
+
 package org.firebirdsql.jdbc;
 
 import org.firebirdsql.common.FBTestBase;
 
 import java.sql.Connection;
-import java.sql.DatabaseMetaData;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.*;
-
-import static org.firebirdsql.common.FBTestProperties.*;
 
 /**
  * Describe class <code>TestFBEncodings</code> here.
@@ -39,8 +37,8 @@ import static org.firebirdsql.common.FBTestProperties.*;
  */
 public class TestFBEncodings extends FBTestBase {
 
-    List<String> encJava = new ArrayList<String>();
-    List<String> encFB = new ArrayList<String>();
+    Vector encJava = new Vector();
+    Vector encFB = new Vector();
 
     public static String CREATE_TABLE = 
     		"CREATE TABLE test_encodings (" +
@@ -137,11 +135,11 @@ public class TestFBEncodings extends FBTestBase {
         String CREATE_TABLE_UNIVERSAL = "CREATE TABLE test_encodings_universal (" +
                 "  id INTEGER ";
         for (int encN = 0; encN < encJava.size(); encN++) {
-            CREATE_TABLE_UNIVERSAL = CREATE_TABLE_UNIVERSAL + "," + encJava.get(encN)
-                    + "_field VARCHAR(50) CHARACTER SET " + encFB.get(encN);
+            CREATE_TABLE_UNIVERSAL = CREATE_TABLE_UNIVERSAL + "," + (String) encJava.elementAt(encN)
+                    + "_field VARCHAR(50) CHARACTER SET " + (String) encFB.elementAt(encN);
         }
         for (int encN = 0; encN < encJava.size(); encN++) {
-            CREATE_TABLE_UNIVERSAL = CREATE_TABLE_UNIVERSAL + ", uc_" + encJava.get(encN)
+            CREATE_TABLE_UNIVERSAL = CREATE_TABLE_UNIVERSAL + ", uc_" + (String) encJava.elementAt(encN)
                     + "_field VARCHAR(50) CHARACTER SET UNICODE_FSS ";
         }
         CREATE_TABLE_UNIVERSAL = CREATE_TABLE_UNIVERSAL + ")";
@@ -412,9 +410,8 @@ public class TestFBEncodings extends FBTestBase {
             assertFalse("Upper(Cyrl_field) must be != Cyrl_field ", cyrlValue.equals(cyrlValueUpper));
             assertFalse("Upper(Win1251_field) must be != Win1251_field ", win1251Value.equals(win1251ValueUpper));
             // Unicode only uppercase ASCII characters (until Firebird 2.0)
-            DatabaseMetaData metaData = connection.getMetaData();
-			if (metaData.getDatabaseMajorVersion() < 2)
-                assertEquals("Upper(unicode) must be == Unicode_field ", unicodeValue, unicodeValueUpper);
+            if (((FirebirdDatabaseMetaData) connection.getMetaData()).getDatabaseMajorVersion() < 2)
+                assertTrue("Upper(unicode) must be == Unicode_field ", unicodeValue.equals(unicodeValueUpper));
 
             assertEquals("Upper(win1251_field) must == upper test string ", CYRL_TEST_STRING_UPPER, win1251ValueUpper);
             // The CYRL charset fails because the mapping is 1251 and the uppercase
@@ -424,7 +421,7 @@ public class TestFBEncodings extends FBTestBase {
 
             // unicode does not uppercase (until FB 2.0)
 
-            if (metaData.getDatabaseMajorVersion() < 2)
+            if (((FirebirdDatabaseMetaData) connection.getMetaData()).getDatabaseMajorVersion() < 2)
                 assertFalse("Upper(Unicode_field) must be != upper test string ",
                         unicodeValueUpper.equals(CYRL_TEST_STRING_UPPER));
 
@@ -631,7 +628,7 @@ public class TestFBEncodings extends FBTestBase {
 
             stmt.setInt(1, UNIVERSAL_TEST_ID);
             for (int col = 0; col < encJava.size(); col++) {
-                String value = new String(UNIVERSAL_TEST_BYTES, encJava.get(col));
+                String value = new String(UNIVERSAL_TEST_BYTES, (String) encJava.elementAt(col));
                 stmt.setString(col + 2, value);
                 stmt.setString(col + encJava.size() + 2, value);
             }
@@ -653,10 +650,10 @@ public class TestFBEncodings extends FBTestBase {
                 String charsetValue = rs.getString(col + 2);
                 String unicodeValue = rs.getString(col + encJava.size() + 2);
 
-                assertEquals("charsetValue " + encJava.get(col) + " should be the same that unicode",
+                assertEquals("charsetValue " + encJava.elementAt(col) + " should be the same that unicode",
                         unicodeValue, charsetValue);
-                assertEquals("charsetValue " + encJava.get(col) + " should be == string", new String(
-                        UNIVERSAL_TEST_BYTES, encJava.get(col)), charsetValue);
+                assertEquals("charsetValue " + encJava.elementAt(col) + " should be == string", new String(
+                        UNIVERSAL_TEST_BYTES, (String) encJava.elementAt(col)), charsetValue);
             }
             assertFalse("Should have exactly one row", rs.next());
 

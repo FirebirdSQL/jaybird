@@ -30,7 +30,6 @@ package org.firebirdsql.gds.impl;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 
 import javax.security.auth.Subject;
@@ -51,7 +50,7 @@ public abstract class AbstractIscDbHandle implements IscDbHandle {
     private volatile boolean invalid;
     private int rdb_id;
     private Subject subject;
-    private final List<GDSException> rdb_warnings = Collections.synchronizedList(new ArrayList<GDSException>());
+    private List rdb_warnings = new ArrayList();
     private int dialect;
     private int protocol;
     private GDSServerVersion serverVersion;
@@ -59,7 +58,7 @@ public abstract class AbstractIscDbHandle implements IscDbHandle {
     private int ODSMinorVersion;
     private int resp_object;
     private byte[] resp_data;
-    protected final Collection<AbstractIscTrHandle> rdb_transactions = Collections.synchronizedList(new ArrayList<AbstractIscTrHandle>());
+    protected Collection rdb_transactions = new ArrayList();
     private long resp_blob_id;
     
     protected AbstractIscDbHandle() {
@@ -152,21 +151,25 @@ public abstract class AbstractIscDbHandle implements IscDbHandle {
         return subject;
     }
 
-    public List<GDSException> getWarnings() {
+    public List getWarnings() {
         checkValidity();
         synchronized (rdb_warnings) {
-            return new ArrayList<GDSException>(rdb_warnings);
+            return new ArrayList(rdb_warnings);
         }
     }
 
     public void addWarning(GDSException warning) {
         checkValidity();
-        rdb_warnings.add(warning);
+        synchronized (rdb_warnings) {
+            rdb_warnings.add(warning);
+        }
     }
 
     public void clearWarnings() {
         checkValidity();
-        rdb_warnings.clear();
+        synchronized (rdb_warnings) {
+            rdb_warnings.clear();
+        }
     }
 
     public void setResp_object(int value) {
@@ -190,10 +193,8 @@ public abstract class AbstractIscDbHandle implements IscDbHandle {
         return !rdb_transactions.isEmpty();
     }
 
-    public Collection<AbstractIscTrHandle> getTransactions() {
-        synchronized (rdb_transactions) {
-            return new ArrayList<AbstractIscTrHandle>(rdb_transactions);
-        }
+    public Collection getTransactions() {
+        return new ArrayList(rdb_transactions);
     }
 
     public int getOpenTransactionCount() {

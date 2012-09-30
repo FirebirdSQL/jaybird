@@ -20,8 +20,10 @@
  */
 package org.firebirdsql.jdbc;
 
+import java.io.InputStream;
+import java.io.Reader;
 import java.sql.*;
-import java.util.List;
+import java.util.ArrayList;
 
 import org.firebirdsql.gds.XSQLVAR;
 import org.firebirdsql.gds.impl.AbstractIscStmtHandle;
@@ -45,7 +47,7 @@ public class FBResultSet extends AbstractResultSet {
                 rsConcurrency, rsHoldability, cached);
     }
 
-    public FBResultSet(XSQLVAR[] xsqlvars, List<byte[][]> rows) throws SQLException {
+    public FBResultSet(XSQLVAR[] xsqlvars, ArrayList rows) throws SQLException {
         super(xsqlvars, rows);
     }
 

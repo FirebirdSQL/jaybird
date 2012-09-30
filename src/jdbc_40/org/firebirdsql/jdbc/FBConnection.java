@@ -22,8 +22,9 @@ package org.firebirdsql.jdbc;
 
 import java.sql.*;
 import java.util.HashSet;
+import java.util.Iterator;
+import java.util.Map;
 import java.util.Properties;
-import java.util.Set;
 import java.util.concurrent.Executor;
 
 import org.firebirdsql.jca.FBManagedConnection;
@@ -36,8 +37,7 @@ import org.firebirdsql.util.SQLExceptionChainBuilder;
  */
 public class FBConnection extends AbstractConnection {
 
-    // TODO Nothing is ever put into this set
-    private Set<String> clientInfoPropNames = new HashSet<String>();
+    private HashSet clientInfoPropNames = new HashSet();
 
     /**
      * Create instance of this class for the specified managed connection.
@@ -77,7 +77,8 @@ public class FBConnection extends AbstractConnection {
 
         PreparedStatement stmt = prepareStatement(GET_CLIENT_INFO_SQL);
         try {
-            for (String propName : clientInfoPropNames) {
+            for (Iterator iterator = clientInfoPropNames.iterator(); iterator.hasNext();) {
+                String propName = (String) iterator.next();
                 result.put(propName, getClientInfo(stmt, propName));
             }
         } finally {
@@ -130,14 +131,15 @@ public class FBConnection extends AbstractConnection {
             PreparedStatement stmt = prepareStatement(SET_CLIENT_INFO_SQL);
             try {
 
-                for (String propName : properties.stringPropertyNames()) {
-                    String propValue = properties.getProperty(propName);
+                for (Iterator iterator = properties.entrySet().iterator(); iterator.hasNext();) {
+                    Map.Entry entry = (Map.Entry) iterator.next();
 
                     try {
-                        setClientInfo(stmt, propName, propValue);
+                        setClientInfo(stmt, (String) entry.getKey(), (String) entry.getValue());
                     } catch (SQLClientInfoException ex) {
                         chain.append(ex);
                     }
+
                 }
             } finally {
                 stmt.close();

@@ -32,7 +32,6 @@ import org.firebirdsql.logging.LoggerFactory;
 import java.io.*;
 import java.net.URL;
 import java.util.*;
-import java.util.Map.Entry;
 
 /**
  * The class <code>GDSFactory</code> exists to provide a way to obtain objects
@@ -51,20 +50,25 @@ public class GDSFactory {
      * puts the most short JDBC URLs at the end of the list, so the correct
      * default protocol handling can be implemented.
      */
-    private static class ReversedStringComparator implements Comparator<String> {
+    private static class ReversedStringComparator implements Comparator {
 
-        public int compare(String s1, String s2) {
+        public int compare(Object o1, Object o2) {
+            String s1 = (String) o1;
+            String s2 = (String) o2;
+
             // note, we compare here s2 to s1,
             // this causes descending sorting
             return s2.compareTo(s1);
         }
+
     }
 
-    private static final Set<GDSFactoryPlugin> registeredPlugins = new HashSet<GDSFactoryPlugin>();
+    private static HashSet registeredPlugins = new HashSet();
 
-    private static final Map<GDSType, GDSFactoryPlugin> typeToPluginMap = new HashMap<GDSType, GDSFactoryPlugin>();
+    private static HashMap typeToPluginMap = new HashMap();
 
-    private static final TreeMap<String, GDSFactoryPlugin> jdbcUrlToPluginMap = new TreeMap<String, GDSFactoryPlugin>(new ReversedStringComparator());
+    private static TreeMap jdbcUrlToPluginMap = new TreeMap(
+            new ReversedStringComparator());
 
     private static GDSType defaultType;
 
@@ -100,12 +104,12 @@ public class GDSFactory {
      */
     private static void loadPluginsFromClassLoader(ClassLoader classLoader) throws IOException {
         // TODO: Replace with Java.util.ServiceLoader usage
-        Enumeration<URL> res = classLoader.getResources(
+        Enumeration res = classLoader.getResources(
             "META-INF/services/" + GDSFactoryPlugin.class.getName());
         
         while (res.hasMoreElements()) {
             
-            URL url = res.nextElement();
+            URL url = (URL) res.nextElement();
             
             InputStreamReader rin = new InputStreamReader(url.openStream());
             BufferedReader bin = new BufferedReader(rin);
@@ -114,7 +118,7 @@ public class GDSFactory {
                 String className;
                 while ((className = bin.readLine()) != null) {
                     try {
-                        Class<?> clazz = Class.forName(className);
+                        Class clazz = Class.forName(className);
                         GDSFactoryPlugin plugin = (GDSFactoryPlugin)clazz.newInstance();
                         registerPlugin(plugin);
                     } catch (ClassNotFoundException ex) {
@@ -162,10 +166,11 @@ public class GDSFactory {
             typeToPluginMap.put(aliasType, plugin);
         }
 
-        String[] jdbcUrls = plugin.getSupportedProtocols();
+        String[] jdbcUrls = (String[]) plugin.getSupportedProtocols();
         for (int i = 0; i < jdbcUrls.length; i++) {
 
-            GDSFactoryPlugin otherPlugin = jdbcUrlToPluginMap.put(jdbcUrls[i], plugin);
+            GDSFactoryPlugin otherPlugin = 
+                (GDSFactoryPlugin)jdbcUrlToPluginMap.put(jdbcUrls[i], plugin);
             
             if (otherPlugin == null)
                 continue;
@@ -205,7 +210,8 @@ public class GDSFactory {
     public synchronized static GDS getGDSForType(GDSType gdsType) {
         if (gdsType == null) gdsType = defaultType;
 
-        GDSFactoryPlugin gdsPlugin = typeToPluginMap.get(gdsType);
+        GDSFactoryPlugin gdsPlugin = (GDSFactoryPlugin) typeToPluginMap
+                .get(gdsType);
 
         if (gdsPlugin == null)
             throw new IllegalArgumentException("Specified GDS type " + gdsType
@@ -273,8 +279,8 @@ public class GDSFactory {
      * 
      * @return set of the supported protocols.
      */
-    public static Set<String> getSupportedProtocols() {
-        return Collections.unmodifiableSet(jdbcUrlToPluginMap.keySet());
+    public static Set getSupportedProtocols() {
+        return jdbcUrlToPluginMap.keySet();
     }
 
     /**
@@ -301,12 +307,15 @@ public class GDSFactory {
      * @return instance of {@link GDSType}.
      */
     public static GDSType getTypeForProtocol(String jdbcUrl) {
-        // TODO use TreeMap functionality to locate protocol (eg using floorKey() or ceilingKey())?
-        for (Entry<String, GDSFactoryPlugin> entry : jdbcUrlToPluginMap.entrySet()) {
-            String jdbcProtocol = entry.getKey();
+        for (Iterator iter = jdbcUrlToPluginMap.entrySet().iterator(); iter
+                .hasNext();) {
+            Map.Entry entry = (Map.Entry) iter.next();
+
+            String jdbcProtocol = (String) entry.getKey();
+            GDSFactoryPlugin plugin = (GDSFactoryPlugin) entry.getValue();
 
             if (jdbcUrl.startsWith(jdbcProtocol))
-                return GDSType.getType(entry.getValue().getTypeName());
+                return GDSType.getType(plugin.getTypeName());
         }
 
         return null;
@@ -322,7 +331,7 @@ public class GDSFactory {
      * 
      * @return class to instantiate for the database connection.
      */
-    public static Class<?> getConnectionClass(GDSType gdsType) {
+    public static Class getConnectionClass(GDSType gdsType) {
         return getPlugin(gdsType).getConnectionClass();
     }
 
@@ -338,7 +347,8 @@ public class GDSFactory {
      *             if specified type is not known.
      */
     private static GDSFactoryPlugin getPlugin(GDSType gdsType) {
-        GDSFactoryPlugin gdsPlugin = typeToPluginMap.get(gdsType);
+        GDSFactoryPlugin gdsPlugin = (GDSFactoryPlugin) typeToPluginMap
+                .get(gdsType);
         if (gdsPlugin == null)
             throw new IllegalArgumentException("Specified GDS type " + gdsType
                     + " is unknown.");

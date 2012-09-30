@@ -85,7 +85,7 @@ public interface UserManager extends ServiceManager {
      * @throws SQLException
      * @throws IOException
      */
-    public Map<String, User> getUsers() throws SQLException, IOException;
+    public Map getUsers() throws SQLException, IOException;
     
 	/**
 	 * Sets the security database and therefore overrides the

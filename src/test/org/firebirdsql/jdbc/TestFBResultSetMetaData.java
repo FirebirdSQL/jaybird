@@ -18,11 +18,7 @@
  */
 package org.firebirdsql.jdbc;
 
-import org.firebirdsql.common.DdlHelper;
-import org.firebirdsql.common.FBJUnit4TestBase;
-import org.firebirdsql.common.JdbcResourceHelper;
-import org.junit.Before;
-import org.junit.Test;
+import org.firebirdsql.common.FBTestBase;
 
 import com.sun.rowset.CachedRowSetImpl;
 
@@ -31,16 +27,13 @@ import java.util.Properties;
 
 import javax.sql.rowset.CachedRowSet;
 
-import static org.firebirdsql.common.FBTestProperties.*;
-import static junit.framework.Assert.*;
-
 /**
  * This method tests correctness of {@link FBResultSetMetaData} class.
  *
  * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  */
-public class TestFBResultSetMetaData extends FBJUnit4TestBase {
+public class TestFBResultSetMetaData extends FBTestBase {
     
     public static String CREATE_TABLE = 
         "CREATE TABLE test_rs_metadata (" + 
@@ -65,136 +58,164 @@ public class TestFBResultSetMetaData extends FBJUnit4TestBase {
     public static String DROP_TABLE = 
         "DROP TABLE test_rs_metadata";
     
-    @Before
-    public void setUp() throws Exception {
+    public TestFBResultSetMetaData(String testName) {
+        super(testName);
+    }
+    
+    protected void setUp() throws Exception {
+        super.setUp();
+        
         Class.forName(FBDriver.class.getName());
         
         Properties props = new Properties();
-        props.putAll(getDefaultPropertiesForConnection());
+        props.putAll(this.getDefaultPropertiesForConnection());
         props.put("lc_ctype", "UNICODE_FSS");
         
-        Connection connection = DriverManager.getConnection(getUrl(), props);
+        Connection connection = DriverManager.getConnection(this.getUrl(), props);
         
-        DdlHelper.executeDropTable(connection, DROP_TABLE);
-        DdlHelper.executeCreateTable(connection, CREATE_TABLE);
+        Statement stmt = connection.createStatement();
+        try {
+            stmt.executeUpdate(DROP_TABLE);
+        }
+        catch (Exception e) {}
+
+        stmt.executeUpdate(CREATE_TABLE);
+        stmt.close();        
         
-        JdbcResourceHelper.closeQuietly(connection);
+        connection.close();
     }
 
-    @Test
+    protected void tearDown() throws Exception {
+        /*
+        Properties props = new Properties();
+        props.putAll(DB_INFO);
+        props.put("lc_ctype", "NONE");
+        
+        Connection connection = 
+            DriverManager.getConnection(DB_DRIVER_URL, props);
+            
+        Statement stmt = connection.createStatement();
+        stmt.executeUpdate(DROP_TABLE);
+        stmt.close();
+        connection.close();      
+        */
+        
+        super.tearDown();
+    }
+    
     public void testResultSetMetaData() throws Exception {
         Properties props = new Properties();
-        props.putAll(getDefaultPropertiesForConnection());
+        props.putAll(this.getDefaultPropertiesForConnection());
         props.put("lc_ctype", "UNICODE_FSS");
         
-        Connection connection = DriverManager.getConnection(getUrl(), props);
-        try {
-            Statement stmt = connection.createStatement();
-            ResultSet rs = stmt.executeQuery(TEST_QUERY);
-            ResultSetMetaData metaData = rs.getMetaData();
+        Connection connection = DriverManager.getConnection(this.getUrl(), props);
+        
+        Statement stmt = connection.createStatement();
+        
+        ResultSet rs = stmt.executeQuery(TEST_QUERY);
+        
+        ResultSetMetaData metaData = rs.getMetaData();
+        
+        assertTrue("simple_field must have size 60", 
+            metaData.getPrecision(1) == 60);
             
-            assertEquals("simple_field must have size 60", 
-                60, metaData.getPrecision(1));
-                
-            assertEquals("two_byte_field must have size 60", 
-                60, metaData.getPrecision(2));
-    
-            assertEquals("three_byte_field must have size 60", 
-                60, metaData.getPrecision(3));
-    
-            assertEquals("long_field must have precision 15", 
-                15, metaData.getPrecision(4));
-    
-            assertEquals("int_field must have precision 8", 
-                8, metaData.getPrecision(5));
-    
-            assertEquals("short_field must have precision 4", 
-                4, metaData.getPrecision(6));
-    
-            stmt.close();
-        } finally {
-            JdbcResourceHelper.closeQuietly(connection);
-        }
+        assertTrue("two_byte_field must have size 60", 
+            metaData.getPrecision(2) == 60);
+
+        assertTrue("three_byte_field must have size 60", 
+            metaData.getPrecision(3) == 60);
+
+        assertTrue("long_field must have precision 15", 
+            metaData.getPrecision(4) == 15);
+
+        assertTrue("int_field must have precision 8", 
+            metaData.getPrecision(5) == 8);
+
+        assertTrue("short_field must have precision 4", 
+            metaData.getPrecision(6) == 4);
+
+        stmt.close();
+        connection.close();
     }
     
-    @Test
     public void testResultSetMetaData2() throws Exception {
         Properties props = new Properties();
-        props.putAll(getDefaultPropertiesForConnection());
+        props.putAll(this.getDefaultPropertiesForConnection());
         props.put("lc_ctype", "UNICODE_FSS");
         
-        Connection connection = DriverManager.getConnection(getUrl(), props);
+        Connection connection = DriverManager.getConnection(this.getUrl(), props);
         
-        try {
-            FBDatabaseMetaData dmd = (FBDatabaseMetaData)connection.getMetaData();
-            int firebirdVersion = dmd.getDatabaseMajorVersion();
-            
-            Statement stmt = connection.createStatement();
-            ResultSet rs = stmt.executeQuery(TEST_QUERY2);
-            ResultSetMetaData metaData = rs.getMetaData();
-            		  
-            int columnDisplaySize = metaData.getColumnDisplaySize(3);
-            
-            if (firebirdVersion == 1)
-                assertEquals("RDB$SECURITY_CLASS must have display size 10 ", 10, columnDisplaySize);
-            else
-            if (firebirdVersion >= 2)
-                assertEquals("RDB$SECURITY_CLASS must have display size 31 ", 31, columnDisplaySize);
-            else
-                fail("Unknown Firebird version, not clear what to compare.");
-            
-            int columnDisplaySize2 = metaData.getColumnDisplaySize(4);
-            
-            if (firebirdVersion == 1)
-                assertEquals("RDB$CHARACTER_SET_NAME must have display size 10 ", 10, columnDisplaySize2);
-            else
-            if (firebirdVersion >= 2)
-                assertEquals("RDB$CHARACTER_SET_NAME must have display size 31 ", 31, columnDisplaySize2);
-            else
-                fail("Unknown Firebird version, not clear what to compare.");
-            
-            stmt.close();
-        } finally {
-            JdbcResourceHelper.closeQuietly(connection);
-        }
+        FBDatabaseMetaData dmd = (FBDatabaseMetaData)connection.getMetaData();
+        int firebirdVersion = dmd.getDatabaseMajorVersion();
+        
+        Statement stmt = connection.createStatement();
+        
+        ResultSet rs = stmt.executeQuery(TEST_QUERY2);
+        
+        ResultSetMetaData metaData = rs.getMetaData();
+        		  
+        int columnDisplaySize = metaData.getColumnDisplaySize(3);
+        
+        if (firebirdVersion == 1)
+            assertTrue("RDB$SECURITY_CLASS must have display size 31 ", columnDisplaySize == 10);
+        else
+        if (firebirdVersion == 2)
+            assertTrue("RDB$SECURITY_CLASS must have display size 31 ", columnDisplaySize == 31);
+        else
+            fail("Unknown Firebird version, not clear what to compare.");
+        
+        int columnDisplaySize2 = metaData.getColumnDisplaySize(4);
+        
+        if (firebirdVersion == 1)
+            assertTrue("RDB$CHARACTER_SET_NAME must have display size 31 ",columnDisplaySize2 == 10);
+        else
+        if (firebirdVersion == 2)
+            assertTrue("RDB$CHARACTER_SET_NAME must have display size 31 ",columnDisplaySize2 == 31);
+        else
+            fail("Unknown Firebird version, not clear what to compare.");
+        
+        stmt.close();
+        connection.close();
     }
     
-    @Test
-    public void testColumnTypeName() throws Exception {
+	public void testColumnTypeName() throws Exception {
+		
 		Properties props = new Properties();
-		props.putAll(getDefaultPropertiesForConnection());
+		props.putAll(this.getDefaultPropertiesForConnection());
 		props.put("lc_ctype", "UNICODE_FSS");
 
-		Connection connection = DriverManager.getConnection(getUrl(), props);
-		try {
-    		Statement stmt = connection.createStatement();
-    		ResultSet rs = stmt.executeQuery(TEST_QUERY);
-    		ResultSetMetaData metaData = rs.getMetaData();
-    
-    		assertEquals("simple_field must be of type VARCHAR",
-    				"VARCHAR", metaData.getColumnTypeName(1));
-    
-    		assertEquals("two_byte_field must be of type VARCHAR",
-    				"VARCHAR", metaData.getColumnTypeName(2));
-    
-    		assertEquals("three_byte_field must be of type VARCHAR",
-    				"VARCHAR", metaData.getColumnTypeName(3));
-    
-    		assertEquals("long_field must be of type NUMERIC",
-    				"NUMERIC", metaData.getColumnTypeName(4));
-    
-    		assertEquals("int_field must be of type NUMERIC",
-    				"NUMERIC", metaData.getColumnTypeName(5));
-    
-    		assertEquals("short_field must be of type NUMERIC",
-    				"NUMERIC", metaData.getColumnTypeName(6));
-    
-    		stmt.close();
-		} finally {
-		    JdbcResourceHelper.closeQuietly(connection);
-		}
+		Connection connection = 
+			DriverManager.getConnection(this.getUrl(), props);
+
+		Statement stmt = connection.createStatement();
+
+		ResultSet rs = stmt.executeQuery(TEST_QUERY);
+
+		ResultSetMetaData metaData = rs.getMetaData();
+
+		assertTrue("simple_field must be of type VARCHAR",
+				metaData.getColumnTypeName(1).equals("VARCHAR"));
+
+		assertTrue("two_byte_field must be of type VARCHAR",
+				metaData.getColumnTypeName(2).equals("VARCHAR"));
+
+		assertTrue("three_byte_field must be of type VARCHAR",
+				metaData.getColumnTypeName(3).equals("VARCHAR"));
+
+		assertTrue("long_field must be of type NUMERIC",
+				metaData.getColumnTypeName(4).equals("NUMERIC"));
+
+		assertTrue("int_field must be of type NUMERIC",
+				metaData.getColumnTypeName(5).equals("NUMERIC"));
+
+		assertTrue("short_field must be of type NUMERIC",
+				metaData.getColumnTypeName(6).equals("NUMERIC"));
+
+		stmt.close();
+		connection.close();
+		
 	}
-    
+	
     /**
      * Tests the default strategy for retrieving columnNames and columnLabels, where the columnName is the original column name
      * and the label is the AS clause (if specified), or the original column name otherwise.
@@ -202,7 +223,6 @@ public class TestFBResultSetMetaData extends FBJUnit4TestBase {
      * This is the JDBC-compliant behavior
      * </p>
      */
-    @Test
     public void columnNameAndLabel_Default() throws Exception {
         Connection con = getConnectionViaDriverManager();
         try {
@@ -227,7 +247,7 @@ public class TestFBResultSetMetaData extends FBJUnit4TestBase {
             
             stmt.close();
         } finally {
-            JdbcResourceHelper.closeQuietly(con);
+            closeQuietly(con);
         }
     }
     
@@ -239,7 +259,6 @@ public class TestFBResultSetMetaData extends FBJUnit4TestBase {
      * in the connection properties
      * </p>
      */
-    @Test
     public void columnNameAndLabel_ColumnLabelForName() throws Exception {
         Properties props = new Properties();
         props.putAll(getDefaultPropertiesForConnection());
@@ -267,7 +286,7 @@ public class TestFBResultSetMetaData extends FBJUnit4TestBase {
             
             stmt.close();
         } finally {
-            JdbcResourceHelper.closeQuietly(con);
+            closeQuietly(con);
         }
     }
     
@@ -275,7 +294,6 @@ public class TestFBResultSetMetaData extends FBJUnit4TestBase {
      * Tests if the columnLabelForName strategy allows com.sun.rowset.CachedRowSetImpl to
      * access rows by their columnLabel.
      */
-    @Test
     public void cachedRowSetImpl_columnLabelForName() throws Exception {
         Properties props = new Properties();
         props.putAll(getDefaultPropertiesForConnection());
@@ -301,8 +319,8 @@ public class TestFBResultSetMetaData extends FBJUnit4TestBase {
             }
             stmt.close();
         } finally {
-            JdbcResourceHelper.closeQuietly(con);
+            closeQuietly(con);
         }
     }
+
 }
-;

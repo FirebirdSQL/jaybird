@@ -24,7 +24,6 @@ import org.firebirdsql.common.FBTestBase;
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.TransactionParameterBuffer;
 
-import static org.firebirdsql.common.DdlHelper.*;
 
 public class TestTableReservation extends FBTestBase {
     

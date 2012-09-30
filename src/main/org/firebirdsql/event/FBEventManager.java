@@ -55,6 +55,7 @@ import java.util.Set;
 import java.util.List;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.ArrayList;
 import java.util.Collections;
 
@@ -75,9 +76,9 @@ public class FBEventManager implements EventManager {
     private String database = "";
     private int port = 3050;
     private String host = "localhost";
-    private final Map<String, Set<EventListener>> listenerMap = Collections.synchronizedMap(new HashMap<String, Set<EventListener>>());
-    private final Map<String, GdsEventHandler> handlerMap = Collections.synchronizedMap(new HashMap<String, GdsEventHandler>());
-    private final List<DatabaseEvent> eventQueue = new ArrayList<DatabaseEvent>();
+    private Map listenerMap = Collections.synchronizedMap(new HashMap());
+    private Map handlerMap = Collections.synchronizedMap(new HashMap());
+    private List eventQueue = new ArrayList();
     private EventDispatcher eventDispatcher;
     private Thread dispatchThread;
     private long waitTimeout = 1000;
@@ -117,7 +118,9 @@ public class FBEventManager implements EventManager {
             throw new IllegalStateException(
                     "Disconnect called while not connected");
         }
-        for (String eventName : new HashSet<String>(handlerMap.keySet())) {
+        for (Iterator eventItr = new HashSet(handlerMap.keySet()).iterator(); 
+                eventItr.hasNext();){
+            String eventName = (String)eventItr.next();
             try {
                 unregisterListener(eventName);
             } catch (GDSException e1){
@@ -232,9 +235,9 @@ public class FBEventManager implements EventManager {
                 } catch (GDSException e){
                     throw new FBSQLException(e);
                 }
-                listenerMap.put(eventName, new HashSet<EventListener>());
+                listenerMap.put(eventName, new HashSet());
             }
-            Set<EventListener> listenerSet = listenerMap.get(eventName);
+            Set listenerSet = (Set)listenerMap.get(eventName);
             listenerSet.add(listener);
         }
     }
@@ -244,7 +247,7 @@ public class FBEventManager implements EventManager {
         if (eventName == null || listener == null){
             throw new NullPointerException();
         }
-        Set<EventListener> listenerSet = listenerMap.get(eventName);
+        Set listenerSet = (Set)listenerMap.get(eventName);
         if (listenerSet != null){
             listenerSet.remove(listener);
             if (listenerSet.isEmpty()){
@@ -290,7 +293,7 @@ public class FBEventManager implements EventManager {
     }
 
     private void unregisterListener(String eventName) throws GDSException {
-        GdsEventHandler handler = handlerMap.get(eventName);
+        GdsEventHandler handler = (GdsEventHandler)handlerMap.get(eventName);
         handler.unregister();
         handlerMap.remove(eventName);
     }
@@ -365,7 +368,7 @@ public class FBEventManager implements EventManager {
 
         public void run(){
             running = true;
-            List<DatabaseEvent> events = new ArrayList<DatabaseEvent>(); 
+            List events = new ArrayList(); 
             while (running){
                 synchronized (eventQueue){
                     while (eventQueue.isEmpty() && running){
@@ -377,12 +380,17 @@ public class FBEventManager implements EventManager {
                     eventQueue.clear();
                 }
                 
-                for (DatabaseEvent event : events) {
-                    Set<EventListener> listenerSet = null;
+                for (Iterator eItr = events.iterator(); eItr.hasNext();){
+                    DatabaseEvent event = (DatabaseEvent)eItr.next();
+                    Set listenerSet = null;
                     synchronized (listenerMap){
-                        listenerSet = listenerMap.get(event.getEventName());
+                        listenerSet = 
+                            (Set)listenerMap.get(event.getEventName());
                         if (listenerSet != null){
-                            for (EventListener listener : listenerSet) {
+                            Iterator listenerItr = listenerSet.iterator();
+                            while (listenerItr.hasNext()){
+                                EventListener listener = 
+                                    (EventListener)listenerItr.next();
                                 listener.eventOccurred(event);
                             }
                         }

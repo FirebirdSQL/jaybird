@@ -30,7 +30,6 @@ import java.sql.Time;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
 
 import junit.framework.TestCase;
 import org.firebirdsql.gds.XSQLVAR;
@@ -72,7 +71,7 @@ public abstract class BaseTestFBField extends TestCase {
 
     protected FieldDataProvider createDataProvider(XSQLVAR[] xsqlvars) throws SQLException {
         byte[][] row = new byte[1][];
-        List<byte[][]> rows = new ArrayList<byte[][]>();
+        ArrayList rows = new ArrayList();
         rows.add(row);
         final FBResultSet rs = new FBFieldResultSet(xsqlvars, rows);
         rs.next();

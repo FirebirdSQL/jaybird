@@ -38,11 +38,11 @@ import org.firebirdsql.jdbc.FBSQLException;
  */
 public class FBXAConnection extends FBPooledConnection implements XAConnection {
     
-    private WeakReference<FBManagedConnection> mc;
+    private WeakReference mc;
     
     public FBXAConnection(AbstractConnection connection) {
         super(connection);
-        mc = new WeakReference<FBManagedConnection>(connection.getManagedConnection());
+        mc = new WeakReference(connection.getManagedConnection());
     }
 
     public XAResource getXAResource() throws SQLException {
@@ -64,7 +64,7 @@ public class FBXAConnection extends FBPooledConnection implements XAConnection {
     }
     
     private FBManagedConnection getManagedConnection() throws SQLException {
-        FBManagedConnection managedConnection = mc.get();
+        FBManagedConnection managedConnection = (FBManagedConnection)mc.get();
         if (managedConnection == null) {
             throw new FBSQLException("Managed Connection is null, connection unavailable", FBSQLException.SQL_STATE_CONNECTION_CLOSED);
         }

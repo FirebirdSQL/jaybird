@@ -32,9 +32,6 @@ import java.util.Set;
 import org.firebirdsql.common.FBTestBase;
 import org.firebirdsql.jdbc.MetaDataValidator.MetaDataInfo;
 
-import static org.firebirdsql.common.DdlHelper.*;
-import static org.firebirdsql.common.JdbcResourceHelper.*;
-
 /**
  * Base test class for testing and validating the various DatabaseMetaData
  * methods returning a ResultSet.
@@ -44,7 +41,7 @@ import static org.firebirdsql.common.JdbcResourceHelper.*;
  * @param <T>
  *            Enum containing the metadata columns to be validated.
  */
-public abstract class FBMetaDataTestBase<T extends Enum<T> & MetaDataInfo> extends FBTestBase {
+public abstract class FBMetaDataTestBase<T extends Enum & MetaDataInfo> extends FBTestBase {
 
     private Class<T> metaDataInfoClass;
 

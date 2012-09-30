@@ -32,8 +32,6 @@ import java.util.Map;
 
 import org.firebirdsql.jdbc.MetaDataValidator.MetaDataInfo;
 
-import static org.firebirdsql.common.JdbcResourceHelper.*;
-
 /**
  * Tests for {@link FBDatabaseMetaData} for procedure columns related metadata.
  * 
@@ -340,7 +338,7 @@ public class TestFBDatabaseMetaDataProcedureColumns extends FBMetaDataTestBase<T
 
     @Override
     protected Map<ProcedureColumnMetaData, Object> getDefaultValueValidationRules() throws Exception {
-        return new EnumMap<ProcedureColumnMetaData, Object>(DEFAULT_COLUMN_VALUES);
+        return new EnumMap(DEFAULT_COLUMN_VALUES);
     }
     
     /**

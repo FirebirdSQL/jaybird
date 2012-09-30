@@ -17,7 +17,6 @@
 	   haltonerror="${junit.haltonerror}"
 	   haltonfailure="${junit.haltonfailure}"
 	   fork="${junit.fork}"
-       forkmode="${junit.forkmode}"
 	   timeout="${junit.timeout}"
 	   jvm="${junit.jvm}">
 
@@ -31,6 +30,10 @@
       <sysproperty key="test.gds_type" value="PURE_JAVA"/>
 
       <classpath>
+        <!-- pathelement location="${build.classes}"/ -->
+        <!-- pathelement location="${build.test}"/ -->
+        <!-- pathelement location="${build.resources}"/ -->
+
         <pathelement location="${build.lib}/${archive.name.simple}"/>
         <pathelement location="${build.lib}/${archive.name.test}"/>
         <pathelement location="${build.lib}/connector-api-1.5.jar"/>
@@ -48,7 +51,8 @@
 
       <batchtest todir="${build.reports.pure_java}"
 		 haltonerror="${junit.batchtest.haltonerror}"
-		 haltonfailure="${junit.batchtest.haltonfailure}">
+		 haltonfailure="${junit.batchtest.haltonfailure}"
+		 fork="${junit.fork}">
 
         <fileset dir="${build.test}">
           <include name="**/Test*.class"/>
@@ -79,7 +83,6 @@
 	   haltonerror="${junit.haltonerror}"
 	   haltonfailure="${junit.haltonfailure}"
 	   fork="${junit.fork}"
-       forkmode="${junit.forkmode}"
 	   timeout="${junit.timeout}"
 	   jvm="${junit.jvm}">
 
@@ -115,7 +118,8 @@
 
       <batchtest todir="${build.reports.native}"
 		 haltonerror="${junit.batchtest.haltonerror}"
-		 haltonfailure="${junit.batchtest.haltonfailure}">
+		 haltonfailure="${junit.batchtest.haltonfailure}"
+		 fork="${junit.fork}">
 
         <fileset dir="${build.test}">
           <include name="**/Test*.class"/>
@@ -149,7 +153,6 @@
 	   haltonerror="${junit.haltonerror}"
 	   haltonfailure="${junit.haltonfailure}"
 	   fork="${junit.fork}"
-       forkmode="${junit.forkmode}"
 	   timeout="${junit.timeout}"
 	   jvm="${junit.jvm}">
 
@@ -185,7 +188,8 @@
 
       <batchtest todir="${build.reports.embedded}"
 		 haltonerror="${junit.batchtest.haltonerror}"
-		 haltonfailure="${junit.batchtest.haltonfailure}">
+		 haltonfailure="${junit.batchtest.haltonfailure}"
+		 fork="${junit.fork}">
 
         <fileset dir="${build.test}">
           <include name="**/Test*.class"/>
@@ -217,7 +221,6 @@
 	   haltonerror="${junit.haltonerror}"
 	   haltonfailure="${junit.haltonfailure}"
 	   fork="${junit.fork}"
-       forkmode="${junit.forkmode}"
 	   timeout="${junit.timeout}"
 	   jvm="${junit.jvm}">
 
@@ -245,7 +248,8 @@
 
       <batchtest todir="${build.reports.pure_java}"
 		 haltonerror="${junit.batchtest.haltonerror}"
-		 haltonfailure="${junit.batchtest.haltonfailure}">
+		 haltonfailure="${junit.batchtest.haltonfailure}"
+		 fork="${junit.batchtest.fork}">
 
         <fileset dir="${build.test}">
             <include name="org/firebirdsql/*/Test${test}*.class"/>
@@ -267,7 +271,6 @@
 	   haltonerror="${junit.haltonerror}"
 	   haltonfailure="${junit.haltonfailure}"
 	   fork="${junit.fork}"
-       forkmode="${junit.forkmode}"
 	   timeout="${junit.timeout}"
 	   jvm="${junit.jvm}">
 
@@ -299,7 +302,8 @@
 
       <batchtest todir="${build.reports.native}"
 		 haltonerror="${junit.batchtest.haltonerror}"
-		 haltonfailure="${junit.batchtest.haltonfailure}">
+		 haltonfailure="${junit.batchtest.haltonfailure}"
+		 fork="${junit.batchtest.fork}">
 
         <fileset dir="${build.test}">
           <include name="org/firebirdsql/*/Test${test}*.class"/>
@@ -318,7 +322,6 @@
 	   haltonerror="${junit.haltonerror}"
 	   haltonfailure="${junit.haltonfailure}"
 	   fork="${junit.fork}"
-       forkmode="${junit.forkmode}"
 	   timeout="${junit.timeout}"
 	   jvm="${junit.jvm}">
 
@@ -348,7 +351,8 @@
 
       <batchtest todir="${build.reports.embedded}"
 		 haltonerror="${junit.batchtest.haltonerror}"
-		 haltonfailure="${junit.batchtest.haltonfailure}">
+		 haltonfailure="${junit.batchtest.haltonfailure}"
+		 fork="${junit.batchtest.fork}">
 
         <fileset dir="${build.test}">
           <include name="org/firebirdsql/*/Test${test}*.class"/>

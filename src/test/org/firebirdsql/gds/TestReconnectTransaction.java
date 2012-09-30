@@ -10,7 +10,6 @@ import org.firebirdsql.jdbc.FBTpbMapper;
 import org.firebirdsql.jdbc.field.FBField;
 import org.firebirdsql.jdbc.field.FieldDataProvider;
 
-import static org.firebirdsql.common.FBTestProperties.*;
 
 /**
  * 
@@ -44,8 +43,8 @@ public class TestReconnectTransaction extends FBTestBase {
         gds = GDSFactory.getGDSForType(getGdsType());
         
         dpb = gds.createDatabaseParameterBuffer();
-        dpb.addArgument(DatabaseParameterBuffer.USER, DB_USER);
-        dpb.addArgument(DatabaseParameterBuffer.PASSWORD, DB_PASSWORD);
+        dpb.addArgument(DatabaseParameterBuffer.USER, this.DB_USER);
+        dpb.addArgument(DatabaseParameterBuffer.PASSWORD, this.DB_PASSWORD);
         
         tpb = new FBTpb(FBTpbMapper.getDefaultMapper(gds).getDefaultMapping());
     }
@@ -70,7 +69,7 @@ public class TestReconnectTransaction extends FBTestBase {
         }
         
         public byte[] getFieldData() {
-            return stmtHandle.getRows()[row][fieldPos];
+            return ((byte[][])stmtHandle.getRows()[row])[fieldPos];
         }
         public void setFieldData(byte[] data) {
             throw new UnsupportedOperationException();

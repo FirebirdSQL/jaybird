@@ -23,6 +23,7 @@
  * Portions created by Alejandro Alberola are Copyright (C) 2001
  * Boix i Oltra, S.L. All Rights Reserved.
  */
+
 package org.firebirdsql.gds.impl.jni;
 
 import org.firebirdsql.gds.IscDbHandle;
@@ -30,12 +31,10 @@ import org.firebirdsql.gds.GDSException;
 import org.firebirdsql.gds.impl.AbstractIscStmtHandle;
 import org.firebirdsql.gds.impl.AbstractIscTrHandle;
 
-import java.util.Collections;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Set;
+
 
 /**
  * Describe class <code>isc_tr_handle_impl</code> here.
@@ -49,8 +48,8 @@ public final class isc_tr_handle_impl extends AbstractIscTrHandle {
     private int rtr_id_ptr = 0;
 
     private isc_db_handle_impl rtr_rdb;
-    private List<isc_blob_handle_impl> blobs = Collections.synchronizedList(new LinkedList<isc_blob_handle_impl>());
-    private Set<AbstractIscStmtHandle> stmts = Collections.synchronizedSet(new HashSet<AbstractIscStmtHandle>());
+    private ArrayList blobs = new ArrayList();
+    private HashSet stmts = new HashSet();
 
     private int state = NOTRANSACTION;
 
@@ -110,17 +109,21 @@ public final class isc_tr_handle_impl extends AbstractIscTrHandle {
     }
 	 
     public void registerStatementWithTransaction(AbstractIscStmtHandle stmt) {
-        stmts.add(stmt);
+        synchronized(stmts) {
+            stmts.add(stmt);
+		}
     }
     
     public void unregisterStatementFromTransaction(AbstractIscStmtHandle stmt) {
-        stmts.remove(stmt);
+        synchronized(stmts) {
+            stmts.remove(stmt);
+        }
     }
 
     public void forgetResultSets() {
         synchronized(stmts) {
-            for (Iterator<AbstractIscStmtHandle> iter = stmts.iterator(); iter.hasNext();) {
-                AbstractIscStmtHandle stmt = iter.next();
+            for (Iterator iter = stmts.iterator(); iter.hasNext();) {
+                AbstractIscStmtHandle stmt = (AbstractIscStmtHandle) iter.next();
                 stmt.clearRows();
             }
             

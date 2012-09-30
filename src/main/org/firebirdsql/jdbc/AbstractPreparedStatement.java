@@ -583,7 +583,6 @@ public abstract class AbstractPreparedStatement extends AbstractStatement implem
      * 
      * I really have no idea if there is anything else we should be doing here
      */
-    @Deprecated
     public void setUnicodeStream(int parameterIndex, InputStream x, int length)
             throws SQLException {
         setBinaryStream(parameterIndex, x, length);
@@ -816,8 +815,7 @@ public abstract class AbstractPreparedStatement extends AbstractStatement implem
         }
     }
 
-    // TODO: AbstractCallableStatement adds FBProcedureCall, while AbstractPreparedStatement adds XSQLVAR[]: separate?
-    protected final List<Object> batchList = new LinkedList<Object>();
+    protected final List batchList = new LinkedList();
 
     /**
      * Adds a set of parameters to this <code>PreparedStatement</code>
@@ -927,8 +925,8 @@ public abstract class AbstractPreparedStatement extends AbstractStatement implem
             try {
                 notifyStatementStarted();
 
-                List<Integer> results = new ArrayList<Integer>(batchList.size());
-                Iterator<Object> iter = batchList.iterator();
+                ArrayList results = new ArrayList(batchList.size());
+                Iterator iter = batchList.iterator();
 
                 try {
                     while (iter.hasNext()) {
@@ -953,7 +951,7 @@ public abstract class AbstractPreparedStatement extends AbstractStatement implem
 
                             int updateCount = getUpdateCount();
 
-                            results.add(Integer.valueOf(updateCount));
+                            results.add(new Integer(updateCount));
 
                         } catch (SQLException ex) {
                             throw new BatchUpdateException(ex.getMessage(), ex
@@ -1339,6 +1337,6 @@ public abstract class AbstractPreparedStatement extends AbstractStatement implem
     }
 
     public ParameterMetaData getParameterMetaData() throws SQLException {
-        return getFirebirdParameterMetaData();
+        return new FBParameterMetaData(fixedStmt.getInSqlda().sqlvar, gdsHelper);
     }
 }

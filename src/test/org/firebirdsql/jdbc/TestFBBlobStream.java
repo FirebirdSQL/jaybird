@@ -27,8 +27,6 @@ import java.util.Arrays;
 import java.util.Properties;
 import java.util.Random;
 
-import static org.firebirdsql.common.FBTestProperties.*;
-
 /**
  * Describe class <code>TestFBBlobAccess</code> here.
  *

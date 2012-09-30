@@ -19,6 +19,7 @@
 
 package org.firebirdsql.jdbc;
 
+
 import java.io.*;
 import java.sql.*;
 import java.util.*;
@@ -70,7 +71,7 @@ public class FBBlob implements FirebirdBlob, Synchronizable {
     GDSHelper gdsHelper;
     private FBObjectListener.BlobListener blobListener;
 
-    Collection<FBBlobInputStream> inputStreams = Collections.synchronizedSet(new HashSet<FBBlobInputStream>());
+    Collection inputStreams = new HashSet();
     private FBBlobOutputStream blobOut = null;
 
     private FBBlob(GDSHelper c, boolean isNew, FBObjectListener.BlobListener blobListener) {
@@ -133,9 +134,10 @@ public class FBBlob implements FirebirdBlob, Synchronizable {
 
             IOException error = null;
             
-            for (FBBlobInputStream blobIS : inputStreams) {
+            Iterator i = inputStreams.iterator();
+            while (i.hasNext()) {
                 try {
-                    blobIS.close();
+                    ((FBBlobInputStream)i.next()).close();
                 } catch(IOException ex) {
                     error = ex;
                 }

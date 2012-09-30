@@ -144,8 +144,8 @@ public abstract class AbstractCallableStatement extends FBPreparedStatement impl
             try {
                 notifyStatementStarted();
 
-                List<Integer> results = new ArrayList<Integer>(batchList.size());
-                Iterator<Object> iterator = batchList.iterator();
+                List results = new ArrayList(batchList.size());
+                Iterator iterator = batchList.iterator();
 
                 try {
                     while (iterator.hasNext()) {
@@ -164,7 +164,7 @@ public abstract class AbstractCallableStatement extends FBPreparedStatement impl
         }
     }
     
-    private void executeSingleForBatch(List<Integer> results) throws SQLException {
+    private void executeSingleForBatch(List results) throws SQLException {
         /*
          * TODO: array given to BatchUpdateException might not be JDBC-compliant
          * (should set Statement.EXECUTE_FAILED and throwing it right away
@@ -176,7 +176,7 @@ public abstract class AbstractCallableStatement extends FBPreparedStatement impl
             if (internalExecute(!isSelectableProcedure()))
                 throw new BatchUpdateException(toArray(results));
 
-            results.add(Integer.valueOf(getUpdateCount()));
+            results.add(new Integer(getUpdateCount()));
         } catch (GDSException ex) {
             throw new BatchUpdateException(ex.getMessage(), "", ex.getFbErrorCode(),
                     toArray(results));
@@ -200,9 +200,13 @@ public abstract class AbstractCallableStatement extends FBPreparedStatement impl
      * @throws SQLException if something went wrong.
      */
     protected void setRequiredTypes() throws SQLException {
+
         FBResultSet resultSet = (FBResultSet) getCurrentResultSet();
 
-        for (FBProcedureParam param : procedureCall.getOutputParams()) {
+        Iterator iter = procedureCall.getOutputParams().iterator();
+        while (iter.hasNext()) {
+            FBProcedureParam param = (FBProcedureParam) iter.next();
+
             if (param == null)
                 continue;
 
@@ -362,7 +366,11 @@ public abstract class AbstractCallableStatement extends FBPreparedStatement impl
 
         int counter = 0;
 
-        for (FBProcedureParam param : procedureCall.getInputParams()) {
+        List inputParams = procedureCall.getInputParams();
+        Iterator iter = inputParams.iterator();
+        while (iter.hasNext()) {
+            FBProcedureParam param = (FBProcedureParam) iter.next();
+
             if (param != null && param.isParam()) {
 
                 counter++;
@@ -632,7 +640,6 @@ public abstract class AbstractCallableStatement extends FBPreparedStatement impl
      * @exception SQLException if a database access error occurs
      * @deprecated
      */
-    @Deprecated
     public BigDecimal getBigDecimal(int parameterIndex, int scale)
         throws SQLException
     {
@@ -747,13 +754,13 @@ public abstract class AbstractCallableStatement extends FBPreparedStatement impl
     * @since 1.2
     * @see <a href="package-summary.html#2.0 API">What Is in the JDBC 2.0 API</a>
     */
-    public Object getObject(int parameterIndex, Map<String, Class<?>> map) throws SQLException {
+    public Object getObject(int parameterIndex, Map map) throws SQLException {
         assertHasData(getCurrentResultSet());
         parameterIndex = procedureCall.mapOutParamIndexToPosition(parameterIndex);
         return getCurrentResultSet().getObject(parameterIndex, map);
     }
     
-    public Object getObject(String colName, Map<String, Class<?>> map) throws SQLException {
+    public Object getObject(String colName, Map map) throws SQLException {
         return getObject(findOutParameter(colName), map);
     }
     
@@ -1347,7 +1354,7 @@ public abstract class AbstractCallableStatement extends FBPreparedStatement impl
     }
 
     public void setByte(int parameterIndex, byte x) throws SQLException {
-        procedureCall.getInputParam(parameterIndex).setValue(Byte.valueOf(x));
+        procedureCall.getInputParam(parameterIndex).setValue(new Byte(x));
     }
 
     public void setBytes(int parameterIndex, byte[] x) throws SQLException {
@@ -1380,11 +1387,11 @@ public abstract class AbstractCallableStatement extends FBPreparedStatement impl
     }
 
     public void setInt(int parameterIndex, int x) throws SQLException {
-        procedureCall.getInputParam(parameterIndex).setValue(Integer.valueOf(x));
+        procedureCall.getInputParam(parameterIndex).setValue(new Integer(x));
     }
 
     public void setLong(int parameterIndex, long x) throws SQLException {
-        procedureCall.getInputParam(parameterIndex).setValue(Long.valueOf(x));
+        procedureCall.getInputParam(parameterIndex).setValue(new Long(x));
     }
 
     public void setNull(int parameterIndex, int sqlType, String typeName) throws SQLException {
@@ -1413,7 +1420,7 @@ public abstract class AbstractCallableStatement extends FBPreparedStatement impl
     }
 
     public void setShort(int parameterIndex, short x) throws SQLException {
-        procedureCall.getInputParam(parameterIndex).setValue(Short.valueOf(x));
+        procedureCall.getInputParam(parameterIndex).setValue(new Short(x));
     }
 
     public void setString(int parameterIndex, String x) throws SQLException {

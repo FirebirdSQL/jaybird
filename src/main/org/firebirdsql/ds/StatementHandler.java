@@ -30,7 +30,7 @@ import java.sql.Statement;
 import org.firebirdsql.jdbc.FBSQLException;
 import org.firebirdsql.jdbc.FirebirdStatement;
 
-import static org.firebirdsql.util.ReflectionHelper.*;
+import static org.firebirdsql.ds.ReflectionHelper.*;
 
 /**
  * InvocationHandler for statements.

@@ -50,39 +50,62 @@ import java.io.Reader;
  * @version 1.0
  */
 public abstract class FBField {
-    static final String BYTE_CONVERSION_ERROR = "Error converting to byte.";
-    static final String SHORT_CONVERSION_ERROR = "Error converting to short.";
-    static final String INT_CONVERSION_ERROR = "Error converting to int.";
-    static final String LONG_CONVERSION_ERROR = "Error converting to long.";
+    static String BYTE_CONVERSION_ERROR =
+        "Error converting to byte.";
+    static String SHORT_CONVERSION_ERROR =
+        "Error converting to short.";
+    static String INT_CONVERSION_ERROR =
+        "Error converting to int.";
+    static String LONG_CONVERSION_ERROR =
+        "Error converting to long.";
 
-    static final String FLOAT_CONVERSION_ERROR = "Error converting to float.";
-    static final String DOUBLE_CONVERSION_ERROR = "Error converting to double.";
-    static final String BIGDECIMAL_CONVERSION_ERROR = "Error converting to big decimal.";
+    static String FLOAT_CONVERSION_ERROR =
+        "Error converting to float.";
+    static String DOUBLE_CONVERSION_ERROR =
+        "Error converting to double.";
+    static String BIGDECIMAL_CONVERSION_ERROR =
+        "Error converting to big decimal.";
 
-    static final String BOOLEAN_CONVERSION_ERROR = "Error converting to boolean.";
+    static String BOOLEAN_CONVERSION_ERROR =
+        "Error converting to boolean.";
 
-    static final String STRING_CONVERSION_ERROR = "Error converting to string.";
+    static String STRING_CONVERSION_ERROR =
+        "Error converting to string.";
 
-    static final String OBJECT_CONVERSION_ERROR = "Error converting to object.";
+    static String OBJECT_CONVERSION_ERROR =
+        "Error converting to object.";
 
-    static final String DATE_CONVERSION_ERROR = "Error converting to date.";
-    static final String TIME_CONVERSION_ERROR = "Error converting to time.";
-    static final String TIMESTAMP_CONVERSION_ERROR = "Error converting to timestamp.";
+    static String DATE_CONVERSION_ERROR =
+        "Error converting to date.";
+    static String TIME_CONVERSION_ERROR =
+        "Error converting to time.";
+    static String TIMESTAMP_CONVERSION_ERROR =
+        "Error converting to timestamp.";
 
-    static final String ASCII_STREAM_CONVERSION_ERROR = "Error converting to ascii stream.";
-    static final String UNICODE_STREAM_CONVERSION_ERROR = "Error converting to unicode stream.";
-    static final String BINARY_STREAM_CONVERSION_ERROR = "Error converting to binary stream.";
-    static final String CHARACTER_STREAM_CONVERSION_ERROR = "Error converting to character stream.";
+    static String ASCII_STREAM_CONVERSION_ERROR =
+        "Error converting to ascii stream.";
+    static String UNICODE_STREAM_CONVERSION_ERROR =
+        "Error converting to unicode stream.";
+    static String BINARY_STREAM_CONVERSION_ERROR =
+        "Error converting to binary stream.";
+    static String CHARACTER_STREAM_CONVERSION_ERROR =
+        "Error converting to character stream.";
 
-    static final String BYTES_CONVERSION_ERROR = "Error converting to array of bytes.";
+    static String BYTES_CONVERSION_ERROR =
+        "Error converting to array of bytes.";
         
-    static final String BLOB_CONVERSION_ERROR =  "Error converting to Firebird BLOB object";
+    static String BLOB_CONVERSION_ERROR = 
+        "Error converting to Firebird BLOB object";
     
-    static final String CLOB_CONVERSION_ERROR = "Error converting to Firebird CLOB object";
+    static String CLOB_CONVERSION_ERROR =
+    	"Error converting to Firebird CLOB object";
 
-    static final String SQL_TYPE_NOT_SUPPORTED = "SQL type for this field is not yet supported.";
+    static String SQL_TYPE_NOT_SUPPORTED =
+        "SQL type for this field is not yet supported.";
     
-    static final String SQL_ARRAY_NOT_SUPPORTED = "Types.ARRAY: " + SQL_TYPE_NOT_SUPPORTED;
+    static String SQL_ARRAY_NOT_SUPPORTED = 
+        "Types.ARRAY: " + SQL_TYPE_NOT_SUPPORTED;
+
 
     static final byte BYTE_NULL_VALUE = 0;
     static final short SHORT_NULL_VALUE = 0;
@@ -108,16 +131,16 @@ public abstract class FBField {
     static final FBClob CLOB_NULL_VALUE = null;
     
     static final byte MAX_BYTE_VALUE = Byte.MAX_VALUE;
-    static final byte MIN_BYTE_VALUE = Byte.MIN_VALUE;
+    static final byte MIN_BYTE_VALUE = (byte)(-1 * MAX_BYTE_VALUE - 1);
     
     static final short MAX_SHORT_VALUE = Short.MAX_VALUE;
-    static final short MIN_SHORT_VALUE = Short.MIN_VALUE;
+    static final short MIN_SHORT_VALUE = (short)(-1 * MAX_SHORT_VALUE - 1);
     
     static final int MAX_INT_VALUE = Integer.MAX_VALUE;
-    static final int MIN_INT_VALUE = Integer.MIN_VALUE;
+    static final int MIN_INT_VALUE = -1 * MAX_INT_VALUE - 1;
     
     static final long MAX_LONG_VALUE = Long.MAX_VALUE;
-    static final long MIN_LONG_VALUE = Long.MIN_VALUE;
+    static final long MIN_LONG_VALUE = -1 * MAX_LONG_VALUE - 1;
     
     static final float MAX_FLOAT_VALUE = Float.MAX_VALUE;
     static final float MIN_FLOAT_VALUE = -1 * MAX_FLOAT_VALUE;
@@ -288,12 +311,12 @@ public abstract class FBField {
                         (type == Types.LONGVARCHAR)
                         ;
 
-            // Unfortunately we do not know the SQL correspondence to these type
+            // unfortunatelly we do not know the SQL correspondence to these type
             case ISCConstants.SQL_QUAD:
             case ISCConstants.SQL_D_FLOAT :
                 return false;
 
-            // currently we do not provide compatibility with CHAR and VARCHAR
+            // currently we do not provide compatibilty with CHAR and VARCHAR
             case ISCConstants.SQL_DOUBLE :
             case ISCConstants.SQL_FLOAT :
             case ISCConstants.SQL_INT64 :
@@ -342,7 +365,8 @@ public abstract class FBField {
     public final static boolean isNullType(XSQLVAR field) {
         int tempType = field.sqltype & ~1;
 
-        return tempType == ISCConstants.SQL_NULL;
+        return tempType == ISCConstants.SQL_NULL
+                || field.sqltype == ISCConstants.SQL_NULL;
     }
     
     /**
@@ -364,19 +388,19 @@ public abstract class FBField {
             if (field.sqlscale == 0)
                 return new FBShortField(field, dataProvider, Types.SMALLINT);
             else
-                return new FBBigDecimalField(field, dataProvider, field.sqlsubtype == 2 ? Types.DECIMAL : Types.NUMERIC);
+                return new FBBigDecimalField(field, dataProvider, 1, Types.NUMERIC);
         else
         if (isType(field, Types.INTEGER))
             if (field.sqlscale == 0)
                 return new FBIntegerField(field, dataProvider, Types.INTEGER);
             else
-                return new FBBigDecimalField(field, dataProvider, field.sqlsubtype == 2 ? Types.DECIMAL : Types.NUMERIC);
+                return new FBBigDecimalField(field, dataProvider,2, Types.NUMERIC);
         else
         if (isType(field, Types.BIGINT))
             if (field.sqlscale == 0)
                 return new FBLongField(field, dataProvider, Types.BIGINT);
             else
-                return new FBBigDecimalField(field, dataProvider, field.sqlsubtype == 2 ? Types.DECIMAL : Types.NUMERIC);
+                return new FBBigDecimalField(field, dataProvider,3, Types.NUMERIC);
         else
         if (isType(field, Types.FLOAT))
             return new FBFloatField(field, dataProvider, Types.FLOAT);
@@ -439,7 +463,6 @@ public abstract class FBField {
             throw (SQLException)createException(SQL_ARRAY_NOT_SUPPORTED);
         else
         if (isNullType(field))
-            // TODO Shouldn't this be Types.NULL ?
             return new FBNullField(field, dataProvider, Types.VARCHAR);
         else
             throw (SQLException)createException(SQL_TYPE_NOT_SUPPORTED);
@@ -556,17 +579,17 @@ public abstract class FBField {
             case Types.TINYINT :
             case Types.SMALLINT :
             case Types.INTEGER :
-                return Integer.valueOf(getInt());
+                return new Integer(getInt());
                 
             case Types.BIGINT :
-                return Long.valueOf(getLong());
+                return new Long(getLong());
                 
             case Types.REAL :
-                return Float.valueOf(getFloat());
+                return new Float(getFloat());
                 
             case Types.FLOAT :
             case Types.DOUBLE :
-                return Double.valueOf(getDouble());
+                return new Double(getDouble());
                 
             case Types.BINARY :
             case Types.VARBINARY :
@@ -597,7 +620,7 @@ public abstract class FBField {
         }
         
     }
-    public Object getObject(Map<String, Class<?>> map) throws  SQLException {
+    public Object getObject(Map map) throws  SQLException {
               throw new FBDriverNotCapableException();
     }
     public InputStream getAsciiStream() throws SQLException {

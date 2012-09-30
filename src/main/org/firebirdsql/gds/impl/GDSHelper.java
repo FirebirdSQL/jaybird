@@ -761,9 +761,9 @@ public class GDSHelper {
      * @return list of {@link GDSException}instances representing warnings for
      *         this database connection.
      */
-    public List<GDSException> getWarnings() {
+    public List getWarnings() {
         if (currentDbHandle == null)
-            return Collections.emptyList();
+            return Collections.EMPTY_LIST;
         else
             return currentDbHandle.getWarnings();
     }

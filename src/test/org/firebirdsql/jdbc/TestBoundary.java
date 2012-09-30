@@ -6,9 +6,6 @@ import java.sql.SQLException;
 
 import org.firebirdsql.common.FBTestBase;
 
-import static org.firebirdsql.common.DdlHelper.*;
-import static org.firebirdsql.common.JdbcResourceHelper.*;
-
 public class TestBoundary extends FBTestBase {
 
     private static final String CREATE_META_ONE = 

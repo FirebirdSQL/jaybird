@@ -19,7 +19,7 @@
 package org.firebirdsql.jdbc.field;
 
 import java.sql.SQLException;
-import java.util.List;
+import java.util.ArrayList;
 
 import org.firebirdsql.gds.XSQLVAR;
 import org.firebirdsql.jdbc.FBResultSet;
@@ -31,7 +31,7 @@ import org.firebirdsql.jdbc.FBResultSet;
  */
 public class FBFieldResultSet extends FBResultSet {
 
-	public FBFieldResultSet(XSQLVAR[] xsqlvars, List<byte[][]> rows) throws SQLException {
+	public FBFieldResultSet(XSQLVAR[] xsqlvars, ArrayList rows) throws SQLException {
 		super(xsqlvars, rows);
 	}
 

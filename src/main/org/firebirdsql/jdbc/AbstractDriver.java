@@ -54,8 +54,7 @@ public abstract class AbstractDriver implements FirebirdDriver {
      * standard connection.
      */
 
-    private Map<FBManagedConnectionFactory, FBDataSource> mcfToDataSourceMap = 
-            Collections.synchronizedMap(new WeakHashMap<FBManagedConnectionFactory, FBDataSource>());
+    private Map mcfToDataSourceMap = Collections.synchronizedMap(new WeakHashMap());
 
     static {
         log = LoggerFactory.getLogger(AbstractDriver.class, false);
@@ -101,7 +100,7 @@ public abstract class AbstractDriver implements FirebirdDriver {
             if (originalInfo == null)
                 originalInfo = new Properties();
 
-            Map<String, String> normalizedInfo = FBDriverPropertyManager.normalize(url, originalInfo);
+            Map normalizedInfo = FBDriverPropertyManager.normalize(url, originalInfo);
             
             int qMarkIndex = url.indexOf('?');
             if (qMarkIndex != -1)
@@ -112,8 +111,10 @@ public abstract class AbstractDriver implements FirebirdDriver {
             String databaseURL = GDSFactory.getDatabasePath(type, url);
 
             mcf.setDatabase(databaseURL);
-            for (Map.Entry<String, String> entry : normalizedInfo.entrySet()) {
-                mcf.setNonStandardProperty(entry.getKey(), entry.getValue());
+            for (Iterator iter = normalizedInfo.entrySet().iterator(); iter.hasNext();) {
+                Map.Entry entry = (Map.Entry) iter.next();
+                
+                mcf.setNonStandardProperty((String)entry.getKey(), (String)entry.getValue());
             }
 
             FBConnectionHelper.processTpbMapping(mcf.getGDS(), mcf, originalInfo);
@@ -134,7 +135,7 @@ public abstract class AbstractDriver implements FirebirdDriver {
     private FBDataSource createDataSource(FBManagedConnectionFactory mcf) throws ResourceException {
         FBDataSource dataSource = null;
         synchronized (mcfToDataSourceMap) {
-            dataSource = mcfToDataSourceMap.get(mcf);
+            dataSource = (FBDataSource)mcfToDataSourceMap.get(mcf);
             
             if (dataSource == null) {
                 dataSource = (FBDataSource)mcf.createConnectionFactory();
@@ -177,7 +178,10 @@ public abstract class AbstractDriver implements FirebirdDriver {
      * @exception SQLException if a database access error occurs
      */
     public boolean acceptsURL(String url) throws  SQLException {
-        for (String protocol : GDSFactory.getSupportedProtocols()) {
+        Set protocols = GDSFactory.getSupportedProtocols();
+        
+        for (Iterator iter = protocols.iterator(); iter.hasNext();) {
+            String protocol = (String) iter.next();
             if (url.startsWith(protocol))
                 return true;
         }

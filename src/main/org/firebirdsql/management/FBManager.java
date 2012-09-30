@@ -172,7 +172,7 @@ public class FBManager implements FBManagerMBean
      * @jmx.managed-attribute
      */
     public void setPort(int port) {
-        this.port = Integer.valueOf(port);
+        this.port = new Integer(port);
     }
 
     /**

@@ -44,7 +44,7 @@ public class TestFBEscapedFunctionHelper extends TestCase {
      */
     public static final String ESCAPED_FUNCTION_CALL = "test(\"arg1\", 12, ',\"')";
     public static final String ESCAPED_FUNCTION_NAME = "test";
-    public static final List<String> ESCAPED_FUNCTION_PARAMS = new ArrayList<String>();
+    public static final List ESCAPED_FUNCTION_PARAMS = new ArrayList();
     static {
         ESCAPED_FUNCTION_PARAMS.add("\"arg1\"");
         ESCAPED_FUNCTION_PARAMS.add("12");
@@ -52,7 +52,7 @@ public class TestFBEscapedFunctionHelper extends TestCase {
     }
     
     public void testParseArguments() throws SQLException {
-        List<String> parsedParams = FBEscapedFunctionHelper.parseArguments(ESCAPED_FUNCTION_CALL);
+        List parsedParams = FBEscapedFunctionHelper.parseArguments(ESCAPED_FUNCTION_CALL);
         
         assertTrue("Parsed params should be equal to the test ones.", 
             ESCAPED_FUNCTION_PARAMS.equals(parsedParams));

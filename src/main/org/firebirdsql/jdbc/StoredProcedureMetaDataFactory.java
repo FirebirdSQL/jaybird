@@ -89,7 +89,7 @@ public abstract class StoredProcedureMetaDataFactory {
  */
 class DefaultCallableStatementMetaData implements StoredProcedureMetaData {
 
-    Set<String> selectableProcedureNames = new HashSet<String>();
+    Set selectableProcedureNames = new HashSet();
 
     public DefaultCallableStatementMetaData(Connection connection)
             throws SQLException {

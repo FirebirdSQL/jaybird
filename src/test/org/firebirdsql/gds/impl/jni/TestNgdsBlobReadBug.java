@@ -24,9 +24,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import junit.framework.TestCase;
-
-import org.firebirdsql.common.StringHelper;
+import org.firebirdsql.common.SimpleFBTestBase;
 import org.firebirdsql.gds.BlobParameterBuffer;
 import org.firebirdsql.gds.DatabaseParameterBuffer;
 import org.firebirdsql.gds.GDS;
@@ -45,8 +43,6 @@ import org.firebirdsql.jca.FBTpb;
 import org.firebirdsql.logging.Logger;
 import org.firebirdsql.logging.LoggerFactory;
 
-import static org.firebirdsql.common.FBTestProperties.*;
-
 /**
  * Performs test to reproduce bug found in blob reading done by type 2 driver.
  * 
@@ -55,7 +51,7 @@ import static org.firebirdsql.common.FBTestProperties.*;
  * If a blob greater then 65536 bytes in length is written to a database using
  * jaybird in type 4 mode it will not be possible to read it in type 2 mode.
  */
-public class TestNgdsBlobReadBug extends TestCase {
+public class TestNgdsBlobReadBug extends SimpleFBTestBase {
 
     private Logger log = LoggerFactory.getLogger(getClass(), false);
 
@@ -126,7 +122,7 @@ public class TestNgdsBlobReadBug extends TestCase {
 
     private byte[] readAndBlobRecord(GDS gds, IscDbHandle database_handle) throws Exception {
         int readcount = 0;
-        final List<byte[]> results = new ArrayList<byte[]>();
+        final List results = new ArrayList();
         IscTrHandle transaction_handle = startTransaction(gds, database_handle);
 
         try {
@@ -152,14 +148,14 @@ public class TestNgdsBlobReadBug extends TestCase {
             int size = statement_handle.size();
 
             for (int rowNum = 0; rowNum < size; rowNum++) {
-                row = rows[rowNum];
+                row = (byte[][]) rows[rowNum];
 
                 StringBuilder out = new StringBuilder();
 
                 for (int i = 0; i < out_xsqlda.sqld; i++) {
-                    byte[] data = row[i];
+                    Object data = row[i];
 
-                    out.append("column: ").append(i).append(", value: ").append(StringHelper.toHex(data));
+                    out.append("column: ").append(i).append(", value: ").append(data);
                 }
 
                 if (log != null) log.info(out);
@@ -195,7 +191,7 @@ public class TestNgdsBlobReadBug extends TestCase {
         int currentWritePosition = 0;
         final byte[] returnValue = new byte[readcount];
         for (int i = 0, n = results.size(); i < n; i++) {
-            final byte[] currentArray = results.get(i);
+            final byte[] currentArray = (byte[]) results.get(i);
             System.arraycopy(currentArray, 0, returnValue, currentWritePosition,
                     currentArray.length);
             currentWritePosition += currentArray.length;

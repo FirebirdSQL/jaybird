@@ -36,7 +36,7 @@ public interface GDSFactoryPlugin {
     
     String[] getTypeAliases();
     
-    Class<?> getConnectionClass();
+    Class getConnectionClass();
     
     String getDefaultProtocol();
     

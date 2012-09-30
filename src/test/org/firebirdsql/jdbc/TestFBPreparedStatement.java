@@ -26,10 +26,6 @@ import java.util.Calendar;
 import java.util.Properties;
 import java.util.TimeZone;
 
-import static org.firebirdsql.common.DdlHelper.*;
-import static org.firebirdsql.common.JdbcResourceHelper.*;
-import static org.firebirdsql.common.FBTestProperties.*;
-
 /**
  * Describe class <code>TestFBPreparedStatement</code> here.
  * 
@@ -771,7 +767,7 @@ public class TestFBPreparedStatement extends FBTestBase {
             closeQuietly(stmt);
         }
     }
-    
+
     /**
      * Tests NULL parameter when using {@link PreparedStatement#setNull(int, int)}
      */
@@ -806,7 +802,7 @@ public class TestFBPreparedStatement extends FBTestBase {
         createIsNullTestData();
 
         PreparedStatement ps = con.prepareStatement(
-        		"SELECT id FROM testtab WHERE field2 = ? OR ? IS NULL ORDER BY 1");
+                "SELECT id FROM testtab WHERE field2 = ? OR ? IS NULL ORDER BY 1");
         ResultSet rs;
         try {
             ps.setString(1, "a");
