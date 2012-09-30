@@ -36,7 +36,7 @@ Unzip the distribution zips to separate folders (one for each JDK version)
 
 Step 2:
 Prepare the POM file.
-* Copy the jaybird-example.pom to each JDK folder as jaybird.pom
+* Copy the jaybird-example.pom to each JDK folder as jaybird-jdkXX.<version>.pom
 * Modify the POM:
 	- Change artifactId from jaybird-jdkXX to the right jdk version (eg jaybird-jdk17 for Java 7)
 	- Change the version to reflect the release version, examples:

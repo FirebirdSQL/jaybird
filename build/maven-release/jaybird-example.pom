@@ -133,10 +133,10 @@
 	</licenses>
 	
 	<scm>
-		<connection>scm:cvs:pserver:anonymous@firebird.cvs.sourceforge.net:/cvsroot/firebird:client-java</connection>
-		<developerConnection>scm:cvs:ext:@firebird.cvs.sourceforge.net:/cvsroot/firebird:client-java</developerConnection>
-		<url>http://firebird.cvs.sourceforge.net/viewvc/firebird/client-java/</url>
-	</scm>
+        <connection>scm:svn:https://firebird.svn.sourceforge.net/svnroot/firebird/client-java</connection>
+        <developerConnection>scm:svn:https://firebird.svn.sourceforge.net/svnroot/firebird/client-java</developerConnection>
+        <url>http://firebird.svn.sourceforge.net/viewvc/firebird/client-java/</url>
+    </scm>
 	
 	<issueManagement>
 		<system>JIRA Tracker</system>
