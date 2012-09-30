@@ -485,6 +485,7 @@ public abstract class BaseGDSImpl extends AbstractGDS {
     // ---------------------------------------------------------------------------------------------
     public void iscDsqlFetch(IscStmtHandle stmt_handle, int da_version,
             XSQLDA xsqlda, int fetchSize) throws GDSException {
+        // FIXME fetchSize is ignored
         fetchSize = 1;
         
         if (stmt_handle == null) { 
