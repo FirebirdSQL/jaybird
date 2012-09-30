@@ -68,7 +68,7 @@
     <property name="version.full" value="${version.major}.${version.minor}.${version.revision}${version.tag}${version.name}"/>
 
     <!-- This must be set to the SVN tag for any release -->
-    <property name="version.cvstag" value="Branch_2_2"/>
+    <property name="version.cvstag" value="Jaybird_2_2_1"/>
 
     <!-- Manifest version info -->
     <property name="specification.title" value="Firebird Jaybird"/>
