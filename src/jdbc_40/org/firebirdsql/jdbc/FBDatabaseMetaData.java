@@ -66,11 +66,7 @@ public class FBDatabaseMetaData extends AbstractDatabaseMetaData {
     
     public int getJDBCMinorVersion() {
         try {
-            String javaImplementation = AccessController.doPrivileged(new PrivilegedAction<String>() {
-                public String run() {
-                    return System.getProperty("java.implementation.version");
-                } 
-             });
+            String javaImplementation = getSystemPropertyPrivileged("java.implementation.version");
             if (javaImplementation != null && "1.7".compareTo(javaImplementation) <= 0) {
                 // JDK 1.7 or higher: JDBC 4.1
                 return 1;
@@ -82,5 +78,13 @@ public class FBDatabaseMetaData extends AbstractDatabaseMetaData {
             // default to 0 (JDBC 4.0) when privileged call fails
             return 0;
         }
+    }
+    
+    private static String getSystemPropertyPrivileged(final String propertyName) {
+        return AccessController.doPrivileged(new PrivilegedAction<String>() {
+           public String run() {
+               return System.getProperty(propertyName);
+           } 
+        });
     }
 }

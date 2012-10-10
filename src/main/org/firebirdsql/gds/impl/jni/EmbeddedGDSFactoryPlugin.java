@@ -1,11 +1,30 @@
+/*
+ * $Id$
+ * 
+ * Firebird Open Source J2ee connector - jdbc driver
+ *
+ * Distributable under LGPL license.
+ * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * LGPL License for more details.
+ *
+ * This file was created by members of the firebird development team.
+ * All individual contributions remain the Copyright (C) of those
+ * individuals.  Contributors to this file are either listed here or
+ * can be obtained from a CVS history command.
+ *
+ * All rights reserved.
+ */
 package org.firebirdsql.gds.impl.jni;
 
 import org.firebirdsql.gds.GDS;
 import org.firebirdsql.gds.GDSException;
-import org.firebirdsql.gds.impl.GDSFactoryPlugin;
-import org.firebirdsql.jdbc.FBConnection;
+import org.firebirdsql.gds.impl.BaseGDSFactoryPlugin;
 
-public class EmbeddedGDSFactoryPlugin implements GDSFactoryPlugin {
+public class EmbeddedGDSFactoryPlugin extends BaseGDSFactoryPlugin {
 
     private static final String[] TYPE_ALIASES = new String[0];
 
@@ -13,8 +32,6 @@ public class EmbeddedGDSFactoryPlugin implements GDSFactoryPlugin {
         "jdbc:firebirdsql:embedded:"
     };
 
-    private static GDS gds;
-    
     public String getPluginName() {
         return "GDS implementation for embedded server.";
     }
@@ -27,70 +44,23 @@ public class EmbeddedGDSFactoryPlugin implements GDSFactoryPlugin {
         return TYPE_ALIASES;
     }
 
-    public Class<?> getConnectionClass() {
-        return FBConnection.class;
-    }
-
     public String[] getSupportedProtocols() {
         return JDBC_PROTOCOLS;
     }
-
-    public synchronized GDS getGDS() {
-        if (gds == null)
-            gds = applySyncPolicy(new EmbeddedGDSImpl());
-        
-        return gds;
-    }
-
-    /**
-     * Apply the synchronization policy if the current platform is not Windows.
-     * @param tempGds instance if {@link GDS} to which policy should be applied.
-     */
-    public static GDS applySyncPolicy(GDS tempGds) {
-        GDSSynchronizationPolicy.AbstractSynchronizationPolicy syncPolicy = null;
-
-        String osName = System.getProperty("os.name");
-        if (osName != null && osName.indexOf("Windows") == -1)
-            syncPolicy = new GDSSynchronizationPolicy.ClientLibrarySyncPolicy(tempGds);
-
-        if (syncPolicy != null)
-            return GDSSynchronizationPolicy.applySyncronizationPolicy(tempGds, syncPolicy);
-        else
-            return tempGds;
-    }
-
     
     public String getDatabasePath(String server, Integer port, String path)
             throws GDSException {
         return path;
     }
-
-    public String getDatabasePath(String jdbcUrl) throws GDSException {
-        String[] protocols = getSupportedProtocols();
-        for (int i = 0; i < protocols.length; i++) {
-            if (jdbcUrl.startsWith(protocols[i]))
-                return jdbcUrl.substring(protocols[i].length());
-        }
-
-        throw new IllegalArgumentException("Incorrect JDBC protocol handling: "
-                + jdbcUrl);
-    }
-
-    public String getDefaultProtocol() {
-        return getSupportedProtocols()[0];
-    }
     
-    public int hashCode() {
-        return getTypeName().hashCode();
+    /**
+     * Initialization-on-demand depending on classloading behavior specified in JLS 12.4
+     */
+    private static final class GDSHolder {
+        private static final GDS gds = GDSSynchronizationPolicy.applyClientSyncPolicyNonWindows(new EmbeddedGDSImpl());
     }
-    
-    public boolean equals(Object obj) {
-        if (obj == this) 
-            return true;
-        
-        if (!(obj instanceof EmbeddedGDSFactoryPlugin))
-            return false;
-        
-        return true;
-    }   
+
+    public GDS getGDS() {
+        return GDSHolder.gds;
+    }
 }
