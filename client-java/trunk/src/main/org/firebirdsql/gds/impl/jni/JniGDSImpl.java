@@ -1,5 +1,8 @@
 package org.firebirdsql.gds.impl.jni;
 
+import java.security.AccessController;
+import java.security.PrivilegedAction;
+
 import org.firebirdsql.gds.*;
 import org.firebirdsql.gds.impl.GDSType;
 import org.firebirdsql.logging.Logger;
@@ -52,14 +55,14 @@ public abstract class JniGDSImpl extends BaseGDSImpl {
     protected static void initJNIBridge() throws UnsatisfiedLinkError {
         final boolean logging = log != null;
         
-        boolean amd64Architecture = "amd64".equals(System.getProperty("os.arch"));
-
-        String jaybirdJniLibrary = amd64Architecture ? JAYBIRD_JNI_LIBRARY_X64 : JAYBIRD_JNI_LIBRARY;
-        
-		if (logging)
-            log.info("Attempting to load JNI library : [" + jaybirdJniLibrary + "]");
-
         try {
+            boolean amd64Architecture = "amd64".equals(getSystemPropertyPrivileged("os.arch"));
+    
+            String jaybirdJniLibrary = amd64Architecture ? JAYBIRD_JNI_LIBRARY_X64 : JAYBIRD_JNI_LIBRARY;
+            
+    		if (logging)
+                log.info("Attempting to load JNI library : [" + jaybirdJniLibrary + "]");
+        
             System.loadLibrary(jaybirdJniLibrary);
         } catch (SecurityException ex) {
             if (logging)
@@ -278,5 +281,13 @@ public abstract class JniGDSImpl extends BaseGDSImpl {
     
     protected void finalize() throws Throwable {
         native_isc_finalize(isc_api_handle);
+    }
+    
+    private static String getSystemPropertyPrivileged(final String propertyName) {
+        return AccessController.doPrivileged(new PrivilegedAction<String>() {
+           public String run() {
+               return System.getProperty(propertyName);
+           } 
+        });
     }
 }

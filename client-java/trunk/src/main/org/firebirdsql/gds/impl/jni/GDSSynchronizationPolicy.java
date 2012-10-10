@@ -23,6 +23,8 @@ import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
+import java.security.AccessController;
+import java.security.PrivilegedAction;
 
 import org.firebirdsql.gds.GDS;
 import org.firebirdsql.util.ReflectionHelper;
@@ -33,6 +35,24 @@ import org.firebirdsql.util.ReflectionHelper;
  * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
  */
 public class GDSSynchronizationPolicy {
+    
+    /**
+     * Apply the synchronization policy if the current platform is not Windows.
+     * 
+     * @param tempGds instance if {@link GDS} to which policy should be applied.
+     */
+    static GDS applyClientSyncPolicyNonWindows(GDS tempGds) {
+        GDSSynchronizationPolicy.AbstractSynchronizationPolicy syncPolicy = null;
+
+        String osName = getSystemPropertyPrivileged("os.name");
+        if (osName != null && osName.indexOf("Windows") == -1)
+            syncPolicy = new GDSSynchronizationPolicy.ClientLibrarySyncPolicy(tempGds);
+
+        if (syncPolicy != null)
+            return GDSSynchronizationPolicy.applySyncronizationPolicy(tempGds, syncPolicy);
+        else
+            return tempGds;
+    }
     
     /**
      * Apply synchronization policy on the specfied instance of {@link GDS}.
@@ -122,6 +142,14 @@ public class GDSSynchronizationPolicy {
         protected Object getSynchronizationObject() {
             return SYNC_OBJECT;
         }
+    }
+    
+    private static String getSystemPropertyPrivileged(final String propertyName) {
+        return AccessController.doPrivileged(new PrivilegedAction<String>() {
+           public String run() {
+               return System.getProperty(propertyName);
+           } 
+        });
     }
 
 }

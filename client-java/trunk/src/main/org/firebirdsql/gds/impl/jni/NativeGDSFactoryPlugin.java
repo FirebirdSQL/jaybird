@@ -1,16 +1,33 @@
+/*
+ * $Id$
+ * 
+ * Firebird Open Source J2ee connector - jdbc driver
+ *
+ * Distributable under LGPL license.
+ * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * LGPL License for more details.
+ *
+ * This file was created by members of the firebird development team.
+ * All individual contributions remain the Copyright (C) of those
+ * individuals.  Contributors to this file are either listed here or
+ * can be obtained from a CVS history command.
+ *
+ * All rights reserved.
+ */
 package org.firebirdsql.gds.impl.jni;
 
 import org.firebirdsql.gds.GDS;
 import org.firebirdsql.gds.GDSException;
-import org.firebirdsql.gds.impl.GDSFactoryPlugin;
-import org.firebirdsql.jdbc.FBConnection;
+import org.firebirdsql.gds.impl.BaseGDSFactoryPlugin;
 
-public class NativeGDSFactoryPlugin implements GDSFactoryPlugin {
+public class NativeGDSFactoryPlugin extends BaseGDSFactoryPlugin {
 
     private static final String[] TYPE_ALIASES = new String[]{"TYPE2"};
     private static final String[] JDBC_PROTOCOLS = new String[]{"jdbc:firebirdsql:native:"};
-    
-    private static GDS gds;
     
     public String getPluginName() {
         return "JNI-based GDS implementation.";
@@ -24,19 +41,8 @@ public class NativeGDSFactoryPlugin implements GDSFactoryPlugin {
         return TYPE_ALIASES;
     }
 
-    public Class<?> getConnectionClass() {
-        return FBConnection.class;
-    }
-
     public String[] getSupportedProtocols() {
         return JDBC_PROTOCOLS;
-    }
-
-    public GDS getGDS() {
-        if (gds == null) 
-            gds = new NativeGDSImpl();
-        
-        return gds;
     }
 
     public String getDatabasePath(String server, Integer port, String path) throws GDSException{
@@ -58,32 +64,14 @@ public class NativeGDSFactoryPlugin implements GDSFactoryPlugin {
         return sb.toString();
     }
     
-    public String getDatabasePath(String jdbcUrl) throws GDSException {
-        String[] protocols = getSupportedProtocols();
-        for (int i = 0; i < protocols.length; i++) {
-            if (jdbcUrl.startsWith(protocols[i]))
-                return jdbcUrl.substring(protocols[i].length());
-        }
-
-        throw new IllegalArgumentException("Incorrect JDBC protocol handling: "
-                + jdbcUrl);
+    /**
+     * Initialization-on-demand depending on classloading behavior specified in JLS 12.4
+     */
+    private static final class GDSHolder {
+        private static final GDS gds = new NativeGDSImpl();
     }
 
-    public String getDefaultProtocol() {
-        return getSupportedProtocols()[0];
-    }
-
-    public int hashCode() {
-        return getTypeName().hashCode();
-    }
-    
-    public boolean equals(Object obj) {
-        if (obj == this) 
-            return true;
-        
-        if (!(obj instanceof NativeGDSFactoryPlugin))
-            return false;
-        
-        return true;
+    public GDS getGDS() {
+        return GDSHolder.gds;
     }   
 }

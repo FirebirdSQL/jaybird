@@ -499,7 +499,7 @@ public abstract class AbstractJavaGDSImpl extends AbstractGDS implements GDS {
         }
     }
 
-	private String getSystemPropertyPrivileged(final String propertyName) {
+	private static String getSystemPropertyPrivileged(final String propertyName) {
 	    return AccessController.doPrivileged(new PrivilegedAction<String>() {
 	       public String run() {
 	           return System.getProperty(propertyName);
@@ -1994,7 +1994,15 @@ public abstract class AbstractJavaGDSImpl extends AbstractGDS implements GDS {
 
 		// Here we identify the user to the engine. This may or may not be
 		// used as login info to a database.
-		String user = System.getProperty("user.name");
+		String user; 
+		try {
+		    user = getSystemPropertyPrivileged("user.name");
+		} catch (SecurityException ex) {
+		    if (debug)
+		        log.debug("Unable to retrieve user.name property", ex);
+		    // TODO Find out if using empty string is sufficient
+		    user = "";
+		}
 		
 		if (debug)
 			log.debug("user.name: " + user);
