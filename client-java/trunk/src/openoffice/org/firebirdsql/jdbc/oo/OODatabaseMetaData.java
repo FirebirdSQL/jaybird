@@ -12,7 +12,7 @@ import org.firebirdsql.jdbc.*;
 
 public class OODatabaseMetaData extends FBDatabaseMetaData {
 
-    public OODatabaseMetaData(AbstractConnection c) throws GDSException {
+    public OODatabaseMetaData(FBConnection c) throws GDSException {
         super(c);
     }
 

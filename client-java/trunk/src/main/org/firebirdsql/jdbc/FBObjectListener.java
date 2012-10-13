@@ -105,11 +105,11 @@ public interface FBObjectListener {
         /**
          * Get the connection object to which this listener belongs to.
          * 
-         * @return instance of {@link AbstractConnection}
+         * @return instance of {@link FBConnection}
          * 
          * @throws SQLException if something went wrong.
          */
-        AbstractConnection getConnection() throws SQLException;
+        FBConnection getConnection() throws SQLException;
         
         /**
          * Notify listener that statement execution is being started.
@@ -118,14 +118,14 @@ public interface FBObjectListener {
          * 
          * @throws SQLException if something went wrong.
          */
-        void executionStarted(AbstractStatement stmt) throws SQLException;
+        void executionStarted(FBStatement stmt) throws SQLException;
         
         /**
          * Notify the listener that statement was closed.
          * 
          * @param stmt statement that was closed.
          */
-        void statementClosed(AbstractStatement stmt) throws SQLException;
+        void statementClosed(FBStatement stmt) throws SQLException;
         
         /**
          * Notify the listener that statement is completed. This is shortcut
@@ -133,7 +133,7 @@ public interface FBObjectListener {
          * 
          * @param stmt statement that was completed.
          */
-        void statementCompleted(AbstractStatement stmt) throws SQLException;
+        void statementCompleted(FBStatement stmt) throws SQLException;
         
         /**
          * Notify the listener that statement is completed and tell whether
@@ -144,7 +144,7 @@ public interface FBObjectListener {
          * 
          * @throws SQLException if an error occured.
          */
-        void statementCompleted(AbstractStatement stmt, boolean success) 
+        void statementCompleted(FBStatement stmt, boolean success) 
             throws SQLException;
     }
     

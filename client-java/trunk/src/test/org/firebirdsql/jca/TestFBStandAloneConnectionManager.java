@@ -26,7 +26,7 @@ import javax.sql.DataSource;
 import junit.framework.Test;
 import junit.framework.TestSuite;
 
-import org.firebirdsql.jdbc.AbstractConnection;
+import org.firebirdsql.jdbc.FBConnection;
 
 
 /**
@@ -77,7 +77,7 @@ public class TestFBStandAloneConnectionManager extends TestXABase {
         if (log != null) log.info("testUseStatement");
         FBManagedConnectionFactory mcf = initMcf();
         DataSource ds = (DataSource)mcf.createConnectionFactory();
-        AbstractConnection c = (AbstractConnection)ds.getConnection();
+        FBConnection c = (FBConnection)ds.getConnection();
         Statement s = c.createStatement();
         FirebirdLocalTransaction t = c.getLocalTransaction();
         assertTrue("Could not get LocalTransaction", t != null);

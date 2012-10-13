@@ -54,14 +54,14 @@ class PooledConnectionHandler implements InvocationHandler {
 
     protected static final String CLOSED_MESSAGE = "Logical connection already closed";
     protected static final String FORCIBLY_CLOSED_MESSAGE = "Logical connection was forcibly closed by the connection pool";
-    protected final AbstractPooledConnection owner;
+    protected final FBPooledConnection owner;
     protected volatile Connection connection;
     protected volatile Connection proxy;
     protected volatile boolean forcedClose;
 
     private final List<StatementHandler> openStatements = Collections.synchronizedList(new LinkedList<StatementHandler>());
 
-    protected PooledConnectionHandler(Connection connection, AbstractPooledConnection owner) {
+    protected PooledConnectionHandler(Connection connection, FBPooledConnection owner) {
         this.connection = connection;
         this.owner = owner;
         proxy = (Connection) Proxy.newProxyInstance(getClass().getClassLoader(),

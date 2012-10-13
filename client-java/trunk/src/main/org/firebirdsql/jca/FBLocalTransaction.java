@@ -24,7 +24,7 @@ import javax.resource.spi.*;
 import javax.transaction.xa.*;
 
 import org.firebirdsql.gds.GDSException;
-import org.firebirdsql.jdbc.AbstractConnection;
+import org.firebirdsql.jdbc.FBConnection;
 
 /**
  * The class <code>FBLocalTransaction</code> implements LocalTransaction both
@@ -53,7 +53,7 @@ public class FBLocalTransaction implements FirebirdLocalTransaction,
     protected final ConnectionEvent rollbackEvent;
 
     // should be package!!! perhaps reorganize and eliminate jdbc!!!
-    public FBLocalTransaction(FBManagedConnection mc, AbstractConnection c) {
+    public FBLocalTransaction(FBManagedConnection mc, FBConnection c) {
         this.mc = mc;
         if (c == null) {
             beginEvent = null;

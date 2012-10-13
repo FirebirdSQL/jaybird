@@ -313,7 +313,7 @@ public class GDSFactory {
     }
 
     /**
-     * Get class extending the {@link org.firebirdsql.jdbc.AbstractConnection}
+     * Get class extending the {@link org.firebirdsql.jdbc.FBConnection}
      * that will be instantiated when new connection is created. This method
      * finds the plugin for the specified type and delegates the call to it.
      * 

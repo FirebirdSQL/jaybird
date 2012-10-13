@@ -40,7 +40,7 @@ import static org.firebirdsql.common.FBTestProperties.*;
  */
 public class TestFBDatabaseMetaData extends TestXABase {
 
-    private AbstractConnection c;
+    private FBConnection c;
     private Statement s;
     private DatabaseMetaData dmd;
     private LocalTransaction t;
@@ -53,7 +53,7 @@ public class TestFBDatabaseMetaData extends TestXABase {
         super.setUp();
         FBManagedConnectionFactory mcf = initMcf();
         DataSource ds = (DataSource) mcf.createConnectionFactory();
-        c = (AbstractConnection) ds.getConnection();
+        c = (FBConnection) ds.getConnection();
         s = c.createStatement();
         t = c.getLocalTransaction();
         dmd = c.getMetaData();

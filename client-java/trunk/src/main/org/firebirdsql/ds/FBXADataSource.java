@@ -39,7 +39,7 @@ import org.firebirdsql.gds.impl.GDSFactory;
 import org.firebirdsql.gds.impl.GDSType;
 import org.firebirdsql.jca.FBManagedConnection;
 import org.firebirdsql.jca.FBManagedConnectionFactory;
-import org.firebirdsql.jdbc.AbstractConnection;
+import org.firebirdsql.jdbc.FBConnection;
 import org.firebirdsql.jdbc.FBDataSource;
 import org.firebirdsql.jdbc.FBSQLException;
 
@@ -61,7 +61,7 @@ public class FBXADataSource extends FBAbstractCommonDataSource implements XAData
         if (internalDs == null) {
             initialize();
         }
-        AbstractConnection connection = (AbstractConnection) internalDs.getConnection(user,
+        FBConnection connection = (FBConnection) internalDs.getConnection(user,
                 password);
         return new FBXAConnection(connection);
     }

@@ -777,20 +777,20 @@ public class FBManagedConnectionFactory implements ManagedConnectionFactory,
         }
     }
 
-    AbstractConnection newConnection(FBManagedConnection mc)
+    FBConnection newConnection(FBManagedConnection mc)
             throws ResourceException {
         Class<?> connectionClass = GDSFactory.getConnectionClass(getGDSType());
 
-        if (!AbstractConnection.class.isAssignableFrom(connectionClass))
+        if (!FBConnection.class.isAssignableFrom(connectionClass))
             throw new IllegalArgumentException("Specified connection class"
-                    + " does not extend " + AbstractConnection.class.getName()
+                    + " does not extend " + FBConnection.class.getName()
                     + " class");
 
         try {
             Constructor<?> constructor = connectionClass
                     .getConstructor(new Class[] { FBManagedConnection.class});
 
-            return (AbstractConnection) constructor
+            return (FBConnection) constructor
                     .newInstance(new Object[] { mc});
 
         } catch (NoSuchMethodException ex) {
