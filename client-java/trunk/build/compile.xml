@@ -31,7 +31,6 @@
 
   <target name="set-jdbc-40-src" if="jdbc.40">
     <path id="source.java.additional">
-      <pathelement path="${source.jdbc.40}"/>
     </path>
   </target>
   
@@ -84,7 +83,6 @@
   
   <target name="set-jdbc-40-test" if="jdbc.40">
     <path id="source.test.additional">
-      <pathelement path="${source.test.40}"/>
     </path>
   </target>
 
