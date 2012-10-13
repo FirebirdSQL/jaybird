@@ -28,12 +28,6 @@
       <classpath refid="javac.examples.classpath"/>
     </javac>
   </target>
-  
-  <target name="set-jdbc-30-src" if="jdbc.30">
-    <path id="source.java.additional">
-      <pathelement path="${source.jdbc.30}"/>
-    </path>
-  </target>
 
   <target name="set-jdbc-40-src" if="jdbc.40">
     <path id="source.java.additional">
@@ -48,7 +42,7 @@
   	</path>
   </target>
   
-  <target name="set-driver-sources" depends="init,set-jdbc-30-src,set-jdbc-40-src,set-openoffice-src-14"/>
+  <target name="set-driver-sources" depends="init,set-jdbc-40-src,set-openoffice-src-14"/>
 
   <target name="compile-driver" depends="set-driver-sources">
     <mkdir dir="${build.classes}"/>
@@ -87,11 +81,6 @@
       <classpath refid="javac.compatibility.classpath"/>
     </javac>
   </target>
-
-  <target name="set-jdbc-30-test" if="jdbc.30">
-    <path id="source.test.additional">
-    </path>
-  </target>
   
   <target name="set-jdbc-40-test" if="jdbc.40">
     <path id="source.test.additional">
@@ -99,7 +88,7 @@
     </path>
   </target>
 
-  <target name="compile-tests" depends="compile-driver,set-jdbc-30-test,set-jdbc-40-test">
+  <target name="compile-tests" depends="compile-driver,set-jdbc-40-test">
     <mkdir dir="${build.test}"/>
     <javac 
            destdir="${build.test}"
@@ -130,7 +119,6 @@
     <copy todir="${build.etc}" filtering="yes">
       <fileset dir="${source.etc}">
          <include name="default.mf"/>
-         <include name="JDBC20_conformance.html"/>
          <include name="faq.html"/>
          <include name="FAQ.txt"/>
          <include name="release_notes.html"/>
