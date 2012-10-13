@@ -331,9 +331,9 @@ public class FBProcedureCall implements Cloneable {
     public String getSQL(boolean select) throws FBSQLException {
         StringBuilder sb = new StringBuilder();
         if (select)
-            sb.append(AbstractCallableStatement.NATIVE_SELECT_COMMAND);
+            sb.append(FBCallableStatement.NATIVE_SELECT_COMMAND);
         else
-            sb.append(AbstractCallableStatement.NATIVE_CALL_COMMAND);
+            sb.append(FBCallableStatement.NATIVE_CALL_COMMAND);
         
         sb.append(" ");
         sb.append(name);

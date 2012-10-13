@@ -27,7 +27,7 @@ import javax.sql.XAConnection;
 import javax.transaction.xa.XAResource;
 
 import org.firebirdsql.jca.FBManagedConnection;
-import org.firebirdsql.jdbc.AbstractConnection;
+import org.firebirdsql.jdbc.FBConnection;
 import org.firebirdsql.jdbc.FBSQLException;
 
 /**
@@ -40,7 +40,7 @@ public class FBXAConnection extends FBPooledConnection implements XAConnection {
     
     private WeakReference<FBManagedConnection> mc;
     
-    public FBXAConnection(AbstractConnection connection) {
+    public FBXAConnection(FBConnection connection) {
         super(connection);
         mc = new WeakReference<FBManagedConnection>(connection.getManagedConnection());
     }

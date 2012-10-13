@@ -581,7 +581,7 @@ public class TestFBPreparedStatement extends FBTestBase {
     }
 
     public void testGetExecutionPlan() throws SQLException {
-        AbstractPreparedStatement stmt = (AbstractPreparedStatement)con
+        FBPreparedStatement stmt = (FBPreparedStatement)con
                 .prepareStatement("SELECT * FROM TESTTAB WHERE ID = 2");
         try {
             String executionPlan = stmt.getExecutionPlan();
@@ -593,7 +593,7 @@ public class TestFBPreparedStatement extends FBTestBase {
     }
     
     protected void checkStatementType(String query, int expectedStatementType, String assertionMessage) throws SQLException {
-        AbstractPreparedStatement stmt = (AbstractPreparedStatement) con
+        FBPreparedStatement stmt = (FBPreparedStatement) con
                 .prepareStatement(query);
         try {
             assertEquals(

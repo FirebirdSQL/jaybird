@@ -365,7 +365,7 @@ public class TestFBConnection extends FBTestBase {
         Connection connection = DriverManager.getConnection(getUrl(), props);
         try {
             
-            AbstractStatement stmt1 = (AbstractStatement)connection.createStatement();
+            FBStatement stmt1 = (FBStatement)connection.createStatement();
             assertEquals(ResultSet.HOLD_CURSORS_OVER_COMMIT, stmt1.getResultSetHoldability());
             
             Statement stmt2 = connection.createStatement();
@@ -388,7 +388,7 @@ public class TestFBConnection extends FBTestBase {
     public void testGetAttachments() throws Exception {
         FirebirdConnection connection = getConnectionViaDriverManager();
         try {
-            AbstractConnection abstractConnection = (AbstractConnection)connection;
+            FBConnection abstractConnection = (FBConnection)connection;
             
             GDS gds = (abstractConnection).getInternalAPIHandler();
             
@@ -479,6 +479,19 @@ public class TestFBConnection extends FBTestBase {
             assertNull("Expected no warning when specifying connection characterset", warnings);
         } finally {
             closeQuietly(con);
+        }
+    }
+    
+    public void testClientInfo() throws Exception {
+        FBConnection connection = (FBConnection)getConnectionViaDriverManager();
+        try {
+            
+            connection.setClientInfo("TestProperty", "testValue");
+            String checkValue = connection.getClientInfo("TestProperty");
+            assertEquals("testValue", checkValue);
+            
+        } finally {
+            connection.close();
         }
     }
 }

@@ -34,7 +34,7 @@ import javax.sql.DataSource;
 import junit.framework.Test;
 import junit.framework.TestSuite;
 
-import org.firebirdsql.jdbc.AbstractConnection;
+import org.firebirdsql.jdbc.FBConnection;
 
 
 
@@ -181,7 +181,7 @@ public class TestFBResultSet extends TestXABase {
         if (log != null) log.info("testUseResultSetWithPreparedStatement");
         FBManagedConnectionFactory mcf = initMcf();
         DataSource ds = (DataSource)mcf.createConnectionFactory();
-        AbstractConnection c = (AbstractConnection)ds.getConnection();
+        FBConnection c = (FBConnection)ds.getConnection();
         Statement s = c.createStatement();
         LocalTransaction t = c.getLocalTransaction();
         Exception ex = null;
@@ -277,7 +277,7 @@ public class TestFBResultSet extends TestXABase {
         if (log != null) log.info("testUsePreparedStatementAcrossTransactions");
         FBManagedConnectionFactory mcf = initMcf();
         DataSource ds = (DataSource)mcf.createConnectionFactory();
-        AbstractConnection c = (AbstractConnection)ds.getConnection();
+        FBConnection c = (FBConnection)ds.getConnection();
         Statement s = c.createStatement();
         LocalTransaction t = c.getLocalTransaction();
         Exception ex = null;
@@ -383,7 +383,7 @@ public class TestFBResultSet extends TestXABase {
         if (log != null) log.info("testUseResultSetWithCount");
         FBManagedConnectionFactory mcf = initMcf();
         DataSource ds = (DataSource)mcf.createConnectionFactory();
-        AbstractConnection c = (AbstractConnection)ds.getConnection();
+        FBConnection c = (FBConnection)ds.getConnection();
         Statement s = c.createStatement();
         LocalTransaction t = c.getLocalTransaction();
         Exception ex = null;
@@ -430,7 +430,7 @@ public class TestFBResultSet extends TestXABase {
         if (log != null) log.info("testExecutableProcedure");
         FBManagedConnectionFactory mcf = initMcf();
         DataSource ds = (DataSource)mcf.createConnectionFactory();
-        AbstractConnection c = (AbstractConnection)ds.getConnection();
+        FBConnection c = (FBConnection)ds.getConnection();
         Statement s = c.createStatement();
         LocalTransaction t = c.getLocalTransaction();
         t.begin();

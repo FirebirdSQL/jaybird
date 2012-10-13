@@ -60,7 +60,7 @@ public class FBManagedConnection implements ManagedConnection, XAResource, GDSHe
 
     private final List<ConnectionEventListener> connectionEventListeners = new CopyOnWriteArrayList<ConnectionEventListener>();
     // TODO Review synchronization of connectionHandles (especially in blocks like in disassociateConnections, setConnectionSharing etc)
-    private final List<AbstractConnection> connectionHandles = Collections.synchronizedList(new ArrayList<AbstractConnection>());
+    private final List<FBConnection> connectionHandles = Collections.synchronizedList(new ArrayList<FBConnection>());
 
     private int timeout = 0;
 
@@ -202,7 +202,7 @@ public class FBManagedConnection implements ManagedConnection, XAResource, GDSHe
                     "connection in non-sharing mode.");
             
             // there will be at most one connection.
-            for (AbstractConnection connection : connectionHandles) {
+            for (FBConnection connection : connectionHandles) {
                 try {
                     connection.setManagedEnvironment(managedEnvironment);
                 } catch(SQLException ex) {
@@ -214,7 +214,7 @@ public class FBManagedConnection implements ManagedConnection, XAResource, GDSHe
     
     /**
      * Check if connection sharing is enabled. When connection sharing is 
-     * enabled, multiple connection handles ({@link AbstractConnection} instances)
+     * enabled, multiple connection handles ({@link FBConnection} instances)
      * can access this managed connection in thread-safe manner (they synchronize
      * on this instance). This feature can be enabled only in JCA environment,
      * any other environment must not use connection sharing.
@@ -370,7 +370,7 @@ public class FBManagedConnection implements ManagedConnection, XAResource, GDSHe
             disassociateConnections();
         
         try {
-            final AbstractConnection abstractConnection = (AbstractConnection) connection;
+            final FBConnection abstractConnection = (FBConnection) connection;
             abstractConnection.setManagedConnection(this);
             connectionHandles.add(abstractConnection);
         } catch (ClassCastException cce) {
@@ -431,8 +431,8 @@ public class FBManagedConnection implements ManagedConnection, XAResource, GDSHe
         SQLExceptionChainBuilder<SQLException> chain = new SQLExceptionChainBuilder<SQLException>();
         
         // Iterate over copy of list as connection.close() will remove connection
-        List<AbstractConnection> connectionHandleCopy = new ArrayList<AbstractConnection>(connectionHandles);
-        for (AbstractConnection connection : connectionHandleCopy) {
+        List<FBConnection> connectionHandleCopy = new ArrayList<FBConnection>(connectionHandles);
+        for (FBConnection connection : connectionHandleCopy) {
             try {
                 connection.close();
             } catch(SQLException sqlex) {
@@ -489,7 +489,7 @@ public class FBManagedConnection implements ManagedConnection, XAResource, GDSHe
         if (!connectionSharing)
             disassociateConnections();
         
-        AbstractConnection c = mcf.newConnection(this);
+        FBConnection c = mcf.newConnection(this);
         try {
             c.setManagedEnvironment(isManagedEnvironment());
             connectionHandles.add(c);
@@ -1149,7 +1149,7 @@ public class FBManagedConnection implements ManagedConnection, XAResource, GDSHe
      * @param c
      *            The <code>AbstractConnection</code> that is being closed
      */
-    public void close(AbstractConnection c) {
+    public void close(FBConnection c) {
         c.setManagedConnection(null);
         connectionHandles.remove(c);
         ConnectionEvent ce = new ConnectionEvent(this,

@@ -9,7 +9,7 @@ import java.io.ByteArrayOutputStream;
 import java.util.StringTokenizer;
 
 import org.firebirdsql.common.FBTestBase;
-import org.firebirdsql.jdbc.AbstractConnection;
+import org.firebirdsql.jdbc.FBConnection;
 
 import org.firebirdsql.gds.GDS;
 import org.firebirdsql.gds.IscDbHandle;
@@ -495,7 +495,7 @@ public class TestFBMaintenanceManager extends FBTestBase {
 
 
     private void createLimboTransaction(int count) throws Exception {
-        AbstractConnection conn = (AbstractConnection)getConnectionViaDriverManager();
+        FBConnection conn = (FBConnection)getConnectionViaDriverManager();
         try {
             GDS gds = conn.getInternalAPIHandler();
             DatabaseParameterBuffer dpb = gds.createDatabaseParameterBuffer();

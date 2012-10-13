@@ -47,7 +47,7 @@ public abstract class StoredProcedureMetaDataFactory {
      *             if an exception occurs while retrieving meta-data
      */
     public static StoredProcedureMetaData getInstance(
-            AbstractConnection connection) throws SQLException {
+            FBConnection connection) throws SQLException {
 
         StoredProcedureMetaData metaData;
 
@@ -61,7 +61,7 @@ public abstract class StoredProcedureMetaDataFactory {
     }
 
     private static boolean connectionHasProcedureMetadata(
-            AbstractConnection connection) throws SQLException {
+            FBConnection connection) throws SQLException {
 
         FirebirdDatabaseMetaData metaData = 
             (FirebirdDatabaseMetaData) connection.getMetaData();
