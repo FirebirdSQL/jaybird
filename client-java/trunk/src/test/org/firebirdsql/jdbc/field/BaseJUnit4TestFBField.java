@@ -251,6 +251,13 @@ public abstract class BaseJUnit4TestFBField<T extends FBField, O> {
     }
     
     @Test
+    public void setNull() throws SQLException {
+        setNullExpectations();
+        
+        field.setNull();
+    }
+    
+    @Test
     public void getName() throws SQLException {
         assertEquals("Unexpected value for getName()", NAME_VALUE, field.getName());
     }
@@ -268,6 +275,13 @@ public abstract class BaseJUnit4TestFBField<T extends FBField, O> {
     @Test(expected = TypeConversionException.class)
     public void setObjectUnsupportedType() throws SQLException {
         field.setObject(new Object());
+    }
+    
+    @Test
+    public void setObjectNull() throws SQLException {
+        setNullExpectations();
+        
+        field.setObject(null);
     }
     
     @Test(expected = FBDriverNotCapableException.class)
@@ -394,5 +408,4 @@ public abstract class BaseJUnit4TestFBField<T extends FBField, O> {
      * @return A non-null object of the right type for the field under test
      */
     protected abstract O getNonNullObject();
-
 }
