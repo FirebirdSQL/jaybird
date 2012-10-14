@@ -539,28 +539,33 @@ public class TestFBBigDecimalField extends BaseJUnit4TestFBField<FBBigDecimalFie
     }
     
     @Test
-    public void setNull() throws SQLException {
-        xsqlvar = createIntegerXSQLVAR();
-        xsqlvar.sqlscale = -1;
-        field = new FBBigDecimalField(xsqlvar, fieldData, Types.NUMERIC);
-        setNullExpectations();
-        
-        field.setNull();
-    }
-    
-    @Test
-    @Ignore
     @Override
     public void getObjectNonNull() throws SQLException {
-        // TODO : implement
+        xsqlvar = createLongXSQLVAR();
+        xsqlvar.sqlscale = -8;
+        field = new FBBigDecimalField(xsqlvar, fieldData, Types.NUMERIC);
+        context.checking(new Expectations() {{
+            atLeast(1).of(fieldData).getFieldData(); will(returnValue(xsqlvar.encodeLong(51300000000L)));
+        }});
+        
+        BigDecimal expectedValue = new BigDecimal("513.00000000");
+        assertEquals("Unexpected value for long BigDecimal", expectedValue, field.getObject());
     }
     
     @Test
-    @Ignore
     @Override
     public void setObjectNonNull() throws SQLException {
-        // TODO : implement
+        xsqlvar = createIntegerXSQLVAR();
+        xsqlvar.sqlscale = -3;
+        field = new FBBigDecimalField(xsqlvar, fieldData, Types.NUMERIC);
+        context.checking(new Expectations() {{
+            oneOf(fieldData).setFieldData(xsqlvar.encodeInt(1234567));
+        }});
+        
+        field.setObject(new BigDecimal("1234.567"));
     }
+    
+    // TODO Add tests for other object types
     
     @Test
     public void getShortNull() throws SQLException {
