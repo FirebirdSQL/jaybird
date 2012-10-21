@@ -53,8 +53,7 @@ class FBFloatField extends FBField {
         // check if value is within bounds
         if (value > MAX_BYTE_VALUE ||
             value < MIN_BYTE_VALUE)
-                throw (SQLException)createException(
-                    BYTE_CONVERSION_ERROR + " " + value).fillInStackTrace();
+                throw new TypeConversionException(BYTE_CONVERSION_ERROR + " " + value);
 
         return (byte) value;
     }
@@ -67,8 +66,7 @@ class FBFloatField extends FBField {
         // check if value is within bounds
         if (value > MAX_SHORT_VALUE ||
             value < MIN_SHORT_VALUE)
-                throw (SQLException)createException(
-                    SHORT_CONVERSION_ERROR + " " + value).fillInStackTrace();
+                throw new TypeConversionException(SHORT_CONVERSION_ERROR + " " + value);
 
         return (short) value;
     }
@@ -81,8 +79,7 @@ class FBFloatField extends FBField {
         // check if value is within bounds
         if (value > MAX_INT_VALUE ||
             value < MIN_INT_VALUE)
-                throw (SQLException)createException(
-                    INT_CONVERSION_ERROR + " " + value).fillInStackTrace();
+                throw new TypeConversionException(INT_CONVERSION_ERROR + " " + value);
 
         return (int) value;
     }
@@ -95,8 +92,7 @@ class FBFloatField extends FBField {
         // check if value is within bounds
         if (value > MAX_LONG_VALUE ||
             value < MIN_LONG_VALUE)
-                throw (SQLException)createException(
-                    LONG_CONVERSION_ERROR + " " + value).fillInStackTrace();
+                throw new TypeConversionException(LONG_CONVERSION_ERROR + " " + value);
 
         return (long) value;
     }
@@ -150,8 +146,7 @@ class FBFloatField extends FBField {
         try {
             setFloat(Float.parseFloat(value));
         } catch(NumberFormatException nfex) {
-            throw (SQLException)createException(
-                FLOAT_CONVERSION_ERROR+" "+value).fillInStackTrace();
+            throw new TypeConversionException(FLOAT_CONVERSION_ERROR + " " + value);
         }
     }
     
@@ -172,8 +167,7 @@ class FBFloatField extends FBField {
         // TODO: Shouldn't we just overflow to +/-INF?
         if (value > MAX_FLOAT_VALUE ||
             value < MIN_FLOAT_VALUE)
-                throw (SQLException)createException(
-                    FLOAT_CONVERSION_ERROR+" "+value).fillInStackTrace();
+                throw new TypeConversionException(FLOAT_CONVERSION_ERROR + " " + value);
 
         setFloat((float)value);
     }
@@ -199,8 +193,7 @@ class FBFloatField extends FBField {
         // check if value is within bounds
         if (value.compareTo(BD_MAX_FLOAT) > 0 ||
             value.compareTo(BD_MIN_FLOAT) < 0)
-                throw (SQLException)createException(
-                    BIGDECIMAL_CONVERSION_ERROR+" "+value).fillInStackTrace();
+                throw new TypeConversionException(BIGDECIMAL_CONVERSION_ERROR + " " + value);
 
         setFloat(value.floatValue());
     }

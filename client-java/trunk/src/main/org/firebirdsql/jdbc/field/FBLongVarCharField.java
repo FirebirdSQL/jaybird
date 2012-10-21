@@ -128,8 +128,7 @@ public class FBLongVarCharField extends FBStringField implements FBFlushableFiel
                 bout.write(buff, 0, counter);
             }
         } catch(IOException ioex) {
-            throw (SQLException)createException(
-                BYTES_CONVERSION_ERROR + " " + ioex.getMessage());
+            throw new TypeConversionException(BYTES_CONVERSION_ERROR + " " + ioex.getMessage());
         } finally {
             try {
                 in.close();

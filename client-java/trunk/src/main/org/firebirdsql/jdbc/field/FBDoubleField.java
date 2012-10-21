@@ -48,8 +48,7 @@ class FBDoubleField extends FBField {
         // check if value is within bounds
         if (value > MAX_BYTE_VALUE ||
             value < MIN_BYTE_VALUE)
-                throw (SQLException)createException(
-                    BYTE_CONVERSION_ERROR + " " + value).fillInStackTrace();
+                throw new TypeConversionException(BYTE_CONVERSION_ERROR + " " + value);
 
         return (byte) value;
     }
@@ -62,8 +61,7 @@ class FBDoubleField extends FBField {
         // check if value is within bounds
         if (value > MAX_SHORT_VALUE ||
             value < MIN_SHORT_VALUE)
-                throw (SQLException)createException(
-                    SHORT_CONVERSION_ERROR + " " + value).fillInStackTrace();
+                throw new TypeConversionException(SHORT_CONVERSION_ERROR + " " + value);
 
         return (short) value;
     }
@@ -76,8 +74,7 @@ class FBDoubleField extends FBField {
         // check if value is within bounds
         if (value > MAX_INT_VALUE ||
             value < MIN_INT_VALUE)
-                throw (SQLException)createException(
-                    INT_CONVERSION_ERROR + " " + value).fillInStackTrace();
+                throw new TypeConversionException(INT_CONVERSION_ERROR + " " + value);
 
         return (int) value;
     }
@@ -90,8 +87,7 @@ class FBDoubleField extends FBField {
         // check if value is within bounds
         if (value > MAX_LONG_VALUE ||
             value < MIN_LONG_VALUE)
-                throw (SQLException)createException(
-                    LONG_CONVERSION_ERROR + " " + value).fillInStackTrace();
+                throw new TypeConversionException(LONG_CONVERSION_ERROR + " " + value);
 
         return (long) value;
     }
@@ -105,8 +101,7 @@ class FBDoubleField extends FBField {
         // check if value is within bounds
         if (cValue == Float.POSITIVE_INFINITY || 
         	cValue == Float.NEGATIVE_INFINITY)
-            throw (SQLException)createException(
-                FLOAT_CONVERSION_ERROR + " " + value).fillInStackTrace();
+            throw new TypeConversionException(FLOAT_CONVERSION_ERROR + " " + value);
 
         return cValue;
     }
@@ -169,8 +164,7 @@ class FBDoubleField extends FBField {
         try {
             setDouble(Double.parseDouble(value));
         } catch(NumberFormatException nfex) {
-            throw (SQLException)createException(
-                DOUBLE_CONVERSION_ERROR + " " + value).fillInStackTrace();
+            throw new TypeConversionException(DOUBLE_CONVERSION_ERROR + " " + value);
         }
     }
     
@@ -211,8 +205,7 @@ class FBDoubleField extends FBField {
         // check if value is within bounds
         if (value.compareTo(BD_MAX_DOUBLE) > 0 ||
             value.compareTo(BD_MIN_DOUBLE) < 0)
-                throw (SQLException)createException(
-                    DOUBLE_CONVERSION_ERROR + " " + value).fillInStackTrace();
+                throw new TypeConversionException(DOUBLE_CONVERSION_ERROR + " " + value);
 
         setDouble(value.doubleValue());
     }
