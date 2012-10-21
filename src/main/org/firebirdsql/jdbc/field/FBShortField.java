@@ -50,8 +50,7 @@ class FBShortField extends FBField {
         // check if value is within bounds
         if (value > MAX_BYTE_VALUE ||
             value < MIN_BYTE_VALUE)
-                throw (SQLException)createException(
-                    BYTE_CONVERSION_ERROR + " " + value).fillInStackTrace();
+                throw new TypeConversionException(BYTE_CONVERSION_ERROR + " " + value);
 
         return (byte) value;
     }
@@ -123,8 +122,7 @@ class FBShortField extends FBField {
         try {
             setShort(Short.parseShort(value));
         } catch(NumberFormatException nfex) {
-            throw (SQLException)createException(
-                SHORT_CONVERSION_ERROR + " " + value).fillInStackTrace();
+            throw new TypeConversionException(SHORT_CONVERSION_ERROR + " " + value);
         }
     }
     
@@ -140,8 +138,7 @@ class FBShortField extends FBField {
         // check if value is within bounds
         if (value > MAX_SHORT_VALUE ||
             value < MIN_SHORT_VALUE)
-                throw (SQLException)createException(
-                    SHORT_CONVERSION_ERROR + " " + value).fillInStackTrace();
+                throw new TypeConversionException(SHORT_CONVERSION_ERROR + " " + value);
 
         setShort((short)value);
     }
@@ -150,8 +147,7 @@ class FBShortField extends FBField {
         // check if value is within bounds
         if (value > MAX_SHORT_VALUE ||
             value < MIN_SHORT_VALUE)
-                throw (SQLException)createException(
-                    SHORT_CONVERSION_ERROR + " " + value).fillInStackTrace();
+                throw new TypeConversionException(SHORT_CONVERSION_ERROR + " " + value);
 
         setShort((short)value);
     }
@@ -160,8 +156,7 @@ class FBShortField extends FBField {
         // check if value is within bounds
         if (value > MAX_SHORT_VALUE ||
             value < MIN_SHORT_VALUE)
-                throw (SQLException)createException(
-                    SHORT_CONVERSION_ERROR + " " + value).fillInStackTrace();
+                throw new TypeConversionException(SHORT_CONVERSION_ERROR + " " + value);
 
         setShort((short)value);
     }
@@ -170,8 +165,7 @@ class FBShortField extends FBField {
         // check if value is within bounds
         if (value > MAX_SHORT_VALUE ||
             value < MIN_SHORT_VALUE)
-                throw (SQLException)createException(
-                    SHORT_CONVERSION_ERROR + " " + value).fillInStackTrace();
+                throw new TypeConversionException(SHORT_CONVERSION_ERROR + " " + value);
 
         setShort((short)value);
     }
@@ -189,8 +183,7 @@ class FBShortField extends FBField {
         // check if value is within bounds
         if (value.compareTo(BD_MAX_SHORT) > 0 ||
             value.compareTo(BD_MIN_SHORT) < 0)
-                throw (SQLException)createException(
-                    SHORT_CONVERSION_ERROR + " " + value).fillInStackTrace();
+                throw new TypeConversionException(SHORT_CONVERSION_ERROR + " " + value);
 
         setShort(value.shortValue());
     }

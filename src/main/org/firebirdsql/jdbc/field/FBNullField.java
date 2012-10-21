@@ -44,7 +44,7 @@ public class FBNullField extends FBField {
 
     private void checkNull() throws SQLException {
         if (getFieldData() != null) {
-            throw (SQLException) createException(NULL_CONVERSION_ERROR);
+            throw new TypeConversionException(NULL_CONVERSION_ERROR);
         }
     }
 

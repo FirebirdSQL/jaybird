@@ -66,8 +66,7 @@ public class FBBigDecimalField extends FBField {
         // check if value is within bounds
         if (longValue > MAX_BYTE_VALUE ||
             longValue < MIN_BYTE_VALUE)
-                throw (SQLException)createException(
-                    BYTE_CONVERSION_ERROR).fillInStackTrace();
+                throw new TypeConversionException(BYTE_CONVERSION_ERROR);
 
 
         return (byte)longValue;
@@ -99,8 +98,7 @@ public class FBBigDecimalField extends FBField {
         // check if value is within bounds
         if (longValue > MAX_INT_VALUE ||
             longValue < MIN_INT_VALUE)
-                throw (SQLException)createException(
-                    INT_CONVERSION_ERROR).fillInStackTrace();
+                throw new TypeConversionException(INT_CONVERSION_ERROR);
 
         return (int)longValue;
     }
@@ -128,8 +126,7 @@ public class FBBigDecimalField extends FBField {
         // check if value is within bounds
         if (longValue > MAX_SHORT_VALUE ||
             longValue < MIN_SHORT_VALUE)
-                throw (SQLException)createException(
-                    SHORT_CONVERSION_ERROR).fillInStackTrace();
+                throw new TypeConversionException(SHORT_CONVERSION_ERROR);
 
         return (short)longValue;
     }
@@ -188,8 +185,7 @@ public class FBBigDecimalField extends FBField {
         try {
             setBigDecimal(new BigDecimal(value));
         } catch(NumberFormatException nex) {
-            throw (SQLException)createException(
-                STRING_CONVERSION_ERROR).fillInStackTrace();
+            throw new TypeConversionException(STRING_CONVERSION_ERROR);
         }
     }
 
@@ -219,7 +215,7 @@ public class FBBigDecimalField extends FBField {
             protected byte[] encode(final XSQLVAR field, final BigDecimal value) throws SQLException {
                 BigInteger unscaledValue = normalize(value, -field.sqlscale);
                 if (unscaledValue.compareTo(MAX_SHORT) > 0 || unscaledValue.compareTo(MIN_SHORT) < 0) {
-                    throw (SQLException)createException(BIGDECIMAL_CONVERSION_ERROR).fillInStackTrace();
+                    throw new TypeConversionException(BIGDECIMAL_CONVERSION_ERROR);
                 }
                 return field.encodeShort(unscaledValue.shortValue());
             }
@@ -235,7 +231,7 @@ public class FBBigDecimalField extends FBField {
             protected byte[] encode(final XSQLVAR field, final BigDecimal value) throws SQLException {
                 BigInteger unscaledValue = normalize(value, -field.sqlscale);
                 if (unscaledValue.compareTo(MAX_INT) > 0 || unscaledValue.compareTo(MIN_INT) < 0) {
-                    throw (SQLException)createException(BIGDECIMAL_CONVERSION_ERROR).fillInStackTrace();
+                    throw new TypeConversionException(BIGDECIMAL_CONVERSION_ERROR);
                 }
                 return field.encodeInt(unscaledValue.intValue());
             }
@@ -251,7 +247,7 @@ public class FBBigDecimalField extends FBField {
             protected byte[] encode(final XSQLVAR field, final BigDecimal value) throws SQLException {
                 BigInteger unscaledValue = normalize(value, -field.sqlscale);
                 if (unscaledValue.compareTo(MAX_LONG) > 0 || unscaledValue.compareTo(MIN_LONG) < 0) {
-                    throw (SQLException)createException(BIGDECIMAL_CONVERSION_ERROR).fillInStackTrace();
+                    throw new TypeConversionException(BIGDECIMAL_CONVERSION_ERROR);
                 }
                 return field.encodeLong(unscaledValue.longValue());
             }
