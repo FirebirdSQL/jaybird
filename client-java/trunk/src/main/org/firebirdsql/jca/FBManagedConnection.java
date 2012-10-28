@@ -715,7 +715,7 @@ public class FBManagedConnection implements ManagedConnection, XAResource, GDSHe
 
         try {
             // find XID
-            
+            // TODO: Is there a reason why this pieace of code can't use the JDBC Statement class?
             AbstractIscTrHandle trHandle2 = (AbstractIscTrHandle)gds.createIscTrHandle();
             gds.iscStartTransaction(trHandle2, gdsHelper.getCurrentDbHandle(), tpb.getTransactionParameterBuffer());
             
