@@ -446,6 +446,7 @@ public class FBConnection implements FirebirdConnection {
         if (this.autoCommit == autoCommit) 
             return;
         
+        // FIXME : Looks like this is wrong, see also setSavePoint
         if (autoCommit && mc.inDistributedTransaction()) {
             throw new FBSQLException("Connection enlisted in distributed transaction", FBSQLException.SQL_STATE_INVALID_TX_STATE);
         }
