@@ -16,7 +16,6 @@
  *
  * All rights reserved.
  */
-
 package org.firebirdsql.jdbc;
 
 import java.io.IOException;
@@ -110,12 +109,12 @@ public class FBClob implements Clob {
 		    }
 		    int n;
 		    char[] buffer = new char[1024];
-		    StringBuffer stringBuffer = new StringBuffer();
+		    StringBuilder sb = new StringBuilder(length);
 			while (length > 0 && (n = reader.read(buffer, 0, Math.min(length, buffer.length))) != -1) {
-				stringBuffer.append(buffer, 0, Math.min(n, length));
+				sb.append(buffer, 0, n);
 				length -= n;
 			}
-			return stringBuffer.toString();
+			return sb.toString();
 		} catch (IOException e) {
 			throw new FBSQLException(e);
 		} finally {
@@ -145,8 +144,7 @@ public class FBClob implements Clob {
 			return new InputStreamReader(inputStream);
 		} else {
 			try {
-				return new InputStreamReader(wrappedBlob.getBinaryStream(),
-						encoding);
+				return new InputStreamReader(wrappedBlob.getBinaryStream(), encoding);
 			} catch (IOException ioe) {
 				throw new FBSQLException(ioe);
 			}
@@ -236,25 +234,12 @@ public class FBClob implements Clob {
 
 	}
 
-	/**
-	 * <b>This operation is not supported</b>
-	 * 
-	 * @param param1
-	 *            <description>
-	 * @param param2
-	 *            <description>
-	 * @param param3
-	 *            <description>
-	 * @param param4
-	 *            <description>
-	 * @return <description>
-	 * @exception java.sql.SQLException
-	 *                <description>
+	/*
+	 * This operation is not supported
 	 */
 	public int setString(long param1, String param2, int param3, int param4)
 			throws SQLException {
 		throw new FBDriverNotCapableException();
-
 	}
 
 	/**
@@ -280,8 +265,8 @@ public class FBClob implements Clob {
 	 *                <description>
 	 */
 	public Writer setCharacterStream(long position) throws SQLException {
-
 		String encoding = wrappedBlob.gdsHelper.getJavaEncoding();
+		// FIXME: This is wrong for multibyte charactersets; doesn't matter right now as setBinaryStream isn't implemented for position > 1
 		OutputStream outputStream = wrappedBlob.setBinaryStream(position);
 		if (encoding == null) {
 			return new OutputStreamWriter(outputStream);
@@ -295,10 +280,11 @@ public class FBClob implements Clob {
 	}
 
 	public void free() throws SQLException {
-		this.wrappedBlob.free();
+		wrappedBlob.free();
 	}
 
 	public Reader getCharacterStream(long pos, long length) throws SQLException {
+	    // FIXME: This is wrong for multibyte charactersets; doesn't matter right now as getBinaryStream isn't implemented
 		InputStream inputStream = wrappedBlob.getBinaryStream(pos, length);
 		String encoding = getWrappedBlob().gdsHelper.getJavaEncoding();
 		if (encoding == null) {
@@ -313,8 +299,7 @@ public class FBClob implements Clob {
 	}
 
 	public void copyCharacterStream(Reader characterStream) throws SQLException {
-
-		Writer writer = setCharacterStream(0);
+		Writer writer = setCharacterStream(1);
 		try {
 			int chunk = 0;
 			char[] buffer = new char[1024];
@@ -327,13 +312,15 @@ public class FBClob implements Clob {
 		} catch (IOException ioe) {
 			throw new FBSQLException(ioe);
 		}
-
 	}
 
-
-
+	/**
+	 * Retrieves the FBBlob wrapped by this FBClob.
+	 * 
+	 * @return FBBlob instance
+	 * @throws SQLException
+	 */
 	public FBBlob getWrappedBlob() throws SQLException {
 		return wrappedBlob;
 	}
-
 }
