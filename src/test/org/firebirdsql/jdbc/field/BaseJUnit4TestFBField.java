@@ -85,6 +85,9 @@ public abstract class BaseJUnit4TestFBField<T extends FBField, O> {
         xsqlvar.relname = RELATION_NAME_VALUE;
     }
     
+    /**
+     * @throws SQLException  
+     */
     @Test
     public void getAlias() throws SQLException {
         assertEquals("Unexpected value for getAlias()", ALIAS_VALUE, field.getAlias());
@@ -250,6 +253,9 @@ public abstract class BaseJUnit4TestFBField<T extends FBField, O> {
         field.setLong(1);
     }
     
+    /**
+     * @throws SQLException  
+     */
     @Test
     public void setNull() throws SQLException {
         setNullExpectations();
@@ -257,6 +263,9 @@ public abstract class BaseJUnit4TestFBField<T extends FBField, O> {
         field.setNull();
     }
     
+    /**
+     * @throws SQLException  
+     */
     @Test
     public void getName() throws SQLException {
         assertEquals("Unexpected value for getName()", NAME_VALUE, field.getName());
@@ -294,6 +303,9 @@ public abstract class BaseJUnit4TestFBField<T extends FBField, O> {
         field.getRef();
     }
     
+    /**
+     * @throws SQLException  
+     */
     @Test
     public void getRelationName() throws SQLException {
         assertEquals("Unexpected value for getRelationName()", RELATION_NAME_VALUE, field.getRelationName());
@@ -379,33 +391,147 @@ public abstract class BaseJUnit4TestFBField<T extends FBField, O> {
     @Test
     public void isNull_nonNullValue() throws SQLException {
         // TODO Check if this is sufficient, otherwise we may need to add an abstract toReturnNonNull
-        context.checking(new Expectations() {{
-            atLeast(1).of(fieldData).getFieldData(); will(returnValue(new byte[0]));
-        }});
+        toReturnValueExpectations(new byte[0]);
         
         assertFalse("Expected isNull() to return false for non-null-field", field.isNull());
-    }
-
-    /**
-     * Expectations for setting field to null
-     */
-    protected void setNullExpectations() {
-        context.checking(new Expectations() {{
-            one(fieldData).setFieldData(null);
-        }});
-    }
-
-    /**
-     * Expectations to return null from fieldData.
-     */
-    protected void toReturnNullExpectations() {
-        context.checking(new Expectations() {{
-                atLeast(1).of(fieldData).getFieldData(); will(returnValue(null));
-        }});
     }
     
     /**
      * @return A non-null object of the right type for the field under test
      */
     protected abstract O getNonNullObject();
+    
+    // Expectation methods
+    
+    /**
+     * Expectations for setting field to the supplied byte array
+     * @param data byte array with expected data
+     */
+    protected final void setValueExpectations(final byte[] data) {
+        context.checking(new Expectations() {{
+            one(fieldData).setFieldData(data);
+        }});
+    }
+    
+    /**
+     * Expectations to return a byte array from fielddata
+     * @param data byte array with data to return
+     */
+    protected final void toReturnValueExpectations(final byte[] data) {
+        context.checking(new Expectations() {{
+            atLeast(1).of(fieldData).getFieldData(); will(returnValue(data));
+        }});
+    }
+
+    /**
+     * Expectations for setting field to null
+     */
+    protected final void setNullExpectations() {
+        setValueExpectations(null);
+    }
+
+    /**
+     * Expectations to return null from fieldData.
+     */
+    protected final void toReturnNullExpectations() {
+        toReturnValueExpectations(null);
+    }
+    
+    /**
+     * Expectations for setting fieldData to a specific double value.
+     * @param value Double value that is expected to be set
+     */
+    protected final void setDoubleExpectations(final double value) {
+        setValueExpectations(xsqlvar.encodeDouble(value));
+    }
+
+    /**
+     * Expectations to return a specific double value from fieldData.
+     * @param value Double value to return
+     */
+    protected final void toReturnDoubleExpectations(final double value) {
+        toReturnValueExpectations(xsqlvar.encodeDouble(value));
+    }
+    
+    /**
+     * Expectations for setting fieldData to a specific short value.
+     * @param value Short value that is expected to be set
+     */
+    protected final void setShortExpectations(final short value) {
+        setValueExpectations(xsqlvar.encodeShort(value));
+    }
+
+    /**
+     * Expectations to return a specific short value from fieldData.
+     * @param value Short value to return
+     */
+    protected final void toReturnShortExpectations(final short value) {
+        toReturnValueExpectations(xsqlvar.encodeShort(value));
+    }
+    
+    /**
+     * Expectations for setting fieldData to a specific integer value.
+     * @param value Integer value that is expected to be set
+     */
+    protected final void setIntegerExpectations(final int value) {
+        setValueExpectations(xsqlvar.encodeInt(value));
+    }
+
+    /**
+     * Expectations to return a specific integer value from fieldData.
+     * @param value Integer value to return
+     */
+    protected final void toReturnIntegerExpectations(final int value) {
+        toReturnValueExpectations(xsqlvar.encodeInt(value));
+    }
+
+    /**
+     * Expectations for setting fieldData to a specific long value.
+     * @param value Long value that is expected to be set
+     */
+    protected final void setLongExpectations(final long value) {
+        setValueExpectations(xsqlvar.encodeLong(value));
+    }
+
+    /**
+     * Expectations to return a specific long value from fieldData.
+     * @param value Long value to return
+     */
+    protected final void toReturnLongExpectations(final long value) {
+        toReturnValueExpectations(xsqlvar.encodeLong(value));
+    }
+    
+    /**
+     * Expectations for setting fieldData to a specific Date value.
+     * @param value Date value that is expected to be set
+     */
+    protected final void setDateExpectations(final java.sql.Date value) {
+        setValueExpectations(xsqlvar.encodeDate(value));
+    }
+
+    /**
+     * Expectations to return a specific Date value from fieldData.
+     * @param value Date value to return
+     */
+    protected final void toReturnDateExpectations(final java.sql.Date value) {
+        toReturnValueExpectations(xsqlvar.encodeDate(value));
+    }
+    
+    /**
+     * Expectations for setting fieldData to a specific Date value.
+     * @param value Date value that is expected to be set
+     * @param calendar Calendar instance for timezone
+     */
+    protected final void setDateExpectations(final java.sql.Date value, Calendar calendar) {
+        setValueExpectations(xsqlvar.encodeDateCalendar(value, calendar));
+    }
+
+    /**
+     * Expectations to return a specific Date value from fieldData.
+     * @param value Date value to return
+     * @param calendar Calendar instance for timezone
+     */
+    protected final void toReturnDateExpectations(final java.sql.Date value, Calendar calendar) {
+        toReturnValueExpectations(xsqlvar.encodeDateCalendar(value, calendar));
+    }
 }

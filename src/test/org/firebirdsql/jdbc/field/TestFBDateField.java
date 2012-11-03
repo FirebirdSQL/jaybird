@@ -28,7 +28,6 @@ import java.util.Calendar;
 import java.util.TimeZone;
 
 import org.firebirdsql.gds.ISCConstants;
-import org.jmock.Expectations;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -135,15 +134,21 @@ public class TestFBDateField extends BaseJUnit4TestFBField<FBDateField, java.sql
     @Ignore
     @Override
     public void getObjectNonNull() throws SQLException {
-        // TODO Implement
+        toReturnTestSqlDateExpectations();
+        
+        assertEquals("Unexpected value for getObject()", TEST_SQL_DATE, field.getObject());
     }
     
     @Test
     @Ignore
     @Override
     public void setObjectNonNull() throws SQLException {
-        // TODO Implement
+        setTestSqlDateExpectations();
+        
+        field.setObject(TEST_SQL_DATE);
     }
+    
+    // TODO Check if other objecttypes need to be tested as well.
     
     @Test
     public void getStringNull() throws SQLException {
@@ -261,15 +266,11 @@ public class TestFBDateField extends BaseJUnit4TestFBField<FBDateField, java.sql
      * Expectations to return {@link TEST_SQL_DATE} from fieldData
      */
     private void toReturnTestSqlDateExpectations() {
-        context.checking(new Expectations() {{
-            atLeast(1).of(fieldData).getFieldData(); will(returnValue(xsqlvar.encodeDate(TEST_SQL_DATE)));
-        }});
+        toReturnDateExpectations(TEST_SQL_DATE);
     }
     
     private void setTestSqlDateExpectations() {
-        context.checking(new Expectations() {{
-            oneOf(fieldData).setFieldData(xsqlvar.encodeDate(TEST_SQL_DATE));
-        }});
+        setDateExpectations(TEST_SQL_DATE);
     }
 
     @Override
