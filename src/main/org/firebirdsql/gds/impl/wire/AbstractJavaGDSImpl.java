@@ -600,6 +600,10 @@ public abstract class AbstractJavaGDSImpl extends AbstractGDS implements GDS {
 	private void parseAttachDatabaseInfo(byte[] info, IscDbHandle handle)
 			throws GDSException {
 		boolean debug = log != null && log.isDebugEnabled();
+		// TODO: Check if info will never be empty
+//		if (info.length == 0) {
+//            throw new GDSException(ISCConstants.isc_dsql_sqlda_err);
+//        }
 		if (debug)
 			log.debug("parseDatabaseInfo: first 2 bytes are "
 					+ iscVaxInteger(info, 0, 2) + " or: " + info[0] + ", "
