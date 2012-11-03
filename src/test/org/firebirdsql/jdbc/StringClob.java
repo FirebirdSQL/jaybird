@@ -36,7 +36,7 @@ import java.sql.SQLException;
  *
  * @author Steve Ebersole
  */
-public class StringClob implements Clob {
+class StringClob implements Clob {
 	private final String value;
 
 	public StringClob(String value) {
