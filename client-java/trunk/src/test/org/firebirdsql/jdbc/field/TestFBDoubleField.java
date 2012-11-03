@@ -25,7 +25,6 @@ import java.sql.SQLException;
 import java.sql.Types;
 
 import org.firebirdsql.gds.ISCConstants;
-import org.jmock.Expectations;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -49,9 +48,7 @@ public class TestFBDoubleField extends BaseJUnit4TestFBField<FBDoubleField, Doub
     @Test
     @Override
     public void getBigDecimalNonNull() throws SQLException {
-        context.checking(new Expectations() {{
-            atLeast(1).of(fieldData).getFieldData(); will(returnValue(xsqlvar.encodeDouble(1.34578)));
-        }});
+        toReturnDoubleExpectations(1.34578);
         
         BigDecimal expectedValue = new BigDecimal(1.34578);
         assertEquals("Unexpected value for getBigDecimal", expectedValue, field.getBigDecimal());
@@ -67,9 +64,7 @@ public class TestFBDoubleField extends BaseJUnit4TestFBField<FBDoubleField, Doub
     @Test
     @Override
     public void setBigDecimalNonNull() throws SQLException {
-        context.checking(new Expectations() {{
-            oneOf(fieldData).setFieldData(xsqlvar.encodeDouble(10));
-        }});
+        setDoubleExpectations(10);
         
         field.setBigDecimal(BigDecimal.TEN);
     }
@@ -79,9 +74,7 @@ public class TestFBDoubleField extends BaseJUnit4TestFBField<FBDoubleField, Doub
      */
     @Test
     public void setBigDecimal_MAX() throws SQLException {
-        context.checking(new Expectations() {{
-            oneOf(fieldData).setFieldData(xsqlvar.encodeDouble(Double.MAX_VALUE));
-        }});
+        setDoubleExpectations(Double.MAX_VALUE);
         
         field.setBigDecimal(new BigDecimal(Double.MAX_VALUE));
     }
@@ -102,9 +95,7 @@ public class TestFBDoubleField extends BaseJUnit4TestFBField<FBDoubleField, Doub
      */
     @Test
     public void setBigDecimal_MIN() throws SQLException {
-        context.checking(new Expectations() {{
-            oneOf(fieldData).setFieldData(xsqlvar.encodeDouble(-1 * Double.MAX_VALUE));
-        }});
+        setDoubleExpectations(-1 * Double.MAX_VALUE);
         
         field.setBigDecimal(new BigDecimal(-1* Double.MAX_VALUE));
     }
@@ -140,9 +131,7 @@ public class TestFBDoubleField extends BaseJUnit4TestFBField<FBDoubleField, Doub
     @Test
     @Override
     public void getBooleanNonNull() throws SQLException {
-        context.checking(new Expectations() {{
-            atLeast(1).of(fieldData).getFieldData(); will(returnValue(xsqlvar.encodeDouble(1)));
-        }});
+        toReturnDoubleExpectations(1);
         
         assertTrue("Expected true for getBoolean with field value 1", field.getBoolean());
     }
@@ -152,9 +141,7 @@ public class TestFBDoubleField extends BaseJUnit4TestFBField<FBDoubleField, Doub
      */
     @Test
     public void getBooleanNonNull_false_zero() throws SQLException {
-        context.checking(new Expectations() {{
-            atLeast(1).of(fieldData).getFieldData(); will(returnValue(xsqlvar.encodeDouble(0)));
-        }});
+        toReturnDoubleExpectations(0);
         
         assertFalse("Expected false for getBoolean with field value 0", field.getBoolean());
     }
@@ -165,9 +152,7 @@ public class TestFBDoubleField extends BaseJUnit4TestFBField<FBDoubleField, Doub
      */
     @Test
     public void getBooleanNonNull_false_other() throws SQLException {
-        context.checking(new Expectations() {{
-            atLeast(1).of(fieldData).getFieldData(); will(returnValue(xsqlvar.encodeDouble(513)));
-        }});
+        toReturnDoubleExpectations(513);
         
         assertFalse("Expected false for getBoolean with field value other than 1 or 0", field.getBoolean());
     }
@@ -185,9 +170,7 @@ public class TestFBDoubleField extends BaseJUnit4TestFBField<FBDoubleField, Doub
     @Test
     @Override
     public void setBoolean() throws SQLException {
-        context.checking(new Expectations() {{
-            oneOf(fieldData).setFieldData(xsqlvar.encodeDouble(1));
-        }});
+        setDoubleExpectations(1);
         
         field.setBoolean(true);
     }
@@ -197,9 +180,7 @@ public class TestFBDoubleField extends BaseJUnit4TestFBField<FBDoubleField, Doub
      */
     @Test
     public void setBoolean_false() throws SQLException {
-        context.checking(new Expectations() {{
-            oneOf(fieldData).setFieldData(xsqlvar.encodeDouble(0));
-        }});
+        setDoubleExpectations(0);
         
         field.setBoolean(false);
     }
@@ -210,9 +191,7 @@ public class TestFBDoubleField extends BaseJUnit4TestFBField<FBDoubleField, Doub
     @Test
     @Override
     public void getByteNonNull() throws SQLException {
-        context.checking(new Expectations() {{
-            atLeast(1).of(fieldData).getFieldData(); will(returnValue(xsqlvar.encodeDouble(114.123)));
-        }});
+        toReturnDoubleExpectations(114.123);
         
         assertEquals("Unexpected value for getByte", 114, field.getByte());
     }
@@ -222,9 +201,7 @@ public class TestFBDoubleField extends BaseJUnit4TestFBField<FBDoubleField, Doub
      */
     @Test
     public void getByte_MAX() throws SQLException {
-        context.checking(new Expectations() {{
-            atLeast(1).of(fieldData).getFieldData(); will(returnValue(xsqlvar.encodeDouble(Byte.MAX_VALUE)));
-        }});
+        toReturnDoubleExpectations(Byte.MAX_VALUE);
         
         assertEquals("Unexpected value for getByte", 127, field.getByte());
     }
@@ -234,9 +211,7 @@ public class TestFBDoubleField extends BaseJUnit4TestFBField<FBDoubleField, Doub
      */
     @Test(expected = TypeConversionException.class)
     public void getByte_MAX_plus_fraction() throws SQLException {
-        context.checking(new Expectations() {{
-            atLeast(1).of(fieldData).getFieldData(); will(returnValue(xsqlvar.encodeDouble(Byte.MAX_VALUE + Math.ulp(Byte.MAX_VALUE))));
-        }});
+        toReturnDoubleExpectations(Byte.MAX_VALUE + Math.ulp(Byte.MAX_VALUE));
         
         field.getByte();
     }
@@ -246,9 +221,7 @@ public class TestFBDoubleField extends BaseJUnit4TestFBField<FBDoubleField, Doub
      */
     @Test
     public void getByte_MIN() throws SQLException {
-        context.checking(new Expectations() {{
-            atLeast(1).of(fieldData).getFieldData(); will(returnValue(xsqlvar.encodeDouble(Byte.MIN_VALUE)));
-        }});
+        toReturnDoubleExpectations(Byte.MIN_VALUE);
         
         assertEquals("Unexpected value for getByte", -128, field.getByte());
     }
@@ -258,9 +231,7 @@ public class TestFBDoubleField extends BaseJUnit4TestFBField<FBDoubleField, Doub
      */
     @Test(expected = TypeConversionException.class)
     public void getByte_MIN_minus_fraction() throws SQLException {
-        context.checking(new Expectations() {{
-            atLeast(1).of(fieldData).getFieldData(); will(returnValue(xsqlvar.encodeDouble(Byte.MIN_VALUE - Math.ulp(Byte.MIN_VALUE))));
-        }});
+        toReturnDoubleExpectations(Byte.MIN_VALUE - Math.ulp(Byte.MIN_VALUE));
         
         field.getByte();
     }
@@ -275,9 +246,7 @@ public class TestFBDoubleField extends BaseJUnit4TestFBField<FBDoubleField, Doub
     @Test
     @Override
     public void setByte() throws SQLException {
-        context.checking(new Expectations() {{
-            oneOf(fieldData).setFieldData(xsqlvar.encodeDouble(-54));
-        }});
+        setDoubleExpectations(-54);
         
         field.setByte((byte)-54);
     }
@@ -285,9 +254,7 @@ public class TestFBDoubleField extends BaseJUnit4TestFBField<FBDoubleField, Doub
     @Test
     @Override
     public void getDoubleNonNull() throws SQLException {
-        context.checking(new Expectations() {{
-            atLeast(1).of(fieldData).getFieldData(); will(returnValue(xsqlvar.encodeDouble(1.34578)));
-        }});
+        toReturnDoubleExpectations(1.34578);
         
         assertEquals("Unexpected value for getDouble", 1.34578, field.getDouble(), 0);
     }
@@ -302,36 +269,28 @@ public class TestFBDoubleField extends BaseJUnit4TestFBField<FBDoubleField, Doub
     @Test
     @Override
     public void setDouble() throws SQLException {
-        context.checking(new Expectations() {{
-            oneOf(fieldData).setFieldData(xsqlvar.encodeDouble(9157824.1245785));
-        }});
+        setDoubleExpectations(9157824.1245785);
         
         field.setDouble(9157824.1245785);
     }
     
     @Test
     public void setDouble_NaN() throws SQLException {
-        context.checking(new Expectations() {{
-            oneOf(fieldData).setFieldData(xsqlvar.encodeDouble(Double.NaN));
-        }});
+        setDoubleExpectations(Double.NaN);
         
         field.setDouble(Double.NaN);
     }
     
     @Test
     public void setDouble_posInf() throws SQLException {
-        context.checking(new Expectations() {{
-            oneOf(fieldData).setFieldData(xsqlvar.encodeDouble(Double.POSITIVE_INFINITY));
-        }});
-        
+        setDoubleExpectations(Double.POSITIVE_INFINITY);
+                
         field.setDouble(Double.POSITIVE_INFINITY);
     }
     
     @Test
     public void setDouble_negInf() throws SQLException {
-        context.checking(new Expectations() {{
-            oneOf(fieldData).setFieldData(xsqlvar.encodeDouble(Double.NEGATIVE_INFINITY));
-        }});
+        setDoubleExpectations(Double.NEGATIVE_INFINITY);
         
         field.setDouble(Double.NEGATIVE_INFINITY);
     }
@@ -339,27 +298,21 @@ public class TestFBDoubleField extends BaseJUnit4TestFBField<FBDoubleField, Doub
     @Test
     @Override
     public void getFloatNonNull() throws SQLException {
-        context.checking(new Expectations() {{
-            atLeast(1).of(fieldData).getFieldData(); will(returnValue(xsqlvar.encodeDouble(1247.25898)));
-        }});
+        toReturnDoubleExpectations(1247.25898);
         
         assertEquals("Unexpected value for getFloat", 1247.25898f, field.getFloat(), 0);
     }
     
     @Test(expected = TypeConversionException.class)
     public void getFloat_OutOfRange_high() throws SQLException {
-        context.checking(new Expectations() {{
-            atLeast(1).of(fieldData).getFieldData(); will(returnValue(xsqlvar.encodeDouble(Float.MAX_VALUE + (double)Math.ulp(Float.MAX_VALUE))));
-        }});
+        toReturnDoubleExpectations(Float.MAX_VALUE + (double)Math.ulp(Float.MAX_VALUE));
         
         field.getFloat();
     }
     
     @Test(expected = TypeConversionException.class)
     public void getFloat_OutOfRange_low() throws SQLException {
-        context.checking(new Expectations() {{
-            atLeast(1).of(fieldData).getFieldData(); will(returnValue(xsqlvar.encodeDouble(-1 * Float.MAX_VALUE - (double)Math.ulp(Float.MAX_VALUE))));
-        }});
+        toReturnDoubleExpectations(-1 * Float.MAX_VALUE - (double)Math.ulp(Float.MAX_VALUE));
         
         field.getFloat();
     }
@@ -374,36 +327,28 @@ public class TestFBDoubleField extends BaseJUnit4TestFBField<FBDoubleField, Doub
     @Test
     @Override
     public void setFloat() throws SQLException {
-        context.checking(new Expectations() {{
-            oneOf(fieldData).setFieldData(xsqlvar.encodeDouble(Float.MAX_VALUE));
-        }});
+        setDoubleExpectations(Float.MAX_VALUE);
         
         field.setFloat(Float.MAX_VALUE);
     }
     
     @Test
     public void setFloat_NaN() throws SQLException {
-        context.checking(new Expectations() {{
-            oneOf(fieldData).setFieldData(xsqlvar.encodeDouble(Double.NaN));
-        }});
+        setDoubleExpectations(Double.NaN);
         
         field.setDouble(Float.NaN);
     }
     
     @Test
     public void setFloat_posInf() throws SQLException {
-        context.checking(new Expectations() {{
-            oneOf(fieldData).setFieldData(xsqlvar.encodeDouble(Double.POSITIVE_INFINITY));
-        }});
+        setDoubleExpectations(Double.POSITIVE_INFINITY);
         
         field.setFloat(Float.POSITIVE_INFINITY);
     }
     
     @Test
     public void setFloat_negInf() throws SQLException {
-        context.checking(new Expectations() {{
-            oneOf(fieldData).setFieldData(xsqlvar.encodeDouble(Double.NEGATIVE_INFINITY));
-        }});
+        setDoubleExpectations(Double.NEGATIVE_INFINITY);
         
         field.setFloat(Float.NEGATIVE_INFINITY);
     }
@@ -414,9 +359,7 @@ public class TestFBDoubleField extends BaseJUnit4TestFBField<FBDoubleField, Doub
     @Test
     @Override
     public void getIntNonNull() throws SQLException {
-        context.checking(new Expectations() {{
-            atLeast(1).of(fieldData).getFieldData(); will(returnValue(xsqlvar.encodeDouble(124578.124578)));
-        }});
+        toReturnDoubleExpectations(124578.124578);
         
         assertEquals("Unexpected value for getInt", 124578, field.getInt());
     }
@@ -426,9 +369,7 @@ public class TestFBDoubleField extends BaseJUnit4TestFBField<FBDoubleField, Doub
      */
     @Test
     public void getInt_MAX() throws SQLException {
-        context.checking(new Expectations() {{
-            atLeast(1).of(fieldData).getFieldData(); will(returnValue(xsqlvar.encodeDouble(Integer.MAX_VALUE)));
-        }});
+        toReturnDoubleExpectations(Integer.MAX_VALUE);
         
         assertEquals("Unexpected value for getInt", Integer.MAX_VALUE, field.getInt());
     }
@@ -438,9 +379,7 @@ public class TestFBDoubleField extends BaseJUnit4TestFBField<FBDoubleField, Doub
      */
     @Test(expected = TypeConversionException.class)
     public void getInt_MAX_plus_fraction() throws SQLException {
-        context.checking(new Expectations() {{
-            atLeast(1).of(fieldData).getFieldData(); will(returnValue(xsqlvar.encodeDouble(Integer.MAX_VALUE + Math.ulp(Integer.MAX_VALUE))));
-        }});
+        toReturnDoubleExpectations(Integer.MAX_VALUE + Math.ulp(Integer.MAX_VALUE));
         
         field.getInt();
     }
@@ -450,9 +389,7 @@ public class TestFBDoubleField extends BaseJUnit4TestFBField<FBDoubleField, Doub
      */
     @Test
     public void getInt_MIN() throws SQLException {
-        context.checking(new Expectations() {{
-            atLeast(1).of(fieldData).getFieldData(); will(returnValue(xsqlvar.encodeDouble(Integer.MIN_VALUE)));
-        }});
+        toReturnDoubleExpectations(Integer.MIN_VALUE);
         
         assertEquals("Unexpected value for getInt", Integer.MIN_VALUE, field.getInt());
     }
@@ -462,9 +399,7 @@ public class TestFBDoubleField extends BaseJUnit4TestFBField<FBDoubleField, Doub
      */
     @Test(expected = TypeConversionException.class)
     public void getInt_MIN_minus_fraction() throws SQLException {
-        context.checking(new Expectations() {{
-            atLeast(1).of(fieldData).getFieldData(); will(returnValue(xsqlvar.encodeDouble(Integer.MIN_VALUE - Math.ulp(Integer.MIN_VALUE))));
-        }});
+        toReturnDoubleExpectations(Integer.MIN_VALUE - Math.ulp(Integer.MIN_VALUE));
         
         field.getInt();
     }
@@ -479,9 +414,7 @@ public class TestFBDoubleField extends BaseJUnit4TestFBField<FBDoubleField, Doub
     @Test
     @Override
     public void setInteger() throws SQLException {
-        context.checking(new Expectations() {{
-            oneOf(fieldData).setFieldData(xsqlvar.encodeDouble(Integer.MAX_VALUE));
-        }});
+        setDoubleExpectations(Integer.MAX_VALUE);
         
         field.setInteger(Integer.MAX_VALUE);
     }
@@ -492,9 +425,7 @@ public class TestFBDoubleField extends BaseJUnit4TestFBField<FBDoubleField, Doub
     @Test
     @Override
     public void getLongNonNull() throws SQLException {
-        context.checking(new Expectations() {{
-            atLeast(1).of(fieldData).getFieldData(); will(returnValue(xsqlvar.encodeDouble(2.132457 * Integer.MAX_VALUE)));
-        }});
+        toReturnDoubleExpectations(2.132457 * Integer.MAX_VALUE);
         
         long expectedValue = (long)(2.132457 * Integer.MAX_VALUE);
         assertEquals("Unexpected value for getLong", expectedValue, field.getLong());
@@ -505,9 +436,7 @@ public class TestFBDoubleField extends BaseJUnit4TestFBField<FBDoubleField, Doub
      */
     @Test
     public void getLong_MAX() throws SQLException {
-        context.checking(new Expectations() {{
-            atLeast(1).of(fieldData).getFieldData(); will(returnValue(xsqlvar.encodeDouble(Long.MAX_VALUE)));
-        }});
+        toReturnDoubleExpectations(Long.MAX_VALUE);
         
         assertEquals("Unexpected value for getLong", Long.MAX_VALUE, field.getLong());
     }
@@ -517,9 +446,7 @@ public class TestFBDoubleField extends BaseJUnit4TestFBField<FBDoubleField, Doub
      */
     @Test(expected = TypeConversionException.class)
     public void getLong_MAX_plus_fraction() throws SQLException {
-        context.checking(new Expectations() {{
-            atLeast(1).of(fieldData).getFieldData(); will(returnValue(xsqlvar.encodeDouble(Long.MAX_VALUE + Math.ulp(Long.MAX_VALUE))));
-        }});
+        toReturnDoubleExpectations(Long.MAX_VALUE + Math.ulp(Long.MAX_VALUE));
         
         field.getLong();
     }
@@ -529,9 +456,7 @@ public class TestFBDoubleField extends BaseJUnit4TestFBField<FBDoubleField, Doub
      */
     @Test
     public void getLong_MIN() throws SQLException {
-        context.checking(new Expectations() {{
-            atLeast(1).of(fieldData).getFieldData(); will(returnValue(xsqlvar.encodeDouble(Long.MIN_VALUE)));
-        }});
+        toReturnDoubleExpectations(Long.MIN_VALUE);
         
         assertEquals("Unexpected value for getLong", Long.MIN_VALUE, field.getLong());
     }
@@ -541,9 +466,7 @@ public class TestFBDoubleField extends BaseJUnit4TestFBField<FBDoubleField, Doub
      */
     @Test(expected = TypeConversionException.class)
     public void getLong_MIN_minus_fraction() throws SQLException {
-        context.checking(new Expectations() {{
-            atLeast(1).of(fieldData).getFieldData(); will(returnValue(xsqlvar.encodeDouble(Long.MIN_VALUE - Math.ulp(Long.MIN_VALUE))));
-        }});
+        toReturnDoubleExpectations(Long.MIN_VALUE - Math.ulp(Long.MIN_VALUE));
         
         field.getLong();
     }
@@ -558,9 +481,7 @@ public class TestFBDoubleField extends BaseJUnit4TestFBField<FBDoubleField, Doub
     @Test
     @Override
     public void setLong() throws SQLException {
-        context.checking(new Expectations() {{
-            oneOf(fieldData).setFieldData(xsqlvar.encodeDouble(Long.MAX_VALUE));
-        }});
+        setDoubleExpectations(Long.MAX_VALUE);
         
         field.setLong(Long.MAX_VALUE);
     }
@@ -568,9 +489,7 @@ public class TestFBDoubleField extends BaseJUnit4TestFBField<FBDoubleField, Doub
     @Test
     @Override
     public void getObjectNonNull() throws SQLException {
-        context.checking(new Expectations() {{
-            atLeast(1).of(fieldData).getFieldData(); will(returnValue(xsqlvar.encodeDouble(-1 * Double.MAX_VALUE)));
-        }});
+        toReturnDoubleExpectations(-1 * Double.MAX_VALUE);
         
         Double expectedValue = Double.valueOf(-1 * Double.MAX_VALUE);
         assertEquals("Unexpected value for getObject", expectedValue, field.getObject());
@@ -579,9 +498,7 @@ public class TestFBDoubleField extends BaseJUnit4TestFBField<FBDoubleField, Doub
     @Test
     @Override
     public void setObjectNonNull() throws SQLException {
-        context.checking(new Expectations() {{
-            oneOf(fieldData).setFieldData(xsqlvar.encodeDouble(-1 * Double.MAX_VALUE));
-        }});
+        setDoubleExpectations(-1 * Double.MAX_VALUE);
         Double setValue = Double.valueOf(-1 * Double.MAX_VALUE);
         
         field.setObject(setValue);
@@ -595,9 +512,7 @@ public class TestFBDoubleField extends BaseJUnit4TestFBField<FBDoubleField, Doub
     @Test
     @Override
     public void getShortNonNull() throws SQLException {
-        context.checking(new Expectations() {{
-            atLeast(1).of(fieldData).getFieldData(); will(returnValue(xsqlvar.encodeDouble(-14578.124)));
-        }});
+        toReturnDoubleExpectations(-14578.124);
         
         assertEquals("Unexpected value for getShort", -14578, field.getShort());
     }
@@ -608,9 +523,7 @@ public class TestFBDoubleField extends BaseJUnit4TestFBField<FBDoubleField, Doub
      */
     @Test
     public void getShort_MAX() throws SQLException {
-        context.checking(new Expectations() {{
-            atLeast(1).of(fieldData).getFieldData(); will(returnValue(xsqlvar.encodeDouble(Short.MAX_VALUE)));
-        }});
+        toReturnDoubleExpectations(Short.MAX_VALUE);
         
         assertEquals("Unexpected value for getShort", Short.MAX_VALUE, field.getShort());
     }
@@ -621,9 +534,7 @@ public class TestFBDoubleField extends BaseJUnit4TestFBField<FBDoubleField, Doub
      */
     @Test(expected = TypeConversionException.class)
     public void getShort_MAX_plus_fraction() throws SQLException {
-        context.checking(new Expectations() {{
-            atLeast(1).of(fieldData).getFieldData(); will(returnValue(xsqlvar.encodeDouble(Short.MAX_VALUE + Math.ulp(Short.MAX_VALUE))));
-        }});
+        toReturnDoubleExpectations(Short.MAX_VALUE + Math.ulp(Short.MAX_VALUE));
         
         field.getShort();
     }
@@ -634,9 +545,7 @@ public class TestFBDoubleField extends BaseJUnit4TestFBField<FBDoubleField, Doub
      */
     @Test
     public void getShort_MIN() throws SQLException {
-        context.checking(new Expectations() {{
-            atLeast(1).of(fieldData).getFieldData(); will(returnValue(xsqlvar.encodeDouble(Short.MIN_VALUE)));
-        }});
+        toReturnDoubleExpectations(Short.MIN_VALUE);
         
         assertEquals("Unexpected value for getShort", Short.MIN_VALUE, field.getShort());
     }
@@ -647,9 +556,7 @@ public class TestFBDoubleField extends BaseJUnit4TestFBField<FBDoubleField, Doub
      */
     @Test(expected = TypeConversionException.class)
     public void getShort_MIN_minus_fraction() throws SQLException {
-        context.checking(new Expectations() {{
-            atLeast(1).of(fieldData).getFieldData(); will(returnValue(xsqlvar.encodeDouble(Short.MIN_VALUE - Math.ulp(Short.MIN_VALUE))));
-        }});
+        toReturnDoubleExpectations(Short.MIN_VALUE - Math.ulp(Short.MIN_VALUE));
         
         field.getShort();
     }
@@ -664,9 +571,7 @@ public class TestFBDoubleField extends BaseJUnit4TestFBField<FBDoubleField, Doub
     @Test
     @Override
     public void setShort() throws SQLException {
-        context.checking(new Expectations() {{
-            oneOf(fieldData).setFieldData(xsqlvar.encodeDouble(Short.MIN_VALUE));
-        }});
+        setDoubleExpectations(Short.MIN_VALUE);
         
         field.setShort(Short.MIN_VALUE);
     }
@@ -674,9 +579,7 @@ public class TestFBDoubleField extends BaseJUnit4TestFBField<FBDoubleField, Doub
     @Test
     @Override
     public void getStringNonNull() throws SQLException {
-        context.checking(new Expectations() {{
-            atLeast(1).of(fieldData).getFieldData(); will(returnValue(xsqlvar.encodeDouble(-14578.124)));
-        }});
+        toReturnDoubleExpectations(-14578.124);
         
         String expectedValue = String.valueOf(-14578.124);
         assertEquals("Unexpected value for getString", expectedValue, field.getString());
@@ -695,9 +598,7 @@ public class TestFBDoubleField extends BaseJUnit4TestFBField<FBDoubleField, Doub
     @Test
     @Override
     public void setStringNonNull() throws SQLException {
-        context.checking(new Expectations() {{
-            oneOf(fieldData).setFieldData(xsqlvar.encodeDouble(5145789.12457));
-        }});
+        setDoubleExpectations(5145789.12457);
         
         field.setString("5145789.12457");
     }
