@@ -314,7 +314,7 @@ public class FBClob implements Clob {
 
 	public void copyCharacterStream(Reader characterStream) throws SQLException {
 
-		Writer writer = setCharacterStream(0);
+		Writer writer = setCharacterStream(1);
 		try {
 			int chunk = 0;
 			char[] buffer = new char[1024];
