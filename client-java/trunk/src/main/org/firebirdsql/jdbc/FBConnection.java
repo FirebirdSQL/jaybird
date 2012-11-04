@@ -35,6 +35,7 @@ import java.sql.SQLXML;
 import java.sql.Savepoint;
 import java.sql.Statement;
 import java.sql.Struct;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -70,22 +71,18 @@ import org.firebirdsql.util.SQLExceptionChainBuilder;
  */
 public class FBConnection implements FirebirdConnection {
 
-    
     private static final String GET_CLIENT_INFO_SQL = "SELECT "
                 + "    rdb$get_context('USER_SESSION', ?) session_context "
                 + "  , rdb$get_context('USER_TRANSACTION', ?) tx_context " 
                 + "FROM rdb$database";
 
-
     private static final String SET_CLIENT_INFO_SQL = "SELECT "
                 + "  rdb$set_context('USER_SESSION', ?, ?) session_context " 
                 + "FROM rdb$database";
 
-
-    // This flag is set tu true in close() method to indicate that this 
+    // This flag is set to true in close() method to indicate that this 
     // instance is invalid and cannot be used anymore
     private boolean invalid = false;
-
 
     protected FBManagedConnection mc;
 
@@ -174,7 +171,7 @@ public class FBConnection implements FirebirdConnection {
      */
     private void freeStatements() throws SQLException {
         // copy statements to avoid concurrent modification exception
-        Set<Statement> statements = new HashSet<Statement>(activeStatements);
+        List<Statement> statements = new ArrayList<Statement>(activeStatements);
         
         // iterate through the set, close statements and collect exceptions
         SQLExceptionChainBuilder<SQLException> chain = new SQLExceptionChainBuilder<SQLException>();
@@ -1496,11 +1493,7 @@ public class FBConnection implements FirebirdConnection {
 		 if (firstWarning == null)
 			 firstWarning = warning;
 		 else{
-			 SQLWarning lastWarning = firstWarning;
-			 while (lastWarning.getNextWarning() != null){
-				 lastWarning = lastWarning.getNextWarning();
-			 }
-			 lastWarning.setNextWarning(warning);
+			 firstWarning.setNextWarning(warning);
 		 }
 	 }
      
@@ -1512,21 +1505,14 @@ public class FBConnection implements FirebirdConnection {
       */
     private SQLWarning getIscWarnings() throws SQLException {
          try {
-             SQLWarning firstWarning = null;
-             SQLWarning lastWarning = null;
-
+             SQLExceptionChainBuilder<FBSQLWarning> chain = new SQLExceptionChainBuilder<FBSQLWarning>();
+             
              for (GDSException item : getGDSHelper().getWarnings()) {
                  FBSQLWarning warning = new FBSQLWarning(item);
-                 if (firstWarning == null) {
-                     firstWarning = warning;
-                     lastWarning = warning;
-                 } else {
-                     // Null warning can be ignored: lastwarning is not null here
-                     lastWarning.setNextWarning(warning);
-                     lastWarning = warning;
-                 }
+                 chain.append(warning);
              }
-             return firstWarning;
+             
+             return chain.getException();
          } catch(GDSException ex) {
              throw new FBSQLException(ex);
          }
