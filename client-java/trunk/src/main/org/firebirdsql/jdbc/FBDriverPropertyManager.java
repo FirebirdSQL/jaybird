@@ -169,7 +169,7 @@ public class FBDriverPropertyManager {
     public static Map<String, String> normalize(String url, Properties props) throws SQLException {
         Map<String, String> tempProps = new HashMap<String, String>();
         // TODO: Replace with iterating over stringPropertyNames() when Java 5 support is dropped
-        for (Enumeration propertyNames = props.propertyNames(); propertyNames.hasMoreElements();) {
+        for (Enumeration<?> propertyNames = props.propertyNames(); propertyNames.hasMoreElements();) {
             String propertyName = (String)propertyNames.nextElement();
             tempProps.put(propertyName, props.getProperty(propertyName));
         }
@@ -322,7 +322,7 @@ public class FBDriverPropertyManager {
     public static DriverPropertyInfo[] getDriverPropertyInfo(Properties props) {
         List<DriverPropertyInfo> result = new ArrayList<DriverPropertyInfo>();
         // TODO: Replace with iterating over stringPropertyNames() when Java 5 support is dropped
-        for (Enumeration propertyNames = props.propertyNames(); propertyNames.hasMoreElements();) {
+        for (Enumeration<?> propertyNames = props.propertyNames(); propertyNames.hasMoreElements();) {
             String propName = (String)propertyNames.nextElement();
             Object propValue = props.getProperty(propName);
             

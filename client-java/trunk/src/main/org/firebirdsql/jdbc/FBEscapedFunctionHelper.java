@@ -171,7 +171,7 @@ public class FBEscapedFunctionHelper {
             parenthesisStart + 1, functionCall.length() - 1);
             
         List<String> params = new ArrayList<String>();
-        StringBuffer sb = new StringBuffer();
+        StringBuilder sb = new StringBuilder();
         boolean inQuotes = false;
         boolean inDoubleQuotes = false;
         
@@ -209,7 +209,7 @@ public class FBEscapedFunctionHelper {
                         sb.append(chars[i]);
                     else {
                         params.add(sb.toString());
-                        sb = new StringBuffer();
+                        sb.setLength(0);
                     }
                     break;
                   

@@ -205,8 +205,8 @@ public class FBEscapedParser {
             return sql;
 
         char[] sqlbuff = sql.toCharArray();
-        StringBuffer buffer = new StringBuffer();
-        StringBuffer escape = new StringBuffer();
+        final StringBuilder buffer = new StringBuilder();
+        final StringBuilder escape = new StringBuilder();
 
         for(int i = 0; i < sqlbuff.length; i++) {
 
@@ -219,7 +219,7 @@ public class FBEscapedParser {
             if (isInState(NORMAL_STATE) && wasInState(ESCAPE_STATE)) {
                 // escape now is in form "{...." without trailing '}'...
                 buffer.append(escapeToNative(escape.substring(1, escape.length())));
-                escape = new StringBuffer();
+                escape.setLength(0);
                 setState(NORMAL_STATE);
             } else
             if (isInState(ESCAPE_STATE))
@@ -231,8 +231,8 @@ public class FBEscapedParser {
         return buffer.toString();
     }
 
-    protected void processEscaped(String escaped, StringBuffer keyword,
-        StringBuffer payload)
+    protected void processEscaped(String escaped, StringBuilder keyword,
+            StringBuilder payload)
     {
         if (keyword.length() != 0) keyword.delete(0, keyword.length());
         if (payload.length() != 0) payload.delete(0, payload.length());
@@ -255,8 +255,8 @@ public class FBEscapedParser {
      * @return the native representation of the SQL code.
      */
     protected String escapeToNative(String escaped) throws FBSQLException {
-        StringBuffer keyword = new StringBuffer();
-        StringBuffer payload = new StringBuffer();
+        StringBuilder keyword = new StringBuilder();
+        StringBuilder payload = new StringBuilder();
 
         processEscaped(escaped, keyword, payload);
 
@@ -265,7 +265,7 @@ public class FBEscapedParser {
          */
         if (keyword.toString().equalsIgnoreCase(ESCAPE_CALL_KEYWORD)){
             
-            StringBuffer call = new StringBuffer();
+            StringBuilder call = new StringBuilder();
             call
                 .append('{')
                 .append(keyword)
@@ -278,7 +278,7 @@ public class FBEscapedParser {
         } else
         if (keyword.toString().equalsIgnoreCase(ESCAPE_CALL_KEYWORD3)) {
             
-            StringBuffer call = new StringBuffer();
+            StringBuilder call = new StringBuilder();
             
             call
                 .append('{')

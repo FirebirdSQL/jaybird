@@ -358,8 +358,8 @@ public class FBConnectionProperties implements FirebirdConnectionProperties, Ser
 
     public void setNonStandardProperty(String propertyMapping) {
         char[] chars = propertyMapping.toCharArray();
-        StringBuffer key = new StringBuffer();
-        StringBuffer value = new StringBuffer();
+        StringBuilder key = new StringBuilder();
+        StringBuilder value = new StringBuilder();
 
         boolean keyProcessed = false;
         for (int i = 0; i < chars.length; i++) {

@@ -142,7 +142,8 @@ public class FBEscapedCallParser {
      * @throws FBSQLParseException if cleanup resulted in empty statement.
      */
     private String cleanUpCall(String sql) throws FBSQLParseException {
-        StringBuffer cleanupBuffer = new StringBuffer(sql);
+        // TODO Consider replacing with processing into buffer or simply String.trim(), as deleting is not very efficient
+        StringBuilder cleanupBuffer = new StringBuilder(sql);
         
         // remove spaces at the beginning
         while(cleanupBuffer.length() > 0 && 
@@ -201,8 +202,8 @@ public class FBEscapedCallParser {
         
         setState(NORMAL_STATE);
         
-        char[] sqlbuff = sql.toCharArray();
-        StringBuffer buffer = new StringBuffer();
+        final char[] sqlbuff = sql.toCharArray();
+        final StringBuilder buffer = new StringBuilder();
         
          for(int i = 0; i < sqlbuff.length; i++) {
              switchState(sqlbuff[i]);
@@ -230,7 +231,7 @@ public class FBEscapedCallParser {
                              isFirstOutParam = true;
                              paramPosition++;
                              
-                             buffer = new StringBuffer();
+                             buffer.setLength(0);
                              continue;
                          }
                      }
@@ -260,7 +261,7 @@ public class FBEscapedCallParser {
                  if (!isNameProcessed) {
                      boolean tokenProcessed = processToken(token);
                      if (tokenProcessed) {
-                     	buffer = new StringBuffer();
+                     	buffer.setLength(0);
                         setState(NORMAL_STATE);
                         if (isNameProcessed){
                             // If we just found a name, fast-forward to the 
@@ -300,7 +301,7 @@ public class FBEscapedCallParser {
                      procedureCall.setName(token);
                      isNameProcessed = true;
                      
-                     buffer = new StringBuffer();
+                     buffer.setLength(0);
                      
                  } else {
                      buffer.append(sqlbuff[i]);
@@ -328,7 +329,7 @@ public class FBEscapedCallParser {
                  }
                  
                  String param = processParam(buffer.toString());
-                 buffer = new StringBuffer();
+                 buffer.setLength(0);
                  
                  FBProcedureParam callParam = 
                      procedureCall.addParam(paramPosition, param);

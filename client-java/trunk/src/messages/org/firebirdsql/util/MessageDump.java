@@ -29,7 +29,7 @@ public class MessageDump {
     private static String extractMessage(String fbMessage) {
         char[] chars = fbMessage.toCharArray();
 
-        StringBuffer sb = new StringBuffer();
+        StringBuilder sb = new StringBuilder();
         int counter = 0;
 
         for (int i = 0; i < chars.length; i++) {
@@ -161,7 +161,7 @@ public class MessageDump {
 
     private static String saveConvert(String theString, boolean escapeSpace) {
         int len = theString.length();
-        StringBuffer outBuffer = new StringBuffer(len * 2);
+        StringBuilder outBuffer = new StringBuilder(len * 2);
 
         for (int x = 0; x < len; x++) {
             char aChar = theString.charAt(x);

@@ -172,17 +172,17 @@ public class FBServiceManager implements ServiceManager {
     }
     
     public String getServiceName() {
-        StringBuffer sb = new StringBuffer();
+        StringBuilder sb = new StringBuilder();
         if (getHost() != null) {
             
             sb.append(getHost());
             
             if (getPort() != 3050) {
-                sb.append("/");
+                sb.append('/');
                 sb.append(getPort());
             }
             
-            sb.append(":");
+            sb.append(':');
         }
         sb.append("service_mgr");
         return sb.toString();

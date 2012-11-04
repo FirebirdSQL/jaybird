@@ -64,12 +64,12 @@ public class OOGDSFactoryPlugin extends BaseGDSFactoryPlugin {
         if (path == null)
             throw new GDSException("Database name/path is required.");
 
-        StringBuffer sb = new StringBuffer();
+        StringBuilder sb = new StringBuilder();
 
         sb.append(server);
-        if (port != null) sb.append("/").append(port.intValue());
+        if (port != null) sb.append('/').append(port.intValue());
 
-        sb.append(":").append(path);
+        sb.append(':').append(path);
 
         return sb.toString();
     }

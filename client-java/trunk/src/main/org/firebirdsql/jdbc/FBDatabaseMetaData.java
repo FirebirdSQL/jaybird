@@ -6032,7 +6032,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
      * @return pattern with all backslash-escapes removed
      */
     public String stripEscape(String pattern) {
-        StringBuffer stripped = new StringBuffer(pattern.length());
+        StringBuilder stripped = new StringBuilder(pattern.length());
         for (int pos = 0; pos < pattern.length(); pos++) {
             if (pattern.charAt(pos) != '\\') {
                 stripped.append(pattern.charAt(pos));
