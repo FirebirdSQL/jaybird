@@ -28,6 +28,7 @@ package org.firebirdsql.gds.impl.jni;
 
 import org.firebirdsql.gds.XSQLDA;
 import org.firebirdsql.gds.GDSException;
+import org.firebirdsql.gds.impl.AbstractIscDbHandle;
 import org.firebirdsql.gds.impl.AbstractIscStmtHandle;
 import org.firebirdsql.gds.impl.AbstractIscTrHandle;
 
@@ -42,7 +43,7 @@ public final class isc_stmt_handle_impl extends AbstractIscStmtHandle {
     private int rsr_id;
     private int rsr_id_ptr = 0;
 
-    private isc_db_handle_impl rsr_rdb;
+    private AbstractIscDbHandle rsr_rdb;
     private XSQLDA in_sqlda = null;
     private XSQLDA out_sqlda = null;
     private byte[][][] rows;
@@ -169,11 +170,11 @@ public final class isc_stmt_handle_impl extends AbstractIscStmtHandle {
         this.rsr_id_ptr = rsr_id_ptr;
     }
 
-    public isc_db_handle_impl getRsr_rdb() {
+    public AbstractIscDbHandle getRsr_rdb() {
         return rsr_rdb;
     }
 
-    public void setRsr_rdb(isc_db_handle_impl value) {
+    public void setRsr_rdb(AbstractIscDbHandle value) {
         rsr_rdb = value;
     }
 

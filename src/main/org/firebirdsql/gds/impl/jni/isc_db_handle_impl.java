@@ -37,29 +37,8 @@ import org.firebirdsql.gds.impl.AbstractIscDbHandle;
  * @version 1.0
  */
 public final class isc_db_handle_impl extends AbstractIscDbHandle {
-
-    private int rdb_id_ptr;
-
-    protected void invalidate() {
+    
+    public void invalidate() throws Exception {
         invalidateHandle();
-    }
-
-    void setRdb_id_ptr(int rdb_id_ptr, int value) {
-        setRdbId(value);
-        this.rdb_id_ptr = rdb_id_ptr;
-    }
-
-    public int getRdb_id_ptr() {
-        return rdb_id_ptr;
-    }
-
-    void addTransaction(isc_tr_handle_impl tr) {
-        checkValidity();
-        rdb_transactions.add(tr);
-    }
-
-    void removeTransaction(isc_tr_handle_impl tr) {
-        checkValidity();
-        rdb_transactions.remove(tr);
     }
 }

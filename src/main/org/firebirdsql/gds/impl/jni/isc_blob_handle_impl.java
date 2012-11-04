@@ -20,6 +20,7 @@
 package org.firebirdsql.gds.impl.jni;
 
 import org.firebirdsql.gds.*;
+import org.firebirdsql.gds.impl.AbstractIscDbHandle;
 
 /**
  * Describe class <code>isc_blob_handle_impl</code> here.
@@ -29,7 +30,7 @@ import org.firebirdsql.gds.*;
  */
 public final class isc_blob_handle_impl implements IscBlobHandle {
 
-    private isc_db_handle_impl db;
+    private AbstractIscDbHandle db;
 
     private isc_tr_handle_impl tr;
 
@@ -54,11 +55,11 @@ public final class isc_blob_handle_impl implements IscBlobHandle {
         tr = value;
     }
 
-    public isc_db_handle_impl getDb() {
+    public AbstractIscDbHandle getDb() {
         return db;
     }
 
-    public void setDb(isc_db_handle_impl value) {
+    public void setDb(AbstractIscDbHandle value) {
         db = value;
     }
 

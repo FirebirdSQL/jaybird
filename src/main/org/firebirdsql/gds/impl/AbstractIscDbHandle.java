@@ -37,6 +37,7 @@ import javax.security.auth.Subject;
 
 import org.firebirdsql.gds.GDSException;
 import org.firebirdsql.gds.IscDbHandle;
+import org.firebirdsql.gds.IscTrHandle;
 
 
 /**
@@ -57,16 +58,10 @@ public abstract class AbstractIscDbHandle implements IscDbHandle {
     private GDSServerVersion serverVersion;
     private int ODSMajorVersion;
     private int ODSMinorVersion;
-    private int resp_object;
-    private byte[] resp_data;
-    protected final Collection<AbstractIscTrHandle> rdb_transactions = Collections.synchronizedList(new ArrayList<AbstractIscTrHandle>());
+    protected final Collection<IscTrHandle> rdb_transactions = Collections.synchronizedList(new ArrayList<IscTrHandle>());
     private long resp_blob_id;
     
     protected AbstractIscDbHandle() {
-    }
-    
-    protected AbstractIscDbHandle(byte[] defaultResp_data) {
-        resp_data = defaultResp_data;
     }
     
     public int getDatabaseProductMajorVersion() {
@@ -169,30 +164,14 @@ public abstract class AbstractIscDbHandle implements IscDbHandle {
         rdb_warnings.clear();
     }
 
-    public void setResp_object(int value) {
-        resp_object = value;
-    }
-
-    public int getResp_object() {
-        return resp_object;
-    }
-
-    public void setResp_data(byte[] value) {
-        resp_data = value;
-    }
-
-    public byte[] getResp_data() {
-        return resp_data;
-    }
-
     public boolean hasTransactions() {
         checkValidity();
         return !rdb_transactions.isEmpty();
     }
 
-    public Collection<AbstractIscTrHandle> getTransactions() {
+    public Collection<IscTrHandle> getTransactions() {
         synchronized (rdb_transactions) {
-            return new ArrayList<AbstractIscTrHandle>(rdb_transactions);
+            return new ArrayList<IscTrHandle>(rdb_transactions);
         }
     }
 
@@ -211,6 +190,16 @@ public abstract class AbstractIscDbHandle implements IscDbHandle {
     
     protected final synchronized void invalidateHandle() {
         invalid = true;
+    }
+
+    public void addTransaction(IscTrHandle tr) {
+        checkValidity();
+        rdb_transactions.add(tr);
+    }
+
+    public void removeTransaction(IscTrHandle tr) {
+        checkValidity();
+        rdb_transactions.remove(tr);
     }
    
 }
