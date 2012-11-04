@@ -135,10 +135,10 @@ public class DriverExample {
                  * property list.
                  */
                 java.util.Properties sysProps = System.getProperties();
-                StringBuffer drivers = new StringBuffer("org.firebirdsql.jdbc.FBDriver");
+                StringBuilder drivers = new StringBuilder("org.firebirdsql.jdbc.FBDriver");
                 String oldDrivers = sysProps.getProperty("jdbc.drivers");
                 if (oldDrivers != null)
-                    drivers.append(":" + oldDrivers);
+                    drivers.append(':').append(oldDrivers);
                 sysProps.put("jdbc.drivers", drivers.toString());
                 System.setProperties(sysProps);
                 break;

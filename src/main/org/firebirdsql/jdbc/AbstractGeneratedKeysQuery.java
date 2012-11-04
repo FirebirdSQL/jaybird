@@ -352,9 +352,9 @@ public abstract class AbstractGeneratedKeysQuery {
         }
         generatesKeys = true;
 
-        StringBuffer query = new StringBuffer(originalSQL);
+        StringBuilder query = new StringBuilder(originalSQL);
         if (query.charAt(query.length() - 1) == ';') {
-            query.deleteCharAt(query.length() - 1);
+            query.setLength(query.length() - 1);
         }
         query.append('\n');
         query.append("RETURNING ");
@@ -362,7 +362,7 @@ public abstract class AbstractGeneratedKeysQuery {
             query.append(columnNames[i]);
 
             if (i < columnNames.length - 1) {
-                query.append(", ");
+                query.append(',');
             }
         }
 

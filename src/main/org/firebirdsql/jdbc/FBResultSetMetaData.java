@@ -762,7 +762,7 @@ public class FBResultSetMetaData implements FirebirdResultSetMetaData {
         int pending = xsqlvars.length;
         Map<FieldKey, ExtendedFieldInfo> result = new HashMap<FieldKey, ExtendedFieldInfo>();
         while (pending > 0){
-            StringBuffer sb = new StringBuffer();
+            StringBuilder sb = new StringBuilder();
             List<String> params = new ArrayList<String>();
 
             int maxLength = (pending>70) ? 70 : pending;
@@ -779,7 +779,7 @@ public class FBResultSetMetaData implements FirebirdResultSetMetaData {
                 params.add(relationName);
 
                 if (i < maxLength - 1)
-                    sb.append("\n").append("UNION").append("\n");
+                    sb.append('\n').append("UNION").append('\n');
             }
 
             FBDatabaseMetaData metaData = new FBDatabaseMetaData(gdsHelper);

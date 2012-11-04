@@ -567,10 +567,7 @@ public class FBBlob implements FirebirdBlob, Synchronizable {
         byte[] buffer = new byte[Math.min(bufferlength, length)];
         int chunk;
         try {
-            while (length > 0) {
-                chunk = inputStream.read(buffer, 0, ((length < bufferlength) ? length : bufferlength));
-                if (chunk == -1)
-                    break;
+            while (length > 0 && (chunk = inputStream.read(buffer, 0, Math.min(buffer.length, length))) != 1) {
                 os.write(buffer, 0, chunk);
                 length -= chunk;
             }

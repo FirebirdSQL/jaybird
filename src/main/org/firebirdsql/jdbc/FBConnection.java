@@ -1451,6 +1451,11 @@ public class FBConnection implements FirebirdConnection {
         return iface.cast(this);
     }
 
+    /**
+     * 
+     * @param schema
+     * @throws SQLException
+     */
     public void setSchema(String schema) throws SQLException {
         // Ignore: no schema support
         checkValidity();

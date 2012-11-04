@@ -198,13 +198,12 @@ public final class isc_stmt_handle_impl extends AbstractIscStmtHandle {
     }
 
     public static void printRow(byte[][] row) {
-        StringBuffer sb = new StringBuffer();
-        sb.append("\t");
+        StringBuilder sb = new StringBuilder();
+        sb.append('\t');
         
         if (row == null)
             sb.append("null");
         else {
-            
             for (int i = 0; i < row.length; i++) {
                 
                 if (row[i] == null)
@@ -213,11 +212,11 @@ public final class isc_stmt_handle_impl extends AbstractIscStmtHandle {
                     for (int j = 0; j < row[i].length; j++) {
                         String hexValue = Integer.toHexString(row[i][j] & 0xff);
                         if (hexValue.length() == 1)
-                            hexValue = "0" + hexValue;
+                            sb.append(0);
                         
                         sb.append(hexValue);
                         if (j < row[i].length - 1)
-                            sb.append(" ");
+                            sb.append(' ');
                     }
                 }
                 

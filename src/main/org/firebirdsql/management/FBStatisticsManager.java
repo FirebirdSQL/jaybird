@@ -119,7 +119,7 @@ public class FBStatisticsManager extends FBServiceManager
         ServiceRequestBuffer srb = createStatsSRB(ISCConstants.isc_spb_sts_table);
 
         // create space-separated list of tables
-        StringBuffer commandLine = new StringBuffer();
+        StringBuilder commandLine = new StringBuilder();
         for (int i = 0; i < tableNames.length; i++) {
             commandLine.append(tableNames[i]);
             if (i < tableNames.length - 1)

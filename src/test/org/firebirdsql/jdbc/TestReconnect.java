@@ -46,19 +46,6 @@ public class TestReconnect extends FBTestBase
         super(testName);
     }
 
-    protected void setUp() throws Exception {
-        super.setUp();
-        Class.forName(org.firebirdsql.jdbc.FBDriver.class.getName());
-        //driver = DriverManager.getDriver(DB_DRIVER_URL);
-    }
-
-
-
-    protected void tearDown() throws Exception
-    {
-        super.tearDown();
-    }
-
     private static String getTableName(int no)
     {
         return "TEST" + no;
@@ -193,7 +180,7 @@ public class TestReconnect extends FBTestBase
 
         for (int i = 1; i <= TABLE_COUNT; i++) {
             String table = getTableName(i);
-            StringBuffer sql = new StringBuffer(100);
+            StringBuilder sql = new StringBuilder(100);
             sql.append("CREATE TABLE ");
             sql.append(table);
             sql.append(" (\n" +
@@ -216,7 +203,7 @@ public class TestReconnect extends FBTestBase
         for (int i = 2; i <= TABLE_COUNT; i++) {
             String thisTable = getTableName(i);
             String refTable = getTableName(i - 1);
-            StringBuffer sql = new StringBuffer(100);
+            StringBuilder sql = new StringBuilder(100);
             sql.append("ALTER TABLE ");
             sql.append(thisTable);
             sql.append(" ADD CONSTRAINT FK_");
@@ -240,7 +227,7 @@ public class TestReconnect extends FBTestBase
         for (int i = 2; i <= TABLE_COUNT; i++) {
             String thisTable = getTableName(i);
             String refTable = getTableName(i - 1);
-            StringBuffer sql = new StringBuffer(100);
+            StringBuilder sql = new StringBuilder(100);
             sql.append("ALTER TABLE ");
             sql.append(thisTable);
             sql.append(" DROP CONSTRAINT FK_");
@@ -270,7 +257,7 @@ public class TestReconnect extends FBTestBase
             log.info("Populating test tables ...");
         Random random = new Random();
         for (int i = 1; i <= TABLE_COUNT; i++) {
-            StringBuffer sql = new StringBuffer(100);
+            StringBuilder sql = new StringBuilder(100);
             sql.append("INSERT INTO ");
             sql.append(getTableName(i));
             sql.append(" (ID,NR,X1,X2,X3");
@@ -308,7 +295,7 @@ public class TestReconnect extends FBTestBase
                 log.info(title);
                 log.info("-------------------------------------------------------------------------------");
             }
-            StringBuffer sb = new StringBuffer();
+            StringBuilder sb = new StringBuilder();
             for (int i = 1; i <= cols; i++) {
                 if (i > 1)
                     sb.append('\t');
@@ -320,7 +307,7 @@ public class TestReconnect extends FBTestBase
             }
         }
         while (rs.next()) {
-            StringBuffer sb = new StringBuffer();
+            StringBuilder sb = new StringBuilder();
             for (int i = 1; i <= cols; i++) {
                 String value = rs.getString(i);
                         
