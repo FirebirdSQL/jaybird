@@ -27,6 +27,7 @@ package org.firebirdsql.gds.impl.jni;
 
 import org.firebirdsql.gds.IscDbHandle;
 import org.firebirdsql.gds.GDSException;
+import org.firebirdsql.gds.impl.AbstractIscDbHandle;
 import org.firebirdsql.gds.impl.AbstractIscStmtHandle;
 import org.firebirdsql.gds.impl.AbstractIscTrHandle;
 
@@ -48,7 +49,7 @@ public final class isc_tr_handle_impl extends AbstractIscTrHandle {
     private int rtr_id;
     private int rtr_id_ptr = 0;
 
-    private isc_db_handle_impl rtr_rdb;
+    private AbstractIscDbHandle rtr_rdb;
     private List<isc_blob_handle_impl> blobs = Collections.synchronizedList(new LinkedList<isc_blob_handle_impl>());
     private Set<AbstractIscStmtHandle> stmts = Collections.synchronizedSet(new HashSet<AbstractIscStmtHandle>());
 
@@ -91,7 +92,7 @@ public final class isc_tr_handle_impl extends AbstractIscTrHandle {
         return rtr_id_ptr;
     }
 
-    void setDbHandle(final isc_db_handle_impl db) {
+    void setDbHandle(final AbstractIscDbHandle db) {
         this.rtr_rdb = db;
         rtr_rdb.addTransaction(this);
     }

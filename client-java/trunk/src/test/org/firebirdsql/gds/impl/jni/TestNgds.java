@@ -33,6 +33,7 @@ import org.firebirdsql.gds.IscDbHandle;
 import org.firebirdsql.gds.IscTrHandle;
 import org.firebirdsql.gds.XSQLDA;
 import org.firebirdsql.gds.XSQLVAR;
+import org.firebirdsql.gds.impl.AbstractIscDbHandle;
 import org.firebirdsql.gds.impl.GDSFactory;
 import org.firebirdsql.gds.impl.GDSType;
 import org.firebirdsql.jca.FBTpb;
@@ -177,8 +178,8 @@ public class TestNgds extends TestCase {
         db2 = gds.createIscDbHandle();
         gds.iscAttachDatabase(getdbpath(dbName), db2, c);
 
-        if (log != null) log.info("test- rdb_id1: " + ((isc_db_handle_impl)db1).getRdbId());
-        if (log != null) log.info("test- rdb_id2: " + ((isc_db_handle_impl)db2).getRdbId());
+        if (log != null) log.info("test- rdb_id1: " + ((AbstractIscDbHandle)db1).getRdbId());
+        if (log != null) log.info("test- rdb_id2: " + ((AbstractIscDbHandle)db2).getRdbId());
         if (log != null) log.info("test- isc_detach_database");
 
         gds.iscDetachDatabase(db1);
@@ -197,8 +198,8 @@ public class TestNgds extends TestCase {
         db1 = createDatabase(dbName);
         db2 = createDatabase(dbName2);
 
-        if (log != null) log.info("test- rdb_id1: " + ((isc_db_handle_impl)db1).getRdbId());
-        if (log != null) log.info("test- rdb_id2: " + ((isc_db_handle_impl)db2).getRdbId());
+        if (log != null) log.info("test- rdb_id1: " + ((AbstractIscDbHandle)db1).getRdbId());
+        if (log != null) log.info("test- rdb_id2: " + ((AbstractIscDbHandle)db2).getRdbId());
 
         t1 = startTransaction(db1);
         doSQLImmed(db1, t1, "create table r1 (col1 smallint not null primary key)");

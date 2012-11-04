@@ -109,7 +109,7 @@ public abstract class AbstractJavaGDSImpl extends AbstractGDS implements GDS {
 
 	static final int op_write_page = 14; /* write page and optionally release lock */
 
-	static final int op_lock = 15; /* sieze lock */
+	static final int op_lock = 15; /* seize lock */
 
 	static final int op_convert_lock = 16; /* convert existing lock */
 
@@ -177,7 +177,7 @@ public abstract class AbstractJavaGDSImpl extends AbstractGDS implements GDS {
 
 	static final int op_mgr_report = 47; /* Report on server */
 
-	static final int op_que_events = 48; /* Que event notification request */
+	static final int op_que_events = 48; /* Queue event notification request */
 
 	static final int op_cancel_events = 49; /* Cancel event notification request */
 
@@ -187,10 +187,7 @@ public abstract class AbstractJavaGDSImpl extends AbstractGDS implements GDS {
 
 	static final int op_event = 52; /* Completed event request (asynchronous) */
 
-	static final int op_connect_request = 53; /*
-												 * Request to establish
-												 * connection
-												 */
+	static final int op_connect_request = 53; /* Request to establish connection */
 
 	static final int op_aux_connect = 54; /* Establish auxiliary connection */
 
@@ -204,10 +201,7 @@ public abstract class AbstractJavaGDSImpl extends AbstractGDS implements GDS {
 
 	static final int op_put_slice = 59;
 
-	static final int op_slice = 60; /*
-									 * Successful response to static final int
-									 * op_get_slice
-									 */
+	static final int op_slice = 60; /* Successful response to static final int op_get_slice */
 
 	static final int op_seek_blob = 61; /* Blob seek operation */
 
@@ -388,19 +382,6 @@ public abstract class AbstractJavaGDSImpl extends AbstractGDS implements GDS {
 
 	    DbAttachInfo dbai = new DbAttachInfo(file_name);
 	    internalAttachDatabase(dbai, db_handle, databaseParameterBuffer, true);
-	}
-
-	/**
-	 * @deprecated This method will be removed in Jaybird 2.3
-	 */
-	@Deprecated
-	public void internalAttachDatabase(String host, Integer port,
-			String file_name, IscDbHandle db_handle,
-			DatabaseParameterBuffer databaseParameterBuffer)
-			throws GDSException {
-	    // TODO: Unused, remove?
-		DbAttachInfo dbai = new DbAttachInfo(host, port, file_name);
-		internalAttachDatabase(dbai, db_handle, databaseParameterBuffer, false);
 	}
 
 	public void iscAttachDatabase(String connectString, IscDbHandle db_handle,
@@ -1609,7 +1590,6 @@ public abstract class AbstractJavaGDSImpl extends AbstractGDS implements GDS {
 		isc_stmt_handle_impl stmt = (isc_stmt_handle_impl) stmt_handle;
 		isc_db_handle_impl db = stmt.getRsr_rdb();
 
-
 		synchronized (db) {
 			try {
 				if (debug)
@@ -1843,6 +1823,8 @@ public abstract class AbstractJavaGDSImpl extends AbstractGDS implements GDS {
 				int len = 0;
 				int srcpos = 0;
 				int destpos = 0;
+				// TODO It looks like this might cause IndexOutOfBounds if srcpos = bufferLength - 1 and bufferLength = buffer.length
+				// TODO Or might read garbage if bufferLength is smaller than buffer.length
 				while (srcpos < bufferLength) {
 					len = iscVaxInteger(buffer, srcpos, 2);
 					srcpos += 2;
@@ -2225,9 +2207,7 @@ public abstract class AbstractJavaGDSImpl extends AbstractGDS implements GDS {
 				case ISCConstants.isc_arg_gds:
 					int er = db.in.readInt();
 					if (debug)
-						log
-								.debug("readStatusVector arg:isc_arg_gds int: "
-										+ er);
+						log.debug("readStatusVector arg:isc_arg_gds int: " + er);
 					if (er != 0) {
 						GDSException td = new GDSException(arg, er);
 						if (head == null) {
@@ -2279,9 +2259,7 @@ public abstract class AbstractJavaGDSImpl extends AbstractGDS implements GDS {
 				default:
 					int e = db.in.readInt();
 					if (debug)
-						log
-								.debug("readStatusVector arg: " + arg
-										+ " int: " + e);
+						log.debug("readStatusVector arg: " + arg + " int: " + e);
 					if (e != 0) {
 						GDSException td = new GDSException(arg, e);
 						if (head == null) {
@@ -2296,8 +2274,7 @@ public abstract class AbstractJavaGDSImpl extends AbstractGDS implements GDS {
 				}
 			}
 		} catch (IOException ioe) {
-			// ioe.getMessage() makes little sense here, it will not be
-			// displayed
+			// ioe.getMessage() makes little sense here, it will not be displayed
 			// because error message for isc_net_read_err does not accept params
 			throw new GDSException(ISCConstants.isc_arg_gds,
 					ISCConstants.isc_net_read_err, ioe.getMessage());

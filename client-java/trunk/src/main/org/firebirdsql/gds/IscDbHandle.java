@@ -145,5 +145,7 @@ public interface IscDbHandle {
      *         <code>false</code> otherwise
      */
     boolean isValid();
+    
+    void invalidate() throws Exception;
 }
 
