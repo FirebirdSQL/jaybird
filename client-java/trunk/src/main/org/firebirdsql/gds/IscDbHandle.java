@@ -32,6 +32,7 @@
 
 package org.firebirdsql.gds;
 
+import java.util.Collection;
 import java.util.List;
 
 /**
@@ -111,6 +112,8 @@ public interface IscDbHandle {
      * @return Protocol version number
      */
     int getProtocol();
+    
+    void setProtocol(int value);
 
     /**
      * @return the major ODS version of the database. 
@@ -147,5 +150,19 @@ public interface IscDbHandle {
     boolean isValid();
     
     void invalidate() throws Exception;
+    
+    void addTransaction(IscTrHandle tr);
+    
+    void removeTransaction(IscTrHandle tr);
+    
+    Collection<IscTrHandle> getTransactions();
+    
+    boolean hasTransactions();
+    
+    int getOpenTransactionCount();
+    
+    void setRdbId(int rdb_id);
+    
+    int getRdbId();
 }
 

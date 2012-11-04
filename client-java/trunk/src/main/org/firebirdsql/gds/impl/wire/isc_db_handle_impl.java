@@ -50,6 +50,7 @@ public final class isc_db_handle_impl extends AbstractIscDbHandle {
     private int resp_object;
     private byte[] resp_data;
     private int resp_data_len;
+    private long resp_blob_id;
 
     isc_db_handle_impl() {
         resp_data = new byte[DEFAULT_RESP_DATA];
@@ -125,5 +126,13 @@ public final class isc_db_handle_impl extends AbstractIscDbHandle {
 
     void setResp_data(byte[] value) {
         resp_data = value;
+    }
+
+    public void setResp_blob_id(long value) {
+        resp_blob_id = value;
+    }
+
+    public long getResp_blob_id() {
+        return resp_blob_id;
     }
 }

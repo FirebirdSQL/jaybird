@@ -34,7 +34,6 @@ public final class isc_blob_handle_impl implements IscBlobHandle {
     private isc_tr_handle_impl tr;
     private int rbl_id;
     private long blob_id;
-//    private isc_blob_handle_impl next;
     private int rbl_flags;
     private int position;
 

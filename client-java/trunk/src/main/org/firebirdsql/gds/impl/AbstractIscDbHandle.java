@@ -33,12 +33,9 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
-import javax.security.auth.Subject;
-
 import org.firebirdsql.gds.GDSException;
 import org.firebirdsql.gds.IscDbHandle;
 import org.firebirdsql.gds.IscTrHandle;
-
 
 /**
  * Abstract implementation of {@link org.firebirdsql.gds.IscDbHandle} interface.
@@ -47,11 +44,8 @@ import org.firebirdsql.gds.IscTrHandle;
  */
 public abstract class AbstractIscDbHandle implements IscDbHandle {
     
-    // TODO: Consider to introduce generics on isc_tr_handle_impl (so methods can be moved up from isc_db_handle_impl)
-
     private volatile boolean invalid;
     private int rdb_id;
-    private Subject subject;
     private final List<GDSException> rdb_warnings = Collections.synchronizedList(new ArrayList<GDSException>());
     private int dialect;
     private int protocol;
@@ -59,10 +53,6 @@ public abstract class AbstractIscDbHandle implements IscDbHandle {
     private int ODSMajorVersion;
     private int ODSMinorVersion;
     protected final Collection<IscTrHandle> rdb_transactions = Collections.synchronizedList(new ArrayList<IscTrHandle>());
-    private long resp_blob_id;
-    
-    protected AbstractIscDbHandle() {
-    }
     
     public int getDatabaseProductMajorVersion() {
         return serverVersion.getMajorVersion();
@@ -124,11 +114,6 @@ public abstract class AbstractIscDbHandle implements IscDbHandle {
         return !invalid;
     }
 
-    protected void checkValidity() {
-        if (invalid)
-            throw new IllegalStateException("This database handle is invalid and cannot be used anymore.");
-    }
-
     public void setRdbId(int rdb_id) {
         checkValidity();
         this.rdb_id = rdb_id;
@@ -137,14 +122,6 @@ public abstract class AbstractIscDbHandle implements IscDbHandle {
     public int getRdbId() {
         checkValidity();
         return rdb_id;
-    }
-
-    public void setSubject(Subject subject) {
-        this.subject = subject;
-    }
-
-    public Subject getSubject() {
-        return subject;
     }
 
     public List<GDSException> getWarnings() {
@@ -180,18 +157,6 @@ public abstract class AbstractIscDbHandle implements IscDbHandle {
         return rdb_transactions.size();
     }
 
-    public void setResp_blob_id(long value) {
-        resp_blob_id = value;
-    }
-
-    public long getResp_blob_id() {
-        return resp_blob_id;
-    }
-    
-    protected final synchronized void invalidateHandle() {
-        invalid = true;
-    }
-
     public void addTransaction(IscTrHandle tr) {
         checkValidity();
         rdb_transactions.add(tr);
@@ -201,5 +166,13 @@ public abstract class AbstractIscDbHandle implements IscDbHandle {
         checkValidity();
         rdb_transactions.remove(tr);
     }
-   
+    
+    protected final synchronized void invalidateHandle() {
+        invalid = true;
+    }
+    
+    protected void checkValidity() {
+        if (invalid)
+            throw new IllegalStateException("This database handle is invalid and cannot be used anymore.");
+    }
 }
