@@ -90,7 +90,7 @@ public class GDSHelper {
             listener.errorOccured(ex);
     }
         
-    public synchronized AbstractIscTrHandle getCurrentTrHandle() {
+    public synchronized IscTrHandle getCurrentTrHandle() {
         return currentTr;
     }
     
@@ -592,7 +592,7 @@ public class GDSHelper {
         }
     }
     
-    public void prepareTransaction(AbstractIscTrHandle trHandle, byte[] message) throws GDSException {
+    public void prepareTransaction(IscTrHandle trHandle, byte[] message) throws GDSException {
         try {
             gds.iscPrepareTransaction2(trHandle, message);
         } catch(GDSException ex) {
@@ -601,7 +601,7 @@ public class GDSHelper {
         }
     }
     
-    public void commitTransaction(AbstractIscTrHandle trHandle) throws GDSException {
+    public void commitTransaction(IscTrHandle trHandle) throws GDSException {
         try {
             gds.iscCommitTransaction(trHandle);
         } catch(GDSException ex) {
@@ -610,7 +610,7 @@ public class GDSHelper {
         }
     }
     
-    public void rollbackTransaction(AbstractIscTrHandle trHandle) throws GDSException {
+    public void rollbackTransaction(IscTrHandle trHandle) throws GDSException {
         try {
             gds.iscRollbackTransaction(trHandle);
         } catch(GDSException ex) {

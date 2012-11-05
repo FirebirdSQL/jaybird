@@ -44,10 +44,79 @@ package org.firebirdsql.gds;
  */
 public interface IscTrHandle {
 
+    // TODO Replace with enum
+    public static final int NOTRANSACTION = 0;
+    public static final int TRANSACTIONSTARTING = 1;
+    public static final int TRANSACTIONSTARTED = 2;
+    public static final int TRANSACTIONPREPARING = 3;
+    public static final int TRANSACTIONPREPARED = 4;
+    public static final int TRANSACTIONCOMMITTING = 5;
+    public static final int TRANSACTIONROLLINGBACK = 6;
+
+    int getTransactionId();
+    
+    void setTransactionId(final int rtr_id);
+    
     /**
      * Retrieve a handle to the database to which this transaction is linked.
      *
      * @return Handle to the database
      */
     IscDbHandle getDbHandle();
+    
+    /**
+     * Sets a handle to the database to which this transaction is linked.
+     *
+     * @return Handle to the database
+     */
+    void setDbHandle(IscDbHandle db);
+    
+    /**
+     * Clears the database handle associated with this transaction
+     */
+    public void unsetDbHandle();
+    
+    /**
+     * Add a warning to the connection associated with this transaction.
+     * 
+     * @param warning Warning to add
+     */
+    void addWarning(GDSException warning);
+    
+    /**
+     * Get the current state of the transaction to which this handle is
+     * pointing. The state is equal to one of the <code>TRANSACTION*</code> 
+     * constants of this interface, or the <code>NOTRANSACTION</code> constant,
+     * also of this interface.
+     *
+     * @return The corresponding value for the current state
+     */
+    int getState();
+    
+    void setState(int state);
+    
+    void addBlob(IscBlobHandle blob);
+    
+    void removeBlob(IscBlobHandle blob);
+    
+    /**
+     * Register a statement within the transaction to which this handle points.
+     * This method allows automated cleanup of the rows fetched within a 
+     * transaction on commit or rollback point.
+     *
+     * @param stmt Handle to the statement to be registered.
+     */
+    void registerStatementWithTransaction(IscStmtHandle stmt);
+    
+    /**
+     * Unregister a statement from the transaction in which it was registered.
+     *
+     * @param stmt Handle to the statement to be unregistered.
+     */
+    void unregisterStatementFromTransaction(IscStmtHandle stmt);
+    
+    /**
+     * Clear all the saved result sets from this handle.
+     */
+    void forgetResultSets();
 }
