@@ -86,7 +86,7 @@ public class TestReconnectTransaction extends FBTestBase {
         
         GDSHelper gdsHelper1 = new GDSHelper(gds, dpb, dbHandle1, null);
 
-        AbstractIscTrHandle trHandle1 = (AbstractIscTrHandle)gds.createIscTrHandle();
+        IscTrHandle trHandle1 = gds.createIscTrHandle();
         gds.iscStartTransaction(trHandle1, dbHandle1, tpb.getTransactionParameterBuffer());
 
         gdsHelper1.getTransactionId(trHandle1);

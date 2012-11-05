@@ -1,26 +1,27 @@
 /*
- * Public Firebird Java API.
+ * Firebird Open Source J2ee connector - jdbc driver
  *
- * Redistribution and use in source and binary forms, with or without 
- * modification, are permitted provided that the following conditions are met:
- *    1. Redistributions of source code must retain the above copyright notice, 
- *       this list of conditions and the following disclaimer.
- *    2. Redistributions in binary form must reproduce the above copyright 
- *       notice, this list of conditions and the following disclaimer in the 
- *       documentation and/or other materials provided with the distribution. 
- *    3. The name of the author may not be used to endorse or promote products 
- *       derived from this software without specific prior written permission.
- * 
- * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR IMPLIED 
- * WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF 
- * MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO 
- * EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, 
- * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, 
- * PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; 
- * OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, 
- * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR 
- * OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
- * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * Distributable under LGPL license.
+ * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * LGPL License for more details.
+ *
+ * This file was created by members of the firebird development team.
+ * All individual contributions remain the Copyright (C) of those
+ * individuals.  Contributors to this file are either listed here or
+ * can be obtained from a CVS history command.
+ *
+ * All rights reserved.
+ */
+/*
+ * The Original Code is the Firebird Java GDS implementation.
+ *
+ * The Initial Developer of the Original Code is Alejandro Alberola.
+ * Portions created by Alejandro Alberola are Copyright (C) 2001
+ * Boix i Oltra, S.L. All Rights Reserved.
  */
 package org.firebirdsql.gds.impl;
 
@@ -31,30 +32,27 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 
+import org.firebirdsql.gds.GDSException;
 import org.firebirdsql.gds.IscBlobHandle;
+import org.firebirdsql.gds.IscDbHandle;
 import org.firebirdsql.gds.IscStmtHandle;
 import org.firebirdsql.gds.IscTrHandle;
 
 /**
  * Abstract implementation of the {@link org.firebirdsql.gds.IscTrHandle} 
  * interface.
+ * 
+ * @author <a href="mailto:alberola@users.sourceforge.net">Alejandro Alberola</a>
+ * @author <a href="mailto:d_jencks@users.sourceforge.net">David Jencks</a>
  */
 public abstract class AbstractIscTrHandle implements IscTrHandle {
 
-    public final static int NOTRANSACTION = 0;
-    public final static int TRANSACTIONCOMMITTING = 5;
-    public final static int TRANSACTIONPREPARED = 4;
-    public final static int TRANSACTIONPREPARING = 3;
-    public final static int TRANSACTIONROLLINGBACK = 6;
-    public final static int TRANSACTIONSTARTED = 2;
-    public final static int TRANSACTIONSTARTING = 1;
-    
     private final List<IscBlobHandle> blobs = Collections.synchronizedList(new LinkedList<IscBlobHandle>());
     private final Set<IscStmtHandle> stmts = Collections.synchronizedSet(new HashSet<IscStmtHandle>());
+    private IscDbHandle rtr_rdb;
+    private int state = NOTRANSACTION;
+    private int rtr_id;
 
-    /**
-     * Clear all the saved result sets from this handle.
-     */
     public void forgetResultSets() {
         synchronized(stmts) {
             for (Iterator<IscStmtHandle> iter = stmts.iterator(); iter.hasNext();) {
@@ -65,16 +63,6 @@ public abstract class AbstractIscTrHandle implements IscTrHandle {
             stmts.clear();
         }
     }
-    
-    /**
-     * Get the current state of the transaction to which this handle is
-     * pointing. The state is equal to one of the <code>TRANSACTION*</code> 
-     * constants of this interface, or the <code>NOTRANSACTION</code> constant,
-     * also of this interface.
-     *
-     * @return The corresponding value for the current state
-     */
-    public abstract int getState();
 
     public void addBlob(IscBlobHandle blob) {
         blobs.add(blob);
@@ -84,23 +72,60 @@ public abstract class AbstractIscTrHandle implements IscTrHandle {
         blobs.remove(blob);
     }
 
-    /**
-     * Register a statement within the transaction to which this handle points.
-     * This method allows automated cleanup of the rows fetched within a 
-     * transaction on commit or rollback point.
-     *
-     * @param fbStatement Handle to the statement to be registered.
-     */
     public void registerStatementWithTransaction(IscStmtHandle stmt) {
         stmts.add(stmt);
     }
 
-    /**
-     * Unregister a statement from the transaction in which it was registered.
-     *
-     * @param fbStatement Handle to the statement to be unregistered.
-     */
     public void unregisterStatementFromTransaction(IscStmtHandle stmt) {
         stmts.remove(stmt);
+    }
+
+    public void addWarning(GDSException warning) {
+        rtr_rdb.addWarning(warning);
+    }
+
+    public IscDbHandle getDbHandle() {
+        return rtr_rdb;
+    }
+
+    public void setDbHandle(final IscDbHandle db) {
+        this.rtr_rdb = db;
+        rtr_rdb.addTransaction(this);
+    }
+
+    public void unsetDbHandle() {
+        rtr_rdb.removeTransaction(this);
+        rtr_rdb = null;
+    }
+
+    public void setState(int state) {
+        this.state = state;
+    }
+
+    public int getState() {
+        return state;
+    }
+
+    public void setTransactionId(final int rtr_id) {
+        this.rtr_id = rtr_id;
+    }
+
+    public int getTransactionId() {
+        return rtr_id;
+    }
+    
+    @Override
+    public int hashCode() {
+        return rtr_id;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj == this)
+            return true;
+        if (!(obj instanceof AbstractIscTrHandle))
+            return false;
+        AbstractIscTrHandle that = (AbstractIscTrHandle) obj;
+        return this.rtr_id == that.rtr_id;
     }
 }

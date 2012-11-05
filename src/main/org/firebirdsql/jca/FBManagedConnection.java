@@ -860,7 +860,7 @@ public class FBManagedConnection implements ManagedConnection, XAResource, GDSHe
 
     int internalPrepare(Xid xid) throws FBXAException, GDSException {
         if (log != null) log.trace("prepare called: " + xid);
-        AbstractIscTrHandle committingTr = xidMap.get(xid);
+        IscTrHandle committingTr = xidMap.get(xid);
         if (committingTr == null)
             throw new FBXAException("Prepare called with unknown transaction",
                     XAException.XAER_NOTA);
