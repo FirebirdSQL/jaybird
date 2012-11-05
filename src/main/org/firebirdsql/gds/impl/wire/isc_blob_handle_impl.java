@@ -21,6 +21,7 @@ package org.firebirdsql.gds.impl.wire;
 
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.IscBlobHandle;
+import org.firebirdsql.gds.impl.AbstractIscTrHandle;
 
 /**
  * Describe class <code>isc_blob_handle_impl</code> here.
@@ -31,7 +32,7 @@ import org.firebirdsql.gds.IscBlobHandle;
 public final class isc_blob_handle_impl implements IscBlobHandle {
 
     private isc_db_handle_impl db;
-    private isc_tr_handle_impl tr;
+    private AbstractIscTrHandle tr;
     private int rbl_id;
     private long blob_id;
     private int rbl_flags;
@@ -39,11 +40,11 @@ public final class isc_blob_handle_impl implements IscBlobHandle {
 
     isc_blob_handle_impl() {};
 
-    public isc_tr_handle_impl getTr() {
+    public AbstractIscTrHandle getTr() {
         return tr;
     }
 
-    public void setTr(isc_tr_handle_impl value) {
+    public void setTr(AbstractIscTrHandle value) {
         tr = value;
     }
 

@@ -26,6 +26,7 @@ import org.firebirdsql.encodings.EncodingFactory;
 import org.firebirdsql.gds.*;
 import org.firebirdsql.gds.impl.AbstractGDS;
 import org.firebirdsql.gds.impl.AbstractIscDbHandle;
+import org.firebirdsql.gds.impl.AbstractIscStmtHandle;
 import org.firebirdsql.gds.impl.AbstractIscTrHandle;
 import org.firebirdsql.gds.impl.DatabaseParameterBufferExtension;
 import org.firebirdsql.gds.impl.GDSType;
@@ -34,7 +35,7 @@ import org.firebirdsql.logging.LoggerFactory;
 
 public abstract class BaseGDSImpl extends AbstractGDS {
     
-    // TODO Synchronization seems to be inconsistent: sometimes on dbhandle, sometimes on this (and soemtimes on blobhandle)
+    // TODO Synchronization seems to be inconsistent: sometimes on dbhandle, sometimes on this (and sometimes on blobhandle)
     // TODO Checking for validity of dbhandle is inconsistent (sometimes only null check, sometimes also .isValid())
 
     private static Logger log = LoggerFactory.getLogger(BaseGDSImpl.class,
@@ -50,12 +51,11 @@ public abstract class BaseGDSImpl extends AbstractGDS {
         ISCConstants.isc_info_base_level,
         ISCConstants.isc_info_end };
 
-
     private static byte[] stmtInfo = new byte[] {
                 ISCConstants.isc_info_sql_records,
                 ISCConstants.isc_info_sql_stmt_type, ISCConstants.isc_info_end};
 
-    private static int INFO_SIZE = 128;
+    private static final int INFO_SIZE = 128;
 
     public int isc_api_handle;
     
@@ -115,8 +115,9 @@ public abstract class BaseGDSImpl extends AbstractGDS {
     public void iscAttachDatabase(String file_name, IscDbHandle db_handle,
             DatabaseParameterBuffer databaseParameterBuffer)
             throws GDSException {
-        if (db_handle == null) { throw new GDSException(
-                ISCConstants.isc_bad_db_handle); }
+        if (db_handle == null) { 
+            throw new GDSException(ISCConstants.isc_bad_db_handle); 
+        }
 
         final byte[] dpbBytes;
         final String filenameCharset;
@@ -166,10 +167,13 @@ public abstract class BaseGDSImpl extends AbstractGDS {
     public void iscCloseBlob(IscBlobHandle blob_handle) throws GDSException {
         isc_blob_handle_impl blob = (isc_blob_handle_impl) blob_handle;
         IscDbHandle db = blob.getDb();
-        if (db == null) { throw new GDSException(ISCConstants.isc_bad_db_handle); }
-        isc_tr_handle_impl tr = blob.getTr();
-        if (tr == null) { throw new GDSException(
-                ISCConstants.isc_bad_trans_handle); }
+        if (db == null) { 
+            throw new GDSException(ISCConstants.isc_bad_db_handle); 
+        }
+        AbstractIscTrHandle tr = blob.getTr();
+        if (tr == null) { 
+            throw new GDSException(ISCConstants.isc_bad_trans_handle); 
+        }
 
         synchronized (db) {
             native_isc_close_blob(blob_handle);
@@ -182,8 +186,9 @@ public abstract class BaseGDSImpl extends AbstractGDS {
     // ---------------------------------------------------------------------------------------------
     public void iscCommitRetaining(IscTrHandle tr_handle) throws GDSException {
         isc_tr_handle_impl tr = (isc_tr_handle_impl) tr_handle;
-        if (tr == null) { throw new GDSException(
-                ISCConstants.isc_bad_trans_handle); }
+        if (tr == null) { 
+            throw new GDSException(ISCConstants.isc_bad_trans_handle); 
+        }
         IscDbHandle db = tr.getDbHandle();
         
         if (db == null || !db.isValid())
@@ -191,8 +196,9 @@ public abstract class BaseGDSImpl extends AbstractGDS {
 
         synchronized (db) {
             if (tr.getState() != AbstractIscTrHandle.TRANSACTIONSTARTED
-                    && tr.getState() != AbstractIscTrHandle.TRANSACTIONPREPARED) { throw new GDSException(
-                    ISCConstants.isc_tra_state); }
+                    && tr.getState() != AbstractIscTrHandle.TRANSACTIONPREPARED) { 
+                throw new GDSException(ISCConstants.isc_tra_state); 
+            }
 
             tr.setState(AbstractIscTrHandle.TRANSACTIONCOMMITTING);
 
@@ -215,8 +221,9 @@ public abstract class BaseGDSImpl extends AbstractGDS {
 
         synchronized (db) {
             if (tr.getState() != AbstractIscTrHandle.TRANSACTIONSTARTED
-                    && tr.getState() != AbstractIscTrHandle.TRANSACTIONPREPARED) { throw new GDSException(
-                    ISCConstants.isc_tra_state); }
+                    && tr.getState() != AbstractIscTrHandle.TRANSACTIONPREPARED) { 
+                throw new GDSException(ISCConstants.isc_tra_state); 
+            }
 
             tr.setState(AbstractIscTrHandle.TRANSACTIONCOMMITTING);
 
@@ -234,14 +241,18 @@ public abstract class BaseGDSImpl extends AbstractGDS {
             IscBlobHandle blob_handle, BlobParameterBuffer blobParameterBuffer)
             throws GDSException {
         AbstractIscDbHandle db = (AbstractIscDbHandle) db_handle;
-        isc_tr_handle_impl tr = (isc_tr_handle_impl) tr_handle;
+        AbstractIscTrHandle tr = (AbstractIscTrHandle) tr_handle;
         isc_blob_handle_impl blob = (isc_blob_handle_impl) blob_handle;
 
-        if (db == null) { throw new GDSException(ISCConstants.isc_bad_db_handle); }
-        if (tr == null) { throw new GDSException(
-                ISCConstants.isc_bad_trans_handle); }
-        if (blob == null) { throw new GDSException(
-                ISCConstants.isc_bad_segstr_handle); }
+        if (db == null) { 
+            throw new GDSException(ISCConstants.isc_bad_db_handle); 
+        }
+        if (tr == null) { 
+            throw new GDSException(ISCConstants.isc_bad_trans_handle); 
+        }
+        if (blob == null) { 
+            throw new GDSException(ISCConstants.isc_bad_segstr_handle); 
+        }
 
         final byte[] bpb = blobParameterBuffer == null ? null
                 : ((BlobParameterBufferImp) blobParameterBuffer)
@@ -288,8 +299,7 @@ public abstract class BaseGDSImpl extends AbstractGDS {
                 throw new GDSException(ISCConstants.isc_bad_dpb_content);
             }
             
-            native_isc_create_database(urlData, db_handle,
-                    dpbBytes);
+            native_isc_create_database(urlData, db_handle, dpbBytes);
         }
     }
 
@@ -326,8 +336,9 @@ public abstract class BaseGDSImpl extends AbstractGDS {
     // isc_drop_database
     // ---------------------------------------------------------------------------------------------
     public void iscDropDatabase(IscDbHandle db_handle) throws GDSException {
-        if (db_handle == null) { throw new GDSException(
-                ISCConstants.isc_bad_db_handle); }
+        if (db_handle == null) { 
+            throw new GDSException(ISCConstants.isc_bad_db_handle); 
+        }
 
         synchronized (this) {
             native_isc_drop_database(db_handle);
@@ -338,38 +349,34 @@ public abstract class BaseGDSImpl extends AbstractGDS {
     // ---------------------------------------------------------------------------------------------
     public void iscDsqlAllocateStatement(IscDbHandle db_handle,
             IscStmtHandle stmt_handle) throws GDSException {
-        isc_stmt_handle_impl stmt = (isc_stmt_handle_impl) stmt_handle;
 
-        if (db_handle == null) { throw new GDSException(
-                ISCConstants.isc_bad_db_handle); }
+        if (db_handle == null) { 
+            throw new GDSException(ISCConstants.isc_bad_db_handle); 
+        }
 
-        if (stmt_handle == null) { throw new GDSException(
-                ISCConstants.isc_bad_req_handle); }
+        if (stmt_handle == null) { 
+            throw new GDSException(ISCConstants.isc_bad_req_handle); 
+        }
 
         synchronized (db_handle) {
             native_isc_dsql_allocate_statement(db_handle, stmt_handle);
 
-            stmt.setRsr_rdb((AbstractIscDbHandle) db_handle);
-            stmt.setAllRowsFetched(false);
+            stmt_handle.setRsr_rdb(db_handle);
+            stmt_handle.setAllRowsFetched(false);
         }
     }
 
     // isc_dsql_describe
     // ---------------------------------------------------------------------------------------------
-    public XSQLDA iscDsqlDescribe(IscStmtHandle stmt_handle, int da_version)
-            throws GDSException {
-        isc_stmt_handle_impl stmt = (isc_stmt_handle_impl) stmt_handle;
+    public XSQLDA iscDsqlDescribe(IscStmtHandle stmt_handle, int da_version) throws GDSException {
 
-        if (stmt == null) { throw new GDSException(
-                ISCConstants.isc_bad_req_handle); }
+        if (stmt_handle == null) { 
+            throw new GDSException(ISCConstants.isc_bad_req_handle); 
+        }
 
-        synchronized (stmt.getRsr_rdb()) {
-
-            stmt.setInSqlda(native_isc_dsql_describe(stmt_handle, da_version)); /*
-                                                                                 * @todo
-                                                                                 * setInSqlda
-                                                                                 * here ??
-                                                                                 */
+        synchronized (stmt_handle.getRsr_rdb()) {
+            stmt_handle.setInSqlda(native_isc_dsql_describe(stmt_handle, da_version)); 
+            // TODO setInSqlda here ??
 
             return stmt_handle.getInSqlda();
         }
@@ -379,11 +386,9 @@ public abstract class BaseGDSImpl extends AbstractGDS {
     // ---------------------------------------------------------------------------------------------
     public XSQLDA iscDsqlDescribeBind(IscStmtHandle stmt_handle, int da_version)
             throws GDSException {
-        isc_stmt_handle_impl stmt = (isc_stmt_handle_impl) stmt_handle;
 
-        synchronized (stmt.getRsr_rdb()) {
-            stmt.setInSqlda(native_isc_dsql_describe_bind(stmt_handle,
-                    da_version));
+        synchronized (stmt_handle.getRsr_rdb()) {
+            stmt_handle.setInSqlda(native_isc_dsql_describe_bind(stmt_handle, da_version));
 
             return stmt_handle.getInSqlda();
         }
@@ -403,6 +408,7 @@ public abstract class BaseGDSImpl extends AbstractGDS {
     public void iscDsqlExecImmed2(IscDbHandle db_handle, IscTrHandle tr_handle,
             String statement, int dialect, XSQLDA in_xsqlda, XSQLDA out_xsqlda)
             throws GDSException {
+        // TODO Suspicious use of NONE here
         iscDsqlExecImmed2(db_handle, tr_handle, statement, "NONE", dialect,
                 in_xsqlda, out_xsqlda);
     }
@@ -438,26 +444,25 @@ public abstract class BaseGDSImpl extends AbstractGDS {
     public void iscDsqlExecute2(IscTrHandle tr_handle,
             IscStmtHandle stmt_handle, int da_version, XSQLDA in_xsqlda,
             XSQLDA out_xsqlda) throws GDSException {
-        isc_stmt_handle_impl stmt = (isc_stmt_handle_impl) stmt_handle;
 
-        synchronized (stmt.getRsr_rdb()) {
+        synchronized (stmt_handle.getRsr_rdb()) {
             native_isc_dsql_execute2(tr_handle, stmt_handle, da_version,
-                    in_xsqlda, out_xsqlda); /* @todo Fetch Statements */
+                    in_xsqlda, out_xsqlda); /* TODO Fetch Statements */
 
-            if (stmt.getOutSqlda() != null) stmt.notifyOpenResultSet();
+            if (stmt_handle.getOutSqlda() != null) stmt_handle.notifyOpenResultSet();
 
             if (out_xsqlda != null) {
                 // this would be an Execute procedure
-                stmt.ensureCapacity(1);
-                readSQLData(out_xsqlda, stmt);
-                stmt.setAllRowsFetched(true);
-                stmt.setSingletonResult(true);
+                stmt_handle.ensureCapacity(1);
+                readSQLData(out_xsqlda, stmt_handle);
+                stmt_handle.setAllRowsFetched(true);
+                stmt_handle.setSingletonResult(true);
             } else {
-                stmt.setAllRowsFetched(false);
-                stmt.setSingletonResult(false);
+                stmt_handle.setAllRowsFetched(false);
+                stmt_handle.setSingletonResult(false);
             }
             
-            stmt.registerTransaction((AbstractIscTrHandle)tr_handle);
+            stmt_handle.registerTransaction(tr_handle);
         }
     }
 
@@ -503,26 +508,26 @@ public abstract class BaseGDSImpl extends AbstractGDS {
             throw new GDSException(ISCConstants.isc_dsql_sqlda_err);
         }
 
-        isc_stmt_handle_impl stmt = (isc_stmt_handle_impl) stmt_handle;
-        IscDbHandle db = stmt.getRsr_rdb();
+        IscDbHandle db = stmt_handle.getRsr_rdb();
 
         synchronized (db) {
             // Apply fetchSize
             // Fetch next batch of rows
-            stmt.ensureCapacity(fetchSize);
+            stmt_handle.ensureCapacity(fetchSize);
 
             for (int i = 0; i < fetchSize; i++) {
+                // TODO Repeating fetchSize times, but also passing fetchSize into fetch call?
                 try {
                     boolean isRowPresent = native_isc_dsql_fetch(stmt_handle,
                             da_version, xsqlda, fetchSize);
                     if (isRowPresent) {
-                        readSQLData(xsqlda, stmt);
+                        readSQLData(xsqlda, stmt_handle);
                     } else {
-                        stmt.setAllRowsFetched(true);
+                        stmt_handle.setAllRowsFetched(true);
                         return;
                     }
                 } finally {
-                    stmt.notifyOpenResultSet();
+                    stmt_handle.notifyOpenResultSet();
                 }
             }
         }
@@ -535,29 +540,28 @@ public abstract class BaseGDSImpl extends AbstractGDS {
         if (stmt_handle == null) { 
             throw new GDSException(ISCConstants.isc_bad_req_handle);
         }
-        isc_stmt_handle_impl stmt = (isc_stmt_handle_impl) stmt_handle;
-        IscDbHandle db = stmt.getRsr_rdb();
+        IscDbHandle db = stmt_handle.getRsr_rdb();
 
         synchronized (db) {
             // Does not seem to be possible or necessary to close
             // an execute procedure statement.
-            if (stmt.isSingletonResult() && option == ISCConstants.DSQL_close) { return; }
+            if (stmt_handle.isSingletonResult() && option == ISCConstants.DSQL_close) { return; }
 
             if (option == ISCConstants.DSQL_drop) {
-                stmt.setInSqlda(null);
-                stmt.setOutSqlda(null);
-                stmt.setRsr_rdb(null);
+                stmt_handle.setInSqlda(null);
+                stmt_handle.setOutSqlda(null);
+                stmt_handle.setRsr_rdb(null);
             }
 
             native_isc_dsql_free_statement(stmt_handle, option);
             
             // clear association with transaction
             try {
-                AbstractIscTrHandle tr = stmt.getTransaction();
+                AbstractIscTrHandle tr = (AbstractIscTrHandle)stmt_handle.getTransaction();
                 if (tr != null)
-                    tr.unregisterStatementFromTransaction(stmt);
+                    tr.unregisterStatementFromTransaction(stmt_handle);
             } finally {
-                stmt.unregisterTransaction();
+                stmt_handle.unregisterTransaction();
             }
 
         }
@@ -575,17 +579,15 @@ public abstract class BaseGDSImpl extends AbstractGDS {
         if (stmt_handle == null) { 
             throw new GDSException(ISCConstants.isc_bad_req_handle);
         }
-        isc_stmt_handle_impl stmt = (isc_stmt_handle_impl) stmt_handle;
-        IscDbHandle db = stmt.getRsr_rdb();
+        
+        synchronized (stmt_handle.getRsr_rdb()) {
+            stmt_handle.setInSqlda(null);
+            stmt_handle.setOutSqlda(null);
 
-        synchronized (db) {
-            stmt.setInSqlda(null);
-            stmt.setOutSqlda(null);
-
-            stmt.setOutSqlda(native_isc_dsql_prepare(tr_handle, stmt_handle,
+            stmt_handle.setOutSqlda(native_isc_dsql_prepare(tr_handle, stmt_handle,
                     getZeroTerminatedArray(statement), dialect));
 
-            getStatementType(stmt);
+            getStatementType(stmt_handle);
             
             return stmt_handle.getOutSqlda();
         }
@@ -598,7 +600,7 @@ public abstract class BaseGDSImpl extends AbstractGDS {
      * 
      * @throws GDSException if error occured.
      */
-    private void getStatementType(isc_stmt_handle_impl stmt) throws GDSException {
+    private void getStatementType(IscStmtHandle stmt) throws GDSException {
         final byte [] REQUEST = new byte [] {
             ISCConstants.isc_info_sql_stmt_type,
             ISCConstants.isc_info_end };
@@ -661,8 +663,7 @@ public abstract class BaseGDSImpl extends AbstractGDS {
             throw new GDSException(ISCConstants.isc_bad_req_handle);
         }
         
-        isc_stmt_handle_impl stmt = (isc_stmt_handle_impl) stmt_handle;
-        IscDbHandle db = stmt.getRsr_rdb();
+        IscDbHandle db = stmt_handle.getRsr_rdb();
 
         synchronized (db) {
             native_isc_dsql_set_cursor_name(stmt_handle, cursor_name, type);
@@ -673,16 +674,9 @@ public abstract class BaseGDSImpl extends AbstractGDS {
     // ---------------------------------------------------------------------------------------------
     public byte[] iscDsqlSqlInfo(IscStmtHandle stmt_handle, byte[] items,
             int buffer_length) throws GDSException {
-        synchronized (((isc_stmt_handle_impl) stmt_handle).getRsr_rdb()) {
+        synchronized (((AbstractIscStmtHandle) stmt_handle).getRsr_rdb()) {
             return native_isc_dsql_sql_info(stmt_handle, items, buffer_length);
         }
-    }
-
-    // isc_expand_dpb
-    // ---------------------------------------------------------------------------------------------
-    public byte[] iscExpandDpb(byte[] dpb, int dpb_length, int param,
-            Object[] params) throws GDSException {
-        return dpb;
     }
 
     // isc_get_segment
@@ -700,14 +694,18 @@ public abstract class BaseGDSImpl extends AbstractGDS {
             IscBlobHandle blob_handle, BlobParameterBuffer blobParameterBuffer)
             throws GDSException {
         AbstractIscDbHandle db = (AbstractIscDbHandle) db_handle;
-        isc_tr_handle_impl tr = (isc_tr_handle_impl) tr_handle;
+        AbstractIscTrHandle tr = (AbstractIscTrHandle) tr_handle;
         isc_blob_handle_impl blob = (isc_blob_handle_impl) blob_handle;
 
-        if (db == null) { throw new GDSException(ISCConstants.isc_bad_db_handle); }
-        if (tr == null) { throw new GDSException(
-                ISCConstants.isc_bad_trans_handle); }
-        if (blob == null) { throw new GDSException(
-                ISCConstants.isc_bad_segstr_handle); }
+        if (db == null) { 
+            throw new GDSException(ISCConstants.isc_bad_db_handle); 
+        }
+        if (tr == null) { 
+            throw new GDSException(ISCConstants.isc_bad_trans_handle); 
+        }
+        if (blob == null) { 
+            throw new GDSException(ISCConstants.isc_bad_segstr_handle); 
+        }
 
         final byte[] bpb = blobParameterBuffer == null ? null
                 : ((BlobParameterBufferImp) blobParameterBuffer)
@@ -727,11 +725,11 @@ public abstract class BaseGDSImpl extends AbstractGDS {
     public void iscPrepareTransaction(IscTrHandle tr_handle)
             throws GDSException {
         isc_tr_handle_impl tr = (isc_tr_handle_impl) tr_handle;
-        if (tr == null) { throw new GDSException(
-                ISCConstants.isc_bad_trans_handle); }
-        AbstractIscDbHandle db = (AbstractIscDbHandle) tr.getDbHandle();
-
-        synchronized (db) {
+        if (tr == null) { 
+            throw new GDSException(ISCConstants.isc_bad_trans_handle); 
+        }
+        
+        synchronized (tr.getDbHandle()) {
             if (tr.getState() != AbstractIscTrHandle.TRANSACTIONSTARTED) { throw new GDSException(
                     ISCConstants.isc_tra_state); }
             tr.setState(AbstractIscTrHandle.TRANSACTIONPREPARING);
@@ -747,13 +745,15 @@ public abstract class BaseGDSImpl extends AbstractGDS {
     public void iscPrepareTransaction2(IscTrHandle tr_handle, byte[] bytes)
             throws GDSException {
         isc_tr_handle_impl tr = (isc_tr_handle_impl) tr_handle;
-        if (tr == null) { throw new GDSException(
-                ISCConstants.isc_bad_trans_handle); }
-        IscDbHandle db = tr.getDbHandle();
-
-        synchronized (db) {
-            if (tr.getState() != AbstractIscTrHandle.TRANSACTIONSTARTED) { throw new GDSException(
-                    ISCConstants.isc_tra_state); }
+        if (tr == null) { 
+            throw new GDSException(ISCConstants.isc_bad_trans_handle);
+        }
+        
+        synchronized (tr.getDbHandle()) {
+            if (tr.getState() != AbstractIscTrHandle.TRANSACTIONSTARTED) { 
+                throw new GDSException(ISCConstants.isc_tra_state); 
+            }
+            
             tr.setState(AbstractIscTrHandle.TRANSACTIONPREPARING);
 
             native_isc_prepare_transaction2(tr_handle, bytes);
@@ -791,7 +791,7 @@ public abstract class BaseGDSImpl extends AbstractGDS {
             tr.setState(AbstractIscTrHandle.TRANSACTIONSTARTING);
 
             native_isc_reconnect_transaction(db_handle, tr_handle, buffer);
-            tr.setDbHandle((AbstractIscDbHandle) db_handle);
+            tr.setDbHandle(db_handle);
 
             tr.setState(AbstractIscTrHandle.TRANSACTIONSTARTED);
         }
@@ -801,8 +801,9 @@ public abstract class BaseGDSImpl extends AbstractGDS {
     // ---------------------------------------------------------------------------------------------
     public void iscRollbackRetaining(IscTrHandle tr_handle) throws GDSException {
         isc_tr_handle_impl tr = (isc_tr_handle_impl) tr_handle;
-        if (tr == null) { throw new GDSException(
-                ISCConstants.isc_bad_trans_handle); }
+        if (tr == null) { 
+            throw new GDSException(ISCConstants.isc_bad_trans_handle); 
+        }
         IscDbHandle db = tr.getDbHandle();
         if (db == null || !db.isValid())
             throw new GDSException(ISCConstants.isc_bad_db_handle);
@@ -824,8 +825,9 @@ public abstract class BaseGDSImpl extends AbstractGDS {
     public void iscRollbackTransaction(IscTrHandle tr_handle)
             throws GDSException {
         isc_tr_handle_impl tr = (isc_tr_handle_impl) tr_handle;
-        if (tr == null) { throw new GDSException(
-                ISCConstants.isc_bad_trans_handle); }
+        if (tr == null) { 
+            throw new GDSException(ISCConstants.isc_bad_trans_handle); 
+        }
         IscDbHandle db = tr.getDbHandle();
         if (db == null || !db.isValid())
             throw new GDSException(ISCConstants.isc_bad_db_handle);
@@ -842,7 +844,6 @@ public abstract class BaseGDSImpl extends AbstractGDS {
             tr.unsetDbHandle();
         }
     }
-
 
     public byte [] iscTransactionInformation(IscTrHandle trHandle, 
             byte [] requestBuffer, int bufferLen) throws GDSException {
@@ -876,8 +877,7 @@ public abstract class BaseGDSImpl extends AbstractGDS {
         }
     }
 
-    public void iscServiceDetach(IscSvcHandle serviceHandle)
-            throws GDSException {
+    public void iscServiceDetach(IscSvcHandle serviceHandle) throws GDSException {
         synchronized (serviceHandle) {
             if (serviceHandle.isNotValid())
                 throw new GDSException("serviceHandle is not attached.");
@@ -928,13 +928,15 @@ public abstract class BaseGDSImpl extends AbstractGDS {
             IscDbHandle db_handle, TransactionParameterBuffer tpb)
             throws GDSException {
         isc_tr_handle_impl tr = (isc_tr_handle_impl) tr_handle;
-        IscDbHandle db = db_handle;
         TransactionParameterBufferImpl tpbImpl = (TransactionParameterBufferImpl) tpb;
 
-        if (tr == null) { throw new GDSException(
-                ISCConstants.isc_bad_trans_handle); }
+        if (tr == null) { 
+            throw new GDSException(ISCConstants.isc_bad_trans_handle); 
+        }
 
-        if (db == null) { throw new GDSException(ISCConstants.isc_bad_db_handle); }
+        if (db_handle == null) { 
+            throw new GDSException(ISCConstants.isc_bad_db_handle); 
+        }
 
         synchronized (db_handle) {
             if (tr.getState() != AbstractIscTrHandle.NOTRANSACTION)
@@ -942,14 +944,10 @@ public abstract class BaseGDSImpl extends AbstractGDS {
 
             tr.setState(AbstractIscTrHandle.TRANSACTIONSTARTING);
 
-            // final byte[] arg = new byte[tpb.length + 1];
-            // arg[0] = 3;
-            // System.arraycopy(tpb, 0, arg, 1, tpb.length);
-
             byte[] arg = tpbImpl.getBytesForNativeCode();
             native_isc_start_transaction(tr_handle, db_handle, arg);
 
-            tr.setDbHandle((AbstractIscDbHandle) db_handle);
+            tr.setDbHandle(db_handle);
 
             tr.setState(AbstractIscTrHandle.TRANSACTIONSTARTED);
         }
@@ -1130,6 +1128,7 @@ public abstract class BaseGDSImpl extends AbstractGDS {
      */
     private void parseAttachDatabaseInfo(byte[] info, IscDbHandle handle)
             throws GDSException {
+        // TODO Duplicate of method in wire.AbstractJavaGDSImpl?
         boolean debug = log != null && log.isDebugEnabled();
         if (debug)
             log.debug("parseDatabaseInfo: first 2 bytes are "
@@ -1207,7 +1206,7 @@ public abstract class BaseGDSImpl extends AbstractGDS {
         }
     }
     
-    public void readSQLData(XSQLDA xsqlda, isc_stmt_handle_impl stmt) {
+    public void readSQLData(XSQLDA xsqlda, IscStmtHandle stmt) {
         // This only works if not (port->port_flags & PORT_symmetric)
         int numCols = xsqlda.sqld;
         byte[][] row = new byte[numCols][];
@@ -1245,13 +1244,13 @@ public abstract class BaseGDSImpl extends AbstractGDS {
     }
 
     public void getSqlCounts(IscStmtHandle stmt_handle) throws GDSException {
-        isc_stmt_handle_impl stmt = (isc_stmt_handle_impl) stmt_handle;
-        byte[] buffer = iscDsqlSqlInfo(stmt, /* stmtInfo.length, */stmtInfo, INFO_SIZE);
+        // TODO duplicate of method in wire.AbstractJavaGDSImpl?
+        byte[] buffer = iscDsqlSqlInfo(stmt_handle, stmtInfo, INFO_SIZE);
 
-        stmt.setInsertCount(0);
-		stmt.setUpdateCount(0);
-		stmt.setDeleteCount(0);
-		stmt.setSelectCount(0);
+        stmt_handle.setInsertCount(0);
+		stmt_handle.setUpdateCount(0);
+		stmt_handle.setDeleteCount(0);
+		stmt_handle.setSelectCount(0);
 
         int pos = 0;
         int length;
@@ -1268,19 +1267,19 @@ public abstract class BaseGDSImpl extends AbstractGDS {
                         pos += 2;
                         switch (t) {
                             case ISCConstants.isc_info_req_insert_count:
-                                stmt.setInsertCount(iscVaxInteger(buffer, pos,
+                                stmt_handle.setInsertCount(iscVaxInteger(buffer, pos,
                                         l));
                                 break;
                             case ISCConstants.isc_info_req_update_count:
-                                stmt.setUpdateCount(iscVaxInteger(buffer, pos,
+                                stmt_handle.setUpdateCount(iscVaxInteger(buffer, pos,
                                         l));
                                 break;
                             case ISCConstants.isc_info_req_delete_count:
-                                stmt.setDeleteCount(iscVaxInteger(buffer, pos,
+                                stmt_handle.setDeleteCount(iscVaxInteger(buffer, pos,
                                         l));
                                 break;
                             case ISCConstants.isc_info_req_select_count:
-                                stmt.setSelectCount(iscVaxInteger(buffer, pos,
+                                stmt_handle.setSelectCount(iscVaxInteger(buffer, pos,
                                         l));
                                 break;
                             default:
@@ -1290,7 +1289,7 @@ public abstract class BaseGDSImpl extends AbstractGDS {
                     }
                     break;
                 case ISCConstants.isc_info_sql_stmt_type:
-                    stmt.setStatementType(iscVaxInteger(buffer, pos, length));
+                    stmt_handle.setStatementType(iscVaxInteger(buffer, pos, length));
                     pos += length;
                     break;
                 default:
@@ -1363,7 +1362,9 @@ public abstract class BaseGDSImpl extends AbstractGDS {
     
     public void fbCancelOperation(IscDbHandle dbHandle, int kind)
             throws GDSException {
-        if (dbHandle == null) { throw new GDSException(ISCConstants.isc_bad_db_handle); }
+        if (dbHandle == null) { 
+            throw new GDSException(ISCConstants.isc_bad_db_handle); 
+        }
 
         synchronized (this) {
             native_fb_cancel_operation(dbHandle, kind);
