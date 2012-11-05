@@ -30,6 +30,7 @@ import org.firebirdsql.gds.DatabaseParameterBuffer;
 import org.firebirdsql.gds.GDS;
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.IscDbHandle;
+import org.firebirdsql.gds.IscStmtHandle;
 import org.firebirdsql.gds.IscTrHandle;
 import org.firebirdsql.gds.XSQLDA;
 import org.firebirdsql.gds.XSQLVAR;
@@ -329,7 +330,7 @@ public class TestNgds extends TestCase {
         XSQLDA in_xsqlda;
         XSQLDA out_xsqlda;
 
-        isc_stmt_handle_impl stmt1 = (isc_stmt_handle_impl) gds.createIscStmtHandle();
+        IscStmtHandle stmt1 = gds.createIscStmtHandle();
 
         if (log != null) log.info("test- isc_dsql_allocate_statement");
 
@@ -421,7 +422,7 @@ public class TestNgds extends TestCase {
 
         gds.iscDsqlExecImmed2(db1, t1, "INSERT INTO R2 VALUES (?, ?)",
                 ISCConstants.SQL_DIALECT_CURRENT, xsqlda, null);
-        isc_stmt_handle_impl stmt1 = (isc_stmt_handle_impl) gds.createIscStmtHandle();
+        IscStmtHandle stmt1 = gds.createIscStmtHandle();
 
         if (log != null) log.info("test- isc_dsql_allocate_statement");
 
@@ -512,7 +513,7 @@ public class TestNgds extends TestCase {
 
         gds.iscDsqlExecImmed2(db1, t1, "INSERT INTO R2 VALUES (?, ?)",
                 ISCConstants.SQL_DIALECT_CURRENT, xsqlda, null);
-        isc_stmt_handle_impl stmt1 = (isc_stmt_handle_impl) gds.createIscStmtHandle();
+        IscStmtHandle stmt1 = gds.createIscStmtHandle();
 
         if (log != null) log.info("test- isc_dsql_allocate_statement");
 
@@ -611,7 +612,7 @@ public class TestNgds extends TestCase {
 
         gds.iscDsqlExecImmed2(db1, t1, "INSERT INTO R2 VALUES (?, ?)",
                 ISCConstants.SQL_DIALECT_CURRENT, xsqlda, null);
-        isc_stmt_handle_impl stmt1 = (isc_stmt_handle_impl) gds.createIscStmtHandle();
+        IscStmtHandle stmt1 = gds.createIscStmtHandle();
 
         if (log != null) log.info("test- isc_dsql_allocate_statement");
 
@@ -712,7 +713,7 @@ public class TestNgds extends TestCase {
 
         gds.iscDsqlExecImmed2(db1, t1, "INSERT INTO R2 VALUES (?, ?)",
                 ISCConstants.SQL_DIALECT_CURRENT, xsqlda, null);
-        isc_stmt_handle_impl stmt1 = (isc_stmt_handle_impl) gds.createIscStmtHandle();
+        IscStmtHandle stmt1 = gds.createIscStmtHandle();
 
         if (log != null) log.info("test- isc_dsql_allocate_statement");
 

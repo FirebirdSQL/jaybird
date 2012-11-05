@@ -27,16 +27,8 @@ package org.firebirdsql.gds.impl.jni;
 
 import org.firebirdsql.gds.IscDbHandle;
 import org.firebirdsql.gds.GDSException;
-import org.firebirdsql.gds.impl.AbstractIscDbHandle;
-import org.firebirdsql.gds.impl.AbstractIscStmtHandle;
 import org.firebirdsql.gds.impl.AbstractIscTrHandle;
 
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Set;
 
 /**
  * Describe class <code>isc_tr_handle_impl</code> here.
@@ -47,12 +39,8 @@ import java.util.Set;
  */
 public final class isc_tr_handle_impl extends AbstractIscTrHandle {
     private int rtr_id;
-    private int rtr_id_ptr = 0;
 
-    private AbstractIscDbHandle rtr_rdb;
-    private List<isc_blob_handle_impl> blobs = Collections.synchronizedList(new LinkedList<isc_blob_handle_impl>());
-    private Set<AbstractIscStmtHandle> stmts = Collections.synchronizedSet(new HashSet<AbstractIscStmtHandle>());
-
+    private IscDbHandle rtr_rdb;
     private int state = NOTRANSACTION;
 
     public isc_tr_handle_impl() {
@@ -83,16 +71,7 @@ public final class isc_tr_handle_impl extends AbstractIscTrHandle {
         return rtr_id;
     }
 
-    void setTransactionIdPtr(final int rtr_id_ptr, int value) {
-        setTransactionId(value);
-        this.rtr_id_ptr = rtr_id_ptr;
-    }
-
-    int getTransactionIdPtr() {
-        return rtr_id_ptr;
-    }
-
-    void setDbHandle(final AbstractIscDbHandle db) {
+    void setDbHandle(final IscDbHandle db) {
         this.rtr_rdb = db;
         rtr_rdb.addTransaction(this);
     }
@@ -100,32 +79,5 @@ public final class isc_tr_handle_impl extends AbstractIscTrHandle {
     void unsetDbHandle() {
         rtr_rdb.removeTransaction(this);
         rtr_rdb = null;
-    }
-
-    void addBlob(isc_blob_handle_impl blob) {
-        blobs.add(blob);
-    }
-
-    void removeBlob(isc_blob_handle_impl blob) {
-        blobs.remove(blob);
-    }
-	 
-    public void registerStatementWithTransaction(AbstractIscStmtHandle stmt) {
-        stmts.add(stmt);
-    }
-    
-    public void unregisterStatementFromTransaction(AbstractIscStmtHandle stmt) {
-        stmts.remove(stmt);
-    }
-
-    public void forgetResultSets() {
-        synchronized(stmts) {
-            for (Iterator<AbstractIscStmtHandle> iter = stmts.iterator(); iter.hasNext();) {
-                AbstractIscStmtHandle stmt = iter.next();
-                stmt.clearRows();
-            }
-            
-            stmts.clear();
-		}
     }
 }

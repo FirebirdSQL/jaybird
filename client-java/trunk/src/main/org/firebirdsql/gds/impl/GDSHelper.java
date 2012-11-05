@@ -196,7 +196,7 @@ public class GDSHelper {
             if (describeBind) 
                 gds.iscDsqlDescribeBind(stmt, ISCConstants.SQLDA_VERSION1);
             
-            stmt.statement = sql;
+            stmt.setStatementText(sql);
             
         } catch(GDSException ex) {
             notifyListeners(ex);
@@ -220,7 +220,7 @@ public class GDSHelper {
         try {
             
             if (log != null && log.isDebugEnabled())
-                log.debug("Executing " + stmt.statement);
+                log.debug("Executing " + stmt.getStatementText());
             
             // System.out.println("Executing " + stmt.statement);
             

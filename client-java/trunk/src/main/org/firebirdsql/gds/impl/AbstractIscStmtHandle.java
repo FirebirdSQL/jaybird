@@ -1,32 +1,37 @@
 /*
- * Public Firebird Java API.
+ * Firebird Open Source J2ee connector - jdbc driver
  *
- * Redistribution and use in source and binary forms, with or without 
- * modification, are permitted provided that the following conditions are met:
- *    1. Redistributions of source code must retain the above copyright notice, 
- *       this list of conditions and the following disclaimer.
- *    2. Redistributions in binary form must reproduce the above copyright 
- *       notice, this list of conditions and the following disclaimer in the 
- *       documentation and/or other materials provided with the distribution. 
- *    3. The name of the author may not be used to endorse or promote products 
- *       derived from this software without specific prior written permission.
- * 
- * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR IMPLIED 
- * WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF 
- * MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO 
- * EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, 
- * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, 
- * PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; 
- * OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, 
- * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR 
- * OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
- * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * Distributable under LGPL license.
+ * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * LGPL License for more details.
+ *
+ * This file was created by members of the firebird development team.
+ * All individual contributions remain the Copyright (C) of those
+ * individuals.  Contributors to this file are either listed here or
+ * can be obtained from a CVS history command.
+ *
+ * All rights reserved.
+ */
+/*
+ * The Original Code is the Firebird Java GDS implementation.
+ *
+ * The Initial Developer of the Original Code is Alejandro Alberola.
+ * Portions created by Alejandro Alberola are Copyright (C) 2001
+ * Boix i Oltra, S.L. All Rights Reserved.
  */
 package org.firebirdsql.gds.impl;
 
-import org.firebirdsql.gds.ISCConstants;
+import org.firebirdsql.gds.GDSException;
+import org.firebirdsql.gds.IscDbHandle;
 import org.firebirdsql.gds.IscStmtHandle;
-
+import org.firebirdsql.gds.IscTrHandle;
+import org.firebirdsql.gds.XSQLDA;
+import org.firebirdsql.logging.Logger;
+import org.firebirdsql.logging.LoggerFactory;
 
 /**
  * Abstract implementation of the {@link org.firebirdsql.gds.IscStmtHandle}
@@ -34,107 +39,33 @@ import org.firebirdsql.gds.IscStmtHandle;
  */
 public abstract class AbstractIscStmtHandle implements IscStmtHandle {
     
+    private static final Logger log = LoggerFactory.getLogger(AbstractIscStmtHandle.class, false);
+    
     private String executionPlan;
-    private int statementType = TYPE_UNKNOWN;
-    public String statement;
-
-    /**
-     * Clear all rows that have been fetched for this statement. This 
-     * method differs from {@link #removeRows} in that it only affects rows 
-     * that have already been fetched.
-     *
-     * @see #removeRows
-     */
-    public abstract void clearRows();
-
-    /**
-     * Get the number of rows that were deleted by executing this statement.
-     *
-     * @return The number of deleted rows
-     */
-    public abstract int getDeleteCount();
-
-    /**
-     * Get the number of rows that were inserted by executing this statement.
-     *
-     * @return The number of inserted rows
-     */
-    public abstract int getInsertCount();
-
-    /**
-     * Get the rows retrieved by executing this statement.
-     *
-     * @return Array of rows retrieved
-     */
-    public abstract byte[][][] getRows();
-
-    /**
-     * Get the number of rows that were updated by executing this statement.
-     *
-     * @return The number of updated rows
-     */
-    public abstract int getUpdateCount();
+    private int statementType = IscStmtHandle.TYPE_UNKNOWN;
+    private String statement;
+    private int insertCount;
+    private int updateCount;
+    private int deleteCount;
+    private int selectCount;
+    private XSQLDA in_sqlda = null;
+    private XSQLDA out_sqlda = null;
+    private int rsr_id;
+    private byte[][][] rows;
+    private int size;
+    private boolean allRowsFetched = false;
+    private boolean isSingletonResult = false;
+    private boolean hasOpenResultSet = false;
+    private IscTrHandle trHandle;
+    private IscDbHandle rsr_rdb;
     
-    /**
-     * Retrieve whether this statement has an open <code>ResultSet</code>.
-     *
-     * @return <code>true</code> if this statement has an open 
-     *         <code>ResultSet</code>, false otherwise
-     */
-    public abstract boolean hasOpenResultSet();
+    public String getStatementText() {
+        return statement;
+    }
     
-    /**
-     * Retrieve whether this statement has singleton result set.
-     * 
-     * @return <code>true</code> if result set has singleton result set.
-     */
-    public abstract boolean isSingletonResult();
-
-    /**
-     * Retrieve whether or not this statement is valid.
-     *
-     * @return <code>true</code> if this is a valid statement, 
-     *         <code>false</code> otherwise
-     */
-    public abstract boolean isValid();
-
-    /**
-     * Get the number of rows contained in this statement.
-     *
-     * @return The rowcount for this statement
-     */
-    public abstract int size();
-
-    /**
-     * Remove all rows contained by this statement. This method differs from
-     * {@link #clearRows} in that it effectively clears all rows from this
-     * statement.
-     *
-     * @see #clearRows
-     */
-    public abstract void removeRows();
-
-    /**
-     * Register statement for the transaction. This method is used within
-     * the <code>GDS.iscDsqlExecXXX</code> methods to keep a reference on
-     * current transaction in which statement is executed.
-     * 
-     * @param trHandle instance of {@link AbstractIscTrHandle}.
-     */
-    public abstract void registerTransaction(AbstractIscTrHandle trHandle);
-    
-    /**
-     * Get current transaction in which statement is currently executed.
-     * 
-     * @return instance of {@link AbstractIscTrHandle} or <code>null</code>
-     * if statement is not assigned to a transaction.
-     */
-    public abstract AbstractIscTrHandle getTransaction();
-    
-    /**
-     * Unregister statement from the transaction.
-     */
-    public abstract void unregisterTransaction();
+    public void setStatementText(String statement) {
+        this.statement = statement;
+    }
 
     public String getExecutionPlan() {
         return executionPlan;
@@ -144,11 +75,6 @@ public abstract class AbstractIscStmtHandle implements IscStmtHandle {
         this.executionPlan = plan;
     }
 
-    /**
-     * Get type of the statement.
-     * 
-     * @return value from the {@link ISCConstants} class.
-     */
     public int getStatementType() {
         return statementType;
     }
@@ -157,4 +83,180 @@ public abstract class AbstractIscStmtHandle implements IscStmtHandle {
         this.statementType = statementType;
     }
     
+    public void setInsertCount(int value) {
+        insertCount = value;
+    }
+
+    public int getInsertCount() {
+        return insertCount;
+    }
+
+    public void setUpdateCount(int value) {
+        updateCount = value;
+    }
+
+    public int getUpdateCount() {
+        return updateCount;
+    }
+
+    public void setDeleteCount(int value) {
+        deleteCount = value;
+    }
+
+    public int getDeleteCount() {
+        return deleteCount;
+    }
+
+    public void setSelectCount(int value) {
+        selectCount = value;
+    }
+
+    public int getSelectCount() {
+        return selectCount;
+    }
+
+    public XSQLDA getInSqlda() {
+        return in_sqlda;
+    }
+
+    public XSQLDA getOutSqlda() {
+        return out_sqlda;
+    }
+
+    public void setInSqlda(XSQLDA xsqlda) {
+        in_sqlda = xsqlda;
+    }
+
+    public void setOutSqlda(XSQLDA xsqlda) {
+        out_sqlda = xsqlda;
+    }
+
+    public void ensureCapacity(int maxSize) {
+        if (rows == null || rows.length < maxSize)
+            rows = new byte[maxSize][][];
+        size = 0;
+    }
+
+    public void clearRows() {
+        size = 0;
+        if (rows != null)
+            rows = null;
+        allRowsFetched = false;
+        hasOpenResultSet = false;
+    }
+
+    public boolean isAllRowsFetched() {
+        return allRowsFetched;
+    }
+
+    public void setAllRowsFetched(boolean value) {
+        allRowsFetched = value;
+    }
+
+    public boolean isSingletonResult() {
+        return isSingletonResult;
+    }
+
+    public void setSingletonResult(boolean value) {
+        isSingletonResult = value;
+    }
+
+    public int getRsrId() {
+        return rsr_id;
+    }
+
+    public void setRsrId(int value) {
+        rsr_id = value;
+    }
+
+    public boolean hasOpenResultSet() {
+        return hasOpenResultSet;
+    }
+
+    public void notifyOpenResultSet() {
+        hasOpenResultSet = true;
+    }
+
+    public int size() {
+        return size;
+    }
+
+    public byte[][][] getRows() {
+        // TODO Return rows up to size?
+        return rows;
+    }
+
+    public void removeRows() {
+        rows = null;
+        size = 0;
+    }
+
+    public void addRow(byte[][] row) {
+        rows[size++] = row;
+    }
+
+    public IscTrHandle getTransaction() {
+        return trHandle;
+    }
+
+    public void registerTransaction(IscTrHandle trHandle) {
+        this.trHandle = trHandle;
+    }
+
+    public void unregisterTransaction() {
+        this.trHandle = null;
+    }
+
+    public void addWarning(GDSException warning) {
+        // TODO: Store warnings on statement level? (currently only used from JNI-code)
+        rsr_rdb.addWarning(warning);
+    }
+
+    public IscDbHandle getRsr_rdb() {
+        return rsr_rdb;
+    }
+
+    public void setRsr_rdb(IscDbHandle value) {
+        rsr_rdb = value;
+    }
+
+    public boolean isValid() {
+        return rsr_rdb != null && rsr_rdb.isValid();
+    }
+
+    /**
+     * Helper method to print the bytes of a row using hex representation.
+     * @param row Row to print
+     */
+    public static void printRow(byte[][] row) {
+        StringBuilder sb = new StringBuilder();
+        sb.append('\t');
+        
+        if (row == null)
+            sb.append("null");
+        else {
+            for (int i = 0; i < row.length; i++) {
+                
+                if (row[i] == null)
+                    sb.append("null");
+                else {
+                    for (int j = 0; j < row[i].length; j++) {
+                        String hexValue = Integer.toHexString(row[i][j] & 0xff);
+                        if (hexValue.length() == 1)
+                            sb.append(0);
+                        
+                        sb.append(hexValue);
+                        if (j < row[i].length - 1)
+                            sb.append(' ');
+                    }
+                }
+                
+                if (i < row.length - 1)
+                    sb.append(", ");
+            }
+        }
+
+        if (log != null)
+            log.debug(sb.toString());
+    }
 }

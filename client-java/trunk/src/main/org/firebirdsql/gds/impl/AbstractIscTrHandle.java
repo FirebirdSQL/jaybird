@@ -24,8 +24,16 @@
  */
 package org.firebirdsql.gds.impl;
 
-import org.firebirdsql.gds.IscTrHandle;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Set;
 
+import org.firebirdsql.gds.IscBlobHandle;
+import org.firebirdsql.gds.IscStmtHandle;
+import org.firebirdsql.gds.IscTrHandle;
 
 /**
  * Abstract implementation of the {@link org.firebirdsql.gds.IscTrHandle} 
@@ -40,12 +48,24 @@ public abstract class AbstractIscTrHandle implements IscTrHandle {
     public final static int TRANSACTIONROLLINGBACK = 6;
     public final static int TRANSACTIONSTARTED = 2;
     public final static int TRANSACTIONSTARTING = 1;
+    
+    private final List<IscBlobHandle> blobs = Collections.synchronizedList(new LinkedList<IscBlobHandle>());
+    private final Set<IscStmtHandle> stmts = Collections.synchronizedSet(new HashSet<IscStmtHandle>());
 
     /**
      * Clear all the saved result sets from this handle.
      */
-    public abstract void forgetResultSets();
-
+    public void forgetResultSets() {
+        synchronized(stmts) {
+            for (Iterator<IscStmtHandle> iter = stmts.iterator(); iter.hasNext();) {
+                AbstractIscStmtHandle stmt = (AbstractIscStmtHandle) iter.next();
+                stmt.clearRows();
+            }
+            
+            stmts.clear();
+        }
+    }
+    
     /**
      * Get the current state of the transaction to which this handle is
      * pointing. The state is equal to one of the <code>TRANSACTION*</code> 
@@ -56,6 +76,14 @@ public abstract class AbstractIscTrHandle implements IscTrHandle {
      */
     public abstract int getState();
 
+    public void addBlob(IscBlobHandle blob) {
+        blobs.add(blob);
+    }
+
+    public void removeBlob(IscBlobHandle blob) {
+        blobs.remove(blob);
+    }
+
     /**
      * Register a statement within the transaction to which this handle points.
      * This method allows automated cleanup of the rows fetched within a 
@@ -63,12 +91,16 @@ public abstract class AbstractIscTrHandle implements IscTrHandle {
      *
      * @param fbStatement Handle to the statement to be registered.
      */
-    public abstract void registerStatementWithTransaction(AbstractIscStmtHandle fbStatement);
+    public void registerStatementWithTransaction(IscStmtHandle stmt) {
+        stmts.add(stmt);
+    }
 
     /**
      * Unregister a statement from the transaction in which it was registered.
      *
      * @param fbStatement Handle to the statement to be unregistered.
      */
-    public abstract void unregisterStatementFromTransaction(AbstractIscStmtHandle fbStatement);
+    public void unregisterStatementFromTransaction(IscStmtHandle stmt) {
+        stmts.remove(stmt);
+    }
 }
