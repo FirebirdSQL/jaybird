@@ -256,8 +256,9 @@
   </target>
 
   <target name="one-test-native" 
-            depends="jars,compile-native,copy_native_to_test_path"
-	    description="Execute a single test.">
+            depends="jars,compile-native,copy_native_to_test_path,one-test-native-only"
+	    description="Execute a single test." />
+  <target name="one-test-native-only" depends="init">
     <mkdir dir="${test.db.dir}"/>
     <chmod dir="${test.db.dir}" perm="777"/>
     <mkdir dir="${build.reports.native}"/>
