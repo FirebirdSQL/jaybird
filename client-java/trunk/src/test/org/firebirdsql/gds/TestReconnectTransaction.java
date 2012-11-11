@@ -4,7 +4,6 @@ import java.util.Arrays;
 
 import org.firebirdsql.common.FBTestBase;
 import org.firebirdsql.gds.impl.*;
-import org.firebirdsql.gds.impl.wire.isc_db_handle_impl;
 import org.firebirdsql.jca.FBTpb;
 import org.firebirdsql.jdbc.FBTpbMapper;
 import org.firebirdsql.jdbc.field.FBField;
@@ -96,8 +95,7 @@ public class TestReconnectTransaction extends FBTestBase {
         //gds.isc_commit_transaction(trHandle1);
         
         //gds.isc_detach_database(dbHandle1);
-        if (dbHandle1 instanceof isc_db_handle_impl)
-            ((isc_db_handle_impl)dbHandle1).out.close();
+        dbHandle1.invalidate();
         
         IscDbHandle dbHandle2 = gds.createIscDbHandle();
         gds.iscAttachDatabase(getdbpath(DB_NAME), dbHandle2, dpb);
@@ -155,8 +153,6 @@ public class TestReconnectTransaction extends FBTestBase {
             row++;
         }
 
-
-        
         gdsHelper2.closeStatement(stmtHandle2, true);
         
         gds.iscCommitTransaction(trHandle2);

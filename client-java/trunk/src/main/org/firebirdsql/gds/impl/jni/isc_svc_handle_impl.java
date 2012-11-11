@@ -30,7 +30,7 @@ import java.util.List;
 /**
  * ngds implementation for isc_svc_handle.
  */
-class isc_svc_handle_impl implements IscSvcHandle {
+public final class isc_svc_handle_impl implements IscSvcHandle {
 
     private List<GDSException> warnings = Collections.synchronizedList(new LinkedList<GDSException>());
     private int handle = 0;

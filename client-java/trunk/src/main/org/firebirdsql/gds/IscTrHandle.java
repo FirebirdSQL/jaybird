@@ -53,9 +53,19 @@ public interface IscTrHandle {
     public static final int TRANSACTIONCOMMITTING = 5;
     public static final int TRANSACTIONROLLINGBACK = 6;
 
+    /**
+     * Get the Firebird id for this transaction.
+     * 
+     * @return Firebird transaction id
+     */
     int getTransactionId();
     
-    void setTransactionId(final int rtr_id);
+    /**
+     * Sets the Firebird id for this transaction.
+     * 
+     * param rtr_id Firebird transaction id
+     */
+    void setTransactionId(int rtr_id);
     
     /**
      * Retrieve a handle to the database to which this transaction is linked.
@@ -67,7 +77,7 @@ public interface IscTrHandle {
     /**
      * Sets a handle to the database to which this transaction is linked.
      *
-     * @return Handle to the database
+     * @param db Handle to the database
      */
     void setDbHandle(IscDbHandle db);
     
@@ -93,10 +103,25 @@ public interface IscTrHandle {
      */
     int getState();
     
+    /**
+     * Sets the current transaction state.
+     * 
+     * @param state The value for the current state
+     */
     void setState(int state);
     
+    /**
+     * Register blob created under this transaction.
+     * 
+     * @param blob Blob to be registered
+     */
     void addBlob(IscBlobHandle blob);
     
+    /**
+     * Remove blob as registered under this transaction.
+     * 
+     * @param blob Blob to removed
+     */
     void removeBlob(IscBlobHandle blob);
     
     /**
