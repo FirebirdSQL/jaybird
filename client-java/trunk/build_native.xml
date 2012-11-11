@@ -84,9 +84,9 @@
             Name of the output library. On Windows this will be 
             resolved to jaybird.dll, on Linux it will be libjaybird.so
             
-            For amd64 it is set to jaybird22_x64 (note: detection depends on the bitness of the JVM used to run ANT!)
+            For amd64 it is set to jaybird23_x64 (note: detection depends on the bitness of the JVM used to run ANT!)
         -->
-        <condition property="build.native.name" value="jaybird22" else="jaybird22_x64">
+        <condition property="build.native.name" value="jaybird23" else="jaybird23_x64">
             <not>
                 <os arch="amd64" />
             </not>
