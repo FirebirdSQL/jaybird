@@ -29,6 +29,7 @@ import org.firebirdsql.gds.BlobParameterBuffer;
 import org.firebirdsql.gds.DatabaseParameterBuffer;
 import org.firebirdsql.gds.GDS;
 import org.firebirdsql.gds.ISCConstants;
+import org.firebirdsql.gds.IscBlobHandle;
 import org.firebirdsql.gds.IscDbHandle;
 import org.firebirdsql.gds.IscStmtHandle;
 import org.firebirdsql.gds.IscTrHandle;
@@ -377,7 +378,7 @@ public class TestNgds extends TestCase {
 
         db1 = createDatabase(dbName);
         t1 = startTransaction(db1);
-        isc_blob_handle_impl blob = (isc_blob_handle_impl) gds.createIscBlobHandle();
+        IscBlobHandle blob = gds.createIscBlobHandle();
         gds.iscCreateBlob2(db1, t1, blob, null);
         gds.iscCloseBlob(blob);
         commit(t1);
@@ -391,7 +392,7 @@ public class TestNgds extends TestCase {
 
         db1 = setupTable2();
         t1 = startTransaction(db1);
-        isc_blob_handle_impl blob1 = (isc_blob_handle_impl) gds.createIscBlobHandle();
+        IscBlobHandle blob1 = gds.createIscBlobHandle();
         final BlobParameterBuffer blobParameterBuffer = gds.createBlobParameterBuffer();
         blobParameterBuffer.addArgument(ISCConstants.isc_bpb_type, ISCConstants.isc_bpb_type_segmented);
         gds.iscCreateBlob2(db1, t1, blob1, blobParameterBuffer);
@@ -433,7 +434,7 @@ public class TestNgds extends TestCase {
         if (log != null) log.info("test- isc_dsql_execute2");
 
         gds.iscDsqlExecute2(t1, stmt1, 1, null, null);
-        isc_blob_handle_impl blob2 = (isc_blob_handle_impl) gds.createIscBlobHandle();
+        IscBlobHandle blob2 = gds.createIscBlobHandle();
         byte[][] row = null;
         gds.iscDsqlFetch(stmt1, 1, out_xsqlda, 200);
         Object[] rows = stmt1.getRows();
@@ -479,7 +480,7 @@ public class TestNgds extends TestCase {
 
         db1 = setupTable2();
         t1 = startTransaction(db1);
-        isc_blob_handle_impl blob1 = (isc_blob_handle_impl) gds.createIscBlobHandle();
+        IscBlobHandle blob1 = gds.createIscBlobHandle();
         final BlobParameterBuffer blobParameterBuffer = gds.createBlobParameterBuffer();
         blobParameterBuffer.addArgument(ISCConstants.isc_bpb_type, ISCConstants.isc_bpb_type_segmented);
         gds.iscCreateBlob2(db1, t1, blob1, blobParameterBuffer);
@@ -524,7 +525,7 @@ public class TestNgds extends TestCase {
         if (log != null) log.info("test- isc_dsql_execute2");
 
         gds.iscDsqlExecute2(t1, stmt1, 1, null, null);
-        isc_blob_handle_impl blob2 = (isc_blob_handle_impl) gds.createIscBlobHandle();
+        IscBlobHandle blob2 = gds.createIscBlobHandle();
         byte[][] row = null;
         gds.iscDsqlFetch(stmt1, 1, out_xsqlda, 200);
         Object[] rows = stmt1.getRows();
@@ -577,7 +578,7 @@ public class TestNgds extends TestCase {
 
         db1 = setupTable2();
         t1 = startTransaction(db1);
-        isc_blob_handle_impl blob1 = (isc_blob_handle_impl) gds.createIscBlobHandle();
+        IscBlobHandle blob1 = gds.createIscBlobHandle();
         final BlobParameterBuffer blobParameterBuffer = gds.createBlobParameterBuffer();
         blobParameterBuffer.addArgument(ISCConstants.isc_bpb_type, ISCConstants.isc_bpb_type_segmented);
         gds.iscCreateBlob2(db1, t1, blob1, blobParameterBuffer);
@@ -623,7 +624,7 @@ public class TestNgds extends TestCase {
         if (log != null) log.info("test- isc_dsql_execute2");
 
         gds.iscDsqlExecute2(t1, stmt1, 1, null, null);
-        isc_blob_handle_impl blob2 = (isc_blob_handle_impl) gds.createIscBlobHandle();
+        IscBlobHandle blob2 = gds.createIscBlobHandle();
         byte[][] row = null;
         gds.iscDsqlFetch(stmt1, 1, out_xsqlda, 200);
         Object[] rows = stmt1.getRows();
@@ -678,7 +679,7 @@ public class TestNgds extends TestCase {
 
         db1 = setupTable2();
         t1 = startTransaction(db1);
-        isc_blob_handle_impl blob1 = (isc_blob_handle_impl) gds.createIscBlobHandle();
+        IscBlobHandle blob1 = gds.createIscBlobHandle();
         final BlobParameterBuffer blobParameterBuffer = gds.createBlobParameterBuffer();
         blobParameterBuffer.addArgument(ISCConstants.isc_bpb_type, ISCConstants.isc_bpb_type_stream);
         gds.iscCreateBlob2(db1, t1, blob1, blobParameterBuffer);
@@ -724,7 +725,7 @@ public class TestNgds extends TestCase {
         if (log != null) log.info("test- isc_dsql_execute2");
 
         gds.iscDsqlExecute2(t1, stmt1, 1, null, null);
-        isc_blob_handle_impl blob2 = (isc_blob_handle_impl) gds.createIscBlobHandle();
+        IscBlobHandle blob2 = gds.createIscBlobHandle();
         byte[][] row = null;
         gds.iscDsqlFetch(stmt1, 1, out_xsqlda, 200);
         Object[] rows = stmt1.getRows();

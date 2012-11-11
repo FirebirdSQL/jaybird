@@ -16,12 +16,9 @@
  *
  * All rights reserved.
  */
-
 package org.firebirdsql.gds.impl.jni;
 
-import org.firebirdsql.gds.*;
-import org.firebirdsql.gds.impl.AbstractIscDbHandle;
-import org.firebirdsql.gds.impl.AbstractIscTrHandle;
+import org.firebirdsql.gds.impl.AbstractIscBlobHandle;
 
 /**
  * Describe class <code>isc_blob_handle_impl</code> here.
@@ -29,58 +26,5 @@ import org.firebirdsql.gds.impl.AbstractIscTrHandle;
  * @author <a href="mailto:d_jencks@users.sourceforge.net">David Jencks</a>
  * @version 1.0
  */
-public final class isc_blob_handle_impl implements IscBlobHandle {
-
-    private AbstractIscDbHandle db;
-
-    private AbstractIscTrHandle tr;
-
-    private int rbl_id;
-
-    private long blob_id;
-
-    boolean isEndOfFile = false;
-    
-    public isc_blob_handle_impl() {
-    };
-
-    public void addWarning(GDSException warning) {
-        db.addWarning(warning);
-    }
-
-    public AbstractIscTrHandle getTr() {
-        return tr;
-    }
-
-    public void setTr(AbstractIscTrHandle value) {
-        tr = value;
-    }
-
-    public AbstractIscDbHandle getDb() {
-        return db;
-    }
-
-    public void setDb(AbstractIscDbHandle value) {
-        db = value;
-    }
-
-    public long getBlobId() {
-        return blob_id;
-    }
-
-    public void setBlobId(long value) {
-        blob_id = value;
-    }
-
-    public int getRblId() {
-        return rbl_id;
-    }
-
-    public void setRblId(int value) {
-        rbl_id = value;
-    }
-
-    public boolean isEof() {
-        return isEndOfFile;
-    }
+public final class isc_blob_handle_impl extends AbstractIscBlobHandle {
 }
