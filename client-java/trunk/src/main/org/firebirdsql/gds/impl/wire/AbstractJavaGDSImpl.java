@@ -2173,15 +2173,12 @@ public abstract class AbstractJavaGDSImpl extends AbstractGDS implements GDS {
 						throw head;
 					else if (head != null && head.isWarning())
 						db.addWarning(head);
-
 					return;
 				case ISCConstants.isc_arg_interpreted:
 				case ISCConstants.isc_arg_string:
 					GDSException ts = new GDSException(arg, db.in.readString());
 					if (debug)
-						log
-								.debug("readStatusVector string: "
-										+ ts.getMessage());
+						log.debug("readStatusVector string: " + ts.getMessage());
 					if (head == null) {
 						head = ts;
 						tail = ts;
@@ -2710,9 +2707,7 @@ public abstract class AbstractJavaGDSImpl extends AbstractGDS implements GDS {
 				case ISCConstants.isc_arg_gds:
 					int er = svc.in.readInt();
 					if (debug)
-						log
-								.debug("readStatusVector arg:isc_arg_gds int: "
-										+ er);
+						log.debug("readStatusVector arg:isc_arg_gds int: " + er);
 					if (er != 0) {
 						GDSException td = new GDSException(arg, er);
 						if (head == null) {
@@ -2735,9 +2730,7 @@ public abstract class AbstractJavaGDSImpl extends AbstractGDS implements GDS {
 				case ISCConstants.isc_arg_string:
 					GDSException ts = new GDSException(arg, svc.in.readString());
 					if (debug)
-						log
-								.debug("readStatusVector string: "
-										+ ts.getMessage());
+						log.debug("readStatusVector string: " + ts.getMessage());
 					if (head == null) {
 						head = ts;
 						tail = ts;
