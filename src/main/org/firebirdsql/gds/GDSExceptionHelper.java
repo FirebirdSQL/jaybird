@@ -42,42 +42,48 @@ import java.io.InputStream;
  */
 public class GDSExceptionHelper {
 
+   private static final String SQLSTATE_CLI_GENERIC_ERROR = "HY000";
+
    private static final Logger log = LoggerFactory.getLogger(GDSExceptionHelper.class,false);
 
     private static final String MESSAGES = "isc_error_msg";
     private static final String SQLSTATES = "isc_error_sqlstates";
-    private static Properties messages = new Properties();
-    private static Properties sqlstates = new Properties();
-
-    private static boolean initialized = false;
+    private static final Properties messages;
+    private static final Properties sqlstates;
 
     /**
-     * This method initializes the messages map.
-     * @todo think about better exception handling.
+     * Initializes the messages map.
      */
-    private static void init() {
-        loadResource(MESSAGES, messages);
-        loadResource(SQLSTATES, sqlstates);
+    static {
+        try {
+            messages = loadResource(MESSAGES);
+            sqlstates = loadResource(SQLSTATES);
+        } catch (Exception ex) {
+            if (log != null) log.error("Exception in init of GDSExceptionHelper, unable to load error information", ex);
+            throw new ExceptionInInitializerError(ex);
+        }
     }
 
-    private static void loadResource(String resource, Properties propeties) {
-        try {
-            String res = "/" + resource.replace('.','/') + ".properties";
-			InputStream in = GDSException.class.getResourceAsStream(res);
-            
-            if (in == null) {
-                ClassLoader cl = Thread.currentThread().getContextClassLoader();
-                in = cl.getResourceAsStream(res);
-            }
-            
-            if (in != null)
-                propeties.load(in);
-                
-        } catch (Exception ex) {
-            if (log!=null) log.info("Exception in init of GDSExceptionHelper", ex);
-        } finally {
-            initialized = true;
+    private static Properties loadResource(String resource) throws Exception {
+        Properties properties = new Properties();
+        String res = "/" + resource.replace('.','/') + ".properties";
+		InputStream in = GDSException.class.getResourceAsStream(res);
+		if (in == null) {
+            ClassLoader cl = Thread.currentThread().getContextClassLoader();
+            in = cl.getResourceAsStream(res);
         }
+		try {
+            if (in != null) {
+                properties.load(in);
+            } else if (log != null) {
+                log.warn("Unable to load resource; resource " + resource + " is not found");
+            }
+		} finally {
+		    if (in != null) {
+		        in.close();
+		    }
+		}
+        return properties;
     }
 
     /**
@@ -87,9 +93,8 @@ public class GDSExceptionHelper {
      * where you can set desired parameters.
      */
     public static GDSMessage getMessage(int code) {
-        if (!initialized) init();
         return new GDSMessage(messages.getProperty(
-            "" + code, "No message for code " + code + " found."));
+                Integer.toString(code), "No message for code " + code + " found."));
     }
     
     /**
@@ -100,29 +105,23 @@ public class GDSExceptionHelper {
      * @return string with SQL state, "HY000" if nothing found. 
      */
     public static String getSQLState(int code) {
-        if (!initialized) init();
-        String result = sqlstates.getProperty(Integer.toString(code));
-        
-        if (result == null)
-            result = "HY000";
-        
-        return result;
+        return sqlstates.getProperty(Integer.toString(code), SQLSTATE_CLI_GENERIC_ERROR);
     }
 
     /**
      * This class wraps message template obtained from isc_error_msg.properties
      * file and allows to set parameters to the message.
      */
-    public static class GDSMessage {
-        private String template;
-        private String[] params;
+    public static final class GDSMessage {
+        private final String template;
+        private final String[] params;
 
         /**
          * Constructs an instance of GDSMessage for the specified template.
          */
         public GDSMessage(String template) {
             this.template = template;
-            params = new String[getParamCount()];
+            params = new String[getParamCountInternal()];
         }
 
         /**
@@ -130,9 +129,14 @@ public class GDSExceptionHelper {
          * @return number of parameters.
          */
         public int getParamCount() {
+            return params.length;
+        }
+
+        private int getParamCountInternal() {
             int count = 0;
-            for(int i = 0; i < template.length(); i++)
+            for(int i = 0; i < template.length(); i++) {
                 if (template.charAt(i) == '{') count++;
+            }
             return count;
         }
 
@@ -142,8 +146,9 @@ public class GDSExceptionHelper {
          * @param text value of parameter
          */
         public void setParameter(int position, String text) {
-            if (position < params.length)
+            if (position < params.length) {
                 params[position] = text;
+            }
         }
 
         /**

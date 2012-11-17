@@ -38,386 +38,477 @@
  */
 package org.firebirdsql.management;
 
-
 import java.sql.SQLException;
+import java.util.List;
 
 import org.firebirdsql.gds.ISCConstants;
 
-
 /**
- * A <code>MaintenanceManager</code> is responsible for replicating
- * the functionality provided by the <code>gfix</code> command-line tool.
+ * A <code>MaintenanceManager</code> is responsible for replicating the
+ * functionality provided by the <code>gfix</code> command-line tool.
+ * <p>
  * Among the responsibilities of this class are:
  * <ul>
- *      <li>Database shutdown
- *      <li>Extended database shutdown/online modes new with Firebird 2.5
- *      <li>Changing database mode to read-only or read-write
- *      <li>Enabling or disabling forced writes in the database
- *      <li>Changing the dialect of the database
- *      <li>Setting the cache size at database-level
- *      <li>Mending databases and making minor repairs
- *      <li>Sweeping databases
- *      <li>Displaying, committing, or recovering limbo transactions
- *      <li>Activating and killing shadow files
- *      <li>Configuring page fill
+ * <li>Database shutdown
+ * <li>Extended database shutdown/online modes
+ * <li>Changing database mode to read-only or read-write
+ * <li>Enabling or disabling forced writes in the database
+ * <li>Changing the dialect of the database
+ * <li>Setting the cache size at database-level
+ * <li>Mending databases and making minor repairs
+ * <li>Sweeping databases
+ * <li>Displaying, committing, or recovering limbo transactions
+ * <li>Activating and killing shadow files
+ * <li>Configuring page fill
  * </ul>
- *
+ * </p>
+ * 
  * @author <a href="mailto:gab_reid@users.sourceforge.net">Gabriel Reid</a>
  * @author <a href="mailto:tsteinmaurer@users.sourceforge.net">Thomas Steinmaurer</a>
  */
 public interface MaintenanceManager extends ServiceManager {
 
-    /** 
+    /**
      * Database read-write mode
      */
-    public static final int ACCESS_MODE_READ_WRITE = ISCConstants.isc_spb_prp_am_readwrite;
+    int ACCESS_MODE_READ_WRITE = ISCConstants.isc_spb_prp_am_readwrite;
 
     /**
      * Database read-only mode
      */
-    public static final int ACCESS_MODE_READ_ONLY = ISCConstants.isc_spb_prp_am_readonly;
+    int ACCESS_MODE_READ_ONLY = ISCConstants.isc_spb_prp_am_readonly;
 
     /**
      * Don't allow new connections while waiting to shut down.
      */
-    public static final int SHUTDOWN_ATTACH = ISCConstants.isc_spb_prp_deny_new_attachments;
+    int SHUTDOWN_ATTACH = ISCConstants.isc_spb_prp_deny_new_attachments;
 
     /**
      * Don't allow new transactions while waiting to shut down.
      */
-    public static final int SHUTDOWN_TRANSACTIONAL = ISCConstants.isc_spb_prp_deny_new_transactions;
+    int SHUTDOWN_TRANSACTIONAL = ISCConstants.isc_spb_prp_deny_new_transactions;
 
     /**
      * Forced database shutdown.
      */
-    public static final int SHUTDOWN_FORCE = ISCConstants.isc_spb_prp_shutdown_db;
+    int SHUTDOWN_FORCE = ISCConstants.isc_spb_prp_shutdown_db;
 
     /**
      * Only report corrupt or misallocated structures, don't fix.
      */
-    public static final int VALIDATE_READ_ONLY = ISCConstants.isc_spb_rpr_check_db;
+    int VALIDATE_READ_ONLY = ISCConstants.isc_spb_rpr_check_db;
 
     /**
      * Ignore checksums during repair operations.
      */
-    public static final int VALIDATE_IGNORE_CHECKSUM = ISCConstants.isc_spb_rpr_ignore_checksum;
+    int VALIDATE_IGNORE_CHECKSUM = ISCConstants.isc_spb_rpr_ignore_checksum;
 
     /**
      * Do a full check on record and pages structures, releasing unassigned
      * record fragments.
      */
-    public static final int VALIDATE_FULL = ISCConstants.isc_spb_rpr_full;
+    int VALIDATE_FULL = ISCConstants.isc_spb_rpr_full;
 
     /**
      * Fully fill pages when inserting records.
      */
-    public static final int PAGE_FILL_FULL = ISCConstants.isc_spb_prp_res_use_full;
+    int PAGE_FILL_FULL = ISCConstants.isc_spb_prp_res_use_full;
 
     /**
-     * While inserting recrods, reserve 20% of each page for later
-     * record deltas
+     * While inserting records, reserve 20% of each page for later record deltas
      */
-    public static final int PAGE_FILL_RESERVE = ISCConstants.isc_spb_prp_res;
-    
+    int PAGE_FILL_RESERVE = ISCConstants.isc_spb_prp_res;
+
     /**
-     * Operation mode normal online. New with Firebird 2.5.
+     * Operation mode normal online.
+     * <p>
      * To be used with the {@link #shutdownDatabase(byte, int, int)} method.
-     * @see #shutdownDatabase(byte, int, int) 
-     */
-    public static final byte OPERATION_MODE_NORMAL = ISCConstants.isc_spb_prp_sm_normal;
-    
-    /**
-     * Operation mode multi shutdown/online. New with Firebird 2.5. 
-     * To be used with the {@link #shutdownDatabase(byte, int, int)} method.
-     * @see #shutdownDatabase(byte, int, int) 
-     */
-    public static final byte OPERATION_MODE_MULTI = ISCConstants.isc_spb_prp_sm_multi;
-    
-    /**
-     * Operation mode single shutdown/online. New with Firebird 2.5. 
-     * To be used with the {@link #shutdownDatabase(byte, int, int)} method.
-     * @see #shutdownDatabase(byte, int, int) 
-     */
-    public static final byte OPERATION_MODE_SINGLE = ISCConstants.isc_spb_prp_sm_single;
-    
-    /**
-     * Operation mode full shutdown. New with Firebird 2.5. 
-     * To be used with the {@link #shutdownDatabase(byte, int, int)} method.
-     * @see #shutdownDatabase(byte, int, int) 
-     */
-    public static final byte OPERATION_MODE_FULL_SHUTDOWN = ISCConstants.isc_spb_prp_sm_full;
-    
-    /**
-     * Force shutdown. New with Firebird 2.5. 
-     * To be used with the {@link #shutdownDatabase(byte, int, int)} method.
+     * </p>
+     * 
+     * @since Firebird 2.5
      * @see #shutdownDatabase(byte, int, int)
      */
-    public static final int SHUTDOWNEX_FORCE = ISCConstants.isc_spb_prp_force_shutdown;
-    
-    /**
-     * Shutdown attachments. New with Firebird 2.5. 
-     * To be used with the {@link #shutdownDatabase(byte, int, int)} method.
-     * @see #shutdownDatabase(byte, int, int) 
-     */
-    public static final int SHUTDOWNEX_ATTACHMENTS = ISCConstants.isc_spb_prp_attachments_shutdown;
+    byte OPERATION_MODE_NORMAL = ISCConstants.isc_spb_prp_sm_normal;
 
     /**
-     * Shutdown transactions. New with Firebird 2.5. 
+     * Operation mode multi shutdown/online.
+     * <p>
      * To be used with the {@link #shutdownDatabase(byte, int, int)} method.
-     * @see #shutdownDatabase(byte, int, int) 
+     * </p>
+     * 
+     * @since Firebird 2.5
+     * @see #shutdownDatabase(byte, int, int)
      */
-    public static final int SHUTDOWNEX_TRANSACTIONS = ISCConstants.isc_spb_prp_transactions_shutdown;
-    
+    byte OPERATION_MODE_MULTI = ISCConstants.isc_spb_prp_sm_multi;
+
+    /**
+     * Operation mode single shutdown/online.
+     * <p>
+     * To be used with the {@link #shutdownDatabase(byte, int, int)} method.
+     * </p>
+     * 
+     * @since Firebird 2.5
+     * @see #shutdownDatabase(byte, int, int)
+     */
+    byte OPERATION_MODE_SINGLE = ISCConstants.isc_spb_prp_sm_single;
+
+    /**
+     * Operation mode full shutdown.
+     * <p>
+     * To be used with the {@link #shutdownDatabase(byte, int, int)} method.
+     * </p>
+     * 
+     * @since Firebird 2.5
+     * @see #shutdownDatabase(byte, int, int)
+     */
+    byte OPERATION_MODE_FULL_SHUTDOWN = ISCConstants.isc_spb_prp_sm_full;
+
+    /**
+     * Force shutdown.
+     * <p>
+     * To be used with the {@link #shutdownDatabase(byte, int, int)} method.
+     * </p>
+     * 
+     * @since Firebird 2.5
+     * @see #shutdownDatabase(byte, int, int)
+     */
+    int SHUTDOWNEX_FORCE = ISCConstants.isc_spb_prp_force_shutdown;
+
+    /**
+     * Shutdown attachments.
+     * <p>
+     * To be used with the {@link #shutdownDatabase(byte, int, int)} method.
+     * </p>
+     * 
+     * @since Firebird 2.5
+     * @see #shutdownDatabase(byte, int, int)
+     */
+    int SHUTDOWNEX_ATTACHMENTS = ISCConstants.isc_spb_prp_attachments_shutdown;
+
+    /**
+     * Shutdown transactions.
+     * <p>
+     * To be used with the {@link #shutdownDatabase(byte, int, int)} method.
+     * </p>
+     * 
+     * @since Firebird 2.5
+     * @see #shutdownDatabase(byte, int, int)
+     */
+    int SHUTDOWNEX_TRANSACTIONS = ISCConstants.isc_spb_prp_transactions_shutdown;
+
     /**
      * Set the database to have read-write or read-only access.
-     *
-     * @param mode Must be either <code>ACCESS_MODE_READ_WRITE</code> 
-     *        or <code>ACCESS_MODE_READ_ONLY</code>
-     * @throws SQLException if a database access error occurs
+     * 
+     * @param mode
+     *            Must be either <code>ACCESS_MODE_READ_WRITE</code> or
+     *            <code>ACCESS_MODE_READ_ONLY</code>
+     * @throws SQLException
+     *             if a database access error occurs
      */
-    public void setDatabaseAccessMode(int mode) throws SQLException; 
+    void setDatabaseAccessMode(int mode) throws SQLException;
 
     /**
      * Set the database's dialect.
-     *
-     * @param dialect The database dialect, must be either 1 or 3
-     * @throws SQLException if a database access error occurs 
+     * 
+     * @param dialect
+     *            The database dialect, must be either 1 or 3
+     * @throws SQLException
+     *             if a database access error occurs
      */
-    public void setDatabaseDialect(int dialect) throws SQLException;
-
+    void setDatabaseDialect(int dialect) throws SQLException;
 
     /**
-     * Set the default page-buffer count to be cached in the database. The
-     * Firebird default is 2048.
-     *
-     * @param pageCount The number of pages to be cached, must be a positive 
-     * @throws SQLException If the given page count cannot be set, or a
-     *         database access error occurs
+     * Set the default page-buffer count to be cached in the database.
+     * 
+     * @param pageCount
+     *            The number of pages to be cached, must be a positive
+     * @throws SQLException
+     *             If the given page count cannot be set, or a database access
+     *             error occurs
      */
-    public void setDefaultCacheBuffer(int pageCount) throws SQLException;
-
+    void setDefaultCacheBuffer(int pageCount) throws SQLException;
 
     /**
      * Enable or disable forced (synchronous) writes in the database.
-     * Note, it is considered to be a <b>very</b> bad idea to use buffered 
-     * writing on Windows platforms.
-     *
-     * @param forced If <code>true</code>, forced writes will be used in the
-     *        database, otherwise buffered writes will be used.
-     * @throws SQLException if a database access error occurs
+     * <p>
+     * Note, it is considered to be a <b>very</b> bad idea to disable forced
+     * writes on Windows platforms.
+     * </p>
+     * 
+     * @param forced
+     *            If <code>true</code>, forced writes will be used in the
+     *            database, otherwise buffered writes will be used.
+     * @throws SQLException
+     *             if a database access error occurs
      */
-    public void setForcedWrites(boolean forced) throws SQLException;
+    void setForcedWrites(boolean forced) throws SQLException;
 
-   
     /**
      * Set the page fill strategy for when inserting records.
+     * <p>
      * <code>pageFill</code> can be one of:
      * <ul>
-     *      <li><code>PAGE_FILL_FULL</code> Fully fill database pages
-     *      <li><code>PAGE_FILL_RESERVE</code> Reserve 20% of page space for
-     *      later record deltas
+     * <li><code>PAGE_FILL_FULL</code> Fully fill database pages
+     * <li><code>PAGE_FILL_RESERVE</code> Reserve 20% of page space for later
+     * record deltas
      * </ul>
-     *
-     * @param pageFill The page-filling strategy, either 
-     *        <code>PAGE_FILL_FULL</code> or <code>PAGE_FILL_RESERVE</code>
-     * @throws SQLException if a database access error occurs
+     * </p>
+     * 
+     * @param pageFill
+     *            The page-filling strategy, either <code>PAGE_FILL_FULL</code>
+     *            or <code>PAGE_FILL_RESERVE</code>
+     * @throws SQLException
+     *             if a database access error occurs
      */
-    public void setPageFill(int pageFill) throws SQLException;
+    void setPageFill(int pageFill) throws SQLException;
 
-
-    //----------- Database Shutdown -------------------
+    // ----------- Database Shutdown -------------------
 
     /**
      * Shutdown the current database.
+     * <p>
      * Shutdown can be done in three modes:
      * <ul>
-     *      <li><code>SHUTDOWN_ATTACH</code> - No new non-owner connections 
-     *      will be allowed to the database during the shutdown, and shutdown
-     *      is cancelled if there are still processes connected at the end
-     *      of the timeout.
-     *
-     *      <li><code>SHUTDOWN_TRANSACTIONAL</code> - No new transactions can 
-     *      be started during the timeout period, and shutdown is cancelled
-     *      if there are still active transactions at the end of the timeout.
-     *
-     *      <li><code>SHUTDOWN_FORCE</code> - Forcefully shuts down the 
-     *      database at the end of the timeout.
+     * <li><code>SHUTDOWN_ATTACH</code> - No new non-owner connections will be
+     * allowed to the database during the shutdown, and shutdown is cancelled if
+     * there are still processes connected at the end of the timeout.
+     * 
+     * <li><code>SHUTDOWN_TRANSACTIONAL</code> - No new transactions can be
+     * started during the timeout period, and shutdown is cancelled if there are
+     * still active transactions at the end of the timeout.
+     * 
+     * <li><code>SHUTDOWN_FORCE</code> - Forcefully shuts down the database at
+     * the end of the timeout.
      * </ul>
-     *
-     * @param shutdownMode One of <code>SHUTDOWN_ATTACH</code>, 
-     *        <code>SHUTDOWN_TRANSACTIONAL</code>, 
-     *        or <code>SHUTDOWN_FORCE</code>.
-     * @param timeout The maximum amount of time allocated for the operation,
-     *        in seconds
-     * @throws SQLException if the requested operation cannot be completed 
-     *         within the given timeout, or a database access error occurs
+     * </p>
+     * 
+     * @param shutdownMode
+     *            One of <code>SHUTDOWN_ATTACH</code>,
+     *            <code>SHUTDOWN_TRANSACTIONAL</code>, or
+     *            <code>SHUTDOWN_FORCE</code>.
+     * @param timeout
+     *            The maximum amount of time allocated for the operation, in
+     *            seconds
+     * @throws SQLException
+     *             if the requested operation cannot be completed within the
+     *             given timeout, or a database access error occurs
      */
-    public void shutdownDatabase(int shutdownMode, int timeout) 
-            throws SQLException ;
+    void shutdownDatabase(int shutdownMode, int timeout) throws SQLException;
 
     /**
-     * Shutdown the current database with enhanced modes new since Firebird 2.5.
+     * Shutdown the current database with enhanced modes (FB 2.5 or higher).
+     * <p>
      * There are three operation modes for shutdown available:
      * <ul>
-     *      <li><code>OPERATION_MODE_MULTI</code> - Multi-user maintenance. Unlimited SYSDBA/database owner connections are allowed.
-     *
-     *      <li><code>OPERATION_MODE_SINGLE</code> - Single-user maintenance. Only one SYSDBA/database owner connection is allowed.
-     *
-     *      <li><code>OPERATION_MODE_FULL_SHUTDOWN</code> - Full shutdown. Full exclusive shutdown. No connections are allowed.
+     * <li><code>OPERATION_MODE_MULTI</code> - Multi-user maintenance. Unlimited
+     * SYSDBA/database owner connections are allowed.
+     * <li><code>OPERATION_MODE_SINGLE</code> - Single-user maintenance. Only
+     * one SYSDBA/database owner connection is allowed.
+     * <li><code>OPERATION_MODE_FULL_SHUTDOWN</code> - Full shutdown. Full
+     * exclusive shutdown. No connections are allowed.
      * </ul>
+     * </p>
+     * <p>
      * There are three extended shutdown modes for shutdown available:
      * <ul>
-     *      <li><code>SHUTDOWNEX_FORCE</code> - Force shutdown.
-     *
-     *      <li><code>SHUTDOWNEX_ATTACHMENTS</code> - Shutdown attachments.
-     *
-     *      <li><code>SHUTDOWNEX_TRANSACTIONS</code> - Shutdown transactions.
+     * <li><code>SHUTDOWNEX_FORCE</code> - Force shutdown.
+     * <li><code>SHUTDOWNEX_ATTACHMENTS</code> - Shutdown attachments.
+     * <li><code>SHUTDOWNEX_TRANSACTIONS</code> - Shutdown transactions.
      * </ul>
-     * @param operationMode one of <code>OPERATION_MODE_*</code> operation modes listed above
-     * @param shutdownModeEx one of <code>SHUTDOWNEX_*</code> extended shutdown modes listed above
-     * @param timeout The maximum amount of time allocated for the operation, in seconds. 0 = immediately. 
-     * @throws SQLException if the requested operation cannot be completed
-     * 		   within the given timeout, or a database access error occurs
+     * </p>
+     * 
+     * @param operationMode
+     *            one of <code>OPERATION_MODE_*</code> operation modes listed
+     *            above
+     * @param shutdownModeEx
+     *            one of <code>SHUTDOWNEX_*</code> extended shutdown modes
+     *            listed above
+     * @param timeout
+     *            The maximum amount of time allocated for the operation, in
+     *            seconds. 0 = immediately.
+     * @throws SQLException
+     *             if the requested operation cannot be completed within the
+     *             given timeout, or a database access error occurs
+     * @since Firebird 2.5
      */
-    public void shutdownDatabase(byte operationMode, int shutdownModeEx, int timeout) throws SQLException ;
+    void shutdownDatabase(byte operationMode, int shutdownModeEx, int timeout) throws SQLException;
 
-    
     /**
      * Bring a shutdown database online.
-     *
-     * @throws SQLException if a database access error occurs
+     * 
+     * @throws SQLException
+     *             if a database access error occurs
      */
-    public void bringDatabaseOnline() throws SQLException; 
+    void bringDatabaseOnline() throws SQLException;
 
     /**
-     * Bring a shutdown database online with enhanced operation modes
-     * new since Firebird 2.5.
+     * Bring a shutdown database online with enhanced operation modes (FB 2.5 or
+     * higher).
+     * <p>
      * There are three operation modes for bringing a database online available:
      * <ul>
-     *      <li><code>OPERATION_MODE_NORMAL</code> - Normal operation modes.
-     *      
-     *      <li><code>OPERATION_MODE_MULTI</code> - Multi-user maintenance. Unlimited SYSDBA/database owner connections are allowed.
-     *
-     *      <li><code>OPERATION_MODE_SINGLE</code> - Single-user maintenance. Only one SYSDBA/database owner connection is allowed.
+     * <li><code>OPERATION_MODE_NORMAL</code> - Normal operation modes.
+     * <li><code>OPERATION_MODE_MULTI</code> - Multi-user maintenance. Unlimited
+     * SYSDBA/database owner connections are allowed.
+     * <li><code>OPERATION_MODE_SINGLE</code> - Single-user maintenance. Only
+     * one SYSDBA/database owner connection is allowed.
      * </ul>
-     * @throws SQLException if a database access error occurs
+     * </p>
+     * 
+     * @throws SQLException
+     *             if a database access error occurs
+     * @since Firebird 2.5
      */
-    public void bringDatabaseOnline(byte operationMode) throws SQLException; 
+    void bringDatabaseOnline(byte operationMode) throws SQLException;
 
-
-    //-------------- Database Repair ----------------------
+    // -------------- Database Repair ----------------------
 
     /**
      * Mark corrupt records in the database as unavailable.
-     * This operation ensures that the corrupt records are skipped (for 
-     * example, during a subsequent backup).
-     *
-     * @throws SQLException if a database access error occurs
+     * <p>
+     * This operation ensures that the corrupt records are skipped (for example,
+     * during a subsequent backup).
+     * </p>
+     * 
+     * @throws SQLException
+     *             if a database access error occurs
      */
-    public void markCorruptRecords() throws SQLException;
+    void markCorruptRecords() throws SQLException;
 
     /**
-     * Locate and release database pages that are allocated but unassigned
-     * to any data structures. This method also reports corrupt structures.
-     *
-     * @throws SQLException if a database access error occurs
+     * Locate and release database pages that are allocated but unassigned to
+     * any data structures. This method also reports corrupt structures.
+     * 
+     * @throws SQLException
+     *             if a database access error occurs
      */
-    public void validateDatabase() throws SQLException;
+    void validateDatabase() throws SQLException;
 
     /**
-     * Locate and release database pages that are allocated but unassigned
-     * to any data structures. This method also reports corrupt structures.
-     * The value supplied for <code>options</code> must be one of the
-     * following:
+     * Locate and release database pages that are allocated but unassigned to
+     * any data structures. This method also reports corrupt structures.
+     * <p>
+     * The value supplied for <code>options</code> must be one of the following:
      * <ul>
-     *      <li>0 - Simple validation
-     *      <li><code>VALIDATE_READ_ONLY</code> - read-only validation, 
-     *      no repair
-     *      <li><code>VALIDATE_FULL</code> - full validation and repair
+     * <li>0 - Simple validation
+     * <li><code>VALIDATE_READ_ONLY</code> - read-only validation, no repair
+     * <li><code>VALIDATE_FULL</code> - full validation and repair
      * </ul>
-     *
-     * The value for <code>options</code> can additionally be combined in
-     * a bitmask with <code>VALIDATE_IGNORE_CHECKSUM</code> to ignore
-     * checksums while performing validation.
-     *
-     * @param options Either 0, <code>VALIDATE_READ_ONLY</code>, or
-     *        <code>VALIDATE_FULL</code>
-     * @throws SQLException if a database access error occurs
+     * </p>
+     * <p>
+     * The value for <code>options</code> can additionally be combined in a
+     * bitmask with <code>VALIDATE_IGNORE_CHECKSUM</code> to ignore checksums
+     * while performing validation.
+     * </p>
+     * 
+     * @param options
+     *            Either 0, <code>VALIDATE_READ_ONLY</code>, or
+     *            <code>VALIDATE_FULL</code>
+     * @throws SQLException
+     *             if a database access error occurs
      */
-    public void validateDatabase(int options) throws SQLException;
+    void validateDatabase(int options) throws SQLException;
 
-   
+    // ----------- Sweeping -------------------------
 
-    //----------- Sweeping -------------------------
-   
     /**
-     * Set the database automatic sweep interval to a given number of 
-     * transactions. The Firebird default value is 20,000. If 
-     * <code>transactions</code> is 0, automatic sweeping is disabled.
-     *
-     * @param transactions The interval of transactions between automatic
-     *        sweeps of the database. Can be set to 0, which disables
-     *        automatic sweeping of the database.
-     * @throws SQLException if a database access error occurs
+     * Set the database automatic sweep interval to a given number of
+     * transactions.
+     * <p>
+     * The Firebird default value is 20,000. If <code>transactions</code> is 0,
+     * automatic sweeping is disabled.
+     * </p>
+     * 
+     * @param transactions
+     *            The interval of transactions between automatic sweeps of the
+     *            database. Can be set to 0, which disables automatic sweeping
+     *            of the database.
+     * @throws SQLException
+     *             if a database access error occurs
      */
-    public void setSweepThreshold(int transactions) throws SQLException;
+    void setSweepThreshold(int transactions) throws SQLException;
 
     /**
      * Perform an immediate sweep of the database.
-     *
-     * @throws SQLException if a database access error occurs
+     * 
+     * @throws SQLException
+     *             if a database access error occurs
      */
-    public void sweepDatabase() throws SQLException;
+    void sweepDatabase() throws SQLException;
 
+    // ----------- Shadow Files ------------------------------------
 
-
-    //----------- Shadow Files ------------------------------------
-   
     /**
      * Activate a database shadow file to be used as the actual database.
+     * <p>
      * This method is the equivalent of <b><code>gfix -activate</code></b>.
-     *
-     * @throws SQLException if a database access error occurs
+     * </p>
+     * 
+     * @throws SQLException
+     *             if a database access error occurs
      */
-    public void activateShadowFile() throws SQLException;
+    void activateShadowFile() throws SQLException;
 
     /**
-     * Remove references to unavailable shadow files. This method is the
-     * equivalent of <b><code>gfix -kill</code></b>.
-     *
-     * @throws SQLException if a database access error occurs
+     * Remove references to unavailable shadow files.
+     * <p>
+     * This method is the equivalent of <b><code>gfix -kill</code></b>.
+     * </p>
+     * 
+     * @throws SQLException
+     *             if a database access error occurs
      */
-    public void killUnavailableShadows() throws SQLException;
+    void killUnavailableShadows() throws SQLException;
 
-
-
-
-    //----------- Transaction Management ----------------------------
+    // ----------- Transaction Management ----------------------------
 
     /**
-     * Retrieve the ID of each limbo transaction. The output of this  method 
-     * is written to the logger.
-     *
-     * @throws SQLException if a database access error occurs
+     * Retrieve the ID of each limbo transaction. The output of this method is
+     * written to the logger.
+     * 
+     * @throws SQLException
+     *             if a database access error occurs
+     * @deprecated Use {@link #limboTransactionsAsList()} or
+     *             {@link #getLimboTransactions()} instead
      */
-    public void listLimboTransactions() throws SQLException; 
+    @Deprecated
+    void listLimboTransactions() throws SQLException;
+
+    /**
+     * Retrieve the ID of each limbo transaction as a List of Integer objects.
+     * 
+     * @throws SQLException
+     *             if a database access error occurs
+     */
+    List<Integer> limboTransactionsAsList() throws SQLException;
+
+    /**
+     * Retrieve the ID of each limbo transaction as an array of ints.
+     * 
+     * @throws SQLException
+     *             if a database access error occurs
+     */
+    int[] getLimboTransactions() throws SQLException;
 
     /**
      * Commit a limbo transaction based on its ID.
-     *
-     * @param transactionId The ID of the limbo transaction to be committed
-     * @throws SQLException if a database access error occurs or the 
-     *         given transaction ID is not valid
+     * 
+     * @param transactionId
+     *            The ID of the limbo transaction to be committed
+     * @throws SQLException
+     *             if a database access error occurs or the given transaction ID
+     *             is not valid
      */
-    public void commitTransaction(int transactionId) throws SQLException;
+    void commitTransaction(int transactionId) throws SQLException;
 
     /**
      * Rollback a limbo transaction based on its ID.
-     *
-     * @param transactionId The ID of the limbo transaction to be rolled back
-     * @throws SQLException if a database access error occurs or the
-     *         given transaction ID is not valid
+     * 
+     * @param transactionId
+     *            The ID of the limbo transaction to be rolled back
+     * @throws SQLException
+     *             if a database access error occurs or the given transaction ID
+     *             is not valid
      */
-    public void rollbackTransaction(int transactionId) throws SQLException;
-
+    void rollbackTransaction(int transactionId) throws SQLException;
 }
