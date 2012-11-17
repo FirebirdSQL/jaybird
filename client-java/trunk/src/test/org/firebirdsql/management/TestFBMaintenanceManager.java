@@ -6,6 +6,7 @@ import java.sql.Statement;
 import java.sql.ResultSet;
 
 import java.io.ByteArrayOutputStream;
+import java.util.List;
 import java.util.StringTokenizer;
 
 import org.firebirdsql.common.FBTestBase;
@@ -447,52 +448,38 @@ public class TestFBMaintenanceManager extends FBTestBase {
         int[] limboTransactions = maintenanceManager.getLimboTransactions();
         assertEquals(COUNT_LIMBO, limboTransactions.length);
     }
-
     
     public void testRollbackLimboTransaction() throws Exception {
-        ByteArrayOutputStream byteOut = new ByteArrayOutputStream();
-        maintenanceManager.setLogger(byteOut);
-        maintenanceManager.listLimboTransactions();
-        StringTokenizer limboTransactions = new StringTokenizer(byteOut.toString(),"\n");
-        assertEquals(0, limboTransactions.countTokens());
+        List<Integer> limboTransactions = maintenanceManager.limboTransactionsAsList();
+        assertEquals(0, limboTransactions.size());
+        
         createLimboTransaction(3);
-        byteOut.reset();
-        maintenanceManager.listLimboTransactions();
-        limboTransactions = new StringTokenizer(byteOut.toString(),"\n");
-        assertEquals(3, limboTransactions.countTokens());
-        if (limboTransactions.hasMoreTokens()) {
-            int trId = Integer.parseInt(limboTransactions.nextToken());
-            maintenanceManager.rollbackTransaction(trId);
-        }
-        else fail("There should be 3 limbo transactions.");
-        byteOut.reset();
-        maintenanceManager.listLimboTransactions();
-        limboTransactions = new StringTokenizer(byteOut.toString(),"\n");
-        assertEquals(2, limboTransactions.countTokens());
+        
+        limboTransactions = maintenanceManager.limboTransactionsAsList();
+        assertEquals(3, limboTransactions.size());
+        
+        int trId = limboTransactions.get(0).intValue();
+        maintenanceManager.rollbackTransaction(trId);
+        
+        limboTransactions = maintenanceManager.limboTransactionsAsList();
+        assertEquals(2, limboTransactions.size());
     }
 
     public void testCommitLimboTransaction() throws Exception {
-        ByteArrayOutputStream byteOut = new ByteArrayOutputStream();
-        maintenanceManager.setLogger(byteOut);
-        maintenanceManager.listLimboTransactions();
-        StringTokenizer limboTransactions = new StringTokenizer(byteOut.toString(),"\n");
-        assertEquals(0, limboTransactions.countTokens());
+        List<Integer> limboTransactions = maintenanceManager.limboTransactionsAsList();
+        assertEquals(0, limboTransactions.size());
+        
         createLimboTransaction(3);
-        byteOut.reset();
-        maintenanceManager.listLimboTransactions();
-        limboTransactions = new StringTokenizer(byteOut.toString(),"\n");
-        assertEquals(3, limboTransactions.countTokens());
-        if (limboTransactions.hasMoreTokens()) {
-            int trId = Integer.parseInt(limboTransactions.nextToken());
-            maintenanceManager.commitTransaction(trId);
-        }
-        else fail("There should be 3 limbo transactions.");
-        byteOut.reset();
-        maintenanceManager.listLimboTransactions();
-        limboTransactions = new StringTokenizer(byteOut.toString(),"\n");
-        assertEquals(2, limboTransactions.countTokens());
-    }
+        
+        limboTransactions = maintenanceManager.limboTransactionsAsList();
+        assertEquals(3, limboTransactions.size());
+        
+        int trId = limboTransactions.get(0).intValue();
+        maintenanceManager.commitTransaction(trId);
 
+        limboTransactions = maintenanceManager.limboTransactionsAsList();
+        assertEquals(2, limboTransactions.size());
+    }
 
     private void createLimboTransaction(int count) throws Exception {
         FBConnection conn = (FBConnection)getConnectionViaDriverManager();
