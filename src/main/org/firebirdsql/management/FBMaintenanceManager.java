@@ -38,19 +38,19 @@
  */
 package org.firebirdsql.management;
 
-
 import java.sql.SQLException;
-import java.util.StringTokenizer;
+import java.util.LinkedList;
+import java.util.List;
 
+import org.firebirdsql.gds.GDSException;
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.ServiceRequestBuffer;
 import org.firebirdsql.gds.impl.GDSType;
+import org.firebirdsql.jdbc.FBSQLException;
 
 import java.io.OutputStream;
 import java.io.PrintStream;
 import java.io.ByteArrayOutputStream;
-
-
 
 /**
  * The <code>FBMaintenanceManager</code> class is responsible for replicating
@@ -436,11 +436,8 @@ public class FBMaintenanceManager extends FBServiceManager
         executeRepairOperation(ISCConstants.isc_spb_rpr_kill_shadows);
     }
 
-
-
     //----------- Transaction Management ----------------------------
    
-
     /**
      * Retrieve the ID of each limbo transaction. The output of this  method 
      * is written to the logger.
@@ -448,42 +445,64 @@ public class FBMaintenanceManager extends FBServiceManager
      * @throws SQLException if a database access error occurs
      */
     public void listLimboTransactions() throws SQLException {
+        PrintStream ps = new PrintStream(getLogger());
+        for (Integer trId : limboTransactionsAsList()) {
+            ps.print(trId + "\n");
+        }
+    }
+    
+    public List<Integer> limboTransactionsAsList() throws SQLException {
+        // See also fbscvmgr.cpp method printInfo
         OutputStream saveOut = getLogger();
         try {
+            List<Integer> result = new LinkedList<Integer>();
             ByteArrayOutputStream out = new ByteArrayOutputStream();
-            PrintStream ps = new PrintStream(saveOut);
             setLogger(out);
             executeRepairOperation(ISCConstants.isc_spb_rpr_list_limbo_trans);
             byte output[] = out.toByteArray();
-            int trId = 0, shift = 0;
-            for (int i = 0; i < output.length; i++){
-                if (output[i] == ISCConstants.isc_spb_single_tra_id){
-                    trId = 0;
-                    shift = 0;
-                } else if (output[i] == 0 && shift != -1){
-                    ps.print(trId + "\n");
-                    shift = -1;
-                } else if (shift != -1) {
-                    trId += ((output[i] & 0xff) << shift);
-                    shift += 8;
+
+            int idx = 0;
+            while (idx < output.length) {
+                switch (output[idx++]) {
+                case ISCConstants.isc_spb_tra_id:
+                case ISCConstants.isc_spb_single_tra_id:
+                case ISCConstants.isc_spb_multi_tra_id:
+                    int trId = getGds().iscVaxInteger(output, idx, 4);
+                    idx += 4;
+                    result.add(Integer.valueOf(trId));
+                    break;
+                // Information items we will ignore for now
+                case ISCConstants.isc_spb_tra_state:
+                case ISCConstants.isc_spb_tra_advise:
+                    idx++;
+                    break;
+                case ISCConstants.isc_spb_tra_host_site:
+                case ISCConstants.isc_spb_tra_remote_site:
+                case ISCConstants.isc_spb_tra_db_path:
+                    int length = getGds().iscVaxInteger(output, idx, 2);
+                    idx += 2;
+                    idx += length;
+                    break;
+                default:
+                    GDSException gdsException = new GDSException(ISCConstants.isc_arg_gds,
+                            ISCConstants.isc_fbsvcmgr_info_err);
+                    gdsException.setNext(new GDSException(ISCConstants.isc_arg_number, output[idx - 1] & 0xFF));
+                    throw new FBSQLException(gdsException);
                 }
             }
+            return result;
         } finally {
             setLogger(saveOut);
         }
     }
     
-    public int[] getLimboTransactions() throws SQLException
-    {
-        ByteArrayOutputStream byteOut = new ByteArrayOutputStream();
-        setLogger(byteOut);
-        listLimboTransactions();
-        
-        StringTokenizer limboTransactions = new StringTokenizer(byteOut.toString(),"\n");
-        int[] trans = new int[limboTransactions.countTokens()];
-        int count = 0;
-        while(limboTransactions.hasMoreTokens())
-        	trans[count++] = Integer.parseInt(limboTransactions.nextToken().trim());
+    public int[] getLimboTransactions() throws SQLException {
+        List<Integer> limboTransactions = limboTransactionsAsList();
+        int[] trans = new int[limboTransactions.size()];
+        int idx = 0;
+        for (Integer trId : limboTransactions) {
+            trans[idx++] = trId.intValue();
+        }
         return trans;
     }
 
