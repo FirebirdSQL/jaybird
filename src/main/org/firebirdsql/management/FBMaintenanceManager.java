@@ -464,7 +464,6 @@ public class FBMaintenanceManager extends FBServiceManager
             int idx = 0;
             while (idx < output.length) {
                 switch (output[idx++]) {
-                case ISCConstants.isc_spb_tra_id:
                 case ISCConstants.isc_spb_single_tra_id:
                 case ISCConstants.isc_spb_multi_tra_id:
                     int trId = getGds().iscVaxInteger(output, idx, 4);
@@ -472,6 +471,9 @@ public class FBMaintenanceManager extends FBServiceManager
                     result.add(Integer.valueOf(trId));
                     break;
                 // Information items we will ignore for now
+                case ISCConstants.isc_spb_tra_id:
+                    idx += 4;
+                    break;
                 case ISCConstants.isc_spb_tra_state:
                 case ISCConstants.isc_spb_tra_advise:
                     idx++;
