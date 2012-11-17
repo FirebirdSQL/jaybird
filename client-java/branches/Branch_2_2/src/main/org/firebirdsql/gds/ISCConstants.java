@@ -1461,6 +1461,7 @@ public interface ISCConstants {
     public final static int isc_gstat_open_err                   = 336920605;
     public final static int isc_gstat_read_err                   = 336920606;
     public final static int isc_gstat_sysmemex                   = 336920607;
+    public final static int isc_fbsvcmgr_info_err                = 336986116;
     public final static int isc_err_max                          = 689;
 
     /*******************/
