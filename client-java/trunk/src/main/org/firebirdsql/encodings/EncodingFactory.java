@@ -26,55 +26,67 @@ import java.util.Map.Entry;
 
 public class EncodingFactory {
    
-    private static final int[][] CHARSET_MAXIMUM_SIZE = new int[][] {
-        { 0, 1}   // NONE
-      , { 1, 1}   // OCTETS
-      , { 2, 1}   // ASCII
-      , { 3, 3}   // UNICODE_FSS
-      , { 4, 4}   // UTF8 
-      , { 5, 2}   // SJIS_0208
-      , { 6, 2}   // EUJC_0208
-      , { 9, 1}   // DOS737
-      , {10, 1}   // DOS437
-      , {11, 1}   // DOS850
-      , {12, 1}   // DOS865
-      , {13, 1}   // DOS775
-      , {14, 1}   // DOS863
-      , {15, 1}   // DOS775
-      , {16, 1}   // DOS858
-      , {17, 1}   // DOS862
-      , {18, 1}   // DOS864
-      , {19, 1}   // NEXT
-      , {21, 1}   // ISO8859_1
-      , {22, 1}   // ISO8859_2
-      , {23, 1}   // ISO8859_3
-      , {34, 1}   // ISO8859_4
-      , {35, 1}   // ISO8859_5
-      , {36, 1}   // ISO8859_6
-      , {37, 1}   // ISO8859_7
-      , {38, 1}   // ISO8859_8
-      , {39, 1}   // ISO8859_9
-      , {40, 1}   // ISO8859_13
-      , {44, 2}   // KSC_5601
-      , {45, 1}   // DOS852
-      , {46, 1}   // DOS857
-      , {47, 1}   // DOS861
-      , {48, 1}   // DOS866
-      , {49, 1}   // DOS869
-      , {50, 1}   // CYRL
-      , {51, 1}   // WIN1250
-      , {52, 1}   // WIN1251
-      , {53, 1}   // WIN1252
-      , {54, 1}   // WIN1253
-      , {55, 1}   // WIN1254
-      , {56, 2}   // BIG_5
-      , {57, 2}   // GB2312
-      , {58, 1}   // WIN1255
-      , {59, 1}   // WIN1256
-      , {60, 1}   // WIN1257
-      , {63, 1}   // KOI8R
-      , {64, 1}   // KOI8U
-      , {65, 1}   // WIN1258
+    private static final byte[] CHARSET_MAXIMUM_SIZE;
+    private static final int MAX_CHARSET_ID = 69;
+    
+    static {
+        byte[] maximumSize = new byte[MAX_CHARSET_ID + 1];
+        // Fill with 1 as default
+        Arrays.fill(maximumSize, (byte)1);
+        maximumSize[0] = 1; // NONE
+        maximumSize[1] = 1; // OCTETS
+        maximumSize[2] = 1; // ASCII
+        maximumSize[3] = 3; // UNICODE_FSS
+        maximumSize[4] = 4; // UTF8
+        maximumSize[5] = 2; // SJIS_0208
+        maximumSize[6] = 2; // EUJC_0208
+        maximumSize[9] = 1; // DOS737
+        maximumSize[10] = 1; // DOS437
+        maximumSize[11] = 1; // DOS850
+        maximumSize[12] = 1; // DOS865
+        maximumSize[13] = 1; // DOS775
+        maximumSize[14] = 1; // DOS863
+        maximumSize[15] = 1; // DOS775
+        maximumSize[16] = 1; // DOS858
+        maximumSize[17] = 1; // DOS862
+        maximumSize[18] = 1; // DOS864
+        maximumSize[19] = 1; // NEXT
+        maximumSize[21] = 1; // ISO8859_1
+        maximumSize[22] = 1; // ISO8859_2
+        maximumSize[23] = 1; // ISO8859_3
+        maximumSize[34] = 1; // ISO8859_4
+        maximumSize[35] = 1; // ISO8859_5
+        maximumSize[36] = 1; // ISO8859_6
+        maximumSize[37] = 1; // ISO8859_7
+        maximumSize[38] = 1; // ISO8859_8
+        maximumSize[39] = 1; // ISO8859_9
+        maximumSize[40] = 1; // ISO8859_13
+        maximumSize[44] = 2; // KSC_5601
+        maximumSize[45] = 1; // DOS852
+        maximumSize[46] = 1; // DOS857
+        maximumSize[47] = 1; // DOS861
+        maximumSize[48] = 1; // DOS866
+        maximumSize[49] = 1; // DOS869
+        maximumSize[50] = 1; // CYRL
+        maximumSize[51] = 1; // WIN1250
+        maximumSize[52] = 1; // WIN1251
+        maximumSize[53] = 1; // WIN1252
+        maximumSize[54] = 1; // WIN1253
+        maximumSize[55] = 1; // WIN1254
+        maximumSize[56] = 2; // BIG_5
+        maximumSize[57] = 2; // GB2312
+        maximumSize[58] = 1; // WIN1255
+        maximumSize[59] = 1; // WIN1256
+        maximumSize[60] = 1; // WIN1257
+        maximumSize[63] = 1; // KOI8R
+        maximumSize[64] = 1; // KOI8U
+        maximumSize[65] = 1; // WIN1258
+        maximumSize[66] = 1; // TIS620
+        maximumSize[67] = 2; // GBK
+        maximumSize[68] = 2; // CP943C
+        maximumSize[69] = 4; // GB18030
+        
+        CHARSET_MAXIMUM_SIZE = maximumSize;
     };
     
     /**
@@ -206,12 +218,9 @@ public class EncodingFactory {
      * not found.
      */
     public static int getCharacterSetSize(int characterSetId) {
-        
-        for (int i = 0; i < CHARSET_MAXIMUM_SIZE.length; i++) {
-            if (CHARSET_MAXIMUM_SIZE[i][0] == characterSetId)
-                return CHARSET_MAXIMUM_SIZE[i][1];
+        if (characterSetId >= 0 && characterSetId < CHARSET_MAXIMUM_SIZE.length) {
+            return CHARSET_MAXIMUM_SIZE[characterSetId];
         }
-
         // let's assume that default length is 1
         return 1;
     }
