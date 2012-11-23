@@ -3,7 +3,7 @@ package org.firebirdsql.pool;
 import org.firebirdsql.gds.impl.GDSType;
 
 /**
- * @deprecated Use {@link org.firebirdsql.dl.FBSimpleDataSource}
+ * @deprecated Use {@link org.firebirdsql.ds.FBSimpleDataSource}
  */
 @Deprecated
 public class FBSimpleDataSource extends org.firebirdsql.ds.FBSimpleDataSource {

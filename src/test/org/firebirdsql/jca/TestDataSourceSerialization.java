@@ -16,47 +16,36 @@
  *
  * All rights reserved.
  */
-
 package org.firebirdsql.jca;
-
-
 
 import java.rmi.MarshalledObject;
 import java.sql.Connection;
 import javax.sql.DataSource;
 
-
 /**
  * TestDataSourceSerialization.java
- *
- *
- * Created: Fri Sep  6 11:00:48 2002
  *
  * @author <a href="mailto:d_jencks@users.sourceforge.net">David Jencks</a>
  * @version
  */
-
-public class TestDataSourceSerialization extends TestXABase 
-{
-    public TestDataSourceSerialization(String name) 
-    {
+public class TestDataSourceSerialization extends TestXABase {
+    
+    public TestDataSourceSerialization(String name) {
         super(name);
     }
     
-    public void testDataSourceSerialization() throws Exception
-    {
-        if (log != null) log.info("testDataSourceSerialization");
+    public void testDataSourceSerialization() throws Exception {
         FBManagedConnectionFactory mcf = initMcf();
         DataSource ds = (DataSource)mcf.createConnectionFactory();
-        assertTrue("Could not get DataSource", ds != null);
+        assertNotNull("Could not get DataSource", ds);
+        
         Connection c = ds.getConnection();
-        assertTrue("Could not get Connection", c != null);
+        assertNotNull("Could not get Connection", c);
+        
         c.close();
-        MarshalledObject mo = new MarshalledObject(ds);
-        ds = (DataSource)mo.get();
+        MarshalledObject<DataSource> mo = new MarshalledObject<DataSource>(ds);
+        ds = mo.get();
         c = ds.getConnection();
         c.close();
     }
-
-
-}// TestDataSourceSerialization
+}
