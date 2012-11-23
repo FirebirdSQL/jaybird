@@ -16,94 +16,51 @@
  *
  * All rights reserved.
  */
-
-/* added by Blas Rodriguez Somoza:
- *
- * CVS modification log:
- * $Log$
- * Revision 1.3  2003/06/05 22:36:07  brodsom
- * Substitute package and inline imports
- *
- * Revision 1.2  2003/01/23 01:40:50  brodsom
- * Encodings patch
- *
- */
 package org.firebirdsql.encodings;
 
-import java.io.UnsupportedEncodingException;
+import java.nio.charset.Charset;
 
-public class Encoding_NotOneByte implements Encoding{
+/**
+ * Implementation of {@link Encoding} for multibyte charactersets.
+ * <p>
+ * It also works for single byte character sets, but {@link Encoding_OneByte} is more efficient.
+ * </p>
+ */
+final class Encoding_NotOneByte implements Encoding {
 
-    String encoding = null;
-    char[] charMapping;
+    private final Charset charset;
+    private final char[] charMapping;
 
-    public Encoding_NotOneByte(String encoding){
-        this.encoding = encoding;
+    public Encoding_NotOneByte(Charset charset) {
+        this(charset, null);
     }
-    
-    public Encoding_NotOneByte(String encoding, char[] charMapping) {
-        this.encoding = encoding;
+
+    public Encoding_NotOneByte(Charset charset, char[] charMapping) {
+        this.charset = charset;
         this.charMapping = charMapping;
     }
+
     // encode
-    public byte[] encodeToCharset(String in){
-        byte[] result = null;
-        try {
-            
-            if (charMapping != null)
-                in = new String(translate(in.toCharArray()));
-            
-            result = in.getBytes(encoding);
+    public byte[] encodeToCharset(String in) {
+        if (charMapping != null) {
+            in = new String(translate(in.toCharArray()));
         }
-        catch (UnsupportedEncodingException uee){
-        }            
-        return result;
+        return in.getBytes(charset);
     }
-    public int encodeToCharset(char[] in, int off, int len, byte[] out){
-        byte[] by = null;
-        try {
-            
-            if (charMapping != null)
-                in = translate(in);
-            
-            by = new String(in).getBytes(encoding);
-            System.arraycopy(by, 0, out, 0, by.length);
-        }
-        catch (UnsupportedEncodingException uee){
-        }
-        return by.length;
-    }
+
     // decode
-    public String decodeFromCharset(byte[] in){
-        String result = null;
-        try {
-            result = new String(in,encoding);
-            
-            if (charMapping != null)
-                return new String(translate(result.toCharArray()));
-        }
-        catch (UnsupportedEncodingException uee){
+    public String decodeFromCharset(byte[] in) {
+        String result = new String(in, charset);
+        if (charMapping != null) {
+            return new String(translate(result.toCharArray()));
         }
         return result;
     }
-    public int decodeFromCharset(byte[] in, int off, int len, char[] out){
-        String str = null; 
-        try {
-            str = new String(in, encoding);
-            str.getChars(0, str.length(), out, 0);
-            
-            if (charMapping != null)
-                translate(out);
-        }
-        catch (UnsupportedEncodingException uee){
-        }
-        return str.length();
-    }
+    
     private char[] translate(char[] chars) {
         for (int i = 0; i < chars.length; i++) {
             chars[i] = charMapping[chars[i]];
         }
-        
         return chars;
     }
 }
