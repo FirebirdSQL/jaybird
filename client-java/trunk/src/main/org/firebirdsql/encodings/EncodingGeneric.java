@@ -26,16 +26,16 @@ import java.nio.charset.Charset;
  * It also works for single byte character sets, but {@link Encoding_OneByte} is more efficient.
  * </p>
  */
-final class Encoding_NotOneByte implements Encoding {
+final class EncodingGeneric implements Encoding {
 
     private final Charset charset;
     private final char[] charMapping;
 
-    public Encoding_NotOneByte(Charset charset) {
+    public EncodingGeneric(Charset charset) {
         this(charset, null);
     }
 
-    public Encoding_NotOneByte(Charset charset, char[] charMapping) {
+    public EncodingGeneric(Charset charset, char[] charMapping) {
         this.charset = charset;
         this.charMapping = charMapping;
     }
