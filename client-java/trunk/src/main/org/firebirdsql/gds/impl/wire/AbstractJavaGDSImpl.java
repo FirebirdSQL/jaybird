@@ -29,6 +29,7 @@ package org.firebirdsql.gds.impl.wire;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.InetAddress;
+import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.net.SocketException;
 import java.net.UnknownHostException;
@@ -2007,30 +2008,12 @@ public abstract class AbstractJavaGDSImpl extends AbstractGDS implements GDS {
 		return nextOperation;
 	}
 
-	/**
-	 * Returns a newly created socket. This abstract method is necessary because
-	 * of a bug found in the JDK5.0 socket implementation. JDK1.4+ has an
-	 * acceptable work around.
-	 * 
-	 * See bug details:
-	 * http://bugs.sun.com/bugdatabase/view_bug.do?bug_id=5092063
-	 * 
-	 * @param server
-	 *            The server string.
-	 * @param port
-	 *            The port to connect to.
-	 * @return A valid socket.
-	 * @throws IOException
-	 * @throws UnknownHostException
-	 */
-	protected abstract Socket getSocket(String server, int port)
-			throws IOException, UnknownHostException;
-
 	protected void openSocket(isc_db_handle_impl db, DbAttachInfo dbai,
 			boolean debug, int socketBufferSize, int soTimeout) throws IOException,
 			SocketException, GDSException {
 		try {
-			db.socket = getSocket(dbai.getServer(), dbai.getPort());
+			db.socket = new Socket();
+			// TODO: consider not disabling Nagle
 			db.socket.setTcpNoDelay(true);
 			
 			if (soTimeout != -1)
@@ -2040,6 +2023,9 @@ public abstract class AbstractJavaGDSImpl extends AbstractGDS implements GDS {
 				db.socket.setReceiveBufferSize(socketBufferSize);
 				db.socket.setSendBufferSize(socketBufferSize);
 			}
+			// TODO : introduce keep alive
+			// TODO : introduce connection timeout
+			db.socket.connect(new InetSocketAddress(dbai.getServer(), dbai.getPort()));
 
 			if (debug)
 				log.debug("Got socket");
@@ -2593,13 +2579,18 @@ public abstract class AbstractJavaGDSImpl extends AbstractGDS implements GDS {
 		synchronized (svc) {
 			try {
 				try {
-					svc.socket = getSocket(host, port);
+				    svc.socket = new Socket();
 					svc.socket.setTcpNoDelay(true);
 
+					// TODO: Introduce buffer sizes for services
+					// TODO: Introduce soTimeout for services
 					// if (socketBufferSize != -1) {
 					// svc.socket.setReceiveBufferSize(socketBufferSize);
 					// svc.socket.setSendBufferSize(socketBufferSize);
 					// }
+					
+					// TODO Use connect timeout
+					svc.socket.connect(new InetSocketAddress(host, port));
 					if (debug)
 						log.debug("Got socket");
 				} catch (UnknownHostException ex2) {
