@@ -172,9 +172,9 @@ public class EncodingFactory {
         }
 
         if (getJavaEncodingSize(charset) == 1) {
-            standardEncoding = new Encoding_OneByte(charset);
+            standardEncoding = new EncodingSingleByte(charset);
         } else {
-            standardEncoding = new Encoding_NotOneByte(charset);
+            standardEncoding = new EncodingGeneric(charset);
         }
 
         STANDARD_ENCODINGS.putIfAbsent(charset, standardEncoding);
@@ -193,9 +193,9 @@ public class EncodingFactory {
     private static Encoding createMappedEncoding(Charset charset, char[] charMapping) {
         assert (charset != null) : "Parameter charset is required";
         if (getJavaEncodingSize(charset) == 1) {
-            return new Encoding_OneByte(charset, charMapping);
+            return new EncodingSingleByte(charset, charMapping);
         } else {
-            return new Encoding_NotOneByte(charset, charMapping);
+            return new EncodingGeneric(charset, charMapping);
         }
     }
 

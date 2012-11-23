@@ -23,16 +23,16 @@ import java.nio.charset.Charset;
 /**
  * Implementation of {@link Encoding} for single byte character sets.
  */
-final class Encoding_OneByte implements Encoding {
+final class EncodingSingleByte implements Encoding {
 
     private final char[] byteToChar;
     private final byte[] charToByte;
 
-    Encoding_OneByte(Charset charset) {
+    EncodingSingleByte(Charset charset) {
         this(charset, EncodingFactory.DEFAULT_MAPPING);
     }
 
-    Encoding_OneByte(Charset charset, final char[] charMapping) {
+    EncodingSingleByte(Charset charset, final char[] charMapping) {
         byteToChar = new char[256];
         charToByte = new byte[256 * 256];
         
