@@ -41,6 +41,16 @@ import org.firebirdsql.management.FBManager;
  * Helper class for test properties (database user, password, paths etc)
  */
 public final class FBTestProperties {
+    
+    static {
+        // TODO: Technically not needed with JDBC 4.0 autoloading
+        try {
+            Class.forName(FBDriver.class.getName());
+        } catch (ClassNotFoundException ex) {
+            throw new ExceptionInInitializerError("No suitable driver.");
+        }
+    }
+    
     private static ResourceBundle testDefaults = ResourceBundle.getBundle("unit_test_defaults");
 
     public static String getProperty(String property) {
@@ -156,12 +166,6 @@ public final class FBTestProperties {
     }
 
     public static FirebirdConnection getConnectionViaDriverManager() throws SQLException {
-        try {
-            Class.forName(FBDriver.class.getName());
-        } catch (ClassNotFoundException ex) {
-            throw new SQLException("No suitable driver.");
-        }
-
         return (FirebirdConnection) DriverManager.getConnection(getUrl(),
                 getDefaultPropertiesForConnection());
     }
@@ -172,7 +176,7 @@ public final class FBTestProperties {
      * @return Configured FBManager instance used for creation of the database
      * @throws Exception
      */
-    protected static FBManager defaultDatabaseSetUp() throws Exception {
+    public static FBManager defaultDatabaseSetUp() throws Exception {
         FBManager fbManager = createFBManager();
 
         if (getGdsType() == GDSType.getType("PURE_JAVA")
@@ -195,7 +199,7 @@ public final class FBTestProperties {
      *            FBManager instance
      * @throws Exception
      */
-    protected static void defaultDatabaseTearDown(FBManager fbManager) throws Exception {
+    public static void defaultDatabaseTearDown(FBManager fbManager) throws Exception {
         fbManager.dropDatabase(getDatabasePath(), DB_USER, DB_PASSWORD);
         fbManager.stop();
     }

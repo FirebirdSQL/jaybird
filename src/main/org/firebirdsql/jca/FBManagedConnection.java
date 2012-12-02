@@ -101,6 +101,10 @@ public class FBManagedConnection implements ManagedConnection, XAResource, GDSHe
                 dbHandle.addWarning(new GDSWarning(WARNING_NO_CHARSET));
             }
             
+            if (!dpb.hasArgument(DatabaseParameterBuffer.CONNECT_TIMEOUT) && DriverManager.getLoginTimeout() > 0) {
+                dpb.addArgument(DatabaseParameterBuffer.CONNECT_TIMEOUT, DriverManager.getLoginTimeout());
+            }
+
             gds.iscAttachDatabase(mcf.getDatabase(), dbHandle, dpb);
             
             gdsHelper = new GDSHelper(gds, dpb, dbHandle, this);
