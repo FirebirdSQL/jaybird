@@ -29,7 +29,6 @@ import org.firebirdsql.gds.ServiceRequestBuffer;
 class ServiceRequestBufferImp extends ParameterBufferBase implements
         ServiceRequestBuffer {
 
-    
     /**
      * Every ServiceRequestBuffer has an associated taskIdentifier.
      * 
@@ -43,15 +42,14 @@ class ServiceRequestBufferImp extends ParameterBufferBase implements
         return taskIdentifier;
     }
     
-    
-    // We will overide the addArgument(int argumentType, String value) method.
-
+    @Override
     public void addArgument(int argumentType, String value) {
         getArgumentsList().add(new StringArgument(argumentType, value) {
 
             /* (non-Javadoc)
              * @see org.firebirdsql.jgds.ParameterBufferBase.StringArgument#getLength()
              */
+            @Override
             int getLength() {
                 return super.getLength() + 1;
             }
@@ -65,24 +63,17 @@ class ServiceRequestBufferImp extends ParameterBufferBase implements
     }
 
     
-    /* (non-Javadoc)
-     * @see org.firebirdsql.gds.ServiceRequestBuffer#addArgument(int, int)
-     */
+    @Override
     public void addArgument(int argumentType, int value) {
 
         getArgumentsList().add(new NumericArgument(argumentType, value) {
-           
-            
-            /* (non-Javadoc)
-             * @see org.firebirdsql.jgds.ParameterBufferBase.NumericArgument#getLength()
-             */
+
+            @Override
             int getLength() {
                 return 5;
             }
             
-            /* (non-Javadoc)
-             * @see org.firebirdsql.jgds.ParameterBufferBase.NumericArgument#writeValue(org.firebirdsql.gds.XdrOutputStream, int)
-             */
+            @Override
             protected void writeValue(XdrOutputStream outputStream, int value)
                     throws IOException {
                 outputStream.write(value);
@@ -96,9 +87,15 @@ class ServiceRequestBufferImp extends ParameterBufferBase implements
     public void addArgument(int argumentType, byte value){
         getArgumentsList().add(new NumericArgument(argumentType, value){
             
+            @Override
+            int getLength() {
+                return 2;
+            }
+            
+            @Override
             protected void writeValue(XdrOutputStream outputStream, int value)
                     throws IOException {
-                outputStream.write((byte)value);
+                outputStream.write(value);
             }
         });
     }
