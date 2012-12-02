@@ -55,11 +55,12 @@ public class WireGDSFactoryPlugin extends BaseGDSFactoryPlugin {
         
         StringBuilder sb = new StringBuilder();
         
+        sb.append("//");
         sb.append(server);
         if (port != null)
-            sb.append('/').append(port.intValue());
+            sb.append(':').append(port.intValue());
         
-        sb.append(':').append(path);
+        sb.append('/').append(path);
         
         return sb.toString();
     }
