@@ -228,9 +228,6 @@ public class ParameterBufferBase implements java.io.Serializable, Xdrable {
 
         void writeTo(XdrOutputStream outputStream) throws IOException {
             outputStream.write(type);
-
-            final int value = this.value;
-
             writeValue(outputStream, value);
         }
 
