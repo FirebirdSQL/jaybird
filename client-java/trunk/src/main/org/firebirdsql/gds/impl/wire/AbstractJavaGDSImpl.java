@@ -1887,17 +1887,29 @@ public abstract class AbstractJavaGDSImpl extends AbstractGDS implements GDS {
 
 		boolean debug = log != null && log.isDebugEnabled();
 
-		int socketBufferSize = -1;
-		int soTimeout = -1;
-
-        if (databaseParameterBuffer.hasArgument(DatabaseParameterBufferExtension.SOCKET_BUFFER_SIZE))
+		final int socketBufferSize;
+        if (databaseParameterBuffer.hasArgument(DatabaseParameterBufferExtension.SOCKET_BUFFER_SIZE)) {
             socketBufferSize = databaseParameterBuffer.getArgumentAsInt(DatabaseParameterBufferExtension.SOCKET_BUFFER_SIZE);
+        } else {
+            socketBufferSize = -1;
+        }
         
-        if (databaseParameterBuffer.hasArgument(DatabaseParameterBufferExtension.SO_TIMEOUT))
+        final int soTimeout;
+        if (databaseParameterBuffer.hasArgument(DatabaseParameterBufferExtension.SO_TIMEOUT)) {
             soTimeout = databaseParameterBuffer.getArgumentAsInt(DatabaseParameterBufferExtension.SO_TIMEOUT);
+        } else {
+            soTimeout = -1;
+        }
+        
+        final int connectTimeout;
+        if (databaseParameterBuffer.hasArgument(DatabaseParameterBuffer.CONNECT_TIMEOUT)) {
+            connectTimeout = databaseParameterBuffer.getArgumentAsInt(DatabaseParameterBuffer.CONNECT_TIMEOUT) * 1000;
+        } else {
+            connectTimeout = 0;
+        }
 
 		try {
-			openSocket(db, dbai, debug, socketBufferSize, soTimeout);
+			openSocket(db, dbai, debug, socketBufferSize, soTimeout, connectTimeout);
 			
 			XdrOutputStream out = db.out;
 			XdrInputStream in = db.in;
@@ -1987,7 +1999,6 @@ public abstract class AbstractJavaGDSImpl extends AbstractGDS implements GDS {
 		out.writeInt(op_attach);
 		out.writeInt(2); // CONNECT_VERSION2
 		out.writeInt(1); // arch_generic
-		// db.out.writeString(file_name); // p_cnct_file
 		out.writeString(fileName); // p_cnct_file
 		out.writeInt(1); // p_cnct_count
 		out.writeBuffer(user_id); // p_cnct_user_id
@@ -2009,7 +2020,7 @@ public abstract class AbstractJavaGDSImpl extends AbstractGDS implements GDS {
 	}
 
 	protected void openSocket(isc_db_handle_impl db, DbAttachInfo dbai,
-			boolean debug, int socketBufferSize, int soTimeout) throws IOException,
+			boolean debug, int socketBufferSize, int soTimeout, int connectTimeout) throws IOException,
 			SocketException, GDSException {
 		try {
 			db.socket = new Socket();
@@ -2024,8 +2035,7 @@ public abstract class AbstractJavaGDSImpl extends AbstractGDS implements GDS {
 				db.socket.setSendBufferSize(socketBufferSize);
 			}
 			// TODO : introduce keep alive
-			// TODO : introduce connection timeout
-			db.socket.connect(new InetSocketAddress(dbai.getServer(), dbai.getPort()));
+			db.socket.connect(new InetSocketAddress(dbai.getServer(), dbai.getPort()), connectTimeout);
 
 			if (debug)
 				log.debug("Got socket");

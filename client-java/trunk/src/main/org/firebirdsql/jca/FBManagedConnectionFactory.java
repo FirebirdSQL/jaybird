@@ -374,6 +374,14 @@ public class FBManagedConnectionFactory implements ManagedConnectionFactory,
     public void setSoTimeout(int soTimeout) {
         connectionProperties.setSoTimeout(soTimeout);
     }
+    
+    public int getConnectTimeout() {
+        return connectionProperties.getConnectTimeout();
+    }
+    
+    public void setConnectTimeout(int connectTimeout) {
+        connectionProperties.setConnectTimeout(connectTimeout);
+    }
 
     public int hashCode() {
         if (hashCode != 0) 
