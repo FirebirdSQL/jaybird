@@ -61,7 +61,7 @@ public class TestFBConnectionTimeout {
     public static void verifyTestType() {
         // Test won't work for embedded
         assumeTrue(!FBTestProperties.getGdsType().toString().equals(EmbeddedGDSImpl.EMBEDDED_TYPE_NAME));
-        // Test won't for for native
+        // Test won't work for for native
         assumeTrue(!FBTestProperties.getGdsType().toString().equals(NativeGDSImpl.NATIVE_TYPE_NAME));
     }
     
@@ -78,7 +78,7 @@ public class TestFBConnectionTimeout {
         DriverManager.setLoginTimeout(0);
         long startTime = System.currentTimeMillis();
         try {
-            DriverManager.getConnection("jdbc:firebirdsql://" + NON_EXISTENT_IP + "/db", "sysdba", "masterkey");
+            DriverManager.getConnection(buildTestURL(), "sysdba", "masterkey");
         } catch (SQLException e) {
             long endTime = System.currentTimeMillis();
             long difference = endTime - startTime;
