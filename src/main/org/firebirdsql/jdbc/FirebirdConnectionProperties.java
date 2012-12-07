@@ -404,7 +404,7 @@ public interface FirebirdConnectionProperties {
     /**
      * Set the connect timeout.
      * 
-     * @param connectTimout Connect timeout in seconds (0 is 'infinite', or better: OS specific timeout)
+     * @param connectTimeout Connect timeout in seconds (0 is 'infinite', or better: OS specific timeout)
      */
     void setConnectTimeout(int connectTimeout);
 }
