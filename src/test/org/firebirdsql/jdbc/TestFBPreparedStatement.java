@@ -172,21 +172,162 @@ public class TestFBPreparedStatement extends FBTestBase {
             closeQuietly(updatePs);
         }
     }
-
-    public void testMixedExecution() throws Throwable {
-        PreparedStatement ps = con
-        		.prepareStatement("INSERT INTO test_blob (id, obj_data) VALUES(?, NULL)");
+    
+    /**
+     * The method {@link java.sql.Statement#executeQuery(String)} should not work on PreparedStatement.
+     */
+    public void testUnsupportedExecuteQuery_String() throws Exception {
+        PreparedStatement ps = con.prepareStatement("SELECT 1 FROM RDB$DATABASE");
         try {
-            ps.setInt(1, 100);
-            ps.execute();
-
-            ResultSet rs = ps.executeQuery("SELECT * FROM test_blob");
-            while (rs.next()) {
-                // nothing
-            }
+            ps.executeQuery("SELECT * FROM test_blob");
+            fail("Expected SQLException when executing executeQuery(String) on PreparedStatement");
+        } catch (SQLException ex) {
+            assertStatementOnlyException(ex);
         } finally {
             closeQuietly(ps);
         }
+    }
+    
+    /**
+     * The method {@link java.sql.Statement#executeUpdate(String)} should not work on PreparedStatement.
+     */
+    public void testUnsupportedExecuteUpdate_String() throws Exception {
+        PreparedStatement ps = con.prepareStatement("SELECT 1 FROM RDB$DATABASE");
+        try {
+            ps.executeUpdate("SELECT * FROM test_blob");
+            fail("Expected SQLException when executing executeUpdate(String) on PreparedStatement");
+        } catch (SQLException ex) {
+            assertStatementOnlyException(ex);
+        } finally {
+            closeQuietly(ps);
+        }
+    }
+    
+    /**
+     * The method {@link java.sql.Statement#execute(String)} should not work on PreparedStatement.
+     */
+    public void testUnsupportedExecute_String() throws Exception {
+        PreparedStatement ps = con.prepareStatement("SELECT 1 FROM RDB$DATABASE");
+        try {
+            ps.execute("SELECT * FROM test_blob");
+            fail("Expected SQLException when executing execute(String) on PreparedStatement");
+        } catch (SQLException ex) {
+            assertStatementOnlyException(ex);
+        } finally {
+            closeQuietly(ps);
+        }
+    }
+    
+    /**
+     * The method {@link java.sql.Statement#addBatch(String)} should not work on PreparedStatement.
+     */
+    public void testUnsupportedAddBatch_String() throws Exception {
+        PreparedStatement ps = con.prepareStatement("SELECT 1 FROM RDB$DATABASE");
+        try {
+            ps.addBatch("SELECT * FROM test_blob");
+            fail("Expected SQLException when executing addBatch(String) on PreparedStatement");
+        } catch (SQLException ex) {
+            assertStatementOnlyException(ex);
+        } finally {
+            closeQuietly(ps);
+        }
+    }
+    
+    /**
+     * The method {@link java.sql.Statement#executeUpdate(String, int)} should not work on PreparedStatement.
+     */
+    public void testUnsupportedExecuteUpdate_String_int() throws Exception {
+        PreparedStatement ps = con.prepareStatement("SELECT 1 FROM RDB$DATABASE");
+        try {
+            ps.executeUpdate("SELECT * FROM test_blob", Statement.NO_GENERATED_KEYS);
+            fail("Expected SQLException when executing executeUpdate(String, int) on PreparedStatement");
+        } catch (SQLException ex) {
+            assertStatementOnlyException(ex);
+        } finally {
+            closeQuietly(ps);
+        }
+    }
+    
+    /**
+     * The method {@link java.sql.Statement#execute(String, int[])} should not work on PreparedStatement.
+     */
+    public void testUnsupportedExecuteUpdate_String_intArr() throws Exception {
+        PreparedStatement ps = con.prepareStatement("SELECT 1 FROM RDB$DATABASE");
+        try {
+            ps.executeUpdate("SELECT * FROM test_blob", new int[] { 1 });
+            fail("Expected SQLException when executing executeUpdate(String, int[]) on PreparedStatement");
+        } catch (SQLException ex) {
+            assertStatementOnlyException(ex);
+        } finally {
+            closeQuietly(ps);
+        }
+    }
+    
+    /**
+     * The method {@link java.sql.Statement#executeUpdate(String, String[])} should not work on PreparedStatement.
+     */
+    public void testUnsupportedExecuteUpdate_String_StringArr() throws Exception {
+        PreparedStatement ps = con.prepareStatement("SELECT 1 FROM RDB$DATABASE");
+        try {
+            ps.executeUpdate("SELECT * FROM test_blob", new String[] { "col" });
+            fail("Expected SQLException when executing executeUpdate(String, String[]) on PreparedStatement");
+        } catch (SQLException ex) {
+            assertStatementOnlyException(ex);
+        } finally {
+            closeQuietly(ps);
+        }
+    }
+    
+    /**
+     * The method {@link java.sql.Statement#execute(String, int)} should not work on PreparedStatement.
+     */
+    public void testUnsupportedExecute_String_int() throws Exception {
+        PreparedStatement ps = con.prepareStatement("SELECT 1 FROM RDB$DATABASE");
+        try {
+            ps.execute("SELECT * FROM test_blob", Statement.NO_GENERATED_KEYS);
+            fail("Expected SQLException when executing execute(String, int) on PreparedStatement");
+        } catch (SQLException ex) {
+            assertStatementOnlyException(ex);
+        } finally {
+            closeQuietly(ps);
+        }
+    }
+    
+    /**
+     * The method {@link java.sql.Statement#execute(String, int[])} should not work on PreparedStatement.
+     */
+    public void testUnsupportedExecute_String_intArr() throws Exception {
+        PreparedStatement ps = con.prepareStatement("SELECT 1 FROM RDB$DATABASE");
+        try {
+            ps.execute("SELECT * FROM test_blob", new int[] { 1 });
+            fail("Expected SQLException when executing execute(String, int[]) on PreparedStatement");
+        } catch (SQLException ex) {
+            assertStatementOnlyException(ex);
+        } finally {
+            closeQuietly(ps);
+        }
+    }
+    
+    /**
+     * The method {@link java.sql.Statement#execute(String, String[])} should not work on PreparedStatement.
+     */
+    public void testUnsupportedExecute_String_StringArr() throws Exception {
+        PreparedStatement ps = con.prepareStatement("SELECT 1 FROM RDB$DATABASE");
+        try {
+            ps.execute("SELECT * FROM test_blob", new String[] { "col" });
+            fail("Expected SQLException when executing execute(String, String[]) on PreparedStatement");
+        } catch (SQLException ex) {
+            assertStatementOnlyException(ex);
+        } finally {
+            closeQuietly(ps);
+        }
+    }
+
+    private void assertStatementOnlyException(SQLException ex) {
+        assertEquals("Unexpected SQLState for statement only method called on FBPreparedStatement", 
+                FBSQLException.SQL_STATE_GENERAL_ERROR, ex.getSQLState());
+        assertEquals("Unexpected exception message for statement only method called on FBPreparedStatement", 
+                FBPreparedStatement.METHOD_NOT_SUPPORTED, ex.getMessage());
     }
 
     void checkSelectString(String stringToTest, int id) throws Exception {
@@ -525,7 +666,7 @@ public class TestFBPreparedStatement extends FBTestBase {
 
         Statement stmt = con.createStatement();
         try {
-            stmt.execute("SELECT * FROM rdb$database");
+            stmt.execute("SELECT 1 FROM RDB$DATABASE");
         } catch (Throwable t) {
             fail("Should not throw exception");
         } finally {
@@ -558,7 +699,7 @@ public class TestFBPreparedStatement extends FBTestBase {
 
         Statement stmt = con.createStatement();
         try {
-            stmt.execute("SELECT * FROM rdb$database");
+            stmt.execute("SELECT 1 FROM RDB$DATABASE");
         } catch (Throwable t) {
             fail("Should not throw exception");
         } finally {

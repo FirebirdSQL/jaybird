@@ -825,11 +825,11 @@ public class TestFBCallableStatement extends FBTestBase {
     }
     
     public void testJdbc181() throws Exception {
-        PreparedStatement ps = con.prepareCall("{call factorial(?, ?)}"); //con.prepareStatement("EXECUTE PROCEDURE factorial(?, ?)");
+        CallableStatement cs = con.prepareCall("{call factorial(?, ?)}"); //con.prepareStatement("EXECUTE PROCEDURE factorial(?, ?)");
         try {
-            ps.setInt(1, 5);
-            ps.setInt(2, 1);
-            ResultSet rs = ps.executeQuery();
+            cs.setInt(1, 5);
+            cs.setInt(2, 1);
+            ResultSet rs = cs.executeQuery();
             int counter = 0; 
             int factorial = 1;
             while(rs.next()) {
@@ -840,7 +840,7 @@ public class TestFBCallableStatement extends FBTestBase {
                     factorial *= counter;
             }
         } finally {
-            closeQuietly(ps);
+            closeQuietly(cs);
         }
     }
     
@@ -890,4 +890,161 @@ public class TestFBCallableStatement extends FBTestBase {
     }
     
     // Other closeOnCompletion behavior considered to be sufficiently tested in TestFBStatement
+    
+    /**
+     * The method {@link java.sql.Statement#executeQuery(String)} should not work on CallabeStatement.
+     */
+    public void testUnsupportedExecuteQuery_String() throws Exception {
+        CallableStatement cs = con.prepareCall(EXECUTE_SIMPLE_OUT_PROCEDURE);
+        try {
+            cs.executeQuery("SELECT * FROM test_blob");
+            fail("Expected SQLException when executing executeQuery(String) on CallabeStatement");
+        } catch (SQLException ex) {
+            assertStatementOnlyException(ex);
+        } finally {
+            closeQuietly(cs);
+        }
+    }
+    
+    /**
+     * The method {@link java.sql.Statement#executeUpdate(String)} should not work on CallabeStatement.
+     */
+    public void testUnsupportedExecuteUpdate_String() throws Exception {
+        CallableStatement cs = con.prepareCall(EXECUTE_SIMPLE_OUT_PROCEDURE);
+        try {
+            cs.executeUpdate("SELECT * FROM test_blob");
+            fail("Expected SQLException when executing executeUpdate(String) on CallabeStatement");
+        } catch (SQLException ex) {
+            assertStatementOnlyException(ex);
+        } finally {
+            closeQuietly(cs);
+        }
+    }
+    
+    /**
+     * The method {@link java.sql.Statement#execute(String)} should not work on CallabeStatement.
+     */
+    public void testUnsupportedExecute_String() throws Exception {
+        CallableStatement cs = con.prepareCall(EXECUTE_SIMPLE_OUT_PROCEDURE);
+        try {
+            cs.execute("SELECT * FROM test_blob");
+            fail("Expected SQLException when executing execute(String) on CallabeStatement");
+        } catch (SQLException ex) {
+            assertStatementOnlyException(ex);
+        } finally {
+            closeQuietly(cs);
+        }
+    }
+    
+    /**
+     * The method {@link java.sql.Statement#addBatch(String)} should not work on CallabeStatement.
+     */
+    public void testUnsupportedAddBatch_String() throws Exception {
+        CallableStatement cs = con.prepareCall(EXECUTE_SIMPLE_OUT_PROCEDURE);
+        try {
+            cs.addBatch("SELECT * FROM test_blob");
+            fail("Expected SQLException when executing addBatch(String) on CallabeStatement");
+        } catch (SQLException ex) {
+            assertStatementOnlyException(ex);
+        } finally {
+            closeQuietly(cs);
+        }
+    }
+    
+    /**
+     * The method {@link java.sql.Statement#executeUpdate(String, int)} should not work on CallabeStatement.
+     */
+    public void testUnsupportedExecuteUpdate_String_int() throws Exception {
+        CallableStatement cs = con.prepareCall(EXECUTE_SIMPLE_OUT_PROCEDURE);
+        try {
+            cs.executeUpdate("SELECT * FROM test_blob", Statement.NO_GENERATED_KEYS);
+            fail("Expected SQLException when executing executeUpdate(String, int) on CallabeStatement");
+        } catch (SQLException ex) {
+            assertStatementOnlyException(ex);
+        } finally {
+            closeQuietly(cs);
+        }
+    }
+    
+    /**
+     * The method {@link java.sql.Statement#execute(String, int[])} should not work on CallabeStatement.
+     */
+    public void testUnsupportedExecuteUpdate_String_intArr() throws Exception {
+        CallableStatement cs = con.prepareCall(EXECUTE_SIMPLE_OUT_PROCEDURE);
+        try {
+            cs.executeUpdate("SELECT * FROM test_blob", new int[] { 1 });
+            fail("Expected SQLException when executing executeUpdate(String, int[]) on CallabeStatement");
+        } catch (SQLException ex) {
+            assertStatementOnlyException(ex);
+        } finally {
+            closeQuietly(cs);
+        }
+    }
+    
+    /**
+     * The method {@link java.sql.Statement#executeUpdate(String, String[])} should not work on CallabeStatement.
+     */
+    public void testUnsupportedExecuteUpdate_String_StringArr() throws Exception {
+        CallableStatement cs = con.prepareCall(EXECUTE_SIMPLE_OUT_PROCEDURE);
+        try {
+            cs.executeUpdate("SELECT * FROM test_blob", new String[] { "col" });
+            fail("Expected SQLException when executing executeUpdate(String, String[]) on CallabeStatement");
+        } catch (SQLException ex) {
+            assertStatementOnlyException(ex);
+        } finally {
+            closeQuietly(cs);
+        }
+    }
+    
+    /**
+     * The method {@link java.sql.Statement#execute(String, int)} should not work on CallabeStatement.
+     */
+    public void testUnsupportedExecute_String_int() throws Exception {
+        CallableStatement cs = con.prepareCall(EXECUTE_SIMPLE_OUT_PROCEDURE);
+        try {
+            cs.execute("SELECT * FROM test_blob", Statement.NO_GENERATED_KEYS);
+            fail("Expected SQLException when executing execute(String, int) on CallabeStatement");
+        } catch (SQLException ex) {
+            assertStatementOnlyException(ex);
+        } finally {
+            closeQuietly(cs);
+        }
+    }
+    
+    /**
+     * The method {@link java.sql.Statement#execute(String, int[])} should not work on CallabeStatement.
+     */
+    public void testUnsupportedExecute_String_intArr() throws Exception {
+        CallableStatement cs = con.prepareCall(EXECUTE_SIMPLE_OUT_PROCEDURE);
+        try {
+            cs.execute("SELECT * FROM test_blob", new int[] { 1 });
+            fail("Expected SQLException when executing execute(String, int[]) on CallabeStatement");
+        } catch (SQLException ex) {
+            assertStatementOnlyException(ex);
+        } finally {
+            closeQuietly(cs);
+        }
+    }
+    
+    /**
+     * The method {@link java.sql.Statement#execute(String, String[])} should not work on CallabeStatement.
+     */
+    public void testUnsupportedExecute_String_StringArr() throws Exception {
+        CallableStatement cs = con.prepareCall(EXECUTE_SIMPLE_OUT_PROCEDURE);
+        try {
+            cs.execute("SELECT * FROM test_blob", new String[] { "col" });
+            fail("Expected SQLException when executing execute(String, String[]) on CallabeStatement");
+        } catch (SQLException ex) {
+            assertStatementOnlyException(ex);
+        } finally {
+            closeQuietly(cs);
+        }
+    }
+
+    private void assertStatementOnlyException(SQLException ex) {
+        assertEquals("Unexpected SQLState for statement only method called on FBCallableStatement", 
+                FBSQLException.SQL_STATE_GENERAL_ERROR, ex.getSQLState());
+        assertEquals("Unexpected exception message for statement only method called on FBCallableStatement", 
+                FBPreparedStatement.METHOD_NOT_SUPPORTED, ex.getMessage());
+    }
 }
