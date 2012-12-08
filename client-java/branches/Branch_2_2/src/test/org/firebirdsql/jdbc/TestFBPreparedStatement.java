@@ -175,10 +175,12 @@ public class TestFBPreparedStatement extends FBTestBase {
         try {
             ps.setInt(1, 100);
             ps.execute();
-
-            ResultSet rs = ps.executeQuery("SELECT * FROM test_blob");
-            while (rs.next()) {
-                // nothing
+            
+            try {
+                ps.executeQuery("SELECT * FROM test_blob");
+                fail("Calling executeQuery(String) on PreparedStatement should fail");
+            } catch (SQLException ex) {
+                // expected
             }
         } finally {
             closeQuietly(ps);
