@@ -17,6 +17,7 @@
       </sourcepath>
       <sourcepath refid="source.java.openoffice"/>
       <sourcepath refid="source.java.additional"/>
+      <link href="http://docs.oracle.com/javase/7/docs/api/" />
     </javadoc>
   </target>
 
