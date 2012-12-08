@@ -46,6 +46,7 @@
       </fileset>
       <fileset dir=".">
         <include name="ChangeLog"/>
+        <include name="CONTRIBUTING"/>
       </fileset>
       <fileset dir="native">
         <include name="**/*"/>
