@@ -32,7 +32,7 @@ import org.junit.Test;
 
 /**
  * Tests for support of the scalar system function escapes as defined in
- * appendix D.3 of the JDBC 4.1 specification.
+ * appendix D.4 of the JDBC 4.1 specification.
  * 
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  */
