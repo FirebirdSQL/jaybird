@@ -88,6 +88,7 @@ public class TestScalarTimeDateFunctions {
     @Parameters
     public static Collection<Object[]> timeDateFunctionTestcases() {
         return Arrays.asList(new Object[][] {
+//@formatter:off
                 testcase("CURRENT_DATE", new CurrentDateValidator()),   // TODO Currently fails, support calling without ()
                 testcase("CURRENT_DATE()", new CurrentDateValidator()), // TODO Currently fails, implement using CURRENT_DATE
                 testcase("CURRENT_TIME", new CurrentTimeValidator()),   // TODO Currently fails, support calling without ()
@@ -111,13 +112,13 @@ public class TestScalarTimeDateFunctions {
                 testcase("MINUTE(TIME '19:13:05')", new SimpleValidator(13)),
                 testcase("MONTH(DATE '2012-12-22')", new SimpleValidator(12)),
                 unsupported("MONTHNAME(CURRENT_DATE)"),
-                testcase("NOW()", new CurrentTimestampValidator()),   // TODO Currently fails, implement using CURRENT_TIMESTAMP
-                unsupported("QUARTER(DATE '2012-12-22')"),  // TODO Can be implemented as 1+(EXTRACT(MONTH FROM ...)-1)/3
+                testcase("NOW()", new CurrentTimestampValidator()), // TODO Currently fails, implement using CURRENT_TIMESTAMP
+                unsupported("QUARTER(DATE '2012-12-22')"),          // TODO Can be implemented as 1+(EXTRACT(MONTH FROM ...)-1)/3
                 testcase("SECOND(TIME '19:13:05')", new SimpleValidator(5)),
                 // TODO tests for TIMESTAMPADD and TIMESTAMPDIFF (maybe as separate test class)
                 testcase("WEEK(DATE '2012-12-22')", new SimpleValidator(52)),   // TODO Currently fails, implement using EXTRACT(WEEK FROM ..)
-                testcase("YEAR(DATE '2012-12-22')", new SimpleValidator(2012)),
-        });
+                testcase("YEAR(DATE '2012-12-22')", new SimpleValidator(2012)), });
+//@formatter:off
     }
     
     @Test
@@ -145,7 +146,7 @@ public class TestScalarTimeDateFunctions {
             JdbcResourceHelper.closeQuietly(rs);
         }
     }
-   
+    
     private String createQuery() {
         return String.format("SELECT {fn %s} FROM RDB$DATABASE", functionCall);
     }
@@ -192,7 +193,7 @@ public class TestScalarTimeDateFunctions {
         @Override
         public String validate(Object objectToValidate, String functionCall) {
             if (objectToValidate instanceof java.sql.Date) {
-                java.sql.Date date = (java.sql.Date)objectToValidate;
+                java.sql.Date date = (java.sql.Date) objectToValidate;
                 java.sql.Date currentDate = new java.sql.Date(System.currentTimeMillis());
                 String dateAsString = date.toString();
                 String currentDateAsString = currentDate.toString();
@@ -211,7 +212,7 @@ public class TestScalarTimeDateFunctions {
         @Override
         public String validate(Object objectToValidate, String functionCall) {
             if (objectToValidate instanceof java.sql.Time) {
-                java.sql.Time time = (java.sql.Time)objectToValidate;
+                java.sql.Time time = (java.sql.Time) objectToValidate;
                 java.sql.Time currentTime = new java.sql.Time(System.currentTimeMillis());
                 String timeAsString = time.toString();
                 String currentTimeAsString = currentTime.toString();
@@ -230,7 +231,7 @@ public class TestScalarTimeDateFunctions {
         @Override
         public String validate(Object objectToValidate, String functionCall) {
             if (objectToValidate instanceof java.sql.Time) {
-                java.sql.Timestamp timestamp = (java.sql.Timestamp)objectToValidate;
+                java.sql.Timestamp timestamp = (java.sql.Timestamp) objectToValidate;
                 java.sql.Timestamp currentTimestamp = new java.sql.Timestamp(System.currentTimeMillis());
                 SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm");
                 String timestampAsString = df.format(timestamp);
@@ -238,8 +239,9 @@ public class TestScalarTimeDateFunctions {
                 if (timestampAsString.equals(currentTimestampAsString)) {
                     return null;
                 }
-                return String.format("Expected current timestamp %s, received %s", currentTimestampAsString, timestampAsString);
-            } 
+                return String.format("Expected current timestamp %s, received %s", currentTimestampAsString,
+                        timestampAsString);
+            }
             return "Expected result of type java.sql.Timestamp";
         }
     }
@@ -247,7 +249,7 @@ public class TestScalarTimeDateFunctions {
     private static class SimpleValidator implements Validator {
         
         private final Object expectedValue;
-
+        
         private SimpleValidator(Object expectedValue) {
             this.expectedValue = expectedValue;
             
@@ -258,7 +260,8 @@ public class TestScalarTimeDateFunctions {
             if (equals(expectedValue, objectToValidate)) {
                 return null;
             }
-            return String.format("Unexpected value %s, expected %s for function call %s", objectToValidate, expectedValue, functionCall);
+            return String.format("Unexpected value %s, expected %s for function call %s", objectToValidate,
+                    expectedValue, functionCall);
         }
         
         private boolean equals(Object o1, Object o2) {
@@ -269,8 +272,8 @@ public class TestScalarTimeDateFunctions {
                 return false;
             }
             if (o1 instanceof Number && o2 instanceof Number) {
-                double d1 = ((Number)o1).doubleValue();
-                double d2 = ((Number)o2).doubleValue();
+                double d1 = ((Number) o1).doubleValue();
+                double d2 = ((Number) o2).doubleValue();
                 return Math.abs(d1 - d2) <= 0.00001;
             }
             return o1.equals(o2);
