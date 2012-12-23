@@ -54,8 +54,8 @@ public class TestFBEscapedFunctionHelper extends TestCase {
     public void testParseArguments() throws SQLException {
         List<String> parsedParams = FBEscapedFunctionHelper.parseArguments(ESCAPED_FUNCTION_CALL);
         
-        assertTrue("Parsed params should be equal to the test ones.", 
-            ESCAPED_FUNCTION_PARAMS.equals(parsedParams));
+        assertEquals("Parsed params should be equal to the test ones.", 
+            ESCAPED_FUNCTION_PARAMS, parsedParams);
     }
     
     /**
@@ -64,12 +64,12 @@ public class TestFBEscapedFunctionHelper extends TestCase {
     public void testParseName() throws SQLException {
         String name = FBEscapedFunctionHelper.parseFunction(ESCAPED_FUNCTION_CALL);
         
-        assertTrue("Parsed function name should be equal to the test one.",
-            ESCAPED_FUNCTION_NAME.equals(name));
+        assertEquals("Parsed function name should be equal to the test one.",
+            ESCAPED_FUNCTION_NAME, name);
     }
     
     public static final String LCASE_FUNCTION_CALL = "{fn lcase('some name')}";
-    public static final String LCASE_FUNCTION_TEST = "lower('some name')";
+    public static final String LCASE_FUNCTION_TEST = "LOWER('some name')";
     
     public static final String UCASE_FUNCTION_CALL = "{fn ucase(some_identifier)}";
     public static final String UCASE_FUNCTION_TEST = "UPPER(some_identifier)";
@@ -78,15 +78,15 @@ public class TestFBEscapedFunctionHelper extends TestCase {
         FBEscapedParser parser = new FBEscapedParser(FBEscapedParser.USE_BUILT_IN);
         
         String ucaseTest = parser.parse(UCASE_FUNCTION_CALL);
-        assertTrue("ucase function parsing should be correct",
-                UCASE_FUNCTION_TEST.equals(ucaseTest));
+        assertEquals("ucase function parsing should be correct",
+                UCASE_FUNCTION_TEST, ucaseTest);
     }
     
     public void testUseStandardUdf() throws SQLException {
         FBEscapedParser parser = new FBEscapedParser(FBEscapedParser.USE_STANDARD_UDF);
         
         String lcaseTest = parser.parse(LCASE_FUNCTION_CALL);
-        assertTrue("lcase function parsing should be correct",
-                LCASE_FUNCTION_TEST.equals(lcaseTest));
+        assertEquals("lcase function parsing should be correct",
+                LCASE_FUNCTION_TEST, lcaseTest);
     }
 }
