@@ -16,24 +16,39 @@
  *
  * All rights reserved.
  */
-
 package org.firebirdsql.jdbc;
 
 import java.text.BreakIterator;
 
-
 /**
- * The class <code>FBEscapedParser</code>  parses the SQL 
- * and converts escaped syntax to native form.
- *
+ * The class <code>FBEscapedParser</code> parses the SQL and converts escaped
+ * syntax to native form.
+ * 
  * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
+ * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @version 1.0
  */
 public class FBEscapedParser {
-    
+
+    /**
+     * Use built-in functions if available.
+     * <p>
+     * This may still result in a UDF function beign used if the UDF matches
+     * naming and arguments of the function (or function template)
+     * </p>
+     */
     public static final int USE_BUILT_IN = 0;
+
+    /**
+     * Attempt to use UDF if there is no explicit function template defined.
+     * <p>
+     * This may still result in a built-in function being used if there is an
+     * explicit function template, and/or if there is no UDF with the name, but
+     * there is a built-in with the same name and parameter order.
+     * </p>
+     */
     public static final int USE_STANDARD_UDF = 1;
-    
+
     /*
      * Currently we have three states, normal when we simply copy characters
      * from source to destination, escape state, when we extract the escaped
@@ -80,106 +95,126 @@ public class FBEscapedParser {
     private int state = NORMAL_STATE;
     private int lastState = NORMAL_STATE;
     private int nestedEscaped = 0;
+    private final int mode;
 
-    private int mode;
-    
+    /**
+     * Creates a parser for JDBC escaped strings.
+     * 
+     * @param mode
+     *            One of {@link FBEscapedParser#USE_BUILT_IN} or
+     *            {@link FBEscapedParser#USE_STANDARD_UDF}
+     */
     public FBEscapedParser(int mode) {
+        assert (mode == USE_BUILT_IN || mode == USE_STANDARD_UDF);
         this.mode = mode;
     }
-    
-    /**
-     * Returns the current state.
-     */
-    protected int getLastState() { return lastState; }
 
     /**
      * Returns the current state.
      */
-    protected int getState() { return state; }
+    protected int getLastState() {
+        return lastState;
+    }
+
+    /**
+     * Returns the current state.
+     */
+    protected int getState() {
+        return state;
+    }
 
     /**
      * Sets the current state.
-     * @param state to enter.
-     * @throws <code>java.lang.IllegalStateException</code> if the system
-     * cannot enter the desired state.
+     * 
+     * @param newState
+     *            state to enter.
+     * @throws <code>java.lang.IllegalStateException</code> if the system cannot
+     *         enter the desired state.
      */
-    protected void setState(int state) throws IllegalStateException {
-        int tempState = getLastState();
+    protected void setState(final int newState) throws IllegalStateException {
+        final int tempState = getLastState();
         lastState = getState();
-        if (state == NORMAL_STATE)
-            this.state = NORMAL_STATE;
-        else
-        if (state == LITERAL_STATE)
-            this.state = LITERAL_STATE;
-        else
-        if (state == ESCAPE_STATE)
-            this.state = ESCAPE_STATE;
-        else {
+        switch (newState) {
+        case NORMAL_STATE:
+        case LITERAL_STATE:
+        case ESCAPE_STATE:
+            state = newState;
+            break;
+        default:
             lastState = tempState;
-            throw new IllegalStateException("State " + state + " is unknown.");
+            throw new IllegalStateException("State " + newState + " is unknown.");
         }
     }
 
     /**
      * Returns if the system is in state <code>state</code>.
-     * @param state we're testing
+     * 
+     * @param state
+     *            state we're testing
      * @return <code>true</code> if the system is in state <code>state</code>.
      */
-    protected boolean isInState(int state) { return getState() == state; }
+    protected boolean isInState(final int state) {
+        return getState() == state;
+    }
 
     /**
      * Returns if the system was in state <code>state</code>.
-     * @param state we're testing
+     * 
+     * @param state
+     *            state we're testing
      * @return <code>true</code> if the system was in state <code>state</code>.
      */
-    protected boolean wasInState(int state) { return getLastState() == state; }
+    protected boolean wasInState(final int state) {
+        return getLastState() == state;
+    }
 
     /**
-     * Test the character to be the state switching character and switches
-     * the state if necessary.
-     * @param testChar character to test
+     * Test the character to be the state switching character and switches the
+     * state if necessary.
+     * 
+     * @param testChar
+     *            character to test
      */
-    protected void switchState(char testChar) {
-            switch (testChar) {
-                case '\'' : {
-                    if (isInState(NORMAL_STATE))
-                        setState(LITERAL_STATE);
-                    else
-                    if (isInState(LITERAL_STATE))
-                        setState(NORMAL_STATE);
-                    break;
-                }
-                case '{' : {
-                    if (isInState(NORMAL_STATE))
-                        setState(ESCAPE_STATE);
-                    nestedEscaped++;
-                    break;
-                }
-                case '}' : {
-                    if (isInState(ESCAPE_STATE))
-                        nestedEscaped--;
-                    if (nestedEscaped == 0)
-                        setState(NORMAL_STATE);
-                    break;
-                }
+    protected void switchState(final char testChar) {
+        switch (testChar) {
+        case '\'':
+            if (isInState(NORMAL_STATE))
+                setState(LITERAL_STATE);
+            else if (isInState(LITERAL_STATE))
+            	setState(NORMAL_STATE);
+            break;
+        case '{':
+            if (isInState(NORMAL_STATE))
+            	setState(ESCAPE_STATE);
+            nestedEscaped++;
+            break;
+        case '}':
+            if (isInState(ESCAPE_STATE)) {
+                nestedEscaped--;
+                if (nestedEscaped == 0)
+                	setState(NORMAL_STATE);
             }
+            break;
+        }
     }
 
     /**
      * Check if the target SQL contains at least one of the escaped syntax
      * commands. This method performs simple substring matching, so it may
-     * report that SQL contains escaped syntax when the <code>"{"</code>
-     * is followed by the escaped syntax command in regular string constants
-     * that are passed as parameters. In this case {@link #parse(String)} will
+     * report that SQL contains escaped syntax when the <code>"{"</code> is
+     * followed by the escaped syntax command in regular string constants that
+     * are passed as parameters. In this case {@link #parse(String)} will
      * perform complete SQL parsing.
-     *
-     * @param sql to test
+     * 
+     * @param sql
+     *            to test
      * @return <code>true</code> if the <code>sql</code> is suspected to contain
-     * escaped syntax.
+     *         escaped syntax.
      */
     protected boolean checkForEscapes(String sql) {
         sql = sql.toLowerCase();
-        
+
+//@formatter:off
         return  sql.indexOf(CHECK_CALL_1) != -1 ||
                 sql.indexOf(CHECK_CALL_2) != -1 ||
                 sql.indexOf(CHECK_DATE) != -1 ||
@@ -188,61 +223,53 @@ public class FBEscapedParser {
                 sql.indexOf(CHECK_OUTERJOIN) != -1 ||
                 sql.indexOf(CHECK_TIME) != -1 ||
                 sql.indexOf(CHECK_TIMESTAMP) != -1;
+//@formatter:on
     }
 
     /**
      * Converts escaped parts in the passed SQL to native representation.
-     * @param sql to parse
+     * 
+     * @param sql
+     *            to parse
      * @return native form of the <code>sql</code>.
      */
-    public String parse(String sql) throws FBSQLException {
-        
+    public String parse(final String sql) throws FBSQLException {
         lastState = NORMAL_STATE;
         state = NORMAL_STATE;
         nestedEscaped = 0;
 
-        if (!checkForEscapes(sql))
-            return sql;
+        if (!checkForEscapes(sql)) return sql;
 
-        char[] sqlbuff = sql.toCharArray();
+        final char[] sqlbuff = sql.toCharArray();
         final StringBuilder buffer = new StringBuilder();
         final StringBuilder escape = new StringBuilder();
 
-        for(int i = 0; i < sqlbuff.length; i++) {
-
+        for (int i = 0; i < sqlbuff.length; i++) {
             switchState(sqlbuff[i]);
 
-            if (isInState(NORMAL_STATE) &&
-                    (wasInState(NORMAL_STATE) || wasInState(LITERAL_STATE)))
+            if (isInState(NORMAL_STATE) && (wasInState(NORMAL_STATE) || wasInState(LITERAL_STATE)))
                 buffer.append(sqlbuff[i]);
-            else
-            if (isInState(NORMAL_STATE) && wasInState(ESCAPE_STATE)) {
+            else if (isInState(NORMAL_STATE) && wasInState(ESCAPE_STATE)) {
                 // escape now is in form "{...." without trailing '}'...
                 buffer.append(escapeToNative(escape.substring(1, escape.length())));
                 escape.setLength(0);
                 setState(NORMAL_STATE);
-            } else
-            if (isInState(ESCAPE_STATE))
+            } else if (isInState(ESCAPE_STATE))
                 escape.append(sqlbuff[i]);
-            else
-            if (isInState(LITERAL_STATE))
-                buffer.append(sqlbuff[i]);
+            else if (isInState(LITERAL_STATE)) buffer.append(sqlbuff[i]);
         }
         return buffer.toString();
     }
 
-    protected void processEscaped(String escaped, StringBuilder keyword,
-            StringBuilder payload)
-    {
-        if (keyword.length() != 0) keyword.delete(0, keyword.length());
-        if (payload.length() != 0) payload.delete(0, payload.length());
-        /*
-         * Extract the keyword from the escaped syntax.
-         */
-        BreakIterator iterator = BreakIterator.getWordInstance();
+    protected void processEscaped(final String escaped, final StringBuilder keyword, final StringBuilder payload) {
+        if (keyword.length() != 0) keyword.setLength(0);
+        if (payload.length() != 0) payload.setLength(0);
+
+        // Extract the keyword from the escaped syntax.
+        final BreakIterator iterator = BreakIterator.getWordInstance();
         iterator.setText(escaped);
-        int keyStart = iterator.first();
-        int keyEnd = iterator.next();
+        final int keyStart = iterator.first();
+        final int keyEnd = iterator.next();
         keyword.append(escaped.substring(keyStart, keyEnd));
         payload.append(escaped.substring(keyEnd, escaped.length()));
     }
@@ -251,129 +278,110 @@ public class FBEscapedParser {
      * This method checks the passed parameter to conform the escaped syntax,
      * checks for the unknown keywords and re-formats result according to the
      * Firebird SQL syntax.
-     * @param escaped the part of escaped SQL between the '{' and '}'.
+     * 
+     * @param escaped
+     *            the part of escaped SQL between the '{' and '}'.
      * @return the native representation of the SQL code.
      */
-    protected String escapeToNative(String escaped) throws FBSQLException {
-        StringBuilder keyword = new StringBuilder();
-        StringBuilder payload = new StringBuilder();
+    protected String escapeToNative(final String escaped) throws FBSQLException {
+        final StringBuilder keyword = new StringBuilder();
+        final StringBuilder payload = new StringBuilder();
 
         processEscaped(escaped, keyword, payload);
 
-        /*
-         * Handle keywords.
-         */
-        if (keyword.toString().equalsIgnoreCase(ESCAPE_CALL_KEYWORD)){
-            
+        //Handle keywords.
+        final String keywordStr = keyword.toString();
+        if (keywordStr.equalsIgnoreCase(ESCAPE_CALL_KEYWORD)) {
             StringBuilder call = new StringBuilder();
-            call
-                .append('{')
+            call.append('{')
                 .append(keyword)
                 .append(' ')
                 .append(payload)
                 .append('}');
-            
             return convertProcedureCall(call.toString());
-        
-        } else
-        if (keyword.toString().equalsIgnoreCase(ESCAPE_CALL_KEYWORD3)) {
-            
+        } else if (keywordStr.equalsIgnoreCase(ESCAPE_CALL_KEYWORD3)) {
             StringBuilder call = new StringBuilder();
-            
-            call
-                .append('{')
+            call.append('{')
                 .append(ESCAPE_CALL_KEYWORD3)
                 .append(payload)
                 .append('}');
-            
             return convertProcedureCall(call.toString());
-        } else
-        if (keyword.toString().equalsIgnoreCase(ESCAPE_DATE_KEYWORD))
+        } else if (keywordStr.equalsIgnoreCase(ESCAPE_DATE_KEYWORD))
             return toDateString(payload.toString().trim());
-        else
-        if (keyword.toString().equalsIgnoreCase(ESCAPE_ESCAPE_KEYWORD))
+        else if (keywordStr.equalsIgnoreCase(ESCAPE_ESCAPE_KEYWORD))
             return convertEscapeString(payload.toString().trim());
-        else
-        if (keyword.toString().equalsIgnoreCase(ESCAPE_FUNCTION_KEYWORD))
+        else if (keywordStr.equalsIgnoreCase(ESCAPE_FUNCTION_KEYWORD))
             return convertEscapedFunction(payload.toString().trim());
-        else
-        if (keyword.toString().equalsIgnoreCase(ESCAPE_OUTERJOIN_KEYWORS))
+        else if (keywordStr.equalsIgnoreCase(ESCAPE_OUTERJOIN_KEYWORS))
             return convertOuterJoin(payload.toString().trim());
-        else
-        if (keyword.toString().equalsIgnoreCase(ESCAPE_TIME_KEYWORD))
+        else if (keywordStr.equalsIgnoreCase(ESCAPE_TIME_KEYWORD))
             return toTimeString(payload.toString().trim());
-        else
-        if (keyword.toString().equalsIgnoreCase(ESCAPE_TIMESTAMP_KEYWORD))
+        else if (keywordStr.equalsIgnoreCase(ESCAPE_TIMESTAMP_KEYWORD))
             return toTimestampString(payload.toString().trim());
         else
-            throw new FBSQLParseException(
-                "Unknown keyword " + keyword + " for escaped syntax.");
+            throw new FBSQLParseException("Unknown keyword " + keywordStr + " for escaped syntax.");
     }
 
     /**
-     * This method converts the 'yyyy-mm-dd' date format into the
-     * Firebird understandable format.
-     * @param dateStr the date in the 'yyyy-mm-dd' format.
+     * This method converts the 'yyyy-mm-dd' date format into the Firebird
+     * understandable format.
+     * 
+     * @param dateStr
+     *            the date in the 'yyyy-mm-dd' format.
      * @return Firebird understandable date format.
      */
-    protected String toDateString(String dateStr) throws FBSQLParseException {
-        /*
-         * We assume that Firebird can handle the 'yyyy-mm-dd' date format.
-         */
-        return dateStr;
+    protected String toDateString(final String dateStr) throws FBSQLParseException {
+        // use shorthand date cast (using just the string will not work in all contexts)
+        return "DATE " + dateStr;
     }
 
     /**
-     * This method converts the 'hh:mm:ss' time format into the
-     * Firebird understandable format.
-     * @param timeStr the date in the 'hh:mm:ss' format.
+     * This method converts the 'hh:mm:ss' time format into the Firebird
+     * understandable format.
+     * 
+     * @param timeStr
+     *            the date in the 'hh:mm:ss' format.
      * @return Firebird understandable date format.
      */
-    protected String toTimeString(String timeStr) throws FBSQLParseException {
-        /*
-         * We assume that Firebird can handle the 'hh:mm:ss' date format.
-         */
-        return timeStr;
+    protected String toTimeString(final String timeStr) throws FBSQLParseException {
+        // use shorthand time cast (using just the string will not work in all contexts)
+        return "TIME " + timeStr;
     }
 
     /**
      * This method converts the 'yyyy-mm-dd hh:mm:ss' timestamp format into the
      * Firebird understandable format.
-     * @param timestampStr the date in the 'yyyy-mm-dd hh:mm:ss' format.
+     * 
+     * @param timestampStr
+     *            the date in the 'yyyy-mm-dd hh:mm:ss' format.
      * @return Firebird understandable date format.
      */
-    protected String toTimestampString(String timestampStr)
-        throws FBSQLParseException
-    {
-        /*
-         * We assume that Firebird can handle the 'dd.mm.yyyy hh:mm:ss' date format.
-         */
-        return timestampStr;
+    protected String toTimestampString(final String timestampStr) throws FBSQLParseException {
+        // use shorthand timestamp cast (using just the string will not work in all contexts)
+        return "TIMESTAMP " + timestampStr;
     }
 
     /**
-     * This methods converts the escaped procedure call syntax into the
-     * native procedure call.
-     * @param procedureCall part of {call proc_name(...)} without curly braces
-     * and "call" word.
+     * This methods converts the escaped procedure call syntax into the native
+     * procedure call.
+     * 
+     * @param procedureCall
+     *            part of {call proc_name(...)} without curly braces and "call"
+     *            word.
      * @return native procedure call.
      */
-    protected String convertProcedureCall(String procedureCall)
-        throws FBSQLException
-    {
+    protected String convertProcedureCall(final String procedureCall) throws FBSQLException {
         FBEscapedCallParser tempParser = new FBEscapedCallParser(mode);
         FBProcedureCall call = tempParser.parseCall(procedureCall);
         return call.getSQL(false);
     }
 
     /**
-     * This method converts the escaped outer join call syntax into the
-     * native outer join. Actually, we do not change anything here, since
-     * Firebird's syntax is the same.
+     * This method converts the escaped outer join call syntax into the native
+     * outer join. Actually, we do not change anything here, since Firebird's
+     * syntax is the same.
      */
-    protected String convertOuterJoin(String outerJoin)
-        throws FBSQLParseException
-    {
+    protected String convertOuterJoin(final String outerJoin) throws FBSQLParseException {
         return outerJoin;
     }
 
@@ -381,33 +389,27 @@ public class FBEscapedParser {
      * Convert the <code>"{escape '...'}"</code> call into the corresponding
      * escape clause for Firebird.
      * 
-     * @param escapeString escape string to convert
-     * 
+     * @param escapeString
+     *            escape string to convert
      * @return converted code.
      */
-    protected String convertEscapeString(String escapeString) {
+    protected String convertEscapeString(final String escapeString) {
         return escapeString;
     }
-    
+
     /**
      * This method converts escaped function to a server function call. Actually
      * we do not change anything here, we hope that all UDF are defined.
      * 
-     * @param escapedFunction escaped function call
+     * @param escapedFunction
+     *            escaped function call
      * @return server-side function call.
-     * 
-     * @throws FBSQLParseException if something was wrong.
+     * @throws FBSQLParseException
+     *             if something was wrong.
      */
-    protected String convertEscapedFunction(String escapedFunction)
-        throws FBSQLParseException
-    {
-        String templateResult = 
-            FBEscapedFunctionHelper.convertTemplate(escapedFunction, mode);
-        
-        if (templateResult != null)
-            return templateResult;
-        else
-            return escapedFunction;
+    protected String convertEscapedFunction(final String escapedFunction) throws FBSQLParseException {
+        final String templateResult = FBEscapedFunctionHelper.convertTemplate(escapedFunction, mode);
+        return templateResult != null ? templateResult : escapedFunction;
     }
 
     public static boolean supportsStoredProcedures() {
@@ -415,6 +417,6 @@ public class FBEscapedParser {
     }
 
     public static boolean supportsLikeEscapeClause() {
-        return false;
+        return true;
     }
 }

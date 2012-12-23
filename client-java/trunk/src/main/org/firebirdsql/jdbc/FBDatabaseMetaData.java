@@ -424,7 +424,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
      * Derived from firebird2/src/dsql/keywords.cpp.
      * Exclusions from list of sql-92 keywords in SQL Instant Reference,
      * Martin Gruber (1993) Sybex.
-     *
+     * TODO Review list of keywords
      */
     private final static String fbSQLKeywords =
     //"ACTION," +
@@ -675,56 +675,63 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
         return fbSQLKeywords;
     }
 
-
     /**
-     * Gets a comma-separated list of math functions.  These are the
-     * X/Open CLI math function names used in the JDBC function escape
-     * clause.
-     *
-     * @return the list
-     * @exception SQLException if a database access error occurs
+     * NOTE: Some of the functions listed may only work on Firebird 2.1 or higher, or when equivalent UDFs
+     * are installed.
+     * <p>
+     * {@inheritDoc}
+     * </p>
      */
-    public  String getNumericFunctions() throws SQLException {
-        return "";//udf's
+    public String getNumericFunctions() throws SQLException {
+        // TODO cache result?
+        return collectionToCommaSeperatedList(FBEscapedFunctionHelper.getSupportedNumericFunctions());
+    }
+    
+    private static String collectionToCommaSeperatedList(Collection<String> collection) {
+        StringBuilder sb = new StringBuilder();
+        for (String item : collection) {
+            sb.append(item);
+            sb.append(',');
+        }
+        sb.setLength(sb.length() - 1);
+        return sb.toString();
     }
 
-
     /**
-     * Gets a comma-separated list of string functions.  These are the
-     * X/Open CLI string function names used in the JDBC function escape
-     * clause.
-     *
-     * @return the list
-     * @exception SQLException if a database access error occurs
+     * NOTE: Some of the functions listed may only work on Firebird 2.1 or higher, or when equivalent UDFs
+     * are installed.
+     * <p>
+     * {@inheritDoc}
+     * </p>
      */
-    public  String getStringFunctions() throws SQLException {
-        return "SUBSTRING,UCASE,CONCAT";
+    public String getStringFunctions() throws SQLException {
+        // TODO cache result?
+        return collectionToCommaSeperatedList(FBEscapedFunctionHelper.getSupportedStringFunctions());
     }
 
-
     /**
-     * Gets a comma-separated list of system functions.  These are the
-     * X/Open CLI system function names used in the JDBC function escape
-     * clause.
-     *
-     * @return the list
-     * @exception SQLException if a database access error occurs
+     * NOTE: Some of the functions listed may only work on Firebird 2.1 or higher, or when equivalent UDFs
+     * are installed.
+     * <p>
+     * {@inheritDoc}
+     * </p>
      */
-    public  String getSystemFunctions() throws SQLException {
-        return "";
+    public String getSystemFunctions() throws SQLException {
+        // TODO cache result?
+        return collectionToCommaSeperatedList(FBEscapedFunctionHelper.getSupportedSystemFunctions());
     }
 
-
     /**
-     * Gets a comma-separated list of time and date functions.
-     *
-     * @return the list
-     * @exception SQLException if a database access error occurs
+     * NOTE: Some of the functions listed may only work on Firebird 2.1 or higher, or when equivalent UDFs
+     * are installed.
+     * <p>
+     * {@inheritDoc}
+     * </p>
      */
-    public  String getTimeDateFunctions() throws SQLException {
-        return "CURDATE,CURTIME,DAYOFYEAR,HOUR,MINUTE,MONTH,NOW,SECOND,YEAR";
+    public String getTimeDateFunctions() throws SQLException {
+        // TODO cache result?
+        return collectionToCommaSeperatedList(FBEscapedFunctionHelper.getSupportedTimeDateFunctions());
     }
-
 
     /**
      * Gets the string that can be used to escape wildcard characters.
@@ -741,7 +748,6 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
     public  String getSearchStringEscape() throws SQLException {
         return "\\";
     }
-
 
     /**
      * Gets all the "extra" characters that can be used in unquoted
@@ -813,12 +819,11 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
     /**
      * Is the CONVERT function between SQL types supported?
      *
-     * What is this??? my sql ref says CONVERT is a string encoding map!
      * @return <code>true</code> if so; <code>false</code> otherwise
      * @exception SQLException if a database access error occurs
      */
     public  boolean supportsConvert() throws SQLException {
-        return false;//don't know
+        return false;   // Support is broken right now
     }
 
 
@@ -832,7 +837,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
      * @see Types
      */
     public  boolean supportsConvert(int fromType, int toType) throws SQLException {
-        return false;//don't know
+        return false;   // Support is broken right now
     }
 
 

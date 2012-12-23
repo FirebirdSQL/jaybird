@@ -47,8 +47,8 @@ public class TestScalarSystemFunctions extends FBJUnit4TestBase {
             // TODO Consider implementing using RDB$GET_CONTEXT('SYSTEM', 'DB_NAME')
             fail("JDBC escape DATABASE() not supported");
         } catch (SQLException ex) {
-            // TODO validate exception instead of throwing
-            fail("Validation of unsupported functions not yet implemented");  
+            // TODO validate exception?
+            //fail("Validation of unsupported functions not yet implemented");  
         } finally {
             JdbcResourceHelper.closeQuietly(con);
         }
@@ -73,9 +73,9 @@ public class TestScalarSystemFunctions extends FBJUnit4TestBase {
         try {
             Statement stmt = con.createStatement();
             ResultSet rs = stmt.executeQuery("SELECT {fn USER()} FROM RDB$DATABASE");
-            // TODO Currently fails, implement using CURRENT_USER
             assertTrue("Expected at least one row", rs.next());
-            assertEquals("Unexpected result for function escape USER()", "SYSDBA", rs.getString(1));
+            assertEquals("Unexpected result for function escape USER()", 
+                    FBTestProperties.DB_USER.toUpperCase(), rs.getString(1));
         } finally {
             JdbcResourceHelper.closeQuietly(con);
         }

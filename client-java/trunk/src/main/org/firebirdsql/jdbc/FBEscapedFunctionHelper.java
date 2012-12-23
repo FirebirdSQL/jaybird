@@ -30,86 +30,148 @@ import java.util.*;
  */
 public class FBEscapedFunctionHelper {
     
-    /*
+    /**
      * This map contains mapping between JDBC function names and Firebird ones.
+     * Mapping to null means: execute as is (might fail if there is no built-in or UDF)
      */
-    private static final Map<String, String> FUNCTION_MAP = new HashMap<String, String>();
+    private static final Map<String, String> FUNCTION_MAP;
+    
+    /**
+     * Supported numeric functions
+     */
+    private static final Set<String> SUPPORTED_NUMERIC_FUNCTIONS;
+    
+    /**
+     * Supported string functions
+     */
+    private static final Set<String> SUPPORTED_STRING_FUNCTIONS;
+    
+    /**
+     * Supported time and date functions
+     */
+    private static final Set<String> SUPPORTED_TIME_DATE_FUNCTIONS;
+    
+    /**
+     * Supported system functions
+     */
+    private static final Set<String> SUPPORTED_SYSTEM_FUNCTIONS;
+    
     static {
-        
+        Map<String, String> functionMap = new HashMap<String, String>();
         /* Numeric Functions */
-        FUNCTION_MAP.put("ABS", null);
-        FUNCTION_MAP.put("ACOS", null);
-        FUNCTION_MAP.put("ASIN", null);
-        FUNCTION_MAP.put("ATAN", null);
-        FUNCTION_MAP.put("ATAN2", null);
-        FUNCTION_MAP.put("CEILING", null);
-        FUNCTION_MAP.put("COS", null);
-        FUNCTION_MAP.put("COT", null);
-        FUNCTION_MAP.put("DEGREES", null);
-        FUNCTION_MAP.put("EXP", null);
-        FUNCTION_MAP.put("FLOOR", null);
-        FUNCTION_MAP.put("LOG", null);
-        FUNCTION_MAP.put("LOG10", null);
-        FUNCTION_MAP.put("MOD", null);
-        FUNCTION_MAP.put("PI", null);
-        FUNCTION_MAP.put("POWER", null);
-        FUNCTION_MAP.put("RADIANS", null);
-        FUNCTION_MAP.put("RAND", null);
-        FUNCTION_MAP.put("ROUND", null);
-        FUNCTION_MAP.put("SIGN", null);
-        FUNCTION_MAP.put("SIN", null);
-        FUNCTION_MAP.put("SQRT", null);
-        FUNCTION_MAP.put("TAN", null);
-        FUNCTION_MAP.put("TRUNCATE", null);
+        functionMap.put("ABS", null);
+        functionMap.put("ACOS", null);
+        functionMap.put("ASIN", null);
+        functionMap.put("ATAN", null);
+        functionMap.put("ATAN2", null);
+        functionMap.put("CEILING", null);
+        functionMap.put("COS", null);
+        functionMap.put("COT", null);
+        functionMap.put("EXP", null);
+        functionMap.put("FLOOR", null);
+        functionMap.put("LOG", "LN({0})");
+        functionMap.put("LOG10", null);
+        functionMap.put("MOD", null);
+        functionMap.put("PI", null);
+        functionMap.put("POWER", null);
+        functionMap.put("ROUND", null);
+        functionMap.put("SIGN", null);
+        functionMap.put("SIN", null);
+        functionMap.put("SQRT", null);
+        functionMap.put("TAN", null);
+        functionMap.put("TRUNCATE", "TRUNC({0},{1})");
+        
+        SUPPORTED_NUMERIC_FUNCTIONS = Collections.unmodifiableSet(new HashSet<String>(functionMap.keySet()));
         
         /* String Functions */
-        FUNCTION_MAP.put("ASCII", null);
-        FUNCTION_MAP.put("CHAR", null);
-        FUNCTION_MAP.put("CONCAT", "{0}||{1}");
-        FUNCTION_MAP.put("DIFFERENCE", null);
-        FUNCTION_MAP.put("INSERT", null);
-        FUNCTION_MAP.put("LCASE", null);
-        FUNCTION_MAP.put("LEFT", "SUBSTRING({0} FROM 1 FOR {1}");
-        FUNCTION_MAP.put("LENGTH", "CHARACTER_LENGTH({0})");
-        FUNCTION_MAP.put("LOCATE", null);
-        FUNCTION_MAP.put("LTRIM", null);
-        FUNCTION_MAP.put("REPEAT", null);
-        FUNCTION_MAP.put("REPLACE", null);
-        FUNCTION_MAP.put("RIGHT", null);
-        FUNCTION_MAP.put("RTRIM", null);
-        FUNCTION_MAP.put("SOUNDEX", null);
-        FUNCTION_MAP.put("SPACE", null);
-        FUNCTION_MAP.put("SUBSTRING", "SUBSTRING({0} FROM {1} FOR {2})");
-        FUNCTION_MAP.put("UCASE", "UPPER({0})");
+        functionMap.put("ASCII", "ASCII_VAL({0})");
+        functionMap.put("CHAR", "ASCII_CHAR({0})");
+        // TODO support difference between CHARACTER and OCTETS optional param
+        functionMap.put("CHAR_LENGTH", "CHAR_LENGTH({0})");
+        functionMap.put("CHARACTER_LENGTH", "CHAR_LENGTH({0})");
+        functionMap.put("CONCAT", "{0}||{1}");
+        functionMap.put("INSERT", "OVERLAY({0} PLACING {3} FROM {1} FOR {2})");
+        functionMap.put("LCASE", "LOWER({0})");
+        functionMap.put("LEFT", null);
+        // TODO support difference between CHARACTER and OCTETS optional param
+        functionMap.put("LENGTH", "CHAR_LENGTH(TRIM(TRAILING FROM {0}))");
+        // TODO Support variant without start position
+        functionMap.put("LOCATE", "POSITION({0},{1},{2})");
+        functionMap.put("LTRIM", "TRIM(LEADING FROM {0})");
+        functionMap.put("OCTET_LENGTH", null);
+        functionMap.put("POSITION", null);
+        functionMap.put("REPEAT", "RPAD('''',{1},{0})");
+        functionMap.put("REPLACE", null);
+        functionMap.put("RIGHT", null);
+        functionMap.put("RTRIM", "TRIM(TRAILING FROM {0})");
+        functionMap.put("SPACE", "RPAD('''',{0})");
+        functionMap.put("SUBSTRING", "SUBSTRING({0} FROM {1} FOR {2})");
+        functionMap.put("UCASE", "UPPER({0})");
+        
+        Set<String> supportedStringFunctions = new HashSet<String>(functionMap.keySet());
+        supportedStringFunctions.removeAll(SUPPORTED_NUMERIC_FUNCTIONS);
+        SUPPORTED_STRING_FUNCTIONS = Collections.unmodifiableSet(new HashSet<String>(supportedStringFunctions));
         
         /* Time and Date Functions */
-        FUNCTION_MAP.put("CURDATE", "CURRENT_DATE");
-        FUNCTION_MAP.put("CURTIME", "CURRENT_TIME");
-        FUNCTION_MAP.put("DAYNAME", null);
-        FUNCTION_MAP.put("DAYOFMONTH", "EXTRACT(DAY FROM {0})");
-        FUNCTION_MAP.put("DAYOFWEEK", null);
-        FUNCTION_MAP.put("DAYOFYEAR", null );
-        FUNCTION_MAP.put("HOUR", "EXTRACT(HOUR FROM {0})");
-        FUNCTION_MAP.put("MINUTE", "EXTRACT(MINUTE FROM {0})");
-        FUNCTION_MAP.put("MONTH", "EXTRACT(MONTH FROM {0})");
-        FUNCTION_MAP.put("MONTHNAME", null);
-        FUNCTION_MAP.put("NOW", "CURRENT_TIMESTAMP");
-        FUNCTION_MAP.put("QUARTER", null);
-        FUNCTION_MAP.put("SECOND", "EXTRACT(SECOND FROM {0})");
-        FUNCTION_MAP.put("TIMESTAMPADD", null);
-        FUNCTION_MAP.put("TIMESTAMPDIFF", null);
-        FUNCTION_MAP.put("WEEK", null);
-        FUNCTION_MAP.put("YEAR", "EXTRACT(YEAR FROM {0})");
+        functionMap.put("CURRENT_DATE", "CURRENT_DATE");
+        functionMap.put("CURRENT_TIME", "CURRENT_TIME");
+        functionMap.put("CURRENT_TIMESTAMP", "CURRENT_TIMESTAMP");
+        functionMap.put("CURDATE", "CURRENT_DATE");
+        functionMap.put("CURTIME", "CURRENT_TIME");
+        functionMap.put("DAYOFMONTH", "EXTRACT(DAY FROM {0})");
+        functionMap.put("DAYOFWEEK", "EXTRACT(WEEKDAY FROM {0})+1");
+        functionMap.put("DAYOFYEAR", "EXTRACT(YEARDAY FROM {0})+1");
+        functionMap.put("EXTRACT", null);
+        functionMap.put("HOUR", "EXTRACT(HOUR FROM {0})");
+        functionMap.put("MINUTE", "EXTRACT(MINUTE FROM {0})");
+        functionMap.put("MONTH", "EXTRACT(MONTH FROM {0})");
+        functionMap.put("NOW", "CURRENT_TIMESTAMP");
+        functionMap.put("SECOND", "EXTRACT(SECOND FROM {0})");
+        functionMap.put("TIMESTAMPADD", null);
+        functionMap.put("TIMESTAMPDIFF", null);
+        functionMap.put("WEEK", "EXTRACT(WEEK FROM {0})");
+        functionMap.put("YEAR", "EXTRACT(YEAR FROM {0})");
+        
+        Set<String> supportedTimeDateFunctions = new HashSet<String>(functionMap.keySet());
+        supportedTimeDateFunctions.removeAll(SUPPORTED_NUMERIC_FUNCTIONS);
+        supportedTimeDateFunctions.removeAll(SUPPORTED_STRING_FUNCTIONS);
+        SUPPORTED_TIME_DATE_FUNCTIONS = Collections.unmodifiableSet(new HashSet<String>(supportedTimeDateFunctions));
         
         /* System Functions */
-        FUNCTION_MAP.put("DATABASE", null);
-        FUNCTION_MAP.put("IFNULL", "COALESCE({0}, {1})");
+        functionMap.put("IFNULL", "COALESCE({0}, {1})");
+        functionMap.put("USER", "USER");
+        
+        Set<String> supportedSystemFunctions = new HashSet<String>(functionMap.keySet());
+        supportedSystemFunctions.removeAll(SUPPORTED_NUMERIC_FUNCTIONS);
+        supportedSystemFunctions.removeAll(SUPPORTED_STRING_FUNCTIONS);
+        supportedSystemFunctions.removeAll(SUPPORTED_TIME_DATE_FUNCTIONS);
+        SUPPORTED_SYSTEM_FUNCTIONS = Collections.unmodifiableSet(new HashSet<String>(supportedSystemFunctions));
         
         /* Conversion Functions */
-        FUNCTION_MAP.put("CONVERT", "CAST({0} AS {1})");
+        // TODO This does not support the conversion with SQL_ prefix in appendix D
+        // TODO Should work without specifying size on CHAR and VARCHAR
+        functionMap.put("CONVERT", "CAST({0} AS {1})");
+        
+        // Unsupported functions defined in appendix D that might accidentally work due to UDFs
+        // Numerics
+        functionMap.put("DEGREES", null);
+        functionMap.put("RADIANS", null);
+        functionMap.put("RAND", null);
+        
+        // String
+        functionMap.put("DIFFERENCE", null);
+        functionMap.put("SOUNDEX", null);
+        
+        // Time and date
+        functionMap.put("DAYNAME", null);
+        functionMap.put("MONTHNAME", null);
+        functionMap.put("QUARTER", null);
+        
+        // System
+        functionMap.put("DATABASE", null);
+        
+        FUNCTION_MAP = Collections.unmodifiableMap(functionMap);
     }
-    
-    
     
     /**
      * Simple syntax check if function is specified in form "name(...)".
@@ -119,16 +181,10 @@ public class FBEscapedFunctionHelper {
      * @throws FBSQLParseException if simple syntax check failed.
      */
     private static void checkSyntax(String functionCall) throws FBSQLParseException {
+        // NOTE: Some function calls don't require parenthesis eg CURRENT_TIMESTAMP
         int parenthesisStart = functionCall.indexOf('(');
-        
-        if (parenthesisStart == -1)
-            throw new FBSQLParseException("No opening parenthesis found, " +
-                    "not a function call.");
-        
-        if (functionCall.charAt(functionCall.length() - 1) != ')')
-            throw new FBSQLParseException("No closing parenthesis found, " +
-                    "not a function call.");
-        
+        if (parenthesisStart != -1 && functionCall.charAt(functionCall.length() - 1) != ')')
+            throw new FBSQLParseException("No closing parenthesis found, not a function call.");
     }
     
     /**
@@ -142,12 +198,10 @@ public class FBEscapedFunctionHelper {
      */
     public static String parseFunction(String functionCall) throws FBSQLParseException {
         functionCall = functionCall.trim();
-        
         checkSyntax(functionCall);
-        
         int parenthesisStart = functionCall.indexOf('(');
         
-        return functionCall.substring(0, parenthesisStart);
+        return parenthesisStart != -1 ? functionCall.substring(0, parenthesisStart) : functionCall;
     }
     
     /**
@@ -162,10 +216,12 @@ public class FBEscapedFunctionHelper {
      */
     public static List<String> parseArguments(String functionCall) throws FBSQLParseException {
         functionCall = functionCall.trim();
-        
         checkSyntax(functionCall);
         
         int parenthesisStart = functionCall.indexOf('(');
+        if (parenthesisStart == -1) {
+            return Collections.emptyList();
+        }
         
         String paramsString = functionCall.substring(
             parenthesisStart + 1, functionCall.length() - 1);
@@ -193,6 +249,7 @@ public class FBEscapedFunctionHelper {
                     
                 // we ignore spaces, tabs and new lines if
                 // we are not in the string literal
+                // TODO Ignoring spaces can break some nested calls (eg CAST(... AS type)
                 case ' ' :
                 case '\t' :
                 case '\n' :
@@ -225,8 +282,7 @@ public class FBEscapedFunctionHelper {
         
         // after processing all parameters all string literals should be closed
         if (inQuotes || inDoubleQuotes)
-            throw new FBSQLParseException(
-                "String literal is not properly closed.");
+            throw new FBSQLParseException("String literal is not properly closed.");
         
         return params;
     }
@@ -241,17 +297,27 @@ public class FBEscapedFunctionHelper {
      *  
      * @throws FBSQLParseException if escaped function call has incorrect syntax.
      */
-    public static String convertTemplate(String functionCall, int mode) throws FBSQLParseException {
-        String name = parseFunction(functionCall);
-        String[] params = parseArguments(functionCall).toArray(new String[0]);
+    public static String convertTemplate(final String functionCall, final int mode) throws FBSQLParseException {
+        final String functionName = parseFunction(functionCall).toUpperCase();
+        final String[] params = parseArguments(functionCall).toArray(new String[0]);
         
-        String firebirdTemplate = FUNCTION_MAP.get(name.toUpperCase());
+        if (!FUNCTION_MAP.containsKey(functionName)) {
+            /* See 13.4.1 of JDBC 4.1 spec:
+             * "The escape syntax for scalar functions must only be used to invoke the scalar
+             * functions defined in Appendix D “Scalar Functions". The escape syntax is not
+             * intended to be used to invoke user-defined or vendor specific scalar functions."
+             */
+            // TODO Consider throwing SQLFeatureNotSupported or a different SQLException
+            throw new FBSQLParseException("Unsupported JDBC function escape: " + functionName);
+        }
+        
+        final String firebirdTemplate = FUNCTION_MAP.get(functionName);
 
         if (firebirdTemplate != null) 
-            return MessageFormat.format(firebirdTemplate, (Object[])params);
+            return MessageFormat.format(firebirdTemplate, (Object[]) params);
         
         if (mode == FBEscapedParser.USE_STANDARD_UDF)
-            return convertUsingStandardUDF(name, params);
+            return convertUsingStandardUDF(functionName, params);
             
         return null;
     }
@@ -697,4 +763,31 @@ public class FBEscapedFunctionHelper {
         return "rtrim(" + params[0] + ")";
     }
     
+    /**
+     * @return Set of JDBC numeric functions supported (as defined in appendix D.1 of JDBC 4.1)
+     */
+    public static Set<String> getSupportedNumericFunctions() {
+        return SUPPORTED_NUMERIC_FUNCTIONS;
+    }
+    
+    /**
+     * @return Set of JDBC string functions supported (as defined in appendix D.2 of JDBC 4.1)
+     */
+    public static Set<String> getSupportedStringFunctions() {
+        return SUPPORTED_STRING_FUNCTIONS;
+    }
+    
+    /**
+     * @return Set of JDBC time and date functions supported (as defined in appendix D.3 of JDBC 4.1)
+     */
+    public static Set<String> getSupportedTimeDateFunctions() {
+        return SUPPORTED_TIME_DATE_FUNCTIONS;
+    }
+    
+    /**
+     * @return Set of JDBC system functions supported (as defined in appendix D.4 of JDBC 4.1)
+     */
+    public static Set<String> getSupportedSystemFunctions() {
+        return SUPPORTED_SYSTEM_FUNCTIONS;
+    }
 }

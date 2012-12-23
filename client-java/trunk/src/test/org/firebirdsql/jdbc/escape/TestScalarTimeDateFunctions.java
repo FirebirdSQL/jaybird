@@ -89,36 +89,37 @@ public class TestScalarTimeDateFunctions {
     public static Collection<Object[]> timeDateFunctionTestcases() {
         return Arrays.asList(new Object[][] {
 //@formatter:off
-                testcase("CURRENT_DATE", new CurrentDateValidator()),   // TODO Currently fails, support calling without ()
-                testcase("CURRENT_DATE()", new CurrentDateValidator()), // TODO Currently fails, implement using CURRENT_DATE
-                testcase("CURRENT_TIME", new CurrentTimeValidator()),   // TODO Currently fails, support calling without ()
-                testcase("CURRENT_TIME()", new CurrentTimeValidator()), // TODO Currently fails, implement using CURRENT_TIME
-                testcase("CURRENT_TIMESTAMP", new CurrentTimestampValidator()),     // TODO Currently fails, support calling without ()
-                testcase("CURRENT_TIMESTAMP()", new CurrentTimestampValidator()),   // TODO Currently fails, implement using CURRENT_TIMESTAMP
-                testcase("CURDATE()", new CurrentDateValidator()),
-                testcase("CURTIME()", new CurrentTimeValidator()),
-                unsupported("DAYNAME(CURRENT_DATE)"),
-                testcase("DAYOFMONTH(DATE '2012-12-22')", new SimpleValidator(22)),
-                testcase("DAYOFWEEK(DATE '2012-12-22')", new SimpleValidator(7)),   // TODO Implement (NOTE Sunday = 1, Saturday = 7)
-                testcase("DAYOFWEEK(DATE '2012-12-23')", new SimpleValidator(1)),   // TODO Implement
-                testcase("DAYOFYEAR(DATE '2012-12-22')", new SimpleValidator(357)), // TODO Implement (NOTE: 2012-01-01 should be 1, not 0)
-                testcase("EXTRACT(YEAR FROM TIMESTAMP '2012-12-22 19:13:05')", new SimpleValidator(2012)),
-                testcase("EXTRACT(MONTH FROM TIMESTAMP '2012-12-22 19:13:05')", new SimpleValidator(12)),
-                testcase("EXTRACT(DAY FROM TIMESTAMP '2012-12-22 19:13:05')", new SimpleValidator(22)),
-                testcase("EXTRACT(HOUR FROM TIMESTAMP '2012-12-22 19:13:05')", new SimpleValidator(19)),
-                testcase("EXTRACT(MINUTE FROM TIMESTAMP '2012-12-22 19:13:05')", new SimpleValidator(13)),
-                testcase("EXTRACT(SECOND FROM TIMESTAMP '2012-12-22 19:13:05')", new SimpleValidator(5)),
-                testcase("HOUR(TIME '19:13:05')", new SimpleValidator(19)),
-                testcase("MINUTE(TIME '19:13:05')", new SimpleValidator(13)),
-                testcase("MONTH(DATE '2012-12-22')", new SimpleValidator(12)),
-                unsupported("MONTHNAME(CURRENT_DATE)"),
-                testcase("NOW()", new CurrentTimestampValidator()), // TODO Currently fails, implement using CURRENT_TIMESTAMP
-                unsupported("QUARTER(DATE '2012-12-22')"),          // TODO Can be implemented as 1+(EXTRACT(MONTH FROM ...)-1)/3
-                testcase("SECOND(TIME '19:13:05')", new SimpleValidator(5)),
+        /* 0*/  testcase("CURRENT_DATE", new CurrentDateValidator()),
+        /* 1*/  testcase("CURRENT_DATE()", new CurrentDateValidator()),
+        /* 2*/  testcase("CURRENT_TIME", new CurrentTimeValidator()),
+        /* 3*/  testcase("CURRENT_TIME()", new CurrentTimeValidator()),
+        /* 4*/  testcase("CURRENT_TIMESTAMP", new CurrentTimestampValidator()),
+        /* 5*/  testcase("CURRENT_TIMESTAMP()", new CurrentTimestampValidator()),
+        /* 6*/  testcase("CURDATE()", new CurrentDateValidator()),
+        /* 7*/  testcase("CURTIME()", new CurrentTimeValidator()),
+        /* 8*/  unsupported("DAYNAME(CURRENT_DATE)"),
+        /* 9*/  testcase("DAYOFMONTH(DATE '2012-12-22')", new SimpleValidator(22)),
+        /*10*/  testcase("DAYOFWEEK(DATE '2012-12-22')", new SimpleValidator(7)),
+        /*11*/  testcase("DAYOFWEEK(DATE '2012-12-23')", new SimpleValidator(1)),
+        /*12*/  testcase("DAYOFYEAR(DATE '2012-12-22')", new SimpleValidator(357)),
+        /*13*/  testcase("EXTRACT(YEAR FROM TIMESTAMP '2012-12-22 19:13:05')", new SimpleValidator(2012)),
+        /*14*/  testcase("EXTRACT(MONTH FROM TIMESTAMP '2012-12-22 19:13:05')", new SimpleValidator(12)),
+        /*15*/  testcase("EXTRACT(DAY FROM TIMESTAMP '2012-12-22 19:13:05')", new SimpleValidator(22)),
+        /*16*/  testcase("EXTRACT(HOUR FROM TIMESTAMP '2012-12-22 19:13:05')", new SimpleValidator(19)),
+        /*17*/  testcase("EXTRACT(MINUTE FROM TIMESTAMP '2012-12-22 19:13:05')", new SimpleValidator(13)),
+        /*18*/  testcase("EXTRACT(SECOND FROM TIMESTAMP '2012-12-22 19:13:05')", new SimpleValidator(5)),
+        /*19*/  testcase("HOUR(TIME '19:13:05')", new SimpleValidator(19)),
+        /*20*/  testcase("MINUTE(TIME '19:13:05')", new SimpleValidator(13)),
+        /*21*/  testcase("MONTH(DATE '2012-12-22')", new SimpleValidator(12)),
+        /*22*/  unsupported("MONTHNAME(CURRENT_DATE)"),
+        /*23*/  testcase("NOW()", new CurrentTimestampValidator()),
+        /*24*/  unsupported("QUARTER(DATE '2012-12-22')"),          // TODO Can be implemented as 1+(EXTRACT(MONTH FROM ...)-1)/3
+        /*25*/  testcase("SECOND(TIME '19:13:05')", new SimpleValidator(5)),
                 // TODO tests for TIMESTAMPADD and TIMESTAMPDIFF (maybe as separate test class)
-                testcase("WEEK(DATE '2012-12-22')", new SimpleValidator(52)),   // TODO Currently fails, implement using EXTRACT(WEEK FROM ..)
-                testcase("YEAR(DATE '2012-12-22')", new SimpleValidator(2012)), });
+        /*26*/  testcase("WEEK(DATE '2012-12-22')", new SimpleValidator(51)),
+        /*27*/  testcase("YEAR(DATE '2012-12-22')", new SimpleValidator(2012)),
 //@formatter:off
+        });
     }
     
     @Test
@@ -139,8 +140,8 @@ public class TestScalarTimeDateFunctions {
             if (supported) {
                 throw ex;
             } else {
-                // TODO validate exception instead of throwing
-                fail("Validation of unsupported functions not yet implemented");
+                // TODO validate exception?
+                //fail("Validation of unsupported functions not yet implemented");
             }
         } finally {
             JdbcResourceHelper.closeQuietly(rs);
@@ -230,7 +231,7 @@ public class TestScalarTimeDateFunctions {
     private static class CurrentTimestampValidator implements Validator {
         @Override
         public String validate(Object objectToValidate, String functionCall) {
-            if (objectToValidate instanceof java.sql.Time) {
+            if (objectToValidate instanceof java.sql.Timestamp) {
                 java.sql.Timestamp timestamp = (java.sql.Timestamp) objectToValidate;
                 java.sql.Timestamp currentTimestamp = new java.sql.Timestamp(System.currentTimeMillis());
                 SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm");

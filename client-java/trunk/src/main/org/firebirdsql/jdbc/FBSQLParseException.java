@@ -16,9 +16,7 @@
  *
  * All rights reserved.
  */
-
 package org.firebirdsql.jdbc;
-
 
 /**
  * This exception is thrown by FBEscapedParser when it cannot parse the
@@ -28,6 +26,8 @@ package org.firebirdsql.jdbc;
  */
 public class FBSQLParseException extends FBSQLException{
     
+    private static final long serialVersionUID = 4217078230221445003L;
+
     public static final String SQL_STATE_INVALID_ESCAPE_SEQ = "22025";
     
     public FBSQLParseException(String msg) { 

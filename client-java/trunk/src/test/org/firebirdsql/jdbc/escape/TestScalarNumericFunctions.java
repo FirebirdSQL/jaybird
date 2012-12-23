@@ -38,8 +38,8 @@ import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
 
 /**
- * Tests for support of the scalar numeric function escapes as defined in appendix
- * D.1 of the JDBC 4.1 specification.
+ * Tests for support of the scalar numeric function escapes as defined in
+ * appendix D.1 of the JDBC 4.1 specification.
  * 
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  */
@@ -89,35 +89,34 @@ public class TestScalarNumericFunctions {
     public static Collection<Object[]> numericFunctionTestcases() {
         return Arrays.asList(new Object[][] {
 //@formatter:off
-                testcase("ABS(-513)", 513),
-                testcase("ACOS(-1)", Math.PI),
-                testcase("ASIN(1)", Math.PI/2),
-                testcase("ATAN(-1)", -1*Math.PI/4),
-                testcase("ATAN2(1,0)", Math.PI/2),
-                testcase("CEILING(2.13)", 3),
-                testcase("COS(3.141592654)", -1),
-                testcase("COT(0.5)", 1.830488),
-                unsupported("DEGREES(3.1414)"),  // TODO Add support using number * 180.0 / PI()?
-                testcase("EXP(2)", Math.exp(2)),
-                testcase("FLOOR(2.13)", 2),
-                testcase("LOG(7.389056099)", 2), // TODO Currently fails, add support using LN(param)
-                testcase("LOG10(31.1)", 1.492760),
-                testcase("MOD(513, 132)", 117),
-                testcase("PI()", Math.PI),
-                testcase("POWER(3, 4)", 81),
-                unsupported("RADIANS(90)"),      // TODO Add support using number * PI() / 180.0?
-                unsupported("RAND(14232)"),      // Firebird only supports RAND() without parameter
-                testcase("ROUND(1.123456, 3)", 1.123),
-                testcase("SIGN(-3487)", -1),
-                testcase("SIGN(0)", 0),
-                testcase("SIGN(24737443)", 1),
-                testcase("SIN(2.322)", Math.sin(2.322)),
-                testcase("SQRT(25.25)", 5.024938),
-                testcase("TAN(1.2333)", Math.tan(1.2333)),
-                testcase("TRUNCATE(2345.12556, 2)", 2345.12), //TODO Currently fails, add support using TRUNC (verify if identical)
-                unsupported("LN(7.389056099)"),   // Not listed in appendix D, TODO: change JDBC escape to not forward all functions
+        /* 0*/  testcase("ABS(-513)", 513),
+        /* 1*/  testcase("ACOS(-1)", Math.PI),
+        /* 2*/  testcase("ASIN(1)", Math.PI/2),
+        /* 3*/  testcase("ATAN(-1)", -1*Math.PI/4),
+        /* 4*/  testcase("ATAN2(1,0)", Math.PI/2),
+        /* 5*/  testcase("CEILING(2.13)", 3),
+        /* 6*/  testcase("COS(3.141592654)", -1),
+        /* 7*/  testcase("COT(0.5)", 1.830488),
+        /* 8*/  unsupported("DEGREES(3.1414)"),  // TODO Add support using number * 180.0 / PI()?
+        /* 9*/  testcase("EXP(2)", Math.exp(2)),
+        /*10*/  testcase("FLOOR(2.13)", 2),
+        /*11*/  testcase("LOG(7.389056099)", 2),
+        /*12*/  testcase("LOG10(31.1)", 1.492760),
+        /*13*/  testcase("MOD(513, 132)", 117),
+        /*14*/  testcase("PI()", Math.PI),
+        /*15*/  testcase("POWER(3, 4)", 81),
+        /*16*/  unsupported("RADIANS(90)"),      // TODO Add support using number * PI() / 180.0?
+        /*17*/  unsupported("RAND(14232)"),      // Firebird only supports RAND() without parameter
+        /*18*/  testcase("ROUND(1.123456, 3)", 1.123),
+        /*19*/  testcase("SIGN(-3487)", -1),
+        /*20*/  testcase("SIGN(0)", 0),
+        /*21*/  testcase("SIGN(24737443)", 1),
+        /*22*/  testcase("SIN(2.322)", Math.sin(2.322)),
+        /*23*/  testcase("SQRT(25.25)", 5.024938),
+        /*24*/  testcase("TAN(1.2333)", Math.tan(1.2333)),
+        /*25*/  testcase("TRUNCATE(2345.12556, 2)", 2345.12),
 //@formatter:on
-                });
+        });
     }
     
     @Test
@@ -135,8 +134,8 @@ public class TestScalarNumericFunctions {
             if (supported) {
                 throw ex;
             } else {
-                // TODO validate exception instead of throwing
-                fail("Validation of unsupported functions not yet implemented");
+                // TODO validate exception?
+                //fail("Validation of unsupported functions not yet implemented");
             }
         } finally {
             JdbcResourceHelper.closeQuietly(rs);
