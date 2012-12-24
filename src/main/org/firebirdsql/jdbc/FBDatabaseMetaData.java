@@ -1040,7 +1040,6 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
         return false; //Nah, but lets see what the tests say
     }
 
-
     /**
      * Is the SQL Integrity Enhancement Facility supported?
      *
@@ -1051,33 +1050,14 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
         return true; // rrokytskyy: yep, they call so foreign keys + cascade deletes
     }
 
-    /**
-     * Is some form of outer join supported?
-     *
-     * @return <code>true</code> if so; <code>false</code> otherwise
-     * @exception SQLException if a database access error occurs
-     */
     public  boolean supportsOuterJoins() throws SQLException {
         return true;
     }
 
-    /**
-     * Are full nested outer joins supported?
-     *
-     * @return <code>true</code> if so; <code>false</code> otherwise
-     * @exception SQLException if a database access error occurs
-     */
     public  boolean supportsFullOuterJoins() throws SQLException {
         return true;
     }
 
-    /**
-     * Is there limited support for outer joins?  (This will be true
-     * if supportFullOuterJoins is true.)
-     *
-     * @return <code>true</code> if so; <code>false</code> otherwise
-     * @exception SQLException if a database access error occurs
-     */
     public  boolean supportsLimitedOuterJoins() throws SQLException {
         return true;
     }
