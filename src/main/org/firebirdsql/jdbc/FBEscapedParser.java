@@ -19,6 +19,7 @@
 package org.firebirdsql.jdbc;
 
 import java.text.BreakIterator;
+import java.text.MessageFormat;
 
 /**
  * The class <code>FBEscapedParser</code> parses the SQL and converts escaped
@@ -76,7 +77,8 @@ public class FBEscapedParser {
     public static final String ESCAPE_TIMESTAMP_KEYWORD = "ts";
     public static final String ESCAPE_FUNCTION_KEYWORD = "fn";
     public static final String ESCAPE_ESCAPE_KEYWORD = "escape";
-    public static final String ESCAPE_OUTERJOIN_KEYWORS = "oj";
+    public static final String ESCAPE_OUTERJOIN_KEYWORD = "oj";
+    public static final String ESCAPE_LIMIT_KEYWORD = "limit";
 
     /*
      * These constants are necessary to speed up checking the
@@ -91,6 +93,9 @@ public class FBEscapedParser {
     protected static final String CHECK_FUNCTION = "{fn";
     protected static final String CHECK_ESCAPE = "{escape";
     protected static final String CHECK_OUTERJOIN = "{oj";
+    protected static final String CHECK_LIMIT = "{limit";
+    
+    protected static final String LIMIT_OFFSET_CLAUSE = " offset ";
 
     private int state = NORMAL_STATE;
     private int lastState = NORMAL_STATE;
@@ -222,7 +227,8 @@ public class FBEscapedParser {
                 sql.indexOf(CHECK_FUNCTION) != -1 ||
                 sql.indexOf(CHECK_OUTERJOIN) != -1 ||
                 sql.indexOf(CHECK_TIME) != -1 ||
-                sql.indexOf(CHECK_TIMESTAMP) != -1;
+                sql.indexOf(CHECK_TIMESTAMP) != -1 ||
+                sql.indexOf(CHECK_LIMIT) != -1;
 //@formatter:on
     }
 
@@ -312,12 +318,14 @@ public class FBEscapedParser {
             return convertEscapeString(payload.toString().trim());
         else if (keywordStr.equalsIgnoreCase(ESCAPE_FUNCTION_KEYWORD))
             return convertEscapedFunction(payload.toString().trim());
-        else if (keywordStr.equalsIgnoreCase(ESCAPE_OUTERJOIN_KEYWORS))
+        else if (keywordStr.equalsIgnoreCase(ESCAPE_OUTERJOIN_KEYWORD))
             return convertOuterJoin(payload.toString().trim());
         else if (keywordStr.equalsIgnoreCase(ESCAPE_TIME_KEYWORD))
             return toTimeString(payload.toString().trim());
         else if (keywordStr.equalsIgnoreCase(ESCAPE_TIMESTAMP_KEYWORD))
             return toTimestampString(payload.toString().trim());
+        else if (keywordStr.equalsIgnoreCase(ESCAPE_LIMIT_KEYWORD))
+            return convertLimitString(payload.toString().trim());
         else
             throw new FBSQLParseException("Unknown keyword " + keywordStr + " for escaped syntax.");
     }
@@ -395,6 +403,37 @@ public class FBEscapedParser {
      */
     protected String convertEscapeString(final String escapeString) {
         return "ESCAPE " + escapeString;
+    }
+
+    /**
+     * Convert the <code>"{limit &lt;rows&gt; [offset &lt;rows_offset&gt;]}"</code> call into the corresponding rows
+     * clause for Firebird.
+     * <p>
+     * NOTE: We assume that the {limit ...} escape occurs in the right place to
+     * work for a
+     * <code><a href="http://www.firebirdsql.org/file/documentation/reference_manuals/reference_material/html/langrefupd25-select.html#langrefupd25-select-rows">ROWS</a></code>
+     * clause in Firebird.
+     * </p>
+     * <p>
+     * This implementation supports a parameter for the value of &lt;rows&gt;, but not for &lt;rows_offset&gt;.
+     * </p>
+     * 
+     * @param limitClause
+     *            Limit clause
+     * @return converted code
+     */
+    protected String convertLimitString(final String limitClause) throws FBSQLParseException {
+        final int offsetStart = limitClause.toLowerCase().indexOf(LIMIT_OFFSET_CLAUSE.toLowerCase());
+        if (offsetStart == -1) {
+            return "ROWS " + limitClause;
+        } else {
+            final String rows = limitClause.substring(0, offsetStart).trim();
+            final String offset = limitClause.substring(offsetStart + LIMIT_OFFSET_CLAUSE.length()).trim(); 
+            if (offset.indexOf('?') != -1) {
+                throw new FBSQLParseException("Extended limit escape ({limit <rows> offset <offset_rows>} does not support parameters for <offset_rows>");
+            }
+            return MessageFormat.format("ROWS {0} TO {0} + {1}", offset, rows);
+        }
     }
 
     /**
