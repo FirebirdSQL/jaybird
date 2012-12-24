@@ -386,7 +386,7 @@ public class FBEscapedParser {
      * @return converted code.
      */
     protected String convertEscapeString(String escapeString) {
-        return escapeString;
+        return "ESCAPE " + escapeString;
     }
     
     /**
