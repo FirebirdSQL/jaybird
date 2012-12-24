@@ -16,15 +16,12 @@
  *
  * All rights reserved.
  */
-
 package org.firebirdsql.jdbc;
 
 import java.sql.SQLException;
 import java.sql.Types;
 
-
 import junit.framework.TestCase;
-
 
 /**
  * Describe class <code>TestFBEscapedCallParser</code> here.
