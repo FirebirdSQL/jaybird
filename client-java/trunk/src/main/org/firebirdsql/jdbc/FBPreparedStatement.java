@@ -131,13 +131,15 @@ public class FBPreparedStatement extends FBStatement implements
         this.standaloneStatement = standaloneStatement;
         this.generatedKeys = generatedKeys;
         
-        notifyStatementStarted();
-
         try {
+            notifyStatementStarted();
             prepareFixedStatement(sql, true);
         } catch (GDSException ge) {
             notifyStatementCompleted(false);
             throw new FBSQLException(ge);
+        } catch (Exception e) {
+            notifyStatementCompleted(false);
+            throw e;
         }
     }
     
