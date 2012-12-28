@@ -17,7 +17,11 @@
  * All rights reserved.
  */
 
-package org.firebirdsql.jdbc;
+package org.firebirdsql.jdbc.escape;
+
+import org.firebirdsql.jdbc.FBProcedureCall;
+import org.firebirdsql.jdbc.FBProcedureParam;
+import org.firebirdsql.jdbc.FBSQLException;
 
 
 /**

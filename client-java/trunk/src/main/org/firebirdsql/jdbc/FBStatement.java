@@ -26,6 +26,7 @@ import java.util.logging.Logger;
 
 import org.firebirdsql.gds.*;
 import org.firebirdsql.gds.impl.*;
+import org.firebirdsql.jdbc.escape.FBEscapedParser;
 
 /**
  * <P>The object used for executing a static SQL statement
