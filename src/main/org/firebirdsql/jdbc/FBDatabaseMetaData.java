@@ -29,6 +29,7 @@ import org.firebirdsql.gds.*;
 import org.firebirdsql.gds.impl.AbstractGDS;
 import org.firebirdsql.gds.impl.GDSFactory;
 import org.firebirdsql.gds.impl.GDSHelper;
+import org.firebirdsql.jdbc.escape.FBEscapedFunctionHelper;
 import org.firebirdsql.logging.Logger;
 import org.firebirdsql.logging.LoggerFactory;
 

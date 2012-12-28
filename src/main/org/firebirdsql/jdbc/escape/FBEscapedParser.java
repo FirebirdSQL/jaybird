@@ -16,11 +16,14 @@
  *
  * All rights reserved.
  */
-package org.firebirdsql.jdbc;
+package org.firebirdsql.jdbc.escape;
 
 import java.text.BreakIterator;
 import java.text.MessageFormat;
 import java.util.regex.Pattern;
+
+import org.firebirdsql.jdbc.FBProcedureCall;
+import org.firebirdsql.jdbc.FBSQLException;
 
 /**
  * The class <code>FBEscapedParser</code> parses the SQL and converts escaped

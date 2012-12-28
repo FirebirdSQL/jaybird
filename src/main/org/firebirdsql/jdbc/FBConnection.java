@@ -60,6 +60,7 @@ import org.firebirdsql.jca.FBConnectionRequestInfo;
 import org.firebirdsql.jca.FBLocalTransaction;
 import org.firebirdsql.jca.FBManagedConnection;
 import org.firebirdsql.jca.FirebirdLocalTransaction;
+import org.firebirdsql.jdbc.escape.FBEscapedParser;
 import org.firebirdsql.util.SQLExceptionChainBuilder;
 
 /**

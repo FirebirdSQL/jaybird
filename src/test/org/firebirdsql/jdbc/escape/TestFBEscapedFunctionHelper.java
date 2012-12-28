@@ -16,7 +16,7 @@
  *
  * All rights reserved.
  */
-package org.firebirdsql.jdbc;
+package org.firebirdsql.jdbc.escape;
 
 import java.sql.SQLException;
 import java.util.ArrayList;

@@ -16,7 +16,9 @@
  *
  * All rights reserved.
  */
-package org.firebirdsql.jdbc;
+package org.firebirdsql.jdbc.escape;
+
+import org.firebirdsql.jdbc.FBSQLException;
 
 /**
  * This exception is thrown by FBEscapedParser when it cannot parse the

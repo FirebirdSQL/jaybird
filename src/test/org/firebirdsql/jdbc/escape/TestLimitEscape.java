@@ -28,7 +28,6 @@ import java.sql.Statement;
 import org.firebirdsql.common.FBJUnit4TestBase;
 import org.firebirdsql.common.FBTestProperties;
 import org.firebirdsql.common.JdbcResourceHelper;
-import org.firebirdsql.jdbc.FBSQLParseException;
 import org.junit.Before;
 import org.junit.Test;
 

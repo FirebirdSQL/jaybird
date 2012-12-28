@@ -16,10 +16,14 @@
  *
  * All rights reserved.
  */
-package org.firebirdsql.jdbc;
+package org.firebirdsql.jdbc.escape;
 
 import java.sql.SQLException;
 import java.sql.Types;
+
+import org.firebirdsql.jdbc.FBProcedureCall;
+import org.firebirdsql.jdbc.FBProcedureParam;
+import org.firebirdsql.jdbc.FBSQLException;
 
 import junit.framework.TestCase;
 
