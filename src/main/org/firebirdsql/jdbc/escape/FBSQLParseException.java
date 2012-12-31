@@ -18,7 +18,7 @@
  */
 package org.firebirdsql.jdbc.escape;
 
-import org.firebirdsql.jdbc.FBSQLException;
+import java.sql.SQLSyntaxErrorException;
 
 /**
  * This exception is thrown by FBEscapedParser when it cannot parse the
@@ -26,11 +26,11 @@ import org.firebirdsql.jdbc.FBSQLException;
  * 
  * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
  */
-public class FBSQLParseException extends FBSQLException{
+public class FBSQLParseException extends SQLSyntaxErrorException {
     
     private static final long serialVersionUID = 4217078230221445003L;
 
-    public static final String SQL_STATE_INVALID_ESCAPE_SEQ = "22025";
+    public static final String SQL_STATE_INVALID_ESCAPE_SEQ = "42000";
     
     public FBSQLParseException(String msg) { 
         super(msg, SQL_STATE_INVALID_ESCAPE_SEQ); 
