@@ -27,6 +27,7 @@ import java.util.logging.Logger;
 import org.firebirdsql.gds.*;
 import org.firebirdsql.gds.impl.*;
 import org.firebirdsql.jdbc.escape.FBEscapedParser;
+import org.firebirdsql.jdbc.escape.FBEscapedParser.EscapeParserMode;
 
 /**
  * <P>The object used for executing a static SQL statement
@@ -47,8 +48,8 @@ import org.firebirdsql.jdbc.escape.FBEscapedParser;
  */
 public class FBStatement implements FirebirdStatement, Synchronizable {
     
-    protected GDSHelper gdsHelper;
-    protected FBObjectListener.StatementListener statementListener;
+    protected final GDSHelper gdsHelper;
+    protected final FBObjectListener.StatementListener statementListener;
 
     protected AbstractIscStmtHandle fixedStmt;
     
@@ -72,13 +73,12 @@ public class FBStatement implements FirebirdStatement, Synchronizable {
     private int queryTimeout;
     private String cursorName;
 
-    private int rsConcurrency;
-    private int rsType;
-    private int rsHoldability = ResultSet.CLOSE_CURSORS_AT_COMMIT;
+    private final int rsConcurrency;
+    private final int rsType;
+    private final int rsHoldability;
     
-    private FBObjectListener.ResultSetListener resultSetListener = new RSListener();
-
-    private FBConnection connection;
+    private final FBObjectListener.ResultSetListener resultSetListener = new RSListener();
+    private final FBConnection connection;
 
     /**
      * Listener for the result sets.
@@ -102,7 +102,6 @@ public class FBStatement implements FirebirdStatement, Synchronizable {
             }
         }
         
-        
         /* (non-Javadoc)
          * @see org.firebirdsql.jdbc.FBObjectListener.ResultSetListener#allRowsFetched(java.sql.ResultSet)
          */
@@ -121,10 +120,9 @@ public class FBStatement implements FirebirdStatement, Synchronizable {
             // generate the "resultSetClosed" event, that in turn generates
             // the "statementCompleted" event
             
-            if (statementListener.getConnection().getAutoCommit())
+            if (connection != null && connection.getAutoCommit())
                 rs.close();
         }
-
 
         /* (non-Javadoc)
          * @see org.firebirdsql.jdbc.FBObjectListener.ResultSetListener#executionCompleted(org.firebirdsql.jdbc.FirebirdRowUpdater, boolean)
@@ -133,15 +131,12 @@ public class FBStatement implements FirebirdStatement, Synchronizable {
             notifyStatementCompleted(success);
         }
 
-
         /* (non-Javadoc)
          * @see org.firebirdsql.jdbc.FBObjectListener.ResultSetListener#executionStarted(org.firebirdsql.jdbc.FirebirdRowUpdater)
          */
         public void executionStarted(FirebirdRowUpdater updater) throws SQLException {
             notifyStatementStarted(false);
         }
-        
-        
     }
 
     protected FBStatement(GDSHelper c, int rsType, int rsConcurrency, int rsHoldability, FBObjectListener.StatementListener statementListener) throws SQLException {
@@ -153,6 +148,7 @@ public class FBStatement implements FirebirdStatement, Synchronizable {
         
         this.statementListener = statementListener;
         
+        // TODO Find out if connection is actually ever null, because some parts of the code expect it not to be null
         this.connection = statementListener != null ? 
                 statementListener.getConnection() : null;
         
@@ -1443,17 +1439,15 @@ public class FBStatement implements FirebirdStatement, Synchronizable {
     }
 
     protected String nativeSQL(String sql) throws SQLException {
-        DatabaseParameterBuffer dpb = gdsHelper.getDatabaseParameterBuffer();
-        
-        int mode = FBEscapedParser.USE_BUILT_IN;
-        
-        if (dpb.hasArgument(DatabaseParameterBufferExtension.USE_STANDARD_UDF))
-            mode = FBEscapedParser.USE_STANDARD_UDF;
-        
-        return new FBEscapedParser(mode).parse(sql);
-
+        if (connection != null) {
+            return connection.nativeSQL(sql);
+        } else {
+            DatabaseParameterBuffer dpb = gdsHelper.getDatabaseParameterBuffer();
+            EscapeParserMode mode = dpb.hasArgument(DatabaseParameterBufferExtension.USE_STANDARD_UDF) ? EscapeParserMode.USE_STANDARD_UDF
+                    : EscapeParserMode.USE_BUILT_IN;
+            return new FBEscapedParser(mode).parse(sql);
+        }
     }
-
 
     /**
      * Get the execution plan of this PreparedStatement

@@ -18,10 +18,11 @@
  */
 package org.firebirdsql.jdbc.escape;
 
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.text.MessageFormat;
 import java.util.*;
+
+import org.firebirdsql.jdbc.escape.FBEscapedParser.EscapeParserMode;
 
 /**
  * Helper class for escaped functions.
@@ -230,49 +231,72 @@ public class FBEscapedFunctionHelper {
         StringBuilder sb = new StringBuilder();
         boolean inQuotes = false;
         boolean inDoubleQuotes = false;
+        // ignore initial whitespace
+        boolean coalesceSpace = true;
+        int nestedParentheses = 0;
         
-        char[] chars = paramsString.toCharArray();
-        
-        for(int i = 0; i < chars.length ; i++) {
-            switch(chars[i]) {
-                case '\'' :
-                    sb.append(chars[i]);
-                    if (!inDoubleQuotes) 
-                        inQuotes = !inQuotes;
-                    break;
-                    
-                case '"' :
-                    sb.append(chars[i]);
-                    if (!inQuotes) 
-                        inDoubleQuotes = !inDoubleQuotes;
-                    break;
-                    
-                // we ignore spaces, tabs and new lines if
-                // we are not in the string literal
-                // TODO Ignoring spaces can break some nested calls (eg CAST(... AS type)
-                case ' ' :
-                case '\t' :
-                case '\n' :
-                case '\r' :
-                    if (inQuotes || inDoubleQuotes) 
-                        sb.append(chars[i]);
-                        
-                    break;
-                    
-                // comma is considered parameter separator
-                // if it is not within the string literal 
-                case ',' :
-                    if (inQuotes || inDoubleQuotes)
-                        sb.append(chars[i]);
-                    else {
-                        params.add(sb.toString());
-                        sb.setLength(0);
+        for(int i = 0, n = paramsString.length(); i < n; i++) {
+            char currentChar = paramsString.charAt(i);
+            switch(currentChar) {
+            case '\'' :
+                sb.append(currentChar);
+                if (!inDoubleQuotes) 
+                    inQuotes = !inQuotes;
+                coalesceSpace = false;
+                break;
+            case '"' :
+                sb.append(currentChar);
+                if (!inQuotes) 
+                    inDoubleQuotes = !inDoubleQuotes;
+                coalesceSpace = false;
+                break;
+            case '(':
+            	if (!(inQuotes || inDoubleQuotes)) {
+            	    nestedParentheses++;
+            	}
+                sb.append('(');
+                coalesceSpace = false;
+                break;
+            case ')':
+            	if (!(inQuotes || inDoubleQuotes)) {
+                    nestedParentheses--;
+                    if (nestedParentheses < 0) {
+                        throw new FBSQLParseException("Unbalanced parentheses in parameters at position " + i);
                     }
-                    break;
-                  
-                // by default we add chars to the buffer  
-                default : 
-                    sb.append(chars[i]);
+            	}
+                sb.append(')');
+                coalesceSpace = false;
+                break;
+            // we coalesce spaces, tabs and new lines into a single space if
+            // we are not in a string literal
+            case ' ' :
+            case '\t' :
+            case '\n' :
+            case '\r' :
+                if (inQuotes || inDoubleQuotes) { 
+                    sb.append(currentChar);
+                } else if (!coalesceSpace) {
+                    sb.append(' ');
+                    coalesceSpace = true;
+                }
+                break;
+            // comma is considered parameter separator
+            // if it is not within the string literal or within parentheses 
+            case ',' :
+                if (inQuotes || inDoubleQuotes || nestedParentheses > 0) {
+                    sb.append(currentChar);
+                } else {
+                    params.add(sb.toString());
+                    sb.setLength(0);
+                    // Ignore whitespace after parameter
+                    coalesceSpace = true;
+                }
+                break;
+              
+            // by default we add chars to the buffer  
+            default : 
+                sb.append(currentChar);
+                coalesceSpace = false;
             }
         }
         
@@ -281,8 +305,12 @@ public class FBEscapedFunctionHelper {
             params.add(sb.toString());
         
         // after processing all parameters all string literals should be closed
-        if (inQuotes || inDoubleQuotes)
+        if (inQuotes || inDoubleQuotes) {
             throw new FBSQLParseException("String literal is not properly closed.");
+        }
+        if (nestedParentheses != 0) {
+            throw new FBSQLParseException("Unbalanced parentheses in parameters.");
+        }
         
         return params;
     }
@@ -297,7 +325,7 @@ public class FBEscapedFunctionHelper {
      *  
      * @throws FBSQLParseException if escaped function call has incorrect syntax.
      */
-    public static String convertTemplate(final String functionCall, final int mode) throws FBSQLParseException {
+    public static String convertTemplate(final String functionCall, final EscapeParserMode mode) throws FBSQLParseException {
         final String functionName = parseFunction(functionCall).toUpperCase();
         final String[] params = parseArguments(functionCall).toArray(new String[0]);
         
@@ -316,7 +344,7 @@ public class FBEscapedFunctionHelper {
         if (firebirdTemplate != null) 
             return MessageFormat.format(firebirdTemplate, (Object[]) params);
         
-        if (mode == FBEscapedParser.USE_STANDARD_UDF)
+        if (mode == EscapeParserMode.USE_STANDARD_UDF)
             return convertUsingStandardUDF(functionName, params);
             
         return null;
@@ -332,39 +360,18 @@ public class FBEscapedFunctionHelper {
      */
     
     private static String convertUsingStandardUDF(String name, String[] params) throws FBSQLParseException {
-        
         try {
-            
             name = name.toLowerCase();
-            
-            // workaround for the {fn char()} function, since we cannot use
-            // "char" as name of the function - it is reserved word. 
-            if ("char".equals(name))
-                name = "_char";
-            
-            Method method = FBEscapedFunctionHelper.class.getMethod(
-                name.toLowerCase(), new Class[] { String[].class});
-            
+            Method method = FBEscapedFunctionHelper.class.getMethod(name, new Class[] { String[].class});
             return (String)method.invoke(null, new Object[]{params});
-            
         } catch(NoSuchMethodException ex) {
             return null;
-        } catch (IllegalArgumentException ex) {
-            throw new FBSQLParseException("Error when converting function " 
-                + name + ". Error " + ex.getClass().getName() + 
-                " : " + ex.getMessage());
-        } catch (IllegalAccessException ex) {
-            throw new FBSQLParseException("Error when converting function " 
-                + name + ". Error " + ex.getClass().getName() + 
-                " : " + ex.getMessage());
-        } catch (InvocationTargetException ex) {
+        } catch (Exception ex) {
             throw new FBSQLParseException("Error when converting function " 
                 + name + ". Error " + ex.getClass().getName() + 
                 " : " + ex.getMessage());
         }
-        
     }
-    
     
     /*
      * Mathematical functions
@@ -513,22 +520,6 @@ public class FBEscapedFunctionHelper {
         
         return "floor(" + params[0] + ")";
     }
-
-    /**
-     * Produce a function call for the <code>log</code> UDF function. 
-     * The syntax of the <code>log</code> function is 
-     * <code>{fn log(number)}</code>.
-     *
-     * @param params The parameters to be used in the call
-     * @throws FBSQLParseException if there is an error with the parameters
-     */
-    public static String log(String[] params) throws FBSQLParseException {
-        if (params.length != 1)
-            throw new FBSQLParseException("Incorrect number of " +
-                    "parameters of function log : " + params.length);
-        
-        return "ln(" + params[0] + ")";
-    }
     
     /**
      * Produce a function call for the <code>log10</code> UDF function. 
@@ -655,112 +646,6 @@ public class FBEscapedFunctionHelper {
                     "parameters of function tan : " + params.length);
         
         return "tan(" + params[0] + ")";
-    }
-    
-    
-    /*
-     * String functions.
-     */
-    
-    
-    /**
-     * Produce a function call for the <code>ascii</code> UDF function.
-     * The syntax of the <code>ascii</code> function is
-     * <code>{fn ascii(string)}</code>
-     *
-     * @param params The parameters to be used in the call
-     * @throws FBSQLParseException if there is an error with the parameters
-     */
-    public static String ascii(String[] params) throws FBSQLParseException {
-        if (params.length != 1 )
-            throw new FBSQLParseException("Incorrect number of " +
-                    "parameters of function ascii : " + params.length);
-        
-        if (params[0] == null || params[0].length() < 1)
-            throw new FBSQLParseException("Parameter must not be " +
-                    "empty or null");
-        
-        return "ascii_val(" + params[0].charAt(0) + ")";
-    }
-    
-    /**
-     * Produce a function call for the <code>char</code> UDF function.
-     * The syntax of the <code>char</code> function is
-     * <code>{fn char(integer)}</code>.
-     *
-     * @param params The parameters to be used in the call
-     * @throws FBSQLParseException if there is an error with the parameters
-     */
-    public static String _char(String[] params) throws FBSQLParseException {
-        if (params.length != 1)
-            throw new FBSQLParseException("Incorrect number of " +
-                    "parameters of function char : " + params.length);
-        
-        return "char(" + params[0] + ")";
-    }
-
-    /**
-     * Produce a function call for the <code>lcase</code> UDF function.
-     * The syntax of the <code>lcase</code> function is
-     * <code>{fn lcase(string)}</code>
-     *
-     * @param params The parameters to be used in the call
-     * @throws FBSQLParseException if there is an error with the parameters
-     */
-    public static String lcase(String[] params) throws FBSQLParseException {
-        if (params.length != 1)
-            throw new FBSQLParseException("Incorrect number of " +
-                    "parameters of function lcase : " + params.length);
-        
-        return "lower(" + params[0] + ")";
-    }
-
-    /**
-     * Produce a function call for the <code>length</code> UDF function.
-     * The syntax of the <code>length</code> function is
-     * <code>{fn length(string)}</code>.
-     *
-     * @param params The parameters to be used in the call
-     * @throws FBSQLParseException if there is an error with the parameters
-     */
-    public static String length(String[] params) throws FBSQLParseException {
-        if (params.length != 1)
-            throw new FBSQLParseException("Incorrect number of " +
-                    "parameters of function length : " + params.length);
-        
-        return "strlen(" + params[0] + ")";
-    }
-    
-    /**
-     * Produce a function call for the <code>ltrim</code> UDF function.
-     * The syntax of the <code>ltrim</code> function is
-     * <code>{fn ltrim(string)}</code>.
-     *
-     * @param params The parameters to be used in the call
-     * @throws FBSQLParseException if there is an error with the parameters
-     */
-    public static String ltrim(String[] params) throws FBSQLParseException {
-        if (params.length != 1)
-            throw new FBSQLParseException("Incorrect number of " +
-                    "parameters of function ltrim : " + params.length);
-        
-        return "ltrim(" + params[0] + ")";
-    }
-    
-    /**
-     * Produce a function call for the <code>rtrim</code> UDF function.
-     * The syntax of the <code>rtrim</code> function is
-     * <code>{fn rtrim(string)}</code>.
-     *
-     * @param params The parameters to be used in the call
-     * @throws FBSQLParseException if there is an error with the parameters
-     */
-    public static String rtrim(String[] params) throws FBSQLParseException {
-        if (params.length != 1)
-            throw new FBSQLParseException("Incorrect number of " +
-                    "parameters of function rtrim : " + params.length);
-        
-        return "rtrim(" + params[0] + ")";
     }
     
     /**

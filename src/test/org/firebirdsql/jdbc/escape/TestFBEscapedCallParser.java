@@ -24,6 +24,7 @@ import java.sql.Types;
 import org.firebirdsql.jdbc.FBProcedureCall;
 import org.firebirdsql.jdbc.FBProcedureParam;
 import org.firebirdsql.jdbc.FBSQLException;
+import org.firebirdsql.jdbc.escape.FBEscapedParser.EscapeParserMode;
 
 import junit.framework.TestCase;
 
@@ -93,7 +94,7 @@ public class TestFBEscapedCallParser extends TestCase {
     }
     
     public void testProcessEscapedCall() throws Exception {
-        FBEscapedCallParser parser = new FBEscapedCallParser(FBEscapedParser.USE_BUILT_IN);
+        FBEscapedCallParser parser = new FBEscapedCallParser(EscapeParserMode.USE_BUILT_IN);
         
         FBProcedureCall procedureCall = parser.parseCall(CALL_TEST_5);
         procedureCall.registerOutParam(1, Types.INTEGER);
