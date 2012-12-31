@@ -137,22 +137,6 @@ public class TestLimitEscape extends FBJUnit4TestBase {
     }
 
     /**
-     * Test of limit escape with the rows and row_offset parameter with a literal value for rows and a parameter for offset_rows.
-     * <p>
-     * Expects exception, as parameter for offset_rows is not supported by driver implementation.
-     * </p>
-     */
-    @Test(expected = FBSQLParseException.class)
-    public void testLimitOffsetParameter() throws Exception {
-        Connection con = FBTestProperties.getConnectionViaDriverManager();
-        try {
-            con.prepareStatement("SELECT ID FROM TAB1 ORDER BY ID {limit 10 offset ?}");
-        } finally {
-            JdbcResourceHelper.closeQuietly(con);
-        }
-    }
-
-    /**
      * Test of limit escape with the rows and row_offset parameter with a parameter for rows and a literal value for offset_rows.
      */
     @Test
@@ -172,22 +156,6 @@ public class TestLimitEscape extends FBJUnit4TestBase {
             assertEquals("Unexpected final value for ID returned", 18, id);
             rs.close();
             pstmt.close();
-        } finally {
-            JdbcResourceHelper.closeQuietly(con);
-        }
-    }
-
-    /**
-     * Test of limit escape with the rows and row_offset parameter with a parameter for rows and offset_rows.
-     * <p>
-     * Expects exception, as parameter for offset_rows is not supported by driver implementation.
-     * </p>
-     */
-    @Test(expected = FBSQLParseException.class)
-    public void testLimitRowsAndOffsetParameter() throws Exception {
-        Connection con = FBTestProperties.getConnectionViaDriverManager();
-        try {
-            con.prepareStatement("SELECT ID FROM TAB1 ORDER BY ID {limit ? offset ?}");
         } finally {
             JdbcResourceHelper.closeQuietly(con);
         }

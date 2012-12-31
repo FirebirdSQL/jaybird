@@ -22,6 +22,8 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.firebirdsql.jdbc.escape.FBEscapedParser.EscapeParserMode;
+
 import junit.framework.TestCase;
 
 /**
@@ -75,7 +77,7 @@ public class TestFBEscapedFunctionHelper extends TestCase {
     public static final String UCASE_FUNCTION_TEST = "UPPER(some_identifier)";
     
     public void testEscapedFunctionCall() throws SQLException {
-        FBEscapedParser parser = new FBEscapedParser(FBEscapedParser.USE_BUILT_IN);
+        FBEscapedParser parser = new FBEscapedParser(EscapeParserMode.USE_BUILT_IN);
         
         String ucaseTest = parser.parse(UCASE_FUNCTION_CALL);
         assertEquals("ucase function parsing should be correct",
@@ -83,7 +85,7 @@ public class TestFBEscapedFunctionHelper extends TestCase {
     }
     
     public void testUseStandardUdf() throws SQLException {
-        FBEscapedParser parser = new FBEscapedParser(FBEscapedParser.USE_STANDARD_UDF);
+        FBEscapedParser parser = new FBEscapedParser(EscapeParserMode.USE_STANDARD_UDF);
         
         String lcaseTest = parser.parse(LCASE_FUNCTION_CALL);
         assertEquals("lcase function parsing should be correct",

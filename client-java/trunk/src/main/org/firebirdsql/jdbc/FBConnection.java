@@ -36,6 +36,7 @@ import java.sql.Savepoint;
 import java.sql.Statement;
 import java.sql.Struct;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -61,6 +62,7 @@ import org.firebirdsql.jca.FBLocalTransaction;
 import org.firebirdsql.jca.FBManagedConnection;
 import org.firebirdsql.jca.FirebirdLocalTransaction;
 import org.firebirdsql.jdbc.escape.FBEscapedParser;
+import org.firebirdsql.jdbc.escape.FBEscapedParser.EscapeParserMode;
 import org.firebirdsql.util.SQLExceptionChainBuilder;
 
 /**
@@ -90,19 +92,20 @@ public class FBConnection implements FirebirdConnection {
     private FBLocalTransaction localTransaction;
     private FBDatabaseMetaData metaData;
     
-    protected InternalTransactionCoordinator txCoordinator;
+    protected final InternalTransactionCoordinator txCoordinator;
 
     private SQLWarning firstWarning;
      
     // This set contains all allocated but not closed statements
     // It is used to close them before the connection is closed
-    protected Set<Statement> activeStatements = new HashSet<Statement>();
+    protected final Set<Statement> activeStatements = Collections.synchronizedSet(new HashSet<Statement>());
     
     private int resultSetHoldability = ResultSet.CLOSE_CURSORS_AT_COMMIT;
     
     private boolean autoCommit;
     
     private StoredProcedureMetaData storedProcedureMetaData;
+    private FBEscapedParser escapedParser;
 	 
     /**
      * Create a new AbstractConnection instance based on a
@@ -403,16 +406,23 @@ public class FBConnection implements FirebirdConnection {
      * @return the native form of this statement
      * @exception SQLException if a database access error occurs
      */
-    public synchronized String nativeSQL(String sql) throws SQLException {
-        
-        DatabaseParameterBuffer dpb = getDatabaseParameterBuffer();
-        
-        int mode = FBEscapedParser.USE_BUILT_IN;
-        
-        if (dpb.hasArgument(DatabaseParameterBufferExtension.USE_STANDARD_UDF))
-            mode = FBEscapedParser.USE_STANDARD_UDF;
-        
-        return new FBEscapedParser(mode).parse(sql);
+    public String nativeSQL(String sql) throws SQLException {
+        return getEscapedParser().parse(sql);
+    }
+    
+    /**
+     * Returns the FBEscapedParser instance for this connection.
+     * 
+     * @return Instance of FBEscapedParser
+     */
+    protected FBEscapedParser getEscapedParser() {
+        if (escapedParser == null) {
+            DatabaseParameterBuffer dpb = getDatabaseParameterBuffer();
+            EscapeParserMode mode = dpb.hasArgument(DatabaseParameterBufferExtension.USE_STANDARD_UDF) ? EscapeParserMode.USE_STANDARD_UDF
+                    : EscapeParserMode.USE_BUILT_IN;
+            escapedParser = new FBEscapedParser(mode);
+        }
+        return escapedParser;
     }
 
     /**

@@ -16,13 +16,13 @@
  *
  * All rights reserved.
  */
-
 package org.firebirdsql.jdbc.escape;
+
+import java.sql.SQLException;
 
 import org.firebirdsql.jdbc.FBProcedureCall;
 import org.firebirdsql.jdbc.FBProcedureParam;
-import org.firebirdsql.jdbc.FBSQLException;
-
+import org.firebirdsql.jdbc.escape.FBEscapedParser.EscapeParserMode;
 
 /**
  * Parser for escaped procedure call.
@@ -35,7 +35,6 @@ public class FBEscapedCallParser {
     private static final int CURLY_BRACE_STATE = 8;
     private static final int SPACE_STATE = 16;
     private static final int COMMA_STATE = 32;
-    
     
     private int state = NORMAL_STATE;
 
@@ -53,7 +52,7 @@ public class FBEscapedCallParser {
     private FBProcedureCall procedureCall;
     private FBEscapedParser escapedParser;
     
-    public FBEscapedCallParser(int mode) {
+    public FBEscapedCallParser(EscapeParserMode mode) {
         this.escapedParser = new FBEscapedParser(mode);
     }
     
@@ -188,7 +187,7 @@ public class FBEscapedCallParser {
      * 
      * @return native form of the <code>sql</code>.
      */
-    public FBProcedureCall parseCall(String sql) throws FBSQLException {
+    public FBProcedureCall parseCall(String sql) throws SQLException {
         
     	sql = cleanUpCall(sql);
         
@@ -436,7 +435,7 @@ public class FBEscapedCallParser {
      * 
      * @throws FBSQLParseException if parameter cannot be correctly parsed.
      */
-    protected String processParam(String param) throws FBSQLException {
+    protected String processParam(String param) throws SQLException {
         return escapedParser.parse(param);
     }
 }

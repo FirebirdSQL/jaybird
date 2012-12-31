@@ -33,7 +33,7 @@ import org.firebirdsql.gds.GDSException;
 import org.firebirdsql.gds.impl.DatabaseParameterBufferExtension;
 import org.firebirdsql.gds.impl.GDSHelper;
 import org.firebirdsql.jdbc.escape.FBEscapedCallParser;
-import org.firebirdsql.jdbc.escape.FBEscapedParser;
+import org.firebirdsql.jdbc.escape.FBEscapedParser.EscapeParserMode;
 import org.firebirdsql.jdbc.field.FBField;
 import org.firebirdsql.jdbc.field.TypeConversionException;
 
@@ -103,10 +103,10 @@ public class FBCallableStatement extends FBPreparedStatement implements Callable
 
         DatabaseParameterBuffer dpb = c.getDatabaseParameterBuffer();
 
-        int mode = FBEscapedParser.USE_BUILT_IN;
+        EscapeParserMode mode = EscapeParserMode.USE_BUILT_IN;
 
         if (dpb.hasArgument(DatabaseParameterBufferExtension.USE_STANDARD_UDF))
-            mode = FBEscapedParser.USE_STANDARD_UDF;
+            mode = EscapeParserMode.USE_STANDARD_UDF;
 
         FBEscapedCallParser parser = new FBEscapedCallParser(mode);
 
@@ -114,6 +114,7 @@ public class FBCallableStatement extends FBPreparedStatement implements Callable
         // and second time in parser.parseCall(...)... not nice, maybe
         // in the future should be fixed by calling FBEscapedParser for
         // each parameter in FBEscapedCallParser class
+        // TODO Might be unnecessary now FBEscapedParser processes nested escapes
         procedureCall = parser.parseCall(nativeSQL(sql));
 
         if (storedProcMetaData.canGetSelectableInformation()) {
