@@ -84,6 +84,10 @@ public class FBEscapedCallParser {
      * @param testChar character to test
      */
     protected void switchState(char testChar) throws FBSQLParseException {
+        if (Character.isWhitespace(testChar) && !isInState(LITERAL_STATE)) {
+            setState(SPACE_STATE);
+            return;
+        }
         
         switch (testChar) {
             case '\'' : 
@@ -92,47 +96,28 @@ public class FBEscapedCallParser {
                 else
                 if (isInState(LITERAL_STATE))
                     setState(NORMAL_STATE);
-
                 break;
-                
-            case ' ' :
-            case '\t' :
-            case '\r' :
-            case '\n' :
-            case '\f' :
-                if (!isInState(LITERAL_STATE))
-                    setState(SPACE_STATE);
-
-                break;
-                
             case ',' : 
                 if (!isInState(LITERAL_STATE) && !isInState(BRACE_STATE))
                     setState(COMMA_STATE);
                 
                 break;
-                
             case '(' :
             case ')' :
-                if (isInState(LITERAL_STATE))
-                    break;
-                
-                setState(BRACE_STATE);
-                
+                if (!isInState(LITERAL_STATE))
+                    setState(BRACE_STATE);
                 break;
-                
             case '{' :
             case '}' :
                 if (!isInState(LITERAL_STATE))
                     setState(CURLY_BRACE_STATE);
                 
                 break;
-
             default :
                 if (!isInState(LITERAL_STATE) && !isInState(BRACE_STATE))
                 setState(NORMAL_STATE);
         }
     }
-    
     
     /**
      * Clean the SQL statement. This method removes leading and trailing spaces
@@ -145,30 +130,32 @@ public class FBEscapedCallParser {
      * @throws FBSQLParseException if cleanup resulted in empty statement.
      */
     private String cleanUpCall(String sql) throws FBSQLParseException {
-        // TODO Consider replacing with processing into buffer or simply String.trim(), as deleting is not very efficient
-        StringBuilder cleanupBuffer = new StringBuilder(sql);
+        final int length = sql.length();
         
-        // remove spaces at the beginning
-        while(cleanupBuffer.length() > 0 && 
-                Character.isSpaceChar(cleanupBuffer.charAt(0)))
-            cleanupBuffer.deleteCharAt(0);
+        // Find first non-whitespace character
+        int startIndex = 0;
+        while(startIndex < length && Character.isWhitespace(sql.charAt(startIndex))) {
+            startIndex++;
+        }
         
-        // remove spaces at the end
-        while(cleanupBuffer.length() > 0 && 
-                Character.isSpaceChar(cleanupBuffer.charAt(cleanupBuffer.length() - 1)))
-            cleanupBuffer.deleteCharAt(cleanupBuffer.length() - 1);
+        // Find last non-whitespace
+        int endIndex = sql.length();
+        while (endIndex > 0 && Character.isWhitespace(sql.charAt(endIndex - 1))) {
+            endIndex--;
+        }
         
-        if (cleanupBuffer.length() == 0)
-            throw new FBSQLParseException(
-                    "Escaped call statement was empty.");
+        // Exclude open and close curly brace (we are assuming they match)
+        if (startIndex < length && sql.charAt(startIndex) == '{' && endIndex > 0 && sql.charAt(endIndex - 1) == '}') {
+            startIndex++;
+            endIndex--;
+        }
         
-        if (cleanupBuffer.charAt(0) == '{')
-        	cleanupBuffer.deleteCharAt(0);
+        // No string left
+        if (startIndex >= endIndex) {
+            throw new FBSQLParseException("Escaped call statement was empty.");
+        }
         
-        if (cleanupBuffer.charAt(cleanupBuffer.length() - 1) == '}')
-            cleanupBuffer.deleteCharAt(cleanupBuffer.length() - 1);
-        
-        return cleanupBuffer.toString();
+        return sql.substring(startIndex, endIndex);
     }
     
     /**
@@ -188,7 +175,6 @@ public class FBEscapedCallParser {
      * @return native form of the <code>sql</code>.
      */
     public FBProcedureCall parseCall(String sql) throws SQLException {
-        
     	sql = cleanUpCall(sql);
         
         procedureCall = new FBProcedureCall();
@@ -205,135 +191,104 @@ public class FBEscapedCallParser {
         
         setState(NORMAL_STATE);
         
-        final char[] sqlbuff = sql.toCharArray();
-        final StringBuilder buffer = new StringBuilder();
+        final StringBuilder buffer = new StringBuilder(sql.length());
         
-         for(int i = 0; i < sqlbuff.length; i++) {
-             switchState(sqlbuff[i]);
+         for(int i = 0, length = sql.length(); i < length; i++) {
+             char currentChar = sql.charAt(i);
+             switchState(currentChar);
 
-             if (isInState(NORMAL_STATE)) {
-                 
+             switch (state) {
+             case NORMAL_STATE :
                  // if we have an equal sign, most likely {? = call ...}
                  // syntax is used (there's hardly any place for this sign
                  // in procedure parameters). but to be sure, we check if 
                  // no brace is open and if buffer contains only '?'
-                 if (sqlbuff[i] == '=') {
-                     
+                 if (currentChar == '=') {
                      if (openBraceCount <= 0) {
-                     
-                         String token = buffer.toString().trim();
-    
-                         if ("?".equals(token) && !isFirstOutParam && !isNameProcessed) {
-                             
-                             FBProcedureParam param = 
-                                 procedureCall.addParam(paramPosition, token);
-                             
+                         if (buffer.length() >= 1 && buffer.charAt(0) == '?' && !isFirstOutParam && !isNameProcessed) {
+                             FBProcedureParam param = procedureCall.addParam(paramPosition, "?");
                              paramCount++;
                              param.setIndex(paramCount);
-                             
                              isFirstOutParam = true;
                              paramPosition++;
-                             
                              buffer.setLength(0);
                              continue;
                          }
                      }
                  }
-                     
-                 buffer.append(sqlbuff[i]);
-                 
-             } else
-             if (isInState(SPACE_STATE)) {
-                 
+                 buffer.append(currentChar);
+                 break;
+             case SPACE_STATE:
                  if (buffer.length() == 0) {
                      setState(NORMAL_STATE);
                      continue;
                  }
-                 
                  if (openBraceCount > 0) {
-                     buffer.append(sqlbuff[i]);
+                     buffer.append(currentChar);
                      setState(NORMAL_STATE);
                      continue;
                  }
                  
-                 String token = buffer.toString().trim();
-
                  // if procedure name was not yet processed, process
                  // the token; we look for the sequence EXECUTE PROCEDURE <name>
                  // otherwise go into normal state to enable next transitions.
                  if (!isNameProcessed) {
-                     boolean tokenProcessed = processToken(token);
+                     boolean tokenProcessed = processToken(buffer.toString().trim());
                      if (tokenProcessed) {
                      	buffer.setLength(0);
                         setState(NORMAL_STATE);
-                        if (isNameProcessed){
+                        if (isNameProcessed) {
                             // If we just found a name, fast-forward to the 
                             // opening parenthesis, if there is one
                             int j = i;
-                            while (j < sqlbuff.length - 1 
-                                && Character.isWhitespace(sqlbuff[j])) j++;
-                            if (sqlbuff[j] == '(') 
+                            while (j < length - 1 
+                                && Character.isWhitespace(sql.charAt(j))) j++;
+                            if (sql.charAt(j) == '(') 
                                 i = j;
                         }
-
                      }
                  } else {
-                     buffer.append(sqlbuff[i]);
+                     buffer.append(currentChar);
                      setState(NORMAL_STATE);
                  }
-                 
-             } else
-             if (isInState(BRACE_STATE)) {
-                 
+                 break;
+             case BRACE_STATE:
                  // if we have an opening brace and we already processed
                  // EXECUTE PROCEDURE words, but still do not have procedure
                  // name set, we can be sure that buffer contains procedure 
                  // name.
                  boolean isProcedureName = 
-                     sqlbuff[i] == '(' &&
+                     currentChar == '(' &&
                      isCallKeywordProcessed() &&
                      !isNameProcessed;
-                 
+
                  if (isProcedureName) {
-                     String token = buffer.toString().trim();
+                     if (buffer.length() == 0)
+                         throw new FBSQLParseException("Procedure name is empty.");
                      
-                     if ("".equals(token))
-                         throw new FBSQLParseException(
-                             "Procedure name is empty.");
-                     
-                     procedureCall.setName(token);
+                     procedureCall.setName(buffer.toString().trim());
                      isNameProcessed = true;
-                     
                      buffer.setLength(0);
-                     
                  } else {
-                     buffer.append(sqlbuff[i]);
-                 
-                     if (sqlbuff[i] == '(')
+                     buffer.append(currentChar);
+                     if (currentChar == '(')
                          openBraceCount++;
                      else
                          openBraceCount--;
                  }
-                 
                  setState(NORMAL_STATE);
-                 
-             } else
-             if (isInState(CURLY_BRACE_STATE)) {
-                
-                buffer.append(sqlbuff[i]);
+                 break;
+             case CURLY_BRACE_STATE:
+                buffer.append(currentChar);
                 setState(NORMAL_STATE);
-                
-             } else
-             if (isInState(COMMA_STATE)) {
-                 
+                break;
+             case COMMA_STATE:
                  if (openBraceCount > 0) {
-                     buffer.append(sqlbuff[i]);
+                     buffer.append(currentChar);
                      continue;
                  }
-                 
                  String param = processParam(buffer.toString());
                  buffer.setLength(0);
-                 
                  FBProcedureParam callParam = 
                      procedureCall.addParam(paramPosition, param);
                  
@@ -345,14 +300,16 @@ public class FBEscapedCallParser {
                  paramPosition++;
                  
                  setState(NORMAL_STATE);
-                 
-             } else
-             if (isInState(LITERAL_STATE)) 
-                 buffer.append(sqlbuff[i]);
+                 break;
+             case LITERAL_STATE: 
+                 buffer.append(currentChar);
+             }
          }
 
          if (buffer.length() == 0) 
              return procedureCall;
+         
+         // TODO Is this removal necessary, deleteCharAt is not efficient!
          
          // remove spaces at the beginning and the end
          while(Character.isSpaceChar(buffer.charAt(0)))
@@ -361,6 +318,8 @@ public class FBEscapedCallParser {
          while(Character.isSpaceChar(buffer.charAt(buffer.length() - 1)))
              buffer.deleteCharAt(buffer.length() - 1);
 
+         // TODO: Does deletion of ( and ) make sense?
+         
          // if buffer starts with '(', remove it, 
          // we do not want this thing to bother us
          if (buffer.charAt(0) == '(')
