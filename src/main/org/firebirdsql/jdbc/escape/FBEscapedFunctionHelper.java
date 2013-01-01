@@ -96,7 +96,7 @@ public class FBEscapedFunctionHelper {
         functionMap.put("LEFT", null);
         // TODO support difference between CHARACTER and OCTETS optional param
         functionMap.put("LENGTH", "CHAR_LENGTH(TRIM(TRAILING FROM {0}))");
-        // TODO Support variant without start position
+        // TODO Support variant without start position (required for JavaEE compliance see 6.2 of JDBC 4.1 spec
         functionMap.put("LOCATE", "POSITION({0},{1},{2})");
         functionMap.put("LTRIM", "TRIM(LEADING FROM {0})");
         functionMap.put("OCTET_LENGTH", null);
@@ -218,71 +218,67 @@ public class FBEscapedFunctionHelper {
     public static List<String> parseArguments(String functionCall) throws FBSQLParseException {
         functionCall = functionCall.trim();
         checkSyntax(functionCall);
-        
-        int parenthesisStart = functionCall.indexOf('(');
+
+        final int parenthesisStart = functionCall.indexOf('(');
         if (parenthesisStart == -1) {
             return Collections.emptyList();
         }
-        
-        String paramsString = functionCall.substring(
-            parenthesisStart + 1, functionCall.length() - 1);
-            
-        List<String> params = new ArrayList<String>();
-        StringBuilder sb = new StringBuilder();
+        final String paramsString = functionCall.substring(parenthesisStart + 1, functionCall.length() - 1);
+
+        final List<String> params = new ArrayList<String>();
+        final StringBuilder sb = new StringBuilder();
         boolean inQuotes = false;
         boolean inDoubleQuotes = false;
         // ignore initial whitespace
         boolean coalesceSpace = true;
         int nestedParentheses = 0;
-        
-        for(int i = 0, n = paramsString.length(); i < n; i++) {
+
+        for (int i = 0, n = paramsString.length(); i < n; i++) {
             char currentChar = paramsString.charAt(i);
-            switch(currentChar) {
-            case '\'' :
-                sb.append(currentChar);
-                if (!inDoubleQuotes) 
-                    inQuotes = !inQuotes;
-                coalesceSpace = false;
-                break;
-            case '"' :
-                sb.append(currentChar);
-                if (!inQuotes) 
-                    inDoubleQuotes = !inDoubleQuotes;
-                coalesceSpace = false;
-                break;
-            case '(':
-            	if (!(inQuotes || inDoubleQuotes)) {
-            	    nestedParentheses++;
-            	}
-                sb.append('(');
-                coalesceSpace = false;
-                break;
-            case ')':
-            	if (!(inQuotes || inDoubleQuotes)) {
-                    nestedParentheses--;
-                    if (nestedParentheses < 0) {
-                        throw new FBSQLParseException("Unbalanced parentheses in parameters at position " + i);
-                    }
-            	}
-                sb.append(')');
-                coalesceSpace = false;
-                break;
             // we coalesce spaces, tabs and new lines into a single space if
             // we are not in a string literal
-            case ' ' :
-            case '\t' :
-            case '\n' :
-            case '\r' :
-                if (inQuotes || inDoubleQuotes) { 
+            if (Character.isWhitespace(currentChar)) {
+                if (inQuotes || inDoubleQuotes) {
                     sb.append(currentChar);
                 } else if (!coalesceSpace) {
                     sb.append(' ');
                     coalesceSpace = true;
                 }
+                continue;
+            }
+            switch (currentChar) {
+            case '\'':
+                sb.append(currentChar);
+                if (!inDoubleQuotes)
+                	inQuotes = !inQuotes;
+                coalesceSpace = false;
+                break;
+            case '"':
+                sb.append(currentChar);
+                if (!inQuotes)
+                	inDoubleQuotes = !inDoubleQuotes;
+                coalesceSpace = false;
+                break;
+            case '(':
+                if (!(inQuotes || inDoubleQuotes)) {
+                    nestedParentheses++;
+                }
+                sb.append('(');
+                coalesceSpace = false;
+                break;
+            case ')':
+                if (!(inQuotes || inDoubleQuotes)) {
+                    nestedParentheses--;
+                    if (nestedParentheses < 0) {
+                        throw new FBSQLParseException("Unbalanced parentheses in parameters at position " + i);
+                    }
+                }
+                sb.append(')');
+                coalesceSpace = false;
                 break;
             // comma is considered parameter separator
             // if it is not within the string literal or within parentheses 
-            case ',' :
+            case ',':
                 if (inQuotes || inDoubleQuotes || nestedParentheses > 0) {
                     sb.append(currentChar);
                 } else {
@@ -292,18 +288,17 @@ public class FBEscapedFunctionHelper {
                     coalesceSpace = true;
                 }
                 break;
-              
             // by default we add chars to the buffer  
-            default : 
+            default:
                 sb.append(currentChar);
                 coalesceSpace = false;
             }
         }
-        
+
         // add last parameter if present
         if (sb.length() > 0)
-            params.add(sb.toString());
-        
+        	params.add(sb.toString());
+
         // after processing all parameters all string literals should be closed
         if (inQuotes || inDoubleQuotes) {
             throw new FBSQLParseException("String literal is not properly closed.");
@@ -311,7 +306,7 @@ public class FBEscapedFunctionHelper {
         if (nestedParentheses != 0) {
             throw new FBSQLParseException("Unbalanced parentheses in parameters.");
         }
-        
+
         return params;
     }
     

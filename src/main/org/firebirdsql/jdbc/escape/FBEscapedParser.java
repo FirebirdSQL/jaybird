@@ -105,7 +105,7 @@ public final class FBEscapedParser {
 
         ParserState state = ParserState.NORMAL_STATE;
         final Deque<StringBuilder> bufferStack = new LinkedList<StringBuilder>();
-        StringBuilder buffer = new StringBuilder();
+        StringBuilder buffer = new StringBuilder(sql.length());
 
         for (int i = 0, n = sql.length(); i < n; i++) {
             char currentChar = sql.charAt(i);
@@ -173,7 +173,7 @@ public final class FBEscapedParser {
      */
     private void escapeToNative(final StringBuilder target, final String escaped) throws SQLException {
         final StringBuilder keyword = new StringBuilder();
-        final StringBuilder payload = new StringBuilder();
+        final StringBuilder payload = new StringBuilder(Math.max(16, escaped.length()));
 
         processEscaped(escaped, keyword, payload);
 
@@ -187,6 +187,7 @@ public final class FBEscapedParser {
                 .append(' ')
                 .append(payload)
                 .append('}');
+            // TODO Should we call convertProcedureCall? It leads to inefficient double parsing
             convertProcedureCall(target, call.toString());
         } else if (keywordStr.equals(ESCAPE_CALL_KEYWORD3)) {
             StringBuilder call = new StringBuilder();
@@ -194,6 +195,7 @@ public final class FBEscapedParser {
                 .append(ESCAPE_CALL_KEYWORD3)
                 .append(payload)
                 .append('}');
+            // TODO Should we call convertProcedureCall? It leads to inefficient double parsing
             convertProcedureCall(target, call.toString());
         } else if (keywordStr.equals(ESCAPE_DATE_KEYWORD))
             toDateString(target, payload);
