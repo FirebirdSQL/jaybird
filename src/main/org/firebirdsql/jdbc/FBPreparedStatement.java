@@ -137,7 +137,10 @@ public class FBPreparedStatement extends FBStatement implements
         } catch (GDSException ge) {
             notifyStatementCompleted(false);
             throw new FBSQLException(ge);
-        } catch (Exception e) {
+        } catch (SQLException e) {
+            notifyStatementCompleted(false);
+            throw e;
+        } catch (RuntimeException e) {
             notifyStatementCompleted(false);
             throw e;
         }
