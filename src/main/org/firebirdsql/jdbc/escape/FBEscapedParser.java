@@ -113,6 +113,11 @@ public final class FBEscapedParser {
             switch (state) {
             case NORMAL_STATE:
             case LITERAL_STATE:
+            case START_LINE_COMMENT:
+            case LINE_COMMENT:
+            case START_BLOCK_COMMENT:
+            case BLOCK_COMMENT:
+            case END_BLOCK_COMMENT:
                 buffer.append(currentChar);
                 break;
             case ESCAPE_ENTER_STATE:
@@ -123,8 +128,9 @@ public final class FBEscapedParser {
                 if (bufferStack.isEmpty()) {
                     throw new FBSQLParseException("Unbalanced JDBC escape, too many '}'");
                 }
-                escapeToNative(bufferStack.peek(), buffer.toString());
+                String escapeText = buffer.toString();
                 buffer = bufferStack.pop();
+                escapeToNative(buffer, escapeText);
                 break;
             default:
                 throw new FBSQLParseException("Unexpected parser state " + state);
@@ -371,6 +377,10 @@ public final class FBEscapedParser {
                     return ESCAPE_ENTER_STATE;
                 case '}':
                     return ESCAPE_EXIT_STATE;
+                case '-':
+                    return START_LINE_COMMENT;
+                case '/':
+                    return START_BLOCK_COMMENT;
                 default:
                     return NORMAL_STATE;
                 }
@@ -391,10 +401,18 @@ public final class FBEscapedParser {
         ESCAPE_ENTER_STATE {
             @Override
             protected ParserState nextState(char inputChar) throws FBSQLParseException {
-                if (inputChar == '}') {
-                    throw new FBSQLParseException("Did not expect end of JDBC escape at this point");
+                switch (inputChar) {
+                case '?': // start of {?= call ...}
+                case 'c': // start of {call ...}
+                case 't': // start of {t ...} or {ts ...}
+                case 'e': // start of {escape ...}
+                case 'f': // start of {fn ...}
+                case 'o': // start of {oj ...}
+                case 'l': // start of {limit ...}
+                    return NORMAL_STATE;
+                default:
+                    throw new FBSQLParseException("Unexpected first character inside JDBC escape: " + inputChar);
                 }
-                return NORMAL_STATE;
             }
         },
         /**
@@ -403,7 +421,61 @@ public final class FBEscapedParser {
         ESCAPE_EXIT_STATE {
             @Override
             protected ParserState nextState(char inputChar) throws FBSQLParseException {
-                return (inputChar == '}') ? ESCAPE_EXIT_STATE : NORMAL_STATE;
+                switch (inputChar) {
+                case '}':
+                    return ESCAPE_EXIT_STATE;
+                case '-':
+                    return START_LINE_COMMENT;
+                case '/':
+                    return START_BLOCK_COMMENT;
+                default:
+                    return NORMAL_STATE;
+                }
+            }
+        },
+        /**
+         * Potential start of line comment
+         */
+        START_LINE_COMMENT {
+            @Override
+            protected ParserState nextState(char inputChar) throws FBSQLParseException {
+                return (inputChar == '-') ? LINE_COMMENT : NORMAL_STATE;
+            }
+        },
+        /**
+         * Line comment
+         */
+        LINE_COMMENT {
+            @Override
+            protected ParserState nextState(char inputChar) throws FBSQLParseException {
+                return (inputChar == '\n') ? NORMAL_STATE : LINE_COMMENT;
+            }
+        },
+        /**
+         * Potential start of block comment
+         */
+        START_BLOCK_COMMENT {
+            @Override
+            protected ParserState nextState(char inputChar) throws FBSQLParseException {
+                return (inputChar == '*') ? BLOCK_COMMENT : NORMAL_STATE;
+            }
+        },
+        /**
+         * Block comment
+         */
+        BLOCK_COMMENT {
+            @Override
+            protected ParserState nextState(char inputChar) throws FBSQLParseException {
+                return (inputChar == '*') ? END_BLOCK_COMMENT : BLOCK_COMMENT;
+            }
+        },
+        /**
+         * Potential block comment end
+         */
+        END_BLOCK_COMMENT {
+            @Override
+            protected ParserState nextState(char inputChar) throws FBSQLParseException {
+                return (inputChar == '/') ? NORMAL_STATE : BLOCK_COMMENT;
             }
         };
 
@@ -414,7 +486,7 @@ public final class FBEscapedParser {
          *            Input character
          * @return Next state
          * @throws FBSQLParseException
-         *             For incorrect states during parsing
+         *             For incorrect character for current state during parsing
          */
         protected abstract ParserState nextState(char inputChar) throws FBSQLParseException;
     }

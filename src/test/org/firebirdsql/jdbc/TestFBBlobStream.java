@@ -29,7 +29,6 @@ import java.util.Properties;
 import java.util.Random;
 
 import static org.firebirdsql.common.FBTestProperties.*;
-import static org.junit.Assert.assertArrayEquals;
 
 /**
  * Describe class <code>TestFBBlobAccess</code> here.
