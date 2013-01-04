@@ -531,31 +531,35 @@ public class TestFBPreparedStatement extends FBTestBase {
                 Timestamp ts2 = null;
                 Timestamp ts3 = null;
 
-                String ts2Str = null;
-                String ts3Str = null;
+                String ts2AsStr = null;
+                String ts3AsStr = null;
 
-                int maxLength = 22;
+                final int maxLength = 22;
 
                 while (rs.next()) {
                     switch (rs.getInt(1)) {
                     case 2:
                         ts2 = rs.getTimestamp(3);
-                        ts2Str = rs.getString(2)
-                        		.substring(0, maxLength);
+                        ts2AsStr = rs.getString(2);
+                        ts2AsStr = ts2AsStr.substring(0, Math.min(ts2AsStr.length(), maxLength));
                         break;
 
                     case 3:
                         ts3 = rs.getTimestamp(3);
-                        ts3Str = rs.getString(2)
-                        		.substring(0, maxLength);
+                        ts3AsStr = rs.getString(2);
+                        ts3AsStr = ts3AsStr.substring(0, Math.min(ts3AsStr.length(), maxLength));
                         break;
                     }
                 }
 
                 assertEquals("Timestamps 2 and 3 should differ for 3600 seconds.", 3600 * 1000,
                         Math.abs(ts2.getTime() - ts3.getTime()));
-                assertEquals("Server should see the same timestamp", ts2Str, ts2.toString().substring(0, maxLength));
-                assertEquals("Server should see the same timestamp", ts3Str, ts3.toString().substring(0, maxLength));
+                String ts2ToStr = ts2.toString();
+                ts2ToStr = ts2ToStr.substring(0, Math.min(ts2ToStr.length(), maxLength));
+                assertEquals("Server should see the same timestamp", ts2AsStr, ts2ToStr);
+                String ts3ToStr = ts3.toString();
+                ts3ToStr = ts3ToStr.substring(0, Math.min(ts3ToStr.length(), maxLength));
+                assertEquals("Server should see the same timestamp", ts3AsStr, ts3ToStr);
             } finally {
                 closeQuietly(selectStmt);
             }
