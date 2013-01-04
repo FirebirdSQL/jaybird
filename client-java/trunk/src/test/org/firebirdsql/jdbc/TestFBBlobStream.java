@@ -29,6 +29,7 @@ import java.util.Properties;
 import java.util.Random;
 
 import static org.firebirdsql.common.FBTestProperties.*;
+import static org.junit.Assert.assertArrayEquals;
 
 /**
  * Describe class <code>TestFBBlobAccess</code> here.
@@ -37,6 +38,9 @@ import static org.firebirdsql.common.FBTestProperties.*;
  * @version 1.0
  */
 public class TestFBBlobStream extends FBTestBase {
+    
+    private static final Random rnd = new Random();
+    
     public static final String CREATE_TABLE =
         "CREATE TABLE test_blob(" +
         "  id INTEGER, " +
@@ -55,8 +59,6 @@ public class TestFBBlobStream extends FBTestBase {
 
     private Connection connection;
 
-    private byte[][] testData;
-
     public TestFBBlobStream(String testName) {
         super(testName);
     }
@@ -64,8 +66,6 @@ public class TestFBBlobStream extends FBTestBase {
     protected void setUp() throws Exception {
         super.setUp();
 
-        Class.forName(FBDriver.class.getName());
-        
         Properties props = getDefaultPropertiesForConnection();
         props.put("isc_dpb_use_stream_blobs", "");
         
@@ -76,17 +76,6 @@ public class TestFBBlobStream extends FBTestBase {
         stmt.executeUpdate(CREATE_TABLE);
         stmt.execute(CREATE_PROCEDURE);
         stmt.close();
-
-        java.util.Random rnd = new java.util.Random();
-
-        testData = new byte[TEST_ROW_COUNT][0];
-
-        for (int i = 0; i < testData.length; i++) {
-            int testLength = rnd.nextInt(100 * 1024) + 128;
-            testData[i] = new byte[testLength];
-            rnd.nextBytes(testData[i]);
-        }
-
     }
 
     protected void tearDown() throws Exception {
@@ -104,14 +93,13 @@ public class TestFBBlobStream extends FBTestBase {
 
         PreparedStatement ps = connection.prepareStatement(
             "INSERT INTO test_blob(id, bin_data) VALUES (?, ?)");
+        
+        int size = generateRandomLength();
+        byte[] data = createRandomBytes(size);
 
         try {
-            long start = System.currentTimeMillis();
-    
-            long size = testData[0].length;
-    
             ps.setInt(1, 1);
-            ps.setBytes(2, testData[0]);
+            ps.setBytes(2, data);
             ps.executeUpdate();
     
             ps.close();
@@ -129,12 +117,9 @@ public class TestFBBlobStream extends FBTestBase {
             
             FBBlob blob = (FBBlob)rs.getBlob(1);
             
-            start = System.currentTimeMillis();
+            // Do it repeatedly (TODO: does this make sense)
             for(int i = 0; i < 1000; i++)
-                assertTrue("Reported length should be correct.", blob.length() == size);
-            System.out.println("Getting info took " + 
-                (System.currentTimeMillis() - start));
-    
+                assertEquals("Reported length should be correct.", size, blob.length());
             rs.close();
         } finally {
             ps.close();
@@ -152,29 +137,25 @@ public class TestFBBlobStream extends FBTestBase {
         PreparedStatement ps = connection.prepareStatement(
             "INSERT INTO test_blob(id, bin_data) VALUES (?, ?)");
 
+        byte[] data = createRandomBytes(generateRandomLength());
         try {
             ps.setInt(1, 1);
-            ps.setBytes(2, testData[0]);
+            ps.setBytes(2, data);
             ps.executeUpdate();
-            
         } finally {
             ps.close();
         }
     
-            connection.commit();
+        connection.commit();
     
         try {
-            ps = connection.prepareStatement(
-                "SELECT bin_data FROM test_blob WHERE id = ?");
-    
+            ps = connection.prepareStatement("SELECT bin_data FROM test_blob WHERE id = ?");
             ps.setInt(1, 1);
-    
             ResultSet rs = ps.executeQuery();
     
             assertTrue("Should select at least one row", rs.next());
     
-            FBBlobInputStream in = 
-                (FBBlobInputStream)rs.getBinaryStream(1);
+            FBBlobInputStream in = (FBBlobInputStream)rs.getBinaryStream(1);
             
             int blobSize = (int)in.length();
             byte[] fullBlob = new byte[blobSize];
@@ -193,8 +174,8 @@ public class TestFBBlobStream extends FBTestBase {
             System.arraycopy(fullBlob, 10, testBlob, 0, blobSize - 10);
     
             assertTrue("Full and original blobs must be equal.", 
-                Arrays.equals(testData[0], fullBlob));
-                
+                Arrays.equals(data, fullBlob));
+
             assertTrue("Truncated and testing blobs must be equal.", 
                 Arrays.equals(testBlob, truncatedBlob));
             
@@ -203,23 +184,26 @@ public class TestFBBlobStream extends FBTestBase {
             ps.close();
         }
     }
-    
-    
-    
+   
     /**
      * Test if byte[] are correctly stored and retrieved from database
      *
      * @throws Exception if something went wrong.
      */
     public void testFieldTypes() throws Exception {
-        
         connection.setAutoCommit(false);
 
         PreparedStatement ps = connection.prepareStatement(
             "INSERT INTO test_blob(id, bin_data) VALUES (?, ?)");
+        
+        byte[][] testData;
+        testData = new byte[TEST_ROW_COUNT][0];
+        for (int i = 0; i < testData.length; i++) {
+            testData[i] = new byte[generateRandomLength()];
+            rnd.nextBytes(testData[i]);
+        }
 
         long start = System.currentTimeMillis();
-
         long size = 0;
 
         for(int i = 0; i < TEST_ROW_COUNT; i++) {
@@ -243,41 +227,36 @@ public class TestFBBlobStream extends FBTestBase {
         Statement stmt = connection.createStatement();
 
         for (int i = 0; i < 10; i++) {
-        ResultSet rs = stmt.executeQuery("SELECT id, bin_data FROM test_blob");
-        start = System.currentTimeMillis();
-
-        size = 0;
-
-        try {
-            int counter = 0;
-
-            while(rs.next()) {
-
-                int id = rs.getInt("id");
-                byte[] data = rs.getBytes("bin_data");
-
-                size += data.length;
-
-                assertTrue(
-                    "Data read from database for id " + id +
-                    " should be equal to generated one.",
-                    java.util.Arrays.equals(testData[id], data));
-
-                counter++;
+            ResultSet rs = stmt.executeQuery("SELECT id, bin_data FROM test_blob");
+            start = System.currentTimeMillis();
+    
+            size = 0;
+    
+            try {
+                int counter = 0;
+                while(rs.next()) {
+                    int id = rs.getInt("id");
+                    byte[] data = rs.getBytes("bin_data");
+    
+                    size += data.length;
+    
+                    assertTrue(
+                        "Data read from database for id " + id +
+                        " should be equal to generated one.",
+                        Arrays.equals(testData[id], data));
+    
+                    counter++;
+                }
+    
+                assertEquals("Unexpected number of rows read", TEST_ROW_COUNT, counter);
+    
+                duration = System.currentTimeMillis() - start;
+    
+                System.out.println("Read " + size + " bytes in " + duration + " ms, " +
+                    "speed " + ((size * 1000 * 1000 / duration / 1024 / 1024) / 1000.0) + " MB/s");
+            } finally {
+                rs.close();
             }
-
-            assertTrue(
-                "Should read " + TEST_ROW_COUNT +
-                " rows, read " + counter, TEST_ROW_COUNT == counter);
-
-            duration = System.currentTimeMillis() - start;
-
-            System.out.println("Read " + size + " bytes in " + duration + " ms, " +
-                "speed " + ((size * 1000 * 1000 / duration / 1024 / 1024) / 1000.0) + " MB/s");
-        } finally {
-            rs.close();
-//            stmt.close();
-        }
         }
         stmt.close();
     }
@@ -291,29 +270,29 @@ public class TestFBBlobStream extends FBTestBase {
     public void testEndlessLoop() throws Exception {
         connection.setAutoCommit(false);
 
-        PreparedStatement ps = connection.prepareStatement(
-            "INSERT INTO test_blob(id, bin_data) VALUES (?, ?)");
+        PreparedStatement ps = connection.prepareStatement("INSERT INTO test_blob(id, bin_data) VALUES (?, ?)");
 
         try {
             ByteArrayInputStream in = new ByteArrayInputStream(new byte[0]);
     
             ps.setInt(1, 1);
             ps.setBinaryStream(2, in, 10);
+            long startTime = System.currentTimeMillis();
             ps.executeUpdate();
-    
+            long endTime = System.currentTimeMillis();
+            
+            if (endTime - startTime > 5000) {
+                fail("Executing update with empty binarystream took longer than 5 seconds");
+            }
             ps.close();
-    
             connection.commit();
     
-            ps = connection.prepareStatement(
-                "SELECT bin_data FROM test_blob WHERE id = ?");
-               
+            ps = connection.prepareStatement("SELECT bin_data FROM test_blob WHERE id = ?");
             ps.setInt(1, 1);
             
             ResultSet rs = ps.executeQuery();
             
             assertTrue("Should select at least one row", rs.next());
-            
             byte[] blob = rs.getBytes(1);
             
             assertTrue("Reported length should be correct.", blob.length == 0);
@@ -322,18 +301,61 @@ public class TestFBBlobStream extends FBTestBase {
         } finally {
             ps.close();
         }
-        
+    }
+    
+    /**
+     * Check if using only 1 byte from the stream works
+     * 
+     * @throws Exception if something went wrong.
+     */
+    public void testSingleByteRead() throws Exception {
+        connection.setAutoCommit(false);
+
+        PreparedStatement ps = connection.prepareStatement("INSERT INTO test_blob(id, bin_data) VALUES (?, ?)");
+
+        final byte[] testData = new byte[] { 56, 54, 52 };
+        try {
+            ByteArrayInputStream in = new ByteArrayInputStream(testData);
+    
+            ps.setInt(1, 1);
+            ps.setBinaryStream(2, in, 1);
+            long startTime = System.currentTimeMillis();
+            ps.executeUpdate();
+            long endTime = System.currentTimeMillis();
+            
+            if (endTime - startTime > 5000) {
+                fail("Executing update with reading 1 byte from binarystream took longer than 5 seconds");
+            }
+            ps.close();
+            connection.commit();
+    
+            ps = connection.prepareStatement("SELECT bin_data FROM test_blob WHERE id = ?");
+            ps.setInt(1, 1);
+            
+            ResultSet rs = ps.executeQuery();
+            
+            assertTrue("Should select at least one row", rs.next());
+            byte[] blob = rs.getBytes(1);
+            
+            assertEquals("Reported length should be correct.", 1, blob.length);
+            assertEquals("Unexpected value for first byte", 56, blob[0]);
+    
+            rs.close();
+        } finally {
+            ps.close();
+        }
     }
     
     public void testStreamForLongVarChar() throws Exception {
-
         PreparedStatement ps = connection.prepareCall("{call test_procedure(?, ?)}");
         
         try {
-            ByteArrayInputStream in = new ByteArrayInputStream(testData[0]);
+            byte[] data = createRandomBytes(generateRandomLength());
+            
+            ByteArrayInputStream in = new ByteArrayInputStream(data);
             
             ps.setInt(1, 1);
-            ps.setBinaryStream(2, in, testData[0].length);
+            ps.setBinaryStream(2, in, data.length);
             
             ps.execute();
             
@@ -343,21 +365,18 @@ public class TestFBBlobStream extends FBTestBase {
                     "SELECT id, char_data FROM test_blob WHERE id = 1");
                 
                 assertTrue("Should select data from table", rs.next());
-                assertTrue("Value should be correct", Arrays.equals(rs.getBytes(2), testData[0]));
+                assertTrue("Value should be correct", Arrays.equals(rs.getBytes(2), data));
                 assertTrue("Should not have more rows.", !rs.next());
             } finally {
                 stmt.close();
             }
-            
         } finally {
             ps.close();
         }
     }
     
     public void testWriteBytes() throws Exception {
-        byte[] data = new byte[75 * 1024]; // should be more than 64k
-        Random rnd = new Random();
-        rnd.nextBytes(data);
+        final byte[] data = createRandomBytes(75 * 1024); // should be more than 64k
         
         FirebirdConnection fbConnection = (FirebirdConnection)connection;
         fbConnection.setAutoCommit(false);
@@ -390,6 +409,25 @@ public class TestFBBlobStream extends FBTestBase {
         } finally {
             stmt.close();
         }
-        
+    }
+    
+    /**
+     * Creates a byte array with random bytes with the specified length.
+     * 
+     * @param length Requested length
+     * @return Byte array of length filled with random bytes
+     */
+    private static byte[] createRandomBytes(int length) {
+        byte[] randomBytes = new byte[length];
+        rnd.nextBytes(randomBytes);
+        return randomBytes;
+    }
+    
+    /**
+     * Generates a random length betwen 128 and 102528
+     * @return generated length
+     */
+    private static int generateRandomLength() {
+        return rnd.nextInt(100 * 1024) + 128;
     }
 }
