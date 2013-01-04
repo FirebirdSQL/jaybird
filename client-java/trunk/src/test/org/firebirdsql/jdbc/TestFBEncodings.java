@@ -39,62 +39,15 @@ import static org.firebirdsql.common.FBTestProperties.*;
  */
 public class TestFBEncodings extends FBTestBase {
 
-    List<String> encJava = new ArrayList<String>();
-    List<String> encFB = new ArrayList<String>();
-
-    public static String CREATE_TABLE = 
-    		"CREATE TABLE test_encodings (" +
-	        "  id INTEGER, " +
-	        "  win1250_field VARCHAR(50) CHARACTER SET WIN1250, " +
-	        "  win1251_field VARCHAR(50) CHARACTER SET WIN1251, " +
-	        "  win1252_field VARCHAR(50) CHARACTER SET WIN1252, " +
-	        "  win1253_field VARCHAR(50) CHARACTER SET WIN1253, " +
-	        "  win1254_field VARCHAR(50) CHARACTER SET WIN1254, " +
-	        "  unicode_field VARCHAR(50) CHARACTER SET UNICODE_FSS, " +
-	        "  ascii_field VARCHAR(50) CHARACTER SET ASCII, " +
-	        "  none_field VARCHAR(50) CHARACTER SET NONE, " +
-	        "  char_field CHAR(50) CHARACTER SET UNICODE_FSS, " +
-	        "  octets_field CHAR(10) CHARACTER SET OCTETS, " +
-	        "  var_octets_field VARCHAR(10) CHARACTER SET OCTETS, " +
-	        "  none_octets_field CHAR(10) CHARACTER SET NONE, " +
-	        "  uuid_char CHAR(36) CHARACTER SET UTF8, " + 
-	        "  uuid_varchar CHAR(36) CHARACTER SET UTF8 " +
-	        ")"
-	        ;
-
-    public static String CREATE_TABLE_CYRL = 
-    		"CREATE TABLE test_encodings_cyrl (" + 
-	        "  id INTEGER, " +
-	        "  cyrl_field VARCHAR(50) CHARACTER SET CYRL COLLATE DB_RUS, " +
-	        "  win1251_field VARCHAR(50) CHARACTER SET WIN1251 COLLATE PXW_CYRL, " +
-	        "  unicode_field VARCHAR(50) CHARACTER SET UNICODE_FSS " +
-	        ")"
-	        ;
-
-    public static String DROP_TABLE =
-    		"DROP TABLE test_encodings";
-
-    public static String DROP_TABLE_CYRL =
-    		"DROP TABLE test_encodings_cyrl";
-
-    public static String DROP_TABLE_UNIVERSAL =
-    		"DROP TABLE test_encodings_universal";
-
-    public TestFBEncodings(String testName) {
-        super(testName);
-    }
-
-    protected String getCreateTableStatement() {
-        return CREATE_TABLE;
-    }
-
-    protected String getCreateTableStatement_cyrl() {
-        return CREATE_TABLE_CYRL;
-    }
-
-    protected String getCreateTableStatement_universal() {
-
-    	encJava.add("Cp437"); encFB.add("DOS437");              
+    private static final List<String> ENCODINGS_JAVA;
+    private static final List<String> ENCODINGS_FIREBIRD;
+    private static final String CREATE_TABLE_UNIVERSAL;
+    
+    static {
+        List<String> encJava = new ArrayList<String>();
+        List<String> encFB = new ArrayList<String>();
+        
+        encJava.add("Cp437"); encFB.add("DOS437");              
         encJava.add("Cp850"); encFB.add("DOS850");
         encJava.add("Cp852"); encFB.add("DOS852");
         encJava.add("Cp857"); encFB.add("DOS857");          
@@ -134,18 +87,61 @@ public class TestFBEncodings extends FBTestBase {
         encJava.add("ISO8859_9"); encFB.add("ISO8859_9");
         encJava.add("ISO8859_13"); encFB.add("ISO8859_13");
 */
-        String CREATE_TABLE_UNIVERSAL = "CREATE TABLE test_encodings_universal (" +
-                "  id INTEGER ";
-        for (int encN = 0; encN < encJava.size(); encN++) {
-            CREATE_TABLE_UNIVERSAL = CREATE_TABLE_UNIVERSAL + "," + encJava.get(encN)
-                    + "_field VARCHAR(50) CHARACTER SET " + encFB.get(encN);
+        ENCODINGS_JAVA = Collections.unmodifiableList(encJava);
+        ENCODINGS_FIREBIRD = Collections.unmodifiableList(encFB);
+        
+        StringBuilder sb = new StringBuilder("CREATE TABLE test_encodings_universal (");
+        sb.append("  id INTEGER ");
+        for (int encN = 0; encN < ENCODINGS_JAVA.size(); encN++) {
+            sb.append(',').append(ENCODINGS_JAVA.get(encN)).append("_field VARCHAR(50) CHARACTER SET ").append(ENCODINGS_FIREBIRD.get(encN));
         }
-        for (int encN = 0; encN < encJava.size(); encN++) {
-            CREATE_TABLE_UNIVERSAL = CREATE_TABLE_UNIVERSAL + ", uc_" + encJava.get(encN)
-                    + "_field VARCHAR(50) CHARACTER SET UNICODE_FSS ";
+        for (int encN = 0; encN < ENCODINGS_JAVA.size(); encN++) {
+            sb.append(", uc_").append(ENCODINGS_JAVA.get(encN)).append("_field VARCHAR(50) CHARACTER SET UNICODE_FSS ");
         }
-        CREATE_TABLE_UNIVERSAL = CREATE_TABLE_UNIVERSAL + ")";
-        return CREATE_TABLE_UNIVERSAL;
+        sb.append(')');
+
+        CREATE_TABLE_UNIVERSAL = sb.toString();
+    }
+
+    private static final String CREATE_TABLE = 
+    		"CREATE TABLE test_encodings (" +
+	        "  id INTEGER, " +
+	        "  win1250_field VARCHAR(50) CHARACTER SET WIN1250, " +
+	        "  win1251_field VARCHAR(50) CHARACTER SET WIN1251, " +
+	        "  win1252_field VARCHAR(50) CHARACTER SET WIN1252, " +
+	        "  win1253_field VARCHAR(50) CHARACTER SET WIN1253, " +
+	        "  win1254_field VARCHAR(50) CHARACTER SET WIN1254, " +
+	        "  unicode_field VARCHAR(50) CHARACTER SET UNICODE_FSS, " +
+	        "  ascii_field VARCHAR(50) CHARACTER SET ASCII, " +
+	        "  none_field VARCHAR(50) CHARACTER SET NONE, " +
+	        "  char_field CHAR(50) CHARACTER SET UNICODE_FSS, " +
+	        "  octets_field CHAR(10) CHARACTER SET OCTETS, " +
+	        "  var_octets_field VARCHAR(10) CHARACTER SET OCTETS, " +
+	        "  none_octets_field CHAR(10) CHARACTER SET NONE, " +
+	        "  uuid_char CHAR(36) CHARACTER SET UTF8, " + 
+	        "  uuid_varchar CHAR(36) CHARACTER SET UTF8 " +
+	        ")"
+	        ;
+
+    private static String CREATE_TABLE_CYRL = 
+    		"CREATE TABLE test_encodings_cyrl (" + 
+	        "  id INTEGER, " +
+	        "  cyrl_field VARCHAR(50) CHARACTER SET CYRL COLLATE DB_RUS, " +
+	        "  win1251_field VARCHAR(50) CHARACTER SET WIN1251 COLLATE PXW_CYRL, " +
+	        "  unicode_field VARCHAR(50) CHARACTER SET UNICODE_FSS " +
+	        ")"
+	        ;
+
+    public TestFBEncodings(String testName) {
+        super(testName);
+    }
+
+    protected String getCreateTableStatement() {
+        return CREATE_TABLE;
+    }
+
+    protected String getCreateTableStatement_cyrl() {
+        return CREATE_TABLE_CYRL;
     }
 
     protected void setUp() throws Exception {
@@ -158,45 +154,17 @@ public class TestFBEncodings extends FBTestBase {
         props.put("lc_ctype", "NONE");
 
         Connection connection = DriverManager.getConnection(getUrl(), props);
-
-        Statement stmt = connection.createStatement();
-        try {stmt.executeUpdate(DROP_TABLE);} catch(SQLException ex) { /*ex.printStackTrace();*/}
-        try {stmt.executeUpdate(DROP_TABLE_CYRL);} catch(SQLException ex) { /*ex.printStackTrace();*/}
-        try {stmt.executeUpdate(DROP_TABLE_UNIVERSAL);} catch(SQLException ex) { /*ex.printStackTrace();*/}
-
-        stmt.executeUpdate(getCreateTableStatement());
-        stmt.executeUpdate(getCreateTableStatement_cyrl());
-        stmt.executeUpdate(getCreateTableStatement_universal());
-
-        stmt.executeUpdate("DELETE FROM test_encodings");
-        stmt.executeUpdate("DELETE FROM test_encodings_cyrl");
-        stmt.executeUpdate("DELETE FROM test_encodings_universal");
-
-        stmt.close();
-
-        connection.close();
-    }
-
-    protected void tearDown() throws Exception {
-        Properties props = new Properties();
-        props.putAll(getDefaultPropertiesForConnection());
-        props.put("lc_ctype", "NONE");
-
-        Connection connection =
-        		DriverManager.getConnection(getUrl(), props);
-
         try {
             Statement stmt = connection.createStatement();
-            stmt.executeUpdate(DROP_TABLE);
-            stmt.close();
-            stmt = connection.createStatement();
-            stmt.executeUpdate(DROP_TABLE_CYRL);
+    
+            stmt.executeUpdate(getCreateTableStatement());
+            stmt.executeUpdate(getCreateTableStatement_cyrl());
+            stmt.executeUpdate(CREATE_TABLE_UNIVERSAL);
+    
             stmt.close();
         } finally {
             connection.close();
         }
-
-        super.tearDown();
     }
 
     // "test string" in Ukrainian ("тестова стрічка")
@@ -206,23 +174,9 @@ public class TestFBEncodings extends FBTestBase {
             //"\u00f1\u00f2\u00f0\u00b3\u00f7\u00ea\u00e0";
             "\u0441\u0442\u0440\u0456\u0447\u043a\u0430";
 
-    public static byte[] UKRAINIAN_TEST_BYTES = new byte[] {
-        (byte)0xf2, (byte)0xe5, (byte)0xf1, (byte)0xf2, 
-        (byte)0xee, (byte)0xe2, (byte)0xe0, (byte)0x20,
-        (byte)0xf1, (byte)0xf2, (byte)0xf0, (byte)0xb3, 
-        (byte)0xf7, (byte)0xea, (byte)0xe0
-    };
-
-    public static String UKRAINIAN_TEST_STRING_WIN1251;
-
-    public static int UKRAINIAN_TEST_ID = 1;
+    private static int UKRAINIAN_TEST_ID = 1;
 
     public void testUkrainian() throws Exception {
-        UKRAINIAN_TEST_STRING_WIN1251 =
-        		new String(UKRAINIAN_TEST_BYTES, "Cp1251");
-
-        assertEquals("Strings should be equal.", UKRAINIAN_TEST_STRING, UKRAINIAN_TEST_STRING_WIN1251);
-
         Properties props = new Properties();
         props.putAll(getDefaultPropertiesForConnection());
         props.put("lc_ctype", "WIN1251");
@@ -236,9 +190,9 @@ public class TestFBEncodings extends FBTestBase {
             		+ "VALUES(?, ?, ?, ?)");
 
             stmt.setInt(1, UKRAINIAN_TEST_ID);
-            stmt.setString(2, UKRAINIAN_TEST_STRING_WIN1251);
-            stmt.setString(3, UKRAINIAN_TEST_STRING_WIN1251);
-            stmt.setString(4, UKRAINIAN_TEST_STRING_WIN1251);
+            stmt.setString(2, UKRAINIAN_TEST_STRING);
+            stmt.setString(3, UKRAINIAN_TEST_STRING);
+            stmt.setString(4, UKRAINIAN_TEST_STRING);
 
             int updated = stmt.executeUpdate();
             stmt.close();
@@ -323,13 +277,11 @@ public class TestFBEncodings extends FBTestBase {
         (byte)0x00, (byte)0x99, (byte)0x9A, (byte)0x9B, 
         (byte)0x9C, (byte)0x9D, (byte)0x9C, (byte)0x9F
     };
+    
     public void testCyrl() throws Exception {
-        String CYRL_TEST_STRING =
-        		new String(CYRL_TEST_BYTES, "Cp1251");
-        String CYRL_TEST_STRING_UPPER =
-        		new String(CYRL_TEST_BYTES_UPPER, "Cp1251");
-        String CYRL_TEST_STRING_UPPER_WRONG =
-        		new String(CYRL_TEST_BYTES_UPPER_WRONG, "Cp1251");
+        final String cyrlTestString = new String(CYRL_TEST_BYTES, "Cp1251");
+        final String cyrlTestStringUpper = new String(CYRL_TEST_BYTES_UPPER, "Cp1251");
+        final String cyrlTestStringUpperWrong = new String(CYRL_TEST_BYTES_UPPER_WRONG, "Cp1251");
 /*
         for (int i=0; i< CYRL_TEST_BYTES.length ; i++){
             System.out.println("inic "+Integer.toHexString((int) CYRL_TEST_BYTES[i]&0xFF)+" "+((int) CYRL_TEST_BYTES[i]&0xFF));
@@ -348,9 +300,9 @@ public class TestFBEncodings extends FBTestBase {
             		+ "VALUES(?, ?, ?, ?)");
 
             stmt.setInt(1, 1);
-            stmt.setString(2, CYRL_TEST_STRING);
-            stmt.setString(3, CYRL_TEST_STRING);
-            stmt.setString(4, CYRL_TEST_STRING);
+            stmt.setString(2, cyrlTestString);
+            stmt.setString(3, cyrlTestString);
+            stmt.setString(4, cyrlTestString);
 
             int updated = stmt.executeUpdate();
             stmt.close();
@@ -416,17 +368,17 @@ public class TestFBEncodings extends FBTestBase {
 			if (metaData.getDatabaseMajorVersion() < 2)
                 assertEquals("Upper(unicode) must be == Unicode_field ", unicodeValue, unicodeValueUpper);
 
-            assertEquals("Upper(win1251_field) must == upper test string ", CYRL_TEST_STRING_UPPER, win1251ValueUpper);
+            assertEquals("Upper(win1251_field) must == upper test string ", cyrlTestStringUpper, win1251ValueUpper);
             // The CYRL charset fails because the mapping is 1251 and the uppercase
             // and lowercase functions work as if the charset is CP866
-            assertEquals("Upper(cyrl_field) must be == wrong upper test string ", CYRL_TEST_STRING_UPPER_WRONG,
+            assertEquals("Upper(cyrl_field) must be == wrong upper test string ", cyrlTestStringUpperWrong,
                     cyrlValueUpper);
 
             // unicode does not uppercase (until FB 2.0)
 
             if (metaData.getDatabaseMajorVersion() < 2)
                 assertFalse("Upper(Unicode_field) must be != upper test string ",
-                        unicodeValueUpper.equals(CYRL_TEST_STRING_UPPER));
+                        unicodeValueUpper.equals(cyrlTestStringUpper));
 
             assertFalse("Should have exactly one row", rs.next());
 
@@ -511,26 +463,12 @@ public class TestFBEncodings extends FBTestBase {
     }
 
     // String in Hungarian ("\u0151r\u00FClt")
-    public static String HUNGARIAN_TEST_STRING = 
+    private static final String HUNGARIAN_TEST_STRING = 
     		"\u0151\u0072\u00fc\u006c\u0074";
-
-    public static byte[] HUNGARIAN_TEST_BYTES = new byte[] {
-        (byte)0xf5, (byte)0x72, (byte)0xfc, (byte)0x6c, (byte)0x74
-    };
-
-    public static String HUNGARIAN_TEST_STRING_WIN1250;
-    public static String HUNGARIAN_NATIVE_UNICODE;
 
     public static int HUNGARIAN_TEST_ID = 3;
 
     public void testHungarian() throws Exception {
-        HUNGARIAN_TEST_STRING_WIN1250 =
-        		new String(HUNGARIAN_TEST_BYTES, "Cp1250");
-
-        HUNGARIAN_NATIVE_UNICODE = new String(HUNGARIAN_TEST_BYTES);
-
-        assertEquals("Strings should be equal.", HUNGARIAN_TEST_STRING, HUNGARIAN_TEST_STRING_WIN1250);
-
         Properties props = new Properties();
         props.putAll(getDefaultPropertiesForConnection());
         props.put("lc_ctype", "UNICODE_FSS");
@@ -545,11 +483,11 @@ public class TestFBEncodings extends FBTestBase {
                     + "VALUES(?, ?, ?, ?, ?, ?)");
 
             stmt.setInt(1, HUNGARIAN_TEST_ID);
-            stmt.setString(2, HUNGARIAN_TEST_STRING_WIN1250);
+            stmt.setString(2, HUNGARIAN_TEST_STRING);
             stmt.setString(3, UKRAINIAN_TEST_STRING);
             stmt.setString(4, GERMAN_TEST_STRING_WIN1252);
             stmt.setString(5, HUNGARIAN_TEST_STRING);
-            stmt.setString(6, HUNGARIAN_TEST_STRING_WIN1250);
+            stmt.setString(6, HUNGARIAN_TEST_STRING);
 
             int updated = stmt.executeUpdate();
             stmt.close();
@@ -604,14 +542,14 @@ public class TestFBEncodings extends FBTestBase {
         }
     }
 
-    public static byte[] UNIVERSAL_TEST_BYTES = new byte[] {
+    private static final byte[] UNIVERSAL_TEST_BYTES = new byte[] {
         (byte)0xE0, (byte)0xE1, (byte)0xE2, /* (byte)0xE3, CANT MAP IN ISO_8859_3 */
         (byte)0xE4, (byte)0xE5, (byte)0xE6, /* (byte)0xE7, CANT MAP IN DOS857 */
         (byte)0xE8, (byte)0xE9, (byte)0xEA, (byte)0xEB, 
         (byte)0xEC, (byte)0xED, (byte)0xEC, (byte)0xEF
     };
 
-    public static int UNIVERSAL_TEST_ID = 1;
+    public static final int UNIVERSAL_TEST_ID = 1;
 
     public void testUniversal() throws Exception {
 
@@ -623,17 +561,17 @@ public class TestFBEncodings extends FBTestBase {
 
         try {
             StringBuilder insert = new StringBuilder("INSERT INTO test_encodings_universal VALUES(? ");
-            for (int col = 0; col < encJava.size() * 2; col++) {
+            for (int col = 0; col < ENCODINGS_JAVA.size() * 2; col++) {
                 insert.append(", ?");
             }
             insert.append(')');
             PreparedStatement stmt = connection.prepareStatement(insert.toString());
 
             stmt.setInt(1, UNIVERSAL_TEST_ID);
-            for (int col = 0; col < encJava.size(); col++) {
-                String value = new String(UNIVERSAL_TEST_BYTES, encJava.get(col));
+            for (int col = 0; col < ENCODINGS_JAVA.size(); col++) {
+                String value = new String(UNIVERSAL_TEST_BYTES, ENCODINGS_JAVA.get(col));
                 stmt.setString(col + 2, value);
-                stmt.setString(col + encJava.size() + 2, value);
+                stmt.setString(col + ENCODINGS_JAVA.size() + 2, value);
             }
 
             int updated = stmt.executeUpdate();
@@ -649,14 +587,14 @@ public class TestFBEncodings extends FBTestBase {
             ResultSet rs = stmt.executeQuery();
             assertTrue("Should have at least one row", rs.next());
 
-            for (int col = 0; col < encJava.size(); col++) {
+            for (int col = 0; col < ENCODINGS_JAVA.size(); col++) {
                 String charsetValue = rs.getString(col + 2);
-                String unicodeValue = rs.getString(col + encJava.size() + 2);
+                String unicodeValue = rs.getString(col + ENCODINGS_JAVA.size() + 2);
 
-                assertEquals("charsetValue " + encJava.get(col) + " should be the same that unicode",
+                assertEquals("charsetValue " + ENCODINGS_JAVA.get(col) + " should be the same that unicode",
                         unicodeValue, charsetValue);
-                assertEquals("charsetValue " + encJava.get(col) + " should be == string", new String(
-                        UNIVERSAL_TEST_BYTES, encJava.get(col)), charsetValue);
+                assertEquals("charsetValue " + ENCODINGS_JAVA.get(col) + " should be == string", new String(
+                        UNIVERSAL_TEST_BYTES, ENCODINGS_JAVA.get(col)), charsetValue);
             }
             assertFalse("Should have exactly one row", rs.next());
 
