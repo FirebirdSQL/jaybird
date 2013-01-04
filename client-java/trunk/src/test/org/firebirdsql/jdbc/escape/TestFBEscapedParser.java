@@ -269,13 +269,38 @@ public class TestFBEscapedParser {
     
     /**
      * Tests if the parser preserves whitespace inside parameters (implementation coalesces multiple whitespace characters into one space)
-     * @throws Exception
      */
     @Test
     public void testWhitespaceInParameter() throws Exception {
         final FBEscapedParser parser = new FBEscapedParser(EscapeParserMode.USE_BUILT_IN);
         final String input = "{fn LTRIM(CAST( ?\tAS  VARCHAR(10)))}";
         final String expectedOutput = "TRIM(LEADING FROM CAST( ? AS VARCHAR(10)))";
+        
+        String parseResult = parser.parse(input);
+        assertEquals("Unexpected output for nested escapes", expectedOutput, parseResult);
+    }
+    
+    /**
+     * Tests if the parser does not process JDBC escapes inside a line comment
+     */
+    @Test
+    public void testEscapeInLineComment() throws Exception {
+        final FBEscapedParser parser = new FBEscapedParser(EscapeParserMode.USE_BUILT_IN);
+        final String input = "{fn LTRIM(CAST( ?\tAS  VARCHAR(10)))} --{fn LTRIM(CAST( ?\tAS  VARCHAR(10)))}\n{fn LTRIM(CAST( ?\tAS  VARCHAR(10)))}";
+        final String expectedOutput = "TRIM(LEADING FROM CAST( ? AS VARCHAR(10))) --{fn LTRIM(CAST( ?\tAS  VARCHAR(10)))}\nTRIM(LEADING FROM CAST( ? AS VARCHAR(10)))";
+        
+        String parseResult = parser.parse(input);
+        assertEquals("Unexpected output for nested escapes", expectedOutput, parseResult);
+    }
+    
+    /**
+     * Tests if the parser does not process JDBC escapes inside a block comment
+     */
+    @Test
+    public void testEscapeInBlockComment() throws Exception {
+        final FBEscapedParser parser = new FBEscapedParser(EscapeParserMode.USE_BUILT_IN);
+        final String input = "{fn LTRIM(CAST( ?\tAS  VARCHAR(10)))} /*{fn LTRIM(CAST( ?\tAS  VARCHAR(10)))}\n*/{fn LTRIM(CAST( ?\tAS  VARCHAR(10)))}";
+        final String expectedOutput = "TRIM(LEADING FROM CAST( ? AS VARCHAR(10))) /*{fn LTRIM(CAST( ?\tAS  VARCHAR(10)))}\n*/TRIM(LEADING FROM CAST( ? AS VARCHAR(10)))";
         
         String parseResult = parser.parse(input);
         assertEquals("Unexpected output for nested escapes", expectedOutput, parseResult);
