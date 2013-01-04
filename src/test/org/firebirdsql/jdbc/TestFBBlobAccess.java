@@ -19,15 +19,14 @@
 package org.firebirdsql.jdbc;
 
 import org.firebirdsql.common.FBTestBase;
+import org.firebirdsql.common.JdbcResourceHelper;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Arrays;
 import java.util.Random;
-
 
 /**
  * Describe class <code>TestFBBlobAccess</code> here.
@@ -46,12 +45,6 @@ public class TestFBBlobAccess extends FBTestBase {
         "CREATE VIEW test_blob_view (id, bin_data) AS " +
         "  SELECT id, bin_data FROM test_blob"
         ;
-    
-    public static final String DROP_TABLE = 
-        "DROP TABLE test_blob";
-        
-    public static final String DROP_VIEW =
-        "DROP VIEW test_blob_view";
 
     public static int TEST_ROW_COUNT = 10;        
         
@@ -71,19 +64,6 @@ public class TestFBBlobAccess extends FBTestBase {
         connection = getConnectionViaDriverManager();
         
         Statement stmt = connection.createStatement();
-        
-        try {
-            stmt.execute(DROP_VIEW);
-        } catch(SQLException ex) {
-            // ignore
-        }
-        
-        try {
-            stmt.executeUpdate(DROP_TABLE);
-        }
-        catch (Exception e) {
-            // e.printStackTrace();
-        }
 
         stmt.executeUpdate(CREATE_TABLE);
         stmt.execute(CREATE_VIEW);
@@ -100,13 +80,9 @@ public class TestFBBlobAccess extends FBTestBase {
         }
         
     }
-
+    
     protected void tearDown() throws Exception {
-        Statement stmt = connection.createStatement();
-        stmt.execute(DROP_VIEW);
-        stmt.executeUpdate(DROP_TABLE);
-        stmt.close();
-        connection.close();
+        JdbcResourceHelper.closeQuietly(connection);
         super.tearDown();
     }
     

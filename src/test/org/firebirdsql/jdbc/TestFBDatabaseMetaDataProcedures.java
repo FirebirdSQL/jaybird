@@ -74,15 +74,6 @@ public class TestFBDatabaseMetaDataProcedures extends
     public static final String ADD_COMMENT_ON_NORMAL_PROC_WITH_RETURN = 
             "COMMENT ON PROCEDURE normal_proc_with_return IS 'Some comment'";
 
-    public static final String DROP_NORMAL_PROC_NO_RETURN = 
-            "DROP PROCEDURE normal_proc_no_return";
-
-    public static final String DROP_NORMAL_PROC_WITH_RETURN = 
-            "DROP PROCEDURE normal_proc_with_return";
-
-    public static final String DROP_QUOTED_PROC_NO_RETURN = 
-            "DROP PROCEDURE \"quoted_proc_no_return\"";
-
     @Override
     protected List<String> getCreateStatements() {
         List<String> createDDL = new LinkedList<String>();
@@ -90,15 +81,6 @@ public class TestFBDatabaseMetaDataProcedures extends
             createDDL.addAll(testData.getCreateDDL());
         }
         return createDDL;
-    }
-
-    @Override
-    protected List<String> getDropStatements() {
-        List<String> dropDDL = new LinkedList<String>();
-        for (ProcedureTestData testData : ProcedureTestData.values()) {
-            dropDDL.addAll(testData.getDropDDL());
-        }
-        return dropDDL;
     }
 
     /**
@@ -249,8 +231,7 @@ public class TestFBDatabaseMetaDataProcedures extends
 
     private enum ProcedureTestData {
         NORMAL_PROC_NO_RETURN("normal_proc_no_return", 
-                Arrays.asList(CREATE_NORMAL_PROC_NO_RETURN),
-                Arrays.asList(DROP_NORMAL_PROC_NO_RETURN)) {
+                Arrays.asList(CREATE_NORMAL_PROC_NO_RETURN)) {
 
             @Override
             Map<ProcedureMetaData, Object> getSpecificValidationRules(Map<ProcedureMetaData, Object> rules) {
@@ -261,8 +242,7 @@ public class TestFBDatabaseMetaDataProcedures extends
             }
         },
         NORMAL_PROC_WITH_RETURN("normal_proc_with_return", 
-                Arrays.asList(CREATE_NORMAL_PROC_WITH_RETURN, ADD_COMMENT_ON_NORMAL_PROC_WITH_RETURN), 
-                Arrays.asList(DROP_NORMAL_PROC_WITH_RETURN)) {
+                Arrays.asList(CREATE_NORMAL_PROC_WITH_RETURN, ADD_COMMENT_ON_NORMAL_PROC_WITH_RETURN)) {
 
             @Override
             Map<ProcedureMetaData, Object> getSpecificValidationRules(Map<ProcedureMetaData, Object> rules) {
@@ -275,8 +255,7 @@ public class TestFBDatabaseMetaDataProcedures extends
         
         },
         QUOTED_PROC_NO_RETURN("\"quoted_proc_no_return\"",
-                Arrays.asList(CREATE_QUOTED_PROC_NO_RETURN),
-                Arrays.asList(DROP_QUOTED_PROC_NO_RETURN)) {
+                Arrays.asList(CREATE_QUOTED_PROC_NO_RETURN)) {
 
             @Override
             Map<ProcedureMetaData, Object> getSpecificValidationRules(Map<ProcedureMetaData, Object> rules) {
@@ -290,12 +269,10 @@ public class TestFBDatabaseMetaDataProcedures extends
 
         private final String originalProcedureName;
         private final List<String> createDDL;
-        private final List<String> dropDDL;
 
-        private ProcedureTestData(String originalProcedureName, List<String> createDDL, List<String> dropDDL) {
+        private ProcedureTestData(String originalProcedureName, List<String> createDDL) {
             this.originalProcedureName = originalProcedureName;
             this.createDDL = createDDL;
-            this.dropDDL = dropDDL;
         }
 
         /**
@@ -311,13 +288,6 @@ public class TestFBDatabaseMetaDataProcedures extends
          */
         List<String> getCreateDDL() {
             return createDDL;
-        }
-
-        /**
-         * @return List of DDL script(s) for dropping the procedure
-         */
-        List<String> getDropDDL() {
-            return dropDDL;
         }
 
         /**

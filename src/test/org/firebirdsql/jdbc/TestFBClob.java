@@ -52,8 +52,6 @@ public class TestFBClob extends FBTestBase {
                TEXT_BLOB + " BLOB SUB_TYPE TEXT, " + 
                PLAIN_BLOB + " BLOB )";
 
-    public static final String DROP_TABLE = "DROP TABLE test_clob";
-
     public static final byte[] LATIN1_BYTES = new byte[] { (byte) 0xC8,
         (byte) 0xC9, (byte) 0xCA, (byte) 0xCB };
 
@@ -82,7 +80,6 @@ public class TestFBClob extends FBTestBase {
         super.setUp();
         Connection con = getConnectionViaDriverManager();
         try {
-            DdlHelper.executeDropTable(con, DROP_TABLE);
             DdlHelper.executeCreateTable(con, CREATE_TABLE);
         } finally {
             JdbcResourceHelper.closeQuietly(con);

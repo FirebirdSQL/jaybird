@@ -21,6 +21,7 @@ package org.firebirdsql.jdbc;
 import java.sql.*;
 
 import org.firebirdsql.common.FBJUnit4TestBase;
+import org.firebirdsql.common.JdbcResourceHelper;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -46,12 +47,6 @@ public class TestFBSavepoint extends FBJUnit4TestBase {
         
         Statement stmt = connection.createStatement();
         try {
-            stmt.execute("DROP TABLE test_svpt");
-        } catch(SQLException ex) {
-            // do nothing
-        }
-        
-        try {
             stmt.execute("CREATE TABLE test_svpt(id INTEGER)");
         } catch(SQLException ex) {
             // ignore, most likely table exists
@@ -62,18 +57,7 @@ public class TestFBSavepoint extends FBJUnit4TestBase {
 
     @After
     public void tearDown() throws Exception {
-        
-        Statement stmt = connection.createStatement();
-        
-        try {
-            stmt.execute("DROP TABLE test_svpt");
-        } catch(SQLException ex) {
-            ex.printStackTrace();
-        } finally {
-            stmt.close();
-        }
-        
-        connection.close();
+        JdbcResourceHelper.closeQuietly(connection);
     }
 
     /**

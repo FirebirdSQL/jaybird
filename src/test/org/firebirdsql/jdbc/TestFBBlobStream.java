@@ -19,6 +19,7 @@
 package org.firebirdsql.jdbc;
 
 import org.firebirdsql.common.FBTestBase;
+import org.firebirdsql.common.JdbcResourceHelper;
 
 import java.io.ByteArrayInputStream;
 import java.io.OutputStream;
@@ -50,19 +51,11 @@ public class TestFBBlobStream extends FBTestBase {
         + "END"
         ;
 
-    public static final String DROP_TABLE =
-        "DROP TABLE test_blob";
-
-    public static final String DROP_PROCEDURE = 
-        "DROP PROCEDURE test_procedure";
-
     public static int TEST_ROW_COUNT = 100;
 
     private Connection connection;
 
     private byte[][] testData;
-
-
 
     public TestFBBlobStream(String testName) {
         super(testName);
@@ -79,17 +72,6 @@ public class TestFBBlobStream extends FBTestBase {
         connection = DriverManager.getConnection(getUrl(), props);
 
         java.sql.Statement stmt = connection.createStatement();
-        try {
-            stmt.execute(DROP_PROCEDURE);
-        } catch(SQLException ex) {
-            // empty
-        }
-
-        try {
-            stmt.executeUpdate(DROP_TABLE);
-        }
-        catch (Exception e) {}
-        
 
         stmt.executeUpdate(CREATE_TABLE);
         stmt.execute(CREATE_PROCEDURE);
@@ -108,16 +90,7 @@ public class TestFBBlobStream extends FBTestBase {
     }
 
     protected void tearDown() throws Exception {
-        
-        if (!connection.getAutoCommit())
-            connection.setAutoCommit(true);
-        
-        java.sql.Statement stmt = connection.createStatement();
-        stmt.execute(DROP_PROCEDURE);
-        stmt.executeUpdate(DROP_TABLE);
-        stmt.close();
-        
-        connection.close();
+        JdbcResourceHelper.closeQuietly(connection);
         super.tearDown();
     }
     

@@ -16,7 +16,6 @@ public class TestFBStatement extends FBTestBase {
 
     private static final int DATA_ITEMS = 5;
     private static final String CREATE_TABLE = "CREATE TABLE test ( col1 INTEGER )";
-    private static final String DROP_TABLE = "DROP TABLE test";
     private static final String INSERT_DATA = "INSERT INTO test(col1) VALUES(?)";
     private static final String SELECT_DATA = "SELECT col1 FROM test ORDER BY col1";
 
@@ -31,8 +30,6 @@ public class TestFBStatement extends FBTestBase {
         con = this.getConnectionViaDriverManager();
 
         try {
-            executeDropTable(con, DROP_TABLE);
-            
             executeCreateTable(con, CREATE_TABLE);
             prepareTestData();
         } finally {
@@ -42,12 +39,8 @@ public class TestFBStatement extends FBTestBase {
     }
 
     protected void tearDown() throws Exception {
-        try {
-            executeDropTable(con, DROP_TABLE);
-        } finally {
-            closeQuietly(con);
-            super.tearDown();
-        }
+        closeQuietly(con);
+        super.tearDown();
     }
 
     /**

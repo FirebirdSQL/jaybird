@@ -54,13 +54,9 @@ public class TestFBParameterMetaData extends FBTestBase {
         "long_field, int_field, short_field) " + 
         "values (?,?,?,?,?,?)";
     
-    public static String DROP_TABLE = 
-        "DROP TABLE test_p_metadata";
-    
     public TestFBParameterMetaData(String testName) {
         super(testName);
     }
-    
     
     protected void setUp() throws Exception {
         super.setUp();
@@ -74,19 +70,11 @@ public class TestFBParameterMetaData extends FBTestBase {
         Connection connection = DriverManager.getConnection(getUrl(), props);
         
         Statement stmt = connection.createStatement();
-        try {
-            stmt.executeUpdate(DROP_TABLE);
-        }
-        catch (Exception e) {}
 
         stmt.executeUpdate(CREATE_TABLE);
         stmt.close();        
         
         connection.close();
-    }
-
-    protected void tearDown() throws Exception {
-        super.tearDown();
     }
     
     public void testParameterMetaData() throws Exception {

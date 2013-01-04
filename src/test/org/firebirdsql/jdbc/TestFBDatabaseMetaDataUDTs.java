@@ -41,11 +41,6 @@ public class TestFBDatabaseMetaDataUDTs extends FBMetaDataTestBase<TestFBDatabas
     }
 
     @Override
-    protected List<String> getDropStatements() {
-        return Collections.emptyList();
-    }
-
-    @Override
     protected List<String> getCreateStatements() {
         return Collections.emptyList();
     }

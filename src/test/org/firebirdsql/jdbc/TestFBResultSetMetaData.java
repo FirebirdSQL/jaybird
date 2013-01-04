@@ -61,9 +61,6 @@ public class TestFBResultSetMetaData extends FBJUnit4TestBase {
     
     public static final String TEST_QUERY2 = 
         "SELECT * from RDB$DATABASE";
-        
-    public static String DROP_TABLE = 
-        "DROP TABLE test_rs_metadata";
     
     @Before
     public void setUp() throws Exception {
@@ -75,7 +72,6 @@ public class TestFBResultSetMetaData extends FBJUnit4TestBase {
         
         Connection connection = DriverManager.getConnection(getUrl(), props);
         
-        DdlHelper.executeDropTable(connection, DROP_TABLE);
         DdlHelper.executeCreateTable(connection, CREATE_TABLE);
         
         JdbcResourceHelper.closeQuietly(connection);
@@ -299,6 +295,7 @@ public class TestFBResultSetMetaData extends FBJUnit4TestBase {
             } catch (SQLException ex) {
                 // expected
             }
+            rowSet.close();
             stmt.close();
         } finally {
             JdbcResourceHelper.closeQuietly(con);

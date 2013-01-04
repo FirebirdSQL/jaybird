@@ -35,8 +35,7 @@ import java.util.Random;
  * @author Stephan Perktold
  * @version 1.0
  */
-public class TestReconnect extends FBTestBase
-{
+public class TestReconnect extends FBTestBase {
 
     private static final int TABLE_COUNT	= 10;
 

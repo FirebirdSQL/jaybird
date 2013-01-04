@@ -41,8 +41,6 @@ public class TestFBPreparedStatement extends FBTestBase {
 
     public static final String CREATE_GENERATOR = "CREATE GENERATOR test_generator";
 
-    public static final String DROP_GENERATOR = "DROP GENERATOR test_generator";
-
     public static final String CREATE_TEST_BLOB_TABLE = 
             "CREATE TABLE test_blob ("
             + "  ID INTEGER, "
@@ -74,18 +72,11 @@ public class TestFBPreparedStatement extends FBTestBase {
 
     public static final String INIT_T1 = "INSERT INTO t1 VALUES ('XX', 'no more bugs')";
 
-    public static final String DROP_TEST_BLOB_TABLE = "DROP TABLE test_blob";
-
-    public static final String DROP_TEST_CHARS_TABLE = "DROP TABLE TESTTAB";
-
-    public static final String DROP_UNRECOGNIZED_TR_TABLE = "DROP TABLE t1";
-
     public static final String TEST_STRING = "This is simple test string.";
     public static final String ANOTHER_TEST_STRING = "Another test string.";
 
     private static final int DATA_ITEMS = 5;
     private static final String CREATE_TABLE = "CREATE TABLE test ( col1 INTEGER )";
-    private static final String DROP_TABLE = "DROP TABLE test";
     private static final String INSERT_DATA = "INSERT INTO test(col1) VALUES(?)";
     private static final String SELECT_DATA = "SELECT col1 FROM test ORDER BY col1";
 
@@ -100,12 +91,6 @@ public class TestFBPreparedStatement extends FBTestBase {
         con = this.getConnectionViaDriverManager();
         Statement stmt = con.createStatement();
         try {
-            executeDropTable(con, DROP_TEST_BLOB_TABLE);
-            executeDropTable(con, DROP_UNRECOGNIZED_TR_TABLE);
-            executeDropTable(con, DROP_TEST_CHARS_TABLE);
-            executeDDL(con, DROP_GENERATOR, new int[] { 335544351 });
-            executeDropTable(con, DROP_TABLE);
-
             executeCreateTable(con, CREATE_TEST_BLOB_TABLE);
             executeCreateTable(con, CREATE_UNRECOGNIZED_TR_TABLE);
             executeDDL(con, ADD_CONSTRAINT_T1_C1, null);
@@ -120,15 +105,8 @@ public class TestFBPreparedStatement extends FBTestBase {
     }
 
     protected void tearDown() throws Exception {
-        try {
-            executeDropTable(con, DROP_TEST_BLOB_TABLE);
-            executeDropTable(con, DROP_TEST_CHARS_TABLE);
-            executeDropTable(con, DROP_UNRECOGNIZED_TR_TABLE);
-            executeDropTable(con, DROP_TABLE);
-        } finally {
-            closeQuietly(con);
-            super.tearDown();
-        }
+        closeQuietly(con);
+        super.tearDown();
     }
 
     public void testModifyBlob() throws Exception {

@@ -20,6 +20,7 @@
 package org.firebirdsql.jdbc;
 
 import org.firebirdsql.common.FBTestBase;
+import org.firebirdsql.common.JdbcResourceHelper;
 
 import java.math.BigDecimal;
 import java.sql.Connection;
@@ -43,9 +44,6 @@ public class TestFBDecimalConversions extends FBTestBase {
         "  col_double_precision DOUBLE PRECISION, " +
         "  col_float FLOAT " +
         ")";
-
-    public static final String DROP_TABLE =
-        "DROP TABLE decimal_test";
 
     public static final String INSERT_RECORD_1 =
         "INSERT INTO decimal_test VALUES (1, 10.0/3.0, 10.0/3.0, 10.0/3.0, 10.0/3.0, 10.0/3.0)";
@@ -75,12 +73,6 @@ public class TestFBDecimalConversions extends FBTestBase {
         connection = getConnectionViaDriverManager();
 
         Statement stmt = connection.createStatement();
-        try {
-            stmt.executeUpdate(DROP_TABLE);
-        }
-        catch (Exception e) {
-            //e.printStackTrace();
-        }
 
         stmt.executeUpdate(CREATE_TABLE);
         stmt.executeUpdate(INSERT_RECORD_1);
@@ -91,14 +83,7 @@ public class TestFBDecimalConversions extends FBTestBase {
     }
 
     protected void tearDown() throws Exception {
-        /*
-        Statement stmt = connection.createStatement();
-        stmt.executeUpdate(DROP_TABLE);
-        stmt.close();
-        */
-
-        connection.close();
-
+        JdbcResourceHelper.closeQuietly(connection);
         super.tearDown();
     }
 

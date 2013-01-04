@@ -75,26 +75,6 @@ public class TestFBDatabaseMetaDataTables extends FBMetaDataTestBase<TestFBDatab
             "FROM test_normal_table t1 " + 
             "INNER JOIN \"test_quoted_normal_table\" t2 ON t1.id = t2.id";
     
-    public static final String DROP_NORMAL_TABLE =
-            "DROP TABLE test_normal_table";
-    
-    public static final String DROP_QUOTED_NORMAL_TABLE =
-            "DROP TABLE \"test_quoted_normal_table\"";
-    
-    public static final String DROP_NORMAL_VIEW =
-            "DROP VIEW test_normal_view";
-    
-    public static final String DROP_QUOTED_NORMAL_VIEW =
-            "DROP view \"test_quoted_normal_view\"";
-    
-    protected List<String> getDropStatements() {
-        return Arrays.asList(
-                DROP_NORMAL_VIEW,
-                DROP_QUOTED_NORMAL_VIEW,
-                DROP_NORMAL_TABLE,
-                DROP_QUOTED_NORMAL_TABLE);
-    }
-    
     protected List<String> getCreateStatements() {
         return Arrays.asList(
                 CREATE_NORMAL_TABLE,
