@@ -305,4 +305,30 @@ public class TestFBEscapedParser {
         String parseResult = parser.parse(input);
         assertEquals("Unexpected output for nested escapes", expectedOutput, parseResult);
     }
+    
+    /**
+     * Tests if the parser correctly processes an escape that is directly after a '-' (potential start of line comment).
+     */
+    @Test
+    public void testLineCommentStartFollowedByEscape() throws Exception {
+        final FBEscapedParser parser = new FBEscapedParser(EscapeParserMode.USE_BUILT_IN);
+        final String input = "6-{fn EXP(2)}";
+        final String expectedOutput = "6-EXP(2)";
+        
+        String parseResult = parser.parse(input);
+        assertEquals("Unexpected output for nested escapes", expectedOutput, parseResult);
+    }
+    
+    /**
+     * Tests if the parser correctly processes an escape that is directly after a '/' (potential start of block comment).
+     */
+    @Test
+    public void testBlockCommentStartFollowedByEscape() throws Exception {
+        final FBEscapedParser parser = new FBEscapedParser(EscapeParserMode.USE_BUILT_IN);
+        final String input = "6/{fn EXP(2)}";
+        final String expectedOutput = "6/EXP(2)";
+        
+        String parseResult = parser.parse(input);
+        assertEquals("Unexpected output for nested escapes", expectedOutput, parseResult);
+    }
 }

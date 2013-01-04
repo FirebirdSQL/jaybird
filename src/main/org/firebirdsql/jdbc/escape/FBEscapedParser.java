@@ -404,6 +404,7 @@ public final class FBEscapedParser {
                 switch (inputChar) {
                 case '?': // start of {?= call ...}
                 case 'c': // start of {call ...}
+                case 'd': // start of {d ...}
                 case 't': // start of {t ...} or {ts ...}
                 case 'e': // start of {escape ...}
                 case 'f': // start of {fn ...}
@@ -421,16 +422,7 @@ public final class FBEscapedParser {
         ESCAPE_EXIT_STATE {
             @Override
             protected ParserState nextState(char inputChar) throws FBSQLParseException {
-                switch (inputChar) {
-                case '}':
-                    return ESCAPE_EXIT_STATE;
-                case '-':
-                    return START_LINE_COMMENT;
-                case '/':
-                    return START_BLOCK_COMMENT;
-                default:
-                    return NORMAL_STATE;
-                }
+                return (inputChar == '}') ? ESCAPE_EXIT_STATE : NORMAL_STATE.nextState(inputChar);
             }
         },
         /**
@@ -439,7 +431,7 @@ public final class FBEscapedParser {
         START_LINE_COMMENT {
             @Override
             protected ParserState nextState(char inputChar) throws FBSQLParseException {
-                return (inputChar == '-') ? LINE_COMMENT : NORMAL_STATE;
+                return (inputChar == '-') ? LINE_COMMENT : NORMAL_STATE.nextState(inputChar);
             }
         },
         /**
@@ -457,7 +449,7 @@ public final class FBEscapedParser {
         START_BLOCK_COMMENT {
             @Override
             protected ParserState nextState(char inputChar) throws FBSQLParseException {
-                return (inputChar == '*') ? BLOCK_COMMENT : NORMAL_STATE;
+                return (inputChar == '*') ? BLOCK_COMMENT : NORMAL_STATE.nextState(inputChar);
             }
         },
         /**
