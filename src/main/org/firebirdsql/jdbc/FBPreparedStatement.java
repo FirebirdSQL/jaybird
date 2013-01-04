@@ -18,7 +18,6 @@
  *
  * All rights reserved.
  */
-
 package org.firebirdsql.jdbc;
 
 import java.io.*;
@@ -46,21 +45,21 @@ public class FBPreparedStatement extends FBStatement implements
 
     static final String METHOD_NOT_SUPPORTED = "This method is only supported on Statement and not supported on PreparedStatement and CallableStatement";
 
-    private boolean metaDataQuery;
+    private final boolean metaDataQuery;
     
     /**
      * This flag is needed to guarantee the correct behavior in case when it 
      * was created without controlling Connection object (in some metadata
      * queries we have only GDSHelper instance)
      */
-    private boolean standaloneStatement;
+    private final boolean standaloneStatement;
     
     /**
      * This flag is needed to prevent throwing an exception for the case when
      * result set is returned for INSERT statement and the statement should
      * return the generated keys.
      */
-    private boolean generatedKeys;
+    private final boolean generatedKeys;
 
     // this array contains either true or false indicating if parameter
     // was initialized, executeQuery, executeUpdate and execute methods
@@ -73,9 +72,10 @@ public class FBPreparedStatement extends FBStatement implements
     // because in this case we must send out_xsqlda to the server.
     private boolean isExecuteProcedureStatement;
 
-    private boolean trimStrings;
+    // TODO: Value is never changed and only used in one place, just remove?
+    private boolean trimStrings = false;
     
-    private FBObjectListener.BlobListener blobListener;
+    private final FBObjectListener.BlobListener blobListener;
 
     /**
      * Create instance of this class for the specified result set type and 
@@ -101,6 +101,9 @@ public class FBPreparedStatement extends FBStatement implements
         
         super(c, rsType, rsConcurrency, rsHoldability, statementListener);
         this.blobListener = blobListener;
+        this.standaloneStatement = false;
+        this.metaDataQuery = false;
+        this.generatedKeys = false;
     }
 
     /**
@@ -147,7 +150,6 @@ public class FBPreparedStatement extends FBStatement implements
     }
     
     public void completeStatement() throws SQLException {
-        
         if (!metaDataQuery)
             closeResultSet(false);
             
