@@ -61,9 +61,6 @@ public class TestFBCallableStatement extends FBTestBase {
         + "END " 
         ;
 
-    public static final String DROP_PROCEDURE =
-        "DROP PROCEDURE factorial;";
-
     public static final String SELECT_PROCEDURE =
         "SELECT * FROM factorial(?, 2)";
     
@@ -88,8 +85,6 @@ public class TestFBCallableStatement extends FBTestBase {
 		  + "        SUSPEND; "
 		  + "END";
 
-    public static final String DROP_PROCEDURE_EMP_SELECT =
-        "DROP PROCEDURE get_emp_proj;";
     public static final String SELECT_PROCEDURE_EMP_SELECT =
         "SELECT * FROM get_emp_proj(?)";
 
@@ -104,9 +99,6 @@ public class TestFBCallableStatement extends FBTestBase {
         + "    INSERT INTO employee_project (emp_no, proj_id, last_name, proj_name) "
 		  + "    VALUES (:emp_no, :proj_id, :last_name, :proj_name); "
 		  + "END";
-
-    public static final String DROP_PROCEDURE_EMP_INSERT =
-        "DROP PROCEDURE set_emp_proj;";
 
     public static final String EXECUTE_PROCEDURE_EMP_INSERT =
         "{call set_emp_proj (?,?,?,?)}";
@@ -125,19 +117,12 @@ public class TestFBCallableStatement extends FBTestBase {
 		  + " proj_name VARCHAR(25) NOT NULL, "
 		  + " proj_desc BLOB SUB_TYPE 1, "
 		  + " product VARCHAR(25) )";
-
-	 public static final String DROP_EMPLOYEE_PROJECT = 
-	     "DROP TABLE employee_project;";
      
      public static final String CREATE_SIMPLE_OUT_PROC = ""
          + "CREATE PROCEDURE test_out (inParam VARCHAR(10)) RETURNS (outParam VARCHAR(10)) "
          + "AS BEGIN "
          + "    outParam = inParam; "
          + "END"
-         ;
-     
-     public static final String DROP_SIMPLE_OUT_PROC = ""
-         + "DROP PROCEDURE test_out"
          ;
      
      public static final String EXECUTE_SIMPLE_OUT_PROCEDURE = ""
@@ -157,10 +142,6 @@ public class TestFBCallableStatement extends FBTestBase {
          + "AS BEGIN "
          + "    exit; "
          + "END"
-         ;
-     
-     public static final String DROP_PROCEDURE_WITHOUT_PARAMS = ""
-         + "DROP PROCEDURE test_no_params"
          ;
      
      public static final String EXECUTE_PROCEDURE_WITHOUT_PARAMS = ""
@@ -196,25 +177,6 @@ public class TestFBCallableStatement extends FBTestBase {
         con = getConnectionViaDriverManager();
         Statement stmt = con.createStatement();
         try {
-            try {
-                stmt.executeUpdate(DROP_PROCEDURE);
-            } catch (Exception e) {}
-            try {
-                stmt.executeUpdate(DROP_PROCEDURE_EMP_SELECT);
-            } catch (Exception e) {}
-            try {
-                stmt.executeUpdate(DROP_PROCEDURE_EMP_INSERT);
-            } catch (Exception e) {}
-            try {
-                stmt.executeUpdate(DROP_EMPLOYEE_PROJECT);
-            } catch (Exception e) {}
-            try {
-                stmt.executeUpdate(DROP_SIMPLE_OUT_PROC);
-            } catch (Exception e) {}
-            try {
-                stmt.executeUpdate(DROP_PROCEDURE_WITHOUT_PARAMS);
-            } catch (Exception e) {}
-
             stmt.executeUpdate(CREATE_PROCEDURE);
             stmt.executeUpdate(CREATE_EMPLOYEE_PROJECT);
             stmt.executeUpdate(CREATE_PROCEDURE_EMP_SELECT);
@@ -228,19 +190,8 @@ public class TestFBCallableStatement extends FBTestBase {
     }
     
     protected void tearDown() throws Exception {
-        try {
-            Statement stmt = con.createStatement();
-            stmt.executeUpdate(DROP_PROCEDURE);
-            stmt.executeUpdate(DROP_PROCEDURE_EMP_SELECT);
-            stmt.executeUpdate(DROP_PROCEDURE_EMP_INSERT);
-            stmt.executeUpdate(DROP_EMPLOYEE_PROJECT);
-            stmt.executeUpdate(DROP_SIMPLE_OUT_PROC);
-            stmt.executeUpdate(DROP_PROCEDURE_WITHOUT_PARAMS);
-            closeQuietly(stmt);
-        } finally {
-            closeQuietly(con);
-            super.tearDown();
-        }
+        closeQuietly(con);
+        super.tearDown();
     }
 
     public void testRun() throws Exception {

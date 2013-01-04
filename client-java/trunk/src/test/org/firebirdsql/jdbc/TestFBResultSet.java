@@ -19,6 +19,7 @@
 package org.firebirdsql.jdbc;
 
 import org.firebirdsql.common.FBTestBase;
+import org.firebirdsql.common.JdbcResourceHelper;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -65,14 +66,6 @@ public class TestFBResultSet extends FBTestBase {
         + ")"
         ;
 
-    public static final String DROP_TABLE_STATEMENT = ""
-        + "DROP TABLE test_table"
-        ;
-
-    public static final String DROP_TABLE_STATEMENT2 = ""
-        + "DROP TABLE test_table2"
-        ;
-
     public static final String CREATE_VIEW_STATEMENT = ""
         + "CREATE VIEW test_empty_string_view(marker, id, empty_char) "
         + "  AS  "
@@ -83,20 +76,12 @@ public class TestFBResultSet extends FBTestBase {
         + "  FROM "
         + "    test_table"
         ;
-        
-    public static final String DROP_VIEW_STATEMENT = ""
-        + "DROP VIEW test_empty_string_view"
-        ;
 
     public static final String CREATE_SUBSTR_FUNCTION = ""
         + "DECLARE EXTERNAL FUNCTION substr " 
         + "  CSTRING(80), SMALLINT, SMALLINT "
         + "RETURNS CSTRING(80) FREE_IT " 
         + "ENTRY_POINT 'IB_UDF_substr' MODULE_NAME 'ib_udf'"
-        ;
-    
-    public static final String DROP_SUBSTR_FUNCTION = ""
-        + "DROP EXTERNAL FUNCTION substr"
         ;
     
     public static final String SELECT_FROM_VIEW_STATEMENT = ""
@@ -133,30 +118,6 @@ public class TestFBResultSet extends FBTestBase {
         Statement stmt = connection.createStatement();
         
         try {
-            try {
-                stmt.execute(DROP_VIEW_STATEMENT);
-            } catch (SQLException ex) {
-                // do nothing here
-            }
-            
-            try {
-                stmt.execute(DROP_TABLE_STATEMENT);
-            } catch (SQLException ex) {
-                // do nothing here
-            }
-
-            try {
-                stmt.execute(DROP_TABLE_STATEMENT2);
-            } catch (SQLException ex) {
-                // do nothing here
-            }
-
-            try {
-                stmt.execute(DROP_SUBSTR_FUNCTION);
-            } catch(SQLException ex) {
-                // do nothing here
-            }
-            
             stmt.execute(CREATE_TABLE_STATEMENT);
             stmt.execute(CREATE_TABLE_STATEMENT2);
             stmt.execute(CREATE_VIEW_STATEMENT);
@@ -167,9 +128,7 @@ public class TestFBResultSet extends FBTestBase {
     }
 
     protected void tearDown() throws Exception {
-        
-        connection.close();
-        
+        JdbcResourceHelper.closeQuietly(connection);
         super.tearDown();
     }
     

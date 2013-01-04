@@ -22,8 +22,6 @@ public class TestBoundary extends FBTestBase {
             + "PRIMARY KEY (ID) \n" 
             + ") \n";
 
-    private static final String DROP_META_ONE = "DROP TABLE COMMUNICATIONS_FIT";
-
     public TestBoundary(String testName) {
         super(testName);
     }
@@ -33,20 +31,9 @@ public class TestBoundary extends FBTestBase {
         
         Connection connection = getConnectionViaDriverManager();
         try {
-            executeDropTable(connection, DROP_META_ONE);
             executeCreateTable(connection, CREATE_META_ONE);
         } finally {
             closeQuietly(connection);
-        }
-    }
-    
-    protected void tearDown() throws Exception {
-        Connection connection = getConnectionViaDriverManager();
-        try {
-            executeDropTable(connection, DROP_META_ONE);
-        } finally {
-            closeQuietly(connection);
-            super.tearDown();
         }
     }
 

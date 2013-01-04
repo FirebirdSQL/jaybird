@@ -41,10 +41,6 @@ public class TestFBConnection extends FBTestBase {
         + ")"
         ;
     
-    public static final String DROP_TABLE = ""
-        + "DROP TABLE test"
-        ;
-    
     public static final String INSERT_DATA = ""
         + "INSERT INTO test(col1) VALUES(?)"
         ;
@@ -60,14 +56,7 @@ public class TestFBConnection extends FBTestBase {
         try {
             Statement ddlStmt = connection.createStatement();
             try {
-                try {
-                    ddlStmt.execute(DROP_TABLE);
-                } catch(SQLException ex) {
-                    // ignore
-                }
-                
                 ddlStmt.execute(CREATE_TABLE);
-                
             } finally {
                 ddlStmt.close();
             }
@@ -77,23 +66,6 @@ public class TestFBConnection extends FBTestBase {
         }
         
 	}
-
-	protected void tearDown() throws Exception {
-        
-        Connection connection = getConnectionViaDriverManager();
-        try {
-            Statement ddlStmt = connection.createStatement();
-            try {
-                ddlStmt.execute(DROP_TABLE);
-            } finally {
-                ddlStmt.close();
-            }
-        } finally {
-            connection.close();
-        }
-        
-        super.tearDown();
-    }
     
     /**
      * Test if {@link FirebirdConnection#setTransactionParameters(int, int[])}
