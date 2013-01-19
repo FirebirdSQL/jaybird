@@ -61,8 +61,8 @@
 
     <property name="version.major" value="2"/>
     <property name="version.minor" value="2"/>
-    <property name="version.revision" value="1"/>
-    <property name="version.tag" value=""/>
+    <property name="version.revision" value="2"/>
+    <property name="version.tag" value="snapshot"/>
     <property name="version.name" value="JDK_${ant.java.version}"/>
 
     <property name="version.full" value="${version.major}.${version.minor}.${version.revision}${version.tag}${version.name}"/>
