@@ -366,11 +366,45 @@ public interface FirebirdConnectionProperties {
      */
     void setTransactionParameters(int isolation, TransactionParameterBuffer tpb);
     
+    /**
+     * Get the default ResultSet holdability.
+     * 
+     * @return <code>true</code> when ResultSets are holdable by default, <code>false</code> not holdable.
+     */
     boolean isDefaultResultSetHoldable();
     
+    /**
+     * Sets the default ResultSet holdability.
+     * 
+     * @param isHoldable <code>true</code> when ResultSets are holdable by default, <code>false</code> not holdable.
+     */
     void setDefaultResultSetHoldable(boolean isHoldable);
     
+    /**
+     * Get the current Socket blocking timeout (SoTimeout).
+     * 
+     * @return The socket blocking timeout in milliseconds (0 is 'infinite')
+     */
     int getSoTimeout();
     
+    /**
+     * Set the Socket blocking timeout (SoTimeout).
+     * 
+     * @param soTimeout Timeout in milliseconds (0 is 'infinite')
+     */
     void setSoTimeout(int soTimeout);
+    
+    /**
+     * Get the current connect timeout.
+     * 
+     * @return Connect timeout in seconds (0 is 'infinite', or better: OS specific timeout)
+     */
+    int getConnectTimeout();
+    
+    /**
+     * Set the connect timeout.
+     * 
+     * @param connectTimeout Connect timeout in seconds (0 is 'infinite', or better: OS specific timeout)
+     */
+    void setConnectTimeout(int connectTimeout);
 }

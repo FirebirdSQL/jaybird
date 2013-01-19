@@ -35,6 +35,10 @@ public abstract class BaseGDSImpl extends AbstractGDS {
 
     private static Logger log = LoggerFactory.getLogger(BaseGDSImpl.class,
             false);
+    
+    private static final String WARNING_CONNECT_TIMEOUT_NATIVE = 
+            "WARNING: The native driver does not apply connectTimeout for establishing the socket connection (only for protocol negotiation with the Firebird server), " + 
+            "it will not detect unreachable hosts within the specified timeout";
    
     protected static final byte[] DESCRIBE_DATABASE_INFO_BLOCK = new byte[] {
         ISCConstants.isc_info_db_sql_dialect,
@@ -118,6 +122,15 @@ public abstract class BaseGDSImpl extends AbstractGDS {
         final String filenameCharset;
         if (databaseParameterBuffer != null) {
             DatabaseParameterBuffer cleanDPB = ((DatabaseParameterBufferExtension)databaseParameterBuffer).removeExtensionParams();
+            if (cleanDPB.hasArgument(DatabaseParameterBuffer.CONNECT_TIMEOUT)) {
+                // For the native driver isc_dpb_connect_timeout is not a socket connect timeout
+                // It only applies to the steps for op_accept (negotiating protocol, etc)
+                if (log != null) {
+                    log.warn(WARNING_CONNECT_TIMEOUT_NATIVE);
+                }
+                db_handle.addWarning(new GDSWarning(WARNING_CONNECT_TIMEOUT_NATIVE));
+            }
+            
             dpbBytes = ((DatabaseParameterBufferImp) cleanDPB).getBytesForNativeCode();
             filenameCharset = databaseParameterBuffer.getArgumentAsString(DatabaseParameterBufferExtension.FILENAME_CHARSET);
         } else {

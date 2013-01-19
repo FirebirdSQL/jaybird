@@ -58,6 +58,7 @@ public class FBConnectionProperties implements FirebirdConnectionProperties, Ser
     public static final String BUFFERS_NUMBER_PROPERTY = "buffersNumber";
     public static final String DEFAULT_HOLDABLE_RS_PROPERTY = "defaultHoldable";
     public static final String SO_TIMEOUT = "soTimeout";
+    public static final String CONNECT_TIMEOUT = "connectTimeout";
 
     private HashMap properties = new HashMap();
     private String type;
@@ -352,6 +353,14 @@ public class FBConnectionProperties implements FirebirdConnectionProperties, Ser
     public int getSoTimeout() {
         return getIntProperty(SO_TIMEOUT);
     }
+    
+    public int getConnectTimeout() {
+    	return getIntProperty(CONNECT_TIMEOUT);
+    }
+    
+    public void setConnectTimeout(int connectTimeout) {
+    	setIntProperty(CONNECT_TIMEOUT, connectTimeout);
+    }
 
     public void setSoTimeout(int soTimeout) {
         setIntProperty(SO_TIMEOUT, soTimeout);
@@ -501,5 +510,4 @@ public class FBConnectionProperties implements FirebirdConnectionProperties, Ser
             throw new IllegalArgumentException("Unknown GDS type " + type);
         return GDSFactory.getGDSForType(gdsType);
     }
-
 }

@@ -199,12 +199,32 @@ public abstract class FBAbstractCommonDataSource extends RootCommonDataSource im
         }
     }
 
+    /**
+     * {@inheritDoc}
+     * <p>
+     * This property is an alias for the connectTimeout property.
+     * </p>
+     */
     public int getLoginTimeout() throws SQLException {
-        return connectionProperties.getSoTimeout() / 1000;
+    	return getConnectTimeout();
     }
 
+    /**
+     * {@inheritDoc}
+     * <p>
+     * This property is an alias for the connectTimeout property.
+     * </p>
+     */
     public void setLoginTimeout(int seconds) throws SQLException {
-        connectionProperties.setSoTimeout(seconds * 1000);
+    	setConnectTimeout(seconds);
+    }
+    
+    public int getConnectTimeout() {
+        return connectionProperties.getConnectTimeout();
+    }
+    
+    public void setConnectTimeout(int connectTimeout) {
+        connectionProperties.setConnectTimeout(connectTimeout);
     }
     
     @Deprecated
