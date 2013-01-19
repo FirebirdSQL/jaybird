@@ -1,4 +1,6 @@
 /*
+ * $Id$
+ * 
  * Firebird Open Source J2ee connector - jdbc driver
  *
  * Distributable under LGPL license.
@@ -20,8 +22,8 @@ package org.firebirdsql.jdbc.escape;
 
 import java.sql.SQLException;
 import java.text.BreakIterator;
+import java.util.ArrayDeque;
 import java.util.Deque;
-import java.util.LinkedList;
 import java.util.regex.Pattern;
 
 import org.firebirdsql.jdbc.FBProcedureCall;
@@ -103,14 +105,18 @@ public final class FBEscapedParser {
     public String parse(final String sql) throws SQLException {
         if (!checkForEscapes(sql)) return sql;
 
-        ParserState state = ParserState.NORMAL_STATE;
-        final Deque<StringBuilder> bufferStack = new LinkedList<StringBuilder>();
+        ParserState state = ParserState.INITIAL_STATE;
+        // Note initialising to 8 as that is the minimum size in Oracle Java, and we (usually) need less than the default of 16
+        final Deque<StringBuilder> bufferStack = new ArrayDeque<StringBuilder>(8);
         StringBuilder buffer = new StringBuilder(sql.length());
 
         for (int i = 0, n = sql.length(); i < n; i++) {
             char currentChar = sql.charAt(i);
             state = state.nextState(currentChar);
             switch (state) {
+            case INITIAL_STATE:
+                // Ignore leading whitespace
+                continue;
             case NORMAL_STATE:
             case LITERAL_STATE:
             case START_LINE_COMMENT:
@@ -365,6 +371,15 @@ public final class FBEscapedParser {
 
     private enum ParserState {
         /**
+         * Initial parser state (to ignore leading whitespace)
+         */
+        INITIAL_STATE {
+            @Override
+            protected ParserState nextState(char inputChar) throws FBSQLParseException {
+                return Character.isWhitespace(inputChar) ? INITIAL_STATE : NORMAL_STATE.nextState(inputChar);
+            }
+        },
+        /**
          * Normal SQL query text state
          */
         NORMAL_STATE {
@@ -422,7 +437,7 @@ public final class FBEscapedParser {
         ESCAPE_EXIT_STATE {
             @Override
             protected ParserState nextState(char inputChar) throws FBSQLParseException {
-                return (inputChar == '}') ? ESCAPE_EXIT_STATE : NORMAL_STATE.nextState(inputChar);
+                return NORMAL_STATE.nextState(inputChar);
             }
         },
         /**
