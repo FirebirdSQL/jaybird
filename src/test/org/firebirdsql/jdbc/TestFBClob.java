@@ -262,29 +262,6 @@ public class TestFBClob extends FBTestBase {
     public void testHoldableClobFromBlobSubtypeText() throws Exception {
         runHoldableClobTest(TEXT_BLOB, LATIN1_TEST_STRING, "ISO-8859-1", "ISO8859_1");
     }
-
-    public void testWriteClobUsingReader() throws Exception {
-        Connection con = getEncodedConnection("ISO8859_1");
-        try {
-            PreparedStatement insertStmt = con.prepareStatement("INSERT INTO test_clob (" + TEXT_BLOB + ") VALUES (?)");
-
-            insertStmt.setClob(1, new StringReader(LATIN1_TEST_STRING));
-            insertStmt.execute();
-            insertStmt.close();
-
-            PreparedStatement selStatement = con.prepareStatement("SELECT " + TEXT_BLOB + " FROM test_clob");
-            ResultSet rs = selStatement.executeQuery();
-
-            if (rs.next()) {
-                String result = rs.getString(1);
-                assertEquals("Unexpected value for clob roundtrip", LATIN1_TEST_STRING, result);
-            } else {
-                fail("Expected a row");
-            }
-        } finally {
-            closeQuietly(con);
-        }
-    }
     
     public void testWriteClobUsingNonFBClob() throws Exception {
         Connection con = getEncodedConnection("ISO8859_1");
@@ -338,7 +315,7 @@ public class TestFBClob extends FBTestBase {
     private void runMultibyteWriteTest(String testString, String fbEncoding, String colName, String javaEncoding)
             throws SQLException, IOException, UnsupportedEncodingException {
 
-        Connection con = getEncodedConnection(fbEncoding);
+        FBConnection con = getEncodedConnection(fbEncoding);
         try {
             insertStringViaClobCharacterStream(con, testString, colName);
 
@@ -362,7 +339,7 @@ public class TestFBClob extends FBTestBase {
         return selectString;
     }
 
-    private void insertStringViaClobCharacterStream(Connection con, String testString, String colName)
+    private void insertStringViaClobCharacterStream(FBConnection con, String testString, String colName)
             throws SQLException, IOException {
         PreparedStatement insertStmt = con.prepareStatement("INSERT INTO test_clob (" + colName + ") VALUES (?)");
         Clob insertClob = con.createClob();
