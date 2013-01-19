@@ -814,8 +814,15 @@ abstract public class AbstractFBConnectionPoolDataSource extends BasicAbstractCo
         checkNotStarted();
         connectionProperties.setSoTimeout(soTimeout);
     }
+    
+    public int getConnectTimeout() {
+    	return connectionProperties.getConnectTimeout();
+    }
 
-
+    public void setConnectTimeout(int connectTimeout) {
+    	checkNotStarted();
+    	connectionProperties.setConnectTimeout(connectTimeout);
+    }
 
     protected static final String REF_PROPERTIES = "properties";
     protected static final String REF_NON_STANDARD_PROPERTY = "nonStandard";

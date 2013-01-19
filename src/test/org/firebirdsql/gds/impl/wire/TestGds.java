@@ -876,21 +876,4 @@ public class TestGds extends SimpleFBTestBase {
      * String(answer)); gds.isc_close_blob(blob1); commit(t1); //
      * teardownTable2(db1); // dropDatabase(db1); }
      */
-
-    public void testIPv6Format() {
-        byte[] testIPv4 = { 127, 0, 0, 1};
-
-        // 2001:0db8:85a3:08d3:1319:8a2e:0370:7344
-        byte[] testIPv6 = { 32, 1, 13, (byte) 184, (byte) 133, (byte) 163, 8,
-                (byte) 211, 19, 25, (byte) 138, 46, 3, 112, 115, 68};
-        
-        byte[] ipv4 = JavaGDSImpl.parseRawAddress("127.0.0.1");
-        byte[] ipv6 = JavaGDSImpl.parseRawAddress("2001:0db8:85a3:08d3:1319:8a2e:0370:7344");
-        
-        assertTrue(Arrays.equals(ipv4, testIPv4));
-        assertTrue(Arrays.equals(ipv6, testIPv6));
-
-        byte[] dummy = JavaGDSImpl.parseRawAddress("a.b.c.d");
-        assertNull(dummy);
-    }
 }

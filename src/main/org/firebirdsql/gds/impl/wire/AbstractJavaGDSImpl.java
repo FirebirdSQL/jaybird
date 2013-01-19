@@ -29,6 +29,7 @@ package org.firebirdsql.gds.impl.wire;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.InetAddress;
+import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.net.SocketException;
 import java.net.UnknownHostException;
@@ -1948,17 +1949,29 @@ public abstract class AbstractJavaGDSImpl extends AbstractGDS implements GDS {
 
 		boolean debug = log != null && log.isDebugEnabled();
 
-		int socketBufferSize = -1;
-		int soTimeout = -1;
-
-        if (databaseParameterBuffer.hasArgument(DatabaseParameterBufferExtension.SOCKET_BUFFER_SIZE))
+		final int socketBufferSize;
+        if (databaseParameterBuffer.hasArgument(DatabaseParameterBufferExtension.SOCKET_BUFFER_SIZE)) {
             socketBufferSize = databaseParameterBuffer.getArgumentAsInt(DatabaseParameterBufferExtension.SOCKET_BUFFER_SIZE);
+        } else {
+            socketBufferSize = -1;
+        }
         
-        if (databaseParameterBuffer.hasArgument(DatabaseParameterBufferExtension.SO_TIMEOUT))
+        final int soTimeout;
+        if (databaseParameterBuffer.hasArgument(DatabaseParameterBufferExtension.SO_TIMEOUT)) {
             soTimeout = databaseParameterBuffer.getArgumentAsInt(DatabaseParameterBufferExtension.SO_TIMEOUT);
+        } else {
+            soTimeout = -1;
+        }
+        
+        final int connectTimeout;
+        if (databaseParameterBuffer.hasArgument(DatabaseParameterBuffer.CONNECT_TIMEOUT)) {
+            connectTimeout = databaseParameterBuffer.getArgumentAsInt(DatabaseParameterBuffer.CONNECT_TIMEOUT) * 1000;
+        } else {
+            connectTimeout = 0;
+        }
 
 		try {
-			openSocket(db, dbai, debug, socketBufferSize, soTimeout);
+			openSocket(db, dbai, debug, socketBufferSize, soTimeout, connectTimeout);
 			
 			XdrOutputStream out = db.out;
 			XdrInputStream in = db.in;
@@ -2061,30 +2074,11 @@ public abstract class AbstractJavaGDSImpl extends AbstractGDS implements GDS {
 		return nextOperation;
 	}
 
-	/**
-	 * Returns a newly created socket. This abstract method is necessary because
-	 * of a bug found in the JDK5.0 socket implementation. JDK1.4+ has an
-	 * acceptable work around.
-	 * 
-	 * See bug details:
-	 * http://bugs.sun.com/bugdatabase/view_bug.do?bug_id=5092063
-	 * 
-	 * @param server
-	 *            The server string.
-	 * @param port
-	 *            The port to connect to.
-	 * @return A valid socket.
-	 * @throws IOException
-	 * @throws UnknownHostException
-	 */
-	protected abstract Socket getSocket(String server, int port)
-			throws IOException, UnknownHostException;
-
 	protected void openSocket(isc_db_handle_impl db, DbAttachInfo dbai,
-			boolean debug, int socketBufferSize, int soTimeout) throws IOException,
+			boolean debug, int socketBufferSize, int soTimeout, int connectTimeout) throws IOException,
 			SocketException, GDSException {
 		try {
-			db.socket = getSocket(dbai.getServer(), dbai.getPort());
+			db.socket = new Socket();
 			db.socket.setTcpNoDelay(true);
 			
 			if (soTimeout != -1)
@@ -2094,6 +2088,7 @@ public abstract class AbstractJavaGDSImpl extends AbstractGDS implements GDS {
 				db.socket.setReceiveBufferSize(socketBufferSize);
 				db.socket.setSendBufferSize(socketBufferSize);
 			}
+			db.socket.connect(new InetSocketAddress(dbai.getServer(), dbai.getPort()), connectTimeout);
 
 			if (debug)
 				log.debug("Got socket");
@@ -2658,13 +2653,15 @@ public abstract class AbstractJavaGDSImpl extends AbstractGDS implements GDS {
 		synchronized (svc) {
 			try {
 				try {
-					svc.socket = getSocket(host, port);
+					svc.socket = new Socket();
 					svc.socket.setTcpNoDelay(true);
 
 					// if (socketBufferSize != -1) {
 					// svc.socket.setReceiveBufferSize(socketBufferSize);
 					// svc.socket.setSendBufferSize(socketBufferSize);
 					// }
+					svc.socket.connect(new InetSocketAddress(host, port));
+					
 					if (debug)
 						log.debug("Got socket");
 				} catch (UnknownHostException ex2) {

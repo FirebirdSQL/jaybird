@@ -670,11 +670,17 @@ public class FBWrappingDataSource extends RootCommonDataSource implements DataSo
         getPool().setSoTimeout(soTimeout);
     }
     
+    public int getConnectTimeout() {
+    	return getPool().getConnectTimeout();
+    }
+    
+    public void setConnectTimeout(int connectTimeout) {
+    	getPool().setConnectTimeout(connectTimeout);
+    }
 
     /*
      * JNDI-related code. 
      */
-
 
     private static final String REF_BLOCKING_TIMEOUT = "blockingTimeout";
 //    private static final String REF_DATABASE = "database";

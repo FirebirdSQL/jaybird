@@ -59,7 +59,6 @@ public final class FBSimpleDataSource extends RootCommonDataSource implements Da
     
     protected Reference jndiReference;
     protected String description;
-    protected int loginTimeout;
 
     /**
      * Create instance of this class.
@@ -376,7 +375,13 @@ public final class FBSimpleDataSource extends RootCommonDataSource implements Da
         mcf.setSoTimeout(soTimeout);
     }
     
-
+    public int getConnectTimeout() {
+        return mcf.getConnectTimeout();
+    }
+    
+    public void setConnectTimeout(int connectTimeout) {
+        mcf.setConnectTimeout(connectTimeout);
+    }
     
     /*
      * INTERFACES IMPLEMENTATION
@@ -429,24 +434,23 @@ public final class FBSimpleDataSource extends RootCommonDataSource implements Da
     }
 
     /**
-     * Get login timeout specified for this datasource.
-     * 
-     * @return login timeout of this datasource in seconds.
-     * 
-     * @throws SQLException if something went wrong.
+     * {@inheritDoc}
+     * <p>
+     * This property is an alias for the connectTimeout property.
+     * </p>
      */
     public int getLoginTimeout() throws SQLException {
-        return loginTimeout;
+        return getConnectTimeout();
     }
 
     /**
-     * Set login timeout for this datasource.
-     * 
-     * @param loginTimeout login timeout in seconds.
-     * @throws SQLException
+     * {@inheritDoc}
+     * <p>
+     * This property is an alias for the connectTimeout property.
+     * </p>
      */
     public void setLoginTimeout(int loginTimeout) throws SQLException {
-        this.loginTimeout = loginTimeout;
+        setConnectTimeout(loginTimeout);
     }
     
     /**
