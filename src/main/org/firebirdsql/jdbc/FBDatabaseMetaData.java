@@ -5962,7 +5962,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
 
     public <T> T unwrap(Class<T> iface) throws SQLException {
         if (!isWrapperFor(iface))
-            throw new FBSQLException("No compatible class found.");
+            throw new SQLException("Unable to unwrap to class " + iface.getName());
         
         return iface.cast(this);
     }    

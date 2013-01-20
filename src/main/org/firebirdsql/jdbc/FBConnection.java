@@ -1454,7 +1454,7 @@ public class FBConnection implements FirebirdConnection {
 
     public <T> T unwrap(Class<T> iface) throws SQLException {
         if (!isWrapperFor(iface))
-            throw new FBDriverNotCapableException();
+            throw new SQLException("Unable to unwrap to class " + iface.getName());
         
         return iface.cast(this);
     }

@@ -1,4 +1,6 @@
- /*
+/*
+ * $Id$
+ * 
  * Firebird Open Source J2ee connector - jdbc driver
  *
  * Distributable under LGPL license.
@@ -1357,7 +1359,7 @@ public class FBStatement implements FirebirdStatement, Synchronizable {
 
     public <T> T unwrap(Class<T> iface) throws SQLException {
         if (!isWrapperFor(iface))
-            throw new FBDriverNotCapableException();
+            throw new SQLException("Unable to unwrap to class " + iface.getName());
         
         return iface.cast(this);
     }
