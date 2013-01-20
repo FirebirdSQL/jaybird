@@ -50,7 +50,7 @@ public abstract class RootCommonDataSource implements CommonDataSource {
     }
 
     public Logger getParentLogger() throws SQLFeatureNotSupportedException {
-        throw new FBDriverNotCapableException();
+        throw new FBDriverNotCapableException("Method getParentLogger() not supported");
     }
 
 }
