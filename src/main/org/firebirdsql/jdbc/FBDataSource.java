@@ -163,7 +163,7 @@ public class FBDataSource extends RootCommonDataSource implements DataSource, Se
 
     public <T> T unwrap(Class<T> iface) throws SQLException {
         if (!isWrapperFor(iface))
-            throw new SQLException("Unable to unwrap to class " + iface.getName());
+            throw new FBDriverNotCapableException();
         
         return iface.cast(this);
     }

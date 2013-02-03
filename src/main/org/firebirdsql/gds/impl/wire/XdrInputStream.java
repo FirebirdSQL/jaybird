@@ -25,13 +25,14 @@
  * Boix i Oltra, S.L. All Rights Reserved.
  *
  */
+
 package org.firebirdsql.gds.impl.wire;
 
 import java.io.EOFException;
 import java.io.IOException;
 import java.io.InputStream;
 
-import org.firebirdsql.gds.IscStmtHandle;
+
 
 /**
  * <code>XdrInputStream</code> is an input stream for reading in data that
@@ -126,7 +127,7 @@ public class XdrInputStream {
      * @throws IOException if an error occurs while reading from the 
      *         underlying input stream
      */
-    public void readSQLData(int[] ioLength, IscStmtHandle stmt) throws IOException {
+    public void readSQLData(int[] ioLength, isc_stmt_handle_impl stmt) throws IOException {
         // This only works if not (port->port_flags & PORT_symmetric)		 
         int numCols = ioLength.length;
         byte[][] row = new byte[numCols][];

@@ -22,15 +22,14 @@ package org.firebirdsql.ds;
 
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 import javax.sql.PooledConnection;
 
 import org.firebirdsql.common.FBTestBase;
+import org.firebirdsql.common.SimpleFBTestBase;
 import org.firebirdsql.gds.impl.GDSType;
-
-import static org.firebirdsql.common.JdbcResourceHelper.*;
-import static org.firebirdsql.common.FBTestProperties.*;
 
 /**
  * Common testbase for tests using {@link FBConnectionPoolDataSource}
@@ -38,7 +37,7 @@ import static org.firebirdsql.common.FBTestProperties.*;
  */
 public abstract class FBConnectionPoolTestBase extends FBTestBase {
 
-    private List<PooledConnection> connections = new ArrayList<PooledConnection>();
+    private List connections = new ArrayList();
     protected FBConnectionPoolDataSource ds;
 
     public FBConnectionPoolTestBase(String name) {
@@ -49,7 +48,7 @@ public abstract class FBConnectionPoolTestBase extends FBTestBase {
         super.setUp();
     
         FBConnectionPoolDataSource newDs = new FBConnectionPoolDataSource();
-        newDs.setType(getProperty("test.gds_type", null));
+        newDs.setType(SimpleFBTestBase.getProperty("test.gds_type", null));
         if (getGdsType() == GDSType.getType("PURE_JAVA")
                 || getGdsType() == GDSType.getType("NATIVE")) {
             newDs.setServerName(DB_SERVER_URL);
@@ -63,7 +62,9 @@ public abstract class FBConnectionPoolTestBase extends FBTestBase {
     }
 
     public void tearDown() throws Exception {
-        for (PooledConnection pc : connections) {
+        Iterator iter = connections.iterator();
+        while (iter.hasNext()) {
+            PooledConnection pc = (PooledConnection) iter.next();
             closeQuietly(pc);
         }
         super.tearDown();

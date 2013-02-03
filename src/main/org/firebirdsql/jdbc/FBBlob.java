@@ -16,7 +16,9 @@
  *
  * All rights reserved.
  */
+
 package org.firebirdsql.jdbc;
+
 
 import java.io.*;
 import java.sql.*;
@@ -51,6 +53,7 @@ import org.firebirdsql.gds.impl.GDSHelper;
  * This class is new in the JDBC 2.0 API.
  * @since 1.2
  */
+
 public class FBBlob implements FirebirdBlob, Synchronizable {
     
     public static final boolean SEGMENTED = true;
@@ -68,7 +71,7 @@ public class FBBlob implements FirebirdBlob, Synchronizable {
     GDSHelper gdsHelper;
     private FBObjectListener.BlobListener blobListener;
 
-    Collection<FBBlobInputStream> inputStreams = Collections.synchronizedSet(new HashSet<FBBlobInputStream>());
+    Collection inputStreams = new HashSet();
     private FBBlobOutputStream blobOut = null;
 
     private FBBlob(GDSHelper c, boolean isNew, FBObjectListener.BlobListener blobListener) {
@@ -131,9 +134,10 @@ public class FBBlob implements FirebirdBlob, Synchronizable {
 
             IOException error = null;
             
-            for (FBBlobInputStream blobIS : inputStreams) {
+            Iterator i = inputStreams.iterator();
+            while (i.hasNext()) {
                 try {
-                    blobIS.close();
+                    ((FBBlobInputStream)i.next()).close();
                 } catch(IOException ex) {
                     error = ex;
                 }
@@ -419,6 +423,7 @@ public class FBBlob implements FirebirdBlob, Synchronizable {
         throw new FBDriverNotCapableException();
     }
 
+
   /**
    * Determines the byte position in the <code>BLOB</code> value
    * designated by this <code>Blob</code> object at which
@@ -437,6 +442,7 @@ public class FBBlob implements FirebirdBlob, Synchronizable {
     public long position(Blob pattern, long start) throws SQLException {
         throw new FBDriverNotCapableException();
     }
+
 
     //jdbc 3.0 additions
 
@@ -506,7 +512,7 @@ public class FBBlob implements FirebirdBlob, Synchronizable {
                     "You can't start before the beginning of the blob",
                     FBSQLException.SQL_STATE_INVALID_ARG_VALUE);
 
-        if (isNew && pos > 1) 
+        if ((isNew) && (pos > 1)) 
             throw new FBSQLException(
                     "Previous value was null, you must start at position 1",
                     FBSQLException.SQL_STATE_INVALID_ARG_VALUE);
@@ -567,7 +573,10 @@ public class FBBlob implements FirebirdBlob, Synchronizable {
         byte[] buffer = new byte[Math.min(bufferlength, length)];
         int chunk;
         try {
-            while (length > 0 && (chunk = inputStream.read(buffer, 0, Math.min(buffer.length, length))) != -1) {
+            while (length >0) {
+                chunk =inputStream.read(buffer, 0, ((length<bufferlength) ? length:bufferlength));
+                if (chunk == -1)
+                    break;
                 os.write(buffer, 0, chunk);
                 length -= chunk;
             }
@@ -614,6 +623,7 @@ public class FBBlob implements FirebirdBlob, Synchronizable {
     public void copyCharacterStream(Reader inputStream, int length, String encoding) throws SQLException {
         OutputStream os = setBinaryStream(1);
         try {
+            
             OutputStreamWriter osw;
             if (encoding != null)
                 osw = new OutputStreamWriter(os, encoding);
@@ -623,12 +633,16 @@ public class FBBlob implements FirebirdBlob, Synchronizable {
             char[] buffer = new char[Math.min(bufferlength, length)];
             int chunk;
             try {
-                while (length > 0 && (chunk = inputStream.read(buffer, 0, Math.min(buffer.length, length))) != -1) {
+                while (length >0) {
+                    chunk =inputStream.read(buffer, 0, ((length<bufferlength) ? length:bufferlength));
+                    if (chunk == -1)
+                        break;
                     osw.write(buffer, 0, chunk);                
                     length -= chunk;
                 }
                 osw.flush();
-                osw.close();
+                os.flush();
+                os.close();
             }
             catch (IOException ioe) {
                 throw new FBSQLException(ioe);
@@ -640,6 +654,8 @@ public class FBBlob implements FirebirdBlob, Synchronizable {
             );
         }
     }
+
+
 }
 
 

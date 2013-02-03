@@ -1,31 +1,10 @@
-/*
- * $Id$
- * 
- * Firebird Open Source J2ee connector - jdbc driver
- *
- * Distributable under LGPL license.
- * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * LGPL License for more details.
- *
- * This file was created by members of the firebird development team.
- * All individual contributions remain the Copyright (C) of those
- * individuals.  Contributors to this file are either listed here or
- * can be obtained from a CVS history command.
- *
- * All rights reserved.
- */
 package org.firebirdsql.gds.impl.oo;
 
 import org.firebirdsql.gds.*;
-import org.firebirdsql.gds.impl.BaseGDSFactoryPlugin;
-import org.firebirdsql.gds.impl.wire.JavaGDSImpl;
-import org.firebirdsql.jdbc.oo.OOConnection;
+import org.firebirdsql.gds.impl.GDSFactoryPlugin;
+import org.firebirdsql.gds.impl.wire.AbstractJavaGDSImpl;
 
-public class OOGDSFactoryPlugin extends BaseGDSFactoryPlugin {
+public class OOGDSFactoryPlugin implements GDSFactoryPlugin {
 
     private static final String TYPE_NAME = "OOREMOTE";
 
@@ -33,6 +12,8 @@ public class OOGDSFactoryPlugin extends BaseGDSFactoryPlugin {
 
     private static final String[] JDBC_PROTOCOLS = new String[] {
             "jdbc:firebird:oo:", "jdbc:firebirdsql:oo:"};
+
+    private static AbstractJavaGDSImpl gdsImpl;
 
     public String getPluginName() {
         return "GDS implementation for OpenOffice.";
@@ -46,13 +27,18 @@ public class OOGDSFactoryPlugin extends BaseGDSFactoryPlugin {
         return TYPE_ALIASES;
     }
 
-    @Override
-    public Class<?> getConnectionClass() {
-        return OOConnection.class;
+    public Class getConnectionClass() {
+        return ClassFactory.get("org.firebirdsql.jdbc.oo.OOConnection");
     }
 
     public String[] getSupportedProtocols() {
         return JDBC_PROTOCOLS;
+    }
+
+    public GDS getGDS() {
+        if (gdsImpl == null) gdsImpl = GDSObjectFactory.createJavaGDSImpl();
+
+        return gdsImpl;
     }
 
     public String getDatabasePath(String server, Integer port, String path)
@@ -64,24 +50,41 @@ public class OOGDSFactoryPlugin extends BaseGDSFactoryPlugin {
         if (path == null)
             throw new GDSException("Database name/path is required.");
 
-        StringBuilder sb = new StringBuilder();
+        StringBuffer sb = new StringBuffer();
 
         sb.append(server);
-        if (port != null) sb.append('/').append(port.intValue());
+        if (port != null) sb.append("/").append(port.intValue());
 
-        sb.append(':').append(path);
+        sb.append(":").append(path);
 
         return sb.toString();
     }
 
-    /**
-     * Initialization-on-demand depending on classloading behavior specified in JLS 12.4
-     */
-    private static final class GDSHolder {
-        private static final GDS gds = new JavaGDSImpl();
+    public String getDatabasePath(String jdbcUrl) throws GDSException {
+
+        String[] protocols = getSupportedProtocols();
+        for (int i = 0; i < protocols.length; i++) {
+            if (jdbcUrl.startsWith(protocols[i]))
+                return jdbcUrl.substring(protocols[i].length());
+        }
+
+        throw new IllegalArgumentException("Incorrect JDBC protocol handling: "
+                + jdbcUrl);
     }
 
-    public GDS getGDS() {
-        return GDSHolder.gds;
+    public String getDefaultProtocol() {
+        return getSupportedProtocols()[0];
+    }
+
+    public int hashCode() {
+        return getTypeName().hashCode();
+    }
+
+    public boolean equals(Object obj) {
+        if (obj == this) return true;
+
+        if (!(obj instanceof OOGDSFactoryPlugin)) return false;
+
+        return true;
     }
 }

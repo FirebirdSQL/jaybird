@@ -39,25 +39,21 @@ import org.firebirdsql.gds.impl.AbstractIscDbHandle;
  * @author <a href="mailto:d_jencks@users.sourceforge.net">David Jencks</a>
  * @version 1.0
  */
-public final class isc_db_handle_impl extends AbstractIscDbHandle {
+public class isc_db_handle_impl extends AbstractIscDbHandle {
 
     private static final int DEFAULT_RESP_DATA = 65536;
 
     Socket socket;
     public XdrOutputStream out;
     public WireXdrInputStream in;
-    EventCoordinator eventCoordinator;
-    private int resp_object;
-    private byte[] resp_data;
     private int resp_data_len;
-    private long resp_blob_id;
+    EventCoordinator eventCoordinator;
 
-    isc_db_handle_impl() {
-        resp_data = new byte[DEFAULT_RESP_DATA];
+    public isc_db_handle_impl() {
+        super(new byte[DEFAULT_RESP_DATA]);
     }
 
-    // TODO Consider throwing GDSException instead?
-    public void invalidate() throws IOException {
+    protected void invalidate() throws IOException {
         if (!isValid())
             return;
 
@@ -95,44 +91,28 @@ public final class isc_db_handle_impl extends AbstractIscDbHandle {
             }
         }
     }
-    
-    // TODO merge getResp_data_truncated() and getResp_data() ?
 
-    byte[] getResp_data_truncated() {
+    void addTransaction(isc_tr_handle_impl tr) {
+        checkValidity();
+        rdb_transactions.add(tr);
+    }
+
+    void removeTransaction(isc_tr_handle_impl tr) {
+        checkValidity();
+        rdb_transactions.remove(tr);
+    }
+
+    public byte[] getResp_data_truncated() {
         byte[] dest = new byte[getResp_data_len()];
         System.arraycopy(getResp_data(), 0, dest, 0, dest.length);
         return dest;
     }
-    
-    byte[] getResp_data() {
-        return resp_data;
-    }
 
-    void setResp_data_len(int len) {
+    public void setResp_data_len(int len) {
         this.resp_data_len = len;
     }
 
-    int getResp_data_len() {
+    public int getResp_data_len() {
         return this.resp_data_len;
-    }
-
-    void setResp_object(int value) {
-        resp_object = value;
-    }
-
-    int getResp_object() {
-        return resp_object;
-    }
-
-    void setResp_data(byte[] value) {
-        resp_data = value;
-    }
-
-    public void setResp_blob_id(long value) {
-        resp_blob_id = value;
-    }
-
-    public long getResp_blob_id() {
-        return resp_blob_id;
     }
 }

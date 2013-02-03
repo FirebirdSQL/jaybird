@@ -3,7 +3,6 @@ package org.firebirdsql.jdbc;
 
 import java.sql.*;
 import java.util.ArrayList;
-import java.util.List;
 
 import org.firebirdsql.gds.GDSException;
 import org.firebirdsql.gds.XSQLVAR;
@@ -28,14 +27,15 @@ class FBCachedFetcher implements FBFetcher {
         this.fetcherListener = fetcherListener;
         this.forwardOnly = forwardOnly;
         
-        List<Object[]> rowsSets = new ArrayList<Object[]>(100);
+        ArrayList rowsSets = new ArrayList(100);
 
         AbstractIscStmtHandle stmt =  stmt_handle;
         byte[][] localRow = null;
 
         XSQLVAR[] xsqlvars = stmt_handle.getOutSqlda().sqlvar;
-
+        //
         // Check if there is blobs to catch
+        //
         boolean[] isBlob = new boolean[xsqlvars.length];
         boolean hasBlobs = false;
         for (int i = 0; i < xsqlvars.length; i++){
@@ -46,7 +46,9 @@ class FBCachedFetcher implements FBFetcher {
                 hasBlobs = true;
         }
         
+        //
         // load all rows from statement
+        //
         int rowsCount = 0;
         try {
             if (fetchSize == 0)
@@ -69,11 +71,12 @@ class FBCachedFetcher implements FBFetcher {
                 int rowCount = 0;
                 rowsArray  = new Object[rowsCount];
                 for (int i=0; i<rowsSets.size(); i++){
-                    Object[] oneSet = rowsSets.get(i);
+                    Object[] oneSet = (Object[]) rowsSets.get(i);
                     if (oneSet.length > rowsCount-rowCount){
-                        System.arraycopy(oneSet, 0, rowsArray, rowCount, rowsCount - rowCount);
+                        System.arraycopy(oneSet, 0, rowsArray, rowCount, rowsCount-rowCount);
                         rowCount = rowsCount;
-                    } else{
+                    }
+						  else{
                         System.arraycopy(oneSet, 0, rowsArray, rowCount, oneSet.length);
                         rowCount += oneSet.length;
                     }
@@ -84,7 +87,7 @@ class FBCachedFetcher implements FBFetcher {
                 rowsArray = stmt.getRows();
                 stmt.removeRows();
             }
-
+            //
             if (hasBlobs){
                 for (int i=0;i< rowsArray.length; i++){
                     localRow = (byte[][])rowsArray[i];
@@ -123,7 +126,7 @@ class FBCachedFetcher implements FBFetcher {
         }
     }
 
-    FBCachedFetcher(List<byte[][]> rows, FBObjectListener.FetcherListener fetcherListener) throws SQLException {
+    FBCachedFetcher(ArrayList rows, FBObjectListener.FetcherListener fetcherListener) throws SQLException {
         rowsArray = rows.toArray();
         this.fetcherListener = fetcherListener;
     }

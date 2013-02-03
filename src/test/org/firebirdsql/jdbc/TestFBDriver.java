@@ -29,9 +29,6 @@ import java.util.TimeZone;
 import junit.framework.Test;
 import junit.framework.TestSuite;
 import org.firebirdsql.common.FBTestBase;
-import org.firebirdsql.common.JdbcResourceHelper;
-
-import static org.firebirdsql.common.FBTestProperties.*;
 
 /**
  * Test suite for the FBDriver class implementation.
@@ -58,8 +55,8 @@ public class TestFBDriver extends FBTestBase {
         driver = DriverManager.getDriver(getUrl());
     }
 
-    protected void tearDown() throws Exception {
-       JdbcResourceHelper.closeQuietly(connection);
+    protected void tearDown() throws Exception
+    {
        super.tearDown();
     }
 

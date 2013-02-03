@@ -206,7 +206,7 @@ public abstract class FBAbstractCommonDataSource extends RootCommonDataSource im
      * </p>
      */
     public int getLoginTimeout() throws SQLException {
-        return getConnectTimeout();
+    	return getConnectTimeout();
     }
 
     /**
@@ -216,7 +216,7 @@ public abstract class FBAbstractCommonDataSource extends RootCommonDataSource im
      * </p>
      */
     public void setLoginTimeout(int seconds) throws SQLException {
-        setConnectTimeout(seconds);
+    	setConnectTimeout(seconds);
     }
     
     public int getConnectTimeout() {

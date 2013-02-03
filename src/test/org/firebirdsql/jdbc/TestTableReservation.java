@@ -21,11 +21,9 @@ package org.firebirdsql.jdbc;
 import java.sql.*;
 
 import org.firebirdsql.common.FBTestBase;
-import org.firebirdsql.common.JdbcResourceHelper;
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.TransactionParameterBuffer;
 
-import static org.firebirdsql.common.DdlHelper.*;
 
 public class TestTableReservation extends FBTestBase {
     
@@ -54,6 +52,14 @@ public class TestTableReservation extends FBTestBase {
         + "CREATE TABLE table_2("
         + "  ID INTEGER NOT NULL PRIMARY KEY"
         + ")"
+        ;
+    
+    protected static final String DROP_TABLE_1 = ""
+        + "DROP TABLE table_1"
+        ;
+    
+    protected static final String DROP_TABLE_2 = ""
+        + "DROP TABLE table_2"
         ;
     
     protected static final String INSERT_TABLE_1 = ""
@@ -94,9 +100,25 @@ public class TestTableReservation extends FBTestBase {
     }
 
     protected void tearDown() throws Exception {
-        JdbcResourceHelper.closeQuietly(connection1);
-        JdbcResourceHelper.closeQuietly(connection2);
-        super.tearDown();
+        
+        try {
+            try {
+                connection2.close();
+            } finally {
+                connection1.close();
+            }
+        } finally {
+            Connection connection = getConnectionViaDriverManager();
+            try {
+                executeDropTable(connection, DROP_TABLE_1);
+                executeDropTable(connection, DROP_TABLE_2);
+            } finally {
+                connection.close();
+            }
+    
+            
+            super.tearDown();
+        }
     }
 
     protected void execute(Connection connection, String sql, Object[] params) throws SQLException {

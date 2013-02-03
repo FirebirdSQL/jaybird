@@ -12,9 +12,6 @@ import org.firebirdsql.gds.impl.GDSHelper;
 import org.firebirdsql.gds.impl.GDSType;
 import org.firebirdsql.jdbc.FBConnection;
 
-import static org.firebirdsql.common.JdbcResourceHelper.*;
-import static org.firebirdsql.common.FBTestProperties.*;
-
 /**
  * TODO: This test assumes it is run against localhost 
  */

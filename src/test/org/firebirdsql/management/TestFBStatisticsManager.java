@@ -10,8 +10,6 @@ import java.sql.SQLException;
 import org.firebirdsql.common.FBTestBase;
 import org.firebirdsql.gds.impl.GDSType;
 
-import static org.firebirdsql.common.FBTestProperties.*;
-
 /**
  * Test the FBStatisticsManager class
  */

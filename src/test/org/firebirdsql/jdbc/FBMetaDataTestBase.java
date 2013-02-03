@@ -32,9 +32,6 @@ import java.util.Set;
 import org.firebirdsql.common.FBTestBase;
 import org.firebirdsql.jdbc.MetaDataValidator.MetaDataInfo;
 
-import static org.firebirdsql.common.DdlHelper.*;
-import static org.firebirdsql.common.JdbcResourceHelper.*;
-
 /**
  * Base test class for testing and validating the various DatabaseMetaData
  * methods returning a ResultSet.
@@ -44,7 +41,7 @@ import static org.firebirdsql.common.JdbcResourceHelper.*;
  * @param <T>
  *            Enum containing the metadata columns to be validated.
  */
-public abstract class FBMetaDataTestBase<T extends Enum<T> & MetaDataInfo> extends FBTestBase {
+public abstract class FBMetaDataTestBase<T extends Enum & MetaDataInfo> extends FBTestBase {
 
     private Class<T> metaDataInfoClass;
 
@@ -68,9 +65,14 @@ public abstract class FBMetaDataTestBase<T extends Enum<T> & MetaDataInfo> exten
         try {
             super.setUp();
             con = getConnectionViaDriverManager();
+            for (String dropStatement : getDropStatements()) {
+                executeDropTable(con, dropStatement);
+            }
+    
             for (String createStatement : getCreateStatements()) {
                 executeCreateTable(con, createStatement);
             }
+    
             dbmd = con.getMetaData();
     
             additionalSetup();
@@ -82,6 +84,9 @@ public abstract class FBMetaDataTestBase<T extends Enum<T> & MetaDataInfo> exten
 
     protected final void tearDown() throws Exception {
         try {
+            for (String dropStatement : getDropStatements()) {
+                executeDropTable(con, dropStatement);
+            }
             additionalTeardown();
         } finally {
             closeQuietly(con);
@@ -104,6 +109,18 @@ public abstract class FBMetaDataTestBase<T extends Enum<T> & MetaDataInfo> exten
     protected void additionalTeardown() throws Exception {
         // default nothing
     }
+
+    /**
+     * Provides the list of DROP statements to be executed in the setUp() and
+     * tearDown().
+     * <p>
+     * The provided list must be ordered based on dependencies between objects
+     * (if any)
+     * </p>
+     * 
+     * @return List of drop statements
+     */
+    protected abstract List<String> getDropStatements();
 
     /**
      * Provides the list of CREATE (or other DDL) to be executed in the setUp().

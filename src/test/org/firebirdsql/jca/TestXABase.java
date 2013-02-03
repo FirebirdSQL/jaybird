@@ -18,6 +18,7 @@
  */
 package org.firebirdsql.jca;
 
+
 import java.io.Serializable;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
@@ -25,8 +26,6 @@ import java.net.UnknownHostException;
 import javax.transaction.xa.Xid;
 
 import org.firebirdsql.common.FBTestBase;
-
-import static org.firebirdsql.common.FBTestProperties.*;
 
 /**
  * THIS FILE INCLUDES AN XID IMPLEMENTATION FROM THE JBOSS PROJECT
@@ -199,7 +198,7 @@ public abstract class TestXABase extends FBTestBase {
         */
        public byte[] getGlobalTransactionId()
        {
-          return globalId.clone();
+          return (byte[])globalId.clone();
        }
 
        /**
@@ -210,7 +209,7 @@ public abstract class TestXABase extends FBTestBase {
           if (branchId.length == 0)
              return branchId; // Zero length arrays are immutable.
           else
-             return branchId.clone();
+             return (byte[])branchId.clone();
        }
 
        /**
@@ -282,7 +281,7 @@ public abstract class TestXABase extends FBTestBase {
         */
        public byte[] getInternalGlobalTransactionId()
        {
-          return globalId.clone();
+          return (byte[])globalId.clone();
        }
 
     }
