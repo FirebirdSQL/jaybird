@@ -1,3 +1,154 @@
+2013-02-02 09:52  mrotteveel
+
+	* src/test/org/firebirdsql/jdbc/TestFBConnectionTimeout.java:
+	  
+	  Ignore timout test that is OS dependent
+
+2013-02-02 09:50  mrotteveel
+
+	* src/etc/release_notes.html, src/etc/release_notes.odt,
+	  src/etc/release_notes.pdf:
+	  
+	  Updated 2.2.2 releasenotes
+
+2013-02-02 08:42  mrotteveel
+
+	* native/debug/jaybird22.dll, native/debug/jaybird22.pdb,
+	  native/debug/jaybird22_x64.dll, native/debug/jaybird22_x64.pdb,
+	  native/jaybird22.dll, native/jaybird22_x64.dll,
+	  src/native/jaygds/builds/msvc10/java_gds.rc:
+	  
+	  Jaybird 2.2.2 Windows binaries
+
+2013-01-19 16:05  mrotteveel
+
+	* src/etc/release_notes.html, src/etc/release_notes.odt,
+	  src/etc/release_notes.pdf:
+	  
+	  Update releasenotes for Jaybird 2.2.2
+
+2013-01-19 14:19  mrotteveel
+
+	* build/init.xml:
+	  
+	  Increase revision to 2.2.2
+
+2013-01-19 14:14  mrotteveel
+
+	* src/main/org/firebirdsql/ds/FBAbstractCommonDataSource.java,
+	  src/main/org/firebirdsql/gds/impl/jni/BaseGDSImpl.java,
+	  src/main/org/firebirdsql/gds/impl/wire/AbstractJavaGDSImpl.java,
+	  src/main/org/firebirdsql/jca/FBManagedConnection.java,
+	  src/main/org/firebirdsql/jca/FBManagedConnectionFactory.java,
+	  src/main/org/firebirdsql/jdbc/FBConnectionProperties.java,
+	  src/main/org/firebirdsql/jdbc/FirebirdConnectionProperties.java,
+	  src/pool/org/firebirdsql/pool/AbstractFBConnectionPoolDataSource.java,
+	  src/pool/org/firebirdsql/pool/FBSimpleDataSource.java,
+	  src/pool/org/firebirdsql/pool/FBWrappingDataSource.java,
+	  src/resources/driver_property_info.properties,
+	  src/resources/isc_dpb_types.properties,
+	  src/test/org/firebirdsql/gds/impl/wire/TestGds.java,
+	  src/test/org/firebirdsql/jdbc/TestFBConnectionTimeout.java,
+	  src/wire_jdk1_4/org/firebirdsql/gds/impl/wire/JavaGDSImpl.java:
+	  
+	  JDBC-295 : Backport connect timeout implementation into 2.2.2
+
+2013-01-19 14:05  mrotteveel
+
+	* src/test/org/firebirdsql/jdbc/TestFBClob.java,
+	  src/test_40/org/firebirdsql/jdbc/TestFBClob4_0.java:
+	  
+	  Fix test compatibility with Java 5
+
+2012-12-24 13:42  mrotteveel
+
+	* src/main/org/firebirdsql/jdbc/FBEscapedParser.java:
+	  
+	  JDBC-290 Backport fix for JDBC LIKE escape character escape
+
+2012-12-08 14:28  mrotteveel
+
+	* src/main/org/firebirdsql/jdbc/AbstractCallableStatement.java,
+	  src/main/org/firebirdsql/jdbc/AbstractPreparedStatement.java,
+	  src/test/org/firebirdsql/jdbc/TestFBPreparedStatement.java:
+	  
+	  JDBC-288 Backport basic fix (disallow use of execute methods
+	  accepting query string on PreparedStatement and
+	  PreparedStatement)
+
+2012-12-02 12:42  mrotteveel
+
+	* src/main/org/firebirdsql/gds/impl/jni/ServiceRequestBufferImp.java,
+	  src/main/org/firebirdsql/gds/impl/wire/ServiceRequestBufferImp.java:
+	  
+	  JDBC-286 backport to 2.2.2
+
+2012-12-02 12:41  mrotteveel
+
+	* src/main/org/firebirdsql/gds/impl/jni/ParameterBufferBase.java:
+	  
+	  JDBC-285 backport to 2.2.2
+
+2012-12-02 12:41  mrotteveel
+
+	* src/main/org/firebirdsql/jdbc/FBConnectionHelper.java:
+	  
+	  JDBC-284 backport to 2.2.2
+
+2012-11-17 13:30  mrotteveel
+
+	* src/main/org/firebirdsql/management/FBMaintenanceManager.java:
+	  
+	  JDBC-266 On closer examination isc_spb_tra_id is an information
+	  item as part of isc_spb_multi_tra_id and not actually a limbo
+	  transaction
+
+2012-11-17 13:23  mrotteveel
+
+	* src/main/org/firebirdsql/gds/ISCConstants.java,
+	  src/main/org/firebirdsql/management/FBMaintenanceManager.java:
+	  
+	  JDBC-266 Incorrect limbo transaction numbers
+
+2012-11-03 16:49  mrotteveel
+
+	* src/main/org/firebirdsql/jdbc/FBClob.java,
+	  src/test/org/firebirdsql/jdbc/StringClob.java,
+	  src/test/org/firebirdsql/jdbc/TestFBClob.java:
+	  
+	  JDBC-281 Backport fix + tests to Jaybird 2.2
+
+2012-09-30 12:58  mrotteveel
+
+	* build/maven-release/instructions.txt,
+	  build/maven-release/jaybird-example.pom:
+	  
+	  Minor tweak to maven release instructions + source URLs in pom
+
+2012-09-30 11:09  mrotteveel
+
+	* build/init.xml:
+	  
+	  Revert back to Branch_2_2 tag in build script
+
+2012-09-30 10:56  mrotteveel
+
+	* build/init.xml:
+	  
+	  Set tag in buildfile in preparation of tagging Jaybird 2.2.1
+
+2012-09-29 13:44  mrotteveel
+
+	* build/init.xml:
+	  
+	  Update build version info
+
+2012-09-29 09:49  mrotteveel
+
+	* native/libjaybird22_x64.so:
+	  
+	  Update lib for Linux AMD64
+
 2012-09-29 09:47  mrotteveel
 
 	* native/libjaybird22.so:
