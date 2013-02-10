@@ -40,16 +40,6 @@ public abstract class BaseGDSImpl extends AbstractGDS {
     private static final String WARNING_CONNECT_TIMEOUT_NATIVE = 
             "WARNING: The native driver does not apply connectTimeout for establishing the socket connection (only for protocol negotiation with the Firebird server), " + 
             "it will not detect unreachable hosts within the specified timeout";
-   
-    protected static final byte[] DESCRIBE_DATABASE_INFO_BLOCK = new byte[] {
-        ISCConstants.isc_info_db_sql_dialect,
-        ISCConstants.isc_info_firebird_version,
-        ISCConstants.isc_info_ods_version,
-        ISCConstants.isc_info_ods_minor_version,
-        ISCConstants.isc_info_implementation,
-        ISCConstants.isc_info_db_class, 
-        ISCConstants.isc_info_base_level,
-        ISCConstants.isc_info_end };
 
     public int isc_api_handle;
     
@@ -71,16 +61,15 @@ public abstract class BaseGDSImpl extends AbstractGDS {
         return new DatabaseParameterBufferImp();
     }
 
-    public synchronized IscBlobHandle createIscBlobHandle() {
+    public IscBlobHandle createIscBlobHandle() {
         return new isc_blob_handle_impl();
     }
 
-    // Handle declaration methods
-    public synchronized IscDbHandle createIscDbHandle() {
+    public IscDbHandle createIscDbHandle() {
         return new isc_db_handle_impl();
     }
 
-    public synchronized IscStmtHandle createIscStmtHandle() {
+    public IscStmtHandle createIscStmtHandle() {
         return new isc_stmt_handle_impl();
     }
 
@@ -88,12 +77,9 @@ public abstract class BaseGDSImpl extends AbstractGDS {
         return new isc_svc_handle_impl();
     }
 
-    public synchronized IscTrHandle createIscTrHandle() {
+    public IscTrHandle createIscTrHandle() {
         return new isc_tr_handle_impl();
     }
-
-    // GDS Implementation
-    // ----------------------------------------------------------------------------------------------
 
     public ServiceParameterBuffer createServiceParameterBuffer() {
         return new ServiceParameterBufferImp();
@@ -153,7 +139,7 @@ public abstract class BaseGDSImpl extends AbstractGDS {
         }
 
         parseAttachDatabaseInfo(iscDatabaseInfo(db_handle,
-                DESCRIBE_DATABASE_INFO_BLOCK, 1024), db_handle);
+                AbstractGDS.DESCRIBE_DATABASE_INFO_BLOCK, 1024), db_handle);
     }
 
     public byte[] iscBlobInfo(IscBlobHandle handle, byte[] items,
@@ -1079,7 +1065,7 @@ public abstract class BaseGDSImpl extends AbstractGDS {
         return new TransactionParameterBufferImpl();
     }
 
-    public void readSQLData(XSQLDA xsqlda, IscStmtHandle stmt) {
+    protected void readSQLData(XSQLDA xsqlda, IscStmtHandle stmt) {
         // This only works if not (port->port_flags & PORT_symmetric)
         int numCols = xsqlda.sqld;
         byte[][] row = new byte[numCols][];

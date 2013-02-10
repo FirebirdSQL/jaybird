@@ -42,6 +42,16 @@ public abstract class AbstractGDS implements GDS, Externalizable {
     private static Logger log = LoggerFactory.getLogger(AbstractGDS.class, false);
 
     private GDSType gdsType;
+    
+    protected static final byte[] DESCRIBE_DATABASE_INFO_BLOCK = new byte[] {
+        ISCConstants.isc_info_db_sql_dialect,
+        ISCConstants.isc_info_firebird_version,
+        ISCConstants.isc_info_ods_version,
+        ISCConstants.isc_info_ods_minor_version,
+        ISCConstants.isc_info_implementation,
+        ISCConstants.isc_info_db_class, 
+        ISCConstants.isc_info_base_level,
+        ISCConstants.isc_info_end };
 
     public AbstractGDS() {
     }

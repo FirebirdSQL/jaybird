@@ -51,12 +51,12 @@ public class NativeGDSImpl extends JniGDSImpl {
         final boolean logging = log != null;
 
         if (logging) 
-            log.info("Attempting to initilize native library.");
+            log.info("Attempting to initialize native library.");
 
         attemptToLoadAClientLibraryFromList(CLIENT_LIBRARIES_TO_TRY);
 
         if (logging) 
-            log.info("Initilized native library OK.");
+            log.info("Initialized native library OK.");
     }
 
     protected String getServerUrl(String file_name) throws GDSException {
