@@ -51,12 +51,6 @@ public abstract class BaseGDSImpl extends AbstractGDS {
         ISCConstants.isc_info_base_level,
         ISCConstants.isc_info_end };
 
-    private static byte[] stmtInfo = new byte[] {
-                ISCConstants.isc_info_sql_records,
-                ISCConstants.isc_info_sql_stmt_type, ISCConstants.isc_info_end};
-
-    private static final int INFO_SIZE = 128;
-
     public int isc_api_handle;
     
     public BaseGDSImpl() {
@@ -620,7 +614,7 @@ public abstract class BaseGDSImpl extends AbstractGDS {
         for (int i = 0; i < buffer.length; i++){
             switch(buffer[i]){
                 case ISCConstants.isc_info_sql_stmt_type:
-                    dataLength = iscVaxInteger(buffer, ++i, 2);
+                    dataLength = iscVaxInteger2(buffer, ++i);
                     i += 2;
                     stmt.setStatementType(iscVaxInteger(buffer, i, dataLength));
                     i += dataLength;
@@ -943,26 +937,6 @@ public abstract class BaseGDSImpl extends AbstractGDS {
         }
     }
 
-    // isc_vax_integer
-    // ---------------------------------------------------------------------------------------------
-    public int iscVaxInteger(byte[] buffer, int pos, int length) {
-        int value;
-        int shift;
-
-        value = shift = 0;
-
-        int i = pos;
-        while (--length >= 0) {
-            value += (buffer[i++] & 0xff) << shift;
-            shift += 8;
-        }
-        return value;
-    }
-    
-    public int iscVaxInteger2(byte[] buffer, int pos) {
-        return (buffer[pos] & 0xff) | ((buffer[pos + 1] & 0xff) << 8);
-    }
-    
     public abstract void native_isc_attach_database(byte[] file_name,
             IscDbHandle db_handle, byte[] dpbBytes);
 
@@ -1105,97 +1079,6 @@ public abstract class BaseGDSImpl extends AbstractGDS {
         return new TransactionParameterBufferImpl();
     }
 
-    /**
-     * Parse database info returned after attach. This method assumes that it is
-     * not truncated.
-     * 
-     * @param info
-     *            information returned by isc_database_info call
-     * @param handle
-     *            isc_db_handle to set connection parameters
-     * @throws GDSException
-     *             if something went wrong :))
-     */
-    private void parseAttachDatabaseInfo(byte[] info, IscDbHandle handle)
-            throws GDSException {
-        // TODO Duplicate of method in wire.AbstractJavaGDSImpl?
-        boolean debug = log != null && log.isDebugEnabled();
-        if (debug)
-            log.debug("parseDatabaseInfo: first 2 bytes are "
-                    + iscVaxInteger(info, 0, 2) + " or: " + info[0] + ", "
-                    + info[1]);
-        int value = 0;
-        int len = 0;
-        int i = 0;
-        IscDbHandle db = handle;
-        while (info[i] != ISCConstants.isc_info_end) {
-            switch (info[i++]) {
-                case ISCConstants.isc_info_db_sql_dialect:
-                    len = iscVaxInteger(info, i, 2);
-                    i += 2;
-                    value = iscVaxInteger(info, i, len);
-                    i += len;
-                    db.setDialect(value);
-                    if (debug) log.debug("isc_info_db_sql_dialect:" + value);
-                    break;
-                case ISCConstants.isc_info_ods_version:
-                    len = iscVaxInteger(info, i, 2);
-                    i += 2;
-                    value = iscVaxInteger(info, i, len);
-                    i += len;
-                    db.setODSMajorVersion(value);
-                    if (debug) log.debug("isc_info_ods_version:" + value);
-                    break;
-                case ISCConstants.isc_info_ods_minor_version:
-                    len = iscVaxInteger(info, i, 2);
-                    i += 2;
-                    value = iscVaxInteger(info, i, len);
-                    i += len;
-                    db.setODSMinorVersion(value);
-                    if (debug)
-                        log.debug("isc_info_ods_minor_version:" + value);
-                    break;
-                case ISCConstants.isc_info_firebird_version:
-                    len = iscVaxInteger(info, i, 2);
-                    i += 2;
-                    byte[] fb_vers = new byte[len - 2];
-                    System.arraycopy(info, i + 2, fb_vers, 0, len - 2);
-                    i += len;
-                    String fb_versS = new String(fb_vers);
-                    db.setVersion(fb_versS);
-                    if (debug)
-                        log.debug("isc_info_firebird_version:" + fb_versS);
-                    break;
-                case ISCConstants.isc_info_implementation:
-                    len = iscVaxInteger(info, i, 2);
-                    i += 2;
-                    byte[] impl = new byte[len - 2];
-                    System.arraycopy(info, i + 2, impl, 0, len - 2);
-                    i += len;
-                    break;
-                case ISCConstants.isc_info_db_class:
-                    len = iscVaxInteger(info, i, 2);
-                    i += 2;
-                    byte[] db_class = new byte[len - 2];
-                    System.arraycopy(info, i + 2, db_class, 0, len - 2);
-                    i += len;
-                    break;
-                case ISCConstants.isc_info_base_level:
-                    len = iscVaxInteger(info, i, 2);
-                    i += 2;
-                    byte[] base_level = new byte[len - 2];
-                    System.arraycopy(info, i + 2, base_level, 0, len - 2);
-                    i += len;
-                    break;
-                case ISCConstants.isc_info_truncated:
-                    if (debug) log.debug("isc_info_truncated ");
-                    return;
-                default:
-                    throw new GDSException(ISCConstants.isc_dsql_sqlda_err);
-            }
-        }
-    }
-    
     public void readSQLData(XSQLDA xsqlda, IscStmtHandle stmt) {
         // This only works if not (port->port_flags & PORT_symmetric)
         int numCols = xsqlda.sqld;
@@ -1231,62 +1114,6 @@ public abstract class BaseGDSImpl extends AbstractGDS {
         zeroTermBytes[stringBytes.length] = 0;
 
         return zeroTermBytes;
-    }
-
-    public void getSqlCounts(IscStmtHandle stmt_handle) throws GDSException {
-        // TODO duplicate of method in wire.AbstractJavaGDSImpl?
-        byte[] buffer = iscDsqlSqlInfo(stmt_handle, stmtInfo, INFO_SIZE);
-
-        stmt_handle.setInsertCount(0);
-		stmt_handle.setUpdateCount(0);
-		stmt_handle.setDeleteCount(0);
-		stmt_handle.setSelectCount(0);
-
-        int pos = 0;
-        int length;
-        int type;
-        while ((type = buffer[pos++]) != ISCConstants.isc_info_end) {
-            length = iscVaxInteger2(buffer, pos);
-            pos += 2;
-            switch (type) {
-                case ISCConstants.isc_info_sql_records:
-                    int l;
-                    int t;
-                    while ((t = buffer[pos++]) != ISCConstants.isc_info_end) {
-                        l = iscVaxInteger2(buffer, pos);
-                        pos += 2;
-                        switch (t) {
-                            case ISCConstants.isc_info_req_insert_count:
-                                stmt_handle.setInsertCount(iscVaxInteger(buffer, pos,
-                                        l));
-                                break;
-                            case ISCConstants.isc_info_req_update_count:
-                                stmt_handle.setUpdateCount(iscVaxInteger(buffer, pos,
-                                        l));
-                                break;
-                            case ISCConstants.isc_info_req_delete_count:
-                                stmt_handle.setDeleteCount(iscVaxInteger(buffer, pos,
-                                        l));
-                                break;
-                            case ISCConstants.isc_info_req_select_count:
-                                stmt_handle.setSelectCount(iscVaxInteger(buffer, pos,
-                                        l));
-                                break;
-                            default:
-                                break;
-                        }
-                        pos += l;
-                    }
-                    break;
-                case ISCConstants.isc_info_sql_stmt_type:
-                    stmt_handle.setStatementType(iscVaxInteger(buffer, pos, length));
-                    pos += length;
-                    break;
-                default:
-                    pos += length;
-                    break;
-            }
-        }
     }
 
     public int iscQueueEvents(IscDbHandle dbHandle, 

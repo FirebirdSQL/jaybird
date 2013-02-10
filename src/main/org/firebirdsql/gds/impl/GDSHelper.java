@@ -643,6 +643,10 @@ public class GDSHelper {
     public int iscVaxInteger(byte[] buffer, int pos, int length) {
         return gds.iscVaxInteger(buffer, pos, length);
     }
+    
+    public long iscVaxLong(byte[] buffer, int pos, int length) {
+        return gds.iscVaxLong(buffer, pos, length);
+    }
 
     // for DatabaseMetaData.
     

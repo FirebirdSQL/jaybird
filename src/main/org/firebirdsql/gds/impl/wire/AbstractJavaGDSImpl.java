@@ -508,7 +508,7 @@ public abstract class AbstractJavaGDSImpl extends AbstractGDS implements GDS {
 					log.debug("sent");
 				receiveResponse(db, -1);
 				// if (debug) log.debug("parseSqlInfo: first 2 bytes are " +
-				// iscVaxInteger(db.getResp_data(), 0, 2) + " or: " +
+				// iscVaxInteger2(db.getResp_data(), 0) + " or: " +
 				// db.getResp_data()[0] + ", " + db.getResp_data()[1]);
 				return db.getResp_data_truncated();
 			} catch (IOException ex) {
@@ -535,7 +535,7 @@ public abstract class AbstractJavaGDSImpl extends AbstractGDS implements GDS {
 					log.debug("sent");
 				receiveResponse(db, -1);
 				// if (debug) log.debug("parseSqlInfo: first 2 bytes are " +
-				// iscVaxInteger(db.getResp_data(), 0, 2) + " or: " +
+				// iscVaxInteger2(db.getResp_data(), 0) + " or: " +
 				// db.getResp_data()[0] + ", " + db.getResp_data()[1]);
 				return db.getResp_data_truncated();
 			} catch (IOException ex) {
@@ -562,104 +562,6 @@ public abstract class AbstractJavaGDSImpl extends AbstractGDS implements GDS {
 				receiveResponse(db, -1);
 			} catch (IOException ex) {
 				throw new GDSException(ISCConstants.isc_network_error);
-			}
-		}
-	}
-
-	/**
-	 * Parse database info returned after attach. This method assumes that it is
-	 * not truncated.
-	 * 
-	 * @param info
-	 *            information returned by isc_database_info call
-	 * @param handle
-	 *            isc_db_handle to set connection parameters
-	 * @throws GDSException
-	 *             if something went wrong :))
-	 */
-	private void parseAttachDatabaseInfo(byte[] info, IscDbHandle handle)
-			throws GDSException {
-	    // TODO Duplicate of method in jni.BaseGDSImpl?
-		boolean debug = log != null && log.isDebugEnabled();
-		// TODO: Check if info will never be empty
-//		if (info.length == 0) {
-//            throw new GDSException(ISCConstants.isc_dsql_sqlda_err);
-//        }
-		if (debug)
-			log.debug("parseDatabaseInfo: first 2 bytes are "
-					+ iscVaxInteger(info, 0, 2) + " or: " + info[0] + ", "
-					+ info[1]);
-		int value = 0;
-		int len = 0;
-		int i = 0;
-		isc_db_handle_impl db = (isc_db_handle_impl) handle;
-		while (info[i] != ISCConstants.isc_info_end) {
-			switch (info[i++]) {
-			case ISCConstants.isc_info_db_sql_dialect:
-				len = iscVaxInteger(info, i, 2);
-				i += 2;
-				value = iscVaxInteger(info, i, len);
-				i += len;
-				db.setDialect(value);
-				if (debug)
-					log.debug("isc_info_db_sql_dialect:" + value);
-				break;
-			case ISCConstants.isc_info_ods_version:
-				len = iscVaxInteger(info, i, 2);
-				i += 2;
-				value = iscVaxInteger(info, i, len);
-				i += len;
-				db.setODSMajorVersion(value);
-				if (debug)
-					log.debug("isc_info_ods_version:" + value);
-				break;
-			case ISCConstants.isc_info_ods_minor_version:
-				len = iscVaxInteger(info, i, 2);
-				i += 2;
-				value = iscVaxInteger(info, i, len);
-				i += len;
-				db.setODSMinorVersion(value);
-				if (debug)
-					log.debug("isc_info_ods_minor_version:" + value);
-				break;
-			case ISCConstants.isc_info_firebird_version:
-				len = iscVaxInteger(info, i, 2);
-				i += 2;
-				byte[] fb_vers = new byte[len - 2];
-				System.arraycopy(info, i + 2, fb_vers, 0, len - 2);
-				i += len;
-				String fb_versS = new String(fb_vers);
-				db.setVersion(fb_versS);
-				if (debug)
-					log.debug("isc_info_firebird_version:" + fb_versS);
-				break;
-			case ISCConstants.isc_info_implementation:
-				len = iscVaxInteger(info, i, 2);
-				i += 2;
-				byte[] impl = new byte[len - 2];
-				System.arraycopy(info, i + 2, impl, 0, len - 2);
-				i += len;
-				break;
-			case ISCConstants.isc_info_db_class:
-				len = iscVaxInteger(info, i, 2);
-				i += 2;
-				byte[] db_class = new byte[len - 2];
-				System.arraycopy(info, i + 2, db_class, 0, len - 2);
-				i += len;
-				break;
-			case ISCConstants.isc_info_base_level:
-				len = iscVaxInteger(info, i, 2);
-				i += 2;
-				byte[] base_level = new byte[len - 2];
-				System.arraycopy(info, i + 2, base_level, 0, len - 2);
-				i += len;
-				break;
-			case ISCConstants.isc_info_truncated:
-				if (debug)
-					log.debug("isc_info_truncated ");
-				return;
-			default:
-				throw new GDSException(ISCConstants.isc_dsql_sqlda_err);
 			}
 		}
 	}
@@ -1573,92 +1475,6 @@ public abstract class AbstractJavaGDSImpl extends AbstractGDS implements GDS {
 
 	}
 
-	private static byte[] stmtInfo = new byte[] {
-			ISCConstants.isc_info_sql_records,
-			ISCConstants.isc_info_sql_stmt_type, ISCConstants.isc_info_end };
-
-	private static final int INFO_SIZE = 128;
-
-	public void getSqlCounts(IscStmtHandle stmt_handle) throws GDSException {
-	    // TODO duplicate of method in jni.BaseGDSImpl?
-		isc_stmt_handle_impl stmt = (isc_stmt_handle_impl) stmt_handle;
-		
-		stmt.setInsertCount(0);
-		stmt.setUpdateCount(0);
-		stmt.setDeleteCount(0);
-		stmt.setSelectCount(0);
-		
-		byte[] buffer = iscDsqlSqlInfo(stmt, stmtInfo, INFO_SIZE);
-		int pos = 0;
-		int length;
-		int type;
-		while ((type = buffer[pos++]) != ISCConstants.isc_info_end) {
-			length = iscVaxInteger(buffer, pos, 2);
-			pos += 2;
-			switch (type) {
-			case ISCConstants.isc_info_sql_records:
-				int l;
-				int t;
-				while ((t = buffer[pos++]) != ISCConstants.isc_info_end) {
-					l = iscVaxInteger(buffer, pos, 2);
-					pos += 2;
-					switch (t) {
-					case ISCConstants.isc_info_req_insert_count:
-						stmt.setInsertCount(iscVaxInteger(buffer, pos, l));
-						break;
-					case ISCConstants.isc_info_req_update_count:
-						stmt.setUpdateCount(iscVaxInteger(buffer, pos, l));
-						break;
-					case ISCConstants.isc_info_req_delete_count:
-						stmt.setDeleteCount(iscVaxInteger(buffer, pos, l));
-						break;
-					case ISCConstants.isc_info_req_select_count:
-						stmt.setSelectCount(iscVaxInteger(buffer, pos, l));
-						break;
-					default:
-						break;
-					}
-					pos += l;
-				}
-				break;
-			case ISCConstants.isc_info_sql_stmt_type:
-				stmt.setStatementType(iscVaxInteger(buffer, pos, length));
-				pos += length;
-				break;
-			default:
-				pos += length;
-				break;
-			}
-		}
-	}
-
-	public int iscVaxInteger(byte[] buffer, int pos, int length) {
-		int value;
-		int shift;
-
-		value = shift = 0;
-
-		int i = pos;
-		while (--length >= 0) {
-			value += (buffer[i++] & 0xff) << shift;
-			shift += 8;
-		}
-		return value;
-	}
-	
-	public int iscInteger(byte[] buffer, int pos, int length) {
-        int value;
-
-        value = 0;
-
-        int i = pos;
-        while (i < length) {
-            value = value << 8;
-            value += (buffer[i++] & 0xff);
-        }
-        return value;
-    }
-
 	// -----------------------------------------------
 	// Blob methods
 	// -----------------------------------------------
@@ -1780,7 +1596,7 @@ public abstract class AbstractJavaGDSImpl extends AbstractGDS implements GDS {
 				// TODO It looks like this might cause IndexOutOfBounds if srcpos = bufferLength - 1 and bufferLength = buffer.length
 				// TODO Or might read garbage if bufferLength is smaller than buffer.length
 				while (srcpos < bufferLength) {
-					len = iscVaxInteger(buffer, srcpos, 2);
+					len = iscVaxInteger2(buffer, srcpos);
 					srcpos += 2;
 					System.arraycopy(buffer, srcpos, buffer, destpos, len);
 					srcpos += len;
@@ -2333,7 +2149,7 @@ public abstract class AbstractJavaGDSImpl extends AbstractGDS implements GDS {
         // check the statement type
         int i = 0;
         if (info[i] == ISCConstants.isc_info_sql_stmt_type) {
-            int dataLength = iscVaxInteger(info, ++i, 2);
+            int dataLength = iscVaxInteger2(info, ++i);
             i += 2;
             int statementType = iscVaxInteger(info, i, dataLength);
             ((isc_stmt_handle_impl)stmt_handle).setStatementType(statementType);
@@ -2377,12 +2193,12 @@ public abstract class AbstractJavaGDSImpl extends AbstractGDS implements GDS {
 		int index = 0;
 		if (debug)
 			log.debug("parseSqlInfo: first 2 bytes are "
-					+ iscVaxInteger(info, 0, 2) + " or: " + info[0] + ", "
+					+ iscVaxInteger2(info, 0) + " or: " + info[0] + ", "
 					+ info[1]);
 
 		int i = startAt;
 
-		int len = iscVaxInteger(info, i, 2);
+		int len = iscVaxInteger2(info, i);
 		i += 2;
 		int n = iscVaxInteger(info, i, len);
 		i += len;
@@ -2399,7 +2215,7 @@ public abstract class AbstractJavaGDSImpl extends AbstractGDS implements GDS {
 			while ((item = info[i++]) != ISCConstants.isc_info_sql_describe_end) {
 				switch (item) {
 				case ISCConstants.isc_info_sql_sqlda_seq:
-					len = iscVaxInteger(info, i, 2);
+					len = iscVaxInteger2(info, i);
 					i += 2;
 					index = iscVaxInteger(info, i, len);
 					i += len;
@@ -2408,7 +2224,7 @@ public abstract class AbstractJavaGDSImpl extends AbstractGDS implements GDS {
 						log.debug("new xsqlvar " + (index - 1));
 					break;
 				case ISCConstants.isc_info_sql_type:
-					len = iscVaxInteger(info, i, 2);
+					len = iscVaxInteger2(info, i);
 					i += 2;
 					xsqlda.sqlvar[index - 1].sqltype = iscVaxInteger(info, i,
 							len);
@@ -2418,7 +2234,7 @@ public abstract class AbstractJavaGDSImpl extends AbstractGDS implements GDS {
 								+ xsqlda.sqlvar[index - 1].sqltype);
 					break;
 				case ISCConstants.isc_info_sql_sub_type:
-					len = iscVaxInteger(info, i, 2);
+					len = iscVaxInteger2(info, i);
 					i += 2;
 					xsqlda.sqlvar[index - 1].sqlsubtype = iscVaxInteger(info,
 							i, len);
@@ -2428,7 +2244,7 @@ public abstract class AbstractJavaGDSImpl extends AbstractGDS implements GDS {
 								+ xsqlda.sqlvar[index - 1].sqlsubtype);
 					break;
 				case ISCConstants.isc_info_sql_scale:
-					len = iscVaxInteger(info, i, 2);
+					len = iscVaxInteger2(info, i);
 					i += 2;
 					xsqlda.sqlvar[index - 1].sqlscale = iscVaxInteger(info, i,
 							len);
@@ -2438,7 +2254,7 @@ public abstract class AbstractJavaGDSImpl extends AbstractGDS implements GDS {
 								+ xsqlda.sqlvar[index - 1].sqlscale);
 					break;
 				case ISCConstants.isc_info_sql_length:
-					len = iscVaxInteger(info, i, 2);
+					len = iscVaxInteger2(info, i);
 					i += 2;
 					xsqlda.sqlvar[index - 1].sqllen = iscVaxInteger(info, i,
 							len);
@@ -2448,7 +2264,7 @@ public abstract class AbstractJavaGDSImpl extends AbstractGDS implements GDS {
 								+ xsqlda.sqlvar[index - 1].sqllen);
 					break;
 				case ISCConstants.isc_info_sql_field:
-					len = iscVaxInteger(info, i, 2);
+					len = iscVaxInteger2(info, i);
 					i += 2;
 					xsqlda.sqlvar[index - 1].sqlname = new String(info, i, len);
 					i += len;
@@ -2457,7 +2273,7 @@ public abstract class AbstractJavaGDSImpl extends AbstractGDS implements GDS {
 								+ xsqlda.sqlvar[index - 1].sqlname);
 					break;
 				case ISCConstants.isc_info_sql_relation:
-					len = iscVaxInteger(info, i, 2);
+					len = iscVaxInteger2(info, i);
 					i += 2;
 					xsqlda.sqlvar[index - 1].relname = new String(info, i, len);
 					i += len;
@@ -2466,7 +2282,7 @@ public abstract class AbstractJavaGDSImpl extends AbstractGDS implements GDS {
 								+ xsqlda.sqlvar[index - 1].relname);
 					break;
 				case ISCConstants.isc_info_sql_relation_alias:
-					len = iscVaxInteger(info, i, 2);
+					len = iscVaxInteger2(info, i);
 					i += 2;
 					xsqlda.sqlvar[index - 1].relaliasname = new String(info, i, len);
 					i += len;
@@ -2476,7 +2292,7 @@ public abstract class AbstractJavaGDSImpl extends AbstractGDS implements GDS {
 					break;
 	
 				case ISCConstants.isc_info_sql_owner:
-					len = iscVaxInteger(info, i, 2);
+					len = iscVaxInteger2(info, i);
 					i += 2;
 					xsqlda.sqlvar[index - 1].ownname = new String(info, i, len);
 					i += len;
@@ -2485,7 +2301,7 @@ public abstract class AbstractJavaGDSImpl extends AbstractGDS implements GDS {
 								+ xsqlda.sqlvar[index - 1].ownname);
 					break;
 				case ISCConstants.isc_info_sql_alias:
-					len = iscVaxInteger(info, i, 2);
+					len = iscVaxInteger2(info, i);
 					i += 2;
 					xsqlda.sqlvar[index - 1].aliasname = new String(info, i,
 							len);
