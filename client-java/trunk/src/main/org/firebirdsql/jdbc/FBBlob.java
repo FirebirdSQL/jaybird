@@ -1,4 +1,6 @@
 /*
+ * $Id$
+ * 
  * Firebird Open Source J2ee connector - jdbc driver
  *
  * Distributable under LGPL license.
@@ -26,47 +28,23 @@ import org.firebirdsql.gds.*;
 import org.firebirdsql.gds.impl.GDSHelper;
 
 /**
- * The representation (mapping) in
- * the Java<sup><font size=-2>TM</font></sup> programming
- * language of an SQL
- * <code>BLOB</code> value.  An SQL <code>BLOB</code> is a built-in type
- * that stores a Binary Large Object as a column value in a row of
- * a database table. The driver implements <code>Blob</code> using
- * an SQL <code>locator(BLOB)</code>, which means that a
- * <code>Blob</code> object contains a logical pointer to the
- * SQL <code>BLOB</code> data rather than the data itself.
- * A <code>Blob</code> object is valid for the duration of the
- * transaction in which is was created.
- *
- * <P>Methods in the interfaces {@link java.sql.ResultSet},
- * {@link java.sql.CallableStatement}, and {@link java.sql.PreparedStatement}, such as
- * <code>getBlob</code> and <code>setBlob</code> allow a programmer to
- * access an SQL <code>BLOB</code> value.
- * The <code>Blob</code> interface provides methods for getting the
- * length of an SQL <code>BLOB</code> (Binary Large Object) value,
- * for materializing a <code>BLOB</code> value on the client, and for
- * determining the position of a pattern of bytes within a
- * <code>BLOB</code> value.
- *<P>
- * This class is new in the JDBC 2.0 API.
- * @since 1.2
+ * Firebird implementation of {@link java.sql.Blob}.
  */
 public class FBBlob implements FirebirdBlob, Synchronizable {
     
     public static final boolean SEGMENTED = true;
-    public static final int READ_FULLY_BUFFER_SIZE = 16 * 1024;
 
     /**
      * bufferlength is the size of the buffer for blob input and output streams,
      * also used for the BufferedInputStream/BufferedOutputStream wrappers.
      *
      */
-    int bufferlength;
+    final int bufferlength;
 
     boolean isNew;
     long blob_id;
-    GDSHelper gdsHelper;
-    private FBObjectListener.BlobListener blobListener;
+    final GDSHelper gdsHelper;
+    private final FBObjectListener.BlobListener blobListener;
 
     Collection<FBBlobInputStream> inputStreams = Collections.synchronizedSet(new HashSet<FBBlobInputStream>());
     private FBBlobOutputStream blobOut = null;
@@ -82,12 +60,19 @@ public class FBBlob implements FirebirdBlob, Synchronizable {
      * Create new Blob instance. This constructor creates new fresh Blob, only
      * writing to the Blob is allowed.
      * 
-     * @param c connection that will be used to write data to blob.
+     * @param c connection that will be used to write data to blob
+     * @param blobListener BlobListener
      */
     public FBBlob(GDSHelper c, FBObjectListener.BlobListener blobListener) {
         this(c, true, blobListener);
     }
     
+    /**
+     * Create new Blob instance. This constructor creates new fresh Blob, only
+     * writing to the Blob is allowed.
+     * 
+     * @param c connection that will be used to write data to blob.
+     */
     public FBBlob(GDSHelper c) {
         this(c, null);
     }
@@ -96,8 +81,8 @@ public class FBBlob implements FirebirdBlob, Synchronizable {
      * Create instance of this class to access existing Blob.
      * 
      * @param c connection that will be used to access Blob.
-     * 
      * @param blob_id ID of the Blob.
+     * @param blobListener BlobListener
      */
     public FBBlob(GDSHelper c, long blob_id, FBObjectListener.BlobListener blobListener) {
         this(c, false, blobListener);
@@ -186,8 +171,7 @@ public class FBBlob implements FirebirdBlob, Synchronizable {
      * this method
      * @since 1.6
      */
-    public InputStream getBinaryStream(long pos, long length)
-            throws SQLException {
+    public InputStream getBinaryStream(long pos, long length) throws SQLException {
         throw new FBDriverNotCapableException();
     }
 
@@ -262,7 +246,7 @@ public class FBBlob implements FirebirdBlob, Synchronizable {
             
         int dataLength = gdsHelper.iscVaxInteger(info, position + 1, 2);
             
-        return gdsHelper.iscVaxInteger(info, position + 3, dataLength);
+        return gdsHelper.iscVaxLong(info, position + 3, dataLength);
     }
     
     /**
@@ -340,7 +324,6 @@ public class FBBlob implements FirebirdBlob, Synchronizable {
    * @see <a href="package-summary.html#2.0 API">What Is in the JDBC 2.0 API</a>
    */
     public byte[] getBytes(long pos, int length) throws SQLException{
-        
         if (pos < 1)
             throw new FBSQLException("Blob position should be >= 1");
         
@@ -355,22 +338,17 @@ public class FBBlob implements FirebirdBlob, Synchronizable {
                 blobListener.executionStarted(this);
             
             try {
-                FirebirdBlob.BlobInputStream in = 
-                    (FirebirdBlob.BlobInputStream)getBinaryStream();
-                    
+                FirebirdBlob.BlobInputStream in = (FirebirdBlob.BlobInputStream)getBinaryStream();
                 try {
                     byte[] result = new byte[length];
-                    
                     if (pos != 1)
                         in.seek((int)pos - 1);
                     
                     in.readFully(result);
-                    
                     return result;
                 } finally {
                     in.close();
                 }
-                
             } catch(IOException ex) {
                 throw new FBSQLException(ex);                    
             } finally {
@@ -380,18 +358,7 @@ public class FBBlob implements FirebirdBlob, Synchronizable {
         }
      }
 
-
-  /**
-   * Retrieves the <code>BLOB</code> designated by this
-   * <code>Blob</code> instance as a stream.
-   * @return a stream containing the <code>BLOB</code> data
-   * @exception SQLException if there is an error accessing the
-   * <code>BLOB</code>
-   * @since 1.2
-   * @see <a href="package-summary.html#2.0 API">What Is in the JDBC 2.0 API</a>
-   */
     public InputStream getBinaryStream () throws SQLException {
-        
         Object syncObject = getSynchronizationObject();
         synchronized(syncObject) {
             FBBlobInputStream blobstream = new FBBlobInputStream(this);
@@ -400,106 +367,32 @@ public class FBBlob implements FirebirdBlob, Synchronizable {
         }
     }
 
-  /**
-   * Determines the byte position at which the specified byte
-   * <code>pattern</code> begins within the <code>BLOB</code>
-   * value that this <code>Blob</code> object represents.  The
-   * search for <code>pattern</code> begins at position
-   * <code>start</code>.
-   * @param pattern the byte array for which to search
-   * @param start the position at which to begin searching; the
-   *        first position is 1
-   * @return the position at which the pattern appears, else -1
-   * @exception SQLException if there is an error accessing the
-   * <code>BLOB</code>
-   * @since 1.2
-   * @see <a href="package-summary.html#2.0 API">What Is in the JDBC 2.0 API</a>
-   */
     public long position(byte pattern[], long start) throws SQLException {
-        throw new FBDriverNotCapableException();
+        throw new FBDriverNotCapableException("Method position(byte[], long) is not supported");
     }
 
-  /**
-   * Determines the byte position in the <code>BLOB</code> value
-   * designated by this <code>Blob</code> object at which
-   * <code>pattern</code> begins.  The search begins at position
-   * <code>start</code>.
-   * @param pattern the <code>Blob</code> object designating
-   * the <code>BLOB</code> value for which to search
-   * @param start the position in the <code>BLOB</code> value
-   *        at which to begin searching; the first position is 1
-   * @return the position at which the pattern begins, else -1
-   * @exception SQLException if there is an error accessing the
-   * <code>BLOB</code>
-   * @since 1.2
-   * @see <a href="package-summary.html#2.0 API">What Is in the JDBC 2.0 API</a>
-   */
     public long position(Blob pattern, long start) throws SQLException {
-        throw new FBDriverNotCapableException();
+        throw new FBDriverNotCapableException("Method position(Blob, long) is not supported");
     }
 
-    //jdbc 3.0 additions
-
-    /**
-     * <b>This operation is not currently supported</b>
-     * Truncate this <code>Blob</code> to a given length. 
-     *
-     * @param param1 The length to truncate this Blob to 
-     * @exception java.sql.SQLException this operation is not supported     
-     * */
-    public void truncate(long param1) throws SQLException {
-        throw new FBDriverNotCapableException();
+    public void truncate(long len) throws SQLException {
+        throw new FBDriverNotCapableException("Method truncate(long) is not supported");
     }
 
-    /**
-     * <b>This operation is not currently supported</b>
-     * Writes all or part of the given byte array to the BLOB value that this 
-     * <code>Blob</code> object represents and returns the number of bytes 
-     * written.
-     *
-     * @param param1 The position at which to start writing 
-     * @param param2 The array of bytes to be written 
-     * @return the number of bytes written 
-     * @exception java.sql.SQLException because this operation is not supported 
-     */
-    public int setBytes(long param1, byte[] param2) throws SQLException {
-        throw new FBDriverNotCapableException();
+    public int setBytes(long pos, byte[] bytes) throws SQLException {
+        throw new FBDriverNotCapableException("Method setBytes(long, byte[]) is not supported");
     }
 
-    /**
-     * <b>This operation is not currently supported</b>
-     * Writes all or part of the given byte array to the BLOB value that this 
-     * <code>Blob</code> object represents and returns the number of bytes 
-     * written.
-     *
-     * @param param1 The position at which to start writing 
-     * @param param2 The array of bytes to be written 
-     * @param param3 the offset into the byte array at which to start reading 
-     * the bytes to be set 
-     * @param param4 the number of bytes to be written to the BLOB value from 
-     * the byte array   
-     * @return the number of bytes written 
-     * @exception java.sql.SQLException because this operation is not supported 
-     */
-    public int setBytes(long param1, byte[] param2, int param3, int param4) throws SQLException {
-        throw new FBDriverNotCapableException();
+    public int setBytes(long pos, byte[] bytes, int offset, int len) throws SQLException {
+        throw new FBDriverNotCapableException("Method setBytes(long, byte[], int, int) is not supported");
     }
 
-    /**
-     * Retrieves a stream that can be used to write to the BLOB value that 
-     * this Blob object represents. The stream begins at position pos. 
-     *
-     * @param pos The position in the blob to start writing.
-     * @return OuputStream to write to.
-     * @exception java.sql.SQLException if a database access error occurs 
-     */
     public OutputStream setBinaryStream(long pos) throws SQLException {
-        
         if (blobListener != null)
             blobListener.executionStarted(this);
         
         if (blobOut != null) 
-            throw new FBSQLException("Only one blob output stream open at a time!");
+            throw new FBSQLException("OutputStream already open. Only one blob output stream can be open at a time.");
 
         if (pos < 1) 
             throw new FBSQLException(
@@ -520,7 +413,6 @@ public class FBBlob implements FirebirdBlob, Synchronizable {
         
         return blobOut;
     }
-
 
     //package methods
 
@@ -612,8 +504,8 @@ public class FBBlob implements FirebirdBlob, Synchronizable {
      * @param encoding The encoding used in the character stream
      */
     public void copyCharacterStream(Reader inputStream, int length, String encoding) throws SQLException {
-        OutputStream os = setBinaryStream(1);
         try {
+            OutputStream os = setBinaryStream(1);
             OutputStreamWriter osw;
             if (encoding != null)
                 osw = new OutputStreamWriter(os, encoding);
@@ -627,19 +519,19 @@ public class FBBlob implements FirebirdBlob, Synchronizable {
                     osw.write(buffer, 0, chunk);                
                     length -= chunk;
                 }
+            } finally {
                 osw.flush();
                 osw.close();
             }
-            catch (IOException ioe) {
-                throw new FBSQLException(ioe);
-            }
-        } catch(UnsupportedEncodingException ex) {
+        }
+        catch(UnsupportedEncodingException ex) {
             throw new FBSQLException("Cannot set character stream because " +
-                "the unsupported encoding is detected in the JVM: " +
-                encoding + ". Please report this to the driver developers."
+                "the encoding '" + encoding + "' is unsupported in the JVM. " +
+        		"Please report this to the driver developers."
             );
+        }
+        catch (IOException ioe) {
+            throw new FBSQLException(ioe);
         }
     }
 }
-
-
