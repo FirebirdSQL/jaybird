@@ -62,6 +62,8 @@ import org.firebirdsql.gds.impl.*;
 import org.firebirdsql.logging.Logger;
 import org.firebirdsql.logging.LoggerFactory;
 
+import static org.firebirdsql.gds.impl.wire.WireProtocolConstants.*;
+
 /**
  * Describe class <code>GDS_Impl</code> here.
  * 
@@ -74,192 +76,6 @@ public abstract class AbstractJavaGDSImpl extends AbstractGDS implements GDS {
 	public static final String PURE_JAVA_TYPE_NAME = "PURE_JAVA";
 
 	private static Logger log = LoggerFactory.getLogger(AbstractJavaGDSImpl.class, false);
-	
-	// TODO Move operation constants to separate class/interface
-
-	/* Operation (packet) types */
-
-	static final int op_void = 0; /* Packet has been voided */
-
-	static final int op_connect = 1; /* Connect to remote server */
-
-	static final int op_exit = 2; /* Remote end has exitted */
-
-	static final int op_accept = 3; /* Server accepts connection */
-
-	static final int op_reject = 4; /* Server rejects connection */
-
-	static final int op_protocol = 5; /* Protocol selection */
-
-	static final int op_disconnect = 6; /* Connect is going away */
-
-	static final int op_credit = 7; /* Grant (buffer) credits */
-
-	static final int op_continuation = 8; /* Continuation packet */
-
-	static final int op_response = 9; /* Generic response block */
-
-	/* Page server operations */
-
-	static final int op_open_file = 10; /* Open file for page service */
-
-	static final int op_create_file = 11; /* Create file for page service */
-
-	static final int op_close_file = 12; /* Close file for page service */
-
-	static final int op_read_page = 13; /* optionally lock and read page */
-
-	static final int op_write_page = 14; /* write page and optionally release lock */
-
-	static final int op_lock = 15; /* seize lock */
-
-	static final int op_convert_lock = 16; /* convert existing lock */
-
-	static final int op_release_lock = 17; /* release existing lock */
-
-	static final int op_blocking = 18; /* blocking lock message */
-
-	/* Full context server operations */
-
-	static final int op_attach = 19; /* Attach database */
-
-	static final int op_create = 20; /* Create database */
-
-	static final int op_detach = 21; /* Detach database */
-
-	static final int op_compile = 22; /* Request based operations */
-
-	static final int op_start = 23;
-
-	static final int op_start_and_send = 24;
-
-	static final int op_send = 25;
-
-	static final int op_receive = 26;
-
-	static final int op_unwind = 27;
-
-	static final int op_release = 28;
-
-	static final int op_transaction = 29; /* Transaction operations */
-
-	static final int op_commit = 30;
-
-	static final int op_rollback = 31;
-
-	static final int op_prepare = 32;
-
-	static final int op_reconnect = 33;
-
-	static final int op_create_blob = 34; /* Blob operations */
-
-	static final int op_open_blob = 35;
-
-	static final int op_get_segment = 36;
-
-	static final int op_put_segment = 37;
-
-	static final int op_cancel_blob = 38;
-
-	static final int op_close_blob = 39;
-
-	static final int op_info_database = 40; /* Information services */
-
-	static final int op_info_request = 41;
-
-	static final int op_info_transaction = 42;
-
-	static final int op_info_blob = 43;
-
-	static final int op_batch_segments = 44; /* Put a bunch of blob segments */
-
-	static final int op_mgr_set_affinity = 45; /* Establish server affinity */
-
-	static final int op_mgr_clear_affinity = 46; /* Break server affinity */
-
-	static final int op_mgr_report = 47; /* Report on server */
-
-	static final int op_que_events = 48; /* Queue event notification request */
-
-	static final int op_cancel_events = 49; /* Cancel event notification request */
-
-	static final int op_commit_retaining = 50; /* Commit retaining (what else) */
-
-	static final int op_prepare2 = 51; /* Message form of prepare */
-
-	static final int op_event = 52; /* Completed event request (asynchronous) */
-
-	static final int op_connect_request = 53; /* Request to establish connection */
-
-	static final int op_aux_connect = 54; /* Establish auxiliary connection */
-
-	static final int op_ddl = 55; /* DDL call */
-
-	static final int op_open_blob2 = 56;
-
-	static final int op_create_blob2 = 57;
-
-	static final int op_get_slice = 58;
-
-	static final int op_put_slice = 59;
-
-	static final int op_slice = 60; /* Successful response to static final int op_get_slice */
-
-	static final int op_seek_blob = 61; /* Blob seek operation */
-
-	/* DSQL operations */
-
-	static final int op_allocate_statement = 62; /* allocate a statement handle */
-
-	static final int op_execute = 63; /* execute a prepared statement */
-
-	static final int op_exec_immediate = 64; /* execute a statement */
-
-	static final int op_fetch = 65; /* fetch a record */
-
-	static final int op_fetch_response = 66; /* response for record fetch */
-
-	static final int op_free_statement = 67; /* free a statement */
-
-	static final int op_prepare_statement = 68; /* prepare a statement */
-
-	static final int op_set_cursor = 69; /* set a cursor name */
-
-	static final int op_info_sql = 70;
-
-	static final int op_dummy = 71; /* dummy packet to detect loss of client */
-
-	static final int op_response_piggyback = 72; /* response block for piggybacked messages */
-
-	static final int op_start_and_receive = 73;
-
-	static final int op_start_send_and_receive = 74;
-
-	static final int op_exec_immediate2 = 75; /* execute an immediate statement with msgs */
-
-	static final int op_execute2 = 76; /* execute a statement with msgs */
-
-	static final int op_insert = 77;
-
-	static final int op_sql_response = 78; /* response from execute; exec immed; insert */
-
-	static final int op_transact = 79;
-
-	static final int op_transact_response = 80;
-
-	static final int op_drop_database = 81;
-
-	static final int op_service_attach = 82;
-
-	static final int op_service_detach = 83;
-
-	static final int op_service_info = 84;
-
-	static final int op_service_start = 85;
-
-	static final int op_rollback_retaining = 86;
-	
-	static final int op_cancel = 91;
 
 	static final int MAX_BUFFER_SIZE = 1024;
 	
@@ -1751,29 +1567,12 @@ public abstract class AbstractJavaGDSImpl extends AbstractGDS implements GDS {
 
 		// Here we identify the user to the engine. This may or may not be
 		// used as login info to a database.
-		String user; 
-		try {
-		    user = getSystemPropertyPrivileged("user.name");
-		} catch (SecurityException ex) {
-		    if (debug)
-		        log.debug("Unable to retrieve user.name property", ex);
-		    // TODO Find out if using empty string is sufficient
-		    user = "";
-		}
+		String user = getSystemUser();
 		
 		if (debug)
 			log.debug("user.name: " + user);
 		
-		String host;
-		try {
-			host = InetAddress.getLocalHost().getHostName();
-		} catch(UnknownHostException ex) {
-			try {
-				host = InetAddress.getLocalHost().getHostAddress();
-			} catch(UnknownHostException ex1) {
-				host = "127.0.0.1";
-			}
-		}
+		String host = getSystemHostName();
 
 		byte[] userBytes = user.getBytes();
 		byte[] hostBytes = host.getBytes();
@@ -1825,6 +1624,29 @@ public abstract class AbstractJavaGDSImpl extends AbstractGDS implements GDS {
 		int nextOperation = nextOperation(in);
 		return nextOperation;
 	}
+	
+	private String getSystemUser() {
+        try {
+            return getSystemPropertyPrivileged("user.name");
+        } catch (SecurityException ex) {
+            if (debug())
+                log.debug("Unable to retrieve user.name property", ex);
+            // TODO Find out if using empty string is sufficient
+            return "";
+        }
+    }
+    
+    private String getSystemHostName() {
+        try {
+            return InetAddress.getLocalHost().getHostName();
+        } catch(UnknownHostException ex) {
+            try {
+                return InetAddress.getLocalHost().getHostAddress();
+            } catch(UnknownHostException ex1) {
+                return "127.0.0.1";
+            }
+        }
+    }
 
 	protected void openSocket(isc_db_handle_impl db, DbAttachInfo dbai,
 			boolean debug, int socketBufferSize, int soTimeout, int connectTimeout) throws IOException,
@@ -1841,7 +1663,6 @@ public abstract class AbstractJavaGDSImpl extends AbstractGDS implements GDS {
 				db.socket.setReceiveBufferSize(socketBufferSize);
 				db.socket.setSendBufferSize(socketBufferSize);
 			}
-			// TODO : introduce keep alive
 			db.socket.connect(new InetSocketAddress(dbai.getServer(), dbai.getPort()), connectTimeout);
 
 			if (debug)
@@ -3018,5 +2839,9 @@ public abstract class AbstractJavaGDSImpl extends AbstractGDS implements GDS {
             return sql_prepare_info15;
         }
         return sql_prepare_info2;
+    }
+    
+    private static boolean debug() {
+        return log != null && log.isDebugEnabled();
     }
 }
