@@ -126,13 +126,6 @@ public class XdrOutputStream {
     public void writeString(String s) throws IOException {
         byte[] buffer = s.getBytes();
         writeBuffer(buffer);
-        /*
-        int len = buffer.length;
-        writeInt(len);
-        if (len > 0) {
-            write(buffer, len, (4 - len) & 3);
-        }
-        */
     }
 
     /**
