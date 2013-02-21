@@ -78,16 +78,16 @@ public abstract class BaseGDSImpl extends AbstractGDS {
         return new DatabaseParameterBufferImp();
     }
 
-    public synchronized IscBlobHandle createIscBlobHandle() {
+    public IscBlobHandle createIscBlobHandle() {
         return new isc_blob_handle_impl();
     }
 
     // Handle declaration methods
-    public synchronized IscDbHandle createIscDbHandle() {
+    public IscDbHandle createIscDbHandle() {
         return new isc_db_handle_impl();
     }
 
-    public synchronized IscStmtHandle createIscStmtHandle() {
+    public IscStmtHandle createIscStmtHandle() {
         return new isc_stmt_handle_impl();
     }
 
@@ -95,7 +95,7 @@ public abstract class BaseGDSImpl extends AbstractGDS {
         return new isc_svc_handle_impl();
     }
 
-    public synchronized IscTrHandle createIscTrHandle() {
+    public IscTrHandle createIscTrHandle() {
         return new isc_tr_handle_impl();
     }
 
@@ -154,7 +154,7 @@ public abstract class BaseGDSImpl extends AbstractGDS {
             throw new GDSException(ISCConstants.isc_bad_dpb_content);
         }
         
-        synchronized (this) {
+        synchronized (db_handle) {
             native_isc_attach_database(urlData, db_handle, dpbBytes);
         }
 
@@ -165,7 +165,7 @@ public abstract class BaseGDSImpl extends AbstractGDS {
     public byte[] iscBlobInfo(IscBlobHandle handle, byte[] items,
             int buffer_length) throws GDSException {
         isc_blob_handle_impl blob = (isc_blob_handle_impl) handle;
-        synchronized (blob) {
+        synchronized (blob.getDb()) {
             return native_isc_blob_info(blob, items, buffer_length);
         }
     }
@@ -278,7 +278,7 @@ public abstract class BaseGDSImpl extends AbstractGDS {
                 : ((DatabaseParameterBufferImp) dpb)
                         .getBytesForNativeCode());
 
-        synchronized (this) {
+        synchronized (db_handle) {
             String serverUrl  = getServerUrl(file_name);
             
             byte[] urlData;
@@ -322,7 +322,7 @@ public abstract class BaseGDSImpl extends AbstractGDS {
         isc_db_handle_impl db = (isc_db_handle_impl) db_handle;
         if (db == null) { throw new GDSException(ISCConstants.isc_bad_db_handle); }
 
-        synchronized (this) {
+        synchronized (db) {
 //            if (db.hasTransactions()) { throw new GDSException(
 //                    ISCConstants.isc_open_trans, db.getOpenTransactionCount()); }
 
@@ -337,7 +337,7 @@ public abstract class BaseGDSImpl extends AbstractGDS {
         if (db_handle == null) { throw new GDSException(
                 ISCConstants.isc_bad_db_handle); }
 
-        synchronized (this) {
+        synchronized (db_handle) {
             native_isc_drop_database(db_handle);
         }
     }
@@ -854,7 +854,7 @@ public abstract class BaseGDSImpl extends AbstractGDS {
 
     public byte [] iscTransactionInformation(IscTrHandle trHandle, 
             byte [] requestBuffer, int bufferLen) throws GDSException {
-        synchronized (trHandle) {
+        synchronized (trHandle.getDbHandle()) {
             return native_isc_transaction_info(trHandle, requestBuffer, bufferLen);
         }
     }
@@ -862,7 +862,7 @@ public abstract class BaseGDSImpl extends AbstractGDS {
     public void iscSeekBlob(IscBlobHandle handle, int position, int mode)
             throws GDSException {
         isc_blob_handle_impl blob = (isc_blob_handle_impl) handle;
-        synchronized (handle) {
+        synchronized (blob.getDb()) {
             native_isc_seek_blob(blob, position, mode);
         }
     }
@@ -1374,8 +1374,6 @@ public abstract class BaseGDSImpl extends AbstractGDS {
         isc_db_handle_impl db = (isc_db_handle_impl) dbHandle;
         if (db == null) { throw new GDSException(ISCConstants.isc_bad_db_handle); }
 
-        synchronized (this) {
-            native_fb_cancel_operation(dbHandle, kind);
-        }
+        native_fb_cancel_operation(dbHandle, kind);
     }
 }
