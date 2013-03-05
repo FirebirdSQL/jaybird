@@ -8,7 +8,8 @@ import org.firebirdsql.logging.LoggerFactory;
 
 public abstract class JniGDSImpl extends BaseGDSImpl {
 
-    private static final boolean DEVELOPMENT_DEBUG_OUTPUT = true;
+	// TODO: Replace with debug logging
+    private static final boolean DEVELOPMENT_DEBUG_OUTPUT = false;
 
     /**
      * Name of the JNI library able to communicate with the client or embedded
