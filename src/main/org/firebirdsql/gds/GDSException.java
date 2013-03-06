@@ -118,6 +118,28 @@ public class GDSException extends Exception {
         this.strParam = null;
         setNext(new GDSException(ISCConstants.isc_arg_string, strParam));
     }
+    
+    /**
+     * Construct instance of this class. This method correctly constructs
+     * chain of exceptions for one string parameter.
+     * 
+     * @param type type of the exception, should be always 
+     * {@link ISCConstants#isc_arg_gds}, otherwise no message will be displayed.
+     * 
+     * @param fbErrorCode Firebird error code, one of the constants declared
+     * in {@link GDS} interface.
+     * 
+     * @param strParam value of the string parameter that will substitute 
+     * <code>{0}</code> entry in error message corresponding to the specified
+     * error code.
+     * 
+     * @param cause Cause of this exception
+     */
+    public GDSException(int type, int fbErrorCode, String strParam, Throwable cause) {
+        this(type, fbErrorCode, strParam);
+        initCause(cause);
+        setNext(new GDSException(ISCConstants.isc_arg_string, strParam));
+    }
 
     /**
      * Create a new instance.
@@ -129,6 +151,18 @@ public class GDSException extends Exception {
         this.intParam = fbErrorCode;
         this.type = ISCConstants.isc_arg_gds;
         this.strParam = null;
+    }
+    
+    /**
+     * Create a new instance.
+     *
+     * @param fbErrorCode Firebird error code, one of the constants declared
+     *        in {@link GDS} interface
+     * @param cause Cause of this exception
+     */
+    public GDSException(int fbErrorCode, Throwable cause) {
+        this(fbErrorCode);
+        initCause(cause);
     }
 
     /**
