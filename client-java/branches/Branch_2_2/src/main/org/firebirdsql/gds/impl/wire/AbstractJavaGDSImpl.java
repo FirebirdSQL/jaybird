@@ -529,7 +529,7 @@ public abstract class AbstractJavaGDSImpl extends AbstractGDS implements GDS {
 				// db.getResp_data()[0] + ", " + db.getResp_data()[1]);
 				return db.getResp_data_truncated();
 			} catch (IOException ex) {
-				throw new GDSException(ISCConstants.isc_network_error);
+				throw new GDSException(ISCConstants.isc_network_error, ex);
 			}
 		}
 	}
@@ -557,7 +557,7 @@ public abstract class AbstractJavaGDSImpl extends AbstractGDS implements GDS {
 				// db.getResp_data()[0] + ", " + db.getResp_data()[1]);
 				return db.getResp_data_truncated();
 			} catch (IOException ex) {
-				throw new GDSException(ISCConstants.isc_network_error);
+				throw new GDSException(ISCConstants.isc_network_error, ex);
 			}
 		}
 	}
@@ -581,7 +581,7 @@ public abstract class AbstractJavaGDSImpl extends AbstractGDS implements GDS {
 				receiveResponse(db, -1);
 				blob.setPosition(db.getResp_object());
 			} catch (IOException ex) {
-				throw new GDSException(ISCConstants.isc_network_error);
+				throw new GDSException(ISCConstants.isc_network_error, ex);
 			}
 		}
 	}
@@ -703,7 +703,7 @@ public abstract class AbstractJavaGDSImpl extends AbstractGDS implements GDS {
 				receiveResponse(db, -1);
 
 			} catch (IOException ex) {
-				throw new GDSException(ISCConstants.isc_network_error);
+				throw new GDSException(ISCConstants.isc_network_error, ex);
 			} finally {
 				try {
 					disconnect(db);
@@ -735,7 +735,7 @@ public abstract class AbstractJavaGDSImpl extends AbstractGDS implements GDS {
 					log.debug("sent");
 				receiveResponse(db, -1);
 			} catch (IOException ex) {
-				throw new GDSException(ISCConstants.isc_network_error);
+				throw new GDSException(ISCConstants.isc_network_error, ex);
 			}
 		}
 
@@ -788,7 +788,7 @@ public abstract class AbstractJavaGDSImpl extends AbstractGDS implements GDS {
 				// out.flush();
 				receiveResponse(db, -1);
 			} catch (IOException ex) {
-				throw new GDSException(ISCConstants.isc_network_error);
+				throw new GDSException(ISCConstants.isc_network_error, ex);
 			}
 			tr.setTransactionId(db.getResp_object());
 
@@ -837,7 +837,7 @@ public abstract class AbstractJavaGDSImpl extends AbstractGDS implements GDS {
 				// out.flush();
 				receiveResponse(db, -1);
 			} catch (IOException ex) {
-				throw new GDSException(ISCConstants.isc_network_error);
+				throw new GDSException(ISCConstants.isc_network_error, ex);
 			}
 			tr.setTransactionId(db.getResp_object());
 
@@ -1995,7 +1995,7 @@ public abstract class AbstractJavaGDSImpl extends AbstractGDS implements GDS {
 			if (debug)
 				log.debug("IOException while trying to connect to db:", ex);
 			throw new GDSException(ISCConstants.isc_arg_gds,
-					ISCConstants.isc_network_error, dbai.getServer());
+					ISCConstants.isc_network_error, dbai.getServer(), ex);
 		}
 	}
 
@@ -2097,7 +2097,7 @@ public abstract class AbstractJavaGDSImpl extends AbstractGDS implements GDS {
 			if (debug)
 				log.error(message, ex2);
 			throw new GDSException(ISCConstants.isc_arg_gds,
-					ISCConstants.isc_network_error, dbai.getServer());
+					ISCConstants.isc_network_error, dbai.getServer(), ex2);
 		}
 
 		db.out = new XdrOutputStream(db.socket.getOutputStream());
@@ -2669,7 +2669,7 @@ public abstract class AbstractJavaGDSImpl extends AbstractGDS implements GDS {
 					if (debug)
 						log.error(message, ex2);
 					throw new GDSException(ISCConstants.isc_arg_gds,
-							ISCConstants.isc_network_error, host);
+							ISCConstants.isc_network_error, host, ex2);
 				}
 
 				svc.out = new XdrOutputStream(svc.socket.getOutputStream());
@@ -3174,12 +3174,12 @@ public abstract class AbstractJavaGDSImpl extends AbstractGDS implements GDS {
                 throw new GDSException(
                         ISCConstants.isc_arg_gds, 
                         ISCConstants.isc_network_error,
-                        ipAddress);
+                        ipAddress, uhe);
             } catch (IOException ioe){
                 throw new GDSException(
                         ISCConstants.isc_arg_gds, 
                         ISCConstants.isc_network_error, 
-                        ipAddress);
+                        ipAddress, ioe);
             }
         }
 
@@ -3266,7 +3266,7 @@ public abstract class AbstractJavaGDSImpl extends AbstractGDS implements GDS {
                 // receiveResponse(db, -1);
 
             } catch (IOException ex) {
-                throw new GDSException(ISCConstants.isc_network_error);
+                throw new GDSException(ISCConstants.isc_network_error, ex);
             } 
         //}
     }
