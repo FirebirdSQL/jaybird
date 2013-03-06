@@ -163,6 +163,7 @@ public class GDSException extends Exception {
      *
      * @param fbErrorCode Firebird error code, one of the constants declared
      *        in {@link GDS} interface
+     * @param cause Cause of this exception
      */
     public GDSException(int fbErrorCode, Throwable cause) {
         this(fbErrorCode);
