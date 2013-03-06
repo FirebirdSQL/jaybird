@@ -310,7 +310,7 @@ public abstract class BaseGDSImpl extends AbstractGDS {
             } catch (Exception e) {
                 // Actual implementation does not throw exception
                 // TODO : Invalidate should throw GDSException?
-                throw new GDSException(ISCConstants.isc_network_error);
+                throw new GDSException(ISCConstants.isc_network_error, e);
             }
         }
     }
