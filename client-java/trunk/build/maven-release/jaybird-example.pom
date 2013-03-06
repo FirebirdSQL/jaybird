@@ -17,17 +17,17 @@
 	<inceptionYear>2001</inceptionYear>
 	<developers>
 		<developer>
-			<id>rrokytskyy</id>
-			<name>Roman Rokytskyy</name>
+			<id>mrotteveel</id>
+			<name>Mark Rotteveel</name>
+			<email>mrotteveel@users.sourceforge.net</email>
 			<roles>
 				<role>Administrator</role>
 				<role>Developer</role>
 			</roles>
 		</developer>
 		<developer>
-			<id>mrotteveel</id>
-			<name>Mark Rotteveel</name>
-			<email>mrotteveel@users.sourceforge.net</email>
+			<id>rrokytskyy</id>
+			<name>Roman Rokytskyy</name>
 			<roles>
 				<role>Developer</role>
 			</roles>
@@ -133,9 +133,9 @@
 	</licenses>
 	
 	<scm>
-        <connection>scm:svn:https://firebird.svn.sourceforge.net/svnroot/firebird/client-java</connection>
-        <developerConnection>scm:svn:https://firebird.svn.sourceforge.net/svnroot/firebird/client-java</developerConnection>
-        <url>http://firebird.svn.sourceforge.net/viewvc/firebird/client-java/</url>
+        <connection>scm:svn:svn://svn.code.sf.net/p/firebird/code/client-java</connection>
+        <developerConnection>scm:svn:svn+ssh://svn.code.sf.net/p/firebird/code/client-java</developerConnection>
+        <url>http://sourceforge.net/p/firebird/code</url>
     </scm>
 	
 	<issueManagement>
