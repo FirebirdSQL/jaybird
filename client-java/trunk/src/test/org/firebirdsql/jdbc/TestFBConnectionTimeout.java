@@ -79,6 +79,7 @@ public class TestFBConnectionTimeout {
         long startTime = System.currentTimeMillis();
         try {
             DriverManager.getConnection(buildTestURL(), "sysdba", "masterkey");
+            fail("Expected connection to fail");
         } catch (SQLException e) {
             long endTime = System.currentTimeMillis();
             long difference = endTime - startTime;
@@ -97,6 +98,7 @@ public class TestFBConnectionTimeout {
         long startTime = System.currentTimeMillis();
         try {
             DriverManager.getConnection(buildTestURL(), "sysdba", "masterkey");
+            fail("Expected connection to fail");
         } catch (SQLException e) {
             long endTime = System.currentTimeMillis();
             long difference = endTime - startTime;
@@ -115,6 +117,7 @@ public class TestFBConnectionTimeout {
         long startTime = System.currentTimeMillis();
         try {
             DriverManager.getConnection(buildTestURL() + "?connectTimeout=1", "sysdba", "masterkey");
+            fail("Expected connection to fail");
         } catch (SQLException e) {
             long endTime = System.currentTimeMillis();
             long difference = endTime - startTime;
