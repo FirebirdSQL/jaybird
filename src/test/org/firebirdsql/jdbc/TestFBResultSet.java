@@ -946,7 +946,7 @@ public class TestFBResultSet extends FBTestBase {
                 "", rs.getExecutionPlan());
     }
     
-    public void testHoldability() throws Exception {
+    public void testHoldabilityStatement() throws Exception {
         final int recordCount = 10;
         
         PreparedStatement ps = 
@@ -969,6 +969,47 @@ public class TestFBResultSet extends FBTestBase {
         try {
             // execute first query
             FirebirdResultSet rs = (FirebirdResultSet) stmt.executeQuery(SELECT_TEST_TABLE);
+            
+            // now execute another query, causes commit in auto-commit mode
+            stmt2.executeQuery("SELECT * FROM rdb$database");
+            
+            // now let's access the result set
+            int actualCount = 0;
+            assertEquals("Unexpected holdability", ResultSet.HOLD_CURSORS_OVER_COMMIT, rs.getHoldability());
+            while(rs.next()) {
+                rs.getString(1);
+                actualCount++;
+            }
+            assertEquals("Unexpected number of reads from holdable resultset", recordCount, actualCount);
+        } finally {
+            JdbcResourceHelper.closeQuietly(stmt);
+            JdbcResourceHelper.closeQuietly(stmt2);
+        }
+    }
+    
+    public void testHoldabilityPreparedStatement() throws Exception {
+        final int recordCount = 10;
+        
+        PreparedStatement ps = 
+            connection.prepareStatement(INSERT_INTO_TABLE_STATEMENT);
+
+        try {
+            for(int i = 0; i < recordCount; i++) {
+                ps.setInt(1, i);
+                ps.setInt(2, i);
+                ps.executeUpdate();
+            }
+        } finally {
+            ps.close();
+        }
+
+        PreparedStatement stmt = connection.prepareStatement(SELECT_TEST_TABLE, ResultSet.TYPE_SCROLL_INSENSITIVE, 
+                ResultSet.CONCUR_READ_ONLY, ResultSet.HOLD_CURSORS_OVER_COMMIT);
+        Statement stmt2 = connection.createStatement();
+        
+        try {
+            // execute first query
+            FirebirdResultSet rs = (FirebirdResultSet) stmt.executeQuery();
             
             // now execute another query, causes commit in auto-commit mode
             stmt2.executeQuery("SELECT * FROM rdb$database");
