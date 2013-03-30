@@ -31,6 +31,7 @@ import org.firebirdsql.gds.*;
 import org.firebirdsql.gds.impl.AbstractIscStmtHandle;
 import org.firebirdsql.gds.impl.GDSHelper;
 import org.firebirdsql.jdbc.field.*;
+import org.firebirdsql.util.SQLExceptionChainBuilder;
 
 /**
  * Implementation of {@link ResultSet} interface.
@@ -215,7 +216,7 @@ public class FBResultSet implements ResultSet, FirebirdResultSet, Synchronizable
      * @throws SQLException if statement is closed.
      */
     protected void checkCursorMove() throws SQLException {
-        if (closed && rsHoldability != ResultSet.HOLD_CURSORS_OVER_COMMIT) 
+        if (isClosed()) 
             throw new FBSQLException("The result set is closed");
         
         closeFields();
@@ -229,9 +230,19 @@ public class FBResultSet implements ResultSet, FirebirdResultSet, Synchronizable
     protected void closeFields() throws SQLException {
         wasNullValid = false;
 
+        SQLExceptionChainBuilder<SQLException> chain = new SQLExceptionChainBuilder<SQLException>();
         // close current fields, so that resources are freed.
-        for(int i = 0; i < fields.length; i++) 
-            fields[i].close();
+        for(int i = 0; i < fields.length; i++) {
+            try {
+                fields[i].close();
+            } catch (SQLException ex) {
+                chain.append(ex);
+            }
+        }
+        
+        if (chain.hasException()) {
+            throw chain.getException();
+        }
     }
     
     /* (non-Javadoc)
@@ -291,31 +302,47 @@ public class FBResultSet implements ResultSet, FirebirdResultSet, Synchronizable
     }
     
     void close(boolean notifyListener) throws SQLException {
-        wasNullValid = false;
+        if (isClosed()) return;
         closed = true;
+        SQLExceptionChainBuilder<SQLException> chain = new SQLExceptionChainBuilder<SQLException>();
         
         try {
-            
-            for(int i = 0; i < fields.length; i++)
-                fields[i].close();
-            
+            closeFields();
+        } catch (SQLException ex) {
+            chain.append(ex);
         } finally {
-
-            if (fbFetcher != null) {
-                fbFetcher.close();
-
-                if (rowUpdater != null)
-                    rowUpdater.close();
-
-                if (notifyListener) {
-                    if (listener != null)
-                        listener.resultSetClosed(this);
+            try {
+                if (fbFetcher != null) {
+                    try {
+                        fbFetcher.close();
+                    } catch (SQLException ex) {
+                        chain.append(ex);
+                    }
                 }
 
-            }
-            
-            if (rsHoldability != ResultSet.HOLD_CURSORS_OVER_COMMIT)
+                if (rowUpdater != null) {
+                    try {
+                        rowUpdater.close();
+                    } catch (SQLException ex) {
+                        chain.append(ex);
+                    }
+                }
+
+                if (notifyListener && listener != null) {
+                    try {
+                        listener.resultSetClosed(this);
+                    } catch (SQLException ex) {
+                        chain.append(ex);
+                    }
+                }
+            } finally {
                 fbFetcher = null;
+                rowUpdater = null;
+            }
+        }
+
+        if (chain.hasException()) {
+            throw chain.getException();
         }
     }
 
@@ -631,7 +658,7 @@ public class FBResultSet implements ResultSet, FirebirdResultSet, Synchronizable
      * Factory method for the field access objects
      */
     public FBField getField(int columnIndex, boolean checkRowPosition) throws SQLException {
-        if (closed && rsHoldability != ResultSet.HOLD_CURSORS_OVER_COMMIT) 
+        if (isClosed()) 
             throw new FBSQLException("The resultSet is closed");
         
         if (checkRowPosition && row == null && rowUpdater == null)
@@ -657,7 +684,7 @@ public class FBResultSet implements ResultSet, FirebirdResultSet, Synchronizable
      * @throws SQLException if the field cannot be retrieved
      */
     public FBField getField(String columnName) throws SQLException {
-        if (closed && rsHoldability != ResultSet.HOLD_CURSORS_OVER_COMMIT) 
+        if (isClosed()) 
             throw new FBSQLException("The resultSet is closed");
         
         if (row == null && rowUpdater == null)

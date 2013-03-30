@@ -54,6 +54,9 @@ public class TestFBResultSet extends FBTestBase {
         + "  \"CamelStr\" VARCHAR(255)"
         + ")"
         ;
+    
+    public static final String SELECT_TEST_TABLE =
+            "SELECT id, str FROM test_table";
 
     public static final String CREATE_TABLE_STATEMENT2 = ""
         + "CREATE TABLE test_table2(" 
@@ -944,26 +947,43 @@ public class TestFBResultSet extends FBTestBase {
     }
     
     public void testHoldability() throws Exception {
-        ((FirebirdConnection)connection).setHoldability(ResultSet.HOLD_CURSORS_OVER_COMMIT);
+        final int recordCount = 10;
         
-        
-        Statement stmt = connection.createStatement(
-                ResultSet.TYPE_SCROLL_INSENSITIVE, 
-                ResultSet.CONCUR_READ_ONLY);
+        PreparedStatement ps = 
+            connection.prepareStatement(INSERT_INTO_TABLE_STATEMENT);
+
+        try {
+            for(int i = 0; i < recordCount; i++) {
+                ps.setInt(1, i);
+                ps.setInt(2, i);
+                ps.executeUpdate();
+            }
+        } finally {
+            ps.close();
+        }
+
+        Statement stmt = connection.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, 
+                ResultSet.CONCUR_READ_ONLY, ResultSet.HOLD_CURSORS_OVER_COMMIT);
+        Statement stmt2 = connection.createStatement();
         
         try {
             // execute first query
-            ResultSet rs = stmt.executeQuery("SELECT * FROM rdb$database");
+            FirebirdResultSet rs = (FirebirdResultSet) stmt.executeQuery(SELECT_TEST_TABLE);
             
             // now execute another query, causes commit in auto-commit mode
-            stmt.executeQuery("SELECT * FROM rdb$database");
+            stmt2.executeQuery("SELECT * FROM rdb$database");
             
             // now let's access the result set
+            int actualCount = 0;
+            assertEquals("Unexpected holdability", ResultSet.HOLD_CURSORS_OVER_COMMIT, rs.getHoldability());
             while(rs.next()) {
                 rs.getString(1);
+                actualCount++;
             }
+            assertEquals("Unexpected number of reads from holdable resultset", recordCount, actualCount);
         } finally {
-            stmt.close();
+            JdbcResourceHelper.closeQuietly(stmt);
+            JdbcResourceHelper.closeQuietly(stmt2);
         }
     }
 
@@ -1117,7 +1137,6 @@ public class TestFBResultSet extends FBTestBase {
     }
 
     public void testRelAlias() throws Exception {
-        
         Statement stmt = connection.createStatement();
         
         try {
@@ -1138,7 +1157,6 @@ public class TestFBResultSet extends FBTestBase {
     }
 
     public void testUpdatableHoldableResultSet() throws Exception {
-	
 	    connection.setAutoCommit(true);
 	
 	    int recordCount = 10;
@@ -1181,6 +1199,22 @@ public class TestFBResultSet extends FBTestBase {
 	        stmt.close();
 	    }
 	}
+    
+    // TODO Ignored, see JDBC-307 http://tracker.firebirdsql.org/browse/JDBC-307
+    public void _testClosedOnCommit() throws Exception {
+        connection.setAutoCommit(false);
+        Statement stmt = connection.createStatement();
+        try {
+            FirebirdResultSet rs = (FirebirdResultSet) stmt.executeQuery("SELECT * FROM RDB$DATABASE");
+            assertEquals("Unexpected holdability", ResultSet.CLOSE_CURSORS_AT_COMMIT, rs.getHoldability());
+            assertFalse("Expected resultset to be open", rs.isClosed());
+            
+            connection.commit();
+            assertTrue("Expected resultset to be closed", rs.isClosed());
+        } finally {
+            stmt.close();
+        }
+    }
 
 	public static void main(String[] args) {
         TestRunner.run(new TestFBResultSet("testMemoryGrowth"));
