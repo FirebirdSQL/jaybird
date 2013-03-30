@@ -186,7 +186,7 @@ public class FBStatement implements FirebirdStatement, Synchronizable {
     
     protected void finalize() throws Throwable {
         if (!closed)
-            close(true);
+            close();
     }
     
     public void completeStatement() throws SQLException {
