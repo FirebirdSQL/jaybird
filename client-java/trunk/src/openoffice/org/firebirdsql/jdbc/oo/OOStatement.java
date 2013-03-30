@@ -16,6 +16,12 @@ public class OOStatement extends FBStatement {
 
     public void completeStatement() throws SQLException {
         // workaround - do not close the result set, OpenOffice gets crazy
+        // TODO Test if this is still necessary after the changes of JDBC-304
+        if (!completed) notifyStatementCompleted();
+    }
+    
+    public void completeStatement(CompletionReason reason)  throws SQLException {
+        // TODO Test if this is still necessary after the changes of JDBC-304
         if (!completed) notifyStatementCompleted();
     }
 }

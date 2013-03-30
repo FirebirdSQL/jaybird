@@ -190,7 +190,13 @@ public class FBStatement implements FirebirdStatement, Synchronizable {
     }
     
     public void completeStatement() throws SQLException {
-        closeResultSet(false);
+        completeStatement(CompletionReason.OTHER);
+    }
+    
+    public void completeStatement(CompletionReason reason) throws SQLException {
+        if (currentRs != null && (reason != CompletionReason.COMMIT || currentRs.getHoldability() == ResultSet.CLOSE_CURSORS_AT_COMMIT)) {
+            closeResultSet(false);
+        }
         
         if (!completed)
             notifyStatementCompleted();
@@ -231,14 +237,13 @@ public class FBStatement implements FirebirdStatement, Synchronizable {
     }
     
     protected void notifyStatementStarted(boolean closeResultSet) throws SQLException {
-        
         if (closeResultSet)
             closeResultSet(false);
         
         // notify listener that statement execution is about to start
         statementListener.executionStarted(this);
         
-        this.completed = false;
+        completed = false;
     }
 
     protected void notifyStatementCompleted() throws SQLException {
@@ -246,7 +251,7 @@ public class FBStatement implements FirebirdStatement, Synchronizable {
     }
     
     protected void notifyStatementCompleted(boolean success) throws SQLException {
-        this.completed = true;
+        completed = true;
         statementListener.statementCompleted(this, success);
     }
     
@@ -582,8 +587,7 @@ public class FBStatement implements FirebirdStatement, Synchronizable {
     }
     
     void close(boolean ignoreAlreadyClosed) throws SQLException {
-        
-        if (closed) { 
+        if (isClosed()) { 
             if (ignoreAlreadyClosed)
                 return;
             
@@ -597,7 +601,6 @@ public class FBStatement implements FirebirdStatement, Synchronizable {
                 try {
                     try {
                         closeResultSet(false);
-
                     } finally {
                         //may need ensureTransaction?
                         if (fixedStmt.isValid())
@@ -1014,18 +1017,13 @@ public class FBStatement implements FirebirdStatement, Synchronizable {
     }
         
     public boolean getMoreResults(int mode) throws SQLException {
-        
         hasMoreResults = false;
 
         boolean closeResultSet = mode == Statement.CLOSE_ALL_RESULTS
                 || mode == Statement.CLOSE_CURRENT_RESULT;
         
         if (closeResultSet && currentRs != null) {
-            try {
-                currentRs.close();
-            } finally {
-                currentRs = null;
-            }
+            closeResultSet(true);
         }
         
         return hasMoreResults;
@@ -1315,7 +1313,7 @@ public class FBStatement implements FirebirdStatement, Synchronizable {
      */
     public Connection getConnection() throws SQLException {
         checkValidity();
-        return statementListener.getConnection();
+        return connection;
     }
 
     //package level
@@ -1323,13 +1321,18 @@ public class FBStatement implements FirebirdStatement, Synchronizable {
     void closeResultSet(boolean notifyListener) throws SQLException {
         boolean wasCompleted = completed;
         
-        if (currentRs != null) {
-            currentRs.close(notifyListener);
-            currentRs = null;
+        try {
+            if (currentRs != null) {
+                try {
+                    currentRs.close(notifyListener);
+                } finally {
+                    currentRs = null;
+                }
+            }
+        } finally {
+            if (notifyListener && !wasCompleted)
+                statementListener.statementCompleted(this);
         }
-        
-        if (notifyListener && !wasCompleted)
-            statementListener.statementCompleted(this);
     }
     
     public void forgetResultSet() { //yuck should be package
@@ -1482,7 +1485,6 @@ public class FBStatement implements FirebirdStatement, Synchronizable {
         return fixedStmt.getStatementType();
     }
 
-
     private void populateStatementInfo() throws FBSQLException {
         if (fixedStmt.getExecutionPlan() == null){
             try {
@@ -1507,5 +1509,18 @@ public class FBStatement implements FirebirdStatement, Synchronizable {
 
     public Logger getParentLogger() throws SQLFeatureNotSupportedException {
         throw new FBDriverNotCapableException();
+    }
+    
+    /**
+     * Reasons for statement completion. This is intended for the {@link InternalTransactionCoordinator} to
+     * notify the statement on why it should complete.
+     * <p>
+     * TODO: This is a bit of kludge to fix <a href="http://tracker.firebirdsql.org/browse/JDBC-304">JDBC-304</a> in 2.2.x, might need some more polish for 2.3
+     * </p>
+     * @since 2.2.3
+     */
+    protected enum CompletionReason {
+        COMMIT,
+        OTHER;
     }
 }
