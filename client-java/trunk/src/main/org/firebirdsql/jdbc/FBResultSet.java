@@ -39,7 +39,7 @@ import org.firebirdsql.jdbc.field.*;
  * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  */
-public class FBResultSet implements FirebirdResultSet, Synchronizable, FBObjectListener.FetcherListener {
+public class FBResultSet implements ResultSet, FirebirdResultSet, Synchronizable, FBObjectListener.FetcherListener {
 
     private FBStatement fbStatement;
     private FBFetcher fbFetcher;
@@ -47,9 +47,9 @@ public class FBResultSet implements FirebirdResultSet, Synchronizable, FBObjectL
 
     protected GDSHelper gdsHelper;
 
-    public XSQLVAR[] xsqlvars;
+    protected XSQLVAR[] xsqlvars;
 
-    public byte[][] row;
+    protected byte[][] row;
 
     private int maxRows;
      
