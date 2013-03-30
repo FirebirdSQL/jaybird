@@ -34,5 +34,8 @@ public class FBFieldResultSet extends FBResultSet {
 	public FBFieldResultSet(XSQLVAR[] xsqlvars, ArrayList rows) throws SQLException {
 		super(xsqlvars, rows);
 	}
-
+	
+	public byte[][] getCurrentRow() {
+	    return row;
+	}
 }
