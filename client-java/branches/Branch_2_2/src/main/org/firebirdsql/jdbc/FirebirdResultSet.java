@@ -1,4 +1,6 @@
 /*
+ * $Id$
+ * 
  * Firebird Open Source J2ee connector - jdbc driver, public Firebird-specific 
  * JDBC extensions.
  *
@@ -27,24 +29,7 @@ package org.firebirdsql.jdbc;
 
 import java.sql.SQLException;
 
-
-public interface FirebirdResultSet {
-
-    /**
-     * The constant indicating that <code>ResultSet</code> objects should not
-     * be closed when the method <code>Connection.commit</code> is called.
-     * 
-     * Copied from JDBC 3.0 declaration to let code run in JDK 1.3.
-     */
-    int HOLD_CURSORS_OVER_COMMIT = 1;
-
-    /**
-     * The constant indicating that <code>ResultSet</code> objects should be
-     * closed when the method <code>Connection.commit</code> is called.
-     * 
-     * Copied from JDBC 3.0 declaration to let code run in JDK 1.3.
-     */
-    int CLOSE_CURSORS_AT_COMMIT = 2;
+public interface FirebirdResultSet extends java.sql.ResultSet {
 
     /**
      * Get execution plan for the specified result set. 
@@ -57,4 +42,16 @@ public interface FirebirdResultSet {
      * @see FirebirdPreparedStatement#getExecutionPlan()
      */
     String getExecutionPlan() throws SQLException;
+    
+    /**
+     * Retrieves the holdability of this <code>ResultSet</code> object
+     * <p>
+     * Copied from java.sql.ResultSet of Java 6 for Java 5 compatibility
+     * </p>
+     * @return  either <code>ResultSet.HOLD_CURSORS_OVER_COMMIT</code> or <code>ResultSet.CLOSE_CURSORS_AT_COMMIT</code>
+     * @throws SQLException if a database access error occurs
+     * or this method is called on a closed result set
+     * @since 1.6
+     */
+    int getHoldability() throws SQLException;
 }

@@ -1,4 +1,6 @@
 /*
+ * $Id$
+ * 
  * Firebird Open Source J2ee connector - jdbc driver, public Firebird-specific 
  * JDBC extensions.
  *
@@ -35,47 +37,6 @@ import java.sql.Statement;
  * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
  */
 public interface FirebirdStatement extends Statement {
-
-    /** 
-     * The constant indicating that the current <code>ResultSet</code> object 
-     * should be closed when calling <code>getMoreResults</code>.
-     * <p>
-     * Copied from JDBC 3.0 definition
-     */
-    int CLOSE_CURRENT_RESULT = 1;
-
-    /**
-     * The constant indicating that the current <code>ResultSet</code> object
-     * should not be closed when calling <code>getMoreResults</code>.
-     * <p>
-     * Copied from JDBC 3.0 definition
-     */
-    int KEEP_CURRENT_RESULT = 2;
-
-    /**
-     * The constant indicating that all <code>ResultSet</code> objects that
-     * have previously been kept open should be closed when calling
-     * <code>getMoreResults</code>.
-     * <p>
-     * Copied from JDBC 3.0 definition
-     */
-    int CLOSE_ALL_RESULTS = 3;
-
-    /**
-     * The constant indicating that generated keys should be made 
-     * available for retrieval.
-     *
-     * @since 1.4
-     */
-    int RETURN_GENERATED_KEYS = 1;
-
-    /**
-     * The constant indicating that generated keys should not be made 
-     * available for retrieval.
-     *
-     * @since 1.4
-     */
-    int NO_GENERATED_KEYS = 2;
     
     /**
      * Get number of inserted rows. You can call this method multiple times,

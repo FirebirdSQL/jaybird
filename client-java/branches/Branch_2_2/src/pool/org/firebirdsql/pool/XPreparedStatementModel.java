@@ -1,8 +1,10 @@
 /*
+ * $Id$
+ * 
  * Firebird Open Source J2ee connector - jdbc driver
  *
  * Distributable under LGPL license.
-     * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
+ * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -18,9 +20,8 @@
  */
 package org.firebirdsql.pool;
 
+import java.sql.Statement;
 import java.util.Arrays;
-
-import org.firebirdsql.jdbc.FirebirdStatement;
 
 /**
  * Object containing all information that is needed to prepare the statement.
@@ -49,7 +50,7 @@ public class XPreparedStatementModel {
     
     public XPreparedStatementModel(String sql, int generatedKeys) {
         this.sql = sql;
-        this.generatedKeys = generatedKeys == FirebirdStatement.RETURN_GENERATED_KEYS;
+        this.generatedKeys = generatedKeys == Statement.RETURN_GENERATED_KEYS;
     }
     
     public XPreparedStatementModel(String sql, int[] keyIndexes) {

@@ -84,7 +84,7 @@ public abstract class AbstractConnection implements FirebirdConnection {
     // It is used to close them before the connection is closed
     protected HashSet activeStatements = new HashSet();
     
-    private int resultSetHoldability = FirebirdResultSet.CLOSE_CURSORS_AT_COMMIT;
+    private int resultSetHoldability = ResultSet.CLOSE_CURSORS_AT_COMMIT;
     
     private boolean autoCommit;
     
@@ -104,9 +104,9 @@ public abstract class AbstractConnection implements FirebirdConnection {
         FBConnectionRequestInfo cri = (FBConnectionRequestInfo)mc.getConnectionRequestInfo();
         
         if (cri.hasArgument(DatabaseParameterBufferExtension.RESULT_SET_HOLDABLE))
-            resultSetHoldability = FirebirdResultSet.HOLD_CURSORS_OVER_COMMIT;
+            resultSetHoldability = ResultSet.HOLD_CURSORS_OVER_COMMIT;
         else
-            resultSetHoldability = FirebirdResultSet.CLOSE_CURSORS_AT_COMMIT;
+            resultSetHoldability = ResultSet.CLOSE_CURSORS_AT_COMMIT;
     }
     
     public FBObjectListener.StatementListener getStatementListener() {
@@ -166,7 +166,7 @@ public abstract class AbstractConnection implements FirebirdConnection {
         while(iter.hasNext()) {
             try {
                 AbstractStatement stmt = (AbstractStatement)iter.next();
-                stmt.close(true);
+                stmt.close();
             } catch(SQLException ex) {
                 chain.append(ex);
             }
@@ -828,7 +828,7 @@ public abstract class AbstractConnection implements FirebirdConnection {
     public synchronized Statement createStatement(int resultSetType, 
         int resultSetConcurrency, int resultSetHoldability) throws SQLException 
     {
-        if (resultSetHoldability == FirebirdResultSet.HOLD_CURSORS_OVER_COMMIT && 
+        if (resultSetHoldability == ResultSet.HOLD_CURSORS_OVER_COMMIT && 
                 resultSetType == ResultSet.TYPE_FORWARD_ONLY) {
 
             addWarning(new FBSQLWarning("Holdable result set must be scrollable."));
@@ -864,7 +864,7 @@ public abstract class AbstractConnection implements FirebirdConnection {
      */
     private void checkHoldability(int resultSetType, int resultSetHoldability) throws SQLException {
         boolean holdable = 
-            resultSetHoldability == FirebirdResultSet.HOLD_CURSORS_OVER_COMMIT;
+            resultSetHoldability == ResultSet.HOLD_CURSORS_OVER_COMMIT;
         
         boolean notScrollable = resultSetType != ResultSet.TYPE_SCROLL_INSENSITIVE;
 
@@ -1125,7 +1125,7 @@ public abstract class AbstractConnection implements FirebirdConnection {
             return prepareStatement(query.getQueryString(), 
                     ResultSet.TYPE_FORWARD_ONLY, 
                     ResultSet.CONCUR_READ_ONLY, 
-                    FirebirdResultSet.CLOSE_CURSORS_AT_COMMIT, 
+                    ResultSet.CLOSE_CURSORS_AT_COMMIT, 
                     false, true);
         } else {
             return prepareStatement(query.getQueryString());
@@ -1155,7 +1155,7 @@ public abstract class AbstractConnection implements FirebirdConnection {
     {
           PreparedStatement stmt;
           
-          if (resultSetHoldability == FirebirdResultSet.HOLD_CURSORS_OVER_COMMIT && 
+          if (resultSetHoldability == ResultSet.HOLD_CURSORS_OVER_COMMIT && 
                   resultSetType == ResultSet.TYPE_FORWARD_ONLY) {
 
               addWarning(new FBSQLWarning("Holdable result set must be scrollable."));
@@ -1223,7 +1223,7 @@ public abstract class AbstractConnection implements FirebirdConnection {
     {
         AbstractCallableStatement stmt;
         
-        if (resultSetHoldability == FirebirdResultSet.HOLD_CURSORS_OVER_COMMIT && 
+        if (resultSetHoldability == ResultSet.HOLD_CURSORS_OVER_COMMIT && 
                 resultSetType == ResultSet.TYPE_FORWARD_ONLY) {
 
             addWarning(new FBSQLWarning("Holdable result set must be scrollable."));
