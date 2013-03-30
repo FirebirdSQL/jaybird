@@ -73,17 +73,17 @@ public abstract class BaseTestFBField extends TestCase {
         byte[][] row = new byte[1][];
         ArrayList rows = new ArrayList();
         rows.add(row);
-        final FBResultSet rs = new FBFieldResultSet(xsqlvars, rows);
+        final FBFieldResultSet rs = new FBFieldResultSet(xsqlvars, rows);
         rs.next();
         // anonymous implementation of the FieldDataProvider interface
         FieldDataProvider dataProvider = new FieldDataProvider() {
 
             public byte[] getFieldData() {
-                return rs.row[0];
+                return rs.getCurrentRow()[0];
             }
 
             public void setFieldData(byte[] data) {
-                rs.row[0] = data;
+                rs.getCurrentRow()[0] = data;
             }
         };
 
