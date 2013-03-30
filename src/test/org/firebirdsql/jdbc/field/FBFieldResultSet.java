@@ -35,4 +35,7 @@ public class FBFieldResultSet extends FBResultSet {
 		super(xsqlvars, rows);
 	}
 
+	public byte[][] getCurrentRow() {
+	    return row;
+	}
 }
