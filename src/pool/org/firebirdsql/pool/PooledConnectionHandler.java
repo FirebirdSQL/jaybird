@@ -1,4 +1,6 @@
 /*
+ * $Id$
+ * 
  * Firebird Open Source J2ee connector - jdbc driver
  *
  * Distributable under LGPL license.
@@ -37,8 +39,6 @@ import java.util.Iterator;
 import java.util.List;
 
 import org.firebirdsql.jdbc.FBSQLException;
-import org.firebirdsql.jdbc.FirebirdResultSet;
-import org.firebirdsql.jdbc.FirebirdStatement;
 import org.firebirdsql.logging.Logger;
 import org.firebirdsql.logging.LoggerFactory;
 import org.firebirdsql.util.SQLExceptionChainBuilder;
@@ -229,7 +229,7 @@ class PooledConnectionHandler implements InvocationHandler {
                     statement, 
                     ResultSet.TYPE_FORWARD_ONLY,
                     ResultSet.CONCUR_READ_ONLY,
-                    FirebirdResultSet.CLOSE_CURSORS_AT_COMMIT);
+                    ResultSet.CLOSE_CURSORS_AT_COMMIT);
             } else
             if (method.equals(CONNECTION_PREPARE_STATEMENT2)) {
                 String statement = (String)args[0];
@@ -239,7 +239,7 @@ class PooledConnectionHandler implements InvocationHandler {
                     statement, 
                     resultSetType.intValue(), 
                     resultSetConcurrency.intValue(),
-                    FirebirdResultSet.CLOSE_CURSORS_AT_COMMIT);
+                    ResultSet.CLOSE_CURSORS_AT_COMMIT);
 			} else
             if (method.equals(CONNECTION_PREPARE_STATEMENT3)) {
                 String statement = (String)args[0];
@@ -259,14 +259,14 @@ class PooledConnectionHandler implements InvocationHandler {
                 String statement = (String)args[0];
                 Integer returnGeneratedKeys = (Integer)args[1];
                 
-                if (returnGeneratedKeys.intValue() == FirebirdStatement.RETURN_GENERATED_KEYS)
+                if (returnGeneratedKeys.intValue() == Statement.RETURN_GENERATED_KEYS)
                     return handlePrepareStatement(statement, null, null);
                 else
                     return handlePrepareStatement(
                         statement, 
                         ResultSet.TYPE_FORWARD_ONLY,
                         ResultSet.CONCUR_READ_ONLY,
-                        FirebirdResultSet.CLOSE_CURSORS_AT_COMMIT);
+                        ResultSet.CLOSE_CURSORS_AT_COMMIT);
             } else
             if (method.equals(CONNECTION_PREPARE_STATEMENT_GENKEYS2)) {
                 String statement = (String)args[0];

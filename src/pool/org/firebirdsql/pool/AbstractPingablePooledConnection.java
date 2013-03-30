@@ -1,8 +1,10 @@
 /*
+ * $Id$
+ * 
  * Firebird Open Source J2ee connector - jdbc driver
  *
  * Distributable under LGPL license.
-     * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
+ * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -419,7 +421,7 @@ public abstract class AbstractPingablePooledConnection implements PooledConnecti
     public PreparedStatement getPreparedStatement(String sql,
             int resultSetType, int resultSetConcurrency) throws SQLException {
         return getPreparedStatement(sql, resultSetType, resultSetConcurrency,
-            FirebirdResultSet.CLOSE_CURSORS_AT_COMMIT);
+            ResultSet.CLOSE_CURSORS_AT_COMMIT);
     }
 
     public PreparedStatement getPreparedStatement(String statement, int[] keyIndexes,
@@ -428,7 +430,7 @@ public abstract class AbstractPingablePooledConnection implements PooledConnecti
         if (!isStatementPooling()) {
             if (keyIndexes == null && keyColumns == null)
                 return jdbcConnection.prepareStatement(
-                    statement, FirebirdStatement.RETURN_GENERATED_KEYS);
+                    statement, Statement.RETURN_GENERATED_KEYS);
             else
             if (keyIndexes != null)
                 return jdbcConnection.prepareStatement(statement, keyIndexes);
@@ -443,7 +445,7 @@ public abstract class AbstractPingablePooledConnection implements PooledConnecti
             XPreparedStatementModel key;
             
             if (keyIndexes == null && keyColumns == null)
-                key = new XPreparedStatementModel(statement, FirebirdStatement.RETURN_GENERATED_KEYS);
+                key = new XPreparedStatementModel(statement, Statement.RETURN_GENERATED_KEYS);
             else
             if (keyIndexes != null)
                 key = new XPreparedStatementModel(statement, keyIndexes);
@@ -522,7 +524,7 @@ public abstract class AbstractPingablePooledConnection implements PooledConnecti
         
         return prepareStatement(
             new XPreparedStatementModel(sql, resultSetType, resultSetConcurrency,
-                    FirebirdResultSet.CLOSE_CURSORS_AT_COMMIT), cached);
+                    ResultSet.CLOSE_CURSORS_AT_COMMIT), cached);
     }
 
     private XCachablePreparedStatement prepareStatementNoGeneratedKeys(
@@ -541,7 +543,7 @@ public abstract class AbstractPingablePooledConnection implements PooledConnecti
         PreparedStatement stmt;
         if (key.getKeyIndexes() == null && key.getKeyColumns() == null)
             stmt = jdbcConnection.prepareStatement(
-                key.getSql(), FirebirdStatement.RETURN_GENERATED_KEYS);
+                key.getSql(), Statement.RETURN_GENERATED_KEYS);
         else
         if (key.getKeyIndexes() != null)
             stmt = jdbcConnection.prepareStatement(key.getSql(), key.getKeyIndexes());

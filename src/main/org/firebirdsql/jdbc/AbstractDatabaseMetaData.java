@@ -5650,8 +5650,8 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
      * @exception SQLException if a database access error occurs 
      */
     public boolean supportsResultSetHoldability(int holdability) throws SQLException {
-        return holdability == FirebirdResultSet.CLOSE_CURSORS_AT_COMMIT ||
-            holdability == FirebirdResultSet.HOLD_CURSORS_OVER_COMMIT;
+        return holdability == ResultSet.CLOSE_CURSORS_AT_COMMIT ||
+            holdability == ResultSet.HOLD_CURSORS_OVER_COMMIT;
     }
 
     /**
@@ -5661,7 +5661,7 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
      * @exception SQLException if a database access error occurs 
      */
     public int getResultSetHoldability() throws SQLException {
-        return FirebirdResultSet.CLOSE_CURSORS_AT_COMMIT; 
+        return ResultSet.CLOSE_CURSORS_AT_COMMIT; 
     }
 
     /**
@@ -6234,7 +6234,7 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
             
             s = FBStatementFactory.createPreparedStatement(gdsHelper, sql,
                     ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY,
-                    FirebirdResultSet.CLOSE_CURSORS_AT_COMMIT, 
+                    ResultSet.CLOSE_CURSORS_AT_COMMIT, 
                     metaDataTransactionCoordinator, metaDataTransactionCoordinator,
                     true, true, false);
         } else {
