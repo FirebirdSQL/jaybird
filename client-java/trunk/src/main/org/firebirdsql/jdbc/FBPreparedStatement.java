@@ -149,12 +149,13 @@ public class FBPreparedStatement extends FBStatement implements
         }
     }
     
-    public void completeStatement() throws SQLException {
-        if (!metaDataQuery)
-            closeResultSet(false);
-            
-        if (!completed)
+    @Override
+    public void completeStatement(CompletionReason reason) throws SQLException {
+        if (!metaDataQuery) {
+            super.completeStatement(reason);
+        } else if (!completed) {
             notifyStatementCompleted();
+        }
     }
 
     protected void notifyStatementCompleted(boolean success)
