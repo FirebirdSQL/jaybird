@@ -30,6 +30,7 @@ import java.util.*;
 
 import org.firebirdsql.gds.*;
 import org.firebirdsql.gds.impl.GDSHelper;
+import org.firebirdsql.jdbc.AbstractStatement.CompletionReason;
 import org.firebirdsql.jdbc.field.*;
 import org.firebirdsql.jdbc.field.FBFlushableField.CachedObject;
 
@@ -141,15 +142,15 @@ public abstract class AbstractPreparedStatement extends AbstractStatement implem
         }
     }
     
-    public void completeStatement() throws SQLException {
-        
-        if (!metaDataQuery)
-            closeResultSet(false);
-            
-        if (!completed)
+    @Override
+    public void completeStatement(CompletionReason reason) throws SQLException {
+        if (!metaDataQuery) {
+            super.completeStatement(reason);
+        } else if (!completed) {
             notifyStatementCompleted();
+        }
     }
-
+    
     protected void notifyStatementCompleted(boolean success)
             throws SQLException {
         try {
