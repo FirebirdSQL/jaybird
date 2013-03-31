@@ -1,4 +1,6 @@
 /*
+ * $Id$
+ * 
  * Firebird Open Source J2ee connector - jdbc driver, public Firebird-specific 
  * JDBC extensions.
  *
