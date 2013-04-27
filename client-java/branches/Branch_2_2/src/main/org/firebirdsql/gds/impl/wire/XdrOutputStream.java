@@ -49,16 +49,19 @@ public class XdrOutputStream {
 
     private static final int BUF_SIZE = 32767;
 
-    private static Logger log = LoggerFactory.getLogger(XdrOutputStream.class,false);
-    private static byte[] textPad = new byte[BUF_SIZE];
-    private static byte[] zero = new XSQLVAR().encodeInt(0);   // todo
-    private static byte[] minusOne = new XSQLVAR().encodeInt(-1);
+    private static final Logger log = LoggerFactory.getLogger(XdrOutputStream.class,false);
+    private static final byte[] textPad = new byte[BUF_SIZE];
+    private static final byte[] zero = new XSQLVAR().encodeInt(0);   // todo
+    private static final byte[] minusOne = new XSQLVAR().encodeInt(-1);
+    
+    static {
+        // fill the padding with blanks
+        Arrays.fill(textPad,(byte) 32);
+    }
 
     private byte[] buf = new byte[BUF_SIZE];
-
     private int count;
-
-    private OutputStream out = null;
+    private OutputStream out;
 
     protected XdrOutputStream() {
         // empty, for subclasses.
@@ -71,9 +74,6 @@ public class XdrOutputStream {
      */
     public XdrOutputStream(OutputStream out) {
         this.out = out;
-        count=0;
-        // fill the padding with blanks
-        Arrays.fill(textPad,(byte) 32);
     }
 
     /**
@@ -112,7 +112,7 @@ public class XdrOutputStream {
         checkBufferSize(2);
         buf[count++] = (byte) ((len >> 0) & 0xff);
         buf[count++] = (byte) ((len >> 8) & 0xff);
-        write(buffer, len, ((4 - len+2)&3));
+        write(buffer, len, (4 - len + 2) & 3); // TODO Is this correct, shouldn't it be (4 - (len + 2)) & 3; see writeSet
     }
 
     /**
@@ -126,13 +126,6 @@ public class XdrOutputStream {
     public void writeString(String s) throws IOException {
         byte[] buffer = s.getBytes();
         writeBuffer(buffer);
-        /*
-        int len = buffer.length;
-        writeInt(len);
-        if (len > 0) {
-            write(buffer, len, (4 - len) & 3);
-        }
-        */
     }
 
     /**
@@ -157,15 +150,12 @@ public class XdrOutputStream {
     public void writeSet(int type, byte[] s) throws IOException {
         if (s == null) {
             writeInt(1);
-            checkBufferSize(1);
-            buf[count++] = (byte) type; //e.g. gds.isc_tpb_version3
-        }
-        else {
+            write(type); //e.g. gds.isc_tpb_version3
+        } else {
             int len = s.length;
             writeInt(len + 1);
-            checkBufferSize(1);
-            buf[count++] = (byte) type;
-            write(s, len, (4 - (len+1)) & 3);
+            write(type);
+            write(s, len, (4 - ( len + 1 )) & 3); // TODO Is this correct; see writeBlobBuffer, that suggests it should be (4 - len + 1) & 3
         }
     }
 
@@ -182,18 +172,16 @@ public class XdrOutputStream {
         int size;
         if (item == null) {
             writeInt(1);
-            checkBufferSize(1);
-            buf[count++] = (byte) type; //e.g. gds.isc_tpb_version3
+            write(type); //e.g. gds.isc_tpb_version3
             size = 1;
-        }
-        else {
+        } else {
             size = item.getLength() + 1;
             writeInt(size);
-            checkBufferSize(1);
-            buf[count++] = (byte) type; //e.g. gds.isc_tpb_version3
+            write(type);
             item.write(this);
         }
-        count += (4 - size) & 3;
+        // TODO Find out if we need to pad with 0x00 instead
+        write(textPad, (4 - size) & 3, 0);
     }
 
     // 
@@ -331,19 +319,22 @@ public class XdrOutputStream {
      *         underlying output stream
      */
     public void write(byte[] b, int len, int pad) throws IOException {
-        if (len > 256 || count + len >= BUF_SIZE){
+        if (len > 256 || count + len + pad >= BUF_SIZE){
             if (count > 0)
                 out.write(buf, 0, count);
             out.write(b, 0, len);
             out.write(textPad, 0, pad);
             count = 0;
-        }
-        else {
+        } else {
             checkBufferSize(len + pad);
-            System.arraycopy(b, 0, buf, count, len);
-            count += len;
-            System.arraycopy(textPad, 0, buf, count, pad);
-            count += pad;
+            if (len > 0) {
+                System.arraycopy(b, 0, buf, count, len);
+                count += len;
+            }
+            if (pad > 0) {
+                System.arraycopy(textPad, 0, buf, count, pad);
+                count += pad;
+            }
         }
     }
 
@@ -369,7 +360,7 @@ public class XdrOutputStream {
      *         underlying output stream
      */
     public void write(byte b[]) throws IOException{
-        write(b,b.length, 0);
+        write(b, b.length, 0);
     }
 
     /**
@@ -380,9 +371,9 @@ public class XdrOutputStream {
      */
     public void flush() throws IOException {
         if (count > 0){
-            out.write(buf,0,count);
+            out.write(buf, 0, count);
         }
-        count=0;
+        count = 0;
         out.flush();
     }
 
@@ -393,14 +384,37 @@ public class XdrOutputStream {
      *         underlying stream
      */
     public void close() throws IOException {
+        if (out == null) {
+            return;
+        }
+        IOException firstException = null;
+        
+        try {
+            out.flush();
+        } catch (IOException ex) {
+            firstException = ex;
+        } catch (RuntimeException ex) {
+            firstException = new IOException("Runtime exception flushing XdrOutputStream during close()");
+            firstException.initCause(ex);
+        }
+        
         try {
             out.close();
+        } catch (IOException ex) {
+            if (firstException == null) {
+                firstException = ex;
+            } else if (log != null) {
+                log.debug("Ignoring IOException closing XdrOutputStream; received an earlier exception, ignored exception:", ex);
+            }
         } finally {
             buf = null;
             out = null;
         }
+        
+        if (firstException != null) {
+            throw firstException;
+        }
     }
-
 
     /**
      * Ensure that there is room in the buffer for a given number
