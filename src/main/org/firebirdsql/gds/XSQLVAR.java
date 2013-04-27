@@ -69,6 +69,21 @@ public class XSQLVAR {
 
     public XSQLVAR() {
     }
+
+    /**
+     * Constructor for metadata XSQLVAR.
+     *
+     * @param sqltype Column SQL type
+     * @param sqllen Column length
+     * @param sqlname Column name
+     * @param relname Column table
+     */
+    public XSQLVAR(int sqltype, int sqllen, String sqlname, String relname) {
+        this.sqltype = sqltype;
+        this.sqllen = sqllen;
+        this.sqlname = sqlname;
+        this.relname = relname;
+    }
     
     /**
      * Get a deep copy of this object.
@@ -192,7 +207,6 @@ public class XSQLVAR {
         ret[7] = (byte) (value >>>  0 & 0xFF);
         return ret;
     }
-
 
     /**
      * Decode a <code>byte</code> array into a <code>long</code> value.
