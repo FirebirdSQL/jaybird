@@ -20,7 +20,6 @@
  */
 package org.firebirdsql.jdbc;
 
-
 import java.sql.*;
 import java.util.*;
 
@@ -1772,11 +1771,11 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
     }
 
     private static final String GET_PROCEDURES_START = "select "
-        + " RDB$PROCEDURE_NAME as PROCEDURE_NAME,"
-        + " RDB$DESCRIPTION as REMARKS,"
-        + " RDB$PROCEDURE_OUTPUTS as PROCEDURE_TYPE "
-        + "from"
-        + " RDB$PROCEDURES "
+        + "cast(RDB$PROCEDURE_NAME as varchar(31)) as PROCEDURE_NAME,"
+        + "RDB$DESCRIPTION as REMARKS,"
+        + "RDB$PROCEDURE_OUTPUTS as PROCEDURE_TYPE "
+        + "from "
+        + "RDB$PROCEDURES "
         + "where ";
     private static final String GET_PROCEDURES_END = "1 = 1 order by 1";
 
@@ -1929,28 +1928,28 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
     }
 
 
-    private static final String GET_PROCEDURE_COLUMNS_START = "select"
-        + " PP.RDB$PROCEDURE_NAME as PROCEDURE_NAME,"
-        + " PP.RDB$PARAMETER_NAME as COLUMN_NAME,"
-        + " PP.RDB$PARAMETER_TYPE as COLUMN_TYPE,"
-        + " F.RDB$FIELD_TYPE as FIELD_TYPE,"
-        + " F.RDB$FIELD_SUB_TYPE as FIELD_SUB_TYPE,"
-        + " F.RDB$FIELD_PRECISION as FIELD_PRECISION,"
-        + " F.RDB$FIELD_SCALE as FIELD_SCALE,"
-        + " F.RDB$FIELD_LENGTH as FIELD_LENGTH,"
-        + " F.RDB$NULL_FLAG as NULL_FLAG,"
-        + " PP.RDB$DESCRIPTION as REMARKS,"
-        + " F.RDB$CHARACTER_LENGTH AS CHAR_LEN,"
-        + " PP.RDB$PARAMETER_NUMBER + 1 AS PARAMETER_NUMBER " 
-        + "from"
-        + " RDB$PROCEDURE_PARAMETERS PP,"
-        + " RDB$FIELDS F "
+    private static final String GET_PROCEDURE_COLUMNS_START = "select "
+        + "cast(PP.RDB$PROCEDURE_NAME as varchar(31)) as PROCEDURE_NAME,"
+        + "cast(PP.RDB$PARAMETER_NAME as varchar(31)) as COLUMN_NAME,"
+        + "PP.RDB$PARAMETER_TYPE as COLUMN_TYPE,"
+        + "F.RDB$FIELD_TYPE as FIELD_TYPE,"
+        + "F.RDB$FIELD_SUB_TYPE as FIELD_SUB_TYPE,"
+        + "F.RDB$FIELD_PRECISION as FIELD_PRECISION,"
+        + "F.RDB$FIELD_SCALE as FIELD_SCALE,"
+        + "F.RDB$FIELD_LENGTH as FIELD_LENGTH,"
+        + "F.RDB$NULL_FLAG as NULL_FLAG,"
+        + "PP.RDB$DESCRIPTION as REMARKS,"
+        + "F.RDB$CHARACTER_LENGTH AS CHAR_LEN,"
+        + "PP.RDB$PARAMETER_NUMBER + 1 AS PARAMETER_NUMBER "
+        + "from "
+        + "RDB$PROCEDURE_PARAMETERS PP,"
+        + "RDB$FIELDS F "
         + "where ";
     private static final String GET_PROCEDURE_COLUMNS_END = " PP.RDB$FIELD_SOURCE = F.RDB$FIELD_NAME "
-        + "order by"
-        + " PP.RDB$PROCEDURE_NAME,"
-        + " PP.RDB$PARAMETER_TYPE desc,"
-        + " PP.RDB$PARAMETER_NUMBER ";
+        + "order by "
+        + "PP.RDB$PROCEDURE_NAME,"
+        + "PP.RDB$PARAMETER_TYPE desc,"
+        + "PP.RDB$PARAMETER_NUMBER ";
 
     /**
      * Retrieves a description of the given catalog's stored procedure parameter
@@ -2310,17 +2309,17 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
     
     private static final String TABLE_COLUMNS_FORMAT =
               " select cast(null as varchar(31)) as TABLE_CAT,"
-            + " cast(null as varchar(31)) as TABLE_SCHEM,"
-            + " RDB$RELATION_NAME as TABLE_NAME,"
-            + " cast('%s' as varchar(31)) as TABLE_TYPE,"
-            + " RDB$DESCRIPTION as REMARKS,"
-            + " cast(null as varchar(31)) as TYPE_CAT,"
-            + " cast(null as varchar(31)) as TYPE_SCHEM,"
-            + " cast(null as varchar(31)) as TYPE_NAME,"
-            + " cast(null as varchar(31)) as SELF_REFERENCING_COL_NAME,"
-            + " cast(null as varchar(31)) as REF_GENERATION,"
-            + " RDB$OWNER_NAME as OWNER_NAME"
-            + " from RDB$RELATIONS";
+            + "cast(null as varchar(31)) as TABLE_SCHEM,"
+            + "cast(RDB$RELATION_NAME as varchar(31)) as TABLE_NAME,"
+            + "cast('%s' as varchar(31)) as TABLE_TYPE,"
+            + "RDB$DESCRIPTION as REMARKS,"
+            + "cast(null as varchar(31)) as TYPE_CAT,"
+            + "cast(null as varchar(31)) as TYPE_SCHEM,"
+            + "cast(null as varchar(31)) as TYPE_NAME,"
+            + "cast(null as varchar(31)) as SELF_REFERENCING_COL_NAME,"
+            + "cast(null as varchar(31)) as REF_GENERATION,"
+            + "cast(RDB$OWNER_NAME as varchar(31)) as OWNER_NAME "
+            + "from RDB$RELATIONS";
     
     private static final String TABLE_COLUMNS_SYSTEM =
             String.format(TABLE_COLUMNS_FORMAT, SYSTEM_TABLE);
@@ -2535,22 +2534,22 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
     }
 
     private static final String GET_COLUMNS_START = 
-            "SELECT   RF.RDB$RELATION_NAME  AS RELATION_NAME   ," + 
-    		"         RF.RDB$FIELD_NAME     AS FIELD_NAME      ," + 
-    		"         F.RDB$FIELD_TYPE      AS FIELD_TYPE      ," + 
-    		"         F.RDB$FIELD_SUB_TYPE  AS FIELD_SUB_TYPE  ," + 
-    		"         F.RDB$FIELD_PRECISION AS FIELD_PRECISION ," + 
-    		"         F.RDB$FIELD_SCALE     AS FIELD_SCALE     ," + 
-    		"         F.RDB$FIELD_LENGTH    AS FIELD_LENGTH    ," + 
-    		"         F.RDB$CHARACTER_LENGTH AS CHAR_LEN       ," + 
-    		"         RF.RDB$DESCRIPTION    AS REMARKS         ," + 
-    		"         RF.RDB$DEFAULT_SOURCE AS DEFAULT_SOURCE  ," + 
-    		"         RF.RDB$FIELD_POSITION + 1 AS FIELD_POSITION  ," + 
-    		"         RF.RDB$NULL_FLAG      AS NULL_FLAG       ," + 
-    		"         F.RDB$NULL_FLAG       AS SOURCE_NULL_FLAG," +
-    		"         F.RDB$COMPUTED_BLR    AS COMPUTED_BLR " +
-    		"FROM     RDB$RELATION_FIELDS RF," + 
-    		"         RDB$FIELDS F " + 
+            "SELECT cast(RF.RDB$RELATION_NAME as varchar(31)) AS RELATION_NAME," +
+    		"cast(RF.RDB$FIELD_NAME as varchar(31)) AS FIELD_NAME," +
+    		"F.RDB$FIELD_TYPE AS FIELD_TYPE," +
+    		"F.RDB$FIELD_SUB_TYPE AS FIELD_SUB_TYPE," +
+    		"F.RDB$FIELD_PRECISION AS FIELD_PRECISION," +
+    		"F.RDB$FIELD_SCALE AS FIELD_SCALE," +
+    		"F.RDB$FIELD_LENGTH AS FIELD_LENGTH," +
+    		"F.RDB$CHARACTER_LENGTH AS CHAR_LEN," +
+    		"RF.RDB$DESCRIPTION AS REMARKS," +
+    		"RF.RDB$DEFAULT_SOURCE AS DEFAULT_SOURCE," +
+    		"RF.RDB$FIELD_POSITION + 1 AS FIELD_POSITION," +
+    		"RF.RDB$NULL_FLAG AS NULL_FLAG," +
+    		"F.RDB$NULL_FLAG AS SOURCE_NULL_FLAG," +
+    		"F.RDB$COMPUTED_BLR AS COMPUTED_BLR " +
+    		"FROM RDB$RELATION_FIELDS RF," +
+    		"RDB$FIELDS F " +
     		"WHERE ";
 
     public static final String GET_COLUMNS_END = " RF.RDB$FIELD_SOURCE = F.RDB$FIELD_NAME " +
@@ -3088,17 +3087,17 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
     }
 
     private static final String GET_COLUMN_PRIVILEGES_START = "select "
-        + "null as TABLE_CAT,"
-        + "null as TABLE_SCHEM,"
-        + "RF.RDB$RELATION_NAME as TABLE_NAME, "
-        + "RF.RDB$FIELD_NAME as COLUMN_NAME, "
-        + "UP.RDB$GRANTOR as GRANTOR, "
-        + "UP.RDB$USER as GRANTEE, "
-        + "UP.RDB$PRIVILEGE as PRIVILEGE, "
+        /*+ "null as TABLE_CAT,"
+        + "null as TABLE_SCHEM,"*/
+        + "cast(RF.RDB$RELATION_NAME as varchar(31)) as TABLE_NAME,"
+        + "cast(RF.RDB$FIELD_NAME as varchar(31)) as COLUMN_NAME,"
+        + "cast(UP.RDB$GRANTOR as varchar(31)) as GRANTOR,"
+        + "cast(UP.RDB$USER as varchar(31)) as GRANTEE,"
+        + "cast(UP.RDB$PRIVILEGE as varchar(6)) as PRIVILEGE,"
         + "UP.RDB$GRANT_OPTION as IS_GRANTABLE "
         + "from "
-        + "RDB$RELATION_FIELDS RF, "
-        + "RDB$FIELDS F, "
+        + "RDB$RELATION_FIELDS RF,"
+        + "RDB$FIELDS F,"
         + "RDB$USER_PRIVILEGES UP "
         + "where "
         + "RF.RDB$RELATION_NAME = UP.RDB$RELATION_NAME and "
@@ -3108,7 +3107,7 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
         + "UP.RDB$RELATION_NAME = ? and ((";
     private static final String GET_COLUMN_PRIVILEGES_END = " UP.RDB$OBJECT_TYPE = 0) or "
         + "(RF.RDB$FIELD_NAME is null and UP.RDB$OBJECT_TYPE = 0)) "
-        + "order by 4,7 ";
+        + "order by 2,5 ";
 
     /**
      * Gets a description of the access rights for a table's columns.
@@ -3261,20 +3260,20 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
         return new FBResultSet(xsqlvars, rows);
     }
 
-    private static final String GET_TABLE_PRIVILEGES_START = "select"
-        + " null as TABLE_CAT, "
-        + " null as TABLE_SCHEM,"
-        + " RDB$RELATION_NAME as TABLE_NAME,"
-        + " RDB$GRANTOR as GRANTOR, "
-        + " RDB$USER as GRANTEE, "
-        + " RDB$PRIVILEGE as PRIVILEGE, "
-        + " RDB$GRANT_OPTION as IS_GRANTABLE "
+    private static final String GET_TABLE_PRIVILEGES_START = "select "
+        /*+ " null as TABLE_CAT, "
+        + " null as TABLE_SCHEM,"*/
+        + "cast(RDB$RELATION_NAME as varchar(31)) as TABLE_NAME,"
+        + "cast(RDB$GRANTOR as varchar(31)) as GRANTOR,"
+        + "cast(RDB$USER as varchar(31)) as GRANTEE,"
+        + "cast(RDB$PRIVILEGE as varchar(6)) as PRIVILEGE,"
+        + "RDB$GRANT_OPTION as IS_GRANTABLE "
         + "from"
         + " RDB$USER_PRIVILEGES "
         + "where ";
     private static final String GET_TABLE_PRIVILEGES_END = " RDB$OBJECT_TYPE = 0 and"
         + " RDB$FIELD_NAME is null "
-        + "order by 3, 6";
+        + "order by 1, 4";
 
     /**
      * Gets a description of the access rights for each table available
@@ -3432,31 +3431,30 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
         return new FBResultSet(xsqlvars, rows);
     }
 
-    private static final String GET_BEST_ROW_IDENT = "" +
+    private static final String GET_BEST_ROW_IDENT =
         "select " +
-        "    rf.rdb$field_name as column_name, " +
-        "    f.rdb$field_type as field_type, " +
-        "    f.rdb$field_sub_type as field_sub_type, " +
-        "    f.rdb$field_scale as field_scale, " +
-        "    f.rdb$field_precision as field_precision " +
+        "cast(rf.rdb$field_name as varchar(31)) as column_name," +
+        "f.rdb$field_type as field_type," +
+        "f.rdb$field_sub_type as field_sub_type," +
+        "f.rdb$field_scale as field_scale," +
+        "f.rdb$field_precision as field_precision " +
         "from " +
-        "    rdb$relation_constraints rc," +
-        "    rdb$index_segments idx," +
-        "    rdb$relation_fields rf," +
-        "    rdb$fields f " +
+        "rdb$relation_constraints rc," +
+        "rdb$index_segments idx," +
+        "rdb$relation_fields rf," +
+        "rdb$fields f " +
         "where " +
-        "    rc.rdb$relation_name = ? " +
+        "rc.rdb$relation_name = ? " +
         "and " +
-        "    rc.rdb$constraint_type = 'PRIMARY KEY' " +
+        "rc.rdb$constraint_type = 'PRIMARY KEY' " +
         "and " +
-        "    idx.rdb$index_name = rc.rdb$index_name " +
+        "idx.rdb$index_name = rc.rdb$index_name " +
         "and " +
-        "    rf.rdb$field_name = idx.rdb$field_name " +
+        "rf.rdb$field_name = idx.rdb$field_name " +
         "and " +
-        "    rf.rdb$relation_name = ? " +
+        "rf.rdb$relation_name = ? " +
         "and " +
-        "    f.rdb$field_name = rf.rdb$field_source"
-        ;
+        "f.rdb$field_name = rf.rdb$field_source";
 
     /**
      * Gets a description of a table's optimal set of columns that
@@ -3689,12 +3687,12 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
 
 
     private static final String GET_PRIMARY_KEYS_START = "select "
-        + " null as TABLE_CAT, "
-        + " null as TABLE_SCHEM, "
-        + "RC.RDB$RELATION_NAME as TABLE_NAME, "
-        + "ISGMT.RDB$FIELD_NAME as COLUMN_NAME, "
-        + "CAST ((ISGMT.RDB$FIELD_POSITION + 1) as SMALLINT) as KEY_SEQ, "
-        + "RC.RDB$CONSTRAINT_NAME as PK_NAME "
+        /*+ " null as TABLE_CAT, "
+        + " null as TABLE_SCHEM, "*/
+        + "cast(RC.RDB$RELATION_NAME as varchar(31)) as TABLE_NAME,"
+        + "cast(ISGMT.RDB$FIELD_NAME as varchar(31)) as COLUMN_NAME,"
+        + "CAST((ISGMT.RDB$FIELD_POSITION + 1) as SMALLINT) as KEY_SEQ,"
+        + "cast(RC.RDB$CONSTRAINT_NAME as varchar(31)) as PK_NAME "
         + "from "
         + "RDB$RELATION_CONSTRAINTS RC, "
         + "RDB$INDEX_SEGMENTS ISGMT "
@@ -3813,36 +3811,36 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
     }
 
 
-    private static final String GET_IMPORTED_KEYS_START = "select"
-    +" null as PKTABLE_CAT "
-    +" ,null as PKTABLE_SCHEM "
-    +" ,PK.RDB$RELATION_NAME as PKTABLE_NAME "
-    +" ,ISP.RDB$FIELD_NAME as PKCOLUMN_NAME "
-    +" ,null as FKTABLE_CAT "
-    +" ,null as FKTABLE_SCHEM "
-    +" ,FK.RDB$RELATION_NAME as FKTABLE_NAME "
-    +" ,ISF.RDB$FIELD_NAME as FKCOLUMN_NAME "
-    +" ,CAST ((ISP.RDB$FIELD_POSITION + 1) as SMALLINT) as KEY_SEQ "
-    +" ,RC.RDB$UPDATE_RULE as UPDATE_RULE "
-    +" ,RC.RDB$DELETE_RULE as DELETE_RULE "
-    +" ,PK.RDB$CONSTRAINT_NAME as PK_NAME "
-    +" ,FK.RDB$CONSTRAINT_NAME as FK_NAME "
-    +" ,null as DEFERRABILITY "
-    +" from "
-    +" RDB$RELATION_CONSTRAINTS PK "
-    +" ,RDB$RELATION_CONSTRAINTS FK "
-    +" ,RDB$REF_CONSTRAINTS RC "
-    +" ,RDB$INDEX_SEGMENTS ISP "
-    +" ,RDB$INDEX_SEGMENTS ISF "
-    +" WHERE ";
+    private static final String GET_IMPORTED_KEYS_START = "select "
+    /*+" null as PKTABLE_CAT "
+    +" ,null as PKTABLE_SCHEM "*/
+    +"cast(PK.RDB$RELATION_NAME as varchar(31)) as PKTABLE_NAME"
+    +",cast(ISP.RDB$FIELD_NAME as varchar(31)) as PKCOLUMN_NAME"
+    /*+" ,null as FKTABLE_CAT "
+    +" ,null as FKTABLE_SCHEM "*/
+    +",cast(FK.RDB$RELATION_NAME as varchar(31)) as FKTABLE_NAME"
+    +",cast(ISF.RDB$FIELD_NAME as varchar(31)) as FKCOLUMN_NAME"
+    +",CAST((ISP.RDB$FIELD_POSITION + 1) as SMALLINT) as KEY_SEQ"
+    +",cast(RC.RDB$UPDATE_RULE as varchar(11)) as UPDATE_RULE"
+    +",cast(RC.RDB$DELETE_RULE as varchar(11)) as DELETE_RULE"
+    +",cast(PK.RDB$CONSTRAINT_NAME as varchar(31)) as PK_NAME"
+    +",cast(FK.RDB$CONSTRAINT_NAME as varchar(31)) as FK_NAME "
+    /*+" ,null as DEFERRABILITY "*/
+    +"from "
+    +"RDB$RELATION_CONSTRAINTS PK"
+    +",RDB$RELATION_CONSTRAINTS FK"
+    +",RDB$REF_CONSTRAINTS RC"
+    +",RDB$INDEX_SEGMENTS ISP"
+    +",RDB$INDEX_SEGMENTS ISF "
+    +"WHERE ";
 
     private static final String GET_IMPORTED_KEYS_END =
     " FK.RDB$CONSTRAINT_NAME = RC.RDB$CONSTRAINT_NAME "
-    +" and PK.RDB$CONSTRAINT_NAME = RC.RDB$CONST_NAME_UQ "
-    +" and ISP.RDB$INDEX_NAME = PK.RDB$INDEX_NAME "
-    +" and ISF.RDB$INDEX_NAME = FK.RDB$INDEX_NAME "
-    +" and ISP.RDB$FIELD_POSITION = ISF.RDB$FIELD_POSITION "
-    +" order by 3, 9 ";
+    +"and PK.RDB$CONSTRAINT_NAME = RC.RDB$CONST_NAME_UQ "
+    +"and ISP.RDB$INDEX_NAME = PK.RDB$INDEX_NAME "
+    +"and ISF.RDB$INDEX_NAME = FK.RDB$INDEX_NAME "
+    +"and ISP.RDB$FIELD_POSITION = ISF.RDB$FIELD_POSITION "
+    +"order by 1, 5 ";
 
     /**
      * Gets a description of the primary key columns that are
@@ -4066,36 +4064,36 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
     }
 
 
-    private static final String GET_EXPORTED_KEYS_START = "select"
-    +" null as PKTABLE_CAT "
-    +" ,null as PKTABLE_SCHEM "
-    +" ,PK.RDB$RELATION_NAME as PKTABLE_NAME "
-    +" ,ISP.RDB$FIELD_NAME as PKCOLUMN_NAME "
-    +" ,null as FKTABLE_CAT "
-    +" ,null as FKTABLE_SCHEM "
-    +" ,FK.RDB$RELATION_NAME as FKTABLE_NAME "
-    +" ,ISF.RDB$FIELD_NAME as FKCOLUMN_NAME "
-    +" ,CAST ((ISP.RDB$FIELD_POSITION + 1) as SMALLINT) as KEY_SEQ "
-    +" ,RC.RDB$UPDATE_RULE as UPDATE_RULE "
-    +" ,RC.RDB$DELETE_RULE as DELETE_RULE "
-    +" ,PK.RDB$CONSTRAINT_NAME as PK_NAME "
-    +" ,FK.RDB$CONSTRAINT_NAME as FK_NAME "
-    +" ,null as DEFERRABILITY "
-    +" from "
-    +" RDB$RELATION_CONSTRAINTS PK "
-    +" ,RDB$RELATION_CONSTRAINTS FK "
-    +" ,RDB$REF_CONSTRAINTS RC "
-    +" ,RDB$INDEX_SEGMENTS ISP "
-    +" ,RDB$INDEX_SEGMENTS ISF "
-    +" WHERE ";
+    private static final String GET_EXPORTED_KEYS_START = "select "
+    /*+" null as PKTABLE_CAT "
+    +" ,null as PKTABLE_SCHEM "*/
+    +"cast(PK.RDB$RELATION_NAME as varchar(31)) as PKTABLE_NAME"
+    +",cast(ISP.RDB$FIELD_NAME as varchar(31)) as PKCOLUMN_NAME"
+    /*+" ,null as FKTABLE_CAT "
+    +" ,null as FKTABLE_SCHEM "*/
+    +",cast(FK.RDB$RELATION_NAME as varchar(31)) as FKTABLE_NAME"
+    +",cast(ISF.RDB$FIELD_NAME as varchar(31)) as FKCOLUMN_NAME"
+    +",CAST((ISP.RDB$FIELD_POSITION + 1) as SMALLINT) as KEY_SEQ"
+    +",cast(RC.RDB$UPDATE_RULE as varchar(11)) as UPDATE_RULE"
+    +",cast(RC.RDB$DELETE_RULE as varchar(11)) as DELETE_RULE"
+    +",cast(PK.RDB$CONSTRAINT_NAME as varchar(31)) as PK_NAME"
+    +",cast(FK.RDB$CONSTRAINT_NAME as varchar(31)) as FK_NAME "
+    /*+" ,null as DEFERRABILITY "*/
+    +"from "
+    +"RDB$RELATION_CONSTRAINTS PK"
+    +",RDB$RELATION_CONSTRAINTS FK"
+    +",RDB$REF_CONSTRAINTS RC"
+    +",RDB$INDEX_SEGMENTS ISP"
+    +",RDB$INDEX_SEGMENTS ISF "
+    +"WHERE ";
 
     private static final String GET_EXPORTED_KEYS_END =
     " FK.RDB$CONSTRAINT_NAME = RC.RDB$CONSTRAINT_NAME "
-    +" and PK.RDB$CONSTRAINT_NAME = RC.RDB$CONST_NAME_UQ "
-    +" and ISP.RDB$INDEX_NAME = PK.RDB$INDEX_NAME "
-    +" and ISF.RDB$INDEX_NAME = FK.RDB$INDEX_NAME "
-    +" and ISP.RDB$FIELD_POSITION = ISF.RDB$FIELD_POSITION "
-    +" order by 7, 9 ";
+    +"and PK.RDB$CONSTRAINT_NAME = RC.RDB$CONST_NAME_UQ "
+    +"and ISP.RDB$INDEX_NAME = PK.RDB$INDEX_NAME "
+    +"and ISF.RDB$INDEX_NAME = FK.RDB$INDEX_NAME "
+    +"and ISP.RDB$FIELD_POSITION = ISF.RDB$FIELD_POSITION "
+    +"order by 3, 5 ";
 
     /**
      * Gets a description of the foreign key columns that reference a
@@ -4322,36 +4320,36 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
 
 
 
-    private static final String GET_CROSS_KEYS_START = "select"
-    +" null as PKTABLE_CAT "
-    +" ,null as PKTABLE_SCHEM "
-    +" ,PK.RDB$RELATION_NAME as PKTABLE_NAME "
-    +" ,ISP.RDB$FIELD_NAME as PKCOLUMN_NAME "
-    +" ,null as FKTABLE_CAT "
-    +" ,null as FKTABLE_SCHEM "
-    +" ,FK.RDB$RELATION_NAME as FKTABLE_NAME "
-    +" ,ISF.RDB$FIELD_NAME as FKCOLUMN_NAME "
-    +" ,CAST ((ISP.RDB$FIELD_POSITION + 1) as SMALLINT) as KEY_SEQ "
-    +" ,RC.RDB$UPDATE_RULE as UPDATE_RULE "
-    +" ,RC.RDB$DELETE_RULE as DELETE_RULE "
-    +" ,PK.RDB$CONSTRAINT_NAME as PK_NAME "
-    +" ,FK.RDB$CONSTRAINT_NAME as FK_NAME "
-    +" ,null as DEFERRABILITY "
-    +" from "
-    +" RDB$RELATION_CONSTRAINTS PK "
-    +" ,RDB$RELATION_CONSTRAINTS FK "
-    +" ,RDB$REF_CONSTRAINTS RC "
-    +" ,RDB$INDEX_SEGMENTS ISP "
-    +" ,RDB$INDEX_SEGMENTS ISF "
-    +" WHERE ";
+    private static final String GET_CROSS_KEYS_START = "select "
+    /*+" null as PKTABLE_CAT "
+    +" ,null as PKTABLE_SCHEM "*/
+    +"cast(PK.RDB$RELATION_NAME as varchar(31)) as PKTABLE_NAME"
+    +",cast(ISP.RDB$FIELD_NAME as varchar(31)) as PKCOLUMN_NAME"
+    /*+" ,null as FKTABLE_CAT "
+    +" ,null as FKTABLE_SCHEM "*/
+    +",cast(FK.RDB$RELATION_NAME as varchar(31)) as FKTABLE_NAME"
+    +",cast(ISF.RDB$FIELD_NAME as varchar(31)) as FKCOLUMN_NAME"
+    +",CAST((ISP.RDB$FIELD_POSITION + 1) as SMALLINT) as KEY_SEQ"
+    +",cast(RC.RDB$UPDATE_RULE as varchar(11)) as UPDATE_RULE"
+    +",cast(RC.RDB$DELETE_RULE as varchar(11)) as DELETE_RULE"
+    +",cast(PK.RDB$CONSTRAINT_NAME as varchar(31)) as PK_NAME"
+    +",cast(FK.RDB$CONSTRAINT_NAME as varchar(31)) as FK_NAME"
+    /*+" ,null as DEFERRABILITY "*/
+    +"from "
+    +"RDB$RELATION_CONSTRAINTS PK"
+    +",RDB$RELATION_CONSTRAINTS FK"
+    +",RDB$REF_CONSTRAINTS RC"
+    +",RDB$INDEX_SEGMENTS ISP"
+    +",RDB$INDEX_SEGMENTS ISF "
+    +"WHERE ";
 
     private static final String GET_CROSS_KEYS_END =
     " FK.RDB$CONSTRAINT_NAME = RC.RDB$CONSTRAINT_NAME "
-    +" and PK.RDB$CONSTRAINT_NAME = RC.RDB$CONST_NAME_UQ "
-    +" and ISP.RDB$INDEX_NAME = PK.RDB$INDEX_NAME "
-    +" and ISF.RDB$INDEX_NAME = FK.RDB$INDEX_NAME "
-    +" and ISP.RDB$FIELD_POSITION = ISF.RDB$FIELD_POSITION "
-    +" order by 7, 9 ";
+    +"and PK.RDB$CONSTRAINT_NAME = RC.RDB$CONST_NAME_UQ "
+    +"and ISP.RDB$INDEX_NAME = PK.RDB$INDEX_NAME "
+    +"and ISF.RDB$INDEX_NAME = FK.RDB$INDEX_NAME "
+    +"and ISP.RDB$FIELD_POSITION = ISF.RDB$FIELD_POSITION "
+    +"order by 3, 5 ";
 
     /**
      * Gets a description of the foreign key columns in the foreign key
@@ -4593,7 +4591,6 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
         } while(rs.next());
         return new FBResultSet(xsqlvars, rows);
     }
-
 
     /**
      * Simple convertor function to convert integer values to Short objects.
@@ -4880,31 +4877,29 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
     }
 
     private static final String GET_INDEX_INFO_START = "SELECT "
-        + "  ind.RDB$RELATION_NAME AS TABLE_NAME"
-        + ", ind.RDB$UNIQUE_FLAG AS UNIQUE_FLAG"
-        + ", ind.RDB$INDEX_NAME as INDEX_NAME"
-        + ", ise.rdb$field_position + 1 as ORDINAL_POSITION"
-        + ", ise.rdb$field_name as COLUMN_NAME"
-        + ", ind.RDB$EXPRESSION_SOURCE as EXPRESSION_SOURCE"
-        + ", ind.RDB$INDEX_TYPE as ASC_OR_DESC "
+        + "cast(ind.RDB$RELATION_NAME as varchar(31)) AS TABLE_NAME"
+        + ",ind.RDB$UNIQUE_FLAG AS UNIQUE_FLAG"
+        + ",cast(ind.RDB$INDEX_NAME as varchar(31)) as INDEX_NAME"
+        + ",ise.rdb$field_position + 1 as ORDINAL_POSITION"
+        + ",cast(ise.rdb$field_name as varchar(31)) as COLUMN_NAME"
+        + ",ind.RDB$EXPRESSION_SOURCE as EXPRESSION_SOURCE"
+        + ",ind.RDB$INDEX_TYPE as ASC_OR_DESC "
         + "FROM "
-        + "  rdb$indices ind "
-        + "  LEFT JOIN rdb$index_segments ise ON ind.rdb$index_name = ise.rdb$index_name "
-        ;
+        + "rdb$indices ind "
+        + "LEFT JOIN rdb$index_segments ise ON ind.rdb$index_name = ise.rdb$index_name ";
     
     private static final String GET_INDEX_INFO =
         GET_INDEX_INFO_START
         + "WHERE " 
-        + "  ind.rdb$relation_name = ? "
+        + "ind.rdb$relation_name = ? "
         + "ORDER BY 2, 3, 4"
         ;
     
     private static final String GET_INDEX_INFO_UPPER =
         GET_INDEX_INFO_START
         + "WHERE " 
-        + "  UPPER(ind.rdb$relation_name) = ? "
-        + "ORDER BY 2, 3, 4"
-        ;
+        + "UPPER(ind.rdb$relation_name) = ? "
+        + "ORDER BY 2, 3, 4";
 
     /**
      * Gets a description of a table's indices and statistics. They are
@@ -5413,8 +5408,6 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
         return new FBResultSet(xsqlvars, rows);
     }
 
-
-
     /**
      * Retrieves the connection that produced this metadata object.
      *
@@ -5427,7 +5420,6 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
     }
 
     //jdbc 3 methods
-
 
     /**
      * <b>This operation is not supported</b>
@@ -5985,13 +5977,7 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
     }    
     
     public boolean isAllCondition(String pattern) {
-        if ("%".equals(pattern)) {
-            //asks for everything, no condition needed
-            return true;
-        }
-        else {
-            return false;
-        }
+         return "%".equals(pattern);
     }
 
     /**
