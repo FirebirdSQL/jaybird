@@ -5540,6 +5540,7 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
         xsqlvars[2].sqlname = "TYPE_NAME";
         xsqlvars[2].relname = "SUPERTYPES";
 
+        xsqlvars[3] = new XSQLVAR();
         xsqlvars[3].sqltype = ISCConstants.SQL_VARYING;
         xsqlvars[3].sqllen = 31;
         xsqlvars[3].sqlname = "SUPERTYPE_CAT";
