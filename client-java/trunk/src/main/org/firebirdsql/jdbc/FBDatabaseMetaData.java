@@ -5310,24 +5310,29 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
         return RowIdLifetime.ROWID_UNSUPPORTED;
     }
 
-    public int getJDBCMajorVersion() {
-        return 4;
-    }
-    
-    public int getJDBCMinorVersion() {
+    private static final int JDBC_MAJOR_VERSION = 4;
+    private static final int JDBC_MINOR_VERSION;
+    static {
+        // JDK 1.6 (or lower): JDBC 4.0
+        int tempVersion = 0;
         try {
-            String javaImplementation = getSystemPropertyPrivileged("java.implementation.version");
+            String javaImplementation = getSystemPropertyPrivileged("java.specification.version");
             if (javaImplementation != null && "1.7".compareTo(javaImplementation) <= 0) {
                 // JDK 1.7 or higher: JDBC 4.1
-                return 1;
-            } else {
-                // JDK 1.6 (or lower): JDBC 4.0
-                return 0;
+                tempVersion = 1;
             }
         } catch (RuntimeException ex) {
             // default to 0 (JDBC 4.0) when privileged call fails
-            return 0;
         }
+        JDBC_MINOR_VERSION = tempVersion;
+    }
+
+    public int getJDBCMajorVersion() {
+        return JDBC_MAJOR_VERSION;
+    }
+
+    public int getJDBCMinorVersion() {
+        return JDBC_MINOR_VERSION;
     }
     
     private static String getSystemPropertyPrivileged(final String propertyName) {
