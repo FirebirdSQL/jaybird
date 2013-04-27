@@ -68,7 +68,7 @@ public class FBDatabaseMetaData extends AbstractDatabaseMetaData {
         try {
             String javaImplementation = AccessController.doPrivileged(new PrivilegedAction<String>() {
                 public String run() {
-                    return System.getProperty("java.implementation.version");
+                    return System.getProperty("java.specification.version");
                 } 
              });
             if (javaImplementation != null && "1.7".compareTo(javaImplementation) <= 0) {
