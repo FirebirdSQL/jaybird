@@ -60,7 +60,61 @@ import org.firebirdsql.logging.LoggerFactory;
 public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
 
     private final static Logger log = LoggerFactory.getLogger(FBDatabaseMetaData.class,false);
-    public static final String SPACES = "                               ";//31 spaces
+    protected static final String SPACES = "                               ";//31 spaces
+
+    private static final int SUBTYPE_NUMERIC = 1;
+    private static final int SUBTYPE_DECIMAL = 2;
+
+    private static final byte[] TRUE_BYTES = getBytes("T");
+    private static final byte[] FALSE_BYTES = getBytes("F");
+    private static final byte[] YES_BYTES = getBytes("YES");
+    private static final byte[] NO_BYTES = getBytes("NO");
+    private static final byte[] EMPTY_STRING_BYTES = getBytes("");
+    private static final byte[] CASESENSITIVE = TRUE_BYTES;
+    private static final byte[] CASEINSENSITIVE = FALSE_BYTES;
+    private static final byte[] UNSIGNED = TRUE_BYTES;
+    private static final byte[] SIGNED = FALSE_BYTES;
+    private static final byte[] FIXEDSCALE = TRUE_BYTES;
+    private static final byte[] VARIABLESCALE = FALSE_BYTES;
+    private static final byte[] NOTAUTOINC = FALSE_BYTES;
+    // TODO in implementation short and int are encoded identical, remove distinction?
+    private static final byte[] INT_ZERO = createInt(0);
+    private static final byte[] SHORT_ZERO = createShort(0);
+    private static final byte[] SHORT_ONE = createShort(1);
+    private static final byte[] RADIX_BINARY = createInt(2);
+    private static final byte[] RADIX_TEN = createInt(10);
+    // TODO in implementation short and int are encoded identical, remove distinction?
+    private static final byte[] RADIX_TEN_SHORT = createShort(10);
+    private static final byte[] TYPE_PRED_NONE = createShort(DatabaseMetaData.typePredNone);
+    private static final byte[] TYPE_PRED_BASIC = createShort(DatabaseMetaData.typePredBasic);
+    private static final byte[] TYPE_SEARCHABLE = createShort(DatabaseMetaData.typeSearchable);
+    private static final byte[] TYPE_NULLABLE = createShort(DatabaseMetaData.typeNullable);
+    private static final byte[] PROCEDURE_NO_RESULT = createShort(DatabaseMetaData.procedureNoResult);
+    private static final byte[] PROCEDURE_RETURNS_RESULT = createShort(DatabaseMetaData.procedureReturnsResult);
+    private static final byte[] PROCEDURE_NO_NULLS = createShort(DatabaseMetaData.procedureNoNulls);
+    private static final byte[] PROCEDURE_NULLABLE = createShort(DatabaseMetaData.procedureNullable);
+    private static final byte[] PROCEDURE_COLUMN_IN = createShort(DatabaseMetaData.procedureColumnIn);
+    private static final byte[] PROCEDURE_COLUMN_OUT = createShort(DatabaseMetaData.procedureColumnOut);
+    private static final byte[] FLOAT_PRECISION = createInt(7);
+    private static final byte[] DOUBLE_PRECISION = createInt(15);
+    private static final byte[] BIGINT_PRECISION = createInt(19);
+    private static final byte[] INTEGER_PRECISION = createInt(10);
+    private static final byte[] SMALLINT_PRECISION = createInt(5);
+    private static final byte[] DATE_PRECISION = createInt(10);
+    private static final byte[] TIME_PRECISION = createInt(8);
+    private static final byte[] TIMESTAMP_PRECISION = createInt(19);
+    private static final byte[] NUMERIC_PRECISION = createInt(18);
+    private static final byte[] DECIMAL_PRECISION = createInt(18);
+    private static final byte[] COLUMN_NO_NULLS = createInt(DatabaseMetaData.columnNoNulls);
+    private static final byte[] COLUMN_NULLABLE = createInt(DatabaseMetaData.columnNullable);
+    private static final byte[] IMPORTED_KEY_NO_ACTION = createShort(DatabaseMetaData.importedKeyNoAction);
+    private static final byte[] IMPORTED_KEY_CASCADE = createShort(DatabaseMetaData.importedKeyCascade);
+    private static final byte[] IMPORTED_KEY_SET_NULL = createShort(DatabaseMetaData.importedKeySetNull);
+    private static final byte[] IMPORTED_KEY_SET_DEFAULT = createShort(DatabaseMetaData.importedKeySetDefault);
+    private static final byte[] IMPORTED_KEY_NOT_DEFERRABLE = createShort(DatabaseMetaData.importedKeyNotDeferrable);
+    private static final byte[] TABLE_INDEX_OTHER = createShort(DatabaseMetaData.tableIndexOther);
+    private static final byte[] ASC_BYTES = getBytes("A");
+    private static final byte[] DESC_BYTES = getBytes("D");
 
     private GDSHelper gdsHelper;
     private FBConnection connection;
@@ -104,7 +158,6 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
         return false;
     }
 
-
     /**
      * Can all the tables returned by getTable be SELECTed by the
      * current user?
@@ -116,7 +169,6 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
         //returns all tables matching criteria independent of access permissions.
         return false;
     }
-
 
     /**
      * What's the url for this database?
@@ -130,7 +182,6 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
         return GDSFactory.getJdbcUrl(gds.getType(), connection.mc.getDatabase());
     }
 
-
     /**
      * What's our user name as known to the database?
      * 
@@ -142,7 +193,6 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
         return gdsHelper.getUserName();
     }
 
-
     /**
      * Is the database in read-only mode?
      *
@@ -152,7 +202,6 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
     public  boolean isReadOnly() throws SQLException {
         return false;//could be true, not yetimplemented
     }
-
 
     /**
      * Are NULL values sorted high?
@@ -166,7 +215,6 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
         return false;
     }
 
-
     /**
      * Are NULL values sorted low?
      *
@@ -178,7 +226,6 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
         // in Firebird 2.0.x NULLs are sorted low
         return gdsHelper.compareToVersion(2, 0) >= 0;
     }
-
 
     /**
      * Are NULL values sorted at the start regardless of sort order?
@@ -192,7 +239,6 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
         return false;
     }
 
-
     /**
      * Are NULL values sorted at the end regardless of sort order?
      *
@@ -205,7 +251,6 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
         return gdsHelper.compareToVersion(2, 0) < 0;
     }
 
-
     /**
      * What's the name of this database product?
      *
@@ -215,7 +260,6 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
     public  String getDatabaseProductName() throws SQLException {
         return gdsHelper.getDatabaseProductName();
     }
-
 
     /**
      * What's the version of this database product?
@@ -227,7 +271,6 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
         return gdsHelper.getDatabaseProductVersion();
     }
 
-
     /**
      * What's the name of this JDBC driver?
      *
@@ -237,7 +280,6 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
     public  String getDriverName() throws SQLException {
         return "Jaybird JCA/JDBC driver";
     }
-
 
     /**
      * What's the version of this JDBC driver?
@@ -249,7 +291,6 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
         return "2.2";
     }
 
-
     /**
      * What's this JDBC driver's major version number?
      *
@@ -259,7 +300,6 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
         return 2;
     }
 
-
     /**
      * What's this JDBC driver's minor version number?
      *
@@ -268,7 +308,6 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
     public  int getDriverMinorVersion() {
         return 2;
     }
-
 
     /**
      * Does the database store tables in a local file?
@@ -280,7 +319,6 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
         return false;
     }
 
-
     /**
      * Does the database use a file for each table?
      *
@@ -290,7 +328,6 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
     public  boolean usesLocalFilePerTable() throws SQLException {
         return false;
     }
-
 
     /**
      * Does the database treat mixed case unquoted SQL identifiers as
@@ -331,7 +368,6 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
         return true;
     }
 
-
     /**
      * Does the database treat mixed case unquoted SQL identifiers as
      * case insensitive and store them in lower case?
@@ -343,7 +379,6 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
         return false;
     }
 
-
     /**
      * Does the database treat mixed case unquoted SQL identifiers as
      * case insensitive and store them in mixed case?
@@ -354,7 +389,6 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
     public  boolean storesMixedCaseIdentifiers() throws SQLException {
         return false;
     }
-
 
     /**
      * Does the database treat mixed case quoted SQL identifiers as
@@ -369,7 +403,6 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
         return true;
     }
 
-
     /**
      * Does the database treat mixed case quoted SQL identifiers as
      * case insensitive and store them in upper case?
@@ -380,7 +413,6 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
     public  boolean storesUpperCaseQuotedIdentifiers() throws SQLException {
         return false;
     }
-
 
     /**
      * Does the database treat mixed case quoted SQL identifiers as
@@ -393,7 +425,6 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
         return false;
     }
 
-
     /**
      * Does the database treat mixed case quoted SQL identifiers as
      * case insensitive and store them in mixed case?
@@ -404,7 +435,6 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
     public  boolean storesMixedCaseQuotedIdentifiers() throws SQLException {
         return false;
     }
-
 
     /**
      * What's the string used to quote SQL identifiers?
@@ -664,7 +694,6 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
     //"YEAR," + 
     "YEARDAY"; 
 
-
     /**
      * Gets a comma-separated list of all a database's SQL keywords
      * that are NOT also SQL92 keywords.
@@ -684,7 +713,6 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
      * </p>
      */
     public String getNumericFunctions() throws SQLException {
-        // TODO cache result?
         return collectionToCommaSeperatedList(FBEscapedFunctionHelper.getSupportedNumericFunctions());
     }
     
@@ -706,7 +734,6 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
      * </p>
      */
     public String getStringFunctions() throws SQLException {
-        // TODO cache result?
         return collectionToCommaSeperatedList(FBEscapedFunctionHelper.getSupportedStringFunctions());
     }
 
@@ -718,7 +745,6 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
      * </p>
      */
     public String getSystemFunctions() throws SQLException {
-        // TODO cache result?
         return collectionToCommaSeperatedList(FBEscapedFunctionHelper.getSupportedSystemFunctions());
     }
 
@@ -730,7 +756,6 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
      * </p>
      */
     public String getTimeDateFunctions() throws SQLException {
-        // TODO cache result?
         return collectionToCommaSeperatedList(FBEscapedFunctionHelper.getSupportedTimeDateFunctions());
     }
 
@@ -761,7 +786,6 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
         return "$";
     }
 
-
     //--------------------------------------------------------------------
     // Functions describing which features are supported.
 
@@ -775,7 +799,6 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
         return true;
     }
 
-
     /**
      * Is "ALTER TABLE" with drop column supported?
      *
@@ -785,7 +808,6 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
     public  boolean supportsAlterTableWithDropColumn() throws SQLException {
         return true;
     }
-
 
     /**
      * Is column aliasing supported?
@@ -803,7 +825,6 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
         return true;
     }
 
-
     /**
      * Retrieves whether concatenations between NULL and non-NULL values 
      * equal NULL. For SQL-92 compliance, a JDBC technology-enabled driver will
@@ -816,7 +837,6 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
         return true;
     }
 
-
     /**
      * Is the CONVERT function between SQL types supported?
      *
@@ -824,9 +844,9 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
      * @exception SQLException if a database access error occurs
      */
     public  boolean supportsConvert() throws SQLException {
+        // TODO: Set true after JDBC-294 has been done
         return false;   // Support is broken right now
     }
-
 
     /**
      * Retrieves whether CONVERT between the given SQL types supported.
@@ -838,9 +858,9 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
      * @see Types
      */
     public  boolean supportsConvert(int fromType, int toType) throws SQLException {
+        // TODO: implement actual mapping with JDBC-294
         return false;   // Support is broken right now
     }
-
 
     /**
      * Are table correlation names supported?
@@ -854,7 +874,6 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
         return true;
     }
 
-
     /**
      * If table correlation names are supported, are they restricted
      * to be different from the names of the tables?
@@ -866,7 +885,6 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
         return false; //I think
     }
 
-
     /**
      * Are expressions in "ORDER BY" lists supported?
      *
@@ -876,7 +894,6 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
     public  boolean supportsExpressionsInOrderBy() throws SQLException {
         return false; //coming soon
     }
-
 
     /**
      * Can an "ORDER BY" clause use columns not in the SELECT statement?
@@ -888,7 +905,6 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
         return true;
     }
 
-
     /**
      * Is some form of "GROUP BY" clause supported?
      *
@@ -898,7 +914,6 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
     public  boolean supportsGroupBy() throws SQLException {
         return true;
     }
-
 
     /**
      * Can a "GROUP BY" clause use columns not in the SELECT?
@@ -910,7 +925,6 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
         return false;
     }
 
-
     /**
      * Can a "GROUP BY" clause add columns not in the SELECT
      * provided it specifies all the columns in the SELECT?
@@ -921,7 +935,6 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
     public  boolean supportsGroupByBeyondSelect() throws SQLException {
         return false;
     }
-
 
     /**
      * Is the escape character in "LIKE" clauses supported?
@@ -935,7 +948,6 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
         return true;
     }
 
-
     /**
      * Are multiple <code>ResultSet</code> from a single execute supported?
      *
@@ -945,7 +957,6 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
     public  boolean supportsMultipleResultSets() throws SQLException {
         return false;
     }
-
 
     /**
      * Can we have multiple transactions open at once (on different
@@ -957,7 +968,6 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
     public  boolean supportsMultipleTransactions() throws SQLException {
         return true;
     }
-
 
     /**
      * Can columns be defined as non-nullable?
@@ -971,7 +981,6 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
         return true;
     }
 
-
     /**
      * Is the ODBC Minimum SQL grammar supported?
      *
@@ -984,7 +993,6 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
         return true; //lets see what the tests say
     }
 
-
     /**
      * Is the ODBC Core SQL grammar supported?
      *
@@ -995,7 +1003,6 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
         return true; //lets see what the tests say
     }
 
-
     /**
      * Is the ODBC Extended SQL grammar supported?
      *
@@ -1005,7 +1012,6 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
     public  boolean supportsExtendedSQLGrammar() throws SQLException {
         return true; //lets see what the tests say
     }
-
 
     /**
      * Is the ANSI92 entry level SQL grammar supported?
@@ -1019,7 +1025,6 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
         return true; //lets see what the tests say
     }
 
-
     /**
      * Is the ANSI92 intermediate SQL grammar supported?
      *
@@ -1029,7 +1034,6 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
     public  boolean supportsANSI92IntermediateSQL() throws SQLException {
         return false; //lets see what the tests say
     }
-
 
     /**
      * Is the ANSI92 full SQL grammar supported?
@@ -1075,7 +1079,6 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
         return null;
     }
 
-
     /**
      * What's the database vendor's preferred term for "procedure"?
      *
@@ -1085,7 +1088,6 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
     public  String getProcedureTerm() throws SQLException {
         return "PROCEDURE";
     }
-
 
     /**
      * What's the database vendor's preferred term for "catalog"?
@@ -1100,7 +1102,6 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
         return null;
     }
 
-
     /**
      * Does a catalog appear at the start of a qualified table name?
      * (Otherwise it appears at the end)
@@ -1111,7 +1112,6 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
     public  boolean isCatalogAtStart() throws SQLException {
         return false;
     }
-
 
     /**
      * What's the separator between catalog and table name?
@@ -1126,7 +1126,6 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
         return null;
     }
 
-
     /**
      * Can a schema name be used in a data manipulation statement?
      *
@@ -1138,7 +1137,6 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
         return false;
     }
 
-
     /**
      * Can a schema name be used in a procedure call statement?
      *
@@ -1148,7 +1146,6 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
     public  boolean supportsSchemasInProcedureCalls() throws SQLException {
         return false;
     }
-
 
     /**
      * Can a schema name be used in a table definition statement?
@@ -1160,7 +1157,6 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
         return false;
     }
 
-
     /**
      * Can a schema name be used in an index definition statement?
      *
@@ -1170,7 +1166,6 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
     public  boolean supportsSchemasInIndexDefinitions() throws SQLException {
         return false;
     }
-
 
     /**
      * Can a schema name be used in a privilege definition statement?
@@ -1182,7 +1177,6 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
         return false;
     }
 
-
     /**
      * Can a catalog name be used in a data manipulation statement?
      *
@@ -1192,7 +1186,6 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
     public  boolean supportsCatalogsInDataManipulation() throws SQLException {
         return false;
     }
-
 
     /**
      * Can a catalog name be used in a procedure call statement?
@@ -1204,7 +1197,6 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
         return false;
     }
 
-
     /**
      * Can a catalog name be used in a table definition statement?
      *
@@ -1214,7 +1206,6 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
     public  boolean supportsCatalogsInTableDefinitions() throws SQLException {
         return false;
     }
-
 
     /**
      * Can a catalog name be used in an index definition statement?
@@ -1226,7 +1217,6 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
         return false;
     }
 
-
     /**
      * Can a catalog name be used in a privilege definition statement?
      *
@@ -1236,8 +1226,6 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
     public  boolean supportsCatalogsInPrivilegeDefinitions() throws SQLException {
         return false;
     }
-
-
 
     /**
      * Is positioned DELETE supported?
@@ -1249,7 +1237,6 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
         return true;
     }
 
-
     /**
      * Is positioned UPDATE supported?
      *
@@ -1260,7 +1247,6 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
         return true;
     }
 
-
     /**
      * Is SELECT for UPDATE supported?
      *
@@ -1270,7 +1256,6 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
     public  boolean supportsSelectForUpdate() throws SQLException {
         return true;
     }
-
 
     /**
      * Are stored procedure calls using the stored procedure escape
@@ -1295,7 +1280,6 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
         return true;
     }
 
-
     /**
      * Are subqueries in 'exists' expressions supported?
      *
@@ -1307,7 +1291,6 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
     public  boolean supportsSubqueriesInExists() throws SQLException {
         return true;
     }
-
 
     /**
      * Are subqueries in 'in' statements supported?
@@ -1321,7 +1304,6 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
         return true;
     }
 
-
     /**
      * Are subqueries in quantified expressions supported?
      *
@@ -1333,7 +1315,6 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
     public  boolean supportsSubqueriesInQuantifieds() throws SQLException {
         return true;
     }
-
 
     /**
      * Are correlated subqueries supported?
@@ -1347,7 +1328,6 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
         return true;
     }
 
-
     /**
      * Is SQL UNION supported?
      *
@@ -1358,7 +1338,6 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
         return true;
     }
 
-
     /**
      * Is SQL UNION ALL supported?
      *
@@ -1368,7 +1347,6 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
     public  boolean supportsUnionAll() throws SQLException {
         return true;
     }
-
 
     /**
      * Can cursors remain open across commits?
@@ -1381,7 +1359,6 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
         return false;//only when commit retaining is executed I think
     }
 
-
     /**
      * Can cursors remain open across rollbacks?
      *
@@ -1393,7 +1370,6 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
         return false;//commit retaining only.
     }
 
-
     /**
      * Can statements remain open across commits?
      *
@@ -1404,7 +1380,6 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
     public  boolean supportsOpenStatementsAcrossCommit() throws SQLException {
         return true;//commit retaining only.
     }
-
 
     /**
      * Can statements remain open across rollbacks?
@@ -1444,8 +1419,6 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
     public  int getMaxCharLiteralLength() throws SQLException {
         return 32767;
     }
-
-
 
     /**
      * What's the limit on column name length?
@@ -1755,11 +1728,11 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
     }
 
     private static final String GET_PROCEDURES_START = "select "
-        + " RDB$PROCEDURE_NAME as PROCEDURE_NAME,"
-        + " RDB$DESCRIPTION as REMARKS,"
-        + " RDB$PROCEDURE_OUTPUTS as PROCEDURE_TYPE "
-        + "from"
-        + " RDB$PROCEDURES "
+        + "cast(RDB$PROCEDURE_NAME as varchar(31)) as PROCEDURE_NAME,"
+        + "RDB$DESCRIPTION as REMARKS,"
+        + "RDB$PROCEDURE_OUTPUTS as PROCEDURE_TYPE "
+        + "from "
+        + "RDB$PROCEDURES "
         + "where ";
     private static final String GET_PROCEDURES_END = "1 = 1 order by 1";
 
@@ -1801,65 +1774,23 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
     public ResultSet getProcedures(String catalog, String schemaPattern,
             String procedureNamePattern) throws SQLException {
         checkCatalogAndSchema(catalog, schemaPattern);
-        
+
+        // TODO null or "" are not according to spec
         if (procedureNamePattern == null || procedureNamePattern.equals("")) {
             procedureNamePattern = "%";
         }
 
         XSQLVAR[] xsqlvars = new XSQLVAR[9];
 
-        xsqlvars[0] = new XSQLVAR();
-        xsqlvars[0].sqltype = ISCConstants.SQL_VARYING;
-        xsqlvars[0].sqllen = 31;
-        xsqlvars[0].sqlname = "PROCEDURE_CAT";
-        xsqlvars[0].relname = "RDB$PROCEDURES";
-
-        xsqlvars[1] = new XSQLVAR();
-        xsqlvars[1].sqltype = ISCConstants.SQL_VARYING;
-        xsqlvars[1].sqllen = 31;
-        xsqlvars[1].sqlname = "PROCEDURE_SCHEM";
-        xsqlvars[1].relname = "RDB$PROCEDURES";
-
-        xsqlvars[2] = new XSQLVAR();
-        xsqlvars[2].sqltype = ISCConstants.SQL_VARYING;
-        xsqlvars[2].sqllen = 31;
-        xsqlvars[2].sqlname = "PROCEDURE_NAME";
-        xsqlvars[2].relname = "RDB$PROCEDURES";
-
-        xsqlvars[3] = new XSQLVAR();
-        xsqlvars[3].sqltype = ISCConstants.SQL_VARYING;
-        xsqlvars[3].sqllen = 31;
-        xsqlvars[3].sqlname = "FUTURE1";
-        xsqlvars[3].relname = "RDB$PROCEDURES";
-
-        xsqlvars[4] = new XSQLVAR();
-        xsqlvars[4].sqltype = ISCConstants.SQL_VARYING;
-        xsqlvars[4].sqllen = 31;
-        xsqlvars[4].sqlname = "FUTURE2";
-        xsqlvars[4].relname = "RDB$PROCEDURES";
-
-        xsqlvars[5] = new XSQLVAR();
-        xsqlvars[5].sqltype = ISCConstants.SQL_VARYING;
-        xsqlvars[5].sqllen = 31;
-        xsqlvars[5].sqlname = "FUTURE3";
-        xsqlvars[5].relname = "RDB$PROCEDURES";
-
-        xsqlvars[6] = new XSQLVAR();
-        xsqlvars[6].sqltype = ISCConstants.SQL_VARYING;
-        xsqlvars[6].sqllen = 80; // gets updated if there are longer remarks.
-        xsqlvars[6].sqlname = "REMARKS";
-        xsqlvars[6].relname = "RDB$PROCEDURES";
-
-        xsqlvars[7] = new XSQLVAR();
-        xsqlvars[7].sqltype = ISCConstants.SQL_SHORT;
-        xsqlvars[7].sqlname = "PROCEDURE_TYPE";
-        xsqlvars[7].relname = "RDB$PROCEDURES";
-        
-        xsqlvars[8] = new XSQLVAR();
-        xsqlvars[8].sqltype = ISCConstants.SQL_VARYING;
-        xsqlvars[8].sqllen = 31;
-        xsqlvars[8].sqlname = "SPECIFIC_NAME";
-        xsqlvars[8].relname = "RDB$PROCEDURES";
+        xsqlvars[0] = new XSQLVAR(ISCConstants.SQL_VARYING, 31, "PROCEDURE_CAT", "PROCEDURES");
+        xsqlvars[1] = new XSQLVAR(ISCConstants.SQL_VARYING, 31, "PROCEDURE_SCHEM", "ROCEDURES");
+        xsqlvars[2] = new XSQLVAR(ISCConstants.SQL_VARYING, 31, "PROCEDURE_NAME", "PROCEDURES");
+        xsqlvars[3] = new XSQLVAR(ISCConstants.SQL_VARYING, 31, "FUTURE1", "PROCEDURES");
+        xsqlvars[4] = new XSQLVAR(ISCConstants.SQL_VARYING, 31, "FUTURE2", "PROCEDURES");
+        xsqlvars[5] = new XSQLVAR(ISCConstants.SQL_VARYING, 31, "FUTURE3", "PROCEDURES");
+        xsqlvars[6] = new XSQLVAR(ISCConstants.SQL_VARYING, 80 /*gets updated if there are longer remarks*/, "REMARKS", "PROCEDURES");
+        xsqlvars[7] = new XSQLVAR(ISCConstants.SQL_SHORT, 0, "PROCEDURE_TYPE", "PROCEDURES");
+        xsqlvars[8] = new XSQLVAR(ISCConstants.SQL_VARYING, 31, "SPECIFIC_NAME", "PROCEDURES");
 
         Clause procedureClause = new Clause("RDB$PROCEDURE_NAME", procedureNamePattern);
         
@@ -1874,10 +1805,11 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
         }
 
         ResultSet rs = doQuery(sql, params);
-        ArrayList<byte[][]> rows = new ArrayList<byte[][]>();
+
         
         // if nothing found, check the uppercased identifiers
         if (!rs.next()) {
+            rs.close();
             params.clear();
             if (!procedureClause.getCondition().equals("")) {
                 params.add(procedureClause.getValue());
@@ -1886,10 +1818,13 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
             rs = doQuery(sql, params);
             
             // if nothing found, return an empty result set
-            if (!rs.next())
-                return new FBResultSet(xsqlvars, rows);
+            if (!rs.next()) {
+                rs.close();
+                return new FBResultSet(xsqlvars, Collections.<byte[][]>emptyList());
+            }
         }
-        
+
+        ArrayList<byte[][]> rows = new ArrayList<byte[][]>();
         do {
             byte[][] row = new byte[9][];
             row[0] = null;
@@ -1903,37 +1838,36 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
             if (remarks != null && remarks.length() > xsqlvars[6].sqllen)
                 xsqlvars[6].sqllen = remarks.length();
             short procedureType = rs.getShort("PROCEDURE_TYPE");
-            row[7] = (procedureType == 0) ? xsqlvars[0].encodeShort((short)procedureNoResult) : xsqlvars[0].encodeShort((short)procedureReturnsResult);
+            row[7] = procedureType == 0 ? PROCEDURE_NO_RESULT : PROCEDURE_RETURNS_RESULT;
             row[8] = row[2];
             rows.add(row);
         } while (rs.next());
-        
+        rs.close();
         return new FBResultSet(xsqlvars, rows);
     }
 
-
-    private static final String GET_PROCEDURE_COLUMNS_START = "select"
-        + " PP.RDB$PROCEDURE_NAME as PROCEDURE_NAME,"
-        + " PP.RDB$PARAMETER_NAME as COLUMN_NAME,"
-        + " PP.RDB$PARAMETER_TYPE as COLUMN_TYPE,"
-        + " F.RDB$FIELD_TYPE as FIELD_TYPE,"
-        + " F.RDB$FIELD_SUB_TYPE as FIELD_SUB_TYPE,"
-        + " F.RDB$FIELD_PRECISION as FIELD_PRECISION,"
-        + " F.RDB$FIELD_SCALE as FIELD_SCALE,"
-        + " F.RDB$FIELD_LENGTH as FIELD_LENGTH,"
-        + " F.RDB$NULL_FLAG as NULL_FLAG,"
-        + " PP.RDB$DESCRIPTION as REMARKS,"
-        + " F.RDB$CHARACTER_LENGTH AS CHAR_LEN,"
-        + " PP.RDB$PARAMETER_NUMBER + 1 AS PARAMETER_NUMBER " 
-        + "from"
-        + " RDB$PROCEDURE_PARAMETERS PP,"
-        + " RDB$FIELDS F "
+    private static final String GET_PROCEDURE_COLUMNS_START = "select "
+        + "cast(PP.RDB$PROCEDURE_NAME as varchar(31)) as PROCEDURE_NAME,"
+        + "cast(PP.RDB$PARAMETER_NAME as varchar(31)) as COLUMN_NAME,"
+        + "PP.RDB$PARAMETER_TYPE as COLUMN_TYPE,"
+        + "F.RDB$FIELD_TYPE as FIELD_TYPE,"
+        + "F.RDB$FIELD_SUB_TYPE as FIELD_SUB_TYPE,"
+        + "F.RDB$FIELD_PRECISION as FIELD_PRECISION,"
+        + "F.RDB$FIELD_SCALE as FIELD_SCALE,"
+        + "F.RDB$FIELD_LENGTH as FIELD_LENGTH,"
+        + "F.RDB$NULL_FLAG as NULL_FLAG,"
+        + "PP.RDB$DESCRIPTION as REMARKS,"
+        + "F.RDB$CHARACTER_LENGTH AS CHAR_LEN,"
+        + "PP.RDB$PARAMETER_NUMBER + 1 AS PARAMETER_NUMBER "
+        + "from "
+        + "RDB$PROCEDURE_PARAMETERS PP,"
+        + "RDB$FIELDS F "
         + "where ";
     private static final String GET_PROCEDURE_COLUMNS_END = " PP.RDB$FIELD_SOURCE = F.RDB$FIELD_NAME "
-        + "order by"
-        + " PP.RDB$PROCEDURE_NAME,"
-        + " PP.RDB$PARAMETER_TYPE desc,"
-        + " PP.RDB$PARAMETER_NUMBER ";
+        + "order by "
+        + "PP.RDB$PROCEDURE_NAME,"
+        + "PP.RDB$PARAMETER_TYPE desc,"
+        + "PP.RDB$PARAMETER_NUMBER ";
 
     /**
      * Retrieves a description of the given catalog's stored procedure parameter
@@ -2035,114 +1969,26 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
 
         XSQLVAR[] xsqlvars = new XSQLVAR[20];
 
-        xsqlvars[0] = new XSQLVAR();
-        xsqlvars[0].sqltype = ISCConstants.SQL_VARYING;
-        xsqlvars[0].sqllen = 31;
-        xsqlvars[0].sqlname = "PROCEDURE_CAT";
-        xsqlvars[0].relname = "COLUMNINFO";
-
-        xsqlvars[1] = new XSQLVAR();
-        xsqlvars[1].sqltype = ISCConstants.SQL_VARYING;
-        xsqlvars[1].sqllen = 31;
-        xsqlvars[1].sqlname = "PROCEDURE_SCHEM";
-        xsqlvars[1].relname = "COLUMNINFO";
-
-        xsqlvars[2] = new XSQLVAR();
-        xsqlvars[2].sqltype = ISCConstants.SQL_VARYING;
-        xsqlvars[2].sqllen = 31;
-        xsqlvars[2].sqlname = "PROCEDURE_NAME";
-        xsqlvars[2].relname = "COLUMNINFO";
-
-        xsqlvars[3] = new XSQLVAR();
-        xsqlvars[3].sqltype = ISCConstants.SQL_VARYING;
-        xsqlvars[3].sqllen = 31;
-        xsqlvars[3].sqlname = "COLUMN_NAME";
-        xsqlvars[3].relname = "COLUMNINFO";
-
-        xsqlvars[4] = new XSQLVAR();
-        xsqlvars[4].sqltype = ISCConstants.SQL_SHORT;
-        xsqlvars[4].sqlname = "COLUMN_TYPE";
-        xsqlvars[4].relname = "COLUMNINFO";
-
-        xsqlvars[5] = new XSQLVAR();
-        xsqlvars[5].sqltype = ISCConstants.SQL_LONG;
-        xsqlvars[5].sqlname = "DATA_TYPE";
-        xsqlvars[5].relname = "COLUMNINFO";
-
-        xsqlvars[6] = new XSQLVAR();
-        xsqlvars[6].sqltype = ISCConstants.SQL_VARYING;
-        xsqlvars[6].sqllen = 31;
-        xsqlvars[6].sqlname = "TYPE_NAME";
-        xsqlvars[6].relname = "COLUMNINFO";
-
-        xsqlvars[7] = new XSQLVAR();
-        xsqlvars[7].sqltype = ISCConstants.SQL_LONG;
-        xsqlvars[7].sqlname = "PRECISION";
-        xsqlvars[7].relname = "COLUMNINFO";
-
-        xsqlvars[8] = new XSQLVAR();
-        xsqlvars[8].sqltype = ISCConstants.SQL_LONG;
-        xsqlvars[8].sqlname = "LENGTH";
-        xsqlvars[8].relname = "COLUMNINFO";
-
-        xsqlvars[9] = new XSQLVAR();
-        xsqlvars[9].sqltype = ISCConstants.SQL_SHORT;
-        xsqlvars[9].sqlname = "SCALE";
-        xsqlvars[9].relname = "COLUMNINFO";
-
-        xsqlvars[10] = new XSQLVAR();
-        xsqlvars[10].sqltype = ISCConstants.SQL_SHORT;
-        xsqlvars[10].sqlname = "RADIX";
-        xsqlvars[10].relname = "COLUMNINFO";
-
-        xsqlvars[11] = new XSQLVAR();
-        xsqlvars[11].sqltype = ISCConstants.SQL_SHORT;
-        xsqlvars[11].sqlname = "NULLABLE";
-        xsqlvars[11].relname = "COLUMNINFO";
-
-        xsqlvars[12] = new XSQLVAR();
-        xsqlvars[12].sqltype = ISCConstants.SQL_VARYING;
-        xsqlvars[12].sqllen = 80; // gets updated if we get a longer description
-        xsqlvars[12].sqlname = "REMARKS";
-        xsqlvars[12].relname = "COLUMNINFO";
-        
-        xsqlvars[13] = new XSQLVAR();
-        xsqlvars[13].sqltype = ISCConstants.SQL_VARYING;
-        xsqlvars[13].sqllen = 31;
-        xsqlvars[13].sqlname = "COLUMN_DEF";
-        xsqlvars[13].relname = "COLUMNINFO";
-        
-        xsqlvars[14] = new XSQLVAR();
-        xsqlvars[14].sqltype = ISCConstants.SQL_LONG;
-        xsqlvars[14].sqlname = "SQL_DATA_TYPE";
-        xsqlvars[14].relname = "COLUMNINFO";
-        
-        xsqlvars[15] = new XSQLVAR();
-        xsqlvars[15].sqltype = ISCConstants.SQL_LONG;
-        xsqlvars[15].sqlname = "SQL_DATETIME_SUB";
-        xsqlvars[15].relname = "COLUMNINFO";
-        
-        xsqlvars[16] = new XSQLVAR();
-        xsqlvars[16].sqltype = ISCConstants.SQL_LONG;
-        xsqlvars[16].sqlname = "CHAR_OCTET_LENGTH";
-        xsqlvars[16].relname = "COLUMNINFO";
-        
-        xsqlvars[17] = new XSQLVAR();
-        xsqlvars[17].sqltype = ISCConstants.SQL_LONG;
-        xsqlvars[17].sqlname = "ORDINAL_POSITION";
-        xsqlvars[17].relname = "COLUMNINFO";
-        
-        xsqlvars[18] = new XSQLVAR();
-        xsqlvars[18].sqltype = ISCConstants.SQL_VARYING;
-        xsqlvars[18].sqllen = 3;
-        xsqlvars[18].sqlname = "IS_NULLABLE";
-        xsqlvars[18].relname = "COLUMNINFO";
-        
-        xsqlvars[19] = new XSQLVAR();
-        xsqlvars[19].sqltype = ISCConstants.SQL_VARYING;
-        xsqlvars[19].sqllen = 31;
-        xsqlvars[19].sqlname = "SPECIFIC_NAME";
-        xsqlvars[19].relname = "COLUMNINFO";
+        xsqlvars[0] = new XSQLVAR(ISCConstants.SQL_VARYING, 31, "PROCEDURE_CAT", "COLUMNINFO");
+        xsqlvars[1] = new XSQLVAR(ISCConstants.SQL_VARYING, 31, "PROCEDURE_SCHEM", "COLUMNINFO");
+        xsqlvars[2] = new XSQLVAR(ISCConstants.SQL_VARYING, 31, "PROCEDURE_NAME", "COLUMNINFO");
+        xsqlvars[3] = new XSQLVAR(ISCConstants.SQL_VARYING, 31, "COLUMN_NAME", "COLUMNINFO");
+        xsqlvars[4] = new XSQLVAR(ISCConstants.SQL_SHORT, 0, "COLUMN_TYPE", "COLUMNINFO");
+        xsqlvars[5] = new XSQLVAR(ISCConstants.SQL_LONG, 0, "DATA_TYPE", "COLUMNINFO");
+        xsqlvars[6] = new XSQLVAR(ISCConstants.SQL_VARYING, 31, "TYPE_NAME", "COLUMNINFO");
+        xsqlvars[7] = new XSQLVAR(ISCConstants.SQL_LONG, 0, "PRECISION", "COLUMNINFO");
+        xsqlvars[8] = new XSQLVAR(ISCConstants.SQL_LONG, 0, "LENGTH", "COLUMNINFO");
+        xsqlvars[9] = new XSQLVAR(ISCConstants.SQL_SHORT, 0, "SCALE", "COLUMNINFO");
+        xsqlvars[10] = new XSQLVAR(ISCConstants.SQL_SHORT, 0, "RADIX", "COLUMNINFO");
+        xsqlvars[11] = new XSQLVAR(ISCConstants.SQL_SHORT, 0, "NULLABLE", "COLUMNINFO");
+        xsqlvars[12] = new XSQLVAR(ISCConstants.SQL_VARYING, 80 /*gets updated if we get a longer description*/, "REMARKS", "COLUMNINFO");
+        xsqlvars[13] = new XSQLVAR(ISCConstants.SQL_VARYING, 31, "COLUMN_DEF", "COLUMNINFO");
+        xsqlvars[14] = new XSQLVAR(ISCConstants.SQL_LONG, 0, "SQL_DATA_TYPE", "COLUMNINFO");
+        xsqlvars[15] = new XSQLVAR(ISCConstants.SQL_LONG, 0, "SQL_DATETIME_SUB", "COLUMNINFO");
+        xsqlvars[16] = new XSQLVAR(ISCConstants.SQL_LONG, 0, "CHAR_OCTET_LENGTH", "COLUMNINFO");
+        xsqlvars[17] = new XSQLVAR(ISCConstants.SQL_LONG, 0, "ORDINAL_POSITION", "COLUMNINFO");
+        xsqlvars[18] = new XSQLVAR(ISCConstants.SQL_VARYING, 3, "IS_NULLABLE", "COLUMNINFO");
+        xsqlvars[19] = new XSQLVAR(ISCConstants.SQL_VARYING, 31, "SPECIFIC_NAME", "COLUMNINFO");
 
         Clause procedureClause = new Clause("PP.RDB$PROCEDURE_NAME", procedureNamePattern);
         Clause columnClause = new Clause("PP.RDB$PARAMETER_NAME", columnNamePattern);
@@ -2166,6 +2012,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
         
         // if nothing found, check the uppercased identifiers
         if (!rs.next()) {
+            rs.close();
             params.clear();
             if (!procedureClause.getCondition().equals("")) {
                 params.add(procedureClause.getValue());
@@ -2177,8 +2024,10 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
             rs = doQuery(sql, params);
             
             // if nothing found, return an empty result set
-            if (!rs.next())
+            if (!rs.next()) {
+                rs.close();
                 return new FBResultSet(xsqlvars, rows);
+            }
         }
 
         do {
@@ -2191,17 +2040,17 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
             short columnType = rs.getShort("COLUMN_TYPE");
             // TODO: Unsure if procedureColumnOut is correct, maybe procedureColumnResult, or need ODS dependent use of RDB$PROCEDURE_TYPE to decide on selectable or executable?
             // TODO: ResultSet columns should not be first according to JDBC 4.1 description
-            row[4] = (columnType == 0) ? xsqlvars[0].encodeShort((short)procedureColumnIn) : xsqlvars[0].encodeShort((short)procedureColumnOut);
+            row[4] = columnType == 0 ? PROCEDURE_COLUMN_IN : PROCEDURE_COLUMN_OUT;
 
             short fieldType = rs.getShort("FIELD_TYPE");
             short fieldSubType = rs.getShort("FIELD_SUB_TYPE");
             short fieldScale = rs.getShort("FIELD_SCALE");
             int dataType = getDataType(fieldType, fieldSubType, fieldScale);
 
-            row[5] = xsqlvars[0].encodeInt(dataType);
+            row[5] = createInt(dataType);
             row[6] = getBytes(getDataTypeName(fieldType, fieldSubType, fieldScale));
             
-            row[8] = xsqlvars[0].encodeInt(rs.getShort("FIELD_LENGTH"));
+            row[8] = createInt(rs.getShort("FIELD_LENGTH"));
             
             // Defaults: some are overridden in the switch
             row[7] = null;
@@ -2211,51 +2060,51 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
             switch (dataType){
                 case Types.DECIMAL:
                 case Types.NUMERIC:
-                   row[7] = xsqlvars[0].encodeInt(rs.getShort("FIELD_PRECISION"));
-                   row[9] = xsqlvars[0].encodeShort((short)(fieldScale * (-1)));
-                   row[10] = xsqlvars[0].encodeShort((short)10);
+                   row[7] = createInt(rs.getShort("FIELD_PRECISION"));
+                   row[9] = createShort(-1 * fieldScale);
+                   row[10] = RADIX_TEN_SHORT;
                    break;
                 case Types.CHAR:
                 case Types.VARCHAR:
                    short charLen = rs.getShort("CHAR_LEN");
                    if (!rs.wasNull()) {
-                       row[7] = xsqlvars[0].encodeInt(charLen);
+                       row[7] = createInt(charLen);
                    } else {
                        row[7] = row[8];
                    }
                    row[16] = row[8];
                    break;
                 case Types.FLOAT:
-                   row[7] = xsqlvars[0].encodeInt(7);
-                   row[10] = xsqlvars[0].encodeShort((short)10);
+                   row[7] = FLOAT_PRECISION;
+                   row[10] = RADIX_TEN_SHORT;
                    break;
                 case Types.DOUBLE:
-                   row[7] = xsqlvars[0].encodeInt(15);
-                   row[10] = xsqlvars[0].encodeShort((short)10);
+                   row[7] = DOUBLE_PRECISION;
+                   row[10] = RADIX_TEN_SHORT;
                    break;
                 case Types.BIGINT:
-                    row[7] = xsqlvars[0].encodeInt(19);
-                    row[9] = xsqlvars[0].encodeShort((short)0);
-                    row[10] = xsqlvars[0].encodeShort((short)10);
+                    row[7] = BIGINT_PRECISION;
+                    row[9] = SHORT_ZERO;
+                    row[10] = RADIX_TEN_SHORT;
                     break;
                 case Types.INTEGER:
-                   row[7] = xsqlvars[0].encodeInt(10);
-                   row[9] = xsqlvars[0].encodeShort((short)0);
-                   row[10] = xsqlvars[0].encodeShort((short)10);
+                   row[7] = INTEGER_PRECISION;
+                   row[9] = SHORT_ZERO;
+                   row[10] = RADIX_TEN_SHORT;
                    break;
                 case Types.SMALLINT:
-                   row[7] = xsqlvars[0].encodeInt(5);
-                   row[9] = xsqlvars[0].encodeShort((short)0);
-                   row[10] = xsqlvars[0].encodeShort((short)10);
+                   row[7] = SMALLINT_PRECISION;
+                   row[9] = SHORT_ZERO;
+                   row[10] = RADIX_TEN_SHORT;
                    break;
                 case Types.DATE:
-                   row[7] = xsqlvars[0].encodeInt(10);
+                   row[7] = DATE_PRECISION;
                    break;
                 case Types.TIME:
-                   row[7] = xsqlvars[0].encodeInt(8);
+                   row[7] = TIME_PRECISION;
                    break;
                 case Types.TIMESTAMP:
-                   row[7] = xsqlvars[0].encodeInt(19);
+                   row[7] = TIMESTAMP_PRECISION;
                    break;
                 default:
                    row[7] = null;
@@ -2263,8 +2112,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
             
             // TODO: Find out what the difference is with NULL_FLAG in RDB$PROCEDURE_PARAMETERS (might be ODS dependent) 
             short nullFlag = rs.getShort("NULL_FLAG");
-            row[11] = (nullFlag == 1) ? xsqlvars[0].encodeShort((short)procedureNoNulls) :
-                                        xsqlvars[0].encodeShort((short)procedureNullable);
+            row[11] = nullFlag == 1 ? PROCEDURE_NO_NULLS : PROCEDURE_NULLABLE;
 
             String remarks = rs.getString("REMARKS");
             row[12] = getBytes(remarks);
@@ -2275,13 +2123,14 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
             row[14] = null;
             row[15] = null;
             // TODO: Find correct value for ORDINAL_POSITION (+ order of columns and intent, see JDBC-229)
-            row[17] = xsqlvars[0].encodeInt(rs.getInt("PARAMETER_NUMBER"));
+            row[17] = createInt(rs.getInt("PARAMETER_NUMBER"));
             // TODO: Find out if there is a conceptual difference with NULLABLE (idx 11)
-            row[18] = (nullFlag == 1) ? getBytes("NO") : getBytes("YES");
+            row[18] = (nullFlag == 1) ? NO_BYTES : YES_BYTES;
             row[19] = row[2];
 
             rows.add(row);
         } while (rs.next());
+        rs.close();
         return new FBResultSet(xsqlvars, rows);
     }
 
@@ -2290,20 +2139,20 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
     public static final String SYSTEM_TABLE = "SYSTEM TABLE";
     public static final String VIEW = "VIEW";
     public static final String[] ALL_TYPES = {TABLE, SYSTEM_TABLE, VIEW};
-    
+
     private static final String TABLE_COLUMNS_FORMAT =
-              " select cast(null as varchar(31)) as TABLE_CAT,"
-            + " cast(null as varchar(31)) as TABLE_SCHEM,"
-            + " RDB$RELATION_NAME as TABLE_NAME,"
-            + " cast('%s' as varchar(31)) as TABLE_TYPE,"
-            + " RDB$DESCRIPTION as REMARKS,"
-            + " cast(null as varchar(31)) as TYPE_CAT,"
-            + " cast(null as varchar(31)) as TYPE_SCHEM,"
-            + " cast(null as varchar(31)) as TYPE_NAME,"
-            + " cast(null as varchar(31)) as SELF_REFERENCING_COL_NAME,"
-            + " cast(null as varchar(31)) as REF_GENERATION,"
-            + " RDB$OWNER_NAME as OWNER_NAME"
-            + " from RDB$RELATIONS";
+            " select cast(null as varchar(31)) as TABLE_CAT,"
+            + "cast(null as varchar(31)) as TABLE_SCHEM,"
+            + "cast(RDB$RELATION_NAME as varchar(31)) as TABLE_NAME,"
+            + "cast('%s' as varchar(31)) as TABLE_TYPE,"
+            + "RDB$DESCRIPTION as REMARKS,"
+            + "cast(null as varchar(31)) as TYPE_CAT,"
+            + "cast(null as varchar(31)) as TYPE_SCHEM,"
+            + "cast(null as varchar(31)) as TYPE_NAME,"
+            + "cast(null as varchar(31)) as SELF_REFERENCING_COL_NAME,"
+            + "cast(null as varchar(31)) as REF_GENERATION,"
+            + "cast(RDB$OWNER_NAME as varchar(31)) as OWNER_NAME "
+            + "from RDB$RELATIONS";
     
     private static final String TABLE_COLUMNS_SYSTEM =
             String.format(TABLE_COLUMNS_FORMAT, SYSTEM_TABLE);
@@ -2402,6 +2251,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
     public ResultSet getTables(String catalog, String schemaPattern,
         String tableNamePattern, String types[]) throws SQLException {
 
+        // TODO null or "" are invalid according to JDBC spec
         if (tableNamePattern == null || "".equals(tableNamePattern))
             tableNamePattern = "%";
 
@@ -2475,11 +2325,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
     public  ResultSet getCatalogs() throws SQLException {
         XSQLVAR[] xsqlvars = new XSQLVAR[1];
 
-        xsqlvars[0] = new XSQLVAR();
-        xsqlvars[0].sqltype = ISCConstants.SQL_VARYING;
-        xsqlvars[0].sqllen = 31;
-        xsqlvars[0].sqlname = "TABLE_CAT";
-        xsqlvars[0].relname = "TABLECATALOGS";
+        xsqlvars[0] = new XSQLVAR(ISCConstants.SQL_VARYING, 31, "TABLE_CAT", "TABLECATALOGS");
 
         List<byte[][]> rows = Collections.emptyList();
 
@@ -2504,11 +2350,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
     public  ResultSet getTableTypes() throws SQLException {
         XSQLVAR[] xsqlvars = new XSQLVAR[1];
 
-        xsqlvars[0] = new XSQLVAR();
-        xsqlvars[0].sqltype = ISCConstants.SQL_VARYING;
-        xsqlvars[0].sqllen = 31;
-        xsqlvars[0].sqlname = "TABLE_TYPE";
-        xsqlvars[0].relname = "TABLETYPES";
+        xsqlvars[0] = new XSQLVAR(ISCConstants.SQL_VARYING, 31, "TABLE_TYPE", "TABLETYPES");
 
         List<byte[][]> rows = new ArrayList<byte[][]>(ALL_TYPES.length);
         for(int i = 0; i < ALL_TYPES.length; i++)
@@ -2517,24 +2359,24 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
         return new FBResultSet(xsqlvars, rows);
     }
 
-    private static final String GET_COLUMNS_START = 
-            "SELECT   RF.RDB$RELATION_NAME  AS RELATION_NAME   ," + 
-    		"         RF.RDB$FIELD_NAME     AS FIELD_NAME      ," + 
-    		"         F.RDB$FIELD_TYPE      AS FIELD_TYPE      ," + 
-    		"         F.RDB$FIELD_SUB_TYPE  AS FIELD_SUB_TYPE  ," + 
-    		"         F.RDB$FIELD_PRECISION AS FIELD_PRECISION ," + 
-    		"         F.RDB$FIELD_SCALE     AS FIELD_SCALE     ," + 
-    		"         F.RDB$FIELD_LENGTH    AS FIELD_LENGTH    ," + 
-    		"         F.RDB$CHARACTER_LENGTH AS CHAR_LEN       ," + 
-    		"         RF.RDB$DESCRIPTION    AS REMARKS         ," + 
-    		"         RF.RDB$DEFAULT_SOURCE AS DEFAULT_SOURCE  ," + 
-    		"         RF.RDB$FIELD_POSITION + 1 AS FIELD_POSITION  ," + 
-    		"         RF.RDB$NULL_FLAG      AS NULL_FLAG       ," + 
-    		"         F.RDB$NULL_FLAG       AS SOURCE_NULL_FLAG," +
-    		"         F.RDB$COMPUTED_BLR    AS COMPUTED_BLR " +
-    		"FROM     RDB$RELATION_FIELDS RF," + 
-    		"         RDB$FIELDS F " + 
-    		"WHERE ";
+    private static final String GET_COLUMNS_START =
+            "SELECT cast(RF.RDB$RELATION_NAME as varchar(31)) AS RELATION_NAME," +
+            "cast(RF.RDB$FIELD_NAME as varchar(31)) AS FIELD_NAME," +
+            "F.RDB$FIELD_TYPE AS FIELD_TYPE," +
+            "F.RDB$FIELD_SUB_TYPE AS FIELD_SUB_TYPE," +
+            "F.RDB$FIELD_PRECISION AS FIELD_PRECISION," +
+            "F.RDB$FIELD_SCALE AS FIELD_SCALE," +
+            "F.RDB$FIELD_LENGTH AS FIELD_LENGTH," +
+            "F.RDB$CHARACTER_LENGTH AS CHAR_LEN," +
+            "RF.RDB$DESCRIPTION AS REMARKS," +
+            "RF.RDB$DEFAULT_SOURCE AS DEFAULT_SOURCE," +
+            "RF.RDB$FIELD_POSITION + 1 AS FIELD_POSITION," +
+            "RF.RDB$NULL_FLAG AS NULL_FLAG," +
+            "F.RDB$NULL_FLAG AS SOURCE_NULL_FLAG," +
+            "F.RDB$COMPUTED_BLR AS COMPUTED_BLR " +
+            "FROM RDB$RELATION_FIELDS RF," +
+            "RDB$FIELDS F " +
+            "WHERE ";
 
     public static final String GET_COLUMNS_END = " RF.RDB$FIELD_SOURCE = F.RDB$FIELD_NAME " +
         "order by 1, 11";
@@ -2635,142 +2477,36 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
 
         XSQLVAR[] xsqlvars = new XSQLVAR[24];
 
-        xsqlvars[0] = new XSQLVAR();
-        xsqlvars[0].sqltype = ISCConstants.SQL_VARYING;
-        xsqlvars[0].sqllen = 31;
-        xsqlvars[0].sqlname = "TABLE_CAT";
-        xsqlvars[0].relname = "COLUMNINFO";
-
-        xsqlvars[1] = new XSQLVAR();
-        xsqlvars[1].sqltype = ISCConstants.SQL_VARYING;
-        xsqlvars[1].sqllen = 31;
-        xsqlvars[1].sqlname = "TABLE_SCHEM";
-        xsqlvars[1].relname = "COLUMNINFO";
-
-        xsqlvars[2] = new XSQLVAR();
-        xsqlvars[2].sqltype = ISCConstants.SQL_VARYING;
-        xsqlvars[2].sqllen = 31;
-        xsqlvars[2].sqlname = "TABLE_NAME";
-        xsqlvars[2].relname = "COLUMNINFO";
-
-        xsqlvars[3] = new XSQLVAR();
-        xsqlvars[3].sqltype = ISCConstants.SQL_VARYING;
-        xsqlvars[3].sqllen = 31;
-        xsqlvars[3].sqlname = "COLUMN_NAME";
-        xsqlvars[3].relname = "COLUMNINFO";
-
-        xsqlvars[4] = new XSQLVAR();
-        xsqlvars[4].sqltype = ISCConstants.SQL_LONG;
-        xsqlvars[4].sqlname = "DATA_TYPE";
-        xsqlvars[4].relname = "COLUMNINFO";
-
-        xsqlvars[5] = new XSQLVAR();
-        xsqlvars[5].sqltype = ISCConstants.SQL_VARYING | 1;
-        xsqlvars[5].sqllen = 31;
-        xsqlvars[5].sqlname = "TYPE_NAME";
-        xsqlvars[5].relname = "COLUMNINFO";
-
-        xsqlvars[6] = new XSQLVAR();
-        xsqlvars[6].sqltype = ISCConstants.SQL_LONG;
-        xsqlvars[6].sqlname = "COLUMN_SIZE";
-        xsqlvars[6].relname = "COLUMNINFO";
-
-        xsqlvars[7] = new XSQLVAR();
-        xsqlvars[7].sqltype = ISCConstants.SQL_LONG;
-        xsqlvars[7].sqlname = "BUFFER_LENGTH";
-        xsqlvars[7].relname = "COLUMNINFO";
-
-        xsqlvars[8] = new XSQLVAR();
-        xsqlvars[8].sqltype = ISCConstants.SQL_LONG;
-        xsqlvars[8].sqlname = "DECIMAL_DIGITS";
-        xsqlvars[8].relname = "COLUMNINFO";
-
-        xsqlvars[9] = new XSQLVAR();
-        xsqlvars[9].sqltype = ISCConstants.SQL_LONG;
-        xsqlvars[9].sqlname = "NUM_PREC_RADIX";
-        xsqlvars[9].relname = "COLUMNINFO";
-
-        xsqlvars[10] = new XSQLVAR();
-        xsqlvars[10].sqltype = ISCConstants.SQL_LONG;
-        xsqlvars[10].sqlname = "NULLABLE";
-        xsqlvars[10].relname = "COLUMNINFO";
-
-        xsqlvars[11] = new XSQLVAR();
-        xsqlvars[11].sqltype = ISCConstants.SQL_VARYING | 1;
-        xsqlvars[11].sqllen = 80;
-        xsqlvars[11].sqlname = "REMARKS";
-        xsqlvars[11].relname = "COLUMNINFO";
-
-        xsqlvars[12] = new XSQLVAR();
-        xsqlvars[12].sqltype = ISCConstants.SQL_VARYING | 1;
-        xsqlvars[12].sqllen = 31;
-        xsqlvars[12].sqlname = "COLUMN_DEF";
-        xsqlvars[12].relname = "COLUMNINFO";
-
-        xsqlvars[13] = new XSQLVAR();
-        xsqlvars[13].sqltype = ISCConstants.SQL_LONG;
-        xsqlvars[13].sqlname = "SQL_DATA_TYPE";
-        xsqlvars[13].relname = "COLUMNINFO";
-
-        xsqlvars[14] = new XSQLVAR();
-        xsqlvars[14].sqltype = ISCConstants.SQL_LONG;
-        xsqlvars[14].sqlname = "SQL_DATETIME_SUB";
-        xsqlvars[14].relname = "COLUMNINFO";
-
-        xsqlvars[15] = new XSQLVAR();
-        xsqlvars[15].sqltype = ISCConstants.SQL_LONG;
-        xsqlvars[15].sqlname = "CHAR_OCTET_LENGTH";
-        xsqlvars[15].relname = "COLUMNINFO";
-
-        xsqlvars[16] = new XSQLVAR();
-        xsqlvars[16].sqltype = ISCConstants.SQL_LONG;
-        xsqlvars[16].sqlname = "ORDINAL_POSITION";
-        xsqlvars[16].relname = "COLUMNINFO";
-
-        xsqlvars[17] = new XSQLVAR();
-        xsqlvars[17].sqltype = ISCConstants.SQL_VARYING;
-        xsqlvars[17].sqllen = 3;
-        xsqlvars[17].sqlname = "IS_NULLABLE";
-        xsqlvars[17].relname = "COLUMNINFO";
-        
-        xsqlvars[18] = new XSQLVAR();
-        xsqlvars[18].sqltype = ISCConstants.SQL_VARYING;
-        xsqlvars[18].sqllen = 31;
+        xsqlvars[0] = new XSQLVAR(ISCConstants.SQL_VARYING, 31, "TABLE_CAT", "COLUMNINFO");
+        xsqlvars[1] = new XSQLVAR(ISCConstants.SQL_VARYING, 31, "TABLE_SCHEM", "COLUMNINFO");
+        xsqlvars[2] = new XSQLVAR(ISCConstants.SQL_VARYING, 31, "TABLE_NAME", "COLUMNINFO");
+        xsqlvars[3] = new XSQLVAR(ISCConstants.SQL_VARYING, 31, "COLUMN_NAME", "COLUMNINFO");
+        xsqlvars[4] = new XSQLVAR(ISCConstants.SQL_LONG, 0, "DATA_TYPE", "COLUMNINFO");
+        xsqlvars[5] = new XSQLVAR(ISCConstants.SQL_VARYING | 1, 31, "TYPE_NAME", "COLUMNINFO");
+        xsqlvars[6] = new XSQLVAR(ISCConstants.SQL_LONG, 0, "COLUMN_SIZE", "COLUMNINFO");
+        xsqlvars[7] = new XSQLVAR(ISCConstants.SQL_LONG, 0, "BUFFER_LENGTH", "COLUMNINFO");
+        xsqlvars[8] = new XSQLVAR(ISCConstants.SQL_LONG, 0, "DECIMAL_DIGITS", "COLUMNINFO");
+        xsqlvars[9] = new XSQLVAR(ISCConstants.SQL_LONG, 0, "NUM_PREC_RADIX", "COLUMNINFO");
+        xsqlvars[10] = new XSQLVAR(ISCConstants.SQL_LONG, 0, "NULLABLE", "COLUMNINFO");
+        xsqlvars[11] = new XSQLVAR(ISCConstants.SQL_VARYING | 1, 80, "REMARKS", "COLUMNINFO");
+        xsqlvars[12] = new XSQLVAR(ISCConstants.SQL_VARYING | 1, 31, "COLUMN_DEF", "COLUMNINFO");
+        xsqlvars[13] = new XSQLVAR(ISCConstants.SQL_LONG, 0, "SQL_DATA_TYPE", "COLUMNINFO");
+        xsqlvars[14] = new XSQLVAR(ISCConstants.SQL_LONG, 0, "SQL_DATETIME_SUB", "COLUMNINFO");
+        xsqlvars[15] = new XSQLVAR(ISCConstants.SQL_LONG, 0, "CHAR_OCTET_LENGTH", "COLUMNINFO");
+        xsqlvars[16] = new XSQLVAR(ISCConstants.SQL_LONG, 0, "ORDINAL_POSITION", "COLUMNINFO");
+        xsqlvars[17] = new XSQLVAR(ISCConstants.SQL_VARYING, 3, "IS_NULLABLE", "COLUMNINFO");
+        final String scopeCatalog;
         if (getJDBCMajorVersion() > 4 || getJDBCMajorVersion() == 4 && getJDBCMinorVersion() >= 1) {
-            xsqlvars[18].sqlname = "SCOPE_CATALOG";
+            scopeCatalog = "SCOPE_CATALOG";
         } else {
-            xsqlvars[18].sqlname = "SCOPE_CATLOG";
+            scopeCatalog = "SCOPE_CATLOG";
         }
-        xsqlvars[18].relname = "COLUMNINFO";
-        
-        xsqlvars[19] = new XSQLVAR();
-        xsqlvars[19].sqltype = ISCConstants.SQL_VARYING;
-        xsqlvars[19].sqllen = 31;
-        xsqlvars[19].sqlname = "SCOPE_SCHEMA";
-        xsqlvars[19].relname = "COLUMNINFO";
-        
-        xsqlvars[20] = new XSQLVAR();
-        xsqlvars[20].sqltype = ISCConstants.SQL_VARYING;
-        xsqlvars[20].sqllen = 31;
-        xsqlvars[20].sqlname = "SCOPE_TABLE";
-        xsqlvars[20].relname = "COLUMNINFO";
-        
-        xsqlvars[21] = new XSQLVAR();
-        xsqlvars[21].sqltype = ISCConstants.SQL_SHORT;
-        xsqlvars[21].sqlname = "SOURCE_DATA_TYPE";
-        xsqlvars[21].relname = "COLUMNINFO";
-        
-        xsqlvars[22] = new XSQLVAR();
-        xsqlvars[22].sqltype = ISCConstants.SQL_VARYING;
-        xsqlvars[22].sqllen = 3;
-        xsqlvars[22].sqlname = "IS_AUTOINCREMENT";
-        xsqlvars[22].relname = "COLUMNINFO";
-        
-        xsqlvars[23] = new XSQLVAR();
-        xsqlvars[23].sqltype = ISCConstants.SQL_VARYING;
-        xsqlvars[23].sqllen = 3;
-        xsqlvars[23].sqlname = "IS_GENERATEDCOLUMN";
-        xsqlvars[23].relname = "COLUMNINFO";
+        xsqlvars[18] = new XSQLVAR(ISCConstants.SQL_VARYING, 31, scopeCatalog, "COLUMNINFO");
+        xsqlvars[19] = new XSQLVAR(ISCConstants.SQL_VARYING, 31, "SCOPE_SCHEMA", "COLUMNINFO");
+        xsqlvars[20] = new XSQLVAR(ISCConstants.SQL_VARYING, 31, "SCOPE_TABLE", "COLUMNINFO");
+        xsqlvars[21] = new XSQLVAR(ISCConstants.SQL_SHORT, 0, "SOURCE_DATA_TYPE", "COLUMNINFO");
+        xsqlvars[22] = new XSQLVAR(ISCConstants.SQL_VARYING, 3, "IS_AUTOINCREMENT", "COLUMNINFO");
+        xsqlvars[23] = new XSQLVAR(ISCConstants.SQL_VARYING, 3, "IS_GENERATEDCOLUMN", "COLUMNINFO");
 
         Clause tableClause = new Clause("RF.RDB$RELATION_NAME", tableNamePattern);
         Clause columnClause = new Clause("RF.RDB$FIELD_NAME", columnNamePattern);
@@ -2795,6 +2531,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
 
         // if no direct match happened, check the uppercased match
         if (!rs.next()) {
+            rs.close();
             params.clear();
             if (!tableClause.getCondition().equals("")) {
                 params.add(tableClause.getValue());
@@ -2808,8 +2545,10 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
             // if no rows are available, we have to exit now, otherwise the 
             // following do/while loop will throw SQLException that the
             // result set is not positioned on a row
-            if (!rs.next())
+            if (!rs.next()) {
+                rs.close();
                 return new FBResultSet(xsqlvars, rows);
+            }
         }
 
         do {
@@ -2824,7 +2563,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
             short fieldScale = rs.getShort("FIELD_SCALE");
             int dataType = getDataType(fieldType, fieldSubType, fieldScale);
 
-            row[4] = xsqlvars[0].encodeInt(dataType);
+            row[4] = createInt(dataType);
             row[5] = getBytes(getDataTypeName(fieldType, fieldSubType, fieldScale));
             
             row[7] = null;
@@ -2836,51 +2575,51 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
             switch (dataType){
                 case Types.DECIMAL:
                 case Types.NUMERIC:
-                   row[6] = xsqlvars[0].encodeInt(rs.getShort("FIELD_PRECISION"));
-                   row[8] = xsqlvars[0].encodeInt(fieldScale * (-1));
-                   row[9] = xsqlvars[0].encodeInt(10);
+                   row[6] = createInt(rs.getShort("FIELD_PRECISION"));
+                   row[8] = createInt(fieldScale * (-1));
+                   row[9] = RADIX_TEN;
                    break;
                 case Types.CHAR:
                 case Types.VARCHAR:
-                    row[15] = xsqlvars[0].encodeInt(rs.getShort("FIELD_LENGTH"));
+                    row[15] = createInt(rs.getShort("FIELD_LENGTH"));
                    short charLen = rs.getShort("CHAR_LEN");
                    if (!rs.wasNull()) {
-                       row[6] = xsqlvars[0].encodeInt(charLen);
+                       row[6] = createInt(charLen);
                    } else {
                        row[6] = row[15];
                    }
                    break;
                 case Types.FLOAT:
-                   row[6] = xsqlvars[0].encodeInt(7);
-                   row[9] = xsqlvars[0].encodeInt(10);
+                   row[6] = FLOAT_PRECISION;
+                   row[9] = RADIX_TEN;
                    break;
                 case Types.DOUBLE:
-                   row[6] = xsqlvars[0].encodeInt(15);
-                   row[9] = xsqlvars[0].encodeInt(10);
+                   row[6] = DOUBLE_PRECISION;
+                   row[9] = RADIX_TEN;
                    break;
                 case Types.BIGINT:
-                    row[6] = xsqlvars[0].encodeInt(19);
-                    row[8] = xsqlvars[0].encodeInt(0);
-                    row[9] = xsqlvars[0].encodeInt(10);
+                    row[6] = BIGINT_PRECISION;
+                    row[8] = INT_ZERO;
+                    row[9] = RADIX_TEN;
                     break;
                 case Types.INTEGER:
-                   row[6] = xsqlvars[0].encodeInt(10);
-                   row[8] = xsqlvars[0].encodeInt(0);
-                   row[9] = xsqlvars[0].encodeInt(10);
+                   row[6] = INTEGER_PRECISION;
+                   row[8] = INT_ZERO;
+                   row[9] = RADIX_TEN;
                    break;
                 case Types.SMALLINT:
-                   row[6] = xsqlvars[0].encodeInt(5);
-                   row[8] = xsqlvars[0].encodeInt(0);
-                   row[9] = xsqlvars[0].encodeInt(10);
+                   row[6] = SMALLINT_PRECISION;
+                   row[8] = INT_ZERO;
+                   row[9] = RADIX_TEN;
                    break;
                 case Types.DATE:
-                   row[6] = xsqlvars[0].encodeInt(10);
+                   row[6] = DATE_PRECISION;
                    break;
                 case Types.TIME:
-                   row[6] = xsqlvars[0].encodeInt(8);
+                   row[6] = TIME_PRECISION;
                    break;
                 case Types.TIMESTAMP:
-                   row[6] = xsqlvars[0].encodeInt(19);
+                   row[6] = TIMESTAMP_PRECISION;
                    break;
                 default:
                    row[6] = null;
@@ -2888,9 +2627,9 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
 
             short nullFlag = rs.getShort("NULL_FLAG");
             short sourceNullFlag = rs.getShort("SOURCE_NULL_FLAG");
-            row[10] = (nullFlag == 1 || sourceNullFlag == 1) ? 
-                    xsqlvars[0].encodeInt(columnNoNulls) :
-                    xsqlvars[0].encodeInt(columnNullable);
+            row[10] = (nullFlag == 1 || sourceNullFlag == 1) ?
+                    COLUMN_NO_NULLS :
+                    COLUMN_NULLABLE;
 
             String remarks = rs.getString("REMARKS");  
             row[11] = getBytes(remarks);             
@@ -2909,9 +2648,8 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
             
             row[13] = null;
             row[14] = null;
-            row[16] = xsqlvars[0].encodeInt(rs.getInt("FIELD_POSITION"));
-            row[17] = (nullFlag == 1 || sourceNullFlag == 1) ? 
-                        getBytes("NO") : getBytes("YES");
+            row[16] = createInt(rs.getInt("FIELD_POSITION"));
+            row[17] = (nullFlag == 1 || sourceNullFlag == 1) ? NO_BYTES : YES_BYTES;
             row[18] = null;
             row[19] = null;
             row[20] = null;
@@ -2922,59 +2660,60 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
             case Types.BIGINT:
             case Types.SMALLINT:
                 // Could be autoincrement, but we simply don't know
-                row[22] = getBytes("");
+                row[22] = EMPTY_STRING_BYTES;
                 break;
             case Types.NUMERIC:
             case Types.DECIMAL:
             	if (fieldScale == 0) {
             		// Could be autoincrement, but we simply don't know
-                    row[22] = getBytes("");
+                    row[22] = EMPTY_STRING_BYTES;
             	} else {
             		// Scaled NUMERIC/DECIMAL: definitely not autoincrement
-            		row[22] = getBytes("NO");
+            		row[22] = NO_BYTES;
             	}
             	break;
             default:
                 // All other types are never autoincrement
-                row[22] = getBytes("NO");
+                row[22] = NO_BYTES;
             }
+            // Retrieving COMPUTED_BLR to check if it was NULL or not
             rs.getString("COMPUTED_BLR");
-            row[23] = getBytes(rs.wasNull() ? "NO" : "YES");
+            row[23] = rs.wasNull() ? NO_BYTES : YES_BYTES;
 
             rows.add(row);
         } while (rs.next());
-        
+        rs.close();
         return new FBResultSet(xsqlvars, rows);
     }
 
-    private static final short smallint_type = 7;
-    private static final short integer_type = 8;
-    private static final short quad_type = 9;
-    private static final short float_type = 10;
-    private static final short d_float_type = 11;
-    private static final short date_type = 12;
-    private static final short time_type = 13;
-    private static final short char_type = 14;
-    private static final short int64_type = 16;
-    private static final short double_type = 27;
-    private static final short timestamp_type = 35;
-    private static final short varchar_type = 37;
-//  private static final short cstring_type = 40;
-    private static final short blob_type = 261;
+    private static final int smallint_type = 7;
+    private static final int integer_type = 8;
+    private static final int quad_type = 9;
+    private static final int float_type = 10;
+    private static final int d_float_type = 11;
+    private static final int date_type = 12;
+    private static final int time_type = 13;
+    private static final int char_type = 14;
+    private static final int int64_type = 16;
+    private static final int double_type = 27;
+    private static final int timestamp_type = 35;
+    private static final int varchar_type = 37;
+//  private static final int cstring_type = 40;
+    private static final int blob_type = 261;
 
-    private static int getDataType (short fieldType, short fieldSubType, short fieldScale) {
+    private static int getDataType(int fieldType, int fieldSubType, int fieldScale) {
         switch (fieldType) {
             case smallint_type:
-                if (fieldSubType == 1 || (fieldSubType == 0 && fieldScale < 0))
+                if (fieldSubType == SUBTYPE_NUMERIC || (fieldSubType == 0 && fieldScale < 0))
                     return Types.NUMERIC;
-                else if (fieldSubType == 2)
+                else if (fieldSubType == SUBTYPE_DECIMAL)
                     return Types.DECIMAL;
                 else
                     return Types.SMALLINT;
             case integer_type:
-                if (fieldSubType == 1 || (fieldSubType == 0 && fieldScale < 0))
+                if (fieldSubType == SUBTYPE_NUMERIC || (fieldSubType == 0 && fieldScale < 0))
                     return Types.NUMERIC;
-                else if (fieldSubType == 2)
+                else if (fieldSubType == SUBTYPE_DECIMAL)
                     return Types.DECIMAL;
                 else
                     return Types.INTEGER;
@@ -2994,9 +2733,9 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
             case date_type:
                 return Types.DATE;
             case int64_type:
-                if (fieldSubType == 1 || (fieldSubType == 0 && fieldScale < 0))
+                if (fieldSubType == SUBTYPE_NUMERIC || (fieldSubType == 0 && fieldScale < 0))
                     return Types.NUMERIC;
-                else if (fieldSubType == 2)
+                else if (fieldSubType == SUBTYPE_DECIMAL)
                     return Types.DECIMAL;
                 else
                     return Types.BIGINT;
@@ -3016,19 +2755,19 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
         }
     }
 
-    private static String getDataTypeName(short sqltype, short sqlsubtype, short sqlscale) {
+    private static String getDataTypeName(int sqltype, int sqlsubtype, int sqlscale) {
         switch (sqltype) {
             case smallint_type:
-                if (sqlsubtype == 1 || (sqlsubtype == 0 && sqlscale < 0))
+                if (sqlsubtype == SUBTYPE_NUMERIC || (sqlsubtype == 0 && sqlscale < 0))
                     return "NUMERIC";
-                else if (sqlsubtype == 2)
+                else if (sqlsubtype == SUBTYPE_DECIMAL)
                     return "DECIMAL";
                 else
                     return "SMALLINT";
             case integer_type:
-                if (sqlsubtype == 1 || (sqlsubtype == 0 && sqlscale < 0))
+                if (sqlsubtype == SUBTYPE_NUMERIC || (sqlsubtype == 0 && sqlscale < 0))
                     return "NUMERIC";
-                else if (sqlsubtype == 2)
+                else if (sqlsubtype == SUBTYPE_DECIMAL)
                     return "DECIMAL";
                 else
                     return "INTEGER";
@@ -3048,14 +2787,15 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
             case date_type:
                 return "DATE";
             case int64_type:
-                if (sqlsubtype == 1 || (sqlsubtype == 0 && sqlscale < 0))
+                if (sqlsubtype == SUBTYPE_NUMERIC || (sqlsubtype == 0 && sqlscale < 0))
                     return "NUMERIC";
-                else if (sqlsubtype == 2)
+                else if (sqlsubtype == SUBTYPE_DECIMAL)
                     return "DECIMAL";
                 else
                     return "BIGINT";
             case blob_type:
                 if (sqlsubtype < 0)
+                    // TODO Include actual subtype?
                     return "BLOB SUB_TYPE <0";
                 else if (sqlsubtype == 0)
                     return "BLOB SUB_TYPE 0";
@@ -3071,17 +2811,17 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
     }
 
     private static final String GET_COLUMN_PRIVILEGES_START = "select "
-        + "null as TABLE_CAT,"
-        + "null as TABLE_SCHEM,"
-        + "RF.RDB$RELATION_NAME as TABLE_NAME, "
-        + "RF.RDB$FIELD_NAME as COLUMN_NAME, "
-        + "UP.RDB$GRANTOR as GRANTOR, "
-        + "UP.RDB$USER as GRANTEE, "
-        + "UP.RDB$PRIVILEGE as PRIVILEGE, "
+        /*+ "null as TABLE_CAT,"
+        + "null as TABLE_SCHEM,"*/
+        + "cast(RF.RDB$RELATION_NAME as varchar(31)) as TABLE_NAME,"
+        + "cast(RF.RDB$FIELD_NAME as varchar(31)) as COLUMN_NAME,"
+        + "cast(UP.RDB$GRANTOR as varchar(31)) as GRANTOR,"
+        + "cast(UP.RDB$USER as varchar(31)) as GRANTEE,"
+        + "cast(UP.RDB$PRIVILEGE as varchar(6)) as PRIVILEGE,"
         + "UP.RDB$GRANT_OPTION as IS_GRANTABLE "
         + "from "
-        + "RDB$RELATION_FIELDS RF, "
-        + "RDB$FIELDS F, "
+        + "RDB$RELATION_FIELDS RF,"
+        + "RDB$FIELDS F,"
         + "RDB$USER_PRIVILEGES UP "
         + "where "
         + "RF.RDB$RELATION_NAME = UP.RDB$RELATION_NAME and "
@@ -3091,7 +2831,30 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
         + "UP.RDB$RELATION_NAME = ? and ((";
     private static final String GET_COLUMN_PRIVILEGES_END = " UP.RDB$OBJECT_TYPE = 0) or "
         + "(RF.RDB$FIELD_NAME is null and UP.RDB$OBJECT_TYPE = 0)) "
-        + "order by 4,7 ";
+        + "order by 2,5 ";
+
+    private static final Map<String, byte[]> PRIVILEGE_MAPPING;
+    static {
+        Map<String, byte[]> tempMapping = new HashMap<String, byte[]>(7);
+        tempMapping.put("A", getBytes("ALL"));
+        tempMapping.put("S", getBytes("SELECT"));
+        tempMapping.put("D", getBytes("DELETE"));
+        tempMapping.put("I", getBytes("INSERT"));
+        tempMapping.put("U", getBytes("UPDATE"));
+        tempMapping.put("R", getBytes("REFERENCE")); // TODO: JDBC apidoc specifies REFRENCES (yes: typo and + S)
+        tempMapping.put("M", getBytes("MEMBEROF"));
+        PRIVILEGE_MAPPING = Collections.unmodifiableMap(tempMapping);
+    }
+
+    /**
+     * Maps the (one character) Firebird privilege to the equivalent JDBC privilege.
+     *
+     * @param firebirdPrivilege Firebird privilege
+     * @return JDBC privilege encoded as byte array
+     */
+    private static byte[] mapPrivilege(String firebirdPrivilege) {
+        return PRIVILEGE_MAPPING.get(firebirdPrivilege);
+    }
 
     /**
      * Gets a description of the access rights for a table's columns.
@@ -3128,53 +2891,14 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
 
         XSQLVAR[] xsqlvars = new XSQLVAR[8];
 
-        xsqlvars[0] = new XSQLVAR();
-        xsqlvars[0].sqltype = ISCConstants.SQL_VARYING;
-        xsqlvars[0].sqllen = 31;
-        xsqlvars[0].sqlname = "TABLE_CAT";
-        xsqlvars[0].relname = "COLUMNPRIV";
-
-        xsqlvars[1] = new XSQLVAR();
-        xsqlvars[1].sqltype = ISCConstants.SQL_VARYING;
-        xsqlvars[1].sqllen = 31;
-        xsqlvars[1].sqlname = "TABLE_SCHEM";
-        xsqlvars[1].relname = "COLUMNPRIV";
-
-        xsqlvars[2] = new XSQLVAR();
-        xsqlvars[2].sqltype = ISCConstants.SQL_VARYING;
-        xsqlvars[2].sqllen = 31;
-        xsqlvars[2].sqlname = "TABLE_NAME";
-        xsqlvars[2].relname = "COLUMNPRIV";
-
-        xsqlvars[3] = new XSQLVAR();
-        xsqlvars[3].sqltype = ISCConstants.SQL_VARYING;
-        xsqlvars[3].sqllen = 31;
-        xsqlvars[3].sqlname = "COLUMN_NAME";
-        xsqlvars[3].relname = "COLUMNPRIV";
-
-        xsqlvars[4] = new XSQLVAR();
-        xsqlvars[4].sqltype = ISCConstants.SQL_VARYING;
-        xsqlvars[4].sqllen = 31;
-        xsqlvars[4].sqlname = "GRANTOR";
-        xsqlvars[4].relname = "COLUMNPRIV";
-
-        xsqlvars[5] = new XSQLVAR();
-        xsqlvars[5].sqltype = ISCConstants.SQL_VARYING;
-        xsqlvars[5].sqllen = 31;
-        xsqlvars[5].sqlname = "GRANTEE";
-        xsqlvars[5].relname = "COLUMNPRIV";
-
-        xsqlvars[6] = new XSQLVAR();
-        xsqlvars[6].sqltype = ISCConstants.SQL_VARYING;
-        xsqlvars[6].sqllen = 31;
-        xsqlvars[6].sqlname = "PRIVILEGE";
-        xsqlvars[6].relname = "COLUMNPRIV";
-
-        xsqlvars[7] = new XSQLVAR();
-        xsqlvars[7].sqltype = ISCConstants.SQL_VARYING;
-        xsqlvars[7].sqllen = 31;
-        xsqlvars[7].sqlname = "IS_GRANTABLE";
-        xsqlvars[7].relname = "COLUMNPRIV";
+        xsqlvars[0] = new XSQLVAR(ISCConstants.SQL_VARYING, 31, "TABLE_CAT", "COLUMNPRIV");
+        xsqlvars[1] = new XSQLVAR(ISCConstants.SQL_VARYING, 31, "TABLE_SCHEM", "COLUMNPRIV");
+        xsqlvars[2] = new XSQLVAR(ISCConstants.SQL_VARYING, 31, "TABLE_NAME", "COLUMNPRIV");
+        xsqlvars[3] = new XSQLVAR(ISCConstants.SQL_VARYING, 31, "COLUMN_NAME", "COLUMNPRIV");
+        xsqlvars[4] = new XSQLVAR(ISCConstants.SQL_VARYING, 31, "GRANTOR", "COLUMNPRIV");
+        xsqlvars[5] = new XSQLVAR(ISCConstants.SQL_VARYING, 31, "GRANTEE", "COLUMNPRIV");
+        xsqlvars[6] = new XSQLVAR(ISCConstants.SQL_VARYING, 31, "PRIVILEGE", "COLUMNPRIV");
+        xsqlvars[7] = new XSQLVAR(ISCConstants.SQL_VARYING, 31, "IS_GRANTABLE", "COLUMNPRIV");
 
         Clause columnClause = new Clause("RF.RDB$FIELD_NAME", columnNamePattern);
         
@@ -3191,11 +2915,12 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
             params.add(columnClause.getOriginalCaseValue());
         }
         
-        List<byte[][]> rows = new ArrayList<byte[][]>();
+
         ResultSet rs = doQuery(sql, params);
         
         // if nothing was found, check the uppercased identifiers
         if (!rs.next()) {
+            rs.close();
             params.clear();
             if (!columnClause.getCondition().equals("")) {
                 params.add(stripQuotes(stripEscape(table), true));
@@ -3205,10 +2930,13 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
             rs = doQuery(sql, params);
             
             // return empty result set 
-            if (!rs.next())
-                return new FBResultSet(xsqlvars, rows);
+            if (!rs.next()) {
+                rs.close();
+                return new FBResultSet(xsqlvars, Collections.<byte[][]>emptyList());
+            }
         }
 
+        List<byte[][]> rows = new ArrayList<byte[][]>();
         do {
             byte[][] row = new byte[8][];
             row[0] = null;
@@ -3217,47 +2945,30 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
             row[3] = getBytes(rs.getString("COLUMN_NAME"));
             row[4] = getBytes(rs.getString("GRANTOR"));
             row[5] = getBytes(rs.getString("GRANTEE"));
-            String privilege = rs.getString("PRIVILEGE");
-            if (privilege.equals("A"))
-                row[6] = getBytes("ALL");
-            else if (privilege.equals("S"))
-                row[6] = getBytes("SELECT");
-            else if (privilege.equals("D"))
-                row[6] = getBytes("DELETE");
-            else if (privilege.equals("I"))
-                row[6] = getBytes("INSERT");
-            else if (privilege.equals("U"))
-                row[6] = getBytes("UPDATE");
-            else if (privilege.equals("R"))
-                row[6] = getBytes("REFERENCE");
-            else if (privilege.equals("M"))
-                row[6] = getBytes("MEMBEROF");
+            row[6] = mapPrivilege(rs.getString("PRIVILEGE"));
             int isGrantable = rs.getShort("IS_GRANTABLE");
-            if (isGrantable==0)
-                row[7] = getBytes("NO");
-            else
-                row[7] = getBytes("YES");
+            row[7] = isGrantable == 0 ? NO_BYTES : YES_BYTES;
 
             rows.add(row);
         } while(rs.next());
-        
+        rs.close();
         return new FBResultSet(xsqlvars, rows);
     }
 
-    private static final String GET_TABLE_PRIVILEGES_START = "select"
-        + " null as TABLE_CAT, "
-        + " null as TABLE_SCHEM,"
-        + " RDB$RELATION_NAME as TABLE_NAME,"
-        + " RDB$GRANTOR as GRANTOR, "
-        + " RDB$USER as GRANTEE, "
-        + " RDB$PRIVILEGE as PRIVILEGE, "
-        + " RDB$GRANT_OPTION as IS_GRANTABLE "
+    private static final String GET_TABLE_PRIVILEGES_START = "select "
+        /*+ " null as TABLE_CAT, "
+        + " null as TABLE_SCHEM,"*/
+        + "cast(RDB$RELATION_NAME as varchar(31)) as TABLE_NAME,"
+        + "cast(RDB$GRANTOR as varchar(31)) as GRANTOR,"
+        + "cast(RDB$USER as varchar(31)) as GRANTEE,"
+        + "cast(RDB$PRIVILEGE as varchar(6)) as PRIVILEGE,"
+        + "RDB$GRANT_OPTION as IS_GRANTABLE "
         + "from"
         + " RDB$USER_PRIVILEGES "
         + "where ";
     private static final String GET_TABLE_PRIVILEGES_END = " RDB$OBJECT_TYPE = 0 and"
         + " RDB$FIELD_NAME is null "
-        + "order by 3, 6";
+        + "order by 1, 4";
 
     /**
      * Gets a description of the access rights for each table available
@@ -3315,6 +3026,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
         
         // if nothing found, check the uppercased identifiers
         if (!rs.next()) {
+            rs.close();
             params.clear();
             if (!tableClause.getCondition().equals("")) {
                 params.add(tableClause.getValue());
@@ -3323,8 +3035,10 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
             rs = doQuery(sql, params);
             
             // if nothing found, return an empty result set
-            if (!rs.next())
-                return new FBResultSet(xsqlvars, new ArrayList<byte[][]>());
+            if (!rs.next()) {
+                rs.close();
+                return new FBResultSet(xsqlvars, Collections.<byte[][]>emptyList());
+            }
         }
         
         return processTablePrivileges(xsqlvars, rs);
@@ -3333,47 +3047,13 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
     protected final XSQLVAR[] buildTablePrivilegeRSMetaData() {
         XSQLVAR[] xsqlvars = new XSQLVAR[7];
 
-        xsqlvars[0] = new XSQLVAR();
-        xsqlvars[0].sqltype = ISCConstants.SQL_VARYING;
-        xsqlvars[0].sqllen = 31;
-        xsqlvars[0].sqlname = "TABLE_CAT";
-        xsqlvars[0].relname = "TABLEPRIV";
-
-        xsqlvars[1] = new XSQLVAR();
-        xsqlvars[1].sqltype = ISCConstants.SQL_VARYING;
-        xsqlvars[1].sqllen = 31;
-        xsqlvars[1].sqlname = "TABLE_SCHEM";
-        xsqlvars[1].relname = "TABLEPRIV";
-
-        xsqlvars[2] = new XSQLVAR();
-        xsqlvars[2].sqltype = ISCConstants.SQL_VARYING;
-        xsqlvars[2].sqllen = 31;
-        xsqlvars[2].sqlname = "TABLE_NAME";
-        xsqlvars[2].relname = "TABLEPRIV";
-
-        xsqlvars[3] = new XSQLVAR();
-        xsqlvars[3].sqltype = ISCConstants.SQL_VARYING;
-        xsqlvars[3].sqllen = 31;
-        xsqlvars[3].sqlname = "GRANTOR";
-        xsqlvars[3].relname = "TABLEPRIV";
-
-        xsqlvars[4] = new XSQLVAR();
-        xsqlvars[4].sqltype = ISCConstants.SQL_VARYING;
-        xsqlvars[4].sqllen = 31;
-        xsqlvars[4].sqlname = "GRANTEE";
-        xsqlvars[4].relname = "TABLEPRIV";
-
-        xsqlvars[5] = new XSQLVAR();
-        xsqlvars[5].sqltype = ISCConstants.SQL_VARYING;
-        xsqlvars[5].sqllen = 31;
-        xsqlvars[5].sqlname = "PRIVILEGE";
-        xsqlvars[5].relname = "TABLEPRIV";
-
-        xsqlvars[6] = new XSQLVAR();
-        xsqlvars[6].sqltype = ISCConstants.SQL_VARYING;
-        xsqlvars[6].sqllen = 31;
-        xsqlvars[6].sqlname = "IS_GRANTABLE";
-        xsqlvars[6].relname = "TABLEPRIV";
+        xsqlvars[0] = new XSQLVAR(ISCConstants.SQL_VARYING, 31, "TABLE_CAT", "TABLEPRIV");
+        xsqlvars[1] = new XSQLVAR(ISCConstants.SQL_VARYING, 31, "TABLE_SCHEM", "TABLEPRIV");
+        xsqlvars[2] = new XSQLVAR(ISCConstants.SQL_VARYING, 31, "TABLE_NAME", "TABLEPRIV");
+        xsqlvars[3] = new XSQLVAR(ISCConstants.SQL_VARYING, 31, "GRANTOR", "TABLEPRIV");
+        xsqlvars[4] = new XSQLVAR(ISCConstants.SQL_VARYING, 31, "GRANTEE", "TABLEPRIV");
+        xsqlvars[5] = new XSQLVAR(ISCConstants.SQL_VARYING, 31, "PRIVILEGE", "TABLEPRIV");
+        xsqlvars[6] = new XSQLVAR(ISCConstants.SQL_VARYING, 31, "IS_GRANTABLE", "TABLEPRIV");
         
         return xsqlvars;
     }
@@ -3388,58 +3068,40 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
             row[2] = getBytes(fbTablePrivileges.getString("TABLE_NAME"));
             row[3] = getBytes(fbTablePrivileges.getString("GRANTOR"));
             row[4] = getBytes(fbTablePrivileges.getString("GRANTEE"));
-            String privilege = fbTablePrivileges.getString("PRIVILEGE");
-            if (privilege.equals("A"))
-                row[5] = getBytes("ALL");
-            else if (privilege.equals("S"))
-                row[5] = getBytes("SELECT");
-            else if (privilege.equals("D"))
-                row[5] = getBytes("DELETE");
-            else if (privilege.equals("I"))
-                row[5] = getBytes("INSERT");
-            else if (privilege.equals("U"))
-                row[5] = getBytes("UPDATE");
-            else if (privilege.equals("R"))
-                row[5] = getBytes("REFERENCE"); // TODO: JDBC spec specifies REFRENCES (yes: typo and + S)
-            else if (privilege.equals("M"))
-                row[5] = getBytes("MEMBEROF");
+            row[5] = mapPrivilege(fbTablePrivileges.getString("PRIVILEGE"));
             int isGrantable = fbTablePrivileges.getShort("IS_GRANTABLE");
-            if (isGrantable==0)
-                row[6] = getBytes("NO");
-            else
-                row[6] = getBytes("YES");
+            row[6] = isGrantable == 0 ? NO_BYTES : YES_BYTES;
 
             rows.add(row);
         } while (fbTablePrivileges.next());
-        
+        fbTablePrivileges.close();
         return new FBResultSet(xsqlvars, rows);
     }
 
-    private static final String GET_BEST_ROW_IDENT = "" +
+    private static final String GET_BEST_ROW_IDENT =
         "select " +
-        "    rf.rdb$field_name as column_name, " +
-        "    f.rdb$field_type as field_type, " +
-        "    f.rdb$field_sub_type as field_sub_type, " +
-        "    f.rdb$field_scale as field_scale, " +
-        "    f.rdb$field_precision as field_precision " +
+        "cast(rf.rdb$field_name as varchar(31)) as column_name," +
+        "f.rdb$field_type as field_type," +
+        "f.rdb$field_sub_type as field_sub_type," +
+        "f.rdb$field_scale as field_scale," +
+        "f.rdb$field_precision as field_precision " +
         "from " +
-        "    rdb$relation_constraints rc," +
-        "    rdb$index_segments idx," +
-        "    rdb$relation_fields rf," +
-        "    rdb$fields f " +
+        "rdb$relation_constraints rc," +
+        "rdb$index_segments idx," +
+        "rdb$relation_fields rf," +
+        "rdb$fields f " +
         "where " +
-        "    rc.rdb$relation_name = ? " +
+        "rc.rdb$relation_name = ? " +
         "and " +
-        "    rc.rdb$constraint_type = 'PRIMARY KEY' " +
+        "rc.rdb$constraint_type = 'PRIMARY KEY' " +
         "and " +
-        "    idx.rdb$index_name = rc.rdb$index_name " +
+        "idx.rdb$index_name = rc.rdb$index_name " +
         "and " +
-        "    rf.rdb$field_name = idx.rdb$field_name " +
+        "rf.rdb$field_name = idx.rdb$field_name " +
         "and " +
-        "    rf.rdb$relation_name = ? " +
+        "rf.rdb$relation_name = ? " +
         "and " +
-        "    f.rdb$field_name = rf.rdb$field_source"
-        ;
+        "f.rdb$field_name = rf.rdb$field_source";
 
     /**
      * Gets a description of a table's optimal set of columns that
@@ -3482,73 +3144,43 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
         String table, int scope, boolean nullable) throws SQLException {
         XSQLVAR[] xsqlvars = new XSQLVAR[8];
 
-        xsqlvars[0] = new XSQLVAR();
-        xsqlvars[0].sqltype = ISCConstants.SQL_SHORT;
-        xsqlvars[0].sqlname = "SCOPE";
-        xsqlvars[0].relname = "ROWIDENTIFIER";
+        xsqlvars[0] = new XSQLVAR(ISCConstants.SQL_SHORT, 0, "SCOPE", "ROWIDENTIFIER");
+        xsqlvars[1] = new XSQLVAR(ISCConstants.SQL_VARYING, 31, "COLUMN_NAME", "ROWIDENTIFIER");
+        xsqlvars[2] = new XSQLVAR(ISCConstants.SQL_SHORT, 0, "DATA_TYPE", "ROWIDENTIFIER");
+        xsqlvars[3] = new XSQLVAR(ISCConstants.SQL_VARYING, 31, "TYPE_NAME", "ROWIDENTIFIER");
+        xsqlvars[4] = new XSQLVAR(ISCConstants.SQL_LONG, 0, "COLUMN_SIZE", "ROWIDENTIFIER");
+        xsqlvars[5] = new XSQLVAR(ISCConstants.SQL_LONG, 0, "BUFFER_LENGTH", "ROWIDENTIFIER");
+        xsqlvars[6] = new XSQLVAR(ISCConstants.SQL_SHORT, 0, "DECIMAL_DIGITS", "ROWIDENTIFIER");
+        xsqlvars[7] = new XSQLVAR(ISCConstants.SQL_SHORT, 0, "PSEUDO_COLUMN", "ROWIDENTIFIER");
 
-        xsqlvars[1] = new XSQLVAR();
-        xsqlvars[1].sqltype = ISCConstants.SQL_VARYING;
-        xsqlvars[1].sqllen = 31;
-        xsqlvars[1].sqlname = "COLUMN_NAME";
-        xsqlvars[1].relname = "ROWIDENTIFIER";
-
-        xsqlvars[2] = new XSQLVAR();
-        xsqlvars[2].sqltype = ISCConstants.SQL_SHORT;
-        xsqlvars[2].sqlname = "DATA_TYPE";
-        xsqlvars[2].relname = "ROWIDENTIFIER";
-
-        xsqlvars[3] = new XSQLVAR();
-        xsqlvars[3].sqltype = ISCConstants.SQL_VARYING;
-        xsqlvars[3].sqllen = 31;
-        xsqlvars[3].sqlname = "TYPE_NAME";
-        xsqlvars[3].relname = "ROWIDENTIFIER";
-
-        xsqlvars[4] = new XSQLVAR();
-        xsqlvars[4].sqltype = ISCConstants.SQL_LONG;
-        xsqlvars[4].sqlname = "COLUMN_SIZE";
-        xsqlvars[4].relname = "ROWIDENTIFIER";
-
-        xsqlvars[5] = new XSQLVAR();
-        xsqlvars[5].sqltype = ISCConstants.SQL_LONG;
-        xsqlvars[5].sqlname = "BUFFER_LENGTH";
-        xsqlvars[5].relname = "ROWIDENTIFIER";
-
-        xsqlvars[6] = new XSQLVAR();
-        xsqlvars[6].sqltype = ISCConstants.SQL_SHORT;
-        xsqlvars[6].sqlname = "DECIMAL_DIGITS";
-        xsqlvars[6].relname = "ROWIDENTIFIER";
-
-        xsqlvars[7] = new XSQLVAR();
-        xsqlvars[7].sqltype = ISCConstants.SQL_SHORT;
-        xsqlvars[7].sqlname = "PSEUDO_COLUMN";
-        xsqlvars[7].relname = "ROWIDENTIFIER";
-
-        ResultSet tables = getTables(catalog, schema, table, null);
-        
-        if (!tables.next())
-            return new FBResultSet(xsqlvars, new ArrayList<byte[][]>());
-        
-        List<byte[][]> rows = getPrimaryKeyIdentifier(tables.getString(3), scope, xsqlvars);
+        ResultSet tables = null;
+        List<byte[][]> rows = null;
+        try {
+            tables = getTables(catalog, schema, table, null);
+            if (!tables.next())
+                return new FBResultSet(xsqlvars, Collections.<byte[][]>emptyList());
+            rows = getPrimaryKeyIdentifier(tables.getString(3), scope, xsqlvars);
+        } finally {
+            if (tables != null) tables.close();
+        }
 
         // if no primary key exists, add RDB$DB_KEY as pseudo-column
         if (rows.size() == 0) {
             byte[][] row = new byte[8][];
-            row[0] = xsqlvars[0].encodeShort((short)scope);
+            row[0] = createShort(scope);
             row[1] = getBytes("RDB$DB_KEY");
-            row[2] = xsqlvars[0].encodeShort((short)getDataType(char_type, (short)0, (short)0));
-            row[3] = getBytes(getDataTypeName(char_type, (short)0, (short)0));
-            row[4] = xsqlvars[0].encodeInt(0);
+            row[2] = createShort(getDataType(char_type, 0, 0));
+            row[3] = getBytes(getDataTypeName(char_type, 0, 0));
+            row[4] = createInt(0);
             row[5] = null;
-            row[6] = xsqlvars[0].encodeShort((short)0);
-            row[7] = xsqlvars[0].encodeShort((short)bestRowPseudo);
+            row[6] = createShort(0);
+            row[7] = createShort(bestRowPseudo);
 
             rows.add(row);
         }
         
         return new FBResultSet(xsqlvars, rows);
     }
-
 
     /**
      * Get primary key of the table as best row identifier.
@@ -3573,19 +3205,21 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
         
         while (rs.next()) {
             byte[][] row = new byte[8][];
-            row[0] = xsqlvars[0].encodeShort((short)scope);
+            row[0] = createShort(scope);
             row[1] = getBytes(rs.getString("COLUMN_NAME"));
-            row[2] = xsqlvars[0].encodeShort((short)getDataType(rs.getShort("FIELD_TYPE"), 
-                rs.getShort("FIELD_SUB_TYPE"), rs.getShort("FIELD_SCALE")));
-            row[3] = getBytes(getDataTypeName(rs.getShort("FIELD_TYPE"), 
-                rs.getShort("FIELD_SUB_TYPE"), rs.getShort("FIELD_SCALE")));
-            row[4] = xsqlvars[0].encodeInt(rs.getInt("FIELD_PRECISION"));
+            short fieldType = rs.getShort("FIELD_TYPE");
+            short fieldSubType = rs.getShort("FIELD_SUB_TYPE");
+            short fieldScale = rs.getShort("FIELD_SCALE");
+            row[2] = createShort(getDataType(fieldType, fieldSubType, fieldScale));
+            row[3] = getBytes(getDataTypeName(fieldType, fieldSubType, fieldScale));
+            row[4] = createInt(rs.getInt("FIELD_PRECISION"));
             row[5] = null;
-            row[6] = xsqlvars[0].encodeShort(rs.getShort("FIELD_SCALE"));
-            row[7] = xsqlvars[0].encodeShort((short)bestRowNotPseudo);
+            row[6] = createShort(fieldScale);
+            row[7] = createShort(bestRowNotPseudo);
 
             rows.add(row);
         }
+        rs.close();
         return rows;
     }
 
@@ -3623,61 +3257,27 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
                 String table) throws SQLException {
         XSQLVAR[] xsqlvars = new XSQLVAR[8];
 
-        xsqlvars[0] = new XSQLVAR();
-        xsqlvars[0].sqltype = ISCConstants.SQL_SHORT;
-        xsqlvars[0].sqlname = "SCOPE";
-        xsqlvars[0].relname = "VERSIONCOL";
-
-        xsqlvars[1] = new XSQLVAR();
-        xsqlvars[1].sqltype = ISCConstants.SQL_VARYING;
-        xsqlvars[1].sqllen = 31;
-        xsqlvars[1].sqlname = "COLUMN_NAME";
-        xsqlvars[1].relname = "VERSIONCOL";
-
-        xsqlvars[2] = new XSQLVAR();
-        xsqlvars[2].sqltype = ISCConstants.SQL_SHORT;
-        xsqlvars[2].sqlname = "DATA_TYPE";
-        xsqlvars[2].relname = "VERSIONCOL";
-
-        xsqlvars[3] = new XSQLVAR();
-        xsqlvars[3].sqltype = ISCConstants.SQL_VARYING;
-        xsqlvars[3].sqllen = 31;
-        xsqlvars[3].sqlname = "TYPE_NAME";
-        xsqlvars[3].relname = "VERSIONCOL";
-
-        xsqlvars[4] = new XSQLVAR();
-        xsqlvars[4].sqltype = ISCConstants.SQL_LONG;
-        xsqlvars[4].sqlname = "COLUMN_SIZE";
-        xsqlvars[4].relname = "VERSIONCOL";
-
-        xsqlvars[5] = new XSQLVAR();
-        xsqlvars[5].sqltype = ISCConstants.SQL_LONG;
-        xsqlvars[5].sqlname = "BUFFER_LENGTH";
-        xsqlvars[5].relname = "VERSIONCOL";
-
-        xsqlvars[6] = new XSQLVAR();
-        xsqlvars[6].sqltype = ISCConstants.SQL_SHORT;
-        xsqlvars[6].sqlname = "DECIMAL_DIGITS";
-        xsqlvars[6].relname = "VERSIONCOL";
-
-        xsqlvars[7] = new XSQLVAR();
-        xsqlvars[7].sqltype = ISCConstants.SQL_SHORT;
-        xsqlvars[7].sqlname = "PSEUDO_COLUMN";
-        xsqlvars[7].relname = "VERSIONCOL";
+        xsqlvars[0] = new XSQLVAR(ISCConstants.SQL_SHORT, 0, "SCOPE", "VERSIONCOL");
+        xsqlvars[1] = new XSQLVAR(ISCConstants.SQL_VARYING, 31, "COLUMN_NAME", "VERSIONCOL");
+        xsqlvars[2] = new XSQLVAR(ISCConstants.SQL_SHORT, 0, "DATA_TYPE", "VERSIONCOL");
+        xsqlvars[3] = new XSQLVAR(ISCConstants.SQL_VARYING, 31, "TYPE_NAME", "VERSIONCOL");
+        xsqlvars[4] = new XSQLVAR(ISCConstants.SQL_LONG, 0, "COLUMN_SIZE", "VERSIONCOL");
+        xsqlvars[5] = new XSQLVAR(ISCConstants.SQL_LONG, 0, "BUFFER_LENGTH", "VERSIONCOL");
+        xsqlvars[6] = new XSQLVAR(ISCConstants.SQL_SHORT, 0, "DECIMAL_DIGITS", "VERSIONCOL");
+        xsqlvars[7] = new XSQLVAR(ISCConstants.SQL_SHORT, 0, "PSEUDO_COLUMN", "VERSIONCOL");
 
         List<byte[][]> rows = Collections.emptyList();
 
         return new FBResultSet(xsqlvars, rows);
     }
 
-
     private static final String GET_PRIMARY_KEYS_START = "select "
-        + " null as TABLE_CAT, "
-        + " null as TABLE_SCHEM, "
-        + "RC.RDB$RELATION_NAME as TABLE_NAME, "
-        + "ISGMT.RDB$FIELD_NAME as COLUMN_NAME, "
-        + "CAST ((ISGMT.RDB$FIELD_POSITION + 1) as SMALLINT) as KEY_SEQ, "
-        + "RC.RDB$CONSTRAINT_NAME as PK_NAME "
+        /*+ " null as TABLE_CAT, "
+        + " null as TABLE_SCHEM, "*/
+        + "cast(RC.RDB$RELATION_NAME as varchar(31)) as TABLE_NAME,"
+        + "cast(ISGMT.RDB$FIELD_NAME as varchar(31)) as COLUMN_NAME,"
+        + "CAST((ISGMT.RDB$FIELD_POSITION + 1) as SMALLINT) as KEY_SEQ,"
+        + "cast(RC.RDB$CONSTRAINT_NAME as varchar(31)) as PK_NAME "
         + "from "
         + "RDB$RELATION_CONSTRAINTS RC, "
         + "RDB$INDEX_SEGMENTS ISGMT "
@@ -3716,40 +3316,12 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
 
         XSQLVAR[] xsqlvars = new XSQLVAR[6];
 
-        xsqlvars[0] = new XSQLVAR();
-        xsqlvars[0].sqltype = ISCConstants.SQL_VARYING;
-        xsqlvars[0].sqllen = 31;
-        xsqlvars[0].sqlname = "TABLE_CAT";
-        xsqlvars[0].relname = "COLUMNINFO";
-
-        xsqlvars[1] = new XSQLVAR();
-        xsqlvars[1].sqltype = ISCConstants.SQL_VARYING;
-        xsqlvars[1].sqllen = 31;
-        xsqlvars[1].sqlname = "TABLE_SCHEM";
-        xsqlvars[1].relname = "COLUMNINFO";
-
-        xsqlvars[2] = new XSQLVAR();
-        xsqlvars[2].sqltype = ISCConstants.SQL_VARYING;
-        xsqlvars[2].sqllen = 31;
-        xsqlvars[2].sqlname = "TABLE_NAME";
-        xsqlvars[2].relname = "COLUMNINFO";
-
-        xsqlvars[3] = new XSQLVAR();
-        xsqlvars[3].sqltype = ISCConstants.SQL_VARYING;
-        xsqlvars[3].sqllen = 31;
-        xsqlvars[3].sqlname = "COLUMN_NAME";
-        xsqlvars[3].relname = "COLUMNINFO";
-
-        xsqlvars[4] = new XSQLVAR();
-        xsqlvars[4].sqltype = ISCConstants.SQL_SHORT;
-        xsqlvars[4].sqlname = "KEY_SEQ";
-        xsqlvars[4].relname = "COLUMNINFO";
-
-        xsqlvars[5] = new XSQLVAR();
-        xsqlvars[5].sqltype = ISCConstants.SQL_VARYING;
-        xsqlvars[5].sqllen = 31;
-        xsqlvars[5].sqlname = "PK_NAME";
-        xsqlvars[5].relname = "COLUMNINFO";
+        xsqlvars[0] = new XSQLVAR(ISCConstants.SQL_VARYING, 31, "TABLE_CAT", "COLUMNINFO");
+        xsqlvars[1] = new XSQLVAR(ISCConstants.SQL_VARYING, 31, "TABLE_SCHEM", "COLUMNINFO");
+        xsqlvars[2] = new XSQLVAR(ISCConstants.SQL_VARYING, 31, "TABLE_NAME", "COLUMNINFO");
+        xsqlvars[3] = new XSQLVAR(ISCConstants.SQL_VARYING, 31, "COLUMN_NAME", "COLUMNINFO");
+        xsqlvars[4] = new XSQLVAR(ISCConstants.SQL_SHORT, 0, "KEY_SEQ", "COLUMNINFO");
+        xsqlvars[5] = new XSQLVAR(ISCConstants.SQL_VARYING, 31, "PK_NAME", "COLUMNINFO");
 
         Clause tableClause = new Clause("RC.RDB$RELATION_NAME", table);
 
@@ -3763,11 +3335,11 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
             params.add(tableClause.getOriginalCaseValue());
         }
         
-        List<byte[][]> rows = new ArrayList<byte[][]>();
         ResultSet rs = doQuery(sql, params);
         
         // if nothing found, check the uppercased identifier
         if (!rs.next()) {
+            rs.close();
             params.clear();
             if (!tableClause.getCondition().equals("")) {
                 params.add(tableClause.getValue());
@@ -3776,56 +3348,79 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
             rs = doQuery(sql, params);
             
             // if nothing found, return empty result set
-            if (!rs.next()) 
-                return new FBResultSet(xsqlvars, rows);
+            if (!rs.next()) {
+                rs.close();
+                return new FBResultSet(xsqlvars, Collections.<byte[][]>emptyList());
+            }
         }
-        
+
+        List<byte[][]> rows = new ArrayList<byte[][]>();
         do {
             byte[][] row = new byte[6][];
             row[0] = null;
             row[1] = null;
             row[2] = getBytes(rs.getString("TABLE_NAME"));
             row[3] = getBytes(rs.getString("COLUMN_NAME"));
-            row[4] = xsqlvars[0].encodeShort(rs.getShort("KEY_SEQ"));
+            row[4] = createShort(rs.getShort("KEY_SEQ"));
             row[5] = getBytes(rs.getString("PK_NAME"));
 
             rows.add(row);
         } while(rs.next());
-        
+        rs.close();
         return new FBResultSet(xsqlvars, rows);
     }
 
-
-    private static final String GET_IMPORTED_KEYS_START = "select"
-    +" null as PKTABLE_CAT "
-    +" ,null as PKTABLE_SCHEM "
-    +" ,PK.RDB$RELATION_NAME as PKTABLE_NAME "
-    +" ,ISP.RDB$FIELD_NAME as PKCOLUMN_NAME "
-    +" ,null as FKTABLE_CAT "
-    +" ,null as FKTABLE_SCHEM "
-    +" ,FK.RDB$RELATION_NAME as FKTABLE_NAME "
-    +" ,ISF.RDB$FIELD_NAME as FKCOLUMN_NAME "
-    +" ,CAST ((ISP.RDB$FIELD_POSITION + 1) as SMALLINT) as KEY_SEQ "
-    +" ,RC.RDB$UPDATE_RULE as UPDATE_RULE "
-    +" ,RC.RDB$DELETE_RULE as DELETE_RULE "
-    +" ,PK.RDB$CONSTRAINT_NAME as PK_NAME "
-    +" ,FK.RDB$CONSTRAINT_NAME as FK_NAME "
-    +" ,null as DEFERRABILITY "
-    +" from "
-    +" RDB$RELATION_CONSTRAINTS PK "
-    +" ,RDB$RELATION_CONSTRAINTS FK "
-    +" ,RDB$REF_CONSTRAINTS RC "
-    +" ,RDB$INDEX_SEGMENTS ISP "
-    +" ,RDB$INDEX_SEGMENTS ISF "
-    +" WHERE ";
+    private static final String GET_IMPORTED_KEYS_START = "select "
+    /*+" null as PKTABLE_CAT "
+    +" ,null as PKTABLE_SCHEM "*/
+    +"cast(PK.RDB$RELATION_NAME as varchar(31)) as PKTABLE_NAME"
+    +",cast(ISP.RDB$FIELD_NAME as varchar(31)) as PKCOLUMN_NAME"
+    /*+" ,null as FKTABLE_CAT "
+    +" ,null as FKTABLE_SCHEM "*/
+    +",cast(FK.RDB$RELATION_NAME as varchar(31)) as FKTABLE_NAME"
+    +",cast(ISF.RDB$FIELD_NAME as varchar(31)) as FKCOLUMN_NAME"
+    +",CAST((ISP.RDB$FIELD_POSITION + 1) as SMALLINT) as KEY_SEQ"
+    +",cast(RC.RDB$UPDATE_RULE as varchar(11)) as UPDATE_RULE"
+    +",cast(RC.RDB$DELETE_RULE as varchar(11)) as DELETE_RULE"
+    +",cast(PK.RDB$CONSTRAINT_NAME as varchar(31)) as PK_NAME"
+    +",cast(FK.RDB$CONSTRAINT_NAME as varchar(31)) as FK_NAME "
+    /*+" ,null as DEFERRABILITY "*/
+    +"from "
+    +"RDB$RELATION_CONSTRAINTS PK"
+    +",RDB$RELATION_CONSTRAINTS FK"
+    +",RDB$REF_CONSTRAINTS RC"
+    +",RDB$INDEX_SEGMENTS ISP"
+    +",RDB$INDEX_SEGMENTS ISF "
+    +"WHERE ";
 
     private static final String GET_IMPORTED_KEYS_END =
     " FK.RDB$CONSTRAINT_NAME = RC.RDB$CONSTRAINT_NAME "
-    +" and PK.RDB$CONSTRAINT_NAME = RC.RDB$CONST_NAME_UQ "
-    +" and ISP.RDB$INDEX_NAME = PK.RDB$INDEX_NAME "
-    +" and ISF.RDB$INDEX_NAME = FK.RDB$INDEX_NAME "
-    +" and ISP.RDB$FIELD_POSITION = ISF.RDB$FIELD_POSITION "
-    +" order by 3, 9 ";
+    +"and PK.RDB$CONSTRAINT_NAME = RC.RDB$CONST_NAME_UQ "
+    +"and ISP.RDB$INDEX_NAME = PK.RDB$INDEX_NAME "
+    +"and ISF.RDB$INDEX_NAME = FK.RDB$INDEX_NAME "
+    +"and ISP.RDB$FIELD_POSITION = ISF.RDB$FIELD_POSITION "
+    +"order by 1, 5 ";
+
+    private static final Map<String, byte[]> ACTION_MAPPING;
+    static {
+        Map<String, byte[]> tempMap = new HashMap<String, byte[]>();
+        tempMap.put("NO ACTION", IMPORTED_KEY_NO_ACTION);
+        tempMap.put("RESTRICT", IMPORTED_KEY_NO_ACTION);
+        tempMap.put("CASCADE", IMPORTED_KEY_CASCADE);
+        tempMap.put("SET NULL", IMPORTED_KEY_SET_NULL);
+        tempMap.put("SET DEFAULT", IMPORTED_KEY_SET_DEFAULT);
+        ACTION_MAPPING = Collections.unmodifiableMap(tempMap);
+    }
+
+    /**
+     * Maps the Firebird action name to the equivalent JDBC action.
+     *
+     * @param fbAction Firebird action
+     * @return JDBC action encoded as byte array
+     */
+    private static byte[] mapAction(String fbAction) {
+        return ACTION_MAPPING.get(fbAction);
+    }
 
     /**
      * Gets a description of the primary key columns that are
@@ -3901,85 +3496,20 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
 
         XSQLVAR[] xsqlvars = new XSQLVAR[14];
 
-        xsqlvars[0] = new XSQLVAR();
-        xsqlvars[0].sqltype = ISCConstants.SQL_VARYING;
-        xsqlvars[0].sqllen = 31;
-        xsqlvars[0].sqlname = "PKTABLE_CAT";
-        xsqlvars[0].relname = "COLUMNINFO";
-
-        xsqlvars[1] = new XSQLVAR();
-        xsqlvars[1].sqltype = ISCConstants.SQL_VARYING;
-        xsqlvars[1].sqllen = 31;
-        xsqlvars[1].sqlname = "PKTABLE_SCHEM";
-        xsqlvars[1].relname = "COLUMNINFO";
-
-        xsqlvars[2] = new XSQLVAR();
-        xsqlvars[2].sqltype = ISCConstants.SQL_VARYING;
-        xsqlvars[2].sqllen = 31;
-        xsqlvars[2].sqlname = "PKTABLE_NAME";
-        xsqlvars[2].relname = "COLUMNINFO";
-
-        xsqlvars[3] = new XSQLVAR();
-        xsqlvars[3].sqltype = ISCConstants.SQL_VARYING;
-        xsqlvars[3].sqllen = 31;
-        xsqlvars[3].sqlname = "PKCOLUMN_NAME";
-        xsqlvars[3].relname = "COLUMNINFO";
-
-        xsqlvars[4] = new XSQLVAR();
-        xsqlvars[4].sqltype = ISCConstants.SQL_VARYING;
-        xsqlvars[4].sqllen = 31;
-        xsqlvars[4].sqlname = "FKTABLE_CAT";
-        xsqlvars[4].relname = "COLUMNINFO";
-
-        xsqlvars[5] = new XSQLVAR();
-        xsqlvars[5].sqltype = ISCConstants.SQL_VARYING;
-        xsqlvars[5].sqllen = 31;
-        xsqlvars[5].sqlname = "FKTABLE_SCHEM";
-        xsqlvars[5].relname = "COLUMNINFO";
-
-        xsqlvars[6] = new XSQLVAR();
-        xsqlvars[6].sqltype = ISCConstants.SQL_VARYING;
-        xsqlvars[6].sqllen = 31;
-        xsqlvars[6].sqlname = "FKTABLE_NAME";
-        xsqlvars[6].relname = "COLUMNINFO";
-
-        xsqlvars[7] = new XSQLVAR();
-        xsqlvars[7].sqltype = ISCConstants.SQL_VARYING;
-        xsqlvars[7].sqllen = 31;
-        xsqlvars[7].sqlname = "FKCOLUMN_NAME";
-        xsqlvars[7].relname = "COLUMNINFO";
-
-        xsqlvars[8] = new XSQLVAR();
-        xsqlvars[8].sqltype = ISCConstants.SQL_SHORT;
-        xsqlvars[8].sqlname = "KEY_SEQ";
-        xsqlvars[8].relname = "COLUMNINFO";
-
-        xsqlvars[9] = new XSQLVAR();
-        xsqlvars[9].sqltype = ISCConstants.SQL_SHORT;
-        xsqlvars[9].sqlname = "UPDATE_RULE";
-        xsqlvars[9].relname = "COLUMNINFO";
-
-        xsqlvars[10] = new XSQLVAR();
-        xsqlvars[10].sqltype = ISCConstants.SQL_SHORT;
-        xsqlvars[10].sqlname = "DELETE_RULE";
-        xsqlvars[10].relname = "COLUMNINFO";
-
-        xsqlvars[11] = new XSQLVAR();
-        xsqlvars[11].sqltype = ISCConstants.SQL_VARYING;
-        xsqlvars[11].sqllen = 31;
-        xsqlvars[11].sqlname = "FK_NAME";
-        xsqlvars[11].relname = "COLUMNINFO";
-
-        xsqlvars[12] = new XSQLVAR();
-        xsqlvars[12].sqltype = ISCConstants.SQL_VARYING;
-        xsqlvars[12].sqllen = 31;
-        xsqlvars[12].sqlname = "PK_NAME";
-        xsqlvars[12].relname = "COLUMNINFO";
-
-        xsqlvars[13] = new XSQLVAR();
-        xsqlvars[13].sqltype = ISCConstants.SQL_SHORT;
-        xsqlvars[13].sqlname = "DEFERRABILITY";
-        xsqlvars[13].relname = "COLUMNINFO";
+        xsqlvars[0] = new XSQLVAR(ISCConstants.SQL_VARYING, 31, "PKTABLE_CAT", "COLUMNINFO");
+        xsqlvars[1] = new XSQLVAR(ISCConstants.SQL_VARYING, 31, "PKTABLE_SCHEM", "COLUMNINFO");
+        xsqlvars[2] = new XSQLVAR(ISCConstants.SQL_VARYING, 31, "PKTABLE_NAME", "COLUMNINFO");
+        xsqlvars[3] = new XSQLVAR(ISCConstants.SQL_VARYING, 31, "PKCOLUMN_NAME", "COLUMNINFO");
+        xsqlvars[4] = new XSQLVAR(ISCConstants.SQL_VARYING, 31, "FKTABLE_CAT", "COLUMNINFO");
+        xsqlvars[5] = new XSQLVAR(ISCConstants.SQL_VARYING, 31, "FKTABLE_SCHEM", "COLUMNINFO");
+        xsqlvars[6] = new XSQLVAR(ISCConstants.SQL_VARYING, 31, "FKTABLE_NAME", "COLUMNINFO");
+        xsqlvars[7] = new XSQLVAR(ISCConstants.SQL_VARYING, 31, "FKCOLUMN_NAME", "COLUMNINFO");
+        xsqlvars[8] = new XSQLVAR(ISCConstants.SQL_SHORT, 0, "KEY_SEQ", "COLUMNINFO");
+        xsqlvars[9] = new XSQLVAR(ISCConstants.SQL_SHORT, 0, "UPDATE_RULE", "COLUMNINFO");
+        xsqlvars[10] = new XSQLVAR(ISCConstants.SQL_SHORT, 0, "DELETE_RULE", "COLUMNINFO");
+        xsqlvars[11] = new XSQLVAR(ISCConstants.SQL_VARYING, 31, "FK_NAME", "COLUMNINFO");
+        xsqlvars[12] = new XSQLVAR(ISCConstants.SQL_VARYING, 31, "PK_NAME", "COLUMNINFO");
+        xsqlvars[13] = new XSQLVAR(ISCConstants.SQL_SHORT, 0, "DEFERRABILITY", "COLUMNINFO");
 
         Clause tableClause = new Clause("FK.RDB$RELATION_NAME", table);
         
@@ -3993,11 +3523,11 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
             params.add(tableClause.getOriginalCaseValue());
         }
         
-        List<byte[][]> rows = new ArrayList<byte[][]>();
         ResultSet rs = doQuery(sql, params);
         
         // if nothing found, check the uppercased identifiers
         if (!rs.next()) {
+            rs.close();
             params.clear();
             if (!tableClause.getCondition().equals("")) {
                 params.add(tableClause.getValue());
@@ -4006,10 +3536,13 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
             rs = doQuery(sql, params);
             
             // if nothing found, return an empty result set
-            if (!rs.next())
-                return new FBResultSet(xsqlvars, rows);
+            if (!rs.next()) {
+                rs.close();
+                return new FBResultSet(xsqlvars, Collections.<byte[][]>emptyList());
+            }
         }
-        
+
+        List<byte[][]> rows = new ArrayList<byte[][]>();
         do {
             byte[][] row = new byte[14][];
             row[0] = null;
@@ -4020,65 +3553,50 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
             row[5] = null;
             row[6] = getBytes(rs.getString("FKTABLE_NAME"));
             row[7] = getBytes(rs.getString("FKCOLUMN_NAME"));
-            row[8] = xsqlvars[0].encodeShort(rs.getShort("KEY_SEQ"));
+            row[8] = createShort(rs.getShort("KEY_SEQ"));
             String updateRule = rs.getString("UPDATE_RULE");
-            if (updateRule.equals("NO ACTION") || updateRule.equals("RESTRICT"))
-                row[9] = xsqlvars[0].encodeShort((short) DatabaseMetaData.importedKeyNoAction);
-            else if (updateRule.equals("CASCADE"))
-                row[9] = xsqlvars[0].encodeShort((short) DatabaseMetaData.importedKeyCascade);
-            else if (updateRule.equals("SET NULL"))
-                row[9] = xsqlvars[0].encodeShort((short) DatabaseMetaData.importedKeySetNull);
-            else if (updateRule.equals("SET DEFAULT"))
-                row[9] = xsqlvars[0].encodeShort((short) DatabaseMetaData.importedKeySetDefault);
+            row[9] = mapAction(updateRule);
             String deleteRule = rs.getString("DELETE_RULE");
-            if (deleteRule.equals("NO ACTION") || deleteRule.equals("RESTRICT"))
-                row[10] = xsqlvars[0].encodeShort((short) DatabaseMetaData.importedKeyNoAction);
-            else if (deleteRule.equals("CASCADE"))
-                row[10] = xsqlvars[0].encodeShort((short) DatabaseMetaData.importedKeyCascade);
-            else if (deleteRule.equals("SET NULL"))
-                row[10] = xsqlvars[0].encodeShort((short) DatabaseMetaData.importedKeySetNull);
-            else if (deleteRule.equals("SET DEFAULT"))
-                row[10] = xsqlvars[0].encodeShort((short) DatabaseMetaData.importedKeySetDefault);
+            row[10] = mapAction(deleteRule);
             row[11] = getBytes(rs.getString("FK_NAME"));
             row[12] = getBytes(rs.getString("PK_NAME"));
-            row[13] = xsqlvars[0].encodeShort((short) DatabaseMetaData.importedKeyNotDeferrable);
+            row[13] = IMPORTED_KEY_NOT_DEFERRABLE;
             rows.add(row);
         } while (rs.next());
-        
+        rs.close();
         return new FBResultSet(xsqlvars, rows);
     }
 
-
-    private static final String GET_EXPORTED_KEYS_START = "select"
-    +" null as PKTABLE_CAT "
-    +" ,null as PKTABLE_SCHEM "
-    +" ,PK.RDB$RELATION_NAME as PKTABLE_NAME "
-    +" ,ISP.RDB$FIELD_NAME as PKCOLUMN_NAME "
-    +" ,null as FKTABLE_CAT "
-    +" ,null as FKTABLE_SCHEM "
-    +" ,FK.RDB$RELATION_NAME as FKTABLE_NAME "
-    +" ,ISF.RDB$FIELD_NAME as FKCOLUMN_NAME "
-    +" ,CAST ((ISP.RDB$FIELD_POSITION + 1) as SMALLINT) as KEY_SEQ "
-    +" ,RC.RDB$UPDATE_RULE as UPDATE_RULE "
-    +" ,RC.RDB$DELETE_RULE as DELETE_RULE "
-    +" ,PK.RDB$CONSTRAINT_NAME as PK_NAME "
-    +" ,FK.RDB$CONSTRAINT_NAME as FK_NAME "
-    +" ,null as DEFERRABILITY "
-    +" from "
-    +" RDB$RELATION_CONSTRAINTS PK "
-    +" ,RDB$RELATION_CONSTRAINTS FK "
-    +" ,RDB$REF_CONSTRAINTS RC "
-    +" ,RDB$INDEX_SEGMENTS ISP "
-    +" ,RDB$INDEX_SEGMENTS ISF "
-    +" WHERE ";
+    private static final String GET_EXPORTED_KEYS_START = "select "
+    /*+" null as PKTABLE_CAT "
+    +" ,null as PKTABLE_SCHEM "*/
+    +"cast(PK.RDB$RELATION_NAME as varchar(31)) as PKTABLE_NAME"
+    +",cast(ISP.RDB$FIELD_NAME as varchar(31)) as PKCOLUMN_NAME"
+    /*+" ,null as FKTABLE_CAT "
+    +" ,null as FKTABLE_SCHEM "*/
+    +",cast(FK.RDB$RELATION_NAME as varchar(31)) as FKTABLE_NAME"
+    +",cast(ISF.RDB$FIELD_NAME as varchar(31)) as FKCOLUMN_NAME"
+    +",CAST((ISP.RDB$FIELD_POSITION + 1) as SMALLINT) as KEY_SEQ"
+    +",cast(RC.RDB$UPDATE_RULE as varchar(11)) as UPDATE_RULE"
+    +",cast(RC.RDB$DELETE_RULE as varchar(11)) as DELETE_RULE"
+    +",cast(PK.RDB$CONSTRAINT_NAME as varchar(31)) as PK_NAME"
+    +",cast(FK.RDB$CONSTRAINT_NAME as varchar(31)) as FK_NAME "
+    /*+" ,null as DEFERRABILITY "*/
+    +"from "
+    +"RDB$RELATION_CONSTRAINTS PK"
+    +",RDB$RELATION_CONSTRAINTS FK"
+    +",RDB$REF_CONSTRAINTS RC"
+    +",RDB$INDEX_SEGMENTS ISP"
+    +",RDB$INDEX_SEGMENTS ISF "
+    +"WHERE ";
 
     private static final String GET_EXPORTED_KEYS_END =
     " FK.RDB$CONSTRAINT_NAME = RC.RDB$CONSTRAINT_NAME "
-    +" and PK.RDB$CONSTRAINT_NAME = RC.RDB$CONST_NAME_UQ "
-    +" and ISP.RDB$INDEX_NAME = PK.RDB$INDEX_NAME "
-    +" and ISF.RDB$INDEX_NAME = FK.RDB$INDEX_NAME "
-    +" and ISP.RDB$FIELD_POSITION = ISF.RDB$FIELD_POSITION "
-    +" order by 7, 9 ";
+    +"and PK.RDB$CONSTRAINT_NAME = RC.RDB$CONST_NAME_UQ "
+    +"and ISP.RDB$INDEX_NAME = PK.RDB$INDEX_NAME "
+    +"and ISF.RDB$INDEX_NAME = FK.RDB$INDEX_NAME "
+    +"and ISP.RDB$FIELD_POSITION = ISF.RDB$FIELD_POSITION "
+    +"order by 3, 5 ";
 
     /**
      * Gets a description of the foreign key columns that reference a
@@ -4154,85 +3672,20 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
 
         XSQLVAR[] xsqlvars = new XSQLVAR[14];
 
-        xsqlvars[0] = new XSQLVAR();
-        xsqlvars[0].sqltype = ISCConstants.SQL_VARYING;
-        xsqlvars[0].sqllen = 31;
-        xsqlvars[0].sqlname = "PKTABLE_CAT";
-        xsqlvars[0].relname = "COLUMNINFO";
-
-        xsqlvars[1] = new XSQLVAR();
-        xsqlvars[1].sqltype = ISCConstants.SQL_VARYING;
-        xsqlvars[1].sqllen = 31;
-        xsqlvars[1].sqlname = "PKTABLE_SCHEM";
-        xsqlvars[1].relname = "COLUMNINFO";
-
-        xsqlvars[2] = new XSQLVAR();
-        xsqlvars[2].sqltype = ISCConstants.SQL_VARYING;
-        xsqlvars[2].sqllen = 31;
-        xsqlvars[2].sqlname = "PKTABLE_NAME";
-        xsqlvars[2].relname = "COLUMNINFO";
-
-        xsqlvars[3] = new XSQLVAR();
-        xsqlvars[3].sqltype = ISCConstants.SQL_VARYING;
-        xsqlvars[3].sqllen = 31;
-        xsqlvars[3].sqlname = "PKCOLUMN_NAME";
-        xsqlvars[3].relname = "COLUMNINFO";
-
-        xsqlvars[4] = new XSQLVAR();
-        xsqlvars[4].sqltype = ISCConstants.SQL_VARYING;
-        xsqlvars[4].sqllen = 31;
-        xsqlvars[4].sqlname = "FKTABLE_CAT";
-        xsqlvars[4].relname = "COLUMNINFO";
-
-        xsqlvars[5] = new XSQLVAR();
-        xsqlvars[5].sqltype = ISCConstants.SQL_VARYING;
-        xsqlvars[5].sqllen = 31;
-        xsqlvars[5].sqlname = "FKTABLE_SCHEM";
-        xsqlvars[5].relname = "COLUMNINFO";
-
-        xsqlvars[6] = new XSQLVAR();
-        xsqlvars[6].sqltype = ISCConstants.SQL_VARYING;
-        xsqlvars[6].sqllen = 31;
-        xsqlvars[6].sqlname = "FKTABLE_NAME";
-        xsqlvars[6].relname = "COLUMNINFO";
-
-        xsqlvars[7] = new XSQLVAR();
-        xsqlvars[7].sqltype = ISCConstants.SQL_VARYING;
-        xsqlvars[7].sqllen = 31;
-        xsqlvars[7].sqlname = "FKCOLUMN_NAME";
-        xsqlvars[7].relname = "COLUMNINFO";
-
-        xsqlvars[8] = new XSQLVAR();
-        xsqlvars[8].sqltype = ISCConstants.SQL_SHORT;
-        xsqlvars[8].sqlname = "KEY_SEQ";
-        xsqlvars[8].relname = "COLUMNINFO";
-
-        xsqlvars[9] = new XSQLVAR();
-        xsqlvars[9].sqltype = ISCConstants.SQL_SHORT;
-        xsqlvars[9].sqlname = "UPDATE_RULE";
-        xsqlvars[9].relname = "COLUMNINFO";
-
-        xsqlvars[10] = new XSQLVAR();
-        xsqlvars[10].sqltype = ISCConstants.SQL_SHORT;
-        xsqlvars[10].sqlname = "DELETE_RULE";
-        xsqlvars[10].relname = "COLUMNINFO";
-
-        xsqlvars[11] = new XSQLVAR();
-        xsqlvars[11].sqltype = ISCConstants.SQL_VARYING;
-        xsqlvars[11].sqllen = 31;
-        xsqlvars[11].sqlname = "FK_NAME";
-        xsqlvars[11].relname = "COLUMNINFO";
-
-        xsqlvars[12] = new XSQLVAR();
-        xsqlvars[12].sqltype = ISCConstants.SQL_VARYING;
-        xsqlvars[12].sqllen = 31;
-        xsqlvars[12].sqlname = "PK_NAME";
-        xsqlvars[12].relname = "COLUMNINFO";
-
-        xsqlvars[13] = new XSQLVAR();
-        xsqlvars[13].sqltype = ISCConstants.SQL_SHORT;
-        xsqlvars[13].sqlname = "DEFERRABILITY";
-        xsqlvars[13].relname = "COLUMNINFO";
+        xsqlvars[0] = new XSQLVAR(ISCConstants.SQL_VARYING, 31, "PKTABLE_CAT", "COLUMNINFO");
+        xsqlvars[1] = new XSQLVAR(ISCConstants.SQL_VARYING, 31, "PKTABLE_SCHEM", "COLUMNINFO");
+        xsqlvars[2] = new XSQLVAR(ISCConstants.SQL_VARYING, 31, "PKTABLE_NAME", "COLUMNINFO");
+        xsqlvars[3] = new XSQLVAR(ISCConstants.SQL_VARYING, 31, "PKCOLUMN_NAME", "COLUMNINFO");
+        xsqlvars[4] = new XSQLVAR(ISCConstants.SQL_VARYING, 31, "FKTABLE_CAT", "COLUMNINFO");
+        xsqlvars[5] = new XSQLVAR(ISCConstants.SQL_VARYING, 31, "FKTABLE_SCHEM", "COLUMNINFO");
+        xsqlvars[6] = new XSQLVAR(ISCConstants.SQL_VARYING, 31, "FKTABLE_NAME", "COLUMNINFO");
+        xsqlvars[7] = new XSQLVAR(ISCConstants.SQL_VARYING, 31, "FKCOLUMN_NAME", "COLUMNINFO");
+        xsqlvars[8] = new XSQLVAR(ISCConstants.SQL_SHORT, 0, "KEY_SEQ", "COLUMNINFO");
+        xsqlvars[9] = new XSQLVAR(ISCConstants.SQL_SHORT, 0, "UPDATE_RULE", "COLUMNINFO");
+        xsqlvars[10] = new XSQLVAR(ISCConstants.SQL_SHORT, 0, "DELETE_RULE", "COLUMNINFO");
+        xsqlvars[11] = new XSQLVAR(ISCConstants.SQL_VARYING, 31, "FK_NAME", "COLUMNINFO");
+        xsqlvars[12] = new XSQLVAR(ISCConstants.SQL_VARYING, 31, "PK_NAME", "COLUMNINFO");
+        xsqlvars[13] = new XSQLVAR(ISCConstants.SQL_SHORT, 0, "DEFERRABILITY", "COLUMNINFO");
 
         Clause tableClause = new Clause("PK.RDB$RELATION_NAME", table);
 
@@ -4251,6 +3704,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
         
         // if nothing found, check the uppercased identifiers
         if (!rs.next()) {
+            rs.close();
             params.clear();
             if (!tableClause.getCondition().equals("")) {
                 params.add(tableClause.getValue());
@@ -4259,8 +3713,10 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
             rs = doQuery(sql, params);
             
             // if nothing found, return an empty result set
-            if (!rs.next())
+            if (!rs.next()) {
+                rs.close();
                 return new FBResultSet(xsqlvars, rows);
+            }
         }
 
         do {
@@ -4273,68 +3729,51 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
             row[5] = null;
             row[6] = getBytes(rs.getString("FKTABLE_NAME"));
             row[7] = getBytes(rs.getString("FKCOLUMN_NAME"));
-            row[8] = xsqlvars[0].encodeShort(rs.getShort("KEY_SEQ"));
+            row[8] = createShort(rs.getShort("KEY_SEQ"));
             String updateRule = rs.getString("UPDATE_RULE");
-            if (updateRule.equals("NO ACTION") || updateRule.equals("RESTRICT"))
-                row[9] = xsqlvars[0].encodeShort((short) DatabaseMetaData.importedKeyNoAction);
-            else if (updateRule.equals("CASCADE"))
-                row[9] = xsqlvars[0].encodeShort((short) DatabaseMetaData.importedKeyCascade);
-            else if (updateRule.equals("SET NULL"))
-                row[9] = xsqlvars[0].encodeShort((short) DatabaseMetaData.importedKeySetNull);
-            else if (updateRule.equals("SET DEFAULT"))
-                row[9] = xsqlvars[0].encodeShort((short) DatabaseMetaData.importedKeySetDefault);
+            row[9] = mapAction(updateRule);
             String deleteRule = rs.getString("DELETE_RULE");
-            if (deleteRule.equals("NO ACTION") || deleteRule.equals("RESTRICT"))
-                row[10] = xsqlvars[0].encodeShort((short) DatabaseMetaData.importedKeyNoAction);
-            else if (deleteRule.equals("CASCADE"))
-                row[10] = xsqlvars[0].encodeShort((short) DatabaseMetaData.importedKeyCascade);
-            else if (deleteRule.equals("SET NULL"))
-                row[10] = xsqlvars[0].encodeShort((short) DatabaseMetaData.importedKeySetNull);
-            else if (deleteRule.equals("SET DEFAULT"))
-                row[10] = xsqlvars[0].encodeShort((short) DatabaseMetaData.importedKeySetDefault);
-
+            row[10] = mapAction(deleteRule);
             row[11] = getBytes(rs.getString("FK_NAME"));
             row[12] = getBytes(rs.getString("PK_NAME"));
-            row[13] = xsqlvars[0].encodeShort((short) DatabaseMetaData.importedKeyNotDeferrable);
+            row[13] = IMPORTED_KEY_NOT_DEFERRABLE;
 
             rows.add(row);
         } while(rs.next());
-        
+        rs.close();
         return new FBResultSet(xsqlvars, rows);
     }
 
-
-
-    private static final String GET_CROSS_KEYS_START = "select"
-    +" null as PKTABLE_CAT "
-    +" ,null as PKTABLE_SCHEM "
-    +" ,PK.RDB$RELATION_NAME as PKTABLE_NAME "
-    +" ,ISP.RDB$FIELD_NAME as PKCOLUMN_NAME "
-    +" ,null as FKTABLE_CAT "
-    +" ,null as FKTABLE_SCHEM "
-    +" ,FK.RDB$RELATION_NAME as FKTABLE_NAME "
-    +" ,ISF.RDB$FIELD_NAME as FKCOLUMN_NAME "
-    +" ,CAST ((ISP.RDB$FIELD_POSITION + 1) as SMALLINT) as KEY_SEQ "
-    +" ,RC.RDB$UPDATE_RULE as UPDATE_RULE "
-    +" ,RC.RDB$DELETE_RULE as DELETE_RULE "
-    +" ,PK.RDB$CONSTRAINT_NAME as PK_NAME "
-    +" ,FK.RDB$CONSTRAINT_NAME as FK_NAME "
-    +" ,null as DEFERRABILITY "
-    +" from "
-    +" RDB$RELATION_CONSTRAINTS PK "
-    +" ,RDB$RELATION_CONSTRAINTS FK "
-    +" ,RDB$REF_CONSTRAINTS RC "
-    +" ,RDB$INDEX_SEGMENTS ISP "
-    +" ,RDB$INDEX_SEGMENTS ISF "
-    +" WHERE ";
+    private static final String GET_CROSS_KEYS_START = "select "
+    /*+" null as PKTABLE_CAT "
+    +" ,null as PKTABLE_SCHEM "*/
+    +"cast(PK.RDB$RELATION_NAME as varchar(31)) as PKTABLE_NAME"
+    +",cast(ISP.RDB$FIELD_NAME as varchar(31)) as PKCOLUMN_NAME"
+    /*+" ,null as FKTABLE_CAT "
+    +" ,null as FKTABLE_SCHEM "*/
+    +",cast(FK.RDB$RELATION_NAME as varchar(31)) as FKTABLE_NAME"
+    +",cast(ISF.RDB$FIELD_NAME as varchar(31)) as FKCOLUMN_NAME"
+    +",CAST((ISP.RDB$FIELD_POSITION + 1) as SMALLINT) as KEY_SEQ"
+    +",cast(RC.RDB$UPDATE_RULE as varchar(11)) as UPDATE_RULE"
+    +",cast(RC.RDB$DELETE_RULE as varchar(11)) as DELETE_RULE"
+    +",cast(PK.RDB$CONSTRAINT_NAME as varchar(31)) as PK_NAME"
+    +",cast(FK.RDB$CONSTRAINT_NAME as varchar(31)) as FK_NAME"
+    /*+" ,null as DEFERRABILITY "*/
+    +"from "
+    +"RDB$RELATION_CONSTRAINTS PK"
+    +",RDB$RELATION_CONSTRAINTS FK"
+    +",RDB$REF_CONSTRAINTS RC"
+    +",RDB$INDEX_SEGMENTS ISP"
+    +",RDB$INDEX_SEGMENTS ISF "
+    +"WHERE ";
 
     private static final String GET_CROSS_KEYS_END =
     " FK.RDB$CONSTRAINT_NAME = RC.RDB$CONSTRAINT_NAME "
-    +" and PK.RDB$CONSTRAINT_NAME = RC.RDB$CONST_NAME_UQ "
-    +" and ISP.RDB$INDEX_NAME = PK.RDB$INDEX_NAME "
-    +" and ISF.RDB$INDEX_NAME = FK.RDB$INDEX_NAME "
-    +" and ISP.RDB$FIELD_POSITION = ISF.RDB$FIELD_POSITION "
-    +" order by 7, 9 ";
+    +"and PK.RDB$CONSTRAINT_NAME = RC.RDB$CONST_NAME_UQ "
+    +"and ISP.RDB$INDEX_NAME = PK.RDB$INDEX_NAME "
+    +"and ISF.RDB$INDEX_NAME = FK.RDB$INDEX_NAME "
+    +"and ISP.RDB$FIELD_POSITION = ISF.RDB$FIELD_POSITION "
+    +"order by 3, 5 ";
 
     /**
      * Gets a description of the foreign key columns in the foreign key
@@ -4421,85 +3860,20 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
 
         XSQLVAR[] xsqlvars = new XSQLVAR[14];
 
-        xsqlvars[0] = new XSQLVAR();
-        xsqlvars[0].sqltype = ISCConstants.SQL_VARYING;
-        xsqlvars[0].sqllen = 31;
-        xsqlvars[0].sqlname = "PKTABLE_CAT";
-        xsqlvars[0].relname = "COLUMNINFO";
-
-        xsqlvars[1] = new XSQLVAR();
-        xsqlvars[1].sqltype = ISCConstants.SQL_VARYING;
-        xsqlvars[1].sqllen = 31;
-        xsqlvars[1].sqlname = "PKTABLE_SCHEM";
-        xsqlvars[1].relname = "COLUMNINFO";
-
-        xsqlvars[2] = new XSQLVAR();
-        xsqlvars[2].sqltype = ISCConstants.SQL_VARYING;
-        xsqlvars[2].sqllen = 31;
-        xsqlvars[2].sqlname = "PKTABLE_NAME";
-        xsqlvars[2].relname = "COLUMNINFO";
-
-        xsqlvars[3] = new XSQLVAR();
-        xsqlvars[3].sqltype = ISCConstants.SQL_VARYING;
-        xsqlvars[3].sqllen = 31;
-        xsqlvars[3].sqlname = "PKCOLUMN_NAME";
-        xsqlvars[3].relname = "COLUMNINFO";
-
-        xsqlvars[4] = new XSQLVAR();
-        xsqlvars[4].sqltype = ISCConstants.SQL_VARYING;
-        xsqlvars[4].sqllen = 31;
-        xsqlvars[4].sqlname = "FKTABLE_CAT";
-        xsqlvars[4].relname = "COLUMNINFO";
-
-        xsqlvars[5] = new XSQLVAR();
-        xsqlvars[5].sqltype = ISCConstants.SQL_VARYING;
-        xsqlvars[5].sqllen = 31;
-        xsqlvars[5].sqlname = "FKTABLE_SCHEM";
-        xsqlvars[5].relname = "COLUMNINFO";
-
-        xsqlvars[6] = new XSQLVAR();
-        xsqlvars[6].sqltype = ISCConstants.SQL_VARYING;
-        xsqlvars[6].sqllen = 31;
-        xsqlvars[6].sqlname = "FKTABLE_NAME";
-        xsqlvars[6].relname = "COLUMNINFO";
-
-        xsqlvars[7] = new XSQLVAR();
-        xsqlvars[7].sqltype = ISCConstants.SQL_VARYING;
-        xsqlvars[7].sqllen = 31;
-        xsqlvars[7].sqlname = "FKCOLUMN_NAME";
-        xsqlvars[7].relname = "COLUMNINFO";
-
-        xsqlvars[8] = new XSQLVAR();
-        xsqlvars[8].sqltype = ISCConstants.SQL_SHORT;
-        xsqlvars[8].sqlname = "KEY_SEQ";
-        xsqlvars[8].relname = "COLUMNINFO";
-
-        xsqlvars[9] = new XSQLVAR();
-        xsqlvars[9].sqltype = ISCConstants.SQL_SHORT;
-        xsqlvars[9].sqlname = "UPDATE_RULE";
-        xsqlvars[9].relname = "COLUMNINFO";
-
-        xsqlvars[10] = new XSQLVAR();
-        xsqlvars[10].sqltype = ISCConstants.SQL_SHORT;
-        xsqlvars[10].sqlname = "DELETE_RULE";
-        xsqlvars[10].relname = "COLUMNINFO";
-
-        xsqlvars[11] = new XSQLVAR();
-        xsqlvars[11].sqltype = ISCConstants.SQL_VARYING;
-        xsqlvars[11].sqllen = 31;
-        xsqlvars[11].sqlname = "FK_NAME";
-        xsqlvars[11].relname = "COLUMNINFO";
-
-        xsqlvars[12] = new XSQLVAR();
-        xsqlvars[12].sqltype = ISCConstants.SQL_VARYING;
-        xsqlvars[12].sqllen = 31;
-        xsqlvars[12].sqlname = "PK_NAME";
-        xsqlvars[12].relname = "COLUMNINFO";
-
-        xsqlvars[13] = new XSQLVAR();
-        xsqlvars[13].sqltype = ISCConstants.SQL_SHORT;
-        xsqlvars[13].sqlname = "DEFERRABILITY";
-        xsqlvars[13].relname = "COLUMNINFO";
+        xsqlvars[0] = new XSQLVAR(ISCConstants.SQL_VARYING, 31, "PKTABLE_CAT", "COLUMNINFO");
+        xsqlvars[1] = new XSQLVAR(ISCConstants.SQL_VARYING, 31, "PKTABLE_SCHEM", "COLUMNINFO");
+        xsqlvars[2] = new XSQLVAR(ISCConstants.SQL_VARYING, 31, "PKTABLE_NAME", "COLUMNINFO");
+        xsqlvars[3] = new XSQLVAR(ISCConstants.SQL_VARYING, 31, "PKCOLUMN_NAME", "COLUMNINFO");
+        xsqlvars[4] = new XSQLVAR(ISCConstants.SQL_VARYING, 31, "FKTABLE_CAT", "COLUMNINFO");
+        xsqlvars[5] = new XSQLVAR(ISCConstants.SQL_VARYING, 31, "FKTABLE_SCHEM", "COLUMNINFO");
+        xsqlvars[6] = new XSQLVAR(ISCConstants.SQL_VARYING, 31, "FKTABLE_NAME", "COLUMNINFO");
+        xsqlvars[7] = new XSQLVAR(ISCConstants.SQL_VARYING, 31, "FKCOLUMN_NAME", "COLUMNINFO");
+        xsqlvars[8] = new XSQLVAR(ISCConstants.SQL_SHORT, 0, "KEY_SEQ", "COLUMNINFO");
+        xsqlvars[9] = new XSQLVAR(ISCConstants.SQL_SHORT, 0, "UPDATE_RULE", "COLUMNINFO");
+        xsqlvars[10] = new XSQLVAR(ISCConstants.SQL_SHORT, 0, "DELETE_RULE", "COLUMNINFO");
+        xsqlvars[11] = new XSQLVAR(ISCConstants.SQL_VARYING, 31, "FK_NAME", "COLUMNINFO");
+        xsqlvars[12] = new XSQLVAR(ISCConstants.SQL_VARYING, 31, "PK_NAME", "COLUMNINFO");
+        xsqlvars[13] = new XSQLVAR(ISCConstants.SQL_SHORT, 0, "DEFERRABILITY", "COLUMNINFO");
 
         Clause primaryTableClause = new Clause("PK.RDB$RELATION_NAME", primaryTable);
         Clause foreignTableClause = new Clause("FK.RDB$RELATION_NAME", foreignTable);
@@ -4519,11 +3893,11 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
             params.add(foreignTableClause.getOriginalCaseValue());
         }
 
-        List<byte[][]> rows = new ArrayList<byte[][]>();
         ResultSet rs = doQuery(sql, params);
 
         // if nothing found, check the uppercased identifiers
         if (!rs.next()) {
+            rs.close();
             params.clear();
             if (!primaryTableClause.getCondition().equals("")) {
                 params.add(primaryTableClause.getValue());
@@ -4535,10 +3909,13 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
             rs = doQuery(sql, params);
             
             // return empty result set if nothing found
-            if (!rs.next())
-                return new FBResultSet(xsqlvars, rows);
+            if (!rs.next()) {
+                rs.close();
+                return new FBResultSet(xsqlvars, Collections.<byte[][]>emptyList());
+            }
         }
-        
+
+        List<byte[][]> rows = new ArrayList<byte[][]>();
         do {
             byte[][] row = new byte[14][];
             row[0] = null;
@@ -4549,48 +3926,40 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
             row[5] = null;
             row[6] = getBytes(rs.getString("FKTABLE_NAME"));
             row[7] = getBytes(rs.getString("FKCOLUMN_NAME"));
-            row[8] = xsqlvars[0].encodeShort(rs.getShort("KEY_SEQ"));
+            row[8] = createShort(rs.getShort("KEY_SEQ"));
             String updateRule = rs.getString("UPDATE_RULE");
-            if (updateRule.equals("NO ACTION") || updateRule.equals("RESTRICT"))
-                row[9] = xsqlvars[0].encodeShort((short) DatabaseMetaData.importedKeyNoAction);
-            else if (updateRule.equals("CASCADE"))
-                row[9] = xsqlvars[0].encodeShort((short) DatabaseMetaData.importedKeyCascade);
-            else if (updateRule.equals("SET NULL"))
-                row[9] = xsqlvars[0].encodeShort((short) DatabaseMetaData.importedKeySetNull);
-            else if (updateRule.equals("SET DEFAULT"))
-                row[9] = xsqlvars[0].encodeShort((short) DatabaseMetaData.importedKeySetDefault);
+            row[9] = mapAction(updateRule);
             String deleteRule = rs.getString("DELETE_RULE");
-            if (deleteRule.equals("NO ACTION") || deleteRule.equals("RESTRICT"))
-                row[10] = xsqlvars[0].encodeShort((short) DatabaseMetaData.importedKeyNoAction);
-            else if (deleteRule.equals("CASCADE"))
-                row[10] = xsqlvars[0].encodeShort((short) DatabaseMetaData.importedKeyCascade);
-            else if (deleteRule.equals("SET NULL"))
-                row[10] = xsqlvars[0].encodeShort((short) DatabaseMetaData.importedKeySetNull);
-            else if (deleteRule.equals("SET DEFAULT"))
-                row[10] = xsqlvars[0].encodeShort((short) DatabaseMetaData.importedKeySetDefault);
+            row[10] = mapAction(deleteRule);
             row[11] = getBytes(rs.getString("FK_NAME"));
             row[12] = getBytes(rs.getString("PK_NAME"));
-            row[13] = xsqlvars[0].encodeShort((short) DatabaseMetaData.importedKeyNotDeferrable);
+            row[13] = IMPORTED_KEY_NOT_DEFERRABLE;
 
             rows.add(row);
         } while(rs.next());
+        rs.close();
         return new FBResultSet(xsqlvars, rows);
     }
 
-
     /**
-     * Simple convertor function to convert integer values to Short objects.
-     * Used in {@link #getTypeInfo()} for values of {@link java.sql.Types} class.
+     * Function to convert integer values to encoded byte arrays for shorts.
      *
      * @param value integer value to convert
-     * @return instance of java.lang.Short representing the value
+     * @return encoded byte array representing the value
      */
-    private byte[] createShort(int value) throws SQLException {
-        if (value > Short.MAX_VALUE)
-            throw new FBSQLException("Cannot convert integer to short.",
-                    FBSQLException.SQL_STATE_INVALID_ARG_VALUE);
-        
-        return new XSQLVAR().encodeShort((short)value);
+    private static byte[] createShort(int value) {
+        assert (value >= Short.MIN_VALUE && value <= Short.MAX_VALUE) : String.format("Value \"%d\" outside range of short", value);
+        return XSQLVAR.shortToBytes((short) value);
+    }
+
+    /**
+     * Function to convert integer values to encoded byte arrays for integers.
+     *
+     * @param value integer value to convert
+     * @return encoded byte array representing the value
+     */
+    private static byte[] createInt(int value) {
+        return XSQLVAR.intToBytes(value);
     }
 
     /**
@@ -4640,254 +4009,138 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
      * @exception SQLException if a database access error occurs
      */
     public  ResultSet getTypeInfo() throws SQLException {
-
-		final XSQLVAR anXSQLVAR = new XSQLVAR();
-
-        byte[] shortZero = anXSQLVAR.encodeShort((short)0);
-        byte[] CASESENSITIVE = getBytes("T");
-        byte[] CASEINSENSITIVE = getBytes("F");
-        byte[] UNSIGNED = getBytes("T");
-        byte[] SIGNED = getBytes("F");
-        byte[] FIXEDSCALE = getBytes("T");
-        byte[] VARIABLESCALE = getBytes("F");
-        byte[] NOTAUTOINC = getBytes("F");
-        byte[] BINARY = anXSQLVAR.encodeInt(2);
-        byte[] PREDNONE = anXSQLVAR.encodeShort((short) DatabaseMetaData.typePredNone);
-        // TODO Find out why unused
-        byte[] PREDBASIC = anXSQLVAR.encodeShort((short) DatabaseMetaData.typePredBasic);
-        byte[] SEARCHABLE = anXSQLVAR.encodeShort((short) DatabaseMetaData.typeSearchable);
-        byte[] NULLABLE = anXSQLVAR.encodeShort((short) DatabaseMetaData.typeNullable);
-        //need to construct xsqlvar[] for ResultSetMetaData.
         XSQLVAR[] xsqlvars = new XSQLVAR[18];
 
-        xsqlvars[0] = new XSQLVAR();
-        xsqlvars[0].sqltype = ISCConstants.SQL_VARYING;
-        xsqlvars[0].sqllen = 31;
-        xsqlvars[0].sqlname = "TYPE_NAME";
-        xsqlvars[0].relname = "TYPEINFO";
-
-        xsqlvars[1] = new XSQLVAR();
-        xsqlvars[1].sqltype = ISCConstants.SQL_SHORT;
-        xsqlvars[1].sqlname = "DATA_TYPE";
-        xsqlvars[1].relname = "TYPEINFO";
-
-        xsqlvars[2] = new XSQLVAR();
-        xsqlvars[2].sqltype = ISCConstants.SQL_LONG;
-        xsqlvars[2].sqlname = "PRECISION";
-        xsqlvars[2].relname = "TYPEINFO";
-
-        xsqlvars[3] = new XSQLVAR();
-        xsqlvars[3].sqltype = ISCConstants.SQL_VARYING;
-        xsqlvars[3].sqllen = 1;
-        xsqlvars[3].sqlname = "LITERAL_PREFIX";
-        xsqlvars[3].relname = "TYPEINFO";
-
-        xsqlvars[4] = new XSQLVAR();
-        xsqlvars[4].sqltype = ISCConstants.SQL_VARYING;
-        xsqlvars[4].sqllen = 1;
-        xsqlvars[4].sqlname = "LITERAL_SUFFIX";
-        xsqlvars[4].relname = "TYPEINFO";
-
-        xsqlvars[5] = new XSQLVAR();
-        xsqlvars[5].sqltype = ISCConstants.SQL_VARYING;
-        xsqlvars[5].sqllen = 31;
-        xsqlvars[5].sqlname = "CREATE_PARAMS";
-        xsqlvars[5].relname = "TYPEINFO";
-
-        xsqlvars[6] = new XSQLVAR();
-        xsqlvars[6].sqltype = ISCConstants.SQL_SHORT;
-        xsqlvars[6].sqlname = "NULLABLE";
-        xsqlvars[6].relname = "TYPEINFO";
-
-        xsqlvars[7] = new XSQLVAR();
-        xsqlvars[7].sqltype = ISCConstants.SQL_TEXT;
-        xsqlvars[7].sqllen = 1;
-        xsqlvars[7].sqlname = "CASE_SENSITIVE";
-        xsqlvars[7].relname = "TYPEINFO";
-
-        xsqlvars[8] = new XSQLVAR();
-        xsqlvars[8].sqltype = ISCConstants.SQL_SHORT;
-        xsqlvars[8].sqlname = "SEARCHABLE";
-        xsqlvars[8].relname = "TYPEINFO";
-
-        xsqlvars[9] = new XSQLVAR();
-        xsqlvars[9].sqltype = ISCConstants.SQL_TEXT;
-        xsqlvars[9].sqllen = 1;
-        xsqlvars[9].sqlname = "UNSIGNED_ATTRIBUTE";
-        xsqlvars[9].relname = "TYPEINFO";
-
-        xsqlvars[10] = new XSQLVAR();
-        xsqlvars[10].sqltype = ISCConstants.SQL_TEXT;
-        xsqlvars[10].sqllen = 1;
-        xsqlvars[10].sqlname = "FIXED_PREC_SCALE";
-        xsqlvars[10].relname = "TYPEINFO";
-
-        xsqlvars[11] = new XSQLVAR();
-        xsqlvars[11].sqltype = ISCConstants.SQL_TEXT;
-        xsqlvars[11].sqllen = 1;
-        xsqlvars[11].sqlname = "AUTO_INCREMENT";
-        xsqlvars[11].relname = "TYPEINFO";
-
-        xsqlvars[12] = new XSQLVAR();
-        xsqlvars[12].sqltype = ISCConstants.SQL_VARYING;
-        xsqlvars[12].sqllen = 31;
-        xsqlvars[12].sqlname = "LOCAL_TYPE_NAME";
-        xsqlvars[12].relname = "TYPEINFO";
-
-        xsqlvars[13] = new XSQLVAR();
-        xsqlvars[13].sqltype = ISCConstants.SQL_SHORT;
-        xsqlvars[13].sqlname = "MINIMUM_SCALE";
-        xsqlvars[13].relname = "TYPEINFO";
-
-        xsqlvars[14] = new XSQLVAR();
-        xsqlvars[14].sqltype = ISCConstants.SQL_SHORT;
-        xsqlvars[14].sqlname = "MAXIMUM_SCALE";
-        xsqlvars[14].relname = "TYPEINFO";
-
-        xsqlvars[15] = new XSQLVAR();
-        xsqlvars[15].sqltype = ISCConstants.SQL_LONG;
-        xsqlvars[15].sqlname = "SQL_DATA_TYPE";
-        xsqlvars[15].relname = "TYPEINFO";
-
-        xsqlvars[16] = new XSQLVAR();
-        xsqlvars[16].sqltype = ISCConstants.SQL_LONG;
-        xsqlvars[16].sqlname = "SQL_DATETIME_SUB";
-        xsqlvars[16].relname = "TYPEINFO";
-
-        xsqlvars[17] = new XSQLVAR();
-        xsqlvars[17].sqltype = ISCConstants.SQL_LONG;
-        xsqlvars[17].sqlname = "NUM_PREC_RADIX";
-        xsqlvars[17].relname = "TYPEINFO";
+        xsqlvars[0] = new XSQLVAR(ISCConstants.SQL_VARYING, 31, "TYPE_NAME", "TYPEINFO");
+        xsqlvars[1] = new XSQLVAR(ISCConstants.SQL_SHORT, 0, "DATA_TYPE", "TYPEINFO");
+        xsqlvars[2] = new XSQLVAR(ISCConstants.SQL_LONG, 0, "PRECISION", "TYPEINFO");
+        xsqlvars[3] = new XSQLVAR(ISCConstants.SQL_VARYING, 1, "LITERAL_PREFIX", "TYPEINFO");
+        xsqlvars[4] = new XSQLVAR(ISCConstants.SQL_VARYING, 1, "LITERAL_SUFFIX", "TYPEINFO");
+        xsqlvars[5] = new XSQLVAR(ISCConstants.SQL_VARYING, 31, "CREATE_PARAMS", "TYPEINFO");
+        xsqlvars[6] = new XSQLVAR(ISCConstants.SQL_SHORT, 0, "NULLABLE", "TYPEINFO");
+        xsqlvars[7] = new XSQLVAR(ISCConstants.SQL_TEXT, 1, "CASE_SENSITIVE", "TYPEINFO");
+        xsqlvars[8] = new XSQLVAR(ISCConstants.SQL_SHORT, 0, "SEARCHABLE", "TYPEINFO");
+        xsqlvars[9] = new XSQLVAR(ISCConstants.SQL_TEXT, 1, "UNSIGNED_ATTRIBUTE", "TYPEINFO");
+        xsqlvars[10] = new XSQLVAR(ISCConstants.SQL_TEXT, 1, "FIXED_PREC_SCALE", "TYPEINFO");
+        xsqlvars[11] = new XSQLVAR(ISCConstants.SQL_TEXT, 1, "AUTO_INCREMENT", "TYPEINFO");
+        xsqlvars[12] = new XSQLVAR(ISCConstants.SQL_VARYING, 31, "LOCAL_TYPE_NAME", "TYPEINFO");
+        xsqlvars[13] = new XSQLVAR(ISCConstants.SQL_SHORT, 0, "MINIMUM_SCALE", "TYPEINFO");
+        xsqlvars[14] = new XSQLVAR(ISCConstants.SQL_SHORT, 0, "MAXIMUM_SCALE", "TYPEINFO");
+        xsqlvars[15] = new XSQLVAR(ISCConstants.SQL_LONG, 0, "SQL_DATA_TYPE", "TYPEINFO");
+        xsqlvars[16] = new XSQLVAR(ISCConstants.SQL_LONG, 0, "SQL_DATETIME_SUB", "TYPEINFO");
+        xsqlvars[17] = new XSQLVAR(ISCConstants.SQL_LONG, 0, "NUM_PREC_RADIX", "TYPEINFO");
 
         //dialect 3 only
         List<byte[][]> rows = new ArrayList<byte[][]>();
 
         //BIGINT=-5
-        rows.add(new byte[][] {getBytes("BIGINT"), createShort(Types.BIGINT)
-            , anXSQLVAR.encodeInt(64), null, null, null,
-            NULLABLE, CASEINSENSITIVE, SEARCHABLE, SIGNED, FIXEDSCALE,
-            NOTAUTOINC, null, shortZero, shortZero, anXSQLVAR.encodeInt(ISCConstants.SQL_INT64), null, BINARY});
-        
+        rows.add(new byte[][]{ getBytes("BIGINT"), createShort(Types.BIGINT), BIGINT_PRECISION, null, null, null,
+                TYPE_NULLABLE, CASEINSENSITIVE, TYPE_SEARCHABLE, SIGNED, FIXEDSCALE, NOTAUTOINC, null, SHORT_ZERO,
+                SHORT_ZERO, createInt(ISCConstants.SQL_INT64), null, RADIX_TEN });
+
         //LONGVARBINARY=-4
-        rows.add(new byte[][] {getBytes("BLOB SUB_TYPE 0"), createShort(Types.LONGVARBINARY)
-            , anXSQLVAR.encodeInt(0), null, null, null,
-            NULLABLE, CASESENSITIVE, PREDNONE, UNSIGNED, FIXEDSCALE,
-            NOTAUTOINC, null, shortZero, shortZero, anXSQLVAR.encodeInt(ISCConstants.SQL_BLOB), null, BINARY});
+        rows.add(new byte[][]{ getBytes("BLOB SUB_TYPE 0"), createShort(Types.LONGVARBINARY), INT_ZERO, null, null,
+                null, TYPE_NULLABLE, CASESENSITIVE, TYPE_PRED_NONE, UNSIGNED, FIXEDSCALE, NOTAUTOINC, null,
+                SHORT_ZERO, SHORT_ZERO, createInt(ISCConstants.SQL_BLOB), null, RADIX_BINARY });
 
         //LONGVARCHAR=-1
-        rows.add(new byte[][] {getBytes("BLOB SUB_TYPE 1"), createShort(Types.LONGVARCHAR)
-            , anXSQLVAR.encodeInt(0), null, null, null,
-            NULLABLE, CASESENSITIVE, PREDNONE, UNSIGNED, FIXEDSCALE,
-            NOTAUTOINC, null, shortZero, shortZero, anXSQLVAR.encodeInt(ISCConstants.SQL_BLOB), null, BINARY});
+        rows.add(new byte[][]{ getBytes("BLOB SUB_TYPE 1"), createShort(Types.LONGVARCHAR), INT_ZERO, null, null,
+                null, TYPE_NULLABLE, CASESENSITIVE, TYPE_PRED_NONE, UNSIGNED, FIXEDSCALE, NOTAUTOINC, null,
+                SHORT_ZERO, SHORT_ZERO, createInt(ISCConstants.SQL_BLOB), null, RADIX_BINARY });
 
         //CHAR=1
-        rows.add(new byte[][] {getBytes("CHAR"), createShort(Types.CHAR)
-            , anXSQLVAR.encodeInt(32664), getBytes("'"), getBytes("'"), getBytes("length"),
-            NULLABLE, CASESENSITIVE, SEARCHABLE, UNSIGNED, FIXEDSCALE,
-            NOTAUTOINC, null, shortZero, shortZero, anXSQLVAR.encodeInt(ISCConstants.SQL_TEXT), null, BINARY});
+        rows.add(new byte[][]{ getBytes("CHAR"), createShort(Types.CHAR), createInt(32664), getBytes("'"),
+                getBytes("'"), getBytes("length"), TYPE_NULLABLE, CASESENSITIVE, TYPE_SEARCHABLE, UNSIGNED,
+                FIXEDSCALE, NOTAUTOINC, null, SHORT_ZERO, SHORT_ZERO, createInt(ISCConstants.SQL_TEXT), null,
+                RADIX_BINARY });
 
         //NUMERIC=2
-        rows.add(new byte[][] {getBytes("NUMERIC"), createShort(Types.NUMERIC)
-            , anXSQLVAR.encodeInt(18), null, null, getBytes("precision,scale"),
-            NULLABLE, CASEINSENSITIVE, SEARCHABLE, SIGNED, FIXEDSCALE,
-            NOTAUTOINC, null, shortZero, createShort(18), anXSQLVAR.encodeInt(ISCConstants.SQL_INT64), null, BINARY});
+        rows.add(new byte[][]{ getBytes("NUMERIC"), createShort(Types.NUMERIC), NUMERIC_PRECISION, null, null,
+                getBytes("precision,scale"), TYPE_NULLABLE, CASEINSENSITIVE, TYPE_SEARCHABLE, SIGNED, FIXEDSCALE,
+                NOTAUTOINC, null, SHORT_ZERO, NUMERIC_PRECISION, createInt(ISCConstants.SQL_INT64), null, RADIX_TEN });
 
         //DECIMAL=3
-        rows.add(new byte[][] {getBytes("DECIMAL"), createShort(Types.DECIMAL)
-            , anXSQLVAR.encodeInt(18), null, null, getBytes("precision,scale"),
-            NULLABLE, CASEINSENSITIVE, SEARCHABLE, SIGNED, FIXEDSCALE,
-            NOTAUTOINC, null, shortZero, createShort(18), anXSQLVAR.encodeInt(ISCConstants.SQL_INT64), null, BINARY});
+        rows.add(new byte[][]{ getBytes("DECIMAL"), createShort(Types.DECIMAL), DECIMAL_PRECISION, null, null,
+                getBytes("precision,scale"), TYPE_NULLABLE, CASEINSENSITIVE, TYPE_SEARCHABLE, SIGNED, FIXEDSCALE,
+                NOTAUTOINC, null, SHORT_ZERO, DECIMAL_PRECISION, createInt(ISCConstants.SQL_INT64), null, RADIX_TEN });
 
         //INTEGER=4
-        rows.add(new byte[][] {getBytes("INTEGER"), createShort(Types.INTEGER)
-            , anXSQLVAR.encodeInt(32), null, null, null,
-            NULLABLE, CASEINSENSITIVE, SEARCHABLE, SIGNED, FIXEDSCALE,
-            NOTAUTOINC, null, shortZero, shortZero, anXSQLVAR.encodeInt(ISCConstants.SQL_LONG), null, BINARY});
+        rows.add(new byte[][]{ getBytes("INTEGER"), createShort(Types.INTEGER), INTEGER_PRECISION, null, null, null,
+                TYPE_NULLABLE, CASEINSENSITIVE, TYPE_SEARCHABLE, SIGNED, FIXEDSCALE, NOTAUTOINC, null, SHORT_ZERO,
+                SHORT_ZERO, createInt(ISCConstants.SQL_LONG), null, RADIX_TEN });
 
         //SMALLINT=5
-        rows.add(new byte[][] {getBytes("SMALLINT"), createShort(Types.SMALLINT)
-            , anXSQLVAR.encodeInt(16), null, null, null,
-            NULLABLE, CASEINSENSITIVE, SEARCHABLE, SIGNED, FIXEDSCALE,
-            NOTAUTOINC, null, shortZero, shortZero, anXSQLVAR.encodeInt(ISCConstants.SQL_SHORT), null, BINARY});
+        rows.add(new byte[][]{ getBytes("SMALLINT"), createShort(Types.SMALLINT), SMALLINT_PRECISION, null, null,
+                null, TYPE_NULLABLE, CASEINSENSITIVE, TYPE_SEARCHABLE, SIGNED, FIXEDSCALE, NOTAUTOINC, null,
+                SHORT_ZERO, SHORT_ZERO, createInt(ISCConstants.SQL_SHORT), null, RADIX_TEN });
 
         //FLOAT=6
-        rows.add(new byte[][] {getBytes("FLOAT"), createShort(Types.FLOAT)
-            , anXSQLVAR.encodeInt(7), null, null, null,
-            NULLABLE, CASEINSENSITIVE, SEARCHABLE, SIGNED, VARIABLESCALE,
-            NOTAUTOINC, null, createShort(0), createShort(7), anXSQLVAR.encodeInt(ISCConstants.SQL_FLOAT), null, BINARY});
+        rows.add(new byte[][]{ getBytes("FLOAT"), createShort(Types.FLOAT), FLOAT_PRECISION, null, null, null,
+                TYPE_NULLABLE, CASEINSENSITIVE, TYPE_SEARCHABLE, SIGNED, VARIABLESCALE, NOTAUTOINC, null, SHORT_ZERO,
+                SHORT_ZERO, createInt(ISCConstants.SQL_FLOAT), null, RADIX_BINARY });
 
         //DOUBLE=8
-        rows.add(new byte[][] {getBytes("DOUBLE PRECISION"), createShort(Types.DOUBLE)
-            , anXSQLVAR.encodeInt(15), null, null, null,
-            NULLABLE, CASEINSENSITIVE, SEARCHABLE, SIGNED, VARIABLESCALE,
-            NOTAUTOINC, null, createShort(0), createShort(15), anXSQLVAR.encodeInt(ISCConstants.SQL_DOUBLE), null, BINARY});
+        rows.add(new byte[][]{ getBytes("DOUBLE PRECISION"), createShort(Types.DOUBLE), DOUBLE_PRECISION, null, null,
+                null, TYPE_NULLABLE, CASEINSENSITIVE, TYPE_SEARCHABLE, SIGNED, VARIABLESCALE, NOTAUTOINC, null,
+                SHORT_ZERO, SHORT_ZERO, createInt(ISCConstants.SQL_DOUBLE), null, RADIX_BINARY });
 
         //VARCHAR=12
-        rows.add(new byte[][] {getBytes("VARCHAR"), createShort(Types.VARCHAR)
-            , anXSQLVAR.encodeInt(32664), getBytes("'"), getBytes("'"), getBytes("length"),
-            NULLABLE, CASESENSITIVE, SEARCHABLE, UNSIGNED, FIXEDSCALE,
-            NOTAUTOINC, null, shortZero, shortZero, anXSQLVAR.encodeInt(ISCConstants.SQL_VARYING), null, BINARY});
+        rows.add(new byte[][]{ getBytes("VARCHAR"), createShort(Types.VARCHAR), createInt(32664), getBytes("'"),
+                getBytes("'"), getBytes("length"), TYPE_NULLABLE, CASESENSITIVE, TYPE_SEARCHABLE, UNSIGNED,
+                FIXEDSCALE, NOTAUTOINC, null, SHORT_ZERO, SHORT_ZERO, createInt(ISCConstants.SQL_VARYING), null,
+                RADIX_BINARY });
 
         //DATE=91
-        rows.add(new byte[][] {getBytes("DATE"), createShort(Types.DATE)
-            , anXSQLVAR.encodeInt(0), null, null, null,
-            NULLABLE, CASEINSENSITIVE, SEARCHABLE, UNSIGNED, FIXEDSCALE,
-            NOTAUTOINC, null, shortZero, shortZero, anXSQLVAR.encodeInt(ISCConstants.SQL_TYPE_DATE), null, BINARY});
+        rows.add(new byte[][]{ getBytes("DATE"), createShort(Types.DATE), DATE_PRECISION, null, null, null,
+                TYPE_NULLABLE, CASEINSENSITIVE, TYPE_SEARCHABLE, UNSIGNED, FIXEDSCALE, NOTAUTOINC, null, SHORT_ZERO,
+                SHORT_ZERO, createInt(ISCConstants.SQL_TYPE_DATE), null, RADIX_BINARY });
 
         //TIME=92
-        rows.add(new byte[][] {getBytes("TIME"), createShort(Types.TIME)
-            , anXSQLVAR.encodeInt(0), null, null, null,
-            NULLABLE, CASEINSENSITIVE, SEARCHABLE, UNSIGNED, FIXEDSCALE,
-            NOTAUTOINC, null, shortZero, shortZero, anXSQLVAR.encodeInt(ISCConstants.SQL_TYPE_TIME), null, BINARY});
+        rows.add(new byte[][]{ getBytes("TIME"), createShort(Types.TIME), TIME_PRECISION, null, null, null,
+                TYPE_NULLABLE, CASEINSENSITIVE, TYPE_SEARCHABLE, UNSIGNED, FIXEDSCALE, NOTAUTOINC, null, SHORT_ZERO,
+                SHORT_ZERO, createInt(ISCConstants.SQL_TYPE_TIME), null, RADIX_BINARY });
 
         //TIMESTAMP=93
-        rows.add(new byte[][] {getBytes("TIMESTAMP"), createShort(Types.TIMESTAMP)
-            , anXSQLVAR.encodeInt(0), null, null, null,
-            NULLABLE, CASEINSENSITIVE, SEARCHABLE, UNSIGNED, FIXEDSCALE,
-            NOTAUTOINC, null, shortZero, shortZero, anXSQLVAR.encodeInt(ISCConstants.SQL_TIMESTAMP), null, BINARY});
+        rows.add(new byte[][]{ getBytes("TIMESTAMP"), createShort(Types.TIMESTAMP), TIMESTAMP_PRECISION, null, null,
+                null, TYPE_NULLABLE, CASEINSENSITIVE, TYPE_SEARCHABLE, UNSIGNED, FIXEDSCALE, NOTAUTOINC, null,
+                SHORT_ZERO, SHORT_ZERO, createInt(ISCConstants.SQL_TIMESTAMP), null, RADIX_BINARY });
 
         //OTHER=1111
-        rows.add(new byte[][] {getBytes("ARRAY"), createShort(Types.OTHER)
-            , anXSQLVAR.encodeInt(0), null, null, null,
-            NULLABLE, CASESENSITIVE, PREDNONE, UNSIGNED, FIXEDSCALE,
-            NOTAUTOINC, null, shortZero, shortZero, anXSQLVAR.encodeInt(ISCConstants.SQL_ARRAY), null, BINARY});
+        rows.add(new byte[][]{ getBytes("ARRAY"), createShort(Types.OTHER), INT_ZERO, null, null, null, TYPE_NULLABLE,
+                CASESENSITIVE, TYPE_PRED_NONE, UNSIGNED, FIXEDSCALE, NOTAUTOINC, null, SHORT_ZERO, SHORT_ZERO,
+                createInt(ISCConstants.SQL_ARRAY), null, RADIX_BINARY });
 
         //BLOB=2004
-        rows.add(new byte[][] {getBytes("BLOB SUB_TYPE <0 "), createShort(Types.BLOB)
-            , anXSQLVAR.encodeInt(0), null, null, null,
-            NULLABLE, CASESENSITIVE, PREDNONE, UNSIGNED, FIXEDSCALE,
-            NOTAUTOINC, null, shortZero, shortZero, anXSQLVAR.encodeInt(ISCConstants.SQL_BLOB), null, BINARY});
+        rows.add(new byte[][]{ getBytes("BLOB SUB_TYPE <0 "), createShort(Types.BLOB), INT_ZERO, null, null, null,
+                TYPE_NULLABLE, CASESENSITIVE, TYPE_PRED_NONE, UNSIGNED, FIXEDSCALE, NOTAUTOINC, null, SHORT_ZERO,
+                SHORT_ZERO, createInt(ISCConstants.SQL_BLOB), null, RADIX_BINARY });
 
         return new FBResultSet(xsqlvars, rows);
-
     }
 
     private static final String GET_INDEX_INFO_START = "SELECT "
-        + "  ind.RDB$RELATION_NAME AS TABLE_NAME"
-        + ", ind.RDB$UNIQUE_FLAG AS UNIQUE_FLAG"
-        + ", ind.RDB$INDEX_NAME as INDEX_NAME"
-        + ", ise.rdb$field_position + 1 as ORDINAL_POSITION"
-        + ", ise.rdb$field_name as COLUMN_NAME"
-        + ", ind.RDB$EXPRESSION_SOURCE as EXPRESSION_SOURCE"
-        + ", ind.RDB$INDEX_TYPE as ASC_OR_DESC "
+        + "cast(ind.RDB$RELATION_NAME as varchar(31)) AS TABLE_NAME"
+        + ",ind.RDB$UNIQUE_FLAG AS UNIQUE_FLAG"
+        + ",cast(ind.RDB$INDEX_NAME as varchar(31)) as INDEX_NAME"
+        + ",ise.rdb$field_position + 1 as ORDINAL_POSITION"
+        + ",cast(ise.rdb$field_name as varchar(31)) as COLUMN_NAME"
+        + ",ind.RDB$EXPRESSION_SOURCE as EXPRESSION_SOURCE"
+        + ",ind.RDB$INDEX_TYPE as ASC_OR_DESC "
         + "FROM "
-        + "  rdb$indices ind "
-        + "  LEFT JOIN rdb$index_segments ise ON ind.rdb$index_name = ise.rdb$index_name "
-        ;
-    
+        + "rdb$indices ind "
+        + "LEFT JOIN rdb$index_segments ise ON ind.rdb$index_name = ise.rdb$index_name ";
+
     private static final String GET_INDEX_INFO =
         GET_INDEX_INFO_START
-        + "WHERE " 
-        + "  ind.rdb$relation_name = ? "
-        + "ORDER BY 2, 3, 4"
-        ;
-    
+        + "WHERE "
+        + "ind.rdb$relation_name = ? "
+        + "ORDER BY 2, 3, 4";
+
     private static final String GET_INDEX_INFO_UPPER =
         GET_INDEX_INFO_START
-        + "WHERE " 
-        + "  UPPER(ind.rdb$relation_name) = ? "
-        + "ORDER BY 2, 3, 4"
-        ;
+        + "WHERE "
+        + "UPPER(ind.rdb$relation_name) = ? "
+        + "ORDER BY 2, 3, 4";
 
     /**
      * Gets a description of a table's indices and statistics. They are
@@ -4947,84 +4200,22 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
 
         XSQLVAR[] xsqlvars = new XSQLVAR[13];
 
-        xsqlvars[0] = new XSQLVAR();
-        xsqlvars[0].sqltype = ISCConstants.SQL_VARYING;
-        xsqlvars[0].sqllen = 31;
-        xsqlvars[0].sqlname = "TABLE_CAT";
-        xsqlvars[0].relname = "INDEXINFO";
+        xsqlvars[0] = new XSQLVAR(ISCConstants.SQL_VARYING, 31, "TABLE_CAT", "INDEXINFO");
+        xsqlvars[1] = new XSQLVAR(ISCConstants.SQL_VARYING, 31, "TABLE_SCHEM", "INDEXINFO");
+        xsqlvars[2] = new XSQLVAR(ISCConstants.SQL_VARYING, 31, "TABLE_NAME", "INDEXINFO");
+        xsqlvars[3] = new XSQLVAR(ISCConstants.SQL_TEXT, 1, "NON_UNIQUE", "INDEXINFO");
+        xsqlvars[4] = new XSQLVAR(ISCConstants.SQL_VARYING, 31, "INDEX_QUALIFIER", "INDEXINFO");
+        xsqlvars[5] = new XSQLVAR(ISCConstants.SQL_VARYING, 31, "INDEX_NAME", "INDEXINFO");
+        xsqlvars[6] = new XSQLVAR(ISCConstants.SQL_SHORT, 0, "TYPE", "INDEXINFO");
+        xsqlvars[7] = new XSQLVAR(ISCConstants.SQL_SHORT, 0, "ORDINAL_POSITION", "INDEXINFO");
+        xsqlvars[8] = new XSQLVAR(ISCConstants.SQL_VARYING, 31, "COLUMN_NAME", "INDEXINFO");
+        xsqlvars[9] = new XSQLVAR(ISCConstants.SQL_VARYING, 31, "ASC_OR_DESC", "INDEXINFO");
+        xsqlvars[10] = new XSQLVAR(ISCConstants.SQL_LONG, 0, "CARDINALITY", "INDEXINFO");
+        xsqlvars[11] = new XSQLVAR(ISCConstants.SQL_LONG, 0, "PAGES", "INDEXINFO");
+        xsqlvars[12] = new XSQLVAR(ISCConstants.SQL_VARYING, 31, "FILTER_CONDITION", "INDEXINFO");
 
-        xsqlvars[1] = new XSQLVAR();
-        xsqlvars[1].sqltype = ISCConstants.SQL_VARYING;
-        xsqlvars[1].sqllen = 31;
-        xsqlvars[1].sqlname = "TABLE_SCHEM";
-        xsqlvars[1].relname = "INDEXINFO";
-
-        xsqlvars[2] = new XSQLVAR();
-        xsqlvars[2].sqltype = ISCConstants.SQL_VARYING;
-        xsqlvars[2].sqllen = 31;
-        xsqlvars[2].sqlname = "TABLE_NAME";
-        xsqlvars[2].relname = "INDEXINFO";
-
-        xsqlvars[3] = new XSQLVAR();
-        xsqlvars[3].sqltype = ISCConstants.SQL_TEXT;
-        xsqlvars[3].sqllen = 1;
-        xsqlvars[3].sqlname = "NON_UNIQUE";
-        xsqlvars[3].relname = "INDEXINFO";
-
-        xsqlvars[4] = new XSQLVAR();
-        xsqlvars[4].sqltype = ISCConstants.SQL_VARYING;
-        xsqlvars[4].sqllen = 31;
-        xsqlvars[4].sqlname = "INDEX_QUALIFIER";
-        xsqlvars[4].relname = "INDEXINFO";
-
-        xsqlvars[5] = new XSQLVAR();
-        xsqlvars[5].sqltype = ISCConstants.SQL_VARYING;
-        xsqlvars[5].sqllen = 31;
-        xsqlvars[5].sqlname = "INDEX_NAME";
-        xsqlvars[5].relname = "INDEXINFO";
-
-        xsqlvars[6] = new XSQLVAR();
-        xsqlvars[6].sqltype = ISCConstants.SQL_SHORT;
-        xsqlvars[6].sqlname = "TYPE";
-        xsqlvars[6].relname = "INDEXINFO";
-
-        xsqlvars[7] = new XSQLVAR();
-        xsqlvars[7].sqltype = ISCConstants.SQL_SHORT;
-        xsqlvars[7].sqlname = "ORDINAL_POSITION";
-        xsqlvars[7].relname = "INDEXINFO";
-
-        xsqlvars[8] = new XSQLVAR();
-        xsqlvars[8].sqltype = ISCConstants.SQL_VARYING;
-        xsqlvars[8].sqllen = 31;
-        xsqlvars[8].sqlname = "COLUMN_NAME";
-        xsqlvars[8].relname = "INDEXINFO";
-
-        xsqlvars[9] = new XSQLVAR();
-        xsqlvars[9].sqltype = ISCConstants.SQL_VARYING;
-        xsqlvars[9].sqllen = 31;
-        xsqlvars[9].sqlname = "ASC_OR_DESC";
-        xsqlvars[9].relname = "INDEXINFO";
-
-        xsqlvars[10] = new XSQLVAR();
-        xsqlvars[10].sqltype = ISCConstants.SQL_LONG;
-        xsqlvars[10].sqlname = "CARDINALITY";
-        xsqlvars[10].relname = "INDEXINFO";
-
-        xsqlvars[11] = new XSQLVAR();
-        xsqlvars[11].sqltype = ISCConstants.SQL_LONG;
-        xsqlvars[11].sqlname = "PAGES";
-        xsqlvars[11].relname = "INDEXINFO";
-
-        xsqlvars[12] = new XSQLVAR();
-        xsqlvars[12].sqltype = ISCConstants.SQL_VARYING;
-        xsqlvars[12].sqllen = 31;
-        xsqlvars[12].sqlname = "FILTER_CONDITION";
-        xsqlvars[12].relname = "INDEXINFO";
-
-        List<byte[][]> rows = new ArrayList<byte[][]>();
-        
         if (table == null) {
-            return new FBResultSet(xsqlvars, rows);
+            return new FBResultSet(xsqlvars, Collections.<byte[][]>emptyList());
         }
 
         List<String> params = new ArrayList<String>();
@@ -5034,6 +4225,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
 
         // if no direct match happened, check the uppercased match
         if (!rs.next()) {
+            rs.close();
             params.set(0, table.toUpperCase());
             rs = doQuery(GET_INDEX_INFO_UPPER, params);
             
@@ -5041,9 +4233,13 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
             // if no rows are available, we have to exit now, otherwise the 
             // following do/while loop will throw SQLException that the
             // result set is not positioned on a row
-            if (!rs.next())
-                return new FBResultSet(xsqlvars, rows);
+            if (!rs.next()) {
+                rs.close();
+                return new FBResultSet(xsqlvars, Collections.<byte[][]>emptyList());
+            }
         }
+
+        List<byte[][]> rows = new ArrayList<byte[][]>();
         
         do {
             byte[][] row = new byte[13][];
@@ -5055,13 +4251,13 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
                 // Skip indices that are not unique, as requested
                 continue;
             }
-            row[3] = getBytes(isNotUnique ? "T" : "F");
+            row[3] = isNotUnique ? TRUE_BYTES : FALSE_BYTES;
             row[4] = null;
             row[5] = getBytes(rs.getString("INDEX_NAME"));
-            row[6] = xsqlvars[0].encodeShort(DatabaseMetaData.tableIndexOther);
+            row[6] = TABLE_INDEX_OTHER;
             String columnName = rs.getString("COLUMN_NAME");
             if (rs.wasNull()) {
-                row[7] = xsqlvars[0].encodeShort((short)1);
+                row[7] = SHORT_ONE;
                 String expressionSource = rs.getString("EXPRESSION_SOURCE");
                 if (expressionSource != null) {
                     row[8] = getBytes(expressionSource);
@@ -5072,14 +4268,14 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
                     row[8] = null;
                 }
             } else {
-                row[7] = xsqlvars[0].encodeShort(rs.getShort("ORDINAL_POSITION"));
+                row[7] = createShort(rs.getShort("ORDINAL_POSITION"));
                 row[8] = getBytes(columnName);
             }
             int ascOrDesc = rs.getInt("ASC_OR_DESC");
             if (ascOrDesc == 0) {
-                row[9] = getBytes("A");
+                row[9] = ASC_BYTES;
             } else if (ascOrDesc == 1) {
-                row[9] = getBytes("D");
+                row[9] = DESC_BYTES;
             } else {
                 row[9] = null;
             }
@@ -5093,7 +4289,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
             rows.add(row);
             
         } while (rs.next());
-        
+        rs.close();
         return new FBResultSet(xsqlvars, rows);
     }
 
@@ -5299,104 +4495,24 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
     }
 
     /**
-     * Retrieves a description of the user-defined types (UDTs) defined
-     * in a particular schema.  Schema-specific UDTs may have type
-     * <code>JAVA_OBJECT</code>, <code>STRUCT</code>,
-     * or <code>DISTINCT</code>.
+     * UDTs are not supported by Firebird. This method will always return an empty ResultSet.
      *
-     * <P>Only types matching the catalog, schema, type name and type
-     * criteria are returned.  They are ordered by <code>DATA_TYPE</code>,
-     * <code>TYPE_CAT</code>, <code>TYPE_SCHEM</code>  and
-     * <code>TYPE_NAME</code>.  The type name parameter may be a fully-qualified
-     * name.  In this case, the catalog and schemaPattern parameters are
-     * ignored.
-     *
-     * <P>Each type description has the following columns:
-     *  <OL>
-     *  <LI><B>TYPE_CAT</B> String => the type's catalog (may be <code>null</code>)
-     *  <LI><B>TYPE_SCHEM</B> String => type's schema (may be <code>null</code>)
-     *  <LI><B>TYPE_NAME</B> String => type name
-     *  <LI><B>CLASS_NAME</B> String => Java class name
-     *  <LI><B>DATA_TYPE</B> int => type value defined in java.sql.Types.
-     *     One of JAVA_OBJECT, STRUCT, or DISTINCT
-     *  <LI><B>REMARKS</B> String => explanatory comment on the type
-     *  <LI><B>BASE_TYPE</B> short => type code of the source type of a
-     *     DISTINCT type or the type that implements the user-generated
-     *     reference type of the SELF_REFERENCING_COLUMN of a structured
-     *     type as defined in java.sql.Types (<code>null</code> if DATA_TYPE is not
-     *     DISTINCT or not STRUCT with REFERENCE_GENERATION = USER_DEFINED)
-     *  </OL>
-     *
-     * <P><B>Note:</B> If the driver does not support UDTs, an empty
-     * result set is returned.
-     *
-     * @param catalog a catalog name; must match the catalog name as it
-     *        is stored in the database; "" retrieves those without a catalog;
-     *        <code>null</code> means that the catalog name should not be used to narrow
-     *        the search
-     * @param schemaPattern a schema pattern name; must match the schema name
-     *        as it is stored in the database; "" retrieves those without a schema;
-     *        <code>null</code> means that the schema name should not be used to narrow
-     *        the search
-     * @param typeNamePattern a type name pattern; must match the type name
-     *        as it is stored in the database; may be a fully qualified name
-     * @param types a list of user-defined types (JAVA_OBJECT,
-     *        STRUCT, or DISTINCT) to include; <code>null</code> returns all types
-     * @return <code>ResultSet</code> object in which each row describes a UDT
-     * @exception SQLException if a database access error occurs
-     * @see #getSearchStringEscape
-     * @since 1.2
+     * {@inheritDoc}
      */
     public ResultSet getUDTs(String catalog, String schemaPattern,
               String typeNamePattern, int[] types) throws SQLException {
         XSQLVAR[] xsqlvars = new XSQLVAR[7];
 
-        xsqlvars[0] = new XSQLVAR();
-        xsqlvars[0].sqltype = ISCConstants.SQL_VARYING;
-        xsqlvars[0].sqllen = 31;
-        xsqlvars[0].sqlname = "TYPE_CAT";
-        xsqlvars[0].relname = "UDT";
+        xsqlvars[0] = new XSQLVAR(ISCConstants.SQL_VARYING, 31, "TYPE_CAT", "UDT");
+        xsqlvars[1] = new XSQLVAR(ISCConstants.SQL_VARYING, 31, "TYPE_SCHEM", "UDT");
+        xsqlvars[2] = new XSQLVAR(ISCConstants.SQL_VARYING, 31, "TYPE_NAME", "UDT");
+        xsqlvars[3] = new XSQLVAR(ISCConstants.SQL_VARYING, 31, "CLASS_NAME", "UDT");
+        xsqlvars[4] = new XSQLVAR(ISCConstants.SQL_LONG, 0, "DATA_TYPE", "UDT");
+        xsqlvars[5] = new XSQLVAR(ISCConstants.SQL_VARYING, 31, "REMARKS", "UDT");
+        xsqlvars[6] = new XSQLVAR(ISCConstants.SQL_SHORT, 0, "BASE_TYPE", "UDT");
 
-        xsqlvars[1] = new XSQLVAR();
-        xsqlvars[1].sqltype = ISCConstants.SQL_VARYING;
-        xsqlvars[1].sqllen = 31;
-        xsqlvars[1].sqlname = "TYPE_SCHEM";
-        xsqlvars[1].relname = "UDT";
-
-        xsqlvars[2] = new XSQLVAR();
-        xsqlvars[2].sqltype = ISCConstants.SQL_VARYING;
-        xsqlvars[2].sqllen = 31;
-        xsqlvars[2].sqlname = "TYPE_NAME";
-        xsqlvars[2].relname = "UDT";
-
-        xsqlvars[3] = new XSQLVAR();
-        xsqlvars[3].sqltype = ISCConstants.SQL_VARYING;
-        xsqlvars[3].sqllen = 31;
-        xsqlvars[3].sqlname = "CLASS_NAME";
-        xsqlvars[3].relname = "UDT";
-
-        xsqlvars[4] = new XSQLVAR();
-        xsqlvars[4].sqltype = ISCConstants.SQL_LONG;
-        xsqlvars[4].sqlname = "DATA_TYPE";
-        xsqlvars[4].relname = "UDT";
-
-        xsqlvars[5] = new XSQLVAR();
-        xsqlvars[5].sqltype = ISCConstants.SQL_VARYING;
-        xsqlvars[5].sqllen = 31;
-        xsqlvars[5].sqlname = "REMARKS";
-        xsqlvars[5].relname = "UDT";
-        
-        xsqlvars[6] = new XSQLVAR();
-        xsqlvars[6].sqltype = ISCConstants.SQL_SHORT;
-        xsqlvars[6].sqlname = "BASE_TYPE";
-        xsqlvars[6].relname = "UDT";
-
-        List<byte[][]> rows = new ArrayList<byte[][]>(0);
-
-        return new FBResultSet(xsqlvars, rows);
+        return new FBResultSet(xsqlvars, Collections.<byte[][]>emptyList());
     }
-
-
 
     /**
      * Retrieves the connection that produced this metadata object.
@@ -5411,19 +4527,37 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
 
     //jdbc 3 methods
 
-
     /**
-     * <b>This operation is not supported</b>
+     * UDTs are not supported by Firebird. This method will always return an empty ResultSet.
      *
-     * @param param1 <description>
-     * @param param2 <description>
-     * @param param3 <description>
-     * @param param4 <description>
-     * @return <description>
-     * @exception java.sql.SQLException <description>
+     * {@inheritDoc}
      */
-    public ResultSet getAttributes(String param1, String param2, String param3, String param4) throws SQLException {
-        throw new FBDriverNotCapableException();
+    public ResultSet getAttributes(String catalog, String schemaPattern, String typeNamePattern, String attributeNamePattern) throws SQLException {
+        XSQLVAR[] xsqlvars = new XSQLVAR[21];
+
+        xsqlvars[0] = new XSQLVAR(ISCConstants.SQL_VARYING, 31, "TYPE_CAT", "ATTRIBUTES");
+        xsqlvars[1] = new XSQLVAR(ISCConstants.SQL_VARYING, 31, "TYPE_SCHEM", "ATTRIBUTES");
+        xsqlvars[2] = new XSQLVAR(ISCConstants.SQL_VARYING, 31, "TYPE_NAME", "ATTRIBUTES");
+        xsqlvars[3] = new XSQLVAR(ISCConstants.SQL_VARYING, 31, "ATTR_NAME", "ATTRIBUTES");
+        xsqlvars[4] = new XSQLVAR(ISCConstants.SQL_LONG, 0, "DATA_TYPE", "ATTRIBUTES");
+        xsqlvars[5] = new XSQLVAR(ISCConstants.SQL_VARYING, 31, "ATTR_TYPE_NAME", "ATTRIBUTES");
+        xsqlvars[6] = new XSQLVAR(ISCConstants.SQL_LONG, 0, "ATTR_SIZE", "ATTRIBUTES");
+        xsqlvars[7] = new XSQLVAR(ISCConstants.SQL_LONG, 0, "DECIMAL_DIGITS", "ATTRIBUTES");
+        xsqlvars[8] = new XSQLVAR(ISCConstants.SQL_LONG, 0, "NUM_PREC_RADIX", "ATTRIBUTES");
+        xsqlvars[9] = new XSQLVAR(ISCConstants.SQL_LONG, 0, "NULLABLE", "ATTRIBUTES");
+        xsqlvars[10] = new XSQLVAR(ISCConstants.SQL_VARYING, 80, "REMARKS", "ATTRIBUTES");
+        xsqlvars[11] = new XSQLVAR(ISCConstants.SQL_VARYING, 31, "ATTR_DEF", "ATTRIBUTES");
+        xsqlvars[12] = new XSQLVAR(ISCConstants.SQL_LONG, 0, "SQL_DATA_TYPE", "ATTRIBUTES");
+        xsqlvars[13] = new XSQLVAR(ISCConstants.SQL_LONG, 0, "SQL_DATETIME_SUB", "ATTRIBUTES");
+        xsqlvars[14] = new XSQLVAR(ISCConstants.SQL_LONG, 0, "CHAR_OCTET_LENGTH", "ATTRIBUTES");
+        xsqlvars[15] = new XSQLVAR(ISCConstants.SQL_SHORT, 0, "ORDINAL_POSITION", "ATTRIBUTES");
+        xsqlvars[16] = new XSQLVAR(ISCConstants.SQL_VARYING, 31, "IS_NULLABLE", "ATTRIBUTES");
+        xsqlvars[17] = new XSQLVAR(ISCConstants.SQL_VARYING, 31, "SCOPE_CATALOG", "ATTRIBUTES");
+        xsqlvars[18] = new XSQLVAR(ISCConstants.SQL_VARYING, 31, "SCOPE_SCHEMA", "ATTRIBUTES");
+        xsqlvars[19] = new XSQLVAR(ISCConstants.SQL_VARYING, 31, "SCOPE_TABLE", "ATTRIBUTES");
+        xsqlvars[20] = new XSQLVAR(ISCConstants.SQL_SHORT, 0, "SOURCE_DATA_TYPE", "ATTRIBUTES");
+
+        return new FBResultSet(xsqlvars, Collections.<byte[][]>emptyList());
     }
 
     /**
@@ -5469,84 +4603,19 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
     }
 
     /**
+     * Supertypes are not supported by Firebird. This method will always return an empty ResultSet.
      *
-     * Retrieves a description of the user-defined type (UDT) hierarchies 
-     * defined in a particular schema in this database. Only the immediate 
-     * super type/sub type relationship is modeled.
-     * <P>
-     * Only supertype information for UDTs matching the catalog, 
-     * schema, and type name is returned. The type name parameter
-     * may be a fully-qualified name. When the UDT name supplied is a 
-     * fully-qualified name, the catalog and schemaPattern parameters are 
-     * ignored. 
-     * <P>
-     * If a UDT does not have a direct super type, it is not listed here.
-     * A row of the <code>ResultSet</code> object returned by this method
-     * describes the designated UDT and a direct supertype. A row has the 
-     * following columns:
-     *  <OL>
-     *  <LI><B>TYPE_CAT</B> String => the UDT's catalog (may be 
-     *  <code>null</code>)
-     *  <LI><B>TYPE_SCHEM</B> String => UDT's schema (may be <code>null</code>)
-     *  <LI><B>TYPE_NAME</B> String => type name of the UDT
-     *  <LI><B>SUPERTYPE_CAT</B> String => the direct super type's catalog 
-     *                           (may be <code>null</code>)
-     *  <LI><B>SUPERTYPE_SCHEM</B> String => the direct super type's schema 
-     *                             (may be <code>null</code>)
-     *  <LI><B>SUPERTYPE_NAME</B> String => the direct super type's name
-     *  </OL>
-     *
-     * <P><B>Note:</B> If the driver does not support type hierarchies, an 
-     * empty result set is returned.
-     *
-     * @param catalog a catalog name; "" retrieves those without a catalog;
-     *        <code>null</code> means drop catalog name from the selection 
-     *        criteria
-     * @param schemaPattern a schema name pattern; "" retrieves those 
-     *        without a schema
-     * @param tableNamePattern a UDT name pattern; may be a fully-qualified
-     *        name
-     * @return a <code>ResultSet</code> object in which a row gives information
-     *         about the designated UDT
-     * @throws SQLException if a database access error occurs
+     * {@inheritDoc}
      */
     public ResultSet getSuperTypes(String catalog, String schemaPattern, String tableNamePattern) throws SQLException {
         XSQLVAR[] xsqlvars = new XSQLVAR[6];
 
-        xsqlvars[0] = new XSQLVAR();
-        xsqlvars[0].sqltype = ISCConstants.SQL_VARYING;
-        xsqlvars[0].sqllen = 31;
-        xsqlvars[0].sqlname = "TYPE_CAT";
-        xsqlvars[0].relname = "SUPERTYPES";
-
-        xsqlvars[1] = new XSQLVAR();
-        xsqlvars[1].sqltype = ISCConstants.SQL_VARYING;
-        xsqlvars[1].sqllen = 31;
-        xsqlvars[1].sqlname = "TYPE_SCHEM";
-        xsqlvars[1].relname = "SUPERTYPES";
-
-        xsqlvars[2] = new XSQLVAR();
-        xsqlvars[2].sqltype = ISCConstants.SQL_VARYING;
-        xsqlvars[2].sqllen = 31;
-        xsqlvars[2].sqlname = "TYPE_NAME";
-        xsqlvars[2].relname = "SUPERTYPES";
-
-        xsqlvars[3].sqltype = ISCConstants.SQL_VARYING;
-        xsqlvars[3].sqllen = 31;
-        xsqlvars[3].sqlname = "SUPERTYPE_CAT";
-        xsqlvars[3].relname = "SUPERTYPES";
-
-        xsqlvars[4] = new XSQLVAR();
-        xsqlvars[4].sqltype = ISCConstants.SQL_VARYING;
-        xsqlvars[4].sqllen = 31;
-        xsqlvars[4].sqlname = "SUPERTYPE_SCHEM";
-        xsqlvars[4].relname = "SUPERTYPES";
-
-        xsqlvars[5] = new XSQLVAR();
-        xsqlvars[5].sqltype = ISCConstants.SQL_VARYING;
-        xsqlvars[5].sqllen = 31;
-        xsqlvars[5].sqlname = "SUPERTYPE_NAME";
-        xsqlvars[5].relname = "SUPERTYPES";
+        xsqlvars[0] = new XSQLVAR(ISCConstants.SQL_VARYING, 31, "TYPE_CAT", "SUPERTYPES");
+        xsqlvars[1] = new XSQLVAR(ISCConstants.SQL_VARYING, 31, "TYPE_SCHEM", "SUPERTYPES");
+        xsqlvars[2] = new XSQLVAR(ISCConstants.SQL_VARYING, 31, "TYPE_NAME", "SUPERTYPES");
+        xsqlvars[3] = new XSQLVAR(ISCConstants.SQL_VARYING, 31, "SUPERTYPE_CAT", "SUPERTYPES");
+        xsqlvars[4] = new XSQLVAR(ISCConstants.SQL_VARYING, 31, "SUPERTYPE_SCHEM", "SUPERTYPES");
+        xsqlvars[5] = new XSQLVAR(ISCConstants.SQL_VARYING, 31, "SUPERTYPE_NAME", "SUPERTYPES");
 
         List<byte[][]> rows = Collections.emptyList();
 
@@ -5554,68 +4623,18 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
     }
 
     /**
-     * Retrieves a description of the table hierarchies defined in a particular 
-     * schema in this database.
+     * Supertables are not supported by Firebird. This method will always return an empty ResultSet.
      *
-     * <P>Only supertable information for tables matching the catalog, schema
-     * and table name are returned. The table name parameter may be a fully-
-     * qualified name, in which case, the catalog and schemaPattern parameters
-     * are ignored. If a table does not have a super table, it is not listed 
-     * here. Supertables have to be defined in the same catalog and schema as 
-     * the sub tables. Therefore, the type description does not need to include
-     * this information for the supertable.
-     *
-     * <P>Each type description has the following columns:
-     *  <OL>
-     *  <LI><B>TABLE_CAT</B> String => the type's catalog (may be 
-     *  <code>null</code>)
-     *  <LI><B>TABLE_SCHEM</B> String => type's schema (may be 
-     *  <code>null</code>)
-     *  <LI><B>TABLE_NAME</B> String => type name
-     *  <LI><B>SUPERTABLE_NAME</B> String => the direct super type's name
-     *  </OL>
-     *
-     * <P><B>Note:</B> If the driver does not support type hierarchies, an 
-     * empty result set is returned.
-     *
-     * @param catalog a catalog name; "" retrieves those without a catalog;
-     *        <code>null</code> means drop catalog name from the selection 
-     *        criteria
-     * @param schemaPattern a schema name pattern; "" retrieves those 
-     *        without a schema
-     * @param tableNamePattern a table name pattern; may be a fully-qualified
-     *        name
-     * @return a <code>ResultSet</code> object in which each row is a type 
-     *         description
-     * @throws SQLException if a database access error occurs
+     * {@inheritDoc}
      */
     public ResultSet getSuperTables(String catalog, String schemaPattern, String tableNamePattern) throws SQLException {
         
         XSQLVAR[] xsqlvars = new XSQLVAR[4];
 
-        xsqlvars[0] = new XSQLVAR();
-        xsqlvars[0].sqltype = ISCConstants.SQL_VARYING;
-        xsqlvars[0].sqllen = 31;
-        xsqlvars[0].sqlname = "TABLE_CAT";
-        xsqlvars[0].relname = "SUPERTABLES";
-
-        xsqlvars[1] = new XSQLVAR();
-        xsqlvars[1].sqltype = ISCConstants.SQL_VARYING;
-        xsqlvars[1].sqllen = 31;
-        xsqlvars[1].sqlname = "TABLE_SCHEM";
-        xsqlvars[1].relname = "SUPERTABLES";
-
-        xsqlvars[2] = new XSQLVAR();
-        xsqlvars[2].sqltype = ISCConstants.SQL_VARYING;
-        xsqlvars[2].sqllen = 31;
-        xsqlvars[2].sqlname = "TABLE_NAME";
-        xsqlvars[2].relname = "SUPERTABLES";
-
-        xsqlvars[3] = new XSQLVAR();
-        xsqlvars[3].sqltype = ISCConstants.SQL_VARYING;
-        xsqlvars[3].sqllen = 31;
-        xsqlvars[3].sqlname = "SUPERTABLE_NAME";
-        xsqlvars[3].relname = "SUPERTABLES";
+        xsqlvars[0] = new XSQLVAR(ISCConstants.SQL_VARYING, 31, "TABLE_CAT", "SUPERTABLES");
+        xsqlvars[1] = new XSQLVAR(ISCConstants.SQL_VARYING, 31, "TABLE_SCHEM", "SUPERTABLES");
+        xsqlvars[2] = new XSQLVAR(ISCConstants.SQL_VARYING, 31, "TABLE_NAME", "SUPERTABLES");
+        xsqlvars[3] = new XSQLVAR(ISCConstants.SQL_VARYING, 31, "SUPERTABLE_NAME", "SUPERTABLES");
 
         List<byte[][]> rows = Collections.emptyList();
 
@@ -5711,7 +4730,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
      * Retrieves a list of the client info properties 
      * that the driver supports.  The result set contains the following columns
      * <p>
-         * <ol>
+     * <ol>
      * <li><b>NAME</b> String=> The name of the client info property<br>
      * <li><b>MAX_LEN</b> int=> The maximum length of the value for the property<br>
      * <li><b>DEFAULT_VALUE</b> String=> The default value of the property<br>
@@ -5719,42 +4738,24 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
      *                      contain information as to where this property is 
      *                      stored in the database.
      * </ol>
-         * <p>
+     * <p>
      * The <code>ResultSet</code> is sorted by the NAME column
      * <p>
      * @return  A <code>ResultSet</code> object; each row is a supported client info
-         * property
+     * property
      * <p>
      *  @exception SQLException if a database access error occurs
      * <p>
      * @since 1.6
      */
     public ResultSet getClientInfoProperties() throws SQLException {
+        // TODO Return context info?
         XSQLVAR[] xsqlvars = new XSQLVAR[4];
 
-        xsqlvars[0] = new XSQLVAR();
-        xsqlvars[0].sqltype = ISCConstants.SQL_VARYING;
-        xsqlvars[0].sqllen = 31;
-        xsqlvars[0].sqlname = "NAME";
-        xsqlvars[0].relname = "UDT";
-
-        xsqlvars[1] = new XSQLVAR();
-        xsqlvars[1].sqltype = ISCConstants.SQL_LONG;
-        xsqlvars[1].sqllen = 4;
-        xsqlvars[1].sqlname = "MAX_LEN";
-        xsqlvars[1].relname = "UDT";
-
-        xsqlvars[2] = new XSQLVAR();
-        xsqlvars[2].sqltype = ISCConstants.SQL_VARYING;
-        xsqlvars[2].sqllen = 31;
-        xsqlvars[2].sqlname = "DEFAULT";
-        xsqlvars[2].relname = "UDT";
-
-        xsqlvars[3] = new XSQLVAR();
-        xsqlvars[3].sqltype = ISCConstants.SQL_VARYING;
-        xsqlvars[3].sqllen = 31;
-        xsqlvars[3].sqlname = "DESCRIPTION";
-        xsqlvars[3].relname = "UDT";
+        xsqlvars[0] = new XSQLVAR(ISCConstants.SQL_VARYING, 31, "NAME", "CLIENTINFO");
+        xsqlvars[1] = new XSQLVAR(ISCConstants.SQL_LONG, 4, "MAX_LEN", "CLIENTINFO");
+        xsqlvars[2] = new XSQLVAR(ISCConstants.SQL_VARYING, 31, "DEFAULT", "CLIENTINFO");
+        xsqlvars[3] = new XSQLVAR(ISCConstants.SQL_VARYING, 31, "DESCRIPTION", "CLIENTINFO");
 
         List<byte[][]> rows = Collections.emptyList();
 
@@ -5856,8 +4857,28 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
      * @since 1.6
      */
     public ResultSet getFunctionColumns(String catalog, String schemaPattern, String functionNamePattern, String columnNamePattern) throws SQLException {
-        // FIXME implement this method
-        throw new FBDriverNotCapableException();
+        // FIXME implement this method to return actual result
+        XSQLVAR[] xsqlvars = new XSQLVAR[17];
+
+        xsqlvars[0] = new XSQLVAR(ISCConstants.SQL_VARYING, 31, "FUNCTION_CAT", "FUNCTION_COLUMNS");
+        xsqlvars[1] = new XSQLVAR(ISCConstants.SQL_VARYING, 31, "FUNCTION_SCHEM", "FUNCTION_COLUMNS");
+        xsqlvars[2] = new XSQLVAR(ISCConstants.SQL_VARYING, 31, "FUNCTION_NAME", "FUNCTION_COLUMNS");
+        xsqlvars[3] = new XSQLVAR(ISCConstants.SQL_VARYING, 31, "COLUMN_NAME", "FUNCTION_COLUMNS");
+        xsqlvars[4] = new XSQLVAR(ISCConstants.SQL_SHORT, 0, "COLUMN_TYPE", "FUNCTION_COLUMNS");
+        xsqlvars[5] = new XSQLVAR(ISCConstants.SQL_LONG, 0, "DATA_TYPE", "FUNCTION_COLUMNS");
+        xsqlvars[6] = new XSQLVAR(ISCConstants.SQL_VARYING, 31, "TYPE_NAME", "FUNCTION_COLUMNS");
+        xsqlvars[7] = new XSQLVAR(ISCConstants.SQL_LONG, 0, "PRECISION", "FUNCTION_COLUMNS");
+        xsqlvars[8] = new XSQLVAR(ISCConstants.SQL_LONG, 0, "LENGTH", "FUNCTION_COLUMNS");
+        xsqlvars[9] = new XSQLVAR(ISCConstants.SQL_SHORT, 0, "SCALE", "FUNCTION_COLUMNS");
+        xsqlvars[10] = new XSQLVAR(ISCConstants.SQL_SHORT, 0, "RADIX", "FUNCTION_COLUMNS");
+        xsqlvars[11] = new XSQLVAR(ISCConstants.SQL_SHORT, 0, "NULLABLE", "FUNCTION_COLUMNS");
+        xsqlvars[12] = new XSQLVAR(ISCConstants.SQL_VARYING, 80, "REMARKS", "FUNCTION_COLUMNS");
+        xsqlvars[13] = new XSQLVAR(ISCConstants.SQL_LONG, 0, "CHAR_OCTET_LENGTH", "FUNCTION_COLUMNS");
+        xsqlvars[14] = new XSQLVAR(ISCConstants.SQL_LONG, 0, "ORDINAL_POSITION", "FUNCTION_COLUMNS");
+        xsqlvars[15] = new XSQLVAR(ISCConstants.SQL_VARYING, 31, "IS_NULLABLE", "FUNCTION_COLUMNS");
+        xsqlvars[16] = new XSQLVAR(ISCConstants.SQL_VARYING, 31, "SPECIFIC_NAME", "FUNCTION_COLUMNS");
+
+        return new FBResultSet(xsqlvars, Collections.<byte[][]>emptyList());
     }
 
     /**
@@ -5909,7 +4930,17 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
      * @since 1.6
      */
     public ResultSet getFunctions(String catalog, String schemaPattern, String functionNamePattern) throws SQLException {
-        throw new FBDriverNotCapableException();
+        // FIXME implement this method to return actual result
+        XSQLVAR[] xsqlvars = new XSQLVAR[6];
+
+        xsqlvars[0] = new XSQLVAR(ISCConstants.SQL_VARYING, 31, "FUNCTION_CAT", "FUNCTIONS");
+        xsqlvars[1] = new XSQLVAR(ISCConstants.SQL_VARYING, 31, "FUNCTION_SCHEM", "FUNCTIONS");
+        xsqlvars[2] = new XSQLVAR(ISCConstants.SQL_VARYING, 31, "FUNCTION_NAME", "FUNCTIONS");
+        xsqlvars[3] = new XSQLVAR(ISCConstants.SQL_VARYING, 80, "REMARKS", "FUNCTIONS");
+        xsqlvars[4] = new XSQLVAR(ISCConstants.SQL_SHORT, 0, "FUNCTION_TYPE", "FUNCTIONS");
+        xsqlvars[5] = new XSQLVAR(ISCConstants.SQL_VARYING, 31, "SPECIFIC_NAME", "FUNCTIONS");
+
+        return new FBResultSet(xsqlvars, Collections.<byte[][]>emptyList());
     }
 
     /**
@@ -5939,17 +4970,8 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
     public ResultSet getSchemas(String catalog, String schemaPattern) throws SQLException {
         XSQLVAR[] xsqlvars = new XSQLVAR[2];
 
-        xsqlvars[0] = new XSQLVAR();
-        xsqlvars[0].sqltype = ISCConstants.SQL_VARYING;
-        xsqlvars[0].sqllen = 31;
-        xsqlvars[0].sqlname = "TABLE_SCHEM";
-        xsqlvars[0].relname = "TABLESCHEMAS";
-        
-        xsqlvars[1] = new XSQLVAR();
-        xsqlvars[1].sqltype = ISCConstants.SQL_VARYING;
-        xsqlvars[1].sqllen = 31;
-        xsqlvars[1].sqlname = "TABLE_CATALOG";
-        xsqlvars[1].relname = "TABLESCHEMAS";
+        xsqlvars[0] = new XSQLVAR(ISCConstants.SQL_VARYING, 31, "TABLE_SCHEM", "TABLESCHEMAS");
+        xsqlvars[1] = new XSQLVAR(ISCConstants.SQL_VARYING, 31, "TABLE_CATALOG", "TABLESCHEMAS");
 
         List<byte[][]> rows = Collections.emptyList();
 
@@ -5967,12 +4989,8 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
         return iface.cast(this);
     }    
     
-    public boolean isAllCondition(String pattern) {
-        if ("%".equals(pattern)) {
-            //asks for everything, no condition needed
-            return true;
-        }
-        return false;
+    protected static boolean isAllCondition(String pattern) {
+        return "%".equals(pattern);
     }
 
     /**
@@ -5983,7 +5001,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
      * @return <code>true</code> if there are no wildcards in the pattern, 
      *         <code>false</code> otherwise
      */
-    public boolean hasNoWildcards(String pattern) {
+    public static boolean hasNoWildcards(String pattern) {
         if (pattern == null)
             return true;
 
@@ -6017,7 +5035,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
      * @param pattern The string to be stripped
      * @return pattern with all backslash-escapes removed
      */
-    public String stripEscape(String pattern) {
+    public static String stripEscape(String pattern) {
         StringBuilder stripped = new StringBuilder(pattern.length());
         for (int pos = 0; pos < pattern.length(); pos++) {
             if (pattern.charAt(pos) != '\\') {
@@ -6061,7 +5079,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
      * @return a copy of <code>pattern</code> with leading and trailing quote 
      * removed
      */
-    public String stripQuotes(String pattern, boolean uppercase) {
+    public static String stripQuotes(String pattern, boolean uppercase) {
         if ((pattern.length() >= 2)
             && (pattern.charAt(0) == '\"')
             && (pattern.charAt(pattern.length() - 1) == '\"'))
@@ -6149,25 +5167,21 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
         */
     }
 
-    protected class Clause {
-        private String condition = "";
-        private String value;
-        private String originalCaseValue;
+    protected static final class Clause {
+        private final String condition;
+        private final String value;
+        private final String originalCaseValue;
 
         public Clause (String columnName, String pattern) {
-            if (pattern == null) {
-                return;
-            }
-            else if (isAllCondition(pattern)) {
-                //do nothing to tableCondition
-                return;
-            }
-            else if (hasNoWildcards(pattern)) {
+            if (pattern == null || isAllCondition(pattern)) {
+                condition = "";
+                value = null;
+                originalCaseValue = null;
+            } else if (hasNoWildcards(pattern)) {
                 value = stripQuotes(stripEscape(pattern), true);
                 originalCaseValue = stripQuotes(stripEscape(pattern), false);
                 condition = columnName + " = ? and ";
-            }
-            else {
+            } else {
                 value = stripQuotes(pattern, true) + SPACES + "%";
                 originalCaseValue = stripQuotes(pattern, false) + SPACES + "%";
                 condition = columnName + " || '" + SPACES + "' like ? escape '\\' and ";
@@ -6187,11 +5201,8 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
         }
     }
 
-    protected byte[] getBytes(String value){
-        if (value !=null)
-            return value.getBytes();
-        else
-            return null;
+    protected static byte[] getBytes(String value){
+        return value != null ? value.getBytes(): null;
     }
     
     private FBPreparedStatement getStatement(String sql) throws SQLException {
@@ -6234,7 +5245,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
      * @throws SQLException
      *             if a database access error occurs
      */
-    public ResultSet doQuery(String sql, List<String> params)
+    protected ResultSet doQuery(String sql, List<String> params)
             throws SQLException {
         
         FBPreparedStatement s = getStatement(sql);
@@ -6269,24 +5280,29 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
         return RowIdLifetime.ROWID_UNSUPPORTED;
     }
 
-    public int getJDBCMajorVersion() {
-        return 4;
-    }
-    
-    public int getJDBCMinorVersion() {
+    private static final int JDBC_MAJOR_VERSION = 4;
+    private static final int JDBC_MINOR_VERSION;
+    static {
+        // JDK 1.6 (or lower): JDBC 4.0
+        int tempVersion = 0;
         try {
-            String javaImplementation = getSystemPropertyPrivileged("java.implementation.version");
+            String javaImplementation = getSystemPropertyPrivileged("java.specification.version");
             if (javaImplementation != null && "1.7".compareTo(javaImplementation) <= 0) {
                 // JDK 1.7 or higher: JDBC 4.1
-                return 1;
-            } else {
-                // JDK 1.6 (or lower): JDBC 4.0
-                return 0;
+                tempVersion = 1;
             }
         } catch (RuntimeException ex) {
             // default to 0 (JDBC 4.0) when privileged call fails
-            return 0;
         }
+        JDBC_MINOR_VERSION = tempVersion;
+    }
+
+    public int getJDBCMajorVersion() {
+        return JDBC_MAJOR_VERSION;
+    }
+
+    public int getJDBCMinorVersion() {
+        return JDBC_MINOR_VERSION;
     }
     
     private static String getSystemPropertyPrivileged(final String propertyName) {
@@ -6296,5 +5312,4 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
            } 
         });
     }
-    
 }
