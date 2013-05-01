@@ -60,6 +60,7 @@ public class FBResultSet implements ResultSet, FirebirdResultSet, Synchronizable
     private volatile boolean closed = false;
 
     //might be a bit of a kludge, or a useful feature.
+    // TODO Consider subclassing for metadata resultsets (instead of using metaDataQuery parameter and/or parameter taking xsqlvars and rows)
     private boolean trimStrings;
 
     private SQLWarning firstWarning;
@@ -151,14 +152,15 @@ public class FBResultSet implements ResultSet, FirebirdResultSet, Synchronizable
                 rsType = ResultSet.TYPE_SCROLL_INSENSITIVE;
             }
             
-            if (updatableCursor)  
+            if (updatableCursor) {
                 fbFetcher = new FBUpdatableCursorFetcher(gdsHelper,
                         fbStatement, stmt, this, fbStatement.getMaxRows(),
                         fbStatement.getFetchSize());
-            else
+            } else {
                 fbFetcher = new FBStatementFetcher(gdsHelper,
                         fbStatement, stmt, this, fbStatement.getMaxRows(),
                         fbStatement.getFetchSize());
+            }
         }
         
         if (rsConcurrency == ResultSet.CONCUR_UPDATABLE) {
@@ -173,30 +175,43 @@ public class FBResultSet implements ResultSet, FirebirdResultSet, Synchronizable
         }
     }
 
+    /**
+     * Creates a FBResultSet with the columns specified by <code>xsqlvars</code> and the data in <code>rows</code>.
+     * <p>
+     * This constructor is intended for metadata resultsets, but can be used for other purposes as well.
+     * </p>
+     * <p>
+     * Current implementation will ensure that strings will be trimmed on retrieval.
+     * </p>
+     *
+     * @param xsqlvars Column definition
+     * @param rows Row data
+     * @throws SQLException
+     */
     public FBResultSet(XSQLVAR[] xsqlvars, List<byte[][]> rows) throws SQLException {
-        maxRows = 0;
         fbFetcher = new FBCachedFetcher(rows,this);
+        trimStrings = true;
         this.xsqlvars = xsqlvars;
         prepareVars(true);
     }
-    
+
     private void prepareVars(boolean cached) throws SQLException {
         fields = new FBField[xsqlvars.length];
         colNames = new HashMap<String, Integer>(xsqlvars.length, 1);
-        for (int i=0; i<xsqlvars.length; i++){
+        for (int i = 0; i < xsqlvars.length; i++) {
             final int fieldPosition = i;
-            
-              // anonymous implementation of the FieldDataProvider interface
-              FieldDataProvider dataProvider = new FieldDataProvider() {
-                  public byte[] getFieldData() {
-                      return row[fieldPosition];
-                  }
-                  
-                  public void setFieldData(byte[] data) {
-                      row[fieldPosition] = data;
-                  }
-              };
-              
+
+            // anonymous implementation of the FieldDataProvider interface
+            FieldDataProvider dataProvider = new FieldDataProvider() {
+                public byte[] getFieldData() {
+                    return row[fieldPosition];
+                }
+
+                public void setFieldData(byte[] data) {
+                    row[fieldPosition] = data;
+                }
+            };
+
             fields[i] = FBField.createField(xsqlvars[i], dataProvider, gdsHelper, cached);
         }
     }
