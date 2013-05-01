@@ -22,14 +22,11 @@ public class OODatabaseMetaData extends FBDatabaseMetaData {
 
     private static final String DEFAULT_SCHEMA = "DEFAULT";
 
+    @Override
     public ResultSet getSchemas() throws SQLException {
         XSQLVAR[] xsqlvars = new XSQLVAR[1];
 
-        xsqlvars[0] = new XSQLVAR();
-        xsqlvars[0].sqltype = ISCConstants.SQL_VARYING;
-        xsqlvars[0].sqllen = 31;
-        xsqlvars[0].sqlname = "TABLE_SCHEM";
-        xsqlvars[0].relname = "TABLESCHEMAS";
+        xsqlvars[0] = new XSQLVAR(ISCConstants.SQL_VARYING, 31, "TABLE_SCHEM", "TABLESCHEMAS");
 
         List<byte[][]> rows = new ArrayList<byte[][]>(1);
         rows.add(new byte[][] { getBytes(DEFAULT_SCHEMA) });
@@ -37,6 +34,7 @@ public class OODatabaseMetaData extends FBDatabaseMetaData {
         return new FBResultSet(xsqlvars, rows);
     }
 
+    @Override
     public ResultSet getTables(String catalog, String schemaPattern,
             String tableNamePattern, String[] types) throws SQLException {
 
@@ -55,6 +53,7 @@ public class OODatabaseMetaData extends FBDatabaseMetaData {
         return super.getTables(catalog, schemaPattern, tableNamePattern, types);
     }
 
+    @Override
     public ResultSet getColumns(String catalog, String schemaPattern,
             String tableNamePattern, String columnNamePattern)
             throws SQLException {
@@ -92,6 +91,7 @@ public class OODatabaseMetaData extends FBDatabaseMetaData {
             upperColumnNamePattern);
     }
 
+    @Override
     public ResultSet getBestRowIdentifier(String catalog, String schema,
             String table, int scope, boolean nullable) throws SQLException {
         if (DEFAULT_SCHEMA.equals(schema)) schema = null;
@@ -100,6 +100,7 @@ public class OODatabaseMetaData extends FBDatabaseMetaData {
             nullable);
     }
 
+    @Override
     public ResultSet getColumnPrivileges(String catalog, String schema,
             String table, String columnNamePattern) throws SQLException {
         if (DEFAULT_SCHEMA.equals(schema)) schema = null;
@@ -108,6 +109,7 @@ public class OODatabaseMetaData extends FBDatabaseMetaData {
             columnNamePattern);
     }
 
+    @Override
     public ResultSet getCrossReference(String primaryCatalog,
             String primarySchema, String primaryTable, String foreignCatalog,
             String foreignSchema, String foreignTable) throws SQLException {
@@ -119,6 +121,7 @@ public class OODatabaseMetaData extends FBDatabaseMetaData {
             primaryTable, foreignCatalog, foreignSchema, foreignTable);
     }
 
+    @Override
     public ResultSet getExportedKeys(String catalog, String schema, String table)
             throws SQLException {
         if (DEFAULT_SCHEMA.equals(schema)) schema = null;
@@ -126,6 +129,7 @@ public class OODatabaseMetaData extends FBDatabaseMetaData {
         return super.getExportedKeys(catalog, schema, table);
     }
 
+    @Override
     public ResultSet getImportedKeys(String catalog, String schema, String table)
             throws SQLException {
 
@@ -134,6 +138,7 @@ public class OODatabaseMetaData extends FBDatabaseMetaData {
         return super.getImportedKeys(catalog, schema, table);
     }
 
+    @Override
     public ResultSet getIndexInfo(String catalog, String schema, String table,
             boolean unique, boolean approximate) throws SQLException {
         if (DEFAULT_SCHEMA.equals(schema)) schema = null;
@@ -141,6 +146,7 @@ public class OODatabaseMetaData extends FBDatabaseMetaData {
         return super.getIndexInfo(catalog, schema, table, unique, approximate);
     }
 
+    @Override
     public ResultSet getPrimaryKeys(String catalog, String schema, String table)
             throws SQLException {
         if (DEFAULT_SCHEMA.equals(schema)) schema = null;
@@ -148,6 +154,7 @@ public class OODatabaseMetaData extends FBDatabaseMetaData {
         return super.getPrimaryKeys(catalog, schema, table);
     }
 
+    @Override
     public ResultSet getProcedureColumns(String catalog, String schemaPattern,
             String procedureNamePattern, String columnNamePattern)
             throws SQLException {
@@ -158,6 +165,7 @@ public class OODatabaseMetaData extends FBDatabaseMetaData {
             procedureNamePattern, columnNamePattern);
     }
 
+    @Override
     public ResultSet getProcedures(String catalog, String schemaPattern,
             String procedureNamePattern) throws SQLException {
         if (DEFAULT_SCHEMA.equals(schemaPattern)) schemaPattern = null;
@@ -166,6 +174,7 @@ public class OODatabaseMetaData extends FBDatabaseMetaData {
                 .getProcedures(catalog, schemaPattern, procedureNamePattern);
     }
 
+    @Override
     public ResultSet getSuperTables(String catalog, String schemaPattern,
             String tableNamePattern) throws SQLException {
         if (DEFAULT_SCHEMA.equals(schemaPattern)) schemaPattern = null;
@@ -173,6 +182,7 @@ public class OODatabaseMetaData extends FBDatabaseMetaData {
         return super.getSuperTables(catalog, schemaPattern, tableNamePattern);
     }
 
+    @Override
     public ResultSet getSuperTypes(String catalog, String schemaPattern,
             String tableNamePattern) throws SQLException {
         if (DEFAULT_SCHEMA.equals(schemaPattern)) schemaPattern = null;
@@ -209,6 +219,7 @@ public class OODatabaseMetaData extends FBDatabaseMetaData {
         " RDB$USER IN (CURRENT_ROLE, 'PUBLIC') AND RDB$FIELD_NAME IS NULL AND RDB$OBJECT_TYPE = 0 " + 
         "ORDER BY 3, 6";
 
+    @Override
     public ResultSet getTablePrivileges(String catalog, String schemaPattern,
             String tableNamePattern) throws SQLException {
         if (DEFAULT_SCHEMA.equals(schemaPattern)) schemaPattern = null;
@@ -257,18 +268,5 @@ public class OODatabaseMetaData extends FBDatabaseMetaData {
         }
         
         return processTablePrivileges(xsqlvars, rs);
-    }
-
-    public String stripEscape(String pattern) {
-        return super.stripEscape(pattern);
-    }
-
-    public String stripQuotes(String pattern) {
-        if ((pattern.length() >= 2) && (pattern.charAt(0) == '\"')
-                && (pattern.charAt(pattern.length() - 1) == '\"')) {
-            return pattern.substring(1, pattern.length() - 1);
-        } else {
-            return pattern;
-        }
     }
 }

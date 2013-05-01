@@ -199,8 +199,8 @@ public class FBStringField extends FBField {
     
     public byte[] getBytes() throws SQLException {
         if (getFieldData()==null) return BYTES_NULL_VALUE;
-
-        return getFieldData();
+        // protect against unintentional modification of cached or shared byte-arrays (eg in DatabaseMetaData)
+        return getFieldData().clone();
     }
 
     //----- getDate, getTime and getTimestamp code
