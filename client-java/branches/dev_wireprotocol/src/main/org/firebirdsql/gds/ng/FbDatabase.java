@@ -48,7 +48,7 @@ public interface FbDatabase {
     void detach() throws FbException;
 
     /**
-     * Creates a new database.
+     * Creates a new database, connection remains attached to database.
      * 
      * @param dpb
      *            DatabaseParameterBuffer with all required values
@@ -56,7 +56,7 @@ public interface FbDatabase {
      *            Path or alias of the database
      * @throws FbException
      */
-    void createDatabase(DatabaseParameterBuffer dpb, String database) throws FbException;
+    void createDatabase(DatabaseParameterBuffer dpb, String databaseName) throws FbException;
 
     /**
      * Drops (and deletes) the currently attached database.
@@ -114,7 +114,12 @@ public interface FbDatabase {
     /**
      * @return The database dialect
      */
-    short getDialect();
+    short getDatabaseDialect();
+
+    /**
+     * @return The client connection dialect
+     */
+    short getConnectionDialect();
 
     /**
      * @return The database handle value

@@ -23,12 +23,12 @@ package org.firebirdsql.gds.ng.wire.version10;
 import java.io.IOException;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
 
 import org.firebirdsql.gds.DatabaseParameterBuffer;
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.TransactionParameterBuffer;
 import org.firebirdsql.gds.impl.DatabaseParameterBufferExtension;
-import org.firebirdsql.gds.impl.wire.WireProtocolConstants;
 import org.firebirdsql.gds.impl.wire.XdrInputStream;
 import org.firebirdsql.gds.impl.wire.XdrOutputStream;
 import org.firebirdsql.gds.impl.wire.Xdrable;
@@ -47,17 +47,17 @@ import static org.firebirdsql.gds.impl.wire.WireProtocolConstants.*;
  */
 public class V10Database implements FbWireDatabase, TransactionEventListener {
 
-    private static Logger log = LoggerFactory.getLogger(V10Database.class, false);
+    private static final Logger log = LoggerFactory.getLogger(V10Database.class, false);
 
     private final Object syncObject = new Object();
     private final XdrStreamHolder xdrStreamHolder;
     private final AtomicBoolean attached = new AtomicBoolean();
     private final AtomicInteger transactionCount = new AtomicInteger();
     private final ProtocolDescriptor protocolDescriptor;
-    private WireConnection connection;
+    private final AtomicReference<WireConnection> connection;
     private WarningMessageCallback warningCallback;
     private int handle;
-    private short dialect;
+    private short databaseDialect;
     private int odsMajor;
     private int odsMinor;
     private String versionString;
@@ -72,18 +72,24 @@ public class V10Database implements FbWireDatabase, TransactionEventListener {
      *            used for creating further dependent objects).
      */
     protected V10Database(WireConnection connection, ProtocolDescriptor descriptor) {
-        this.connection = connection;
+        this.connection = new AtomicReference<WireConnection>(connection);
         xdrStreamHolder = new XdrStreamHolder(connection);
         protocolDescriptor = descriptor;
     }
 
     @Override
-    public short getDialect() {
-        return dialect;
+    public short getDatabaseDialect() {
+        return databaseDialect;
+    }
+
+    @Override
+    public short getConnectionDialect() {
+        // TODO
+        return -1;
     }
 
     /**
-     * Sets the dialect of the connection (= usually equal to database).
+     * Sets the dialect of the database.
      * <p>
      * This method should only be called by this instance.
      * </p>
@@ -91,8 +97,8 @@ public class V10Database implements FbWireDatabase, TransactionEventListener {
      * @param dialect
      *            Dialect of the database/connection
      */
-    protected void setDialect(short dialect) {
-        this.dialect = dialect;
+    protected void setDatabaseDialect(short dialect) {
+        this.databaseDialect = dialect;
     }
 
     @Override
@@ -185,23 +191,41 @@ public class V10Database implements FbWireDatabase, TransactionEventListener {
 
     @Override
     public boolean isAttached() {
-        synchronized (getSynchronizationObject()) {
-            return attached.get() && connection != null && connection.isConnected();
-        }
+        WireConnection actualConnection = connection.get();
+        return attached.get() && actualConnection != null && actualConnection.isConnected();
     }
 
     @Override
     public void attach(DatabaseParameterBuffer dpb, String databaseName) throws FbException {
+        attachOrCreate(dpb, databaseName, false);
+    }
+
+    /**
+     * @param dpb
+     *            Database parameter buffer
+     * @param databaseName
+     *            Name of the database file or alias
+     * @param create
+     *            <code>true</code> create database, <code>false</code> only
+     *            attach
+     * @throws FbException
+     *             For errors during attach or create
+     */
+    protected void attachOrCreate(DatabaseParameterBuffer dpb, String databaseName, boolean create) throws FbException {
+        if (attached.get()) {
+            throw new FbException("Already attached to a database");
+        }
+        checkConnected();
         synchronized (getSynchronizationObject()) {
             try {
                 try {
-                    sendAttachToBuffer(dpb, databaseName);
+                    sendAttachOrCreateToBuffer(dpb, databaseName, create);
                     getXdrOut().flush();
                 } catch (IOException e) {
                     throw new FbException(ISCConstants.isc_net_write_err, e);
                 }
                 try {
-                    processAttachResponse(readGenericResponse());
+                    processAttachOrCreateResponse(readGenericResponse());
                 } catch (IOException e) {
                     throw new FbException(ISCConstants.isc_net_read_err, e);
                 }
@@ -215,39 +239,23 @@ public class V10Database implements FbWireDatabase, TransactionEventListener {
     }
 
     /**
-     * Sends the attach operation to the connection.
-     * 
-     * @param dpb
-     *            Database parameter buffer
-     * @param databaseName
-     *            Name of the database file or alias
-     * @throws FbException
-     *             If the connection is not open
-     * @throws IOException
-     *             For errors writing to the connection
-     */
-    protected void sendAttachToBuffer(DatabaseParameterBuffer dpb, String databaseName) throws FbException, IOException {
-        sendAttachOrCreateToBuffer(op_attach, dpb, databaseName);
-    }
-
-    /**
      * Sends the buffer for op_attach or op_create
      * 
-     * @param operation
-     *            {@link WireProtocolConstants.op_attach} or
-     *            {@link WireProtocolConstants.op_create}
      * @param dpb
      *            Database parameter buffer
      * @param databaseName
      *            Name of the database file or alias
+     * @param create
+     *            <code>true</code> create database, <code>false</code> only
+     *            attach
      * @throws FbException
      *             If the connection is not open
      * @throws IOException
      *             For errors writing to the connection
      */
-    protected void sendAttachOrCreateToBuffer(int operation, DatabaseParameterBuffer dpb, String databaseName)
+    protected void sendAttachOrCreateToBuffer(DatabaseParameterBuffer dpb, String databaseName, boolean create)
             throws FbException, IOException {
-        assert operation == op_attach || operation == op_create;
+        final int operation = create ? op_create : op_attach;
         final XdrOutputStream xdrOut = getXdrOut();
 
         String filenameCharset = dpb.getArgumentAsString(DatabaseParameterBufferExtension.FILENAME_CHARSET);
@@ -263,12 +271,12 @@ public class V10Database implements FbWireDatabase, TransactionEventListener {
     }
 
     /**
-     * Processes the response from the server to the attach operation.
+     * Processes the response from the server to the attach or create operation.
      * 
      * @param genericResponse
      *            GenericResponse received from the server.
      */
-    protected void processAttachResponse(GenericResponse genericResponse) {
+    protected void processAttachOrCreateResponse(GenericResponse genericResponse) {
         handle = genericResponse.getObjectHandle();
     }
 
@@ -284,17 +292,17 @@ public class V10Database implements FbWireDatabase, TransactionEventListener {
      */
     protected void afterAttachActions() throws FbException {
         getDatabaseInfo(DESCRIBE_DATABASE_INFO_BLOCK, 1024, new DatabaseInformationProcessor());
-        // During connect and attach the connectTimeout might be set as the socketTimeout, now reset to 'normal' socketTimeout
-        connection.resetSocketTimeout();
+        // During connect and attach the socketTimeout might be set to the connectTimeout, now reset to 'normal' socketTimeout
+        connection.get().resetSocketTimeout();
     }
 
     @Override
     public void detach() throws FbException {
-        // TODO Explicit exception on already detached?
-
+        checkConnected();
         synchronized (getSynchronizationObject()) {
             if (getTransactionCount() > 0) {
-                // TODO: Change exception creation
+                // TODO: Change exception creation?
+                // TODO: Rollback transactions instead?
                 FbException fbException = new FbException(ISCConstants.isc_open_trans);
                 fbException.setNext(new FbException(ISCConstants.isc_arg_number, getTransactionCount()));
                 throw fbException;
@@ -302,8 +310,10 @@ public class V10Database implements FbWireDatabase, TransactionEventListener {
 
             final XdrOutputStream xdrOut = getXdrOut();
             try {
-                xdrOut.writeInt(op_detach);
-                xdrOut.writeInt(getHandle());
+                if (attached.get()) {
+                    xdrOut.writeInt(op_detach);
+                    xdrOut.writeInt(getHandle());
+                }
                 xdrOut.writeInt(op_disconnect);
                 xdrOut.flush();
 
@@ -328,7 +338,6 @@ public class V10Database implements FbWireDatabase, TransactionEventListener {
      */
     protected void safelyDetach() {
         try {
-            // TODO Force rollback of any active transaction?
             detach();
         } catch (Exception ex) {
             // ignore, but log
@@ -337,57 +346,28 @@ public class V10Database implements FbWireDatabase, TransactionEventListener {
     }
 
     public void closeConnection() throws IOException {
+        WireConnection actualConnection = connection.get();
+        if (actualConnection == null || !actualConnection.isConnected()) return;
         synchronized (getSynchronizationObject()) {
-            if (connection != null) {
-                try {
-                    connection.disconnect();
-                } finally {
-                    // Clear members
-                    connection = null;
-                    versionString = null;
-                    warningCallback = null;
-                }
+            try {
+                actualConnection.disconnect();
+            } finally {
+                // Clear members
+                connection.set(null);
+                versionString = null;
+                warningCallback = null;
             }
         }
     }
 
     @Override
-    public void createDatabase(DatabaseParameterBuffer dpb, String database) throws FbException {
-        synchronized (getSynchronizationObject()) {
-            try {
-                try {
-                    sendCreateToBuffer(dpb, database);
-                    getXdrOut().flush();
-                } catch (IOException ioex) {
-                    throw new FbException(ISCConstants.isc_net_write_err, ioex);
-                }
-                try {
-                    processCreateResponse(readGenericResponse());
-                    detach();
-                } catch (IOException ioex) {
-                    throw new FbException(ISCConstants.isc_net_read_err, ioex);
-                }
-            } catch (FbException ex) {
-                try {
-                    closeConnection();
-                } catch (Exception ex2) {
-                    // ignore
-                }
-                throw ex;
-            }
-        }
-    }
-
-    protected void sendCreateToBuffer(DatabaseParameterBuffer dpb, String databaseName) throws FbException, IOException {
-        sendAttachOrCreateToBuffer(op_create, dpb, databaseName);
-    }
-
-    protected void processCreateResponse(GenericResponse genericResponse) {
-        handle = genericResponse.getObjectHandle();
+    public void createDatabase(DatabaseParameterBuffer dpb, String databaseName) throws FbException {
+        attachOrCreate(dpb, databaseName, true);
     }
 
     @Override
     public void dropDatabase() throws FbException {
+        checkAttached();
         synchronized (getSynchronizationObject()) {
             try {
                 try {
@@ -405,10 +385,7 @@ public class V10Database implements FbWireDatabase, TransactionEventListener {
                 }
             } finally {
                 try {
-                    // TODO
-                    closeConnection();
-                } catch (Exception ex) {
-                    // ignore
+                    safelyDetach();
                 } finally {
                     attached.set(false);
                 }
@@ -438,7 +415,6 @@ public class V10Database implements FbWireDatabase, TransactionEventListener {
     public <T> T getDatabaseInfo(byte[] requestItems, int bufferLength, InfoProcessor<T> infoProcessor)
             throws FbException {
         byte[] responseBuffer = getDatabaseInfo(requestItems, bufferLength);
-
         return infoProcessor.process(responseBuffer);
     }
 
@@ -447,12 +423,15 @@ public class V10Database implements FbWireDatabase, TransactionEventListener {
      * 
      * @param requestItems
      *            Information items to request
-     * @param bufferLength
-     *            Response buffer length to use
+     * @param maxBufferLength
+     *            Maximum response buffer length to use
+     * @return The response buffer (note: length is the actual length of the
+     *         response, not <code>maxBufferLength</code>
      * @throws FbException
      *             For errors retrieving the information.
      */
-    protected byte[] getDatabaseInfo(byte[] requestItems, int bufferLength) throws FbException {
+    protected byte[] getDatabaseInfo(byte[] requestItems, int maxBufferLength) throws FbException {
+        checkAttached();
         synchronized (getSynchronizationObject()) {
             try {
                 final XdrOutputStream xdrOut = getXdrOut();
@@ -460,7 +439,7 @@ public class V10Database implements FbWireDatabase, TransactionEventListener {
                 xdrOut.writeInt(getHandle());
                 xdrOut.writeInt(0); // incarnation
                 xdrOut.writeBuffer(requestItems);
-                xdrOut.writeInt(bufferLength);
+                xdrOut.writeInt(maxBufferLength);
 
                 xdrOut.flush();
             } catch (IOException ex) {
@@ -469,10 +448,9 @@ public class V10Database implements FbWireDatabase, TransactionEventListener {
             try {
                 GenericResponse genericResponse = readGenericResponse();
                 byte[] data = genericResponse.getData();
-                int responseLength = Math.min(bufferLength, data.length);
-
-                // TODO Allocate responseLength responseBuffer instead?
-                final byte[] responseBuffer = new byte[bufferLength];
+                int responseLength = Math.min(maxBufferLength, data.length);
+                // TODO Can't we just return data?
+                final byte[] responseBuffer = new byte[responseLength];
                 System.arraycopy(data, 0, responseBuffer, 0, responseLength);
                 return responseBuffer;
             } catch (IOException ex) {
@@ -487,7 +465,6 @@ public class V10Database implements FbWireDatabase, TransactionEventListener {
         if (response instanceof GenericResponse) {
             processResponse(response);
         }
-
         return response;
     }
 
@@ -518,7 +495,6 @@ public class V10Database implements FbWireDatabase, TransactionEventListener {
     protected Response readSingleResponse() throws FbException, IOException {
         Response response = processOperation(getXdrIn().readNextOperation());
         processResponseWarnings(response);
-
         return response;
     }
 
@@ -529,7 +505,7 @@ public class V10Database implements FbWireDatabase, TransactionEventListener {
      *             For errors returned from the server.
      */
     protected void processResponse(Response response) throws FbException {
-        if (response != null && response instanceof GenericResponse) {
+        if (response instanceof GenericResponse) {
             GenericResponse genericResponse = (GenericResponse) response;
             FbException exception = genericResponse.getException();
             if (exception != null && !exception.isWarning()) {
@@ -768,7 +744,7 @@ public class V10Database implements FbWireDatabase, TransactionEventListener {
                     i += 2;
                     value = iscVaxInteger(info, i, len);
                     i += len;
-                    setDialect((short) value);
+                    setDatabaseDialect((short) value);
                     if (debug) log.debug("isc_info_db_sql_dialect:" + value);
                     break;
                 case ISCConstants.isc_info_ods_version:
@@ -806,6 +782,7 @@ public class V10Database implements FbWireDatabase, TransactionEventListener {
         }
     }
 
+    // TODO Current behavior is based on implementation in .NET Provider; this probably needs to be modified
     @Override
     public void transactionStateChanged(FbTransaction transaction, TransactionState newState,
             TransactionState previousState) {
@@ -821,6 +798,39 @@ public class V10Database implements FbWireDatabase, TransactionEventListener {
                 // do nothing
                 break;
             }
+        }
+    }
+
+    /**
+     * Checks if a physical connection to the server is established and if the
+     * connection is attached to a database.
+     * <p>
+     * This method calls {@link #checkConnected()}, so it is not necessary to
+     * call both.
+     * </p>
+     * 
+     * @throws FbException
+     *             If the not connected or attached.
+     */
+    protected final void checkAttached() throws FbException {
+        checkConnected();
+        if (!attached.get()) {
+            // TODO Update message / externalize + add SQLState
+            throw new FbException("The connection is not attached to a database");
+        }
+    }
+
+    /**
+     * Checks if a physical connection to the server is established.
+     * 
+     * @throws FbException
+     *             If not connected.
+     */
+    protected final void checkConnected() throws FbException {
+        WireConnection actualConnection = connection.get();
+        if (actualConnection == null || !actualConnection.isConnected()) {
+            // TODO Update message / externalize + add SQLState
+            throw new FbException("No connection established to the database server");
         }
     }
 }

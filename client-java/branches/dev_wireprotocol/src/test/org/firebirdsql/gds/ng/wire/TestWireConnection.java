@@ -31,10 +31,8 @@ import org.firebirdsql.common.FBTestProperties;
 import org.firebirdsql.gds.impl.jni.EmbeddedGDSImpl;
 import org.firebirdsql.gds.impl.jni.NativeGDSImpl;
 import org.firebirdsql.gds.ng.FbConnectTimeoutException;
+import org.firebirdsql.gds.ng.FbConnectionProperties;
 import org.firebirdsql.gds.ng.FbException;
-import org.firebirdsql.gds.ng.wire.ProtocolCollection;
-import org.firebirdsql.gds.ng.wire.ProtocolDescriptor;
-import org.firebirdsql.gds.ng.wire.WireConnection;
 import org.firebirdsql.gds.ng.wire.version10.Version10Descriptor;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -52,6 +50,14 @@ public class TestWireConnection extends FBJUnit4TestBase {
      * Delta for timeout, it is about 100-120 on my machine
      */
     private static final double TIMEOUT_DELTA_MS = 200;
+    
+    private final FbConnectionProperties connectionInfo;
+    {
+        connectionInfo = new FbConnectionProperties();
+        connectionInfo.setServerName(FBTestProperties.DB_SERVER_URL);
+        connectionInfo.setPortNumber(FBTestProperties.DB_SERVER_PORT);
+        connectionInfo.setDatabaseName(FBTestProperties.getDatabasePath());
+    }
 
     @BeforeClass
     public static void verifyTestType() {
@@ -67,8 +73,7 @@ public class TestWireConnection extends FBJUnit4TestBase {
      */
     @Test
     public void testIsConnectedNoConnection() {
-        WireConnection gdsConnection = new WireConnection(FBTestProperties.DB_SERVER_URL,
-                FBTestProperties.DB_SERVER_PORT);
+        WireConnection gdsConnection = new WireConnection(connectionInfo);
         assertFalse("Not connected, isConnected() should return false", gdsConnection.isConnected());
     }
 
@@ -78,8 +83,7 @@ public class TestWireConnection extends FBJUnit4TestBase {
      */
     @Test
     public void testIsConnectedWithConnection() throws FbException {
-        WireConnection gdsConnection = new WireConnection(FBTestProperties.DB_SERVER_URL,
-                FBTestProperties.DB_SERVER_PORT);
+        WireConnection gdsConnection = new WireConnection(connectionInfo);
         try {
             gdsConnection.socketConnect();
             assertTrue("Connected to existing server, isConnected() should return true", gdsConnection.isConnected());
@@ -99,8 +103,7 @@ public class TestWireConnection extends FBJUnit4TestBase {
      */
     @Test
     public void testIsConnectedAfterDisconnect() throws Exception {
-        WireConnection gdsConnection = new WireConnection(FBTestProperties.DB_SERVER_URL,
-                FBTestProperties.DB_SERVER_PORT);
+        WireConnection gdsConnection = new WireConnection(connectionInfo);
         gdsConnection.socketConnect();
         gdsConnection.disconnect();
         
@@ -113,13 +116,12 @@ public class TestWireConnection extends FBJUnit4TestBase {
     @Test
     public void testIdentifyExistingDb() throws FbException {
         ProtocolDescriptor expectedProtocol = new Version10Descriptor();
-        WireConnection gdsConnection = new WireConnection(FBTestProperties.DB_SERVER_URL,
-                FBTestProperties.DB_SERVER_PORT);
+        WireConnection gdsConnection = new WireConnection(connectionInfo, ProtocolCollection.create(expectedProtocol));
         try {
             gdsConnection.socketConnect();
             assertTrue(gdsConnection.isConnected());
 
-            FbWireDatabase database = gdsConnection.identify(FBTestProperties.getDatabasePath());
+            FbWireDatabase database = gdsConnection.identify();
             
             assertEquals("Unexpected FbWireDatabase implementation",
                     org.firebirdsql.gds.ng.wire.version10.V10Database.class, database.getClass());
@@ -144,8 +146,9 @@ public class TestWireConnection extends FBJUnit4TestBase {
     public void testConnectTimeout_nonExistentServer() {
         long startTime = System.currentTimeMillis();
         try {
-            WireConnection gdsConnection = new WireConnection(NON_EXISTENT_IP, FBTestProperties.DB_SERVER_PORT, -1, 2,
-                    ProtocolCollection.getDefaultCollection());
+            connectionInfo.setServerName(NON_EXISTENT_IP);
+            connectionInfo.setConnectTimeout(2);
+            WireConnection gdsConnection = new WireConnection(connectionInfo);
             gdsConnection.socketConnect();
             
             fail("Expected connection to fail");
@@ -174,10 +177,12 @@ public class TestWireConnection extends FBJUnit4TestBase {
 
         long startTime = System.currentTimeMillis();
         try {
-            WireConnection gdsConnection = new WireConnection("localhost", server.getPort(), -1, 2,
-                    ProtocolCollection.getDefaultCollection());
+            connectionInfo.setPortNumber(server.getPort());
+            connectionInfo.setDatabaseName("somedb");
+            connectionInfo.setConnectTimeout(2);
+            WireConnection gdsConnection = new WireConnection(connectionInfo);
             gdsConnection.socketConnect();
-            gdsConnection.identify("somedb");
+            gdsConnection.identify();
             
             fail("Expected connection to fail");
         } catch (FbConnectTimeoutException e) {
@@ -208,10 +213,12 @@ public class TestWireConnection extends FBJUnit4TestBase {
 
         long startTime = System.currentTimeMillis();
         try {
-            WireConnection gdsConnection = new WireConnection("localhost", server.getPort());
-            gdsConnection.setSocketTimeout(2000);
+            connectionInfo.setPortNumber(server.getPort());
+            connectionInfo.setDatabaseName("somedb");
+            connectionInfo.setSoTimeout(2000);
+            WireConnection gdsConnection = new WireConnection(connectionInfo);
             gdsConnection.socketConnect();
-            gdsConnection.identify("somedb");
+            gdsConnection.identify();
             
             fail("Expected connection to fail");
         } catch (FbConnectTimeoutException e) {
@@ -237,8 +244,7 @@ public class TestWireConnection extends FBJUnit4TestBase {
      */
     @Test(expected = FbException.class)
     public void testUnconnected_CreateXdrIn() throws Exception {
-        WireConnection gdsConnection = new WireConnection(FBTestProperties.DB_SERVER_URL,
-                FBTestProperties.DB_SERVER_PORT);
+        WireConnection gdsConnection = new WireConnection(connectionInfo);
         gdsConnection.getXdrIn();
     }
 
@@ -248,8 +254,7 @@ public class TestWireConnection extends FBJUnit4TestBase {
      */
     @Test(expected = FbException.class)
     public void testUnconnected_CreateXdrOut() throws Exception {
-        WireConnection gdsConnection = new WireConnection(FBTestProperties.DB_SERVER_URL,
-                FBTestProperties.DB_SERVER_PORT);
+        WireConnection gdsConnection = new WireConnection(connectionInfo);
         gdsConnection.getXdrOut();
     }
 
@@ -259,8 +264,7 @@ public class TestWireConnection extends FBJUnit4TestBase {
      */
     @Test
     public void testUnconnected_Disconnect() throws Exception {
-        WireConnection gdsConnection = new WireConnection(FBTestProperties.DB_SERVER_URL,
-                FBTestProperties.DB_SERVER_PORT);
+        WireConnection gdsConnection = new WireConnection(connectionInfo);
         gdsConnection.disconnect();
     }
 }
