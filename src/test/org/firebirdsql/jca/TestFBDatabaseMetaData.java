@@ -40,6 +40,8 @@ import static org.firebirdsql.common.FBTestProperties.*;
  */
 public class TestFBDatabaseMetaData extends TestXABase {
 
+    // TODO Move class to org.firebirdsql.jdbc and find out why it extends TestXABase
+
     private FBConnection c;
     private Statement s;
     private DatabaseMetaData dmd;
