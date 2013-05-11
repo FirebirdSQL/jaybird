@@ -45,7 +45,6 @@
         <include name="release_notes.html"/>
       </fileset>
       <fileset dir=".">
-        <include name="ChangeLog"/>
         <include name="CONTRIBUTING"/>
       </fileset>
       <fileset dir="native">
