@@ -48,6 +48,7 @@ public class TestFBEventManager extends FBTestBase {
         }
         eventManager.setUser(DB_USER);
         eventManager.setPassword(DB_PASSWORD);
+        eventManager.setPort(DB_SERVER_PORT);
         
         // have to resolve relative path to the absolute one
         File tempFile = new File(getDatabasePath());

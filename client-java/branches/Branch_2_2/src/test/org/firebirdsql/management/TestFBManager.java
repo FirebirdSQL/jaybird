@@ -37,9 +37,14 @@ public class TestFBManager extends FBTestBase {
         super(name);
     }
 
-    public static Test suite() {
+    @Override
+    public void setUp() {
+        // We don't want the setup in FBTestBase
+    }
 
-        return new TestSuite(TestFBManager.class);
+    @Override
+    public void tearDown() {
+        // We don't want the teardown in FBTestBase
     }
 
     public void testStart() throws Exception {
@@ -55,27 +60,24 @@ public class TestFBManager extends FBTestBase {
         m.setServer(DB_SERVER_URL);
         m.setPort(DB_SERVER_PORT);
         m.start();
+        // Adding .fdb suffix to prevent conflicts with other tests if drop fails
+        final String databasePath = getDatabasePath() + ".fdb";
         // check create
-        // m.createDatabase(getdbpath(DB_NAME + ".fdb"), DB_USER, DB_PASSWORD);
-        m.createDatabase(DB_NAME + ".fdb", DB_USER, DB_PASSWORD);
+        m.createDatabase(databasePath, DB_USER, DB_PASSWORD);
         
         // check create with set forceCreate
         m.setForceCreate(true);
-        // m.createDatabase(getdbpath(DB_NAME + ".fdb"), DB_USER, DB_PASSWORD);
-        m.createDatabase(DB_NAME + ".fdb", DB_USER, DB_PASSWORD);
+        m.createDatabase(databasePath, DB_USER, DB_PASSWORD);
         
         assertTrue("Must report that database exists", m.isDatabaseExists(
-            DB_NAME + ".fdb", DB_USER, DB_PASSWORD));
+                databasePath, DB_USER, DB_PASSWORD));
         
         // check drop
-        m.dropDatabase(DB_NAME + ".fdb", DB_USER, DB_PASSWORD);
+        m.dropDatabase(databasePath, DB_USER, DB_PASSWORD);
         
-        assertTrue("Must report that database exists", !m.isDatabaseExists(
-            DB_NAME + ".fdb", DB_USER, DB_PASSWORD));
+        assertTrue("Must report that database does not exist", !m.isDatabaseExists(
+                databasePath, DB_USER, DB_PASSWORD));
         
         m.stop();
     }
-
-
-
 }
