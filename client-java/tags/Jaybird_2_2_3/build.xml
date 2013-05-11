@@ -1,0 +1,31 @@
+<?xml version="1.0"?>
+
+<!-- ======================================================================= -->
+<!-- JDBC-JCA Driver for Firebird build file                                -->
+<!-- ======================================================================= -->
+
+<!DOCTYPE project [
+  <!ENTITY init     SYSTEM "./build/init.xml">
+  <!ENTITY util     SYSTEM "./build/util.xml">
+  <!ENTITY compile  SYSTEM "./build/compile.xml">
+  <!ENTITY archive  SYSTEM "./build/archive.xml">
+  <!ENTITY deploy   SYSTEM "./build/deploy.xml">
+  <!ENTITY test     SYSTEM "./build/test.xml">
+  <!ENTITY dist     SYSTEM "./build/dist.xml">
+]>
+       
+<project name="FirebirdSQL" default="tests-report-html-pure-java" basedir=".">
+	&init;
+	&util;
+	&compile;
+	&archive;
+	&deploy;
+	&test;
+	&dist;
+</project>
+
+
+
+
+
+
