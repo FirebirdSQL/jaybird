@@ -49,9 +49,6 @@
         <include name="release_notes.pdf"/>
         <include name="release_notes.html"/>
       </fileset>
-      <fileset dir=".">
-        <include name="ChangeLog"/>
-      </fileset>
       <fileset dir="native">
         <include name="**/*"/>
       </fileset>
