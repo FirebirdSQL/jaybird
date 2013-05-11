@@ -30,12 +30,13 @@ package org.firebirdsql.gds.impl;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
+
+import javax.security.auth.Subject;
 
 import org.firebirdsql.gds.GDSException;
 import org.firebirdsql.gds.IscDbHandle;
-import org.firebirdsql.gds.IscTrHandle;
+
 
 /**
  * Abstract implementation of {@link org.firebirdsql.gds.IscDbHandle} interface.
@@ -44,15 +45,28 @@ import org.firebirdsql.gds.IscTrHandle;
  */
 public abstract class AbstractIscDbHandle implements IscDbHandle {
     
+    // TODO: Consider to introduce generics on isc_tr_handle_impl (so methods can be moved up from isc_db_handle_impl)
+
     private volatile boolean invalid;
     private int rdb_id;
-    private final List<GDSException> rdb_warnings = Collections.synchronizedList(new ArrayList<GDSException>());
+    private Subject subject;
+    private List rdb_warnings = new ArrayList();
     private int dialect;
     private int protocol;
     private GDSServerVersion serverVersion;
     private int ODSMajorVersion;
     private int ODSMinorVersion;
-    protected final Collection<IscTrHandle> rdb_transactions = Collections.synchronizedList(new ArrayList<IscTrHandle>());
+    private int resp_object;
+    private byte[] resp_data;
+    protected Collection rdb_transactions = new ArrayList();
+    private long resp_blob_id;
+    
+    protected AbstractIscDbHandle() {
+    }
+    
+    protected AbstractIscDbHandle(byte[] defaultResp_data) {
+        resp_data = defaultResp_data;
+    }
     
     public int getDatabaseProductMajorVersion() {
         return serverVersion.getMajorVersion();
@@ -114,6 +128,11 @@ public abstract class AbstractIscDbHandle implements IscDbHandle {
         return !invalid;
     }
 
+    protected void checkValidity() {
+        if (invalid)
+            throw new IllegalStateException("This database handle is invalid and cannot be used anymore.");
+    }
+
     public void setRdbId(int rdb_id) {
         checkValidity();
         this.rdb_id = rdb_id;
@@ -124,21 +143,49 @@ public abstract class AbstractIscDbHandle implements IscDbHandle {
         return rdb_id;
     }
 
-    public List<GDSException> getWarnings() {
+    public void setSubject(Subject subject) {
+        this.subject = subject;
+    }
+
+    public Subject getSubject() {
+        return subject;
+    }
+
+    public List getWarnings() {
         checkValidity();
         synchronized (rdb_warnings) {
-            return new ArrayList<GDSException>(rdb_warnings);
+            return new ArrayList(rdb_warnings);
         }
     }
 
     public void addWarning(GDSException warning) {
         checkValidity();
-        rdb_warnings.add(warning);
+        synchronized (rdb_warnings) {
+            rdb_warnings.add(warning);
+        }
     }
 
     public void clearWarnings() {
         checkValidity();
-        rdb_warnings.clear();
+        synchronized (rdb_warnings) {
+            rdb_warnings.clear();
+        }
+    }
+
+    public void setResp_object(int value) {
+        resp_object = value;
+    }
+
+    public int getResp_object() {
+        return resp_object;
+    }
+
+    public void setResp_data(byte[] value) {
+        resp_data = value;
+    }
+
+    public byte[] getResp_data() {
+        return resp_data;
     }
 
     public boolean hasTransactions() {
@@ -146,10 +193,8 @@ public abstract class AbstractIscDbHandle implements IscDbHandle {
         return !rdb_transactions.isEmpty();
     }
 
-    public Collection<IscTrHandle> getTransactions() {
-        synchronized (rdb_transactions) {
-            return new ArrayList<IscTrHandle>(rdb_transactions);
-        }
+    public Collection getTransactions() {
+        return new ArrayList(rdb_transactions);
     }
 
     public int getOpenTransactionCount() {
@@ -157,22 +202,16 @@ public abstract class AbstractIscDbHandle implements IscDbHandle {
         return rdb_transactions.size();
     }
 
-    public void addTransaction(IscTrHandle tr) {
-        checkValidity();
-        rdb_transactions.add(tr);
+    public void setResp_blob_id(long value) {
+        resp_blob_id = value;
     }
 
-    public void removeTransaction(IscTrHandle tr) {
-        checkValidity();
-        rdb_transactions.remove(tr);
+    public long getResp_blob_id() {
+        return resp_blob_id;
     }
     
     protected final synchronized void invalidateHandle() {
         invalid = true;
     }
-    
-    protected void checkValidity() {
-        if (invalid)
-            throw new IllegalStateException("This database handle is invalid and cannot be used anymore.");
-    }
+   
 }

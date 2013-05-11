@@ -166,7 +166,7 @@ public class FBRowUpdater implements FirebirdRowUpdater  {
         this.processing = false;
     }
 
-    private void deallocateStatement(AbstractIscStmtHandle handle, SQLExceptionChainBuilder<SQLException> chain) {
+    private void deallocateStatement(AbstractIscStmtHandle handle, SQLExceptionChainBuilder chain) {
     	try {
     		if (handle != null)
     			gdsHelper.closeStatement(handle, true);
@@ -177,7 +177,7 @@ public class FBRowUpdater implements FirebirdRowUpdater  {
     
     public void close() throws SQLException {
     	
-    	SQLExceptionChainBuilder<SQLException> chain = new SQLExceptionChainBuilder<SQLException>();
+    	SQLExceptionChainBuilder chain = new SQLExceptionChainBuilder();
     	deallocateStatement(selectStatement, chain);
     	deallocateStatement(insertStatement, chain);
     	deallocateStatement(updateStatement, chain);
@@ -287,9 +287,9 @@ public class FBRowUpdater implements FirebirdRowUpdater  {
         }
     }
     
-    private void appendWhereClause(StringBuilder sb, int[] parameterMask) {
+    private void appendWhereClause(StringBuffer sb, int[] parameterMask) {
         sb.append("WHERE");
-        sb.append('\n');
+        sb.append("\n");
         
         // handle the RDB$DB_KEY case first
         boolean hasDbKey = false;
@@ -315,17 +315,17 @@ public class FBRowUpdater implements FirebirdRowUpdater  {
                 sb.append("AND");
             
             sb.append("\n\t");
-            sb.append('"').append(xsqlvars[i].sqlname).append("\" = ").append('?');
+            sb.append("\"").append(xsqlvars[i].sqlname).append("\" = ").append("?");
             
             first = false;
         }
     }
     
     private String buildUpdateStatement(int[] parameterMask) {
-        StringBuilder sb = new StringBuilder();
+        StringBuffer sb = new StringBuffer();
         
-        sb.append("UPDATE ").append(tableName).append('\n');
-        sb.append("SET").append('\n');
+        sb.append("UPDATE ").append(tableName).append("\n");
+        sb.append("SET").append("\n");
         
         boolean first = true;
         for (int i = 0; i < xsqlvars.length; i++) {
@@ -333,35 +333,36 @@ public class FBRowUpdater implements FirebirdRowUpdater  {
                 continue;
             
             if (!first)
-                sb.append(',');
+                sb.append(",");
             
             sb.append("\n\t");
-            sb.append('"').append(xsqlvars[i].sqlname).append("\" = ").append('?');
+            sb.append("\"").append(xsqlvars[i].sqlname).append("\" = ").append("?");
             
             first = false;
         }
         
-        sb.append('\n');
+        sb.append("\n");
         appendWhereClause(sb, parameterMask);
         
         return sb.toString();
     }
     
     private String buildDeleteStatement(int[] parameterMask) {
-        StringBuilder sb = new StringBuilder();
+        StringBuffer sb = new StringBuffer();
         
-        sb.append("DELETE FROM ").append(tableName).append('\n');
+        sb.append("DELETE FROM ").append(tableName).append("\n");
         appendWhereClause(sb, parameterMask);
         
         return sb.toString();
     }
     
     private String buildInsertStatement() {
-        StringBuilder columns = new StringBuilder();
-        StringBuilder params = new StringBuilder();
+        StringBuffer sb = new StringBuffer();
         
-        StringBuilder sb = new StringBuilder("INSERT INTO ");
-        sb.append(tableName);
+        StringBuffer columns = new StringBuffer();
+        StringBuffer params = new StringBuffer();
+        
+        sb.append("INSERT INTO ").append(tableName);
         
         boolean first = true;
         for (int i = 0; i < xsqlvars.length; i++) {
@@ -370,32 +371,34 @@ public class FBRowUpdater implements FirebirdRowUpdater  {
                 continue;
             
             if (!first) {
-                columns.append(',');
-                params.append(',');
+                columns.append(", ");
+                params.append(", ");
             }
             
             columns.append(xsqlvars[i].sqlname);
-            params.append('?');
+            params.append("?");
             
             first = false;
         }
         
-        sb.append('(').append(columns).append(')');
-        sb.append(" VALUES ");
-        sb.append('(').append(params).append(')');
+        sb.append("(\n\t").append(columns).append("\n)");
+        sb.append("VALUES");
+        sb.append("(\n\t").append(params).append("\n)");
         
         return sb.toString();
     }
     
     private String buildSelectStatement(int[] parameterMask) {
-        StringBuilder sb = new StringBuilder("SELECT ");
-        StringBuilder columns = new StringBuilder();
+        StringBuffer sb = new StringBuffer();
+        StringBuffer columns = new StringBuffer();
+        
+        sb.append("SELECT");
         
         boolean first = true;
         for (int i = 0; i < xsqlvars.length; i++) {
             
             if (!first) 
-                columns.append(',');
+                columns.append(", ");
             
             // do special handling of RDB$DB_KEY, since Firebird returns
             // DB_KEY column name instead of the correct one
@@ -404,14 +407,14 @@ public class FBRowUpdater implements FirebirdRowUpdater  {
                     && xsqlvars[i].sqllen == 8)
                 columns.append("RDB$DB_KEY");
             else
-                columns.append('"').append(xsqlvars[i].sqlname).append('"');
+                columns.append("\"").append(xsqlvars[i].sqlname).append("\"");
             
             first = false;
         }
         
-        sb.append(columns).append('\n');
-        sb.append("FROM ");
-        sb.append(tableName).append(' ');
+        sb.append("\n\t").append(columns).append("\n");
+        sb.append("FROM");
+        sb.append("\n\t").append(tableName).append("\n");
         appendWhereClause(sb, parameterMask);
         return sb.toString();
     }

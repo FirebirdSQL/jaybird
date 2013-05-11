@@ -23,33 +23,33 @@ import org.firebirdsql.gds.IscSvcHandle;
 import org.firebirdsql.gds.GDSException;
 
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.LinkedList;
 import java.util.List;
 
 /**
  * ngds implementation for isc_svc_handle.
  */
-public final class isc_svc_handle_impl implements IscSvcHandle {
+class isc_svc_handle_impl implements IscSvcHandle {
 
-    private List<GDSException> warnings = Collections.synchronizedList(new LinkedList<GDSException>());
+    private List warnings = new ArrayList();
     private int handle = 0;
 
     public isc_svc_handle_impl() {
     }
 
-    public List<GDSException> getWarnings() {
-        synchronized (warnings) {
-            return new ArrayList<GDSException>(warnings);
+    public List getWarnings() {
+        synchronized (this.warnings) {
+            return new ArrayList(this.warnings);
         }
     }
 
     public void clearWarnings() {
-        warnings.clear();
+        synchronized (this.warnings) {
+            this.warnings.clear();
+        }
     }
 
     public synchronized boolean isValid() {
-        return handle != 0;
+        return this.handle != 0;
     }
 
     public synchronized boolean isNotValid() {
@@ -57,14 +57,16 @@ public final class isc_svc_handle_impl implements IscSvcHandle {
     }
 
     void setHandle(int value) {
-        handle = value;
+        this.handle = value;
     }
 
     int getHandle() {
-        return handle;
+        return this.handle;
     }
 
     void addWarning(GDSException warning) {
-        warnings.add(warning);
+        synchronized (this.warnings) {
+            this.warnings.add(warning);
+        }
     }
 }

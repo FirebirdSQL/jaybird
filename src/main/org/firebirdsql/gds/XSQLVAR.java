@@ -69,21 +69,6 @@ public class XSQLVAR {
 
     public XSQLVAR() {
     }
-
-    /**
-     * Constructor for metadata XSQLVAR.
-     *
-     * @param sqltype Column SQL type
-     * @param sqllen Column length
-     * @param sqlname Column name
-     * @param relname Column table
-     */
-    public XSQLVAR(int sqltype, int sqllen, String sqlname, String relname) {
-        this.sqltype = sqltype;
-        this.sqllen = sqllen;
-        this.sqlname = sqlname;
-        this.relname = relname;
-    }
     
     /**
      * Get a deep copy of this object.
@@ -147,20 +132,6 @@ public class XSQLVAR {
     }
 
     /**
-     * Encode a <code>short</code> value as a <code>byte</code> array in network-order(big-endian) representation.
-     * <p>
-     * NOTE: Implementation is identical to {@link #intToBytes(int)}
-     * </p>
-     *
-     * @param value The value to be encoded
-     * @return The value of <code>value</code> encoded as a
-     *         <code>byte</code> array
-     */
-    public static byte[] shortToBytes(short value) {
-        return intToBytes(value);
-    }
-
-    /**
      * Decode a <code>byte</code> array into a <code>short</code> value.
      *
      * @param byte_int The <code>byte</code> array to be decoded
@@ -179,22 +150,11 @@ public class XSQLVAR {
      *         <code>byte</code> array
      */
     public byte[] encodeInt(int value){
-        return intToBytes(value);
-    }
-
-    /**
-     * Encode an <code>int</code> value as a <code>byte</code> array in network-order(big-endian) representation.
-     *
-     * @param value The value to be encoded
-     * @return The value of <code>value</code> encoded as a
-     *         <code>byte</code> array
-     */
-    public static byte[] intToBytes(int value) {
         byte ret[] = new byte[4];
         ret[0] = (byte) ((value >>> 24) & 0xff);
         ret[1] = (byte) ((value >>> 16) & 0xff);
         ret[2] = (byte) ((value >>> 8) & 0xff);
-        ret[3] = (byte) ((value) & 0xff);
+        ret[3] = (byte) ((value >>> 0) & 0xff);
         return ret;
     }
 
@@ -210,7 +170,7 @@ public class XSQLVAR {
         int b2 = byte_int[1]&0xFF;
         int b3 = byte_int[2]&0xFF;
         int b4 = byte_int[3]&0xFF;
-        return ((b1 << 24) + (b2 << 16) + (b3 << 8) + b4);
+        return ((b1 << 24) + (b2 << 16) + (b3 << 8) + (b4 << 0));
     }
 
     /**
@@ -220,18 +180,7 @@ public class XSQLVAR {
      * @return The value of <code>value</code> encoded as a 
      *         <code>byte</code> array
      */
-    public byte[] encodeLong(long value){
-        return longToBytes(value);
-    }
-
-    /**
-     * Encode a <code>long</code> value as a <code>byte</code> array in network-order(big-endian) representation.
-     *
-     * @param value The value to be encoded
-     * @return The value of <code>value</code> encoded as a
-     *         <code>byte</code> array
-     */
-    public static byte[] longToBytes(long value) {
+    public  byte[] encodeLong(long value){
         byte[] ret = new byte[8];
         ret[0] = (byte) (value >>> 56 & 0xFF);
         ret[1] = (byte) (value >>> 48 & 0xFF);
@@ -240,9 +189,10 @@ public class XSQLVAR {
         ret[4] = (byte) (value >>> 24 & 0xFF);
         ret[5] = (byte) (value >>> 16 & 0xFF);
         ret[6] = (byte) (value >>>  8 & 0xFF);
-        ret[7] = (byte) (value & 0xFF);
+        ret[7] = (byte) (value >>>  0 & 0xFF);
         return ret;
     }
+
 
     /**
      * Decode a <code>byte</code> array into a <code>long</code> value.
@@ -251,7 +201,7 @@ public class XSQLVAR {
      * @return The <code>long</code> value of the decoded 
      *         <code>byte</code> array
      */
-    public long decodeLong(byte[] byte_int){
+    public  long decodeLong(byte[] byte_int){
         long b1 = byte_int[0]&0xFF;
         long b2 = byte_int[1]&0xFF;
         long b3 = byte_int[2]&0xFF;
@@ -261,7 +211,7 @@ public class XSQLVAR {
         long b7 = byte_int[6]&0xFF;
         long b8 = byte_int[7]&0xFF;
         return ((b1 << 56) + (b2 << 48) + (b3 << 40) + (b4 << 32) 
-        + (b5 << 24) + (b6 << 16) + (b7 << 8) + b8);
+        + (b5 << 24) + (b6 << 16) + (b7 << 8) + (b8 << 0));
     }
 
     /**

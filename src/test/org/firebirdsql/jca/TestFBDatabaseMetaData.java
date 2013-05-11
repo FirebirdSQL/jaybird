@@ -30,8 +30,6 @@ import javax.sql.DataSource;
 
 import org.firebirdsql.jdbc.*;
 
-import static org.firebirdsql.common.FBTestProperties.*;
-
 /**
  * Describe class <code>TestFBDatabaseMetaData</code> here.
  * 
@@ -40,9 +38,7 @@ import static org.firebirdsql.common.FBTestProperties.*;
  */
 public class TestFBDatabaseMetaData extends TestXABase {
 
-    // TODO Move class to org.firebirdsql.jdbc and find out why it extends TestXABase
-
-    private FBConnection c;
+    private AbstractConnection c;
     private Statement s;
     private DatabaseMetaData dmd;
     private LocalTransaction t;
@@ -55,7 +51,7 @@ public class TestFBDatabaseMetaData extends TestXABase {
         super.setUp();
         FBManagedConnectionFactory mcf = initMcf();
         DataSource ds = (DataSource) mcf.createConnectionFactory();
-        c = (FBConnection) ds.getConnection();
+        c = (AbstractConnection) ds.getConnection();
         s = c.createStatement();
         t = c.getLocalTransaction();
         dmd = c.getMetaData();
@@ -158,7 +154,7 @@ public class TestFBDatabaseMetaData extends TestXABase {
         }
 
         int sysTableCount;
-        DatabaseMetaData metaData = c.getMetaData();
+        FirebirdDatabaseMetaData metaData = (FirebirdDatabaseMetaData) c.getMetaData();
         if (metaData.getDatabaseMajorVersion() < 2)
             sysTableCount = 32;
         else if (metaData.getDatabaseMajorVersion() == 2 && metaData.getDatabaseMinorVersion() == 0)
@@ -291,7 +287,7 @@ public class TestFBDatabaseMetaData extends TestXABase {
 
         t.begin();
         ResultSet rs = dmd.getColumns(null, null, "TABLE_A", "%");
-        Set<String> tableNames = new HashSet<String>();
+        Set tableNames = new HashSet();
         while (rs.next()) {
             tableNames.add(rs.getString(3));
         }

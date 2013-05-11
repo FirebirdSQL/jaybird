@@ -24,8 +24,6 @@ import java.sql.SQLException;
 
 import org.firebirdsql.common.FBTestBase;
 
-import static org.firebirdsql.common.FBTestProperties.*;
-
 /**
  * Tests the UserManager class which uses the Services API to display, add,
  * delete, and modify users.
@@ -84,7 +82,7 @@ public class TestUserManager extends FBTestBase {
         }
         
         // Check to make sure the user was added.
-        User user2 = userManager.getUsers().get(user1.getUserName());
+        User user2 = (User) userManager.getUsers().get(user1.getUserName());
 
         // User2 should not be null;
         assertTrue("User 2 should not be null.", user2 != null);
@@ -100,12 +98,12 @@ public class TestUserManager extends FBTestBase {
 
         userManager.update(user1);
 
-        user2 = userManager.getUsers().get(user1.getUserName());
+        user2 = (User) userManager.getUsers().get(user1.getUserName());
         assertTrue("user1 should equal user2", user1.equals(user2));
 
         userManager.delete(user1);
 
-        user2 = userManager.getUsers().get(user1.getUserName());
+        user2 = (User) userManager.getUsers().get(user1.getUserName());
 
         // User2 should be null;
         assertTrue("User 2 should be null", user2 == null);

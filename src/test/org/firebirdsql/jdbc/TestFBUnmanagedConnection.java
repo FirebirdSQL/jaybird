@@ -26,11 +26,7 @@ import java.util.Map;
 
 import junit.framework.Test;
 import junit.framework.TestSuite;
-
 import org.firebirdsql.common.FBTestBase;
-
-import static org.firebirdsql.common.DdlHelper.*;
-import static org.firebirdsql.common.JdbcResourceHelper.*;
 
 /**
  * Describe class <code>TestFBUnmanagedConnection</code> here.
@@ -127,7 +123,7 @@ public class TestFBUnmanagedConnection extends FBTestBase {
     }
 
     public void testGetTypeMap() throws Exception {
-        Map<String, Class<?>> typeMap = connection.getTypeMap();
+        Map typeMap = connection.getTypeMap();
         assertTrue("TypeMap is null", typeMap != null);
     }
 

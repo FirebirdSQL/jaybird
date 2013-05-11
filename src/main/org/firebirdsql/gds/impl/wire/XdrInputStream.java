@@ -25,15 +25,14 @@
  * Boix i Oltra, S.L. All Rights Reserved.
  *
  */
-package org.firebirdsql.gds.impl.wire;
 
-import static org.firebirdsql.gds.impl.wire.WireProtocolConstants.op_dummy;
+package org.firebirdsql.gds.impl.wire;
 
 import java.io.EOFException;
 import java.io.IOException;
 import java.io.InputStream;
 
-import org.firebirdsql.gds.IscStmtHandle;
+
 
 /**
  * <code>XdrInputStream</code> is an input stream for reading in data that
@@ -111,20 +110,7 @@ public class XdrInputStream {
         readFully(pad,0,(4 - len) & 3);
         return new String(buffer);
     }
-    
-    /**
-     * Reads the next operation code. Skips all {@link WireProtocolConstants.op_dummy} codes received.
-     * 
-     * @return Operation code
-     * @throws IOException if an error occurs while reading from the underlying InputStream
-     */
-    public int readNextOperation() throws IOException {
-        int op;
-        do {
-            op = readInt();
-        } while (op == op_dummy);
-        return op;
-    }
+
 
     //
     // Read SQL data
@@ -141,7 +127,7 @@ public class XdrInputStream {
      * @throws IOException if an error occurs while reading from the 
      *         underlying input stream
      */
-    public void readSQLData(int[] ioLength, IscStmtHandle stmt) throws IOException {
+    public void readSQLData(int[] ioLength, isc_stmt_handle_impl stmt) throws IOException {
         // This only works if not (port->port_flags & PORT_symmetric)		 
         int numCols = ioLength.length;
         byte[][] row = new byte[numCols][];
@@ -176,6 +162,7 @@ public class XdrInputStream {
     //
     // Substitute DataInputStream
     //
+
 
     /**
      * Read in a <code>long</code>.
@@ -223,13 +210,12 @@ public class XdrInputStream {
      *         underlying input stream
      */
     public void readFully(byte b[], int off, int len) throws IOException {
-        if (len == 0) {
-            return;
-        }
-        if (len <= count - pos){
+
+        if (len <= count-pos){
             System.arraycopy(buf, pos, b, off, len);
             pos += len;
-        } else {
+        }
+        else {
             int n = 0;
             while (n < len) {
                 if (count <= pos){

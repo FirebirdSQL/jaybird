@@ -22,32 +22,25 @@ package org.firebirdsql.gds.impl.jni;
 
 import java.util.Arrays;
 
-import junit.framework.TestCase;
-
-import org.firebirdsql.common.StringHelper;
+import org.firebirdsql.common.SimpleFBTestBase;
 import org.firebirdsql.gds.BlobParameterBuffer;
 import org.firebirdsql.gds.DatabaseParameterBuffer;
 import org.firebirdsql.gds.GDS;
 import org.firebirdsql.gds.ISCConstants;
-import org.firebirdsql.gds.IscBlobHandle;
 import org.firebirdsql.gds.IscDbHandle;
-import org.firebirdsql.gds.IscStmtHandle;
 import org.firebirdsql.gds.IscTrHandle;
 import org.firebirdsql.gds.XSQLDA;
 import org.firebirdsql.gds.XSQLVAR;
-import org.firebirdsql.gds.impl.AbstractIscDbHandle;
 import org.firebirdsql.gds.impl.GDSFactory;
 import org.firebirdsql.gds.impl.GDSType;
 import org.firebirdsql.jca.FBTpb;
 import org.firebirdsql.logging.Logger;
 import org.firebirdsql.logging.LoggerFactory;
 
-import static org.firebirdsql.common.FBTestProperties.*;
-
 /**
  * Performs basic low level tests of the ngds package.
  */
-public class TestNgds extends TestCase {
+public class TestNgds extends SimpleFBTestBase {
 
     private Logger log = LoggerFactory.getLogger(getClass(), false);
 
@@ -180,8 +173,8 @@ public class TestNgds extends TestCase {
         db2 = gds.createIscDbHandle();
         gds.iscAttachDatabase(getdbpath(dbName), db2, c);
 
-        if (log != null) log.info("test- rdb_id1: " + ((AbstractIscDbHandle)db1).getRdbId());
-        if (log != null) log.info("test- rdb_id2: " + ((AbstractIscDbHandle)db2).getRdbId());
+        if (log != null) log.info("test- rdb_id1: " + ((isc_db_handle_impl)db1).getRdbId());
+        if (log != null) log.info("test- rdb_id2: " + ((isc_db_handle_impl)db2).getRdbId());
         if (log != null) log.info("test- isc_detach_database");
 
         gds.iscDetachDatabase(db1);
@@ -200,8 +193,8 @@ public class TestNgds extends TestCase {
         db1 = createDatabase(dbName);
         db2 = createDatabase(dbName2);
 
-        if (log != null) log.info("test- rdb_id1: " + ((AbstractIscDbHandle)db1).getRdbId());
-        if (log != null) log.info("test- rdb_id2: " + ((AbstractIscDbHandle)db2).getRdbId());
+        if (log != null) log.info("test- rdb_id1: " + ((isc_db_handle_impl)db1).getRdbId());
+        if (log != null) log.info("test- rdb_id2: " + ((isc_db_handle_impl)db2).getRdbId());
 
         t1 = startTransaction(db1);
         doSQLImmed(db1, t1, "create table r1 (col1 smallint not null primary key)");
@@ -312,8 +305,8 @@ public class TestNgds extends TestCase {
                 ISCConstants.SQL_DIALECT_CURRENT, null, xsqlda);
 
         if (log != null)
-            log.info("test- retrieved inserted row C1 = " + StringHelper.toHex(xsqlda.sqlvar[0].sqldata) + "     "
-                    + "C2 = " + StringHelper.toHex(xsqlda.sqlvar[1].sqldata));
+            log.info("test- retrieved inserted row C1 = " + xsqlda.sqlvar[0].sqldata + "     "
+                    + "C2 = " + xsqlda.sqlvar[1].sqldata);
 
         commit(t1);
         teardownTable(db1);
@@ -331,7 +324,7 @@ public class TestNgds extends TestCase {
         XSQLDA in_xsqlda;
         XSQLDA out_xsqlda;
 
-        IscStmtHandle stmt1 = gds.createIscStmtHandle();
+        isc_stmt_handle_impl stmt1 = (isc_stmt_handle_impl) gds.createIscStmtHandle();
 
         if (log != null) log.info("test- isc_dsql_allocate_statement");
 
@@ -378,7 +371,7 @@ public class TestNgds extends TestCase {
 
         db1 = createDatabase(dbName);
         t1 = startTransaction(db1);
-        IscBlobHandle blob = gds.createIscBlobHandle();
+        isc_blob_handle_impl blob = (isc_blob_handle_impl) gds.createIscBlobHandle();
         gds.iscCreateBlob2(db1, t1, blob, null);
         gds.iscCloseBlob(blob);
         commit(t1);
@@ -392,7 +385,7 @@ public class TestNgds extends TestCase {
 
         db1 = setupTable2();
         t1 = startTransaction(db1);
-        IscBlobHandle blob1 = gds.createIscBlobHandle();
+        isc_blob_handle_impl blob1 = (isc_blob_handle_impl) gds.createIscBlobHandle();
         final BlobParameterBuffer blobParameterBuffer = gds.createBlobParameterBuffer();
         blobParameterBuffer.addArgument(ISCConstants.isc_bpb_type, ISCConstants.isc_bpb_type_segmented);
         gds.iscCreateBlob2(db1, t1, blob1, blobParameterBuffer);
@@ -423,7 +416,7 @@ public class TestNgds extends TestCase {
 
         gds.iscDsqlExecImmed2(db1, t1, "INSERT INTO R2 VALUES (?, ?)",
                 ISCConstants.SQL_DIALECT_CURRENT, xsqlda, null);
-        IscStmtHandle stmt1 = gds.createIscStmtHandle();
+        isc_stmt_handle_impl stmt1 = (isc_stmt_handle_impl) gds.createIscStmtHandle();
 
         if (log != null) log.info("test- isc_dsql_allocate_statement");
 
@@ -434,7 +427,7 @@ public class TestNgds extends TestCase {
         if (log != null) log.info("test- isc_dsql_execute2");
 
         gds.iscDsqlExecute2(t1, stmt1, 1, null, null);
-        IscBlobHandle blob2 = gds.createIscBlobHandle();
+        isc_blob_handle_impl blob2 = (isc_blob_handle_impl) gds.createIscBlobHandle();
         byte[][] row = null;
         gds.iscDsqlFetch(stmt1, 1, out_xsqlda, 200);
         Object[] rows = stmt1.getRows();
@@ -446,9 +439,9 @@ public class TestNgds extends TestCase {
             StringBuilder out = new StringBuilder();
 
             for (int i = 0; i < out_xsqlda.sqld; i++) {
-                byte[] data = row[i];
+                Object data = row[i];
 
-                out.append("column: ").append(i).append(", value: ").append(StringHelper.toHex(data));
+                out.append("column: ").append(i).append(", value: ").append(data);
             }
 
             if (log != null) log.info("fetch returned: " + out);
@@ -480,7 +473,7 @@ public class TestNgds extends TestCase {
 
         db1 = setupTable2();
         t1 = startTransaction(db1);
-        IscBlobHandle blob1 = gds.createIscBlobHandle();
+        isc_blob_handle_impl blob1 = (isc_blob_handle_impl) gds.createIscBlobHandle();
         final BlobParameterBuffer blobParameterBuffer = gds.createBlobParameterBuffer();
         blobParameterBuffer.addArgument(ISCConstants.isc_bpb_type, ISCConstants.isc_bpb_type_segmented);
         gds.iscCreateBlob2(db1, t1, blob1, blobParameterBuffer);
@@ -514,7 +507,7 @@ public class TestNgds extends TestCase {
 
         gds.iscDsqlExecImmed2(db1, t1, "INSERT INTO R2 VALUES (?, ?)",
                 ISCConstants.SQL_DIALECT_CURRENT, xsqlda, null);
-        IscStmtHandle stmt1 = gds.createIscStmtHandle();
+        isc_stmt_handle_impl stmt1 = (isc_stmt_handle_impl) gds.createIscStmtHandle();
 
         if (log != null) log.info("test- isc_dsql_allocate_statement");
 
@@ -525,7 +518,7 @@ public class TestNgds extends TestCase {
         if (log != null) log.info("test- isc_dsql_execute2");
 
         gds.iscDsqlExecute2(t1, stmt1, 1, null, null);
-        IscBlobHandle blob2 = gds.createIscBlobHandle();
+        isc_blob_handle_impl blob2 = (isc_blob_handle_impl) gds.createIscBlobHandle();
         byte[][] row = null;
         gds.iscDsqlFetch(stmt1, 1, out_xsqlda, 200);
         Object[] rows = stmt1.getRows();
@@ -536,9 +529,9 @@ public class TestNgds extends TestCase {
             StringBuilder out = new StringBuilder();
 
             for (int i = 0; i < out_xsqlda.sqld; i++) {
-                byte[] data = row[i];
+                Object data = row[i];
 
-                out.append("column: ").append(i).append(", value: ").append(StringHelper.toHex(data));
+                out.append("column: ").append(i).append(", value: ").append(data);
             }
 
             if (log != null) log.info(out);
@@ -578,7 +571,7 @@ public class TestNgds extends TestCase {
 
         db1 = setupTable2();
         t1 = startTransaction(db1);
-        IscBlobHandle blob1 = gds.createIscBlobHandle();
+        isc_blob_handle_impl blob1 = (isc_blob_handle_impl) gds.createIscBlobHandle();
         final BlobParameterBuffer blobParameterBuffer = gds.createBlobParameterBuffer();
         blobParameterBuffer.addArgument(ISCConstants.isc_bpb_type, ISCConstants.isc_bpb_type_segmented);
         gds.iscCreateBlob2(db1, t1, blob1, blobParameterBuffer);
@@ -613,7 +606,7 @@ public class TestNgds extends TestCase {
 
         gds.iscDsqlExecImmed2(db1, t1, "INSERT INTO R2 VALUES (?, ?)",
                 ISCConstants.SQL_DIALECT_CURRENT, xsqlda, null);
-        IscStmtHandle stmt1 = gds.createIscStmtHandle();
+        isc_stmt_handle_impl stmt1 = (isc_stmt_handle_impl) gds.createIscStmtHandle();
 
         if (log != null) log.info("test- isc_dsql_allocate_statement");
 
@@ -624,7 +617,7 @@ public class TestNgds extends TestCase {
         if (log != null) log.info("test- isc_dsql_execute2");
 
         gds.iscDsqlExecute2(t1, stmt1, 1, null, null);
-        IscBlobHandle blob2 = gds.createIscBlobHandle();
+        isc_blob_handle_impl blob2 = (isc_blob_handle_impl) gds.createIscBlobHandle();
         byte[][] row = null;
         gds.iscDsqlFetch(stmt1, 1, out_xsqlda, 200);
         Object[] rows = stmt1.getRows();
@@ -636,9 +629,9 @@ public class TestNgds extends TestCase {
             StringBuilder out = new StringBuilder();
 
             for (int i = 0; i < out_xsqlda.sqld; i++) {
-                byte[] data = row[i];
+                Object data = row[i];
 
-                out.append("column: ").append(i).append(", value: ").append(StringHelper.toHex(data));
+                out.append("column: ").append(i).append(", value: ").append(data);
             }
 
             if (log != null) log.info(out);
@@ -679,7 +672,7 @@ public class TestNgds extends TestCase {
 
         db1 = setupTable2();
         t1 = startTransaction(db1);
-        IscBlobHandle blob1 = gds.createIscBlobHandle();
+        isc_blob_handle_impl blob1 = (isc_blob_handle_impl) gds.createIscBlobHandle();
         final BlobParameterBuffer blobParameterBuffer = gds.createBlobParameterBuffer();
         blobParameterBuffer.addArgument(ISCConstants.isc_bpb_type, ISCConstants.isc_bpb_type_stream);
         gds.iscCreateBlob2(db1, t1, blob1, blobParameterBuffer);
@@ -714,7 +707,7 @@ public class TestNgds extends TestCase {
 
         gds.iscDsqlExecImmed2(db1, t1, "INSERT INTO R2 VALUES (?, ?)",
                 ISCConstants.SQL_DIALECT_CURRENT, xsqlda, null);
-        IscStmtHandle stmt1 = gds.createIscStmtHandle();
+        isc_stmt_handle_impl stmt1 = (isc_stmt_handle_impl) gds.createIscStmtHandle();
 
         if (log != null) log.info("test- isc_dsql_allocate_statement");
 
@@ -725,7 +718,7 @@ public class TestNgds extends TestCase {
         if (log != null) log.info("test- isc_dsql_execute2");
 
         gds.iscDsqlExecute2(t1, stmt1, 1, null, null);
-        IscBlobHandle blob2 = gds.createIscBlobHandle();
+        isc_blob_handle_impl blob2 = (isc_blob_handle_impl) gds.createIscBlobHandle();
         byte[][] row = null;
         gds.iscDsqlFetch(stmt1, 1, out_xsqlda, 200);
         Object[] rows = stmt1.getRows();
@@ -737,9 +730,9 @@ public class TestNgds extends TestCase {
             StringBuilder out = new StringBuilder();
 
             for (int i = 0; i < out_xsqlda.sqld; i++) {
-                byte[] data = row[i];
+                Object data = row[i];
 
-                out.append("column: ").append(i).append(", value: ").append(StringHelper.toHex(data));
+                out.append("column: ").append(i).append(", value: ").append(data);
             }
 
             if (log != null) log.info(out);

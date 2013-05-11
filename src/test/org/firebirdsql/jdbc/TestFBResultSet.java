@@ -19,7 +19,6 @@
 package org.firebirdsql.jdbc;
 
 import org.firebirdsql.common.FBTestBase;
-import org.firebirdsql.common.JdbcResourceHelper;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -31,8 +30,6 @@ import java.util.Properties;
 import java.util.Random;
 
 import junit.textui.TestRunner;
-
-import static org.firebirdsql.common.FBTestProperties.*;
 
 public class TestFBResultSet extends FBTestBase {
     
@@ -69,6 +66,14 @@ public class TestFBResultSet extends FBTestBase {
         + ")"
         ;
 
+    public static final String DROP_TABLE_STATEMENT = ""
+        + "DROP TABLE test_table"
+        ;
+
+    public static final String DROP_TABLE_STATEMENT2 = ""
+        + "DROP TABLE test_table2"
+        ;
+
     public static final String CREATE_VIEW_STATEMENT = ""
         + "CREATE VIEW test_empty_string_view(marker, id, empty_char) "
         + "  AS  "
@@ -79,12 +84,20 @@ public class TestFBResultSet extends FBTestBase {
         + "  FROM "
         + "    test_table"
         ;
+        
+    public static final String DROP_VIEW_STATEMENT = ""
+        + "DROP VIEW test_empty_string_view"
+        ;
 
     public static final String CREATE_SUBSTR_FUNCTION = ""
         + "DECLARE EXTERNAL FUNCTION substr " 
         + "  CSTRING(80), SMALLINT, SMALLINT "
         + "RETURNS CSTRING(80) FREE_IT " 
         + "ENTRY_POINT 'IB_UDF_substr' MODULE_NAME 'ib_udf'"
+        ;
+    
+    public static final String DROP_SUBSTR_FUNCTION = ""
+        + "DROP EXTERNAL FUNCTION substr"
         ;
     
     public static final String SELECT_FROM_VIEW_STATEMENT = ""
@@ -121,6 +134,30 @@ public class TestFBResultSet extends FBTestBase {
         Statement stmt = connection.createStatement();
         
         try {
+            try {
+                stmt.execute(DROP_VIEW_STATEMENT);
+            } catch (SQLException ex) {
+                // do nothing here
+            }
+            
+            try {
+                stmt.execute(DROP_TABLE_STATEMENT);
+            } catch (SQLException ex) {
+                // do nothing here
+            }
+
+            try {
+                stmt.execute(DROP_TABLE_STATEMENT2);
+            } catch (SQLException ex) {
+                // do nothing here
+            }
+
+            try {
+                stmt.execute(DROP_SUBSTR_FUNCTION);
+            } catch(SQLException ex) {
+                // do nothing here
+            }
+            
             stmt.execute(CREATE_TABLE_STATEMENT);
             stmt.execute(CREATE_TABLE_STATEMENT2);
             stmt.execute(CREATE_VIEW_STATEMENT);
@@ -131,7 +168,9 @@ public class TestFBResultSet extends FBTestBase {
     }
 
     protected void tearDown() throws Exception {
-        JdbcResourceHelper.closeQuietly(connection);
+        
+        connection.close();
+        
         super.tearDown();
     }
     
@@ -963,7 +1002,7 @@ public class TestFBResultSet extends FBTestBase {
         }
 
         Statement stmt = connection.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, 
-                ResultSet.CONCUR_READ_ONLY, ResultSet.HOLD_CURSORS_OVER_COMMIT);
+        		ResultSet.CONCUR_READ_ONLY, ResultSet.HOLD_CURSORS_OVER_COMMIT);
         Statement stmt2 = connection.createStatement();
         
         try {
@@ -982,8 +1021,8 @@ public class TestFBResultSet extends FBTestBase {
             }
             assertEquals("Unexpected number of reads from holdable resultset", recordCount, actualCount);
         } finally {
-            JdbcResourceHelper.closeQuietly(stmt);
-            JdbcResourceHelper.closeQuietly(stmt2);
+            closeQuietly(stmt);
+            closeQuietly(stmt2);
         }
     }
     
@@ -1023,8 +1062,8 @@ public class TestFBResultSet extends FBTestBase {
             }
             assertEquals("Unexpected number of reads from holdable resultset", recordCount, actualCount);
         } finally {
-            JdbcResourceHelper.closeQuietly(stmt);
-            JdbcResourceHelper.closeQuietly(stmt2);
+            closeQuietly(stmt);
+            closeQuietly(stmt2);
         }
     }
 
@@ -1196,68 +1235,24 @@ public class TestFBResultSet extends FBTestBase {
             stmt.close();
         }
     }
-
-    public void testUpdatableHoldableResultSet() throws Exception {
-	    connection.setAutoCommit(true);
-	
-	    int recordCount = 10;
-	    PreparedStatement ps = connection.prepareStatement("INSERT INTO test_table("
-	            + "id, long_str) VALUES (?, ?)");
-	
-	    try {
-	        for (int i = 0; i < recordCount; i++) {
-	            ps.setInt(1, i);
-	            ps.setString(2, "oldString" + i);
-	            ps.executeUpdate();
-	        }
-	    } finally {
-	        ps.close();
-	    }
-	
-	    connection.setAutoCommit(false);
-	
-	    Statement stmt = connection.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE,
-	            ResultSet.CONCUR_UPDATABLE, ResultSet.HOLD_CURSORS_OVER_COMMIT);
-	
-	    try {
-	        ResultSet rs = stmt.executeQuery("SELECT id, long_str FROM test_table");
-	
-	        while (rs.next()) {
-	            rs.updateString(2, rs.getString(2) + "a");
-	            rs.updateRow();
-	            connection.commit();
-	        }
-	
-	        int counter = 0;
-	
-	        rs = stmt.executeQuery("SELECT id, long_str FROM test_table");
-	        while (rs.next()) {
-	            assertEquals("oldString" + counter + "a", rs.getString(2));
-	            counter++;
-	        }
-	
-	    } finally {
-	        stmt.close();
-	    }
-	}
     
     // TODO Ignored, see JDBC-307 http://tracker.firebirdsql.org/browse/JDBC-307
     public void _testClosedOnCommit() throws Exception {
-        connection.setAutoCommit(false);
-        Statement stmt = connection.createStatement();
-        try {
-            FirebirdResultSet rs = (FirebirdResultSet) stmt.executeQuery("SELECT * FROM RDB$DATABASE");
-            assertEquals("Unexpected holdability", ResultSet.CLOSE_CURSORS_AT_COMMIT, rs.getHoldability());
-            assertFalse("Expected resultset to be open", rs.isClosed());
-            
-            connection.commit();
-            assertTrue("Expected resultset to be closed", rs.isClosed());
-        } finally {
-            stmt.close();
-        }
+    	connection.setAutoCommit(false);
+    	Statement stmt = connection.createStatement();
+    	try {
+    		FirebirdResultSet rs = (FirebirdResultSet) stmt.executeQuery("SELECT * FROM RDB$DATABASE");
+    		assertEquals("Unexpected holdability", ResultSet.CLOSE_CURSORS_AT_COMMIT, rs.getHoldability());
+    		assertFalse("Expected resultset to be open", rs.isClosed());
+    		
+    		connection.commit();
+    		assertTrue("Expected resultset to be closed", rs.isClosed());
+    	} finally {
+    	    stmt.close();
+    	}
     }
 
-	public static void main(String[] args) {
+    public static void main(String[] args) {
         TestRunner.run(new TestFBResultSet("testMemoryGrowth"));
     }
 

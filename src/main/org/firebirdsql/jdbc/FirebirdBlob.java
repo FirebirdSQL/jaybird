@@ -253,5 +253,21 @@ public interface FirebirdBlob extends Blob {
      * otherwise <code>false</code>
      */
     boolean isSegmented() throws SQLException;
-
+    
+    /**
+     * Retrieves a stream that can be used to write to the Blob value that this 
+     * object represents.  The stream begins at position <code>position</code>.
+     * <p>
+     * This method is directly copied from JDBC 3.0 classes to make it available
+     * in JDBC 2.0 environment.
+     *
+     * @param position the position in the <code>BLOB</code> value at which
+     * to start writing; currently only position 0 is supported.
+     * 
+     * @return a <code>java.io.OutputStream</code> object to which data can 
+     * be written
+     * 
+     * @throws SQLException if something went wrong.
+     */
+    OutputStream setBinaryStream(long position) throws SQLException;
 }

@@ -99,7 +99,8 @@ public class FBBlobField extends FBField implements FBFlushableField {
     public InputStream getBinaryStream() throws SQLException {
         // getBinaryStream() is not defined for BLOB types, only for BINARY
         if (field.sqlsubtype < 0)
-            throw new TypeConversionException(BINARY_STREAM_CONVERSION_ERROR);
+            throw (SQLException)createException(
+                BINARY_STREAM_CONVERSION_ERROR).fillInStackTrace();
         
         Blob blob = getBlob();
 
@@ -147,7 +148,7 @@ public class FBBlobField extends FBField implements FBFlushableField {
                         
                         if (segementBuffer.length == 0) {
                             // unexpected EOF
-                            throw new TypeConversionException(BYTES_CONVERSION_ERROR);
+                            throw (SQLException) createException(BYTES_CONVERSION_ERROR);
                         }
                         
                         System.arraycopy(segementBuffer, 0, resultBuffer, offset, segementBuffer.length);
@@ -197,7 +198,8 @@ public class FBBlobField extends FBField implements FBFlushableField {
     public String getString() throws SQLException {
         // getString() is not defined for BLOB fields, only for BINARY
         if (field.sqlsubtype < 0)
-            throw new TypeConversionException(STRING_CONVERSION_ERROR);
+            throw (SQLException)createException(
+                STRING_CONVERSION_ERROR).fillInStackTrace();
 
         Blob blob = getBlob();
 

@@ -33,21 +33,18 @@ import java.util.regex.Pattern;
  * in response to the <code>isc_info_firebird_version</code> information call.
  * Expected version format is:
  * <p>
- * <code>&lt;platform&gt;-&lt;type&gt;&lt;majorVersion&gt;.&lt;minorVersion&gt;.&lt;variant&gt;.&lt;buildNum&gt; &lt;serverName&gt;[,&lt;extended server info&gt;]</code>
+ * <platform>-<type><majorVersion>.<minorVersion>.<variant>.<buildNum> <serverName>[,<extended server info>]
  * </p>
- * <p>
  * where <code>platform</code> is a two-character platform identification string,
  * Windows for example is "WI", <code>type</code> is one of the three characters:
  * "V" - production version, "T" - beta version, "X" - development version.
- * </p>
+ *
  */
 public class GDSServerVersion implements Serializable {
-    
-    // TODO Document why this class is serializable (or remove it)
-    
-    private static final long serialVersionUID = -3401092369588765195L;
 
-    public static final String TYPE_PRODUCTION = "V";
+	private static final long serialVersionUID = -153657557318248541L;
+	
+	public static final String TYPE_PRODUCTION = "V";
     public static final String TYPE_BETA = "T";
     public static final String TYPE_DEVELOPMENT = "X";
 
@@ -64,32 +61,21 @@ public class GDSServerVersion implements Serializable {
     private static final int SERVER_NAME_IDX = 8;
     private static final int EXTENDED_INFO_IDX = 9;    
 
-    private final String rawStr;
+    private String rawStr;
     
-    private final String platform;
-    private final String type;
+    private String platform;
+    private String type;
 
-    private final String fullVersion;
-    private final int majorVersion;
-    private final int minorVersion;
-    private final int variant;
-    private final int buildNumber;
+    private String fullVersion;
+    private int majorVersion;
+    private int minorVersion;
+    private int variant;
+    private int buildNumber;
 
-    private final String serverName;
-    private final String extendedServerName;
+    private String serverName;
+    private String extendedServerName;
 
-    private GDSServerVersion(String rawStr, String platform, String type, String fullVersion, int majorVersion,
-            int minorVersion, int variant, int buildNumber, String serverName, String extendedServerName) {
-        this.rawStr = rawStr;
-        this.platform = platform;
-        this.type = type;
-        this.fullVersion = fullVersion;
-        this.majorVersion = majorVersion;
-        this.minorVersion = minorVersion;
-        this.variant = variant;
-        this.buildNumber = buildNumber;
-        this.serverName = serverName;
-        this.extendedServerName = extendedServerName;
+    private GDSServerVersion() {
     }
 
     public int getBuildNumber() {
@@ -154,24 +140,26 @@ public class GDSServerVersion implements Serializable {
      * @throws GDSServerVersionException if versionString does not match expected pattern
      */
     public static GDSServerVersion parseRawVersion(String versionString) throws GDSServerVersionException {
-        Matcher matcher = VERSION_PATTERN.matcher(versionString);
-        if (!matcher.matches()) {
-            throw new GDSServerVersionException(String.format("Version string \"%s\" does not match expected format \"%s\"", 
-            		versionString, VERSION_PATTERN));
-        }
+    	Matcher matcher = VERSION_PATTERN.matcher(versionString);
+    	if (!matcher.matches()) {
+    		throw new GDSServerVersionException("Version string does not match expected format");
+    	}
+    	
+    	GDSServerVersion version = new GDSServerVersion();
+    	
+    	version.rawStr = versionString;
+    	
+    	version.serverName = matcher.group(SERVER_NAME_IDX);
+    	version.extendedServerName = matcher.group(EXTENDED_INFO_IDX);
+    	version.platform = matcher.group(PLATFORM_IDX);
+    	version.type = matcher.group(TYPE_IDX);
 
-        GDSServerVersion version = new GDSServerVersion(
-                versionString, 
-                matcher.group(PLATFORM_IDX),
-                matcher.group(TYPE_IDX), 
-                matcher.group(FULL_VERSION_IDX), 
-                Integer.parseInt(matcher.group(MAJOR_IDX)),
-                Integer.parseInt(matcher.group(MINOR_IDX)), 
-                Integer.parseInt(matcher.group(VARIANT_IDX)),
-                Integer.parseInt(matcher.group(BUILD_IDX)), 
-                matcher.group(SERVER_NAME_IDX),
-                matcher.group(EXTENDED_INFO_IDX));
-
-        return version;
+    	version.fullVersion = matcher.group(FULL_VERSION_IDX);
+    	version.majorVersion = Integer.parseInt(matcher.group(MAJOR_IDX));
+    	version.minorVersion = Integer.parseInt(matcher.group(MINOR_IDX));
+    	version.variant = Integer.parseInt(matcher.group(VARIANT_IDX));
+    	version.buildNumber = Integer.parseInt(matcher.group(BUILD_IDX));
+    	
+    	return version;
     }
 }

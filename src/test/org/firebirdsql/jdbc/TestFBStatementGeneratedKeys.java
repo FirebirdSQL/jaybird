@@ -28,8 +28,6 @@ import java.sql.Statement;
 
 import org.firebirdsql.gds.ISCConstants;
 
-import static org.firebirdsql.common.JdbcResourceHelper.*;
-
 /**
  * Tests for retrieval of auto generated keys through {@link java.sql.Statement}
  * implementation {@link FBStatement}.
