@@ -20,47 +20,47 @@
  */
 package org.firebirdsql.gds.ng.wire.version10;
 
-import static org.firebirdsql.common.FBTestProperties.DB_PASSWORD;
-import static org.firebirdsql.common.FBTestProperties.DB_USER;
-import static org.firebirdsql.common.FBTestProperties.defaultDatabaseSetUp;
-import static org.firebirdsql.common.FBTestProperties.defaultDatabaseTearDown;
-import static org.junit.Assert.*;
-import static org.junit.Assume.assumeTrue;
-
-import java.io.File;
-import java.util.Arrays;
-import java.util.List;
-
 import org.firebirdsql.common.FBTestProperties;
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.impl.jni.EmbeddedGDSImpl;
 import org.firebirdsql.gds.impl.jni.NativeGDSImpl;
 import org.firebirdsql.gds.impl.wire.DatabaseParameterBufferImp;
 import org.firebirdsql.gds.ng.FbConnectionProperties;
-import org.firebirdsql.gds.ng.FbException;
+import org.firebirdsql.gds.ng.FbExceptionBuilder;
 import org.firebirdsql.gds.ng.SimpleWarningMessageCallback;
-import org.firebirdsql.gds.ng.wire.FbWireDatabase;
-import org.firebirdsql.gds.ng.wire.GenericResponse;
-import org.firebirdsql.gds.ng.wire.ProtocolCollection;
-import org.firebirdsql.gds.ng.wire.WireConnection;
+import org.firebirdsql.gds.ng.wire.*;
 import org.firebirdsql.management.FBManager;
 import org.junit.BeforeClass;
 import org.junit.Test;
+
+import java.io.File;
+import java.sql.SQLException;
+import java.sql.SQLWarning;
+import java.util.Arrays;
+import java.util.List;
+
+import static org.firebirdsql.common.FBTestProperties.*;
+import static org.junit.Assert.*;
+import static org.junit.Assume.assumeTrue;
 
 /**
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @since 2.3
  */
 public class TestV10Database {
-    
+
+    private static final WireConnection DUMMY_CONNECTION = new WireConnection(null);
+    private static final ProtocolDescriptor DUMMY_DESCRIPTOR = new Version10Descriptor();
+
     private final FbConnectionProperties connectionInfo;
+
     {
         connectionInfo = new FbConnectionProperties();
         connectionInfo.setServerName(FBTestProperties.DB_SERVER_URL);
         connectionInfo.setPortNumber(FBTestProperties.DB_SERVER_PORT);
         connectionInfo.setDatabaseName(FBTestProperties.getDatabasePath());
     }
-    
+
     @BeforeClass
     public static void verifyTestType() {
         // Test irrelevant for embedded
@@ -75,13 +75,13 @@ public class TestV10Database {
      */
     @Test
     public void testProcessResponse_noException() throws Exception {
-        V10Database db = new V10Database(null, null);
+        V10Database db = new V10Database(DUMMY_CONNECTION, DUMMY_DESCRIPTOR);
 
         GenericResponse genericResponse = new GenericResponse(-1, -1, null, null);
         try {
             db.processResponse(genericResponse);
-        } catch (FbException ex) {
-            fail("Expected no FbException to be thrown");
+        } catch (SQLException ex) {
+            fail("Expected no SQLException to be thrown");
         }
     }
 
@@ -91,15 +91,15 @@ public class TestV10Database {
      */
     @Test
     public void testProcessResponse_exception() throws Exception {
-        V10Database db = new V10Database(null, null);
+        V10Database db = new V10Database(DUMMY_CONNECTION, DUMMY_DESCRIPTOR);
 
-        FbException exception = new FbException(ISCConstants.isc_arg_gds, ISCConstants.isc_numeric_out_of_range);
+        SQLException exception = new FbExceptionBuilder().exception(ISCConstants.isc_numeric_out_of_range).toSQLException();
         GenericResponse genericResponse = new GenericResponse(-1, -1, null, exception);
 
         try {
             db.processResponse(genericResponse);
             fail("Expected the registered exception to be thrown");
-        } catch (FbException ex) {
+        } catch (SQLException ex) {
             assertEquals("Unexpected exception caught", exception, ex);
         }
     }
@@ -110,15 +110,15 @@ public class TestV10Database {
      */
     @Test
     public void testProcessResponse_warning() throws Exception {
-        V10Database db = new V10Database(null, null);
+        V10Database db = new V10Database(DUMMY_CONNECTION, DUMMY_DESCRIPTOR);
 
-        FbException exception = new FbException(ISCConstants.isc_arg_warning, ISCConstants.isc_numeric_out_of_range);
+        SQLException exception = new FbExceptionBuilder().warning(ISCConstants.isc_numeric_out_of_range).toSQLException();
         GenericResponse genericResponse = new GenericResponse(-1, -1, null, exception);
 
         try {
             db.processResponse(genericResponse);
-        } catch (FbException ex) {
-            fail("Expected no FbException to be thrown");
+        } catch (SQLException ex) {
+            fail("Expected no SQLException to be thrown");
         }
     }
 
@@ -128,14 +128,14 @@ public class TestV10Database {
      */
     @Test
     public void testProcessReponseWarnings_noException() throws Exception {
-        V10Database db = new V10Database(null, null);
+        V10Database db = new V10Database(DUMMY_CONNECTION, DUMMY_DESCRIPTOR);
         SimpleWarningMessageCallback callback = new SimpleWarningMessageCallback();
         db.setWarningMessageCallback(callback);
 
         GenericResponse genericResponse = new GenericResponse(-1, -1, null, null);
         db.processResponseWarnings(genericResponse);
 
-        List<FbException> warnings = callback.getWarnings();
+        List<SQLWarning> warnings = callback.getWarnings();
         assertEquals("Expected no warnings to be registered", 0, warnings.size());
     }
 
@@ -145,15 +145,15 @@ public class TestV10Database {
      */
     @Test
     public void testProcessReponseWarnings_exception() throws Exception {
-        V10Database db = new V10Database(null, null);
+        V10Database db = new V10Database(DUMMY_CONNECTION, DUMMY_DESCRIPTOR);
         SimpleWarningMessageCallback callback = new SimpleWarningMessageCallback();
         db.setWarningMessageCallback(callback);
 
-        FbException exception = new FbException(ISCConstants.isc_arg_gds, ISCConstants.isc_numeric_out_of_range);
+        SQLException exception = new FbExceptionBuilder().exception(ISCConstants.isc_numeric_out_of_range).toSQLException();
         GenericResponse genericResponse = new GenericResponse(-1, -1, null, exception);
         db.processResponseWarnings(genericResponse);
 
-        List<FbException> warnings = callback.getWarnings();
+        List<SQLWarning> warnings = callback.getWarnings();
         assertEquals("Expected no warnings to be registered", 0, warnings.size());
     }
 
@@ -163,15 +163,15 @@ public class TestV10Database {
      */
     @Test
     public void testProcessResponseWarnings_warning() throws Exception {
-        V10Database db = new V10Database(null, null);
+        V10Database db = new V10Database(DUMMY_CONNECTION, DUMMY_DESCRIPTOR);
         SimpleWarningMessageCallback callback = new SimpleWarningMessageCallback();
         db.setWarningMessageCallback(callback);
 
-        FbException warning = new FbException(ISCConstants.isc_arg_warning, ISCConstants.isc_numeric_out_of_range);
+        SQLException warning = new FbExceptionBuilder().warning(ISCConstants.isc_numeric_out_of_range).toSQLException();
         GenericResponse genericResponse = new GenericResponse(-1, -1, null, warning);
         db.processResponseWarnings(genericResponse);
 
-        List<FbException> warnings = callback.getWarnings();
+        List<SQLWarning> warnings = callback.getWarnings();
 
         assertEquals("Unexpected warnings registered or no warnings registered", Arrays.asList(warning), warnings);
     }
@@ -181,9 +181,9 @@ public class TestV10Database {
      */
     @Test
     public void testProcessResponseWarnings_warning_noCallback() throws Exception {
-        V10Database db = new V10Database(null, null);
+        V10Database db = new V10Database(DUMMY_CONNECTION, DUMMY_DESCRIPTOR);
 
-        FbException warning = new FbException(ISCConstants.isc_arg_warning, ISCConstants.isc_numeric_out_of_range);
+        SQLException warning = new FbExceptionBuilder().warning(ISCConstants.isc_numeric_out_of_range).toSQLException();
         GenericResponse genericResponse = new GenericResponse(-1, -1, null, warning);
         try {
             db.processResponseWarnings(genericResponse);
@@ -191,7 +191,7 @@ public class TestV10Database {
             fail("Expected no exception");
         }
     }
-    
+
     /**
      * Tests if attaching to an existing database works.
      */
@@ -205,22 +205,22 @@ public class TestV10Database {
                 gdsConnection.socketConnect();
                 db = gdsConnection.identify();
                 assertEquals("Unexpected FbWireDatabase implementation", V10Database.class, db.getClass());
-                
+
                 DatabaseParameterBufferImp dpb = new DatabaseParameterBufferImp();
                 dpb.addArgument(ISCConstants.isc_dpb_sql_dialect, 3);
                 dpb.addArgument(ISCConstants.isc_dpb_user_name, DB_USER);
                 dpb.addArgument(ISCConstants.isc_dpb_password, DB_PASSWORD);
-                
-                db.attach(dpb, gdsConnection.getDatabaseName());
+
+                db.attach(dpb);
                 System.out.println(db.getHandle());
-                
+
                 assertTrue("Expected isAttached() to return true", db.isAttached());
                 assertNotNull("Expected version string to be not null", db.getVersionString());
             } finally {
                 if (db != null) {
                     try {
                         db.detach();
-                    } catch (FbException ex) {
+                    } catch (SQLException ex) {
                         // ignore (TODO: log)
                     }
                 }
@@ -229,7 +229,7 @@ public class TestV10Database {
             defaultDatabaseTearDown(fbManager);
         }
     }
-    
+
     /**
      * Tests if attaching to a non-existent database results in an exception
      */
@@ -241,19 +241,19 @@ public class TestV10Database {
             gdsConnection.socketConnect();
             db = gdsConnection.identify();
             assertEquals("Unexpected FbWireDatabase implementation", V10Database.class, db.getClass());
-            
+
             DatabaseParameterBufferImp dpb = new DatabaseParameterBufferImp();
             dpb.addArgument(ISCConstants.isc_dpb_sql_dialect, 3);
             dpb.addArgument(ISCConstants.isc_dpb_user_name, DB_USER);
             dpb.addArgument(ISCConstants.isc_dpb_password, DB_PASSWORD);
-            
-            db.attach(dpb, gdsConnection.getDatabaseName());
+
+            db.attach(dpb);
             fail("Expected the attach to fail because the database doesn't exist");
-        } catch (FbException e) {
+        } catch (SQLException e) {
             // TODO Is this actually the right SQLState?
             assertEquals("Expected SQLState for 'Client unable to establish connection' (08001)", "08001", e.getSQLState());
             // TODO Seems to be the least specific error, deeper in there is a more specific 335544734 (isc_io_open_err)
-            assertEquals("Expected isc_io_error (335544344)", ISCConstants.isc_io_error, e.getFbErrorCode());
+            assertEquals("Expected isc_io_error (335544344)", ISCConstants.isc_io_error, e.getErrorCode());
         }
         assertFalse(gdsConnection.isConnected());
     }
@@ -270,13 +270,13 @@ public class TestV10Database {
             gdsConnection.socketConnect();
             db = gdsConnection.identify();
             assertEquals("Unexpected FbWireDatabase implementation", V10Database.class, db.getClass());
-            
+
             DatabaseParameterBufferImp dpb = new DatabaseParameterBufferImp();
             dpb.addArgument(ISCConstants.isc_dpb_sql_dialect, 3);
             dpb.addArgument(ISCConstants.isc_dpb_user_name, DB_USER);
             dpb.addArgument(ISCConstants.isc_dpb_password, DB_PASSWORD);
-            
-            db.createDatabase(dpb, gdsConnection.getDatabaseName());
+
+            db.createDatabase(dpb);
             assertTrue(db.isAttached());
             assertTrue(gdsConnection.isConnected());
             assertTrue(dbFile.exists());

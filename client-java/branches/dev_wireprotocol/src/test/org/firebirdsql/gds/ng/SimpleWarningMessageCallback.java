@@ -20,27 +20,28 @@
  */
 package org.firebirdsql.gds.ng;
 
+import java.sql.SQLWarning;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
 /**
  * Implementation of {@link WarningMessageCallback} for testing purposes.
- * 
+ *
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @since 2.3
  */
 public class SimpleWarningMessageCallback implements WarningMessageCallback {
 
-    private final List<FbException> warnings = Collections.synchronizedList(new ArrayList<FbException>());
+    private final List<SQLWarning> warnings = Collections.synchronizedList(new ArrayList<SQLWarning>());
 
     @Override
-    public void processWarning(FbException warning) {
+    public void processWarning(SQLWarning warning) {
         warnings.add(warning);
     }
 
-    public List<FbException> getWarnings() {
-        return new ArrayList<FbException>(warnings);
+    public List<SQLWarning> getWarnings() {
+        return new ArrayList<SQLWarning>(warnings);
     }
 
     public void clear() {

@@ -20,25 +20,28 @@
  */
 package org.firebirdsql.gds.ng;
 
-import static org.junit.Assert.*;
+import org.junit.Test;
 
 import java.beans.BeanInfo;
 import java.beans.Introspector;
 import java.beans.PropertyDescriptor;
 import java.lang.reflect.Method;
+import java.util.HashMap;
+import java.util.Map;
 
-import org.junit.Test;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 
 /**
  * Tests for {@link FbConnectionProperties}
- * 
+ *
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @since 2.3
  */
 public class TestFbConnectionProperties {
-    
+
     private final FbConnectionProperties info = new FbConnectionProperties();
-    
+
     @Test
     public void testDatabaseName() {
         assertNull(info.getDatabaseName());
@@ -46,7 +49,7 @@ public class TestFbConnectionProperties {
         info.setDatabaseName(databaseName);
         assertEquals(databaseName, info.getDatabaseName());
     }
-    
+
     @Test
     public void testServerName() {
         assertEquals("localhost", info.getServerName());
@@ -54,7 +57,7 @@ public class TestFbConnectionProperties {
         info.setServerName(serverName);
         assertEquals(serverName, info.getServerName());
     }
-    
+
     @Test
     public void testPortNumber() {
         assertEquals(IConnectionProperties.DEFAULT_PORT, info.getPortNumber());
@@ -70,7 +73,7 @@ public class TestFbConnectionProperties {
         info.setUser(user);
         assertEquals(user, info.getUser());
     }
-    
+
     @Test
     public void testPassword() {
         assertNull(info.getPassword());
@@ -78,7 +81,7 @@ public class TestFbConnectionProperties {
         info.setPassword(password);
         assertEquals(password, info.getPassword());
     }
-    
+
     @Test
     public void testCharSet() {
         assertNull(info.getCharSet());
@@ -88,7 +91,7 @@ public class TestFbConnectionProperties {
         // Value of encoding should not be modified by charSet
         assertNull(info.getEncoding());
     }
-    
+
     @Test
     public void testEncoding() {
         assertNull(info.getEncoding());
@@ -98,7 +101,7 @@ public class TestFbConnectionProperties {
         // Value of charSet should not be modified by encoding
         assertNull(info.getCharSet());
     }
-    
+
     @Test
     public void testRoleName() {
         assertNull(info.getRoleName());
@@ -106,7 +109,7 @@ public class TestFbConnectionProperties {
         info.setRoleName(roleName);
         assertEquals(roleName, info.getRoleName());
     }
-    
+
     @Test
     public void testSqlDialect() {
         assertEquals(IConnectionProperties.DEFAULT_DIALECT, info.getConnectionDialect());
@@ -114,7 +117,7 @@ public class TestFbConnectionProperties {
         info.setConnectionDialect(sqlDialect);
         assertEquals(sqlDialect, info.getConnectionDialect());
     }
-    
+
     @Test
     public void testSocketBufferSize() {
         assertEquals(IConnectionProperties.DEFAULT_SOCKET_BUFFER_SIZE, info.getSocketBufferSize());
@@ -122,7 +125,7 @@ public class TestFbConnectionProperties {
         info.setSocketBufferSize(socketBufferSize);
         assertEquals(socketBufferSize, info.getSocketBufferSize());
     }
-    
+
     @Test
     public void testBuffersNumber() {
         assertEquals(IConnectionProperties.DEFAULT_BUFFERS_NUMBER, info.getPageCacheSize());
@@ -130,7 +133,7 @@ public class TestFbConnectionProperties {
         info.setPageCacheSize(buffersNumber);
         assertEquals(buffersNumber, info.getPageCacheSize());
     }
-    
+
     @Test
     public void testSoTimeout() {
         assertEquals(IConnectionProperties.DEFAULT_SO_TIMEOUT, info.getSoTimeout());
@@ -138,7 +141,7 @@ public class TestFbConnectionProperties {
         info.setSoTimeout(soTimeout);
         assertEquals(soTimeout, info.getSoTimeout());
     }
-    
+
     @Test
     public void testConnectTimeout() {
         assertEquals(IConnectionProperties.DEFAULT_CONNECT_TIMEOUT, info.getConnectTimeout());
@@ -146,7 +149,7 @@ public class TestFbConnectionProperties {
         info.setConnectTimeout(connectTimeout);
         assertEquals(connectTimeout, info.getConnectTimeout());
     }
-    
+
     @Test
     public void testCopyConstructor() throws Exception {
         info.setDatabaseName("testValue");
@@ -154,14 +157,49 @@ public class TestFbConnectionProperties {
         info.setPortNumber(1203);
         info.setConnectionDialect((short) 2);
         info.setConnectTimeout(15);
-        
+
         FbConnectionProperties copy = new FbConnectionProperties(info);
-        BeanInfo beanInfo = Introspector.getBeanInfo(IConnectionProperties.class);
+        BeanInfo beanInfo = Introspector.getBeanInfo(FbConnectionProperties.class);
         for (PropertyDescriptor descriptor : beanInfo.getPropertyDescriptors()) {
             Method method = descriptor.getReadMethod();
             if (method == null) continue;
             // Compare all properties
             assertEquals(method.invoke(info), method.invoke(copy));
+        }
+    }
+
+    @Test
+    public void testAsImmutable() throws Exception {
+        // TODO Explicitly test properties instead of using reflection
+        Map<String, Object> testValues = new HashMap<String, Object>();
+        int intValue = 1;
+        BeanInfo beanInfo = Introspector.getBeanInfo(IConnectionProperties.class);
+        for (PropertyDescriptor descriptor : beanInfo.getPropertyDescriptors()) {
+            Method method = descriptor.getWriteMethod();
+            Class<?> parameterType = method.getParameterTypes()[0];
+            if (parameterType == int.class) {
+                Object value = Integer.valueOf(intValue++);
+                method.invoke(info, value);
+                testValues.put(descriptor.getName(), value);
+            } else if (parameterType == short.class) {
+                Object value = Short.valueOf((short) (intValue++));
+                method.invoke(info, value);
+                testValues.put(descriptor.getName(), value);
+            } else if (parameterType == String.class) {
+                method.invoke(info, method.getName());
+                testValues.put(descriptor.getName(), method.getName());
+            } else {
+                throw new IllegalStateException("Unexpected setter type: " + parameterType);
+            }
+        }
+
+        IConnectionPropertiesGetters immutable = info.asImmutable();
+        BeanInfo immutableBean = Introspector.getBeanInfo(IConnectionPropertiesGetters.class);
+        for (PropertyDescriptor descriptor : immutableBean.getPropertyDescriptors()) {
+            Method method = descriptor.getReadMethod();
+            Object value = method.invoke(immutable);
+            String propertyName = descriptor.getName();
+            assertEquals(String.format("Value for property %s doesn't match expected value", propertyName), testValues.get(propertyName), value);
         }
     }
 }

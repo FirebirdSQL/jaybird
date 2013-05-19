@@ -21,6 +21,9 @@
 package org.firebirdsql.gds.ng;
 
 /**
+ * Interface defining the getters of the connection properties.
+ *
+ * @see IConnectionProperties
  * @author @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  */
 public interface IConnectionPropertiesGetters {
@@ -141,4 +144,9 @@ public interface IConnectionPropertiesGetters {
      *         specific timeout)
      */
     int getConnectTimeout();
+
+    /**
+     * @return An immutable version of this instance as an implementation of {@link IConnectionPropertiesGetters}
+     */
+    IConnectionPropertiesGetters asImmutable();
 }

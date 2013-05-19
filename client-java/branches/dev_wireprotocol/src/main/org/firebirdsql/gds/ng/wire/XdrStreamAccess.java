@@ -22,11 +22,12 @@ package org.firebirdsql.gds.ng.wire;
 
 import org.firebirdsql.gds.impl.wire.XdrInputStream;
 import org.firebirdsql.gds.impl.wire.XdrOutputStream;
-import org.firebirdsql.gds.ng.FbException;
+
+import java.sql.SQLException;
 
 /**
  * Provides access to the {@link XdrInputStream} and {@link XdrOutputStream}.
- * 
+ *
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @since 2.3
  */
@@ -34,21 +35,21 @@ public interface XdrStreamAccess {
 
     /**
      * Gets the XdrInputStream.
-     * 
+     *
      * @return Instance of XdrInputStream
-     * @throws FbException
-     *             If no connection is opened or when exceptions occur
-     *             retrieving the InputStream
+     * @throws SQLException
+     *         If no connection is opened or when exceptions occur
+     *         retrieving the InputStream
      */
-    XdrInputStream getXdrIn() throws FbException;
-    
+    XdrInputStream getXdrIn() throws SQLException;
+
     /**
      * Gets the XdrOutputStream.
-     * 
+     *
      * @return Instance of XdrOutputStream
-     * @throws FbException
-     *             If no connection is opened or when exceptions occur
-     *             retrieving the OutputStream
+     * @throws SQLException
+     *         If no connection is opened or when exceptions occur
+     *         retrieving the OutputStream
      */
-    XdrOutputStream getXdrOut() throws FbException;
+    XdrOutputStream getXdrOut() throws SQLException;
 }

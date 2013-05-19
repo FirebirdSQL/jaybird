@@ -20,12 +20,14 @@
  */
 package org.firebirdsql.gds.ng;
 
+import java.sql.SQLException;
+
 /**
  * Functional interface to process an information buffer (responses to p_info_*
  * requests) returning an object of type T.
- * 
- * @param T
- *            Type of the result of the {@link #process(byte[])} method.
+ *
+ * @param <T>
+ *         Type of the result of the {@link #process(byte[])} method.
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @since 2.3
  */
@@ -33,13 +35,13 @@ public interface InfoProcessor<T> {
 
     /**
      * Process an infoResponse block into an object of type T.
-     * 
+     *
      * @param infoResponse
-     *            byte array containing the server response to an info-request.
+     *         byte array containing the server response to an info-request.
      * @return Processed response of type T (usually - but not required - a
      *         newly created object).
-     * @throws FbException
-     *             For errors during the infoResponse.
+     * @throws SQLException
+     *         For errors during the infoResponse.
      */
-    T process(byte[] infoResponse) throws FbException;
+    T process(byte[] infoResponse) throws SQLException;
 }

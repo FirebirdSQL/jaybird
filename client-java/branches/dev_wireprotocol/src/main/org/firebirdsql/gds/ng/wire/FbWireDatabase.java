@@ -20,10 +20,10 @@
  */
 package org.firebirdsql.gds.ng.wire;
 
-import java.io.IOException;
-
 import org.firebirdsql.gds.ng.FbDatabase;
-import org.firebirdsql.gds.ng.FbException;
+
+import java.io.IOException;
+import java.sql.SQLException;
 
 /**
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
@@ -34,12 +34,12 @@ public interface FbWireDatabase extends FbDatabase, XdrStreamAccess {
 
     /**
      * Reads the response from the server.
-     * 
+     *
      * @return {@link Response} read.
-     * @throws FbException
-     *             For errors returned from the server, or when attempting to read
+     * @throws SQLException
+     *         For errors returned from the server, or when attempting to read
      * @throws IOException
-     *             For errors reading the response from the connection.
+     *         For errors reading the response from the connection.
      */
-    Response readResponse() throws FbException, IOException;
+    Response readResponse() throws SQLException, IOException;
 }

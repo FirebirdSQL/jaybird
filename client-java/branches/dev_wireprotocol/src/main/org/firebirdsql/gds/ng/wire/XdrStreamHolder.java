@@ -20,48 +20,49 @@
  */
 package org.firebirdsql.gds.ng.wire;
 
-import java.lang.ref.WeakReference;
-
 import org.firebirdsql.gds.impl.wire.XdrInputStream;
 import org.firebirdsql.gds.impl.wire.XdrOutputStream;
-import org.firebirdsql.gds.ng.FbException;
+
+import java.lang.ref.WeakReference;
+import java.sql.SQLException;
 
 /**
  * Provides weak referenced access to an {@link XdrStreamAccess} implementation.
- * 
+ *
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @since 2.3
  */
 public final class XdrStreamHolder implements XdrStreamAccess {
-    
+
     private final WeakReference<XdrStreamAccess> xdrStreamAccessRef;
-    
+
     /**
      * Creates a new instance of XdrStreamHolder.
-     * 
-     * @param xdrStreamAccess XdrStreamAccess instance
+     *
+     * @param xdrStreamAccess
+     *         XdrStreamAccess instance
      */
     public XdrStreamHolder(XdrStreamAccess xdrStreamAccess) {
         xdrStreamAccessRef = new WeakReference<XdrStreamAccess>(xdrStreamAccess);
     }
 
     @Override
-    public XdrInputStream getXdrIn() throws FbException {
+    public XdrInputStream getXdrIn() throws SQLException {
         XdrStreamAccess streamAccess = xdrStreamAccessRef.get();
         if (streamAccess != null) {
             final XdrInputStream xdrIn = streamAccess.getXdrIn();
             if (xdrIn != null) return xdrIn;
         }
-        throw new FbException("XdrInputStream not available");
+        throw new SQLException("XdrInputStream not available");
     }
 
     @Override
-    public XdrOutputStream getXdrOut() throws FbException {
+    public XdrOutputStream getXdrOut() throws SQLException {
         XdrStreamAccess streamAccess = xdrStreamAccessRef.get();
         if (streamAccess != null) {
             final XdrOutputStream xdrOut = streamAccess.getXdrOut();
             if (xdrOut != null) return xdrOut;
-        } 
-        throw new FbException("XdrOutputStream not available");
+        }
+        throw new SQLException("XdrOutputStream not available");
     }
 }

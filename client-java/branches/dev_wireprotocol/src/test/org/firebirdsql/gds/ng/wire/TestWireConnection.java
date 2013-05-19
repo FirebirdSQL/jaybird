@@ -24,15 +24,15 @@ import static org.junit.Assert.*;
 import static org.junit.Assume.assumeTrue;
 
 import java.io.IOException;
+import java.sql.SQLException;
+import java.sql.SQLTimeoutException;
 
 import org.firebirdsql.common.BlackholeServer;
 import org.firebirdsql.common.FBJUnit4TestBase;
 import org.firebirdsql.common.FBTestProperties;
 import org.firebirdsql.gds.impl.jni.EmbeddedGDSImpl;
 import org.firebirdsql.gds.impl.jni.NativeGDSImpl;
-import org.firebirdsql.gds.ng.FbConnectTimeoutException;
 import org.firebirdsql.gds.ng.FbConnectionProperties;
-import org.firebirdsql.gds.ng.FbException;
 import org.firebirdsql.gds.ng.wire.version10.Version10Descriptor;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -82,7 +82,7 @@ public class TestWireConnection extends FBJUnit4TestBase {
      * established.
      */
     @Test
-    public void testIsConnectedWithConnection() throws FbException {
+    public void testIsConnectedWithConnection() throws Exception {
         WireConnection gdsConnection = new WireConnection(connectionInfo);
         try {
             gdsConnection.socketConnect();
@@ -114,7 +114,7 @@ public class TestWireConnection extends FBJUnit4TestBase {
      * Tests a successful connection identification phase.
      */
     @Test
-    public void testIdentifyExistingDb() throws FbException {
+    public void testIdentifyExistingDb() throws Exception {
         ProtocolDescriptor expectedProtocol = new Version10Descriptor();
         WireConnection gdsConnection = new WireConnection(connectionInfo, ProtocolCollection.create(expectedProtocol));
         try {
@@ -152,17 +152,17 @@ public class TestWireConnection extends FBJUnit4TestBase {
             gdsConnection.socketConnect();
             
             fail("Expected connection to fail");
-        } catch (FbConnectTimeoutException e) {
+        } catch (SQLTimeoutException e) {
             long endTime = System.currentTimeMillis();
             long difference = endTime - startTime;
             
             assertEquals("Expected error code for \"Unable to complete network request\"", 335544721,
-                    e.getFbErrorCode());
+                    e.getErrorCode());
             assertEquals("Unexpected timeout duration (in ms)", 2000, difference, TIMEOUT_DELTA_MS);
-        } catch (FbException e) {
+        } catch (SQLException e) {
             e.printStackTrace();
             
-            fail("Expected GdsConnectTimeoutException to be thrown");
+            fail("Expected SQLTimeoutException to be thrown");
         }
     }
 
@@ -185,17 +185,17 @@ public class TestWireConnection extends FBJUnit4TestBase {
             gdsConnection.identify();
             
             fail("Expected connection to fail");
-        } catch (FbConnectTimeoutException e) {
+        } catch (SQLTimeoutException e) {
             long endTime = System.currentTimeMillis();
             long difference = endTime - startTime;
             
             assertEquals("Expected error code for \"Unable to complete network request\"", 335544721,
-                    e.getFbErrorCode());
+                    e.getErrorCode());
             assertEquals("Unexpected timeout duration (in ms)", 2000, difference, TIMEOUT_DELTA_MS);
-        } catch (FbException e) {
+        } catch (SQLException e) {
             e.printStackTrace();
             
-            fail("Expected GdsConnectTimeoutException to be thrown");
+            fail("Expected SQLTimeoutException to be thrown");
         } finally {
             server.stop();
             thread.join();
@@ -221,17 +221,17 @@ public class TestWireConnection extends FBJUnit4TestBase {
             gdsConnection.identify();
             
             fail("Expected connection to fail");
-        } catch (FbConnectTimeoutException e) {
+        } catch (SQLTimeoutException e) {
             long endTime = System.currentTimeMillis();
             long difference = endTime - startTime;
             
             assertEquals("Expected error code for \"Unable to complete network request\"", 335544721,
-                    e.getFbErrorCode());
+                    e.getErrorCode());
             assertEquals("Unexpected timeout duration (in ms)", 2000, difference, TIMEOUT_DELTA_MS);
-        } catch (FbException e) {
+        } catch (SQLException e) {
             e.printStackTrace();
             
-            fail("Expected GdsConnectTimeoutException to be thrown");
+            fail("Expected SQLTimeoutException to be thrown");
         } finally {
             server.stop();
             thread.join();
@@ -242,7 +242,7 @@ public class TestWireConnection extends FBJUnit4TestBase {
      * Tests if calling {@link WireConnection#getXdrIn()} throws an
      * IOException when not connected.
      */
-    @Test(expected = FbException.class)
+    @Test(expected = SQLException.class)
     public void testUnconnected_CreateXdrIn() throws Exception {
         WireConnection gdsConnection = new WireConnection(connectionInfo);
         gdsConnection.getXdrIn();
@@ -252,7 +252,7 @@ public class TestWireConnection extends FBJUnit4TestBase {
      * Tests if calling {@link WireConnection#getXdrOut()} throws an
      * IOException when not connected.
      */
-    @Test(expected = FbException.class)
+    @Test(expected = SQLException.class)
     public void testUnconnected_CreateXdrOut() throws Exception {
         WireConnection gdsConnection = new WireConnection(connectionInfo);
         gdsConnection.getXdrOut();

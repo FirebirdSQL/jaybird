@@ -20,6 +20,8 @@
  */
 package org.firebirdsql.gds.ng.wire;
 
+import org.firebirdsql.gds.ng.FbTransaction;
+
 /**
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @since 2.3
@@ -53,10 +55,19 @@ public interface ProtocolDescriptor {
 
     /**
      * Create {@link FbWireDatabase} implementation for this protocol.
-     * 
+     *
      * @param connection
-     *            WireConnection to this database
+     *         WireConnection to this database
      * @return FbWireDatabase implementation
      */
     FbWireDatabase createDatabase(WireConnection connection);
+
+    /**
+     * Create {@link FbTransaction} implementation for this protocol.
+     *
+     * @param database
+     *         FbWireDatabase of the current database
+     * @return FbTransaction implementation
+     */
+    FbTransaction createTransaction(FbWireDatabase database);
 }

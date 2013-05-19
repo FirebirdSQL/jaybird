@@ -20,6 +20,7 @@
  */
 package org.firebirdsql.gds.ng;
 
+import java.sql.SQLException;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Map;
@@ -49,23 +50,25 @@ public abstract class AbstractFbTransaction implements FbTransaction {
      * 
      * @param newState
      *            New state to switch to
-     * @throws FbException
+     * @throws SQLException
      *             If the requested state transition is not allowed or if the
      *             current state is also changed in a concurrent thread.
      */
-    protected final void switchState(TransactionState newState) throws FbException {
+    protected final void switchState(TransactionState newState) throws SQLException {
         TransactionState currentState = state.get();
         if (currentState.isValidTransition(newState)) {
             if (state.compareAndSet(currentState, newState)) {
                 fireTransactionStateChanged(newState, currentState);
             } else {
                 // TODO: race condition when generating message (get() could return same value as currentState)
-                throw new FbException(String.format(
+                // TODO Include sqlstate
+                throw new SQLException(String.format(
                         "Unable to change transaction state: expected current state %s, but was %s", currentState,
                         state.get()));
             }
         } else {
-            throw new FbException(String.format("Unable to change transaction state: state %s is not valid after %s",
+            // TODO Include sqlstate
+            throw new SQLException(String.format("Unable to change transaction state: state %s is not valid after %s",
                     newState, currentState));
         }
     }

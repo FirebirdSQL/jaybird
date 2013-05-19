@@ -6,8 +6,7 @@ package org.firebirdsql.gds.ng;
  * This interface only defines setters, the getters are defined in {@link IConnectionPropertiesGetters}.
  * </p>
  * <p>
- * TODO Do refactor to remove overlap/duplication with
- * {@link org.firebirdsql.jdbc.FirebirdConnectionProperties}
+ * TODO Do refactor to remove overlap/duplication with {@link org.firebirdsql.jdbc.FirebirdConnectionProperties}
  * </p>
  *
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
@@ -170,9 +169,4 @@ public interface IConnectionProperties extends IConnectionPropertiesGetters {
      *         specific timeout)
      */
     void setConnectTimeout(int connectTimeout);
-
-    /**
-     * @return An immutable version of this instance as an implementation of {@link IConnectionPropertiesGetters}
-     */
-    IConnectionPropertiesGetters asImmutable();
 }

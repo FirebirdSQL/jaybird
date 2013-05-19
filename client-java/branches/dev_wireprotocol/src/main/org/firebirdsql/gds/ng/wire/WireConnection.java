@@ -20,41 +20,38 @@
  */
 package org.firebirdsql.gds.ng.wire;
 
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.net.InetAddress;
-import java.net.InetSocketAddress;
-import java.net.Socket;
-import java.net.SocketException;
-import java.net.SocketTimeoutException;
-import java.net.UnknownHostException;
-import java.security.AccessController;
-import java.security.PrivilegedAction;
-import java.util.concurrent.TimeUnit;
-
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.impl.wire.XdrInputStream;
 import org.firebirdsql.gds.impl.wire.XdrOutputStream;
-import org.firebirdsql.gds.ng.FbConnectTimeoutException;
 import org.firebirdsql.gds.ng.FbConnectionProperties;
-import org.firebirdsql.gds.ng.FbException;
+import org.firebirdsql.gds.ng.FbExceptionBuilder;
 import org.firebirdsql.gds.ng.IConnectionProperties;
+import org.firebirdsql.gds.ng.IConnectionPropertiesGetters;
 import org.firebirdsql.logging.Logger;
 import org.firebirdsql.logging.LoggerFactory;
+
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.net.*;
+import java.security.AccessController;
+import java.security.PrivilegedAction;
+import java.sql.SQLException;
+import java.sql.SQLTimeoutException;
+import java.util.concurrent.TimeUnit;
 
 import static org.firebirdsql.gds.impl.wire.WireProtocolConstants.*;
 
 /**
  * Class managing the TCP/IP connection and initial handshaking with the
  * Firebird server.
- * 
+ *
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @since 2.3
  */
 public final class WireConnection implements XdrStreamAccess {
 
     // TODO Include character set
-    // TODO Check if methods currently throwing IOException should throw FbException instead
+    // TODO Check if methods currently throwing IOException should throw SQLException instead
     // TODO Change how information is passed?
 
     private static final Logger log = LoggerFactory.getLogger(WireConnection.class, false);
@@ -72,9 +69,9 @@ public final class WireConnection implements XdrStreamAccess {
     /**
      * Creates a WireConnection (without establishing a connection to the
      * server) with the default protocol collection.
-     * 
+     *
      * @param connectionProperties
-     *            Connection properties
+     *         Connection properties
      */
     public WireConnection(IConnectionProperties connectionProperties) {
         this(connectionProperties, ProtocolCollection.getDefaultCollection());
@@ -83,11 +80,11 @@ public final class WireConnection implements XdrStreamAccess {
     /**
      * Creates a WireConnection (without establishing a connection to the
      * server).
-     * 
+     *
      * @param connectionProperties
-     *            Connection properties
+     *         Connection properties
      * @param protocols
-     *            The collection of protocols to use for this connection.
+     *         The collection of protocols to use for this connection.
      */
     public WireConnection(IConnectionProperties connectionProperties, ProtocolCollection protocols) {
         this.connectionProperties = new FbConnectionProperties(connectionProperties);
@@ -105,9 +102,13 @@ public final class WireConnection implements XdrStreamAccess {
     public int getPortNumber() {
         return connectionProperties.getPortNumber();
     }
-    
+
     public String getDatabaseName() {
         return connectionProperties.getDatabaseName();
+    }
+
+    public short getConnectionDialect() {
+        return connectionProperties.getConnectionDialect();
     }
 
     public int getProtocolVersion() {
@@ -123,17 +124,24 @@ public final class WireConnection implements XdrStreamAccess {
     }
 
     /**
+     * @return An immutable copy of the current connection properties.
+     */
+    public IConnectionPropertiesGetters getConnectionProperties() {
+        return connectionProperties.asImmutable();
+    }
+
+    /**
      * Sets the socket blocking timeout (SO_TIMEOUT) of the socket.
      * <p>
      * This method can also be called if a connection is established
      * </p>
-     * 
+     *
      * @param socketTimeout
-     *            Value of the socket timeout (in milliseconds)
-     * @throws FbException
-     *             If the timeout value cannot be changed
+     *         Value of the socket timeout (in milliseconds)
+     * @throws SQLException
+     *         If the timeout value cannot be changed
      */
-    public void setSoTimeout(int socketTimeout) throws FbException {
+    public void setSoTimeout(int socketTimeout) throws SQLException {
         connectionProperties.setSoTimeout(socketTimeout);
         resetSocketTimeout();
     }
@@ -141,11 +149,11 @@ public final class WireConnection implements XdrStreamAccess {
     /**
      * Resets the socket timeout to the configured socketTimeout. Does nothing
      * if currently not connected.
-     * 
-     * @throws FbException
-     *             If the timeout value cannot be changed
+     *
+     * @throws SQLException
+     *         If the timeout value cannot be changed
      */
-    public void resetSocketTimeout() throws FbException {
+    public void resetSocketTimeout() throws SQLException {
         if (isConnected()) {
             try {
                 final int soTimeout = connectionProperties.getSoTimeout();
@@ -154,7 +162,7 @@ public final class WireConnection implements XdrStreamAccess {
                     socket.setSoTimeout(desiredTimeout);
                 }
             } catch (SocketException e) {
-                throw new FbException("Unable to change socket timeout (SO_TIMEOUT)", e);
+                throw new SQLException("Unable to change socket timeout (SO_TIMEOUT)", e);
             }
         }
     }
@@ -162,15 +170,15 @@ public final class WireConnection implements XdrStreamAccess {
     /**
      * Establishes the TCP/IP connection to serverName and portNumber of this
      * Connection
-     * 
-     * @throws FbConnectTimeoutException
-     *             If the connection cannot be established within the connect
-     *             timeout (either explicitly set or implied by the OS timeout
-     *             of the socket)
-     * @throws FbException
-     *             If the connection cannot be established.
+     *
+     * @throws SQLTimeoutException
+     *         If the connection cannot be established within the connect
+     *         timeout (either explicitly set or implied by the OS timeout
+     *         of the socket)
+     * @throws SQLException
+     *         If the connection cannot be established.
      */
-    public void socketConnect() throws FbConnectTimeoutException, FbException {
+    public void socketConnect() throws SQLException {
         try {
             socket = new Socket();
             socket.setTcpNoDelay(true);
@@ -182,7 +190,7 @@ public final class WireConnection implements XdrStreamAccess {
                 // Blocking timeout initially identical to connect timeout
                 socket.setSoTimeout(socketConnectTimeout);
             } else {
-                // socket connect timeout is net set, so indefinite (0)
+                // socket connect timeout is not set, so indefinite (0)
                 socketConnectTimeout = 0;
                 // Blocking timeout to normal socket timeout, 0 if not set
                 socket.setSoTimeout(Math.max(connectionProperties.getSoTimeout(), 0));
@@ -196,39 +204,37 @@ public final class WireConnection implements XdrStreamAccess {
 
             socket.connect(new InetSocketAddress(getServerName(), getPortNumber()), socketConnectTimeout);
         } catch (SocketTimeoutException ste) {
-            throw new FbConnectTimeoutException(ISCConstants.isc_arg_gds, ISCConstants.isc_network_error,
-                    getServerName(), ste);
+            throw new FbExceptionBuilder().timeoutException(ISCConstants.isc_network_error).messageParameter(getServerName()).cause(ste).toSQLException();
         } catch (IOException ioex) {
-            throw new FbException(ISCConstants.isc_arg_gds, ISCConstants.isc_network_error, getServerName(), ioex);
+            throw new FbExceptionBuilder().exception(ISCConstants.isc_network_error).messageParameter(getServerName()).cause(ioex).toSQLException();
         }
     }
 
-    public XdrInputStream getXdrIn() throws FbException {
+    public XdrInputStream getXdrIn() throws SQLException {
         if (isConnected()) {
             return xdrIn;
         } else {
-            throw new FbException("Connection closed or no connection available");
+            throw new SQLException("Connection closed or no connection available");
         }
     }
 
-    public XdrOutputStream getXdrOut() throws FbException {
+    public XdrOutputStream getXdrOut() throws SQLException {
         if (isConnected()) {
             return xdrOut;
         } else {
-            throw new FbException("Connection closed or no connection available");
+            throw new SQLException("Connection closed or no connection available");
         }
     }
 
     /**
      * Performs the connection identification phase of the Wire protocol and
      * returns the FbWireDatabase implementation for the agreed protocol.
-     * 
-     * @param databaseName
-     *            Name of the database
+     *
      * @return FbWireDatabase
-     * @throws FbException
+     * @throws SQLTimeoutException
+     * @throws SQLException
      */
-    public FbWireDatabase identify() throws FbException {
+    public FbWireDatabase identify() throws SQLException {
         try {
             xdrIn = new XdrInputStream(socket.getInputStream());
             xdrOut = new XdrOutputStream(socket.getOutputStream());
@@ -280,7 +286,7 @@ public final class WireConnection implements XdrStreamAccess {
 
                 ProtocolDescriptor descriptor = protocols.getProtocolDescriptor(protocolVersion);
                 if (descriptor == null) {
-                    throw new FbException(
+                    throw new SQLException(
                             String.format(
                                     "Unsupported or unexpected protocol version %d connecting to database %s. Supported version(s): %s",
                                     protocolVersion, getServerName(), protocols.getProtocolVersions()));
@@ -292,21 +298,20 @@ public final class WireConnection implements XdrStreamAccess {
                 } catch (Exception ex) {
                     log.debug("Ignoring exception on disconnect in connect phase of protocol", ex);
                 }
-                throw new FbException(ISCConstants.isc_connect_reject);
+                throw new FbExceptionBuilder().exception(ISCConstants.isc_connect_reject).toSQLException();
             }
         } catch (SocketTimeoutException ste) {
-            throw new FbConnectTimeoutException(ISCConstants.isc_arg_gds, ISCConstants.isc_network_error,
-                    getServerName(), ste);
+            throw new FbExceptionBuilder().timeoutException(ISCConstants.isc_network_error).messageParameter(getServerName()).cause(ste).toSQLException();
         } catch (IOException ioex) {
-            throw new FbException(ISCConstants.isc_arg_gds, ISCConstants.isc_network_error, getServerName(), ioex);
+            throw new FbExceptionBuilder().exception(ISCConstants.isc_network_error).messageParameter(getServerName()).cause(ioex).toSQLException();
         }
     }
 
     /**
      * Closes the TCP/IP connection. This is not a normal detach operation.
-     * 
+     *
      * @throws IOException
-     *             if closing fails
+     *         if closing fails
      */
     public void disconnect() throws IOException {
         IOException ioex = null;
@@ -336,6 +341,15 @@ public final class WireConnection implements XdrStreamAccess {
             xdrOut = null;
             xdrIn = null;
             socket = null;
+        }
+    }
+
+    @Override
+    protected void finalize() throws Throwable {
+        try {
+            disconnect();
+        } finally {
+            super.finalize();
         }
     }
 

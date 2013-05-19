@@ -20,7 +20,7 @@
  */
 package org.firebirdsql.gds.ng.wire;
 
-import org.firebirdsql.gds.ng.FbException;
+import java.sql.SQLException;
 
 /**
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
@@ -31,9 +31,9 @@ public final class GenericResponse implements Response {
     private final int objectHandle;
     private final long blobId;
     private final byte[] data;
-    private final FbException exception;
+    private final SQLException exception;
 
-    public GenericResponse(int objectHandle, long blobId, byte[] data, FbException exception) {
+    public GenericResponse(int objectHandle, long blobId, byte[] data, SQLException exception) {
         this.objectHandle = objectHandle;
         this.blobId = blobId;
         this.data = data;
@@ -52,7 +52,7 @@ public final class GenericResponse implements Response {
         return data;
     }
 
-    public FbException getException() {
+    public SQLException getException() {
         return exception;
     }
 }

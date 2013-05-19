@@ -20,16 +20,17 @@
  */
 package org.firebirdsql.gds.ng.wire;
 
-import static org.junit.Assert.*;
+import org.firebirdsql.gds.impl.wire.WireProtocolConstants;
+import org.firebirdsql.gds.ng.EmptyProtocolDescriptor;
+import org.firebirdsql.gds.ng.wire.version10.Version10Descriptor;
+import org.junit.Test;
 
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import org.firebirdsql.gds.impl.wire.WireProtocolConstants;
-import org.firebirdsql.gds.ng.wire.version10.Version10Descriptor;
-import org.junit.Test;
+import static org.junit.Assert.*;
 
 /**
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
@@ -48,7 +49,7 @@ public class TestProtocolCollection {
     @Test
     public void testGetDefaultCollection() {
         assertProtocolCollection(ProtocolCollection.getDefaultCollection(),
-                Arrays.<Class<? extends ProtocolDescriptor>> asList(Version10Descriptor.class));
+                Arrays.<Class<? extends ProtocolDescriptor>>asList(Version10Descriptor.class));
     }
 
     /**
@@ -58,39 +59,23 @@ public class TestProtocolCollection {
     @Test
     public void testCreate() {
         // Version 10 with weight 3, type 1
-        ProtocolDescriptor alternativeDescriptorV10Weight3_1 = new AbstractProtocolDescriptor(
+        ProtocolDescriptor alternativeDescriptorV10Weight3_1 = new EmptyProtocolDescriptor(
                 WireProtocolConstants.PROTOCOL_VERSION11, WireProtocolConstants.arch_generic,
-                WireProtocolConstants.ptype_rpc, WireProtocolConstants.ptype_batch_send, 3) {
-                    @Override
-                    public FbWireDatabase createDatabase(WireConnection connection) {
-                        return null;
-                    }
-        };
+                WireProtocolConstants.ptype_rpc, WireProtocolConstants.ptype_batch_send, 3);
         // Version 10 with weight 2
-        ProtocolDescriptor alternativeDescriptorV10Weight2 = new AbstractProtocolDescriptor(
+        ProtocolDescriptor alternativeDescriptorV10Weight2 = new EmptyProtocolDescriptor(
                 WireProtocolConstants.PROTOCOL_VERSION11, WireProtocolConstants.arch_generic,
-                WireProtocolConstants.ptype_rpc, WireProtocolConstants.ptype_batch_send, 2) {
-                    @Override
-                    public FbWireDatabase createDatabase(WireConnection connection) {
-                        return null;
-                    }
-        };
+                WireProtocolConstants.ptype_rpc, WireProtocolConstants.ptype_batch_send, 2);
         // Version 10 with weight 3, type 2
-        ProtocolDescriptor alternativeDescriptorV10Weight3_2 = new AbstractProtocolDescriptor(
+        ProtocolDescriptor alternativeDescriptorV10Weight3_2 = new EmptyProtocolDescriptor(
                 WireProtocolConstants.PROTOCOL_VERSION11, WireProtocolConstants.arch_generic,
-                WireProtocolConstants.ptype_rpc, WireProtocolConstants.ptype_batch_send, 3) {
-                    @Override
-                    public FbWireDatabase createDatabase(WireConnection connection) {
-                        // TODO Auto-generated method stub
-                        return null;
-                    }
-        };
-        
+                WireProtocolConstants.ptype_rpc, WireProtocolConstants.ptype_batch_send, 3);
+
         ProtocolCollection collection = ProtocolCollection.create(new Version10Descriptor(),
                 alternativeDescriptorV10Weight3_1, alternativeDescriptorV10Weight2, alternativeDescriptorV10Weight3_2);
 
         // We expect the descriptor 'Version 10 with weight 3, type 1' to be returned
-        assertProtocolCollection(collection, Arrays.<Class<? extends ProtocolDescriptor>> asList(
+        assertProtocolCollection(collection, Arrays.<Class<? extends ProtocolDescriptor>>asList(
                 Version10Descriptor.class, alternativeDescriptorV10Weight3_1.getClass()));
     }
 
@@ -101,18 +86,13 @@ public class TestProtocolCollection {
      */
     @Test
     public void testCreateSameVersion() {
-        ProtocolDescriptor alternativeDescriptor = new AbstractProtocolDescriptor(
+        ProtocolDescriptor alternativeDescriptor = new EmptyProtocolDescriptor(
                 WireProtocolConstants.PROTOCOL_VERSION10, WireProtocolConstants.arch_generic,
-                WireProtocolConstants.ptype_rpc, WireProtocolConstants.ptype_batch_send, 2) {
-                    @Override
-                    public FbWireDatabase createDatabase(WireConnection connection) {
-                        return null;
-                    }
-        };
+                WireProtocolConstants.ptype_rpc, WireProtocolConstants.ptype_batch_send, 2);
         ProtocolCollection collection = ProtocolCollection.create(new Version10Descriptor(), alternativeDescriptor);
 
         assertProtocolCollection(collection,
-                Arrays.<Class<? extends ProtocolDescriptor>> asList(alternativeDescriptor.getClass()));
+                Arrays.<Class<? extends ProtocolDescriptor>>asList(alternativeDescriptor.getClass()));
     }
 
     /**
@@ -142,7 +122,7 @@ public class TestProtocolCollection {
     }
 
     private void assertProtocolCollection(ProtocolCollection collection,
-            List<Class<? extends ProtocolDescriptor>> expected) {
+                                          List<Class<? extends ProtocolDescriptor>> expected) {
         Set<Class<? extends ProtocolDescriptor>> expectedProtocols = new HashSet<Class<? extends ProtocolDescriptor>>(
                 expected);
         Set<Class<? extends ProtocolDescriptor>> unexpectedProtocols = new HashSet<Class<? extends ProtocolDescriptor>>();

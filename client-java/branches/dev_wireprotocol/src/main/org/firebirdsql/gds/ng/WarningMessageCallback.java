@@ -20,18 +20,30 @@
  */
 package org.firebirdsql.gds.ng;
 
+import java.sql.SQLWarning;
+
 /**
  * Callback interface for passing warnings.
- * 
+ *
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @since 2.3
  */
 public interface WarningMessageCallback {
 
     /**
-     * Signals the warning to the callback
-     * 
-     * @param warning GdsException that is a warning
+     * Dummy WarningMessageCallback that does nothing
      */
-    void processWarning(FbException warning);
+    WarningMessageCallback DUMMY = new WarningMessageCallback() {
+        @Override
+        public void processWarning(SQLWarning warning) {
+        }
+    };
+
+    /**
+     * Signals the warning to the callback
+     *
+     * @param warning
+     *         GdsException that is a warning
+     */
+    void processWarning(SQLWarning warning);
 }

@@ -22,12 +22,14 @@ package org.firebirdsql.gds.ng;
 
 import org.firebirdsql.gds.TransactionParameterBuffer;
 
+import java.sql.SQLException;
+
 /**
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @since 2.3
  */
 public interface FbTransaction {
-    
+
     // TODO Evaluate whether this structure matches with needs for JDBC
 
     /**
@@ -38,63 +40,63 @@ public interface FbTransaction {
     /**
      * Adds a {@link TransactionEventListener} to the list of listeners.
      * <p>
-     * The implementation may use {@link WeakReference} for the listeners, so
-     * make sure the listener remains strongly reachable for its usefull
+     * The implementation may use {@link java.lang.ref.WeakReference} for the listeners, so
+     * make sure the listener remains strongly reachable for its useful
      * lifetime.
      * </p>
-     * 
+     *
      * @param listener
-     *            TransactionEventListener to register
+     *         TransactionEventListener to register
      */
     void addTransactionEventListener(TransactionEventListener listener);
 
     /**
      * Removes the {@link TransactionEventListener} from the list of listeners.
-     * 
+     *
      * @param listener
-     *            TransactionEventListener to remove
+     *         TransactionEventListener to remove
      */
     void removeTransactionEventListener(TransactionEventListener listener);
 
     /**
      * Begin the transaction.
-     * 
+     *
      * @param tpb
-     *            TransactionParameterBuffer with the transaction configuration
-     * @throws FbException
+     *         TransactionParameterBuffer with the transaction configuration
+     * @throws SQLException
      */
-    void beginTransaction(TransactionParameterBuffer tpb) throws FbException;
+    void beginTransaction(TransactionParameterBuffer tpb) throws SQLException;
 
     /**
      * Commit the transaction
-     * 
-     * @throws FbException
+     *
+     * @throws SQLException
      */
-    void commit() throws FbException;
+    void commit() throws SQLException;
 
     /**
      * Commit with retaining
-     * 
-     * @throws FbException
+     *
+     * @throws SQLException
      */
-    void commitRetaining() throws FbException;
+    void commitRetaining() throws SQLException;
 
     /**
      * Roll back the transaction
-     * 
-     * @throws FbException
+     *
+     * @throws SQLException
      */
-    void rollback() throws FbException;
+    void rollback() throws SQLException;
 
     /**
      * Roll back with retaining
-     * 
-     * @throws FbException
+     *
+     * @throws SQLException
      */
-    void rollbackRetaining() throws FbException;
+    void rollbackRetaining() throws SQLException;
 
     // TODO Implement two-phase to match with current Jaybird implementation
-    //    void prepare() throws FbException;
+    //    void prepare() throws SQLException;
     //
-    //    void prepare(byte[] buffer) throws FbException;
+    //    void prepare(byte[] buffer) throws SQLException;
 }

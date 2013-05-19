@@ -23,6 +23,8 @@ package org.firebirdsql.gds.ng;
 import org.firebirdsql.gds.DatabaseParameterBuffer;
 import org.firebirdsql.gds.TransactionParameterBuffer;
 
+import java.sql.SQLException;
+
 /**
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @since 2.3
@@ -31,85 +33,91 @@ public interface FbDatabase {
 
     /**
      * Attach to a database.
-     * 
+     *
      * @param dpb
-     *            The DatabaseParameterBuffer with all required values
-     * @param databaseName
-     *            Path or alias of the database
-     * @throws FbException
+     *         The DatabaseParameterBuffer with all required values
+     * @throws SQLException
      */
-    void attach(DatabaseParameterBuffer dpb, String databaseName) throws FbException;
+    void attach(DatabaseParameterBuffer dpb) throws SQLException;
 
     /**
      * Detaches from the current database.
-     * 
-     * @throws FbException
+     *
+     * @throws SQLException
      */
-    void detach() throws FbException;
+    void detach() throws SQLException;
 
     /**
      * Creates a new database, connection remains attached to database.
-     * 
+     *
      * @param dpb
-     *            DatabaseParameterBuffer with all required values
-     * @param databaseName
-     *            Path or alias of the database
-     * @throws FbException
+     *         DatabaseParameterBuffer with all required values
+     * @throws SQLException
      */
-    void createDatabase(DatabaseParameterBuffer dpb, String databaseName) throws FbException;
+    void createDatabase(DatabaseParameterBuffer dpb) throws SQLException;
 
     /**
      * Drops (and deletes) the currently attached database.
-     * 
-     * @throws FbException
+     *
+     * @throws SQLException
      */
-    void dropDatabase() throws FbException;
+    void dropDatabase() throws SQLException;
+
+    /**
+     * Cancels the current operation.
+     *
+     * @param kind
+     *         TODO Document parameter kind of cancelOperation
+     * @throws SQLException
+     *         For errors cancelling, or if the cancel operation is not supported.
+     */
+    void cancelOperation(int kind) throws SQLException;
 
     /**
      * Creates and starts a transaction.
-     * 
+     *
      * @param tpb
-     *            TransactionParameterBuffer with the required transaction
-     *            options
+     *         TransactionParameterBuffer with the required transaction
+     *         options
      * @return Transaction
-     * @throws FbException
+     * @throws SQLException
      */
-    FbTransaction createTransaction(TransactionParameterBuffer tpb) throws FbException;
+    FbTransaction createTransaction(TransactionParameterBuffer tpb) throws SQLException;
 
     /**
      * Creates a statement with an implicit transaction.
-     * 
+     *
      * @return GdsStatement with implicit transaction
-     * @throws FbException
+     * @throws SQLException
      */
-    FbStatement createStatement() throws FbException;
+    FbStatement createStatement() throws SQLException;
 
     /**
      * Creates a statement associated with a transaction
-     * 
+     *
      * @param transaction
-     *            GdsTransaction to associate with this statement
+     *         GdsTransaction to associate with this statement
      * @return GdsStatement
-     * @throws FbException
+     * @throws SQLException
      */
-    FbStatement createStatement(FbTransaction transaction) throws FbException;
+    FbStatement createStatement(FbTransaction transaction) throws SQLException;
 
     /**
      * Request database info.
-     * 
+     *
      * @param requestItems
-     *            Array of info items to request
+     *         Array of info items to request
      * @param bufferLength
-     *            Response buffer length to use
+     *         Response buffer length to use
      * @param infoProcessor
-     *            Implementation of {@link InfoProcessor} to transform
-     *            the info response
+     *         Implementation of {@link InfoProcessor} to transform
+     *         the info response
      * @return Transformed info response of type T
-     * @throws FbException
-     *             For errors retrieving or transforming the response.
+     * @throws SQLException
+     *         For errors retrieving or transforming the response.
      */
     <T> T getDatabaseInfo(byte[] requestItems, int bufferLength, InfoProcessor<T> infoProcessor)
-            throws FbException;
+            throws SQLException;
 
     /**
      * @return The database dialect
@@ -133,15 +141,15 @@ public interface FbDatabase {
 
     /**
      * Sets the WarningMessageCallback for this database.
-     * 
+     *
      * @param callback
-     *            WarningMessageCallback
+     *         WarningMessageCallback
      */
     void setWarningMessageCallback(WarningMessageCallback callback);
 
     /**
      * Current attachment status of the database.
-     * 
+     *
      * @return <code>true</code> if connected to the server and attached to a
      *         database, <code>false</code> otherwise.
      */
@@ -149,7 +157,7 @@ public interface FbDatabase {
 
     /**
      * Get synchronization object.
-     * 
+     *
      * @return object, cannot be <code>null</code>.
      */
     Object getSynchronizationObject();

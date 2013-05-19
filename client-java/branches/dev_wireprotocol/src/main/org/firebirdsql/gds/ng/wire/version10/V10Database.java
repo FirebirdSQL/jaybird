@@ -20,11 +20,6 @@
  */
 package org.firebirdsql.gds.ng.wire.version10;
 
-import java.io.IOException;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicReference;
-
 import org.firebirdsql.gds.DatabaseParameterBuffer;
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.TransactionParameterBuffer;
@@ -34,14 +29,22 @@ import org.firebirdsql.gds.impl.wire.XdrOutputStream;
 import org.firebirdsql.gds.impl.wire.Xdrable;
 import org.firebirdsql.gds.ng.*;
 import org.firebirdsql.gds.ng.wire.*;
+import org.firebirdsql.jdbc.FBSQLException;
 import org.firebirdsql.logging.Logger;
 import org.firebirdsql.logging.LoggerFactory;
+
+import java.io.IOException;
+import java.sql.SQLException;
+import java.sql.SQLFeatureNotSupportedException;
+import java.sql.SQLWarning;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.firebirdsql.gds.impl.wire.WireProtocolConstants.*;
 
 /**
  * {@link FbWireDatabase} implementation for the version 10 wire protocol.
- * 
+ *
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @since 2.3
  */
@@ -49,13 +52,21 @@ public class V10Database implements FbWireDatabase, TransactionEventListener {
 
     private static final Logger log = LoggerFactory.getLogger(V10Database.class, false);
 
+    // TODO Eliminate DatabaseParameterBuffer parameter from various methods
+
     private final Object syncObject = new Object();
     private final XdrStreamHolder xdrStreamHolder;
     private final AtomicBoolean attached = new AtomicBoolean();
     private final AtomicInteger transactionCount = new AtomicInteger();
     private final ProtocolDescriptor protocolDescriptor;
-    private final AtomicReference<WireConnection> connection;
-    private WarningMessageCallback warningCallback;
+    private final WireConnection connection;
+    /**
+     * Callback for warnings. Only change using {@link #setWarningMessageCallback(org.firebirdsql.gds.ng.WarningMessageCallback)}.
+     * <p>
+     * Should never be null.
+     * </p>
+     */
+    private WarningMessageCallback warningCallback = WarningMessageCallback.DUMMY;
     private int handle;
     private short databaseDialect;
     private int odsMajor;
@@ -64,15 +75,17 @@ public class V10Database implements FbWireDatabase, TransactionEventListener {
 
     /**
      * Creates a V10Database instance.
-     * 
+     *
      * @param connection
-     *            A WireConnection with an established connection to the server.
+     *         A WireConnection with an established connection to the server.
      * @param descriptor
-     *            The ProtocolDescriptor that created this connection (this is
-     *            used for creating further dependent objects).
+     *         The ProtocolDescriptor that created this connection (this is
+     *         used for creating further dependent objects).
      */
     protected V10Database(WireConnection connection, ProtocolDescriptor descriptor) {
-        this.connection = new AtomicReference<WireConnection>(connection);
+        if (connection == null) throw new IllegalArgumentException("parameter connection should be non-null");
+        if (descriptor == null) throw new IllegalArgumentException("parameter descriptor should be non-null");
+        this.connection = connection;
         xdrStreamHolder = new XdrStreamHolder(connection);
         protocolDescriptor = descriptor;
     }
@@ -84,8 +97,7 @@ public class V10Database implements FbWireDatabase, TransactionEventListener {
 
     @Override
     public short getConnectionDialect() {
-        // TODO
-        return -1;
+        return connection.getConnectionDialect();
     }
 
     /**
@@ -93,9 +105,9 @@ public class V10Database implements FbWireDatabase, TransactionEventListener {
      * <p>
      * This method should only be called by this instance.
      * </p>
-     * 
+     *
      * @param dialect
-     *            Dialect of the database/connection
+     *         Dialect of the database/connection
      */
     protected void setDatabaseDialect(short dialect) {
         this.databaseDialect = dialect;
@@ -117,9 +129,9 @@ public class V10Database implements FbWireDatabase, TransactionEventListener {
      * <p>
      * This method should only be called by this instance.
      * </p>
-     * 
+     *
      * @param odsMajor
-     *            ODS major version
+     *         ODS major version
      */
     protected void setOdsMajor(int odsMajor) {
         this.odsMajor = odsMajor;
@@ -136,9 +148,9 @@ public class V10Database implements FbWireDatabase, TransactionEventListener {
      * <p>
      * This method should only be called by this instance.
      * </p>
-     * 
+     *
      * @param odsMinor
-     *            The ODS minor version
+     *         The ODS minor version
      */
     protected void setOdsMinor(int odsMinor) {
         this.odsMinor = odsMinor;
@@ -154,9 +166,9 @@ public class V10Database implements FbWireDatabase, TransactionEventListener {
      * <p>
      * This method should only be called by this instance.
      * </p>
-     * 
+     *
      * @param versionString
-     *            Raw version string
+     *         Raw version string
      */
     protected void setVersionString(String versionString) {
         this.versionString = versionString;
@@ -170,7 +182,7 @@ public class V10Database implements FbWireDatabase, TransactionEventListener {
     @Override
     public void setWarningMessageCallback(WarningMessageCallback callback) {
         synchronized (getSynchronizationObject()) {
-            warningCallback = callback;
+            warningCallback = callback != null ? callback : WarningMessageCallback.DUMMY;
         }
     }
 
@@ -180,56 +192,53 @@ public class V10Database implements FbWireDatabase, TransactionEventListener {
     }
 
     @Override
-    public final XdrInputStream getXdrIn() throws FbException {
+    public final XdrInputStream getXdrIn() throws SQLException {
         return xdrStreamHolder.getXdrIn();
     }
 
     @Override
-    public final XdrOutputStream getXdrOut() throws FbException {
+    public final XdrOutputStream getXdrOut() throws SQLException {
         return xdrStreamHolder.getXdrOut();
     }
 
     @Override
     public boolean isAttached() {
-        WireConnection actualConnection = connection.get();
-        return attached.get() && actualConnection != null && actualConnection.isConnected();
+        return attached.get() && connection.isConnected();
     }
 
     @Override
-    public void attach(DatabaseParameterBuffer dpb, String databaseName) throws FbException {
-        attachOrCreate(dpb, databaseName, false);
+    public void attach(DatabaseParameterBuffer dpb) throws SQLException {
+        attachOrCreate(dpb, false);
     }
 
     /**
      * @param dpb
-     *            Database parameter buffer
-     * @param databaseName
-     *            Name of the database file or alias
+     *         Database parameter buffer
      * @param create
-     *            <code>true</code> create database, <code>false</code> only
-     *            attach
-     * @throws FbException
-     *             For errors during attach or create
+     *         <code>true</code> create database, <code>false</code> only
+     *         attach
+     * @throws SQLException
+     *         For errors during attach or create
      */
-    protected void attachOrCreate(DatabaseParameterBuffer dpb, String databaseName, boolean create) throws FbException {
-        if (attached.get()) {
-            throw new FbException("Already attached to a database");
-        }
+    protected void attachOrCreate(DatabaseParameterBuffer dpb, boolean create) throws SQLException {
         checkConnected();
+        if (attached.get()) {
+            throw new SQLException("Already attached to a database");
+        }
         synchronized (getSynchronizationObject()) {
             try {
                 try {
-                    sendAttachOrCreateToBuffer(dpb, databaseName, create);
+                    sendAttachOrCreateToBuffer(dpb, create);
                     getXdrOut().flush();
                 } catch (IOException e) {
-                    throw new FbException(ISCConstants.isc_net_write_err, e);
+                    throw new FbExceptionBuilder().exception(ISCConstants.isc_net_write_err).cause(e).toSQLException();
                 }
                 try {
                     processAttachOrCreateResponse(readGenericResponse());
                 } catch (IOException e) {
-                    throw new FbException(ISCConstants.isc_net_read_err, e);
+                    throw new FbExceptionBuilder().exception(ISCConstants.isc_net_read_err).cause(e).toSQLException();
                 }
-            } catch (FbException e) {
+            } catch (SQLException e) {
                 safelyDetach();
                 throw e;
             }
@@ -240,21 +249,19 @@ public class V10Database implements FbWireDatabase, TransactionEventListener {
 
     /**
      * Sends the buffer for op_attach or op_create
-     * 
+     *
      * @param dpb
-     *            Database parameter buffer
-     * @param databaseName
-     *            Name of the database file or alias
+     *         Database parameter buffer
      * @param create
-     *            <code>true</code> create database, <code>false</code> only
-     *            attach
-     * @throws FbException
-     *             If the connection is not open
+     *         <code>true</code> create database, <code>false</code> only
+     *         attach
+     * @throws SQLException
+     *         If the connection is not open
      * @throws IOException
-     *             For errors writing to the connection
+     *         For errors writing to the connection
      */
-    protected void sendAttachOrCreateToBuffer(DatabaseParameterBuffer dpb, String databaseName, boolean create)
-            throws FbException, IOException {
+    protected void sendAttachOrCreateToBuffer(DatabaseParameterBuffer dpb, boolean create)
+            throws SQLException, IOException {
         final int operation = create ? op_create : op_attach;
         final XdrOutputStream xdrOut = getXdrOut();
 
@@ -262,7 +269,7 @@ public class V10Database implements FbWireDatabase, TransactionEventListener {
 
         xdrOut.writeInt(operation);
         xdrOut.writeInt(0); // Database object ID
-        xdrOut.writeString(databaseName, filenameCharset);
+        xdrOut.writeString(connection.getDatabaseName(), filenameCharset);
 
         dpb = ((DatabaseParameterBufferExtension) dpb).removeExtensionParams();
         // TODO Include ProcessID and ProcessName as in JavaGDSImpl implementation (or move that to different part?)
@@ -272,9 +279,9 @@ public class V10Database implements FbWireDatabase, TransactionEventListener {
 
     /**
      * Processes the response from the server to the attach or create operation.
-     * 
+     *
      * @param genericResponse
-     *            GenericResponse received from the server.
+     *         GenericResponse received from the server.
      */
     protected void processAttachOrCreateResponse(GenericResponse genericResponse) {
         handle = genericResponse.getObjectHandle();
@@ -286,26 +293,27 @@ public class V10Database implements FbWireDatabase, TransactionEventListener {
      * Implementation retrieves database information like dialect ODS and server
      * version.
      * </p>
-     * 
-     * @throws FbException
-     *             For errors reading or writing database information.
+     *
+     * @throws SQLException
+     *         For errors reading or writing database information.
      */
-    protected void afterAttachActions() throws FbException {
+    protected void afterAttachActions() throws SQLException {
         getDatabaseInfo(DESCRIBE_DATABASE_INFO_BLOCK, 1024, new DatabaseInformationProcessor());
         // During connect and attach the socketTimeout might be set to the connectTimeout, now reset to 'normal' socketTimeout
-        connection.get().resetSocketTimeout();
+        connection.resetSocketTimeout();
     }
 
     @Override
-    public void detach() throws FbException {
+    public void detach() throws SQLException {
         checkConnected();
         synchronized (getSynchronizationObject()) {
             if (getTransactionCount() > 0) {
-                // TODO: Change exception creation?
-                // TODO: Rollback transactions instead?
-                FbException fbException = new FbException(ISCConstants.isc_open_trans);
-                fbException.setNext(new FbException(ISCConstants.isc_arg_number, getTransactionCount()));
-                throw fbException;
+                // Register open transactions as warning, we are going to detach and close the connection anyway
+                // TODO: Change exception creation
+                // TODO: Rollback transactions?
+                FbExceptionBuilder builder = new FbExceptionBuilder();
+                builder.warning(ISCConstants.isc_open_trans).messageParameter(getTransactionCount());
+                warningCallback.processWarning(builder.toSQLException(SQLWarning.class));
             }
 
             final XdrOutputStream xdrOut = getXdrOut();
@@ -326,7 +334,7 @@ public class V10Database implements FbWireDatabase, TransactionEventListener {
                 } catch (Exception ex2) {
                     // ignore
                 }
-                throw new FbException(ISCConstants.isc_net_write_err, ex);
+                throw new FbExceptionBuilder().exception(ISCConstants.isc_net_write_err).cause(ex).toSQLException();
             } finally {
                 attached.set(false);
             }
@@ -345,28 +353,31 @@ public class V10Database implements FbWireDatabase, TransactionEventListener {
         }
     }
 
-    public void closeConnection() throws IOException {
-        WireConnection actualConnection = connection.get();
-        if (actualConnection == null || !actualConnection.isConnected()) return;
+    /**
+     * Closes the WireConnection associated with this connection.
+     *
+     * @throws IOException
+     *         For errors closing the connection.
+     */
+    protected void closeConnection() throws IOException {
+        if (!connection.isConnected()) return;
         synchronized (getSynchronizationObject()) {
             try {
-                actualConnection.disconnect();
+                connection.disconnect();
             } finally {
-                // Clear members
-                connection.set(null);
-                versionString = null;
-                warningCallback = null;
+                attached.set(false);
+                setWarningMessageCallback(null);
             }
         }
     }
 
     @Override
-    public void createDatabase(DatabaseParameterBuffer dpb, String databaseName) throws FbException {
-        attachOrCreate(dpb, databaseName, true);
+    public void createDatabase(DatabaseParameterBuffer dpb) throws SQLException {
+        attachOrCreate(dpb, true);
     }
 
     @Override
-    public void dropDatabase() throws FbException {
+    public void dropDatabase() throws SQLException {
         checkAttached();
         synchronized (getSynchronizationObject()) {
             try {
@@ -376,61 +387,66 @@ public class V10Database implements FbWireDatabase, TransactionEventListener {
                     xdrOut.writeInt(getHandle());
                     xdrOut.flush();
                 } catch (IOException ioex) {
-                    throw new FbException(ISCConstants.isc_net_write_err, ioex);
+                    throw new FbExceptionBuilder().exception(ISCConstants.isc_net_write_err).cause(ioex).toSQLException();
                 }
                 try {
                     readResponse();
                 } catch (IOException ioex) {
-                    throw new FbException(ISCConstants.isc_net_read_err, ioex);
+                    throw new FbExceptionBuilder().exception(ISCConstants.isc_net_read_err).cause(ioex).toSQLException();
                 }
             } finally {
-                try {
-                    safelyDetach();
-                } finally {
-                    attached.set(false);
-                }
+                // TODO: Might be wrong, as this will signal an attach followed by a connection close; we are no longer attached
+                safelyDetach();
             }
         }
     }
 
+    // TODO Rename to startTransaction(?), or leave calling beginTransaction to caller; and eliminate tpb use?
+
     @Override
-    public FbTransaction createTransaction(TransactionParameterBuffer tpb) throws FbException {
+    public FbTransaction createTransaction(TransactionParameterBuffer tpb) throws SQLException {
+        FbTransaction transaction = protocolDescriptor.createTransaction(this);
+        transaction.beginTransaction(tpb);
+        return transaction;
+    }
+
+    @Override
+    public FbStatement createStatement() throws SQLException {
         // TODO Auto-generated method stub
         return null;
     }
 
     @Override
-    public FbStatement createStatement() throws FbException {
+    public FbStatement createStatement(FbTransaction transaction) throws SQLException {
         // TODO Auto-generated method stub
         return null;
     }
 
     @Override
-    public FbStatement createStatement(FbTransaction transaction) throws FbException {
-        // TODO Auto-generated method stub
-        return null;
+    public void cancelOperation(int kind) throws SQLException {
+        throw new SQLFeatureNotSupportedException("Cancel Operation isn't supported on Firebird 2.1 and earlier.");
     }
 
     @Override
     public <T> T getDatabaseInfo(byte[] requestItems, int bufferLength, InfoProcessor<T> infoProcessor)
-            throws FbException {
+            throws SQLException {
         byte[] responseBuffer = getDatabaseInfo(requestItems, bufferLength);
         return infoProcessor.process(responseBuffer);
     }
 
     /**
      * Performs a database info request.
-     * 
+     *
      * @param requestItems
-     *            Information items to request
+     *         Information items to request
      * @param maxBufferLength
-     *            Maximum response buffer length to use
+     *         Maximum response buffer length to use
      * @return The response buffer (note: length is the actual length of the
      *         response, not <code>maxBufferLength</code>
-     * @throws FbException
-     *             For errors retrieving the information.
+     * @throws SQLException
+     *         For errors retrieving the information.
      */
-    protected byte[] getDatabaseInfo(byte[] requestItems, int maxBufferLength) throws FbException {
+    protected byte[] getDatabaseInfo(byte[] requestItems, int maxBufferLength) throws SQLException {
         checkAttached();
         synchronized (getSynchronizationObject()) {
             try {
@@ -443,7 +459,7 @@ public class V10Database implements FbWireDatabase, TransactionEventListener {
 
                 xdrOut.flush();
             } catch (IOException ex) {
-                throw new FbException(ISCConstants.isc_net_write_err, ex);
+                throw new FbExceptionBuilder().exception(ISCConstants.isc_net_write_err).cause(ex).toSQLException();
             }
             try {
                 GenericResponse genericResponse = readGenericResponse();
@@ -454,13 +470,13 @@ public class V10Database implements FbWireDatabase, TransactionEventListener {
                 System.arraycopy(data, 0, responseBuffer, 0, responseLength);
                 return responseBuffer;
             } catch (IOException ex) {
-                throw new FbException(ISCConstants.isc_net_read_err, ex);
+                throw new FbExceptionBuilder().exception(ISCConstants.isc_net_read_err).cause(ex).toSQLException();
             }
         }
     }
 
     @Override
-    public Response readResponse() throws FbException, IOException {
+    public Response readResponse() throws SQLException, IOException {
         Response response = readSingleResponse();
         if (response instanceof GenericResponse) {
             processResponse(response);
@@ -470,29 +486,29 @@ public class V10Database implements FbWireDatabase, TransactionEventListener {
 
     /**
      * Convenience method to read a Response to a GenericResponse
-     * 
+     *
      * @return GenericResponse
-     * @throws FbException
-     *             For errors returned from the server, or when attempting to
-     *             read.
+     * @throws SQLException
+     *         For errors returned from the server, or when attempting to
+     *         read.
      * @throws IOException
-     *             For errors reading the response from the connection.
+     *         For errors reading the response from the connection.
      */
-    protected GenericResponse readGenericResponse() throws FbException, IOException {
+    protected GenericResponse readGenericResponse() throws SQLException, IOException {
         return (GenericResponse) readResponse();
     }
 
     /**
      * Reads the response from the server.
-     * 
+     *
      * @return Response
-     * @throws FbException
-     *             For errors returned from the server, or when attempting to
-     *             read
+     * @throws SQLException
+     *         For errors returned from the server, or when attempting to
+     *         read
      * @throws IOException
-     *             For errors reading the response from the connection.
+     *         For errors reading the response from the connection.
      */
-    protected Response readSingleResponse() throws FbException, IOException {
+    protected Response readSingleResponse() throws SQLException, IOException {
         Response response = processOperation(getXdrIn().readNextOperation());
         processResponseWarnings(response);
         return response;
@@ -500,15 +516,15 @@ public class V10Database implements FbWireDatabase, TransactionEventListener {
 
     /**
      * @param response
-     *            Response to process
-     * @throws FbException
-     *             For errors returned from the server.
+     *         Response to process
+     * @throws SQLException
+     *         For errors returned from the server.
      */
-    protected void processResponse(Response response) throws FbException {
+    protected void processResponse(Response response) throws SQLException {
         if (response instanceof GenericResponse) {
             GenericResponse genericResponse = (GenericResponse) response;
-            FbException exception = genericResponse.getException();
-            if (exception != null && !exception.isWarning()) {
+            SQLException exception = genericResponse.getException();
+            if (exception != null && !(exception instanceof SQLWarning)) {
                 throw exception;
             }
         }
@@ -517,111 +533,111 @@ public class V10Database implements FbWireDatabase, TransactionEventListener {
     /**
      * Checks if the response included a warning and signals that warning to the
      * WarningMessageCallback.
-     * 
+     *
      * @param response
-     *            Response to process
+     *         Response to process
      */
     protected void processResponseWarnings(Response response) {
         if (response instanceof GenericResponse) {
             GenericResponse genericResponse = (GenericResponse) response;
-            FbException exception = genericResponse.getException();
-            if (exception != null && exception.isWarning() && warningCallback != null) {
-                warningCallback.processWarning(exception);
+            SQLException exception = genericResponse.getException();
+            if (exception != null && exception instanceof SQLWarning) {
+                warningCallback.processWarning((SQLWarning) exception);
             }
         }
     }
 
     /**
      * Reads the response based on the specified operation.
-     * 
+     *
      * @param operation
-     *            Database operation
+     *         Database operation
      * @return Response object for the operation
-     * @throws FbException
-     *             For errors reading the response from the connection.
+     * @throws SQLException
+     *         For errors reading the response from the connection.
      * @throws IOException
-     *             For errors reading the response from the connection.
+     *         For errors reading the response from the connection.
      */
-    protected Response processOperation(int operation) throws FbException, IOException {
+    protected Response processOperation(int operation) throws SQLException, IOException {
         final XdrInputStream xdrIn = getXdrIn();
         switch (operation) {
-        case op_response:
-            return new GenericResponse(xdrIn.readInt(), xdrIn.readLong(), xdrIn.readBuffer(), readStatusVector());
-        case op_fetch_response:
-            return new FetchResponse(xdrIn.readInt(), xdrIn.readInt());
-        case op_sql_response:
-            return new SqlResponse(xdrIn.readInt());
-        default:
-            // TODO: Throw exception instead?
-            return null;
+            case op_response:
+                return new GenericResponse(xdrIn.readInt(), xdrIn.readLong(), xdrIn.readBuffer(), readStatusVector());
+            case op_fetch_response:
+                return new FetchResponse(xdrIn.readInt(), xdrIn.readInt());
+            case op_sql_response:
+                return new SqlResponse(xdrIn.readInt());
+            default:
+                // TODO: Throw exception instead?
+                return null;
         }
     }
 
     /**
-     * Process the status vector and returns the associated {@link FbException}
+     * Process the status vector and returns the associated {@link SQLException}
      * instance.
      * <p>
-     * NOTE: This method <b>returns</b> the FbException read from the
-     * statusvector, and only <b>throws</b> FbException when an error occurs
-     * processing the statusvector.
+     * NOTE: This method <b>returns</b> the SQLException read from the
+     * status vector, and only <b>throws</b> SQLException when an error occurs
+     * processing the status ector.
      * </p>
-     * 
-     * @return FbException from the statusvector
-     * @throws FbException
-     *             for errors reading or processing the statusvector
+     *
+     * @return SQLException from the status vector
+     * @throws SQLException
+     *         for errors reading or processing the status vector
      */
-    protected FbException readStatusVector() throws FbException {
+    protected SQLException readStatusVector() throws SQLException {
         // TODO: Revise processing of status vector to not use exceptions for intermediate strings and values.
         boolean debug = log.isDebugEnabled();
+        FbExceptionBuilder builder = new FbExceptionBuilder();
         try {
-            FbException head = null;
-            FbException tail = null;
             final XdrInputStream xdrIn = getXdrIn();
             while (true) {
                 int arg = xdrIn.readInt();
-                FbException td = null;
+                int errorCode = 0;
                 switch (arg) {
-                case ISCConstants.isc_arg_gds:
-                    int errorCode = xdrIn.readInt();
-                    if (debug) log.debug("readStatusVector arg:isc_arg_gds int: " + errorCode);
-                    if (errorCode != 0) {
-                        td = new FbException(arg, errorCode);
-                    }
-                    break;
-                case ISCConstants.isc_arg_interpreted:
-                case ISCConstants.isc_arg_string:
-                    String stringValue = xdrIn.readString();
-                    if (debug) log.debug("readStatusVector string: " + stringValue);
-                    td = new FbException(arg, stringValue);
-                    break;
-                case ISCConstants.isc_arg_number:
-                    int intValue = xdrIn.readInt();
-                    if (debug) log.debug("readStatusVector arg:isc_arg_number int: " + intValue);
-                    td = new FbException(arg, intValue);
-                    break;
-                case ISCConstants.isc_arg_end:
-                    return head;
-                default:
-                    int e = xdrIn.readInt();
-                    if (debug) log.debug("readStatusVector arg: " + arg + " int: " + e);
-                    if (e != 0) {
-                        td = new FbException(arg, e);
-                    }
-                    break;
-                }
-
-                if (td != null) {
-                    if (head == null) {
-                        head = td;
-                        tail = td;
-                    } else {
-                        tail.setNext(td);
-                        tail = td;
-                    }
+                    case ISCConstants.isc_arg_gds:
+                        errorCode = xdrIn.readInt();
+                        if (debug) log.debug("readStatusVector arg:isc_arg_gds int: " + errorCode);
+                        if (errorCode != 0) {
+                            builder.exception(errorCode);
+                        }
+                        break;
+                    case ISCConstants.isc_arg_warning:
+                        errorCode = xdrIn.readInt();
+                        if (debug) log.debug("readStatusVector arg:isc_arg_warning int: " + errorCode);
+                        if (errorCode != 0) {
+                            builder.warning(errorCode);
+                        }
+                        break;
+                    case ISCConstants.isc_arg_interpreted:
+                    case ISCConstants.isc_arg_string:
+                        String stringValue = xdrIn.readString();
+                        if (debug) log.debug("readStatusVector string: " + stringValue);
+                        builder.messageParameter(stringValue);
+                        break;
+                    case ISCConstants.isc_arg_sql_state:
+                        // TODO Is this actually returned from server?
+                        String sqlState = xdrIn.readString();
+                        if (debug) log.debug("readStatusVector sqlstate: " + sqlState);
+                        builder.sqlState(sqlState);
+                        break;
+                    case ISCConstants.isc_arg_number:
+                        int intValue = xdrIn.readInt();
+                        if (debug) log.debug("readStatusVector arg:isc_arg_number int: " + intValue);
+                        builder.messageParameter(intValue);
+                        break;
+                    case ISCConstants.isc_arg_end:
+                        return builder.toSQLException();
+                    default:
+                        int e = xdrIn.readInt();
+                        if (debug) log.debug("readStatusVector arg: " + arg + " int: " + e);
+                        builder.messageParameter(e);
+                        break;
                 }
             }
         } catch (IOException ioe) {
-            throw new FbException(ISCConstants.isc_net_read_err, ioe);
+            throw new FbExceptionBuilder().exception(ISCConstants.isc_net_read_err).cause(ioe).toSQLException();
         }
     }
 
@@ -636,12 +652,12 @@ public class V10Database implements FbWireDatabase, TransactionEventListener {
      * {@link #iscVaxLong(byte[], int, int)} for reading values with length up
      * to 8 bytes.
      * </p>
-     * 
+     *
      * @param buffer
-     *            The byte array from which the integer is to be retrieved
+     *         The byte array from which the integer is to be retrieved
      * @param startPosition
-     *            The offset starting position from which to start retrieving
-     *            byte values
+     *         The offset starting position from which to start retrieving
+     *         byte values
      * @return The integer value retrieved from the bytes
      * @see #iscVaxLong(byte[], int, int)
      * @see #iscVaxInteger2(byte[], int)
@@ -665,12 +681,12 @@ public class V10Database implements FbWireDatabase, TransactionEventListener {
      * This method is useful for lengths up to 8 bytes (ie normal Java longs (
      * <code>long</code>). For larger lengths the values read will overflow.
      * </p>
-     * 
+     *
      * @param buffer
-     *            The byte array from which the integer is to be retrieved
+     *         The byte array from which the integer is to be retrieved
      * @param startPosition
-     *            The offset starting position from which to start retrieving
-     *            byte values
+     *         The offset starting position from which to start retrieving
+     *         byte values
      * @return The integer value retrieved from the bytes
      * @see #iscVaxLong(byte[], int, int)
      * @see #iscVaxInteger2(byte[], int)
@@ -694,12 +710,12 @@ public class V10Database implements FbWireDatabase, TransactionEventListener {
      * Use of this method has a small performance benefit over generic
      * {@link #iscVaxInteger(byte[], int, int)}
      * </p>
-     * 
+     *
      * @param buffer
-     *            The byte array from which the integer is to be retrieved
+     *         The byte array from which the integer is to be retrieved
      * @param startPosition
-     *            The offset starting position from which to start retrieving
-     *            byte values
+     *         The offset starting position from which to start retrieving
+     *         byte values
      * @return The integer value retrieved from the bytes
      * @see #iscVaxInteger(byte[], int, int)
      * @see #iscVaxLong(byte[], int, int)
@@ -717,65 +733,65 @@ public class V10Database implements FbWireDatabase, TransactionEventListener {
      */
     // @formatter:off
     protected static final byte[] DESCRIBE_DATABASE_INFO_BLOCK = new byte[] {
-        ISCConstants.isc_info_db_sql_dialect,
-        ISCConstants.isc_info_firebird_version,
-        ISCConstants.isc_info_ods_version,
-        ISCConstants.isc_info_ods_minor_version,
-        ISCConstants.isc_info_end };
+            ISCConstants.isc_info_db_sql_dialect,
+            ISCConstants.isc_info_firebird_version,
+            ISCConstants.isc_info_ods_version,
+            ISCConstants.isc_info_ods_minor_version,
+            ISCConstants.isc_info_end };
     // @formatter:on
 
     protected class DatabaseInformationProcessor implements InfoProcessor<V10Database> {
         @Override
-        public V10Database process(byte[] info) throws FbException {
+        public V10Database process(byte[] info) throws SQLException {
             boolean debug = log.isDebugEnabled();
             if (info.length == 0) {
-                throw new FbException("Response buffer for database information request is empty");
+                throw new SQLException("Response buffer for database information request is empty");
             }
             if (debug)
                 log.debug(String.format("DatabaseInformationProcessor.process: first 2 bytes are %04X or: %02X, %02X",
                         iscVaxInteger2(info, 0), info[0], info[1]));
-            int value = 0;
-            int len = 0;
+            int value;
+            int len;
             int i = 0;
             while (info[i] != ISCConstants.isc_info_end) {
                 switch (info[i++]) {
-                case ISCConstants.isc_info_db_sql_dialect:
-                    len = iscVaxInteger2(info, i);
-                    i += 2;
-                    value = iscVaxInteger(info, i, len);
-                    i += len;
-                    setDatabaseDialect((short) value);
-                    if (debug) log.debug("isc_info_db_sql_dialect:" + value);
-                    break;
-                case ISCConstants.isc_info_ods_version:
-                    len = iscVaxInteger2(info, i);
-                    i += 2;
-                    value = iscVaxInteger(info, i, len);
-                    i += len;
-                    setOdsMajor(value);
-                    if (debug) log.debug("isc_info_ods_version:" + value);
-                    break;
-                case ISCConstants.isc_info_ods_minor_version:
-                    len = iscVaxInteger2(info, i);
-                    i += 2;
-                    value = iscVaxInteger(info, i, len);
-                    i += len;
-                    setOdsMinor(value);
-                    if (debug) log.debug("isc_info_ods_minor_version:" + value);
-                    break;
-                case ISCConstants.isc_info_firebird_version:
-                    len = iscVaxInteger2(info, i);
-                    i += 2;
-                    String fb_versS = new String(info, i + 2, len - 2);
-                    i += len;
-                    setVersionString(fb_versS);
-                    if (debug) log.debug("isc_info_firebird_version:" + fb_versS);
-                    break;
-                case ISCConstants.isc_info_truncated:
-                    if (debug) log.debug("isc_info_truncated ");
-                    return V10Database.this;
-                default:
-                    throw new FbException(ISCConstants.isc_infunk);
+                    case ISCConstants.isc_info_db_sql_dialect:
+                        len = iscVaxInteger2(info, i);
+                        i += 2;
+                        value = iscVaxInteger(info, i, len);
+                        i += len;
+                        setDatabaseDialect((short) value);
+                        if (debug) log.debug("isc_info_db_sql_dialect:" + value);
+                        break;
+                    case ISCConstants.isc_info_ods_version:
+                        len = iscVaxInteger2(info, i);
+                        i += 2;
+                        value = iscVaxInteger(info, i, len);
+                        i += len;
+                        setOdsMajor(value);
+                        if (debug) log.debug("isc_info_ods_version:" + value);
+                        break;
+                    case ISCConstants.isc_info_ods_minor_version:
+                        len = iscVaxInteger2(info, i);
+                        i += 2;
+                        value = iscVaxInteger(info, i, len);
+                        i += len;
+                        setOdsMinor(value);
+                        if (debug) log.debug("isc_info_ods_minor_version:" + value);
+                        break;
+                    case ISCConstants.isc_info_firebird_version:
+                        len = iscVaxInteger2(info, i);
+                        i += 2;
+                        String fb_versS = new String(info, i + 2, len - 2);
+                        i += len;
+                        setVersionString(fb_versS);
+                        if (debug) log.debug("isc_info_firebird_version:" + fb_versS);
+                        break;
+                    case ISCConstants.isc_info_truncated:
+                        if (debug) log.debug("isc_info_truncated ");
+                        return V10Database.this;
+                    default:
+                        throw new FbExceptionBuilder().exception(ISCConstants.isc_infunk).toSQLException();
                 }
             }
             return V10Database.this;
@@ -785,18 +801,18 @@ public class V10Database implements FbWireDatabase, TransactionEventListener {
     // TODO Current behavior is based on implementation in .NET Provider; this probably needs to be modified
     @Override
     public void transactionStateChanged(FbTransaction transaction, TransactionState newState,
-            TransactionState previousState) {
+                                        TransactionState previousState) {
         if (newState != previousState) {
             switch (newState) {
-            case ACTIVE:
-                transactionCount.incrementAndGet();
-                break;
-            case NO_TRANSACTION:
-                transactionCount.decrementAndGet();
-                break;
-            default:
-                // do nothing
-                break;
+                case ACTIVE:
+                    transactionCount.incrementAndGet();
+                    break;
+                case NO_TRANSACTION:
+                    transactionCount.decrementAndGet();
+                    break;
+                default:
+                    // do nothing
+                    break;
             }
         }
     }
@@ -808,29 +824,43 @@ public class V10Database implements FbWireDatabase, TransactionEventListener {
      * This method calls {@link #checkConnected()}, so it is not necessary to
      * call both.
      * </p>
-     * 
-     * @throws FbException
-     *             If the not connected or attached.
+     *
+     * @throws SQLException
+     *         If the not connected or attached.
      */
-    protected final void checkAttached() throws FbException {
+    protected final void checkAttached() throws SQLException {
         checkConnected();
         if (!attached.get()) {
-            // TODO Update message / externalize + add SQLState
-            throw new FbException("The connection is not attached to a database");
+            // TODO Update message / externalize + Check if SQL State right
+            throw new SQLException("The connection is not attached to a database", FBSQLException.SQL_STATE_CONNECTION_ERROR);
         }
     }
 
     /**
      * Checks if a physical connection to the server is established.
-     * 
-     * @throws FbException
-     *             If not connected.
+     *
+     * @throws SQLException
+     *         If not connected.
      */
-    protected final void checkConnected() throws FbException {
-        WireConnection actualConnection = connection.get();
-        if (actualConnection == null || !actualConnection.isConnected()) {
-            // TODO Update message / externalize + add SQLState
-            throw new FbException("No connection established to the database server");
+    protected final void checkConnected() throws SQLException {
+        if (!connection.isConnected()) {
+            // TODO Update message / externalize
+            throw new SQLException("No connection established to the database server", FBSQLException.SQL_STATE_CONNECTION_CLOSED);
+        }
+    }
+
+    @Override
+    protected void finalize() throws Throwable {
+        try {
+            if (connection.isConnected()) {
+                if (attached.get()) {
+                    safelyDetach();
+                } else {
+                    closeConnection();
+                }
+            }
+        } finally {
+            super.finalize();
         }
     }
 }
