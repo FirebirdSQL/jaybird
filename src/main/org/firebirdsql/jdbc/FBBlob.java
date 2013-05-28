@@ -57,27 +57,31 @@ import org.firebirdsql.gds.impl.GDSHelper;
 public class FBBlob implements FirebirdBlob, Synchronizable {
     
     public static final boolean SEGMENTED = true;
-    public static final int READ_FULLY_BUFFER_SIZE = 16 * 1024;
+
+    /**
+     * Maximum blob segment size, see IB 6 Data Definition Guide, page 78 ("BLOB segment length")
+     */
+    public static final int READ_FULLY_BUFFER_SIZE = 32 * 1024;
 
     /**
      * bufferlength is the size of the buffer for blob input and output streams,
      * also used for the BufferedInputStream/BufferedOutputStream wrappers.
      *
      */
-    int bufferlength;
+    final int bufferlength;
 
     boolean isNew;
     long blob_id;
-    GDSHelper gdsHelper;
-    private FBObjectListener.BlobListener blobListener;
+    final GDSHelper gdsHelper;
+    private final FBObjectListener.BlobListener blobListener;
 
     Collection inputStreams = new HashSet();
     private FBBlobOutputStream blobOut = null;
 
     private FBBlob(GDSHelper c, boolean isNew, FBObjectListener.BlobListener blobListener) {
-        this.gdsHelper = c;
+        gdsHelper = c;
         this.isNew = isNew;
-        this.bufferlength = c.getBlobBufferLength();
+        bufferlength = c.getBlobBufferLength();
         this.blobListener = blobListener;
     }
 
@@ -99,25 +103,24 @@ public class FBBlob implements FirebirdBlob, Synchronizable {
      * Create instance of this class to access existing Blob.
      * 
      * @param c connection that will be used to access Blob.
-     * 
      * @param blob_id ID of the Blob.
+     * @param blobListener Blob listener instance
      */
     public FBBlob(GDSHelper c, long blob_id, FBObjectListener.BlobListener blobListener) {
         this(c, false, blobListener);
         this.blob_id = blob_id;
     }
-    
+
+    /**
+     * Create instance of this class to access existing Blob.
+     *
+     * @param c connection that will be used to access Blob.
+     * @param blob_id ID of the Blob.
+     */
     public FBBlob(GDSHelper c, long blob_id) {
         this(c, blob_id, null);
     }
 
-    
-    /**
-     * Get synchronization object that will be used to synchronize multithreaded
-     * access to the database.
-     * 
-     * @return object that will be used for synchronization.
-     */
     public Object getSynchronizationObject() {
         return gdsHelper;
     }

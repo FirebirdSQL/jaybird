@@ -20,11 +20,11 @@ package org.firebirdsql.jdbc;
 
 import org.firebirdsql.common.FBTestBase;
 
+import java.io.ByteArrayInputStream;
+import java.io.InputStream;
 import java.math.BigDecimal;
 import java.sql.*;
-import java.util.Calendar;
-import java.util.Properties;
-import java.util.TimeZone;
+import java.util.*;
 
 /**
  * Describe class <code>TestFBPreparedStatement</code> here.
@@ -34,6 +34,8 @@ import java.util.TimeZone;
  * @version 1.0
  */
 public class TestFBPreparedStatement extends FBTestBase {
+
+    private static final Random rnd = new Random();
 
     public static final String CREATE_GENERATOR = "CREATE GENERATOR test_generator";
 
@@ -131,7 +133,7 @@ public class TestFBPreparedStatement extends FBTestBase {
         int id = 1;
 
         PreparedStatement insertPs = con
-        		.prepareStatement("INSERT INTO test_blob (id, obj_data) VALUES (?,?);");
+        		.prepareStatement("INSERT INTO test_blob (id, obj_data) VALUES (?,?)");
         try {
             insertPs.setInt(1, id);
             insertPs.setBytes(2, TEST_STRING.getBytes());
@@ -147,7 +149,7 @@ public class TestFBPreparedStatement extends FBTestBase {
 
         // Update item
         PreparedStatement updatePs = con
-        		.prepareStatement("UPDATE test_blob SET obj_data=? WHERE id=?;");
+        		.prepareStatement("UPDATE test_blob SET obj_data=? WHERE id=?");
         try {
             updatePs.setBytes(1, ANOTHER_TEST_STRING.getBytes());
             updatePs.setInt(2, id);
@@ -941,6 +943,57 @@ public class TestFBPreparedStatement extends FBTestBase {
             rs.close();
         } finally {
             closeQuietly(stmt);
+        }
+    }
+
+    /**
+     * Tests multiple batch executions in a row when using blobs.
+     * <p>
+     * See <a href="http://tracker.firebirdsql.org/browse/JDBC-312">JDBC-312</a>
+     * </p>
+     */
+    public void testRepeatedBatchExecutionWithBlob() throws Exception {
+        con.setAutoCommit(false);
+        List<byte[]> expectedData = new ArrayList<byte[]>();
+        try {
+            PreparedStatement insert = con.prepareStatement("INSERT INTO test_blob (id, obj_data) VALUES (?,?)");
+            try {
+                for (int i = 0; i < 2; i++) {
+                    byte[] testData = new byte[50];
+                    rnd.nextBytes(testData);
+                    expectedData.add(testData.clone());
+                    insert.setInt(1, i);
+                    InputStream in = new ByteArrayInputStream(testData);
+                    insert.setBinaryStream(2, in, testData.length);
+                    insert.addBatch();
+                    insert.executeBatch();
+                }
+            } finally {
+                closeQuietly(insert);
+            }
+
+            Statement select = con.createStatement();
+            try {
+                ResultSet rs = select.executeQuery("SELECT id, obj_data FROM test_blob ORDER BY id");
+                try {
+                    int count = 0;
+                    while (rs.next()) {
+                        count++;
+                        int id = rs.getInt(1);
+                        byte[] data = rs.getBytes(2);
+
+                        // TODO Change to JUnit 4 assertArrayEquals
+                        assertTrue(String.format("Unexpected blob data for id %d", id), Arrays.equals(expectedData.get(id), data));
+                    }
+                    assertEquals("Unexpected number of blobs in table", 2, count);
+                } finally {
+                    closeQuietly(rs);
+                }
+            } finally {
+                closeQuietly(select);
+            }
+        } finally {
+            con.setAutoCommit(true);
         }
     }
 
