@@ -55,6 +55,7 @@ public class FBCachedBlobField extends FBBlobField {
     }
 
     public byte[] getBytes() throws SQLException {
+        // TODO Looks suspicious compared to the implementation in FBBlobField
         return getFieldData();
     }
     
