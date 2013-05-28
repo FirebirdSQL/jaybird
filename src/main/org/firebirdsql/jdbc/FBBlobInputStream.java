@@ -9,8 +9,11 @@ import org.firebirdsql.gds.*;
  * An input stream for reading directly from a FBBlob instance.
  */
 public class FBBlobInputStream extends InputStream implements FirebirdBlob.BlobInputStream {
-    
-    private static final int READ_FULLY_BUFFER_SIZE = 16 * 1024;
+
+    /**
+     * Maximum blob segment size, see IB 6 Data Definition Guide, page 78 ("BLOB segment length")
+     */
+    private static final int READ_FULLY_BUFFER_SIZE = 32 * 1024;
 
     private byte[] buffer = null;
     private IscBlobHandle blobHandle;
