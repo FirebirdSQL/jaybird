@@ -29,6 +29,7 @@ import org.firebirdsql.gds.impl.wire.XdrOutputStream;
 import org.firebirdsql.gds.impl.wire.Xdrable;
 import org.firebirdsql.gds.ng.*;
 import org.firebirdsql.gds.ng.wire.*;
+import org.firebirdsql.jdbc.FBDriverNotCapableException;
 import org.firebirdsql.jdbc.FBSQLException;
 import org.firebirdsql.logging.Logger;
 import org.firebirdsql.logging.LoggerFactory;
@@ -395,8 +396,11 @@ public class V10Database implements FbWireDatabase, TransactionEventListener {
                     throw new FbExceptionBuilder().exception(ISCConstants.isc_net_read_err).cause(ioex).toSQLException();
                 }
             } finally {
-                // TODO: Might be wrong, as this will signal an attach followed by a connection close; we are no longer attached
-                safelyDetach();
+                try {
+                    closeConnection();
+                } catch (IOException e) {
+                    log.debug("Ignored exception on connection close in dropDatabase()", e);
+                }
             }
         }
     }
@@ -424,7 +428,7 @@ public class V10Database implements FbWireDatabase, TransactionEventListener {
 
     @Override
     public void cancelOperation(int kind) throws SQLException {
-        throw new SQLFeatureNotSupportedException("Cancel Operation isn't supported on Firebird 2.1 and earlier.");
+        throw new SQLFeatureNotSupportedException("Cancel Operation isn't supported on Firebird 2.1 and earlier.", FBDriverNotCapableException.SQL_STATE_FEATURE_NOT_SUPPORTED);
     }
 
     @Override
@@ -482,6 +486,51 @@ public class V10Database implements FbWireDatabase, TransactionEventListener {
             processResponse(response);
         }
         return response;
+    }
+
+    @Override
+    public void releaseObject(int operation, int objectId) throws SQLException {
+        checkAttached();
+        synchronized (getSynchronizationObject()) {
+            try {
+                doReleaseObjectPacket(operation, objectId);
+                getXdrOut().flush();
+            } catch (IOException ex) {
+                throw new FbExceptionBuilder().exception(ISCConstants.isc_net_write_err).cause(ex).toSQLException();
+            }
+            try {
+                processReleaseObjectResponse(readResponse());
+            } catch (IOException ex) {
+                throw new FbExceptionBuilder().exception(ISCConstants.isc_net_read_err).cause(ex).toSQLException();
+            }
+        }
+    }
+
+    /**
+     * Sends - without flushing - the (release) operation and objectId.
+     *
+     * @param operation
+     *         Operation
+     * @param objectId
+     *         Id of the object to release
+     * @throws IOException
+     *         For errors writing to the connection
+     * @throws SQLException
+     *         If the database connection is not available
+     */
+    protected void doReleaseObjectPacket(int operation, int objectId) throws IOException, SQLException {
+        getXdrOut().writeInt(operation);
+        getXdrOut().writeInt(objectId);
+    }
+
+    /**
+     * Process the release object response
+     *
+     * @param response
+     *         The response object
+     */
+    protected void processReleaseObjectResponse(Response response) {
+        // Do nothing
     }
 
     /**
@@ -561,15 +610,15 @@ public class V10Database implements FbWireDatabase, TransactionEventListener {
     protected Response processOperation(int operation) throws SQLException, IOException {
         final XdrInputStream xdrIn = getXdrIn();
         switch (operation) {
-            case op_response:
-                return new GenericResponse(xdrIn.readInt(), xdrIn.readLong(), xdrIn.readBuffer(), readStatusVector());
-            case op_fetch_response:
-                return new FetchResponse(xdrIn.readInt(), xdrIn.readInt());
-            case op_sql_response:
-                return new SqlResponse(xdrIn.readInt());
-            default:
-                // TODO: Throw exception instead?
-                return null;
+        case op_response:
+            return new GenericResponse(xdrIn.readInt(), xdrIn.readLong(), xdrIn.readBuffer(), readStatusVector());
+        case op_fetch_response:
+            return new FetchResponse(xdrIn.readInt(), xdrIn.readInt());
+        case op_sql_response:
+            return new SqlResponse(xdrIn.readInt());
+        default:
+            // TODO: Throw exception instead?
+            return null;
         }
     }
 
@@ -587,53 +636,52 @@ public class V10Database implements FbWireDatabase, TransactionEventListener {
      *         for errors reading or processing the status vector
      */
     protected SQLException readStatusVector() throws SQLException {
-        // TODO: Revise processing of status vector to not use exceptions for intermediate strings and values.
         boolean debug = log.isDebugEnabled();
         FbExceptionBuilder builder = new FbExceptionBuilder();
         try {
             final XdrInputStream xdrIn = getXdrIn();
             while (true) {
                 int arg = xdrIn.readInt();
-                int errorCode = 0;
+                int errorCode;
                 switch (arg) {
-                    case ISCConstants.isc_arg_gds:
-                        errorCode = xdrIn.readInt();
-                        if (debug) log.debug("readStatusVector arg:isc_arg_gds int: " + errorCode);
-                        if (errorCode != 0) {
-                            builder.exception(errorCode);
-                        }
-                        break;
-                    case ISCConstants.isc_arg_warning:
-                        errorCode = xdrIn.readInt();
-                        if (debug) log.debug("readStatusVector arg:isc_arg_warning int: " + errorCode);
-                        if (errorCode != 0) {
-                            builder.warning(errorCode);
-                        }
-                        break;
-                    case ISCConstants.isc_arg_interpreted:
-                    case ISCConstants.isc_arg_string:
-                        String stringValue = xdrIn.readString();
-                        if (debug) log.debug("readStatusVector string: " + stringValue);
-                        builder.messageParameter(stringValue);
-                        break;
-                    case ISCConstants.isc_arg_sql_state:
-                        // TODO Is this actually returned from server?
-                        String sqlState = xdrIn.readString();
-                        if (debug) log.debug("readStatusVector sqlstate: " + sqlState);
-                        builder.sqlState(sqlState);
-                        break;
-                    case ISCConstants.isc_arg_number:
-                        int intValue = xdrIn.readInt();
-                        if (debug) log.debug("readStatusVector arg:isc_arg_number int: " + intValue);
-                        builder.messageParameter(intValue);
-                        break;
-                    case ISCConstants.isc_arg_end:
-                        return builder.toSQLException();
-                    default:
-                        int e = xdrIn.readInt();
-                        if (debug) log.debug("readStatusVector arg: " + arg + " int: " + e);
-                        builder.messageParameter(e);
-                        break;
+                case ISCConstants.isc_arg_gds:
+                    errorCode = xdrIn.readInt();
+                    if (debug) log.debug("readStatusVector arg:isc_arg_gds int: " + errorCode);
+                    if (errorCode != 0) {
+                        builder.exception(errorCode);
+                    }
+                    break;
+                case ISCConstants.isc_arg_warning:
+                    errorCode = xdrIn.readInt();
+                    if (debug) log.debug("readStatusVector arg:isc_arg_warning int: " + errorCode);
+                    if (errorCode != 0) {
+                        builder.warning(errorCode);
+                    }
+                    break;
+                case ISCConstants.isc_arg_interpreted:
+                case ISCConstants.isc_arg_string:
+                    String stringValue = xdrIn.readString();
+                    if (debug) log.debug("readStatusVector string: " + stringValue);
+                    builder.messageParameter(stringValue);
+                    break;
+                case ISCConstants.isc_arg_sql_state:
+                    // TODO Is this actually returned from server?
+                    String sqlState = xdrIn.readString();
+                    if (debug) log.debug("readStatusVector sqlstate: " + sqlState);
+                    builder.sqlState(sqlState);
+                    break;
+                case ISCConstants.isc_arg_number:
+                    int intValue = xdrIn.readInt();
+                    if (debug) log.debug("readStatusVector arg:isc_arg_number int: " + intValue);
+                    builder.messageParameter(intValue);
+                    break;
+                case ISCConstants.isc_arg_end:
+                    return builder.toSQLException();
+                default:
+                    int e = xdrIn.readInt();
+                    if (debug) log.debug("readStatusVector arg: " + arg + " int: " + e);
+                    builder.messageParameter(e);
+                    break;
                 }
             }
         } catch (IOException ioe) {
@@ -755,43 +803,43 @@ public class V10Database implements FbWireDatabase, TransactionEventListener {
             int i = 0;
             while (info[i] != ISCConstants.isc_info_end) {
                 switch (info[i++]) {
-                    case ISCConstants.isc_info_db_sql_dialect:
-                        len = iscVaxInteger2(info, i);
-                        i += 2;
-                        value = iscVaxInteger(info, i, len);
-                        i += len;
-                        setDatabaseDialect((short) value);
-                        if (debug) log.debug("isc_info_db_sql_dialect:" + value);
-                        break;
-                    case ISCConstants.isc_info_ods_version:
-                        len = iscVaxInteger2(info, i);
-                        i += 2;
-                        value = iscVaxInteger(info, i, len);
-                        i += len;
-                        setOdsMajor(value);
-                        if (debug) log.debug("isc_info_ods_version:" + value);
-                        break;
-                    case ISCConstants.isc_info_ods_minor_version:
-                        len = iscVaxInteger2(info, i);
-                        i += 2;
-                        value = iscVaxInteger(info, i, len);
-                        i += len;
-                        setOdsMinor(value);
-                        if (debug) log.debug("isc_info_ods_minor_version:" + value);
-                        break;
-                    case ISCConstants.isc_info_firebird_version:
-                        len = iscVaxInteger2(info, i);
-                        i += 2;
-                        String fb_versS = new String(info, i + 2, len - 2);
-                        i += len;
-                        setVersionString(fb_versS);
-                        if (debug) log.debug("isc_info_firebird_version:" + fb_versS);
-                        break;
-                    case ISCConstants.isc_info_truncated:
-                        if (debug) log.debug("isc_info_truncated ");
-                        return V10Database.this;
-                    default:
-                        throw new FbExceptionBuilder().exception(ISCConstants.isc_infunk).toSQLException();
+                case ISCConstants.isc_info_db_sql_dialect:
+                    len = iscVaxInteger2(info, i);
+                    i += 2;
+                    value = iscVaxInteger(info, i, len);
+                    i += len;
+                    setDatabaseDialect((short) value);
+                    if (debug) log.debug("isc_info_db_sql_dialect:" + value);
+                    break;
+                case ISCConstants.isc_info_ods_version:
+                    len = iscVaxInteger2(info, i);
+                    i += 2;
+                    value = iscVaxInteger(info, i, len);
+                    i += len;
+                    setOdsMajor(value);
+                    if (debug) log.debug("isc_info_ods_version:" + value);
+                    break;
+                case ISCConstants.isc_info_ods_minor_version:
+                    len = iscVaxInteger2(info, i);
+                    i += 2;
+                    value = iscVaxInteger(info, i, len);
+                    i += len;
+                    setOdsMinor(value);
+                    if (debug) log.debug("isc_info_ods_minor_version:" + value);
+                    break;
+                case ISCConstants.isc_info_firebird_version:
+                    len = iscVaxInteger2(info, i);
+                    i += 2;
+                    String firebirdVersion = new String(info, i + 2, len - 2);
+                    i += len;
+                    setVersionString(firebirdVersion);
+                    if (debug) log.debug("isc_info_firebird_version:" + firebirdVersion);
+                    break;
+                case ISCConstants.isc_info_truncated:
+                    if (debug) log.debug("isc_info_truncated ");
+                    return V10Database.this;
+                default:
+                    throw new FbExceptionBuilder().exception(ISCConstants.isc_infunk).toSQLException();
                 }
             }
             return V10Database.this;
@@ -804,15 +852,15 @@ public class V10Database implements FbWireDatabase, TransactionEventListener {
                                         TransactionState previousState) {
         if (newState != previousState) {
             switch (newState) {
-                case ACTIVE:
-                    transactionCount.incrementAndGet();
-                    break;
-                case NO_TRANSACTION:
-                    transactionCount.decrementAndGet();
-                    break;
-                default:
-                    // do nothing
-                    break;
+            case ACTIVE:
+                transactionCount.incrementAndGet();
+                break;
+            case NO_TRANSACTION:
+                transactionCount.decrementAndGet();
+                break;
+            default:
+                // do nothing
+                break;
             }
         }
     }

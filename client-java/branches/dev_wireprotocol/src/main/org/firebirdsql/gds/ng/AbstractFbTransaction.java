@@ -83,6 +83,19 @@ public abstract class AbstractFbTransaction implements FbTransaction {
         transactionEventListeners.remove(listener);
     }
 
+    @Override
+    protected void finalize() throws Throwable {
+        try {
+            try {
+                rollback();
+            } catch (Throwable t) {
+                // ignore TODO: Log?
+            }
+        } finally {
+            super.finalize();
+        }
+    }
+
     /**
      * Fires the transactionStateChanged event to all listeners.
      * 

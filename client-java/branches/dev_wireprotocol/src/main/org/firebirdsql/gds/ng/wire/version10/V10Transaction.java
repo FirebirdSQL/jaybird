@@ -27,6 +27,7 @@ import org.firebirdsql.gds.impl.wire.XdrOutputStream;
 import org.firebirdsql.gds.impl.wire.Xdrable;
 import org.firebirdsql.gds.ng.AbstractFbTransaction;
 import org.firebirdsql.gds.ng.FbExceptionBuilder;
+import org.firebirdsql.gds.ng.FbTransaction;
 import org.firebirdsql.gds.ng.TransactionState;
 import org.firebirdsql.gds.ng.wire.FbWireDatabase;
 import org.firebirdsql.gds.ng.wire.GenericResponse;
@@ -37,15 +38,22 @@ import java.sql.SQLException;
 import static org.firebirdsql.gds.impl.wire.WireProtocolConstants.*;
 
 /**
+ * {@link FbTransaction} implementation for the version 10 wire protocol.
+ *
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @since 2.3
  */
-public class V10Transaction extends AbstractFbTransaction {
+public class V10Transaction extends AbstractFbTransaction implements FbTransaction {
 
     private FbWireDatabase database;
     private final Object syncObject = new Object();
     private int handle;
 
+    /**
+     * Creates a new instance of V10Transaction for the specified database.
+     *
+     * @param database FbWireDatabase implementation
+     */
     public V10Transaction(FbWireDatabase database) {
         this.database = database;
     }
@@ -189,7 +197,7 @@ public class V10Transaction extends AbstractFbTransaction {
         }
     }
 
-    // TODO two-phase commit
+    // TODO two-phase commit implementation
 
     private void checkTransactionActive() throws SQLException {
         if (getState() != TransactionState.ACTIVE) {

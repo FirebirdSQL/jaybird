@@ -42,4 +42,13 @@ public interface FbWireDatabase extends FbDatabase, XdrStreamAccess {
      *         For errors reading the response from the connection.
      */
     Response readResponse() throws SQLException, IOException;
+
+    /**
+     * Release object. TODO Review usage
+     *
+     * @param operation Operation
+     * @param objectId Id of the object to release
+     * @throws SQLException
+     */
+    void releaseObject(int operation, int objectId) throws SQLException;
 }

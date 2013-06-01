@@ -56,6 +56,8 @@ public final class FbExceptionBuilder {
      * depending on the error code and other rules internal to this builder.
      * </p>
      *
+     * @param errorCode
+     *         The Firebird error code
      * @return this FbExceptionBuilder
      * @see #warning(int)
      */
@@ -67,6 +69,8 @@ public final class FbExceptionBuilder {
     /**
      * The (next) exception is a warning.
      *
+     * @param errorCode
+     *         The Firebird error code
      * @return this FbExceptionBuilder
      * @see #exception(int)
      */
@@ -78,6 +82,8 @@ public final class FbExceptionBuilder {
     /**
      * Force the next exception to be a {@link java.sql.SQLTimeoutException}.
      *
+     * @param errorCode
+     *         The Firebird error code
      * @return this FbExceptionBuilder
      * @see #exception(int)
      */
@@ -111,7 +117,7 @@ public final class FbExceptionBuilder {
     }
 
     /**
-     * Sets the SQL state.
+     * Sets the SQL state. Overriding the value derived from the Firebird error code.
      * <p>
      * SQL State is usually derived from the errorCode. Use of this
      * method is optional.
