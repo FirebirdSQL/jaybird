@@ -1,4 +1,6 @@
 /*
+ * $Id$
+ *
  * Firebird Open Source J2ee connector - jdbc driver
  *
  * Distributable under LGPL license.
@@ -18,39 +20,47 @@
  */
 package org.firebirdsql.jdbc;
 
-import org.firebirdsql.common.FBTestBase;
+import org.firebirdsql.common.FBJUnit4TestBase;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Ignore;
+import org.junit.Test;
 
+import java.io.ByteArrayInputStream;
+import java.io.InputStream;
 import java.math.BigDecimal;
 import java.sql.*;
-import java.util.Calendar;
-import java.util.Properties;
-import java.util.TimeZone;
+import java.util.*;
 
-import static org.firebirdsql.common.DdlHelper.*;
-import static org.firebirdsql.common.JdbcResourceHelper.*;
+import static org.firebirdsql.common.DdlHelper.executeCreateTable;
+import static org.firebirdsql.common.DdlHelper.executeDDL;
 import static org.firebirdsql.common.FBTestProperties.*;
+import static org.firebirdsql.common.JdbcResourceHelper.closeQuietly;
+import static org.junit.Assert.*;
 
 /**
  * Describe class <code>TestFBPreparedStatement</code> here.
- * 
+ *
  * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @version 1.0
  */
-public class TestFBPreparedStatement extends FBTestBase {
+public class TestFBPreparedStatement extends FBJUnit4TestBase {
+
+    private static final Random rnd = new Random();
 
     public static final String CREATE_GENERATOR = "CREATE GENERATOR test_generator";
 
-    public static final String CREATE_TEST_BLOB_TABLE = 
-            "CREATE TABLE test_blob ("
+    public static final String CREATE_TEST_BLOB_TABLE =
+              "CREATE TABLE test_blob ("
             + "  ID INTEGER, "
             + "  OBJ_DATA BLOB, "
             + "  TS_FIELD TIMESTAMP, "
             + "  T_FIELD TIME "
             + ")";
 
-    public static final String CREATE_TEST_CHARS_TABLE = 
-            "CREATE TABLE TESTTAB ("
+    public static final String CREATE_TEST_CHARS_TABLE =
+              "CREATE TABLE TESTTAB ("
             + "ID INTEGER, "
             + "FIELD1 VARCHAR(10) NOT NULL PRIMARY KEY,"
             + "FIELD2 VARCHAR(30),"
@@ -62,9 +72,9 @@ public class TestFBPreparedStatement extends FBTestBase {
             + "num_field numeric(9,2)"
             + ")";
 
-    public static final String CREATE_UNRECOGNIZED_TR_TABLE = 
-            "CREATE TABLE t1("
-            + "  c1 CHAR(2) CHARACTER SET ASCII NOT NULL, " 
+    public static final String CREATE_UNRECOGNIZED_TR_TABLE =
+              "CREATE TABLE t1("
+            + "  c1 CHAR(2) CHARACTER SET ASCII NOT NULL, "
             + "  c2 BLOB SUB_TYPE TEXT CHARACTER SET ASCII NOT NULL "
             + ")";
 
@@ -80,15 +90,11 @@ public class TestFBPreparedStatement extends FBTestBase {
     private static final String INSERT_DATA = "INSERT INTO test(col1) VALUES(?)";
     private static final String SELECT_DATA = "SELECT col1 FROM test ORDER BY col1";
 
-    public TestFBPreparedStatement(String testName) {
-        super(testName);
-    }
-
     private Connection con;
 
-    protected void setUp() throws Exception {
-        super.setUp();
-        con = this.getConnectionViaDriverManager();
+    @Before
+    public void setUp() throws Exception {
+        con = getConnectionViaDriverManager();
         Statement stmt = con.createStatement();
         try {
             executeCreateTable(con, CREATE_TEST_BLOB_TABLE);
@@ -104,16 +110,16 @@ public class TestFBPreparedStatement extends FBTestBase {
         }
     }
 
-    protected void tearDown() throws Exception {
+    @After
+    public void tearDown() throws Exception {
         closeQuietly(con);
-        super.tearDown();
     }
 
+    @Test
     public void testModifyBlob() throws Exception {
         int id = 1;
 
-        PreparedStatement insertPs = con
-        		.prepareStatement("INSERT INTO test_blob (id, obj_data) VALUES (?,?);");
+        PreparedStatement insertPs = con.prepareStatement("INSERT INTO test_blob (id, obj_data) VALUES (?,?)");
         try {
             insertPs.setInt(1, id);
             insertPs.setBytes(2, TEST_STRING.getBytes());
@@ -129,7 +135,7 @@ public class TestFBPreparedStatement extends FBTestBase {
 
         // Update item
         PreparedStatement updatePs = con
-        		.prepareStatement("UPDATE test_blob SET obj_data=? WHERE id=?;");
+                .prepareStatement("UPDATE test_blob SET obj_data=? WHERE id=?");
         try {
             updatePs.setBytes(1, ANOTHER_TEST_STRING.getBytes());
             updatePs.setInt(2, id);
@@ -150,10 +156,11 @@ public class TestFBPreparedStatement extends FBTestBase {
             closeQuietly(updatePs);
         }
     }
-    
+
     /**
      * The method {@link java.sql.Statement#executeQuery(String)} should not work on PreparedStatement.
      */
+    @Test
     public void testUnsupportedExecuteQuery_String() throws Exception {
         PreparedStatement ps = con.prepareStatement("SELECT 1 FROM RDB$DATABASE");
         try {
@@ -165,10 +172,11 @@ public class TestFBPreparedStatement extends FBTestBase {
             closeQuietly(ps);
         }
     }
-    
+
     /**
      * The method {@link java.sql.Statement#executeUpdate(String)} should not work on PreparedStatement.
      */
+    @Test
     public void testUnsupportedExecuteUpdate_String() throws Exception {
         PreparedStatement ps = con.prepareStatement("SELECT 1 FROM RDB$DATABASE");
         try {
@@ -180,10 +188,11 @@ public class TestFBPreparedStatement extends FBTestBase {
             closeQuietly(ps);
         }
     }
-    
+
     /**
      * The method {@link java.sql.Statement#execute(String)} should not work on PreparedStatement.
      */
+    @Test
     public void testUnsupportedExecute_String() throws Exception {
         PreparedStatement ps = con.prepareStatement("SELECT 1 FROM RDB$DATABASE");
         try {
@@ -195,10 +204,11 @@ public class TestFBPreparedStatement extends FBTestBase {
             closeQuietly(ps);
         }
     }
-    
+
     /**
      * The method {@link java.sql.Statement#addBatch(String)} should not work on PreparedStatement.
      */
+    @Test
     public void testUnsupportedAddBatch_String() throws Exception {
         PreparedStatement ps = con.prepareStatement("SELECT 1 FROM RDB$DATABASE");
         try {
@@ -210,10 +220,11 @@ public class TestFBPreparedStatement extends FBTestBase {
             closeQuietly(ps);
         }
     }
-    
+
     /**
      * The method {@link java.sql.Statement#executeUpdate(String, int)} should not work on PreparedStatement.
      */
+    @Test
     public void testUnsupportedExecuteUpdate_String_int() throws Exception {
         PreparedStatement ps = con.prepareStatement("SELECT 1 FROM RDB$DATABASE");
         try {
@@ -225,14 +236,15 @@ public class TestFBPreparedStatement extends FBTestBase {
             closeQuietly(ps);
         }
     }
-    
+
     /**
      * The method {@link java.sql.Statement#execute(String, int[])} should not work on PreparedStatement.
      */
+    @Test
     public void testUnsupportedExecuteUpdate_String_intArr() throws Exception {
         PreparedStatement ps = con.prepareStatement("SELECT 1 FROM RDB$DATABASE");
         try {
-            ps.executeUpdate("SELECT * FROM test_blob", new int[] { 1 });
+            ps.executeUpdate("SELECT * FROM test_blob", new int[]{ 1 });
             fail("Expected SQLException when executing executeUpdate(String, int[]) on PreparedStatement");
         } catch (SQLException ex) {
             assertStatementOnlyException(ex);
@@ -240,14 +252,15 @@ public class TestFBPreparedStatement extends FBTestBase {
             closeQuietly(ps);
         }
     }
-    
+
     /**
      * The method {@link java.sql.Statement#executeUpdate(String, String[])} should not work on PreparedStatement.
      */
+    @Test
     public void testUnsupportedExecuteUpdate_String_StringArr() throws Exception {
         PreparedStatement ps = con.prepareStatement("SELECT 1 FROM RDB$DATABASE");
         try {
-            ps.executeUpdate("SELECT * FROM test_blob", new String[] { "col" });
+            ps.executeUpdate("SELECT * FROM test_blob", new String[]{ "col" });
             fail("Expected SQLException when executing executeUpdate(String, String[]) on PreparedStatement");
         } catch (SQLException ex) {
             assertStatementOnlyException(ex);
@@ -255,10 +268,11 @@ public class TestFBPreparedStatement extends FBTestBase {
             closeQuietly(ps);
         }
     }
-    
+
     /**
      * The method {@link java.sql.Statement#execute(String, int)} should not work on PreparedStatement.
      */
+    @Test
     public void testUnsupportedExecute_String_int() throws Exception {
         PreparedStatement ps = con.prepareStatement("SELECT 1 FROM RDB$DATABASE");
         try {
@@ -270,14 +284,15 @@ public class TestFBPreparedStatement extends FBTestBase {
             closeQuietly(ps);
         }
     }
-    
+
     /**
      * The method {@link java.sql.Statement#execute(String, int[])} should not work on PreparedStatement.
      */
+    @Test
     public void testUnsupportedExecute_String_intArr() throws Exception {
         PreparedStatement ps = con.prepareStatement("SELECT 1 FROM RDB$DATABASE");
         try {
-            ps.execute("SELECT * FROM test_blob", new int[] { 1 });
+            ps.execute("SELECT * FROM test_blob", new int[]{ 1 });
             fail("Expected SQLException when executing execute(String, int[]) on PreparedStatement");
         } catch (SQLException ex) {
             assertStatementOnlyException(ex);
@@ -285,14 +300,15 @@ public class TestFBPreparedStatement extends FBTestBase {
             closeQuietly(ps);
         }
     }
-    
+
     /**
      * The method {@link java.sql.Statement#execute(String, String[])} should not work on PreparedStatement.
      */
+    @Test
     public void testUnsupportedExecute_String_StringArr() throws Exception {
         PreparedStatement ps = con.prepareStatement("SELECT 1 FROM RDB$DATABASE");
         try {
-            ps.execute("SELECT * FROM test_blob", new String[] { "col" });
+            ps.execute("SELECT * FROM test_blob", new String[]{ "col" });
             fail("Expected SQLException when executing execute(String, String[]) on PreparedStatement");
         } catch (SQLException ex) {
             assertStatementOnlyException(ex);
@@ -302,15 +318,15 @@ public class TestFBPreparedStatement extends FBTestBase {
     }
 
     private void assertStatementOnlyException(SQLException ex) {
-        assertEquals("Unexpected SQLState for statement only method called on FBPreparedStatement", 
+        assertEquals("Unexpected SQLState for statement only method called on FBPreparedStatement",
                 FBSQLException.SQL_STATE_GENERAL_ERROR, ex.getSQLState());
-        assertEquals("Unexpected exception message for statement only method called on FBPreparedStatement", 
+        assertEquals("Unexpected exception message for statement only method called on FBPreparedStatement",
                 FBPreparedStatement.METHOD_NOT_SUPPORTED, ex.getMessage());
     }
 
     void checkSelectString(String stringToTest, int id) throws Exception {
         PreparedStatement selectPs = con
-        		.prepareStatement("SELECT obj_data FROM test_blob WHERE id = ?");
+                .prepareStatement("SELECT obj_data FROM test_blob WHERE id = ?");
         try {
             selectPs.setInt(1, id);
             ResultSet rs = selectPs.executeQuery();
@@ -329,18 +345,19 @@ public class TestFBPreparedStatement extends FBTestBase {
         }
     }
 
+    @Test
     public void testGenerator() throws Exception {
         PreparedStatement ps = con
-        		.prepareStatement("SELECT gen_id(test_generator, 1) as new_value FROM rdb$database");
+                .prepareStatement("SELECT gen_id(test_generator, 1) as new_value FROM rdb$database");
         try {
             ResultSet rs = ps.executeQuery();
-    
+
             assertTrue("Should get at least one row", rs.next());
-    
+
             rs.getLong("new_value");
-    
+
             assertFalse("should have only one row", rs.next());
-    
+
             rs.close();
         } finally {
             closeQuietly(ps);
@@ -353,14 +370,15 @@ public class TestFBPreparedStatement extends FBTestBase {
      * problem (@see org.firebirdsql.jdbc.field.FBWorkaroundStringField) this
      * test case is no longer relevant. In order to make it execute correctly
      * one has to remove this workaround.
-     * 
-     * @throws Exception
-     *             if something went wrong.
+     *
+     * @throws Exception if something went wrong.
      */
-    public void _testOpCancelled() throws Exception {
+    @Test
+    @Ignore(value="Broken due to FBWorkaroundStringField")
+    public void testOpCancelled() throws Exception {
         PreparedStatement prep = con
-        		.prepareStatement("INSERT INTO TESTTAB (FIELD1, FIELD3, FIELD4, FIELD5 ) "
-        		        + "VALUES ( ?, ?, ?, ? )");
+                .prepareStatement("INSERT INTO TESTTAB (FIELD1, FIELD3, FIELD4, FIELD5 ) "
+                        + "VALUES ( ?, ?, ?, ? )");
         try {
             for (int i = 0; i < 5; i++) {
                 if (i == 0) {
@@ -402,10 +420,10 @@ public class TestFBPreparedStatement extends FBTestBase {
 
     /**
      * Test if parameters are correctly checked for their length.
-     * 
-     * @throws Exception
-     *             if something went wrong.
+     *
+     * @throws Exception if something went wrong.
      */
+    @Test
     public void testLongParameter() throws Exception {
         Statement stmt = con.createStatement();
         try {
@@ -417,7 +435,7 @@ public class TestFBPreparedStatement extends FBTestBase {
         con.setAutoCommit(false);
 
         PreparedStatement ps = con
-        		.prepareStatement("UPDATE testtab SET field6=? WHERE id = 1");
+                .prepareStatement("UPDATE testtab SET field6=? WHERE id = 1");
         try {
             try {
                 ps.setString(1, "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx");
@@ -437,23 +455,23 @@ public class TestFBPreparedStatement extends FBTestBase {
 
     /**
      * Test if batch execution works correctly.
-     * 
-     * @throws Exception
-     *             if something went wrong.
+     *
+     * @throws Exception if something went wrong.
      */
+    @Test
     public void testBatch() throws Exception {
         Statement s = con.createStatement();
         try {
             s.executeUpdate("CREATE TABLE foo ("
                     + "bar varchar(64) NOT NULL, "
-            		+ "baz varchar(8) NOT NULL, "
+                    + "baz varchar(8) NOT NULL, "
                     + "CONSTRAINT pk_foo PRIMARY KEY (bar, baz))");
         } finally {
             closeQuietly(s);
         }
 
         PreparedStatement ps = con
-        		.prepareStatement("Insert into foo values (?, ?)");
+                .prepareStatement("Insert into foo values (?, ?)");
         try {
             ps.setString(1, "one");
             ps.setString(2, "two");
@@ -470,6 +488,7 @@ public class TestFBPreparedStatement extends FBTestBase {
         }
     }
 
+    @Test
     public void testTimestampWithCalendar() throws Exception {
         Properties props = new Properties();
         props.putAll(getDefaultPropertiesForConnection());
@@ -478,13 +497,13 @@ public class TestFBPreparedStatement extends FBTestBase {
         Connection connection = DriverManager.getConnection(getUrl(), props);
         try {
             PreparedStatement stmt = connection
-            		.prepareStatement("INSERT INTO test_blob(id, ts_field) VALUES (?, ?)");
+                    .prepareStatement("INSERT INTO test_blob(id, ts_field) VALUES (?, ?)");
 
             try {
                 Calendar calendar = Calendar.getInstance(TimeZone
-                		.getTimeZone("GMT+01"));
+                        .getTimeZone("GMT+01"));
                 Calendar utcCalendar = Calendar.getInstance(TimeZone
-                		.getTimeZone("UTC"));
+                        .getTimeZone("UTC"));
 
                 Timestamp ts = new Timestamp(calendar.getTime().getTime());
 
@@ -516,17 +535,17 @@ public class TestFBPreparedStatement extends FBTestBase {
 
                 while (rs.next()) {
                     switch (rs.getInt(1)) {
-                    case 2:
-                        ts2 = rs.getTimestamp(3);
-                        ts2AsStr = rs.getString(2);
-                        ts2AsStr = ts2AsStr.substring(0, Math.min(ts2AsStr.length(), maxLength));
-                        break;
+                        case 2:
+                            ts2 = rs.getTimestamp(3);
+                            ts2AsStr = rs.getString(2);
+                            ts2AsStr = ts2AsStr.substring(0, Math.min(ts2AsStr.length(), maxLength));
+                            break;
 
-                    case 3:
-                        ts3 = rs.getTimestamp(3);
-                        ts3AsStr = rs.getString(2);
-                        ts3AsStr = ts3AsStr.substring(0, Math.min(ts3AsStr.length(), maxLength));
-                        break;
+                        case 3:
+                            ts3 = rs.getTimestamp(3);
+                            ts3AsStr = rs.getString(2);
+                            ts3AsStr = ts3AsStr.substring(0, Math.min(ts3AsStr.length(), maxLength));
+                            break;
                     }
                 }
 
@@ -546,6 +565,7 @@ public class TestFBPreparedStatement extends FBTestBase {
         }
     }
 
+    @Test
     public void testTimeWithCalendar() throws Exception {
         Properties props = new Properties();
         props.putAll(getDefaultPropertiesForConnection());
@@ -554,13 +574,13 @@ public class TestFBPreparedStatement extends FBTestBase {
         Connection connection = DriverManager.getConnection(getUrl(), props);
         try {
             PreparedStatement stmt = connection
-            		.prepareStatement("INSERT INTO test_blob(id, t_field) VALUES (?, ?)");
+                    .prepareStatement("INSERT INTO test_blob(id, t_field) VALUES (?, ?)");
 
             try {
                 Calendar calendar = Calendar.getInstance(TimeZone
-                		.getTimeZone("GMT+01"));
+                        .getTimeZone("GMT+01"));
                 Calendar utcCalendar = Calendar.getInstance(TimeZone
-                		.getTimeZone("UTC"));
+                        .getTimeZone("UTC"));
 
                 Time t = new Time(calendar.getTime().getTime());
 
@@ -590,15 +610,15 @@ public class TestFBPreparedStatement extends FBTestBase {
 
                 while (rs.next()) {
                     switch (rs.getInt(1)) {
-                    case 2:
-                        t2 = rs.getTime(3);
-                        t2Str = rs.getString(2);
-                        break;
+                        case 2:
+                            t2 = rs.getTime(3);
+                            t2Str = rs.getString(2);
+                            break;
 
-                    case 3:
-                        t3 = rs.getTime(3);
-                        t3Str = rs.getString(2);
-                        break;
+                        case 3:
+                            t3 = rs.getTime(3);
+                            t3Str = rs.getString(2);
+                            break;
                     }
                 }
 
@@ -618,18 +638,19 @@ public class TestFBPreparedStatement extends FBTestBase {
     /**
      * Test if failure in setting the parameter leaves the driver in correct
      * state (i.e. "not all params were set").
-     * 
+     *
      * @throws Exception
      */
+    @Test
     public void testBindParameter() throws Exception {
         con.setAutoCommit(false);
 
         PreparedStatement ps = con
-        		.prepareStatement("UPDATE testtab SET field1 = ? WHERE id = ?");
+                .prepareStatement("UPDATE testtab SET field1 = ? WHERE id = ?");
         try {
             try {
                 ps.setString(1,
-                		"veeeeeeeeeeeeeeeeeeeeery looooooooooooooooooooooong striiiiiiiiiiiiiiiiiiing");
+                        "veeeeeeeeeeeeeeeeeeeeery looooooooooooooooooooooong striiiiiiiiiiiiiiiiiiing");
             } catch (DataTruncation ex) {
                 // ignore
             }
@@ -659,14 +680,15 @@ public class TestFBPreparedStatement extends FBTestBase {
     /**
      * Test if failure in setting the parameter leaves the driver in correct
      * state (i.e. "not all params were set").
-     * 
+     *
      * @throws Exception
      */
+    @Test
     public void testLikeParameter() throws Exception {
         con.setAutoCommit(false);
 
         PreparedStatement ps = con
-        		.prepareStatement("SELECT * FROM testtab WHERE field7 = ?");
+                .prepareStatement("SELECT * FROM testtab WHERE field7 = ?");
         try {
             try {
                 ps.setString(1, "%a%");
@@ -703,18 +725,19 @@ public class TestFBPreparedStatement extends FBTestBase {
         }
     }
 
+    @Test
     public void testGetExecutionPlan() throws SQLException {
-        FBPreparedStatement stmt = (FBPreparedStatement)con
+        FBPreparedStatement stmt = (FBPreparedStatement) con
                 .prepareStatement("SELECT * FROM TESTTAB WHERE ID = 2");
         try {
             String executionPlan = stmt.getExecutionPlan();
             assertTrue("Ensure that a valid execution plan is retrieved",
-            		executionPlan.indexOf("TESTTAB") >= 0);
+                    executionPlan.indexOf("TESTTAB") >= 0);
         } finally {
             closeQuietly(stmt);
         }
     }
-    
+
     protected void checkStatementType(String query, int expectedStatementType, String assertionMessage) throws SQLException {
         FBPreparedStatement stmt = (FBPreparedStatement) con
                 .prepareStatement(query);
@@ -726,33 +749,40 @@ public class TestFBPreparedStatement extends FBTestBase {
             closeQuietly(stmt);
         }
     }
-    
+
+    @Test
     public void testGetStatementType_Select() throws SQLException {
-        checkStatementType("SELECT * FROM TESTTAB", FirebirdPreparedStatement.TYPE_SELECT, 
+        checkStatementType("SELECT * FROM TESTTAB", FirebirdPreparedStatement.TYPE_SELECT,
                 "TYPE_SELECT should be returned for a SELECT statement");
     }
-    
+
+    @Test
     public void testGetStatementType_Insert() throws SQLException {
-        checkStatementType("INSERT INTO testtab(id, field1, field6) VALUES(?, ?, ?)", FirebirdPreparedStatement.TYPE_INSERT, 
+        checkStatementType("INSERT INTO testtab(id, field1, field6) VALUES(?, ?, ?)", FirebirdPreparedStatement.TYPE_INSERT,
                 "TYPE_INSERT should be returned for an INSERT statement");
     }
-    
+
+    @Test
     public void testGetStatementType_Delete() throws SQLException {
-        checkStatementType("DELETE FROM TESTTAB WHERE ID = ?", FirebirdPreparedStatement.TYPE_DELETE, 
+        checkStatementType("DELETE FROM TESTTAB WHERE ID = ?", FirebirdPreparedStatement.TYPE_DELETE,
                 "TYPE_DELETE should be returned for a DELETE statement");
     }
-    
+
+    @Test
     public void testGetStatementType_Update() throws SQLException {
-        checkStatementType("UPDATE TESTTAB SET FIELD1 = ? WHERE ID = ?", FirebirdPreparedStatement.TYPE_UPDATE, 
+        checkStatementType("UPDATE TESTTAB SET FIELD1 = ? WHERE ID = ?", FirebirdPreparedStatement.TYPE_UPDATE,
                 "TYPE_UPDATE should be returned for an UPDATE statement");
     }
-    
+
+    @Test
     public void testGetStatementType_InsertReturning() throws SQLException {
-        checkStatementType("INSERT INTO testtab(field1) VALUES(?) RETURNING id", FirebirdPreparedStatement.TYPE_EXEC_PROCEDURE, 
+        checkStatementType("INSERT INTO testtab(field1) VALUES(?) RETURNING id", FirebirdPreparedStatement.TYPE_EXEC_PROCEDURE,
                 "TYPE_EXEC_PROCEDURE should be returned for an INSERT ... RETURNING statement");
     }
 
-    public void _testLikeFullLength() throws Exception {
+    @Test
+    @Ignore
+    public void testLikeFullLength() throws Exception {
         Statement stmt = con.createStatement();
         try {
             stmt.execute("INSERT INTO testtab(field1) VALUES('abcdefghij')");
@@ -761,7 +791,7 @@ public class TestFBPreparedStatement extends FBTestBase {
         }
 
         PreparedStatement ps = con
-        		.prepareStatement("SELECT field1 FROM testtab WHERE field1 LIKE ?");
+                .prepareStatement("SELECT field1 FROM testtab WHERE field1 LIKE ?");
         try {
             ps.setString(1, "%abcdefghi%");
 
@@ -774,10 +804,10 @@ public class TestFBPreparedStatement extends FBTestBase {
 
     /**
      * Test if parameters are correctly checked for their length.
-     * 
-     * @throws Exception
-     *             if something went wrong.
+     *
+     * @throws Exception if something went wrong.
      */
+    @Test
     public void testNumeric15_2() throws Exception {
         Properties props = getDefaultPropertiesForConnection();
         props.setProperty("sqlDialect", "1");
@@ -818,19 +848,20 @@ public class TestFBPreparedStatement extends FBTestBase {
         }
     }
 
+    @Test
     public void testInsertReturning() throws Exception {
         FirebirdPreparedStatement stmt = (FirebirdPreparedStatement) con
-                .prepareStatement("INSERT INTO testtab(id, field1) VALUES(gen_id(test_generator, 1), 'a') RETURNING id");;
+                .prepareStatement("INSERT INTO testtab(id, field1) VALUES(gen_id(test_generator, 1), 'a') RETURNING id");
         try {
             assertEquals(
-            		"TYPE_EXEC_PROCEDURE should be returned for an INSERT...RETURNING statement",
+                    "TYPE_EXEC_PROCEDURE should be returned for an INSERT...RETURNING statement",
                     FirebirdPreparedStatement.TYPE_EXEC_PROCEDURE,
                     stmt.getStatementType());
             ResultSet rs = stmt.executeQuery();
 
             assertTrue("Should return at least 1 row", rs.next());
             assertTrue("Generator value should be > 0 (actual value is "
-            + rs.getInt(1) + ")", rs.getInt(1) > 0);
+                    + rs.getInt(1) + ")", rs.getInt(1) > 0);
             assertFalse("Should return exactly one row", rs.next());
 
         } finally {
@@ -838,20 +869,21 @@ public class TestFBPreparedStatement extends FBTestBase {
         }
     }
 
-    private static final String dummySelect = 
-            "execute block returns(a integer) " 
-            + " as"
-            + "     declare variable i integer;" 
-            + " begin" 
-            + "    i = 1;" 
-            + "    while(i < 10000) do begin"
-            + "     EXECUTE STATEMENT 'SELECT ' || :i || ' FROM rdb$database' INTO :a;" 
-            + "     i = i + 1;"
-            + "     suspend;" 
-            + "    end" 
-            + " end";
+    private static final String dummySelect =
+            "execute block returns(a integer) "
+                    + " as"
+                    + "     declare variable i integer;"
+                    + " begin"
+                    + "    i = 1;"
+                    + "    while(i < 10000) do begin"
+                    + "     EXECUTE STATEMENT 'SELECT ' || :i || ' FROM rdb$database' INTO :a;"
+                    + "     i = i + 1;"
+                    + "     suspend;"
+                    + "    end"
+                    + " end";
 
     // TODO: This test intermittently fails
+    @Test
     public void testCancelStatement() throws Exception {
         final Statement stmt = con.createStatement();
         try {
@@ -873,7 +905,7 @@ public class TestFBPreparedStatement extends FBTestBase {
             }, "cancel-thread");
 
             cancelThread.start();
-            
+
             int i = 0;
             try {
                 while (hasRecord) {
@@ -894,10 +926,11 @@ public class TestFBPreparedStatement extends FBTestBase {
             closeQuietly(stmt);
         }
     }
-    
+
     /**
      * Tests NULL parameter when using {@link PreparedStatement#setNull(int, int)}
      */
+    @Test
     public void testParameterIsNullQuerySetNull() throws Throwable {
         createIsNullTestData();
 
@@ -925,11 +958,12 @@ public class TestFBPreparedStatement extends FBTestBase {
     /**
      * Tests NULL parameter when using actual (non-null) value in {@link PreparedStatement#setString(int, String)}
      */
+    @Test
     public void testParameterIsNullQueryWithValues() throws Throwable {
         createIsNullTestData();
 
         PreparedStatement ps = con.prepareStatement(
-        		"SELECT id FROM testtab WHERE field2 = ? OR ? IS NULL ORDER BY 1");
+                "SELECT id FROM testtab WHERE field2 = ? OR ? IS NULL ORDER BY 1");
         ResultSet rs;
         try {
             ps.setString(1, "a");
@@ -947,10 +981,11 @@ public class TestFBPreparedStatement extends FBTestBase {
             closeQuietly(ps);
         }
     }
-    
+
     /**
      * Tests NULL parameter when using null value in {@link PreparedStatement#setString(int, String)}
      */
+    @Test
     public void testParameterIsNullQueryWithNull() throws Throwable {
         createIsNullTestData();
 
@@ -987,9 +1022,10 @@ public class TestFBPreparedStatement extends FBTestBase {
 
     /**
      * Closing a statement twice should not result in an Exception.
-     * 
+     *
      * @throws SQLException
      */
+    @Test
     public void testDoubleClose() throws SQLException {
         PreparedStatement stmt = con.prepareStatement("SELECT 1, 2 FROM RDB$DATABASE");
         stmt.close();
@@ -1002,9 +1038,10 @@ public class TestFBPreparedStatement extends FBTestBase {
      * <p>
      * JDBC 4.1 feature
      * </p>
-     * 
+     *
      * @throws SQLException
      */
+    @Test
     public void testCloseOnCompletion_StatementClosed_afterImplicitResultSetClose() throws SQLException {
         FBPreparedStatement stmt = (FBPreparedStatement) con.prepareStatement(SELECT_DATA);
         try {
@@ -1026,15 +1063,16 @@ public class TestFBPreparedStatement extends FBTestBase {
             stmt.close();
         }
     }
-    
+
     /**
      * Tests insertion of a single character into a single character field on a UTF8 connection.
      * <p>
      * See JDBC-234 for rationale of this test.
      * </p>
-     * 
+     *
      * @throws Exception
      */
+    @Test
     public void testInsertSingleCharOnUTF8() throws Exception {
         Properties props = getDefaultPropertiesForConnection();
         props.setProperty("lc_ctype", "UTF8");
@@ -1047,15 +1085,16 @@ public class TestFBPreparedStatement extends FBTestBase {
             closeQuietly(connection);
         }
     }
-    
+
     /**
      * Tests if a parameter with a CAST around it will correctly be NULL when set
      * <p>
      * See JDBC-271 for rationale of this test.
      * </p>
-     *  
+     *
      * @throws Exception
      */
+    @Test
     public void testNullParameterWithCast() throws Exception {
         PreparedStatement stmt = con.prepareStatement("SELECT CAST(? AS VARCHAR(1)) FROM RDB$DATABASE");
         try {
@@ -1066,6 +1105,60 @@ public class TestFBPreparedStatement extends FBTestBase {
             rs.close();
         } finally {
             closeQuietly(stmt);
+        }
+    }
+
+    /**
+     * Tests multiple batch executions in a row when using blobs created from a stream
+     * <p>
+     * See <a href="http://tracker.firebirdsql.org/browse/JDBC-312">JDBC-312</a>
+     * </p>
+     */
+    @Test
+    public void testRepeatedBatchExecutionWithBlobFromStream() throws Exception {
+        con.setAutoCommit(false);
+        List<byte[]> expectedData = new ArrayList<byte[]>();
+        try {
+            PreparedStatement insert = con.prepareStatement("INSERT INTO test_blob (id, obj_data) VALUES (?,?)");
+            // Execute two separate batches inserting a random blob
+            try {
+                for (int i = 0; i < 2; i++) {
+                    byte[] testData = new byte[50];
+                    rnd.nextBytes(testData);
+                    expectedData.add(testData.clone());
+                    insert.setInt(1, i);
+                    InputStream in = new ByteArrayInputStream(testData);
+                    insert.setBinaryStream(2, in, testData.length);
+                    insert.addBatch();
+                    insert.executeBatch();
+                }
+            } finally {
+                closeQuietly(insert);
+            }
+
+            // Check if the stored data matches the retrieved data
+            Statement select = con.createStatement();
+            try {
+                ResultSet rs = select.executeQuery("SELECT id, obj_data FROM test_blob ORDER BY id");
+                try {
+                    int count = 0;
+                    while (rs.next()) {
+                        count++;
+                        int id = rs.getInt(1);
+                        byte[] data = rs.getBytes(2);
+
+                        // TODO Change to JUnit 4 assertArrayEquals
+                        assertArrayEquals(String.format("Unexpected blob data for id %d", id), expectedData.get(id), data);
+                    }
+                    assertEquals("Unexpected number of blobs in table", 2, count);
+                } finally {
+                    closeQuietly(rs);
+                }
+            } finally {
+                closeQuietly(select);
+            }
+        } finally {
+            con.setAutoCommit(true);
         }
     }
 
