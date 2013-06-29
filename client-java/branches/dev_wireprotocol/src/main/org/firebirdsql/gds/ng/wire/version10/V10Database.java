@@ -416,8 +416,7 @@ public class V10Database implements FbWireDatabase, TransactionEventListener {
 
     @Override
     public FbStatement createStatement() throws SQLException {
-        // TODO Auto-generated method stub
-        return null;
+        return protocolDescriptor.createStatement(this);
     }
 
     @Override
@@ -438,19 +437,7 @@ public class V10Database implements FbWireDatabase, TransactionEventListener {
         return infoProcessor.process(responseBuffer);
     }
 
-    /**
-     * Performs a database info request.
-     *
-     * @param requestItems
-     *         Information items to request
-     * @param maxBufferLength
-     *         Maximum response buffer length to use
-     * @return The response buffer (note: length is the actual length of the
-     *         response, not <code>maxBufferLength</code>
-     * @throws SQLException
-     *         For errors retrieving the information.
-     */
-    protected byte[] getDatabaseInfo(byte[] requestItems, int maxBufferLength) throws SQLException {
+    public byte[] getDatabaseInfo(byte[] requestItems, int maxBufferLength) throws SQLException {
         checkAttached();
         synchronized (getSynchronizationObject()) {
             try {
@@ -533,17 +520,8 @@ public class V10Database implements FbWireDatabase, TransactionEventListener {
         // Do nothing
     }
 
-    /**
-     * Convenience method to read a Response to a GenericResponse
-     *
-     * @return GenericResponse
-     * @throws SQLException
-     *         For errors returned from the server, or when attempting to
-     *         read.
-     * @throws IOException
-     *         For errors reading the response from the connection.
-     */
-    protected GenericResponse readGenericResponse() throws SQLException, IOException {
+    @Override
+    public GenericResponse readGenericResponse() throws SQLException, IOException {
         return (GenericResponse) readResponse();
     }
 
@@ -691,25 +669,7 @@ public class V10Database implements FbWireDatabase, TransactionEventListener {
 
     // TODO: Move iscVax* up in inheritance tree, or move to helper class
 
-    /**
-     * Reads Vax style integers from the supplied buffer, starting at
-     * <code>startPosition</code> and reading for <code>length</code> bytes.
-     * <p>
-     * This method is useful for lengths up to 4 bytes (ie normal Java integers
-     * (<code>int</code>). For larger lengths the values read will overflow. Use
-     * {@link #iscVaxLong(byte[], int, int)} for reading values with length up
-     * to 8 bytes.
-     * </p>
-     *
-     * @param buffer
-     *         The byte array from which the integer is to be retrieved
-     * @param startPosition
-     *         The offset starting position from which to start retrieving
-     *         byte values
-     * @return The integer value retrieved from the bytes
-     * @see #iscVaxLong(byte[], int, int)
-     * @see #iscVaxInteger2(byte[], int)
-     */
+    @Override
     public int iscVaxInteger(final byte[] buffer, final int startPosition, int length) {
         int value = 0;
         int shift = 0;
@@ -722,23 +682,7 @@ public class V10Database implements FbWireDatabase, TransactionEventListener {
         return value;
     }
 
-    /**
-     * Reads Vax style integers from the supplied buffer, starting at
-     * <code>startPosition</code> and reading for <code>length</code> bytes.
-     * <p>
-     * This method is useful for lengths up to 8 bytes (ie normal Java longs (
-     * <code>long</code>). For larger lengths the values read will overflow.
-     * </p>
-     *
-     * @param buffer
-     *         The byte array from which the integer is to be retrieved
-     * @param startPosition
-     *         The offset starting position from which to start retrieving
-     *         byte values
-     * @return The integer value retrieved from the bytes
-     * @see #iscVaxLong(byte[], int, int)
-     * @see #iscVaxInteger2(byte[], int)
-     */
+    @Override
     public long iscVaxLong(final byte[] buffer, final int startPosition, int length) {
         long value = 0;
         int shift = 0;
@@ -751,23 +695,7 @@ public class V10Database implements FbWireDatabase, TransactionEventListener {
         return value;
     }
 
-    /**
-     * Implementation of {@link #iscVaxInteger(byte[], int, int)} specifically
-     * for two-byte integers.
-     * <p>
-     * Use of this method has a small performance benefit over generic
-     * {@link #iscVaxInteger(byte[], int, int)}
-     * </p>
-     *
-     * @param buffer
-     *         The byte array from which the integer is to be retrieved
-     * @param startPosition
-     *         The offset starting position from which to start retrieving
-     *         byte values
-     * @return The integer value retrieved from the bytes
-     * @see #iscVaxInteger(byte[], int, int)
-     * @see #iscVaxLong(byte[], int, int)
-     */
+    @Override
     public int iscVaxInteger2(final byte[] buffer, final int startPosition) {
         return (buffer[startPosition] & 0xff) | ((buffer[startPosition + 1] & 0xff) << 8);
     }

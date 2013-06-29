@@ -1,22 +1,28 @@
 /*
  * $Id$
- * 
- * Firebird Open Source J2EE Connector - JDBC Driver
  *
- * Distributable under LGPL license.
- * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
+ * Public Firebird Java API.
  *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * LGPL License for more details.
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
+ *    1. Redistributions of source code must retain the above copyright notice,
+ *       this list of conditions and the following disclaimer.
+ *    2. Redistributions in binary form must reproduce the above copyright
+ *       notice, this list of conditions and the following disclaimer in the
+ *       documentation and/or other materials provided with the distribution.
+ *    3. The name of the author may not be used to endorse or promote products
+ *       derived from this software without specific prior written permission.
  *
- * This file was created by members of the firebird development team.
- * All individual contributions remain the Copyright (C) of those
- * individuals.  Contributors to this file are either listed here or
- * can be obtained from a CVS history command.
- *
- * All rights reserved.
+ * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR IMPLIED
+ * WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
+ * MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO
+ * EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+ * PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
+ * OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+ * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+ * OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+ * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 package org.firebirdsql.gds.ng.wire;
 
@@ -51,4 +57,75 @@ public interface FbWireDatabase extends FbDatabase, XdrStreamAccess {
      * @throws SQLException
      */
     void releaseObject(int operation, int objectId) throws SQLException;
+
+    /**
+     * Convenience method to read a Response to a GenericResponse
+     *
+     * @return GenericResponse
+     * @throws SQLException
+     *         For errors returned from the server, or when attempting to
+     *         read.
+     * @throws IOException
+     *         For errors reading the response from the connection.
+     */
+    GenericResponse readGenericResponse() throws SQLException, IOException;
+
+    /**
+     * Reads Vax style integers from the supplied buffer, starting at
+     * <code>startPosition</code> and reading for <code>length</code> bytes.
+     * <p>
+     * This method is useful for lengths up to 4 bytes (ie normal Java integers
+     * (<code>int</code>). For larger lengths the values read will overflow. Use
+     * {@link #iscVaxLong(byte[], int, int)} for reading values with length up
+     * to 8 bytes.
+     * </p>
+     *
+     * @param buffer
+     *         The byte array from which the integer is to be retrieved
+     * @param startPosition
+     *         The offset starting position from which to start retrieving
+     *         byte values
+     * @return The integer value retrieved from the bytes
+     * @see #iscVaxLong(byte[], int, int)
+     * @see #iscVaxInteger2(byte[], int)
+     */
+    int iscVaxInteger(byte[] buffer, int startPosition, int length);
+
+    /**
+     * Reads Vax style integers from the supplied buffer, starting at
+     * <code>startPosition</code> and reading for <code>length</code> bytes.
+     * <p>
+     * This method is useful for lengths up to 8 bytes (ie normal Java longs (
+     * <code>long</code>). For larger lengths the values read will overflow.
+     * </p>
+     *
+     * @param buffer
+     *         The byte array from which the integer is to be retrieved
+     * @param startPosition
+     *         The offset starting position from which to start retrieving
+     *         byte values
+     * @return The integer value retrieved from the bytes
+     * @see #iscVaxLong(byte[], int, int)
+     * @see #iscVaxInteger2(byte[], int)
+     */
+    long iscVaxLong(byte[] buffer, int startPosition, int length);
+
+    /**
+     * Implementation of {@link #iscVaxInteger(byte[], int, int)} specifically
+     * for two-byte integers.
+     * <p>
+     * Use of this method has a small performance benefit over generic
+     * {@link #iscVaxInteger(byte[], int, int)}
+     * </p>
+     *
+     * @param buffer
+     *         The byte array from which the integer is to be retrieved
+     * @param startPosition
+     *         The offset starting position from which to start retrieving
+     *         byte values
+     * @return The integer value retrieved from the bytes
+     * @see #iscVaxInteger(byte[], int, int)
+     * @see #iscVaxLong(byte[], int, int)
+     */
+    int iscVaxInteger2(byte[] buffer, int startPosition);
 }

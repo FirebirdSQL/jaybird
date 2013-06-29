@@ -22,10 +22,7 @@ package org.firebirdsql.gds.ng.wire.version10;
 
 import org.firebirdsql.gds.impl.wire.WireProtocolConstants;
 import org.firebirdsql.gds.ng.FbTransaction;
-import org.firebirdsql.gds.ng.wire.AbstractProtocolDescriptor;
-import org.firebirdsql.gds.ng.wire.FbWireDatabase;
-import org.firebirdsql.gds.ng.wire.ProtocolDescriptor;
-import org.firebirdsql.gds.ng.wire.WireConnection;
+import org.firebirdsql.gds.ng.wire.*;
 
 /**
  * The {@link ProtocolDescriptor} for the Firebird version 10 protocol. This version applies to Firebird 1.x and 2.0,
@@ -52,7 +49,12 @@ public final class Version10Descriptor extends AbstractProtocolDescriptor implem
     }
 
     @Override
-    public FbTransaction createTransaction(FbWireDatabase database) {
+    public FbWireTransaction createTransaction(FbWireDatabase database) {
         return new V10Transaction(database);
+    }
+
+    @Override
+    public FbWireStatement createStatement(final FbWireDatabase database) {
+        return new V10Statement(database);
     }
 }

@@ -26,7 +26,6 @@ import org.firebirdsql.gds.impl.wire.XdrOutputStream;
 import org.firebirdsql.gds.ng.FbConnectionProperties;
 import org.firebirdsql.gds.ng.FbExceptionBuilder;
 import org.firebirdsql.gds.ng.IConnectionProperties;
-import org.firebirdsql.gds.ng.IConnectionPropertiesGetters;
 import org.firebirdsql.logging.Logger;
 import org.firebirdsql.logging.LoggerFactory;
 
@@ -126,7 +125,7 @@ public final class WireConnection implements XdrStreamAccess {
     /**
      * @return An immutable copy of the current connection properties.
      */
-    public IConnectionPropertiesGetters getConnectionProperties() {
+    public IConnectionProperties getConnectionProperties() {
         return connectionProperties.asImmutable();
     }
 

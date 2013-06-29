@@ -30,6 +30,7 @@ import org.firebirdsql.gds.ng.FbExceptionBuilder;
 import org.firebirdsql.gds.ng.FbTransaction;
 import org.firebirdsql.gds.ng.TransactionState;
 import org.firebirdsql.gds.ng.wire.FbWireDatabase;
+import org.firebirdsql.gds.ng.wire.FbWireTransaction;
 import org.firebirdsql.gds.ng.wire.GenericResponse;
 
 import java.io.IOException;
@@ -43,7 +44,7 @@ import static org.firebirdsql.gds.impl.wire.WireProtocolConstants.*;
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @since 2.3
  */
-public class V10Transaction extends AbstractFbTransaction implements FbTransaction {
+public class V10Transaction extends AbstractFbTransaction implements FbWireTransaction {
 
     private FbWireDatabase database;
     private final Object syncObject = new Object();
@@ -74,8 +75,12 @@ public class V10Transaction extends AbstractFbTransaction implements FbTransacti
         return database;
     }
 
-    // TODO Should transaction begin here, or on creation in a FbDatabase implementation?
+    @Override
+    public int getHandle() {
+        return handle;
+    }
 
+    // TODO Should transaction begin here, or on creation in a FbDatabase implementation?
     @Override
     public void beginTransaction(TransactionParameterBuffer tpb) throws SQLException {
         synchronized (getSynchronizationObject()) {

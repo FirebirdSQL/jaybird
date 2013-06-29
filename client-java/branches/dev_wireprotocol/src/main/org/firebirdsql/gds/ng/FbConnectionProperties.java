@@ -44,22 +44,16 @@ public final class FbConnectionProperties implements IConnectionProperties {
     private int connectTimeout = IConnectionProperties.DEFAULT_CONNECT_TIMEOUT;
 
     /**
-     * Default constructor for FbConnectionProperties
-     */
-    public FbConnectionProperties() {
-    }
-
-    /**
      * Copy constructor for FbConnectionProperties.
      * <p>
-     * All properties defined in {@link IConnectionPropertiesGetters} are
+     * All properties defined in {@link IConnectionProperties} are
      * copied from <code>src</code> to the new instance.
      * </p>
      *
      * @param src
      *         Source to copy from
      */
-    public FbConnectionProperties(IConnectionPropertiesGetters src) {
+    public FbConnectionProperties(IConnectionProperties src) {
         this();
         if (src != null) {
             databaseName = src.getDatabaseName();
@@ -76,6 +70,12 @@ public final class FbConnectionProperties implements IConnectionProperties {
             soTimeout = src.getSoTimeout();
             connectTimeout = src.getConnectTimeout();
         }
+    }
+
+    /**
+     * Default constructor for FbConnectionProperties
+     */
+    public FbConnectionProperties() {
     }
 
     @Override
@@ -209,7 +209,7 @@ public final class FbConnectionProperties implements IConnectionProperties {
     }
 
     @Override
-    public IConnectionPropertiesGetters asImmutable() {
+    public IConnectionProperties asImmutable() {
         return new FbImmutableConnectionProperties(this);
     }
 }

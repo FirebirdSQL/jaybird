@@ -26,39 +26,13 @@
  */
 package org.firebirdsql.gds.ng.wire;
 
-import java.sql.SQLException;
+import org.firebirdsql.gds.ng.FbTransaction;
 
 /**
+ * Interface for transactions created for the wire protocol implementaton.
+ *
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @since 2.3
  */
-public final class GenericResponse implements Response {
-
-    private final int objectHandle;
-    private final long blobId;
-    private final byte[] data;
-    private final SQLException exception;
-
-    public GenericResponse(int objectHandle, long blobId, byte[] data, SQLException exception) {
-        this.objectHandle = objectHandle;
-        this.blobId = blobId;
-        this.data = data;
-        this.exception = exception;
-    }
-
-    public int getObjectHandle() {
-        return objectHandle;
-    }
-
-    public long getBlobId() {
-        return blobId;
-    }
-
-    public byte[] getData() {
-        return data;
-    }
-
-    public SQLException getException() {
-        return exception;
-    }
+public interface FbWireTransaction extends FbTransaction {
 }

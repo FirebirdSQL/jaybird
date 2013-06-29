@@ -25,10 +25,7 @@ import org.firebirdsql.jdbc.FBSQLException;
 import org.firebirdsql.jdbc.FBSQLWarning;
 import org.firebirdsql.util.SQLExceptionChainBuilder;
 
-import java.sql.SQLException;
-import java.sql.SQLFeatureNotSupportedException;
-import java.sql.SQLTimeoutException;
-import java.sql.SQLWarning;
+import java.sql.*;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -93,6 +90,19 @@ public final class FbExceptionBuilder {
     }
 
     /**
+     * Force the next exception to be a {@link java.sql.SQLNonTransientException}.
+     *
+     * @param errorCode
+     *         The Firebird error code
+     * @return this FbExceptionBuilder
+     * @see #exception(int)
+     */
+    public FbExceptionBuilder nonTransientException(int errorCode) {
+        setNextExceptionInformation(Type.NON_TRANSIENT, errorCode);
+        return this;
+    }
+
+    /**
      * Adds an integer message parameter for the exception message.
      *
      * @param parameter
@@ -133,6 +143,13 @@ public final class FbExceptionBuilder {
         return this;
     }
 
+    /**
+     * Sets the cause of the current exception.
+     *
+     * @param cause
+     *         Throwable with the cause
+     * @return this FbExceptionBuilder
+     */
     public FbExceptionBuilder cause(Throwable cause) {
         checkExceptionInformation();
         current.setCause(cause);
@@ -332,7 +349,17 @@ public final class FbExceptionBuilder {
             public SQLException createSQLException(final String message, final String sqlState, final int errorCode) {
                 return new SQLTimeoutException(message, sqlState, errorCode);
             }
-        };
+        },
+        /**
+         * Force builder to create exception of {@link java.sql.SQLNonTransientException}
+         */
+        NON_TRANSIENT(FBSQLException.SQL_STATE_GENERAL_ERROR) {
+            @Override
+            public SQLException createSQLException(final String message, final String sqlState, final int errorCode) {
+                return new SQLNonTransientException(message, sqlState, errorCode);
+            }
+        }
+        ;
 
         private final String defaultSQLState;
 

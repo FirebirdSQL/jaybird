@@ -1,13 +1,13 @@
 package org.firebirdsql.gds.ng;
 
 /**
- * Immutable implementation of {@link org.firebirdsql.gds.ng.IConnectionPropertiesGetters}.
+ * Immutable implementation of {@link org.firebirdsql.gds.ng.IConnectionProperties}.
  *
  * @author @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @see FbConnectionProperties
  * @since 2.3
  */
-public final class FbImmutableConnectionProperties implements IConnectionPropertiesGetters {
+public final class FbImmutableConnectionProperties implements IConnectionProperties {
 
     private final String databaseName;
     private final String serverName;
@@ -26,14 +26,14 @@ public final class FbImmutableConnectionProperties implements IConnectionPropert
     /**
      * Copy constructor for FbConnectionProperties.
      * <p>
-     * All properties defined in {@link org.firebirdsql.gds.ng.IConnectionPropertiesGetters} are
+     * All properties defined in {@link org.firebirdsql.gds.ng.IConnectionProperties} are
      * copied from <code>src</code> to the new instance.
      * </p>
      *
      * @param src
      *         Source to copy from
      */
-    public FbImmutableConnectionProperties(IConnectionPropertiesGetters src) {
+    public FbImmutableConnectionProperties(IConnectionProperties src) {
         databaseName = src.getDatabaseName();
         serverName = src.getServerName();
         portNumber = src.getPortNumber();
@@ -55,8 +55,18 @@ public final class FbImmutableConnectionProperties implements IConnectionPropert
     }
 
     @Override
+    public void setDatabaseName(final String databaseName) {
+        throw new UnsupportedOperationException("this object is immutable");
+    }
+
+    @Override
     public String getServerName() {
         return serverName;
+    }
+
+    @Override
+    public void setServerName(final String serverName) {
+        throw new UnsupportedOperationException("this object is immutable");
     }
 
     @Override
@@ -65,8 +75,18 @@ public final class FbImmutableConnectionProperties implements IConnectionPropert
     }
 
     @Override
+    public void setPortNumber(final int portNumber) {
+        throw new UnsupportedOperationException("this object is immutable");
+    }
+
+    @Override
     public String getUser() {
         return user;
+    }
+
+    @Override
+    public void setUser(final String user) {
+        throw new UnsupportedOperationException("this object is immutable");
     }
 
     @Override
@@ -75,8 +95,18 @@ public final class FbImmutableConnectionProperties implements IConnectionPropert
     }
 
     @Override
+    public void setPassword(final String password) {
+        throw new UnsupportedOperationException("this object is immutable");
+    }
+
+    @Override
     public String getCharSet() {
         return charSet;
+    }
+
+    @Override
+    public void setCharSet(final String charSet) {
+        throw new UnsupportedOperationException("this object is immutable");
     }
 
     @Override
@@ -85,8 +115,18 @@ public final class FbImmutableConnectionProperties implements IConnectionPropert
     }
 
     @Override
+    public void setEncoding(final String encoding) {
+        throw new UnsupportedOperationException("this object is immutable");
+    }
+
+    @Override
     public String getRoleName() {
         return roleName;
+    }
+
+    @Override
+    public void setRoleName(final String roleName) {
+        throw new UnsupportedOperationException("this object is immutable");
     }
 
     @Override
@@ -95,8 +135,18 @@ public final class FbImmutableConnectionProperties implements IConnectionPropert
     }
 
     @Override
+    public void setConnectionDialect(final short connectionDialect) {
+        throw new UnsupportedOperationException("this object is immutable");
+    }
+
+    @Override
     public int getSocketBufferSize() {
         return socketBufferSize;
+    }
+
+    @Override
+    public void setSocketBufferSize(final int socketBufferSize) {
+        throw new UnsupportedOperationException("this object is immutable");
     }
 
     @Override
@@ -105,8 +155,18 @@ public final class FbImmutableConnectionProperties implements IConnectionPropert
     }
 
     @Override
+    public void setPageCacheSize(final int pageCacheSize) {
+        throw new UnsupportedOperationException("this object is immutable");
+    }
+
+    @Override
     public int getSoTimeout() {
         return soTimeout;
+    }
+
+    @Override
+    public void setSoTimeout(final int soTimeout) {
+        throw new UnsupportedOperationException("this object is immutable");
     }
 
     @Override
@@ -115,7 +175,12 @@ public final class FbImmutableConnectionProperties implements IConnectionPropert
     }
 
     @Override
-    public IConnectionPropertiesGetters asImmutable() {
+    public void setConnectTimeout(final int connectTimeout) {
+        throw new UnsupportedOperationException("this object is immutable");
+    }
+
+    @Override
+    public IConnectionProperties asImmutable() {
         // Immutable already, so just return this
         return this;
     }

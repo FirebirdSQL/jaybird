@@ -23,13 +23,20 @@ package org.firebirdsql.gds.ng;
 import org.firebirdsql.gds.ISCConstants;
 
 import java.sql.SQLException;
+import java.util.Collections;
+import java.util.EnumSet;
+import java.util.Set;
+import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @since 2.3
  */
 public abstract class AbstractFbStatement implements FbStatement {
 
-    private static final int EXECUTION_PLAN_BUFFER_SIZE = 32768;
+    private final Object syncObject = new Object();
+    private final AtomicReference<StatementState> state = new AtomicReference<StatementState>(StatementState.CLOSED);
+    private final AtomicReference<StatementType> type = new AtomicReference<StatementType>(StatementType.NONE);
 
     /**
      * Plan information items
@@ -46,59 +53,104 @@ public abstract class AbstractFbStatement implements FbStatement {
             ISCConstants.isc_info_sql_records
     };
 
-    /**
-     * Describe information items
-     * TODO: isc_info_sql_relation_alias is not supported in Firebird 1.5 and earlier, take this into account by making it dependent on the protocol version?
-     */
-    private static final byte[] DESCRIBE_INFO_AND_BIND_INFO_ITEMS = new byte[] {
-            ISCConstants.isc_info_sql_stmt_type,
-            ISCConstants.isc_info_sql_select,
-            ISCConstants.isc_info_sql_describe_vars,
-            ISCConstants.isc_info_sql_sqlda_seq,
-            ISCConstants.isc_info_sql_type, ISCConstants.isc_info_sql_sub_type,
-            ISCConstants.isc_info_sql_scale, ISCConstants.isc_info_sql_length,
-            ISCConstants.isc_info_sql_field,
-            ISCConstants.isc_info_sql_alias,
-            ISCConstants.isc_info_sql_relation,
-            ISCConstants.isc_info_sql_relation_alias,
-            ISCConstants.isc_info_sql_owner,
-            ISCConstants.isc_info_sql_describe_end,
-
-            ISCConstants.isc_info_sql_bind,
-            ISCConstants.isc_info_sql_describe_vars,
-            ISCConstants.isc_info_sql_sqlda_seq,
-            ISCConstants.isc_info_sql_type, ISCConstants.isc_info_sql_sub_type,
-            ISCConstants.isc_info_sql_scale, ISCConstants.isc_info_sql_length,
-            ISCConstants.isc_info_sql_field,
-            ISCConstants.isc_info_sql_alias,
-            ISCConstants.isc_info_sql_relation,
-            ISCConstants.isc_info_sql_relation_alias,
-            ISCConstants.isc_info_sql_owner,
-            ISCConstants.isc_info_sql_describe_end
-    };
-
-    protected byte[] getDescribePlanInfoItems() {
-        return DESCRIBE_PLAN_INFO_ITEMS;
-    }
-
-    protected byte[] getRowsAffectedInfoItems() {
-        return ROWS_AFFECTED_INFO_ITEMS;
-    }
-
-    protected byte[] getDescribeInfoAndBindInfoItems() {
-        // TODO Make abstract and move into protocol specific version, see todo on DESCRIBE_INFO_AND_BIND_INFO_ITEMS
-        return DESCRIBE_INFO_AND_BIND_INFO_ITEMS;
+    @Override
+    public final Object getSynchronizationObject() {
+        return syncObject;
     }
 
     @Override
-    public String getExecutionPlan() throws SQLException {
-        return getSqlInfo(getDescribePlanInfoItems(), EXECUTION_PLAN_BUFFER_SIZE, new InfoProcessor<String>() {
-            @Override
-            public String process(final byte[] infoResponse) throws SQLException {
-                return null;  //To change body of implemented methods use File | Settings | File Templates.
+    public void close() {
+        synchronized (getSynchronizationObject()) {
+            if (getState() == StatementState.CLOSED) return;
+            // TODO do additional checks (see also old implementation and .NET)
+            try {
+                free(ISCConstants.DSQL_drop);
+            } finally {
+                setState(StatementState.CLOSED);
+                setType(StatementType.NONE);
             }
-        });
+        }
     }
+
+    /**
+     * StatementState values indicating that cursor is closed
+     * TODO Should also include ALLOCATED and PREPARED?
+     */
+    protected static final Set<StatementState> STATE_CURSOR_CLOSED =
+            Collections.unmodifiableSet(EnumSet.of(StatementState.CLOSED, StatementState.IDLE));
+
+    /**
+     * StatementType values that can have a cursor
+     */
+    protected static final Set<StatementType> TYPE_HAS_CURSOR =
+            Collections.unmodifiableSet(EnumSet.of(StatementType.SELECT, StatementType.SELECT_FOR_UPDATE, StatementType.STORED_PROCEDURE));
+
+    @Override
+    public void closeCursor() throws SQLException {
+        synchronized (getSynchronizationObject()) {
+            if (STATE_CURSOR_CLOSED.contains(getState())) return;
+            // TODO do additional checks (see also old implementation and .NET)
+            try {
+                if (TYPE_HAS_CURSOR.contains(getType())) {
+                    free(ISCConstants.DSQL_close);
+                }
+            } finally {
+                // TODO Close in case of exception?
+                setState(StatementState.IDLE);
+            }
+        }
+    }
+
+    @Override
+    public StatementState getState() {
+        return state.get();
+    }
+
+    /**
+     * Sets the StatementState.
+     *
+     * @param state
+     *         New state
+     */
+    protected void setState(StatementState state) {
+        // TODO Check valid transition?
+        this.state.set(state);
+    }
+
+    @Override
+    public StatementType getType() {
+        return type.get();
+    }
+
+    /**
+     * Sets the StatementType
+     *
+     * @param type
+     *         New type
+     */
+    protected void setType(StatementType type) {
+        this.type.set(type);
+    }
+
+    public byte[] getDescribePlanInfoItems() {
+        return DESCRIBE_PLAN_INFO_ITEMS.clone();
+    }
+
+    public byte[] getRowsAffectedInfoItems() {
+        return ROWS_AFFECTED_INFO_ITEMS.clone();
+    }
+
+    /**
+     * @return The (full) statement info request items.
+     * @see #getParameterDescriptionInfoRequestItems()
+     */
+    public abstract byte[] getStatementInfoRequestItems();
+
+    /**
+     * @return The <tt>isc_info_sql_describe_vars</tt> info request items.
+     * @see #getStatementInfoRequestItems()
+     */
+    public abstract byte[] getParameterDescriptionInfoRequestItems();
 
     /**
      * Request statement info.
@@ -114,7 +166,19 @@ public abstract class AbstractFbStatement implements FbStatement {
      * @throws SQLException
      *         For errors retrieving or transforming the response.
      */
-    protected abstract <T> T getSqlInfo(byte[] requestItems, int bufferLength, InfoProcessor<T> infoProcessor) throws SQLException;
+    public abstract <T> T getSqlInfo(byte[] requestItems, int bufferLength, InfoProcessor<T> infoProcessor) throws SQLException;
+
+    /**
+     * Request statement info.
+     *
+     * @param requestItems
+     *         Array of info items to request
+     * @param bufferLength
+     *         Response buffer length to use
+     * @return Response buffer
+     * @throws SQLException
+     */
+    public abstract byte[] getSqlInfo(byte[] requestItems, int bufferLength) throws SQLException;
 
     protected abstract void free(int option);
 }

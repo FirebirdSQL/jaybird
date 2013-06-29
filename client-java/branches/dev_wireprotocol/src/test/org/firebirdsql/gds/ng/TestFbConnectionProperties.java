@@ -193,8 +193,8 @@ public class TestFbConnectionProperties {
             }
         }
 
-        IConnectionPropertiesGetters immutable = info.asImmutable();
-        BeanInfo immutableBean = Introspector.getBeanInfo(IConnectionPropertiesGetters.class);
+        IConnectionProperties immutable = info.asImmutable();
+        BeanInfo immutableBean = Introspector.getBeanInfo(IConnectionProperties.class);
         for (PropertyDescriptor descriptor : immutableBean.getPropertyDescriptors()) {
             Method method = descriptor.getReadMethod();
             Object value = method.invoke(immutable);

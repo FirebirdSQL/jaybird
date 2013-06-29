@@ -26,39 +26,23 @@
  */
 package org.firebirdsql.gds.ng.wire;
 
-import java.sql.SQLException;
+import org.firebirdsql.gds.ng.FbStatement;
 
 /**
+ * Interface for Statements created for the wire protocol implementation.
+ *
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @since 2.3
  */
-public final class GenericResponse implements Response {
+public interface FbWireStatement extends FbStatement {
 
-    private final int objectHandle;
-    private final long blobId;
-    private final byte[] data;
-    private final SQLException exception;
+    /**
+     * @return The default size to use for the sql info buffer
+     */
+    int getDefaultSqlInfoSize();
 
-    public GenericResponse(int objectHandle, long blobId, byte[] data, SQLException exception) {
-        this.objectHandle = objectHandle;
-        this.blobId = blobId;
-        this.data = data;
-        this.exception = exception;
-    }
-
-    public int getObjectHandle() {
-        return objectHandle;
-    }
-
-    public long getBlobId() {
-        return blobId;
-    }
-
-    public byte[] getData() {
-        return data;
-    }
-
-    public SQLException getException() {
-        return exception;
-    }
+    /**
+     * @return The maximum size to use for the sql info buffer
+     */
+    int getMaxSqlInfoSize();
 }

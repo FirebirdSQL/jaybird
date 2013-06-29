@@ -20,9 +20,7 @@
  */
 package org.firebirdsql.gds.ng;
 
-import org.firebirdsql.gds.ng.wire.AbstractProtocolDescriptor;
-import org.firebirdsql.gds.ng.wire.FbWireDatabase;
-import org.firebirdsql.gds.ng.wire.WireConnection;
+import org.firebirdsql.gds.ng.wire.*;
 
 /**
  * Implementation of {@link org.firebirdsql.gds.ng.wire.ProtocolDescriptor} that returns null for the
@@ -45,7 +43,12 @@ public class EmptyProtocolDescriptor extends AbstractProtocolDescriptor {
     }
 
     @Override
-    public FbTransaction createTransaction(final FbWireDatabase database) {
+    public FbWireTransaction createTransaction(final FbWireDatabase database) {
+        return null;
+    }
+
+    @Override
+    public FbWireStatement createStatement(final FbWireDatabase database) {
         return null;
     }
 }

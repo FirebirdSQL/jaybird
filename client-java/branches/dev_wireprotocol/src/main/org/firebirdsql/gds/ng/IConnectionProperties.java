@@ -1,10 +1,33 @@
+/*
+ * $Id$
+ *
+ * Public Firebird Java API.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
+ *    1. Redistributions of source code must retain the above copyright notice,
+ *       this list of conditions and the following disclaimer.
+ *    2. Redistributions in binary form must reproduce the above copyright
+ *       notice, this list of conditions and the following disclaimer in the
+ *       documentation and/or other materials provided with the distribution.
+ *    3. The name of the author may not be used to endorse or promote products
+ *       derived from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR IMPLIED
+ * WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
+ * MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO
+ * EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+ * PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
+ * OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+ * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+ * OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+ * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
 package org.firebirdsql.gds.ng;
 
 /**
  * Connection properties for the Firebird connection.
- * <p>
- * This interface only defines setters, the getters are defined in {@link IConnectionPropertiesGetters}.
- * </p>
  * <p>
  * TODO Do refactor to remove overlap/duplication with {@link org.firebirdsql.jdbc.FirebirdConnectionProperties}
  * </p>
@@ -12,7 +35,7 @@ package org.firebirdsql.gds.ng;
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @since 2.3
  */
-public interface IConnectionProperties extends IConnectionPropertiesGetters {
+public interface IConnectionProperties {
 
     final int DEFAULT_PORT = 3050;
     final short DEFAULT_DIALECT = 3;
@@ -23,10 +46,26 @@ public interface IConnectionProperties extends IConnectionPropertiesGetters {
     final int DEFAULT_CONNECT_TIMEOUT = -1;
 
     /**
+     * @return Name or alias of the database
+     */
+    String getDatabaseName();
+
+    /**
      * @param databaseName
      *         Name or alias of the database
      */
     void setDatabaseName(String databaseName);
+
+    /**
+     * Get the hostname or IP address of the Firebird server.
+     * <p>
+     * NOTE: Implementer should take care to return {@link IConnectionProperties#DEFAULT_SERVER_NAME}
+     * if value hasn't been set yet.
+     * </p>
+     *
+     * @return Hostname or IP address of the server
+     */
+    String getServerName();
 
     /**
      * Set the hostname or IP address of the Firebird server.
@@ -41,6 +80,17 @@ public interface IConnectionProperties extends IConnectionPropertiesGetters {
     void setServerName(String serverName);
 
     /**
+     * Get the portnumber of the server.
+     * <p>
+     * NOTE: Implementer should take care to return {@link IConnectionProperties#DEFAULT_PORT} if
+     * value hasn't been set yet.
+     * </p>
+     *
+     * @return Portnumber of the server
+     */
+    int getPortNumber();
+
+    /**
      * Set the port number of the server.
      * <p>
      * NOTE: Implementer should take care to use the {@link #DEFAULT_PORT} if
@@ -53,16 +103,31 @@ public interface IConnectionProperties extends IConnectionPropertiesGetters {
     void setPortNumber(int portNumber);
 
     /**
+     * @return Name of the user to authenticate to the server.
+     */
+    String getUser();
+
+    /**
      * @param user
      *         Name of the user to authenticate to the server.
      */
     void setUser(String user);
 
     /**
+     * @return Password to authenticate to the server.
+     */
+    String getPassword();
+
+    /**
      * @param password
      *         Password to authenticate to the server.
      */
     void setPassword(String password);
+
+    /**
+     * @return Java character set for the connection.
+     */
+    String getCharSet();
 
     /**
      * Set the Java character set for the connection.
@@ -81,6 +146,11 @@ public interface IConnectionProperties extends IConnectionPropertiesGetters {
     void setCharSet(String charSet);
 
     /**
+     * @return Firebird character encoding for the connection.
+     */
+    String getEncoding();
+
+    /**
      * Set the Firebird character set for the connection.
      * <p>
      * Contrary to other parts of the codebase, the value of
@@ -95,10 +165,26 @@ public interface IConnectionProperties extends IConnectionPropertiesGetters {
     void setEncoding(String encoding);
 
     /**
+     * @return SQL role to use.
+     */
+    String getRoleName();
+
+    /**
      * @param roleName
      *         SQL role to use.
      */
     void setRoleName(String roleName);
+
+    /**
+     * Get the dialect of the client connection
+     * <p>
+     * NOTE: Implementer should take care to return {@link IConnectionProperties#DEFAULT_DIALECT} if
+     * the value hasn't been set yet.
+     * </p>
+     *
+     * @return SQL dialect of the client.
+     */
+    short getConnectionDialect();
 
     /**
      * Set the dialect of the client connection
@@ -113,6 +199,17 @@ public interface IConnectionProperties extends IConnectionPropertiesGetters {
     void setConnectionDialect(short connectionDialect);
 
     /**
+     * Get the socket buffer size.
+     * <p>
+     * NOTE: Implementer should take care to return {@link IConnectionProperties#DEFAULT_SOCKET_BUFFER_SIZE} if the
+     * value hasn't been set yet.
+     * </p>
+     *
+     * @return socket buffer size in bytes, or -1 if not specified.
+     */
+    int getSocketBufferSize();
+
+    /**
      * Set the socket buffer size.
      * <p>
      * NOTE: Implementer should take care to use {@link #DEFAULT_SOCKET_BUFFER_SIZE} if the
@@ -123,6 +220,26 @@ public interface IConnectionProperties extends IConnectionPropertiesGetters {
      *         socket buffer size in bytes.
      */
     void setSocketBufferSize(int socketBufferSize);
+
+    /**
+     * Get the page cache size.
+     * <p>
+     * A value of <code>0</code> indicates that the value is not set, and that
+     * the server default is used.
+     * </p>
+     * <p>
+     * This option is only relevant for Firebird implementations with per connection cache (eg Classic)
+     * </p>
+     * <p>
+     * NOTE: Implementer should take care to return {@link IConnectionProperties#DEFAULT_BUFFERS_NUMBER} if
+     * the value hasn't been set yet.
+     * </p>
+     *
+     * @return number of cache buffers that should be allocated for this
+     *         connection, should be specified for ClassicServer instances,
+     *         SuperServer has a server-wide configuration parameter.
+     */
+    int getPageCacheSize();
 
     /**
      * Set the page cache size.
@@ -146,6 +263,18 @@ public interface IConnectionProperties extends IConnectionPropertiesGetters {
     void setPageCacheSize(int pageCacheSize);
 
     /**
+     * Get the initial Socket blocking timeout (SoTimeout).
+     * <p>
+     * NOTE: Implementer should take care to return {@link IConnectionProperties#DEFAULT_SO_TIMEOUT} if the
+     * value hasn't been set yet.
+     * </p>
+     *
+     * @return The initial socket blocking timeout in milliseconds (0 is
+     *         'infinite')
+     */
+    int getSoTimeout();
+
+    /**
      * Set the initial Socket blocking timeout (SoTimeout).
      * <p>
      * NOTE: Implementer should take care to use {@link #DEFAULT_SO_TIMEOUT} if the
@@ -156,6 +285,18 @@ public interface IConnectionProperties extends IConnectionPropertiesGetters {
      *         Timeout in milliseconds (0 is 'infinite')
      */
     void setSoTimeout(int soTimeout);
+
+    /**
+     * Get the connect timeout in seconds.
+     * <p>
+     * NOTE: Implementer should take care to return {@link IConnectionProperties#DEFAULT_CONNECT_TIMEOUT} if the
+     * value hasn't been set yet.
+     * </p>
+     *
+     * @return Connect timeout in seconds (0 is 'infinite', or better: OS
+     *         specific timeout)
+     */
+    int getConnectTimeout();
 
     /**
      * Set the connect timeout in seconds.
@@ -169,4 +310,9 @@ public interface IConnectionProperties extends IConnectionPropertiesGetters {
      *         specific timeout)
      */
     void setConnectTimeout(int connectTimeout);
+
+    /**
+     * @return An immutable version of this instance as an implementation of {@link IConnectionProperties}
+     */
+    IConnectionProperties asImmutable();
 }
