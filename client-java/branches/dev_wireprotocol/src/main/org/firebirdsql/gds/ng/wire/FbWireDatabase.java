@@ -75,9 +75,8 @@ public interface FbWireDatabase extends FbDatabase, XdrStreamAccess {
      * <code>startPosition</code> and reading for <code>length</code> bytes.
      * <p>
      * This method is useful for lengths up to 4 bytes (ie normal Java integers
-     * (<code>int</code>). For larger lengths the values read will overflow. Use
-     * {@link #iscVaxLong(byte[], int, int)} for reading values with length up
-     * to 8 bytes.
+     * (<code>int</code>). Use {@link #iscVaxLong(byte[], int, int)} for reading
+     * values with length up to 8 bytes.
      * </p>
      *
      * @param buffer
@@ -96,7 +95,7 @@ public interface FbWireDatabase extends FbDatabase, XdrStreamAccess {
      * <code>startPosition</code> and reading for <code>length</code> bytes.
      * <p>
      * This method is useful for lengths up to 8 bytes (ie normal Java longs (
-     * <code>long</code>). For larger lengths the values read will overflow.
+     * <code>long</code>).
      * </p>
      *
      * @param buffer
@@ -111,11 +110,11 @@ public interface FbWireDatabase extends FbDatabase, XdrStreamAccess {
     long iscVaxLong(byte[] buffer, int startPosition, int length);
 
     /**
-     * Implementation of {@link #iscVaxInteger(byte[], int, int)} specifically
+     * Variant of {@link #iscVaxInteger(byte[], int, int)} specifically
      * for two-byte integers.
      * <p>
-     * Use of this method has a small performance benefit over generic
-     * {@link #iscVaxInteger(byte[], int, int)}
+     * Implementations can either delegate to {@link #iscVaxInteger(byte[], int, int)},
+     * or implement an optimized version.
      * </p>
      *
      * @param buffer

@@ -170,7 +170,7 @@ public class RowDescriptorBuilder {
 
     public RowDescriptorBuilder setFieldIndex(int index) {
         if (index >= fieldDescriptors.length) {
-            throw new IndexOutOfBoundsException(String.format("The index '%d' is exceeds the expected size (%d) of this RowDescriptorBuilder", index, fieldDescriptors.length));
+            throw new IndexOutOfBoundsException(String.format("The index '%d' exceeds the expected size (%d) of this RowDescriptorBuilder", index, fieldDescriptors.length));
         }
         if (fieldDescriptors[index] != null) {
             throw new IllegalStateException(String.format("There is already a field at index '%d'", index));
@@ -261,7 +261,7 @@ public class RowDescriptorBuilder {
      */
     public RowDescriptorBuilder addField(FieldDescriptor fieldDescriptor) {
         if (currentFieldIndex >= fieldDescriptors.length) {
-            throw new IndexOutOfBoundsException(String.format("The index '%d' is exceeds the expected size (%d) of this RowDescriptorBuilder", currentFieldIndex, fieldDescriptors.length));
+            throw new IndexOutOfBoundsException(String.format("The index '%d' exceeds the expected size (%d) of this RowDescriptorBuilder", currentFieldIndex, fieldDescriptors.length));
         }
         fieldDescriptors[currentFieldIndex] = fieldDescriptor;
         currentFieldIndex += 1;
