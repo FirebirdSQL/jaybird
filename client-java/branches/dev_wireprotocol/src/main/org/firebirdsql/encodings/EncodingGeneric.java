@@ -23,10 +23,12 @@ import java.nio.charset.Charset;
 /**
  * Implementation of {@link Encoding} for multibyte charactersets.
  * <p>
- * It also works for single byte character sets, but {@link Encoding_OneByte} is more efficient.
+ * It also works for single byte character sets, but {@link EncodingSingleByte} is more efficient.
  * </p>
  */
-final class EncodingGeneric implements Encoding {
+public final class EncodingGeneric implements Encoding {
+
+    // TODO Test claim that EncodingSingleByte is more efficient
 
     private final Charset charset;
     private final char[] charMapping;
@@ -35,12 +37,12 @@ final class EncodingGeneric implements Encoding {
         this(charset, null);
     }
 
-    public EncodingGeneric(Charset charset, char[] charMapping) {
+    EncodingGeneric(Charset charset, char[] charMapping) {
         this.charset = charset;
         this.charMapping = charMapping;
     }
 
-    // encode
+    @Override
     public byte[] encodeToCharset(String in) {
         if (charMapping != null) {
             in = new String(translate(in.toCharArray()));
@@ -48,7 +50,7 @@ final class EncodingGeneric implements Encoding {
         return in.getBytes(charset);
     }
 
-    // decode
+    @Override
     public String decodeFromCharset(byte[] in) {
         String result = new String(in, charset);
         if (charMapping != null) {
@@ -56,7 +58,13 @@ final class EncodingGeneric implements Encoding {
         }
         return result;
     }
-    
+
+    @Override
+    public Encoding withTranslation(final CharacterTranslator translator) {
+        // TODO Use inner class for mapping, remove mapping decision from normal implementation
+        return new EncodingGeneric(charset, translator.getMapping());
+    }
+
     private char[] translate(char[] chars) {
         for (int i = 0; i < chars.length; i++) {
             chars[i] = charMapping[chars[i]];

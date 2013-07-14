@@ -23,19 +23,21 @@ import java.nio.charset.Charset;
 /**
  * Implementation of {@link Encoding} for single byte character sets.
  */
-final class EncodingSingleByte implements Encoding {
+public final class EncodingSingleByte implements Encoding {
 
     private final char[] byteToChar;
     private final byte[] charToByte;
+    private final Charset charset;
 
-    EncodingSingleByte(Charset charset) {
+    public EncodingSingleByte(Charset charset) {
         this(charset, EncodingFactory.DEFAULT_MAPPING);
     }
 
     EncodingSingleByte(Charset charset, final char[] charMapping) {
         byteToChar = new char[256];
         charToByte = new byte[256 * 256];
-        
+        this.charset = charset;
+
         byte[] val = new byte[1];
         for (int i = 0; i < 256; i++) {
             val[0] = (byte) i;
@@ -45,7 +47,7 @@ final class EncodingSingleByte implements Encoding {
         }
     }
 
-    // encode
+    @Override
     public byte[] encodeToCharset(String str) {
         int length = str.length();
         byte[] result = new byte[length];
@@ -56,12 +58,18 @@ final class EncodingSingleByte implements Encoding {
         return result;
     }
 
-    // decode from charset
+    @Override
     public String decodeFromCharset(byte[] in) {
         char[] bufferC = new char[in.length];
         for (int i = 0; i < bufferC.length; i++) {
             bufferC[i] = byteToChar[in[i] & 0xFF];
         }
         return new String(bufferC);
+    }
+
+    @Override
+    public Encoding withTranslation(final CharacterTranslator translator) {
+        // TODO Use inner class for mapping, remove mapping decision from normal implementation
+        return new EncodingSingleByte(charset, translator.getMapping());
     }
 }
