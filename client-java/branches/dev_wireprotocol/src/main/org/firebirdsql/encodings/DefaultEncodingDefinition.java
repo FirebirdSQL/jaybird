@@ -30,12 +30,18 @@ import java.nio.charset.Charset;
  */
 public final class DefaultEncodingDefinition implements EncodingDefinition {
 
+    /**
+     * Marker object to indicate the encoding field of an instance hasn't been initialized yet
+     * (since <code>null</code> is a valid initialization).
+     */
+    private static final Encoding NOT_INITIALIZED = new EncodingGeneric(null);
+
     private final Charset charset;
     private final String firebirdEncodingName;
     private final int maxBytesPerChar;
     private final int firebirdCharacterSetId;
     private final boolean firebirdOnly;
-    private final Encoding encoding;
+    private Encoding encoding = NOT_INITIALIZED;
 
     /**
      * Initializes an instance of DefaultEncodingDefinition.
@@ -58,15 +64,6 @@ public final class DefaultEncodingDefinition implements EncodingDefinition {
         this.maxBytesPerChar = maxBytesPerChar;
         this.firebirdOnly = firebirdOnly;
         this.firebirdCharacterSetId = firebirdCharacterSetId;
-        if (charset != null) {
-            if (maxBytesPerChar == 1) {
-                encoding = new EncodingSingleByte(charset);
-            } else {
-                encoding = new EncodingGeneric(charset);
-            }
-        } else {
-            encoding = null;
-        }
     }
 
     @Override
@@ -110,6 +107,31 @@ public final class DefaultEncodingDefinition implements EncodingDefinition {
      */
     @Override
     public Encoding getEncoding() {
+        if (encoding == NOT_INITIALIZED) {
+            // We intentionally don't use synchronization or volatile here
+            // Multiple initialization might be a bit wasteful, but it has no other side effects
+            if (isInformationOnly()) {
+                encoding = null;
+            } else if (getMaxBytesPerChar() == 1) {
+                encoding = new EncodingSingleByte(getJavaCharset());
+            } else {
+                encoding = new EncodingGeneric(getJavaCharset());
+            }
+        }
         return encoding;
+    }
+
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+        sb.append('[');
+        sb.append("firebirdEncodingName='").append(getFirebirdEncodingName()).append("',");
+        sb.append("javaEncodingName='").append(getJavaEncodingName()).append("',");
+        sb.append("maxBytesPerChar=").append(getMaxBytesPerChar()).append(',');
+        sb.append("firebirdOnly=").append(isFirebirdOnly()).append(',');
+        sb.append("firebirdCharacterSetId=").append(getFirebirdCharacterSetId()).append(',');
+        sb.append("informationOnly=").append(isInformationOnly());
+        sb.append(']');
+        return sb.toString();
     }
 }

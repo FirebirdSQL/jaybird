@@ -46,20 +46,23 @@
                                         <xs:documentation>
                                             The Java name of the encoding (if available). If both javaName and the encodingImplementation are not specified, then
                                             this element is purely informational. In that case Jaybird will not support this character set (with the explicit exception of NONE and OCTETS).
-                                            If the specified Java encoding does not exist, this encoding will be purely informational.
+                                            If the specified Java encoding does not exist, this encoding will be purely informational (it will behave as if no javaName was specified).
+                                            If the javaName is illegal according to the rules established in java.nio.charset.Charset, this encoding will be ignored.
                                         </xs:documentation>
                                     </xs:annotation>
                                 </xs:attribute>
                                 <xs:attribute type="xs:int" name="characterSetId" use="required">
                                     <xs:annotation>
                                         <xs:documentation>
-                                            The Firebird id of the character set (as listed in RDB$CHARACTER_SETS)</xs:documentation>
+                                            The Firebird id of the character set (as listed in RDB$CHARACTER_SETS). Value 127 (CS_dynamic) is not allowed and will be ignored.
+                                        </xs:documentation>
                                     </xs:annotation>
                                 </xs:attribute>
                                 <xs:attribute type="xs:int" name="maxBytesPerCharacter" use="optional" default="1">
                                     <xs:annotation>
                                         <xs:documentation>
-                                            The maximum number of bytes per character, defaults to 1.</xs:documentation>
+                                            The maximum number of bytes per character, defaults to 1.
+                                        </xs:documentation>
                                     </xs:annotation>
                                 </xs:attribute>
                                 <xs:attribute type="xs:string" name="encodingDefinitionImplementation" use="optional">

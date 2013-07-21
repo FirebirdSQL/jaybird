@@ -29,7 +29,7 @@ package org.firebirdsql.encodings;
 import java.nio.charset.Charset;
 
 /**
- * Definition of a Firebird encoding. This is a mapping from the Firebirding to a Java Charset and additional
+ * Definition of a Firebird encoding. This is a mapping from the Firebird encoding to a Java Charset and additional
  * information needed by Jaybird to process this encoding.
  *
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
@@ -70,7 +70,7 @@ public interface EncodingDefinition {
      * should (in general) map to Firebird character set <code>UTF8</code>.
      * </p>
      *
-     * @return
+     * @return <code>true</code> when this encoding maps from Java to Firebird, <code>false</code> otherwise
      */
     boolean isFirebirdOnly();
 

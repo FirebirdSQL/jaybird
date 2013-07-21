@@ -20,6 +20,7 @@
  */
 package org.firebirdsql.encodings;
 
+import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.logging.Logger;
 import org.firebirdsql.logging.LoggerFactory;
 
@@ -34,7 +35,7 @@ import java.util.concurrent.ConcurrentMap;
  *
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  */
-public final class EncodingFactory {
+public final class EncodingFactory implements IEncodingFactory {
 
     private static final Logger log = LoggerFactory.getLogger(EncodingFactory.class, false);
 
@@ -54,23 +55,12 @@ public final class EncodingFactory {
         private static final EncodingFactory DEFAULT_INSTANCE = createInstance();
     }
 
-    /**
-     * Default mapping table, provides an "identity" mapping.
-     */
-    public static final char[] DEFAULT_MAPPING;
-
-    static {
-        DEFAULT_MAPPING = new char[256 * 256];
-        for (int i = 0; i < DEFAULT_MAPPING.length; i++) {
-            DEFAULT_MAPPING[i] = (char) i;
-        }
-    }
-
     private final Map<String, EncodingDefinition> firebirdEncodingToDefinition = new HashMap<String, EncodingDefinition>();
     private final Map<Integer, EncodingDefinition> firebirdCharacterSetIdToDefinition = new HashMap<Integer, EncodingDefinition>();
     private final Map<Charset, EncodingDefinition> javaCharsetToDefinition = new HashMap<Charset, EncodingDefinition>();
     private final Map<String, EncodingDefinition> javaAliasesToDefinition = new HashMap<String, EncodingDefinition>();
     private final Encoding defaultEncoding;
+    private final EncodingDefinition defaultEncodingDefinition;
     private final ConcurrentMap<String, CharacterTranslator> translations = new ConcurrentHashMap<String, CharacterTranslator>();
 
     /**
@@ -86,23 +76,32 @@ public final class EncodingFactory {
         final EncodingDefinition defaultEncodingDefinition = javaCharsetToDefinition.get(DEFAULT_CHARSET);
         if (defaultEncodingDefinition != null && !defaultEncodingDefinition.isInformationOnly()) {
             defaultEncoding = defaultEncodingDefinition.getEncoding();
+            this.defaultEncodingDefinition = defaultEncodingDefinition;
         } else {
             defaultEncoding = new EncodingGeneric(DEFAULT_CHARSET);
+            this.defaultEncodingDefinition =
+                    new DefaultEncodingDefinition("NONE", DEFAULT_CHARSET, (int) DEFAULT_CHARSET.newEncoder().maxBytesPerChar(), 0, false);
         }
     }
 
-    /**
-     * @param firebirdEncodingName
-     *         The Firebird encoding name (case insensitive)
-     * @return EncodingDefinition instance or <code>null</code> if the encoding name is unknown
-     */
+    @Override
+    public Encoding getDefaultEncoding() {
+        return defaultEncoding;
+    }
+
+    @Override
+    public EncodingDefinition getDefaultEncodingDefinition() {
+        return defaultEncodingDefinition;
+    }
+
+    @Override
     public EncodingDefinition getEncodingDefinitionByFirebirdName(final String firebirdEncodingName) {
-        return firebirdEncodingToDefinition.get(firebirdEncodingName.toLowerCase());
+        return firebirdEncodingName != null ? firebirdEncodingToDefinition.get(firebirdEncodingName.toLowerCase()) : null;
     }
 
     /**
-     * Creates an encoding for the specified Firebird encoding. If there is no known encoding for this name,
-     * or the loaded EncodingDefinition is information-only, then the fallbackEncoding.
+     * Gets an {@link org.firebirdsql.encodings.Encoding} for the specified Firebird encoding. If there is no known
+     * encoding for this name, or the loaded EncodingDefinition is information-only, then the fallbackEncoding.
      *
      * @param firebirdEncodingName
      *         The Firebird encoding name (case insensitive)
@@ -112,24 +111,18 @@ public final class EncodingFactory {
      * @return Encoding instance (never null)
      */
     public Encoding getEncodingForFirebirdName(final String firebirdEncodingName, final Encoding fallbackEncoding) {
-        final EncodingDefinition encodingDefinition = getEncodingDefinitionByFirebirdName(firebirdEncodingName);
-        return returnEncodingOrFallback(encodingDefinition, fallbackEncoding);
+        return returnEncodingOrFallback(getEncodingDefinitionByFirebirdName(firebirdEncodingName), fallbackEncoding);
     }
 
-    /**
-     * Looks up the EncodingDefinition for the specified Firebird character set id.
-     * <p>
-     * This implementation will always return <code>null</code> for the value 127, as that is
-     * the indicator to use the connection character set, which is unknown to this EncodingFactory.
-     * </p>
-     *
-     * @param firebirdCharacterSetId
-     *         Firebird character set id
-     * @return EncodingDefinition instance or <code>null</code> if the character set id is unknown or <code>127</code>
-     */
+    @Override
+    public Encoding getEncodingForFirebirdName(final String firebirdEncodingName) {
+        return getEncodingForFirebirdName(firebirdEncodingName, null);
+    }
+
+    @Override
     public EncodingDefinition getEncodingDefinitionByCharacterSetId(final int firebirdCharacterSetId) {
-        if (firebirdCharacterSetId == 127) {
-            // Value 127 indicates the connection character set is to be used
+        if (firebirdCharacterSetId == ISCConstants.CS_dynamic) {
+            // Value CS_dynamic (127) indicates the connection character set is to be used
             // Explicitly returning null to prevent user defined encoding definitions from messing up
             return null;
         }
@@ -137,8 +130,8 @@ public final class EncodingFactory {
     }
 
     /**
-     * Creates an encoding for the specified Firebird  character set id. If there is no known encoding for this
-     * character set id (or if it is 127, see {@link #getEncodingDefinitionByCharacterSetId(int)}),
+     * Gets an {@link org.firebirdsql.encodings.Encoding} for the specified Firebird character set id. If there is no
+     * known encoding for this character set id (or if it is 127, see {@link #getEncodingDefinitionByCharacterSetId(int)}),
      * or the loaded EncodingDefinition is information-only, then the fallbackEncoding will be used.
      *
      * @param firebirdCharacterSetId
@@ -149,22 +142,23 @@ public final class EncodingFactory {
      * @return Encoding instance (never null)
      */
     public Encoding getEncodingForCharacterSetId(final int firebirdCharacterSetId, final Encoding fallbackEncoding) {
-        final EncodingDefinition encodingDefinition = getEncodingDefinitionByCharacterSetId(firebirdCharacterSetId);
-        return returnEncodingOrFallback(encodingDefinition, fallbackEncoding);
+        return returnEncodingOrFallback(getEncodingDefinitionByCharacterSetId(firebirdCharacterSetId), fallbackEncoding);
     }
 
-    /**
-     * @param charset
-     *         The Java character set
-     * @return EncodingDefinition instance or <code>null</code> if the character set is not mapped
-     */
+    @Override
+    public Encoding getEncodingForCharacterSetId(final int firebirdCharacterSetId) {
+        return getEncodingForCharacterSetId(firebirdCharacterSetId, null);
+    }
+
+    @Override
     public EncodingDefinition getEncodingDefinitionByCharset(final Charset charset) {
         return javaCharsetToDefinition.get(charset);
     }
 
     /**
-     * Creates an encoding for the specified Java character set. If there is no known encoding for this name,
-     * or the loaded EncodingDefinition is information-only, then the fallbackEncoding will be used.
+     * Gets an {@link org.firebirdsql.encodings.Encoding} for the specified Java character set. If there is no known
+     * encoding for this {@link java.nio.charset.Charset}, or the loaded EncodingDefinition is information-only, then
+     * the fallbackEncoding will be used.
      *
      * @param charset
      *         The Java character set
@@ -172,29 +166,26 @@ public final class EncodingFactory {
      *         The Encoding to use as fallback if no encoding is found (usually the connection encoding). If
      *         <code>null</code>, the defaultEncoding for the JVM is used.
      * @return Encoding instance (never null)
-     * @see #getEncodingForCharset(java.nio.charset.Charset)
+     * @see #getOrCreateEncodingForCharset(java.nio.charset.Charset)
      */
     public Encoding getEncodingForCharset(final Charset charset, final Encoding fallbackEncoding) {
-        final EncodingDefinition encodingDefinition = getEncodingDefinitionByCharset(charset);
-        return returnEncodingOrFallback(encodingDefinition, fallbackEncoding);
+        return returnEncodingOrFallback(getEncodingDefinitionByCharset(charset), fallbackEncoding);
     }
 
-    public EncodingDefinition getEncodingDefinitionByCharsetAlias(String charsetAlias) {
-        if (charsetAlias == null) return null;
-        return javaAliasesToDefinition.get(charsetAlias.toLowerCase());
-    }
-
-    public Encoding getEncodingForCharsetAlias(final String charsetAlias, final Encoding fallbackEncoding) {
-        final EncodingDefinition encodingDefinition = getEncodingDefinitionByCharsetAlias(charsetAlias);
-        return returnEncodingOrFallback(encodingDefinition, fallbackEncoding);
+    @Override
+    public Encoding getEncodingForCharset(final Charset charset) {
+        return getEncodingForCharset(charset, null);
     }
 
     /**
-     * Creates an encoding for the specified Java character set. If there is no known encoding for this name,
-     * or the loaded EncodingDefinition is information-only, then an Encoding instance based on the charset is
-     * returned.
+     * Creates an {@link Encoding} for the specified Java character set. If there is no known encoding for this
+     * charset, then an Encoding instance based on the charset is returned.
      * <p>
      * In general the method {@link #getEncodingForCharset(java.nio.charset.Charset, Encoding)} should be used.
+     * </p>
+     * <p>
+     * Don't confuse this method with {@link #getEncodingForCharset(Charset)}, which falls back to the default
+     * encoding.
      * </p>
      *
      * @param charset
@@ -202,8 +193,59 @@ public final class EncodingFactory {
      * @return Encoding instance (never null)
      * @see #getEncodingForCharset(java.nio.charset.Charset, Encoding)
      */
-    public Encoding getEncodingForCharset(final Charset charset) {
+    public Encoding getOrCreateEncodingForCharset(final Charset charset) {
         return getEncodingForCharset(charset, new EncodingGeneric(charset));
+    }
+
+    @Override
+    public EncodingDefinition getEncodingDefinitionByCharsetAlias(String charsetAlias) {
+        return charsetAlias != null ? javaAliasesToDefinition.get(charsetAlias.toLowerCase()) : null;
+    }
+
+    /**
+     * Gets an {@link org.firebirdsql.encodings.Encoding} for the specified Java character set name or alias. If there
+     * is no known encoding for
+     * this name,
+     * or the loaded EncodingDefinition is information-only, then the fallbackEncoding will be used.
+     *
+     * @param charsetAlias
+     *         The Java character set name or alias
+     * @param fallbackEncoding
+     *         The Encoding to use as fallback if no encoding is found (usually the connection encoding). If
+     *         <code>null</code>, the defaultEncoding for the JVM is used.
+     * @return Encoding instance (never null)
+     */
+    public Encoding getEncodingForCharsetAlias(final String charsetAlias, final Encoding fallbackEncoding) {
+        return returnEncodingOrFallback(getEncodingDefinitionByCharsetAlias(charsetAlias), fallbackEncoding);
+    }
+
+    @Override
+    public Encoding getEncodingForCharsetAlias(final String charsetAlias) {
+        return getEncodingForCharsetAlias(charsetAlias, null);
+    }
+
+    @Override
+    public CharacterTranslator getCharacterTranslator(String mappingPath) throws SQLException {
+        CharacterTranslator translator = translations.get(mappingPath);
+        if (translator != null) {
+            return translator;
+        }
+
+        translator = CharacterTranslator.create(mappingPath);
+        translations.putIfAbsent(mappingPath, translator);
+
+        return translations.get(mappingPath);
+    }
+
+    /**
+     * Returns an {@link IEncodingFactory} that uses <code>encodingDefinition</code> as the default.
+     *
+     * @param encodingDefinition
+     *         The default encoding to use (or <code>null</code> for the value of {@link #getDefaultEncoding()}
+     * @return IEncoding instance with the specified default.
+     */
+    public IEncodingFactory withDefaultEncodingDefinition(EncodingDefinition encodingDefinition) {
+        return new ConnectionEncodingFactory(this, encodingDefinition != null ? encodingDefinition : getDefaultEncodingDefinition());
     }
 
     /**
@@ -211,7 +253,7 @@ public final class EncodingFactory {
      *
      * @see EncodingSet
      */
-    private static NavigableSet<EncodingSet> loadEncodingDefinitions() {
+    private static NavigableSet<EncodingSet> loadEncodingSets() {
         final TreeSet<EncodingSet> encodingSets = new TreeSet<EncodingSet>(ENCODING_SET_COMPARATOR);
         final ServiceLoader<EncodingSet> encodingSetLoader = ServiceLoader.load(EncodingSet.class, EncodingFactory.class.getClassLoader());
         // Load the encoding sets and populate the TreeMap
@@ -248,7 +290,11 @@ public final class EncodingFactory {
         if (firebirdEncodingToDefinition.containsKey(firebirdEncodingName.toLowerCase())) {
             // We already loaded a definition for this encoding
             if (log.isDebugEnabled())
-                log.debug(String.format("Skipped loading encoding for Firebird encoding %s, already loaded a definition for that name", firebirdEncodingName));
+                log.debug(String.format("Skipped loading encoding definition for Firebird encoding %s, already loaded a definition for that name", firebirdEncodingName));
+            return;
+        } else if (encodingDefinition.getFirebirdCharacterSetId() == ISCConstants.CS_dynamic) {
+            if (log.isDebugEnabled())
+                log.debug(String.format("Skipped loading encoding definition for Firebird encoding %s, as it declared itself as the connection character set (FirebirdCharacterSetId 127 or CS_dynamic)", firebirdEncodingName));
             return;
         }
 
@@ -259,47 +305,27 @@ public final class EncodingFactory {
         firebirdCharacterSetIdToDefinition.put(encodingDefinition.getFirebirdCharacterSetId(), encodingDefinition);
 
         final Charset charset = encodingDefinition.getJavaCharset();
-        if (!encodingDefinition.isInformationOnly() && !encodingDefinition.isFirebirdOnly() && charset != null) {
-            if (javaCharsetToDefinition.containsKey(charset)) {
-                if (log.isDebugEnabled())
-                    log.debug(String.format("Not mapping java charset %s to Firebird encoding %s, already mapped to Firebird encoding %s",
-                            charset.name(), firebirdEncodingName, javaCharsetToDefinition.get(charset).getFirebirdEncodingName()));
-            } else {
-                // Map Java charset to EncodingDefinition
-                javaCharsetToDefinition.put(charset, encodingDefinition);
-                javaAliasesToDefinition.put(charset.name().toLowerCase(), encodingDefinition);
-                for (String charsetAlias : charset.aliases()) {
-                    javaAliasesToDefinition.put(charsetAlias.toLowerCase(), encodingDefinition);
-                }
+        if (encodingDefinition.isInformationOnly() || encodingDefinition.isFirebirdOnly() || charset == null) {
+            return;
+        }
+        if (javaCharsetToDefinition.containsKey(charset)) {
+            if (log.isDebugEnabled())
+                log.debug(String.format("Not mapping java charset %s to Firebird encoding %s, already mapped to Firebird encoding %s",
+                        charset.name(), firebirdEncodingName, javaCharsetToDefinition.get(charset).getFirebirdEncodingName()));
+        } else {
+            // Map Java charset to EncodingDefinition
+            javaCharsetToDefinition.put(charset, encodingDefinition);
+            javaAliasesToDefinition.put(charset.name().toLowerCase(), encodingDefinition);
+            for (String charsetAlias : charset.aliases()) {
+                javaAliasesToDefinition.put(charsetAlias.toLowerCase(), encodingDefinition);
             }
         }
     }
 
     /**
-     * Gets an instance of {@link CharacterTranslator} for the specified mappingPath.
-     *
-     * @param mappingPath
-     *         Path of the file with mapping definition
-     * @return Instance of CharacterTranslator
-     * @throws SQLException
-     */
-    public CharacterTranslator getCharacterTranslator(String mappingPath) throws SQLException {
-        CharacterTranslator translator = translations.get(mappingPath);
-        if (translator != null) {
-            return translator;
-        }
-
-        translator = new CharacterTranslator();
-        translator.init(mappingPath);
-        translations.putIfAbsent(mappingPath, translator);
-
-        return translations.get(mappingPath);
-    }
-
-    /**
      * Returns the {@link Encoding} from the encodingDefinition. If encodingDefinition is null, information-only or
      * doesn't create an Encoding, it will return the fallbackEncoding. If fallbackEncoding is null, then {@link
-     * #defaultEncoding} is used.
+     * #getDefaultEncoding()} is used.
      *
      * @param encodingDefinition
      *         EncodingDefinition instance
@@ -309,26 +335,25 @@ public final class EncodingFactory {
      */
     private Encoding returnEncodingOrFallback(EncodingDefinition encodingDefinition, Encoding fallbackEncoding) {
         if (fallbackEncoding == null) {
-            fallbackEncoding = defaultEncoding;
+            fallbackEncoding = getDefaultEncoding();
         }
-        if (encodingDefinition != null && !encodingDefinition.isInformationOnly()) {
-            Encoding encoding = encodingDefinition.getEncoding();
-            if (encoding == null) {
-                if (log.isDebugEnabled())
-                    log.debug(String.format("EncodingDefinition for Firebird encoding %s returned null for getEncoding(), using fallback encoding",
-                            encodingDefinition.getFirebirdEncodingName()));
-                encoding = fallbackEncoding;
-            }
+        if (encodingDefinition == null || encodingDefinition.isInformationOnly()) {
+            return fallbackEncoding;
+        }
+        Encoding encoding = encodingDefinition.getEncoding();
+        if (encoding != null) {
             return encoding;
+        }
+        // We only get here if the EncodingDefinition implementation does not adhere to the contract
+        if (log.isDebugEnabled()) {
+            log.debug(String.format("EncodingDefinition for Firebird encoding %s returned null for getEncoding(), using fallback encoding",
+                    encodingDefinition.getFirebirdEncodingName()));
         }
         return fallbackEncoding;
     }
 
     /**
      * Returns the default instance of EncodingFactory.
-     * <p>
-     * The default instance is loaded when the EncodingFactory class is first loaded.
-     * </p>
      *
      * @return The default instance of EncodingFactory
      * @see #createInstance()
@@ -342,13 +367,12 @@ public final class EncodingFactory {
      */
     public static EncodingFactory createInstance() {
         // Process the encoding sets in descending order
-        return new EncodingFactory(loadEncodingDefinitions().descendingIterator());
+        return new EncodingFactory(loadEncodingSets().descendingIterator());
     }
 
     /**
      * Creates a new EncodingFactory based on the supplied encodingSets. The supplied {@link EncodingSet} instances
-     * are processed
-     * highest preferenceWeight first.
+     * are processed highest preferenceWeight first.
      *
      * @param encodingSets
      *         The EncodingSet definitions to use for the EncodingFactory instance
@@ -381,14 +405,14 @@ public final class EncodingFactory {
     /**
      * Gets an {@link Encoding} instance for the supplied java Charset name.
      *
-     * @param encoding
+     * @param javaCharsetAlias
      *         Java Charset name
      * @return Instance of {@link Encoding}
      * @deprecated Use {@link #getEncodingForCharsetAlias(String, Encoding)}
      */
     @Deprecated
-    public static Encoding getEncoding(String encoding) {
-        return getDefaultInstance().getEncodingForCharsetAlias(encoding, null);
+    public static Encoding getEncoding(String javaCharsetAlias) {
+        return getDefaultInstance().getEncodingForCharsetAlias(javaCharsetAlias, null);
     }
 
     /**
@@ -398,11 +422,11 @@ public final class EncodingFactory {
      *         Java Charset
      * @return Instance of {@link Encoding}
      * @deprecated Use {@link #getEncodingForCharset(java.nio.charset.Charset, Encoding)} or {@link
-     *             #getEncodingForCharset(java.nio.charset.Charset)}
+     *             #getOrCreateEncodingForCharset(java.nio.charset.Charset)}
      */
     @Deprecated
     public static Encoding getEncoding(Charset charset) {
-        return getDefaultInstance().getEncodingForCharset(charset);
+        return getDefaultInstance().getOrCreateEncodingForCharset(charset);
     }
 
     /**
@@ -418,6 +442,7 @@ public final class EncodingFactory {
      *             Encoding#withTranslation(CharacterTranslator)}
      */
     @Deprecated
+    @SuppressWarnings("deprecation")
     public static Encoding getEncoding(String encoding, String mappingPath) throws SQLException {
         EncodingDefinition encodingDefinition = getDefaultInstance().getEncodingDefinitionByCharsetAlias(encoding);
         // TODO Express this in terms of other methods of this factory?
@@ -445,26 +470,25 @@ public final class EncodingFactory {
      *             Encoding#withTranslation(CharacterTranslator)}
      */
     @Deprecated
+    @SuppressWarnings("deprecation")
     public static Encoding getEncoding(Charset charset, String mappingPath) throws SQLException {
-        if (mappingPath == null) {
-            return getEncoding(charset);
-        }
-        CharacterTranslator translator = getTranslator(mappingPath);
-        return getEncoding(charset).withTranslation(translator);
+        final Encoding encoding = getEncoding(charset);
+        return mappingPath == null ? encoding : encoding.withTranslation(getTranslator(mappingPath));
     }
 
     /**
      * Get Firebird encoding for given Java language encoding.
      *
-     * @param javaEncoding
+     * @param javaCharsetAlias
      *         Java language encoding.
      * @return corresponding Firebird encoding or <code>null</code> if none
      *         found.
      * @deprecated Use {@link #getEncodingDefinitionByCharsetAlias(String)}
      */
     @Deprecated
-    public static String getIscEncoding(String javaEncoding) {
-        final EncodingDefinition encodingDefinition = getDefaultInstance().getEncodingDefinitionByCharsetAlias(javaEncoding);
+    @SuppressWarnings("deprecation")
+    public static String getIscEncoding(String javaCharsetAlias) {
+        final EncodingDefinition encodingDefinition = getDefaultInstance().getEncodingDefinitionByCharsetAlias(javaCharsetAlias);
         return encodingDefinition != null ? encodingDefinition.getFirebirdEncodingName() : null;
     }
 
@@ -526,40 +550,6 @@ public final class EncodingFactory {
     }
 
     /**
-     * Get size of a character for the specified Java encoding, as it would be
-     * encoded in Firebird.
-     *
-     * @param javaCharset
-     *         Java Charset
-     * @return maximum size of the character in bytes or 1 if encoding was not
-     *         found.
-     * @deprecated Use {@link #getEncodingDefinitionByCharset(java.nio.charset.Charset)} and {@link
-     *             EncodingDefinition#getMaxBytesPerChar()}
-     */
-    @Deprecated
-    public static int getJavaEncodingSize(Charset javaCharset) {
-        final EncodingDefinition encodingDefinition = getDefaultInstance().getEncodingDefinitionByCharset(javaCharset);
-        return encodingDefinition != null ? encodingDefinition.getMaxBytesPerChar() : 1;
-    }
-
-    /**
-     * Get size of a character for the specified Java encoding, as it would be
-     * encoded in Firebird.
-     *
-     * @param javaEncoding
-     *         Java Charset name
-     * @return maximum size of the character in bytes or 1 if encoding was not
-     *         found.
-     * @deprecated Use {@link #getEncodingDefinitionByCharsetAlias(String)} and {@link
-     *             EncodingDefinition#getMaxBytesPerChar()}
-     */
-    @Deprecated
-    public static int getJavaEncodingSize(String javaEncoding) {
-        final EncodingDefinition encodingDefinition = getDefaultInstance().getEncodingDefinitionByCharsetAlias(javaEncoding);
-        return encodingDefinition != null ? encodingDefinition.getMaxBytesPerChar() : 1;
-    }
-
-    /**
      * Get Java language encoding for a given Java encoding alias.
      * <p>
      * Ensures that naming is consistent even if a different alias was used.
@@ -567,7 +557,7 @@ public final class EncodingFactory {
      *
      * @param javaAlias
      *         Java alias for the encoding
-     * @return
+     * @return Java Charset name
      * @deprecated Use {@link #getEncodingDefinitionByCharsetAlias(String)} and {@link
      *             EncodingDefinition#getJavaEncodingName()}
      */

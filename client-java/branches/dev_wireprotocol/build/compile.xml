@@ -112,6 +112,7 @@
     <copy todir="${build.test}" filtering="no">
       <fileset dir="${source.test}">
          <include name="**/*.properties"/>
+         <include name="**/*.xml"/>
       </fileset>
     </copy>
 

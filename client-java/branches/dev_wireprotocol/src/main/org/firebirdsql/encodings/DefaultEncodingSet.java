@@ -159,11 +159,13 @@ public class DefaultEncodingSet implements EncodingSet {
                     final Charset charset = definition.getJavaName() != null ? Charset.forName(definition.getJavaName()) : null;
                     return new DefaultEncodingDefinition(definition.getFirebirdName(), charset, definition.getMaxBytesPerCharacter(), definition.getCharacterSetId(), definition.isFirebirdOnly());
                 } catch (IllegalCharsetNameException e) {
-                    logger.warn(String.format("javaName=\"%s\" specified for encoding \"%s\" is an illegal character set name",
+                    logger.warn(String.format("javaName=\"%s\" specified for encoding \"%s\" is an illegal character set name, skipping encoding",
                             definition.getJavaName(), definition.getFirebirdName()), e);
                 } catch (UnsupportedCharsetException e) {
-                    logger.warn(String.format("javaName=\"%s\" specified for encoding \"%s\" is an illegal character set name",
-                            definition.getJavaName(), definition.getFirebirdName()), e);
+                    logger.warn(String.format("javaName=\"%s\" specified for encoding \"%s\" is not supported by the jvm, creating information-only EncodingDefinition",
+                            definition.getJavaName(), definition.getFirebirdName()));
+                    // Create an 'information-only' definition by using null for charset
+                    return new DefaultEncodingDefinition(definition.getFirebirdName(), null, definition.getMaxBytesPerCharacter(), definition.getCharacterSetId(), definition.isFirebirdOnly());
                 }
             }
         } catch (Exception e) {
