@@ -4043,7 +4043,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
                 SHORT_ZERO, SHORT_ZERO, createInt(ISCConstants.SQL_BLOB), null, RADIX_TEN });
 
         //CHAR=1
-        rows.add(new byte[][]{ getBytes("CHAR"), createShort(Types.CHAR), createInt(32664), getBytes("'"),
+        rows.add(new byte[][]{ getBytes("CHAR"), createShort(Types.CHAR), createInt(32767), getBytes("'"),
                 getBytes("'"), getBytes("length"), TYPE_NULLABLE, CASESENSITIVE, TYPE_SEARCHABLE, UNSIGNED,
                 FIXEDSCALE, NOTAUTOINC, null, SHORT_ZERO, SHORT_ZERO, createInt(ISCConstants.SQL_TEXT), null,
                 RADIX_TEN });
@@ -4079,7 +4079,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
                 SHORT_ZERO, SHORT_ZERO, createInt(ISCConstants.SQL_DOUBLE), null, RADIX_TEN });
 
         //VARCHAR=12
-        rows.add(new byte[][]{ getBytes("VARCHAR"), createShort(Types.VARCHAR), createInt(32664), getBytes("'"),
+        rows.add(new byte[][]{ getBytes("VARCHAR"), createShort(Types.VARCHAR), createInt(32765), getBytes("'"),
                 getBytes("'"), getBytes("length"), TYPE_NULLABLE, CASESENSITIVE, TYPE_SEARCHABLE, UNSIGNED,
                 FIXEDSCALE, NOTAUTOINC, null, SHORT_ZERO, SHORT_ZERO, createInt(ISCConstants.SQL_VARYING), null,
                 RADIX_TEN });
