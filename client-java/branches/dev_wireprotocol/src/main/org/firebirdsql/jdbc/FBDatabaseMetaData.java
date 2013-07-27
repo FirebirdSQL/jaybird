@@ -2570,14 +2570,13 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
             
             // Defaults: some are overridden in the switch
             row[8] = null;
-            row[9] = null;
+            row[9] = RADIX_TEN;
             row[15] = null;
             switch (dataType){
                 case Types.DECIMAL:
                 case Types.NUMERIC:
                    row[6] = createInt(rs.getShort("FIELD_PRECISION"));
                    row[8] = createInt(fieldScale * (-1));
-                   row[9] = RADIX_TEN;
                    break;
                 case Types.CHAR:
                 case Types.VARCHAR:
@@ -2591,26 +2590,21 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
                    break;
                 case Types.FLOAT:
                    row[6] = FLOAT_PRECISION;
-                   row[9] = RADIX_TEN;
                    break;
                 case Types.DOUBLE:
                    row[6] = DOUBLE_PRECISION;
-                   row[9] = RADIX_TEN;
                    break;
                 case Types.BIGINT:
                     row[6] = BIGINT_PRECISION;
                     row[8] = INT_ZERO;
-                    row[9] = RADIX_TEN;
                     break;
                 case Types.INTEGER:
                    row[6] = INTEGER_PRECISION;
                    row[8] = INT_ZERO;
-                   row[9] = RADIX_TEN;
                    break;
                 case Types.SMALLINT:
                    row[6] = SMALLINT_PRECISION;
                    row[8] = INT_ZERO;
-                   row[9] = RADIX_TEN;
                    break;
                 case Types.DATE:
                    row[6] = DATE_PRECISION;
@@ -4041,18 +4035,18 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
         //LONGVARBINARY=-4
         rows.add(new byte[][]{ getBytes("BLOB SUB_TYPE 0"), createShort(Types.LONGVARBINARY), INT_ZERO, null, null,
                 null, TYPE_NULLABLE, CASESENSITIVE, TYPE_PRED_NONE, UNSIGNED, FIXEDSCALE, NOTAUTOINC, null,
-                SHORT_ZERO, SHORT_ZERO, createInt(ISCConstants.SQL_BLOB), null, RADIX_BINARY });
+                SHORT_ZERO, SHORT_ZERO, createInt(ISCConstants.SQL_BLOB), null, RADIX_TEN });
 
         //LONGVARCHAR=-1
         rows.add(new byte[][]{ getBytes("BLOB SUB_TYPE 1"), createShort(Types.LONGVARCHAR), INT_ZERO, null, null,
                 null, TYPE_NULLABLE, CASESENSITIVE, TYPE_PRED_NONE, UNSIGNED, FIXEDSCALE, NOTAUTOINC, null,
-                SHORT_ZERO, SHORT_ZERO, createInt(ISCConstants.SQL_BLOB), null, RADIX_BINARY });
+                SHORT_ZERO, SHORT_ZERO, createInt(ISCConstants.SQL_BLOB), null, RADIX_TEN });
 
         //CHAR=1
-        rows.add(new byte[][]{ getBytes("CHAR"), createShort(Types.CHAR), createInt(32664), getBytes("'"),
+        rows.add(new byte[][]{ getBytes("CHAR"), createShort(Types.CHAR), createInt(32767), getBytes("'"),
                 getBytes("'"), getBytes("length"), TYPE_NULLABLE, CASESENSITIVE, TYPE_SEARCHABLE, UNSIGNED,
                 FIXEDSCALE, NOTAUTOINC, null, SHORT_ZERO, SHORT_ZERO, createInt(ISCConstants.SQL_TEXT), null,
-                RADIX_BINARY });
+                RADIX_TEN });
 
         //NUMERIC=2
         rows.add(new byte[][]{ getBytes("NUMERIC"), createShort(Types.NUMERIC), NUMERIC_PRECISION, null, null,
@@ -4077,43 +4071,43 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
         //FLOAT=6
         rows.add(new byte[][]{ getBytes("FLOAT"), createShort(Types.FLOAT), FLOAT_PRECISION, null, null, null,
                 TYPE_NULLABLE, CASEINSENSITIVE, TYPE_SEARCHABLE, SIGNED, VARIABLESCALE, NOTAUTOINC, null, SHORT_ZERO,
-                SHORT_ZERO, createInt(ISCConstants.SQL_FLOAT), null, RADIX_BINARY });
+                SHORT_ZERO, createInt(ISCConstants.SQL_FLOAT), null, RADIX_TEN });
 
         //DOUBLE=8
         rows.add(new byte[][]{ getBytes("DOUBLE PRECISION"), createShort(Types.DOUBLE), DOUBLE_PRECISION, null, null,
                 null, TYPE_NULLABLE, CASEINSENSITIVE, TYPE_SEARCHABLE, SIGNED, VARIABLESCALE, NOTAUTOINC, null,
-                SHORT_ZERO, SHORT_ZERO, createInt(ISCConstants.SQL_DOUBLE), null, RADIX_BINARY });
+                SHORT_ZERO, SHORT_ZERO, createInt(ISCConstants.SQL_DOUBLE), null, RADIX_TEN });
 
         //VARCHAR=12
-        rows.add(new byte[][]{ getBytes("VARCHAR"), createShort(Types.VARCHAR), createInt(32664), getBytes("'"),
+        rows.add(new byte[][]{ getBytes("VARCHAR"), createShort(Types.VARCHAR), createInt(32765), getBytes("'"),
                 getBytes("'"), getBytes("length"), TYPE_NULLABLE, CASESENSITIVE, TYPE_SEARCHABLE, UNSIGNED,
                 FIXEDSCALE, NOTAUTOINC, null, SHORT_ZERO, SHORT_ZERO, createInt(ISCConstants.SQL_VARYING), null,
-                RADIX_BINARY });
+                RADIX_TEN });
 
         //DATE=91
         rows.add(new byte[][]{ getBytes("DATE"), createShort(Types.DATE), DATE_PRECISION, null, null, null,
                 TYPE_NULLABLE, CASEINSENSITIVE, TYPE_SEARCHABLE, UNSIGNED, FIXEDSCALE, NOTAUTOINC, null, SHORT_ZERO,
-                SHORT_ZERO, createInt(ISCConstants.SQL_TYPE_DATE), null, RADIX_BINARY });
+                SHORT_ZERO, createInt(ISCConstants.SQL_TYPE_DATE), null, RADIX_TEN });
 
         //TIME=92
         rows.add(new byte[][]{ getBytes("TIME"), createShort(Types.TIME), TIME_PRECISION, null, null, null,
                 TYPE_NULLABLE, CASEINSENSITIVE, TYPE_SEARCHABLE, UNSIGNED, FIXEDSCALE, NOTAUTOINC, null, SHORT_ZERO,
-                SHORT_ZERO, createInt(ISCConstants.SQL_TYPE_TIME), null, RADIX_BINARY });
+                SHORT_ZERO, createInt(ISCConstants.SQL_TYPE_TIME), null, RADIX_TEN });
 
         //TIMESTAMP=93
         rows.add(new byte[][]{ getBytes("TIMESTAMP"), createShort(Types.TIMESTAMP), TIMESTAMP_PRECISION, null, null,
                 null, TYPE_NULLABLE, CASEINSENSITIVE, TYPE_SEARCHABLE, UNSIGNED, FIXEDSCALE, NOTAUTOINC, null,
-                SHORT_ZERO, SHORT_ZERO, createInt(ISCConstants.SQL_TIMESTAMP), null, RADIX_BINARY });
+                SHORT_ZERO, SHORT_ZERO, createInt(ISCConstants.SQL_TIMESTAMP), null, RADIX_TEN });
 
         //OTHER=1111
         rows.add(new byte[][]{ getBytes("ARRAY"), createShort(Types.OTHER), INT_ZERO, null, null, null, TYPE_NULLABLE,
                 CASESENSITIVE, TYPE_PRED_NONE, UNSIGNED, FIXEDSCALE, NOTAUTOINC, null, SHORT_ZERO, SHORT_ZERO,
-                createInt(ISCConstants.SQL_ARRAY), null, RADIX_BINARY });
+                createInt(ISCConstants.SQL_ARRAY), null, RADIX_TEN });
 
         //BLOB=2004
         rows.add(new byte[][]{ getBytes("BLOB SUB_TYPE <0 "), createShort(Types.BLOB), INT_ZERO, null, null, null,
                 TYPE_NULLABLE, CASESENSITIVE, TYPE_PRED_NONE, UNSIGNED, FIXEDSCALE, NOTAUTOINC, null, SHORT_ZERO,
-                SHORT_ZERO, createInt(ISCConstants.SQL_BLOB), null, RADIX_BINARY });
+                SHORT_ZERO, createInt(ISCConstants.SQL_BLOB), null, RADIX_TEN });
 
         return new FBResultSet(xsqlvars, rows);
     }
