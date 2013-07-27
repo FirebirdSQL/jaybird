@@ -20,7 +20,7 @@ public class TestCharacterTranslation {
 
     @Test
     public void testOriginal() {
-        Encoding encoding = EncodingFactory.getEncoding("ISO8859_1");
+        Encoding encoding = EncodingFactory.getDefaultInstance().getEncodingForFirebirdName("ISO8859_1");
 
         String testStr = encoding.decodeFromCharset(testBytes);
         String checkStr = new String(originalChars);
@@ -30,8 +30,9 @@ public class TestCharacterTranslation {
 
     @Test
     public void testTranslation() throws Exception {
-        Encoding encoding = EncodingFactory.getEncoding("ISO8859_1",
-                "org.firebirdsql.encodings.testTranslation");
+        final EncodingFactory factory = EncodingFactory.getDefaultInstance();
+        Encoding encoding = factory.getEncodingForFirebirdName("ISO8859_1")
+                .withTranslation(factory.getCharacterTranslator("org.firebirdsql.encodings.testTranslation"));
 
         String testStr = encoding.decodeFromCharset(testBytes);
         String checkStr = new String(translatedChars);
@@ -47,7 +48,9 @@ public class TestCharacterTranslation {
 
     @Test
     public void testHPUXTranslations() throws Exception {
-        Encoding encoding = EncodingFactory.getEncoding("Cp1252", "translation.hpux");
+        final EncodingFactory factory = EncodingFactory.getDefaultInstance();
+        Encoding encoding = factory.getEncodingForCharsetAlias("Cp1252")
+                .withTranslation(factory.getCharacterTranslator("translation.hpux"));
 
         byte[] direct = encoding.encodeToCharset(TRANSLATION_TEST);
 
