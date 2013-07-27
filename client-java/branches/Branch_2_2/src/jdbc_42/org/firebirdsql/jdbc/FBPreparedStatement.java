@@ -27,7 +27,7 @@ import org.firebirdsql.jdbc.FBObjectListener.StatementListener;
 import java.sql.*;
 
 /**
- * JDBC-4.x implementation of {@link java.sql.PreparedStatement}.
+ * JDBC-4.2 implementation of {@link java.sql.PreparedStatement}.
  * 
  * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
  */

@@ -9,8 +9,10 @@ import java.sql.SQLWarning;
 import java.util.logging.Logger;
 
 /**
- * 
+ * JDBC 4.2 implementation of {@link java.sql.Statement}
+ *
  * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
+ * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  */
 public class FBStatement extends AbstractStatement {
 
