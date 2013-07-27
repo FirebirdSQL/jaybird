@@ -125,7 +125,6 @@ public class TestFBDatabaseMetaDataColumns extends FBMetaDataTestBase<TestFBData
         validationRules.put(ColumnMetaData.TYPE_NAME, "INTEGER");
         validationRules.put(ColumnMetaData.COLUMN_SIZE, 10);
         validationRules.put(ColumnMetaData.DECIMAL_DIGITS, 0);
-        validationRules.put(ColumnMetaData.NUM_PREC_RADIX, 10);
         // Explicit comment:
         validationRules.put(ColumnMetaData.REMARKS, "Some comment");
         validationRules.put(ColumnMetaData.ORDINAL_POSITION, 1);
@@ -144,7 +143,6 @@ public class TestFBDatabaseMetaDataColumns extends FBMetaDataTestBase<TestFBData
         validationRules.put(ColumnMetaData.TYPE_NAME, "INTEGER");
         validationRules.put(ColumnMetaData.COLUMN_SIZE, 10);
         validationRules.put(ColumnMetaData.DECIMAL_DIGITS, 0);
-        validationRules.put(ColumnMetaData.NUM_PREC_RADIX, 10);
         validationRules.put(ColumnMetaData.ORDINAL_POSITION, 32);
         validationRules.put(ColumnMetaData.IS_AUTOINCREMENT, "");
         validationRules.put(ColumnMetaData.COLUMN_DEF, "NULL");
@@ -161,7 +159,6 @@ public class TestFBDatabaseMetaDataColumns extends FBMetaDataTestBase<TestFBData
         validationRules.put(ColumnMetaData.TYPE_NAME, "INTEGER");
         validationRules.put(ColumnMetaData.COLUMN_SIZE, 10);
         validationRules.put(ColumnMetaData.DECIMAL_DIGITS, 0);
-        validationRules.put(ColumnMetaData.NUM_PREC_RADIX, 10);
         validationRules.put(ColumnMetaData.ORDINAL_POSITION, 33);
         validationRules.put(ColumnMetaData.IS_AUTOINCREMENT, "");
         validationRules.put(ColumnMetaData.COLUMN_DEF, "999");
@@ -179,7 +176,6 @@ public class TestFBDatabaseMetaDataColumns extends FBMetaDataTestBase<TestFBData
         validationRules.put(ColumnMetaData.TYPE_NAME, "INTEGER");
         validationRules.put(ColumnMetaData.COLUMN_SIZE, 10);
         validationRules.put(ColumnMetaData.DECIMAL_DIGITS, 0);
-        validationRules.put(ColumnMetaData.NUM_PREC_RADIX, 10);
         validationRules.put(ColumnMetaData.ORDINAL_POSITION, 30);
         validationRules.put(ColumnMetaData.IS_AUTOINCREMENT, "");
         validationRules.put(ColumnMetaData.NULLABLE, DatabaseMetaData.columnNoNulls);
@@ -198,7 +194,6 @@ public class TestFBDatabaseMetaDataColumns extends FBMetaDataTestBase<TestFBData
         validationRules.put(ColumnMetaData.TYPE_NAME, "BIGINT");
         validationRules.put(ColumnMetaData.COLUMN_SIZE, 19);
         validationRules.put(ColumnMetaData.DECIMAL_DIGITS, 0);
-        validationRules.put(ColumnMetaData.NUM_PREC_RADIX, 10);
         validationRules.put(ColumnMetaData.ORDINAL_POSITION, 2);
         validationRules.put(ColumnMetaData.IS_AUTOINCREMENT, "");
 
@@ -215,7 +210,6 @@ public class TestFBDatabaseMetaDataColumns extends FBMetaDataTestBase<TestFBData
         validationRules.put(ColumnMetaData.TYPE_NAME, "SMALLINT");
         validationRules.put(ColumnMetaData.COLUMN_SIZE, 5);
         validationRules.put(ColumnMetaData.DECIMAL_DIGITS, 0);
-        validationRules.put(ColumnMetaData.NUM_PREC_RADIX, 10);
         validationRules.put(ColumnMetaData.ORDINAL_POSITION, 3);
         validationRules.put(ColumnMetaData.IS_AUTOINCREMENT, "");
 
@@ -231,7 +225,6 @@ public class TestFBDatabaseMetaDataColumns extends FBMetaDataTestBase<TestFBData
         validationRules.put(ColumnMetaData.DATA_TYPE, Types.DOUBLE);
         validationRules.put(ColumnMetaData.TYPE_NAME, "DOUBLE PRECISION");
         validationRules.put(ColumnMetaData.COLUMN_SIZE, 15);
-        validationRules.put(ColumnMetaData.NUM_PREC_RADIX, 10);
         validationRules.put(ColumnMetaData.ORDINAL_POSITION, 4);
 
         validate("test_column_metadata", "col_double", validationRules);
@@ -246,7 +239,6 @@ public class TestFBDatabaseMetaDataColumns extends FBMetaDataTestBase<TestFBData
         validationRules.put(ColumnMetaData.DATA_TYPE, Types.FLOAT);
         validationRules.put(ColumnMetaData.TYPE_NAME, "FLOAT");
         validationRules.put(ColumnMetaData.COLUMN_SIZE, 7);
-        validationRules.put(ColumnMetaData.NUM_PREC_RADIX, 10);
         validationRules.put(ColumnMetaData.ORDINAL_POSITION, 5);
 
         validate("test_column_metadata", "col_float", validationRules);
@@ -262,7 +254,6 @@ public class TestFBDatabaseMetaDataColumns extends FBMetaDataTestBase<TestFBData
         validationRules.put(ColumnMetaData.TYPE_NAME, "DECIMAL");
         validationRules.put(ColumnMetaData.COLUMN_SIZE, 18);
         validationRules.put(ColumnMetaData.DECIMAL_DIGITS, 2);
-        validationRules.put(ColumnMetaData.NUM_PREC_RADIX, 10);
         validationRules.put(ColumnMetaData.ORDINAL_POSITION, 6);
 
         validate("test_column_metadata", "col_dec18_2", validationRules);
@@ -281,7 +272,6 @@ public class TestFBDatabaseMetaDataColumns extends FBMetaDataTestBase<TestFBData
         validationRules.put(ColumnMetaData.TYPE_NAME, "DECIMAL");
         validationRules.put(ColumnMetaData.COLUMN_SIZE, 18);
         validationRules.put(ColumnMetaData.DECIMAL_DIGITS, 0);
-        validationRules.put(ColumnMetaData.NUM_PREC_RADIX, 10);
         validationRules.put(ColumnMetaData.ORDINAL_POSITION, 7);
         validationRules.put(ColumnMetaData.IS_AUTOINCREMENT, "");
 
@@ -298,7 +288,6 @@ public class TestFBDatabaseMetaDataColumns extends FBMetaDataTestBase<TestFBData
         validationRules.put(ColumnMetaData.TYPE_NAME, "DECIMAL");
         validationRules.put(ColumnMetaData.COLUMN_SIZE, 7);
         validationRules.put(ColumnMetaData.DECIMAL_DIGITS, 3);
-        validationRules.put(ColumnMetaData.NUM_PREC_RADIX, 10);
         validationRules.put(ColumnMetaData.ORDINAL_POSITION, 8);
 
         validate("test_column_metadata", "col_dec7_3", validationRules);
@@ -317,7 +306,6 @@ public class TestFBDatabaseMetaDataColumns extends FBMetaDataTestBase<TestFBData
         validationRules.put(ColumnMetaData.TYPE_NAME, "DECIMAL");
         validationRules.put(ColumnMetaData.COLUMN_SIZE, 7);
         validationRules.put(ColumnMetaData.DECIMAL_DIGITS, 0);
-        validationRules.put(ColumnMetaData.NUM_PREC_RADIX, 10);
         validationRules.put(ColumnMetaData.ORDINAL_POSITION, 9);
         validationRules.put(ColumnMetaData.IS_AUTOINCREMENT, "");
 
@@ -334,7 +322,6 @@ public class TestFBDatabaseMetaDataColumns extends FBMetaDataTestBase<TestFBData
         validationRules.put(ColumnMetaData.TYPE_NAME, "DECIMAL");
         validationRules.put(ColumnMetaData.COLUMN_SIZE, 4);
         validationRules.put(ColumnMetaData.DECIMAL_DIGITS, 3);
-        validationRules.put(ColumnMetaData.NUM_PREC_RADIX, 10);
         validationRules.put(ColumnMetaData.ORDINAL_POSITION, 10);
 
         validate("test_column_metadata", "col_dec4_3", validationRules);
@@ -353,7 +340,6 @@ public class TestFBDatabaseMetaDataColumns extends FBMetaDataTestBase<TestFBData
         validationRules.put(ColumnMetaData.TYPE_NAME, "DECIMAL");
         validationRules.put(ColumnMetaData.COLUMN_SIZE, 4);
         validationRules.put(ColumnMetaData.DECIMAL_DIGITS, 0);
-        validationRules.put(ColumnMetaData.NUM_PREC_RADIX, 10);
         validationRules.put(ColumnMetaData.ORDINAL_POSITION, 11);
         validationRules.put(ColumnMetaData.IS_AUTOINCREMENT, "");
 
@@ -370,7 +356,6 @@ public class TestFBDatabaseMetaDataColumns extends FBMetaDataTestBase<TestFBData
         validationRules.put(ColumnMetaData.TYPE_NAME, "NUMERIC");
         validationRules.put(ColumnMetaData.COLUMN_SIZE, 18);
         validationRules.put(ColumnMetaData.DECIMAL_DIGITS, 2);
-        validationRules.put(ColumnMetaData.NUM_PREC_RADIX, 10);
         validationRules.put(ColumnMetaData.ORDINAL_POSITION, 12);
 
         validate("test_column_metadata", "col_num18_2", validationRules);
@@ -389,7 +374,6 @@ public class TestFBDatabaseMetaDataColumns extends FBMetaDataTestBase<TestFBData
         validationRules.put(ColumnMetaData.TYPE_NAME, "NUMERIC");
         validationRules.put(ColumnMetaData.COLUMN_SIZE, 18);
         validationRules.put(ColumnMetaData.DECIMAL_DIGITS, 0);
-        validationRules.put(ColumnMetaData.NUM_PREC_RADIX, 10);
         validationRules.put(ColumnMetaData.ORDINAL_POSITION, 13);
         validationRules.put(ColumnMetaData.IS_AUTOINCREMENT, "");
 
@@ -406,7 +390,6 @@ public class TestFBDatabaseMetaDataColumns extends FBMetaDataTestBase<TestFBData
         validationRules.put(ColumnMetaData.TYPE_NAME, "NUMERIC");
         validationRules.put(ColumnMetaData.COLUMN_SIZE, 7);
         validationRules.put(ColumnMetaData.DECIMAL_DIGITS, 3);
-        validationRules.put(ColumnMetaData.NUM_PREC_RADIX, 10);
         validationRules.put(ColumnMetaData.ORDINAL_POSITION, 14);
 
         validate("test_column_metadata", "col_num7_3", validationRules);
@@ -425,7 +408,6 @@ public class TestFBDatabaseMetaDataColumns extends FBMetaDataTestBase<TestFBData
         validationRules.put(ColumnMetaData.TYPE_NAME, "NUMERIC");
         validationRules.put(ColumnMetaData.COLUMN_SIZE, 7);
         validationRules.put(ColumnMetaData.DECIMAL_DIGITS, 0);
-        validationRules.put(ColumnMetaData.NUM_PREC_RADIX, 10);
         validationRules.put(ColumnMetaData.ORDINAL_POSITION, 15);
         validationRules.put(ColumnMetaData.IS_AUTOINCREMENT, "");
 
@@ -442,7 +424,6 @@ public class TestFBDatabaseMetaDataColumns extends FBMetaDataTestBase<TestFBData
         validationRules.put(ColumnMetaData.TYPE_NAME, "NUMERIC");
         validationRules.put(ColumnMetaData.COLUMN_SIZE, 4);
         validationRules.put(ColumnMetaData.DECIMAL_DIGITS, 3);
-        validationRules.put(ColumnMetaData.NUM_PREC_RADIX, 10);
         validationRules.put(ColumnMetaData.ORDINAL_POSITION, 16);
 
         validate("test_column_metadata", "col_num4_3", validationRules);
@@ -461,7 +442,6 @@ public class TestFBDatabaseMetaDataColumns extends FBMetaDataTestBase<TestFBData
         validationRules.put(ColumnMetaData.TYPE_NAME, "NUMERIC");
         validationRules.put(ColumnMetaData.COLUMN_SIZE, 4);
         validationRules.put(ColumnMetaData.DECIMAL_DIGITS, 0);
-        validationRules.put(ColumnMetaData.NUM_PREC_RADIX, 10);
         validationRules.put(ColumnMetaData.ORDINAL_POSITION, 17);
         validationRules.put(ColumnMetaData.IS_AUTOINCREMENT, "");
 
@@ -757,7 +737,7 @@ public class TestFBDatabaseMetaDataColumns extends FBMetaDataTestBase<TestFBData
         defaults.put(ColumnMetaData.TABLE_SCHEM, null);
         defaults.put(ColumnMetaData.BUFFER_LENGTH, null);
         defaults.put(ColumnMetaData.DECIMAL_DIGITS, null);
-        defaults.put(ColumnMetaData.NUM_PREC_RADIX, null);
+        defaults.put(ColumnMetaData.NUM_PREC_RADIX, 10);
         defaults.put(ColumnMetaData.NULLABLE, DatabaseMetaData.columnNullable);
         defaults.put(ColumnMetaData.REMARKS, null);
         defaults.put(ColumnMetaData.COLUMN_DEF, null);

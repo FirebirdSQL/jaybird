@@ -2847,14 +2847,13 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
             
             // Defaults: some are overridden in the switch
             row[8] = null;
-            row[9] = null;
+            row[9] = xsqlvars[0].encodeInt(10);
             row[15] = null;
             switch (dataType){
                 case Types.DECIMAL:
                 case Types.NUMERIC:
                    row[6] = xsqlvars[0].encodeInt(rs.getShort("FIELD_PRECISION"));
                    row[8] = xsqlvars[0].encodeInt(fieldScale * (-1));
-                   row[9] = xsqlvars[0].encodeInt(10);
                    break;
                 case Types.CHAR:
                 case Types.VARCHAR:
@@ -2868,26 +2867,21 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
                    break;
                 case Types.FLOAT:
                    row[6] = xsqlvars[0].encodeInt(7);
-                   row[9] = xsqlvars[0].encodeInt(10);
                    break;
                 case Types.DOUBLE:
                    row[6] = xsqlvars[0].encodeInt(15);
-                   row[9] = xsqlvars[0].encodeInt(10);
                    break;
                 case Types.BIGINT:
                     row[6] = xsqlvars[0].encodeInt(19);
                     row[8] = xsqlvars[0].encodeInt(0);
-                    row[9] = xsqlvars[0].encodeInt(10);
                     break;
                 case Types.INTEGER:
                    row[6] = xsqlvars[0].encodeInt(10);
                    row[8] = xsqlvars[0].encodeInt(0);
-                   row[9] = xsqlvars[0].encodeInt(10);
                    break;
                 case Types.SMALLINT:
                    row[6] = xsqlvars[0].encodeInt(5);
                    row[8] = xsqlvars[0].encodeInt(0);
-                   row[9] = xsqlvars[0].encodeInt(10);
                    break;
                 case Types.DATE:
                    row[6] = xsqlvars[0].encodeInt(10);
@@ -4666,6 +4660,7 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
         byte[] VARIABLESCALE = getBytes("F");
         byte[] NOTAUTOINC = getBytes("F");
         byte[] BINARY = anXSQLVAR.encodeInt(2);
+        byte[] RADIX_TEN = anXSQLVAR.encodeInt(10);
         byte[] PREDNONE = anXSQLVAR.encodeShort((short) DatabaseMetaData.typePredNone);
         // TODO Find out why unused
         byte[] PREDBASIC = anXSQLVAR.encodeShort((short) DatabaseMetaData.typePredBasic);
@@ -4778,99 +4773,99 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
 
         //BIGINT=-5
         rows.add(new byte[][] {getBytes("BIGINT"), createShort(Types.BIGINT)
-            , anXSQLVAR.encodeInt(64), null, null, null,
+            , anXSQLVAR.encodeInt(19), null, null, null,
             NULLABLE, CASEINSENSITIVE, SEARCHABLE, SIGNED, FIXEDSCALE,
-            NOTAUTOINC, null, shortZero, shortZero, anXSQLVAR.encodeInt(ISCConstants.SQL_INT64), null, BINARY});
+            NOTAUTOINC, null, shortZero, shortZero, anXSQLVAR.encodeInt(ISCConstants.SQL_INT64), null, RADIX_TEN});
         
         //LONGVARBINARY=-4
         rows.add(new byte[][] {getBytes("BLOB SUB_TYPE 0"), createShort(Types.LONGVARBINARY)
             , anXSQLVAR.encodeInt(0), null, null, null,
             NULLABLE, CASESENSITIVE, PREDNONE, UNSIGNED, FIXEDSCALE,
-            NOTAUTOINC, null, shortZero, shortZero, anXSQLVAR.encodeInt(ISCConstants.SQL_BLOB), null, BINARY});
+            NOTAUTOINC, null, shortZero, shortZero, anXSQLVAR.encodeInt(ISCConstants.SQL_BLOB), null, RADIX_TEN});
 
         //LONGVARCHAR=-1
         rows.add(new byte[][] {getBytes("BLOB SUB_TYPE 1"), createShort(Types.LONGVARCHAR)
             , anXSQLVAR.encodeInt(0), null, null, null,
             NULLABLE, CASESENSITIVE, PREDNONE, UNSIGNED, FIXEDSCALE,
-            NOTAUTOINC, null, shortZero, shortZero, anXSQLVAR.encodeInt(ISCConstants.SQL_BLOB), null, BINARY});
+            NOTAUTOINC, null, shortZero, shortZero, anXSQLVAR.encodeInt(ISCConstants.SQL_BLOB), null, RADIX_TEN});
 
         //CHAR=1
         rows.add(new byte[][] {getBytes("CHAR"), createShort(Types.CHAR)
             , anXSQLVAR.encodeInt(32664), getBytes("'"), getBytes("'"), getBytes("length"),
             NULLABLE, CASESENSITIVE, SEARCHABLE, UNSIGNED, FIXEDSCALE,
-            NOTAUTOINC, null, shortZero, shortZero, anXSQLVAR.encodeInt(ISCConstants.SQL_TEXT), null, BINARY});
+            NOTAUTOINC, null, shortZero, shortZero, anXSQLVAR.encodeInt(ISCConstants.SQL_TEXT), null, RADIX_TEN});
 
         //NUMERIC=2
         rows.add(new byte[][] {getBytes("NUMERIC"), createShort(Types.NUMERIC)
             , anXSQLVAR.encodeInt(18), null, null, getBytes("precision,scale"),
             NULLABLE, CASEINSENSITIVE, SEARCHABLE, SIGNED, FIXEDSCALE,
-            NOTAUTOINC, null, shortZero, createShort(18), anXSQLVAR.encodeInt(ISCConstants.SQL_INT64), null, BINARY});
+            NOTAUTOINC, null, shortZero, createShort(18), anXSQLVAR.encodeInt(ISCConstants.SQL_INT64), null, RADIX_TEN});
 
         //DECIMAL=3
         rows.add(new byte[][] {getBytes("DECIMAL"), createShort(Types.DECIMAL)
             , anXSQLVAR.encodeInt(18), null, null, getBytes("precision,scale"),
             NULLABLE, CASEINSENSITIVE, SEARCHABLE, SIGNED, FIXEDSCALE,
-            NOTAUTOINC, null, shortZero, createShort(18), anXSQLVAR.encodeInt(ISCConstants.SQL_INT64), null, BINARY});
+            NOTAUTOINC, null, shortZero, createShort(18), anXSQLVAR.encodeInt(ISCConstants.SQL_INT64), null, RADIX_TEN});
 
         //INTEGER=4
         rows.add(new byte[][] {getBytes("INTEGER"), createShort(Types.INTEGER)
-            , anXSQLVAR.encodeInt(32), null, null, null,
+            , anXSQLVAR.encodeInt(10), null, null, null,
             NULLABLE, CASEINSENSITIVE, SEARCHABLE, SIGNED, FIXEDSCALE,
-            NOTAUTOINC, null, shortZero, shortZero, anXSQLVAR.encodeInt(ISCConstants.SQL_LONG), null, BINARY});
+            NOTAUTOINC, null, shortZero, shortZero, anXSQLVAR.encodeInt(ISCConstants.SQL_LONG), null, RADIX_TEN});
 
         //SMALLINT=5
         rows.add(new byte[][] {getBytes("SMALLINT"), createShort(Types.SMALLINT)
             , anXSQLVAR.encodeInt(16), null, null, null,
             NULLABLE, CASEINSENSITIVE, SEARCHABLE, SIGNED, FIXEDSCALE,
-            NOTAUTOINC, null, shortZero, shortZero, anXSQLVAR.encodeInt(ISCConstants.SQL_SHORT), null, BINARY});
+            NOTAUTOINC, null, shortZero, shortZero, anXSQLVAR.encodeInt(ISCConstants.SQL_SHORT), null, RADIX_TEN});
 
         //FLOAT=6
         rows.add(new byte[][] {getBytes("FLOAT"), createShort(Types.FLOAT)
             , anXSQLVAR.encodeInt(7), null, null, null,
             NULLABLE, CASEINSENSITIVE, SEARCHABLE, SIGNED, VARIABLESCALE,
-            NOTAUTOINC, null, createShort(0), createShort(7), anXSQLVAR.encodeInt(ISCConstants.SQL_FLOAT), null, BINARY});
+            NOTAUTOINC, null, createShort(0), createShort(7), anXSQLVAR.encodeInt(ISCConstants.SQL_FLOAT), null, RADIX_TEN});
 
         //DOUBLE=8
         rows.add(new byte[][] {getBytes("DOUBLE PRECISION"), createShort(Types.DOUBLE)
             , anXSQLVAR.encodeInt(15), null, null, null,
             NULLABLE, CASEINSENSITIVE, SEARCHABLE, SIGNED, VARIABLESCALE,
-            NOTAUTOINC, null, createShort(0), createShort(15), anXSQLVAR.encodeInt(ISCConstants.SQL_DOUBLE), null, BINARY});
+            NOTAUTOINC, null, createShort(0), createShort(15), anXSQLVAR.encodeInt(ISCConstants.SQL_DOUBLE), null, RADIX_TEN});
 
         //VARCHAR=12
         rows.add(new byte[][] {getBytes("VARCHAR"), createShort(Types.VARCHAR)
             , anXSQLVAR.encodeInt(32664), getBytes("'"), getBytes("'"), getBytes("length"),
             NULLABLE, CASESENSITIVE, SEARCHABLE, UNSIGNED, FIXEDSCALE,
-            NOTAUTOINC, null, shortZero, shortZero, anXSQLVAR.encodeInt(ISCConstants.SQL_VARYING), null, BINARY});
+            NOTAUTOINC, null, shortZero, shortZero, anXSQLVAR.encodeInt(ISCConstants.SQL_VARYING), null, RADIX_TEN});
 
         //DATE=91
         rows.add(new byte[][] {getBytes("DATE"), createShort(Types.DATE)
             , anXSQLVAR.encodeInt(0), null, null, null,
             NULLABLE, CASEINSENSITIVE, SEARCHABLE, UNSIGNED, FIXEDSCALE,
-            NOTAUTOINC, null, shortZero, shortZero, anXSQLVAR.encodeInt(ISCConstants.SQL_TYPE_DATE), null, BINARY});
+            NOTAUTOINC, null, shortZero, shortZero, anXSQLVAR.encodeInt(ISCConstants.SQL_TYPE_DATE), null, RADIX_TEN});
 
         //TIME=92
         rows.add(new byte[][] {getBytes("TIME"), createShort(Types.TIME)
             , anXSQLVAR.encodeInt(0), null, null, null,
             NULLABLE, CASEINSENSITIVE, SEARCHABLE, UNSIGNED, FIXEDSCALE,
-            NOTAUTOINC, null, shortZero, shortZero, anXSQLVAR.encodeInt(ISCConstants.SQL_TYPE_TIME), null, BINARY});
+            NOTAUTOINC, null, shortZero, shortZero, anXSQLVAR.encodeInt(ISCConstants.SQL_TYPE_TIME), null, RADIX_TEN});
 
         //TIMESTAMP=93
         rows.add(new byte[][] {getBytes("TIMESTAMP"), createShort(Types.TIMESTAMP)
             , anXSQLVAR.encodeInt(0), null, null, null,
             NULLABLE, CASEINSENSITIVE, SEARCHABLE, UNSIGNED, FIXEDSCALE,
-            NOTAUTOINC, null, shortZero, shortZero, anXSQLVAR.encodeInt(ISCConstants.SQL_TIMESTAMP), null, BINARY});
+            NOTAUTOINC, null, shortZero, shortZero, anXSQLVAR.encodeInt(ISCConstants.SQL_TIMESTAMP), null, RADIX_TEN});
 
         //OTHER=1111
         rows.add(new byte[][] {getBytes("ARRAY"), createShort(Types.OTHER)
             , anXSQLVAR.encodeInt(0), null, null, null,
             NULLABLE, CASESENSITIVE, PREDNONE, UNSIGNED, FIXEDSCALE,
-            NOTAUTOINC, null, shortZero, shortZero, anXSQLVAR.encodeInt(ISCConstants.SQL_ARRAY), null, BINARY});
+            NOTAUTOINC, null, shortZero, shortZero, anXSQLVAR.encodeInt(ISCConstants.SQL_ARRAY), null, RADIX_TEN});
 
         //BLOB=2004
         rows.add(new byte[][] {getBytes("BLOB SUB_TYPE <0 "), createShort(Types.BLOB)
             , anXSQLVAR.encodeInt(0), null, null, null,
             NULLABLE, CASESENSITIVE, PREDNONE, UNSIGNED, FIXEDSCALE,
-            NOTAUTOINC, null, shortZero, shortZero, anXSQLVAR.encodeInt(ISCConstants.SQL_BLOB), null, BINARY});
+            NOTAUTOINC, null, shortZero, shortZero, anXSQLVAR.encodeInt(ISCConstants.SQL_BLOB), null, RADIX_TEN});
 
         return new FBResultSet(xsqlvars, rows);
 
