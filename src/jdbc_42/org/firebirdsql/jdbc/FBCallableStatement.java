@@ -24,7 +24,7 @@ import org.firebirdsql.gds.impl.GDSHelper;
 import java.sql.*;
 
 /**
- * JDBC 4.x compliant implementation of {@link java.sql.CallableStatement}.
+ * JDBC 4.2 compliant implementation of {@link java.sql.CallableStatement}.
  */
 public class FBCallableStatement extends AbstractCallableStatement {
 

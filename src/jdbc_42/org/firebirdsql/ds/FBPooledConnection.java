@@ -24,7 +24,7 @@ import javax.sql.StatementEventListener;
 import java.sql.Connection;
 
 /**
- * JDBC 4.0 implementation of PooledConnection.
+ * JDBC 4.2 implementation of PooledConnection.
  * 
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @since 2.2

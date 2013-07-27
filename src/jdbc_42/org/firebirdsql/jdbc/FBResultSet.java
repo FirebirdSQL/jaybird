@@ -30,7 +30,7 @@ import java.sql.*;
 import java.util.ArrayList;
 
 /**
- * Implementation of {@link java.sql.ResultSet} interface.
+ * JDBC 4.2 implementation of {@link java.sql.ResultSet} interface.
  *
  * @author <a href="mailto:d_jencks@users.sourceforge.net">David Jencks</a>
  * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>

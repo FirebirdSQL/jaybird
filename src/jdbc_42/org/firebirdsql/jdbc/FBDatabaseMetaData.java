@@ -26,6 +26,9 @@ import java.security.PrivilegedAction;
 import java.sql.RowIdLifetime;
 import java.sql.SQLException;
 
+/**
+ * JDBC 4.2 implementation of {@link java.sql.DatabaseMetaData}
+ */
 public class FBDatabaseMetaData extends AbstractDatabaseMetaData {
 
     public FBDatabaseMetaData(AbstractConnection c) throws GDSException {
@@ -65,22 +68,6 @@ public class FBDatabaseMetaData extends AbstractDatabaseMetaData {
     }
     
     public int getJDBCMinorVersion() {
-        try {
-            String javaImplementation = AccessController.doPrivileged(new PrivilegedAction<String>() {
-                public String run() {
-                    return System.getProperty("java.specification.version");
-                } 
-             });
-            if (javaImplementation != null && "1.7".compareTo(javaImplementation) <= 0) {
-                // JDK 1.7 or higher: JDBC 4.1
-                return 1;
-            } else {
-                // JDK 1.6 (or lower): JDBC 4.0
-                return 0;
-            }
-        } catch (RuntimeException ex) {
-            // default to 0 (JDBC 4.0) when privileged call fails
-            return 0;
-        }
+        return 2;
     }
 }

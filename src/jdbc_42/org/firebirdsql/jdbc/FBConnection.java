@@ -31,7 +31,7 @@ import java.util.Properties;
 import java.util.concurrent.Executor;
 
 /**
- * Firebird connection class implementing JDBC 3.0 methods.
+ * Firebird connection class implementing JDBC 4.2 methods.
  * 
  * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
  */
