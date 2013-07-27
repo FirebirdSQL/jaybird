@@ -30,6 +30,26 @@
 			<equals arg1="${ant.java.version}" arg2="1.7"/>
 		</or>
 	</condition>
+
+    <condition property="use.16.jca" value="true">
+        <or>
+            <equals arg1="${ant.java.version}" arg2="1.6"/>
+            <equals arg1="${ant.java.version}" arg2="1.7"/>
+            <equals arg1="${ant.java.version}" arg2="1.8"/>
+        </or>
+    </condition>
+
+    <condition property="use.16.pool" value="true">
+        <or>
+            <equals arg1="${ant.java.version}" arg2="1.6"/>
+            <equals arg1="${ant.java.version}" arg2="1.7"/>
+            <equals arg1="${ant.java.version}" arg2="1.8"/>
+        </or>
+    </condition>
+
+    <condition property="jdbc.42" value="true">
+        <equals arg1="${ant.java.version}" arg2="1.8"/>
+    </condition>
 	
 	<!-- We set jdk1.3 property if JDK version is 1.3 -->
 	<condition property="jdk1.3" value="true">
@@ -55,6 +75,11 @@
 	<condition property="jdk1.7" value="true">
 		<equals arg1="${ant.java.version}" arg2="1.7"/>
 	</condition>
+
+    <!-- We set jdk1.7 property if JDK version is 1.7 -->
+    <condition property="jdk1.8" value="true">
+        <equals arg1="${ant.java.version}" arg2="1.8"/>
+    </condition>
 	
 	<property name="Name" value="Jaybird"/>
     <property name="name" value="jaybird"/>
@@ -109,6 +134,7 @@
     <property name="source.jdbc.20" value="${module.source}/jdbc_20"/>
     <property name="source.jdbc.30" value="${module.source}/jdbc_30"/>
     <property name="source.jdbc.40" value="${module.source}/jdbc_40"/>
+    <property name="source.jdbc.42" value="${module.source}/jdbc_42"/>
     <property name="source.wire1.3" value="${module.source}/wire_jdk1_3"/>
     <property name="source.wire1.4" value="${module.source}/wire_jdk1_4"/>
     <property name="source.pool1.4" value="${module.source}/pool_jdk1_4"/>
@@ -124,6 +150,7 @@
     <property name="source.test" value="${module.source}/test"/>
     <property name="source.test.30" value="${module.source}/test_30"/>
     <property name="source.test.40" value="${module.source}/test_40"/>
+    <property name="source.test.42" value="${module.source}/test_42"/>
     <property name="source.pool" value="${module.source}/pool"/>
     <property name="source.compatibility" value="${module.source}/compatibility"/>
 

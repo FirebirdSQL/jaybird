@@ -47,6 +47,12 @@
     </path>
   </target>
 
+  <target name="set-jdbc-42-src" if="jdbc.42">
+    <path id="source.java.additional">
+      <pathelement path="${source.jdbc.42}"/>
+    </path>
+  </target>
+
   <target name="set-wire1.3-src" if="jdk1.3">
     <path id="source.java.wire">
       <pathelement path="${source.wire1.3}"/>
@@ -71,7 +77,7 @@
     </path>
   </target>
 
-  <target name="set-pool1.6-src" if="jdbc.40">
+  <target name="set-pool1.6-src" if="use.16.pool">
 	<path id="source.java.pool">
       <pathelement path="${source.pool1.6}"/>
     </path>
@@ -90,19 +96,19 @@
   	</path>
   </target>
 
-  <target name="set-jca-src-14" unless="jdbc.40">
+  <target name="set-jca-src-14" unless="use.16.jca">
   	<path id="source.java.jca">
     	<pathelement path="${source.jca1.4}"/>
     </path>
   </target>
 
-  <target name="set-jca-src-16" if="jdbc.40">
+  <target name="set-jca-src-16" if="use.16.jca">
   	<path id="source.java.jca">
     	<pathelement path="${source.jca1.6}"/>
     </path>
   </target>
   
-  <target name="set-driver-sources" depends="init,set-jdbc-20-src,set-jdbc-30-src,set-jdbc-40-src,set-wire1.3-src,set-wire1.4-src,set-openoffice-src-13,set-openoffice-src-14,set-jca-src-14,set-jca-src-16"/>
+  <target name="set-driver-sources" depends="init,set-jdbc-20-src,set-jdbc-30-src,set-jdbc-40-src,set-jdbc-42-src,set-wire1.3-src,set-wire1.4-src,set-openoffice-src-13,set-openoffice-src-14,set-jca-src-14,set-jca-src-16"/>
   
   <target name="set-pool-sources" depends="init,set-pool1.4-src,set-pool1.5-src,set-pool1.6-src"/>
 
@@ -185,7 +191,15 @@
     </path>
   </target>
 
-  <target name="compile-tests" depends="compile-pool,set-jdbc-20-test,set-jdbc-30-test,set-jdbc-40-test">
+  <target name="set-jdbc-42-test" if="jdbc.42">
+      <path id="source.test.additional">
+          <pathelement path="${source.test.30}"/>
+          <pathelement path="${source.test.40}"/>
+          <pathelement path="${source.test.42}"/>
+      </path>
+  </target>
+
+  <target name="compile-tests" depends="compile-pool,set-jdbc-20-test,set-jdbc-30-test,set-jdbc-40-test,set-jdbc-42-test">
     <mkdir dir="${build.test}"/>
     <javac 
            destdir="${build.test}"
