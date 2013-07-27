@@ -26,6 +26,8 @@
  */
 package org.firebirdsql.gds.ng.fields;
 
+import org.firebirdsql.util.ObjectUtils;
+
 /**
  * The class <code>FieldDescriptor</code> contains the column metadata of the XSQLVAR server
  * data structure used to describe one column for input or output. FieldDescriptor is an immutable type.
@@ -33,7 +35,7 @@ package org.firebirdsql.gds.ng.fields;
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @version 2.3
  */
-public class FieldDescriptor {
+public final class FieldDescriptor {
 
     private final int type;
     private final int subType;
@@ -44,6 +46,7 @@ public class FieldDescriptor {
     private final String originalName;
     private final String originalTableName;
     private final String ownerName;
+    private int hash;
 
     /**
      * Constructor for metadata FieldDescriptor.
@@ -65,6 +68,7 @@ public class FieldDescriptor {
      * @param originalTableName
      *         Column original table
      * @param ownerName
+     *         Owner of the column
      */
     public FieldDescriptor(int type, final int subType, final int scale, int length, final String fieldName, final String tableAlias, String originalName,
                            String originalTableName, final String ownerName) {
@@ -162,5 +166,31 @@ public class FieldDescriptor {
                 .append(",OwnerName=").append(getOwnerName())
                 .append(']');
         return sb;
+    }
+
+    @Override
+    public boolean equals(final Object obj) {
+        if (this == obj) return true;
+        if (!(obj instanceof FieldDescriptor)) return false;
+        FieldDescriptor other = (FieldDescriptor) obj;
+        return this.type == other.type
+                && this.subType == other.subType
+                && this.scale == other.scale
+                && this.length == other.length
+                && ObjectUtils.equals(this.fieldName, other.fieldName)
+                && ObjectUtils.equals(this.tableAlias, other.tableAlias)
+                && ObjectUtils.equals(this.originalName, other.originalName)
+                && ObjectUtils.equals(this.originalTableName, other.originalTableName)
+                && ObjectUtils.equals(this.ownerName, other.ownerName);
+    }
+
+    @Override
+    public int hashCode() {
+        // Depend on immutability to cache hashCode
+        if (hash == 0) {
+            hash = ObjectUtils.hash(type, subType, scale, length, fieldName, tableAlias, originalName,
+                    originalTableName, ownerName);
+        }
+        return hash;
     }
 }

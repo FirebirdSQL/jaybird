@@ -31,21 +31,23 @@ import org.firebirdsql.gds.ng.FbConnectionProperties;
 import org.firebirdsql.gds.ng.FbStatement;
 import org.firebirdsql.gds.ng.FbTransaction;
 import org.firebirdsql.gds.ng.StatementType;
+import org.firebirdsql.gds.ng.fields.FieldDescriptor;
+import org.firebirdsql.gds.ng.fields.RowDescriptor;
 import org.firebirdsql.gds.ng.wire.FbWireDatabase;
 import org.firebirdsql.gds.ng.wire.ProtocolCollection;
 import org.firebirdsql.gds.ng.wire.WireConnection;
 import org.firebirdsql.management.FBManager;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.*;
+import org.junit.rules.ExpectedException;
 
 import java.sql.SQLException;
+import java.sql.SQLNonTransientException;
+import java.util.Arrays;
+import java.util.List;
 
 import static org.firebirdsql.common.FBTestProperties.*;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
 
 /**
@@ -63,6 +65,9 @@ public class TestV10Statement {
         connectionInfo.setPortNumber(FBTestProperties.DB_SERVER_PORT);
         connectionInfo.setDatabaseName(FBTestProperties.getDatabasePath());
     }
+
+    @Rule
+    public final ExpectedException expectedException = ExpectedException.none();
 
     @BeforeClass
     public static void verifyTestType() {
@@ -89,20 +94,71 @@ public class TestV10Statement {
     }
 
     @Test
-    public void testBasic() throws Exception {
+    public void testSelect_NoParameters() throws Exception {
         final FbTransaction transaction = getTransaction();
         final FbStatement statement = db.createStatement();
         statement.setTransaction(transaction);
-        statement.prepare("SELECT * FROM RDB$DATABASE");
-
-        System.out.println(statement.getFields());
-        System.out.println(statement.getParameters());
+        statement.prepare(
+                "SELECT RDB$DESCRIPTION AS \"Description\", RDB$RELATION_ID, RDB$SECURITY_CLASS, RDB$CHARACTER_SET_NAME " +
+                        "FROM RDB$DATABASE");
 
         assertEquals("Unexpected StatementType", StatementType.SELECT, statement.getType());
-        assertNotNull("Fields", statement.getFields());
-        assertEquals("Unexpected field count", 4, statement.getFields().getCount());
+
+        final RowDescriptor fields = statement.getFields();
+        assertNotNull("Fields", fields);
+        // Note that in the V10 protocol we don't have support for the table alias, so it is always null
+        List<FieldDescriptor> expectedFields =
+                Arrays.asList(
+                        new FieldDescriptor(ISCConstants.SQL_BLOB | 1, 1, 3, 8, "Description", null, "RDB$DESCRIPTION", "RDB$DATABASE", "SYSDBA"),
+                        new FieldDescriptor(ISCConstants.SQL_SHORT | 1, 0, 0, 2, "RDB$RELATION_ID", null, "RDB$RELATION_ID", "RDB$DATABASE", "SYSDBA"),
+                        new FieldDescriptor(ISCConstants.SQL_TEXT | 1, 3, 0, 93, "RDB$SECURITY_CLASS", null, "RDB$SECURITY_CLASS", "RDB$DATABASE", "SYSDBA"),
+                        new FieldDescriptor(ISCConstants.SQL_TEXT | 1, 3, 0, 93, "RDB$CHARACTER_SET_NAME", null, "RDB$CHARACTER_SET_NAME", "RDB$DATABASE", "SYSDBA")
+                );
+        assertEquals("Unexpected values for fields", expectedFields, fields.getFieldDescriptors());
         assertNotNull("Parameters", statement.getParameters());
         assertEquals("Unexpected parameter count", 0, statement.getParameters().getCount());
+    }
+
+    @Test
+    public void testSelect_WithParameters() throws Exception {
+        final FbTransaction transaction = getTransaction();
+        final FbStatement statement = db.createStatement();
+        statement.setTransaction(transaction);
+        statement.prepare(
+                "SELECT a.RDB$CHARACTER_SET_NAME " +
+                        "FROM RDB$CHARACTER_SETS a " +
+                        "WHERE a.RDB$CHARACTER_SET_ID = ? OR a.RDB$BYTES_PER_CHARACTER = ?");
+
+        assertEquals("Unexpected StatementType", StatementType.SELECT, statement.getType());
+
+        final RowDescriptor fields = statement.getFields();
+        assertNotNull("Fields", fields);
+        // Note that in the V10 protocol we don't have support for the table alias, so it is always null
+        List<FieldDescriptor> expectedFields =
+                Arrays.asList(
+                        new FieldDescriptor(ISCConstants.SQL_TEXT | 1, 3, 0, 93, "RDB$CHARACTER_SET_NAME", null, "RDB$CHARACTER_SET_NAME", "RDB$CHARACTER_SETS", "SYSDBA")
+                );
+        assertEquals("Unexpected values for fields", expectedFields, fields.getFieldDescriptors());
+
+        final RowDescriptor parameters = statement.getParameters();
+        assertNotNull("Parameters", parameters);
+        List<FieldDescriptor> expectedParameters =
+                Arrays.asList(
+                        new FieldDescriptor(ISCConstants.SQL_SHORT | 1, 0, 0, 2, null, null, null, null, null),
+                        new FieldDescriptor(ISCConstants.SQL_SHORT | 1, 0, 0, 2, null, null, null, null, null)
+                );
+        assertEquals("Unexpected values for parameters", expectedParameters, parameters.getFieldDescriptors());
+    }
+
+    @Test
+    public void testAllocate_NotClosed() throws Exception {
+        final V10Statement statement = (V10Statement) db.createStatement();
+
+        statement.allocateStatement();
+
+        expectedException.expect(SQLNonTransientException.class);
+        expectedException.expectMessage("allocateStatement only allowed when current state is CLOSED");
+        statement.allocateStatement();
     }
 
     private FbTransaction getTransaction() throws SQLException {

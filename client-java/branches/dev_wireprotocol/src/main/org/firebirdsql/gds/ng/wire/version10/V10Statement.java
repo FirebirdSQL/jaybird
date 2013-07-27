@@ -28,6 +28,7 @@ import org.firebirdsql.gds.ng.wire.AbstractFbWireStatement;
 import org.firebirdsql.gds.ng.wire.FbWireDatabase;
 import org.firebirdsql.gds.ng.wire.FbWireStatement;
 import org.firebirdsql.gds.ng.wire.GenericResponse;
+import org.firebirdsql.jdbc.FBSQLException;
 
 import java.io.IOException;
 import java.sql.SQLException;
@@ -60,11 +61,12 @@ public class V10Statement extends AbstractFbWireStatement implements FbWireState
             ISCConstants.isc_info_sql_sqlda_seq,
             ISCConstants.isc_info_sql_type, ISCConstants.isc_info_sql_sub_type,
             ISCConstants.isc_info_sql_scale, ISCConstants.isc_info_sql_length,
-            ISCConstants.isc_info_sql_field,
-            ISCConstants.isc_info_sql_alias,
-            ISCConstants.isc_info_sql_relation,
+            // TODO: Information not available in normal queries, check for procedures, otherwise remove
+            //ISCConstants.isc_info_sql_field,
+            //ISCConstants.isc_info_sql_alias,
+            //ISCConstants.isc_info_sql_relation,
             //ISCConstants.isc_info_sql_relation_alias,
-            ISCConstants.isc_info_sql_owner,
+            //ISCConstants.isc_info_sql_owner,
             ISCConstants.isc_info_sql_describe_end
     };
 
@@ -156,8 +158,7 @@ public class V10Statement extends AbstractFbWireStatement implements FbWireState
         synchronized (getSynchronizationObject()) {
             // TODO Do we actually need a transaction for the prepare?
             if (getTransaction() == null || getTransaction().getState() != TransactionState.ACTIVE) {
-                // TODO throw exception with right error code
-                throw new SQLNonTransientException();
+                throw new SQLNonTransientException("No transaction or transaction not ACTIVE", FBSQLException.SQL_STATE_INVALID_TX_STATE);
             }
             reset(true);
             synchronized (getDatabase().getSynchronizationObject()) {
@@ -272,18 +273,20 @@ public class V10Statement extends AbstractFbWireStatement implements FbWireState
      */
     protected void allocateStatement() throws SQLException {
         if (getState() != StatementState.CLOSED) {
-            throw new IllegalStateException("allocateStatement only allowed when current state is CLOSED");
+            throw new SQLNonTransientException("allocateStatement only allowed when current state is CLOSED", FBSQLException.SQL_STATE_GENERAL_ERROR);
         }
         synchronized (getDatabase().getSynchronizationObject()) {
             try {
                 sendAllocateToBuffer();
                 getXdrOut().flush();
             } catch (IOException ex) {
+                setState(StatementState.ERROR);
                 throw new FbExceptionBuilder().exception(ISCConstants.isc_net_write_err).cause(ex).toSQLException();
             }
             try {
                 processAllocateResponse(getDatabase().readGenericResponse());
             } catch (IOException ex) {
+                setState(StatementState.ERROR);
                 throw new FbExceptionBuilder().exception(ISCConstants.isc_net_read_err).cause(ex).toSQLException();
             }
         }

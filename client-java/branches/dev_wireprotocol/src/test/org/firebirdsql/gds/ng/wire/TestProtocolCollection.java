@@ -47,6 +47,7 @@ public class TestProtocolCollection {
      * </p>
      */
     @Test
+    @SuppressWarnings("unchecked")
     public void testGetDefaultCollection() {
         assertProtocolCollection(ProtocolCollection.getDefaultCollection(),
                 Arrays.<Class<? extends ProtocolDescriptor>>asList(Version10Descriptor.class));
@@ -57,6 +58,7 @@ public class TestProtocolCollection {
      * a collection with the supplied descriptors.
      */
     @Test
+    @SuppressWarnings("unchecked")
     public void testCreate() {
         // Version 10 with weight 3, type 1
         ProtocolDescriptor alternativeDescriptorV10Weight3_1 = new EmptyProtocolDescriptor(
@@ -85,6 +87,7 @@ public class TestProtocolCollection {
      * ProtocolDescriptors with the same version.
      */
     @Test
+    @SuppressWarnings("unchecked")
     public void testCreateSameVersion() {
         ProtocolDescriptor alternativeDescriptor = new EmptyProtocolDescriptor(
                 WireProtocolConstants.PROTOCOL_VERSION10, WireProtocolConstants.arch_generic,

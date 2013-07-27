@@ -35,11 +35,12 @@ import java.util.*;
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @version 2.3
  */
-public class RowDescriptor implements Iterable<FieldDescriptor> {
+public final class RowDescriptor implements Iterable<FieldDescriptor> {
 
     public static final RowDescriptor EMPTY = new RowDescriptor(new FieldDescriptor[0]);
 
     private final FieldDescriptor[] fieldDescriptors;
+    private int hash;
 
     public RowDescriptor(FieldDescriptor[] fieldDescriptors) {
         this.fieldDescriptors = fieldDescriptors.clone();
@@ -94,5 +95,21 @@ public class RowDescriptor implements Iterable<FieldDescriptor> {
         }
         sb.append(']');
         return sb.toString();
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) return true;
+        if (!(obj instanceof RowDescriptor)) return false;
+        RowDescriptor other = (RowDescriptor) obj;
+        return Arrays.equals(this.fieldDescriptors, other.fieldDescriptors);
+    }
+
+    @Override
+    public int hashCode() {
+        if (hash == 0) {
+            hash = Arrays.hashCode(this.fieldDescriptors);
+        }
+        return hash;
     }
 }
