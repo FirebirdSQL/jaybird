@@ -4791,7 +4791,7 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
 
         //CHAR=1
         rows.add(new byte[][] {getBytes("CHAR"), createShort(Types.CHAR)
-            , anXSQLVAR.encodeInt(32664), getBytes("'"), getBytes("'"), getBytes("length"),
+            , anXSQLVAR.encodeInt(32767), getBytes("'"), getBytes("'"), getBytes("length"),
             NULLABLE, CASESENSITIVE, SEARCHABLE, UNSIGNED, FIXEDSCALE,
             NOTAUTOINC, null, shortZero, shortZero, anXSQLVAR.encodeInt(ISCConstants.SQL_TEXT), null, RADIX_TEN});
 
@@ -4815,7 +4815,7 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
 
         //SMALLINT=5
         rows.add(new byte[][] {getBytes("SMALLINT"), createShort(Types.SMALLINT)
-            , anXSQLVAR.encodeInt(16), null, null, null,
+            , anXSQLVAR.encodeInt(5), null, null, null,
             NULLABLE, CASEINSENSITIVE, SEARCHABLE, SIGNED, FIXEDSCALE,
             NOTAUTOINC, null, shortZero, shortZero, anXSQLVAR.encodeInt(ISCConstants.SQL_SHORT), null, RADIX_TEN});
 
@@ -4833,7 +4833,7 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
 
         //VARCHAR=12
         rows.add(new byte[][] {getBytes("VARCHAR"), createShort(Types.VARCHAR)
-            , anXSQLVAR.encodeInt(32664), getBytes("'"), getBytes("'"), getBytes("length"),
+            , anXSQLVAR.encodeInt(32765), getBytes("'"), getBytes("'"), getBytes("length"),
             NULLABLE, CASESENSITIVE, SEARCHABLE, UNSIGNED, FIXEDSCALE,
             NOTAUTOINC, null, shortZero, shortZero, anXSQLVAR.encodeInt(ISCConstants.SQL_VARYING), null, RADIX_TEN});
 
