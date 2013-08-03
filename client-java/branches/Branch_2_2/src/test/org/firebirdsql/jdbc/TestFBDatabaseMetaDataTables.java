@@ -180,7 +180,7 @@ public class TestFBDatabaseMetaDataTables extends FBMetaDataTestBase<TestFBDatab
                         tableName != null && tableName.length() > 0);
                 expectedTables.remove(tableName);
 
-                if (tableName.startsWith("RDB$") || tableName.startsWith("MON$")) {
+                if (tableName.startsWith("RDB$") || tableName.startsWith("MON$") || tableName.startsWith("SEC$")) {
                     rules.put(TableMetaData.TABLE_TYPE, SYSTEM_TABLE);
                 } else if (tableName.equals("TEST_NORMAL_TABLE") || tableName.equals("test_quoted_normal_table")) {
                     rules.put(TableMetaData.TABLE_TYPE, TABLE);
@@ -257,7 +257,7 @@ public class TestFBDatabaseMetaDataTables extends FBMetaDataTestBase<TestFBDatab
                         tableName != null && tableName.length() > 0);
                 expectedTables.remove(tableName);
                 
-                if (!(tableName.startsWith("RDB$") || tableName.startsWith("MON$"))) {
+                if (!(tableName.startsWith("RDB$") || tableName.startsWith("MON$") || tableName.startsWith("SEC$"))) {
                     fail("Only expect tablenames starting with RDB$ or MON$, retrieved " + tableName);
                 }
 

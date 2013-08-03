@@ -83,11 +83,11 @@ public class TestFBStatisticsManager extends FBTestBase {
 
         // Not a lot more we can really do to ensure that it's a real
         // header page, unfortunately :(
-        assertTrue("The header page must include checksum info",
-                headerPage.indexOf("Checksum") != -1);
+        assertTrue("The header page must include 'Database header page information'",
+                headerPage.contains("Database header page information"));
 
-        assertTrue("The statistics must not include data table info",
-                headerPage.indexOf("Data pages") == -1);
+        assertFalse("The statistics must not include data table info",
+                headerPage.contains("Data pages"));
     }
 
     public void testGetDatabaseStatistics() throws SQLException {
