@@ -214,11 +214,14 @@ public class TestFBResultSetMetaData extends FBJUnit4TestBase {
             assertEquals("Column 2, unexpected columnName", "TWO_BYTE_FIELD", metaData.getColumnName(2));
             assertEquals("Column 2, unexpected columnLabel", "TWO_BYTE_FIELD", metaData.getColumnLabel(2));
 
-            // TODO: Investigate difference between column 3 and 4
             assertEquals("Column 3, unexpected columnName", "ADD", metaData.getColumnName(3));
             assertEquals("Column 3, unexpected columnLabel", "ADD", metaData.getColumnLabel(3));
-            
-            assertEquals("Column 4, unexpected columnName", "", metaData.getColumnName(4));
+
+            if (con.getMetaData().getDatabaseMajorVersion() < 3) {
+                assertEquals("Column 4, unexpected columnName", "", metaData.getColumnName(4));
+            } else {
+                assertEquals("Column 4, unexpected columnName", "SUBTRACT", metaData.getColumnName(4));
+            }
             assertEquals("Column 4, unexpected columnLabel", "COLUMN4ALIAS", metaData.getColumnLabel(4));
             
             stmt.close();
