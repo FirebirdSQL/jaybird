@@ -44,7 +44,7 @@ import org.junit.Test;
  */
 public class TestLikeEscape extends FBJUnit4TestBase {
 
-    private static final String[] TEST_DATA = { "abcdef", "abc_ef", "abc%ef" };
+    private static final String[] TEST_DATA = { "abcdef", "abc_ef", "abc%ef", "abc&%ef", "abc&_ef" };
 
     @Before
     public void setupTestData() throws Exception {
@@ -105,7 +105,7 @@ public class TestLikeEscape extends FBJUnit4TestBase {
         try {
             Statement stmt = con.createStatement();
             ResultSet rs = stmt.executeQuery("SELECT VAL FROM TAB1 WHERE VAL LIKE 'abc_ef' {escape '&'}");
-            Set<String> expectedStrings = Collections.unmodifiableSet(new HashSet<String>(Arrays.asList(TEST_DATA)));
+            Set<String> expectedStrings = Collections.unmodifiableSet(new HashSet<String>(Arrays.asList("abcdef", "abc_ef", "abc%ef")));
 
             assertEquals("Unexpected result for LIKE 'abc_ef' {escape '&'}", expectedStrings, getStrings(rs, 1));
 
