@@ -237,6 +237,45 @@ public final class EncodingFactory implements IEncodingFactory {
         return translations.get(mappingPath);
     }
 
+    @Override
+    public EncodingDefinition getEncodingDefinition(final String firebirdEncodingName, final String javaCharsetAlias) {
+        try {
+            EncodingDefinition encodingDefinition = null;
+            Charset charset = null;
+            if (firebirdEncodingName != null) {
+                encodingDefinition = getEncodingDefinitionByFirebirdName(firebirdEncodingName);
+                if (javaCharsetAlias != null) {
+                    charset = Charset.forName(javaCharsetAlias);
+                } else if (encodingDefinition != null) {
+                    charset = encodingDefinition.getJavaCharset();
+                }
+            } else if (javaCharsetAlias != null) {
+                encodingDefinition = getEncodingDefinitionByCharsetAlias(javaCharsetAlias);
+                if (encodingDefinition != null) {
+                    charset = encodingDefinition.getJavaCharset();
+                }
+            }
+
+            if (encodingDefinition == null) {
+                return null;
+            }
+            if (!encodingDefinition.isInformationOnly() && (charset == null || encodingDefinition.getJavaCharset().equals(charset))) {
+                return encodingDefinition;
+            }
+            if (charset != null) {
+                return new DefaultEncodingDefinition(encodingDefinition.getFirebirdEncodingName(), charset, encodingDefinition.getMaxBytesPerChar(),
+                        encodingDefinition.getFirebirdCharacterSetId(), false);
+            }
+            if (firebirdEncodingName != null && firebirdEncodingName.equalsIgnoreCase("NONE")) {
+                return getDefaultEncodingDefinition();
+            }
+            return null;
+        } catch (Exception e) {
+            log.debug(String.format("Exception looking up encoding definition for firebirdEncodingName %s, javaCharsetAlias %s", firebirdEncodingName, javaCharsetAlias), e);
+            return null;
+        }
+    }
+
     /**
      * Returns an {@link IEncodingFactory} that uses <code>encodingDefinition</code> as the default.
      *

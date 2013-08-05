@@ -312,6 +312,48 @@ public interface IConnectionProperties {
     void setConnectTimeout(int connectTimeout);
 
     /**
+     * Set if {@link java.sql.ResultSet} should be {@link java.sql.ResultSet#HOLD_CURSORS_OVER_COMMIT} by default.
+     *
+     * @param holdable
+     *         <code>true</code> ResultSets are holdable, <code>false</code> (default) ResultSets are {@link
+     *         java.sql.ResultSet#CLOSE_CURSORS_AT_COMMIT}
+     */
+    void setResultSetDefaultHoldable(boolean holdable);
+
+    /**
+     * Get whether ResultSets are holdable by default.
+     *
+     * @return <code>true</code> ResultSets by default are {@link java.sql.ResultSet#HOLD_CURSORS_OVER_COMMIT},
+     *         <code>false</code> (default), ResultSets
+     *         are {@link java.sql.ResultSet#CLOSE_CURSORS_AT_COMMIT}
+     */
+    boolean isResultSetDefaultHoldable();
+
+    /**
+     * Set if {@link java.sql.ResultSetMetaData#getColumnName(int)} returns the <code>columnLabel</code> instead of the
+     * <code>columnName</code>.
+     * <p>
+     * The default behaviour (with <code>columnLabelForName=false</code> is JDBC-compliant. The behavior for value
+     * <code>true</code> is
+     * to provide compatibility with tools with a wrong expectation.
+     * </p>
+     *
+     * @param columnLabelForName
+     *         <code>false</code> JDBC compliant behavior (<code>columnName</code> is returned), <code>true</code>
+     *         compatibility option (<code>columnLabel</code> is returned)
+     */
+    void setColumnLabelForName(boolean columnLabelForName);
+
+    /**
+     * Gets the current setting of <code>columnLabelForName</code>
+     *
+     * @return <code>false</code> JDBC compliant behavior (<code>columnName</code> is returned), <code>true</code>
+     *         compatibility option (<code>columnLabel</code> is returned)
+     * @see #setColumnLabelForName(boolean)
+     */
+    boolean isColumnLabelForName();
+
+    /**
      * @return An immutable version of this instance as an implementation of {@link IConnectionProperties}
      */
     IConnectionProperties asImmutable();

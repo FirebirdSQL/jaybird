@@ -101,4 +101,9 @@ class ConnectionEncodingFactory implements IEncodingFactory {
     public CharacterTranslator getCharacterTranslator(final String mappingPath) throws SQLException {
         return factory.getCharacterTranslator(mappingPath);
     }
+
+    @Override
+    public EncodingDefinition getEncodingDefinition(final String firebirdEncodingName, final String javaCharsetAlias) {
+        return factory.getEncodingDefinition(firebirdEncodingName, javaCharsetAlias);
+    }
 }

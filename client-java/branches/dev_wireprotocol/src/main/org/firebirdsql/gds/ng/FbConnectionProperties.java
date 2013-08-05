@@ -42,6 +42,8 @@ public final class FbConnectionProperties implements IConnectionProperties {
     private int pageCacheSize;
     private int soTimeout = IConnectionProperties.DEFAULT_SO_TIMEOUT;
     private int connectTimeout = IConnectionProperties.DEFAULT_CONNECT_TIMEOUT;
+    private boolean resultSetDefaultHoldable;
+    private boolean columnLabelForName;
 
     /**
      * Copy constructor for FbConnectionProperties.
@@ -206,6 +208,26 @@ public final class FbConnectionProperties implements IConnectionProperties {
     @Override
     public void setConnectTimeout(int connectTimeout) {
         this.connectTimeout = connectTimeout;
+    }
+
+    @Override
+    public void setResultSetDefaultHoldable(final boolean holdable) {
+        resultSetDefaultHoldable = holdable;
+    }
+
+    @Override
+    public boolean isResultSetDefaultHoldable() {
+        return resultSetDefaultHoldable;
+    }
+
+    @Override
+    public void setColumnLabelForName(final boolean columnLabelForName) {
+        this.columnLabelForName = columnLabelForName;
+    }
+
+    @Override
+    public boolean isColumnLabelForName() {
+        return columnLabelForName;
     }
 
     @Override

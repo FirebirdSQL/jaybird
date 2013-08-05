@@ -30,6 +30,7 @@ import java.sql.SQLTimeoutException;
 import org.firebirdsql.common.BlackholeServer;
 import org.firebirdsql.common.FBJUnit4TestBase;
 import org.firebirdsql.common.FBTestProperties;
+import org.firebirdsql.encodings.EncodingFactory;
 import org.firebirdsql.gds.impl.jni.EmbeddedGDSImpl;
 import org.firebirdsql.gds.impl.jni.NativeGDSImpl;
 import org.firebirdsql.gds.ng.FbConnectionProperties;
@@ -72,7 +73,7 @@ public class TestWireConnection extends FBJUnit4TestBase {
      * established yet.
      */
     @Test
-    public void testIsConnectedNoConnection() {
+    public void testIsConnectedNoConnection() throws SQLException {
         WireConnection gdsConnection = new WireConnection(connectionInfo);
         assertFalse("Not connected, isConnected() should return false", gdsConnection.isConnected());
     }
@@ -116,7 +117,7 @@ public class TestWireConnection extends FBJUnit4TestBase {
     @Test
     public void testIdentifyExistingDb() throws Exception {
         ProtocolDescriptor expectedProtocol = new Version10Descriptor();
-        WireConnection gdsConnection = new WireConnection(connectionInfo, ProtocolCollection.create(expectedProtocol));
+        WireConnection gdsConnection = new WireConnection(connectionInfo, EncodingFactory.getDefaultInstance(), ProtocolCollection.create(expectedProtocol));
         try {
             gdsConnection.socketConnect();
             assertTrue(gdsConnection.isConnected());

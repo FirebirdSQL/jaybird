@@ -22,6 +22,8 @@ public final class FbImmutableConnectionProperties implements IConnectionPropert
     private final int pageCacheSize;
     private final int soTimeout;
     private final int connectTimeout;
+    private final boolean resultSetDefaultHoldable;
+    private final boolean columnLabelForName;
 
     /**
      * Copy constructor for FbConnectionProperties.
@@ -47,6 +49,8 @@ public final class FbImmutableConnectionProperties implements IConnectionPropert
         pageCacheSize = src.getPageCacheSize();
         soTimeout = src.getSoTimeout();
         connectTimeout = src.getConnectTimeout();
+        resultSetDefaultHoldable = src.isResultSetDefaultHoldable();
+        columnLabelForName = src.isColumnLabelForName();
     }
 
     @Override
@@ -56,7 +60,7 @@ public final class FbImmutableConnectionProperties implements IConnectionPropert
 
     @Override
     public void setDatabaseName(final String databaseName) {
-        throw new UnsupportedOperationException("this object is immutable");
+        immutable();
     }
 
     @Override
@@ -66,7 +70,7 @@ public final class FbImmutableConnectionProperties implements IConnectionPropert
 
     @Override
     public void setServerName(final String serverName) {
-        throw new UnsupportedOperationException("this object is immutable");
+        immutable();
     }
 
     @Override
@@ -76,7 +80,7 @@ public final class FbImmutableConnectionProperties implements IConnectionPropert
 
     @Override
     public void setPortNumber(final int portNumber) {
-        throw new UnsupportedOperationException("this object is immutable");
+        immutable();
     }
 
     @Override
@@ -86,7 +90,7 @@ public final class FbImmutableConnectionProperties implements IConnectionPropert
 
     @Override
     public void setUser(final String user) {
-        throw new UnsupportedOperationException("this object is immutable");
+        immutable();
     }
 
     @Override
@@ -96,7 +100,7 @@ public final class FbImmutableConnectionProperties implements IConnectionPropert
 
     @Override
     public void setPassword(final String password) {
-        throw new UnsupportedOperationException("this object is immutable");
+        immutable();
     }
 
     @Override
@@ -106,7 +110,7 @@ public final class FbImmutableConnectionProperties implements IConnectionPropert
 
     @Override
     public void setCharSet(final String charSet) {
-        throw new UnsupportedOperationException("this object is immutable");
+        immutable();
     }
 
     @Override
@@ -116,7 +120,7 @@ public final class FbImmutableConnectionProperties implements IConnectionPropert
 
     @Override
     public void setEncoding(final String encoding) {
-        throw new UnsupportedOperationException("this object is immutable");
+        immutable();
     }
 
     @Override
@@ -126,7 +130,7 @@ public final class FbImmutableConnectionProperties implements IConnectionPropert
 
     @Override
     public void setRoleName(final String roleName) {
-        throw new UnsupportedOperationException("this object is immutable");
+        immutable();
     }
 
     @Override
@@ -136,7 +140,7 @@ public final class FbImmutableConnectionProperties implements IConnectionPropert
 
     @Override
     public void setConnectionDialect(final short connectionDialect) {
-        throw new UnsupportedOperationException("this object is immutable");
+        immutable();
     }
 
     @Override
@@ -146,7 +150,7 @@ public final class FbImmutableConnectionProperties implements IConnectionPropert
 
     @Override
     public void setSocketBufferSize(final int socketBufferSize) {
-        throw new UnsupportedOperationException("this object is immutable");
+        immutable();
     }
 
     @Override
@@ -156,7 +160,7 @@ public final class FbImmutableConnectionProperties implements IConnectionPropert
 
     @Override
     public void setPageCacheSize(final int pageCacheSize) {
-        throw new UnsupportedOperationException("this object is immutable");
+        immutable();
     }
 
     @Override
@@ -166,7 +170,7 @@ public final class FbImmutableConnectionProperties implements IConnectionPropert
 
     @Override
     public void setSoTimeout(final int soTimeout) {
-        throw new UnsupportedOperationException("this object is immutable");
+        immutable();
     }
 
     @Override
@@ -176,12 +180,39 @@ public final class FbImmutableConnectionProperties implements IConnectionPropert
 
     @Override
     public void setConnectTimeout(final int connectTimeout) {
-        throw new UnsupportedOperationException("this object is immutable");
+        immutable();
+    }
+
+    @Override
+    public void setResultSetDefaultHoldable(final boolean holdable) {
+        immutable();
+    }
+
+    @Override
+    public boolean isResultSetDefaultHoldable() {
+        return resultSetDefaultHoldable;
+    }
+
+    @Override
+    public void setColumnLabelForName(final boolean columnLabelForName) {
+        immutable();
+    }
+
+    @Override
+    public boolean isColumnLabelForName() {
+        return columnLabelForName;
     }
 
     @Override
     public IConnectionProperties asImmutable() {
         // Immutable already, so just return this
         return this;
+    }
+
+    /**
+     * Throws an UnsupportedOperationException
+     */
+    private static void immutable() {
+        throw new UnsupportedOperationException("this object is immutable");
     }
 }

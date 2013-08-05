@@ -21,6 +21,7 @@
 package org.firebirdsql.gds.ng.wire.version10;
 
 import org.firebirdsql.common.FBTestProperties;
+import org.firebirdsql.encodings.EncodingFactory;
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.impl.jni.EmbeddedGDSImpl;
 import org.firebirdsql.gds.impl.jni.NativeGDSImpl;
@@ -49,7 +50,18 @@ import static org.junit.Assume.assumeTrue;
  */
 public class TestV10Database {
 
-    private static final WireConnection DUMMY_CONNECTION = new WireConnection(null);
+    private static final WireConnection DUMMY_CONNECTION;
+    static {
+        try {
+            FbConnectionProperties connectionInfo = new FbConnectionProperties();
+            connectionInfo.setEncoding("NONE");
+
+            DUMMY_CONNECTION = new WireConnection(connectionInfo);
+        } catch (SQLException e) {
+            throw new ExceptionInInitializerError(e);
+        }
+    }
+
     private static final ProtocolDescriptor DUMMY_DESCRIPTOR = new Version10Descriptor();
 
     private final FbConnectionProperties connectionInfo;
@@ -59,6 +71,7 @@ public class TestV10Database {
         connectionInfo.setServerName(FBTestProperties.DB_SERVER_URL);
         connectionInfo.setPortNumber(FBTestProperties.DB_SERVER_PORT);
         connectionInfo.setDatabaseName(FBTestProperties.getDatabasePath());
+        connectionInfo.setEncoding("NONE");
     }
 
     @BeforeClass
@@ -199,7 +212,7 @@ public class TestV10Database {
     public void testBasicAttach() throws Exception {
         FBManager fbManager = defaultDatabaseSetUp();
         try {
-            WireConnection gdsConnection = new WireConnection(connectionInfo, ProtocolCollection.create(new Version10Descriptor()));
+            WireConnection gdsConnection = new WireConnection(connectionInfo, EncodingFactory.getDefaultInstance(), ProtocolCollection.create(new Version10Descriptor()));
             FbWireDatabase db = null;
             try {
                 gdsConnection.socketConnect();
@@ -235,7 +248,7 @@ public class TestV10Database {
      */
     @Test
     public void testAttach_NonExistentDatabase() throws Exception {
-        WireConnection gdsConnection = new WireConnection(connectionInfo, ProtocolCollection.create(new Version10Descriptor()));
+        WireConnection gdsConnection = new WireConnection(connectionInfo, EncodingFactory.getDefaultInstance(), ProtocolCollection.create(new Version10Descriptor()));
         FbWireDatabase db = null;
         try {
             gdsConnection.socketConnect();
@@ -263,7 +276,7 @@ public class TestV10Database {
      */
     @Test
     public void testBasicCreateAndDrop() throws Exception {
-        WireConnection gdsConnection = new WireConnection(connectionInfo, ProtocolCollection.create(new Version10Descriptor()));
+        WireConnection gdsConnection = new WireConnection(connectionInfo, EncodingFactory.getDefaultInstance(), ProtocolCollection.create(new Version10Descriptor()));
         FbWireDatabase db = null;
         File dbFile = new File(gdsConnection.getDatabaseName());
         try {

@@ -20,12 +20,16 @@
  */
 package org.firebirdsql.gds.ng.wire;
 
+import org.firebirdsql.encodings.EncodingDefinition;
+import org.firebirdsql.encodings.EncodingFactory;
+import org.firebirdsql.encodings.IEncodingFactory;
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.impl.wire.XdrInputStream;
 import org.firebirdsql.gds.impl.wire.XdrOutputStream;
 import org.firebirdsql.gds.ng.FbConnectionProperties;
 import org.firebirdsql.gds.ng.FbExceptionBuilder;
 import org.firebirdsql.gds.ng.IConnectionProperties;
+import org.firebirdsql.jdbc.FBSQLException;
 import org.firebirdsql.logging.Logger;
 import org.firebirdsql.logging.LoggerFactory;
 
@@ -35,6 +39,7 @@ import java.net.*;
 import java.security.AccessController;
 import java.security.PrivilegedAction;
 import java.sql.SQLException;
+import java.sql.SQLNonTransientConnectionException;
 import java.sql.SQLTimeoutException;
 import java.util.concurrent.TimeUnit;
 
@@ -56,11 +61,13 @@ public final class WireConnection implements XdrStreamAccess {
     private static final Logger log = LoggerFactory.getLogger(WireConnection.class, false);
 
     private Socket socket;
-    private final ProtocolCollection protocols;
-    private final IConnectionProperties connectionProperties;
+    private ProtocolCollection protocols;
+    private IConnectionProperties connectionProperties;
     private int protocolVersion;
     private int protocolArchitecture;
     private int protocolMinimumType;
+    private EncodingDefinition encodingDefinition;
+    private IEncodingFactory encodingFactory;
 
     private XdrOutputStream xdrOut;
     private XdrInputStream xdrIn;
@@ -72,8 +79,21 @@ public final class WireConnection implements XdrStreamAccess {
      * @param connectionProperties
      *         Connection properties
      */
-    public WireConnection(IConnectionProperties connectionProperties) {
-        this(connectionProperties, ProtocolCollection.getDefaultCollection());
+    public WireConnection(IConnectionProperties connectionProperties) throws SQLException {
+        this(connectionProperties, EncodingFactory.getDefaultInstance(), ProtocolCollection.getDefaultCollection());
+    }
+
+    /**
+     * Creates a WireConnection (without establishing a connection to the
+     * server) with the default protocol collection.
+     *
+     * @param connectionProperties
+     *         Connection properties
+     * @param encodingFactory
+     *         Factory for encoding definitions
+     */
+    public WireConnection(IConnectionProperties connectionProperties, IEncodingFactory encodingFactory) throws SQLException {
+        this(connectionProperties, encodingFactory, ProtocolCollection.getDefaultCollection());
     }
 
     /**
@@ -82,12 +102,20 @@ public final class WireConnection implements XdrStreamAccess {
      *
      * @param connectionProperties
      *         Connection properties
+     * @param encodingFactory
+     *         Factory for encoding definitions
      * @param protocols
      *         The collection of protocols to use for this connection.
      */
-    public WireConnection(IConnectionProperties connectionProperties, ProtocolCollection protocols) {
+    public WireConnection(IConnectionProperties connectionProperties, IEncodingFactory encodingFactory, ProtocolCollection protocols) throws SQLException {
         this.connectionProperties = new FbConnectionProperties(connectionProperties);
         this.protocols = protocols;
+        this.encodingFactory = encodingFactory;
+        encodingDefinition = encodingFactory.getEncodingDefinition(connectionProperties.getEncoding(), connectionProperties.getCharSet());
+        if (encodingDefinition == null || encodingDefinition.isInformationOnly()) {
+            throw new SQLNonTransientConnectionException(String.format("No valid encoding definition for Firebird encoding %s and/or Java charset %s",
+                    connectionProperties.getEncoding(), connectionProperties.getCharSet()), FBSQLException.SQL_STATE_CONNECTION_ERROR);
+        }
     }
 
     public boolean isConnected() {
@@ -225,6 +253,14 @@ public final class WireConnection implements XdrStreamAccess {
         }
     }
 
+    public EncodingDefinition getEncodingDefinition() {
+        return this.encodingDefinition;
+    }
+
+    public IEncodingFactory getEncodingFactory() {
+        return encodingFactory;
+    }
+
     /**
      * Performs the connection identification phase of the Wire protocol and
      * returns the FbWireDatabase implementation for the agreed protocol.
@@ -340,6 +376,10 @@ public final class WireConnection implements XdrStreamAccess {
             xdrOut = null;
             xdrIn = null;
             socket = null;
+            protocols = null;
+            connectionProperties = null;
+            encodingDefinition = null;
+            encodingFactory = null;
         }
     }
 

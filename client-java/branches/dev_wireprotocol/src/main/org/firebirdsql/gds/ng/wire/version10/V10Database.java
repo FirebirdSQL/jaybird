@@ -24,6 +24,7 @@ import org.firebirdsql.gds.DatabaseParameterBuffer;
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.TransactionParameterBuffer;
 import org.firebirdsql.gds.impl.DatabaseParameterBufferExtension;
+import org.firebirdsql.gds.impl.wire.DatabaseParameterBufferImp;
 import org.firebirdsql.gds.impl.wire.XdrInputStream;
 import org.firebirdsql.gds.impl.wire.XdrOutputStream;
 import org.firebirdsql.gds.impl.wire.Xdrable;
@@ -210,6 +211,12 @@ public class V10Database implements FbWireDatabase, TransactionEventListener {
     @Override
     public void attach(DatabaseParameterBuffer dpb) throws SQLException {
         attachOrCreate(dpb, false);
+    }
+
+    protected DatabaseParameterBuffer generateDatabaseParameterBufferFromConnectionProperties() {
+        final IConnectionProperties connectionProperties = connection.getConnectionProperties();
+        final DatabaseParameterBufferImp dpb = new DatabaseParameterBufferImp();
+        throw new UnsupportedOperationException();
     }
 
     /**

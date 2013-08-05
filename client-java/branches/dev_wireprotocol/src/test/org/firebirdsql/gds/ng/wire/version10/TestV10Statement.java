@@ -21,6 +21,7 @@
 package org.firebirdsql.gds.ng.wire.version10;
 
 import org.firebirdsql.common.FBTestProperties;
+import org.firebirdsql.encodings.EncodingFactory;
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.TransactionParameterBuffer;
 import org.firebirdsql.gds.impl.jni.EmbeddedGDSImpl;
@@ -64,6 +65,7 @@ public class TestV10Statement {
         connectionInfo.setServerName(FBTestProperties.DB_SERVER_URL);
         connectionInfo.setPortNumber(FBTestProperties.DB_SERVER_PORT);
         connectionInfo.setDatabaseName(FBTestProperties.getDatabasePath());
+        connectionInfo.setEncoding("NONE");
     }
 
     @Rule
@@ -80,7 +82,7 @@ public class TestV10Statement {
     @Before
     public void setUp() throws Exception {
         fbManager = defaultDatabaseSetUp();
-        WireConnection gdsConnection = new WireConnection(connectionInfo, ProtocolCollection.create(new Version10Descriptor()));
+        WireConnection gdsConnection = new WireConnection(connectionInfo, EncodingFactory.getDefaultInstance(), ProtocolCollection.create(new Version10Descriptor()));
         gdsConnection.socketConnect();
         db = gdsConnection.identify();
         assertEquals("Unexpected FbWireDatabase implementation", V10Database.class, db.getClass());
