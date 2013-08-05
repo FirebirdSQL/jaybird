@@ -104,6 +104,12 @@ class ConnectionEncodingFactory implements IEncodingFactory {
 
     @Override
     public EncodingDefinition getEncodingDefinition(final String firebirdEncodingName, final String javaCharsetAlias) {
+        // TODO Consider returning getDefaultEncodingDefinition() if null
         return factory.getEncodingDefinition(firebirdEncodingName, javaCharsetAlias);
+    }
+
+    @Override
+    public IEncodingFactory withDefaultEncodingDefinition(EncodingDefinition encodingDefinition) {
+        return factory.withDefaultEncodingDefinition(encodingDefinition != null ? encodingDefinition : getDefaultEncodingDefinition());
     }
 }

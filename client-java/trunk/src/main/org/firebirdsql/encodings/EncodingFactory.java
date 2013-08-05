@@ -242,6 +242,7 @@ public final class EncodingFactory implements IEncodingFactory {
         try {
             EncodingDefinition encodingDefinition = null;
             Charset charset = null;
+            // TODO Consider returning getDefaultEncodingDefinition() if both firebirdEncodingName and javaCharsetAlias are NULL
             if (firebirdEncodingName != null) {
                 encodingDefinition = getEncodingDefinitionByFirebirdName(firebirdEncodingName);
                 if (javaCharsetAlias != null) {
@@ -257,18 +258,25 @@ public final class EncodingFactory implements IEncodingFactory {
             }
 
             if (encodingDefinition == null) {
+                // TODO Consider throwing exception if no EncodingDefinition is found
                 return null;
             }
             if (!encodingDefinition.isInformationOnly() && (charset == null || encodingDefinition.getJavaCharset().equals(charset))) {
+                // Normal encoding definition
                 return encodingDefinition;
             }
             if (charset != null) {
+                /* Construct non-standard combination of Firebird encoding + Java character set
+                 * This allows for special purpose combinations like Firebird ISO8859_3 with Java ISO-8859-1
+                 * But is mostly intended for using Firebird NONE with a specific java character set
+                 */
                 return new DefaultEncodingDefinition(encodingDefinition.getFirebirdEncodingName(), charset, encodingDefinition.getMaxBytesPerChar(),
                         encodingDefinition.getFirebirdCharacterSetId(), false);
             }
-            if (firebirdEncodingName != null && firebirdEncodingName.equalsIgnoreCase("NONE")) {
+            if ("NONE".equalsIgnoreCase(firebirdEncodingName)) {
                 return getDefaultEncodingDefinition();
             }
+            // TODO Consider throwing exception if no EncodingDefinition is found
             return null;
         } catch (Exception e) {
             log.debug(String.format("Exception looking up encoding definition for firebirdEncodingName %s, javaCharsetAlias %s", firebirdEncodingName, javaCharsetAlias), e);
@@ -276,13 +284,7 @@ public final class EncodingFactory implements IEncodingFactory {
         }
     }
 
-    /**
-     * Returns an {@link IEncodingFactory} that uses <code>encodingDefinition</code> as the default.
-     *
-     * @param encodingDefinition
-     *         The default encoding to use (or <code>null</code> for the value of {@link #getDefaultEncoding()}
-     * @return IEncoding instance with the specified default.
-     */
+    @Override
     public IEncodingFactory withDefaultEncodingDefinition(EncodingDefinition encodingDefinition) {
         return new ConnectionEncodingFactory(this, encodingDefinition != null ? encodingDefinition : getDefaultEncodingDefinition());
     }

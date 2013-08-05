@@ -110,12 +110,13 @@ public final class WireConnection implements XdrStreamAccess {
     public WireConnection(IConnectionProperties connectionProperties, IEncodingFactory encodingFactory, ProtocolCollection protocols) throws SQLException {
         this.connectionProperties = new FbConnectionProperties(connectionProperties);
         this.protocols = protocols;
-        this.encodingFactory = encodingFactory;
         encodingDefinition = encodingFactory.getEncodingDefinition(connectionProperties.getEncoding(), connectionProperties.getCharSet());
         if (encodingDefinition == null || encodingDefinition.isInformationOnly()) {
+            // TODO Don't throw exception if encoding/charSet is null (see also TODO inside EncodingFactory.getEncodingDefinition)
             throw new SQLNonTransientConnectionException(String.format("No valid encoding definition for Firebird encoding %s and/or Java charset %s",
                     connectionProperties.getEncoding(), connectionProperties.getCharSet()), FBSQLException.SQL_STATE_CONNECTION_ERROR);
         }
+        this.encodingFactory = encodingFactory.withDefaultEncodingDefinition(encodingDefinition);
     }
 
     public boolean isConnected() {

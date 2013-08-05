@@ -183,4 +183,13 @@ public interface IEncodingFactory {
      * @return An EncodingDefinition or null if both parameters are null, no encoding was found or if an exception occurred.
      */
     EncodingDefinition getEncodingDefinition(String firebirdEncodingName, String javaCharsetAlias);
+
+    /**
+     * Returns an {@link org.firebirdsql.encodings.IEncodingFactory} that uses <code>encodingDefinition</code> as the default.
+     *
+     * @param encodingDefinition
+     *         The default encoding to use (or <code>null</code> for the value of {@link #getDefaultEncoding()}
+     * @return IEncoding instance with the specified default.
+     */
+    IEncodingFactory withDefaultEncodingDefinition(EncodingDefinition encodingDefinition);
 }

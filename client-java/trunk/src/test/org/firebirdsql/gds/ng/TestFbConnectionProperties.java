@@ -188,6 +188,9 @@ public class TestFbConnectionProperties {
             } else if (parameterType == String.class) {
                 method.invoke(info, method.getName());
                 testValues.put(descriptor.getName(), method.getName());
+            } else if (parameterType == boolean.class) {
+                method.invoke(info, true);
+                testValues.put(descriptor.getName(), true);
             } else {
                 throw new IllegalStateException("Unexpected setter type: " + parameterType);
             }
