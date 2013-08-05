@@ -50,6 +50,12 @@
 	<echo message="${ant.java.version}"/>
     <echo message="${toString:source.java.openoffice}"/>
     <echo message="${toString:source.java.additional}"/>
+
+    <copy todir="${build.classes}" filtering="no">
+        <fileset dir="${source.java}">
+            <include name="org/firebirdsql/encodings/xml/encodings.xsd"/>
+        </fileset>
+    </copy>
     
     <javac destdir="${build.classes}"
            target="${ant.java.version}"
@@ -106,6 +112,7 @@
     <copy todir="${build.test}" filtering="no">
       <fileset dir="${source.test}">
          <include name="**/*.properties"/>
+         <include name="**/*.xml"/>
       </fileset>
     </copy>
 

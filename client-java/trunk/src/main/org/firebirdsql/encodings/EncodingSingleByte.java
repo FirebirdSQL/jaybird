@@ -23,45 +23,52 @@ import java.nio.charset.Charset;
 /**
  * Implementation of {@link Encoding} for single byte character sets.
  */
-final class EncodingSingleByte implements Encoding {
+public final class EncodingSingleByte implements Encoding {
 
     private final char[] byteToChar;
     private final byte[] charToByte;
+    private final Charset charset;
 
-    EncodingSingleByte(Charset charset) {
-        this(charset, EncodingFactory.DEFAULT_MAPPING);
+    public EncodingSingleByte(final Charset charset) {
+        this(charset, CharacterTranslator.IDENTITY_TRANSLATOR);
     }
 
-    EncodingSingleByte(Charset charset, final char[] charMapping) {
+    EncodingSingleByte(final Charset charset, final CharacterTranslator translator) {
         byteToChar = new char[256];
         charToByte = new byte[256 * 256];
-        
+        this.charset = charset;
+
         byte[] val = new byte[1];
         for (int i = 0; i < 256; i++) {
             val[0] = (byte) i;
             char ch = new String(val, 0, 1, charset).charAt(0);
-            byteToChar[i] = charMapping[ch];
+            byteToChar[i] = translator.getMapping(ch);
             charToByte[byteToChar[i]] = (byte) i;
         }
     }
 
-    // encode
-    public byte[] encodeToCharset(String str) {
-        int length = str.length();
-        byte[] result = new byte[length];
-        char[] in = str.toCharArray();
-        for (int i = 0; i < in.length; i++) {
-            result[i] = charToByte[in[i]];
+    @Override
+    public byte[] encodeToCharset(final String str) {
+        final int length = str.length();
+        final byte[] result = new byte[length];
+        for (int i = 0; i < length; i++) {
+            result[i] = charToByte[str.charAt(i)];
         }
         return result;
     }
 
-    // decode from charset
-    public String decodeFromCharset(byte[] in) {
-        char[] bufferC = new char[in.length];
-        for (int i = 0; i < bufferC.length; i++) {
+    @Override
+    public String decodeFromCharset(final byte[] in) {
+        final int length = in.length;
+        final char[] bufferC = new char[length];
+        for (int i = 0; i < length; i++) {
             bufferC[i] = byteToChar[in[i] & 0xFF];
         }
         return new String(bufferC);
+    }
+
+    @Override
+    public Encoding withTranslation(final CharacterTranslator translator) {
+        return new EncodingSingleByte(charset, translator);
     }
 }

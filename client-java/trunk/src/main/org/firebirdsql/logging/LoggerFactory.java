@@ -29,10 +29,16 @@ import java.security.PrivilegedAction;
  */
 public class LoggerFactory {
 
-    private static final boolean forceConsoleLogger = false;
+    // TODO Use system property
+    private static final boolean forceConsoleLogger = true;
 
     private static boolean checked = false;
     private static boolean log4j = false;
+    
+    /**
+     * NullLogger to use for all getLogger requests if no logging is configured
+     */
+    private static final Logger NULL_LOGGER = new NullLogger(null);
 
     public static Logger getLogger(String name, boolean def) {
         if (!checked) {
@@ -65,7 +71,7 @@ public class LoggerFactory {
         else if (forceConsoleLogger)
             return new ConsoleLogger(name);
         else
-            return null;
+            return NULL_LOGGER;
     }
 
     public static Logger getLogger(Class<?> clazz, boolean def) {

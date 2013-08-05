@@ -173,7 +173,7 @@ public interface WireProtocolConstants {
        Therefore always set highmost bit in protocol version to 1.
        For unsigned protocol version this does not break version's compare. */
     int FB_PROTOCOL_FLAG = 0x8000;
-    int FB_PROTOCOL_MASK = ~FB_PROTOCOL_FLAG;
+    int FB_PROTOCOL_MASK = ~FB_PROTOCOL_FLAG & 0xFFFF;
     
     /* Protocol 11 has support for user authentication related
        operations (op_update_account_info, op_authenticate_user and

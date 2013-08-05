@@ -191,6 +191,7 @@ public class GDSException extends Exception {
         switch (type) {
         case ISCConstants.isc_arg_number:
         case ISCConstants.isc_arg_gds:
+        case ISCConstants.isc_arg_warning:
             return intParam;
         default:
             return -1;

@@ -27,6 +27,7 @@ package org.firebirdsql.gds;
 import org.firebirdsql.logging.Logger;
 import org.firebirdsql.logging.LoggerFactory;
 
+import java.util.List;
 import java.util.Properties;
 import java.io.InputStream;
 
@@ -102,10 +103,22 @@ public class GDSExceptionHelper {
      * 
      * @param code Firebird error code
      *  
-     * @return string with SQL state, "HY000" if nothing found. 
+     * @return SQL state for the Firebird error code, "HY000" if nothing found.
      */
     public static String getSQLState(int code) {
-        return sqlstates.getProperty(Integer.toString(code), SQLSTATE_CLI_GENERIC_ERROR);
+        return getSQLState(code, SQLSTATE_CLI_GENERIC_ERROR);
+    }
+
+    /**
+     * Get the SQL state for the specified error code.
+     *
+     * @param code Firebird error code
+     * @param defaultSQLState The default SQLState to return
+     *
+     * @return SQL state for the Firebird error code, or <code>defaultSQLState</code> if nothing found.
+     */
+    public static String getSQLState(int code, String defaultSQLState) {
+        return sqlstates.getProperty(Integer.toString(code), defaultSQLState);
     }
 
     /**
@@ -152,18 +165,33 @@ public class GDSExceptionHelper {
         }
 
         /**
+         * Sets the parameter values.
+         * <p>
+         * Parameter values with an index value higher than the number of message arguments are ignored.
+         * </p>
+         *
+         * @param messageParameters Message parameters
+         */
+        public void setParameters(List<String> messageParameters) {
+            for (int position = 0; position < Math.min(params.length, messageParameters.size()); position++) {
+                params[position] = messageParameters.get(position);
+            }
+        }
+
+        /**
          * Puts parameters into the template and return the obtained string.
          * @return string representation of the message.
          */
         public String toString() {
             String message = template;
+            // TODO Use MessageFormat?
             for(int i = 0; i < params.length; i++) {
                 String param = "{" + i + "}";
                 int pos = message.indexOf(param);
                 if (pos > -1) 
                 {
                    String temp = message.substring(0, pos);
-                   temp += (params[i] == null) ? "" : params[i];
+                   temp += (params[i] != null) ? params[i] : "(null)";
                    temp += message.substring(pos + param.length());
                    message = temp;
                 } // end of if ()
