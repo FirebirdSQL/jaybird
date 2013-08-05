@@ -85,11 +85,11 @@ public class TestFBStatisticsManager extends FBTestBase {
 
         // Not a lot more we can really do to ensure that it's a real
         // header page, unfortunately :(
-        assertTrue("The header page must include checksum info",
-                headerPage.indexOf("Checksum") != -1);
+        assertTrue("The header page must include 'Database header page information'",
+                headerPage.contains("Database header page information"));
 
-        assertTrue("The statistics must not include data table info",
-                headerPage.indexOf("Data pages") == -1);
+        assertFalse("The statistics must not include data table info",
+                headerPage.contains("Data pages"));
     }
 
     public void testGetDatabaseStatistics() throws SQLException {
@@ -99,10 +99,10 @@ public class TestFBStatisticsManager extends FBTestBase {
         String statistics = loggingStream.toString();
 
         assertTrue("The database page analysis must be in the statistics",
-                statistics.indexOf("Data pages") != -1);
+                statistics.contains("Data pages"));
 
-        assertTrue("System table information must not be in basic statistics",
-                statistics.indexOf("RDB$DATABASE") == -1);
+        assertFalse("System table information must not be in basic statistics",
+                statistics.contains("RDB$DATABASE"));
     }
 
     public void testGetStatsWithBadOptions() throws SQLException {
@@ -126,7 +126,7 @@ public class TestFBStatisticsManager extends FBTestBase {
         String statistics = loggingStream.toString();
         assertTrue("Statistics with SYSTEM_TABLE_STATISTICS option must "
                     + "include system table info",
-                statistics.indexOf("RDB$DATABASE") != -1);
+                statistics.contains("RDB$DATABASE"));
     }
 
     public void testGetTableStatistics() throws SQLException {
@@ -138,9 +138,9 @@ public class TestFBStatisticsManager extends FBTestBase {
         System.out.println(statistics);
         
         assertTrue("The database page analysis must be in the statistics",
-                statistics.indexOf("Data pages") != -1);
+                statistics.contains("Data pages"));
 
         assertTrue("The table name must be in the statistics",
-            statistics.indexOf("TEST") != -1);
+                statistics.contains("TEST"));
     }
 }
