@@ -356,13 +356,8 @@ public class TestFBConnectionPoolDataSource extends FBTestBase {
             Statement stmt = con.createStatement();
             
             try {
-                try {
-                    stmt.executeUpdate("DROP TABLE test");
-                } catch(SQLException ex) {
-                    if (ex.getErrorCode() != ISCConstants.isc_dsql_error)
-                        throw ex;
-                }
-                
+                executeDropTable(con, "DROP TABLE test");
+
                 stmt.executeUpdate("CREATE TABLE test(a INTEGER)");
                 
                 stmt.executeUpdate("INSERT INTO test VALUES(1)");
@@ -933,7 +928,7 @@ public class TestFBConnectionPoolDataSource extends FBTestBase {
         }
     }
     
-    // "test string" in Ukrainian ("тестова стрічка")
+    // "test string" in Ukrainian ("пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ")
     public static String UKRAINIAN_TEST_STRING = 
         //"\u00f2\u00e5\u00f1\u00f2\u00ee\u00e2\u00e0 " +
         "\u0442\u0435\u0441\u0442\u043e\u0432\u0430 " + 
