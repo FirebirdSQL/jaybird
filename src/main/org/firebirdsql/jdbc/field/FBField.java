@@ -283,6 +283,9 @@ public abstract class FBField {
             case ISCConstants.SQL_NULL:
                 return false;
 
+            case ISCConstants.SQL_BOOLEAN:
+                return (type == Types.BOOLEAN);
+
             default:
                 return false;
         }
@@ -311,17 +314,18 @@ public abstract class FBField {
                         (type == Types.LONGVARCHAR)
                         ;
 
-            // unfortunatelly we do not know the SQL correspondence to these type
+            // unfortunately we do not know the SQL correspondence to these type
             case ISCConstants.SQL_QUAD:
             case ISCConstants.SQL_D_FLOAT :
                 return false;
 
-            // currently we do not provide compatibilty with CHAR and VARCHAR
+            // currently we do not provide compatibility with CHAR and VARCHAR
             case ISCConstants.SQL_DOUBLE :
             case ISCConstants.SQL_FLOAT :
             case ISCConstants.SQL_INT64 :
             case ISCConstants.SQL_LONG :
             case ISCConstants.SQL_SHORT:
+            case ISCConstants.SQL_BOOLEAN:
                 return  (type == Types.DOUBLE) ||
                         (type == Types.FLOAT) ||
                         (type == Types.REAL) ||
@@ -331,7 +335,8 @@ public abstract class FBField {
                         (type == Types.TINYINT) ||
                         (type == Types.NUMERIC) ||
                         (type == Types.DECIMAL) ||
-                        (type == Types.BIT)
+                        (type == Types.BIT) || // TODO: We don't support BIT
+                        (type == Types.BOOLEAN)
                         ;
 
             case ISCConstants.SQL_TEXT:
@@ -461,6 +466,9 @@ public abstract class FBField {
         else
         if (isType(field, Types.ARRAY))
             throw (SQLException)createException(SQL_ARRAY_NOT_SUPPORTED);
+        else
+        if (isType(field, Types.BOOLEAN))
+            return new FBBooleanField(field, dataProvider, Types.BOOLEAN);
         else
         if (isNullType(field))
             return new FBNullField(field, dataProvider, Types.VARCHAR);
