@@ -239,6 +239,8 @@ public class FBResultSetMetaData implements FirebirdResultSetMetaData {
                 return 8;
             case Types.TIMESTAMP:
                 return 19;
+            case Types.BOOLEAN:
+                return 1;
             default:
 
                return 0;
@@ -330,7 +332,7 @@ public class FBResultSetMetaData implements FirebirdResultSetMetaData {
             case Types.INTEGER:
                 return 10;
             case Types.BIGINT:
-                return 20;
+                return 19;
             case Types.SMALLINT:
                 return 5;
             case Types.DATE:
@@ -339,6 +341,8 @@ public class FBResultSetMetaData implements FirebirdResultSetMetaData {
                 return 8;
             case Types.TIMESTAMP:
                 return 19;
+            case Types.BOOLEAN:
+                return 1;
             default:
                 return 0;
             }
@@ -463,6 +467,8 @@ public class FBResultSetMetaData implements FirebirdResultSetMetaData {
                     return Types.OTHER;
             case ISCConstants.SQL_QUAD:
                 return Types.OTHER;
+            case ISCConstants.SQL_BOOLEAN:
+                return Types.BOOLEAN;
             default:
                 return Types.NULL;
         }
@@ -538,6 +544,8 @@ public class FBResultSetMetaData implements FirebirdResultSetMetaData {
                     return "BLOB SUB_TYPE " + sqlsubtype;
             case ISCConstants.SQL_QUAD:
                 return "ARRAY";
+            case ISCConstants.SQL_BOOLEAN:
+                return "BOOLEAN";
             default:
                 return "NULL";
         }
@@ -653,8 +661,12 @@ public class FBResultSetMetaData implements FirebirdResultSetMetaData {
                 else {
                     return BigDecimal.class.getName();
                 }
+
+            case ISCConstants.SQL_BOOLEAN:
+                return Boolean.class.getName();
+
             default:
-                throw new FBSQLException("Unkown SQL type.",
+                throw new FBSQLException("Unknown SQL type.",
                         FBSQLException.SQL_STATE_INVALID_PARAM_TYPE);
         }
     }

@@ -60,12 +60,12 @@ import org.firebirdsql.gds.impl.GDSHelper;
  * TODO check if the setBinaryStream(null) is allowed by specs.
  */
 public class FBStringField extends FBField {
-    private static final String SHORT_TRUE = "Y";
-    private static final String SHORT_FALSE = "N";
-    private static final String LONG_TRUE = "true";
-    private static final String LONG_FALSE = "false";
-    private static final String SHORT_TRUE_2 = "T";
-    private static final String SHORT_TRUE_3 = "1";
+    static final String SHORT_TRUE = "Y";
+    static final String SHORT_FALSE = "N";
+    static final String LONG_TRUE = "true";
+    static final String LONG_FALSE = "false";
+    static final String SHORT_TRUE_2 = "T";
+    static final String SHORT_TRUE_3 = "1";
     
     protected int possibleCharLength;
     protected int bytesPerCharacter;
@@ -172,10 +172,11 @@ public class FBStringField extends FBField {
     public boolean getBoolean() throws SQLException {
         if (getFieldData()==null) return BOOLEAN_NULL_VALUE;
 
-        return getString().trim().equalsIgnoreCase(LONG_TRUE) ||
-                getString().trim().equalsIgnoreCase(SHORT_TRUE) ||
-                getString().trim().equalsIgnoreCase(SHORT_TRUE_2) ||
-                getString().trim().equalsIgnoreCase(SHORT_TRUE_3);
+        final String trimmedValue = getString().trim();
+        return trimmedValue.equalsIgnoreCase(LONG_TRUE) ||
+                trimmedValue.equalsIgnoreCase(SHORT_TRUE) ||
+                trimmedValue.equalsIgnoreCase(SHORT_TRUE_2) ||
+                trimmedValue.equalsIgnoreCase(SHORT_TRUE_3);
     }
     public String getString() throws SQLException {
         if (getFieldData()==null) return STRING_NULL_VALUE;

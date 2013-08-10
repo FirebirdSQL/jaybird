@@ -562,7 +562,6 @@ public class XSQLVAR {
         return dt.toDateBytes();
     }
 
-
     /**
      * Decode a <code>Date</code> value using a given <code>Calendar</code>.
      *
@@ -593,7 +592,27 @@ public class XSQLVAR {
     
 	public Date decodeDateCalendar(byte[] byte_int, Calendar c) {
        datetime dt = new datetime(byte_int, null);
-        return dt.toDate(c);
+       return dt.toDate(c);
+    }
+
+    /**
+     * Decode boolean from supplied data.
+     *
+     * @param data (expected) 1 bytes
+     * @return <code>false</code> when decoded as int 0, <code>true</code> for all other values
+     */
+    public boolean decodeBoolean(byte[] data) {
+        return data[0] != 0;
+    }
+
+    /**
+     * Encodes boolean to 1 byte data.
+     *
+     * @param value Boolean value to encode
+     * @return <code>true</code> as 1, <code>false</code> as 0.
+     */
+    public byte[] encodeBoolean(boolean value) {
+        return new byte[] { (byte) (value ? 1 : 0) };
     }
 
     /**

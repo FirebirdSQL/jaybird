@@ -1482,7 +1482,7 @@ public interface ISCConstants {
     public final static int SQL_TYPE_TIME = 560;
     public final static int SQL_TYPE_DATE = 570;
     public final static int SQL_INT64     = 580;
-    
+    public final static int SQL_BOOLEAN   = 32764;
     public final static int SQL_NULL      = 32766;
 
     /* Historical alias for pre V6 applications */

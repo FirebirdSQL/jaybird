@@ -1353,7 +1353,10 @@ public abstract class AbstractJavaGDSImpl extends AbstractGDS implements GDS {
 				break;
 			case ISCConstants.SQL_NULL:
 			    xsqlda.ioLength[i] = 0;
-			    break;
+                break;
+            case ISCConstants.SQL_BOOLEAN:
+                xsqlda.ioLength[i] = 1 + 1;
+                break;
 			}
 		}
 	}
@@ -2201,51 +2204,70 @@ public abstract class AbstractJavaGDSImpl extends AbstractGDS implements GDS {
 			for (int i = 0; i < xsqlda.sqld; i++) {
 				int dtype = xsqlda.sqlvar[i].sqltype & ~1;
 				int len = xsqlda.sqlvar[i].sqllen;
-				if (dtype == ISCConstants.SQL_VARYING) {
-					blr[n++] = 37; // blr_varying
-					blr[n++] = (byte) (len & 255);
-					blr[n++] = (byte) (len >> 8);
-				} else if (dtype == ISCConstants.SQL_TEXT) {
-					blr[n++] = 14; // blr_text
-					blr[n++] = (byte) (len & 255);
-					blr[n++] = (byte) (len >> 8);
-                } else if (dtype == ISCConstants.SQL_NULL) {
+                switch (dtype) {
+                case ISCConstants.SQL_VARYING:
+                    blr[n++] = 37; // blr_varying
+                    blr[n++] = (byte) (len & 255);
+                    blr[n++] = (byte) (len >> 8);
+                    break;
+                case ISCConstants.SQL_TEXT:
+                    blr[n++] = 14; // blr_text
+                    blr[n++] = (byte) (len & 255);
+                    blr[n++] = (byte) (len >> 8);
+                    break;
+                case ISCConstants.SQL_NULL:
                     blr[n++] = 14; // blr_text
                     blr[n++] = 0;
                     blr[n++] = 0;
-				} else if (dtype == ISCConstants.SQL_DOUBLE) {
-					blr[n++] = 27; // blr_double
-				} else if (dtype == ISCConstants.SQL_FLOAT) {
-					blr[n++] = 10; // blr_float
-				} else if (dtype == ISCConstants.SQL_D_FLOAT) {
-					blr[n++] = 11; // blr_d_float
-				} else if (dtype == ISCConstants.SQL_TYPE_DATE) {
-					blr[n++] = 12; // blr_sql_date
-				} else if (dtype == ISCConstants.SQL_TYPE_TIME) {
-					blr[n++] = 13; // blr_sql_time
-				} else if (dtype == ISCConstants.SQL_TIMESTAMP) {
-					blr[n++] = 35; // blr_timestamp
-				} else if (dtype == ISCConstants.SQL_BLOB) {
-					blr[n++] = 9; // blr_quad
-					blr[n++] = 0;
-				} else if (dtype == ISCConstants.SQL_ARRAY) {
-					blr[n++] = 9; // blr_quad
-					blr[n++] = 0;
-				} else if (dtype == ISCConstants.SQL_LONG) {
-					blr[n++] = 8; // blr_long
-					blr[n++] = (byte) xsqlda.sqlvar[i].sqlscale;
-				} else if (dtype == ISCConstants.SQL_SHORT) {
-					blr[n++] = 7; // blr_short
-					blr[n++] = (byte) xsqlda.sqlvar[i].sqlscale;
-				} else if (dtype == ISCConstants.SQL_INT64) {
-					blr[n++] = 16; // blr_int64
-					blr[n++] = (byte) xsqlda.sqlvar[i].sqlscale;
-				} else if (dtype == ISCConstants.SQL_QUAD) {
-					blr[n++] = 9; // blr_quad
-					blr[n++] = (byte) xsqlda.sqlvar[i].sqlscale;
-				} else {
-					// return error_dsql_804 (gds__dsql_sqlda_value_err);
-				}
+                    break;
+                case ISCConstants.SQL_DOUBLE:
+                    blr[n++] = 27; // blr_double
+                    break;
+                case ISCConstants.SQL_FLOAT:
+                    blr[n++] = 10; // blr_float
+                    break;
+                case ISCConstants.SQL_D_FLOAT:
+                    blr[n++] = 11; // blr_d_float
+                    break;
+                case ISCConstants.SQL_TYPE_DATE:
+                    blr[n++] = 12; // blr_sql_date
+                    break;
+                case ISCConstants.SQL_TYPE_TIME:
+                    blr[n++] = 13; // blr_sql_time
+                    break;
+                case ISCConstants.SQL_TIMESTAMP:
+                    blr[n++] = 35; // blr_timestamp
+                    break;
+                case ISCConstants.SQL_BLOB:
+                    blr[n++] = 9; // blr_quad
+                    blr[n++] = 0;
+                    break;
+                case ISCConstants.SQL_ARRAY:
+                    blr[n++] = 9; // blr_quad
+                    blr[n++] = 0;
+                    break;
+                case ISCConstants.SQL_LONG:
+                    blr[n++] = 8; // blr_long
+                    blr[n++] = (byte) xsqlda.sqlvar[i].sqlscale;
+                    break;
+                case ISCConstants.SQL_SHORT:
+                    blr[n++] = 7; // blr_short
+                    blr[n++] = (byte) xsqlda.sqlvar[i].sqlscale;
+                    break;
+                case ISCConstants.SQL_INT64:
+                    blr[n++] = 16; // blr_int64
+                    blr[n++] = (byte) xsqlda.sqlvar[i].sqlscale;
+                    break;
+                case ISCConstants.SQL_QUAD:
+                    blr[n++] = 9; // blr_quad
+                    blr[n++] = (byte) xsqlda.sqlvar[i].sqlscale;
+                    break;
+                case ISCConstants.SQL_BOOLEAN:
+                    blr[n++] = 23; // blr_bool
+                    break;
+                default:
+                    throw new GDSException(ISCConstants.isc_dsql_sqlda_value_err);
+                }
 
 				blr[n++] = 7; // blr_short
 				blr[n++] = 0;

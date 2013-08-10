@@ -2222,14 +2222,13 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
             // Defaults: some are overridden in the switch
             row[7] = null;
             row[9] = null;
-            row[10] = null;
+            row[10] = xsqlvars[0].encodeShort((short)10);
             row[16] = null;
             switch (dataType){
                 case Types.DECIMAL:
                 case Types.NUMERIC:
                    row[7] = xsqlvars[0].encodeInt(rs.getShort("FIELD_PRECISION"));
                    row[9] = xsqlvars[0].encodeShort((short)(fieldScale * (-1)));
-                   row[10] = xsqlvars[0].encodeShort((short)10);
                    break;
                 case Types.CHAR:
                 case Types.VARCHAR:
@@ -2243,26 +2242,21 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
                    break;
                 case Types.FLOAT:
                    row[7] = xsqlvars[0].encodeInt(7);
-                   row[10] = xsqlvars[0].encodeShort((short)10);
                    break;
                 case Types.DOUBLE:
                    row[7] = xsqlvars[0].encodeInt(15);
-                   row[10] = xsqlvars[0].encodeShort((short)10);
                    break;
                 case Types.BIGINT:
                     row[7] = xsqlvars[0].encodeInt(19);
                     row[9] = xsqlvars[0].encodeShort((short)0);
-                    row[10] = xsqlvars[0].encodeShort((short)10);
                     break;
                 case Types.INTEGER:
                    row[7] = xsqlvars[0].encodeInt(10);
                    row[9] = xsqlvars[0].encodeShort((short)0);
-                   row[10] = xsqlvars[0].encodeShort((short)10);
                    break;
                 case Types.SMALLINT:
                    row[7] = xsqlvars[0].encodeInt(5);
                    row[9] = xsqlvars[0].encodeShort((short)0);
-                   row[10] = xsqlvars[0].encodeShort((short)10);
                    break;
                 case Types.DATE:
                    row[7] = xsqlvars[0].encodeInt(10);
@@ -2273,6 +2267,9 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
                 case Types.TIMESTAMP:
                    row[7] = xsqlvars[0].encodeInt(19);
                    break;
+                case Types.BOOLEAN:
+                    row[7] = xsqlvars[0].encodeInt(1);
+                    row[10] = xsqlvars[0].encodeShort((short) 2);
                 default:
                    row[7] = null;
             }
@@ -2892,6 +2889,10 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
                 case Types.TIMESTAMP:
                    row[6] = xsqlvars[0].encodeInt(19);
                    break;
+                case Types.BOOLEAN:
+                    row[6] = xsqlvars[0].encodeInt(1);
+                    row[9] = xsqlvars[0].encodeInt(2);
+                    break;
                 default:
                    row[6] = null;
             }
@@ -2971,6 +2972,7 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
     private static final short varchar_type = 37;
 //  private static final short cstring_type = 40;
     private static final short blob_type = 261;
+    private static final short boolean_type = 23;
 
     private static int getDataType (short fieldType, short fieldSubType, short fieldScale) {
         switch (fieldType) {
@@ -3021,6 +3023,8 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
                     return Types.OTHER;
             case quad_type:
                 return Types.OTHER;
+            case boolean_type:
+                return Types.BOOLEAN;
             default:
                 return Types.NULL;
         }
@@ -3075,6 +3079,8 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
                     return "BLOB SUB_TYPE " + sqlsubtype;
             case quad_type:
                 return "ARRAY";
+            case boolean_type:
+                return "BOOLEAN";
             default:
                 return "NULL";
         }
@@ -4866,6 +4872,13 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
             , anXSQLVAR.encodeInt(0), null, null, null,
             NULLABLE, CASESENSITIVE, PREDNONE, UNSIGNED, FIXEDSCALE,
             NOTAUTOINC, null, shortZero, shortZero, anXSQLVAR.encodeInt(ISCConstants.SQL_BLOB), null, RADIX_TEN});
+
+        //BOOLEAN=16
+        if (getDatabaseMajorVersion() >= 3) {
+            rows.add(new byte[][] {getBytes("BOOLEAN"), createShort(Types.BOOLEAN), anXSQLVAR.encodeInt(1),
+                    null, null, null, NULLABLE, CASEINSENSITIVE, PREDBASIC, UNSIGNED, FIXEDSCALE,
+                    NOTAUTOINC, null, shortZero, shortZero, anXSQLVAR.encodeInt(ISCConstants.SQL_BOOLEAN), null, BINARY});
+        }
 
         return new FBResultSet(xsqlvars, rows);
 
