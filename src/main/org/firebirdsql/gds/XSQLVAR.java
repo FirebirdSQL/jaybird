@@ -599,7 +599,7 @@ public class XSQLVAR {
      * Decode boolean from supplied data.
      *
      * @param data (expected) 1 bytes
-     * @return <code>false</code> when decoded as int 0, <code>true</code> for all other values
+     * @return <code>false</code> when 0, <code>true</code> for all other values
      */
     public boolean decodeBoolean(byte[] data) {
         return data[0] != 0;
