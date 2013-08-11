@@ -20,6 +20,8 @@
  */
 package org.firebirdsql.encodings;
 
+import org.firebirdsql.gds.ISCConstants;
+
 import java.nio.charset.Charset;
 import java.sql.SQLException;
 
@@ -39,11 +41,30 @@ class ConnectionEncodingFactory implements IEncodingFactory {
     private final EncodingFactory factory;
     private final EncodingDefinition defaultEncodingDefinition;
     private final Encoding defaultEncoding;
+    private final EncodingDefinition noneEncodingDefinition;
+    private final EncodingDefinition octetsEncodingDefinition;
 
     ConnectionEncodingFactory(EncodingFactory factory, EncodingDefinition defaultEncodingDefinition) {
         this.factory = factory;
         this.defaultEncodingDefinition = defaultEncodingDefinition;
-        this.defaultEncoding = defaultEncodingDefinition.getEncoding();
+        defaultEncoding = defaultEncodingDefinition.getEncoding();
+        // Redefine NONE encoding
+        if (EncodingFactory.ENCODING_NAME_NONE.equalsIgnoreCase(defaultEncodingDefinition.getFirebirdEncodingName())) {
+            noneEncodingDefinition = defaultEncodingDefinition;
+        } else if (factory.getEncodingDefinitionByFirebirdName(EncodingFactory.ENCODING_NAME_NONE).isInformationOnly()) {
+            noneEncodingDefinition = new DefaultEncodingDefinition(EncodingFactory.ENCODING_NAME_NONE,
+                    defaultEncodingDefinition.getJavaCharset(), 1, ISCConstants.CS_NONE, false);
+        } else {
+            noneEncodingDefinition = getEncodingDefinitionByFirebirdName(EncodingFactory.ENCODING_NAME_NONE);
+        }
+
+        // Redefine OCTETS encoding
+        if (factory.getEncodingDefinitionByFirebirdName(EncodingFactory.ENCODING_NAME_OCTETS).isInformationOnly()) {
+            octetsEncodingDefinition = new DefaultEncodingDefinition(EncodingFactory.ENCODING_NAME_OCTETS,
+                    defaultEncodingDefinition.getJavaCharset(), 1, ISCConstants.CS_BINARY, false);
+        } else {
+            octetsEncodingDefinition = getEncodingDefinitionByFirebirdName(EncodingFactory.ENCODING_NAME_OCTETS);
+        }
     }
 
     @Override
@@ -58,23 +79,53 @@ class ConnectionEncodingFactory implements IEncodingFactory {
 
     @Override
     public EncodingDefinition getEncodingDefinitionByFirebirdName(final String firebirdEncodingName) {
-        return factory.getEncodingDefinitionByFirebirdName(firebirdEncodingName);
+        if (EncodingFactory.ENCODING_NAME_NONE.equalsIgnoreCase(firebirdEncodingName)) {
+            return noneEncodingDefinition;
+        } else if (EncodingFactory.ENCODING_NAME_OCTETS.equalsIgnoreCase(firebirdEncodingName)) {
+            return octetsEncodingDefinition;
+        } else {
+            return factory.getEncodingDefinitionByFirebirdName(firebirdEncodingName);
+        }
     }
 
     @Override
     public Encoding getEncodingForFirebirdName(final String firebirdEncodingName) {
-        return factory.getEncodingForFirebirdName(firebirdEncodingName, getDefaultEncoding());
+        if (EncodingFactory.ENCODING_NAME_NONE.equalsIgnoreCase(firebirdEncodingName)) {
+            return noneEncodingDefinition.getEncoding();
+        } else if (EncodingFactory.ENCODING_NAME_OCTETS.equalsIgnoreCase(firebirdEncodingName)) {
+            return octetsEncodingDefinition.getEncoding();
+        } else {
+            return factory.getEncodingForFirebirdName(firebirdEncodingName, getDefaultEncoding());
+        }
     }
 
     @Override
     public EncodingDefinition getEncodingDefinitionByCharacterSetId(final int firebirdCharacterSetId) {
-        // TODO: Be able to return the EncodingDefinition of the default encoding if unknown or 127?
-        return factory.getEncodingDefinitionByCharacterSetId(firebirdCharacterSetId);
+        switch (firebirdCharacterSetId & 0xFF) {
+        case ISCConstants.CS_NONE:
+            return noneEncodingDefinition;
+        case ISCConstants.CS_BINARY:
+            return octetsEncodingDefinition;
+        case ISCConstants.CS_dynamic:
+            return defaultEncodingDefinition;
+        default:
+            return factory.getEncodingDefinitionByCharacterSetId(firebirdCharacterSetId);
+        }
+        // TODO: return the EncodingDefinition of the default encoding if unknown?
     }
 
     @Override
     public Encoding getEncodingForCharacterSetId(final int firebirdCharacterSetId) {
-        return factory.getEncodingForCharacterSetId(firebirdCharacterSetId, getDefaultEncoding());
+        switch (firebirdCharacterSetId & 0xFF) {
+        case ISCConstants.CS_NONE:
+            return noneEncodingDefinition.getEncoding();
+        case ISCConstants.CS_BINARY:
+            return octetsEncodingDefinition.getEncoding();
+        case ISCConstants.CS_dynamic:
+            return defaultEncoding;
+        default:
+            return factory.getEncodingForCharacterSetId(firebirdCharacterSetId, getDefaultEncoding());
+        }
     }
 
     @Override

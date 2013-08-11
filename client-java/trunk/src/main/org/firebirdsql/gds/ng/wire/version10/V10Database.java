@@ -20,6 +20,9 @@
  */
 package org.firebirdsql.gds.ng.wire.version10;
 
+import org.firebirdsql.encodings.Encoding;
+import org.firebirdsql.encodings.EncodingFactory;
+import org.firebirdsql.encodings.IEncodingFactory;
 import org.firebirdsql.gds.DatabaseParameterBuffer;
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.TransactionParameterBuffer;
@@ -36,6 +39,7 @@ import org.firebirdsql.logging.Logger;
 import org.firebirdsql.logging.LoggerFactory;
 
 import java.io.IOException;
+import java.nio.charset.Charset;
 import java.sql.SQLException;
 import java.sql.SQLFeatureNotSupportedException;
 import java.sql.SQLWarning;
@@ -163,6 +167,16 @@ public class V10Database implements FbWireDatabase, TransactionEventListener {
         return versionString;
     }
 
+    @Override
+    public IEncodingFactory getEncodingFactory() {
+        return connection.getEncodingFactory();
+    }
+
+    @Override
+    public Encoding getEncoding() {
+        return connection.getEncoding();
+    }
+
     /**
      * Sets the Firebird version string.
      * <p>
@@ -277,7 +291,13 @@ public class V10Database implements FbWireDatabase, TransactionEventListener {
 
         xdrOut.writeInt(operation);
         xdrOut.writeInt(0); // Database object ID
-        xdrOut.writeString(connection.getDatabaseName(), filenameCharset);
+        final Encoding filenameEncoding;
+        if (filenameCharset == null) {
+            filenameEncoding = getEncoding();
+        } else {
+            filenameEncoding = EncodingFactory.getDefaultInstance().getOrCreateEncodingForCharset(Charset.forName(filenameCharset));
+        }
+        xdrOut.writeString(connection.getDatabaseName(), filenameEncoding);
 
         dpb = ((DatabaseParameterBufferExtension) dpb).removeExtensionParams();
         // TODO Include ProcessID and ProcessName as in JavaGDSImpl implementation (or move that to different part?)
@@ -543,7 +563,7 @@ public class V10Database implements FbWireDatabase, TransactionEventListener {
      *         For errors reading the response from the connection.
      */
     protected Response readSingleResponse() throws SQLException, IOException {
-        Response response = processOperation(getXdrIn().readNextOperation());
+        Response response = processOperation(connection.readNextOperation());
         processResponseWarnings(response);
         return response;
     }
@@ -645,13 +665,13 @@ public class V10Database implements FbWireDatabase, TransactionEventListener {
                     break;
                 case ISCConstants.isc_arg_interpreted:
                 case ISCConstants.isc_arg_string:
-                    String stringValue = xdrIn.readString();
+                    String stringValue = xdrIn.readString(connection.getEncodingFactory().getDefaultEncoding());
                     if (debug) log.debug("readStatusVector string: " + stringValue);
                     builder.messageParameter(stringValue);
                     break;
                 case ISCConstants.isc_arg_sql_state:
                     // TODO Is this actually returned from server?
-                    String sqlState = xdrIn.readString();
+                    String sqlState = xdrIn.readString(connection.getEncodingFactory().getDefaultEncoding());
                     if (debug) log.debug("readStatusVector sqlstate: " + sqlState);
                     builder.sqlState(sqlState);
                     break;

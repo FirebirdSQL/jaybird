@@ -19,6 +19,8 @@
 
 package org.firebirdsql.gds.impl.jni;
 
+import org.firebirdsql.encodings.EncodingFactory;
+import org.firebirdsql.encodings.IEncodingFactory;
 import org.firebirdsql.gds.IscSvcHandle;
 import org.firebirdsql.gds.GDSException;
 
@@ -34,6 +36,7 @@ public final class isc_svc_handle_impl implements IscSvcHandle {
 
     private List<GDSException> warnings = Collections.synchronizedList(new LinkedList<GDSException>());
     private int handle = 0;
+    private IEncodingFactory encodingFactory = EncodingFactory.getDefaultInstance().withDefaultEncodingDefinition();
 
     public isc_svc_handle_impl() {
     }
@@ -46,6 +49,16 @@ public final class isc_svc_handle_impl implements IscSvcHandle {
 
     public void clearWarnings() {
         warnings.clear();
+    }
+
+    @Override
+    public IEncodingFactory getEncodingFactory() {
+        return encodingFactory;
+    }
+
+    @Override
+    public void setEncodingFactory(IEncodingFactory encodingFactory) {
+        this.encodingFactory = encodingFactory;
     }
 
     public synchronized boolean isValid() {

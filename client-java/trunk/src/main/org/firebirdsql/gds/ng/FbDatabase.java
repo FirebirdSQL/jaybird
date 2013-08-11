@@ -26,6 +26,8 @@
  */
 package org.firebirdsql.gds.ng;
 
+import org.firebirdsql.encodings.Encoding;
+import org.firebirdsql.encodings.IEncodingFactory;
 import org.firebirdsql.gds.DatabaseParameterBuffer;
 import org.firebirdsql.gds.TransactionParameterBuffer;
 
@@ -196,4 +198,15 @@ public interface FbDatabase {
      * @return Firebird version string
      */
     String getVersionString();
+
+    /**
+     * @return The {@link IEncodingFactory} for this connection
+     */
+    IEncodingFactory getEncodingFactory();
+
+    /**
+     * @return The connection encoding (should be the same as returned from calling {@link org.firebirdsql.encodings.IEncodingFactory#getDefaultEncoding()}
+     * on the result of {@link #getEncodingFactory()}.
+     */
+    Encoding getEncoding();
 }

@@ -33,6 +33,8 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
+import org.firebirdsql.encodings.EncodingFactory;
+import org.firebirdsql.encodings.IEncodingFactory;
 import org.firebirdsql.gds.GDSException;
 import org.firebirdsql.gds.IscDbHandle;
 import org.firebirdsql.gds.IscTrHandle;
@@ -53,6 +55,7 @@ public abstract class AbstractIscDbHandle implements IscDbHandle {
     private int ODSMajorVersion;
     private int ODSMinorVersion;
     protected final Collection<IscTrHandle> rdb_transactions = Collections.synchronizedList(new ArrayList<IscTrHandle>());
+    private IEncodingFactory encodingFactory = EncodingFactory.getDefaultInstance().withDefaultEncodingDefinition();
     
     public int getDatabaseProductMajorVersion() {
         return serverVersion.getMajorVersion();
@@ -165,6 +168,14 @@ public abstract class AbstractIscDbHandle implements IscDbHandle {
     public void removeTransaction(IscTrHandle tr) {
         checkValidity();
         rdb_transactions.remove(tr);
+    }
+
+    public IEncodingFactory getEncodingFactory() {
+        return encodingFactory;
+    }
+
+    public void setEncodingFactory(IEncodingFactory encodingFactory) {
+        this.encodingFactory = encodingFactory;
     }
     
     protected final synchronized void invalidateHandle() {

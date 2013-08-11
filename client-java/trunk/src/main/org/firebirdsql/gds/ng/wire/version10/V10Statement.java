@@ -204,7 +204,7 @@ public class V10Statement extends AbstractFbWireStatement implements FbWireState
             xdrOut.writeInt(getHandle());
             xdrOut.writeInt(getDatabase().getConnectionDialect());
             // TODO Include encoding!
-            xdrOut.writeString(statementText);
+            xdrOut.writeString(statementText, database.getEncoding());
             xdrOut.writeBuffer(getStatementInfoRequestItems());
             xdrOut.writeInt(getDefaultSqlInfoSize());
         }

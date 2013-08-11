@@ -189,7 +189,7 @@ public interface IEncodingFactory {
      *
      * @param encodingDefinition
      *         The default encoding to use (or <code>null</code> for the value of {@link #getDefaultEncoding()}
-     * @return IEncoding instance with the specified default.
+     * @return IEncodingFactory instance with the specified default.
      */
     IEncodingFactory withDefaultEncodingDefinition(EncodingDefinition encodingDefinition);
 }
