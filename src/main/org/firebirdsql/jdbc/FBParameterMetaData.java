@@ -155,6 +155,8 @@ public class FBParameterMetaData implements FirebirdParameterMetaData {
                 return 7;
             case Types.DOUBLE:
                 return 15;
+            case Types.BIGINT:
+                return 19;
             case Types.INTEGER:
                 return 10;
             case Types.SMALLINT:
@@ -165,6 +167,8 @@ public class FBParameterMetaData implements FirebirdParameterMetaData {
                 return 8;
             case Types.TIMESTAMP:
                 return 19;
+            case Types.BOOLEAN:
+                return 1;
             default:
                 return 0;
         }
@@ -252,6 +256,8 @@ public class FBParameterMetaData implements FirebirdParameterMetaData {
                     return Types.OTHER;
             case ISCConstants.SQL_QUAD:
                 return Types.OTHER;
+            case ISCConstants.SQL_BOOLEAN:
+                return Types.BOOLEAN;
             default:
                 return Types.NULL;
         }
@@ -326,6 +332,8 @@ public class FBParameterMetaData implements FirebirdParameterMetaData {
                     return "BLOB SUB_TYPE " + sqlsubtype;
             case ISCConstants.SQL_QUAD:
                 return "ARRAY";
+            case ISCConstants.SQL_BOOLEAN:
+                return "BOOLEAN";
             default:
                 return "NULL";
         }
@@ -395,9 +403,12 @@ public class FBParameterMetaData implements FirebirdParameterMetaData {
                 else {
                     return BigDecimal.class.getName();
                 }
+
+            case ISCConstants.SQL_BOOLEAN:
+                return Boolean.class.getName();
             
             default:
-                throw new SQLException("Unkown SQL type", 
+                throw new SQLException("Unknown SQL type",
                         FBSQLException.SQL_STATE_INVALID_PARAM_TYPE);
         }
     }

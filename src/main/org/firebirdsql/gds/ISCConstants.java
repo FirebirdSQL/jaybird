@@ -1942,7 +1942,7 @@ public interface ISCConstants {
     int SQL_TYPE_TIME = 560;
     int SQL_TYPE_DATE = 570;
     int SQL_INT64     = 580;
-    
+    int SQL_BOOLEAN   = 32764;
     int SQL_NULL      = 32766;
 
     /* Historical alias for pre V6 applications */
@@ -1952,6 +1952,6 @@ public interface ISCConstants {
     /* Other stuff     */
     /*******************/
     int CS_NONE    = 0; /* No Character Set */
-    int CS_BINARY  = 1;	/* BINARY BYTES */
+    int CS_BINARY  = 1; /* BINARY BYTES */
     int CS_dynamic = 127; // Pseudo number for runtime charset (see intl\charsets.h and references to it in Firebird)
 }

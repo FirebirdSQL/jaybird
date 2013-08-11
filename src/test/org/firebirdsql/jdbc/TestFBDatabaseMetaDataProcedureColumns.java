@@ -150,7 +150,6 @@ public class TestFBDatabaseMetaDataProcedureColumns extends FBMetaDataTestBase<T
         column.put(ProcedureColumnMetaData.PRECISION, 10);
         column.put(ProcedureColumnMetaData.LENGTH, 4);
         column.put(ProcedureColumnMetaData.SCALE, 0);
-        column.put(ProcedureColumnMetaData.RADIX, 10);
         column.put(ProcedureColumnMetaData.ORDINAL_POSITION, 2);
         column.put(ProcedureColumnMetaData.SPECIFIC_NAME, column.get(ProcedureColumnMetaData.PROCEDURE_NAME));
         expectedColumns.add(column);
@@ -187,7 +186,6 @@ public class TestFBDatabaseMetaDataProcedureColumns extends FBMetaDataTestBase<T
         column.put(ProcedureColumnMetaData.PRECISION, 10);
         column.put(ProcedureColumnMetaData.LENGTH, 4);
         column.put(ProcedureColumnMetaData.SCALE, 0);
-        column.put(ProcedureColumnMetaData.RADIX, 10);
         column.put(ProcedureColumnMetaData.ORDINAL_POSITION, 2);
         column.put(ProcedureColumnMetaData.SPECIFIC_NAME, column.get(ProcedureColumnMetaData.PROCEDURE_NAME));
         expectedColumns.add(column);
@@ -199,7 +197,6 @@ public class TestFBDatabaseMetaDataProcedureColumns extends FBMetaDataTestBase<T
         column.put(ProcedureColumnMetaData.TYPE_NAME, "DOUBLE PRECISION");
         column.put(ProcedureColumnMetaData.PRECISION, 15);
         column.put(ProcedureColumnMetaData.LENGTH, 8);
-        column.put(ProcedureColumnMetaData.RADIX, 10);
         column.put(ProcedureColumnMetaData.ORDINAL_POSITION, 3);
         column.put(ProcedureColumnMetaData.SPECIFIC_NAME, column.get(ProcedureColumnMetaData.PROCEDURE_NAME));
         expectedColumns.add(column);
@@ -224,7 +221,6 @@ public class TestFBDatabaseMetaDataProcedureColumns extends FBMetaDataTestBase<T
         column.put(ProcedureColumnMetaData.PRECISION, 18);
         column.put(ProcedureColumnMetaData.LENGTH, 8);
         column.put(ProcedureColumnMetaData.SCALE, 2);
-        column.put(ProcedureColumnMetaData.RADIX, 10);
         column.put(ProcedureColumnMetaData.REMARKS, "Some comment");
         column.put(ProcedureColumnMetaData.ORDINAL_POSITION, 2);
         column.put(ProcedureColumnMetaData.SPECIFIC_NAME, column.get(ProcedureColumnMetaData.PROCEDURE_NAME));
@@ -238,7 +234,6 @@ public class TestFBDatabaseMetaDataProcedureColumns extends FBMetaDataTestBase<T
         column.put(ProcedureColumnMetaData.PRECISION, 4);
         column.put(ProcedureColumnMetaData.LENGTH, 2);
         column.put(ProcedureColumnMetaData.SCALE, 3);
-        column.put(ProcedureColumnMetaData.RADIX, 10);
         column.put(ProcedureColumnMetaData.ORDINAL_POSITION, 3);
         column.put(ProcedureColumnMetaData.SPECIFIC_NAME, column.get(ProcedureColumnMetaData.PROCEDURE_NAME));
         expectedColumns.add(column);
@@ -305,7 +300,7 @@ public class TestFBDatabaseMetaDataProcedureColumns extends FBMetaDataTestBase<T
         defaults.put(ProcedureColumnMetaData.PROCEDURE_CAT, null);
         defaults.put(ProcedureColumnMetaData.PROCEDURE_SCHEM, null);
         defaults.put(ProcedureColumnMetaData.SCALE, null);
-        defaults.put(ProcedureColumnMetaData.RADIX, null);
+        defaults.put(ProcedureColumnMetaData.RADIX, 10);
         defaults.put(ProcedureColumnMetaData.NULLABLE, DatabaseMetaData.procedureNullable);
         defaults.put(ProcedureColumnMetaData.REMARKS, null);
         defaults.put(ProcedureColumnMetaData.COLUMN_DEF, null);
