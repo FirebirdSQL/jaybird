@@ -85,6 +85,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
     private static final byte[] RADIX_TEN = createInt(10);
     // TODO in implementation short and int are encoded identical, remove distinction?
     private static final byte[] RADIX_TEN_SHORT = createShort(10);
+    private static final byte[] RADIX_BINARY_SHORT = createShort(2);
     private static final byte[] TYPE_PRED_NONE = createShort(DatabaseMetaData.typePredNone);
     private static final byte[] TYPE_PRED_BASIC = createShort(DatabaseMetaData.typePredBasic);
     private static final byte[] TYPE_SEARCHABLE = createShort(DatabaseMetaData.typeSearchable);
@@ -105,6 +106,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
     private static final byte[] TIMESTAMP_PRECISION = createInt(19);
     private static final byte[] NUMERIC_PRECISION = createInt(18);
     private static final byte[] DECIMAL_PRECISION = createInt(18);
+    private static final byte[] BOOLEAN_PRECISION = createInt(1);
     private static final byte[] COLUMN_NO_NULLS = createInt(DatabaseMetaData.columnNoNulls);
     private static final byte[] COLUMN_NULLABLE = createInt(DatabaseMetaData.columnNullable);
     private static final byte[] IMPORTED_KEY_NO_ACTION = createShort(DatabaseMetaData.importedKeyNoAction);
@@ -2055,14 +2057,13 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
             // Defaults: some are overridden in the switch
             row[7] = null;
             row[9] = null;
-            row[10] = null;
+            row[10] = RADIX_TEN_SHORT;
             row[16] = null;
             switch (dataType){
                 case Types.DECIMAL:
                 case Types.NUMERIC:
                    row[7] = createInt(rs.getShort("FIELD_PRECISION"));
                    row[9] = createShort(-1 * fieldScale);
-                   row[10] = RADIX_TEN_SHORT;
                    break;
                 case Types.CHAR:
                 case Types.VARCHAR:
@@ -2076,26 +2077,21 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
                    break;
                 case Types.FLOAT:
                    row[7] = FLOAT_PRECISION;
-                   row[10] = RADIX_TEN_SHORT;
                    break;
                 case Types.DOUBLE:
                    row[7] = DOUBLE_PRECISION;
-                   row[10] = RADIX_TEN_SHORT;
                    break;
                 case Types.BIGINT:
                     row[7] = BIGINT_PRECISION;
                     row[9] = SHORT_ZERO;
-                    row[10] = RADIX_TEN_SHORT;
                     break;
                 case Types.INTEGER:
                    row[7] = INTEGER_PRECISION;
                    row[9] = SHORT_ZERO;
-                   row[10] = RADIX_TEN_SHORT;
                    break;
                 case Types.SMALLINT:
                    row[7] = SMALLINT_PRECISION;
                    row[9] = SHORT_ZERO;
-                   row[10] = RADIX_TEN_SHORT;
                    break;
                 case Types.DATE:
                    row[7] = DATE_PRECISION;
@@ -2106,6 +2102,9 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
                 case Types.TIMESTAMP:
                    row[7] = TIMESTAMP_PRECISION;
                    break;
+                case Types.BOOLEAN:
+                    row[7] = BOOLEAN_PRECISION;
+                    row[10] = RADIX_BINARY_SHORT;
                 default:
                    row[7] = null;
             }
@@ -2615,6 +2614,10 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
                 case Types.TIMESTAMP:
                    row[6] = TIMESTAMP_PRECISION;
                    break;
+                case Types.BOOLEAN:
+                    row[6] = BOOLEAN_PRECISION;
+                    row[9] = RADIX_BINARY;
+                    break;
                 default:
                    row[6] = null;
             }
@@ -2694,6 +2697,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
     private static final int varchar_type = 37;
 //  private static final int cstring_type = 40;
     private static final int blob_type = 261;
+    private static final short boolean_type = 23;
 
     private static int getDataType(int fieldType, int fieldSubType, int fieldScale) {
         switch (fieldType) {
@@ -2744,6 +2748,8 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
                     return Types.OTHER;
             case quad_type:
                 return Types.OTHER;
+            case boolean_type:
+                return Types.BOOLEAN;
             default:
                 return Types.NULL;
         }
@@ -2799,6 +2805,8 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
                     return "BLOB SUB_TYPE " + sqlsubtype;
             case quad_type:
                 return "ARRAY";
+            case boolean_type:
+                return "BOOLEAN";
             default:
                 return "NULL";
         }
@@ -4108,6 +4116,13 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
         rows.add(new byte[][]{ getBytes("BLOB SUB_TYPE <0 "), createShort(Types.BLOB), INT_ZERO, null, null, null,
                 TYPE_NULLABLE, CASESENSITIVE, TYPE_PRED_NONE, UNSIGNED, FIXEDSCALE, NOTAUTOINC, null, SHORT_ZERO,
                 SHORT_ZERO, createInt(ISCConstants.SQL_BLOB), null, RADIX_TEN });
+
+        //BOOLEAN=16
+        if (getDatabaseMajorVersion() >= 3) {
+            rows.add(new byte[][] {getBytes("BOOLEAN"), createShort(Types.BOOLEAN), BOOLEAN_PRECISION,
+                    null, null, null, TYPE_NULLABLE, CASEINSENSITIVE, TYPE_PRED_BASIC, UNSIGNED, FIXEDSCALE,
+                    NOTAUTOINC, null, SHORT_ZERO, SHORT_ZERO, createInt(ISCConstants.SQL_BOOLEAN), null, RADIX_BINARY});
+        }
 
         return new FBResultSet(xsqlvars, rows);
     }
