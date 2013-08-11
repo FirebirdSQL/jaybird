@@ -51,6 +51,8 @@
     <jar jarfile="${build.lib}/${archive.name.test}" manifest="${build.etc}/default.mf">
        <fileset dir="${build.test}">
          <include name="org/firebirdsql/**"/>
+         <include name="**/*.properties"/>
+         <include name="**/*.xml"/>
        </fileset>
        <fileset dir="${build.resources}">
          <include name="**/*.properties"/>

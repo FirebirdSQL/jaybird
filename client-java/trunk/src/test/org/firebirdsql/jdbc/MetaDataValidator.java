@@ -24,7 +24,7 @@ import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Types;
-import static junit.framework.Assert.*;
+import static org.junit.Assert.*;
 
 /**
  * Validator for columns of metadata resultsets.

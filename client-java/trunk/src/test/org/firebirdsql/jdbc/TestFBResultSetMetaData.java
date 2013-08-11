@@ -32,7 +32,7 @@ import java.util.Properties;
 import javax.sql.rowset.CachedRowSet;
 
 import static org.firebirdsql.common.FBTestProperties.*;
-import static junit.framework.Assert.*;
+import static org.junit.Assert.*;
 
 /**
  * This method tests correctness of {@link FBResultSetMetaData} class.
