@@ -16,7 +16,6 @@
  *
  * All rights reserved.
  */
-
 /*
  * The Original Code is the Firebird Java GDS implementation.
  *
@@ -24,56 +23,93 @@
  * Portions created by Alejandro Alberola are Copyright (C) 2001
  * Boix i Oltra, S.L. All Rights Reserved.
  */
-
 package org.firebirdsql.gds.impl.wire;
 
+import org.firebirdsql.encodings.Encoding;
+import org.firebirdsql.gds.ISCConstants;
+import org.firebirdsql.logging.Logger;
+import org.firebirdsql.logging.LoggerFactory;
 
+import java.io.BufferedOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.Arrays;
 
-import org.firebirdsql.gds.*;
-
-import org.firebirdsql.logging.Logger;
-import org.firebirdsql.logging.LoggerFactory;
-
 /**
- * An <code>XdrOutputStream</code> writes data in XDR format to an 
+ * An <code>XdrOutputStream</code> writes data in XDR format to an
  * underlying <code>java.io.OutputStream</code>.
+ * <p>
+ * This class is not thread-safe.
+ * </p>
  *
  * @author <a href="mailto:alberola@users.sourceforge.net">Alejandro Alberola</a>
  * @author <a href="mailto:d_jencks@users.sourceforge.net">David Jencks</a>
+ * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @version 1.0
  */
 public class XdrOutputStream {
 
     private static final int BUF_SIZE = 32767;
 
-    private static Logger log = LoggerFactory.getLogger(XdrOutputStream.class,false);
-    private static byte[] textPad = new byte[BUF_SIZE];
-    private static byte[] zero = new XSQLVAR().encodeInt(0);   // todo
-    private static byte[] minusOne = new XSQLVAR().encodeInt(-1);
+    private static final Logger log = LoggerFactory.getLogger(XdrOutputStream.class, false);
+    private static final byte[] textPad = new byte[BUF_SIZE];
+    private static final byte[] ZERO_PADDING = new byte[3];
+    public static final int SPACE_BYTE = 0x20;
+    public static final int NULL_BYTE = 0x0;
 
-    private byte[] buf = new byte[BUF_SIZE];
+    private final OutputStream out;
 
-    private int count;
+    // TODO In a lot of cases the padding written in this class should be NULL_BYTE instead of SPACE_BYTE
 
-    private OutputStream out = null;
-
-    protected XdrOutputStream() {
-        // empty, for subclasses.
-    }
-    
     /**
      * Create a new instance of <code>XdrOutputStream</code>.
      *
      * @param out The underlying <code>OutputStream</code> to write to
      */
     public XdrOutputStream(OutputStream out) {
-        this.out = out;
-        count=0;
+        this.out = new BufferedOutputStream(out, BUF_SIZE);
         // fill the padding with blanks
-        Arrays.fill(textPad,(byte) 32);
+        Arrays.fill(textPad, (byte) SPACE_BYTE);
+    }
+
+    /**
+     * Writes the <code>0x00</code> alignment for the specified length. This padding is calculated as
+     * <code>(4 - length) & 3</code>.
+     *
+     * @param length
+     *         The length of the previously written buffer to pad
+     * @throws IOException
+     *         if an error occurs while writing to the
+     *         underlying output stream
+     */
+    public void writeAlignment(int length) throws IOException {
+        out.write(ZERO_PADDING, 0, (4 - length) & 3);
+    }
+
+    /**
+     * Writes padding for the specified length of the specified padding byte.
+     *
+     * @param length
+     *         Length of padding to write
+     * @param padByte
+     *         Padding byte to use
+     * @throws IOException
+     *         if an error occurs while writing to the
+     *         underlying output stream
+     */
+    public void writePadding(int length, int padByte) throws IOException {
+        final byte[] padding;
+        if (padByte == SPACE_BYTE && length <= textPad.length) {
+            padding = textPad;
+        } else if (padByte == NULL_BYTE && length <= ZERO_PADDING.length) {
+            padding = ZERO_PADDING;
+        } else {
+            padding = new byte[length];
+            if (padByte != NULL_BYTE) {
+                Arrays.fill(padding, (byte) padByte);
+            }
+        }
+        out.write(padding, 0, length);
     }
 
     /**
@@ -81,7 +117,7 @@ public class XdrOutputStream {
      * XDR format.
      *
      * @param buffer The <code>byte</code> buffer to be written
-     * @throws IOException if an error occurs while writing to the 
+     * @throws IOException if an error occurs while writing to the
      *         underlying output stream
      */
     public void writeBuffer(byte[] buffer) throws IOException {
@@ -98,259 +134,122 @@ public class XdrOutputStream {
      * Write a blob buffer to the underlying output stream in XDR format.
      *
      * @param buffer A <code>byte</code> array containing the blob
-     * @throws IOException if an error occurs while writing to the 
+     * @throws IOException if an error occurs while writing to the
      *         underlying output stream
      */
     public void writeBlobBuffer(byte[] buffer) throws IOException {
-        int len = buffer.length ; // 2 for short for buffer length
+        int len = buffer.length; // 2 for short for buffer length
         if (log != null && log.isDebugEnabled()) log.debug("writeBlobBuffer len: " + len);
         if (len > Short.MAX_VALUE) {
             throw new IOException(""); //Need a value???
         }
         writeInt(len + 2);
         writeInt(len + 2); //bizarre but true! three copies of the length
-        checkBufferSize(2);
-        buf[count++] = (byte) ((len >> 0) & 0xff);
-        buf[count++] = (byte) ((len >> 8) & 0xff);
-        write(buffer, len, ((4 - len+2)&3));
+        write(len & 0xff);
+        write((len >> 8) & 0xff);
+        // TODO 4 - len + 2 or 4 - (len + 2) ?
+        write(buffer, len, ((4 - len + 2) & 3));
     }
 
     /**
-     * Write a <code>String</code> to the underlying output stream in
-     * XDR format.
-     *
-     * @param s The <code>String</code> to be written
-     * @throws IOException if an error occurs while writing to the 
-     *         underlying output stream
+     * Write content of the specified string using the specified encoding.
      */
-    public void writeString(String s) throws IOException {
-        byte[] buffer = s.getBytes();
-        writeBuffer(buffer);
-    }
-
-    /**
-     * Write content of the specified string using the specified Java encoding.
-     */
-    public void writeString(String s, String encoding) throws IOException {
-        if (encoding != null)
-            writeBuffer(s.getBytes(encoding));
-        else
+    public void writeString(String s, Encoding encoding) throws IOException {
+        if (encoding != null) {
+            byte[] buffer = encoding.encodeToCharset(s);
+            writeBuffer(buffer);
+        } else {
+            // TODO Remove this option (always require encoding)
             writeBuffer(s.getBytes());
-    }
-
-    /**
-     * Write a set of distinct byte values (ie parameter buffer).
-     *
-     * @param type The type of the parameter value being written, 
-     *        e.g. {@link ISCConstants#isc_tpb_version3}
-     * @param s The set of byte values to be written
-     * @throws IOException if an error occurs while writing to the 
-     *         underlying output stream
-     */
-    public void writeSet(int type, byte[] s) throws IOException {
-        if (s == null) {
-            writeInt(1);
-            checkBufferSize(1);
-            buf[count++] = (byte) type; //e.g. gds.isc_tpb_version3
-        }
-        else {
-            int len = s.length;
-            writeInt(len + 1);
-            checkBufferSize(1);
-            buf[count++] = (byte) type;
-            write(s, len, (4 - (len+1)) & 3);
         }
     }
 
     /**
      * Write an <code>Xdrable</code> to this output stream.
      *
-     * @param type Type of the <code>Xdrable</code> to be written, 
+     * @param type Type of the <code>Xdrable</code> to be written,
      *        e.g. {@link ISCConstants#isc_tpb_version3}
      * @param item The object to be written
-     * @throws IOException if an error occurs while writing to the 
+     * @throws IOException if an error occurs while writing to the
      *         underlying output stream
      */
     public void writeTyped(int type, Xdrable item) throws IOException {
         int size;
         if (item == null) {
             writeInt(1);
-            checkBufferSize(1);
-            buf[count++] = (byte) type; //e.g. gds.isc_tpb_version3
+            write(type); //e.g. gds.isc_tpb_version3
             size = 1;
-        }
-        else {
+        } else {
             size = item.getLength() + 1;
             writeInt(size);
-            checkBufferSize(1);
-            buf[count++] = (byte) type; //e.g. gds.isc_tpb_version3
+            write(type); //e.g. gds.isc_tpb_version3
             item.write(this);
         }
-        count += (4 - size) & 3;
+        writeAlignment(size);
     }
 
-    // 
-    // WriteSQLData methods
-    // 
+    private final byte writeBuffer[] = new byte[8];
 
-    /**
-     * Write a set of SQL data from a <code>XSQLDA</code> data structure.
-     *
-     * @param xsqlda The datastructure containing the SQL data to be written
-     * @throws IOException if an error occurs while writing to the 
-     *         underlying output stream
-     */
-    public void writeSQLData(XSQLDA xsqlda) throws IOException {
-        for (int i = 0; i < xsqlda.sqld; i++) {
-            XSQLVAR xsqlvar = xsqlda.sqlvar[i];
-            if (log != null && log.isDebugEnabled()) {
-                if (out == null) {
-                    log.debug("db.out null in writeSQLDatum");
-                }
-                if (xsqlvar.sqldata == null) {
-                    log.debug("sqldata null in writeSQLDatum: " + xsqlvar);
-                }
-                if (xsqlvar.sqldata == null) {
-                    log.debug("sqldata still null in writeSQLDatum: " + xsqlvar);
-                }
-            }
-            int len = xsqlda.ioLength[i];
-            byte[] buffer = xsqlvar.sqldata;
-            int tempType = xsqlvar.sqltype & ~1;
-            if (tempType == ISCConstants.SQL_NULL) {
-                write(xsqlvar.sqldata != null ? zero : minusOne, 4, 0);
-            } else
-            if (len==0) {
-                if (buffer != null) {
-                    len = buffer.length;
-                    writeInt(len);
-                    write(buffer, len, (4 - len) & 3);
-                    // sqlind
-                    write(zero, 4, 0);
-                }
-                else{
-                    writeInt(0);
-                    // sqlind
-                    write(minusOne, 4, 0);
-                }
-            }
-            else if (len < 0){
-                if (buffer != null) {
-                    write(buffer, -len, 0);
-                    // sqlind
-                    write(zero,4, 0);
-                }
-                else{
-                    write(textPad, -len, 0);
-                    // sqlind
-                    write(minusOne, 4, 0);
-                }
-            }
-            else {
-                // decrement length because it was incremented before
-                len--;
-                if (buffer != null) {
-                    int buflen = buffer.length;
-                    if (buflen >=len){
-                        write(buffer, len, (4 - len) & 3);
-                    }
-                    else{
-                        write(buffer, buflen, 0);
-                        write(textPad, len- buflen, (4 - len) & 3);
-                    }
-                    // sqlind
-                    write(zero, 4, 0);
-                }
-                else{
-                    write(textPad, len, (4 - len) & 3);
-                    // sqlind
-                    write(minusOne, 4, 0);
-                }
-            }
-        }
-    }
-
-    //
-    // DataOutputStream methods
-    // 
-    
     /**
      * Write a <code>long</code> value to the underlying stream in XDR format.
      *
      * @param v The <code>long</code> value to be written
-     * @throws IOException if an error occurs while writing to the 
+     * @throws IOException if an error occurs while writing to the
      *         underlying output stream
      */
     public void writeLong(long v) throws IOException {
-        checkBufferSize(8);
-        buf[count++] = (byte) (v >>> 56 & 0xFF);
-        buf[count++] = (byte) (v >>> 48 & 0xFF);
-        buf[count++] = (byte) (v >>> 40 & 0xFF);
-        buf[count++] = (byte) (v >>> 32 & 0xFF);
-        buf[count++] = (byte) (v >>> 24 & 0xFF);
-        buf[count++] = (byte) (v >>> 16 & 0xFF);
-        buf[count++] = (byte) (v >>>  8 & 0xFF);
-        buf[count++] = (byte) (v >>>  0 & 0xFF);
+        final byte[] buffer = writeBuffer;
+        buffer[0] = (byte) (v >>> 56);
+        buffer[1] = (byte) (v >>> 48);
+        buffer[2] = (byte) (v >>> 40);
+        buffer[3] = (byte) (v >>> 32);
+        buffer[4] = (byte) (v >>> 24);
+        buffer[5] = (byte) (v >>> 16);
+        buffer[6] = (byte) (v >>> 8);
+        buffer[7] = (byte) v;
+        out.write(buffer, 0, 8);
     }
 
     /**
      * Write an <code>int</code> value to the underlying stream in XDR format.
      *
      * @param v The <code>int</code> value to be written
-     * @throws IOException if an error occurs while writing to the 
+     * @throws IOException if an error occurs while writing to the
      *         underlying output stream
      */
     public void writeInt(int v) throws IOException {
-        checkBufferSize(4);
-        buf[count++] = (byte) (v >>> 24);
-        buf[count++] = (byte) (v >>> 16);
-        buf[count++] = (byte) (v >>>  8);
-        buf[count++] = (byte) (v >>>  0);
+        out.write((v >>> 24) & 0xFF);
+        out.write((v >>> 16) & 0xFF);
+        out.write((v >>> 8) & 0xFF);
+        out.write(v & 0xFF);
     }
-
-    //
-    // Buffering 
-    // If the piece to write is greater than 256 bytes, write it directly
-    //
 
     /**
      * Write a <code>byte</code> buffer to the underlying output stream
      * in XDR format
      *
-     * @param b The <code>byte</code> buffer to be written 
-     * @param len The number of bytes to write 
+     * @param b The <code>byte</code> buffer to be written
+     * @param len The number of bytes to write
      * @param pad The number of (blank) padding bytes to write
-     * @throws IOException if an error occurs while writing to the 
+     * @throws IOException if an error occurs while writing to the
      *         underlying output stream
      */
     public void write(byte[] b, int len, int pad) throws IOException {
-        if (len > 256 || count + len >= BUF_SIZE){
-            if (count > 0)
-                out.write(buf, 0, count);
-            out.write(b, 0, len);
-            out.write(textPad, 0, pad);
-            count = 0;
-        }
-        else {
-            checkBufferSize(len + pad);
-            System.arraycopy(b, 0, buf, count, len);
-            count += len;
-            System.arraycopy(textPad, 0, buf, count, pad);
-            count += pad;
-        }
+        out.write(b, 0, len);
+        // TODO We shouldn't always pad with spaces
+        writePadding(pad, SPACE_BYTE);
     }
 
     /**
-     * Write a single <code>byte</code> to the underlying output stream in 
+     * Write a single <code>byte</code> to the underlying output stream in
      * XDR format.
      *
      * @param b The value to be written, will be truncated to a byte
-     * @throws IOException if an error occurs while writing to the 
+     * @throws IOException if an error occurs while writing to the
      *         underlying output stream
      */
     public void write(int b) throws IOException {
-        checkBufferSize(1);
-        buf[count++] = (byte)b;
+        out.write(b);
     }
 
     /**
@@ -358,53 +257,30 @@ public class XdrOutputStream {
      * in XDR format.
      *
      * @param b The <code>byte</code> array to be written
-     * @throws IOException if an error occurs while writing to the 
+     * @throws IOException if an error occurs while writing to the
      *         underlying output stream
      */
-    public void write(byte b[]) throws IOException{
-        write(b,b.length, 0);
+    public void write(byte[] b) throws IOException {
+        out.write(b, 0, b.length);
     }
 
     /**
      * Flush all buffered data to the underlying output stream.
-     * 
-     * @throws IOException if an error occurs while writing to the 
+     *
+     * @throws IOException if an error occurs while writing to the
      *         underlying output stream
      */
     public void flush() throws IOException {
-        if (count > 0){
-            out.write(buf,0,count);
-        }
-        count=0;
         out.flush();
     }
 
     /**
      * Close this stream and the underlying output stream.
      *
-     * @throws IOException if an error occurs while closing the 
+     * @throws IOException if an error occurs while closing the
      *         underlying stream
      */
     public void close() throws IOException {
-        try {
-            out.close();
-        } finally {
-            buf = null;
-            out = null;
-        }
-    }
-
-
-    /**
-     * Ensure that there is room in the buffer for a given number
-     * of direct writes to it.
-     * @param countToWrite The size of write that is being checked.
-     * @throws IOException If a write to the underlying OutputStream fails
-     */
-    private void checkBufferSize(int countToWrite) throws IOException {
-        if (BUF_SIZE - count <= countToWrite){
-            out.write(buf, 0, count);
-            count = 0;
-        }
+        out.close();
     }
 }

@@ -25,6 +25,8 @@
 
 package org.firebirdsql.gds;
 
+import org.firebirdsql.encodings.IEncodingFactory;
+
 import java.util.List;
 
 /**
@@ -62,4 +64,8 @@ public interface IscSvcHandle {
      * Clear warning list associated with this connection.
      */
     void clearWarnings();
+
+    IEncodingFactory getEncodingFactory();
+
+    void setEncodingFactory(IEncodingFactory encodingFactory);
 }

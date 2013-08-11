@@ -20,6 +20,7 @@
  */
 package org.firebirdsql.gds.ng.wire;
 
+import org.firebirdsql.encodings.Encoding;
 import org.firebirdsql.encodings.EncodingDefinition;
 import org.firebirdsql.encodings.EncodingFactory;
 import org.firebirdsql.encodings.IEncodingFactory;
@@ -258,6 +259,10 @@ public final class WireConnection implements XdrStreamAccess {
         return this.encodingDefinition;
     }
 
+    public Encoding getEncoding() {
+        return this.encodingDefinition.getEncoding();
+    }
+
     public IEncodingFactory getEncodingFactory() {
         return encodingFactory;
     }
@@ -298,7 +303,7 @@ public final class WireConnection implements XdrStreamAccess {
             xdrOut.writeInt(CONNECT_VERSION2);
             xdrOut.writeInt(arch_generic);
 
-            xdrOut.writeString(getDatabaseName());
+            xdrOut.writeString(getDatabaseName(), getEncoding());
             xdrOut.writeInt(protocols.getProtocolCount()); // Count of protocols understood
             xdrOut.writeBuffer(userId.toByteArray());
 
@@ -312,7 +317,7 @@ public final class WireConnection implements XdrStreamAccess {
 
             xdrOut.flush();
 
-            if (xdrIn.readNextOperation() == op_accept) {
+            if (readNextOperation() == op_accept) {
                 protocolVersion = xdrIn.readInt(); // Protocol version
                 protocolArchitecture = xdrIn.readInt(); // Architecture for protocol
                 protocolMinimumType = xdrIn.readInt(); // Minimum type
@@ -341,6 +346,21 @@ public final class WireConnection implements XdrStreamAccess {
         } catch (IOException ioex) {
             throw new FbExceptionBuilder().exception(ISCConstants.isc_network_error).messageParameter(getServerName()).cause(ioex).toSQLException();
         }
+    }
+
+    /**
+     * Reads the next operation code. Skips all {@link org.firebirdsql.gds.impl.wire.WireProtocolConstants#op_dummy} codes received.
+     *
+     * @return Operation code
+     * @throws IOException
+     *         if an error occurs while reading from the underlying InputStream
+     */
+    public int readNextOperation() throws IOException {
+        int op;
+        do {
+            op = xdrIn.readInt();
+        } while (op == op_dummy);
+        return op;
     }
 
     /**

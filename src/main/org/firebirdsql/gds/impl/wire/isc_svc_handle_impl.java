@@ -33,6 +33,8 @@ import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
+import org.firebirdsql.encodings.EncodingFactory;
+import org.firebirdsql.encodings.IEncodingFactory;
 import org.firebirdsql.gds.GDSException;
 import org.firebirdsql.gds.IscSvcHandle;
 
@@ -52,6 +54,7 @@ public final class isc_svc_handle_impl implements IscSvcHandle {
     private int resp_object;
     private long resp_blob_id;
     private byte[] resp_data;
+    private IEncodingFactory encodingFactory = EncodingFactory.getDefaultInstance().withDefaultEncodingDefinition();
 
     public isc_svc_handle_impl() {
         this.invalid = true;
@@ -136,7 +139,17 @@ public final class isc_svc_handle_impl implements IscSvcHandle {
         checkValidity();
         warnings.clear();
     }
-    
+
+    @Override
+    public IEncodingFactory getEncodingFactory() {
+        return encodingFactory;
+    }
+
+    @Override
+    public void setEncodingFactory(IEncodingFactory encodingFactory) {
+        this.encodingFactory = encodingFactory;
+    }
+
     /* (non-Javadoc)
      * @see org.firebirdsql.gds.isc_svc_handle#isNotValid()
      */

@@ -45,7 +45,7 @@ public final class isc_db_handle_impl extends AbstractIscDbHandle {
 
     Socket socket;
     public XdrOutputStream out;
-    public WireXdrInputStream in;
+    public XdrInputStream in;
     EventCoordinator eventCoordinator;
     private int resp_object;
     private byte[] resp_data;
@@ -84,15 +84,15 @@ public final class isc_db_handle_impl extends AbstractIscDbHandle {
                     ioeToThrow = e;
                 }
             }
+            if (ioeToThrow != null) {
+                throw ioeToThrow;
+            }
         } finally {
             in = null;
             out = null;
             socket = null;
     
             invalidateHandle();
-            if (ioeToThrow != null) {
-                throw ioeToThrow;
-            }
         }
     }
     

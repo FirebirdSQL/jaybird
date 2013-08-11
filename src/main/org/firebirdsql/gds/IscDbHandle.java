@@ -32,6 +32,8 @@
 
 package org.firebirdsql.gds;
 
+import org.firebirdsql.encodings.IEncodingFactory;
+
 import java.util.Collection;
 import java.util.List;
 
@@ -164,5 +166,9 @@ public interface IscDbHandle {
     void setRdbId(int rdb_id);
     
     int getRdbId();
+
+    IEncodingFactory getEncodingFactory();
+
+    void setEncodingFactory(IEncodingFactory encodingFactory);
 }
 
