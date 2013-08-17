@@ -21,7 +21,6 @@
 package org.firebirdsql.jdbc.field;
 
 import org.firebirdsql.gds.ISCConstants;
-import org.firebirdsql.gds.XSQLVAR;
 import org.junit.Before;
 import org.junit.Test;
 

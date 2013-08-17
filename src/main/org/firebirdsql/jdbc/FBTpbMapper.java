@@ -22,18 +22,14 @@ package org.firebirdsql.jdbc;
 
 import org.firebirdsql.gds.GDS;
 import org.firebirdsql.gds.ISCConstants;
+import org.firebirdsql.gds.ParameterBufferHelper;
 import org.firebirdsql.gds.TransactionParameterBuffer;
 import org.firebirdsql.jca.FBResourceException;
+import org.firebirdsql.util.ObjectUtils;
 
 import java.io.Serializable;
 import java.sql.Connection;
-import java.util.Enumeration;
-import java.util.HashMap;
-import java.util.Locale;
-import java.util.Map;
-import java.util.MissingResourceException;
-import java.util.ResourceBundle;
-import java.util.StringTokenizer;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -45,8 +41,6 @@ import java.util.concurrent.ConcurrentHashMap;
 public class FBTpbMapper implements Serializable, Cloneable {
 
     private static final long serialVersionUID = 1690658870275668176L;
-
-    public static final String DEFAULT_MAPPING_RESOURCE = "isc_tpb_mapping";
 
     public static FBTpbMapper getDefaultMapper(GDS gds) {
         return new FBTpbMapper(gds);
@@ -173,9 +167,9 @@ public class FBTpbMapper implements Serializable, Cloneable {
         readCommittedTpb.addArgument(ISCConstants.isc_tpb_read_committed);
         readCommittedTpb.addArgument(ISCConstants.isc_tpb_rec_version);
 
-        mapping.put(Integer.valueOf(Connection.TRANSACTION_SERIALIZABLE), serializableTpb);
-        mapping.put(Integer.valueOf(Connection.TRANSACTION_REPEATABLE_READ), repeatableReadTpb);
-        mapping.put(Integer.valueOf(Connection.TRANSACTION_READ_COMMITTED), readCommittedTpb);
+        mapping.put(Connection.TRANSACTION_SERIALIZABLE, serializableTpb);
+        mapping.put(Connection.TRANSACTION_REPEATABLE_READ, repeatableReadTpb);
+        mapping.put(Connection.TRANSACTION_READ_COMMITTED, readCommittedTpb);
     }
 
     /**
@@ -230,7 +224,7 @@ public class FBTpbMapper implements Serializable, Cloneable {
             String jdbcTxIsolation = entry.getKey();
             Integer isolationLevel;
             try {
-                isolationLevel = Integer.valueOf(getTransactionIsolationLevel(jdbcTxIsolation));
+                isolationLevel = getTransactionIsolationLevel(jdbcTxIsolation);
             } catch (IllegalArgumentException ex) {
                 throw new FBResourceException(
                         "Transaction isolation " + jdbcTxIsolation +
@@ -275,6 +269,43 @@ public class FBTpbMapper implements Serializable, Cloneable {
     }
 
     /**
+     * This method extracts TPB mapping information from the connection
+     * parameters and adds it to the connectionProperties. Two formats are supported:
+     * <ul>
+     * <li><code>info</code> contains <code>"tpb_mapping"</code> parameter
+     * pointing to a resource bundle with mapping information;
+     * <li><code>info</code> contains separate mappings for each of following
+     * transaction isolation levels: <code>"TRANSACTION_SERIALIZABLE"</code>,
+     * <code>"TRANSACTION_REPEATABLE_READ"</code> and
+     * <code>"TRANSACTION_READ_COMMITTED"</code>.
+     * </ul>
+     *
+     * @param gds GDS object
+     * @param connectionProperties FirebirdConnectionProperties to set transaction state
+     * @param info connection parameters passed into a driver.
+     *
+     * @throws FBResourceException if specified mapping is incorrect.
+     */
+    public static void processMapping(GDS gds, FirebirdConnectionProperties connectionProperties, Properties info)
+            throws FBResourceException {
+
+        if (info.containsKey(TRANSACTION_SERIALIZABLE))
+            connectionProperties.setTransactionParameters(
+                    Connection.TRANSACTION_SERIALIZABLE,
+                    processMapping(gds, info.getProperty(TRANSACTION_SERIALIZABLE)));
+
+        if (info.containsKey(TRANSACTION_REPEATABLE_READ))
+            connectionProperties.setTransactionParameters(
+                    Connection.TRANSACTION_REPEATABLE_READ,
+                    processMapping(gds, info.getProperty(TRANSACTION_REPEATABLE_READ)));
+
+        if (info.containsKey(TRANSACTION_READ_COMMITTED))
+            connectionProperties.setTransactionParameters(
+                    Connection.TRANSACTION_READ_COMMITTED,
+                    processMapping(gds, info.getProperty(TRANSACTION_READ_COMMITTED)));
+    }
+
+    /**
      * Process comma-separated list of keywords and convert them into TPB
      * values.
      * 
@@ -291,12 +322,12 @@ public class FBTpbMapper implements Serializable, Cloneable {
         StringTokenizer st = new StringTokenizer(mapping, ",");
         while (st.hasMoreTokens()) {
             String token = st.nextToken();
-            Integer value = FBConnectionHelper.getTpbParam(token);
+            Integer value = ParameterBufferHelper.getTpbParam(token);
             if (value == null)
                 throw new FBResourceException(
                 		"Keyword " + token + " unknown. Please check your mapping.");
 
-            result.addArgument(value.intValue());
+            result.addArgument(value);
         }
 
         return result;
@@ -319,11 +350,11 @@ public class FBTpbMapper implements Serializable, Cloneable {
         case Connection.TRANSACTION_SERIALIZABLE:
         case Connection.TRANSACTION_REPEATABLE_READ:
         case Connection.TRANSACTION_READ_COMMITTED:
-            return mapping.get(Integer.valueOf(transactionIsolation)).deepCopy();
+            return mapping.get(transactionIsolation).deepCopy();
 
             // promote transaction
         case Connection.TRANSACTION_READ_UNCOMMITTED:
-            return mapping.get(Integer.valueOf(Connection.TRANSACTION_READ_COMMITTED)).deepCopy();
+            return mapping.get(Connection.TRANSACTION_READ_COMMITTED).deepCopy();
 
         case Connection.TRANSACTION_NONE:
         default:
@@ -347,7 +378,7 @@ public class FBTpbMapper implements Serializable, Cloneable {
         case Connection.TRANSACTION_SERIALIZABLE:
         case Connection.TRANSACTION_REPEATABLE_READ:
         case Connection.TRANSACTION_READ_COMMITTED:
-            mapping.put(Integer.valueOf(transactionIsolation), tpb);
+            mapping.put(transactionIsolation, tpb);
             break;
 
         case Connection.TRANSACTION_READ_UNCOMMITTED:
@@ -366,7 +397,7 @@ public class FBTpbMapper implements Serializable, Cloneable {
      * @return mapping for the default transaction isolation level.
      */
     public TransactionParameterBuffer getDefaultMapping() {
-        return mapping.get(Integer.valueOf(defaultIsolationLevel));
+        return mapping.get(defaultIsolationLevel);
     }
 
     public int getDefaultTransactionIsolation() {
@@ -387,19 +418,15 @@ public class FBTpbMapper implements Serializable, Cloneable {
         }
 
         FBTpbMapper that = (FBTpbMapper) obj;
-        boolean result = true;
-        result &= this.mapping.equals(that.mapping);
+        boolean result = this.mapping.equals(that.mapping);
         result &= (this.defaultIsolationLevel == that.defaultIsolationLevel);
 
         return result;
     }
 
     public int hashCode() {
-        int result = 31;
         // TODO both these values are mutable, so potentially unstable hashcode
-        result = result * 83 + mapping.hashCode();
-        result = result * 83 + defaultIsolationLevel;
-        return result;
+        return ObjectUtils.hash(mapping, defaultIsolationLevel);
     }
 
     public Object clone() {
