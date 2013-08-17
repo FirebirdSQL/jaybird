@@ -54,7 +54,7 @@ public class FBDriver implements FirebirdDriver {
      * standard connection.
      */
 
-    private Map<FBManagedConnectionFactory, FBDataSource> mcfToDataSourceMap = 
+    private final Map<FBManagedConnectionFactory, FBDataSource> mcfToDataSourceMap =
             Collections.synchronizedMap(new WeakHashMap<FBManagedConnectionFactory, FBDataSource>());
 
     static {
@@ -116,7 +116,7 @@ public class FBDriver implements FirebirdDriver {
                 mcf.setNonStandardProperty(entry.getKey(), entry.getValue());
             }
 
-            FBConnectionHelper.processTpbMapping(mcf.getGDS(), mcf, originalInfo);
+            FBTpbMapper.processMapping(mcf.getGDS(), mcf, originalInfo);
             
             mcf = mcf.canonicalize();
 
@@ -132,7 +132,7 @@ public class FBDriver implements FirebirdDriver {
     }
 
     private FBDataSource createDataSource(FBManagedConnectionFactory mcf) throws ResourceException {
-        FBDataSource dataSource = null;
+        FBDataSource dataSource;
         synchronized (mcfToDataSourceMap) {
             dataSource = mcfToDataSourceMap.get(mcf);
             
@@ -148,7 +148,7 @@ public class FBDriver implements FirebirdDriver {
         GDSType type = GDSType.getType(properties.getType());
         
         if (type == null)
-            type = ((AbstractGDS)GDSFactory.getDefaultGDS()).getType();
+            type = GDSFactory.getDefaultGDS().getType();
         try {
             FBManagedConnectionFactory mcf = new FBManagedConnectionFactory(type);
     

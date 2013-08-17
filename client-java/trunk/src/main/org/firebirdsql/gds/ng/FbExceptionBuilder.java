@@ -202,6 +202,7 @@ public final class FbExceptionBuilder {
      * @param type
      *         Type of exception
      * @param errorCode
+     *         The Firebird error code
      */
     private void setNextExceptionInformation(Type type, final int errorCode) {
         current = new ExceptionInformation(type, errorCode);
@@ -358,8 +359,7 @@ public final class FbExceptionBuilder {
             public SQLException createSQLException(final String message, final String sqlState, final int errorCode) {
                 return new SQLNonTransientException(message, sqlState, errorCode);
             }
-        }
-        ;
+        };
 
         private final String defaultSQLState;
 

@@ -913,14 +913,8 @@ public abstract class AbstractJavaGDSImpl extends AbstractGDS implements GDS {
         for (int i = 0; i < xsqlda.sqld; i++) {
             XSQLVAR xsqlvar = xsqlda.sqlvar[i];
             if (log != null && log.isDebugEnabled()) {
-                if (out == null) {
-                    log.debug("db.out null in writeSQLDatum");
-                }
                 if (xsqlvar.sqldata == null) {
-                    log.debug("sqldata null in writeSQLDatum: " + xsqlvar);
-                }
-                if (xsqlvar.sqldata == null) {
-                    log.debug("sqldata still null in writeSQLDatum: " + xsqlvar);
+                    log.debug("sqldata null in writeSQLData: " + xsqlvar);
                 }
             }
             int len = xsqlda.ioLength[i];
@@ -952,7 +946,7 @@ public abstract class AbstractJavaGDSImpl extends AbstractGDS implements GDS {
                 }
             } else {
                 // decrement length because it was incremented before
-                // TODO Where was it incremented?
+                // increment happens in calculateIOLength
                 len--;
                 if (buffer != null) {
                     int buflen = buffer.length;
@@ -1170,7 +1164,6 @@ public abstract class AbstractJavaGDSImpl extends AbstractGDS implements GDS {
 								op = nextOperation(db.in);
 								if (op == op_response) {
 									receiveResponse(db, op);
-									continue;
 								}
 							} while (false);
 						}
@@ -1429,7 +1422,7 @@ public abstract class AbstractJavaGDSImpl extends AbstractGDS implements GDS {
 				(blobParameterBuffer == null) ? op_open_blob : op_open_blob2);
 	}
 
-	private final void openOrCreateBlob(IscDbHandle db_handle,
+	private void openOrCreateBlob(IscDbHandle db_handle,
 			IscTrHandle tr_handle, IscBlobHandle blob_handle, // contains
 			// blob_id
 			BlobParameterBuffer blobParameterBuffer, int op)
@@ -1523,7 +1516,7 @@ public abstract class AbstractJavaGDSImpl extends AbstractGDS implements GDS {
 				// has no data
 				// return buffer;
 				// }
-				int len = 0;
+				int len;
 				int srcpos = 0;
 				int destpos = 0;
 				// TODO It looks like this might cause IndexOutOfBounds if srcpos = bufferLength - 1 and bufferLength = buffer.length
@@ -1885,7 +1878,7 @@ public abstract class AbstractJavaGDSImpl extends AbstractGDS implements GDS {
 
 	protected int nextOperation(XdrInputStream in) throws IOException {
 		boolean debug = log != null && log.isDebugEnabled();
-		int op = 0;
+		int op;
 		do {
 			op = in.readInt();
 			if (debug && op == op_dummy) {
@@ -1978,7 +1971,7 @@ public abstract class AbstractJavaGDSImpl extends AbstractGDS implements GDS {
 	}
 
 	public static void calculateBLR(XSQLDA xsqlda) throws GDSException {
-		int blr_len = 0;
+		int blr_len;
 
 		if (xsqlda != null) {
 			// Determine the BLR length
@@ -2112,13 +2105,13 @@ public abstract class AbstractJavaGDSImpl extends AbstractGDS implements GDS {
             int dataLength = iscVaxInteger2(info, ++i);
             i += 2;
             int statementType = iscVaxInteger(info, i, dataLength);
-            ((isc_stmt_handle_impl)stmt_handle).setStatementType(statementType);
+            stmt_handle.setStatementType(statementType);
             i += dataLength;
         }
         
 		XSQLDA xsqlda = new XSQLDA();
 		int lastindex = 0;
-		int index = 0;
+		int index;
 		while ((index = parseTruncSqlInfo(i + 2, info, infoLength, xsqlda, lastindex)) > 0) {
 			byte[] new_items = new byte[4 + items.length - 1];
 			new_items[0] = ISCConstants.isc_info_sql_sqlda_start;

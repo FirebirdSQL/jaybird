@@ -28,10 +28,12 @@ import java.util.Map;
 import org.firebirdsql.encodings.EncodingFactory;
 import org.firebirdsql.gds.DatabaseParameterBuffer;
 import org.firebirdsql.gds.GDS;
+import org.firebirdsql.gds.ParameterBufferHelper;
 import org.firebirdsql.gds.TransactionParameterBuffer;
 import org.firebirdsql.gds.impl.GDSFactory;
 import org.firebirdsql.gds.impl.GDSType;
 import org.firebirdsql.jca.FBResourceException;
+import org.firebirdsql.util.ObjectUtils;
 
 public class FBConnectionProperties implements FirebirdConnectionProperties, Serializable, Cloneable {
 
@@ -70,11 +72,7 @@ public class FBConnectionProperties implements FirebirdConnectionProperties, Ser
 
     private int getIntProperty(String name) {
         Integer value = (Integer) properties.get(getCanonicalName(name));
-
-        if (value == null)
-            return 0;
-
-        return value.intValue();
+        return value != null ? value : 0;
     }
 
     private String getCanonicalName(String propertyName) {
@@ -95,7 +93,7 @@ public class FBConnectionProperties implements FirebirdConnectionProperties, Ser
     }
 
     private void setIntProperty(String name, int value) {
-        properties.put(getCanonicalName(name), Integer.valueOf(value));
+        properties.put(getCanonicalName(name), value);
     }
 
     private void setStringProperty(String name, String value) {
@@ -105,7 +103,7 @@ public class FBConnectionProperties implements FirebirdConnectionProperties, Ser
             setType(value);
 
         name = getCanonicalName(name);
-        Object objValue = FBConnectionHelper.parseDpbString(name, value);
+        Object objValue = ParameterBufferHelper.parseDpbString(name, value);
 
         properties.put(name, objValue);
     }
@@ -119,13 +117,7 @@ public class FBConnectionProperties implements FirebirdConnectionProperties, Ser
     }
 
     public int hashCode() {
-        int result = 17;
-        
-        // Hash is built only from fields that are least likely to change (see JDBC-249)
-        result = result * 151 + (type != null ? type.hashCode() : 0);
-        result = result * 151 + (database != null ? database.hashCode() : 0);
-
-        return result;
+        return ObjectUtils.hash(type, database);
     }
 
     public boolean equals(Object obj) {
@@ -140,13 +132,13 @@ public class FBConnectionProperties implements FirebirdConnectionProperties, Ser
         boolean result = true;
 
         result &= this.properties.equals(that.properties);
-        result &= this.type != null ? this.type.equals(that.type) : that.type == null;
-        result &= this.database != null ? this.database.equals(that.database) : that.database == null;
-        result &= this.tpbMapping != null ? this.tpbMapping.equals(that.tpbMapping) : that.tpbMapping == null;
+        result &= ObjectUtils.equals(this.type, that.type);
+        result &= ObjectUtils.equals(this.database, that.database);
+        result &= ObjectUtils.equals(this.tpbMapping, that.tpbMapping);
         result &= this.defaultTransactionIsolation == that.defaultTransactionIsolation;
         result &= this.customMapping.equals(that.customMapping);
         // If one or both are null we are identical (see also JDBC-249)
-        result &= (this.mapper == null || that.mapper == null) ? true : this.mapper.equals(that.mapper);
+        result &= (this.mapper == null || that.mapper == null) || this.mapper.equals(that.mapper);
 
         return result;
     }
@@ -377,9 +369,7 @@ public class FBConnectionProperties implements FirebirdConnectionProperties, Ser
         StringBuilder value = new StringBuilder();
 
         boolean keyProcessed = false;
-        for (int i = 0; i < chars.length; i++) {
-            char ch = chars[i];
-
+        for (char ch : chars) {
             boolean isSeparator = Character.isWhitespace(ch) || ch == '=' || ch == ':';
 
             // if no key was processed, ignore white spaces
@@ -388,12 +378,10 @@ public class FBConnectionProperties implements FirebirdConnectionProperties, Ser
 
             if (!keyProcessed && !isSeparator) {
                 key.append(ch);
-            } else if (!keyProcessed && isSeparator) {
+            } else if (!keyProcessed) {
                 keyProcessed = true;
-            } else if (keyProcessed && value.length() == 0 && isSeparator) {
-                continue;
-            } else if (keyProcessed) {
-                value.append(ch);
+            } else if (value.length() != 0 || !isSeparator) {
+                    value.append(ch);
             }
         }
 
@@ -411,22 +399,22 @@ public class FBConnectionProperties implements FirebirdConnectionProperties, Ser
             String propertyName = entry.getKey();
             Object value = entry.getValue();
 
-            Integer dpbType = FBConnectionHelper.getDpbKey(propertyName);
+            Integer dpbType = ParameterBufferHelper.getDpbKey(propertyName);
 
             if (dpbType == null)
                 continue;
 
             if (value instanceof Boolean) {
-                if (((Boolean) value).booleanValue())
-                    dpb.addArgument(dpbType.intValue());
+                if ((Boolean) value)
+                    dpb.addArgument(dpbType);
             } else if (value instanceof Byte) {
-                dpb.addArgument(dpbType.intValue(), new byte[] { ((Byte) value).byteValue() });
+                dpb.addArgument(dpbType, new byte[] { (Byte) value });
             } else if (value instanceof Integer) {
-                dpb.addArgument(dpbType.intValue(), ((Integer) value).intValue());
+                dpb.addArgument(dpbType, (Integer) value);
             } else if (value instanceof String) {
-                dpb.addArgument(dpbType.intValue(), (String) value);
+                dpb.addArgument(dpbType, (String) value);
             } else if (value == null)
-                dpb.addArgument(dpbType.intValue());
+                dpb.addArgument(dpbType);
         }
         return dpb;
     }
@@ -467,11 +455,11 @@ public class FBConnectionProperties implements FirebirdConnectionProperties, Ser
         if (mapper != null)
             return mapper.getMapping(isolation);
         else
-            return customMapping.get(Integer.valueOf(isolation));
+            return customMapping.get(isolation);
     }
 
     public void setTransactionParameters(int isolation, TransactionParameterBuffer tpb) {
-        customMapping.put(Integer.valueOf(isolation), tpb);
+        customMapping.put(isolation, tpb);
         if (mapper != null)
             mapper.setMapping(isolation, tpb);
     }
@@ -492,7 +480,7 @@ public class FBConnectionProperties implements FirebirdConnectionProperties, Ser
             Integer isolation = entry.getKey();
             TransactionParameterBuffer tpb = entry.getValue();
 
-            mapper.setMapping(isolation.intValue(), tpb);
+            mapper.setMapping(isolation, tpb);
         }
 
         return mapper;
