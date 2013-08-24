@@ -16,7 +16,6 @@
  *
  * All rights reserved.
  */
-
 package org.firebirdsql.gds.impl.jni;
 
 import org.firebirdsql.gds.DatabaseParameterBuffer;
@@ -24,6 +23,7 @@ import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.impl.DatabaseParameterBufferExtension;
 
 import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 
 /**
  * 
@@ -46,17 +46,20 @@ public class DatabaseParameterBufferImp extends ParameterBufferBase implements
     }
 
     /**
-     * Pacakage local method for obtaining buffer suitable for passing to native
+     * Package local method for obtaining buffer suitable for passing to native
      * method.
      * 
      * @return
      */
     byte[] getBytesForNativeCode() {
         final ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-
         byteArrayOutputStream.write(ISCConstants.isc_dpb_version1);
 
-        super.writeArgumentsTo(byteArrayOutputStream);
+        try {
+            super.writeArgumentsTo(byteArrayOutputStream);
+        } catch (IOException e) {
+            // Ignoring IOException, not thrown by ByteArrayOutputStream
+        }
 
         return byteArrayOutputStream.toByteArray();
     }
@@ -65,12 +68,9 @@ public class DatabaseParameterBufferImp extends ParameterBufferBase implements
         DatabaseParameterBuffer copy = deepCopy();
         
         for (int i = 0; i < DatabaseParameterBufferExtension.EXTENSION_PARAMETERS.length; i++) {
-            copy.removeArgument(
-                DatabaseParameterBufferExtension.EXTENSION_PARAMETERS[i]);
+            copy.removeArgument(DatabaseParameterBufferExtension.EXTENSION_PARAMETERS[i]);
         }
         
         return copy;
     }
-    
-    
 }

@@ -1,4 +1,6 @@
 /*
+ * $Id$
+ *
  * Firebird Open Source J2ee connector - jdbc driver
  *
  * Distributable under LGPL license.
@@ -18,17 +20,17 @@
  */
 package org.firebirdsql.gds.impl.jni;
 
+import java.io.IOException;
+import java.io.OutputStream;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Arrays;
-
-import java.io.ByteArrayOutputStream;
 
 /**
  * Provides implementation common to both ServiceParameterBufferImp and
  * ServiceRequestBufferImp
  */
-abstract class ParameterBufferBase implements java.io.Serializable {
+public abstract class ParameterBufferBase implements java.io.Serializable {
 
     // Parameter Buffer Implementation
 
@@ -50,10 +52,9 @@ abstract class ParameterBufferBase implements java.io.Serializable {
 
     public String getArgumentAsString(int type) {
         final List<Argument> argumentsList = getArgumentsList();
-        for (int i = 0, n = argumentsList.size(); i < n; i++) {
-            final Argument argument = argumentsList.get(i);
-            if (argument.getType() == type) { 
-                return argument.getValueAsString(); 
+        for (final Argument argument : argumentsList) {
+            if (argument.getType() == type) {
+                return argument.getValueAsString();
             }
         }
         return null;
@@ -61,10 +62,9 @@ abstract class ParameterBufferBase implements java.io.Serializable {
 
     public int getArgumentAsInt(int type) {
         final List<Argument> argumentsList = getArgumentsList();
-        for (int i = 0, n = argumentsList.size(); i < n; i++) {
-            final Argument argument = argumentsList.get(i);
-            if (argument.getType() == type) { 
-                return argument.getValueAsInt(); 
+        for (final Argument argument : argumentsList) {
+            if (argument.getType() == type) {
+                return argument.getValueAsInt();
             }
         }
         return 0;
@@ -72,8 +72,7 @@ abstract class ParameterBufferBase implements java.io.Serializable {
 
     public boolean hasArgument(int type) {
         final List<Argument> argumentsList = getArgumentsList();
-        for (int i = 0, n = argumentsList.size(); i < n; i++) {
-            final Argument argument = argumentsList.get(i);
+        for (final Argument argument : argumentsList) {
             if (argument.getType() == type) return true;
         }
         return false;
@@ -92,26 +91,25 @@ abstract class ParameterBufferBase implements java.io.Serializable {
 
     // Object Implementation
 
+    @Override
     public boolean equals(Object other) {
         if (other == null || !(other instanceof ParameterBufferBase))
             return false;
 
         final ParameterBufferBase otherServiceBufferBase = (ParameterBufferBase) other;
 
-        return otherServiceBufferBase.getArgumentsList().equals(
-                this.getArgumentsList());
+        return otherServiceBufferBase.getArgumentsList().equals(this.getArgumentsList());
     }
 
+    @Override
     public int hashCode() {
         return getArgumentsList().hashCode();
     }
 
     // Internal methods
 
-    protected void writeArgumentsTo(ByteArrayOutputStream outputStream) {
-        for (int i = 0, n = arguments.size(); i < n; i++) {
-            final Argument currentArgument = arguments.get(i);
-
+    protected void writeArgumentsTo(OutputStream outputStream) throws IOException {
+        for (final Argument currentArgument : arguments) {
             currentArgument.writeTo(outputStream);
         }
     }
@@ -136,16 +134,14 @@ abstract class ParameterBufferBase implements java.io.Serializable {
         abstract int getType();
 
         String getValueAsString() {
-            throw new RuntimeException(
-                    "Cannot get the value for this argument type as a string");
+            throw new RuntimeException("Cannot get the value for this argument type as a string");
         }
 
         int getValueAsInt() {
-            throw new RuntimeException(
-                    "Cannot get the value of this argument type as int");
+            throw new RuntimeException("Cannot get the value of this argument type as int");
         }
 
-        abstract void writeTo(ByteArrayOutputStream outputStream);
+        abstract void writeTo(OutputStream outputStream) throws IOException;
     }
 
     // ---------------------------------------------------------------------------
@@ -158,27 +154,27 @@ abstract class ParameterBufferBase implements java.io.Serializable {
             this.value = value;
         }
 
-        void writeTo(ByteArrayOutputStream outputStream) {
+        void writeTo(OutputStream outputStream) throws IOException {
             outputStream.write(type);
 
             final byte[] valueBytes = this.value.getBytes();
             final int valueLength = valueBytes.length;
 
             writeLength(valueLength, outputStream);
-            for (int i = 0; i < valueLength; i++)
-                outputStream.write(valueBytes[i]);
+            outputStream.write(valueBytes);
         }
 
+        @Override
         String getValueAsString() {
             return value;
         }
 
+        @Override
         int getValueAsInt() {
             return Integer.parseInt(value);
         }
 
-        protected void writeLength(int length,
-                ByteArrayOutputStream outputStream) {
+        protected void writeLength(int length, OutputStream outputStream) throws IOException {
             outputStream.write(length);
         }
 
@@ -186,22 +182,22 @@ abstract class ParameterBufferBase implements java.io.Serializable {
             return type;
         }
 
+        @Override
         public int hashCode() {
             return value.hashCode();
         }
 
+        @Override
         public boolean equals(Object other) {
-            if (other == null || other instanceof StringArgument == false)
+            if (other == null || !(other instanceof StringArgument))
                 return false;
 
             final StringArgument otherStringArgument = (StringArgument) other;
 
-            return type == otherStringArgument.type
-                    && value.equals(otherStringArgument.value);
+            return type == otherStringArgument.type && value.equals(otherStringArgument.value);
         }
 
         private final int type;
-
         private final String value;
     }
 
@@ -215,13 +211,12 @@ abstract class ParameterBufferBase implements java.io.Serializable {
             this.value = value;
         }
 
-        void writeTo(ByteArrayOutputStream outputStream) {
+        void writeTo(OutputStream outputStream) throws IOException {
             outputStream.write(type);
             writeValue(outputStream, value);
         }
 
-        protected void writeValue(ByteArrayOutputStream outputStream,
-                final int value) {
+        protected void writeValue(OutputStream outputStream, final int value) throws IOException {
             outputStream.write(4);
             outputStream.write(value);
             outputStream.write(value >> 8);
@@ -233,26 +228,27 @@ abstract class ParameterBufferBase implements java.io.Serializable {
             return type;
         }
 
+        @Override
         int getValueAsInt() {
             return value;
         }
 
+        @Override
         public int hashCode() {
             return type;
         }
 
+        @Override
         public boolean equals(Object other) {
-            if (other == null || other instanceof NumericArgument == false)
+            if (other == null || !(other instanceof NumericArgument))
                 return false;
 
             final NumericArgument otherNumericArgument = (NumericArgument) other;
 
-            return type == otherNumericArgument.type
-                    && value == otherNumericArgument.value;
+            return type == otherNumericArgument.type && value == otherNumericArgument.value;
         }
 
         private final int type;
-
         private final int value;
     }
 
@@ -266,16 +262,14 @@ abstract class ParameterBufferBase implements java.io.Serializable {
             this.value = value;
         }
 
-        void writeTo(ByteArrayOutputStream outputStream) {
+        void writeTo(OutputStream outputStream) throws IOException {
             outputStream.write(type);
             final int valueLength = value.length;
             writeLength(valueLength, outputStream);
-            for (int i = 0; i < valueLength; i++)
-                outputStream.write(value[i]);
+            outputStream.write(value);
         }
 
-        protected void writeLength(int length,
-                ByteArrayOutputStream outputStream) {
+        protected void writeLength(int length, OutputStream outputStream) throws IOException {
             outputStream.write(length);
         }
 
@@ -283,26 +277,27 @@ abstract class ParameterBufferBase implements java.io.Serializable {
             return type;
         }
 
+        @Override
         int getValueAsInt() {
             if (value.length == 1)
                 return value[0];
             else
-                throw new UnsupportedOperationException("This method is not "
-                        + "supported for byte arrays with length > 1");
+                throw new UnsupportedOperationException("This method is not supported for byte arrays with length > 1");
         }
 
+        @Override
         public int hashCode() {
             return type;
         }
 
+        @Override
         public boolean equals(Object other) {
-            if (other == null || other instanceof ByteArrayArgument == false)
+            if (other == null || !(other instanceof ByteArrayArgument))
                 return false;
 
             final ByteArrayArgument otherByteArrayArgument = (ByteArrayArgument) other;
 
-            return type == otherByteArrayArgument.type
-                    && Arrays.equals(value, otherByteArrayArgument.value);
+            return type == otherByteArrayArgument.type && Arrays.equals(value, otherByteArrayArgument.value);
         }
 
         private final int type;
@@ -319,7 +314,7 @@ abstract class ParameterBufferBase implements java.io.Serializable {
             this.item = item;
         }
 
-        void writeTo(ByteArrayOutputStream outputStream) {
+        void writeTo(OutputStream outputStream) throws IOException {
             outputStream.write(item);
         }
 
@@ -327,12 +322,14 @@ abstract class ParameterBufferBase implements java.io.Serializable {
             return item;
         }
 
+        @Override
         public int hashCode() {
             return item;
         }
 
+        @Override
         public boolean equals(Object other) {
-            if (other == null || other instanceof SingleItem == false)
+            if (other == null || !(other instanceof SingleItem))
                 return false;
 
             final SingleItem otherSingleItem = (SingleItem) other;
@@ -342,5 +339,4 @@ abstract class ParameterBufferBase implements java.io.Serializable {
 
         private final int item;
     }
-
 }

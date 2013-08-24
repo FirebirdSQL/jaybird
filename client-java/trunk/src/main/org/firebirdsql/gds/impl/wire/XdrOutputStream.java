@@ -47,7 +47,7 @@ import java.util.Arrays;
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @version 1.0
  */
-public class XdrOutputStream {
+public final class XdrOutputStream extends OutputStream {
 
     private static final int BUF_SIZE = 32767;
 
@@ -126,7 +126,7 @@ public class XdrOutputStream {
         else {
             int len = buffer.length;
             writeInt(len);
-            write(buffer, len, (4 - len) & 3);
+            write(buffer, 0, len, (4 - len) & 3);
         }
     }
 
@@ -148,7 +148,7 @@ public class XdrOutputStream {
         write(len & 0xff);
         write((len >> 8) & 0xff);
         // TODO 4 - len + 2 or 4 - (len + 2) ?
-        write(buffer, len, ((4 - len + 2) & 3));
+        write(buffer, 0, len, ((4 - len + 2) & 3));
     }
 
     /**
@@ -226,16 +226,17 @@ public class XdrOutputStream {
 
     /**
      * Write a <code>byte</code> buffer to the underlying output stream
-     * in XDR format
+     * in XDR format.
      *
      * @param b The <code>byte</code> buffer to be written
+     * @param offset The start offset in the buffer
      * @param len The number of bytes to write
      * @param pad The number of (blank) padding bytes to write
      * @throws IOException if an error occurs while writing to the
      *         underlying output stream
      */
-    public void write(byte[] b, int len, int pad) throws IOException {
-        out.write(b, 0, len);
+    public void write(byte[] b, int offset, int len, int pad) throws IOException {
+        out.write(b, offset, len);
         // TODO We shouldn't always pad with spaces
         writePadding(pad, SPACE_BYTE);
     }
@@ -248,20 +249,28 @@ public class XdrOutputStream {
      * @throws IOException if an error occurs while writing to the
      *         underlying output stream
      */
+    @Override
     public void write(int b) throws IOException {
         out.write(b);
     }
 
     /**
-     * Write an array of <code>byte</code>s to the underlying output stream
-     * in XDR format.
+     * Writes <code>len</code> bytes from the specified byte array
+     * starting at offset <code>off</code> to this output stream as defined by {@link java.io.OutputStream#write(byte[], int, int)}.
+     * <p>
+     * <b>Important</b>: do not confuse this method with {@link #write(byte[], int, int, int)} which originally
+     * the signature of this method.
+     * </p>
      *
-     * @param b The <code>byte</code> array to be written
+     * @param b The data
+     * @param off The start offset in the data
+     * @param len The number of bytes to write
      * @throws IOException if an error occurs while writing to the
      *         underlying output stream
      */
-    public void write(byte[] b) throws IOException {
-        out.write(b, 0, b.length);
+    @Override
+    public void write(byte b[], int off, int len) throws IOException {
+        out.write(b, off, len);
     }
 
     /**
@@ -270,6 +279,7 @@ public class XdrOutputStream {
      * @throws IOException if an error occurs while writing to the
      *         underlying output stream
      */
+    @Override
     public void flush() throws IOException {
         out.flush();
     }
@@ -280,6 +290,7 @@ public class XdrOutputStream {
      * @throws IOException if an error occurs while closing the
      *         underlying stream
      */
+    @Override
     public void close() throws IOException {
         out.close();
     }

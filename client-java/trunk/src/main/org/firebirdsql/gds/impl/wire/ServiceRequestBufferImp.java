@@ -20,11 +20,12 @@ package org.firebirdsql.gds.impl.wire;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 
 import org.firebirdsql.gds.ServiceRequestBuffer;
 
 /**
- * ngds implementation for ServiceRequestBufferImp.
+ * Implementation for ServiceRequestBufferImp.
  */
 class ServiceRequestBufferImp extends ParameterBufferBase implements
         ServiceRequestBuffer {
@@ -53,16 +54,15 @@ class ServiceRequestBufferImp extends ParameterBufferBase implements
             int getLength() {
                 return super.getLength() + 1;
             }
-            
-            protected void writeLength(int length,
-                    XdrOutputStream outputStream) throws IOException {
+
+            @Override
+            protected void writeLength(int length, OutputStream outputStream) throws IOException {
                 outputStream.write(length);
                 outputStream.write(length >> 8);
             }
         });
     }
 
-    
     @Override
     public void addArgument(int argumentType, int value) {
 
@@ -74,8 +74,7 @@ class ServiceRequestBufferImp extends ParameterBufferBase implements
             }
             
             @Override
-            protected void writeValue(XdrOutputStream outputStream, int value)
-                    throws IOException {
+            protected void writeValue(OutputStream outputStream, int value) throws IOException {
                 outputStream.write(value);
                 outputStream.write(value>>8);
                 outputStream.write(value>>16);
@@ -93,16 +92,13 @@ class ServiceRequestBufferImp extends ParameterBufferBase implements
             }
             
             @Override
-            protected void writeValue(XdrOutputStream outputStream, int value)
-                    throws IOException {
+            protected void writeValue(OutputStream outputStream, int value) throws IOException {
                 outputStream.write(value);
             }
         });
     }
 
-    /* (non-Javadoc)
-     * @see org.firebirdsql.jgds.ParameterBufferBase#write(org.firebirdsql.gds.XdrOutputStream)
-     */
+    @Override
     public void write(XdrOutputStream outputStream) throws IOException {
         outputStream.write(taskIdentifier);
         super.write(outputStream);
@@ -120,5 +116,5 @@ class ServiceRequestBufferImp extends ParameterBufferBase implements
         return out.toByteArray();
     }
     
-    private int taskIdentifier;
+    private final int taskIdentifier;
 }

@@ -21,6 +21,8 @@ package org.firebirdsql.gds.impl.jni;
 import org.firebirdsql.gds.ServiceRequestBuffer;
 
 import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
 
 /**
  * ngds implementation for ServiceRequestBufferImp.
@@ -42,8 +44,7 @@ class ServiceRequestBufferImp extends ParameterBufferBase implements
         getArgumentsList().add(new StringArgument(argumentType, value) {
 
             @Override
-            protected void writeLength(int length,
-                    ByteArrayOutputStream outputStream) {
+            protected void writeLength(int length, OutputStream outputStream) throws IOException {
                 outputStream.write(length);
                 outputStream.write(length >> 8);
             }
@@ -55,7 +56,7 @@ class ServiceRequestBufferImp extends ParameterBufferBase implements
         getArgumentsList().add(new NumericArgument(argumentType, value) {
 
             @Override
-            protected void writeValue(ByteArrayOutputStream outputStream, int value)  {
+            protected void writeValue(OutputStream outputStream, int value) throws IOException {
                 outputStream.write(value);
                 outputStream.write(value>>8);
                 outputStream.write(value>>16);
@@ -68,8 +69,7 @@ class ServiceRequestBufferImp extends ParameterBufferBase implements
         getArgumentsList().add(new NumericArgument(argumentType, value) {
             
             @Override
-            protected void writeValue(ByteArrayOutputStream outputStream,
-                    final int value) {
+            protected void writeValue(OutputStream outputStream,final int value) throws IOException {
                 outputStream.write(value);
             }
         });
@@ -83,15 +83,18 @@ class ServiceRequestBufferImp extends ParameterBufferBase implements
      */
     byte[] toByteArray() {
         final ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-
         byteArrayOutputStream.write(taskIdentifier);
 
-        super.writeArgumentsTo(byteArrayOutputStream);
+        try {
+            super.writeArgumentsTo(byteArrayOutputStream);
+        } catch (IOException e) {
+            // Ignoring IOException, not thrown by ByteArrayOutputStream
+        }
 
         return byteArrayOutputStream.toByteArray();
     }
 
     // PRIVATE MEMBERS
 
-    private int taskIdentifier;
+    private final int taskIdentifier;
 }

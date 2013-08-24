@@ -921,28 +921,28 @@ public abstract class AbstractJavaGDSImpl extends AbstractGDS implements GDS {
             byte[] buffer = xsqlvar.sqldata;
             int tempType = xsqlvar.sqltype & ~1;
             if (tempType == ISCConstants.SQL_NULL) {
-                out.write(xsqlvar.sqldata != null ? zero : minusOne, 4, 0);
+                out.write(xsqlvar.sqldata != null ? zero : minusOne, 0, 4, 0);
             } else if (len == 0) {
                 if (buffer != null) {
                     len = buffer.length;
                     out.writeInt(len);
-                    out.write(buffer, len, (4 - len) & 3);
+                    out.write(buffer, 0, len, (4 - len) & 3);
                     // sqlind
-                    out.write(zero, 4, 0);
+                    out.write(zero, 0, 4, 0);
                 } else {
                     out.writeInt(0);
                     // sqlind
-                    out.write(minusOne, 4, 0);
+                    out.write(minusOne, 0, 4, 0);
                 }
             } else if (len < 0) {
                 if (buffer != null) {
-                    out.write(buffer, -len, 0);
+                    out.write(buffer, 0, -len, 0);
                     // sqlind
-                    out.write(zero, 4, 0);
+                    out.write(zero, 0, 4, 0);
                 } else {
                     out.writePadding(-len, 0x20);
                     // sqlind
-                    out.write(minusOne, 4, 0);
+                    out.write(minusOne, 0, 4, 0);
                 }
             } else {
                 // decrement length because it was incremented before
@@ -951,17 +951,17 @@ public abstract class AbstractJavaGDSImpl extends AbstractGDS implements GDS {
                 if (buffer != null) {
                     int buflen = buffer.length;
                     if (buflen >= len) {
-                        out.write(buffer, len, (4 - len) & 3);
+                        out.write(buffer, 0, len, (4 - len) & 3);
                     } else {
-                        out.write(buffer, buflen, 0);
+                        out.write(buffer, 0, buflen, 0);
                         out.writePadding(len - buflen + ((4 - len) & 3), 0x20);
                     }
                     // sqlind
-                    out.write(zero, 4, 0);
+                    out.write(zero, 0, 4, 0);
                 } else {
                     out.writePadding(len + ((4 - len) & 3), 0x20);
                     // sqlind
-                    out.write(minusOne, 4, 0);
+                    out.write(minusOne, 0, 4, 0);
                 }
             }
         }
