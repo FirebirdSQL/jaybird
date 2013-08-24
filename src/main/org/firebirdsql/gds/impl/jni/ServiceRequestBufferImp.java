@@ -19,6 +19,8 @@
 package org.firebirdsql.gds.impl.jni;
 
 import org.firebirdsql.gds.ServiceRequestBuffer;
+import org.firebirdsql.gds.impl.argument.NumericArgument;
+import org.firebirdsql.gds.impl.argument.StringArgument;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -44,9 +46,20 @@ class ServiceRequestBufferImp extends ParameterBufferBase implements
         getArgumentsList().add(new StringArgument(argumentType, value) {
 
             @Override
+            public int getLength() {
+                return super.getLength() + 1;
+            }
+
+            @Override
             protected void writeLength(int length, OutputStream outputStream) throws IOException {
                 outputStream.write(length);
                 outputStream.write(length >> 8);
+            }
+
+            @Override
+             protected int getMaxSupportedLength() {
+                // TODO Check if this might be signed
+                return 65535;
             }
         });
     }
@@ -54,6 +67,11 @@ class ServiceRequestBufferImp extends ParameterBufferBase implements
     @Override
     public void addArgument(int argumentType, int value) {
         getArgumentsList().add(new NumericArgument(argumentType, value) {
+
+            @Override
+            public int getLength() {
+                return 5;
+            }
 
             @Override
             protected void writeValue(OutputStream outputStream, int value) throws IOException {
@@ -67,16 +85,21 @@ class ServiceRequestBufferImp extends ParameterBufferBase implements
     
     public void addArgument(int argumentType, byte value) {
         getArgumentsList().add(new NumericArgument(argumentType, value) {
+
+            @Override
+            public int getLength() {
+                return 2;
+            }
             
             @Override
-            protected void writeValue(OutputStream outputStream,final int value) throws IOException {
+            protected void writeValue(OutputStream outputStream, final int value) throws IOException {
                 outputStream.write(value);
             }
         });
     }
 
     /**
-     * Pacakage local method for obtaining buffer suitable for passing to native
+     * Package local method for obtaining buffer suitable for passing to native
      * method.
      * 
      * @return

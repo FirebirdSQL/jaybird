@@ -21,6 +21,7 @@ package org.firebirdsql.gds.impl.jni;
 
 import org.firebirdsql.gds.BlobParameterBuffer;
 import org.firebirdsql.gds.ISCConstants;
+import org.firebirdsql.gds.impl.argument.NumericArgument;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
