@@ -27,6 +27,7 @@ public class TestFBSimpleDataSource extends FBJUnit4TestBase {
         ds.setDatabase(FBTestProperties.DB_DATASOURCE_URL);
         ds.setUserName(FBTestProperties.DB_USER);
         ds.setPassword(FBTestProperties.DB_PASSWORD);
+        ds.setType(FBTestProperties.getGdsType().toString());
         ds.setCharSet(System.getProperty("file.encoding"));
         Connection con = null;
         try {
