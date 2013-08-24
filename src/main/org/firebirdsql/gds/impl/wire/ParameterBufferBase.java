@@ -1,4 +1,6 @@
 /*
+ * $Id$
+ *
  * Firebird Open Source J2ee connector - jdbc driver
  *
  * Distributable under LGPL license.
@@ -18,16 +20,17 @@
  */
 package org.firebirdsql.gds.impl.wire;
 
+import java.io.IOException;
+import java.io.OutputStream;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.io.IOException;
 
 /**
  * Base class for BlobParameterBufferImp and DatabaseParameterBufferImp and
  * perhaps eventually TransactionParameterBuffer.
  */
-public class ParameterBufferBase implements java.io.Serializable, Xdrable {
+public abstract class ParameterBufferBase implements java.io.Serializable, Xdrable {
     // Parameter Buffer Implementation
 
     public void addArgument(int argumentType, String value) {
@@ -48,8 +51,7 @@ public class ParameterBufferBase implements java.io.Serializable, Xdrable {
 
     public String getArgumentAsString(int type) {
         final List<Argument> argumentsList = getArgumentsList();
-        for (int i = 0, n = argumentsList.size(); i < n; i++) {
-            final Argument argument = argumentsList.get(i);
+        for (final Argument argument : argumentsList) {
             if (argument.getType() == type) {
                 return argument.getValueAsString();
             }
@@ -59,8 +61,7 @@ public class ParameterBufferBase implements java.io.Serializable, Xdrable {
 
     public int getArgumentAsInt(int type) {
         final List<Argument> argumentsList = getArgumentsList();
-        for (int i = 0, n = argumentsList.size(); i < n; i++) {
-            final Argument argument = argumentsList.get(i);
+        for (final Argument argument : argumentsList) {
             if (argument.getType() == type) {
                 return argument.getValueAsInt();
             }
@@ -70,10 +71,8 @@ public class ParameterBufferBase implements java.io.Serializable, Xdrable {
 
     public boolean hasArgument(int type) {
         final List<Argument> argumentsList = getArgumentsList();
-        for (int i = 0, n = argumentsList.size(); i < n; i++) {
-            final Argument argument = argumentsList.get(i);
-            if (argument.getType() == type)
-                return true;
+        for (final Argument argument : argumentsList) {
+            if (argument.getType() == type) return true;
         }
         return false;
     }
@@ -94,8 +93,7 @@ public class ParameterBufferBase implements java.io.Serializable, Xdrable {
     public int getLength() {
         final List<Argument> argumentsList = getArgumentsList();
         int length = 0;
-        for (int i = 0, n = argumentsList.size(); i < n; i++) {
-            final Argument currentArgument = argumentsList.get(i);
+        for (final Argument currentArgument : argumentsList) {
             length += currentArgument.getLength();
         }
         return length;
@@ -105,17 +103,14 @@ public class ParameterBufferBase implements java.io.Serializable, Xdrable {
     }
 
     public void write(XdrOutputStream outputStream) throws IOException {
-        final List<Argument> argumentsList = getArgumentsList();
-        for (int i = 0, n = argumentsList.size(); i < n; i++) {
-            final Argument currentArgument = argumentsList.get(i);
-            currentArgument.writeTo(outputStream);
-        }
+        writeArgumentsTo(outputStream);
     }
 
     // Object Implementation
 
+    @Override
     public boolean equals(Object other) {
-        if (other == null || other instanceof ParameterBufferBase == false)
+        if (other == null || !(other instanceof ParameterBufferBase))
             return false;
 
         final ParameterBufferBase otherServiceBufferBase = (ParameterBufferBase) other;
@@ -123,11 +118,18 @@ public class ParameterBufferBase implements java.io.Serializable, Xdrable {
         return otherServiceBufferBase.getArgumentsList().equals(this.getArgumentsList());
     }
 
+    @Override
     public int hashCode() {
         return getArgumentsList().hashCode();
     }
 
     // Internal methods
+
+    protected void writeArgumentsTo(OutputStream outputStream) throws IOException {
+        for (final Argument currentArgument : arguments) {
+            currentArgument.writeTo(outputStream);
+        }
+    }
 
     protected List<Argument> getArgumentsList() {
         return arguments;
@@ -145,6 +147,7 @@ public class ParameterBufferBase implements java.io.Serializable, Xdrable {
     // Argument - Abstract base
     // ---------------------------------------------------------------------------
     protected abstract static class Argument implements java.io.Serializable {
+
         abstract int getType();
 
         String getValueAsString() {
@@ -155,7 +158,7 @@ public class ParameterBufferBase implements java.io.Serializable, Xdrable {
             throw new RuntimeException("Cannot get the value of this argument type as int");
         }
 
-        abstract void writeTo(XdrOutputStream outputStream) throws IOException;
+        abstract void writeTo(OutputStream outputStream) throws IOException;
 
         abstract int getLength();
     }
@@ -164,35 +167,37 @@ public class ParameterBufferBase implements java.io.Serializable, Xdrable {
     // StringArgument
     // ---------------------------------------------------------------------------
     protected static class StringArgument extends Argument {
+
         StringArgument(int type, String value) {
             this.type = type;
             this.value = value;
         }
 
-        void writeTo(XdrOutputStream outputStream) throws IOException {
+        void writeTo(OutputStream outputStream) throws IOException {
             outputStream.write(type);
 
             final byte[] valueBytes = this.value.getBytes();
             final int valueLength = valueBytes.length;
 
             writeLength(valueLength, outputStream);
-            for (int i = 0; i < valueLength; i++)
-                outputStream.write(valueBytes[i]);
+            outputStream.write(valueBytes);
         }
 
         int getLength() {
             return value.getBytes().length + 2;
         }
 
+        @Override
         String getValueAsString() {
             return value;
         }
 
+        @Override
         int getValueAsInt() {
             return Integer.parseInt(value);
         }
 
-        protected void writeLength(int length, XdrOutputStream outputStream) throws IOException {
+        protected void writeLength(int length, OutputStream outputStream) throws IOException {
             outputStream.write(length);
         }
 
@@ -200,12 +205,14 @@ public class ParameterBufferBase implements java.io.Serializable, Xdrable {
             return type;
         }
 
+        @Override
         public int hashCode() {
             return value.hashCode();
         }
 
+        @Override
         public boolean equals(Object other) {
-            if (other == null || other instanceof StringArgument == false)
+            if (other == null || !(other instanceof StringArgument))
                 return false;
 
             final StringArgument otherStringArgument = (StringArgument) other;
@@ -221,12 +228,13 @@ public class ParameterBufferBase implements java.io.Serializable, Xdrable {
     // NumericArgument
     // ---------------------------------------------------------------------------
     protected static class NumericArgument extends Argument {
+
         NumericArgument(int type, int value) {
             this.type = type;
             this.value = value;
         }
 
-        void writeTo(XdrOutputStream outputStream) throws IOException {
+        void writeTo(OutputStream outputStream) throws IOException {
             outputStream.write(type);
             writeValue(outputStream, value);
         }
@@ -235,11 +243,7 @@ public class ParameterBufferBase implements java.io.Serializable, Xdrable {
             return 6;
         }
 
-        int getValueAsInt() {
-            return value;
-        }
-
-        protected void writeValue(XdrOutputStream outputStream, final int value) throws IOException {
+        protected void writeValue(OutputStream outputStream, final int value) throws IOException {
             outputStream.write(4);
             outputStream.write(value);
             outputStream.write(value >> 8);
@@ -251,12 +255,19 @@ public class ParameterBufferBase implements java.io.Serializable, Xdrable {
             return type;
         }
 
+        @Override
+        int getValueAsInt() {
+            return value;
+        }
+
+        @Override
         public int hashCode() {
             return type;
         }
 
+        @Override
         public boolean equals(Object other) {
-            if (other == null || other instanceof NumericArgument == false)
+            if (other == null || !(other instanceof NumericArgument))
                 return false;
 
             final NumericArgument otherNumericArgument = (NumericArgument) other;
@@ -272,32 +283,20 @@ public class ParameterBufferBase implements java.io.Serializable, Xdrable {
     // ByteArrayArgument
     // ---------------------------------------------------------------------------
     private static final class ByteArrayArgument extends Argument {
+
         ByteArrayArgument(int type, byte[] value) {
             this.type = type;
             this.value = value;
         }
 
-        void writeTo(XdrOutputStream outputStream) throws IOException {
+        void writeTo(OutputStream outputStream) throws IOException {
             outputStream.write(type);
             final int valueLength = value.length;
             writeLength(valueLength, outputStream);
-            for (int i = 0; i < valueLength; i++)
-                outputStream.write(value[i]);
+            outputStream.write(value);
         }
 
-        int getLength() {
-            return value.length + 2;
-        }
-
-        int getValueAsInt() {
-            if (value.length == 1)
-                return value[0];
-            else
-                throw new UnsupportedOperationException("This method is not "
-                        + "supported for byte arrays with length > 1");
-        }
-
-        protected void writeLength(int length, XdrOutputStream outputStream) throws IOException {
+        protected void writeLength(int length, OutputStream outputStream) throws IOException {
             outputStream.write(length);
         }
 
@@ -305,18 +304,31 @@ public class ParameterBufferBase implements java.io.Serializable, Xdrable {
             return type;
         }
 
+        int getLength() {
+            return value.length + 2;
+        }
+
+        @Override
+        int getValueAsInt() {
+            if (value.length == 1)
+                return value[0];
+            else
+                throw new UnsupportedOperationException("This method is not supported for byte arrays with length > 1");
+        }
+
+        @Override
         public int hashCode() {
             return type;
         }
 
+        @Override
         public boolean equals(Object other) {
-            if (other == null || other instanceof ByteArrayArgument == false)
+            if (other == null || !(other instanceof ByteArrayArgument))
                 return false;
 
             final ByteArrayArgument otherByteArrayArgument = (ByteArrayArgument) other;
 
-            return type == otherByteArrayArgument.type
-                    && Arrays.equals(value, otherByteArrayArgument.value);
+            return type == otherByteArrayArgument.type && Arrays.equals(value, otherByteArrayArgument.value);
         }
 
         private final int type;
@@ -327,11 +339,12 @@ public class ParameterBufferBase implements java.io.Serializable, Xdrable {
     // SingleItem
     // ---------------------------------------------------------------------------
     private static final class SingleItem extends Argument {
+
         SingleItem(int item) {
             this.item = item;
         }
 
-        void writeTo(XdrOutputStream outputStream) throws IOException {
+        void writeTo(OutputStream outputStream) throws IOException {
             outputStream.write(item);
         }
 
@@ -343,12 +356,14 @@ public class ParameterBufferBase implements java.io.Serializable, Xdrable {
             return item;
         }
 
+        @Override
         public int hashCode() {
             return item;
         }
 
+        @Override
         public boolean equals(Object other) {
-            if (other == null || other instanceof SingleItem == false)
+            if (other == null || !(other instanceof SingleItem))
                 return false;
 
             final SingleItem otherSingleItem = (SingleItem) other;
