@@ -27,7 +27,6 @@ import org.firebirdsql.gds.DatabaseParameterBuffer;
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.TransactionParameterBuffer;
 import org.firebirdsql.gds.impl.DatabaseParameterBufferExtension;
-import org.firebirdsql.gds.impl.wire.DatabaseParameterBufferImp;
 import org.firebirdsql.gds.impl.wire.XdrInputStream;
 import org.firebirdsql.gds.impl.wire.XdrOutputStream;
 import org.firebirdsql.gds.impl.wire.Xdrable;
@@ -57,8 +56,6 @@ import static org.firebirdsql.gds.impl.wire.WireProtocolConstants.*;
 public class V10Database implements FbWireDatabase, TransactionEventListener {
 
     private static final Logger log = LoggerFactory.getLogger(V10Database.class, false);
-
-    // TODO Eliminate DatabaseParameterBuffer parameter from various methods
 
     private final Object syncObject = new Object();
     private final XdrStreamHolder xdrStreamHolder;
@@ -223,14 +220,9 @@ public class V10Database implements FbWireDatabase, TransactionEventListener {
     }
 
     @Override
-    public void attach(DatabaseParameterBuffer dpb) throws SQLException {
+    public void attach() throws SQLException {
+        final DatabaseParameterBuffer dpb = protocolDescriptor.createDatabaseParameterBuffer(connection);
         attachOrCreate(dpb, false);
-    }
-
-    protected DatabaseParameterBuffer generateDatabaseParameterBufferFromConnectionProperties() {
-        final IConnectionProperties connectionProperties = connection.getConnectionProperties();
-        final DatabaseParameterBufferImp dpb = new DatabaseParameterBufferImp();
-        throw new UnsupportedOperationException();
     }
 
     /**
@@ -300,7 +292,7 @@ public class V10Database implements FbWireDatabase, TransactionEventListener {
         xdrOut.writeString(connection.getDatabaseName(), filenameEncoding);
 
         dpb = ((DatabaseParameterBufferExtension) dpb).removeExtensionParams();
-        // TODO Include ProcessID and ProcessName as in JavaGDSImpl implementation (or move that to different part?)
+        // TODO Include ProcessID and ProcessName as in JavaGDSImpl implementation (or move that to different part?) See also Version10ProtocolDescriptor
 
         xdrOut.writeTyped(ISCConstants.isc_dpb_version1, (Xdrable) dpb);
     }

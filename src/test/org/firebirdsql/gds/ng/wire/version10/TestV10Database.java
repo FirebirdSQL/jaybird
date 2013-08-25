@@ -70,6 +70,8 @@ public class TestV10Database {
         connectionInfo = new FbConnectionProperties();
         connectionInfo.setServerName(FBTestProperties.DB_SERVER_URL);
         connectionInfo.setPortNumber(FBTestProperties.DB_SERVER_PORT);
+        connectionInfo.setUser(DB_USER);
+        connectionInfo.setPassword(DB_PASSWORD);
         connectionInfo.setDatabaseName(FBTestProperties.getDatabasePath());
         connectionInfo.setEncoding("NONE");
     }
@@ -180,7 +182,7 @@ public class TestV10Database {
         SimpleWarningMessageCallback callback = new SimpleWarningMessageCallback();
         db.setWarningMessageCallback(callback);
 
-        SQLException warning = new FbExceptionBuilder().warning(ISCConstants.isc_numeric_out_of_range).toSQLException();
+        SQLWarning warning = new FbExceptionBuilder().warning(ISCConstants.isc_numeric_out_of_range).toSQLException(SQLWarning.class);
         GenericResponse genericResponse = new GenericResponse(-1, -1, null, warning);
         db.processResponseWarnings(genericResponse);
 
@@ -219,12 +221,7 @@ public class TestV10Database {
                 db = gdsConnection.identify();
                 assertEquals("Unexpected FbWireDatabase implementation", V10Database.class, db.getClass());
 
-                DatabaseParameterBufferImp dpb = new DatabaseParameterBufferImp();
-                dpb.addArgument(ISCConstants.isc_dpb_sql_dialect, 3);
-                dpb.addArgument(ISCConstants.isc_dpb_user_name, DB_USER);
-                dpb.addArgument(ISCConstants.isc_dpb_password, DB_PASSWORD);
-
-                db.attach(dpb);
+                db.attach();
                 System.out.println(db.getHandle());
 
                 assertTrue("Expected isAttached() to return true", db.isAttached());
@@ -249,18 +246,13 @@ public class TestV10Database {
     @Test
     public void testAttach_NonExistentDatabase() throws Exception {
         WireConnection gdsConnection = new WireConnection(connectionInfo, EncodingFactory.getDefaultInstance(), ProtocolCollection.create(new Version10Descriptor()));
-        FbWireDatabase db = null;
+        FbWireDatabase db;
         try {
             gdsConnection.socketConnect();
             db = gdsConnection.identify();
             assertEquals("Unexpected FbWireDatabase implementation", V10Database.class, db.getClass());
 
-            DatabaseParameterBufferImp dpb = new DatabaseParameterBufferImp();
-            dpb.addArgument(ISCConstants.isc_dpb_sql_dialect, 3);
-            dpb.addArgument(ISCConstants.isc_dpb_user_name, DB_USER);
-            dpb.addArgument(ISCConstants.isc_dpb_password, DB_PASSWORD);
-
-            db.attach(dpb);
+            db.attach();
             fail("Expected the attach to fail because the database doesn't exist");
         } catch (SQLException e) {
             // TODO Is this actually the right SQLState?
@@ -277,7 +269,7 @@ public class TestV10Database {
     @Test
     public void testBasicCreateAndDrop() throws Exception {
         WireConnection gdsConnection = new WireConnection(connectionInfo, EncodingFactory.getDefaultInstance(), ProtocolCollection.create(new Version10Descriptor()));
-        FbWireDatabase db = null;
+        FbWireDatabase db;
         File dbFile = new File(gdsConnection.getDatabaseName());
         try {
             gdsConnection.socketConnect();
@@ -301,7 +293,7 @@ public class TestV10Database {
             if (gdsConnection.isConnected()) {
                 gdsConnection.disconnect();
             }
-            if (dbFile != null && dbFile.exists()) {
+            if (dbFile.exists()) {
                 dbFile.delete();
             }
         }

@@ -26,7 +26,6 @@ import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.TransactionParameterBuffer;
 import org.firebirdsql.gds.impl.jni.EmbeddedGDSImpl;
 import org.firebirdsql.gds.impl.jni.NativeGDSImpl;
-import org.firebirdsql.gds.impl.wire.DatabaseParameterBufferImp;
 import org.firebirdsql.gds.impl.wire.TransactionParameterBufferImpl;
 import org.firebirdsql.gds.ng.FbConnectionProperties;
 import org.firebirdsql.gds.ng.FbStatement;
@@ -64,6 +63,8 @@ public class TestV10Statement {
         connectionInfo = new FbConnectionProperties();
         connectionInfo.setServerName(FBTestProperties.DB_SERVER_URL);
         connectionInfo.setPortNumber(FBTestProperties.DB_SERVER_PORT);
+        connectionInfo.setUser(DB_USER);
+        connectionInfo.setPassword(DB_PASSWORD);
         connectionInfo.setDatabaseName(FBTestProperties.getDatabasePath());
         connectionInfo.setEncoding("NONE");
     }
@@ -87,12 +88,7 @@ public class TestV10Statement {
         db = gdsConnection.identify();
         assertEquals("Unexpected FbWireDatabase implementation", V10Database.class, db.getClass());
 
-        DatabaseParameterBufferImp dpb = new DatabaseParameterBufferImp();
-        dpb.addArgument(ISCConstants.isc_dpb_sql_dialect, 3);
-        dpb.addArgument(ISCConstants.isc_dpb_user_name, DB_USER);
-        dpb.addArgument(ISCConstants.isc_dpb_password, DB_PASSWORD);
-
-        db.attach(dpb);
+        db.attach();
     }
 
     @Test
