@@ -86,19 +86,6 @@ public final class WireConnection implements XdrStreamAccess {
 
     /**
      * Creates a WireConnection (without establishing a connection to the
-     * server) with the default protocol collection.
-     *
-     * @param connectionProperties
-     *         Connection properties
-     * @param encodingFactory
-     *         Factory for encoding definitions
-     */
-    public WireConnection(IConnectionProperties connectionProperties, IEncodingFactory encodingFactory) throws SQLException {
-        this(connectionProperties, encodingFactory, ProtocolCollection.getDefaultCollection());
-    }
-
-    /**
-     * Creates a WireConnection (without establishing a connection to the
      * server).
      *
      * @param connectionProperties

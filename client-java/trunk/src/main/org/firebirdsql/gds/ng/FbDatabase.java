@@ -42,11 +42,9 @@ public interface FbDatabase {
     /**
      * Attach to a database.
      *
-     * @param dpb
-     *         The DatabaseParameterBuffer with all required values
      * @throws SQLException
      */
-    void attach(DatabaseParameterBuffer dpb) throws SQLException;
+    void attach() throws SQLException;
 
     /**
      * Detaches from the current database.

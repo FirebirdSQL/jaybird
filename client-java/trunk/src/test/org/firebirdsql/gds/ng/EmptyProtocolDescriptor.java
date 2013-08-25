@@ -20,6 +20,7 @@
  */
 package org.firebirdsql.gds.ng;
 
+import org.firebirdsql.gds.DatabaseParameterBuffer;
 import org.firebirdsql.gds.ng.wire.*;
 
 /**
@@ -30,6 +31,7 @@ import org.firebirdsql.gds.ng.wire.*;
  * </p>
  *
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @since 2.3
  */
 public class EmptyProtocolDescriptor extends AbstractProtocolDescriptor {
 
@@ -49,6 +51,11 @@ public class EmptyProtocolDescriptor extends AbstractProtocolDescriptor {
 
     @Override
     public FbWireStatement createStatement(final FbWireDatabase database) {
+        return null;
+    }
+
+    @Override
+    public DatabaseParameterBuffer createDatabaseParameterBuffer(final WireConnection connection) {
         return null;
     }
 }
