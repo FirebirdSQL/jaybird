@@ -36,7 +36,7 @@ import org.firebirdsql.gds.ng.fields.FieldValue;
 import org.firebirdsql.gds.ng.fields.RowDescriptor;
 import org.firebirdsql.gds.ng.wire.FbWireDatabase;
 import org.firebirdsql.gds.ng.wire.ProtocolCollection;
-import org.firebirdsql.gds.ng.wire.SimpleRowListener;
+import org.firebirdsql.gds.ng.wire.SimpleStatementListener;
 import org.firebirdsql.gds.ng.wire.WireConnection;
 import org.firebirdsql.management.FBManager;
 import org.junit.*;
@@ -131,20 +131,20 @@ public class TestV10Statement {
                 "SELECT RDB$DESCRIPTION AS \"Description\", RDB$RELATION_ID, RDB$SECURITY_CLASS, RDB$CHARACTER_SET_NAME " +
                         "FROM RDB$DATABASE");
 
-        final SimpleRowListener rowListener = new SimpleRowListener();
-        statement.addRowListener(rowListener);
+        final SimpleStatementListener statementListener = new SimpleStatementListener();
+        statement.addStatementListener(statementListener);
 
         statement.execute(Collections.<FieldValue>emptyList());
 
-        assertEquals("Expected hasResultSet to be set to true", Boolean.TRUE, rowListener.hasResultSet());
-        assertEquals("Expected hasSingletonResult to be set to false", Boolean.FALSE, rowListener.hasSingletonResult());
-        assertNull("Expected allRowsFetched not set yet", rowListener.isAllRowsFetched());
-        assertEquals("Expected no rows to be fetched yet", 0, rowListener.getRows().size());
+        assertEquals("Expected hasResultSet to be set to true", Boolean.TRUE, statementListener.hasResultSet());
+        assertEquals("Expected hasSingletonResult to be set to false", Boolean.FALSE, statementListener.hasSingletonResult());
+        assertNull("Expected allRowsFetched not set yet", statementListener.isAllRowsFetched());
+        assertEquals("Expected no rows to be fetched yet", 0, statementListener.getRows().size());
 
         statement.fetchRows(10);
 
-        assertEquals("Expected allRowsFetched to be set to true", Boolean.TRUE, rowListener.isAllRowsFetched());
-        assertEquals("Expected a single row to have been fetched", 1, rowListener.getRows().size());
+        assertEquals("Expected allRowsFetched to be set to true", Boolean.TRUE, statementListener.isAllRowsFetched());
+        assertEquals("Expected a single row to have been fetched", 1, statementListener.getRows().size());
 
         statement.close();
     }
@@ -196,22 +196,22 @@ public class TestV10Statement {
         FieldValue param1 = new FieldValue(descriptor.getFieldDescriptor(0), new byte[] { 0, 0, 0, 3 }); // int = 3 (id of UNICODE_FSS)
         FieldValue param2 = new FieldValue(descriptor.getFieldDescriptor(1), new byte[] { 0, 0, 0, 1 }); // int = 1 (single byte character sets)
 
-        final SimpleRowListener rowListener = new SimpleRowListener();
-        statement.addRowListener(rowListener);
+        final SimpleStatementListener statementListener = new SimpleStatementListener();
+        statement.addStatementListener(statementListener);
 
         statement.execute(Arrays.asList(param1, param2));
 
-        assertEquals("Expected hasResultSet to be set to true", Boolean.TRUE, rowListener.hasResultSet());
-        assertEquals("Expected hasSingletonResult to be set to false", Boolean.FALSE, rowListener.hasSingletonResult());
-        assertNull("Expected allRowsFetched not set yet", rowListener.isAllRowsFetched());
-        assertEquals("Expected no rows to be fetched yet", 0, rowListener.getRows().size());
+        assertEquals("Expected hasResultSet to be set to true", Boolean.TRUE, statementListener.hasResultSet());
+        assertEquals("Expected hasSingletonResult to be set to false", Boolean.FALSE, statementListener.hasSingletonResult());
+        assertNull("Expected allRowsFetched not set yet", statementListener.isAllRowsFetched());
+        assertEquals("Expected no rows to be fetched yet", 0, statementListener.getRows().size());
 
         // 100 should be sufficient to fetch all character sets
         statement.fetchRows(100);
 
-        assertEquals("Expected allRowsFetched to be set to true", Boolean.TRUE, rowListener.isAllRowsFetched());
+        assertEquals("Expected allRowsFetched to be set to true", Boolean.TRUE, statementListener.isAllRowsFetched());
         // Number is database dependent (unicode_fss + all single byte character sets)
-        assertTrue("Expected more than two rows", rowListener.getRows().size() > 2);
+        assertTrue("Expected more than two rows", statementListener.getRows().size() > 2);
 
         statement.close();
     }

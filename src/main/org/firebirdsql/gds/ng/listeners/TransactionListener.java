@@ -24,18 +24,21 @@
  * OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.firebirdsql.gds.ng;
+package org.firebirdsql.gds.ng.listeners;
+
+import org.firebirdsql.gds.ng.FbTransaction;
+import org.firebirdsql.gds.ng.TransactionState;
 
 /**
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @since 2.3
  */
-public interface TransactionEventListener {
+public interface TransactionListener {
 
     /**
      * Signals that the transaction state changed.
      * 
-     * @param transaction {@link FbTransaction} that changed state
+     * @param transaction {@link org.firebirdsql.gds.ng.FbTransaction} that changed state
      */
     void transactionStateChanged(FbTransaction transaction, TransactionState newState, TransactionState previousState);
 }

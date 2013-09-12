@@ -27,6 +27,7 @@
 package org.firebirdsql.gds.ng;
 
 import org.firebirdsql.gds.TransactionParameterBuffer;
+import org.firebirdsql.gds.ng.listeners.TransactionListener;
 
 import java.sql.SQLException;
 
@@ -49,25 +50,20 @@ public interface FbTransaction {
     int getHandle();
 
     /**
-     * Adds a {@link TransactionEventListener} to the list of listeners.
-     * <p>
-     * The implementation may use {@link java.lang.ref.WeakReference} for the listeners, so
-     * make sure the listener remains strongly reachable for its useful
-     * lifetime.
-     * </p>
+     * Adds a {@link org.firebirdsql.gds.ng.listeners.TransactionListener} to the list of listeners.
      *
      * @param listener
-     *         TransactionEventListener to register
+     *         TransactionListener to register
      */
-    void addTransactionEventListener(TransactionEventListener listener);
+    void addTransactionListener(TransactionListener listener);
 
     /**
-     * Removes the {@link TransactionEventListener} from the list of listeners.
+     * Removes the {@link org.firebirdsql.gds.ng.listeners.TransactionListener} from the list of listeners.
      *
      * @param listener
-     *         TransactionEventListener to remove
+     *         TransactionListener to remove
      */
-    void removeTransactionEventListener(TransactionEventListener listener);
+    void removeTransactionListener(TransactionListener listener);
 
     /**
      * Begin the transaction.
