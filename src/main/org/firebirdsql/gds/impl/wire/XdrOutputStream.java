@@ -258,7 +258,7 @@ public final class XdrOutputStream extends OutputStream {
      * Writes <code>len</code> bytes from the specified byte array
      * starting at offset <code>off</code> to this output stream as defined by {@link java.io.OutputStream#write(byte[], int, int)}.
      * <p>
-     * <b>Important</b>: do not confuse this method with {@link #write(byte[], int, int, int)} which originally
+     * <b>Important</b>: do not confuse this method with {@link #write(byte[], int, int, int)} which originally had
      * the signature of this method.
      * </p>
      *
