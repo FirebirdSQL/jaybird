@@ -28,6 +28,7 @@ package org.firebirdsql.gds.ng.wire;
 
 import org.firebirdsql.gds.DatabaseParameterBuffer;
 import org.firebirdsql.gds.ng.FbTransaction;
+import org.firebirdsql.gds.ng.fields.BlrCalculator;
 
 /**
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
@@ -94,4 +95,12 @@ public interface ProtocolDescriptor {
      * @return DatabaseParameterBuffer implementation
      */
     DatabaseParameterBuffer createDatabaseParameterBuffer(WireConnection connection);
+
+    /**
+     * Create {@link BlrCalculator} implementation for this protocol version.
+     *
+     * @param database FbWireDatabase of the current database
+     * @return BlrCalculator implementation
+     */
+    BlrCalculator createBlrCalculator(final FbWireDatabase database);
 }

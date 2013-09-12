@@ -27,6 +27,7 @@
 package org.firebirdsql.gds.ng.wire;
 
 import org.firebirdsql.gds.ng.FbDatabase;
+import org.firebirdsql.gds.ng.fields.BlrCalculator;
 
 import java.io.IOException;
 import java.sql.SQLException;
@@ -52,8 +53,10 @@ public interface FbWireDatabase extends FbDatabase, XdrStreamAccess {
     /**
      * Release object. TODO Review usage
      *
-     * @param operation Operation
-     * @param objectId Id of the object to release
+     * @param operation
+     *         Operation
+     * @param objectId
+     *         Id of the object to release
      * @throws SQLException
      */
     void releaseObject(int operation, int objectId) throws SQLException;
@@ -69,6 +72,32 @@ public interface FbWireDatabase extends FbDatabase, XdrStreamAccess {
      *         For errors reading the response from the connection.
      */
     GenericResponse readGenericResponse() throws SQLException, IOException;
+
+    /**
+     * Convenience method to read a Response to a SqlResponse
+     *
+     * @return SqlResponse
+     * @throws SQLException
+     *         For errors returned from the server, or when attempting to
+     *         read.
+     * @throws IOException
+     *         For errors reading the response from the connection.
+     */
+    SqlResponse readSqlResponse() throws SQLException, IOException;
+
+    /**
+     * @return The {@link BlrCalculator} instance for this database.
+     */
+    BlrCalculator getBlrCalculator();
+
+    /**
+     * Reads the next operation. Forwards call to {@link org.firebirdsql.gds.ng.wire.WireConnection#readNextOperation()}. The result is stored internally and
+     * can be retrieved once using {@link #readNextOperation()}
+     *
+     * @return next operation
+     * @throws IOException
+     */
+    int readNextOperation() throws IOException;
 
     /**
      * Reads Vax style integers from the supplied buffer, starting at

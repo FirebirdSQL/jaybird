@@ -29,32 +29,34 @@ import org.firebirdsql.jdbc.FBSQLException;
 
 import java.sql.SQLException;
 import java.sql.SQLNonTransientException;
-import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.Collections;
+import java.util.Map;
+import java.util.WeakHashMap;
 import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @since 2.3
  */
 public abstract class AbstractFbWireStatement extends AbstractFbStatement implements FbWireStatement {
 
-    protected final AtomicBoolean allRowsFetched = new AtomicBoolean(false);
-    private final AtomicReference<FbWireTransaction> transaction = new AtomicReference<FbWireTransaction>();
-    protected FbWireDatabase database;
-    private int handle;
-    // TODO Wrap in AtomicReference?
-    private RowDescriptor parameters;
-    private RowDescriptor fields;
+    private final AtomicReference<FbTransaction> transaction = new AtomicReference<FbTransaction>();
+    private final Map<RowDescriptor, byte[]> blrCache = Collections.synchronizedMap(new WeakHashMap<RowDescriptor, byte[]>());
+    private volatile int handle;
+    private final XdrStreamHolder xdrStreamHolder;
+    private FbWireDatabase database;
 
     public AbstractFbWireStatement(FbWireDatabase database) {
         this.database = database;
+        xdrStreamHolder = new XdrStreamHolder(database);
     }
 
     protected final XdrInputStream getXdrIn() throws SQLException {
-        return database.getXdrIn();
+        return xdrStreamHolder.getXdrIn();
     }
 
     protected final XdrOutputStream getXdrOut() throws SQLException {
-        return database.getXdrOut();
+        return xdrStreamHolder.getXdrOut();
     }
 
     protected final FbWireDatabase getDatabase() {
@@ -75,26 +77,8 @@ public abstract class AbstractFbWireStatement extends AbstractFbStatement implem
         // TODO Needs synchronization?
         // TODO Is there a statement or transaction state where we should not be switching transactions?
         if (transaction == this.transaction.get()) return;
-        this.transaction.set((FbWireTransaction) transaction);
+        this.transaction.set(transaction);
         // TODO Implement + add transaction listener
-    }
-
-    @Override
-    public final RowDescriptor getParameters() throws SQLException {
-        return parameters;
-    }
-
-    protected final void setParameters(RowDescriptor parameters) {
-        this.parameters = parameters;
-    }
-
-    @Override
-    public final RowDescriptor getFields() throws SQLException {
-        return fields;
-    }
-
-    protected final void setFields(RowDescriptor fields) {
-        this.fields = fields;
     }
 
     @Override
@@ -103,6 +87,39 @@ public abstract class AbstractFbWireStatement extends AbstractFbStatement implem
     }
 
     protected final void setHandle(int handle) {
-        this.handle = handle;
+        synchronized (getSynchronizationObject()) {
+            this.handle = handle;
+        }
+    }
+
+    /**
+     * Returns the (possibly cached) blr byte array for a {@link RowDescriptor}, or <code>null</code> if the parameter is null.
+     *
+     * @param rowDescriptor
+     *         The row descriptor.
+     * @return blr byte array or <code>null</code> when <code>rowDescriptor</code> is <code>null</code>
+     * @throws SQLException
+     *         When the {@link RowDescriptor} contains an unsupported field type.
+     */
+    protected final byte[] calculateBlr(RowDescriptor rowDescriptor) throws SQLException {
+        if (rowDescriptor == null) return null;
+        byte[] blr = blrCache.get(rowDescriptor);
+        if (blr == null) {
+            blr = getDatabase().getBlrCalculator().calculateBlr(rowDescriptor);
+            blrCache.put(rowDescriptor, blr);
+        }
+        return blr;
+    }
+
+    public void close() throws SQLException {
+        synchronized (getSynchronizationObject()) {
+            try {
+                super.close();
+            } finally {
+                database = null;
+                transaction.set(null);
+                blrCache.clear();
+            }
+        }
     }
 }

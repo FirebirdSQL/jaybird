@@ -30,7 +30,10 @@ import org.firebirdsql.util.ObjectUtils;
 
 /**
  * The class <code>FieldDescriptor</code> contains the column metadata of the XSQLVAR server
- * data structure used to describe one column for input or output. FieldDescriptor is an immutable type.
+ * data structure used to describe one column for input or output.
+ * <p>
+ * FieldDescriptor is an immutable type, the value of a field is maintained separately in an instance of {@link FieldValue}.
+ * </p>
  *
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @version 2.3
@@ -144,6 +147,15 @@ public final class FieldDescriptor {
      */
     public String getOwnerName() {
         return ownerName;
+    }
+
+    /**
+     * Creates a default, uninitialized {@link FieldValue}
+     *
+     * @return A new {@link FieldValue}
+     */
+    public FieldValue createDefaultFieldValue() {
+        return new FieldValue(this);
     }
 
     @Override

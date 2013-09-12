@@ -216,4 +216,7 @@ public interface WireProtocolConstants {
     int ptype_batch_send = 3; // Batch sends, no asynchrony
     int ptype_out_of_band = 4; // Batch sends w/ out of band notification
     int ptype_lazy_send = 5; // Deferred packets delivery
+
+    int FETCH_OK = 0;
+    int FETCH_NO_MORE_ROWS = 100;
 }

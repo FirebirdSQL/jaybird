@@ -32,9 +32,11 @@ import org.firebirdsql.gds.ng.FbStatement;
 import org.firebirdsql.gds.ng.FbTransaction;
 import org.firebirdsql.gds.ng.StatementType;
 import org.firebirdsql.gds.ng.fields.FieldDescriptor;
+import org.firebirdsql.gds.ng.fields.FieldValue;
 import org.firebirdsql.gds.ng.fields.RowDescriptor;
 import org.firebirdsql.gds.ng.wire.FbWireDatabase;
 import org.firebirdsql.gds.ng.wire.ProtocolCollection;
+import org.firebirdsql.gds.ng.wire.SimpleRowListener;
 import org.firebirdsql.gds.ng.wire.WireConnection;
 import org.firebirdsql.management.FBManager;
 import org.junit.*;
@@ -43,11 +45,12 @@ import org.junit.rules.ExpectedException;
 import java.sql.SQLException;
 import java.sql.SQLNonTransientException;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 import static org.firebirdsql.common.FBTestProperties.*;
+import static org.junit.Assert.*;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
 import static org.junit.Assume.assumeTrue;
 
 /**
@@ -92,7 +95,7 @@ public class TestV10Statement {
     }
 
     @Test
-    public void testSelect_NoParameters() throws Exception {
+     public void testSelect_NoParameters_Describe() throws Exception {
         final FbTransaction transaction = getTransaction();
         final FbStatement statement = db.createStatement();
         statement.setTransaction(transaction);
@@ -102,7 +105,7 @@ public class TestV10Statement {
 
         assertEquals("Unexpected StatementType", StatementType.SELECT, statement.getType());
 
-        final RowDescriptor fields = statement.getFields();
+        final RowDescriptor fields = statement.getFieldDescriptor();
         assertNotNull("Fields", fields);
         // Note that in the V10 protocol we don't have support for the table alias, so it is always null
         List<FieldDescriptor> expectedFields =
@@ -113,12 +116,41 @@ public class TestV10Statement {
                         new FieldDescriptor(ISCConstants.SQL_TEXT | 1, 3, 0, 93, "RDB$CHARACTER_SET_NAME", null, "RDB$CHARACTER_SET_NAME", "RDB$DATABASE", "SYSDBA")
                 );
         assertEquals("Unexpected values for fields", expectedFields, fields.getFieldDescriptors());
-        assertNotNull("Parameters", statement.getParameters());
-        assertEquals("Unexpected parameter count", 0, statement.getParameters().getCount());
+        assertNotNull("Parameters", statement.getParameterDescriptor());
+        assertEquals("Unexpected parameter count", 0, statement.getParameterDescriptor().getCount());
+
+        statement.close();
     }
 
     @Test
-    public void testSelect_WithParameters() throws Exception {
+    public void testSelect_NoParameters_Execute_and_Fetch() throws Exception {
+        final FbTransaction transaction = getTransaction();
+        final FbStatement statement = db.createStatement();
+        statement.setTransaction(transaction);
+        statement.prepare(
+                "SELECT RDB$DESCRIPTION AS \"Description\", RDB$RELATION_ID, RDB$SECURITY_CLASS, RDB$CHARACTER_SET_NAME " +
+                        "FROM RDB$DATABASE");
+
+        final SimpleRowListener rowListener = new SimpleRowListener();
+        statement.addRowListener(rowListener);
+
+        statement.execute(Collections.<FieldValue>emptyList());
+
+        assertEquals("Expected hasResultSet to be set to true", Boolean.TRUE, rowListener.hasResultSet());
+        assertEquals("Expected hasSingletonResult to be set to false", Boolean.FALSE, rowListener.hasSingletonResult());
+        assertNull("Expected allRowsFetched not set yet", rowListener.isAllRowsFetched());
+        assertEquals("Expected no rows to be fetched yet", 0, rowListener.getRows().size());
+
+        statement.fetchRows(10);
+
+        assertEquals("Expected allRowsFetched to be set to true", Boolean.TRUE, rowListener.isAllRowsFetched());
+        assertEquals("Expected a single row to have been fetched", 1, rowListener.getRows().size());
+
+        statement.close();
+    }
+
+    @Test
+    public void testSelect_WithParameters_Describe() throws Exception {
         final FbTransaction transaction = getTransaction();
         final FbStatement statement = db.createStatement();
         statement.setTransaction(transaction);
@@ -129,7 +161,7 @@ public class TestV10Statement {
 
         assertEquals("Unexpected StatementType", StatementType.SELECT, statement.getType());
 
-        final RowDescriptor fields = statement.getFields();
+        final RowDescriptor fields = statement.getFieldDescriptor();
         assertNotNull("Fields", fields);
         // Note that in the V10 protocol we don't have support for the table alias, so it is always null
         List<FieldDescriptor> expectedFields =
@@ -138,7 +170,7 @@ public class TestV10Statement {
                 );
         assertEquals("Unexpected values for fields", expectedFields, fields.getFieldDescriptors());
 
-        final RowDescriptor parameters = statement.getParameters();
+        final RowDescriptor parameters = statement.getParameterDescriptor();
         assertNotNull("Parameters", parameters);
         List<FieldDescriptor> expectedParameters =
                 Arrays.asList(
@@ -146,7 +178,45 @@ public class TestV10Statement {
                         new FieldDescriptor(ISCConstants.SQL_SHORT | 1, 0, 0, 2, null, null, null, null, null)
                 );
         assertEquals("Unexpected values for parameters", expectedParameters, parameters.getFieldDescriptors());
+
+        statement.close();
     }
+
+    @Test
+    public void testSelect_WithParameters_Execute_and_Fetch() throws Exception {
+        final FbTransaction transaction = getTransaction();
+        final FbStatement statement = db.createStatement();
+        statement.setTransaction(transaction);
+        statement.prepare(
+                "SELECT a.RDB$CHARACTER_SET_NAME " +
+                        "FROM RDB$CHARACTER_SETS a " +
+                        "WHERE a.RDB$CHARACTER_SET_ID = ? OR a.RDB$BYTES_PER_CHARACTER = ?");
+
+        RowDescriptor descriptor = statement.getParameterDescriptor();
+        FieldValue param1 = new FieldValue(descriptor.getFieldDescriptor(0), new byte[] { 0, 0, 0, 3 }); // int = 3 (id of UNICODE_FSS)
+        FieldValue param2 = new FieldValue(descriptor.getFieldDescriptor(1), new byte[] { 0, 0, 0, 1 }); // int = 1 (single byte character sets)
+
+        final SimpleRowListener rowListener = new SimpleRowListener();
+        statement.addRowListener(rowListener);
+
+        statement.execute(Arrays.asList(param1, param2));
+
+        assertEquals("Expected hasResultSet to be set to true", Boolean.TRUE, rowListener.hasResultSet());
+        assertEquals("Expected hasSingletonResult to be set to false", Boolean.FALSE, rowListener.hasSingletonResult());
+        assertNull("Expected allRowsFetched not set yet", rowListener.isAllRowsFetched());
+        assertEquals("Expected no rows to be fetched yet", 0, rowListener.getRows().size());
+
+        // 100 should be sufficient to fetch all character sets
+        statement.fetchRows(100);
+
+        assertEquals("Expected allRowsFetched to be set to true", Boolean.TRUE, rowListener.isAllRowsFetched());
+        // Number is database dependent (unicode_fss + all single byte character sets)
+        assertTrue("Expected more than two rows", rowListener.getRows().size() > 2);
+
+        statement.close();
+    }
+
+    // TODO Test with executable stored procedure
 
     @Test
     public void testAllocate_NotClosed() throws Exception {

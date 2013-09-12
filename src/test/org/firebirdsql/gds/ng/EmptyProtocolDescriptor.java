@@ -21,6 +21,7 @@
 package org.firebirdsql.gds.ng;
 
 import org.firebirdsql.gds.DatabaseParameterBuffer;
+import org.firebirdsql.gds.ng.fields.BlrCalculator;
 import org.firebirdsql.gds.ng.wire.*;
 
 /**
@@ -56,6 +57,11 @@ public class EmptyProtocolDescriptor extends AbstractProtocolDescriptor {
 
     @Override
     public DatabaseParameterBuffer createDatabaseParameterBuffer(final WireConnection connection) {
+        return null;
+    }
+
+    @Override
+    public BlrCalculator createBlrCalculator(FbWireDatabase database) {
         return null;
     }
 }

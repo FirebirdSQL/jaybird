@@ -26,9 +26,12 @@
  */
 package org.firebirdsql.gds.ng;
 
+import org.firebirdsql.gds.ng.fields.FieldValue;
 import org.firebirdsql.gds.ng.fields.RowDescriptor;
+import org.firebirdsql.gds.ng.listeners.RowListener;
 
 import java.sql.SQLException;
+import java.util.List;
 
 /**
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
@@ -53,12 +56,12 @@ public interface FbStatement {
     /**
      * @return descriptor of the parameters of this statement
      */
-    RowDescriptor getParameters() throws SQLException;
+    RowDescriptor getParameterDescriptor() throws SQLException;
 
     /**
      * @return descriptor of the fields returned by this statement
      */
-    RowDescriptor getFields() throws SQLException;
+    RowDescriptor getFieldDescriptor() throws SQLException;
 
     /**
      * @return The statement type
@@ -102,9 +105,13 @@ public interface FbStatement {
     /**
      * Execute the statement.
      *
+     * @param parameters
+     *         The list of parameter values to use for execution.
      * @throws SQLException
+     *         When the number of type of parameters does not match the types returned by {@link #getParameterDescriptor()},
+     *         a parameter value was not set, or when an error occurred executing this statement.
      */
-    void execute() throws SQLException;
+    void execute(List<FieldValue> parameters) throws SQLException;
 
     /**
      * Prepares and executes the statement. This method cannot be used for statements expecting parameters.
@@ -121,4 +128,32 @@ public interface FbStatement {
      * @return object, cannot be <code>null</code>.
      */
     Object getSynchronizationObject();
+
+    /**
+     * Requests this statement to fetch the next <code>fetchSize</code> rows.
+     * <p>
+     * Fetched rows are not returned from this method, but sent to the registered {@link RowListener} instances.
+     * </p>
+     *
+     * @param fetchSize
+     *         Number of rows to fetch (must be <code>&gt; 0</code>)
+     * @throws SQLException
+     *         For database access errors, when called on a closed statement, when no cursor is open or when the fetch
+     *         size is not <code>&gt; 0</code>.
+     */
+    void fetchRows(int fetchSize) throws SQLException;
+
+    /**
+     * Registers a {@link RowListener}.
+     *
+     * @param rowListener The row listener
+     */
+    void addRowListener(RowListener rowListener);
+
+    /**
+     * Removes a {@link RowListener}.
+     *
+     * @param rowListener The row listener
+     */
+    void removeRowListener(RowListener rowListener);
 }
