@@ -28,7 +28,7 @@ package org.firebirdsql.gds.ng;
 
 import org.firebirdsql.gds.ng.fields.FieldValue;
 import org.firebirdsql.gds.ng.fields.RowDescriptor;
-import org.firebirdsql.gds.ng.listeners.RowListener;
+import org.firebirdsql.gds.ng.listeners.StatementListener;
 
 import java.sql.SQLException;
 import java.util.List;
@@ -113,14 +113,14 @@ public interface FbStatement {
      */
     void execute(List<FieldValue> parameters) throws SQLException;
 
-    /**
-     * Prepares and executes the statement. This method cannot be used for statements expecting parameters.
-     *
-     * @param statementText
-     *         Statement text
-     * @throws SQLException
-     */
-    void execute(String statementText) throws SQLException;
+//    /**
+//     * Prepares and executes the statement. This method cannot be used for statements expecting parameters.
+//     *
+//     * @param statementText
+//     *         Statement text
+//     * @throws SQLException
+//     */
+//    void execute(String statementText) throws SQLException;
 
     /**
      * Get synchronization object.
@@ -132,7 +132,7 @@ public interface FbStatement {
     /**
      * Requests this statement to fetch the next <code>fetchSize</code> rows.
      * <p>
-     * Fetched rows are not returned from this method, but sent to the registered {@link RowListener} instances.
+     * Fetched rows are not returned from this method, but sent to the registered {@link org.firebirdsql.gds.ng.listeners.StatementListener} instances.
      * </p>
      *
      * @param fetchSize
@@ -144,16 +144,16 @@ public interface FbStatement {
     void fetchRows(int fetchSize) throws SQLException;
 
     /**
-     * Registers a {@link RowListener}.
+     * Registers a {@link org.firebirdsql.gds.ng.listeners.StatementListener}.
      *
-     * @param rowListener The row listener
+     * @param statementListener The row listener
      */
-    void addRowListener(RowListener rowListener);
+    void addStatementListener(StatementListener statementListener);
 
     /**
-     * Removes a {@link RowListener}.
+     * Removes a {@link org.firebirdsql.gds.ng.listeners.StatementListener}.
      *
-     * @param rowListener The row listener
+     * @param statementListener The row listener
      */
-    void removeRowListener(RowListener rowListener);
+    void removeStatementListener(StatementListener statementListener);
 }

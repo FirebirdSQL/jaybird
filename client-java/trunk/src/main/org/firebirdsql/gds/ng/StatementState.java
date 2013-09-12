@@ -30,9 +30,10 @@ package org.firebirdsql.gds.ng;
  * Statement states for {@link FbStatement} implementations
  *
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @since 2.3
  */
 public enum StatementState {
-
+    // TODO Add state 'NEW' to distinguish between close() called, or newly constructed statement?
     /**
      * Statement is closed or has been deallocated
      */

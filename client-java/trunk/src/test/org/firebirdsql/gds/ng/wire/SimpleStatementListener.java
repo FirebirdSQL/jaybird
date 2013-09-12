@@ -21,19 +21,20 @@
 package org.firebirdsql.gds.ng.wire;
 
 import org.firebirdsql.gds.ng.FbStatement;
+import org.firebirdsql.gds.ng.StatementState;
 import org.firebirdsql.gds.ng.fields.FieldValue;
-import org.firebirdsql.gds.ng.listeners.RowListener;
+import org.firebirdsql.gds.ng.listeners.StatementListener;
 
 import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Simple implementation of {@link RowListener} for testing purposes
+ * Simple implementation of {@link org.firebirdsql.gds.ng.listeners.StatementListener} for testing purposes
  *
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @since 2.3
  */
-public class SimpleRowListener implements RowListener {
+public class SimpleStatementListener implements StatementListener {
 
     private final List<List<FieldValue>> rows = new ArrayList<List<FieldValue>>();
     private Boolean allRowsFetched;
@@ -54,6 +55,11 @@ public class SimpleRowListener implements RowListener {
     public void statementExecuted(FbStatement sender, boolean hasResultSet, boolean hasSingletonResult) {
         this.hasResultSet = hasResultSet;
         this.hasSingletonResult = hasSingletonResult;
+    }
+
+    @Override
+    public void statementStateChanged(FbStatement sender, StatementState newState, StatementState previousState) {
+        // unused for now
     }
 
     public Boolean isAllRowsFetched() {

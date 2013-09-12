@@ -23,8 +23,8 @@ package org.firebirdsql.gds.ng;
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.ng.fields.FieldValue;
 import org.firebirdsql.gds.ng.fields.RowDescriptor;
-import org.firebirdsql.gds.ng.listeners.RowListener;
-import org.firebirdsql.gds.ng.listeners.RowListenerDispatcher;
+import org.firebirdsql.gds.ng.listeners.StatementListener;
+import org.firebirdsql.gds.ng.listeners.StatementListenerDispatcher;
 
 import java.sql.SQLException;
 import java.sql.SQLNonTransientException;
@@ -33,6 +33,7 @@ import java.util.Collections;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
@@ -41,9 +42,9 @@ import java.util.Set;
 public abstract class AbstractFbStatement implements FbStatement {
 
     private final Object syncObject = new Object();
-    protected final RowListenerDispatcher rowListenerDispatcher = new RowListenerDispatcher();
+    protected final StatementListenerDispatcher statementListenerDispatcher = new StatementListenerDispatcher();
     private volatile boolean allRowsFetched = false;
-    private volatile StatementState state = StatementState.CLOSED;
+    private AtomicReference<StatementState> state = new AtomicReference<StatementState>(StatementState.CLOSED);
     private volatile StatementType type = StatementType.NONE;
     private volatile RowDescriptor parameterDescriptor;
     private volatile RowDescriptor fieldDescriptor;
@@ -76,8 +77,8 @@ public abstract class AbstractFbStatement implements FbStatement {
             try {
                 free(ISCConstants.DSQL_drop);
             } finally {
-                rowListenerDispatcher.removeAllListeners();
-                setState(StatementState.CLOSED);
+                statementListenerDispatcher.removeAllListeners();
+                switchState(StatementState.CLOSED);
                 setType(StatementType.NONE);
             }
         }
@@ -107,26 +108,33 @@ public abstract class AbstractFbStatement implements FbStatement {
                 }
             } finally {
                 // TODO Close in case of exception?
-                setState(StatementState.IDLE);
+                switchState(StatementState.IDLE);
             }
         }
     }
 
     @Override
     public StatementState getState() {
-        return state;
+        return state.get();
     }
 
     /**
      * Sets the StatementState.
      *
-     * @param state
+     * @param newState
      *         New state
      */
-    protected void setState(StatementState state) {
+    protected final void switchState(final StatementState newState) throws SQLException {
         // TODO Check valid transition?
-        synchronized (getSynchronizationObject()) {
-            this.state = state;
+        final StatementState currentState = this.state.get();
+        if (state.compareAndSet(currentState, newState)) {
+            statementListenerDispatcher.statementStateChanged(this, newState, currentState);
+        } else {
+            // Note: race condition when generating message (get() could return same value as currentState)
+            // TODO Include sqlstate
+            throw new SQLException(String.format(
+                    "Unable to change statement state: expected current state %s, but was %s", currentState,
+                    state.get()));
         }
     }
 
@@ -162,13 +170,13 @@ public abstract class AbstractFbStatement implements FbStatement {
      *         Row data
      */
     protected final void queueRowData(List<FieldValue> rowData) {
-        rowListenerDispatcher.newRow(this, rowData);
+        statementListenerDispatcher.newRow(this, rowData);
     }
 
     /**
      * Sets the <code>allRowsFetched</code> property.
      * <p>
-     * When set to true all registered {@link RowListener} instances are notified for the {@link RowListener#allRowsFetched(FbStatement)}
+     * When set to true all registered {@link org.firebirdsql.gds.ng.listeners.StatementListener} instances are notified for the {@link org.firebirdsql.gds.ng.listeners.StatementListener#allRowsFetched(FbStatement)}
      * event.
      * </p>
      *
@@ -180,7 +188,7 @@ public abstract class AbstractFbStatement implements FbStatement {
             this.allRowsFetched = allRowsFetched;
         }
         if (allRowsFetched) {
-            rowListenerDispatcher.allRowsFetched(this);
+            statementListenerDispatcher.allRowsFetched(this);
         }
     }
 
@@ -343,14 +351,14 @@ public abstract class AbstractFbStatement implements FbStatement {
     }
 
     @Override
-    public final void addRowListener(RowListener rowListener) {
+    public final void addStatementListener(StatementListener statementListener) {
         // TODO What to do after statement close?
-        rowListenerDispatcher.addListener(rowListener);
+        statementListenerDispatcher.addListener(statementListener);
     }
 
     @Override
-    public final void removeRowListener(RowListener rowListener) {
-        rowListenerDispatcher.removeListener(rowListener);
+    public final void removeStatementListener(StatementListener statementListener) {
+        statementListenerDispatcher.removeListener(statementListener);
     }
 
     /**

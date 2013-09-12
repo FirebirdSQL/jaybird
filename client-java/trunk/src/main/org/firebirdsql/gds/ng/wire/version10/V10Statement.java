@@ -196,7 +196,7 @@ public class V10Statement extends AbstractFbWireStatement implements FbWireState
                 // Reset statement information
                 reset(option == ISCConstants.DSQL_drop);
             } catch (IOException e) {
-                setState(StatementState.ERROR);
+                switchState(StatementState.ERROR);
                 throw new FbExceptionBuilder().exception(ISCConstants.isc_net_write_err).cause(e).toSQLException();
             }
         }
@@ -271,7 +271,7 @@ public class V10Statement extends AbstractFbWireStatement implements FbWireState
                     }
                 } catch (SQLException ex) {
                     if (getState() == StatementState.ALLOCATED) {
-                        setState(StatementState.ERROR);
+                        switchState(StatementState.ERROR);
                     }
                     throw ex;
                 }
@@ -346,12 +346,12 @@ public class V10Statement extends AbstractFbWireStatement implements FbWireState
                     sendExecuteToBuffer(performExecute2 ? WireProtocolConstants.op_execute2 : WireProtocolConstants.op_execute, parameters);
                     getXdrOut().flush();
                 } catch (IOException ex) {
-                    setState(StatementState.ERROR);
+                    switchState(StatementState.ERROR);
                     throw new FbExceptionBuilder().exception(ISCConstants.isc_net_write_err).cause(ex).toSQLException();
                 }
                 try {
                     final boolean hasResultSet = getFieldDescriptor() != null && getFieldDescriptor().getCount() > 0;
-                    rowListenerDispatcher.statementExecuted(this, hasResultSet, performExecute2);
+                    statementListenerDispatcher.statementExecuted(this, hasResultSet, performExecute2);
                     if (performExecute2) {
                         processStoredProcedureExecuteResponse(getDatabase().readSqlResponse());
                         setAllRowsFetched(true);
@@ -360,9 +360,9 @@ public class V10Statement extends AbstractFbWireStatement implements FbWireState
 
                     // TODO .NET implementation retrieves affected rows here
 
-                    setState(StatementState.EXECUTED);
+                    switchState(StatementState.EXECUTED);
                 } catch (IOException ex) {
-                    setState(StatementState.ERROR);
+                    switchState(StatementState.ERROR);
                     throw new FbExceptionBuilder().exception(ISCConstants.isc_net_read_err).cause(ex).toSQLException();
                 }
             }
@@ -453,13 +453,13 @@ public class V10Statement extends AbstractFbWireStatement implements FbWireState
                     sendFetchToBuffer(fetchSize);
                     getXdrOut().flush();
                 } catch (IOException ex) {
-                    setState(StatementState.ERROR);
+                    switchState(StatementState.ERROR);
                     throw new FbExceptionBuilder().exception(ISCConstants.isc_net_write_err).cause(ex).toSQLException();
                 }
                 try {
                     processFetchResponse();
                 } catch (IOException ex) {
-                    setState(StatementState.ERROR);
+                    switchState(StatementState.ERROR);
                     throw new FbExceptionBuilder().exception(ISCConstants.isc_net_read_err).cause(ex).toSQLException();
                 }
             }
@@ -608,11 +608,6 @@ public class V10Statement extends AbstractFbWireStatement implements FbWireState
         }
     }
 
-    @Override
-    public void execute(final String statementText) throws SQLException {
-        //To change body of implemented methods use File | Settings | File Templates.
-    }
-
     /**
      * Allocates a statement handle on the server
      *
@@ -628,13 +623,13 @@ public class V10Statement extends AbstractFbWireStatement implements FbWireState
                 sendAllocateToBuffer();
                 getXdrOut().flush();
             } catch (IOException ex) {
-                setState(StatementState.ERROR);
+                switchState(StatementState.ERROR);
                 throw new FbExceptionBuilder().exception(ISCConstants.isc_net_write_err).cause(ex).toSQLException();
             }
             try {
                 processAllocateResponse(getDatabase().readGenericResponse());
             } catch (IOException ex) {
-                setState(StatementState.ERROR);
+                switchState(StatementState.ERROR);
                 throw new FbExceptionBuilder().exception(ISCConstants.isc_net_read_err).cause(ex).toSQLException();
             }
         }
@@ -664,7 +659,7 @@ public class V10Statement extends AbstractFbWireStatement implements FbWireState
         synchronized (getSynchronizationObject()) {
             setHandle(response.getObjectHandle());
             setAllRowsFetched(false);
-            setState(StatementState.ALLOCATED);
+            switchState(StatementState.ALLOCATED);
             setType(StatementType.NONE);
         }
     }

@@ -31,6 +31,7 @@ import org.firebirdsql.gds.impl.wire.XdrOutputStream;
 import org.firebirdsql.gds.impl.wire.Xdrable;
 import org.firebirdsql.gds.ng.*;
 import org.firebirdsql.gds.ng.fields.BlrCalculator;
+import org.firebirdsql.gds.ng.listeners.TransactionListener;
 import org.firebirdsql.gds.ng.wire.*;
 import org.firebirdsql.jdbc.FBDriverNotCapableException;
 import org.firebirdsql.jdbc.FBSQLException;
@@ -52,7 +53,7 @@ import static org.firebirdsql.gds.impl.wire.WireProtocolConstants.*;
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @since 2.3
  */
-public class V10Database extends AbstractFbWireDatabase implements FbWireDatabase, TransactionEventListener {
+public class V10Database extends AbstractFbWireDatabase implements FbWireDatabase, TransactionListener {
 
     private static final Logger log = LoggerFactory.getLogger(V10Database.class, false);
 

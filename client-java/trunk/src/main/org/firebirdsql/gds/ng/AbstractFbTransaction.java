@@ -20,12 +20,10 @@
  */
 package org.firebirdsql.gds.ng;
 
+import org.firebirdsql.gds.ng.listeners.TransactionListener;
+import org.firebirdsql.gds.ng.listeners.TransactionListenerDispatcher;
+
 import java.sql.SQLException;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
-import java.util.WeakHashMap;
 import java.util.concurrent.atomic.AtomicReference;
 
 /**
@@ -34,9 +32,7 @@ import java.util.concurrent.atomic.AtomicReference;
  */
 public abstract class AbstractFbTransaction implements FbTransaction {
 
-    private static final Object PRESENT = new Object();
-    private final Map<TransactionEventListener, Object> transactionEventListeners = Collections
-            .synchronizedMap(new WeakHashMap<TransactionEventListener, Object>());
+    protected final TransactionListenerDispatcher transactionListenerDispatcher = new TransactionListenerDispatcher();
     private final AtomicReference<TransactionState> state = new AtomicReference<TransactionState>(
             TransactionState.NO_TRANSACTION);
 
@@ -54,13 +50,13 @@ public abstract class AbstractFbTransaction implements FbTransaction {
      *             If the requested state transition is not allowed or if the
      *             current state is also changed in a concurrent thread.
      */
-    protected final void switchState(TransactionState newState) throws SQLException {
-        TransactionState currentState = state.get();
+    protected final void switchState(final TransactionState newState) throws SQLException {
+        final TransactionState currentState = state.get();
         if (currentState.isValidTransition(newState)) {
             if (state.compareAndSet(currentState, newState)) {
-                fireTransactionStateChanged(newState, currentState);
+                transactionListenerDispatcher.transactionStateChanged(this, newState, currentState);
             } else {
-                // TODO: race condition when generating message (get() could return same value as currentState)
+                // Note: race condition when generating message (get() could return same value as currentState)
                 // TODO Include sqlstate
                 throw new SQLException(String.format(
                         "Unable to change transaction state: expected current state %s, but was %s", currentState,
@@ -74,13 +70,13 @@ public abstract class AbstractFbTransaction implements FbTransaction {
     }
 
     @Override
-    public final void addTransactionEventListener(TransactionEventListener listener) {
-        transactionEventListeners.put(listener, PRESENT);
+    public final void addTransactionListener(TransactionListener listener) {
+        transactionListenerDispatcher.addListener(listener);
     }
 
     @Override
-    public final void removeTransactionEventListener(TransactionEventListener listener) {
-        transactionEventListeners.remove(listener);
+    public final void removeTransactionListener(TransactionListener listener) {
+        transactionListenerDispatcher.removeListener(listener);
     }
 
     @Override
@@ -96,20 +92,4 @@ public abstract class AbstractFbTransaction implements FbTransaction {
         }
     }
 
-    /**
-     * Fires the transactionStateChanged event to all listeners.
-     * 
-     * @param newState
-     *            The new state of the transaction
-     * @param previousState
-     *            The previous state of the transaction
-     */
-    protected final void fireTransactionStateChanged(TransactionState newState, TransactionState previousState) {
-        Set<TransactionEventListener> listeners = new HashSet<TransactionEventListener>(
-                transactionEventListeners.keySet());
-
-        for (TransactionEventListener listener : listeners) {
-            listener.transactionStateChanged(this, newState, previousState);
-        }
-    }
 }
