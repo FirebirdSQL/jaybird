@@ -101,6 +101,7 @@ public final class V10StatementInfoProcessor implements InfoProcessor<InfoProces
      */
     private void handleTruncatedInfo(final StatementInfo info) throws SQLException {
         final byte[] originalInfo = statement.getStatementInfoRequestItems();
+        // Adding 2 * 4 bytes for the isc_info_sql_sqlda_start item (see handling of isc_info_sql_select and isc_info_sql_bind)
         final byte[] newInfoItems = new byte[originalInfo.length + 2 * 4];
         int newIndex = 0;
         for (final byte infoItem : originalInfo) {
@@ -108,27 +109,21 @@ public final class V10StatementInfoProcessor implements InfoProcessor<InfoProces
             switch (infoItem) {
             case ISCConstants.isc_info_sql_select:
             case ISCConstants.isc_info_sql_bind:
+                final RowDescriptorBuilder currentBuilder =
+                        infoItem == ISCConstants.isc_info_sql_select ? info.fieldBuilder : info.parameterBuilder;
+                // Index of first descriptor to request; adding 1 to descriptor index as Firebird uses 1-based index for fields/parameters and builders are 0-based
+                final int descriptorIndex =
+                        currentBuilder != null ? currentBuilder.getFirstUnprocessedIndex() + 1 : 1;
+                // Request server to resend info starting at the specified index of the fields or parameters
                 newInfoItems[newIndex++] = ISCConstants.isc_info_sql_sqlda_start;
                 newInfoItems[newIndex++] = 2;
-                // 1-based index of the first field to request
-                int descriptorIndex = 1;
-                switch (infoItem) {
-                case ISCConstants.isc_info_sql_select:
-                    if (info.fieldBuilder != null) {
-                        descriptorIndex = info.fieldBuilder.getFirstUnprocessedIndex() + 1;
-                    }
-                    break;
-                case ISCConstants.isc_info_sql_bind:
-                    if (info.parameterBuilder != null) {
-                        descriptorIndex = info.parameterBuilder.getFirstUnprocessedIndex() + 1;
-                    }
-                    break;
-                }
                 newInfoItems[newIndex++] = (byte) (descriptorIndex & 0xFF);
                 newInfoItems[newIndex++] = (byte) (descriptorIndex >> 8);
-                // Intentional fall through
+                newInfoItems[newIndex++] = infoItem;
+                break;
             default:
                 newInfoItems[newIndex++] = infoItem;
+                break;
             }
         }
         assert newIndex == newInfoItems.length : "newInfoItems size too long";
@@ -175,7 +170,6 @@ public final class V10StatementInfoProcessor implements InfoProcessor<InfoProces
      *         StatementInfo
      * @param rdb
      *         RowDescriptorBuilder
-     * @return
      */
     private void processDescriptors(final StatementInfo info, final RowDescriptorBuilder rdb) throws SQLException {
         int fieldCount = rdb.getFirstUnprocessedIndex();
@@ -184,7 +178,7 @@ public final class V10StatementInfoProcessor implements InfoProcessor<InfoProces
             info.currentItem = info.buffer[info.currentIndex++];
             switch (info.currentItem) {
             case ISCConstants.isc_info_sql_sqlda_seq:
-                // isc_info_sql_sqlda_seq is 1-based, we use 0-based indices
+                // isc_info_sql_sqlda_seq is 1-based, builder uses 0-based index
                 rdb.setFieldIndex(readIntValue(info) - 1);
                 break;
 
@@ -226,11 +220,12 @@ public final class V10StatementInfoProcessor implements InfoProcessor<InfoProces
                 break;
 
             case ISCConstants.isc_info_truncated:
-                // Clear field data from the builder
+                // Clear current field data from the builder
                 rdb.resetField();
                 // Rewind index so isc_info_truncated can be handled in process(byte[]).
                 info.currentIndex--;
                 return;
+
             default:
                 log.debug(String.format("Unexpected item type %d", info.currentItem));
                 throw new FbExceptionBuilder().exception(ISCConstants.isc_dsql_sqlda_err).toSQLException();
@@ -258,7 +253,7 @@ public final class V10StatementInfoProcessor implements InfoProcessor<InfoProces
     /**
      * Class for holding values about the statement
      */
-    private static class StatementInfo implements InfoProcessor.StatementInfo {
+    private static final class StatementInfo implements InfoProcessor.StatementInfo {
         private int requestBufferSize;
         private int currentIndex;
         private byte currentItem;

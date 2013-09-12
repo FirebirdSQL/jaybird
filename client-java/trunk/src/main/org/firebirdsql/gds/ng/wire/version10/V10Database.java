@@ -22,7 +22,6 @@ package org.firebirdsql.gds.ng.wire.version10;
 
 import org.firebirdsql.encodings.Encoding;
 import org.firebirdsql.encodings.EncodingFactory;
-import org.firebirdsql.encodings.IEncodingFactory;
 import org.firebirdsql.gds.DatabaseParameterBuffer;
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.TransactionParameterBuffer;
@@ -31,6 +30,7 @@ import org.firebirdsql.gds.impl.wire.XdrInputStream;
 import org.firebirdsql.gds.impl.wire.XdrOutputStream;
 import org.firebirdsql.gds.impl.wire.Xdrable;
 import org.firebirdsql.gds.ng.*;
+import org.firebirdsql.gds.ng.fields.BlrCalculator;
 import org.firebirdsql.gds.ng.wire.*;
 import org.firebirdsql.jdbc.FBDriverNotCapableException;
 import org.firebirdsql.jdbc.FBSQLException;
@@ -42,7 +42,6 @@ import java.nio.charset.Charset;
 import java.sql.SQLException;
 import java.sql.SQLFeatureNotSupportedException;
 import java.sql.SQLWarning;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.firebirdsql.gds.impl.wire.WireProtocolConstants.*;
@@ -53,16 +52,11 @@ import static org.firebirdsql.gds.impl.wire.WireProtocolConstants.*;
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @since 2.3
  */
-public class V10Database implements FbWireDatabase, TransactionEventListener {
+public class V10Database extends AbstractFbWireDatabase implements FbWireDatabase, TransactionEventListener {
 
     private static final Logger log = LoggerFactory.getLogger(V10Database.class, false);
 
-    private final Object syncObject = new Object();
-    private final XdrStreamHolder xdrStreamHolder;
-    private final AtomicBoolean attached = new AtomicBoolean();
     private final AtomicInteger transactionCount = new AtomicInteger();
-    private final ProtocolDescriptor protocolDescriptor;
-    private final WireConnection connection;
     /**
      * Callback for warnings. Only change using {@link #setWarningMessageCallback(org.firebirdsql.gds.ng.WarningMessageCallback)}.
      * <p>
@@ -71,10 +65,10 @@ public class V10Database implements FbWireDatabase, TransactionEventListener {
      */
     private WarningMessageCallback warningCallback = WarningMessageCallback.DUMMY;
     private int handle;
-    private short databaseDialect;
     private int odsMajor;
     private int odsMinor;
     private String versionString;
+    private BlrCalculator blrCalculator;
 
     /**
      * Creates a V10Database instance.
@@ -86,34 +80,7 @@ public class V10Database implements FbWireDatabase, TransactionEventListener {
      *         used for creating further dependent objects).
      */
     protected V10Database(WireConnection connection, ProtocolDescriptor descriptor) {
-        if (connection == null) throw new IllegalArgumentException("parameter connection should be non-null");
-        if (descriptor == null) throw new IllegalArgumentException("parameter descriptor should be non-null");
-        this.connection = connection;
-        xdrStreamHolder = new XdrStreamHolder(connection);
-        protocolDescriptor = descriptor;
-    }
-
-    @Override
-    public short getDatabaseDialect() {
-        return databaseDialect;
-    }
-
-    @Override
-    public short getConnectionDialect() {
-        return connection.getConnectionDialect();
-    }
-
-    /**
-     * Sets the dialect of the database.
-     * <p>
-     * This method should only be called by this instance.
-     * </p>
-     *
-     * @param dialect
-     *         Dialect of the database/connection
-     */
-    protected void setDatabaseDialect(short dialect) {
-        this.databaseDialect = dialect;
+        super(connection, descriptor);
     }
 
     @Override
@@ -164,16 +131,6 @@ public class V10Database implements FbWireDatabase, TransactionEventListener {
         return versionString;
     }
 
-    @Override
-    public IEncodingFactory getEncodingFactory() {
-        return connection.getEncodingFactory();
-    }
-
-    @Override
-    public Encoding getEncoding() {
-        return connection.getEncoding();
-    }
-
     /**
      * Sets the Firebird version string.
      * <p>
@@ -197,26 +154,6 @@ public class V10Database implements FbWireDatabase, TransactionEventListener {
         synchronized (getSynchronizationObject()) {
             warningCallback = callback != null ? callback : WarningMessageCallback.DUMMY;
         }
-    }
-
-    @Override
-    public final Object getSynchronizationObject() {
-        return syncObject;
-    }
-
-    @Override
-    public final XdrInputStream getXdrIn() throws SQLException {
-        return xdrStreamHolder.getXdrIn();
-    }
-
-    @Override
-    public final XdrOutputStream getXdrOut() throws SQLException {
-        return xdrStreamHolder.getXdrOut();
-    }
-
-    @Override
-    public boolean isAttached() {
-        return attached.get() && connection.isConnected();
     }
 
     @Override
@@ -393,6 +330,7 @@ public class V10Database implements FbWireDatabase, TransactionEventListener {
 
     @Override
     public void createDatabase(DatabaseParameterBuffer dpb) throws SQLException {
+        // TODO Handle create database similar to attach (don't pass dpb in)?
         attachOrCreate(dpb, true);
     }
 
@@ -440,8 +378,9 @@ public class V10Database implements FbWireDatabase, TransactionEventListener {
 
     @Override
     public FbStatement createStatement(FbTransaction transaction) throws SQLException {
-        // TODO Auto-generated method stub
-        return null;
+        FbStatement stmt = createStatement();
+        stmt.setTransaction(transaction);
+        return stmt;
     }
 
     @Override
@@ -488,9 +427,7 @@ public class V10Database implements FbWireDatabase, TransactionEventListener {
     @Override
     public Response readResponse() throws SQLException, IOException {
         Response response = readSingleResponse();
-        if (response instanceof GenericResponse) {
-            processResponse(response);
-        }
+        processResponse(response);
         return response;
     }
 
@@ -544,6 +481,19 @@ public class V10Database implements FbWireDatabase, TransactionEventListener {
         return (GenericResponse) readResponse();
     }
 
+    @Override
+    public SqlResponse readSqlResponse() throws SQLException, IOException {
+        return (SqlResponse) readResponse();
+    }
+
+    @Override
+    public BlrCalculator getBlrCalculator() {
+        if (blrCalculator == null) {
+            blrCalculator = protocolDescriptor.createBlrCalculator(this);
+        }
+        return blrCalculator;
+    }
+
     /**
      * Reads the response from the server.
      *
@@ -555,7 +505,7 @@ public class V10Database implements FbWireDatabase, TransactionEventListener {
      *         For errors reading the response from the connection.
      */
     protected Response readSingleResponse() throws SQLException, IOException {
-        Response response = processOperation(connection.readNextOperation());
+        Response response = processOperation(readNextOperation());
         processResponseWarnings(response);
         return response;
     }
@@ -614,8 +564,14 @@ public class V10Database implements FbWireDatabase, TransactionEventListener {
         case op_sql_response:
             return new SqlResponse(xdrIn.readInt());
         default:
-            // TODO: Throw exception instead?
             return null;
+        }
+    }
+
+    @Override
+    public final int readNextOperation() throws IOException {
+        synchronized (getSynchronizationObject()) {
+            return connection.readNextOperation();
         }
     }
 
@@ -634,9 +590,9 @@ public class V10Database implements FbWireDatabase, TransactionEventListener {
      */
     protected SQLException readStatusVector() throws SQLException {
         boolean debug = log.isDebugEnabled();
-        FbExceptionBuilder builder = new FbExceptionBuilder();
+        final FbExceptionBuilder builder = new FbExceptionBuilder();
+        final XdrInputStream xdrIn = getXdrIn();
         try {
-            final XdrInputStream xdrIn = getXdrIn();
             while (true) {
                 int arg = xdrIn.readInt();
                 int errorCode;
@@ -657,13 +613,13 @@ public class V10Database implements FbWireDatabase, TransactionEventListener {
                     break;
                 case ISCConstants.isc_arg_interpreted:
                 case ISCConstants.isc_arg_string:
-                    String stringValue = xdrIn.readString(connection.getEncodingFactory().getDefaultEncoding());
+                    String stringValue = xdrIn.readString(getEncoding());
                     if (debug) log.debug("readStatusVector string: " + stringValue);
                     builder.messageParameter(stringValue);
                     break;
                 case ISCConstants.isc_arg_sql_state:
                     // TODO Is this actually returned from server?
-                    String sqlState = xdrIn.readString(connection.getEncodingFactory().getDefaultEncoding());
+                    String sqlState = xdrIn.readString(getEncoding());
                     if (debug) log.debug("readStatusVector sqlstate: " + sqlState);
                     builder.sqlState(sqlState);
                     break;

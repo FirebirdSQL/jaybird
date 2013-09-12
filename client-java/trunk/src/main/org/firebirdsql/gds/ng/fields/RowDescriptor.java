@@ -30,7 +30,11 @@ import java.util.*;
 
 /**
  * The class <code>RowDescriptor</code> is a java mapping of the XSQLDA server
- * data structure used to represent one row for input or output. RowDescriptor is an immutable type.
+ * data structure used to describe the row metadata of one row for input or output.
+ * <p>
+ * RowDescriptor is an immutable, values of a row are maintained separately in a collection of {@link FieldValue} instances. The only exception
+ * is the cached value for the calculated blr.
+ * </p>
  *
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @version 2.3
@@ -38,16 +42,24 @@ import java.util.*;
 public final class RowDescriptor implements Iterable<FieldDescriptor> {
 
     public static final RowDescriptor EMPTY = new RowDescriptor(new FieldDescriptor[0]);
+    public static final List<FieldValue> EMPTY_FIELD_VALUES = Collections.emptyList();
 
     private final FieldDescriptor[] fieldDescriptors;
     private int hash;
 
-    public RowDescriptor(FieldDescriptor[] fieldDescriptors) {
+    /**
+     * Creates an instance of <code>RowDescriptor</code> with the supplied array of
+     * {@link FieldDescriptor} instances.
+     *
+     * @param fieldDescriptors
+     *         The field descriptors (array is cloned before use)
+     */
+    private RowDescriptor(final FieldDescriptor[] fieldDescriptors) {
         this.fieldDescriptors = fieldDescriptors.clone();
     }
 
     /**
-     * @return The number of columns.
+     * @return The number of fields.
      */
     public int getCount() {
         return fieldDescriptors.length;
@@ -69,6 +81,24 @@ public final class RowDescriptor implements Iterable<FieldDescriptor> {
      */
     public List<FieldDescriptor> getFieldDescriptors() {
         return Collections.unmodifiableList(Arrays.asList(fieldDescriptors));
+    }
+
+    /**
+     * Creates a {@link List} with default {@link FieldValue} instances as returned by {@link FieldDescriptor#createDefaultFieldValue()}.
+     * <p>
+     * The (0-based) index of the FieldValue in the list corresponds with the (0-based) index of the {@link FieldDescriptor}
+     * within this <code>RowDescriptor</code>.
+     * </p>
+     *
+     * @return Default <code>FieldValue</code> instances for the <code>FieldDescriptor</code> instance contained in this instance.
+     */
+    public List<FieldValue> createDefaultFieldValues() {
+        if (getCount() == 0) return EMPTY_FIELD_VALUES;
+        List<FieldValue> fieldValues = new ArrayList<FieldValue>(getCount());
+        for (FieldDescriptor fieldDescriptor : fieldDescriptors) {
+            fieldValues.add(fieldDescriptor.createDefaultFieldValue());
+        }
+        return fieldValues;
     }
 
     @Override
@@ -111,5 +141,17 @@ public final class RowDescriptor implements Iterable<FieldDescriptor> {
             hash = Arrays.hashCode(this.fieldDescriptors);
         }
         return hash;
+    }
+
+    /**
+     * Creates an instance of <code>RowDescriptor</code> with the supplied {@link FieldDescriptor} instances.
+     *
+     * @param fieldDescriptors
+     *         The field descriptors (array is cloned before use)
+     * @return <code>RowDescriptor</code> instance
+     */
+    public static RowDescriptor createRowDescriptor(final FieldDescriptor[] fieldDescriptors) {
+        if (fieldDescriptors.length == 0) return EMPTY;
+        return new RowDescriptor(fieldDescriptors);
     }
 }

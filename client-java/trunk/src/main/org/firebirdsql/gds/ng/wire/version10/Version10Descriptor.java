@@ -25,6 +25,7 @@ import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.impl.wire.DatabaseParameterBufferImp;
 import org.firebirdsql.gds.impl.wire.WireProtocolConstants;
 import org.firebirdsql.gds.ng.IConnectionProperties;
+import org.firebirdsql.gds.ng.fields.BlrCalculator;
 import org.firebirdsql.gds.ng.wire.*;
 
 /**
@@ -89,5 +90,10 @@ public final class Version10Descriptor extends AbstractProtocolDescriptor implem
         // TODO Implement support for non-standard properties
 
         return dpb;
+    }
+
+    @Override
+    public BlrCalculator createBlrCalculator(final FbWireDatabase database) {
+        return database.getConnectionDialect() > 1 ? V10BlrCalculator.CALCULATOR_DIALECT_3 : new V10BlrCalculator(database.getConnectionDialect());
     }
 }

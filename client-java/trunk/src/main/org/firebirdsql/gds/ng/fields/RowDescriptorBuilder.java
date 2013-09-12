@@ -23,7 +23,7 @@ package org.firebirdsql.gds.ng.fields;
 /**
  * Builder to construct an immutable {@link RowDescriptor}.
  * <p>
- * The row is constructed by defining the fields, and using {@link #addField()} to add the current field
+ * The row descriptor is constructed by defining the fields, and using {@link #addField()} to add the current field
  * definition to the row. The field data is then reset (as if {@link #resetField()} was called,
  * to prepare for the next field to add.
  * </p>
@@ -34,7 +34,7 @@ package org.firebirdsql.gds.ng.fields;
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @since 2.3
  */
-public class RowDescriptorBuilder {
+public final class RowDescriptorBuilder {
 
     private int type;
     private int subType;
@@ -55,7 +55,7 @@ public class RowDescriptorBuilder {
      * @param size
      *         Number of fields
      */
-    public RowDescriptorBuilder(int size) {
+    public RowDescriptorBuilder(final int size) {
         fieldDescriptors = new FieldDescriptor[size];
     }
 
@@ -168,8 +168,19 @@ public class RowDescriptorBuilder {
         return this;
     }
 
-    public RowDescriptorBuilder setFieldIndex(int index) {
-        if (index >= fieldDescriptors.length) {
+    /**
+     * Sets the field index for the current field under construction.
+     *
+     * @param index
+     *         Index of the field
+     * @return this builder
+     * @throws IndexOutOfBoundsException
+     *         When <code>index</code> is not between 0 (inclusive) and {@link #getSize()} (exclusive)
+     * @throws IllegalStateException
+     *         When a {@link FieldDescriptor} is already defined on the specified <code>index</code>
+     */
+    public RowDescriptorBuilder setFieldIndex(final int index) {
+        if (index < 0 || index >= fieldDescriptors.length) {
             throw new IndexOutOfBoundsException(String.format("The index '%d' exceeds the expected size (%d) of this RowDescriptorBuilder", index, fieldDescriptors.length));
         }
         if (fieldDescriptors[index] != null) {
@@ -208,7 +219,7 @@ public class RowDescriptorBuilder {
     }
 
     /**
-     * Resets the fields of this builder the Java defaults.
+     * Resets the fields of this builder to the Java defaults.
      */
     public RowDescriptorBuilder resetField() {
         type = 0;
@@ -224,13 +235,13 @@ public class RowDescriptorBuilder {
     }
 
     /**
-     * Set this builder with the values of the source {@link FieldDescriptor}.
+     * Set this builder with the values of the source {@link FieldDescriptor} for further modification through this builder.
      *
      * @param sourceFieldDescriptor
      *         Source for the initial values
      * @return this builder
      */
-    public RowDescriptorBuilder copyFieldFrom(FieldDescriptor sourceFieldDescriptor) {
+    public RowDescriptorBuilder copyFieldFrom(final FieldDescriptor sourceFieldDescriptor) {
         type = sourceFieldDescriptor.getType();
         subType = sourceFieldDescriptor.getSubType();
         scale = sourceFieldDescriptor.getScale();
@@ -247,19 +258,25 @@ public class RowDescriptorBuilder {
      * Adds the current field data to the row and prepares this builder for the next field by resetting all values.
      *
      * @return this builder
+     * @see #resetField()
      */
     public RowDescriptorBuilder addField() {
         return addField(toFieldDescriptor()).resetField();
     }
 
     /**
-     * Adds the {@link FieldDescriptor} as the next in the row
+     * Adds the {@link FieldDescriptor} on the current fieldIndex as the next in the row, and increments the current
+     * field index by 1.
+     * <p>
+     * This method does not call {@link #resetField()}, so a partial definition of a field can exist
+     * inside this builder after calling this method.
+     * </p>
      *
      * @param fieldDescriptor
      *         FieldDescriptor to add
      * @return this builder
      */
-    public RowDescriptorBuilder addField(FieldDescriptor fieldDescriptor) {
+    public RowDescriptorBuilder addField(final FieldDescriptor fieldDescriptor) {
         if (currentFieldIndex >= fieldDescriptors.length) {
             throw new IndexOutOfBoundsException(String.format("The index '%d' exceeds the expected size (%d) of this RowDescriptorBuilder", currentFieldIndex, fieldDescriptors.length));
         }
@@ -269,21 +286,27 @@ public class RowDescriptorBuilder {
     }
 
     /**
-     * Constructs the {@link RowDescriptor}.
+     * Constructs the {@link RowDescriptor} with the current content.
+     * <p>
+     * This method can also return a partially filled {@link RowDescriptor}. Caller can check for completeness by
+     * calling {@link #isComplete()}.
+     * </p>
      *
      * @return RowDescriptor instance.
+     * @see #isComplete()
      */
     public RowDescriptor toRowDescriptor() {
-        // NOTE: The correctness of this depends on the fact that RowDescriptor copies the content of the list
-        return new RowDescriptor(fieldDescriptors);
+        // TODO Reconsider allowing partial construction?
+        // NOTE: The correctness of this depends on the fact that RowDescriptor copies the content of the array
+        return RowDescriptor.createRowDescriptor(fieldDescriptors);
     }
 
     /**
      * @return <tt>true</tt> when all {@link FieldDescriptor} entries have been defined
      */
     public boolean isComplete() {
-        for (int idx = 0; idx < fieldDescriptors.length; idx++) {
-            if (fieldDescriptors[idx] == null) {
+        for (FieldDescriptor fieldDescriptor : fieldDescriptors) {
+            if (fieldDescriptor == null) {
                 return false;
             }
         }
