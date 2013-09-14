@@ -71,8 +71,8 @@ public final class FBEscapedParser {
      * Creates a parser for JDBC escaped strings.
      * 
      * @param mode
-     *            One of {@link FBEscapedParser#USE_BUILT_IN} or
-     *            {@link FBEscapedParser#USE_STANDARD_UDF}
+     *            One of {@link EscapeParserMode#USE_BUILT_IN} or
+     *            {@link EscapeParserMode#USE_STANDARD_UDF}
      */
     public FBEscapedParser(EscapeParserMode mode) {
         this.mode = mode;
@@ -181,7 +181,6 @@ public final class FBEscapedParser {
      *            Target StringBuilder to append to.
      * @param escaped
      *            the part of escaped SQL between the '{' and '}'.
-     * @return the native representation of the SQL code.
      */
     private void escapeToNative(final StringBuilder target, final String escaped) throws SQLException {
         final StringBuilder keyword = new StringBuilder();
@@ -235,7 +234,6 @@ public final class FBEscapedParser {
      *            Target StringBuilder to append to.
      * @param dateStr
      *            the date in the 'yyyy-mm-dd' format.
-     * @return Firebird understandable date format.
      */
     private void toDateString(final StringBuilder target, final CharSequence dateStr) throws FBSQLParseException {
         // use shorthand date cast (using just the string will not work in all contexts)
@@ -250,7 +248,6 @@ public final class FBEscapedParser {
      *            Target StringBuilder to append to.
      * @param timeStr
      *            the date in the 'hh:mm:ss' format.
-     * @return Firebird understandable date format.
      */
     private void toTimeString(final StringBuilder target, final CharSequence timeStr) throws FBSQLParseException {
         // use shorthand time cast (using just the string will not work in all contexts)
@@ -265,7 +262,6 @@ public final class FBEscapedParser {
      *            Target StringBuilder to append to.
      * @param timestampStr
      *            the date in the 'yyyy-mm-dd hh:mm:ss' format.
-     * @return Firebird understandable date format.
      */
     private void toTimestampString(final StringBuilder target, final CharSequence timestampStr)
             throws FBSQLParseException {
@@ -282,7 +278,6 @@ public final class FBEscapedParser {
      * @param procedureCall
      *            part of {call proc_name(...)} without curly braces and "call"
      *            word.
-     * @return native procedure call.
      */
     private void convertProcedureCall(final StringBuilder target, final String procedureCall) throws SQLException {
         FBEscapedCallParser tempParser = new FBEscapedCallParser(mode);
@@ -310,7 +305,6 @@ public final class FBEscapedParser {
      * 
      * @param escapeString
      *            escape string to convert
-     * @return converted code.
      */
     private void convertEscapeString(final StringBuilder target, final CharSequence escapeString) {
         target.append("ESCAPE ").append(escapeString);
@@ -333,7 +327,6 @@ public final class FBEscapedParser {
      * 
      * @param limitClause
      *            Limit clause
-     * @return converted code
      */
     private void convertLimitString(final StringBuilder target, final CharSequence limitClause)
             throws FBSQLParseException {
@@ -345,7 +338,7 @@ public final class FBEscapedParser {
             final String rows = limitEscape.substring(0, offsetStart).trim();
             final String offset = limitEscape.substring(offsetStart + LIMIT_OFFSET_CLAUSE.length()).trim();
             if (offset.indexOf('?') != -1) {
-                throw new FBSQLParseException("Extended limit escape ({limit <rows> offset <offset_rows>} does not support parameters for <offset_rows>");
+                throw new FBSQLParseException("Extended limit escape ({limit <rows> offset <offset_rows>}) does not support parameters for <offset_rows>");
             }
             target.append("ROWS ").append(offset).append(" TO ").append(offset).append("+").append(rows);
         }
@@ -359,7 +352,6 @@ public final class FBEscapedParser {
      *            Target StringBuilder to append to.
      * @param escapedFunction
      *            escaped function call
-     * @return server-side function call.
      * @throws FBSQLParseException
      *             if something was wrong.
      */
@@ -515,6 +507,6 @@ public final class FBEscapedParser {
          * name, but there is a built-in with the same name and parameter order.
          * </p>
          */
-        USE_STANDARD_UDF;
+        USE_STANDARD_UDF
     }
 }
