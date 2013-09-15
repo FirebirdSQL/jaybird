@@ -28,6 +28,7 @@ import org.firebirdsql.gds.ng.*;
 import org.firebirdsql.gds.ng.fields.BlrCalculator;
 import org.firebirdsql.gds.ng.fields.FieldDescriptor;
 import org.firebirdsql.gds.ng.fields.FieldValue;
+import org.firebirdsql.gds.ng.fields.RowDescriptor;
 import org.firebirdsql.gds.ng.wire.*;
 import org.firebirdsql.jdbc.FBSQLException;
 
@@ -40,10 +41,13 @@ import java.util.List;
 
 /**
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @since 2.3
  */
 public class V10Statement extends AbstractFbWireStatement implements FbWireStatement {
 
-    // TODO Handle error state in a consistent way
+    // TODO Handle error state in a consistent way (eg when does an exception lead to the error state, or when is it 'just' valid feedback)
+    // TODO Fix state transitions
+    // TODO Statement warnings?
 
     private static final int NULL_INDICATOR_NOT_NULL = 0;
     private static final int NULL_INDICATOR_NULL = -1;
@@ -113,7 +117,7 @@ public class V10Statement extends AbstractFbWireStatement implements FbWireState
         synchronized (getSynchronizationObject()) {
             synchronized (getDatabase().getSynchronizationObject()) {
                 try {
-                    sendInfoSqlToBuffer(requestItems, bufferLength);
+                    sendInfoSql(requestItems, bufferLength);
                     getXdrOut().flush();
                 } catch (IOException ex) {
                     throw new FbExceptionBuilder().exception(ISCConstants.isc_net_write_err).cause(ex).toSQLException();
@@ -137,7 +141,7 @@ public class V10Statement extends AbstractFbWireStatement implements FbWireState
      * @throws IOException
      * @throws SQLException
      */
-    protected void sendInfoSqlToBuffer(final byte[] requestItems, final int bufferLength) throws IOException, SQLException {
+    protected void sendInfoSql(final byte[] requestItems, final int bufferLength) throws IOException, SQLException {
         synchronized (getDatabase().getSynchronizationObject()) {
             final XdrOutputStream xdrOut = getXdrOut();
             xdrOut.writeInt(WireProtocolConstants.op_info_sql);
@@ -161,9 +165,6 @@ public class V10Statement extends AbstractFbWireStatement implements FbWireState
 
     @Override
     protected void free(final int option) throws SQLException {
-        if (freeNotNeeded(option)) {
-            return;
-        }
         synchronized (getSynchronizationObject()) {
             synchronized (getDatabase().getSynchronizationObject()) {
                 try {
@@ -191,12 +192,11 @@ public class V10Statement extends AbstractFbWireStatement implements FbWireState
     protected void doFreePacket(int option) throws SQLException {
         synchronized (getDatabase().getSynchronizationObject()) {
             try {
-                sendFreeToBuffer(option);
+                sendFree(option);
 
                 // Reset statement information
                 reset(option == ISCConstants.DSQL_drop);
             } catch (IOException e) {
-                switchState(StatementState.ERROR);
                 throw new FbExceptionBuilder().exception(ISCConstants.isc_net_write_err).cause(e).toSQLException();
             }
         }
@@ -210,7 +210,7 @@ public class V10Statement extends AbstractFbWireStatement implements FbWireState
      * @throws IOException
      * @throws SQLException
      */
-    protected void sendFreeToBuffer(int option) throws IOException, SQLException {
+    protected void sendFree(int option) throws IOException, SQLException {
         synchronized (getDatabase().getSynchronizationObject()) {
             final XdrOutputStream xdrOut = getXdrOut();
             xdrOut.writeInt(WireProtocolConstants.op_free_statement);
@@ -231,49 +231,41 @@ public class V10Statement extends AbstractFbWireStatement implements FbWireState
         // No processing needed
     }
 
+    private static final EnumSet<StatementState> PREPARE_ALLOWED_STATES = EnumSet.of(StatementState.ALLOCATED, StatementState.PREPARED);
+
     /**
-     * Decides whether sending free is actually required.
+     * Is a call to {@link #prepare(String)} allowed for the supplied {@link StatementState}.
      *
-     * @param option
-     *         Free statement option
-     * @return <code>true</code> when freeing is needed, <code>false</code> otherwise
+     * @param state The statement state
+     * @return <code>true</code> call to <code>prepare</code> is allowed
      */
-    protected boolean freeNotNeeded(final int option) {
-        // Does	not	seem to	be possible	or necessary to	close an execute procedure statement.
-        // TODO Verify if this is correct
-        return getType() == StatementType.STORED_PROCEDURE && option == ISCConstants.DSQL_close;
+    protected boolean isPrepareAllowed(final StatementState state) {
+        return PREPARE_ALLOWED_STATES.contains(state);
     }
 
     @Override
     public void prepare(final String statementText) throws SQLException {
         synchronized (getSynchronizationObject()) {
-            // TODO Do we actually need a transaction for the prepare?
+            checkStatementValid();
             if (getTransaction() == null || getTransaction().getState() != TransactionState.ACTIVE) {
                 throw new SQLNonTransientException("No transaction or transaction not ACTIVE", FBSQLException.SQL_STATE_INVALID_TX_STATE);
             }
-            reset(true);
+            final StatementState currentState = getState();
+            if (!isPrepareAllowed(currentState)) {
+                throw new SQLNonTransientException(String.format("Current statement state (%s) does not allow call to prepare", currentState));
+            }
+            resetAll();
             synchronized (getDatabase().getSynchronizationObject()) {
                 try {
-                    if (getState() == StatementState.CLOSED) {
-                        allocateStatement();
-                    }
-
-                    try {
-                        sendPrepareToBuffer(statementText);
-                        getXdrOut().flush();
-                    } catch (IOException ex) {
-                        throw new FbExceptionBuilder().exception(ISCConstants.isc_net_write_err).cause(ex).toSQLException();
-                    }
-                    try {
-                        processPrepareResponse(getDatabase().readGenericResponse());
-                    } catch (IOException ex) {
-                        throw new FbExceptionBuilder().exception(ISCConstants.isc_net_read_err).cause(ex).toSQLException();
-                    }
-                } catch (SQLException ex) {
-                    if (getState() == StatementState.ALLOCATED) {
-                        switchState(StatementState.ERROR);
-                    }
-                    throw ex;
+                    sendPrepare(statementText);
+                    getXdrOut().flush();
+                } catch (IOException ex) {
+                    throw new FbExceptionBuilder().exception(ISCConstants.isc_net_write_err).cause(ex).toSQLException();
+                }
+                try {
+                    processPrepareResponse(getDatabase().readGenericResponse());
+                } catch (IOException ex) {
+                    throw new FbExceptionBuilder().exception(ISCConstants.isc_net_read_err).cause(ex).toSQLException();
                 }
             }
         }
@@ -287,7 +279,7 @@ public class V10Statement extends AbstractFbWireStatement implements FbWireState
      * @throws SQLException
      * @throws IOException
      */
-    protected void sendPrepareToBuffer(final String statementText) throws SQLException, IOException {
+    protected void sendPrepare(final String statementText) throws SQLException, IOException {
         synchronized (getDatabase().getSynchronizationObject()) {
             final XdrOutputStream xdrOut = getXdrOut();
             xdrOut.writeInt(WireProtocolConstants.op_prepare_statement);
@@ -331,38 +323,37 @@ public class V10Statement extends AbstractFbWireStatement implements FbWireState
 
     @Override
     public void execute(final List<FieldValue> parameters) throws SQLException {
-        if (getState() == StatementState.CLOSED) {
-            // TODO Throw correct error, sqlstate, etc
-            throw new SQLException("Invalid statement state");
-        }
+        checkStatementValid();
         // TODO Validate transaction state?
         synchronized (getSynchronizationObject()) {
             validateParameters(parameters);
             reset(false);
-            final boolean performExecute2 = getType() == StatementType.STORED_PROCEDURE;
             // TODO Records affected?
             synchronized (getDatabase().getSynchronizationObject()) {
+                // TODO Which state to switch to when an exception occurs (always ERROR might be wrong, see to do at start of class)
+                switchState(StatementState.EXECUTING);
                 try {
-                    sendExecuteToBuffer(performExecute2 ? WireProtocolConstants.op_execute2 : WireProtocolConstants.op_execute, parameters);
+                    sendExecute(getType().isTypeWithSingletonResult() ? WireProtocolConstants.op_execute2 : WireProtocolConstants.op_execute, parameters);
                     getXdrOut().flush();
                 } catch (IOException ex) {
-                    switchState(StatementState.ERROR);
                     throw new FbExceptionBuilder().exception(ISCConstants.isc_net_write_err).cause(ex).toSQLException();
                 }
                 try {
-                    final boolean hasResultSet = getFieldDescriptor() != null && getFieldDescriptor().getCount() > 0;
-                    statementListenerDispatcher.statementExecuted(this, hasResultSet, performExecute2);
-                    if (performExecute2) {
-                        processStoredProcedureExecuteResponse(getDatabase().readSqlResponse());
+                    final boolean hasFields = getFieldDescriptor() != null && getFieldDescriptor().getCount() > 0;
+                    if (getType().isTypeWithSingletonResult()) {
+                        // A type with a singleton result (ie an execute procedure), doesn't actually have a result set that will be fetched, instead we have a singleton result if we have fields
+                        statementListenerDispatcher.statementExecuted(this, false, hasFields);
+                        processExecuteSingletonResponse(getDatabase().readSqlResponse());
                         setAllRowsFetched(true);
+                    } else {
+                        // A normal execute is never a singleton result (even if it only produces a single result)
+                        statementListenerDispatcher.statementExecuted(this, hasFields, false);
                     }
                     processExecuteResponse(getDatabase().readGenericResponse());
 
                     // TODO .NET implementation retrieves affected rows here
-
-                    switchState(StatementState.EXECUTED);
+                    switchState(getType().isTypeWithCursor() ? StatementState.EXECUTED : StatementState.PREPARED);
                 } catch (IOException ex) {
-                    switchState(StatementState.ERROR);
                     throw new FbExceptionBuilder().exception(ISCConstants.isc_net_read_err).cause(ex).toSQLException();
                 }
             }
@@ -379,7 +370,7 @@ public class V10Statement extends AbstractFbWireStatement implements FbWireState
      * @throws IOException
      * @throws SQLException
      */
-    protected void sendExecuteToBuffer(final int operation, final List<FieldValue> parameters) throws IOException, SQLException {
+    protected void sendExecute(final int operation, final List<FieldValue> parameters) throws IOException, SQLException {
         assert operation == WireProtocolConstants.op_execute || operation == WireProtocolConstants.op_execute2 : "Needs to be called with operation op_execute or op_execute2";
         synchronized (getDatabase().getSynchronizationObject()) {
             final XdrOutputStream xdrOut = getXdrOut();
@@ -387,9 +378,9 @@ public class V10Statement extends AbstractFbWireStatement implements FbWireState
             xdrOut.writeInt(getHandle());
             xdrOut.writeInt(getTransaction().getHandle());
 
-            // TODO What if 0 parameters?
-            if (getParameterDescriptor() != null) {
-                xdrOut.writeBuffer(calculateBlr(getParameterDescriptor()));
+            final RowDescriptor parameterDescriptor = getParameterDescriptor();
+            if (parameterDescriptor != null && parameterDescriptor.getCount() > 0) {
+                xdrOut.writeBuffer(calculateBlr(parameterDescriptor));
                 xdrOut.writeInt(0); // message number = in_message_type
                 xdrOut.writeInt(1); // Number of messages
                 writeSqlData(parameters);
@@ -400,24 +391,24 @@ public class V10Statement extends AbstractFbWireStatement implements FbWireState
             }
 
             if (operation == WireProtocolConstants.op_execute2) {
-                // TODO What if 0 fields?
-                xdrOut.writeBuffer(getFieldDescriptor() != null ? calculateBlr(getFieldDescriptor()) : null);
+                final RowDescriptor fieldDescriptor = getFieldDescriptor();
+                xdrOut.writeBuffer(fieldDescriptor != null && fieldDescriptor.getCount() > 0 ? calculateBlr(fieldDescriptor) : null);
                 xdrOut.writeInt(0); // out_message_number = out_message_type
             }
         }
     }
 
     /**
-     * Process the execute response for stored procedures (<code>op_execute2</code>.
+     * Process the execute response for statements with a singleton response (<code>op_execute2</code>; stored procedures).
      *
      * @param sqlResponse
      *         SQL response object
      * @throws SQLException
      * @throws IOException
      */
-    protected void processStoredProcedureExecuteResponse(SqlResponse sqlResponse) throws SQLException, IOException {
+    protected void processExecuteSingletonResponse(SqlResponse sqlResponse) throws SQLException, IOException {
         if (sqlResponse.getCount() > 0) {
-            queueRowData(readRowData());
+            queueRowData(readSqlData());
         }
     }
 
@@ -431,35 +422,25 @@ public class V10Statement extends AbstractFbWireStatement implements FbWireState
         // Nothing to do here
     }
 
-    // TODO Validate that other types don't return rows
-    protected static final EnumSet<StatementType> STATEMENT_TYPES_WITH_ROWS = EnumSet.of(StatementType.SELECT, StatementType.SELECT_FOR_UPDATE);
-
     @Override
     public void fetchRows(int fetchSize) throws SQLException {
         synchronized (getSynchronizationObject()) {
-            checkStatementOpen();
-            if (getState() != StatementState.EXECUTED) {
-                // TODO Check if this state is sufficient
+            checkStatementValid();
+            if (!getState().isCursorOpen()) {
                 throw new FbExceptionBuilder().exception(ISCConstants.isc_cursor_not_open).toSQLException();
-            }
-            if (!STATEMENT_TYPES_WITH_ROWS.contains(getType())) {
-                // TODO Throw exception instead?
-                return;
             }
             if (isAllRowsFetched()) return;
 
             synchronized (getDatabase().getSynchronizationObject()) {
                 try {
-                    sendFetchToBuffer(fetchSize);
+                    sendFetch(fetchSize);
                     getXdrOut().flush();
                 } catch (IOException ex) {
-                    switchState(StatementState.ERROR);
                     throw new FbExceptionBuilder().exception(ISCConstants.isc_net_write_err).cause(ex).toSQLException();
                 }
                 try {
                     processFetchResponse();
                 } catch (IOException ex) {
-                    switchState(StatementState.ERROR);
                     throw new FbExceptionBuilder().exception(ISCConstants.isc_net_read_err).cause(ex).toSQLException();
                 }
             }
@@ -478,9 +459,10 @@ public class V10Statement extends AbstractFbWireStatement implements FbWireState
             while (!isAllRowsFetched() && (response = getDatabase().readResponse()) instanceof FetchResponse) {
                 final FetchResponse fetchResponse = (FetchResponse) response;
                 if (fetchResponse.getCount() > 0 && fetchResponse.getStatus() == WireProtocolConstants.FETCH_OK) {
-                    queueRowData(readRowData());
+                    queueRowData(readSqlData());
                 } else if (fetchResponse.getStatus() == WireProtocolConstants.FETCH_NO_MORE_ROWS) {
                     setAllRowsFetched(true);
+                    // TODO Close cursor if everything has been fetched?
                 } else {
                     // TODO Log, raise exception, or simply 'not possible'?
                     break;
@@ -490,13 +472,13 @@ public class V10Statement extends AbstractFbWireStatement implements FbWireState
     }
 
     /**
-     * Sends the fetch requestion to the database.
+     * Sends the fetch request to the database.
      *
      * @param fetchSize Number of rows to fetch.
      * @throws SQLException
      * @throws IOException
      */
-    protected void sendFetchToBuffer(int fetchSize) throws SQLException, IOException {
+    protected void sendFetch(int fetchSize) throws SQLException, IOException {
         synchronized (getDatabase().getSynchronizationObject()) {
             final XdrOutputStream xdrOut = getXdrOut();
             xdrOut.writeInt(WireProtocolConstants.op_fetch);
@@ -514,7 +496,7 @@ public class V10Statement extends AbstractFbWireStatement implements FbWireState
      * @throws SQLException
      * @throws IOException
      */
-    protected List<FieldValue> readRowData() throws SQLException, IOException {
+    protected List<FieldValue> readSqlData() throws SQLException, IOException {
         final List<FieldValue> rowData = new ArrayList<FieldValue>(getFieldDescriptor().getCount());
         final BlrCalculator blrCalculator = getDatabase().getBlrCalculator();
 
@@ -591,7 +573,7 @@ public class V10Statement extends AbstractFbWireStatement implements FbWireState
                     // increment happens in BlrCalculator.calculateIoLength
                     len--;
                     if (buffer != null) {
-                        int buflen = buffer.length;
+                        final int buflen = buffer.length;
                         if (buflen >= len) {
                             xdrOut.write(buffer, 0, len, (4 - len) & 3);
                         } else {
@@ -608,28 +590,22 @@ public class V10Statement extends AbstractFbWireStatement implements FbWireState
         }
     }
 
-    /**
-     * Allocates a statement handle on the server
-     *
-     * @throws SQLException
-     */
-    protected void allocateStatement() throws SQLException {
-        if (getState() != StatementState.CLOSED) {
+    @Override
+    public void allocateStatement() throws SQLException {
+        if (getState() != StatementState.NEW) {
             // TODO Is there a better sqlstate?
-            throw new SQLNonTransientException("allocateStatement only allowed when current state is CLOSED", FBSQLException.SQL_STATE_GENERAL_ERROR);
+            throw new SQLNonTransientException("allocateStatement only allowed when current state is NEW", FBSQLException.SQL_STATE_GENERAL_ERROR);
         }
         synchronized (getDatabase().getSynchronizationObject()) {
             try {
-                sendAllocateToBuffer();
+                sendAllocate();
                 getXdrOut().flush();
             } catch (IOException ex) {
-                switchState(StatementState.ERROR);
                 throw new FbExceptionBuilder().exception(ISCConstants.isc_net_write_err).cause(ex).toSQLException();
             }
             try {
                 processAllocateResponse(getDatabase().readGenericResponse());
             } catch (IOException ex) {
-                switchState(StatementState.ERROR);
                 throw new FbExceptionBuilder().exception(ISCConstants.isc_net_read_err).cause(ex).toSQLException();
             }
         }
@@ -641,7 +617,7 @@ public class V10Statement extends AbstractFbWireStatement implements FbWireState
      * @throws SQLException
      * @throws IOException
      */
-    protected void sendAllocateToBuffer() throws SQLException, IOException {
+    protected void sendAllocate() throws SQLException, IOException {
         synchronized (getDatabase().getSynchronizationObject()) {
             final XdrOutputStream xdrOut = getXdrOut();
             xdrOut.writeInt(WireProtocolConstants.op_allocate_statement);
@@ -655,7 +631,7 @@ public class V10Statement extends AbstractFbWireStatement implements FbWireState
      * @param response
      *         GenericResponse
      */
-    protected void processAllocateResponse(GenericResponse response) {
+    protected void processAllocateResponse(GenericResponse response) throws SQLException {
         synchronized (getSynchronizationObject()) {
             setHandle(response.getObjectHandle());
             setAllRowsFetched(false);

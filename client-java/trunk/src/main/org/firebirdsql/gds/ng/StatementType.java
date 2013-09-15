@@ -36,18 +36,33 @@ import org.firebirdsql.gds.ISCConstants;
 public enum StatementType {
 
     NONE(0),
-    SELECT(ISCConstants.isc_info_sql_stmt_select),
+    SELECT(ISCConstants.isc_info_sql_stmt_select) {
+        @Override
+        public boolean isTypeWithCursor() {
+            return true;
+        }
+    },
     INSERT(ISCConstants.isc_info_sql_stmt_insert),
     UPDATE(ISCConstants.isc_info_sql_stmt_update),
     DELETE(ISCConstants.isc_info_sql_stmt_delete),
     DDL(ISCConstants.isc_info_sql_stmt_ddl),
     GET_SEGMENT(ISCConstants.isc_info_sql_stmt_get_segment),
     PUT_SEGMENT(ISCConstants.isc_info_sql_stmt_put_segment),
-    STORED_PROCEDURE(ISCConstants.isc_info_sql_stmt_exec_procedure),
+    STORED_PROCEDURE(ISCConstants.isc_info_sql_stmt_exec_procedure) {
+        @Override
+        public boolean isTypeWithSingletonResult() {
+            return true;
+        }
+    },
     START_TRANSACTION(ISCConstants.isc_info_sql_stmt_start_trans),
     COMMIT(ISCConstants.isc_info_sql_stmt_commit),
     ROLLBACK(ISCConstants.isc_info_sql_stmt_rollback),
-    SELECT_FOR_UPDATE(ISCConstants.isc_info_sql_stmt_select_for_upd),
+    SELECT_FOR_UPDATE(ISCConstants.isc_info_sql_stmt_select_for_upd) {
+        @Override
+        public boolean isTypeWithCursor() {
+            return true;
+        }
+    },
     SET_GENERATOR(ISCConstants.isc_info_sql_stmt_set_generator),
     SAVE_POINT(ISCConstants.isc_info_sql_stmt_savepoint);
 
@@ -77,6 +92,30 @@ public enum StatementType {
      */
     public int getStatementTypeCode() {
         return statementTypeCode;
+    }
+
+    /**
+     * Indicates whether this statement type has a cursor.
+     * <p>
+     * Implementation assumes that this is the same for all Firebird versions.
+     * </p>
+     *
+     * @return <code>true</code> statement type has a cursor.
+     */
+    public boolean isTypeWithCursor() {
+        return false;
+    }
+
+    /**
+     * Indicates whether this statement type will produce a singleton result.
+     * <p>
+     * Implementation assumes that this is the same for all Firebird versions.
+     * </p>
+     *
+     * @return <code>true</code> statement type will produce a singleton result.
+     */
+    public boolean isTypeWithSingletonResult() {
+        return false;
     }
 
     /**

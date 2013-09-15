@@ -20,7 +20,9 @@
  */
 package org.firebirdsql.gds.ng.wire.version10;
 
+import org.firebirdsql.common.DdlHelper;
 import org.firebirdsql.common.FBTestProperties;
+import org.firebirdsql.common.JdbcResourceHelper;
 import org.firebirdsql.encodings.EncodingFactory;
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.TransactionParameterBuffer;
@@ -42,6 +44,7 @@ import org.firebirdsql.management.FBManager;
 import org.junit.*;
 import org.junit.rules.ExpectedException;
 
+import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.SQLNonTransientException;
 import java.util.Arrays;
@@ -57,6 +60,39 @@ import static org.junit.Assume.assumeTrue;
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  */
 public class TestV10Statement {
+
+    private static final String CREATE_EXECUTABLE_STORED_PROCEDURE =
+            "CREATE PROCEDURE increment " +
+            " (intvalue INTEGER) " +
+            "RETURNS " +
+            " (outvalue INTEGER) " +
+            "AS " +
+            "BEGIN " +
+            " outvalue = intvalue + 1; " +
+            "END";
+
+    private static final String EXECUTE_EXECUTABLE_STORED_PROCEDURE =
+            "EXECUTE PROCEDURE INCREMENT(?)";
+
+    private static final String CREATE_SELECTABLE_STORED_PROCEDURE =
+            "CREATE PROCEDURE range " +
+            " (startvalue INTEGER, rowcount INTEGER) " +
+            "RETURNS " +
+            " (outvalue INTEGER) " +
+            "AS " +
+            "DECLARE VARIABLE actualcount INTEGER; " +
+            "BEGIN " +
+            "  actualcount = 0; " +
+            "  WHILE (actualcount < rowcount) DO " +
+            "  BEGIN " +
+            "    outvalue = startvalue + actualcount; " +
+            "    suspend; " +
+            "    actualcount = actualcount + 1; " +
+            "  END " +
+            "END";
+
+    private static final String EXECUTE_SELECTABLE_STORED_PROCEDURE =
+            "SELECT OUTVALUE FROM RANGE(?, ?)";
 
     private final FbConnectionProperties connectionInfo;
     private FbWireDatabase db;
@@ -86,6 +122,14 @@ public class TestV10Statement {
     @Before
     public void setUp() throws Exception {
         fbManager = defaultDatabaseSetUp();
+        Connection con = FBTestProperties.getConnectionViaDriverManager();
+        try {
+            DdlHelper.executeDDL(con, CREATE_EXECUTABLE_STORED_PROCEDURE, new int[] {});
+            DdlHelper.executeDDL(con, CREATE_SELECTABLE_STORED_PROCEDURE, new int[] {});
+        } finally {
+            JdbcResourceHelper.closeQuietly(con);
+        }
+
         WireConnection gdsConnection = new WireConnection(connectionInfo, EncodingFactory.getDefaultInstance(), ProtocolCollection.create(new Version10Descriptor()));
         gdsConnection.socketConnect();
         db = gdsConnection.identify();
@@ -95,9 +139,10 @@ public class TestV10Statement {
     }
 
     @Test
-     public void testSelect_NoParameters_Describe() throws Exception {
+    public void testSelect_NoParameters_Describe() throws Exception {
         final FbTransaction transaction = getTransaction();
         final FbStatement statement = db.createStatement();
+        statement.allocateStatement();
         statement.setTransaction(transaction);
         statement.prepare(
                 "SELECT RDB$DESCRIPTION AS \"Description\", RDB$RELATION_ID, RDB$SECURITY_CLASS, RDB$CHARACTER_SET_NAME " +
@@ -126,6 +171,7 @@ public class TestV10Statement {
     public void testSelect_NoParameters_Execute_and_Fetch() throws Exception {
         final FbTransaction transaction = getTransaction();
         final FbStatement statement = db.createStatement();
+        statement.allocateStatement();
         statement.setTransaction(transaction);
         statement.prepare(
                 "SELECT RDB$DESCRIPTION AS \"Description\", RDB$RELATION_ID, RDB$SECURITY_CLASS, RDB$CHARACTER_SET_NAME " +
@@ -153,6 +199,7 @@ public class TestV10Statement {
     public void testSelect_WithParameters_Describe() throws Exception {
         final FbTransaction transaction = getTransaction();
         final FbStatement statement = db.createStatement();
+        statement.allocateStatement();
         statement.setTransaction(transaction);
         statement.prepare(
                 "SELECT a.RDB$CHARACTER_SET_NAME " +
@@ -186,6 +233,7 @@ public class TestV10Statement {
     public void testSelect_WithParameters_Execute_and_Fetch() throws Exception {
         final FbTransaction transaction = getTransaction();
         final FbStatement statement = db.createStatement();
+        statement.allocateStatement();
         statement.setTransaction(transaction);
         statement.prepare(
                 "SELECT a.RDB$CHARACTER_SET_NAME " +
@@ -219,14 +267,73 @@ public class TestV10Statement {
     // TODO Test with executable stored procedure
 
     @Test
-    public void testAllocate_NotClosed() throws Exception {
+    public void testAllocate_NotNew() throws Exception {
         final V10Statement statement = (V10Statement) db.createStatement();
 
         statement.allocateStatement();
 
         expectedException.expect(SQLNonTransientException.class);
-        expectedException.expectMessage("allocateStatement only allowed when current state is CLOSED");
+        expectedException.expectMessage("allocateStatement only allowed when current state is NEW");
         statement.allocateStatement();
+    }
+
+    @Test
+    public void test_PrepareExecutableStoredProcedure() throws Exception {
+        final FbTransaction transaction = getTransaction();
+        final FbStatement statement = db.createStatement();
+        statement.allocateStatement();
+        statement.setTransaction(transaction);
+        statement.prepare(EXECUTE_EXECUTABLE_STORED_PROCEDURE);
+
+        assertEquals("Unexpected StatementType", StatementType.STORED_PROCEDURE, statement.getType());
+
+        final RowDescriptor fields = statement.getFieldDescriptor();
+        assertNotNull("Fields", fields);
+        List<FieldDescriptor> expectedFields =
+                Arrays.asList(
+                        new FieldDescriptor(ISCConstants.SQL_LONG | 1, 0, 0, 4, "OUTVALUE", null, "OUTVALUE", "INCREMENT", "SYSDBA")
+                );
+        assertEquals("Unexpected values for fields", expectedFields, fields.getFieldDescriptors());
+
+        final RowDescriptor parameters = statement.getParameterDescriptor();
+        assertNotNull("Parameters", parameters);
+        List<FieldDescriptor> expectedParameters =
+                Arrays.asList(
+                        new FieldDescriptor(ISCConstants.SQL_LONG | 1, 0, 0, 4, null, null, null, null, null)
+                );
+        assertEquals("Unexpected values for parameters", expectedParameters, parameters.getFieldDescriptors());
+
+        statement.close();
+    }
+
+    @Test
+    public void test_PrepareSelectableStoredProcedure() throws Exception {
+        final FbTransaction transaction = getTransaction();
+        final FbStatement statement = db.createStatement();
+        statement.allocateStatement();
+        statement.setTransaction(transaction);
+        statement.prepare(EXECUTE_SELECTABLE_STORED_PROCEDURE);
+
+        assertEquals("Unexpected StatementType", StatementType.SELECT, statement.getType());
+
+        final RowDescriptor fields = statement.getFieldDescriptor();
+        assertNotNull("Fields", fields);
+        List<FieldDescriptor> expectedFields =
+                Arrays.asList(
+                        new FieldDescriptor(ISCConstants.SQL_LONG | 1, 0, 0, 4, "OUTVALUE", null, "OUTVALUE", "RANGE", "SYSDBA")
+                );
+        assertEquals("Unexpected values for fields", expectedFields, fields.getFieldDescriptors());
+
+        final RowDescriptor parameters = statement.getParameterDescriptor();
+        assertNotNull("Parameters", parameters);
+        List<FieldDescriptor> expectedParameters =
+                Arrays.asList(
+                        new FieldDescriptor(ISCConstants.SQL_LONG | 1, 0, 0, 4, null, null, null, null, null),
+                        new FieldDescriptor(ISCConstants.SQL_LONG | 1, 0, 0, 4, null, null, null, null, null)
+                );
+        assertEquals("Unexpected values for parameters", expectedParameters, parameters.getFieldDescriptors());
+
+        statement.close();
     }
 
     private FbTransaction getTransaction() throws SQLException {
