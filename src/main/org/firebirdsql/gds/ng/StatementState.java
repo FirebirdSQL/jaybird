@@ -33,9 +33,12 @@ package org.firebirdsql.gds.ng;
  * @since 2.3
  */
 public enum StatementState {
-    // TODO Add state 'NEW' to distinguish between close() called, or newly constructed statement?
     /**
-     * Statement is closed or has been deallocated
+     * Statement is new and no statement handle has been allocated on the server.
+     */
+    NEW,
+    /**
+     * Statement is closed or has been de-allocated
      */
     CLOSED,
     /**
@@ -47,16 +50,41 @@ public enum StatementState {
      */
     PREPARED,
     /**
-     * Statement has been executed
+     * A statement is being executed, this is an ephemeral state that should only last as long as the execute call to the database takes.
      */
-    EXECUTED,
+    EXECUTING,
     /**
-     * Statement has been executed, and its cursor has been closed. Last statement executed is still prepared
-     * TODO: Merge with prepared?
+     * Statement has been executed, cursor is still open
      */
-    IDLE,
+    EXECUTED {
+        @Override
+        public boolean isCursorOpen() {
+            return true;
+        }
+    },
     /**
      * Last statement execute or prepare resulted in an error
      */
-    ERROR
+    ERROR {
+        /**
+         * {@inheritDoc}
+         * <p>
+         * When in error state, a cursor might be open (or not), as we don't know how we
+         * transitioned into this state.
+         * </p>
+         */
+        @Override
+        public boolean isCursorOpen() {
+            return true;
+        }
+    };
+
+    /**
+     * Can a cursor be open in the current state?
+     *
+     * @return <code>true</code> a cursor can be open in this state
+     */
+    public boolean isCursorOpen() {
+        return false;
+    }
 }

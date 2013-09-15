@@ -29,10 +29,8 @@ import org.firebirdsql.gds.ng.listeners.StatementListenerDispatcher;
 import java.sql.SQLException;
 import java.sql.SQLNonTransientException;
 import java.sql.SQLTransientException;
-import java.util.Collections;
 import java.util.EnumSet;
 import java.util.List;
-import java.util.Set;
 import java.util.concurrent.atomic.AtomicReference;
 
 /**
@@ -44,7 +42,7 @@ public abstract class AbstractFbStatement implements FbStatement {
     private final Object syncObject = new Object();
     protected final StatementListenerDispatcher statementListenerDispatcher = new StatementListenerDispatcher();
     private volatile boolean allRowsFetched = false;
-    private AtomicReference<StatementState> state = new AtomicReference<StatementState>(StatementState.CLOSED);
+    private AtomicReference<StatementState> state = new AtomicReference<StatementState>(StatementState.NEW);
     private volatile StatementType type = StatementType.NONE;
     private volatile RowDescriptor parameterDescriptor;
     private volatile RowDescriptor fieldDescriptor;
@@ -71,44 +69,34 @@ public abstract class AbstractFbStatement implements FbStatement {
 
     @Override
     public void close() throws SQLException {
+        if (getState() == StatementState.CLOSED) return;
         synchronized (getSynchronizationObject()) {
-            if (getState() == StatementState.CLOSED) return;
             // TODO do additional checks (see also old implementation and .NET)
             try {
-                free(ISCConstants.DSQL_drop);
+                if (getState() != StatementState.NEW) {
+                    free(ISCConstants.DSQL_drop);
+                }
             } finally {
-                statementListenerDispatcher.removeAllListeners();
                 switchState(StatementState.CLOSED);
                 setType(StatementType.NONE);
+                statementListenerDispatcher.removeAllListeners();
             }
         }
     }
 
-    /**
-     * StatementState values indicating that cursor is closed
-     * TODO Should also include ALLOCATED and PREPARED?
-     */
-    protected static final Set<StatementState> STATE_CURSOR_CLOSED =
-            Collections.unmodifiableSet(EnumSet.of(StatementState.CLOSED, StatementState.IDLE));
-
-    /**
-     * StatementType values that can have a cursor
-     */
-    protected static final Set<StatementType> TYPE_HAS_CURSOR =
-            Collections.unmodifiableSet(EnumSet.of(StatementType.SELECT, StatementType.SELECT_FOR_UPDATE, StatementType.STORED_PROCEDURE));
-
     @Override
-    public void closeCursor() throws SQLException {
+    public final void closeCursor() throws SQLException {
         synchronized (getSynchronizationObject()) {
-            if (STATE_CURSOR_CLOSED.contains(getState())) return;
+            if (!getState().isCursorOpen()) return;
             // TODO do additional checks (see also old implementation and .NET)
             try {
-                if (TYPE_HAS_CURSOR.contains(getType())) {
+                if (getType().isTypeWithCursor()) {
                     free(ISCConstants.DSQL_close);
                 }
             } finally {
                 // TODO Close in case of exception?
-                switchState(StatementState.IDLE);
+                // TODO Any statement types that cannot be prepared and would need to go to ALLOCATED?
+                switchState(StatementState.PREPARED);
             }
         }
     }
@@ -126,7 +114,7 @@ public abstract class AbstractFbStatement implements FbStatement {
      */
     protected final void switchState(final StatementState newState) throws SQLException {
         // TODO Check valid transition?
-        final StatementState currentState = this.state.get();
+        final StatementState currentState = state.get();
         if (state.compareAndSet(currentState, newState)) {
             statementListenerDispatcher.statementStateChanged(this, newState, currentState);
         } else {
@@ -229,8 +217,7 @@ public abstract class AbstractFbStatement implements FbStatement {
     }
 
     @Override
-    public final RowDescriptor getParameterDescriptor() throws SQLException {
-        checkStatementOpen();
+    public final RowDescriptor getParameterDescriptor() {
         return parameterDescriptor;
     }
 
@@ -247,8 +234,7 @@ public abstract class AbstractFbStatement implements FbStatement {
     }
 
     @Override
-    public final RowDescriptor getFieldDescriptor() throws SQLException {
-        checkStatementOpen();
+    public final RowDescriptor getFieldDescriptor() {
         return fieldDescriptor;
     }
 
@@ -352,7 +338,7 @@ public abstract class AbstractFbStatement implements FbStatement {
 
     @Override
     public final void addStatementListener(StatementListener statementListener) {
-        // TODO What to do after statement close?
+        if (getState() == StatementState.CLOSED) return;
         statementListenerDispatcher.addListener(statementListener);
     }
 
@@ -361,17 +347,25 @@ public abstract class AbstractFbStatement implements FbStatement {
         statementListenerDispatcher.removeListener(statementListener);
     }
 
+    private static final EnumSet<StatementState> STATEMENT_CLOSED = EnumSet.of(StatementState.NEW, StatementState.CLOSED);
+
     /**
-     * Checks if this statement is not in {@link StatementState#CLOSED}, and throws an <code>SQLException</code> if it is.
+     * Checks if this statement is not in {@link StatementState#CLOSED}, {@link StatementState#NEW} or {@link StatementState#ERROR},
+     * and throws an <code>SQLException</code> if it is.
      *
      * @throws SQLException
-     *         When this statement is closed.
+     *         When this statement is closed or in error state.
      */
-    protected final void checkStatementOpen() throws SQLException {
-        if (getState() == StatementState.CLOSED) {
+    protected final void checkStatementValid() throws SQLException {
+        if (STATEMENT_CLOSED.contains(getState())) {
             // TODO Externalize sqlstate
             // TODO See if there is a firebird error code matching this (isc_cursor_not_open is not exactly the same)
-            throw new SQLException("Statement closed", "24000");
+            throw new SQLNonTransientException("Statement closed", "24000");
+        }
+        if (getState() == StatementState.ERROR) {
+            // TODO SQLState?
+            // TODO See if there is a firebird error code matching this
+            throw new SQLNonTransientException("Statement is in error state and needs to be closed");
         }
     }
 

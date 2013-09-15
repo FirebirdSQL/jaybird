@@ -45,6 +45,14 @@ public interface FbStatement {
     FbTransaction getTransaction() throws SQLException;
 
     /**
+     * Allocate a statement handle for this statement on the server.
+     *
+     * @throws SQLException
+     *         If a database access error occurs, or if the statement has been allocated already.
+     */
+    void allocateStatement() throws SQLException;
+
+    /**
      * Associates a transaction with this statement
      *
      * @param transaction
@@ -56,12 +64,12 @@ public interface FbStatement {
     /**
      * @return descriptor of the parameters of this statement
      */
-    RowDescriptor getParameterDescriptor() throws SQLException;
+    RowDescriptor getParameterDescriptor();
 
     /**
      * @return descriptor of the fields returned by this statement
      */
-    RowDescriptor getFieldDescriptor() throws SQLException;
+    RowDescriptor getFieldDescriptor();
 
     /**
      * @return The statement type
@@ -98,7 +106,7 @@ public interface FbStatement {
      *
      * @param statementText
      *         Statement text
-     * @throws SQLException
+     * @throws SQLException If a database access error occurs, or if no statement handle as been allocated, or this statement is currently executing a query.
      */
     void prepare(String statementText) throws SQLException;
 
@@ -146,14 +154,16 @@ public interface FbStatement {
     /**
      * Registers a {@link org.firebirdsql.gds.ng.listeners.StatementListener}.
      *
-     * @param statementListener The row listener
+     * @param statementListener
+     *         The row listener
      */
     void addStatementListener(StatementListener statementListener);
 
     /**
      * Removes a {@link org.firebirdsql.gds.ng.listeners.StatementListener}.
      *
-     * @param statementListener The row listener
+     * @param statementListener
+     *         The row listener
      */
     void removeStatementListener(StatementListener statementListener);
 }
