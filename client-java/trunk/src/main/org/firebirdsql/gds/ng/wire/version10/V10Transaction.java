@@ -48,7 +48,7 @@ public class V10Transaction extends AbstractFbTransaction implements FbWireTrans
 
     private FbWireDatabase database;
     private final Object syncObject = new Object();
-    private int handle;
+    private volatile int handle;
 
     /**
      * Creates a new instance of V10Transaction for the specified database.
@@ -100,7 +100,7 @@ public class V10Transaction extends AbstractFbTransaction implements FbWireTrans
                     throw new FbExceptionBuilder().exception(ISCConstants.isc_net_write_err).cause(ioex).toSQLException();
                 }
                 try {
-                    response = (GenericResponse) getDatabase().readResponse();
+                    response = (GenericResponse) getDatabase().readResponse(null);
                 } catch (IOException ioex) {
                     throw new FbExceptionBuilder().exception(ISCConstants.isc_net_read_err).cause(ioex).toSQLException();
                 }
@@ -124,7 +124,7 @@ public class V10Transaction extends AbstractFbTransaction implements FbWireTrans
                     throw new FbExceptionBuilder().exception(ISCConstants.isc_net_write_err).cause(ioex).toSQLException();
                 }
                 try {
-                    getDatabase().readResponse();
+                    getDatabase().readResponse(null);
                 } catch (IOException ioex) {
                     throw new FbExceptionBuilder().exception(ISCConstants.isc_net_read_err).cause(ioex).toSQLException();
                 }
@@ -132,6 +132,8 @@ public class V10Transaction extends AbstractFbTransaction implements FbWireTrans
             switchState(TransactionState.NO_TRANSACTION);
         }
     }
+
+    // TODO Check handling of commit retaining and rollback retaining (or simply remove if we are not going to use it)
 
     @Override
     public void commitRetaining() throws SQLException {
@@ -147,7 +149,7 @@ public class V10Transaction extends AbstractFbTransaction implements FbWireTrans
                     throw new FbExceptionBuilder().exception(ISCConstants.isc_net_write_err).cause(ioex).toSQLException();
                 }
                 try {
-                    getDatabase().readResponse();
+                    getDatabase().readResponse(null);
                 } catch (IOException ioex) {
                     throw new FbExceptionBuilder().exception(ISCConstants.isc_net_read_err).cause(ioex).toSQLException();
                 }
@@ -170,7 +172,7 @@ public class V10Transaction extends AbstractFbTransaction implements FbWireTrans
                     throw new FbExceptionBuilder().exception(ISCConstants.isc_net_write_err).cause(ioex).toSQLException();
                 }
                 try {
-                    getDatabase().readResponse();
+                    getDatabase().readResponse(null);
                 } catch (IOException ioex) {
                     throw new FbExceptionBuilder().exception(ISCConstants.isc_net_read_err).cause(ioex).toSQLException();
                 }
@@ -193,7 +195,7 @@ public class V10Transaction extends AbstractFbTransaction implements FbWireTrans
                     throw new FbExceptionBuilder().exception(ISCConstants.isc_net_write_err).cause(ioex).toSQLException();
                 }
                 try {
-                    getDatabase().readResponse();
+                    getDatabase().readResponse(null);
                 } catch (IOException ioex) {
                     throw new FbExceptionBuilder().exception(ISCConstants.isc_net_read_err).cause(ioex).toSQLException();
                 }

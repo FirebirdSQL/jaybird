@@ -24,6 +24,7 @@ import org.firebirdsql.encodings.Encoding;
 import org.firebirdsql.encodings.IEncodingFactory;
 import org.firebirdsql.gds.impl.wire.XdrInputStream;
 import org.firebirdsql.gds.impl.wire.XdrOutputStream;
+import org.firebirdsql.gds.ng.AbstractFbDatabase;
 
 import java.sql.SQLException;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -32,14 +33,13 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @since 2.3
  */
-public abstract class AbstractFbWireDatabase implements FbWireDatabase {
+public abstract class AbstractFbWireDatabase extends AbstractFbDatabase implements FbWireDatabase {
 
     protected final AtomicBoolean attached = new AtomicBoolean();
     protected final ProtocolDescriptor protocolDescriptor;
     protected final WireConnection connection;
     private final XdrStreamHolder xdrStreamHolder;
     private final Object syncObject = new Object();
-    private short databaseDialect;
 
     /**
      * Creates a V10Database instance.
@@ -91,23 +91,5 @@ public abstract class AbstractFbWireDatabase implements FbWireDatabase {
     @Override
     public final boolean isAttached() {
         return attached.get() && connection.isConnected();
-    }
-
-    @Override
-    public final short getDatabaseDialect() {
-        return databaseDialect;
-    }
-
-    /**
-     * Sets the dialect of the database.
-     * <p>
-     * This method should only be called by this instance.
-     * </p>
-     *
-     * @param dialect
-     *         Dialect of the database/connection
-     */
-    protected final void setDatabaseDialect(short dialect) {
-        this.databaseDialect = dialect;
     }
 }

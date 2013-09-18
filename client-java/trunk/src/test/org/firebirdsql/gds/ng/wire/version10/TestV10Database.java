@@ -28,7 +28,7 @@ import org.firebirdsql.gds.impl.jni.NativeGDSImpl;
 import org.firebirdsql.gds.impl.wire.DatabaseParameterBufferImp;
 import org.firebirdsql.gds.ng.FbConnectionProperties;
 import org.firebirdsql.gds.ng.FbExceptionBuilder;
-import org.firebirdsql.gds.ng.SimpleWarningMessageCallback;
+import org.firebirdsql.gds.ng.SimpleDatabaseListener;
 import org.firebirdsql.gds.ng.wire.*;
 import org.firebirdsql.management.FBManager;
 import org.junit.BeforeClass;
@@ -144,11 +144,11 @@ public class TestV10Database {
     @Test
     public void testProcessReponseWarnings_noException() throws Exception {
         V10Database db = new V10Database(DUMMY_CONNECTION, DUMMY_DESCRIPTOR);
-        SimpleWarningMessageCallback callback = new SimpleWarningMessageCallback();
-        db.setWarningMessageCallback(callback);
+        SimpleDatabaseListener callback = new SimpleDatabaseListener();
+        db.addDatabaseListener(callback);
 
         GenericResponse genericResponse = new GenericResponse(-1, -1, null, null);
-        db.processResponseWarnings(genericResponse);
+        db.processResponseWarnings(genericResponse, null);
 
         List<SQLWarning> warnings = callback.getWarnings();
         assertEquals("Expected no warnings to be registered", 0, warnings.size());
@@ -161,12 +161,12 @@ public class TestV10Database {
     @Test
     public void testProcessReponseWarnings_exception() throws Exception {
         V10Database db = new V10Database(DUMMY_CONNECTION, DUMMY_DESCRIPTOR);
-        SimpleWarningMessageCallback callback = new SimpleWarningMessageCallback();
-        db.setWarningMessageCallback(callback);
+        SimpleDatabaseListener callback = new SimpleDatabaseListener();
+        db.addDatabaseListener(callback);
 
         SQLException exception = new FbExceptionBuilder().exception(ISCConstants.isc_numeric_out_of_range).toSQLException();
         GenericResponse genericResponse = new GenericResponse(-1, -1, null, exception);
-        db.processResponseWarnings(genericResponse);
+        db.processResponseWarnings(genericResponse, null);
 
         List<SQLWarning> warnings = callback.getWarnings();
         assertEquals("Expected no warnings to be registered", 0, warnings.size());
@@ -179,12 +179,12 @@ public class TestV10Database {
     @Test
     public void testProcessResponseWarnings_warning() throws Exception {
         V10Database db = new V10Database(DUMMY_CONNECTION, DUMMY_DESCRIPTOR);
-        SimpleWarningMessageCallback callback = new SimpleWarningMessageCallback();
-        db.setWarningMessageCallback(callback);
+        SimpleDatabaseListener callback = new SimpleDatabaseListener();
+        db.addDatabaseListener(callback);
 
         SQLWarning warning = new FbExceptionBuilder().warning(ISCConstants.isc_numeric_out_of_range).toSQLException(SQLWarning.class);
         GenericResponse genericResponse = new GenericResponse(-1, -1, null, warning);
-        db.processResponseWarnings(genericResponse);
+        db.processResponseWarnings(genericResponse, null);
 
         List<SQLWarning> warnings = callback.getWarnings();
 
@@ -201,7 +201,7 @@ public class TestV10Database {
         SQLException warning = new FbExceptionBuilder().warning(ISCConstants.isc_numeric_out_of_range).toSQLException();
         GenericResponse genericResponse = new GenericResponse(-1, -1, null, warning);
         try {
-            db.processResponseWarnings(genericResponse);
+            db.processResponseWarnings(genericResponse, null);
         } catch (Exception ex) {
             fail("Expected no exception");
         }

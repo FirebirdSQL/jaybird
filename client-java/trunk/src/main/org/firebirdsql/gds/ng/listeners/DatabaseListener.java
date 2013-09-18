@@ -24,66 +24,48 @@
  * OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.firebirdsql.gds.ng;
+package org.firebirdsql.gds.ng.listeners;
 
-import java.util.Collections;
-import java.util.EnumSet;
-import java.util.Set;
+import org.firebirdsql.gds.ng.FbDatabase;
+
+import java.sql.SQLWarning;
 
 /**
- * Transactions states.
+ * Listener for database events
  *
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @since 2.3
  */
-public enum TransactionState {
-    NO_TRANSACTION {
-        @Override
-        Set<TransactionState> createValidTransitionSet() {
-            return EnumSet.of(ACTIVE, NO_TRANSACTION);
-        }
-    },
-    ACTIVE {
-        @Override
-        Set<TransactionState> createValidTransitionSet() {
-            // TODO Verify if these are the supported transitions
-            return EnumSet.of(ACTIVE, PREPARED, NO_TRANSACTION);
-        }
-    },
-    PREPARED {
-        @Override
-        Set<TransactionState> createValidTransitionSet() {
-            // TODO Verify if these are the supported transitions
-            return EnumSet.of(ACTIVE, PREPARED, NO_TRANSACTION);
-        }
-    };
-
-    private Set<TransactionState> validTransitions;
+public interface DatabaseListener {
 
     /**
-     * Is the transition to <code>toState</code> valid from this state.
+     * Called before the <code>database</code> will be detached.
+     * <p>
+     * This event is intended for cleanup action, implementer should take care that
+     * no exceptions are thrown from this method.
+     * </p>
+     */
+    void detaching(FbDatabase database);
+
+    /**
+     * Called when the <code>database</code> connection has been detached
      *
-     * @param toState The next state
-     * @return <code>true</code> transition is valid
+     * @param database
+     *         The database object that was detached
      */
-    public final boolean isValidTransition(TransactionState toState) {
-        return validTransitionSet().contains(toState);
-    }
+    void detached(FbDatabase database);
 
     /**
-     * @return Set of valid transitions from this state
-     */
-    public final Set<TransactionState> validTransitionSet() {
-        if (validTransitions == null) {
-            validTransitions = Collections.unmodifiableSet(createValidTransitionSet());
-        }
-        return validTransitions;
-    }
-
-    /**
-     * Create the set of valid transitions.
+     * Called when a warning was received for the <code>database</code> connection.
+     * <p>
+     * In implementation it is possible that some warnings are not sent to listeners on the database, but only to listeners on
+     * specific connection derived objects (like an {@link org.firebirdsql.gds.ng.FbStatement} implementation).
+     * </p>
      *
-     * @return Set of valid transitions from this state
+     * @param database
+     *         Database receiving the warning
+     * @param warning
+     *         Warning
      */
-    abstract Set<TransactionState> createValidTransitionSet();
+    void warningReceived(FbDatabase database, SQLWarning warning);
 }

@@ -33,7 +33,11 @@ public class TransactionListenerDispatcher extends AbstractListenerDispatcher<Tr
     @Override
     public void transactionStateChanged(FbTransaction transaction, TransactionState newState, TransactionState previousState) {
         for (TransactionListener listener : this) {
-            listener.transactionStateChanged(transaction, newState, previousState);
+            try {
+                listener.transactionStateChanged(transaction, newState, previousState);
+            } catch (Exception e) {
+                // Ignore // TODO: log
+            }
         }
     }
 }

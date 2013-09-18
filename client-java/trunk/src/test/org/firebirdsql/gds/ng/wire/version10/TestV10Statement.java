@@ -58,6 +58,7 @@ import static org.junit.Assume.assumeTrue;
 
 /**
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @since 2.3
  */
 public class TestV10Statement {
 
@@ -94,6 +95,15 @@ public class TestV10Statement {
     private static final String EXECUTE_SELECTABLE_STORED_PROCEDURE =
             "SELECT OUTVALUE FROM RANGE(?, ?)";
 
+    private static final String CREATE_KEY_VALUE_TABLE =
+            "CREATE TABLE keyvalue ( " +
+            " thekey INTEGER, " +
+            " thevalue VARCHAR(100)" +
+            ")";
+
+    private static final String INSERT_RETURNING_KEY_VALUE =
+            "INSERT INTO keyvalue (thevalue) VALUES (?) RETURNING thekey";
+
     private final FbConnectionProperties connectionInfo;
     private FbWireDatabase db;
     FBManager fbManager;
@@ -126,6 +136,7 @@ public class TestV10Statement {
         try {
             DdlHelper.executeDDL(con, CREATE_EXECUTABLE_STORED_PROCEDURE, new int[] {});
             DdlHelper.executeDDL(con, CREATE_SELECTABLE_STORED_PROCEDURE, new int[] {});
+            DdlHelper.executeCreateTable(con, CREATE_KEY_VALUE_TABLE);
         } finally {
             JdbcResourceHelper.closeQuietly(con);
         }
@@ -330,6 +341,36 @@ public class TestV10Statement {
                 Arrays.asList(
                         new FieldDescriptor(ISCConstants.SQL_LONG | 1, 0, 0, 4, null, null, null, null, null),
                         new FieldDescriptor(ISCConstants.SQL_LONG | 1, 0, 0, 4, null, null, null, null, null)
+                );
+        assertEquals("Unexpected values for parameters", expectedParameters, parameters.getFieldDescriptors());
+
+        statement.close();
+    }
+
+    @Test
+    public void test_PrepareInsertReturning() throws Exception {
+        final FbTransaction transaction = getTransaction();
+        final FbStatement statement = db.createStatement();
+        statement.allocateStatement();
+        statement.setTransaction(transaction);
+        statement.prepare(INSERT_RETURNING_KEY_VALUE);
+
+        // DML {INSERT, UPDATE, DELETE} ... RETURNING is described as a stored procedure!
+        assertEquals("Unexpected StatementType", StatementType.STORED_PROCEDURE, statement.getType());
+
+        final RowDescriptor fields = statement.getFieldDescriptor();
+        assertNotNull("Fields", fields);
+        List<FieldDescriptor> expectedFields =
+                Arrays.asList(
+                        new FieldDescriptor(ISCConstants.SQL_LONG | 1, 0, 0, 4, "THEKEY", null, "THEKEY", "KEYVALUE", "SYSDBA")
+                );
+        assertEquals("Unexpected values for fields", expectedFields, fields.getFieldDescriptors());
+
+        final RowDescriptor parameters = statement.getParameterDescriptor();
+        assertNotNull("Parameters", parameters);
+        List<FieldDescriptor> expectedParameters =
+                Arrays.asList(
+                        new FieldDescriptor(ISCConstants.SQL_VARYING | 1, 0, 0, 100, null, null, null, null, null)
                 );
         assertEquals("Unexpected values for parameters", expectedParameters, parameters.getFieldDescriptors());
 

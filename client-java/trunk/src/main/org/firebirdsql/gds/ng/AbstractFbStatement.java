@@ -25,13 +25,15 @@ import org.firebirdsql.gds.ng.fields.FieldValue;
 import org.firebirdsql.gds.ng.fields.RowDescriptor;
 import org.firebirdsql.gds.ng.listeners.StatementListener;
 import org.firebirdsql.gds.ng.listeners.StatementListenerDispatcher;
+import org.firebirdsql.gds.ng.listeners.TransactionListener;
+import org.firebirdsql.jdbc.FBSQLException;
 
 import java.sql.SQLException;
 import java.sql.SQLNonTransientException;
 import java.sql.SQLTransientException;
+import java.sql.SQLWarning;
 import java.util.EnumSet;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
@@ -39,13 +41,68 @@ import java.util.concurrent.atomic.AtomicReference;
  */
 public abstract class AbstractFbStatement implements FbStatement {
 
+    /**
+     * Set of states that will be reset to {@link StatementState#PREPARED} on transaction change
+     */
+    private static final EnumSet<StatementState> RESET_TO_PREPARED = EnumSet.of(StatementState.EXECUTING, StatementState.EXECUTED);
+
     private final Object syncObject = new Object();
+    private final WarningMessageCallback warningCallback = new WarningMessageCallback() {
+        @Override
+        public void processWarning(SQLWarning warning) {
+            statementListenerDispatcher.warningReceived(AbstractFbStatement.this, warning);
+        }
+    };
     protected final StatementListenerDispatcher statementListenerDispatcher = new StatementListenerDispatcher();
     private volatile boolean allRowsFetched = false;
-    private AtomicReference<StatementState> state = new AtomicReference<StatementState>(StatementState.NEW);
+    private volatile StatementState state = StatementState.NEW;
     private volatile StatementType type = StatementType.NONE;
     private volatile RowDescriptor parameterDescriptor;
     private volatile RowDescriptor fieldDescriptor;
+    private volatile FbTransaction transaction;
+
+    private final TransactionListener transactionListener = new TransactionListener() {
+        @Override
+        public void transactionStateChanged(FbTransaction transaction, TransactionState newState, TransactionState previousState) {
+            synchronized (getSynchronizationObject()) {
+                try {
+                    if (RESET_TO_PREPARED.contains(getState())) {
+                        // Cursor has been closed due to commit, rollback, etc, back to prepared state
+                        try {
+                            switchState(StatementState.PREPARED);
+                        } catch (SQLException e) {
+                            throw new IllegalStateException("Received an SQLException when none was expected", e);
+                        }
+                        reset(false);
+                    }
+                } finally {
+                    transaction.removeTransactionListener(this);
+                    try {
+                        setTransaction(null);
+                    } catch (SQLException e) {
+                        throw new IllegalStateException("Received an SQLException when none was expected", e);
+                    }
+                }
+            }
+        }
+    };
+
+    /**
+     * Gets the {@link TransactionListener} instance for this statement.
+     * <p>
+     * This method should only be called by this object itself. Subclasses may provide their own transaction listener, but
+     * the instance returned by this method should be the same for the lifetime of this {@link FbStatement}.
+     * </p>
+     *
+     * @return The transaction listener instance for this statement.
+     */
+    protected final TransactionListener getTransactionListener() {
+        return transactionListener;
+    }
+
+    protected final WarningMessageCallback getStatementWarningCallback() {
+        return warningCallback;
+    }
 
     /**
      * Plan information items
@@ -80,6 +137,7 @@ public abstract class AbstractFbStatement implements FbStatement {
                 switchState(StatementState.CLOSED);
                 setType(StatementType.NONE);
                 statementListenerDispatcher.removeAllListeners();
+                setTransaction(null);
             }
         }
     }
@@ -93,17 +151,19 @@ public abstract class AbstractFbStatement implements FbStatement {
                 if (getType().isTypeWithCursor()) {
                     free(ISCConstants.DSQL_close);
                 }
-            } finally {
-                // TODO Close in case of exception?
                 // TODO Any statement types that cannot be prepared and would need to go to ALLOCATED?
                 switchState(StatementState.PREPARED);
+            } catch (SQLException e) {
+                // TODO Close in case of exception?
+                switchState(StatementState.ERROR);
+                throw e;
             }
         }
     }
 
     @Override
     public StatementState getState() {
-        return state.get();
+        return state;
     }
 
     /**
@@ -111,18 +171,19 @@ public abstract class AbstractFbStatement implements FbStatement {
      *
      * @param newState
      *         New state
+     * @throws SQLException
+     *         When the state is changed to an illegal next state
      */
     protected final void switchState(final StatementState newState) throws SQLException {
-        // TODO Check valid transition?
-        final StatementState currentState = state.get();
-        if (state.compareAndSet(currentState, newState)) {
-            statementListenerDispatcher.statementStateChanged(this, newState, currentState);
-        } else {
-            // Note: race condition when generating message (get() could return same value as currentState)
-            // TODO Include sqlstate
-            throw new SQLException(String.format(
-                    "Unable to change statement state: expected current state %s, but was %s", currentState,
-                    state.get()));
+        synchronized (getSynchronizationObject()) {
+            final StatementState currentState = state;
+            if (currentState == newState || currentState == StatementState.CLOSED) return;
+            if (currentState.isValidTransition(newState)) {
+                state = newState;
+                statementListenerDispatcher.statementStateChanged(this, newState, currentState);
+            } else {
+                throw new SQLNonTransientException(String.format("Statement state %s only allows next states %s, received %s", currentState, currentState.validTransitionSet(), newState));
+            }
         }
     }
 
@@ -212,6 +273,7 @@ public abstract class AbstractFbStatement implements FbStatement {
             if (resetAll) {
                 setParameterDescriptor(null);
                 setFieldDescriptor(null);
+                setType(StatementType.NONE);
             }
         }
     }
@@ -276,7 +338,10 @@ public abstract class AbstractFbStatement implements FbStatement {
      * @throws SQLException
      *         For errors retrieving or transforming the response.
      */
-    public abstract <T> T getSqlInfo(byte[] requestItems, int bufferLength, InfoProcessor<T> infoProcessor) throws SQLException;
+    @Override
+    public final <T> T getSqlInfo(final byte[] requestItems, final int bufferLength, final InfoProcessor<T> infoProcessor) throws SQLException {
+        return infoProcessor.process(getSqlInfo(requestItems, bufferLength));
+    }
 
     /**
      * Request statement info.
@@ -347,8 +412,6 @@ public abstract class AbstractFbStatement implements FbStatement {
         statementListenerDispatcher.removeListener(statementListener);
     }
 
-    private static final EnumSet<StatementState> STATEMENT_CLOSED = EnumSet.of(StatementState.NEW, StatementState.CLOSED);
-
     /**
      * Checks if this statement is not in {@link StatementState#CLOSED}, {@link StatementState#NEW} or {@link StatementState#ERROR},
      * and throws an <code>SQLException</code> if it is.
@@ -357,15 +420,31 @@ public abstract class AbstractFbStatement implements FbStatement {
      *         When this statement is closed or in error state.
      */
     protected final void checkStatementValid() throws SQLException {
-        if (STATEMENT_CLOSED.contains(getState())) {
+        switch (getState()) {
+        case NEW:
+        case CLOSED:
             // TODO Externalize sqlstate
             // TODO See if there is a firebird error code matching this (isc_cursor_not_open is not exactly the same)
             throw new SQLNonTransientException("Statement closed", "24000");
-        }
-        if (getState() == StatementState.ERROR) {
+        case ERROR:
             // TODO SQLState?
             // TODO See if there is a firebird error code matching this
             throw new SQLNonTransientException("Statement is in error state and needs to be closed");
+        default:
+            // Valid state, continue
+            break;
+        }
+    }
+
+    /**
+     * Checks if this statement has a transaction and that the transaction is {@link TransactionState#ACTIVE}.
+     *
+     * @throws SQLException
+     *         When this statement does not have a transaction, or if that transaction is not active.
+     */
+    protected final void checkTransactionActive() throws SQLException {
+        if (transaction == null || transaction.getState() != TransactionState.ACTIVE) {
+            throw new SQLNonTransientException("No transaction or transaction not ACTIVE", FBSQLException.SQL_STATE_INVALID_TX_STATE);
         }
     }
 
@@ -375,6 +454,43 @@ public abstract class AbstractFbStatement implements FbStatement {
             if (getState() != StatementState.CLOSED) close();
         } finally {
             super.finalize();
+        }
+    }
+
+    @Override
+    public final FbTransaction getTransaction() throws SQLException {
+        return transaction;
+    }
+
+    /**
+     * Method to decide if a transaction implementation class is valid for the statement implementation.
+     * <p>
+     * Eg a V10Statement will only work with an FbWireTransaction implementation.
+     * </p>
+     *
+     * @param transactionClass
+     *         Class of the transaction
+     * @return <code>true</code> when the transaction class is valid for the statement implementation.
+     */
+    protected abstract boolean isValidTransactionClass(Class<? extends FbTransaction> transactionClass);
+
+    @Override
+    public final void setTransaction(final FbTransaction newTransaction) throws SQLException {
+        if (newTransaction == null || isValidTransactionClass(newTransaction.getClass())) {
+            // TODO Is there a statement or transaction state where we should not be switching transactions?
+            synchronized (getSynchronizationObject()) {
+                if (newTransaction == transaction) return;
+                if (transaction != null) {
+                    transaction.removeTransactionListener(getTransactionListener());
+                }
+                transaction = newTransaction;
+                if (newTransaction != null) {
+                    newTransaction.addTransactionListener(getTransactionListener());
+                }
+            }
+        } else {
+            throw new SQLNonTransientException(String.format("Invalid transaction handle type, got \"%s\"", newTransaction.getClass().getName()),
+                    FBSQLException.SQL_STATE_GENERAL_ERROR);
         }
     }
 }

@@ -166,4 +166,20 @@ public interface FbStatement {
      *         The row listener
      */
     void removeStatementListener(StatementListener statementListener);
+
+    /**
+     * Request statement info.
+     *
+     * @param requestItems
+     *         Array of info items to request
+     * @param bufferLength
+     *         Response buffer length to use
+     * @param infoProcessor
+     *         Implementation of {@link InfoProcessor} to transform
+     *         the info response
+     * @return Transformed info response of type T
+     * @throws SQLException
+     *         For errors retrieving or transforming the response.
+     */
+    <T> T getSqlInfo(final byte[] requestItems, final int bufferLength, final InfoProcessor<T> infoProcessor) throws SQLException;
 }

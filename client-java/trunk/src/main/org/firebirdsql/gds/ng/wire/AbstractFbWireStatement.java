@@ -25,14 +25,11 @@ import org.firebirdsql.gds.impl.wire.XdrOutputStream;
 import org.firebirdsql.gds.ng.AbstractFbStatement;
 import org.firebirdsql.gds.ng.FbTransaction;
 import org.firebirdsql.gds.ng.fields.RowDescriptor;
-import org.firebirdsql.jdbc.FBSQLException;
 
 import java.sql.SQLException;
-import java.sql.SQLNonTransientException;
 import java.util.Collections;
 import java.util.Map;
 import java.util.WeakHashMap;
-import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
@@ -40,7 +37,6 @@ import java.util.concurrent.atomic.AtomicReference;
  */
 public abstract class AbstractFbWireStatement extends AbstractFbStatement implements FbWireStatement {
 
-    private final AtomicReference<FbTransaction> transaction = new AtomicReference<FbTransaction>();
     private final Map<RowDescriptor, byte[]> blrCache = Collections.synchronizedMap(new WeakHashMap<RowDescriptor, byte[]>());
     private volatile int handle;
     private final XdrStreamHolder xdrStreamHolder;
@@ -61,24 +57,6 @@ public abstract class AbstractFbWireStatement extends AbstractFbStatement implem
 
     protected final FbWireDatabase getDatabase() {
         return database;
-    }
-
-    @Override
-    public FbTransaction getTransaction() throws SQLException {
-        return transaction.get();
-    }
-
-    @Override
-    public void setTransaction(FbTransaction transaction) throws SQLException {
-        if (!(transaction instanceof FbWireTransaction)) {
-            throw new SQLNonTransientException(String.format("Invalid transaction handle, expected instance of FbWireTransaction, got \"%s\"", transaction.getClass().getName()),
-                    FBSQLException.SQL_STATE_GENERAL_ERROR);
-        }
-        // TODO Needs synchronization?
-        // TODO Is there a statement or transaction state where we should not be switching transactions?
-        if (transaction == this.transaction.get()) return;
-        this.transaction.set(transaction);
-        // TODO Implement + add transaction listener
     }
 
     @Override
@@ -111,15 +89,20 @@ public abstract class AbstractFbWireStatement extends AbstractFbStatement implem
         return blr;
     }
 
+    @Override
     public void close() throws SQLException {
         synchronized (getSynchronizationObject()) {
             try {
                 super.close();
             } finally {
                 database = null;
-                transaction.set(null);
                 blrCache.clear();
             }
         }
+    }
+
+    @Override
+    protected boolean isValidTransactionClass(Class<? extends FbTransaction> transactionClass) {
+        return FbWireTransaction.class.isAssignableFrom(transactionClass);
     }
 }
