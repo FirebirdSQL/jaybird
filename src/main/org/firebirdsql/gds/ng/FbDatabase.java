@@ -30,6 +30,7 @@ import org.firebirdsql.encodings.Encoding;
 import org.firebirdsql.encodings.IEncodingFactory;
 import org.firebirdsql.gds.DatabaseParameterBuffer;
 import org.firebirdsql.gds.TransactionParameterBuffer;
+import org.firebirdsql.gds.ng.listeners.DatabaseListener;
 
 import java.sql.SQLException;
 
@@ -160,14 +161,6 @@ public interface FbDatabase {
     int getTransactionCount();
 
     /**
-     * Sets the WarningMessageCallback for this database.
-     *
-     * @param callback
-     *         WarningMessageCallback
-     */
-    void setWarningMessageCallback(WarningMessageCallback callback);
-
-    /**
      * Current attachment status of the database.
      *
      * @return <code>true</code> if connected to the server and attached to a
@@ -204,7 +197,23 @@ public interface FbDatabase {
 
     /**
      * @return The connection encoding (should be the same as returned from calling {@link org.firebirdsql.encodings.IEncodingFactory#getDefaultEncoding()}
-     * on the result of {@link #getEncodingFactory()}.
+     *         on the result of {@link #getEncodingFactory()}.
      */
     Encoding getEncoding();
+
+    /**
+     * Adds a {@link DatabaseListener} instance to this database.
+     *
+     * @param listener
+     *         Database listener
+     */
+    void addDatabaseListener(DatabaseListener listener);
+
+    /**
+     * Removes a {@link DatabaseListener} instance from this database.
+     *
+     * @param listener
+     *         Database Listener
+     */
+    void removeDatabaseListener(DatabaseListener listener);
 }

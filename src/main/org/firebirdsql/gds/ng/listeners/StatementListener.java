@@ -30,6 +30,7 @@ import org.firebirdsql.gds.ng.FbStatement;
 import org.firebirdsql.gds.ng.StatementState;
 import org.firebirdsql.gds.ng.fields.FieldValue;
 
+import java.sql.SQLWarning;
 import java.util.List;
 
 /**
@@ -89,5 +90,16 @@ public interface StatementListener {
      * @param previousState
      *         The old state of the statement
      */
+    // TODO Replace with (or add) specific events?
     void statementStateChanged(FbStatement sender, StatementState newState, StatementState previousState);
+
+    /**
+     * Called when a warning was received for the <code>sender</code> statement.
+     *
+     * @param sender
+     *         Statement receiving the warning
+     * @param warning
+     *         Warning
+     */
+    void warningReceived(FbStatement sender, SQLWarning warning);
 }

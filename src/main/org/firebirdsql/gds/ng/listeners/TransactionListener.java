@@ -40,5 +40,6 @@ public interface TransactionListener {
      * 
      * @param transaction {@link org.firebirdsql.gds.ng.FbTransaction} that changed state
      */
+    // TODO Replace with (or add) specific events?
     void transactionStateChanged(FbTransaction transaction, TransactionState newState, TransactionState previousState);
 }

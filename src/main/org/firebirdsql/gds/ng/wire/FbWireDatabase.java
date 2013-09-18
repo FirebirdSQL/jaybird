@@ -27,6 +27,7 @@
 package org.firebirdsql.gds.ng.wire;
 
 import org.firebirdsql.gds.ng.FbDatabase;
+import org.firebirdsql.gds.ng.WarningMessageCallback;
 import org.firebirdsql.gds.ng.fields.BlrCalculator;
 
 import java.io.IOException;
@@ -42,13 +43,15 @@ public interface FbWireDatabase extends FbDatabase, XdrStreamAccess {
     /**
      * Reads the response from the server.
      *
+     * @param callback
+     *         Callback object for warnings, <code>null</code> for default callback
      * @return {@link Response} read.
      * @throws SQLException
      *         For errors returned from the server, or when attempting to read
      * @throws IOException
      *         For errors reading the response from the connection.
      */
-    Response readResponse() throws SQLException, IOException;
+    Response readResponse(WarningMessageCallback callback) throws SQLException, IOException;
 
     /**
      * Release object. TODO Review usage
@@ -64,6 +67,8 @@ public interface FbWireDatabase extends FbDatabase, XdrStreamAccess {
     /**
      * Convenience method to read a Response to a GenericResponse
      *
+     * @param callback
+     *         Callback object for warnings, <code>null</code> for default callback
      * @return GenericResponse
      * @throws SQLException
      *         For errors returned from the server, or when attempting to
@@ -71,11 +76,13 @@ public interface FbWireDatabase extends FbDatabase, XdrStreamAccess {
      * @throws IOException
      *         For errors reading the response from the connection.
      */
-    GenericResponse readGenericResponse() throws SQLException, IOException;
+    GenericResponse readGenericResponse(WarningMessageCallback callback) throws SQLException, IOException;
 
     /**
      * Convenience method to read a Response to a SqlResponse
      *
+     * @param callback
+     *         Callback object for warnings, <code>null</code> for default callback
      * @return SqlResponse
      * @throws SQLException
      *         For errors returned from the server, or when attempting to
@@ -83,7 +90,7 @@ public interface FbWireDatabase extends FbDatabase, XdrStreamAccess {
      * @throws IOException
      *         For errors reading the response from the connection.
      */
-    SqlResponse readSqlResponse() throws SQLException, IOException;
+    SqlResponse readSqlResponse(WarningMessageCallback callback) throws SQLException, IOException;
 
     /**
      * @return The {@link BlrCalculator} instance for this database.

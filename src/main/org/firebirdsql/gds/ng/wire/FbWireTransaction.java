@@ -29,7 +29,7 @@ package org.firebirdsql.gds.ng.wire;
 import org.firebirdsql.gds.ng.FbTransaction;
 
 /**
- * Interface for transactions created for the wire protocol implementaton.
+ * Interface for transactions created for the wire protocol implementation.
  *
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @since 2.3

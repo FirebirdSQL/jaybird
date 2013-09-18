@@ -58,13 +58,6 @@ public class V10Database extends AbstractFbWireDatabase implements FbWireDatabas
     private static final Logger log = LoggerFactory.getLogger(V10Database.class, false);
 
     private final AtomicInteger transactionCount = new AtomicInteger();
-    /**
-     * Callback for warnings. Only change using {@link #setWarningMessageCallback(org.firebirdsql.gds.ng.WarningMessageCallback)}.
-     * <p>
-     * Should never be null.
-     * </p>
-     */
-    private WarningMessageCallback warningCallback = WarningMessageCallback.DUMMY;
     private int handle;
     private int odsMajor;
     private int odsMinor;
@@ -151,13 +144,6 @@ public class V10Database extends AbstractFbWireDatabase implements FbWireDatabas
     }
 
     @Override
-    public void setWarningMessageCallback(WarningMessageCallback callback) {
-        synchronized (getSynchronizationObject()) {
-            warningCallback = callback != null ? callback : WarningMessageCallback.DUMMY;
-        }
-    }
-
-    @Override
     public void attach() throws SQLException {
         final DatabaseParameterBuffer dpb = protocolDescriptor.createDatabaseParameterBuffer(connection);
         attachOrCreate(dpb, false);
@@ -186,7 +172,7 @@ public class V10Database extends AbstractFbWireDatabase implements FbWireDatabas
                     throw new FbExceptionBuilder().exception(ISCConstants.isc_net_write_err).cause(e).toSQLException();
                 }
                 try {
-                    processAttachOrCreateResponse(readGenericResponse());
+                    processAttachOrCreateResponse(readGenericResponse(null));
                 } catch (IOException e) {
                     throw new FbExceptionBuilder().exception(ISCConstants.isc_net_read_err).cause(e).toSQLException();
                 }
@@ -262,8 +248,7 @@ public class V10Database extends AbstractFbWireDatabase implements FbWireDatabas
     }
 
     @Override
-    public void detach() throws SQLException {
-        checkConnected();
+    protected void internalDetach() throws SQLException {
         synchronized (getSynchronizationObject()) {
             if (getTransactionCount() > 0) {
                 // Register open transactions as warning, we are going to detach and close the connection anyway
@@ -271,11 +256,11 @@ public class V10Database extends AbstractFbWireDatabase implements FbWireDatabas
                 // TODO: Rollback transactions?
                 FbExceptionBuilder builder = new FbExceptionBuilder();
                 builder.warning(ISCConstants.isc_open_trans).messageParameter(getTransactionCount());
-                warningCallback.processWarning(builder.toSQLException(SQLWarning.class));
+                getDatabaseWarningCallback().processWarning(builder.toSQLException(SQLWarning.class));
             }
 
-            final XdrOutputStream xdrOut = getXdrOut();
             try {
+                final XdrOutputStream xdrOut = getXdrOut();
                 if (attached.get()) {
                     xdrOut.writeInt(op_detach);
                     xdrOut.writeInt(getHandle());
@@ -324,7 +309,6 @@ public class V10Database extends AbstractFbWireDatabase implements FbWireDatabas
                 connection.disconnect();
             } finally {
                 attached.set(false);
-                setWarningMessageCallback(null);
             }
         }
     }
@@ -349,7 +333,7 @@ public class V10Database extends AbstractFbWireDatabase implements FbWireDatabas
                     throw new FbExceptionBuilder().exception(ISCConstants.isc_net_write_err).cause(ioex).toSQLException();
                 }
                 try {
-                    readResponse();
+                    readResponse(null);
                 } catch (IOException ioex) {
                     throw new FbExceptionBuilder().exception(ISCConstants.isc_net_read_err).cause(ioex).toSQLException();
                 }
@@ -412,7 +396,7 @@ public class V10Database extends AbstractFbWireDatabase implements FbWireDatabas
                 throw new FbExceptionBuilder().exception(ISCConstants.isc_net_write_err).cause(ex).toSQLException();
             }
             try {
-                GenericResponse genericResponse = readGenericResponse();
+                GenericResponse genericResponse = readGenericResponse(null);
                 byte[] data = genericResponse.getData();
                 int responseLength = Math.min(maxBufferLength, data.length);
                 // TODO Can't we just return data?
@@ -426,8 +410,8 @@ public class V10Database extends AbstractFbWireDatabase implements FbWireDatabas
     }
 
     @Override
-    public Response readResponse() throws SQLException, IOException {
-        Response response = readSingleResponse();
+    public Response readResponse(WarningMessageCallback warningCallback) throws SQLException, IOException {
+        Response response = readSingleResponse(warningCallback);
         processResponse(response);
         return response;
     }
@@ -443,7 +427,7 @@ public class V10Database extends AbstractFbWireDatabase implements FbWireDatabas
                 throw new FbExceptionBuilder().exception(ISCConstants.isc_net_write_err).cause(ex).toSQLException();
             }
             try {
-                processReleaseObjectResponse(readResponse());
+                processReleaseObjectResponse(readResponse(null));
             } catch (IOException ex) {
                 throw new FbExceptionBuilder().exception(ISCConstants.isc_net_read_err).cause(ex).toSQLException();
             }
@@ -478,13 +462,13 @@ public class V10Database extends AbstractFbWireDatabase implements FbWireDatabas
     }
 
     @Override
-    public GenericResponse readGenericResponse() throws SQLException, IOException {
-        return (GenericResponse) readResponse();
+    public GenericResponse readGenericResponse(WarningMessageCallback warningCallback) throws SQLException, IOException {
+        return (GenericResponse) readResponse(warningCallback);
     }
 
     @Override
-    public SqlResponse readSqlResponse() throws SQLException, IOException {
-        return (SqlResponse) readResponse();
+    public SqlResponse readSqlResponse(WarningMessageCallback warningCallback) throws SQLException, IOException {
+        return (SqlResponse) readResponse(warningCallback);
     }
 
     @Override
@@ -498,6 +482,7 @@ public class V10Database extends AbstractFbWireDatabase implements FbWireDatabas
     /**
      * Reads the response from the server.
      *
+     * @param warningCallback Callback object for signalling warnings, <code>null</code> to register warning on the default callback
      * @return Response
      * @throws SQLException
      *         For errors returned from the server, or when attempting to
@@ -505,9 +490,9 @@ public class V10Database extends AbstractFbWireDatabase implements FbWireDatabas
      * @throws IOException
      *         For errors reading the response from the connection.
      */
-    protected Response readSingleResponse() throws SQLException, IOException {
+    protected Response readSingleResponse(WarningMessageCallback warningCallback) throws SQLException, IOException {
         Response response = processOperation(readNextOperation());
-        processResponseWarnings(response);
+        processResponseWarnings(response, warningCallback);
         return response;
     }
 
@@ -534,7 +519,10 @@ public class V10Database extends AbstractFbWireDatabase implements FbWireDatabas
      * @param response
      *         Response to process
      */
-    protected void processResponseWarnings(Response response) {
+    protected void processResponseWarnings(final Response response, WarningMessageCallback warningCallback) {
+        if (warningCallback == null) {
+            warningCallback = getDatabaseWarningCallback();
+        }
         if (response instanceof GenericResponse) {
             GenericResponse genericResponse = (GenericResponse) response;
             SQLException exception = genericResponse.getException();
@@ -847,6 +835,7 @@ public class V10Database extends AbstractFbWireDatabase implements FbWireDatabas
      * @throws SQLException
      *         If not connected.
      */
+    @Override
     protected final void checkConnected() throws SQLException {
         if (!connection.isConnected()) {
             // TODO Update message / externalize

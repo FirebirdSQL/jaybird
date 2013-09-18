@@ -25,7 +25,9 @@ import org.firebirdsql.gds.ng.StatementState;
 import org.firebirdsql.gds.ng.fields.FieldValue;
 import org.firebirdsql.gds.ng.listeners.StatementListener;
 
+import java.sql.SQLWarning;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -37,6 +39,7 @@ import java.util.List;
 public class SimpleStatementListener implements StatementListener {
 
     private final List<List<FieldValue>> rows = new ArrayList<List<FieldValue>>();
+    private final List<SQLWarning> warnings = Collections.synchronizedList(new ArrayList<SQLWarning>());
     private Boolean allRowsFetched;
     private Boolean hasResultSet;
     private Boolean hasSingletonResult;
@@ -62,6 +65,11 @@ public class SimpleStatementListener implements StatementListener {
         // unused for now
     }
 
+    @Override
+    public void warningReceived(FbStatement sender, SQLWarning warning) {
+        warnings.add(warning);
+    }
+
     public Boolean isAllRowsFetched() {
         return allRowsFetched;
     }
@@ -76,5 +84,13 @@ public class SimpleStatementListener implements StatementListener {
 
     public List<List<FieldValue>> getRows() {
         return rows;
+    }
+
+    public List<SQLWarning> getWarnings() {
+        return new ArrayList<SQLWarning>(warnings);
+    }
+
+    public void clear() {
+        warnings.clear();
     }
 }

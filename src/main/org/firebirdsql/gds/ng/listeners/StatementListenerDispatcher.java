@@ -24,41 +24,69 @@ import org.firebirdsql.gds.ng.FbStatement;
 import org.firebirdsql.gds.ng.StatementState;
 import org.firebirdsql.gds.ng.fields.FieldValue;
 
+import java.sql.SQLWarning;
 import java.util.*;
 
 /**
  * Dispatcher to maintain and notify other {@link StatementListener}.
  *
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
- * @since
+ * @since 2.3
  */
 public final class StatementListenerDispatcher extends AbstractListenerDispatcher<StatementListener> implements StatementListener {
 
     @Override
     public void newRow(final FbStatement sender, final List<FieldValue> rowData) {
         for (StatementListener listener : this) {
-            listener.newRow(sender, rowData);
+            try {
+                listener.newRow(sender, rowData);
+            } catch (Exception e) {
+                // Ignore // TODO: log
+            }
         }
     }
 
     @Override
     public void allRowsFetched(final FbStatement sender) {
         for (StatementListener listener : this) {
-            listener.allRowsFetched(sender);
+            try {
+                listener.allRowsFetched(sender);
+            } catch (Exception e) {
+                // Ignore // TODO: log
+            }
         }
     }
 
     @Override
     public void statementExecuted(final FbStatement sender, final boolean hasResultSet, final boolean hasSingletonResult) {
         for (StatementListener listener : this) {
-            listener.statementExecuted(sender, hasResultSet, hasSingletonResult);
+            try {
+                listener.statementExecuted(sender, hasResultSet, hasSingletonResult);
+            } catch (Exception e) {
+                // Ignore // TODO: log
+            }
         }
     }
 
     @Override
     public void statementStateChanged(FbStatement sender, StatementState newState, StatementState previousState) {
         for (StatementListener listener : this) {
-            listener.statementStateChanged(sender, newState, previousState);
+            try {
+                listener.statementStateChanged(sender, newState, previousState);
+            } catch (Exception e) {
+                // Ignore // TODO: log
+            }
+        }
+    }
+
+    @Override
+    public void warningReceived(FbStatement sender, SQLWarning warning) {
+        for (StatementListener listener : this) {
+            try {
+                listener.warningReceived(sender, warning);
+            } catch (Exception e) {
+                // Ignore // TODO: log
+            }
         }
     }
 }

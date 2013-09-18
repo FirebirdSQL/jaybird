@@ -37,15 +37,6 @@ import java.sql.SQLWarning;
 public interface WarningMessageCallback {
 
     /**
-     * Dummy WarningMessageCallback that does nothing
-     */
-    WarningMessageCallback DUMMY = new WarningMessageCallback() {
-        @Override
-        public void processWarning(SQLWarning warning) {
-        }
-    };
-
-    /**
      * Signals the warning to the callback
      *
      * @param warning

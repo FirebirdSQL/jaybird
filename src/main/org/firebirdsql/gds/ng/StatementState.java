@@ -26,6 +26,10 @@
  */
 package org.firebirdsql.gds.ng;
 
+import java.util.Collections;
+import java.util.EnumSet;
+import java.util.Set;
+
 /**
  * Statement states for {@link FbStatement} implementations
  *
@@ -36,23 +40,48 @@ public enum StatementState {
     /**
      * Statement is new and no statement handle has been allocated on the server.
      */
-    NEW,
+    NEW {
+        @Override
+        EnumSet<StatementState> createValidTransitionSet() {
+            return EnumSet.of(ERROR, ALLOCATED, CLOSED, NEW);
+        }
+    },
     /**
      * Statement is closed or has been de-allocated
      */
-    CLOSED,
+    CLOSED {
+        @Override
+        EnumSet<StatementState> createValidTransitionSet() {
+            return EnumSet.of(CLOSED);
+        }
+    },
     /**
      * Statement has been allocated
      */
-    ALLOCATED,
+    ALLOCATED {
+        @Override
+        EnumSet<StatementState> createValidTransitionSet() {
+            return EnumSet.of(ERROR, PREPARED, CLOSED);
+        }
+    },
     /**
      * Statement has been prepared
      */
-    PREPARED,
+    PREPARED {
+        @Override
+        EnumSet<StatementState> createValidTransitionSet() {
+            return EnumSet.of(ERROR, EXECUTING, CLOSED, PREPARED);
+        }
+    },
     /**
      * A statement is being executed, this is an ephemeral state that should only last as long as the execute call to the database takes.
      */
-    EXECUTING,
+    EXECUTING {
+        @Override
+        EnumSet<StatementState> createValidTransitionSet() {
+            return EnumSet.of(ERROR, EXECUTED, PREPARED, CLOSED);
+        }
+    },
     /**
      * Statement has been executed, cursor is still open
      */
@@ -60,6 +89,11 @@ public enum StatementState {
         @Override
         public boolean isCursorOpen() {
             return true;
+        }
+
+        @Override
+        EnumSet<StatementState> createValidTransitionSet() {
+            return EnumSet.of(ERROR, PREPARED, CLOSED);
         }
     },
     /**
@@ -77,7 +111,14 @@ public enum StatementState {
         public boolean isCursorOpen() {
             return true;
         }
+
+        @Override
+        EnumSet<StatementState> createValidTransitionSet() {
+            return EnumSet.of(ERROR, CLOSED);
+        }
     };
+
+    private Set<StatementState> validTransitions;
 
     /**
      * Can a cursor be open in the current state?
@@ -87,4 +128,32 @@ public enum StatementState {
     public boolean isCursorOpen() {
         return false;
     }
+
+    /**
+     * Is the transition to <code>toState</code> valid from this state.
+     *
+     * @param toState
+     *         The next state
+     * @return <code>true</code> transition is valid
+     */
+    public final boolean isValidTransition(StatementState toState) {
+        return validTransitionSet().contains(toState);
+    }
+
+    /**
+     * @return Set of valid transitions from this state
+     */
+    public final Set<StatementState> validTransitionSet() {
+        if (validTransitions == null) {
+            validTransitions = Collections.unmodifiableSet(createValidTransitionSet());
+        }
+        return validTransitions;
+    }
+
+    /**
+     * Create the set of valid transitions.
+     *
+     * @return Set of valid transitions from this state
+     */
+    abstract Set<StatementState> createValidTransitionSet();
 }

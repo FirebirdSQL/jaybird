@@ -20,25 +20,24 @@
  */
 package org.firebirdsql.gds.ng;
 
+import org.firebirdsql.gds.ng.listeners.DatabaseListener;
+
 import java.sql.SQLWarning;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
 /**
- * Implementation of {@link WarningMessageCallback} for testing purposes.
+ * Implementation of {@link DatabaseListener} for testing purposes.
  *
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @since 2.3
  */
-public class SimpleWarningMessageCallback implements WarningMessageCallback {
+public class SimpleDatabaseListener implements DatabaseListener {
 
     private final List<SQLWarning> warnings = Collections.synchronizedList(new ArrayList<SQLWarning>());
-
-    @Override
-    public void processWarning(SQLWarning warning) {
-        warnings.add(warning);
-    }
+    private boolean detaching = false;
+    private boolean detached = false;
 
     public List<SQLWarning> getWarnings() {
         return new ArrayList<SQLWarning>(warnings);
@@ -46,5 +45,28 @@ public class SimpleWarningMessageCallback implements WarningMessageCallback {
 
     public void clear() {
         warnings.clear();
+    }
+
+    @Override
+    public void detaching(FbDatabase database) {
+        detaching = true;
+    }
+
+    public boolean isDetaching() {
+        return detaching;
+    }
+
+    @Override
+    public void detached(FbDatabase database) {
+        detached = true;
+    }
+
+    public boolean isDetached() {
+        return detached;
+    }
+
+    @Override
+    public void warningReceived(FbDatabase database, SQLWarning warning) {
+        warnings.add(warning);
     }
 }
