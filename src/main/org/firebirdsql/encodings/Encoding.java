@@ -53,6 +53,19 @@ public interface Encoding {
     String decodeFromCharset(byte[] in);
 
     /**
+     * Decodes a part of the supplied byte array to a String.
+     *
+     * @param in
+     *         byte array to decode
+     * @param offset
+     *         Offset into the byte array
+     * @param length
+     *         Length in bytes to decode
+     * @return String after decoding the byte array
+     */
+    String decodeFromCharset(byte[] in, int offset, int length);
+
+    /**
      * Derives an {@link Encoding} that applies the specified character translation
      *
      * @param translator

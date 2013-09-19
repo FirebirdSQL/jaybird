@@ -36,13 +36,4 @@ import org.firebirdsql.gds.ng.FbStatement;
  */
 public interface FbWireStatement extends FbStatement {
 
-    /**
-     * @return The default size to use for the sql info buffer
-     */
-    int getDefaultSqlInfoSize();
-
-    /**
-     * @return The maximum size to use for the sql info buffer
-     */
-    int getMaxSqlInfoSize();
 }

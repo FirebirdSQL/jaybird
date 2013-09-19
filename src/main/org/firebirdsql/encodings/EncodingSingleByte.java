@@ -59,9 +59,13 @@ public final class EncodingSingleByte implements Encoding {
 
     @Override
     public String decodeFromCharset(final byte[] in) {
-        final int length = in.length;
+        return decodeFromCharset(in, 0, in.length);
+    }
+
+    @Override
+    public String decodeFromCharset(final byte[] in, final int offset, final int length) {
         final char[] bufferC = new char[length];
-        for (int i = 0; i < length; i++) {
+        for (int i = offset, limit = offset + length; i < limit; i++) {
             bufferC[i] = byteToChar[in[i] & 0xFF];
         }
         return new String(bufferC);

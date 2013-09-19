@@ -53,7 +53,6 @@ import java.util.List;
 
 import static org.firebirdsql.common.FBTestProperties.*;
 import static org.junit.Assert.*;
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assume.assumeTrue;
 
 /**
@@ -64,42 +63,42 @@ public class TestV10Statement {
 
     private static final String CREATE_EXECUTABLE_STORED_PROCEDURE =
             "CREATE PROCEDURE increment " +
-            " (intvalue INTEGER) " +
-            "RETURNS " +
-            " (outvalue INTEGER) " +
-            "AS " +
-            "BEGIN " +
-            " outvalue = intvalue + 1; " +
-            "END";
+                    " (intvalue INTEGER) " +
+                    "RETURNS " +
+                    " (outvalue INTEGER) " +
+                    "AS " +
+                    "BEGIN " +
+                    " outvalue = intvalue + 1; " +
+                    "END";
 
     private static final String EXECUTE_EXECUTABLE_STORED_PROCEDURE =
             "EXECUTE PROCEDURE INCREMENT(?)";
 
     private static final String CREATE_SELECTABLE_STORED_PROCEDURE =
             "CREATE PROCEDURE range " +
-            " (startvalue INTEGER, rowcount INTEGER) " +
-            "RETURNS " +
-            " (outvalue INTEGER) " +
-            "AS " +
-            "DECLARE VARIABLE actualcount INTEGER; " +
-            "BEGIN " +
-            "  actualcount = 0; " +
-            "  WHILE (actualcount < rowcount) DO " +
-            "  BEGIN " +
-            "    outvalue = startvalue + actualcount; " +
-            "    suspend; " +
-            "    actualcount = actualcount + 1; " +
-            "  END " +
-            "END";
+                    " (startvalue INTEGER, rowcount INTEGER) " +
+                    "RETURNS " +
+                    " (outvalue INTEGER) " +
+                    "AS " +
+                    "DECLARE VARIABLE actualcount INTEGER; " +
+                    "BEGIN " +
+                    "  actualcount = 0; " +
+                    "  WHILE (actualcount < rowcount) DO " +
+                    "  BEGIN " +
+                    "    outvalue = startvalue + actualcount; " +
+                    "    suspend; " +
+                    "    actualcount = actualcount + 1; " +
+                    "  END " +
+                    "END";
 
     private static final String EXECUTE_SELECTABLE_STORED_PROCEDURE =
             "SELECT OUTVALUE FROM RANGE(?, ?)";
 
     private static final String CREATE_KEY_VALUE_TABLE =
             "CREATE TABLE keyvalue ( " +
-            " thekey INTEGER, " +
-            " thevalue VARCHAR(100)" +
-            ")";
+                    " thekey INTEGER, " +
+                    " thevalue VARCHAR(5)" +
+                    ")";
 
     private static final String INSERT_RETURNING_KEY_VALUE =
             "INSERT INTO keyvalue (thevalue) VALUES (?) RETURNING thekey";
@@ -134,8 +133,8 @@ public class TestV10Statement {
         fbManager = defaultDatabaseSetUp();
         Connection con = FBTestProperties.getConnectionViaDriverManager();
         try {
-            DdlHelper.executeDDL(con, CREATE_EXECUTABLE_STORED_PROCEDURE, new int[] {});
-            DdlHelper.executeDDL(con, CREATE_SELECTABLE_STORED_PROCEDURE, new int[] {});
+            DdlHelper.executeDDL(con, CREATE_EXECUTABLE_STORED_PROCEDURE, new int[]{ });
+            DdlHelper.executeDDL(con, CREATE_SELECTABLE_STORED_PROCEDURE, new int[]{ });
             DdlHelper.executeCreateTable(con, CREATE_KEY_VALUE_TABLE);
         } finally {
             JdbcResourceHelper.closeQuietly(con);
@@ -252,8 +251,8 @@ public class TestV10Statement {
                         "WHERE a.RDB$CHARACTER_SET_ID = ? OR a.RDB$BYTES_PER_CHARACTER = ?");
 
         RowDescriptor descriptor = statement.getParameterDescriptor();
-        FieldValue param1 = new FieldValue(descriptor.getFieldDescriptor(0), new byte[] { 0, 0, 0, 3 }); // int = 3 (id of UNICODE_FSS)
-        FieldValue param2 = new FieldValue(descriptor.getFieldDescriptor(1), new byte[] { 0, 0, 0, 1 }); // int = 1 (single byte character sets)
+        FieldValue param1 = new FieldValue(descriptor.getFieldDescriptor(0), new byte[]{ 0, 0, 0, 3 }); // int = 3 (id of UNICODE_FSS)
+        FieldValue param2 = new FieldValue(descriptor.getFieldDescriptor(1), new byte[]{ 0, 0, 0, 1 }); // int = 1 (single byte character sets)
 
         final SimpleStatementListener statementListener = new SimpleStatementListener();
         statement.addStatementListener(statementListener);
@@ -375,6 +374,58 @@ public class TestV10Statement {
         assertEquals("Unexpected values for parameters", expectedParameters, parameters.getFieldDescriptors());
 
         statement.close();
+    }
+
+    @Test
+    public void test_GetExecutionPlan_withStatementPrepared() throws Exception {
+        final FbTransaction transaction = getTransaction();
+        final FbStatement statement = db.createStatement();
+        statement.allocateStatement();
+        statement.setTransaction(transaction);
+        statement.prepare(
+                "SELECT RDB$DESCRIPTION AS \"Description\", RDB$RELATION_ID, RDB$SECURITY_CLASS, RDB$CHARACTER_SET_NAME " +
+                        "FROM RDB$DATABASE");
+
+        String executionPlan = statement.getExecutionPlan();
+
+        assertEquals("Unexpected plan for prepared statement", "PLAN (RDB$DATABASE NATURAL)", executionPlan);
+    }
+
+    @Test
+    public void test_GetExecutionPlan_noStatementPrepared() throws Exception {
+        final FbTransaction transaction = getTransaction();
+        final FbStatement statement = db.createStatement();
+        statement.allocateStatement();
+        statement.setTransaction(transaction);
+
+        String executionPlan = statement.getExecutionPlan();
+
+        assertEquals("Unexpected plan for allocated statement (not prepared)", "", executionPlan);
+    }
+
+    @Test
+    public void test_GetExecutionPlan_notAllocated() throws Exception {
+        expectedException.expect(SQLNonTransientException.class);
+        expectedException.expectMessage("Statement not yet allocated");
+        final FbStatement statement = db.createStatement();
+
+        statement.getExecutionPlan();
+    }
+
+    @Test
+    public void test_GetExecutionPlan_StatementClosed() throws Exception {
+        expectedException.expect(SQLNonTransientException.class);
+        expectedException.expectMessage("Statement closed");
+        final FbTransaction transaction = getTransaction();
+        final FbStatement statement = db.createStatement();
+        statement.allocateStatement();
+        statement.setTransaction(transaction);
+        statement.prepare(
+                "SELECT RDB$DESCRIPTION AS \"Description\", RDB$RELATION_ID, RDB$SECURITY_CLASS, RDB$CHARACTER_SET_NAME " +
+                        "FROM RDB$DATABASE");
+        statement.close();
+
+        statement.getExecutionPlan();
     }
 
     private FbTransaction getTransaction() throws SQLException {

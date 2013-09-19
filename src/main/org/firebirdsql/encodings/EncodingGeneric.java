@@ -51,6 +51,11 @@ public final class EncodingGeneric implements Encoding {
     }
 
     @Override
+    public String decodeFromCharset(final byte[] in, final int offset, final int length) {
+        return new String(in, offset, length, charset);
+    }
+
+    @Override
     public Encoding withTranslation(final CharacterTranslator translator) {
         return new EncodingGenericWithTranslation(translator);
     }
@@ -78,7 +83,13 @@ public final class EncodingGeneric implements Encoding {
 
         @Override
         public String decodeFromCharset(final byte[] in) {
-            String result = EncodingGeneric.this.decodeFromCharset(in);
+            final String result = EncodingGeneric.this.decodeFromCharset(in);
+            return new String(translate(result.toCharArray()));
+        }
+
+        @Override
+        public String decodeFromCharset(final byte[] in, final int off, final int len) {
+            final String result = EncodingGeneric.this.decodeFromCharset(in, off, len);
             return new String(translate(result.toCharArray()));
         }
 
