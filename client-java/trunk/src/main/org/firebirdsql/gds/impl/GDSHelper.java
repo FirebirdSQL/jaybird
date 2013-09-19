@@ -387,13 +387,14 @@ public class GDSHelper {
             String executionPlan = null;
             int statementType = IscStmtHandle.TYPE_UNKNOWN;
             
-            int dataLength = -1; 
+            int dataLength;
             for (int i = 0; i < buffer.length; i++){
                 switch(buffer[i]){
                     case ISCConstants.isc_info_sql_get_plan:
                         dataLength = gds.iscVaxInteger(buffer, ++i, 2);
                         i += 2;
-                        executionPlan = new String(buffer, i + 1, dataLength);
+                        // Skipping first char as it is a linefeed
+                        executionPlan = new String(buffer, i + 1, dataLength - 1);
                         i += dataLength - 1;
                         break;
                     case ISCConstants.isc_info_sql_stmt_type:
