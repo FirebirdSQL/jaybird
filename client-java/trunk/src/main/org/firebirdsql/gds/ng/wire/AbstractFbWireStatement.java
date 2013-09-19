@@ -55,7 +55,8 @@ public abstract class AbstractFbWireStatement extends AbstractFbStatement implem
         return xdrStreamHolder.getXdrOut();
     }
 
-    protected final FbWireDatabase getDatabase() {
+    @Override
+    public final FbWireDatabase getDatabase() {
         return database;
     }
 

@@ -45,6 +45,11 @@ public interface FbStatement {
     FbTransaction getTransaction() throws SQLException;
 
     /**
+     * @return The database connection that created this statement
+     */
+    FbDatabase getDatabase() throws SQLException;
+
+    /**
      * Allocate a statement handle for this statement on the server.
      *
      * @throws SQLException
@@ -106,7 +111,8 @@ public interface FbStatement {
      *
      * @param statementText
      *         Statement text
-     * @throws SQLException If a database access error occurs, or if no statement handle as been allocated, or this statement is currently executing a query.
+     * @throws SQLException
+     *         If a database access error occurs, or if no statement handle as been allocated, or this statement is currently executing a query.
      */
     void prepare(String statementText) throws SQLException;
 
@@ -182,4 +188,33 @@ public interface FbStatement {
      *         For errors retrieving or transforming the response.
      */
     <T> T getSqlInfo(final byte[] requestItems, final int bufferLength, final InfoProcessor<T> infoProcessor) throws SQLException;
+
+    /**
+     * Request statement info.
+     *
+     * @param requestItems
+     *         Array of info items to request
+     * @param bufferLength
+     *         Response buffer length to use
+     * @return Response buffer
+     * @throws SQLException
+     */
+    byte[] getSqlInfo(byte[] requestItems, int bufferLength) throws SQLException;
+
+    /**
+     * @return The default size to use for the sql info buffer
+     */
+    int getDefaultSqlInfoSize();
+
+    /**
+     * @return The maximum size to use for the sql info buffer
+     */
+    int getMaxSqlInfoSize();
+
+    /**
+     * @return The execution plan of the currently prepared statement
+     * @throws SQLException
+     *         If this statement is closed.
+     */
+    String getExecutionPlan() throws SQLException;
 }

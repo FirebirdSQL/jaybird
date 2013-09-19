@@ -105,13 +105,6 @@ public abstract class AbstractFbStatement implements FbStatement {
     }
 
     /**
-     * Plan information items
-     */
-    private static final byte[] DESCRIBE_PLAN_INFO_ITEMS = new byte[]{
-            ISCConstants.isc_info_sql_get_plan
-    };
-
-    /**
      * Records affected items
      * TODO: Compare with current implementation
      */
@@ -202,10 +195,6 @@ public abstract class AbstractFbStatement implements FbStatement {
         synchronized (getSynchronizationObject()) {
             this.type = type;
         }
-    }
-
-    public byte[] getDescribePlanInfoItems() {
-        return DESCRIBE_PLAN_INFO_ITEMS.clone();
     }
 
     public byte[] getRowsAffectedInfoItems() {
@@ -343,17 +332,19 @@ public abstract class AbstractFbStatement implements FbStatement {
         return infoProcessor.process(getSqlInfo(requestItems, bufferLength));
     }
 
+    @Override
+    public final String getExecutionPlan() throws SQLException {
+        checkStatementValid();
+        final ExecutionPlanProcessor processor = createExecutionPlanProcessor();
+        return getSqlInfo(processor.getDescribePlanInfoItems(), getDefaultSqlInfoSize(), processor);
+    }
+
     /**
-     * Request statement info.
-     *
-     * @param requestItems
-     *         Array of info items to request
-     * @param bufferLength
-     *         Response buffer length to use
-     * @return Response buffer
-     * @throws SQLException
+     * @return New instance of {@link ExecutionPlanProcessor} (or subclass) for this statement.
      */
-    public abstract byte[] getSqlInfo(byte[] requestItems, int bufferLength) throws SQLException;
+    protected ExecutionPlanProcessor createExecutionPlanProcessor() {
+        return new ExecutionPlanProcessor(this);
+    }
 
     /**
      * Frees the currently allocated statement (either close the cursor with {@link ISCConstants#DSQL_close} or drop the statement
@@ -422,6 +413,9 @@ public abstract class AbstractFbStatement implements FbStatement {
     protected final void checkStatementValid() throws SQLException {
         switch (getState()) {
         case NEW:
+            // TODO Externalize sqlstate
+            // TODO See if there is a firebird error code matching this (isc_cursor_not_open is not exactly the same)
+            throw new SQLNonTransientException("Statement not yet allocated", "24000");
         case CLOSED:
             // TODO Externalize sqlstate
             // TODO See if there is a firebird error code matching this (isc_cursor_not_open is not exactly the same)
