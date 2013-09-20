@@ -51,6 +51,11 @@ public class GDSServerVersion implements Serializable {
     public static final String TYPE_BETA = "T";
     public static final String TYPE_DEVELOPMENT = "X";
 
+    /**
+     * GDSServerVersion that can be used as a dummy/invalid object when a version object is required, but none is available.
+     */
+    public static final GDSServerVersion INVALID_VERSION = new GDSServerVersion("INVALID", "", "", "", 0, 0, 0, 0, "", "");
+
     private static final Pattern VERSION_PATTERN = 
     	Pattern.compile("((\\w{2})-(\\w)(\\d+)\\.(\\d+)\\.(\\d+)\\.(\\d+)) ([^-,]+)(?:[-,](.*))?");
     

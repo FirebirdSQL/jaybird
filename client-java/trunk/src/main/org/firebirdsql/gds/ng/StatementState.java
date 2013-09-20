@@ -79,13 +79,13 @@ public enum StatementState {
     EXECUTING {
         @Override
         EnumSet<StatementState> createValidTransitionSet() {
-            return EnumSet.of(ERROR, EXECUTED, PREPARED, CLOSED);
+            return EnumSet.of(ERROR, CURSOR_OPEN, PREPARED, CLOSED);
         }
     },
     /**
      * Statement has been executed, cursor is still open
      */
-    EXECUTED {
+    CURSOR_OPEN {
         @Override
         public boolean isCursorOpen() {
             return true;

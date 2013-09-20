@@ -20,8 +20,12 @@
  */
 package org.firebirdsql.gds.ng;
 
+import org.firebirdsql.gds.impl.GDSServerVersion;
+import org.firebirdsql.gds.impl.GDSServerVersionException;
 import org.firebirdsql.gds.ng.listeners.DatabaseListener;
 import org.firebirdsql.gds.ng.listeners.DatabaseListenerDispatcher;
+import org.firebirdsql.logging.Logger;
+import org.firebirdsql.logging.LoggerFactory;
 
 import java.sql.SQLException;
 import java.sql.SQLWarning;
@@ -32,6 +36,8 @@ import java.sql.SQLWarning;
  */
 public abstract class AbstractFbDatabase implements FbDatabase {
 
+    private static final Logger log = LoggerFactory.getLogger(AbstractFbDatabase.class, false);
+
     protected final DatabaseListenerDispatcher databaseListenerDispatcher = new DatabaseListenerDispatcher();
     private final WarningMessageCallback warningCallback = new WarningMessageCallback() {
         @Override
@@ -40,6 +46,9 @@ public abstract class AbstractFbDatabase implements FbDatabase {
         }
     };
     private short databaseDialect;
+    private int odsMajor;
+    private int odsMinor;
+    private GDSServerVersion serverVersion;
 
     /**
      * @return The warning callback for this database.
@@ -111,6 +120,104 @@ public abstract class AbstractFbDatabase implements FbDatabase {
                 databaseListenerDispatcher.removeAllListeners();
             }
         }
+    }
+
+    @Override
+    public int getOdsMajor() {
+        return odsMajor;
+    }
+
+    /**
+     * Sets the ODS (On Disk Structure) major version of the database associated
+     * with this connection.
+     * <p>
+     * This method should only be called by this instance.
+     * </p>
+     *
+     * @param odsMajor
+     *         ODS major version
+     */
+    protected void setOdsMajor(int odsMajor) {
+        this.odsMajor = odsMajor;
+    }
+
+    @Override
+    public int getOdsMinor() {
+        return odsMinor;
+    }
+
+    /**
+     * Sets the ODS (On Disk Structure) minor version of the database associated
+     * with this connection.
+     * <p>
+     * This method should only be called by this instance.
+     * </p>
+     *
+     * @param odsMinor
+     *         The ODS minor version
+     */
+    protected void setOdsMinor(int odsMinor) {
+        this.odsMinor = odsMinor;
+    }
+
+    @Override
+    public GDSServerVersion getServerVersion() {
+        return serverVersion;
+    }
+
+    /**
+     * Sets the Firebird version string.
+     * <p>
+     * This method should only be called by this instance.
+     * </p>
+     *
+     * @param versionString
+     *         Raw version string
+     */
+    protected void setServerVersion(String versionString) {
+        try {
+            serverVersion = GDSServerVersion.parseRawVersion(versionString);
+        } catch (GDSServerVersionException e) {
+            log.error(String.format("Received unsupported server version \"%s\", replacing with dummy invalid version ", versionString), e);
+            serverVersion = GDSServerVersion.INVALID_VERSION;
+        }
+    }
+
+    @Override
+    public int iscVaxInteger(final byte[] buffer, final int startPosition, int length) {
+        if (length > 4) {
+            return 0;
+        }
+        int value = 0;
+        int shift = 0;
+
+        int index = startPosition;
+        while (--length >= 0) {
+            value += (buffer[index++] & 0xff) << shift;
+            shift += 8;
+        }
+        return value;
+    }
+
+    @Override
+    public long iscVaxLong(final byte[] buffer, final int startPosition, int length) {
+        if (length > 8) {
+            return 0;
+        }
+        long value = 0;
+        int shift = 0;
+
+        int index = startPosition;
+        while (--length >= 0) {
+            value += (buffer[index++] & 0xffL) << shift;
+            shift += 8;
+        }
+        return value;
+    }
+
+    @Override
+    public int iscVaxInteger2(final byte[] buffer, final int startPosition) {
+        return (buffer[startPosition] & 0xff) | ((buffer[startPosition + 1] & 0xff) << 8);
     }
 
     // TODO Unregister all listeners on close

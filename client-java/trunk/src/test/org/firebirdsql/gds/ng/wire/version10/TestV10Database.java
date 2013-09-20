@@ -23,6 +23,7 @@ package org.firebirdsql.gds.ng.wire.version10;
 import org.firebirdsql.common.FBTestProperties;
 import org.firebirdsql.encodings.EncodingFactory;
 import org.firebirdsql.gds.ISCConstants;
+import org.firebirdsql.gds.impl.GDSServerVersion;
 import org.firebirdsql.gds.impl.jni.EmbeddedGDSImpl;
 import org.firebirdsql.gds.impl.jni.NativeGDSImpl;
 import org.firebirdsql.gds.impl.wire.DatabaseParameterBufferImp;
@@ -225,7 +226,8 @@ public class TestV10Database {
                 System.out.println(db.getHandle());
 
                 assertTrue("Expected isAttached() to return true", db.isAttached());
-                assertNotNull("Expected version string to be not null", db.getVersionString());
+                assertNotNull("Expected version string to be not null", db.getServerVersion());
+                assertNotEquals("Expected version should not be invalid", GDSServerVersion.INVALID_VERSION, db.getServerVersion());
             } finally {
                 if (db != null) {
                     try {

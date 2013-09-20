@@ -217,4 +217,21 @@ public interface FbStatement {
      *         If this statement is closed.
      */
     String getExecutionPlan() throws SQLException;
+
+    /**
+     * Retrieves the SQL counts for the last execution of this statement.
+     * <p>
+     * The retrieved SQL counts are also notified to all registered {@link StatementListener}s.
+     * </p>
+     * <p>
+     * In general the {@link FbStatement} will (should) retrieve and notify listeners of the SQL counts automatically at times were
+     * it is relevant (eg after executing a statement that does not produce multiple rows, or after fetching all rows).
+     * </p>
+     *
+     * @return The SQL counts of the last execution of this statement
+     * @throws SQLException
+     *         If this statement is closed, or if this statement is in state {@link StatementState#CURSOR_OPEN} and not
+     *         all rows have been fetched.
+     */
+    SqlCountHolder getSqlCounts() throws SQLException;
 }
