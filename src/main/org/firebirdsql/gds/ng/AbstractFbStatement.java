@@ -44,7 +44,7 @@ public abstract class AbstractFbStatement implements FbStatement {
     /**
      * Set of states that will be reset to {@link StatementState#PREPARED} on transaction change
      */
-    private static final EnumSet<StatementState> RESET_TO_PREPARED = EnumSet.of(StatementState.EXECUTING, StatementState.EXECUTED);
+    private static final EnumSet<StatementState> RESET_TO_PREPARED = EnumSet.of(StatementState.EXECUTING, StatementState.CURSOR_OPEN);
 
     private final Object syncObject = new Object();
     private final WarningMessageCallback warningCallback = new WarningMessageCallback() {
@@ -344,6 +344,28 @@ public abstract class AbstractFbStatement implements FbStatement {
      */
     protected ExecutionPlanProcessor createExecutionPlanProcessor() {
         return new ExecutionPlanProcessor(this);
+    }
+
+    @Override
+    public SqlCountHolder getSqlCounts() throws SQLException {
+        checkStatementValid();
+        if (getState() == StatementState.CURSOR_OPEN && !isAllRowsFetched()) {
+            // We disallow fetching count when we haven't fetched all rows yet.
+            // TODO SQLState
+            throw new SQLNonTransientException("Cursor still open, fetch all rows or close cursor before fetching SQL counts");
+        }
+        final SqlCountProcessor countProcessor = createSqlCountProcessor();
+        // NOTE: implementation of SqlCountProcessor assumes the default buffer size is sufficient (actual requirement is 49 bytes max) and does not handle truncation
+        final SqlCountHolder sqlCounts = getSqlInfo(countProcessor.getRecordCountInfoItems(), getDefaultSqlInfoSize(), countProcessor);
+        statementListenerDispatcher.sqlCounts(this, sqlCounts);
+        return sqlCounts;
+    }
+
+    /**
+     * @return New instance of {@link SqlCountProcessor} (or subclass) for this statement.
+     */
+    protected SqlCountProcessor createSqlCountProcessor() {
+        return new SqlCountProcessor(this);
     }
 
     /**

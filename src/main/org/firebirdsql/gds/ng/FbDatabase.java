@@ -30,6 +30,7 @@ import org.firebirdsql.encodings.Encoding;
 import org.firebirdsql.encodings.IEncodingFactory;
 import org.firebirdsql.gds.DatabaseParameterBuffer;
 import org.firebirdsql.gds.TransactionParameterBuffer;
+import org.firebirdsql.gds.impl.GDSServerVersion;
 import org.firebirdsql.gds.ng.listeners.DatabaseListener;
 
 import java.sql.SQLException;
@@ -188,7 +189,7 @@ public interface FbDatabase {
     /**
      * @return Firebird version string
      */
-    String getVersionString();
+    GDSServerVersion getServerVersion();
 
     /**
      * @return The {@link IEncodingFactory} for this connection
@@ -222,8 +223,9 @@ public interface FbDatabase {
      * <code>startPosition</code> and reading for <code>length</code> bytes.
      * <p>
      * This method is useful for lengths up to 4 bytes (ie normal Java integers
-     * (<code>int</code>). Use {@link #iscVaxLong(byte[], int, int)} for reading
-     * values with length up to 8 bytes.
+     * (<code>int</code>). For larger lengths it will return 0. Use
+     * {@link #iscVaxLong(byte[], int, int)} for reading values with length up
+     * to 8 bytes.
      * </p>
      *
      * @param buffer
@@ -242,7 +244,7 @@ public interface FbDatabase {
      * <code>startPosition</code> and reading for <code>length</code> bytes.
      * <p>
      * This method is useful for lengths up to 8 bytes (ie normal Java longs (
-     * <code>long</code>).
+     * <code>long</code>). For larger lengths it will return 0.
      * </p>
      *
      * @param buffer

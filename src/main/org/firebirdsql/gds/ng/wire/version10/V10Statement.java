@@ -333,8 +333,17 @@ public class V10Statement extends AbstractFbWireStatement implements FbWireState
             synchronized (getDatabase().getSynchronizationObject()) {
                 // TODO Which state to switch to when an exception occurs (always ERROR might be wrong, see to do at start of class)
                 switchState(StatementState.EXECUTING);
+                final StatementType statementType = getType();
+                final SqlCountProcessor sqlCountProcessor;
                 try {
-                    sendExecute(getType().isTypeWithSingletonResult() ? WireProtocolConstants.op_execute2 : WireProtocolConstants.op_execute, parameters);
+                    sendExecute(statementType.isTypeWithSingletonResult() ? WireProtocolConstants.op_execute2 : WireProtocolConstants.op_execute, parameters);
+                    if (!statementType.isTypeWithCursor()) {
+                        // TODO Test if batching requests like this also work with earlier version of Firebird (works on 2.5)
+                        sqlCountProcessor = createSqlCountProcessor();
+                        sendInfoSql(sqlCountProcessor.getRecordCountInfoItems(), getDefaultSqlInfoSize());
+                    } else {
+                        sqlCountProcessor = null;
+                    }
                     getXdrOut().flush();
                 } catch (IOException ex) {
                     switchState(StatementState.ERROR);
@@ -342,20 +351,26 @@ public class V10Statement extends AbstractFbWireStatement implements FbWireState
                 }
                 try {
                     final boolean hasFields = getFieldDescriptor() != null && getFieldDescriptor().getCount() > 0;
-                    if (getType().isTypeWithSingletonResult()) {
+                    final WarningMessageCallback statementWarningCallback = getStatementWarningCallback();
+                    if (statementType.isTypeWithSingletonResult()) {
                         // A type with a singleton result (ie an execute procedure), doesn't actually have a result set that will be fetched, instead we have a singleton result if we have fields
                         statementListenerDispatcher.statementExecuted(this, false, hasFields);
-                        processExecuteSingletonResponse(getDatabase().readSqlResponse(getStatementWarningCallback()));
-                        setAllRowsFetched(true);
+                        processExecuteSingletonResponse(getDatabase().readSqlResponse(statementWarningCallback));
+                        if (hasFields) {
+                            setAllRowsFetched(true);
+                        }
                     } else {
                         // A normal execute is never a singleton result (even if it only produces a single result)
                         statementListenerDispatcher.statementExecuted(this, hasFields, false);
                     }
-                    processExecuteResponse(getDatabase().readGenericResponse(getStatementWarningCallback()));
+                    processExecuteResponse(getDatabase().readGenericResponse(statementWarningCallback));
+                    if (sqlCountProcessor != null) {
+                        statementListenerDispatcher.sqlCounts(this, sqlCountProcessor.process(processInfoSqlResponse(getDatabase().readGenericResponse(statementWarningCallback))));
+                    }
 
                     // TODO .NET implementation retrieves affected rows here
                     if (getState() != StatementState.ERROR) {
-                        switchState(getType().isTypeWithCursor() ? StatementState.EXECUTED : StatementState.PREPARED);
+                        switchState(statementType.isTypeWithCursor() ? StatementState.CURSOR_OPEN : StatementState.PREPARED);
                     }
                 } catch (IOException ex) {
                     switchState(StatementState.ERROR);
@@ -469,7 +484,8 @@ public class V10Statement extends AbstractFbWireStatement implements FbWireState
                     queueRowData(readSqlData());
                 } else if (fetchResponse.getStatus() == WireProtocolConstants.FETCH_NO_MORE_ROWS) {
                     setAllRowsFetched(true);
-                    // TODO Close cursor if everything has been fetched?
+                    getSqlCounts();
+                    // Note: we are not explicitly 'closing' the cursor here
                 } else {
                     // TODO Log, raise exception, or simply 'not possible'?
                     break;

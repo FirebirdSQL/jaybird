@@ -59,9 +59,6 @@ public class V10Database extends AbstractFbWireDatabase implements FbWireDatabas
 
     private final AtomicInteger transactionCount = new AtomicInteger();
     private int handle;
-    private int odsMajor;
-    private int odsMinor;
-    private String versionString;
     private BlrCalculator blrCalculator;
 
     /**
@@ -80,62 +77,6 @@ public class V10Database extends AbstractFbWireDatabase implements FbWireDatabas
     @Override
     public int getHandle() {
         return handle;
-    }
-
-    @Override
-    public int getOdsMajor() {
-        return odsMajor;
-    }
-
-    /**
-     * Sets the ODS (On Disk Structure) major version of the database associated
-     * with this connection.
-     * <p>
-     * This method should only be called by this instance.
-     * </p>
-     *
-     * @param odsMajor
-     *         ODS major version
-     */
-    protected void setOdsMajor(int odsMajor) {
-        this.odsMajor = odsMajor;
-    }
-
-    @Override
-    public int getOdsMinor() {
-        return odsMinor;
-    }
-
-    /**
-     * Sets the ODS (On Disk Structure) minor version of the database associated
-     * with this connection.
-     * <p>
-     * This method should only be called by this instance.
-     * </p>
-     *
-     * @param odsMinor
-     *         The ODS minor version
-     */
-    protected void setOdsMinor(int odsMinor) {
-        this.odsMinor = odsMinor;
-    }
-
-    @Override
-    public String getVersionString() {
-        return versionString;
-    }
-
-    /**
-     * Sets the Firebird version string.
-     * <p>
-     * This method should only be called by this instance.
-     * </p>
-     *
-     * @param versionString
-     *         Raw version string
-     */
-    protected void setVersionString(String versionString) {
-        this.versionString = versionString;
     }
 
     @Override
@@ -634,90 +575,6 @@ public class V10Database extends AbstractFbWireDatabase implements FbWireDatabas
     // TODO: Move iscVax* up in inheritance tree, or move to helper class
 
     /**
-     * Reads Vax style integers from the supplied buffer, starting at
-     * <code>startPosition</code> and reading for <code>length</code> bytes.
-     * <p>
-     * This method is useful for lengths up to 4 bytes (ie normal Java integers
-     * (<code>int</code>). For larger lengths the values read will overflow. Use
-     * {@link #iscVaxLong(byte[], int, int)} for reading values with length up
-     * to 8 bytes.
-     * </p>
-     *
-     * @param buffer
-     *         The byte array from which the integer is to be retrieved
-     * @param startPosition
-     *         The offset starting position from which to start retrieving
-     *         byte values
-     * @return The integer value retrieved from the bytes
-     * @see #iscVaxLong(byte[], int, int)
-     * @see #iscVaxInteger2(byte[], int)
-     */
-    @Override
-    public int iscVaxInteger(final byte[] buffer, final int startPosition, int length) {
-        int value = 0;
-        int shift = 0;
-
-        int index = startPosition;
-        while (--length >= 0) {
-            value += (buffer[index++] & 0xff) << shift;
-            shift += 8;
-        }
-        return value;
-    }
-
-    /**
-     * Reads Vax style integers from the supplied buffer, starting at
-     * <code>startPosition</code> and reading for <code>length</code> bytes.
-     * <p>
-     * This method is useful for lengths up to 8 bytes (ie normal Java longs (
-     * <code>long</code>). For larger lengths the values read will overflow.
-     * </p>
-     *
-     * @param buffer
-     *         The byte array from which the integer is to be retrieved
-     * @param startPosition
-     *         The offset starting position from which to start retrieving
-     *         byte values
-     * @return The integer value retrieved from the bytes
-     * @see #iscVaxLong(byte[], int, int)
-     * @see #iscVaxInteger2(byte[], int)
-     */
-    @Override
-    public long iscVaxLong(final byte[] buffer, final int startPosition, int length) {
-        long value = 0;
-        int shift = 0;
-
-        int index = startPosition;
-        while (--length >= 0) {
-            value += (buffer[index++] & 0xffL) << shift;
-            shift += 8;
-        }
-        return value;
-    }
-
-    /**
-     * Implementation of {@link #iscVaxInteger(byte[], int, int)} specifically
-     * for two-byte integers.
-     * <p>
-     * Use of this method has a small performance benefit over generic
-     * {@link #iscVaxInteger(byte[], int, int)}
-     * </p>
-     *
-     * @param buffer
-     *         The byte array from which the integer is to be retrieved
-     * @param startPosition
-     *         The offset starting position from which to start retrieving
-     *         byte values
-     * @return The integer value retrieved from the bytes
-     * @see #iscVaxInteger(byte[], int, int)
-     * @see #iscVaxLong(byte[], int, int)
-     */
-    @Override
-    public int iscVaxInteger2(final byte[] buffer, final int startPosition) {
-        return (buffer[startPosition] & 0xff) | ((buffer[startPosition + 1] & 0xff) << 8);
-    }
-
-    /**
      * Info-request block for database information.
      * <p>
      * TODO Move to FbDatabase interface? Will this vary with versions of
@@ -777,7 +634,7 @@ public class V10Database extends AbstractFbWireDatabase implements FbWireDatabas
                     i += 2;
                     String firebirdVersion = new String(info, i + 2, len - 2);
                     i += len;
-                    setVersionString(firebirdVersion);
+                    setServerVersion(firebirdVersion);
                     if (debug) log.debug("isc_info_firebird_version:" + firebirdVersion);
                     break;
                 case ISCConstants.isc_info_truncated:

@@ -21,6 +21,7 @@
 package org.firebirdsql.gds.ng.listeners;
 
 import org.firebirdsql.gds.ng.FbStatement;
+import org.firebirdsql.gds.ng.SqlCountHolder;
 import org.firebirdsql.gds.ng.StatementState;
 import org.firebirdsql.gds.ng.fields.FieldValue;
 
@@ -84,6 +85,17 @@ public final class StatementListenerDispatcher extends AbstractListenerDispatche
         for (StatementListener listener : this) {
             try {
                 listener.warningReceived(sender, warning);
+            } catch (Exception e) {
+                // Ignore // TODO: log
+            }
+        }
+    }
+
+    @Override
+    public void sqlCounts(FbStatement sender, SqlCountHolder sqlCounts) {
+        for (StatementListener listener : this) {
+            try {
+                listener.sqlCounts(sender, sqlCounts);
             } catch (Exception e) {
                 // Ignore // TODO: log
             }

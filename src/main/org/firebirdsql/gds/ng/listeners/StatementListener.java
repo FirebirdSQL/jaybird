@@ -27,6 +27,7 @@
 package org.firebirdsql.gds.ng.listeners;
 
 import org.firebirdsql.gds.ng.FbStatement;
+import org.firebirdsql.gds.ng.SqlCountHolder;
 import org.firebirdsql.gds.ng.StatementState;
 import org.firebirdsql.gds.ng.fields.FieldValue;
 
@@ -102,4 +103,14 @@ public interface StatementListener {
      *         Warning
      */
     void warningReceived(FbStatement sender, SQLWarning warning);
+
+    /**
+     * Called when the SQL counts of a statement have been retrieved.
+     *
+     * @param sender
+     *         Statement that called this method
+     * @param sqlCounts
+     *         SQL counts
+     */
+    void sqlCounts(FbStatement sender, SqlCountHolder sqlCounts);
 }

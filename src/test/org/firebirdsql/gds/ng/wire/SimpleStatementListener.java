@@ -21,6 +21,7 @@
 package org.firebirdsql.gds.ng.wire;
 
 import org.firebirdsql.gds.ng.FbStatement;
+import org.firebirdsql.gds.ng.SqlCountHolder;
 import org.firebirdsql.gds.ng.StatementState;
 import org.firebirdsql.gds.ng.fields.FieldValue;
 import org.firebirdsql.gds.ng.listeners.StatementListener;
@@ -43,6 +44,7 @@ public class SimpleStatementListener implements StatementListener {
     private Boolean allRowsFetched;
     private Boolean hasResultSet;
     private Boolean hasSingletonResult;
+    private SqlCountHolder sqlCounts;
 
     @Override
     public void newRow(FbStatement sender, List<FieldValue> rowData) {
@@ -70,6 +72,11 @@ public class SimpleStatementListener implements StatementListener {
         warnings.add(warning);
     }
 
+    @Override
+    public void sqlCounts(FbStatement sender, SqlCountHolder sqlCounts) {
+        this.sqlCounts = sqlCounts;
+    }
+
     public Boolean isAllRowsFetched() {
         return allRowsFetched;
     }
@@ -92,5 +99,9 @@ public class SimpleStatementListener implements StatementListener {
 
     public void clear() {
         warnings.clear();
+    }
+
+    public SqlCountHolder getSqlCounts() {
+        return sqlCounts;
     }
 }

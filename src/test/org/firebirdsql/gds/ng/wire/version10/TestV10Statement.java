@@ -104,6 +104,7 @@ public class TestV10Statement {
             "INSERT INTO keyvalue (thevalue) VALUES (?) RETURNING thekey";
 
     private final FbConnectionProperties connectionInfo;
+    private final SimpleStatementListener listener = new SimpleStatementListener();
     private FbWireDatabase db;
     FBManager fbManager;
 
@@ -243,6 +244,7 @@ public class TestV10Statement {
     public void testSelect_WithParameters_Execute_and_Fetch() throws Exception {
         final FbTransaction transaction = getTransaction();
         final FbStatement statement = db.createStatement();
+        statement.addStatementListener(listener);
         statement.allocateStatement();
         statement.setTransaction(transaction);
         statement.prepare(
@@ -254,22 +256,23 @@ public class TestV10Statement {
         FieldValue param1 = new FieldValue(descriptor.getFieldDescriptor(0), new byte[]{ 0, 0, 0, 3 }); // int = 3 (id of UNICODE_FSS)
         FieldValue param2 = new FieldValue(descriptor.getFieldDescriptor(1), new byte[]{ 0, 0, 0, 1 }); // int = 1 (single byte character sets)
 
-        final SimpleStatementListener statementListener = new SimpleStatementListener();
-        statement.addStatementListener(statementListener);
-
         statement.execute(Arrays.asList(param1, param2));
 
-        assertEquals("Expected hasResultSet to be set to true", Boolean.TRUE, statementListener.hasResultSet());
-        assertEquals("Expected hasSingletonResult to be set to false", Boolean.FALSE, statementListener.hasSingletonResult());
-        assertNull("Expected allRowsFetched not set yet", statementListener.isAllRowsFetched());
-        assertEquals("Expected no rows to be fetched yet", 0, statementListener.getRows().size());
+        assertEquals("Expected hasResultSet to be set to true", Boolean.TRUE, listener.hasResultSet());
+        assertEquals("Expected hasSingletonResult to be set to false", Boolean.FALSE, listener.hasSingletonResult());
+        assertNull("Expected allRowsFetched not set yet", listener.isAllRowsFetched());
+        assertEquals("Expected no rows to be fetched yet", 0, listener.getRows().size());
+        assertNull("Expected no SQL counts yet", listener.getSqlCounts());
 
         // 100 should be sufficient to fetch all character sets
         statement.fetchRows(100);
 
-        assertEquals("Expected allRowsFetched to be set to true", Boolean.TRUE, statementListener.isAllRowsFetched());
+        assertEquals("Expected allRowsFetched to be set to true", Boolean.TRUE, listener.isAllRowsFetched());
         // Number is database dependent (unicode_fss + all single byte character sets)
-        assertTrue("Expected more than two rows", statementListener.getRows().size() > 2);
+        assertTrue("Expected more than two rows", listener.getRows().size() > 2);
+
+        assertNotNull("Expected SQL counts", listener.getSqlCounts());
+        assertEquals("Unexpected select count", listener.getRows().size(), listener.getSqlCounts().getLongSelectCount());
 
         statement.close();
     }
@@ -426,6 +429,27 @@ public class TestV10Statement {
         statement.close();
 
         statement.getExecutionPlan();
+    }
+
+    @Test
+    public void test_ExecuteInsert() throws Exception {
+        final FbTransaction transaction = getTransaction();
+        final FbStatement statement = db.createStatement();
+        statement.addStatementListener(listener);
+        statement.allocateStatement();
+        statement.setTransaction(transaction);
+        statement.prepare("INSERT INTO keyvalue (thekey, thevalue) VALUES (?, ?)");
+
+        FieldValue parameter1 = statement.getParameterDescriptor().getFieldDescriptor(0).createDefaultFieldValue();
+        FieldValue parameter2 = statement.getParameterDescriptor().getFieldDescriptor(1).createDefaultFieldValue();
+        parameter1.setFieldData(new byte[]{ 1, 0, 0, 0 });
+        parameter2.setFieldData(db.getEncoding().encodeToCharset("test"));
+
+        statement.execute(Arrays.asList(parameter1, parameter2));
+
+        assertNotNull("Expected SQL counts on listener", listener.getSqlCounts());
+        assertEquals("Expected one row to have been inserted", 1, listener.getSqlCounts().getLongInsertCount());
+        statement.close();
     }
 
     private FbTransaction getTransaction() throws SQLException {
