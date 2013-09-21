@@ -42,12 +42,12 @@ import java.util.*;
  */
 public class GDSFactory {
 
-    private static Logger log = LoggerFactory.getLogger(GDSFactory.class,
+    private static final Logger log = LoggerFactory.getLogger(GDSFactory.class,
         false);
 
     /**
-     * Class for string comparison in the descendant order. This effectively
-     * puts the most short JDBC URLs at the end of the list, so the correct
+     * Class for string comparison in descending order. This effectively
+     * puts the shortest JDBC URLs at the end of the list, so the correct
      * default protocol handling can be implemented.
      */
     private static class ReversedStringComparator implements Comparator {
@@ -74,7 +74,7 @@ public class GDSFactory {
 
     // TODO: Replace with explicit initializer from GDSType?
     static {
-        
+
         // register first all plugins that belong to the same classloader
         // in which this class is loaded
         try {
@@ -82,17 +82,51 @@ public class GDSFactory {
             
             if (classLoader == null)
                 classLoader = ClassLoader.getSystemClassLoader();
-            
+
             loadPluginsFromClassLoader(classLoader);
-            
-            classLoader = Thread.currentThread().getContextClassLoader();
-            if (classLoader != null)
-                loadPluginsFromClassLoader(classLoader);
-            
+
+            final ClassLoader contextClassLoader = Thread.currentThread().getContextClassLoader();
+            if (contextClassLoader != null && contextClassLoader != classLoader)
+                loadPluginsFromClassLoader(contextClassLoader);
+
         } catch (IOException ex) {
             if (log != null) log.error("Can't register plugins ", ex);
         }
-        
+
+        if (jdbcUrlToPluginMap.isEmpty()) {
+            if (log != null) log.warn("No plugins loaded from META-INF/services, falling back to fixed registration of default plugins");
+            loadPluginsFallback();
+        }
+    }
+
+    private static void loadPluginsFallback() {
+        ClassLoader classLoader = GDSFactory.class.getClassLoader();
+
+        if (classLoader == null)
+            classLoader = ClassLoader.getSystemClassLoader();
+        String[] pluginClasses = new String[] {
+                "org.firebirdsql.gds.impl.wire.WireGDSFactoryPlugin",
+                "org.firebirdsql.gds.impl.jni.NativeGDSFactoryPlugin",
+                "org.firebirdsql.gds.impl.jni.LocalGDSFactoryPlugin",
+                "org.firebirdsql.gds.impl.jni.EmbeddedGDSFactoryPlugin",
+                "org.firebirdsql.gds.impl.oo.OOGDSFactoryPlugin"
+        };
+        for (String className : pluginClasses) {
+            try {
+                Class clazz = classLoader.loadClass(className);
+                GDSFactoryPlugin plugin = (GDSFactoryPlugin)clazz.newInstance();
+                registerPlugin(plugin);
+            } catch (ClassNotFoundException ex) {
+                if (log != null)
+                    log.error("Can't register plugin" + className, ex);
+            } catch (IllegalAccessException ex) {
+                if (log != null)
+                    log.error("Can't register plugin" + className, ex);
+            } catch(InstantiationException ex) {
+                if (log != null)
+                    log.error("Can't register plugin" + className, ex);
+            }
+        }
     }
 
     /**
@@ -106,9 +140,12 @@ public class GDSFactory {
         // TODO: Replace with Java.util.ServiceLoader usage
         Enumeration res = classLoader.getResources(
             "META-INF/services/" + GDSFactoryPlugin.class.getName());
-        
+
+        if (!res.hasMoreElements() && log != null) {
+            log.warn("No GDSFactoryPlugin service file(s) found");
+        }
+
         while (res.hasMoreElements()) {
-            
             URL url = (URL) res.nextElement();
             
             InputStreamReader rin = new InputStreamReader(url.openStream());
@@ -118,7 +155,7 @@ public class GDSFactory {
                 String className;
                 while ((className = bin.readLine()) != null) {
                     try {
-                        Class clazz = Class.forName(className);
+                        Class clazz = classLoader.loadClass(className);
                         GDSFactoryPlugin plugin = (GDSFactoryPlugin)clazz.newInstance();
                         registerPlugin(plugin);
                     } catch (ClassNotFoundException ex) {
@@ -314,10 +351,11 @@ public class GDSFactory {
             String jdbcProtocol = (String) entry.getKey();
             GDSFactoryPlugin plugin = (GDSFactoryPlugin) entry.getValue();
 
-            if (jdbcUrl.startsWith(jdbcProtocol))
+            if (jdbcUrl.startsWith(jdbcProtocol)) {
                 return GDSType.getType(plugin.getTypeName());
+            }
         }
-
+        if (log != null) log.debug("No protocol match found for url " + jdbcUrl);
         return null;
     }
 
