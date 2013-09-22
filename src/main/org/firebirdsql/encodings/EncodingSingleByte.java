@@ -64,11 +64,11 @@ public final class EncodingSingleByte implements Encoding {
 
     @Override
     public String decodeFromCharset(final byte[] in, final int offset, final int length) {
-        final char[] bufferC = new char[length];
+        final StringBuilder sb = new StringBuilder(length);
         for (int i = offset, limit = offset + length; i < limit; i++) {
-            bufferC[i] = byteToChar[in[i] & 0xFF];
+            sb.append(byteToChar[in[i] & 0xFF]);
         }
-        return new String(bufferC);
+        return sb.toString();
     }
 
     @Override
