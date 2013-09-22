@@ -372,7 +372,7 @@ public class TestV10Statement {
         assertNotNull("Parameters", parameters);
         List<FieldDescriptor> expectedParameters =
                 Arrays.asList(
-                        new FieldDescriptor(ISCConstants.SQL_VARYING | 1, 0, 0, 100, null, null, null, null, null)
+                        new FieldDescriptor(ISCConstants.SQL_VARYING | 1, 0, 0, 5, null, null, null, null, null)
                 );
         assertEquals("Unexpected values for parameters", expectedParameters, parameters.getFieldDescriptors());
 
