@@ -57,7 +57,7 @@ Upload according to above link
 
 Sign and deploy jar-files (replace paths, url and repositoryId as necessary; example deploys to snapshot repository)
 JDK 17:
-mvn gpg:sign-and-deploy-file -DpomFile=Jaybird-2.2.0beta1JDK_1.7\jaybird-jdk17.pom -Dfile=Jaybird-2.2.0beta1JDK_1.7\jaybird-2.2.0.jar -Dsources=Jaybird-2.2.0beta1JDK_1.7\jaybird-2.2.0-sources.jar -Djavadoc=Jaybird-2.2.0beta1JDK_1.7\jaybird-2.2.0-javadoc.jar -Durl=https://oss.sonatype.org/content/repositories/snapshots -DrepositoryId=sonatype-nexus-snapshots
+mvn gpg:sign-and-deploy-file -DpomFile=jaybird-jdk17-2.2.4-SNAPSHOT.pom -Dfile=jaybird-jdk17-2.2.4-SNAPSHOT.jar -Dsources=jaybird-jdk17-2.2.4-SNAPSHOT-sources.jar -Djavadoc=jaybird-jdk17-2.2.4-SNAPSHOT-javadoc.jar -Durl=https://oss.sonatype.org/content/repositories/snapshots -DrepositoryId=sonatype-nexus-snapshots
 
 NOTE: When deploying a snapshot, signing is optional
 
