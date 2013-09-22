@@ -74,36 +74,55 @@ public class GDSFactory {
 
     // TODO: Replace with explicit initializer from GDSType?
     static {
-
-        // register first all plugins that belong to the same classloader
+        // register first all plugins that belong to the same class loader
         // in which this class is loaded
+        final List<ClassLoader> classLoaders = classLoadersForLoading();
         try {
-            ClassLoader classLoader = GDSFactory.class.getClassLoader();
-            
-            if (classLoader == null)
-                classLoader = ClassLoader.getSystemClassLoader();
-
-            loadPluginsFromClassLoader(classLoader);
-
-            final ClassLoader contextClassLoader = Thread.currentThread().getContextClassLoader();
-            if (contextClassLoader != null && contextClassLoader != classLoader)
-                loadPluginsFromClassLoader(contextClassLoader);
-
-        } catch (IOException ex) {
+            for (ClassLoader classLoader : classLoaders) {
+                loadPluginsFromClassLoader(classLoader);
+            }
+        } catch (Exception ex) {
             if (log != null) log.error("Can't register plugins ", ex);
         }
 
         if (jdbcUrlToPluginMap.isEmpty()) {
             if (log != null) log.warn("No plugins loaded from META-INF/services, falling back to fixed registration of default plugins");
-            loadPluginsFallback();
+            for (ClassLoader classLoader : classLoaders) {
+                loadPluginsFallback(classLoader);
+            }
         }
     }
 
-    private static void loadPluginsFallback() {
-        ClassLoader classLoader = GDSFactory.class.getClassLoader();
+    /**
+     * List of class loaders to use for loading the {@link GDSFactoryPlugin} implementations.
+     *
+     * @return Collection of {@link ClassLoader} instances
+     */
+    private static List<ClassLoader> classLoadersForLoading() {
+        List<ClassLoader> classLoaders = new ArrayList<ClassLoader>();
+        final ClassLoader classLoader = GDSFactory.class.getClassLoader();
+        if (classLoader != null) {
+            classLoaders.add(classLoader);
+        } else {
+            classLoaders.add(ClassLoader.getSystemClassLoader());
+        }
 
-        if (classLoader == null)
-            classLoader = ClassLoader.getSystemClassLoader();
+        final ClassLoader contextClassLoader = Thread.currentThread().getContextClassLoader();
+        if (contextClassLoader != null && !classLoaders.contains(contextClassLoader)) {
+            classLoaders.add(contextClassLoader);
+        }
+        return classLoaders;
+    }
+
+    /**
+     * Loads the plugins from a hardcoded list of class names.
+     * <p>
+     * This method is intended as a fallback in case the plugins could not be discovered from the
+     * {@code META-INF/services/org.firebirdsql.gds.impl.GDSFactoryPlugin} file(s). See also
+     * <a href="http://tracker.firebirdsql.org/browse/JDBC-325">issue JDBC-325</a>
+     * </p>
+     */
+    private static void loadPluginsFallback(final ClassLoader classLoader) {
         String[] pluginClasses = new String[] {
                 "org.firebirdsql.gds.impl.wire.WireGDSFactoryPlugin",
                 "org.firebirdsql.gds.impl.jni.NativeGDSFactoryPlugin",
@@ -113,8 +132,8 @@ public class GDSFactory {
         };
         for (String className : pluginClasses) {
             try {
-                Class clazz = classLoader.loadClass(className);
-                GDSFactoryPlugin plugin = (GDSFactoryPlugin)clazz.newInstance();
+                Class<?> clazz = classLoader.loadClass(className);
+                GDSFactoryPlugin plugin = (GDSFactoryPlugin) clazz.newInstance();
                 registerPlugin(plugin);
             } catch (ClassNotFoundException ex) {
                 if (log != null)
@@ -137,7 +156,6 @@ public class GDSFactory {
      * @throws IOException if I/O error occured.
      */
     private static void loadPluginsFromClassLoader(ClassLoader classLoader) throws IOException {
-        // TODO: Replace with Java.util.ServiceLoader usage
         Enumeration res = classLoader.getResources(
             "META-INF/services/" + GDSFactoryPlugin.class.getName());
 
@@ -155,7 +173,7 @@ public class GDSFactory {
                 String className;
                 while ((className = bin.readLine()) != null) {
                     try {
-                        Class clazz = classLoader.loadClass(className);
+                        Class<?> clazz = classLoader.loadClass(className);
                         GDSFactoryPlugin plugin = (GDSFactoryPlugin)clazz.newInstance();
                         registerPlugin(plugin);
                     } catch (ClassNotFoundException ex) {
