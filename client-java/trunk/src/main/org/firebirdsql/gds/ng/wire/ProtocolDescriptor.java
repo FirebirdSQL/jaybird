@@ -31,6 +31,20 @@ import org.firebirdsql.gds.ng.FbTransaction;
 import org.firebirdsql.gds.ng.fields.BlrCalculator;
 
 /**
+ * Descriptor of protocol information.
+ * <p>
+ * The driver maintains a list of default protocol descriptors that are loaded using a {@link java.util.ServiceLoader} from
+ * the file {@code META-INF/services/org.firebirdsql.gds.ng.wire.ProtocolDescriptor}
+ * </p>
+ * <p>
+ * Protocol descriptors loaded this way are required to adhere to the following rules:
+ * <ul>
+ *     <li>They provide a no-arg constructor</li>
+ *     <li>All instances of a specific implementation class created with the no-arg constructor have the same {@link #hashCode()}.
+ *     <li>All instances of a specific implementation class created with the no-arg constructor are considered equal to each other by the {@link #equals(Object)} implementation</li>
+ * </ul>
+ * </p>
+ *
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @since 2.3
  */
