@@ -329,7 +329,7 @@ public class V10Statement extends AbstractFbWireStatement implements FbWireState
             checkTransactionActive();
             validateParameters(parameters);
             reset(false);
-            // TODO Records affected?
+
             synchronized (getDatabase().getSynchronizationObject()) {
                 // TODO Which state to switch to when an exception occurs (always ERROR might be wrong, see to do at start of class)
                 switchState(StatementState.EXECUTING);
@@ -368,7 +368,6 @@ public class V10Statement extends AbstractFbWireStatement implements FbWireState
                         statementListenerDispatcher.sqlCounts(this, sqlCountProcessor.process(processInfoSqlResponse(getDatabase().readGenericResponse(statementWarningCallback))));
                     }
 
-                    // TODO .NET implementation retrieves affected rows here
                     if (getState() != StatementState.ERROR) {
                         switchState(statementType.isTypeWithCursor() ? StatementState.CURSOR_OPEN : StatementState.PREPARED);
                     }
