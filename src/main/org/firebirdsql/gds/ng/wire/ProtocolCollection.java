@@ -20,13 +20,7 @@
  */
 package org.firebirdsql.gds.ng.wire;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.ServiceLoader;
+import java.util.*;
 
 /**
  * Collection of protocols for a connect request.
@@ -45,13 +39,78 @@ public final class ProtocolCollection implements Iterable<ProtocolDescriptor> {
 
     static {
         // Load protocol implementation information
-        ServiceLoader<ProtocolDescriptor> descriptors = ServiceLoader.load(ProtocolDescriptor.class,
-                ProtocolCollection.class.getClassLoader());
-        List<ProtocolDescriptor> supportedProtocols = new ArrayList<ProtocolDescriptor>();
-        for (ProtocolDescriptor protocol : descriptors) {
-            supportedProtocols.add(protocol);
+        final Set<ProtocolDescriptor> supportedProtocols = new HashSet<ProtocolDescriptor>();
+        final Collection<ClassLoader> classLoaders = classLoadersForLoading();
+        for (ClassLoader classLoader : classLoaders) {
+            final ServiceLoader<ProtocolDescriptor> descriptors = ServiceLoader.load(ProtocolDescriptor.class,
+                    classLoader);
+            for (ProtocolDescriptor protocol : descriptors) {
+                if (!supportedProtocols.contains(protocol)) {
+                    supportedProtocols.add(protocol);
+                }
+            }
         }
-        DEFAULT_COLLECTION = create(supportedProtocols.toArray(new ProtocolDescriptor[0]));
+
+        if (supportedProtocols.isEmpty()) {
+            for (ClassLoader classLoader : classLoaders) {
+                supportedProtocols.addAll(loadProtocolsFallback(classLoader));
+            }
+        }
+        DEFAULT_COLLECTION = create(supportedProtocols.toArray(new ProtocolDescriptor[supportedProtocols.size()]));
+    }
+
+    /**
+     * List of class loaders to use for loading the {@link ProtocolDescriptor} implementations.
+     *
+     * @return Collection of {@link ClassLoader} instances
+     */
+    private static List<ClassLoader> classLoadersForLoading() {
+        final List<ClassLoader> classLoaders = new ArrayList<ClassLoader>(2);
+        final ClassLoader classLoader = ProtocolDescriptor.class.getClassLoader();
+        if (classLoader != null) {
+            classLoaders.add(classLoader);
+        } else {
+            classLoaders.add(ClassLoader.getSystemClassLoader());
+        }
+
+        final ClassLoader contextClassLoader = Thread.currentThread().getContextClassLoader();
+        if (contextClassLoader != null && !classLoaders.contains(contextClassLoader)) {
+            classLoaders.add(contextClassLoader);
+        }
+        return classLoaders;
+    }
+
+    /**
+     * Loads the protocols from a hardcoded list of class names.
+     * <p>
+     * This method is intended as a fallback in case the plugins could not be discovered from the
+     * {@code META-INF/services/org.firebirdsql.gds.ng.wire.version10.Version10Descriptor} file(s). See also
+     * <a href="http://tracker.firebirdsql.org/browse/JDBC-325">issue JDBC-325</a>
+     * </p>
+     *
+     * @param classLoader Class loader to use for loading
+     * @return List of protocol descriptors
+     */
+    private static List<ProtocolDescriptor> loadProtocolsFallback(ClassLoader classLoader) {
+        // TODO Make sure all classes from default implementation are included
+        String[] protocolClasses = {
+                "org.firebirdsql.gds.ng.wire.version10.Version10Descriptor"
+        };
+        final List<ProtocolDescriptor> protocols = new ArrayList<ProtocolDescriptor>(protocolClasses.length);
+        for (String className : protocolClasses) {
+            try {
+                Class<?> clazz = classLoader.loadClass(className);
+                ProtocolDescriptor protocol = (ProtocolDescriptor) clazz.newInstance();
+                protocols.add(protocol);
+            } catch (ClassNotFoundException e) {
+                // TODO Log
+            } catch (InstantiationException e) {
+                // TODO Log
+            } catch (IllegalAccessException e) {
+                // TODO Log
+            }
+        }
+        return protocols;
     }
 
     private ProtocolCollection(Map<Integer, ProtocolDescriptor> protocolDescriptors) {

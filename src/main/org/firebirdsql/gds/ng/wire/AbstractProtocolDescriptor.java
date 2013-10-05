@@ -20,6 +20,8 @@
  */
 package org.firebirdsql.gds.ng.wire;
 
+import org.firebirdsql.util.ObjectUtils;
+
 /**
  * Abstract class to simplify implementation of {@link ProtocolDescriptor}
  * 
@@ -33,6 +35,7 @@ public abstract class AbstractProtocolDescriptor implements ProtocolDescriptor {
     private final int minimumType;
     private final int maximumType;
     private final int weight;
+    private final int hashCode;
 
     /**
      * Initializes the basic ProtocolDescriptor fields.
@@ -49,6 +52,7 @@ public abstract class AbstractProtocolDescriptor implements ProtocolDescriptor {
         this.minimumType = minimumType;
         this.maximumType = maximumType;
         this.weight = weight;
+        hashCode = ObjectUtils.hash(version, architecture, minimumType, maximumType, weight);
     }
 
     @Override
@@ -74,5 +78,24 @@ public abstract class AbstractProtocolDescriptor implements ProtocolDescriptor {
     @Override
     public final int getWeight() {
         return weight;
+    }
+
+    /**
+     * @return Hash code based on {@code version}, {@code architecture}, {@code minimumType}, {@code maximumType} and {@code weight}.
+     */
+    @Override
+    public final int hashCode() {
+        return hashCode;
+    }
+
+    /**
+     * {@inheritDoc}
+     * <p>
+     * Default implementation for the rules described in {@link ProtocolDescriptor}. Returns {@code true} if the other object is of the exact same class as this instance.
+     * </p>
+     */
+    @Override
+    public boolean equals(Object other) {
+        return other != null && this.getClass() == other.getClass();
     }
 }
