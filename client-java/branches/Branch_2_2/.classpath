@@ -12,8 +12,7 @@
 	<classpathentry excluding="org/firebirdsql/hibernate/" kind="src" path="src/test"/>
 	<classpathentry kind="src" path="src/test_30"/>
 	<classpathentry kind="src" path="src/test_40"/>
-	<classpathentry kind="src" path="src/jdbc_42"/>
-	<classpathentry kind="src" path="src/test_42"/>
+	<classpathentry kind="src" path="src/jdbc_40"/>
 	<classpathentry kind="lib" path="src/lib/fscontext.jar"/>
 	<classpathentry kind="lib" path="src/lib/providerutil.jar"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>

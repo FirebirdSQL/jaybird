@@ -129,6 +129,9 @@ public abstract class BaseGDSImpl extends AbstractGDS {
                 }
                 db_handle.addWarning(new GDSWarning(WARNING_CONNECT_TIMEOUT_NATIVE));
             }
+            if (!cleanDPB.hasArgument(DatabaseParameterBuffer.SQL_DIALECT)) {
+                cleanDPB.addArgument(DatabaseParameterBuffer.SQL_DIALECT, ISCConstants.SQL_DIALECT_CURRENT);
+            }
             
             dpbBytes = ((DatabaseParameterBufferImp) cleanDPB).getBytesForNativeCode();
             filenameCharset = databaseParameterBuffer.getArgumentAsString(DatabaseParameterBufferExtension.FILENAME_CHARSET);
@@ -254,16 +257,34 @@ public abstract class BaseGDSImpl extends AbstractGDS {
             throws GDSException {
         validateHandle(db_handle);
 
-        final byte[] dpbBytes = (dpb == null ? null
-                : ((DatabaseParameterBufferImp) dpb)
-                        .getBytesForNativeCode());
+        final byte[] dpbBytes;
+        final String filenameCharset;
+        if (dpb != null) {
+            DatabaseParameterBuffer cleanDPB = ((DatabaseParameterBufferExtension)dpb).removeExtensionParams();
+            if (cleanDPB.hasArgument(DatabaseParameterBuffer.CONNECT_TIMEOUT)) {
+                // For the native driver isc_dpb_connect_timeout is not a socket connect timeout
+                // It only applies to the steps for op_accept (negotiating protocol, etc)
+                if (log != null) {
+                    log.warn(WARNING_CONNECT_TIMEOUT_NATIVE);
+                }
+                db_handle.addWarning(new GDSWarning(WARNING_CONNECT_TIMEOUT_NATIVE));
+            }
+            if (!cleanDPB.hasArgument(DatabaseParameterBuffer.SQL_DIALECT)) {
+                cleanDPB.addArgument(DatabaseParameterBuffer.SQL_DIALECT, ISCConstants.SQL_DIALECT_CURRENT);
+            }
+
+            dpbBytes = ((DatabaseParameterBufferImp) cleanDPB).getBytesForNativeCode();
+            filenameCharset = dpb.getArgumentAsString(DatabaseParameterBufferExtension.FILENAME_CHARSET);
+        } else {
+            dpbBytes = null;
+            filenameCharset = null;
+        }
 
         synchronized (db_handle) {
             String serverUrl  = getServerUrl(file_name);
             
             byte[] urlData;
             try {
-                String filenameCharset = (dpb != null ? dpb.getArgumentAsString(DatabaseParameterBufferExtension.FILENAME_CHARSET) : null);
                 if (filenameCharset != null)
                     urlData = serverUrl.getBytes(filenameCharset);
                 else
