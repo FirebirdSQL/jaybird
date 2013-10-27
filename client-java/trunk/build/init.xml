@@ -121,7 +121,6 @@
 
         <property name="junit.timeout" value="600000"/>
         <!-- 10 minutes -->
-        <property name="junit.batchtest.todir" value="${build.reports}"/>
         <property name="junit.jvm" value="java"/>
         <property name="junit.jvm.options" value="-Ddummy"/>
 
@@ -163,7 +162,6 @@
         <path id="javac.compatibility.classpath">
             <path refid="javac.driver.classpath"/>
             <pathelement location="${build.classes}"/>
-            <pathelement location="${build.pool}"/>
         </path>
 
         <path id="javac.test.classpath">
@@ -178,7 +176,6 @@
         <path id="javac.examples.classpath">
             <path refid="javac.driver.classpath"/>
             <pathelement location="${build.classes}"/>
-            <pathelement location="${build.pool}"/>
         </path>
 
         <!--
