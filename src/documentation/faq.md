@@ -9,16 +9,152 @@ Jaybird
 Where do I get Jaybird?
 -----------------------
 
-Firebird can be downloaded from the Firebird website, under Downloads, [JDBC Driver](http://www.firebirdsql.org/en/jdbc-driver/).
+Firebird can be downloaded from the Firebird website, under Downloads,
+[JDBC Driver](http://www.firebirdsql.org/en/jdbc-driver/).
 
-Alternatively, you can go directly to Source Forge and download Jaybird from the [firebird-jca-jdc-driver files section](http://sourceforge.net/projects/firebird/files/firebird-jca-jdbc-driver/).
+Alternatively, you can go directly to Source Forge and download Jaybird from the
+[firebird-jca-jdc-driver files section](http://sourceforge.net/projects/firebird/files/firebird-jca-jdbc-driver/).
 
 Where can I get the sourcecode?
 -------------------------------
 
-The Jaybird sourcecode is available from Source Forge in the Firebird subversion repository, under client-java. The full URL (trunk) is:
+All Jaybird distribution zips contain a `jaybird-<version>-sources.zip` with the sources used for that specific version.
+The full Jaybird sourcecode is also available from Source Forge in the Firebird subversion repository, under
+client-java. The full URL (trunk) is:
 
 [http://svn.code.sf.net/p/firebird/code/client-java/trunk](http://svn.code.sf.net/p/firebird/code/client-java/trunk)
+
+Each release is also tagged in the repository.
+
+How is Jaybird licensed?
+------------------------
+
+Jaybird JCA/JDBC driver is distributed under the GNU Lesser General Public License (LGPL). Text of the license can be
+obtained from [http://www.gnu.org/copyleft/lesser.html](http://www.gnu.org/copyleft/lesser.html).
+
+Using Jaybird (by importing Jaybird's public interfaces in your Java code), and extending Jaybird by subclassing or
+implementation of an extension interface (but not abstract or concrete class) is considered by the authors of Jaybird to
+be dynamic linking. Hence our interpretation of the LGPL is that the use of the unmodified Jaybird source does not
+affect the license of your application code.
+
+Even more, all extension interfaces to which an application might want to link are released under dual LGPL/modified BSD
+license. Latter is basically "AS IS" license that allows any kind of use of that source code. Jaybird should be viewed
+as an implementation of that interfaces and the LGPL section for dynamic linking is applicable in this case.
+
+Which version of the LGPL applies?
+----------------------------------
+
+Current releases of Jaybird do not explicitly specify an LPGL version. This means that you can choose which version
+applies. Future versions of Jaybird may specify an explicit version, or be released under a different license.
+
+Documentation and Support
+=========================
+
+Where to get more information on Jaybird
+----------------------------------------
+
+Apart from this FAQ, you can get additional information from:
+
+* [JaybirdWiki](http://jaybirdwiki.firebirdsql.org/)
+* [Jaybird 2.1 Programmers Manual](http://www.firebirdsql.org/file/documentation/drivers_documentation/Jaybird_2_1_JDBC_driver_manual.pdf) (PDF)
+* [Firebird Website: Development, JDBC Driver](http://www.firebirdsql.org/en/jdbc-devel-status/)
+
+Where to get help
+-----------------
+
+  * This FAQ
+  * On [Stack Overflow](http://stackoverflow.com/), please tag your questions with *jaybird* and *firebird*
+  * The [Firebird-Java group](http://groups.yahoo.com/group/Firebird-Java) and corresponding
+    mailing list firebird-java@yahoogroups.com
+
+    You can subscribe to the mailing list by sending an email to
+    [firebird-java-subscribe@yahoogroups.com](mailto:firebird-java-subscribe@yahoogroups.com)
+
+  * The code for Firebird and this driver are on [Source Forge](http://sourceforge.net/projects/firebird)
+  * The [Firebird project home page](http://www.firebirdsql.org)
+  * Firebird support and other [Firebird mailing lists](http://www.firebirdsql.org/en/mailing-lists/) for questions not
+    directly related to Jaybird and java.
+
+Contributing
+------------
+
+There are several ways you can contribute to Jaybird or Firebird in general:
+
+* Participate on the mailing lists (see http://www.firebirdsql.org/en/mailing-lists/)
+* Report bugs or submit patches on the tracker (see [Reporting Bugs])
+* Become a developer (for Jaybird contact us on firebird-java, for Firebird in general, use the Firebird-devel mailing
+  list)
+* Become a paying member or sponsor of the Firebird Foundation (see
+  [http://www.firebirdsql.org/en/firebird-foundation/](http://www.firebirdsql.org/en/firebird-foundation/))
+
+See also [http://www.firebirdsql.org/en/consider-your-contribution/](http://www.firebirdsql.org/en/consider-your-contribution/)
+
+Reporting Bugs
+--------------
+
+The developers follow the firebird-java@yahoogroups.com list. Join the list and post information about suspected bugs.
+List members may be able to help out to determine if it is an actual bug, provide a workaround and get you going again,
+whereas bug fixes might take awhile.
+
+You can report bugs in the Firebird bug tracker, project
+["Java Client (Jaybird)"](http://tracker.firebirdsql.org/browse/JDBC)
+
+When reporting bugs, please provide a minimal, but complete reproduction, including databases and sourcecode to
+reproduce the problem. Patches to fix bugs are also appreciated. Make sure the patch is against a recent trunk version
+of the code.
+
+JDBC URLs (`java.sql.DriverManager`)
+====================================
+
+Pure Java (default)
+-------------------
+
+Default URL format:
+
+    jdbc:firebirdsql://host[:port]/<database>
+
+This will connect to the database using Type 4 JDBC driver using the Java implementation of
+the Firebird wire-protocol. Best suited for client-server applications with dedicated database server. Port can be
+omitted (default value is `3050`), host name must be present.
+
+The `<database>` part should be replaced with the database alias or the path to the database. In general it is advisable
+to use database aliases instead of the path the file.
+
+On Linux the root `/` should be included in the path. A database located on `/opt/firebird/db.fdb` should use the URL
+below (note the double slash after port!).\
+`jdbc:firebirdsql://host:port//opt/firebird/db.fdb`
+
+Deprecated, but still supported alternative URL format:\
+`jdbc:firebirdsql:host[/port]:<database>`
+
+Open Office/Libre Office (Pure Java)
+------------------------------------
+
+Jaybird can be used together with OpenOffice and Libre Office Base. To address some compatibility issues (and
+differences in interpretation of JDBC specifications) a separate subprotocol is used:
+
+    jdbc:firebirdsql:oo://host[:port]/<database>
+
+Native (using Firebird client library)
+--------------------------------------
+
+    jdbc:firebirdsql:native:host[/port]:<database>
+
+Type 2 driver, will connect to the database using client library (`fbclient.dll` on Windows, and `libfbclient.so` on
+Linux). Requires correct installation of the client library and the jaybird native library.
+
+    jdbc:firebirdsql:local:<database>
+
+Type 2 driver in local mode. Uses client library as in previous case, however will not use socket communication, but
+rather access database directly. Requires correct installation of the client library and the jaybird native library.
+
+Embedded Server
+---------------
+
+    jdbc:firebirdsql:embedded:<database>
+
+Similar to the Firebird client library, however `fbembed.dll` on Windows and `libfbembed.so` on Linux are used. Requires
+correctly installed and configured Firebird embedded library and the jaybird native library.
 
 JDBC Support
 ============
@@ -28,13 +164,15 @@ How much of JDBC is supported by Jaybird?
 
 **WARNING** The information in this section is outdated
 
-Jaybird follows the JDBC 4.2 specification with some features and methods not implemented. Some of the unimplemented items are required by the specification and some are optional.
+Jaybird follows the JDBC 4.1 specification with some features and methods not implemented. Some of the unimplemented
+items are required by the specification and some are optional.
 
 Implemented features:
 
 * Most useful JDBC functionality ("useful" in the opinion of the developers).
 * Complete JCA API support: may be used directly in JCA-supporting application servers such as JBoss and WebLogic.
-* XA transactions with true two phase commit when used as a JCA resource adapter in a managed environment (with a TransactionManager and JCA deployment support) as well as when used via javax.sql.XADataSource implementation.
+* XA transactions with true two phase commit when used as a JCA resource adapter in a managed environment (with a
+  `TransactionManager` and JCA deployment support) as well as when used via `javax.sql.XADataSource` implementation.
 * Includes optional internal connection pooling for standalone use and use in non-JCA environments such as Tomcat 4.
 * ObjectFactory implementation for use in environments with JNDI but no TransactionManager such as Tomcat 4.
 * DataSource implementations without pooling.
