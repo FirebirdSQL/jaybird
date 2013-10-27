@@ -10,6 +10,7 @@
 	<import file="build/deploy.xml" />
 	<import file="build/test.xml" />
 	<import file="build/dist.xml" />
+    <import file="build/docs.xml"/>
 </project>
 
 
