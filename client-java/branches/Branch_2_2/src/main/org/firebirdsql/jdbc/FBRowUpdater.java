@@ -294,12 +294,19 @@ public class FBRowUpdater implements FirebirdRowUpdater  {
         // handle the RDB$DB_KEY case first
         boolean hasDbKey = false;
         for (int i = 0; i < parameterMask.length; i++) {
-            if (parameterMask[i] == PARAMETER_DBKEY)
+            if (parameterMask[i] == PARAMETER_DBKEY) {
                 hasDbKey = true;
+                break;
+            }
         }
         
         if (hasDbKey) {
-            sb.append("RDB$DB_KEY = ?");
+            if (gdsHelper.getDatabaseProductMajorVersion() == 3) {
+                // TODO Remove Workaround for CORE-4255 when fixed
+                sb.append("CAST(RDB$DB_KEY AS CHAR(8) CHARACTER SET OCTETS) = ?");
+            } else {
+                sb.append("RDB$DB_KEY = ?");
+            }
             return;
         }
         
