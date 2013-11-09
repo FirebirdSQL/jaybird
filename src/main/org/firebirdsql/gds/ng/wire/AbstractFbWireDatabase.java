@@ -1,7 +1,7 @@
 /*
  * $Id$
  * 
- * Firebird Open Source J2EE Connector - JDBC Driver
+ * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -14,7 +14,7 @@
  * This file was created by members of the firebird development team.
  * All individual contributions remain the Copyright (C) of those
  * individuals.  Contributors to this file are either listed here or
- * can be obtained from a CVS history command.
+ * can be obtained from a source control history command.
  *
  * All rights reserved.
  */
@@ -31,18 +31,17 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
- * @since 2.3
+ * @since 3.0
  */
 public abstract class AbstractFbWireDatabase extends AbstractFbDatabase implements FbWireDatabase {
 
     protected final AtomicBoolean attached = new AtomicBoolean();
     protected final ProtocolDescriptor protocolDescriptor;
     protected final WireConnection connection;
-    private final XdrStreamHolder xdrStreamHolder;
     private final Object syncObject = new Object();
 
     /**
-     * Creates a V10Database instance.
+     * Creates an AbstractFbWireDatabase instance.
      *
      * @param connection
      *         A WireConnection with an established connection to the server.
@@ -54,7 +53,6 @@ public abstract class AbstractFbWireDatabase extends AbstractFbDatabase implemen
         if (connection == null) throw new IllegalArgumentException("parameter connection should be non-null");
         if (descriptor == null) throw new IllegalArgumentException("parameter descriptor should be non-null");
         this.connection = connection;
-        xdrStreamHolder = new XdrStreamHolder(connection);
         protocolDescriptor = descriptor;
     }
 
@@ -78,14 +76,33 @@ public abstract class AbstractFbWireDatabase extends AbstractFbDatabase implemen
         return connection.getEncoding();
     }
 
-    @Override
-    public final XdrInputStream getXdrIn() throws SQLException {
-        return xdrStreamHolder.getXdrIn();
+    /**
+     * Gets the XdrInputStream.
+     *
+     * @return Instance of XdrInputStream
+     * @throws SQLException
+     *         If no connection is opened or when exceptions occur
+     *         retrieving the InputStream
+     */
+    protected final XdrInputStream getXdrIn() throws SQLException {
+        return getXdrStreamAccess().getXdrIn();
+    }
+
+    /**
+     * Gets the XdrOutputStream.
+     *
+     * @return Instance of XdrOutputStream
+     * @throws SQLException
+     *         If no connection is opened or when exceptions occur
+     *         retrieving the OutputStream
+     */
+    protected final XdrOutputStream getXdrOut() throws SQLException {
+        return getXdrStreamAccess().getXdrOut();
     }
 
     @Override
-    public final XdrOutputStream getXdrOut() throws SQLException {
-        return xdrStreamHolder.getXdrOut();
+    public final XdrStreamAccess getXdrStreamAccess() {
+        return connection.getXdrStreamAccess();
     }
 
     @Override

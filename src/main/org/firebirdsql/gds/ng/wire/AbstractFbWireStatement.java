@@ -1,7 +1,7 @@
 /*
  * $Id$
  *
- * Firebird Open Source J2EE Connector - JDBC Driver
+ * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -14,7 +14,7 @@
  * This file was created by members of the firebird development team.
  * All individual contributions remain the Copyright (C) of those
  * individuals.  Contributors to this file are either listed here or
- * can be obtained from a source repository history command.
+ * can be obtained from a source control history command.
  *
  * All rights reserved.
  */
@@ -33,26 +33,48 @@ import java.util.WeakHashMap;
 
 /**
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
- * @since 2.3
+ * @since 3.0
  */
 public abstract class AbstractFbWireStatement extends AbstractFbStatement implements FbWireStatement {
 
     private final Map<RowDescriptor, byte[]> blrCache = Collections.synchronizedMap(new WeakHashMap<RowDescriptor, byte[]>());
     private volatile int handle;
-    private final XdrStreamHolder xdrStreamHolder;
     private FbWireDatabase database;
 
     public AbstractFbWireStatement(FbWireDatabase database) {
         this.database = database;
-        xdrStreamHolder = new XdrStreamHolder(database);
     }
 
+    /**
+     * Gets the XdrInputStream.
+     *
+     * @return Instance of XdrInputStream
+     * @throws SQLException
+     *         If no connection is opened or when exceptions occur
+     *         retrieving the InputStream
+     */
     protected final XdrInputStream getXdrIn() throws SQLException {
-        return xdrStreamHolder.getXdrIn();
+        return getXdrStreamAccess().getXdrIn();
     }
 
+    /**
+     * Gets the XdrOutputStream.
+     *
+     * @return Instance of XdrOutputStream
+     * @throws SQLException
+     *         If no connection is opened or when exceptions occur
+     *         retrieving the OutputStream
+     */
     protected final XdrOutputStream getXdrOut() throws SQLException {
-        return xdrStreamHolder.getXdrOut();
+        return getXdrStreamAccess().getXdrOut();
+    }
+
+    private XdrStreamAccess getXdrStreamAccess() throws SQLException {
+        if (database != null) {
+            return database.getXdrStreamAccess();
+        } else {
+            throw new SQLException("Connection closed or no connection available");
+        }
     }
 
     @Override

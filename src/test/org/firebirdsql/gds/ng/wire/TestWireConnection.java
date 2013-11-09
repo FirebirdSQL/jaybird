@@ -1,7 +1,7 @@
 /*
  * $Id$
  * 
- * Firebird Open Source J2EE Connector - JDBC Driver
+ * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -14,7 +14,7 @@
  * This file was created by members of the firebird development team.
  * All individual contributions remain the Copyright (C) of those
  * individuals.  Contributors to this file are either listed here or
- * can be obtained from a CVS history command.
+ * can be obtained from a source control history command.
  *
  * All rights reserved.
  */
@@ -38,6 +38,10 @@ import org.firebirdsql.gds.ng.wire.version10.Version10Descriptor;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+/**
+ * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @since 3.0
+ */
 public class TestWireConnection extends FBJUnit4TestBase {
 
     /**
@@ -242,23 +246,23 @@ public class TestWireConnection extends FBJUnit4TestBase {
     }
 
     /**
-     * Tests if calling {@link WireConnection#getXdrIn()} throws an
-     * IOException when not connected.
+     * Tests if calling {@link XdrStreamAccess#getXdrIn()} obtained from {@link WireConnection#getXdrStreamAccess()} throws an
+     * SQLException when not connected.
      */
     @Test(expected = SQLException.class)
     public void testUnconnected_CreateXdrIn() throws Exception {
         WireConnection gdsConnection = new WireConnection(connectionInfo);
-        gdsConnection.getXdrIn();
+        gdsConnection.getXdrStreamAccess().getXdrIn();
     }
 
     /**
-     * Tests if calling {@link WireConnection#getXdrOut()} throws an
-     * IOException when not connected.
+     * Tests if calling {@link XdrStreamAccess#getXdrOut()} obtained from {@link WireConnection#getXdrStreamAccess()} throws an
+     * SQLException when not connected.
      */
     @Test(expected = SQLException.class)
     public void testUnconnected_CreateXdrOut() throws Exception {
         WireConnection gdsConnection = new WireConnection(connectionInfo);
-        gdsConnection.getXdrOut();
+        gdsConnection.getXdrStreamAccess().getXdrOut();
     }
 
     /**

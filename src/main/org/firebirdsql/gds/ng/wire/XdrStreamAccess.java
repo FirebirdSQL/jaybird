@@ -35,7 +35,7 @@ import java.sql.SQLException;
  * Provides access to the {@link XdrInputStream} and {@link XdrOutputStream}.
  *
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
- * @since 2.3
+ * @since 3.0
  */
 public interface XdrStreamAccess {
 

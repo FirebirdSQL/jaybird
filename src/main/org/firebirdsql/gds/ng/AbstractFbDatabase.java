@@ -1,7 +1,7 @@
 /*
  * $Id$
  * 
- * Firebird Open Source J2EE Connector - JDBC Driver
+ * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -14,7 +14,7 @@
  * This file was created by members of the firebird development team.
  * All individual contributions remain the Copyright (C) of those
  * individuals.  Contributors to this file are either listed here or
- * can be obtained from a CVS history command.
+ * can be obtained from a source control history command.
  *
  * All rights reserved.
  */
@@ -32,7 +32,7 @@ import java.sql.SQLWarning;
 
 /**
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
- * @since 2.3
+ * @since 3.0
  */
 public abstract class AbstractFbDatabase implements FbDatabase {
 
@@ -94,7 +94,7 @@ public abstract class AbstractFbDatabase implements FbDatabase {
     /**
      * Actual implementation of database detach.
      * <p>
-     * Implementations of this method should only be called from {@link #detach()}, and should not notify database
+     * Implementations of this method should only be called from {@link #detach()}, and should <strong>not</strong> notify database
      * listeners of the database {@link DatabaseListener#detaching(FbDatabase)} and
      * {@link DatabaseListener#detached(FbDatabase)} events.
      * </p>
@@ -117,13 +117,13 @@ public abstract class AbstractFbDatabase implements FbDatabase {
                 internalDetach();
             } finally {
                 databaseListenerDispatcher.detached(this);
-                databaseListenerDispatcher.removeAllListeners();
+                databaseListenerDispatcher.shutdown();
             }
         }
     }
 
     @Override
-    public int getOdsMajor() {
+    public final int getOdsMajor() {
         return odsMajor;
     }
 
@@ -137,12 +137,12 @@ public abstract class AbstractFbDatabase implements FbDatabase {
      * @param odsMajor
      *         ODS major version
      */
-    protected void setOdsMajor(int odsMajor) {
+    protected final void setOdsMajor(int odsMajor) {
         this.odsMajor = odsMajor;
     }
 
     @Override
-    public int getOdsMinor() {
+    public final int getOdsMinor() {
         return odsMinor;
     }
 
@@ -156,12 +156,12 @@ public abstract class AbstractFbDatabase implements FbDatabase {
      * @param odsMinor
      *         The ODS minor version
      */
-    protected void setOdsMinor(int odsMinor) {
+    protected final void setOdsMinor(int odsMinor) {
         this.odsMinor = odsMinor;
     }
 
     @Override
-    public GDSServerVersion getServerVersion() {
+    public final GDSServerVersion getServerVersion() {
         return serverVersion;
     }
 
@@ -174,7 +174,7 @@ public abstract class AbstractFbDatabase implements FbDatabase {
      * @param versionString
      *         Raw version string
      */
-    protected void setServerVersion(String versionString) {
+    protected final void setServerVersion(String versionString) {
         try {
             serverVersion = GDSServerVersion.parseRawVersion(versionString);
         } catch (GDSServerVersionException e) {
@@ -219,6 +219,4 @@ public abstract class AbstractFbDatabase implements FbDatabase {
     public int iscVaxInteger2(final byte[] buffer, final int startPosition) {
         return (buffer[startPosition] & 0xff) | ((buffer[startPosition + 1] & 0xff) << 8);
     }
-
-    // TODO Unregister all listeners on close
 }

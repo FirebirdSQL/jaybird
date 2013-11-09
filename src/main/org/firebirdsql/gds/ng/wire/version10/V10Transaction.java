@@ -1,7 +1,7 @@
 /*
  * $Id$
  * 
- * Firebird Open Source J2EE Connector - JDBC Driver
+ * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -14,7 +14,7 @@
  * This file was created by members of the firebird development team.
  * All individual contributions remain the Copyright (C) of those
  * individuals.  Contributors to this file are either listed here or
- * can be obtained from a CVS history command.
+ * can be obtained from a source control history command.
  *
  * All rights reserved.
  */
@@ -42,11 +42,11 @@ import static org.firebirdsql.gds.impl.wire.WireProtocolConstants.*;
  * {@link FbTransaction} implementation for the version 10 wire protocol.
  *
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
- * @since 2.3
+ * @since 3.0
  */
 public class V10Transaction extends AbstractFbTransaction implements FbWireTransaction {
 
-    private FbWireDatabase database;
+    private final FbWireDatabase database;
     private final Object syncObject = new Object();
     private volatile int handle;
 
@@ -59,12 +59,8 @@ public class V10Transaction extends AbstractFbTransaction implements FbWireTrans
         this.database = database;
     }
 
-    protected final XdrInputStream getXdrIn() throws SQLException {
-        return database.getXdrIn();
-    }
-
     protected final XdrOutputStream getXdrOut() throws SQLException {
-        return database.getXdrOut();
+        return database.getXdrStreamAccess().getXdrOut();
     }
 
     protected final Object getSynchronizationObject() {
