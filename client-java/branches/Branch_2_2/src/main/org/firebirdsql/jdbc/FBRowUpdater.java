@@ -302,8 +302,8 @@ public class FBRowUpdater implements FirebirdRowUpdater  {
         
         if (hasDbKey) {
             if (gdsHelper.getDatabaseProductMajorVersion() == 3) {
-                // TODO Remove Workaround for CORE-4255 when fixed
-                sb.append("CAST(RDB$DB_KEY AS CHAR(8) CHARACTER SET OCTETS) = ?");
+                // TODO Remove Workaround for CORE-4255 when fixed (and released as alpha 2)
+                sb.append("RDB$DB_KEY = CAST(? AS CHAR(8) CHARACTER SET OCTETS)");
             } else {
                 sb.append("RDB$DB_KEY = ?");
             }
