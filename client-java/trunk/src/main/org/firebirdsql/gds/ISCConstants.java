@@ -1478,6 +1478,31 @@ public interface ISCConstants {
     int isc_no_providers                     = 335545044;
     int isc_null_spb                         = 335545045;
     int isc_max_args_exceeded                = 335545046;
+    int isc_ee_blr_mismatch_names_count      = 335545047;
+    int isc_ee_blr_mismatch_name_not_found   = 335545048;
+    int isc_bad_result_set                   = 335545049;
+    int isc_wrong_message_length             = 335545050;
+    int isc_no_output_format                 = 335545051;
+    int isc_item_finish                      = 335545052;
+    int isc_miss_config                      = 335545053;
+    int isc_conf_line                        = 335545054;
+    int isc_conf_include                     = 335545055;
+    int isc_include_depth                    = 335545056;
+    int isc_include_miss                     = 335545057;
+    int isc_protect_ownership                = 335545058;
+    int isc_badvarnum                        = 335545059;
+    int isc_sec_context                      = 335545060;
+    int isc_multi_segment                    = 335545061;
+    int isc_login_changed                    = 335545062;
+    int isc_auth_handshake_limit             = 335545063;
+    int isc_wirecrypt_incompatible           = 335545064;
+    int isc_miss_wirecrypt                   = 335545065;
+    int isc_wirecrypt_key                    = 335545066;
+    int isc_wirecrypt_plugin                 = 335545067;
+    int isc_secdb_name                       = 335545068;
+    int isc_auth_data                        = 335545069;
+    int isc_auth_datalength                  = 335545070;
+    int isc_info_unprepared_stmt             = 335545071;
     int isc_gfix_db_name                     = 335740929;
     int isc_gfix_invalid_sw                  = 335740930;
     int isc_gfix_incmp_sw                    = 335740932;
@@ -1922,7 +1947,7 @@ public interface ISCConstants {
     int isc_trace_switch_param_miss          = 337182758;
     int isc_trace_param_act_notcompat        = 337182759;
     int isc_trace_mandatory_switch_miss      = 337182760;
-    int isc_err_max                          = 1170;
+    int isc_err_max                          = 1195;
 
     /*******************/
     /* SQL definitions */
