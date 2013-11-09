@@ -1,6 +1,7 @@
 /*
+ * $Id$
  *
- * Firebird Open Source J2ee connector - jdbc driver
+ * Firebird Open Source JavaEE connector - jdbc driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -13,7 +14,7 @@
  * This file was created by members of the firebird development team.
  * All individual contributions remain the Copyright (C) of those
  * individuals.  Contributors to this file are either listed here or
- * can be obtained from a CVS history command.
+ * can be obtained from a source control history command.
  *
  * All rights reserved.
  */
@@ -30,7 +31,6 @@ import org.firebirdsql.jdbc.field.FBField;
 import org.firebirdsql.jdbc.field.FBFlushableField;
 import org.firebirdsql.jdbc.field.FieldDataProvider;
 import org.firebirdsql.util.SQLExceptionChainBuilder;
-
 
 /**
  * Class responsible for modifying updatable result sets.
@@ -136,14 +136,14 @@ public class FBRowUpdater implements FirebirdRowUpdater  {
         }
         
         // find the table name (there can be only one table per result set)
-        for (int i = 0; i < xsqlvars.length; i++) {
-            if (tableName == null)
-                tableName = xsqlvars[i].relname;
-            else
-            if (!tableName.equals(xsqlvars[i].relname))
+        for (XSQLVAR xsqlvar : xsqlvars) {
+            if (tableName == null) {
+                tableName = xsqlvar.relname;
+            } else if (!tableName.equals(xsqlvar.relname)) {
                 throw new FBResultSetNotUpdatableException(
-                    "Underlying result set references at least two relations: " + 
-                    tableName + " and " + xsqlvars[i].relname + ".");
+                        "Underlying result set references at least two relations: " +
+                                tableName + " and " + xsqlvar.relname + ".");
+            }
         }
     }
     
@@ -232,7 +232,7 @@ public class FBRowUpdater implements FirebirdRowUpdater  {
      */
     private int[] getParameterMask() throws SQLException {
 
-        // loop through the "best row identifiers" and set appropriate falgs.
+        // loop through the "best row identifiers" and set appropriate flags.
         FBDatabaseMetaData metaData = new FBDatabaseMetaData(gdsHelper);
         
         ResultSet bestRowIdentifier = metaData.getBestRowIdentifier(
@@ -247,33 +247,26 @@ public class FBRowUpdater implements FirebirdRowUpdater  {
                 if (columnName == null)
                     continue;
                 
-                boolean found = false;
                 for (int i = 0; i < xsqlvars.length; i++) {
-
                     // special handling for the RDB$DB_KEY columns that must be
                     // selected as RDB$DB_KEY, but in XSQLVAR are represented
                     // as DB_KEY
-                    if ("RDB$DB_KEY".equals(columnName) && "DB_KEY".equals(xsqlvars[i].sqlname)) {
+                    if ("RDB$DB_KEY".equals(columnName) && isDbKey(xsqlvars[i])) {
                         result[i] = PARAMETER_DBKEY;
-                        found = true;
-                    } else
-                    if (columnName.equals(xsqlvars[i].sqlname)) {
+                        hasParams = true;
+                    } else if (columnName.equals(xsqlvars[i].sqlname)) {
                         result[i] = PARAMETER_USED;
-                        found = true;
+                        hasParams = true;
                     } 
-                    //else
-                    //    result[i] = PARAMETER_UNUSED;
                 }
                 
-                // if we did not found a column from the best row identifier
+                // if we did not find a column from the best row identifier
                 // in our result set, throw an exception, since we cannot
                 // reliably identify the row.
-                if (!found)
+                if (!hasParams)
                     throw new FBResultSetNotUpdatableException(
                         "Underlying result set does not contain all columns " +
                         "that form 'best row identifier'.");
-                else
-                    hasParams = true;
             }
             
             if (!hasParams)
@@ -293,12 +286,15 @@ public class FBRowUpdater implements FirebirdRowUpdater  {
         
         // handle the RDB$DB_KEY case first
         boolean hasDbKey = false;
-        for (int i = 0; i < parameterMask.length; i++) {
-            if (parameterMask[i] == PARAMETER_DBKEY)
+        for (int aParameterMask : parameterMask) {
+            if (aParameterMask == PARAMETER_DBKEY) {
                 hasDbKey = true;
+                break;
+            }
         }
         
         if (hasDbKey) {
+            // TODO: For Firebird 3 alpha 1 see JDBC-330 and CORE-4255
             sb.append("RDB$DB_KEY = ?");
             return;
         }
@@ -392,20 +388,17 @@ public class FBRowUpdater implements FirebirdRowUpdater  {
         StringBuilder columns = new StringBuilder();
         
         boolean first = true;
-        for (int i = 0; i < xsqlvars.length; i++) {
-            
-            if (!first) 
+        for (XSQLVAR xsqlvar : xsqlvars) {
+            if (!first)
                 columns.append(',');
-            
+
             // do special handling of RDB$DB_KEY, since Firebird returns
             // DB_KEY column name instead of the correct one
-            if ("DB_KEY".equals(xsqlvars[i].sqlname)
-                    && ((xsqlvars[i].sqltype & ~1) == ISCConstants.SQL_TEXT)
-                    && xsqlvars[i].sqllen == 8)
+            if (isDbKey(xsqlvar)) {
                 columns.append("RDB$DB_KEY");
-            else
-                columns.append('"').append(xsqlvars[i].sqlname).append('"');
-            
+            } else {
+                columns.append('"').append(xsqlvar.sqlname).append('"');
+            }
             first = false;
         }
         
@@ -415,7 +408,19 @@ public class FBRowUpdater implements FirebirdRowUpdater  {
         appendWhereClause(sb, parameterMask);
         return sb.toString();
     }
-    
+
+    /**
+     * Determines if the supplied {@link XSQLVAR} is a db-key (RDB$DB_KEY) of a table.
+     *
+     * @param xsqlvar XSQLVAR
+     * @return <code>true</code> if <code>xsqlvar</code> is a RDB$DB_KEY
+     */
+    private boolean isDbKey(XSQLVAR xsqlvar) {
+        return "DB_KEY".equals(xsqlvar.sqlname)
+                && ((xsqlvar.sqltype & ~1) == ISCConstants.SQL_TEXT)
+                && xsqlvar.sqllen == 8;
+    }
+
     private static final int UPDATE_STATEMENT_TYPE = 1;
     private static final int DELETE_STATEMENT_TYPE = 2;
     private static final int INSERT_STATEMENT_TYPE = 3;
@@ -572,7 +577,7 @@ public class FBRowUpdater implements FirebirdRowUpdater  {
             }
             
             int[] parameterMask = getParameterMask();
-            
+
             String sql;
             switch(statementType) {
                 case UPDATE_STATEMENT_TYPE :
