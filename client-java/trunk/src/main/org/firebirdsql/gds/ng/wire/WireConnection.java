@@ -1,7 +1,7 @@
 /*
  * $Id$
  * 
- * Firebird Open Source J2EE Connector - JDBC Driver
+ * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -14,7 +14,7 @@
  * This file was created by members of the firebird development team.
  * All individual contributions remain the Copyright (C) of those
  * individuals.  Contributors to this file are either listed here or
- * can be obtained from a CVS history command.
+ * can be obtained from a source control history command.
  *
  * All rights reserved.
  */
@@ -51,9 +51,9 @@ import static org.firebirdsql.gds.impl.wire.WireProtocolConstants.*;
  * Firebird server.
  *
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
- * @since 2.3
+ * @since 3.0
  */
-public final class WireConnection implements XdrStreamAccess {
+public final class WireConnection {
 
     // TODO Include character set
     // TODO Check if methods currently throwing IOException should throw SQLException instead
@@ -72,6 +72,25 @@ public final class WireConnection implements XdrStreamAccess {
 
     private XdrOutputStream xdrOut;
     private XdrInputStream xdrIn;
+    private final XdrStreamAccess streamAccess = new XdrStreamAccess() {
+        @Override
+        public XdrInputStream getXdrIn() throws SQLException {
+            if (isConnected() && xdrIn != null) {
+                return xdrIn;
+            } else {
+                throw new SQLException("Connection closed or no connection available");
+            }
+        }
+
+        @Override
+        public XdrOutputStream getXdrOut() throws SQLException {
+            if (isConnected() && xdrOut != null) {
+                return xdrOut;
+            } else {
+                throw new SQLException("Connection closed or no connection available");
+            }
+        }
+    };
 
     /**
      * Creates a WireConnection (without establishing a connection to the
@@ -178,6 +197,7 @@ public final class WireConnection implements XdrStreamAccess {
                     socket.setSoTimeout(desiredTimeout);
                 }
             } catch (SocketException e) {
+                // TODO Add SQLState
                 throw new SQLException("Unable to change socket timeout (SO_TIMEOUT)", e);
             }
         }
@@ -226,20 +246,8 @@ public final class WireConnection implements XdrStreamAccess {
         }
     }
 
-    public XdrInputStream getXdrIn() throws SQLException {
-        if (isConnected()) {
-            return xdrIn;
-        } else {
-            throw new SQLException("Connection closed or no connection available");
-        }
-    }
-
-    public XdrOutputStream getXdrOut() throws SQLException {
-        if (isConnected()) {
-            return xdrOut;
-        } else {
-            throw new SQLException("Connection closed or no connection available");
-        }
+    public XdrStreamAccess getXdrStreamAccess() {
+        return streamAccess;
     }
 
     public EncodingDefinition getEncodingDefinition() {

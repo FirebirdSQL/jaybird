@@ -35,10 +35,15 @@ import java.sql.SQLException;
 
 /**
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
- * @since 2.3
+ * @since 3.0
  */
-public interface FbWireDatabase extends FbDatabase, XdrStreamAccess {
+public interface FbWireDatabase extends FbDatabase {
     // TODO Revise exception usage
+
+    /**
+     * @return Instance of {@link XdrStreamAccess} for this database.
+     */
+    XdrStreamAccess getXdrStreamAccess();
 
     /**
      * Reads the response from the server.
@@ -105,5 +110,4 @@ public interface FbWireDatabase extends FbDatabase, XdrStreamAccess {
      * @throws IOException
      */
     int readNextOperation() throws IOException;
-
 }
