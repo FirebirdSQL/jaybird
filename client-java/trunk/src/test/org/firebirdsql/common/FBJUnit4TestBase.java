@@ -1,6 +1,7 @@
 /*
  * $Id$
- * Firebird Open Source J2ee connector - jdbc driver
+ *
+ * Firebird Open Source JavaEE connector - JDBC driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -13,12 +14,13 @@
  * This file was created by members of the firebird development team.
  * All individual contributions remain the Copyright (C) of those
  * individuals.  Contributors to this file are either listed here or
- * can be obtained from a CVS history command.
+ * can be obtained from a source control history command.
  *
  * All rights reserved.
  */
 package org.firebirdsql.common;
 
+import static org.firebirdsql.common.FBTestProperties.createFBManager;
 import static org.firebirdsql.common.FBTestProperties.defaultDatabaseSetUp;
 import static org.firebirdsql.common.FBTestProperties.defaultDatabaseTearDown;
 
@@ -29,8 +31,8 @@ import org.junit.After;
 import org.junit.Before;
 
 /**
- * Base class for JUnit 4 test cases which could be run against more then a
- * single GDS implementation.
+ * Base class for JUnit 4 test cases which could be run against more then one
+ * GDS implementation.
  * 
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  */
@@ -47,7 +49,8 @@ public abstract class FBJUnit4TestBase {
      */
     @Before
     public void basicSetUp() throws Exception {
-        fbManager = defaultDatabaseSetUp();
+        fbManager = createFBManager();
+        defaultDatabaseSetUp(fbManager);
     }
 
     /**
@@ -60,5 +63,4 @@ public abstract class FBJUnit4TestBase {
         defaultDatabaseTearDown(fbManager);
         fbManager = null;
     }
-
 }

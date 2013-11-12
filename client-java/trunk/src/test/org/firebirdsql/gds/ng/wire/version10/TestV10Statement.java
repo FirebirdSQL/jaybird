@@ -21,6 +21,7 @@
 package org.firebirdsql.gds.ng.wire.version10;
 
 import org.firebirdsql.common.DdlHelper;
+import org.firebirdsql.common.FBJUnit4TestBase;
 import org.firebirdsql.common.FBTestProperties;
 import org.firebirdsql.common.JdbcResourceHelper;
 import org.firebirdsql.encodings.EncodingFactory;
@@ -40,7 +41,6 @@ import org.firebirdsql.gds.ng.wire.FbWireDatabase;
 import org.firebirdsql.gds.ng.wire.ProtocolCollection;
 import org.firebirdsql.gds.ng.wire.SimpleStatementListener;
 import org.firebirdsql.gds.ng.wire.WireConnection;
-import org.firebirdsql.management.FBManager;
 import org.junit.*;
 import org.junit.rules.ExpectedException;
 
@@ -59,7 +59,7 @@ import static org.junit.Assume.assumeTrue;
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @since 3.0
  */
-public class TestV10Statement {
+public class TestV10Statement extends FBJUnit4TestBase {
 
     private static final String CREATE_EXECUTABLE_STORED_PROCEDURE =
             "CREATE PROCEDURE increment " +
@@ -106,7 +106,6 @@ public class TestV10Statement {
     private final FbConnectionProperties connectionInfo;
     private final SimpleStatementListener listener = new SimpleStatementListener();
     private FbWireDatabase db;
-    FBManager fbManager;
 
     {
         connectionInfo = new FbConnectionProperties();
@@ -131,7 +130,6 @@ public class TestV10Statement {
 
     @Before
     public void setUp() throws Exception {
-        fbManager = defaultDatabaseSetUp();
         Connection con = FBTestProperties.getConnectionViaDriverManager();
         try {
             DdlHelper.executeDDL(con, CREATE_EXECUTABLE_STORED_PROCEDURE, new int[]{ });
@@ -463,16 +461,12 @@ public class TestV10Statement {
 
     @After
     public void tearDown() throws Exception {
-        try {
-            if (db != null) {
-                try {
-                    db.detach();
-                } catch (SQLException ex) {
-                    // ignore (TODO: log)
-                }
+        if (db != null) {
+            try {
+                db.detach();
+            } catch (SQLException ex) {
+                log.debug("Exception on detach", ex);
             }
-        } finally {
-            defaultDatabaseTearDown(fbManager);
         }
     }
 }

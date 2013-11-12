@@ -1,5 +1,7 @@
 /*
- * Firebird Open Source J2ee connector - jdbc driver
+ * $Id$
+ *
+ * Firebird Open Source JavaEE connector - JDBC driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -12,12 +14,15 @@
  * This file was created by members of the firebird development team.
  * All individual contributions remain the Copyright (C) of those
  * individuals.  Contributors to this file are either listed here or
- * can be obtained from a CVS history command.
+ * can be obtained from a source control history command.
  *
  * All rights reserved.
  */
 package org.firebirdsql.jdbc;
 
+import static org.firebirdsql.common.FBTestProperties.createFBManager;
+import static org.firebirdsql.common.FBTestProperties.defaultDatabaseSetUp;
+import static org.firebirdsql.common.FBTestProperties.defaultDatabaseTearDown;
 import static org.junit.Assert.*;
 import static org.junit.Assume.*;
 
@@ -41,7 +46,7 @@ import org.junit.Test;
  * Tests for connection timeouts.
  * 
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
- * @since 2.3
+ * @since 3.0
  */
 public class TestFBConnectionTimeout {
     // This test does not extend FBJUnit4TestBase as a lot of these tests don't need an actual database
@@ -133,14 +138,15 @@ public class TestFBConnectionTimeout {
     public void normalConnectionWithTimeoutFromProperty() throws Exception {
         // Reset DriverManager timeout
         DriverManager.setLoginTimeout(0);
-        FBManager fbManager = FBTestProperties.defaultDatabaseSetUp();
+        FBManager fbManager = createFBManager();
+        defaultDatabaseSetUp(fbManager);
         try {
             Properties properties = FBTestProperties.getDefaultPropertiesForConnection();
             properties.setProperty("connectTimeout", "1");
             Connection connection = DriverManager.getConnection(FBTestProperties.getUrl(), properties);
             connection.close();
         } finally {
-            FBTestProperties.defaultDatabaseTearDown(fbManager);
+            defaultDatabaseTearDown(fbManager);
         }
     }
     
@@ -151,13 +157,14 @@ public class TestFBConnectionTimeout {
     public void normalConnectionWithTimeoutFromDriverManager() throws Exception {
         // Reset DriverManager timeout
         DriverManager.setLoginTimeout(2);
-        FBManager fbManager = FBTestProperties.defaultDatabaseSetUp();
+        FBManager fbManager = createFBManager();
+        defaultDatabaseSetUp(fbManager);
         try {
             Properties properties = FBTestProperties.getDefaultPropertiesForConnection();
             Connection connection = DriverManager.getConnection(FBTestProperties.getUrl(), properties);
             connection.close();
         } finally {
-            FBTestProperties.defaultDatabaseTearDown(fbManager);
+            defaultDatabaseTearDown(fbManager);
         }
     }
     

@@ -1,6 +1,7 @@
 /*
  * $Id$
- * Firebird Open Source J2ee connector - jdbc driver
+ *
+ * Firebird Open Source JavaEE connector - JDBC driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -13,7 +14,7 @@
  * This file was created by members of the firebird development team.
  * All individual contributions remain the Copyright (C) of those
  * individuals.  Contributors to this file are either listed here or
- * can be obtained from a CVS history command.
+ * can be obtained from a source control history command.
  *
  * All rights reserved.
  */
@@ -171,14 +172,12 @@ public final class FBTestProperties {
     }
 
     /**
-     * Creates the default test database.
-     * 
-     * @return Configured FBManager instance used for creation of the database
+     * Creates the default test database, and configures the passed in FBManager with the server and type of test.
+     *
+     * @param fbManager instance used for creation of the database
      * @throws Exception
      */
-    public static FBManager defaultDatabaseSetUp() throws Exception {
-        FBManager fbManager = createFBManager();
-
+    public static void defaultDatabaseSetUp(FBManager fbManager) throws Exception {
         if (getGdsType() == GDSType.getType("PURE_JAVA")
                 || getGdsType() == GDSType.getType("NATIVE")) {
             fbManager.setServer(DB_SERVER_URL);
@@ -187,8 +186,6 @@ public final class FBTestProperties {
         fbManager.start();
         fbManager.setForceCreate(true);
         fbManager.createDatabase(getDatabasePath(), DB_USER, DB_PASSWORD);
-
-        return fbManager;
     }
 
     /**
@@ -200,8 +197,11 @@ public final class FBTestProperties {
      * @throws Exception
      */
     public static void defaultDatabaseTearDown(FBManager fbManager) throws Exception {
-        fbManager.dropDatabase(getDatabasePath(), DB_USER, DB_PASSWORD);
-        fbManager.stop();
+        try {
+            fbManager.dropDatabase(getDatabasePath(), DB_USER, DB_PASSWORD);
+        } finally {
+            fbManager.stop();
+        }
     }
 
     private FBTestProperties() {

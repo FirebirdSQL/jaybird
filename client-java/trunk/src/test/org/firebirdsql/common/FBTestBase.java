@@ -1,6 +1,7 @@
 /*
  * $Id$
- * Firebird Open Source J2ee connector - jdbc driver
+ *
+ * Firebird Open Source JavaEE connector - JDBC driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -13,7 +14,7 @@
  * This file was created by members of the firebird development team.
  * All individual contributions remain the Copyright (C) of those
  * individuals.  Contributors to this file are either listed here or
- * can be obtained from a CVS history command.
+ * can be obtained from a source control history command.
  *
  * All rights reserved.
  */
@@ -31,8 +32,8 @@ import org.firebirdsql.management.FBManager;
 import static org.firebirdsql.common.FBTestProperties.*;
 
 /**
- * Base class for JUnit 3 test cases which could be run against more then a
- * single GDS implementation.
+ * Base class for JUnit 3 test cases which could be run against more then one
+ * GDS implementation.
  */
 public abstract class FBTestBase extends TestCase {
 
@@ -49,7 +50,8 @@ public abstract class FBTestBase extends TestCase {
     }
 
     protected void setUp() throws Exception {
-        fbManager = defaultDatabaseSetUp();
+        fbManager = createFBManager();
+        defaultDatabaseSetUp(fbManager);
     }
 
     protected void tearDown() throws Exception {

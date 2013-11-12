@@ -1,5 +1,7 @@
 /*
- * Firebird Open Source J2ee connector - jdbc driver
+ * $Id$
+ *
+ * Firebird Open Source JavaEE connector - JDBC driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -12,12 +14,14 @@
  * This file was created by members of the firebird development team.
  * All individual contributions remain the Copyright (C) of those
  * individuals.  Contributors to this file are either listed here or
- * can be obtained from a CVS history command.
+ * can be obtained from a source control history command.
  *
  * All rights reserved.
  */
 package org.firebirdsql.jdbc.escape;
 
+import static org.firebirdsql.common.FBTestProperties.*;
+import static org.firebirdsql.common.JdbcResourceHelper.closeQuietly;
 import static org.junit.Assert.*;
 
 import java.sql.Connection;
@@ -27,8 +31,6 @@ import java.sql.Statement;
 import java.util.Arrays;
 import java.util.Collection;
 
-import org.firebirdsql.common.FBTestProperties;
-import org.firebirdsql.common.JdbcResourceHelper;
 import org.firebirdsql.management.FBManager;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -56,17 +58,18 @@ public class TestScalarNumericFunctions {
     
     @BeforeClass
     public static void setUp() throws Exception {
-        fbManager = FBTestProperties.defaultDatabaseSetUp();
+        fbManager = createFBManager();
+        defaultDatabaseSetUp(fbManager);
         // We create a connection and statement for all tests executed for performance reasons
-        con = FBTestProperties.getConnectionViaDriverManager();
+        con = getConnectionViaDriverManager();
         stmt = con.createStatement();
     }
     
     @AfterClass
     public static void tearDown() throws Exception {
-        JdbcResourceHelper.closeQuietly(stmt);
-        JdbcResourceHelper.closeQuietly(con);
-        FBTestProperties.defaultDatabaseTearDown(fbManager);
+        closeQuietly(stmt);
+        closeQuietly(con);
+        defaultDatabaseTearDown(fbManager);
         fbManager = null;
     }
     
@@ -78,6 +81,8 @@ public class TestScalarNumericFunctions {
      * @param expectedResult
      *            Expected value as result of using the function against the
      *            database
+     * @param supported
+     *            <code>true</code> function is supported, <code>false</code> when not supported
      */
     public TestScalarNumericFunctions(String functionCall, Double expectedResult, Boolean supported) {
         this.functionCall = functionCall;
@@ -138,7 +143,7 @@ public class TestScalarNumericFunctions {
                 //fail("Validation of unsupported functions not yet implemented");
             }
         } finally {
-            JdbcResourceHelper.closeQuietly(rs);
+            closeQuietly(rs);
         }
     }
     
