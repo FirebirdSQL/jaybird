@@ -27,6 +27,8 @@ import org.firebirdsql.gds.ng.listeners.StatementListener;
 import org.firebirdsql.gds.ng.listeners.StatementListenerDispatcher;
 import org.firebirdsql.gds.ng.listeners.TransactionListener;
 import org.firebirdsql.jdbc.FBSQLException;
+import org.firebirdsql.logging.Logger;
+import org.firebirdsql.logging.LoggerFactory;
 
 import java.sql.SQLException;
 import java.sql.SQLNonTransientException;
@@ -45,6 +47,7 @@ public abstract class AbstractFbStatement implements FbStatement {
      * Set of states that will be reset to {@link StatementState#PREPARED} on transaction change
      */
     private static final EnumSet<StatementState> RESET_TO_PREPARED = EnumSet.of(StatementState.EXECUTING, StatementState.CURSOR_OPEN);
+    private static final Logger log = LoggerFactory.getLogger(AbstractFbStatement.class, false);
 
     private final Object syncObject = new Object();
     private final WarningMessageCallback warningCallback = new WarningMessageCallback() {
@@ -80,6 +83,7 @@ public abstract class AbstractFbStatement implements FbStatement {
                     try {
                         setTransaction(null);
                     } catch (SQLException e) {
+                        //noinspection ThrowFromFinallyBlock
                         throw new IllegalStateException("Received an SQLException when none was expected", e);
                     }
                 }
@@ -112,8 +116,12 @@ public abstract class AbstractFbStatement implements FbStatement {
             ISCConstants.isc_info_sql_records
     };
 
-    @Override
-    public final Object getSynchronizationObject() {
+    /**
+     * Get synchronization object.
+     *
+     * @return object, cannot be <code>null</code>.
+     */
+    protected final Object getSynchronizationObject() {
         return syncObject;
     }
 
@@ -123,14 +131,15 @@ public abstract class AbstractFbStatement implements FbStatement {
         synchronized (getSynchronizationObject()) {
             // TODO do additional checks (see also old implementation and .NET)
             try {
-                if (getState() != StatementState.NEW) {
+                final StatementState currentState = getState();
+                forceState(StatementState.CLOSING);
+                if (currentState != StatementState.NEW) {
                     free(ISCConstants.DSQL_drop);
                 }
             } finally {
-                switchState(StatementState.CLOSED);
+                forceState(StatementState.CLOSED);
                 setType(StatementType.NONE);
-                // TODO Call statementListenerDispatcher.shutdown() instead? Or are we going to allow reuse? If so is removeAll here correct?
-                statementListenerDispatcher.removeAllListeners();
+                statementListenerDispatcher.shutdown();
                 setTransaction(null);
             }
         }
@@ -181,6 +190,31 @@ public abstract class AbstractFbStatement implements FbStatement {
         }
     }
 
+    /**
+     * Forces the statement to the specified state without throwing an exception if this is not a valid transition.
+     * <p>
+     * Does nothing if current state is CLOSED.
+     * </p>
+     *
+     * @param newState
+     *         New state
+     * @see #switchState(StatementState)
+     */
+    private void forceState(final StatementState newState) {
+        synchronized (getSynchronizationObject()) {
+            final StatementState currentState = state;
+            if (currentState == newState || currentState == StatementState.CLOSED) return;
+            if (log.isDebugEnabled() && !currentState.isValidTransition(newState)) {
+                log.debug(
+                        String.format("Forced statement transition is invalid; state %s only allows next states %s, forced to set %s",
+                                currentState, currentState.validTransitionSet(), newState),
+                        new IllegalStateException());
+            }
+            state = newState;
+            statementListenerDispatcher.statementStateChanged(this, newState, currentState);
+        }
+    }
+
     @Override
     public final StatementType getType() {
         return type;
@@ -209,14 +243,14 @@ public abstract class AbstractFbStatement implements FbStatement {
      *         Row data
      */
     protected final void queueRowData(List<FieldValue> rowData) {
-        statementListenerDispatcher.newRow(this, rowData);
+        statementListenerDispatcher.receivedRow(this, rowData);
     }
 
     /**
      * Sets the <code>allRowsFetched</code> property.
      * <p>
-     * When set to true all registered {@link org.firebirdsql.gds.ng.listeners.StatementListener} instances are notified for the {@link org.firebirdsql.gds.ng.listeners.StatementListener#allRowsFetched(FbStatement)}
-     * event.
+     * When set to true all registered {@link org.firebirdsql.gds.ng.listeners.StatementListener} instances are notified
+     * for the {@link org.firebirdsql.gds.ng.listeners.StatementListener#allRowsFetched(FbStatement)} event.
      * </p>
      *
      * @param allRowsFetched
@@ -482,7 +516,8 @@ public abstract class AbstractFbStatement implements FbStatement {
     /**
      * Method to decide if a transaction implementation class is valid for the statement implementation.
      * <p>
-     * Eg a V10Statement will only work with an FbWireTransaction implementation.
+     * Eg a {@link org.firebirdsql.gds.ng.wire.version10.V10Statement} will only work with an
+     * {@link org.firebirdsql.gds.ng.wire.FbWireTransaction} implementation.
      * </p>
      *
      * @param transactionClass
@@ -495,6 +530,7 @@ public abstract class AbstractFbStatement implements FbStatement {
     public final void setTransaction(final FbTransaction newTransaction) throws SQLException {
         if (newTransaction == null || isValidTransactionClass(newTransaction.getClass())) {
             // TODO Is there a statement or transaction state where we should not be switching transactions?
+            // Probably an error to switch when newTransaction is not null and current state is ERROR, CURSOR_OPEN, EXECUTING, CLOSING or CLOSED
             synchronized (getSynchronizationObject()) {
                 if (newTransaction == transaction) return;
                 if (transaction != null) {

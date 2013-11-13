@@ -34,7 +34,7 @@ import java.util.Set;
  * Statement states for {@link FbStatement} implementations
  *
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
- * @since 2.3
+ * @since 3.0
  */
 public enum StatementState {
     /**
@@ -43,7 +43,17 @@ public enum StatementState {
     NEW {
         @Override
         EnumSet<StatementState> createValidTransitionSet() {
-            return EnumSet.of(ERROR, ALLOCATED, CLOSED, NEW);
+            return EnumSet.of(ERROR, ALLOCATED, CLOSING, NEW);
+        }
+    },
+    /**
+     * A statement is being closed, this is an ephemeral state that should only last as long as releasing resources on the
+     * database takes.
+     */
+    CLOSING {
+        @Override
+        Set<StatementState> createValidTransitionSet() {
+            return EnumSet.of(CLOSED, ERROR);
         }
     },
     /**
@@ -61,7 +71,7 @@ public enum StatementState {
     ALLOCATED {
         @Override
         EnumSet<StatementState> createValidTransitionSet() {
-            return EnumSet.of(ERROR, PREPARED, CLOSED);
+            return EnumSet.of(ERROR, PREPARED, CLOSING);
         }
     },
     /**
@@ -70,7 +80,7 @@ public enum StatementState {
     PREPARED {
         @Override
         EnumSet<StatementState> createValidTransitionSet() {
-            return EnumSet.of(ERROR, EXECUTING, CLOSED, PREPARED);
+            return EnumSet.of(ERROR, EXECUTING, CLOSING, PREPARED);
         }
     },
     /**
@@ -79,7 +89,7 @@ public enum StatementState {
     EXECUTING {
         @Override
         EnumSet<StatementState> createValidTransitionSet() {
-            return EnumSet.of(ERROR, CURSOR_OPEN, PREPARED, CLOSED);
+            return EnumSet.of(ERROR, CURSOR_OPEN, PREPARED, CLOSING);
         }
     },
     /**
@@ -93,7 +103,7 @@ public enum StatementState {
 
         @Override
         EnumSet<StatementState> createValidTransitionSet() {
-            return EnumSet.of(ERROR, PREPARED, CLOSED);
+            return EnumSet.of(ERROR, PREPARED, CLOSING);
         }
     },
     /**
@@ -114,7 +124,7 @@ public enum StatementState {
 
         @Override
         EnumSet<StatementState> createValidTransitionSet() {
-            return EnumSet.of(ERROR, CLOSED);
+            return EnumSet.of(ERROR, CLOSING);
         }
     };
 

@@ -22,7 +22,6 @@ package org.firebirdsql.gds.ng.wire.version10;
 
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.TransactionParameterBuffer;
-import org.firebirdsql.gds.impl.wire.XdrInputStream;
 import org.firebirdsql.gds.impl.wire.XdrOutputStream;
 import org.firebirdsql.gds.impl.wire.Xdrable;
 import org.firebirdsql.gds.ng.AbstractFbTransaction;
@@ -47,7 +46,6 @@ import static org.firebirdsql.gds.impl.wire.WireProtocolConstants.*;
 public class V10Transaction extends AbstractFbTransaction implements FbWireTransaction {
 
     private final FbWireDatabase database;
-    private final Object syncObject = new Object();
     private volatile int handle;
 
     /**
@@ -61,10 +59,6 @@ public class V10Transaction extends AbstractFbTransaction implements FbWireTrans
 
     protected final XdrOutputStream getXdrOut() throws SQLException {
         return database.getXdrStreamAccess().getXdrOut();
-    }
-
-    protected final Object getSynchronizationObject() {
-        return syncObject;
     }
 
     protected final FbWireDatabase getDatabase() {
