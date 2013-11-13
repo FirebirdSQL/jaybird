@@ -35,7 +35,7 @@ import java.util.List;
 
 /**
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
- * @since 2.3
+ * @since 3.0
  */
 public interface FbStatement {
 
@@ -135,13 +135,6 @@ public interface FbStatement {
 //     * @throws SQLException
 //     */
 //    void execute(String statementText) throws SQLException;
-
-    /**
-     * Get synchronization object.
-     *
-     * @return object, cannot be <code>null</code>.
-     */
-    Object getSynchronizationObject();
 
     /**
      * Requests this statement to fetch the next <code>fetchSize</code> rows.

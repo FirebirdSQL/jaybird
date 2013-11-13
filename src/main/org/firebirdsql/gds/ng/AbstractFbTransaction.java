@@ -1,7 +1,7 @@
 /*
  * $Id$
  * 
- * Firebird Open Source J2EE Connector - JDBC Driver
+ * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -14,7 +14,7 @@
  * This file was created by members of the firebird development team.
  * All individual contributions remain the Copyright (C) of those
  * individuals.  Contributors to this file are either listed here or
- * can be obtained from a CVS history command.
+ * can be obtained from a source control history command.
  *
  * All rights reserved.
  */
@@ -24,21 +24,20 @@ import org.firebirdsql.gds.ng.listeners.TransactionListener;
 import org.firebirdsql.gds.ng.listeners.TransactionListenerDispatcher;
 
 import java.sql.SQLException;
-import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
- * @since 2.3
+ * @since 3.0
  */
 public abstract class AbstractFbTransaction implements FbTransaction {
 
+    private final Object syncObject = new Object();
     protected final TransactionListenerDispatcher transactionListenerDispatcher = new TransactionListenerDispatcher();
-    private final AtomicReference<TransactionState> state = new AtomicReference<TransactionState>(
-            TransactionState.NO_TRANSACTION);
+    private volatile TransactionState state = TransactionState.NO_TRANSACTION;
 
     @Override
     public final TransactionState getState() {
-        return state.get();
+        return state;
     }
 
     /**
@@ -51,21 +50,17 @@ public abstract class AbstractFbTransaction implements FbTransaction {
      *             current state is also changed in a concurrent thread.
      */
     protected final void switchState(final TransactionState newState) throws SQLException {
-        final TransactionState currentState = state.get();
-        if (currentState.isValidTransition(newState)) {
-            if (state.compareAndSet(currentState, newState)) {
+        synchronized (getSynchronizationObject()) {
+            final TransactionState currentState = state;
+            if (currentState == newState) return;
+            if (currentState.isValidTransition(newState)) {
+                state = newState;
                 transactionListenerDispatcher.transactionStateChanged(this, newState, currentState);
             } else {
-                // Note: race condition when generating message (get() could return same value as currentState)
                 // TODO Include sqlstate
-                throw new SQLException(String.format(
-                        "Unable to change transaction state: expected current state %s, but was %s", currentState,
-                        state.get()));
+                throw new SQLException(String.format("Unable to change transaction state: state %s is not valid after %s",
+                        newState, currentState));
             }
-        } else {
-            // TODO Include sqlstate
-            throw new SQLException(String.format("Unable to change transaction state: state %s is not valid after %s",
-                    newState, currentState));
         }
     }
 
@@ -77,6 +72,15 @@ public abstract class AbstractFbTransaction implements FbTransaction {
     @Override
     public final void removeTransactionListener(TransactionListener listener) {
         transactionListenerDispatcher.removeListener(listener);
+    }
+
+    /**
+     * Get synchronization object.
+     *
+     * @return object, cannot be <code>null</code>.
+     */
+    protected final Object getSynchronizationObject() {
+        return syncObject;
     }
 
     @Override

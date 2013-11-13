@@ -39,19 +39,19 @@ import java.util.List;
  * an {@link org.firebirdsql.gds.ng.FbStatement#fetchRows(int)}, or {@link org.firebirdsql.gds.ng.FbStatement#execute(java.util.List)} with a singleton result.
  *
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
- * @since 2.3
+ * @since 3.0
  */
 public interface StatementListener {
 
     /**
-     * Method to receive a new row of data.
+     * Method to be notified of a new row of data.
      *
      * @param sender
      *         The <code>FbStatement</code> that called this method.
      * @param rowData
      *         The rowData as list. Implementer may choose to use an immutable <code>List</code>.
      */
-    void newRow(FbStatement sender, List<FieldValue> rowData);
+    void receivedRow(FbStatement sender, List<FieldValue> rowData);
 
     /**
      * Method to be notified when all rows have been fetched.

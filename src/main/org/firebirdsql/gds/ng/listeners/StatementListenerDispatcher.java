@@ -1,7 +1,7 @@
 /*
  * $Id$
  * 
- * Firebird Open Source J2EE Connector - JDBC Driver
+ * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -14,7 +14,7 @@
  * This file was created by members of the firebird development team.
  * All individual contributions remain the Copyright (C) of those
  * individuals.  Contributors to this file are either listed here or
- * can be obtained from a CVS history command.
+ * can be obtained from a source control history command.
  *
  * All rights reserved.
  */
@@ -32,15 +32,15 @@ import java.util.*;
  * Dispatcher to maintain and notify other {@link StatementListener}.
  *
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
- * @since 2.3
+ * @since 3.0
  */
 public final class StatementListenerDispatcher extends AbstractListenerDispatcher<StatementListener> implements StatementListener {
 
     @Override
-    public void newRow(final FbStatement sender, final List<FieldValue> rowData) {
+    public void receivedRow(final FbStatement sender, final List<FieldValue> rowData) {
         for (StatementListener listener : this) {
             try {
-                listener.newRow(sender, rowData);
+                listener.receivedRow(sender, rowData);
             } catch (Exception e) {
                 // Ignore // TODO: log
             }

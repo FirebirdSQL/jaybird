@@ -81,7 +81,7 @@ of writing) will add basic support for Java 8 (JDBC 4.2), although not all
 JDBC 4.2 features will be supported or fully implemented.
 
 Jaybird 2.2.x is the last version to support Java 5, support will be dropped
-with Jaybird 2.3
+with Jaybird 3.0.
 
 Which Firebird versions are supported?
 --------------------------------------
@@ -347,7 +347,7 @@ Does Jaybird support connection pooling?
 Jaybird itself no longer provides connection pooling. Earlier versions had a
 `DataSource` implementation with connection pooling, but this implementation had
 severe bugs. This implementation (and all other classes in
-`org.firebirdsql.pool`) was deprecated in 2.2 and dropped 2.3.
+`org.firebirdsql.pool`) was deprecated in 2.2 and dropped 3.0.
 
 Jaybird provides a basic `DataSource` implementation and a
 `ConnectionPoolDataSource` implementation. Contrary to its name the latter does
