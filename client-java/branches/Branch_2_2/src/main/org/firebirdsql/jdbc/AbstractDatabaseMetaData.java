@@ -57,14 +57,13 @@ import org.firebirdsql.logging.LoggerFactory;
 public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaData {
 
     private final static Logger log = LoggerFactory.getLogger(FBDatabaseMetaData.class,false);
-    public static final String SPACES = "                               ";//31 spaces
+    private static final String SPACES_31 = "                               "; // 31 spaces
+    private static final String SPACES_15 = "               "; // 15 spaces
 
     private GDSHelper gdsHelper;
     private AbstractConnection connection;
 
     HashMap statements = new HashMap();
-
-    //PreparedStatement tables = null;
 
     protected AbstractDatabaseMetaData(GDSHelper gdsHelper) {
         this.gdsHelper = gdsHelper;
@@ -2354,15 +2353,15 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
     private static final String GET_TABLES_LIKE = 
           TABLE_COLUMNS_SYSTEM
         + " where ? = 'T' and RDB$SYSTEM_FLAG = 1 and RDB$VIEW_SOURCE is null"
-        + " and RDB$RELATION_NAME || '" + SPACES + "' like ? escape '\\'"
+        + " and RDB$RELATION_NAME || '" + SPACES_31 + "' like ? escape '\\'"
         + " union"
         + TABLE_COLUMNS_NORMAL
         + " where ? = 'T' and RDB$SYSTEM_FLAG = 0 and RDB$VIEW_SOURCE is null"
-        + " and RDB$RELATION_NAME || '" + SPACES + "' like ? escape '\\'"
+        + " and RDB$RELATION_NAME || '" + SPACES_31 + "' like ? escape '\\'"
         + " union"
         + TABLE_COLUMNS_VIEW
         + " where ? = 'T' and RDB$VIEW_SOURCE is not null"
-        + " and RDB$RELATION_NAME || '" + SPACES + "' like ? escape '\\' "
+        + " and RDB$RELATION_NAME || '" + SPACES_31 + "' like ? escape '\\' "
         + " order by 3 ";
 
     /**
@@ -2441,8 +2440,9 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
             params.add(tableNamePattern);
         }
         else {
-            // TODO Usages of 1) uppercase and 2) SPACES + % might be wrong
-            tableNamePattern = stripQuotes(tableNamePattern, true) + SPACES + "%";
+            // TODO Usages of 1) uppercase and 2) SPACES_15 + % might be wrong
+            // See also comment in Clause for explanation
+            tableNamePattern = stripQuotes(tableNamePattern, true) + SPACES_15 + "%";
             sql = GET_TABLES_LIKE;
             params.add(getWantsSystemTables(types));
             params.add(tableNamePattern);
@@ -6122,9 +6122,11 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
                 condition = "CAST(" + columnName + " AS VARCHAR(40)) = ? and ";
             }
             else {
-                value = stripQuotes(pattern, true) + SPACES + "%";
-                originalCaseValue = stripQuotes(pattern, false) + SPACES + "%";
-                condition = columnName + " || '" + SPACES + "' like ? escape '\\' and ";
+                // We are padding the column with 31 spaces to accommodate arguments longer than the actual column length.
+                // The argument itself is padded with 15 spaces and a % to prevent false positives, this allows 15 character longer patterns
+                value = stripQuotes(pattern, true) + SPACES_15 + "%";
+                originalCaseValue = stripQuotes(pattern, false) + SPACES_15 + "%";
+                condition = columnName + " || '" + SPACES_31 + "' like ? escape '\\' and ";
             }
         }
 
