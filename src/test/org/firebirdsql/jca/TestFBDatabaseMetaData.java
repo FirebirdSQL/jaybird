@@ -307,6 +307,40 @@ public class TestFBDatabaseMetaData extends TestXABase {
         dropTable("TABLE_A_B");
     }
 
+    /**
+     * Using a table name of 31 characters for {@link DatabaseMetaData#getTables(String, String, String, String[])}
+     * should return a result.
+     */
+    public void testGetTablesLongTableName() throws Exception {
+        String tableName = "PLANILLAS_PREVISION_MANTENIMIEN";
+        createTable(tableName);
+        try {
+            t.begin();
+            ResultSet rs = dmd.getTables(null, null, tableName, null);
+            assertTrue("Should return primary key information", rs.next());
+            t.commit();
+        } finally {
+            dropTable(tableName);
+        }
+    }
+
+    /**
+     * Using a table name of 31 characters for {@link DatabaseMetaData#getTables(String, String, String, String[])}
+     * and a pattern consisting of the full name + the <code>%</code> symbol should return a result.
+     */
+    public void testGetTablesLongTableName_WithWildcard() throws Exception {
+        String tableName = "PLANILLAS_PREVISION_MANTENIMIEN";
+        createTable(tableName);
+        try {
+            t.begin();
+            ResultSet rs = dmd.getTables(null, null, tableName + "%", null);
+            assertTrue("Should return primary key information", rs.next());
+            t.commit();
+        } finally {
+            dropTable(tableName);
+        }
+    }
+
     public void testGetProcedures() throws Exception {
         if (log != null) log.info("testGetProcedures");
         createProcedure("testproc1", true);
@@ -488,13 +522,34 @@ public class TestFBDatabaseMetaData extends TestXABase {
         }
     }
 
-    public void testLongTableName() throws Exception {
+    /**
+     * Using a table name of 31 characters for {@link DatabaseMetaData#getPrimaryKeys(String, String, String)}
+     * should return a result.
+     */
+    public void testGetPrimaryKeysLongTableName() throws Exception {
         String tableName = "PLANILLAS_PREVISION_MANTENIMIEN";
         createTable(tableName);
         try {
             t.begin();
             ResultSet rs = dmd.getPrimaryKeys(null, null, tableName);
             assertTrue("Should return primary key information", rs.next());
+            t.commit();
+        } finally {
+            dropTable(tableName);
+        }
+    }
+
+    /**
+     * {@link DatabaseMetaData#getPrimaryKeys(String, String, String)} should not accept a LIKE pattern.
+     */
+    public void testGetPrimaryKeys_LikePattern_NoResult() throws Exception {
+        String tableName = "PLANILLAS_PREVISION_MANTENIMIEN";
+        String tableNamePattern = "PLANILLAS_PREVISION_%";
+        createTable(tableName);
+        try {
+            t.begin();
+            ResultSet rs = dmd.getPrimaryKeys(null, null, tableNamePattern);
+            assertFalse("Should return primary key information", rs.next());
             t.commit();
         } finally {
             dropTable(tableName);
