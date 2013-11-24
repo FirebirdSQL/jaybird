@@ -2830,7 +2830,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
         + "RF.RDB$FIELD_SOURCE = F.RDB$FIELD_NAME  and "
         + "(UP.RDB$FIELD_NAME is null or "
         + "UP.RDB$FIELD_NAME = RF.RDB$FIELD_NAME) and "
-        + "UP.RDB$RELATION_NAME = ? and ((";
+        + "CAST(UP.RDB$RELATION_NAME AS VARCHAR(40)) = ? and ((";
     private static final String GET_COLUMN_PRIVILEGES_END = " UP.RDB$OBJECT_TYPE = 0) or "
         + "(RF.RDB$FIELD_NAME is null and UP.RDB$OBJECT_TYPE = 0)) "
         + "order by 2,5 ";
@@ -3081,29 +3081,20 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
     }
 
     private static final String GET_BEST_ROW_IDENT =
-        "select " +
-        "cast(rf.rdb$field_name as varchar(31)) as column_name," +
-        "f.rdb$field_type as field_type," +
-        "f.rdb$field_sub_type as field_sub_type," +
-        "f.rdb$field_scale as field_scale," +
-        "f.rdb$field_precision as field_precision " +
-        "from " +
-        "rdb$relation_constraints rc," +
-        "rdb$index_segments idx," +
-        "rdb$relation_fields rf," +
-        "rdb$fields f " +
-        "where " +
-        "rc.rdb$relation_name = ? " +
-        "and " +
-        "rc.rdb$constraint_type = 'PRIMARY KEY' " +
-        "and " +
-        "idx.rdb$index_name = rc.rdb$index_name " +
-        "and " +
-        "rf.rdb$field_name = idx.rdb$field_name " +
-        "and " +
-        "rf.rdb$relation_name = ? " +
-        "and " +
-        "f.rdb$field_name = rf.rdb$field_source";
+            "SELECT " +
+            "CAST(rf.rdb$field_name AS varchar(31)) AS column_name, " +
+            "f.rdb$field_type AS field_type, " +
+            "f.rdb$field_sub_type AS field_sub_type, " +
+            "f.rdb$field_scale AS field_scale, " +
+            "f.rdb$field_precision AS field_precision " +
+            "FROM rdb$relation_constraints rc " +
+            "INNER JOIN rdb$index_segments idx ON idx.rdb$index_name = rc.rdb$index_name " +
+            "INNER JOIN rdb$relation_fields rf ON rf.rdb$field_name = idx.rdb$field_name " +
+            "    AND rf.rdb$relation_name = rc.rdb$relation_name " +
+            "INNER JOIN rdb$fields f ON f.rdb$field_name = rf.rdb$field_source " +
+            "WHERE " +
+            "CAST(rc.rdb$relation_name AS VARCHAR(40)) = ? " +
+            "AND rc.rdb$constraint_type = 'PRIMARY KEY'";
 
     /**
      * Gets a description of a table's optimal set of columns that
@@ -3158,7 +3149,9 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
         ResultSet tables = null;
         List<byte[][]> rows = null;
         try {
-            tables = getTables(catalog, schema, table, null);
+            // Check if table exists, need to escape as getTables takes a pattern
+            String quoteLikeTable = table != null ? table.replaceAll("([_%])", "\\\\$1") : null;
+            tables = getTables(catalog, schema, quoteLikeTable, null);
             if (!tables.next())
                 return new FBResultSet(xsqlvars, Collections.<byte[][]>emptyList());
             rows = getPrimaryKeyIdentifier(tables.getString(3), scope, xsqlvars);
@@ -3199,10 +3192,9 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
     private List<byte[][]> getPrimaryKeyIdentifier(String table, int scope, XSQLVAR[] xsqlvars) throws SQLException {
         List<byte[][]> rows = new ArrayList<byte[][]>();
 
-        List<String> params = new ArrayList<String>(2);
+        List<String> params = new ArrayList<String>(1);
         params.add(table);
-        params.add(table);
-        
+
         ResultSet rs = doQuery(GET_BEST_ROW_IDENT, params);
         
         while (rs.next()) {
@@ -3273,7 +3265,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
         return new FBResultSet(xsqlvars, rows);
     }
 
-    private static final String GET_PRIMARY_KEYS_START = "select "
+    private static final String GET_PRIMARY_KEYS = "select "
         /*+ " null as TABLE_CAT, "
         + " null as TABLE_SCHEM, "*/
         + "cast(RC.RDB$RELATION_NAME as varchar(31)) as TABLE_NAME,"
@@ -3281,12 +3273,9 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
         + "CAST((ISGMT.RDB$FIELD_POSITION + 1) as SMALLINT) as KEY_SEQ,"
         + "cast(RC.RDB$CONSTRAINT_NAME as varchar(31)) as PK_NAME "
         + "from "
-        + "RDB$RELATION_CONSTRAINTS RC, "
-        + "RDB$INDEX_SEGMENTS ISGMT "
-        + "where ";
-
-    private static final String GET_PRIMARY_KEYS_END =
-        "RC.RDB$INDEX_NAME = ISGMT.RDB$INDEX_NAME and "
+        + "RDB$RELATION_CONSTRAINTS RC "
+        + "INNER JOIN RDB$INDEX_SEGMENTS ISGMT ON RC.RDB$INDEX_NAME = ISGMT.RDB$INDEX_NAME "
+        + "where CAST(RC.RDB$RELATION_NAME AS VARCHAR(40)) = ? and "
         + "RC.RDB$CONSTRAINT_TYPE = 'PRIMARY KEY' "
         + "order by ISGMT.RDB$FIELD_NAME ";
 
@@ -3325,29 +3314,19 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
         xsqlvars[4] = new XSQLVAR(ISCConstants.SQL_SHORT, 0, "KEY_SEQ", "COLUMNINFO");
         xsqlvars[5] = new XSQLVAR(ISCConstants.SQL_VARYING, 31, "PK_NAME", "COLUMNINFO");
 
-        Clause tableClause = new Clause("RC.RDB$RELATION_NAME", table);
-
-        String sql = GET_PRIMARY_KEYS_START;
-        sql += tableClause.getCondition();
-        sql += GET_PRIMARY_KEYS_END;
-        
         // check the original case identifiers
         List<String> params = new ArrayList<String>();
-        if (!tableClause.getCondition().equals("")) {
-            params.add(tableClause.getOriginalCaseValue());
-        }
+        params.add(stripQuotes(stripEscape(table), false));
         
-        ResultSet rs = doQuery(sql, params);
+        ResultSet rs = doQuery(GET_PRIMARY_KEYS, params);
         
         // if nothing found, check the uppercased identifier
         if (!rs.next()) {
             rs.close();
             params.clear();
-            if (!tableClause.getCondition().equals("")) {
-                params.add(tableClause.getValue());
-            }
-            
-            rs = doQuery(sql, params);
+            params.add(stripQuotes(stripEscape(table), true));
+
+            rs = doQuery(GET_PRIMARY_KEYS, params);
             
             // if nothing found, return empty result set
             if (!rs.next()) {
@@ -3372,7 +3351,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
         return new FBResultSet(xsqlvars, rows);
     }
 
-    private static final String GET_IMPORTED_KEYS_START = "select "
+    private static final String GET_IMPORTED_KEYS = "select "
     /*+" null as PKTABLE_CAT "
     +" ,null as PKTABLE_SCHEM "*/
     +"cast(PK.RDB$RELATION_NAME as varchar(31)) as PKTABLE_NAME"
@@ -3393,10 +3372,8 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
     +",RDB$REF_CONSTRAINTS RC"
     +",RDB$INDEX_SEGMENTS ISP"
     +",RDB$INDEX_SEGMENTS ISF "
-    +"WHERE ";
-
-    private static final String GET_IMPORTED_KEYS_END =
-    " FK.RDB$CONSTRAINT_NAME = RC.RDB$CONSTRAINT_NAME "
+    +"WHERE CAST(FK.RDB$RELATION_NAME AS VARCHAR(40)) = ? and "
+    +" FK.RDB$CONSTRAINT_NAME = RC.RDB$CONSTRAINT_NAME "
     +"and PK.RDB$CONSTRAINT_NAME = RC.RDB$CONST_NAME_UQ "
     +"and ISP.RDB$INDEX_NAME = PK.RDB$INDEX_NAME "
     +"and ISF.RDB$INDEX_NAME = FK.RDB$INDEX_NAME "
@@ -3513,17 +3490,11 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
         xsqlvars[12] = new XSQLVAR(ISCConstants.SQL_VARYING, 31, "PK_NAME", "COLUMNINFO");
         xsqlvars[13] = new XSQLVAR(ISCConstants.SQL_SHORT, 0, "DEFERRABILITY", "COLUMNINFO");
 
-        Clause tableClause = new Clause("FK.RDB$RELATION_NAME", table);
-        
-        String sql = GET_IMPORTED_KEYS_START;
-        sql += tableClause.getCondition();
-        sql += GET_IMPORTED_KEYS_END;
+        String sql = GET_IMPORTED_KEYS;
 
         // check the original case identifiers first
         List<String> params = new ArrayList<String>();
-        if (!tableClause.getCondition().equals("")) {
-            params.add(tableClause.getOriginalCaseValue());
-        }
+        params.add(stripQuotes(stripEscape(table), false));
         
         ResultSet rs = doQuery(sql, params);
         
@@ -3531,9 +3502,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
         if (!rs.next()) {
             rs.close();
             params.clear();
-            if (!tableClause.getCondition().equals("")) {
-                params.add(tableClause.getValue());
-            }
+            params.add(stripQuotes(stripEscape(table), true));
             
             rs = doQuery(sql, params);
             
@@ -3746,7 +3715,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
         return new FBResultSet(xsqlvars, rows);
     }
 
-    private static final String GET_CROSS_KEYS_START = "select "
+    private static final String GET_CROSS_KEYS = "select "
     /*+" null as PKTABLE_CAT "
     +" ,null as PKTABLE_SCHEM "*/
     +"cast(PK.RDB$RELATION_NAME as varchar(31)) as PKTABLE_NAME"
@@ -3767,10 +3736,9 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
     +",RDB$REF_CONSTRAINTS RC"
     +",RDB$INDEX_SEGMENTS ISP"
     +",RDB$INDEX_SEGMENTS ISF "
-    +"WHERE ";
-
-    private static final String GET_CROSS_KEYS_END =
-    " FK.RDB$CONSTRAINT_NAME = RC.RDB$CONSTRAINT_NAME "
+    +"WHERE CAST(PK.RDB$RELATION_NAME AS VARCHAR(40)) = ? and "
+    +"CAST(FK.RDB$RELATION_NAME AS VARCHAR(40)) = ? and "
+    +" FK.RDB$CONSTRAINT_NAME = RC.RDB$CONSTRAINT_NAME "
     +"and PK.RDB$CONSTRAINT_NAME = RC.RDB$CONST_NAME_UQ "
     +"and ISP.RDB$INDEX_NAME = PK.RDB$INDEX_NAME "
     +"and ISF.RDB$INDEX_NAME = FK.RDB$INDEX_NAME "
@@ -3877,23 +3845,13 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
         xsqlvars[12] = new XSQLVAR(ISCConstants.SQL_VARYING, 31, "PK_NAME", "COLUMNINFO");
         xsqlvars[13] = new XSQLVAR(ISCConstants.SQL_SHORT, 0, "DEFERRABILITY", "COLUMNINFO");
 
-        Clause primaryTableClause = new Clause("PK.RDB$RELATION_NAME", primaryTable);
-        Clause foreignTableClause = new Clause("FK.RDB$RELATION_NAME", foreignTable);
-        
-        String sql = GET_CROSS_KEYS_START;
-        sql += primaryTableClause.getCondition();
-        sql += foreignTableClause.getCondition();
-        sql += GET_CROSS_KEYS_END;
+        String sql = GET_CROSS_KEYS;
         
         List<String> params = new ArrayList<String>();
         
         // check the original case first
-        if (!primaryTableClause.getCondition().equals("")) {
-            params.add(primaryTableClause.getOriginalCaseValue());
-        }
-        if (!foreignTableClause.getCondition().equals("")) {
-            params.add(foreignTableClause.getOriginalCaseValue());
-        }
+        params.add(stripQuotes(stripEscape(primaryTable), false));
+        params.add(stripQuotes(stripEscape(foreignTable), false));
 
         ResultSet rs = doQuery(sql, params);
 
@@ -3901,12 +3859,8 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
         if (!rs.next()) {
             rs.close();
             params.clear();
-            if (!primaryTableClause.getCondition().equals("")) {
-                params.add(primaryTableClause.getValue());
-            }
-            if (!foreignTableClause.getCondition().equals("")) {
-                params.add(foreignTableClause.getValue());
-            }
+            params.add(stripQuotes(stripEscape(primaryTable), true));
+            params.add(stripQuotes(stripEscape(foreignTable), true));
 
             rs = doQuery(sql, params);
             
@@ -4127,7 +4081,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
         return new FBResultSet(xsqlvars, rows);
     }
 
-    private static final String GET_INDEX_INFO_START = "SELECT "
+    private static final String GET_INDEX_INFO = "SELECT "
         + "cast(ind.RDB$RELATION_NAME as varchar(31)) AS TABLE_NAME"
         + ",ind.RDB$UNIQUE_FLAG AS UNIQUE_FLAG"
         + ",cast(ind.RDB$INDEX_NAME as varchar(31)) as INDEX_NAME"
@@ -4137,18 +4091,9 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
         + ",ind.RDB$INDEX_TYPE as ASC_OR_DESC "
         + "FROM "
         + "rdb$indices ind "
-        + "LEFT JOIN rdb$index_segments ise ON ind.rdb$index_name = ise.rdb$index_name ";
-
-    private static final String GET_INDEX_INFO =
-        GET_INDEX_INFO_START
+        + "LEFT JOIN rdb$index_segments ise ON ind.rdb$index_name = ise.rdb$index_name "
         + "WHERE "
-        + "ind.rdb$relation_name = ? "
-        + "ORDER BY 2, 3, 4";
-
-    private static final String GET_INDEX_INFO_UPPER =
-        GET_INDEX_INFO_START
-        + "WHERE "
-        + "UPPER(ind.rdb$relation_name) = ? "
+        + "CAST(ind.rdb$relation_name AS VARCHAR(40)) = ? "
         + "ORDER BY 2, 3, 4";
 
     /**
@@ -4228,16 +4173,16 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
         }
 
         List<String> params = new ArrayList<String>();
-        params.add(table);
+        params.add(stripQuotes(stripEscape(table), false));
 
         ResultSet rs = doQuery(GET_INDEX_INFO, params);
 
         // if no direct match happened, check the uppercased match
         if (!rs.next()) {
             rs.close();
-            params.set(0, table.toUpperCase());
-            rs = doQuery(GET_INDEX_INFO_UPPER, params);
-            
+            params.set(0, stripQuotes(stripEscape(table), true));
+            rs = doQuery(GET_INDEX_INFO, params);
+
             // open the second result set and check whether we have rows
             // if no rows are available, we have to exit now, otherwise the 
             // following do/while loop will throw SQLException that the
@@ -5045,6 +4990,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
      * @return pattern with all backslash-escapes removed
      */
     public static String stripEscape(String pattern) {
+        if (pattern == null) return null;
         StringBuilder stripped = new StringBuilder(pattern.length());
         for (int pos = 0; pos < pattern.length(); pos++) {
             if (pattern.charAt(pos) != '\\') {
@@ -5089,6 +5035,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
      * removed
      */
     public static String stripQuotes(String pattern, boolean uppercase) {
+        if (pattern == null) return null;
         if ((pattern.length() >= 2)
             && (pattern.charAt(0) == '\"')
             && (pattern.charAt(pattern.length() - 1) == '\"'))
