@@ -3104,7 +3104,7 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
         + "RF.RDB$FIELD_SOURCE = F.RDB$FIELD_NAME  and "
         + "(UP.RDB$FIELD_NAME is null or "
         + "UP.RDB$FIELD_NAME = RF.RDB$FIELD_NAME) and "
-        + "UP.RDB$RELATION_NAME = ? and ((";
+        + "CAST(UP.RDB$RELATION_NAME AS VARCHAR(40)) = ? and ((";
     private static final String GET_COLUMN_PRIVILEGES_END = " UP.RDB$OBJECT_TYPE = 0) or "
         + "(RF.RDB$FIELD_NAME is null and UP.RDB$OBJECT_TYPE = 0)) "
         + "order by 2,5 ";
@@ -3432,29 +3432,20 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
     }
 
     private static final String GET_BEST_ROW_IDENT =
-        "select " +
-        "cast(rf.rdb$field_name as varchar(31)) as column_name," +
-        "f.rdb$field_type as field_type," +
-        "f.rdb$field_sub_type as field_sub_type," +
-        "f.rdb$field_scale as field_scale," +
-        "f.rdb$field_precision as field_precision " +
-        "from " +
-        "rdb$relation_constraints rc," +
-        "rdb$index_segments idx," +
-        "rdb$relation_fields rf," +
-        "rdb$fields f " +
-        "where " +
-        "rc.rdb$relation_name = ? " +
-        "and " +
-        "rc.rdb$constraint_type = 'PRIMARY KEY' " +
-        "and " +
-        "idx.rdb$index_name = rc.rdb$index_name " +
-        "and " +
-        "rf.rdb$field_name = idx.rdb$field_name " +
-        "and " +
-        "rf.rdb$relation_name = ? " +
-        "and " +
-        "f.rdb$field_name = rf.rdb$field_source";
+            "SELECT " +
+            "CAST(rf.rdb$field_name AS varchar(31)) AS column_name, " +
+            "f.rdb$field_type AS field_type, " +
+            "f.rdb$field_sub_type AS field_sub_type, " +
+            "f.rdb$field_scale AS field_scale, " +
+            "f.rdb$field_precision AS field_precision " +
+            "FROM rdb$relation_constraints rc " +
+            "INNER JOIN rdb$index_segments idx ON idx.rdb$index_name = rc.rdb$index_name " +
+            "INNER JOIN rdb$relation_fields rf ON rf.rdb$field_name = idx.rdb$field_name " +
+            "    AND rf.rdb$relation_name = rc.rdb$relation_name " +
+            "INNER JOIN rdb$fields f ON f.rdb$field_name = rf.rdb$field_source " +
+            "WHERE " +
+            "CAST(rc.rdb$relation_name AS VARCHAR(40)) = ? " +
+            "AND rc.rdb$constraint_type = 'PRIMARY KEY'";
 
     /**
      * Gets a description of a table's optimal set of columns that
@@ -3539,11 +3530,13 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
         xsqlvars[7].sqlname = "PSEUDO_COLUMN";
         xsqlvars[7].relname = "ROWIDENTIFIER";
 
-        ResultSet tables = getTables(catalog, schema, table, null);
-        
+        // Check if table exists, need to escape as getTables takes a pattern
+        String quoteLikeTable = table != null ? table.replaceAll("([_%])", "\\\\$1") : null;
+        ResultSet tables = getTables(catalog, schema, quoteLikeTable, null);
+
         if (!tables.next())
             return new FBResultSet(xsqlvars, new ArrayList());
-        
+
         ArrayList rows = getPrimaryKeyIdentifier(tables.getString(3), scope, xsqlvars);
 
         // if no primary key exists, add RDB$DB_KEY as pseudo-column
@@ -3580,10 +3573,9 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
     private ArrayList getPrimaryKeyIdentifier(String table, int scope, XSQLVAR[] xsqlvars) throws SQLException {
         ArrayList rows = new ArrayList(0);
 
-        ArrayList params = new ArrayList(2);
+        ArrayList params = new ArrayList(1);
         params.add(table);
-        params.add(table);
-        
+
         ResultSet rs = doQuery(GET_BEST_ROW_IDENT, params);
         
         while (rs.next()) {
@@ -3686,7 +3678,7 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
     }
 
 
-    private static final String GET_PRIMARY_KEYS_START = "select "
+    private static final String GET_PRIMARY_KEYS = "select "
         /*+ " null as TABLE_CAT, "
         + " null as TABLE_SCHEM, "*/
         + "cast(RC.RDB$RELATION_NAME as varchar(31)) as TABLE_NAME,"
@@ -3694,12 +3686,9 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
         + "CAST((ISGMT.RDB$FIELD_POSITION + 1) as SMALLINT) as KEY_SEQ,"
         + "cast(RC.RDB$CONSTRAINT_NAME as varchar(31)) as PK_NAME "
         + "from "
-        + "RDB$RELATION_CONSTRAINTS RC, "
-        + "RDB$INDEX_SEGMENTS ISGMT "
-        + "where ";
-
-    private static final String GET_PRIMARY_KEYS_END =
-        "RC.RDB$INDEX_NAME = ISGMT.RDB$INDEX_NAME and "
+        + "RDB$RELATION_CONSTRAINTS RC "
+        + "INNER JOIN RDB$INDEX_SEGMENTS ISGMT ON RC.RDB$INDEX_NAME = ISGMT.RDB$INDEX_NAME "
+        + "where CAST(RC.RDB$RELATION_NAME AS VARCHAR(40)) = ? and "
         + "RC.RDB$CONSTRAINT_TYPE = 'PRIMARY KEY' "
         + "order by ISGMT.RDB$FIELD_NAME ";
 
@@ -3766,29 +3755,18 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
         xsqlvars[5].sqlname = "PK_NAME";
         xsqlvars[5].relname = "COLUMNINFO";
 
-        Clause tableClause = new Clause("RC.RDB$RELATION_NAME", table);
-
-        String sql = GET_PRIMARY_KEYS_START;
-        sql += tableClause.getCondition();
-        sql += GET_PRIMARY_KEYS_END;
-        
-        // check the original case identifiers
         ArrayList params = new ArrayList();
-        if (!tableClause.getCondition().equals("")) {
-            params.add(tableClause.getOriginalCaseValue());
-        }
-        
+        params.add(stripQuotes(stripEscape(table), false));
+
         ArrayList rows = new ArrayList();
-        ResultSet rs = doQuery(sql, params);
+        ResultSet rs = doQuery(GET_PRIMARY_KEYS, params);
         
         // if nothing found, check the uppercased identifier
         if (!rs.next()) {
             params.clear();
-            if (!tableClause.getCondition().equals("")) {
-                params.add(tableClause.getValue());
-            }
-            
-            rs = doQuery(sql, params);
+            params.add(stripQuotes(stripEscape(table), true));
+
+            rs = doQuery(GET_PRIMARY_KEYS, params);
             
             // if nothing found, return empty result set
             if (!rs.next()) 
@@ -3811,7 +3789,7 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
     }
 
 
-    private static final String GET_IMPORTED_KEYS_START = "select "
+    private static final String GET_IMPORTED_KEYS = "select "
     /*+" null as PKTABLE_CAT "
     +" ,null as PKTABLE_SCHEM "*/
     +"cast(PK.RDB$RELATION_NAME as varchar(31)) as PKTABLE_NAME"
@@ -3832,10 +3810,8 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
     +",RDB$REF_CONSTRAINTS RC"
     +",RDB$INDEX_SEGMENTS ISP"
     +",RDB$INDEX_SEGMENTS ISF "
-    +"WHERE ";
-
-    private static final String GET_IMPORTED_KEYS_END =
-    " FK.RDB$CONSTRAINT_NAME = RC.RDB$CONSTRAINT_NAME "
+    +"WHERE CAST(FK.RDB$RELATION_NAME AS VARCHAR(40)) = ? and "
+    +" FK.RDB$CONSTRAINT_NAME = RC.RDB$CONSTRAINT_NAME "
     +"and PK.RDB$CONSTRAINT_NAME = RC.RDB$CONST_NAME_UQ "
     +"and ISP.RDB$INDEX_NAME = PK.RDB$INDEX_NAME "
     +"and ISF.RDB$INDEX_NAME = FK.RDB$INDEX_NAME "
@@ -3996,27 +3972,19 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
         xsqlvars[13].sqlname = "DEFERRABILITY";
         xsqlvars[13].relname = "COLUMNINFO";
 
-        Clause tableClause = new Clause("FK.RDB$RELATION_NAME", table);
-        
-        String sql = GET_IMPORTED_KEYS_START;
-        sql += tableClause.getCondition();
-        sql += GET_IMPORTED_KEYS_END;
+        String sql = GET_IMPORTED_KEYS;
 
         // check the original case identifiers first
         ArrayList params = new ArrayList();
-        if (!tableClause.getCondition().equals("")) {
-            params.add(tableClause.getOriginalCaseValue());
-        }
-        
+        params.add(stripQuotes(stripEscape(table), false));
+
         ArrayList rows = new ArrayList();
         ResultSet rs = doQuery(sql, params);
         
         // if nothing found, check the uppercased identifiers
         if (!rs.next()) {
             params.clear();
-            if (!tableClause.getCondition().equals("")) {
-                params.add(tableClause.getValue());
-            }
+            params.add(stripQuotes(stripEscape(table), true));
             
             rs = doQuery(sql, params);
             
@@ -4318,9 +4286,7 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
         return new FBResultSet(xsqlvars, rows);
     }
 
-
-
-    private static final String GET_CROSS_KEYS_START = "select "
+    private static final String GET_CROSS_KEYS = "select "
     /*+" null as PKTABLE_CAT "
     +" ,null as PKTABLE_SCHEM "*/
     +"cast(PK.RDB$RELATION_NAME as varchar(31)) as PKTABLE_NAME"
@@ -4341,10 +4307,9 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
     +",RDB$REF_CONSTRAINTS RC"
     +",RDB$INDEX_SEGMENTS ISP"
     +",RDB$INDEX_SEGMENTS ISF "
-    +"WHERE ";
-
-    private static final String GET_CROSS_KEYS_END =
-    " FK.RDB$CONSTRAINT_NAME = RC.RDB$CONSTRAINT_NAME "
+    +"WHERE CAST(PK.RDB$RELATION_NAME AS VARCHAR(40)) = ? and "
+    +"CAST(FK.RDB$RELATION_NAME AS VARCHAR(40)) = ? and "
+    +" FK.RDB$CONSTRAINT_NAME = RC.RDB$CONSTRAINT_NAME "
     +"and PK.RDB$CONSTRAINT_NAME = RC.RDB$CONST_NAME_UQ "
     +"and ISP.RDB$INDEX_NAME = PK.RDB$INDEX_NAME "
     +"and ISF.RDB$INDEX_NAME = FK.RDB$INDEX_NAME "
@@ -4516,23 +4481,13 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
         xsqlvars[13].sqlname = "DEFERRABILITY";
         xsqlvars[13].relname = "COLUMNINFO";
 
-        Clause primaryTableClause = new Clause("PK.RDB$RELATION_NAME", primaryTable);
-        Clause foreignTableClause = new Clause("FK.RDB$RELATION_NAME", foreignTable);
-        
-        String sql = GET_CROSS_KEYS_START;
-        sql += primaryTableClause.getCondition();
-        sql += foreignTableClause.getCondition();
-        sql += GET_CROSS_KEYS_END;
-        
+        String sql = GET_CROSS_KEYS;
+
         ArrayList params = new ArrayList();
         
         // check the original case first
-        if (!primaryTableClause.getCondition().equals("")) {
-            params.add(primaryTableClause.getOriginalCaseValue());
-        }
-        if (!foreignTableClause.getCondition().equals("")) {
-            params.add(foreignTableClause.getOriginalCaseValue());
-        }
+        params.add(stripQuotes(stripEscape(primaryTable), false));
+        params.add(stripQuotes(stripEscape(foreignTable), false));
 
         ArrayList rows = new ArrayList();
         ResultSet rs = doQuery(sql, params);
@@ -4540,12 +4495,8 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
         // if nothing found, check the uppercased identifiers
         if (!rs.next()) {
             params.clear();
-            if (!primaryTableClause.getCondition().equals("")) {
-                params.add(primaryTableClause.getValue());
-            }
-            if (!foreignTableClause.getCondition().equals("")) {
-                params.add(foreignTableClause.getValue());
-            }
+            params.add(stripQuotes(stripEscape(primaryTable), true));
+            params.add(stripQuotes(stripEscape(foreignTable), true));
 
             rs = doQuery(sql, params);
             
@@ -4884,7 +4835,7 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
 
     }
 
-    private static final String GET_INDEX_INFO_START = "SELECT "
+    private static final String GET_INDEX_INFO = "SELECT "
         + "cast(ind.RDB$RELATION_NAME as varchar(31)) AS TABLE_NAME"
         + ",ind.RDB$UNIQUE_FLAG AS UNIQUE_FLAG"
         + ",cast(ind.RDB$INDEX_NAME as varchar(31)) as INDEX_NAME"
@@ -4894,20 +4845,11 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
         + ",ind.RDB$INDEX_TYPE as ASC_OR_DESC "
         + "FROM "
         + "rdb$indices ind "
-        + "LEFT JOIN rdb$index_segments ise ON ind.rdb$index_name = ise.rdb$index_name ";
-    
-    private static final String GET_INDEX_INFO =
-        GET_INDEX_INFO_START
-        + "WHERE " 
-        + "ind.rdb$relation_name = ? "
+        + "LEFT JOIN rdb$index_segments ise ON ind.rdb$index_name = ise.rdb$index_name "
+        + "WHERE "
+        + "CAST(ind.rdb$relation_name AS VARCHAR(40)) = ? "
         + "ORDER BY 2, 3, 4"
         ;
-    
-    private static final String GET_INDEX_INFO_UPPER =
-        GET_INDEX_INFO_START
-        + "WHERE " 
-        + "UPPER(ind.rdb$relation_name) = ? "
-        + "ORDER BY 2, 3, 4";
 
     /**
      * Gets a description of a table's indices and statistics. They are
@@ -5042,20 +4984,16 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
         xsqlvars[12].relname = "INDEXINFO";
 
         ArrayList rows = new ArrayList();
-        
-        if (table == null) {
-            return new FBResultSet(xsqlvars, rows);
-        }
 
         ArrayList params = new ArrayList();
-        params.add(table);
+        params.add(stripQuotes(stripEscape(table), false));
 
         ResultSet rs = doQuery(GET_INDEX_INFO, params);
 
         // if no direct match happened, check the uppercased match
         if (!rs.next()) {
-            params.set(0, table.toUpperCase());
-            rs = doQuery(GET_INDEX_INFO_UPPER, params);
+            params.set(0, stripQuotes(stripEscape(table), true));
+            rs = doQuery(GET_INDEX_INFO, params);
             
             // open the second result set and check whether we have rows
             // if no rows are available, we have to exit now, otherwise the 
@@ -6032,6 +5970,7 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
      * @return pattern with all backslash-escapes removed
      */
     public String stripEscape(String pattern) {
+        if (pattern == null) return null;
         StringBuffer stripped = new StringBuffer(pattern.length());
         for (int pos = 0; pos < pattern.length(); pos++) {
             if (pattern.charAt(pos) != '\\') {
@@ -6076,6 +6015,7 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
      * removed
      */
     public String stripQuotes(String pattern, boolean uppercase) {
+        if (pattern == null) return null;
         if ((pattern.length() >= 2)
             && (pattern.charAt(0) == '\"')
             && (pattern.charAt(pattern.length() - 1) == '\"'))
@@ -6171,16 +6111,15 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
 
         public Clause (String columnName, String pattern) {
             if (pattern == null) {
-                return;
+                //do nothing to tableCondition
             }
             else if (isAllCondition(pattern)) {
                 //do nothing to tableCondition
-                return;
             }
             else if (hasNoWildcards(pattern)) {
                 value = stripQuotes(stripEscape(pattern), true);
                 originalCaseValue = stripQuotes(stripEscape(pattern), false);
-                condition = columnName + " = ? and ";
+                condition = "CAST(" + columnName + " AS VARCHAR(40)) = ? and ";
             }
             else {
                 value = stripQuotes(pattern, true) + SPACES + "%";
@@ -6201,7 +6140,6 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
             return originalCaseValue;
         }
     }
-
 
     protected byte[] getBytes(String value){
         if (value !=null)
