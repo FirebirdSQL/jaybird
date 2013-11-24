@@ -5136,7 +5136,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
             } else if (hasNoWildcards(pattern)) {
                 value = stripQuotes(stripEscape(pattern), true);
                 originalCaseValue = stripQuotes(stripEscape(pattern), false);
-                condition = columnName + " = ? and ";
+                condition = "CAST(" + columnName + " AS VARCHAR(40)) = ? and ";
             } else {
                 value = stripQuotes(pattern, true) + SPACES + "%";
                 originalCaseValue = stripQuotes(pattern, false) + SPACES + "%";
