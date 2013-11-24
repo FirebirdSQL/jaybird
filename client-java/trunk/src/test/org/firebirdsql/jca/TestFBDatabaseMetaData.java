@@ -540,6 +540,23 @@ public class TestFBDatabaseMetaData extends TestXABase {
     }
 
     /**
+     * Using a very short table name for {@link DatabaseMetaData#getPrimaryKeys(String, String, String)}
+     * should return a result.
+     */
+    public void testGetPrimaryKeysShortTableName() throws Exception {
+        String tableName = "A";
+        createTable(tableName);
+        try {
+            t.begin();
+            ResultSet rs = dmd.getPrimaryKeys(null, null, tableName);
+            assertTrue("Should return primary key information", rs.next());
+            t.commit();
+        } finally {
+            dropTable(tableName);
+        }
+    }
+
+    /**
      * {@link DatabaseMetaData#getPrimaryKeys(String, String, String)} should not accept a LIKE pattern.
      */
     public void testGetPrimaryKeys_LikePattern_NoResult() throws Exception {
