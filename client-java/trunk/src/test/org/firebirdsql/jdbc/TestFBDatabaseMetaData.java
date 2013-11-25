@@ -16,7 +16,7 @@
  *
  * All rights reserved.
  */
-package org.firebirdsql.jca;
+package org.firebirdsql.jdbc;
 
 import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
@@ -28,7 +28,8 @@ import java.util.Set;
 import javax.resource.spi.LocalTransaction;
 import javax.sql.DataSource;
 
-import org.firebirdsql.jdbc.*;
+import org.firebirdsql.jca.FBManagedConnectionFactory;
+import org.firebirdsql.jca.TestXABase;
 
 import static org.firebirdsql.common.FBTestProperties.*;
 
@@ -39,8 +40,6 @@ import static org.firebirdsql.common.FBTestProperties.*;
  * @version 1.0
  */
 public class TestFBDatabaseMetaData extends TestXABase {
-
-    // TODO Move class to org.firebirdsql.jdbc and find out why it extends TestXABase
 
     private FBConnection c;
     private Statement s;
