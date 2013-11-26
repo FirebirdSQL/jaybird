@@ -3540,7 +3540,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
         return new FBResultSet(xsqlvars, rows);
     }
 
-    private static final String GET_EXPORTED_KEYS_START = "select "
+    private static final String GET_EXPORTED_KEYS = "select "
     /*+" null as PKTABLE_CAT "
     +" ,null as PKTABLE_SCHEM "*/
     +"cast(PK.RDB$RELATION_NAME as varchar(31)) as PKTABLE_NAME"
@@ -3561,10 +3561,8 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
     +",RDB$REF_CONSTRAINTS RC"
     +",RDB$INDEX_SEGMENTS ISP"
     +",RDB$INDEX_SEGMENTS ISF "
-    +"WHERE ";
-
-    private static final String GET_EXPORTED_KEYS_END =
-    " FK.RDB$CONSTRAINT_NAME = RC.RDB$CONSTRAINT_NAME "
+    +"WHERE CAST(PK.RDB$RELATION_NAME AS VARCHAR(40)) = ? "
+    +"and FK.RDB$CONSTRAINT_NAME = RC.RDB$CONSTRAINT_NAME "
     +"and PK.RDB$CONSTRAINT_NAME = RC.RDB$CONST_NAME_UQ "
     +"and ISP.RDB$INDEX_NAME = PK.RDB$INDEX_NAME "
     +"and ISF.RDB$INDEX_NAME = FK.RDB$INDEX_NAME "
@@ -3662,15 +3660,11 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
 
         Clause tableClause = new Clause("PK.RDB$RELATION_NAME", table);
 
-        String sql = GET_EXPORTED_KEYS_START;
-        sql += tableClause.getCondition();
-        sql += GET_EXPORTED_KEYS_END;
-        
+        String sql = GET_EXPORTED_KEYS;
+
         // check the original case identifiers first
-        List<String> params = new ArrayList<String>();
-        if (!tableClause.getCondition().equals("")) {
-            params.add(tableClause.getOriginalCaseValue());
-        }
+        ArrayList params = new ArrayList();
+        params.add(stripQuotes(stripEscape(table), false));
 
         List<byte[][]> rows = new ArrayList<byte[][]>();
         ResultSet rs = doQuery(sql, params);
@@ -3679,9 +3673,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
         if (!rs.next()) {
             rs.close();
             params.clear();
-            if (!tableClause.getCondition().equals("")) {
-                params.add(tableClause.getValue());
-            }
+            params.add(stripQuotes(stripEscape(table), true));
             
             rs = doQuery(sql, params);
             
