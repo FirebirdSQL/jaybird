@@ -5,7 +5,7 @@
 	<TITLE></TITLE>
 	<META NAME="GENERATOR" CONTENT="LibreOffice 4.1.3.2 (Windows)">
 	<META NAME="CREATED" CONTENT="20040723;103952000000000">
-	<META NAME="CHANGED" CONTENT="20131102;150835347000000">
+	<META NAME="CHANGED" CONTENT="20131130;102222966000000">
 	<META NAME="Info 1" CONTENT="">
 	<META NAME="Info 2" CONTENT="">
 	<META NAME="Info 3" CONTENT="">
@@ -223,8 +223,8 @@ parameters that are sent to the server.</P>
 <H3 CLASS="western"><A NAME="__RefHeading__6627_1850987433"></A>Supported
 Java versions</H3>
 <P CLASS="western">Jaybird 2.2.4 supports Java 5 (JDBC 3.0), Java 6
-(JDBC 4.0), Java 7 (JDBC 4.1) and Java 8 (JDBC 4.2). Support for
-earlier Java versions has been dropped.</P>
+(JDBC 4.0), Java 7 (JDBC 4.1) and Java 8 early access (JDBC 4.2).
+Support for earlier Java versions has been dropped.</P>
 <H3 CLASS="western"><A NAME="__RefHeading__2741_1560579136"></A>Specification
 support</H3>
 <P CLASS="western">Driver supports the following specifications:</P>
@@ -328,8 +328,8 @@ and fixes in Jaybird 2.2.4</H3>
 	<LI><P CLASS="western">Fixed batch update (or insert) with blob set
 	through <FONT FACE="Courier New, monospace"><FONT SIZE=2>setBinaryStream()</FONT></FONT>
 	sets empty blob for all but the first batch entry (<A CLASS="western" HREF="http://tracker.firebirdsql.org/browse/JDBC-312"><I>JDBC-312</I></A>)</P>
-	<LI><P CLASS="western">Fixed incomplete checks of (database,
-	transaction, statement and blob) handle validity before continuing
+	<LI><P CLASS="western">Fixed incomplete checks of database,
+	transaction, statement and blob handle validity before continuing
 	with actions. These incomplete checks could lead to unexpected
 	exceptions (for example a <FONT FACE="Courier New, monospace"><FONT SIZE=2>NullPointerException</FONT></FONT>
 	in <FONT FACE="Courier New, monospace"><FONT SIZE=2>iscDatabaseInfo</FONT></FONT>)
@@ -360,6 +360,25 @@ and fixes in Jaybird 2.2.4</H3>
 	</SPAN><SPAN STYLE="font-style: normal">Jaybird should specify
 	dialect 3 in dpb when no explicit dialect was set</SPAN><SPAN STYLE="font-style: normal">
 	(</SPAN><A CLASS="western" HREF="http://tracker.firebirdsql.org/browse/JDBC-327"><I>JDBC-327</I></A><SPAN STYLE="font-style: normal">)</SPAN></P>
+	<LI><P CLASS="western"><SPAN STYLE="font-style: normal">Fixed</SPAN><SPAN STYLE="font-style: normal">:
+	several </SPAN><FONT FACE="Consolas, monospace"><FONT SIZE=2><SPAN STYLE="font-style: normal">DatabaseMetaData</SPAN></FONT></FONT><SPAN STYLE="font-style: normal">
+	methods defined by JDBC to only accept the actual table name also
+	accepted a </SPAN><FONT FACE="Consolas, monospace"><FONT SIZE=2><SPAN STYLE="font-style: normal">LIKE</SPAN></FONT></FONT><SPAN STYLE="font-style: normal">-pattern
+	or empty string or </SPAN><FONT FACE="Consolas, monospace"><FONT SIZE=2><SPAN STYLE="font-style: normal">null</SPAN></FONT></FONT><SPAN STYLE="font-style: normal">.
+	This was changed to conform to JDBC. This change can break
+	applications that relied on </SPAN><SPAN STYLE="font-style: normal">the</SPAN><SPAN STYLE="font-style: normal">
+	incorrect behavior (</SPAN><A CLASS="western" HREF="http://tracker.firebirdsql.org/browse/JDBC-331"><I>JDBC-331</I></A><SPAN STYLE="font-style: normal">)<BR>Affected
+	methods are: </SPAN><FONT FACE="Consolas, monospace"><FONT SIZE=2><SPAN STYLE="font-style: normal">getPrimaryKeys</SPAN></FONT></FONT><SPAN STYLE="font-style: normal">,
+	</SPAN><FONT FACE="Consolas, monospace"><FONT SIZE=2><SPAN STYLE="font-style: normal">getBestRowIdentifier</SPAN></FONT></FONT><SPAN STYLE="font-style: normal">,
+	</SPAN><FONT FACE="Consolas, monospace"><FONT SIZE=2><SPAN STYLE="font-style: normal">getImportedKeys</SPAN></FONT></FONT><SPAN STYLE="font-style: normal">,
+	</SPAN><FONT FACE="Consolas, monospace"><FONT SIZE=2><SPAN STYLE="font-style: normal">getExportedKeys</SPAN></FONT></FONT><SPAN STYLE="font-style: normal">
+	</SPAN><SPAN STYLE="font-style: normal">and</SPAN><SPAN STYLE="font-style: normal">
+	</SPAN><FONT FACE="Consolas, monospace"><FONT SIZE=2><SPAN STYLE="font-style: normal">getCrossReference</SPAN></FONT></FONT><SPAN STYLE="font-style: normal">.
+	</SPAN><SPAN STYLE="font-style: normal">As part of this change
+	</SPAN><FONT FACE="Consolas, monospace"><FONT SIZE=2><SPAN STYLE="font-style: normal">getIndexInfo</SPAN></FONT></FONT><SPAN STYLE="font-style: normal">
+	now handles names in the wrong case slightly different.<BR>Jaybird
+	3.0 will further modify and restrict the pattern matching and case
+	sensitivity of metadata methods. See Future changes to Jaybird.</SPAN></P>
 </UL>
 <H4 CLASS="western"><FONT FACE="Arial, sans-serif"><FONT SIZE=3>Known
 issues in Jaybird 2.2.4</FONT></FONT></H4>
@@ -790,21 +809,25 @@ fixes and changes</H3>
 <H2 CLASS="western" STYLE="page-break-before: always"><A NAME="__RefHeading__2751_1560579136"></A>
 Compatibility changes</H2>
 <P CLASS="western">Jaybird 2.2 introduces some changes in
-compatibility and announces future breaking changes.</P>
+compatibility and announces future breaking changes. The version
+previously announced as Jaybird 2.3 will be released as Jaybird 3.0.</P>
 <H3 CLASS="western"><A NAME="__RefHeading__3763_304866878"></A>Java
 support</H3>
 <P CLASS="western">Java 5 support will be dropped for Jaybird 3.0 as
-Java 5 has been on End-Of-Life<A CLASS="sdfootnoteanc" NAME="sdfootnote2anc" HREF="#sdfootnote2sym"><SUP>2</SUP></A>
+Java 5 has been on End-Of-Public-Updates<A CLASS="sdfootnoteanc" NAME="sdfootnote2anc" HREF="#sdfootnote2sym"><SUP>2</SUP></A>
 status since October 2009.</P>
+<P CLASS="western">Java 6 support will be dropped for Jaybird 3.1 as
+Java 6 has been on End-Of-Public-Updates status since February 2013.</P>
 <H3 CLASS="western"><A NAME="__RefHeading__3765_304866878"></A>Firebird
 support</H3>
 <P CLASS="western">Jaybird 2.2 supports Firebird 1.0 and higher, but
-is only tested with Firebird 2.1 and 2.5. For Jaybird 2.3 formal
+is only tested with Firebird 2.1 and 2.5. With Jaybird 3.0 formal
 support for Firebird 1.0 and 1.5 will be dropped. In general this
-probably will not impact the use of the driver, but might have impact
-on the availability and use of metadata information. This also means
-that from Jaybird 3.0 bugs that only occur with Firebird 1.0 and 1.5
-will not be fixed.</P>
+should not impact the use of the driver, but might have impact on the
+availability and use of metadata information. This also means that
+from Jaybird 3.0 bugs that only occur with Firebird 1.0 and 1.5 will
+not be fixed. With Jaybird 3.1 support for Firebird 2.0 will be
+dropped.</P>
 <H3 CLASS="western"><A NAME="__RefHeading__2753_1560579136"></A>Important
 changes to Datasources</H3>
 <P CLASS="western">The <FONT FACE="Courier New, monospace"><FONT SIZE=2>ConnectionPoolDataSource</FONT></FONT>
@@ -955,6 +978,55 @@ upgrade of logging library</FONT></H4>
 <P CLASS="western"><FONT FACE="Times New Roman, serif">Logging in
 Jaybird 3.0 will be changed. We will either switch to slf4j, or
 upgrade Log4J to version 2.x.</FONT></P>
+<H4 CLASS="western">Stricter JDBC compliance for <FONT FACE="Consolas, monospace">DatabaseMetaData</FONT>
+methods</H4>
+<P CLASS="western">The current implementation of <FONT FACE="Consolas, monospace"><FONT SIZE=2>DatabaseMetaData</FONT></FONT>
+methods do not conform to the JDBC specification when it comes to
+case sensitivity and quoted object names.</P>
+<P CLASS="western">In Jaybird 3.0 meta data methods will no longer do
+the following:</P>
+<UL>
+	<LI><P CLASS="western">Remove quotes around object names</P>
+	<LI><P CLASS="western">Trying the uppercased value, when the
+	original parameter value failed to produce results</P>
+</UL>
+<P CLASS="western"><FONT FACE="Times New Roman, serif">For example:</FONT></P>
+<PRE LANG="zxx" CLASS="western"><FONT FACE="Consolas, monospace">CREATE TABLE tablename (</FONT>
+<FONT FACE="Consolas, monospace"><SPAN LANG="zxx">	column1 INTEGER,</SPAN></FONT>
+<FONT FACE="Consolas, monospace"><SPAN LANG="zxx">	&quot;column2&quot; INTEGER</SPAN></FONT>
+<FONT FACE="Consolas, monospace"><SPAN LANG="zxx">);</SPAN></FONT></PRE><P CLASS="western">
+<FONT FACE="Times New Roman, serif">In Jaybird 2.2</FONT><FONT FACE="Times New Roman, serif">
+using </FONT><FONT FACE="Consolas, monospace"><FONT SIZE=2>getColumns(null,
+null, </FONT></FONT><FONT FACE="Consolas, monospace"><FONT SIZE=2>&quot;</FONT></FONT><FONT FACE="Consolas, monospace"><FONT SIZE=2>tablename</FONT></FONT><FONT FACE="Consolas, monospace"><FONT SIZE=2>&quot;</FONT></FONT><FONT FACE="Consolas, monospace"><FONT SIZE=2>,
+</FONT></FONT><FONT FACE="Consolas, monospace"><FONT SIZE=2>&quot;</FONT></FONT><FONT FACE="Consolas, monospace"><FONT SIZE=2>column%</FONT></FONT><FONT FACE="Consolas, monospace"><FONT SIZE=2>&quot;</FONT></FONT><FONT FACE="Consolas, monospace"><FONT SIZE=2>)</FONT></FONT><FONT FACE="Times New Roman, serif">
+will return </FONT><FONT FACE="Consolas, monospace"><FONT SIZE=2>COLUMN1</FONT></FONT><FONT FACE="Times New Roman, serif">(!).
+U</FONT><FONT FACE="Times New Roman, serif">nquoted object names are
+stored uppercase in Firebird, so in Jaybird 3.0 this will produce </FONT><FONT FACE="Times New Roman, serif"><B>no
+rows</B></FONT><FONT FACE="Times New Roman, serif"><SPAN STYLE="font-weight: normal">
+as </SPAN></FONT><FONT FACE="Consolas, monospace"><FONT SIZE=2><SPAN STYLE="font-weight: normal">tablename</SPAN></FONT></FONT><FONT FACE="Times New Roman, serif"><SPAN STYLE="font-weight: normal">
+does not match </SPAN></FONT><FONT FACE="Consolas, monospace"><FONT SIZE=2><SPAN STYLE="font-weight: normal">TABLENAME</SPAN></FONT></FONT><FONT FACE="Times New Roman, serif"><SPAN STYLE="font-weight: normal">.</SPAN></FONT></P>
+<P CLASS="western"><FONT FACE="Times New Roman, serif"><SPAN STYLE="font-weight: normal">Changing
+the query to </SPAN></FONT><FONT FACE="Consolas, monospace"><FONT SIZE=2><SPAN STYLE="font-weight: normal">getColumns(null,
+null, </SPAN></FONT></FONT><FONT FACE="Consolas, monospace"><FONT SIZE=2><SPAN STYLE="font-weight: normal">&quot;TABLENAME&quot;</SPAN></FONT></FONT><FONT FACE="Consolas, monospace"><FONT SIZE=2><SPAN STYLE="font-weight: normal">,
+</SPAN></FONT></FONT><FONT FACE="Consolas, monospace"><FONT SIZE=2><SPAN STYLE="font-weight: normal">&quot;</SPAN></FONT></FONT><FONT FACE="Consolas, monospace"><FONT SIZE=2><SPAN STYLE="font-weight: normal">column%</SPAN></FONT></FONT><FONT FACE="Consolas, monospace"><FONT SIZE=2><SPAN STYLE="font-weight: normal">&quot;</SPAN></FONT></FONT><FONT FACE="Consolas, monospace"><FONT SIZE=2><SPAN STYLE="font-weight: normal">)</SPAN></FONT></FONT><FONT FACE="Times New Roman, serif"><SPAN STYLE="font-weight: normal">
+</SPAN></FONT><FONT FACE="Times New Roman, serif"><SPAN STYLE="font-weight: normal">in
+Jaybird </SPAN></FONT><FONT FACE="Times New Roman, serif"><SPAN STYLE="font-weight: normal">2.2
+and </SPAN></FONT><FONT FACE="Times New Roman, serif"><SPAN STYLE="font-weight: normal">3.0
+will only produce </SPAN></FONT><FONT FACE="Times New Roman, serif"><B>one
+row</B></FONT><FONT FACE="Times New Roman, serif"><SPAN STYLE="font-weight: normal">
+(with </SPAN></FONT><FONT FACE="Consolas, monospace"><FONT SIZE=2><SPAN STYLE="font-weight: normal">column2</SPAN></FONT></FONT><FONT FACE="Times New Roman, serif"><SPAN STYLE="font-weight: normal">),
+as </SPAN></FONT><FONT FACE="Consolas, monospace"><FONT SIZE=2><SPAN STYLE="font-weight: normal">COLUMN1</SPAN></FONT></FONT><FONT FACE="Times New Roman, serif"><SPAN STYLE="font-weight: normal">
+does not match </SPAN></FONT><FONT FACE="Consolas, monospace"><FONT SIZE=2><SPAN STYLE="font-weight: normal">column%</SPAN></FONT></FONT><FONT FACE="Times New Roman, serif"><SPAN STYLE="font-weight: normal">.</SPAN></FONT></P>
+<P CLASS="western"><FONT FACE="Times New Roman, serif"><SPAN STYLE="font-weight: normal">In
+Jaybird 2.2 using </SPAN></FONT><FONT FACE="Consolas, monospace"><FONT SIZE=2><SPAN STYLE="font-weight: normal">getColumns(null,
+null, </SPAN></FONT></FONT><FONT FACE="Consolas, monospace"><FONT SIZE=2><SPAN STYLE="font-weight: normal">&quot;\&quot;TABLENAME\&quot;&quot;</SPAN></FONT></FONT><FONT FACE="Consolas, monospace"><FONT SIZE=2><SPAN STYLE="font-weight: normal">,
+</SPAN></FONT></FONT><FONT FACE="Consolas, monospace"><FONT SIZE=2><SPAN STYLE="font-weight: normal">&quot;</SPAN></FONT></FONT><FONT FACE="Consolas, monospace"><FONT SIZE=2><SPAN STYLE="font-weight: normal">column%</SPAN></FONT></FONT><FONT FACE="Consolas, monospace"><FONT SIZE=2><SPAN STYLE="font-weight: normal">&quot;</SPAN></FONT></FONT><FONT FACE="Consolas, monospace"><FONT SIZE=2><SPAN STYLE="font-weight: normal">)</SPAN></FONT></FONT><FONT FACE="Times New Roman, serif"><SPAN STYLE="font-weight: normal">
+</SPAN></FONT><FONT FACE="Times New Roman, serif"><SPAN STYLE="font-weight: normal">will
+</SPAN></FONT><FONT FACE="Times New Roman, serif"><SPAN STYLE="font-weight: normal">return
+</SPAN></FONT><FONT FACE="Consolas, monospace"><FONT SIZE=2><SPAN STYLE="font-weight: normal">column2</SPAN></FONT></FONT><FONT FACE="Times New Roman, serif"><SPAN STYLE="font-weight: normal">
+</SPAN></FONT><FONT FACE="Times New Roman, serif"><SPAN STYLE="font-weight: normal">as
+the quotes will be stripped, with Jaybird 3.0 this will produce </SPAN></FONT><FONT FACE="Times New Roman, serif"><B>no
+rows</B></FONT><FONT FACE="Times New Roman, serif"><SPAN STYLE="font-weight: normal">.</SPAN></FONT></P>
 <H2 CLASS="western" STYLE="page-break-before: always"><A NAME="__RefHeading__8761_1080388197"></A>
 Distribution package</H2>
 <P CLASS="western">The following file groups can be found in
