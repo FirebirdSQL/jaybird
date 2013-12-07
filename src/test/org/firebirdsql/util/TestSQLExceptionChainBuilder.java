@@ -37,7 +37,7 @@ public class TestSQLExceptionChainBuilder extends TestCase {
      * Test for empty SQLExceptionChainBuilder.
      */
     public void testBuilder_EmptyOnConstruct_NoAppend() {
-        SQLExceptionChainBuilder<SQLException> builder = new SQLExceptionChainBuilder<SQLException>();
+        SQLExceptionChainBuilder builder = new SQLExceptionChainBuilder();
         
         assertFalse("Empty SQLExceptionChainBuilder should have no Exception", builder.hasException());
         assertNull("Empty SQLExceptionChainBuilder should have null Exception", builder.getException());
@@ -49,7 +49,7 @@ public class TestSQLExceptionChainBuilder extends TestCase {
     public void testBuilder_RootOnConstruct_NoAppend() {
         SQLException root = new SQLException();
         
-        SQLExceptionChainBuilder<SQLException> builder = new SQLExceptionChainBuilder<SQLException>(root);
+        SQLExceptionChainBuilder builder = new SQLExceptionChainBuilder(root);
         
         assertTrue("SQLExceptionChainBuilder has a exception", builder.hasException());
         assertSame("Expected root exception to be identical to returned exception", root, builder.getException());
@@ -60,7 +60,7 @@ public class TestSQLExceptionChainBuilder extends TestCase {
      */
     public void testBuilder_EmptyOnConstruct_OneAppend() {
         SQLException root = new SQLException();
-        SQLExceptionChainBuilder<SQLException> builder = new SQLExceptionChainBuilder<SQLException>();
+        SQLExceptionChainBuilder builder = new SQLExceptionChainBuilder();
         
         builder.append(root);
         
@@ -78,7 +78,7 @@ public class TestSQLExceptionChainBuilder extends TestCase {
             additionalExceptions.add(new SQLException(Integer.toString(count)));
         }
         
-        SQLExceptionChainBuilder<SQLException> builder = new SQLExceptionChainBuilder<SQLException>(root);
+        SQLExceptionChainBuilder builder = new SQLExceptionChainBuilder(root);
         for (SQLException ex : additionalExceptions) {
             builder.append(ex);
         }
@@ -99,7 +99,7 @@ public class TestSQLExceptionChainBuilder extends TestCase {
             additionalExceptions.add(new SQLException(Integer.toString(count)));
         }
         
-        SQLExceptionChainBuilder<SQLException> builder = new SQLExceptionChainBuilder<SQLException>();
+        SQLExceptionChainBuilder builder = new SQLExceptionChainBuilder();
         builder.append(root);
         for (SQLException ex : additionalExceptions) {
             builder.append(ex);

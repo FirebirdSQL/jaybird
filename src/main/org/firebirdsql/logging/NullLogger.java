@@ -19,7 +19,7 @@
 package org.firebirdsql.logging;
 
 /**
- * Implementation of {@link Logger} that doesn't do anything and reports all loglevels as disabled.
+ * Describe class <code>NullLogger</code> here.
  *
  * @author <a href="mailto:brodsom@users.sourceforge.net">Blas Rodriguez Somoza</a>
  * @version 1.0

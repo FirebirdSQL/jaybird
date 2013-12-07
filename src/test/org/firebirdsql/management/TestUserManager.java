@@ -24,15 +24,7 @@ import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.SQLException;
 
-import org.firebirdsql.common.FBJUnit4TestBase;
-import org.firebirdsql.common.JdbcResourceHelper;
-import org.junit.Ignore;
-import org.junit.Test;
-
-import static org.firebirdsql.common.FBTestProperties.*;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
+import org.firebirdsql.common.FBTestBase;
 
 /**
  * Tests the UserManager class which uses the Services API to display, add,
@@ -40,9 +32,15 @@ import static org.junit.Assert.assertNull;
  * 
  * @author <a href="mailto:sjardine@users.sourceforge.net">Steven Jardine </a>
  */
-public class TestUserManager extends FBJUnit4TestBase {
+public class TestUserManager extends FBTestBase {
 
-    @Test
+    /**
+     * Create and instance of this class.
+     */
+    public TestUserManager(String name) {
+        super(name);
+    }
+
     public void testUsers() throws Exception {
         boolean isFirebird3 = false;
         Connection connection = null;
@@ -51,7 +49,7 @@ public class TestUserManager extends FBJUnit4TestBase {
             DatabaseMetaData dbmd = connection.getMetaData();
             isFirebird3 = dbmd.getDatabaseMajorVersion() == 3;
         } finally {
-            JdbcResourceHelper.closeQuietly(connection);
+            closeQuietly(connection);
         }
 
         // Initialize the UserManager.
@@ -75,11 +73,11 @@ public class TestUserManager extends FBJUnit4TestBase {
         try {
             userManager.add(user1);
         } catch(SQLException ex) {
-            // ignore
+            // 
         }
         
         // Check to make sure the user was added.
-        User user2 = userManager.getUsers().get(user1.getUserName());
+        User user2 = (User) userManager.getUsers().get(user1.getUserName());
 
         assertNotNull("User 2 should not be null.", user2);
         assertEquals("user1 should equal user2", user1, user2);
@@ -93,20 +91,18 @@ public class TestUserManager extends FBJUnit4TestBase {
 
         userManager.update(user1);
 
-        user2 = userManager.getUsers().get(user1.getUserName());
+        user2 = (User) userManager.getUsers().get(user1.getUserName());
 
         assertEquals("user1 should equal user2", user1, user2);
 
         userManager.delete(user1);
 
-        user2 = userManager.getUsers().get(user1.getUserName());
+        user2 = (User) userManager.getUsers().get(user1.getUserName());
 
         assertNull("User 2 should be null", user2);
     }
 
-    @Ignore
-    @Test
-    public void testConnection() throws Exception {
+    public void _testConnection() throws Exception {
 
         // TODO: Test use of user with database connection and sql.
 

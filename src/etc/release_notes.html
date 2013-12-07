@@ -3,9 +3,9 @@
 <HEAD>
 	<META HTTP-EQUIV="CONTENT-TYPE" CONTENT="text/html; charset=windows-1252">
 	<TITLE></TITLE>
-	<META NAME="GENERATOR" CONTENT="LibreOffice 3.5  (Windows)">
-	<META NAME="CREATED" CONTENT="20040723;10395200">
-	<META NAME="CHANGED" CONTENT="20120713;19212484">
+	<META NAME="GENERATOR" CONTENT="LibreOffice 4.1.3.2 (Windows)">
+	<META NAME="CREATED" CONTENT="20040723;103952000000000">
+	<META NAME="CHANGED" CONTENT="20131130;102222966000000">
 	<META NAME="Info 1" CONTENT="">
 	<META NAME="Info 2" CONTENT="">
 	<META NAME="Info 3" CONTENT="">
@@ -53,13 +53,20 @@
 	</STYLE>
 </HEAD>
 <BODY LANG="en-US" DIR="LTR">
-<H1 CLASS="western" ALIGN=CENTER>JCA/JDBC Driver<BR>Release
-Notes v 2.2.0</H1>
-<DIV ID="Inhoudsopgave1" DIR="LTR">
+<DIV TYPE=HEADER>
+	<P STYLE="margin-bottom: 0.5cm"><BR>
+	</P>
+</DIV>
+<H1 CLASS="western" ALIGN=CENTER>Jaybird</H1>
+<H1 CLASS="western" ALIGN=CENTER>Firebird JCA/JDBC Driver<BR>Release
+Notes v 2.2.4</H1>
+<DIV ID="Table of Contents1" DIR="LTR">
 	<DIV ID="Table of Contents1_Head" DIR="LTR">
 		<P STYLE="margin-bottom: 0cm; page-break-after: avoid"><FONT FACE="Arial, sans-serif"><FONT SIZE=4 STYLE="font-size: 16pt"><B>Table
 		of Contents</B></FONT></FONT></P>
 	</DIV>
+	<P STYLE="margin-bottom: 0cm"><BR>
+	</P>
 	<P STYLE="margin-bottom: 0cm"><BR>
 	</P>
 	<P STYLE="margin-left: 0.5cm; margin-bottom: 0cm"><A CLASS="western" HREF="#__RefHeading__2737_1560579136">General
@@ -72,6 +79,14 @@ Notes v 2.2.0</H1>
 	support</A></FONT></P>
 	<P STYLE="margin-left: 0.5cm; margin-bottom: 0cm"><A CLASS="western" HREF="#__RefHeading__2743_1560579136">What's
 	new in Jaybird 2.2</A></P>
+	<P STYLE="margin-left: 1cm; margin-bottom: 0cm"><FONT SIZE=2 STYLE="font-size: 11pt"><A CLASS="western" HREF="#__RefHeading__4798_1756560361">Changes
+	and fixes in Jaybird 2.2.4</A></FONT></P>
+	<P STYLE="margin-left: 1cm; margin-bottom: 0cm"><FONT SIZE=2 STYLE="font-size: 11pt"><A CLASS="western" HREF="#__RefHeading__4567_489604410">Changes
+	and fixes in Jaybird 2.2.3</A></FONT></P>
+	<P STYLE="margin-left: 1cm; margin-bottom: 0cm"><FONT SIZE=2 STYLE="font-size: 11pt"><A CLASS="western" HREF="#__RefHeading__7842_703890631">Changes
+	and fixes in Jaybird 2.2.2</A></FONT></P>
+	<P STYLE="margin-left: 1cm; margin-bottom: 0cm"><FONT SIZE=2 STYLE="font-size: 11pt"><A CLASS="western" HREF="#__RefHeading__4286_1426179335">Changes
+	and fixes in Jaybird 2.2.1</A></FONT></P>
 	<P STYLE="margin-left: 1cm; margin-bottom: 0cm"><FONT SIZE=2 STYLE="font-size: 11pt"><A CLASS="western" HREF="#__RefHeading__3759_663895651">Changes
 	and fixes since Jaybird 2.2.0 beta 1</A></FONT></P>
 	<P STYLE="margin-left: 1cm; margin-bottom: 0cm"><FONT SIZE=2 STYLE="font-size: 11pt"><A CLASS="western" HREF="#__RefHeading__6629_1850987433">Support
@@ -80,6 +95,8 @@ Notes v 2.2.0</H1>
 	6 and JDBC 4.0 API support</A></FONT></P>
 	<P STYLE="margin-left: 1cm; margin-bottom: 0cm"><FONT SIZE=2 STYLE="font-size: 11pt"><A CLASS="western" HREF="#__RefHeading__8759_1080388197">Java
 	7 and JDBC 4.1 API support</A></FONT></P>
+	<P STYLE="margin-left: 1cm; margin-bottom: 0cm"><FONT SIZE=2 STYLE="font-size: 11pt"><A CLASS="western" HREF="#__RefHeading__4917_785843600">Java
+	8 and JDBC 4.2 API support</A></FONT></P>
 	<P STYLE="margin-left: 1cm; margin-bottom: 0cm"><FONT SIZE=2 STYLE="font-size: 11pt"><A CLASS="western" HREF="#__RefHeading__6631_1850987433">Jaybird
 	on Maven</A></FONT></P>
 	<P STYLE="margin-left: 1cm; margin-bottom: 0cm"><FONT SIZE=2 STYLE="font-size: 11pt"><A CLASS="western" HREF="#__RefHeading__2747_1560579136">Native
@@ -107,13 +124,14 @@ Notes v 2.2.0</H1>
 	Code</A></FONT></P>
 	<P STYLE="margin-left: 0.5cm; margin-bottom: 0cm"><A CLASS="western" HREF="#__RefHeading__8763_1080388197">Documentation
 	and Support</A></P>
-	<P STYLE="margin-left: 1cm; margin-bottom: 0cm"><FONT SIZE=2 STYLE="font-size: 11pt"><A CLASS="western" HREF="#__RefHeading__2821_1560579136">Where
+	<P STYLE="margin-left: 1cm; margin-bottom: 0cm"><FONT SIZE=2 STYLE="font-size: 11pt"><A CLASS="western" HREF="#__RefHeading__8435_506006295">Where
 	to get more information on Jaybird</A></FONT></P>
-	<P STYLE="margin-left: 1cm; margin-bottom: 0cm"><FONT SIZE=2 STYLE="font-size: 11pt"><A CLASS="western" HREF="#__RefHeading__2823_1560579136">Where
+	<P STYLE="margin-left: 1cm; margin-bottom: 0cm"><FONT SIZE=2 STYLE="font-size: 11pt"><A CLASS="western" HREF="#__RefHeading__2823_15605791361">Where
 	to get help</A></FONT></P>
-	<P STYLE="margin-left: 1cm; margin-bottom: 0cm"><FONT SIZE=2 STYLE="font-size: 11pt"><A CLASS="western" HREF="#__RefHeading__2825_1560579136">Reporting
+	<P STYLE="margin-left: 1cm; margin-bottom: 0cm"><FONT SIZE=2 STYLE="font-size: 11pt"><A CLASS="western" HREF="#__RefHeading__8437_506006295">Contributing</A></FONT></P>
+	<P STYLE="margin-left: 1cm; margin-bottom: 0cm"><FONT SIZE=2 STYLE="font-size: 11pt"><A CLASS="western" HREF="#__RefHeading__2825_15605791361">Reporting
 	Bugs</A></FONT></P>
-	<P STYLE="margin-left: 1cm; margin-bottom: 0cm"><FONT SIZE=2 STYLE="font-size: 11pt"><A CLASS="western" HREF="#__RefHeading__8765_1080388197">Corrections/Additions
+	<P STYLE="margin-left: 1cm; margin-bottom: 0cm"><FONT SIZE=2 STYLE="font-size: 11pt"><A CLASS="western" HREF="#__RefHeading__8765_10803881971">Corrections/Additions
 	To Release Notes</A></FONT></P>
 	<P STYLE="margin-left: 0.5cm; margin-bottom: 0cm"><A CLASS="western" HREF="#__RefHeading__8767_1080388197">JDBC
 	URL Format</A></P>
@@ -158,6 +176,8 @@ Notes v 2.2.0</H1>
 	transaction completion support</A></FONT></P>
 	<P STYLE="margin-left: 1cm; margin-bottom: 0cm"><FONT SIZE=2 STYLE="font-size: 11pt"><A CLASS="western" HREF="#__RefHeading__3722_2133805793">Compatibility
 	with com.sun.rowset.*</A></FONT></P>
+	<P STYLE="margin-left: 1cm; margin-bottom: 0cm"><FONT SIZE=2 STYLE="font-size: 11pt"><A CLASS="western" HREF="#__RefHeading__4766_1756560361">Support
+	for Firebird 3 BOOLEAN type</A></FONT></P>
 	<P STYLE="margin-left: 0.5cm; margin-bottom: 0cm"><A CLASS="western" HREF="#__RefHeading__2807_1560579136">Connection
 	pooling with Jaybird</A></P>
 	<P STYLE="margin-left: 1cm; margin-bottom: 0cm"><FONT SIZE=2 STYLE="font-size: 11pt"><A CLASS="western" HREF="#__RefHeading__3729_304866878">Description
@@ -190,21 +210,21 @@ concept, the JCA specification is considerably clearer on the
 division of responsibility between the application server and driver.</P>
 <H3 CLASS="western"><A NAME="__RefHeading__2739_1560579136"></A>Supported
 Firebird versions</H3>
-<P CLASS="western">Jaybird 2.2.0 was tested against Firebird 2.1.4
-and 2.5.1, but should also support other Firebird versions from 1.0
+<P CLASS="western">Jaybird 2.2.4 was tested against Firebird 2.1.5
+and 2.5.2, but should also support other Firebird versions from 1.0
 and up. The Type 2 and embedded server JDBC drivers require the
 appropriate JNI library. Precompiled JNI binaries for Win32 and Linux
 platforms are shipped in the default installation, other platforms
 require porting/building the JNI library for that platform. 
 </P>
-<P CLASS="western">This driver does not supports InterBase servers
-due to Firebird-specific changes in the protocol and database
-attachment parameters that are sent to the server.</P>
+<P CLASS="western">This driver does not support InterBase servers due
+to Firebird-specific changes in the protocol and database attachment
+parameters that are sent to the server.</P>
 <H3 CLASS="western"><A NAME="__RefHeading__6627_1850987433"></A>Supported
 Java versions</H3>
-<P CLASS="western">Jaybird 2.2.0 supports Java 5 (JDBC 3.0), Java 6
-(JDBC 4.0) and Java 7 (JDBC 4.1). Support for earlier Java versions
-has been dropped<A CLASS="sdfootnoteanc" NAME="sdfootnote1anc" HREF="#sdfootnote1sym"><SUP>1</SUP></A>.</P>
+<P CLASS="western">Jaybird 2.2.4 supports Java 5 (JDBC 3.0), Java 6
+(JDBC 4.0), Java 7 (JDBC 4.1) and Java 8 early access (JDBC 4.2).
+Support for earlier Java versions has been dropped.</P>
 <H3 CLASS="western"><A NAME="__RefHeading__2741_1560579136"></A>Specification
 support</H3>
 <P CLASS="western">Driver supports the following specifications:</P>
@@ -214,9 +234,23 @@ support</H3>
 	<THEAD>
 		<TR VALIGN=TOP>
 			<TD WIDTH=15% STYLE="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: none; border-right: none; padding: 0.11cm 0cm">
-				<P CLASS="western">JDBC 4.1</P>
+				<P CLASS="western">JDBC 4.2</P>
 			</TD>
 			<TD WIDTH=85% STYLE="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: none; border-right: none; padding: 0.11cm 0cm">
+				<P CLASS="western">Driver does not fully support JDBC 4.2
+				features, but implements large update count methods by calling
+				the normal update count methods, and methods with <FONT FACE="Courier New, monospace"><FONT SIZE=2>SQLType</FONT></FONT>
+				by calling methods accepting the <FONT FACE="Courier New, monospace"><FONT SIZE=2>java.sql.Types</FONT></FONT>
+				integer value.</P>
+			</TD>
+		</TR>
+	</THEAD>
+	<TBODY>
+		<TR VALIGN=TOP>
+			<TD WIDTH=15% STYLE="border-top: none; border-bottom: 1px solid #000000; border-left: none; border-right: none; padding-top: 0cm; padding-bottom: 0.11cm; padding-left: 0cm; padding-right: 0cm">
+				<P CLASS="western">JDBC 4.1</P>
+			</TD>
+			<TD WIDTH=85% STYLE="border-top: none; border-bottom: 1px solid #000000; border-left: none; border-right: none; padding-top: 0cm; padding-bottom: 0.11cm; padding-left: 0cm; padding-right: 0cm">
 				<P CLASS="western">Driver implements all JDBC 4.1 methods added
 				to existing interfaces. The driver explicitly supports
 				<FONT FACE="Courier New, monospace"><FONT SIZE=2>closeOnCompletion</FONT></FONT>,
@@ -224,8 +258,6 @@ support</H3>
 				<FONT FACE="Courier New, monospace"><FONT SIZE=2>SQLFeatureNotSupportedException</FONT></FONT>.</P>
 			</TD>
 		</TR>
-	</THEAD>
-	<TBODY>
 		<TR VALIGN=TOP>
 			<TD WIDTH=15% STYLE="border-top: none; border-bottom: 1px solid #000000; border-left: none; border-right: none; padding-top: 0cm; padding-bottom: 0.11cm; padding-left: 0cm; padding-right: 0cm">
 				<P CLASS="western">JDBC 4.0</P>
@@ -285,6 +317,220 @@ support</H3>
 What's new in Jaybird 2.2</H2>
 <P CLASS="western">Jaybird 2.2 introduces the following new features
 and fixes:</P>
+<H3 CLASS="western"><A NAME="__RefHeading__4798_1756560361"></A>Changes
+and fixes in Jaybird 2.2.4</H3>
+<P CLASS="western">The following has been changed or fixed in Jaybird
+2.2.4:</P>
+<UL>
+	<LI><P CLASS="western"><SPAN STYLE="font-style: normal">Fixed:
+	Exceptions during statement preparation leave connection and
+	transaction open after explicit close (</SPAN><A CLASS="western" HREF="http://tracker.firebirdsql.org/browse/JDBC-311"><I>JDBC-311</I></A><SPAN STYLE="font-style: normal">)</SPAN></P>
+	<LI><P CLASS="western">Fixed batch update (or insert) with blob set
+	through <FONT FACE="Courier New, monospace"><FONT SIZE=2>setBinaryStream()</FONT></FONT>
+	sets empty blob for all but the first batch entry (<A CLASS="western" HREF="http://tracker.firebirdsql.org/browse/JDBC-312"><I>JDBC-312</I></A>)</P>
+	<LI><P CLASS="western">Fixed incomplete checks of database,
+	transaction, statement and blob handle validity before continuing
+	with actions. These incomplete checks could lead to unexpected
+	exceptions (for example a <FONT FACE="Courier New, monospace"><FONT SIZE=2>NullPointerException</FONT></FONT>
+	in <FONT FACE="Courier New, monospace"><FONT SIZE=2>iscDatabaseInfo</FONT></FONT>)
+	(<I><A CLASS="western" HREF="http://tracker.firebirdsql.org/browse/JDBC-313">JDBC-</A><A CLASS="western" HREF="http://tracker.firebirdsql.org/browse/JDBC-313">313</A></I>)</P>
+	<LI><P CLASS="western">Fixed error when setting connection charset
+	equal to &quot;<FONT FACE="Courier New, monospace"><FONT SIZE=2>file.encoding</FONT></FONT>&quot;
+	java property (<A CLASS="western" HREF="http://tracker.firebirdsql.org/browse/JDBC-314"><I>JDBC-314</I></A>)</P>
+	<LI><P CLASS="western">Fixed connection character set not correctly
+	set when specifying the Java connection characterset (<FONT FACE="Courier New, monospace"><FONT SIZE=2>charSet</FONT></FONT>
+	or <FONT FACE="Courier New, monospace"><FONT SIZE=2>localEncoding</FONT></FONT>
+	property)  (<A CLASS="western" HREF="http://tracker.firebirdsql.org/browse/JDBC-315"><I>JDBC-315</I></A><SPAN STYLE="font-style: normal">)</SPAN></P>
+	<LI><P CLASS="western">Fixed incorrect lengths and/or radix reported
+	by <FONT FACE="Courier New, monospace"><FONT SIZE=2>getTypeInfo</FONT></FONT>
+	and <FONT FACE="Courier New, monospace"><FONT SIZE=2>getColumns</FONT></FONT>
+	metadata (<A CLASS="western" HREF="http://tracker.firebirdsql.org/browse/JDBC-317"><I>JDBC-317</I></A><SPAN STYLE="font-style: normal">,
+	</SPAN><A CLASS="western" HREF="http://tracker.firebirdsql.org/browse/JDBC-318"><I>JDBC-318</I></A><SPAN STYLE="font-style: normal">)</SPAN></P>
+	<LI><P CLASS="western"><SPAN STYLE="font-style: normal">Initial Java
+	8 / JDBC 4.2 support (</SPAN><A CLASS="western" HREF="http://tracker.firebirdsql.org/browse/JDBC-319"><I>JDBC-319</I></A><SPAN STYLE="font-style: normal">)</SPAN></P>
+	<LI><P CLASS="western"><SPAN STYLE="font-style: normal">Firebird 3
+	</SPAN><FONT FACE="Courier New, monospace"><FONT SIZE=2><SPAN STYLE="font-style: normal">BOOLEAN</SPAN></FONT></FONT><SPAN STYLE="font-style: normal">
+	type support, </SPAN><SPAN STYLE="font-style: normal">see Support for Firebird 3 BOOLEAN type</SPAN><SPAN STYLE="font-style: normal">
+	(</SPAN><A CLASS="western" HREF="http://tracker.firebirdsql.org/browse/JDBC-321"><I>JDBC-321</I></A><SPAN STYLE="font-style: normal">)</SPAN></P>
+	<LI><P CLASS="western"><SPAN STYLE="font-style: normal">A</SPAN><SPAN STYLE="font-style: normal">dded
+	fallback of loading </SPAN><FONT FACE="Courier New, monospace"><FONT SIZE=2><SPAN STYLE="font-style: normal">GDSFactoryPlugin</SPAN></FONT></FONT><SPAN STYLE="font-style: normal">
+	implementations to prevent </SPAN><FONT FACE="Courier New, monospace"><FONT SIZE=2><SPAN STYLE="font-style: normal">NullPointerException</SPAN></FONT></FONT><SPAN STYLE="font-style: normal">
+	in Hibernate reverse engineering wizard in NetBeans (</SPAN><A CLASS="western" HREF="http://tracker.firebirdsql.org/browse/JDBC-325"><I>JDBC-325</I></A><SPAN STYLE="font-style: normal">)</SPAN></P>
+	<LI><P CLASS="western"><SPAN STYLE="font-style: normal">Fixed:
+	</SPAN><SPAN STYLE="font-style: normal">Jaybird should specify
+	dialect 3 in dpb when no explicit dialect was set</SPAN><SPAN STYLE="font-style: normal">
+	(</SPAN><A CLASS="western" HREF="http://tracker.firebirdsql.org/browse/JDBC-327"><I>JDBC-327</I></A><SPAN STYLE="font-style: normal">)</SPAN></P>
+	<LI><P CLASS="western"><SPAN STYLE="font-style: normal">Fixed</SPAN><SPAN STYLE="font-style: normal">:
+	several </SPAN><FONT FACE="Consolas, monospace"><FONT SIZE=2><SPAN STYLE="font-style: normal">DatabaseMetaData</SPAN></FONT></FONT><SPAN STYLE="font-style: normal">
+	methods defined by JDBC to only accept the actual table name also
+	accepted a </SPAN><FONT FACE="Consolas, monospace"><FONT SIZE=2><SPAN STYLE="font-style: normal">LIKE</SPAN></FONT></FONT><SPAN STYLE="font-style: normal">-pattern
+	or empty string or </SPAN><FONT FACE="Consolas, monospace"><FONT SIZE=2><SPAN STYLE="font-style: normal">null</SPAN></FONT></FONT><SPAN STYLE="font-style: normal">.
+	This was changed to conform to JDBC. This change can break
+	applications that relied on </SPAN><SPAN STYLE="font-style: normal">the</SPAN><SPAN STYLE="font-style: normal">
+	incorrect behavior (</SPAN><A CLASS="western" HREF="http://tracker.firebirdsql.org/browse/JDBC-331"><I>JDBC-331</I></A><SPAN STYLE="font-style: normal">)<BR>Affected
+	methods are: </SPAN><FONT FACE="Consolas, monospace"><FONT SIZE=2><SPAN STYLE="font-style: normal">getPrimaryKeys</SPAN></FONT></FONT><SPAN STYLE="font-style: normal">,
+	</SPAN><FONT FACE="Consolas, monospace"><FONT SIZE=2><SPAN STYLE="font-style: normal">getBestRowIdentifier</SPAN></FONT></FONT><SPAN STYLE="font-style: normal">,
+	</SPAN><FONT FACE="Consolas, monospace"><FONT SIZE=2><SPAN STYLE="font-style: normal">getImportedKeys</SPAN></FONT></FONT><SPAN STYLE="font-style: normal">,
+	</SPAN><FONT FACE="Consolas, monospace"><FONT SIZE=2><SPAN STYLE="font-style: normal">getExportedKeys</SPAN></FONT></FONT><SPAN STYLE="font-style: normal">
+	</SPAN><SPAN STYLE="font-style: normal">and</SPAN><SPAN STYLE="font-style: normal">
+	</SPAN><FONT FACE="Consolas, monospace"><FONT SIZE=2><SPAN STYLE="font-style: normal">getCrossReference</SPAN></FONT></FONT><SPAN STYLE="font-style: normal">.
+	</SPAN><SPAN STYLE="font-style: normal">As part of this change
+	</SPAN><FONT FACE="Consolas, monospace"><FONT SIZE=2><SPAN STYLE="font-style: normal">getIndexInfo</SPAN></FONT></FONT><SPAN STYLE="font-style: normal">
+	now handles names in the wrong case slightly different.<BR>Jaybird
+	3.0 will further modify and restrict the pattern matching and case
+	sensitivity of metadata methods. See Future changes to Jaybird.</SPAN></P>
+</UL>
+<H4 CLASS="western"><FONT FACE="Arial, sans-serif"><FONT SIZE=3>Known
+issues in Jaybird 2.2.4</FONT></FONT></H4>
+<P CLASS="western"><FONT FACE="Times New Roman, serif"><FONT SIZE=3>The
+following are known in issues in Jaybird 2.2.4 (and earlier):</FONT></FONT></P>
+<UL>
+	<LI><P CLASS="western"><FONT FACE="Courier New, monospace"><FONT SIZE=2>ResultSet</FONT></FONT><FONT FACE="Times New Roman, serif"><FONT SIZE=3>s
+	opened with </FONT></FONT><FONT FACE="Courier New, monospace"><FONT SIZE=2>CLOSE_CURSORS_AT_COMMIT</FONT></FONT><FONT FACE="Times New Roman, serif"><FONT SIZE=3>
+	</FONT></FONT><FONT FACE="Times New Roman, serif"><FONT SIZE=3>aren't</FONT></FONT><FONT FACE="Times New Roman, serif"><FONT SIZE=3>
+	correctly closed on commit when auto-commit is off (</FONT></FONT><A CLASS="western" HREF="http://tracker.firebirdsql.org/browse/JDBC-307"><FONT FACE="Times New Roman, serif"><FONT SIZE=3><I>JDBC-307</I></FONT></FONT></A><FONT FACE="Times New Roman, serif"><FONT SIZE=3>)</FONT></FONT></P>
+</UL>
+<P CLASS="western"><FONT FACE="Times New Roman, serif"><FONT SIZE=3><SPAN STYLE="font-style: normal">This
+list is not exhaustive, see the <A CLASS="western" HREF="http://tracker.firebirdsql.org/browse/JDBC">Jaybird
+tracker</A> for a full list of open bugs.</SPAN></FONT></FONT></P>
+<H3 CLASS="western"><A NAME="__RefHeading__4567_489604410"></A>Changes
+and fixes in Jaybird 2.2.3</H3>
+<P CLASS="western">The following has been changed or fixed in Jaybird
+2.2.3:</P>
+<UL>
+	<LI><P CLASS="western">Fixed incorrect synchronization in native and
+	embedded protocol (JNI) implementation for <FONT FACE="Courier New, monospace"><FONT SIZE=2>iscBlobInfo</FONT></FONT>
+	and <FONT FACE="Courier New, monospace"><FONT SIZE=2>iscSeekBlob</FONT></FONT><FONT FACE="Times New Roman, serif"><FONT SIZE=3>
+	(</FONT></FONT><A CLASS="western" HREF="http://tracker.firebirdsql.org/browse/JDBC-300"><FONT FACE="Times New Roman, serif"><FONT SIZE=3><I>JDBC-300</I></FONT></FONT></A><FONT FACE="Times New Roman, serif"><FONT SIZE=3>)<BR>WARNING:
+	Although Jaybird strives for correct synchronization, a JDBC
+	</FONT></FONT><FONT FACE="Courier New, monospace"><FONT SIZE=2>Connection</FONT></FONT><FONT FACE="Times New Roman, serif"><FONT SIZE=3>,
+	and its dependent objects should be used from a single </FONT></FONT><FONT FACE="Courier New, monospace"><FONT SIZE=2>Thread</FONT></FONT><FONT FACE="Times New Roman, serif"><FONT SIZE=3>
+	at a time, </FONT></FONT><FONT FACE="Times New Roman, serif"><FONT SIZE=3>sharing
+	on multiple threads concurrently is not advisable</FONT></FONT><FONT FACE="Times New Roman, serif"><FONT SIZE=3>.</FONT></FONT></P>
+	<LI><P CLASS="western"><FONT FACE="Times New Roman, serif"><FONT SIZE=3>Fixed
+	holdable </FONT></FONT><FONT FACE="Courier New, monospace"><FONT SIZE=2>ResultSet</FONT></FONT><FONT FACE="Times New Roman, serif"><FONT SIZE=3>
+	is closed on auto-commit (</FONT></FONT><A CLASS="western" HREF="http://tracker.firebirdsql.org/browse/JDBC-304"><FONT FACE="Times New Roman, serif"><FONT SIZE=3><I>JDBC-304</I></FONT></FONT></A><FONT FACE="Times New Roman, serif"><FONT SIZE=3>,
+	</FONT></FONT><A CLASS="western" HREF="http://tracker.firebirdsql.org/browse/JDBC-305"><FONT FACE="Times New Roman, serif"><FONT SIZE=3><I>JDBC-305</I></FONT></FONT></A><FONT FACE="Times New Roman, serif"><FONT SIZE=3>)</FONT></FONT></P>
+	<LI><P CLASS="western"><A NAME="id_l.I.ic.icr.ii.iica"></A><FONT FACE="Times New Roman, serif"><FONT SIZE=3>Fixed
+	table names missing or padded with spaces in Database view of
+	IntelliJ IDEA (</FONT></FONT><A CLASS="western" HREF="http://tracker.firebirdsql.org/browse/JDBC-308"><FONT FACE="Times New Roman, serif"><FONT SIZE=3><I>JDBC-308</I></FONT></FONT></A><FONT FACE="Times New Roman, serif"><FONT SIZE=3>,
+	</FONT></FONT><FONT FACE="Times New Roman, serif"><FONT SIZE=3><I><A CLASS="western" HREF="http://youtrack.jetbrains.com/issue/IDEA-100786">IDEA</A><A CLASS="western" HREF="http://youtrack.jetbrains.com/issue/IDEA-100786">-100786</A></I></FONT></FONT><FONT FACE="Times New Roman, serif"><FONT SIZE=3>)</FONT></FONT></P>
+	<LI><P CLASS="western"><FONT FACE="Times New Roman, serif"><FONT SIZE=3>Fixed
+	incorrect JDBC minor version reported under Java 7; this resulted in
+	an incorrect column name (for Java 7) in the metadata of
+	</FONT></FONT><FONT FACE="Courier New, monospace"><FONT SIZE=2>DatabaseMetaData.getColumns(...)</FONT></FONT><FONT FACE="Times New Roman, serif"><FONT SIZE=3>
+	(</FONT></FONT><A CLASS="western" HREF="http://tracker.firebirdsql.org/browse/JDBC-309"><FONT FACE="Times New Roman, serif"><FONT SIZE=3><I>JDBC-309</I></FONT></FONT></A><FONT FACE="Times New Roman, serif"><FONT SIZE=3>)</FONT></FONT></P>
+	<LI><P CLASS="western"><FONT FACE="Times New Roman, serif"><FONT SIZE=3>Added
+	</FONT></FONT><FONT FACE="Courier New, monospace"><FONT SIZE=2>IOException</FONT></FONT><FONT FACE="Times New Roman, serif"><FONT SIZE=3>
+	to cause of </FONT></FONT><FONT FACE="Courier New, monospace"><FONT SIZE=2>GDSException</FONT></FONT><FONT FACE="Times New Roman, serif"><FONT SIZE=3>
+	with error 335544721; &ldquo;</FONT></FONT><FONT FACE="Times New Roman, serif"><FONT SIZE=3><I>Unable
+	to complete network request to host &ldquo;&rdquo;</I></FONT></FONT><FONT FACE="Times New Roman, serif"><FONT SIZE=3>&rdquo;
+	for further investigation (</FONT></FONT><A CLASS="western" HREF="http://tracker.firebirdsql.org/browse/JDBC-306"><FONT FACE="Times New Roman, serif"><FONT SIZE=3><I>JDBC-306</I></FONT></FONT></A><FONT FACE="Times New Roman, serif"><FONT SIZE=3>)</FONT></FONT></P>
+</UL>
+<H3 CLASS="western"><A NAME="__RefHeading__7842_703890631"></A>Changes
+and fixes in Jaybird 2.2.2</H3>
+<P CLASS="western">The following has been changed or fixed in Jaybird
+2.2.2:</P>
+<UL>
+	<LI><P CLASS="western">Fixed:
+	<FONT FACE="Courier New, monospace"><FONT SIZE=2>FBMaintenanceManager.listLimboTransactions()</FONT></FONT>
+	reports incorrect transaction id when the result contains multi-site
+	transactions in limbo (<A CLASS="western" HREF="http://tracker.firebirdsql.org/browse/JDBC-266"><I>JDBC-266</I></A>)</P>
+	<LI><P CLASS="western">Fixed: Calling <FONT FACE="Courier New, monospace"><FONT SIZE=2>PreparedStatement.setClob(int,
+	Clob)</FONT></FONT> with a non-Firebird <FONT FACE="Courier New, monospace"><FONT SIZE=2>Clob</FONT></FONT>
+	(eg like Hibernate does) or calling <FONT FACE="Courier New, monospace"><FONT SIZE=2>PreparedStatement.setClob(int,
+	Reader)</FONT></FONT> throws <FONT FACE="Courier New, monospace"><FONT SIZE=2>FBSQLException</FONT></FONT>:
+	&ldquo;You can't start before the beginning of the blob&rdquo;
+	(<A CLASS="western" HREF="http://tracker.firebirdsql.org/browse/JDBC-281"><I>JDBC-281</I></A>)</P>
+	<LI><P CLASS="western">Fixed: Connection property types not properly
+	processed from <FONT FACE="Courier New, monospace"><FONT SIZE=2>isc_dpb_types.properties</FONT></FONT>
+	(<I><A CLASS="western" HREF="http://tracker.firebirdsql.org/browse/JDBC-284">JDBC-</A><A CLASS="western" HREF="http://tracker.firebirdsql.org/browse/JDBC-284">284</A></I>)</P>
+	<LI><P CLASS="western">Fixed: JNI implementation of parameter buffer
+	writes incorrect integers (<A CLASS="western" HREF="http://tracker.firebirdsql.org/browse/JDBC-285"><I>JDBC-285</I></A><SPAN STYLE="font-style: normal">,
+	</SPAN><A CLASS="western" HREF="http://tracker.firebirdsql.org/browse/JDBC-286"><I>JDBC-286</I></A>)</P>
+	<LI><P CLASS="western">Changed: Throw <FONT FACE="Courier New, monospace"><FONT SIZE=2>SQLException</FONT></FONT>
+	when calling <FONT FACE="Courier New, monospace"><FONT SIZE=2>execute</FONT></FONT>,
+	<FONT FACE="Courier New, monospace"><FONT SIZE=2>executeQuery</FONT></FONT>,
+	<FONT FACE="Courier New, monospace"><FONT SIZE=2>executeUpdate</FONT></FONT>
+	and <FONT FACE="Courier New, monospace"><FONT SIZE=2>addBatch</FONT></FONT>
+	methods accepting a query string on a <FONT FACE="Courier New, monospace"><FONT SIZE=2>PreparedStatement</FONT></FONT>
+	or <FONT FACE="Courier New, monospace"><FONT SIZE=2>CallableStatement</FONT></FONT>
+	as required by JDBC 4.0 (<A CLASS="western" HREF="http://tracker.firebirdsql.org/browse/JDBC-288"><I>JDBC-288</I></A>)<BR>NOTE:
+	Be aware that this change can break existing code if you depended on
+	the old, non-standard behavior! With <FONT FACE="Courier New, monospace"><FONT SIZE=2>addBatch(String)</FONT></FONT>
+	the old behavior lead to a memory leak and unexpected results.</P>
+	<LI><P CLASS="western">Fixed: <FONT FACE="Courier New, monospace"><FONT SIZE=2>LIKE</FONT></FONT>
+	escape character JDBC escape (<FONT FACE="Courier New, monospace"><FONT SIZE=2>{escape
+	'&lt;char&gt;'}</FONT></FONT>) doesn't work (<A CLASS="western" HREF="http://tracker.firebirdsql.org/browse/JDBC-290"><I>JDBC-290</I></A>)</P>
+	<LI><P CLASS="western">Added: Support for a connect timeout using
+	connection property <FONT FACE="Courier New, monospace"><FONT SIZE=2>connectTimeout</FONT></FONT>.
+	This property can be specified in the JDBC URL or <FONT FACE="Courier New, monospace"><FONT SIZE=2>Propertie</FONT></FONT>s
+	object or on the <FONT FACE="Courier New, monospace"><FONT SIZE=2>DataSource</FONT></FONT>.
+	If the <FONT FACE="Courier New, monospace"><FONT SIZE=2>connectTimeout</FONT></FONT>
+	property is not specified, the general <FONT FACE="Courier New, monospace"><FONT SIZE=2>DriverManager</FONT></FONT><FONT FACE="Times New Roman, serif"><FONT SIZE=3>
+	property </FONT></FONT><FONT FACE="Courier New, monospace"><FONT SIZE=2>loginTimeout</FONT></FONT>
+	is used. The value is the timeout in seconds. (<A CLASS="western" HREF="http://tracker.firebirdsql.org/browse/JDBC-295"><I>JDBC-295</I></A>)<BR>For
+	the Java wire protocol the connect timeout will detect unreachable
+	hosts. In the JNI implementation (native protocol) the connect
+	timeout works as the DPB item <FONT FACE="Courier New, monospace"><FONT SIZE=2>isc_dpb_connect_timeout</FONT></FONT>
+	which only works after connecting to the server for the <FONT FACE="Courier New, monospace"><FONT SIZE=2>op_accept</FONT></FONT>
+	phase of the protocol. This means that &ndash; for the native
+	protocol &ndash; the connect timeout will not detect unreachable
+	hosts within the timeout. As that might be unexpected, an <FONT FACE="Courier New, monospace"><FONT SIZE=2>SQLWarning</FONT></FONT>
+	is added to the connection if the property is specified with the
+	native protocol.</P>
+	<LI><P CLASS="western">As part of the connect timeout change,
+	hostname handling (if the hostname is an IP-address) in the Java
+	wire protocol was changed. This should not have an impact in recent
+	Java versions, but on older Java versions (Java 5 up to update 5)
+	this might result in a delay in connecting using an IP-address, if
+	that address can't be reverse-resolved to a hostname. Workaround is
+	to add an entry for that IP-address to the <FONT FACE="Courier New, monospace"><FONT SIZE=2>/etc/hosts</FONT></FONT>
+	or <FONT FACE="Courier New, monospace"><FONT SIZE=2>%WINDIR%\System32\Drivers\etc\hosts</FONT></FONT><FONT FACE="Times New Roman, serif"><FONT SIZE=3>
+	file.</FONT></FONT></P>
+</UL>
+<H3 CLASS="western"><A NAME="__RefHeading__4286_1426179335"></A>Changes
+and fixes in Jaybird 2.2.1</H3>
+<P CLASS="western">The following has been changed or fixed in Jaybird
+2.2.1:</P>
+<UL>
+	<LI><P CLASS="western">Fixed: <FONT FACE="Courier New, monospace"><FONT SIZE=2>UnsatisfiedLinkError</FONT></FONT>
+	in <FONT FACE="Courier New, monospace"><FONT SIZE=2>libjaybird22(_x64).so
+	undefined symbol: _ZTVN10__cxxabiv117__class_type_infoE</FONT></FONT>
+	on Linux <I>(<A CLASS="western" HREF="http://tracker.firebirdsql.org/browse/JDBC-259">JDBC-259</A>)</I>
+		</P>
+	<LI><P CLASS="western"><FONT FACE="Times New Roman, serif"><FONT SIZE=3>Added
+	connection property </FONT></FONT><FONT FACE="Courier New, monospace"><FONT SIZE=2>columnLabelForName</FONT></FONT><FONT FACE="Times New Roman, serif"><FONT SIZE=3>
+	for backwards compatible behavior of
+	</FONT></FONT><FONT FACE="Courier New, monospace"><FONT SIZE=2>ResultSetMetaData#getColumnName(int)</FONT></FONT><FONT FACE="Times New Roman, serif"><FONT SIZE=3>
+	and compatibility with bug in </FONT></FONT><FONT FACE="Courier New, monospace"><FONT SIZE=2>com.sun.rowset.CachedRowSetImpl</FONT></FONT><FONT FACE="Times New Roman, serif"><FONT SIZE=3>
+	</FONT></FONT><FONT FACE="Times New Roman, serif"><FONT SIZE=3><I>(<A CLASS="western" HREF="http://tracker.firebirdsql.org/browse/JDBC-260">JDBC-260</A>)</I></FONT></FONT><FONT FACE="Times New Roman, serif"><FONT SIZE=3><BR></FONT></FONT><FONT FACE="Times New Roman, serif"><FONT SIZE=3>Set
+	property to </FONT></FONT><FONT FACE="Courier New, monospace"><FONT SIZE=2>true</FONT></FONT><FONT FACE="Times New Roman, serif"><FONT SIZE=3>
+	for backwards compatible behavior (</FONT></FONT><FONT FACE="Courier New, monospace"><FONT SIZE=2>getColumnName()</FONT></FONT><FONT FACE="Times New Roman, serif"><FONT SIZE=3>
+	returns the column label); don't set the property or set </FONT></FONT><FONT FACE="Times New Roman, serif"><FONT SIZE=3>it</FONT></FONT><FONT FACE="Times New Roman, serif"><FONT SIZE=3>
+	to </FONT></FONT><FONT FACE="Courier New, monospace"><FONT SIZE=2>false</FONT></FONT><FONT FACE="Times New Roman, serif"><FONT SIZE=3>
+	for JDBC-compliant behavior (recommended)</FONT></FONT><FONT FACE="Times New Roman, serif"><FONT SIZE=3>.</FONT></FONT></P>
+	<LI><P CLASS="western"><FONT FACE="Times New Roman, serif"><FONT SIZE=3>Fixed:</FONT></FONT><FONT FACE="Courier New, monospace"><FONT SIZE=2>
+	setString(</FONT></FONT><FONT FACE="Courier New, monospace"><FONT SIZE=2>column,
+	</FONT></FONT><FONT FACE="Courier New, monospace"><FONT SIZE=2>null)</FONT></FONT>
+	on &ldquo;<FONT FACE="Courier New, monospace"><FONT SIZE=2>? IS
+	(NOT) NULL</FONT></FONT>&rdquo; condition does not set parameter to
+	<FONT FACE="Courier New, monospace"><FONT SIZE=2>NULL</FONT></FONT>
+	<I>(<A CLASS="western" HREF="http://tracker.firebirdsql.org/browse/JDBC-264">JDBC-264</A>)</I></P>
+	<LI><P CLASS="western"><SPAN STYLE="font-style: normal">The </SPAN><FONT FACE="Courier New, monospace"><FONT SIZE=2><SPAN STYLE="font-style: normal">charSet</SPAN></FONT></FONT><SPAN STYLE="font-style: normal">
+	connection property now accepts all aliases of the supported Java
+	character sets (eg instead of only </SPAN><FONT FACE="Courier New, monospace"><FONT SIZE=2><SPAN STYLE="font-style: normal">Cp1252</SPAN></FONT></FONT><SPAN STYLE="font-style: normal">
+	now </SPAN><FONT FACE="Courier New, monospace"><FONT SIZE=2><SPAN STYLE="font-style: normal">windows-1252</SPAN></FONT></FONT><SPAN STYLE="font-style: normal">
+	is also accepted) </SPAN><I>(<A CLASS="western" HREF="http://tracker.firebirdsql.org/browse/JDBC-267">JDBC-267</A>)</I></P>
+	<LI><P CLASS="western"><SPAN STYLE="font-style: normal">Fixed:
+	values </SPAN><SPAN STYLE="font-style: normal">of</SPAN><SPAN STYLE="font-style: normal">
+	</SPAN><FONT FACE="Courier New, monospace"><FONT SIZE=2><SPAN STYLE="font-style: normal">charSet</SPAN></FONT></FONT><SPAN STYLE="font-style: normal">
+	property are case-sensitive </SPAN><I>(<A CLASS="western" HREF="http://tracker.firebirdsql.org/browse/JDBC-268">JDBC-268</A>)</I></P>
+	<LI><P CLASS="western"><SPAN STYLE="font-style: normal">Fixed:
+	setting a parameter as </SPAN><FONT FACE="Courier New, monospace"><FONT SIZE=2><SPAN STYLE="font-style: normal">NULL</SPAN></FONT></FONT><SPAN STYLE="font-style: normal">
+	with the native protocol does not work when Firebird describe</SPAN><SPAN STYLE="font-style: normal">s</SPAN><SPAN STYLE="font-style: normal">
+	the parameter as not nullable </SPAN><I>(<A CLASS="western" HREF="http://tracker.firebirdsql.org/browse/JDBC-271">JDB</A><A CLASS="western" HREF="http://tracker.firebirdsql.org/browse/JDBC-271">C-271</A>)</I></P>
+</UL>
 <H3 CLASS="western"><A NAME="__RefHeading__3759_663895651"></A>Changes
 and fixes since Jaybird 2.2.0 beta 1</H3>
 <P CLASS="western">The following was changed or fixed after the
@@ -293,20 +539,19 @@ release of Jaybird 2.2.0 beta 1:</P>
 	<LI><P CLASS="western"><FONT FACE="Courier New, monospace"><FONT SIZE=2>ConcurrentModificationException</FONT></FONT>
 	when closing connection obtained from
 	<FONT FACE="Courier New, monospace"><FONT SIZE=2>org.firebirdsql.ds.FBConnectionPoolDataSource</FONT></FONT>
-	with statements open <I>(</I><A CLASS="western" HREF="http://tracker.firebirdsql.org/browse/JDBC-250"><I>JDBC-250</I></A><I>)</I></P>
+	with statements open <I>(<A CLASS="western" HREF="http://tracker.firebirdsql.org/browse/JDBC-250">JDBC-250</A>)</I></P>
 	<LI><P CLASS="western"><SPAN STYLE="font-style: normal">Memory leak
-	when obtaining mu</SPAN><SPAN STYLE="font-style: normal">ltiple
-	connections for the same URL </SPAN><I>(</I><A CLASS="western" HREF="http://tracker.firebirdsql.org/browse/JDBC-249"><I>JDBC-249</I></A><I>)</I></P>
+	when obtaining multiple connections for the same URL </SPAN><I>(<A CLASS="western" HREF="http://tracker.firebirdsql.org/browse/JDBC-249">JDBC-249</A>)</I></P>
 	<LI><P CLASS="western"><SPAN STYLE="font-style: normal">CPU spikes
 	to 100% when using events and Firebird Server is stopped or
-	unreachable </SPAN><I>(</I><A CLASS="western" HREF="http://tracker.firebirdsql.org/browse/JDBC-232"><I>JDBC-</I></A><A CLASS="western" HREF="http://tracker.firebirdsql.org/browse/JDBC-232"><I>232</I></A><I>)</I></P>
+	unreachable </SPAN><I>(<A CLASS="western" HREF="http://tracker.firebirdsql.org/browse/JDBC-232">JDBC-</A><A CLASS="western" HREF="http://tracker.firebirdsql.org/browse/JDBC-232">232</A>)</I></P>
 	<LI><P CLASS="western"><SPAN STYLE="font-style: normal">Events do
-	not work on Embedded </SPAN><I>(</I><A CLASS="western" HREF="http://tracker.firebirdsql.org/browse/JDBC-247"><I>JDBC-247</I></A><I>)</I></P>
+	not work on Embedded </SPAN><I>(<A CLASS="western" HREF="http://tracker.firebirdsql.org/browse/JDBC-247">JDBC-247</A>)</I></P>
 	<LI><P CLASS="western" STYLE="font-style: normal">Provide workaround
-	for characterset transliteration problems in database filenames and
-	other connection properties <I>(</I><A CLASS="western" HREF="http://tracker.firebirdsql.org/browse/JDBC-253"><I>JDBC-253</I></A><I>)</I>;
+	for character set transliteration problems in database filenames and
+	other connection properties <I>(<A CLASS="western" HREF="http://tracker.firebirdsql.org/browse/JDBC-253">JDBC-253</A>)</I>;
 	see also Support for Firebird 2.5.</P>
-	<LI><P CLASS="western" STYLE="font-style: normal">FBBackupManager
+	<LI><P CLASS="western" STYLE="font-style: normal"><FONT FACE="Courier New, monospace"><FONT SIZE=2>FBBackupManager</FONT></FONT>
 	does not allow 16kb page size for restore (<A CLASS="western" HREF="http://tracker.firebirdsql.org/browse/JDBC-255"><I>JDBC-255</I></A>)</P>
 	<LI><P CLASS="western" STYLE="font-style: normal">Log warning and
 	add warning on <FONT FACE="Courier New, monospace"><FONT SIZE=2>Connection</FONT></FONT>
@@ -330,8 +575,8 @@ is passed, the query will be executed as a normal query.</P>
 <FONT FACE="Courier New, monospace"><FONT SIZE=2>RETURN_GENERATED_KEYS</FONT></FONT>
 is passed, the driver will add <I><B>all</B></I><SPAN STYLE="font-style: normal"><SPAN STYLE="font-weight: normal">
 columns of the table in ordinal position order (as in the (JDBC)
-metadata of the table). </SPAN></SPAN><SPAN STYLE="font-style: normal"><SPAN STYLE="font-weight: normal">It
-is advisable to retrieve the values from the </SPAN></SPAN><FONT FACE="Courier New, monospace"><FONT SIZE=2><SPAN STYLE="font-style: normal"><SPAN STYLE="font-weight: normal">getGeneratedKeys()</SPAN></SPAN></FONT></FONT><SPAN STYLE="font-style: normal"><SPAN STYLE="font-weight: normal">
+metadata of the table). It is advisable to retrieve the values from
+the </SPAN></SPAN><FONT FACE="Courier New, monospace"><FONT SIZE=2><SPAN STYLE="font-style: normal"><SPAN STYLE="font-weight: normal">getGeneratedKeys()</SPAN></SPAN></FONT></FONT><SPAN STYLE="font-style: normal"><SPAN STYLE="font-weight: normal">
 resultset by column name.</SPAN></SPAN></P>
 <P CLASS="western" STYLE="margin-left: 1.24cm; font-style: normal; font-weight: normal">
 We opted to include all columns as it is next to impossible to decide
@@ -358,7 +603,7 @@ future)</P>
 are the column names to be returned. The column names provided are
 processed as is and not checked for validity or the need of quoting.
 Providing non-existent or incorrectly (un)quoted columns will result
-in an exception.</P>
+in an exception when the statement is processed by Firebird.</P>
 <P CLASS="western" STYLE="margin-left: 1.24cm">This method is the
 fastest as it does not retrieve metadata from the server.</P>
 <OL START=4>
@@ -407,20 +652,36 @@ features:</P>
 <P CLASS="western">Support was added for the following JDBC 4.1
 features:</P>
 <UL>
-	<LI><P CLASS="western">try-with-resources<A CLASS="sdfootnoteanc" NAME="sdfootnote2anc" HREF="#sdfootnote2sym"><SUP>2</SUP></A></P>
-	<LI><P CLASS="western">Statement <SPAN STYLE="font-style: normal">closeOnCompletion</SPAN></P>
+	<LI><P CLASS="western">try-with-resources<A CLASS="sdfootnoteanc" NAME="sdfootnote1anc" HREF="#sdfootnote1sym"><SUP>1</SUP></A></P>
+	<LI><P CLASS="western">Statement <FONT FACE="Courier New, monospace"><FONT SIZE=2><SPAN STYLE="font-style: normal">closeOnCompletion</SPAN></FONT></FONT></P>
 </UL>
 <P CLASS="western">Other methods added by JDBC 4.1 will throw
 <FONT FACE="Courier New, monospace"><FONT SIZE=2>FBDriverNotCapableException</FONT></FONT>
 (a subclass of <FONT FACE="Courier New, monospace"><FONT SIZE=2>SQLFeatureNotSupportedException</FONT></FONT>).</P>
+<H3 CLASS="western"><A NAME="__RefHeading__4917_785843600"></A>Java 8
+and JDBC 4.2 API support</H3>
+<P CLASS="western">Minimal support for JDBC 4.2 was added in Jaybird
+2.2.4:</P>
+<UL>
+	<LI><P CLASS="western">Large update counts: no actual support is
+	provided, method call is forwarded to the normal update count
+	method.</P>
+	<LI><P CLASS="western">Methods accepting <FONT FACE="Courier New, monospace"><FONT SIZE=2>java.sql.SQLType</FONT></FONT>:
+	no actual support is provided, method call is forwarded to
+	equivalent method accepting a <FONT FACE="Courier New, monospace"><FONT SIZE=2>java.sql.Types</FONT></FONT>
+	integer value.</P>
+</UL>
 <H3 CLASS="western"><A NAME="__RefHeading__6631_1850987433"></A>Jaybird
 on Maven</H3>
-<P CLASS="western">Jaybird 2.2.0 is available on maven, with a
+<P CLASS="western">Jaybird 2.2.4 is available on maven, with a
 separate artifact for each supported Java version.</P>
 <P CLASS="western">Groupid: <FONT FACE="Courier New, monospace"><FONT SIZE=2>org.firebirdsql.jdbc</FONT></FONT>,
-artifactid: <FONT FACE="Courier New, monospace"><FONT SIZE=2>jaybird-</FONT></FONT><FONT FACE="Courier New, monospace"><FONT SIZE=2>jdkXX</FONT></FONT>
-(where XX is 15, 16 or 17).</P>
-<P CLASS="western">Version: <FONT FACE="Courier New, monospace"><FONT SIZE=2>2.2.0</FONT></FONT></P>
+artifactid: <FONT FACE="Courier New, monospace"><FONT SIZE=2>jaybird-jdkXX</FONT></FONT>
+(where <FONT FACE="Courier New, monospace"><FONT SIZE=2>XX</FONT></FONT>
+is <FONT FACE="Courier New, monospace"><FONT SIZE=2>15</FONT></FONT>,
+<FONT FACE="Courier New, monospace"><FONT SIZE=2>16</FONT></FONT> or
+<FONT FACE="Courier New, monospace"><FONT SIZE=2>17</FONT></FONT>).</P>
+<P CLASS="western">Version: <FONT FACE="Courier New, monospace"><FONT SIZE=2>2.2.</FONT></FONT><FONT FACE="Courier New, monospace"><FONT SIZE=2>4</FONT></FONT></P>
 <P CLASS="western">When deploying to a JavaEE environment, exclude
 the <FONT FACE="Courier New, monospace"><FONT SIZE=2>javax.resource</FONT></FONT>
 <FONT FACE="Courier New, monospace"><FONT SIZE=2>connector-api</FONT></FONT>
@@ -461,8 +722,8 @@ but a workaround is available:</P>
 	property </FONT><FONT FACE="Courier New, monospace"><FONT SIZE=2>utf8_filename=1</FONT></FONT><FONT FACE="Times New Roman, serif">
 	in the JDBC URL or (non-standard) properties of the datasource</FONT></P>
 </OL>
-<P CLASS="western"><FONT FACE="Times New Roman, serif">This wi</FONT><FONT FACE="Times New Roman, serif">ll
-only work if the Firebird server is version 2.5 or higher.</FONT></P>
+<P CLASS="western"><FONT FACE="Times New Roman, serif">This will only
+work if the Firebird server is version 2.5 or higher.</FONT></P>
 <H3 CLASS="western"><A NAME="__RefHeading__3761_663895651"></A>Improved
 support for OpenOffice / LibreOffice Base</H3>
 <P CLASS="western">The interpretation of the JDBC standard by Jaybird
@@ -499,7 +760,11 @@ fixes and changes</H3>
 	compliance with the JDBC specification, <FONT FACE="Courier New, monospace"><FONT SIZE=2>getColumnLabel(int)</FONT></FONT>
 	will still return the alias (or the column name if no alias is
 	defined). See Compatibility with com.sun.rowset.* for potential
-	problems when using the reference implementation of <FONT FACE="Courier New, monospace"><FONT SIZE=2>CachedRowSet</FONT></FONT>.</P>
+	problems when using the reference implementation of
+	<FONT FACE="Courier New, monospace"><FONT SIZE=2>CachedRowSet</FONT></FONT>.<BR>Jaybird
+	2.2.1 introduced the connection property <FONT FACE="Courier New, monospace"><FONT SIZE=2>columnLabelForName</FONT></FONT>
+	which will revert to the old behavior when set to <FONT FACE="Courier New, monospace"><FONT SIZE=2>true</FONT></FONT>.
+	Be aware that the old behavior is not JDBC-compliant.</P>
 	<LI><P CLASS="western"><FONT FACE="Courier New, monospace"><FONT SIZE=2>FBDatabaseMetaData</FONT></FONT>
 	has been updated to include metadata columns defined by JDBC 3.0,
 	4.0 and 4.1. This also changes the position of <FONT FACE="Courier New, monospace"><FONT SIZE=2>OWNER_NAME</FONT></FONT>
@@ -517,41 +782,52 @@ fixes and changes</H3>
 	<LI><P CLASS="western">The connection property <FONT FACE="Courier New, monospace"><FONT SIZE=2>octetsAsBytes</FONT></FONT>
 	can be used to identify fields with <FONT FACE="Courier New, monospace"><FONT SIZE=2>CHARACTER
 	SET OCTETS</FONT></FONT> as being <FONT FACE="Courier New, monospace"><FONT SIZE=2>(VAR)BINARY</FONT></FONT>
-	(in the resultsetmetadata only)</P>
+	(in <FONT FACE="Courier New, monospace"><FONT SIZE=2>R</FONT></FONT><FONT FACE="Courier New, monospace"><FONT SIZE=2>esult</FONT></FONT><FONT FACE="Courier New, monospace"><FONT SIZE=2>S</FONT></FONT><FONT FACE="Courier New, monospace"><FONT SIZE=2>et</FONT></FONT><FONT FACE="Courier New, monospace"><FONT SIZE=2>M</FONT></FONT><FONT FACE="Courier New, monospace"><FONT SIZE=2>eta</FONT></FONT><FONT FACE="Courier New, monospace"><FONT SIZE=2>D</FONT></FONT><FONT FACE="Courier New, monospace"><FONT SIZE=2>ata</FONT></FONT>
+	only)</P>
 	<LI><P CLASS="western">The <FONT FACE="Courier New, monospace"><FONT SIZE=2>getTime(</FONT></FONT>),
 	<FONT FACE="Courier New, monospace"><FONT SIZE=2>getDate()</FONT></FONT>,
-	<FONT FACE="Courier New, monospace"><FONT SIZE=2>getTime</FONT></FONT><FONT FACE="Courier New, monospace"><FONT SIZE=2>stamp()</FONT></FONT>
+	<FONT FACE="Courier New, monospace"><FONT SIZE=2>getTimestamp()</FONT></FONT>
 	methods which take a <FONT FACE="Courier New, monospace"><FONT SIZE=2>Calendar</FONT></FONT>
 	object now correctly handle conversions around Daylight Savings Time
-	(DST) changes. Before the time was first converted to the local JVM
+	(DST) changes. Before, the time was first converted to the local JVM
 	timezone, and then to the timezone of the provided <FONT FACE="Courier New, monospace"><FONT SIZE=2>Calendar</FONT></FONT>,
 	this could lose up to an hour in time. Now the time is converted
 	directly to the timezone of the provided <FONT FACE="Courier New, monospace"><FONT SIZE=2>Calendar</FONT></FONT>.
-	<I>(</I><A CLASS="western" HREF="http://tracker.firebirdsql.org/browse/JDBC-154"><I>JDBC-154</I></A><I>)</I></P>
+	<I>(<A CLASS="western" HREF="http://tracker.firebirdsql.org/browse/JDBC-154">JDBC-154</A>)</I></P>
 </UL>
 <P CLASS="western">A full list of changes is available at:</P>
-<P CLASS="western"><A CLASS="western" HREF="http://tracker.firebirdsql.org/secure/ReleaseNote.jspa?version=10053&amp;styleName=Text&amp;projectId=10002&amp;Create=Create">http://tracker.firebirdsql.org/secure/ReleaseNote.jspa?version=10053&amp;styleName=Text&amp;projectId=10002&amp;Create=Create</A></P>
-<H3 CLASS="western"><BR><BR>
-</H3>
+<P CLASS="western">Jaybird 2.2.4:
+<A CLASS="western" HREF="http://tracker.firebirdsql.org/secure/ReleaseNote.jspa?version=10531&amp;styleName=Text&amp;projectId=10002"><FONT FACE="Courier New, monospace"><FONT SIZE=2>http://tracker.firebirdsql.org/secure/ReleaseNote.jspa?version=10531&amp;styleName=Text&amp;projectId=10002</FONT></FONT></A></P>
+<P CLASS="western">Jaybird 2.2.3:
+<A CLASS="western" HREF="http://tracker.firebirdsql.org/secure/ReleaseNote.jspa?version=10510&amp;styleName=Text&amp;projectId=10002"><FONT FACE="Courier New, monospace"><FONT SIZE=2>http://tracker.firebirdsql.org/secure/ReleaseNote.jspa?version=10510&amp;styleName=Text&amp;projectId=10002</FONT></FONT></A></P>
+<P CLASS="western">Jaybird 2.2.2:
+<A CLASS="western" HREF="http://tracker.firebirdsql.org/secure/ReleaseNote.jspa?projectId=10002&amp;styleName=Text&amp;version=10480"><FONT FACE="Courier New, monospace"><FONT SIZE=2>http://tracker.firebirdsql.org/secure/ReleaseNote.jspa?projectId=10002&amp;styleName=Text&amp;version=10480</FONT></FONT></A></P>
+<P CLASS="western">Jaybird 2.2.1:
+<A CLASS="western" HREF="http://tracker.firebirdsql.org/secure/ReleaseNote.jspa?version=10474&amp;styleName=Text&amp;projectId=10002&amp;Create=Create"><FONT FACE="Courier New, monospace"><FONT SIZE=2>http://tracker.firebirdsql.org/secure/ReleaseNote.jspa?version=10474&amp;styleName=Text&amp;projectId=10002&amp;Create=Create</FONT></FONT></A></P>
+<P CLASS="western">Jaybird 2.2.0:
+<A CLASS="western" HREF="http://tracker.firebirdsql.org/secure/ReleaseNote.jspa?version=10053&amp;styleName=Text&amp;projectId=10002&amp;Create=Create"><FONT FACE="Courier New, monospace"><FONT SIZE=2>http://tracker.firebirdsql.org/secure/ReleaseNote.jspa?version=10053&amp;styleName=Text&amp;projectId=10002&amp;Create=Create</FONT></FONT></A></P>
 <H2 CLASS="western" STYLE="page-break-before: always"><A NAME="__RefHeading__2751_1560579136"></A>
 Compatibility changes</H2>
 <P CLASS="western">Jaybird 2.2 introduces some changes in
-compatibility and announces future breaking changes.</P>
+compatibility and announces future breaking changes. The version
+previously announced as Jaybird 2.3 will be released as Jaybird 3.0.</P>
 <H3 CLASS="western"><A NAME="__RefHeading__3763_304866878"></A>Java
 support</H3>
-<P CLASS="western">We are currently considering to drop Java 5
-support for Jaybird 2.3 as Java 5 has been on End-Of-Life<A CLASS="sdfootnoteanc" NAME="sdfootnote3anc" HREF="#sdfootnote3sym"><SUP>3</SUP></A>
-status since October 2009.  Please let us know your thoughts on the
-Firebird-Java list.</P>
+<P CLASS="western">Java 5 support will be dropped for Jaybird 3.0 as
+Java 5 has been on End-Of-Public-Updates<A CLASS="sdfootnoteanc" NAME="sdfootnote2anc" HREF="#sdfootnote2sym"><SUP>2</SUP></A>
+status since October 2009.</P>
+<P CLASS="western">Java 6 support will be dropped for Jaybird 3.1 as
+Java 6 has been on End-Of-Public-Updates status since February 2013.</P>
 <H3 CLASS="western"><A NAME="__RefHeading__3765_304866878"></A>Firebird
 support</H3>
 <P CLASS="western">Jaybird 2.2 supports Firebird 1.0 and higher, but
-is only tested with Firebird 2.1 and 2.5. For Jaybird 2.3 formal
+is only tested with Firebird 2.1 and 2.5. With Jaybird 3.0 formal
 support for Firebird 1.0 and 1.5 will be dropped. In general this
-probably will not impact the use of the driver, but might have impact
-on the availability and use of metadata information. This also means
-that from Jaybird 2.3 bugs that only occur with Firebird 1.0 and 1.5
-will not be fixed.</P>
+should not impact the use of the driver, but might have impact on the
+availability and use of metadata information. This also means that
+from Jaybird 3.0 bugs that only occur with Firebird 1.0 and 1.5 will
+not be fixed. With Jaybird 3.1 support for Firebird 2.0 will be
+dropped.</P>
 <H3 CLASS="western"><A NAME="__RefHeading__2753_1560579136"></A>Important
 changes to Datasources</H3>
 <P CLASS="western">The <FONT FACE="Courier New, monospace"><FONT SIZE=2>ConnectionPoolDataSource</FONT></FONT>
@@ -562,7 +838,7 @@ contain several bugs with regard to pool and connection management
 when used by a JavaEE application server. The decision was made to
 write new implementations in the package <FONT FACE="Courier New, monospace"><FONT SIZE=2>org.firebirdsql.ds</FONT></FONT>.</P>
 <P CLASS="western">The following implementation classes have been
-deprecated and will be removed in Jaybird 2.3:</P>
+deprecated and will be removed in Jaybird 3.0:</P>
 <UL>
 	<LI><P CLASS="western"><FONT FACE="Courier New, monospace"><FONT SIZE=2>org.firebirdsql.pool.DriverConnectionPoolDataSource</FONT></FONT></P>
 	<LI><P CLASS="western"><FONT FACE="Courier New, monospace"><FONT SIZE=2>org.firebirdsql.pool.FBConnectionPoolDataSource</FONT></FONT></P>
@@ -613,7 +889,7 @@ if possible.</P>
 <P CLASS="western">As announced above, the <FONT FACE="Courier New, monospace"><FONT SIZE=2>ConnectionPoolDataSource</FONT></FONT>
 implementations in <FONT FACE="Courier New, monospace"><FONT SIZE=2>org.firebirdsql.pool</FONT></FONT>
 and <FONT FACE="Courier New, monospace"><FONT SIZE=2>org.firebirdsql.jca</FONT></FONT>
-will be removed in Jaybird 2.3. This may included removal of
+will be removed in Jaybird 3.0. This may included removal of
 additional classes and interfaces from these packages (or the entire
 package).</P>
 <P CLASS="western">The following (deprecated) classes will also be
@@ -655,9 +931,9 @@ methods removed:</P>
 methods, please change your code to use the JDBC interface or method
 instead.</P>
 <H4 CLASS="western">Handling <FONT FACE="Courier New, monospace">(VAR)CHAR
-CHARACTER SET OC</FONT><FONT FACE="Courier New, monospace">TETS</FONT>
-as <FONT FACE="Courier New, monospace">(VAR)BINARY</FONT> type</H4>
-<P CLASS="western">From Jaybird 2.3 on <FONT FACE="Courier New, monospace"><FONT SIZE=2>(VAR)CHAR
+CHARACTER SET OCTETS</FONT> as <FONT FACE="Courier New, monospace">(VAR)BINARY</FONT>
+type</H4>
+<P CLASS="western">From Jaybird 3.0 on <FONT FACE="Courier New, monospace"><FONT SIZE=2>(VAR)CHAR
 CHARACTER SET OCTETS</FONT></FONT> will be considered to be of
 <FONT FACE="Courier New, monospace"><FONT SIZE=2>java.sql.Types</FONT></FONT>
 type <FONT FACE="Courier New, monospace"><FONT SIZE=2>(VAR)BINARY</FONT></FONT><FONT FACE="Times New Roman, serif"><FONT SIZE=3>.
@@ -666,19 +942,18 @@ but will impact the metadata and the type of object returned by
 </FONT></FONT><FONT FACE="Courier New, monospace"><FONT SIZE=2>getObject()</FONT></FONT><FONT FACE="Times New Roman, serif"><FONT SIZE=3>
 (a byte array instead of a String).</FONT></FONT></P>
 <H4 CLASS="western"><FONT FACE="Arial, sans-serif"><FONT SIZE=3>Handling
-connections without explicit co</FONT><FONT SIZE=3>nnection character
-set</FONT></FONT></H4>
+connections without explicit connection character set</FONT></FONT></H4>
 <P CLASS="western">When no connection character set has been
 specified (properties <FONT FACE="Courier New, monospace"><FONT SIZE=2>lc_ctype</FONT></FONT>
 or <FONT FACE="Courier New, monospace"><FONT SIZE=2>encoding</FONT></FONT>
 with Firebird character set, or <FONT FACE="Courier New, monospace"><FONT SIZE=2>charSet
 </FONT></FONT>or <FONT FACE="Courier New, monospace"><FONT SIZE=2>localEncoding</FONT></FONT>
-<FONT FACE="Times New Roman, serif">with Java character set)</FONT><FONT FACE="Times New Roman, serif">,
-Jaybird will currently use the </FONT><FONT FACE="Courier New, monospace"><FONT SIZE=2>NONE</FONT></FONT><FONT FACE="Times New Roman, serif">
-character set</FONT><FONT FACE="Times New Roman, serif">. This</FONT><FONT FACE="Times New Roman, serif">
-means that the Firebird server will return the bytes for </FONT><FONT FACE="Courier New, monospace"><FONT SIZE=2>(VAR)CHAR</FONT></FONT><FONT FACE="Times New Roman, serif">
-columns as they are stored, while Jaybird will conv</FONT><FONT FACE="Times New Roman, serif">ert
-between bytes and Strings using the local platform encoding.</FONT></P>
+<FONT FACE="Times New Roman, serif">with Java character set), Jaybird
+will currently use the </FONT><FONT FACE="Courier New, monospace"><FONT SIZE=2>NONE</FONT></FONT><FONT FACE="Times New Roman, serif">
+character set. This means that the Firebird server will return the
+bytes for </FONT><FONT FACE="Courier New, monospace"><FONT SIZE=2>(VAR)CHAR</FONT></FONT><FONT FACE="Times New Roman, serif">
+columns as they are stored, while Jaybird will convert between bytes
+and Strings using the local platform encoding.</FONT></P>
 <P CLASS="western"><FONT FACE="Times New Roman, serif">This default
 has the potential of corrupting data when switching platforms or
 using the same database with different local encoding, or for
@@ -690,29 +965,82 @@ version of Jaybird will refuse to connect without an explicit
 connection character set. For the time being, Jaybird will log a
 warning and add a warning on the </FONT><FONT FACE="Courier New, monospace"><FONT SIZE=2>Connection</FONT></FONT><FONT FACE="Times New Roman, serif">
 when no explicit character set was specified.</FONT></P>
-<P CLASS="western"><FONT FACE="Times New Roman, serif">R</FONT><FONT FACE="Times New Roman, serif">eview
-your use of the connection character sets and change it if you are
-not specifying it explicitly. Be aware that changing this may require</FONT><FONT FACE="Times New Roman, serif">
-you to fix the data as it is currently stored in your database if
-your database character set does not match the local platform
-encoding of your Java application.</FONT><FONT FACE="Times New Roman, serif">
-If you are sure that </FONT><FONT FACE="Courier New, monospace"><FONT SIZE=2>NONE</FONT></FONT><FONT FACE="Times New Roman, serif">
+<P CLASS="western"><FONT FACE="Times New Roman, serif">Review your
+use of the connection character sets and change it if you are not
+specifying it explicitly. Be aware that changing this may require you
+to fix the data as it is currently stored in your database if your
+database character set does not match the local platform encoding of
+your Java application. If you are sure that </FONT><FONT FACE="Courier New, monospace"><FONT SIZE=2>NONE</FONT></FONT><FONT FACE="Times New Roman, serif">
 is the correct character set for you, specify it explicitly in your
 connection string or connection properties.</FONT></P>
+<H4 CLASS="western"><FONT FACE="Arial, sans-serif">Replacement or
+upgrade of logging library</FONT></H4>
+<P CLASS="western"><FONT FACE="Times New Roman, serif">Logging in
+Jaybird 3.0 will be changed. We will either switch to slf4j, or
+upgrade Log4J to version 2.x.</FONT></P>
+<H4 CLASS="western">Stricter JDBC compliance for <FONT FACE="Consolas, monospace">DatabaseMetaData</FONT>
+methods</H4>
+<P CLASS="western">The current implementation of <FONT FACE="Consolas, monospace"><FONT SIZE=2>DatabaseMetaData</FONT></FONT>
+methods do not conform to the JDBC specification when it comes to
+case sensitivity and quoted object names.</P>
+<P CLASS="western">In Jaybird 3.0 meta data methods will no longer do
+the following:</P>
+<UL>
+	<LI><P CLASS="western">Remove quotes around object names</P>
+	<LI><P CLASS="western">Trying the uppercased value, when the
+	original parameter value failed to produce results</P>
+</UL>
+<P CLASS="western"><FONT FACE="Times New Roman, serif">For example:</FONT></P>
+<PRE LANG="zxx" CLASS="western"><FONT FACE="Consolas, monospace">CREATE TABLE tablename (</FONT>
+<FONT FACE="Consolas, monospace"><SPAN LANG="zxx">	column1 INTEGER,</SPAN></FONT>
+<FONT FACE="Consolas, monospace"><SPAN LANG="zxx">	&quot;column2&quot; INTEGER</SPAN></FONT>
+<FONT FACE="Consolas, monospace"><SPAN LANG="zxx">);</SPAN></FONT></PRE><P CLASS="western">
+<FONT FACE="Times New Roman, serif">In Jaybird 2.2</FONT><FONT FACE="Times New Roman, serif">
+using </FONT><FONT FACE="Consolas, monospace"><FONT SIZE=2>getColumns(null,
+null, </FONT></FONT><FONT FACE="Consolas, monospace"><FONT SIZE=2>&quot;</FONT></FONT><FONT FACE="Consolas, monospace"><FONT SIZE=2>tablename</FONT></FONT><FONT FACE="Consolas, monospace"><FONT SIZE=2>&quot;</FONT></FONT><FONT FACE="Consolas, monospace"><FONT SIZE=2>,
+</FONT></FONT><FONT FACE="Consolas, monospace"><FONT SIZE=2>&quot;</FONT></FONT><FONT FACE="Consolas, monospace"><FONT SIZE=2>column%</FONT></FONT><FONT FACE="Consolas, monospace"><FONT SIZE=2>&quot;</FONT></FONT><FONT FACE="Consolas, monospace"><FONT SIZE=2>)</FONT></FONT><FONT FACE="Times New Roman, serif">
+will return </FONT><FONT FACE="Consolas, monospace"><FONT SIZE=2>COLUMN1</FONT></FONT><FONT FACE="Times New Roman, serif">(!).
+U</FONT><FONT FACE="Times New Roman, serif">nquoted object names are
+stored uppercase in Firebird, so in Jaybird 3.0 this will produce </FONT><FONT FACE="Times New Roman, serif"><B>no
+rows</B></FONT><FONT FACE="Times New Roman, serif"><SPAN STYLE="font-weight: normal">
+as </SPAN></FONT><FONT FACE="Consolas, monospace"><FONT SIZE=2><SPAN STYLE="font-weight: normal">tablename</SPAN></FONT></FONT><FONT FACE="Times New Roman, serif"><SPAN STYLE="font-weight: normal">
+does not match </SPAN></FONT><FONT FACE="Consolas, monospace"><FONT SIZE=2><SPAN STYLE="font-weight: normal">TABLENAME</SPAN></FONT></FONT><FONT FACE="Times New Roman, serif"><SPAN STYLE="font-weight: normal">.</SPAN></FONT></P>
+<P CLASS="western"><FONT FACE="Times New Roman, serif"><SPAN STYLE="font-weight: normal">Changing
+the query to </SPAN></FONT><FONT FACE="Consolas, monospace"><FONT SIZE=2><SPAN STYLE="font-weight: normal">getColumns(null,
+null, </SPAN></FONT></FONT><FONT FACE="Consolas, monospace"><FONT SIZE=2><SPAN STYLE="font-weight: normal">&quot;TABLENAME&quot;</SPAN></FONT></FONT><FONT FACE="Consolas, monospace"><FONT SIZE=2><SPAN STYLE="font-weight: normal">,
+</SPAN></FONT></FONT><FONT FACE="Consolas, monospace"><FONT SIZE=2><SPAN STYLE="font-weight: normal">&quot;</SPAN></FONT></FONT><FONT FACE="Consolas, monospace"><FONT SIZE=2><SPAN STYLE="font-weight: normal">column%</SPAN></FONT></FONT><FONT FACE="Consolas, monospace"><FONT SIZE=2><SPAN STYLE="font-weight: normal">&quot;</SPAN></FONT></FONT><FONT FACE="Consolas, monospace"><FONT SIZE=2><SPAN STYLE="font-weight: normal">)</SPAN></FONT></FONT><FONT FACE="Times New Roman, serif"><SPAN STYLE="font-weight: normal">
+</SPAN></FONT><FONT FACE="Times New Roman, serif"><SPAN STYLE="font-weight: normal">in
+Jaybird </SPAN></FONT><FONT FACE="Times New Roman, serif"><SPAN STYLE="font-weight: normal">2.2
+and </SPAN></FONT><FONT FACE="Times New Roman, serif"><SPAN STYLE="font-weight: normal">3.0
+will only produce </SPAN></FONT><FONT FACE="Times New Roman, serif"><B>one
+row</B></FONT><FONT FACE="Times New Roman, serif"><SPAN STYLE="font-weight: normal">
+(with </SPAN></FONT><FONT FACE="Consolas, monospace"><FONT SIZE=2><SPAN STYLE="font-weight: normal">column2</SPAN></FONT></FONT><FONT FACE="Times New Roman, serif"><SPAN STYLE="font-weight: normal">),
+as </SPAN></FONT><FONT FACE="Consolas, monospace"><FONT SIZE=2><SPAN STYLE="font-weight: normal">COLUMN1</SPAN></FONT></FONT><FONT FACE="Times New Roman, serif"><SPAN STYLE="font-weight: normal">
+does not match </SPAN></FONT><FONT FACE="Consolas, monospace"><FONT SIZE=2><SPAN STYLE="font-weight: normal">column%</SPAN></FONT></FONT><FONT FACE="Times New Roman, serif"><SPAN STYLE="font-weight: normal">.</SPAN></FONT></P>
+<P CLASS="western"><FONT FACE="Times New Roman, serif"><SPAN STYLE="font-weight: normal">In
+Jaybird 2.2 using </SPAN></FONT><FONT FACE="Consolas, monospace"><FONT SIZE=2><SPAN STYLE="font-weight: normal">getColumns(null,
+null, </SPAN></FONT></FONT><FONT FACE="Consolas, monospace"><FONT SIZE=2><SPAN STYLE="font-weight: normal">&quot;\&quot;TABLENAME\&quot;&quot;</SPAN></FONT></FONT><FONT FACE="Consolas, monospace"><FONT SIZE=2><SPAN STYLE="font-weight: normal">,
+</SPAN></FONT></FONT><FONT FACE="Consolas, monospace"><FONT SIZE=2><SPAN STYLE="font-weight: normal">&quot;</SPAN></FONT></FONT><FONT FACE="Consolas, monospace"><FONT SIZE=2><SPAN STYLE="font-weight: normal">column%</SPAN></FONT></FONT><FONT FACE="Consolas, monospace"><FONT SIZE=2><SPAN STYLE="font-weight: normal">&quot;</SPAN></FONT></FONT><FONT FACE="Consolas, monospace"><FONT SIZE=2><SPAN STYLE="font-weight: normal">)</SPAN></FONT></FONT><FONT FACE="Times New Roman, serif"><SPAN STYLE="font-weight: normal">
+</SPAN></FONT><FONT FACE="Times New Roman, serif"><SPAN STYLE="font-weight: normal">will
+</SPAN></FONT><FONT FACE="Times New Roman, serif"><SPAN STYLE="font-weight: normal">return
+</SPAN></FONT><FONT FACE="Consolas, monospace"><FONT SIZE=2><SPAN STYLE="font-weight: normal">column2</SPAN></FONT></FONT><FONT FACE="Times New Roman, serif"><SPAN STYLE="font-weight: normal">
+</SPAN></FONT><FONT FACE="Times New Roman, serif"><SPAN STYLE="font-weight: normal">as
+the quotes will be stripped, with Jaybird 3.0 this will produce </SPAN></FONT><FONT FACE="Times New Roman, serif"><B>no
+rows</B></FONT><FONT FACE="Times New Roman, serif"><SPAN STYLE="font-weight: normal">.</SPAN></FONT></P>
 <H2 CLASS="western" STYLE="page-break-before: always"><A NAME="__RefHeading__8761_1080388197"></A>
 Distribution package</H2>
 <P CLASS="western">The following file groups can be found in
 distribution package:</P>
 <UL>
-	<LI><P CLASS="western"><CODE CLASS="western"><FONT FACE="Courier New, monospace">jaybird-2.2.0.jar</FONT></CODE>
+	<LI><P CLASS="western"><CODE CLASS="western"><FONT FACE="Courier New, monospace">jaybird-2.2.</FONT></CODE><CODE CLASS="western"><FONT FACE="Courier New, monospace">4</FONT></CODE><CODE CLASS="western"><FONT FACE="Courier New, monospace">.jar</FONT></CODE>
 	&ndash; archive containing JCA/JDBC driver, implementation of
 	connection pooling and statement pooling interfaces, and JMX
 	management class. It requires JCA 1.5</P>
-	<LI><P CLASS="western"><CODE CLASS="western"><FONT FACE="Courier New, monospace">jaybird-full-2.2.0.jar</FONT></CODE>
-	&ndash; merge of j<CODE CLASS="western"><FONT FACE="Courier New, monospace">aybird-2.2.0.jar</FONT></CODE>
+	<LI><P CLASS="western"><CODE CLASS="western"><FONT FACE="Courier New, monospace">jaybird-full-2.2.</FONT></CODE><CODE CLASS="western"><FONT FACE="Courier New, monospace">4</FONT></CODE><CODE CLASS="western"><FONT FACE="Courier New, monospace">.jar</FONT></CODE>
+	&ndash; merge of j<CODE CLASS="western"><FONT FACE="Courier New, monospace">aybird-2.2.</FONT></CODE><CODE CLASS="western"><FONT FACE="Courier New, monospace">4</FONT></CODE><CODE CLASS="western"><FONT FACE="Courier New, monospace">.jar</FONT></CODE>
 	and <CODE CLASS="western"><FONT FACE="Courier New, monospace">connector-api-1.5.jar</FONT></CODE>.
 	This archive can be used for standalone Jaybird deployments</P>
-	<LI><P CLASS="western"><FONT FACE="Courier New, monospace"><FONT SIZE=2>jaybird-2.2.0-sources.jar</FONT></FONT>
+	<LI><P CLASS="western"><FONT FACE="Courier New, monospace"><FONT SIZE=2>jaybird-2.2.</FONT></FONT><FONT FACE="Courier New, monospace"><FONT SIZE=2>4</FONT></FONT><FONT FACE="Courier New, monospace"><FONT SIZE=2>-sources.jar</FONT></FONT>
 	&ndash; archive containing the sources of Jaybird (specific to this
 	JDK version); for including Jaybird sources in your IDE</P>
 	<LI><P CLASS="western"><CODE CLASS="western"><FONT FACE="Courier New, monospace">lib/connector-api-1.5.jar</FONT></CODE>
@@ -725,7 +1053,7 @@ distribution package:</P>
 	(optional dependency)</P>
 </UL>
 <P CLASS="western">Jaybird has compile-time and run-time dependencies
-to the JCA 1.5 classes. Additionally, if Log4J classes are found in
+on the JCA 1.5 classes. Additionally, if Log4J classes are found in
 the class path, it is possible to enable extensive logging inside the
 driver. If the ANTLR runtime classes are absent, the generated keys
 functionality will not be available.</P>
@@ -747,14 +1075,14 @@ will need to install the Microsoft Visual C++ 2010 SP 1
 redistributable available at:</P>
 <UL>
 	<LI><P CLASS="western">x86:
-	<A CLASS="western" HREF="http://www.microsoft.com/download/en/details.aspx?id=8328">http://www.microsoft.com/download/en/details.aspx?id=8328</A></P>
+	<A CLASS="western" HREF="http://www.microsoft.com/download/en/details.aspx?id=8328"><FONT FACE="Courier New, monospace"><FONT SIZE=2>http://www.microsoft.com/download/en/details.aspx?id=8328</FONT></FONT></A></P>
 	<LI><P CLASS="western">x64:
-	<A CLASS="western" HREF="http://www.microsoft.com/download/en/details.aspx?id=13523">http://www.microsoft.com/download/en/details.aspx?id=13523</A></P>
+	<A CLASS="western" HREF="http://www.microsoft.com/download/en/details.aspx?id=13523"><FONT FACE="Courier New, monospace"><FONT SIZE=2>http://www.microsoft.com/download/en/details.aspx?id=13523</FONT></FONT></A></P>
 </UL>
 <H3 CLASS="western"><A NAME="__RefHeading__2773_1560579136"></A>License</H3>
 <P CLASS="western">Jaybird JCA/JDBC driver is distributed under the
 GNU Lesser General Public License (LGPL). Text of the license can be
-obtained from <A CLASS="western" HREF="http://www.gnu.org/copyleft/lesser.html">http://www.gnu.org/copyleft/lesser.html</A>.
+obtained from <A CLASS="western" HREF="http://www.gnu.org/copyleft/lesser.html"><FONT FACE="Courier New, monospace"><FONT SIZE=2>http://www.gnu.org/copyleft/lesser.html</FONT></FONT></A>.
 </P>
 <P CLASS="western">Using Jaybird (by importing Jaybird's public
 interfaces in your Java code), and extending Jaybird by subclassing
@@ -772,63 +1100,81 @@ linking is applicable in this case.</P>
 <H3 CLASS="western"><A NAME="__RefHeading__2775_1560579136"></A>Source
 Code</H3>
 <P CLASS="western">The distribution package contains the normal
-sources in <FONT FACE="Courier New, monospace"><FONT SIZE=2>jaybird-2.2.0-sources.jar</FONT></FONT>;
+sources in <FONT FACE="Courier New, monospace"><FONT SIZE=2>jaybird-2.2.</FONT></FONT><FONT FACE="Courier New, monospace"><FONT SIZE=2>4</FONT></FONT><FONT FACE="Courier New, monospace"><FONT SIZE=2>-sources.jar</FONT></FONT>;
 this file does not include the sources of the tests, nor the
 sourcecode for other JDK-versions.</P>
 <P CLASS="western">Full source code, including tests and build files,
-can be obtained from CVS at SourceForge.net. The CVSROOT is
-<BR><CODE CLASS="western"><FONT FACE="Courier New, monospace">:pserver:anonymous@cvs.sourceforge.net:/cvsroot/firebird</FONT></CODE>,
-the module name is <CODE CLASS="western"><FONT FACE="Courier New, monospace">client-java</FONT></CODE></P>
-<P CLASS="western">Alternatively source code can be viewed online at
-<A CLASS="western" HREF="http://cvs.sourceforge.net/viewcvs.py/firebird/client-java/">http://cvs.sourceforge.net/viewcvs.py/firebird/client-java/</A>
+can be obtained from the Subversion repository at SourceForge.net.
+The repository URL
+is<BR><A CLASS="western" HREF="svn://svn.code.sf.net/p/firebird/code/client-java">svn://svn.code.sf.net/p/firebird/code/client-java</A></P>
+<P CLASS="western">Alternatively source code can be viewed online at</P>
+<P CLASS="western"><A CLASS="western" HREF="http://sourceforge.net/p/firebird/code/">http://sourceforge.net/p/firebird/code/
+</A>
 </P>
 <H2 CLASS="western" STYLE="page-break-before: always"><A NAME="__RefHeading__8763_1080388197"></A>
 Documentation and Support</H2>
-<H3 CLASS="western"><A NAME="__RefHeading__2821_1560579136"></A>Where
+<H3 CLASS="western"><A NAME="__RefHeading__8435_506006295"></A>Where
 to get more information on Jaybird</H3>
 <P CLASS="western">The most detailed information can be found in the
 Jaybird Frequently Asked Questions (FAQ). The FAQ is included in the
 distribution, and is available on-line in several places. 
 </P>
 <P CLASS="western">JaybirdWiki is available at
-<A CLASS="western" HREF="http://jaybirdwiki.firebirdsql.org/">http://Jaybirdwiki.firebirdsql.org</A>.
-<I>(note: this resource is out of date</I><I> and will be
-discontinued in the near future</I><I>)</I></P>
+<A CLASS="western" HREF="http://jaybirdwiki.firebirdsql.org/"><FONT FACE="Courier New, monospace"><FONT SIZE=2>http://jaybirdwiki.firebirdsql.org/</FONT></FONT></A></P>
 <P CLASS="western">Jaybird 2.1 Programmers Manual:
-<A CLASS="western" HREF="http://www.firebirdsql.org/file/documentation/drivers_documentation/Jaybird_2_1_JDBC_driver_manual.pdf">http://www.firebirdsql.org/file/documentation/drivers_documentation/Jaybird_2_1_JDBC_driver_manual.pdf</A></P>
-<H3 CLASS="western"><A NAME="__RefHeading__2823_1560579136"></A>Where
+<A CLASS="western" HREF="http://www.firebirdsql.org/file/documentation/drivers_documentation/Jaybird_2_1_JDBC_driver_manual.pdf"><FONT FACE="Courier New, monospace"><FONT SIZE=2>http://www.firebirdsql.org/file/documentation/drivers_documentation/Jaybird_2_1_JDBC_driver_manual.pdf</FONT></FONT></A></P>
+<H3 CLASS="western"><A NAME="__RefHeading__2823_15605791361"></A>Where
 to get help</H3>
 <P CLASS="western">The best place to start is the FAQ. Many details
 for using Jaybird with various programs are located there. Below are
 some links to useful web sites.</P>
 <UL>
 	<LI><P CLASS="western">The
-	<A CLASS="western" HREF="http://groups.yahoo.com/group/Firebird-Java">http://groups.yahoo.com/group/Firebird-Java</A>
-	and corresponding mailing list Firebird-Java@yahoogroups.com.</P>
+	<A CLASS="western" HREF="http://groups.yahoo.com/group/Firebird-Java"><FONT FACE="Courier New, monospace"><FONT SIZE=2>http://groups.yahoo.com/group/Firebird-Java</FONT></FONT></A>
+	and corresponding mailing-list <FONT FACE="Courier New, monospace"><FONT SIZE=2>Firebird-Java@yahoogroups.com</FONT></FONT></P>
 	<LI><P CLASS="western">The code for Firebird and this driver are on
-	<A CLASS="western" HREF="http://sourceforge.net/projects/firebird">http://sourceforge.net/projects/firebird</A>.</P>
+	<A CLASS="western" HREF="http://sourceforge.net/projects/firebird"><FONT FACE="Courier New, monospace"><FONT SIZE=2>http://sourceforge.net/projects/firebird</FONT></FONT></A></P>
 	<LI><P CLASS="western">The Firebird project home page
-	<A CLASS="western" HREF="http://www.firebirdsql.com/">http://www.firebirdsql.com</A>.</P>
+	<A CLASS="western" HREF="http://www.firebirdsql.org/"><FONT FACE="Courier New, monospace"><FONT SIZE=2>http://www.firebirdsql.org</FONT></FONT></A></P>
 </UL>
-<H3 CLASS="western"><A NAME="__RefHeading__2825_1560579136"></A>Reporting
+<H3 CLASS="western"><A NAME="__RefHeading__8437_506006295"></A>Contributing</H3>
+<P CLASS="western">There are several ways you can contribute to
+Jaybird or Firebird in general:</P>
+<UL>
+	<LI><P CLASS="western">Participate on the mailinglists (see
+	<A CLASS="western" HREF="http://www.firebirdsql.org/en/mailing-lists/">http://www.firebirdsql.org/en/mailing-lists/</A>)</P>
+	<LI><P CLASS="western">Report bugs or submit patches on the tracker
+	(see below)</P>
+	<LI><P CLASS="western">Become a developer (for Jaybird contact us on
+	Firebird-Java, for Firebird in general, use the Firebird-devel
+	mailing-list)</P>
+	<LI><P CLASS="western">Become a paying member or sponsor of the
+	Firebird Foundation (see
+	<A CLASS="western" HREF="http://www.firebirdsql.org/en/firebird-foundation/">http://www.firebirdsql.org/en/firebird-foundation/</A>)</P>
+</UL>
+<P CLASS="western">See also
+<A CLASS="western" HREF="http://www.firebirdsql.org/en/consider-your-contribution/">http://www.firebirdsql.org/en/consider-your-contribution/</A></P>
+<H3 CLASS="western"><A NAME="__RefHeading__2825_15605791361"></A>Reporting
 Bugs</H3>
 <P CLASS="western">The developers follow the
-Firebird-Java@yahoogroups.com list. Join the list and post
-information about suspected bugs. This is a good idea because what is
-often thought to be a bug turns out to be something else. List
-members may be able to help out and get you going again, whereas bug
-fixes might take awhile.</P>
-<P CLASS="western" ALIGN=LEFT>If you are sure that this is a bug you
-can report it in the Firebird bug tracker, project &ldquo;Java Client
-(Jaybird)&rdquo; at <A CLASS="western" HREF="http://tracker.firebirdsql.org/browse/JDBC">http://tracker.firebirdsql.org/browse/JDBC</A></P>
+<FONT FACE="Courier New, monospace"><FONT SIZE=2>Firebird-Java@yahoogroups.com</FONT></FONT>
+list. Join the list and post information about suspected bugs. List
+members may be able to help out to determine if it is an actual bug,
+provide a workaround and get you going again,  whereas bug fixes
+might take awhile.</P>
+<P CLASS="western">If you are sure that this is a bug you can report
+it in the Firebird bug tracker, project &ldquo;Java Client (Jaybird)&rdquo;
+at <A CLASS="western" HREF="http://tracker.firebirdsql.org/browse/JDBC"><FONT FACE="Courier New, monospace"><FONT SIZE=2>http://tracker.firebirdsql.org/browse/JDBC</FONT></FONT></A></P>
 <P CLASS="western" ALIGN=LEFT>When reporting bugs, please provide a
-minimal reproduction, including databases and sourcecode to reproduce
-the problem.</P>
-<H3 CLASS="western"><A NAME="__RefHeading__8765_1080388197"></A>Corrections/Additions
+minimal, but complete reproduction, including databases and
+sourcecode to reproduce the problem. Patches to fix bugs are also
+appreciated. Make sure the patch is against a recent trunk version of
+the code.</P>
+<H3 CLASS="western"><A NAME="__RefHeading__8765_10803881971"></A>Corrections/Additions
 To Release Notes</H3>
-<P CLASS="western" ALIGN=LEFT>Please send corrections, suggestions,
-or additions to these Release Notes to to the mailing list at
-Firebird-Java@yahoogroups.com.</P>
+<P CLASS="western"><A NAME="__RefHeading__2821_1560579136"></A>Please
+send corrections, suggestions, or additions to these Release Notes to
+to the mailing list at <A CLASS="western" HREF="mailto:Firebird-Java@yahoogroups.com"><FONT FACE="Courier New, monospace"><FONT SIZE=2>Firebird-Java@yahoogroups.com</FONT></FONT></A>.</P>
 <H2 CLASS="western" STYLE="page-break-before: always"><A NAME="__RefHeading__8767_1080388197"></A>
 JDBC URL Format</H2>
 <P CLASS="western" STYLE="page-break-before: auto; page-break-after: avoid">
@@ -845,14 +1191,13 @@ be omitted (default value is 3050), host name must be present. </FONT></FONT></C
 <P CLASS="western"><CODE CLASS="western"><FONT FACE="Times New Roman, serif"><FONT SIZE=3>The
 </FONT></FONT></CODE><CODE CLASS="western"><FONT FACE="Courier New, monospace"><FONT SIZE=2>&lt;database&gt;</FONT></FONT></CODE><CODE CLASS="western"><FONT FACE="Times New Roman, serif"><FONT SIZE=3>
 part should be replaced with the database alias or the path to the
-database. </FONT></FONT></CODE><CODE CLASS="western"><FONT FACE="Times New Roman, serif"><FONT SIZE=3>In
-general it is advisable to uses database aliases instead of the path
-the file.</FONT></FONT></CODE></P>
+database. In general it is advisable to uses database aliases instead
+of the path the file.</FONT></FONT></CODE></P>
 <P CLASS="western"><CODE CLASS="western"><FONT FACE="Times New Roman, serif"><FONT SIZE=3>On
 Linux the root </FONT></FONT></CODE><CODE CLASS="western"><FONT FACE="Courier New, monospace"><FONT SIZE=2>/</FONT></FONT></CODE><CODE CLASS="western"><FONT FACE="Times New Roman, serif"><FONT SIZE=3>
 should be included in the path. A database located on
 </FONT></FONT></CODE><CODE CLASS="western"><FONT FACE="Courier New, monospace"><FONT SIZE=2>/opt/firebird/db.fdb</FONT></FONT></CODE><CODE CLASS="western"><FONT FACE="Times New Roman, serif"><FONT SIZE=3>
-should use the URL below (note the double slash after port!)</FONT></FONT></CODE><CODE CLASS="western"><FONT FACE="Times New Roman, serif"><FONT SIZE=3>.</FONT></FONT></CODE><CODE CLASS="western"><FONT FACE="Times New Roman, serif"><FONT SIZE=3>
+should use the URL below (note the double slash after port!).
 </FONT></FONT></CODE><CODE CLASS="western"><FONT FACE="Courier New, monospace"><FONT SIZE=2>jdbc:firebirdsql://host:port//opt/firebird/db.fdb
 </FONT></FONT></CODE>
 </P>
@@ -863,10 +1208,8 @@ but still available alternative URL:</FONT></FONT></CODE></P>
 Firebird client library</H3>
 <P CLASS="western"><CODE CLASS="western"><FONT FACE="Courier New, monospace"><FONT SIZE=2>jdbc:firebirdsql:native:host[/port]:&lt;database&gt;</FONT></FONT></CODE></P>
 <P CLASS="western">Type 2 driver, will connect to the database using
-client library (either <CODE CLASS="western"><FONT FACE="Courier New, monospace"><FONT SIZE=2>fbclient.dl</FONT></FONT></CODE><FONT FACE="Courier New, monospace"><FONT SIZE=2>l</FONT></FONT>
-or <CODE CLASS="western"><FONT FACE="Courier New, monospace">gds32.dll</FONT></CODE>
+client library (<CODE CLASS="western"><FONT FACE="Courier New, monospace"><FONT SIZE=2>fbclient.dl</FONT></FONT></CODE><FONT FACE="Courier New, monospace"><FONT SIZE=2>l</FONT></FONT>
 on Windows, and <CODE CLASS="western"><FONT FACE="Courier New, monospace">libfbclient.so</FONT></CODE>
-or <CODE CLASS="western"><FONT FACE="Courier New, monospace">libgds.so</FONT></CODE>
 on Linux). Requires correct installation of the client library.</P>
 <P CLASS="western"><CODE CLASS="western"><FONT FACE="Courier New, monospace">jdbc:firebirdsql:local:</FONT></CODE><CODE CLASS="western"><FONT FACE="Courier New, monospace"><FONT SIZE=2>&lt;database&gt;</FONT></FONT></CODE></P>
 <P CLASS="western">Type 2 driver in local mode. Uses client library
@@ -912,29 +1255,35 @@ Precompiled binaries for Windows and Linux platforms are distributed
 with Jaybird.</P>
 <P CLASS="western"><STRONG>Please note that Jaybird 2.2 provides an
 update to the JNI libraries to support new features. It is not
-compatible with</STRONG><STRONG> the</STRONG><STRONG> JNI library for
-Jaybird 2.1 or earlier.</STRONG></P>
+compatible with the JNI library for Jaybird 2.1 or earlier.</STRONG></P>
 <UL>
 	<LI><P CLASS="western"><CODE CLASS="western"><FONT FACE="Courier New, monospace">jaybird22.dll
 	/ jaybird22_x64.dll</FONT></CODE> is a precompiled binary for the
 	Windows platform. It was successfully tested with Windows XP and
-	Windows 7, but there should be no issues in other Win32 OS versions
-	(as long as the MS Visual C++ 2010 SP1 distributable is available).
-	<BR>The library should be copied into a directory in the <FONT FACE="Courier New, monospace"><FONT SIZE=2>PATH</FONT></FONT>
+	Windows 7, but there should be no issues in other Windows OS
+	versions (as long as the MS Visual C++ 2010 SP1 distributable is
+	available). <BR>The library should be copied into a directory in the
+	<FONT FACE="Courier New, monospace"><FONT SIZE=2>PATH</FONT></FONT>
 	environment variable, or be made available to the JVM using the
 	<CODE CLASS="western"><FONT FACE="Courier New, monospace">java.library.path</FONT></CODE>
 	system property.</P>
-	<LI><P CLASS="western"><CODE CLASS="western"><FONT FACE="Courier New, monospace">libjaybird22.so</FONT></CODE><CODE CLASS="western"><FONT FACE="Courier New, monospace">
+	<LI><P CLASS="western"><CODE CLASS="western"><FONT FACE="Courier New, monospace">libjaybird22.so
 	/ libjaybird22_x64.so</FONT></CODE> is a precompiled binary for the
 	Linux platform (AMD/Intel). It must be available via the
 	<FONT FACE="Courier New, monospace"><FONT SIZE=2>LD_LIBRARY_PATH</FONT></FONT>
-	environment variable, e.g. copied into <CODE CLASS="western"><FONT FACE="Courier New, monospace">/usr/lib/</FONT></CODE>
-	directory. The library should be copied into a directory in the
-	<FONT FACE="Courier New, monospace"><FONT SIZE=2>LD_LIBRARY_PATH</FONT></FONT>
-	environment variable (e.g. copied into <CODE CLASS="western"><FONT FACE="Courier New, monospace">/usr/lib/</FONT></CODE>
-	directory), or be made available to the JVM using the
+	environment variable, or be made available to the JVM using the
 	<CODE CLASS="western"><FONT FACE="Courier New, monospace">java.library.path</FONT></CODE>
-	system property.</P>
+	system property.<BR>Dependent libraries (<FONT FACE="Courier New, monospace"><FONT SIZE=2>libfbclient.so</FONT></FONT>
+	or <FONT FACE="Courier New, monospace"><FONT SIZE=2>libfbembed.so</FONT></FONT>)
+	need to be on the <FONT FACE="Courier New, monospace"><FONT SIZE=2>LD_LIBRARY_PATH</FONT></FONT>.
+	The <FONT FACE="Courier New, monospace"><FONT SIZE=2>java.library.path</FONT></FONT>
+	is ignored for these libraries as they are loaded from the JNI
+	library, and not from Java.<BR>Some Firebird distributions will not
+	create <FONT FACE="Courier New, monospace"><FONT SIZE=2>libfbclient.so</FONT></FONT>
+	(but only <FONT FACE="Courier New, monospace"><FONT SIZE=2>libfbclient.so.2</FONT></FONT>
+	and <FONT FACE="Courier New, monospace"><FONT SIZE=2>.so.2.5</FONT></FONT>),
+	you will need to add a symlink with the name as expected by Jaybird.
+		</P>
 	<LI><P CLASS="western">Other platforms can easily compile the JNI
 	library by checking out the Jaybird sources from the CVS and using
 	<FONT FACE="Courier New, monospace"><FONT SIZE=2>./</FONT></FONT><CODE CLASS="western"><FONT FACE="Courier New, monospace"><FONT SIZE=2>build.sh
@@ -1040,8 +1389,8 @@ auto-commit mode.
 and, while traversing it, execute other statements using the same
 connection. According to JDBC specification the result set has to be
 closed if another statement is executed using the same connection in
-auto-commit mode. Among others the OpenOffice Base users have
-problems with the restored JDBC 3.0 compatibility in Jaybird 2.0.</P>
+auto-commit mode. Among others the OpenOffice/LibreOffice Base users
+have problems with the JDBC compatibility in Jaybird.</P>
 <P CLASS="western">The property is called:</P>
 <UL>
 	<LI><P CLASS="western"><CODE CLASS="western"><FONT FACE="Courier New, monospace">defaultResultSetHoldable</FONT></CODE>
@@ -1058,8 +1407,7 @@ problems with the restored JDBC 3.0 compatibility in Jaybird 2.0.</P>
 <P CLASS="western"><STRONG>Note, the price for using this feature is
 that each holdable result set will be fully cached in memory. The
 memory occupied by it will be released when the statement that
-produced the result set is </STRONG><STRONG>either </STRONG><STRONG>closed
-or re-executed.</STRONG></P>
+produced the result set is either closed or re-executed.</STRONG></P>
 <H3 CLASS="western"><A NAME="__RefHeading__2763_1560579136"></A>Updatable
 result sets</H3>
 <P CLASS="western" ALIGN=LEFT>Jaybird provides support for updatable
@@ -1233,8 +1581,8 @@ with a driver version in which the extension was introduced.</P>
 				<P CLASS="western" ALIGN=CENTER>2.0</P>
 			</TD>
 			<TD WIDTH=35% STYLE="border-top: none; border-bottom: 1px solid #000000; border-left: none; border-right: none; padding-top: 0cm; padding-bottom: 0.11cm; padding-left: 0cm; padding-right: 0cm">
-				<P CLASS="western" ALIGN=LEFT><CODE CLASS="western"><FONT FACE="Courier New, monospace">getTransactionParameters(<BR></FONT></CODE><CODE CLASS="western"><FONT FACE="Courier New, monospace">
-				   int isolationLevel<BR></FONT></CODE><CODE CLASS="western"><FONT FACE="Courier New, monospace">)</FONT></CODE></P>
+				<P CLASS="western" ALIGN=LEFT><CODE CLASS="western"><FONT FACE="Courier New, monospace">getTransactionParameters(<BR>
+				   int isolationLevel<BR>)</FONT></CODE></P>
 			</TD>
 			<TD WIDTH=32% STYLE="border-top: none; border-bottom: 1px solid #000000; border-left: none; border-right: none; padding-top: 0cm; padding-bottom: 0.11cm; padding-left: 0cm; padding-right: 0cm">
 				<P CLASS="western" ALIGN=LEFT>Get the TPB parameters for the
@@ -1285,8 +1633,7 @@ with a driver version in which the extension was introduced.</P>
 			</TD>
 			<TD WIDTH=35% STYLE="border-top: none; border-bottom: 1px solid #000000; border-left: none; border-right: none; padding-top: 0cm; padding-bottom: 0.11cm; padding-left: 0cm; padding-right: 0cm">
 				<P CLASS="western" ALIGN=LEFT><CODE CLASS="western"><FONT FACE="Courier New, monospace">setTransactionParameters(<BR>
-				   TransactionParameterBu</FONT></CODE><CODE CLASS="western"><FONT FACE="Courier New, monospace">ffer
-				tpb<BR>)</FONT></CODE></P>
+				   TransactionParameterBuffer tpb<BR>)</FONT></CODE></P>
 			</TD>
 			<TD WIDTH=32% STYLE="border-top: none; border-bottom: 1px solid #000000; border-left: none; border-right: none; padding-top: 0cm; padding-bottom: 0.11cm; padding-left: 0cm; padding-right: 0cm">
 				<P CLASS="western" ALIGN=LEFT>meters are effective until the
@@ -1319,7 +1666,7 @@ with a driver version in which the extension was introduced.</P>
 				</P>
 			</TD>
 			<TD WIDTH=35% STYLE="border-top: none; border-bottom: 1px solid #000000; border-left: none; border-right: none; padding-top: 0cm; padding-bottom: 0.11cm; padding-left: 0cm; padding-right: 0cm">
-				<P CLASS="western" ALIGN=LEFT><CODE CLASS="western"><FONT FACE="Courier New, monospace">getTriggerSourceCode(Strin</FONT></CODE><CODE CLASS="western"><FONT FACE="Courier New, monospace">g)</FONT></CODE></P>
+				<P CLASS="western" ALIGN=LEFT><CODE CLASS="western"><FONT FACE="Courier New, monospace">getTriggerSourceCode(String)</FONT></CODE></P>
 			</TD>
 			<TD WIDTH=32% STYLE="border-top: none; border-bottom: 1px solid #000000; border-left: none; border-right: none; padding-top: 0cm; padding-bottom: 0.11cm; padding-left: 0cm; padding-right: 0cm">
 				<P CLASS="western" ALIGN=LEFT>Get source code for the specified
@@ -1577,7 +1924,7 @@ with a driver version in which the extension was introduced.</P>
 		</TR>
 		<TR VALIGN=TOP>
 			<TD WIDTH=25% STYLE="border-top: none; border-bottom: 1px solid #000000; border-left: none; border-right: none; padding-top: 0cm; padding-bottom: 0.11cm; padding-left: 0cm; padding-right: 0cm">
-				<P CLASS="western" ALIGN=LEFT><CODE CLASS="western"><FONT FACE="Courier New, monospace"><FONT SIZE=2>FirebirdSavepoint</FONT></FONT></CODE><CODE CLASS="western"><FONT FACE="Courier New, monospace"><FONT SIZE=2><A CLASS="sdfootnoteanc" NAME="sdfootnote4anc" HREF="#sdfootnote4sym"><SUP>4</SUP></A></FONT></FONT></CODE></P>
+				<P CLASS="western" ALIGN=LEFT><CODE CLASS="western"><FONT FACE="Courier New, monospace"><FONT SIZE=2>FirebirdSavepoint<A CLASS="sdfootnoteanc" NAME="sdfootnote3anc" HREF="#sdfootnote3sym"><SUP>3</SUP></A></FONT></FONT></CODE></P>
 			</TD>
 			<TD WIDTH=7% STYLE="border-top: none; border-bottom: 1px solid #000000; border-left: none; border-right: none; padding-top: 0cm; padding-bottom: 0.11cm; padding-left: 0cm; padding-right: 0cm">
 				<P CLASS="western" ALIGN=CENTER>2.0</P>
@@ -1638,7 +1985,7 @@ setter method.</P>
 				<P CLASS="western"><CODE CLASS="western"><FONT FACE="Times New Roman, serif"><FONT SIZE=3>This
 				property is not specified in the JDBC standard. Use the the
 				standard defined </FONT></FONT></CODE><CODE CLASS="western"><FONT FACE="Courier New, monospace"><FONT SIZE=2>serverName</FONT></FONT></CODE><CODE CLASS="western"><FONT FACE="Times New Roman, serif"><FONT SIZE=3>,
-				</FONT></FONT></CODE><CODE CLASS="western"><FONT FACE="Courier New, monospace"><FONT SIZE=2>portNum</FONT></FONT></CODE><CODE CLASS="western"><FONT FACE="Courier New, monospace"><FONT SIZE=2>ber</FONT></FONT></CODE><CODE CLASS="western"><FONT FACE="Times New Roman, serif"><FONT SIZE=3>
+				</FONT></FONT></CODE><CODE CLASS="western"><FONT FACE="Courier New, monospace"><FONT SIZE=2>portNumber</FONT></FONT></CODE><CODE CLASS="western"><FONT FACE="Times New Roman, serif"><FONT SIZE=3>
 				and </FONT></FONT></CODE><CODE CLASS="western"><FONT FACE="Courier New, monospace"><FONT SIZE=2>databaseName</FONT></FONT></CODE><CODE CLASS="western"><FONT FACE="Times New Roman, serif"><FONT SIZE=3>
 				instead</FONT></FONT></CODE></P>
 			</TD>
@@ -1884,7 +2231,7 @@ setter method.</P>
 		</TR>
 		<TR VALIGN=TOP>
 			<TD WIDTH=25% STYLE="border-top: none; border-bottom: 1px solid #000000; border-left: none; border-right: none; padding-top: 0cm; padding-bottom: 0.11cm; padding-left: 0cm; padding-right: 0cm">
-				<P CLASS="western"><CODE CLASS="western"><FONT FACE="Courier New, monospace"><FONT SIZE=2>defaultResultSetHol</FONT></FONT></CODE><CODE CLASS="western"><FONT FACE="Courier New, monospace"><FONT SIZE=2>dable</FONT></FONT></CODE></P>
+				<P CLASS="western"><CODE CLASS="western"><FONT FACE="Courier New, monospace"><FONT SIZE=2>defaultResultSetHoldable</FONT></FONT></CODE></P>
 			</TD>
 			<TD WIDTH=18% STYLE="border-top: none; border-bottom: 1px solid #000000; border-left: none; border-right: none; padding-top: 0cm; padding-bottom: 0.11cm; padding-left: 0cm; padding-right: 0cm">
 				<P CLASS="western" ALIGN=CENTER>+</P>
@@ -1928,7 +2275,7 @@ setter method.</P>
 				<P CLASS="western">Default transaction isolation level. All newly
 				created connections will have this isolation level. One of:</P>
 				<UL>
-					<LI><P CLASS="western" STYLE="margin-bottom: 0cm"><CODE CLASS="western"><FONT FACE="Courier New, monospace"><FONT SIZE=2>TRANSACTION_READ_COMMITTE</FONT></FONT></CODE><CODE CLASS="western"><FONT FACE="Courier New, monospace"><FONT SIZE=2>D</FONT></FONT></CODE><FONT FACE="Courier New, monospace"><FONT SIZE=2>
+					<LI><P CLASS="western" STYLE="margin-bottom: 0cm"><CODE CLASS="western"><FONT FACE="Courier New, monospace"><FONT SIZE=2>TRANSACTION_READ_COMMITTED</FONT></FONT></CODE><FONT FACE="Courier New, monospace"><FONT SIZE=2>
 					</FONT></FONT>
 					</P>
 					<LI><P CLASS="western" STYLE="margin-bottom: 0cm"><CODE CLASS="western"><FONT FACE="Courier New, monospace"><FONT SIZE=2>TRANSACTION_REPEATABLE_READ</FONT></FONT></CODE><FONT FACE="Courier New, monospace"><FONT SIZE=2>
@@ -1980,9 +2327,25 @@ setter method.</P>
 				this allows setting non-standard parameters using configuration
 				files.</P>
 				<P CLASS="western"><CODE CLASS="western"><FONT FACE="Courier New, monospace">setNonStandardProperty(String,
-				</FONT></CODE><CODE CLASS="western"><FONT FACE="Courier New, monospace">String)</FONT></CODE>
-				takes property name as first parameter, and its value as the
-				second parameter.</P>
+				String)</FONT></CODE> takes property name as first parameter, and
+				its value as the second parameter.</P>
+			</TD>
+		</TR>
+		<TR VALIGN=TOP>
+			<TD WIDTH=25% STYLE="border-top: none; border-bottom: 1px solid #000000; border-left: none; border-right: none; padding-top: 0cm; padding-bottom: 0.11cm; padding-left: 0cm; padding-right: 0cm">
+				<P CLASS="western"><FONT FACE="Courier New, monospace"><FONT SIZE=2>connectTimeout</FONT></FONT></P>
+			</TD>
+			<TD WIDTH=18% STYLE="border-top: none; border-bottom: 1px solid #000000; border-left: none; border-right: none; padding-top: 0cm; padding-bottom: 0.11cm; padding-left: 0cm; padding-right: 0cm">
+				<P CLASS="western" ALIGN=CENTER>+</P>
+			</TD>
+			<TD WIDTH=17% STYLE="border-top: none; border-bottom: 1px solid #000000; border-left: none; border-right: none; padding-top: 0cm; padding-bottom: 0.11cm; padding-left: 0cm; padding-right: 0cm">
+				<P CLASS="western" ALIGN=CENTER>+</P>
+			</TD>
+			<TD WIDTH=40% STYLE="border-top: none; border-bottom: 1px solid #000000; border-left: none; border-right: none; padding-top: 0cm; padding-bottom: 0.11cm; padding-left: 0cm; padding-right: 0cm">
+				<P CLASS="western">The connect timeout in seconds. For the Java
+				wire protocol detects unreachable hosts, for JNI (native
+				protocol) only defines a timeout during the <FONT FACE="Courier New, monospace"><FONT SIZE=2>op_accept</FONT></FONT>
+				phase after connecting to the server.</P>
 			</TD>
 		</TR>
 	</TBODY>
@@ -2034,7 +2397,7 @@ for their support are not implemented:</P>
 	is not supported</P>
 	<LI><P CLASS="western"><FONT FACE="Courier New, monospace"><FONT SIZE=2>java.sql.SQLXML</FONT></FONT>
 	is not supported</P>
-	<LI><P CLASS="western"><FONT FACE="Courier New, monospace"><FONT SIZE=2>java.sql</FONT></FONT><FONT FACE="Courier New, monospace"><FONT SIZE=2>.RowId</FONT></FONT>
+	<LI><P CLASS="western"><FONT FACE="Courier New, monospace"><FONT SIZE=2>java.sql.RowId</FONT></FONT>
 	is not supported</P>
 	<LI><P CLASS="western"><FONT FACE="Courier New, monospace"><FONT SIZE=2>java.sql.NClob</FONT></FONT>
 	is not supported</P>
@@ -2147,20 +2510,76 @@ with <FONT FACE="Courier New, monospace"><FONT SIZE=3 STYLE="font-size: 13pt">co
 reference implementation of <FONT FACE="Courier New, monospace"><FONT SIZE=2>javax.sql.rowset</FONT></FONT>
 included with Java in package <FONT FACE="Courier New, monospace"><FONT SIZE=2>com.sun.rowset</FONT></FONT>
 does not correctly look up columns by name as it ignores column
-aliases and only allows look up by the original column name<A CLASS="sdfootnoteanc" NAME="sdfootnote5anc" HREF="#sdfootnote5sym"><SUP>5</SUP></A>
+aliases and only allows look up by the original column name<A CLASS="sdfootnoteanc" NAME="sdfootnote4anc" HREF="#sdfootnote4sym"><SUP>4</SUP></A>
 (this specifically applies to <FONT FACE="Courier New, monospace"><FONT SIZE=2>com.sun.rowset.CachedRowSetImpl</FONT></FONT>).</FONT></FONT></P>
 <P CLASS="western"><FONT FACE="Times New Roman, serif"><FONT SIZE=3>We
 advise you to either only access columns by their index or use an
 implementation which correctly uses the column label for column
 lookup (which is either the alias or the original column name if no
 alias was defined).</FONT></FONT></P>
+<P CLASS="western"><FONT FACE="Times New Roman, serif"><FONT SIZE=3>Jaybird
+2.2.1 introduced the connection property <FONT FACE="Courier New, monospace"><FONT SIZE=2>columnLabelForName</FONT></FONT>
+for backwards compatible behavior of
+<FONT FACE="Courier New, monospace"><FONT SIZE=2>ResultSetMetaData#getColumnName(int)</FONT></FONT><FONT FACE="Courier New, monospace"><FONT SIZE=2><I>.
+</I></FONT></FONT>Set property to <FONT FACE="Courier New, monospace"><FONT SIZE=2>true</FONT></FONT>
+for backwards compatible behavior (<FONT FACE="Courier New, monospace"><FONT SIZE=2>getColumnName()</FONT></FONT>
+returns the column label); don't set the property or set it to <FONT FACE="Courier New, monospace"><FONT SIZE=2>false</FONT></FONT>
+for JDBC-compliant behavior (recommended).</FONT></FONT></P>
+<H3 CLASS="western"><A NAME="__RefHeading__4766_1756560361"></A>Support
+for Firebird 3 <FONT FACE="Courier New, monospace"><FONT SIZE=3 STYLE="font-size: 13pt">BOOLEAN</FONT></FONT>
+type</H3>
+<P CLASS="western"><SPAN STYLE="font-style: normal">J</SPAN><SPAN STYLE="font-style: normal">aybird
+2.2.</SPAN><SPAN STYLE="font-style: normal">4</SPAN><SPAN STYLE="font-style: normal">
+introduces support for the Firebird 3 </SPAN><FONT FACE="Courier New, monospace"><FONT SIZE=2><SPAN STYLE="font-style: normal">BOOLEAN</SPAN></FONT></FONT><SPAN STYLE="font-style: normal">
+type. </SPAN><SPAN STYLE="font-style: normal">A boolean field can
+also be set with all numeric setters and the string setter (as
+implied by JDBC 4.1 appendix B).</SPAN></P>
+<P CLASS="western"><SPAN STYLE="font-style: normal">For numeric
+types, currently only </SPAN><FONT FACE="Courier New, monospace"><FONT SIZE=2><SPAN STYLE="font-style: normal">0</SPAN></FONT></FONT><SPAN STYLE="font-style: normal">
+will set to </SPAN><FONT FACE="Courier New, monospace"><FONT SIZE=2><SPAN STYLE="font-style: normal">false</SPAN></FONT></FONT><SPAN STYLE="font-style: normal">
+and all other values will set to </SPAN><FONT FACE="Courier New, monospace"><FONT SIZE=2><SPAN STYLE="font-style: normal">true</SPAN></FONT></FONT><SPAN STYLE="font-style: normal">.
+This is something that might change in the future. Only </SPAN><FONT FACE="Courier New, monospace"><FONT SIZE=2><SPAN STYLE="font-style: normal">0</SPAN></FONT></FONT><SPAN STYLE="font-style: normal">
+for </SPAN><FONT FACE="Courier New, monospace"><FONT SIZE=2><SPAN STYLE="font-style: normal">false</SPAN></FONT></FONT><SPAN STYLE="font-style: normal">
+and </SPAN><FONT FACE="Courier New, monospace"><FONT SIZE=2><SPAN STYLE="font-style: normal">1</SPAN></FONT></FONT><SPAN STYLE="font-style: normal">
+for </SPAN><FONT FACE="Courier New, monospace"><FONT SIZE=2><SPAN STYLE="font-style: normal">true</SPAN></FONT></FONT><SPAN STYLE="font-style: normal">
+are guaranteed, in the future we might decide to throw a conversion
+exception for other values!</SPAN></P>
+<P CLASS="western"><SPAN STYLE="font-style: normal">For string types
+we currently set </SPAN><FONT FACE="Courier New, monospace"><FONT SIZE=2><SPAN STYLE="font-style: normal">true</SPAN></FONT></FONT><SPAN STYLE="font-style: normal">
+for </SPAN><FONT FACE="Courier New, monospace"><FONT SIZE=2><SPAN STYLE="font-style: normal">&quot;true&quot;</SPAN></FONT></FONT><SPAN STYLE="font-style: normal">,
+</SPAN><FONT FACE="Courier New, monospace"><FONT SIZE=2><SPAN STYLE="font-style: normal">&quot;T&quot;</SPAN></FONT></FONT><SPAN STYLE="font-style: normal">,
+</SPAN><FONT FACE="Courier New, monospace"><FONT SIZE=2><SPAN STYLE="font-style: normal">&quot;Y&quot;</SPAN></FONT></FONT><SPAN STYLE="font-style: normal">
+and </SPAN><FONT FACE="Courier New, monospace"><FONT SIZE=2><SPAN STYLE="font-style: normal">&quot;1&quot;</SPAN></FONT></FONT><SPAN STYLE="font-style: normal">
+(case insensitive, ignoring whitespace), all other values will set
+</SPAN><FONT FACE="Courier New, monospace"><FONT SIZE=2><SPAN STYLE="font-style: normal">false</SPAN></FONT></FONT><SPAN STYLE="font-style: normal">;
+this is for compatibility with the current </SPAN><FONT FACE="Courier New, monospace"><FONT SIZE=2><SPAN STYLE="font-style: normal">getBoolean</SPAN></FONT></FONT><SPAN STYLE="font-style: normal">
+behaviour of </SPAN><FONT FACE="Courier New, monospace"><FONT SIZE=2><SPAN STYLE="font-style: normal">FBStringField</SPAN></FONT></FONT><SPAN STYLE="font-style: normal">.
+This is something that might change in the future. Only </SPAN><FONT FACE="Courier New, monospace"><FONT SIZE=2><SPAN STYLE="font-style: normal">&quot;true&quot;</SPAN></FONT></FONT><SPAN STYLE="font-style: normal">
+and </SPAN><FONT FACE="Courier New, monospace"><FONT SIZE=2><SPAN STYLE="font-style: normal">&quot;1&quot;</SPAN></FONT></FONT><SPAN STYLE="font-style: normal">
+for </SPAN><FONT FACE="Courier New, monospace"><FONT SIZE=2><SPAN STYLE="font-style: normal">true</SPAN></FONT></FONT><SPAN STYLE="font-style: normal">
+and </SPAN><FONT FACE="Courier New, monospace"><FONT SIZE=2><SPAN STYLE="font-style: normal">&quot;false&quot;</SPAN></FONT></FONT><SPAN STYLE="font-style: normal">
+and </SPAN><FONT FACE="Courier New, monospace"><FONT SIZE=2><SPAN STYLE="font-style: normal">&quot;0&quot;</SPAN></FONT></FONT><SPAN STYLE="font-style: normal">
+for </SPAN><FONT FACE="Courier New, monospace"><FONT SIZE=2><SPAN STYLE="font-style: normal">false</SPAN></FONT></FONT><SPAN STYLE="font-style: normal">
+are guaranteed (case insensitive, ignoring whitespace), in the future
+we might decide to throw a conversion exception for other values!</SPAN></P>
+<P CLASS="western"><SPAN STYLE="font-style: normal">W</SPAN><SPAN STYLE="font-style: normal">hen
+using string or numeric setters for a boolean field we </SPAN><SPAN STYLE="font-style: normal"><B>strongly
+recommend</B></SPAN><SPAN STYLE="font-style: normal"> to only use the
+guaranteed values (</SPAN><FONT FACE="Courier New, monospace"><FONT SIZE=2><SPAN STYLE="font-style: normal">0</SPAN></FONT></FONT><SPAN STYLE="font-style: normal">,
+</SPAN><FONT FACE="Courier New, monospace"><FONT SIZE=2><SPAN STYLE="font-style: normal">1</SPAN></FONT></FONT><SPAN STYLE="font-style: normal">,
+</SPAN><FONT FACE="Courier New, monospace"><FONT SIZE=2><SPAN STYLE="font-style: normal">&ldquo;0&rdquo;</SPAN></FONT></FONT><SPAN STYLE="font-style: normal">,
+</SPAN><FONT FACE="Courier New, monospace"><FONT SIZE=2><SPAN STYLE="font-style: normal">&ldquo;1</SPAN></FONT></FONT><SPAN STYLE="font-style: normal">&rdquo;,
+</SPAN><FONT FACE="Courier New, monospace"><FONT SIZE=2><SPAN STYLE="font-style: normal">&ldquo;true&rdquo;</SPAN></FONT></FONT><SPAN STYLE="font-style: normal">
+and </SPAN><FONT FACE="Courier New, monospace"><FONT SIZE=2><SPAN STYLE="font-style: normal">&ldquo;false&rdquo;</SPAN></FONT></FONT><SPAN STYLE="font-style: normal">).
+</SPAN><SPAN STYLE="font-style: normal">Better yet: use the boolean
+setter instead.</SPAN></P>
 <H2 CLASS="western" STYLE="page-break-before: always"><A NAME="__RefHeading__2807_1560579136"></A>
 Connection pooling with Jaybird</H2>
 <P CLASS="western">As described in Important changes to Datasources,
 the <FONT FACE="Courier New, monospace"><FONT SIZE=2>ConnectionPoolDataSource
 </FONT></FONT>implementations in <FONT FACE="Courier New, monospace"><FONT SIZE=2>org.firebirdsql.pool</FONT></FONT>
 contain some serious issues. The connection pool capability <FONT FACE="Times New Roman, serif">which
-depends on these classes</FONT> will be removed in Jaybird 2.3.</P>
+depends on these classes</FONT> will be removed in Jaybird 3.0.</P>
 <P CLASS="western">This change leaves only the
 <FONT FACE="Courier New, monospace"><FONT SIZE=2>ConnectionPoolDataSource</FONT></FONT>
 implementations in <FONT FACE="Courier New, monospace"><FONT SIZE=2>org.firebirdsql.ds</FONT></FONT>
@@ -2171,9 +2590,10 @@ the normal JDBC driver.</P>
 <P CLASS="western">If you require standalone connection pooling, or
 use an application server which has no built-in connectionpool,
 please consider using <FONT FACE="Times New Roman, serif"><FONT SIZE=3>a
-third-party connection pool like C3P0, DBCP or BoneCP.</FONT></FONT></P>
+third-party connection pool like </FONT></FONT><FONT FACE="Times New Roman, serif"><FONT SIZE=3>c</FONT></FONT><FONT FACE="Times New Roman, serif"><FONT SIZE=3>3</FONT></FONT><FONT FACE="Times New Roman, serif"><FONT SIZE=3>p0</FONT></FONT><FONT FACE="Times New Roman, serif"><FONT SIZE=3>,
+DBCP or BoneCP.</FONT></FONT></P>
 <H3 CLASS="western"><A NAME="__RefHeading__3729_304866878"></A>Description
-of deprecated <FONT FACE="Courier New, monospace">or</FONT><FONT FACE="Courier New, monospace">g.firebirdsql.pool</FONT>
+of deprecated <FONT FACE="Courier New, monospace">org.firebirdsql.pool</FONT>
 classes</H3>
 <DIV ID="Warning deprecation" DIR="LTR" STYLE="background: #c0c0c0">
 	<P CLASS="western"><B>WARNING: This section provides information on
@@ -2785,25 +3205,19 @@ log when appropriate system properties are set to <CODE CLASS="western"><FONT FA
 <P CLASS="western" ALIGN=LEFT><BR><BR>
 </P>
 <DIV ID="sdfootnote1">
-	<P CLASS="sdfootnote-western"><A CLASS="sdfootnotesym" NAME="sdfootnote1sym" HREF="#sdfootnote1anc">1</A>If
-	you really need a Java 1.4.2 compatible version, please send a mail
-	to the Firebird-Java mailinglist. If there is sufficient demand we
-	will see if it is still possible to create a Java 1.4 build.</P>
+	<P CLASS="sdfootnote-western"><A CLASS="sdfootnotesym" NAME="sdfootnote1sym" HREF="#sdfootnote1anc">1</A>See
+	<A CLASS="western" HREF="http://docs.oracle.com/javase/tutorial/essential/exceptions/tryResourceClose.html">http://docs.oracle.com/javase/tutorial/essential/exceptions/tryResourceClose.html</A></P>
 </DIV>
 <DIV ID="sdfootnote2">
 	<P CLASS="sdfootnote-western"><A CLASS="sdfootnotesym" NAME="sdfootnote2sym" HREF="#sdfootnote2anc">2</A>See
-	<A CLASS="western" HREF="http://docs.oracle.com/javase/tutorial/essential/exceptions/tryResourceClose.html">http://docs.oracle.com/javase/tutorial/essential/exceptions/tryResourceClose.html</A></P>
-</DIV>
-<DIV ID="sdfootnote3">
-	<P CLASS="sdfootnote-western"><A CLASS="sdfootnotesym" NAME="sdfootnote3sym" HREF="#sdfootnote3anc">3</A>See
 	<A CLASS="western" HREF="http://www.oracle.com/technetwork/java/eol-135779.html">http://www.oracle.com/technetwork/java/eol-135779.html</A></P>
 </DIV>
-<DIV ID="sdfootnote4">
-	<P CLASS="sdfootnote-western"><A CLASS="sdfootnotesym" NAME="sdfootnote4sym" HREF="#sdfootnote4anc">4</A>To
-	be removed in Jaybird 2.3</P>
+<DIV ID="sdfootnote3">
+	<P CLASS="sdfootnote-western"><A CLASS="sdfootnotesym" NAME="sdfootnote3sym" HREF="#sdfootnote3anc">3</A>To
+	be removed in Jaybird 3.0</P>
 </DIV>
-<DIV ID="sdfootnote5">
-	<P CLASS="sdfootnote-western"><A CLASS="sdfootnotesym" NAME="sdfootnote5sym" HREF="#sdfootnote5anc">5</A>See
+<DIV ID="sdfootnote4">
+	<P CLASS="sdfootnote-western"><A CLASS="sdfootnotesym" NAME="sdfootnote4sym" HREF="#sdfootnote4anc">4</A>See
 	<A CLASS="western" HREF="http://tracker.firebirdsql.org/browse/JDBC-162">JDBC-162</A>
 	and <A CLASS="western" HREF="http://bugs.sun.com/bugdatabase/view_bug.do?bug_id=7046875">http://bugs.sun.com/bugdatabase/view_bug.do?bug_id=7046875</A>
 	for details</P>

@@ -1,7 +1,6 @@
 package org.firebirdsql.gds.impl.jni;
 
 import java.io.ByteArrayOutputStream;
-import java.io.IOException;
 
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.TransactionParameterBuffer;
@@ -36,11 +35,7 @@ public class TransactionParameterBufferImpl extends ParameterBufferBase
 
         byteArrayOutputStream.write(ISCConstants.isc_tpb_version3);
 
-        try {
-            super.writeArgumentsTo(byteArrayOutputStream);
-        } catch (IOException e) {
-            // Ignoring IOException, not thrown by ByteArrayOutputStream
-        }
+        super.writeArgumentsTo(byteArrayOutputStream);
 
         return byteArrayOutputStream.toByteArray();
     }

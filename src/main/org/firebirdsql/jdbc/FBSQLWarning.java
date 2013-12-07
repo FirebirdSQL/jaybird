@@ -19,6 +19,8 @@
 
 package org.firebirdsql.jdbc;
 
+import java.io.PrintWriter;
+import java.io.PrintStream;
 import java.sql.SQLWarning;
 import org.firebirdsql.gds.GDSException;
 
@@ -33,7 +35,8 @@ public class FBSQLWarning extends SQLWarning {
     public static final String SQL_STATE_WARNING = "01000";
     
     private GDSException original;
-
+    private String message;
+    
     /**
      * Create instance of this class.
      * 
@@ -44,12 +47,14 @@ public class FBSQLWarning extends SQLWarning {
      * returns <code>false</code>).
      */
     public FBSQLWarning(GDSException original) {
-        super(original.getMessage(), SQL_STATE_WARNING, original);
+        super(original.getMessage(), SQL_STATE_WARNING);
             
         if (!original.isWarning())
-            throw new IllegalArgumentException("Only warnings can be wrapped.");
+            throw new IllegalArgumentException(
+                "Only warnings can be wrapped.");
                 
         this.original = original;
+        this.message = original.getMessage();
     }
     
     /**
@@ -60,16 +65,6 @@ public class FBSQLWarning extends SQLWarning {
     public FBSQLWarning(String message) {
         super(message, SQL_STATE_WARNING);
     }
-
-    /**
-     * Create instance of this class for the specified message, sqlState and fbErrorCode
-     * @param message Warning message
-     * @param sqlState SQL state
-     * @param fbErrorCode Firebird error code
-     */
-    public FBSQLWarning(String message, String sqlState, int fbErrorCode) {
-        super(message, sqlState != null ? sqlState : SQL_STATE_WARNING, fbErrorCode);
-    }
     
     /**
      * Get error code for this warning.
@@ -78,9 +73,9 @@ public class FBSQLWarning extends SQLWarning {
      */
     public int getErrorCode() {
         if (original != null)
-            return original.getFbErrorCode();
+            return original.getIntParam();
         else
-            return super.getErrorCode();
+            return 0;
     }
     
     public String getSQLState() {
@@ -89,4 +84,33 @@ public class FBSQLWarning extends SQLWarning {
         else
             return super.getSQLState();
     }
+
+    public Exception getInternalException() {
+        return original;
+    }
+
+    public String getMessage() {
+        return message;
+    }
+
+    public void printStackTrace() {
+        printStackTrace(System.err);
+    }
+
+    public void printStackTrace(PrintStream s) {
+        super.printStackTrace(s);
+        if (original != null) {
+            s.print("at ");
+            original.printStackTrace(s);
+        }
+    }
+
+    public void printStackTrace(PrintWriter s) {
+        super.printStackTrace(s);
+        if (original != null) {
+            s.print("at ");
+            original.printStackTrace(s);
+        }
+    }
+    
 }

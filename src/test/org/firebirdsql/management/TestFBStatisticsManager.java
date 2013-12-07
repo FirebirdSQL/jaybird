@@ -10,8 +10,6 @@ import java.sql.SQLException;
 import org.firebirdsql.common.FBTestBase;
 import org.firebirdsql.gds.impl.GDSType;
 
-import static org.firebirdsql.common.FBTestProperties.*;
-
 /**
  * Test the FBStatisticsManager class
  */
@@ -99,10 +97,10 @@ public class TestFBStatisticsManager extends FBTestBase {
         String statistics = loggingStream.toString();
 
         assertTrue("The database page analysis must be in the statistics",
-                statistics.contains("Data pages"));
+                statistics.indexOf("Data pages") != -1);
 
-        assertFalse("System table information must not be in basic statistics",
-                statistics.contains("RDB$DATABASE"));
+        assertTrue("System table information must not be in basic statistics",
+                statistics.indexOf("RDB$DATABASE") == -1);
     }
 
     public void testGetStatsWithBadOptions() throws SQLException {
@@ -126,7 +124,7 @@ public class TestFBStatisticsManager extends FBTestBase {
         String statistics = loggingStream.toString();
         assertTrue("Statistics with SYSTEM_TABLE_STATISTICS option must "
                     + "include system table info",
-                statistics.contains("RDB$DATABASE"));
+                statistics.indexOf("RDB$DATABASE") != -1);
     }
 
     public void testGetTableStatistics() throws SQLException {
@@ -138,9 +136,9 @@ public class TestFBStatisticsManager extends FBTestBase {
         System.out.println(statistics);
         
         assertTrue("The database page analysis must be in the statistics",
-                statistics.contains("Data pages"));
+                statistics.indexOf("Data pages") != -1);
 
         assertTrue("The table name must be in the statistics",
-                statistics.contains("TEST"));
+            statistics.indexOf("TEST") != -1);
     }
 }

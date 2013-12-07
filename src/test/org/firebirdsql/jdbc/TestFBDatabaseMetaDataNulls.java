@@ -22,7 +22,7 @@ package org.firebirdsql.jdbc;
 import java.sql.*;
 
 import org.firebirdsql.common.FBTestBase;
-import org.firebirdsql.common.JdbcResourceHelper;
+
 
 public class TestFBDatabaseMetaDataNulls extends FBTestBase {
 
@@ -35,6 +35,9 @@ public class TestFBDatabaseMetaDataNulls extends FBTestBase {
         + "  id INTEGER NOT NULL PRIMARY KEY, "
         + "  char_value VARCHAR(20)"
         + ")";
+    
+    public static final String DROP_TABLE = 
+        "DROP TABLE test_nulls";
     
     public static final String INSERT_VALUES = 
         "INSERT INTO test_nulls VALUES(?, ?)";
@@ -49,6 +52,12 @@ public class TestFBDatabaseMetaDataNulls extends FBTestBase {
         
         Statement stmt = connection.createStatement();
         try {
+            try {
+                stmt.execute(DROP_TABLE);
+            } catch(SQLException ex) {
+                // ignore
+            }
+            
             stmt.execute(CREATE_TABLE);
         } finally {
             stmt.close();
@@ -70,7 +79,18 @@ public class TestFBDatabaseMetaDataNulls extends FBTestBase {
     }
 
     protected void tearDown() throws Exception {
-        JdbcResourceHelper.closeQuietly(connection);
+        
+        try {
+            Statement stmt = connection.createStatement();
+            try {
+                stmt.execute(DROP_TABLE);
+            } finally {
+                stmt.close();
+            }
+        } finally {
+            connection.close();
+        }
+        
         super.tearDown();
     }
 

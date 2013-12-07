@@ -21,7 +21,7 @@ package org.firebirdsql.jca;
 import javax.resource.spi.LocalTransaction;
 import javax.sql.DataSource;
 
-import org.firebirdsql.jdbc.FBConnection;
+import org.firebirdsql.jdbc.AbstractConnection;
 import org.firebirdsql.jdbc.FBBlob;
 
 import java.io.ByteArrayInputStream;
@@ -41,7 +41,7 @@ import java.util.Arrays;
  */
 public class TestFBBlob extends TestXABase {
 
-    private FBConnection c;
+    private AbstractConnection c;
     private FBManagedConnectionFactory mcf;
     private DataSource ds;
     private Statement s;
@@ -58,7 +58,7 @@ public class TestFBBlob extends TestXABase {
     protected void setupTable(String name) throws Exception {
         mcf = initMcf();
         ds = (DataSource)mcf.createConnectionFactory();
-        c = (FBConnection)ds.getConnection();
+        c = (AbstractConnection)ds.getConnection();
         s = c.createStatement();
         t = c.getLocalTransaction();
         t.begin();

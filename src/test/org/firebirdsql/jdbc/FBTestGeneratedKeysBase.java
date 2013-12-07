@@ -24,9 +24,6 @@ import java.sql.Connection;
 
 import org.firebirdsql.common.FBTestBase;
 
-import static org.firebirdsql.common.DdlHelper.*;
-import static org.firebirdsql.common.JdbcResourceHelper.*;
-
 /**
  * Test base for tests of retrieval of auto generated keys.
  * <p>
@@ -37,14 +34,17 @@ import static org.firebirdsql.common.JdbcResourceHelper.*;
  */
 abstract class FBTestGeneratedKeysBase extends FBTestBase {
 
+    private static final String DROP_TABLE = "DROP TABLE TABLE_WITH_TRIGGER";
     private static final String CREATE_TABLE = "CREATE TABLE TABLE_WITH_TRIGGER (\n"
                 + " ID Integer NOT NULL,\n" 
                 + " TEXT Varchar(200),\n"
                 + " \"quote_column\" INTEGER DEFAULT 2,\n"
                 + " CONSTRAINT PK_TABLE_WITH_TRIGGER_1 PRIMARY KEY (ID)\n" 
                 + ")";
+    private static final String DROP_SEQUENCE = "DROP GENERATOR GEN_TABLE_WITH_TRIGGER_ID";
     private static final String CREATE_SEQUENCE = "CREATE GENERATOR GEN_TABLE_WITH_TRIGGER_ID";
     private static final String INIT_SEQUENCE = "SET GENERATOR GEN_TABLE_WITH_TRIGGER_ID TO 512";
+    private static final String DROP_TRIGGER = "DROP TRIGGER TABLE_WITH_TRIGGER_BI";
     private static final String CREATE_TRIGGER = "CREATE TRIGGER TABLE_WITH_TRIGGER_BI FOR TABLE_WITH_TRIGGER ACTIVE\n" + 
         		"BEFORE INSERT POSITION 0\n" + 
         		"AS\n" + 
@@ -69,6 +69,10 @@ abstract class FBTestGeneratedKeysBase extends FBTestBase {
         
         Connection con = getConnectionViaDriverManager();
         try {
+            executeDropTable(con, DROP_TRIGGER);
+            executeDropTable(con, DROP_SEQUENCE);
+            executeDropTable(con, DROP_TABLE);
+            
             executeCreateTable(con, CREATE_TABLE);
             executeCreateTable(con, CREATE_SEQUENCE);
             executeCreateTable(con, INIT_SEQUENCE);
@@ -77,4 +81,17 @@ abstract class FBTestGeneratedKeysBase extends FBTestBase {
             closeQuietly(con);
         }
     }
+
+    public void tearDown() throws Exception {
+        Connection con = getConnectionViaDriverManager();
+        try {
+            executeDropTable(con, DROP_TRIGGER);
+            executeDropTable(con, DROP_SEQUENCE);
+            executeDropTable(con, DROP_TABLE);
+        } finally {
+            closeQuietly(con);
+            super.tearDown();
+        }
+    }
+
 }

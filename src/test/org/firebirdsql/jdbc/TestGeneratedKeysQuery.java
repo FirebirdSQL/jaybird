@@ -153,7 +153,7 @@ public class TestGeneratedKeysQuery extends MockObjectTestCase {
         });
 
         // NOTE Implementation detail
-        String expectedSuffix = "\nRETURNING \"ID\",\"NAME\",\"TEXT_VALUE\"";
+        String expectedSuffix = "\nRETURNING \"ID\", \"NAME\", \"TEXT_VALUE\"";
 
         AbstractGeneratedKeysQuery query = new AbstractGeneratedKeysQuery(TEST_INSERT_QUERY,
                 Statement.RETURN_GENERATED_KEYS) {
@@ -289,7 +289,7 @@ public class TestGeneratedKeysQuery extends MockObjectTestCase {
         });
 
         // NOTE Implementation detail
-        String expectedSuffix = "\nRETURNING \"ID\",\"NAME\"";
+        String expectedSuffix = "\nRETURNING \"ID\", \"NAME\"";
 
         AbstractGeneratedKeysQuery query = new AbstractGeneratedKeysQuery(TEST_INSERT_QUERY,
                 new int[] { 1, 2 }) {
@@ -346,7 +346,7 @@ public class TestGeneratedKeysQuery extends MockObjectTestCase {
         });
 
         // NOTE Implementation detail
-        String expectedSuffix = "\nRETURNING \"ID\",\"NAME\"";
+        String expectedSuffix = "\nRETURNING \"ID\", \"NAME\"";
 
         AbstractGeneratedKeysQuery query = new AbstractGeneratedKeysQuery(TEST_INSERT_QUERY,
                 new int[] { 1, 2, 5 }) {
@@ -403,7 +403,7 @@ public class TestGeneratedKeysQuery extends MockObjectTestCase {
         });
 
         // NOTE Implementation detail
-        String expectedSuffix = "\nRETURNING \"ID\",\"NAME\"";
+        String expectedSuffix = "\nRETURNING \"ID\", \"NAME\"";
 
         AbstractGeneratedKeysQuery query = new AbstractGeneratedKeysQuery(TEST_INSERT_QUERY,
                 new int[] { 2, 1 }) {
@@ -561,7 +561,7 @@ public class TestGeneratedKeysQuery extends MockObjectTestCase {
         });
 
         // NOTE Implementation detail
-        String expectedSuffix = "\nRETURNING NAME,ID";
+        String expectedSuffix = "\nRETURNING NAME, ID";
 
         AbstractGeneratedKeysQuery query = new AbstractGeneratedKeysQuery(TEST_INSERT_QUERY,
                 new String[] { "NAME", "ID" }) {

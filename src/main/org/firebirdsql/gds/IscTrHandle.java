@@ -44,104 +44,10 @@ package org.firebirdsql.gds;
  */
 public interface IscTrHandle {
 
-    // TODO Replace with enum
-    public static final int NOTRANSACTION = 0;
-    public static final int TRANSACTIONSTARTING = 1;
-    public static final int TRANSACTIONSTARTED = 2;
-    public static final int TRANSACTIONPREPARING = 3;
-    public static final int TRANSACTIONPREPARED = 4;
-    public static final int TRANSACTIONCOMMITTING = 5;
-    public static final int TRANSACTIONROLLINGBACK = 6;
-
-    /**
-     * Get the Firebird id for this transaction.
-     * 
-     * @return Firebird transaction id
-     */
-    int getTransactionId();
-    
-    /**
-     * Sets the Firebird id for this transaction.
-     * 
-     * param rtr_id Firebird transaction id
-     */
-    void setTransactionId(int rtr_id);
-    
     /**
      * Retrieve a handle to the database to which this transaction is linked.
      *
      * @return Handle to the database
      */
     IscDbHandle getDbHandle();
-    
-    /**
-     * Sets a handle to the database to which this transaction is linked.
-     *
-     * @param db Handle to the database
-     */
-    void setDbHandle(IscDbHandle db);
-    
-    /**
-     * Clears the database handle associated with this transaction
-     */
-    public void unsetDbHandle();
-    
-    /**
-     * Add a warning to the connection associated with this transaction.
-     * 
-     * @param warning Warning to add
-     */
-    void addWarning(GDSException warning);
-    
-    /**
-     * Get the current state of the transaction to which this handle is
-     * pointing. The state is equal to one of the <code>TRANSACTION*</code> 
-     * constants of this interface, or the <code>NOTRANSACTION</code> constant,
-     * also of this interface.
-     *
-     * @return The corresponding value for the current state
-     */
-    int getState();
-    
-    /**
-     * Sets the current transaction state.
-     * 
-     * @param state The value for the current state
-     */
-    void setState(int state);
-    
-    /**
-     * Register blob created under this transaction.
-     * 
-     * @param blob Blob to be registered
-     */
-    void addBlob(IscBlobHandle blob);
-    
-    /**
-     * Remove blob as registered under this transaction.
-     * 
-     * @param blob Blob to removed
-     */
-    void removeBlob(IscBlobHandle blob);
-    
-    /**
-     * Register a statement within the transaction to which this handle points.
-     * This method allows automated cleanup of the rows fetched within a 
-     * transaction on commit or rollback point.
-     *
-     * @param stmt Handle to the statement to be registered.
-     */
-    void registerStatementWithTransaction(IscStmtHandle stmt);
-    
-    /**
-     * Unregister a statement from the transaction in which it was registered.
-     *
-     * @param stmt Handle to the statement to be unregistered.
-     */
-    void unregisterStatementFromTransaction(IscStmtHandle stmt);
-    
-    /**
-     * Clear all the saved result sets from this handle.
-     */
-    void forgetResultSets();
 }

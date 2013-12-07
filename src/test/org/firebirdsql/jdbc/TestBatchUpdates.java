@@ -22,7 +22,6 @@ import java.io.StringReader;
 import java.sql.*;
 
 import org.firebirdsql.common.FBTestBase;
-import org.firebirdsql.common.JdbcResourceHelper;
 
 /**
  * Test batch updates.
@@ -43,6 +42,10 @@ public class TestBatchUpdates extends FBTestBase {
         + ")"
         ;
     
+    public static final String DROP_TABLE = ""
+        + "DROP TABLE batch_updates"
+        ;
+    
     private Connection connection;
     
     protected void setUp() throws Exception {
@@ -52,14 +55,32 @@ public class TestBatchUpdates extends FBTestBase {
         
         Statement stmt = connection.createStatement();
         try {
+            try {
+                stmt.execute(DROP_TABLE);
+            } catch(SQLException ex) {
+                // ignore, most likely - not found
+            }
+            
             stmt.execute(CREATE_TABLE);
+            
         } finally {
             stmt.close();
         }
     }
-    
+
     protected void tearDown() throws Exception {
-        JdbcResourceHelper.closeQuietly(connection);
+        
+        try {
+            Statement stmt = connection.createStatement();
+            try {
+                stmt.execute(DROP_TABLE);
+            } finally {
+                stmt.close();
+            }
+        } finally {
+            connection.close();
+        }
+        
         super.tearDown();
     }
 

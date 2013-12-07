@@ -32,8 +32,6 @@ import java.util.Map;
 
 import org.firebirdsql.jdbc.MetaDataValidator.MetaDataInfo;
 
-import static org.firebirdsql.common.JdbcResourceHelper.*;
-
 /**
  * Tests for {@link FBDatabaseMetaData} for procedure columns related metadata.
  * 
@@ -88,6 +86,27 @@ public class TestFBDatabaseMetaDataProcedureColumns extends FBMetaDataTestBase<T
     
     public static final String ADD_COMMENT_ON_NORMAL_PROC_WITH_RETURN_PARAM2 = 
             "COMMENT ON PARAMETER normal_proc_with_return.param2 IS 'Some comment'";
+    
+    public static final String DROP_PROC_NO_ARG_NO_RETURN =
+            "DROP PROCEDURE proc_no_arg_no_return";
+    
+    public static final String DROP_NORMAL_PROC_NO_RETURN = 
+            "DROP PROCEDURE normal_proc_no_return";
+
+    public static final String DROP_NORMAL_PROC_WITH_RETURN = 
+            "DROP PROCEDURE normal_proc_with_return";
+
+    public static final String DROP_QUOTED_PROC_NO_RETURN = 
+            "DROP PROCEDURE \"quoted_proc_no_return\"";
+
+    @Override
+    protected List<String> getDropStatements() {
+        return Arrays.asList(
+                DROP_PROC_NO_ARG_NO_RETURN,
+                DROP_NORMAL_PROC_NO_RETURN,
+                DROP_NORMAL_PROC_WITH_RETURN,
+                DROP_QUOTED_PROC_NO_RETURN);
+    }
 
     @Override
     protected List<String> getCreateStatements() {
@@ -314,7 +333,7 @@ public class TestFBDatabaseMetaDataProcedureColumns extends FBMetaDataTestBase<T
 
     @Override
     protected Map<ProcedureColumnMetaData, Object> getDefaultValueValidationRules() throws Exception {
-        return new EnumMap<ProcedureColumnMetaData, Object>(DEFAULT_COLUMN_VALUES);
+        return new EnumMap(DEFAULT_COLUMN_VALUES);
     }
     
     /**

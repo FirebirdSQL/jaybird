@@ -26,8 +26,6 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.util.Properties;
 
-import static org.firebirdsql.common.FBTestProperties.*;
-
 /**
  * This test case tests encodings in text blobs.
  *
@@ -62,6 +60,18 @@ public class TestFBLongVarCharEncodings extends TestFBEncodings {
 
     protected String getCreateTableStatement() {
         return CREATE_TABLE;
+    }
+
+    public void testGerman() throws Exception {
+        super.testGerman();
+    }
+
+    public void testHungarian() throws Exception {
+        super.testHungarian();
+    }
+
+    public void testUkrainian() throws Exception {
+        super.testUkrainian();
     }
     
     public void testPadding() throws Exception {

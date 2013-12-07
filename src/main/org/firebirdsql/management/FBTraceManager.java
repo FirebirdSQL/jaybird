@@ -224,7 +224,7 @@ public class FBTraceManager extends FBServiceManager implements TraceManager {
 		
 		FileReader fr = new FileReader(fileName);
 		BufferedReader br = new BufferedReader(fr);
-		StringBuilder sb = new StringBuilder(256);
+		StringBuffer sb = new StringBuffer(256);
 		String s;
 		try {
 			while ((s = br.readLine()) != null) {

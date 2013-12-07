@@ -38,7 +38,7 @@ public class FBSQLException extends SQLException {
     public static final String SQL_STATE_INVALID_ARG_VALUE = "HY009";
     public static final String SQL_STATE_INVALID_OPTION_IDENTIFIER = "HY092";
     public static final String SQL_STATE_INVALID_PARAM_TYPE = "HY105";
-
+    
 
     public static final String SQL_STATE_WRONG_PARAM_NUM = "07001";
     public static final String SQL_STATE_NO_RESULT_SET = "07005";
@@ -48,7 +48,6 @@ public class FBSQLException extends SQLException {
 
     public static final String SQL_STATE_INVALID_STATEMENT_ID = "26000";
 
-    public static final String SQL_STATE_CONNECTION_ERROR = "08000";
     public static final String SQL_STATE_CONNECTION_CLOSED = "08003";
     public static final String SQL_STATE_CONNECTION_FAILURE = "08006";
     public static final String SQL_STATE_CONNECTION_FAILURE_IN_TX = "08007";
@@ -60,12 +59,17 @@ public class FBSQLException extends SQLException {
     }
 
     public FBSQLException(GDSException ex) {
-        super(createGDSExceptionMessage(ex), defaultSQLStateIfNull(ex.getSQLState()), ex.getIntParam(), ex);
+        super(createGDSExceptionMessage(ex), defaultSQLStateIfNull(ex.getSQLState()), ex.getIntParam());
+        initCause(ex);
     }
 
     public FBSQLException(ResourceException ex) {
-        super(createResourceMessage(ex), defaultSQLStateIfNull(ex.getErrorCode()), getSqlErrorCode(ex), resolveCause(ex));
-        // try to unwrap wrapped GDS exception, in this case FBResourceException will never appear on the stack
+        super(createResourceMessage(ex), defaultSQLStateIfNull(ex.getErrorCode()), getSqlErrorCode(ex));
+
+        // try to unwrap wrapped GDS exception, in this case FBResourceException
+        // will never appear on the stack
+        Throwable cause = resolveCause(ex);
+        initCause(cause);
     }
 
     public FBSQLException(String message) {
@@ -73,7 +77,7 @@ public class FBSQLException extends SQLException {
     }
 
     /**
-     *
+     * 
      * @param message
      *            Exception message
      * @param ex
@@ -82,14 +86,13 @@ public class FBSQLException extends SQLException {
      *             {@link #FBSQLException(String, String)} in combination with
      *             {@link #setNextException(SQLException)}.
      */
-    @Deprecated
     public FBSQLException(String message, SQLException ex) {
         this(message);
         setNextException(ex);
     }
 
     /**
-     *
+     * 
      * @param message
      *            Exception message
      * @param sqlState
@@ -103,7 +106,6 @@ public class FBSQLException extends SQLException {
     /**
      * @deprecated use {@link #getCause()} instead.
      */
-    @Deprecated
     public Exception getInternalException() {
         return (Exception) getCause();
     }
@@ -111,7 +113,7 @@ public class FBSQLException extends SQLException {
     /**
      * Helper method to create message text for constructor accepting
      * ResourceException ({@link #FBSQLException(ResourceException)})
-     *
+     * 
      * @param ex
      *            ResourceException
      * @return Exception message
@@ -123,10 +125,10 @@ public class FBSQLException extends SQLException {
         }
         return "Resource Exception. " + ex.getMessage();
     }
-
+    
     /**
      * Helper method to create message text for GDSException.
-     *
+     * 
      * @param ex
      *            The GDSException
      * @return Message text
@@ -138,7 +140,7 @@ public class FBSQLException extends SQLException {
     /**
      * Helper method to get the SQL vendor code (or in the case of Firebird: the
      * isc errorcode).
-     *
+     * 
      * @param ex
      *            ResourceException
      * @return isc errorcode, or 0
