@@ -19,8 +19,8 @@ Jaybird is available on maven (since version 2.2.0), with a separate artifact
 for each supported Java version.
 
 Groupid: `org.firebirdsql.jdbc`,\
-Artifactid: `jaybird-jdkXX` (where `XX` is `15`, `16`, `17`).\
-Version: `2.2.3`
+Artifactid: `jaybird-jdkXX` (where `XX` is `15`, `16`, `17` or `18`).\
+Version: `2.2.4`
 
 For example:
 
@@ -28,7 +28,7 @@ For example:
 <dependency>
     <groupId>org.firebirdsql.jdbc</groupId>
     <artifactId>jaybird-jdk17</artifactId>
-    <version>2.2.3</version>
+    <version>2.2.4</version>
 </dependency>
 ~~~
 
@@ -76,9 +76,9 @@ specify an explicit version, or be released under a different license.
 Which Java versions are supported?
 ----------------------------------
 
-Jaybird 2.2.x supports Java 5, 6 and 7. Jaybird 2.2.4 (not yet released at time
-of writing) will add basic support for Java 8 (JDBC 4.2), although not all
-JDBC 4.2 features will be supported or fully implemented.
+Jaybird 2.2.x supports Java 5, 6 and 7. Jaybird 2.2.4 adds basic support for
+Java 8 (JDBC 4.2), although not all JDBC 4.2 features will be supported or
+fully implemented.
 
 Jaybird 2.2.x is the last version to support Java 5, support will be dropped
 with Jaybird 3.0.
@@ -347,7 +347,7 @@ Does Jaybird support connection pooling?
 Jaybird itself no longer provides connection pooling. Earlier versions had a
 `DataSource` implementation with connection pooling, but this implementation had
 severe bugs. This implementation (and all other classes in
-`org.firebirdsql.pool`) was deprecated in 2.2 and dropped 3.0.
+`org.firebirdsql.pool`) was deprecated in 2.2 and dropped in 3.0.
 
 Jaybird provides a basic `DataSource` implementation and a
 `ConnectionPoolDataSource` implementation. Contrary to its name the latter does
