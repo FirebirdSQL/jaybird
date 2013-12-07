@@ -1,4 +1,3 @@
-
   <target name="init">
     <!-- Setup the build timestamp & build identifer properties -->
     <tstamp>
@@ -86,14 +85,14 @@
 
     <property name="version.major" value="2"/>
     <property name="version.minor" value="2"/>
-    <property name="version.revision" value="4"/>
-    <property name="version.tag" value="-"/>
+    <property name="version.revision" value="5"/>
+    <property name="version.tag" value="-snapshot-"/>
     <property name="version.name" value="JDK_${ant.java.version}"/>
 
     <property name="version.full" value="${version.major}.${version.minor}.${version.revision}${version.tag}${version.name}"/>
 
     <!-- This must be set to the SVN tag for any release -->
-    <property name="version.cvstag" value="Jaybird_2_2_4"/>
+    <property name="version.cvstag" value="Branch_2_2"/>
 
     <!-- Manifest version info -->
     <property name="specification.title" value="Firebird Jaybird"/>
