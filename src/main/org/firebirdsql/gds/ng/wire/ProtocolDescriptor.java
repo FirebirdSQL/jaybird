@@ -46,7 +46,7 @@ import org.firebirdsql.gds.ng.fields.BlrCalculator;
  * </p>
  *
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
- * @since 2.3
+ * @since 3.0
  */
 public interface ProtocolDescriptor {
 
@@ -96,7 +96,8 @@ public interface ProtocolDescriptor {
     /**
      * Create {@link org.firebirdsql.gds.ng.FbStatement} implementation for this protocol.
      *
-     * @param database FbWireDatabase of the current database
+     * @param database
+     *         FbWireDatabase of the current database
      * @return FbStatement implementation
      */
     FbWireStatement createStatement(FbWireDatabase database);
@@ -105,7 +106,8 @@ public interface ProtocolDescriptor {
      * Create {@link DatabaseParameterBuffer} implementation and populate it with supported
      * properties for this protocol version.
      *
-     * @param connection Connection
+     * @param connection
+     *         Connection
      * @return DatabaseParameterBuffer implementation
      */
     DatabaseParameterBuffer createDatabaseParameterBuffer(WireConnection connection);
@@ -113,8 +115,24 @@ public interface ProtocolDescriptor {
     /**
      * Create {@link BlrCalculator} implementation for this protocol version.
      *
-     * @param database FbWireDatabase of the current database
+     * @param database
+     *         FbWireDatabase of the current database
      * @return BlrCalculator implementation
      */
-    BlrCalculator createBlrCalculator(final FbWireDatabase database);
+    BlrCalculator createBlrCalculator(FbWireDatabase database);
+
+    /**
+     * Create {@link FbWireBlob} implementation for this protocol version.
+     *
+     * @param database
+     *         FbWireDatabase of the current database
+     * @param transaction
+     *         FbWireTransaction to associate with the blob
+     * @param blobId
+     *         Blob Id (must be 0 for output blob and non-zero for input blob)
+     * @param outputBlob
+     *         <code>true</code> for output blob, <code>false</code> for input blob
+     * @return FbWireBlob implementation
+     */
+    FbWireBlob createBlob(FbWireDatabase database, FbWireTransaction transaction, long blobId, boolean outputBlob);
 }

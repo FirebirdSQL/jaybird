@@ -37,7 +37,7 @@ import java.sql.SQLException;
 
 /**
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
- * @since 2.3
+ * @since 3.0
  */
 public interface FbDatabase {
 
@@ -87,28 +87,48 @@ public interface FbDatabase {
      * @param tpb
      *         TransactionParameterBuffer with the required transaction
      *         options
-     * @return Transaction
+     * @return FbTransaction
      * @throws SQLException
      */
     FbTransaction createTransaction(TransactionParameterBuffer tpb) throws SQLException;
 
     /**
-     * Creates a statement with an implicit transaction.
-     *
-     * @return GdsStatement with implicit transaction
-     * @throws SQLException
-     */
-    FbStatement createStatement() throws SQLException;
-
-    /**
      * Creates a statement associated with a transaction
      *
      * @param transaction
-     *         GdsTransaction to associate with this statement
-     * @return GdsStatement
+     *         FbTransaction to associate with this statement (can be <code>null</code>).
+     * @return FbStatement
      * @throws SQLException
      */
     FbStatement createStatement(FbTransaction transaction) throws SQLException;
+
+    /**
+     * Creates a new blob for write access.
+     * <p>
+     * TODO: Should this actually create the blob on the server, or can that wait until we actually use it?
+     * </p>
+     *
+     * @param transaction
+     *         Transaction associated with the blob.
+     * @return Instance of {@link FbBlob}
+     * @throws SQLException
+     */
+    FbBlob createBlob(FbTransaction transaction) throws SQLException;
+
+    /**
+     * Opens an existing blob for read access.
+     * <p>
+     * TODO: Should this actually open the blob on the server, or can that wait until we actually use it?
+     * </p>
+     *
+     * @param transaction
+     *         Transaction associated with the blob.
+     * @param blobId
+     *         Handle id of the blob
+     * @return Instance of {@link FbBlob}
+     * @throws SQLException
+     */
+    FbBlob openBlob(FbTransaction transaction, long blobId) throws SQLException;
 
     /**
      * Request database info.

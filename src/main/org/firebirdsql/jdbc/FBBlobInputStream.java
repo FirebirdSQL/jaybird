@@ -87,9 +87,11 @@ public class FBBlobInputStream extends InputStream implements FirebirdBlob.BlobI
             checkClosed();
             if (buffer == null) {
                 if (blobHandle.isEof()) {
+                    // TODO Should return 0 if end of stream (or if next read might block)
                     return -1;
                 }
-                
+
+                // TODO available should not retrieve buffer
                 try {
                     //bufferlength is in FBBlob enclosing class
                     buffer = owner.gdsHelper.getBlobSegment(blobHandle, owner.bufferlength);
@@ -97,9 +99,10 @@ public class FBBlobInputStream extends InputStream implements FirebirdBlob.BlobI
                     throw new IOException("Blob read problem: " +
                         ge.toString());
                 }
-                
+
                 pos = 0;
                 if (buffer.length == 0) {
+                    // TODO Should return 0 if end of stream (or next read might block)
                    return -1;
                 }
             }
@@ -108,10 +111,11 @@ public class FBBlobInputStream extends InputStream implements FirebirdBlob.BlobI
     }
 
     public int read() throws IOException {
+        // TODO Abuse of available() to retrieve buffer and misinterpretation of value of available
         if (available() <= 0) {
             return -1;
         }
-        int result = buffer[pos++] & 0x00FF;//& seems to convert signed byte to unsigned byte
+        int result = buffer[pos++] & 0xFF;
         if (pos == buffer.length) {
             buffer = null;
         }
@@ -119,6 +123,7 @@ public class FBBlobInputStream extends InputStream implements FirebirdBlob.BlobI
     }
 
     public int read(byte[] b, int off, int len) throws IOException {
+        // TODO Abuse of available() to retrieve buffer and misinterpretation of value of available
         int result = available();
         if (result <= 0) {
             return -1;

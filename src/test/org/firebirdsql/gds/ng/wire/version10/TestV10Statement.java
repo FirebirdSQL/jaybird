@@ -51,7 +51,8 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
-import static org.firebirdsql.common.FBTestProperties.*;
+import static org.firebirdsql.common.FBTestProperties.DB_PASSWORD;
+import static org.firebirdsql.common.FBTestProperties.DB_USER;
 import static org.junit.Assert.*;
 import static org.junit.Assume.assumeTrue;
 
@@ -150,9 +151,8 @@ public class TestV10Statement extends FBJUnit4TestBase {
     @Test
     public void testSelect_NoParameters_Describe() throws Exception {
         final FbTransaction transaction = getTransaction();
-        final FbStatement statement = db.createStatement();
+        final FbStatement statement = db.createStatement(transaction);
         statement.allocateStatement();
-        statement.setTransaction(transaction);
         statement.prepare(
                 "SELECT RDB$DESCRIPTION AS \"Description\", RDB$RELATION_ID, RDB$SECURITY_CLASS, RDB$CHARACTER_SET_NAME " +
                         "FROM RDB$DATABASE");
@@ -179,9 +179,8 @@ public class TestV10Statement extends FBJUnit4TestBase {
     @Test
     public void testSelect_NoParameters_Execute_and_Fetch() throws Exception {
         final FbTransaction transaction = getTransaction();
-        final FbStatement statement = db.createStatement();
+        final FbStatement statement = db.createStatement(transaction);
         statement.allocateStatement();
-        statement.setTransaction(transaction);
         statement.prepare(
                 "SELECT RDB$DESCRIPTION AS \"Description\", RDB$RELATION_ID, RDB$SECURITY_CLASS, RDB$CHARACTER_SET_NAME " +
                         "FROM RDB$DATABASE");
@@ -207,9 +206,8 @@ public class TestV10Statement extends FBJUnit4TestBase {
     @Test
     public void testSelect_WithParameters_Describe() throws Exception {
         final FbTransaction transaction = getTransaction();
-        final FbStatement statement = db.createStatement();
+        final FbStatement statement = db.createStatement(transaction);
         statement.allocateStatement();
-        statement.setTransaction(transaction);
         statement.prepare(
                 "SELECT a.RDB$CHARACTER_SET_NAME " +
                         "FROM RDB$CHARACTER_SETS a " +
@@ -241,10 +239,9 @@ public class TestV10Statement extends FBJUnit4TestBase {
     @Test
     public void testSelect_WithParameters_Execute_and_Fetch() throws Exception {
         final FbTransaction transaction = getTransaction();
-        final FbStatement statement = db.createStatement();
+        final FbStatement statement = db.createStatement(transaction);
         statement.addStatementListener(listener);
         statement.allocateStatement();
-        statement.setTransaction(transaction);
         statement.prepare(
                 "SELECT a.RDB$CHARACTER_SET_NAME " +
                         "FROM RDB$CHARACTER_SETS a " +
@@ -279,7 +276,7 @@ public class TestV10Statement extends FBJUnit4TestBase {
 
     @Test
     public void testAllocate_NotNew() throws Exception {
-        final V10Statement statement = (V10Statement) db.createStatement();
+        final V10Statement statement = (V10Statement) db.createStatement(null);
 
         statement.allocateStatement();
 
@@ -291,9 +288,8 @@ public class TestV10Statement extends FBJUnit4TestBase {
     @Test
     public void test_PrepareExecutableStoredProcedure() throws Exception {
         final FbTransaction transaction = getTransaction();
-        final FbStatement statement = db.createStatement();
+        final FbStatement statement = db.createStatement(transaction);
         statement.allocateStatement();
-        statement.setTransaction(transaction);
         statement.prepare(EXECUTE_EXECUTABLE_STORED_PROCEDURE);
 
         assertEquals("Unexpected StatementType", StatementType.STORED_PROCEDURE, statement.getType());
@@ -320,9 +316,8 @@ public class TestV10Statement extends FBJUnit4TestBase {
     @Test
     public void test_PrepareSelectableStoredProcedure() throws Exception {
         final FbTransaction transaction = getTransaction();
-        final FbStatement statement = db.createStatement();
+        final FbStatement statement = db.createStatement(transaction);
         statement.allocateStatement();
-        statement.setTransaction(transaction);
         statement.prepare(EXECUTE_SELECTABLE_STORED_PROCEDURE);
 
         assertEquals("Unexpected StatementType", StatementType.SELECT, statement.getType());
@@ -350,9 +345,8 @@ public class TestV10Statement extends FBJUnit4TestBase {
     @Test
     public void test_PrepareInsertReturning() throws Exception {
         final FbTransaction transaction = getTransaction();
-        final FbStatement statement = db.createStatement();
+        final FbStatement statement = db.createStatement(transaction);
         statement.allocateStatement();
-        statement.setTransaction(transaction);
         statement.prepare(INSERT_RETURNING_KEY_VALUE);
 
         // DML {INSERT, UPDATE, DELETE} ... RETURNING is described as a stored procedure!
@@ -380,9 +374,8 @@ public class TestV10Statement extends FBJUnit4TestBase {
     @Test
     public void test_GetExecutionPlan_withStatementPrepared() throws Exception {
         final FbTransaction transaction = getTransaction();
-        final FbStatement statement = db.createStatement();
+        final FbStatement statement = db.createStatement(transaction);
         statement.allocateStatement();
-        statement.setTransaction(transaction);
         statement.prepare(
                 "SELECT RDB$DESCRIPTION AS \"Description\", RDB$RELATION_ID, RDB$SECURITY_CLASS, RDB$CHARACTER_SET_NAME " +
                         "FROM RDB$DATABASE");
@@ -395,9 +388,8 @@ public class TestV10Statement extends FBJUnit4TestBase {
     @Test
     public void test_GetExecutionPlan_noStatementPrepared() throws Exception {
         final FbTransaction transaction = getTransaction();
-        final FbStatement statement = db.createStatement();
+        final FbStatement statement = db.createStatement(transaction);
         statement.allocateStatement();
-        statement.setTransaction(transaction);
 
         String executionPlan = statement.getExecutionPlan();
         // TODO: Behavior is different for Firebird 3: throws an exception "Attempt to execute an unprepared dynamic SQL statement."
@@ -408,7 +400,7 @@ public class TestV10Statement extends FBJUnit4TestBase {
     public void test_GetExecutionPlan_notAllocated() throws Exception {
         expectedException.expect(SQLNonTransientException.class);
         expectedException.expectMessage("Statement not yet allocated");
-        final FbStatement statement = db.createStatement();
+        final FbStatement statement = db.createStatement(null);
 
         statement.getExecutionPlan();
     }
@@ -418,9 +410,8 @@ public class TestV10Statement extends FBJUnit4TestBase {
         expectedException.expect(SQLNonTransientException.class);
         expectedException.expectMessage("Statement closed");
         final FbTransaction transaction = getTransaction();
-        final FbStatement statement = db.createStatement();
+        final FbStatement statement = db.createStatement(transaction);
         statement.allocateStatement();
-        statement.setTransaction(transaction);
         statement.prepare(
                 "SELECT RDB$DESCRIPTION AS \"Description\", RDB$RELATION_ID, RDB$SECURITY_CLASS, RDB$CHARACTER_SET_NAME " +
                         "FROM RDB$DATABASE");
@@ -432,10 +423,9 @@ public class TestV10Statement extends FBJUnit4TestBase {
     @Test
     public void test_ExecuteInsert() throws Exception {
         final FbTransaction transaction = getTransaction();
-        final FbStatement statement = db.createStatement();
+        final FbStatement statement = db.createStatement(transaction);
         statement.addStatementListener(listener);
         statement.allocateStatement();
-        statement.setTransaction(transaction);
         statement.prepare("INSERT INTO keyvalue (thekey, thevalue) VALUES (?, ?)");
 
         FieldValue parameter1 = statement.getParameterDescriptor().getFieldDescriptor(0).createDefaultFieldValue();
