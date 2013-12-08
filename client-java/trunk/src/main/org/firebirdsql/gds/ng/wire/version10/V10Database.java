@@ -291,22 +291,29 @@ public class V10Database extends AbstractFbWireDatabase implements FbWireDatabas
     // TODO Rename to startTransaction(?), or leave calling beginTransaction to caller; and eliminate tpb use?
 
     @Override
-    public FbTransaction createTransaction(TransactionParameterBuffer tpb) throws SQLException {
-        FbTransaction transaction = protocolDescriptor.createTransaction(this);
+    public FbWireTransaction createTransaction(TransactionParameterBuffer tpb) throws SQLException {
+        FbWireTransaction transaction = protocolDescriptor.createTransaction(this);
         transaction.beginTransaction(tpb);
         return transaction;
     }
 
     @Override
-    public FbStatement createStatement() throws SQLException {
-        return protocolDescriptor.createStatement(this);
+    public FbStatement createStatement(FbTransaction transaction) throws SQLException {
+        FbStatement stmt = protocolDescriptor.createStatement(this);
+        stmt.setTransaction(transaction);
+        return stmt;
     }
 
     @Override
-    public FbStatement createStatement(FbTransaction transaction) throws SQLException {
-        FbStatement stmt = createStatement();
-        stmt.setTransaction(transaction);
-        return stmt;
+    public FbBlob createBlob(FbTransaction transaction) throws SQLException {
+        // TODO open here, in constructor or leave up to caller?
+        return protocolDescriptor.createBlob(this, (FbWireTransaction) transaction, 0, true);
+    }
+
+    @Override
+    public FbBlob openBlob(FbTransaction transaction, long blobId) throws SQLException {
+        // TODO open here, in constructor or leave up to caller?
+        return protocolDescriptor.createBlob(this, (FbWireTransaction) transaction, blobId, false);
     }
 
     @Override
@@ -423,7 +430,8 @@ public class V10Database extends AbstractFbWireDatabase implements FbWireDatabas
     /**
      * Reads the response from the server.
      *
-     * @param warningCallback Callback object for signalling warnings, <code>null</code> to register warning on the default callback
+     * @param warningCallback
+     *         Callback object for signalling warnings, <code>null</code> to register warning on the default callback
      * @return Response
      * @throws SQLException
      *         For errors returned from the server, or when attempting to
@@ -582,7 +590,7 @@ public class V10Database extends AbstractFbWireDatabase implements FbWireDatabas
      * </p>
      */
     // @formatter:off
-    protected static final byte[] DESCRIBE_DATABASE_INFO_BLOCK = new byte[] {
+    protected static final byte[] DESCRIBE_DATABASE_INFO_BLOCK = new byte[]{
             ISCConstants.isc_info_db_sql_dialect,
             ISCConstants.isc_info_firebird_version,
             ISCConstants.isc_info_ods_version,

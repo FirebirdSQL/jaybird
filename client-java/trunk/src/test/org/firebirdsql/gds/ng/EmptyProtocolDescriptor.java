@@ -32,7 +32,7 @@ import org.firebirdsql.gds.ng.wire.*;
  * </p>
  *
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
- * @since 2.3
+ * @since 3.0
  */
 public class EmptyProtocolDescriptor extends AbstractProtocolDescriptor {
 
@@ -62,6 +62,11 @@ public class EmptyProtocolDescriptor extends AbstractProtocolDescriptor {
 
     @Override
     public BlrCalculator createBlrCalculator(FbWireDatabase database) {
+        return null;
+    }
+
+    @Override
+    public FbWireBlob createBlob(FbWireDatabase database, FbWireTransaction transaction, long blobId, boolean outputBlob) {
         return null;
     }
 }
