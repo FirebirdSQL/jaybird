@@ -143,6 +143,8 @@ public final class XdrOutputStream extends OutputStream {
         if (len > Short.MAX_VALUE) {
             throw new IOException(""); //Need a value???
         }
+        // TODO This is probably wrong. It looks like op_batch_segments allows for writing multiple segments up to 2^64 (or 2^63 - 1?) in length (including all segment sizes)
+        // writeLong(len + 2); // This works as well instead of 2 * writeInt(len + 2); below
         writeInt(len + 2);
         writeInt(len + 2); //bizarre but true! three copies of the length
         write(len & 0xff);
