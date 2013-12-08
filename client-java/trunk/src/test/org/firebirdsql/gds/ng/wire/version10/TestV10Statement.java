@@ -107,6 +107,8 @@ public class TestV10Statement extends FBJUnit4TestBase {
     private final FbConnectionProperties connectionInfo;
     private final SimpleStatementListener listener = new SimpleStatementListener();
     private FbWireDatabase db;
+    private FbTransaction transaction;
+    private FbStatement statement;
 
     {
         connectionInfo = new FbConnectionProperties();
@@ -150,8 +152,8 @@ public class TestV10Statement extends FBJUnit4TestBase {
 
     @Test
     public void testSelect_NoParameters_Describe() throws Exception {
-        final FbTransaction transaction = getTransaction();
-        final FbStatement statement = db.createStatement(transaction);
+        transaction = getTransaction();
+        statement = db.createStatement(transaction);
         statement.allocateStatement();
         statement.prepare(
                 "SELECT RDB$DESCRIPTION AS \"Description\", RDB$RELATION_ID, RDB$SECURITY_CLASS, RDB$CHARACTER_SET_NAME " +
@@ -172,14 +174,12 @@ public class TestV10Statement extends FBJUnit4TestBase {
         assertEquals("Unexpected values for fields", expectedFields, fields.getFieldDescriptors());
         assertNotNull("Parameters", statement.getParameterDescriptor());
         assertEquals("Unexpected parameter count", 0, statement.getParameterDescriptor().getCount());
-
-        statement.close();
     }
 
     @Test
     public void testSelect_NoParameters_Execute_and_Fetch() throws Exception {
-        final FbTransaction transaction = getTransaction();
-        final FbStatement statement = db.createStatement(transaction);
+        transaction = getTransaction();
+        statement = db.createStatement(transaction);
         statement.allocateStatement();
         statement.prepare(
                 "SELECT RDB$DESCRIPTION AS \"Description\", RDB$RELATION_ID, RDB$SECURITY_CLASS, RDB$CHARACTER_SET_NAME " +
@@ -199,14 +199,12 @@ public class TestV10Statement extends FBJUnit4TestBase {
 
         assertEquals("Expected allRowsFetched to be set to true", Boolean.TRUE, statementListener.isAllRowsFetched());
         assertEquals("Expected a single row to have been fetched", 1, statementListener.getRows().size());
-
-        statement.close();
     }
 
     @Test
     public void testSelect_WithParameters_Describe() throws Exception {
-        final FbTransaction transaction = getTransaction();
-        final FbStatement statement = db.createStatement(transaction);
+        transaction = getTransaction();
+        statement = db.createStatement(transaction);
         statement.allocateStatement();
         statement.prepare(
                 "SELECT a.RDB$CHARACTER_SET_NAME " +
@@ -232,14 +230,12 @@ public class TestV10Statement extends FBJUnit4TestBase {
                         new FieldDescriptor(ISCConstants.SQL_SHORT | 1, 0, 0, 2, null, null, null, null, null)
                 );
         assertEquals("Unexpected values for parameters", expectedParameters, parameters.getFieldDescriptors());
-
-        statement.close();
     }
 
     @Test
     public void testSelect_WithParameters_Execute_and_Fetch() throws Exception {
-        final FbTransaction transaction = getTransaction();
-        final FbStatement statement = db.createStatement(transaction);
+        transaction = getTransaction();
+        statement = db.createStatement(transaction);
         statement.addStatementListener(listener);
         statement.allocateStatement();
         statement.prepare(
@@ -268,15 +264,13 @@ public class TestV10Statement extends FBJUnit4TestBase {
 
         assertNotNull("Expected SQL counts", listener.getSqlCounts());
         assertEquals("Unexpected select count", listener.getRows().size(), listener.getSqlCounts().getLongSelectCount());
-
-        statement.close();
     }
 
     // TODO Test with executable stored procedure
 
     @Test
     public void testAllocate_NotNew() throws Exception {
-        final V10Statement statement = (V10Statement) db.createStatement(null);
+        statement = db.createStatement(null);
 
         statement.allocateStatement();
 
@@ -287,8 +281,8 @@ public class TestV10Statement extends FBJUnit4TestBase {
 
     @Test
     public void test_PrepareExecutableStoredProcedure() throws Exception {
-        final FbTransaction transaction = getTransaction();
-        final FbStatement statement = db.createStatement(transaction);
+        transaction = getTransaction();
+        statement = db.createStatement(transaction);
         statement.allocateStatement();
         statement.prepare(EXECUTE_EXECUTABLE_STORED_PROCEDURE);
 
@@ -309,14 +303,12 @@ public class TestV10Statement extends FBJUnit4TestBase {
                         new FieldDescriptor(ISCConstants.SQL_LONG | 1, 0, 0, 4, null, null, null, null, null)
                 );
         assertEquals("Unexpected values for parameters", expectedParameters, parameters.getFieldDescriptors());
-
-        statement.close();
     }
 
     @Test
     public void test_PrepareSelectableStoredProcedure() throws Exception {
-        final FbTransaction transaction = getTransaction();
-        final FbStatement statement = db.createStatement(transaction);
+        transaction = getTransaction();
+        statement = db.createStatement(transaction);
         statement.allocateStatement();
         statement.prepare(EXECUTE_SELECTABLE_STORED_PROCEDURE);
 
@@ -338,14 +330,12 @@ public class TestV10Statement extends FBJUnit4TestBase {
                         new FieldDescriptor(ISCConstants.SQL_LONG | 1, 0, 0, 4, null, null, null, null, null)
                 );
         assertEquals("Unexpected values for parameters", expectedParameters, parameters.getFieldDescriptors());
-
-        statement.close();
     }
 
     @Test
     public void test_PrepareInsertReturning() throws Exception {
-        final FbTransaction transaction = getTransaction();
-        final FbStatement statement = db.createStatement(transaction);
+        transaction = getTransaction();
+        statement = db.createStatement(transaction);
         statement.allocateStatement();
         statement.prepare(INSERT_RETURNING_KEY_VALUE);
 
@@ -367,14 +357,12 @@ public class TestV10Statement extends FBJUnit4TestBase {
                         new FieldDescriptor(ISCConstants.SQL_VARYING | 1, 0, 0, 5, null, null, null, null, null)
                 );
         assertEquals("Unexpected values for parameters", expectedParameters, parameters.getFieldDescriptors());
-
-        statement.close();
     }
 
     @Test
     public void test_GetExecutionPlan_withStatementPrepared() throws Exception {
-        final FbTransaction transaction = getTransaction();
-        final FbStatement statement = db.createStatement(transaction);
+        transaction = getTransaction();
+        statement = db.createStatement(transaction);
         statement.allocateStatement();
         statement.prepare(
                 "SELECT RDB$DESCRIPTION AS \"Description\", RDB$RELATION_ID, RDB$SECURITY_CLASS, RDB$CHARACTER_SET_NAME " +
@@ -387,8 +375,8 @@ public class TestV10Statement extends FBJUnit4TestBase {
 
     @Test
     public void test_GetExecutionPlan_noStatementPrepared() throws Exception {
-        final FbTransaction transaction = getTransaction();
-        final FbStatement statement = db.createStatement(transaction);
+        transaction = getTransaction();
+        statement = db.createStatement(transaction);
         statement.allocateStatement();
 
         String executionPlan = statement.getExecutionPlan();
@@ -400,7 +388,7 @@ public class TestV10Statement extends FBJUnit4TestBase {
     public void test_GetExecutionPlan_notAllocated() throws Exception {
         expectedException.expect(SQLNonTransientException.class);
         expectedException.expectMessage("Statement not yet allocated");
-        final FbStatement statement = db.createStatement(null);
+        statement = db.createStatement(null);
 
         statement.getExecutionPlan();
     }
@@ -409,8 +397,8 @@ public class TestV10Statement extends FBJUnit4TestBase {
     public void test_GetExecutionPlan_StatementClosed() throws Exception {
         expectedException.expect(SQLNonTransientException.class);
         expectedException.expectMessage("Statement closed");
-        final FbTransaction transaction = getTransaction();
-        final FbStatement statement = db.createStatement(transaction);
+        transaction = getTransaction();
+        statement = db.createStatement(transaction);
         statement.allocateStatement();
         statement.prepare(
                 "SELECT RDB$DESCRIPTION AS \"Description\", RDB$RELATION_ID, RDB$SECURITY_CLASS, RDB$CHARACTER_SET_NAME " +
@@ -422,8 +410,8 @@ public class TestV10Statement extends FBJUnit4TestBase {
 
     @Test
     public void test_ExecuteInsert() throws Exception {
-        final FbTransaction transaction = getTransaction();
-        final FbStatement statement = db.createStatement(transaction);
+        transaction = getTransaction();
+        statement = db.createStatement(transaction);
         statement.addStatementListener(listener);
         statement.allocateStatement();
         statement.prepare("INSERT INTO keyvalue (thekey, thevalue) VALUES (?, ?)");
@@ -437,7 +425,6 @@ public class TestV10Statement extends FBJUnit4TestBase {
 
         assertNotNull("Expected SQL counts on listener", listener.getSqlCounts());
         assertEquals("Expected one row to have been inserted", 1, listener.getSqlCounts().getLongInsertCount());
-        statement.close();
     }
 
     private FbTransaction getTransaction() throws SQLException {
@@ -451,6 +438,20 @@ public class TestV10Statement extends FBJUnit4TestBase {
 
     @After
     public void tearDown() throws Exception {
+        if (statement != null) {
+            try {
+                statement.close();
+            } catch (SQLException ex) {
+                log.debug("Exception on statement close", ex);
+            }
+        }
+        if (transaction != null) {
+            try {
+                transaction.commit();
+            } catch (SQLException ex) {
+                log.debug("Exception on transaction commit", ex);
+            }
+        }
         if (db != null) {
             try {
                 db.detach();
