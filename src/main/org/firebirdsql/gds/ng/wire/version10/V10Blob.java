@@ -29,7 +29,6 @@ import org.firebirdsql.gds.ng.wire.*;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.sql.SQLException;
-import java.sql.SQLNonTransientException;
 
 import static org.firebirdsql.gds.impl.wire.WireProtocolConstants.*;
 
@@ -83,12 +82,8 @@ public class V10Blob extends AbstractFbWireBlob implements FbWireBlob, DatabaseL
                 try {
                     final GenericResponse genericResponse = database.readGenericResponse(null);
                     setHandle(genericResponse.getObjectHandle());
-                    final long receivedBlobId = genericResponse.getBlobId();
                     if (isOutput()) {
-                        setBlobId(receivedBlobId);
-                    } else if (receivedBlobId != blobId) {
-//                        throw new SQLNonTransientException(String.format("Attempt to open blobId %s returned blobId %s",
-//                                blobId, receivedBlobId));
+                        setBlobId(genericResponse.getBlobId());
                     }
                     setOpen(true);
                 } catch (IOException e) {
