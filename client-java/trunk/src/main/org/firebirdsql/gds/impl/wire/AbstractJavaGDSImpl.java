@@ -277,8 +277,8 @@ public abstract class AbstractJavaGDSImpl extends AbstractGDS implements GDS {
 	}
 
     /**
-     * Adds the processId (pid) to the dpb, if available.
-     * 
+     * Adds the processName to the dpb, if available.
+     *
      * @param databaseParameterBuffer
      */
     protected void addProcessName(DatabaseParameterBuffer databaseParameterBuffer) {
@@ -289,7 +289,7 @@ public abstract class AbstractJavaGDSImpl extends AbstractGDS implements GDS {
     }
 
     /**
-     * Adds the processName to the dpb, if available.
+     * Adds the processId (pid) to the dpb, if available.
      * 
      * @param databaseParameterBuffer
      */
