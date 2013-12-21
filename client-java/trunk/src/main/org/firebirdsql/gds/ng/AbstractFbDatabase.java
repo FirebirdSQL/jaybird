@@ -77,7 +77,6 @@ public abstract class AbstractFbDatabase implements FbDatabase {
 
     @Override
     public final void addDatabaseListener(DatabaseListener listener) {
-        // TODO Don't register if closed?
         databaseListenerDispatcher.addListener(listener);
     }
 
