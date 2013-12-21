@@ -23,6 +23,8 @@ package org.firebirdsql.gds.ng;
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.ng.listeners.DatabaseListener;
 import org.firebirdsql.gds.ng.listeners.TransactionListener;
+import org.firebirdsql.logging.Logger;
+import org.firebirdsql.logging.LoggerFactory;
 
 import java.sql.SQLException;
 import java.sql.SQLNonTransientException;
@@ -33,6 +35,8 @@ import java.sql.SQLWarning;
  * @since 3.0
  */
 public abstract class AbstractFbBlob implements FbBlob, TransactionListener, DatabaseListener {
+
+    private static final Logger log = LoggerFactory.getLogger(AbstractFbBlob.class, false);
 
     private final Object syncObject = new Object();
     private FbTransaction transaction;
@@ -130,6 +134,43 @@ public abstract class AbstractFbBlob implements FbBlob, TransactionListener, Dat
         }
     }
 
+    public final void close() throws SQLException {
+        synchronized (getSynchronizationObject()) {
+            if (!isOpen()) return;
+            checkDatabaseAttached();
+            checkTransactionActive();
+            try {
+                closeImpl();
+            } finally {
+                setOpen(false);
+            }
+        }
+    }
+
+    /**
+     * Internal implementation of {@link #close()}. The implementation does not need
+     * to check for attached database and active transaction, nor does it need to mark this blob as closed.
+     */
+    protected abstract void closeImpl() throws SQLException;
+
+    public final void cancel() throws SQLException {
+        synchronized (getSynchronizationObject()) {
+            checkDatabaseAttached();
+            checkTransactionActive();
+            try {
+                cancelImpl();
+            } finally {
+                setOpen(false);
+            }
+        }
+    }
+
+    /**
+     * Internal implementation of {@link #cancel()}. The implementation does not need
+     * to check for attached database and active transaction, nor does it need to mark this blob as closed.
+     */
+    protected abstract void cancelImpl() throws SQLException;
+
     @Override
     public final Object getSynchronizationObject() {
         return syncObject;
@@ -137,23 +178,38 @@ public abstract class AbstractFbBlob implements FbBlob, TransactionListener, Dat
 
     @Override
     public void transactionStateChanged(FbTransaction transaction, TransactionState newState, TransactionState previousState) {
-        if (this.transaction != transaction) {
+        if (getTransaction() != transaction) {
             transaction.removeTransactionListener(this);
         }
-        // TODO implement
+        if (newState == TransactionState.NO_TRANSACTION) {
+            synchronized (getSynchronizationObject()) {
+                clearTransaction();
+                setOpen(false);
+            }
+        }
+        // TODO Need additional handling for other transitions?
     }
 
     @Override
     public void detaching(FbDatabase database) {
-        // Do nothing
+        synchronized (getSynchronizationObject()) {
+            if (isOpen() && this.database == database) {
+                log.debug(String.format("blob with blobId %d still open on database detach", getBlobId()));
+                try {
+                    close();
+                } catch (SQLException e) {
+                    log.error("Blob close in detaching event failed", e);
+                }
+            }
+        }
     }
 
     @Override
     public void detached(FbDatabase database) {
         synchronized (getSynchronizationObject()) {
-            if (isOpen() && this.database == database) {
+            if (this.database == database) {
                 open = false;
-                this.database = null;
+                clearDatabase();
                 clearTransaction();
             }
             database.removeDatabaseListener(this);
@@ -171,7 +227,8 @@ public abstract class AbstractFbBlob implements FbBlob, TransactionListener, Dat
      */
     protected void checkTransactionActive() throws SQLException {
         synchronized (getSynchronizationObject()) {
-            if (getTransaction() == null || getTransaction().getState() != TransactionState.ACTIVE) {
+            FbTransaction transaction = getTransaction();
+            if (transaction == null || transaction.getState() != TransactionState.ACTIVE) {
                 throw new FbExceptionBuilder().nonTransientException(ISCConstants.isc_segstr_no_trans).toSQLException();
             }
         }
@@ -182,8 +239,10 @@ public abstract class AbstractFbBlob implements FbBlob, TransactionListener, Dat
      *         When no database is set, or the database is not attached
      */
     protected void checkDatabaseAttached() throws SQLException {
-        if (database == null || !database.isAttached()) {
-            throw new FbExceptionBuilder().nonTransientException(ISCConstants.isc_segstr_wrong_db).toSQLException();
+        synchronized (getSynchronizationObject()) {
+            if (database == null || !database.isAttached()) {
+                throw new FbExceptionBuilder().nonTransientException(ISCConstants.isc_segstr_wrong_db).toSQLException();
+            }
         }
     }
 

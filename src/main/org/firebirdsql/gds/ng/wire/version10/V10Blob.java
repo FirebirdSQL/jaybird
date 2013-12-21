@@ -157,7 +157,7 @@ public class V10Blob extends AbstractFbWireBlob implements FbWireBlob, DatabaseL
         // TODO Handle exceeding max segment size?
         if (segment.length == 0) {
             // TODO Add SQL State, make non transient?
-            throw new SQLException(String.format("putSegment called with segment length %d, should be > 0", segment.length));
+            throw new SQLException("putSegment called with zero-length segment, should be > 0");
         }
         synchronized (getSynchronizationObject()) {
             checkDatabaseAttached();
@@ -201,13 +201,7 @@ public class V10Blob extends AbstractFbWireBlob implements FbWireBlob, DatabaseL
     @Override
     protected void releaseBlob(int releaseOperation) throws SQLException {
         synchronized (getSynchronizationObject()) {
-            checkDatabaseAttached();
-            checkTransactionActive();
-            try {
-                getDatabase().releaseObject(releaseOperation, getHandle());
-            } finally {
-                setOpen(false);
-            }
+            getDatabase().releaseObject(releaseOperation, getHandle());
         }
     }
 }

@@ -78,7 +78,8 @@ public interface FbBlob {
     /**
      * Cancels an output blob (which means its contents will be thrown away).
      * <p>
-     * Calling cancel on an input blob will close it.
+     * Calling cancel on an input blob will close it. Contrary to {@link #close()}, calling cancel on an
+     * already closed (or cancelled) blob will throw an {@link java.sql.SQLException}.
      * </p>
      *
      * @throws SQLException
