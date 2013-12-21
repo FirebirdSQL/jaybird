@@ -42,20 +42,25 @@ public abstract class AbstractFbWireBlob extends AbstractFbBlob implements FbWir
 
     /**
      * Release this blob with the specified operation.
+     * <p>
+     * Implementations <strong>should only</strong> do the operation and not perform any further clean up or checks
+     * on attached database and active transaction, as those checks and clean up should be done by the caller.
+     * </p>
      *
      * @param releaseOperation
      *         Either {@link WireProtocolConstants#op_close_blob} or {@link WireProtocolConstants#op_cancel_blob}
      * @throws SQLException
+     *         For database communication errors.
      */
     protected abstract void releaseBlob(int releaseOperation) throws SQLException;
 
     @Override
-    public void close() throws SQLException {
+    protected void closeImpl() throws SQLException {
         releaseBlob(WireProtocolConstants.op_close_blob);
     }
 
     @Override
-    public void cancel() throws SQLException {
+    protected void cancelImpl() throws SQLException {
         releaseBlob(WireProtocolConstants.op_cancel_blob);
     }
 }
