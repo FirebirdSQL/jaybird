@@ -51,7 +51,7 @@ public final class SqlCountHolder {
      */
     private static int countAsInteger(long count) {
         if (count > Integer.MAX_VALUE) {
-            // TODO Use Integer.MAX_VALUE?
+            // TODO Use Integer.MAX_VALUE or -1?
             return 0;
         }
         return (int) count;

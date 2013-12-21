@@ -116,7 +116,7 @@ public final class V10StatementInfoProcessor implements InfoProcessor<InfoProces
                         currentBuilder != null ? currentBuilder.getFirstUnprocessedIndex() + 1 : 1;
                 // Request server to resend info starting at the specified index of the fields or parameters
                 newInfoItems[newIndex++] = ISCConstants.isc_info_sql_sqlda_start;
-                newInfoItems[newIndex++] = 2;
+                newInfoItems[newIndex++] = 2; // size of short
                 newInfoItems[newIndex++] = (byte) (descriptorIndex & 0xFF);
                 newInfoItems[newIndex++] = (byte) (descriptorIndex >> 8);
                 newInfoItems[newIndex++] = infoItem;

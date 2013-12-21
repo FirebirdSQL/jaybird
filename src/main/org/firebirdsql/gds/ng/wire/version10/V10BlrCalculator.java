@@ -154,7 +154,6 @@ public class V10BlrCalculator implements BlrCalculator {
 
     @Override
     public int calculateIoLength(FieldDescriptor fieldDescriptor) throws SQLException {
-        // TODO: Might be Wire protocol specific, move to BlrCalculator?
         int ioLength;
         switch (fieldDescriptor.getType() & ~1) {
         case ISCConstants.SQL_TEXT:
