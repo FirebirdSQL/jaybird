@@ -66,7 +66,12 @@ public class EmptyProtocolDescriptor extends AbstractProtocolDescriptor {
     }
 
     @Override
-    public FbWireBlob createBlob(FbWireDatabase database, FbWireTransaction transaction, long blobId, boolean outputBlob) {
+     public FbWireBlob createOutputBlob(FbWireDatabase database, FbWireTransaction transaction) {
+        return null;
+    }
+
+    @Override
+    public FbWireBlob createInputBlob(FbWireDatabase database, FbWireTransaction transaction, long blobId) {
         return null;
     }
 }

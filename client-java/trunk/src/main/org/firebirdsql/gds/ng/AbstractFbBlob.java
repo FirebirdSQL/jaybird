@@ -42,17 +42,14 @@ public abstract class AbstractFbBlob implements FbBlob, TransactionListener, Dat
     private FbTransaction transaction;
     private FbDatabase database;
     private long blobId;
-    private final boolean output;
     private boolean open;
     private int blobHandle;
     private boolean eof;
 
-    protected AbstractFbBlob(FbDatabase database, FbTransaction transaction, long blobId, boolean output) {
-        assert output ^ blobId != 0 : (output ? "Output blob should have blobId 0" : "input blob should have blobId non-zero");
+    protected AbstractFbBlob(FbDatabase database, FbTransaction transaction, long blobId) {
         this.database = database;
         this.transaction = transaction;
         this.blobId = blobId;
-        this.output = output;
         transaction.addTransactionListener(this);
         database.addDatabaseListener(this);
     }
@@ -72,7 +69,7 @@ public abstract class AbstractFbBlob implements FbBlob, TransactionListener, Dat
      */
     protected final void setBlobId(long blobId) throws SQLException {
         synchronized (getSynchronizationObject()) {
-            if (!isOutput() || getBlobId() != 0) {
+            if (!isOutput() || getBlobId() != FbBlob.NO_BLOB_ID) {
                 // TODO SQL State
                 throw new SQLNonTransientException(isOutput() ? "The blob id is already set" : "Attempt to set the blob id of an input blob");
             }
@@ -93,11 +90,6 @@ public abstract class AbstractFbBlob implements FbBlob, TransactionListener, Dat
         synchronized (getSynchronizationObject()) {
             this.blobHandle = blobHandle;
         }
-    }
-
-    @Override
-    public final boolean isOutput() {
-        return output;
     }
 
     @Override

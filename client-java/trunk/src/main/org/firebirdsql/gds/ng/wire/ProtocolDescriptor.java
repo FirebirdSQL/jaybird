@@ -122,17 +122,26 @@ public interface ProtocolDescriptor {
     BlrCalculator createBlrCalculator(FbWireDatabase database);
 
     /**
-     * Create {@link FbWireBlob} implementation for this protocol version.
+     * Create an output {@link FbWireBlob} implementation for this protocol version.
+     *
+     * @param database
+     *         FbWireDatabase of the current database
+     * @param transaction
+     *         FbWireTransaction to associate with the blob
+     * @return FbWireBlob implementation
+     */
+    FbWireBlob createOutputBlob(FbWireDatabase database, FbWireTransaction transaction);
+
+    /**
+     * Create an input {@link FbWireBlob} implementation for this protocol version.
      *
      * @param database
      *         FbWireDatabase of the current database
      * @param transaction
      *         FbWireTransaction to associate with the blob
      * @param blobId
-     *         Blob Id (must be 0 for output blob and non-zero for input blob)
-     * @param outputBlob
-     *         <code>true</code> for output blob, <code>false</code> for input blob
+     *         Blob Id (must be non-zero for input blob)
      * @return FbWireBlob implementation
      */
-    FbWireBlob createBlob(FbWireDatabase database, FbWireTransaction transaction, long blobId, boolean outputBlob);
+    FbWireBlob createInputBlob(FbWireDatabase database, FbWireTransaction transaction, long blobId);
 }

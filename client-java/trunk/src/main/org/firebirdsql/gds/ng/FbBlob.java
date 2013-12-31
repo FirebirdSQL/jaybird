@@ -34,6 +34,8 @@ import java.sql.SQLException;
  */
 public interface FbBlob {
 
+    static long NO_BLOB_ID = 0;
+
     /**
      * @return The Firebird blob id
      */
@@ -60,7 +62,7 @@ public interface FbBlob {
 
     /**
      * @return <code>true</code> if this blob has reached the end or has been closed, always <code>true</code> for an
-     *         open output blob.
+     * open output blob.
      */
     boolean isEof();
 
@@ -90,7 +92,7 @@ public interface FbBlob {
 
     /**
      * @return <code>true</code> if this is an output blob (write only), <code>false</code> if this is an
-     *         input blob (read only)
+     * input blob (read only)
      */
     boolean isOutput();
 
@@ -138,6 +140,21 @@ public interface FbBlob {
     void putSegment(byte[] segment) throws SQLException;
 
     /**
+     * Performs a seek on a blob with the specified <code>seekMode</code> and <code>offset</code>.
+     * <p>
+     * Firebird only supports seek on stream blobs.
+     * </p>
+     *
+     * @param offset
+     *         Offset of the seek, effect depends on value of <code>seekMode</code>
+     * @param seekMode
+     *         Value of {@link org.firebirdsql.gds.ng.FbBlob.SeekMode}
+     * @throws SQLException
+     *         If the blob is closed, the transaction is not active, or a database error occurred.
+     */
+    void seek(int offset, SeekMode seekMode) throws SQLException;
+
+    /**
      * The maximum segment size allowed by the protocol for {@link #getSegment(int)} and {@link #putSegment(byte[])}.
      * <p>
      * This value is <strong>not</strong> the segment size (optionally) defined for the column.
@@ -146,4 +163,35 @@ public interface FbBlob {
      * @return The maximum segment size allowed for get or put.
      */
     int getMaximumSegmentSize();
+
+    /**
+     * Seek mode for {@link FbBlob#seek(int, org.firebirdsql.gds.ng.FbBlob.SeekMode)}.
+     */
+    public enum SeekMode {
+        /**
+         * Absolute seek from start of blob.
+         */
+        ABSOLUTE(0),
+        /**
+         * Relative seek from current position in blob.
+         */
+        RELATIVE(1),
+        /**
+         * Absolute seek from end of blob.
+         */
+        ABSOLUTE_FROM_END(2);
+
+        final int seekModeId;
+
+        private SeekMode(int seekModeId) {
+            this.seekModeId = seekModeId;
+        }
+
+        /**
+         * @return Seek mode value used within Firebird (and the native API, wire protocol)
+         */
+        public int getSeekModeId() {
+            return seekModeId;
+        }
+    }
 }
