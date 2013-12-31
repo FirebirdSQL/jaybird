@@ -31,8 +31,8 @@ import java.sql.SQLException;
  */
 public abstract class AbstractFbWireBlob extends AbstractFbBlob implements FbWireBlob {
 
-    protected AbstractFbWireBlob(FbWireDatabase database, FbWireTransaction transaction, long blobId, boolean output) {
-        super(database, transaction, blobId, output);
+    protected AbstractFbWireBlob(FbWireDatabase database, FbWireTransaction transaction, long blobId) {
+        super(database, transaction, blobId);
     }
 
     @Override
@@ -52,7 +52,11 @@ public abstract class AbstractFbWireBlob extends AbstractFbBlob implements FbWir
      * @throws SQLException
      *         For database communication errors.
      */
-    protected abstract void releaseBlob(int releaseOperation) throws SQLException;
+    protected void releaseBlob(int releaseOperation) throws SQLException {
+        synchronized (getSynchronizationObject()) {
+            getDatabase().releaseObject(releaseOperation, getHandle());
+        }
+    }
 
     @Override
     protected void closeImpl() throws SQLException {

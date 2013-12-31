@@ -209,6 +209,7 @@ public class V10Database extends AbstractFbWireDatabase implements FbWireDatabas
                 xdrOut.writeInt(op_disconnect);
                 xdrOut.flush();
 
+                // TODO Read response to op_detach?
                 // TODO closeEventManager() (not yet implemented)
 
                 closeConnection();
@@ -307,18 +308,18 @@ public class V10Database extends AbstractFbWireDatabase implements FbWireDatabas
     @Override
     public FbBlob createBlob(FbTransaction transaction) throws SQLException {
         // TODO open here, in constructor or leave up to caller?
-        return protocolDescriptor.createBlob(this, (FbWireTransaction) transaction, 0, true);
+        return protocolDescriptor.createOutputBlob(this, (FbWireTransaction) transaction);
     }
 
     @Override
     public FbBlob openBlob(FbTransaction transaction, long blobId) throws SQLException {
         // TODO open here, in constructor or leave up to caller?
-        return protocolDescriptor.createBlob(this, (FbWireTransaction) transaction, blobId, false);
+        return protocolDescriptor.createInputBlob(this, (FbWireTransaction) transaction, blobId);
     }
 
     @Override
     public void cancelOperation(int kind) throws SQLException {
-        throw new SQLFeatureNotSupportedException("Cancel Operation isn't supported on Firebird 2.1 and earlier.", FBDriverNotCapableException.SQL_STATE_FEATURE_NOT_SUPPORTED);
+        throw new SQLFeatureNotSupportedException(String.format("Cancel Operation isn't supported in this version of the wire protocol (%d).", protocolDescriptor.getVersion()), FBDriverNotCapableException.SQL_STATE_FEATURE_NOT_SUPPORTED);
     }
 
     @Override

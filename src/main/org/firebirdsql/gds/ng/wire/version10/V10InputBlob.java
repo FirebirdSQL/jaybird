@@ -36,10 +36,12 @@ import static org.firebirdsql.gds.impl.wire.WireProtocolConstants.*;
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @since 3.0
  */
-public class V10Blob extends AbstractFbWireBlob implements FbWireBlob, DatabaseListener {
+public class V10InputBlob extends AbstractFbWireInputBlob implements FbWireBlob, DatabaseListener {
 
-    public V10Blob(FbWireDatabase database, FbWireTransaction transaction, long blobId, boolean output) {
-        super(database, transaction, blobId, output);
+    // TODO V10OutputBlob and V10InputBlob share some common behavior and information (eg in open() and getMaximumSegmentSize()), find a way to unify this
+
+    public V10InputBlob(FbWireDatabase database, FbWireTransaction transaction, long blobId) {
+        super(database, transaction, blobId);
     }
 
     // TODO Need blob specific warning callback?
@@ -53,28 +55,15 @@ public class V10Blob extends AbstractFbWireBlob implements FbWireBlob, DatabaseL
                 // TODO isc_no_segstr_close instead?
                 throw new FbExceptionBuilder().nonTransientException(ISCConstants.isc_segstr_no_op).toSQLException();
             }
-            final long blobId = getBlobId();
-            if (isOutput() && blobId != 0) {
-                // TODO Custom error instead? (eg "Attempting to reopen output blob")
-                throw new FbExceptionBuilder().nonTransientException(ISCConstants.isc_segstr_no_op).toSQLException();
-            }
-
-            final int operation;
-            // TODO Update for blob parameter buffer and op_create_blob2 / op_open_blob2
-            if (isOutput()) {
-                operation = op_create_blob;
-            } else {
-                operation = op_open_blob;
-            }
 
             final FbWireDatabase database = getDatabase();
             synchronized (database.getSynchronizationObject()) {
                 try {
                     final XdrOutputStream xdrOut = database.getXdrStreamAccess().getXdrOut();
-                    xdrOut.writeInt(operation);
-                    // TODO Support blob parameter buffer
+                    // TODO Update for blob parameter buffer and op_open_blob2
+                    xdrOut.writeInt(op_open_blob);
                     xdrOut.writeInt(getTransaction().getHandle());
-                    xdrOut.writeLong(blobId);
+                    xdrOut.writeLong(getBlobId());
                     xdrOut.flush();
                 } catch (IOException e) {
                     throw new FbExceptionBuilder().exception(ISCConstants.isc_net_write_err).cause(e).toSQLException();
@@ -82,9 +71,6 @@ public class V10Blob extends AbstractFbWireBlob implements FbWireBlob, DatabaseL
                 try {
                     final GenericResponse genericResponse = database.readGenericResponse(null);
                     setHandle(genericResponse.getObjectHandle());
-                    if (isOutput()) {
-                        setBlobId(genericResponse.getBlobId());
-                    }
                     setOpen(true);
                 } catch (IOException e) {
                     throw new FbExceptionBuilder().exception(ISCConstants.isc_net_read_err).cause(e).toSQLException();
@@ -153,37 +139,26 @@ public class V10Blob extends AbstractFbWireBlob implements FbWireBlob, DatabaseL
     }
 
     @Override
-    public void putSegment(byte[] segment) throws SQLException {
-        // TODO Handle exceeding max segment size?
-        if (segment.length == 0) {
-            // TODO Add SQL State, make non transient?
-            throw new SQLException("putSegment called with zero-length segment, should be > 0");
-        }
+    public void seek(int offset, SeekMode seekMode) throws SQLException {
         synchronized (getSynchronizationObject()) {
             checkDatabaseAttached();
             checkTransactionActive();
-            if (!isOutput()) {
-                throw new FbExceptionBuilder().nonTransientException(ISCConstants.isc_segstr_no_write).toSQLException();
-            }
-            if (!isOpen()) {
-                throw new FbExceptionBuilder().nonTransientException(ISCConstants.isc_bad_segstr_handle).toSQLException();
-            }
 
             final FbWireDatabase database = getDatabase();
             synchronized (database.getSynchronizationObject()) {
                 try {
                     final XdrOutputStream xdrOut = database.getXdrStreamAccess().getXdrOut();
-                    // TODO Using op_batch_segments over op_put_segment doesn't seem to provide a real benefit in current implementation (see XdrOutputStream)
-                    // TODO Is there any actual benefit possible, like sending multiple segments of maximum size?
-                    xdrOut.writeInt(op_batch_segments);
+                    xdrOut.writeInt(op_seek_blob);
                     xdrOut.writeInt(getHandle());
-                    xdrOut.writeBlobBuffer(segment);
+                    xdrOut.writeInt(seekMode.getSeekModeId());
+                    xdrOut.writeInt(offset);
                     xdrOut.flush();
                 } catch (IOException e) {
                     throw new FbExceptionBuilder().exception(ISCConstants.isc_net_write_err).cause(e).toSQLException();
                 }
                 try {
                     database.readResponse(null);
+                    // object handle in response is the current position in the blob (see .NET provider source)
                 } catch (IOException e) {
                     throw new FbExceptionBuilder().exception(ISCConstants.isc_net_read_err).cause(e).toSQLException();
                 }
@@ -196,12 +171,5 @@ public class V10Blob extends AbstractFbWireBlob implements FbWireBlob, DatabaseL
         // TODO Max size in FB 3 is 2^16, not 2^15 - 1, is that for all versions, or only for newer protocols?
         // Subtracting 2 because the maximum size includes length TODO: verify if true
         return Short.MAX_VALUE - 2;
-    }
-
-    @Override
-    protected void releaseBlob(int releaseOperation) throws SQLException {
-        synchronized (getSynchronizationObject()) {
-            getDatabase().releaseObject(releaseOperation, getHandle());
-        }
     }
 }
