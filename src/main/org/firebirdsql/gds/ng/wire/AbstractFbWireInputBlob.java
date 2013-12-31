@@ -32,6 +32,7 @@ import java.sql.SQLException;
 public abstract class AbstractFbWireInputBlob extends AbstractFbWireBlob {
     protected AbstractFbWireInputBlob(FbWireDatabase database, FbWireTransaction transaction, long blobId) {
         super(database, transaction, blobId);
+        assert blobId != 0 : "blobId must be non-zero for an input blob";
     }
 
     @Override
