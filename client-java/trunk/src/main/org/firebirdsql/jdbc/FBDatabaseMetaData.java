@@ -3724,7 +3724,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
     +",cast(PK.RDB$CONSTRAINT_NAME as varchar(31)) as PK_NAME"
     +",cast(FK.RDB$CONSTRAINT_NAME as varchar(31)) as FK_NAME"
     /*+" ,null as DEFERRABILITY "*/
-    +"from "
+    +" from "
     +"RDB$RELATION_CONSTRAINTS PK"
     +",RDB$RELATION_CONSTRAINTS FK"
     +",RDB$REF_CONSTRAINTS RC"
