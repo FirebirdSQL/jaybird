@@ -27,6 +27,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import java.sql.*;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -60,7 +61,6 @@ public class TestFBDatabaseMetaData extends FBJUnit4TestBase {
         dmd = null;
     }
 
-
     @Test
     public void testGetTablesTypesNull() throws Exception {
         if (log != null) log.info("testGetTablesTypesNull");
@@ -76,6 +76,19 @@ public class TestFBDatabaseMetaData extends FBJUnit4TestBase {
         } finally {
             closeQuietly(rs);
         }
+    }
+
+    @Test
+    public void testGetTableTypes() throws Exception {
+        final Set<String> expected = new HashSet<String>(Arrays.asList(FBDatabaseMetaData.ALL_TYPES));
+        final Set<String> retrieved = new HashSet<String>();
+
+        ResultSet rs = dmd.getTableTypes();
+        while (rs.next()) {
+            retrieved.add(rs.getString(1));
+        }
+
+        assertEquals("Unexpected result for getTableTypes", expected, retrieved);
     }
 
     @Test
@@ -578,6 +591,7 @@ public class TestFBDatabaseMetaData extends FBJUnit4TestBase {
                 + "C3 DECIMAL(18,0), "
                 + "C4 FLOAT, "
                 + "C5 DOUBLE PRECISION, "
+                + "C6 INTEGER, "
                 + "\"my column1\" CHAR(10), "
                 + "\"my_ column2\" VARCHAR(20)"
                 + (constraint != null ? ", " + constraint + ")" : ")");
@@ -685,5 +699,131 @@ public class TestFBDatabaseMetaData extends FBJUnit4TestBase {
         } finally {
             closeQuietly(rs);
         }
+    }
+
+    @Test
+    public void testGetVersionColumns() throws Exception {
+        ResultSet rs = dmd.getVersionColumns(null, null, null);
+
+        // TODO Extend to verify columns as defined in JDBC
+        assertFalse("Expected no results for getVersionColumns", rs.next());
+    }
+
+    @Test
+    public void testGetImportedKeys_NoForeignKeys() throws Exception {
+        createTable("table1");
+
+        ResultSet rs = dmd.getImportedKeys(null, null, "TABLE1");
+
+        assertFalse("Expected no imported keys for table without foreign key", rs.next());
+    }
+
+    @Test
+    public void testGetImportedKeys_WithForeignKey() throws Exception {
+        createTable("table1");
+        createTable("table2", "FOREIGN KEY (c6) REFERENCES table1 (c1)");
+
+        // TODO Extend to verify columns as defined in JDBC
+        ResultSet rs = dmd.getImportedKeys(null, null, "TABLE2");
+
+        assertTrue("Expected at least one row", rs.next());
+
+        assertEquals("Unexpected PKTABLE_NAME", "TABLE1", rs.getString("PKTABLE_NAME"));
+        assertEquals("Unexpected PKCOLUMN_NAME", "C1", rs.getString("PKCOLUMN_NAME"));
+        assertEquals("Unexpected FKTABLE_NAME", "TABLE2", rs.getString("FKTABLE_NAME"));
+        assertEquals("Unexpected FKCOLUMN_NAME", "C6", rs.getString("FKCOLUMN_NAME"));
+        assertEquals("Unexpected KEY_SEQ", 1, rs.getInt("KEY_SEQ"));
+        assertEquals("Unexpected UPDATE_RULE", DatabaseMetaData.importedKeyNoAction, rs.getShort("UPDATE_RULE"));
+        assertEquals("Unexpected DELETE_RULE", DatabaseMetaData.importedKeyNoAction, rs.getShort("DELETE_RULE"));
+        assertEquals("Unexpected DEFERRABILITY", DatabaseMetaData.importedKeyNotDeferrable, rs.getShort("DEFERRABILITY"));
+
+        assertFalse("Expected no more than one row", rs.next());
+    }
+
+    @Test
+    public void testGetExportedKeys_NoForeignKeys() throws Exception {
+        createTable("table1");
+
+        ResultSet rs = dmd.getExportedKeys(null, null, "TABLE1");
+
+        assertFalse("Expected no exported keys for table without foreign key references", rs.next());
+    }
+
+    @Test
+    public void testGetExportedKeys_WithForeignKey() throws Exception {
+        createTable("table1");
+        createTable("table2", "FOREIGN KEY (c6) REFERENCES table1 (c1)");
+
+        ResultSet rs = dmd.getExportedKeys(null, null, "TABLE1");
+
+        // TODO Extend to verify columns as defined in JDBC
+        assertTrue("Expected at least one row", rs.next());
+
+        assertEquals("Unexpected PKTABLE_NAME", "TABLE1", rs.getString("PKTABLE_NAME"));
+        assertEquals("Unexpected PKCOLUMN_NAME", "C1", rs.getString("PKCOLUMN_NAME"));
+        assertEquals("Unexpected FKTABLE_NAME", "TABLE2", rs.getString("FKTABLE_NAME"));
+        assertEquals("Unexpected FKCOLUMN_NAME", "C6", rs.getString("FKCOLUMN_NAME"));
+        assertEquals("Unexpected KEY_SEQ", 1, rs.getInt("KEY_SEQ"));
+        assertEquals("Unexpected UPDATE_RULE", DatabaseMetaData.importedKeyNoAction, rs.getShort("UPDATE_RULE"));
+        assertEquals("Unexpected DELETE_RULE", DatabaseMetaData.importedKeyNoAction, rs.getShort("DELETE_RULE"));
+        assertEquals("Unexpected DEFERRABILITY", DatabaseMetaData.importedKeyNotDeferrable, rs.getShort("DEFERRABILITY"));
+
+        assertFalse("Expected no more than one row", rs.next());
+    }
+
+    @Test
+    public void testGetCrossReference_NoForeignKeys() throws Exception {
+        createTable("table1");
+        createTable("table2");
+
+        ResultSet rs = dmd.getCrossReference(null, null, "TABLE1", null, null, "TABLE2");
+
+        assertFalse("Expected no cross reference for tables without foreign key references", rs.next());
+    }
+
+    @Test
+    public void testGetCrossReference_WithForeignKey() throws Exception {
+        createTable("table1");
+        createTable("table2", "FOREIGN KEY (c6) REFERENCES table1 (c1)");
+
+        ResultSet rs = dmd.getCrossReference(null, null, "TABLE1", null, null, "TABLE2");
+
+        // TODO Extend to verify columns as defined in JDBC
+        assertTrue("Expected at least one row", rs.next());
+
+        assertEquals("Unexpected PKTABLE_NAME", "TABLE1", rs.getString("PKTABLE_NAME"));
+        assertEquals("Unexpected PKCOLUMN_NAME", "C1", rs.getString("PKCOLUMN_NAME"));
+        assertEquals("Unexpected FKTABLE_NAME", "TABLE2", rs.getString("FKTABLE_NAME"));
+        assertEquals("Unexpected FKCOLUMN_NAME", "C6", rs.getString("FKCOLUMN_NAME"));
+        assertEquals("Unexpected KEY_SEQ", 1, rs.getInt("KEY_SEQ"));
+        assertEquals("Unexpected UPDATE_RULE", DatabaseMetaData.importedKeyNoAction, rs.getShort("UPDATE_RULE"));
+        assertEquals("Unexpected DELETE_RULE", DatabaseMetaData.importedKeyNoAction, rs.getShort("DELETE_RULE"));
+        assertEquals("Unexpected DEFERRABILITY", DatabaseMetaData.importedKeyNotDeferrable, rs.getShort("DEFERRABILITY"));
+
+        assertFalse("Expected no more than one row", rs.next());
+    }
+
+    @Test
+    public void testGetSuperTypes() throws Exception {
+        ResultSet rs = dmd.getSuperTypes(null, null, null);
+
+        // TODO Extend to verify columns as defined in JDBC
+        assertFalse("Expected no results for getSuperTypes", rs.next());
+    }
+
+    @Test
+    public void testGetSuperTables() throws Exception {
+        ResultSet rs = dmd.getSuperTables(null, null, null);
+
+        // TODO Extend to verify columns as defined in JDBC
+        assertFalse("Expected no results for getSuperTables", rs.next());
+    }
+
+    @Test
+    public void testGetClientInfoProperties() throws Exception {
+        ResultSet rs = dmd.getClientInfoProperties();
+
+        // TODO Extend to verify columns as defined in JDBC
+        assertFalse("Expected no results for getClientInfoProperties", rs.next());
     }
 }
