@@ -63,6 +63,10 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
     private static final String SPACES_31 = "                               "; // 31 spaces
     private static final String SPACES_15 = "               "; // 15 spaces
 
+    private static final int DRIVER_MAJOR_VERSION = 3;
+    private static final int DRIVER_MINOR_VERSION = 0;
+    private static final String DRIVER_VERSION = DRIVER_MAJOR_VERSION + "." + DRIVER_MINOR_VERSION;
+
     private static final int SUBTYPE_NUMERIC = 1;
     private static final int SUBTYPE_DECIMAL = 2;
 
@@ -291,7 +295,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
      * @exception SQLException if a database access error occurs
      */
     public  String getDriverVersion() throws SQLException {
-        return "2.2";
+        return DRIVER_VERSION;
     }
 
     /**
@@ -300,7 +304,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
      * @return JDBC driver major version
      */
     public  int getDriverMajorVersion() {
-        return 2;
+        return DRIVER_MAJOR_VERSION;
     }
 
     /**
@@ -309,7 +313,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
      * @return JDBC driver minor version number
      */
     public  int getDriverMinorVersion() {
-        return 2;
+        return DRIVER_MINOR_VERSION;
     }
 
     /**
@@ -1594,6 +1598,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
      * @exception SQLException if a database access error occurs
      */
     public  int getMaxStatementLength() throws SQLException {
+        // TODO 2GB for Firebird 3 (test if we don't need to change anything else to support this)
         return 65536;
     }
 

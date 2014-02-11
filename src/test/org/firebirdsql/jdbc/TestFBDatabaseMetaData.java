@@ -826,4 +826,13 @@ public class TestFBDatabaseMetaData extends FBJUnit4TestBase {
         // TODO Extend to verify columns as defined in JDBC
         assertFalse("Expected no results for getClientInfoProperties", rs.next());
     }
+
+    /**
+     * Tests if the driver version information is consistent (and doesn't throw exceptions).
+     */
+    @Test
+    public void testDriverVersionInformation() throws Exception {
+        String expectedVersion = String.format("%d.%d", dmd.getDriverMajorVersion(), dmd.getDriverMinorVersion());
+        assertEquals(expectedVersion, dmd.getDriverVersion());
+    }
 }
