@@ -45,7 +45,7 @@ import org.firebirdsql.jdbc.FBSQLException;
  * Please be aware that this is not a connectionpool. This class provides
  * PooledConnection objects for connection pool implementations (eg as provided
  * by a JEE application server). If you need a standalone connectionpool,
- * consider using a connectionpool implementation like c3p0, BoneCP or BDCP.
+ * consider using a connectionpool implementation like c3p0, BoneCP or DBCP.
  * </p>
  * 
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
