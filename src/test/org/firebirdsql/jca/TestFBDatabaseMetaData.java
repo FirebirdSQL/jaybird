@@ -828,7 +828,7 @@ public class TestFBDatabaseMetaData extends TestXABase {
     }
 
     public void testGetClientInfoProperties() throws Exception {
-        ResultSet rs = dmd.getClientInfoProperties();
+        ResultSet rs = ((FBDatabaseMetaData)dmd).getClientInfoProperties();
 
         // TODO Extend to verify columns as defined in JDBC
         assertFalse("Expected no results for getClientInfoProperties", rs.next());
