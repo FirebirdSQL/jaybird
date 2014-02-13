@@ -114,6 +114,8 @@ public abstract class FBField {
     static final double MAX_DOUBLE_VALUE = Double.MAX_VALUE;
     static final double MIN_DOUBLE_VALUE = -1 * FBField.MAX_DOUBLE_VALUE;
 
+    private static final ObjectConverter OBJECT_CONVERTER = ObjectConverterHolder.INSTANCE.getObjectConverter();
+
     protected XSQLVAR field;
     private final FieldDataProvider dataProvider;
     protected int numCol;
@@ -141,6 +143,10 @@ public abstract class FBField {
 
     protected void setFieldData(byte[] data) {
         dataProvider.setFieldData(data);
+    }
+
+    protected final ObjectConverter getObjectConverter() {
+        return OBJECT_CONVERTER;
     }
 
     /**
@@ -737,7 +743,7 @@ public abstract class FBField {
             setTime((Time) value);
         } else if (value instanceof Timestamp) {
             setTimestamp((Timestamp) value);
-        } else {
+        } else if (!getObjectConverter().setObject(this, value)) {
             throw new TypeConversionException(FBField.OBJECT_CONVERSION_ERROR);
         }
     }
