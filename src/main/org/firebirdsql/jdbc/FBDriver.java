@@ -92,6 +92,10 @@ public class FBDriver implements FirebirdDriver {
      * @exception SQLException if a database access error occurs
      */
     public Connection connect(String url, Properties originalInfo) throws SQLException {
+        if (url == null) {
+            throw new SQLException("url is null");
+        }
+
         final GDSType type = GDSFactory.getTypeForProtocol(url);
         
         if (type == null)
@@ -177,6 +181,10 @@ public class FBDriver implements FirebirdDriver {
      * @exception SQLException if a database access error occurs
      */
     public boolean acceptsURL(String url) throws  SQLException {
+        if (url == null) {
+            throw new SQLException("url is null");
+        }
+
         for (String protocol : GDSFactory.getSupportedProtocols()) {
             if (url.startsWith(protocol))
                 return true;
