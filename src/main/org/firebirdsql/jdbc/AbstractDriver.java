@@ -91,6 +91,10 @@ public abstract class AbstractDriver implements FirebirdDriver {
      * @exception SQLException if a database access error occurs
      */
     public Connection connect(String url, Properties originalInfo) throws SQLException {
+        if (url == null) {
+            throw new SQLException("url is null");
+        }
+
         final GDSType type = GDSFactory.getTypeForProtocol(url);
         
         if (type == null)
@@ -177,7 +181,11 @@ public abstract class AbstractDriver implements FirebirdDriver {
      * @return true if this driver can connect to the given URL
      * @exception SQLException if a database access error occurs
      */
-    public boolean acceptsURL(String url) throws  SQLException {
+    public boolean acceptsURL(String url) throws SQLException {
+        if (url == null) {
+            throw new SQLException("url is null");
+        }
+
         Set protocols = GDSFactory.getSupportedProtocols();
         
         for (Iterator iter = protocols.iterator(); iter.hasNext();) {
