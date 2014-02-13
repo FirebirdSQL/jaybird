@@ -276,4 +276,14 @@
         <not><isset property="native_library_present"/></not>
     </condition>
 
+    <!--
+         Java 8 Javadoc has doclint which refuses to build Javadoc for HTML 4.01 syntax errors.
+         This currently gives 100 errors and 100 warnings. We will need to clean this up eventually, but for now
+         disabling seems to be the better option.
+         For details see: http://blog.joda.org/2014/02/turning-off-doclint-in-jdk-8-javadoc.html
+     -->
+    <condition property="javadoc.additionalparam" value="-Xdoclint:none" else="">
+        <equals arg1="${jdk1.8}" arg2="true"/>
+    </condition>
+
   </target>
