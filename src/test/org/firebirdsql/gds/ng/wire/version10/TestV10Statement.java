@@ -306,6 +306,29 @@ public class TestV10Statement extends FBJUnit4TestBase {
     }
 
     @Test
+    public void test_ExecuteExecutableStoredProcedure() throws Exception {
+        transaction = getTransaction();
+        statement = db.createStatement(transaction);
+        statement.addStatementListener(listener);
+        statement.allocateStatement();
+        statement.prepare(EXECUTE_EXECUTABLE_STORED_PROCEDURE);
+
+        FieldValue parameter1 = statement.getParameterDescriptor().getFieldDescriptor(0).createDefaultFieldValue();
+        parameter1.setFieldData(new byte[]{ 0, 0, 0, 1 }); // Byte representation of 1
+
+        statement.execute(Arrays.asList(parameter1));
+
+        assertTrue("Expected singleton result for executable stored procedure", listener.hasSingletonResult());
+        assertFalse("Expected no result set for executable stored procedure", listener.hasResultSet());
+        assertTrue("Expected all rows to have been fetched", listener.isAllRowsFetched());
+        assertEquals("Expected 1 row", 1, listener.getRows().size());
+        List<FieldValue> fieldValues = listener.getRows().get(0);
+        assertEquals("Expected one field", 1, fieldValues.size());
+        FieldValue value = fieldValues.get(0);
+        assertArrayEquals("Expected byte representation of 2", new byte[]{ 0, 0, 0, 2 }, value.getFieldData());
+    }
+
+    @Test
     public void test_PrepareSelectableStoredProcedure() throws Exception {
         transaction = getTransaction();
         statement = db.createStatement(transaction);

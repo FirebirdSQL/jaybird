@@ -51,7 +51,7 @@ import static org.firebirdsql.gds.impl.wire.WireProtocolConstants.*;
  * {@link FbWireDatabase} implementation for the version 10 wire protocol.
  *
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
- * @since 2.3
+ * @since 3.0
  */
 public class V10Database extends AbstractFbWireDatabase implements FbWireDatabase, TransactionListener {
 
@@ -289,11 +289,10 @@ public class V10Database extends AbstractFbWireDatabase implements FbWireDatabas
         }
     }
 
-    // TODO Rename to startTransaction(?), or leave calling beginTransaction to caller; and eliminate tpb use?
-
     @Override
     public FbWireTransaction createTransaction(TransactionParameterBuffer tpb) throws SQLException {
         FbWireTransaction transaction = protocolDescriptor.createTransaction(this);
+        transaction.addTransactionListener(this);
         transaction.beginTransaction(tpb);
         return transaction;
     }
@@ -657,7 +656,6 @@ public class V10Database extends AbstractFbWireDatabase implements FbWireDatabas
         }
     }
 
-    // TODO Current behavior is based on implementation in .NET Provider; this probably needs to be modified
     @Override
     public void transactionStateChanged(FbTransaction transaction, TransactionState newState,
                                         TransactionState previousState) {
@@ -666,7 +664,8 @@ public class V10Database extends AbstractFbWireDatabase implements FbWireDatabas
             case ACTIVE:
                 transactionCount.incrementAndGet();
                 break;
-            case NO_TRANSACTION:
+            case COMMITTED:
+            case ROLLED_BACK:
                 transactionCount.decrementAndGet();
                 break;
             default:

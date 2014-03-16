@@ -33,7 +33,7 @@ import java.sql.SQLException;
 
 /**
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
- * @since 2.3
+ * @since 3.0
  */
 public interface FbTransaction {
 
@@ -82,13 +82,6 @@ public interface FbTransaction {
     void commit() throws SQLException;
 
     /**
-     * Commit with retaining
-     *
-     * @throws SQLException
-     */
-    void commitRetaining() throws SQLException;
-
-    /**
      * Roll back the transaction
      *
      * @throws SQLException
@@ -96,14 +89,10 @@ public interface FbTransaction {
     void rollback() throws SQLException;
 
     /**
-     * Roll back with retaining
+     * Prepare the transaction for two-phase commit/rollback.
      *
+     * @param recoveryInformation Transaction recovery information (stored in RDB$TRANSACTION_DESCRIPTION of RDB$TRANSACTIONS)
      * @throws SQLException
      */
-    void rollbackRetaining() throws SQLException;
-
-    // TODO Implement two-phase to match with current Jaybird implementation
-    //    void prepare() throws SQLException;
-    //
-    //    void prepare(byte[] buffer) throws SQLException;
+    void prepare(byte[] recoveryInformation) throws SQLException;
 }
