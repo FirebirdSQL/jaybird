@@ -57,7 +57,7 @@ public abstract class AbstractFbTransaction implements FbTransaction {
                 state = newState;
                 transactionListenerDispatcher.transactionStateChanged(this, newState, currentState);
             } else {
-                // TODO Include sqlstate
+                // TODO Include sqlstate or use ISCConstants.isc_tra_state instead
                 throw new SQLException(String.format("Unable to change transaction state: state %s is not valid after %s",
                         newState, currentState));
             }

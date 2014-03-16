@@ -70,14 +70,10 @@ public class V10Transaction extends AbstractFbTransaction implements FbWireTrans
         return handle;
     }
 
-    // TODO Should transaction begin here, or on creation in a FbDatabase implementation?
     @Override
     public void beginTransaction(TransactionParameterBuffer tpb) throws SQLException {
         synchronized (getSynchronizationObject()) {
-            if (getState() != TransactionState.NO_TRANSACTION) {
-                // TODO check if right message
-                throw new FbExceptionBuilder().exception(ISCConstants.isc_transaction_in_use).toSQLException();
-            }
+            switchState(TransactionState.STARTING);
             GenericResponse response;
             synchronized (getDatabase().getSynchronizationObject()) {
                 try {
@@ -103,7 +99,7 @@ public class V10Transaction extends AbstractFbTransaction implements FbWireTrans
     @Override
     public void commit() throws SQLException {
         synchronized (getSynchronizationObject()) {
-            checkTransactionActive();
+            switchState(TransactionState.COMMITTING);
             synchronized (getDatabase().getSynchronizationObject()) {
                 try {
                     final XdrOutputStream xdrOut = getXdrOut();
@@ -119,39 +115,14 @@ public class V10Transaction extends AbstractFbTransaction implements FbWireTrans
                     throw new FbExceptionBuilder().exception(ISCConstants.isc_net_read_err).cause(ioex).toSQLException();
                 }
             }
-            switchState(TransactionState.NO_TRANSACTION);
-        }
-    }
-
-    // TODO Check handling of commit retaining and rollback retaining (or simply remove if we are not going to use it)
-
-    @Override
-    public void commitRetaining() throws SQLException {
-        synchronized (getSynchronizationObject()) {
-            checkTransactionActive();
-            synchronized (getDatabase().getSynchronizationObject()) {
-                try {
-                    final XdrOutputStream xdrOut = getXdrOut();
-                    xdrOut.writeInt(op_commit_retaining);
-                    xdrOut.writeInt(handle);
-                    xdrOut.flush();
-                } catch (IOException ioex) {
-                    throw new FbExceptionBuilder().exception(ISCConstants.isc_net_write_err).cause(ioex).toSQLException();
-                }
-                try {
-                    getDatabase().readResponse(null);
-                } catch (IOException ioex) {
-                    throw new FbExceptionBuilder().exception(ISCConstants.isc_net_read_err).cause(ioex).toSQLException();
-                }
-            }
-            switchState(TransactionState.ACTIVE);
+            switchState(TransactionState.COMMITTED);
         }
     }
 
     @Override
     public void rollback() throws SQLException {
         synchronized (getSynchronizationObject()) {
-            checkTransactionActive();
+            switchState(TransactionState.ROLLING_BACK);
             synchronized (getDatabase().getSynchronizationObject()) {
                 try {
                     final XdrOutputStream xdrOut = getXdrOut();
@@ -167,19 +138,20 @@ public class V10Transaction extends AbstractFbTransaction implements FbWireTrans
                     throw new FbExceptionBuilder().exception(ISCConstants.isc_net_read_err).cause(ioex).toSQLException();
                 }
             }
-            switchState(TransactionState.NO_TRANSACTION);
+            switchState(TransactionState.ROLLED_BACK);
         }
     }
 
     @Override
-    public void rollbackRetaining() throws SQLException {
+    public void prepare(byte[] recoveryInformation) throws SQLException {
         synchronized (getSynchronizationObject()) {
-            checkTransactionActive();
+            switchState(TransactionState.PREPARING);
             synchronized (getDatabase().getSynchronizationObject()) {
                 try {
                     final XdrOutputStream xdrOut = getXdrOut();
-                    xdrOut.writeInt(op_rollback_retaining);
+                    xdrOut.writeInt(op_prepare2);
                     xdrOut.writeInt(handle);
+                    xdrOut.writeBuffer(recoveryInformation);
                     xdrOut.flush();
                 } catch (IOException ioex) {
                     throw new FbExceptionBuilder().exception(ISCConstants.isc_net_write_err).cause(ioex).toSQLException();
@@ -190,16 +162,7 @@ public class V10Transaction extends AbstractFbTransaction implements FbWireTrans
                     throw new FbExceptionBuilder().exception(ISCConstants.isc_net_read_err).cause(ioex).toSQLException();
                 }
             }
-            switchState(TransactionState.ACTIVE);
-        }
-    }
-
-    // TODO two-phase commit implementation
-
-    private void checkTransactionActive() throws SQLException {
-        if (getState() != TransactionState.ACTIVE) {
-            // TODO check if right message
-            throw new FbExceptionBuilder().exception(ISCConstants.isc_tra_state).toSQLException();
+            switchState(TransactionState.PREPARED);
         }
     }
 }

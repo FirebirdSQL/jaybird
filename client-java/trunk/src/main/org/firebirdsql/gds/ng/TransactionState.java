@@ -34,27 +34,62 @@ import java.util.Set;
  * Transactions states.
  *
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
- * @since 2.3
+ * @since 3.0
  */
 public enum TransactionState {
+
     NO_TRANSACTION {
         @Override
         Set<TransactionState> createValidTransitionSet() {
-            return EnumSet.of(ACTIVE, NO_TRANSACTION);
+            return EnumSet.of(STARTING);
+        }
+    },
+    STARTING {
+        @Override
+        Set<TransactionState> createValidTransitionSet() {
+            return EnumSet.of(ACTIVE);
         }
     },
     ACTIVE {
         @Override
         Set<TransactionState> createValidTransitionSet() {
-            // TODO Verify if these are the supported transitions
-            return EnumSet.of(ACTIVE, PREPARED, NO_TRANSACTION);
+            return EnumSet.of(PREPARING, COMMITTING, ROLLING_BACK);
+        }
+    },
+    PREPARING {
+        @Override
+        Set<TransactionState> createValidTransitionSet() {
+            return EnumSet.of(PREPARED);
         }
     },
     PREPARED {
         @Override
         Set<TransactionState> createValidTransitionSet() {
-            // TODO Verify if these are the supported transitions
-            return EnumSet.of(ACTIVE, PREPARED, NO_TRANSACTION);
+            return EnumSet.of(COMMITTING, ROLLING_BACK);
+        }
+    },
+    COMMITTING {
+        @Override
+        Set<TransactionState> createValidTransitionSet() {
+            return EnumSet.of(COMMITTED);
+        }
+    },
+    COMMITTED {
+        @Override
+        Set<TransactionState> createValidTransitionSet() {
+            return EnumSet.noneOf(TransactionState.class);
+        }
+    },
+    ROLLING_BACK {
+        @Override
+        Set<TransactionState> createValidTransitionSet() {
+            return EnumSet.of(ROLLED_BACK);
+        }
+    },
+    ROLLED_BACK {
+        @Override
+        Set<TransactionState> createValidTransitionSet() {
+            return EnumSet.noneOf(TransactionState.class);
         }
     };
 

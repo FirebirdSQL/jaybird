@@ -41,7 +41,7 @@ import java.util.List;
 
 /**
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
- * @since 2.3
+ * @since 3.0
  */
 public class V10Statement extends AbstractFbWireStatement implements FbWireStatement {
 
@@ -490,6 +490,7 @@ public class V10Statement extends AbstractFbWireStatement implements FbWireState
                     break;
                 }
             }
+            // TODO Handle other response type?
         }
     }
 
@@ -530,11 +531,13 @@ public class V10Statement extends AbstractFbWireStatement implements FbWireState
                 final FieldValue fieldValue = field.createDefaultFieldValue();
                 byte[] buffer;
                 if (len == 0) {
+                    // Length specified in response
                     len = xdrIn.readInt();
                     buffer = new byte[len];
                     xdrIn.readFully(buffer, 0, len);
                     xdrIn.skipPadding(len);
                 } else if (len < 0) {
+                    // Buffer is not padded
                     buffer = new byte[-len];
                     xdrIn.readFully(buffer, 0, -len);
                 } else {
