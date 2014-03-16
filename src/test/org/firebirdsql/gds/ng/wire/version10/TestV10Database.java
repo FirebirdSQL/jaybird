@@ -328,6 +328,33 @@ public class TestV10Database {
     }
 
     @Test
+    public void testDrop_NotAttached() throws Exception {
+        expectedException.expect(SQLException.class);
+        expectedException.expectMessage(equalTo("The connection is not attached to a database"));
+        expectedException.expect(sqlStateEquals(FBSQLException.SQL_STATE_CONNECTION_ERROR));
+
+        FBManager fbManager = createFBManager();
+        defaultDatabaseSetUp(fbManager);
+        try {
+            WireConnection gdsConnection = new WireConnection(connectionInfo, EncodingFactory.getDefaultInstance(), ProtocolCollection.create(new Version10Descriptor()));
+            FbWireDatabase db;
+            try {
+                gdsConnection.socketConnect();
+                db = gdsConnection.identify();
+                assertEquals("Unexpected FbWireDatabase implementation", V10Database.class, db.getClass());
+
+                db.dropDatabase();
+            } finally {
+                if (gdsConnection.isConnected()) {
+                    gdsConnection.disconnect();
+                }
+            }
+        } finally {
+            defaultDatabaseTearDown(fbManager);
+        }
+    }
+
+    @Test
     public void testDetach_NotConnected() throws Exception {
         V10Database db = new V10Database(DUMMY_CONNECTION, DUMMY_DESCRIPTOR);
 
