@@ -61,7 +61,7 @@ public class TestV10OutputBlob extends BaseTestV10Blob {
             final FbStatement statement = db.createStatement(transaction);
             statement.addStatementListener(listener);
             statement.allocateStatement();
-            final FbBlob blob = db.createBlob(transaction);
+            final FbBlob blob = db.createBlobForOutput(transaction);
             blob.open();
             int bytesWritten = 0;
             while (bytesWritten < testBytes.length) {

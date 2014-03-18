@@ -305,29 +305,11 @@ public class V10Database extends AbstractFbWireDatabase implements FbWireDatabas
     }
 
     @Override
-    public FbBlob createBlob(FbTransaction transaction) throws SQLException {
-        // TODO open here, in constructor or leave up to caller?
-        return protocolDescriptor.createOutputBlob(this, (FbWireTransaction) transaction);
-    }
-
-    @Override
-    public FbBlob openBlob(FbTransaction transaction, long blobId) throws SQLException {
-        // TODO open here, in constructor or leave up to caller?
-        return protocolDescriptor.createInputBlob(this, (FbWireTransaction) transaction, blobId);
-    }
-
-    @Override
     public void cancelOperation(int kind) throws SQLException {
         throw new SQLFeatureNotSupportedException(String.format("Cancel Operation isn't supported in this version of the wire protocol (%d).", protocolDescriptor.getVersion()), FBDriverNotCapableException.SQL_STATE_FEATURE_NOT_SUPPORTED);
     }
 
     @Override
-    public <T> T getDatabaseInfo(byte[] requestItems, int bufferLength, InfoProcessor<T> infoProcessor)
-            throws SQLException {
-        byte[] responseBuffer = getDatabaseInfo(requestItems, bufferLength);
-        return infoProcessor.process(responseBuffer);
-    }
-
     public byte[] getDatabaseInfo(byte[] requestItems, int maxBufferLength) throws SQLException {
         checkAttached();
         synchronized (getSynchronizationObject()) {
