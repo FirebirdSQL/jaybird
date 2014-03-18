@@ -103,9 +103,9 @@ public interface FbDatabase {
     FbStatement createStatement(FbTransaction transaction) throws SQLException;
 
     /**
-     * Creates a new blob for write access.
+     * Creates a blob for write access to a new blob on the server.
      * <p>
-     * TODO: Should this actually create the blob on the server, or can that wait until we actually use it?
+     * The blob is initially closed.
      * </p>
      *
      * @param transaction
@@ -113,12 +113,12 @@ public interface FbDatabase {
      * @return Instance of {@link FbBlob}
      * @throws SQLException
      */
-    FbBlob createBlob(FbTransaction transaction) throws SQLException;
+    FbBlob createBlobForOutput(FbTransaction transaction) throws SQLException;
 
     /**
-     * Opens an existing blob for read access.
+     * Creates a blob for read access to an existing blob on the server.
      * <p>
-     * TODO: Should this actually open the blob on the server, or can that wait until we actually use it?
+     * The blob is initially closed.
      * </p>
      *
      * @param transaction
@@ -128,7 +128,7 @@ public interface FbDatabase {
      * @return Instance of {@link FbBlob}
      * @throws SQLException
      */
-    FbBlob openBlob(FbTransaction transaction, long blobId) throws SQLException;
+    FbBlob createBlobForInput(FbTransaction transaction, long blobId) throws SQLException;
 
     /**
      * Request database info.

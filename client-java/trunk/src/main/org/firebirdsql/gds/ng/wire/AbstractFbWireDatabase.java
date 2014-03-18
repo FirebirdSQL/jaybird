@@ -25,6 +25,9 @@ import org.firebirdsql.encodings.IEncodingFactory;
 import org.firebirdsql.gds.impl.wire.XdrInputStream;
 import org.firebirdsql.gds.impl.wire.XdrOutputStream;
 import org.firebirdsql.gds.ng.AbstractFbDatabase;
+import org.firebirdsql.gds.ng.FbBlob;
+import org.firebirdsql.gds.ng.FbTransaction;
+import org.firebirdsql.gds.ng.InfoProcessor;
 
 import java.sql.SQLException;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -108,5 +111,22 @@ public abstract class AbstractFbWireDatabase extends AbstractFbDatabase implemen
     @Override
     public final boolean isAttached() {
         return attached.get() && connection.isConnected();
+    }
+
+    @Override
+    public FbBlob createBlobForOutput(FbTransaction transaction) throws SQLException {
+        return protocolDescriptor.createOutputBlob(this, (FbWireTransaction) transaction);
+    }
+
+    @Override
+    public FbBlob createBlobForInput(FbTransaction transaction, long blobId) throws SQLException {
+        return protocolDescriptor.createInputBlob(this, (FbWireTransaction) transaction, blobId);
+    }
+
+    @Override
+    public <T> T getDatabaseInfo(byte[] requestItems, int bufferLength, InfoProcessor<T> infoProcessor)
+            throws SQLException {
+        byte[] responseBuffer = getDatabaseInfo(requestItems, bufferLength);
+        return infoProcessor.process(responseBuffer);
     }
 }

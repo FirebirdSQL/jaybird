@@ -81,7 +81,7 @@ public class TestV10InputBlob extends BaseTestV10Blob {
             FieldValue blobIdFieldValue = row.get(0);
             long blobId = new XSQLVAR().decodeLong(blobIdFieldValue.getFieldData());
 
-            final FbBlob blob = db.openBlob(transaction, blobId);
+            final FbBlob blob = db.createBlobForInput(transaction, blobId);
             blob.open();
             ByteArrayOutputStream bos = new ByteArrayOutputStream(requiredSize);
             while (!blob.isEof()) {
