@@ -26,18 +26,24 @@ import java.sql.SQLException;
 import org.firebirdsql.jdbc.FBSQLException;
 import org.jmock.Expectations;
 import org.jmock.Sequence;
-import org.jmock.integration.junit3.MockObjectTestCase;
+import org.jmock.integration.junit4.JUnitRuleMockery;
 import org.jmock.lib.legacy.ClassImposteriser;
+import org.junit.Rule;
+import org.junit.Test;
+
+import static org.junit.Assert.*;
 
 /**
  * Tests for {@link PooledConnectionHandler} using jMock.
  * 
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  */
-public class TestPooledConnectionHandlerMock extends MockObjectTestCase {
+public class TestPooledConnectionHandlerMock {
 
+    @Rule
+    public final JUnitRuleMockery context = new JUnitRuleMockery();
     {
-        setImposteriser(ClassImposteriser.INSTANCE);
+        context.setImposteriser(ClassImposteriser.INSTANCE);
     }
 
     /**
@@ -46,13 +52,14 @@ public class TestPooledConnectionHandlerMock extends MockObjectTestCase {
      * 
      * @throws SQLException
      */
+    @Test
     public void testHandlerClose_IsClosed() throws SQLException {
-        final Connection physicalConnection = mock(Connection.class);
-        final FBPooledConnection pooled = mock(FBPooledConnection.class);
+        final Connection physicalConnection = context.mock(Connection.class);
+        final FBPooledConnection pooled = context.mock(FBPooledConnection.class);
         final PooledConnectionHandler handler = new PooledConnectionHandler(physicalConnection,
                 pooled);
 
-        checking(new Expectations() {
+        context.checking(new Expectations() {
             {
                 allowing(physicalConnection).getAutoCommit();
                 will(returnValue(true));
@@ -73,13 +80,14 @@ public class TestPooledConnectionHandlerMock extends MockObjectTestCase {
      * 
      * @throws SQLException
      */
+    @Test
     public void testProxyClose_IsClosed() throws SQLException {
-        final Connection physicalConnection = mock(Connection.class);
-        final FBPooledConnection pooled = mock(FBPooledConnection.class);
+        final Connection physicalConnection = context.mock(Connection.class);
+        final FBPooledConnection pooled = context.mock(FBPooledConnection.class);
         final PooledConnectionHandler handler = new PooledConnectionHandler(physicalConnection,
                 pooled);
 
-        checking(new Expectations() {
+        context.checking(new Expectations() {
             {
                 allowing(physicalConnection).getAutoCommit();
                 will(returnValue(true));
@@ -101,13 +109,14 @@ public class TestPooledConnectionHandlerMock extends MockObjectTestCase {
      * 
      * @throws SQLException
      */
+    @Test
     public void testHandlerClose_NoNotify() throws SQLException {
-        final Connection physicalConnection = mock(Connection.class);
-        final FBPooledConnection pooled = mock(FBPooledConnection.class);
+        final Connection physicalConnection = context.mock(Connection.class);
+        final FBPooledConnection pooled = context.mock(FBPooledConnection.class);
         final PooledConnectionHandler handler = new PooledConnectionHandler(physicalConnection,
                 pooled);
 
-        checking(new Expectations() {
+        context.checking(new Expectations() {
             {
                 allowing(physicalConnection).getAutoCommit();
                 will(returnValue(true));
@@ -127,13 +136,14 @@ public class TestPooledConnectionHandlerMock extends MockObjectTestCase {
      * 
      * @throws SQLException
      */
+    @Test
     public void testProxyClose_Notify() throws SQLException {
-        final Connection physicalConnection = mock(Connection.class);
-        final FBPooledConnection pooled = mock(FBPooledConnection.class);
+        final Connection physicalConnection = context.mock(Connection.class);
+        final FBPooledConnection pooled = context.mock(FBPooledConnection.class);
         final PooledConnectionHandler handler = new PooledConnectionHandler(physicalConnection,
                 pooled);
 
-        checking(new Expectations() {
+        context.checking(new Expectations() {
             {
                 allowing(physicalConnection).getAutoCommit();
                 will(returnValue(true));
@@ -157,13 +167,14 @@ public class TestPooledConnectionHandlerMock extends MockObjectTestCase {
      * 
      * @throws SQLException
      */
+    @Test
     public void testClosedHandler_throwsException() throws SQLException {
-        final Connection physicalConnection = mock(Connection.class);
-        final FBPooledConnection pooled = mock(FBPooledConnection.class);
+        final Connection physicalConnection = context.mock(Connection.class);
+        final FBPooledConnection pooled = context.mock(FBPooledConnection.class);
         final PooledConnectionHandler handler = new PooledConnectionHandler(physicalConnection,
                 pooled);
 
-        checking(new Expectations() {
+        context.checking(new Expectations() {
             {
                 allowing(physicalConnection).getAutoCommit();
                 will(returnValue(true));
@@ -195,13 +206,14 @@ public class TestPooledConnectionHandlerMock extends MockObjectTestCase {
      * 
      * @throws SQLException
      */
+    @Test
     public void testClosedProxy_throwsException() throws SQLException {
-        final Connection physicalConnection = mock(Connection.class);
-        final FBPooledConnection pooled = mock(FBPooledConnection.class);
+        final Connection physicalConnection = context.mock(Connection.class);
+        final FBPooledConnection pooled = context.mock(FBPooledConnection.class);
         final PooledConnectionHandler handler = new PooledConnectionHandler(physicalConnection,
                 pooled);
 
-        checking(new Expectations() {
+        context.checking(new Expectations() {
             {
                 allowing(physicalConnection).getAutoCommit();
                 will(returnValue(true));
@@ -230,14 +242,15 @@ public class TestPooledConnectionHandlerMock extends MockObjectTestCase {
      * 
      * @throws SQLException
      */
+    @Test
     public void testException_Notify() throws SQLException {
-        final Connection physicalConnection = mock(Connection.class);
-        final FBPooledConnection pooled = mock(FBPooledConnection.class);
+        final Connection physicalConnection = context.mock(Connection.class);
+        final FBPooledConnection pooled = context.mock(FBPooledConnection.class);
         final PooledConnectionHandler handler = new PooledConnectionHandler(physicalConnection,
                 pooled);
-        final Sequence exceptionSequence = sequence("exceptionSequence");
+        final Sequence exceptionSequence = context.sequence("exceptionSequence");
 
-        checking(new Expectations() {
+        context.checking(new Expectations() {
             {
                 SQLException sqle = new FBSQLException("Mock Exception");
                 oneOf(physicalConnection).clearWarnings();
@@ -265,14 +278,15 @@ public class TestPooledConnectionHandlerMock extends MockObjectTestCase {
      * 
      * @throws SQLException
      */
+    @Test
     public void testCloseNotAutoCommit_rollback() throws SQLException {
-        final Connection physicalConnection = mock(Connection.class);
-        final FBPooledConnection pooled = mock(FBPooledConnection.class);
+        final Connection physicalConnection = context.mock(Connection.class);
+        final FBPooledConnection pooled = context.mock(FBPooledConnection.class);
         final PooledConnectionHandler handler = new PooledConnectionHandler(physicalConnection,
                 pooled);
-        final Sequence closeSequence = sequence("closeSequence");
+        final Sequence closeSequence = context.sequence("closeSequence");
 
-        checking(new Expectations() {
+        context.checking(new Expectations() {
             {
                 oneOf(physicalConnection).getAutoCommit();
                 will(returnValue(false));
@@ -293,13 +307,14 @@ public class TestPooledConnectionHandlerMock extends MockObjectTestCase {
      * 
      * @throws SQLException
      */
+    @Test
     public void testDoubleClose_allowed() throws SQLException {
-        final Connection physicalConnection = mock(Connection.class);
-        final FBPooledConnection pooled = mock(FBPooledConnection.class);
+        final Connection physicalConnection = context.mock(Connection.class);
+        final FBPooledConnection pooled = context.mock(FBPooledConnection.class);
         final PooledConnectionHandler handler = new PooledConnectionHandler(physicalConnection,
                 pooled);
 
-        checking(new Expectations() {
+        context.checking(new Expectations() {
             {
                 ignoring(physicalConnection);
                 ignoring(pooled);

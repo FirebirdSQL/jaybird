@@ -11,10 +11,9 @@
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
 	<classpathentry kind="lib" path="src/lib/log4j-core.jar"/>
 	<classpathentry kind="lib" path="lib/junit.jar"/>
-	<classpathentry kind="lib" path="lib/test/jmock-2.6.0.jar"/>
-	<classpathentry kind="lib" path="lib/test/jmock-junit3-2.6.0.jar" sourcepath="lib/test/jmock-junit3-2.6.0.jar"/>
+	<classpathentry kind="lib" path="lib/test/jmock-2.6.0.jar" sourcepath="lib/test/jmock-2.6.0.jar"/>
 	<classpathentry kind="lib" path="lib/test/cglib-nodep-2.2.3.jar"/>
-	<classpathentry kind="lib" path="lib/test/jmock-legacy-2.6.0.jar"/>
+	<classpathentry kind="lib" path="lib/test/jmock-legacy-2.6.0.jar" sourcepath="lib/test/jmock-legacy-2.6.0.jar"/>
 	<classpathentry kind="lib" path="lib/test/objenesis-1.0.jar"/>
 	<classpathentry kind="lib" path="src/lib/antlr-runtime-3.4.jar"/>
 	<classpathentry kind="lib" path="src/lib/connector-api-1.5.jar"/>
