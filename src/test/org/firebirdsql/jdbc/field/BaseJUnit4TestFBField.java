@@ -32,13 +32,11 @@ import org.firebirdsql.jdbc.FBBlob;
 import org.firebirdsql.jdbc.FBClob;
 import org.firebirdsql.jdbc.FBDriverNotCapableException;
 import org.jmock.Expectations;
-import org.jmock.Mockery;
-import org.jmock.integration.junit4.JMock;
-import org.jmock.integration.junit4.JUnit4Mockery;
+import org.jmock.integration.junit4.JUnitRuleMockery;
 import org.jmock.lib.legacy.ClassImposteriser;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 
 /**
  * Abstract base class for testing {@link FBField} implementations.
@@ -61,13 +59,13 @@ import org.junit.runner.RunWith;
  *
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  */
-@RunWith(JMock.class)
 public abstract class BaseJUnit4TestFBField<T extends FBField, O> {
     protected static final String ALIAS_VALUE = "aliasvalue";
     protected static final String NAME_VALUE = "namevalue";
     protected static final String RELATION_NAME_VALUE = "relationnamevalue";
 
-    protected Mockery context = new JUnit4Mockery();
+    @Rule
+    public final JUnitRuleMockery context = new JUnitRuleMockery();
 
     // TODO Convert exception expectation to @Rule (needs to wait until JMock 2.6 is released)
 
