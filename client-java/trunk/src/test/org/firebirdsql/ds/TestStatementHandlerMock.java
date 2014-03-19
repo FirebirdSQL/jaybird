@@ -27,18 +27,24 @@ import java.sql.Statement;
 import org.firebirdsql.jdbc.FBSQLException;
 import org.jmock.Expectations;
 import org.jmock.Sequence;
-import org.jmock.integration.junit3.MockObjectTestCase;
+import org.jmock.integration.junit4.JUnitRuleMockery;
 import org.jmock.lib.legacy.ClassImposteriser;
+import org.junit.Rule;
+import org.junit.Test;
+
+import static org.junit.Assert.*;
 
 /**
  * Tests for {@link StatementHandler} using jMock.
  * 
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  */
-public class TestStatementHandlerMock extends MockObjectTestCase {
+public class TestStatementHandlerMock {
 
+    @Rule
+    public final JUnitRuleMockery context = new JUnitRuleMockery();
     {
-        setImposteriser(ClassImposteriser.INSTANCE);
+        context.setImposteriser(ClassImposteriser.INSTANCE);
     }
 
     /**
@@ -47,12 +53,13 @@ public class TestStatementHandlerMock extends MockObjectTestCase {
      * 
      * @throws SQLException
      */
+    @Test
     public void testProxyDoubleClose_allowed() throws SQLException {
-        final PooledConnectionHandler conHandler = mock(PooledConnectionHandler.class);
-        final Statement statement = mock(Statement.class);
+        final PooledConnectionHandler conHandler = context.mock(PooledConnectionHandler.class);
+        final Statement statement = context.mock(Statement.class);
         final StatementHandler handler = new StatementHandler(conHandler, statement);
 
-        checking(new Expectations() {
+        context.checking(new Expectations() {
             {
                 ignoring(conHandler);
                 ignoring(statement);
@@ -74,12 +81,13 @@ public class TestStatementHandlerMock extends MockObjectTestCase {
      * 
      * @throws SQLException
      */
+    @Test
     public void testClosedProxy_throwsException() throws SQLException {
-        final PooledConnectionHandler conHandler = mock(PooledConnectionHandler.class);
-        final Statement statement = mock(Statement.class);
+        final PooledConnectionHandler conHandler = context.mock(PooledConnectionHandler.class);
+        final Statement statement = context.mock(Statement.class);
         final StatementHandler handler = new StatementHandler(conHandler, statement);
 
-        checking(new Expectations() {
+        context.checking(new Expectations() {
             {
                 oneOf(statement).close();
                 oneOf(conHandler).forgetStatement(handler);
@@ -106,13 +114,14 @@ public class TestStatementHandlerMock extends MockObjectTestCase {
      * 
      * @throws SQLException
      */
+    @Test
     public void testException_notify() throws SQLException {
-        final PooledConnectionHandler conHandler = mock(PooledConnectionHandler.class);
-        final Statement statement = mock(Statement.class);
+        final PooledConnectionHandler conHandler = context.mock(PooledConnectionHandler.class);
+        final Statement statement = context.mock(Statement.class);
         final StatementHandler handler = new StatementHandler(conHandler, statement);
-        final Sequence exceptionSequence = sequence("exceptionSequence");
+        final Sequence exceptionSequence = context.sequence("exceptionSequence");
 
-        checking(new Expectations() {
+        context.checking(new Expectations() {
             {
                 SQLException ex = new FBSQLException("Mock Exception");
                 oneOf(statement).getFetchSize();
@@ -132,14 +141,15 @@ public class TestStatementHandlerMock extends MockObjectTestCase {
             // ignore: expected exception
         }
     }
-    
+
+    @Test
     public void testStatementGetConnection_IsProxyConnection() throws SQLException {
-        final PooledConnectionHandler conHandler = mock(PooledConnectionHandler.class);
-        final Statement statement = mock(Statement.class);
-        final Connection connectionProxy = mock(Connection.class);
+        final PooledConnectionHandler conHandler = context.mock(PooledConnectionHandler.class);
+        final Statement statement = context.mock(Statement.class);
+        final Connection connectionProxy = context.mock(Connection.class);
         final StatementHandler handler = new StatementHandler(conHandler, statement);
         
-        checking(new Expectations() {
+        context.checking(new Expectations() {
             {
                 oneOf(conHandler).getProxy(); will(returnValue(connectionProxy));
             }
@@ -161,12 +171,13 @@ public class TestStatementHandlerMock extends MockObjectTestCase {
      * 
      * @throws SQLException
      */
+    @Test
     public void testHandlerClose_IsClosed() throws SQLException {
-        final PooledConnectionHandler conHandler = mock(PooledConnectionHandler.class);
-        final Statement statement = mock(Statement.class);
+        final PooledConnectionHandler conHandler = context.mock(PooledConnectionHandler.class);
+        final Statement statement = context.mock(Statement.class);
         final StatementHandler handler = new StatementHandler(conHandler, statement);
 
-        checking(new Expectations() {
+        context.checking(new Expectations() {
             {
                 oneOf(statement).close();
                 oneOf(conHandler).forgetStatement(handler);
@@ -189,12 +200,13 @@ public class TestStatementHandlerMock extends MockObjectTestCase {
      * 
      * @throws SQLException
      */
+    @Test
     public void testProxyClose_IsClosed() throws SQLException {
-        final PooledConnectionHandler conHandler = mock(PooledConnectionHandler.class);
-        final Statement statement = mock(Statement.class);
+        final PooledConnectionHandler conHandler = context.mock(PooledConnectionHandler.class);
+        final Statement statement = context.mock(Statement.class);
         final StatementHandler handler = new StatementHandler(conHandler, statement);
 
-        checking(new Expectations() {
+        context.checking(new Expectations() {
             {
                 oneOf(statement).close();
                 oneOf(conHandler).forgetStatement(handler);

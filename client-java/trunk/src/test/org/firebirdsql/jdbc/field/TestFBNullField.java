@@ -21,10 +21,12 @@ import org.junit.Test;
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  */
 public class TestFBNullField {
+
     @Rule
-    public final JUnitRuleMockery context = new JUnitRuleMockery() {{
-        setImposteriser(ClassImposteriser.INSTANCE);
-    }};
+    public final JUnitRuleMockery context = new JUnitRuleMockery();
+    {
+        context.setImposteriser(ClassImposteriser.INSTANCE);
+    }
     
     private FieldDataProvider fieldData;
     private FBNullField field;
