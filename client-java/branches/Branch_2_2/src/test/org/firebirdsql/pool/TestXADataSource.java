@@ -83,24 +83,11 @@ public class TestXADataSource extends FBTestBase {
     }
 
     protected void tearDown() throws Exception {
-        
-        Connection con = pool.getPooledConnection().getConnection();
-
         try {
-            Statement stmt = con.createStatement();
-            try {
-                stmt.executeUpdate("DROP TABLE xa_test");
-            } finally {
-                stmt.close();
-            }
-
+            pool.shutdown();
         } finally {
-            con.close();
+            super.tearDown();
         }
-
-        pool.shutdown();
-        
-        super.tearDown();
     }
 
     /**
@@ -185,8 +172,6 @@ public class TestXADataSource extends FBTestBase {
         } catch (Exception ex) {
             ex.printStackTrace();
             throw ex;
-        } finally {
-            pool.shutdown();
         }
     }
 

@@ -593,21 +593,17 @@ public class TestFBConnectionPoolDataSource extends FBTestBase {
         try {
             Connection con = pool.getPooledConnection().getConnection();
             
-            assertTrue("Should have totally 1 connection", 
-                pool.getTotalSize() == 1);
+            assertEquals("Should have totally 1 connection", 1, pool.getTotalSize());
                 
-            assertTrue("Should have 1 working connection", 
-                pool.getWorkingSize() == 1);
+            assertEquals("Should have 1 working connection", 1, pool.getWorkingSize());
             
             con.close();
             
-            assertTrue("Working size should be 0", 
-                pool.getWorkingSize() == 0);
+            assertEquals("Working size should be 0", 0, pool.getWorkingSize());
             
             Thread.sleep(10 * 1000 + 5 * 1000);
             
-            assertTrue("Total size should be 0",
-                pool.getTotalSize() == 0);
+            assertEquals("Total size should be 0", 0, pool.getTotalSize());
             
         } finally {
             pool.shutdown();

@@ -38,11 +38,9 @@ import org.firebirdsql.logging.LoggerFactory;
  * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
  */
 abstract public class AbstractDriverConnectionPoolDataSource extends BasicAbstractConnectionPool 
-    implements ConnectionPoolDataSource, PooledConnectionEventListener
-{
+    implements ConnectionPoolDataSource, PooledConnectionEventListener {
 
-    private static final Logger logger = LoggerFactory.getLogger(
-    		AbstractDriverConnectionPoolDataSource.class, false);
+    private static final Logger logger = LoggerFactory.getLogger(AbstractDriverConnectionPoolDataSource.class, false);
     
     public static final UserPasswordPair EMPTY_USER_PASSWORD = new UserPasswordPair();
 
@@ -52,11 +50,8 @@ abstract public class AbstractDriverConnectionPoolDataSource extends BasicAbstra
     private String driverClassName;
     private int transactionIsolation = FBPoolingDefaults.DEFAULT_ISOLATION;
 
-    
-    private Properties props = new Properties();
-    
-    private DriverPooledConnectionManager connectionManager = 
-        new DriverPooledConnectionManager();
+    private final Properties props = new Properties();
+    private final DriverPooledConnectionManager connectionManager = new DriverPooledConnectionManager();
         
     public String getJdbcUrl() {
         return jdbcUrl;
@@ -196,11 +191,8 @@ abstract public class AbstractDriverConnectionPoolDataSource extends BasicAbstra
     /**
      * Get pooled connection from the pooled queue.
      */
-    protected synchronized PooledObject getPooledConnection(
-        PooledConnectionQueue queue) throws SQLException
-    {
-        PingablePooledConnection connection = 
-            (PingablePooledConnection)super.getPooledConnection(queue);
+    protected PooledObject getPooledConnection(PooledConnectionQueue queue) throws SQLException {
+        PingablePooledConnection connection = (PingablePooledConnection) super.getPooledConnection(queue);
 
         connection.addConnectionEventListener(this);
 
@@ -215,11 +207,8 @@ abstract public class AbstractDriverConnectionPoolDataSource extends BasicAbstra
      * 
      * @throws SQLException if pooled connection cannot be obtained.
      */
-    public synchronized PooledConnection getPooledConnection() 
-        throws SQLException 
-    {
-        return (PooledConnection)getPooledConnection(
-            getQueue(EMPTY_USER_PASSWORD));
+    public PooledConnection getPooledConnection() throws SQLException {
+        return (PooledConnection) getPooledConnection(getQueue(EMPTY_USER_PASSWORD));
     }
 
     /**
@@ -233,11 +222,8 @@ abstract public class AbstractDriverConnectionPoolDataSource extends BasicAbstra
      * 
      * @throws SQLException always, this method is not yet implemented.
      */
-    public PooledConnection getPooledConnection(String user, String password) 
-        throws SQLException 
-    {
-        return (PooledConnection)getPooledConnection(
-            getQueue(new UserPasswordPair(user, password)));
+    public PooledConnection getPooledConnection(String user, String password) throws SQLException {
+        return (PooledConnection) getPooledConnection(getQueue(new UserPasswordPair(user, password)));
     }
     
     /**
@@ -246,9 +232,7 @@ abstract public class AbstractDriverConnectionPoolDataSource extends BasicAbstra
      * @param connectionEvent instance of {@link ConnectionEvent}.
      */
     public void connectionClosed(ConnectionEvent connectionEvent) {
-        PooledObjectEvent event = 
-            new PooledObjectEvent(connectionEvent.getSource());
-            
+        PooledObjectEvent event = new PooledObjectEvent(connectionEvent.getSource());
         pooledObjectReleased(event);
     }
     
@@ -258,9 +242,7 @@ abstract public class AbstractDriverConnectionPoolDataSource extends BasicAbstra
      * @param connectionEvent instance of {@link ConnectionEvent}.
      */
     public void physicalConnectionClosed(ConnectionEvent connectionEvent) {
-        PooledObjectEvent event = 
-            new PooledObjectEvent(connectionEvent.getSource(), true);
-            
+        PooledObjectEvent event = new PooledObjectEvent(connectionEvent.getSource(), true);
         pooledObjectReleased(event);
     }
     
@@ -270,9 +252,7 @@ abstract public class AbstractDriverConnectionPoolDataSource extends BasicAbstra
      * @param connectionEvent instance of {@link ConnectionEvent}.
      */
     public void physicalConnectionDeallocated(ConnectionEvent connectionEvent) {
-        PooledObjectEvent event = 
-            new PooledObjectEvent(connectionEvent.getSource(), true);
-        
+        PooledObjectEvent event = new PooledObjectEvent(connectionEvent.getSource(), true);
         physicalConnectionDeallocated(event);
     }
     
@@ -375,10 +355,7 @@ abstract public class AbstractDriverConnectionPoolDataSource extends BasicAbstra
         
         private boolean driverInitialized;
     
-        /**
-         * Allocate physical connection to the database.
-         */
-        public PooledObject allocateConnection(Object key) throws SQLException {
+        public PooledObject allocateConnection(Object key, PooledConnectionQueue queue) throws SQLException {
             if (!driverInitialized) {
                 try {
                     Class.forName(getDriverClassName());
@@ -392,39 +369,33 @@ abstract public class AbstractDriverConnectionPoolDataSource extends BasicAbstra
             
             if (!(key instanceof UserPasswordPair))
                 throw new FBSQLException("Incorrect key.");
+            final UserPasswordPair pair = (UserPasswordPair) key;
                 
-            UserPasswordPair pair = (UserPasswordPair)key;
-            
-            String userName = pair.getUserName(); 
-            String password = pair.getPassword();
-            
             // set all properties
-            Properties props = new Properties();
-            props.putAll(
-                AbstractDriverConnectionPoolDataSource.this.getProperties());
+            final Properties props = new Properties();
+            props.putAll(getProperties());
 
+            final String userName = pair.getUserName();
             if (userName != null)
                 props.setProperty(USER_NAME_PROPERTY, userName);
-                
+            final String password = pair.getPassword();
             if (password != null)
                 props.setProperty(PASSWORD_PROPERTY, password);
             
             // open JDBC connection to the database
-            Connection connection = DriverManager.getConnection(
-                getJdbcUrl(), props);
+            Connection connection = DriverManager.getConnection(getJdbcUrl(), props);
             
             // wrap connection into PooledObject implementation
-            PingablePooledConnection pooledConnection = null;
+            final PingablePooledConnection pooledConnection;
 
             if (isPingable())
                 pooledConnection = new PingablePooledConnection(
-                    connection, getPingStatement(), getPingInterval(),
-                    isStatementPooling(), 
-                    getMaxStatements(), isKeepStatements());
+                        connection, getPingStatement(), getPingInterval(),
+                        isStatementPooling(), getMaxStatements(), isKeepStatements(), queue);
             else
                 pooledConnection = new PingablePooledConnection(
-                    connection, isStatementPooling(), 
-                    getMaxStatements(), isKeepStatements());
+                        connection, isStatementPooling(), getMaxStatements(),
+                        isKeepStatements(), queue);
             
             pooledConnection.setDefaultTransactionIsolation(getTransactionIsolationLevel());
 

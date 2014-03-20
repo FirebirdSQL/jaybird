@@ -16,10 +16,10 @@
  *
  * All rights reserved.
  */
-
 package org.firebirdsql.pool;
 
 import java.sql.SQLException;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -41,8 +41,8 @@ public abstract class AbstractConnectionPool extends RootCommonDataSource implem
      * Structure class to store user name and password. 
      */
     protected static class UserPasswordPair {
-        private String userName;
-        private String password;
+        private final String userName;
+        private final String password;
     
         public UserPasswordPair() {
             this(null, null);
@@ -69,8 +69,8 @@ public abstract class AbstractConnectionPool extends RootCommonDataSource implem
             UserPasswordPair that = (UserPasswordPair)obj;
         
             boolean equal = true;
-            
-            equal &= userName != null ? 
+
+            equal &= userName != null ?
                 userName.equals(that.userName) : that.userName == null;
                 
             equal &= password != null ? 
@@ -100,14 +100,9 @@ public abstract class AbstractConnectionPool extends RootCommonDataSource implem
     /**
      * This map contains mapping between key and pooled connection queue. 
      */
-    private HashMap connectionQueues = new HashMap();
-    
-    /**
-     * This map contains mapping between connection and queue, so we
-     * easily know to which queue connection should be returned to.
-     */
-    private HashMap connectionToQueueMap = new HashMap();
-    
+    private final Map<UserPasswordPair, PooledConnectionQueue> connectionQueues =
+            Collections.synchronizedMap(new HashMap<UserPasswordPair, PooledConnectionQueue>());
+
     /**
      * Get logger for this instance. By default all log messages belong to 
      * this class. Subclasses can override this behavior.
@@ -129,29 +124,39 @@ public abstract class AbstractConnectionPool extends RootCommonDataSource implem
      * @throws Throwable if something bad happened.
      */
     protected void finalize() throws Throwable {
-        shutdown();
+        try {
+            shutdown();
+        } finally {
+            super.finalize();
+        }
     }
     
     /**
      * Restart this JDBC pool.  This method restarts all JDBC connections.
      */
-    public void restart()
-    {
-       Iterator iter = connectionQueues.entrySet().iterator();
-        while(iter.hasNext()) {
-            Map.Entry entry = (Map.Entry)iter.next();
-            
-            PooledConnectionQueue queue = 
-                (PooledConnectionQueue)entry.getValue();
-                
-            queue.restart();
+    public void restart() {
+        synchronized (connectionQueues) {
+            Iterator<PooledConnectionQueue> iter = connectionQueues.values().iterator();
+            while(iter.hasNext()) {
+                PooledConnectionQueue queue = iter.next();
+                try {
+                    queue.restart();
+                } catch (SQLException sqlex) {
+                    getLogger().warn("Errors during pool restart: ", sqlex);
+                    try {
+                        queue.shutdown();
+                    } catch (SQLException ex) {
+                        // ignore
+                    } finally {
+                        iter.remove();
+                    }
+                }
+            }
         }
 
         if (getLogger() != null)
-            getLogger().info(
-                "Pool restarted.  Pool name was "
-                + getPoolName()
-                + ".");
+            getLogger().info("Pool restarted. Pool name was " + getPoolName() + ".");
+
     }
 
     /**
@@ -159,23 +164,22 @@ public abstract class AbstractConnectionPool extends RootCommonDataSource implem
      * and marks pool as shut down.
      */
     public void shutdown() {
-
-        Iterator iter = connectionQueues.entrySet().iterator();
-        while(iter.hasNext()) {
-            Map.Entry entry = (Map.Entry)iter.next();
-            
-            PooledConnectionQueue queue = 
-                (PooledConnectionQueue)entry.getValue();
-                
-            queue.shutdown();
+        synchronized (connectionQueues) {
+            Iterator<PooledConnectionQueue> iter = connectionQueues.values().iterator();
+            while(iter.hasNext()) {
+                PooledConnectionQueue queue = iter.next();
+                try {
+                    queue.shutdown();
+                } catch (SQLException sqlex) {
+                    getLogger().error("Errors during pool shutdown: ", sqlex);
+                } finally {
+                    iter.remove();
+                }
+            }
         }
 
         if (getLogger() != null)
-            getLogger().info(
-                "Pool shutted down. Pool name was "
-                + getPoolName()
-                + ".");
-
+            getLogger().info("Pool shutdown. Pool name was " + getPoolName() + ".");
     }
     
     /**
@@ -187,26 +191,23 @@ public abstract class AbstractConnectionPool extends RootCommonDataSource implem
      * 
      * @throws SQLException if something went wrong.
      */
-    public PooledConnectionQueue getQueue(Object key)
-        throws SQLException 
-    {
+    public PooledConnectionQueue getQueue(Object key) throws SQLException {
         synchronized(connectionQueues) {
-            PooledConnectionQueue queue = 
-                (PooledConnectionQueue)connectionQueues.get(key);
-                
+            PooledConnectionQueue queue = connectionQueues.get(key);
+
             if (queue == null) {
                 queue = new PooledConnectionQueue(
-                    getConnectionManager(), 
-                    getLogger(), 
-                    getConfiguration(), 
+                    getConnectionManager(),
+                    getLogger(),
+                    getConfiguration(),
                     getPoolName(),
                     key);
-                    
+
                 queue.start();
-                    
-                connectionQueues.put(key, queue);
+
+                connectionQueues.put((UserPasswordPair) key, queue);
             }
-            
+
             return queue;
         }
     }
@@ -222,47 +223,33 @@ public abstract class AbstractConnectionPool extends RootCommonDataSource implem
      * 
      * @throws SQLException if pooled connection cannot be obtained.
      */
-    protected synchronized PooledObject getPooledConnection(
-        PooledConnectionQueue queue) throws SQLException 
-    {
-
-        PooledObject result;
-
-        result = queue.take();
+    protected PooledObject getPooledConnection(PooledConnectionQueue queue) throws SQLException {
+        PooledObject result = queue.take();
 
         if (result instanceof XPingableConnection) {
-            
-            boolean isValid = false;
-            
-            while (!isValid) {
-
-                XPingableConnection pingableConnection = (XPingableConnection)result;
+            boolean isValid;
+            do {
+                XPingableConnection pingableConnection = (XPingableConnection) result;
     
-                long lastPingTime = pingableConnection.getLastPingTime();
-                long pingInterval = System.currentTimeMillis() - lastPingTime;
-                
+                final long lastPingTime = pingableConnection.getLastPingTime();
+                final long pingInterval = System.currentTimeMillis() - lastPingTime;
+
                 isValid = true;
                 if (getConfiguration().getPingInterval() > 0)
-                    isValid &= pingInterval < getConfiguration().getPingInterval();
+                    isValid = pingInterval < getConfiguration().getPingInterval();
                 
-                if (!isValid && !pingableConnection.ping()) {
+                if (!isValid && !(isValid = pingableConnection.ping())) {
                     if (getLogger() != null)
-                        getLogger().warn(
-                            "Connection " + result
-                            + " was not valid, trying to get another one.");
+                        getLogger().warn("Connection " + result + " was not valid, trying to get another one.");
                             
-                    // notify queue that invalid connection was destroyed
+                    // notify queue that invalid connection should be destroyed
                     queue.destroyConnection(result);
 
                     // take another one
-                    result = (PooledObject)queue.take();
+                    result = queue.take();
                 }
-            }
+            } while (!isValid);
         }
-
-        // save the queue to which this connection belongs to
-        connectionToQueueMap.put(result, queue);
-        
         return result;
     }
     
@@ -275,36 +262,24 @@ public abstract class AbstractConnectionPool extends RootCommonDataSource implem
      */
     public void pooledObjectReleased(PooledObjectEvent event) {
         try {
-            PooledObject connection =
-                (PooledObject) event.getSource();
-                
-            PooledConnectionQueue queue = 
-                (PooledConnectionQueue)connectionToQueueMap.get(connection);
+            final PooledObject connection = (PooledObject) event.getSource();
+            final PooledConnectionQueue queue = connection.getOwningQueue();
                 
             if (queue == null) {
                 if (getLogger() != null)
-                    getLogger().warn("Connection " + connection + 
-                        " does not have corresponding queue");
-                    
-                connectionToQueueMap.remove(connection);
-                
-                if (PARANOID_MODE)
-                    throw new IllegalStateException(
-                        "Connection " + connection + 
-                        " does not have corresponding queue");
-                else
+                    getLogger().warn("Connection " + connection + " does not have corresponding queue");
+
+                if (PARANOID_MODE) {
+                    throw new IllegalStateException("Connection " + connection + " does not have corresponding queue");
+                } else {
                     connection.deallocate();
+                }
+            } else if (event.isDeallocated()) {
+                queue.physicalConnectionDeallocated(connection);
             } else {
-                
-                if (event.isDeallocated()) {
-                    connectionToQueueMap.remove(connection);
-                    queue.physicalConnectionDeallocated(connection);
-                } else
-                    queue.put(connection);
+                queue.put(connection);
             }
-                
         } catch (SQLException ex) {
-    
             if (getLogger() != null)
                 getLogger().warn("Error releasing connection.", ex);
         }
@@ -317,8 +292,7 @@ public abstract class AbstractConnectionPool extends RootCommonDataSource implem
      * @param event instance of {@link PooledObjectEvent}.
      */
     protected void physicalConnectionDeallocated(PooledObjectEvent event) {
-        PooledObject connection = (PooledObject) event.getSource();
-        connectionToQueueMap.remove(connection);
+        // Nothing to do
     }
  
     /**

@@ -99,11 +99,11 @@ class FBPooledConnection extends PingablePooledConnection
      */
     public FBPooledConnection(FBManagedConnection managedConnection, 
         FBConnectionRequestInfo cri, boolean statementPooling, 
-        int maxStatements, boolean keepStatements) 
+        int maxStatements, boolean keepStatements, PooledConnectionQueue owningQueue)
         throws SQLException, ResourceException 
     {
         super((Connection)managedConnection.getConnection(null, cri), 
-            statementPooling, maxStatements, keepStatements);
+            statementPooling, maxStatements, keepStatements, owningQueue);
         
         this.managedConnection = managedConnection;
         
@@ -119,20 +119,19 @@ class FBPooledConnection extends PingablePooledConnection
      * @param pingStatement ping statement.
      * @param pingInterval interval after which connection will be pinged. 
      * @param statementPooling <code>true</code> if statement pooling is enabled.
-     * @param transactionIsolation transaction isolation for connection.
-     * 
+     *
      * @throws SQLException if SQL error happened.
      * @throws ResourceException if resource management error happened.
      */
     protected FBPooledConnection(FBManagedConnection managedConnection, 
         FBConnectionRequestInfo cri, String pingStatement, int pingInterval, 
         boolean statementPooling,int maxStatements, 
-        boolean keepStatements) 
+        boolean keepStatements, PooledConnectionQueue owningQueue)
         throws SQLException, ResourceException 
     {
         super((Connection)managedConnection.getConnection(null, cri), 
             pingStatement, pingInterval, statementPooling, /*transactionIsolation,*/ 
-            maxStatements, keepStatements);
+            maxStatements, keepStatements, owningQueue);
         
         this.managedConnection = managedConnection;
         

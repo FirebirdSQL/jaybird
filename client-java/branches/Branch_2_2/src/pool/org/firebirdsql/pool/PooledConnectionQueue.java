@@ -16,127 +16,103 @@
  *
  * All rights reserved.
  */
-
 package org.firebirdsql.pool;
-
-import java.sql.SQLException;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
 
 import org.firebirdsql.jdbc.FBSQLException;
 import org.firebirdsql.logging.Logger;
 import org.firebirdsql.util.SQLExceptionChainBuilder;
 
+import java.sql.SQLException;
+import java.util.*;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
+
 /**
  * Implementation of free connection queue.
- * 
+ *
  * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
+ * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  */
-class PooledConnectionQueue {
-    
+final class PooledConnectionQueue {
+
     private static final boolean LOG_DEBUG_INFO = PoolDebugConfiguration.LOG_DEBUG_INFO;
     private static final boolean SHOW_STACK_ON_BLOCK = PoolDebugConfiguration.SHOW_TRACE;
     private static final boolean SHOW_STACK_ON_ALLOCATION = PoolDebugConfiguration.SHOW_TRACE;
 
-    private PooledConnectionManager connectionManager;
-    private Logger logger;
-    private ConnectionPoolConfiguration configuration;
-    
-    private Object key;
+    private final PooledConnectionManager connectionManager;
+    private final Logger logger;
+    private final ConnectionPoolConfiguration configuration;
 
-    private String queueName;
-    private int blockingTimeout;
+    private final Object key;
 
-    private int size;
-    private BlockingStack stack = new BlockingStack();
-    private boolean blocked;
-    
-    private Object takeMutex = new Object();
-    
+    private final String queueName;
+    private final int blockingTimeout;
+    private final Object addConnectionMutex = new Object();
+
     private IdleRemover idleRemover;
 
-    private int totalConnections;
+    private final BlockingQueue<PooledObject> idleConnections;
+    private final Set<PooledObject> allConnections;
+    private final Set<PooledObject> workingConnections;
+    private final Set<PooledObject> workingConnectionsToClose;
 
-    private HashSet workingConnections = new HashSet();
-    private HashSet workingConnectionsToClose = new HashSet();
-    private HashMap connectionIdleTime = new HashMap();
+    private final AtomicReference<QueueState> queueState = new AtomicReference<QueueState>(QueueState.NEW);
 
     /**
-     * Create instance of this queue.
-     * 
-     * @param connectionManager instance of {@link PooledConnectionManager}.
-     * @param logger instance of {@link Logger}.
-     * @param configuration instance of {@link Configuration}.
-     * @param queueName name of this queue.
+     * Create instance of this queue for the specified user name and password.
+     *
+     * @param connectionManager
+     *         instance of {@link PooledConnectionManager}.
+     * @param logger
+     *         instance of {@link Logger}.
+     * @param configuration
+     *         instance of {@link ConnectionPoolConfiguration}.
+     * @param queueName
+     *         name of this queue.
+     * @param key
+     *         Key used for this instance
      */
-    private PooledConnectionQueue(PooledConnectionManager connectionManager,
-        Logger logger, ConnectionPoolConfiguration configuration, 
-        String queueName) 
-    {
+    public PooledConnectionQueue(PooledConnectionManager connectionManager,
+                                 Logger logger, ConnectionPoolConfiguration configuration,
+                                 String queueName, Object key) {
         this.connectionManager = connectionManager;
         this.logger = logger;
         this.configuration = configuration;
-        
         this.queueName = queueName;
-        this.blockingTimeout = configuration.getBlockingTimeout();
-    }
-    
-    /**
-     * Create instance of this queue for the specified user name and password.
-     * 
-     * @param connectionManager instance of {@link PooledConnectionManager}.
-     * @param logger instance of {@link Logger}.
-     * @param configuration instance of {@link ConnectionPoolConfiguration}.
-     * @param queueName name of this queue.
-     * @param key Key used for this instance
-     */
-    public PooledConnectionQueue(PooledConnectionManager connectionManager,
-        Logger logger, ConnectionPoolConfiguration configuration, 
-        String queueName, Object key)
-    {
-        this(connectionManager, logger, configuration, queueName);
+        blockingTimeout = configuration.getBlockingTimeout();
         this.key = key;
-    }
-    
-    /**
-     * Get logger for this instance. By default all log messages belong to 
-     * this class. Subclasses can override this behavior.
-     * 
-     * @return instance of {@link Logger}.
-     */
-    protected Logger getLogger() {
-        return logger;
-    }
-    
-    
-    private ConnectionPoolConfiguration getConfiguration() {
-        return configuration;
+
+        // NOTE: We are always creating an unbounded queue as the max pool size could change at runtime
+        idleConnections = new LinkedBlockingQueue<PooledObject>();
+        final int initialSize = Math.max(16, configuration.getMaxPoolSize());
+        allConnections = Collections.synchronizedSet(new HashSet<PooledObject>(initialSize));
+        workingConnections = Collections.synchronizedSet(new HashSet<PooledObject>(initialSize));
+        workingConnectionsToClose = Collections.synchronizedSet(new HashSet<PooledObject>(initialSize));
     }
 
     /**
-     * Get size of this queue. This method can be used to check how many
-     * free connections is left.
-     * 
+     * Get size of this queue. This method can be used to check how many free connections are left.
+     *
      * @return size of this queue.
      */
     public int size() {
-        return size;
+        return idleConnections.size();
     }
 
     /**
      * Get total number of physical connections opened to the database.
-     * 
-     * @return total number of physical connections opened to the 
-     * database.
+     *
+     * @return total number of physical connections opened to the database.
      */
     public int totalSize() {
-        return totalConnections;
+        return allConnections.size();
     }
 
     /**
      * Get number of working connections.
-     * 
+     *
      * @return number for working connections.
      */
     public int workingSize() {
@@ -145,19 +121,22 @@ class PooledConnectionQueue {
 
     /**
      * Start this queue.
-     * 
-     * @throws SQLException if initial number of connections 
-     * could not be created.
+     *
+     * @throws SQLException
+     *         if initial number of connections
+     *         could not be created.
      */
     public void start() throws SQLException {
-        for (int i = 0; i < getConfiguration().getMinPoolSize(); i++) {
+        if (!queueState.compareAndSet(QueueState.NEW, QueueState.STARTED)) return;
+
+        for (int i = 0; i < configuration.getMinPoolSize(); i++) {
             try {
-                addConnection(stack);
+                addConnection();
             } catch (InterruptedException iex) {
                 throw new SQLException("Could not start connection queue.");
             }
         }
-        
+
         idleRemover = new IdleRemover();
         Thread t = new Thread(idleRemover, "Pool " + queueName + " idleRemover");
         t.setDaemon(true);
@@ -167,384 +146,387 @@ class PooledConnectionQueue {
     /**
      * Restart this queue.
      */
-    public synchronized void restart()
-    {
-    	// flag working connections for deallocation when returned to the queue.
-   		workingConnectionsToClose.addAll(workingConnections);
-    	
-        // close all free connections
-        while (size() > 0)
-            try {
-            	PooledObject connection = take();
-                if (connection.isValid()) {
-                	connection.deallocate();
-                	
-                	physicalConnectionDeallocated(connection);
+    public void restart() throws SQLException {
+        if (!queueState.compareAndSet(QueueState.STARTED, QueueState.RESTARTING)) {
+            // NOTE: Minor chance of a race condition here so it could potentially show that the state is STARTED
+            final QueueState currentState = queueState.get();
+            throw new SQLException("Queue " + queueName + " cannot be restarted, current state is: " + currentState);
+        }
+        try {
+            // Move current idle connections to list for removal
+            final List<PooledObject> connectionsToClose = new ArrayList<PooledObject>(size());
+            idleConnections.drainTo(connectionsToClose);
+            // flag working connections for deallocation when returned to the queue.
+            workingConnectionsToClose.addAll(workingConnections);
+
+            // close all free connections
+            for (PooledObject connection : connectionsToClose) {
+                try {
+                    if (connection.isValid()) {
+                        connection.deallocate();
+                    }
+                } catch (Exception ex) {
+                    if (logger != null) {
+                        logger.warn("Could not close connection.", ex);
+                    }
+                } finally {
+                    physicalConnectionDeallocated(connection);
                 }
-            } catch (SQLException ex) {
-                if (getLogger() != null)
-                getLogger().warn("Could not close connection.", ex);
             }
-        //Create enough connections to restore the queue to MinPoolSize.
-        while (totalSize() < getConfiguration().getMinPoolSize())
-        	try {
-        		addConnection(stack);
-        	}
-            catch (Exception e)
-            {
-            	if (getLogger() != null)
-                    getLogger().warn("Could not add connection.", e);
+            //Create enough connections to restore the queue to MinPoolSize.
+            while (totalSize() < configuration.getMinPoolSize()) {
+                if (queueState.get() != QueueState.RESTARTING) {
+                    break;
+                }
+                try {
+                    addConnection();
+                } catch (Exception e) {
+                    if (logger != null) {
+                        logger.warn("Could not add connection.", e);
+                    }
+                }
             }
+        } finally {
+            if (!queueState.compareAndSet(QueueState.RESTARTING, QueueState.STARTED)
+                    && queueState.get() == QueueState.RETRY_SHUTDOWN) {
+                // Shutdown of the queue was signalled while we were restarting, shutdown now
+                shutdown();
+            }
+        }
     }
-    
+
     /**
      * Shutdown this queue.
      */
-    public void shutdown() {
-        try {
-            // close all working connections.
-            Iterator iter = workingConnections.iterator();
-            while (iter.hasNext()) {
-                PooledObject item = (PooledObject)iter.next();
-    
-                if (item.isValid())
-                    item.deallocate();
+    public void shutdown() throws SQLException {
+        final QueueState previousState = queueState.getAndSet(QueueState.SHUTDOWN);
+        switch (previousState) {
+        case SHUTDOWN:
+            return;
+        case RESTARTING:
+            if (queueState.compareAndSet(QueueState.SHUTDOWN, QueueState.RETRY_SHUTDOWN)) {
+                return;
+            } else if (!queueState.compareAndSet(QueueState.STARTED, QueueState.SHUTDOWN)) {
+                // Restart has apparently completed, but is not in state STARTED
+                throw new SQLException("Current queue state prevented shutdown. Please retry.");
             }
-    
-            // close all free connections
-            while (size() > 0)
-                try {
-                    PooledObject item = (PooledObject)take();
-                    if (item.isValid())
-                        item.deallocate();
-                    
-                } catch (SQLException ex) {
-                    if (getLogger() != null)
-                    getLogger().warn("Could not close connection.", ex);
-                }
-    
-            totalConnections = 0;
+        }
+
+        if (idleRemover != null)
+            idleRemover.stop();
+        idleRemover = null;
+
+        /* Synchronizing on addConnectionMutex to ensure that no add or create operation in progress interferes.
+         */
+        synchronized (addConnectionMutex) {
+            idleConnections.clear();
             workingConnections.clear();
             workingConnectionsToClose.clear();
-        } finally {
-            if (idleRemover != null)
-                idleRemover.stop();
-            
-            idleRemover = null;
+
+            // close all current connections.
+            for (PooledObject item : allConnections) {
+                try {
+                    if (item.isValid())
+                        item.deallocate();
+                } catch (Exception ex) {
+                    if (logger != null) {
+                        logger.warn("Could not deallocate connection.", ex);
+                    }
+                }
+            }
+
+            allConnections.clear();
         }
     }
-    
+
     /**
      * Check if {@link #take()} method can keep blocking.
-     * 
-     * @param startTime time when the method was entered.
-     * 
+     *
+     * @param startTime
+     *         time when the method was entered.
      * @return <code>true</code> if method can keep blocking.
      */
     private boolean keepBlocking(long startTime) {
         return System.currentTimeMillis() - startTime < blockingTimeout;
     }
-    
+
     /**
      * Destroy connection and restore the balance of connections in the pool.
-     * 
-     * @param connection connection to destroy
+     *
+     * @param connection
+     *         connection to destroy
      */
     public void destroyConnection(PooledObject connection) {
-        connection.deallocate();
-        
-        totalConnections--;
+        try {
+            connection.deallocate();
+        } finally {
+            physicalConnectionDeallocated(connection);
+        }
     }
-    
+
     /**
      * Notify queue that a physical connection was deallocated.
-     * 
-     * @param connection connection that was deallocated.
+     *
+     * @param connection
+     *         connection that was deallocated.
      */
-    public synchronized void physicalConnectionDeallocated(PooledObject connection) {
-        totalConnections--;
-        connectionIdleTime.remove(connection);
+    public void physicalConnectionDeallocated(PooledObject connection) {
+        allConnections.remove(connection);
         workingConnections.remove(connection);
     }
 
     /**
      * Put connection to this queue.
-     * 
-     * @param connection free pooled connection.
-     * 
-     * @throws SQLException if connection cannot be added to this
-     * queue.
+     *
+     * @param connection
+     *         free pooled connection.
+     * @throws SQLException
+     *         if connection cannot be added to this
+     *         queue.
      */
     public void put(PooledObject connection) throws SQLException {
+        final QueueState currentState = queueState.get();
+        if (currentState == QueueState.NEW) {
+            throw new SQLException("Queue has not been started yet");
+        } else if (!currentState.isAllowPut()) {
+            destroyConnection(connection);
+            if (LOG_DEBUG_INFO && logger != null) {
+                logger.debug("Thread " + Thread.currentThread().getName() + " released connection while pool was in state ." + currentState);
+            }
+            return;
+        }
         try {
-            if (blocked && getLogger() != null)
-                getLogger().warn("Pool " + queueName + " will be unblocked");
-
-            if (getConfiguration().isPooling()) {
-            	
-            	if (workingConnectionsToClose.remove(connection)) {
-            		connection.deallocate();
-            		
-            		physicalConnectionDeallocated(connection);
-            		
-            		addConnection(stack);
-            	}
-            	else {
-            		stack.push(connection);
-                    connection.setInPool(true);
-                
-            		// save timestamp when connection was returned to queue
-            		connectionIdleTime.put(
-            				connection, new Long(System.currentTimeMillis()));
-    
-            		size++;
-            	}
+            if (configuration.isPooling()) {
+                connection.setInPool(true);
+                if (workingConnectionsToClose.remove(connection)) {
+                    destroyConnection(connection);
+                    addConnection();
+                } else if (!idleConnections.offer(connection)) {
+                    // Maximum capacity reached
+                    destroyConnection(connection);
+                } else {
+                    workingConnections.remove(connection);
+                }
             } else {
-                connectionIdleTime.remove(connection);
+                // deallocate connection if pooling is not enabled.
+                destroyConnection(connection);
             }
 
-            blocked = false;
-
-            workingConnections.remove(connection);
-
-            // deallocate connection if pooling is not enabled.
-            if (!getConfiguration().isPooling())
-                destroyConnection(connection);
-
-            if (LOG_DEBUG_INFO && getLogger() != null)
-                getLogger().debug("Thread "
-                        + Thread.currentThread().getName()
-                        + " released connection.");
-
+            if (LOG_DEBUG_INFO && logger != null) {
+                logger.debug("Thread " + Thread.currentThread().getName() + " released connection.");
+            }
         } catch (InterruptedException iex) {
-            if (getLogger() != null)
-                getLogger().warn("Thread "
-                    + Thread.currentThread().getName()
-                    + " was interrupted.",
-                    iex);
-
-            connection.deallocate();
+            if (logger != null) {
+                logger.warn("Thread " + Thread.currentThread().getName() + " was interrupted.", iex);
+            }
+            destroyConnection(connection);
         }
     }
 
     /**
      * Take pooled connection from this queue. This method will block
      * until free and valid connection is available.
-     * 
+     *
      * @return free instance of {@link FBPooledConnection}.
-     * 
-     * @throws SQLException if no free connection was available and 
-     * waiting thread was interruped while waiting for a new free
-     * connection.
+     * @throws SQLException
+     *         if no free connection was available and
+     *         waiting thread was interruped while waiting for a new free
+     *         connection.
      */
     public PooledObject take() throws SQLException {
-        
-        long startTime = System.currentTimeMillis();
+        final QueueState currentState = queueState.get();
+        if (!currentState.isAllowTake()) {
+            throw new SQLException("Current queue state " + currentState + " does not allow take() on connection queue");
+        }
+        final long startTime = System.currentTimeMillis();
+        if (LOG_DEBUG_INFO && logger != null) {
+            logger.debug("Thread " + Thread.currentThread().getName() + " wants to take connection.");
+        }
 
-        if (LOG_DEBUG_INFO && getLogger() != null)
-            getLogger().debug(
-                "Thread "
-                    + Thread.currentThread().getName()
-                    + " wants to take connection.");
+        final SQLExceptionChainBuilder pendingExceptions = new SQLExceptionChainBuilder();
 
         PooledObject result = null;
-        
-        // TODO Pending exceptions are only thrown on timeout, is that correct?
-        SQLExceptionChainBuilder pendingExceptions = new SQLExceptionChainBuilder();
-
         try {
-
-            synchronized(takeMutex) {
-                if (stack.isEmpty()) {
-    
-                    while (result == null) {
-                        
-                        if (!keepBlocking(startTime)) {
-                            String message = "Could not obtain connection during " + 
-                                "blocking timeout (" + blockingTimeout + " ms)";
-                            
-                            FBSQLException ex = new FBSQLException(message, FBSQLException.SQL_STATE_CONNECTION_FAILURE);
-                            if (pendingExceptions.hasException()) {
-                                ex.setNextException(pendingExceptions.getException());
-                            }
-                                
-                            throw ex;
-                        };
-    
-                        boolean connectionAdded = false;
-    
-                        try {
-                            connectionAdded = addConnection(stack);
-                        } catch (SQLException sqlex) {
-                            if (getLogger() != null)
-                                getLogger().warn(
-                                    "Could not create connection."
-                                    + sqlex.getMessage());
-    
-                            // could not add connection... bad luck
-                            // let's wait more
-                            
-                            if (!pendingExceptions.hasException()) {
-                                pendingExceptions.append(sqlex);
-                            } else if (pendingExceptions.getException().getErrorCode() != sqlex.getErrorCode()) {
-                                pendingExceptions.append(sqlex);
-                            }
+            do {
+                if (idleConnections.isEmpty()) {
+                    // Queue empty, Attempt to create a new connection directly
+                    try {
+                        result = createPooledConnection();
+                    } catch (SQLException sqlex) {
+                        if (logger != null) {
+                            logger.warn("Could not create connection." + sqlex.getMessage());
                         }
-    
-                        if (!connectionAdded) {
-                            String message =
-                                "Pool "
-                                    + queueName
-                                    + " is empty and will block here."
-                                    + " Thread "
-                                    + Thread.currentThread().getName();
-    
-                            if (SHOW_STACK_ON_BLOCK) {
-                                if (getLogger() != null)
-                                    getLogger().warn(message, new Exception());
-                            } else {
-                                if (getLogger() != null)
-                                    getLogger().warn(message);
-                            }
-    
-                            blocked = true;
+                        if (!pendingExceptions.hasException()) {
+                            pendingExceptions.append(sqlex);
+                        } else if (pendingExceptions.getException().getErrorCode() != sqlex.getErrorCode()) {
+                            pendingExceptions.append(sqlex);
                         }
-                        
-                        result = (PooledObject) stack.pop(
-                            getConfiguration().getRetryInterval());
-                            
-                        if (result == null && getLogger() != null)
-                            getLogger().warn("No connection in pool. Thread " +
-                                Thread.currentThread().getName());
-                        else
-                        if (result != null && !connectionAdded && getLogger() != null)
-                            getLogger().info("Obtained connection. Thread " + 
-                                Thread.currentThread().getName());
                     }
-    
-                } else {
-                    result = (PooledObject)stack.pop();
+                } // intentionally no else here!
+                if (result == null) {
+                    // Try to obtain connection from pool
+                    result = idleConnections.poll(configuration.getRetryInterval(), TimeUnit.MILLISECONDS);
                 }
-            }
+                if (result != null) {
+                    // Retrieved from pool
+                    if (logger != null) {
+                        logger.info("Obtained connection. Thread " + Thread.currentThread().getName());
+                    }
+                    result.setInPool(false);
+                    workingConnections.add(result);
+                    break;
+                }
 
+                if (!keepBlocking(startTime)) {
+                    final String message = "Could not obtain connection during blocking timeout (" + blockingTimeout + " ms)";
+                    FBSQLException ex = new FBSQLException(message, FBSQLException.SQL_STATE_CONNECTION_FAILURE);
+                    if (pendingExceptions.hasException()) {
+                        ex.setNextException(pendingExceptions.getException());
+                    }
+                    throw ex;
+                }
+
+                String message = "Pool " + queueName + " is empty and will block here. Thread " + Thread.currentThread().getName();
+                if (logger != null) {
+                    if (SHOW_STACK_ON_BLOCK) {
+                        logger.warn(message, new Exception());
+                    } else {
+                        logger.warn(message);
+                    }
+                }
+            } while (true);
         } catch (InterruptedException iex) {
-            throw new SQLException(
-                "No free connection was available and "
-                    + "waiting thread was interrupted.");
+            throw new SQLException("No free connection was available and waiting thread was interrupted.");
         }
 
-        size--;
-
-        workingConnections.add(result);
-
-        if (LOG_DEBUG_INFO && getLogger() != null) {
-            if (SHOW_STACK_ON_ALLOCATION)
-                getLogger().debug(
-                    "Thread "+ Thread.currentThread().getName() +
-                     " got connection.", new Exception());
-            else
-                getLogger().debug(
-                    "Thread "+ Thread.currentThread().getName() +
-                     " got connection.");
-
+        if (LOG_DEBUG_INFO && logger != null) {
+            final String message = "Thread " + Thread.currentThread().getName() + " got connection.";
+            if (SHOW_STACK_ON_ALLOCATION) {
+                logger.debug(message, new Exception());
+            } else {
+                logger.debug(message);
+            }
         }
-
-        result.setInPool(false);
-        
         return result;
     }
 
     /**
-     * Open new connection to database.
-     * 
+     * Opens new connection to database and adds it to the pool.
+     *
      * @return <code>true</code> if new physical connection was created,
      * otherwise false.
-     * 
-     * @throws SQLException if new connection cannot be opened.
-     * @throws InterruptedException if thread was interrupted.
+     * @throws SQLException
+     *         if new connection cannot be opened.
+     * @throws InterruptedException
+     *         if thread was interrupted.
      */
-    private boolean addConnection(BlockingStack queue)
-        throws SQLException, InterruptedException {
+    private boolean addConnection() throws SQLException, InterruptedException {
+        if (LOG_DEBUG_INFO && logger != null) {
+            logger.debug("Trying to create connection, total connections " + allConnections.size()
+                    + ", max allowed " + configuration.getMaxPoolSize());
+        }
+        if (idleConnections.remainingCapacity() == 0) {
+            if (LOG_DEBUG_INFO && logger != null) {
+                logger.debug("Unable to add more connections, maximum capacity reached.");
+            }
+            return false;
+        }
 
-        synchronized (this) {
+        synchronized (addConnectionMutex) {
+            if (!queueState.get().isAllowAdd()) return false;
 
-            if (LOG_DEBUG_INFO && getLogger() != null)
-                getLogger().debug(
-                    "Trying to create connection, total connections "
-                        + totalConnections
-                        + ", max allowed "
-                        + getConfiguration().getMaxPoolSize());
-            
-            boolean maximumCapacityReached = 
-                getConfiguration().getMaxPoolSize() <= totalConnections  && 
-                getConfiguration().getMaxPoolSize() != 0 &&
-                getConfiguration().isPooling();
-
-            if (maximumCapacityReached) {
-
-                if (LOG_DEBUG_INFO && getLogger() != null)
-                    getLogger().debug("Was not able to add more connections.");
-
+            PooledObject pooledConnection = createPooledConnection();
+            if (pooledConnection == null) {
+                if (LOG_DEBUG_INFO && logger != null) {
+                    logger.debug("Unable to add more connections, maximum capacity reached.");
+                }
                 return false;
             }
 
-            Object pooledConnection = connectionManager.allocateConnection(key);
+            if (LOG_DEBUG_INFO && logger != null) {
+                logger.debug("Thread " + Thread.currentThread().getName() + " created connection.");
+            }
 
-            if (LOG_DEBUG_INFO && getLogger() != null)
-                getLogger().debug(
-                    "Thread "
-                        + Thread.currentThread().getName()
-                        + " created connection.");
+            if (idleConnections.offer(pooledConnection)) {
+                return true;
+            }
 
-            queue.push(pooledConnection);
-            size++;
+            /* We cannot add the connection to the pool, we will destroy it again
+             * NOTE: In the current implementation idleConnections is unbounded so we should never get here
+             */
+            destroyConnection(pooledConnection);
+            if (LOG_DEBUG_INFO && logger != null) {
+                logger.debug("Thread " + Thread.currentThread().getName() + " forced to abandon created connection, capacity reached.");
+            }
+            return false;
+        }
+    }
 
-            totalConnections++;
+    /**
+     * Creates a new pooledConnection without adding it to the idleConnections queue.
+     *
+     * @return A new PooledConnection or null when the maximum pool capacity was already reached or allocating new connections is currently not allowed.
+     * @throws SQLException
+     *         For errors allocating the exception.
+     */
+    private PooledObject createPooledConnection() throws SQLException {
+        synchronized (addConnectionMutex) {
+            if (!queueState.get().isAllowAdd()) return null;
 
-            return true;
+            boolean maximumCapacityReached =
+                    configuration.isPooling() &&
+                    configuration.getMaxPoolSize() != 0 &&
+                    configuration.getMaxPoolSize() <= totalSize();
+
+            if (maximumCapacityReached) {
+                if (LOG_DEBUG_INFO && logger != null) {
+                    logger.debug("Unable to add more connections, maximum capacity reached.");
+                }
+                return null;
+            }
+
+            PooledObject pooledConnection = connectionManager.allocateConnection(key, this);
+            allConnections.add(pooledConnection);
+
+            if (LOG_DEBUG_INFO && logger != null) {
+                logger.debug("Thread " + Thread.currentThread().getName() + " created connection.");
+            }
+
+            return pooledConnection;
         }
     }
 
     /**
      * Release first connection in the queue if it was idle longer than idle
      * timeout interval.
-     * 
+     *
      * @return <code>true</code> if method removed idle connection, otherwise
      * <code>false</code>
-     * 
-     * @throws SQLException if exception happened when releasing the connection.
+     * @throws SQLException
+     *         if exception happened when releasing the connection.
      */
     private boolean releaseNextIdleConnection() throws SQLException {
-                  
-        synchronized(takeMutex) {
-            
-            if (totalSize() <= getConfiguration().getMinPoolSize())
-                return false;
-            
-            PooledObject candidate = (PooledObject)stack.peek();
-            
-            if (candidate == null)
-                return false;
-            
-            Long lastUsageTime = (Long)connectionIdleTime.get(candidate);
-            if (lastUsageTime == null)
-                return false;
-            
-            long idleTime = System.currentTimeMillis() - lastUsageTime.longValue();
-            
-            if (idleTime < getConfiguration().getMaxIdleTime()) 
-                return false;
-            
-            try {    
-                take().deallocate();
-            } finally {
-                workingConnections.remove(candidate);
-                connectionIdleTime.remove(candidate);
-                totalConnections--;
-            }
-            
-            return true;
+        if (totalSize() <= configuration.getMinPoolSize())
+            return false;
+
+        // We temporarily remove the connection from the pool to make the necessary checks
+        final PooledObject candidate = idleConnections.poll();
+        if (candidate == null) {
+            return false;
         }
+
+        final long lastUsageTime = candidate.getInstantInPool();
+        if (lastUsageTime == PooledObject.INSTANT_IN_USE && idleConnections.offer(candidate)) {
+            return false;
+        } else {
+            final long idleTime = System.currentTimeMillis() - lastUsageTime;
+            if (idleTime < configuration.getMaxIdleTime() && idleConnections.offer(candidate)) {
+                return false;
+            }
+        }
+
+        destroyConnection(candidate);
+        return true;
     }
 
     /**
@@ -552,43 +534,70 @@ class PooledConnectionQueue {
      * idle connections.
      */
     private class IdleRemover implements Runnable {
-        
-        private boolean running;
-        
+
+        private volatile boolean running;
+
         public IdleRemover() {
             running = true;
         }
-        
+
         public void stop() {
             running = false;
         }
-        
+
         public void run() {
             while (running) {
-                
                 try {
-                    while(releaseNextIdleConnection()) {
-                        // do nothing, we already released connection
-                        // next one, please :)
+                    int releasedInIteration = 0;
+                    while (releaseNextIdleConnection()) {
+                        releasedInIteration++;
                     }
-                } catch(SQLException ex) {
+                    if (logger != null && releasedInIteration > 0) {
+                        logger.trace("IdleRemover for " + queueName + " released " + releasedInIteration + " connections");
+                    }
+                } catch (SQLException ex) {
                     // do nothing, we hardly can handle this situation
                 }
-                
+
                 try {
-                    int idleTimeout = getConfiguration().getMaxIdleTime();
-                    int maxConnections =  getConfiguration().getMaxPoolSize();
-                    
-                    if (maxConnections < 1)
-                        maxConnections = 1;
-                    
-                    Thread.sleep(idleTimeout / maxConnections);
-                } catch(InterruptedException ex) {
+                    final int idleTimeout = configuration.getMaxIdleTime();
+                    Thread.sleep(Math.max(500, idleTimeout / 4));
+                } catch (InterruptedException ex) {
                     // do nothing
                 }
             }
         }
-        
+    }
+
+    private enum QueueState {
+        NEW(false, false, false),
+        STARTED(true, true, true),
+        RESTARTING(true, true, true),
+        RETRY_SHUTDOWN(false, false, false),
+        SHUTDOWN(false, false, false);
+
+        private final boolean allowPut;
+        private final boolean allowTake;
+        private final boolean allowAdd;
+
+        private QueueState(boolean allowPut, boolean allowTake, boolean allowAdd) {
+
+            this.allowPut = allowPut;
+            this.allowTake = allowTake;
+            this.allowAdd = allowAdd;
+        }
+
+        public boolean isAllowPut() {
+            return allowPut;
+        }
+
+        public boolean isAllowTake() {
+            return allowTake;
+        }
+
+        public boolean isAllowAdd() {
+            return allowAdd;
+        }
     }
 }
 
