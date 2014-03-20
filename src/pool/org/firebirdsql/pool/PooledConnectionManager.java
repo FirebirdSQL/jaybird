@@ -33,11 +33,12 @@ public interface PooledConnectionManager {
      * Allocate pooled connection using specified key.
      * 
      * @param key Key of the pool
-     * 
+     * @param queue The queue that will own the connection
+     *
      * @return instance of {@link javax.sql.PooledConnection}.
      * 
      * @throws SQLException if something went wrong.
      */
-    PooledObject allocateConnection(Object key)
+    PooledObject allocateConnection(Object key, PooledConnectionQueue queue)
         throws SQLException;
 }

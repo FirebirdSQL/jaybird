@@ -8,15 +8,15 @@ import javax.sql.StatementEventListener;
 public class PingablePooledConnection extends AbstractPingablePooledConnection {
 
 	protected PingablePooledConnection(Connection connection,
-			boolean statementPooling, int maxStatements, boolean keepStatements)
+			boolean statementPooling, int maxStatements, boolean keepStatements, PooledConnectionQueue owningQueue)
 			throws SQLException {
-		super(connection, statementPooling, maxStatements, keepStatements);
+		super(connection, statementPooling, maxStatements, keepStatements, owningQueue);
 	}
 
 	public PingablePooledConnection(Connection connection,
 			String pingStatement, int pingInterval, boolean statementPooling,
-			int maxStatements, boolean keepStatements) throws SQLException {
-		super(connection, pingStatement, pingInterval, statementPooling, maxStatements, keepStatements);
+			int maxStatements, boolean keepStatements, PooledConnectionQueue owningQueue) throws SQLException {
+		super(connection, pingStatement, pingInterval, statementPooling, maxStatements, keepStatements, owningQueue);
 	}
 
 	public void addStatementEventListener(StatementEventListener arg0) {

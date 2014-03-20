@@ -25,6 +25,8 @@ package org.firebirdsql.pool;
  */
 public interface PooledObject {
 
+    final long INSTANT_IN_USE = -1L;
+
     /**
      * Deallocate this object. This method deallocated the object
      * and releases all associated resources. This method is invoked when
@@ -55,4 +57,11 @@ public interface PooledObject {
      * <code>false</code>.
      */
     void setInPool(boolean inPool);
+
+    /**
+     * @return The instant in time when this object was last used, or {@link #INSTANT_IN_USE} when object is currently in use.
+     */
+    long getInstantInPool();
+
+    PooledConnectionQueue getOwningQueue();
 }

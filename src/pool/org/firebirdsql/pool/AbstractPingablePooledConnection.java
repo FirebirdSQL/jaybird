@@ -23,6 +23,7 @@ package org.firebirdsql.pool;
 
 import static org.firebirdsql.ds.ReflectionHelper.getAllInterfaces;
 
+import java.lang.ref.WeakReference;
 import java.lang.reflect.Proxy;
 import java.sql.*;
 
@@ -41,22 +42,21 @@ import java.util.*;
  * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
  */
 public abstract class AbstractPingablePooledConnection implements PooledConnection,
-    PooledObject, XConnectionManager,
-    XPingableConnection, XStatementManager {
+    PooledObject, XConnectionManager, XPingableConnection, XStatementManager {
 
     private static final boolean LOG_PREPARE_STATEMENT = PoolDebugConfiguration.DEBUG_STMT_POOL;
     private static final boolean LOG_POOL_CLEANING = PoolDebugConfiguration.DEBUG_STMT_POOL;
     
     private static final boolean LOG_META_DATA = PoolDebugConfiguration.LOG_DEBUG_INFO;
 
-    private static Logger log =
-        LoggerFactory.getLogger(PingablePooledConnection.class, false);
+    private static final Logger log = LoggerFactory.getLogger(PingablePooledConnection.class, false);
 
     protected Connection jdbcConnection;
-    private HashSet eventListeners = new HashSet();
+    private final HashSet eventListeners = new HashSet();
 
     private boolean invalid;
     private boolean inPool;
+    private long instantInPool = INSTANT_IN_USE;
 
     private PooledConnectionHandler currentConnection;
 
@@ -73,7 +73,9 @@ public abstract class AbstractPingablePooledConnection implements PooledConnecti
     
     private int transactionIsolation = -1;
 
-    private HashMap statements = new HashMap();
+    private final HashMap statements = new HashMap();
+
+    private final WeakReference<PooledConnectionQueue> owningQueue;
 
     protected Logger getLogChannel() {
         return log;
@@ -82,7 +84,7 @@ public abstract class AbstractPingablePooledConnection implements PooledConnecti
     protected AbstractPingablePooledConnection(Connection connection, 
                                        boolean statementPooling, 
                                        /*int transactionIsolation,*/
-                                       int maxStatements, boolean keepStatements) 
+                                       int maxStatements, boolean keepStatements, PooledConnectionQueue owningQueue)
         throws SQLException 
     {
         this.jdbcConnection = connection;
@@ -90,6 +92,7 @@ public abstract class AbstractPingablePooledConnection implements PooledConnecti
         //this.transactionIsolation = transactionIsolation;
         this.maxStatements = maxStatements;
         this.keepStatements = keepStatements;
+        this.owningQueue = new WeakReference<PooledConnectionQueue>(owningQueue);
 
         this.supportsStatementsAccrossCommit =
             connection.getMetaData().supportsOpenStatementsAcrossCommit();
@@ -113,10 +116,10 @@ public abstract class AbstractPingablePooledConnection implements PooledConnecti
 
     protected AbstractPingablePooledConnection(Connection connection,
         String pingStatement, int pingInterval, boolean statementPooling, 
-        int maxStatements, boolean keepStatements) 
+        int maxStatements, boolean keepStatements, PooledConnectionQueue owningQueue)
         throws SQLException 
     {
-        this(connection, statementPooling, /*transactionIsolation,*/ maxStatements, keepStatements);
+        this(connection, statementPooling, /*transactionIsolation,*/ maxStatements, keepStatements, owningQueue);
         this.pingStatement = pingStatement;
         this.pingInterval = pingInterval;
     }
@@ -190,7 +193,6 @@ public abstract class AbstractPingablePooledConnection implements PooledConnecti
      * @return <code>true</code> if this pooled connection is still valid.
      */
     public boolean isValid() {
-
         if (invalid) {
             return false;
         }
@@ -210,7 +212,7 @@ public abstract class AbstractPingablePooledConnection implements PooledConnecti
      * 
      * @return <code>true</code> if the object is currently in pool. 
      */
-    public boolean isInPool() {
+    public synchronized boolean isInPool() {
         return inPool;
     }
     
@@ -221,15 +223,19 @@ public abstract class AbstractPingablePooledConnection implements PooledConnecti
      * @param inPool <code>true</code> if object is in pool, otherwise 
      * <code>false</code>.
      */
-    public void setInPool(boolean inPool) {
+    public synchronized void setInPool(boolean inPool) {
         this.inPool = inPool;
+        instantInPool = inPool ? System.currentTimeMillis() : PooledObject.INSTANT_IN_USE;
     }
 
-    private void checkInPool() throws SQLException {
+    public synchronized long getInstantInPool() {
+        return instantInPool;
+    }
+
+    private synchronized void checkInPool() throws SQLException {
         if (inPool)
             throw new FBSQLException(
-                "Physical connection is currently in pool, " +
-                "you cannot allocate logical connections now.");
+                "Physical connection is currently in pool, you cannot allocate logical connections now.");
     }
     
     /**
@@ -751,6 +757,10 @@ public abstract class AbstractPingablePooledConnection implements PooledConnecti
         if (!supportsStatementsAccrossRollback) {
             cleanCache();
         }
+    }
+
+    public PooledConnectionQueue getOwningQueue() {
+        return owningQueue.get();
     }
 
 }

@@ -19,6 +19,7 @@
 package org.firebirdsql.pool;
 
 import java.io.PrintWriter;
+import java.lang.ref.WeakReference;
 import java.sql.SQLException;
 import java.util.*;
 
@@ -155,24 +156,18 @@ import org.firebirdsql.logging.LoggerFactory;
  * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
  */
 abstract public class AbstractFBConnectionPoolDataSource extends BasicAbstractConnectionPool
-    implements PooledConnectionManager, ConnectionPoolDataSource, 
-    XADataSource, PooledConnectionEventListener,
-    FirebirdPool
-{
+    implements ConnectionPoolDataSource, XADataSource, PooledConnectionEventListener, FirebirdPool {
     
     public static final AbstractConnectionPool.UserPasswordPair 
         EMPTY_USER_PASSWORD = new AbstractConnectionPool.UserPasswordPair();
     
-    private static final String PING_STATEMENT = ""
-        + "SELECT cast(1 AS INTEGER) FROM rdb$database" 
-        ;
+    private static final String PING_STATEMENT = "SELECT cast(1 AS INTEGER) FROM rdb$database";
     
-    private static final Logger LOG =
-        LoggerFactory.getLogger(AbstractFBConnectionPoolDataSource.class, false);
+    private static final Logger LOG = LoggerFactory.getLogger(AbstractFBConnectionPoolDataSource.class, false);
         
 	private transient PrintWriter logWriter;
     
-    private transient FBManagedConnectionFactory mcf;
+    private transient volatile FBManagedConnectionFactory mcf;
     
     private FBConnectionProperties connectionProperties = new FBConnectionProperties();
 
@@ -216,16 +211,20 @@ abstract public class AbstractFBConnectionPoolDataSource extends BasicAbstractCo
                     "changing connection properties in bulk is not allowed.");
     }
     
-    private synchronized FBManagedConnectionFactory getManagedConnectionFactory() {
-        if (mcf != null)
+    private FBManagedConnectionFactory getManagedConnectionFactory() {
+        if (mcf != null) {
             return mcf;
-        
-        GDSType gdsType = GDSType.getType(getType());
-        
-        if (gdsType == null)
-            gdsType = GDSFactory.getDefaultGDSType();
-        
-        mcf = new FBManagedConnectionFactory(gdsType, connectionProperties);
+        }
+
+        synchronized (this) {
+            if (mcf != null) {
+                return mcf;
+            }
+            GDSType gdsType = GDSType.getType(getType());
+            if (gdsType == null)
+                gdsType = GDSFactory.getDefaultGDSType();
+            mcf = new FBManagedConnectionFactory(gdsType, connectionProperties);
+        }
         
         return mcf;
     }
@@ -235,79 +234,10 @@ abstract public class AbstractFBConnectionPoolDataSource extends BasicAbstractCo
     }
     
     protected PooledConnectionManager getConnectionManager() {
-        return this;
+        return new PooledConnectionManagerImpl(getManagedConnectionFactory());
     }
 
     /**
-     * Allocate new physical connection for the specified user name and 
-     * password.
-     * 
-     * @param key key identifying pooled object.
-     *  
-     * @return instance of {@link PooledObject}.
-     * 
-     * @throws SQLException if connection cannot be allocated.
-     */
-    public PooledObject allocateConnection(Object key)
-        throws SQLException
-    {
-        
-        if (!(key instanceof AbstractConnectionPool.UserPasswordPair))
-            throw new SQLException("Incorrect key.");
-            
-        AbstractConnectionPool.UserPasswordPair pair = 
-                (AbstractConnectionPool.UserPasswordPair)key;
-        
-        String userName = pair.getUserName(); 
-        String password = pair.getPassword();
-
-        try {
-            FBConnectionRequestInfo defaultCri = 
-                getManagedConnectionFactory().getDefaultConnectionRequestInfo();
-            
-            if (userName != null)
-                defaultCri.setUserName(userName);
-            
-            if (password != null)
-                defaultCri.setPassword(password);
-
-            FBManagedConnection managedConnection = (FBManagedConnection)
-                getManagedConnectionFactory().createManagedConnection(null, defaultCri);
-            managedConnection.setConnectionSharing(false);
-            managedConnection.setManagedEnvironment(false);
-
-            PingablePooledConnection pooledConnection = null;
-
-            if (isPingable())
-                pooledConnection =
-                    new FBPooledConnection(
-                        managedConnection,
-                        defaultCri,
-                        getPingStatement(),
-                        getPingInterval(),
-                        isStatementPooling(),
-                        /*getTransactionIsolationLevel(),*/
-                        getMaxStatements(),
-                        isKeepStatements());
-            else
-                pooledConnection = 
-                    new FBPooledConnection(
-                        managedConnection, 
-                        defaultCri, 
-                        isStatementPooling(),
-                        /*getTransactionIsolationLevel(),*/
-                        getMaxStatements(),
-                        isKeepStatements());
-
-            return pooledConnection;
-
-        } catch(ResourceException ex) {
-            throw new FBSQLException(ex);
-        }
-    }
-    
-    
-    /** 
      * Get name of the connection queue.
      * 
      * @see AbstractConnectionPool#getPoolName()
@@ -346,11 +276,8 @@ abstract public class AbstractFBConnectionPoolDataSource extends BasicAbstractCo
     /**
      * Get pooled connection from the pooled queue.
 	 */
-	protected synchronized PooledObject getPooledConnection(
-        PooledConnectionQueue queue) throws SQLException
-    {
-		FBPooledConnection connection = 
-            (FBPooledConnection)super.getPooledConnection(queue);
+	protected PooledObject getPooledConnection(PooledConnectionQueue queue) throws SQLException {
+		FBPooledConnection connection = (FBPooledConnection) super.getPooledConnection(queue);
 
         connection.addConnectionEventListener(this);
         connection.setManagedEnvironment(false);
@@ -366,11 +293,8 @@ abstract public class AbstractFBConnectionPoolDataSource extends BasicAbstractCo
 	 * 
 	 * @throws SQLException if pooled connection cannot be obtained.
 	 */
-	public synchronized PooledConnection getPooledConnection() 
-        throws SQLException 
-    {
-	    return (PooledConnection)getPooledConnection(
-            getQueue(EMPTY_USER_PASSWORD));
+	public PooledConnection getPooledConnection() throws SQLException {
+	    return (PooledConnection)getPooledConnection(getQueue(EMPTY_USER_PASSWORD));
 	}
 
 	/**
@@ -384,9 +308,7 @@ abstract public class AbstractFBConnectionPoolDataSource extends BasicAbstractCo
 	 * 
 	 * @throws SQLException always, this method is not yet implemented.
 	 */
-	public synchronized PooledConnection getPooledConnection(String user, String password) 
-        throws SQLException 
-    {
+	public PooledConnection getPooledConnection(String user, String password) throws SQLException {
 	    return (PooledConnection)getPooledConnection(
             getQueue(new AbstractConnectionPool.UserPasswordPair(user, password)));
 	}
@@ -581,8 +503,6 @@ abstract public class AbstractFBConnectionPoolDataSource extends BasicAbstractCo
         checkNotStarted();
         setType(gdsType.toString());
     }
-
-
 
     /*
      * Properties of this data source. These methods are created only
@@ -867,5 +787,68 @@ abstract public class AbstractFBConnectionPoolDataSource extends BasicAbstractCo
         return FBPooledDataSourceFactory.createFBConnectionPoolDataSource();
     }
 
+    /**
+     * Implementation of {@link org.firebirdsql.pool.AbstractFBConnectionPoolDataSource.PooledConnectionManagerImpl}
+     */
+    private class PooledConnectionManagerImpl implements PooledConnectionManager {
+        private final WeakReference<FBManagedConnectionFactory> mcf;
 
+        private PooledConnectionManagerImpl(FBManagedConnectionFactory mcf) {
+            this.mcf = new WeakReference<FBManagedConnectionFactory>(mcf);
+        }
+
+        public PooledObject allocateConnection(Object key, PooledConnectionQueue queue)throws SQLException {
+            if (!(key instanceof AbstractConnectionPool.UserPasswordPair))
+                throw new SQLException("Incorrect key.");
+            final AbstractConnectionPool.UserPasswordPair pair = (AbstractConnectionPool.UserPasswordPair)key;
+
+            final FBManagedConnectionFactory connectionFactory = mcf.get();
+            if (connectionFactory == null) {
+                throw new SQLException("Weak reference to connection factory is null. Underlying connection pool has not been initialized or has been closed.");
+            }
+
+            final String userName = pair.getUserName();
+            final String password = pair.getPassword();
+
+            try {
+                final FBConnectionRequestInfo defaultCri = connectionFactory.getDefaultConnectionRequestInfo();
+                if (userName != null)
+                    defaultCri.setUserName(userName);
+                if (password != null)
+                    defaultCri.setPassword(password);
+
+                final FBManagedConnection managedConnection = (FBManagedConnection) connectionFactory.createManagedConnection(null, defaultCri);
+                managedConnection.setConnectionSharing(false);
+                managedConnection.setManagedEnvironment(false);
+
+                final PingablePooledConnection pooledConnection;
+
+                if (isPingable())
+                    pooledConnection =
+                            new FBPooledConnection(
+                                    managedConnection,
+                                    defaultCri,
+                                    getPingStatement(),
+                                    getPingInterval(),
+                                    isStatementPooling(),
+                                    getMaxStatements(),
+                                    isKeepStatements(),
+                                    queue);
+                else
+                    pooledConnection =
+                            new FBPooledConnection(
+                                    managedConnection,
+                                    defaultCri,
+                                    isStatementPooling(),
+                                    getMaxStatements(),
+                                    isKeepStatements(),
+                                    queue);
+
+                return pooledConnection;
+
+            } catch(ResourceException ex) {
+                throw new FBSQLException(ex);
+            }
+        }
+    }
 }
