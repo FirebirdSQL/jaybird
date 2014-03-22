@@ -32,7 +32,7 @@ import java.util.*;
 public class AbstractListenerDispatcher<TListener> implements Iterable<TListener> {
 
     private final Set<TListener> listeners = Collections.synchronizedSet(new HashSet<TListener>());
-    private boolean shutdown = false;
+    private volatile boolean shutdown = false;
 
     /**
      * Adds the supplied listener to this dispatcher.
@@ -42,12 +42,14 @@ public class AbstractListenerDispatcher<TListener> implements Iterable<TListener
      *
      * @param listener Listener object
      */
-    public final synchronized void addListener(TListener listener) {
-        if (isShutdown()) return;
+    public final void addListener(TListener listener) {
         if (listener == this) {
             throw new IllegalArgumentException("Adding this instance to itself is not allowed");
         }
-        listeners.add(listener);
+        synchronized (listeners) {
+            if (isShutdown()) return;
+            listeners.add(listener);
+        }
     }
 
     /**
@@ -72,7 +74,7 @@ public class AbstractListenerDispatcher<TListener> implements Iterable<TListener
      * After shutdown calls to {@link #addListener(TListener)} are ignored.
      * </p>
      */
-    public synchronized final void shutdown() {
+    public final void shutdown() {
         shutdown = true;
         removeAllListeners();
     }
@@ -80,14 +82,12 @@ public class AbstractListenerDispatcher<TListener> implements Iterable<TListener
     /**
      * @return <code>true</code> when this dispatcher has been shut down.
      */
-    public synchronized final boolean isShutdown() {
+    public final boolean isShutdown() {
         return shutdown;
     }
 
     @Override
     public final Iterator<TListener> iterator() {
-        synchronized (listeners) {
-            return new ArrayList<TListener>(listeners).iterator();
-        }
+        return new ArrayList<TListener>(listeners).iterator();
     }
 }
