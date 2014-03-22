@@ -142,17 +142,17 @@ public abstract class BaseTestV10Blob extends FBJUnit4TestBase {
         Connection con = FBTestProperties.getConnectionViaDriverManager();
         try {
             DdlHelper.executeCreateTable(con, CREATE_BLOB_TABLE);
-            DdlHelper.executeDDL(con, CREATE_PROC_FILL_BINARY_BLOB, new int[] {});
-            DdlHelper.executeDDL(con, CREATE_PROC_CHECK_BINARY_BLOB, new int[] {});
+            DdlHelper.executeDDL(con, CREATE_PROC_FILL_BINARY_BLOB);
+            DdlHelper.executeDDL(con, CREATE_PROC_CHECK_BINARY_BLOB);
         } finally {
             closeQuietly(con);
         }
     }
 
     /**
-     * Generates base content.
+     * Generates byte array of {@link #BASE_CONTENT_SIZE} with random content.
      *
-     * @return Base content array
+     * @return Array
      */
     protected byte[] generateBaseContent() {
         byte[] baseContent = new byte[BASE_CONTENT_SIZE];
@@ -215,6 +215,15 @@ public abstract class BaseTestV10Blob extends FBJUnit4TestBase {
         }
     }
 
+    /**
+     * Validates the content of a blob using the CHECK_BINARY_BLOB stored procedure.
+     *
+     * @param id ID of the record in blob_table
+     * @param baseContent Base content
+     * @param requiredSize Required (expected) size
+     * @return <code>true</code> when the content matches.
+     * @throws SQLException
+     */
     protected boolean validateBlob(int id, byte[] baseContent, int requiredSize) throws SQLException {
         Connection con = getConnectionViaDriverManager();
         CallableStatement cstmt = null;

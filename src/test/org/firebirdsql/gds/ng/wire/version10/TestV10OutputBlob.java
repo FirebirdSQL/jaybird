@@ -42,9 +42,6 @@ public class TestV10OutputBlob extends BaseTestV10Blob {
 
     /**
      * Tests storage of a blob (what goes in is what comes out).
-     * <p>
-     * Test depends on correct working of blob reading (currently using old gds implementation)
-     * </p>
      */
     @Test
     public void testBlobStorage() throws Exception {
