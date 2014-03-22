@@ -21,16 +21,13 @@
 package org.firebirdsql.gds.ng.wire.version10;
 
 import org.firebirdsql.gds.ISCConstants;
-import org.firebirdsql.gds.TransactionParameterBuffer;
 import org.firebirdsql.gds.impl.wire.XdrOutputStream;
-import org.firebirdsql.gds.impl.wire.Xdrable;
 import org.firebirdsql.gds.ng.AbstractFbTransaction;
 import org.firebirdsql.gds.ng.FbExceptionBuilder;
 import org.firebirdsql.gds.ng.FbTransaction;
 import org.firebirdsql.gds.ng.TransactionState;
 import org.firebirdsql.gds.ng.wire.FbWireDatabase;
 import org.firebirdsql.gds.ng.wire.FbWireTransaction;
-import org.firebirdsql.gds.ng.wire.GenericResponse;
 
 import java.io.IOException;
 import java.sql.SQLException;
@@ -46,15 +43,16 @@ import static org.firebirdsql.gds.impl.wire.WireProtocolConstants.*;
 public class V10Transaction extends AbstractFbTransaction implements FbWireTransaction {
 
     private final FbWireDatabase database;
-    private volatile int handle;
+    private final int handle;
 
     /**
      * Creates a new instance of V10Transaction for the specified database.
      *
      * @param database FbWireDatabase implementation
      */
-    public V10Transaction(FbWireDatabase database) {
+    public V10Transaction(FbWireDatabase database, int transactionHandle) {
         this.database = database;
+        handle = transactionHandle;
     }
 
     protected final XdrOutputStream getXdrOut() throws SQLException {
@@ -68,32 +66,6 @@ public class V10Transaction extends AbstractFbTransaction implements FbWireTrans
     @Override
     public int getHandle() {
         return handle;
-    }
-
-    @Override
-    public void beginTransaction(TransactionParameterBuffer tpb) throws SQLException {
-        synchronized (getSynchronizationObject()) {
-            switchState(TransactionState.STARTING);
-            GenericResponse response;
-            synchronized (getDatabase().getSynchronizationObject()) {
-                try {
-                    final XdrOutputStream xdrOut = getXdrOut();
-                    xdrOut.writeInt(op_transaction);
-                    xdrOut.writeInt(getDatabase().getHandle());
-                    xdrOut.writeTyped(ISCConstants.isc_tpb_version3, (Xdrable) tpb);
-                    xdrOut.flush();
-                } catch (IOException ioex) {
-                    throw new FbExceptionBuilder().exception(ISCConstants.isc_net_write_err).cause(ioex).toSQLException();
-                }
-                try {
-                    response = (GenericResponse) getDatabase().readResponse(null);
-                } catch (IOException ioex) {
-                    throw new FbExceptionBuilder().exception(ISCConstants.isc_net_read_err).cause(ioex).toSQLException();
-                }
-            }
-            handle = response.getObjectHandle();
-            switchState(TransactionState.ACTIVE);
-        }
     }
 
     @Override

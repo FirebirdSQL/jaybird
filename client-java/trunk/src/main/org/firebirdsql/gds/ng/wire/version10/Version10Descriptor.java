@@ -52,8 +52,8 @@ public final class Version10Descriptor extends AbstractProtocolDescriptor implem
     }
 
     @Override
-    public FbWireTransaction createTransaction(final FbWireDatabase database) {
-        return new V10Transaction(database);
+    public FbWireTransaction createTransaction(final FbWireDatabase database, final int transactionHandle) {
+        return new V10Transaction(database, transactionHandle);
     }
 
     @Override

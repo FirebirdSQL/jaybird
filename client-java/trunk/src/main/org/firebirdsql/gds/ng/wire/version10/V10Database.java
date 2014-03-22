@@ -291,9 +291,27 @@ public class V10Database extends AbstractFbWireDatabase implements FbWireDatabas
 
     @Override
     public FbWireTransaction createTransaction(TransactionParameterBuffer tpb) throws SQLException {
-        FbWireTransaction transaction = protocolDescriptor.createTransaction(this);
+        final FbWireTransaction transaction;
+        synchronized (getSynchronizationObject()) {
+            GenericResponse response;
+            try {
+                final XdrOutputStream xdrOut = getXdrOut();
+                xdrOut.writeInt(op_transaction);
+                xdrOut.writeInt(getHandle());
+                xdrOut.writeTyped(ISCConstants.isc_tpb_version3, (Xdrable) tpb);
+                xdrOut.flush();
+            } catch (IOException ioex) {
+                throw new FbExceptionBuilder().exception(ISCConstants.isc_net_write_err).cause(ioex).toSQLException();
+            }
+            try {
+                response = (GenericResponse) readResponse(null);
+            } catch (IOException ioex) {
+                throw new FbExceptionBuilder().exception(ISCConstants.isc_net_read_err).cause(ioex).toSQLException();
+            }
+            transaction = protocolDescriptor.createTransaction(this, response.getObjectHandle());
+        }
         transaction.addTransactionListener(this);
-        transaction.beginTransaction(tpb);
+        transactionCount.incrementAndGet();
         return transaction;
     }
 
@@ -642,9 +660,6 @@ public class V10Database extends AbstractFbWireDatabase implements FbWireDatabas
     public void transactionStateChanged(FbTransaction transaction, TransactionState newState,
                                         TransactionState previousState) {
         switch (newState) {
-        case ACTIVE:
-            transactionCount.incrementAndGet();
-            break;
         case COMMITTED:
         case ROLLED_BACK:
             transactionCount.decrementAndGet();
