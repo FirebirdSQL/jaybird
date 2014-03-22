@@ -39,6 +39,8 @@ import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.List;
 
+import static org.firebirdsql.gds.ng.TransactionHelper.checkTransactionActive;
+
 /**
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @since 3.0
@@ -246,7 +248,7 @@ public class V10Statement extends AbstractFbWireStatement implements FbWireState
     public void prepare(final String statementText) throws SQLException {
         synchronized (getSynchronizationObject()) {
             checkStatementValid();
-            checkTransactionActive();
+            checkTransactionActive(getTransaction());
             final StatementState currentState = getState();
             if (!isPrepareAllowed(currentState)) {
                 throw new SQLNonTransientException(String.format("Current statement state (%s) does not allow call to prepare", currentState));
@@ -326,7 +328,7 @@ public class V10Statement extends AbstractFbWireStatement implements FbWireState
         // TODO Validate transaction state?
         synchronized (getSynchronizationObject()) {
             checkStatementValid();
-            checkTransactionActive();
+            checkTransactionActive(getTransaction());
             validateParameters(parameters);
             reset(false);
 

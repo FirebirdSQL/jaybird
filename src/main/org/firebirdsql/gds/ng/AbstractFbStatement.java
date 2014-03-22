@@ -67,24 +67,32 @@ public abstract class AbstractFbStatement implements FbStatement {
     private final TransactionListener transactionListener = new TransactionListener() {
         @Override
         public void transactionStateChanged(FbTransaction transaction, TransactionState newState, TransactionState previousState) {
-            synchronized (getSynchronizationObject()) {
-                try {
-                    if (RESET_TO_PREPARED.contains(getState())) {
-                        // Cursor has been closed due to commit, rollback, etc, back to prepared state
+            if (getTransaction() != transaction) {
+                transaction.removeTransactionListener(this);
+                return;
+            }
+            switch (newState) {
+            case COMMITTED:
+            case ROLLED_BACK:
+                synchronized (getSynchronizationObject()) {
+                    try {
+                        if (RESET_TO_PREPARED.contains(getState())) {
+                            // Cursor has been closed due to commit, rollback, etc, back to prepared state
+                            try {
+                                switchState(StatementState.PREPARED);
+                            } catch (SQLException e) {
+                                throw new IllegalStateException("Received an SQLException when none was expected", e);
+                            }
+                            reset(false);
+                        }
+                    } finally {
+                        transaction.removeTransactionListener(this);
                         try {
-                            switchState(StatementState.PREPARED);
+                            setTransaction(null);
                         } catch (SQLException e) {
+                            //noinspection ThrowFromFinallyBlock
                             throw new IllegalStateException("Received an SQLException when none was expected", e);
                         }
-                        reset(false);
-                    }
-                } finally {
-                    transaction.removeTransactionListener(this);
-                    try {
-                        setTransaction(null);
-                    } catch (SQLException e) {
-                        //noinspection ThrowFromFinallyBlock
-                        throw new IllegalStateException("Received an SQLException when none was expected", e);
                     }
                 }
             }
@@ -487,18 +495,6 @@ public abstract class AbstractFbStatement implements FbStatement {
         }
     }
 
-    /**
-     * Checks if this statement has a transaction and that the transaction is {@link TransactionState#ACTIVE}.
-     *
-     * @throws SQLException
-     *         When this statement does not have a transaction, or if that transaction is not active.
-     */
-    protected final void checkTransactionActive() throws SQLException {
-        if (transaction == null || transaction.getState() != TransactionState.ACTIVE) {
-            throw new SQLNonTransientException("No transaction or transaction not ACTIVE", FBSQLException.SQL_STATE_INVALID_TX_STATE);
-        }
-    }
-
     @Override
     protected void finalize() throws Throwable {
         try {
@@ -509,7 +505,7 @@ public abstract class AbstractFbStatement implements FbStatement {
     }
 
     @Override
-    public final FbTransaction getTransaction() throws SQLException {
+    public final FbTransaction getTransaction() {
         return transaction;
     }
 

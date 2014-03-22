@@ -172,12 +172,19 @@ public abstract class AbstractFbBlob implements FbBlob, TransactionListener, Dat
     public void transactionStateChanged(FbTransaction transaction, TransactionState newState, TransactionState previousState) {
         if (getTransaction() != transaction) {
             transaction.removeTransactionListener(this);
+            return;
         }
-        if (newState == TransactionState.NO_TRANSACTION) {
+        switch (newState) {
+        case COMMITTED:
+        case ROLLED_BACK:
             synchronized (getSynchronizationObject()) {
                 clearTransaction();
                 setOpen(false);
             }
+            break;
+        default:
+            // Do nothing
+            break;
         }
         // TODO Need additional handling for other transitions?
     }
@@ -185,7 +192,9 @@ public abstract class AbstractFbBlob implements FbBlob, TransactionListener, Dat
     @Override
     public void detaching(FbDatabase database) {
         synchronized (getSynchronizationObject()) {
-            if (isOpen() && this.database == database) {
+            if (this.database != database) {
+                database.removeDatabaseListener(this);
+            } else if (isOpen()) {
                 log.debug(String.format("blob with blobId %d still open on database detach", getBlobId()));
                 try {
                     close();
@@ -217,13 +226,8 @@ public abstract class AbstractFbBlob implements FbBlob, TransactionListener, Dat
      * @throws java.sql.SQLException
      *         When no transaction is set, or the transaction state is not {@link TransactionState#ACTIVE}
      */
-    protected void checkTransactionActive() throws SQLException {
-        synchronized (getSynchronizationObject()) {
-            FbTransaction transaction = getTransaction();
-            if (transaction == null || transaction.getState() != TransactionState.ACTIVE) {
-                throw new FbExceptionBuilder().nonTransientException(ISCConstants.isc_segstr_no_trans).toSQLException();
-            }
-        }
+    protected final void checkTransactionActive() throws SQLException {
+        TransactionHelper.checkTransactionActive(getTransaction(), ISCConstants.isc_segstr_no_trans);
     }
 
     /**
@@ -239,7 +243,6 @@ public abstract class AbstractFbBlob implements FbBlob, TransactionListener, Dat
     }
 
     protected FbTransaction getTransaction() {
-        // TODO Add to public interface in FbBlob?
         synchronized (getSynchronizationObject()) {
             return transaction;
         }
@@ -247,12 +250,14 @@ public abstract class AbstractFbBlob implements FbBlob, TransactionListener, Dat
 
     protected final void clearTransaction() {
         synchronized (getSynchronizationObject()) {
+            if (transaction != null) {
+                transaction.removeTransactionListener(this);
+            }
             transaction = null;
         }
     }
 
     protected FbDatabase getDatabase() {
-        // TODO Add to public interface in FbBlob?
         synchronized (getSynchronizationObject()) {
             return database;
         }
@@ -260,6 +265,9 @@ public abstract class AbstractFbBlob implements FbBlob, TransactionListener, Dat
 
     protected final void clearDatabase() {
         synchronized (getSynchronizationObject()) {
+            if (database != null) {
+                database.removeDatabaseListener(this);
+            }
             database = null;
         }
     }
