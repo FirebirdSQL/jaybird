@@ -89,9 +89,11 @@ public interface ProtocolDescriptor {
      *
      * @param database
      *         FbWireDatabase of the current database
+     * @param transactionHandle
+     *         Transaction handle
      * @return FbTransaction implementation
      */
-    FbWireTransaction createTransaction(FbWireDatabase database);
+    FbWireTransaction createTransaction(FbWireDatabase database, int transactionHandle);
 
     /**
      * Create {@link org.firebirdsql.gds.ng.FbStatement} implementation for this protocol.

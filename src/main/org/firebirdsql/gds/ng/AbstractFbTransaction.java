@@ -33,7 +33,7 @@ public abstract class AbstractFbTransaction implements FbTransaction {
 
     private final Object syncObject = new Object();
     protected final TransactionListenerDispatcher transactionListenerDispatcher = new TransactionListenerDispatcher();
-    private volatile TransactionState state = TransactionState.NO_TRANSACTION;
+    private volatile TransactionState state = TransactionState.ACTIVE;
 
     @Override
     public final TransactionState getState() {

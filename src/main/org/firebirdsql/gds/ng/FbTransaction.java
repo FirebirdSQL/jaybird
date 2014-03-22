@@ -26,7 +26,6 @@
  */
 package org.firebirdsql.gds.ng;
 
-import org.firebirdsql.gds.TransactionParameterBuffer;
 import org.firebirdsql.gds.ng.listeners.TransactionListener;
 
 import java.sql.SQLException;
@@ -64,15 +63,6 @@ public interface FbTransaction {
      *         TransactionListener to remove
      */
     void removeTransactionListener(TransactionListener listener);
-
-    /**
-     * Begin the transaction.
-     *
-     * @param tpb
-     *         TransactionParameterBuffer with the transaction configuration
-     * @throws SQLException
-     */
-    void beginTransaction(TransactionParameterBuffer tpb) throws SQLException;
 
     /**
      * Commit the transaction

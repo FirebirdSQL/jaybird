@@ -38,18 +38,6 @@ import java.util.Set;
  */
 public enum TransactionState {
 
-    NO_TRANSACTION {
-        @Override
-        Set<TransactionState> createValidTransitionSet() {
-            return EnumSet.of(STARTING);
-        }
-    },
-    STARTING {
-        @Override
-        Set<TransactionState> createValidTransitionSet() {
-            return EnumSet.of(ACTIVE);
-        }
-    },
     ACTIVE {
         @Override
         Set<TransactionState> createValidTransitionSet() {
