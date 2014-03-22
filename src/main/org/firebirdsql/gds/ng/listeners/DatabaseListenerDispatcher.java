@@ -36,7 +36,7 @@ public class DatabaseListenerDispatcher extends AbstractListenerDispatcher<Datab
     public void detaching(FbDatabase database) {
         for (DatabaseListener listener : this) {
             try {
-                listener.detached(database);
+                listener.detaching(database);
             } catch (Exception e) {
                 // Ignore // TODO: log
             }
