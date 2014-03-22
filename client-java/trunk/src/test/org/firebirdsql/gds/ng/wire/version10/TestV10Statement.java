@@ -30,10 +30,7 @@ import org.firebirdsql.gds.TransactionParameterBuffer;
 import org.firebirdsql.gds.impl.jni.EmbeddedGDSImpl;
 import org.firebirdsql.gds.impl.jni.NativeGDSImpl;
 import org.firebirdsql.gds.impl.wire.TransactionParameterBufferImpl;
-import org.firebirdsql.gds.ng.FbConnectionProperties;
-import org.firebirdsql.gds.ng.FbStatement;
-import org.firebirdsql.gds.ng.FbTransaction;
-import org.firebirdsql.gds.ng.StatementType;
+import org.firebirdsql.gds.ng.*;
 import org.firebirdsql.gds.ng.fields.FieldDescriptor;
 import org.firebirdsql.gds.ng.fields.FieldValue;
 import org.firebirdsql.gds.ng.fields.RowDescriptor;
@@ -53,7 +50,9 @@ import java.util.List;
 
 import static org.firebirdsql.common.FBTestProperties.DB_PASSWORD;
 import static org.firebirdsql.common.FBTestProperties.DB_USER;
+import static org.hamcrest.CoreMatchers.equalTo;
 import static org.junit.Assert.*;
+import static org.junit.Assume.assumeThat;
 import static org.junit.Assume.assumeTrue;
 
 /**
@@ -135,8 +134,8 @@ public class TestV10Statement extends FBJUnit4TestBase {
     public void setUp() throws Exception {
         Connection con = FBTestProperties.getConnectionViaDriverManager();
         try {
-            DdlHelper.executeDDL(con, CREATE_EXECUTABLE_STORED_PROCEDURE, new int[]{ });
-            DdlHelper.executeDDL(con, CREATE_SELECTABLE_STORED_PROCEDURE, new int[]{ });
+            DdlHelper.executeDDL(con, CREATE_EXECUTABLE_STORED_PROCEDURE);
+            DdlHelper.executeDDL(con, CREATE_SELECTABLE_STORED_PROCEDURE);
             DdlHelper.executeCreateTable(con, CREATE_KEY_VALUE_TABLE);
         } finally {
             JdbcResourceHelper.closeQuietly(con);
@@ -152,9 +151,7 @@ public class TestV10Statement extends FBJUnit4TestBase {
 
     @Test
     public void testSelect_NoParameters_Describe() throws Exception {
-        transaction = getTransaction();
-        statement = db.createStatement(transaction);
-        statement.allocateStatement();
+        allocateStatement();
         statement.prepare(
                 "SELECT RDB$DESCRIPTION AS \"Description\", RDB$RELATION_ID, RDB$SECURITY_CLASS, RDB$CHARACTER_SET_NAME " +
                         "FROM RDB$DATABASE");
@@ -178,9 +175,7 @@ public class TestV10Statement extends FBJUnit4TestBase {
 
     @Test
     public void testSelect_NoParameters_Execute_and_Fetch() throws Exception {
-        transaction = getTransaction();
-        statement = db.createStatement(transaction);
-        statement.allocateStatement();
+        allocateStatement();
         statement.prepare(
                 "SELECT RDB$DESCRIPTION AS \"Description\", RDB$RELATION_ID, RDB$SECURITY_CLASS, RDB$CHARACTER_SET_NAME " +
                         "FROM RDB$DATABASE");
@@ -203,9 +198,7 @@ public class TestV10Statement extends FBJUnit4TestBase {
 
     @Test
     public void testSelect_WithParameters_Describe() throws Exception {
-        transaction = getTransaction();
-        statement = db.createStatement(transaction);
-        statement.allocateStatement();
+        allocateStatement();
         statement.prepare(
                 "SELECT a.RDB$CHARACTER_SET_NAME " +
                         "FROM RDB$CHARACTER_SETS a " +
@@ -234,10 +227,8 @@ public class TestV10Statement extends FBJUnit4TestBase {
 
     @Test
     public void testSelect_WithParameters_Execute_and_Fetch() throws Exception {
-        transaction = getTransaction();
-        statement = db.createStatement(transaction);
+        allocateStatement();
         statement.addStatementListener(listener);
-        statement.allocateStatement();
         statement.prepare(
                 "SELECT a.RDB$CHARACTER_SET_NAME " +
                         "FROM RDB$CHARACTER_SETS a " +
@@ -281,9 +272,7 @@ public class TestV10Statement extends FBJUnit4TestBase {
 
     @Test
     public void test_PrepareExecutableStoredProcedure() throws Exception {
-        transaction = getTransaction();
-        statement = db.createStatement(transaction);
-        statement.allocateStatement();
+        allocateStatement();
         statement.prepare(EXECUTE_EXECUTABLE_STORED_PROCEDURE);
 
         assertEquals("Unexpected StatementType", StatementType.STORED_PROCEDURE, statement.getType());
@@ -307,10 +296,8 @@ public class TestV10Statement extends FBJUnit4TestBase {
 
     @Test
     public void test_ExecuteExecutableStoredProcedure() throws Exception {
-        transaction = getTransaction();
-        statement = db.createStatement(transaction);
+        allocateStatement();
         statement.addStatementListener(listener);
-        statement.allocateStatement();
         statement.prepare(EXECUTE_EXECUTABLE_STORED_PROCEDURE);
 
         FieldValue parameter1 = statement.getParameterDescriptor().getFieldDescriptor(0).createDefaultFieldValue();
@@ -330,9 +317,7 @@ public class TestV10Statement extends FBJUnit4TestBase {
 
     @Test
     public void test_PrepareSelectableStoredProcedure() throws Exception {
-        transaction = getTransaction();
-        statement = db.createStatement(transaction);
-        statement.allocateStatement();
+        allocateStatement();
         statement.prepare(EXECUTE_SELECTABLE_STORED_PROCEDURE);
 
         assertEquals("Unexpected StatementType", StatementType.SELECT, statement.getType());
@@ -357,9 +342,7 @@ public class TestV10Statement extends FBJUnit4TestBase {
 
     @Test
     public void test_PrepareInsertReturning() throws Exception {
-        transaction = getTransaction();
-        statement = db.createStatement(transaction);
-        statement.allocateStatement();
+        allocateStatement();
         statement.prepare(INSERT_RETURNING_KEY_VALUE);
 
         // DML {INSERT, UPDATE, DELETE} ... RETURNING is described as a stored procedure!
@@ -384,9 +367,7 @@ public class TestV10Statement extends FBJUnit4TestBase {
 
     @Test
     public void test_GetExecutionPlan_withStatementPrepared() throws Exception {
-        transaction = getTransaction();
-        statement = db.createStatement(transaction);
-        statement.allocateStatement();
+        allocateStatement();
         statement.prepare(
                 "SELECT RDB$DESCRIPTION AS \"Description\", RDB$RELATION_ID, RDB$SECURITY_CLASS, RDB$CHARACTER_SET_NAME " +
                         "FROM RDB$DATABASE");
@@ -398,9 +379,7 @@ public class TestV10Statement extends FBJUnit4TestBase {
 
     @Test
     public void test_GetExecutionPlan_noStatementPrepared() throws Exception {
-        transaction = getTransaction();
-        statement = db.createStatement(transaction);
-        statement.allocateStatement();
+        allocateStatement();
 
         String executionPlan = statement.getExecutionPlan();
         // TODO: Behavior is different for Firebird 3: throws an exception "Attempt to execute an unprepared dynamic SQL statement."
@@ -420,9 +399,7 @@ public class TestV10Statement extends FBJUnit4TestBase {
     public void test_GetExecutionPlan_StatementClosed() throws Exception {
         expectedException.expect(SQLNonTransientException.class);
         expectedException.expectMessage("Statement closed");
-        transaction = getTransaction();
-        statement = db.createStatement(transaction);
-        statement.allocateStatement();
+        allocateStatement();
         statement.prepare(
                 "SELECT RDB$DESCRIPTION AS \"Description\", RDB$RELATION_ID, RDB$SECURITY_CLASS, RDB$CHARACTER_SET_NAME " +
                         "FROM RDB$DATABASE");
@@ -433,10 +410,8 @@ public class TestV10Statement extends FBJUnit4TestBase {
 
     @Test
     public void test_ExecuteInsert() throws Exception {
-        transaction = getTransaction();
-        statement = db.createStatement(transaction);
+        allocateStatement();
         statement.addStatementListener(listener);
-        statement.allocateStatement();
         statement.prepare("INSERT INTO keyvalue (thekey, thevalue) VALUES (?, ?)");
 
         FieldValue parameter1 = statement.getParameterDescriptor().getFieldDescriptor(0).createDefaultFieldValue();
@@ -450,6 +425,75 @@ public class TestV10Statement extends FBJUnit4TestBase {
         assertEquals("Expected one row to have been inserted", 1, listener.getSqlCounts().getLongInsertCount());
     }
 
+    /**
+     * Test calling {@link org.firebirdsql.gds.ng.FbStatement#closeCursor()} on statement with state NEW,
+     * expectation: no error, state unchanged
+     */
+    @Test
+    public void test_CloseCursor_State_NEW() throws Exception {
+        statement = db.createStatement(null);
+        assumeThat(statement.getState(), equalTo(StatementState.NEW));
+
+        statement.closeCursor();
+        assertEquals(StatementState.NEW, statement.getState());
+    }
+
+    /**
+     * Test calling {@link org.firebirdsql.gds.ng.FbStatement#closeCursor()} on statement with state ALLOCATED,
+     * expectation: no error, state unchanged
+     */
+    @Test
+    public void test_CloseCursor_State_ALLOCATED() throws Exception {
+        allocateStatement();
+        assumeThat(statement.getState(), equalTo(StatementState.ALLOCATED));
+
+        statement.closeCursor();
+        assertEquals(StatementState.ALLOCATED, statement.getState());
+    }
+
+    /**
+     * Test calling {@link org.firebirdsql.gds.ng.FbStatement#closeCursor()} on statement with state PREPARED,
+     * expectation: no error, state unchanged
+     */
+    @Test
+    public void test_CloseCursor_State_PREPARED() throws Exception {
+        allocateStatement();
+        statement.prepare("SELECT * FROM RDB$DATABASE");
+        assumeThat(statement.getState(), equalTo(StatementState.PREPARED));
+
+        statement.closeCursor();
+        assertEquals(StatementState.PREPARED, statement.getState());
+    }
+
+    /**
+     * Test calling {@link org.firebirdsql.gds.ng.FbStatement#closeCursor()} on statement with state CURSOR_OPEN,
+     * expectation: no error, state PREPARED
+     */
+    @Test
+    public void test_CloseCursor_State_CURSOR_OPEN() throws Exception {
+        allocateStatement();
+        statement.prepare("SELECT * FROM RDB$DATABASE");
+        statement.execute(Collections.<FieldValue>emptyList());
+        assumeThat(statement.getState(), equalTo(StatementState.CURSOR_OPEN));
+
+        statement.closeCursor();
+        assertEquals(StatementState.PREPARED, statement.getState());
+    }
+
+    /**
+     * Test calling {@link org.firebirdsql.gds.ng.FbStatement#closeCursor()} on statement with state CLOSED,
+     * expectation: no error, state unchanged
+     */
+    @Test
+    public void test_CloseCursor_State_CLOSED() throws Exception {
+        statement = db.createStatement(null);
+        statement.close();
+        assumeThat(statement.getState(), equalTo(StatementState.CLOSED));
+
+        statement.closeCursor();
+        assertEquals(StatementState.CLOSED, statement.getState());
+    }
+
     private FbTransaction getTransaction() throws SQLException {
         TransactionParameterBuffer tpb = new TransactionParameterBufferImpl();
         tpb.addArgument(ISCConstants.isc_tpb_read_committed);
@@ -457,6 +501,14 @@ public class TestV10Statement extends FBJUnit4TestBase {
         tpb.addArgument(ISCConstants.isc_tpb_write);
         tpb.addArgument(ISCConstants.isc_tpb_wait);
         return db.createTransaction(tpb);
+    }
+
+    private void allocateStatement() throws SQLException {
+        if (transaction == null || transaction.getState() != TransactionState.ACTIVE) {
+            transaction = getTransaction();
+        }
+        statement = db.createStatement(transaction);
+        statement.allocateStatement();
     }
 
     @After
