@@ -42,12 +42,12 @@ public interface FbStatement {
     /**
      * @return Transaction currently associated with this statement
      */
-    FbTransaction getTransaction() throws SQLException;
+    FbTransaction getTransaction();
 
     /**
      * @return The database connection that created this statement
      */
-    FbDatabase getDatabase() throws SQLException;
+    FbDatabase getDatabase();
 
     /**
      * Allocate a statement handle for this statement on the server.

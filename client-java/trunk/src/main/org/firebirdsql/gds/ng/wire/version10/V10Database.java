@@ -641,19 +641,17 @@ public class V10Database extends AbstractFbWireDatabase implements FbWireDatabas
     @Override
     public void transactionStateChanged(FbTransaction transaction, TransactionState newState,
                                         TransactionState previousState) {
-        if (newState != previousState) {
-            switch (newState) {
-            case ACTIVE:
-                transactionCount.incrementAndGet();
-                break;
-            case COMMITTED:
-            case ROLLED_BACK:
-                transactionCount.decrementAndGet();
-                break;
-            default:
-                // do nothing
-                break;
-            }
+        switch (newState) {
+        case ACTIVE:
+            transactionCount.incrementAndGet();
+            break;
+        case COMMITTED:
+        case ROLLED_BACK:
+            transactionCount.decrementAndGet();
+            break;
+        default:
+            // do nothing
+            break;
         }
     }
 
