@@ -45,9 +45,6 @@ public class TestV10InputBlob extends BaseTestV10Blob {
 
     /**
      * Tests retrieval of a blob (what goes in is what comes out).
-     * <p>
-     * Test depends on correct working of blob writing (currently using old gds implementation)
-     * </p>
      */
     @Test
     public void testBlobRetrieval() throws Exception {

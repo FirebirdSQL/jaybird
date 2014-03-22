@@ -38,6 +38,9 @@ import static org.firebirdsql.common.matchers.SQLExceptionMatchers.fbMessageEqua
 import static org.hamcrest.CoreMatchers.allOf;
 
 /**
+ * Tests for {@link org.firebirdsql.gds.ng.wire.version10.V10InputBlob} that don't require
+ * a connection to the database.
+ *
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @since 3.0
  */
@@ -49,6 +52,10 @@ public class TestV10InputBlobMock {
     @Rule
     public final ExpectedException expectedException = ExpectedException.none();
 
+    /**
+     * Test if calling {@link org.firebirdsql.gds.ng.wire.version10.V10InputBlob#putSegment(byte[])} throws
+     * a {@link java.sql.SQLNonTransientException} with error {@link org.firebirdsql.gds.ISCConstants#isc_segstr_no_write}.
+     */
     @Test
     public void testPutSegment() throws Exception {
         expectedException.expect(SQLNonTransientException.class);

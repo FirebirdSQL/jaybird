@@ -40,10 +40,10 @@ public final class DdlHelper {
     }
 
     public static void executeCreateTable(Connection connection, String sql) throws SQLException {
-        DdlHelper.executeDDL(connection, sql, new int[] { ISCConstants.isc_no_meta_update });
+        DdlHelper.executeDDL(connection, sql, ISCConstants.isc_no_meta_update);
     }
 
-    public static void executeDDL(Connection connection, String sql, int[] ignoreErrors)
+    public static void executeDDL(Connection connection, String sql, int... ignoreErrors)
             throws SQLException {
         try {
             Statement stmt = connection.createStatement();
