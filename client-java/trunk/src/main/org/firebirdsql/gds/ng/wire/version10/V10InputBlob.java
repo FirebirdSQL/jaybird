@@ -54,10 +54,7 @@ public class V10InputBlob extends AbstractFbWireInputBlob implements FbWireBlob,
         synchronized (getSynchronizationObject()) {
             checkDatabaseAttached();
             checkTransactionActive();
-            if (isOpen()) {
-                // TODO isc_no_segstr_close instead?
-                throw new FbExceptionBuilder().nonTransientException(ISCConstants.isc_segstr_no_op).toSQLException();
-            }
+            checkBlobClosed();
 
             final FbWireDatabase database = getDatabase();
             synchronized (database.getSynchronizationObject()) {
@@ -81,6 +78,7 @@ public class V10InputBlob extends AbstractFbWireInputBlob implements FbWireBlob,
                     final GenericResponse genericResponse = database.readGenericResponse(null);
                     setHandle(genericResponse.getObjectHandle());
                     setOpen(true);
+                    resetEof();
                 } catch (IOException e) {
                     throw new FbExceptionBuilder().exception(ISCConstants.isc_net_read_err).cause(e).toSQLException();
                 }

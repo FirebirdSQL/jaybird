@@ -35,10 +35,8 @@ import org.junit.rules.ExpectedException;
 
 import java.sql.SQLNonTransientException;
 
-import static org.firebirdsql.common.matchers.SQLExceptionMatchers.errorCodeEquals;
-import static org.firebirdsql.common.matchers.SQLExceptionMatchers.fbMessageEquals;
 import static org.firebirdsql.common.matchers.SQLExceptionMatchers.sqlExceptionEqualTo;
-import static org.hamcrest.CoreMatchers.allOf;
+import static org.junit.Assert.assertTrue;
 
 /**
  * Tests for {@link org.firebirdsql.gds.ng.wire.version10.V10OutputBlob} that don't require
@@ -94,5 +92,12 @@ public class TestV10OutputBlobMock {
         V10OutputBlob blob = new V10OutputBlob(db, transaction, null);
 
         blob.seek(0, FbBlob.SeekMode.ABSOLUTE);
+    }
+
+    @Test
+    public void testNewBlob_eof() {
+        V10OutputBlob blob = new V10OutputBlob(db, transaction, null);
+
+        assertTrue("Expected new output blob to be EOF", blob.isEof());
     }
 }

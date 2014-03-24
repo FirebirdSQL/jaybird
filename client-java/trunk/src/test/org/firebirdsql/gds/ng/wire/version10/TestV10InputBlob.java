@@ -37,6 +37,7 @@ import org.junit.rules.ExpectedException;
 
 import java.io.ByteArrayOutputStream;
 import java.sql.SQLException;
+import java.sql.SQLNonTransientException;
 import java.util.Arrays;
 import java.util.List;
 
@@ -220,6 +221,71 @@ public class TestV10InputBlob extends BaseTestV10Blob {
             statement.execute(Arrays.asList(param1, param2));
             statement.close();
             transaction.commit();
+        } finally {
+            db.detach();
+        }
+    }
+
+    /**
+     * Tests reopen is allowed.
+     */
+    @Test
+    public void testReopen() throws Exception {
+        final int testId = 1;
+        final byte[] baseContent = generateBaseContent();
+        final int requiredSize = 256;
+        populateBlob(testId, baseContent, requiredSize);
+
+        final FbWireDatabase db = createDatabaseConnection();
+        try {
+            long blobId = getBlobId(testId, db);
+
+            final FbBlob blob = db.createBlobForInput(transaction, null, blobId);
+            blob.open();
+            ByteArrayOutputStream bos = new ByteArrayOutputStream(requiredSize);
+            while (!blob.isEof()) {
+                bos.write(blob.getSegment(blob.getMaximumSegmentSize()));
+            }
+            blob.close();
+            // Reopen
+            blob.open();
+            bos = new ByteArrayOutputStream(requiredSize);
+            while (!blob.isEof()) {
+                bos.write(blob.getSegment(blob.getMaximumSegmentSize()));
+            }
+            blob.close();
+
+            transaction.commit();
+            statement.close();
+            byte[] result = bos.toByteArray();
+            assertEquals("Unexpected length read from blob", requiredSize, result.length);
+            assertTrue("Unexpected blob content", validateBlobContent(result, baseContent, requiredSize));
+        } finally {
+            db.detach();
+        }
+    }
+
+    /**
+     * Tests double open not allowed.
+     */
+    @Test
+    public void testDoubleOpen() throws Exception {
+        expectedException.expect(SQLNonTransientException.class);
+        expectedException.expect(sqlExceptionEqualTo(ISCConstants.isc_segstr_no_op));
+
+        final int testId = 1;
+        final byte[] baseContent = generateBaseContent();
+        final int requiredSize = 256;
+        populateBlob(testId, baseContent, requiredSize);
+
+        final FbWireDatabase db = createDatabaseConnection();
+        try {
+            long blobId = getBlobId(testId, db);
+
+            final FbBlob blob = db.createBlobForInput(transaction, null, blobId);
+            blob.open();
+            // Double open
+            blob.open();
         } finally {
             db.detach();
         }

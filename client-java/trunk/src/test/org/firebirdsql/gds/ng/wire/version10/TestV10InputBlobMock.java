@@ -41,6 +41,7 @@ import static org.hamcrest.CoreMatchers.allOf;
 import static org.hamcrest.CoreMatchers.endsWith;
 import static org.hamcrest.CoreMatchers.startsWith;
 import static org.jmock.Expectations.returnValue;
+import static org.junit.Assert.assertTrue;
 
 /**
  * Tests for {@link org.firebirdsql.gds.ng.wire.version10.V10InputBlob} that don't require
@@ -138,5 +139,12 @@ public class TestV10InputBlobMock {
         context.checking(exp);
 
         blob.getSegment(1);
+    }
+
+    @Test
+    public void testIsEof_newBlob() {
+        V10InputBlob blob = new V10InputBlob(db, transaction, null, 1);
+
+        assertTrue("Expected new input blob to be EOF", blob.isEof());
     }
 }
