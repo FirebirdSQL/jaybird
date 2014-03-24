@@ -20,6 +20,7 @@
  */
 package org.firebirdsql.gds.ng.wire.version10;
 
+import org.firebirdsql.gds.BlobParameterBuffer;
 import org.firebirdsql.gds.DatabaseParameterBuffer;
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.impl.wire.DatabaseParameterBufferImp;
@@ -99,12 +100,12 @@ public final class Version10Descriptor extends AbstractProtocolDescriptor implem
     }
 
     @Override
-    public FbWireBlob createOutputBlob(FbWireDatabase database, FbWireTransaction transaction) {
-        return new V10OutputBlob(database, transaction);
+    public FbWireBlob createOutputBlob(FbWireDatabase database, FbWireTransaction transaction, BlobParameterBuffer blobParameterBuffer) {
+        return new V10OutputBlob(database, transaction, blobParameterBuffer);
     }
 
     @Override
-    public FbWireBlob createInputBlob(FbWireDatabase database, FbWireTransaction transaction, long blobId) {
-        return new V10InputBlob(database, transaction, blobId);
+    public FbWireBlob createInputBlob(FbWireDatabase database, FbWireTransaction transaction, BlobParameterBuffer blobParameterBuffer, long blobId) {
+        return new V10InputBlob(database, transaction, blobParameterBuffer, blobId);
     }
 }

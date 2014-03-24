@@ -20,6 +20,7 @@
  */
 package org.firebirdsql.gds.ng;
 
+import org.firebirdsql.gds.BlobParameterBuffer;
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.ng.listeners.DatabaseListener;
 import org.firebirdsql.gds.ng.listeners.TransactionListener;
@@ -27,7 +28,6 @@ import org.firebirdsql.logging.Logger;
 import org.firebirdsql.logging.LoggerFactory;
 
 import java.sql.SQLException;
-import java.sql.SQLNonTransientException;
 import java.sql.SQLWarning;
 
 /**
@@ -39,42 +39,21 @@ public abstract class AbstractFbBlob implements FbBlob, TransactionListener, Dat
     private static final Logger log = LoggerFactory.getLogger(AbstractFbBlob.class, false);
 
     private final Object syncObject = new Object();
+    private final BlobParameterBuffer blobParameterBuffer;
     private FbTransaction transaction;
     private FbDatabase database;
-    private long blobId;
     private boolean open;
     private int blobHandle;
     private boolean eof;
 
-    protected AbstractFbBlob(FbDatabase database, FbTransaction transaction, long blobId) {
+    protected AbstractFbBlob(FbDatabase database, FbTransaction transaction, BlobParameterBuffer blobParameterBuffer) {
+        assert blobParameterBuffer == null || isValidBlobParameterBufferClass(blobParameterBuffer.getClass())
+                : "blobParameterBuffer is of an unsupported type for this implementation";
         this.database = database;
         this.transaction = transaction;
-        this.blobId = blobId;
+        this.blobParameterBuffer = blobParameterBuffer;
         transaction.addTransactionListener(this);
         database.addDatabaseListener(this);
-    }
-
-    @Override
-    public final long getBlobId() {
-        return blobId;
-    }
-
-    /**
-     * Sets the blob id.
-     *
-     * @param blobId
-     *         Blob id.
-     * @throws SQLException
-     *         If this is an input blob, or if this is an output blob whose blobId was already set.
-     */
-    protected final void setBlobId(long blobId) throws SQLException {
-        synchronized (getSynchronizationObject()) {
-            if (!isOutput() || getBlobId() != FbBlob.NO_BLOB_ID) {
-                // TODO SQL State
-                throw new SQLNonTransientException(isOutput() ? "The blob id is already set" : "Attempt to set the blob id of an input blob");
-            }
-            this.blobId = blobId;
-        }
     }
 
     @Override
@@ -126,6 +105,7 @@ public abstract class AbstractFbBlob implements FbBlob, TransactionListener, Dat
         }
     }
 
+    @Override
     public final void close() throws SQLException {
         synchronized (getSynchronizationObject()) {
             if (!isOpen()) return;
@@ -145,6 +125,7 @@ public abstract class AbstractFbBlob implements FbBlob, TransactionListener, Dat
      */
     protected abstract void closeImpl() throws SQLException;
 
+    @Override
     public final void cancel() throws SQLException {
         synchronized (getSynchronizationObject()) {
             checkDatabaseAttached();
@@ -242,6 +223,17 @@ public abstract class AbstractFbBlob implements FbBlob, TransactionListener, Dat
         }
     }
 
+    /**
+     * @throws SQLException
+     *         When the blob is closed.
+     */
+    protected void checkBlobOpen() throws SQLException {
+        if (!isOpen()) {
+            // TODO Use more specific exception message?
+            throw new FbExceptionBuilder().nonTransientException(ISCConstants.isc_bad_segstr_handle).toSQLException();
+        }
+    }
+
     protected FbTransaction getTransaction() {
         synchronized (getSynchronizationObject()) {
             return transaction;
@@ -271,4 +263,24 @@ public abstract class AbstractFbBlob implements FbBlob, TransactionListener, Dat
             database = null;
         }
     }
+
+    /**
+     * @return The blob parameter buffer of this blob.
+     */
+    protected BlobParameterBuffer getBlobParameterBuffer() {
+        return blobParameterBuffer;
+    }
+
+    /**
+     * Method to decide if a blob parameter buffer implementation class is valid for the blob implementation.
+     * <p>
+     * Eg a {@link org.firebirdsql.gds.ng.wire.version10.V10InputBlob} will only work with a blob parameter buffer
+     * that also implements {@link org.firebirdsql.gds.impl.wire.Xdrable}.
+     * </p>
+     *
+     * @param blobParameterBufferClass
+     *         Class of the blob parameter buffer
+     * @return <code>true</code> when the blob parameter buffer class is valid for the blob implementation.
+     */
+    protected abstract boolean isValidBlobParameterBufferClass(Class<? extends BlobParameterBuffer> blobParameterBufferClass);
 }

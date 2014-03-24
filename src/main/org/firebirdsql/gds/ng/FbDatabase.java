@@ -28,6 +28,7 @@ package org.firebirdsql.gds.ng;
 
 import org.firebirdsql.encodings.Encoding;
 import org.firebirdsql.encodings.IEncodingFactory;
+import org.firebirdsql.gds.BlobParameterBuffer;
 import org.firebirdsql.gds.DatabaseParameterBuffer;
 import org.firebirdsql.gds.TransactionParameterBuffer;
 import org.firebirdsql.gds.impl.GDSServerVersion;
@@ -110,10 +111,12 @@ public interface FbDatabase {
      *
      * @param transaction
      *         Transaction associated with the blob.
+     * @param blobParameterBuffer
+     *         Blob Parameter Buffer
      * @return Instance of {@link FbBlob}
      * @throws SQLException
      */
-    FbBlob createBlobForOutput(FbTransaction transaction) throws SQLException;
+    FbBlob createBlobForOutput(FbTransaction transaction, BlobParameterBuffer blobParameterBuffer) throws SQLException;
 
     /**
      * Creates a blob for read access to an existing blob on the server.
@@ -123,12 +126,14 @@ public interface FbDatabase {
      *
      * @param transaction
      *         Transaction associated with the blob.
+     * @param blobParameterBuffer
+     *         Blob Parameter Buffer
      * @param blobId
      *         Handle id of the blob
      * @return Instance of {@link FbBlob}
      * @throws SQLException
      */
-    FbBlob createBlobForInput(FbTransaction transaction, long blobId) throws SQLException;
+    FbBlob createBlobForInput(FbTransaction transaction, BlobParameterBuffer blobParameterBuffer, long blobId) throws SQLException;
 
     /**
      * Request database info.

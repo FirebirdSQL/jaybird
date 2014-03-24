@@ -20,8 +20,10 @@
  */
 package org.firebirdsql.gds.ng.wire.version10;
 
+import org.firebirdsql.gds.BlobParameterBuffer;
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.impl.wire.XdrOutputStream;
+import org.firebirdsql.gds.impl.wire.Xdrable;
 import org.firebirdsql.gds.ng.FbExceptionBuilder;
 import org.firebirdsql.gds.ng.listeners.DatabaseListener;
 import org.firebirdsql.gds.ng.wire.*;
@@ -40,8 +42,9 @@ public class V10InputBlob extends AbstractFbWireInputBlob implements FbWireBlob,
 
     // TODO V10OutputBlob and V10InputBlob share some common behavior and information (eg in open() and getMaximumSegmentSize()), find a way to unify this
 
-    public V10InputBlob(FbWireDatabase database, FbWireTransaction transaction, long blobId) {
-        super(database, transaction, blobId);
+    public V10InputBlob(FbWireDatabase database, FbWireTransaction transaction,
+                        BlobParameterBuffer blobParameterBuffer, long blobId) {
+        super(database, transaction, blobParameterBuffer, blobId);
     }
 
     // TODO Need blob specific warning callback?
@@ -60,8 +63,14 @@ public class V10InputBlob extends AbstractFbWireInputBlob implements FbWireBlob,
             synchronized (database.getSynchronizationObject()) {
                 try {
                     final XdrOutputStream xdrOut = database.getXdrStreamAccess().getXdrOut();
-                    // TODO Update for blob parameter buffer and op_open_blob2
-                    xdrOut.writeInt(op_open_blob);
+                    final BlobParameterBuffer blobParameterBuffer = getBlobParameterBuffer();
+                    if (blobParameterBuffer == null) {
+                        xdrOut.writeInt(op_open_blob);
+                    } else {
+                        xdrOut.writeInt(op_open_blob2);
+                        xdrOut.writeTyped(ISCConstants.isc_bpb_version1,
+                                (Xdrable) blobParameterBuffer);
+                    }
                     xdrOut.writeInt(getTransaction().getHandle());
                     xdrOut.writeLong(getBlobId());
                     xdrOut.flush();
@@ -91,12 +100,7 @@ public class V10InputBlob extends AbstractFbWireInputBlob implements FbWireBlob,
         synchronized (getSynchronizationObject()) {
             checkDatabaseAttached();
             checkTransactionActive();
-            if (isOutput()) {
-                throw new FbExceptionBuilder().nonTransientException(ISCConstants.isc_segstr_no_read).toSQLException();
-            }
-            if (!isOpen()) {
-                throw new FbExceptionBuilder().nonTransientException(ISCConstants.isc_bad_segstr_handle).toSQLException();
-            }
+            checkBlobOpen();
 
             final FbWireDatabase database = getDatabase();
             synchronized (database.getSynchronizationObject()) {
@@ -112,6 +116,7 @@ public class V10InputBlob extends AbstractFbWireInputBlob implements FbWireBlob,
                 }
                 try {
                     GenericResponse response = database.readGenericResponse(null);
+                    // TODO Meaning of 2
                     if (response.getObjectHandle() == 2) {
                         // TODO what if I seek on a stream blob?
                         setEof();

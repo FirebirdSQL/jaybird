@@ -192,7 +192,7 @@ public abstract class BaseTestV10Blob extends FBJUnit4TestBase {
     }
 
     /**
-     * Populates a blob using the FILL_BINARY_BLOB stored procedure
+     * Populates a (segmented) blob using the FILL_BINARY_BLOB stored procedure
      *
      * @param id ID of the record to be created in blob_table
      * @param baseContent Base content

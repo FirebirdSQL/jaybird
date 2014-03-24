@@ -20,8 +20,10 @@
  */
 package org.firebirdsql.gds.ng.wire.version10;
 
+import org.firebirdsql.gds.BlobParameterBuffer;
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.impl.wire.XdrOutputStream;
+import org.firebirdsql.gds.impl.wire.Xdrable;
 import org.firebirdsql.gds.ng.FbBlob;
 import org.firebirdsql.gds.ng.FbExceptionBuilder;
 import org.firebirdsql.gds.ng.listeners.DatabaseListener;
@@ -30,8 +32,7 @@ import org.firebirdsql.gds.ng.wire.*;
 import java.io.IOException;
 import java.sql.SQLException;
 
-import static org.firebirdsql.gds.impl.wire.WireProtocolConstants.op_batch_segments;
-import static org.firebirdsql.gds.impl.wire.WireProtocolConstants.op_create_blob;
+import static org.firebirdsql.gds.impl.wire.WireProtocolConstants.*;
 
 /**
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
@@ -41,8 +42,9 @@ public class V10OutputBlob extends AbstractFbWireOutputBlob implements FbWireBlo
 
     // TODO V10OutputBlob and V10InputBlob share some common behavior and information (eg in open() and getMaximumSegmentSize()), find a way to unify this
 
-    protected V10OutputBlob(FbWireDatabase database, FbWireTransaction transaction) {
-        super(database, transaction);
+    protected V10OutputBlob(FbWireDatabase database, FbWireTransaction transaction,
+                            BlobParameterBuffer blobParameterBuffer) {
+        super(database, transaction, blobParameterBuffer);
     }
 
     // TODO Need blob specific warning callback?
@@ -66,8 +68,14 @@ public class V10OutputBlob extends AbstractFbWireOutputBlob implements FbWireBlo
             synchronized (database.getSynchronizationObject()) {
                 try {
                     final XdrOutputStream xdrOut = database.getXdrStreamAccess().getXdrOut();
-                    // TODO Update for blob parameter buffer and op_create_blob2
-                    xdrOut.writeInt(op_create_blob);
+                    final BlobParameterBuffer blobParameterBuffer = getBlobParameterBuffer();
+                    if (blobParameterBuffer == null) {
+                        xdrOut.writeInt(op_create_blob);
+                    } else {
+                        xdrOut.writeInt(op_create_blob2);
+                        xdrOut.writeTyped(ISCConstants.isc_bpb_version1,
+                                (Xdrable) blobParameterBuffer);
+                    }
                     xdrOut.writeInt(getTransaction().getHandle());
                     xdrOut.writeLong(blobId);
                     xdrOut.flush();
@@ -97,12 +105,7 @@ public class V10OutputBlob extends AbstractFbWireOutputBlob implements FbWireBlo
         synchronized (getSynchronizationObject()) {
             checkDatabaseAttached();
             checkTransactionActive();
-            if (!isOutput()) {
-                throw new FbExceptionBuilder().nonTransientException(ISCConstants.isc_segstr_no_write).toSQLException();
-            }
-            if (!isOpen()) {
-                throw new FbExceptionBuilder().nonTransientException(ISCConstants.isc_bad_segstr_handle).toSQLException();
-            }
+            checkBlobOpen();
 
             final FbWireDatabase database = getDatabase();
             synchronized (database.getSynchronizationObject()) {

@@ -20,6 +20,7 @@
  */
 package org.firebirdsql.gds.ng;
 
+import org.firebirdsql.gds.BlobParameterBuffer;
 import org.firebirdsql.gds.DatabaseParameterBuffer;
 import org.firebirdsql.gds.ng.fields.BlrCalculator;
 import org.firebirdsql.gds.ng.wire.*;
@@ -66,12 +67,12 @@ public class EmptyProtocolDescriptor extends AbstractProtocolDescriptor {
     }
 
     @Override
-     public FbWireBlob createOutputBlob(FbWireDatabase database, FbWireTransaction transaction) {
+     public FbWireBlob createOutputBlob(FbWireDatabase database, FbWireTransaction transaction, BlobParameterBuffer blobParameterBuffer) {
         return null;
     }
 
     @Override
-    public FbWireBlob createInputBlob(FbWireDatabase database, FbWireTransaction transaction, long blobId) {
+    public FbWireBlob createInputBlob(FbWireDatabase database, FbWireTransaction transaction, BlobParameterBuffer blobParameterBuffer, long blobId) {
         return null;
     }
 }
