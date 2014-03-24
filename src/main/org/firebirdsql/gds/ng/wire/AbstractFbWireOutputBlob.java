@@ -56,7 +56,7 @@ public abstract class AbstractFbWireOutputBlob extends AbstractFbWireBlob {
      */
     protected final void setBlobId(long blobId) throws SQLException {
         synchronized (getSynchronizationObject()) {
-            if (!isOutput() || getBlobId() != FbBlob.NO_BLOB_ID) {
+            if (getBlobId() != FbBlob.NO_BLOB_ID) {
                 // TODO SQL State
                 throw new SQLNonTransientException("The blob id is already set");
             }
