@@ -21,21 +21,26 @@
 package org.firebirdsql.gds.ng.wire.version10;
 
 import org.firebirdsql.gds.ISCConstants;
+import org.firebirdsql.gds.ng.TransactionState;
 import org.firebirdsql.gds.ng.listeners.DatabaseListener;
 import org.firebirdsql.gds.ng.listeners.TransactionListener;
 import org.firebirdsql.gds.ng.wire.FbWireDatabase;
 import org.firebirdsql.gds.ng.wire.FbWireTransaction;
 import org.jmock.Expectations;
 import org.jmock.integration.junit4.JUnitRuleMockery;
+import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
+import java.sql.SQLException;
 import java.sql.SQLNonTransientException;
 
-import static org.firebirdsql.common.matchers.SQLExceptionMatchers.errorCodeEquals;
-import static org.firebirdsql.common.matchers.SQLExceptionMatchers.fbMessageEquals;
+import static org.firebirdsql.common.matchers.SQLExceptionMatchers.*;
 import static org.hamcrest.CoreMatchers.allOf;
+import static org.hamcrest.CoreMatchers.endsWith;
+import static org.hamcrest.CoreMatchers.startsWith;
+import static org.jmock.Expectations.returnValue;
 
 /**
  * Tests for {@link org.firebirdsql.gds.ng.wire.version10.V10InputBlob} that don't require
@@ -52,6 +57,20 @@ public class TestV10InputBlobMock {
     @Rule
     public final ExpectedException expectedException = ExpectedException.none();
 
+    private FbWireDatabase db;
+    private FbWireTransaction transaction;
+
+    @Before
+    public void setUp() {
+        db = context.mock(FbWireDatabase.class);
+        transaction = context.mock(FbWireTransaction.class);
+        context.checking(new Expectations() {{
+            allowing(transaction).addTransactionListener(with(any(TransactionListener.class)));
+            allowing(db).addDatabaseListener(with(any(DatabaseListener.class)));
+        }});
+    }
+
+
     /**
      * Test if calling {@link org.firebirdsql.gds.ng.wire.version10.V10InputBlob#putSegment(byte[])} throws
      * a {@link java.sql.SQLNonTransientException} with error {@link org.firebirdsql.gds.ISCConstants#isc_segstr_no_write}.
@@ -59,20 +78,65 @@ public class TestV10InputBlobMock {
     @Test
     public void testPutSegment() throws Exception {
         expectedException.expect(SQLNonTransientException.class);
-        expectedException.expect(
-                allOf(errorCodeEquals(ISCConstants.isc_segstr_no_write),
-                        fbMessageEquals(ISCConstants.isc_segstr_no_write)));
+        expectedException.expect(sqlExceptionEqualTo(ISCConstants.isc_segstr_no_write));
 
-        final FbWireDatabase db = context.mock(FbWireDatabase.class);
-        final FbWireTransaction transaction = context.mock(FbWireTransaction.class);
-        context.checking(new Expectations() {{
-            allowing(transaction).addTransactionListener(with(any(TransactionListener.class)));
-            allowing(db).addDatabaseListener(with(any(DatabaseListener.class)));
-        }});
-
-        V10InputBlob blob = new V10InputBlob(db, transaction, 1);
+        V10InputBlob blob = new V10InputBlob(db, transaction, null, 1);
 
         blob.putSegment(new byte[] { 1, 2, 3, 4 });
     }
 
+    /**
+     * Test if {@link org.firebirdsql.gds.ng.wire.version10.V10InputBlob#getSegment(int)} with zero
+     * throws an exception
+     */
+    @Test
+    public void testGetSegment_requestedSizeZero() throws Exception {
+        expectedException.expect(SQLException.class);
+        expectedException.expect(
+                message(allOf(
+                        startsWith("getSegment called with sizeRequested"),
+                        endsWith(", should be > 0"))));
+
+        V10InputBlob blob = new V10InputBlob(db, transaction, null, 1);
+
+        blob.getSegment(0);
+    }
+
+    /**
+     * Test if {@link org.firebirdsql.gds.ng.wire.version10.V10InputBlob#getSegment(int)} with less than
+     * zero throws an exception
+     */
+    @Test
+    public void testGetSegment_requestedSizeLessThanZero() throws Exception {
+        expectedException.expect(SQLException.class);
+        expectedException.expect(
+                message(allOf(
+                        startsWith("getSegment called with sizeRequested"),
+                        endsWith(", should be > 0"))));
+
+        V10InputBlob blob = new V10InputBlob(db, transaction, null, 1);
+
+        blob.getSegment(-1);
+    }
+
+    /**
+     * Test if {@link org.firebirdsql.gds.ng.wire.version10.V10InputBlob#getSegment(int)} on closed blob
+     * throws exception
+     */
+    @Test
+    public void testGetSegment_blobClosed() throws Exception {
+        expectedException.expect(SQLNonTransientException.class);
+        expectedException.expect(sqlExceptionEqualTo(ISCConstants.isc_bad_segstr_handle));
+
+        V10InputBlob blob = new V10InputBlob(db, transaction, null, 1);
+
+        final Expectations exp = new Expectations();
+        exp.oneOf(db).isAttached();
+        exp.will(returnValue(true));
+        exp.oneOf(transaction).getState();
+        exp.will(returnValue(TransactionState.ACTIVE));
+        context.checking(exp);
+
+        blob.getSegment(1);
+    }
 }

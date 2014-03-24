@@ -20,7 +20,9 @@
  */
 package org.firebirdsql.gds.ng.wire;
 
+import org.firebirdsql.gds.BlobParameterBuffer;
 import org.firebirdsql.gds.impl.wire.WireProtocolConstants;
+import org.firebirdsql.gds.impl.wire.Xdrable;
 import org.firebirdsql.gds.ng.AbstractFbBlob;
 
 import java.sql.SQLException;
@@ -31,8 +33,9 @@ import java.sql.SQLException;
  */
 public abstract class AbstractFbWireBlob extends AbstractFbBlob implements FbWireBlob {
 
-    protected AbstractFbWireBlob(FbWireDatabase database, FbWireTransaction transaction, long blobId) {
-        super(database, transaction, blobId);
+    protected AbstractFbWireBlob(FbWireDatabase database, FbWireTransaction transaction,
+                                 BlobParameterBuffer blobParameterBuffer) {
+        super(database, transaction, blobParameterBuffer);
     }
 
     @Override
@@ -66,5 +69,10 @@ public abstract class AbstractFbWireBlob extends AbstractFbBlob implements FbWir
     @Override
     protected void cancelImpl() throws SQLException {
         releaseBlob(WireProtocolConstants.op_cancel_blob);
+    }
+
+    @Override
+    protected boolean isValidBlobParameterBufferClass(Class<? extends BlobParameterBuffer> blobParameterBufferClass) {
+        return Xdrable.class.isAssignableFrom(blobParameterBufferClass);
     }
 }

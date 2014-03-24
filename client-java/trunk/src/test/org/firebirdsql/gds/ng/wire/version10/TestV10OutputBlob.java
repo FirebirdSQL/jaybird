@@ -20,7 +20,9 @@
  */
 package org.firebirdsql.gds.ng.wire.version10;
 
+import org.firebirdsql.gds.BlobParameterBuffer;
 import org.firebirdsql.gds.XSQLVAR;
+import org.firebirdsql.gds.impl.wire.BlobParameterBufferImp;
 import org.firebirdsql.gds.ng.FbBlob;
 import org.firebirdsql.gds.ng.FbStatement;
 import org.firebirdsql.gds.ng.FbTransaction;
@@ -30,6 +32,7 @@ import org.firebirdsql.gds.ng.wire.FbWireDatabase;
 import org.firebirdsql.gds.ng.wire.SimpleStatementListener;
 import org.junit.Test;
 
+import java.sql.SQLException;
 import java.util.Arrays;
 
 import static org.junit.Assert.assertTrue;
@@ -53,30 +56,7 @@ public class TestV10OutputBlob extends BaseTestV10Blob {
 
         final FbWireDatabase db = createDatabaseConnection();
         try {
-            final SimpleStatementListener listener = new SimpleStatementListener();
-            final FbTransaction transaction = getTransaction(db);
-            final FbStatement statement = db.createStatement(transaction);
-            statement.addStatementListener(listener);
-            statement.allocateStatement();
-            final FbBlob blob = db.createBlobForOutput(transaction);
-            blob.open();
-            int bytesWritten = 0;
-            while (bytesWritten < testBytes.length) {
-                // TODO the interface for writing blobs should be simpler
-                byte[] buffer = new byte[Math.min(blob.getMaximumSegmentSize(), testBytes.length - bytesWritten)];
-                System.arraycopy(testBytes, bytesWritten, buffer, 0, buffer.length);
-                blob.putSegment(buffer);
-                bytesWritten += buffer.length;
-            }
-            blob.close();
-
-            statement.prepare(INSERT_BLOB_TABLE);
-            RowDescriptor descriptor = statement.getParameterDescriptor();
-            FieldValue param1 = new FieldValue(descriptor.getFieldDescriptor(0), XSQLVAR.intToBytes(testId));
-            FieldValue param2 = new FieldValue(descriptor.getFieldDescriptor(1), XSQLVAR.longToBytes(blob.getBlobId()));
-            statement.execute(Arrays.asList(param1, param2));
-            statement.close();
-            transaction.commit();
+            writeBlob(testId, testBytes, db, null);
         } finally {
             db.detach();
         }
@@ -84,4 +64,62 @@ public class TestV10OutputBlob extends BaseTestV10Blob {
         assertTrue("Unexpected blob content", validateBlob(testId, baseContent, requiredSize));
     }
 
+    /**
+     * Writes a blob using the gds.ng API.
+     *
+     * @param testId Id of the record to insert
+     * @param testBytes Bytes to write
+     * @param db Database to use
+     * @param blobParameterBuffer Blob parameter buffer (or null)
+     * @throws SQLException
+     */
+    private void writeBlob(int testId, byte[] testBytes, FbWireDatabase db, BlobParameterBuffer blobParameterBuffer) throws SQLException {
+        final SimpleStatementListener listener = new SimpleStatementListener();
+        final FbTransaction transaction = getTransaction(db);
+        final FbStatement statement = db.createStatement(transaction);
+        statement.addStatementListener(listener);
+        statement.allocateStatement();
+        final FbBlob blob = db.createBlobForOutput(transaction, blobParameterBuffer);
+        blob.open();
+        int bytesWritten = 0;
+        while (bytesWritten < testBytes.length) {
+            // TODO the interface for writing blobs should be simpler
+            byte[] buffer = new byte[Math.min(blob.getMaximumSegmentSize(), testBytes.length - bytesWritten)];
+            System.arraycopy(testBytes, bytesWritten, buffer, 0, buffer.length);
+            blob.putSegment(buffer);
+            bytesWritten += buffer.length;
+        }
+        blob.close();
+
+        statement.prepare(INSERT_BLOB_TABLE);
+        RowDescriptor descriptor = statement.getParameterDescriptor();
+        FieldValue param1 = new FieldValue(descriptor.getFieldDescriptor(0), XSQLVAR.intToBytes(testId));
+        FieldValue param2 = new FieldValue(descriptor.getFieldDescriptor(1), XSQLVAR.longToBytes(blob.getBlobId()));
+        statement.execute(Arrays.asList(param1, param2));
+        statement.close();
+        transaction.commit();
+    }
+
+    /**
+     * Tests storage of a blob (what goes in is what comes out).
+     */
+    @Test
+    public void testBlobStorage_Stream() throws Exception {
+        final int testId = 1;
+        final byte[] baseContent = generateBaseContent();
+        // Use sufficiently large value so that multiple segments are used
+        final int requiredSize = 4 * Short.MAX_VALUE;
+        final byte[] testBytes = generateBlobContent(baseContent, requiredSize);
+
+        final FbWireDatabase db = createDatabaseConnection();
+        try {
+            final BlobParameterBuffer blobParameterBuffer = new BlobParameterBufferImp();
+            blobParameterBuffer.addArgument(BlobParameterBuffer.TYPE, BlobParameterBuffer.TYPE_STREAM);
+            writeBlob(testId, testBytes, db, blobParameterBuffer);
+        } finally {
+            db.detach();
+        }
+
+        assertTrue("Unexpected blob content", validateBlob(testId, baseContent, requiredSize));
+    }
 }

@@ -26,6 +26,7 @@
  */
 package org.firebirdsql.gds.ng.wire;
 
+import org.firebirdsql.gds.BlobParameterBuffer;
 import org.firebirdsql.gds.DatabaseParameterBuffer;
 import org.firebirdsql.gds.ng.FbTransaction;
 import org.firebirdsql.gds.ng.fields.BlrCalculator;
@@ -130,9 +131,11 @@ public interface ProtocolDescriptor {
      *         FbWireDatabase of the current database
      * @param transaction
      *         FbWireTransaction to associate with the blob
+     * @param blobParameterBuffer
+     *         Blob Parameter Buffer
      * @return FbWireBlob implementation
      */
-    FbWireBlob createOutputBlob(FbWireDatabase database, FbWireTransaction transaction);
+    FbWireBlob createOutputBlob(FbWireDatabase database, FbWireTransaction transaction, BlobParameterBuffer blobParameterBuffer);
 
     /**
      * Create an input {@link FbWireBlob} implementation for this protocol version.
@@ -141,9 +144,11 @@ public interface ProtocolDescriptor {
      *         FbWireDatabase of the current database
      * @param transaction
      *         FbWireTransaction to associate with the blob
+     * @param blobParameterBuffer
+     *         Blob Parameter Buffer
      * @param blobId
      *         Blob Id (must be non-zero for input blob)
      * @return FbWireBlob implementation
      */
-    FbWireBlob createInputBlob(FbWireDatabase database, FbWireTransaction transaction, long blobId);
+    FbWireBlob createInputBlob(FbWireDatabase database, FbWireTransaction transaction, BlobParameterBuffer blobParameterBuffer, long blobId);
 }

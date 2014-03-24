@@ -8,6 +8,7 @@ import org.hamcrest.Matcher;
 import java.sql.SQLException;
 import java.util.Arrays;
 
+import static org.hamcrest.CoreMatchers.allOf;
 import static org.hamcrest.CoreMatchers.equalTo;
 
 /**
@@ -109,5 +110,20 @@ public class SQLExceptionMatchers {
         GDSExceptionHelper.GDSMessage message = GDSExceptionHelper.getMessage(fbErrorCode);
         message.setParameters(Arrays.asList(messageParameters));
         return message(equalTo(message.toString()));
+    }
+
+    /**
+     * Convenience factory for matcher that checks if an SQLException has a specific Firebird error code
+     * and error message.
+     * <p>
+     * This matcher combines {@link #errorCodeEquals(int)} and {@link #fbMessageEquals(int, String...)}
+     * </p>
+     * @param fbErrorCode The Firebird error code, see {@link org.firebirdsql.gds.ISCConstants}
+     * @param messageParameters The message parameters
+     * @return The Matcher
+     */
+    @Factory
+    public static Matcher<SQLException> sqlExceptionEqualTo(int fbErrorCode, String... messageParameters) {
+        return allOf(errorCodeEquals(fbErrorCode), fbMessageEquals(fbErrorCode, messageParameters));
     }
 }
