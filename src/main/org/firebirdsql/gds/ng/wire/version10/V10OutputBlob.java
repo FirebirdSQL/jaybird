@@ -54,12 +54,9 @@ public class V10OutputBlob extends AbstractFbWireOutputBlob implements FbWireBlo
         synchronized (getSynchronizationObject()) {
             checkDatabaseAttached();
             checkTransactionActive();
-            if (isOpen()) {
-                // TODO isc_no_segstr_close instead?
-                throw new FbExceptionBuilder().nonTransientException(ISCConstants.isc_segstr_no_op).toSQLException();
-            }
-            final long blobId = getBlobId();
-            if (blobId != FbBlob.NO_BLOB_ID) {
+            checkBlobClosed();
+
+            if (getBlobId() != FbBlob.NO_BLOB_ID) {
                 // TODO Custom error instead? (eg "Attempting to reopen output blob")
                 throw new FbExceptionBuilder().nonTransientException(ISCConstants.isc_segstr_no_op).toSQLException();
             }
@@ -77,7 +74,7 @@ public class V10OutputBlob extends AbstractFbWireOutputBlob implements FbWireBlo
                                 (Xdrable) blobParameterBuffer);
                     }
                     xdrOut.writeInt(getTransaction().getHandle());
-                    xdrOut.writeLong(blobId);
+                    xdrOut.writeLong(FbBlob.NO_BLOB_ID);
                     xdrOut.flush();
                 } catch (IOException e) {
                     throw new FbExceptionBuilder().exception(ISCConstants.isc_net_write_err).cause(e).toSQLException();

@@ -99,6 +99,26 @@ public abstract class AbstractFbBlob implements FbBlob, TransactionListener, Dat
         }
     }
 
+    /**
+     * Resets the eof state of the blob to false (not eof).
+     * <p>
+     * This method should only be called by sub-classes of this class.
+     * </p>
+     */
+    protected final void resetEof() {
+        synchronized (getSynchronizationObject()) {
+            eof = false;
+        }
+    }
+
+    /**
+     * Sets the open state of the blob to the specified value.
+     * <p>
+     * This method should only be called by sub-classes of this class.
+     * </p>
+     *
+     * @param open New value of open.
+     */
     protected final void setOpen(boolean open) {
         synchronized (getSynchronizationObject()) {
             this.open = open;
@@ -231,6 +251,17 @@ public abstract class AbstractFbBlob implements FbBlob, TransactionListener, Dat
         if (!isOpen()) {
             // TODO Use more specific exception message?
             throw new FbExceptionBuilder().nonTransientException(ISCConstants.isc_bad_segstr_handle).toSQLException();
+        }
+    }
+
+    /**
+     * @throws SQLException
+     *         When the blob is open.
+     */
+    protected void checkBlobClosed() throws SQLException {
+        if (isOpen()) {
+            // TODO isc_no_segstr_close instead?
+            throw new FbExceptionBuilder().nonTransientException(ISCConstants.isc_segstr_no_op).toSQLException();
         }
     }
 
