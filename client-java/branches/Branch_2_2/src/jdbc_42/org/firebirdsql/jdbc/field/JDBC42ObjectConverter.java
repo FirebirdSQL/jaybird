@@ -36,7 +36,9 @@ public class JDBC42ObjectConverter implements ObjectConverter {
         if (object instanceof LocalDate) {
             switch (field.requiredType) {
             case Types.DATE:
-                field.setDate(java.sql.Date.valueOf((LocalDate) object));
+                LocalDate localDate = (LocalDate) object;
+                field.setFieldData(field.field.encodeLocalDate(
+                        localDate.getYear(), localDate.getMonthValue(), localDate.getDayOfMonth()));
                 return true;
             case Types.CHAR:
             case Types.VARCHAR:
@@ -47,7 +49,9 @@ public class JDBC42ObjectConverter implements ObjectConverter {
         } else if (object instanceof LocalTime) {
             switch (field.requiredType) {
             case Types.TIME:
-                field.setTime(java.sql.Time.valueOf((LocalTime) object));
+                LocalTime localTime = (LocalTime) object;
+                field.setFieldData(field.field.encodeLocalTime(
+                        localTime.getHour(), localTime.getMinute(), localTime.getSecond(), localTime.getNano()));
                 return true;
             case Types.CHAR:
             case Types.VARCHAR:
@@ -56,11 +60,22 @@ public class JDBC42ObjectConverter implements ObjectConverter {
                 return true;
             }
         } else if (object instanceof LocalDateTime) {
+            LocalDateTime localDateTime = (LocalDateTime) object;
             switch (field.requiredType) {
             case Types.DATE:
+                field.setFieldData(field.field.encodeLocalDate(
+                        localDateTime.getYear(), localDateTime.getMonthValue(), localDateTime.getDayOfMonth()));
+                return true;
             case Types.TIME:
+                field.setFieldData(field.field.encodeLocalTime(
+                        localDateTime.getHour(), localDateTime.getMinute(), localDateTime.getSecond(),
+                        localDateTime.getNano()));
+                return true;
             case Types.TIMESTAMP:
-                field.setTimestamp(java.sql.Timestamp.valueOf((LocalDateTime) object));
+                field.setFieldData(field.field.encodeLocalDateTime(
+                        localDateTime.getYear(), localDateTime.getMonthValue(), localDateTime.getDayOfMonth(),
+                        localDateTime.getHour(), localDateTime.getMinute(), localDateTime.getSecond(),
+                        localDateTime.getNano()));
                 return true;
             case Types.CHAR:
             case Types.VARCHAR:

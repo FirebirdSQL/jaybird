@@ -154,7 +154,7 @@ public class XSQLVAR {
         ret[0] = (byte) ((value >>> 24) & 0xff);
         ret[1] = (byte) ((value >>> 16) & 0xff);
         ret[2] = (byte) ((value >>> 8) & 0xff);
-        ret[3] = (byte) ((value >>> 0) & 0xff);
+        ret[3] = (byte) ((value) & 0xff);
         return ret;
     }
 
@@ -170,7 +170,7 @@ public class XSQLVAR {
         int b2 = byte_int[1]&0xFF;
         int b3 = byte_int[2]&0xFF;
         int b4 = byte_int[3]&0xFF;
-        return ((b1 << 24) + (b2 << 16) + (b3 << 8) + (b4 << 0));
+        return ((b1 << 24) + (b2 << 16) + (b3 << 8) + (b4));
     }
 
     /**
@@ -189,7 +189,7 @@ public class XSQLVAR {
         ret[4] = (byte) (value >>> 24 & 0xFF);
         ret[5] = (byte) (value >>> 16 & 0xFF);
         ret[6] = (byte) (value >>>  8 & 0xFF);
-        ret[7] = (byte) (value >>>  0 & 0xFF);
+        ret[7] = (byte) (value & 0xFF);
         return ret;
     }
 
@@ -211,7 +211,7 @@ public class XSQLVAR {
         long b7 = byte_int[6]&0xFF;
         long b8 = byte_int[7]&0xFF;
         return ((b1 << 56) + (b2 << 48) + (b3 << 40) + (b4 << 32) 
-        + (b5 << 24) + (b6 << 16) + (b7 << 8) + (b8 << 0));
+        + (b5 << 24) + (b6 << 16) + (b7 << 8) + (b8));
     }
 
     /**
@@ -352,9 +352,9 @@ public class XSQLVAR {
     }
 
     /**
-     * Encode a <code>Timstamp</code> as a <code>byte</code> array.
+     * Encode a <code>Timestamp</code> as a <code>byte</code> array.
      *
-     * @param value The <code>Timstamp</code> to be encoded
+     * @param value The <code>Timestamp</code> to be encoded
      * @return The array of <code>byte</code>s that represents the given
      *         <code>Timestamp</code> value
      */
@@ -369,7 +369,7 @@ public class XSQLVAR {
          * 
          * "[timestamp is] stored a two long words, one representing
          * the number of days since 17 Nov 1858 and one representing number
-         * of 100 nano-seconds since midnight"
+         * of 100 nano-seconds since midnight" (NOTE: It is actually 100 microseconds!)
          */
         datetime d = new datetime(value, c);
 
@@ -616,39 +616,107 @@ public class XSQLVAR {
     }
 
     /**
+     * Encodes a java.time.LocalTime equivalent to time bytes.
+     *
+     * @param hour Number of hours (is assumed to be 0..23)
+     * @param minute Number of minutes (is assumed to be 0..59)
+     * @param second Number of seconds (is assumed to be 0..59)
+     * @param nanos Sub-second nanoseconds (actual resolution is 100 microseconds, is assumed to be 0 .. 10^9 - 1 ns)
+     * @return Byte array for time
+     */
+    public byte[] encodeLocalTime(int hour, int minute, int second, int nanos) {
+        datetime dt = new datetime(0, 0, 0, hour, minute, second, nanos);
+        return dt.toTimeBytes();
+    }
+
+    /**
+     * Encodes a java.time.LocalDate equivalent to date bytes.
+     *
+     * @param year Year
+     * @param month Month (is assumed to be 1..12)
+     * @param day Day (is assumed to be valid for year and month)
+     * @return Byte array for date
+     */
+    public byte[] encodeLocalDate(int year, int month, int day) {
+        datetime dt = new datetime(year, month, day, 0, 0, 0, 0);
+        return dt.toDateBytes();
+    }
+
+    /**
+     * Encodes a java.time.LocalDateTime equivalent to timestamp bytes.
+     *
+     * @param year Year
+     * @param month Month (is assumed to be 1..12)
+     * @param day Day (is assumed to be valid for year and month)
+     * @param hour Number of hours (is assumed to be 0..23)
+     * @param minute Number of minutes (is assumed to be 0..59)
+     * @param second Number of seconds (is assumed to be 0..59)
+     * @param nanos Sub-second nanoseconds (actual resolution is 100 microseconds, is assumed to be 0 .. 10^9 - 1 ns)
+     * @return Byte array for timestamp
+     */
+    public byte[] encodeLocalDateTime(int year, int month, int day, int hour, int minute, int second, int nanos) {
+        datetime dt = new datetime(year, month, day, hour, minute, second, nanos);
+        byte[] date = dt.toDateBytes();
+        byte[] time = dt.toTimeBytes();
+
+        byte[] result = new byte[8];
+        System.arraycopy(date, 0, result, 0, 4);
+        System.arraycopy(time, 0, result, 4, 4);
+
+        return result;
+    }
+
+    /**
      * Helper Class to encode/decode times/dates
      */
     private class datetime{
+
+        private static final int NANOSECONDS_PER_FRACTION = 100 * 1000;
+        private static final int FRACTIONS_PER_MILLISECOND = 10;
+        private static final int FRACTIONS_PER_SECOND = 1000 * FRACTIONS_PER_MILLISECOND;
+        private static final int FRACTIONS_PER_MINUTE = 60 * FRACTIONS_PER_SECOND;
+        private static final int FRACTIONS_PER_HOUR = 60 * FRACTIONS_PER_MINUTE;
+
         int year;
         int month;
         int day;
         int hour;
         int minute;
         int second;
-        int millisecond;
+        int fractions; // Sub-second precision in 100 microseconds
+
+        datetime(int year, int month, int day, int hour, int minute, int second, int nanos) {
+            this.year = year;
+            this.month = month;
+            this.day = day;
+            this.hour = hour;
+            this.minute = minute;
+            this.second = second;
+            fractions = (nanos / NANOSECONDS_PER_FRACTION) % FRACTIONS_PER_SECOND;
+        }
 
         datetime(Timestamp value, Calendar cOrig){
         	Calendar c = (Calendar)cOrig.clone();
             c.setTime(value);
             year = c.get(Calendar.YEAR);
-            month = c.get(Calendar.MONTH)+1;
+            month = c.get(Calendar.MONTH) + 1;
             day = c.get(Calendar.DAY_OF_MONTH);
             hour = c.get(Calendar.HOUR_OF_DAY);
             minute = c.get(Calendar.MINUTE);
             second = c.get(Calendar.SECOND);
-            millisecond = value.getNanos()/1000000;
+            fractions = value.getNanos() / NANOSECONDS_PER_FRACTION;
         }
 
         datetime(Date value, Calendar cOrig){
         	Calendar c = (Calendar)cOrig.clone();
             c.setTime(value);
             year = c.get(Calendar.YEAR);
-            month = c.get(Calendar.MONTH)+1;
+            month = c.get(Calendar.MONTH) + 1;
             day = c.get(Calendar.DAY_OF_MONTH);
             hour = 0;
             minute = 0;
             second = 0;
-            millisecond = 0;
+            fractions = 0;
         }
 
         datetime(Time value, Calendar cOrig){
@@ -660,7 +728,7 @@ public class XSQLVAR {
             hour = c.get(Calendar.HOUR_OF_DAY);
             minute = c.get(Calendar.MINUTE);
             second = c.get(Calendar.SECOND);
-            millisecond = c.get(Calendar.MILLISECOND);
+            fractions = c.get(Calendar.MILLISECOND) * FRACTIONS_PER_MILLISECOND;
         }
 
         datetime(byte[] date, byte[] time){
@@ -691,17 +759,23 @@ public class XSQLVAR {
                 }
             }
             if (time != null){		
-                int millisInDay = decodeInt(time)/10;
-                hour = millisInDay / 3600000;
-                minute = (millisInDay - hour*3600000) / 60000;
-                second = (millisInDay - hour*3600000 - minute * 60000) / 1000;
-                millisecond = millisInDay - hour*3600000 - minute * 60000 - second * 1000;
+                int fractionsInDay = decodeInt(time);
+                hour = fractionsInDay / FRACTIONS_PER_HOUR;
+                fractionsInDay -= hour * FRACTIONS_PER_HOUR;
+                minute = fractionsInDay / FRACTIONS_PER_MINUTE;
+                fractionsInDay -= minute * FRACTIONS_PER_MINUTE;
+                second = fractionsInDay / FRACTIONS_PER_SECOND;
+                fractions = fractionsInDay - second * FRACTIONS_PER_SECOND;
             }
         }
 
         byte[] toTimeBytes(){
-            int millisInDay = (hour * 3600000 + minute * 60000 + second * 1000 + millisecond)*10; 
-            return encodeInt(millisInDay);
+            int fractionsInDay =
+                    hour * FRACTIONS_PER_HOUR
+                    + minute * FRACTIONS_PER_MINUTE
+                    + second * FRACTIONS_PER_SECOND
+                    + fractions;
+            return encodeInt(fractionsInDay);
         }
 
         byte[] toDateBytes(){
@@ -732,33 +806,34 @@ public class XSQLVAR {
             c.set(Calendar.MONTH, Calendar.JANUARY);
             c.set(Calendar.DAY_OF_MONTH, 1);
             c.set(Calendar.HOUR_OF_DAY,hour);
-            c.set(Calendar.MINUTE,minute);
-            c.set(Calendar.SECOND,second);
-            c.set(Calendar.MILLISECOND,millisecond);
+            c.set(Calendar.MINUTE, minute);
+            c.set(Calendar.SECOND, second);
+            c.set(Calendar.MILLISECOND, fractions / FRACTIONS_PER_MILLISECOND);
             return new Time(c.getTime().getTime());
         }
 
         Timestamp toTimestamp(Calendar cOrig){
         	Calendar c = (Calendar)cOrig.clone();
-            c.set(Calendar.YEAR,year);
-            c.set(Calendar.MONTH,month-1);
-            c.set(Calendar.DAY_OF_MONTH,day);
-            c.set(Calendar.HOUR_OF_DAY,hour);
-            c.set(Calendar.MINUTE,minute);
-            c.set(Calendar.SECOND,second);
-            c.set(Calendar.MILLISECOND,millisecond);
-            return new Timestamp(c.getTime().getTime());
+            c.set(Calendar.YEAR, year);
+            c.set(Calendar.MONTH, month - 1);
+            c.set(Calendar.DAY_OF_MONTH, day);
+            c.set(Calendar.HOUR_OF_DAY, hour);
+            c.set(Calendar.MINUTE, minute);
+            c.set(Calendar.SECOND, second);
+            Timestamp timestamp = new Timestamp(c.getTime().getTime());
+            timestamp.setNanos(fractions * NANOSECONDS_PER_FRACTION);
+            return timestamp;
         }
 
         Date toDate(Calendar cOrig){
         	Calendar c = (Calendar)cOrig.clone();
-            c.set(Calendar.YEAR,year);
-            c.set(Calendar.MONTH,month-1);
-            c.set(Calendar.DAY_OF_MONTH,day);
-            c.set(Calendar.HOUR_OF_DAY,0);
-            c.set(Calendar.MINUTE,0);
-            c.set(Calendar.SECOND,0);
-            c.set(Calendar.MILLISECOND,0);
+            c.set(Calendar.YEAR, year);
+            c.set(Calendar.MONTH, month - 1);
+            c.set(Calendar.DAY_OF_MONTH, day);
+            c.set(Calendar.HOUR_OF_DAY, 0);
+            c.set(Calendar.MINUTE, 0);
+            c.set(Calendar.SECOND, 0);
+            c.set(Calendar.MILLISECOND, 0);
             return new Date(c.getTime().getTime());
         }
     }
