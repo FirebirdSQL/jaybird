@@ -130,11 +130,7 @@ final class PooledConnectionQueue {
         if (!queueState.compareAndSet(QueueState.NEW, QueueState.STARTED)) return;
 
         for (int i = 0; i < configuration.getMinPoolSize(); i++) {
-            try {
-                addConnection();
-            } catch (InterruptedException iex) {
-                throw new SQLException("Could not start connection queue.");
-            }
+            addConnection();
         }
 
         idleRemover = new IdleRemover();
@@ -295,31 +291,24 @@ final class PooledConnectionQueue {
             }
             return;
         }
-        try {
-            if (configuration.isPooling()) {
-                connection.setInPool(true);
-                if (workingConnectionsToClose.remove(connection)) {
-                    destroyConnection(connection);
-                    addConnection();
-                } else if (!idleConnections.offer(connection)) {
-                    // Maximum capacity reached
-                    destroyConnection(connection);
-                } else {
-                    workingConnections.remove(connection);
-                }
-            } else {
-                // deallocate connection if pooling is not enabled.
+        if (configuration.isPooling()) {
+            connection.setInPool(true);
+            if (workingConnectionsToClose.remove(connection)) {
                 destroyConnection(connection);
+                addConnection();
+            } else if (!idleConnections.offer(connection)) {
+                // Maximum capacity reached
+                destroyConnection(connection);
+            } else {
+                workingConnections.remove(connection);
             }
-
-            if (LOG_DEBUG_INFO && logger != null) {
-                logger.debug("Thread " + Thread.currentThread().getName() + " released connection.");
-            }
-        } catch (InterruptedException iex) {
-            if (logger != null) {
-                logger.warn("Thread " + Thread.currentThread().getName() + " was interrupted.", iex);
-            }
+        } else {
+            // deallocate connection if pooling is not enabled.
             destroyConnection(connection);
+        }
+
+        if (LOG_DEBUG_INFO && logger != null) {
+            logger.debug("Thread " + Thread.currentThread().getName() + " released connection.");
         }
     }
 
@@ -417,10 +406,8 @@ final class PooledConnectionQueue {
      * otherwise false.
      * @throws SQLException
      *         if new connection cannot be opened.
-     * @throws InterruptedException
-     *         if thread was interrupted.
      */
-    private boolean addConnection() throws SQLException, InterruptedException {
+    private boolean addConnection() throws SQLException {
         if (LOG_DEBUG_INFO && logger != null) {
             logger.debug("Trying to create connection, total connections " + allConnections.size()
                     + ", max allowed " + configuration.getMaxPoolSize());
@@ -509,7 +496,20 @@ final class PooledConnectionQueue {
         if (totalSize() <= configuration.getMinPoolSize())
             return false;
 
-        // We temporarily remove the connection from the pool to make the necessary checks
+        /* Initial check without removing object from idleConnections queue.
+         * This is to prevent too much unnecessary removal of items from head and adding them to to the back
+         * of the queue which might lead to too many idle connections older than maxIdleTime at the end
+         * of the queue while younger items exist at the head of the queue.
+         */
+        final PooledObject initialCandidate = idleConnections.peek();
+        if (initialCandidate == null
+                || initialCandidate.getInstantInPool() >= System.currentTimeMillis() - configuration.getMaxIdleTime()) {
+            // No candidate or initial candidate is too recent, abandon further checks
+            return false;
+        }
+
+        // We temporarily remove the connection from the pool to make further checks
+        // We repeat all checks as in the meantime the previous (peeked) candidate may have been obtained from the pool
         final PooledObject candidate = idleConnections.poll();
         if (candidate == null) {
             return false;
@@ -523,9 +523,16 @@ final class PooledConnectionQueue {
             if (idleTime < configuration.getMaxIdleTime() && idleConnections.offer(candidate)) {
                 return false;
             }
+            if (logger != null && logger.isDebugEnabled()) {
+                logger.debug(String.format("Going to remove connection with idleTime %d (max is %d)%n", idleTime, configuration.getMaxIdleTime()));
+            }
         }
 
         destroyConnection(candidate);
+        if (totalSize() < configuration.getMinPoolSize()) {
+            // We assume our current action caused the pool to shrink below the minimum size, so we add one
+            addConnection();
+        }
         return true;
     }
 
