@@ -223,7 +223,7 @@ public class FBDriver implements FirebirdDriver {
          * @return this driver's major version number
      */
     public int getMajorVersion() {
-        return 2;
+        return 3;
     }
 
     /**
