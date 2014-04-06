@@ -224,7 +224,7 @@ public abstract class AbstractDriver implements FirebirdDriver {
 
     /**
      * Gets the driver's major version number. Initially this should be 1.
-         * @return this driver's major version number
+     * @return this driver's major version number
      */
     public int getMajorVersion() {
         return 2;
@@ -232,15 +232,15 @@ public abstract class AbstractDriver implements FirebirdDriver {
 
     /**
      * Gets the driver's minor version number. Initially this should be 0.
-         * @return this driver's minor version number
+     * @return this driver's minor version number
      */
     public int getMinorVersion() {
-        return 0;
+        return 2;
     }
 
     /**
      * Reports whether this driver is a genuine JDBC
-         * COMPLIANT<sup><font size=-2>TM</font></sup> driver.
+     * COMPLIANT<sup><font size=-2>TM</font></sup> driver.
      * A driver may only report true here if it passes the JDBC compliance
      * tests; otherwise it is required to return false.
      *
