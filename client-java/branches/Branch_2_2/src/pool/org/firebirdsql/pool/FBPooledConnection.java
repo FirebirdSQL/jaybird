@@ -199,7 +199,12 @@ class FBPooledConnection extends PingablePooledConnection
         
         super.statementClosed(key, proxy);
     }
-    
+
+    @Override
+    protected boolean isRollbackAllowed() {
+        return !managedConnection.inDistributedTransaction();
+    }
+
     void setManagedEnvironment(boolean managedEnvironment) throws SQLException {
         try {
             managedConnection.setManagedEnvironment(managedEnvironment);

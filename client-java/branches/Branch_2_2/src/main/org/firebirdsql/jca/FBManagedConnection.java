@@ -205,7 +205,7 @@ public class FBManagedConnection implements ManagedConnection, XAResource, GDSHe
             // there will be at most one connection.
             for (Iterator iter = connectionHandles.iterator(); iter.hasNext();) {
                 AbstractConnection connection = (AbstractConnection) iter.next();
-                
+
                 try {
                     connection.setManagedEnvironment(managedEnvironment);
                 } catch(SQLException ex) {
@@ -588,7 +588,7 @@ public class FBManagedConnection implements ManagedConnection, XAResource, GDSHe
      * The <code>internalCommit</code> method performs the requested commit
      * and may throw a GDSException to be interpreted by the caller.
      * 
-     * @param id
+     * @param xid
      *            a <code>Xid</code> value
      * @param onePhase
      *            a <code>boolean</code> value
@@ -657,15 +657,23 @@ public class FBManagedConnection implements ManagedConnection, XAResource, GDSHe
         internalEnd(id, flags);
         mcf.notifyEnd(this, id);
         inDistributedTransaction = false;
+
+        try {
+            // This will reset the managed environment of the associated connections and set the transaction coordinator to local
+            // TODO This is a bit of a hack; need to find a better way; this doesn't work with connectionSharing = true
+            setManagedEnvironment(isManagedEnvironment());
+        } catch (ResourceException ex) {
+            throw new FBXAException("Reset of managed state failed", XAException.XAER_RMERR);
+        }
     }
 
     /**
      * The <code>internalEnd</code> method ends the xid as requested if
-     * approprriate and throws a GDSException including the appropriate XA error
+     * appropriate and throws a GDSException including the appropriate XA error
      * code and a message if not. The caller can decode the exception as
      * necessary.
      * 
-     * @param id
+     * @param xid
      *            a <code>Xid</code> value
      * @param flags
      *            an <code>int</code> value
@@ -1117,6 +1125,10 @@ public class FBManagedConnection implements ManagedConnection, XAResource, GDSHe
             mcf.notifyStart(this, id);
             
             inDistributedTransaction = true;
+
+            // This will reset the managed environment of the associated connections and set the transaction coordinator to managed
+            // TODO This is a bit of a hack; need to find a better way; this doesn't work with connectionSharing = true
+            setManagedEnvironment(isManagedEnvironment());
             
         } catch (GDSException ge) {
             throw new FBXAException(ge.getXAErrorCode());

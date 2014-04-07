@@ -19,7 +19,7 @@ public class PingablePooledConnection extends AbstractPingablePooledConnection {
 		super(connection, pingStatement, pingInterval, statementPooling, maxStatements, keepStatements, owningQueue);
 	}
 
-	public void addStatementEventListener(StatementEventListener arg0) {
+    public void addStatementEventListener(StatementEventListener arg0) {
 		throw new UnsupportedOperationException("Not yet implemented");
 	}
 
