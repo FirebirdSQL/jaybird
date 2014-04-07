@@ -26,7 +26,6 @@ import java.sql.SQLException;
 import java.sql.Savepoint;
 import java.sql.Statement;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 
 import javax.sql.XAConnection;
@@ -73,9 +72,8 @@ public class TestFBXADataSource extends FBTestBase {
     }
 
     public void tearDown() throws Exception {
-        Iterator iter = connections.iterator();
-        while (iter.hasNext()) {
-            XAConnection pc = (XAConnection) iter.next();
+        for (Object connection : connections) {
+            XAConnection pc = (XAConnection) connection;
             closeQuietly(pc);
         }
         super.tearDown();
@@ -150,7 +148,7 @@ public class TestFBXADataSource extends FBTestBase {
     }
     
     /**
-     * Tests if setting autoCommit(true) when autoCommit is true to not throw an exception when participating in a distributed transaction (JDBC 4.0 section 12.4).
+     * Tests if setting autoCommit(true) when autoCommit is true throws an exception when participating in a distributed transaction (JDBC 4.0 section 12.4).
      */
     public void testInDistributed_setAutoCommit_true_inAutoCommit() throws Exception {
         XAConnection pc = getXAConnection();
@@ -161,9 +159,10 @@ public class TestFBXADataSource extends FBTestBase {
         try {
             xa.start(xid, XAResource.TMNOFLAGS);
             con.setAutoCommit(true);
-            
+            fail("Expected setAutoCommit true while in distributed transaction to throw an exception");
         } catch (SQLException ex) {
-            fail("Expected setAutoCommit true (while already true) while in distributed transaction to not throw an exception");
+            // Expected
+            assertEquals(FBSQLException.SQL_STATE_INVALID_TX_STATE, ex.getSQLState());
         } finally {
             xa.end(xid, XAResource.TMSUCCESS);
             xa.rollback(xid);
@@ -183,7 +182,7 @@ public class TestFBXADataSource extends FBTestBase {
         try {
             xa.start(xid, XAResource.TMNOFLAGS);
             con.commit();
-            fail("Expected setAutoCommit true while in distributed transaction to throw an exception");
+            fail("Expected commit while in distributed transaction to throw an exception");
         } catch (SQLException ex) {
             // Expected
             assertEquals(FBSQLException.SQL_STATE_INVALID_TX_STATE, ex.getSQLState());
@@ -206,7 +205,7 @@ public class TestFBXADataSource extends FBTestBase {
         try {
             xa.start(xid, XAResource.TMNOFLAGS);
             con.rollback();
-            fail("Expected setAutoCommit true while in distributed transaction to throw an exception");
+            fail("Expected rollback while in distributed transaction to throw an exception");
         } catch (SQLException ex) {
             // Expected
             assertEquals(FBSQLException.SQL_STATE_INVALID_TX_STATE, ex.getSQLState());
@@ -231,7 +230,7 @@ public class TestFBXADataSource extends FBTestBase {
         xa.start(xid, XAResource.TMNOFLAGS);
         try {
             con.rollback(savepoint);
-            fail("Expected setAutoCommit true while in distributed transaction to throw an exception");
+            fail("Expected rollback(savepoint) while in distributed transaction to throw an exception");
         } catch (SQLException ex) {
             // Expected
             assertEquals(FBSQLException.SQL_STATE_INVALID_TX_STATE, ex.getSQLState());
@@ -254,7 +253,7 @@ public class TestFBXADataSource extends FBTestBase {
         try {
             xa.start(xid, XAResource.TMNOFLAGS);
             con.setSavepoint();
-            fail("Expected setAutoCommit true while in distributed transaction to throw an exception");
+            fail("Expected setSavepoint while in distributed transaction to throw an exception");
         } catch (SQLException ex) {
             // Expected
             assertEquals(FBSQLException.SQL_STATE_INVALID_TX_STATE, ex.getSQLState());
@@ -277,7 +276,7 @@ public class TestFBXADataSource extends FBTestBase {
         try {
             xa.start(xid, XAResource.TMNOFLAGS);
             con.setSavepoint("test_sp");
-            fail("Expected setAutoCommit true while in distributed transaction to throw an exception");
+            fail("Expected setSavepoint(named) while in distributed transaction to throw an exception");
         } catch (SQLException ex) {
             // Expected
             assertEquals(FBSQLException.SQL_STATE_INVALID_TX_STATE, ex.getSQLState());

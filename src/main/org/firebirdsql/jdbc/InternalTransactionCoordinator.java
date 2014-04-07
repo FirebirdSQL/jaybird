@@ -401,9 +401,9 @@ public class InternalTransactionCoordinator implements FBObjectListener.Statemen
         }
         
         /* (non-Javadoc)
-         * @see org.firebirdsql.jdbc.InternalTransactionCoordinator.AbstractTransactionCoordinator#completeStatements()
+         * @see org.firebirdsql.jdbc.InternalTransactionCoordinator.AbstractTransactionCoordinator#completeStatements(CompletionReason)
          */
-        protected void completeStatements() throws SQLException {
+        protected void completeStatements(CompletionReason reason) throws SQLException {
             SQLExceptionChainBuilder chain = new SQLExceptionChainBuilder();
 
             // we have to loop through the array, since the 
@@ -416,7 +416,7 @@ public class InternalTransactionCoordinator implements FBObjectListener.Statemen
                     (AbstractStatement)statementsToComplete[i];
 
                 try {
-                    statement.completeStatement();
+                    statement.completeStatement(reason);
                 } catch(SQLException ex) {
                     chain.append(ex);
                 }

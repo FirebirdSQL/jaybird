@@ -668,6 +668,18 @@ public abstract class AbstractPingablePooledConnection implements PooledConnecti
         }
     }
 
+    /**
+     * Is calling rollback on the physical connection allowed when the logical connection close is signalled.
+     * <p>
+     * Reason to return <code>false</code> is when the physical connection is participating in a distributed connection.
+     * </p>
+     *
+     * @return <code>true</code> when calling rollback is allowed, <code>false</code> otherwise
+     */
+    protected boolean isRollbackAllowed() {
+        return true;
+    }
+
     public void connectionClosed(PooledConnectionHandler connection) throws SQLException {
 
         if (connection != currentConnection) {
@@ -679,7 +691,7 @@ public abstract class AbstractPingablePooledConnection implements PooledConnecti
             cleanCache();
         
         try {
-            if (!jdbcConnection.getAutoCommit() && !connection.isClosed())
+            if (isRollbackAllowed() && !jdbcConnection.getAutoCommit() && !connection.isClosed())
                 jdbcConnection.rollback();
         } catch(SQLException ex) {
             if (log != null && log.isWarnEnabled())

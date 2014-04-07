@@ -42,16 +42,16 @@ public class TestFBXAResource extends TestXABase {
     }
 
     public void testGetXAResource() throws Exception {
-        
         if (log != null) log.info("testGetXAResource");
         FBManagedConnectionFactory mcf = initMcf();
         ManagedConnection mc = mcf.createManagedConnection(null, null);
-        XAResource xa1 = mc.getXAResource();
-        XAResource xa2 = mc.getXAResource();
-        if (xa1 != xa2) {
-            throw new Exception("XAResources do not match from same mc");
+        try {
+            XAResource xa1 = mc.getXAResource();
+            XAResource xa2 = mc.getXAResource();
+            assertSame("XAResources from same mc should be identical", xa1, xa2);
+        } finally {
+            mc.destroy();
         }
-        mc.destroy();
     }
 
     public void testIsSameRM() throws Exception {
@@ -77,7 +77,6 @@ public class TestFBXAResource extends TestXABase {
     }
 
     public void testStartXATrans() throws Exception {
-        
         if (log != null) log.info("testStartXATrans");
         FBManagedConnectionFactory mcf = initMcf();
         ManagedConnection mc = mcf.createManagedConnection(null, null);
@@ -277,4 +276,48 @@ public class TestFBXAResource extends TestXABase {
         }
     }
 
+    /**
+     * Test that use of multiple statements in distributed transactions does not close result sets.
+     * <p>
+     * See <a href="http://tracker.firebirdsql.org/browse/JDBC-344">JDBC-344</a>
+     * </p>
+     */
+    public void testXAMultipleStatements() throws Throwable {
+        FBManagedConnectionFactory mcf = initMcf();
+        FBManagedConnection mc = (FBManagedConnection) mcf.createManagedConnection(null, null);
+        // TODO Test fails with connectionSharing enabled, as that doesn't reset the managedEnvironment status currently used to fix the issue
+        mc.setConnectionSharing(false);
+        try {
+            XAResource xa = mc.getXAResource();
+            Connection con = (Connection) mc.getConnection(null, null);
+            Xid xid = new XidImpl();
+            xa.start(xid, XAResource.TMNOFLAGS);
+
+            Statement stmt1 = con.createStatement();
+            Statement stmt2 = con.createStatement();
+            try {
+                ResultSet rs1 = stmt1.executeQuery("SELECT RDB$CHARACTER_SET_NAME FROM RDB$CHARACTER_SETS");
+                assertTrue("Expected rs1 row 1", rs1.next());
+                assertNotNull("Expected rs1 value for row 1, column 1", rs1.getString(1));
+                ResultSet rs2 = stmt2.executeQuery("SELECT 1 FROM RDB$DATABASE");
+                assertTrue("Expected rs2 row 1", rs2.next());
+                assertEquals("Expected value 1 for rs2 row 1, column 1", 1, rs2.getInt(1));
+                assertFalse("Expected rs1 to be open as the resultset shouldn't have been closed by interleaved execution of stmt2", rs1.isClosed());
+
+                rs1.close();
+                rs2.close();
+                xa.end(xid, XAResource.TMSUCCESS);
+                xa.commit(xid, true);
+            } catch (Throwable t) {
+                xa.end(xid, XAResource.TMSUCCESS);
+                xa.rollback(xid);
+                throw t;
+            } finally {
+                closeQuietly(stmt1);
+                closeQuietly(stmt2);
+            }
+        } finally {
+            mc.destroy();
+        }
+    }
 }
