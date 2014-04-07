@@ -473,7 +473,7 @@ public class FBConnection implements FirebirdConnection {
         checkValidity();
         
         InternalTransactionCoordinator.AbstractTransactionCoordinator coordinator;
-        if (managedConnection && mc.inTransaction()) {
+        if (managedConnection && mc.inDistributedTransaction()) {
             coordinator = new InternalTransactionCoordinator.ManagedTransactionCoordinator(this);
             this.autoCommit = false;
         } else {
