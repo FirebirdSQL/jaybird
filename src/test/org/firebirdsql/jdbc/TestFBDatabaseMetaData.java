@@ -175,7 +175,7 @@ public class TestFBDatabaseMetaData extends FBJUnit4TestBase {
             else if (databaseMajorVersion == 2 && databaseMinorVersion == 5)
                 sysTableCount = 42;
             else if (databaseMajorVersion == 3 && databaseMinorVersion == 0) {
-                sysTableCount = 44;
+                sysTableCount = 45;
             } else {
                 fail(String.format("Unsupported database server version %d.%d for this test case: found table count %d", databaseMajorVersion, databaseMinorVersion, count));
 
