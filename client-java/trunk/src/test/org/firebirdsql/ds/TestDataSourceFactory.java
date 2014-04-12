@@ -20,12 +20,14 @@
  */
 package org.firebirdsql.ds;
 
+import org.junit.Test;
+
 import java.sql.Connection;
 import java.sql.SQLException;
 
 import javax.naming.Reference;
 
-import junit.framework.TestCase;
+import static org.junit.Assert.*;
 
 /**
  * Tests for {@link DataSourceFactory} and - indirectly - the correctness of the getReference() method of
@@ -34,7 +36,7 @@ import junit.framework.TestCase;
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @since 2.2
  */
-public class TestDataSourceFactory extends TestCase {
+public class TestDataSourceFactory {
     
     private static final String ROLE_NAME = "someRoleName";
     private static final int LOGIN_TIMEOUT = 513;
@@ -51,7 +53,7 @@ public class TestDataSourceFactory extends TestCase {
      * Fills the properties (exposed with JavaBeans setters) of FBAbstractCommonDataSource for testing. Does not set nonStandardProperty 
      * and encoding (as it is set through charSet).
      * 
-     * @param instance
+     * @param instance Instance to configure
      * @throws SQLException
      */
     private void fillFBAbstractCommonDataSourceProperties(FBAbstractCommonDataSource instance) throws SQLException {
@@ -70,7 +72,7 @@ public class TestDataSourceFactory extends TestCase {
     /**
      * Validates if the instance of FBAbstractCommonDataSource has the values as set by {@link TestDataSourceFactory#fillFBAbstractCommonDataSourceProperties(FBAbstractCommonDataSource)}.
      * 
-     * @param instance
+     * @param instance Instance to validate
      * @throws SQLException
      */
     private void assertFBAbstractCommonDataSourceProperties(FBAbstractCommonDataSource instance) throws SQLException{
@@ -99,6 +101,7 @@ public class TestDataSourceFactory extends TestCase {
      * </p>
      * @throws Exception
      */
+    @Test
     public void testBuildFBConnectionPoolDataSource_basicProperties() throws Exception {
         final FBConnectionPoolDataSource originalDS = new FBConnectionPoolDataSource();
         
@@ -126,6 +129,7 @@ public class TestDataSourceFactory extends TestCase {
      * </p>
      * @throws Exception
      */
+    @Test
     public void testBuildFBXADataSource_basicProperties() throws Exception {
         final FBXADataSource originalDS = new FBXADataSource();
         
@@ -153,6 +157,7 @@ public class TestDataSourceFactory extends TestCase {
      * </p>
      * @throws Exception
      */
+    @Test
     public void testBuildFBConnectionPoolDataSource_nonStandardProperties() throws Exception {
         final FBConnectionPoolDataSource originalDS = new FBConnectionPoolDataSource();
         
@@ -182,6 +187,7 @@ public class TestDataSourceFactory extends TestCase {
      * </p>
      * @throws Exception
      */
+    @Test
     public void testBuildFBXADataSource_nonStandardProperties() throws Exception {
         final FBXADataSource originalDS = new FBXADataSource();
         
@@ -196,5 +202,4 @@ public class TestDataSourceFactory extends TestCase {
         assertEquals("madeUpValue", newDS.getNonStandardProperty("madeUpProperty"));
         assertNull(newDS.getDescription());
     }
-
 }

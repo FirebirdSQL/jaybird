@@ -31,7 +31,9 @@ import org.jmock.Expectations;
 import org.jmock.integration.junit4.JUnitRuleMockery;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 
+import static org.firebirdsql.common.matchers.SQLExceptionMatchers.sqlStateEquals;
 import static org.junit.Assert.*;
 
 /**
@@ -43,6 +45,9 @@ public class TestFBPooledConnectionMock {
 
     @Rule
     public final JUnitRuleMockery context = new JUnitRuleMockery();
+
+    @Rule
+    public final ExpectedException expectedException = ExpectedException.none();
 
     /**
      * Two logical connections obtained from a PooledConnection should be
@@ -243,12 +248,10 @@ public class TestFBPooledConnectionMock {
             }
         });
 
-        try {
-            pooled.getConnection();
-            fail("Expected an SQLException");
-        } catch (SQLException ex) {
-            // expected
-        }
+        expectedException.expect(SQLException.class);
+        expectedException.expect(sqlStateEquals(FBSQLException.SQL_STATE_CONNECTION_FAILURE));
+
+        pooled.getConnection();
     }
 
     /**
@@ -270,13 +273,10 @@ public class TestFBPooledConnectionMock {
 
         pooled.close();
 
-        try {
-            pooled.getConnection();
-            fail("Obtaining connection from closed PooledConnection should throw exception");
-        } catch (SQLException e) {
-            assertEquals("Unexpected SQLState value for Exception",
-                    FBSQLException.SQL_STATE_CONNECTION_CLOSED, e.getSQLState());
-        }
+        expectedException.expect(SQLException.class);
+        expectedException.expect(sqlStateEquals(FBSQLException.SQL_STATE_CONNECTION_CLOSED));
+
+        pooled.getConnection();
     }
 
     /**

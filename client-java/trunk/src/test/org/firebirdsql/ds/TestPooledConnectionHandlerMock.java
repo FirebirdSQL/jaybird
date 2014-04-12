@@ -30,6 +30,7 @@ import org.jmock.integration.junit4.JUnitRuleMockery;
 import org.jmock.lib.legacy.ClassImposteriser;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 
 import static org.junit.Assert.*;
 
@@ -45,6 +46,9 @@ public class TestPooledConnectionHandlerMock {
     {
         context.setImposteriser(ClassImposteriser.INSTANCE);
     }
+
+    @Rule
+    public final ExpectedException expectedException = ExpectedException.none();
 
     /**
      * The isClosed() method of PooledConnectionHandler and its proxy should
@@ -188,13 +192,10 @@ public class TestPooledConnectionHandlerMock {
         Connection proxy = handler.getProxy();
         handler.close();
 
-        try {
-            proxy.clearWarnings();
-            fail("Calling clearWarnings on closed proxy should throw SQLException");
-        } catch (SQLException ex) {
-            assertEquals("Expected forcibly closed message",
-                    PooledConnectionHandler.FORCIBLY_CLOSED_MESSAGE, ex.getMessage());
-        }
+        expectedException.expect(SQLException.class);
+        expectedException.expectMessage(PooledConnectionHandler.FORCIBLY_CLOSED_MESSAGE);
+
+        proxy.clearWarnings();
     }
 
     /**
@@ -227,13 +228,10 @@ public class TestPooledConnectionHandlerMock {
         Connection proxy = handler.getProxy();
         proxy.close();
 
-        try {
-            proxy.clearWarnings();
-            fail("Calling clearWarnings on closed proxy should throw SQLException");
-        } catch (SQLException ex) {
-            assertEquals("Expected normal closed message", PooledConnectionHandler.CLOSED_MESSAGE,
-                    ex.getMessage());
-        }
+        expectedException.expect(SQLException.class);
+        expectedException.expectMessage(PooledConnectionHandler.CLOSED_MESSAGE);
+
+        proxy.clearWarnings();
     }
 
     /**
@@ -264,12 +262,9 @@ public class TestPooledConnectionHandlerMock {
 
         Connection proxy = handler.getProxy();
 
-        try {
-            proxy.clearWarnings();
-            fail("Expected test exception to be thrown");
-        } catch (SQLException ex) {
-            // ignore: exception expected
-        }
+        expectedException.expect(SQLException.class);
+
+        proxy.clearWarnings();
     }
 
     /**

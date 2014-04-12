@@ -26,8 +26,10 @@ import java.util.List;
 
 import javax.sql.PooledConnection;
 
-import org.firebirdsql.common.FBTestBase;
+import org.firebirdsql.common.FBJUnit4TestBase;
 import org.firebirdsql.gds.impl.GDSType;
+import org.junit.After;
+import org.junit.Before;
 
 import static org.firebirdsql.common.JdbcResourceHelper.*;
 import static org.firebirdsql.common.FBTestProperties.*;
@@ -36,18 +38,13 @@ import static org.firebirdsql.common.FBTestProperties.*;
  * Common testbase for tests using {@link FBConnectionPoolDataSource}
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  */
-public abstract class FBConnectionPoolTestBase extends FBTestBase {
+public abstract class FBConnectionPoolTestBase extends FBJUnit4TestBase {
 
     private List<PooledConnection> connections = new ArrayList<PooledConnection>();
     protected FBConnectionPoolDataSource ds;
 
-    public FBConnectionPoolTestBase(String name) {
-        super(name);
-    }
-
+    @Before
     public void setUp() throws Exception {
-        super.setUp();
-    
         FBConnectionPoolDataSource newDs = new FBConnectionPoolDataSource();
         newDs.setType(getProperty("test.gds_type", null));
         if (getGdsType() == GDSType.getType("PURE_JAVA")
@@ -62,11 +59,11 @@ public abstract class FBConnectionPoolTestBase extends FBTestBase {
         ds = newDs;
     }
 
+    @After
     public void tearDown() throws Exception {
         for (PooledConnection pc : connections) {
             closeQuietly(pc);
         }
-        super.tearDown();
     }
 
     protected PooledConnection getPooledConnection() throws SQLException {
@@ -74,5 +71,4 @@ public abstract class FBConnectionPoolTestBase extends FBTestBase {
         connections.add(pc);
         return pc;
     }
-
 }
