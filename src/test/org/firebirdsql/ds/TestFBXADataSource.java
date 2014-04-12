@@ -32,13 +32,20 @@ import javax.sql.XAConnection;
 import javax.transaction.xa.XAResource;
 import javax.transaction.xa.Xid;
 
-import org.firebirdsql.common.FBTestBase;
+import org.firebirdsql.common.FBJUnit4TestBase;
 import org.firebirdsql.gds.impl.GDSType;
 import org.firebirdsql.jca.TestXABase.XidImpl;
 import org.firebirdsql.jdbc.FBSQLException;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.rules.ExpectedException;
 
 import static org.firebirdsql.common.JdbcResourceHelper.*;
 import static org.firebirdsql.common.FBTestProperties.*;
+import static org.firebirdsql.common.matchers.SQLExceptionMatchers.sqlStateEquals;
+import static org.junit.Assert.*;
 
 /**
  * Test for XADataSource. Note behavior of XAResource (ManagedConnection) is tested in {@link org.firebirdsql.jca.TestFBXAResource}.
@@ -46,19 +53,17 @@ import static org.firebirdsql.common.FBTestProperties.*;
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @since 2.2
  */
-public class TestFBXADataSource extends FBTestBase {
+public class TestFBXADataSource extends FBJUnit4TestBase {
+
+    @Rule
+    public final ExpectedException expectedException = ExpectedException.none();
     
     private List<XAConnection> connections = new ArrayList<XAConnection>();
 
-    public TestFBXADataSource(String name) {
-        super(name);
-    }
-
     protected FBXADataSource ds;
 
+    @Before
     public void setUp() throws Exception {
-        super.setUp();
-
         FBXADataSource newDs = new FBXADataSource();
         newDs.setType(getProperty("test.gds_type", null));
         if (getGdsType() == GDSType.getType("PURE_JAVA")
@@ -73,11 +78,11 @@ public class TestFBXADataSource extends FBTestBase {
         ds = newDs;
     }
 
+    @After
     public void tearDown() throws Exception {
         for (XAConnection pc : connections) {
             closeQuietly(pc);
         }
-        super.tearDown();
     }
     
     protected XAConnection getXAConnection() throws SQLException {
@@ -91,6 +96,7 @@ public class TestFBXADataSource extends FBTestBase {
      * 
      * @throws SQLException
      */
+    @Test
     public void testDataSource_start() throws SQLException {
         getXAConnection();
     }
@@ -101,6 +107,7 @@ public class TestFBXADataSource extends FBTestBase {
      * 
      * @throws SQLException
      */
+    @Test
     public void testConnection() throws SQLException {
         XAConnection pc = getXAConnection();
 
@@ -128,19 +135,20 @@ public class TestFBXADataSource extends FBTestBase {
     /**
      * Tests if setting autoCommit(true) when autoCommit is false throws an exception when participating in a distributed transaction (JDBC 4.0 section 12.4).
      */
+    @Test
     public void testInDistributed_setAutoCommit_true_notInAutoCommit() throws Exception {
         XAConnection pc = getXAConnection();
         XAResource xa = pc.getXAResource();
         Connection con = pc.getConnection();
-        con.setAutoCommit(false);
         Xid xid = new XidImpl();
         try {
+            con.setAutoCommit(false);
             xa.start(xid, XAResource.TMNOFLAGS);
+
+            expectedException.expect(SQLException.class);
+            expectedException.expect(sqlStateEquals(FBSQLException.SQL_STATE_INVALID_TX_STATE));
+
             con.setAutoCommit(true);
-            fail("Expected setAutoCommit true while in distributed transaction to throw an exception");
-        } catch (SQLException ex) {
-            // Expected
-            assertEquals(FBSQLException.SQL_STATE_INVALID_TX_STATE, ex.getSQLState());
         } finally {
             xa.end(xid, XAResource.TMSUCCESS);
             xa.rollback(xid);
@@ -151,19 +159,20 @@ public class TestFBXADataSource extends FBTestBase {
     /**
      * Tests if setting autoCommit(true) when autoCommit is true throws an exception when participating in a distributed transaction (JDBC 4.0 section 12.4).
      */
+    @Test
     public void testInDistributed_setAutoCommit_true_inAutoCommit() throws Exception {
         XAConnection pc = getXAConnection();
         XAResource xa = pc.getXAResource();
         Connection con = pc.getConnection();
-        con.setAutoCommit(true);
         Xid xid = new XidImpl();
         try {
-            xa.start(xid, XAResource.TMNOFLAGS);
             con.setAutoCommit(true);
-            fail("Expected setAutoCommit true while in distributed transaction to throw an exception");
-        } catch (SQLException ex) {
-            // Expected
-            assertEquals(FBSQLException.SQL_STATE_INVALID_TX_STATE, ex.getSQLState());
+            xa.start(xid, XAResource.TMNOFLAGS);
+
+            expectedException.expect(SQLException.class);
+            expectedException.expect(sqlStateEquals(FBSQLException.SQL_STATE_INVALID_TX_STATE));
+
+            con.setAutoCommit(true);
         } finally {
             xa.end(xid, XAResource.TMSUCCESS);
             xa.rollback(xid);
@@ -174,19 +183,20 @@ public class TestFBXADataSource extends FBTestBase {
     /**
      * Test if calling commit throws an exception when participating in a distributed transaction (JDBC 4.0 section 12.4).
      */
+    @Test
     public void testInDistributed_commit() throws Exception {
         XAConnection pc = getXAConnection();
         XAResource xa = pc.getXAResource();
         Connection con = pc.getConnection();
-        con.setAutoCommit(false);
         Xid xid = new XidImpl();
         try {
+            con.setAutoCommit(false);
             xa.start(xid, XAResource.TMNOFLAGS);
+
+            expectedException.expect(SQLException.class);
+            expectedException.expect(sqlStateEquals(FBSQLException.SQL_STATE_INVALID_TX_STATE));
+
             con.commit();
-            fail("Expected commit while in distributed transaction to throw an exception");
-        } catch (SQLException ex) {
-            // Expected
-            assertEquals(FBSQLException.SQL_STATE_INVALID_TX_STATE, ex.getSQLState());
         } finally {
             xa.end(xid, XAResource.TMSUCCESS);
             xa.rollback(xid);
@@ -197,19 +207,20 @@ public class TestFBXADataSource extends FBTestBase {
     /**
      * Test if calling rollback throws an exception when participating in a distributed transaction (JDBC 4.0 section 12.4).
      */
+    @Test
     public void testInDistributed_rollback() throws Exception {
         XAConnection pc = getXAConnection();
         XAResource xa = pc.getXAResource();
         Connection con = pc.getConnection();
-        con.setAutoCommit(false);
         Xid xid = new XidImpl();
         try {
+            con.setAutoCommit(false);
             xa.start(xid, XAResource.TMNOFLAGS);
+
+            expectedException.expect(SQLException.class);
+            expectedException.expect(sqlStateEquals(FBSQLException.SQL_STATE_INVALID_TX_STATE));
+
             con.rollback();
-            fail("Expected rollback while in distributed transaction to throw an exception");
-        } catch (SQLException ex) {
-            // Expected
-            assertEquals(FBSQLException.SQL_STATE_INVALID_TX_STATE, ex.getSQLState());
         } finally {
             xa.end(xid, XAResource.TMSUCCESS);
             xa.rollback(xid);
@@ -220,21 +231,22 @@ public class TestFBXADataSource extends FBTestBase {
     /**
      * Test if calling rollback for savepoint throws an exception when participating in a distributed transaction (JDBC 4.0 section 12.4).
      */
+    @Test
     public void testInDistributed_rollback_savepoint() throws Exception {
         XAConnection pc = getXAConnection();
         XAResource xa = pc.getXAResource();
         Connection con = pc.getConnection();
-        con.setAutoCommit(false);
-        Savepoint savepoint = con.setSavepoint(); // Just to create one
-        con.rollback(); // Required to make sure start() works.
         Xid xid = new XidImpl();
-        xa.start(xid, XAResource.TMNOFLAGS);
         try {
+            con.setAutoCommit(false);
+            Savepoint savepoint = con.setSavepoint(); // Just to create one
+            con.rollback(); // Required to make sure start() works.
+            xa.start(xid, XAResource.TMNOFLAGS);
+
+            expectedException.expect(SQLException.class);
+            expectedException.expect(sqlStateEquals(FBSQLException.SQL_STATE_INVALID_TX_STATE));
+
             con.rollback(savepoint);
-            fail("Expected rollback(savepoint) while in distributed transaction to throw an exception");
-        } catch (SQLException ex) {
-            // Expected
-            assertEquals(FBSQLException.SQL_STATE_INVALID_TX_STATE, ex.getSQLState());
         } finally {
             xa.end(xid, XAResource.TMSUCCESS);
             xa.rollback(xid);
@@ -245,19 +257,20 @@ public class TestFBXADataSource extends FBTestBase {
     /**
      * Test if calling setSavePoint (no param) throws an exception when participating in a distributed transaction (JDBC 4.0 section 12.4).
      */
+    @Test
     public void testInDistributed_setSavepoint() throws Exception {
         XAConnection pc = getXAConnection();
         XAResource xa = pc.getXAResource();
         Connection con = pc.getConnection();
-        con.setAutoCommit(false);
         Xid xid = new XidImpl();
         try {
+            con.setAutoCommit(false);
             xa.start(xid, XAResource.TMNOFLAGS);
+
+            expectedException.expect(SQLException.class);
+            expectedException.expect(sqlStateEquals(FBSQLException.SQL_STATE_INVALID_TX_STATE));
+
             con.setSavepoint();
-            fail("Expected setSavepoint while in distributed transaction to throw an exception");
-        } catch (SQLException ex) {
-            // Expected
-            assertEquals(FBSQLException.SQL_STATE_INVALID_TX_STATE, ex.getSQLState());
         } finally {
             xa.end(xid, XAResource.TMSUCCESS);
             xa.rollback(xid);
@@ -268,19 +281,20 @@ public class TestFBXADataSource extends FBTestBase {
     /**
      * Test if calling setSavePoint (named) throws an exception when participating in a distributed transaction (JDBC 4.0 section 12.4).
      */
+    @Test
     public void testInDistributed_setSavepoint_named() throws Exception {
         XAConnection pc = getXAConnection();
         XAResource xa = pc.getXAResource();
         Connection con = pc.getConnection();
-        con.setAutoCommit(false);
         Xid xid = new XidImpl();
         try {
+            con.setAutoCommit(false);
             xa.start(xid, XAResource.TMNOFLAGS);
+
+            expectedException.expect(SQLException.class);
+            expectedException.expect(sqlStateEquals(FBSQLException.SQL_STATE_INVALID_TX_STATE));
+
             con.setSavepoint("test_sp");
-            fail("Expected setSavepoint(named) while in distributed transaction to throw an exception");
-        } catch (SQLException ex) {
-            // Expected
-            assertEquals(FBSQLException.SQL_STATE_INVALID_TX_STATE, ex.getSQLState());
         } finally {
             xa.end(xid, XAResource.TMSUCCESS);
             xa.rollback(xid);
@@ -291,6 +305,7 @@ public class TestFBXADataSource extends FBTestBase {
     /**
      * Test if a property stored with {@link FBXADataSource#setNonStandardProperty(String)} is retrievable.
      */
+    @Test
     public void testSetNonStandardProperty_singleParam() {
         ds.setNonStandardProperty("someProperty=someValue");
         
@@ -300,6 +315,7 @@ public class TestFBXADataSource extends FBTestBase {
     /**
      * Test if a property stored with {@link FBXADataSource#setNonStandardProperty(String, String)} is retrievable.
      */
+    @Test
     public void testSetNonStandardProperty_twoParam() {
         ds.setNonStandardProperty("someProperty", "someValue");
         

@@ -26,6 +26,9 @@ import java.sql.SQLException;
 import javax.sql.PooledConnection;
 
 import org.firebirdsql.jdbc.FirebirdStatement;
+import org.junit.Test;
+
+import static org.junit.Assert.*;
 
 /**
  * Tests for {@link PooledConnectionHandler} and its proxy object (obtained from {@link FBConnectionPoolDataSource}).
@@ -34,10 +37,6 @@ import org.firebirdsql.jdbc.FirebirdStatement;
  */
 public class TestPooledConnectionHandler extends FBConnectionPoolTestBase {
 
-    public TestPooledConnectionHandler(String name) {
-        super(name);
-    }
-
     /**
      * Test if closing the logical connection does not produce errors when 
      * it is closed with statements open.
@@ -45,6 +44,7 @@ public class TestPooledConnectionHandler extends FBConnectionPoolTestBase {
      * See JDBC-250
      * </p>
      */
+    @Test
     public void testStatementOnConnectionClose() throws SQLException {
         PooledConnection pc = getPooledConnection();
         Connection con = pc.getConnection();
@@ -63,6 +63,7 @@ public class TestPooledConnectionHandler extends FBConnectionPoolTestBase {
      * See JDBC-250
      * </p>
      */
+    @Test
     public void testStatementOnConnectionReuse() throws SQLException {
         PooledConnection pc = getPooledConnection();
         Connection con = pc.getConnection();
@@ -77,6 +78,7 @@ public class TestPooledConnectionHandler extends FBConnectionPoolTestBase {
     /**
      * Tests for equals() on connections. 
      */
+    @Test
     public void testConnectionEquals() throws SQLException {
         PooledConnection pc1 = getPooledConnection();
         PooledConnection pc2 = getPooledConnection();
@@ -95,6 +97,7 @@ public class TestPooledConnectionHandler extends FBConnectionPoolTestBase {
      * NOTE: This tests an implementation detail of the hashCode!
      * </p>
      */
+    @Test
     public void testConnectionHashCode() throws SQLException {
         PooledConnection pc1 = getPooledConnection();
         PooledConnection pc2 = getPooledConnection();
@@ -112,6 +115,7 @@ public class TestPooledConnectionHandler extends FBConnectionPoolTestBase {
     /**
      * Test closing a connection twice should not throw an error.
      */
+    @Test
     public void testConnectionDoubleClose() throws SQLException {
         PooledConnection pc = getPooledConnection();
         Connection con = pc.getConnection();
@@ -129,6 +133,7 @@ public class TestPooledConnectionHandler extends FBConnectionPoolTestBase {
      * NOTE: This tests an implementation detail of toString()
      * </p>
      */
+    @Test
     public void testConnectionToString() throws SQLException {
         PooledConnection pc = getPooledConnection();
         Connection con = pc.getConnection();

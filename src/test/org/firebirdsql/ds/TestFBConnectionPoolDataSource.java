@@ -20,12 +20,16 @@
  */
 package org.firebirdsql.ds;
 
+import org.junit.Test;
+
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 
 import javax.sql.PooledConnection;
+
+import static org.junit.Assert.*;
 
 /**
  * Tests for {@link FBConnectionPoolDataSource}
@@ -34,15 +38,12 @@ import javax.sql.PooledConnection;
  */
 public class TestFBConnectionPoolDataSource extends FBConnectionPoolTestBase {
 
-    public TestFBConnectionPoolDataSource(String name) {
-        super(name);
-    }
-
     /**
      * Tests if the ConnectionPoolDataSource can create a PooledConnection
      * 
      * @throws SQLException
      */
+    @Test
     public void testDataSource_start() throws SQLException {
         getPooledConnection();
     }
@@ -53,6 +54,7 @@ public class TestFBConnectionPoolDataSource extends FBConnectionPoolTestBase {
      * 
      * @throws SQLException
      */
+    @Test
     public void testConnection() throws SQLException {
         PooledConnection pc = getPooledConnection();
 
@@ -80,6 +82,7 @@ public class TestFBConnectionPoolDataSource extends FBConnectionPoolTestBase {
     /**
      * Test if a property stored with {@link FBConnectionPoolDataSource#setNonStandardProperty(String)} is retrievable.
      */
+    @Test
     public void testSetNonStandardProperty_singleParam() {
         ds.setNonStandardProperty("someProperty=someValue");
         
@@ -89,6 +92,7 @@ public class TestFBConnectionPoolDataSource extends FBConnectionPoolTestBase {
     /**
      * Test if a property stored with {@link FBConnectionPoolDataSource#setNonStandardProperty(String, String)} is retrievable.
      */
+    @Test
     public void testSetNonStandardProperty_twoParam() {
         ds.setNonStandardProperty("someProperty", "someValue");
         

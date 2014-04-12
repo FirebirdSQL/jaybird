@@ -28,10 +28,13 @@ import org.firebirdsql.jdbc.FBSQLException;
 import org.jmock.Expectations;
 import org.jmock.Sequence;
 import org.jmock.integration.junit4.JUnitRuleMockery;
+import org.jmock.lib.concurrent.Synchroniser;
 import org.jmock.lib.legacy.ClassImposteriser;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 
+import static org.firebirdsql.common.matchers.SQLExceptionMatchers.sqlStateEquals;
 import static org.junit.Assert.*;
 
 /**
@@ -45,7 +48,11 @@ public class TestStatementHandlerMock {
     public final JUnitRuleMockery context = new JUnitRuleMockery();
     {
         context.setImposteriser(ClassImposteriser.INSTANCE);
+        context.setThreadingPolicy(new Synchroniser());
     }
+
+    @Rule
+    public final ExpectedException expectedException = ExpectedException.none();
 
     /**
      * Closing the statement proxy for a second time should not throw an
@@ -99,13 +106,10 @@ public class TestStatementHandlerMock {
         Statement proxy = handler.getProxy();
         proxy.close();
 
-        try {
-            proxy.getFetchSize();
-            fail("Calling a method on a closed Statement proxy should throw an Exception");
-        } catch (SQLException e) {
-            assertEquals("Unexpected SQLState", FBSQLException.SQL_STATE_INVALID_STATEMENT_ID,
-                    e.getSQLState());
-        }
+        expectedException.expect(SQLException.class);
+        expectedException.expect(sqlStateEquals(FBSQLException.SQL_STATE_INVALID_STATEMENT_ID));
+
+        proxy.getFetchSize();
     }
 
     /**
@@ -134,12 +138,9 @@ public class TestStatementHandlerMock {
 
         Statement proxy = handler.getProxy();
 
-        try {
-            proxy.getFetchSize();
-            fail("Expected test exception to be thrown");
-        } catch (SQLException e) {
-            // ignore: expected exception
-        }
+        expectedException.expect(SQLException.class);
+
+        proxy.getFetchSize();
     }
 
     @Test
