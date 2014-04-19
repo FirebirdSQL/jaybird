@@ -32,39 +32,28 @@ import org.firebirdsql.gds.impl.GDSHelper;
 class FBStatementFetcher implements FBFetcher {
 
     private boolean closed;
-
     private boolean wasFetched;
 
-    protected GDSHelper gdsHelper;
+    protected final GDSHelper gdsHelper;
+    protected final FBObjectListener.FetcherListener fetcherListener;
 
-    protected FBObjectListener.FetcherListener fetcherListener;
-
-    protected int maxRows;
-
+    protected final int maxRows;
     protected int fetchSize;
 
-    protected Synchronizable syncProvider;
-
-    protected AbstractIscStmtHandle stmt;
+    protected final Synchronizable syncProvider;
+    protected final AbstractIscStmtHandle stmt;
 
     private Object[] rowsArray;
-
     private int size;
-
     protected byte[][] _nextRow;
 
     private int rowNum = 0;
-
     private int rowPosition = 0;
 
     private boolean isEmpty = false;
-
     private boolean isBeforeFirst = false;
-
     private boolean isFirst = false;
-
     private boolean isLast = false;
-
     private boolean isAfterLast = false;
 
     FBStatementFetcher(GDSHelper gdsHelper, Synchronizable syncProvider,
@@ -79,9 +68,7 @@ class FBStatementFetcher implements FBFetcher {
         this.maxRows = maxRows;
         this.fetchSize = fetchSize;
 
-        Object syncObject = syncProvider.getSynchronizationObject();
-        synchronized (syncObject) {
-
+        synchronized (syncProvider.getSynchronizationObject()) {
             isEmpty = false;
             isBeforeFirst = false;
             isFirst = false;
@@ -98,7 +85,6 @@ class FBStatementFetcher implements FBFetcher {
 
     protected byte[][] getNextRow() throws SQLException {
         if (!wasFetched) fetch();
-
         return _nextRow;
     }
 
@@ -132,22 +118,18 @@ class FBStatementFetcher implements FBFetcher {
             setRowNum(0);
             return false;
         } else {
-            try {
-                fetcherListener.rowChanged(this, getNextRow());
-                fetch();
-                setRowNum(getRowNum() + 1);
+            fetcherListener.rowChanged(this, getNextRow());
+            fetch();
+            setRowNum(getRowNum() + 1);
 
-                if (getRowNum() == 1) setIsFirst(true);
+            if (getRowNum() == 1) setIsFirst(true);
 
-                if ((getNextRow() == null)
-                        || (maxRows != 0 && getRowNum() == maxRows)) {
-                    setIsLast(true);
-                }
-
-                return true;
-            } catch (SQLException sqle) {
-                throw sqle;
+            if ((getNextRow() == null)
+                    || (maxRows != 0 && getRowNum() == maxRows)) {
+                setIsLast(true);
             }
+
+            return true;
         }
     }
 
@@ -180,12 +162,8 @@ class FBStatementFetcher implements FBFetcher {
     }
 
     public void fetch() throws SQLException {
-
-        Object syncObject = syncProvider.getSynchronizationObject();
-        synchronized (syncObject) {
-
+        synchronized (syncProvider.getSynchronizationObject()) {
             checkClosed();
-
             int maxRows = 0;
 
             if (this.maxRows != 0) maxRows = this.maxRows - rowNum;
@@ -242,7 +220,6 @@ class FBStatementFetcher implements FBFetcher {
 
     public boolean isEmpty() throws SQLException {
         if (!wasFetched) fetch();
-
         return isEmpty;
     }
 
@@ -252,7 +229,6 @@ class FBStatementFetcher implements FBFetcher {
 
     public boolean isBeforeFirst() throws SQLException {
         if (!wasFetched) fetch();
-
         return isBeforeFirst;
     }
 
@@ -262,7 +238,6 @@ class FBStatementFetcher implements FBFetcher {
 
     public boolean isFirst() throws SQLException {
         if (!wasFetched) fetch();
-
         return isFirst;
     }
 
@@ -272,7 +247,6 @@ class FBStatementFetcher implements FBFetcher {
 
     public boolean isLast() throws SQLException {
         if (!wasFetched) fetch();
-
         return isLast;
     }
 
@@ -281,9 +255,7 @@ class FBStatementFetcher implements FBFetcher {
     }
 
     public boolean isAfterLast() throws SQLException {
-
         if (!wasFetched) fetch();
-
         return isAfterLast;
     }
 
