@@ -47,7 +47,7 @@ public abstract class StoredProcedureMetaDataFactory {
      *             if an exception occurs while retrieving meta-data
      */
     public static StoredProcedureMetaData getInstance(
-            FBConnection connection) throws SQLException {
+            AbstractConnection connection) throws SQLException {
 
         StoredProcedureMetaData metaData;
 
@@ -61,7 +61,7 @@ public abstract class StoredProcedureMetaDataFactory {
     }
 
     private static boolean connectionHasProcedureMetadata(
-            FBConnection connection) throws SQLException {
+            AbstractConnection connection) throws SQLException {
 
         FirebirdDatabaseMetaData metaData = 
             (FirebirdDatabaseMetaData) connection.getMetaData();
@@ -89,7 +89,7 @@ public abstract class StoredProcedureMetaDataFactory {
  */
 class DefaultCallableStatementMetaData implements StoredProcedureMetaData {
 
-    Set<String> selectableProcedureNames = new HashSet<String>();
+    Set selectableProcedureNames = new HashSet();
 
     public DefaultCallableStatementMetaData(Connection connection)
             throws SQLException {

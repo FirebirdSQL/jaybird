@@ -413,7 +413,6 @@ public interface GDS {
      * @deprecated use
      *             {@link #iscDsqlExecuteImmediate(IscDbHandle, IscTrHandle, byte[], int, XSQLDA)}
      */
-    @Deprecated
     void iscDsqlExecuteImmediate(IscDbHandle dbHandle, IscTrHandle trHandle,
             String statement, String encoding, int dialect, XSQLDA xsqlda)
             throws GDSException;
@@ -472,7 +471,6 @@ public interface GDS {
      * @deprecated use
      *             {@link #iscDsqlExecImmed2(IscDbHandle, IscTrHandle, byte[], int, XSQLDA, XSQLDA)}
      */
-    @Deprecated
     void iscDsqlExecImmed2(IscDbHandle dbHandle, IscTrHandle trHandle,
             String statement, String encoding, int dialect, XSQLDA inXSQLDA,
             XSQLDA outXSQLDA) throws GDSException;
@@ -565,7 +563,6 @@ public interface GDS {
      * @deprecated use
      *             {@link #iscDsqlPrepare(IscTrHandle, IscStmtHandle, byte[], int)}
      */
-    @Deprecated
     XSQLDA iscDsqlPrepare(IscTrHandle trHandle, IscStmtHandle stmtHandle,
             String statement, String encoding, int dialect) throws GDSException;
 
@@ -639,9 +636,6 @@ public interface GDS {
 
     /**
      * Retrieve an integer value from a sequence of bytes.
-     * <p>
-     * Behaviour is undefined for length &gt; 4
-     * </p>
      * 
      * @param buffer
      *            The byte array from which the integer is to be retrieved
@@ -653,23 +647,6 @@ public interface GDS {
      * @return The integer value retrieved from the bytes
      */
     int iscVaxInteger(byte[] buffer, int pos, int length);
-    
-    /**
-     * Retrieve a long value from a sequence of bytes.
-     * <p>
-     * Behaviour is undefined for length &gt; 8
-     * </p>
-     * 
-     * @param buffer
-     *            The byte array from which the integer is to be retrieved
-     * @param pos
-     *            The offset starting position from which to start retrieving
-     *            byte values
-     * @param length
-     *            The number of bytes to use in retrieving the integer value.
-     * @return The long value retrieved from the bytes
-     */
-    long iscVaxLong(byte[] buffer, int pos, int length);
 
     // -----------------------------------------------
     // Blob methods

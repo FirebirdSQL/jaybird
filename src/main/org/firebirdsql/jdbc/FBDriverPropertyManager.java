@@ -16,15 +16,15 @@
  *
  * All rights reserved.
  */
+
 package org.firebirdsql.jdbc;
 
 import java.sql.DriverPropertyInfo;
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Enumeration;
 import java.util.HashMap;
-import java.util.List;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.MissingResourceException;
 import java.util.Properties;
@@ -32,8 +32,7 @@ import java.util.ResourceBundle;
 import java.util.StringTokenizer;
 
 import org.firebirdsql.encodings.EncodingFactory;
-import org.firebirdsql.gds.ParameterBufferHelper;
-import org.firebirdsql.util.ObjectUtils;
+
 
 /**
  * Manager of the DPB properties.
@@ -55,12 +54,12 @@ public class FBDriverPropertyManager {
      * Container class for the driver properties.
      */
     private static class PropertyInfo {
-        private final String alias;
-        private final String dpbName;
-        private final Integer dpbKey;
-        private final String description;
+        private String alias;
+        private String dpbName;
+        private Integer dpbKey;
+        private String description;
         
-        private final int hashCode;
+        private int hashCode;
         
         public PropertyInfo(String alias, String dpbName, Integer dpbKey,
                 String description) {
@@ -68,8 +67,13 @@ public class FBDriverPropertyManager {
             this.dpbName = dpbName;
             this.dpbKey = dpbKey;
             this.description = description;
-
-            hashCode = ObjectUtils.hash(alias, dpbName, dpbKey);
+            
+            hashCode = 17;
+            if (alias != null)
+                hashCode ^= alias.hashCode();
+            
+            hashCode ^= dpbName.hashCode();
+            hashCode ^= dpbKey.intValue();
         }
         
         public int hashCode() {
@@ -82,7 +86,9 @@ public class FBDriverPropertyManager {
             
             PropertyInfo that = (PropertyInfo)obj;
             
-            boolean result = ObjectUtils.equals(this.alias, that.alias);
+            boolean result = true;
+            
+            result &= this.alias.equals(that.alias);
             result &= this.dpbName.equals(that.dpbName);
             result &= this.dpbKey.equals(that.dpbKey);
             
@@ -90,16 +96,15 @@ public class FBDriverPropertyManager {
         }
     }
     
-    private static final Map<String, PropertyInfo> aliases;
-    private static final Map<String, PropertyInfo> dpbMap;
+    private static HashMap aliases = new HashMap();
+    private static HashMap dpbMap = new HashMap();
+    private static HashMap reversedDpbMap = new HashMap();
 
     static {
-        final Map<String, PropertyInfo> tempAliases = new HashMap<String, PropertyInfo>();
-        final Map<String, PropertyInfo> tempDpbMap = new HashMap<String, PropertyInfo>();
         // process aliases and descriptions first
         if (info != null) {
-            for (Enumeration<String> en = info.getKeys(); en.hasMoreElements();) {
-                String key = en.nextElement();
+            for (Enumeration en = info.getKeys(); en.hasMoreElements();) {
+                String key = (String) en.nextElement();
                 String value = info.getString(key);
                 
                 int hashIndex = value.indexOf('#');
@@ -113,10 +118,10 @@ public class FBDriverPropertyManager {
                     dpbName = value.trim();
                 
                 // skip incorrect mappings
-                if (!dpbName.startsWith(ParameterBufferHelper.DPB_PREFIX))
+                if (!dpbName.startsWith(FBConnectionHelper.DPB_PREFIX))
                     continue;
                 
-                Integer dpbKey = ParameterBufferHelper.getDpbKey(dpbName);
+                Integer dpbKey = FBConnectionHelper.getDpbKey(dpbName);
                 
                 // skip unknown elements
                 if (dpbKey == null)
@@ -125,29 +130,30 @@ public class FBDriverPropertyManager {
                 PropertyInfo propInfo = new PropertyInfo(key, dpbName, 
                     dpbKey, description);
                 
-                tempAliases.put(propInfo.alias, propInfo);
-                tempDpbMap.put(propInfo.dpbName, propInfo);
+                aliases.put(propInfo.alias, propInfo);
+                dpbMap.put(propInfo.dpbName, propInfo);
+                reversedDpbMap.put(dpbKey, propInfo);
             }
         }
         
         // fill rest of the properties
-        for (Map.Entry<String, Integer> entry : ParameterBufferHelper.getDpbMap().entrySet()) {
-            String dpbName = entry.getKey();
-            Integer dpbKey = entry.getValue();
+        Map tempDpbMap = FBConnectionHelper.getDpbMap();
+        for (Iterator iter = tempDpbMap.entrySet().iterator(); iter.hasNext();) {
+            Map.Entry entry = (Map.Entry) iter.next();
+            String dpbName = (String)entry.getKey();
+            Integer dpbKey = (Integer)entry.getValue();
             
-            if (!dpbName.startsWith(ParameterBufferHelper.DPB_PREFIX))
+            if (!dpbName.startsWith(FBConnectionHelper.DPB_PREFIX))
                 continue;
 
-            if (tempDpbMap.containsKey(dpbName))
+            if (dpbMap.containsKey(dpbName))
                 continue;
 
             PropertyInfo propInfo = new PropertyInfo(null, dpbName, dpbKey, "");
             
-            tempDpbMap.put(dpbName, propInfo);
+            dpbMap.put(dpbName, propInfo);
+            reversedDpbMap.put(dpbKey, propInfo);
         }
-        
-        aliases = Collections.unmodifiableMap(tempAliases);
-        dpbMap = Collections.unmodifiableMap(tempDpbMap);
     }
     
     /**
@@ -156,35 +162,34 @@ public class FBDriverPropertyManager {
      * 
      * @param props instance of {@link Properties} containing original properties.
      * 
-     * @return instance of {@link Map} containing the normalized ones.
+     * @return instance of {@link Properties} containing the normalized ones.
      * 
      * @throws SQLException if original properties reference the same DPB 
      * parameter using both alias and original name.
      */
-    public static Map<String, String> normalize(String url, Properties props) throws SQLException {
-        Map<String, String> tempProps = new HashMap<String, String>();
-        for (String propertyName : props.stringPropertyNames()) {
-            tempProps.put(propertyName, props.getProperty(propertyName));
-        }
+    public static HashMap normalize(String url, Map props) throws SQLException {
+        
+        HashMap tempProps = new HashMap();
+        tempProps.putAll(props);
         
         convertUrlParams(url, tempProps);
         
-        Map<String, String> result = new HashMap<String, String>();
+        HashMap result = new HashMap();
         
-        for (Map.Entry<String, String> entry : tempProps.entrySet()) {
-            String propName = entry.getKey();
-            String propValue = entry.getValue();
+        for (Iterator iter = tempProps.entrySet().iterator(); iter.hasNext();) {
+            Map.Entry entry = (Map.Entry) iter.next();
+            String propName = (String)entry.getKey();
+            Object propValue = entry.getValue();
             
-            PropertyInfo propInfo = aliases.get(propName);
+            PropertyInfo propInfo = (PropertyInfo)aliases.get(propName);
             
             // check if alias is not used together with original property
             if (propInfo != null) {
                 String originalName = propInfo.dpbName;
                 String shortName = propInfo.dpbName.substring(
-                    ParameterBufferHelper.DPB_PREFIX.length());
+                    FBConnectionHelper.DPB_PREFIX.length());
                 
-                boolean hasDuplicate = 
-                        tempProps.keySet().contains(originalName)
+                boolean hasDuplicate = tempProps.keySet().contains(originalName)
                         || tempProps.keySet().contains(shortName);
                 
                 hasDuplicate &= !propName.equals(shortName);
@@ -201,10 +206,10 @@ public class FBDriverPropertyManager {
             // the full list
             if (propInfo == null) {
                 String tempKey = propName;
-                if (!tempKey.startsWith(ParameterBufferHelper.DPB_PREFIX))
-                    tempKey = ParameterBufferHelper.DPB_PREFIX + tempKey;
+                if (!tempKey.startsWith(FBConnectionHelper.DPB_PREFIX))
+                    tempKey = FBConnectionHelper.DPB_PREFIX + tempKey;
                 
-                propInfo = dpbMap.get(tempKey);
+                propInfo = (PropertyInfo)dpbMap.get(tempKey);
             }
             
             // skip the element if nothing if found
@@ -220,14 +225,14 @@ public class FBDriverPropertyManager {
     }
     
     public static String getCanonicalName(String propertyName) {
-        PropertyInfo propInfo = aliases.get(propertyName);
+        PropertyInfo propInfo = (PropertyInfo)aliases.get(propertyName);
         
         if (propInfo == null) {
             String tempKey = propertyName;
-            if (!tempKey.startsWith(ParameterBufferHelper.DPB_PREFIX))
-                tempKey = ParameterBufferHelper.DPB_PREFIX + tempKey;
+            if (!tempKey.startsWith(FBConnectionHelper.DPB_PREFIX))
+                tempKey = FBConnectionHelper.DPB_PREFIX + tempKey;
             
-            propInfo = dpbMap.get(tempKey);
+            propInfo = (PropertyInfo)dpbMap.get(tempKey);
         }
         
         if (propInfo == null)
@@ -242,10 +247,10 @@ public class FBDriverPropertyManager {
      * 
      * @param url specified URL.
      * 
-     * @param info instance of {@link Map} into which values should
+     * @param info instance of {@link Properties} into which values should
      * be extracted.
      */
-    private static void convertUrlParams(String url, Map<String, String> info) {
+    private static void convertUrlParams(String url, HashMap info) {
         if (url == null)
             return;
         
@@ -280,9 +285,9 @@ public class FBDriverPropertyManager {
      * @throws SQLException if both isc_dpb_local_encoding and charSet are
      * specified.
      */
-    public static void handleEncodings(Map<String, String> info) throws SQLException {
-        String iscEncoding = info.get("isc_dpb_lc_ctype");
-        String localEncoding = info.get("isc_dpb_local_encoding");
+    public static void handleEncodings(HashMap info) throws SQLException {
+        String iscEncoding = (String)info.get("isc_dpb_lc_ctype");
+        String localEncoding = (String)info.get("isc_dpb_local_encoding");
         
         if (iscEncoding != null && localEncoding == null) {
             String javaEncoding = EncodingFactory.getJavaEncoding(iscEncoding);
@@ -299,7 +304,7 @@ public class FBDriverPropertyManager {
         // ensure that we fail before any connection is obtained
         // in case when incorrect mapping path is specified 
         // (note, EncodingFactory.getEncoding(String, String) throws exception)
-        String mappingPath = info.get("isc_dpb_mapping_path");
+        String mappingPath = (String)info.get("isc_dpb_mapping_path");
         if (mappingPath != null) {
             EncodingFactory.getEncoding(localEncoding, mappingPath);
         }
@@ -313,20 +318,23 @@ public class FBDriverPropertyManager {
      * @return array of {@link DriverPropertyInfo} instances.
      */
     public static DriverPropertyInfo[] getDriverPropertyInfo(Properties props) {
-        List<DriverPropertyInfo> result = new ArrayList<DriverPropertyInfo>();
-        for (String propName : props.stringPropertyNames()) {
-            Object propValue = props.getProperty(propName);
+        ArrayList result = new ArrayList();
+       
+        for (Iterator iter = props.entrySet().iterator(); iter.hasNext();) {
+            Map.Entry entry = (Map.Entry) iter.next();
+            String propName = (String)entry.getKey();
+            Object propValue = entry.getValue();
             
-            PropertyInfo propInfo = aliases.get(propName);
+            PropertyInfo propInfo = (PropertyInfo)aliases.get(propName);
             
             // if the specified property is not an alias, check
             // the full list
             if (propInfo == null) {
                 String tempKey = propName;
-                if (!tempKey.startsWith(ParameterBufferHelper.DPB_PREFIX))
-                    tempKey = ParameterBufferHelper.DPB_PREFIX + tempKey;
+                if (!tempKey.startsWith(FBConnectionHelper.DPB_PREFIX))
+                    tempKey = FBConnectionHelper.DPB_PREFIX + tempKey;
                 
-                propInfo = dpbMap.get(tempKey);
+                propInfo = (PropertyInfo)dpbMap.get(tempKey);
             }
             
             DriverPropertyInfo driverPropInfo = new DriverPropertyInfo(
@@ -336,8 +344,10 @@ public class FBDriverPropertyManager {
                 driverPropInfo.description = propInfo.description;
             
             result.add(driverPropInfo);
+        
         }
         
-        return result.toArray(new DriverPropertyInfo[result.size()]);
+        return (DriverPropertyInfo[])result.toArray(
+            new DriverPropertyInfo[result.size()]);
     }
 }

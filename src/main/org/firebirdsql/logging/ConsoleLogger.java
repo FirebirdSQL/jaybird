@@ -12,7 +12,7 @@ package org.firebirdsql.logging;
  */
 public class ConsoleLogger extends Logger {
     
-    private static final boolean debugEnabled = true;
+    private static final boolean debugEnabled = false;
     private static final boolean traceEnabled = true;
     private static final boolean infoEnabled = true;
     private static final boolean warnEnabled = true;

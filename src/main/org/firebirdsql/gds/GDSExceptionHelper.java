@@ -27,7 +27,6 @@ package org.firebirdsql.gds;
 import org.firebirdsql.logging.Logger;
 import org.firebirdsql.logging.LoggerFactory;
 
-import java.util.List;
 import java.util.Properties;
 import java.io.InputStream;
 
@@ -43,48 +42,42 @@ import java.io.InputStream;
  */
 public class GDSExceptionHelper {
 
-   private static final String SQLSTATE_CLI_GENERIC_ERROR = "HY000";
-
    private static final Logger log = LoggerFactory.getLogger(GDSExceptionHelper.class,false);
 
     private static final String MESSAGES = "isc_error_msg";
     private static final String SQLSTATES = "isc_error_sqlstates";
-    private static final Properties messages;
-    private static final Properties sqlstates;
+    private static Properties messages = new Properties();
+    private static Properties sqlstates = new Properties();
+
+    private static boolean initialized = false;
 
     /**
-     * Initializes the messages map.
+     * This method initializes the messages map.
+     * @todo think about better exception handling.
      */
-    static {
-        try {
-            messages = loadResource(MESSAGES);
-            sqlstates = loadResource(SQLSTATES);
-        } catch (Exception ex) {
-            if (log != null) log.error("Exception in init of GDSExceptionHelper, unable to load error information", ex);
-            throw new ExceptionInInitializerError(ex);
-        }
+    private static void init() {
+        loadResource(MESSAGES, messages);
+        loadResource(SQLSTATES, sqlstates);
     }
 
-    private static Properties loadResource(String resource) throws Exception {
-        Properties properties = new Properties();
-        String res = "/" + resource.replace('.','/') + ".properties";
-		InputStream in = GDSException.class.getResourceAsStream(res);
-		if (in == null) {
-            ClassLoader cl = Thread.currentThread().getContextClassLoader();
-            in = cl.getResourceAsStream(res);
-        }
-		try {
-            if (in != null) {
-                properties.load(in);
-            } else if (log != null) {
-                log.warn("Unable to load resource; resource " + resource + " is not found");
+    private static void loadResource(String resource, Properties propeties) {
+        try {
+            String res = "/" + resource.replace('.','/') + ".properties";
+			InputStream in = GDSException.class.getResourceAsStream(res);
+            
+            if (in == null) {
+                ClassLoader cl = Thread.currentThread().getContextClassLoader();
+                in = cl.getResourceAsStream(res);
             }
-		} finally {
-		    if (in != null) {
-		        in.close();
-		    }
-		}
-        return properties;
+            
+            if (in != null)
+                propeties.load(in);
+                
+        } catch (Exception ex) {
+            if (log!=null) log.info("Exception in init of GDSExceptionHelper", ex);
+        } finally {
+            initialized = true;
+        }
     }
 
     /**
@@ -94,8 +87,9 @@ public class GDSExceptionHelper {
      * where you can set desired parameters.
      */
     public static GDSMessage getMessage(int code) {
+        if (!initialized) init();
         return new GDSMessage(messages.getProperty(
-                Integer.toString(code), "No message for code " + code + " found."));
+            "" + code, "No message for code " + code + " found."));
     }
     
     /**
@@ -103,38 +97,32 @@ public class GDSExceptionHelper {
      * 
      * @param code Firebird error code
      *  
-     * @return SQL state for the Firebird error code, "HY000" if nothing found.
+     * @return string with SQL state, "HY000" if nothing found. 
      */
     public static String getSQLState(int code) {
-        return getSQLState(code, SQLSTATE_CLI_GENERIC_ERROR);
-    }
-
-    /**
-     * Get the SQL state for the specified error code.
-     *
-     * @param code Firebird error code
-     * @param defaultSQLState The default SQLState to return
-     *
-     * @return SQL state for the Firebird error code, or <code>defaultSQLState</code> if nothing found.
-     */
-    public static String getSQLState(int code, String defaultSQLState) {
-        return sqlstates.getProperty(Integer.toString(code), defaultSQLState);
+        if (!initialized) init();
+        String result = sqlstates.getProperty(Integer.toString(code));
+        
+        if (result == null)
+            result = "HY000";
+        
+        return result;
     }
 
     /**
      * This class wraps message template obtained from isc_error_msg.properties
      * file and allows to set parameters to the message.
      */
-    public static final class GDSMessage {
-        private final String template;
-        private final String[] params;
+    public static class GDSMessage {
+        private String template;
+        private String[] params;
 
         /**
          * Constructs an instance of GDSMessage for the specified template.
          */
         public GDSMessage(String template) {
             this.template = template;
-            params = new String[getParamCountInternal()];
+            params = new String[getParamCount()];
         }
 
         /**
@@ -142,14 +130,9 @@ public class GDSExceptionHelper {
          * @return number of parameters.
          */
         public int getParamCount() {
-            return params.length;
-        }
-
-        private int getParamCountInternal() {
             int count = 0;
-            for(int i = 0; i < template.length(); i++) {
+            for(int i = 0; i < template.length(); i++)
                 if (template.charAt(i) == '{') count++;
-            }
             return count;
         }
 
@@ -159,23 +142,8 @@ public class GDSExceptionHelper {
          * @param text value of parameter
          */
         public void setParameter(int position, String text) {
-            if (position < params.length) {
+            if (position < params.length)
                 params[position] = text;
-            }
-        }
-
-        /**
-         * Sets the parameter values.
-         * <p>
-         * Parameter values with an index value higher than the number of message arguments are ignored.
-         * </p>
-         *
-         * @param messageParameters Message parameters
-         */
-        public void setParameters(List<String> messageParameters) {
-            for (int position = 0; position < Math.min(params.length, messageParameters.size()); position++) {
-                params[position] = messageParameters.get(position);
-            }
         }
 
         /**
@@ -184,14 +152,13 @@ public class GDSExceptionHelper {
          */
         public String toString() {
             String message = template;
-            // TODO Use MessageFormat?
             for(int i = 0; i < params.length; i++) {
                 String param = "{" + i + "}";
                 int pos = message.indexOf(param);
                 if (pos > -1) 
                 {
                    String temp = message.substring(0, pos);
-                   temp += (params[i] != null) ? params[i] : "(null)";
+                   temp += (params[i] == null) ? "" : params[i];
                    temp += message.substring(pos + param.length());
                    message = temp;
                 } // end of if ()

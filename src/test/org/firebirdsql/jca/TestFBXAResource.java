@@ -28,16 +28,14 @@ import javax.resource.spi.ManagedConnection;
 import javax.transaction.xa.XAResource;
 import javax.transaction.xa.Xid;
 
-import static org.firebirdsql.common.FBTestProperties.*;
-import static org.firebirdsql.common.JdbcResourceHelper.closeQuietly;
-
- /**
+/**
  * Describe class <code>TestFBXAResource</code> here.
  *
  * @author <a href="mailto:d_jencks@users.sourceforge.net">David Jencks</a>
  * @version 1.0
  */
 public class TestFBXAResource extends TestXABase {
+
 
     public TestFBXAResource(String name) {
         super(name);
@@ -57,6 +55,7 @@ public class TestFBXAResource extends TestXABase {
     }
 
     public void testIsSameRM() throws Exception {
+        
         if (log != null) log.info("testIsSameRM");
         FBManagedConnectionFactory mcf1 = initMcf();
         ManagedConnection mc1 = mcf1.createManagedConnection(null, null);
@@ -94,6 +93,7 @@ public class TestFBXAResource extends TestXABase {
     }
 
     public void testRollbackXATrans() throws Exception {
+        
         if (log != null) log.info("testRollbackXATrans");
         FBManagedConnectionFactory mcf = initMcf();
         ManagedConnection mc = mcf.createManagedConnection(null, null);
@@ -110,6 +110,7 @@ public class TestFBXAResource extends TestXABase {
     }
 
     public void test2PCXATrans() throws Exception {
+        
         if (log != null) log.info("test2PCXATrans");
         FBManagedConnectionFactory mcf = initMcf();
         ManagedConnection mc = mcf.createManagedConnection(null, null);
@@ -127,6 +128,7 @@ public class TestFBXAResource extends TestXABase {
     }
 
     public void testRollback2PCXATrans() throws Exception {
+        
         if (log != null) log.info("testRollback2PCXATrans");
         FBManagedConnectionFactory mcf = initMcf();
         ManagedConnection mc = mcf.createManagedConnection(null, null);
@@ -144,6 +146,7 @@ public class TestFBXAResource extends TestXABase {
     }
 
     public void testDo2XATrans() throws Exception {
+        
         if (log != null) log.info("testDo2XATrans");
         FBManagedConnectionFactory mcf = initMcf();
         ManagedConnection mc1 = mcf.createManagedConnection(null, null);
@@ -172,7 +175,8 @@ public class TestFBXAResource extends TestXABase {
 
     }
 
-    public void testRecover() throws Exception {
+    public void testRecover() throws Exception
+    {
         if ("NATIVE".equals(getGdsType().toString()) || 
             "EMBEDDED".equals(getGdsType().toString()) || 
             "LOCAL".equals(getGdsType().toString()))
@@ -242,8 +246,8 @@ public class TestFBXAResource extends TestXABase {
             assertTrue("Should recover at least one transaction", xids.length > 0);
             
             boolean found = false;
-            for (Xid xid : xids) {
-                if (xid.equals(xid1)) {
+            for (int i = 0; i < xids.length; i++) {
+                if (xids[i].equals(xid1)) {
                     found = true;
                     break;
                 }

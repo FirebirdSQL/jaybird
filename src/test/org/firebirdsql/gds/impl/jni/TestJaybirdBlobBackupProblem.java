@@ -230,7 +230,7 @@ public class TestJaybirdBlobBackupProblem extends TestCase
         final ServiceRequestBuffer serviceRequestBuffer = gds.createServiceRequestBuffer(ISCConstants.isc_info_svc_to_eof);
 
         final byte[] buffer = new byte[1024];
-		final StringBuilder stringBuffer = new StringBuilder();
+		final StringBuffer stringBuffer = new StringBuffer();
 
         boolean finished = false;
 

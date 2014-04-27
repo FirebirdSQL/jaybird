@@ -21,11 +21,8 @@ package org.firebirdsql.gds.impl.jni;
 
 import org.firebirdsql.gds.BlobParameterBuffer;
 import org.firebirdsql.gds.ISCConstants;
-import org.firebirdsql.gds.impl.argument.NumericArgument;
 
 import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.OutputStream;
 
 /**
  * 
@@ -37,14 +34,16 @@ public class BlobParameterBufferImp extends ParameterBufferBase implements
         super();
     }
 
-    @Override
     public void addArgument(int argumentType, int value) {
         if (value > 65535)
-            throw new RuntimeException("Blob parameter buffer value out of range for type " + argumentType);
+            throw new RuntimeException(
+                    "Blob parameter buffer value out of range for type "
+                            + argumentType);
 
         getArgumentsList().add(new NumericArgument(argumentType, value) {
-            @Override
-            protected void writeValue(OutputStream outputStream, int value) throws IOException {
+
+            protected void writeValue(ByteArrayOutputStream outputStream,
+                    int value) {
                 outputStream.write(2);
                 outputStream.write(value);
                 outputStream.write(value >> 8);
@@ -60,13 +59,10 @@ public class BlobParameterBufferImp extends ParameterBufferBase implements
      */
     byte[] getBytesForNativeCode() {
         final ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+
         byteArrayOutputStream.write(ISCConstants.isc_bpb_version1);
 
-        try {
-            super.writeArgumentsTo(byteArrayOutputStream);
-        } catch (IOException e) {
-            // Ignoring IOException, not thrown by ByteArrayOutputStream
-        }
+        super.writeArgumentsTo(byteArrayOutputStream);
 
         return byteArrayOutputStream.toByteArray();
     }

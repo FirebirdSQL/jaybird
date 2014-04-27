@@ -34,8 +34,6 @@ import java.util.Set;
 
 import org.firebirdsql.jdbc.MetaDataValidator.MetaDataInfo;
 
-import static org.firebirdsql.common.JdbcResourceHelper.*;
-
 /**
  * Tests for {@link FBDatabaseMetaData} for column related metadata.
  * 
@@ -91,6 +89,14 @@ public class TestFBDatabaseMetaDataColumns extends FBMetaDataTestBase<TestFBData
     public static final String ADD_COMMENT_ON_COLUMN = 
             "COMMENT ON COLUMN test_column_metadata.col_integer IS 'Some comment'";
 
+    public static final String DROP_COLUMN_METADATA_TEST_TABLE = 
+            "DROP TABLE test_column_metadata";
+
+    protected List<String> getDropStatements() {
+        return Arrays.asList(
+                DROP_COLUMN_METADATA_TEST_TABLE);
+    }
+    
     protected List<String> getCreateStatements() {
         return Arrays.asList(
                 CREATE_COLUMN_METADATA_TEST_TABLE,

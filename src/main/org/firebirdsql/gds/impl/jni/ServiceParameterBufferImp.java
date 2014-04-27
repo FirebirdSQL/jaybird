@@ -22,7 +22,6 @@ import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.ServiceParameterBuffer;
 
 import java.io.ByteArrayOutputStream;
-import java.io.IOException;
 
 /**
  * ngds implementation for ServiceParameterBuffer.
@@ -42,11 +41,7 @@ class ServiceParameterBufferImp extends ParameterBufferBase implements
         byteArrayOutputStream.write(ISCConstants.isc_spb_version);
         byteArrayOutputStream.write(ISCConstants.isc_spb_current_version);
 
-        try {
-            super.writeArgumentsTo(byteArrayOutputStream);
-        } catch (IOException e) {
-            // Ignoring IOException, not thrown by ByteArrayOutputStream
-        }
+        super.writeArgumentsTo(byteArrayOutputStream);
 
         return byteArrayOutputStream.toByteArray();
     }

@@ -1,4 +1,6 @@
 /*
+ * $Id$
+ * 
  * Firebird Open Source J2ee connector - jdbc driver
  *
  * Distributable under LGPL license.
@@ -25,9 +27,6 @@ import org.firebirdsql.common.FBTestBase;
 import org.firebirdsql.gds.*;
 import org.firebirdsql.jca.FBManagedConnection;
 
-import static org.firebirdsql.common.JdbcResourceHelper.*;
-import static org.firebirdsql.common.FBTestProperties.*;
-
 /**
  * Test cases for FirebirdConnection interface.
  * 
@@ -39,6 +38,10 @@ public class TestFBConnection extends FBTestBase {
         + "CREATE TABLE test ("
         + "  col1 INTEGER"
         + ")"
+        ;
+    
+    public static final String DROP_TABLE = ""
+        + "DROP TABLE test"
         ;
     
     public static final String INSERT_DATA = ""
@@ -56,7 +59,14 @@ public class TestFBConnection extends FBTestBase {
         try {
             Statement ddlStmt = connection.createStatement();
             try {
+                try {
+                    ddlStmt.execute(DROP_TABLE);
+                } catch(SQLException ex) {
+                    // ignore
+                }
+                
                 ddlStmt.execute(CREATE_TABLE);
+                
             } finally {
                 ddlStmt.close();
             }
@@ -66,6 +76,23 @@ public class TestFBConnection extends FBTestBase {
         }
         
 	}
+
+	protected void tearDown() throws Exception {
+        
+        Connection connection = getConnectionViaDriverManager();
+        try {
+            Statement ddlStmt = connection.createStatement();
+            try {
+                ddlStmt.execute(DROP_TABLE);
+            } finally {
+                ddlStmt.close();
+            }
+        } finally {
+            connection.close();
+        }
+        
+        super.tearDown();
+    }
     
     /**
      * Test if {@link FirebirdConnection#setTransactionParameters(int, int[])}
@@ -219,7 +246,7 @@ public class TestFBConnection extends FBTestBase {
     
     public void testLockTable() throws Exception {
         FirebirdConnection connection = 
-            getConnectionViaDriverManager();
+            (FirebirdConnection)getConnectionViaDriverManager();
         
         try {
             Statement stmt = connection.createStatement();
@@ -232,7 +259,7 @@ public class TestFBConnection extends FBTestBase {
             connection.close();
         }
 
-        connection = getConnectionViaDriverManager();
+        connection = (FirebirdConnection)getConnectionViaDriverManager();
         try {
             
             Statement stmt = connection.createStatement();
@@ -252,7 +279,7 @@ public class TestFBConnection extends FBTestBase {
                 connection.setAutoCommit(false);
                 
                 FirebirdConnection anotherConnection = 
-                    getConnectionViaDriverManager();
+                    (FirebirdConnection)getConnectionViaDriverManager();
                 anotherConnection.setAutoCommit(false);
                 
                 try {
@@ -337,7 +364,7 @@ public class TestFBConnection extends FBTestBase {
         Connection connection = DriverManager.getConnection(getUrl(), props);
         try {
             
-            FBStatement stmt1 = (FBStatement)connection.createStatement();
+            AbstractStatement stmt1 = (AbstractStatement)connection.createStatement();
             assertEquals(ResultSet.HOLD_CURSORS_OVER_COMMIT, stmt1.getResultSetHoldability());
             
             Statement stmt2 = connection.createStatement();
@@ -360,7 +387,7 @@ public class TestFBConnection extends FBTestBase {
     public void testGetAttachments() throws Exception {
         FirebirdConnection connection = getConnectionViaDriverManager();
         try {
-            FBConnection abstractConnection = (FBConnection)connection;
+            AbstractConnection abstractConnection = (AbstractConnection)connection;
             
             GDS gds = (abstractConnection).getInternalAPIHandler();
             
@@ -451,19 +478,6 @@ public class TestFBConnection extends FBTestBase {
             assertNull("Expected no warning when specifying connection characterset", warnings);
         } finally {
             closeQuietly(con);
-        }
-    }
-    
-    public void testClientInfo() throws Exception {
-        FBConnection connection = (FBConnection)getConnectionViaDriverManager();
-        try {
-            
-            connection.setClientInfo("TestProperty", "testValue");
-            String checkValue = connection.getClientInfo("TestProperty");
-            assertEquals("testValue", checkValue);
-            
-        } finally {
-            connection.close();
         }
     }
 }

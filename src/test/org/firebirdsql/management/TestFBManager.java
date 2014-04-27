@@ -24,7 +24,6 @@ import org.firebirdsql.common.FBTestBase;
 import junit.framework.Test;
 import junit.framework.TestSuite;
 
-import static org.firebirdsql.common.FBTestProperties.*;
 
 /**
  * Describe class <code>TestFBManager</code> here.
@@ -65,23 +64,20 @@ public class TestFBManager extends FBTestBase {
         final String databasePath = getDatabasePath() + ".fdb";
         // check create
         m.createDatabase(databasePath, DB_USER, DB_PASSWORD);
-
+        
         // check create with set forceCreate
         m.setForceCreate(true);
         m.createDatabase(databasePath, DB_USER, DB_PASSWORD);
-
+        
         assertTrue("Must report that database exists", m.isDatabaseExists(
                 databasePath, DB_USER, DB_PASSWORD));
-
+        
         // check drop
         m.dropDatabase(databasePath, DB_USER, DB_PASSWORD);
-
+        
         assertTrue("Must report that database does not exist", !m.isDatabaseExists(
                 databasePath, DB_USER, DB_PASSWORD));
-
+        
         m.stop();
     }
-
-
-
 }

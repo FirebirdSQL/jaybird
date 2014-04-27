@@ -69,21 +69,6 @@ public class XSQLVAR {
 
     public XSQLVAR() {
     }
-
-    /**
-     * Constructor for metadata XSQLVAR.
-     *
-     * @param sqltype Column SQL type
-     * @param sqllen Column length
-     * @param sqlname Column name
-     * @param relname Column table
-     */
-    public XSQLVAR(int sqltype, int sqllen, String sqlname, String relname) {
-        this.sqltype = sqltype;
-        this.sqllen = sqllen;
-        this.sqlname = sqlname;
-        this.relname = relname;
-    }
     
     /**
      * Get a deep copy of this object.
@@ -147,20 +132,6 @@ public class XSQLVAR {
     }
 
     /**
-     * Encode a <code>short</code> value as a <code>byte</code> array in network-order(big-endian) representation.
-     * <p>
-     * NOTE: Implementation is identical to {@link #intToBytes(int)}
-     * </p>
-     *
-     * @param value The value to be encoded
-     * @return The value of <code>value</code> encoded as a
-     *         <code>byte</code> array
-     */
-    public static byte[] shortToBytes(short value) {
-        return intToBytes(value);
-    }
-
-    /**
      * Decode a <code>byte</code> array into a <code>short</code> value.
      *
      * @param byte_int The <code>byte</code> array to be decoded
@@ -179,17 +150,6 @@ public class XSQLVAR {
      *         <code>byte</code> array
      */
     public byte[] encodeInt(int value){
-        return intToBytes(value);
-    }
-
-    /**
-     * Encode an <code>int</code> value as a <code>byte</code> array in network-order(big-endian) representation.
-     *
-     * @param value The value to be encoded
-     * @return The value of <code>value</code> encoded as a
-     *         <code>byte</code> array
-     */
-    public static byte[] intToBytes(int value) {
         byte ret[] = new byte[4];
         ret[0] = (byte) ((value >>> 24) & 0xff);
         ret[1] = (byte) ((value >>> 16) & 0xff);
@@ -210,7 +170,7 @@ public class XSQLVAR {
         int b2 = byte_int[1]&0xFF;
         int b3 = byte_int[2]&0xFF;
         int b4 = byte_int[3]&0xFF;
-        return ((b1 << 24) + (b2 << 16) + (b3 << 8) + b4);
+        return ((b1 << 24) + (b2 << 16) + (b3 << 8) + (b4));
     }
 
     /**
@@ -220,18 +180,7 @@ public class XSQLVAR {
      * @return The value of <code>value</code> encoded as a 
      *         <code>byte</code> array
      */
-    public byte[] encodeLong(long value){
-        return longToBytes(value);
-    }
-
-    /**
-     * Encode a <code>long</code> value as a <code>byte</code> array in network-order(big-endian) representation.
-     *
-     * @param value The value to be encoded
-     * @return The value of <code>value</code> encoded as a
-     *         <code>byte</code> array
-     */
-    public static byte[] longToBytes(long value) {
+    public  byte[] encodeLong(long value){
         byte[] ret = new byte[8];
         ret[0] = (byte) (value >>> 56 & 0xFF);
         ret[1] = (byte) (value >>> 48 & 0xFF);
@@ -244,6 +193,7 @@ public class XSQLVAR {
         return ret;
     }
 
+
     /**
      * Decode a <code>byte</code> array into a <code>long</code> value.
      *
@@ -251,7 +201,7 @@ public class XSQLVAR {
      * @return The <code>long</code> value of the decoded 
      *         <code>byte</code> array
      */
-    public long decodeLong(byte[] byte_int){
+    public  long decodeLong(byte[] byte_int){
         long b1 = byte_int[0]&0xFF;
         long b2 = byte_int[1]&0xFF;
         long b3 = byte_int[2]&0xFF;
@@ -261,7 +211,7 @@ public class XSQLVAR {
         long b7 = byte_int[6]&0xFF;
         long b8 = byte_int[7]&0xFF;
         return ((b1 << 56) + (b2 << 48) + (b3 << 40) + (b4 << 32) 
-        + (b5 << 24) + (b6 << 16) + (b7 << 8) + b8);
+        + (b5 << 24) + (b6 << 16) + (b7 << 8) + (b8));
     }
 
     /**
@@ -612,7 +562,6 @@ public class XSQLVAR {
         return dt.toDateBytes();
     }
 
-
     /**
      * Decode a <code>Date</code> value using a given <code>Calendar</code>.
      *
@@ -643,7 +592,7 @@ public class XSQLVAR {
     
 	public Date decodeDateCalendar(byte[] byte_int, Calendar c) {
        datetime dt = new datetime(byte_int, null);
-        return dt.toDate(c);
+       return dt.toDate(c);
     }
 
     /**
@@ -809,7 +758,7 @@ public class XSQLVAR {
                     year += 1;
                 }
             }
-            if (time != null){
+            if (time != null){		
                 int fractionsInDay = decodeInt(time);
                 hour = fractionsInDay / FRACTIONS_PER_HOUR;
                 fractionsInDay -= hour * FRACTIONS_PER_HOUR;
@@ -823,9 +772,9 @@ public class XSQLVAR {
         byte[] toTimeBytes(){
             int fractionsInDay =
                     hour * FRACTIONS_PER_HOUR
-                            + minute * FRACTIONS_PER_MINUTE
-                            + second * FRACTIONS_PER_SECOND
-                            + fractions;
+                    + minute * FRACTIONS_PER_MINUTE
+                    + second * FRACTIONS_PER_SECOND
+                    + fractions;
             return encodeInt(fractionsInDay);
         }
 
@@ -856,7 +805,7 @@ public class XSQLVAR {
             c.set(Calendar.YEAR, 1970);
             c.set(Calendar.MONTH, Calendar.JANUARY);
             c.set(Calendar.DAY_OF_MONTH, 1);
-            c.set(Calendar.HOUR_OF_DAY, hour);
+            c.set(Calendar.HOUR_OF_DAY,hour);
             c.set(Calendar.MINUTE, minute);
             c.set(Calendar.SECOND, second);
             c.set(Calendar.MILLISECOND, fractions / FRACTIONS_PER_MILLISECOND);

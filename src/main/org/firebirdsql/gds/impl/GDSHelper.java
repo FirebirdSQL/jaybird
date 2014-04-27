@@ -90,7 +90,7 @@ public class GDSHelper {
             listener.errorOccured(ex);
     }
         
-    public synchronized IscTrHandle getCurrentTrHandle() {
+    public synchronized AbstractIscTrHandle getCurrentTrHandle() {
         return currentTr;
     }
     
@@ -196,7 +196,7 @@ public class GDSHelper {
             if (describeBind) 
                 gds.iscDsqlDescribeBind(stmt, ISCConstants.SQLDA_VERSION1);
             
-            stmt.setStatementText(sql);
+            stmt.statement = sql;
             
         } catch(GDSException ex) {
             notifyListeners(ex);
@@ -220,7 +220,7 @@ public class GDSHelper {
         try {
             
             if (log != null && log.isDebugEnabled())
-                log.debug("Executing " + stmt.getStatementText());
+                log.debug("Executing " + stmt.statement);
             
             // System.out.println("Executing " + stmt.statement);
             
@@ -387,7 +387,7 @@ public class GDSHelper {
             String executionPlan = null;
             int statementType = IscStmtHandle.TYPE_UNKNOWN;
             
-            int dataLength;
+            int dataLength = -1; 
             for (int i = 0; i < buffer.length; i++){
                 switch(buffer[i]){
                     case ISCConstants.isc_info_sql_get_plan:
@@ -593,7 +593,7 @@ public class GDSHelper {
         }
     }
     
-    public void prepareTransaction(IscTrHandle trHandle, byte[] message) throws GDSException {
+    public void prepareTransaction(AbstractIscTrHandle trHandle, byte[] message) throws GDSException {
         try {
             gds.iscPrepareTransaction2(trHandle, message);
         } catch(GDSException ex) {
@@ -602,7 +602,7 @@ public class GDSHelper {
         }
     }
     
-    public void commitTransaction(IscTrHandle trHandle) throws GDSException {
+    public void commitTransaction(AbstractIscTrHandle trHandle) throws GDSException {
         try {
             gds.iscCommitTransaction(trHandle);
         } catch(GDSException ex) {
@@ -611,7 +611,7 @@ public class GDSHelper {
         }
     }
     
-    public void rollbackTransaction(IscTrHandle trHandle) throws GDSException {
+    public void rollbackTransaction(AbstractIscTrHandle trHandle) throws GDSException {
         try {
             gds.iscRollbackTransaction(trHandle);
         } catch(GDSException ex) {
@@ -643,10 +643,6 @@ public class GDSHelper {
 
     public int iscVaxInteger(byte[] buffer, int pos, int length) {
         return gds.iscVaxInteger(buffer, pos, length);
-    }
-    
-    public long iscVaxLong(byte[] buffer, int pos, int length) {
-        return gds.iscVaxLong(buffer, pos, length);
     }
 
     // for DatabaseMetaData.
@@ -766,9 +762,9 @@ public class GDSHelper {
      * @return list of {@link GDSException}instances representing warnings for
      *         this database connection.
      */
-    public List<GDSException> getWarnings() {
+    public List getWarnings() {
         if (currentDbHandle == null)
-            return Collections.emptyList();
+            return Collections.EMPTY_LIST;
         else
             return currentDbHandle.getWarnings();
     }

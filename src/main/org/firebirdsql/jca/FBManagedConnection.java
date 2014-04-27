@@ -22,8 +22,6 @@ import java.io.ByteArrayInputStream;
 import java.io.PrintWriter;
 import java.sql.*;
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.CopyOnWriteArrayList;
 
 import javax.resource.ResourceException;
 import javax.resource.spi.*;
@@ -58,13 +56,12 @@ public class FBManagedConnection implements ManagedConnection, XAResource, GDSHe
 
     private final FBManagedConnectionFactory mcf;
 
-    private final List<ConnectionEventListener> connectionEventListeners = new CopyOnWriteArrayList<ConnectionEventListener>();
-    // TODO Review synchronization of connectionHandles (especially in blocks like in disassociateConnections, setConnectionSharing etc)
-    private final List<FBConnection> connectionHandles = Collections.synchronizedList(new ArrayList<FBConnection>());
+    private final ArrayList connectionEventListeners = new ArrayList();
+    private final ArrayList connectionHandles = new ArrayList();
 
     private int timeout = 0;
 
-    private final Map<Xid, AbstractIscTrHandle> xidMap = new ConcurrentHashMap<Xid, AbstractIscTrHandle>();
+    private final Map xidMap = Collections.synchronizedMap(new HashMap());
     
     private final GDS gds;
     private final IscDbHandle dbHandle;
@@ -76,7 +73,7 @@ public class FBManagedConnection implements ManagedConnection, XAResource, GDSHe
 
     private volatile boolean managedEnvironment = true;
     private volatile boolean connectionSharing = true;
-    private final Set<Xid> preparedXid = Collections.synchronizedSet(new HashSet<Xid>());
+    private final Set preparedXid = Collections.synchronizedSet(new HashSet());
     private volatile boolean inDistributedTransaction = false;
 
     FBManagedConnection(Subject subject, ConnectionRequestInfo cri,
@@ -104,7 +101,7 @@ public class FBManagedConnection implements ManagedConnection, XAResource, GDSHe
             if (!dpb.hasArgument(DatabaseParameterBuffer.CONNECT_TIMEOUT) && DriverManager.getLoginTimeout() > 0) {
                 dpb.addArgument(DatabaseParameterBuffer.CONNECT_TIMEOUT, DriverManager.getLoginTimeout());
             }
-
+            
             gds.iscAttachDatabase(mcf.getDatabase(), dbHandle, dpb);
             
             gdsHelper = new GDSHelper(gds, dpb, dbHandle, this);
@@ -146,7 +143,7 @@ public class FBManagedConnection implements ManagedConnection, XAResource, GDSHe
             if (subject != null) {
                 // see connector spec, section 8.2.6, contract for
                 // ManagedConnectinFactory, option A.
-                for (Iterator<?> i = subject.getPrivateCredentials().iterator(); i
+                for (Iterator i = subject.getPrivateCredentials().iterator(); i
                         .hasNext();) {
                     Object cred = i.next();
                     if (cred instanceof PasswordCredential
@@ -206,7 +203,9 @@ public class FBManagedConnection implements ManagedConnection, XAResource, GDSHe
                     "connection in non-sharing mode.");
             
             // there will be at most one connection.
-            for (FBConnection connection : connectionHandles) {
+            for (Iterator iter = connectionHandles.iterator(); iter.hasNext();) {
+                AbstractConnection connection = (AbstractConnection) iter.next();
+
                 try {
                     connection.setManagedEnvironment(managedEnvironment);
                 } catch(SQLException ex) {
@@ -218,7 +217,7 @@ public class FBManagedConnection implements ManagedConnection, XAResource, GDSHe
     
     /**
      * Check if connection sharing is enabled. When connection sharing is 
-     * enabled, multiple connection handles ({@link FBConnection} instances)
+     * enabled, multiple connection handles ({@link AbstractConnection} instances)
      * can access this managed connection in thread-safe manner (they synchronize
      * on this instance). This feature can be enabled only in JCA environment,
      * any other environment must not use connection sharing.
@@ -374,9 +373,8 @@ public class FBManagedConnection implements ManagedConnection, XAResource, GDSHe
             disassociateConnections();
         
         try {
-            final FBConnection abstractConnection = (FBConnection) connection;
-            abstractConnection.setManagedConnection(this);
-            connectionHandles.add(abstractConnection);
+            ((AbstractConnection) connection).setManagedConnection(this);
+            connectionHandles.add(connection);
         } catch (ClassCastException cce) {
             throw new FBResourceException(
                     "invalid connection supplied to associateConnection.", cce);
@@ -430,19 +428,24 @@ public class FBManagedConnection implements ManagedConnection, XAResource, GDSHe
 
     /**
      * Disassociate connections from current managed connection.
+     *
      */
     private void disassociateConnections() throws ResourceException {
-        SQLExceptionChainBuilder<SQLException> chain = new SQLExceptionChainBuilder<SQLException>();
+        SQLExceptionChainBuilder chain = new SQLExceptionChainBuilder();
         
         // Iterate over copy of list as connection.close() will remove connection
-        List<FBConnection> connectionHandleCopy = new ArrayList<FBConnection>(connectionHandles);
-        for (FBConnection connection : connectionHandleCopy) {
+        List connectionHandleCopy = new ArrayList(connectionHandles);
+        for (Iterator i = connectionHandleCopy.iterator(); i.hasNext();) {
+            AbstractConnection connection = (AbstractConnection) i.next();
+            
             try {
                 connection.close();
             } catch(SQLException sqlex) {
                 chain.append(sqlex);
             }
         }
+        
+        connectionHandles.clear();
         
         if (chain.hasException())
             throw new FBResourceException(chain.getException());
@@ -493,7 +496,7 @@ public class FBManagedConnection implements ManagedConnection, XAResource, GDSHe
         if (!connectionSharing)
             disassociateConnections();
         
-        FBConnection c = mcf.newConnection(this);
+        AbstractConnection c = mcf.newConnection(this);
         try {
             c.setManagedEnvironment(isManagedEnvironment());
             connectionHandles.add(c);
@@ -552,7 +555,7 @@ public class FBManagedConnection implements ManagedConnection, XAResource, GDSHe
     // --------------------------------------------------------------
 
     boolean isXidActive(Xid xid) {
-        IscTrHandle trHandle = xidMap.get(xid);
+        IscTrHandle trHandle = (IscTrHandle)xidMap.get(xid); //mcf.getTrHandleForXid(xid);
 
         if (trHandle == null) return false;
 
@@ -595,7 +598,7 @@ public class FBManagedConnection implements ManagedConnection, XAResource, GDSHe
     void internalCommit(Xid xid, boolean onePhase) throws XAException,
             GDSException {
         if (log != null) log.trace("Commit called: " + xid);
-        AbstractIscTrHandle committingTr = xidMap.get(xid);
+        AbstractIscTrHandle committingTr = (AbstractIscTrHandle)xidMap.get(xid);
         
         // check that prepare has NOT been called when onePhase = true
         if (onePhase && isPrepared(xid))
@@ -679,7 +682,7 @@ public class FBManagedConnection implements ManagedConnection, XAResource, GDSHe
      */
     void internalEnd(Xid xid, int flags) throws XAException {
         if (log != null) log.debug("End called: " + xid);
-        IscTrHandle endingTr = xidMap.get(xid);
+        IscTrHandle endingTr = (IscTrHandle)xidMap.get(xid);
         
         if (endingTr == null)
             throw new FBXAException("Unrecognized transaction", XAException.XAER_NOTA);
@@ -727,7 +730,7 @@ public class FBManagedConnection implements ManagedConnection, XAResource, GDSHe
 
         try {
             // find XID
-            // TODO: Is there a reason why this pieace of code can't use the JDBC Statement class?
+            
             AbstractIscTrHandle trHandle2 = (AbstractIscTrHandle)gds.createIscTrHandle();
             gds.iscStartTransaction(trHandle2, gdsHelper.getCurrentDbHandle(), tpb.getTransactionParameterBuffer());
             
@@ -872,7 +875,7 @@ public class FBManagedConnection implements ManagedConnection, XAResource, GDSHe
 
     int internalPrepare(Xid xid) throws FBXAException, GDSException {
         if (log != null) log.trace("prepare called: " + xid);
-        IscTrHandle committingTr = xidMap.get(xid);
+        AbstractIscTrHandle committingTr = (AbstractIscTrHandle)xidMap.get(xid);
         if (committingTr == null)
             throw new FBXAException("Prepare called with unknown transaction",
                     XAException.XAER_NOTA);
@@ -939,7 +942,7 @@ public class FBManagedConnection implements ManagedConnection, XAResource, GDSHe
 //            if ((flags & XAResource.TMENDRSCAN) == 0 && (flags & XAResource.TMNOFLAGS) == 0)
 //                return new Xid[0];
             
-            List<FBXid> xids = new ArrayList<FBXid>();
+            ArrayList xids = new ArrayList();
             
             AbstractIscTrHandle trHandle2 = (AbstractIscTrHandle)gds.createIscTrHandle();
             gds.iscStartTransaction(trHandle2, gdsHelper.getCurrentDbHandle(), tpb.getTransactionParameterBuffer());
@@ -992,7 +995,7 @@ public class FBManagedConnection implements ManagedConnection, XAResource, GDSHe
             gdsHelper2.closeStatement(stmtHandle2, true);
             gds.iscCommitTransaction(trHandle2);
             
-            return xids.toArray(new FBXid[xids.size()]);
+            return (FBXid[])xids.toArray(new FBXid[xids.size()]);
 
         } catch(GDSException ex) {
             throw new FBXAException("can't perform query to fetch xids", XAException.XAER_RMFAIL, ex);
@@ -1018,7 +1021,7 @@ public class FBManagedConnection implements ManagedConnection, XAResource, GDSHe
         }
         
         public byte[] getFieldData() {
-            return stmtHandle.getRows()[row][fieldPos];
+            return ((byte[][])stmtHandle.getRows()[row])[fieldPos];
         }
         public void setFieldData(byte[] data) {
             throw new UnsupportedOperationException();
@@ -1046,7 +1049,7 @@ public class FBManagedConnection implements ManagedConnection, XAResource, GDSHe
 
     void internalRollback(Xid xid) throws XAException, GDSException {
         if (log != null) log.trace("rollback called: " + xid);
-        AbstractIscTrHandle committingTr = xidMap.get(xid);
+        AbstractIscTrHandle committingTr = (AbstractIscTrHandle)xidMap.get(xid); //mcf.getTrHandleForXid(id);
         if (committingTr == null) {
             throw new FBXAException ("Rollback called with unknown transaction: " + xid);
         }
@@ -1165,7 +1168,7 @@ public class FBManagedConnection implements ManagedConnection, XAResource, GDSHe
      * @param c
      *            The <code>AbstractConnection</code> that is being closed
      */
-    public void close(FBConnection c) {
+    public void close(AbstractConnection c) {
         c.setManagedConnection(null);
         connectionHandles.remove(c);
         ConnectionEvent ce = new ConnectionEvent(this,
@@ -1208,7 +1211,7 @@ public class FBManagedConnection implements ManagedConnection, XAResource, GDSHe
         gdsHelper.setCurrentTrHandle(null);
         
         if (flags == XAResource.TMRESUME) {
-            AbstractIscTrHandle trHandle = xidMap.get(xid);
+            AbstractIscTrHandle trHandle = (AbstractIscTrHandle) xidMap.get(xid);
             if (trHandle == null) {
                 throw new FBXAException(
                         "You are trying to resume a transaction that is not attached to this XAResource",
@@ -1219,7 +1222,9 @@ public class FBManagedConnection implements ManagedConnection, XAResource, GDSHe
             return;
         }
         
-        for (Xid knownXid : xidMap.keySet()) {
+        Iterator it = xidMap.keySet().iterator();
+        while (it.hasNext()) {
+            Xid knownXid = (Xid) it.next();
             boolean sameFormatId = knownXid.getFormatId() == xid.getFormatId();
             boolean sameGtrid = Arrays.equals(knownXid.getGlobalTransactionId(), xid.getGlobalTransactionId());
             boolean sameBqual = Arrays.equals(knownXid.getBranchQualifier(), xid.getBranchQualifier());
@@ -1236,9 +1241,17 @@ public class FBManagedConnection implements ManagedConnection, XAResource, GDSHe
     }
     
     void notify(CELNotifier notifier, ConnectionEvent ce) {
-        for (ConnectionEventListener cel : connectionEventListeners) {
+        if (connectionEventListeners.size() == 0) { return; }
+        if (connectionEventListeners.size() == 1) {
+            ConnectionEventListener cel = (ConnectionEventListener) connectionEventListeners
+                    .get(0);
             notifier.notify(cel, ce);
-        }
+            return;
+        } // end of if ()
+        ArrayList cels = (ArrayList) connectionEventListeners.clone();
+        for (Iterator i = cels.iterator(); i.hasNext();) {
+            notifier.notify((ConnectionEventListener) i.next(), ce);
+        } // end of for ()
     }
 
     interface CELNotifier {
@@ -1291,7 +1304,7 @@ public class FBManagedConnection implements ManagedConnection, XAResource, GDSHe
             return false;
         
         try {
-            return this.cri.equals(getCombinedConnectionRequestInfo(subj, cri));
+            return this.cri.equals(getCombinedConnectionRequestInfo(subj, (FBConnectionRequestInfo)cri));
         } catch (ResourceException re) {
             return false;
         }

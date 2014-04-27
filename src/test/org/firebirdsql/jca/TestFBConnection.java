@@ -1,6 +1,4 @@
-/*
- * $Id$
- * 
+ /*
  * Firebird Open Source J2ee connector - jdbc driver
  *
  * Distributable under LGPL license.
@@ -44,8 +42,11 @@ public class TestFBConnection extends TestXABase {
     }
 
     public static Test suite() {
+
         return new TestSuite(TestFBConnection.class);
     }
+
+
 
     public void testCreateC() throws Exception {
         if (log != null) log.info("testCreateC");
@@ -111,5 +112,9 @@ public class TestFBConnection extends TestXABase {
         if (ex != null) {
             throw ex;
         }
+
     }
+
+
+
 }

@@ -8,12 +8,10 @@ import org.firebirdsql.gds.*;
 /**
  * An input stream for reading directly from a FBBlob instance.
  */
-public class FBBlobInputStream extends InputStream implements FirebirdBlob.BlobInputStream {
+public class FBBlobInputStream extends InputStream 
+    implements FirebirdBlob.BlobInputStream
+{
 
-    /**
-     * Maximum blob segment size, see IB 6 Data Definition Guide, page 78 ("BLOB segment length")
-     */
-    private static final int READ_FULLY_BUFFER_SIZE = 32 * 1024;
 
     private byte[] buffer = null;
     private IscBlobHandle blobHandle;
@@ -21,7 +19,7 @@ public class FBBlobInputStream extends InputStream implements FirebirdBlob.BlobI
     
     private boolean closed;
     
-    private final FBBlob owner;
+    private FBBlob owner;
 
     FBBlobInputStream(FBBlob owner) throws SQLException {
         this.owner = owner;
@@ -32,6 +30,7 @@ public class FBBlobInputStream extends InputStream implements FirebirdBlob.BlobI
             throw new FBSQLException("You can't read a new blob");
         
         Object syncObject = owner.getSynchronizationObject();
+        
         synchronized(syncObject) {
             try {
                 blobHandle = owner.gdsHelper.openBlob(owner.blob_id, FBBlob.SEGMENTED);
@@ -50,6 +49,7 @@ public class FBBlobInputStream extends InputStream implements FirebirdBlob.BlobI
     }
 
     public void seek(int position, int seekMode) throws IOException {
+        
         Object syncObject = owner.getSynchronizationObject();
         
         synchronized(syncObject) {
@@ -64,7 +64,9 @@ public class FBBlobInputStream extends InputStream implements FirebirdBlob.BlobI
     }
     
     public long length() throws IOException {
+        
         Object syncObject = owner.getSynchronizationObject();
+        
         synchronized(syncObject) {
             checkClosed();
             try {
@@ -87,11 +89,9 @@ public class FBBlobInputStream extends InputStream implements FirebirdBlob.BlobI
             checkClosed();
             if (buffer == null) {
                 if (blobHandle.isEof()) {
-                    // TODO Should return 0 if end of stream (or if next read might block)
                     return -1;
                 }
-
-                // TODO available should not retrieve buffer
+                
                 try {
                     //bufferlength is in FBBlob enclosing class
                     buffer = owner.gdsHelper.getBlobSegment(blobHandle, owner.bufferlength);
@@ -99,10 +99,9 @@ public class FBBlobInputStream extends InputStream implements FirebirdBlob.BlobI
                     throw new IOException("Blob read problem: " +
                         ge.toString());
                 }
-
+                
                 pos = 0;
                 if (buffer.length == 0) {
-                    // TODO Should return 0 if end of stream (or next read might block)
                    return -1;
                 }
             }
@@ -111,11 +110,10 @@ public class FBBlobInputStream extends InputStream implements FirebirdBlob.BlobI
     }
 
     public int read() throws IOException {
-        // TODO Abuse of available() to retrieve buffer and misinterpretation of value of available
         if (available() <= 0) {
             return -1;
         }
-        int result = buffer[pos++] & 0xFF;
+        int result = buffer[pos++] & 0x00FF;//& seems to convert signed byte to unsigned byte
         if (pos == buffer.length) {
             buffer = null;
         }
@@ -123,7 +121,6 @@ public class FBBlobInputStream extends InputStream implements FirebirdBlob.BlobI
     }
 
     public int read(byte[] b, int off, int len) throws IOException {
-        // TODO Abuse of available() to retrieve buffer and misinterpretation of value of available
         int result = available();
         if (result <= 0) {
             return -1;
@@ -142,7 +139,7 @@ public class FBBlobInputStream extends InputStream implements FirebirdBlob.BlobI
     public void readFully(byte[] b, int off, int len) throws IOException {
         int counter = 0;
         int pos = 0;
-        byte[] buffer = new byte[Math.min(READ_FULLY_BUFFER_SIZE, len)];
+        byte[] buffer = new byte[Math.min(FBBlob.READ_FULLY_BUFFER_SIZE, len)];
 
         int toRead = len;
 
