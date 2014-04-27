@@ -18,6 +18,7 @@
  */
 package org.firebirdsql.jca;
 
+import org.firebirdsql.jdbc.FirebirdResultSet;
 
 import java.sql.Connection;
 import java.sql.ResultSet;
@@ -296,7 +297,7 @@ public class TestFBXAResource extends TestXABase {
             Statement stmt1 = con.createStatement();
             Statement stmt2 = con.createStatement();
             try {
-                ResultSet rs1 = stmt1.executeQuery("SELECT RDB$CHARACTER_SET_NAME FROM RDB$CHARACTER_SETS");
+                FirebirdResultSet rs1 = (FirebirdResultSet) stmt1.executeQuery("SELECT RDB$CHARACTER_SET_NAME FROM RDB$CHARACTER_SETS");
                 assertTrue("Expected rs1 row 1", rs1.next());
                 assertNotNull("Expected rs1 value for row 1, column 1", rs1.getString(1));
                 ResultSet rs2 = stmt2.executeQuery("SELECT 1 FROM RDB$DATABASE");
