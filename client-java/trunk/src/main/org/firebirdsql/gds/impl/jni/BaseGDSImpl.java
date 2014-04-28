@@ -395,6 +395,7 @@ public abstract class BaseGDSImpl extends AbstractGDS {
                 in_xsqlda, out_xsqlda);
     }
 
+    @Deprecated
     public void iscDsqlExecImmed2(IscDbHandle db_handle, IscTrHandle tr_handle,
             String statement, String encoding, int dialect, XSQLDA in_xsqlda,
             XSQLDA out_xsqlda) throws GDSException {
@@ -465,6 +466,7 @@ public abstract class BaseGDSImpl extends AbstractGDS {
                 null);
     }
 
+    @Deprecated
     public void iscDsqlExecuteImmediate(IscDbHandle db_handle,
             IscTrHandle tr_handle, String statement, String encoding,
             int dialect, XSQLDA xsqlda) throws GDSException {
@@ -624,6 +626,7 @@ public abstract class BaseGDSImpl extends AbstractGDS {
                 dialect);
     }
 
+    @Deprecated
     public XSQLDA iscDsqlPrepare(IscTrHandle tr_handle,
             IscStmtHandle stmt_handle, String statement, String encoding,
             int dialect) throws GDSException {

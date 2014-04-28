@@ -407,7 +407,7 @@ public abstract class BaseJUnit4TestFBField<T extends FBField, O> {
      */
     protected final void setValueExpectations(final byte[] data) {
         context.checking(new Expectations() {{
-            one(fieldData).setFieldData(data);
+            oneOf(fieldData).setFieldData(data);
         }});
     }
 

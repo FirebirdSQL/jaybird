@@ -240,15 +240,15 @@ public class FBConnection implements FirebirdConnection {
         return mc.getConnectionRequestInfo().getDpb();
     }
 
-    
+    @Deprecated
 	public void setTransactionParameters(int isolationLevel, int[] parameters)
 		throws SQLException {
         
         TransactionParameterBuffer tpbParams = createTransactionParameterBuffer();
-        
-        for (int i = 0; i < parameters.length; i++) {
-			tpbParams.addArgument(parameters[i]);
-		}
+
+        for (int parameter : parameters) {
+            tpbParams.addArgument(parameter);
+        }
         
         setTransactionParameters(isolationLevel, tpbParams);
 	}

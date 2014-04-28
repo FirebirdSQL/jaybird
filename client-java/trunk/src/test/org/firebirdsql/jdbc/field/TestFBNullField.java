@@ -294,7 +294,7 @@ public class TestFBNullField {
     }
     
     @Test
-    public void setUnicodeStreanNonNull() throws SQLException {
+    public void setUnicodeStreamNonNull() throws SQLException {
         setNonNullExpectations();
         InputStream in = context.mock(InputStream.class);
         // TODO Read and/or close expectation?
@@ -304,14 +304,14 @@ public class TestFBNullField {
 
     private void setNullExpectations() {
         context.checking(new Expectations() {{
-            one(fieldData).setFieldData(null);
+            oneOf(fieldData).setFieldData(null);
         }});
     }
     
     private void setNonNullExpectations() {
         context.checking(new Expectations() {{
             // NOTE: Implementation detail
-            one(fieldData).setFieldData(new byte[0]);
+            oneOf(fieldData).setFieldData(new byte[0]);
         }});
     }
 }

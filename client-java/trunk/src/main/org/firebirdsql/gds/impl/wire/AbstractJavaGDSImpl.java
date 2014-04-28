@@ -1016,6 +1016,7 @@ public abstract class AbstractJavaGDSImpl extends AbstractGDS implements GDS {
 				null);
 	}
 
+    @Deprecated
 	public void iscDsqlExecuteImmediate(IscDbHandle db_handle,
 			IscTrHandle tr_handle, String statement, String encoding,
 			int dialect, XSQLDA xsqlda) throws GDSException {
@@ -1039,7 +1040,8 @@ public abstract class AbstractJavaGDSImpl extends AbstractGDS implements GDS {
 				in_xsqlda, out_xsqlda);
 	}
 
-	public void iscDsqlExecImmed2(IscDbHandle db_handle, IscTrHandle tr_handle,
+	@Deprecated
+    public void iscDsqlExecImmed2(IscDbHandle db_handle, IscTrHandle tr_handle,
 			String statement, String encoding, int dialect, XSQLDA in_xsqlda,
 			XSQLDA out_xsqlda) throws GDSException {
         iscDsqlExecImmed2(db_handle, tr_handle, getByteArrayForString(db_handle, statement, encoding),
@@ -1284,6 +1286,7 @@ public abstract class AbstractJavaGDSImpl extends AbstractGDS implements GDS {
 		return iscDsqlPrepare(tr_handle, stmt_handle, statement, "NONE", dialect);
 	}
 
+    @Deprecated
 	public XSQLDA iscDsqlPrepare(IscTrHandle tr_handle,
 			IscStmtHandle stmt_handle, String statement, String encoding,
 			int dialect) throws GDSException {

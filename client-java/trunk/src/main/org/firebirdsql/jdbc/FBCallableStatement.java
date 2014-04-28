@@ -1415,6 +1415,7 @@ public class FBCallableStatement extends FBPreparedStatement implements Callable
         procedureCall.getInputParam(parameterIndex).setValue(x);
     }
 
+    @Deprecated
     public void setUnicodeStream(int parameterIndex, InputStream x, int length) throws SQLException {
         procedureCall.getInputParam(parameterIndex).setValue(x);
     }
