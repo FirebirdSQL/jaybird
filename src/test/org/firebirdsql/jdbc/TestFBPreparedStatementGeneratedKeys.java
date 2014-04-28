@@ -20,16 +20,14 @@
  */
 package org.firebirdsql.jdbc;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.ResultSetMetaData;
-import java.sql.SQLException;
-import java.sql.Statement;
-
 import org.firebirdsql.gds.ISCConstants;
+import org.junit.Test;
 
-import static org.firebirdsql.common.JdbcResourceHelper.*;
+import java.sql.*;
+
+import static org.firebirdsql.common.FBTestProperties.getConnectionViaDriverManager;
+import static org.firebirdsql.common.JdbcResourceHelper.closeQuietly;
+import static org.junit.Assert.*;
 
 /**
  * Tests for retrieval of auto generated keys through {@link java.sql.PreparedStatement}
@@ -37,124 +35,124 @@ import static org.firebirdsql.common.JdbcResourceHelper.*;
  * <p>
  * This is an integration test which uses an actual database.
  * </p>
- * 
+ *
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  */
 public class TestFBPreparedStatementGeneratedKeys extends FBTestGeneratedKeysBase {
-    
+
     private static final String TEXT_VALUE = "Some text to insert";
     private static final String TEST_INSERT_QUERY = "INSERT INTO TABLE_WITH_TRIGGER(TEXT) VALUES (?)";
 
-    public TestFBPreparedStatementGeneratedKeys(String name) {
-        super(name);
-    }
-    
     /**
      * Test for PreparedStatement created through {@link FBConnection#prepareStatement(String, int)} with value {@link Statement#NO_GENERATED_KEYS}.
      * <p>
      * Expected: INSERT statement type and empty generatedKeys resultset.
      * </p>
-     * 
+     *
      * @throws Exception
      */
+    @Test
     public void testPrepare_INSERT_noGeneratedKeys() throws Exception {
         Connection con = getConnectionViaDriverManager();
         try {
             PreparedStatement stmt = con.prepareStatement(TEST_INSERT_QUERY, Statement.NO_GENERATED_KEYS);
-            assertEquals(FirebirdPreparedStatement.TYPE_INSERT, ((FirebirdPreparedStatement)stmt).getStatementType());
-            
+            assertEquals(FirebirdPreparedStatement.TYPE_INSERT, ((FirebirdPreparedStatement) stmt).getStatementType());
+
             stmt.setString(1, TEXT_VALUE);
             assertFalse("Expected statement not to produce a resultset", stmt.execute());
-            
+
             ResultSet rs = stmt.getGeneratedKeys();
             assertNotNull("Expected a non-null resultset from getGeneratedKeys", rs);
-            
+
             ResultSetMetaData metaData = rs.getMetaData();
             assertEquals("Expected resultset without columns", 0, metaData.getColumnCount());
-            
+
             assertFalse("Expected no rows in resultset", rs.next());
-            
+
             closeQuietly(rs);
             closeQuietly(stmt);
         } finally {
             closeQuietly(con);
         }
     }
-    
+
     /**
      * Test for PreparedStatement created through {@link FBConnection#prepareStatement(String, int)} with {@link Statement#RETURN_GENERATED_KEYS}.
      * <p>
-     * Expected: EXEC_PRODUCERE statement type, all columns of table returned, single row resultset
+     * Expected: TYPE_EXEC_PROCEDURE statement type, all columns of table returned, single row resultset
      * </p>
      */
+    @Test
     public void testPrepare_INSERT_returnGeneratedKeys() throws Exception {
         Connection con = getConnectionViaDriverManager();
         try {
             PreparedStatement stmt = con.prepareStatement(TEST_INSERT_QUERY, Statement.RETURN_GENERATED_KEYS);
-            assertEquals(FirebirdPreparedStatement.TYPE_EXEC_PROCEDURE, ((FirebirdPreparedStatement)stmt).getStatementType());
-            
+            assertEquals(FirebirdPreparedStatement.TYPE_EXEC_PROCEDURE, ((FirebirdPreparedStatement) stmt).getStatementType());
+
             stmt.setString(1, TEXT_VALUE);
             assertTrue("Expected statement to produce a resultset", stmt.execute());
-            
+
             ResultSet rs = stmt.getGeneratedKeys();
             assertNotNull("Expected a non-null resultset from getGeneratedKeys", rs);
-            
+
             ResultSetMetaData metaData = rs.getMetaData();
             assertEquals("Expected resultset with 3 columns", 3, metaData.getColumnCount());
             assertEquals("Unexpected first column", "ID", metaData.getColumnName(1));
             assertEquals("Unexpected second column", "TEXT", metaData.getColumnName(2));
-            
+
             assertTrue("Expected first row in resultset", rs.next());
             assertEquals(513, rs.getInt(1));
             assertEquals(TEXT_VALUE, rs.getString(2));
             assertFalse("Expected no second row", rs.next());
-            
+
             closeQuietly(rs);
             closeQuietly(stmt);
         } finally {
             closeQuietly(con);
         }
     }
-    
+
     /**
      * Test for PreparedStatement created through {@link FBConnection#prepareStatement(String, int)} with {@link Statement#RETURN_GENERATED_KEYS} with an INSERT which already has a RETURNING clause.
      * <p>
      * Expected: EXEC_PRODUCERE statement type, all columns of table returned, single row resultset
      * </p>
      */
+    @Test
     public void testPrepare_INSERT_returnGeneratedKeys_withReturning() throws Exception {
         Connection con = getConnectionViaDriverManager();
         try {
             PreparedStatement stmt = con.prepareStatement(TEST_INSERT_QUERY + " RETURNING ID", Statement.RETURN_GENERATED_KEYS);
-            assertEquals(FirebirdPreparedStatement.TYPE_EXEC_PROCEDURE, ((FirebirdPreparedStatement)stmt).getStatementType());
-            
+            assertEquals(FirebirdPreparedStatement.TYPE_EXEC_PROCEDURE, ((FirebirdPreparedStatement) stmt).getStatementType());
+
             stmt.setString(1, TEXT_VALUE);
             assertTrue("Expected statement to produce a resultset", stmt.execute());
-            
+
             ResultSet rs = stmt.getGeneratedKeys();
             assertNotNull("Expected a non-null resultset from getGeneratedKeys", rs);
-            
+
             ResultSetMetaData metaData = rs.getMetaData();
             assertEquals("Expected resultset with 1 column", 1, metaData.getColumnCount());
             assertEquals("Unexpected first column", "ID", metaData.getColumnName(1));
-            
+
             assertTrue("Expected first row in resultset", rs.next());
             assertEquals(513, rs.getInt(1));
             assertFalse("Expected no second row", rs.next());
-            
+
             closeQuietly(rs);
             closeQuietly(stmt);
         } finally {
             closeQuietly(con);
         }
     }
-    
+
     /**
      * Test for PreparedStatement created through {@link FBConnection#prepareStatement(String, int)} with {@link Statement#RETURN_GENERATED_KEYS} with an INSERT for a non existent table.
      * <p>
      * Expected: SQLException Table unknown
      * </p>
      */
+    @Test
     public void testPrepare_INSERT_returnGeneratedKeys_nonExistentTable() throws Exception {
         Connection con = getConnectionViaDriverManager();
         try {
@@ -168,128 +166,132 @@ public class TestFBPreparedStatementGeneratedKeys extends FBTestGeneratedKeysBas
             closeQuietly(con);
         }
     }
-    
+
     /**
      * Test for PreparedStatement created through {@link FBConnection#prepareStatement(String, int[])} with a single column index.
      * <p>
      * Expected: EXEC_PRODUCERE statement type, single row resultset with only the specified column.
      * </p>
-     * 
+     *
      * @throws Exception
      */
+    @Test
     public void testPrepare_INSERT_columnIndexes() throws Exception {
         Connection con = getConnectionViaDriverManager();
         try {
-            PreparedStatement stmt = con.prepareStatement(TEST_INSERT_QUERY, new int[] {1});
-            assertEquals(FirebirdPreparedStatement.TYPE_EXEC_PROCEDURE, ((FirebirdPreparedStatement)stmt).getStatementType());
-            
+            PreparedStatement stmt = con.prepareStatement(TEST_INSERT_QUERY, new int[] { 1 });
+            assertEquals(FirebirdPreparedStatement.TYPE_EXEC_PROCEDURE, ((FirebirdPreparedStatement) stmt).getStatementType());
+
             stmt.setString(1, TEXT_VALUE);
             assertTrue("Expected statement to produce a resultset", stmt.execute());
-            
+
             ResultSet rs = stmt.getGeneratedKeys();
             assertNotNull("Expected a non-null resultset from getGeneratedKeys", rs);
-            
+
             ResultSetMetaData metaData = rs.getMetaData();
             assertEquals("Expected resultset with 1 column", 1, metaData.getColumnCount());
             assertEquals("Unexpected first column", "ID", metaData.getColumnName(1));
-            
+
             assertTrue("Expected first row in resultset", rs.next());
             assertEquals(513, rs.getInt(1));
             assertFalse("Expected no second row", rs.next());
-            
+
             closeQuietly(rs);
             closeQuietly(stmt);
         } finally {
             closeQuietly(con);
         }
     }
-    
+
     /**
      * Test for PreparedStatement created through {@link FBConnection#prepareStatement(String, int[])} with a multiple indexes, one for a quoted column.
      * <p>
      * Expected: EXEC_PRODUCERE statement type, single row resultset with only the specified columns
      * </p>
-     * 
+     *
      * @throws Exception
      */
+    @Test
     public void testPrepare_INSERT_columnIndexes_quotedColumn() throws Exception {
         Connection con = getConnectionViaDriverManager();
         try {
-            PreparedStatement stmt = con.prepareStatement(TEST_INSERT_QUERY, new int[] {1, 3});
-            assertEquals(FirebirdPreparedStatement.TYPE_EXEC_PROCEDURE, ((FirebirdPreparedStatement)stmt).getStatementType());
-            
+            PreparedStatement stmt = con.prepareStatement(TEST_INSERT_QUERY, new int[] { 1, 3 });
+            assertEquals(FirebirdPreparedStatement.TYPE_EXEC_PROCEDURE, ((FirebirdPreparedStatement) stmt).getStatementType());
+
             stmt.setString(1, TEXT_VALUE);
             assertTrue("Expected statement to produce a resultset", stmt.execute());
-            
+
             ResultSet rs = stmt.getGeneratedKeys();
             assertNotNull("Expected a non-null resultset from getGeneratedKeys", rs);
-            
+
             ResultSetMetaData metaData = rs.getMetaData();
             assertEquals("Expected resultset with 2 column", 2, metaData.getColumnCount());
             assertEquals("Unexpected first column", "ID", metaData.getColumnName(1));
             assertEquals("Unexpected second column", "quote_column", metaData.getColumnName(2));
-            
+
             assertTrue("Expected first row in resultset", rs.next());
             assertEquals(513, rs.getInt(1));
             assertEquals(2, rs.getInt(2));
             assertFalse("Expected no second row", rs.next());
-            
+
             closeQuietly(rs);
             closeQuietly(stmt);
         } finally {
             closeQuietly(con);
         }
     }
-    
+
     // Other combination for execute(String, int[]) already covered in TestGeneratedKeysQuery
-    
+
     /**
      * Test for PreparedStatement created through {@link FBConnection#prepareStatement(String, String[])} with a single column name.
      * <p>
      * Expected: single row resultset with only the specified column.
      * </p>
-     * 
+     *
      * @throws Exception
      */
+    @Test
     public void testPrepare_INSERT_columnNames() throws Exception {
         Connection con = getConnectionViaDriverManager();
         try {
-            PreparedStatement stmt = con.prepareStatement(TEST_INSERT_QUERY, new String[] {"ID"});
-            assertEquals(FirebirdPreparedStatement.TYPE_EXEC_PROCEDURE, ((FirebirdPreparedStatement)stmt).getStatementType());
-            
+            PreparedStatement stmt = con.prepareStatement(TEST_INSERT_QUERY, new String[] { "ID" });
+            assertEquals(FirebirdPreparedStatement.TYPE_EXEC_PROCEDURE, ((FirebirdPreparedStatement) stmt).getStatementType());
+
             stmt.setString(1, TEXT_VALUE);
             assertTrue("Expected statement to produce a resultset", stmt.execute());
-            
+
             ResultSet rs = stmt.getGeneratedKeys();
             assertNotNull("Expected a non-null resultset from getGeneratedKeys", rs);
-            
+
             ResultSetMetaData metaData = rs.getMetaData();
             assertEquals("Expected resultset with 1 column", 1, metaData.getColumnCount());
             assertEquals("Unexpected first column", "ID", metaData.getColumnName(1));
-            
+
             assertTrue("Expected first row in resultset", rs.next());
             assertEquals(513, rs.getInt(1));
             assertFalse("Expected no second row", rs.next());
-            
+
             closeQuietly(rs);
             closeQuietly(stmt);
         } finally {
             closeQuietly(con);
         }
     }
-    
+
     /**
      * Test for {@link FBStatement#execute(String, String[])} with an array of columns containing a non-existent column name.
      * <p>
      * Expected: SQLException for Column unknown.
      * </p>
-     * 
+     *
      * @throws Exception
      */
+    @Test
     public void testPrepare_INSERT_columnNames_nonExistentColumn() throws Exception {
         Connection con = getConnectionViaDriverManager();
         try {
-            con.prepareStatement(TEST_INSERT_QUERY, new String[] {"ID", "NON_EXISTENT"});
+            con.prepareStatement(TEST_INSERT_QUERY, new String[] { "ID", "NON_EXISTENT" });
             fail("Expected an SQLException for specifying a non-existent column");
         } catch (SQLException ex) {
             assertEquals("42000", ex.getSQLState());
@@ -299,7 +301,7 @@ public class TestFBPreparedStatementGeneratedKeys extends FBTestGeneratedKeysBas
             closeQuietly(con);
         }
     }
-    
+
     // TODO In the current implementation executeUpdate uses almost identical logic as execute, decide to test separately or not
 
 }
