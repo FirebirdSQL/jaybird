@@ -21,6 +21,7 @@
 package org.firebirdsql.jdbc;
 
 import java.sql.*;
+import java.util.Arrays;
 
 import org.firebirdsql.common.FBJUnit4TestBase;
 import org.junit.After;
@@ -32,8 +33,11 @@ import org.junit.rules.ExpectedException;
 import static org.firebirdsql.common.DdlHelper.*;
 import static org.firebirdsql.common.FBTestProperties.getConnectionViaDriverManager;
 import static org.firebirdsql.common.JdbcResourceHelper.*;
+import static org.firebirdsql.common.matchers.SQLExceptionMatchers.message;
+import static org.firebirdsql.common.matchers.SQLExceptionMatchers.sqlState;
 import static org.firebirdsql.common.matchers.SQLExceptionMatchers.sqlStateEquals;
-import static org.hamcrest.CoreMatchers.containsString;
+import static org.hamcrest.CoreMatchers.*;
+import static org.hamcrest.Matchers.isEmptyOrNullString;
 import static org.junit.Assert.*;
 
 /**
@@ -57,7 +61,6 @@ public class TestFBStatement extends FBJUnit4TestBase {
 
         try {
             executeCreateTable(con, CREATE_TABLE);
-            prepareTestData();
         } finally {
             closeQuietly(con);
         }
@@ -132,6 +135,7 @@ public class TestFBStatement extends FBJUnit4TestBase {
      */
     @Test
     public void testNoCloseOnCompletion_StatementOpen_afterImplicitResultSetClose() throws SQLException {
+        prepareTestData();
         FBStatement stmt = (FBStatement)con.createStatement();
         try {
             stmt.execute(SELECT_DATA);
@@ -181,6 +185,7 @@ public class TestFBStatement extends FBJUnit4TestBase {
      */
     @Test
     public void testCloseOnCompletion_StatementClosed_afterImplicitResultSetClose() throws SQLException {
+        prepareTestData();
         FBStatement stmt = (FBStatement)con.createStatement();
         try {
             stmt.execute(SELECT_DATA);
@@ -371,6 +376,7 @@ public class TestFBStatement extends FBJUnit4TestBase {
      * @param resultSetConcurrency Concurrency of result set
      */
     private void checkMaxRows(int resultSetType, int resultSetConcurrency) throws SQLException {
+        prepareTestData();
         Statement stmt = con.createStatement(resultSetType, resultSetConcurrency);
         try {
             stmt.setMaxRows(2);
@@ -494,8 +500,422 @@ public class TestFBStatement extends FBJUnit4TestBase {
             expectedException.expectMessage(containsString("Column unknown"));
 
             stmt.executeQuery(testQuery);
-        } catch (SQLException e) {
-            throw e;
+        } finally {
+            stmt.close();
+        }
+    }
+
+    /**
+     * Test retrieval of execution plan ({@link FBStatement#getLastExecutionPlan()}) of a simple select is non-empty
+     */
+    @Test
+    public void testGetLastExecutionPlan_select() throws SQLException {
+        FirebirdStatement stmt = (FirebirdStatement) con.createStatement();
+        try {
+            ResultSet rs = stmt.executeQuery(SELECT_DATA);
+            rs.close();
+
+            String plan = stmt.getLastExecutionPlan();
+            assertThat("Expected non-empty plan", plan, not(isEmptyOrNullString()));
+        } finally {
+            stmt.close();
+        }
+    }
+
+    /**
+     * Test retrieval of execution plan ({@link FBStatement#getLastExecutionPlan()}) when no statement has been executed yet.
+     * <p>
+     * Expected: exception
+     * </p>
+     */
+    @Test
+    public void testGetLastExecutionPlan_noStatement() throws SQLException {
+        FirebirdStatement stmt = (FirebirdStatement) con.createStatement();
+        try {
+            expectedException.expect(allOf(
+                    isA(SQLException.class),
+                    message(equalTo("No statement was executed, plan cannot be obtained."))
+            ));
+
+            stmt.getLastExecutionPlan();
+        } finally {
+            stmt.close();
+        }
+    }
+
+    /**
+     * Test that {@link FBStatement#getConnection()} returns the expected {@link java.sql.Connection}.
+     */
+    @Test
+    public void testGetConnection() throws SQLException {
+        Statement stmt = con.createStatement();
+        try {
+            assertSame("Unexpected result for getConnection()", con, stmt.getConnection());
+        } finally {
+            stmt.close();
+        }
+    }
+
+    /**
+     * Test that {@link FBStatement#getConnection()} throws an exception when called on a closed connection.
+     */
+    @Test
+    public void testGetConnection_closedStatement() throws SQLException {
+        Statement stmt = con.createStatement();
+        try {
+            stmt.close();
+            setStatementClosedExpectedException();
+
+            stmt.getConnection();
+        } finally {
+            stmt.close();
+        }
+    }
+
+    private void setStatementClosedExpectedException() {
+        expectedException.expect(allOf(
+                isA(SQLException.class),
+                sqlState(equalTo(FBSQLException.SQL_STATE_INVALID_STATEMENT_ID)),
+                message(equalTo("Statement is already closed."))
+        ));
+    }
+
+    /**
+     * Test the batch update facility with insert statements.
+     */
+    @Test
+    public void testBatch_Insert() throws SQLException {
+        Statement stmt = con.createStatement();
+        try {
+            for (int item = 1; item <= DATA_ITEMS; item++) {
+                stmt.addBatch(String.format("INSERT INTO test(col1) VALUES(%d)", item));
+            }
+            int[] updateCounts = stmt.executeBatch();
+
+            int[] expectedUpdateCounts = new int[DATA_ITEMS];
+            Arrays.fill(expectedUpdateCounts, 1);
+            assertArrayEquals(expectedUpdateCounts, updateCounts);
+
+            ResultSet rs = stmt.executeQuery(SELECT_DATA);
+            try {
+                int expectedItem = 0;
+                while (rs.next()) {
+                    expectedItem++;
+                    int actualItem = rs.getInt(1);
+                    assertEquals("Unexpected data item in SELECT", expectedItem, actualItem);
+                }
+                assertEquals("Unexpected data item in SELECT", DATA_ITEMS, expectedItem);
+            } finally {
+                rs.close();
+            }
+        } finally {
+            stmt.close();
+        }
+    }
+
+    /**
+     * Tests if the default value of {@link FBStatement#getFetchSize()} is <code>0</code>.
+     */
+    @Test
+    public void testGetFetchSize_default() throws SQLException {
+        Statement stmt = con.createStatement();
+        try {
+            assertEquals("Default getFetchSize value should be 0", 0, stmt.getFetchSize());
+        } finally {
+            stmt.close();
+        }
+    }
+
+    /**
+     * Test calling {@link org.firebirdsql.jdbc.FBStatement#getFetchSize()} on a closed statement
+     * <p>
+     * Expected: SQLException statement closed
+     * </p>
+     */
+    @Test
+    public void testGetFetchSize_statementClosed() throws SQLException {
+        Statement stmt = con.createStatement();
+        try {
+            stmt.close();
+            setStatementClosedExpectedException();
+
+            stmt.setFetchSize(10);
+        } finally {
+            stmt.close();
+        }
+    }
+
+    /**
+     * Test calling {@link org.firebirdsql.jdbc.FBStatement#setFetchSize(int)} with a non-zero value.
+     * <p>
+     * Expected: value retrieved with {@link org.firebirdsql.jdbc.FBStatement#getFetchSize()} is same as value set.
+     * </p>
+     */
+    @Test
+    public void testSetFetchSize() throws SQLException {
+        Statement stmt = con.createStatement();
+        try {
+            final int testSize = 132;
+            stmt.setFetchSize(testSize);
+
+            assertEquals("getFetchSize value should be equal to value set", testSize, stmt.getFetchSize());
+        } finally {
+            stmt.close();
+        }
+    }
+
+    /**
+     * Test calling {@link org.firebirdsql.jdbc.FBStatement#setFetchSize(int)} on a closed statement
+     * <p>
+     * Expected: SQLException statement closed
+     * </p>
+     */
+    @Test
+    public void testSetFetchSize_statementClosed() throws SQLException {
+        Statement stmt = con.createStatement();
+        try {
+            stmt.close();
+            setStatementClosedExpectedException();
+
+            stmt.setFetchSize(10);
+        } finally {
+            stmt.close();
+        }
+    }
+
+    /**
+     * Test calling {@link org.firebirdsql.jdbc.FBStatement#setFetchSize(int)} with a negative value.
+     * <p>
+     * Expected: SQLException
+     * </p>
+     */
+    @Test
+    public void testSetFetchSize_negativeValue() throws SQLException {
+        Statement stmt = con.createStatement();
+        try {
+            expectedException.expect(allOf(
+                    isA(SQLException.class),
+                    sqlState(equalTo(FBSQLException.SQL_STATE_INVALID_ARG_VALUE))
+            ));
+
+            stmt.setFetchSize(-1);
+        } finally {
+            stmt.close();
+        }
+    }
+
+    /**
+     * Test calling {@link org.firebirdsql.jdbc.FBStatement#setFetchDirection(int)} with {@link ResultSet#FETCH_FORWARD}.
+     * <p>
+     * No exception, {@link FBStatement#getFetchDirection()} returns {@link ResultSet#FETCH_FORWARD}
+     * </p>
+     */
+    @Test
+    public void testSetFetchDirection_Forward() throws SQLException {
+        Statement stmt = con.createStatement();
+        try {
+            stmt.setFetchDirection(ResultSet.FETCH_FORWARD);
+
+            assertEquals("Unexpected value for fetchDirection", ResultSet.FETCH_FORWARD, stmt.getFetchDirection());
+        } finally {
+            stmt.close();
+        }
+    }
+
+    /**
+     * Test calling {@link org.firebirdsql.jdbc.FBStatement#setFetchDirection(int)} with {@link ResultSet#FETCH_REVERSE}.
+     * <p>
+     * Exception: SQLFeatureNotSupportedException
+     * </p>
+     */
+    @Test
+    public void testSetFetchDirection_Reverse() throws SQLException {
+        Statement stmt = con.createStatement();
+        try {
+            expectedException.expect(SQLFeatureNotSupportedException.class);
+
+            stmt.setFetchDirection(ResultSet.FETCH_REVERSE);
+        } finally {
+            stmt.close();
+        }
+    }
+
+    /**
+     * Test calling {@link org.firebirdsql.jdbc.FBStatement#setFetchDirection(int)} with {@link ResultSet#FETCH_UNKNOWN}.
+     * <p>
+     * Exception: SQLFeatureNotSupportedException
+     * </p>
+     */
+    @Test
+    public void testSetFetchDirection_Unknown() throws SQLException {
+        Statement stmt = con.createStatement();
+        try {
+            expectedException.expect(SQLFeatureNotSupportedException.class);
+
+            stmt.setFetchDirection(ResultSet.FETCH_UNKNOWN);
+        } finally {
+            stmt.close();
+        }
+    }
+
+    /**
+     * Test calling {@link org.firebirdsql.jdbc.FBStatement#setFetchDirection(int)} with an invalid value.
+     * <p>
+     * Exception: SQLException
+     * </p>
+     */
+    @Test
+    public void testSetFetchDirection_InvalidValue() throws SQLException {
+        Statement stmt = con.createStatement();
+        try {
+            expectedException.expect(allOf(
+                    isA(SQLException.class),
+                    not(isA(SQLFeatureNotSupportedException.class)),
+                    sqlState(equalTo(FBSQLException.SQL_STATE_INVALID_ARG_VALUE))
+            ));
+
+            //noinspection MagicConstant
+            stmt.setFetchDirection(-1);
+        } finally {
+            stmt.close();
+        }
+    }
+
+    /**
+     * Test calling {@link org.firebirdsql.jdbc.FBStatement#setFetchDirection(int)} with {@link ResultSet#FETCH_FORWARD}
+     * on a closed statement.
+     * <p>
+     * Exception: SQLException statement closed.
+     * </p>
+     */
+    @Test
+    public void testSetFetchDirection_statementClosed() throws SQLException {
+        Statement stmt = con.createStatement();
+        stmt.close();
+        setStatementClosedExpectedException();
+
+        stmt.setFetchDirection(ResultSet.FETCH_FORWARD);
+    }
+
+    /**
+     * Tests if default value of {@link FBStatement#isPoolable()} is <code>false</code>.
+     */
+    @Test
+    public void testIsPoolable_default() throws SQLException {
+        Statement stmt = con.createStatement();
+        try {
+            assertFalse("Unexpected value for isPoolable()", stmt.isPoolable());
+        } finally {
+            stmt.close();
+        }
+    }
+
+    /**
+     * Tests {@link FBStatement#isPoolable()} on a closed statement
+     * <p>
+     * Expected: SQLException statement closed
+     * </p>
+     */
+    @Test
+    public void testIsPoolable_statementClosed() throws SQLException {
+        Statement stmt = con.createStatement();
+        stmt.close();
+        setStatementClosedExpectedException();
+
+        stmt.isPoolable();
+    }
+
+    /**
+     * Tests if calls to {@link org.firebirdsql.jdbc.FBStatement#setPoolable(boolean)} are ignored.
+     */
+    @Test
+    public void testSetPoolable_ignored() throws SQLException {
+        Statement stmt = con.createStatement();
+        try {
+            stmt.setPoolable(true);
+
+            assertFalse("Expected isPoolable() to remain false", stmt.isPoolable());
+        } finally {
+            stmt.close();
+        }
+    }
+
+    /**
+     * Tests {@link org.firebirdsql.jdbc.FBStatement#setPoolable(boolean)} on a closed statement
+     * <p>
+     * Expected: SQLException statement closed
+     * </p>
+     */
+    @Test
+    public void testSetPoolable_statementClosed() throws SQLException {
+        Statement stmt = con.createStatement();
+        stmt.close();
+        setStatementClosedExpectedException();
+
+        stmt.setPoolable(true);
+    }
+
+    /**
+     * Tests if {@link org.firebirdsql.jdbc.FBStatement#isWrapperFor(Class)} with {@link org.firebirdsql.jdbc.FirebirdStatement}
+     * returns <code>true</code>.
+     */
+    @Test
+    public void testIsWrapperFor_FirebirdStatement() throws SQLException {
+        Statement stmt = con.createStatement();
+        try {
+            assertTrue("Expected to be wrapper for FirebirdStatement", stmt.isWrapperFor(FirebirdStatement.class));
+        } finally {
+            stmt.close();
+        }
+    }
+
+    /**
+     * Tests if {@link org.firebirdsql.jdbc.FBStatement#isWrapperFor(Class)} with {@link ResultSet}
+     * returns <code>false</code>.
+     */
+    @Test
+    public void testIsWrapperFor_ResultSet() throws SQLException {
+        Statement stmt = con.createStatement();
+        try {
+            assertFalse("Expected not to be wrapper for ResultSet", stmt.isWrapperFor(ResultSet.class));
+        } finally {
+            stmt.close();
+        }
+    }
+
+    /**
+     * Tests if {@link org.firebirdsql.jdbc.FBStatement#unwrap(Class)} with {@link org.firebirdsql.jdbc.FirebirdStatement}
+     * successfully unwraps.
+     */
+    @Test
+    public void testUnwrap_FirebirdStatement() throws SQLException {
+        Statement stmt = con.createStatement();
+        try {
+            FirebirdStatement firebirdStatement = stmt.unwrap(FirebirdStatement.class);
+
+            assertThat("Unexpected result for unwrap to FirebirdStatement", firebirdStatement, allOf(
+                    notNullValue(),
+                    sameInstance(stmt)
+            ));
+        } finally {
+            stmt.close();
+        }
+    }
+
+    /**
+     * Tests if {@link org.firebirdsql.jdbc.FBStatement#unwrap(Class)} with {@link ResultSet}
+     * throws an Exception.
+     */
+    @Test
+    public void testUnwrap_ResultSet() throws SQLException {
+        Statement stmt = con.createStatement();
+        try {
+            expectedException.expect(allOf(
+                    isA(SQLException.class),
+                    message(equalTo("Unable to unwrap to class java.sql.ResultSet"))
+            ));
+
+            stmt.unwrap(ResultSet.class);
         } finally {
             stmt.close();
         }
