@@ -427,6 +427,7 @@ public class TestFBMaintenanceManager extends FBJUnit4TestBase {
         createLimboTransaction(COUNT_LIMBO);
         ByteArrayOutputStream byteOut = new ByteArrayOutputStream();
         maintenanceManager.setLogger(byteOut);
+        //noinspection deprecation
         maintenanceManager.listLimboTransactions();
 
         StringTokenizer limboTransactions = new StringTokenizer(byteOut.toString(), "\n");
