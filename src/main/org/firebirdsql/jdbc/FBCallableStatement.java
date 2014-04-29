@@ -123,9 +123,9 @@ public class FBCallableStatement extends FBPreparedStatement implements Callable
     }
 
     public ParameterMetaData getParameterMetaData() throws SQLException {
-        statementListener.executionStarted(this);
-        Object syncObject = getSynchronizationObject();
-        synchronized (syncObject) {
+        synchronized (getSynchronizationObject()) {
+            // TODO See http://tracker.firebirdsql.org/browse/JDBC-352
+            notifyStatementStarted(false);
             try {
                 prepareFixedStatement(procedureCall.getSQL(isSelectableProcedure()), true);
             } catch (GDSException ge) {
@@ -141,8 +141,7 @@ public class FBCallableStatement extends FBPreparedStatement implements Callable
     }
 
     public int[] executeBatch() throws SQLException {
-        Object syncObject = getSynchronizationObject();
-        synchronized (syncObject) {
+        synchronized (getSynchronizationObject()) {
             boolean success = false;
             try {
                 notifyStatementStarted();
@@ -151,6 +150,8 @@ public class FBCallableStatement extends FBPreparedStatement implements Callable
                 Iterator<Object> iterator = batchList.iterator();
 
                 try {
+                    prepareFixedStatement(procedureCall.getSQL(isSelectableProcedure()), true);
+
                     while (iterator.hasNext()) {
                         procedureCall = (FBProcedureCall) iterator.next();
                         executeSingleForBatch(results);
@@ -158,6 +159,9 @@ public class FBCallableStatement extends FBPreparedStatement implements Callable
 
                     success = true;
                     return toArray(results);
+                } catch (GDSException ex) {
+                    throw new BatchUpdateException(ex.getMessage(), "", ex.getFbErrorCode(),
+                            toArray(results));
                 } finally {
                     clearBatch();
                 }
@@ -173,17 +177,10 @@ public class FBCallableStatement extends FBPreparedStatement implements Callable
          * (should set Statement.EXECUTE_FAILED and throwing it right away
          * instead of continuing may fail intention)
          */
-        try {
-            prepareFixedStatement(procedureCall.getSQL(isSelectableProcedure()), true);
+        if (internalExecute(!isSelectableProcedure()))
+            throw new BatchUpdateException(toArray(results));
 
-            if (internalExecute(!isSelectableProcedure()))
-                throw new BatchUpdateException(toArray(results));
-
-            results.add(getUpdateCount());
-        } catch (GDSException ex) {
-            throw new BatchUpdateException(ex.getMessage(), "", ex.getFbErrorCode(),
-                    toArray(results));
-        }
+        results.add(getUpdateCount());
     }
 
     /* (non-Javadoc)
@@ -222,9 +219,7 @@ public class FBCallableStatement extends FBPreparedStatement implements Callable
      * This is an workaround to the issue that the statement is actually prepared
      * only after all OUT parameters are registered.
      */
-    protected void prepareFixedStatement(String sql, boolean describeBind)
-            throws GDSException, SQLException {
-
+    protected void prepareFixedStatement(String sql, boolean describeBind) throws GDSException, SQLException {
         if (fixedStmt != null)
             return;
 
@@ -237,11 +232,9 @@ public class FBCallableStatement extends FBPreparedStatement implements Callable
      * data for the callable statement is obtained.
      */
     public ResultSetMetaData getMetaData() throws SQLException {
-
-        statementListener.executionStarted(this);
-
-        Object syncObject = getSynchronizationObject();
-        synchronized (syncObject) {
+        synchronized (getSynchronizationObject()) {
+            // TODO See http://tracker.firebirdsql.org/browse/JDBC-352
+            notifyStatementStarted(false);
             try {
                 prepareFixedStatement(procedureCall.getSQL(isSelectableProcedure()), true);
             } catch (GDSException ge) {
@@ -264,8 +257,7 @@ public class FBCallableStatement extends FBPreparedStatement implements Callable
      */
     public boolean execute() throws SQLException {
         boolean hasResultSet = false;
-        Object syncObject = getSynchronizationObject();
-        synchronized (syncObject) {
+        synchronized (getSynchronizationObject()) {
             notifyStatementStarted();
 
             try {
@@ -292,14 +284,10 @@ public class FBCallableStatement extends FBPreparedStatement implements Callable
      * the processing is done by superclass.
      */
     public ResultSet executeQuery() throws SQLException {
-
-        Object syncObject = getSynchronizationObject();
-        synchronized (syncObject) {
+        synchronized (getSynchronizationObject()) {
             notifyStatementStarted();
-
             try {
                 currentRs = null;
-
                 prepareFixedStatement(procedureCall.getSQL(isSelectableProcedure()), true);
 
                 if (!internalExecute(!isSelectableProcedure()))
@@ -308,11 +296,9 @@ public class FBCallableStatement extends FBPreparedStatement implements Callable
                             FBSQLException.SQL_STATE_NO_RESULT_SET);
 
                 getResultSet();
-
                 setRequiredTypes();
 
                 return getCurrentResultSet();
-
             } catch (GDSException ex) {
                 throw new FBSQLException(ex);
             }
@@ -324,13 +310,10 @@ public class FBCallableStatement extends FBPreparedStatement implements Callable
      * the processing is done by superclass.
      */
     public int executeUpdate() throws SQLException {
-        Object syncObject = getSynchronizationObject();
-        synchronized (syncObject) {
+        synchronized (getSynchronizationObject()) {
             try {
                 notifyStatementStarted();
-
                 currentRs = null;
-
                 prepareFixedStatement(procedureCall.getSQL(isSelectableProcedure()), true);
 
                 /*
@@ -362,9 +345,7 @@ public class FBCallableStatement extends FBPreparedStatement implements Callable
      * the processing is done by superclass.
      */
     protected boolean internalExecute(boolean sendOutParams) throws SQLException {
-
         int counter = 0;
-
         for (FBProcedureParam param : procedureCall.getInputParams()) {
             if (param != null && param.isParam()) {
 
@@ -449,9 +430,7 @@ public class FBCallableStatement extends FBPreparedStatement implements Callable
      * @exception SQLException if a database access error occurs
      * @see Types
      */
-    public void registerOutParameter(int parameterIndex, int sqlType)
-            throws SQLException
-    {
+    public void registerOutParameter(int parameterIndex, int sqlType) throws SQLException {
         procedureCall.registerOutParam(parameterIndex, sqlType);
     }
 
@@ -476,9 +455,7 @@ public class FBCallableStatement extends FBPreparedStatement implements Callable
      * @exception SQLException if a database access error occurs
      * @see Types
      */
-    public void registerOutParameter(int parameterIndex, int sqlType, int scale)
-        throws SQLException
-    {
+    public void registerOutParameter(int parameterIndex, int sqlType, int scale) throws SQLException {
         procedureCall.registerOutParam(parameterIndex, sqlType);
     }
 
@@ -636,9 +613,7 @@ public class FBCallableStatement extends FBPreparedStatement implements Callable
      * @deprecated
      */
     @Deprecated
-    public BigDecimal getBigDecimal(int parameterIndex, int scale)
-        throws SQLException
-    {
+    public BigDecimal getBigDecimal(int parameterIndex, int scale) throws SQLException {
         assertHasData(getCurrentResultSet());
         parameterIndex = procedureCall.mapOutParamIndexToPosition(parameterIndex);
         //noinspection deprecation
@@ -700,9 +675,7 @@ public class FBCallableStatement extends FBPreparedStatement implements Callable
      * is <code>null</code>.
      * @exception SQLException if a database access error occurs
      */
-    public Timestamp getTimestamp(int parameterIndex)
-        throws SQLException
-    {
+    public Timestamp getTimestamp(int parameterIndex) throws SQLException {
         assertHasData(getCurrentResultSet());
         parameterIndex = procedureCall.mapOutParamIndexToPosition(parameterIndex);
         return getCurrentResultSet().getTimestamp(parameterIndex);
@@ -885,9 +858,7 @@ public class FBCallableStatement extends FBPreparedStatement implements Callable
      * <code>null</code>.
      * @exception SQLException if a database access error occurs
      */
-    public java.sql.Date getDate(int parameterIndex, Calendar cal)
-        throws SQLException
-    {
+    public java.sql.Date getDate(int parameterIndex, Calendar cal) throws SQLException {
         assertHasData(getCurrentResultSet());
         parameterIndex = procedureCall.mapOutParamIndexToPosition(parameterIndex);
         return getCurrentResultSet().getDate(parameterIndex, cal);
@@ -911,9 +882,7 @@ public class FBCallableStatement extends FBPreparedStatement implements Callable
      * <code>null</code>.
      * @exception SQLException if a database access error occurs
      */
-    public Time getTime(int parameterIndex, Calendar cal)
-        throws SQLException
-    {
+    public Time getTime(int parameterIndex, Calendar cal) throws SQLException {
         assertHasData(getCurrentResultSet());
         parameterIndex = procedureCall.mapOutParamIndexToPosition(parameterIndex);
         return getCurrentResultSet().getTime(parameterIndex, cal);
@@ -938,9 +907,7 @@ public class FBCallableStatement extends FBPreparedStatement implements Callable
      * <code>null</code>.
      * @exception SQLException if a database access error occurs
      */
-    public Timestamp getTimestamp(int parameterIndex, Calendar cal)
-        throws SQLException
-    {
+    public Timestamp getTimestamp(int parameterIndex, Calendar cal) throws SQLException {
         assertHasData(getCurrentResultSet());
         parameterIndex = procedureCall.mapOutParamIndexToPosition(parameterIndex);
         return getCurrentResultSet().getTimestamp(parameterIndex, cal);
@@ -1065,8 +1032,7 @@ public class FBCallableStatement extends FBPreparedStatement implements Callable
         return getNString(findOutParameter(parameterName));
     }
 
-    public void setAsciiStream(String parameterName, InputStream x, long length)
-            throws SQLException {
+    public void setAsciiStream(String parameterName, InputStream x, long length) throws SQLException {
         throw new FBDriverNotCapableException();
     }
 
@@ -1074,8 +1040,7 @@ public class FBCallableStatement extends FBPreparedStatement implements Callable
         throw new FBDriverNotCapableException();
     }
 
-    public void setBinaryStream(String parameterName, InputStream x, long length)
-            throws SQLException {
+    public void setBinaryStream(String parameterName, InputStream x, long length) throws SQLException {
         throw new FBDriverNotCapableException();
     }
 
@@ -1087,8 +1052,7 @@ public class FBCallableStatement extends FBPreparedStatement implements Callable
         throw new FBDriverNotCapableException();
     }
 
-    public void setBlob(String parameterName, InputStream inputStream, long length)
-            throws SQLException {
+    public void setBlob(String parameterName, InputStream inputStream, long length) throws SQLException {
         throw new FBDriverNotCapableException();
     }
 
@@ -1096,8 +1060,7 @@ public class FBCallableStatement extends FBPreparedStatement implements Callable
         throw new FBDriverNotCapableException();
     }
 
-    public void setCharacterStream(String parameterName, Reader reader, long length)
-            throws SQLException {
+    public void setCharacterStream(String parameterName, Reader reader, long length) throws SQLException {
         throw new FBDriverNotCapableException();
     }
 
@@ -1117,8 +1080,7 @@ public class FBCallableStatement extends FBPreparedStatement implements Callable
         throw new FBDriverNotCapableException();
     }
 
-    public void setNCharacterStream(String parameterName, Reader value, long length)
-            throws SQLException {
+    public void setNCharacterStream(String parameterName, Reader value, long length) throws SQLException {
         throw new FBDriverNotCapableException();
     }
 
@@ -1254,8 +1216,7 @@ public class FBCallableStatement extends FBPreparedStatement implements Callable
         throw new FBDriverNotCapableException();
     }
 
-    public void registerOutParameter(int parameterIndex, int sqlType, String typeName)
-            throws SQLException {
+    public void registerOutParameter(int parameterIndex, int sqlType, String typeName) throws SQLException {
         throw new FBDriverNotCapableException();
     }
 
@@ -1271,17 +1232,20 @@ public class FBCallableStatement extends FBPreparedStatement implements Callable
      * @throws java.sql.SQLException when the result set has no data.
      */
     protected void assertHasData(ResultSet rs) throws SQLException {
+        if (rs == null) {
+            throw new SQLException("Current statement has no data to return.", FBSQLException.SQL_STATE_NO_RESULT_SET);
+        }
         // check if we have a row, and try to move to the first position.
-        if (rs.getRow() == 0)
+        if (rs.getRow() == 0) {
             rs.next();
-        else
+        } else {
             return;
+        }
 
         // check if we still have no row and throw an exception in this case.
-        if (rs.getRow() == 0)
-        	throw new FBSQLException(
-                    "Current statement has not data to return.",
-                        FBSQLException.SQL_STATE_NO_RESULT_SET);
+        if (rs.getRow() == 0) {
+            throw new SQLException("Current statement has no data to return.", FBSQLException.SQL_STATE_NO_RESULT_SET);
+        }
     }
 
     // this method doesn't give an exception if it is called twice.
@@ -1314,8 +1278,7 @@ public class FBCallableStatement extends FBPreparedStatement implements Callable
         procedureCall.getInputParam(parameterIndex).setValue(x);
     }
 
-    public void setBinaryStream(int parameterIndex, InputStream inputStream, int length)
-            throws SQLException {
+    public void setBinaryStream(int parameterIndex, InputStream inputStream, int length) throws SQLException {
         procedureCall.getInputParam(parameterIndex).setValue(
                 new WrapperWithInt(inputStream, length));
     }
@@ -1336,8 +1299,7 @@ public class FBCallableStatement extends FBPreparedStatement implements Callable
         procedureCall.getInputParam(parameterIndex).setValue(x);
     }
 
-    public void setCharacterStream(int parameterIndex, Reader reader, int length)
-            throws SQLException {
+    public void setCharacterStream(int parameterIndex, Reader reader, int length) throws SQLException {
         procedureCall.getInputParam(parameterIndex).setValue(new WrapperWithInt(reader, length));
     }
 
@@ -1377,8 +1339,7 @@ public class FBCallableStatement extends FBPreparedStatement implements Callable
         procedureCall.getInputParam(parameterIndex).setValue(null);
     }
 
-    public void setObject(int parameterIndex, Object x, int targetSqlType, int scale)
-            throws SQLException {
+    public void setObject(int parameterIndex, Object x, int targetSqlType, int scale) throws SQLException {
         procedureCall.getInputParam(parameterIndex).setValue(x);
     }
 
