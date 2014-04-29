@@ -72,9 +72,6 @@ public class FBPreparedStatement extends FBStatement implements
     // because in this case we must send out_xsqlda to the server.
     private boolean isExecuteProcedureStatement;
 
-    // TODO: Value is never changed and only used in one place, just remove?
-    private boolean trimStrings = false;
-    
     private final FBObjectListener.BlobListener blobListener;
 
     /**
@@ -135,6 +132,7 @@ public class FBPreparedStatement extends FBStatement implements
         this.generatedKeys = generatedKeys;
         
         try {
+            // TODO See http://tracker.firebirdsql.org/browse/JDBC-352
             notifyStatementStarted();
             prepareFixedStatement(sql, true);
         } catch (GDSException ge) {
@@ -647,8 +645,8 @@ public class FBPreparedStatement extends FBStatement implements
             isParamSet[i] = false;
 
         XSQLVAR[] xsqlvar = fixedStmt.getInSqlda().sqlvar;
-        for (int i = 0; i < xsqlvar.length; i++) {
-            xsqlvar[i].sqldata = null;
+        for (XSQLVAR aXsqlvar : xsqlvar) {
+            aXsqlvar.sqldata = null;
         }
     }
 
@@ -776,7 +774,8 @@ public class FBPreparedStatement extends FBStatement implements
      * flushes all "flushable" fields that might contain cached data and
      * executes the statement. 
      * 
-     * @param sendOutParams
+     * @param sendOutParams Determines if the XSQLDA structure should be sent to the
+     *            database
      * @return <code>true</code> if the statement has more result sets. 
      * @throws SQLException
      */
@@ -784,8 +783,8 @@ public class FBPreparedStatement extends FBStatement implements
             throws SQLException {
         
         boolean canExecute = true;
-        for (int i = 0; i < isParamSet.length; i++) {
-            canExecute = canExecute && isParamSet[i];
+        for (boolean anIsParamSet : isParamSet) {
+            canExecute = canExecute && anIsParamSet;
         }
 
         if (!canExecute)
@@ -795,7 +794,6 @@ public class FBPreparedStatement extends FBStatement implements
         Object syncObject = getSynchronizationObject();
 
         synchronized (syncObject) {
-
             flushFields();
 
             try {
@@ -841,10 +839,9 @@ public class FBPreparedStatement extends FBStatement implements
      *      </a>
      */
     public void addBatch() throws SQLException {
-
         boolean allParamsSet = true;
-        for (int i = 0; i < isParamSet.length; i++) {
-            allParamsSet &= isParamSet[i];
+        for (boolean anIsParamSet : isParamSet) {
+            allParamsSet &= anIsParamSet;
         }
 
         if (!allParamsSet) throw new FBSQLException("Not all parameters set.");
@@ -961,9 +958,7 @@ public class FBPreparedStatement extends FBStatement implements
                             if (internalExecute(isExecuteProcedureStatement))
                                 throw new BatchUpdateException(toArray(results));
 
-                            int updateCount = getUpdateCount();
-
-                            results.add(Integer.valueOf(updateCount));
+                            results.add(getUpdateCount());
 
                         } catch (SQLException ex) {
                             throw new BatchUpdateException(ex.getMessage(), ex
@@ -1306,23 +1301,18 @@ public class FBPreparedStatement extends FBStatement implements
             final int fieldPos = i;
 
             FieldDataProvider dataProvider = new FieldDataProvider() {
-
+                @Override
                 public byte[] getFieldData() {
                     return getXsqlvar(fieldPos + 1).sqldata;
                 }
-
+                @Override
                 public void setFieldData(byte[] data) {
                     getXsqlvar(fieldPos + 1).sqldata = data;
                 }
             };
 
             // FIXME check if we can safely pass cached here
-            fields[i] = FBField.createField(getXsqlvar(i + 1), dataProvider,
-                gdsHelper, false);
-
-            if (fields[i] instanceof FBWorkaroundStringField)
-                ((FBWorkaroundStringField) fields[i])
-                        .setTrimString(trimStrings);
+            fields[i] = FBField.createField(getXsqlvar(i + 1), dataProvider, gdsHelper, false);
         }
 
         this.isExecuteProcedureStatement = fixedStmt.getStatementType() == FirebirdPreparedStatement.TYPE_EXEC_PROCEDURE;
