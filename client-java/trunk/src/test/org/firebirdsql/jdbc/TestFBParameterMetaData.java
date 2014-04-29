@@ -16,18 +16,21 @@
  *
  * All rights reserved.
  */
-
 package org.firebirdsql.jdbc;
 
-import org.firebirdsql.common.FBTestBase;
+import org.firebirdsql.common.DdlHelper;
+import org.firebirdsql.common.FBJUnit4TestBase;
+import org.junit.Test;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.ParameterMetaData;
-import java.sql.Statement;
+import java.sql.PreparedStatement;
 import java.util.Properties;
 
-import static org.firebirdsql.common.FBTestProperties.*;
+import static org.firebirdsql.common.FBTestProperties.getDefaultPropertiesForConnection;
+import static org.firebirdsql.common.FBTestProperties.getUrl;
+import static org.junit.Assert.assertEquals;
 
 /**
  * This method tests correctness of {@link FBParameterMetaData} class.
@@ -35,8 +38,9 @@ import static org.firebirdsql.common.FBTestProperties.*;
  * @author <a href="mailto:skidder@users.sourceforge.net">Nickolay Samofatov</a>
  * @version 1.0
  */
-public class TestFBParameterMetaData extends FBTestBase {
-    
+public class TestFBParameterMetaData extends FBJUnit4TestBase {
+
+    //@formatter:off
     public static String CREATE_TABLE = 
         "CREATE TABLE test_p_metadata (" + 
         "  id INTEGER, " +
@@ -53,61 +57,31 @@ public class TestFBParameterMetaData extends FBTestBase {
         "simple_field, two_byte_field, three_byte_field, " + 
         "long_field, int_field, short_field) " + 
         "values (?,?,?,?,?,?)";
-    
-    public TestFBParameterMetaData(String testName) {
-        super(testName);
-    }
-    
-    protected void setUp() throws Exception {
-        super.setUp();
-        
-        Class.forName(FBDriver.class.getName());
-        
-        Properties props = new Properties();
-        props.putAll(getDefaultPropertiesForConnection());
-        props.put("lc_ctype", "UNICODE_FSS");
-        
-        Connection connection = DriverManager.getConnection(getUrl(), props);
-        
-        Statement stmt = connection.createStatement();
+    //@formatter:on
 
-        stmt.executeUpdate(CREATE_TABLE);
-        stmt.close();        
-        
-        connection.close();
-    }
-    
+    @Test
     public void testParameterMetaData() throws Exception {
         Properties props = new Properties();
         props.putAll(getDefaultPropertiesForConnection());
         props.put("lc_ctype", "UNICODE_FSS");
-        
+
         Connection connection = DriverManager.getConnection(getUrl(), props);
-        
-        FirebirdPreparedStatement stmt = 
-            (FirebirdPreparedStatement)connection.prepareStatement(TEST_QUERY);
-        
-        ParameterMetaData metaData = stmt.getParameterMetaData();
-        
-        assertTrue("simple_field must have size 60", 
-            metaData.getPrecision(1) == 60);
-            
-        assertTrue("two_byte_field must have size 60", 
-            metaData.getPrecision(2) == 60);
+        try {
+            DdlHelper.executeCreateTable(connection, CREATE_TABLE);
 
-        assertTrue("three_byte_field must have size 60", 
-            metaData.getPrecision(3) == 60);
+            PreparedStatement stmt = connection.prepareStatement(TEST_QUERY);
+            ParameterMetaData metaData = stmt.getParameterMetaData();
 
-        assertTrue("long_field must have precision 19", 
-            metaData.getPrecision(4) == 19);
+            assertEquals("simple_field must have size 60", 60, metaData.getPrecision(1));
+            assertEquals("two_byte_field must have size 60", 60, metaData.getPrecision(2));
+            assertEquals("three_byte_field must have size 60", 60, metaData.getPrecision(3));
+            assertEquals("long_field must have precision 19", 19, metaData.getPrecision(4));
+            assertEquals("int_field must have precision 10", 10, metaData.getPrecision(5));
+            assertEquals("short_field must have precision 5", 5, metaData.getPrecision(6));
 
-        assertTrue("int_field must have precision 10", 
-            metaData.getPrecision(5) == 10);
-
-        assertTrue("short_field must have precision 5", 
-            metaData.getPrecision(6) == 5);
-
-        stmt.close();
-        connection.close();
+            stmt.close();
+        } finally {
+            connection.close();
+        }
     }
 }
