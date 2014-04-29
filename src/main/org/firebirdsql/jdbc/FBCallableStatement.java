@@ -179,7 +179,7 @@ public class FBCallableStatement extends FBPreparedStatement implements Callable
             if (internalExecute(!isSelectableProcedure()))
                 throw new BatchUpdateException(toArray(results));
 
-            results.add(Integer.valueOf(getUpdateCount()));
+            results.add(getUpdateCount());
         } catch (GDSException ex) {
             throw new BatchUpdateException(ex.getMessage(), "", ex.getFbErrorCode(),
                     toArray(results));
@@ -641,6 +641,7 @@ public class FBCallableStatement extends FBPreparedStatement implements Callable
     {
         assertHasData(getCurrentResultSet());
         parameterIndex = procedureCall.mapOutParamIndexToPosition(parameterIndex);
+        //noinspection deprecation
         return getCurrentResultSet().getBigDecimal(parameterIndex, scale);
     }
 
@@ -763,6 +764,8 @@ public class FBCallableStatement extends FBPreparedStatement implements Callable
     public <T> T getObject(int parameterIndex, Class<T> type) throws SQLException {
         assertHasData(getCurrentResultSet());
         parameterIndex = procedureCall.mapOutParamIndexToPosition(parameterIndex);
+        // NOTE: Cast required for Java 6 compatibility
+        //noinspection RedundantCast
         return ((FBResultSet)getCurrentResultSet()).getObject(parameterIndex, type);
     }
 
@@ -1045,7 +1048,7 @@ public class FBCallableStatement extends FBPreparedStatement implements Callable
     public Reader getNCharacterStream(int parameterIndex) throws SQLException {
         assertHasData(getCurrentResultSet());
         parameterIndex = procedureCall.mapOutParamIndexToPosition(parameterIndex);
-        return ((FBResultSet)getCurrentResultSet()).getNCharacterStream(parameterIndex);
+        return getCurrentResultSet().getNCharacterStream(parameterIndex);
     }
 
     public Reader getNCharacterStream(String parameterName) throws SQLException {
@@ -1055,7 +1058,7 @@ public class FBCallableStatement extends FBPreparedStatement implements Callable
     public String getNString(int parameterIndex) throws SQLException {
         assertHasData(getCurrentResultSet());
         parameterIndex = procedureCall.mapOutParamIndexToPosition(parameterIndex);
-        return ((FBResultSet)getCurrentResultSet()).getNString(parameterIndex);
+        return getCurrentResultSet().getNString(parameterIndex);
     }
 
     public String getNString(String parameterName) throws SQLException {
@@ -1322,11 +1325,11 @@ public class FBCallableStatement extends FBPreparedStatement implements Callable
     }
 
     public void setBoolean(int parameterIndex, boolean x) throws SQLException {
-        procedureCall.getInputParam(parameterIndex).setValue(Boolean.valueOf(x));
+        procedureCall.getInputParam(parameterIndex).setValue(x);
     }
 
     public void setByte(int parameterIndex, byte x) throws SQLException {
-        procedureCall.getInputParam(parameterIndex).setValue(Byte.valueOf(x));
+        procedureCall.getInputParam(parameterIndex).setValue(x);
     }
 
     public void setBytes(int parameterIndex, byte[] x) throws SQLException {
@@ -1351,19 +1354,19 @@ public class FBCallableStatement extends FBPreparedStatement implements Callable
     }
 
     public void setDouble(int parameterIndex, double x) throws SQLException {
-        procedureCall.getInputParam(parameterIndex).setValue(new Double(x));
+        procedureCall.getInputParam(parameterIndex).setValue(x);
     }
 
     public void setFloat(int parameterIndex, float x) throws SQLException {
-        procedureCall.getInputParam(parameterIndex).setValue(new Float(x));
+        procedureCall.getInputParam(parameterIndex).setValue(x);
     }
 
     public void setInt(int parameterIndex, int x) throws SQLException {
-        procedureCall.getInputParam(parameterIndex).setValue(Integer.valueOf(x));
+        procedureCall.getInputParam(parameterIndex).setValue(x);
     }
 
     public void setLong(int parameterIndex, long x) throws SQLException {
-        procedureCall.getInputParam(parameterIndex).setValue(Long.valueOf(x));
+        procedureCall.getInputParam(parameterIndex).setValue(x);
     }
 
     public void setNull(int parameterIndex, int sqlType, String typeName) throws SQLException {
@@ -1392,7 +1395,7 @@ public class FBCallableStatement extends FBPreparedStatement implements Callable
     }
 
     public void setShort(int parameterIndex, short x) throws SQLException {
-        procedureCall.getInputParam(parameterIndex).setValue(Short.valueOf(x));
+        procedureCall.getInputParam(parameterIndex).setValue(x);
     }
 
     public void setString(int parameterIndex, String x) throws SQLException {
@@ -1415,6 +1418,7 @@ public class FBCallableStatement extends FBPreparedStatement implements Callable
         procedureCall.getInputParam(parameterIndex).setValue(x);
     }
 
+    @SuppressWarnings("deprecation")
     @Deprecated
     public void setUnicodeStream(int parameterIndex, InputStream x, int length) throws SQLException {
         procedureCall.getInputParam(parameterIndex).setValue(x);
