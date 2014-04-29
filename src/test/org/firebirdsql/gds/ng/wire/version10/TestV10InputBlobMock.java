@@ -26,6 +26,7 @@ import org.firebirdsql.gds.ng.listeners.DatabaseListener;
 import org.firebirdsql.gds.ng.listeners.TransactionListener;
 import org.firebirdsql.gds.ng.wire.FbWireDatabase;
 import org.firebirdsql.gds.ng.wire.FbWireTransaction;
+import org.hamcrest.CoreMatchers;
 import org.jmock.Expectations;
 import org.jmock.integration.junit4.JUnitRuleMockery;
 import org.junit.Before;
@@ -37,7 +38,6 @@ import java.sql.SQLException;
 import java.sql.SQLNonTransientException;
 
 import static org.firebirdsql.common.matchers.SQLExceptionMatchers.*;
-import static org.hamcrest.CoreMatchers.allOf;
 import static org.hamcrest.CoreMatchers.endsWith;
 import static org.hamcrest.CoreMatchers.startsWith;
 import static org.jmock.Expectations.returnValue;
@@ -93,8 +93,9 @@ public class TestV10InputBlobMock {
     @Test
     public void testGetSegment_requestedSizeZero() throws Exception {
         expectedException.expect(SQLException.class);
+        //noinspection RedundantTypeArguments
         expectedException.expect(
-                message(allOf(
+                message(CoreMatchers.<String>allOf( /* generic param required for Java 6 */
                         startsWith("getSegment called with sizeRequested"),
                         endsWith(", should be > 0"))));
 
@@ -110,8 +111,9 @@ public class TestV10InputBlobMock {
     @Test
     public void testGetSegment_requestedSizeLessThanZero() throws Exception {
         expectedException.expect(SQLException.class);
+        //noinspection RedundantTypeArguments
         expectedException.expect(
-                message(allOf(
+                message(CoreMatchers.<String>allOf( /* generic param required for Java 6 */
                         startsWith("getSegment called with sizeRequested"),
                         endsWith(", should be > 0"))));
 
