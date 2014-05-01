@@ -36,6 +36,7 @@ import static org.firebirdsql.common.DdlHelper.executeCreateTable;
 import static org.firebirdsql.common.DdlHelper.executeDDL;
 import static org.firebirdsql.common.FBTestProperties.*;
 import static org.firebirdsql.common.JdbcResourceHelper.closeQuietly;
+import static org.hamcrest.CoreMatchers.containsString;
 import static org.junit.Assert.*;
 
 /**
@@ -99,10 +100,10 @@ public class TestFBPreparedStatement extends FBJUnit4TestBase {
         try {
             executeCreateTable(con, CREATE_TEST_BLOB_TABLE);
             executeCreateTable(con, CREATE_UNRECOGNIZED_TR_TABLE);
-            executeDDL(con, ADD_CONSTRAINT_T1_C1, null);
+            executeDDL(con, ADD_CONSTRAINT_T1_C1);
             stmt.executeUpdate(INIT_T1);
             executeCreateTable(con, CREATE_TEST_CHARS_TABLE);
-            executeDDL(con, CREATE_GENERATOR, null);
+            executeDDL(con, CREATE_GENERATOR);
             executeCreateTable(con, CREATE_TABLE);
             prepareTestData();
         } finally {
@@ -535,19 +536,22 @@ public class TestFBPreparedStatement extends FBJUnit4TestBase {
 
                 while (rs.next()) {
                     switch (rs.getInt(1)) {
-                        case 2:
-                            ts2 = rs.getTimestamp(3);
-                            ts2AsStr = rs.getString(2);
-                            ts2AsStr = ts2AsStr.substring(0, Math.min(ts2AsStr.length(), maxLength));
-                            break;
+                    case 2:
+                        ts2 = rs.getTimestamp(3);
+                        ts2AsStr = rs.getString(2);
+                        ts2AsStr = ts2AsStr.substring(0, Math.min(ts2AsStr.length(), maxLength));
+                        break;
 
-                        case 3:
-                            ts3 = rs.getTimestamp(3);
-                            ts3AsStr = rs.getString(2);
-                            ts3AsStr = ts3AsStr.substring(0, Math.min(ts3AsStr.length(), maxLength));
-                            break;
+                    case 3:
+                        ts3 = rs.getTimestamp(3);
+                        ts3AsStr = rs.getString(2);
+                        ts3AsStr = ts3AsStr.substring(0, Math.min(ts3AsStr.length(), maxLength));
+                        break;
                     }
                 }
+
+                assertNotNull(ts2);
+                assertNotNull(ts3);
 
                 assertEquals("Timestamps 2 and 3 should differ for 3600 seconds.", 3600 * 1000,
                         Math.abs(ts2.getTime() - ts3.getTime()));
@@ -621,6 +625,9 @@ public class TestFBPreparedStatement extends FBJUnit4TestBase {
                             break;
                     }
                 }
+
+                assertNotNull(t2);
+                assertNotNull(t3);
 
                 assertEquals("Timestamps 2 and 3 should differ for 3600 seconds.", 3600 * 1000,
                         Math.abs(t2.getTime() - t3.getTime()));
@@ -711,28 +718,13 @@ public class TestFBPreparedStatement extends FBJUnit4TestBase {
         }
     }
 
-    // TODO: Reason for this test?
-    public void _testUnrecognizedTransaction() throws Exception {
-        String sql = "SELECT 1 FROM t1 WHERE c1 = ? AND c2 = ?";
-        PreparedStatement ps = con.prepareStatement(sql);
-        try {
-            ps.setString(1, "XX");
-            ps.setString(2, "bug busters");
-            ResultSet rs = ps.executeQuery();
-            assertTrue("Should find something.", rs.next());
-        } finally {
-            closeQuietly(ps);
-        }
-    }
-
     @Test
     public void testGetExecutionPlan() throws SQLException {
         FBPreparedStatement stmt = (FBPreparedStatement) con
                 .prepareStatement("SELECT * FROM TESTTAB WHERE ID = 2");
         try {
             String executionPlan = stmt.getExecutionPlan();
-            assertTrue("Ensure that a valid execution plan is retrieved",
-                    executionPlan.indexOf("TESTTAB") >= 0);
+            assertThat("Ensure that a valid execution plan is retrieved", executionPlan, containsString("TESTTAB"));
         } finally {
             closeQuietly(stmt);
         }
@@ -1147,7 +1139,6 @@ public class TestFBPreparedStatement extends FBJUnit4TestBase {
                         int id = rs.getInt(1);
                         byte[] data = rs.getBytes(2);
 
-                        // TODO Change to JUnit 4 assertArrayEquals
                         assertArrayEquals(String.format("Unexpected blob data for id %d", id), expectedData.get(id), data);
                     }
                     assertEquals("Unexpected number of blobs in table", 2, count);
