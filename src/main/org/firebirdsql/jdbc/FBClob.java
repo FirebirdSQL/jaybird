@@ -102,28 +102,26 @@ public class FBClob implements Clob {
 	 */
 	public String getSubString(long pos, int length) throws SQLException {
 		Reader reader = getCharacterStream();
-		try {
-		    long toSkip = pos - 1; // 1-based index
-		    while (toSkip > 0) {
-		        toSkip -= reader.skip(toSkip);
-		    }
-		    int n;
-		    char[] buffer = new char[1024];
-		    StringBuilder sb = new StringBuilder(length);
-			while (length > 0 && (n = reader.read(buffer, 0, Math.min(length, buffer.length))) != -1) {
-				sb.append(buffer, 0, n);
-				length -= n;
-			}
-			return sb.toString();
-		} catch (IOException e) {
-			throw new FBSQLException(e);
-		} finally {
-			try {
+        try {
+            try {
+                long toSkip = pos - 1; // 1-based index
+                while (toSkip > 0) {
+                    toSkip -= reader.skip(toSkip);
+                }
+                int n;
+                char[] buffer = new char[1024];
+                StringBuilder sb = new StringBuilder(length);
+                while (length > 0 && (n = reader.read(buffer, 0, Math.min(length, buffer.length))) != -1) {
+                    sb.append(buffer, 0, n);
+                    length -= n;
+                }
+                return sb.toString();
+            } finally {
                 reader.close();
-            } catch (IOException e) {
-                throw new FBSQLException(e);
             }
-		}
+        } catch (IOException e) {
+            throw new FBSQLException(e);
+        }
 	}
 
 	/**
@@ -216,30 +214,24 @@ public class FBClob implements Clob {
 		throw new FBDriverNotCapableException();
 	}
 
-	/**
-	 * <b>This operation is not supported</b> Writes the given Java String to
-	 * the CLOB value that this <code>Clob</code> object designates at the
-	 * position <code>pos</code>.
-	 * 
-	 * @param start
-	 *            position at which to start writing
-	 * @param searchString
-	 *            The <code>String</code> value to write
-	 * @return The number of characters written
-	 * @exception java.sql.SQLException
-	 *                because this operation is not supported
-	 */
-	public int setString(long start, String searchString) throws SQLException {
-		throw new FBDriverNotCapableException();
-
+    /**
+     * {@inheritDoc}
+     * <p>
+     * Jaybird currently does not support this method.
+     * </p>
+     */
+	public int setString(long pos, String str) throws SQLException {
+        return setString(1, str, 0, str.length());
 	}
 
-	/*
-	 * This operation is not supported
-	 */
-	public int setString(long param1, String param2, int param3, int param4)
-			throws SQLException {
-		throw new FBDriverNotCapableException();
+    /**
+     * {@inheritDoc}
+     * <p>
+     * Jaybird currently does not support this method.
+     * </p>
+     */
+	public int setString(long pos, String str, int offset, int len) throws SQLException {
+        throw new FBDriverNotCapableException();
 	}
 
 	/**
@@ -301,8 +293,8 @@ public class FBClob implements Clob {
 	public void copyCharacterStream(Reader characterStream) throws SQLException {
 		Writer writer = setCharacterStream(1);
 		try {
-			int chunk = 0;
-			char[] buffer = new char[1024];
+			int chunk;
+			final char[] buffer = new char[1024];
 
 			while ((chunk = characterStream.read(buffer)) != -1)
 				writer.write(buffer, 0, chunk);
