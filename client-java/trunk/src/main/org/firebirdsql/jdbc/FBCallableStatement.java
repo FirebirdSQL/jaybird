@@ -38,26 +38,24 @@ import org.firebirdsql.jdbc.field.FBField;
 import org.firebirdsql.jdbc.field.TypeConversionException;
 
 /**
- * The interface used to execute SQL
- * stored procedures.  JDBC provides a stored procedure
- * SQL escape syntax that allows stored procedures to be called in a standard
- * way for all RDBMSs. This escape syntax has one form that includes
- * a result parameter and one that does not. If used, the result
+ * The interface used to execute SQL stored procedures.  The JDBC API
+ * provides a stored procedure SQL escape syntax that allows stored procedures
+ * to be called in a standard way for all RDBMSs. This escape syntax has one
+ * form that includes a result parameter and one that does not. If used, the result
  * parameter must be registered as an OUT parameter. The other parameters
  * can be used for input, output or both. Parameters are referred to
  * sequentially, by number, with the first parameter being 1.
+ * <PRE>
+ *   {?= call &lt;procedure-name&gt;[(&lt;arg1&gt;,&lt;arg2&gt;, ...)]}
+ *   {call &lt;procedure-name&gt;[(&lt;arg1&gt;,&lt;arg2&gt;, ...)]}
+ * </PRE>
  * <P>
- * <blockquote><pre>
- *   {?= call &lt;procedure-name&gt;[&lt;arg1&gt;,&lt;arg2&gt;, ...]}
- *   {call &lt;procedure-name&gt;[&lt;arg1&gt;,&lt;arg2&gt;, ...]}
- * </pre></blockquote>
- * <P>
- * IN parameter values are set using the set methods inherited from
+ * IN parameter values are set using the <code>set</code> methods inherited from
  * {@link PreparedStatement}.  The type of all OUT parameters must be
  * registered prior to executing the stored procedure; their values
  * are retrieved after execution via the <code>get</code> methods provided here.
  * <P>
- * A <code>CallableStatement</code> can return one {@link ResultSet} or
+ * A <code>CallableStatement</code> can return one {@link ResultSet} object or
  * multiple <code>ResultSet</code> objects.  Multiple
  * <code>ResultSet</code> objects are handled using operations
  * inherited from {@link Statement}.
@@ -66,13 +64,6 @@ import org.firebirdsql.jdbc.field.TypeConversionException;
  * update counts should be processed prior to getting the values of output
  * parameters.
  * <P>
- * Methods that are new in the JDBC 2.0 API are marked "Since 1.2."
- *
- * Note: Escape syntax currently is not supported. Please use native
- * Firebird procedure call syntax:
- * <pre>
- * EXECUTE PROCEDURE <proc_name>(param1, ...);
- * </pre>
  *
  * @see Connection#prepareCall
  * @see ResultSet
@@ -227,11 +218,15 @@ public class FBCallableStatement extends FBPreparedStatement implements Callable
     }
 
     /**
+     * {@inheritDoc}
+     * <p>
      * Since we deferred the statement preparation until all OUT params are 
      * registered, we ensure that the statement is prepared before the meta
      * data for the callable statement is obtained.
+     * </p>
      */
     public ResultSetMetaData getMetaData() throws SQLException {
+        checkValidity();
         synchronized (getSynchronizationObject()) {
             // TODO See http://tracker.firebirdsql.org/browse/JDBC-352
             notifyStatementStarted(false);

@@ -29,11 +29,7 @@ import java.sql.*;
 
 import static org.firebirdsql.common.FBTestProperties.getConnectionViaDriverManager;
 import static org.firebirdsql.common.JdbcResourceHelper.closeQuietly;
-import static org.firebirdsql.common.matchers.SQLExceptionMatchers.message;
-import static org.firebirdsql.common.matchers.SQLExceptionMatchers.sqlState;
-import static org.hamcrest.CoreMatchers.allOf;
-import static org.hamcrest.CoreMatchers.equalTo;
-import static org.hamcrest.CoreMatchers.isA;
+import static org.firebirdsql.common.matchers.SQLExceptionMatchers.*;
 import static org.junit.Assert.*;
 import static org.junit.Assume.assumeTrue;
 
@@ -723,7 +719,7 @@ public class TestFBCallableStatement extends FBJUnit4TestBase {
                     factorial *= counter;
             }
         } finally {
-            closeQuietly(cs);
+            cs.close();
         }
     }
 
@@ -779,11 +775,11 @@ public class TestFBCallableStatement extends FBJUnit4TestBase {
     public void testUnsupportedExecuteQuery_String() throws Exception {
         CallableStatement cs = con.prepareCall(EXECUTE_SIMPLE_OUT_PROCEDURE);
         try {
-            setStatementOnlyExpectedException();
+            expectedException.expect(fbStatementOnlyMethodException());
 
             cs.executeQuery("SELECT * FROM test_blob");
         } finally {
-            closeQuietly(cs);
+            cs.close();
         }
     }
 
@@ -794,11 +790,11 @@ public class TestFBCallableStatement extends FBJUnit4TestBase {
     public void testUnsupportedExecuteUpdate_String() throws Exception {
         CallableStatement cs = con.prepareCall(EXECUTE_SIMPLE_OUT_PROCEDURE);
         try {
-            setStatementOnlyExpectedException();
+            expectedException.expect(fbStatementOnlyMethodException());
 
             cs.executeUpdate("SELECT * FROM test_blob");
         } finally {
-            closeQuietly(cs);
+            cs.close();
         }
     }
 
@@ -809,11 +805,11 @@ public class TestFBCallableStatement extends FBJUnit4TestBase {
     public void testUnsupportedExecute_String() throws Exception {
         CallableStatement cs = con.prepareCall(EXECUTE_SIMPLE_OUT_PROCEDURE);
         try {
-            setStatementOnlyExpectedException();
+            expectedException.expect(fbStatementOnlyMethodException());
 
             cs.execute("SELECT * FROM test_blob");
         } finally {
-            closeQuietly(cs);
+            cs.close();
         }
     }
 
@@ -824,11 +820,11 @@ public class TestFBCallableStatement extends FBJUnit4TestBase {
     public void testUnsupportedAddBatch_String() throws Exception {
         CallableStatement cs = con.prepareCall(EXECUTE_SIMPLE_OUT_PROCEDURE);
         try {
-            setStatementOnlyExpectedException();
+            expectedException.expect(fbStatementOnlyMethodException());
 
             cs.addBatch("SELECT * FROM test_blob");
         } finally {
-            closeQuietly(cs);
+            cs.close();
         }
     }
 
@@ -839,11 +835,11 @@ public class TestFBCallableStatement extends FBJUnit4TestBase {
     public void testUnsupportedExecuteUpdate_String_int() throws Exception {
         CallableStatement cs = con.prepareCall(EXECUTE_SIMPLE_OUT_PROCEDURE);
         try {
-            setStatementOnlyExpectedException();
+            expectedException.expect(fbStatementOnlyMethodException());
 
             cs.executeUpdate("SELECT * FROM test_blob", Statement.NO_GENERATED_KEYS);
         } finally {
-            closeQuietly(cs);
+            cs.close();
         }
     }
 
@@ -854,11 +850,11 @@ public class TestFBCallableStatement extends FBJUnit4TestBase {
     public void testUnsupportedExecuteUpdate_String_intArr() throws Exception {
         CallableStatement cs = con.prepareCall(EXECUTE_SIMPLE_OUT_PROCEDURE);
         try {
-            setStatementOnlyExpectedException();
+            expectedException.expect(fbStatementOnlyMethodException());
 
             cs.executeUpdate("SELECT * FROM test_blob", new int[] { 1 });
         } finally {
-            closeQuietly(cs);
+            cs.close();
         }
     }
 
@@ -869,11 +865,11 @@ public class TestFBCallableStatement extends FBJUnit4TestBase {
     public void testUnsupportedExecuteUpdate_String_StringArr() throws Exception {
         CallableStatement cs = con.prepareCall(EXECUTE_SIMPLE_OUT_PROCEDURE);
         try {
-            setStatementOnlyExpectedException();
+            expectedException.expect(fbStatementOnlyMethodException());
 
             cs.executeUpdate("SELECT * FROM test_blob", new String[] { "col" });
         } finally {
-            closeQuietly(cs);
+            cs.close();
         }
     }
 
@@ -884,11 +880,11 @@ public class TestFBCallableStatement extends FBJUnit4TestBase {
     public void testUnsupportedExecute_String_int() throws Exception {
         CallableStatement cs = con.prepareCall(EXECUTE_SIMPLE_OUT_PROCEDURE);
         try {
-            setStatementOnlyExpectedException();
+            expectedException.expect(fbStatementOnlyMethodException());
 
             cs.execute("SELECT * FROM test_blob", Statement.NO_GENERATED_KEYS);
         } finally {
-            closeQuietly(cs);
+            cs.close();
         }
     }
 
@@ -899,34 +895,58 @@ public class TestFBCallableStatement extends FBJUnit4TestBase {
     public void testUnsupportedExecute_String_intArr() throws Exception {
         CallableStatement cs = con.prepareCall(EXECUTE_SIMPLE_OUT_PROCEDURE);
         try {
-            setStatementOnlyExpectedException();
+            expectedException.expect(fbStatementOnlyMethodException());
 
             cs.execute("SELECT * FROM test_blob", new int[] { 1 });
         } finally {
-            closeQuietly(cs);
+            cs.close();
         }
     }
 
     /**
-     * The method {@link java.sql.Statement#execute(String, String[])} should not work on CallabeStatement.
+     * The method {@link java.sql.Statement#execute(String, String[])} should not work on CallableStatement.
      */
     @Test
     public void testUnsupportedExecute_String_StringArr() throws Exception {
         CallableStatement cs = con.prepareCall(EXECUTE_SIMPLE_OUT_PROCEDURE);
         try {
-            setStatementOnlyExpectedException();
+            expectedException.expect(fbStatementOnlyMethodException());
 
             cs.execute("SELECT * FROM test_blob", new String[] { "col" });
         } finally {
-            closeQuietly(cs);
+            cs.close();
         }
     }
 
-    private void setStatementOnlyExpectedException() {
-        expectedException.expect(allOf(
-                isA(SQLException.class),
-                sqlState(equalTo(FBSQLException.SQL_STATE_GENERAL_ERROR)),
-                message(equalTo(FBPreparedStatement.METHOD_NOT_SUPPORTED))
-        ));
+    /**
+     * Basic test of {@link FBCallableStatement#getMetaData()}.
+     */
+    @Test
+    public void testGetMetaData() throws Exception {
+        CallableStatement cs = con.prepareCall(EXECUTE_PROCEDURE_EMP_SELECT);
+        try {
+            ResultSetMetaData metaData = cs.getMetaData();
+
+            assertEquals("columnCount", 1, metaData.getColumnCount());
+            assertEquals("columnLabel", "PROJ_ID", metaData.getColumnLabel(1));
+            assertEquals("columnName", "PROJ_ID", metaData.getColumnName(1));
+            // Basic checking, rest should be covered by TestFBResultSetMetaData.
+        } finally {
+            cs.close();
+        }
     }
+
+    /**
+     * Calling {@link java.sql.CallableStatement#getMetaData()} on a closed statement should throw an exception.
+     */
+    @Test
+    public void testGetMetaData_statementClosed() throws Exception {
+        CallableStatement cs = con.prepareCall(EXECUTE_SIMPLE_OUT_PROCEDURE);
+        cs.close();
+
+        expectedException.expect(fbStatementClosedException());
+
+        cs.getMetaData();
+    }
+
 }
