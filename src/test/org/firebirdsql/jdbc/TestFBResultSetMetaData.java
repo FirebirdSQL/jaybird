@@ -305,4 +305,3 @@ public class TestFBResultSetMetaData extends FBJUnit4TestBase {
         }
     }
 }
-;
