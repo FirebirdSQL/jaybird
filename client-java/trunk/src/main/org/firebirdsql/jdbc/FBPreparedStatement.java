@@ -43,7 +43,7 @@ import org.firebirdsql.jdbc.field.FBFlushableField.CachedObject;
 public class FBPreparedStatement extends FBStatement implements
         FirebirdPreparedStatement {
 
-    static final String METHOD_NOT_SUPPORTED = "This method is only supported on Statement and not supported on PreparedStatement and CallableStatement";
+    public static final String METHOD_NOT_SUPPORTED = "This method is only supported on Statement and not supported on PreparedStatement and CallableStatement";
 
     private final boolean metaDataQuery;
     
@@ -1137,17 +1137,31 @@ public class FBPreparedStatement extends FBStatement implements
     }
 
     /**
-     * Gets the number, types and properties of a <code>ResultSet</code>
-     * object's columns.
-     * 
-     * @return the description of a <code>ResultSet</code> object's columns
-     * @exception SQLException
-     *                if a database access error occurs
+     * Retrieves a <code>ResultSetMetaData</code> object that contains
+     * information about the columns of the <code>ResultSet</code> object
+     * that will be returned when this <code>PreparedStatement</code> object
+     * is executed.
+     * <P>
+     * Because a <code>PreparedStatement</code> object is precompiled, it is
+     * possible to know about the <code>ResultSet</code> object that it will
+     * return without having to execute it.  Consequently, it is possible
+     * to invoke the method <code>getMetaData</code> on a
+     * <code>PreparedStatement</code> object rather than waiting to execute
+     * it and then invoking the <code>ResultSet.getMetaData</code> method
+     * on the <code>ResultSet</code> object that is returned.
+     * <P>
+     *
+     * @return the description of a <code>ResultSet</code> object's columns or
+     *         <code>null</code> if the driver cannot return a
+     *         <code>ResultSetMetaData</code> object
+     * @exception SQLException if a database access error occurs or
+     * this method is called on a closed <code>PreparedStatement</code>
+     * @exception SQLFeatureNotSupportedException if the JDBC driver does not support
+     * this method
      * @since 1.2
-     * @see <a href="package-summary.html#2.0 API">What Is in the JDBC 2.0 API
-     *      </a>
      */
     public ResultSetMetaData getMetaData() throws SQLException {
+        checkValidity();
         return new FBResultSetMetaData(fixedStmt.getOutSqlda().sqlvar,
                 gdsHelper);
     }
