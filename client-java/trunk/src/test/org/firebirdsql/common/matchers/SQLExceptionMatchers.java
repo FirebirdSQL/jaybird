@@ -1,15 +1,15 @@
 package org.firebirdsql.common.matchers;
 
 import org.firebirdsql.gds.GDSExceptionHelper;
-import org.hamcrest.Factory;
+import org.firebirdsql.jdbc.FBPreparedStatement;
+import org.firebirdsql.jdbc.FBSQLException;
 import org.hamcrest.FeatureMatcher;
 import org.hamcrest.Matcher;
 
 import java.sql.SQLException;
 import java.util.Arrays;
 
-import static org.hamcrest.CoreMatchers.allOf;
-import static org.hamcrest.CoreMatchers.equalTo;
+import static org.hamcrest.CoreMatchers.*;
 
 /**
  * Factory for {@link org.hamcrest.Matcher} instances for testing {@link java.sql.SQLException} information.
@@ -22,10 +22,10 @@ public class SQLExceptionMatchers {
     /**
      * Matcher for the value of {@link java.sql.SQLException#getErrorCode()}.
      *
-     * @param errorCode The expected error code
+     * @param errorCode
+     *         The expected error code
      * @return The Matcher
      */
-    @Factory
     public static Matcher<SQLException> errorCodeEquals(final int errorCode) {
         return errorCode(equalTo(errorCode));
     }
@@ -33,10 +33,10 @@ public class SQLExceptionMatchers {
     /**
      * Matcher for the value of {@link java.sql.SQLException#getErrorCode()}.
      *
-     * @param matcher The matcher for the error code
+     * @param matcher
+     *         The matcher for the error code
      * @return The Matcher
      */
-    @Factory
     public static Matcher<SQLException> errorCode(final Matcher<Integer> matcher) {
         return new FeatureMatcher<SQLException, Integer>(matcher, "error code", "error code") {
             @Override
@@ -52,11 +52,11 @@ public class SQLExceptionMatchers {
      * Valid SQL States are 5 characters in length, this matcher does not enforce this.
      * </p>
      *
-     * @param sqlState The expected SQL State
+     * @param sqlState
+     *         The expected SQL State
      * @return The Matcher
      * @see #sqlState(org.hamcrest.Matcher)
      */
-    @Factory
     public static Matcher<SQLException> sqlStateEquals(final String sqlState) {
         return sqlState(equalTo(sqlState));
     }
@@ -64,10 +64,10 @@ public class SQLExceptionMatchers {
     /**
      * Matcher for the value of {@link java.sql.SQLException#getSQLState()}.
      *
-     * @param matcher Matcher for the value of the SQL State
+     * @param matcher
+     *         Matcher for the value of the SQL State
      * @return The Matcher
      */
-    @Factory
     public static Matcher<SQLException> sqlState(final Matcher<String> matcher) {
         return new FeatureMatcher<SQLException, String>(matcher, "SQL state", "SQL state") {
             @Override
@@ -80,10 +80,10 @@ public class SQLExceptionMatchers {
     /**
      * Matcher for the message of an Exception.
      *
-     * @param matcher Matcher for the exception message
+     * @param matcher
+     *         Matcher for the exception message
      * @return The Matcher
      */
-    @Factory
     public static Matcher<Exception> message(final Matcher<String> matcher) {
         return new FeatureMatcher<Exception, String>(matcher, "exception message", "exception message") {
             @Override
@@ -101,11 +101,12 @@ public class SQLExceptionMatchers {
      * with the error code and populated with the parameters
      * </p>
      *
-     * @param fbErrorCode The Firebird error code, see {@link org.firebirdsql.gds.ISCConstants}
-     * @param messageParameters The message parameters
+     * @param fbErrorCode
+     *         The Firebird error code, see {@link org.firebirdsql.gds.ISCConstants}
+     * @param messageParameters
+     *         The message parameters
      * @return The Matcher
      */
-    @Factory
     public static Matcher<Exception> fbMessageEquals(int fbErrorCode, String... messageParameters) {
         GDSExceptionHelper.GDSMessage message = GDSExceptionHelper.getMessage(fbErrorCode);
         message.setParameters(Arrays.asList(messageParameters));
@@ -118,12 +119,43 @@ public class SQLExceptionMatchers {
      * <p>
      * This matcher combines {@link #errorCodeEquals(int)} and {@link #fbMessageEquals(int, String...)}
      * </p>
-     * @param fbErrorCode The Firebird error code, see {@link org.firebirdsql.gds.ISCConstants}
-     * @param messageParameters The message parameters
+     *
+     * @param fbErrorCode
+     *         The Firebird error code, see {@link org.firebirdsql.gds.ISCConstants}
+     * @param messageParameters
+     *         The message parameters
      * @return The Matcher
      */
-    @Factory
     public static Matcher<SQLException> sqlExceptionEqualTo(int fbErrorCode, String... messageParameters) {
         return allOf(errorCodeEquals(fbErrorCode), fbMessageEquals(fbErrorCode, messageParameters));
+    }
+
+    /**
+     * Convenience factory for matcher of the statement closed exception thrown by {@link org.firebirdsql.jdbc.FBStatement}
+     * and descendants when the statement is closed.
+     *
+     * @return The Matcher
+     */
+    public static Matcher<SQLException> fbStatementClosedException() {
+        return allOf(
+                isA(SQLException.class),
+                sqlState(equalTo(FBSQLException.SQL_STATE_INVALID_STATEMENT_ID)),
+                message(equalTo("Statement is already closed."))
+        );
+    }
+
+    /**
+     * Convenience factory for matcher of SQLException with the message {@link org.firebirdsql.jdbc.FBPreparedStatement#METHOD_NOT_SUPPORTED}
+     * thrown when one of the <code>execute*(String)</code> methods of {@link java.sql.Statement} is called on
+     * a {@link java.sql.PreparedStatement} or {@link java.sql.CallableStatement}.
+     *
+     * @return The Matcher
+     */
+    public static Matcher<SQLException> fbStatementOnlyMethodException() {
+        return allOf(
+                isA(SQLException.class),
+                sqlState(equalTo(FBSQLException.SQL_STATE_GENERAL_ERROR)),
+                message(equalTo(FBPreparedStatement.METHOD_NOT_SUPPORTED))
+        );
     }
 }
