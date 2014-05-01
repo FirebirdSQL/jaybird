@@ -22,10 +22,7 @@ import org.firebirdsql.common.DdlHelper;
 import org.firebirdsql.common.FBJUnit4TestBase;
 import org.junit.Test;
 
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.ParameterMetaData;
-import java.sql.PreparedStatement;
+import java.sql.*;
 import java.util.Properties;
 
 import static org.firebirdsql.common.FBTestProperties.getDefaultPropertiesForConnection;
@@ -51,6 +48,16 @@ public class TestFBParameterMetaData extends FBJUnit4TestBase {
         "  int_field INTEGER, " +
         "  short_field SMALLINT " +
         ")";
+
+    public static String CREATE_EXECUTABLE_SP =
+            "CREATE PROCEDURE sp_executable(" +
+            "  int_field INTEGER," +
+            "  varchar_field VARCHAR(35)" +
+            ")" +
+            "  RETURNS (res1 CHAR(2)) " +
+            "AS " +
+            "BEGIN " +
+            "END";
         
     public static final String TEST_QUERY = 
         "insert into test_p_metadata(" + 
@@ -60,7 +67,7 @@ public class TestFBParameterMetaData extends FBJUnit4TestBase {
     //@formatter:on
 
     @Test
-    public void testParameterMetaData() throws Exception {
+    public void testParameterMetaData_preparedStatement() throws Exception {
         Properties props = new Properties();
         props.putAll(getDefaultPropertiesForConnection());
         props.put("lc_ctype", "UNICODE_FSS");
@@ -80,6 +87,37 @@ public class TestFBParameterMetaData extends FBJUnit4TestBase {
             assertEquals("short_field must have precision 5", 5, metaData.getPrecision(6));
 
             stmt.close();
+        } finally {
+            connection.close();
+        }
+    }
+
+    @Test
+    public void testParameterMetaData_callableStatement() throws SQLException {
+        Properties props = new Properties();
+        props.putAll(getDefaultPropertiesForConnection());
+        props.put("lc_ctype", "UNICODE_FSS");
+
+        Connection connection = DriverManager.getConnection(getUrl(), props);
+        try {
+            DdlHelper.executeDDL(connection, CREATE_EXECUTABLE_SP);
+
+            CallableStatement stmt = connection.prepareCall("{call sp_executable(?, ?)}");
+            try {
+                ParameterMetaData metaData = stmt.getParameterMetaData();
+
+                assertEquals("parameterCount", 2, metaData.getParameterCount());
+                // Checks for parameter 1
+                assertEquals("1:parameterMode", ParameterMetaData.parameterModeIn, metaData.getParameterMode(1));
+                assertEquals("1:parameterType", Types.INTEGER, metaData.getParameterType(1));
+
+                // Checks for parameter 2
+                assertEquals("2:parameterMode", ParameterMetaData.parameterModeIn, metaData.getParameterMode(2));
+                assertEquals("2:parameterType", Types.VARCHAR, metaData.getParameterType(2));
+
+            } finally {
+                stmt.close();
+            }
         } finally {
             connection.close();
         }
