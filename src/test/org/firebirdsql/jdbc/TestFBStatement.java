@@ -33,9 +33,7 @@ import org.junit.rules.ExpectedException;
 import static org.firebirdsql.common.DdlHelper.*;
 import static org.firebirdsql.common.FBTestProperties.getConnectionViaDriverManager;
 import static org.firebirdsql.common.JdbcResourceHelper.*;
-import static org.firebirdsql.common.matchers.SQLExceptionMatchers.message;
-import static org.firebirdsql.common.matchers.SQLExceptionMatchers.sqlState;
-import static org.firebirdsql.common.matchers.SQLExceptionMatchers.sqlStateEquals;
+import static org.firebirdsql.common.matchers.SQLExceptionMatchers.*;
 import static org.hamcrest.CoreMatchers.*;
 import static org.hamcrest.Matchers.isEmptyOrNullString;
 import static org.junit.Assert.*;
@@ -564,20 +562,12 @@ public class TestFBStatement extends FBJUnit4TestBase {
         Statement stmt = con.createStatement();
         try {
             stmt.close();
-            setStatementClosedExpectedException();
+            expectedException.expect(fbStatementClosedException());
 
             stmt.getConnection();
         } finally {
             stmt.close();
         }
-    }
-
-    private void setStatementClosedExpectedException() {
-        expectedException.expect(allOf(
-                isA(SQLException.class),
-                sqlState(equalTo(FBSQLException.SQL_STATE_INVALID_STATEMENT_ID)),
-                message(equalTo("Statement is already closed."))
-        ));
     }
 
     /**
@@ -637,7 +627,7 @@ public class TestFBStatement extends FBJUnit4TestBase {
         Statement stmt = con.createStatement();
         try {
             stmt.close();
-            setStatementClosedExpectedException();
+            expectedException.expect(fbStatementClosedException());
 
             stmt.setFetchSize(10);
         } finally {
@@ -675,7 +665,7 @@ public class TestFBStatement extends FBJUnit4TestBase {
         Statement stmt = con.createStatement();
         try {
             stmt.close();
-            setStatementClosedExpectedException();
+            expectedException.expect(fbStatementClosedException());
 
             stmt.setFetchSize(10);
         } finally {
@@ -792,7 +782,7 @@ public class TestFBStatement extends FBJUnit4TestBase {
     public void testSetFetchDirection_statementClosed() throws SQLException {
         Statement stmt = con.createStatement();
         stmt.close();
-        setStatementClosedExpectedException();
+        expectedException.expect(fbStatementClosedException());
 
         stmt.setFetchDirection(ResultSet.FETCH_FORWARD);
     }
@@ -820,7 +810,7 @@ public class TestFBStatement extends FBJUnit4TestBase {
     public void testIsPoolable_statementClosed() throws SQLException {
         Statement stmt = con.createStatement();
         stmt.close();
-        setStatementClosedExpectedException();
+        expectedException.expect(fbStatementClosedException());
 
         stmt.isPoolable();
     }
@@ -850,7 +840,7 @@ public class TestFBStatement extends FBJUnit4TestBase {
     public void testSetPoolable_statementClosed() throws SQLException {
         Statement stmt = con.createStatement();
         stmt.close();
-        setStatementClosedExpectedException();
+        expectedException.expect(fbStatementClosedException());
 
         stmt.setPoolable(true);
     }
