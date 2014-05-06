@@ -175,7 +175,7 @@ public class TestFBDatabaseMetaData extends FBJUnit4TestBase {
             else if (databaseMajorVersion == 2 && databaseMinorVersion == 5)
                 sysTableCount = 42;
             else if (databaseMajorVersion == 3 && databaseMinorVersion == 0) {
-                sysTableCount = 45;
+                sysTableCount = 47;
             } else {
                 fail(String.format("Unsupported database server version %d.%d for this test case: found table count %d", databaseMajorVersion, databaseMinorVersion, count));
 
@@ -618,12 +618,7 @@ public class TestFBDatabaseMetaData extends FBJUnit4TestBase {
                         + " OUT3 = IN1;"
                         + "END");
 
-                int updateCount = stmt.executeUpdate("UPDATE RDB$PROCEDURES "
-                        + "SET RDB$DESCRIPTION='Test description' "
-                        + "WHERE RDB$PROCEDURE_NAME='"
-                        + procedureName.toUpperCase() + "'");
-
-                assertEquals("Could not set procedure description", 1, updateCount);
+                stmt.execute("COMMENT ON PROCEDURE " + procedureName + " IS 'Test description'");
             } else
                 stmt.execute("CREATE PROCEDURE " + procedureName
                         + " (INP INTEGER) AS BEGIN exit; END");
