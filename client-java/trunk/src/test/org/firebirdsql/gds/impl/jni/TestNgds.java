@@ -1,7 +1,7 @@
 /*
  * $Id$
  * 
- * Firebird Open Source J2ee connector - jdbc driver
+ * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -14,7 +14,7 @@
  * This file was created by members of the firebird development team.
  * All individual contributions remain the Copyright (C) of those
  * individuals.  Contributors to this file are either listed here or
- * can be obtained from a CVS history command.
+ * can be obtained from a source control history command.
  *
  * All rights reserved.
  */
@@ -22,9 +22,9 @@ package org.firebirdsql.gds.impl.jni;
 
 import java.util.Arrays;
 
-import junit.framework.TestCase;
-
+import org.firebirdsql.common.FBTestProperties;
 import org.firebirdsql.common.StringHelper;
+import org.firebirdsql.common.rules.TestTypeRule;
 import org.firebirdsql.gds.BlobParameterBuffer;
 import org.firebirdsql.gds.DatabaseParameterBuffer;
 import org.firebirdsql.gds.GDS;
@@ -35,19 +35,27 @@ import org.firebirdsql.gds.IscStmtHandle;
 import org.firebirdsql.gds.IscTrHandle;
 import org.firebirdsql.gds.XSQLDA;
 import org.firebirdsql.gds.XSQLVAR;
-import org.firebirdsql.gds.impl.AbstractIscDbHandle;
 import org.firebirdsql.gds.impl.GDSFactory;
 import org.firebirdsql.gds.impl.GDSType;
 import org.firebirdsql.jca.FBTpb;
 import org.firebirdsql.logging.Logger;
 import org.firebirdsql.logging.LoggerFactory;
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
 
 import static org.firebirdsql.common.FBTestProperties.*;
+import static org.junit.Assert.assertEquals;
 
 /**
  * Performs basic low level tests of the ngds package.
  */
-public class TestNgds extends TestCase {
+public class TestNgds {
+
+    @Rule
+    public final TestTypeRule testTypes = TestTypeRule.supports(
+            EmbeddedGDSImpl.EMBEDDED_TYPE_NAME,
+            NativeGDSImpl.NATIVE_TYPE_NAME);
 
     private Logger log = LoggerFactory.getLogger(getClass(), false);
 
@@ -61,15 +69,10 @@ public class TestNgds extends TestCase {
     private DatabaseParameterBuffer c;
     private FBTpb tpb;
 
-    public TestNgds(String name) {
-        super(name);
-    }
-
-    protected void setUp() {
-        if ("EMBEDDED".equals(getProperty("test.gds_type")))
-            gds = GDSFactory.getGDSForType(GDSType.getType("EMBEDDED"));
-        else
-            gds = GDSFactory.getGDSForType(GDSType.getType("NATIVE"));
+    @Before
+    public void setUp() {
+        GDSType gdsType = FBTestProperties.getGdsType();
+        gds = GDSFactory.getGDSForType(gdsType);
 
         c = gds.createDatabaseParameterBuffer();
         c.addArgument(ISCConstants.isc_dpb_num_buffers, new byte[] { 90 });
@@ -85,76 +88,41 @@ public class TestNgds extends TestCase {
         tpb.getTransactionParameterBuffer().addArgument(ISCConstants.isc_tpb_wait);
     }
 
-    protected void tearDown() {}// hide superclass teardown.
-
     protected IscDbHandle createDatabase(String name) throws Exception {
         IscDbHandle db = gds.createIscDbHandle();
-
-        if (log != null) log.info("test- isc_create_database");
-
         gds.iscCreateDatabase(getdbpath(name), db, c);
-
         return db;
     }
 
     private void dropDatabase(IscDbHandle db) throws Exception {
-        if (log != null) log.info("test- isc_drop_database");
-
         gds.iscDropDatabase(db);
     }
 
     private IscTrHandle startTransaction(IscDbHandle db) throws Exception {
         IscTrHandle tr = gds.createIscTrHandle();
-
-        if (log != null) log.info("test- isc_start_transaction");
-
         gds.iscStartTransaction(tr, db, tpb.getTransactionParameterBuffer());
-
         return tr;
     }
 
     private void commit(IscTrHandle tr) throws Exception {
-        if (log != null) log.info("test- isc_commit_transaction");
-
-        try {
-            gds.iscCommitTransaction(tr);
-        } catch (Exception e) {
-            if (log != null) log.info("exception in commit", e);
-
-            throw e;
-        }
+        gds.iscCommitTransaction(tr);
     }
 
     private void doSQLImmed(IscDbHandle db, IscTrHandle tr, String sql) throws Exception {
-        if (log != null) log.info("test- isc_dsql_exec_immed2");
-
         gds.iscDsqlExecImmed2(db, tr, sql, ISCConstants.SQL_DIALECT_CURRENT, null, null);
     }
 
+    @Test
     public void testCreateDropDB() throws Exception {
-        if (log != null) log.info("test- testCreateDropDB");
-
         db1 = createDatabase(dbName);
-
-        if (log != null) log.info("test- isc_detach_database");
-
         gds.iscDetachDatabase(db1);
         db1 = gds.createIscDbHandle();
-
-        if (log != null) log.info("test- isc_attach_database");
-
         gds.iscAttachDatabase(getdbpath(dbName), db1, c);
         dropDatabase(db1);
     }
 
+    @Test
     public void testCreateDropD3DB() throws Exception {
-        GDS gds;
-
-        if ("EMBEDDED".equals(getProperty("test.gds_type")))
-            return;
-        else
-            gds = GDSFactory.getGDSForType(GDSType.getType("NATIVE"));
-
         DatabaseParameterBuffer databaseParameterBuffer = gds.createDatabaseParameterBuffer();
         databaseParameterBuffer.addArgument(ISCConstants.isc_dpb_num_buffers, new byte[] { 90 });
         databaseParameterBuffer.addArgument(ISCConstants.isc_dpb_dummy_packet_interval, new byte[] { 120, 10, 0, 0 });
@@ -167,41 +135,34 @@ public class TestNgds extends TestCase {
         gds.iscDetachDatabase(db);
         db = gds.createIscDbHandle();
 
-        if (log != null) log.info("test- isc_attach_database");
-
         gds.iscAttachDatabase(getdbpath(dbName2), db, databaseParameterBuffer);
         dropDatabase(db);
     }
 
+    @Test
     public void testDbHandleEquality() throws Exception {
-        if (log != null) log.info("test- testDbHandleEquality");
-
         db1 = createDatabase(dbName);
         db2 = gds.createIscDbHandle();
         gds.iscAttachDatabase(getdbpath(dbName), db2, c);
 
-        if (log != null) log.info("test- rdb_id1: " + ((AbstractIscDbHandle)db1).getRdbId());
-        if (log != null) log.info("test- rdb_id2: " + ((AbstractIscDbHandle)db2).getRdbId());
-        if (log != null) log.info("test- isc_detach_database");
+        if (log != null) log.info("test- rdb_id1: " + db1.getRdbId());
+        if (log != null) log.info("test- rdb_id2: " + db2.getRdbId());
 
         gds.iscDetachDatabase(db1);
         gds.iscDetachDatabase(db2);
         db1 = gds.createIscDbHandle();
 
-        if (log != null) log.info("test- isc_attach_database");
-
         gds.iscAttachDatabase(getdbpath(dbName), db1, c);
         dropDatabase(db1);
     }
 
+    @Test
     public void testDbHandleEquality2() throws Exception {
-        if (log != null) log.info("test- testDbHandleEquality2");
-
         db1 = createDatabase(dbName);
         db2 = createDatabase(dbName2);
 
-        if (log != null) log.info("test- rdb_id1: " + ((AbstractIscDbHandle)db1).getRdbId());
-        if (log != null) log.info("test- rdb_id2: " + ((AbstractIscDbHandle)db2).getRdbId());
+        if (log != null) log.info("test- rdb_id1: " + db1.getRdbId());
+        if (log != null) log.info("test- rdb_id2: " + db2.getRdbId());
 
         t1 = startTransaction(db1);
         doSQLImmed(db1, t1, "create table r1 (col1 smallint not null primary key)");
@@ -218,7 +179,6 @@ public class TestNgds extends TestCase {
         t1 = startTransaction(db);
         doSQLImmed(db, t1, "create table r1 (col1 smallint not null primary key, col2 smallint)");
         commit(t1);
-        
         return db;
     }
 
@@ -234,7 +194,6 @@ public class TestNgds extends TestCase {
         t1 = startTransaction(db);
         doSQLImmed(db, t1, "create table r2 (col1 smallint not null primary key, col2 blob)");
         commit(t1);
-        
         return db;
     }
 
@@ -245,16 +204,14 @@ public class TestNgds extends TestCase {
         dropDatabase(db);
     }
 
+    @Test
     public void testCreateDropTable() throws Exception {
-        if (log != null) log.info("test- testCreateDropTable");
-
         db1 = setupTable();
         teardownTable(db1);
     }
 
+    @Test
     public void testInsert() throws Exception {
-        if (log != null) log.info("test- testInsert");
-
         db1 = setupTable();
         t1 = startTransaction(db1);
         doSQLImmed(db1, t1, "INSERT INTO R1 VALUES (1, 2)");
@@ -264,9 +221,8 @@ public class TestNgds extends TestCase {
         teardownTable(db1);
     }
 
+    @Test
     public void testParameterizedInsert() throws Exception {
-        if (log != null) log.info("test- testParameterizedInsert");
-
         db1 = setupTable();
         t1 = startTransaction(db1);
 
@@ -286,8 +242,6 @@ public class TestNgds extends TestCase {
 
         xsqlda.sqlvar[1] = xsqlvar;
 
-        if (log != null) log.info("test- isc_dsql_exec_immed2");
-
         gds.iscDsqlExecImmed2(db1, t1, "INSERT INTO R1 VALUES (?, ?)",
                 ISCConstants.SQL_DIALECT_CURRENT, xsqlda, null);
 
@@ -306,8 +260,6 @@ public class TestNgds extends TestCase {
         xsqlvar.sqldata = null;
         xsqlda.sqlvar[1] = xsqlvar;
 
-        if (log != null) log.info("test- isc_dsql_exec_immed2");
-
         gds.iscDsqlExecImmed2(db1, t1, "SELECT COL1, COL2 FROM R1 WHERE COL1 = 3",
                 ISCConstants.SQL_DIALECT_CURRENT, null, xsqlda);
 
@@ -319,37 +271,26 @@ public class TestNgds extends TestCase {
         teardownTable(db1);
     }
 
+    @Test
     public void testPreparedSelect() throws Exception {
-        if (log != null) log.info("test- testPreparedSelect");
-
         db1 = setupTable();
         t1 = startTransaction(db1);
         doSQLImmed(db1, t1, "INSERT INTO R1 VALUES (1, 2)");
         doSQLImmed(db1, t1, "INSERT INTO R1 VALUES (2, 3)");
         doSQLImmed(db1, t1, "INSERT INTO R1 VALUES (3, 4)");
 
-        XSQLDA in_xsqlda;
-        XSQLDA out_xsqlda;
-
         IscStmtHandle stmt1 = gds.createIscStmtHandle();
-
-        if (log != null) log.info("test- isc_dsql_allocate_statement");
 
         gds.iscDsqlAllocateStatement(db1, stmt1);
 
-        if (log != null) log.info("test- isc_dsql_prepare");
-
-        out_xsqlda = gds.iscDsqlPrepare(t1, stmt1, "SELECT COL1, COL2 FROM R1 WHERE COL1 = 1",
+        XSQLDA out_xsqlda = gds.iscDsqlPrepare(t1, stmt1, "SELECT COL1, COL2 FROM R1 WHERE COL1 = 1",
                 ISCConstants.SQL_DIALECT_CURRENT);// , out_xsqlda);
-        in_xsqlda = null;
 
-        if (log != null) log.info("test- isc_dsql_execute2");
-
-        gds.iscDsqlExecute2(t1, stmt1, 1, in_xsqlda, null);
+        gds.iscDsqlExecute2(t1, stmt1, 1, null, null);
 
         StringBuilder out = new StringBuilder();
 
-        byte[][] row = null;
+        byte[][] row;
         gds.iscDsqlFetch(stmt1, 1, out_xsqlda, 200);
         Object[] rows = stmt1.getRows();
         int size = stmt1.size();
@@ -357,7 +298,7 @@ public class TestNgds extends TestCase {
         for (int rowNum = 0; rowNum < size; rowNum++) {
             row = (byte[][]) rows[rowNum];
             for (int i = 0; i < out_xsqlda.sqld; i++) {
-                Short data = new Short(out_xsqlda.sqlvar[0].decodeShort(row[i]));
+                Short data = out_xsqlda.sqlvar[0].decodeShort(row[i]);
                 out.append(data.shortValue()).append("    ");
             }
             out.append(getProperty("line.separator"));
@@ -365,7 +306,6 @@ public class TestNgds extends TestCase {
 
         if (log != null) {
             log.info("fetch returned: " + out);
-            log.info("test- isc_dsql_free_statement");
         }
 
         gds.iscDsqlFreeStatement(stmt1, ISCConstants.DSQL_drop);
@@ -373,9 +313,8 @@ public class TestNgds extends TestCase {
         teardownTable(db1);
     }
 
+    @Test
     public void testCreateBlob() throws Exception {
-        if (log != null) log.info("test- testCreateBlob");
-
         db1 = createDatabase(dbName);
         t1 = startTransaction(db1);
         IscBlobHandle blob = gds.createIscBlobHandle();
@@ -385,10 +324,9 @@ public class TestNgds extends TestCase {
         dropDatabase(db1);
     }
 
+    @Test
     public void testCreateAndWriteBlob() throws Exception {
         byte[] testbuf = "xxThis is a test of a blob".getBytes();
-
-        if (log != null) log.info("test- test- testCreateAndWriteBlob");
 
         db1 = setupTable2();
         t1 = startTransaction(db1);
@@ -396,8 +334,6 @@ public class TestNgds extends TestCase {
         final BlobParameterBuffer blobParameterBuffer = gds.createBlobParameterBuffer();
         blobParameterBuffer.addArgument(ISCConstants.isc_bpb_type, ISCConstants.isc_bpb_type_segmented);
         gds.iscCreateBlob2(db1, t1, blob1, blobParameterBuffer);
-
-        if (log != null) log.info("test- test- new blob_id: " + blob1.getBlobId());
 
         gds.iscPutSegment(blob1, testbuf);
 
@@ -419,23 +355,17 @@ public class TestNgds extends TestCase {
 
         gds.iscCloseBlob(blob1);
 
-        if (log != null) log.info("test- isc_dsql_exec_immed2");
-
         gds.iscDsqlExecImmed2(db1, t1, "INSERT INTO R2 VALUES (?, ?)",
                 ISCConstants.SQL_DIALECT_CURRENT, xsqlda, null);
         IscStmtHandle stmt1 = gds.createIscStmtHandle();
-
-        if (log != null) log.info("test- isc_dsql_allocate_statement");
 
         gds.iscDsqlAllocateStatement(db1, stmt1);
         XSQLDA out_xsqlda = gds.iscDsqlPrepare(t1, stmt1, "SELECT COL1, COL2 FROM R2",
                 ISCConstants.SQL_DIALECT_CURRENT);
 
-        if (log != null) log.info("test- isc_dsql_execute2");
-
         gds.iscDsqlExecute2(t1, stmt1, 1, null, null);
         IscBlobHandle blob2 = gds.createIscBlobHandle();
-        byte[][] row = null;
+        byte[][] row;
         gds.iscDsqlFetch(stmt1, 1, out_xsqlda, 200);
         Object[] rows = stmt1.getRows();
         int size = stmt1.size();
@@ -447,7 +377,6 @@ public class TestNgds extends TestCase {
 
             for (int i = 0; i < out_xsqlda.sqld; i++) {
                 byte[] data = row[i];
-
                 out.append("column: ").append(i).append(", value: ").append(StringHelper.toHex(data));
             }
 
@@ -464,19 +393,16 @@ public class TestNgds extends TestCase {
             gds.iscCloseBlob(blob2);
         }
 
-        if (log != null) log.info("test- isc_dsql_free_statement");
-
         gds.iscDsqlFreeStatement(stmt1, ISCConstants.DSQL_drop);
         commit(t1);
         teardownTable2(db1);
     }
 
+    @Test
     public void testCreateAndWriteBlobStream() throws Exception {
         byte[] a = "a".getBytes();
         byte[] testbuf = new byte[500];
         Arrays.fill(testbuf, a[0]);
-
-        if (log != null) log.info("test- testCreateAndWriteBlobStream");
 
         db1 = setupTable2();
         t1 = startTransaction(db1);
@@ -510,23 +436,17 @@ public class TestNgds extends TestCase {
 
         gds.iscCloseBlob(blob1);
 
-        if (log != null) log.info("test- isc_dsql_exec_immed2");
-
         gds.iscDsqlExecImmed2(db1, t1, "INSERT INTO R2 VALUES (?, ?)",
                 ISCConstants.SQL_DIALECT_CURRENT, xsqlda, null);
         IscStmtHandle stmt1 = gds.createIscStmtHandle();
-
-        if (log != null) log.info("test- isc_dsql_allocate_statement");
 
         gds.iscDsqlAllocateStatement(db1, stmt1);
         XSQLDA out_xsqlda = gds.iscDsqlPrepare(t1, stmt1, "SELECT COL1, COL2 FROM R2",
                 ISCConstants.SQL_DIALECT_CURRENT);
 
-        if (log != null) log.info("test- isc_dsql_execute2");
-
         gds.iscDsqlExecute2(t1, stmt1, 1, null, null);
         IscBlobHandle blob2 = gds.createIscBlobHandle();
-        byte[][] row = null;
+        byte[][] row;
         gds.iscDsqlFetch(stmt1, 1, out_xsqlda, 200);
         Object[] rows = stmt1.getRows();
         int size = stmt1.size();
@@ -537,7 +457,6 @@ public class TestNgds extends TestCase {
 
             for (int i = 0; i < out_xsqlda.sqld; i++) {
                 byte[] data = row[i];
-
                 out.append("column: ").append(i).append(", value: ").append(StringHelper.toHex(data));
             }
 
@@ -556,25 +475,21 @@ public class TestNgds extends TestCase {
                 readcount += answer.length;
 
                 if (log != null) log.info("test- read bytes: " + readcount);
-
             } while (!blob2.isEof());
 
             gds.iscCloseBlob(blob2);
         }
-
-        if (log != null) log.info("test- isc_dsql_free_statement");
 
         gds.iscDsqlFreeStatement(stmt1, ISCConstants.DSQL_drop);
         commit(t1);
         teardownTable2(db1);
     }
 
+    @Test
     public void testCreateAndWriteBlobStreamInSegmentedPieces() throws Exception {
         byte[] a = "a".getBytes();
         byte[] testbuf = new byte[64];
         Arrays.fill(testbuf, a[0]);
-
-        if (log != null) log.info("test- testCreateAndWriteBlobStreamInSegmentedPieces");
 
         db1 = setupTable2();
         t1 = startTransaction(db1);
@@ -587,7 +502,6 @@ public class TestNgds extends TestCase {
 
         for (int i = 0; i < 10; i++) {
             gds.iscPutSegment(blob1, testbuf);
-
             if (log != null) log.info("test- wrote bytes: " + (i * testbuf.length));
         }
 
@@ -609,23 +523,17 @@ public class TestNgds extends TestCase {
 
         gds.iscCloseBlob(blob1);
 
-        if (log != null) log.info("test- isc_dsql_exec_immed2");
-
         gds.iscDsqlExecImmed2(db1, t1, "INSERT INTO R2 VALUES (?, ?)",
                 ISCConstants.SQL_DIALECT_CURRENT, xsqlda, null);
         IscStmtHandle stmt1 = gds.createIscStmtHandle();
-
-        if (log != null) log.info("test- isc_dsql_allocate_statement");
 
         gds.iscDsqlAllocateStatement(db1, stmt1);
         XSQLDA out_xsqlda = gds.iscDsqlPrepare(t1, stmt1, "SELECT COL1, COL2 FROM R2",
                 ISCConstants.SQL_DIALECT_CURRENT);
 
-        if (log != null) log.info("test- isc_dsql_execute2");
-
         gds.iscDsqlExecute2(t1, stmt1, 1, null, null);
         IscBlobHandle blob2 = gds.createIscBlobHandle();
-        byte[][] row = null;
+        byte[][] row;
         gds.iscDsqlFetch(stmt1, 1, out_xsqlda, 200);
         Object[] rows = stmt1.getRows();
         int size = stmt1.size();
@@ -637,7 +545,6 @@ public class TestNgds extends TestCase {
 
             for (int i = 0; i < out_xsqlda.sqld; i++) {
                 byte[] data = row[i];
-
                 out.append("column: ").append(i).append(", value: ").append(StringHelper.toHex(data));
             }
 
@@ -645,8 +552,8 @@ public class TestNgds extends TestCase {
 
             blob2.setBlobId(xsqlvar.decodeLong(row[1]));
             gds.iscOpenBlob2(db1, t1, blob2, blobParameterBuffer);
-            int readcount = 0;
 
+            int readCount = 0;
             do {
                 byte[] answer = gds.iscGetSegment(blob2, 64);
 
@@ -654,28 +561,25 @@ public class TestNgds extends TestCase {
                     log.info("test- answer length: " + answer.length + ", answer string: "
                             + new String(answer));
 
-                readcount += answer.length;
+                readCount += answer.length;
 
-                if (log != null) log.info("test- read bytes: " + readcount);
+                if (log != null) log.info("test- read bytes: " + readCount);
             } while (!blob2.isEof());
 
             gds.iscCloseBlob(blob2);
         }
-
-        if (log != null) log.info("test- isc_dsql_free_statement");
 
         gds.iscDsqlFreeStatement(stmt1, ISCConstants.DSQL_drop);
         commit(t1);
         teardownTable2(db1);
     }
 
+    @Test
     public void testCreateAndWriteBlobStreamInStreamPieces() throws Exception {
         byte[] a = "a".getBytes();
         byte[] testbuf = new byte[4096];
         int reps = 10;
         Arrays.fill(testbuf, a[0]);
-
-        if (log != null) log.info("test- testCreateAndWriteBlobInStreamPieces");
 
         db1 = setupTable2();
         t1 = startTransaction(db1);
@@ -710,23 +614,17 @@ public class TestNgds extends TestCase {
 
         gds.iscCloseBlob(blob1);
 
-        if (log != null) log.info("test- isc_dsql_exec_immed2");
-
         gds.iscDsqlExecImmed2(db1, t1, "INSERT INTO R2 VALUES (?, ?)",
                 ISCConstants.SQL_DIALECT_CURRENT, xsqlda, null);
         IscStmtHandle stmt1 = gds.createIscStmtHandle();
-
-        if (log != null) log.info("test- isc_dsql_allocate_statement");
 
         gds.iscDsqlAllocateStatement(db1, stmt1);
         XSQLDA out_xsqlda = gds.iscDsqlPrepare(t1, stmt1, "SELECT COL1, COL2 FROM R2",
                 ISCConstants.SQL_DIALECT_CURRENT);
 
-        if (log != null) log.info("test- isc_dsql_execute2");
-
         gds.iscDsqlExecute2(t1, stmt1, 1, null, null);
         IscBlobHandle blob2 = gds.createIscBlobHandle();
-        byte[][] row = null;
+        byte[][] row;
         gds.iscDsqlFetch(stmt1, 1, out_xsqlda, 200);
         Object[] rows = stmt1.getRows();
         int size = stmt1.size();
@@ -738,7 +636,6 @@ public class TestNgds extends TestCase {
 
             for (int i = 0; i < out_xsqlda.sqld; i++) {
                 byte[] data = row[i];
-
                 out.append("column: ").append(i).append(", value: ").append(StringHelper.toHex(data));
             }
 
@@ -747,26 +644,21 @@ public class TestNgds extends TestCase {
             blob2.setBlobId(xsqlvar.decodeLong(row[1]));
             gds.iscOpenBlob2(db1, t1, blob2, blobParameterBuffer);
 
-            int readcount = 0;
+            int readCount = 0;
             do {
                 byte[] answer = gds.iscGetSegment(blob2, 4096);// 1050)
-
-                readcount += answer.length;
+                readCount += answer.length;
             } while (!blob2.isEof());
 
-            if (log != null) log.info("test- read bytes: " + readcount);
+            if (log != null) log.info("test- read bytes: " + readCount);
 
-            if (readcount != (reps * testbuf.length)) {
-                throw new Exception("Retrieved wrong size");
-            }
+            assertEquals("Retrieved wrong size", reps * testbuf.length, readCount);
+
             gds.iscCloseBlob(blob2);
         }
-
-        if (log != null) log.info("test- isc_dsql_free_statement");
 
         gds.iscDsqlFreeStatement(stmt1, ISCConstants.DSQL_drop);
         commit(t1);
         teardownTable2(db1);
     }
-
 }

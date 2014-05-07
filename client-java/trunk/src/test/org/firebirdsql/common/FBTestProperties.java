@@ -44,7 +44,7 @@ import org.firebirdsql.management.FBManager;
 public final class FBTestProperties {
     
     static {
-        // TODO: Technically not needed with JDBC 4.0 autoloading
+        // Needed for supporting tests that don't reference DriverManager
         try {
             Class.forName(FBDriver.class.getName());
         } catch (ClassNotFoundException ex) {
@@ -77,6 +77,7 @@ public final class FBTestProperties {
     public static final int DB_SERVER_PORT = Integer.parseInt(getProperty("test.db.port", "3050"));
     public static final String DB_LC_CTYPE = getProperty("test.db.lc_ctype", "NONE");
     public static final String DB_DATASOURCE_URL = getdbpath(DB_NAME);
+    public static final String GDS_TYPE = getProperty("test.gds_type", "PURE_JAVA");
 
     public static String getDatabasePath() {
         return getDatabasePath(DB_NAME);
@@ -122,7 +123,7 @@ public final class FBTestProperties {
      * @return {@link GDSType} for this testrun
      */
     public static GDSType getGdsType() {
-        final GDSType gdsType = GDSType.getType(getProperty("test.gds_type", "PURE_JAVA"));
+        final GDSType gdsType = GDSType.getType(GDS_TYPE);
         if (gdsType == null) {
             throw new RuntimeException("Unrecognized value for 'test.gds_type' property.");
         }

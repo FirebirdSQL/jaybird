@@ -21,7 +21,6 @@
 package org.firebirdsql.gds.ng.wire;
 
 import static org.junit.Assert.*;
-import static org.junit.Assume.assumeTrue;
 
 import java.io.IOException;
 import java.sql.SQLException;
@@ -30,12 +29,13 @@ import java.sql.SQLTimeoutException;
 import org.firebirdsql.common.BlackholeServer;
 import org.firebirdsql.common.FBJUnit4TestBase;
 import org.firebirdsql.common.FBTestProperties;
+import org.firebirdsql.common.rules.TestTypeRule;
 import org.firebirdsql.encodings.EncodingFactory;
 import org.firebirdsql.gds.impl.jni.EmbeddedGDSImpl;
 import org.firebirdsql.gds.impl.jni.NativeGDSImpl;
 import org.firebirdsql.gds.ng.FbConnectionProperties;
 import org.firebirdsql.gds.ng.wire.version10.Version10Descriptor;
-import org.junit.BeforeClass;
+import org.junit.Rule;
 import org.junit.Test;
 
 /**
@@ -43,6 +43,11 @@ import org.junit.Test;
  * @since 3.0
  */
 public class TestWireConnection extends FBJUnit4TestBase {
+
+    @Rule
+    public final TestTypeRule testTypes = TestTypeRule.excludes(
+            EmbeddedGDSImpl.EMBEDDED_TYPE_NAME,
+            NativeGDSImpl.NATIVE_TYPE_NAME);
 
     /**
      * IP address which does not exist (we simply assume that this site local
@@ -64,14 +69,6 @@ public class TestWireConnection extends FBJUnit4TestBase {
         connectionInfo.setDatabaseName(FBTestProperties.getDatabasePath());
         // TODO consider keeping NONE the default in WireConnection if not specified
         connectionInfo.setEncoding("NONE");
-    }
-
-    @BeforeClass
-    public static void verifyTestType() {
-        // Test irrelevant for embedded
-        assumeTrue(!FBTestProperties.getGdsType().toString().equals(EmbeddedGDSImpl.EMBEDDED_TYPE_NAME));
-        // Test irrelevant for native
-        assumeTrue(!FBTestProperties.getGdsType().toString().equals(NativeGDSImpl.NATIVE_TYPE_NAME));
     }
 
     /**
