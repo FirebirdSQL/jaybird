@@ -1,5 +1,7 @@
 /*
- * Firebird Open Source J2ee connector - jdbc driver
+ * $Id$
+ *
+ * Firebird Open Source J2EE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -18,7 +20,7 @@
  */
 package org.firebirdsql.gds.impl.jni;
 
-import junit.framework.TestCase;
+import org.firebirdsql.common.rules.TestTypeRule;
 import org.firebirdsql.logging.Logger;
 import org.firebirdsql.logging.LoggerFactory;
 import org.firebirdsql.jdbc.FBDriver;
@@ -26,144 +28,142 @@ import org.firebirdsql.management.FBManager;
 import org.firebirdsql.gds.*;
 import org.firebirdsql.gds.impl.GDSFactory;
 import org.firebirdsql.gds.impl.GDSType;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
 
 import java.io.*;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 
+import static org.junit.Assert.assertTrue;
+
 /**
  * Initial tests for Services API. Currently run only against embedded server.
  * TODO: Make run against other types
  */
-public class TestServicesAPI extends TestCase {
-    protected final Logger log = LoggerFactory.getLogger(getClass(), true);
+public class TestServicesAPI {
 
-    public TestServicesAPI(String s) {
-        super(s);
+    @Rule
+    public final TestTypeRule testType = TestTypeRule.supports(EmbeddedGDSImpl.EMBEDDED_TYPE_NAME);
+
+    private final Logger log = LoggerFactory.getLogger(getClass(), true);
+
+    private String mAbsoluteDatabasePath;
+    private String mAbsoluteBackupPath;
+    private FBManager fbManager;
+    private GDSType gdsType;
+    private GDS gds;
+
+    @Before
+    public void setUp() throws Exception {
+        Class.forName(FBDriver.class.getName());
+        gdsType = GDSType.getType("EMBEDDED");
+        gds = GDSFactory.getGDSForType(gdsType);
+
+        fbManager = new FBManager(gdsType);
+
+        fbManager.setServer("localhost");
+        fbManager.setPort(5066);
+        fbManager.start();
+
+        String mRelativeBackupPath = "db/testES01344.fbk";
+        mAbsoluteBackupPath = new File(".", mRelativeBackupPath).getAbsolutePath();
+
+        String mRelativeDatabasePath = "db/testES01344.fdb";
+        mAbsoluteDatabasePath = new File(".", mRelativeDatabasePath).getAbsolutePath();
+
+        fbManager.createDatabase(mAbsoluteDatabasePath, "SYSDBA", "masterkey");
     }
 
-    protected void setUp() throws Exception {
-        try {
-            Class.forName(FBDriver.class.getName());
-
-            fbManager = new FBManager(GDSType.getType("EMBEDDED"));
-
-            fbManager.setServer("localhost");
-            fbManager.setPort(5066);
-            fbManager.start();
-
-            mRelativeBackupPath = "db/" + "testES01344.fbk";
-            mAbsoluteBackupPath = new File(".", mRelativeBackupPath).getAbsolutePath();
-
-            mRelativeDatabasePath = "db/" + "testES01344.fdb";
-            mAbsoluteDatabasePath = new File(".", mRelativeDatabasePath).getAbsolutePath();
-
-            fbManager.createDatabase(mAbsoluteDatabasePath, "SYSDBA", "masterkey");
-        } catch (Exception e) {
-            if (log != null)
-                log.warn("exception in setup of " + getName() + ": ", e);
-        } // end of try-catch
+    @After
+    public void tearDown() throws Exception {
+        fbManager.dropDatabase(mAbsoluteDatabasePath, "SYSDBA", "masterkey");
+        fbManager.stop();
+        fbManager = null;
     }
 
-    protected void tearDown() throws Exception {
-        try {
-            fbManager.dropDatabase(mAbsoluteDatabasePath, "SYSDBA", "masterkey");
-            fbManager.stop();
-            fbManager = null;
-        } catch (Exception e) {
-            if (log != null)
-                log.warn("exception in teardown of " + getName() + ": ", e);
-        } // end of try-catch
-    }
-
+    @Test
     public void testServicesManagerAttachAndDetach() throws GDSException {
-        final GDS gds = GDSFactory.getGDSForType(GDSType.getType("EMBEDDED"));
-        final ServiceParameterBuffer serviceParameterBuffer = createServiceParameterBuffer(gds);
+        final ServiceParameterBuffer serviceParameterBuffer = createServiceParameterBuffer();
         final IscSvcHandle handle = gds.createIscSvcHandle();
 
         assertTrue("Handle should be invalid when created.", handle.isNotValid());
 
         gds.iscServiceAttach("service_mgr", handle, serviceParameterBuffer);
 
-        assertTrue("Handle should be valid when isc_service_attach returns normally.",
-                handle.isValid());
+        assertTrue("Handle should be valid when isc_service_attach returns normally.", handle.isValid());
 
         gds.iscServiceDetach(handle);
 
-        assertTrue("Handle should be invalid when isc_service_detach returns normally.",
-                handle.isNotValid());
+        assertTrue("Handle should be invalid when isc_service_detach returns normally.", handle.isNotValid());
     }
 
+    @Test
     public void testBackupAndRestore() throws Exception {
-        final GDS gds = GDSFactory.getGDSForType(GDSType.getType("EMBEDDED"));
+        IscSvcHandle handle = attachToServiceManager();
+        backupDatabase(handle);
+        detachFromServiceManager(handle);
+        dropDatabase();
 
-        IscSvcHandle handle = attatchToServiceManager(gds);
-
-        backupDatabase(gds, handle);
-
-        detachFromServiceManager(gds, handle);
-
-        dropDatabase(gds);
-
-        handle = attatchToServiceManager(gds);
-
-        restoreDatabase(gds, handle);
-
-        detachFromServiceManager(gds, handle);
+        handle = attachToServiceManager();
+        restoreDatabase(handle);
+        detachFromServiceManager(handle);
 
         connectToDatabase();
     }
 
     private void connectToDatabase() throws SQLException {
-        Connection connection = DriverManager.getConnection("jdbc:firebirdsql:embedded:"
-                + mAbsoluteDatabasePath, "SYSDBA", "masterkey");
+        Connection connection = DriverManager.getConnection("jdbc:firebirdsql:embedded:" + mAbsoluteDatabasePath,
+                "SYSDBA", "masterkey");
         connection.close();
     }
 
-    private void restoreDatabase(GDS gds, IscSvcHandle handle) throws Exception, IOException {
-        startRestore(gds, handle);
+    private void restoreDatabase(IscSvcHandle handle) throws Exception {
+        startRestore(handle);
 
-        queryService(gds, handle, "log/restoretest.log");
+        queryService(handle, "log/restoretest.log");
 
-        assertTrue("Database file doesent exist after restore !",
-                new File(mAbsoluteDatabasePath).exists());
-        new File(mAbsoluteBackupPath).delete();
+        assertTrue("Database file doesn't exist after restore !", new File(mAbsoluteDatabasePath).exists());
+        if (!new File(mAbsoluteBackupPath).delete()) {
+            log.debug("Unable to delete file " + mAbsoluteBackupPath);
+        }
     }
 
-    private void startRestore(GDS gds, IscSvcHandle handle) throws GDSException {
+    private void startRestore(IscSvcHandle handle) throws GDSException {
         final ServiceRequestBuffer serviceRequestBuffer = gds
                 .createServiceRequestBuffer(ISCConstants.isc_action_svc_restore);
 
         serviceRequestBuffer.addArgument(ISCConstants.isc_spb_verbose);
-        serviceRequestBuffer.addArgument(ISCConstants.isc_spb_options,
-                ISCConstants.isc_spb_res_create);
+        serviceRequestBuffer.addArgument(ISCConstants.isc_spb_options, ISCConstants.isc_spb_res_create);
         serviceRequestBuffer.addArgument(ISCConstants.isc_spb_dbname, mAbsoluteBackupPath);
         serviceRequestBuffer.addArgument(ISCConstants.isc_spb_bkp_file, mAbsoluteDatabasePath);
 
         gds.iscServiceStart(handle, serviceRequestBuffer);
     }
 
-    private void dropDatabase(GDS gds) throws Exception {
-        final FBManager testFBManager = new FBManager(gds.getType());
+    private void dropDatabase() throws Exception {
+        final FBManager testFBManager = new FBManager(gdsType);
         testFBManager.start();
         testFBManager.dropDatabase(mAbsoluteDatabasePath, "SYSDBA", "masterkey");
         testFBManager.stop();
     }
 
-    private void backupDatabase(final GDS gds, final IscSvcHandle handle) throws Exception,
-            IOException {
-        new File(mAbsoluteBackupPath).delete();
+    private void backupDatabase(final IscSvcHandle handle) throws Exception {
+        if (!new File(mAbsoluteBackupPath).delete()) {
+            log.debug("Unable to delete file " + mAbsoluteBackupPath);
+        }
 
-        startBackup(gds, handle);
+        startBackup(handle);
 
-        queryService(gds, handle, "log/backuptest.log");
+        queryService(handle, "log/backuptest.log");
 
-        assertTrue("Backup file doesent exist !", new File(mAbsoluteBackupPath).exists());
+        assertTrue("Backup file doesn't exist!", new File(mAbsoluteBackupPath).exists());
     }
 
-    private void queryService(final GDS gds, final IscSvcHandle handle, String outputFilename)
-            throws Exception, IOException {
+    private void queryService(final IscSvcHandle handle, String outputFilename) throws Exception {
         final ServiceRequestBuffer serviceRequestBuffer = gds
                 .createServiceRequestBuffer(ISCConstants.isc_info_svc_to_eof);
         final byte[] buffer = new byte[1024];
@@ -178,8 +178,7 @@ public class TestServicesAPI extends TestCase {
                 // TODO Find out why unused
                 final byte firstByte = (byte) byteArrayInputStream.read();
 
-                int numberOfBytes = (short) ((byteArrayInputStream.read() << 0) + (byteArrayInputStream
-                        .read() << 8));
+                int numberOfBytes = (short) ((byteArrayInputStream.read()) + (byteArrayInputStream.read() << 8));
 
                 if (numberOfBytes == 0) {
                     if (byteArrayInputStream.read() != ISCConstants.isc_info_end)
@@ -197,7 +196,7 @@ public class TestServicesAPI extends TestCase {
         }
     }
 
-    private void startBackup(final GDS gds, final IscSvcHandle handle) throws GDSException {
+    private void startBackup(final IscSvcHandle handle) throws GDSException {
         final ServiceRequestBuffer serviceRequestBuffer = gds
                 .createServiceRequestBuffer(ISCConstants.isc_action_svc_backup);
 
@@ -208,32 +207,29 @@ public class TestServicesAPI extends TestCase {
         gds.iscServiceStart(handle, serviceRequestBuffer);
     }
 
-    private IscSvcHandle attatchToServiceManager(GDS gds) throws GDSException {
-        final ServiceParameterBuffer serviceParameterBuffer = createServiceParameterBuffer(gds);
-
+    private IscSvcHandle attachToServiceManager() throws GDSException {
+        final ServiceParameterBuffer serviceParameterBuffer = createServiceParameterBuffer();
         final IscSvcHandle handle = gds.createIscSvcHandle();
 
         assertTrue("Handle should be invalid when created.", handle.isNotValid());
 
         gds.iscServiceAttach("service_mgr", handle, serviceParameterBuffer);
 
-        assertTrue("Handle should be valid when isc_service_attach returns normally.",
-                handle.isValid());
+        assertTrue("Handle should be valid when isc_service_attach returns normally.", handle.isValid());
 
         return handle;
     }
 
-    private void detachFromServiceManager(GDS gds, IscSvcHandle handle) throws GDSException {
+    private void detachFromServiceManager(IscSvcHandle handle) throws GDSException {
         if (handle.isNotValid())
             throw new Error("Handle should be valid here");
 
         gds.iscServiceDetach(handle);
 
-        assertTrue("Handle should be invalid when isc_service_detach returns normally.",
-                handle.isNotValid());
+        assertTrue("Handle should be invalid when isc_service_detach returns normally.", handle.isNotValid());
     }
 
-    private ServiceParameterBuffer createServiceParameterBuffer(GDS gds) {
+    private ServiceParameterBuffer createServiceParameterBuffer() {
         final ServiceParameterBuffer returnValue = gds.createServiceParameterBuffer();
 
         returnValue.addArgument(ISCConstants.isc_spb_user_name, "SYSDBA");
@@ -241,12 +237,4 @@ public class TestServicesAPI extends TestCase {
 
         return returnValue;
     }
-
-    private String mRelativeDatabasePath = null;
-    private String mAbsoluteDatabasePath = null;
-
-    private String mRelativeBackupPath = null;
-    private String mAbsoluteBackupPath = null;
-
-    private FBManager fbManager = null;
 }
