@@ -1,7 +1,7 @@
 /*
  * $Id$
- * 
- * Firebird Open Source J2EE Connector - JDBC Driver
+ *
+ * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -14,13 +14,14 @@
  * This file was created by members of the firebird development team.
  * All individual contributions remain the Copyright (C) of those
  * individuals.  Contributors to this file are either listed here or
- * can be obtained from a CVS history command.
+ * can be obtained from a source control history command.
  *
  * All rights reserved.
  */
 package org.firebirdsql.util;
 
 import java.lang.reflect.Method;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -44,12 +45,9 @@ public final class ReflectionHelper {
     public static Class<?>[] getAllInterfaces(Class<?> clazz) {
         Set<Class<?>> result = new HashSet<Class<?>>();
         do {
-            Class<?>[] interfaces = clazz.getInterfaces();
-            for (int i = 0; i < interfaces.length; i++) {
-                result.add(interfaces[i]);
-            }
+            Collections.addAll(result, clazz.getInterfaces());
             clazz = clazz.getSuperclass();
-        } while(clazz.getSuperclass() != null);
+        } while(clazz.getSuperclass() != null); // Scan until clazz is Object (so skip Object itself)
         return result.toArray(new Class<?>[result.size()]);
     }
     
