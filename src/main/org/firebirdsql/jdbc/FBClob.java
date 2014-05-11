@@ -109,7 +109,7 @@ public class FBClob implements Clob {
                     toSkip -= reader.skip(toSkip);
                 }
                 int n;
-                char[] buffer = new char[1024];
+                char[] buffer = new char[Math.min(length, 1024)];
                 StringBuilder sb = new StringBuilder(length);
                 while (length > 0 && (n = reader.read(buffer, 0, Math.min(length, buffer.length))) != -1) {
                     sb.append(buffer, 0, n);
