@@ -24,9 +24,12 @@ import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.SQLException;
 
+import org.firebirdsql.common.DdlHelper;
 import org.firebirdsql.common.FBJUnit4TestBase;
 import org.firebirdsql.common.JdbcResourceHelper;
-import org.junit.Ignore;
+import org.firebirdsql.gds.ISCConstants;
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 
 import static org.firebirdsql.common.FBTestProperties.*;
@@ -41,6 +44,19 @@ import static org.junit.Assert.assertNull;
  * @author <a href="mailto:sjardine@users.sourceforge.net">Steven Jardine </a>
  */
 public class TestUserManager extends FBJUnit4TestBase {
+
+    public static final String USER_NAME = "TESTUSER123";
+
+    @Before
+    @After
+    public void ensureTestUserDoesNotExist() throws SQLException {
+        Connection connection = getConnectionViaDriverManager();
+        try {
+            DdlHelper.executeDDL(connection, "DROP USER " + USER_NAME, ISCConstants.isc_gsec_err_rec_not_found);
+        } finally {
+            JdbcResourceHelper.closeQuietly(connection);
+        }
+    }
 
     @Test
     public void testUsers() throws Exception {
@@ -63,11 +79,11 @@ public class TestUserManager extends FBJUnit4TestBase {
 
         // Add a user.
         User user1 = new FBUser();
-        user1.setUserName("TESTUSER123");
+        user1.setUserName(USER_NAME);
         user1.setPassword("tes123");
-        user1.setFirstName("First Name");
-        user1.setMiddleName("Middle Name");
-        user1.setLastName("Last Name");
+        user1.setFirstName("First");
+        user1.setMiddleName("Middle");
+        user1.setLastName("Last");
         // Setting userid and groupid to 0 for Firebird 3 as it isn't supported for the SRP usermanager
         user1.setUserId(isFirebird3 ? 0 : 222);
         user1.setGroupId(isFirebird3 ? 0 : 222);
@@ -102,13 +118,5 @@ public class TestUserManager extends FBJUnit4TestBase {
         user2 = userManager.getUsers().get(user1.getUserName());
 
         assertNull("User 2 should be null", user2);
-    }
-
-    @Ignore
-    @Test
-    public void testConnection() throws Exception {
-
-        // TODO: Test use of user with database connection and sql.
-
     }
 }
