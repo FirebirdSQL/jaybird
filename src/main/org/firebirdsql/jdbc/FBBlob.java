@@ -1,7 +1,7 @@
 /*
  * $Id$
- * 
- * Firebird Open Source J2ee connector - jdbc driver
+ *
+ * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -14,18 +14,26 @@
  * This file was created by members of the firebird development team.
  * All individual contributions remain the Copyright (C) of those
  * individuals.  Contributors to this file are either listed here or
- * can be obtained from a CVS history command.
+ * can be obtained from a source control history command.
  *
  * All rights reserved.
  */
 package org.firebirdsql.jdbc;
 
-import java.io.*;
-import java.sql.*;
-import java.util.*;
-
-import org.firebirdsql.gds.*;
+import org.firebirdsql.gds.GDSException;
+import org.firebirdsql.gds.ISCConstants;
+import org.firebirdsql.gds.IscBlobHandle;
 import org.firebirdsql.gds.impl.GDSHelper;
+import org.firebirdsql.util.SQLExceptionChainBuilder;
+
+import java.io.*;
+import java.sql.Blob;
+import java.sql.SQLException;
+import java.sql.SQLFeatureNotSupportedException;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashSet;
 
 /**
  * Firebird implementation of {@link java.sql.Blob}.
@@ -35,23 +43,22 @@ public class FBBlob implements FirebirdBlob, Synchronizable {
     public static final boolean SEGMENTED = true;
 
     /**
-     * bufferlength is the size of the buffer for blob input and output streams,
+     * The size of the buffer for blob input and output streams,
      * also used for the BufferedInputStream/BufferedOutputStream wrappers.
      */
-    final int bufferlength;
-
-    boolean isNew;
-    long blob_id;
-    final GDSHelper gdsHelper;
+    private final int bufferLength;
+    private boolean isNew;
+    private long blob_id;
+    private final GDSHelper gdsHelper;
     private final FBObjectListener.BlobListener blobListener;
 
-    final Collection<FBBlobInputStream> inputStreams = Collections.synchronizedSet(new HashSet<FBBlobInputStream>());
+    private final Collection<FBBlobInputStream> inputStreams = Collections.synchronizedSet(new HashSet<FBBlobInputStream>());
     private FBBlobOutputStream blobOut = null;
 
     private FBBlob(GDSHelper c, boolean isNew, FBObjectListener.BlobListener blobListener) {
         gdsHelper = c;
         this.isNew = isNew;
-        bufferlength = c.getBlobBufferLength();
+        bufferLength = c.getBlobBufferLength();
         this.blobListener = blobListener != null ? blobListener : FBObjectListener.NoActionBlobListener.instance();
     }
 
@@ -103,30 +110,6 @@ public class FBBlob implements FirebirdBlob, Synchronizable {
     }
 
     /**
-     * Close this Blob object. This method closes all open input streams.
-     *
-     * @throws IOException if at least one of the stream raised an exception
-     * when closed.
-     */
-    public void close() throws IOException {
-        synchronized (getSynchronizationObject()) {
-            IOException error = null;
-
-            for (FBBlobInputStream blobIS : inputStreams) {
-                try {
-                    blobIS.close();
-                } catch (IOException ex) {
-                    error = ex;
-                }
-            }
-            inputStreams.clear();
-
-            if (error != null)
-                throw error;
-        }
-    }
-
-    /**
      * This method frees the <code>Blob</code> object and releases the resources that
      * it holds. The object is invalid once the <code>free</code>
      * method is called.
@@ -144,10 +127,20 @@ public class FBBlob implements FirebirdBlob, Synchronizable {
      * @since 1.6
      */
     public void free() throws SQLException {
-        try {
-            close();
-        } catch (IOException ex) {
-            throw new FBSQLException(ex);
+        synchronized (getSynchronizationObject()) {
+            SQLExceptionChainBuilder<SQLException> chain = new SQLExceptionChainBuilder<SQLException>();
+
+            for (FBBlobInputStream blobIS : new ArrayList<FBBlobInputStream>(inputStreams)) {
+                try {
+                    blobIS.close();
+                } catch (IOException ex) {
+                    chain.append(new FBSQLException(ex));
+                }
+            }
+            inputStreams.clear();
+
+            if (chain.hasException())
+                throw chain.getException();
         }
     }
 
@@ -210,8 +203,9 @@ public class FBBlob implements FirebirdBlob, Synchronizable {
      * @return length of the <code>BLOB</code> in bytes
      * @exception SQLException if there is an error accessing the
      * length of the <code>BLOB</code>
+     * @exception SQLFeatureNotSupportedException if the JDBC driver does not support
+     * this method
      * @since 1.2
-     * @see <a href="package-summary.html#2.0 API">What Is in the JDBC 2.0 API</a>
      */
     public long length() throws SQLException {
         byte[] info = getInfo(BLOB_LENGTH_REQUEST, 20);
@@ -290,24 +284,29 @@ public class FBBlob implements FirebirdBlob, Synchronizable {
     }
 
     /**
-     * Returns as an array of bytes, part or all of the <code>BLOB</code>
-     * value that this <code>Blob</code> object designates.  The byte
-     * array contains up to <code>length</code> consecutive bytes
-     * starting at position <code>pos</code>.
+     * Retrieves all or part of the <code>BLOB</code>
+     * value that this <code>Blob</code> object represents, as an array of
+     * bytes.  This <code>byte</code> array contains up to <code>length</code>
+     * consecutive bytes starting at position <code>pos</code>.
+     *
      * @param pos the ordinal position of the first byte in the
-     * <code>BLOB</code> value to be extracted; the first byte is at
-     * position 1
-     * @param length the number of consecutive bytes to be copied
+     *        <code>BLOB</code> value to be extracted; the first byte is at
+     *        position 1
+     * @param length the number of consecutive bytes to be copied; the value
+     * for length must be 0 or greater
      * @return a byte array containing up to <code>length</code>
-     * consecutive bytes from the <code>BLOB</code> value designated
-     * by this <code>Blob</code> object, starting with the
-     * byte at position <code>pos</code>
+     *         consecutive bytes from the <code>BLOB</code> value designated
+     *         by this <code>Blob</code> object, starting with the
+     *         byte at position <code>pos</code>
      * @exception SQLException if there is an error accessing the
-     * <code>BLOB</code>
+     *            <code>BLOB</code> value; if pos is less than 1 or length is
+     * less than 0
+     * @exception SQLFeatureNotSupportedException if the JDBC driver does not support
+     * this method
+     * @see #setBytes
      * @since 1.2
-     * @see <a href="package-summary.html#2.0 API">What Is in the JDBC 2.0 API</a>
      */
-    public byte[] getBytes(long pos, int length) throws SQLException{
+    public byte[] getBytes(long pos, int length) throws SQLException {
         if (pos < 1)
             throw new FBSQLException("Blob position should be >= 1");
 
@@ -319,7 +318,7 @@ public class FBBlob implements FirebirdBlob, Synchronizable {
         synchronized (getSynchronizationObject()) {
             blobListener.executionStarted(this);
             try {
-                FirebirdBlob.BlobInputStream in = (FirebirdBlob.BlobInputStream)getBinaryStream();
+                FirebirdBlob.BlobInputStream in = (FirebirdBlob.BlobInputStream) getBinaryStream();
                 try {
                     byte[] result = new byte[length];
                     if (pos != 1)
@@ -426,6 +425,37 @@ public class FBBlob implements FirebirdBlob, Synchronizable {
     }
 
     /**
+     * The size of the buffer for blob input and output streams,
+     * also used for the BufferedInputStream/BufferedOutputStream wrappers.
+     *
+     * @return The buffer length
+     */
+    int getBufferLength() {
+        return bufferLength;
+    }
+
+    /**
+     * Notifies this blob that <code>stream</code> has been closed.
+     *
+     * @param stream
+     *         InputStream that has been closed.
+     */
+    void notifyClosed(FBBlobInputStream stream) {
+        inputStreams.remove(stream);
+    }
+
+    /**
+     * @return <code>true</code> when this is an uninitialized output blob, <code>false</code> otherwise.
+     */
+    boolean isNew() {
+        return isNew;
+    }
+
+    GDSHelper getGdsHelper() {
+        return gdsHelper;
+    }
+
+    /**
      * Copy the contents of an <code>InputStream</code> into this Blob.
      *
      * @param inputStream the stream from which data will be copied
@@ -435,7 +465,7 @@ public class FBBlob implements FirebirdBlob, Synchronizable {
     public void copyStream(InputStream inputStream, int length) throws SQLException {
         OutputStream os = setBinaryStream(1);
         try {
-            final byte[] buffer = new byte[Math.min(bufferlength, length)];
+            final byte[] buffer = new byte[Math.min(bufferLength, length)];
             int chunk;
             while (length > 0 && (chunk = inputStream.read(buffer, 0, Math.min(buffer.length, length))) != -1) {
                 os.write(buffer, 0, chunk);
@@ -459,7 +489,7 @@ public class FBBlob implements FirebirdBlob, Synchronizable {
     public void copyStream(InputStream inputStream) throws SQLException {
         OutputStream os = setBinaryStream(1);
         try {
-            final byte[] buffer = new byte[bufferlength];
+            final byte[] buffer = new byte[bufferLength];
             int chunk;
             while ((chunk = inputStream.read(buffer)) != -1)
                 os.write(buffer, 0, chunk);
@@ -481,13 +511,11 @@ public class FBBlob implements FirebirdBlob, Synchronizable {
     public void copyCharacterStream(Reader inputStream, int length, String encoding) throws SQLException {
         try {
             OutputStream os = setBinaryStream(1);
-            OutputStreamWriter osw;
-            if (encoding != null)
-                osw = new OutputStreamWriter(os, encoding);
-            else
-                osw = new OutputStreamWriter(os);
+            OutputStreamWriter osw = encoding != null
+                    ? new OutputStreamWriter(os, encoding)
+                    : new OutputStreamWriter(os);
 
-            final char[] buffer = new char[Math.min(bufferlength, length)];
+            final char[] buffer = new char[Math.min(bufferLength, length)];
             int chunk;
             try {
                 while (length > 0 && (chunk = inputStream.read(buffer, 0, Math.min(buffer.length, length))) != -1) {

@@ -29,7 +29,6 @@ import org.firebirdsql.jdbc.FBClob;
 import org.firebirdsql.jdbc.FBSQLException;
 import org.firebirdsql.jdbc.Synchronizable;
 
-import java.io.IOException;
 import java.io.InputStream;
 import java.io.Reader;
 import java.sql.Blob;
@@ -57,9 +56,7 @@ public class FBBlobField extends FBField implements FBFlushableField {
 
     public void close() throws SQLException {
         try {
-            if (blob != null) blob.close();
-        } catch (IOException ioex) {
-            throw new FBSQLException(ioex);
+            if (blob != null) blob.free();
         } finally {
             // forget this blob instance, resource waste
             // but simplifies our life. BLOB handle will be
@@ -289,15 +286,15 @@ public class FBBlobField extends FBField implements FBFlushableField {
     public void setNull() {
         super.setNull();
         try {
-            if (blob != null) blob.close();
-        } catch (IOException e) {
+            if (blob != null) blob.free();
+        } catch (SQLException e) {
             //ignore
+        } finally {
+            blob = null;
+            binaryStream = null;
+            characterStream = null;
+            bytes = null;
+            length = 0;
         }
-
-        blob = null;
-        binaryStream = null;
-        characterStream = null;
-        bytes = null;
-        length = 0;
     }
 }

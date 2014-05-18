@@ -47,7 +47,7 @@ import java.sql.SQLException;
  */
 public class FBClob implements Clob {
 
-	private FBBlob wrappedBlob;
+	private final FBBlob wrappedBlob;
 
 	public FBClob(FBBlob blob) {
 		this.wrappedBlob = blob;
@@ -136,7 +136,7 @@ public class FBClob implements Clob {
 	 * @see <a href="package-summary.html#2.0 API">What Is in the JDBC 2.0 API</a>
 	 */
 	public Reader getCharacterStream() throws SQLException {
-		String encoding = getWrappedBlob().gdsHelper.getJavaEncoding();
+		String encoding = getWrappedBlob().getGdsHelper().getJavaEncoding();
 		InputStream inputStream = wrappedBlob.getBinaryStream();
 		if (encoding == null) {
 			return new InputStreamReader(inputStream);
@@ -257,7 +257,7 @@ public class FBClob implements Clob {
 	 *                <description>
 	 */
 	public Writer setCharacterStream(long position) throws SQLException {
-		String encoding = wrappedBlob.gdsHelper.getJavaEncoding();
+		String encoding = wrappedBlob.getGdsHelper().getJavaEncoding();
 		// FIXME: This is wrong for multibyte charactersets; doesn't matter right now as setBinaryStream isn't implemented for position > 1
 		OutputStream outputStream = wrappedBlob.setBinaryStream(position);
 		if (encoding == null) {
@@ -278,7 +278,7 @@ public class FBClob implements Clob {
 	public Reader getCharacterStream(long pos, long length) throws SQLException {
 	    // FIXME: This is wrong for multibyte charactersets; doesn't matter right now as getBinaryStream isn't implemented
 		InputStream inputStream = wrappedBlob.getBinaryStream(pos, length);
-		String encoding = getWrappedBlob().gdsHelper.getJavaEncoding();
+		String encoding = getWrappedBlob().getGdsHelper().getJavaEncoding();
 		if (encoding == null) {
 			return new InputStreamReader(inputStream);
 		} else {

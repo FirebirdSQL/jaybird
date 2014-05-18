@@ -72,14 +72,7 @@ public class TestFBBlob extends FBJUnit4TestBase {
         connectionProperties.setProperty("useStreamBlobs", "false");
         Connection conn = DriverManager.getConnection(getUrl(), connectionProperties);
         try {
-            PreparedStatement insert = conn.prepareStatement(INSERT_BLOB);
-            try {
-                insert.setInt(1, 1);
-                insert.setBytes(2, new byte[]{ 1, 2, 3, 4, 5 });
-                insert.executeUpdate();
-            } finally {
-                closeQuietly(insert);
-            }
+            populateBlob(conn, new byte[] { 1, 2, 3, 4, 5 });
 
             PreparedStatement select = conn.prepareStatement(SELECT_BLOB);
             select.setInt(1, 1);
@@ -107,14 +100,7 @@ public class TestFBBlob extends FBJUnit4TestBase {
         connectionProperties.setProperty("useStreamBlobs", "true");
         Connection conn = DriverManager.getConnection(getUrl(), connectionProperties);
         try {
-            PreparedStatement insert = conn.prepareStatement(INSERT_BLOB);
-            try {
-                insert.setInt(1, 1);
-                insert.setBytes(2, new byte[]{ 1, 2, 3, 4, 5 });
-                insert.executeUpdate();
-            } finally {
-                closeQuietly(insert);
-            }
+            populateBlob(conn, new byte[]{ 1, 2, 3, 4, 5 });
 
             PreparedStatement select = conn.prepareStatement(SELECT_BLOB);
             select.setInt(1, 1);
@@ -130,6 +116,49 @@ public class TestFBBlob extends FBJUnit4TestBase {
             }
         } finally {
             closeQuietly(conn);
+        }
+    }
+
+    /**
+     * Tests that closing a blob after opening an InputStream doesn't throw unexpected exceptions
+     * <p>
+     * Previously {@link FBBlob} threw a ConcurrentModificationException in this case.
+     * </p>
+     */
+    @Test
+    public void testClose_afterOpeningMultipleIS() throws Exception {
+        Connection conn = getConnectionViaDriverManager();
+        try {
+            populateBlob(conn, new byte[]{ 1, 2, 3, 4, 5 });
+            PreparedStatement select = conn.prepareStatement(SELECT_BLOB);
+            select.setInt(1, 1);
+            ResultSet rs = select.executeQuery();
+            try {
+                assertTrue("Expected a row in result set", rs.next());
+                FBBlob blob = (FBBlob) rs.getBlob(1);
+
+                blob.getBinaryStream();
+                blob.getBinaryStream();
+
+                blob.free();
+            } finally {
+                closeQuietly(rs);
+                closeQuietly(select);
+            }
+        } finally {
+            closeQuietly(conn);
+        }
+    }
+
+    private void populateBlob(Connection conn, byte[] bytes) throws SQLException {
+        PreparedStatement insert = conn.prepareStatement(INSERT_BLOB);
+        try {
+            insert.setInt(1, 1);
+
+            insert.setBytes(2, bytes);
+            insert.executeUpdate();
+        } finally {
+            closeQuietly(insert);
         }
     }
 }

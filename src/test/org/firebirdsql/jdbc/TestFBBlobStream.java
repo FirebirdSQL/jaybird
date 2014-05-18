@@ -20,6 +20,7 @@ package org.firebirdsql.jdbc;
 
 import org.firebirdsql.common.FBTestBase;
 import org.firebirdsql.common.JdbcResourceHelper;
+import org.firebirdsql.common.TestDataGeneration;
 
 import java.io.ByteArrayInputStream;
 import java.io.OutputStream;
@@ -94,7 +95,7 @@ public class TestFBBlobStream extends FBTestBase {
             "INSERT INTO test_blob(id, bin_data) VALUES (?, ?)");
         
         int size = generateRandomLength();
-        byte[] data = createRandomBytes(size);
+        byte[] data = TestDataGeneration.createRandomBytes(size);
 
         try {
             ps.setInt(1, 1);
@@ -136,7 +137,7 @@ public class TestFBBlobStream extends FBTestBase {
         PreparedStatement ps = connection.prepareStatement(
             "INSERT INTO test_blob(id, bin_data) VALUES (?, ?)");
 
-        byte[] data = createRandomBytes(generateRandomLength());
+        byte[] data = TestDataGeneration.createRandomBytes(generateRandomLength());
         try {
             ps.setInt(1, 1);
             ps.setBytes(2, data);
@@ -349,7 +350,7 @@ public class TestFBBlobStream extends FBTestBase {
         PreparedStatement ps = connection.prepareCall("{call test_procedure(?, ?)}");
         
         try {
-            byte[] data = createRandomBytes(generateRandomLength());
+            byte[] data = TestDataGeneration.createRandomBytes(generateRandomLength());
             
             ByteArrayInputStream in = new ByteArrayInputStream(data);
             
@@ -375,7 +376,7 @@ public class TestFBBlobStream extends FBTestBase {
     }
     
     public void testWriteBytes() throws Exception {
-        final byte[] data = createRandomBytes(75 * 1024); // should be more than 64k
+        final byte[] data = TestDataGeneration.createRandomBytes(75 * 1024); // should be more than 64k
         
         FirebirdConnection fbConnection = (FirebirdConnection)connection;
         fbConnection.setAutoCommit(false);
@@ -409,24 +410,13 @@ public class TestFBBlobStream extends FBTestBase {
             stmt.close();
         }
     }
-    
+
     /**
-     * Creates a byte array with random bytes with the specified length.
-     * 
-     * @param length Requested length
-     * @return Byte array of length filled with random bytes
-     */
-    private static byte[] createRandomBytes(int length) {
-        byte[] randomBytes = new byte[length];
-        rnd.nextBytes(randomBytes);
-        return randomBytes;
-    }
-    
-    /**
-     * Generates a random length betwen 128 and 102528
+     * Generates a random length between 128 and 102400.
+     *
      * @return generated length
      */
     private static int generateRandomLength() {
-        return rnd.nextInt(100 * 1024) + 128;
+        return TestDataGeneration.generateRandom(128, 100 * 1024);
     }
 }
