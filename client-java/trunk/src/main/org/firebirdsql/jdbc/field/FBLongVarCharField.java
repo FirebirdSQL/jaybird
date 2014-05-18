@@ -59,10 +59,8 @@ public class FBLongVarCharField extends FBStringField implements FBFlushableFiel
     public void close() throws SQLException {
         try {
             if (blob != null) 
-                blob.close();
-        } catch(IOException ioex) {
-            throw new FBSQLException(ioex);
-        } finally {       
+                blob.free();
+        } finally {
             // forget this blob instance, resource waste
             // but simplifies our life. BLOB handle will be
             // released by a server automatically later
@@ -76,11 +74,10 @@ public class FBLongVarCharField extends FBStringField implements FBFlushableFiel
     }
     
     public Blob getBlob() throws SQLException {
-        
         if (blob != null)
             return blob;
         
-        if (getFieldData()==null)
+        if (getFieldData() == null)
             return BLOB_NULL_VALUE;
 
         blob = new FBBlob(gdsHelper, field.decodeLong(getFieldData()));
@@ -122,7 +119,7 @@ public class FBLongVarCharField extends FBStringField implements FBFlushableFiel
 
         // copy stream data
         byte[] buff = new byte[BUFF_SIZE];
-        int counter = 0;
+        int counter;
         try {
             while((counter = in.read(buff)) != -1) {
                 bout.write(buff, 0, counter);

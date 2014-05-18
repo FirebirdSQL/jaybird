@@ -21,11 +21,19 @@
 package org.firebirdsql.jdbc;
 
 import org.firebirdsql.common.FBJUnit4TestBase;
+import org.junit.After;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 
+import java.io.IOException;
 import java.sql.Connection;
 
 import static org.firebirdsql.common.FBTestProperties.getConnectionViaDriverManager;
+import static org.firebirdsql.common.matchers.SQLExceptionMatchers.message;
+import static org.hamcrest.CoreMatchers.allOf;
+import static org.hamcrest.CoreMatchers.equalTo;
+import static org.hamcrest.CoreMatchers.isA;
 import static org.junit.Assert.assertEquals;
 
 /**
@@ -36,19 +44,39 @@ import static org.junit.Assert.assertEquals;
  */
 public class TestFBBlobOutputStream extends FBJUnit4TestBase {
 
+    @Rule
+    public final ExpectedException expectedException = ExpectedException.none();
+    private Connection conn;
+    private FBBlobOutputStream stream;
+
+    public void initDefault() throws Exception {
+        conn = getConnectionViaDriverManager();
+        // TODO Required because of JDBC-348
+        conn.setAutoCommit(false);
+        FBBlob blob = (FBBlob) conn.createBlob();
+        stream = (FBBlobOutputStream) blob.setBinaryStream(1);
+    }
+
+    @After
+    public void tearDown() throws Exception {
+        if (conn != null) conn.close();
+    }
+
     @Test
     public void testLength() throws Exception {
-        Connection conn = getConnectionViaDriverManager();
-        try {
-            // TODO Required because of JDBC-348
-            conn.setAutoCommit(false);
-            FBBlob blob = (FBBlob) conn.createBlob();
-            FBBlobOutputStream stream = (FBBlobOutputStream) blob.setBinaryStream(1);
+        initDefault();
+        stream.write(new byte[]{ 1, 2, 3, 4 });
+        assertEquals(4, stream.length());
+    }
 
-            stream.write(new byte[]{ 1, 2, 3, 4 });
-            assertEquals(4, stream.length());
-        } finally {
-            conn.close();
-        }
+    @Test
+    public void testWrite_byte_throwsException() throws Exception {
+        initDefault();
+        expectedException.expect(allOf(
+                isA(IOException.class),
+                message(equalTo("FBBlobOutputStream.write(int b) not implemented")))
+        );
+
+        stream.write(1);
     }
 }
