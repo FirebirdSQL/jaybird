@@ -21,6 +21,7 @@
 package org.firebirdsql.jdbc;
 
 import org.firebirdsql.common.FBJUnit4TestBase;
+import org.firebirdsql.common.TestDataGeneration;
 import org.junit.After;
 import org.junit.Rule;
 import org.junit.Test;
@@ -46,6 +47,7 @@ public class TestFBBlobOutputStream extends FBJUnit4TestBase {
 
     @Rule
     public final ExpectedException expectedException = ExpectedException.none();
+
     private Connection conn;
     private FBBlobOutputStream stream;
 
@@ -63,20 +65,194 @@ public class TestFBBlobOutputStream extends FBJUnit4TestBase {
     }
 
     @Test
-    public void testLength() throws Exception {
+    public void testWrite_byteArr_lengthEqualToBuffer_notWrittenImmediately() throws Exception {
         initDefault();
         stream.write(new byte[]{ 1, 2, 3, 4 });
-        assertEquals(4, stream.length());
+
+        assertEquals("Complete array writes (smaller than internal buffer) are buffered", 0, stream.length());
+
+        stream.flush();
+
+        assertEquals("Expected length of 4 after flush", 4, stream.length());
     }
 
     @Test
-    public void testWrite_byte_throwsException() throws Exception {
+    public void testWrite_byteArr_lengthSmallerThanBuffer_notWrittenImmediately() throws Exception {
         initDefault();
-        expectedException.expect(allOf(
-                isA(IOException.class),
-                message(equalTo("FBBlobOutputStream.write(int b) not implemented")))
-        );
+        stream.write(new byte[]{ 1, 2, 3, 4 }, 0, 3);
+        assertEquals("Partial array writes (smaller than internal buffer) are buffered", 0, stream.length());
+
+        stream.flush();
+
+        assertEquals("Expected length of 3 after flush", 3, stream.length());
+    }
+
+    @Test
+    public void testWrite_byteArr_equalToBufferSize_writtenImmediately() throws Exception {
+        initDefault();
+        byte[] data = TestDataGeneration.createRandomBytes(((FBBlob) stream.getBlob()).getBufferLength());
+
+        stream.write(data);
+
+        assertEquals("Byte array writes equal to internal buffer size are written immediately", data.length, stream.length());
+    }
+
+    @Test
+    public void testWrite_byteArr_twoHalfBufferSize_writtenOnSecondWrite() throws Exception {
+        initDefault();
+        byte[] data = TestDataGeneration.createRandomBytes(((FBBlob) stream.getBlob()).getBufferLength());
+        int halfLength = data.length / 2;
+
+        stream.write(data, 0, halfLength);
+
+        assertEquals("Expected no write after first half", 0, stream.length());
+
+        stream.write(data, halfLength, data.length - halfLength);
+
+        assertEquals("Expected full write after second half", data.length, stream.length());
+    }
+
+    @Test
+    public void testWrite_byteArr_halfAndRemainderPlus1OfBufferSize_writtenOnSecondWrite() throws Exception {
+        initDefault();
+        byte[] data = TestDataGeneration.createRandomBytes(((FBBlob) stream.getBlob()).getBufferLength());
+        int halfLength = data.length / 2;
+
+        stream.write(data, 0, halfLength);
+
+        assertEquals("Expected no write after first half", 0, stream.length());
+
+        // Writing one more byte than the available internal buffer to trigger "len > buf.length - count" condition
+        stream.write(data, 0, data.length - (halfLength - 1));
+
+        assertEquals("Expected full write after second write", data.length + 1, stream.length());
+    }
+
+    @Test
+    public void testWrite_byteArr_largerThanBufferSize_writtenImmediately() throws Exception {
+        initDefault();
+        byte[] data = TestDataGeneration.createRandomBytes((int) (((FBBlob) stream.getBlob()).getBufferLength() * 1.5));
+
+        stream.write(data);
+
+        assertEquals("Byte array writes larger than internal buffer size are written immediately", data.length, stream.length());
+    }
+
+    @Test
+    public void testWrite_byteArr_zeroLength_doesNothing() throws Exception {
+        initDefault();
+        stream.write(new byte[] { 1, 2, 3, 4, 5 }, 0, 0);
+
+        assertEquals("Expected blob with no length", 0, stream.length());
+
+        stream.flush();
+
+        assertEquals("Expected blob with no length after flush", 0, stream.length());
+    }
+
+    @Test
+    public void testWrite_byteArr_closed_throwsIOE() throws Exception {
+        initDefault();
+        stream.close();
+
+        expectStreamClosedIOException();
+
+        stream.write(new byte[] { 1, 2, 3, 4, 5 });
+    }
+
+    @Test
+    public void testWrite_byteArrNull_throwsNPE() throws Exception {
+        initDefault();
+
+        expectedException.expect(NullPointerException.class);
+
+        stream.write(null, 0, 1);
+    }
+
+    @Test
+    public void testWrite_byteArr_offsetNegative_throwsIOBE() throws Exception {
+        initDefault();
+
+        expectedException.expect(IndexOutOfBoundsException.class);
+
+        stream.write(new byte[] { 1, 2, 3, 4, 5}, -1, 2);
+    }
+
+    @Test
+    public void testWrite_byteArr_LengthNegative_throwsIOBE() throws Exception {
+        initDefault();
+
+        expectedException.expect(IndexOutOfBoundsException.class);
+
+        stream.write(new byte[] { 1, 2, 3, 4, 5}, 0, -1);
+    }
+
+    @Test
+    public void testWrite_byteArr_offsetBeyondEnd_throwsIOBE() throws Exception {
+        initDefault();
+
+        expectedException.expect(IndexOutOfBoundsException.class);
+
+        stream.write(new byte[] { 1, 2, 3, 4, 5}, 5, 1);
+    }
+
+    @Test
+    public void testWrite_byteArr_lengthBeyondEnd_throwsIOBE() throws Exception {
+        initDefault();
+
+        expectedException.expect(IndexOutOfBoundsException.class);
+
+        stream.write(new byte[] { 1, 2, 3, 4, 5}, 0, 6);
+    }
+
+    @Test
+    public void testWrite_byteArr_offsetAndLengthBeyondEnd_throwsIOBE() throws Exception {
+        initDefault();
+
+        expectedException.expect(IndexOutOfBoundsException.class);
+
+        stream.write(new byte[] { 1, 2, 3, 4, 5}, 4, 2);
+    }
+
+    @Test
+    public void testWrite_byte_notWrittenImmediately() throws Exception {
+        initDefault();
+        stream.write(1);
+
+        assertEquals("Single byte writes aren't flushed immediately", 0, stream.length());
+
+        stream.flush();
+
+        assertEquals("Expected length of 1 after flush", 1, stream.length());
+    }
+
+    @Test
+    public void testWrite_byte_fillsBuffer_writtenImmediately() throws Exception {
+        initDefault();
+        byte[] data = TestDataGeneration.createRandomBytes(((FBBlob) stream.getBlob()).getBufferLength() - 1);
+        stream.write(data);
+
+        assertEquals("Write less than internal buffer not written immediately", 0, stream.length());
 
         stream.write(1);
+
+        assertEquals("Expected flush after filling internal buffer", data.length + 1, stream.length());
+    }
+
+    @Test
+    public void testWrite_byte_closed_throwsIOE() throws Exception {
+        initDefault();
+        stream.close();
+
+        expectStreamClosedIOException();
+
+        stream.write(1);
+    }
+
+    private void expectStreamClosedIOException() {
+        expectedException.expect(allOf(
+                isA(IOException.class),
+                message(equalTo("Output stream is already closed."))
+        ));
     }
 }

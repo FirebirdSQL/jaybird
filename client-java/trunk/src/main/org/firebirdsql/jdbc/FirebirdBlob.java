@@ -185,6 +185,20 @@ public interface FirebirdBlob extends Blob {
      * that we can extend.
      */
     interface BlobOutputStream {
+
+        /**
+         * Get instance of {@link FirebirdBlob} to which this stream belongs to.
+         * <p>
+         * Note, code
+         * <pre>
+         * FirebirdBlob.BlobOutputStream otherStream = (FirebirdBlob.BlobOutputStream)
+         *     inputStream.getBlob().setBinaryStream(1);
+         * </pre>
+         * will return new stream object.
+         *
+         * @return instance of {@link FirebirdBlob}.
+         */
+        FirebirdBlob getBlob();
         
         /**
          * Close this stream. Calling this method closes Blob stream and moves
