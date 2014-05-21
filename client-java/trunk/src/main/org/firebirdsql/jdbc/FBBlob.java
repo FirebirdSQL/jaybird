@@ -320,10 +320,10 @@ public class FBBlob implements FirebirdBlob, Synchronizable {
             try {
                 FirebirdBlob.BlobInputStream in = (FirebirdBlob.BlobInputStream) getBinaryStream();
                 try {
-                    byte[] result = new byte[length];
                     if (pos != 1)
                         in.seek((int) pos - 1);
 
+                    byte[] result = new byte[length];
                     in.readFully(result);
                     return result;
                 } finally {
@@ -358,7 +358,7 @@ public class FBBlob implements FirebirdBlob, Synchronizable {
     }
 
     public int setBytes(long pos, byte[] bytes) throws SQLException {
-        throw new FBDriverNotCapableException("Method setBytes(long, byte[]) is not supported");
+        return setBytes(pos, bytes, 0, bytes.length);
     }
 
     public int setBytes(long pos, byte[] bytes, int offset, int len) throws SQLException {
