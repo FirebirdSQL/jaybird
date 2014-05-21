@@ -108,9 +108,22 @@ public class SQLExceptionMatchers {
      * @return The Matcher
      */
     public static Matcher<Exception> fbMessageEquals(int fbErrorCode, String... messageParameters) {
+        return message(equalTo(getFbMessage(fbErrorCode, messageParameters)));
+    }
+
+    /**
+     * Creates a Firebird exception message based on its error code and message parameters.
+     *
+     * @param fbErrorCode
+     *         The Firebird error code, see {@link org.firebirdsql.gds.ISCConstants}
+     * @param messageParameters
+     *         The message parameters
+     * @return The message
+     */
+    public static String getFbMessage(int fbErrorCode, String... messageParameters) {
         GDSExceptionHelper.GDSMessage message = GDSExceptionHelper.getMessage(fbErrorCode);
         message.setParameters(Arrays.asList(messageParameters));
-        return message(equalTo(message.toString()));
+        return message.toString();
     }
 
     /**
