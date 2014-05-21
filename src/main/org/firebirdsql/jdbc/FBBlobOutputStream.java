@@ -29,13 +29,21 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.sql.SQLException;
 
+/**
+ * {@link java.io.OutputStream} for writing Firebird blobs.
+ */
 public final class FBBlobOutputStream extends OutputStream implements FirebirdBlob.BlobOutputStream {
+
+    private static final byte[] EMPTY_BUFFER = new byte[0];
 
     private IscBlobHandle blobHandle;
     private final FBBlob owner;
+    private byte[] buf;
+    private int count;
 
     FBBlobOutputStream(FBBlob owner) throws SQLException {
         this.owner = owner;
+        buf = new byte[owner.getBufferLength()];
 
         synchronized (owner.getSynchronizationObject()) {
             try {
@@ -52,6 +60,12 @@ public final class FBBlobOutputStream extends OutputStream implements FirebirdBl
         }
     }
 
+    @Override
+    public FirebirdBlob getBlob() {
+        return owner;
+    }
+
+    @Override
     public long length() throws IOException {
         synchronized (owner.getSynchronizationObject()) {
             try {
@@ -65,30 +79,83 @@ public final class FBBlobOutputStream extends OutputStream implements FirebirdBl
         }
     }
 
+    /**
+     * {@inheritDoc}
+     * <p>
+     * Writes are buffered up to the buffer length of the blob (optionally specified by the connection
+     * property <code>blobBufferSize</code>).
+     * </p>
+     */
+    @Override
     public void write(int b) throws IOException {
-        //This won't be called, don't implement
-        throw new IOException("FBBlobOutputStream.write(int b) not implemented");
+        checkClosed();
+        if (count >= buf.length) flush();
+
+        buf[count++] = (byte) b;
+
+        if (count == buf.length) flush();
     }
 
-    public void writeSegment(byte[] buf) throws GDSException {
-        Object syncObject = owner.getSynchronizationObject();
-        synchronized (syncObject) {
+    /**
+     * Writes a byte array directly to the blob.
+     *
+     * @param buf
+     *         Byte array to write
+     * @throws GDSException
+     *         For errors writing to the blob
+     */
+    private void writeSegment(byte[] buf) throws GDSException {
+        synchronized (owner.getSynchronizationObject()) {
             owner.getGdsHelper().putBlobSegment(blobHandle, buf);
         }
     }
 
+    /**
+     * {@inheritDoc}
+     * <p>
+     * Writes are buffered up to the buffer length of the blob (optionally specified by the connection
+     * property <code>blobBufferSize</code>).
+     * </p>
+     */
+    @Override
     public void write(byte[] b, int off, int len) throws IOException {
+        checkClosed();
         if (b == null) {
             throw new NullPointerException();
-        } else if ((off < 0) || (off > b.length) || (len < 0) ||
-                ((off + len) > b.length) || ((off + len) < 0)) {
+        } else if (off < 0 || len < 0 || len > b.length - off) {
             throw new IndexOutOfBoundsException();
         } else if (len == 0) {
             return;
         }
 
+        // array doesn't fit in remainder of buffer,
+        // or full array written is equal to buffer size: flush and write immediately (saves copying)
+        if (off == 0 && len == buf.length || len > buf.length - count) {
+            flush();
+            writeInternal(b, off, len);
+        } else {
+            System.arraycopy(b, off, buf, count, len);
+            count += len;
+
+            if (count == buf.length) flush();
+        }
+    }
+
+    /**
+     * Performs unbuffered writes to the blob.
+     *
+     * @param b
+     *         byte array to write
+     * @param off
+     *         offset to start
+     * @param len
+     *         length to write
+     * @throws IOException
+     *         If an I/O error occurs.
+     */
+    private void writeInternal(byte[] b, int off, int len) throws IOException {
         try {
-            if (off == 0 && len == b.length && len < owner.getBufferLength()) {
+            if (off == 0 && len == b.length && len <= owner.getBufferLength()) {
                 /*
                  * If we are just writing the entire byte array, we need to
                  * do nothing but just write it over
@@ -100,17 +167,16 @@ public final class FBBlobOutputStream extends OutputStream implements FirebirdBl
                  * cannot currently support length and offset.
                  */
                 int chunk = Math.min(owner.getBufferLength(), len);
-                byte[] buf = new byte[chunk];
+                byte[] buffer = new byte[chunk];
                 while (len > 0) {
                     chunk = Math.min(len, chunk);
 
                     // this allows us to reuse the buffer if its size has not changed
-                    if (chunk != buf.length) {
-                        buf = new byte[chunk];
+                    if (chunk != buffer.length) {
+                        buffer = new byte[chunk];
                     }
-
-                    System.arraycopy(b, off, buf, 0, chunk);
-                    writeSegment(buf);
+                    System.arraycopy(b, off, buffer, 0, chunk);
+                    writeSegment(buffer);
 
                     len -= chunk;
                     off += chunk;
@@ -122,18 +188,38 @@ public final class FBBlobOutputStream extends OutputStream implements FirebirdBl
     }
 
     @Override
+    public void flush() throws IOException {
+        if (count > 0) {
+            writeInternal(buf, 0, count);
+            count = 0;
+        }
+    }
+
+    @Override
     public void close() throws IOException {
         if (blobHandle == null) return;
+        flush();
+
         try {
             synchronized (owner.getSynchronizationObject()) {
                 owner.getGdsHelper().closeBlob(blobHandle);
             }
-
             owner.setBlobId(blobHandle.getBlobId());
         } catch (GDSException ge) {
             throw new IOException("could not close blob: " + ge.getMessage(), ge);
         } finally {
             blobHandle = null;
+            buf = EMPTY_BUFFER;
+            count = 0;
+        }
+    }
+
+    /**
+     * @throws IOException When this output stream has been closed.
+     */
+    private void checkClosed() throws IOException {
+        if (blobHandle == null) {
+            throw new IOException("Output stream is already closed.");
         }
     }
 }

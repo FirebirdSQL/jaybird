@@ -24,13 +24,20 @@ import org.firebirdsql.common.FBJUnit4TestBase;
 import org.firebirdsql.common.TestDataGeneration;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 
+import java.io.EOFException;
 import java.sql.*;
 
 import static org.firebirdsql.common.DdlHelper.executeCreateTable;
 import static org.firebirdsql.common.FBTestProperties.getConnectionViaDriverManager;
 import static org.firebirdsql.common.JdbcResourceHelper.closeQuietly;
+import static org.firebirdsql.common.matchers.SQLExceptionMatchers.message;
+import static org.hamcrest.CoreMatchers.allOf;
+import static org.hamcrest.CoreMatchers.equalTo;
+import static org.hamcrest.CoreMatchers.isA;
 import static org.junit.Assert.*;
 
 /**
@@ -40,6 +47,9 @@ import static org.junit.Assert.*;
  * @since 3.0
  */
 public class TestFBBlobInputStream extends FBJUnit4TestBase {
+
+    @Rule
+    public final ExpectedException expectedException = ExpectedException.none();
 
     private static final String CREATE_TABLE =
             "CREATE TABLE test_blob(" +
@@ -84,6 +94,18 @@ public class TestFBBlobInputStream extends FBJUnit4TestBase {
         } finally {
             pstmt.close();
         }
+    }
+
+    @Test
+    public void testNewBlob_throwSQLE() throws Exception {
+        Blob blob = connection.createBlob();
+
+        expectedException.expect(allOf(
+                isA(SQLException.class),
+                message(equalTo("You can't read a new blob"))
+        ));
+
+        blob.getBinaryStream();
     }
 
     @Test
@@ -221,7 +243,168 @@ public class TestFBBlobInputStream extends FBJUnit4TestBase {
     }
 
     @Test
-    public void testRead_byteArr_moreThanAvailable_returnsAllRead() throws Exception {
+    public void testRead_byteArr_length0_returns0() throws Exception {
+        final byte[] bytes = { 1, 2, 3, 4, 5 };
+        populateBlob(1, bytes);
+
+        PreparedStatement pstmt = connection.prepareStatement(SELECT_BLOB);
+        try {
+            pstmt.setInt(1, 1);
+            ResultSet rs = pstmt.executeQuery();
+            try {
+                assertTrue("Expected a row", rs.next());
+                Blob blob = rs.getBlob(1);
+                FBBlobInputStream is = (FBBlobInputStream) blob.getBinaryStream();
+
+                byte[] buffer = new byte[5];
+                int bytesRead = is.read(buffer, 0, 0);
+
+                assertEquals("Expected 0 bytes read", 0, bytesRead);
+                assertArrayEquals("Expected buffer to have defaults only", new byte[] {0, 0, 0, 0, 0}, buffer);
+            } finally {
+                rs.close();
+            }
+        } finally {
+            pstmt.close();
+        }
+    }
+
+    @Test
+    public void testRead_byteArrNull_throwsNPE() throws Exception {
+        final byte[] bytes = { 1, 2, 3, 4, 5 };
+        populateBlob(1, bytes);
+
+        PreparedStatement pstmt = connection.prepareStatement(SELECT_BLOB);
+        try {
+            pstmt.setInt(1, 1);
+            ResultSet rs = pstmt.executeQuery();
+            try {
+                assertTrue("Expected a row", rs.next());
+                Blob blob = rs.getBlob(1);
+                FBBlobInputStream is = (FBBlobInputStream) blob.getBinaryStream();
+
+                expectedException.expect(NullPointerException.class);
+
+                //noinspection ResultOfMethodCallIgnored
+                is.read(null, 0 ,1);
+            } finally {
+                rs.close();
+            }
+        } finally {
+            pstmt.close();
+        }
+    }
+
+    @Test
+    public void testRead_negativeOffset_throwsIOBE() throws Exception {
+        final byte[] bytes = { 1, 2, 3, 4, 5 };
+        populateBlob(1, bytes);
+
+        PreparedStatement pstmt = connection.prepareStatement(SELECT_BLOB);
+        try {
+            pstmt.setInt(1, 1);
+            ResultSet rs = pstmt.executeQuery();
+            try {
+                assertTrue("Expected a row", rs.next());
+                Blob blob = rs.getBlob(1);
+                FBBlobInputStream is = (FBBlobInputStream) blob.getBinaryStream();
+
+                expectedException.expect(IndexOutOfBoundsException.class);
+
+                byte[] buffer = new byte[5];
+                //noinspection ResultOfMethodCallIgnored
+                is.read(buffer, -1, 1);
+            } finally {
+                rs.close();
+            }
+        } finally {
+            pstmt.close();
+        }
+    }
+
+    @Test
+    public void testRead_negativeLength_throwsIOBE() throws Exception {
+        final byte[] bytes = { 1, 2, 3, 4, 5 };
+        populateBlob(1, bytes);
+
+        PreparedStatement pstmt = connection.prepareStatement(SELECT_BLOB);
+        try {
+            pstmt.setInt(1, 1);
+            ResultSet rs = pstmt.executeQuery();
+            try {
+                assertTrue("Expected a row", rs.next());
+                Blob blob = rs.getBlob(1);
+                FBBlobInputStream is = (FBBlobInputStream) blob.getBinaryStream();
+
+                expectedException.expect(IndexOutOfBoundsException.class);
+
+                byte[] buffer = new byte[5];
+                //noinspection ResultOfMethodCallIgnored
+                is.read(buffer, 0, -1);
+            } finally {
+                rs.close();
+            }
+        } finally {
+            pstmt.close();
+        }
+    }
+
+    @Test
+    public void testRead_offsetBeyondLength_throwsIOBE() throws Exception {
+        final byte[] bytes = { 1, 2, 3, 4, 5 };
+        populateBlob(1, bytes);
+
+        PreparedStatement pstmt = connection.prepareStatement(SELECT_BLOB);
+        try {
+            pstmt.setInt(1, 1);
+            ResultSet rs = pstmt.executeQuery();
+            try {
+                assertTrue("Expected a row", rs.next());
+                Blob blob = rs.getBlob(1);
+                FBBlobInputStream is = (FBBlobInputStream) blob.getBinaryStream();
+
+                expectedException.expect(IndexOutOfBoundsException.class);
+
+                byte[] buffer = new byte[5];
+                //noinspection ResultOfMethodCallIgnored
+                is.read(buffer, 5, 1);
+            } finally {
+                rs.close();
+            }
+        } finally {
+            pstmt.close();
+        }
+    }
+
+    @Test
+    public void testRead_offsetAndLengthBeyondLength_throwsIOBE() throws Exception {
+        final byte[] bytes = { 1, 2, 3, 4, 5 };
+        populateBlob(1, bytes);
+
+        PreparedStatement pstmt = connection.prepareStatement(SELECT_BLOB);
+        try {
+            pstmt.setInt(1, 1);
+            ResultSet rs = pstmt.executeQuery();
+            try {
+                assertTrue("Expected a row", rs.next());
+                Blob blob = rs.getBlob(1);
+                FBBlobInputStream is = (FBBlobInputStream) blob.getBinaryStream();
+
+                expectedException.expect(IndexOutOfBoundsException.class);
+
+                byte[] buffer = new byte[5];
+                //noinspection ResultOfMethodCallIgnored
+                is.read(buffer, 0, 6);
+            } finally {
+                rs.close();
+            }
+        } finally {
+            pstmt.close();
+        }
+    }
+
+    @Test
+    public void testReadFully_byteArr_moreThanAvailable_returnsAllRead() throws Exception {
         final byte[] bytes = TestDataGeneration.createRandomBytes(128 * 1024);
         populateBlob(1, bytes);
 
@@ -245,6 +428,186 @@ public class TestFBBlobInputStream extends FBJUnit4TestBase {
                 is.readFully(buffer, 1, 128 * 1024 - 1);
 
                 assertArrayEquals("Full blob should have been read", bytes, buffer);
+            } finally {
+                rs.close();
+            }
+        } finally {
+            pstmt.close();
+        }
+    }
+
+    @Test
+    public void testReadFully_byteArr_length0_readsNothing() throws Exception {
+        populateBlob(1, new byte[] { 1, 2, 3, 4, 5 });
+
+        PreparedStatement pstmt = connection.prepareStatement(SELECT_BLOB);
+        try {
+            pstmt.setInt(1, 1);
+            ResultSet rs = pstmt.executeQuery();
+            try {
+                assertTrue("Expected a row", rs.next());
+                Blob blob = rs.getBlob(1);
+                FBBlobInputStream is = (FBBlobInputStream) blob.getBinaryStream();
+
+                byte[] buffer = new byte[5];
+
+                is.readFully(buffer, 0, 0);
+
+                assertArrayEquals("Expected buffer to still contain 0", new byte[] { 0, 0, 0, 0, 0}, buffer);
+            } finally {
+                rs.close();
+            }
+        } finally {
+            pstmt.close();
+        }
+    }
+
+    @Test
+    public void testReadFully_byteArrNull_throwsNPE() throws Exception {
+        final byte[] bytes = { 1, 2, 3, 4, 5 };
+        populateBlob(1, bytes);
+
+        PreparedStatement pstmt = connection.prepareStatement(SELECT_BLOB);
+        try {
+            pstmt.setInt(1, 1);
+            ResultSet rs = pstmt.executeQuery();
+            try {
+                assertTrue("Expected a row", rs.next());
+                Blob blob = rs.getBlob(1);
+                FBBlobInputStream is = (FBBlobInputStream) blob.getBinaryStream();
+
+                expectedException.expect(NullPointerException.class);
+
+                is.readFully(null, 0, 1);
+            } finally {
+                rs.close();
+            }
+        } finally {
+            pstmt.close();
+        }
+    }
+
+    @Test
+    public void testReadFully_negativeOffset_throwsIOBE() throws Exception {
+        final byte[] bytes = { 1, 2, 3, 4, 5 };
+        populateBlob(1, bytes);
+
+        PreparedStatement pstmt = connection.prepareStatement(SELECT_BLOB);
+        try {
+            pstmt.setInt(1, 1);
+            ResultSet rs = pstmt.executeQuery();
+            try {
+                assertTrue("Expected a row", rs.next());
+                Blob blob = rs.getBlob(1);
+                FBBlobInputStream is = (FBBlobInputStream) blob.getBinaryStream();
+
+                expectedException.expect(IndexOutOfBoundsException.class);
+
+                byte[] buffer = new byte[5];
+                is.readFully(buffer, -1, 1);
+            } finally {
+                rs.close();
+            }
+        } finally {
+            pstmt.close();
+        }
+    }
+
+    @Test
+    public void testReadFully_negativeLength_throwsIOBE() throws Exception {
+        final byte[] bytes = { 1, 2, 3, 4, 5 };
+        populateBlob(1, bytes);
+
+        PreparedStatement pstmt = connection.prepareStatement(SELECT_BLOB);
+        try {
+            pstmt.setInt(1, 1);
+            ResultSet rs = pstmt.executeQuery();
+            try {
+                assertTrue("Expected a row", rs.next());
+                Blob blob = rs.getBlob(1);
+                FBBlobInputStream is = (FBBlobInputStream) blob.getBinaryStream();
+
+                expectedException.expect(IndexOutOfBoundsException.class);
+
+                byte[] buffer = new byte[5];
+                is.readFully(buffer, 0, -1);
+            } finally {
+                rs.close();
+            }
+        } finally {
+            pstmt.close();
+        }
+    }
+
+    @Test
+    public void testReadFully_offsetBeyondLength_throwsIOBE() throws Exception {
+        final byte[] bytes = { 1, 2, 3, 4, 5 };
+        populateBlob(1, bytes);
+
+        PreparedStatement pstmt = connection.prepareStatement(SELECT_BLOB);
+        try {
+            pstmt.setInt(1, 1);
+            ResultSet rs = pstmt.executeQuery();
+            try {
+                assertTrue("Expected a row", rs.next());
+                Blob blob = rs.getBlob(1);
+                FBBlobInputStream is = (FBBlobInputStream) blob.getBinaryStream();
+
+                expectedException.expect(IndexOutOfBoundsException.class);
+
+                byte[] buffer = new byte[5];
+                is.readFully(buffer, 5, 1);
+            } finally {
+                rs.close();
+            }
+        } finally {
+            pstmt.close();
+        }
+    }
+
+    @Test
+    public void testReadFully_offsetAndLengthBeyondLength_throwsIOBE() throws Exception {
+        final byte[] bytes = { 1, 2, 3, 4, 5 };
+        populateBlob(1, bytes);
+
+        PreparedStatement pstmt = connection.prepareStatement(SELECT_BLOB);
+        try {
+            pstmt.setInt(1, 1);
+            ResultSet rs = pstmt.executeQuery();
+            try {
+                assertTrue("Expected a row", rs.next());
+                Blob blob = rs.getBlob(1);
+                FBBlobInputStream is = (FBBlobInputStream) blob.getBinaryStream();
+
+                expectedException.expect(IndexOutOfBoundsException.class);
+
+                byte[] buffer = new byte[5];
+                is.readFully(buffer, 0, 6);
+            } finally {
+                rs.close();
+            }
+        } finally {
+            pstmt.close();
+        }
+    }
+
+    @Test
+    public void testReadFully_bufferLongerThanBlob_throwsEOFException() throws Exception {
+        populateBlob(1, new byte[] { 1, 2, 3, 4, 5 });
+
+        PreparedStatement pstmt = connection.prepareStatement(SELECT_BLOB);
+        try {
+            pstmt.setInt(1, 1);
+            ResultSet rs = pstmt.executeQuery();
+            try {
+                assertTrue("Expected a row", rs.next());
+                Blob blob = rs.getBlob(1);
+                FBBlobInputStream is = (FBBlobInputStream) blob.getBinaryStream();
+
+                expectedException.expect(EOFException.class);
+
+                byte[] buffer = new byte[6];
+                is.readFully(buffer);
             } finally {
                 rs.close();
             }
