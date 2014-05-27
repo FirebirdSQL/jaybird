@@ -44,7 +44,7 @@ import static org.junit.Assert.assertEquals;
 /**
  * Tests {@link org.firebirdsql.jdbc.FBParameterMetaData} for a {@link org.firebirdsql.jdbc.FBPreparedStatement}.
  * <p>
- * This is a parametrized test that test all columns in a statement and the (expected) metadata.
+ * This is a parametrized test that test all parameters in a statement and the (expected) metadata.
  * </p>
  *
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
