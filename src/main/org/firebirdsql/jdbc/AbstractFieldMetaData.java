@@ -30,7 +30,7 @@ import java.sql.*;
 import java.util.Map;
 
 /**
- * Common base class for {@link org.firebirdsql.jdbc.FBResultSetMetaData} and
+ * Base class for {@link org.firebirdsql.jdbc.FBResultSetMetaData} and
  * {@link org.firebirdsql.jdbc.FBParameterMetaData} for methods common to both implementations.
  *
  * @author <a href="mailto:d_jencks@users.sourceforge.net">David Jencks</a>
