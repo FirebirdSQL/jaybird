@@ -75,7 +75,8 @@ public class TestFBPreparedStatementMetaData {
         "  time_field TIME, " +
         "  timestamp_field TIMESTAMP, " +
         "  blob_field BLOB, " +
-        "  blob_text_field BLOB SUB_TYPE TEXT" +
+        "  blob_text_field BLOB SUB_TYPE TEXT, " +
+        "  blob_minus_one BLOB SUB_TYPE -1 " +
         ")";
 
     public static final String TEST_QUERY =
@@ -83,8 +84,8 @@ public class TestFBPreparedStatementMetaData {
             "simple_field, two_byte_field, three_byte_field, long_field, int_field, short_field," +
             "float_field, double_field, smallint_numeric, integer_decimal_1, integer_numeric," +
             "integer_decimal_2, bigint_numeric, bigint_decimal, date_field, time_field," +
-            "timestamp_field, blob_field, blob_text_field) " +
-            "values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+            "timestamp_field, blob_field, blob_text_field, blob_minus_one) " +
+            "values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
     //@formatter:on
 
     private static FBManager fbManager;
@@ -123,33 +124,35 @@ public class TestFBPreparedStatementMetaData {
         }
     }
 
-    public TestFBPreparedStatementMetaData(Integer parameterIndex, ParameterMetaDataInfo expectedMetaData) {
+    public TestFBPreparedStatementMetaData(Integer parameterIndex, ParameterMetaDataInfo expectedMetaData, @SuppressWarnings("UnusedParameters") String descriptiveName) {
         this.parameterIndex = parameterIndex;
         this.expectedMetaData = expectedMetaData;
     }
 
-    @Parameterized.Parameters(name="Column Index {0}")
+    @Parameterized.Parameters(name = "Column {0} ({2})")
     public static Collection<Object[]> testData() {
         return Arrays.asList(
-                create(1, "java.lang.String", parameterModeIn, VARCHAR, "VARCHAR", 60, 0, parameterNullable, false),
-                create(2, "java.lang.String", parameterModeIn, VARCHAR, "VARCHAR", 60, 0, parameterNullable, false),
-                create(3, "java.lang.String", parameterModeIn, VARCHAR, "VARCHAR", 60, 0, parameterNullable, false),
-                create(4, "java.lang.Long", parameterModeIn, BIGINT, "BIGINT", 19, 0, parameterNullable, true),
-                create(5, "java.lang.Integer", parameterModeIn, INTEGER, "INTEGER", 10, 0, parameterNullable, true),
-                create(6, "java.lang.Integer", parameterModeIn, SMALLINT, "SMALLINT", 5, 0, parameterNullable, true),
-                create(7, "java.lang.Double", parameterModeIn, FLOAT, "FLOAT", 7, 0, parameterNullable, true),
-                create(8, "java.lang.Double", parameterModeIn, DOUBLE, "DOUBLE PRECISION", 15, 0, parameterNullable, true),
-                create(9, "java.math.BigDecimal", parameterModeIn, NUMERIC, "NUMERIC", 4, 1, parameterNullable, true),
-                create(10, "java.math.BigDecimal", parameterModeIn, DECIMAL, "DECIMAL", 9, 1, parameterNullable, true),
-                create(11, "java.math.BigDecimal", parameterModeIn, NUMERIC, "NUMERIC", 9, 2, parameterNullable, true),
-                create(12, "java.math.BigDecimal", parameterModeIn, DECIMAL, "DECIMAL", 9, 3, parameterNullable, true),
-                create(13, "java.math.BigDecimal", parameterModeIn, NUMERIC, "NUMERIC", 18, 4, parameterNullable, true),
-                create(14, "java.math.BigDecimal", parameterModeIn, DECIMAL, "DECIMAL", 18, 9, parameterNullable, true),
-                create(15, "java.sql.Date", parameterModeIn, DATE, "DATE", 10, 0, parameterNullable, false),
-                create(16, "java.sql.Time", parameterModeIn, TIME, "TIME", 8, 0, parameterNullable, false),
-                create(17, "java.sql.Timestamp", parameterModeIn, TIMESTAMP, "TIMESTAMP", 19, 0, parameterNullable, false),
-                create(18, "[B", parameterModeIn, LONGVARBINARY, "BLOB SUB_TYPE 0", 0, 0, parameterNullable, false),
-                create(19, "java.lang.String", parameterModeIn, LONGVARCHAR, "BLOB SUB_TYPE 1", 0, 0, parameterNullable, false)
+                create(1, "java.lang.String", parameterModeIn, VARCHAR, "VARCHAR", 60, 0, parameterNullable, false, "simple_field"),
+                create(2, "java.lang.String", parameterModeIn, VARCHAR, "VARCHAR", 60, 0, parameterNullable, false, "two_byte_field"),
+                create(3, "java.lang.String", parameterModeIn, VARCHAR, "VARCHAR", 60, 0, parameterNullable, false, "three_byte_field"),
+                create(4, "java.lang.Long", parameterModeIn, BIGINT, "BIGINT", 19, 0, parameterNullable, true, "long_field"),
+                create(5, "java.lang.Integer", parameterModeIn, INTEGER, "INTEGER", 10, 0, parameterNullable, true, "int_field"),
+                create(6, "java.lang.Integer", parameterModeIn, SMALLINT, "SMALLINT", 5, 0, parameterNullable, true, "short_field"),
+                create(7, "java.lang.Double", parameterModeIn, FLOAT, "FLOAT", 7, 0, parameterNullable, true, "float_field"),
+                create(8, "java.lang.Double", parameterModeIn, DOUBLE, "DOUBLE PRECISION", 15, 0, parameterNullable, true, "double_field"),
+                create(9, "java.math.BigDecimal", parameterModeIn, NUMERIC, "NUMERIC", 4, 1, parameterNullable, true, "smallint_numeric"),
+                create(10, "java.math.BigDecimal", parameterModeIn, DECIMAL, "DECIMAL", 9, 1, parameterNullable, true, "integer_decimal_1"),
+                create(11, "java.math.BigDecimal", parameterModeIn, NUMERIC, "NUMERIC", 9, 2, parameterNullable, true, "integer_numeric"),
+                create(12, "java.math.BigDecimal", parameterModeIn, DECIMAL, "DECIMAL", 9, 3, parameterNullable, true, "integer_decimal_2"),
+                create(13, "java.math.BigDecimal", parameterModeIn, NUMERIC, "NUMERIC", 18, 4, parameterNullable, true, "bigint_numeric"),
+                create(14, "java.math.BigDecimal", parameterModeIn, DECIMAL, "DECIMAL", 18, 9, parameterNullable, true, "bigint_decimal"),
+                create(15, "java.sql.Date", parameterModeIn, DATE, "DATE", 10, 0, parameterNullable, false, "date_field"),
+                create(16, "java.sql.Time", parameterModeIn, TIME, "TIME", 8, 0, parameterNullable, false, "time_field"),
+                create(17, "java.sql.Timestamp", parameterModeIn, TIMESTAMP, "TIMESTAMP", 19, 0, parameterNullable, false, "timestamp_field"),
+                create(18, "[B", parameterModeIn, LONGVARBINARY, "BLOB SUB_TYPE 0", 0, 0, parameterNullable, false, "blob_field"),
+                create(19, "java.lang.String", parameterModeIn, LONGVARCHAR, "BLOB SUB_TYPE 1", 0, 0, parameterNullable, false, "blob_text_field"),
+                // TODO Report actual subtype value
+                create(20, "java.sql.Blob", parameterModeIn, BLOB, "BLOB SUB_TYPE <0", 0, 0, parameterNullable, false, "blob_minus_one")
         );
     }
 
@@ -201,9 +204,34 @@ public class TestFBPreparedStatementMetaData {
                 expectedMetaData.isSigned(), parameterMetaData.isSigned(parameterIndex));
     }
 
+    /**
+     * Creates a parameter array for a set of tests for a single column.
+     *
+     * @param index
+     *         Parameter index (1-based)
+     * @param className
+     *         Expected java class name
+     * @param mode
+     *         Expected parameter mode
+     * @param type
+     *         Expected parameter type
+     * @param typeName
+     *         Expected parameter type name
+     * @param precision
+     *         Expected precision
+     * @param scale
+     *         Expected scale
+     * @param nullable
+     *         Expected nullability
+     * @param signed
+     *         Expected value for is signed
+     * @param descriptiveName
+     *         Descriptive name (eg the column name) for logging purposes
+     * @return Test parameter data
+     */
     private static Object[] create(int index, String className, int mode, int type, String typeName, int precision,
-                                   int scale, int nullable, boolean signed) {
-        return new Object[] { index, new ParameterMetaDataInfo(className, mode, type, typeName, precision, scale, nullable, signed) };
+                                   int scale, int nullable, boolean signed, String descriptiveName) {
+        return new Object[] { index, new ParameterMetaDataInfo(className, mode, type, typeName, precision, scale, nullable, signed), descriptiveName };
     }
 
     /**
@@ -232,35 +260,35 @@ public class TestFBPreparedStatementMetaData {
             this.signed = signed;
         }
 
-        public String getClassName() {
+        private String getClassName() {
             return className;
         }
 
-        public int getMode() {
+        private int getMode() {
             return mode;
         }
 
-        public int getType() {
+        private int getType() {
             return type;
         }
 
-        public String getTypeName() {
+        private String getTypeName() {
             return typeName;
         }
 
-        public int getPrecision() {
+        private int getPrecision() {
             return precision;
         }
 
-        public int getScale() {
+        private int getScale() {
             return scale;
         }
 
-        public int isNullable() {
+        private int isNullable() {
             return nullable;
         }
 
-        public boolean isSigned() {
+        private boolean isSigned() {
             return signed;
         }
     }
