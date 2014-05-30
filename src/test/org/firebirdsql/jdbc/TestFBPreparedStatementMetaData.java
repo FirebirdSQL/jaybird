@@ -46,6 +46,9 @@ import static org.junit.Assert.assertEquals;
  * <p>
  * This is a parametrized test that test all parameters in a statement and the (expected) metadata.
  * </p>
+ * <p>
+ * This test is similar to {@link TestFBResultSetMetaDataParametrized}
+ * </p>
  *
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @since 3.0
@@ -231,7 +234,9 @@ public class TestFBPreparedStatementMetaData {
      */
     private static Object[] create(int index, String className, int mode, int type, String typeName, int precision,
                                    int scale, int nullable, boolean signed, String descriptiveName) {
-        return new Object[] { index, new ParameterMetaDataInfo(className, mode, type, typeName, precision, scale, nullable, signed), descriptiveName };
+        return new Object[] { index,
+                new ParameterMetaDataInfo(className, mode, type, typeName, precision, scale, nullable, signed),
+                descriptiveName };
     }
 
     /**
