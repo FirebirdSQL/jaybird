@@ -39,7 +39,7 @@ import java.sql.SQLException;
  * </p>
  *
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
- * @since 2.3
+ * @since 3.0
  */
 public final class V10StatementInfoProcessor implements InfoProcessor<InfoProcessor.StatementInfo> {
 
