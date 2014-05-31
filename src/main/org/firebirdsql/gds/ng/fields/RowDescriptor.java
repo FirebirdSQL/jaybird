@@ -32,17 +32,16 @@ import java.util.*;
  * The class <code>RowDescriptor</code> is a java mapping of the XSQLDA server
  * data structure used to describe the row metadata of one row for input or output.
  * <p>
- * RowDescriptor is an immutable, values of a row are maintained separately in a collection of {@link FieldValue} instances. The only exception
- * is the cached value for the calculated blr.
+ * RowDescriptor is an immutable, values of a row are maintained separately in a collection of {@link FieldValue} instances.
  * </p>
  *
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
- * @version 2.3
+ * @version 3.0
  */
 public final class RowDescriptor implements Iterable<FieldDescriptor> {
 
     public static final RowDescriptor EMPTY = new RowDescriptor(new FieldDescriptor[0]);
-    public static final List<FieldValue> EMPTY_FIELD_VALUES = Collections.emptyList();
+    private static final List<FieldValue> EMPTY_FIELD_VALUES = Collections.emptyList();
 
     private final FieldDescriptor[] fieldDescriptors;
     private int hash;

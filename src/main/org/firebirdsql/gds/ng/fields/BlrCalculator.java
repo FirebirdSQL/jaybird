@@ -29,10 +29,10 @@ package org.firebirdsql.gds.ng.fields;
 import java.sql.SQLException;
 
 /**
- * Functional interface for calculating the blr (binary language representation) of a row.
+ * Interface for calculating the blr (binary language representation) of a row.
  *
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
- * @since 2.3
+ * @since 3.0
  */
 public interface BlrCalculator {
 
@@ -42,7 +42,8 @@ public interface BlrCalculator {
      * @param rowDescriptor
      *         Row descriptor
      * @return Byte array with the blr
-     * @throws SQLException When the {@link RowDescriptor} contains an unsupported field type.
+     * @throws SQLException
+     *         When the {@link RowDescriptor} contains an unsupported field type.
      */
     byte[] calculateBlr(RowDescriptor rowDescriptor) throws SQLException;
 
@@ -51,9 +52,9 @@ public interface BlrCalculator {
      * <p>
      * The return value indicates the length and padding of the type in the buffer
      * <ul>
-     *     <li>&lt; 0 : Type is of specified length * -1 and not padded</li>
-     *     <li>== 0 : Type is of dynamic length (which is specified in the buffer as an integer) and padded</li>
-     *     <li>&gt; 0 : Type is of specified length minus 1 (subtracting 1 is required to avoid 0 for types of zero length) and padded</li>
+     * <li>&lt; 0 : Type is of specified length * -1 and not padded</li>
+     * <li>== 0 : Type is of dynamic length (which is specified in the buffer as an integer) and padded</li>
+     * <li>&gt; 0 : Type is of specified length minus 1 (subtracting 1 is required to avoid 0 for types of zero length) and padded</li>
      * </ul>
      * </p>
      *
