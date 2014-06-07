@@ -26,6 +26,10 @@ import java.util.logging.Logger;
 
 import org.firebirdsql.gds.*;
 import org.firebirdsql.gds.impl.*;
+import org.firebirdsql.gds.ng.FbStatement;
+import org.firebirdsql.gds.ng.SqlCountHolder;
+import org.firebirdsql.gds.ng.StatementState;
+import org.firebirdsql.gds.ng.fields.FieldValue;
 import org.firebirdsql.jdbc.escape.FBEscapedParser;
 import org.firebirdsql.jdbc.escape.FBEscapedParser.EscapeParserMode;
 
@@ -51,7 +55,8 @@ public class FBStatement implements FirebirdStatement, Synchronizable {
     protected final GDSHelper gdsHelper;
     protected final FBObjectListener.StatementListener statementListener;
 
-    protected AbstractIscStmtHandle fixedStmt;
+    //protected AbstractIscStmtHandle fixedStmt;
+    protected FbStatement fbStatement;
     
     //The normally retrieved resultset. (no autocommit, not a cached rs).
     private FBResultSet currentRs;
@@ -153,9 +158,12 @@ public class FBStatement implements FirebirdStatement, Synchronizable {
     String getCursorName() {
         return cursorName;
     }
-    
+
+    private static Set<StatementState> INVALID_STATEMENT_STATES = EnumSet.of(
+            StatementState.ERROR, StatementState.CLOSING, StatementState.CLOSED);
+
     public boolean isValid() {
-        return !closed && (fixedStmt == null || fixedStmt.isValid());
+        return !closed && !INVALID_STATEMENT_STATES.contains(fbStatement.getState());
     }
     
     /**
@@ -233,10 +241,13 @@ public class FBStatement implements FirebirdStatement, Synchronizable {
     protected void notifyStatementStarted(boolean closeResultSet) throws SQLException {
         if (closeResultSet)
             closeResultSet(false);
-        
+
         // notify listener that statement execution is about to start
         statementListener.executionStarted(this);
-        
+
+        if (fbStatement != null) {
+            fbStatement.setTransaction(gdsHelper.getCurrentTransaction());
+        }
         completed = false;
     }
 
@@ -577,19 +588,16 @@ public class FBStatement implements FirebirdStatement, Synchronizable {
         }
 
         synchronized(getSynchronizationObject()) {
-            if (fixedStmt != null) {
+            if (fbStatement != null) {
                 try {
                     try {
                         closeResultSet(false);
                     } finally {
                         //may need ensureTransaction?
-                        if (fixedStmt.isValid())
-                            gdsHelper.closeStatement(fixedStmt, true);
+                        fbStatement.close();
                     }
-                } catch (GDSException ge) {
-                    throw new FBSQLException(ge);
                 } finally {
-                    fixedStmt = null;
+                    fbStatement = null;
                 }
             } 
         }
@@ -857,29 +865,26 @@ public class FBStatement implements FirebirdStatement, Synchronizable {
     }
 
     public ResultSet getResultSet(boolean metaDataQuery) throws  SQLException {
-        try {
-            if (cursorName != null)
-                gdsHelper.setCursorName(fixedStmt, cursorName);
-        } catch(GDSException ex) {
-            throw new FBSQLException(ex);
+        if (fbStatement == null) {
+            throw new FBSQLException("No statement was executed.");
         }
-        
+
+        if (cursorName != null) {
+            fbStatement.setCursorName(cursorName);
+        }
+
         if (currentRs != null) {
             throw new FBSQLException("Only one resultset at a time/statement.");
         }
-        if (fixedStmt == null) {
-            throw new FBSQLException("No statement was executed.");
+
+        if (isResultSet) {
+            currentRs = new FBResultSet(gdsHelper, this, /*fixedStmt TODO: replace with fbStatement*/ null,
+                    resultSetListener, metaDataQuery, rsType, rsConcurrency,
+                    rsHoldability, false);
+
+            return currentRs;
         }
-        else {
-            if (isResultSet) {
-                currentRs = new FBResultSet(gdsHelper, this, fixedStmt,
-                        resultSetListener, metaDataQuery, rsType, rsConcurrency, 
-                        rsHoldability, false);
-                
-                return currentRs;
-            } else
-                return null;
-        } // end of else
+        return null;
     }
 
 	public boolean hasOpenResultSet() {
@@ -901,16 +906,14 @@ public class FBStatement implements FirebirdStatement, Synchronizable {
             return -1;
         else {
             try {
-                gdsHelper.getSqlCounts(fixedStmt);
-                int insCount = fixedStmt.getInsertCount();
-                int updCount = fixedStmt.getUpdateCount();
-                int delCount = fixedStmt.getDeleteCount();
+                // TODO replace with listener
+                final SqlCountHolder sqlCounts = fbStatement.getSqlCounts();
+                int insCount = sqlCounts.getIntegerInsertCount();
+                int updCount = sqlCounts.getIntegerUpdateCount();
+                int delCount = sqlCounts.getIntegerDeleteCount();
                 int resCount = ((updCount>delCount) ? updCount:delCount);
                 resCount = ((resCount>insCount) ? resCount:insCount);
                 return resCount;
-            }
-            catch (GDSException ge) {
-                throw new FBSQLException(ge);
             } finally {
                 hasMoreResults = false;
             }
@@ -925,21 +928,18 @@ public class FBStatement implements FirebirdStatement, Synchronizable {
         if (isResultSet || !hasMoreResults)
             return -1;
         else {
-        	try {
-        		gdsHelper.getSqlCounts(fixedStmt);
-                switch(type) {
-                    case INSERTED_ROWS_COUNT :
-                    	return fixedStmt.getInsertCount();
-                    case UPDATED_ROWS_COUNT :
-                        return fixedStmt.getUpdateCount();
-                    case DELETED_ROWS_COUNT :
-                        return fixedStmt.getDeleteCount();
-                    default :
-                        throw new IllegalArgumentException(
-                            "Specified type is unknown.");
-                }
-            } catch(GDSException ex) {
-            	throw new FBSQLException(ex);
+            // TODO replace with listener
+            final SqlCountHolder sqlCounts = fbStatement.getSqlCounts();
+            switch(type) {
+                case INSERTED_ROWS_COUNT :
+                    return sqlCounts.getIntegerInsertCount();
+                case UPDATED_ROWS_COUNT :
+                    return sqlCounts.getIntegerUpdateCount();
+                case DELETED_ROWS_COUNT :
+                    return sqlCounts.getIntegerDeleteCount();
+                default :
+                    throw new IllegalArgumentException(
+                        "Specified type is unknown.");
             }
         }
 	}
@@ -1292,10 +1292,13 @@ public class FBStatement implements FirebirdStatement, Synchronizable {
     }
     
     public void forgetResultSet() { //yuck should be package
+        // TODO Use case unclear, find out if this needs to be added to fbStatement somehow
         currentRs = null;
+        /*
         if (fixedStmt != null) {
             fixedStmt.clearRows();
         }
+        */
     }
     
     public ResultSet getCurrentResultSet() throws SQLException {
@@ -1357,28 +1360,26 @@ public class FBStatement implements FirebirdStatement, Synchronizable {
             throw new FBSQLException("Statement is already closed.");
 
         // closeResultSet(false);
-        prepareFixedStatement(sql, false);
-        gdsHelper.executeStatement(fixedStmt, fixedStmt.getStatementType() == ISCConstants.isc_info_sql_stmt_exec_procedure);
+        // TODO Consider use/implementation of execute immediate?
+        prepareFixedStatement(sql);
+        fbStatement.execute(Collections.<FieldValue>emptyList());
+        /*gdsHelper.executeStatement(fixedStmt, fixedStmt.getStatementType() == ISCConstants.isc_info_sql_stmt_exec_procedure);*/
+
+        // TODO Replace with statement listener
+        /*
         hasMoreResults = true;
         isResultSet = fixedStmt.getOutSqlda().sqld > 0;
+        */
         return isResultSet;
     }
 
-    protected void prepareFixedStatement(String sql, boolean describeBind)
-        throws GDSException, SQLException
-    {
-        if (fixedStmt == null) {
-            fixedStmt = gdsHelper.allocateStatement();
+    protected void prepareFixedStatement(String sql) throws SQLException {
+        // TODO: Statement should be created and allocated at FBStatement creation only.
+        if (fbStatement == null) {
+            fbStatement = gdsHelper.allocateStatement();
         }
-        
-        if (!fixedStmt.isValid())
-            throw new FBSQLException("Corresponding connection is not valid.",
-                FBSQLException.SQL_STATE_CONNECTION_FAILURE_IN_TX);
-        
-        gdsHelper.prepareStatement(
-            fixedStmt, 
-            escapedProcessing ? nativeSQL(sql) : sql, 
-            describeBind);
+        fbStatement.setTransaction(gdsHelper.getCurrentTransaction());
+        fbStatement.prepare(escapedProcessing ? nativeSQL(sql) : sql);
     }
 
     protected void addWarning(SQLWarning warning){
@@ -1405,15 +1406,14 @@ public class FBStatement implements FirebirdStatement, Synchronizable {
      *
      * @return The execution plan of the statement
      */
-    String getExecutionPlan() throws FBSQLException {
-        populateStatementInfo();
-        return fixedStmt.getExecutionPlan();
+    String getExecutionPlan() throws SQLException {
+        return fbStatement.getExecutionPlan();
     }
     
     public String getLastExecutionPlan() throws SQLException {
         checkValidity();
         
-        if (fixedStmt == null)
+        if (fbStatement == null)
             throw new FBSQLException("No statement was executed, plan cannot be obtained.");
         
         return getExecutionPlan();
@@ -1427,20 +1427,9 @@ public class FBStatement implements FirebirdStatement, Synchronizable {
      * @return The identifier for the given statement's type
      */
     int getStatementType() throws FBSQLException {
-        populateStatementInfo();
-        return fixedStmt.getStatementType();
+        return fbStatement.getType().getStatementTypeCode();
     }
 
-    private void populateStatementInfo() throws FBSQLException {
-        if (fixedStmt.getExecutionPlan() == null){
-            try {
-                gdsHelper.populateStatementInfo(fixedStmt);
-            } catch(GDSException ex) {
-                throw new FBSQLException(ex);
-            }
-        }
-    }
-    
     /**
      * Check if this statement is valid. This method should be invoked before
      * executing any action which requires a valid connection.

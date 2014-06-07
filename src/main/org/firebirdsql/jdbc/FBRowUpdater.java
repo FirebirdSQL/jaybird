@@ -427,7 +427,7 @@ public class FBRowUpdater implements FirebirdRowUpdater {
                 notifyExecutionStarted();
 
                 if (updateStatement == null)
-                    updateStatement = gdsHelper.allocateStatement();
+                    updateStatement = gdsHelper.allocateOldStatement();
 
                 executeStatement(UPDATE_STATEMENT_TYPE, updateStatement);
 
@@ -449,7 +449,7 @@ public class FBRowUpdater implements FirebirdRowUpdater {
                 notifyExecutionStarted();
 
                 if (deleteStatement == null)
-                    deleteStatement = gdsHelper.allocateStatement();
+                    deleteStatement = gdsHelper.allocateOldStatement();
 
                 executeStatement(DELETE_STATEMENT_TYPE, deleteStatement);
 
@@ -472,7 +472,7 @@ public class FBRowUpdater implements FirebirdRowUpdater {
                 notifyExecutionStarted();
 
                 if (insertStatement == null)
-                    insertStatement = gdsHelper.allocateStatement();
+                    insertStatement = gdsHelper.allocateOldStatement();
 
                 executeStatement(INSERT_STATEMENT_TYPE, insertStatement);
 
@@ -494,7 +494,7 @@ public class FBRowUpdater implements FirebirdRowUpdater {
                 notifyExecutionStarted();
 
                 if (selectStatement == null)
-                    selectStatement = gdsHelper.allocateStatement();
+                    selectStatement = gdsHelper.allocateOldStatement();
 
                 try {
                     executeStatement(SELECT_STATEMENT_TYPE, selectStatement);

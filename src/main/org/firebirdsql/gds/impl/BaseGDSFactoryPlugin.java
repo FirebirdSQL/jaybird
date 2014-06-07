@@ -21,6 +21,7 @@
 package org.firebirdsql.gds.impl;
 
 import org.firebirdsql.gds.GDSException;
+import org.firebirdsql.gds.ng.FbDatabaseFactory;
 import org.firebirdsql.jdbc.FBConnection;
 
 /**
@@ -52,7 +53,12 @@ public abstract class BaseGDSFactoryPlugin implements GDSFactoryPlugin {
         throw new IllegalArgumentException("Incorrect JDBC protocol handling: "
                 + jdbcUrl);
     }
-    
+
+    @Override
+    public FbDatabaseFactory getDatabaseFactory() {
+        throw new UnsupportedOperationException("getDatabaseFactory needs to be implemented for native implementation");
+    }
+
     public int hashCode() {
         return getTypeName().hashCode();
     }

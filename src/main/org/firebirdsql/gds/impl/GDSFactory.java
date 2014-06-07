@@ -26,6 +26,7 @@ package org.firebirdsql.gds.impl;
 
 import org.firebirdsql.gds.GDS;
 import org.firebirdsql.gds.GDSException;
+import org.firebirdsql.gds.ng.FbDatabaseFactory;
 import org.firebirdsql.logging.Logger;
 import org.firebirdsql.logging.LoggerFactory;
 
@@ -37,7 +38,7 @@ import java.util.Map.Entry;
  * implementing GDS and Clumplet.
  * 
  * @author <a href="mailto:d_jencks@users.sourceforge.net">David Jencks</a>
- * @version 1.0
+ * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  */
 public class GDSFactory {
 
@@ -217,16 +218,14 @@ public class GDSFactory {
      *            The type of the <code>GDS</code> instance to be returned
      * @return A <code>GDS</code> implementation of the given type
      */
-    public synchronized static GDS getGDSForType(GDSType gdsType) {
+    public static GDS getGDSForType(GDSType gdsType) {
         if (gdsType == null) gdsType = defaultType;
+        return getPlugin(gdsType).getGDS();
+    }
 
-        GDSFactoryPlugin gdsPlugin = typeToPluginMap.get(gdsType);
-
-        if (gdsPlugin == null)
-            throw new IllegalArgumentException("Specified GDS type " + gdsType
-                    + " is unknown.");
-
-        return gdsPlugin.getGDS();
+    public static FbDatabaseFactory getDatabaseFactoryForType(GDSType gdsType) {
+        if (gdsType == null) gdsType = defaultType;
+        return getPlugin(gdsType).getDatabaseFactory();
     }
 
     /**
@@ -355,8 +354,7 @@ public class GDSFactory {
     private static GDSFactoryPlugin getPlugin(GDSType gdsType) {
         GDSFactoryPlugin gdsPlugin = typeToPluginMap.get(gdsType);
         if (gdsPlugin == null)
-            throw new IllegalArgumentException("Specified GDS type " + gdsType
-                    + " is unknown.");
+            throw new IllegalArgumentException("Specified GDS type " + gdsType + " is unknown.");
         return gdsPlugin;
     }
 }

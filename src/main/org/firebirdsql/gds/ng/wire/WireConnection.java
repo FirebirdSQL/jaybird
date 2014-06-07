@@ -119,9 +119,14 @@ public final class WireConnection {
         this.protocols = protocols;
         encodingDefinition = encodingFactory.getEncodingDefinition(connectionProperties.getEncoding(), connectionProperties.getCharSet());
         if (encodingDefinition == null || encodingDefinition.isInformationOnly()) {
-            // TODO Don't throw exception if encoding/charSet is null (see also TODO inside EncodingFactory.getEncodingDefinition)
-            throw new SQLNonTransientConnectionException(String.format("No valid encoding definition for Firebird encoding %s and/or Java charset %s",
-                    connectionProperties.getEncoding(), connectionProperties.getCharSet()), FBSQLException.SQL_STATE_CONNECTION_ERROR);
+            if (connectionProperties.getEncoding() == null && connectionProperties.getCharSet() == null) {
+                // TODO Signal warning?
+                encodingDefinition = encodingFactory.getDefaultEncodingDefinition();
+            } else {
+                // TODO Don't throw exception if encoding/charSet is null (see also TODO inside EncodingFactory.getEncodingDefinition)
+                throw new SQLNonTransientConnectionException(String.format("No valid encoding definition for Firebird encoding %s and/or Java charset %s",
+                        connectionProperties.getEncoding(), connectionProperties.getCharSet()), FBSQLException.SQL_STATE_CONNECTION_ERROR);
+            }
         }
         this.encodingFactory = encodingFactory.withDefaultEncodingDefinition(encodingDefinition);
     }

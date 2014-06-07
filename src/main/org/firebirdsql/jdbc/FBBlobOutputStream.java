@@ -21,9 +21,8 @@
 package org.firebirdsql.jdbc;
 
 import org.firebirdsql.gds.DatabaseParameterBuffer;
-import org.firebirdsql.gds.GDSException;
-import org.firebirdsql.gds.IscBlobHandle;
 import org.firebirdsql.gds.impl.DatabaseParameterBufferExtension;
+import org.firebirdsql.gds.ng.FbBlob;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -36,7 +35,7 @@ public final class FBBlobOutputStream extends OutputStream implements FirebirdBl
 
     private static final byte[] EMPTY_BUFFER = new byte[0];
 
-    private IscBlobHandle blobHandle;
+    private FbBlob blobHandle;
     private final FBBlob owner;
     private byte[] buf;
     private int count;
@@ -46,13 +45,9 @@ public final class FBBlobOutputStream extends OutputStream implements FirebirdBl
         buf = new byte[owner.getBufferLength()];
 
         synchronized (owner.getSynchronizationObject()) {
-            try {
-                DatabaseParameterBuffer dpb = owner.getGdsHelper().getDatabaseParameterBuffer();
-                boolean useStreamBlobs = dpb.hasArgument(DatabaseParameterBufferExtension.USE_STREAM_BLOBS);
-                blobHandle = owner.getGdsHelper().createBlob(!useStreamBlobs);
-            } catch (GDSException ge) {
-                throw new FBSQLException(ge);
-            }
+            DatabaseParameterBuffer dpb = owner.getGdsHelper().getDatabaseParameterBuffer();
+            boolean useStreamBlobs = dpb.hasArgument(DatabaseParameterBufferExtension.USE_STREAM_BLOBS);
+            blobHandle = owner.getGdsHelper().createBlob(!useStreamBlobs);
         }
 
         if (owner.isNew()) {
@@ -68,6 +63,9 @@ public final class FBBlobOutputStream extends OutputStream implements FirebirdBl
     @Override
     public long length() throws IOException {
         synchronized (owner.getSynchronizationObject()) {
+            // TODO Implement
+            throw new UnsupportedOperationException("length not yet implemented");
+            /*
             try {
                 final byte[] info = owner.getGdsHelper().getBlobInfo(blobHandle, FBBlob.BLOB_LENGTH_REQUEST, 20);
                 return owner.interpretLength(info, 0);
@@ -76,6 +74,7 @@ public final class FBBlobOutputStream extends OutputStream implements FirebirdBl
             } catch (SQLException ex) {
                 throw new IOException(ex.getMessage(), ex);
             }
+            */
         }
     }
 
@@ -101,12 +100,12 @@ public final class FBBlobOutputStream extends OutputStream implements FirebirdBl
      *
      * @param buf
      *         Byte array to write
-     * @throws GDSException
+     * @throws SQLException
      *         For errors writing to the blob
      */
-    private void writeSegment(byte[] buf) throws GDSException {
+    private void writeSegment(byte[] buf) throws SQLException {
         synchronized (owner.getSynchronizationObject()) {
-            owner.getGdsHelper().putBlobSegment(blobHandle, buf);
+            blobHandle.putSegment(buf);
         }
     }
 
@@ -182,7 +181,7 @@ public final class FBBlobOutputStream extends OutputStream implements FirebirdBl
                     off += chunk;
                 }
             }
-        } catch (GDSException ge) {
+        } catch (SQLException ge) {
             throw new IOException("Problem writing to FBBlobOutputStream: " + ge.getMessage(), ge);
         }
     }
@@ -202,10 +201,10 @@ public final class FBBlobOutputStream extends OutputStream implements FirebirdBl
 
         try {
             synchronized (owner.getSynchronizationObject()) {
-                owner.getGdsHelper().closeBlob(blobHandle);
+                blobHandle.close();
             }
             owner.setBlobId(blobHandle.getBlobId());
-        } catch (GDSException ge) {
+        } catch (SQLException ge) {
             throw new IOException("could not close blob: " + ge.getMessage(), ge);
         } finally {
             blobHandle = null;

@@ -85,31 +85,33 @@ public class TestFBConnection extends TestXABase {
         if (log != null) log.info("testUseStatement");
         FBManagedConnectionFactory mcf = initMcf();
         ManagedConnection mc = mcf.createManagedConnection(null, null);
-        Connection c = (Connection)mc.getConnection(null, null);
-        Statement s = c.createStatement();
-        XAResource xa = mc.getXAResource();
-        Exception ex = null;
-        Xid xid = new XidImpl();
-        xa.start(xid, XAResource.TMNOFLAGS);
         try {
-            s.execute("CREATE TABLE T1 ( C1 SMALLINT, C2 SMALLINT)");
-            //s.close();
-        }
-        catch (Exception e) {
-            ex = e;
-        }
-        xa.end(xid, XAResource.TMSUCCESS);
-        xa.commit(xid, true);
+            Connection c = (Connection) mc.getConnection(null, null);
+            Statement s = c.createStatement();
+            XAResource xa = mc.getXAResource();
+            Exception ex = null;
+            Xid xid = new XidImpl();
+            xa.start(xid, XAResource.TMNOFLAGS);
+            try {
+                s.execute("CREATE TABLE T1 ( C1 SMALLINT, C2 SMALLINT)");
+                //s.close();
+            } catch (Exception e) {
+                ex = e;
+            }
+            xa.end(xid, XAResource.TMSUCCESS);
+            xa.commit(xid, true);
 
-        xid = new XidImpl();
-        xa.start(xid, XAResource.TMNOFLAGS);
-        s.execute("DROP TABLE T1");
-        s.close();
-        xa.end(xid, XAResource.TMSUCCESS);
-        xa.commit(xid, true);
-        mc.destroy();
-        if (ex != null) {
-            throw ex;
+            xid = new XidImpl();
+            xa.start(xid, XAResource.TMNOFLAGS);
+            s.execute("DROP TABLE T1");
+            s.close();
+            xa.end(xid, XAResource.TMSUCCESS);
+            xa.commit(xid, true);
+            if (ex != null) {
+                throw ex;
+            }
+        } finally {
+            mc.destroy();
         }
     }
 }

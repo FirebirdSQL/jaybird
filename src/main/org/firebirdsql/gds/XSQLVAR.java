@@ -37,6 +37,7 @@ import java.sql.Date;
 import java.sql.SQLException;
 import java.sql.Time;
 import java.sql.Timestamp;
+import java.util.Arrays;
 import java.util.Calendar;
 import java.util.GregorianCalendar;
 
@@ -121,7 +122,7 @@ public class XSQLVAR {
         this.sqllen = original.sqllen;
         
         if (original.sqldata != null && copyData) {
-            this.sqldata = new byte[original.sqldata.length]; 
+            this.sqldata = new byte[original.sqldata.length];
             System.arraycopy(original.sqldata, 0, this.sqldata, 0, original.sqldata.length);
         } else
             this.sqldata = null;

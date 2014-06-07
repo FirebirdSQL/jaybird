@@ -20,10 +20,9 @@
  */
 package org.firebirdsql.jdbc;
 
-import org.firebirdsql.gds.GDSException;
 import org.firebirdsql.gds.ISCConstants;
-import org.firebirdsql.gds.IscBlobHandle;
 import org.firebirdsql.gds.impl.GDSHelper;
+import org.firebirdsql.gds.ng.FbBlob;
 import org.firebirdsql.util.SQLExceptionChainBuilder;
 
 import java.io.*;
@@ -180,15 +179,15 @@ public class FBBlob implements FirebirdBlob, Synchronizable {
         synchronized (getSynchronizationObject()) {
             blobListener.executionStarted(this);
             try {
-                IscBlobHandle blob = gdsHelper.openBlob(blob_id, SEGMENTED);
+                FbBlob blob = gdsHelper.openBlob(blob_id, SEGMENTED);
                 try {
-                    return gdsHelper.getBlobInfo(blob, items, buffer_length);
+                    // TODO Implement
+                    throw new UnsupportedOperationException("blobInfo not yet implemented");
+                    /*return gdsHelper.getBlobInfo(blob, items, buffer_length);*/
                 } finally {
                     // TODO Does it make sense to close blob here?
-                    gdsHelper.closeBlob(blob);
+                    blob.close();
                 }
-            } catch (GDSException ex) {
-                throw new FBSQLException(ex);
             } finally {
                 blobListener.executionCompleted(this);
             }

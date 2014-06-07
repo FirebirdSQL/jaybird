@@ -20,8 +20,7 @@
  */
 package org.firebirdsql.jdbc;
 
-import org.firebirdsql.gds.GDSException;
-import org.firebirdsql.gds.IscBlobHandle;
+import org.firebirdsql.gds.ng.FbBlob;
 
 import java.io.EOFException;
 import java.io.IOException;
@@ -40,7 +39,7 @@ public final class FBBlobInputStream extends InputStream implements FirebirdBlob
     private static final byte[] EMPTY_BUFFER = new byte[0];
 
     private byte[] buffer = EMPTY_BUFFER;
-    private IscBlobHandle blobHandle;
+    private FbBlob blobHandle;
     private int pos = 0;
 
     private boolean closed;
@@ -55,11 +54,7 @@ public final class FBBlobInputStream extends InputStream implements FirebirdBlob
         closed = false;
 
         synchronized (owner.getSynchronizationObject()) {
-            try {
-                blobHandle = owner.getGdsHelper().openBlob(owner.getBlobId(), FBBlob.SEGMENTED);
-            } catch (GDSException ge) {
-                throw new FBSQLException(ge);
-            }
+            blobHandle = owner.getGdsHelper().openBlob(owner.getBlobId(), FBBlob.SEGMENTED);
         }
     }
 
@@ -68,15 +63,19 @@ public final class FBBlobInputStream extends InputStream implements FirebirdBlob
     }
 
     public void seek(int position) throws IOException {
-        seek(position, SEEK_MODE_ABSOLUTE);
+        seek(position, FbBlob.SeekMode.ABSOLUTE);
     }
 
     public void seek(int position, int seekMode) throws IOException {
+        seek(position, FbBlob.SeekMode.getById(seekMode));
+    }
+
+    public void seek(int position, FbBlob.SeekMode seekMode) throws IOException {
         synchronized (owner.getSynchronizationObject()) {
             checkClosed();
             try {
-                owner.getGdsHelper().seekBlob(blobHandle, position, seekMode);
-            } catch (GDSException ex) {
+                blobHandle.seek(position, seekMode);
+            } catch (SQLException ex) {
                 /** @todo fix this */
                 throw new IOException(ex.getMessage(), ex);
             }
@@ -86,6 +85,9 @@ public final class FBBlobInputStream extends InputStream implements FirebirdBlob
     public long length() throws IOException {
         synchronized (owner.getSynchronizationObject()) {
             checkClosed();
+            // TODO Add length support to FbBlob.
+            throw new UnsupportedOperationException("length currently not implemented in FbBlob");
+            /*
             try {
                 byte[] info = owner.getGdsHelper().getBlobInfo(blobHandle, FBBlob.BLOB_LENGTH_REQUEST, 20);
                 return owner.interpretLength(info, 0);
@@ -94,6 +96,7 @@ public final class FBBlobInputStream extends InputStream implements FirebirdBlob
             } catch (SQLException ex) {
                 throw new IOException(ex.getMessage(), ex);
             }
+            */
         }
     }
 
@@ -120,10 +123,10 @@ public final class FBBlobInputStream extends InputStream implements FirebirdBlob
             }
 
             try {
-                buffer = owner.getGdsHelper().getBlobSegment(blobHandle, owner.getBufferLength());
+                buffer = blobHandle.getSegment(owner.getBufferLength());
                 pos = 0;
                 return buffer.length != 0 ? buffer.length : -1;
-            } catch (GDSException ge) {
+            } catch (SQLException ge) {
                 throw new IOException("Blob read problem: " + ge.toString(), ge);
             }
         }
@@ -187,9 +190,9 @@ public final class FBBlobInputStream extends InputStream implements FirebirdBlob
         synchronized (owner.getSynchronizationObject()) {
             if (blobHandle != null) {
                 try {
-                    owner.getGdsHelper().closeBlob(blobHandle);
+                    blobHandle.close();
                     owner.notifyClosed(this);
-                } catch (GDSException ge) {
+                } catch (SQLException ge) {
                     throw new IOException("couldn't close blob: " + ge);
                 }
                 blobHandle = null;

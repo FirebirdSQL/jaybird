@@ -23,6 +23,7 @@ package org.firebirdsql.gds.impl.wire;
 import org.firebirdsql.gds.GDS;
 import org.firebirdsql.gds.GDSException;
 import org.firebirdsql.gds.impl.BaseGDSFactoryPlugin;
+import org.firebirdsql.gds.ng.wire.FbWireDatabaseFactory;
 
 public class WireGDSFactoryPlugin extends BaseGDSFactoryPlugin {
 
@@ -74,5 +75,10 @@ public class WireGDSFactoryPlugin extends BaseGDSFactoryPlugin {
 
     public GDS getGDS() {
         return GDSHolder.gds;
-    }   
+    }
+
+    @Override
+    public FbWireDatabaseFactory getDatabaseFactory() {
+        return FbWireDatabaseFactory.getInstance();
+    }
 }

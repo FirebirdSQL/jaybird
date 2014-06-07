@@ -307,6 +307,35 @@ public class V10Statement extends AbstractFbWireStatement implements FbWireState
         }
     }
 
+    public void setCursorName(String cursorName) throws SQLException {
+        synchronized (getSynchronizationObject()) {
+            checkStatementValid();
+            // TODO Check other statement states?
+
+            synchronized (getDatabase().getSynchronizationObject()) {
+                try {
+                    final XdrOutputStream xdrOut = getXdrOut();
+                    xdrOut.writeInt(WireProtocolConstants.op_set_cursor);
+                    xdrOut.writeInt(getHandle());
+                    // TODO Potentially needs additional null-termination
+                    xdrOut.writeString(cursorName, getDatabase().getEncoding());
+                    xdrOut.writeInt(0); // Cursor type
+                    xdrOut.flush();
+                } catch (IOException ex) {
+                    switchState(StatementState.ERROR);
+                    throw new FbExceptionBuilder().exception(ISCConstants.isc_net_write_err).cause(ex).toSQLException();
+                }
+                try {
+                    // TODO Do we need to do anything else with this response?
+                    getDatabase().readGenericResponse(getStatementWarningCallback());
+                } catch (IOException ex) {
+                    switchState(StatementState.ERROR);
+                    throw new FbExceptionBuilder().exception(ISCConstants.isc_net_read_err).cause(ex).toSQLException();
+                }
+            }
+        }
+    }
+
     /**
      * Parse the statement info response in <code>statementInfoResponse</code>. If the response is truncated, a new
      * request is done using {@link #getStatementInfoRequestItems()}
@@ -621,7 +650,7 @@ public class V10Statement extends AbstractFbWireStatement implements FbWireState
     public void allocateStatement() throws SQLException {
         if (getState() != StatementState.NEW) {
             // TODO Is there a better sqlstate?
-            throw new SQLNonTransientException("allocateStatement only allowed when current state is NEW", FBSQLException.SQL_STATE_GENERAL_ERROR);
+            throw new SQLNonTransientException("allocateOldStatement only allowed when current state is NEW", FBSQLException.SQL_STATE_GENERAL_ERROR);
         }
         synchronized (getDatabase().getSynchronizationObject()) {
             try {

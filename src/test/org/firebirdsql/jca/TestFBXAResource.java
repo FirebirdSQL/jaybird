@@ -85,7 +85,7 @@ public class TestFBXAResource extends TestXABase {
         XAResource xa = mc.getXAResource();
         Xid xid = new XidImpl();
         xa.start(xid, XAResource.TMNOFLAGS);
-        if (fbmc.getGDSHelper().getCurrentDbHandle() == null) {
+        if (fbmc.getGDSHelper().getCurrentDatabase() == null) {
             throw new Exception("no db handle after start xid");
         }
         xa.end(xid, XAResource.TMSUCCESS);
@@ -101,7 +101,7 @@ public class TestFBXAResource extends TestXABase {
         XAResource xa = mc.getXAResource();
         Xid xid = new XidImpl();
         xa.start(xid, XAResource.TMNOFLAGS);
-        if (fbmc.getGDSHelper().getCurrentDbHandle() == null) {
+        if (fbmc.getGDSHelper().getCurrentDatabase() == null) {
             throw new Exception("no db handle after start xid");
         }
         xa.end(xid, XAResource.TMSUCCESS);
@@ -117,7 +117,7 @@ public class TestFBXAResource extends TestXABase {
         XAResource xa = mc.getXAResource();
         Xid xid = new XidImpl();
         xa.start(xid, XAResource.TMNOFLAGS);
-        if (fbmc.getGDSHelper().getCurrentDbHandle() == null) {
+        if (fbmc.getGDSHelper().getCurrentDatabase() == null) {
             throw new Exception("no db handle after start xid");
         }
         xa.end(xid, XAResource.TMSUCCESS);
@@ -134,7 +134,7 @@ public class TestFBXAResource extends TestXABase {
         XAResource xa = mc.getXAResource();
         Xid xid = new XidImpl();
         xa.start(xid, XAResource.TMNOFLAGS);
-        if (fbmc.getGDSHelper().getCurrentDbHandle() == null) {
+        if (fbmc.getGDSHelper().getCurrentDatabase() == null) {
             throw new Exception("no db handle after start xid");
         }
         xa.end(xid, XAResource.TMSUCCESS);
@@ -151,7 +151,7 @@ public class TestFBXAResource extends TestXABase {
         XAResource xa1 = mc1.getXAResource();
         Xid xid1 = new XidImpl();
         xa1.start(xid1, XAResource.TMNOFLAGS);
-        if (fbmc1.getGDSHelper().getCurrentDbHandle() == null) {
+        if (fbmc1.getGDSHelper().getCurrentDatabase() == null) {
             throw new Exception("no db handle after start xid");
         }
         ManagedConnection mc2 = mcf.createManagedConnection(null, null);
@@ -159,7 +159,7 @@ public class TestFBXAResource extends TestXABase {
         XAResource xa2 = mc2.getXAResource();
         Xid xid2 = new XidImpl();
         xa2.start(xid2, XAResource.TMNOFLAGS);
-        if (fbmc2.getGDSHelper().getCurrentDbHandle() == null) {
+        if (fbmc2.getGDSHelper().getCurrentDatabase() == null) {
             throw new Exception("no db handle after start xid");
         }
         //commit each tr on other xares

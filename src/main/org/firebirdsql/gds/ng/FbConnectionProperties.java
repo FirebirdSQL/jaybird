@@ -20,6 +20,9 @@
  */
 package org.firebirdsql.gds.ng;
 
+import org.firebirdsql.gds.DatabaseParameterBuffer;
+import org.firebirdsql.gds.ISCConstants;
+
 /**
  * Mutable implementation of {@link IConnectionProperties}
  *
@@ -233,5 +236,62 @@ public final class FbConnectionProperties implements IConnectionProperties {
     @Override
     public IConnectionProperties asImmutable() {
         return new FbImmutableConnectionProperties(this);
+    }
+
+    /**
+     * Method to populate an FbConnectionProperties from a database parameter buffer.
+     * <p>
+     * Unsupported or unknown properties are ignored.
+     * </p>
+     *
+     * @param dpb
+     *         Database parameter buffer
+     * @deprecated TODO: This method is only intended to simplify migration of the protocol implementation and needs to be removed.
+     */
+    @Deprecated
+    public void fromDpb(DatabaseParameterBuffer dpb) {
+        if (dpb.hasArgument(ISCConstants.isc_dpb_user_name)) {
+            setUser(dpb.getArgumentAsString(ISCConstants.isc_dpb_user_name));
+        }
+        if (dpb.hasArgument(ISCConstants.isc_dpb_password)) {
+            setPassword(dpb.getArgumentAsString(ISCConstants.isc_dpb_password));
+        }
+        if (dpb.hasArgument(ISCConstants.isc_dpb_sql_role_name)) {
+            setRoleName(dpb.getArgumentAsString(ISCConstants.isc_dpb_sql_role_name));
+        }
+
+        if (dpb.hasArgument(ISCConstants.isc_dpb_lc_ctype)) {
+            setEncoding(dpb.getArgumentAsString(ISCConstants.isc_dpb_lc_ctype));
+        }
+        if (dpb.hasArgument(ISCConstants.isc_dpb_local_encoding)) {
+            setCharSet(dpb.getArgumentAsString(ISCConstants.isc_dpb_local_encoding));
+        }
+
+        if (dpb.hasArgument(ISCConstants.isc_dpb_sql_dialect)) {
+            setConnectionDialect((short) dpb.getArgumentAsInt(ISCConstants.isc_dpb_sql_dialect));
+        }
+
+        if (dpb.hasArgument(ISCConstants.isc_dpb_num_buffers)) {
+            setPageCacheSize(dpb.getArgumentAsInt(ISCConstants.isc_dpb_num_buffers));
+        }
+
+        if (dpb.hasArgument(ISCConstants.isc_dpb_connect_timeout)) {
+            setConnectTimeout(ISCConstants.isc_dpb_connect_timeout);
+        }
+        if (dpb.hasArgument(ISCConstants.isc_dpb_so_timeout)) {
+            setSoTimeout(ISCConstants.isc_dpb_so_timeout);
+        }
+
+        if (dpb.hasArgument(ISCConstants.isc_dpb_socket_buffer_size)) {
+            setSocketBufferSize(dpb.getArgumentAsInt(ISCConstants.isc_dpb_socket_buffer_size));
+        }
+
+        if (dpb.hasArgument(ISCConstants.isc_dpb_result_set_holdable)) {
+            setResultSetDefaultHoldable(true);
+        }
+
+        if (dpb.hasArgument(ISCConstants.isc_dpb_column_label_for_name)) {
+            setColumnLabelForName(true);
+        }
     }
 }
