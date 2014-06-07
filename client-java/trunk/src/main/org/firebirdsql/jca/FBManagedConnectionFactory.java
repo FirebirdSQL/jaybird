@@ -36,6 +36,7 @@ import javax.transaction.xa.*;
 
 import org.firebirdsql.gds.*;
 import org.firebirdsql.gds.impl.*;
+import org.firebirdsql.gds.ng.FbDatabaseFactory;
 import org.firebirdsql.jdbc.*;
 
 /**
@@ -51,6 +52,7 @@ import org.firebirdsql.jdbc.*;
  * copy is expected to function as anything other than a key.
  * 
  * @author <a href="mailto:d_jencks@users.sourceforge.net">David Jencks </a>
+ * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  */
 public class FBManagedConnectionFactory implements ManagedConnectionFactory,
         Serializable, FirebirdConnectionProperties {
@@ -100,8 +102,13 @@ public class FBManagedConnectionFactory implements ManagedConnectionFactory,
         setType(gdsType.toString());
     }
 
+    @Deprecated
     public GDS getGDS() {
         return GDSFactory.getGDSForType(getGDSType());
+    }
+
+    public FbDatabaseFactory getDatabaseFactory() {
+        return GDSFactory.getDatabaseFactoryForType(getGDSType());
     }
 
     /**
@@ -139,7 +146,7 @@ public class FBManagedConnectionFactory implements ManagedConnectionFactory,
      */
     @Deprecated
     public Integer getTransactionIsolation() {
-        return Integer.valueOf(getDefaultTransactionIsolation());
+        return getDefaultTransactionIsolation();
     }
     
     /**
@@ -148,7 +155,7 @@ public class FBManagedConnectionFactory implements ManagedConnectionFactory,
     @Deprecated
     public void setTransactionIsolation(Integer value) {
         if (value != null)
-            setDefaultTransactionIsolation(value.intValue());
+            setDefaultTransactionIsolation(value);
     }
     
     /**
@@ -615,7 +622,7 @@ public class FBManagedConnectionFactory implements ManagedConnectionFactory,
             if (!started) {
                 mcfInstances.put(this, this);
                 started = true;
-            } // end of if ()
+            }
         }
     }
 
@@ -677,8 +684,8 @@ public class FBManagedConnectionFactory implements ManagedConnectionFactory,
      * rollback. If no "in limbo" transaction can be found, or error happens
      * during completion, an exception is thrown.
      * 
-     * @param gdsHelper
-     *            instance of {@link GDSHelper} that will be used to reconnect
+     * @param gds
+     *            instance of {@link GDS} that will be used to reconnect
      *            transaction.
      * @param xid
      *            Xid of the transaction to reconnect.
@@ -716,8 +723,11 @@ public class FBManagedConnectionFactory implements ManagedConnectionFactory,
                             + " called with unknown transaction.",
                             XAException.XAER_NOTA);
 
-                IscDbHandle dbHandle = tempMc.getGDSHelper().getCurrentDbHandle();
+                IscDbHandle dbHandle = null; // tempMc.getGDSHelper().getCurrentDbHandle();
 
+                // TODO Implemented reconnect
+                if (true)
+                    throw new UnsupportedOperationException("Reconnect currently not implemented");
                 IscTrHandle trHandle = gds.createIscTrHandle();
                 gds.iscReconnectTransaction(trHandle, dbHandle,
                                 fbTransactionId);
@@ -731,19 +741,19 @@ public class FBManagedConnectionFactory implements ManagedConnectionFactory,
                 // remove heuristic data from rdb$transactions
                 try {
                     String query = "delete from rdb$transactions where rdb$transaction_id = " + fbTransactionId;
-                    GDSHelper gdsHelper = new GDSHelper(gds, getDatabaseParameterBuffer(), dbHandle, null);
+                    GDSHelper gdsHelper = new GDSHelper(gds, getDatabaseParameterBuffer(), dbHandle, null, null);
 
                     AbstractIscTrHandle trHandle2 = (AbstractIscTrHandle)gds.createIscTrHandle();
-                    gds.iscStartTransaction(trHandle2, gdsHelper.getCurrentDbHandle(), getDefaultTpb().getTransactionParameterBuffer());
+                    gds.iscStartTransaction(trHandle2, dbHandle, getDefaultTpb().getTransactionParameterBuffer());
 
                     AbstractIscStmtHandle stmtHandle2 = (AbstractIscStmtHandle)gds.createIscStmtHandle();
-                    gds.iscDsqlAllocateStatement(gdsHelper.getCurrentDbHandle(), stmtHandle2);
+                    gds.iscDsqlAllocateStatement(dbHandle, stmtHandle2);
 
                     stmtHandle2 = (AbstractIscStmtHandle)gds.createIscStmtHandle();
-                    gds.iscDsqlAllocateStatement(gdsHelper.getCurrentDbHandle(), stmtHandle2);
+                    gds.iscDsqlAllocateStatement(dbHandle, stmtHandle2);
                     
-                    GDSHelper gdsHelper2 = new GDSHelper(gds, gdsHelper.getDatabaseParameterBuffer(), gdsHelper.getCurrentDbHandle(), null);
-                    gdsHelper2.setCurrentTrHandle(trHandle2);
+                    GDSHelper gdsHelper2 = new GDSHelper(gds, gdsHelper.getDatabaseParameterBuffer(), dbHandle, null, null);
+                    //gdsHelper2.setCurrentTrHandle(trHandle2);
 
                     gdsHelper2.prepareStatement(stmtHandle2, query, false);
                     gdsHelper2.executeStatement(stmtHandle2, false);

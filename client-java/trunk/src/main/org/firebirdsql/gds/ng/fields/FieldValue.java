@@ -31,11 +31,12 @@ import org.firebirdsql.jdbc.field.FieldDataProvider;
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @since 2.3
  */
-public final class FieldValue implements FieldDataProvider {
+public final class FieldValue implements FieldDataProvider, Cloneable {
 
     private final FieldDescriptor fieldDescriptor;
     private byte[] fieldData;
     private boolean initialized;
+    private Object cachedObject;
 
     /**
      * Creates an uninitialized FieldValue instance with the supplied {@link FieldDescriptor}.
@@ -88,6 +89,27 @@ public final class FieldValue implements FieldDataProvider {
     }
 
     /**
+     * @return Cached object
+     */
+    public Object getCachedObject() {
+        return cachedObject;
+    }
+
+    /**
+     * Stores a cached object in this field.
+     * <p>
+     * This is mostly used to store blob data for batched execution.
+     * </p>
+     *
+     * @param cachedObject
+     *         Object to cache
+     */
+    public void setCachedObject(Object cachedObject) {
+        this.cachedObject = cachedObject;
+        initialized = true;
+    }
+
+    /**
      * Is this field in an initialized state (meaning: was it explicitly set to a value (or null)).
      *
      * @return <code>true</code> if initialized, <code>false</code> otherwise
@@ -102,6 +124,7 @@ public final class FieldValue implements FieldDataProvider {
     public void reset() {
         initialized = false;
         fieldData = null;
+        cachedObject = null;
     }
 
     /**
@@ -109,5 +132,17 @@ public final class FieldValue implements FieldDataProvider {
      */
     public FieldDescriptor getFieldDescriptor() {
         return fieldDescriptor;
+    }
+
+    public FieldValue clone() {
+        try {
+            FieldValue clonedFieldValue = (FieldValue) super.clone();
+            if (fieldData != null) {
+                clonedFieldValue.fieldData = fieldData.clone();
+            }
+            return clonedFieldValue;
+        } catch (CloneNotSupportedException e) {
+            throw new Error("Unexpected (and impossible) CloneNotSupportedException", e);
+        }
     }
 }

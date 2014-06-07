@@ -193,5 +193,29 @@ public interface FbBlob {
         public int getSeekModeId() {
             return seekModeId;
         }
+
+        /**
+         * Get the SeekMode instance by the (Firebird) seekmode id.
+         * <p>
+         * Valid values are:
+         * <ul>
+         * <li><code>0</code> - for {@link SeekMode#ABSOLUTE}</li>
+         * <li><code>1</code> - for {@link SeekMode#RELATIVE}</li>
+         * <li><code>2</code> - for {@link SeekMode#ABSOLUTE_FROM_END}</li>
+         * </ul>
+         * </p>
+         *
+         * @param seekModeId
+         *         The seekmode id.
+         * @return Instance of SeekMode matching the id.
+         * @throws java.lang.IllegalArgumentException
+         *         For values that do not have a SeekMode instance.
+         */
+        public static SeekMode getById(int seekModeId) {
+            for (SeekMode seekMode : values()) {
+                if (seekMode.getSeekModeId() == seekModeId) return seekMode;
+            }
+            throw new IllegalArgumentException(String.format("No SeekMode with id %d", seekModeId));
+        }
     }
 }

@@ -29,7 +29,6 @@ import java.sql.Date;
 import java.util.*;
 
 import org.firebirdsql.gds.DatabaseParameterBuffer;
-import org.firebirdsql.gds.GDSException;
 import org.firebirdsql.gds.impl.DatabaseParameterBufferExtension;
 import org.firebirdsql.gds.impl.GDSHelper;
 import org.firebirdsql.jdbc.escape.FBEscapedCallParser;
@@ -117,14 +116,10 @@ public class FBCallableStatement extends FBPreparedStatement implements Callable
         synchronized (getSynchronizationObject()) {
             // TODO See http://tracker.firebirdsql.org/browse/JDBC-352
             notifyStatementStarted(false);
-            try {
-                prepareFixedStatement(procedureCall.getSQL(isSelectableProcedure()), true);
-            } catch (GDSException ge) {
-                throw new FBSQLException(ge);
-            }
+            prepareFixedStatement(procedureCall.getSQL(isSelectableProcedure()));
         }
 
-        return new FBParameterMetaData(fixedStmt.getInSqlda().sqlvar, gdsHelper);
+        return new FBParameterMetaData(/*TODO fixedStmt.getInSqlda().sqlvar*/ null, gdsHelper);
     }
 
     public void addBatch() throws SQLException {
@@ -141,7 +136,7 @@ public class FBCallableStatement extends FBPreparedStatement implements Callable
                 Iterator<Object> iterator = batchList.iterator();
 
                 try {
-                    prepareFixedStatement(procedureCall.getSQL(isSelectableProcedure()), true);
+                    prepareFixedStatement(procedureCall.getSQL(isSelectableProcedure()));
 
                     while (iterator.hasNext()) {
                         procedureCall = (FBProcedureCall) iterator.next();
@@ -150,9 +145,9 @@ public class FBCallableStatement extends FBPreparedStatement implements Callable
 
                     success = true;
                     return toArray(results);
-                } catch (GDSException ex) {
-                    throw new BatchUpdateException(ex.getMessage(), "", ex.getFbErrorCode(),
-                            toArray(results));
+                } catch (SQLException ex) {
+                    throw new BatchUpdateException(ex.getMessage(), ex.getSQLState(), ex.getErrorCode(),
+                            toArray(results), ex);
                 } finally {
                     clearBatch();
                 }
@@ -210,11 +205,11 @@ public class FBCallableStatement extends FBPreparedStatement implements Callable
      * This is an workaround to the issue that the statement is actually prepared
      * only after all OUT parameters are registered.
      */
-    protected void prepareFixedStatement(String sql, boolean describeBind) throws GDSException, SQLException {
-        if (fixedStmt != null)
+    protected void prepareFixedStatement(String sql) throws SQLException {
+        if (fbStatement != null)
             return;
 
-        super.prepareFixedStatement(sql, describeBind);
+        super.prepareFixedStatement(sql);
     }
 
     /**
@@ -230,11 +225,7 @@ public class FBCallableStatement extends FBPreparedStatement implements Callable
         synchronized (getSynchronizationObject()) {
             // TODO See http://tracker.firebirdsql.org/browse/JDBC-352
             notifyStatementStarted(false);
-            try {
-                prepareFixedStatement(procedureCall.getSQL(isSelectableProcedure()), true);
-            } catch (GDSException ge) {
-                throw new FBSQLException(ge);
-            }
+            prepareFixedStatement(procedureCall.getSQL(isSelectableProcedure()));
         }
 
         return super.getMetaData();
@@ -258,13 +249,11 @@ public class FBCallableStatement extends FBPreparedStatement implements Callable
             try {
                 currentRs = null;
 
-                prepareFixedStatement(procedureCall.getSQL(isSelectableProcedure()), true);
+                prepareFixedStatement(procedureCall.getSQL(isSelectableProcedure()));
                 hasResultSet = internalExecute(!isSelectableProcedure());
 
                 if (hasResultSet)
                     setRequiredTypes();
-            }catch (GDSException ge) {
-                throw new FBSQLException(ge);
             } finally {
             	if (!hasResultSet) notifyStatementCompleted();
             }
@@ -281,22 +270,18 @@ public class FBCallableStatement extends FBPreparedStatement implements Callable
     public ResultSet executeQuery() throws SQLException {
         synchronized (getSynchronizationObject()) {
             notifyStatementStarted();
-            try {
-                currentRs = null;
-                prepareFixedStatement(procedureCall.getSQL(isSelectableProcedure()), true);
+            currentRs = null;
+            prepareFixedStatement(procedureCall.getSQL(isSelectableProcedure()));
 
-                if (!internalExecute(!isSelectableProcedure()))
-                	throw new FBSQLException(
-                            "No resultset for sql",
-                            FBSQLException.SQL_STATE_NO_RESULT_SET);
+            if (!internalExecute(!isSelectableProcedure()))
+                throw new FBSQLException(
+                        "No resultset for sql",
+                        FBSQLException.SQL_STATE_NO_RESULT_SET);
 
-                getResultSet();
-                setRequiredTypes();
+            getResultSet();
+            setRequiredTypes();
 
-                return getCurrentResultSet();
-            } catch (GDSException ex) {
-                throw new FBSQLException(ex);
-            }
+            return getCurrentResultSet();
         }
     }
 
@@ -309,7 +294,7 @@ public class FBCallableStatement extends FBPreparedStatement implements Callable
             try {
                 notifyStatementStarted();
                 currentRs = null;
-                prepareFixedStatement(procedureCall.getSQL(isSelectableProcedure()), true);
+                prepareFixedStatement(procedureCall.getSQL(isSelectableProcedure()));
 
                 /*
                  * // R.Rokytskyy: JDBC CTS suite uses executeUpdate() //
@@ -327,8 +312,6 @@ public class FBCallableStatement extends FBPreparedStatement implements Callable
                 }
 
                 return getUpdateCount();
-            } catch (GDSException ex) {
-                throw new FBSQLException(ex);
             } finally {
                 notifyStatementCompleted();
             }

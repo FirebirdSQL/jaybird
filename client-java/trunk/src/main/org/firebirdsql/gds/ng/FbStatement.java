@@ -180,7 +180,8 @@ public interface FbStatement {
      * @throws SQLException
      *         For errors retrieving or transforming the response.
      */
-    <T> T getSqlInfo(final byte[] requestItems, final int bufferLength, final InfoProcessor<T> infoProcessor) throws SQLException;
+    <T> T getSqlInfo(final byte[] requestItems, final int bufferLength,
+            final InfoProcessor<T> infoProcessor) throws SQLException;
 
     /**
      * Request statement info.
@@ -227,4 +228,14 @@ public interface FbStatement {
      *         all rows have been fetched.
      */
     SqlCountHolder getSqlCounts() throws SQLException;
+
+    /**
+     * Sets the named cursor name for this statement.
+     *
+     * @param cursorName
+     *         Name of the cursor
+     * @throws SQLException
+     *         If this statement is closed, TODO: Other reasons (eg cursor open)?
+     */
+    void setCursorName(String cursorName) throws SQLException;
 }

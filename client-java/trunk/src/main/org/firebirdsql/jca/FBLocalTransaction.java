@@ -251,8 +251,6 @@ public class FBLocalTransaction implements FirebirdLocalTransaction,
                 mc.internalRollback(xid);
             } catch (XAException ex) {
                 throw new FBResourceTransactionException(ex.getMessage());
-            } catch (GDSException ex) {
-                throw new FBResourceTransactionException(ex.getMessage(), ex);
             } finally {
                 xid = null;
             }

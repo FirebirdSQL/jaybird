@@ -38,6 +38,7 @@ import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.XSQLVAR;
 import org.firebirdsql.gds.impl.DatabaseParameterBufferExtension;
 import org.firebirdsql.gds.impl.GDSHelper;
+import org.firebirdsql.gds.ng.fields.FieldDescriptor;
 import org.firebirdsql.jdbc.FBBlob;
 import org.firebirdsql.jdbc.FBClob;
 import org.firebirdsql.jdbc.FBDriverNotCapableException;
@@ -346,9 +347,14 @@ public abstract class FBField {
      * <code>FBField</code> class according to the SQL datatype. This instance
      * knows how to perform all necessary type conversions.
      */
-    public final static FBField createField(XSQLVAR field, FieldDataProvider dataProvider,
-            GDSHelper gdsHelper, boolean cached) throws SQLException {
+    public static FBField createField(XSQLVAR field, FieldDataProvider dataProvider, GDSHelper gdsHelper, boolean cached) throws SQLException {
         final FBField result = FBField.createField(field, dataProvider, cached);
+        result.setConnection(gdsHelper);
+        return result;
+    }
+
+    public static FBField createField(FieldDescriptor field, FieldDataProvider dataProvider, GDSHelper gdsHelper, boolean cached) throws SQLException {
+        final FBField result = FBField.createField(field.toXSQLVAR(), dataProvider, cached);
         result.setConnection(gdsHelper);
         return result;
     }

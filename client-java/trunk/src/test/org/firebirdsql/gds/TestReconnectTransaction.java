@@ -77,13 +77,15 @@ public class TestReconnectTransaction extends FBTestBase {
 }
     
     public void testReconnectTransaction() throws Exception {
+        fail("test needs to be fixed for new implementation or be removed");
+        /*
         if (getGdsType() != GDSType.getType("PURE_JAVA"))
             fail("This test case does not work with JNI connections.");
         
         IscDbHandle dbHandle1 = gds.createIscDbHandle();
         gds.iscAttachDatabase(getdbpath(DB_NAME), dbHandle1, dpb);
         
-        GDSHelper gdsHelper1 = new GDSHelper(gds, dpb, dbHandle1, null);
+        GDSHelper gdsHelper1 = new GDSHelper(gds, dpb, dbHandle1, null, null);
 
         IscTrHandle trHandle1 = gds.createIscTrHandle();
         gds.iscStartTransaction(trHandle1, dbHandle1, tpb.getTransactionParameterBuffer());
@@ -106,7 +108,7 @@ public class TestReconnectTransaction extends FBTestBase {
         AbstractIscStmtHandle stmtHandle2 = (AbstractIscStmtHandle)gds.createIscStmtHandle();
         gds.iscDsqlAllocateStatement(dbHandle2, stmtHandle2);
         
-        GDSHelper gdsHelper2 = new GDSHelper(gds, dpb, dbHandle2, null);
+        GDSHelper gdsHelper2 = new GDSHelper(gds, dpb, dbHandle2, null, null);
         gdsHelper2.setCurrentTrHandle(trHandle2);
         
         gdsHelper2.prepareStatement(stmtHandle2, RECOVERY_QUERY, false);
@@ -159,5 +161,6 @@ public class TestReconnectTransaction extends FBTestBase {
         gds.iscDetachDatabase(dbHandle2);
         
         assertTrue("Should find in-limbo tx.", foundInLimboTx);
+        */
     }
 }

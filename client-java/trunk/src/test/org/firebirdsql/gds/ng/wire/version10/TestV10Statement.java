@@ -266,7 +266,7 @@ public class TestV10Statement extends FBJUnit4TestBase {
         statement.allocateStatement();
 
         expectedException.expect(SQLNonTransientException.class);
-        expectedException.expectMessage("allocateStatement only allowed when current state is NEW");
+        expectedException.expectMessage("allocateOldStatement only allowed when current state is NEW");
         statement.allocateStatement();
     }
 

@@ -26,6 +26,7 @@
  */
 package org.firebirdsql.gds.ng.fields;
 
+import org.firebirdsql.gds.XSQLVAR;
 import org.firebirdsql.util.ObjectUtils;
 
 /**
@@ -204,5 +205,24 @@ public final class FieldDescriptor {
                     originalTableName, ownerName);
         }
         return hash;
+    }
+
+    /**
+     * Temporary measure to derive an {@link org.firebirdsql.gds.XSQLVAR} from this FieldDescriptor.
+     * <p>
+     * TODO Remove this method before 3.0 release
+     * </p>
+     *
+     * @return XSQLVAR derived from this FieldDescriptor
+     */
+    @Deprecated
+    public XSQLVAR toXSQLVAR() {
+        XSQLVAR xsqlvar = new XSQLVAR(getType(), getLength(), getOriginalName(), getOriginalTableName());
+        xsqlvar.sqlscale = getScale();
+        xsqlvar.sqlsubtype = getSubType();
+        xsqlvar.relaliasname = getTableAlias();
+        xsqlvar.ownname = getOwnerName();
+        xsqlvar.aliasname = getFieldName();
+        return xsqlvar;
     }
 }

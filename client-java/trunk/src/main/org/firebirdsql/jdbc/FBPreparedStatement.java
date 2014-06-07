@@ -29,6 +29,10 @@ import java.util.*;
 
 import org.firebirdsql.gds.*;
 import org.firebirdsql.gds.impl.GDSHelper;
+import org.firebirdsql.gds.ng.StatementType;
+import org.firebirdsql.gds.ng.fields.FieldDescriptor;
+import org.firebirdsql.gds.ng.fields.FieldValue;
+import org.firebirdsql.gds.ng.fields.RowDescriptor;
 import org.firebirdsql.jdbc.field.*;
 import org.firebirdsql.jdbc.field.FBFlushableField.CachedObject;
 
@@ -73,6 +77,7 @@ public class FBPreparedStatement extends FBStatement implements
     private boolean isExecuteProcedureStatement;
 
     private final FBObjectListener.BlobListener blobListener;
+    private List<FieldValue> fieldValues;
 
     /**
      * Create instance of this class for the specified result set type and 
@@ -134,10 +139,7 @@ public class FBPreparedStatement extends FBStatement implements
         try {
             // TODO See http://tracker.firebirdsql.org/browse/JDBC-352
             notifyStatementStarted();
-            prepareFixedStatement(sql, true);
-        } catch (GDSException ge) {
-            notifyStatementCompleted(false);
-            throw new FBSQLException(ge);
+            prepareFixedStatement(sql);
         } catch (SQLException e) {
             notifyStatementCompleted(false);
             throw e;
@@ -219,7 +221,8 @@ public class FBPreparedStatement extends FBStatement implements
     }
 
     public FirebirdParameterMetaData getFirebirdParameterMetaData() throws SQLException {
-        return new FBParameterMetaData(fixedStmt.getInSqlda().sqlvar, gdsHelper);
+        /* TODO: Replace with RowDescriptor */
+        return new FBParameterMetaData(/*fixedStmt.getInSqlda().sqlvar*/ null, gdsHelper);
     }
 
     /**
@@ -511,10 +514,13 @@ public class FBPreparedStatement extends FBStatement implements
     }
 
     /**
-     * Returns the XSQLVAR structure for the specified column.
+     * Returns the {@link FieldDescriptor} of the specified parameter.
+     *
+     * @param columnIndex 1-based index of the parameter
+     * @return Field descriptor
      */
-    protected XSQLVAR getXsqlvar(int columnIndex) {
-        return fixedStmt.getInSqlda().sqlvar[columnIndex - 1];
+    protected FieldDescriptor getParameterDescriptor(int columnIndex) {
+        return fbStatement.getParameterDescriptor().getFieldDescriptor(columnIndex - 1);
     }
 
     /**
@@ -639,14 +645,14 @@ public class FBPreparedStatement extends FBStatement implements
      *                if a database access error occurs
      */
     public void clearParameters() throws SQLException {
-        if (isParamSet == null) return;
+        if (fieldValues == null) return;
 
+        // TODO Remove: should be based on FieldValue#isInitialized
         for (int i = 0; i < isParamSet.length; i++)
             isParamSet[i] = false;
 
-        XSQLVAR[] xsqlvar = fixedStmt.getInSqlda().sqlvar;
-        for (XSQLVAR aXsqlvar : xsqlvar) {
-            aXsqlvar.sqldata = null;
+        for (FieldValue fieldValue : fieldValues) {
+            fieldValue.reset();
         }
     }
 
@@ -783,25 +789,22 @@ public class FBPreparedStatement extends FBStatement implements
             throws SQLException {
         
         boolean canExecute = true;
+        // TODO replace with FieldValue#isInitialized
         for (boolean anIsParamSet : isParamSet) {
             canExecute = canExecute && anIsParamSet;
         }
 
         if (!canExecute)
-            throw new FBMissingParameterException(
-                    "Not all parameters were set.", isParamSet);
+            throw new FBMissingParameterException("Not all parameters were set.", isParamSet);
 
-        Object syncObject = getSynchronizationObject();
-
-        synchronized (syncObject) {
+        synchronized (getSynchronizationObject()) {
             flushFields();
 
             try {
-                gdsHelper.executeStatement(fixedStmt, sendOutParams);
-                isResultSet = (fixedStmt.getOutSqlda().sqld > 0);
-                return (fixedStmt.getOutSqlda().sqld > 0);
-            } catch (GDSException ge) {
-                throw new FBSQLException(ge);
+                // TODO: add a statement listener for controlling information exchange
+                fbStatement.execute(fieldValues);
+                isResultSet = fbStatement.getFieldDescriptor().getCount() > 0;
+                return isResultSet;
             } finally {
                 hasMoreResults = true;
             }
@@ -840,24 +843,23 @@ public class FBPreparedStatement extends FBStatement implements
      */
     public void addBatch() throws SQLException {
         boolean allParamsSet = true;
+        // TODO Replace with check of FieldValue#isInitialized
         for (boolean anIsParamSet : isParamSet) {
             allParamsSet &= anIsParamSet;
         }
 
         if (!allParamsSet) throw new FBSQLException("Not all parameters set.");
 
-        XSQLVAR[] oldXsqlvar = fixedStmt.getInSqlda().sqlvar;
-
-        XSQLVAR[] newXsqlvar = new XSQLVAR[oldXsqlvar.length];
-        for (int i = 0; i < newXsqlvar.length; i++) {
-            newXsqlvar[i] = oldXsqlvar[i].deepCopy();
+        List<FieldValue> batchedValues = new ArrayList<FieldValue>(fieldValues.size());
+        for (int i = 0; i < fieldValues.size(); i++) {
+            batchedValues.add(fieldValues.get(i).clone());
 
             FBField field = getField(i + 1);
             if (field instanceof FBFlushableField)
-                newXsqlvar[i].cachedobject = ((FBFlushableField)field).getCachedObject();
+                batchedValues.get(i).setCachedObject(((FBFlushableField) field).getCachedObject());
         }
 
-        batchList.add(newXsqlvar);
+        batchList.add(batchedValues);
     }
 
     /**
@@ -939,18 +941,20 @@ public class FBPreparedStatement extends FBStatement implements
 
                 try {
                     while (iter.hasNext()) {
-                        XSQLVAR[] data = (XSQLVAR[]) iter.next();
+                        List<FieldValue> data = (List<FieldValue>) iter.next();
 
-                        XSQLVAR[] vars = fixedStmt.getInSqlda().sqlvar;
-                        for (int i = 0; i < vars.length; i++) {
+                        for (int i = 0; i < fieldValues.size(); i++) {
+                            FieldValue fieldValue = fieldValues.get(i);
+                            fieldValue.reset();
+
                             FBField field = getField(i + 1);
                             if (field instanceof FBFlushableField) {
-                                vars[i].copyFrom(data[i], false);
-                                ((FBFlushableField)field).setCachedObject((CachedObject)data[i].cachedobject);
+                                // Explicitly set to null to ensure initialized property set to true
+                                fieldValue.setFieldData(null);
+                                ((FBFlushableField) field).setCachedObject((CachedObject) data.get(i).getCachedObject());
                             } else {
-                                vars[i].copyFrom(data[i], true);
+                                fieldValue.setFieldData(data.get(i).getFieldData());
                             }
-                                
                             isParamSet[i] = true;
                         }
 
@@ -1162,8 +1166,7 @@ public class FBPreparedStatement extends FBStatement implements
      */
     public ResultSetMetaData getMetaData() throws SQLException {
         checkValidity();
-        return new FBResultSetMetaData(fixedStmt.getOutSqlda().sqlvar,
-                gdsHelper);
+        return new FBResultSetMetaData(/* TODO fixedStmt.getOutSqlda().sqlvar*/ null, gdsHelper);
     }
 
     /**
@@ -1295,41 +1298,24 @@ public class FBPreparedStatement extends FBStatement implements
     /**
      * Prepare fixed statement and initialize parameters.
      */
-    protected void prepareFixedStatement(String sql, boolean describeBind)
-            throws GDSException, SQLException {
-        super.prepareFixedStatement(sql, describeBind);
+    protected void prepareFixedStatement(String sql) throws SQLException {
+        super.prepareFixedStatement(sql);
 
-        XSQLDA inSqlda = fixedStmt.getInSqlda();
+        RowDescriptor rowDescriptor = fbStatement.getParameterDescriptor();
+        assert rowDescriptor != null : "RowDescriptor should not be null after prepare";
 
-        if (!describeBind && inSqlda == null) {
-            inSqlda = new XSQLDA();
-            inSqlda.sqln = 0;
-            inSqlda.sqlvar = new XSQLVAR[0];
-        }
-
-        // initialize isParamSet member
-        isParamSet = new boolean[inSqlda.sqln];
-        fields = new FBField[inSqlda.sqln];
+        isParamSet = new boolean[rowDescriptor.getCount()];
+        fieldValues = rowDescriptor.createDefaultFieldValues();
+        fields = new FBField[rowDescriptor.getCount()];
 
         for (int i = 0; i < isParamSet.length; i++) {
-            final int fieldPos = i;
-
-            FieldDataProvider dataProvider = new FieldDataProvider() {
-                @Override
-                public byte[] getFieldData() {
-                    return getXsqlvar(fieldPos + 1).sqldata;
-                }
-                @Override
-                public void setFieldData(byte[] data) {
-                    getXsqlvar(fieldPos + 1).sqldata = data;
-                }
-            };
+            FieldDataProvider dataProvider = fieldValues.get(i);
 
             // FIXME check if we can safely pass cached here
-            fields[i] = FBField.createField(getXsqlvar(i + 1), dataProvider, gdsHelper, false);
+            fields[i] = FBField.createField(getParameterDescriptor(i + 1), dataProvider, gdsHelper, false);
         }
 
-        this.isExecuteProcedureStatement = fixedStmt.getStatementType() == FirebirdPreparedStatement.TYPE_EXEC_PROCEDURE;
+        this.isExecuteProcedureStatement = fbStatement.getType() == StatementType.STORED_PROCEDURE;
     }
 
     /**
@@ -1337,7 +1323,7 @@ public class FBPreparedStatement extends FBStatement implements
      *
      * @return The execution plan of the statement
      */
-    public String getExecutionPlan() throws FBSQLException {
+    public String getExecutionPlan() throws SQLException {
         return super.getExecutionPlan();
     }
 

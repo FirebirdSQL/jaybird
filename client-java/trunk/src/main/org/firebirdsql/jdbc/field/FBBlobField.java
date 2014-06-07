@@ -21,12 +21,10 @@
 
 package org.firebirdsql.jdbc.field;
 
-import org.firebirdsql.gds.GDSException;
-import org.firebirdsql.gds.IscBlobHandle;
 import org.firebirdsql.gds.XSQLVAR;
+import org.firebirdsql.gds.ng.FbBlob;
 import org.firebirdsql.jdbc.FBBlob;
 import org.firebirdsql.jdbc.FBClob;
-import org.firebirdsql.jdbc.FBSQLException;
 import org.firebirdsql.jdbc.Synchronizable;
 
 import java.io.InputStream;
@@ -117,35 +115,33 @@ public class FBBlobField extends FBField implements FBFlushableField {
 
         final long blobId = field.decodeLong(blobIdBuffer);
         synchronized (((Synchronizable) getBlob()).getSynchronizationObject()) {
+            final FbBlob blobHandle = gdsHelper.openBlob(blobId, FBBlob.SEGMENTED);
+
             try {
-                final IscBlobHandle blobHandle = gdsHelper.openBlob(blobId, FBBlob.SEGMENTED);
+                // TODO implement
+                if (true) throw new UnsupportedOperationException("blob length not implemented");
+                final int blobLength = 0; //gdsHelper.getBlobLength(blobHandle);
+                final int bufferLength = gdsHelper.getBlobBufferLength();
+                final byte[] resultBuffer = new byte[blobLength];
 
-                try {
-                    final int blobLength = gdsHelper.getBlobLength(blobHandle);
-                    final int bufferLength = gdsHelper.getBlobBufferLength();
-                    final byte[] resultBuffer = new byte[blobLength];
+                int offset = 0;
 
-                    int offset = 0;
+                while (offset < blobLength) {
+                    final byte[] segmentBuffer = blobHandle.getSegment(bufferLength);
 
-                    while (offset < blobLength) {
-                        final byte[] segmentBuffer = gdsHelper.getBlobSegment(blobHandle, bufferLength);
-
-                        if (segmentBuffer.length == 0) {
-                            // unexpected EOF
-                            throw new TypeConversionException(BYTES_CONVERSION_ERROR);
-                        }
-
-                        System.arraycopy(segmentBuffer, 0, resultBuffer, offset, segmentBuffer.length);
-                        offset += segmentBuffer.length;
+                    if (segmentBuffer.length == 0) {
+                        // unexpected EOF
+                        throw new TypeConversionException(BYTES_CONVERSION_ERROR);
                     }
 
-                    return resultBuffer;
-
-                } finally {
-                    gdsHelper.closeBlob(blobHandle);
+                    System.arraycopy(segmentBuffer, 0, resultBuffer, offset, segmentBuffer.length);
+                    offset += segmentBuffer.length;
                 }
-            } catch (GDSException e) {
-                throw new FBSQLException(e);
+
+                return resultBuffer;
+
+            } finally {
+                blobHandle.close();
             }
         }
     }
