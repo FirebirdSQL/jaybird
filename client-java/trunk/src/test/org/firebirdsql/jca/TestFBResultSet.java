@@ -1,5 +1,7 @@
  /*
- * Firebird Open Source J2ee connector - jdbc driver
+ * $Id$
+ *
+ * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -12,12 +14,11 @@
  * This file was created by members of the firebird development team.
  * All individual contributions remain the Copyright (C) of those
  * individuals.  Contributors to this file are either listed here or
- * can be obtained from a CVS history command.
+ * can be obtained from a source control history command.
  *
  * All rights reserved.
  */
 package org.firebirdsql.jca;
-
 
 import javax.resource.spi.LocalTransaction;
 import javax.resource.spi.ManagedConnection;
@@ -35,8 +36,6 @@ import junit.framework.Test;
 import junit.framework.TestSuite;
 
 import org.firebirdsql.jdbc.FBConnection;
-
-
 
 /**
  * Describe class <code>TestFBResultSet</code> here.
@@ -419,11 +418,10 @@ public class TestFBResultSet extends TestXABase {
         if (ex != null) {
             throw ex;
         }
-
     }
 
-        public static final String CREATE_PROCEDURE =
-        "CREATE PROCEDURE testproc(number INTEGER) RETURNS (result INTEGER) AS BEGIN     result = number; END";
+    public static final String CREATE_PROCEDURE =
+        "CREATE PROCEDURE testproc(number INTEGER) RETURNS (result INTEGER) AS BEGIN result = number; END";
 
     public void testExecutableProcedure() throws Exception {
         
@@ -441,7 +439,7 @@ public class TestFBResultSet extends TestXABase {
         }
         t.commit();
         t.begin();
-            s.execute(CREATE_PROCEDURE);
+        s.execute(CREATE_PROCEDURE);
         t.commit();
 
         t.begin();
@@ -459,6 +457,4 @@ public class TestFBResultSet extends TestXABase {
         t.commit();
         c.close();
     }
-
-
 }

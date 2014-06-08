@@ -1,7 +1,7 @@
 /*
  * $Id$
  *
- * Firebird Open Source J2ee connector - jdbc driver
+ * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -14,7 +14,7 @@
  * This file was created by members of the firebird development team.
  * All individual contributions remain the Copyright (C) of those
  * individuals.  Contributors to this file are either listed here or
- * can be obtained from a CVS history command.
+ * can be obtained from a source control history command.
  *
  * All rights reserved.
  */
@@ -28,8 +28,10 @@ import java.sql.Date;
 import java.util.*;
 
 import org.firebirdsql.gds.*;
-import org.firebirdsql.gds.impl.AbstractIscStmtHandle;
 import org.firebirdsql.gds.impl.GDSHelper;
+import org.firebirdsql.gds.ng.FbStatement;
+import org.firebirdsql.gds.ng.fields.FieldValue;
+import org.firebirdsql.gds.ng.fields.RowDescriptor;
 import org.firebirdsql.jdbc.field.*;
 import org.firebirdsql.util.SQLExceptionChainBuilder;
 
@@ -48,9 +50,9 @@ public class FBResultSet implements ResultSet, FirebirdResultSet, Synchronizable
 
     protected final GDSHelper gdsHelper;
 
-    protected final XSQLVAR[] xsqlvars;
+    protected final RowDescriptor rowDescriptor;
 
-    protected byte[][] row;
+    protected List<FieldValue> row;
 
     private boolean wasNull = false;
     private boolean wasNullValid = false;
@@ -73,15 +75,18 @@ public class FBResultSet implements ResultSet, FirebirdResultSet, Synchronizable
     private final int rsConcurrency;
     private final int rsHoldability;
 
+    @Override
     public void allRowsFetched(FBFetcher fetcher) throws SQLException {
         listener.allRowsFetched(this);
     }
 
+    @Override
     public void fetcherClosed(FBFetcher fetcher) throws SQLException {
         // ignore, there nothing to do here
     }
 
-    public void rowChanged(FBFetcher fetcher, byte[][] newRow) throws SQLException {
+    @Override
+    public void rowChanged(FBFetcher fetcher, List<FieldValue> newRow) throws SQLException {
         this.row = newRow;
     }
 
@@ -94,7 +99,7 @@ public class FBResultSet implements ResultSet, FirebirdResultSet, Synchronizable
      */
     public FBResultSet(GDSHelper gdsHelper,
             FBStatement fbStatement,
-            AbstractIscStmtHandle stmt,
+            FbStatement stmt,
             FBObjectListener.ResultSetListener listener,
             boolean metaDataQuery,
             int rsType,
@@ -106,14 +111,14 @@ public class FBResultSet implements ResultSet, FirebirdResultSet, Synchronizable
         cursorName = fbStatement.getCursorName();
         this.listener = listener != null ? listener : FBObjectListener.NoActionResultSetListener.instance();
         trimStrings = metaDataQuery;
-        xsqlvars = stmt.getOutSqlda().sqlvar;
-        fields = new FBField[xsqlvars.length];
-        colNames = new HashMap<String, Integer>(xsqlvars.length, 1);
+        rowDescriptor = stmt.getFieldDescriptor();
+        fields = new FBField[rowDescriptor.getCount()];
+        colNames = new HashMap<String, Integer>(rowDescriptor.getCount(), 1);
         this.fbStatement = fbStatement;
 
         if (rsType == ResultSet.TYPE_SCROLL_SENSITIVE) {
             fbStatement.addWarning(new FBSQLWarning(
-                    "Result set type changed. ResultSet.TYPE_SCROLL_SENSITIVE is not supported."));
+                    "Result set type changed to TYPE_SCROLL_INSENSITIVE. ResultSet.TYPE_SCROLL_SENSITIVE is not supported."));
             rsType = ResultSet.TYPE_SCROLL_INSENSITIVE;
         }
 
@@ -134,7 +139,7 @@ public class FBResultSet implements ResultSet, FirebirdResultSet, Synchronizable
 
         if (rsConcurrency == ResultSet.CONCUR_UPDATABLE) {
             try {
-                rowUpdater = new FBRowUpdater(gdsHelper, xsqlvars, this, cached, listener);
+                rowUpdater = new FBRowUpdater(gdsHelper, rowDescriptor, this, cached, listener);
             } catch (FBResultSetNotUpdatableException ex) {
                 fbStatement.addWarning(new FBSQLWarning("Result set concurrency changed to READ ONLY."));
                 rsConcurrency = ResultSet.CONCUR_READ_ONLY;
@@ -148,48 +153,52 @@ public class FBResultSet implements ResultSet, FirebirdResultSet, Synchronizable
     /**
      * Creates a FBResultSet with the columns specified by <code>xsqlvars</code> and the data in <code>rows</code>.
      * <p>
-     * This constructor is intended for metadata resultsets, but can be used for other purposes as well.
+     * This constructor is intended for metadata result sets, but can be used for other purposes as well.
      * </p>
      * <p>
      * Current implementation will ensure that strings will be trimmed on retrieval.
      * </p>
      *
-     * @param xsqlvars Column definition
+     * @param rowDescriptor Column definition
      * @param rows Row data
      * @throws SQLException
      */
-    public FBResultSet(XSQLVAR[] xsqlvars, List<byte[][]> rows) throws SQLException {
+    public FBResultSet(RowDescriptor rowDescriptor, List<List<FieldValue>> rows) throws SQLException {
         gdsHelper = null;
         fbStatement = null;
         listener = FBObjectListener.NoActionResultSetListener.instance();
         cursorName = null;
         fbFetcher = new FBCachedFetcher(rows, this);
         trimStrings = true;
-        this.xsqlvars = xsqlvars;
-        fields = new FBField[xsqlvars.length];
-        colNames = new HashMap<String, Integer>(xsqlvars.length, 1);
+        this.rowDescriptor = rowDescriptor;
+        fields = new FBField[rowDescriptor.getCount()];
+        colNames = new HashMap<String, Integer>(rowDescriptor.getCount(), 1);
         prepareVars(true);
         rsType = ResultSet.TYPE_FORWARD_ONLY;
         rsConcurrency = ResultSet.CONCUR_READ_ONLY;
         rsHoldability = ResultSet.CLOSE_CURSORS_AT_COMMIT;
     }
 
+    public FBResultSet(XSQLVAR[] xsqlvars, List<byte[][]> rows) throws SQLException {
+        throw new UnsupportedOperationException("This constructor needs to be removed");
+    }
+
     private void prepareVars(boolean cached) throws SQLException {
-        for (int i = 0; i < xsqlvars.length; i++) {
+        for (int i = 0; i < rowDescriptor.getCount(); i++) {
             final int fieldPosition = i;
 
             // anonymous implementation of the FieldDataProvider interface
             FieldDataProvider dataProvider = new FieldDataProvider() {
                 public byte[] getFieldData() {
-                    return row[fieldPosition];
+                    return row.get(fieldPosition).getFieldData();
                 }
 
                 public void setFieldData(byte[] data) {
-                    row[fieldPosition] = data;
+                    row.get(fieldPosition).setFieldData(data);
                 }
             };
 
-            fields[i] = FBField.createField(xsqlvars[i], dataProvider, gdsHelper, cached);
+            fields[i] = FBField.createField(rowDescriptor.getFieldDescriptor(i), dataProvider, gdsHelper, cached);
         }
     }
 
@@ -628,13 +637,6 @@ public class FBResultSet implements ResultSet, FirebirdResultSet, Synchronizable
     }
 
     /**
-     * Returns the XSQLVAR structure for the specified column.
-     */
-    protected XSQLVAR getXsqlvar(int columnIndex) {
-        return xsqlvars[columnIndex - 1];
-    }
-
-    /**
      * Get the <code>FBField</code> object at the given column index
      *
      * @param columnIndex The index of the parameter, 1 is the first index
@@ -644,7 +646,7 @@ public class FBResultSet implements ResultSet, FirebirdResultSet, Synchronizable
         final FBField field = getField(columnIndex, true);
 
         wasNullValid = true;
-        wasNull = row == null || (row[columnIndex - 1] == null);
+        wasNull = row == null || (row.get(columnIndex - 1).getFieldData() == null);
 
         return field;
     }
@@ -661,7 +663,7 @@ public class FBResultSet implements ResultSet, FirebirdResultSet, Synchronizable
                     "The resultSet is not in a row, use next",
                     FBSQLException.SQL_STATE_NO_ROW_AVAIL);
 
-        if (columnIndex > xsqlvars.length)
+        if (columnIndex > rowDescriptor.getCount())
             throw new FBSQLException(
                     "Invalid column index.",
                     FBSQLException.SQL_STATE_INVALID_COLUMN);
@@ -701,7 +703,7 @@ public class FBResultSet implements ResultSet, FirebirdResultSet, Synchronizable
                 ? rowUpdater.getField(fieldNum - 1)
                 : fields[fieldNum - 1];
         wasNullValid = true;
-        wasNull = (row == null || row[fieldNum - 1] == null);
+        wasNull = (row == null || row.get(fieldNum - 1).getFieldData() == null);
         return field;
     }
 
@@ -1010,7 +1012,7 @@ public class FBResultSet implements ResultSet, FirebirdResultSet, Synchronizable
      * this result set is constructed in code.
      */
     public ResultSetMetaData getMetaData() throws SQLException {
-        return new FBResultSetMetaData(xsqlvars, gdsHelper);
+        return new FBResultSetMetaData(/* TODO xsqlvars*/ null, gdsHelper);
     }
 
     /**
@@ -1065,25 +1067,25 @@ public class FBResultSet implements ResultSet, FirebirdResultSet, Synchronizable
         if (columnName.startsWith("\"") && columnName.endsWith("\"")) {
             columnName = columnName.substring(1, columnName.length() - 1);
             // case-sensitively check column aliases 
-            for (int i = 0; i < xsqlvars.length; i++) {
-                if (columnName.equals(xsqlvars[i].aliasname)) {
+            for (int i = 0; i < rowDescriptor.getCount(); i++) {
+                if (columnName.equals(rowDescriptor.getFieldDescriptor(i).getFieldName())) {
                     return ++i;
                 }
             }
             // case-sensitively check column names
-            for (int i = 0; i < xsqlvars.length; i++) {
-                if (columnName.equals(xsqlvars[i].sqlname)) {
+            for (int i = 0; i < rowDescriptor.getCount(); i++) {
+                if (columnName.equals(rowDescriptor.getFieldDescriptor(i).getOriginalName())) {
                     return ++i;
                 }
             }
         } else {
-            for (int i = 0; i < xsqlvars.length; i++) {
-                if (columnName.equalsIgnoreCase(xsqlvars[i].aliasname)) {
+            for (int i = 0; i < rowDescriptor.getCount(); i++) {
+                if (columnName.equalsIgnoreCase(rowDescriptor.getFieldDescriptor(i).getFieldName())) {
                     return ++i;
                 }
             }
-            for (int i = 0; i < xsqlvars.length; i++) {
-                if (columnName.equalsIgnoreCase(xsqlvars[i].sqlname)) {
+            for (int i = 0; i < rowDescriptor.getCount(); i++) {
+                if (columnName.equalsIgnoreCase(rowDescriptor.getFieldDescriptor(i).getOriginalName())) {
                     return ++i;
                 }
             }

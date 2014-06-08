@@ -1,7 +1,7 @@
 /*
  * $Id$
  *
- * Firebird Open Source JavaEE connector - jdbc driver
+ * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -20,17 +20,23 @@
  */
 package org.firebirdsql.jdbc;
 
-import java.sql.DatabaseMetaData;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-
-import org.firebirdsql.gds.*;
-import org.firebirdsql.gds.impl.AbstractIscStmtHandle;
+import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.impl.GDSHelper;
+import org.firebirdsql.gds.ng.FbStatement;
+import org.firebirdsql.gds.ng.fields.FieldDescriptor;
+import org.firebirdsql.gds.ng.fields.FieldValue;
+import org.firebirdsql.gds.ng.fields.RowDescriptor;
+import org.firebirdsql.gds.ng.listeners.DefaultStatementListener;
 import org.firebirdsql.jdbc.field.FBField;
 import org.firebirdsql.jdbc.field.FBFlushableField;
 import org.firebirdsql.jdbc.field.FieldDataProvider;
 import org.firebirdsql.util.SQLExceptionChainBuilder;
+
+import java.sql.DatabaseMetaData;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Class responsible for modifying updatable result sets.
@@ -54,6 +60,7 @@ import org.firebirdsql.util.SQLExceptionChainBuilder;
  * read-only.
  *
  * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
+ * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  */
 public class FBRowUpdater implements FirebirdRowUpdater {
 
@@ -63,28 +70,28 @@ public class FBRowUpdater implements FirebirdRowUpdater {
 
     private final GDSHelper gdsHelper;
     private final Synchronizable syncProvider;
-    private final XSQLVAR[] xsqlvars;
+    private final RowDescriptor rowDescriptor;
     private final FBField[] fields;
 
     private boolean inInsertRow;
 
-    private byte[][] newRow;
-    private byte[][] oldRow;
-    private byte[][] insertRow;
+    private List<FieldValue> newRow;
+    private List<FieldValue> oldRow;
+    private List<FieldValue> insertRow;
     private boolean[] updatedFlags;
 
     private String tableName;
 
-    private AbstractIscStmtHandle updateStatement;
-    private AbstractIscStmtHandle deleteStatement;
-    private AbstractIscStmtHandle insertStatement;
-    private AbstractIscStmtHandle selectStatement;
+    private FbStatement updateStatement;
+    private FbStatement deleteStatement;
+    private FbStatement insertStatement;
+    private FbStatement selectStatement;
 
     private final FBObjectListener.ResultSetListener rsListener;
     private boolean closed;
     private boolean processing;
 
-    public FBRowUpdater(GDSHelper connection, XSQLVAR[] xsqlvars,
+    public FBRowUpdater(GDSHelper connection, RowDescriptor rowDescriptor,
             Synchronizable syncProvider, boolean cached,
             FBObjectListener.ResultSetListener rsListener) throws SQLException {
 
@@ -93,55 +100,50 @@ public class FBRowUpdater implements FirebirdRowUpdater {
         this.gdsHelper = connection;
         this.syncProvider = syncProvider;
 
-        this.xsqlvars = new XSQLVAR[xsqlvars.length];
-        this.fields = new FBField[xsqlvars.length];
+        this.rowDescriptor = rowDescriptor;
+        this.fields = new FBField[rowDescriptor.getCount()];
 
-        for (int i = 0; i < xsqlvars.length; i++) {
-            XSQLVAR xsqlvar = xsqlvars[i].deepCopy();
-            this.xsqlvars[i] = xsqlvar;
-        }
+        newRow = rowDescriptor.createDefaultFieldValues();
+        updatedFlags = new boolean[rowDescriptor.getCount()];
 
-        newRow = new byte[xsqlvars.length][];
-        updatedFlags = new boolean[xsqlvars.length];
-
-        for (int i = 0; i < this.xsqlvars.length; i++) {
+        for (int i = 0; i < rowDescriptor.getCount(); i++) {
             final int fieldPos = i;
 
             // implementation of the FieldDataProvider interface
             final FieldDataProvider dataProvider = new FieldDataProvider() {
                 @Override
                 public byte[] getFieldData() {
-                    if (updatedFlags[fieldPos]) {
-                        if (inInsertRow)
-                            return insertRow[fieldPos];
-                        else
-                            return newRow[fieldPos];
-                    } else
-                        return oldRow[fieldPos];
+                    if (!updatedFlags[fieldPos]) {
+                        return oldRow.get(fieldPos).getFieldData();
+                    } else if (inInsertRow) {
+                        return insertRow.get(fieldPos).getFieldData();
+                    } else {
+                        return newRow.get(fieldPos).getFieldData();
+                    }
                 }
 
                 @Override
                 public void setFieldData(byte[] data) {
-                    if (inInsertRow)
-                        insertRow[fieldPos] = data;
-                    else
-                        newRow[fieldPos] = data;
-
+                    if (inInsertRow) {
+                        insertRow.get(fieldPos).setFieldData(data);
+                    } else {
+                        newRow.get(fieldPos).setFieldData(data);
+                    }
                     updatedFlags[fieldPos] = true;
                 }
             };
 
-            fields[i] = FBField.createField(this.xsqlvars[i], dataProvider, connection, cached);
+            fields[i] = FBField.createField(rowDescriptor.getFieldDescriptor(i), dataProvider, connection, cached);
         }
 
         // find the table name (there can be only one table per result set)
-        for (XSQLVAR xsqlvar : xsqlvars) {
+        for (FieldDescriptor fieldDescriptor : rowDescriptor) {
             if (tableName == null) {
-                tableName = xsqlvar.relname;
-            } else if (!tableName.equals(xsqlvar.relname)) {
+                tableName = fieldDescriptor.getOriginalTableName();
+            } else if (!tableName.equals(fieldDescriptor.getOriginalTableName())) {
                 throw new FBResultSetNotUpdatableException(
                         "Underlying result set references at least two relations: " +
-                                tableName + " and " + xsqlvar.relname + ".");
+                                tableName + " and " + fieldDescriptor.getOriginalTableName() + ".");
             }
         }
     }
@@ -165,12 +167,12 @@ public class FBRowUpdater implements FirebirdRowUpdater {
         this.processing = false;
     }
 
-    private void deallocateStatement(AbstractIscStmtHandle handle, SQLExceptionChainBuilder<SQLException> chain) {
+    private void deallocateStatement(FbStatement handle, SQLExceptionChainBuilder<SQLException> chain) {
+        if (handle == null) return;
         try {
-            if (handle != null)
-                gdsHelper.closeStatement(handle, true);
-        } catch (GDSException ex) {
-            chain.append(new FBSQLException(ex));
+            handle.close();
+        } catch (SQLException ex) {
+            chain.append(ex);
         }
     }
 
@@ -191,16 +193,16 @@ public class FBRowUpdater implements FirebirdRowUpdater {
     }
 
     @Override
-    public void setRow(byte[][] row) {
+    public void setRow(List<FieldValue> row) {
         this.oldRow = row;
-        this.updatedFlags = new boolean[xsqlvars.length];
+        this.updatedFlags = new boolean[rowDescriptor.getCount()];
         this.inInsertRow = false;
     }
 
     @Override
     public void cancelRowUpdates() {
-        this.newRow = new byte[xsqlvars.length][];
-        this.updatedFlags = new boolean[xsqlvars.length];
+        this.newRow = rowDescriptor.createDefaultFieldValues();
+        this.updatedFlags = new boolean[rowDescriptor.getCount()];
         this.inInsertRow = false;
     }
 
@@ -231,7 +233,7 @@ public class FBRowUpdater implements FirebirdRowUpdater {
                 "", "", tableName, DatabaseMetaData.bestRowSession, true);
 
         try {
-            int[] result = new int[xsqlvars.length];
+            int[] result = new int[rowDescriptor.getCount()];
             boolean hasParams = false;
             while (bestRowIdentifier.next()) {
                 String columnName = bestRowIdentifier.getString(2);
@@ -239,14 +241,14 @@ public class FBRowUpdater implements FirebirdRowUpdater {
                 if (columnName == null)
                     continue;
 
-                for (int i = 0; i < xsqlvars.length; i++) {
+                for (int i = 0; i < rowDescriptor.getCount(); i++) {
                     // special handling for the RDB$DB_KEY columns that must be
                     // selected as RDB$DB_KEY, but in XSQLVAR are represented
                     // as DB_KEY
-                    if ("RDB$DB_KEY".equals(columnName) && isDbKey(xsqlvars[i])) {
+                    if ("RDB$DB_KEY".equals(columnName) && isDbKey(rowDescriptor.getFieldDescriptor(i))) {
                         result[i] = PARAMETER_DBKEY;
                         hasParams = true;
-                    } else if (columnName.equals(xsqlvars[i].sqlname)) {
+                    } else if (columnName.equals(rowDescriptor.getFieldDescriptor(i).getOriginalName())) {
                         result[i] = PARAMETER_USED;
                         hasParams = true;
                     }
@@ -258,13 +260,13 @@ public class FBRowUpdater implements FirebirdRowUpdater {
                 if (!hasParams)
                     throw new FBResultSetNotUpdatableException(
                             "Underlying result set does not contain all columns " +
-                            "that form 'best row identifier'.");
+                                    "that form 'best row identifier'.");
             }
 
             if (!hasParams)
                 throw new FBResultSetNotUpdatableException(
                         "No columns that can be used in WHERE clause could be " +
-                        "found.");
+                                "found.");
 
             return result;
         } finally {
@@ -295,7 +297,7 @@ public class FBRowUpdater implements FirebirdRowUpdater {
         // therefore loop through the parameters and build the
         // WHERE clause
         boolean first = true;
-        for (int i = 0; i < xsqlvars.length; i++) {
+        for (int i = 0; i < rowDescriptor.getCount(); i++) {
             if (parameterMask[i] == PARAMETER_UNUSED)
                 continue;
 
@@ -303,7 +305,7 @@ public class FBRowUpdater implements FirebirdRowUpdater {
                 sb.append("AND");
 
             sb.append("\n\t");
-            sb.append('"').append(xsqlvars[i].sqlname).append("\" = ").append('?');
+            sb.append('"').append(rowDescriptor.getFieldDescriptor(i).getOriginalName()).append("\" = ").append('?');
 
             first = false;
         }
@@ -316,7 +318,7 @@ public class FBRowUpdater implements FirebirdRowUpdater {
         sb.append("SET").append('\n');
 
         boolean first = true;
-        for (int i = 0; i < xsqlvars.length; i++) {
+        for (int i = 0; i < rowDescriptor.getCount(); i++) {
             if (!updatedFlags[i])
                 continue;
 
@@ -324,7 +326,7 @@ public class FBRowUpdater implements FirebirdRowUpdater {
                 sb.append(',');
 
             sb.append("\n\t");
-            sb.append('"').append(xsqlvars[i].sqlname).append("\" = ").append('?');
+            sb.append('"').append(rowDescriptor.getFieldDescriptor(i).getOriginalName()).append("\" = ").append('?');
 
             first = false;
         }
@@ -352,7 +354,7 @@ public class FBRowUpdater implements FirebirdRowUpdater {
         sb.append(tableName);
 
         boolean first = true;
-        for (int i = 0; i < xsqlvars.length; i++) {
+        for (int i = 0; i < rowDescriptor.getCount(); i++) {
 
             if (!updatedFlags[i])
                 continue;
@@ -362,7 +364,7 @@ public class FBRowUpdater implements FirebirdRowUpdater {
                 params.append(',');
             }
 
-            columns.append(xsqlvars[i].sqlname);
+            columns.append(rowDescriptor.getFieldDescriptor(i).getOriginalName());
             params.append('?');
 
             first = false;
@@ -380,16 +382,16 @@ public class FBRowUpdater implements FirebirdRowUpdater {
         StringBuilder columns = new StringBuilder();
 
         boolean first = true;
-        for (XSQLVAR xsqlvar : xsqlvars) {
+        for (FieldDescriptor fieldDescriptor : rowDescriptor) {
             if (!first)
                 columns.append(',');
 
             // do special handling of RDB$DB_KEY, since Firebird returns
             // DB_KEY column name instead of the correct one
-            if (isDbKey(xsqlvar)) {
+            if (isDbKey(fieldDescriptor)) {
                 columns.append("RDB$DB_KEY");
             } else {
-                columns.append('"').append(xsqlvar.sqlname).append('"');
+                columns.append('"').append(fieldDescriptor.getOriginalName()).append('"');
             }
             first = false;
         }
@@ -402,15 +404,16 @@ public class FBRowUpdater implements FirebirdRowUpdater {
     }
 
     /**
-     * Determines if the supplied {@link XSQLVAR} is a db-key (RDB$DB_KEY) of a table.
+     * Determines if the supplied {@link org.firebirdsql.gds.ng.fields.FieldDescriptor} is a db-key (RDB$DB_KEY) of a table.
      *
-     * @param xsqlvar XSQLVAR
+     * @param fieldDescriptor
+     *         Field descriptor
      * @return <code>true</code> if <code>xsqlvar</code> is a RDB$DB_KEY
      */
-    private boolean isDbKey(XSQLVAR xsqlvar) {
-        return "DB_KEY".equals(xsqlvar.sqlname)
-                && ((xsqlvar.sqltype & ~1) == ISCConstants.SQL_TEXT)
-                && xsqlvar.sqllen == 8;
+    private boolean isDbKey(FieldDescriptor fieldDescriptor) {
+        return "DB_KEY".equals(fieldDescriptor.getOriginalName())
+                && ((fieldDescriptor.getType() & ~1) == ISCConstants.SQL_TEXT)
+                && fieldDescriptor.getLength() == 8;
     }
 
     private static final int UPDATE_STATEMENT_TYPE = 1;
@@ -427,13 +430,11 @@ public class FBRowUpdater implements FirebirdRowUpdater {
                 notifyExecutionStarted();
 
                 if (updateStatement == null)
-                    updateStatement = gdsHelper.allocateOldStatement();
+                    updateStatement = gdsHelper.allocateStatement();
 
                 executeStatement(UPDATE_STATEMENT_TYPE, updateStatement);
 
                 success = true;
-            } catch (GDSException ex) {
-                throw new FBSQLException(ex);
             } finally {
                 notifyExecutionCompleted(success);
             }
@@ -449,13 +450,11 @@ public class FBRowUpdater implements FirebirdRowUpdater {
                 notifyExecutionStarted();
 
                 if (deleteStatement == null)
-                    deleteStatement = gdsHelper.allocateOldStatement();
+                    deleteStatement = gdsHelper.allocateStatement();
 
                 executeStatement(DELETE_STATEMENT_TYPE, deleteStatement);
 
                 success = true;
-            } catch (GDSException ex) {
-                throw new FBSQLException(ex);
             } finally {
                 notifyExecutionCompleted(success);
             }
@@ -472,13 +471,11 @@ public class FBRowUpdater implements FirebirdRowUpdater {
                 notifyExecutionStarted();
 
                 if (insertStatement == null)
-                    insertStatement = gdsHelper.allocateOldStatement();
+                    insertStatement = gdsHelper.allocateStatement();
 
                 executeStatement(INSERT_STATEMENT_TYPE, insertStatement);
 
                 success = true;
-            } catch (GDSException ex) {
-                throw new FBSQLException(ex);
             } finally {
                 notifyExecutionCompleted(success);
             }
@@ -494,121 +491,109 @@ public class FBRowUpdater implements FirebirdRowUpdater {
                 notifyExecutionStarted();
 
                 if (selectStatement == null)
-                    selectStatement = gdsHelper.allocateOldStatement();
+                    selectStatement = gdsHelper.allocateStatement();
+
+                final RowListener rowListener = new RowListener();
+                selectStatement.addStatementListener(rowListener);
 
                 try {
                     executeStatement(SELECT_STATEMENT_TYPE, selectStatement);
 
                     // should fetch one row anyway
-                    gdsHelper.fetch(selectStatement, 10);
+                    selectStatement.fetchRows(10);
 
-                    Object[] rows = selectStatement.getRows();
-                    if (selectStatement.size() == 0)
+                    List<List<FieldValue>> rows = rowListener.getRows();
+                    if (rows.size() == 0)
                         throw new FBSQLException("No rows could be fetched.");
 
-                    if (selectStatement.size() > 1)
+                    if (rows.size() > 1)
                         throw new FBSQLException("More then one row fetched.");
 
-                    setRow((byte[][]) rows[0]);
+                    setRow(rows.get(0));
                 } finally {
-                    gdsHelper.closeStatement(selectStatement, false);
-                    selectStatement = null;
+                    selectStatement.removeStatementListener(rowListener);
+                    selectStatement.closeCursor();
                 }
 
                 success = true;
-            } catch (GDSException ex) {
-                throw new FBSQLException(ex);
             } finally {
                 notifyExecutionCompleted(success);
             }
         }
     }
 
-    private void executeStatement(int statementType, AbstractIscStmtHandle stmt) throws SQLException {
-        try {
-            if (!stmt.isValid())
-                throw new FBSQLException("Corresponding connection is not valid.",
-                        FBSQLException.SQL_STATE_CONNECTION_FAILURE_IN_TX);
+    private void executeStatement(int statementType, FbStatement stmt) throws SQLException {
+        // TODO Replace or leave to check within statement?
+        /*
+        if (!stmt.isValid())
+            throw new FBSQLException("Corresponding connection is not valid.",
+                    FBSQLException.SQL_STATE_CONNECTION_FAILURE_IN_TX);
+        */
 
-            if (inInsertRow && statementType != INSERT_STATEMENT_TYPE)
-                throw new FBSQLException("Only insertRow() is allowed when " +
-                        "result set is positioned on insert row.");
+        if (inInsertRow && statementType != INSERT_STATEMENT_TYPE)
+            throw new FBSQLException("Only insertRow() is allowed when result set is positioned on insert row.");
 
-            if (statementType != INSERT_STATEMENT_TYPE && oldRow == null)
-                throw new FBSQLException("Result set is not positioned on a row.");
+        if (statementType != INSERT_STATEMENT_TYPE && oldRow == null)
+            throw new FBSQLException("Result set is not positioned on a row.");
 
-            // we have to flush before constructing the parameters
-            // since flushable field can update the value, which 
-            // in turn can change the parameter distribution
-            for (int i = 0; i < xsqlvars.length; i++) {
-                if (fields[i] instanceof FBFlushableField)
-                    ((FBFlushableField) fields[i]).flushCachedData();
-            }
-
-            int[] parameterMask = getParameterMask();
-
-            String sql;
-            switch (statementType) {
-            case UPDATE_STATEMENT_TYPE:
-                sql = buildUpdateStatement(parameterMask);
-                break;
-
-            case DELETE_STATEMENT_TYPE:
-                sql = buildDeleteStatement(parameterMask);
-                break;
-
-            case INSERT_STATEMENT_TYPE:
-                sql = buildInsertStatement();
-                break;
-
-            case SELECT_STATEMENT_TYPE:
-                sql = buildSelectStatement(parameterMask);
-                break;
-
-            default:
-                throw new IllegalArgumentException("Incorrect statement type specified.");
-            }
-
-            gdsHelper.prepareStatement(stmt, sql, true);
-
-            XSQLVAR[] params = stmt.getInSqlda().sqlvar;
-
-            int paramIterator = 0;
-
-            if (statementType == UPDATE_STATEMENT_TYPE) {
-                for (int i = 0; i < xsqlvars.length; i++) {
-                    if (!updatedFlags[i])
-                        continue;
-
-                    params[paramIterator].copyFrom(xsqlvars[i]);
-                    params[paramIterator].sqldata = newRow[i];
-                    paramIterator++;
-                }
-            }
-
-            for (int i = 0; i < xsqlvars.length; i++) {
-                if (parameterMask[i] == PARAMETER_UNUSED && statementType != INSERT_STATEMENT_TYPE)
-                    continue;
-                else if (!updatedFlags[i] && statementType == INSERT_STATEMENT_TYPE)
-                    continue;
-
-                params[paramIterator].copyFrom(xsqlvars[i]);
-
-                if (statementType == INSERT_STATEMENT_TYPE)
-                    params[paramIterator].sqldata = insertRow[i];
-                else
-                    params[paramIterator].sqldata = oldRow[i];
-
-                paramIterator++;
-            }
-
-            gdsHelper.executeStatement(stmt, false);
-
-            // TODO think about adding COMMIT RETAIN in the auto-commit mode
-
-        } catch (GDSException ex) {
-            throw new FBSQLException(ex);
+        // we have to flush before constructing the parameters
+        // since flushable field can update the value, which
+        // in turn can change the parameter distribution
+        for (int i = 0; i < rowDescriptor.getCount(); i++) {
+            if (fields[i] instanceof FBFlushableField)
+                ((FBFlushableField) fields[i]).flushCachedData();
         }
+
+        int[] parameterMask = getParameterMask();
+
+        String sql;
+        switch (statementType) {
+        case UPDATE_STATEMENT_TYPE:
+            sql = buildUpdateStatement(parameterMask);
+            break;
+
+        case DELETE_STATEMENT_TYPE:
+            sql = buildDeleteStatement(parameterMask);
+            break;
+
+        case INSERT_STATEMENT_TYPE:
+            sql = buildInsertStatement();
+            break;
+
+        case SELECT_STATEMENT_TYPE:
+            sql = buildSelectStatement(parameterMask);
+            break;
+
+        default:
+            throw new IllegalArgumentException("Incorrect statement type specified.");
+        }
+
+        stmt.prepare(sql);
+
+        List<FieldValue> params = new ArrayList<FieldValue>();
+
+        if (statementType == UPDATE_STATEMENT_TYPE) {
+            for (int i = 0; i < rowDescriptor.getCount(); i++) {
+                if (!updatedFlags[i]) continue;
+
+                params.add(newRow.get(i).clone());
+            }
+        }
+
+        for (int i = 0; i < rowDescriptor.getCount(); i++) {
+            if (parameterMask[i] == PARAMETER_UNUSED && statementType != INSERT_STATEMENT_TYPE)
+                continue;
+            else if (!updatedFlags[i] && statementType == INSERT_STATEMENT_TYPE)
+                continue;
+            if (statementType == INSERT_STATEMENT_TYPE)
+                params.add(insertRow.get(i).clone());
+            else
+                params.add(oldRow.get(i).clone());
+        }
+
+        stmt.execute(params);
+
+        // TODO think about adding COMMIT RETAIN in the auto-commit mode
     }
 
     @Override
@@ -627,23 +612,13 @@ public class FBRowUpdater implements FirebirdRowUpdater {
     }
 
     @Override
-    public byte[][] getNewRow() {
-        byte[][] result = new byte[oldRow.length][];
-        for (int i = 0; i < result.length; i++) {
+    public List<FieldValue> getNewRow() {
+        List<FieldValue> result = new ArrayList<FieldValue>(oldRow.size());
+        for (int i = 0; i < result.size(); i++) {
             if (updatedFlags[i]) {
-                if (newRow[i] == null)
-                    result[i] = null;
-                else {
-                    result[i] = new byte[newRow[i].length];
-                    System.arraycopy(newRow[i], 0, result[i], 0, newRow[i].length);
-                }
+                result.add(newRow.get(i).clone());
             } else {
-                if (oldRow[i] == null) {
-                    result[i] = null;
-                } else {
-                    result[i] = new byte[oldRow[i].length];
-                    System.arraycopy(oldRow[i], 0, result[i], 0, oldRow[i].length);
-                }
+                result.add(oldRow.get(i).clone());
             }
         }
 
@@ -651,26 +626,39 @@ public class FBRowUpdater implements FirebirdRowUpdater {
     }
 
     @Override
-    public byte[][] getInsertRow() {
+    public List<FieldValue> getInsertRow() {
         return insertRow;
     }
 
     @Override
-    public byte[][] getOldRow() {
+    public List<FieldValue> getOldRow() {
         return oldRow;
     }
 
     @Override
     public void moveToInsertRow() throws SQLException {
         inInsertRow = true;
-        insertRow = new byte[xsqlvars.length][];
-        this.updatedFlags = new boolean[xsqlvars.length];
+        insertRow = rowDescriptor.createDefaultFieldValues();
+        this.updatedFlags = new boolean[rowDescriptor.getCount()];
     }
 
     @Override
     public void moveToCurrentRow() throws SQLException {
         inInsertRow = false;
-        insertRow = new byte[xsqlvars.length][];
-        this.updatedFlags = new boolean[xsqlvars.length];
+        insertRow = rowDescriptor.createDefaultFieldValues();
+        this.updatedFlags = new boolean[rowDescriptor.getCount()];
+    }
+
+    private static class RowListener extends DefaultStatementListener {
+        private final List<List<FieldValue>> rows = new ArrayList<List<FieldValue>>();
+
+        @Override
+        public void receivedRow(FbStatement sender, List<FieldValue> rowData) {
+            rows.add(rowData);
+        }
+
+        public List<List<FieldValue>> getRows() {
+            return rows;
+        }
     }
 }
