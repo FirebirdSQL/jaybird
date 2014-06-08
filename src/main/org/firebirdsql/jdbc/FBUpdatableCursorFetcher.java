@@ -1,5 +1,7 @@
 /*
- * Firebird Open Source J2ee connector - jdbc driver
+ * $Id$
+ *
+ * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -12,7 +14,7 @@
  * This file was created by members of the firebird development team.
  * All individual contributions remain the Copyright (C) of those
  * individuals.  Contributors to this file are either listed here or
- * can be obtained from a CVS history command.
+ * can be obtained from a source control history command.
  *
  * All rights reserved.
  */
@@ -20,27 +22,28 @@ package org.firebirdsql.jdbc;
 
 import java.sql.SQLException;
 
-import org.firebirdsql.gds.impl.AbstractIscStmtHandle;
 import org.firebirdsql.gds.impl.GDSHelper;
+import org.firebirdsql.gds.ng.FbStatement;
 
 /**
  * Statement fetcher for updatable cursor case. This fetcher keeps cursor
  * position consistent, however we cannot tell now if we are on the last record.
  * Method {@link #isLast()}throws exception now.
  * 
- * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy
- *         </a>
+ * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
+ * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  */
 public class FBUpdatableCursorFetcher extends FBStatementFetcher {
 
     FBUpdatableCursorFetcher(GDSHelper gdsHelper, Synchronizable syncProvider,
-            AbstractIscStmtHandle stmth,
+            FbStatement stmth,
             FBObjectListener.FetcherListener fetcherListener, int maxRows,
             int fetchSize) throws SQLException {
         super(gdsHelper, syncProvider, stmth, fetcherListener, maxRows,
                 fetchSize);
     }
 
+    @Override
     public boolean next() throws SQLException {
 
         if (isBeforeFirst()) {
@@ -67,27 +70,24 @@ public class FBUpdatableCursorFetcher extends FBStatementFetcher {
             setRowNum(0);
             return false;
         } else {
-            try {
-                fetch();
+            fetch();
 
-                boolean maxRowReached = this.maxRows != 0
-                        && getRowNum() == this.maxRows;
+            boolean maxRowReached = this.maxRows != 0
+                    && getRowNum() == this.maxRows;
 
-                if ((getNextRow() == null) || maxRowReached) {
-                    setIsAfterLast(true);
-                    return false;
-                }
-
-                fetcherListener.rowChanged(this, getNextRow());
-                setRowNum(getRowNum() + 1);
-
-                return true;
-            } catch (SQLException sqle) {
-                throw sqle;
+            if ((getNextRow() == null) || maxRowReached) {
+                setIsAfterLast(true);
+                return false;
             }
+
+            fetcherListener.rowChanged(this, getNextRow());
+            setRowNum(getRowNum() + 1);
+
+            return true;
         }
     }
 
+    @Override
     public boolean isLast() throws SQLException {
         throw new FBDriverNotCapableException(
                 "isLast() operation is not defined in case of "

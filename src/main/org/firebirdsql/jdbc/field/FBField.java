@@ -48,7 +48,7 @@ import org.firebirdsql.jdbc.FBSQLException;
  * Describe class <code>FBField</code> here.
  * 
  * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
- * @version 1.0
+ * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  */
 public abstract class FBField {
     static final String BYTE_CONVERSION_ERROR = "Error converting to byte.";
@@ -194,66 +194,79 @@ public abstract class FBField {
      * @return <code>true</code> if the field is of type <code>type</code>.
      * TODO write correct ISCConstants.SQL_QUAD support
      */
-    public final static boolean isType(XSQLVAR field, int type) {
+    public static boolean isType(XSQLVAR field, int type) {
+        return isType(field.sqltype, field.sqlsubtype, type);
+    }
+
+    /**
+     * @return <code>true</code> if the field is of type <code>type</code>.
+     * TODO write correct ISCConstants.SQL_QUAD support
+     * TODO Consider moving to FieldDescriptor itself
+     */
+    public static boolean isType(FieldDescriptor field, int jdbcType) {
+        return isType(field.getType(), field.getSubType(), jdbcType);
+    }
+
+    private static boolean isType(int fbType, int subType, int jdbcType) {
         // turn off null flag, in this case we're not interested in it.
-        final int tempType = field.sqltype & ~1;
+        final int tempType = fbType & ~1;
         switch (tempType) {
         case ISCConstants.SQL_ARRAY:
-            return type == Types.ARRAY;
+            return jdbcType == Types.ARRAY;
 
         case ISCConstants.SQL_BLOB:
-            if (field.sqlsubtype < 0) {
-                return type == Types.BLOB;
+            if (subType < 0) {
+                return jdbcType == Types.BLOB;
             }
-            if (field.sqlsubtype == 1) {
-                return type == Types.LONGVARCHAR;
+            if (subType == 1) {
+                return jdbcType == Types.LONGVARCHAR;
             } else {
-                return type == Types.LONGVARBINARY 
-                        || type == Types.VARBINARY
-                        || type == Types.BINARY;
+                return jdbcType == Types.LONGVARBINARY
+                        || jdbcType == Types.VARBINARY
+                        || jdbcType == Types.BINARY;
             }
 
         case ISCConstants.SQL_D_FLOAT:
             return false; // not supported right now
 
         case ISCConstants.SQL_DOUBLE:
-            return type == Types.DOUBLE;
+            return jdbcType == Types.DOUBLE;
 
         case ISCConstants.SQL_FLOAT:
-            return type == Types.FLOAT;
+            return jdbcType == Types.FLOAT;
 
         case ISCConstants.SQL_INT64:
-            return type == Types.BIGINT;
+            return jdbcType == Types.BIGINT;
 
         case ISCConstants.SQL_LONG:
-            return type == Types.INTEGER;
+            return jdbcType == Types.INTEGER;
 
         case ISCConstants.SQL_QUAD:
             return false; // not supported right now
 
         case ISCConstants.SQL_SHORT:
-            return type == Types.SMALLINT;
+            return jdbcType == Types.SMALLINT;
 
         case ISCConstants.SQL_TEXT:
-            return type == Types.CHAR;
+            return jdbcType == Types.CHAR;
 
         case ISCConstants.SQL_TIMESTAMP:
-            return type == Types.TIMESTAMP;
+            return jdbcType == Types.TIMESTAMP;
 
         case ISCConstants.SQL_TYPE_DATE:
-            return type == Types.DATE;
+            return jdbcType == Types.DATE;
 
         case ISCConstants.SQL_TYPE_TIME:
-            return type == Types.TIME;
+            return jdbcType == Types.TIME;
 
         case ISCConstants.SQL_VARYING:
-            return type == Types.VARCHAR;
+            return jdbcType == Types.VARCHAR;
 
         case ISCConstants.SQL_NULL:
             return false;
 
         case ISCConstants.SQL_BOOLEAN:
-            return type == Types.BOOLEAN;
+            return jdbcType == Types.BOOLEAN;
 
         default:
             return false;
@@ -264,7 +277,7 @@ public abstract class FBField {
      * This method implements the type compatibility matrix from
      * "JDBC(tm): A Java SQL API, version 1.20" whitepaper, page 21.
      */
-    public final static boolean isCompatible(XSQLVAR field, int type) {
+    public static boolean isCompatible(XSQLVAR field, int type) {
         // turn off null flag, in this case we're not interested in it.
         final int tempType = field.sqltype & ~1;
         switch (tempType) {

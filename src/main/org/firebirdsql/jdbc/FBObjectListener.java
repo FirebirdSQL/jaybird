@@ -18,13 +18,17 @@
  */
 package org.firebirdsql.jdbc;
 
+import org.firebirdsql.gds.ng.fields.FieldValue;
+
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.List;
 
 /**
  * This interface defines set of listeners that will be called in different situations.
  *
  * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
+ * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  */
 public interface FBObjectListener {
 
@@ -54,7 +58,7 @@ public interface FBObjectListener {
          * @param newRow
          *         new row.
          */
-        void rowChanged(FBFetcher fetcher, byte[][] newRow) throws SQLException;
+        void rowChanged(FBFetcher fetcher, List<FieldValue> newRow) throws SQLException;
     }
 
     /**

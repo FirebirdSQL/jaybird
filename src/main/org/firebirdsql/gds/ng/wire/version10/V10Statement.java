@@ -1,7 +1,7 @@
 /*
  * $Id$
  *
- * Firebird Open Source J2EE Connector - JDBC Driver
+ * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -14,7 +14,7 @@
  * This file was created by members of the firebird development team.
  * All individual contributions remain the Copyright (C) of those
  * individuals.  Contributors to this file are either listed here or
- * can be obtained from a source repository history command.
+ * can be obtained from a source control history command.
  *
  * All rights reserved.
  */
@@ -370,6 +370,7 @@ public class V10Statement extends AbstractFbWireStatement implements FbWireState
                     sendExecute(statementType.isTypeWithSingletonResult() ? WireProtocolConstants.op_execute2 : WireProtocolConstants.op_execute, parameters);
                     if (!statementType.isTypeWithCursor()) {
                         // TODO Test if batching requests like this also work with earlier version of Firebird (works on 2.5)
+                        // TODO Batching requests this way has a flaw: if an exception occurs is returned in the response, the next still needs to be read (but probably not always!)
                         sqlCountProcessor = createSqlCountProcessor();
                         sendInfoSql(sqlCountProcessor.getRecordCountInfoItems(), getDefaultSqlInfoSize());
                     } else {

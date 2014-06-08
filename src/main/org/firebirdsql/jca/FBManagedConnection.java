@@ -1,5 +1,7 @@
 /*
- * Firebird Open Source J2ee connector - jdbc driver
+ * $Id$
+ *
+ * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -12,7 +14,7 @@
  * This file was created by members of the firebird development team.
  * All individual contributions remain the Copyright (C) of those
  * individuals.  Contributors to this file are either listed here or
- * can be obtained from a CVS history command.
+ * can be obtained from a source control history command.
  *
  * All rights reserved.
  */
@@ -36,7 +38,7 @@ import org.firebirdsql.gds.impl.DbAttachInfo;
 import org.firebirdsql.gds.impl.GDSHelper;
 import org.firebirdsql.gds.ng.*;
 import org.firebirdsql.gds.ng.fields.FieldValue;
-import org.firebirdsql.gds.ng.listeners.StatementListener;
+import org.firebirdsql.gds.ng.listeners.DefaultStatementListener;
 import org.firebirdsql.jdbc.*;
 import org.firebirdsql.jdbc.field.FBField;
 import org.firebirdsql.jdbc.field.FieldDataProvider;
@@ -48,7 +50,8 @@ import org.firebirdsql.util.SQLExceptionChainBuilder;
  * The class <code>FBManagedConnection</code> implements both the
  * ManagedConnection and XAResource interfaces.
  * 
- * @author <a href="mailto:d_jencks@users.sourceforge.net">David Jencks </a>
+ * @author <a href="mailto:d_jencks@users.sourceforge.net">David Jencks</a>
+ * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @version 1.0
  */
 public class FBManagedConnection implements ManagedConnection, XAResource, ExceptionListener {
@@ -979,7 +982,7 @@ public class FBManagedConnection implements ManagedConnection, XAResource, Excep
         } 
     }
 
-    private static class DataProvider implements FieldDataProvider, StatementListener {
+    private static class DataProvider extends DefaultStatementListener implements FieldDataProvider {
         private final List<List<FieldValue>> rows = new ArrayList<List<FieldValue>>();
         private final int fieldPos;
         private int row;
@@ -1008,21 +1011,6 @@ public class FBManagedConnection implements ManagedConnection, XAResource, Excep
         public void receivedRow(FbStatement sender, List<FieldValue> rowData) {
             rows.add(rowData);
         }
-
-        @Override
-        public void allRowsFetched(FbStatement sender) { }
-
-        @Override
-        public void statementExecuted(FbStatement sender, boolean hasResultSet, boolean hasSingletonResult) { }
-
-        @Override
-        public void statementStateChanged(FbStatement sender, StatementState newState, StatementState previousState) { }
-
-        @Override
-        public void warningReceived(FbStatement sender, SQLWarning warning) { }
-
-        @Override
-        public void sqlCounts(FbStatement sender, SqlCountHolder sqlCounts) { }
     }
     
     /**
