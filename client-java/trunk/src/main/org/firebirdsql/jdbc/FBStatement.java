@@ -30,6 +30,7 @@ import org.firebirdsql.gds.ng.FbStatement;
 import org.firebirdsql.gds.ng.SqlCountHolder;
 import org.firebirdsql.gds.ng.StatementState;
 import org.firebirdsql.gds.ng.fields.FieldValue;
+import org.firebirdsql.gds.ng.fields.RowDescriptor;
 import org.firebirdsql.gds.ng.listeners.StatementListener;
 import org.firebirdsql.jdbc.escape.FBEscapedParser;
 import org.firebirdsql.jdbc.escape.FBEscapedParser.EscapeParserMode;
@@ -67,18 +68,19 @@ public class FBStatement implements FirebirdStatement, Synchronizable {
 
     private SqlCountHolder sqlCountHolder;
 
-    private boolean closed = false;
+    private boolean closed;
     protected boolean completed = true;
     private boolean escapedProcessing = true;
-    private volatile boolean closeOnCompletion = false;
+    private volatile boolean closeOnCompletion;
 
 	protected SQLWarning firstWarning;
 
 	 // If the last executedStatement returns ResultSet or UpdateCount
 	protected boolean isResultSet;
     protected boolean hasMoreResults;
-    protected boolean isSingletonResult;
 
+    // Singleton result indicates it is a stored procedure or [INSERT | UPDATE | DELETE] ... RETURNING ...
+    protected boolean isSingletonResult;
     protected List<FieldValue> singletonResult;
 
     protected int maxRows;	 
@@ -563,7 +565,7 @@ public class FBStatement implements FirebirdStatement, Synchronizable {
         checkValidity();
         ResultSet rs = getResultSet();
         if (rs == null) {
-            rs = new FBResultSet(new XSQLVAR[0], Collections.<byte[][]>emptyList());
+            rs = new FBResultSet(RowDescriptor.EMPTY, Collections.<List<FieldValue>>emptyList());
         }
         return rs;
     }
@@ -886,10 +888,15 @@ public class FBStatement implements FirebirdStatement, Synchronizable {
             throw new FBSQLException("Only one resultset at a time/statement.");
         }
 
+        // We may need to have different behavior if this is a RETURN_GENERATED_KEYS statement
         if (isResultSet) {
-            currentRs = new FBResultSet(gdsHelper, this, fbStatement,
-                    resultSetListener, metaDataQuery, rsType, rsConcurrency,
-                    rsHoldability, false);
+            if (!isSingletonResult) {
+                currentRs = new FBResultSet(gdsHelper, this, fbStatement, resultSetListener, metaDataQuery, rsType,
+                        rsConcurrency, rsHoldability, false);
+            } else {
+                //noinspection unchecked
+                currentRs = new FBResultSet(fbStatement.getFieldDescriptor(), Arrays.asList(singletonResult), resultSetListener);
+            }
 
             return currentRs;
         }
