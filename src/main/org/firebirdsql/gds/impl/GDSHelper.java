@@ -237,21 +237,11 @@ public class GDSHelper {
      * 
      * @param statement
      *            The SQL statement to execute
-     * @throws GDSException
+     * @throws SQLException
      *             if a Firebird-specific error occurs
      */
-    public void executeImmediate(String statement) throws GDSException {
-        // TODO reimplement in FbStatement
-        throw new UnsupportedOperationException("executeImmediate is currently not implemented");
-        /*
-        try {
-            gds.iscDsqlExecImmed2(getIscDBHandle(), currentTr, statement, 3,
-                null, null);
-        } catch(GDSException ex) {
-            notifyListeners(ex);
-            throw ex;
-        }
-        */
+    public void executeImmediate(String statement) throws SQLException {
+        database.executeImmediate(statement, getCurrentTransaction());
     }
 
     /**

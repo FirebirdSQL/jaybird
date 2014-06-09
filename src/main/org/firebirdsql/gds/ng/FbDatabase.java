@@ -133,7 +133,8 @@ public interface FbDatabase {
      * @return Instance of {@link FbBlob}
      * @throws SQLException
      */
-    FbBlob createBlobForInput(FbTransaction transaction, BlobParameterBuffer blobParameterBuffer, long blobId) throws SQLException;
+    FbBlob createBlobForInput(FbTransaction transaction, BlobParameterBuffer blobParameterBuffer,
+            long blobId) throws SQLException;
 
     /**
      * Request database info.
@@ -160,11 +161,27 @@ public interface FbDatabase {
      * @param maxBufferLength
      *         Maximum response buffer length to use
      * @return The response buffer (note: length is the actual length of the
-     *         response, not <code>maxBufferLength</code>
+     * response, not <code>maxBufferLength</code>
      * @throws SQLException
      *         For errors retrieving the information.
      */
     byte[] getDatabaseInfo(byte[] requestItems, int maxBufferLength) throws SQLException;
+
+    /**
+     * Performs an execute immediate of a statement.
+     * <p>
+     * A call to this method is the equivalent of a <code>isc_dsql_execute_immediate()</code> without parameters.
+     * </p>
+     *
+     * @param statementText
+     *         Statement text
+     * @param transaction
+     *         Transaction (<code>null</code> only allowed if database is not attached!)
+     * @throws SQLException
+     *         For errors executing the statement, or if <code>transaction</code> is <code>null</code> when the database
+     *         is attached or not <code>null</code> when the database is not attached
+     */
+    void executeImmediate(String statementText, FbTransaction transaction) throws SQLException;
 
     /**
      * @return The database dialect
@@ -190,7 +207,7 @@ public interface FbDatabase {
      * Current attachment status of the database.
      *
      * @return <code>true</code> if connected to the server and attached to a
-     *         database, <code>false</code> otherwise.
+     * database, <code>false</code> otherwise.
      */
     boolean isAttached();
 
@@ -223,7 +240,7 @@ public interface FbDatabase {
 
     /**
      * @return The connection encoding (should be the same as returned from calling {@link org.firebirdsql.encodings.IEncodingFactory#getDefaultEncoding()}
-     *         on the result of {@link #getEncodingFactory()}.
+     * on the result of {@link #getEncodingFactory()}.
      */
     Encoding getEncoding();
 
