@@ -85,6 +85,7 @@ public class TestFBDriver extends FBTestBase {
      * make server return us a warning.
      */
     public void testWarnings() throws Exception {
+        // TODO Test no longer has desired effect with new protocol implementation, find out why
         Properties info = (Properties)getDefaultPropertiesForConnection().clone();
         info.setProperty("set_db_sql_dialect", "1");
         
