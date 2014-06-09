@@ -163,6 +163,37 @@ public class FBResultSet implements ResultSet, FirebirdResultSet, Synchronizable
      * @param rows Row data
      * @throws SQLException
      */
+    public FBResultSet(RowDescriptor rowDescriptor, List<List<FieldValue>> rows, FBObjectListener.ResultSetListener listener) throws SQLException {
+        // TODO Evaluate if we need to share more implementation with constructor above
+        gdsHelper = null;
+        fbStatement = null;
+        this.listener = listener != null ? listener : FBObjectListener.NoActionResultSetListener.instance();
+        cursorName = null;
+        fbFetcher = new FBCachedFetcher(rows, this);
+        trimStrings = false;
+        this.rowDescriptor = rowDescriptor;
+        fields = new FBField[rowDescriptor.getCount()];
+        colNames = new HashMap<String, Integer>(rowDescriptor.getCount(), 1);
+        prepareVars(true);
+        // TODO Set specific types (see also previous todo)
+        rsType = ResultSet.TYPE_FORWARD_ONLY;
+        rsConcurrency = ResultSet.CONCUR_READ_ONLY;
+        rsHoldability = ResultSet.CLOSE_CURSORS_AT_COMMIT;
+    }
+
+    /**
+     * Creates a FBResultSet with the columns specified by <code>xsqlvars</code> and the data in <code>rows</code>.
+     * <p>
+     * This constructor is intended for metadata result sets, but can be used for other purposes as well.
+     * </p>
+     * <p>
+     * Current implementation will ensure that strings will be trimmed on retrieval.
+     * </p>
+     *
+     * @param rowDescriptor Column definition
+     * @param rows Row data
+     * @throws SQLException
+     */
     public FBResultSet(RowDescriptor rowDescriptor, List<List<FieldValue>> rows) throws SQLException {
         gdsHelper = null;
         fbStatement = null;

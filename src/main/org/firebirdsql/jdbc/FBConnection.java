@@ -771,16 +771,7 @@ public class FBConnection implements FirebirdConnection {
      * @exception SQLException if a database access error occurs
      */
     public synchronized SQLWarning getWarnings() throws SQLException {
-        SQLWarning warning = firstWarning;
-        SQLWarning iscWarning = getIscWarnings();
-        
-        if (warning == null)
-            warning = iscWarning;
-        else
-        if (iscWarning != null)
-            warning.setNextWarning(iscWarning);
-            
-        return warning;
+        return firstWarning;
     }
 
 
@@ -794,7 +785,6 @@ public class FBConnection implements FirebirdConnection {
      */
     public synchronized void clearWarnings() throws SQLException {
 		 firstWarning = null;
-         clearIscWarnings();
     }
 
     /**
@@ -1508,38 +1498,6 @@ public class FBConnection implements FirebirdConnection {
 		 }
 	 }
      
-     /**
-      * Get warnings associated with this database connection.
-      * 
-      * @return instance of {@link SQLWarning} that is the first warning in 
-      * a linked list of warnings.
-      */
-    private SQLWarning getIscWarnings() throws SQLException {
-         try {
-             SQLExceptionChainBuilder<FBSQLWarning> chain = new SQLExceptionChainBuilder<FBSQLWarning>();
-             
-             for (GDSException item : getGDSHelper().getWarnings()) {
-                 FBSQLWarning warning = new FBSQLWarning(item);
-                 chain.append(warning);
-             }
-             
-             return chain.getException();
-         } catch(GDSException ex) {
-             throw new FBSQLException(ex);
-         }
-     }
-     
-     /**
-      * Clear warnings associated with this database connection.
-      */
-     private void clearIscWarnings() throws SQLException {
-         try {
-             getGDSHelper().clearWarnings();
-         } catch(GDSException ex) {
-             throw new FBSQLException(ex);
-         }
-     }
-	 
     public NClob createNClob() throws SQLException {
         throw new FBDriverNotCapableException();
     }
