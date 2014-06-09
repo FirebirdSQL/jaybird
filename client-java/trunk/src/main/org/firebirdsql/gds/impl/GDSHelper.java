@@ -101,18 +101,6 @@ public class GDSHelper {
     
     /**
      * Retrieve a newly allocated statement handle with the current connection.
-     * 
-     * @return The new statement handle
-     * @throws GDSException
-     *             if a database access error occurs
-     */
-    @Deprecated
-    public AbstractIscStmtHandle allocateOldStatement() throws GDSException {
-        throw new UnsupportedOperationException("allocateOldStatement is no longer supported/implemented");
-    }
-
-    /**
-     * Retrieve a newly allocated statement handle with the current connection.
      *
      * @return The new statement handle
      * @throws java.sql.SQLException

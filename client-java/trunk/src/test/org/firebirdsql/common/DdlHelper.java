@@ -1,6 +1,7 @@
 /*
  * $Id$
- * Firebird Open Source J2ee connector - jdbc driver
+ *
+ * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -13,15 +14,11 @@
  * This file was created by members of the firebird development team.
  * All individual contributions remain the Copyright (C) of those
  * individuals.  Contributors to this file are either listed here or
- * can be obtained from a CVS history command.
+ * can be obtained from a source control history command.
  *
  * All rights reserved.
  */
 package org.firebirdsql.common;
-
-import java.sql.Connection;
-import java.sql.SQLException;
-import java.sql.Statement;
 
 import org.firebirdsql.gds.GDSException;
 import org.firebirdsql.gds.ISCConstants;
@@ -29,9 +26,14 @@ import org.firebirdsql.gds.impl.GDSHelper;
 import org.firebirdsql.jdbc.FBConnection;
 import org.firebirdsql.jdbc.FBSQLException;
 
+import java.sql.Connection;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.util.Arrays;
+
 /**
  * Helper class for executing DDL while ignoring certain errors.
- * 
+ *
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  */
 public final class DdlHelper {
@@ -43,8 +45,11 @@ public final class DdlHelper {
         DdlHelper.executeDDL(connection, sql, ISCConstants.isc_no_meta_update);
     }
 
-    public static void executeDDL(Connection connection, String sql, int... ignoreErrors)
-            throws SQLException {
+    public static void executeDDL(Connection connection, String sql, int... ignoreErrors) throws SQLException {
+        if (ignoreErrors != null) {
+            Arrays.sort(ignoreErrors);
+        }
+
         try {
             Statement stmt = connection.createStatement();
             try {
@@ -56,31 +61,14 @@ public final class DdlHelper {
             if (ignoreErrors == null || ignoreErrors.length == 0)
                 throw ex;
 
-            boolean ignoreException = false;
+            for (Throwable current : ex) {
+                if (current instanceof SQLException
+                        && Arrays.binarySearch(ignoreErrors, ((SQLException) current).getErrorCode()) >= 0) {
+                    return;
+                }
+            }
 
-            int errorCode = ex.getErrorCode();
-            Throwable current = ex;
-            errorcodeloop: do {
-                for (int i = 0; i < ignoreErrors.length; i++) {
-                    if (ignoreErrors[i] == errorCode) {
-                        ignoreException = true;
-                        break errorcodeloop;
-                    }
-                }
-                if (current instanceof GDSException) {
-                    current = ((GDSException) current).getNext();
-                } else {
-                    current = current.getCause();
-                }
-                if (current == null || !(current instanceof GDSException)) {
-                    break;
-                } else {
-                    errorCode = ((GDSException) current).getFbErrorCode();
-                }
-            } while (errorCode != -1);
-
-            if (!ignoreException)
-                throw ex;
+            throw ex;
         }
     }
 
