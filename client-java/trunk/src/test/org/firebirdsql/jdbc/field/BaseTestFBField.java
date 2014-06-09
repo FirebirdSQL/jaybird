@@ -1,7 +1,7 @@
 /*
  * $Id$
- * 
- * Firebird Open Source J2ee connector - jdbc driver
+ *
+ * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -14,7 +14,7 @@
  * This file was created by members of the firebird development team.
  * All individual contributions remain the Copyright (C) of those
  * individuals.  Contributors to this file are either listed here or
- * can be obtained from a CVS history command.
+ * can be obtained from a source control history command.
  *
  * All rights reserved.
  */
@@ -28,15 +28,18 @@ import java.sql.Date;
 import java.sql.SQLException;
 import java.sql.Time;
 import java.sql.Timestamp;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import junit.framework.TestCase;
-import org.firebirdsql.gds.XSQLVAR;
-import org.firebirdsql.gds.impl.GDSType;
-import org.firebirdsql.gds.impl.jni.XSQLVARLittleEndianImpl;
-import org.firebirdsql.jdbc.FBResultSet;
+import org.firebirdsql.gds.ng.fields.FieldValue;
+import org.firebirdsql.gds.ng.fields.RowDescriptor;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.rules.ExpectedException;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 /**
  * Describe class <code>BaseTestFBField</code> here.
@@ -44,7 +47,11 @@ import org.firebirdsql.jdbc.FBResultSet;
  * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
  * @version 1.0
  */
-public abstract class BaseTestFBField extends TestCase {
+public abstract class BaseTestFBField {
+
+    @Rule
+    public final ExpectedException expectedException = ExpectedException.none();
+
     protected FBField field;
     static byte TEST_BYTE = Byte.MAX_VALUE;
     static short TEST_SHORT = Short.MAX_VALUE;
@@ -52,132 +59,110 @@ public abstract class BaseTestFBField extends TestCase {
     static long TEST_LONG = Long.MAX_VALUE;
     static float TEST_FLOAT = Float.MAX_VALUE;
     static double TEST_DOUBLE = Double.MAX_VALUE;
-    static int TEST_BOOLEAN_INT = 1;
     static byte[] TEST_BYTES = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 };
 
-    static long TEST_TIME_LONG = System.currentTimeMillis();
+    static Date TEST_DATE = new Date(System.currentTimeMillis());
 
-    static Date TEST_DATE =
-    		new Date(System.currentTimeMillis());
+    static Time TEST_TIME = new Time(System.currentTimeMillis());
 
-    static Time TEST_TIME =
-    		new Time(System.currentTimeMillis());
+    static Timestamp TEST_TIMESTAMP = new Timestamp(System.currentTimeMillis());
 
-    static Timestamp TEST_TIMESTAMP =
-    		new Timestamp(System.currentTimeMillis());
-
-    public BaseTestFBField(String testName) {
-        super(testName);
+    protected FieldDataProvider createDataProvider(RowDescriptor rowDescriptor) throws SQLException {
+        assert rowDescriptor.getCount() == 1 : "Test should use a single column";
+        List<FieldValue> row = rowDescriptor.createDefaultFieldValues();
+        return row.get(0);
     }
 
-    protected FieldDataProvider createDataProvider(XSQLVAR[] xsqlvars) throws SQLException {
-        byte[][] row = new byte[1][];
-        List<byte[][]> rows = new ArrayList<byte[][]>();
-        rows.add(row);
-        final FBFieldResultSet rs = new FBFieldResultSet(xsqlvars, rows);
-        rs.next();
-        // anonymous implementation of the FieldDataProvider interface
-        FieldDataProvider dataProvider = new FieldDataProvider() {
-
-            public byte[] getFieldData() {
-                return rs.getCurrentRow()[0];
-            }
-
-            public void setFieldData(byte[] data) {
-                rs.getCurrentRow()[0] = data;
-            }
-        };
-
-        return dataProvider;
-    }
-
+    @Test
     public void testByte() throws SQLException {
         field.setByte(TEST_BYTE);
-        field.copyOI();
         assertEquals("Byte values test failure", TEST_BYTE, field.getByte());
     }
 
+    @Test
     public void testShort() throws SQLException {
         field.setShort(TEST_SHORT);
-        field.copyOI();
         assertEquals("Short values test failure", TEST_SHORT, field.getShort());
     }
 
+    @Test
     public void testInteger() throws SQLException {
         field.setInteger(TEST_INT);
-        field.copyOI();
         assertEquals("Integer values test failure", TEST_INT, field.getInt());
     }
 
+    @Test
     public void testLong() throws SQLException {
         field.setLong(TEST_LONG);
-        field.copyOI();
         assertEquals("Long values test failure", TEST_LONG, field.getLong());
     }
 
+    @Test
     public void testFloat() throws SQLException {
         field.setFloat(TEST_FLOAT);
-        field.copyOI();
-        assertEquals("Float values test failure", TEST_FLOAT, field.getFloat());
+        assertEquals("Float values test failure", TEST_FLOAT, field.getFloat(), 0.0);
     }
 
+    @Test
     public void testDouble() throws SQLException {
         field.setDouble(TEST_DOUBLE);
-        field.copyOI();
         assertEquals("Double values test failure", TEST_DOUBLE, field.getDouble(), 0.0);
     }
 
+    @Test
     public abstract void testBigDecimal() throws SQLException;
 
+    @Test
     public void testBoolean() throws SQLException {
         field.setBoolean(true);
-        field.copyOI();
         assertTrue("Boolean values test failure", field.getBoolean());
     }
 
+    @Test
     public abstract void testObject() throws SQLException;
 
+    @Test
     public abstract void testString() throws SQLException;
 
+    @Test
     public void testAsciiStream() throws SQLException {
         field.setAsciiStream(new ByteArrayInputStream(TEST_BYTES), TEST_BYTES.length);
-        field.copyOI();
         assertTrue("ASCII stream values test failure", Arrays.equals(TEST_BYTES, readInputStream(field.getAsciiStream())));
     }
 
+    @Test
     public void testUnicodeStream() throws SQLException {
         field.setUnicodeStream(new ByteArrayInputStream(TEST_BYTES), TEST_BYTES.length);
-        field.copyOI();
         assertTrue("Unicode stream values test failure", Arrays.equals(TEST_BYTES, readInputStream(field.getUnicodeStream())));
     }
 
+    @Test
     public void testBinaryStream() throws SQLException {
         field.setBinaryStream(new ByteArrayInputStream(TEST_BYTES), TEST_BYTES.length);
-        field.copyOI();
         assertTrue("Binary stream values test failure", Arrays.equals(TEST_BYTES, readInputStream(field.getBinaryStream())));
     }
 
+    @Test
     public void testBytes() throws SQLException {
         field.setBytes(TEST_BYTES);
-        field.copyOI();
         assertTrue("Byte array values test failure", Arrays.equals(TEST_BYTES, field.getBytes()));
     }
 
+    @Test
     public void testDate() throws SQLException {
         field.setDate(TEST_DATE);
-        field.copyOI();
         assertEquals("Date values test failure", TEST_DATE.toString(), field.getDate().toString());
     }
 
+    @Test
     public void testTime() throws SQLException {
         field.setTime(TEST_TIME);
-        field.copyOI();
         assertEquals("Time values test failure", TEST_TIME.toString(), field.getTime().toString());
     }
 
+    @Test
     public void testTimestamp() throws SQLException {
         field.setTimestamp(TEST_TIMESTAMP);
-        field.copyOI();
         assertEquals("Timestamp values test failure", TEST_TIMESTAMP, field.getTimestamp());
     }
 
@@ -185,28 +170,14 @@ public abstract class BaseTestFBField extends TestCase {
         try {
             ByteArrayOutputStream out = new ByteArrayOutputStream();
             byte[] buff = new byte[4096];
-            int counter = 0;
+            int counter;
             while ((counter = in.read(buff)) != -1)
                 out.write(buff, 0, counter);
             return out.toByteArray();
         } catch (IOException ioex) {
-            assertTrue("IOException happened during processing.", false);
+            fail("IOException happened during processing.");
             // lets make compiler happy! :)
             return null;
         }
-    }
-
-    protected XSQLVAR createXSQLVAR() {
-        if (getGdsType() == GDSType.getType("PURE_JAVA"))
-            return new org.firebirdsql.gds.XSQLVAR();
-        else if (getGdsType() == GDSType.getType("NATIVE")
-                || getGdsType() == GDSType.getType("EMBEDDED"))
-            return new XSQLVARLittleEndianImpl();
-        else
-            throw new RuntimeException("Unrecognised GDSType");
-    }
-
-    protected GDSType getGdsType() {
-        return GDSType.getType("PURE_JAVA");
     }
 }

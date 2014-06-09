@@ -1,5 +1,7 @@
 /*
- * Firebird Open Source J2ee connector - jdbc driver
+ * $Id$
+ *
+ * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -12,22 +14,22 @@
  * This file was created by members of the firebird development team.
  * All individual contributions remain the Copyright (C) of those
  * individuals.  Contributors to this file are either listed here or
- * can be obtained from a CVS history command.
+ * can be obtained from a source control history command.
  *
  * All rights reserved.
  */
-
 package org.firebirdsql.jdbc.field;
 
-
-import org.firebirdsql.gds.XSQLVAR;
 import org.firebirdsql.gds.ISCConstants;
+import org.firebirdsql.gds.ng.fields.RowDescriptor;
+import org.firebirdsql.gds.ng.fields.RowDescriptorBuilder;
+import org.junit.Before;
+import org.junit.Test;
 
 import java.math.BigDecimal;
 import java.sql.SQLException;
 
-import junit.framework.Test;
-import junit.framework.TestSuite;
+import static org.junit.Assert.assertEquals;
 
 /**
  * Describe class <code>TestFBShortField</code> here.
@@ -36,131 +38,100 @@ import junit.framework.TestSuite;
  * @version 1.0
  */
 public class TestFBShortField extends BaseTestFBField {
-	public TestFBShortField(String testName) {
-		super(testName);
-	}
 
-	protected void setUp() throws SQLException {
-        XSQLVAR[] xsqlvars = new XSQLVAR[1];
-        xsqlvars[0] = createXSQLVAR();
-        xsqlvars[0].sqltype = ISCConstants.SQL_SHORT;
-        field = FBField.createField(xsqlvars[0], createDataProvider(xsqlvars), null, false);
-	}
+    @Before
+    public void setUp() throws SQLException {
+        RowDescriptorBuilder rowDescriptorBuilder = new RowDescriptorBuilder(1);
+        rowDescriptorBuilder.setFieldIndex(0);
+        rowDescriptorBuilder.setType(ISCConstants.SQL_SHORT);
+        rowDescriptorBuilder.addField();
+        RowDescriptor rowDescriptor = rowDescriptorBuilder.toRowDescriptor();
+        field = FBField.createField(rowDescriptor.getFieldDescriptor(0), createDataProvider(rowDescriptor), null, false);
+    }
 
-	protected void tearDown() {
-	}
+    @Test
+    public void testObject() throws SQLException {
+        field.setObject(TEST_SHORT);
+        assertEquals((int) TEST_SHORT, field.getObject());
+    }
 
-	public static Test suite() {
-		return new TestSuite(TestFBShortField.class);
-	}
+    @Test
+    public void testUnicodeStream() throws SQLException {
+        expectedException.expect(TypeConversionException.class);
+        super.testUnicodeStream();
+    }
 
+    @Test
+    public void testBinaryStream() throws SQLException {
+        expectedException.expect(TypeConversionException.class);
+        super.testBinaryStream();
+    }
 
+    @Test
+    public void testString() throws SQLException {
+        final String shortString = Short.toString(TEST_SHORT);
+        field.setString(shortString);
+        assertEquals(shortString, field.getString());
+    }
 
-	public void testObject() throws SQLException {
-		field.setObject(new Short(TEST_SHORT));
-		field.copyOI();
-		assertTrue(field.getObject().equals(new Integer(TEST_SHORT)));
-	}
-	public void testUnicodeStream() throws SQLException {
-		try {
-			super.testUnicodeStream();
-			assertTrue("This method should fail.", false);
-		} catch(SQLException ex) {
-			//everything is ok :)
-		}
-	}
-	public void testBinaryStream() throws SQLException {
-		try {
-			super.testBinaryStream();
-			assertTrue("This method should fail.", false);
-		} catch(SQLException ex) {
-			//everything is ok :)
-		}
+    @Test
+    public void testAsciiStream() throws SQLException {
+        expectedException.expect(TypeConversionException.class);
+        super.testAsciiStream();
+    }
 
-	}
-	public void testString() throws SQLException {
-		field.setString(Short.toString(TEST_SHORT));
-		field.copyOI();
-		assertTrue(field.getString().equals(Short.toString(TEST_SHORT)));
-	}
-	public void testAsciiStream() throws SQLException {
-		try {
-			super.testAsciiStream();
-			assertTrue("This method should fail.", false);
-		} catch(SQLException ex) {
-			//everything is ok :)
-		}
-	}
-	public void testTimestamp() throws SQLException {
-		try {
-			super.testTimestamp();
-			assertTrue("This method should fail.", false);
-		} catch(SQLException ex) {
-			//everything is ok :)
-		}
-	}
-	public void testBigDecimal() throws SQLException {
-		BigDecimal testBigDecimal =	BigDecimal.valueOf(TEST_SHORT);
-		field.setBigDecimal(testBigDecimal);
-		field.copyOI();
-		assertTrue(field.getBigDecimal().equals(testBigDecimal));
-	}
-	public void testDate() throws SQLException {
-		try {
-			super.testDate();
-			assertTrue("This method should fail.", false);
-		} catch(SQLException ex) {
-			//everything is ok :)
-		}
-	}
-	public void testTime() throws SQLException {
-		try {
-			super.testTime();
-			assertTrue("This method should fail.", false);
-		} catch(SQLException ex) {
-			//everything is ok :)
-		}
-	}
-	public void testBytes() throws SQLException {
-		try {
-			super.testBytes();
-			assertTrue("This method should fail.", false);
-		} catch(SQLException ex) {
-			//everything is ok :)
-		}
+    @Test
+    public void testTimestamp() throws SQLException {
+        expectedException.expect(TypeConversionException.class);
+        super.testTimestamp();
+    }
 
-	}
-	public void testInteger() throws SQLException {
-		try {
-			super.testInteger();
-			assertTrue("This method should fail.", false);
-		} catch(SQLException ex) {
-			//everything is ok :)
-		}
-	}
-	public void testLong() throws SQLException {
-		try {
-			super.testLong();
-			assertTrue("This method should fail.", false);
-		} catch(SQLException ex) {
-			//everything is ok :)
-		}
-	}
-	public void testFloat() throws SQLException {
-		try {
-			super.testFloat();
-			assertTrue("This method should fail.", false);
-		} catch(SQLException sqlex) {
-			//everything is ok :)
-		}
-	}
-	public void testDouble() throws SQLException {
-		try {
-			super.testDouble();
-			assertTrue("This method should fail.", false);
-		} catch(SQLException sqlex) {
-			//everything is ok :)
-		}
-	}
+    @Test
+    public void testBigDecimal() throws SQLException {
+        BigDecimal testBigDecimal = BigDecimal.valueOf(TEST_SHORT);
+        field.setBigDecimal(testBigDecimal);
+        assertEquals(testBigDecimal, field.getBigDecimal());
+    }
 
+    @Test
+    public void testDate() throws SQLException {
+        expectedException.expect(TypeConversionException.class);
+        super.testDate();
+    }
+
+    @Test
+    public void testTime() throws SQLException {
+        expectedException.expect(TypeConversionException.class);
+        super.testTime();
+    }
+
+    @Test
+    public void testBytes() throws SQLException {
+        expectedException.expect(TypeConversionException.class);
+        super.testBytes();
+    }
+
+    @Test
+    public void testInteger() throws SQLException {
+        expectedException.expect(TypeConversionException.class);
+        super.testInteger();
+    }
+
+    @Test
+    public void testLong() throws SQLException {
+        expectedException.expect(TypeConversionException.class);
+        super.testLong();
+    }
+
+    @Test
+    public void testFloat() throws SQLException {
+        expectedException.expect(TypeConversionException.class);
+        super.testFloat();
+    }
+
+    @Test
+    public void testDouble() throws SQLException {
+        expectedException.expect(TypeConversionException.class);
+        super.testDouble();
+    }
 }
