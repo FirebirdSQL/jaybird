@@ -1,5 +1,7 @@
 /*
- * Firebird Open Source J2ee connector - jdbc driver
+ * $Id$
+ *
+ * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -12,7 +14,7 @@
  * This file was created by members of the firebird development team.
  * All individual contributions remain the Copyright (C) of those
  * individuals.  Contributors to this file are either listed here or
- * can be obtained from a CVS history command.
+ * can be obtained from a source control history command.
  *
  * All rights reserved.
  */
@@ -119,7 +121,6 @@ public abstract class FBField {
 
     protected XSQLVAR field;
     private final FieldDataProvider dataProvider;
-    protected int numCol;
     protected GDSHelper gdsHelper = null;
     protected String iscEncoding = null;
     protected String javaEncoding = null;
@@ -349,7 +350,7 @@ public abstract class FBField {
         }
     }
 
-    public final static boolean isNullType(XSQLVAR field) {
+    public static boolean isNullType(XSQLVAR field) {
         final int tempType = field.sqltype & ~1;
 
         return tempType == ISCConstants.SQL_NULL;
@@ -537,12 +538,8 @@ public abstract class FBField {
     }
 
     private boolean isOctetsAsBytes() {
-        if (gdsHelper == null) {
-            return false;
-        }
-
-        return gdsHelper.getDatabaseParameterBuffer().hasArgument(
-                DatabaseParameterBufferExtension.OCTETS_AS_BYTES);
+        return gdsHelper != null
+                && gdsHelper.getDatabaseParameterBuffer().hasArgument(DatabaseParameterBufferExtension.OCTETS_AS_BYTES);
     }
 
     public Object getObject() throws SQLException {
@@ -572,22 +569,22 @@ public abstract class FBField {
 
         case Types.BIT:
         case Types.BOOLEAN:
-            return Boolean.valueOf(getBoolean());
+            return getBoolean();
 
         case Types.TINYINT:
         case Types.SMALLINT:
         case Types.INTEGER:
-            return Integer.valueOf(getInt());
+            return getInt();
 
         case Types.BIGINT:
-            return Long.valueOf(getLong());
+            return getLong();
 
         case Types.REAL:
-            return Float.valueOf(getFloat());
+            return getFloat();
 
         case Types.FLOAT:
         case Types.DOUBLE:
-            return Double.valueOf(getDouble());
+            return getDouble();
 
         case Types.BINARY:
         case Types.VARBINARY:
@@ -739,23 +736,23 @@ public abstract class FBField {
                 setBinaryStream(((Blob) value).getBinaryStream(), (int) ((Blob) value).length());
             }
         } else if (value instanceof Boolean) {
-            setBoolean(((Boolean) value).booleanValue());
+            setBoolean((Boolean) value);
         } else if (value instanceof Byte) {
-            setByte(((Byte) value).byteValue());
+            setByte((Byte) value);
         } else if (value instanceof byte[]) {
             setBytes((byte[]) value);
         } else if (value instanceof Date) {
             setDate((Date) value);
         } else if (value instanceof Double) {
-            setDouble(((Double) value).doubleValue());
+            setDouble((Double) value);
         } else if (value instanceof Float) {
-            setFloat(((Float) value).floatValue());
+            setFloat((Float) value);
         } else if (value instanceof Integer) {
-            setInteger(((Integer) value).intValue());
+            setInteger((Integer) value);
         } else if (value instanceof Long) {
-            setLong(((Long) value).longValue());
+            setLong((Long) value);
         } else if (value instanceof Short) {
-            setShort(((Short) value).shortValue());
+            setShort((Short) value);
         } else if (value instanceof String) {
             setString((String) value);
         } else if (value instanceof Time) {
@@ -817,12 +814,6 @@ public abstract class FBField {
 
     public void setClob(FBClob clob) throws SQLException {
         throw new TypeConversionException(FBField.CLOB_CONVERSION_ERROR);
-    }
-
-    // This method is only for the tests
-    //
-    void copyOI() {
-        dataProvider.setFieldData(dataProvider.getFieldData());
     }
 
     protected boolean isInvertTimeZone() {
