@@ -26,6 +26,7 @@ import org.firebirdsql.gds.DatabaseParameterBuffer;
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.TransactionParameterBuffer;
 import org.firebirdsql.gds.impl.DatabaseParameterBufferExtension;
+import org.firebirdsql.gds.impl.wire.WireProtocolConstants;
 import org.firebirdsql.gds.impl.wire.XdrInputStream;
 import org.firebirdsql.gds.impl.wire.XdrOutputStream;
 import org.firebirdsql.gds.impl.wire.Xdrable;
@@ -46,6 +47,7 @@ import java.sql.SQLWarning;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.firebirdsql.gds.impl.wire.WireProtocolConstants.*;
+import static org.firebirdsql.gds.ng.TransactionHelper.checkTransactionActive;
 
 /**
  * {@link FbWireDatabase} implementation for the version 10 wire protocol.
@@ -351,6 +353,47 @@ public class V10Database extends AbstractFbWireDatabase implements FbWireDatabas
                 final byte[] responseBuffer = new byte[responseLength];
                 System.arraycopy(data, 0, responseBuffer, 0, responseLength);
                 return responseBuffer;
+            } catch (IOException ex) {
+                throw new FbExceptionBuilder().exception(ISCConstants.isc_net_read_err).cause(ex).toSQLException();
+            }
+        }
+    }
+
+    @Override
+    public void executeImmediate(String statementText, FbTransaction transaction) throws SQLException {
+        // TODO also implement op_exec_immediate2
+        if (isAttached()) {
+            if (transaction == null) {
+                // TODO SQLState and/or Firebird specific error
+                throw new SQLException("executeImmediate requires a transaction when attached");
+            }
+            checkTransactionActive(transaction);
+        } else if (transaction != null) {
+            // TODO SQLState and/or Firebird specific error
+            throw new SQLException("executeImmediate when not attached should have no transaction");
+        }
+        synchronized (getSynchronizationObject()) {
+            try {
+                final XdrOutputStream xdrOut = getXdrOut();
+                xdrOut.writeInt(WireProtocolConstants.op_exec_immediate);
+
+                xdrOut.writeInt(transaction != null ? transaction.getHandle() : 0);
+                xdrOut.writeInt(getHandle());
+                xdrOut.writeInt(getConnectionDialect());
+                xdrOut.writeString(statementText, getEncoding());
+
+                // information request items
+                xdrOut.writeBuffer(null);
+                xdrOut.writeInt(0);
+                getXdrOut().flush();
+            } catch (IOException ex) {
+                throw new FbExceptionBuilder().exception(ISCConstants.isc_net_write_err).cause(ex).toSQLException();
+            }
+            try {
+                if (!isAttached()) {
+                    processAttachOrCreateResponse(readGenericResponse(null));
+                }
+                readGenericResponse(null);
             } catch (IOException ex) {
                 throw new FbExceptionBuilder().exception(ISCConstants.isc_net_read_err).cause(ex).toSQLException();
             }
