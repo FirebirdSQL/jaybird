@@ -31,6 +31,7 @@ import org.firebirdsql.gds.ng.fields.FieldValue;
 import org.firebirdsql.gds.ng.fields.RowDescriptor;
 import org.firebirdsql.gds.ng.wire.*;
 import org.firebirdsql.jdbc.FBSQLException;
+import org.firebirdsql.util.SQLExceptionChainBuilder;
 
 import java.io.IOException;
 import java.sql.SQLException;
@@ -381,23 +382,38 @@ public class V10Statement extends AbstractFbWireStatement implements FbWireState
                     switchState(StatementState.ERROR);
                     throw new FbExceptionBuilder().exception(ISCConstants.isc_net_write_err).cause(ex).toSQLException();
                 }
+                final SQLExceptionChainBuilder<SQLException> chain = new SQLExceptionChainBuilder<SQLException>();
                 try {
                     final boolean hasFields = getFieldDescriptor() != null && getFieldDescriptor().getCount() > 0;
                     final WarningMessageCallback statementWarningCallback = getStatementWarningCallback();
-                    if (statementType.isTypeWithSingletonResult()) {
-                        // A type with a singleton result (ie an execute procedure), doesn't actually have a result set that will be fetched, instead we have a singleton result if we have fields
-                        statementListenerDispatcher.statementExecuted(this, false, hasFields);
-                        processExecuteSingletonResponse(getDatabase().readSqlResponse(statementWarningCallback));
-                        if (hasFields) {
-                            setAllRowsFetched(true);
+
+                    try {
+                        if (statementType.isTypeWithSingletonResult()) {
+                            // A type with a singleton result (ie an execute procedure), doesn't actually have a result set that will be fetched, instead we have a singleton result if we have fields
+                            statementListenerDispatcher.statementExecuted(this, false, hasFields);
+                            processExecuteSingletonResponse(getDatabase().readSqlResponse(statementWarningCallback));
+                            if (hasFields) {
+                                setAllRowsFetched(true);
+                            }
+                        } else {
+                            // A normal execute is never a singleton result (even if it only produces a single result)
+                            statementListenerDispatcher.statementExecuted(this, hasFields, false);
                         }
-                    } else {
-                        // A normal execute is never a singleton result (even if it only produces a single result)
-                        statementListenerDispatcher.statementExecuted(this, hasFields, false);
+                        processExecuteResponse(getDatabase().readGenericResponse(statementWarningCallback));
+                    } catch (SQLException ex) {
+                        chain.append(ex);
                     }
-                    processExecuteResponse(getDatabase().readGenericResponse(statementWarningCallback));
+
                     if (sqlCountProcessor != null) {
-                        statementListenerDispatcher.sqlCounts(this, sqlCountProcessor.process(processInfoSqlResponse(getDatabase().readGenericResponse(statementWarningCallback))));
+                        try {
+                            statementListenerDispatcher.sqlCounts(this, sqlCountProcessor.process(processInfoSqlResponse(getDatabase().readGenericResponse(statementWarningCallback))));
+                        } catch (SQLException ex) {
+                            chain.append(ex);
+                        }
+                    }
+
+                    if (chain.hasException()) {
+                        throw chain.getException();
                     }
 
                     if (getState() != StatementState.ERROR) {
