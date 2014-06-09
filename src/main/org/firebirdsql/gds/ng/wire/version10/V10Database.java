@@ -26,7 +26,6 @@ import org.firebirdsql.gds.DatabaseParameterBuffer;
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.TransactionParameterBuffer;
 import org.firebirdsql.gds.impl.DatabaseParameterBufferExtension;
-import org.firebirdsql.gds.impl.wire.WireProtocolConstants;
 import org.firebirdsql.gds.impl.wire.XdrInputStream;
 import org.firebirdsql.gds.impl.wire.XdrOutputStream;
 import org.firebirdsql.gds.impl.wire.Xdrable;
@@ -375,7 +374,7 @@ public class V10Database extends AbstractFbWireDatabase implements FbWireDatabas
         synchronized (getSynchronizationObject()) {
             try {
                 final XdrOutputStream xdrOut = getXdrOut();
-                xdrOut.writeInt(WireProtocolConstants.op_exec_immediate);
+                xdrOut.writeInt(op_exec_immediate);
 
                 xdrOut.writeInt(transaction != null ? transaction.getHandle() : 0);
                 xdrOut.writeInt(getHandle());
