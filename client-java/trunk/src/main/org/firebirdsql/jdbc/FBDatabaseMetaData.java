@@ -4644,7 +4644,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
      * @exception SQLException if a database access error occurs
      */
     public int getOdsMajorVersion() throws SQLException {
-    	return gdsHelper.getIscDBHandle().getODSMajorVersion();
+        return gdsHelper.getCurrentDatabase().getOdsMajor();
     }
     
     /**
@@ -4653,7 +4653,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
      * @exception SQLException if a database access error occurs
      */
     public int getOdsMinorVersion() throws SQLException {
-    	return gdsHelper.getIscDBHandle().getODSMinorVersion();
+    	return gdsHelper.getCurrentDatabase().getOdsMinor();
     }
 
     /**
