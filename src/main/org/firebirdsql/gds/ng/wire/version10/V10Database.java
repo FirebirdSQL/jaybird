@@ -346,12 +346,7 @@ public class V10Database extends AbstractFbWireDatabase implements FbWireDatabas
             }
             try {
                 GenericResponse genericResponse = readGenericResponse(null);
-                byte[] data = genericResponse.getData();
-                int responseLength = Math.min(maxBufferLength, data.length);
-                // TODO Can't we just return data?
-                final byte[] responseBuffer = new byte[responseLength];
-                System.arraycopy(data, 0, responseBuffer, 0, responseLength);
-                return responseBuffer;
+                return genericResponse.getData();
             } catch (IOException ex) {
                 throw new FbExceptionBuilder().exception(ISCConstants.isc_net_read_err).cause(ex).toSQLException();
             }
