@@ -180,8 +180,7 @@ public interface FbStatement {
      * @throws SQLException
      *         For errors retrieving or transforming the response.
      */
-    <T> T getSqlInfo(final byte[] requestItems, final int bufferLength,
-            final InfoProcessor<T> infoProcessor) throws SQLException;
+    <T> T getSqlInfo(byte[] requestItems, int bufferLength, InfoProcessor<T> infoProcessor) throws SQLException;
 
     /**
      * Request statement info.

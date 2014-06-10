@@ -117,14 +117,6 @@ public abstract class AbstractFbStatement implements FbStatement {
     }
 
     /**
-     * Records affected items
-     * TODO: Compare with current implementation
-     */
-    private static final byte[] ROWS_AFFECTED_INFO_ITEMS = new byte[]{
-            ISCConstants.isc_info_sql_records
-    };
-
-    /**
      * Get synchronization object.
      *
      * @return object, cannot be <code>null</code>.
@@ -238,10 +230,6 @@ public abstract class AbstractFbStatement implements FbStatement {
         synchronized (getSynchronizationObject()) {
             this.type = type;
         }
-    }
-
-    public byte[] getRowsAffectedInfoItems() {
-        return ROWS_AFFECTED_INFO_ITEMS.clone();
     }
 
     /**

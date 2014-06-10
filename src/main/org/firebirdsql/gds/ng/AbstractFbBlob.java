@@ -280,9 +280,29 @@ public abstract class AbstractFbBlob implements FbBlob, TransactionListener, Dat
         }
     }
 
-    protected FbDatabase getDatabase() {
+    @Override
+    public FbDatabase getDatabase() {
         synchronized (getSynchronizationObject()) {
             return database;
+        }
+    }
+
+    @Override
+    public <T> T getBlobInfo(final byte[] requestItems, final int bufferLength, final InfoProcessor<T> infoProcessor)
+            throws SQLException {
+        return infoProcessor.process(getBlobInfo(requestItems, bufferLength));
+    }
+
+    @Override
+    public long length() throws SQLException {
+        synchronized (getSynchronizationObject()) {
+            checkDatabaseAttached();
+            if (getBlobId() == FbBlob.NO_BLOB_ID) {
+                // TODO type, message and state
+                throw new SQLException("No blob id associated with this blob");
+            }
+            final BlobLengthProcessor blobLengthProcessor = createBlobLengthProcessor();
+            return getBlobInfo(blobLengthProcessor.getBlobLengthItems(), 20, blobLengthProcessor);
         }
     }
 
@@ -314,4 +334,11 @@ public abstract class AbstractFbBlob implements FbBlob, TransactionListener, Dat
      * @return <code>true</code> when the blob parameter buffer class is valid for the blob implementation.
      */
     protected abstract boolean isValidBlobParameterBufferClass(Class<? extends BlobParameterBuffer> blobParameterBufferClass);
+
+    /**
+     * @return New instance of {@link BlobLengthProcessor} (or subclass) for this blob.
+     */
+    protected BlobLengthProcessor createBlobLengthProcessor() {
+        return new BlobLengthProcessor(this);
+    }
 }

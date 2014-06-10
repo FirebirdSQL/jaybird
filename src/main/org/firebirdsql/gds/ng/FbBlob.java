@@ -47,6 +47,11 @@ public interface FbBlob {
     int getHandle();
 
     /**
+     * @return The database connection that created this statement
+     */
+    FbDatabase getDatabase();
+
+    /**
      * Opens an existing input blob, or creates an output blob.
      *
      * @throws SQLException
@@ -163,6 +168,45 @@ public interface FbBlob {
      * @return The maximum segment size allowed for get or put.
      */
     int getMaximumSegmentSize();
+
+    /**
+     * Request blob info.
+     *
+     * @param requestItems
+     *         Array of info items to request
+     * @param bufferLength
+     *         Response buffer length to use
+     * @param infoProcessor
+     *         Implementation of {@link org.firebirdsql.gds.ng.InfoProcessor} to transform
+     *         the info response
+     * @return Transformed info response of type T
+     * @throws SQLException
+     *         For errors retrieving or transforming the response.
+     */
+    <T> T getBlobInfo(byte[] requestItems, int bufferLength, InfoProcessor<T> infoProcessor)
+            throws SQLException;
+
+    /**
+     * Requests the blob length from the server.
+     *
+     * @return Length of the blob.
+     * @throws SQLException
+     *         For Errors retrieving the length, or if the blob is not associated with a blob id, or the database is not
+     *         attached.
+     */
+    long length() throws SQLException;
+
+    /**
+     * Request blob info.
+     *
+     * @param requestItems
+     *         Array of info items to request
+     * @param bufferLength
+     *         Response buffer length to use
+     * @return Response buffer
+     * @throws SQLException
+     */
+    byte[] getBlobInfo(byte[] requestItems, int bufferLength) throws SQLException;
 
     /**
      * Seek mode for {@link FbBlob#seek(int, org.firebirdsql.gds.ng.FbBlob.SeekMode)}.

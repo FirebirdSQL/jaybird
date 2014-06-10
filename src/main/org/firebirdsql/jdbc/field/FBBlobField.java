@@ -118,9 +118,7 @@ public class FBBlobField extends FBField implements FBFlushableField {
             final FbBlob blobHandle = gdsHelper.openBlob(blobId, FBBlob.SEGMENTED);
 
             try {
-                // TODO implement
-                if (true) throw new UnsupportedOperationException("blob length not implemented");
-                final int blobLength = 0; //gdsHelper.getBlobLength(blobHandle);
+                final int blobLength = (int) blobHandle.length();
                 final int bufferLength = gdsHelper.getBlobBufferLength();
                 final byte[] resultBuffer = new byte[blobLength];
 

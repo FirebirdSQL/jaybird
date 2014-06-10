@@ -181,9 +181,7 @@ public class FBBlob implements FirebirdBlob, Synchronizable {
             try {
                 FbBlob blob = gdsHelper.openBlob(blob_id, SEGMENTED);
                 try {
-                    // TODO Implement
-                    throw new UnsupportedOperationException("blobInfo not yet implemented");
-                    /*return gdsHelper.getBlobInfo(blob, items, buffer_length);*/
+                    return blob.getBlobInfo(items, buffer_length);
                 } finally {
                     // TODO Does it make sense to close blob here?
                     blob.close();

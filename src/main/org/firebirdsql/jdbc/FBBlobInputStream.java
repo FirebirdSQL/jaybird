@@ -85,18 +85,11 @@ public final class FBBlobInputStream extends InputStream implements FirebirdBlob
     public long length() throws IOException {
         synchronized (owner.getSynchronizationObject()) {
             checkClosed();
-            // TODO Add length support to FbBlob.
-            throw new UnsupportedOperationException("length currently not implemented in FbBlob");
-            /*
             try {
-                byte[] info = owner.getGdsHelper().getBlobInfo(blobHandle, FBBlob.BLOB_LENGTH_REQUEST, 20);
-                return owner.interpretLength(info, 0);
-            } catch (GDSException ex) {
-                throw new IOException(ex.getMessage(), ex);
-            } catch (SQLException ex) {
-                throw new IOException(ex.getMessage(), ex);
+                return blobHandle.length();
+            } catch (SQLException e) {
+                throw new IOException(e);
             }
-            */
         }
     }
 
