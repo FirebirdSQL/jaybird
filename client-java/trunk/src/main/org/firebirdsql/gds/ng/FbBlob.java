@@ -47,7 +47,7 @@ public interface FbBlob {
     int getHandle();
 
     /**
-     * @return The database connection that created this statement
+     * @return The database connection that created this blob
      */
     FbDatabase getDatabase();
 
