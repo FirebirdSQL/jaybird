@@ -63,18 +63,12 @@ public final class FBBlobOutputStream extends OutputStream implements FirebirdBl
     @Override
     public long length() throws IOException {
         synchronized (owner.getSynchronizationObject()) {
-            // TODO Implement
-            throw new UnsupportedOperationException("length not yet implemented");
-            /*
+            checkClosed();
             try {
-                final byte[] info = owner.getGdsHelper().getBlobInfo(blobHandle, FBBlob.BLOB_LENGTH_REQUEST, 20);
-                return owner.interpretLength(info, 0);
-            } catch (GDSException ex) {
-                throw new IOException(ex.getMessage(), ex);
-            } catch (SQLException ex) {
-                throw new IOException(ex.getMessage(), ex);
+                return blobHandle.length();
+            } catch (SQLException e) {
+                throw new IOException(e);
             }
-            */
         }
     }
 
