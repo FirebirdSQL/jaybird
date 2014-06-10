@@ -1218,14 +1218,12 @@ public class FBManagedConnection implements ManagedConnection, XAResource, Excep
         }
         
         // new xid for us
-        FbTransaction transaction;
         try {
-            transaction = gdsHelper.startTransaction(tpb.getTransactionParameterBuffer());
+            FbTransaction transaction = gdsHelper.startTransaction(tpb.getTransactionParameterBuffer());
+            xidMap.put(xid, transaction);
         } catch (SQLException e) {
             throw new FBXAException(e.getMessage(), XAException.XAER_RMERR, e);
         }
-
-        xidMap.put(xid, transaction);
     }
     
     void notify(CELNotifier notifier, ConnectionEvent ce) {
