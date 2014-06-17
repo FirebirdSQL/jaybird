@@ -276,10 +276,10 @@ public final class FbConnectionProperties implements IConnectionProperties {
         }
 
         if (dpb.hasArgument(ISCConstants.isc_dpb_connect_timeout)) {
-            setConnectTimeout(ISCConstants.isc_dpb_connect_timeout);
+            setConnectTimeout(dpb.getArgumentAsInt(ISCConstants.isc_dpb_connect_timeout));
         }
         if (dpb.hasArgument(ISCConstants.isc_dpb_so_timeout)) {
-            setSoTimeout(ISCConstants.isc_dpb_so_timeout);
+            setSoTimeout(dpb.getArgumentAsInt(ISCConstants.isc_dpb_so_timeout));
         }
 
         if (dpb.hasArgument(ISCConstants.isc_dpb_socket_buffer_size)) {
