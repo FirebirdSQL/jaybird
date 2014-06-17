@@ -148,6 +148,9 @@ public class FBSQLException extends SQLException {
         if (cause instanceof GDSException) {
             return ((GDSException) cause).getIntParam();
         }
+        if (cause instanceof SQLException) {
+            return ((SQLException) cause).getErrorCode();
+        }
         return 0;
     }
 
