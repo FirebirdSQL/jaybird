@@ -25,6 +25,7 @@ import javax.resource.ResourceException;
 
 import org.firebirdsql.gds.GDSException;
 import org.firebirdsql.jca.FBResourceException;
+import org.firebirdsql.jca.FBXAException;
 
 public class FBSQLException extends SQLException {
 
@@ -150,6 +151,13 @@ public class FBSQLException extends SQLException {
         }
         if (cause instanceof SQLException) {
             return ((SQLException) cause).getErrorCode();
+        }
+        if (cause instanceof FBXAException) {
+            FBXAException fbXaException = (FBXAException) cause;
+            Throwable cause2 = fbXaException.getCause();
+            if (cause2 instanceof SQLException) {
+                return ((SQLException) cause2).getErrorCode();
+            }
         }
         return 0;
     }
