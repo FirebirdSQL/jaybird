@@ -1,5 +1,7 @@
 /*
- * Firebird Open Source J2ee connector - jdbc driver
+ * $Id$
+ *
+ * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -12,11 +14,10 @@
  * This file was created by members of the firebird development team.
  * All individual contributions remain the Copyright (C) of those
  * individuals.  Contributors to this file are either listed here or
- * can be obtained from a CVS history command.
+ * can be obtained from a source control history command.
  *
  * All rights reserved.
  */
-
 package org.firebirdsql.gds.impl.jni;
 
 import org.firebirdsql.gds.BlobParameterBuffer;
@@ -27,15 +28,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 
-/**
- * 
- */
-public class BlobParameterBufferImp extends ParameterBufferBase implements
-        BlobParameterBuffer {
-
-    public BlobParameterBufferImp() {
-        super();
-    }
+public class BlobParameterBufferImp extends ParameterBufferBase implements BlobParameterBuffer {
 
     @Override
     public void addArgument(int argumentType, int value) {
@@ -53,10 +46,10 @@ public class BlobParameterBufferImp extends ParameterBufferBase implements
     }
 
     /**
-     * Pacakage local method for obtaining buffer suitable for passing to native
+     * Package local method for obtaining buffer suitable for passing to native
      * method.
-     * 
-     * @return
+     *
+     * @return Buffer for native method
      */
     byte[] getBytesForNativeCode() {
         final ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();

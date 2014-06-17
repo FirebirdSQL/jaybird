@@ -1,4 +1,6 @@
 /*
+ * $Id$
+ *
  * Public Firebird Java API.
  *
  * Redistribution and use in source and binary forms, with or without 
@@ -22,7 +24,6 @@
  * OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-
 package org.firebirdsql.gds;
 
 /**
@@ -30,7 +31,7 @@ package org.firebirdsql.gds;
  * Firebird API documentation and specifies the attributes for the  Services API
  * connection.
  */
-public interface ServiceParameterBuffer {
+public interface ServiceParameterBuffer extends ParameterBuffer {
     
     int VERSION                 = ISCConstants.isc_spb_version;
     int VERSION1                = ISCConstants.isc_spb_version1;
@@ -50,51 +51,5 @@ public interface ServiceParameterBuffer {
     int CONNECT_TIMEOUT         = ISCConstants.isc_spb_connect_timeout;
     int DUMMY_PACKET_INTERVAL   = ISCConstants.isc_spb_dummy_packet_interval;
     int SQL_ROLE_NAME           = ISCConstants.isc_spb_sql_role_name;
-    
 
-    /**
-     * Set a void (valueless) parameter on this
-     * <code>ServiceParameterBuffer</code>.
-     * 
-     * @param argumentType
-     *            The parameter to be set, one of the <code>isc_spb_*</code>
-     *            constants from {@link ISCConstants}
-     */
-    public void addArgument(int argumentType);
-
-    /**
-     * Set a <code>String</code> parameter on this
-     * <code>ServiceParameterBuffer</code>.
-     * 
-     * @param argumentType
-     *            The parameter to be set, one of the <code>isc_spb_*</code>
-     *            constants from {@link ISCConstants}
-     * @param value
-     *            The value to set for the given parameter type
-     */
-    public void addArgument(int argumentType, String value);
-
-    /**
-     * Set an <code>int</code> paramter on this
-     * <code>ServiceParameterBuffer</code>.
-     * 
-     * @param argumentType
-     *            The parameter to be set, one of the <code>isc_spb_*</code>
-     *            constants from {@link ISCConstants}
-     * @param value
-     *            The value to set for the given parameter type
-     */
-    public void addArgument(int argumentType, int value);
-
-    /**
-     * Set an <code>byte[]</code> paramter on this
-     * <code>ServiceParameterBuffer</code>.
-     * 
-     * @param argumentType
-     *            The parameter to be set, one of the <code>isc_spb_*</code>
-     *            constants from {@link ISCConstants}
-     * @param data
-     *            The value to set for the given parameter type
-     */
-    public void addArgument(int argumentType, byte[] data);
 }

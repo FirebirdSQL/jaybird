@@ -1,5 +1,7 @@
 /*
- * Firebird Open Source J2ee connector - jdbc driver
+ * $Id$
+ *
+ * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -12,7 +14,7 @@
  * This file was created by members of the firebird development team.
  * All individual contributions remain the Copyright (C) of those
  * individuals.  Contributors to this file are either listed here or
- * can be obtained from a CVS history command.
+ * can be obtained from a source control history command.
  *
  * All rights reserved.
  */
@@ -20,22 +22,18 @@ package org.firebirdsql.gds.impl.wire;
 
 import org.firebirdsql.gds.TransactionParameterBuffer;
 
-
 /**
  * Implementation of the {@link org.firebirdsql.gds.TransactionParameterBuffer}
- * interface. 
+ * interface.
  */
-public class TransactionParameterBufferImpl extends ParameterBufferBase
-        implements TransactionParameterBuffer {
+public class TransactionParameterBufferImpl extends ParameterBufferBase implements TransactionParameterBuffer {
 
-    /* (non-Javadoc)
-     * @see org.firebirdsql.gds.TransactionParameterBuffer#deepCopy()
-     */
+    @Override
     public TransactionParameterBuffer deepCopy() {
         TransactionParameterBufferImpl result = new TransactionParameterBufferImpl();
-        
-        result.getArgumentsList().addAll( this.getArgumentsList() );
-        
+
+        result.getArgumentsList().addAll(this.getArgumentsList());
+
         return result;
     }
 
