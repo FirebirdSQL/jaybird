@@ -32,7 +32,8 @@ package org.firebirdsql.gds;
  * connection.
  */
 public interface ServiceParameterBuffer extends ParameterBuffer {
-    
+
+    //@formatter:off
     int VERSION                 = ISCConstants.isc_spb_version;
     int VERSION1                = ISCConstants.isc_spb_version1;
     int CURRENT_VERSION         = ISCConstants.isc_spb_current_version;
@@ -51,5 +52,5 @@ public interface ServiceParameterBuffer extends ParameterBuffer {
     int CONNECT_TIMEOUT         = ISCConstants.isc_spb_connect_timeout;
     int DUMMY_PACKET_INTERVAL   = ISCConstants.isc_spb_dummy_packet_interval;
     int SQL_ROLE_NAME           = ISCConstants.isc_spb_sql_role_name;
-
+    //@formatter:on
 }

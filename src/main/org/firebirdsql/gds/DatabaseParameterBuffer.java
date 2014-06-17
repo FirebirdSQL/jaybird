@@ -30,13 +30,14 @@ package org.firebirdsql.gds;
  * Instance of this interface represents a Database Parameter Buffer from the
  * Firebird API documentation and specifies the attributes for the
  * current connection.
- * <p>
+ * <p/>
  * Additionally it is possible to change some database properties in a permanent
  * way, however this approach is not recommended. Please use instead management
  * API.
  */
 public interface DatabaseParameterBuffer extends ParameterBuffer {
-    
+
+    //@formatter:off
     int CDD_PATHNAME            = ISCConstants.isc_dpb_cdd_pathname;
     int ALLOCATION              = ISCConstants.isc_dpb_allocation;
     int JOURNAL                 = ISCConstants.isc_dpb_journal;
@@ -106,17 +107,19 @@ public interface DatabaseParameterBuffer extends ParameterBuffer {
     int GFIX_ATTACH             = ISCConstants.isc_dpb_gfix_attach;
     int GSTAT_ATTACH            = ISCConstants.isc_dpb_gstat_attach;
     int SET_DB_CHARSET          = ISCConstants.isc_dpb_set_db_charset;
-    
+
     int GSEC_ATTACH             = ISCConstants.isc_dpb_gsec_attach;
     int ADDRESS_PATH            = ISCConstants.isc_dpb_address_path;
     int PROCESS_ID              = ISCConstants.isc_dpb_process_id;
     int NO_DB_TRIGGERS          = ISCConstants.isc_dpb_no_db_triggers;
     int TRUSTED_AUTH            = ISCConstants.isc_dpb_trusted_auth;
     int PROCESS_NAME            = ISCConstants.isc_dpb_process_name;
+    //@formatter:on
 
     /**
-	 * Make a deep copy of this object.
-	 * @return deep copy of this object.
-	 */
+     * Make a deep copy of this object.
+     *
+     * @return deep copy of this object.
+     */
     DatabaseParameterBuffer deepCopy();
 }

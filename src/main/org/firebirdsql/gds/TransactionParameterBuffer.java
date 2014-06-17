@@ -31,7 +31,8 @@ package org.firebirdsql.gds;
  * Firebird API.
  */
 public interface TransactionParameterBuffer extends ParameterBuffer {
-    
+
+    //@formatter:off
     int AUTOCOMMIT         = ISCConstants.isc_tpb_autocommit;
 
     int READ_COMMITTED      = ISCConstants.isc_tpb_read_committed;
@@ -63,10 +64,12 @@ public interface TransactionParameterBuffer extends ParameterBuffer {
     int NO_AUTO_UNDO        = ISCConstants.isc_tpb_no_auto_undo;
     
     int LOCK_TIMEOUT        = ISCConstants.isc_tpb_lock_timeout;
+    //@formatter:on
 
     /**
      * Make a deep copy of this object.
+     *
      * @return deep copy of this object.
-     */ 
+     */
     TransactionParameterBuffer deepCopy();
 }
