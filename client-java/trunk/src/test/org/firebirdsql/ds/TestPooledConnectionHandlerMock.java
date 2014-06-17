@@ -27,6 +27,7 @@ import org.firebirdsql.jdbc.FBSQLException;
 import org.jmock.Expectations;
 import org.jmock.Sequence;
 import org.jmock.integration.junit4.JUnitRuleMockery;
+import org.jmock.lib.concurrent.Synchroniser;
 import org.jmock.lib.legacy.ClassImposteriser;
 import org.junit.Rule;
 import org.junit.Test;
@@ -45,6 +46,7 @@ public class TestPooledConnectionHandlerMock {
     public final JUnitRuleMockery context = new JUnitRuleMockery();
     {
         context.setImposteriser(ClassImposteriser.INSTANCE);
+        context.setThreadingPolicy(new Synchroniser());
     }
 
     @Rule

@@ -10,6 +10,7 @@ import java.util.Calendar;
 import org.firebirdsql.gds.XSQLVAR;
 import org.jmock.Expectations;
 import org.jmock.integration.junit4.JUnitRuleMockery;
+import org.jmock.lib.concurrent.Synchroniser;
 import org.jmock.lib.legacy.ClassImposteriser;
 import org.junit.Before;
 import org.junit.Rule;
@@ -26,8 +27,9 @@ public class TestFBNullField {
     public final JUnitRuleMockery context = new JUnitRuleMockery();
     {
         context.setImposteriser(ClassImposteriser.INSTANCE);
+        context.setThreadingPolicy(new Synchroniser());
     }
-    
+
     private FieldDataProvider fieldData;
     private FBNullField field;
     
