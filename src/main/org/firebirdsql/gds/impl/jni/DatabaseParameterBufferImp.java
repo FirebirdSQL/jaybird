@@ -1,5 +1,7 @@
 /*
- * Firebird Open Source J2ee connector - jdbc driver
+ * $Id$
+ *
+ * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -12,7 +14,7 @@
  * This file was created by members of the firebird development team.
  * All individual contributions remain the Copyright (C) of those
  * individuals.  Contributors to this file are either listed here or
- * can be obtained from a CVS history command.
+ * can be obtained from a source control history command.
  *
  * All rights reserved.
  */
@@ -25,16 +27,9 @@ import org.firebirdsql.gds.impl.DatabaseParameterBufferExtension;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 
-/**
- * 
- */
-public class DatabaseParameterBufferImp extends ParameterBufferBase implements
-        DatabaseParameterBufferExtension {
+public class DatabaseParameterBufferImp extends ParameterBufferBase implements DatabaseParameterBufferExtension {
 
-    public DatabaseParameterBufferImp() {
-        super();
-    }
-
+    @Override
     public DatabaseParameterBuffer deepCopy() {
         final DatabaseParameterBufferImp copy = new DatabaseParameterBufferImp();
 
@@ -48,8 +43,8 @@ public class DatabaseParameterBufferImp extends ParameterBufferBase implements
     /**
      * Package local method for obtaining buffer suitable for passing to native
      * method.
-     * 
-     * @return
+     *
+     * @return Buffer for native method
      */
     byte[] getBytesForNativeCode() {
         final ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
@@ -64,13 +59,14 @@ public class DatabaseParameterBufferImp extends ParameterBufferBase implements
         return byteArrayOutputStream.toByteArray();
     }
 
+    @Override
     public DatabaseParameterBuffer removeExtensionParams() {
         DatabaseParameterBuffer copy = deepCopy();
-        
+
         for (int i = 0; i < DatabaseParameterBufferExtension.EXTENSION_PARAMETERS.length; i++) {
             copy.removeArgument(DatabaseParameterBufferExtension.EXTENSION_PARAMETERS[i]);
         }
-        
+
         return copy;
     }
 }

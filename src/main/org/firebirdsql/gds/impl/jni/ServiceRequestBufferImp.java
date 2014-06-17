@@ -29,13 +29,15 @@ import java.io.OutputStream;
 /**
  * ngds implementation for ServiceRequestBufferImp.
  */
-class ServiceRequestBufferImp extends ParameterBufferBase implements
-        ServiceRequestBuffer {
+class ServiceRequestBufferImp extends ParameterBufferBase implements ServiceRequestBuffer {
+
+    private final int taskIdentifier;
 
     /**
      * Every ServiceRequestBuffer has an associated taskIdentifier.
-     * 
+     *
      * @param taskIdentifier
+     *         Service request task
      */
     ServiceRequestBufferImp(int taskIdentifier) {
         this.taskIdentifier = taskIdentifier;
@@ -57,13 +59,13 @@ class ServiceRequestBufferImp extends ParameterBufferBase implements
             }
 
             @Override
-             protected int getMaxSupportedLength() {
+            protected int getMaxSupportedLength() {
                 // TODO Check if this might be signed
                 return 65535;
             }
         });
     }
-    
+
     @Override
     public void addArgument(int argumentType, int value) {
         getArgumentsList().add(new NumericArgument(argumentType, value) {
@@ -76,13 +78,14 @@ class ServiceRequestBufferImp extends ParameterBufferBase implements
             @Override
             protected void writeValue(OutputStream outputStream, int value) throws IOException {
                 outputStream.write(value);
-                outputStream.write(value>>8);
-                outputStream.write(value>>16);
-                outputStream.write(value>>24);
+                outputStream.write(value >> 8);
+                outputStream.write(value >> 16);
+                outputStream.write(value >> 24);
             }
         });
     }
-    
+
+    @Override
     public void addArgument(int argumentType, byte value) {
         getArgumentsList().add(new NumericArgument(argumentType, value) {
 
@@ -90,7 +93,7 @@ class ServiceRequestBufferImp extends ParameterBufferBase implements
             public int getLength() {
                 return 2;
             }
-            
+
             @Override
             protected void writeValue(OutputStream outputStream, final int value) throws IOException {
                 outputStream.write(value);
@@ -101,8 +104,8 @@ class ServiceRequestBufferImp extends ParameterBufferBase implements
     /**
      * Package local method for obtaining buffer suitable for passing to native
      * method.
-     * 
-     * @return
+     *
+     * @return Buffer for native method
      */
     byte[] toByteArray() {
         final ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
@@ -116,8 +119,4 @@ class ServiceRequestBufferImp extends ParameterBufferBase implements
 
         return byteArrayOutputStream.toByteArray();
     }
-
-    // PRIVATE MEMBERS
-
-    private final int taskIdentifier;
 }

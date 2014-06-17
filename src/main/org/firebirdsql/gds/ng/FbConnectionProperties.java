@@ -21,7 +21,11 @@
 package org.firebirdsql.gds.ng;
 
 import org.firebirdsql.gds.DatabaseParameterBuffer;
-import org.firebirdsql.gds.ISCConstants;
+import org.firebirdsql.gds.Parameter;
+import org.firebirdsql.logging.Logger;
+import org.firebirdsql.logging.LoggerFactory;
+
+import static org.firebirdsql.gds.ISCConstants.*;
 
 /**
  * Mutable implementation of {@link IConnectionProperties}
@@ -31,6 +35,8 @@ import org.firebirdsql.gds.ISCConstants;
  * @since 2.3
  */
 public final class FbConnectionProperties implements IConnectionProperties {
+
+    private static final Logger log = LoggerFactory.getLogger(FbConnectionProperties.class, false);
 
     private String databaseName;
     private String serverName = IConnectionProperties.DEFAULT_SERVER_NAME;
@@ -250,48 +256,46 @@ public final class FbConnectionProperties implements IConnectionProperties {
      */
     @Deprecated
     public void fromDpb(DatabaseParameterBuffer dpb) {
-        if (dpb.hasArgument(ISCConstants.isc_dpb_user_name)) {
-            setUser(dpb.getArgumentAsString(ISCConstants.isc_dpb_user_name));
-        }
-        if (dpb.hasArgument(ISCConstants.isc_dpb_password)) {
-            setPassword(dpb.getArgumentAsString(ISCConstants.isc_dpb_password));
-        }
-        if (dpb.hasArgument(ISCConstants.isc_dpb_sql_role_name)) {
-            setRoleName(dpb.getArgumentAsString(ISCConstants.isc_dpb_sql_role_name));
-        }
-
-        if (dpb.hasArgument(ISCConstants.isc_dpb_lc_ctype)) {
-            setEncoding(dpb.getArgumentAsString(ISCConstants.isc_dpb_lc_ctype));
-        }
-        if (dpb.hasArgument(ISCConstants.isc_dpb_local_encoding)) {
-            setCharSet(dpb.getArgumentAsString(ISCConstants.isc_dpb_local_encoding));
-        }
-
-        if (dpb.hasArgument(ISCConstants.isc_dpb_sql_dialect)) {
-            setConnectionDialect((short) dpb.getArgumentAsInt(ISCConstants.isc_dpb_sql_dialect));
-        }
-
-        if (dpb.hasArgument(ISCConstants.isc_dpb_num_buffers)) {
-            setPageCacheSize(dpb.getArgumentAsInt(ISCConstants.isc_dpb_num_buffers));
-        }
-
-        if (dpb.hasArgument(ISCConstants.isc_dpb_connect_timeout)) {
-            setConnectTimeout(dpb.getArgumentAsInt(ISCConstants.isc_dpb_connect_timeout));
-        }
-        if (dpb.hasArgument(ISCConstants.isc_dpb_so_timeout)) {
-            setSoTimeout(dpb.getArgumentAsInt(ISCConstants.isc_dpb_so_timeout));
-        }
-
-        if (dpb.hasArgument(ISCConstants.isc_dpb_socket_buffer_size)) {
-            setSocketBufferSize(dpb.getArgumentAsInt(ISCConstants.isc_dpb_socket_buffer_size));
-        }
-
-        if (dpb.hasArgument(ISCConstants.isc_dpb_result_set_holdable)) {
-            setResultSetDefaultHoldable(true);
-        }
-
-        if (dpb.hasArgument(ISCConstants.isc_dpb_column_label_for_name)) {
-            setColumnLabelForName(true);
+        for (Parameter parameter : dpb) {
+            switch(parameter.getType()) {
+            case isc_dpb_user_name:
+                setUser(parameter.getValueAsString());
+                break;
+            case isc_dpb_password:
+                setPassword(parameter.getValueAsString());
+                break;
+            case isc_dpb_sql_role_name:
+                setRoleName(parameter.getValueAsString());
+                break;
+            case isc_dpb_lc_ctype:
+                setEncoding(parameter.getValueAsString());
+                break;
+            case isc_dpb_local_encoding:
+                setCharSet(parameter.getValueAsString());
+                break;
+            case isc_dpb_sql_dialect:
+                setConnectionDialect((short) parameter.getValueAsInt());
+                break;
+            case isc_dpb_num_buffers:
+                setPageCacheSize(parameter.getValueAsInt());
+                break;
+            case isc_dpb_connect_timeout:
+                setConnectTimeout(parameter.getValueAsInt());
+                break;
+            case isc_dpb_so_timeout:
+                setSoTimeout(parameter.getValueAsInt());
+                break;
+            case isc_dpb_socket_buffer_size:
+                setSocketBufferSize(parameter.getValueAsInt());
+                break;
+            case isc_dpb_result_set_holdable:
+                setResultSetDefaultHoldable(true);
+                break;
+            case isc_dpb_column_label_for_name:
+                setColumnLabelForName(true);
+            default:
+                log.warn(String.format("Unknown or unsupported parameter with type %d ignored", parameter.getType()));
+            }
         }
     }
 }

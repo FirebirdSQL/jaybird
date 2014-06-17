@@ -1,5 +1,7 @@
 /*
- * Firebird Open Source J2ee connector - jdbc driver
+ * $Id$
+ *
+ * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -12,30 +14,32 @@
  * This file was created by members of the firebird development team.
  * All individual contributions remain the Copyright (C) of those
  * individuals.  Contributors to this file are either listed here or
- * can be obtained from a CVS history command.
+ * can be obtained from a source control history command.
  *
  * All rights reserved.
  */
 package org.firebirdsql.gds.impl.wire;
 
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.OutputStream;
-
 import org.firebirdsql.gds.ServiceRequestBuffer;
 import org.firebirdsql.gds.impl.argument.NumericArgument;
 import org.firebirdsql.gds.impl.argument.StringArgument;
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
+
 /**
  * Implementation for ServiceRequestBufferImp.
  */
-class ServiceRequestBufferImp extends ParameterBufferBase implements
-        ServiceRequestBuffer {
+class ServiceRequestBufferImp extends ParameterBufferBase implements ServiceRequestBuffer {
+
+    private final int taskIdentifier;
 
     /**
      * Every ServiceRequestBuffer has an associated taskIdentifier.
-     * 
+     *
      * @param taskIdentifier
+     *         Service request task
      */
     ServiceRequestBufferImp(int taskIdentifier) {
         this.taskIdentifier = taskIdentifier;
@@ -44,7 +48,7 @@ class ServiceRequestBufferImp extends ParameterBufferBase implements
     public int getTaskIdentifier() {
         return taskIdentifier;
     }
-    
+
     @Override
     public void addArgument(int argumentType, String value) {
         getArgumentsList().add(new StringArgument(argumentType, value) {
@@ -77,25 +81,26 @@ class ServiceRequestBufferImp extends ParameterBufferBase implements
             public int getLength() {
                 return 5;
             }
-            
+
             @Override
             protected void writeValue(OutputStream outputStream, int value) throws IOException {
                 outputStream.write(value);
-                outputStream.write(value>>8);
-                outputStream.write(value>>16);
-                outputStream.write(value>>24);
+                outputStream.write(value >> 8);
+                outputStream.write(value >> 16);
+                outputStream.write(value >> 24);
             }
         });
     }
-    
-    public void addArgument(int argumentType, byte value){
-        getArgumentsList().add(new NumericArgument(argumentType, value){
-            
+
+    @Override
+    public void addArgument(int argumentType, byte value) {
+        getArgumentsList().add(new NumericArgument(argumentType, value) {
+
             @Override
             public int getLength() {
                 return 2;
             }
-            
+
             @Override
             protected void writeValue(OutputStream outputStream, int value) throws IOException {
                 outputStream.write(value);
@@ -108,18 +113,16 @@ class ServiceRequestBufferImp extends ParameterBufferBase implements
         outputStream.write(taskIdentifier);
         super.write(outputStream);
     }
-    
+
     public byte[] toByteArray() throws IOException {
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         XdrOutputStream outputStream = new XdrOutputStream(out);
-        
+
         write(outputStream);
-        
+
         outputStream.flush();
         out.flush();
-        
+
         return out.toByteArray();
     }
-    
-    private final int taskIdentifier;
 }
