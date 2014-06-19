@@ -47,10 +47,20 @@ public class V10Transaction extends AbstractFbTransaction implements FbWireTrans
 
     /**
      * Creates a new instance of V10Transaction for the specified database.
+     * <p>
+     * This can either be used for an active handle (with <code>initialState</code> {@link org.firebirdsql.gds.ng.TransactionState#ACTIVE}),
+     * or a reconnected (prepared) handle (with <code>initialState</code> {@link org.firebirdsql.gds.ng.TransactionState#PREPARED}).
+     * </p>
      *
-     * @param database FbWireDatabase implementation
+     * @param database
+     *         FbWireDatabase implementation
+     * @param transactionHandle
+     *         transactionHandle
+     * @param initialState
+     *         The initial state of the transaction (only <code>ACTIVE</code> or <code>PREPARED</code> allowed).
      */
-    public V10Transaction(FbWireDatabase database, int transactionHandle) {
+    public V10Transaction(FbWireDatabase database, int transactionHandle, TransactionState initialState) {
+        super(initialState);
         this.database = database;
         handle = transactionHandle;
     }

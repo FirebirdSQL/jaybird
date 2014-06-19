@@ -26,6 +26,7 @@ import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.impl.wire.DatabaseParameterBufferImp;
 import org.firebirdsql.gds.impl.wire.WireProtocolConstants;
 import org.firebirdsql.gds.ng.IConnectionProperties;
+import org.firebirdsql.gds.ng.TransactionState;
 import org.firebirdsql.gds.ng.fields.BlrCalculator;
 import org.firebirdsql.gds.ng.wire.*;
 
@@ -53,8 +54,9 @@ public final class Version10Descriptor extends AbstractProtocolDescriptor implem
     }
 
     @Override
-    public FbWireTransaction createTransaction(final FbWireDatabase database, final int transactionHandle) {
-        return new V10Transaction(database, transactionHandle);
+    public FbWireTransaction createTransaction(final FbWireDatabase database, final int transactionHandle,
+            final TransactionState initialState) {
+        return new V10Transaction(database, transactionHandle, initialState);
     }
 
     @Override

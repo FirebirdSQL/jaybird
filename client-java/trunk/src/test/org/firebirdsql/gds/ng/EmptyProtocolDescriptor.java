@@ -47,7 +47,8 @@ public class EmptyProtocolDescriptor extends AbstractProtocolDescriptor {
     }
 
     @Override
-    public FbWireTransaction createTransaction(final FbWireDatabase database, final int transactionHandle) {
+    public FbWireTransaction createTransaction(final FbWireDatabase database, final int transactionHandle,
+            final TransactionState initialState) {
         return null;
     }
 
