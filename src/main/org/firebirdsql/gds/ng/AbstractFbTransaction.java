@@ -24,6 +24,9 @@ import org.firebirdsql.gds.ng.listeners.TransactionListener;
 import org.firebirdsql.gds.ng.listeners.TransactionListenerDispatcher;
 
 import java.sql.SQLException;
+import java.util.Collections;
+import java.util.EnumSet;
+import java.util.Set;
 
 /**
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
@@ -31,9 +34,24 @@ import java.sql.SQLException;
  */
 public abstract class AbstractFbTransaction implements FbTransaction {
 
+    private static final Set<TransactionState> ALLOWED_INITIAL_STATES = Collections.unmodifiableSet(EnumSet.of(TransactionState.ACTIVE, TransactionState.PREPARED));
     private final Object syncObject = new Object();
     protected final TransactionListenerDispatcher transactionListenerDispatcher = new TransactionListenerDispatcher();
     private volatile TransactionState state = TransactionState.ACTIVE;
+
+    /**
+     * Initializes AbstractFbTransaction.
+     *
+     * @param initialState
+     *         Initial transaction state (allowed values are {@link org.firebirdsql.gds.ng.TransactionState#ACTIVE}
+     *         and {@link org.firebirdsql.gds.ng.TransactionState#PREPARED}.
+     */
+    protected AbstractFbTransaction(TransactionState initialState) {
+        if (!ALLOWED_INITIAL_STATES.contains(initialState)) {
+            throw new IllegalArgumentException(String.format("Illegal initial transaction state: %s, allowed states are: %s", initialState, ALLOWED_INITIAL_STATES));
+        }
+        this.state = initialState;
+    }
 
     @Override
     public final TransactionState getState() {
@@ -42,12 +60,12 @@ public abstract class AbstractFbTransaction implements FbTransaction {
 
     /**
      * Switches current state to the supplied newState.
-     * 
+     *
      * @param newState
-     *            New state to switch to
+     *         New state to switch to
      * @throws SQLException
-     *             If the requested state transition is not allowed or if the
-     *             current state is also changed in a concurrent thread.
+     *         If the requested state transition is not allowed or if the
+     *         current state is also changed in a concurrent thread.
      */
     protected final void switchState(final TransactionState newState) throws SQLException {
         synchronized (getSynchronizationObject()) {

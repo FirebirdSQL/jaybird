@@ -309,7 +309,39 @@ public class V10Database extends AbstractFbWireDatabase implements FbWireDatabas
             } catch (IOException ioex) {
                 throw new FbExceptionBuilder().exception(ISCConstants.isc_net_read_err).cause(ioex).toSQLException();
             }
-            transaction = protocolDescriptor.createTransaction(this, response.getObjectHandle());
+            transaction = protocolDescriptor.createTransaction(this, response.getObjectHandle(), TransactionState.ACTIVE);
+        }
+        transaction.addTransactionListener(this);
+        transactionCount.incrementAndGet();
+        return transaction;
+    }
+
+    @Override
+    public FbTransaction reconnectTransaction(long transactionId) throws SQLException {
+        final FbWireTransaction transaction;
+        synchronized (getSynchronizationObject()) {
+            GenericResponse response;
+            try {
+                final XdrOutputStream xdrOut = getXdrOut();
+                xdrOut.writeInt(op_reconnect);
+                xdrOut.writeInt(getHandle());
+                // TODO: Only sending integer, why long?
+                byte[] buf = new byte[4];
+                // Note: This uses a atypical encoding (as this is actually a TPB without a type)
+                for (int i = 0; i < 4; i++) {
+                    buf[i] = (byte) (transactionId >>> (i * 8));
+                }
+                xdrOut.writeBuffer(buf);
+                xdrOut.flush();
+            } catch (IOException ioex) {
+                throw new FbExceptionBuilder().exception(ISCConstants.isc_net_write_err).cause(ioex).toSQLException();
+            }
+            try {
+                response = (GenericResponse) readResponse(null);
+            } catch (IOException ioex) {
+                throw new FbExceptionBuilder().exception(ISCConstants.isc_net_read_err).cause(ioex).toSQLException();
+            }
+            transaction = protocolDescriptor.createTransaction(this, response.getObjectHandle(), TransactionState.PREPARED);
         }
         transaction.addTransactionListener(this);
         transactionCount.incrementAndGet();

@@ -36,7 +36,9 @@ import javax.transaction.xa.*;
 
 import org.firebirdsql.gds.*;
 import org.firebirdsql.gds.impl.*;
+import org.firebirdsql.gds.ng.FbDatabase;
 import org.firebirdsql.gds.ng.FbDatabaseFactory;
+import org.firebirdsql.gds.ng.FbTransaction;
 import org.firebirdsql.jdbc.*;
 
 /**
@@ -718,28 +720,24 @@ public class FBManagedConnectionFactory implements ManagedConnectionFactory,
                     }
                 }
 
-                if (!found)
-                    throw new FBXAException((commit ? "Commit" : "Rollback")
-                            + " called with unknown transaction.",
+                if (!found) {
+                    throw new FBXAException((commit ? "Commit" : "Rollback") + " called with unknown transaction.",
                             XAException.XAER_NOTA);
+                }
 
-                IscDbHandle dbHandle = null; // tempMc.getGDSHelper().getCurrentDbHandle();
-
-                // TODO Implemented reconnect
-                if (true)
-                    throw new UnsupportedOperationException("Reconnect currently not implemented");
-                IscTrHandle trHandle = gds.createIscTrHandle();
-                gds.iscReconnectTransaction(trHandle, dbHandle,
-                                fbTransactionId);
+                FbDatabase dbHandle = tempMc.getGDSHelper().getCurrentDatabase();
+                FbTransaction trHandle = dbHandle.reconnectTransaction(fbTransactionId);
 
                 // complete transaction by commit or rollback
-                if (commit)
-                    gds.iscCommitTransaction(trHandle);
-                else
-                    gds.iscRollbackTransaction(trHandle);
-                
+                if (commit) {
+                    trHandle.commit();
+                } else {
+                    trHandle.rollback();
+                }
+
+                // TODO: Rewrite removal from rdb$transactions
                 // remove heuristic data from rdb$transactions
-                try {
+                /*try {
                     String query = "delete from rdb$transactions where rdb$transaction_id = " + fbTransactionId;
                     GDSHelper gdsHelper = new GDSHelper(gds, getDatabaseParameterBuffer(), dbHandle, null, null);
 
@@ -760,10 +758,35 @@ public class FBManagedConnectionFactory implements ManagedConnectionFactory,
 
                     gdsHelper2.closeStatement(stmtHandle2, true);
                     gds.iscCommitTransaction(trHandle2);
+
                 } catch (SQLException sqle) {
                     throw new FBXAException("unable to remove in limbo transaction from rdb$transactions where rdb$transaction_id = " + fbTransactionId, XAException.XAER_RMERR);
+                }*/
+
+            } catch (SQLException ex) {
+                /*
+                 * if ex.getIntParam() is 335544353 (transaction is not in limbo) and next ex.getIntParam() is 335544468 (transaction {0} is {1})
+                 *  => detected heuristic
+                 */
+                // TODO: We may need to parse the exception to get the details (or we need to handle this specific one differently)
+                int errorCode = XAException.XAER_RMERR;
+                int sqlError = ex.getErrorCode();
+                //int nextIntParam = ex.getNext().getIntParam();
+
+                if (sqlError == ISCConstants.isc_no_recon /*&& nextIntParam == ISCConstants.isc_tra_state*/) {
+                    /*String param = ex.getNext().getNext().getNext().getParam();
+                    if ("committed".equals(param))
+                        errorCode = XAException.XA_HEURCOM;
+                    else if ("rolled back".equals(param))
+                        errorCode = XAException.XA_HEURRB;*/
+                    if (ex.getMessage().contains("committed")) {
+                        errorCode = XAException.XA_HEURCOM;
+                    } else if (ex.getMessage().contains("rolled back")) {
+                        errorCode = XAException.XA_HEURCOM;
+                    }
                 }
 
+                throw new FBXAException("unable to complete in limbo transaction", errorCode, ex);
             } catch (GDSException ex) {
                 /*
                  * if ex.getIntParam() is 335544353 (transaction is not in limbo) and next ex.getIntParam() is 335544468 (transaction {0} is {1})
@@ -772,7 +795,7 @@ public class FBManagedConnectionFactory implements ManagedConnectionFactory,
                 int errorCode = XAException.XAER_RMERR;
                 int intParam = ex.getIntParam();
                 int nextIntParam = ex.getNext().getIntParam();
-                
+
                 if (intParam == ISCConstants.isc_no_recon && nextIntParam == ISCConstants.isc_tra_state) {
                     String param = ex.getNext().getNext().getNext().getParam();
                     if ("committed".equals(param))
@@ -780,7 +803,7 @@ public class FBManagedConnectionFactory implements ManagedConnectionFactory,
                     else if ("rolled back".equals(param))
                         errorCode = XAException.XA_HEURRB;
                 }
-                
+
                 throw new FBXAException("unable to complete in limbo transaction", errorCode, ex);
             } finally {
                 try {

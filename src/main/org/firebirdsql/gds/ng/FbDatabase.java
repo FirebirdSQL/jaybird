@@ -94,6 +94,20 @@ public interface FbDatabase {
     FbTransaction createTransaction(TransactionParameterBuffer tpb) throws SQLException;
 
     /**
+     * Reconnects a prepared transaction.
+     * <p>
+     * Reconnecting transactions is only allowed for transactions in limbo (prepared, but not committed or rolled back).
+     * </p>
+     *
+     * @param transactionId
+     *         The id of the transaction to reconnect.
+     * @return FbTransaction
+     * @throws SQLException
+     *         For errors reconnecting the transaction
+     */
+    FbTransaction reconnectTransaction(long transactionId) throws SQLException;
+
+    /**
      * Creates a statement associated with a transaction
      *
      * @param transaction

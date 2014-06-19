@@ -29,6 +29,7 @@ package org.firebirdsql.gds.ng.wire;
 import org.firebirdsql.gds.BlobParameterBuffer;
 import org.firebirdsql.gds.DatabaseParameterBuffer;
 import org.firebirdsql.gds.ng.FbTransaction;
+import org.firebirdsql.gds.ng.TransactionState;
 import org.firebirdsql.gds.ng.fields.BlrCalculator;
 
 /**
@@ -40,9 +41,9 @@ import org.firebirdsql.gds.ng.fields.BlrCalculator;
  * <p>
  * Protocol descriptors loaded this way are required to adhere to the following rules:
  * <ul>
- *     <li>They provide a no-arg constructor</li>
- *     <li>All instances of a specific implementation class created with the no-arg constructor have the same {@link #hashCode()}.
- *     <li>All instances of a specific implementation class created with the no-arg constructor are considered equal to each other by the {@link #equals(Object)} implementation</li>
+ * <li>They provide a no-arg constructor</li>
+ * <li>All instances of a specific implementation class created with the no-arg constructor have the same {@link #hashCode()}.
+ * <li>All instances of a specific implementation class created with the no-arg constructor are considered equal to each other by the {@link #equals(Object)} implementation</li>
  * </ul>
  * </p>
  *
@@ -92,9 +93,12 @@ public interface ProtocolDescriptor {
      *         FbWireDatabase of the current database
      * @param transactionHandle
      *         Transaction handle
+     * @param initialState
+     *         Initial transaction state (either {@link org.firebirdsql.gds.ng.TransactionState#ACTIVE}
+     *         or {@link org.firebirdsql.gds.ng.TransactionState#PREPARED}).
      * @return FbTransaction implementation
      */
-    FbWireTransaction createTransaction(FbWireDatabase database, int transactionHandle);
+    FbWireTransaction createTransaction(FbWireDatabase database, int transactionHandle, TransactionState initialState);
 
     /**
      * Create {@link org.firebirdsql.gds.ng.FbStatement} implementation for this protocol.
@@ -135,7 +139,8 @@ public interface ProtocolDescriptor {
      *         Blob Parameter Buffer
      * @return FbWireBlob implementation
      */
-    FbWireBlob createOutputBlob(FbWireDatabase database, FbWireTransaction transaction, BlobParameterBuffer blobParameterBuffer);
+    FbWireBlob createOutputBlob(FbWireDatabase database, FbWireTransaction transaction,
+            BlobParameterBuffer blobParameterBuffer);
 
     /**
      * Create an input {@link FbWireBlob} implementation for this protocol version.
@@ -150,5 +155,6 @@ public interface ProtocolDescriptor {
      *         Blob Id (must be non-zero for input blob)
      * @return FbWireBlob implementation
      */
-    FbWireBlob createInputBlob(FbWireDatabase database, FbWireTransaction transaction, BlobParameterBuffer blobParameterBuffer, long blobId);
+    FbWireBlob createInputBlob(FbWireDatabase database, FbWireTransaction transaction,
+            BlobParameterBuffer blobParameterBuffer, long blobId);
 }
