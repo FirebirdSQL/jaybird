@@ -1490,7 +1490,8 @@ public class FBConnection implements FirebirdConnection {
         }
     }
 
-	 protected synchronized void addWarning(SQLWarning warning){
+	 public synchronized void addWarning(SQLWarning warning){
+         // TODO: Find way so this method can be protected (or less visible) again.
 		 if (firstWarning == null)
 			 firstWarning = warning;
 		 else{

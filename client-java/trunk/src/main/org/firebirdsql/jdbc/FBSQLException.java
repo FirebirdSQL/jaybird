@@ -40,7 +40,6 @@ public class FBSQLException extends SQLException {
     public static final String SQL_STATE_INVALID_OPTION_IDENTIFIER = "HY092";
     public static final String SQL_STATE_INVALID_PARAM_TYPE = "HY105";
 
-
     public static final String SQL_STATE_WRONG_PARAM_NUM = "07001";
     public static final String SQL_STATE_NO_RESULT_SET = "07005";
     public static final String SQL_STATE_INVALID_CONVERSION = "07006";
@@ -54,6 +53,8 @@ public class FBSQLException extends SQLException {
     public static final String SQL_STATE_CONNECTION_FAILURE = "08006";
     public static final String SQL_STATE_CONNECTION_FAILURE_IN_TX = "08007";
     public static final String SQL_STATE_COMM_LINK_FAILURE = "08S01";
+
+    public static final String SQL_STATE_SYNTAX_ERROR = "42000";
 
     public FBSQLException(Exception ex) {
         this("Exception. " + ex.getMessage());

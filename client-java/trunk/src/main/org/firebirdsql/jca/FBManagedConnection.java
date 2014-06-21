@@ -38,6 +38,7 @@ import org.firebirdsql.gds.impl.DbAttachInfo;
 import org.firebirdsql.gds.impl.GDSHelper;
 import org.firebirdsql.gds.ng.*;
 import org.firebirdsql.gds.ng.fields.FieldValue;
+import org.firebirdsql.gds.ng.listeners.DefaultDatabaseListener;
 import org.firebirdsql.gds.ng.listeners.DefaultStatementListener;
 import org.firebirdsql.jdbc.*;
 import org.firebirdsql.jdbc.field.FBField;
@@ -65,6 +66,8 @@ public class FBManagedConnection implements ManagedConnection, XAResource, Excep
     private final List<ConnectionEventListener> connectionEventListeners = new CopyOnWriteArrayList<ConnectionEventListener>();
     // TODO Review synchronization of connectionHandles (especially in blocks like in disassociateConnections, setConnectionSharing etc)
     private final List<FBConnection> connectionHandles = Collections.synchronizedList(new ArrayList<FBConnection>());
+    // TODO This is a bit of hack to be able to get attach warnings into the FBConnection that is created later.
+    private SQLWarning unnotifiedWarnings;
 
     private int timeout = 0;
 
@@ -117,6 +120,7 @@ public class FBManagedConnection implements ManagedConnection, XAResource, Excep
             connectionProperties.setDatabaseName(dbAttachInfo.getFileName());
 
             database = mcf.getDatabaseFactory().connect(connectionProperties);
+            database.addDatabaseListener(new MCDatabaseListener());
             database.attach();
 
             gdsHelper = new GDSHelper(gds, dpb, null, this, database);
@@ -511,14 +515,17 @@ public class FBManagedConnection implements ManagedConnection, XAResource, Excep
             throws ResourceException {
         
         if (!matches(subject, cri))
-            throw new FBResourceException("Incompatible subject or "
-                    + "ConnectionRequestInfo in getConnection!");  
+            throw new FBResourceException("Incompatible subject or ConnectionRequestInfo in getConnection!");
 
         if (!connectionSharing)
             disassociateConnections();
         
         FBConnection c = mcf.newConnection(this);
         try {
+            if (unnotifiedWarnings != null) {
+                c.addWarning(unnotifiedWarnings);
+                unnotifiedWarnings = null;
+            }
             c.setManagedEnvironment(isManagedEnvironment());
             connectionHandles.add(c);
             return c;
@@ -1359,4 +1366,27 @@ public class FBManagedConnection implements ManagedConnection, XAResource, Excep
         return tpb.isReadOnly();
     }
 
+    /**
+     * DatabaseListener implementation for use by this ManagedConnection.
+     */
+    private class MCDatabaseListener extends DefaultDatabaseListener {
+        @Override
+        public void warningReceived(FbDatabase database, SQLWarning warning) {
+            if (database != FBManagedConnection.this.database) {
+                database.removeDatabaseListener(this);
+                return;
+            }
+            // Note: minor chance of a race condition here, but we take the chance.
+            if (connectionHandles.isEmpty()) {
+                if (unnotifiedWarnings == null) {
+                    unnotifiedWarnings = warning;
+                } else {
+                    unnotifiedWarnings.setNextWarning(warning);
+                }
+            }
+            for (FBConnection connection : new ArrayList<FBConnection>(connectionHandles)) {
+                connection.addWarning(warning);
+            }
+        }
+    }
 }

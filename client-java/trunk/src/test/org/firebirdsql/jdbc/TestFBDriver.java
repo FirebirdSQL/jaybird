@@ -1,5 +1,7 @@
 /*
- * Firebird Open Source J2ee connector - jdbc driver
+ * $Id$
+ *
+ * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -12,313 +14,221 @@
  * This file was created by members of the firebird development team.
  * All individual contributions remain the Copyright (C) of those
  * individuals.  Contributors to this file are either listed here or
- * can be obtained from a CVS history command.
+ * can be obtained from a source control history command.
  *
  * All rights reserved.
  */
-
 package org.firebirdsql.jdbc;
 
-import java.sql.*;
+import org.firebirdsql.common.FBJUnit4TestBase;
+import org.firebirdsql.gds.ISCConstants;
+import org.junit.After;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.rules.ExpectedException;
 
+import java.sql.*;
 import java.util.Calendar;
 import java.util.GregorianCalendar;
 import java.util.Properties;
 import java.util.TimeZone;
 
-import junit.framework.Test;
-import junit.framework.TestSuite;
-import org.firebirdsql.common.FBTestBase;
-import org.firebirdsql.common.JdbcResourceHelper;
-
 import static org.firebirdsql.common.FBTestProperties.*;
+import static org.firebirdsql.common.JdbcResourceHelper.closeQuietly;
+import static org.firebirdsql.common.matchers.SQLExceptionMatchers.sqlExceptionEqualTo;
+import static org.firebirdsql.common.matchers.SQLExceptionMatchers.sqlState;
+import static org.hamcrest.CoreMatchers.allOf;
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.isA;
+import static org.junit.Assert.*;
 
 /**
  * Test suite for the FBDriver class implementation.
  *
  * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
- * @version 1.0
+ * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  */
-public class TestFBDriver extends FBTestBase {
+public class TestFBDriver extends FBJUnit4TestBase {
 
     private Connection connection;
-    private Driver driver;
 
-    public TestFBDriver(String testName) {
-        super(testName);
+    @Rule
+    public final ExpectedException expectedException = ExpectedException.none();
+
+    @After
+    public void tearDown() throws Exception {
+        closeQuietly(connection);
     }
 
-    public static Test suite() {
-        return new TestSuite(TestFBDriver.class);
-    }
-
-    protected void setUp() throws Exception {
-       super.setUp();
-        Class.forName(org.firebirdsql.jdbc.FBDriver.class.getName());
-        driver = DriverManager.getDriver(getUrl());
-    }
-
-    protected void tearDown() throws Exception {
-       JdbcResourceHelper.closeQuietly(connection);
-       super.tearDown();
-    }
-
+    @Test
     public void testAcceptsURL() throws Exception {
+        Driver driver = DriverManager.getDriver(getUrl());
+
         assertTrue(driver.acceptsURL(getUrl()));
     }
 
+    @Test
     public void testConnect() throws Exception {
-        if (log != null) log.info(getUrl());
+        Driver driver = DriverManager.getDriver(getUrl());
         connection = driver.connect(getUrl(), getDefaultPropertiesForConnection());
-        assertTrue("Connection is null", connection != null);
-        connection.close();
+
+        assertNotNull("Connection is null", connection);
     }
 
-    public void testJdbcCompliant() {
+    @Test
+    public void testJdbcCompliant() throws Exception {
+        Driver driver = DriverManager.getDriver(getUrl());
+
         // current driver is not JDBC compliant.
         assertTrue(driver.jdbcCompliant());
     }
-    
+
     /**
      * This method tests if driver correctly handles warnings returned from
-     * database. We use SQL dialect mismatch between client and server to 
+     * database. We use SQL dialect mismatch between client and server to
      * make server return us a warning.
      */
+    @Test
     public void testWarnings() throws Exception {
-        // TODO Test no longer has desired effect with new protocol implementation, find out why
-        Properties info = (Properties)getDefaultPropertiesForConnection().clone();
+        Properties info = (Properties) getDefaultPropertiesForConnection().clone();
         info.setProperty("set_db_sql_dialect", "1");
-        
-        try {
-	        // open connection and convert DB to SQL dialect 1
-	        Connection dialect1Connection = 
-	            DriverManager.getConnection(getUrl(), info);
-	            
-            try {
-    	        Statement stmt = dialect1Connection.createStatement();
-    	        
-    	        // execute select statement, driver will pass SQL dialect 3 
-    	        // for this statement and database server will return a warning
-    	        stmt.executeQuery("SELECT 1 as col1 FROM rdb$database");
-    	        
-    	        stmt.close();
-    	        
-    	        SQLWarning warning = dialect1Connection.getWarnings();
-    	        
-    	        assertTrue("Connection should have at least one warning.", 
-    	            warning != null);
-    	            
-    	        dialect1Connection.clearWarnings();
-    	        
-    	        assertTrue("After clearing no warnings should be present.",
-    	            dialect1Connection.getWarnings() == null);
-            } finally {	            
-                dialect1Connection.close();
-            }
-        } finally {
-        
-	        info.setProperty("set_db_sql_dialect", "3");
-	        
-	        Connection dialect3Connection = 
-	            DriverManager.getConnection(getUrl(), info);
-	            
-	        dialect3Connection.close();
-        }
+
+        // open connection and convert DB to SQL dialect 1
+        connection = DriverManager.getConnection(getUrl(), info);
+        SQLWarning warning = connection.getWarnings();
+
+        assertNotNull("Connection should have at least one warning.", warning);
+        assertThat(warning, allOf(
+                isA(SQLWarning.class),
+                sqlExceptionEqualTo(ISCConstants.isc_dialect_reset_warning))
+        );
+
+        connection.clearWarnings();
+
+        assertNull("After clearing no warnings should be present.", connection.getWarnings());
     }
-    
+
+    @Test
     public void testDialect1() throws Exception {
-        Properties info = (Properties)getDefaultPropertiesForConnection().clone();
+        Properties info = (Properties) getDefaultPropertiesForConnection().clone();
         info.setProperty("isc_dpb_sql_dialect", "1");
-        
-        Connection dialect1Connection = DriverManager.getConnection(getUrl(), info);
+
+        connection = DriverManager.getConnection(getUrl(), info);
+        Statement stmt = connection.createStatement();
         try {
-            
-            Statement stmt = dialect1Connection.createStatement();
-            try {
-                ResultSet rs = stmt.executeQuery("SELECT  cast(\"today\" as date) - 7 FROM rdb$database");
-                assertTrue("Should have at least one row.", rs.next());
-            } catch(SQLException ex) {
-                ex.printStackTrace();
-                fail("In dialect doublequotes are allowed.");
-            } finally {
-                stmt.close();
-            }
-            
+            // Dialect 1 allows double quotes in strings
+            ResultSet rs = stmt.executeQuery("SELECT  cast(\"today\" as date) - 7 FROM rdb$database");
+
+            assertTrue("Should have at least one row.", rs.next());
         } finally {
-            dialect1Connection.close();
+            stmt.close();
         }
     }
-    
+
+    @Test
     public void testGetSQLState() throws Exception {
-        Connection connection = getConnectionViaDriverManager();
-        
+        connection = getConnectionViaDriverManager();
+        Statement stmt = connection.createStatement();
         try {
-            Statement stmt = connection.createStatement();
-            try {
-                stmt.executeQuery("select * from");
-                fail("Expected exception to be thrown");
-            } catch(SQLException ex) {
-                String sqlState = ex.getSQLState();
-                assertNotNull("getSQLState() method does not return value", sqlState);
-            } finally {
-                stmt.close();
-            }
+            expectedException.expect(SQLSyntaxErrorException.class);
+            expectedException.expect(sqlState(is(FBSQLException.SQL_STATE_SYNTAX_ERROR)));
+
+            stmt.executeQuery("select * from");
         } finally {
-            connection.close();
+            stmt.close();
         }
     }
-    
-    public void testLongRange() throws Exception
-    {
-        Connection c = getConnectionViaDriverManager();
-        try 
-        {
-            Statement s = c.createStatement();
-            try 
-            {
-                s.execute("CREATE TABLE LONGTEST (LONGID DECIMAL(18) NOT NULL PRIMARY KEY)");
-                try 
-                {
-                    s.execute("INSERT INTO LONGTEST (LONGID) VALUES (" + Long.MAX_VALUE + ")");
-                    ResultSet rs = s.executeQuery("SELECT LONGID FROM LONGTEST");
-                    try 
-                    {
-                         
-                        assertTrue("Should have one row!", rs.next());
-                        assertTrue("Retrieved wrong value!", rs.getLong(1) == Long.MAX_VALUE);
-                    }
-                    finally
-                    {
-                        rs.close();
-                    } // end of try-finally
-                    s.execute("DELETE FROM LONGTEST");
-                    s.execute("INSERT INTO LONGTEST (LONGID) VALUES (" + Long.MIN_VALUE + ")");
-                    rs = s.executeQuery("SELECT LONGID FROM LONGTEST");
-                    try 
-                    {
-                         
-                        assertTrue("Should have one row!", rs.next());
-                        assertTrue("Retrieved wrong value!", rs.getLong(1) == Long.MIN_VALUE);
-                    }
-                    finally
-                    {
-                        rs.close();
-                    } // end of try-finally
-                    
-                    
-                }
-                finally
-                {
-                    s.execute("DROP TABLE LONGTEST");
-                } // end of try-finally
-                
 
+    @Test
+    public void testLongRange() throws Exception {
+        connection = getConnectionViaDriverManager();
+        Statement s = connection.createStatement();
+        try {
+            s.execute("CREATE TABLE LONGTEST (LONGID DECIMAL(18) NOT NULL PRIMARY KEY)");
+            s.execute("INSERT INTO LONGTEST (LONGID) VALUES (" + Long.MAX_VALUE + ")");
+            ResultSet rs = s.executeQuery("SELECT LONGID FROM LONGTEST");
+            try {
+                assertTrue("Should have one row!", rs.next());
+                assertEquals("Retrieved wrong value!", Long.MAX_VALUE, rs.getLong(1));
+            } finally {
+                rs.close();
             }
-            finally
-            {
-                s.close();
-            } // end of try-catch
-            
 
+            s.execute("DELETE FROM LONGTEST");
+            s.execute("INSERT INTO LONGTEST (LONGID) VALUES (" + Long.MIN_VALUE + ")");
+            rs = s.executeQuery("SELECT LONGID FROM LONGTEST");
+            try {
+                assertTrue("Should have one row!", rs.next());
+                assertEquals("Retrieved wrong value!", Long.MIN_VALUE, rs.getLong(1));
+            } finally {
+                rs.close();
+            }
+        } finally {
+            s.close();
         }
-        finally
-        {
-            c.close();
-        } // end of try-catch
-        
     }
 
     private static final TimeZone timeZoneUTC = TimeZone.getTimeZone("UTC");
-    
-    public void testDate() throws Exception
-    {
-        Connection c = getConnectionViaDriverManager();
-        try 
-        {
-            Statement s = c.createStatement();
-            try 
-            {
-                s.execute("CREATE TABLE DATETEST (DATEID INTEGER NOT NULL PRIMARY KEY, TESTDATE TIMESTAMP)");
-                PreparedStatement ps = c.prepareStatement("INSERT INTO DATETEST (DATEID, TESTDATE) VALUES (?,?)");
-                Calendar cal = new GregorianCalendar(timeZoneUTC);
-                Timestamp x = Timestamp.valueOf("1917-02-17 20:59:31");
-                try 
-                {
-                    ps.setInt(1, 1);
-                    ps.setTimestamp(2, x, cal);
-                    ps.execute();
-                }
-                finally
-                {
-                    ps.close();
-                } // end of finally
-                
-                try 
-                {
-                    ResultSet rs = s.executeQuery("SELECT TESTDATE FROM DATETEST WHERE DATEID=1");
-                    try 
-                    {
-                         
-                        assertTrue("Should have one row!", rs.next());
-                        Timestamp x2 = rs.getTimestamp(1, cal);
-                        assertTrue("Retrieved wrong value! expected: " + x + ", actual: " + x2, x.equals(x2));
-                    }
-                    finally
-                    {
-                        rs.close();
-                    } // end of try-finally
-                }
-                finally
-                {
-                    s.execute("DROP TABLE DATETEST");
-                } // end of try-finally
+
+    @Test
+    public void testDate() throws Exception {
+        connection = getConnectionViaDriverManager();
+        Statement s = connection.createStatement();
+        try {
+            s.execute("CREATE TABLE DATETEST (DATEID INTEGER NOT NULL PRIMARY KEY, TESTDATE TIMESTAMP)");
+            PreparedStatement ps = connection.prepareStatement("INSERT INTO DATETEST (DATEID, TESTDATE) VALUES (?,?)");
+            Calendar cal = new GregorianCalendar(timeZoneUTC);
+            Timestamp x = Timestamp.valueOf("1917-02-17 20:59:31");
+            try {
+                ps.setInt(1, 1);
+                ps.setTimestamp(2, x, cal);
+                ps.execute();
+            } finally {
+                ps.close();
             }
-            finally
-            {
-                s.close();
-            } // end of try-catch
+
+            ResultSet rs = s.executeQuery("SELECT TESTDATE FROM DATETEST WHERE DATEID=1");
+            try {
+                assertTrue("Should have one row!", rs.next());
+                assertEquals("Retrieved wrong value!", x, rs.getTimestamp(1, cal));
+            } finally {
+                rs.close();
+            }
+        } finally {
+            s.close();
         }
-        finally
-        {
-            c.close();
-        } // end of try-catch
-        
     }
 
-    
     /**
-     * This test checks if transaction is rolled back when connection is closed, 
+     * This test checks if transaction is rolled back when connection is closed,
      * but still has an active transaction associated with it.
-     * 
-     * @throws Exception if something went wrong.
+     *
+     * @throws Exception
+     *         if something went wrong.
      */
+    @Test
     public void testClose() throws Exception {
         connection = getConnectionViaDriverManager();
         try {
             Statement stmt = connection.createStatement();
-            
             stmt.executeUpdate("CREATE TABLE test(id INTEGER, test_value INTEGER)");
             stmt.executeUpdate("INSERT INTO test VALUES (1, 1)");
-            
             connection.setAutoCommit(false);
-            
             stmt.executeUpdate("UPDATE test SET test_value = 2 WHERE id = 1");
-            
             stmt.close();
-        } finally {        
+        } finally {
             connection.close();
         }
-        
+
         connection = getConnectionViaDriverManager();
         try {
             Statement stmt = connection.createStatement();
-            
             ResultSet rs = stmt.executeQuery("SELECT test_value FROM test WHERE id = 1");
-            
+
             assertTrue("Should have at least one row", rs.next());
-            assertTrue("Value should be 1.", rs.getInt(1) == 1);
+            assertEquals("Value should be 1.", 1, rs.getInt(1));
             assertTrue("Should have only one row.", !rs.next());
-            
+
             rs.close();
             stmt.executeUpdate("DROP TABLE test");
             stmt.close();
@@ -327,13 +237,15 @@ public class TestFBDriver extends FBTestBase {
         }
     }
 
+    @Test
     public void testDummyPacketIntervalConnect() throws Exception {
-        if (log != null) log.info(getUrl());
         Properties props = getDefaultPropertiesForConnection();
         props.setProperty("soTimeout", "2000");
+
+        Driver driver = DriverManager.getDriver(getUrl());
         connection = driver.connect(getUrl(), props);
-        assertTrue("Connection is null", connection != null);
-        connection.close();
+
+        assertNotNull("Connection is null", connection);
     }
 
 }
