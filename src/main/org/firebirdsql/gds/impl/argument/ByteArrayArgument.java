@@ -1,7 +1,7 @@
 /*
  * $Id$
- * 
- * Firebird Open Source J2EE Connector - JDBC Driver
+ *
+ * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -14,11 +14,13 @@
  * This file was created by members of the firebird development team.
  * All individual contributions remain the Copyright (C) of those
  * individuals.  Contributors to this file are either listed here or
- * can be obtained from a CVS history command.
+ * can be obtained from a source control history command.
  *
  * All rights reserved.
  */
 package org.firebirdsql.gds.impl.argument;
+
+import org.firebirdsql.gds.ParameterBuffer;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -32,11 +34,15 @@ import java.util.Arrays;
  */
 public final class ByteArrayArgument extends Argument {
 
+    private final byte[] value;
+
     /**
      * Initializes an instance of ByteArrayArgument.
      *
-     * @param type Parameter type
-     * @param value Byte array with a length up to 255 bytes.
+     * @param type
+     *         Parameter type
+     * @param value
+     *         Byte array with a length up to 255 bytes.
      */
     public ByteArrayArgument(int type, byte[] value) {
         super(type);
@@ -74,6 +80,11 @@ public final class ByteArrayArgument extends Argument {
     }
 
     @Override
+    public void copyTo(ParameterBuffer buffer) {
+        buffer.addArgument(getType(), value.clone());
+    }
+
+    @Override
     public boolean equals(Object other) {
         if (other == null || !(other instanceof ByteArrayArgument))
             return false;
@@ -82,6 +93,4 @@ public final class ByteArrayArgument extends Argument {
 
         return this.getType() == otherByteArrayArgument.getType() && Arrays.equals(this.value, otherByteArrayArgument.value);
     }
-
-    private final byte[] value;
 }

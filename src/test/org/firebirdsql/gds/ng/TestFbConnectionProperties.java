@@ -1,7 +1,7 @@
 /*
  * $Id$
- * 
- * Firebird Open Source J2EE Connector - JDBC Driver
+ *
+ * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -14,7 +14,7 @@
  * This file was created by members of the firebird development team.
  * All individual contributions remain the Copyright (C) of those
  * individuals.  Contributors to this file are either listed here or
- * can be obtained from a CVS history command.
+ * can be obtained from a source control history command.
  *
  * All rights reserved.
  */
@@ -36,7 +36,7 @@ import static org.junit.Assert.assertNull;
  * Tests for {@link FbConnectionProperties}
  *
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
- * @since 2.3
+ * @since 3.0
  */
 public class TestFbConnectionProperties {
 
@@ -175,14 +175,18 @@ public class TestFbConnectionProperties {
         int intValue = 1;
         BeanInfo beanInfo = Introspector.getBeanInfo(IConnectionProperties.class);
         for (PropertyDescriptor descriptor : beanInfo.getPropertyDescriptors()) {
+            if ("extraDatabaseParameters".equals(descriptor.getName())) {
+                // Property extraDatabaseParameters has no setter
+                continue;
+            }
             Method method = descriptor.getWriteMethod();
             Class<?> parameterType = method.getParameterTypes()[0];
             if (parameterType == int.class) {
-                Object value = Integer.valueOf(intValue++);
+                Object value = intValue++;
                 method.invoke(info, value);
                 testValues.put(descriptor.getName(), value);
             } else if (parameterType == short.class) {
-                Object value = Short.valueOf((short) (intValue++));
+                Object value = (short) (intValue++);
                 method.invoke(info, value);
                 testValues.put(descriptor.getName(), value);
             } else if (parameterType == String.class) {
@@ -199,6 +203,11 @@ public class TestFbConnectionProperties {
         IConnectionProperties immutable = info.asImmutable();
         BeanInfo immutableBean = Introspector.getBeanInfo(IConnectionProperties.class);
         for (PropertyDescriptor descriptor : immutableBean.getPropertyDescriptors()) {
+            if ("extraDatabaseParameters".equals(descriptor.getName())) {
+                // Property extraDatabaseParameters always returns a buffer
+                // TODO: Add or update test(s) to include extraDatabaseParameters
+                continue;
+            }
             Method method = descriptor.getReadMethod();
             Object value = method.invoke(immutable);
             String propertyName = descriptor.getName();

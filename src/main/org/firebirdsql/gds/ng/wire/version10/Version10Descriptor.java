@@ -23,6 +23,7 @@ package org.firebirdsql.gds.ng.wire.version10;
 import org.firebirdsql.gds.BlobParameterBuffer;
 import org.firebirdsql.gds.DatabaseParameterBuffer;
 import org.firebirdsql.gds.ISCConstants;
+import org.firebirdsql.gds.Parameter;
 import org.firebirdsql.gds.impl.wire.DatabaseParameterBufferImp;
 import org.firebirdsql.gds.impl.wire.WireProtocolConstants;
 import org.firebirdsql.gds.ng.IConnectionProperties;
@@ -91,6 +92,9 @@ public final class Version10Descriptor extends AbstractProtocolDescriptor implem
 
         // Map non-standard properties
         // TODO Implement support for non-standard properties
+        for (Parameter parameter : connectionProperties.getExtraDatabaseParameters()) {
+            parameter.copyTo(dpb);
+        }
 
         return dpb;
     }

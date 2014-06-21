@@ -26,6 +26,8 @@
  */
 package org.firebirdsql.gds.ng;
 
+import org.firebirdsql.gds.DatabaseParameterBuffer;
+
 /**
  * Connection properties for the Firebird connection.
  * <p>
@@ -352,6 +354,17 @@ public interface IConnectionProperties {
      * @see #setColumnLabelForName(boolean)
      */
     boolean isColumnLabelForName();
+
+    /**
+     * Gets the extra database parameters. This can be used to pass extra database parameters that are not directly
+     * supported.
+     * <p>
+     * An immutable instance of <code>IConnectionProperties</code> <b>must</b> return a copy.
+     * </p>
+     *
+     * @return DatabaseParameterBuffer instance.
+     */
+    DatabaseParameterBuffer getExtraDatabaseParameters();
 
     /**
      * @return An immutable version of this instance as an implementation of {@link IConnectionProperties}
