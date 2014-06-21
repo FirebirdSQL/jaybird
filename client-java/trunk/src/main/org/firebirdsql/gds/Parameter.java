@@ -63,4 +63,20 @@ public interface Parameter {
      * @return The value as int
      */
     int getValueAsInt();
+
+    /**
+     * Copies this argument into the supplied buffer.
+     * <p>
+     * An instance of <code>Parameter</code> should know how to copy itself into another buffer (eg an instance
+     * of {@link org.firebirdsql.gds.impl.argument.StringArgument} would know to call
+     * {@link org.firebirdsql.gds.ParameterBuffer#addArgument(int, String)}).
+     * </p>
+     * <p>
+     * The parameter does not need to check if it is the right type of destination buffer (if someone tries to
+     * add a TPB argument to a DPB he is free to try that).
+     * </p>
+     *
+     * @param buffer ParameterBuffer instance
+     */
+    void copyTo(ParameterBuffer buffer);
 }

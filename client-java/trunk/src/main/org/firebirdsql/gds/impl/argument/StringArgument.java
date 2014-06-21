@@ -1,7 +1,7 @@
 /*
  * $Id$
- * 
- * Firebird Open Source J2EE Connector - JDBC Driver
+ *
+ * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -14,11 +14,13 @@
  * This file was created by members of the firebird development team.
  * All individual contributions remain the Copyright (C) of those
  * individuals.  Contributors to this file are either listed here or
- * can be obtained from a CVS history command.
+ * can be obtained from a source control history command.
  *
  * All rights reserved.
  */
 package org.firebirdsql.gds.impl.argument;
+
+import org.firebirdsql.gds.ParameterBuffer;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -27,6 +29,9 @@ import java.io.OutputStream;
  * {@link Argument} implementation for String values
  */
 public class StringArgument extends Argument {
+
+    private final String value;
+    private final byte[] asBytes;
 
     public StringArgument(int type, String value) {
         super(type);
@@ -48,12 +53,14 @@ public class StringArgument extends Argument {
         return 255;
     }
 
+    @Override
     public void writeTo(OutputStream outputStream) throws IOException {
         outputStream.write(getType());
         writeLength(asBytes.length, outputStream);
         outputStream.write(asBytes);
     }
 
+    @Override
     public int getLength() {
         return asBytes.length + 2;
     }
@@ -66,6 +73,11 @@ public class StringArgument extends Argument {
     @Override
     public int getValueAsInt() {
         return Integer.parseInt(value);
+    }
+
+    @Override
+    public void copyTo(ParameterBuffer buffer) {
+        buffer.addArgument(getType(), value);
     }
 
     protected void writeLength(int length, OutputStream outputStream) throws IOException {
@@ -86,7 +98,4 @@ public class StringArgument extends Argument {
 
         return this.getType() == otherStringArgument.getType() && value.equals(otherStringArgument.value);
     }
-
-    private final String value;
-    private final byte[] asBytes;
 }

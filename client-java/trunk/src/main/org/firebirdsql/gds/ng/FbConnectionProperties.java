@@ -1,7 +1,7 @@
 /*
  * $Id$
- * 
- * Firebird Open Source J2EE Connector - JDBC Driver
+ *
+ * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -14,7 +14,7 @@
  * This file was created by members of the firebird development team.
  * All individual contributions remain the Copyright (C) of those
  * individuals.  Contributors to this file are either listed here or
- * can be obtained from a CVS history command.
+ * can be obtained from a source control history command.
  *
  * All rights reserved.
  */
@@ -22,6 +22,7 @@ package org.firebirdsql.gds.ng;
 
 import org.firebirdsql.gds.DatabaseParameterBuffer;
 import org.firebirdsql.gds.Parameter;
+import org.firebirdsql.gds.impl.wire.DatabaseParameterBufferImp;
 import org.firebirdsql.logging.Logger;
 import org.firebirdsql.logging.LoggerFactory;
 
@@ -32,7 +33,7 @@ import static org.firebirdsql.gds.ISCConstants.*;
  *
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @see FbImmutableConnectionProperties
- * @since 2.3
+ * @since 3.0
  */
 public final class FbConnectionProperties implements IConnectionProperties {
 
@@ -53,6 +54,7 @@ public final class FbConnectionProperties implements IConnectionProperties {
     private int connectTimeout = IConnectionProperties.DEFAULT_CONNECT_TIMEOUT;
     private boolean resultSetDefaultHoldable;
     private boolean columnLabelForName;
+    private final DatabaseParameterBuffer extraDatabaseParameters = new DatabaseParameterBufferImp();
 
     /**
      * Copy constructor for FbConnectionProperties.
@@ -80,6 +82,9 @@ public final class FbConnectionProperties implements IConnectionProperties {
             pageCacheSize = src.getPageCacheSize();
             soTimeout = src.getSoTimeout();
             connectTimeout = src.getConnectTimeout();
+            for (Parameter parameter : src.getExtraDatabaseParameters()) {
+                parameter.copyTo(extraDatabaseParameters);
+            }
         }
     }
 
@@ -240,6 +245,11 @@ public final class FbConnectionProperties implements IConnectionProperties {
     }
 
     @Override
+    public DatabaseParameterBuffer getExtraDatabaseParameters() {
+        return extraDatabaseParameters;
+    }
+
+    @Override
     public IConnectionProperties asImmutable() {
         return new FbImmutableConnectionProperties(this);
     }
@@ -294,7 +304,8 @@ public final class FbConnectionProperties implements IConnectionProperties {
             case isc_dpb_column_label_for_name:
                 setColumnLabelForName(true);
             default:
-                log.warn(String.format("Unknown or unsupported parameter with type %d ignored", parameter.getType()));
+                log.warn(String.format("Unknown or unsupported parameter with type %d added to extra database parameters", parameter.getType()));
+                parameter.copyTo(getExtraDatabaseParameters());
             }
         }
     }
