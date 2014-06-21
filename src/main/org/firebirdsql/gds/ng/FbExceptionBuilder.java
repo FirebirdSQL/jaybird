@@ -41,6 +41,7 @@ import java.util.List;
 public final class FbExceptionBuilder {
 
     private static final String SQLSTATE_FEATURE_NOT_SUPPORTED_PREFIX = "0A";
+    private static final String SQLSTATE_SYNTAX_ERROR_PREFIX = "42";
 
     private final List<ExceptionInformation> exceptionInfo = new ArrayList<ExceptionInformation>();
     private ExceptionInformation current = null;
@@ -322,9 +323,12 @@ public final class FbExceptionBuilder {
         EXCEPTION(FBSQLException.SQL_STATE_GENERAL_ERROR) {
             @Override
             public SQLException createSQLException(final String message, final String sqlState, final int errorCode) {
+                // TODO Replace with a list or chain of processors?
                 if (sqlState != null && sqlState.startsWith(SQLSTATE_FEATURE_NOT_SUPPORTED_PREFIX)) {
                     // Feature not supported by Firebird
                     return new SQLFeatureNotSupportedException(message, sqlState, errorCode);
+                } else if (sqlState != null && sqlState.startsWith(SQLSTATE_SYNTAX_ERROR_PREFIX)) {
+                    return new SQLSyntaxErrorException(message, sqlState, errorCode);
                 } else {
                     // TODO Add support for other SQLException types
                     return new SQLException(message, sqlState, errorCode);
