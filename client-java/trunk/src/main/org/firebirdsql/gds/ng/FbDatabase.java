@@ -91,7 +91,7 @@ public interface FbDatabase {
      * @return FbTransaction
      * @throws SQLException
      */
-    FbTransaction createTransaction(TransactionParameterBuffer tpb) throws SQLException;
+    FbTransaction startTransaction(TransactionParameterBuffer tpb) throws SQLException;
 
     /**
      * Reconnects a prepared transaction.

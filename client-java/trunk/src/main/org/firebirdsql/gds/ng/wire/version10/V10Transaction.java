@@ -22,12 +22,10 @@ package org.firebirdsql.gds.ng.wire.version10;
 
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.impl.wire.XdrOutputStream;
-import org.firebirdsql.gds.ng.AbstractFbTransaction;
-import org.firebirdsql.gds.ng.FbExceptionBuilder;
-import org.firebirdsql.gds.ng.FbTransaction;
-import org.firebirdsql.gds.ng.TransactionState;
+import org.firebirdsql.gds.ng.*;
 import org.firebirdsql.gds.ng.wire.FbWireDatabase;
 import org.firebirdsql.gds.ng.wire.FbWireTransaction;
+import org.firebirdsql.gds.ng.wire.GenericResponse;
 
 import java.io.IOException;
 import java.sql.SQLException;
@@ -42,7 +40,6 @@ import static org.firebirdsql.gds.impl.wire.WireProtocolConstants.*;
  */
 public class V10Transaction extends AbstractFbTransaction implements FbWireTransaction {
 
-    private final FbWireDatabase database;
     private final int handle;
 
     /**
@@ -60,17 +57,17 @@ public class V10Transaction extends AbstractFbTransaction implements FbWireTrans
      *         The initial state of the transaction (only <code>ACTIVE</code> or <code>PREPARED</code> allowed).
      */
     public V10Transaction(FbWireDatabase database, int transactionHandle, TransactionState initialState) {
-        super(initialState);
-        this.database = database;
+        super(initialState, database);
         handle = transactionHandle;
     }
 
     protected final XdrOutputStream getXdrOut() throws SQLException {
-        return database.getXdrStreamAccess().getXdrOut();
+        return getDatabase().getXdrStreamAccess().getXdrOut();
     }
 
-    protected final FbWireDatabase getDatabase() {
-        return database;
+    @Override
+    protected FbWireDatabase getDatabase() {
+        return (FbWireDatabase) super.getDatabase();
     }
 
     @Override
@@ -145,6 +142,31 @@ public class V10Transaction extends AbstractFbTransaction implements FbWireTrans
                 }
             }
             switchState(TransactionState.PREPARED);
+        }
+    }
+
+    @Override
+    public byte[] getTransactionInfo(byte[] requestItems, int maxBufferLength) throws SQLException {
+        synchronized (getSynchronizationObject()) {
+            synchronized (getDatabase().getSynchronizationObject()) {
+                try {
+                    final XdrOutputStream xdrOut = getXdrOut();
+                    xdrOut.writeInt(op_info_transaction);
+                    xdrOut.writeInt(getHandle());
+                    xdrOut.writeInt(0); // incarnation(?)
+                    xdrOut.writeBuffer(requestItems);
+                    xdrOut.writeInt(maxBufferLength);
+                    xdrOut.flush();
+                } catch (IOException ioex) {
+                    throw new FbExceptionBuilder().exception(ISCConstants.isc_net_write_err).cause(ioex).toSQLException();
+                }
+                try {
+                    GenericResponse genericResponse = getDatabase().readGenericResponse(null);
+                    return genericResponse.getData();
+                } catch (IOException ex) {
+                    throw new FbExceptionBuilder().exception(ISCConstants.isc_net_read_err).cause(ex).toSQLException();
+                }
+            }
         }
     }
 }

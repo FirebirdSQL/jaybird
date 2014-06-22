@@ -291,7 +291,7 @@ public class V10Database extends AbstractFbWireDatabase implements FbWireDatabas
     }
 
     @Override
-    public FbWireTransaction createTransaction(TransactionParameterBuffer tpb) throws SQLException {
+    public FbWireTransaction startTransaction(TransactionParameterBuffer tpb) throws SQLException {
         final FbWireTransaction transaction;
         synchronized (getSynchronizationObject()) {
             GenericResponse response;
@@ -362,6 +362,7 @@ public class V10Database extends AbstractFbWireDatabase implements FbWireDatabas
 
     @Override
     public byte[] getDatabaseInfo(byte[] requestItems, int maxBufferLength) throws SQLException {
+        // TODO Write common info request implementation shared for db, sql, transaction and blob?
         checkAttached();
         synchronized (getSynchronizationObject()) {
             try {

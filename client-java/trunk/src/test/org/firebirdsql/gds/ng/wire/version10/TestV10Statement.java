@@ -500,7 +500,7 @@ public class TestV10Statement extends FBJUnit4TestBase {
         tpb.addArgument(ISCConstants.isc_tpb_rec_version);
         tpb.addArgument(ISCConstants.isc_tpb_write);
         tpb.addArgument(ISCConstants.isc_tpb_wait);
-        return db.createTransaction(tpb);
+        return db.startTransaction(tpb);
     }
 
     private void allocateStatement() throws SQLException {

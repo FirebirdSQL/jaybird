@@ -183,6 +183,13 @@ public abstract class AbstractFbDatabase implements FbDatabase {
     }
 
     @Override
+    public <T> T getDatabaseInfo(byte[] requestItems, int bufferLength, InfoProcessor<T> infoProcessor)
+            throws SQLException {
+        byte[] responseBuffer = getDatabaseInfo(requestItems, bufferLength);
+        return infoProcessor.process(responseBuffer);
+    }
+
+    @Override
     public int iscVaxInteger(final byte[] buffer, final int startPosition, int length) {
         if (length > 4) {
             return 0;

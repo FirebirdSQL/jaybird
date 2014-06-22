@@ -493,7 +493,7 @@ public class GDSHelper {
     
     public FbTransaction startTransaction(TransactionParameterBuffer tpb) throws SQLException {
         try {
-            FbTransaction transaction = database.createTransaction(tpb);
+            FbTransaction transaction = database.startTransaction(tpb);
             setCurrentTransaction(transaction);
             
             return transaction;
