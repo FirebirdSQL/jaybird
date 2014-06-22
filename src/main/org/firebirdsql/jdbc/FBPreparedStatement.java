@@ -27,7 +27,6 @@ import java.sql.*;
 import java.sql.Date;
 import java.util.*;
 
-import org.firebirdsql.gds.*;
 import org.firebirdsql.gds.impl.GDSHelper;
 import org.firebirdsql.gds.ng.StatementType;
 import org.firebirdsql.gds.ng.fields.FieldDescriptor;
@@ -221,8 +220,7 @@ public class FBPreparedStatement extends FBStatement implements
     }
 
     public FirebirdParameterMetaData getFirebirdParameterMetaData() throws SQLException {
-        /* TODO: Replace with RowDescriptor */
-        return new FBParameterMetaData(/*fixedStmt.getInSqlda().sqlvar*/ null, gdsHelper);
+        return new FBParameterMetaData(fbStatement.getParameterDescriptor(), gdsHelper);
     }
 
     /**
@@ -1166,7 +1164,7 @@ public class FBPreparedStatement extends FBStatement implements
      */
     public ResultSetMetaData getMetaData() throws SQLException {
         checkValidity();
-        return new FBResultSetMetaData(/* TODO fixedStmt.getOutSqlda().sqlvar*/ null, gdsHelper);
+        return new FBResultSetMetaData(fbStatement.getFieldDescriptor(), gdsHelper);
     }
 
     /**
