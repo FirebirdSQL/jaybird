@@ -57,6 +57,7 @@ import org.firebirdsql.gds.IscDbHandle;
 import org.firebirdsql.gds.TransactionParameterBuffer;
 import org.firebirdsql.gds.impl.DatabaseParameterBufferExtension;
 import org.firebirdsql.gds.impl.GDSHelper;
+import org.firebirdsql.gds.ng.FbDatabase;
 import org.firebirdsql.jca.FBConnectionRequestInfo;
 import org.firebirdsql.jca.FBLocalTransaction;
 import org.firebirdsql.jca.FBManagedConnection;
@@ -213,8 +214,25 @@ public class FBConnection implements FirebirdConnection {
      * Get connection handle for direct Firebird API access
      *
      * @return internal handle for connection
-     * @exception GDSException if handle needed to be created and creation failed
+     * @throws SQLException
+     *         if handle needed to be created and creation failed
      */
+    public FbDatabase getFbDatabase() throws SQLException {
+        try {
+            return getGDSHelper().getCurrentDatabase();
+        } catch (GDSException e) {
+            throw new FBSQLException(e);
+        }
+    }
+
+    /**
+     * Get connection handle for direct Firebird API access
+     *
+     * @return internal handle for connection
+     * @exception GDSException if handle needed to be created and creation failed
+     * @deprecated TODO Remove
+     */
+    @Deprecated
     public IscDbHandle getIscDBHandle() throws GDSException {
         return getGDSHelper().getIscDBHandle();
     }
