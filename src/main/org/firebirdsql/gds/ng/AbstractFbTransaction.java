@@ -20,6 +20,7 @@
  */
 package org.firebirdsql.gds.ng;
 
+import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.ng.listeners.TransactionListener;
 import org.firebirdsql.gds.ng.listeners.TransactionListenerDispatcher;
 
@@ -35,6 +36,7 @@ import java.util.Set;
 public abstract class AbstractFbTransaction implements FbTransaction {
 
     private static final Set<TransactionState> ALLOWED_INITIAL_STATES = Collections.unmodifiableSet(EnumSet.of(TransactionState.ACTIVE, TransactionState.PREPARED));
+    private final FbDatabase database;
     private final Object syncObject = new Object();
     protected final TransactionListenerDispatcher transactionListenerDispatcher = new TransactionListenerDispatcher();
     private volatile TransactionState state = TransactionState.ACTIVE;
@@ -46,11 +48,12 @@ public abstract class AbstractFbTransaction implements FbTransaction {
      *         Initial transaction state (allowed values are {@link org.firebirdsql.gds.ng.TransactionState#ACTIVE}
      *         and {@link org.firebirdsql.gds.ng.TransactionState#PREPARED}.
      */
-    protected AbstractFbTransaction(TransactionState initialState) {
+    protected AbstractFbTransaction(TransactionState initialState, FbDatabase database) {
         if (!ALLOWED_INITIAL_STATES.contains(initialState)) {
             throw new IllegalArgumentException(String.format("Illegal initial transaction state: %s, allowed states are: %s", initialState, ALLOWED_INITIAL_STATES));
         }
         this.state = initialState;
+        this.database = database;
     }
 
     @Override
@@ -92,6 +95,29 @@ public abstract class AbstractFbTransaction implements FbTransaction {
         transactionListenerDispatcher.removeListener(listener);
     }
 
+    @Override
+    public <T> T getTransactionInfo(byte[] requestItems, int bufferLength, InfoProcessor<T> infoProcessor)
+            throws SQLException {
+        byte[] responseBuffer = getTransactionInfo(requestItems, bufferLength);
+        return infoProcessor.process(responseBuffer);
+    }
+
+    @Override
+    public long getTransactionId() throws SQLException {
+        // TODO As separate class?
+        return getTransactionInfo(new byte[] { ISCConstants.isc_info_tra_id }, 16, new InfoProcessor<Long>() {
+            @Override
+            public Long process(byte[] infoResponse) throws SQLException {
+                if (infoResponse[0] != ISCConstants.isc_info_tra_id) {
+                    // TODO Message, SQL state, error code?
+                    throw new SQLException("Unexpected response buffer");
+                }
+                int length = getDatabase().iscVaxInteger2(infoResponse, 1);
+                return getDatabase().iscVaxLong(infoResponse, 3, length);
+            }
+        });
+    }
+
     /**
      * Get synchronization object.
      *
@@ -114,4 +140,7 @@ public abstract class AbstractFbTransaction implements FbTransaction {
         }
     }
 
+    protected FbDatabase getDatabase() {
+        return database;
+    }
 }

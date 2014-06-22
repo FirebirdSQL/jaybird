@@ -81,8 +81,52 @@ public interface FbTransaction {
     /**
      * Prepare the transaction for two-phase commit/rollback.
      *
-     * @param recoveryInformation Transaction recovery information (stored in RDB$TRANSACTION_DESCRIPTION of RDB$TRANSACTIONS)
+     * @param recoveryInformation
+     *         Transaction recovery information (stored in RDB$TRANSACTION_DESCRIPTION of RDB$TRANSACTIONS)
      * @throws SQLException
      */
     void prepare(byte[] recoveryInformation) throws SQLException;
+
+    /**
+     * Request transaction info.
+     *
+     * @param requestItems
+     *         Array of info items to request
+     * @param bufferLength
+     *         Response buffer length to use
+     * @param infoProcessor
+     *         Implementation of {@link InfoProcessor} to transform
+     *         the info response
+     * @return Transformed info response of type T
+     * @throws SQLException
+     *         For errors retrieving or transforming the response.
+     */
+    <T> T getTransactionInfo(byte[] requestItems, int bufferLength, InfoProcessor<T> infoProcessor)
+            throws SQLException;
+
+    /**
+     * Performs a transaction info request.
+     *
+     * @param requestItems
+     *         Information items to request
+     * @param maxBufferLength
+     *         Maximum response buffer length to use
+     * @return The response buffer (note: length is the actual length of the
+     * response, not <code>maxBufferLength</code>
+     * @throws SQLException
+     *         For errors retrieving the information.
+     */
+    byte[] getTransactionInfo(byte[] requestItems, int maxBufferLength) throws SQLException;
+
+    /**
+     * Retrieves the transaction id.
+     * <p>
+     * The transaction id is the database transaction id, not to be confused with the attachment level transaction
+     * handle provided by {@link #getHandle()}.
+     * </p>
+     *
+     * @return Database transaction id.
+     * @throws SQLException
+     */
+    long getTransactionId() throws SQLException;
 }

@@ -748,7 +748,7 @@ public class FBManagedConnection implements ManagedConnection, XAResource, Excep
         try {
             // find XID
             // TODO: Is there a reason why this pieace of code can't use the JDBC Statement class?
-            FbTransaction trHandle2 = database.createTransaction(tpb.getTransactionParameterBuffer());
+            FbTransaction trHandle2 = database.startTransaction(tpb.getTransactionParameterBuffer());
             FbStatement stmtHandle2 = database.createStatement(trHandle2);
             stmtHandle2.allocateStatement();
 
@@ -812,7 +812,7 @@ public class FBManagedConnection implements ManagedConnection, XAResource, Excep
         try {    
             // delete XID
 
-            FbTransaction trHandle2 = database.createTransaction(tpb.getTransactionParameterBuffer());
+            FbTransaction trHandle2 = database.startTransaction(tpb.getTransactionParameterBuffer());
 
             FbStatement stmtHandle2 = database.createStatement(trHandle2);
             stmtHandle2.allocateStatement();
@@ -938,7 +938,7 @@ public class FBManagedConnection implements ManagedConnection, XAResource, Excep
             
             List<FBXid> xids = new ArrayList<FBXid>();
 
-            FbTransaction trHandle2 = database.createTransaction(tpb.getTransactionParameterBuffer());
+            FbTransaction trHandle2 = database.startTransaction(tpb.getTransactionParameterBuffer());
 
             FbStatement stmtHandle2 = database.createStatement(trHandle2);
             stmtHandle2.allocateStatement();
