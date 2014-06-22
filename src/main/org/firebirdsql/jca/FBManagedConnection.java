@@ -105,7 +105,7 @@ public class FBManagedConnection implements ManagedConnection, XAResource, Excep
                 if (log != null) {
                     log.warn(WARNING_NO_CHARSET);
                 }
-                //dbHandle.addWarning(new GDSWarning(WARNING_NO_CHARSET));
+                notifyWarning(new SQLWarning(WARNING_NO_CHARSET));
             }
             
             if (!dpb.hasArgument(DatabaseParameterBuffer.CONNECT_TIMEOUT) && DriverManager.getLoginTimeout() > 0) {
@@ -1366,6 +1366,20 @@ public class FBManagedConnection implements ManagedConnection, XAResource, Excep
         return tpb.isReadOnly();
     }
 
+    private void notifyWarning(SQLWarning warning) {
+        // Note: minor chance of a race condition here, but we take the chance.
+        if (connectionHandles.isEmpty()) {
+            if (unnotifiedWarnings == null) {
+                unnotifiedWarnings = warning;
+            } else {
+                unnotifiedWarnings.setNextWarning(warning);
+            }
+        }
+        for (FBConnection connection : new ArrayList<FBConnection>(connectionHandles)) {
+            connection.addWarning(warning);
+        }
+    }
+
     /**
      * DatabaseListener implementation for use by this ManagedConnection.
      */
@@ -1376,17 +1390,7 @@ public class FBManagedConnection implements ManagedConnection, XAResource, Excep
                 database.removeDatabaseListener(this);
                 return;
             }
-            // Note: minor chance of a race condition here, but we take the chance.
-            if (connectionHandles.isEmpty()) {
-                if (unnotifiedWarnings == null) {
-                    unnotifiedWarnings = warning;
-                } else {
-                    unnotifiedWarnings.setNextWarning(warning);
-                }
-            }
-            for (FBConnection connection : new ArrayList<FBConnection>(connectionHandles)) {
-                connection.addWarning(warning);
-            }
+            notifyWarning(warning);
         }
     }
 }
