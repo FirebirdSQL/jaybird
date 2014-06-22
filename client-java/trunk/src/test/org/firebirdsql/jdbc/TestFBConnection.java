@@ -23,6 +23,7 @@ import java.util.Properties;
 
 import org.firebirdsql.common.FBTestBase;
 import org.firebirdsql.gds.*;
+import org.firebirdsql.gds.ng.FbDatabase;
 import org.firebirdsql.jca.FBManagedConnection;
 
 import static org.firebirdsql.common.JdbcResourceHelper.*;
@@ -361,19 +362,18 @@ public class TestFBConnection extends FBTestBase {
         FirebirdConnection connection = getConnectionViaDriverManager();
         try {
             FBConnection abstractConnection = (FBConnection)connection;
-            
-            GDS gds = (abstractConnection).getInternalAPIHandler();
-            
+
+            FbDatabase database = abstractConnection.getFbDatabase();
+
             byte[] infoRequest = new byte[] {ISCConstants.isc_info_user_names, ISCConstants.isc_info_end};
-            byte[] reply = gds.iscDatabaseInfo(
-                abstractConnection.getIscDBHandle(), infoRequest, 1024);
+            byte[] reply = database.getDatabaseInfo(infoRequest, 1024);
             
             int i = 0;
             
             while(reply[i] != ISCConstants.isc_info_end) {
                 switch(reply[i++]) {
                     case ISCConstants.isc_info_user_names :
-                        gds.iscVaxInteger(reply, i, 2); // can be ignored
+                        database.iscVaxInteger(reply, i, 2); // can be ignored
                         i += 2;
                         int strLen = reply[i] & 0xff;
                         i += 1;
