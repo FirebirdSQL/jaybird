@@ -20,8 +20,8 @@
  */
 package org.firebirdsql.jdbc;
 
-import org.firebirdsql.gds.XSQLVAR;
 import org.firebirdsql.gds.impl.GDSHelper;
+import org.firebirdsql.gds.ng.fields.RowDescriptor;
 
 import java.sql.ParameterMetaData;
 import java.sql.SQLException;
@@ -41,15 +41,15 @@ public class FBParameterMetaData extends AbstractFieldMetaData implements Firebi
     /**
      * Creates a new <code>FBParameterMetaData</code> instance.
      *
-     * @param xsqlvars
-     *         a <code>XSQLVAR[]</code> value
+     * @param rowDescriptor
+     *         a row descriptor
      * @param connection
      *         a <code>AbstractConnection</code> value
      * @throws SQLException
      *         if an error occurs
      */
-    protected FBParameterMetaData(XSQLVAR[] xsqlvars, GDSHelper connection) throws SQLException {
-        super(xsqlvars, connection);
+    protected FBParameterMetaData(RowDescriptor rowDescriptor, GDSHelper connection) throws SQLException {
+        super(rowDescriptor, connection);
     }
 
     /**
@@ -80,7 +80,7 @@ public class FBParameterMetaData extends AbstractFieldMetaData implements Firebi
      */
     @Override
     public int isNullable(int parameter) throws SQLException {
-        return (getXsqlvar(parameter).sqltype & 1) == 1
+        return (getFieldDescriptor(parameter).getType() & 1) == 1
                 ? ParameterMetaData.parameterNullable
                 : ParameterMetaData.parameterNoNulls;
     }

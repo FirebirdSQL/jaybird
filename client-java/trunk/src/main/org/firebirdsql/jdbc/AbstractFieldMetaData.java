@@ -22,8 +22,9 @@ package org.firebirdsql.jdbc;
 
 import org.firebirdsql.encodings.EncodingFactory;
 import org.firebirdsql.gds.ISCConstants;
-import org.firebirdsql.gds.XSQLVAR;
 import org.firebirdsql.gds.impl.GDSHelper;
+import org.firebirdsql.gds.ng.fields.FieldDescriptor;
+import org.firebirdsql.gds.ng.fields.RowDescriptor;
 
 import java.math.BigDecimal;
 import java.sql.*;
@@ -43,12 +44,12 @@ public abstract class AbstractFieldMetaData implements Wrapper {
     private static final int SUBTYPE_NUMERIC = 1;
     private static final int SUBTYPE_DECIMAL = 2;
 
-    private final XSQLVAR[] xsqlvars;
+    private final RowDescriptor rowDescriptor;
     private final GDSHelper gdsHelper;
     private Map<FieldKey, ExtendedFieldInfo> extendedInfo;
 
-    protected AbstractFieldMetaData(XSQLVAR[] xsqlvars, GDSHelper gdsHelper) {
-        this.xsqlvars = xsqlvars;
+    protected AbstractFieldMetaData(RowDescriptor rowDescriptor, GDSHelper gdsHelper) {
+        this.rowDescriptor = rowDescriptor;
         this.gdsHelper = gdsHelper;
     }
 
@@ -79,18 +80,18 @@ public abstract class AbstractFieldMetaData implements Wrapper {
      * @return the number of fields
      */
     protected final int getFieldCount() {
-        return xsqlvars.length;
+        return rowDescriptor.getCount();
     }
 
     /**
-     * The {@link org.firebirdsql.gds.XSQLVAR} of the field with index <code>fieldIndex</code>.
+     * The {@link org.firebirdsql.gds.ng.fields.FieldDescriptor} of the field with index <code>fieldIndex</code>.
      *
      * @param fieldIndex
      *         1-based index of a field in this metadata object
-     * @return XSQLVAR instance with field information
+     * @return field descriptor
      */
-    protected final XSQLVAR getXsqlvar(int fieldIndex) {
-        return xsqlvars[fieldIndex - 1];
+    protected final FieldDescriptor getFieldDescriptor(int fieldIndex) {
+        return rowDescriptor.getFieldDescriptor(fieldIndex - 1);
     }
 
     /**
@@ -101,7 +102,7 @@ public abstract class AbstractFieldMetaData implements Wrapper {
      * @return <code>true</code> if so; <code>false</code> otherwise
      */
     protected final boolean isSignedInternal(int field) {
-        switch (getXsqlvar(field).sqltype & ~1) {
+        switch (getFieldDescriptor(field).getType() & ~1) {
         case ISCConstants.SQL_SHORT:
         case ISCConstants.SQL_LONG:
         case ISCConstants.SQL_FLOAT:
@@ -123,7 +124,7 @@ public abstract class AbstractFieldMetaData implements Wrapper {
      * @return scale
      */
     protected final int getScaleInternal(int field) {
-        return getXsqlvar(field).sqlscale * (-1);
+        return getFieldDescriptor(field).getScale() * (-1);
     }
 
     protected final String getFieldClassName(int field) throws SQLException {
@@ -186,9 +187,9 @@ public abstract class AbstractFieldMetaData implements Wrapper {
     protected final String getFieldTypeName(int field) {
         // Must return the same value as DatabaseMetaData getColumns Type_Name
         // TODO Reduce duplication with FBDatabaseMetaData
-        int sqlType = getXsqlvar(field).sqltype & ~1;
-        int sqlScale = getXsqlvar(field).sqlscale;
-        int sqlSubtype = getXsqlvar(field).sqlsubtype;
+        int sqlType = getFieldDescriptor(field).getType() & ~1;
+        int sqlScale = getFieldDescriptor(field).getScale();
+        int sqlSubtype = getFieldDescriptor(field).getSubType();
 
         switch (sqlType) {
         case ISCConstants.SQL_SHORT:
@@ -246,9 +247,9 @@ public abstract class AbstractFieldMetaData implements Wrapper {
     }
 
     protected int getFieldType(int field) {
-        int sqlType = getXsqlvar(field).sqltype & ~1;
-        int sqlScale = getXsqlvar(field).sqlscale;
-        int sqlSubtype = getXsqlvar(field).sqlsubtype;
+        int sqlType = getFieldDescriptor(field).getType() & ~1;
+        int sqlScale = getFieldDescriptor(field).getScale();
+        int sqlSubtype = getFieldDescriptor(field).getSubType();
 
         switch (sqlType) {
         case ISCConstants.SQL_SHORT:
@@ -333,12 +334,12 @@ public abstract class AbstractFieldMetaData implements Wrapper {
 
         case Types.CHAR:
         case Types.VARCHAR: {
-            XSQLVAR var = getXsqlvar(field);
-            int charset = var.sqlsubtype & 0xFF;
+            FieldDescriptor var = getFieldDescriptor(field);
+            int charset = var.getSubType() & 0xFF;
             int charSetSize = charset == 127 /* CS_dynamic */ ?
                     EncodingFactory.getIscEncodingSize(getIscEncoding()) :
                     EncodingFactory.getCharacterSetSize(charset);
-            return var.sqllen / charSetSize;
+            return var.getLength() / charSetSize;
         }
 
         case Types.FLOAT:
@@ -365,7 +366,7 @@ public abstract class AbstractFieldMetaData implements Wrapper {
     }
 
     protected final int estimateFixedPrecision(int fieldIndex) {
-        int sqltype = getXsqlvar(fieldIndex).sqltype & ~1;
+        int sqltype = getFieldDescriptor(fieldIndex).getType() & ~1;
         switch (sqltype) {
         case ISCConstants.SQL_SHORT:
             return 4;
@@ -386,8 +387,8 @@ public abstract class AbstractFieldMetaData implements Wrapper {
         }
 
         FieldKey key = new FieldKey(
-                getXsqlvar(columnIndex).relname,
-                getXsqlvar(columnIndex).sqlname);
+                getFieldDescriptor(columnIndex).getOriginalTableName(),
+                getFieldDescriptor(columnIndex).getOriginalName());
 
         return extendedInfo.get(key);
     }

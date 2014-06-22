@@ -1043,7 +1043,7 @@ public class FBResultSet implements ResultSet, FirebirdResultSet, Synchronizable
      * this result set is constructed in code.
      */
     public ResultSetMetaData getMetaData() throws SQLException {
-        return new FBResultSetMetaData(/* TODO xsqlvars*/ null, gdsHelper);
+        return new FBResultSetMetaData(rowDescriptor, gdsHelper);
     }
 
     /**

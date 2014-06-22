@@ -22,8 +22,9 @@ package org.firebirdsql.jdbc;
 
 import org.firebirdsql.encodings.EncodingFactory;
 import org.firebirdsql.gds.ISCConstants;
-import org.firebirdsql.gds.XSQLVAR;
 import org.firebirdsql.gds.impl.GDSHelper;
+import org.firebirdsql.gds.ng.fields.FieldDescriptor;
+import org.firebirdsql.gds.ng.fields.RowDescriptor;
 
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
@@ -45,8 +46,8 @@ public class FBResultSetMetaData extends AbstractFieldMetaData implements Firebi
     /**
      * Creates a new <code>FBResultSetMetaData</code> instance.
      *
-     * @param xsqlvars
-     *         a <code>XSQLVAR[]</code> value
+     * @param rowDescriptor
+     *         a row descriptor
      * @param connection
      *         a <code>AbstractConnection</code> value
      * @throws SQLException
@@ -55,8 +56,8 @@ public class FBResultSetMetaData extends AbstractFieldMetaData implements Firebi
      *         TODO Need another constructor for metadata from constructed
      *         result set, where we supply the ext field info.
      */
-    protected FBResultSetMetaData(XSQLVAR[] xsqlvars, GDSHelper connection) throws SQLException {
-        super(xsqlvars, connection);
+    protected FBResultSetMetaData(RowDescriptor rowDescriptor, GDSHelper connection) throws SQLException {
+        super(rowDescriptor, connection);
 
         // Decide how to handle column names and column labels
         if (connection != null && connection.getDatabaseParameterBuffer().hasArgument(ISCConstants.isc_dpb_column_label_for_name)) {
@@ -123,7 +124,7 @@ public class FBResultSetMetaData extends AbstractFieldMetaData implements Firebi
      */
     @Override
     public boolean isSearchable(int column) throws SQLException {
-        final int sqlType = getXsqlvar(column).sqltype & ~1;
+        final int sqlType = getFieldDescriptor(column).getType() & ~1;
         return !((sqlType == ISCConstants.SQL_ARRAY)
                 || (sqlType == ISCConstants.SQL_BLOB));
     }
@@ -154,7 +155,7 @@ public class FBResultSetMetaData extends AbstractFieldMetaData implements Firebi
      */
     @Override
     public int isNullable(int column) throws SQLException {
-        return (getXsqlvar(column).sqltype & 1) == 1
+        return (getFieldDescriptor(column).getType() & 1) == 1
                 ? ResultSetMetaData.columnNullable
                 : ResultSetMetaData.columnNoNulls;
     }
@@ -219,7 +220,7 @@ public class FBResultSetMetaData extends AbstractFieldMetaData implements Firebi
      */
     @Override
     public String getColumnLabel(int column) throws SQLException {
-        return columnStrategy.getColumnLabel(getXsqlvar(column));
+        return columnStrategy.getColumnLabel(getFieldDescriptor(column));
     }
 
     /**
@@ -233,7 +234,7 @@ public class FBResultSetMetaData extends AbstractFieldMetaData implements Firebi
      */
     @Override
     public String getColumnName(int column) throws SQLException {
-        return columnStrategy.getColumnName(getXsqlvar(column));
+        return columnStrategy.getColumnName(getFieldDescriptor(column));
     }
 
     /**
@@ -305,14 +306,14 @@ public class FBResultSetMetaData extends AbstractFieldMetaData implements Firebi
      */
     @Override
     public String getTableName(int column) throws SQLException {
-        String result = getXsqlvar(column).relname;
+        String result = getFieldDescriptor(column).getOriginalTableName();
         if (result == null) result = "";
         return result;
     }
 
     @Override
     public String getTableAlias(int column) throws SQLException {
-        String result = getXsqlvar(column).relaliasname;
+        String result = getFieldDescriptor(column).getTableAlias();
         if (result == null) result = getTableName(column);
         return result;
     }
@@ -481,8 +482,8 @@ public class FBResultSetMetaData extends AbstractFieldMetaData implements Firebi
             int maxLength = Math.min(pending, 70);
             for (int i = 1; i <= maxLength; i++) {
 
-                String relationName = getXsqlvar(i).relname;
-                String fieldName = getXsqlvar(i).sqlname;
+                String relationName = getFieldDescriptor(i).getOriginalTableName();
+                String fieldName = getFieldDescriptor(i).getOriginalName();
 
                 if (relationName == null || relationName.equals("")
                         || fieldName == null || fieldName.equals("")) continue;
@@ -544,8 +545,10 @@ public class FBResultSetMetaData extends AbstractFieldMetaData implements Firebi
          */
         DEFAULT {
             @Override
-            String getColumnName(XSQLVAR xsqlvar) {
-                return xsqlvar.sqlname == null ? getColumnLabel(xsqlvar) : xsqlvar.sqlname;
+            String getColumnName(FieldDescriptor fieldDescriptor) {
+                return fieldDescriptor.getOriginalName() != null
+                        ? fieldDescriptor.getOriginalName()
+                        : getColumnLabel(fieldDescriptor);
             }
         },
         /**
@@ -563,32 +566,32 @@ public class FBResultSetMetaData extends AbstractFieldMetaData implements Firebi
          */
         COLUMN_LABEL_FOR_NAME {
             @Override
-            String getColumnName(XSQLVAR xsqlvar) {
-                return getColumnLabel(xsqlvar);
+            String getColumnName(FieldDescriptor fieldDescriptor) {
+                return getColumnLabel(fieldDescriptor);
             }
         };
 
         /**
          * Retrieve the columnName for the specified column.
          *
-         * @param xsqlvar
-         *         Column XSQLVAR
+         * @param fieldDescriptor
+         *         Column descriptor
          * @return value for the columnName
          */
-        abstract String getColumnName(XSQLVAR xsqlvar);
+        abstract String getColumnName(FieldDescriptor fieldDescriptor);
 
         /**
          * Retrieve the columnLabel for the specified column.
          *
-         * @param xsqlvar
-         *         Column XSQLVAR
+         * @param fieldDescriptor
+         *         Column descriptor
          * @return value for the columnLabel
          */
-        String getColumnLabel(XSQLVAR xsqlvar) {
-            if (xsqlvar.aliasname != null) {
-                return xsqlvar.aliasname;
-            } else if (xsqlvar.sqlname != null) {
-                return xsqlvar.sqlname;
+        String getColumnLabel(FieldDescriptor fieldDescriptor) {
+            if (fieldDescriptor.getFieldName() != null) {
+                return fieldDescriptor.getFieldName();
+            } else if (fieldDescriptor.getOriginalName() != null) {
+                return fieldDescriptor.getOriginalName();
             } else {
                 return "";
             }
