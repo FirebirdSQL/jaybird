@@ -29,8 +29,8 @@ import org.firebirdsql.gds.impl.*;
 import org.firebirdsql.gds.ng.FbStatement;
 import org.firebirdsql.gds.ng.SqlCountHolder;
 import org.firebirdsql.gds.ng.StatementState;
-import org.firebirdsql.gds.ng.fields.FieldValue;
 import org.firebirdsql.gds.ng.fields.RowDescriptor;
+import org.firebirdsql.gds.ng.fields.RowValue;
 import org.firebirdsql.gds.ng.listeners.StatementListener;
 import org.firebirdsql.jdbc.escape.FBEscapedParser;
 import org.firebirdsql.jdbc.escape.FBEscapedParser.EscapeParserMode;
@@ -81,7 +81,7 @@ public class FBStatement implements FirebirdStatement, Synchronizable {
 
     // Singleton result indicates it is a stored procedure or [INSERT | UPDATE | DELETE] ... RETURNING ...
     protected boolean isSingletonResult;
-    protected List<FieldValue> singletonResult;
+    protected RowValue singletonResult;
 
     protected int maxRows;	 
     protected int fetchSize;
@@ -565,7 +565,7 @@ public class FBStatement implements FirebirdStatement, Synchronizable {
         checkValidity();
         ResultSet rs = getResultSet();
         if (rs == null) {
-            rs = new FBResultSet(RowDescriptor.EMPTY, Collections.<List<FieldValue>>emptyList());
+            rs = new FBResultSet(RowDescriptor.EMPTY, Collections.<RowValue>emptyList());
         }
         return rs;
     }
@@ -1379,7 +1379,7 @@ public class FBStatement implements FirebirdStatement, Synchronizable {
         // closeResultSet(false);
         // TODO Consider use/implementation of execute immediate?
         prepareFixedStatement(sql);
-        fbStatement.execute(Collections.<FieldValue>emptyList());
+        fbStatement.execute(RowValue.EMPTY_ROW_VALUE);
         /*gdsHelper.executeStatement(fixedStmt, fixedStmt.getStatementType() == ISCConstants.isc_info_sql_stmt_exec_procedure);*/
 
         // TODO Replace with statement listener
@@ -1489,11 +1489,11 @@ public class FBStatement implements FirebirdStatement, Synchronizable {
 
     private final class FBStatementListener implements StatementListener {
         @Override
-        public void receivedRow(FbStatement sender, List<FieldValue> rowData) {
+        public void receivedRow(FbStatement sender, RowValue rowValue) {
             if (!isValidSender(sender)) return;
             // TODO May need extra condition to distinguish between singleton result of EXECUTE PROCEDURE and INSERT ... RETURNING ...
             if (isSingletonResult) {
-                singletonResult = rowData;
+                singletonResult = rowValue;
             }
         }
 

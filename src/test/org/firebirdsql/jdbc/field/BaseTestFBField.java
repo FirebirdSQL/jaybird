@@ -29,10 +29,9 @@ import java.sql.SQLException;
 import java.sql.Time;
 import java.sql.Timestamp;
 import java.util.Arrays;
-import java.util.List;
 
-import org.firebirdsql.gds.ng.fields.FieldValue;
 import org.firebirdsql.gds.ng.fields.RowDescriptor;
+import org.firebirdsql.gds.ng.fields.RowValue;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -69,8 +68,8 @@ public abstract class BaseTestFBField {
 
     protected FieldDataProvider createDataProvider(RowDescriptor rowDescriptor) throws SQLException {
         assert rowDescriptor.getCount() == 1 : "Test should use a single column";
-        List<FieldValue> row = rowDescriptor.createDefaultFieldValues();
-        return row.get(0);
+        RowValue row = rowDescriptor.createDefaultFieldValues();
+        return row.getFieldValue(0);
     }
 
     @Test

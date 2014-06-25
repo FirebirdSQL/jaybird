@@ -25,10 +25,7 @@ import org.firebirdsql.gds.impl.wire.WireProtocolConstants;
 import org.firebirdsql.gds.impl.wire.XdrInputStream;
 import org.firebirdsql.gds.impl.wire.XdrOutputStream;
 import org.firebirdsql.gds.ng.*;
-import org.firebirdsql.gds.ng.fields.BlrCalculator;
-import org.firebirdsql.gds.ng.fields.FieldDescriptor;
-import org.firebirdsql.gds.ng.fields.FieldValue;
-import org.firebirdsql.gds.ng.fields.RowDescriptor;
+import org.firebirdsql.gds.ng.fields.*;
 import org.firebirdsql.gds.ng.wire.*;
 import org.firebirdsql.jdbc.FBSQLException;
 import org.firebirdsql.util.SQLExceptionChainBuilder;
@@ -36,9 +33,7 @@ import org.firebirdsql.util.SQLExceptionChainBuilder;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.sql.SQLNonTransientException;
-import java.util.ArrayList;
 import java.util.EnumSet;
-import java.util.List;
 
 import static org.firebirdsql.gds.ng.TransactionHelper.checkTransactionActive;
 
@@ -354,7 +349,7 @@ public class V10Statement extends AbstractFbWireStatement implements FbWireState
     }
 
     @Override
-    public void execute(final List<FieldValue> parameters) throws SQLException {
+    public void execute(final RowValue parameters) throws SQLException {
         // TODO Validate transaction state?
         synchronized (getSynchronizationObject()) {
             checkStatementValid();
@@ -437,7 +432,7 @@ public class V10Statement extends AbstractFbWireStatement implements FbWireState
      * @throws IOException
      * @throws SQLException
      */
-    protected void sendExecute(final int operation, final List<FieldValue> parameters) throws IOException, SQLException {
+    protected void sendExecute(final int operation, final RowValue parameters) throws IOException, SQLException {
         assert operation == WireProtocolConstants.op_execute || operation == WireProtocolConstants.op_execute2 : "Needs to be called with operation op_execute or op_execute2";
         synchronized (getDatabase().getSynchronizationObject()) {
             final XdrOutputStream xdrOut = getXdrOut();
@@ -567,16 +562,15 @@ public class V10Statement extends AbstractFbWireStatement implements FbWireState
      * @throws SQLException
      * @throws IOException
      */
-    protected List<FieldValue> readSqlData() throws SQLException, IOException {
-        final List<FieldValue> rowData = new ArrayList<FieldValue>(getFieldDescriptor().getCount());
+    protected RowValue readSqlData() throws SQLException, IOException {
+        final RowValue rowValue = getFieldDescriptor().createDefaultFieldValues();
         final BlrCalculator blrCalculator = getDatabase().getBlrCalculator();
 
         synchronized (getDatabase().getSynchronizationObject()) {
             final XdrInputStream xdrIn = getXdrIn();
 
-            for (FieldDescriptor field : getFieldDescriptor()) {
-                int len = blrCalculator.calculateIoLength(field);
-                final FieldValue fieldValue = field.createDefaultFieldValue();
+            for (FieldValue fieldValue : rowValue) {
+                int len = blrCalculator.calculateIoLength(fieldValue.getFieldDescriptor());
                 byte[] buffer;
                 if (len == 0) {
                     // Length specified in response
@@ -598,10 +592,9 @@ public class V10Statement extends AbstractFbWireStatement implements FbWireState
                 if (xdrIn.readInt() == -1)
                     buffer = null;
                 fieldValue.setFieldData(buffer);
-                rowData.add(fieldValue);
             }
         }
-        return rowData;
+        return rowValue;
     }
 
     /**
@@ -612,7 +605,7 @@ public class V10Statement extends AbstractFbWireStatement implements FbWireState
      * @throws IOException
      *         if an error occurs while writing to the underlying output stream
      */
-    protected void writeSqlData(final List<FieldValue> fieldValues) throws IOException, SQLException {
+    protected void writeSqlData(final RowValue fieldValues) throws IOException, SQLException {
         synchronized (getDatabase().getSynchronizationObject()) {
             final XdrOutputStream xdrOut = getXdrOut();
             final BlrCalculator blrCalculator = getDatabase().getBlrCalculator();

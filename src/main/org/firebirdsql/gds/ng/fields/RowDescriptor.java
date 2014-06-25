@@ -41,7 +41,6 @@ import java.util.*;
 public final class RowDescriptor implements Iterable<FieldDescriptor> {
 
     public static final RowDescriptor EMPTY = new RowDescriptor(new FieldDescriptor[0]);
-    private static final List<FieldValue> EMPTY_FIELD_VALUES = Collections.emptyList();
 
     private final FieldDescriptor[] fieldDescriptors;
     private int hash;
@@ -70,6 +69,8 @@ public final class RowDescriptor implements Iterable<FieldDescriptor> {
      * @param index
      *         0-based index of the field
      * @return FieldDescriptor
+     * @throws java.lang.IndexOutOfBoundsException
+     *         if index is not <code>0 &lt;= index &lt; getCount</code>
      */
     public FieldDescriptor getFieldDescriptor(int index) {
         return fieldDescriptors[index];
@@ -91,18 +92,18 @@ public final class RowDescriptor implements Iterable<FieldDescriptor> {
      *
      * @return Default <code>FieldValue</code> instances for the <code>FieldDescriptor</code> instance contained in this instance.
      */
-    public List<FieldValue> createDefaultFieldValues() {
-        if (getCount() == 0) return EMPTY_FIELD_VALUES;
-        List<FieldValue> fieldValues = new ArrayList<FieldValue>(getCount());
-        for (FieldDescriptor fieldDescriptor : fieldDescriptors) {
-            fieldValues.add(fieldDescriptor.createDefaultFieldValue());
+    public RowValue createDefaultFieldValues() {
+        if (getCount() == 0) return RowValue.EMPTY_ROW_VALUE;
+        FieldValue[] fieldValues = new FieldValue[getCount()];
+        for (int i = 0; i < fieldDescriptors.length; i++) {
+            fieldValues[i] = fieldDescriptors[i].createDefaultFieldValue();
         }
-        return fieldValues;
+        return new RowValue(fieldValues);
     }
 
     @Override
     public Iterator<FieldDescriptor> iterator() {
-        return getFieldDescriptors().iterator();
+        return new RowDescriptorIterator();
     }
 
     @Override
@@ -152,5 +153,31 @@ public final class RowDescriptor implements Iterable<FieldDescriptor> {
     public static RowDescriptor createRowDescriptor(final FieldDescriptor[] fieldDescriptors) {
         if (fieldDescriptors.length == 0) return EMPTY;
         return new RowDescriptor(fieldDescriptors);
+    }
+
+    /**
+     * Iterator implementation to iterate over the internal array
+     */
+    private class RowDescriptorIterator implements Iterator<FieldDescriptor> {
+
+        private int index = 0;
+
+        @Override
+        public boolean hasNext() {
+            return index < fieldDescriptors.length;
+        }
+
+        @Override
+        public FieldDescriptor next() {
+            if (!hasNext()) {
+                throw new NoSuchElementException();
+            }
+            return fieldDescriptors[index++];
+        }
+
+        @Override
+        public void remove() {
+            throw new UnsupportedOperationException("remove() method is not supported");
+        }
     }
 }

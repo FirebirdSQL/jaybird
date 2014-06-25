@@ -29,6 +29,7 @@ import org.firebirdsql.gds.ng.FbStatement;
 import org.firebirdsql.gds.ng.FbTransaction;
 import org.firebirdsql.gds.ng.fields.FieldValue;
 import org.firebirdsql.gds.ng.fields.RowDescriptor;
+import org.firebirdsql.gds.ng.fields.RowValue;
 import org.firebirdsql.gds.ng.wire.FbWireDatabase;
 import org.firebirdsql.gds.ng.wire.SimpleStatementListener;
 import org.junit.Rule;
@@ -37,7 +38,6 @@ import org.junit.rules.ExpectedException;
 
 import java.sql.SQLException;
 import java.sql.SQLNonTransientException;
-import java.util.Arrays;
 
 import static org.firebirdsql.common.matchers.SQLExceptionMatchers.sqlExceptionEqualTo;
 import static org.junit.Assert.assertFalse;
@@ -105,7 +105,7 @@ public class TestV10OutputBlob extends BaseTestV10Blob {
         RowDescriptor descriptor = statement.getParameterDescriptor();
         FieldValue param1 = new FieldValue(descriptor.getFieldDescriptor(0), XSQLVAR.intToBytes(testId));
         FieldValue param2 = new FieldValue(descriptor.getFieldDescriptor(1), XSQLVAR.longToBytes(blob.getBlobId()));
-        statement.execute(Arrays.asList(param1, param2));
+        statement.execute(RowValue.of(param1, param2));
         statement.close();
         transaction.commit();
     }
@@ -226,7 +226,7 @@ public class TestV10OutputBlob extends BaseTestV10Blob {
             RowDescriptor descriptor = statement.getParameterDescriptor();
             FieldValue param1 = new FieldValue(descriptor.getFieldDescriptor(0), XSQLVAR.intToBytes(testId));
             FieldValue param2 = new FieldValue(descriptor.getFieldDescriptor(1), XSQLVAR.longToBytes(blob.getBlobId()));
-            statement.execute(Arrays.asList(param1, param2));
+            statement.execute(RowValue.of(param1, param2));
             statement.close();
             transaction.commit();
         } finally {

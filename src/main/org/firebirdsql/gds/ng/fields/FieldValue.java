@@ -134,6 +134,15 @@ public final class FieldValue implements FieldDataProvider, Cloneable {
         return fieldDescriptor;
     }
 
+    /**
+     * Clones this <code>FieldValue</code> instance.
+     * <p>
+     * The contained field data is cloned as well, but the cached object is identical.
+     * </p>
+     *
+     * @return Clone of this instance
+     */
+    @Override
     public FieldValue clone() {
         try {
             FieldValue clonedFieldValue = (FieldValue) super.clone();

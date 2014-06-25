@@ -35,6 +35,7 @@ import org.firebirdsql.gds.ng.FbStatement;
 import org.firebirdsql.gds.ng.FbTransaction;
 import org.firebirdsql.gds.ng.TransactionState;
 import org.firebirdsql.gds.ng.fields.FieldValue;
+import org.firebirdsql.gds.ng.fields.RowValue;
 import org.firebirdsql.gds.ng.wire.FbWireDatabase;
 import org.firebirdsql.gds.ng.wire.ProtocolCollection;
 import org.firebirdsql.gds.ng.wire.WireConnection;
@@ -45,7 +46,6 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.Arrays;
 
 import static org.firebirdsql.common.FBTestProperties.DB_PASSWORD;
 import static org.firebirdsql.common.FBTestProperties.DB_USER;
@@ -212,7 +212,7 @@ public class TestV10Transaction extends FBJUnit4TestBase {
             parameter1.setFieldData(new XSQLVAR().encodeInt(key));
             parameter2.setFieldData(db.getEncoding().encodeToCharset(value));
 
-            statement.execute(Arrays.asList(parameter1, parameter2));
+            statement.execute(RowValue.of(parameter1, parameter2));
         } finally {
             statement.close();
         }

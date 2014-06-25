@@ -23,7 +23,7 @@ package org.firebirdsql.gds.ng.wire;
 import org.firebirdsql.gds.ng.FbStatement;
 import org.firebirdsql.gds.ng.SqlCountHolder;
 import org.firebirdsql.gds.ng.StatementState;
-import org.firebirdsql.gds.ng.fields.FieldValue;
+import org.firebirdsql.gds.ng.fields.RowValue;
 import org.firebirdsql.gds.ng.listeners.StatementListener;
 
 import java.sql.SQLWarning;
@@ -39,7 +39,7 @@ import java.util.List;
  */
 public class SimpleStatementListener implements StatementListener {
 
-    private final List<List<FieldValue>> rows = new ArrayList<List<FieldValue>>();
+    private final List<RowValue> rows = new ArrayList<RowValue>();
     private final List<SQLWarning> warnings = Collections.synchronizedList(new ArrayList<SQLWarning>());
     private Boolean allRowsFetched;
     private Boolean hasResultSet;
@@ -47,8 +47,8 @@ public class SimpleStatementListener implements StatementListener {
     private SqlCountHolder sqlCounts;
 
     @Override
-    public void receivedRow(FbStatement sender, List<FieldValue> rowData) {
-        rows.add(rowData);
+    public void receivedRow(FbStatement sender, RowValue rowValue) {
+        rows.add(rowValue);
     }
 
     @Override
@@ -89,7 +89,7 @@ public class SimpleStatementListener implements StatementListener {
         return hasSingletonResult;
     }
 
-    public List<List<FieldValue>> getRows() {
+    public List<RowValue> getRows() {
         return rows;
     }
 

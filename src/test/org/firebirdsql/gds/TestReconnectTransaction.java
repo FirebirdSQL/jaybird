@@ -26,7 +26,7 @@ import org.firebirdsql.gds.impl.GDSFactory;
 import org.firebirdsql.gds.impl.GDSHelper;
 import org.firebirdsql.gds.impl.GDSType;
 import org.firebirdsql.gds.ng.*;
-import org.firebirdsql.gds.ng.fields.FieldValue;
+import org.firebirdsql.gds.ng.fields.RowValue;
 import org.firebirdsql.gds.ng.listeners.DefaultStatementListener;
 import org.firebirdsql.gds.ng.listeners.StatementListener;
 import org.firebirdsql.jca.FBTpb;
@@ -38,7 +38,6 @@ import org.junit.Test;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 
 import static org.firebirdsql.common.FBTestProperties.*;
@@ -71,11 +70,11 @@ public class TestReconnectTransaction extends FBJUnit4TestBase {
 
     private static class DataProvider implements FieldDataProvider {
 
-        private final List<List<FieldValue>> rows;
+        private final List<RowValue> rows;
         private final int fieldPos;
         private int row;
 
-        private DataProvider(List<List<FieldValue>> rows, int fieldPos) {
+        private DataProvider(List<RowValue> rows, int fieldPos) {
             this.rows = rows;
             this.fieldPos = fieldPos;
         }
@@ -85,7 +84,7 @@ public class TestReconnectTransaction extends FBJUnit4TestBase {
         }
 
         public byte[] getFieldData() {
-            return rows.get(row).get(fieldPos).getFieldData();
+            return rows.get(row).getFieldValue(fieldPos).getFieldData();
         }
 
         public void setFieldData(byte[] data) {
@@ -127,15 +126,15 @@ public class TestReconnectTransaction extends FBJUnit4TestBase {
         stmtHandle2.allocateStatement();
         stmtHandle2.prepare(RECOVERY_QUERY);
 
-        final List<List<FieldValue>> rows = new ArrayList<List<FieldValue>>();
+        final List<RowValue> rows = new ArrayList<RowValue>();
         StatementListener stmtListener = new DefaultStatementListener() {
             @Override
-            public void receivedRow(FbStatement sender, List<FieldValue> rowData) {
-                rows.add(rowData);
+            public void receivedRow(FbStatement sender, RowValue rowValues) {
+                rows.add(rowValues);
             }
         };
         stmtHandle2.addStatementListener(stmtListener);
-        stmtHandle2.execute(Collections.<FieldValue>emptyList());
+        stmtHandle2.execute(RowValue.EMPTY_ROW_VALUE);
         stmtHandle2.fetchRows(10);
 
         DataProvider dataProvider0 = new DataProvider(rows, 0);

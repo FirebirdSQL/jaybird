@@ -1,7 +1,7 @@
 /*
  * $Id$
- * 
- * Firebird Open Source J2ee connector - jdbc driver
+ *
+ * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -14,7 +14,7 @@
  * This file was created by members of the firebird development team.
  * All individual contributions remain the Copyright (C) of those
  * individuals.  Contributors to this file are either listed here or
- * can be obtained from a CVS history command.
+ * can be obtained from a source control history command.
  *
  * All rights reserved.
  */
@@ -32,6 +32,7 @@ import org.firebirdsql.gds.ng.StatementType;
 import org.firebirdsql.gds.ng.fields.FieldDescriptor;
 import org.firebirdsql.gds.ng.fields.FieldValue;
 import org.firebirdsql.gds.ng.fields.RowDescriptor;
+import org.firebirdsql.gds.ng.fields.RowValue;
 import org.firebirdsql.jdbc.field.*;
 import org.firebirdsql.jdbc.field.FBFlushableField.CachedObject;
 
@@ -76,7 +77,7 @@ public class FBPreparedStatement extends FBStatement implements
     private boolean isExecuteProcedureStatement;
 
     private final FBObjectListener.BlobListener blobListener;
-    private List<FieldValue> fieldValues;
+    private RowValue fieldValues;
 
     /**
      * Create instance of this class for the specified result set type and 
@@ -848,13 +849,11 @@ public class FBPreparedStatement extends FBStatement implements
 
         if (!allParamsSet) throw new FBSQLException("Not all parameters set.");
 
-        List<FieldValue> batchedValues = new ArrayList<FieldValue>(fieldValues.size());
-        for (int i = 0; i < fieldValues.size(); i++) {
-            batchedValues.add(fieldValues.get(i).clone());
-
+        final RowValue batchedValues = fieldValues.deepCopy();
+        for (int i = 0; i < batchedValues.getCount(); i++) {
             FBField field = getField(i + 1);
             if (field instanceof FBFlushableField)
-                batchedValues.get(i).setCachedObject(((FBFlushableField) field).getCachedObject());
+                batchedValues.getFieldValue(i).setCachedObject(((FBFlushableField) field).getCachedObject());
         }
 
         batchList.add(batchedValues);
@@ -939,19 +938,19 @@ public class FBPreparedStatement extends FBStatement implements
 
                 try {
                     while (iter.hasNext()) {
-                        List<FieldValue> data = (List<FieldValue>) iter.next();
+                        RowValue data = (RowValue) iter.next();
 
-                        for (int i = 0; i < fieldValues.size(); i++) {
-                            FieldValue fieldValue = fieldValues.get(i);
+                        for (int i = 0; i < fieldValues.getCount(); i++) {
+                            FieldValue fieldValue = fieldValues.getFieldValue(i);
                             fieldValue.reset();
 
                             FBField field = getField(i + 1);
                             if (field instanceof FBFlushableField) {
                                 // Explicitly set to null to ensure initialized property set to true
                                 fieldValue.setFieldData(null);
-                                ((FBFlushableField) field).setCachedObject((CachedObject) data.get(i).getCachedObject());
+                                ((FBFlushableField) field).setCachedObject((CachedObject) data.getFieldValue(i).getCachedObject());
                             } else {
-                                fieldValue.setFieldData(data.get(i).getFieldData());
+                                fieldValue.setFieldData(data.getFieldValue(i).getFieldData());
                             }
                             isParamSet[i] = true;
                         }
@@ -1307,7 +1306,7 @@ public class FBPreparedStatement extends FBStatement implements
         fields = new FBField[rowDescriptor.getCount()];
 
         for (int i = 0; i < isParamSet.length; i++) {
-            FieldDataProvider dataProvider = fieldValues.get(i);
+            FieldDataProvider dataProvider = fieldValues.getFieldValue(i);
 
             // FIXME check if we can safely pass cached here
             fields[i] = FBField.createField(getParameterDescriptor(i + 1), dataProvider, gdsHelper, false);

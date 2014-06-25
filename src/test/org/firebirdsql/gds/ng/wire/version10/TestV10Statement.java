@@ -34,6 +34,7 @@ import org.firebirdsql.gds.ng.*;
 import org.firebirdsql.gds.ng.fields.FieldDescriptor;
 import org.firebirdsql.gds.ng.fields.FieldValue;
 import org.firebirdsql.gds.ng.fields.RowDescriptor;
+import org.firebirdsql.gds.ng.fields.RowValue;
 import org.firebirdsql.gds.ng.wire.FbWireDatabase;
 import org.firebirdsql.gds.ng.wire.ProtocolCollection;
 import org.firebirdsql.gds.ng.wire.SimpleStatementListener;
@@ -45,7 +46,6 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.SQLNonTransientException;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 
 import static org.firebirdsql.common.FBTestProperties.DB_PASSWORD;
@@ -183,7 +183,7 @@ public class TestV10Statement extends FBJUnit4TestBase {
         final SimpleStatementListener statementListener = new SimpleStatementListener();
         statement.addStatementListener(statementListener);
 
-        statement.execute(Collections.<FieldValue>emptyList());
+        statement.execute(RowValue.EMPTY_ROW_VALUE);
 
         assertEquals("Expected hasResultSet to be set to true", Boolean.TRUE, statementListener.hasResultSet());
         assertEquals("Expected hasSingletonResult to be set to false", Boolean.FALSE, statementListener.hasSingletonResult());
@@ -238,7 +238,7 @@ public class TestV10Statement extends FBJUnit4TestBase {
         FieldValue param1 = new FieldValue(descriptor.getFieldDescriptor(0), new byte[]{ 0, 0, 0, 3 }); // int = 3 (id of UNICODE_FSS)
         FieldValue param2 = new FieldValue(descriptor.getFieldDescriptor(1), new byte[]{ 0, 0, 0, 1 }); // int = 1 (single byte character sets)
 
-        statement.execute(Arrays.asList(param1, param2));
+        statement.execute(RowValue.of(param1, param2));
 
         assertEquals("Expected hasResultSet to be set to true", Boolean.TRUE, listener.hasResultSet());
         assertEquals("Expected hasSingletonResult to be set to false", Boolean.FALSE, listener.hasSingletonResult());
@@ -303,15 +303,15 @@ public class TestV10Statement extends FBJUnit4TestBase {
         FieldValue parameter1 = statement.getParameterDescriptor().getFieldDescriptor(0).createDefaultFieldValue();
         parameter1.setFieldData(new byte[]{ 0, 0, 0, 1 }); // Byte representation of 1
 
-        statement.execute(Arrays.asList(parameter1));
+        statement.execute(RowValue.of(parameter1));
 
         assertTrue("Expected singleton result for executable stored procedure", listener.hasSingletonResult());
         assertFalse("Expected no result set for executable stored procedure", listener.hasResultSet());
         assertTrue("Expected all rows to have been fetched", listener.isAllRowsFetched());
         assertEquals("Expected 1 row", 1, listener.getRows().size());
-        List<FieldValue> fieldValues = listener.getRows().get(0);
-        assertEquals("Expected one field", 1, fieldValues.size());
-        FieldValue value = fieldValues.get(0);
+        RowValue fieldValues = listener.getRows().get(0);
+        assertEquals("Expected one field", 1, fieldValues.getCount());
+        FieldValue value = fieldValues.getFieldValue(0);
         assertArrayEquals("Expected byte representation of 2", new byte[]{ 0, 0, 0, 2 }, value.getFieldData());
     }
 
@@ -419,7 +419,7 @@ public class TestV10Statement extends FBJUnit4TestBase {
         parameter1.setFieldData(new byte[]{ 1, 0, 0, 0 });
         parameter2.setFieldData(db.getEncoding().encodeToCharset("test"));
 
-        statement.execute(Arrays.asList(parameter1, parameter2));
+        statement.execute(RowValue.of(parameter1, parameter2));
 
         assertNotNull("Expected SQL counts on listener", listener.getSqlCounts());
         assertEquals("Expected one row to have been inserted", 1, listener.getSqlCounts().getLongInsertCount());
@@ -473,7 +473,7 @@ public class TestV10Statement extends FBJUnit4TestBase {
     public void test_CloseCursor_State_CURSOR_OPEN() throws Exception {
         allocateStatement();
         statement.prepare("SELECT * FROM RDB$DATABASE");
-        statement.execute(Collections.<FieldValue>emptyList());
+        statement.execute(RowValue.EMPTY_ROW_VALUE);
         assumeThat(statement.getState(), equalTo(StatementState.CURSOR_OPEN));
 
         statement.closeCursor();

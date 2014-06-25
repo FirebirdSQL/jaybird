@@ -30,8 +30,8 @@ import java.util.*;
 import org.firebirdsql.gds.*;
 import org.firebirdsql.gds.impl.GDSHelper;
 import org.firebirdsql.gds.ng.FbStatement;
-import org.firebirdsql.gds.ng.fields.FieldValue;
 import org.firebirdsql.gds.ng.fields.RowDescriptor;
+import org.firebirdsql.gds.ng.fields.RowValue;
 import org.firebirdsql.jdbc.field.*;
 import org.firebirdsql.util.SQLExceptionChainBuilder;
 
@@ -52,7 +52,7 @@ public class FBResultSet implements ResultSet, FirebirdResultSet, Synchronizable
 
     protected final RowDescriptor rowDescriptor;
 
-    protected List<FieldValue> row;
+    protected RowValue row;
 
     private boolean wasNull = false;
     private boolean wasNullValid = false;
@@ -86,7 +86,7 @@ public class FBResultSet implements ResultSet, FirebirdResultSet, Synchronizable
     }
 
     @Override
-    public void rowChanged(FBFetcher fetcher, List<FieldValue> newRow) throws SQLException {
+    public void rowChanged(FBFetcher fetcher, RowValue newRow) throws SQLException {
         this.row = newRow;
     }
 
@@ -163,7 +163,7 @@ public class FBResultSet implements ResultSet, FirebirdResultSet, Synchronizable
      * @param rows Row data
      * @throws SQLException
      */
-    public FBResultSet(RowDescriptor rowDescriptor, List<List<FieldValue>> rows, FBObjectListener.ResultSetListener listener) throws SQLException {
+    public FBResultSet(RowDescriptor rowDescriptor, List<RowValue> rows, FBObjectListener.ResultSetListener listener) throws SQLException {
         // TODO Evaluate if we need to share more implementation with constructor above
         gdsHelper = null;
         fbStatement = null;
@@ -194,7 +194,7 @@ public class FBResultSet implements ResultSet, FirebirdResultSet, Synchronizable
      * @param rows Row data
      * @throws SQLException
      */
-    public FBResultSet(RowDescriptor rowDescriptor, List<List<FieldValue>> rows) throws SQLException {
+    public FBResultSet(RowDescriptor rowDescriptor, List<RowValue> rows) throws SQLException {
         gdsHelper = null;
         fbStatement = null;
         listener = FBObjectListener.NoActionResultSetListener.instance();
@@ -221,11 +221,11 @@ public class FBResultSet implements ResultSet, FirebirdResultSet, Synchronizable
             // anonymous implementation of the FieldDataProvider interface
             FieldDataProvider dataProvider = new FieldDataProvider() {
                 public byte[] getFieldData() {
-                    return row.get(fieldPosition).getFieldData();
+                    return row.getFieldValue(fieldPosition).getFieldData();
                 }
 
                 public void setFieldData(byte[] data) {
-                    row.get(fieldPosition).setFieldData(data);
+                    row.getFieldValue(fieldPosition).setFieldData(data);
                 }
             };
 
@@ -677,7 +677,7 @@ public class FBResultSet implements ResultSet, FirebirdResultSet, Synchronizable
         final FBField field = getField(columnIndex, true);
 
         wasNullValid = true;
-        wasNull = row == null || (row.get(columnIndex - 1).getFieldData() == null);
+        wasNull = row == null || (row.getFieldValue(columnIndex - 1).getFieldData() == null);
 
         return field;
     }
@@ -734,7 +734,7 @@ public class FBResultSet implements ResultSet, FirebirdResultSet, Synchronizable
                 ? rowUpdater.getField(fieldNum - 1)
                 : fields[fieldNum - 1];
         wasNullValid = true;
-        wasNull = (row == null || row.get(fieldNum - 1).getFieldData() == null);
+        wasNull = (row == null || row.getFieldValue(fieldNum - 1).getFieldData() == null);
         return field;
     }
 
