@@ -26,12 +26,11 @@
  */
 package org.firebirdsql.gds.ng;
 
-import org.firebirdsql.gds.ng.fields.FieldValue;
 import org.firebirdsql.gds.ng.fields.RowDescriptor;
+import org.firebirdsql.gds.ng.fields.RowValue;
 import org.firebirdsql.gds.ng.listeners.StatementListener;
 
 import java.sql.SQLException;
-import java.util.List;
 
 /**
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
@@ -125,7 +124,7 @@ public interface FbStatement {
      *         When the number of type of parameters does not match the types returned by {@link #getParameterDescriptor()},
      *         a parameter value was not set, or when an error occurred executing this statement.
      */
-    void execute(List<FieldValue> parameters) throws SQLException;
+    void execute(RowValue parameters) throws SQLException;
 
 //    /**
 //     * Prepares and executes the statement. This method cannot be used for statements expecting parameters.

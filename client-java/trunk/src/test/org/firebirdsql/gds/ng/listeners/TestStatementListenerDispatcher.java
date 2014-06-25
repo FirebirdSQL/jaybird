@@ -23,7 +23,7 @@ package org.firebirdsql.gds.ng.listeners;
 import org.firebirdsql.gds.ng.FbStatement;
 import org.firebirdsql.gds.ng.SqlCountHolder;
 import org.firebirdsql.gds.ng.StatementState;
-import org.firebirdsql.gds.ng.fields.FieldValue;
+import org.firebirdsql.gds.ng.fields.RowValue;
 import org.jmock.Expectations;
 import org.jmock.integration.junit4.JUnitRuleMockery;
 import org.junit.Before;
@@ -32,9 +32,7 @@ import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
 import java.sql.SQLWarning;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
 
 import static org.jmock.Expectations.throwException;
 
@@ -65,17 +63,16 @@ public class TestStatementListenerDispatcher {
     }
 
     /**
-     * Test if call to {@link org.firebirdsql.gds.ng.listeners.StatementListenerDispatcher#receivedRow(org.firebirdsql.gds.ng.FbStatement, java.util.List)}
+     * Test if call to {@link org.firebirdsql.gds.ng.listeners.StatementListenerDispatcher#receivedRow(org.firebirdsql.gds.ng.FbStatement, org.firebirdsql.gds.ng.fields.RowValue)}
      * is forwarded correctly.
      */
     @Test
     public void testReceivedRow() {
         final Expectations expectations = new Expectations();
-        final List<FieldValue> rowData = new ArrayList<FieldValue>();
-        expectations.exactly(1).of(listener).receivedRow(statement, rowData);
+        expectations.exactly(1).of(listener).receivedRow(statement, RowValue.EMPTY_ROW_VALUE);
         context.checking(expectations);
 
-        dispatcher.receivedRow(statement, rowData);
+        dispatcher.receivedRow(statement, RowValue.EMPTY_ROW_VALUE);
     }
 
     /**
@@ -87,14 +84,13 @@ public class TestStatementListenerDispatcher {
         final StatementListener listener2 = context.mock(StatementListener.class, "listener2");
         dispatcher.addListener(listener2);
         final Expectations expectations = new Expectations();
-        final List<FieldValue> rowData = new ArrayList<FieldValue>();
         for (StatementListener currentListener : Arrays.asList(listener, listener2)) {
-            expectations.exactly(1).of(currentListener).receivedRow(statement, rowData);
+            expectations.exactly(1).of(currentListener).receivedRow(statement, RowValue.EMPTY_ROW_VALUE);
             expectations.will(throwException(new Exception()));
         }
         context.checking(expectations);
 
-        dispatcher.receivedRow(statement, rowData);
+        dispatcher.receivedRow(statement, RowValue.EMPTY_ROW_VALUE);
     }
 
     /**

@@ -23,10 +23,9 @@ package org.firebirdsql.gds.ng.listeners;
 import org.firebirdsql.gds.ng.FbStatement;
 import org.firebirdsql.gds.ng.SqlCountHolder;
 import org.firebirdsql.gds.ng.StatementState;
-import org.firebirdsql.gds.ng.fields.FieldValue;
+import org.firebirdsql.gds.ng.fields.RowValue;
 
 import java.sql.SQLWarning;
-import java.util.List;
 
 /**
  * Default implementation of {@link org.firebirdsql.gds.ng.listeners.StatementListener} where all implemented methods
@@ -37,7 +36,7 @@ import java.util.List;
  */
 public class DefaultStatementListener implements StatementListener {
     @Override
-    public void receivedRow(FbStatement sender, List<FieldValue> rowData) {
+    public void receivedRow(FbStatement sender, RowValue rowValue) {
     }
 
     @Override

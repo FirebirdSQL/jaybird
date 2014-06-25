@@ -29,6 +29,7 @@ import org.firebirdsql.gds.ng.FbStatement;
 import org.firebirdsql.gds.ng.FbTransaction;
 import org.firebirdsql.gds.ng.fields.FieldValue;
 import org.firebirdsql.gds.ng.fields.RowDescriptor;
+import org.firebirdsql.gds.ng.fields.RowValue;
 import org.firebirdsql.gds.ng.wire.FbWireDatabase;
 import org.firebirdsql.gds.ng.wire.SimpleStatementListener;
 import org.junit.Rule;
@@ -39,7 +40,6 @@ import java.io.ByteArrayOutputStream;
 import java.sql.SQLException;
 import java.sql.SQLNonTransientException;
 import java.util.Arrays;
-import java.util.List;
 
 import static org.firebirdsql.common.matchers.SQLExceptionMatchers.sqlExceptionEqualTo;
 import static org.junit.Assert.assertArrayEquals;
@@ -77,15 +77,15 @@ public class TestV10InputBlob extends BaseTestV10Blob {
         RowDescriptor descriptor = statement.getParameterDescriptor();
         FieldValue param1 = new FieldValue(descriptor.getFieldDescriptor(0), XSQLVAR.intToBytes(testId));
 
-        statement.execute(Arrays.asList(param1));
+        statement.execute(RowValue.of(param1));
 
         assertEquals("Expected hasResultSet to be set to true", Boolean.TRUE, listener.hasResultSet());
 
         statement.fetchRows(1);
         assertEquals("Expected a row", 1, listener.getRows().size());
 
-        List<FieldValue> row = listener.getRows().get(0);
-        FieldValue blobIdFieldValue = row.get(0);
+        RowValue row = listener.getRows().get(0);
+        FieldValue blobIdFieldValue = row.getFieldValue(0);
         return new XSQLVAR().decodeLong(blobIdFieldValue.getFieldData());
     }
 
@@ -218,7 +218,7 @@ public class TestV10InputBlob extends BaseTestV10Blob {
             RowDescriptor descriptor = statement.getParameterDescriptor();
             FieldValue param1 = new FieldValue(descriptor.getFieldDescriptor(0), XSQLVAR.intToBytes(testId));
             FieldValue param2 = new FieldValue(descriptor.getFieldDescriptor(1), XSQLVAR.longToBytes(blob.getBlobId()));
-            statement.execute(Arrays.asList(param1, param2));
+            statement.execute(RowValue.of(param1, param2));
             statement.close();
             transaction.commit();
         } finally {

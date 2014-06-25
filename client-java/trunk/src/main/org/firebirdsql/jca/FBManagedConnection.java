@@ -37,7 +37,7 @@ import org.firebirdsql.gds.*;
 import org.firebirdsql.gds.impl.DbAttachInfo;
 import org.firebirdsql.gds.impl.GDSHelper;
 import org.firebirdsql.gds.ng.*;
-import org.firebirdsql.gds.ng.fields.FieldValue;
+import org.firebirdsql.gds.ng.fields.RowValue;
 import org.firebirdsql.gds.ng.listeners.DefaultDatabaseListener;
 import org.firebirdsql.gds.ng.listeners.DefaultStatementListener;
 import org.firebirdsql.jdbc.*;
@@ -762,7 +762,7 @@ public class FBManagedConnection implements ManagedConnection, XAResource, Excep
             DataProvider dataProvider1 = new DataProvider(1);
             stmtHandle2.addStatementListener(dataProvider1);
 
-            stmtHandle2.execute(Collections.<FieldValue>emptyList());
+            stmtHandle2.execute(RowValue.EMPTY_ROW_VALUE);
             stmtHandle2.fetchRows(10);
 
             FBField field0 = FBField.createField(stmtHandle2.getFieldDescriptor().getFieldDescriptor(0), dataProvider0, gdsHelper2, false);
@@ -821,7 +821,7 @@ public class FBManagedConnection implements ManagedConnection, XAResource, Excep
             gdsHelper2.setCurrentTransaction(trHandle2);
 
             stmtHandle2.prepare(FORGET_DELETE_QUERY + inLimboId);
-            stmtHandle2.execute(Collections.<FieldValue>emptyList());
+            stmtHandle2.execute(RowValue.EMPTY_ROW_VALUE);
 
             stmtHandle2.close();
             trHandle2.commit();
@@ -953,7 +953,7 @@ public class FBManagedConnection implements ManagedConnection, XAResource, Excep
             DataProvider dataProvider1 = new DataProvider(1);
             stmtHandle2.addStatementListener(dataProvider1);
 
-            stmtHandle2.execute(Collections.<FieldValue>emptyList());
+            stmtHandle2.execute(RowValue.EMPTY_ROW_VALUE);
             stmtHandle2.fetchRows(10);
 
             FBField field0 = FBField.createField(stmtHandle2.getFieldDescriptor().getFieldDescriptor(0), dataProvider0, gdsHelper2, false);
@@ -990,7 +990,7 @@ public class FBManagedConnection implements ManagedConnection, XAResource, Excep
     }
 
     private static class DataProvider extends DefaultStatementListener implements FieldDataProvider {
-        private final List<List<FieldValue>> rows = new ArrayList<List<FieldValue>>();
+        private final List<RowValue> rows = new ArrayList<RowValue>();
         private final int fieldPos;
         private int row;
         
@@ -1003,7 +1003,7 @@ public class FBManagedConnection implements ManagedConnection, XAResource, Excep
         }
         
         public byte[] getFieldData() {
-            return rows.get(row).get(fieldPos).getFieldData();
+            return rows.get(row).getFieldValue(fieldPos).getFieldData();
         }
 
         public void setFieldData(byte[] data) {
@@ -1015,8 +1015,8 @@ public class FBManagedConnection implements ManagedConnection, XAResource, Excep
         }
 
         @Override
-        public void receivedRow(FbStatement sender, List<FieldValue> rowData) {
-            rows.add(rowData);
+        public void receivedRow(FbStatement sender, RowValue rowValue) {
+            rows.add(rowValue);
         }
     }
     

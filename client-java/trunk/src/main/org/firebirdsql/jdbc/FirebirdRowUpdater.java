@@ -26,9 +26,8 @@
 package org.firebirdsql.jdbc;
 
 import java.sql.SQLException;
-import java.util.List;
 
-import org.firebirdsql.gds.ng.fields.FieldValue;
+import org.firebirdsql.gds.ng.fields.RowValue;
 import org.firebirdsql.jdbc.field.FBField;
 
 /**
@@ -57,15 +56,15 @@ interface FirebirdRowUpdater {
 
     void moveToInsertRow() throws SQLException;
 
-    void moveToCurrentRow() throws SQLException;    
-    
-    List<FieldValue> getNewRow() throws SQLException;
+    void moveToCurrentRow() throws SQLException;
 
-    List<FieldValue> getInsertRow() throws SQLException;
+    RowValue getNewRow() throws SQLException;
 
-    List<FieldValue> getOldRow() throws SQLException;
+    RowValue getInsertRow() throws SQLException;
 
-    void setRow(List<FieldValue> row) throws SQLException;
+    RowValue getOldRow() throws SQLException;
+
+    void setRow(RowValue row) throws SQLException;
     
     FBField getField(int fieldPosition) throws SQLException;
     

@@ -23,6 +23,7 @@ package org.firebirdsql.gds.ng;
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.ng.fields.FieldValue;
 import org.firebirdsql.gds.ng.fields.RowDescriptor;
+import org.firebirdsql.gds.ng.fields.RowValue;
 import org.firebirdsql.gds.ng.listeners.StatementListener;
 import org.firebirdsql.gds.ng.listeners.StatementListenerDispatcher;
 import org.firebirdsql.gds.ng.listeners.TransactionListener;
@@ -35,7 +36,6 @@ import java.sql.SQLNonTransientException;
 import java.sql.SQLTransientException;
 import java.sql.SQLWarning;
 import java.util.EnumSet;
-import java.util.List;
 
 /**
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
@@ -238,7 +238,7 @@ public abstract class AbstractFbStatement implements FbStatement {
      * @param rowData
      *         Row data
      */
-    protected final void queueRowData(List<FieldValue> rowData) {
+    protected final void queueRowData(RowValue rowData) {
         statementListenerDispatcher.receivedRow(this, rowData);
     }
 
@@ -413,14 +413,14 @@ public abstract class AbstractFbStatement implements FbStatement {
      * Validates if the number of parameters matches the expected number and types, and if all values have been set.
      *
      * @param parameters
-     *         List of parameters
+     *         Parameter values to validate
      * @throws SQLException
      *         When the number or type of parameters does not match {@link #getParameterDescriptor()}, or when a parameter has not been set.
      */
-    protected void validateParameters(final List<FieldValue> parameters) throws SQLException {
+    protected void validateParameters(final RowValue parameters) throws SQLException {
         final RowDescriptor parameterDescriptor = getParameterDescriptor();
         final int expectedSize = parameterDescriptor != null ? parameterDescriptor.getCount() : 0;
-        final int actualSize = parameters.size();
+        final int actualSize = parameters.getCount();
         // TODO Externalize sqlstates
         if (actualSize != expectedSize) {
             // TODO use HY021 (inconsistent descriptor information) instead?
@@ -428,7 +428,7 @@ public abstract class AbstractFbStatement implements FbStatement {
                     expectedSize, actualSize), "07008"); // invalid descriptor count
         }
         for (int fieldIndex = 0; fieldIndex < actualSize; fieldIndex++) {
-            FieldValue fieldValue = parameters.get(fieldIndex);
+            FieldValue fieldValue = parameters.getFieldValue(fieldIndex);
             if (fieldValue == null || !fieldValue.isInitialized()) {
                 // Communicating 1-based index, so it doesn't cause confusion when JDBC user sees this.
                 // TODO use HY000 (dynamic parameter value needed) instead?

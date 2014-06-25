@@ -20,10 +20,9 @@
  */
 package org.firebirdsql.jdbc;
 
-import org.firebirdsql.gds.ng.fields.FieldValue;
+import org.firebirdsql.gds.ng.fields.RowValue;
 
 import java.sql.SQLException;
-import java.util.List;
 
 /**
  * Instances of this class are able to fetch records from the server.
@@ -133,7 +132,7 @@ interface FBFetcher {
      * 
      * @throws SQLException if operation cannot be completed.
      */
-    void insertRow(List<FieldValue> data) throws SQLException;
+    void insertRow(RowValue data) throws SQLException;
     
     /**
      * Delete row at current position. This method deletes a row at the current
@@ -153,7 +152,7 @@ interface FBFetcher {
      * 
      * @throws SQLException if operation cannot be completed.
      */
-    void updateRow(List<FieldValue> data) throws SQLException;
+    void updateRow(RowValue data) throws SQLException;
 
     /**
      * Set the suggested number of rows to fetch with each batch fetch.

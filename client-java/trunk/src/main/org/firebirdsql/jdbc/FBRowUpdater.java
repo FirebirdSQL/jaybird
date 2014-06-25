@@ -26,6 +26,7 @@ import org.firebirdsql.gds.ng.FbStatement;
 import org.firebirdsql.gds.ng.fields.FieldDescriptor;
 import org.firebirdsql.gds.ng.fields.FieldValue;
 import org.firebirdsql.gds.ng.fields.RowDescriptor;
+import org.firebirdsql.gds.ng.fields.RowValue;
 import org.firebirdsql.gds.ng.listeners.DefaultStatementListener;
 import org.firebirdsql.jdbc.field.FBField;
 import org.firebirdsql.jdbc.field.FBFlushableField;
@@ -75,9 +76,9 @@ public class FBRowUpdater implements FirebirdRowUpdater {
 
     private boolean inInsertRow;
 
-    private List<FieldValue> newRow;
-    private List<FieldValue> oldRow;
-    private List<FieldValue> insertRow;
+    private RowValue newRow;
+    private RowValue oldRow;
+    private RowValue insertRow;
     private boolean[] updatedFlags;
 
     private String tableName;
@@ -114,20 +115,20 @@ public class FBRowUpdater implements FirebirdRowUpdater {
                 @Override
                 public byte[] getFieldData() {
                     if (!updatedFlags[fieldPos]) {
-                        return oldRow.get(fieldPos).getFieldData();
+                        return oldRow.getFieldValue(fieldPos).getFieldData();
                     } else if (inInsertRow) {
-                        return insertRow.get(fieldPos).getFieldData();
+                        return insertRow.getFieldValue(fieldPos).getFieldData();
                     } else {
-                        return newRow.get(fieldPos).getFieldData();
+                        return newRow.getFieldValue(fieldPos).getFieldData();
                     }
                 }
 
                 @Override
                 public void setFieldData(byte[] data) {
                     if (inInsertRow) {
-                        insertRow.get(fieldPos).setFieldData(data);
+                        insertRow.getFieldValue(fieldPos).setFieldData(data);
                     } else {
-                        newRow.get(fieldPos).setFieldData(data);
+                        newRow.getFieldValue(fieldPos).setFieldData(data);
                     }
                     updatedFlags[fieldPos] = true;
                 }
@@ -193,7 +194,7 @@ public class FBRowUpdater implements FirebirdRowUpdater {
     }
 
     @Override
-    public void setRow(List<FieldValue> row) {
+    public void setRow(RowValue row) {
         this.oldRow = row;
         this.updatedFlags = new boolean[rowDescriptor.getCount()];
         this.inInsertRow = false;
@@ -502,7 +503,7 @@ public class FBRowUpdater implements FirebirdRowUpdater {
                     // should fetch one row anyway
                     selectStatement.fetchRows(10);
 
-                    List<List<FieldValue>> rows = rowListener.getRows();
+                    List<RowValue> rows = rowListener.getRows();
                     if (rows.size() == 0)
                         throw new FBSQLException("No rows could be fetched.");
 
@@ -576,7 +577,7 @@ public class FBRowUpdater implements FirebirdRowUpdater {
             for (int i = 0; i < rowDescriptor.getCount(); i++) {
                 if (!updatedFlags[i]) continue;
 
-                params.add(newRow.get(i).clone());
+                params.add(newRow.getFieldValue(i).clone());
             }
         }
 
@@ -586,12 +587,12 @@ public class FBRowUpdater implements FirebirdRowUpdater {
             else if (!updatedFlags[i] && statementType == INSERT_STATEMENT_TYPE)
                 continue;
             if (statementType == INSERT_STATEMENT_TYPE)
-                params.add(insertRow.get(i).clone());
+                params.add(insertRow.getFieldValue(i).clone());
             else
-                params.add(oldRow.get(i).clone());
+                params.add(oldRow.getFieldValue(i).clone());
         }
 
-        stmt.execute(params);
+        stmt.execute(new RowValue(params.toArray(new FieldValue[params.size()])));
 
         // TODO think about adding COMMIT RETAIN in the auto-commit mode
     }
@@ -612,26 +613,25 @@ public class FBRowUpdater implements FirebirdRowUpdater {
     }
 
     @Override
-    public List<FieldValue> getNewRow() {
-        List<FieldValue> result = new ArrayList<FieldValue>(oldRow.size());
-        for (int i = 0; i < result.size(); i++) {
+    public RowValue getNewRow() {
+        FieldValue[] fieldValues = new FieldValue[oldRow.getCount()];
+        for (int i = 0; i < fieldValues.length; i++) {
             if (updatedFlags[i]) {
-                result.add(newRow.get(i).clone());
+                fieldValues[i] = newRow.getFieldValue(i).clone();
             } else {
-                result.add(oldRow.get(i).clone());
+                fieldValues[i] = oldRow.getFieldValue(i).clone();
             }
         }
-
-        return result;
+        return new RowValue(fieldValues);
     }
 
     @Override
-    public List<FieldValue> getInsertRow() {
+    public RowValue getInsertRow() {
         return insertRow;
     }
 
     @Override
-    public List<FieldValue> getOldRow() {
+    public RowValue getOldRow() {
         return oldRow;
     }
 
@@ -650,14 +650,14 @@ public class FBRowUpdater implements FirebirdRowUpdater {
     }
 
     private static class RowListener extends DefaultStatementListener {
-        private final List<List<FieldValue>> rows = new ArrayList<List<FieldValue>>();
+        private final List<RowValue> rows = new ArrayList<RowValue>();
 
         @Override
-        public void receivedRow(FbStatement sender, List<FieldValue> rowData) {
-            rows.add(rowData);
+        public void receivedRow(FbStatement sender, RowValue rowValue) {
+            rows.add(rowValue);
         }
 
-        public List<List<FieldValue>> getRows() {
+        public List<RowValue> getRows() {
             return rows;
         }
     }

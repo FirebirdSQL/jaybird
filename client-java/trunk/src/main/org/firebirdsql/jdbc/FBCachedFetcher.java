@@ -23,8 +23,8 @@ package org.firebirdsql.jdbc;
 import org.firebirdsql.gds.impl.GDSHelper;
 import org.firebirdsql.gds.ng.FbStatement;
 import org.firebirdsql.gds.ng.fields.FieldDescriptor;
-import org.firebirdsql.gds.ng.fields.FieldValue;
 import org.firebirdsql.gds.ng.fields.RowDescriptor;
+import org.firebirdsql.gds.ng.fields.RowValue;
 import org.firebirdsql.gds.ng.listeners.DefaultStatementListener;
 import org.firebirdsql.jdbc.field.FBField;
 import org.firebirdsql.jdbc.field.FBFlushableField;
@@ -39,7 +39,7 @@ import java.util.List;
 class FBCachedFetcher implements FBFetcher {
 
     private boolean forwardOnly;
-    private List<List<FieldValue>> rows;
+    private List<RowValue> rows;
     private int rowNum = 0;
 
     private int fetchSize;
@@ -97,25 +97,25 @@ class FBCachedFetcher implements FBFetcher {
         */
 
         if (hasBlobs) {
-            for (List<FieldValue> row : rows) {
+            for (RowValue row : rows) {
                 cacheBlobsInRow(gdsHelper, rowDescriptor, isBlob, row);
             }
         }
         stmt_handle.closeCursor();
     }
 
-    FBCachedFetcher(List<List<FieldValue>> rows, FBObjectListener.FetcherListener fetcherListener) throws SQLException {
-        this.rows = new ArrayList<List<FieldValue>>(rows);
+    FBCachedFetcher(List<RowValue> rows, FBObjectListener.FetcherListener fetcherListener) throws SQLException {
+        this.rows = new ArrayList<RowValue>(rows);
         this.fetcherListener = fetcherListener;
     }
 
     private static void cacheBlobsInRow(final GDSHelper gdsHelper, final RowDescriptor rowDescriptor,
-            final boolean[] isBlob, final List<FieldValue> localRow) throws SQLException {
+            final boolean[] isBlob, final RowValue localRow) throws SQLException {
         //ugly blob caching workaround.
-        for (int j = 0; j < localRow.size(); j++) {
+        for (int j = 0; j < localRow.getCount(); j++) {
             // if field is blob and there is a value to cache
-            if (isBlob[j] && localRow.get(j).getFieldData() != null) {
-                final byte[] tempData = localRow.get(j).getFieldData();
+            if (isBlob[j] && localRow.getFieldValue(j).getFieldData() != null) {
+                final byte[] tempData = localRow.getFieldValue(j).getFieldData();
                 FieldDataProvider dataProvider = new FieldDataProvider() {
                     @Override
                     public byte[] getFieldData() {
@@ -132,7 +132,7 @@ class FBCachedFetcher implements FBFetcher {
                 final FBFlushableField blob = (FBFlushableField) FBField.createField(
                         rowDescriptor.getFieldDescriptor(j), dataProvider, gdsHelper, false);
                 // TODO setCachedObject instead?
-                localRow.get(j).setFieldData(blob.getCachedData());
+                localRow.getFieldValue(j).setFieldData(blob.getCachedData());
             }
         }
     }
@@ -304,7 +304,7 @@ class FBCachedFetcher implements FBFetcher {
     }
 
     @Override
-    public void insertRow(List<FieldValue> data) throws SQLException {
+    public void insertRow(RowValue data) throws SQLException {
         if (rowNum == 0)
             rowNum++;
 
@@ -321,7 +321,7 @@ class FBCachedFetcher implements FBFetcher {
     }
 
     @Override
-    public void updateRow(List<FieldValue> data) throws SQLException {
+    public void updateRow(RowValue data) throws SQLException {
         if (!isAfterLast() && !isBeforeFirst()) {
             rows.set(rowNum - 1, data);
             fetcherListener.rowChanged(this, data);
@@ -339,12 +339,12 @@ class FBCachedFetcher implements FBFetcher {
     }
 
     private static class RowListener extends DefaultStatementListener {
-        private final List<List<FieldValue>> rows = new ArrayList<List<FieldValue>>();
+        private final List<RowValue> rows = new ArrayList<RowValue>();
         private boolean allRowsFetched = false;
 
         @Override
-        public void receivedRow(FbStatement sender, List<FieldValue> rowData) {
-            rows.add(rowData);
+        public void receivedRow(FbStatement sender, RowValue rowValue) {
+            rows.add(rowValue);
         }
 
         @Override
@@ -356,7 +356,7 @@ class FBCachedFetcher implements FBFetcher {
             return allRowsFetched;
         }
 
-        public List<List<FieldValue>> getRows() {
+        public List<RowValue> getRows() {
             return rows;
         }
     }

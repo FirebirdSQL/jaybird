@@ -29,14 +29,14 @@ package org.firebirdsql.gds.ng.listeners;
 import org.firebirdsql.gds.ng.FbStatement;
 import org.firebirdsql.gds.ng.SqlCountHolder;
 import org.firebirdsql.gds.ng.StatementState;
-import org.firebirdsql.gds.ng.fields.FieldValue;
+import org.firebirdsql.gds.ng.fields.RowValue;
 
 import java.sql.SQLWarning;
-import java.util.List;
 
 /**
  * Listener interface for receiving rows and related information as retrieved by
- * an {@link org.firebirdsql.gds.ng.FbStatement#fetchRows(int)}, or {@link org.firebirdsql.gds.ng.FbStatement#execute(java.util.List)} with a singleton result.
+ * an {@link org.firebirdsql.gds.ng.FbStatement#fetchRows(int)}, or
+ * {@link org.firebirdsql.gds.ng.FbStatement#execute(RowValue)} with a singleton result.
  *
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @since 3.0
@@ -48,10 +48,10 @@ public interface StatementListener {
      *
      * @param sender
      *         The <code>FbStatement</code> that called this method.
-     * @param rowData
-     *         The rowData as list. Implementer may choose to use an immutable <code>List</code>.
+     * @param rowValue
+     *         The row values.
      */
-    void receivedRow(FbStatement sender, List<FieldValue> rowData);
+    void receivedRow(FbStatement sender, RowValue rowValue);
 
     /**
      * Method to be notified when all rows have been fetched.

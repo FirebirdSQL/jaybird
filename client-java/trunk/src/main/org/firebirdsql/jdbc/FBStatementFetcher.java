@@ -20,15 +20,15 @@
  */
 package org.firebirdsql.jdbc;
 
+import org.firebirdsql.gds.impl.GDSHelper;
+import org.firebirdsql.gds.ng.FbStatement;
+import org.firebirdsql.gds.ng.fields.RowValue;
+import org.firebirdsql.gds.ng.listeners.DefaultStatementListener;
+
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-
-import org.firebirdsql.gds.impl.GDSHelper;
-import org.firebirdsql.gds.ng.FbStatement;
-import org.firebirdsql.gds.ng.fields.FieldValue;
-import org.firebirdsql.gds.ng.listeners.DefaultStatementListener;
 
 /**
  * Statement fetcher for read-only case. It differs from updatable cursor case
@@ -49,10 +49,10 @@ class FBStatementFetcher implements FBFetcher {
     protected final Synchronizable syncProvider;
     protected final FbStatement stmt;
 
-    private List<List<FieldValue>> rows = new ArrayList<List<FieldValue>>();
+    private List<RowValue> rows = new ArrayList<RowValue>();
     private final RowListener rowListener = new RowListener();
     private boolean allRowsFetched;
-    protected List<FieldValue> _nextRow;
+    protected RowValue _nextRow;
 
     private int rowNum = 0;
     private int rowPosition = 0;
@@ -95,12 +95,12 @@ class FBStatementFetcher implements FBFetcher {
         }
     }
 
-    protected List<FieldValue> getNextRow() throws SQLException {
+    protected RowValue getNextRow() throws SQLException {
         if (!wasFetched) fetch();
         return _nextRow;
     }
 
-    protected void setNextRow(List<FieldValue> nextRow) {
+    protected void setNextRow(RowValue nextRow) {
         _nextRow = nextRow;
 
         if (!wasFetched) {
@@ -285,29 +285,29 @@ class FBStatementFetcher implements FBFetcher {
     }
 
     @Override
-    public void insertRow(List<FieldValue> data) throws SQLException {
+    public void insertRow(RowValue data) throws SQLException {
         // empty
     }
 
     @Override
-    public void updateRow(List<FieldValue> data) throws SQLException {
+    public void updateRow(RowValue data) throws SQLException {
         // empty
     }
 
     @Override
-    public void setFetchSize(int fetchSize){
+    public void setFetchSize(int fetchSize) {
         this.fetchSize = fetchSize;
     }
 
     @Override
-    public int getFetchSize(){
+    public int getFetchSize() {
         return fetchSize;
     }
 
     private class RowListener extends DefaultStatementListener {
         @Override
-        public void receivedRow(FbStatement sender, List<FieldValue> rowData) {
-            rows.add(rowData);
+        public void receivedRow(FbStatement sender, RowValue rowValue) {
+            rows.add(rowValue);
         }
 
         @Override
