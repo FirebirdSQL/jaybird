@@ -90,8 +90,33 @@ public final class RowValue implements Iterable<FieldValue> {
      *         Field value elements
      * @return new <code>RowValues</code> object
      */
-    public static RowValue of(FieldValue... fieldValues) {
+    public static RowValue of(final FieldValue... fieldValues) {
         return new RowValue(fieldValues);
+    }
+
+    /**
+     * Convenience method for populating a row value from a RowDescriptor and byte arrays.
+     * <p>
+     * Note this method, and the similar {@link org.firebirdsql.gds.ng.fields.RowValueBuilder} are mainly intended for
+     * use in {@link org.firebirdsql.jdbc.FBDatabaseMetaData}.
+     * </p>
+     *
+     * @param rowDescriptor
+     *         The row descriptor
+     * @param rowData
+     *         An array of byte arrays with the field data.
+     * @return new <code>RowValues</code> object
+     * @see org.firebirdsql.gds.ng.fields.RowValueBuilder
+     */
+    public static RowValue of(RowDescriptor rowDescriptor, byte[]... rowData) {
+        if (rowDescriptor.getCount() != rowData.length) {
+            throw new IllegalArgumentException("Expected RowDescriptor count and rowData length to be the same");
+        }
+        final RowValue rowValue = rowDescriptor.createDefaultFieldValues();
+        for (int i = 0; i < rowData.length; i++) {
+            rowValue.getFieldValue(i).setFieldData(rowData[i]);
+        }
+        return rowValue;
     }
 
     /**

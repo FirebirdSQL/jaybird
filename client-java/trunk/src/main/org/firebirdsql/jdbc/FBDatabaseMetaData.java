@@ -1,7 +1,7 @@
 /*
  * $Id$
- * 
- * Firebird Open Source J2ee connector - jdbc driver
+ *
+ * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -14,7 +14,7 @@
  * This file was created by members of the firebird development team.
  * All individual contributions remain the Copyright (C) of those
  * individuals.  Contributors to this file are either listed here or
- * can be obtained from a CVS history command.
+ * can be obtained from a source control history command.
  *
  * All rights reserved.
  */
@@ -29,9 +29,15 @@ import org.firebirdsql.gds.*;
 import org.firebirdsql.gds.impl.AbstractGDS;
 import org.firebirdsql.gds.impl.GDSFactory;
 import org.firebirdsql.gds.impl.GDSHelper;
+import org.firebirdsql.gds.ng.fields.RowDescriptor;
+import org.firebirdsql.gds.ng.fields.RowDescriptorBuilder;
+import org.firebirdsql.gds.ng.fields.RowValue;
+import org.firebirdsql.gds.ng.fields.RowValueBuilder;
 import org.firebirdsql.jdbc.escape.FBEscapedFunctionHelper;
 import org.firebirdsql.logging.Logger;
 import org.firebirdsql.logging.LoggerFactory;
+
+import static org.firebirdsql.gds.ISCConstants.*;
 
 /**
  * Comprehensive information about the database as a whole.
@@ -131,7 +137,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
     protected FBDatabaseMetaData(GDSHelper gdsHelper) {
         this.gdsHelper = gdsHelper;
     }
-    
+
     protected FBDatabaseMetaData(FBConnection c) throws GDSException {
         this.gdsHelper = c.getGDSHelper();
         this.connection = c;
@@ -185,13 +191,13 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
      */
     public  String getURL() throws SQLException {
         AbstractGDS gds = ((AbstractGDS) connection.getInternalAPIHandler());
-        
+
         return GDSFactory.getJdbcUrl(gds.getType(), connection.mc.getDatabase());
     }
 
     /**
      * What's our user name as known to the database?
-     * 
+     *
      * @return our database user name
      * @exception SQLException
      *                if a database access error occurs
@@ -471,10 +477,10 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
     "ADMIN," +
     "AFTER," +
     //"ALL," +
-    //"ALTER," + 
-    //"AND," + 
-    //"ANY," + 
-    //"AS," + 
+    //"ALTER," +
+    //"AND," +
+    //"ANY," +
+    //"AS," +
     //"ASC," +    /* Alias of ASCENDING */
     "ASCENDING," +
     //"AT," +
@@ -486,7 +492,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
     //"BETWEEN," +
     "BIGINT," +
     "BLOB," +
-    "BREAK," + 
+    "BREAK," +
     //"BY," +
     "CACHE," +
     //"CASCADE," +
@@ -523,8 +529,8 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
     //"DEC," +
     //"DECIMAL," +
     //"DECLARE," +
-    //"DEFAULT," + 
-    //"DELETE," + 
+    //"DEFAULT," +
+    //"DELETE," +
     //"DESC," +    /* Alias of DESCENDING */
     "DESCENDING," +
     //"DESCRIPTOR," +
@@ -632,7 +638,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
     //"REAL," +
     "RECORD_VERSION," +
     "RECREATE," +
-    //"REFERENCES," + 
+    //"REFERENCES," +
     "RESERV," +    /* Alias of RESERVING */
     "RESERVING," +
     //"RESTRICT," +
@@ -641,8 +647,8 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
     "RETURNS," +
     //"REVOKE," +
     //"RIGHT," +
-    "ROLE," + 
-    //"ROLLBACK," + 
+    "ROLE," +
+    //"ROLLBACK," +
     "ROWS_AFFECTED," +
     "SAVEPOINT," +
     //"SCHEMA," +    /* Alias of DATABASE */
@@ -660,8 +666,8 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
     //"SOME," +
     "SORT," +
     //"SQLCODE," +
-    "STABILITY," + 
-    "STARTING," + 
+    "STABILITY," +
+    "STARTING," +
     "STARTS," +    /* Alias of STARTING */
     "STATISTICS," +
     //"SUBSTRING," +
@@ -697,9 +703,9 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
     "WHILE," +
     //"WITH," +
     //"WORK," +
-    //"WRITE," + 
-    //"YEAR," + 
-    "YEARDAY"; 
+    //"WRITE," +
+    //"YEAR," +
+    "YEARDAY";
 
     /**
      * Gets a comma-separated list of all a database's SQL keywords
@@ -722,7 +728,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
     public String getNumericFunctions() throws SQLException {
         return collectionToCommaSeperatedList(FBEscapedFunctionHelper.getSupportedNumericFunctions());
     }
-    
+
     private static String collectionToCommaSeperatedList(Collection<String> collection) {
         StringBuilder sb = new StringBuilder();
         for (String item : collection) {
@@ -833,7 +839,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
     }
 
     /**
-     * Retrieves whether concatenations between NULL and non-NULL values 
+     * Retrieves whether concatenations between NULL and non-NULL values
      * equal NULL. For SQL-92 compliance, a JDBC technology-enabled driver will
      * return <code>true</code>.
      *
@@ -1575,7 +1581,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
     public  int getMaxRowSize() throws SQLException {
         if (gdsHelper.compareToVersion(1, 5) >= 0)
             return 65531;
-        else 
+        else
             return 0;
     }
 
@@ -1788,24 +1794,25 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
             procedureNamePattern = "%";
         }
 
-        XSQLVAR[] xsqlvars = new XSQLVAR[9];
-
-        xsqlvars[0] = new XSQLVAR(ISCConstants.SQL_VARYING, 31, "PROCEDURE_CAT", "PROCEDURES");
-        xsqlvars[1] = new XSQLVAR(ISCConstants.SQL_VARYING, 31, "PROCEDURE_SCHEM", "ROCEDURES");
-        xsqlvars[2] = new XSQLVAR(ISCConstants.SQL_VARYING, 31, "PROCEDURE_NAME", "PROCEDURES");
-        xsqlvars[3] = new XSQLVAR(ISCConstants.SQL_VARYING, 31, "FUTURE1", "PROCEDURES");
-        xsqlvars[4] = new XSQLVAR(ISCConstants.SQL_VARYING, 31, "FUTURE2", "PROCEDURES");
-        xsqlvars[5] = new XSQLVAR(ISCConstants.SQL_VARYING, 31, "FUTURE3", "PROCEDURES");
-        xsqlvars[6] = new XSQLVAR(ISCConstants.SQL_VARYING, 80 /*gets updated if there are longer remarks*/, "REMARKS", "PROCEDURES");
-        xsqlvars[7] = new XSQLVAR(ISCConstants.SQL_SHORT, 0, "PROCEDURE_TYPE", "PROCEDURES");
-        xsqlvars[8] = new XSQLVAR(ISCConstants.SQL_VARYING, 31, "SPECIFIC_NAME", "PROCEDURES");
+        final RowDescriptor rowDescriptor = new RowDescriptorBuilder(9)
+                .at(0).simple(SQL_VARYING, 31, "PROCEDURE_CAT", "PROCEDURES").addField()
+                .at(1).simple(SQL_VARYING, 31, "PROCEDURE_SCHEM", "ROCEDURES").addField()
+                .at(2).simple(SQL_VARYING, 31, "PROCEDURE_NAME", "PROCEDURES").addField()
+                .at(3).simple(SQL_VARYING, 31, "FUTURE1", "PROCEDURES").addField()
+                .at(4).simple(SQL_VARYING, 31, "FUTURE2", "PROCEDURES").addField()
+                .at(5).simple(SQL_VARYING, 31, "FUTURE3", "PROCEDURES").addField()
+                // Field in Firebird is actually a blob, using Integer.MAX_VALUE for length
+                .at(6).simple(SQL_VARYING, Integer.MAX_VALUE, "REMARKS", "PROCEDURES").addField() // TODO: Check if setting this to Integer.MAX_VALUE doesn't lead to problems elsewhere
+                .at(7).simple(SQL_SHORT, 0, "PROCEDURE_TYPE", "PROCEDURES").addField()
+                .at(8).simple(SQL_VARYING, 31, "SPECIFIC_NAME", "PROCEDURES").addField()
+                .toRowDescriptor();
 
         Clause procedureClause = new Clause("RDB$PROCEDURE_NAME", procedureNamePattern);
-        
+
         String sql = GET_PROCEDURES_START;
         sql += procedureClause.getCondition();
         sql += GET_PROCEDURES_END;
-        
+
         // check the original case identifiers first
         List<String> params = new ArrayList<String>();
         if (!procedureClause.getCondition().equals("")) {
@@ -1813,45 +1820,38 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
         }
 
         ResultSet rs = doQuery(sql, params);
-
-        
-        // if nothing found, check the uppercased identifiers
-        if (!rs.next()) {
-            rs.close();
-            params.clear();
-            if (!procedureClause.getCondition().equals("")) {
-                params.add(procedureClause.getValue());
-            }
-            
-            rs = doQuery(sql, params);
-            
-            // if nothing found, return an empty result set
+        try {
+            // if nothing found, check the uppercased identifiers
             if (!rs.next()) {
                 rs.close();
-                return new FBResultSet(xsqlvars, Collections.<byte[][]>emptyList());
-            }
-        }
+                params.clear();
+                if (!procedureClause.getCondition().equals("")) {
+                    params.add(procedureClause.getValue());
+                }
 
-        ArrayList<byte[][]> rows = new ArrayList<byte[][]>();
-        do {
-            byte[][] row = new byte[9][];
-            row[0] = null;
-            row[1] = null;
-            row[2] = getBytes(rs.getString("PROCEDURE_NAME"));
-            row[3] = null;
-            row[4] = null;
-            row[5] = null;
-            String remarks = rs.getString("REMARKS");
-            row[6] = getBytes(remarks);
-            if (remarks != null && remarks.length() > xsqlvars[6].sqllen)
-                xsqlvars[6].sqllen = remarks.length();
-            short procedureType = rs.getShort("PROCEDURE_TYPE");
-            row[7] = procedureType == 0 ? PROCEDURE_NO_RESULT : PROCEDURE_RETURNS_RESULT;
-            row[8] = row[2];
-            rows.add(row);
-        } while (rs.next());
-        rs.close();
-        return new FBResultSet(xsqlvars, rows);
+                rs = doQuery(sql, params);
+
+                // if nothing found, return an empty result set
+                if (!rs.next()) {
+                    return new FBResultSet(rowDescriptor, Collections.<RowValue>emptyList());
+                }
+            }
+
+            final List<RowValue> rows = new ArrayList<RowValue>();
+            final RowValueBuilder valueBuilder = new RowValueBuilder(rowDescriptor);
+            do {
+                rows.add(valueBuilder
+                                .at(2).set(getBytes(rs.getString("PROCEDURE_NAME")))
+                                .at(6).set(getBytes(rs.getString("REMARKS")))
+                                .at(7).set(rs.getShort("PROCEDURE_TYPE") == 0 ? PROCEDURE_NO_RESULT : PROCEDURE_RETURNS_RESULT)
+                                .at(8).set(valueBuilder.get(2))
+                                .toRowValue(true)
+                );
+            } while (rs.next());
+            return new FBResultSet(rowDescriptor, rows);
+        } finally {
+            rs.close();
+        }
     }
 
     private static final String GET_PROCEDURE_COLUMNS_START = "select "
@@ -1893,7 +1893,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
      *  <LI><B>PROCEDURE_CAT</B> String => procedure catalog (may be <code>null</code>)
      *  <LI><B>PROCEDURE_SCHEM</B> String => procedure schema (may be <code>null</code>)
      *  <LI><B>PROCEDURE_NAME</B> String => procedure name
-     *  <LI><B>COLUMN_NAME</B> String => column/parameter name 
+     *  <LI><B>COLUMN_NAME</B> String => column/parameter name
      *  <LI><B>COLUMN_TYPE</B> Short => kind of column/parameter:
      *      <UL>
      *      <LI> procedureColumnUnknown - nobody knows
@@ -1908,7 +1908,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
      *  type name is fully qualified
      *  <LI><B>PRECISION</B> int => precision
      *  <LI><B>LENGTH</B> int => length in bytes of data
-     *  <LI><B>SCALE</B> short => scale -  null is returned for data types where  
+     *  <LI><B>SCALE</B> short => scale -  null is returned for data types where
      * SCALE is not applicable.
      *  <LI><B>RADIX</B> short => radix
      *  <LI><B>NULLABLE</B> short => can it contain NULL.
@@ -1926,7 +1926,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
      *      </UL>
      *  <LI><B>SQL_DATA_TYPE</B> int  => reserved for future use
      *  <LI><B>SQL_DATETIME_SUB</B> int  => reserved for future use
-     *  <LI><B>CHAR_OCTET_LENGTH</B> int  => the maximum length of binary and character based columns.  For any other datatype the returned value is a 
+     *  <LI><B>CHAR_OCTET_LENGTH</B> int  => the maximum length of binary and character based columns.  For any other datatype the returned value is a
      * NULL
      *  <LI><B>ORDINAL_POSITION</B> int  => the ordinal position, starting from 1, for the input and output parameters for a procedure. A value of 0
      *is returned if this row describes the procedure's return value.  For result set columns, it is the
@@ -1937,19 +1937,19 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
      *       <UL>
      *       <LI> YES           --- if the parameter can include NULLs
      *       <LI> NO            --- if the parameter cannot include NULLs
-     *       <LI> empty string  --- if the nullability for the 
+     *       <LI> empty string  --- if the nullability for the
      * parameter is unknown
      *       </UL>
      *  <LI><B>SPECIFIC_NAME</B> String  => the name which uniquely identifies this procedure within its schema.
      *  </OL>
      *
      * <P><B>Note:</B> Some databases may not return the column
-     * descriptions for a procedure. 
-     * 
-     * <p>The PRECISION column represents the specified column size for the given column. 
-     * For numeric data, this is the maximum precision.  For character data, this is the length in characters. 
-     * For datetime datatypes, this is the length in characters of the String representation (assuming the 
-     * maximum allowed precision of the fractional seconds component). For binary data, this is the length in bytes.  For the ROWID datatype, 
+     * descriptions for a procedure.
+     *
+     * <p>The PRECISION column represents the specified column size for the given column.
+     * For numeric data, this is the maximum precision.  For character data, this is the length in characters.
+     * For datetime datatypes, this is the length in characters of the String representation (assuming the
+     * maximum allowed precision of the fractional seconds component). For binary data, this is the length in bytes.  For the ROWID datatype,
      * this is the length in bytes. Null is returned for data types where the
      * column size is not applicable.
      * @param catalog a catalog name; must match the catalog name as it
@@ -1961,13 +1961,13 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
      *        <code>null</code> means that the schema name should not be used to narrow
      *        the search
      * @param procedureNamePattern a procedure name pattern; must match the
-     *        procedure name as it is stored in the database 
+     *        procedure name as it is stored in the database
      * @param columnNamePattern a column name pattern; must match the column name
-     *        as it is stored in the database 
-     * @return <code>ResultSet</code> - each row describes a stored procedure parameter or 
+     *        as it is stored in the database
+     * @return <code>ResultSet</code> - each row describes a stored procedure parameter or
      *      column
      * @exception SQLException if a database access error occurs
-     * @see #getSearchStringEscape 
+     * @see #getSearchStringEscape
      */
     public ResultSet getProcedureColumns(String catalog,
             String schemaPattern,
@@ -1975,37 +1975,38 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
             String columnNamePattern) throws SQLException {
         checkCatalogAndSchema(catalog, schemaPattern);
 
-        XSQLVAR[] xsqlvars = new XSQLVAR[20];
-
-        xsqlvars[0] = new XSQLVAR(ISCConstants.SQL_VARYING, 31, "PROCEDURE_CAT", "COLUMNINFO");
-        xsqlvars[1] = new XSQLVAR(ISCConstants.SQL_VARYING, 31, "PROCEDURE_SCHEM", "COLUMNINFO");
-        xsqlvars[2] = new XSQLVAR(ISCConstants.SQL_VARYING, 31, "PROCEDURE_NAME", "COLUMNINFO");
-        xsqlvars[3] = new XSQLVAR(ISCConstants.SQL_VARYING, 31, "COLUMN_NAME", "COLUMNINFO");
-        xsqlvars[4] = new XSQLVAR(ISCConstants.SQL_SHORT, 0, "COLUMN_TYPE", "COLUMNINFO");
-        xsqlvars[5] = new XSQLVAR(ISCConstants.SQL_LONG, 0, "DATA_TYPE", "COLUMNINFO");
-        xsqlvars[6] = new XSQLVAR(ISCConstants.SQL_VARYING, 31, "TYPE_NAME", "COLUMNINFO");
-        xsqlvars[7] = new XSQLVAR(ISCConstants.SQL_LONG, 0, "PRECISION", "COLUMNINFO");
-        xsqlvars[8] = new XSQLVAR(ISCConstants.SQL_LONG, 0, "LENGTH", "COLUMNINFO");
-        xsqlvars[9] = new XSQLVAR(ISCConstants.SQL_SHORT, 0, "SCALE", "COLUMNINFO");
-        xsqlvars[10] = new XSQLVAR(ISCConstants.SQL_SHORT, 0, "RADIX", "COLUMNINFO");
-        xsqlvars[11] = new XSQLVAR(ISCConstants.SQL_SHORT, 0, "NULLABLE", "COLUMNINFO");
-        xsqlvars[12] = new XSQLVAR(ISCConstants.SQL_VARYING, 80 /*gets updated if we get a longer description*/, "REMARKS", "COLUMNINFO");
-        xsqlvars[13] = new XSQLVAR(ISCConstants.SQL_VARYING, 31, "COLUMN_DEF", "COLUMNINFO");
-        xsqlvars[14] = new XSQLVAR(ISCConstants.SQL_LONG, 0, "SQL_DATA_TYPE", "COLUMNINFO");
-        xsqlvars[15] = new XSQLVAR(ISCConstants.SQL_LONG, 0, "SQL_DATETIME_SUB", "COLUMNINFO");
-        xsqlvars[16] = new XSQLVAR(ISCConstants.SQL_LONG, 0, "CHAR_OCTET_LENGTH", "COLUMNINFO");
-        xsqlvars[17] = new XSQLVAR(ISCConstants.SQL_LONG, 0, "ORDINAL_POSITION", "COLUMNINFO");
-        xsqlvars[18] = new XSQLVAR(ISCConstants.SQL_VARYING, 3, "IS_NULLABLE", "COLUMNINFO");
-        xsqlvars[19] = new XSQLVAR(ISCConstants.SQL_VARYING, 31, "SPECIFIC_NAME", "COLUMNINFO");
+        final RowDescriptor rowDescriptor = new RowDescriptorBuilder(20)
+                .at(0).simple(SQL_VARYING, 31, "PROCEDURE_CAT", "COLUMNINFO").addField()
+                .at(1).simple(SQL_VARYING, 31, "PROCEDURE_SCHEM", "COLUMNINFO").addField()
+                .at(2).simple(SQL_VARYING, 31, "PROCEDURE_NAME", "COLUMNINFO").addField()
+                .at(3).simple(SQL_VARYING, 31, "COLUMN_NAME", "COLUMNINFO").addField()
+                .at(4).simple(SQL_SHORT, 0, "COLUMN_TYPE", "COLUMNINFO").addField()
+                .at(5).simple(SQL_LONG, 0, "DATA_TYPE", "COLUMNINFO").addField()
+                .at(6).simple(SQL_VARYING, 31, "TYPE_NAME", "COLUMNINFO").addField()
+                .at(7).simple(SQL_LONG, 0, "PRECISION", "COLUMNINFO").addField()
+                .at(8).simple(SQL_LONG, 0, "LENGTH", "COLUMNINFO").addField()
+                .at(9).simple(SQL_SHORT, 0, "SCALE", "COLUMNINFO").addField()
+                .at(10).simple(SQL_SHORT, 0, "RADIX", "COLUMNINFO").addField()
+                .at(11).simple(SQL_SHORT, 0, "NULLABLE", "COLUMNINFO").addField()
+                // Field in Firebird is actually a blob, using Integer.MAX_VALUE for length
+                .at(12).simple(SQL_VARYING, Integer.MAX_VALUE, "REMARKS", "COLUMNINFO").addField() // TODO: Check if setting this to Integer.MAX_VALUE doesn't lead to problems elsewhere
+                .at(13).simple(SQL_VARYING, 31, "COLUMN_DEF", "COLUMNINFO").addField()
+                .at(14).simple(SQL_LONG, 0, "SQL_DATA_TYPE", "COLUMNINFO").addField()
+                .at(15).simple(SQL_LONG, 0, "SQL_DATETIME_SUB", "COLUMNINFO").addField()
+                .at(16).simple(SQL_LONG, 0, "CHAR_OCTET_LENGTH", "COLUMNINFO").addField()
+                .at(17).simple(SQL_LONG, 0, "ORDINAL_POSITION", "COLUMNINFO").addField()
+                .at(18).simple(SQL_VARYING, 3, "IS_NULLABLE", "COLUMNINFO").addField()
+                .at(19).simple(SQL_VARYING, 31, "SPECIFIC_NAME", "COLUMNINFO").addField()
+                .toRowDescriptor();
 
         Clause procedureClause = new Clause("PP.RDB$PROCEDURE_NAME", procedureNamePattern);
         Clause columnClause = new Clause("PP.RDB$PARAMETER_NAME", columnNamePattern);
-        
+
         String sql = GET_PROCEDURE_COLUMNS_START;
         sql += procedureClause.getCondition();
         sql += columnClause.getCondition();
         sql += GET_PROCEDURE_COLUMNS_END;
-        
+
         // check the original case identifiers first
         List<String> params = new ArrayList<String>();
         if (!procedureClause.getCondition().equals("")) {
@@ -2016,127 +2017,114 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
         }
 
         ResultSet rs = doQuery(sql, params);
-        List<byte[][]> rows = new ArrayList<byte[][]>();
-        
-        // if nothing found, check the uppercased identifiers
-        if (!rs.next()) {
-            rs.close();
-            params.clear();
-            if (!procedureClause.getCondition().equals("")) {
-                params.add(procedureClause.getValue());
-            }
-            if (!columnClause.getCondition().equals("")) {
-                params.add(columnClause.getValue());
-            }
-            
-            rs = doQuery(sql, params);
-            
-            // if nothing found, return an empty result set
+        try {
+            // if nothing found, check the uppercased identifiers
             if (!rs.next()) {
                 rs.close();
-                return new FBResultSet(xsqlvars, rows);
+                params.clear();
+                if (!procedureClause.getCondition().equals("")) {
+                    params.add(procedureClause.getValue());
+                }
+                if (!columnClause.getCondition().equals("")) {
+                    params.add(columnClause.getValue());
+                }
+
+                rs = doQuery(sql, params);
+
+                // if nothing found, return an empty result set
+                if (!rs.next()) {
+                    return new FBResultSet(rowDescriptor, Collections.<RowValue>emptyList());
+                }
             }
-        }
 
-        do {
-            byte[][] row = new byte[20][];
-            row[0] = null;
-            row[1] = null;
-            row[2] = getBytes(rs.getString("PROCEDURE_NAME"));
-            row[3] = getBytes(rs.getString("COLUMN_NAME"));
+            final List<RowValue> rows = new ArrayList<RowValue>();
+            final RowValueBuilder valueBuilder = new RowValueBuilder(rowDescriptor);
+            do {
+                final short columnType = rs.getShort("COLUMN_TYPE");
+                final short fieldType = rs.getShort("FIELD_TYPE");
+                final short fieldSubType = rs.getShort("FIELD_SUB_TYPE");
+                final short fieldScale = rs.getShort("FIELD_SCALE");
+                // TODO: Find out what the difference is with NULL_FLAG in RDB$PROCEDURE_PARAMETERS (might be ODS dependent)
+                final short nullFlag = rs.getShort("NULL_FLAG");
+                final int dataType = getDataType(fieldType, fieldSubType, fieldScale);
+                valueBuilder
+                        .at(2).set(getBytes(rs.getString("PROCEDURE_NAME")))
+                        .at(3).set(getBytes(rs.getString("COLUMN_NAME")))
+                        // TODO: Unsure if procedureColumnOut is correct, maybe procedureColumnResult, or need ODS dependent use of RDB$PROCEDURE_TYPE to decide on selectable or executable?
+                        // TODO: ResultSet columns should not be first according to JDBC 4.1 description
+                        .at(4).set(columnType == 0 ? PROCEDURE_COLUMN_IN : PROCEDURE_COLUMN_OUT)
+                        .at(5).set(createInt(dataType))
+                        .at(6).set(getBytes(getDataTypeName(fieldType, fieldSubType, fieldScale)))
+                        .at(8).set(createInt(rs.getShort("FIELD_LENGTH")))
+                        .at(10).set(RADIX_TEN_SHORT)
+                        .at(11).set(nullFlag == 1 ? PROCEDURE_NO_NULLS : PROCEDURE_NULLABLE)
+                        .at(12).set(getBytes(rs.getString("REMARKS")))
+                        // TODO: Need to write ODS version dependent method to retrieve some of the info for indexes 13 (From 2.0 defaults for procedure parameters), 14 and 15
+                        // TODO: Find correct value for ORDINAL_POSITION (+ order of columns and intent, see JDBC-229)
+                        .at(17).set(createInt(rs.getInt("PARAMETER_NUMBER")))
+                        // TODO: Find out if there is a conceptual difference with NULLABLE (idx 11)
+                        .at(18).set(nullFlag == 1 ? NO_BYTES : YES_BYTES)
+                        .at(19).set(valueBuilder.get(2));
 
-            short columnType = rs.getShort("COLUMN_TYPE");
-            // TODO: Unsure if procedureColumnOut is correct, maybe procedureColumnResult, or need ODS dependent use of RDB$PROCEDURE_TYPE to decide on selectable or executable?
-            // TODO: ResultSet columns should not be first according to JDBC 4.1 description
-            row[4] = columnType == 0 ? PROCEDURE_COLUMN_IN : PROCEDURE_COLUMN_OUT;
-
-            short fieldType = rs.getShort("FIELD_TYPE");
-            short fieldSubType = rs.getShort("FIELD_SUB_TYPE");
-            short fieldScale = rs.getShort("FIELD_SCALE");
-            int dataType = getDataType(fieldType, fieldSubType, fieldScale);
-
-            row[5] = createInt(dataType);
-            row[6] = getBytes(getDataTypeName(fieldType, fieldSubType, fieldScale));
-            
-            row[8] = createInt(rs.getShort("FIELD_LENGTH"));
-            
-            // Defaults: some are overridden in the switch
-            row[7] = null;
-            row[9] = null;
-            row[10] = RADIX_TEN_SHORT;
-            row[16] = null;
-            switch (dataType){
+                switch (dataType) {
                 case Types.DECIMAL:
                 case Types.NUMERIC:
-                   row[7] = createInt(rs.getShort("FIELD_PRECISION"));
-                   row[9] = createShort(-1 * fieldScale);
-                   break;
+                    valueBuilder
+                            .at(7).set(createInt(rs.getShort("FIELD_PRECISION")))
+                            .at(9).set(createShort(-1 * fieldScale));
+                    break;
                 case Types.CHAR:
                 case Types.VARCHAR:
-                   short charLen = rs.getShort("CHAR_LEN");
-                   if (!rs.wasNull()) {
-                       row[7] = createInt(charLen);
-                   } else {
-                       row[7] = row[8];
-                   }
-                   row[16] = row[8];
-                   break;
+                    short charLen = rs.getShort("CHAR_LEN");
+                    if (!rs.wasNull()) {
+                        valueBuilder.at(7).set(createInt(charLen));
+                    } else {
+                        valueBuilder.at(8).set(valueBuilder.get(8));
+                    }
+                    valueBuilder.at(16).set(valueBuilder.get(8));
+                    break;
                 case Types.FLOAT:
-                   row[7] = FLOAT_PRECISION;
-                   break;
+                    valueBuilder.at(7).set(FLOAT_PRECISION);
+                    break;
                 case Types.DOUBLE:
-                   row[7] = DOUBLE_PRECISION;
-                   break;
+                    valueBuilder.at(7).set(DOUBLE_PRECISION);
+                    break;
                 case Types.BIGINT:
-                    row[7] = BIGINT_PRECISION;
-                    row[9] = SHORT_ZERO;
+                    valueBuilder
+                            .at(7).set(BIGINT_PRECISION)
+                            .at(9).set(SHORT_ZERO);
                     break;
                 case Types.INTEGER:
-                   row[7] = INTEGER_PRECISION;
-                   row[9] = SHORT_ZERO;
-                   break;
+                    valueBuilder
+                            .at(7).set(INTEGER_PRECISION)
+                            .at(9).set(SHORT_ZERO);
+                    break;
                 case Types.SMALLINT:
-                   row[7] = SMALLINT_PRECISION;
-                   row[9] = SHORT_ZERO;
-                   break;
+                    valueBuilder
+                            .at(7).set(SMALLINT_PRECISION)
+                            .at(9).set(SHORT_ZERO);
+                    break;
                 case Types.DATE:
-                   row[7] = DATE_PRECISION;
-                   break;
+                    valueBuilder.at(7).set(DATE_PRECISION);
+                    break;
                 case Types.TIME:
-                   row[7] = TIME_PRECISION;
-                   break;
+                    valueBuilder.at(7).set(TIME_PRECISION);
+                    break;
                 case Types.TIMESTAMP:
-                   row[7] = TIMESTAMP_PRECISION;
-                   break;
+                    valueBuilder.at(7).set(TIMESTAMP_PRECISION);
+                    break;
                 case Types.BOOLEAN:
-                    row[7] = BOOLEAN_PRECISION;
-                    row[10] = RADIX_BINARY_SHORT;
-                default:
-                   row[7] = null;
-            }
-            
-            // TODO: Find out what the difference is with NULL_FLAG in RDB$PROCEDURE_PARAMETERS (might be ODS dependent) 
-            short nullFlag = rs.getShort("NULL_FLAG");
-            row[11] = nullFlag == 1 ? PROCEDURE_NO_NULLS : PROCEDURE_NULLABLE;
+                    valueBuilder
+                            .at(7).set(BOOLEAN_PRECISION)
+                            .at(10).set(RADIX_BINARY_SHORT);
+                }
 
-            String remarks = rs.getString("REMARKS");
-            row[12] = getBytes(remarks);
-            if (remarks != null && remarks.length() > xsqlvars[12].sqllen)
-                xsqlvars[12].sqllen = remarks.length();
-            // TODO: Need to write ODS version dependent method to retrieve some of the info
-            row[13] = null; // TODO From 2.0 defaults for procedure parameters
-            row[14] = null;
-            row[15] = null;
-            // TODO: Find correct value for ORDINAL_POSITION (+ order of columns and intent, see JDBC-229)
-            row[17] = createInt(rs.getInt("PARAMETER_NUMBER"));
-            // TODO: Find out if there is a conceptual difference with NULLABLE (idx 11)
-            row[18] = (nullFlag == 1) ? NO_BYTES : YES_BYTES;
-            row[19] = row[2];
-
-            rows.add(row);
-        } while (rs.next());
-        rs.close();
-        return new FBResultSet(xsqlvars, rows);
+                rows.add(valueBuilder.toRowValue(true));
+            } while (rs.next());
+            return new FBResultSet(rowDescriptor, rows);
+        } finally {
+            rs.close();
+        }
     }
 
     // TODO: Include GLOBAL TEMPORARY
@@ -2158,17 +2146,17 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
             + "cast(null as varchar(31)) as REF_GENERATION,"
             + "cast(RDB$OWNER_NAME as varchar(31)) as OWNER_NAME "
             + "from RDB$RELATIONS";
-    
+
     private static final String TABLE_COLUMNS_SYSTEM =
             String.format(TABLE_COLUMNS_FORMAT, SYSTEM_TABLE);
-    
+
     private static final String TABLE_COLUMNS_NORMAL =
             String.format(TABLE_COLUMNS_FORMAT, TABLE);
-    
+
     private static final String TABLE_COLUMNS_VIEW =
             String.format(TABLE_COLUMNS_FORMAT, VIEW);
 
-    private static final String GET_TABLES_ALL = 
+    private static final String GET_TABLES_ALL =
           TABLE_COLUMNS_SYSTEM
         + " where ? = 'T' and RDB$SYSTEM_FLAG = 1 and RDB$VIEW_SOURCE is null"
         + " union"
@@ -2179,7 +2167,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
         + " where ? = 'T' and RDB$VIEW_SOURCE is not null "
         + " order by 3 ";
 
-    private static final String GET_TABLES_EXACT = 
+    private static final String GET_TABLES_EXACT =
           TABLE_COLUMNS_SYSTEM
         + " where ? = 'T' and RDB$SYSTEM_FLAG = 1 and RDB$VIEW_SOURCE is null"
         + " and ? = RDB$RELATION_NAME"
@@ -2192,7 +2180,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
         + " where ? = 'T' and RDB$VIEW_SOURCE is not null"
         + " and ? = RDB$RELATION_NAME";
 
-    private static final String GET_TABLES_LIKE = 
+    private static final String GET_TABLES_LIKE =
           TABLE_COLUMNS_SYSTEM
         + " where ? = 'T' and RDB$SYSTEM_FLAG = 1 and RDB$VIEW_SOURCE is null"
         + " and RDB$RELATION_NAME || '" + SPACES_31 + "' like ? escape '\\'"
@@ -2210,7 +2198,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
      * Retrieves a description of the tables available in the given catalog.
      * Only table descriptions matching the catalog, schema, table
      * name and type criteria are returned.  They are ordered by
-     * <code>TABLE_TYPE</code>, <code>TABLE_CAT</code>, 
+     * <code>TABLE_TYPE</code>, <code>TABLE_CAT</code>,
      * <code>TABLE_SCHEM</code> and <code>TABLE_NAME</code>.
      * <P>
      * Each table description has the following columns:
@@ -2219,18 +2207,18 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
      *  <LI><B>TABLE_SCHEM</B> String => table schema (may be <code>null</code>)
      *  <LI><B>TABLE_NAME</B> String => table name
      *  <LI><B>TABLE_TYPE</B> String => table type.  Typical types are "TABLE",
-     *          "VIEW", "SYSTEM TABLE", "GLOBAL TEMPORARY", 
+     *          "VIEW", "SYSTEM TABLE", "GLOBAL TEMPORARY",
      *          "LOCAL TEMPORARY", "ALIAS", "SYNONYM".
      *  <LI><B>REMARKS</B> String => explanatory comment on the table
      *  <LI><B>TYPE_CAT</B> String => the types catalog (may be <code>null</code>)
      *  <LI><B>TYPE_SCHEM</B> String => the types schema (may be <code>null</code>)
      *  <LI><B>TYPE_NAME</B> String => type name (may be <code>null</code>)
-     *  <LI><B>SELF_REFERENCING_COL_NAME</B> String => name of the designated 
+     *  <LI><B>SELF_REFERENCING_COL_NAME</B> String => name of the designated
      *                  "identifier" column of a typed table (may be <code>null</code>)
-     *  <LI><B>REF_GENERATION</B> String => specifies how values in 
+     *  <LI><B>REF_GENERATION</B> String => specifies how values in
      *                  SELF_REFERENCING_COL_NAME are created. Values are
      *                  "SYSTEM", "USER", "DERIVED". (may be <code>null</code>)
-     *  <LI><B>OWNER_NAME</B> String => Username of the owner of the table (Jaybird-specific) 
+     *  <LI><B>OWNER_NAME</B> String => Username of the owner of the table (Jaybird-specific)
      *  </OL>
      *
      * <P><B>Note:</B> Some databases may not return information for
@@ -2245,13 +2233,13 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
      *        <code>null</code> means that the schema name should not be used to narrow
      *        the search
      * @param tableNamePattern a table name pattern; must match the
-     *        table name as it is stored in the database 
-     * @param types a list of table types, which must be from the list of table types 
+     *        table name as it is stored in the database
+     * @param types a list of table types, which must be from the list of table types
      *         returned from {@link #getTableTypes},to include; <code>null</code> returns
      * all types
      * @return <code>ResultSet</code> - each row is a table description
      * @exception SQLException if a database access error occurs
-     * @see #getSearchStringEscape 
+     * @see #getSearchStringEscape
      */
     public ResultSet getTables(String catalog, String schemaPattern,
         String tableNamePattern, String types[]) throws SQLException {
@@ -2329,13 +2317,11 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
      * @exception SQLException if a database access error occurs
      */
     public  ResultSet getCatalogs() throws SQLException {
-        XSQLVAR[] xsqlvars = new XSQLVAR[1];
+        final RowDescriptor rowDescriptor = new RowDescriptorBuilder(1)
+                .at(0).simple(SQL_VARYING, 31, "TABLE_CAT", "TABLECATALOGS").addField()
+                .toRowDescriptor();
 
-        xsqlvars[0] = new XSQLVAR(ISCConstants.SQL_VARYING, 31, "TABLE_CAT", "TABLECATALOGS");
-
-        List<byte[][]> rows = Collections.emptyList();
-
-        return new FBResultSet(xsqlvars, rows);
+        return new FBResultSet(rowDescriptor, Collections.<RowValue>emptyList());
     }
 
     /**
@@ -2354,15 +2340,16 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
      * @exception SQLException if a database access error occurs
      */
     public  ResultSet getTableTypes() throws SQLException {
-        XSQLVAR[] xsqlvars = new XSQLVAR[1];
+        final RowDescriptor rowDescriptor = new RowDescriptorBuilder(1)
+                .at(0).simple(SQL_VARYING, 31, "TABLE_TYPE", "TABLETYPES").addField()
+                .toRowDescriptor();
 
-        xsqlvars[0] = new XSQLVAR(ISCConstants.SQL_VARYING, 31, "TABLE_TYPE", "TABLETYPES");
+        final List<RowValue> rows = new ArrayList<RowValue>(ALL_TYPES.length);
+        for (String ALL_TYPE : ALL_TYPES) {
+            rows.add(RowValue.of(rowDescriptor, getBytes(ALL_TYPE)));
+        }
 
-        List<byte[][]> rows = new ArrayList<byte[][]>(ALL_TYPES.length);
-        for(int i = 0; i < ALL_TYPES.length; i++)
-          rows.add(new byte[][] {getBytes(ALL_TYPES[i])});
-
-        return new FBResultSet(xsqlvars, rows);
+        return new FBResultSet(rowDescriptor, rows);
     }
 
     private static final String GET_COLUMNS_START =
@@ -2477,53 +2464,48 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
      * @exception SQLException if a database access error occurs
      * @see #getSearchStringEscape
      */
-    public ResultSet getColumns(String catalog, String schemaPattern,
-        String tableNamePattern, String columnNamePattern) throws SQLException {
+    public ResultSet getColumns(String catalog, String schemaPattern, String tableNamePattern, String columnNamePattern)
+            throws SQLException {
         checkCatalogAndSchema(catalog, schemaPattern);
 
-        XSQLVAR[] xsqlvars = new XSQLVAR[24];
-
-        xsqlvars[0] = new XSQLVAR(ISCConstants.SQL_VARYING, 31, "TABLE_CAT", "COLUMNINFO");
-        xsqlvars[1] = new XSQLVAR(ISCConstants.SQL_VARYING, 31, "TABLE_SCHEM", "COLUMNINFO");
-        xsqlvars[2] = new XSQLVAR(ISCConstants.SQL_VARYING, 31, "TABLE_NAME", "COLUMNINFO");
-        xsqlvars[3] = new XSQLVAR(ISCConstants.SQL_VARYING, 31, "COLUMN_NAME", "COLUMNINFO");
-        xsqlvars[4] = new XSQLVAR(ISCConstants.SQL_LONG, 0, "DATA_TYPE", "COLUMNINFO");
-        xsqlvars[5] = new XSQLVAR(ISCConstants.SQL_VARYING | 1, 31, "TYPE_NAME", "COLUMNINFO");
-        xsqlvars[6] = new XSQLVAR(ISCConstants.SQL_LONG, 0, "COLUMN_SIZE", "COLUMNINFO");
-        xsqlvars[7] = new XSQLVAR(ISCConstants.SQL_LONG, 0, "BUFFER_LENGTH", "COLUMNINFO");
-        xsqlvars[8] = new XSQLVAR(ISCConstants.SQL_LONG, 0, "DECIMAL_DIGITS", "COLUMNINFO");
-        xsqlvars[9] = new XSQLVAR(ISCConstants.SQL_LONG, 0, "NUM_PREC_RADIX", "COLUMNINFO");
-        xsqlvars[10] = new XSQLVAR(ISCConstants.SQL_LONG, 0, "NULLABLE", "COLUMNINFO");
-        xsqlvars[11] = new XSQLVAR(ISCConstants.SQL_VARYING | 1, 80, "REMARKS", "COLUMNINFO");
-        xsqlvars[12] = new XSQLVAR(ISCConstants.SQL_VARYING | 1, 31, "COLUMN_DEF", "COLUMNINFO");
-        xsqlvars[13] = new XSQLVAR(ISCConstants.SQL_LONG, 0, "SQL_DATA_TYPE", "COLUMNINFO");
-        xsqlvars[14] = new XSQLVAR(ISCConstants.SQL_LONG, 0, "SQL_DATETIME_SUB", "COLUMNINFO");
-        xsqlvars[15] = new XSQLVAR(ISCConstants.SQL_LONG, 0, "CHAR_OCTET_LENGTH", "COLUMNINFO");
-        xsqlvars[16] = new XSQLVAR(ISCConstants.SQL_LONG, 0, "ORDINAL_POSITION", "COLUMNINFO");
-        xsqlvars[17] = new XSQLVAR(ISCConstants.SQL_VARYING, 3, "IS_NULLABLE", "COLUMNINFO");
-        final String scopeCatalog;
-        if (getJDBCMajorVersion() > 4 || getJDBCMajorVersion() == 4 && getJDBCMinorVersion() >= 1) {
-            scopeCatalog = "SCOPE_CATALOG";
-        } else {
-            scopeCatalog = "SCOPE_CATLOG";
-        }
-        xsqlvars[18] = new XSQLVAR(ISCConstants.SQL_VARYING, 31, scopeCatalog, "COLUMNINFO");
-        xsqlvars[19] = new XSQLVAR(ISCConstants.SQL_VARYING, 31, "SCOPE_SCHEMA", "COLUMNINFO");
-        xsqlvars[20] = new XSQLVAR(ISCConstants.SQL_VARYING, 31, "SCOPE_TABLE", "COLUMNINFO");
-        xsqlvars[21] = new XSQLVAR(ISCConstants.SQL_SHORT, 0, "SOURCE_DATA_TYPE", "COLUMNINFO");
-        xsqlvars[22] = new XSQLVAR(ISCConstants.SQL_VARYING, 3, "IS_AUTOINCREMENT", "COLUMNINFO");
-        xsqlvars[23] = new XSQLVAR(ISCConstants.SQL_VARYING, 3, "IS_GENERATEDCOLUMN", "COLUMNINFO");
+        final RowDescriptor rowDescriptor = new RowDescriptorBuilder(24)
+                .at(0).simple(SQL_VARYING, 31, "TABLE_CAT", "COLUMNINFO").addField()
+                .at(1).simple(SQL_VARYING, 31, "TABLE_SCHEM", "COLUMNINFO").addField()
+                .at(2).simple(SQL_VARYING, 31, "TABLE_NAME", "COLUMNINFO").addField()
+                .at(3).simple(SQL_VARYING, 31, "COLUMN_NAME", "COLUMNINFO").addField()
+                .at(4).simple(SQL_LONG, 0, "DATA_TYPE", "COLUMNINFO").addField()
+                .at(5).simple(SQL_VARYING | 1, 31, "TYPE_NAME", "COLUMNINFO").addField()
+                .at(6).simple(SQL_LONG, 0, "COLUMN_SIZE", "COLUMNINFO").addField()
+                .at(7).simple(SQL_LONG, 0, "BUFFER_LENGTH", "COLUMNINFO").addField()
+                .at(8).simple(SQL_LONG, 0, "DECIMAL_DIGITS", "COLUMNINFO").addField()
+                .at(9).simple(SQL_LONG, 0, "NUM_PREC_RADIX", "COLUMNINFO").addField()
+                .at(10).simple(SQL_LONG, 0, "NULLABLE", "COLUMNINFO").addField()
+                // Field in Firebird is actually a blob, using Integer.MAX_VALUE for length
+                .at(11).simple(SQL_VARYING | 1, Integer.MAX_VALUE, "REMARKS", "COLUMNINFO").addField() // TODO Check if use of Integer.MAX_VALUE doesn't lead to problem elsewhere
+                .at(12).simple(SQL_VARYING | 1, 31, "COLUMN_DEF", "COLUMNINFO").addField()
+                .at(13).simple(SQL_LONG, 0, "SQL_DATA_TYPE", "COLUMNINFO").addField()
+                .at(14).simple(SQL_LONG, 0, "SQL_DATETIME_SUB", "COLUMNINFO").addField()
+                .at(15).simple(SQL_LONG, 0, "CHAR_OCTET_LENGTH", "COLUMNINFO").addField()
+                .at(16).simple(SQL_LONG, 0, "ORDINAL_POSITION", "COLUMNINFO").addField()
+                .at(17).simple(SQL_VARYING, 3, "IS_NULLABLE", "COLUMNINFO").addField()
+                .at(18).simple(SQL_VARYING, 31, getScopeCatalogColumnName(), "COLUMNINFO").addField()
+                .at(19).simple(SQL_VARYING, 31, "SCOPE_SCHEMA", "COLUMNINFO").addField()
+                .at(20).simple(SQL_VARYING, 31, "SCOPE_TABLE", "COLUMNINFO").addField()
+                .at(21).simple(SQL_SHORT, 0, "SOURCE_DATA_TYPE", "COLUMNINFO").addField()
+                .at(22).simple(SQL_VARYING, 3, "IS_AUTOINCREMENT", "COLUMNINFO").addField()
+                .at(23).simple(SQL_VARYING, 3, "IS_GENERATEDCOLUMN", "COLUMNINFO").addField()
+                .toRowDescriptor();
 
         Clause tableClause = new Clause("RF.RDB$RELATION_NAME", tableNamePattern);
         Clause columnClause = new Clause("RF.RDB$FIELD_NAME", columnNamePattern);
-        
+
         String sql = GET_COLUMNS_START;
         sql += tableClause.getCondition();
         sql += columnClause.getCondition();
         sql += GET_COLUMNS_END;
-        
+
         List<String> params = new ArrayList<String>();
-        
+
         // check first original case values
         if (!tableClause.getCondition().equals("")) {
             params.add(tableClause.getOriginalCaseValue());
@@ -2531,163 +2513,170 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
         if (!columnClause.getCondition().equals("")) {
             params.add(columnClause.getOriginalCaseValue());
         }
-        
-        ResultSet rs = doQuery(sql, params);
-        List<byte[][]> rows = new ArrayList<byte[][]>();
 
-        // if no direct match happened, check the uppercased match
-        if (!rs.next()) {
-            rs.close();
-            params.clear();
-            if (!tableClause.getCondition().equals("")) {
-                params.add(tableClause.getValue());
-            }
-            if (!columnClause.getCondition().equals("")) {
-                params.add(columnClause.getValue());
-            }
-            rs = doQuery(sql, params);
-            
-            // open the second result set and check whether we have rows
-            // if no rows are available, we have to exit now, otherwise the 
-            // following do/while loop will throw SQLException that the
-            // result set is not positioned on a row
+        ResultSet rs = doQuery(sql, params);
+        try {
+            // if no direct match happened, check the uppercased match
             if (!rs.next()) {
                 rs.close();
-                return new FBResultSet(xsqlvars, rows);
+                params.clear();
+                if (!tableClause.getCondition().equals("")) {
+                    params.add(tableClause.getValue());
+                }
+                if (!columnClause.getCondition().equals("")) {
+                    params.add(columnClause.getValue());
+                }
+                rs = doQuery(sql, params);
+
+                // open the second result set and check whether we have rows
+                // if no rows are available, we have to exit now, otherwise the
+                // following do/while loop will throw SQLException that the
+                // result set is not positioned on a row
+                if (!rs.next()) {
+                    return new FBResultSet(rowDescriptor, Collections.<RowValue>emptyList());
+                }
             }
-        }
 
-        do {
-            byte[][] row = new byte[24][];
-            row[0] = null;
-            row[1] = null;
-            row[2] = getBytes(rs.getString("RELATION_NAME"));
-            row[3] = getBytes(rs.getString("FIELD_NAME"));
+            final List<RowValue> rows = new ArrayList<RowValue>();
+            final RowValueBuilder valueBuilder = new RowValueBuilder(rowDescriptor);
+            do {
+                final short fieldType = rs.getShort("FIELD_TYPE");
+                final short fieldSubType = rs.getShort("FIELD_SUB_TYPE");
+                final short fieldScale = rs.getShort("FIELD_SCALE");
+                final int dataType = getDataType(fieldType, fieldSubType, fieldScale);
+                valueBuilder
+                        .at(2).set(getBytes(rs.getString("RELATION_NAME")))
+                        .at(3).set(getBytes(rs.getString("FIELD_NAME")))
+                        .at(4).set(createInt(dataType))
+                        .at(5).set(getBytes(getDataTypeName(fieldType, fieldSubType, fieldScale)))
+                        .at(9).set(RADIX_TEN);
 
-            short fieldType = rs.getShort("FIELD_TYPE");
-            short fieldSubType = rs.getShort("FIELD_SUB_TYPE");
-            short fieldScale = rs.getShort("FIELD_SCALE");
-            int dataType = getDataType(fieldType, fieldSubType, fieldScale);
-
-            row[4] = createInt(dataType);
-            row[5] = getBytes(getDataTypeName(fieldType, fieldSubType, fieldScale));
-            
-            row[7] = null;
-            
-            // Defaults: some are overridden in the switch
-            row[8] = null;
-            row[9] = RADIX_TEN;
-            row[15] = null;
-            switch (dataType){
+                switch (dataType) {
                 case Types.DECIMAL:
                 case Types.NUMERIC:
-                   row[6] = createInt(rs.getShort("FIELD_PRECISION"));
-                   row[8] = createInt(fieldScale * (-1));
-                   break;
+                    valueBuilder
+                            .at(6).set(createInt(rs.getShort("FIELD_PRECISION")))
+                            .at(8).set(createInt(fieldScale * (-1)));
+                    break;
                 case Types.CHAR:
                 case Types.VARCHAR:
-                    row[15] = createInt(rs.getShort("FIELD_LENGTH"));
-                   short charLen = rs.getShort("CHAR_LEN");
-                   if (!rs.wasNull()) {
-                       row[6] = createInt(charLen);
-                   } else {
-                       row[6] = row[15];
-                   }
-                   break;
+                    valueBuilder.at(15).set(createInt(rs.getShort("FIELD_LENGTH")));
+                    short charLen = rs.getShort("CHAR_LEN");
+                    if (!rs.wasNull()) {
+                        valueBuilder.at(6).set(createInt(charLen));
+                    } else {
+                        valueBuilder.at(6).set(valueBuilder.get(15));
+                    }
+                    break;
                 case Types.FLOAT:
-                   row[6] = FLOAT_PRECISION;
-                   break;
+                    valueBuilder.at(6).set(FLOAT_PRECISION);
+                    break;
                 case Types.DOUBLE:
-                   row[6] = DOUBLE_PRECISION;
-                   break;
+                    valueBuilder.at(6).set(DOUBLE_PRECISION);
+                    break;
                 case Types.BIGINT:
-                    row[6] = BIGINT_PRECISION;
-                    row[8] = INT_ZERO;
+                    valueBuilder
+                            .at(6).set(BIGINT_PRECISION)
+                            .at(8).set(INT_ZERO);
                     break;
                 case Types.INTEGER:
-                   row[6] = INTEGER_PRECISION;
-                   row[8] = INT_ZERO;
-                   break;
+                    valueBuilder
+                            .at(6).set(INTEGER_PRECISION)
+                            .at(8).set(INT_ZERO);
+                    break;
                 case Types.SMALLINT:
-                   row[6] = SMALLINT_PRECISION;
-                   row[8] = INT_ZERO;
-                   break;
+                    valueBuilder
+                            .at(6).set(SMALLINT_PRECISION)
+                            .at(8).set(INT_ZERO);
+                    break;
                 case Types.DATE:
-                   row[6] = DATE_PRECISION;
-                   break;
+                    valueBuilder.at(6).set(DATE_PRECISION);
+                    break;
                 case Types.TIME:
-                   row[6] = TIME_PRECISION;
-                   break;
+                    valueBuilder.at(6).set(TIME_PRECISION);
+                    break;
                 case Types.TIMESTAMP:
-                   row[6] = TIMESTAMP_PRECISION;
-                   break;
+                    valueBuilder.at(6).set(TIMESTAMP_PRECISION);
+                    break;
                 case Types.BOOLEAN:
-                    row[6] = BOOLEAN_PRECISION;
-                    row[9] = RADIX_BINARY;
+                    valueBuilder
+                            .at(6).set(BOOLEAN_PRECISION)
+                            .at(9).set(RADIX_BINARY);
+                    break;
+                }
+
+                final short nullFlag = rs.getShort("NULL_FLAG");
+                final short sourceNullFlag = rs.getShort("SOURCE_NULL_FLAG");
+                valueBuilder.at(10).set(nullFlag == 1 || sourceNullFlag == 1
+                                ? COLUMN_NO_NULLS
+                                : COLUMN_NULLABLE)
+                        .at(11).set(getBytes(rs.getString("REMARKS")));
+
+                String column_def = rs.getString("DEFAULT_SOURCE");
+                if (column_def != null) {
+                    // TODO This looks suspicious (what if it contain default)
+                    int defaultPos = column_def.toUpperCase().indexOf("DEFAULT");
+                    if (defaultPos >= 0)
+                        column_def = column_def.substring(7).trim();
+                    valueBuilder.at(12).set(getBytes(column_def));
+                }
+
+                valueBuilder
+                        .at(16).set(createInt(rs.getInt("FIELD_POSITION")))
+                        .at(17).set(nullFlag == 1 || sourceNullFlag == 1 ? NO_BYTES : YES_BYTES);
+
+                switch (dataType) {
+                case Types.INTEGER:
+                case Types.TINYINT:
+                case Types.BIGINT:
+                case Types.SMALLINT:
+                    // Could be autoincrement, but we simply don't know
+                    valueBuilder.at(22).set(EMPTY_STRING_BYTES);
+                    break;
+                case Types.NUMERIC:
+                case Types.DECIMAL:
+                    if (fieldScale == 0) {
+                        // Could be autoincrement, but we simply don't know
+                        valueBuilder.at(22).set(EMPTY_STRING_BYTES);
+                    } else {
+                        // Scaled NUMERIC/DECIMAL: definitely not autoincrement
+                        valueBuilder.at(22).set(NO_BYTES);
+                    }
                     break;
                 default:
-                   row[6] = null;
-            }
+                    // All other types are never autoincrement
+                    valueBuilder.at(22).set(NO_BYTES);
+                }
+                // Retrieving COMPUTED_BLR to check if it was NULL or not
+                rs.getString("COMPUTED_BLR");
+                valueBuilder.at(23).set(rs.wasNull() ? NO_BYTES : YES_BYTES);
 
-            short nullFlag = rs.getShort("NULL_FLAG");
-            short sourceNullFlag = rs.getShort("SOURCE_NULL_FLAG");
-            row[10] = (nullFlag == 1 || sourceNullFlag == 1) ?
-                    COLUMN_NO_NULLS :
-                    COLUMN_NULLABLE;
+                rows.add(valueBuilder.toRowValue(true));
+            } while (rs.next());
+            return new FBResultSet(rowDescriptor, rows);
+        } finally {
+            rs.close();
+        }
+    }
 
-            String remarks = rs.getString("REMARKS");  
-            row[11] = getBytes(remarks);             
-            if (remarks != null && remarks.length() > xsqlvars[11].sqllen)               
-                xsqlvars[11].sqllen = remarks.length();
-            
-            String column_def = rs.getString("DEFAULT_SOURCE");
-            if (column_def != null) {
-                int defaultPos = column_def.toUpperCase().indexOf("DEFAULT");
-                if (defaultPos >= 0)
-                    column_def = column_def.substring(7).trim();
-                
-            	row[12] = getBytes(column_def);
-            } else
-            	row[12] = null;
-            
-            row[13] = null;
-            row[14] = null;
-            row[16] = createInt(rs.getInt("FIELD_POSITION"));
-            row[17] = (nullFlag == 1 || sourceNullFlag == 1) ? NO_BYTES : YES_BYTES;
-            row[18] = null;
-            row[19] = null;
-            row[20] = null;
-            row[21] = null;
-            switch (dataType) {
-            case Types.INTEGER:
-            case Types.TINYINT:
-            case Types.BIGINT:
-            case Types.SMALLINT:
-                // Could be autoincrement, but we simply don't know
-                row[22] = EMPTY_STRING_BYTES;
-                break;
-            case Types.NUMERIC:
-            case Types.DECIMAL:
-            	if (fieldScale == 0) {
-            		// Could be autoincrement, but we simply don't know
-                    row[22] = EMPTY_STRING_BYTES;
-            	} else {
-            		// Scaled NUMERIC/DECIMAL: definitely not autoincrement
-            		row[22] = NO_BYTES;
-            	}
-            	break;
-            default:
-                // All other types are never autoincrement
-                row[22] = NO_BYTES;
-            }
-            // Retrieving COMPUTED_BLR to check if it was NULL or not
-            rs.getString("COMPUTED_BLR");
-            row[23] = rs.wasNull() ? NO_BYTES : YES_BYTES;
-
-            rows.add(row);
-        } while (rs.next());
-        rs.close();
-        return new FBResultSet(xsqlvars, rows);
+    /**
+     * Gets the name of the correct scope catalog column name based on the JDBC version for use in
+     * {@link #getColumns(String, String, String, String)}.
+     * <p>
+     * Rationale: in older versions of JDBC this column was misspelled as <code>"SCOPE_CATLOG"</code> instead of
+     * <code>"SCOPE_CATALOG"</code>. This was fixed in JDBC 4.1
+     * </p>
+     *
+     * @return The scope catalog name.
+     */
+    private String getScopeCatalogColumnName() {
+        final String scopeCatalog;
+        if (getJDBCMajorVersion() > 4 || getJDBCMajorVersion() == 4 && getJDBCMinorVersion() >= 1) {
+            scopeCatalog = "SCOPE_CATALOG";
+        } else {
+            scopeCatalog = "SCOPE_CATLOG";
+        }
+        return scopeCatalog;
     }
 
     private static final int smallint_type = 7;
@@ -2898,70 +2887,68 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
         String table, String columnNamePattern) throws SQLException {
         checkCatalogAndSchema(catalog, schema);
 
-        XSQLVAR[] xsqlvars = new XSQLVAR[8];
-
-        xsqlvars[0] = new XSQLVAR(ISCConstants.SQL_VARYING, 31, "TABLE_CAT", "COLUMNPRIV");
-        xsqlvars[1] = new XSQLVAR(ISCConstants.SQL_VARYING, 31, "TABLE_SCHEM", "COLUMNPRIV");
-        xsqlvars[2] = new XSQLVAR(ISCConstants.SQL_VARYING, 31, "TABLE_NAME", "COLUMNPRIV");
-        xsqlvars[3] = new XSQLVAR(ISCConstants.SQL_VARYING, 31, "COLUMN_NAME", "COLUMNPRIV");
-        xsqlvars[4] = new XSQLVAR(ISCConstants.SQL_VARYING, 31, "GRANTOR", "COLUMNPRIV");
-        xsqlvars[5] = new XSQLVAR(ISCConstants.SQL_VARYING, 31, "GRANTEE", "COLUMNPRIV");
-        xsqlvars[6] = new XSQLVAR(ISCConstants.SQL_VARYING, 31, "PRIVILEGE", "COLUMNPRIV");
-        xsqlvars[7] = new XSQLVAR(ISCConstants.SQL_VARYING, 31, "IS_GRANTABLE", "COLUMNPRIV");
+        final RowDescriptor rowDescriptor = new RowDescriptorBuilder(8)
+                .at(0).simple(SQL_VARYING, 31, "TABLE_CAT", "COLUMNPRIV").addField()
+                .at(1).simple(SQL_VARYING, 31, "TABLE_SCHEM", "COLUMNPRIV").addField()
+                .at(2).simple(SQL_VARYING, 31, "TABLE_NAME", "COLUMNPRIV").addField()
+                .at(3).simple(SQL_VARYING, 31, "COLUMN_NAME", "COLUMNPRIV").addField()
+                .at(4).simple(SQL_VARYING, 31, "GRANTOR", "COLUMNPRIV").addField()
+                .at(5).simple(SQL_VARYING, 31, "GRANTEE", "COLUMNPRIV").addField()
+                .at(6).simple(SQL_VARYING, 31, "PRIVILEGE", "COLUMNPRIV").addField()
+                .at(7).simple(SQL_VARYING, 31, "IS_GRANTABLE", "COLUMNPRIV").addField()
+                .toRowDescriptor();
 
         Clause columnClause = new Clause("RF.RDB$FIELD_NAME", columnNamePattern);
-        
+
         String sql = GET_COLUMN_PRIVILEGES_START;
         sql += columnClause.getCondition();
         sql += GET_COLUMN_PRIVILEGES_END;
-        
+
         List<String> params = new ArrayList<String>();
-        
+
         // check the original case first
         table = stripQuotes(stripEscape(table), false);
         params.add(table);
         if (!columnClause.getCondition().equals("")) {
             params.add(columnClause.getOriginalCaseValue());
         }
-        
 
         ResultSet rs = doQuery(sql, params);
-        
-        // if nothing was found, check the uppercased identifiers
-        if (!rs.next()) {
-            rs.close();
-            params.clear();
-            if (!columnClause.getCondition().equals("")) {
-                params.add(stripQuotes(stripEscape(table), true));
-                params.add(columnClause.getValue());
-            }
-            
-            rs = doQuery(sql, params);
-            
-            // return empty result set 
+        try {
+            // if nothing was found, check the uppercased identifiers
             if (!rs.next()) {
                 rs.close();
-                return new FBResultSet(xsqlvars, Collections.<byte[][]>emptyList());
+                params.clear();
+                if (!columnClause.getCondition().equals("")) {
+                    params.add(stripQuotes(stripEscape(table), true));
+                    params.add(columnClause.getValue());
+                }
+
+                rs = doQuery(sql, params);
+
+                // return empty result set
+                if (!rs.next()) {
+                    return new FBResultSet(rowDescriptor, Collections.<RowValue>emptyList());
+                }
             }
+
+            final List<RowValue> rows = new ArrayList<RowValue>();
+            final RowValueBuilder valueBuilder = new RowValueBuilder(rowDescriptor);
+            do {
+                rows.add(valueBuilder
+                        .at(2).set(getBytes(rs.getString("TABLE_NAME")))
+                        .at(3).set(getBytes(rs.getString("COLUMN_NAME")))
+                        .at(4).set(getBytes(rs.getString("GRANTOR")))
+                        .at(5).set(getBytes(rs.getString("GRANTEE")))
+                        .at(6).set(mapPrivilege(rs.getString("PRIVILEGE")))
+                        .at(7).set(rs.getShort("IS_GRANTABLE") == 0 ? NO_BYTES : YES_BYTES)
+                        .toRowValue(true)
+                );
+            } while (rs.next());
+            return new FBResultSet(rowDescriptor, rows);
+        } finally {
+            rs.close();
         }
-
-        List<byte[][]> rows = new ArrayList<byte[][]>();
-        do {
-            byte[][] row = new byte[8][];
-            row[0] = null;
-            row[1] = null;
-            row[2] = getBytes(rs.getString("TABLE_NAME"));
-            row[3] = getBytes(rs.getString("COLUMN_NAME"));
-            row[4] = getBytes(rs.getString("GRANTOR"));
-            row[5] = getBytes(rs.getString("GRANTEE"));
-            row[6] = mapPrivilege(rs.getString("PRIVILEGE"));
-            int isGrantable = rs.getShort("IS_GRANTABLE");
-            row[7] = isGrantable == 0 ? NO_BYTES : YES_BYTES;
-
-            rows.add(row);
-        } while(rs.next());
-        rs.close();
-        return new FBResultSet(xsqlvars, rows);
     }
 
     private static final String GET_TABLE_PRIVILEGES_START = "select "
@@ -3017,14 +3004,14 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
         checkCatalogAndSchema(catalog, schemaPattern);
         tableNamePattern = stripQuotes(stripEscape(tableNamePattern), true);
 
-        XSQLVAR[] xsqlvars = buildTablePrivilegeRSMetaData();
+        final RowDescriptor rowDescriptor = buildTablePrivilegeRSMetaData();
 
         Clause tableClause = new Clause("RDB$RELATION_NAME", tableNamePattern);
-        
+
         String sql = GET_TABLE_PRIVILEGES_START;
         sql += tableClause.getCondition();
         sql += GET_TABLE_PRIVILEGES_END;
-        
+
         // check the original case identifiers first
         List<String> params = new ArrayList<String>();
         if (!tableClause.getCondition().equals("")) {
@@ -3032,7 +3019,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
         }
 
         ResultSet rs = doQuery(sql, params);
-        
+
         // if nothing found, check the uppercased identifiers
         if (!rs.next()) {
             rs.close();
@@ -3040,51 +3027,49 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
             if (!tableClause.getCondition().equals("")) {
                 params.add(tableClause.getValue());
             }
-            
+
             rs = doQuery(sql, params);
-            
+
             // if nothing found, return an empty result set
             if (!rs.next()) {
                 rs.close();
-                return new FBResultSet(xsqlvars, Collections.<byte[][]>emptyList());
+                return new FBResultSet(rowDescriptor, Collections.<RowValue>emptyList());
             }
         }
-        
-        return processTablePrivileges(xsqlvars, rs);
-    }
-    
-    protected final XSQLVAR[] buildTablePrivilegeRSMetaData() {
-        XSQLVAR[] xsqlvars = new XSQLVAR[7];
 
-        xsqlvars[0] = new XSQLVAR(ISCConstants.SQL_VARYING, 31, "TABLE_CAT", "TABLEPRIV");
-        xsqlvars[1] = new XSQLVAR(ISCConstants.SQL_VARYING, 31, "TABLE_SCHEM", "TABLEPRIV");
-        xsqlvars[2] = new XSQLVAR(ISCConstants.SQL_VARYING, 31, "TABLE_NAME", "TABLEPRIV");
-        xsqlvars[3] = new XSQLVAR(ISCConstants.SQL_VARYING, 31, "GRANTOR", "TABLEPRIV");
-        xsqlvars[4] = new XSQLVAR(ISCConstants.SQL_VARYING, 31, "GRANTEE", "TABLEPRIV");
-        xsqlvars[5] = new XSQLVAR(ISCConstants.SQL_VARYING, 31, "PRIVILEGE", "TABLEPRIV");
-        xsqlvars[6] = new XSQLVAR(ISCConstants.SQL_VARYING, 31, "IS_GRANTABLE", "TABLEPRIV");
-        
-        return xsqlvars;
+        return processTablePrivileges(rowDescriptor, rs);
     }
-    
-    protected final FBResultSet processTablePrivileges(XSQLVAR[] xsqlvars, ResultSet fbTablePrivileges) throws SQLException {
-        List<byte[][]> rows = new ArrayList<byte[][]>();
-        
-        do {
-            byte[][] row = new byte[7][];
-            row[0] = null;
-            row[1] = null;
-            row[2] = getBytes(fbTablePrivileges.getString("TABLE_NAME"));
-            row[3] = getBytes(fbTablePrivileges.getString("GRANTOR"));
-            row[4] = getBytes(fbTablePrivileges.getString("GRANTEE"));
-            row[5] = mapPrivilege(fbTablePrivileges.getString("PRIVILEGE"));
-            int isGrantable = fbTablePrivileges.getShort("IS_GRANTABLE");
-            row[6] = isGrantable == 0 ? NO_BYTES : YES_BYTES;
 
-            rows.add(row);
-        } while (fbTablePrivileges.next());
-        fbTablePrivileges.close();
-        return new FBResultSet(xsqlvars, rows);
+    protected final RowDescriptor buildTablePrivilegeRSMetaData() {
+        return new RowDescriptorBuilder(7)
+                .at(0).simple(SQL_VARYING, 31, "TABLE_CAT", "TABLEPRIV").addField()
+                .at(1).simple(SQL_VARYING, 31, "TABLE_SCHEM", "TABLEPRIV").addField()
+                .at(2).simple(SQL_VARYING, 31, "TABLE_NAME", "TABLEPRIV").addField()
+                .at(3).simple(SQL_VARYING, 31, "GRANTOR", "TABLEPRIV").addField()
+                .at(4).simple(SQL_VARYING, 31, "GRANTEE", "TABLEPRIV").addField()
+                .at(5).simple(SQL_VARYING, 31, "PRIVILEGE", "TABLEPRIV").addField()
+                .at(6).simple(SQL_VARYING, 31, "IS_GRANTABLE", "TABLEPRIV").addField()
+                .toRowDescriptor();
+    }
+
+    protected final FBResultSet processTablePrivileges(final RowDescriptor rowDescriptor, final ResultSet fbTablePrivileges) throws SQLException {
+        try {
+            final List<RowValue> rows = new ArrayList<RowValue>();
+            final RowValueBuilder valueBuilder = new RowValueBuilder(rowDescriptor);
+            do {
+                rows.add(valueBuilder
+                        .at(2).set(getBytes(fbTablePrivileges.getString("TABLE_NAME")))
+                        .at(3).set(getBytes(fbTablePrivileges.getString("GRANTOR")))
+                        .at(4).set(getBytes(fbTablePrivileges.getString("GRANTEE")))
+                        .at(5).set(mapPrivilege(fbTablePrivileges.getString("PRIVILEGE")))
+                        .at(6).set(fbTablePrivileges.getShort("IS_GRANTABLE") == 0 ? NO_BYTES : YES_BYTES)
+                        .toRowValue(true)
+                );
+            } while (fbTablePrivileges.next());
+            return new FBResultSet(rowDescriptor, rows);
+        } finally {
+            fbTablePrivileges.close();
+        }
     }
 
     private static final String GET_BEST_ROW_IDENT =
@@ -3140,88 +3125,85 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
      * @return <code>ResultSet</code> - each row is a column description
      * @exception SQLException if a database access error occurs
      */
-    public ResultSet getBestRowIdentifier(String catalog, String schema,
-        String table, int scope, boolean nullable) throws SQLException {
-        XSQLVAR[] xsqlvars = new XSQLVAR[8];
-
-        xsqlvars[0] = new XSQLVAR(ISCConstants.SQL_SHORT, 0, "SCOPE", "ROWIDENTIFIER");
-        xsqlvars[1] = new XSQLVAR(ISCConstants.SQL_VARYING, 31, "COLUMN_NAME", "ROWIDENTIFIER");
-        xsqlvars[2] = new XSQLVAR(ISCConstants.SQL_SHORT, 0, "DATA_TYPE", "ROWIDENTIFIER");
-        xsqlvars[3] = new XSQLVAR(ISCConstants.SQL_VARYING, 31, "TYPE_NAME", "ROWIDENTIFIER");
-        xsqlvars[4] = new XSQLVAR(ISCConstants.SQL_LONG, 0, "COLUMN_SIZE", "ROWIDENTIFIER");
-        xsqlvars[5] = new XSQLVAR(ISCConstants.SQL_LONG, 0, "BUFFER_LENGTH", "ROWIDENTIFIER");
-        xsqlvars[6] = new XSQLVAR(ISCConstants.SQL_SHORT, 0, "DECIMAL_DIGITS", "ROWIDENTIFIER");
-        xsqlvars[7] = new XSQLVAR(ISCConstants.SQL_SHORT, 0, "PSEUDO_COLUMN", "ROWIDENTIFIER");
+    public ResultSet getBestRowIdentifier(String catalog, String schema, String table, int scope, boolean nullable)
+            throws SQLException {
+        final RowDescriptor rowDescriptor = new RowDescriptorBuilder(8)
+                .at(0).simple(SQL_SHORT, 0, "SCOPE", "ROWIDENTIFIER").addField()
+                .at(1).simple(SQL_VARYING, 31, "COLUMN_NAME", "ROWIDENTIFIER").addField()
+                .at(2).simple(SQL_SHORT, 0, "DATA_TYPE", "ROWIDENTIFIER").addField()
+                .at(3).simple(SQL_VARYING, 31, "TYPE_NAME", "ROWIDENTIFIER").addField()
+                .at(4).simple(SQL_LONG, 0, "COLUMN_SIZE", "ROWIDENTIFIER").addField()
+                .at(5).simple(SQL_LONG, 0, "BUFFER_LENGTH", "ROWIDENTIFIER").addField()
+                .at(6).simple(SQL_SHORT, 0, "DECIMAL_DIGITS", "ROWIDENTIFIER").addField()
+                .at(7).simple(SQL_SHORT, 0, "PSEUDO_COLUMN", "ROWIDENTIFIER").addField()
+                .toRowDescriptor();
 
         ResultSet tables = null;
-        List<byte[][]> rows = null;
+        List<RowValue> rows = null;
+        final RowValueBuilder rowValueBuilder = new RowValueBuilder(rowDescriptor);
         try {
             // Check if table exists, need to escape as getTables takes a pattern
             String quoteLikeTable = table != null ? table.replaceAll("([_%])", "\\\\$1") : null;
             tables = getTables(catalog, schema, quoteLikeTable, null);
             if (!tables.next())
-                return new FBResultSet(xsqlvars, Collections.<byte[][]>emptyList());
-            rows = getPrimaryKeyIdentifier(tables.getString(3), scope, xsqlvars);
+                return new FBResultSet(rowDescriptor, Collections.<RowValue>emptyList());
+            rows = getPrimaryKeyIdentifier(tables.getString(3), scope, rowValueBuilder);
         } finally {
             if (tables != null) tables.close();
         }
 
         // if no primary key exists, add RDB$DB_KEY as pseudo-column
         if (rows.size() == 0) {
-            byte[][] row = new byte[8][];
-            row[0] = createShort(scope);
-            row[1] = getBytes("RDB$DB_KEY");
-            row[2] = createShort(getDataType(char_type, 0, 0));
-            row[3] = getBytes(getDataTypeName(char_type, 0, 0));
-            row[4] = createInt(0);
-            row[5] = null;
-            row[6] = createShort(0);
-            row[7] = createShort(bestRowPseudo);
-
-            rows.add(row);
+            rows.add(rowValueBuilder
+                    .at(0).set(createShort(scope))
+                    .at(1).set(getBytes("RDB$DB_KEY"))
+                    .at(2).set(createShort(getDataType(char_type, 0, 0)))
+                    .at(3).set(getBytes(getDataTypeName(char_type, 0, 0)))
+                    .at(4).set(createInt(0))
+                    .at(6).set(createShort(0))
+                    .at(7).set(createShort(bestRowPseudo))
+                    .toRowValue(true)
+            );
         }
-        
-        return new FBResultSet(xsqlvars, rows);
+
+        return new FBResultSet(rowDescriptor, rows);
     }
 
     /**
      * Get primary key of the table as best row identifier.
-     * 
+     *
      * @param table name of the table.
      * @param scope scope, we just include it in the result set.
-     * @param xsqlvars array of {@link XSQLVAR} instances describing result set.
-     * 
-     * @return list of result set values, when size is 0, no primary key has 
+     * @param valueBuilder Builder for row values
+     *
+     * @return list of result set values, when size is 0, no primary key has
      * been defined for a table.
-     * 
+     *
      * @throws SQLException if something went wrong.
      */
-    private List<byte[][]> getPrimaryKeyIdentifier(String table, int scope, XSQLVAR[] xsqlvars) throws SQLException {
-        List<byte[][]> rows = new ArrayList<byte[][]>();
-
-        List<String> params = new ArrayList<String>(1);
-        params.add(table);
-
-        ResultSet rs = doQuery(GET_BEST_ROW_IDENT, params);
-        
-        while (rs.next()) {
-            byte[][] row = new byte[8][];
-            row[0] = createShort(scope);
-            row[1] = getBytes(rs.getString("COLUMN_NAME"));
-            short fieldType = rs.getShort("FIELD_TYPE");
-            short fieldSubType = rs.getShort("FIELD_SUB_TYPE");
-            short fieldScale = rs.getShort("FIELD_SCALE");
-            row[2] = createShort(getDataType(fieldType, fieldSubType, fieldScale));
-            row[3] = getBytes(getDataTypeName(fieldType, fieldSubType, fieldScale));
-            row[4] = createInt(rs.getInt("FIELD_PRECISION"));
-            row[5] = null;
-            row[6] = createShort(fieldScale);
-            row[7] = createShort(bestRowNotPseudo);
-
-            rows.add(row);
+    private List<RowValue> getPrimaryKeyIdentifier(String table, int scope, final RowValueBuilder valueBuilder) throws SQLException {
+        ResultSet rs = doQuery(GET_BEST_ROW_IDENT, Arrays.asList(table));
+        try {
+            final List<RowValue> rows = new ArrayList<RowValue>();
+            while (rs.next()) {
+                short fieldType = rs.getShort("FIELD_TYPE");
+                short fieldSubType = rs.getShort("FIELD_SUB_TYPE");
+                short fieldScale = rs.getShort("FIELD_SCALE");
+                rows.add(valueBuilder
+                        .at(0).set(createShort(scope))
+                        .at(1).set(getBytes(rs.getString("COLUMN_NAME")))
+                        .at(2).set(createShort(getDataType(fieldType, fieldSubType, fieldScale)))
+                        .at(3).set(getBytes(getDataTypeName(fieldType, fieldSubType, fieldScale)))
+                        .at(4).set(createInt(rs.getInt("FIELD_PRECISION")))
+                        .at(6).set(createShort(fieldScale))
+                        .at(7).set(createShort(bestRowNotPseudo))
+                        .toRowValue(true)
+                );
+            }
+            return rows;
+        } finally {
+            rs.close();
         }
-        rs.close();
-        return rows;
     }
 
     /**
@@ -3254,22 +3236,19 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
      * @return <code>ResultSet</code> - each row is a column description
      * @exception SQLException if a database access error occurs
      */
-    public ResultSet getVersionColumns(String catalog, String schema,
-                String table) throws SQLException {
-        XSQLVAR[] xsqlvars = new XSQLVAR[8];
+    public ResultSet getVersionColumns(String catalog, String schema, String table) throws SQLException {
+        final RowDescriptor rowDescriptor = new RowDescriptorBuilder(8)
+                .at(0).simple(SQL_SHORT, 0, "SCOPE", "VERSIONCOL").addField()
+                .at(1).simple(SQL_VARYING, 31, "COLUMN_NAME", "VERSIONCOL").addField()
+                .at(2).simple(SQL_SHORT, 0, "DATA_TYPE", "VERSIONCOL").addField()
+                .at(3).simple(SQL_VARYING, 31, "TYPE_NAME", "VERSIONCOL").addField()
+                .at(4).simple(SQL_LONG, 0, "COLUMN_SIZE", "VERSIONCOL").addField()
+                .at(5).simple(SQL_LONG, 0, "BUFFER_LENGTH", "VERSIONCOL").addField()
+                .at(6).simple(SQL_SHORT, 0, "DECIMAL_DIGITS", "VERSIONCOL").addField()
+                .at(7).simple(SQL_SHORT, 0, "PSEUDO_COLUMN", "VERSIONCOL").addField()
+                .toRowDescriptor();
 
-        xsqlvars[0] = new XSQLVAR(ISCConstants.SQL_SHORT, 0, "SCOPE", "VERSIONCOL");
-        xsqlvars[1] = new XSQLVAR(ISCConstants.SQL_VARYING, 31, "COLUMN_NAME", "VERSIONCOL");
-        xsqlvars[2] = new XSQLVAR(ISCConstants.SQL_SHORT, 0, "DATA_TYPE", "VERSIONCOL");
-        xsqlvars[3] = new XSQLVAR(ISCConstants.SQL_VARYING, 31, "TYPE_NAME", "VERSIONCOL");
-        xsqlvars[4] = new XSQLVAR(ISCConstants.SQL_LONG, 0, "COLUMN_SIZE", "VERSIONCOL");
-        xsqlvars[5] = new XSQLVAR(ISCConstants.SQL_LONG, 0, "BUFFER_LENGTH", "VERSIONCOL");
-        xsqlvars[6] = new XSQLVAR(ISCConstants.SQL_SHORT, 0, "DECIMAL_DIGITS", "VERSIONCOL");
-        xsqlvars[7] = new XSQLVAR(ISCConstants.SQL_SHORT, 0, "PSEUDO_COLUMN", "VERSIONCOL");
-
-        List<byte[][]> rows = Collections.emptyList();
-
-        return new FBResultSet(xsqlvars, rows);
+        return new FBResultSet(rowDescriptor, Collections.<RowValue>emptyList());
     }
 
     private static final String GET_PRIMARY_KEYS = "select "
@@ -3312,50 +3291,50 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
                 String table) throws SQLException {
         checkCatalogAndSchema(catalog, schema);
 
-        XSQLVAR[] xsqlvars = new XSQLVAR[6];
-
-        xsqlvars[0] = new XSQLVAR(ISCConstants.SQL_VARYING, 31, "TABLE_CAT", "COLUMNINFO");
-        xsqlvars[1] = new XSQLVAR(ISCConstants.SQL_VARYING, 31, "TABLE_SCHEM", "COLUMNINFO");
-        xsqlvars[2] = new XSQLVAR(ISCConstants.SQL_VARYING, 31, "TABLE_NAME", "COLUMNINFO");
-        xsqlvars[3] = new XSQLVAR(ISCConstants.SQL_VARYING, 31, "COLUMN_NAME", "COLUMNINFO");
-        xsqlvars[4] = new XSQLVAR(ISCConstants.SQL_SHORT, 0, "KEY_SEQ", "COLUMNINFO");
-        xsqlvars[5] = new XSQLVAR(ISCConstants.SQL_VARYING, 31, "PK_NAME", "COLUMNINFO");
+        RowDescriptor rowDescriptor = new RowDescriptorBuilder(6)
+                .at(0).simple(SQL_VARYING, 31, "TABLE_CAT", "COLUMNINFO").addField()
+                .at(1).simple(SQL_VARYING, 31, "TABLE_SCHEM", "COLUMNINFO").addField()
+                .at(2).simple(SQL_VARYING, 31, "TABLE_NAME", "COLUMNINFO").addField()
+                .at(3).simple(SQL_VARYING, 31, "COLUMN_NAME", "COLUMNINFO").addField()
+                .at(4).simple(SQL_SHORT, 0, "KEY_SEQ", "COLUMNINFO").addField()
+                .at(5).simple(SQL_VARYING, 31, "PK_NAME", "COLUMNINFO").addField()
+                .toRowDescriptor();
 
         // check the original case identifiers
         List<String> params = new ArrayList<String>();
         params.add(stripQuotes(stripEscape(table), false));
-        
-        ResultSet rs = doQuery(GET_PRIMARY_KEYS, params);
-        
-        // if nothing found, check the uppercased identifier
-        if (!rs.next()) {
-            rs.close();
-            params.clear();
-            params.add(stripQuotes(stripEscape(table), true));
 
-            rs = doQuery(GET_PRIMARY_KEYS, params);
-            
-            // if nothing found, return empty result set
+        ResultSet rs = doQuery(GET_PRIMARY_KEYS, params);
+        try {
+            // if nothing found, check the uppercased identifier
             if (!rs.next()) {
                 rs.close();
-                return new FBResultSet(xsqlvars, Collections.<byte[][]>emptyList());
+                params.clear();
+                params.add(stripQuotes(stripEscape(table), true));
+
+                rs = doQuery(GET_PRIMARY_KEYS, params);
+
+                // if nothing found, return empty result set
+                if (!rs.next()) {
+                    return new FBResultSet(rowDescriptor, Collections.<RowValue>emptyList());
+                }
             }
+
+            final List<RowValue> rows = new ArrayList<RowValue>();
+            final RowValueBuilder valueBuilder = new RowValueBuilder(rowDescriptor);
+            do {
+                rows.add(valueBuilder
+                        .at(2).set(getBytes(rs.getString("TABLE_NAME")))
+                        .at(3).set(getBytes(rs.getString("COLUMN_NAME")))
+                        .at(4).set(createShort(rs.getShort("KEY_SEQ")))
+                        .at(5).set(getBytes(rs.getString("PK_NAME")))
+                        .toRowValue(true)
+                );
+            } while (rs.next());
+            return new FBResultSet(rowDescriptor, rows);
+        } finally {
+            rs.close();
         }
-
-        List<byte[][]> rows = new ArrayList<byte[][]>();
-        do {
-            byte[][] row = new byte[6][];
-            row[0] = null;
-            row[1] = null;
-            row[2] = getBytes(rs.getString("TABLE_NAME"));
-            row[3] = getBytes(rs.getString("COLUMN_NAME"));
-            row[4] = createShort(rs.getShort("KEY_SEQ"));
-            row[5] = getBytes(rs.getString("PK_NAME"));
-
-            rows.add(row);
-        } while(rs.next());
-        rs.close();
-        return new FBResultSet(xsqlvars, rows);
     }
 
     private static final String GET_IMPORTED_KEYS = "select "
@@ -3476,73 +3455,69 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
      * @exception SQLException if a database access error occurs
      * @see #getExportedKeys
      */
-    public ResultSet getImportedKeys(String catalog, String schema,
-                String table) throws SQLException {
+    public ResultSet getImportedKeys(String catalog, String schema, String table) throws SQLException {
         checkCatalogAndSchema(catalog, schema);
 
-        XSQLVAR[] xsqlvars = new XSQLVAR[14];
-
-        xsqlvars[0] = new XSQLVAR(ISCConstants.SQL_VARYING, 31, "PKTABLE_CAT", "COLUMNINFO");
-        xsqlvars[1] = new XSQLVAR(ISCConstants.SQL_VARYING, 31, "PKTABLE_SCHEM", "COLUMNINFO");
-        xsqlvars[2] = new XSQLVAR(ISCConstants.SQL_VARYING, 31, "PKTABLE_NAME", "COLUMNINFO");
-        xsqlvars[3] = new XSQLVAR(ISCConstants.SQL_VARYING, 31, "PKCOLUMN_NAME", "COLUMNINFO");
-        xsqlvars[4] = new XSQLVAR(ISCConstants.SQL_VARYING, 31, "FKTABLE_CAT", "COLUMNINFO");
-        xsqlvars[5] = new XSQLVAR(ISCConstants.SQL_VARYING, 31, "FKTABLE_SCHEM", "COLUMNINFO");
-        xsqlvars[6] = new XSQLVAR(ISCConstants.SQL_VARYING, 31, "FKTABLE_NAME", "COLUMNINFO");
-        xsqlvars[7] = new XSQLVAR(ISCConstants.SQL_VARYING, 31, "FKCOLUMN_NAME", "COLUMNINFO");
-        xsqlvars[8] = new XSQLVAR(ISCConstants.SQL_SHORT, 0, "KEY_SEQ", "COLUMNINFO");
-        xsqlvars[9] = new XSQLVAR(ISCConstants.SQL_SHORT, 0, "UPDATE_RULE", "COLUMNINFO");
-        xsqlvars[10] = new XSQLVAR(ISCConstants.SQL_SHORT, 0, "DELETE_RULE", "COLUMNINFO");
-        xsqlvars[11] = new XSQLVAR(ISCConstants.SQL_VARYING, 31, "FK_NAME", "COLUMNINFO");
-        xsqlvars[12] = new XSQLVAR(ISCConstants.SQL_VARYING, 31, "PK_NAME", "COLUMNINFO");
-        xsqlvars[13] = new XSQLVAR(ISCConstants.SQL_SHORT, 0, "DEFERRABILITY", "COLUMNINFO");
+        final RowDescriptor rowDescriptor = new RowDescriptorBuilder(14)
+                .at(0).simple(SQL_VARYING, 31, "PKTABLE_CAT", "COLUMNINFO").addField()
+                .at(1).simple(SQL_VARYING, 31, "PKTABLE_SCHEM", "COLUMNINFO").addField()
+                .at(2).simple(SQL_VARYING, 31, "PKTABLE_NAME", "COLUMNINFO").addField()
+                .at(3).simple(SQL_VARYING, 31, "PKCOLUMN_NAME", "COLUMNINFO").addField()
+                .at(4).simple(SQL_VARYING, 31, "FKTABLE_CAT", "COLUMNINFO").addField()
+                .at(5).simple(SQL_VARYING, 31, "FKTABLE_SCHEM", "COLUMNINFO").addField()
+                .at(6).simple(SQL_VARYING, 31, "FKTABLE_NAME", "COLUMNINFO").addField()
+                .at(7).simple(SQL_VARYING, 31, "FKCOLUMN_NAME", "COLUMNINFO").addField()
+                .at(8).simple(SQL_SHORT, 0, "KEY_SEQ", "COLUMNINFO").addField()
+                .at(9).simple(SQL_SHORT, 0, "UPDATE_RULE", "COLUMNINFO").addField()
+                .at(10).simple(SQL_SHORT, 0, "DELETE_RULE", "COLUMNINFO").addField()
+                .at(11).simple(SQL_VARYING, 31, "FK_NAME", "COLUMNINFO").addField()
+                .at(12).simple(SQL_VARYING, 31, "PK_NAME", "COLUMNINFO").addField()
+                .at(13).simple(SQL_SHORT, 0, "DEFERRABILITY", "COLUMNINFO").addField()
+                .toRowDescriptor();
 
         String sql = GET_IMPORTED_KEYS;
 
         // check the original case identifiers first
         List<String> params = new ArrayList<String>();
         params.add(stripQuotes(stripEscape(table), false));
-        
+
         ResultSet rs = doQuery(sql, params);
-        
-        // if nothing found, check the uppercased identifiers
-        if (!rs.next()) {
-            rs.close();
-            params.clear();
-            params.add(stripQuotes(stripEscape(table), true));
-            
-            rs = doQuery(sql, params);
-            
-            // if nothing found, return an empty result set
+        try {
+            // if nothing found, check the uppercased identifiers
             if (!rs.next()) {
                 rs.close();
-                return new FBResultSet(xsqlvars, Collections.<byte[][]>emptyList());
-            }
-        }
+                params.clear();
+                params.add(stripQuotes(stripEscape(table), true));
 
-        List<byte[][]> rows = new ArrayList<byte[][]>();
-        do {
-            byte[][] row = new byte[14][];
-            row[0] = null;
-            row[1] = null;
-            row[2] = getBytes(rs.getString("PKTABLE_NAME"));
-            row[3] = getBytes(rs.getString("PKCOLUMN_NAME"));
-            row[4] = null;
-            row[5] = null;
-            row[6] = getBytes(rs.getString("FKTABLE_NAME"));
-            row[7] = getBytes(rs.getString("FKCOLUMN_NAME"));
-            row[8] = createShort(rs.getShort("KEY_SEQ"));
-            String updateRule = rs.getString("UPDATE_RULE");
-            row[9] = mapAction(updateRule);
-            String deleteRule = rs.getString("DELETE_RULE");
-            row[10] = mapAction(deleteRule);
-            row[11] = getBytes(rs.getString("FK_NAME"));
-            row[12] = getBytes(rs.getString("PK_NAME"));
-            row[13] = IMPORTED_KEY_NOT_DEFERRABLE;
-            rows.add(row);
-        } while (rs.next());
-        rs.close();
-        return new FBResultSet(xsqlvars, rows);
+                rs = doQuery(sql, params);
+
+                // if nothing found, return an empty result set
+                if (!rs.next()) {
+                    return new FBResultSet(rowDescriptor, Collections.<RowValue>emptyList());
+                }
+            }
+
+            final List<RowValue> rows = new ArrayList<RowValue>();
+            final RowValueBuilder valueBuilder = new RowValueBuilder(rowDescriptor);
+            do {
+                rows.add(valueBuilder
+                        .at(2).set(getBytes(rs.getString("PKTABLE_NAME")))
+                        .at(3).set(getBytes(rs.getString("PKCOLUMN_NAME")))
+                        .at(6).set(getBytes(rs.getString("FKTABLE_NAME")))
+                        .at(7).set(getBytes(rs.getString("FKCOLUMN_NAME")))
+                        .at(8).set(createShort(rs.getShort("KEY_SEQ")))
+                        .at(9).set(mapAction(rs.getString("UPDATE_RULE")))
+                        .at(10).set(mapAction(rs.getString("DELETE_RULE")))
+                        .at(11).set(getBytes(rs.getString("FK_NAME")))
+                        .at(12).set(getBytes(rs.getString("PK_NAME")))
+                        .at(13).set(IMPORTED_KEY_NOT_DEFERRABLE)
+                        .toRowValue(true)
+                );
+            } while (rs.next());
+            return new FBResultSet(rowDescriptor, rows);
+        } finally {
+            rs.close();
+        }
     }
 
     private static final String GET_EXPORTED_KEYS = "select "
@@ -3642,76 +3617,69 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
      * @exception SQLException if a database access error occurs
      * @see #getImportedKeys
      */
-    public ResultSet getExportedKeys(String catalog, String schema,
-                String table) throws SQLException {
+    public ResultSet getExportedKeys(String catalog, String schema, String table) throws SQLException {
         checkCatalogAndSchema(catalog, schema);
 
-        XSQLVAR[] xsqlvars = new XSQLVAR[14];
-
-        xsqlvars[0] = new XSQLVAR(ISCConstants.SQL_VARYING, 31, "PKTABLE_CAT", "COLUMNINFO");
-        xsqlvars[1] = new XSQLVAR(ISCConstants.SQL_VARYING, 31, "PKTABLE_SCHEM", "COLUMNINFO");
-        xsqlvars[2] = new XSQLVAR(ISCConstants.SQL_VARYING, 31, "PKTABLE_NAME", "COLUMNINFO");
-        xsqlvars[3] = new XSQLVAR(ISCConstants.SQL_VARYING, 31, "PKCOLUMN_NAME", "COLUMNINFO");
-        xsqlvars[4] = new XSQLVAR(ISCConstants.SQL_VARYING, 31, "FKTABLE_CAT", "COLUMNINFO");
-        xsqlvars[5] = new XSQLVAR(ISCConstants.SQL_VARYING, 31, "FKTABLE_SCHEM", "COLUMNINFO");
-        xsqlvars[6] = new XSQLVAR(ISCConstants.SQL_VARYING, 31, "FKTABLE_NAME", "COLUMNINFO");
-        xsqlvars[7] = new XSQLVAR(ISCConstants.SQL_VARYING, 31, "FKCOLUMN_NAME", "COLUMNINFO");
-        xsqlvars[8] = new XSQLVAR(ISCConstants.SQL_SHORT, 0, "KEY_SEQ", "COLUMNINFO");
-        xsqlvars[9] = new XSQLVAR(ISCConstants.SQL_SHORT, 0, "UPDATE_RULE", "COLUMNINFO");
-        xsqlvars[10] = new XSQLVAR(ISCConstants.SQL_SHORT, 0, "DELETE_RULE", "COLUMNINFO");
-        xsqlvars[11] = new XSQLVAR(ISCConstants.SQL_VARYING, 31, "FK_NAME", "COLUMNINFO");
-        xsqlvars[12] = new XSQLVAR(ISCConstants.SQL_VARYING, 31, "PK_NAME", "COLUMNINFO");
-        xsqlvars[13] = new XSQLVAR(ISCConstants.SQL_SHORT, 0, "DEFERRABILITY", "COLUMNINFO");
-
-        Clause tableClause = new Clause("PK.RDB$RELATION_NAME", table);
+        final RowDescriptor rowDescriptor = new RowDescriptorBuilder(14)
+                .at(0).simple(SQL_VARYING, 31, "PKTABLE_CAT", "COLUMNINFO").addField()
+                .at(1).simple(SQL_VARYING, 31, "PKTABLE_SCHEM", "COLUMNINFO").addField()
+                .at(2).simple(SQL_VARYING, 31, "PKTABLE_NAME", "COLUMNINFO").addField()
+                .at(3).simple(SQL_VARYING, 31, "PKCOLUMN_NAME", "COLUMNINFO").addField()
+                .at(4).simple(SQL_VARYING, 31, "FKTABLE_CAT", "COLUMNINFO").addField()
+                .at(5).simple(SQL_VARYING, 31, "FKTABLE_SCHEM", "COLUMNINFO").addField()
+                .at(6).simple(SQL_VARYING, 31, "FKTABLE_NAME", "COLUMNINFO").addField()
+                .at(7).simple(SQL_VARYING, 31, "FKCOLUMN_NAME", "COLUMNINFO").addField()
+                .at(8).simple(SQL_SHORT, 0, "KEY_SEQ", "COLUMNINFO").addField()
+                .at(9).simple(SQL_SHORT, 0, "UPDATE_RULE", "COLUMNINFO").addField()
+                .at(10).simple(SQL_SHORT, 0, "DELETE_RULE", "COLUMNINFO").addField()
+                .at(11).simple(SQL_VARYING, 31, "FK_NAME", "COLUMNINFO").addField()
+                .at(12).simple(SQL_VARYING, 31, "PK_NAME", "COLUMNINFO").addField()
+                .at(13).simple(SQL_SHORT, 0, "DEFERRABILITY", "COLUMNINFO").addField()
+                .toRowDescriptor();
 
         String sql = GET_EXPORTED_KEYS;
 
         // check the original case identifiers first
-        ArrayList params = new ArrayList();
+        List<String> params = new ArrayList<String>();
         params.add(stripQuotes(stripEscape(table), false));
 
-        List<byte[][]> rows = new ArrayList<byte[][]>();
         ResultSet rs = doQuery(sql, params);
-        
-        // if nothing found, check the uppercased identifiers
-        if (!rs.next()) {
-            rs.close();
-            params.clear();
-            params.add(stripQuotes(stripEscape(table), true));
-            
-            rs = doQuery(sql, params);
-            
-            // if nothing found, return an empty result set
+        try {
+            // if nothing found, check the uppercased identifiers
             if (!rs.next()) {
                 rs.close();
-                return new FBResultSet(xsqlvars, rows);
+                params.clear();
+                params.add(stripQuotes(stripEscape(table), true));
+
+                rs = doQuery(sql, params);
+
+                // if nothing found, return an empty result set
+                if (!rs.next()) {
+                    return new FBResultSet(rowDescriptor, Collections.<RowValue>emptyList());
+                }
             }
+
+            List<RowValue> rows = new ArrayList<RowValue>();
+            final RowValueBuilder valueBuilder = new RowValueBuilder(rowDescriptor);
+            do {
+                rows.add(valueBuilder
+                        .at(2).set(getBytes(rs.getString("PKTABLE_NAME")))
+                        .at(3).set(getBytes(rs.getString("PKCOLUMN_NAME")))
+                        .at(6).set(getBytes(rs.getString("FKTABLE_NAME")))
+                        .at(7).set(getBytes(rs.getString("FKCOLUMN_NAME")))
+                        .at(8).set(createShort(rs.getShort("KEY_SEQ")))
+                        .at(9).set(mapAction(rs.getString("UPDATE_RULE")))
+                        .at(10).set(mapAction(rs.getString("DELETE_RULE")))
+                        .at(11).set(getBytes(rs.getString("FK_NAME")))
+                        .at(12).set(getBytes(rs.getString("PK_NAME")))
+                        .at(13).set(IMPORTED_KEY_NOT_DEFERRABLE)
+                        .toRowValue(true)
+                );
+            } while (rs.next());
+            return new FBResultSet(rowDescriptor, rows);
+        } finally {
+            rs.close();
         }
-
-        do {
-            byte[][] row = new byte[14][];
-            row[0] = null;
-            row[1] = null;
-            row[2] = getBytes(rs.getString("PKTABLE_NAME"));
-            row[3] = getBytes(rs.getString("PKCOLUMN_NAME"));
-            row[4] = null;
-            row[5] = null;
-            row[6] = getBytes(rs.getString("FKTABLE_NAME"));
-            row[7] = getBytes(rs.getString("FKCOLUMN_NAME"));
-            row[8] = createShort(rs.getShort("KEY_SEQ"));
-            String updateRule = rs.getString("UPDATE_RULE");
-            row[9] = mapAction(updateRule);
-            String deleteRule = rs.getString("DELETE_RULE");
-            row[10] = mapAction(deleteRule);
-            row[11] = getBytes(rs.getString("FK_NAME"));
-            row[12] = getBytes(rs.getString("PK_NAME"));
-            row[13] = IMPORTED_KEY_NOT_DEFERRABLE;
-
-            rows.add(row);
-        } while(rs.next());
-        rs.close();
-        return new FBResultSet(xsqlvars, rows);
     }
 
     private static final String GET_CROSS_KEYS = "select "
@@ -3821,79 +3789,75 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
      * @see #getImportedKeys
      */
     public ResultSet getCrossReference(
-        String primaryCatalog, String primarySchema, String primaryTable,
-        String foreignCatalog, String foreignSchema, String foreignTable
-        ) throws SQLException {
+            String primaryCatalog, String primarySchema, String primaryTable,
+            String foreignCatalog, String foreignSchema, String foreignTable
+            ) throws SQLException {
         checkCatalogAndSchema(primaryCatalog, primarySchema);
         checkCatalogAndSchema(foreignCatalog, foreignSchema);
 
-        XSQLVAR[] xsqlvars = new XSQLVAR[14];
-
-        xsqlvars[0] = new XSQLVAR(ISCConstants.SQL_VARYING, 31, "PKTABLE_CAT", "COLUMNINFO");
-        xsqlvars[1] = new XSQLVAR(ISCConstants.SQL_VARYING, 31, "PKTABLE_SCHEM", "COLUMNINFO");
-        xsqlvars[2] = new XSQLVAR(ISCConstants.SQL_VARYING, 31, "PKTABLE_NAME", "COLUMNINFO");
-        xsqlvars[3] = new XSQLVAR(ISCConstants.SQL_VARYING, 31, "PKCOLUMN_NAME", "COLUMNINFO");
-        xsqlvars[4] = new XSQLVAR(ISCConstants.SQL_VARYING, 31, "FKTABLE_CAT", "COLUMNINFO");
-        xsqlvars[5] = new XSQLVAR(ISCConstants.SQL_VARYING, 31, "FKTABLE_SCHEM", "COLUMNINFO");
-        xsqlvars[6] = new XSQLVAR(ISCConstants.SQL_VARYING, 31, "FKTABLE_NAME", "COLUMNINFO");
-        xsqlvars[7] = new XSQLVAR(ISCConstants.SQL_VARYING, 31, "FKCOLUMN_NAME", "COLUMNINFO");
-        xsqlvars[8] = new XSQLVAR(ISCConstants.SQL_SHORT, 0, "KEY_SEQ", "COLUMNINFO");
-        xsqlvars[9] = new XSQLVAR(ISCConstants.SQL_SHORT, 0, "UPDATE_RULE", "COLUMNINFO");
-        xsqlvars[10] = new XSQLVAR(ISCConstants.SQL_SHORT, 0, "DELETE_RULE", "COLUMNINFO");
-        xsqlvars[11] = new XSQLVAR(ISCConstants.SQL_VARYING, 31, "FK_NAME", "COLUMNINFO");
-        xsqlvars[12] = new XSQLVAR(ISCConstants.SQL_VARYING, 31, "PK_NAME", "COLUMNINFO");
-        xsqlvars[13] = new XSQLVAR(ISCConstants.SQL_SHORT, 0, "DEFERRABILITY", "COLUMNINFO");
+        final RowDescriptor rowDescriptor = new RowDescriptorBuilder(14)
+                .at(0).simple(SQL_VARYING, 31, "PKTABLE_CAT", "COLUMNINFO").addField()
+                .at(1).simple(SQL_VARYING, 31, "PKTABLE_SCHEM", "COLUMNINFO").addField()
+                .at(2).simple(SQL_VARYING, 31, "PKTABLE_NAME", "COLUMNINFO").addField()
+                .at(3).simple(SQL_VARYING, 31, "PKCOLUMN_NAME", "COLUMNINFO").addField()
+                .at(4).simple(SQL_VARYING, 31, "FKTABLE_CAT", "COLUMNINFO").addField()
+                .at(5).simple(SQL_VARYING, 31, "FKTABLE_SCHEM", "COLUMNINFO").addField()
+                .at(6).simple(SQL_VARYING, 31, "FKTABLE_NAME", "COLUMNINFO").addField()
+                .at(7).simple(SQL_VARYING, 31, "FKCOLUMN_NAME", "COLUMNINFO").addField()
+                .at(8).simple(SQL_SHORT, 0, "KEY_SEQ", "COLUMNINFO").addField()
+                .at(9).simple(SQL_SHORT, 0, "UPDATE_RULE", "COLUMNINFO").addField()
+                .at(10).simple(SQL_SHORT, 0, "DELETE_RULE", "COLUMNINFO").addField()
+                .at(11).simple(SQL_VARYING, 31, "FK_NAME", "COLUMNINFO").addField()
+                .at(12).simple(SQL_VARYING, 31, "PK_NAME", "COLUMNINFO").addField()
+                .at(13).simple(SQL_SHORT, 0, "DEFERRABILITY", "COLUMNINFO").addField()
+                .toRowDescriptor();
 
         String sql = GET_CROSS_KEYS;
-        
-        List<String> params = new ArrayList<String>();
-        
+
+        final List<String> params = new ArrayList<String>();
+
         // check the original case first
         params.add(stripQuotes(stripEscape(primaryTable), false));
         params.add(stripQuotes(stripEscape(foreignTable), false));
 
         ResultSet rs = doQuery(sql, params);
-
-        // if nothing found, check the uppercased identifiers
-        if (!rs.next()) {
-            rs.close();
-            params.clear();
-            params.add(stripQuotes(stripEscape(primaryTable), true));
-            params.add(stripQuotes(stripEscape(foreignTable), true));
-
-            rs = doQuery(sql, params);
-            
-            // return empty result set if nothing found
+        try {
+            // if nothing found, check the uppercased identifiers
             if (!rs.next()) {
                 rs.close();
-                return new FBResultSet(xsqlvars, Collections.<byte[][]>emptyList());
+                params.clear();
+                params.add(stripQuotes(stripEscape(primaryTable), true));
+                params.add(stripQuotes(stripEscape(foreignTable), true));
+
+                rs = doQuery(sql, params);
+
+                // return empty result set if nothing found
+                if (!rs.next()) {
+                    return new FBResultSet(rowDescriptor, Collections.<RowValue>emptyList());
+                }
             }
+
+            final List<RowValue> rows = new ArrayList<RowValue>();
+            final RowValueBuilder valueBuilder = new RowValueBuilder(rowDescriptor);
+            do {
+                rows.add(valueBuilder
+                        .at(2).set(getBytes(rs.getString("PKTABLE_NAME")))
+                        .at(3).set(getBytes(rs.getString("PKCOLUMN_NAME")))
+                        .at(6).set(getBytes(rs.getString("FKTABLE_NAME")))
+                        .at(7).set(getBytes(rs.getString("FKCOLUMN_NAME")))
+                        .at(8).set(createShort(rs.getShort("KEY_SEQ")))
+                        .at(9).set(mapAction(rs.getString("UPDATE_RULE")))
+                        .at(10).set(mapAction(rs.getString("DELETE_RULE")))
+                        .at(11).set(getBytes(rs.getString("FK_NAME")))
+                        .at(12).set(getBytes(rs.getString("PK_NAME")))
+                        .at(13).set(IMPORTED_KEY_NOT_DEFERRABLE)
+                        .toRowValue(true)
+                );
+            } while (rs.next());
+            return new FBResultSet(rowDescriptor, rows);
+        } finally {
+            rs.close();
         }
-
-        List<byte[][]> rows = new ArrayList<byte[][]>();
-        do {
-            byte[][] row = new byte[14][];
-            row[0] = null;
-            row[1] = null;
-            row[2] = getBytes(rs.getString("PKTABLE_NAME"));
-            row[3] = getBytes(rs.getString("PKCOLUMN_NAME"));
-            row[4] = null;
-            row[5] = null;
-            row[6] = getBytes(rs.getString("FKTABLE_NAME"));
-            row[7] = getBytes(rs.getString("FKCOLUMN_NAME"));
-            row[8] = createShort(rs.getShort("KEY_SEQ"));
-            String updateRule = rs.getString("UPDATE_RULE");
-            row[9] = mapAction(updateRule);
-            String deleteRule = rs.getString("DELETE_RULE");
-            row[10] = mapAction(deleteRule);
-            row[11] = getBytes(rs.getString("FK_NAME"));
-            row[12] = getBytes(rs.getString("PK_NAME"));
-            row[13] = IMPORTED_KEY_NOT_DEFERRABLE;
-
-            rows.add(row);
-        } while(rs.next());
-        rs.close();
-        return new FBResultSet(xsqlvars, rows);
     }
 
     /**
@@ -3964,120 +3928,137 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
      * @exception SQLException if a database access error occurs
      */
     public  ResultSet getTypeInfo() throws SQLException {
-        XSQLVAR[] xsqlvars = new XSQLVAR[18];
-
-        xsqlvars[0] = new XSQLVAR(ISCConstants.SQL_VARYING, 31, "TYPE_NAME", "TYPEINFO");
-        xsqlvars[1] = new XSQLVAR(ISCConstants.SQL_SHORT, 0, "DATA_TYPE", "TYPEINFO");
-        xsqlvars[2] = new XSQLVAR(ISCConstants.SQL_LONG, 0, "PRECISION", "TYPEINFO");
-        xsqlvars[3] = new XSQLVAR(ISCConstants.SQL_VARYING, 1, "LITERAL_PREFIX", "TYPEINFO");
-        xsqlvars[4] = new XSQLVAR(ISCConstants.SQL_VARYING, 1, "LITERAL_SUFFIX", "TYPEINFO");
-        xsqlvars[5] = new XSQLVAR(ISCConstants.SQL_VARYING, 31, "CREATE_PARAMS", "TYPEINFO");
-        xsqlvars[6] = new XSQLVAR(ISCConstants.SQL_SHORT, 0, "NULLABLE", "TYPEINFO");
-        xsqlvars[7] = new XSQLVAR(ISCConstants.SQL_TEXT, 1, "CASE_SENSITIVE", "TYPEINFO");
-        xsqlvars[8] = new XSQLVAR(ISCConstants.SQL_SHORT, 0, "SEARCHABLE", "TYPEINFO");
-        xsqlvars[9] = new XSQLVAR(ISCConstants.SQL_TEXT, 1, "UNSIGNED_ATTRIBUTE", "TYPEINFO");
-        xsqlvars[10] = new XSQLVAR(ISCConstants.SQL_TEXT, 1, "FIXED_PREC_SCALE", "TYPEINFO");
-        xsqlvars[11] = new XSQLVAR(ISCConstants.SQL_TEXT, 1, "AUTO_INCREMENT", "TYPEINFO");
-        xsqlvars[12] = new XSQLVAR(ISCConstants.SQL_VARYING, 31, "LOCAL_TYPE_NAME", "TYPEINFO");
-        xsqlvars[13] = new XSQLVAR(ISCConstants.SQL_SHORT, 0, "MINIMUM_SCALE", "TYPEINFO");
-        xsqlvars[14] = new XSQLVAR(ISCConstants.SQL_SHORT, 0, "MAXIMUM_SCALE", "TYPEINFO");
-        xsqlvars[15] = new XSQLVAR(ISCConstants.SQL_LONG, 0, "SQL_DATA_TYPE", "TYPEINFO");
-        xsqlvars[16] = new XSQLVAR(ISCConstants.SQL_LONG, 0, "SQL_DATETIME_SUB", "TYPEINFO");
-        xsqlvars[17] = new XSQLVAR(ISCConstants.SQL_LONG, 0, "NUM_PREC_RADIX", "TYPEINFO");
+        final RowDescriptor rowDescriptor = new RowDescriptorBuilder(18)
+                .at(0).simple(SQL_VARYING, 31, "TYPE_NAME", "TYPEINFO").addField()
+                .at(1).simple(SQL_SHORT, 0, "DATA_TYPE", "TYPEINFO").addField()
+                .at(2).simple(SQL_LONG, 0, "PRECISION", "TYPEINFO").addField()
+                .at(3).simple(SQL_VARYING, 1, "LITERAL_PREFIX", "TYPEINFO").addField()
+                .at(4).simple(SQL_VARYING, 1, "LITERAL_SUFFIX", "TYPEINFO").addField()
+                .at(5).simple(SQL_VARYING, 31, "CREATE_PARAMS", "TYPEINFO").addField()
+                .at(6).simple(SQL_SHORT, 0, "NULLABLE", "TYPEINFO").addField()
+                .at(7).simple(SQL_TEXT, 1, "CASE_SENSITIVE", "TYPEINFO").addField()
+                .at(8).simple(SQL_SHORT, 0, "SEARCHABLE", "TYPEINFO").addField()
+                .at(9).simple(SQL_TEXT, 1, "UNSIGNED_ATTRIBUTE", "TYPEINFO").addField()
+                .at(10).simple(SQL_TEXT, 1, "FIXED_PREC_SCALE", "TYPEINFO").addField()
+                .at(11).simple(SQL_TEXT, 1, "AUTO_INCREMENT", "TYPEINFO").addField()
+                .at(12).simple(SQL_VARYING, 31, "LOCAL_TYPE_NAME", "TYPEINFO").addField()
+                .at(13).simple(SQL_SHORT, 0, "MINIMUM_SCALE", "TYPEINFO").addField()
+                .at(14).simple(SQL_SHORT, 0, "MAXIMUM_SCALE", "TYPEINFO").addField()
+                .at(15).simple(SQL_LONG, 0, "SQL_DATA_TYPE", "TYPEINFO").addField()
+                .at(16).simple(SQL_LONG, 0, "SQL_DATETIME_SUB", "TYPEINFO").addField()
+                .at(17).simple(SQL_LONG, 0, "NUM_PREC_RADIX", "TYPEINFO").addField()
+                .toRowDescriptor();
 
         //dialect 3 only
-        List<byte[][]> rows = new ArrayList<byte[][]>();
+        final List<RowValue> rows = new ArrayList<RowValue>(17);
 
         //BIGINT=-5
-        rows.add(new byte[][]{ getBytes("BIGINT"), createShort(Types.BIGINT), BIGINT_PRECISION, null, null, null,
+        rows.add(RowValue.of(rowDescriptor,
+                getBytes("BIGINT"), createShort(Types.BIGINT), BIGINT_PRECISION, null, null, null,
                 TYPE_NULLABLE, CASEINSENSITIVE, TYPE_SEARCHABLE, SIGNED, FIXEDSCALE, NOTAUTOINC, null, SHORT_ZERO,
-                SHORT_ZERO, createInt(ISCConstants.SQL_INT64), null, RADIX_TEN });
+                SHORT_ZERO, createInt(SQL_INT64), null, RADIX_TEN));
 
         //LONGVARBINARY=-4
-        rows.add(new byte[][]{ getBytes("BLOB SUB_TYPE 0"), createShort(Types.LONGVARBINARY), INT_ZERO, null, null,
+        rows.add(RowValue.of(rowDescriptor,
+                getBytes("BLOB SUB_TYPE 0"), createShort(Types.LONGVARBINARY), INT_ZERO, null, null,
                 null, TYPE_NULLABLE, CASESENSITIVE, TYPE_PRED_NONE, UNSIGNED, FIXEDSCALE, NOTAUTOINC, null,
-                SHORT_ZERO, SHORT_ZERO, createInt(ISCConstants.SQL_BLOB), null, RADIX_TEN });
+                SHORT_ZERO, SHORT_ZERO, createInt(SQL_BLOB), null, RADIX_TEN));
 
         //LONGVARCHAR=-1
-        rows.add(new byte[][]{ getBytes("BLOB SUB_TYPE 1"), createShort(Types.LONGVARCHAR), INT_ZERO, null, null,
+        rows.add(RowValue.of(rowDescriptor,
+                getBytes("BLOB SUB_TYPE 1"), createShort(Types.LONGVARCHAR), INT_ZERO, null, null,
                 null, TYPE_NULLABLE, CASESENSITIVE, TYPE_PRED_NONE, UNSIGNED, FIXEDSCALE, NOTAUTOINC, null,
-                SHORT_ZERO, SHORT_ZERO, createInt(ISCConstants.SQL_BLOB), null, RADIX_TEN });
+                SHORT_ZERO, SHORT_ZERO, createInt(SQL_BLOB), null, RADIX_TEN));
 
         //CHAR=1
-        rows.add(new byte[][]{ getBytes("CHAR"), createShort(Types.CHAR), createInt(32767), getBytes("'"),
+        rows.add(RowValue.of(rowDescriptor,
+                getBytes("CHAR"), createShort(Types.CHAR), createInt(32767), getBytes("'"),
                 getBytes("'"), getBytes("length"), TYPE_NULLABLE, CASESENSITIVE, TYPE_SEARCHABLE, UNSIGNED,
-                FIXEDSCALE, NOTAUTOINC, null, SHORT_ZERO, SHORT_ZERO, createInt(ISCConstants.SQL_TEXT), null,
-                RADIX_TEN });
+                FIXEDSCALE, NOTAUTOINC, null, SHORT_ZERO, SHORT_ZERO, createInt(SQL_TEXT), null,
+                RADIX_TEN));
 
         //NUMERIC=2
-        rows.add(new byte[][]{ getBytes("NUMERIC"), createShort(Types.NUMERIC), NUMERIC_PRECISION, null, null,
+        rows.add(RowValue.of(rowDescriptor,
+                getBytes("NUMERIC"), createShort(Types.NUMERIC), NUMERIC_PRECISION, null, null,
                 getBytes("precision,scale"), TYPE_NULLABLE, CASEINSENSITIVE, TYPE_SEARCHABLE, SIGNED, FIXEDSCALE,
-                NOTAUTOINC, null, SHORT_ZERO, NUMERIC_PRECISION, createInt(ISCConstants.SQL_INT64), null, RADIX_TEN });
+                NOTAUTOINC, null, SHORT_ZERO, NUMERIC_PRECISION, createInt(SQL_INT64), null, RADIX_TEN));
 
         //DECIMAL=3
-        rows.add(new byte[][]{ getBytes("DECIMAL"), createShort(Types.DECIMAL), DECIMAL_PRECISION, null, null,
+        rows.add(RowValue.of(rowDescriptor,
+                getBytes("DECIMAL"), createShort(Types.DECIMAL), DECIMAL_PRECISION, null, null,
                 getBytes("precision,scale"), TYPE_NULLABLE, CASEINSENSITIVE, TYPE_SEARCHABLE, SIGNED, FIXEDSCALE,
-                NOTAUTOINC, null, SHORT_ZERO, DECIMAL_PRECISION, createInt(ISCConstants.SQL_INT64), null, RADIX_TEN });
+                NOTAUTOINC, null, SHORT_ZERO, DECIMAL_PRECISION, createInt(SQL_INT64), null, RADIX_TEN));
 
         //INTEGER=4
-        rows.add(new byte[][]{ getBytes("INTEGER"), createShort(Types.INTEGER), INTEGER_PRECISION, null, null, null,
+        rows.add(RowValue.of(rowDescriptor,
+                getBytes("INTEGER"), createShort(Types.INTEGER), INTEGER_PRECISION, null, null, null,
                 TYPE_NULLABLE, CASEINSENSITIVE, TYPE_SEARCHABLE, SIGNED, FIXEDSCALE, NOTAUTOINC, null, SHORT_ZERO,
-                SHORT_ZERO, createInt(ISCConstants.SQL_LONG), null, RADIX_TEN });
+                SHORT_ZERO, createInt(SQL_LONG), null, RADIX_TEN));
 
         //SMALLINT=5
-        rows.add(new byte[][]{ getBytes("SMALLINT"), createShort(Types.SMALLINT), SMALLINT_PRECISION, null, null,
+        rows.add(RowValue.of(rowDescriptor,
+                getBytes("SMALLINT"), createShort(Types.SMALLINT), SMALLINT_PRECISION, null, null,
                 null, TYPE_NULLABLE, CASEINSENSITIVE, TYPE_SEARCHABLE, SIGNED, FIXEDSCALE, NOTAUTOINC, null,
-                SHORT_ZERO, SHORT_ZERO, createInt(ISCConstants.SQL_SHORT), null, RADIX_TEN });
+                SHORT_ZERO, SHORT_ZERO, createInt(SQL_SHORT), null, RADIX_TEN));
 
         //FLOAT=6
-        rows.add(new byte[][]{ getBytes("FLOAT"), createShort(Types.FLOAT), FLOAT_PRECISION, null, null, null,
+        rows.add(RowValue.of(rowDescriptor,
+                getBytes("FLOAT"), createShort(Types.FLOAT), FLOAT_PRECISION, null, null, null,
                 TYPE_NULLABLE, CASEINSENSITIVE, TYPE_SEARCHABLE, SIGNED, VARIABLESCALE, NOTAUTOINC, null, SHORT_ZERO,
-                SHORT_ZERO, createInt(ISCConstants.SQL_FLOAT), null, RADIX_TEN });
+                SHORT_ZERO, createInt(SQL_FLOAT), null, RADIX_TEN));
 
         //DOUBLE=8
-        rows.add(new byte[][]{ getBytes("DOUBLE PRECISION"), createShort(Types.DOUBLE), DOUBLE_PRECISION, null, null,
+        rows.add(RowValue.of(rowDescriptor,
+                getBytes("DOUBLE PRECISION"), createShort(Types.DOUBLE), DOUBLE_PRECISION, null, null,
                 null, TYPE_NULLABLE, CASEINSENSITIVE, TYPE_SEARCHABLE, SIGNED, VARIABLESCALE, NOTAUTOINC, null,
-                SHORT_ZERO, SHORT_ZERO, createInt(ISCConstants.SQL_DOUBLE), null, RADIX_TEN });
+                SHORT_ZERO, SHORT_ZERO, createInt(SQL_DOUBLE), null, RADIX_TEN));
 
         //VARCHAR=12
-        rows.add(new byte[][]{ getBytes("VARCHAR"), createShort(Types.VARCHAR), createInt(32765), getBytes("'"),
+        rows.add(RowValue.of(rowDescriptor,
+                getBytes("VARCHAR"), createShort(Types.VARCHAR), createInt(32765), getBytes("'"),
                 getBytes("'"), getBytes("length"), TYPE_NULLABLE, CASESENSITIVE, TYPE_SEARCHABLE, UNSIGNED,
-                FIXEDSCALE, NOTAUTOINC, null, SHORT_ZERO, SHORT_ZERO, createInt(ISCConstants.SQL_VARYING), null,
-                RADIX_TEN });
+                FIXEDSCALE, NOTAUTOINC, null, SHORT_ZERO, SHORT_ZERO, createInt(SQL_VARYING), null,
+                RADIX_TEN));
 
         //DATE=91
-        rows.add(new byte[][]{ getBytes("DATE"), createShort(Types.DATE), DATE_PRECISION, null, null, null,
+        rows.add(RowValue.of(rowDescriptor,
+                getBytes("DATE"), createShort(Types.DATE), DATE_PRECISION, null, null, null,
                 TYPE_NULLABLE, CASEINSENSITIVE, TYPE_SEARCHABLE, UNSIGNED, FIXEDSCALE, NOTAUTOINC, null, SHORT_ZERO,
-                SHORT_ZERO, createInt(ISCConstants.SQL_TYPE_DATE), null, RADIX_TEN });
+                SHORT_ZERO, createInt(SQL_TYPE_DATE), null, RADIX_TEN));
 
         //TIME=92
-        rows.add(new byte[][]{ getBytes("TIME"), createShort(Types.TIME), TIME_PRECISION, null, null, null,
+        rows.add(RowValue.of(rowDescriptor,
+                getBytes("TIME"), createShort(Types.TIME), TIME_PRECISION, null, null, null,
                 TYPE_NULLABLE, CASEINSENSITIVE, TYPE_SEARCHABLE, UNSIGNED, FIXEDSCALE, NOTAUTOINC, null, SHORT_ZERO,
-                SHORT_ZERO, createInt(ISCConstants.SQL_TYPE_TIME), null, RADIX_TEN });
+                SHORT_ZERO, createInt(SQL_TYPE_TIME), null, RADIX_TEN));
 
         //TIMESTAMP=93
-        rows.add(new byte[][]{ getBytes("TIMESTAMP"), createShort(Types.TIMESTAMP), TIMESTAMP_PRECISION, null, null,
+        rows.add(RowValue.of(rowDescriptor,
+                getBytes("TIMESTAMP"), createShort(Types.TIMESTAMP), TIMESTAMP_PRECISION, null, null,
                 null, TYPE_NULLABLE, CASEINSENSITIVE, TYPE_SEARCHABLE, UNSIGNED, FIXEDSCALE, NOTAUTOINC, null,
-                SHORT_ZERO, SHORT_ZERO, createInt(ISCConstants.SQL_TIMESTAMP), null, RADIX_TEN });
+                SHORT_ZERO, SHORT_ZERO, createInt(SQL_TIMESTAMP), null, RADIX_TEN));
 
         //OTHER=1111
-        rows.add(new byte[][]{ getBytes("ARRAY"), createShort(Types.OTHER), INT_ZERO, null, null, null, TYPE_NULLABLE,
+        rows.add(RowValue.of(rowDescriptor,
+                getBytes("ARRAY"), createShort(Types.OTHER), INT_ZERO, null, null, null, TYPE_NULLABLE,
                 CASESENSITIVE, TYPE_PRED_NONE, UNSIGNED, FIXEDSCALE, NOTAUTOINC, null, SHORT_ZERO, SHORT_ZERO,
-                createInt(ISCConstants.SQL_ARRAY), null, RADIX_TEN });
+                createInt(SQL_ARRAY), null, RADIX_TEN));
 
         //BLOB=2004
-        rows.add(new byte[][]{ getBytes("BLOB SUB_TYPE <0 "), createShort(Types.BLOB), INT_ZERO, null, null, null,
+        rows.add(RowValue.of(rowDescriptor,
+                getBytes("BLOB SUB_TYPE <0 "), createShort(Types.BLOB), INT_ZERO, null, null, null,
                 TYPE_NULLABLE, CASESENSITIVE, TYPE_PRED_NONE, UNSIGNED, FIXEDSCALE, NOTAUTOINC, null, SHORT_ZERO,
-                SHORT_ZERO, createInt(ISCConstants.SQL_BLOB), null, RADIX_TEN });
+                SHORT_ZERO, createInt(SQL_BLOB), null, RADIX_TEN));
 
         //BOOLEAN=16
         if (getDatabaseMajorVersion() >= 3) {
-            rows.add(new byte[][] {getBytes("BOOLEAN"), createShort(Types.BOOLEAN), BOOLEAN_PRECISION,
+            rows.add(RowValue.of(rowDescriptor,
+                    getBytes("BOOLEAN"), createShort(Types.BOOLEAN), BOOLEAN_PRECISION,
                     null, null, null, TYPE_NULLABLE, CASEINSENSITIVE, TYPE_PRED_BASIC, UNSIGNED, FIXEDSCALE,
-                    NOTAUTOINC, null, SHORT_ZERO, SHORT_ZERO, createInt(ISCConstants.SQL_BOOLEAN), null, RADIX_BINARY});
+                    NOTAUTOINC, null, SHORT_ZERO, SHORT_ZERO, createInt(SQL_BOOLEAN), null, RADIX_BINARY));
         }
 
-        return new FBResultSet(xsqlvars, rows);
+        return new FBResultSet(rowDescriptor, rows);
     }
 
     private static final String GET_INDEX_INFO = "SELECT "
@@ -4151,99 +4132,88 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
         boolean unique, boolean approximate) throws SQLException {
         checkCatalogAndSchema(catalog, schema);
 
-        XSQLVAR[] xsqlvars = new XSQLVAR[13];
-
-        xsqlvars[0] = new XSQLVAR(ISCConstants.SQL_VARYING, 31, "TABLE_CAT", "INDEXINFO");
-        xsqlvars[1] = new XSQLVAR(ISCConstants.SQL_VARYING, 31, "TABLE_SCHEM", "INDEXINFO");
-        xsqlvars[2] = new XSQLVAR(ISCConstants.SQL_VARYING, 31, "TABLE_NAME", "INDEXINFO");
-        xsqlvars[3] = new XSQLVAR(ISCConstants.SQL_TEXT, 1, "NON_UNIQUE", "INDEXINFO");
-        xsqlvars[4] = new XSQLVAR(ISCConstants.SQL_VARYING, 31, "INDEX_QUALIFIER", "INDEXINFO");
-        xsqlvars[5] = new XSQLVAR(ISCConstants.SQL_VARYING, 31, "INDEX_NAME", "INDEXINFO");
-        xsqlvars[6] = new XSQLVAR(ISCConstants.SQL_SHORT, 0, "TYPE", "INDEXINFO");
-        xsqlvars[7] = new XSQLVAR(ISCConstants.SQL_SHORT, 0, "ORDINAL_POSITION", "INDEXINFO");
-        xsqlvars[8] = new XSQLVAR(ISCConstants.SQL_VARYING, 31, "COLUMN_NAME", "INDEXINFO");
-        xsqlvars[9] = new XSQLVAR(ISCConstants.SQL_VARYING, 31, "ASC_OR_DESC", "INDEXINFO");
-        xsqlvars[10] = new XSQLVAR(ISCConstants.SQL_LONG, 0, "CARDINALITY", "INDEXINFO");
-        xsqlvars[11] = new XSQLVAR(ISCConstants.SQL_LONG, 0, "PAGES", "INDEXINFO");
-        xsqlvars[12] = new XSQLVAR(ISCConstants.SQL_VARYING, 31, "FILTER_CONDITION", "INDEXINFO");
+        final RowDescriptor rowDescriptor = new RowDescriptorBuilder(13)
+                .at(0).simple(SQL_VARYING, 31, "TABLE_CAT", "INDEXINFO").addField()
+                .at(1).simple(SQL_VARYING, 31, "TABLE_SCHEM", "INDEXINFO").addField()
+                .at(2).simple(SQL_VARYING, 31, "TABLE_NAME", "INDEXINFO").addField()
+                .at(3).simple(SQL_TEXT, 1, "NON_UNIQUE", "INDEXINFO").addField()
+                .at(4).simple(SQL_VARYING, 31, "INDEX_QUALIFIER", "INDEXINFO").addField()
+                .at(5).simple(SQL_VARYING, 31, "INDEX_NAME", "INDEXINFO").addField()
+                .at(6).simple(SQL_SHORT, 0, "TYPE", "INDEXINFO").addField()
+                .at(7).simple(SQL_SHORT, 0, "ORDINAL_POSITION", "INDEXINFO").addField()
+                // Field with EXPRESSION_SOURCE (used for expression indexes) in Firebird is actually a blob, using Integer.MAX_VALUE for length
+                .at(8).simple(SQL_VARYING, Integer.MAX_VALUE, "COLUMN_NAME", "INDEXINFO").addField() // TODO Check if use of Integer.MAX_VALUE here leads to problems elsewhere
+                .at(9).simple(SQL_VARYING, 31, "ASC_OR_DESC", "INDEXINFO").addField()
+                .at(10).simple(SQL_LONG, 0, "CARDINALITY", "INDEXINFO").addField()
+                .at(11).simple(SQL_LONG, 0, "PAGES", "INDEXINFO").addField()
+                .at(12).simple(SQL_VARYING, 31, "FILTER_CONDITION", "INDEXINFO").addField()
+                .toRowDescriptor();
 
         if (table == null) {
-            return new FBResultSet(xsqlvars, Collections.<byte[][]>emptyList());
+            return new FBResultSet(rowDescriptor, Collections.<RowValue>emptyList());
         }
 
         List<String> params = new ArrayList<String>();
         params.add(stripQuotes(stripEscape(table), false));
 
         ResultSet rs = doQuery(GET_INDEX_INFO, params);
-
-        // if no direct match happened, check the uppercased match
-        if (!rs.next()) {
-            rs.close();
-            params.set(0, stripQuotes(stripEscape(table), true));
-            rs = doQuery(GET_INDEX_INFO, params);
-
-            // open the second result set and check whether we have rows
-            // if no rows are available, we have to exit now, otherwise the 
-            // following do/while loop will throw SQLException that the
-            // result set is not positioned on a row
+        try {
+            // if no direct match happened, check the uppercased match
             if (!rs.next()) {
                 rs.close();
-                return new FBResultSet(xsqlvars, Collections.<byte[][]>emptyList());
-            }
-        }
+                params.set(0, stripQuotes(stripEscape(table), true));
+                rs = doQuery(GET_INDEX_INFO, params);
 
-        List<byte[][]> rows = new ArrayList<byte[][]>();
-        
-        do {
-            byte[][] row = new byte[13][];
-            row[0] = null;
-            row[1] = null;
-            row[2] = getBytes(rs.getString("TABLE_NAME"));
-            boolean isNotUnique = (rs.getInt("UNIQUE_FLAG") == 0);
-            if (unique && isNotUnique) {
-                // Skip indices that are not unique, as requested
-                continue;
+                // open the second result set and check whether we have rows
+                // if no rows are available, we have to exit now, otherwise the
+                // following do/while loop will throw SQLException that the
+                // result set is not positioned on a row
+                if (!rs.next()) {
+                    return new FBResultSet(rowDescriptor, Collections.<RowValue>emptyList());
+                }
             }
-            row[3] = isNotUnique ? TRUE_BYTES : FALSE_BYTES;
-            row[4] = null;
-            row[5] = getBytes(rs.getString("INDEX_NAME"));
-            row[6] = TABLE_INDEX_OTHER;
-            String columnName = rs.getString("COLUMN_NAME");
-            if (rs.wasNull()) {
-                row[7] = SHORT_ONE;
-                String expressionSource = rs.getString("EXPRESSION_SOURCE");
-                if (expressionSource != null) {
-                    row[8] = getBytes(expressionSource);
-                    if (expressionSource.length() > xsqlvars[8].sqllen) {
-                        xsqlvars[8].sqllen = expressionSource.length();
+
+            final List<RowValue> rows = new ArrayList<RowValue>();
+            final RowValueBuilder valueBuilder = new RowValueBuilder(rowDescriptor);
+            do {
+                final boolean isNotUnique = rs.getInt("UNIQUE_FLAG") == 0;
+                if (unique && isNotUnique) {
+                    // Skip indices that are not unique, as requested
+                    continue;
+                }
+                valueBuilder
+                        .at(2).set(getBytes(rs.getString("TABLE_NAME")))
+                        .at(3).set(isNotUnique ? TRUE_BYTES : FALSE_BYTES)
+                        .at(5).set(getBytes(rs.getString("INDEX_NAME")))
+                        .at(6).set(TABLE_INDEX_OTHER);
+                String columnName = rs.getString("COLUMN_NAME");
+                if (rs.wasNull()) {
+                    valueBuilder.at(7).set(SHORT_ONE);
+                    String expressionSource = rs.getString("EXPRESSION_SOURCE");
+                    if (expressionSource != null) {
+                        valueBuilder.at(8).set(getBytes(expressionSource));
                     }
                 } else {
-                    row[8] = null;
+                    valueBuilder
+                            .at(7).set(createShort(rs.getShort("ORDINAL_POSITION")))
+                            .at(8).set(getBytes(columnName));
                 }
-            } else {
-                row[7] = createShort(rs.getShort("ORDINAL_POSITION"));
-                row[8] = getBytes(columnName);
-            }
-            int ascOrDesc = rs.getInt("ASC_OR_DESC");
-            if (ascOrDesc == 0) {
-                row[9] = ASC_BYTES;
-            } else if (ascOrDesc == 1) {
-                row[9] = DESC_BYTES;
-            } else {
-                row[9] = null;
-            }
-            // NOTE: We are setting CARDINALITY and PAGES to NULL as we don't have this info; might contravene JDBC spec
-            // TODO use 1 / RDB$STATISTICS for approximation of CARDINALITY?
-            row[10] = null;
-            // TODO query RDB$PAGES for PAGES information?
-            row[11] = null;
-            row[12] = null;
+                int ascOrDesc = rs.getInt("ASC_OR_DESC");
+                if (ascOrDesc == 0) {
+                    valueBuilder.at(9).set(ASC_BYTES);
+                } else if (ascOrDesc == 1) {
+                    valueBuilder.at(9).set(DESC_BYTES);
+                }
+                // NOTE: We are setting CARDINALITY and PAGES to NULL as we don't have this info; might contravene JDBC spec
+                // TODO index 10: use 1 / RDB$STATISTICS for approximation of CARDINALITY?
+                // TODO index 11: query RDB$PAGES for PAGES information?
 
-            rows.add(row);
-            
-        } while (rs.next());
-        rs.close();
-        return new FBResultSet(xsqlvars, rows);
+                rows.add(valueBuilder.toRowValue(true));
+            } while (rs.next());
+            return new FBResultSet(rowDescriptor, rows);
+        } finally {
+            rs.close();
+        }
     }
 
     //--------------------------JDBC 2.0-----------------------------
@@ -4286,7 +4256,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
             case ResultSet.TYPE_FORWARD_ONLY:
             case ResultSet.TYPE_SCROLL_INSENSITIVE :
             case ResultSet.TYPE_SCROLL_SENSITIVE :
-                return concurrency == ResultSet.CONCUR_READ_ONLY || 
+                return concurrency == ResultSet.CONCUR_READ_ONLY ||
                     concurrency == ResultSet.CONCUR_UPDATABLE;
             default:
                 return false;
@@ -4452,19 +4422,18 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
      *
      * {@inheritDoc}
      */
-    public ResultSet getUDTs(String catalog, String schemaPattern,
-              String typeNamePattern, int[] types) throws SQLException {
-        XSQLVAR[] xsqlvars = new XSQLVAR[7];
+    public ResultSet getUDTs(String catalog, String schemaPattern, String typeNamePattern, int[] types) throws SQLException {
+        final RowDescriptor rowDescriptor = new RowDescriptorBuilder(7)
+                .at(0).simple(SQL_VARYING, 31, "TYPE_CAT", "UDT").addField()
+                .at(1).simple(SQL_VARYING, 31, "TYPE_SCHEM", "UDT").addField()
+                .at(2).simple(SQL_VARYING, 31, "TYPE_NAME", "UDT").addField()
+                .at(3).simple(SQL_VARYING, 31, "CLASS_NAME", "UDT").addField()
+                .at(4).simple(SQL_LONG, 0, "DATA_TYPE", "UDT").addField()
+                .at(5).simple(SQL_VARYING, 31, "REMARKS", "UDT").addField()
+                .at(6).simple(SQL_SHORT, 0, "BASE_TYPE", "UDT").addField()
+                .toRowDescriptor();
 
-        xsqlvars[0] = new XSQLVAR(ISCConstants.SQL_VARYING, 31, "TYPE_CAT", "UDT");
-        xsqlvars[1] = new XSQLVAR(ISCConstants.SQL_VARYING, 31, "TYPE_SCHEM", "UDT");
-        xsqlvars[2] = new XSQLVAR(ISCConstants.SQL_VARYING, 31, "TYPE_NAME", "UDT");
-        xsqlvars[3] = new XSQLVAR(ISCConstants.SQL_VARYING, 31, "CLASS_NAME", "UDT");
-        xsqlvars[4] = new XSQLVAR(ISCConstants.SQL_LONG, 0, "DATA_TYPE", "UDT");
-        xsqlvars[5] = new XSQLVAR(ISCConstants.SQL_VARYING, 31, "REMARKS", "UDT");
-        xsqlvars[6] = new XSQLVAR(ISCConstants.SQL_SHORT, 0, "BASE_TYPE", "UDT");
-
-        return new FBResultSet(xsqlvars, Collections.<byte[][]>emptyList());
+        return new FBResultSet(rowDescriptor, Collections.<RowValue>emptyList());
     }
 
     /**
@@ -4486,37 +4455,37 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
      * {@inheritDoc}
      */
     public ResultSet getAttributes(String catalog, String schemaPattern, String typeNamePattern, String attributeNamePattern) throws SQLException {
-        XSQLVAR[] xsqlvars = new XSQLVAR[21];
+        final RowDescriptor rowDescriptor = new RowDescriptorBuilder(21)
+                .at(0).simple(SQL_VARYING, 31, "TYPE_CAT", "ATTRIBUTES").addField()
+                .at(1).simple(SQL_VARYING, 31, "TYPE_SCHEM", "ATTRIBUTES").addField()
+                .at(2).simple(SQL_VARYING, 31, "TYPE_NAME", "ATTRIBUTES").addField()
+                .at(3).simple(SQL_VARYING, 31, "ATTR_NAME", "ATTRIBUTES").addField()
+                .at(4).simple(SQL_LONG, 0, "DATA_TYPE", "ATTRIBUTES").addField()
+                .at(5).simple(SQL_VARYING, 31, "ATTR_TYPE_NAME", "ATTRIBUTES").addField()
+                .at(6).simple(SQL_LONG, 0, "ATTR_SIZE", "ATTRIBUTES").addField()
+                .at(7).simple(SQL_LONG, 0, "DECIMAL_DIGITS", "ATTRIBUTES").addField()
+                .at(8).simple(SQL_LONG, 0, "NUM_PREC_RADIX", "ATTRIBUTES").addField()
+                .at(9).simple(SQL_LONG, 0, "NULLABLE", "ATTRIBUTES").addField()
+                .at(10).simple(SQL_VARYING, 80, "REMARKS", "ATTRIBUTES").addField()
+                .at(11).simple(SQL_VARYING, 31, "ATTR_DEF", "ATTRIBUTES").addField()
+                .at(12).simple(SQL_LONG, 0, "SQL_DATA_TYPE", "ATTRIBUTES").addField()
+                .at(13).simple(SQL_LONG, 0, "SQL_DATETIME_SUB", "ATTRIBUTES").addField()
+                .at(14).simple(SQL_LONG, 0, "CHAR_OCTET_LENGTH", "ATTRIBUTES").addField()
+                .at(15).simple(SQL_SHORT, 0, "ORDINAL_POSITION", "ATTRIBUTES").addField()
+                .at(16).simple(SQL_VARYING, 31, "IS_NULLABLE", "ATTRIBUTES").addField()
+                .at(17).simple(SQL_VARYING, 31, "SCOPE_CATALOG", "ATTRIBUTES").addField()
+                .at(18).simple(SQL_VARYING, 31, "SCOPE_SCHEMA", "ATTRIBUTES").addField()
+                .at(19).simple(SQL_VARYING, 31, "SCOPE_TABLE", "ATTRIBUTES").addField()
+                .at(20).simple(SQL_SHORT, 0, "SOURCE_DATA_TYPE", "ATTRIBUTES").addField()
+                .toRowDescriptor();
 
-        xsqlvars[0] = new XSQLVAR(ISCConstants.SQL_VARYING, 31, "TYPE_CAT", "ATTRIBUTES");
-        xsqlvars[1] = new XSQLVAR(ISCConstants.SQL_VARYING, 31, "TYPE_SCHEM", "ATTRIBUTES");
-        xsqlvars[2] = new XSQLVAR(ISCConstants.SQL_VARYING, 31, "TYPE_NAME", "ATTRIBUTES");
-        xsqlvars[3] = new XSQLVAR(ISCConstants.SQL_VARYING, 31, "ATTR_NAME", "ATTRIBUTES");
-        xsqlvars[4] = new XSQLVAR(ISCConstants.SQL_LONG, 0, "DATA_TYPE", "ATTRIBUTES");
-        xsqlvars[5] = new XSQLVAR(ISCConstants.SQL_VARYING, 31, "ATTR_TYPE_NAME", "ATTRIBUTES");
-        xsqlvars[6] = new XSQLVAR(ISCConstants.SQL_LONG, 0, "ATTR_SIZE", "ATTRIBUTES");
-        xsqlvars[7] = new XSQLVAR(ISCConstants.SQL_LONG, 0, "DECIMAL_DIGITS", "ATTRIBUTES");
-        xsqlvars[8] = new XSQLVAR(ISCConstants.SQL_LONG, 0, "NUM_PREC_RADIX", "ATTRIBUTES");
-        xsqlvars[9] = new XSQLVAR(ISCConstants.SQL_LONG, 0, "NULLABLE", "ATTRIBUTES");
-        xsqlvars[10] = new XSQLVAR(ISCConstants.SQL_VARYING, 80, "REMARKS", "ATTRIBUTES");
-        xsqlvars[11] = new XSQLVAR(ISCConstants.SQL_VARYING, 31, "ATTR_DEF", "ATTRIBUTES");
-        xsqlvars[12] = new XSQLVAR(ISCConstants.SQL_LONG, 0, "SQL_DATA_TYPE", "ATTRIBUTES");
-        xsqlvars[13] = new XSQLVAR(ISCConstants.SQL_LONG, 0, "SQL_DATETIME_SUB", "ATTRIBUTES");
-        xsqlvars[14] = new XSQLVAR(ISCConstants.SQL_LONG, 0, "CHAR_OCTET_LENGTH", "ATTRIBUTES");
-        xsqlvars[15] = new XSQLVAR(ISCConstants.SQL_SHORT, 0, "ORDINAL_POSITION", "ATTRIBUTES");
-        xsqlvars[16] = new XSQLVAR(ISCConstants.SQL_VARYING, 31, "IS_NULLABLE", "ATTRIBUTES");
-        xsqlvars[17] = new XSQLVAR(ISCConstants.SQL_VARYING, 31, "SCOPE_CATALOG", "ATTRIBUTES");
-        xsqlvars[18] = new XSQLVAR(ISCConstants.SQL_VARYING, 31, "SCOPE_SCHEMA", "ATTRIBUTES");
-        xsqlvars[19] = new XSQLVAR(ISCConstants.SQL_VARYING, 31, "SCOPE_TABLE", "ATTRIBUTES");
-        xsqlvars[20] = new XSQLVAR(ISCConstants.SQL_SHORT, 0, "SOURCE_DATA_TYPE", "ATTRIBUTES");
-
-        return new FBResultSet(xsqlvars, Collections.<byte[][]>emptyList());
+        return new FBResultSet(rowDescriptor, Collections.<RowValue>emptyList());
     }
 
     /**
      * Retrieves whether this database supports savepoints.
      *
-     * @return true if savepoints are supported; false otherwise 
+     * @return true if savepoints are supported; false otherwise
      * @exception SQLException if a database access error occurs
      */
     public boolean supportsSavepoints() throws SQLException {
@@ -4526,7 +4495,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
     /**
      * Retrieve whether this database supports named parameters.
      *
-     * @return true if named parameters are supported, false otherwise 
+     * @return true if named parameters are supported, false otherwise
      * @exception SQLException if a database access error occurs
      */
     public boolean supportsNamedParameters() throws SQLException {
@@ -4535,11 +4504,11 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
 
     /**
      * Retrieves whether it is possible to have multiple <code>ResultSet</code>
-     * objects returned from a <code>CallableStatement</code> object 
+     * objects returned from a <code>CallableStatement</code> object
      * simultaneously.
      *
      * @return true if multiple open ResultSets are supported, false otherwise
-     * @exception SQLException if a database access error occurs 
+     * @exception SQLException if a database access error occurs
      */
     public boolean supportsMultipleOpenResults() throws SQLException {
         return false;
@@ -4549,7 +4518,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
      * Retrieves whether auto-generated keys can be retrieved after creation.
      *
      * @return true if auto-generated keys can be retrieved, false otherwise
-     * @exception SQLException if a database access error occurs 
+     * @exception SQLException if a database access error occurs
      */
     public boolean supportsGetGeneratedKeys() throws SQLException {
         return true;
@@ -4561,18 +4530,16 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
      * {@inheritDoc}
      */
     public ResultSet getSuperTypes(String catalog, String schemaPattern, String tableNamePattern) throws SQLException {
-        XSQLVAR[] xsqlvars = new XSQLVAR[6];
+        final RowDescriptor rowDescriptor = new RowDescriptorBuilder(6)
+                .at(0).simple(SQL_VARYING, 31, "TYPE_CAT", "SUPERTYPES").addField()
+                .at(1).simple(SQL_VARYING, 31, "TYPE_SCHEM", "SUPERTYPES").addField()
+                .at(2).simple(SQL_VARYING, 31, "TYPE_NAME", "SUPERTYPES").addField()
+                .at(3).simple(SQL_VARYING, 31, "SUPERTYPE_CAT", "SUPERTYPES").addField()
+                .at(4).simple(SQL_VARYING, 31, "SUPERTYPE_SCHEM", "SUPERTYPES").addField()
+                .at(5).simple(SQL_VARYING, 31, "SUPERTYPE_NAME", "SUPERTYPES").addField()
+                .toRowDescriptor();
 
-        xsqlvars[0] = new XSQLVAR(ISCConstants.SQL_VARYING, 31, "TYPE_CAT", "SUPERTYPES");
-        xsqlvars[1] = new XSQLVAR(ISCConstants.SQL_VARYING, 31, "TYPE_SCHEM", "SUPERTYPES");
-        xsqlvars[2] = new XSQLVAR(ISCConstants.SQL_VARYING, 31, "TYPE_NAME", "SUPERTYPES");
-        xsqlvars[3] = new XSQLVAR(ISCConstants.SQL_VARYING, 31, "SUPERTYPE_CAT", "SUPERTYPES");
-        xsqlvars[4] = new XSQLVAR(ISCConstants.SQL_VARYING, 31, "SUPERTYPE_SCHEM", "SUPERTYPES");
-        xsqlvars[5] = new XSQLVAR(ISCConstants.SQL_VARYING, 31, "SUPERTYPE_NAME", "SUPERTYPES");
-
-        List<byte[][]> rows = Collections.emptyList();
-
-        return new FBResultSet(xsqlvars, rows);
+        return new FBResultSet(rowDescriptor, Collections.<RowValue>emptyList());
     }
 
     /**
@@ -4581,28 +4548,25 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
      * {@inheritDoc}
      */
     public ResultSet getSuperTables(String catalog, String schemaPattern, String tableNamePattern) throws SQLException {
-        
-        XSQLVAR[] xsqlvars = new XSQLVAR[4];
+        final RowDescriptor rowDescriptor = new RowDescriptorBuilder(4)
+                .at(0).simple(SQL_VARYING, 31, "TABLE_CAT", "SUPERTABLES").addField()
+                .at(1).simple(SQL_VARYING, 31, "TABLE_SCHEM", "SUPERTABLES").addField()
+                .at(2).simple(SQL_VARYING, 31, "TABLE_NAME", "SUPERTABLES").addField()
+                .at(3).simple(SQL_VARYING, 31, "SUPERTABLE_NAME", "SUPERTABLES").addField()
+                .toRowDescriptor();
 
-        xsqlvars[0] = new XSQLVAR(ISCConstants.SQL_VARYING, 31, "TABLE_CAT", "SUPERTABLES");
-        xsqlvars[1] = new XSQLVAR(ISCConstants.SQL_VARYING, 31, "TABLE_SCHEM", "SUPERTABLES");
-        xsqlvars[2] = new XSQLVAR(ISCConstants.SQL_VARYING, 31, "TABLE_NAME", "SUPERTABLES");
-        xsqlvars[3] = new XSQLVAR(ISCConstants.SQL_VARYING, 31, "SUPERTABLE_NAME", "SUPERTABLES");
-
-        List<byte[][]> rows = Collections.emptyList();
-
-        return new FBResultSet(xsqlvars, rows);
+        return new FBResultSet(rowDescriptor, Collections.<RowValue>emptyList());
     }
 
     /**
      * Retrieves whether this database supports the given results holdability.
      *
-     * @param holdability one of the following constants: 
-     * <code>ResultSet.HOLD_CURSORS_OVER_COMMIT</code> or 
+     * @param holdability one of the following constants:
+     * <code>ResultSet.HOLD_CURSORS_OVER_COMMIT</code> or
      * <code>ResultSet.CLOSE_CURSORS_AT_COMMIT</code>
-     * @return <code>true</code> if the holdability is supported, 
-     *         <code>false</code> otherwise 
-     * @exception SQLException if a database access error occurs 
+     * @return <code>true</code> if the holdability is supported,
+     *         <code>false</code> otherwise
+     * @exception SQLException if a database access error occurs
      */
     public boolean supportsResultSetHoldability(int holdability) throws SQLException {
         return holdability == ResultSet.CLOSE_CURSORS_AT_COMMIT ||
@@ -4613,17 +4577,17 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
      * Retrieves the default holdability of this <code>ResultSet</code>.
      *
      * @return the default holdability
-     * @exception SQLException if a database access error occurs 
+     * @exception SQLException if a database access error occurs
      */
     public int getResultSetHoldability() throws SQLException {
-        return ResultSet.CLOSE_CURSORS_AT_COMMIT; 
+        return ResultSet.CLOSE_CURSORS_AT_COMMIT;
     }
 
     /**
      * Get the major version number of the database.
      *
-     * @return The major version number 
-     * @exception SQLException if a database access error occurs 
+     * @return The major version number
+     * @exception SQLException if a database access error occurs
      */
     public int getDatabaseMajorVersion() throws SQLException {
         return gdsHelper.getDatabaseProductMajorVersion();
@@ -4631,13 +4595,13 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
 
     /**
      * Get the minor version number of the database.
-     * @return The minor version number 
-     * @exception SQLException if a database access error occurs 
+     * @return The minor version number
+     * @exception SQLException if a database access error occurs
      */
     public int getDatabaseMinorVersion() throws SQLException {
         return gdsHelper.getDatabaseProductMinorVersion();
     }
-    
+
     /**
      * Get the major version of the ODS (On-Disk Structure) of the database.
      * @return The major version number
@@ -4646,7 +4610,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
     public int getOdsMajorVersion() throws SQLException {
         return gdsHelper.getCurrentDatabase().getOdsMajor();
     }
-    
+
     /**
      * Get the minor version of the ODS (On-Disk Structure) of the database.
      * @return The minor version number
@@ -4657,22 +4621,22 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
     }
 
     /**
-     * Indicates whether the SQLSTATEs returned by SQLException.getSQLState is 
+     * Indicates whether the SQLSTATEs returned by SQLException.getSQLState is
      * X/Open (now known as Open Group) SQL CLI or SQL99
      *
      * @return the type of SQLSTATEs
-     * @exception SQLException should never be thrown in this implementation 
+     * @exception SQLException should never be thrown in this implementation
      */
     public int getSQLStateType() throws SQLException {
         return DatabaseMetaData.sqlStateSQL99;
     }
 
     //-------------------------- JDBC 4.0 -------------------------------------
-    
+
     public boolean supportsStoredFunctionsUsingCallSyntax() throws SQLException {
         return false;
     }
-    
+
     public boolean autoCommitFailureClosesAllResultSets() throws SQLException {
         // the holdable result sets remain open, others are closed, but this
         // happens before the statement is executed
@@ -4680,15 +4644,15 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
     }
 
     /**
-     * Retrieves a list of the client info properties 
+     * Retrieves a list of the client info properties
      * that the driver supports.  The result set contains the following columns
      * <p>
      * <ol>
      * <li><b>NAME</b> String=> The name of the client info property<br>
      * <li><b>MAX_LEN</b> int=> The maximum length of the value for the property<br>
      * <li><b>DEFAULT_VALUE</b> String=> The default value of the property<br>
-     * <li><b>DESCRIPTION</b> String=> A description of the property.  This will typically 
-     *                      contain information as to where this property is 
+     * <li><b>DESCRIPTION</b> String=> A description of the property.  This will typically
+     *                      contain information as to where this property is
      *                      stored in the database.
      * </ol>
      * <p>
@@ -4703,39 +4667,37 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
      */
     public ResultSet getClientInfoProperties() throws SQLException {
         // TODO Return context info?
-        XSQLVAR[] xsqlvars = new XSQLVAR[4];
+        final RowDescriptor rowDescriptor = new RowDescriptorBuilder(4)
+                .at(0).simple(SQL_VARYING, 31, "NAME", "CLIENTINFO").addField()
+                .at(1).simple(SQL_LONG, 4, "MAX_LEN", "CLIENTINFO").addField()
+                .at(2).simple(SQL_VARYING, 31, "DEFAULT", "CLIENTINFO").addField()
+                .at(3).simple(SQL_VARYING, 31, "DESCRIPTION", "CLIENTINFO").addField()
+                .toRowDescriptor();
 
-        xsqlvars[0] = new XSQLVAR(ISCConstants.SQL_VARYING, 31, "NAME", "CLIENTINFO");
-        xsqlvars[1] = new XSQLVAR(ISCConstants.SQL_LONG, 4, "MAX_LEN", "CLIENTINFO");
-        xsqlvars[2] = new XSQLVAR(ISCConstants.SQL_VARYING, 31, "DEFAULT", "CLIENTINFO");
-        xsqlvars[3] = new XSQLVAR(ISCConstants.SQL_VARYING, 31, "DESCRIPTION", "CLIENTINFO");
-
-        List<byte[][]> rows = Collections.emptyList();
-
-        return new FBResultSet(xsqlvars, rows);
+        return new FBResultSet(rowDescriptor, Collections.<RowValue>emptyList());
     }
 
     /**
-     * Retrieves a description of the given catalog's system or user 
+     * Retrieves a description of the given catalog's system or user
      * function parameters and return type.
      *
      * <P>Only descriptions matching the schema,  function and
      * parameter name criteria are returned. They are ordered by
      * <code>FUNCTION_CAT</code>, <code>FUNCTION_SCHEM</code>,
-     * <code>FUNCTION_NAME</code> and 
+     * <code>FUNCTION_NAME</code> and
      * <code>SPECIFIC_ NAME</code>. Within this, the return value,
      * if any, is first. Next are the parameter descriptions in call
      * order. The column descriptions follow in column number order.
      *
-     * <P>Each row in the <code>ResultSet</code> 
+     * <P>Each row in the <code>ResultSet</code>
      * is a parameter description, column description or
      * return type description with the following fields:
      *  <OL>
      *  <LI><B>FUNCTION_CAT</B> String => function catalog (may be <code>null</code>)
      *  <LI><B>FUNCTION_SCHEM</B> String => function schema (may be <code>null</code>)
-     *  <LI><B>FUNCTION_NAME</B> String => function name.  This is the name 
+     *  <LI><B>FUNCTION_NAME</B> String => function name.  This is the name
      * used to invoke the function
-     *  <LI><B>COLUMN_NAME</B> String => column/parameter name 
+     *  <LI><B>COLUMN_NAME</B> String => column/parameter name
      *  <LI><B>COLUMN_TYPE</B> Short => kind of column/parameter:
      *      <UL>
      *      <LI> functionColumnUnknown - nobody knows
@@ -4751,7 +4713,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
      *  type name is fully qualified
      *  <LI><B>PRECISION</B> int => precision
      *  <LI><B>LENGTH</B> int => length in bytes of data
-     *  <LI><B>SCALE</B> short => scale -  null is returned for data types where  
+     *  <LI><B>SCALE</B> short => scale -  null is returned for data types where
      * SCALE is not applicable.
      *  <LI><B>RADIX</B> short => radix
      *  <LI><B>NULLABLE</B> short => can it contain NULL.
@@ -4761,33 +4723,33 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
      *      <LI> functionNullableUnknown - nullability unknown
      *      </UL>
      *  <LI><B>REMARKS</B> String => comment describing column/parameter
-     *  <LI><B>CHAR_OCTET_LENGTH</B> int  => the maximum length of binary 
-     * and character based parameters or columns.  For any other datatype the returned value 
+     *  <LI><B>CHAR_OCTET_LENGTH</B> int  => the maximum length of binary
+     * and character based parameters or columns.  For any other datatype the returned value
      * is a NULL
-     *  <LI><B>ORDINAL_POSITION</B> int  => the ordinal position, starting 
+     *  <LI><B>ORDINAL_POSITION</B> int  => the ordinal position, starting
      * from 1, for the input and output parameters. A value of 0
-     * is returned if this row describes the function's return value. 
+     * is returned if this row describes the function's return value.
      * For result set columns, it is the
-     * ordinal position of the column in the result set starting from 1.  
-     *  <LI><B>IS_NULLABLE</B> String  => ISO rules are used to determine 
+     * ordinal position of the column in the result set starting from 1.
+     *  <LI><B>IS_NULLABLE</B> String  => ISO rules are used to determine
      * the nullability for a parameter or column.
      *       <UL>
      *       <LI> YES           --- if the parameter or column can include NULLs
      *       <LI> NO            --- if the parameter or column  cannot include NULLs
-     *       <LI> empty string  --- if the nullability for the 
+     *       <LI> empty string  --- if the nullability for the
      * parameter  or column is unknown
      *       </UL>
-     *  <LI><B>SPECIFIC_NAME</B> String  => the name which uniquely identifies 
+     *  <LI><B>SPECIFIC_NAME</B> String  => the name which uniquely identifies
      * this function within its schema.  This is a user specified, or DBMS
-     * generated, name that may be different then the <code>FUNCTION_NAME</code> 
+     * generated, name that may be different then the <code>FUNCTION_NAME</code>
      * for example with overload functions
      *  </OL>
-     * 
-     * <p>The PRECISION column represents the specified column size for the given 
-     * parameter or column. 
-     * For numeric data, this is the maximum precision.  For character data, this is the length in characters. 
-     * For datetime datatypes, this is the length in characters of the String representation (assuming the 
-     * maximum allowed precision of the fractional seconds component). For binary data, this is the length in bytes.  For the ROWID datatype, 
+     *
+     * <p>The PRECISION column represents the specified column size for the given
+     * parameter or column.
+     * For numeric data, this is the maximum precision.  For character data, this is the length in characters.
+     * For datetime datatypes, this is the length in characters of the String representation (assuming the
+     * maximum allowed precision of the fractional seconds component). For binary data, this is the length in bytes.  For the ROWID datatype,
      * this is the length in bytes. Null is returned for data types where the
      * column size is not applicable.
      * @param catalog a catalog name; must match the catalog name as it
@@ -4799,56 +4761,56 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
      *        <code>null</code> means that the schema name should not be used to narrow
      *        the search
      * @param functionNamePattern a procedure name pattern; must match the
-     *        function name as it is stored in the database 
-     * @param columnNamePattern a parameter name pattern; must match the 
-     * parameter or column name as it is stored in the database 
-     * @return <code>ResultSet</code> - each row describes a 
+     *        function name as it is stored in the database
+     * @param columnNamePattern a parameter name pattern; must match the
+     * parameter or column name as it is stored in the database
+     * @return <code>ResultSet</code> - each row describes a
      * user function parameter, column  or return type
      *
      * @exception SQLException if a database access error occurs
-     * @see #getSearchStringEscape 
+     * @see #getSearchStringEscape
      * @since 1.6
      */
     public ResultSet getFunctionColumns(String catalog, String schemaPattern, String functionNamePattern, String columnNamePattern) throws SQLException {
         // FIXME implement this method to return actual result
-        XSQLVAR[] xsqlvars = new XSQLVAR[17];
+        final RowDescriptor rowDescriptor = new RowDescriptorBuilder(17)
+                .at(0).simple(SQL_VARYING, 31, "FUNCTION_CAT", "FUNCTION_COLUMNS").addField()
+                .at(1).simple(SQL_VARYING, 31, "FUNCTION_SCHEM", "FUNCTION_COLUMNS").addField()
+                .at(2).simple(SQL_VARYING, 31, "FUNCTION_NAME", "FUNCTION_COLUMNS").addField()
+                .at(3).simple(SQL_VARYING, 31, "COLUMN_NAME", "FUNCTION_COLUMNS").addField()
+                .at(4).simple(SQL_SHORT, 0, "COLUMN_TYPE", "FUNCTION_COLUMNS").addField()
+                .at(5).simple(SQL_LONG, 0, "DATA_TYPE", "FUNCTION_COLUMNS").addField()
+                .at(6).simple(SQL_VARYING, 31, "TYPE_NAME", "FUNCTION_COLUMNS").addField()
+                .at(7).simple(SQL_LONG, 0, "PRECISION", "FUNCTION_COLUMNS").addField()
+                .at(8).simple(SQL_LONG, 0, "LENGTH", "FUNCTION_COLUMNS").addField()
+                .at(9).simple(SQL_SHORT, 0, "SCALE", "FUNCTION_COLUMNS").addField()
+                .at(10).simple(SQL_SHORT, 0, "RADIX", "FUNCTION_COLUMNS").addField()
+                .at(11).simple(SQL_SHORT, 0, "NULLABLE", "FUNCTION_COLUMNS").addField()
+                .at(12).simple(SQL_VARYING, 80, "REMARKS", "FUNCTION_COLUMNS").addField()
+                .at(13).simple(SQL_LONG, 0, "CHAR_OCTET_LENGTH", "FUNCTION_COLUMNS").addField()
+                .at(14).simple(SQL_LONG, 0, "ORDINAL_POSITION", "FUNCTION_COLUMNS").addField()
+                .at(15).simple(SQL_VARYING, 31, "IS_NULLABLE", "FUNCTION_COLUMNS").addField()
+                .at(16).simple(SQL_VARYING, 31, "SPECIFIC_NAME", "FUNCTION_COLUMNS").addField()
+                .toRowDescriptor();
 
-        xsqlvars[0] = new XSQLVAR(ISCConstants.SQL_VARYING, 31, "FUNCTION_CAT", "FUNCTION_COLUMNS");
-        xsqlvars[1] = new XSQLVAR(ISCConstants.SQL_VARYING, 31, "FUNCTION_SCHEM", "FUNCTION_COLUMNS");
-        xsqlvars[2] = new XSQLVAR(ISCConstants.SQL_VARYING, 31, "FUNCTION_NAME", "FUNCTION_COLUMNS");
-        xsqlvars[3] = new XSQLVAR(ISCConstants.SQL_VARYING, 31, "COLUMN_NAME", "FUNCTION_COLUMNS");
-        xsqlvars[4] = new XSQLVAR(ISCConstants.SQL_SHORT, 0, "COLUMN_TYPE", "FUNCTION_COLUMNS");
-        xsqlvars[5] = new XSQLVAR(ISCConstants.SQL_LONG, 0, "DATA_TYPE", "FUNCTION_COLUMNS");
-        xsqlvars[6] = new XSQLVAR(ISCConstants.SQL_VARYING, 31, "TYPE_NAME", "FUNCTION_COLUMNS");
-        xsqlvars[7] = new XSQLVAR(ISCConstants.SQL_LONG, 0, "PRECISION", "FUNCTION_COLUMNS");
-        xsqlvars[8] = new XSQLVAR(ISCConstants.SQL_LONG, 0, "LENGTH", "FUNCTION_COLUMNS");
-        xsqlvars[9] = new XSQLVAR(ISCConstants.SQL_SHORT, 0, "SCALE", "FUNCTION_COLUMNS");
-        xsqlvars[10] = new XSQLVAR(ISCConstants.SQL_SHORT, 0, "RADIX", "FUNCTION_COLUMNS");
-        xsqlvars[11] = new XSQLVAR(ISCConstants.SQL_SHORT, 0, "NULLABLE", "FUNCTION_COLUMNS");
-        xsqlvars[12] = new XSQLVAR(ISCConstants.SQL_VARYING, 80, "REMARKS", "FUNCTION_COLUMNS");
-        xsqlvars[13] = new XSQLVAR(ISCConstants.SQL_LONG, 0, "CHAR_OCTET_LENGTH", "FUNCTION_COLUMNS");
-        xsqlvars[14] = new XSQLVAR(ISCConstants.SQL_LONG, 0, "ORDINAL_POSITION", "FUNCTION_COLUMNS");
-        xsqlvars[15] = new XSQLVAR(ISCConstants.SQL_VARYING, 31, "IS_NULLABLE", "FUNCTION_COLUMNS");
-        xsqlvars[16] = new XSQLVAR(ISCConstants.SQL_VARYING, 31, "SPECIFIC_NAME", "FUNCTION_COLUMNS");
-
-        return new FBResultSet(xsqlvars, Collections.<byte[][]>emptyList());
+        return new FBResultSet(rowDescriptor, Collections.<RowValue>emptyList());
     }
 
     /**
-     * Retrieves a description of the  system and user functions available 
+     * Retrieves a description of the  system and user functions available
      * in the given catalog.
      * <P>
      * Only system and user function descriptions matching the schema and
      * function name criteria are returned.  They are ordered by
      * <code>FUNCTION_CAT</code>, <code>FUNCTION_SCHEM</code>,
-     * <code>FUNCTION_NAME</code> and 
+     * <code>FUNCTION_NAME</code> and
      * <code>SPECIFIC_ NAME</code>.
      *
      * <P>Each function description has the the following columns:
      *  <OL>
      *  <LI><B>FUNCTION_CAT</B> String => function catalog (may be <code>null</code>)
      *  <LI><B>FUNCTION_SCHEM</B> String => function schema (may be <code>null</code>)
-     *  <LI><B>FUNCTION_NAME</B> String => function name.  This is the name 
+     *  <LI><B>FUNCTION_NAME</B> String => function name.  This is the name
      * used to invoke the function
      *  <LI><B>REMARKS</B> String => explanatory comment on the function
      * <LI><B>FUNCTION_TYPE</B> short => kind of function:
@@ -4858,9 +4820,9 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
      *      <LI> functionNoTable- Does not return a table
      *      <LI> functionReturnsTable - Returns a table
      *      </UL>
-     *  <LI><B>SPECIFIC_NAME</B> String  => the name which uniquely identifies 
+     *  <LI><B>SPECIFIC_NAME</B> String  => the name which uniquely identifies
      *  this function within its schema.  This is a user specified, or DBMS
-     * generated, name that may be different then the <code>FUNCTION_NAME</code> 
+     * generated, name that may be different then the <code>FUNCTION_NAME</code>
      * for example with overload functions
      *  </OL>
      * <p>
@@ -4876,29 +4838,29 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
      *        <code>null</code> means that the schema name should not be used to narrow
      *        the search
      * @param functionNamePattern a function name pattern; must match the
-     *        function name as it is stored in the database 
-     * @return <code>ResultSet</code> - each row is a function description 
+     *        function name as it is stored in the database
+     * @return <code>ResultSet</code> - each row is a function description
      * @exception SQLException if a database access error occurs
-     * @see #getSearchStringEscape 
+     * @see #getSearchStringEscape
      * @since 1.6
      */
     public ResultSet getFunctions(String catalog, String schemaPattern, String functionNamePattern) throws SQLException {
         // FIXME implement this method to return actual result
-        XSQLVAR[] xsqlvars = new XSQLVAR[6];
+        final RowDescriptor rowDescriptor = new RowDescriptorBuilder(6)
+                .at(0).simple(SQL_VARYING, 31, "FUNCTION_CAT", "FUNCTIONS").addField()
+                .at(1).simple(SQL_VARYING, 31, "FUNCTION_SCHEM", "FUNCTIONS").addField()
+                .at(2).simple(SQL_VARYING, 31, "FUNCTION_NAME", "FUNCTIONS").addField()
+                .at(3).simple(SQL_VARYING, 80, "REMARKS", "FUNCTIONS").addField()
+                .at(4).simple(SQL_SHORT, 0, "FUNCTION_TYPE", "FUNCTIONS").addField()
+                .at(5).simple(SQL_VARYING, 31, "SPECIFIC_NAME", "FUNCTIONS").addField()
+                .toRowDescriptor();
 
-        xsqlvars[0] = new XSQLVAR(ISCConstants.SQL_VARYING, 31, "FUNCTION_CAT", "FUNCTIONS");
-        xsqlvars[1] = new XSQLVAR(ISCConstants.SQL_VARYING, 31, "FUNCTION_SCHEM", "FUNCTIONS");
-        xsqlvars[2] = new XSQLVAR(ISCConstants.SQL_VARYING, 31, "FUNCTION_NAME", "FUNCTIONS");
-        xsqlvars[3] = new XSQLVAR(ISCConstants.SQL_VARYING, 80, "REMARKS", "FUNCTIONS");
-        xsqlvars[4] = new XSQLVAR(ISCConstants.SQL_SHORT, 0, "FUNCTION_TYPE", "FUNCTIONS");
-        xsqlvars[5] = new XSQLVAR(ISCConstants.SQL_VARYING, 31, "SPECIFIC_NAME", "FUNCTIONS");
-
-        return new FBResultSet(xsqlvars, Collections.<byte[][]>emptyList());
+        return new FBResultSet(rowDescriptor, Collections.<RowValue>emptyList());
     }
 
     /**
      * Retrieves the schema names available in this database.  The results
-     * are ordered by <code>TABLE_CATALOG</code> and 
+     * are ordered by <code>TABLE_CATALOG</code> and
      * <code>TABLE_SCHEM</code>.
      *
      * <P>The schema columns are:
@@ -4917,18 +4879,16 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
      * @return a <code>ResultSet</code> object in which each row is a
      *         schema description
      * @exception SQLException if a database access error occurs
-     * @see #getSearchStringEscape 
+     * @see #getSearchStringEscape
      * @since 1.6
      */
     public ResultSet getSchemas(String catalog, String schemaPattern) throws SQLException {
-        XSQLVAR[] xsqlvars = new XSQLVAR[2];
+        final RowDescriptor rowDescriptor = new RowDescriptorBuilder(2)
+                .at(0).simple(SQL_VARYING, 31, "TABLE_SCHEM", "TABLESCHEMAS").addField()
+                .at(1).simple(SQL_VARYING, 31, "TABLE_CATALOG", "TABLESCHEMAS").addField()
+                .toRowDescriptor();
 
-        xsqlvars[0] = new XSQLVAR(ISCConstants.SQL_VARYING, 31, "TABLE_SCHEM", "TABLESCHEMAS");
-        xsqlvars[1] = new XSQLVAR(ISCConstants.SQL_VARYING, 31, "TABLE_CATALOG", "TABLESCHEMAS");
-
-        List<byte[][]> rows = Collections.emptyList();
-
-        return new FBResultSet(xsqlvars, rows);
+        return new FBResultSet(rowDescriptor, Collections.<RowValue>emptyList());
     }
 
     public boolean isWrapperFor(Class<?> iface) throws SQLException {
@@ -4938,20 +4898,20 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
     public <T> T unwrap(Class<T> iface) throws SQLException {
         if (!isWrapperFor(iface))
             throw new SQLException("Unable to unwrap to class " + iface.getName());
-        
+
         return iface.cast(this);
-    }    
-    
+    }
+
     protected static boolean isAllCondition(String pattern) {
         return "%".equals(pattern);
     }
 
     /**
-     * Determine if there are no SQL wildcard characters ('%' or '_') in the 
+     * Determine if there are no SQL wildcard characters ('%' or '_') in the
      * given pattern.
      *
      * @param pattern The pattern to be checked for wildcards
-     * @return <code>true</code> if there are no wildcards in the pattern, 
+     * @return <code>true</code> if there are no wildcards in the pattern,
      *         <code>false</code> otherwise
      */
     public static boolean hasNoWildcards(String pattern) {
@@ -5000,8 +4960,8 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
     }
 
     protected String getWantsSystemTables(String[] types) {
-        for (int i = 0; i < types.length; i++) {
-            if (SYSTEM_TABLE.equals(types[i])) {
+        for (String type : types) {
+            if (SYSTEM_TABLE.equals(type)) {
                 return "T";
             }
         }
@@ -5009,8 +4969,8 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
     }
 
     protected String getWantsTables(String[] types) {
-        for (int i = 0; i < types.length; i++) {
-            if (TABLE.equals(types[i])) {
+        for (String type : types) {
+            if (TABLE.equals(type)) {
                 return "T";
             }
         }
@@ -5018,8 +4978,8 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
     }
 
     protected String getWantsViews(String[] types) {
-        for (int i = 0; i < types.length; i++) {
-            if (VIEW.equals(types[i])) {
+        for (String type : types) {
+            if (VIEW.equals(type)) {
                 return "T";
             }
         }
@@ -5030,7 +4990,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
      * Strips a leading and trailing quote (double or single) from a string.
      *
      * @param pattern the string to be stripped
-     * @return a copy of <code>pattern</code> with leading and trailing quote 
+     * @return a copy of <code>pattern</code> with leading and trailing quote
      * removed
      */
     public static String stripQuotes(String pattern, boolean uppercase) {
@@ -5048,7 +5008,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
                 return pattern;
         }
     }
-    
+
     public ResultSet getPseudoColumns(String catalog, String schemaPattern,
             String tableNamePattern, String columnNamePattern) throws SQLException {
         // TODO Write implementation
@@ -5077,7 +5037,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
         rs.close();
 
         return sResult;
-    } 
+    }
 
     /*
      * (non-Javadoc)
@@ -5152,7 +5112,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
         public String getValue() {
             return value;
         }
-        
+
         public String getOriginalCaseValue() {
             return originalCaseValue;
         }
@@ -5161,40 +5121,40 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
     protected static byte[] getBytes(String value){
         return value != null ? value.getBytes(): null;
     }
-    
+
     private FBPreparedStatement getStatement(String sql) throws SQLException {
         FBPreparedStatement s = statements.get(sql);
-        
+
         if (s != null && s.isClosed()) {
             statements.remove(sql);
             s = null;
         }
-        
-        if (s != null) 
+
+        if (s != null)
             return s;
-        
+
         if (connection == null) {
-            InternalTransactionCoordinator.MetaDataTransactionCoordinator metaDataTransactionCoordinator = 
+            InternalTransactionCoordinator.MetaDataTransactionCoordinator metaDataTransactionCoordinator =
                 new InternalTransactionCoordinator.MetaDataTransactionCoordinator();
-            
+
             s = new FBPreparedStatement(gdsHelper, sql,
                     ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY,
-                    ResultSet.CLOSE_CURSORS_AT_COMMIT, 
+                    ResultSet.CLOSE_CURSORS_AT_COMMIT,
                     metaDataTransactionCoordinator, metaDataTransactionCoordinator,
                     true, true, false);
         } else {
             s = (FBPreparedStatement)connection.prepareMetaDataStatement(
                 sql, ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
         }
-            
+
         statements.put(sql, s);
-        
+
         return s;
     }
 
     /**
      * Execute an sql query with a given set of parameters.
-     * 
+     *
      * @param sql
      *            The sql statement to be used for the query
      * @param params
@@ -5204,30 +5164,30 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
      */
     protected ResultSet doQuery(String sql, List<String> params)
             throws SQLException {
-        
+
         FBPreparedStatement s = getStatement(sql);
-        
+
         for (int i = 0; i < params.size(); i++)
             s.setStringForced(i + 1, params.get(i));
 
         return s.executeMetaDataQuery();
     }
-    
+
     /**
      * Indicates whether or not this data source supports the SQL <code>ROWID</code> type,
-     * and if so  the lifetime for which a <code>RowId</code> object remains valid. 
+     * and if so  the lifetime for which a <code>RowId</code> object remains valid.
      * <p>
-     * The returned int values have the following relationship: 
+     * The returned int values have the following relationship:
      * <pre>
      *     ROWID_UNSUPPORTED < ROWID_VALID_OTHER < ROWID_VALID_TRANSACTION
      *         < ROWID_VALID_SESSION < ROWID_VALID_FOREVER
      * </pre>
-     * so conditional logic such as 
+     * so conditional logic such as
      * <pre>
      *     if (metadata.getRowIdLifetime() > DatabaseMetaData.ROWID_VALID_TRANSACTION)
      * </pre>
-     * can be used. Valid Forever means valid across all Sessions, and valid for 
-     * a Session means valid across all its contained Transactions. 
+     * can be used. Valid Forever means valid across all Sessions, and valid for
+     * a Session means valid across all its contained Transactions.
      *
      * @return the status indicating the lifetime of a <code>RowId</code>
      * @throws SQLException if a database access error occurs
@@ -5261,12 +5221,12 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
     public int getJDBCMinorVersion() {
         return JDBC_MINOR_VERSION;
     }
-    
+
     private static String getSystemPropertyPrivileged(final String propertyName) {
         return AccessController.doPrivileged(new PrivilegedAction<String>() {
            public String run() {
                return System.getProperty(propertyName);
-           } 
+           }
         });
     }
 }

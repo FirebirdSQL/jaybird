@@ -1,7 +1,7 @@
 /*
  * $Id$
  *
- * Firebird Open Source J2EE Connector - JDBC Driver
+ * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -14,7 +14,7 @@
  * This file was created by members of the firebird development team.
  * All individual contributions remain the Copyright (C) of those
  * individuals.  Contributors to this file are either listed here or
- * can be obtained from a source repository history command.
+ * can be obtained from a source control history command.
  *
  * All rights reserved.
  */
@@ -32,7 +32,7 @@ package org.firebirdsql.gds.ng.fields;
  * </p>
  *
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
- * @since 2.3
+ * @since 3.0
  */
 public final class RowDescriptorBuilder {
 
@@ -170,6 +170,10 @@ public final class RowDescriptorBuilder {
 
     /**
      * Sets the field index for the current field under construction.
+     * <p>
+     * Even though {@link #addField()} increments the current field index, it is advisable to always explicitly
+     * set the index using this method or {@link #at(int)} as it improves readability.
+     * </p>
      *
      * @param index
      *         Index of the field
@@ -191,6 +195,18 @@ public final class RowDescriptorBuilder {
     }
 
     /**
+     * Convenience shortcut for {@link #setFieldIndex(int)}.
+     *
+     * @param index
+     *         Index of the field
+     * @return this builder
+     * @see #setFieldIndex(int)
+     */
+    public RowDescriptorBuilder at(final int index) {
+        return setFieldIndex(index);
+    }
+
+    /**
      * @return The index for the current field
      */
     public int getCurrentFieldIndex() {
@@ -206,6 +222,33 @@ public final class RowDescriptorBuilder {
      */
     public RowDescriptorBuilder setOwnerName(final String ownerName) {
         this.ownerName = ownerName;
+        return this;
+    }
+
+    /**
+     * Convenience method to populate the basic field information used in metadata result sets (eg for use in
+     * {@link org.firebirdsql.jdbc.FBDatabaseMetaData}).
+     *
+     * @param type
+     *         Firebird data type
+     * @param length
+     *         Defined (maximum) length of the field
+     * @param originalName
+     *         The original field name
+     * @param originalTableName
+     *         The table name
+     * @return this builder
+     * @see #setType(int)
+     * @see #setLength(int)
+     * @see #setOriginalTableName(String)
+     * @see #setOriginalName(String)
+     */
+    public RowDescriptorBuilder simple(final int type, final int length, final String originalName,
+            final String originalTableName) {
+        this.type = type;
+        this.length = length;
+        this.originalName = originalName;
+        this.originalTableName = originalTableName;
         return this;
     }
 
