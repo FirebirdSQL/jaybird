@@ -1,3 +1,23 @@
+/*
+ * $Id$
+ *
+ * Firebird Open Source JavaEE Connector - JDBC Driver
+ *
+ * Distributable under LGPL license.
+ * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * LGPL License for more details.
+ *
+ * This file was created by members of the firebird development team.
+ * All individual contributions remain the Copyright (C) of those
+ * individuals.  Contributors to this file are either listed here or
+ * can be obtained from a source control history command.
+ *
+ * All rights reserved.
+ */
 package org.firebirdsql.jdbc.oo;
 
 import java.sql.ResultSet;
@@ -8,6 +28,8 @@ import java.util.List;
 
 import org.firebirdsql.gds.*;
 import org.firebirdsql.gds.impl.GDSHelper;
+import org.firebirdsql.gds.ng.fields.RowDescriptor;
+import org.firebirdsql.gds.ng.fields.RowValue;
 import org.firebirdsql.jdbc.*;
 
 public class OODatabaseMetaData extends FBDatabaseMetaData {
@@ -227,7 +249,7 @@ public class OODatabaseMetaData extends FBDatabaseMetaData {
         checkCatalogAndSchema(catalog, schemaPattern);
         tableNamePattern = stripQuotes(stripEscape(tableNamePattern), true);
 
-        XSQLVAR[] xsqlvars = buildTablePrivilegeRSMetaData();
+        final RowDescriptor rowDescriptor = buildTablePrivilegeRSMetaData();
 
         Clause tableClause1 = new Clause("RDB$RELATION_NAME", tableNamePattern);
         Clause tableClause2 = new Clause("RDB$RELATION_NAME", tableNamePattern);
@@ -264,9 +286,9 @@ public class OODatabaseMetaData extends FBDatabaseMetaData {
             
             // if nothing found, return an empty result set
             if (!rs.next())
-                return new FBResultSet(xsqlvars, Collections.<byte[][]>emptyList());
+                return new FBResultSet(rowDescriptor, Collections.<RowValue>emptyList());
         }
         
-        return processTablePrivileges(xsqlvars, rs);
+        return processTablePrivileges(rowDescriptor, rs);
     }
 }
