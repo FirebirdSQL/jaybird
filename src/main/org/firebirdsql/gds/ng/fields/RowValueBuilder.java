@@ -23,12 +23,12 @@ package org.firebirdsql.gds.ng.fields;
 /**
  * Builder for {@link RowValue} instances.
  * <p>
- * This class allows for  population of column values (ie: they stay null). It is intended for use in
- * tests and classes like {@link org.firebirdsql.jdbc.FBDatabaseMetaData}.
+ * This class allows for sparse population of column values (ie: <code>null</code> values can be skipped). It is
+ * intended for use in tests and classes like {@link org.firebirdsql.jdbc.FBDatabaseMetaData}.
  * </p>
  * <p>
  * Its main advantage over {@link RowValue#of(RowDescriptor, byte[]...)} is that it is clearer to which field
- * the value is assigned, and it allows sparse population (ie: skipping <code>null</code> values).
+ * the value is assigned, and it sparse population (ie: skipping <code>null</code> values).
  * </p>
  * <p>
  * TODO: Add convenience methods for constructing based on objects
