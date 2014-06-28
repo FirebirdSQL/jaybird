@@ -430,8 +430,11 @@ public class FBRowUpdater implements FirebirdRowUpdater {
             try {
                 notifyExecutionStarted();
 
-                if (updateStatement == null)
+                if (updateStatement == null) {
                     updateStatement = gdsHelper.allocateStatement();
+                } else {
+                    updateStatement.setTransaction(gdsHelper.getCurrentTransaction());
+                }
 
                 executeStatement(UPDATE_STATEMENT_TYPE, updateStatement);
 
@@ -450,8 +453,11 @@ public class FBRowUpdater implements FirebirdRowUpdater {
             try {
                 notifyExecutionStarted();
 
-                if (deleteStatement == null)
+                if (deleteStatement == null) {
                     deleteStatement = gdsHelper.allocateStatement();
+                } else {
+                    deleteStatement.setTransaction(gdsHelper.getCurrentTransaction());
+                }
 
                 executeStatement(DELETE_STATEMENT_TYPE, deleteStatement);
 
@@ -471,8 +477,11 @@ public class FBRowUpdater implements FirebirdRowUpdater {
 
                 notifyExecutionStarted();
 
-                if (insertStatement == null)
+                if (insertStatement == null) {
                     insertStatement = gdsHelper.allocateStatement();
+                } else {
+                    insertStatement.setTransaction(gdsHelper.getCurrentTransaction());
+                }
 
                 executeStatement(INSERT_STATEMENT_TYPE, insertStatement);
 
@@ -491,8 +500,11 @@ public class FBRowUpdater implements FirebirdRowUpdater {
             try {
                 notifyExecutionStarted();
 
-                if (selectStatement == null)
+                if (selectStatement == null) {
                     selectStatement = gdsHelper.allocateStatement();
+                } else {
+                    selectStatement.setTransaction(gdsHelper.getCurrentTransaction());
+                }
 
                 final RowListener rowListener = new RowListener();
                 selectStatement.addStatementListener(rowListener);

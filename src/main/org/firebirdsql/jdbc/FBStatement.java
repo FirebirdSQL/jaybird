@@ -1395,8 +1395,9 @@ public class FBStatement implements FirebirdStatement, Synchronizable {
         if (fbStatement == null) {
             fbStatement = gdsHelper.allocateStatement();
             fbStatement.addStatementListener(createStatementLister());
+        } else {
+            fbStatement.setTransaction(gdsHelper.getCurrentTransaction());
         }
-        fbStatement.setTransaction(gdsHelper.getCurrentTransaction());
         fbStatement.prepare(escapedProcessing ? nativeSQL(sql) : sql);
     }
 
