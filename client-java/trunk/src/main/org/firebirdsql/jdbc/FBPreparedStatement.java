@@ -810,6 +810,11 @@ public class FBPreparedStatement extends FBStatement implements
         }
     }
 
+    @Override
+    protected boolean isGeneratedKeyQuery() {
+        return generatedKeys;
+    }
+
     /**
      * Flush fields that might have cached data.
      * 
