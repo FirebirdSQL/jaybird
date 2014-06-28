@@ -74,8 +74,9 @@ public final class FieldDescriptor {
      * @param ownerName
      *         Owner of the column
      */
-    public FieldDescriptor(int type, final int subType, final int scale, int length, final String fieldName, final String tableAlias, String originalName,
-                           String originalTableName, final String ownerName) {
+    public FieldDescriptor(int type, final int subType, final int scale, int length, final String fieldName,
+            final String tableAlias, String originalName,
+            String originalTableName, final String ownerName) {
         this.type = type;
         this.subType = subType;
         this.scale = scale;
@@ -157,6 +158,32 @@ public final class FieldDescriptor {
      */
     public FieldValue createDefaultFieldValue() {
         return new FieldValue(this);
+    }
+
+    /**
+     * Limited equals that only checks if the data type in the provided field descriptor is the same as this descriptor.
+     * <p>
+     * The fields checked are:
+     * <ul>
+     * <li>type</li>
+     * <li>subType</li>
+     * <li>scale</li>
+     * <li>length</li>
+     * </ul>
+     * </p>
+     *
+     * @param other
+     *         Field descriptor to check
+     * @return <code>true</code> when <code>other</code> is not null and has the same type definition as this instance,
+     * <code>false</code> otherwise.
+     */
+    public boolean typeEquals(final FieldDescriptor other) {
+        return this == other
+                || other != null
+                && this.type == other.type
+                && this.subType == other.subType
+                && this.scale == other.scale
+                && this.length == other.length;
     }
 
     @Override

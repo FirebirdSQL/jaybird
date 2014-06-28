@@ -108,7 +108,7 @@ public class GDSHelper {
      */
     public FbStatement allocateStatement() throws SQLException {
         try {
-            final FbStatement statement = database.createStatement(null);
+            final FbStatement statement = database.createStatement(getCurrentTransaction());
             statement.allocateStatement();
             return statement;
         } catch (SQLException ex) {
