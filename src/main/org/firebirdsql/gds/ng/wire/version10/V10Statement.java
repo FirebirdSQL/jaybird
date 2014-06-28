@@ -313,8 +313,8 @@ public class V10Statement extends AbstractFbWireStatement implements FbWireState
                     final XdrOutputStream xdrOut = getXdrOut();
                     xdrOut.writeInt(WireProtocolConstants.op_set_cursor);
                     xdrOut.writeInt(getHandle());
-                    // TODO Potentially needs additional null-termination
-                    xdrOut.writeString(cursorName, getDatabase().getEncoding());
+                    // Null termination is needed due to a quirk of the protocol
+                    xdrOut.writeString(cursorName + '\0', getDatabase().getEncoding());
                     xdrOut.writeInt(0); // Cursor type
                     xdrOut.flush();
                 } catch (IOException ex) {
