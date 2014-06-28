@@ -1188,7 +1188,7 @@ public class TestFBResultSet extends FBTestBase {
             assertTrue(rs.next());
             
             FirebirdResultSetMetaData frsMeta = (FirebirdResultSetMetaData)rs.getMetaData();
-            
+            // TODO Currently fails because the V10 protocol impl doesn't provide the required info item (isc_info_sql_relation_alias)
             assertEquals("A", frsMeta.getTableAlias(1));
             assertEquals("B", frsMeta.getTableAlias(2));
             
