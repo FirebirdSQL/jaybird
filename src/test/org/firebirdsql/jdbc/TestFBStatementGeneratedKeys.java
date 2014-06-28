@@ -1,7 +1,7 @@
 /*
  * $Id$
- * 
- * Firebird Open Source J2EE Connector - JDBC Driver
+ *
+ * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -14,7 +14,7 @@
  * This file was created by members of the firebird development team.
  * All individual contributions remain the Copyright (C) of those
  * individuals.  Contributors to this file are either listed here or
- * can be obtained from a CVS history command.
+ * can be obtained from a source control history command.
  *
  * All rights reserved.
  */
@@ -45,7 +45,8 @@ import static org.junit.Assert.*;
 public class TestFBStatementGeneratedKeys extends FBTestGeneratedKeysBase {
 
     private static final String TEXT_VALUE = "Some text to insert";
-    private static final String TEST_INSERT_QUERY = "INSERT INTO TABLE_WITH_TRIGGER(TEXT) VALUES ('" + TEXT_VALUE + "')";
+    private static final String TEST_INSERT_QUERY =
+            "INSERT INTO TABLE_WITH_TRIGGER(TEXT) VALUES ('" + TEXT_VALUE + "')";
 
     @Rule
     public final ExpectedException expectedException = ExpectedException.none();
@@ -53,7 +54,7 @@ public class TestFBStatementGeneratedKeys extends FBTestGeneratedKeysBase {
     /**
      * Test {@link FBStatement#execute(String, int)} with {@link Statement#NO_GENERATED_KEYS}.
      * <p>
-     * Expected: empty generatedKeys resultset.
+     * Expected: empty generatedKeys result set.
      * </p>
      *
      * @throws Exception
@@ -65,15 +66,16 @@ public class TestFBStatementGeneratedKeys extends FBTestGeneratedKeysBase {
             Statement stmt = con.createStatement();
 
             boolean producedResultSet = stmt.execute(TEST_INSERT_QUERY, Statement.NO_GENERATED_KEYS);
-            assertFalse("Expected execute to report false (no resultset) for INSERT without generated keys returned", producedResultSet);
+            assertFalse("Expected execute to report false (no result set) for INSERT without generated keys returned",
+                    producedResultSet);
 
             ResultSet rs = stmt.getGeneratedKeys();
-            assertNotNull("Expected a non-null resultset from getGeneratedKeys", rs);
+            assertNotNull("Expected a non-null result set from getGeneratedKeys", rs);
 
             ResultSetMetaData metaData = rs.getMetaData();
-            assertEquals("Expected resultset without columns", 0, metaData.getColumnCount());
+            assertEquals("Expected result set without columns", 0, metaData.getColumnCount());
 
-            assertFalse("Expected no rows in resultset", rs.next());
+            assertFalse("Expected no rows in result set", rs.next());
 
             closeQuietly(rs);
             closeQuietly(stmt);
@@ -85,7 +87,7 @@ public class TestFBStatementGeneratedKeys extends FBTestGeneratedKeysBase {
     /**
      * Test {@link FBStatement#executeUpdate(String, int)} with {@link Statement#NO_GENERATED_KEYS}.
      * <p>
-     * Expected: empty generatedKeys resultset.
+     * Expected: empty generatedKeys result set.
      * </p>
      *
      * @throws Exception
@@ -100,12 +102,12 @@ public class TestFBStatementGeneratedKeys extends FBTestGeneratedKeysBase {
             assertEquals("Expected update count of 1", 1, updateCount);
 
             ResultSet rs = stmt.getGeneratedKeys();
-            assertNotNull("Expected a non-null resultset from getGeneratedKeys", rs);
+            assertNotNull("Expected a non-null result set from getGeneratedKeys", rs);
 
             ResultSetMetaData metaData = rs.getMetaData();
-            assertEquals("Expected resultset without columns", 0, metaData.getColumnCount());
+            assertEquals("Expected result set without columns", 0, metaData.getColumnCount());
 
-            assertFalse("Expected no rows in resultset", rs.next());
+            assertFalse("Expected no rows in result set", rs.next());
 
             closeQuietly(rs);
             closeQuietly(stmt);
@@ -117,7 +119,7 @@ public class TestFBStatementGeneratedKeys extends FBTestGeneratedKeysBase {
     /**
      * Test for {@link FBStatement#execute(String, int)} with {@link Statement#RETURN_GENERATED_KEYS}.
      * <p>
-     * Expected: all columns of table returned, single row resultset
+     * Expected: all columns of table returned, single row result set
      * </p>
      */
     @Test
@@ -127,17 +129,18 @@ public class TestFBStatementGeneratedKeys extends FBTestGeneratedKeysBase {
             Statement stmt = con.createStatement();
 
             boolean producedResultSet = stmt.execute(TEST_INSERT_QUERY, Statement.RETURN_GENERATED_KEYS);
-            assertTrue("Expected execute to report true (has resultset) for INSERT with generated keys returned", producedResultSet);
+            assertFalse("Expected execute to report false (has no result set) for INSERT with generated keys returned",
+                    producedResultSet);
 
             ResultSet rs = stmt.getGeneratedKeys();
-            assertNotNull("Expected a non-null resultset from getGeneratedKeys", rs);
+            assertNotNull("Expected a non-null result set from getGeneratedKeys", rs);
 
             ResultSetMetaData metaData = rs.getMetaData();
-            assertEquals("Expected resultset with 3 columns", 3, metaData.getColumnCount());
+            assertEquals("Expected result set with 3 columns", 3, metaData.getColumnCount());
             assertEquals("Unexpected first column", "ID", metaData.getColumnName(1));
             assertEquals("Unexpected second column", "TEXT", metaData.getColumnName(2));
 
-            assertTrue("Expected first row in resultset", rs.next());
+            assertTrue("Expected first row in result set", rs.next());
             assertEquals(513, rs.getInt(1));
             assertEquals(TEXT_VALUE, rs.getString(2));
             assertFalse("Expected no second row", rs.next());
@@ -152,7 +155,7 @@ public class TestFBStatementGeneratedKeys extends FBTestGeneratedKeysBase {
     /**
      * Test for {@link FBStatement#executeUpdate(String, int)} with {@link Statement#RETURN_GENERATED_KEYS}.
      * <p>
-     * Expected: all columns of table returned, single row resultset
+     * Expected: all columns of table returned, single row result set
      * </p>
      */
     @Test
@@ -162,18 +165,17 @@ public class TestFBStatementGeneratedKeys extends FBTestGeneratedKeysBase {
             Statement stmt = con.createStatement();
 
             int updateCount = stmt.executeUpdate(TEST_INSERT_QUERY, Statement.RETURN_GENERATED_KEYS);
-            // TODO: We need to revise how generated keys are processed, we should get the update count!
-            assertEquals("Expected -1 update count", -1, updateCount);
+            assertEquals("Expected update count", 1, updateCount);
 
             ResultSet rs = stmt.getGeneratedKeys();
-            assertNotNull("Expected a non-null resultset from getGeneratedKeys", rs);
+            assertNotNull("Expected a non-null result set from getGeneratedKeys", rs);
 
             ResultSetMetaData metaData = rs.getMetaData();
-            assertEquals("Expected resultset with 3 columns", 3, metaData.getColumnCount());
+            assertEquals("Expected result set with 3 columns", 3, metaData.getColumnCount());
             assertEquals("Unexpected first column", "ID", metaData.getColumnName(1));
             assertEquals("Unexpected second column", "TEXT", metaData.getColumnName(2));
 
-            assertTrue("Expected first row in resultset", rs.next());
+            assertTrue("Expected first row in result set", rs.next());
             assertEquals(513, rs.getInt(1));
             assertEquals(TEXT_VALUE, rs.getString(2));
             assertFalse("Expected no second row", rs.next());
@@ -186,9 +188,10 @@ public class TestFBStatementGeneratedKeys extends FBTestGeneratedKeysBase {
     }
 
     /**
-     * Test for {@link FBStatement#execute(String, int)} with {@link Statement#RETURN_GENERATED_KEYS} with an INSERT which already has a RETURNING clause.
+     * Test for {@link FBStatement#execute(String, int)} with {@link Statement#RETURN_GENERATED_KEYS} with an INSERT
+     * which already has a RETURNING clause.
      * <p>
-     * Expected: all columns of table returned, single row resultset
+     * Expected: all columns of table returned, single row result set
      * </p>
      */
     @Test
@@ -197,17 +200,19 @@ public class TestFBStatementGeneratedKeys extends FBTestGeneratedKeysBase {
         try {
             Statement stmt = con.createStatement();
 
-            boolean producedResultSet = stmt.execute(TEST_INSERT_QUERY + " RETURNING ID", Statement.RETURN_GENERATED_KEYS);
-            assertTrue("Expected execute to report true (has resultset) for INSERT with generated keys returned", producedResultSet);
+            boolean producedResultSet = stmt.execute(TEST_INSERT_QUERY + " RETURNING ID",
+                    Statement.RETURN_GENERATED_KEYS);
+            assertFalse("Expected execute to report false (has no result set) for INSERT with generated keys returned",
+                    producedResultSet);
 
             ResultSet rs = stmt.getGeneratedKeys();
-            assertNotNull("Expected a non-null resultset from getGeneratedKeys", rs);
+            assertNotNull("Expected a non-null result set from getGeneratedKeys", rs);
 
             ResultSetMetaData metaData = rs.getMetaData();
-            assertEquals("Expected resultset with 1 column", 1, metaData.getColumnCount());
+            assertEquals("Expected result set with 1 column", 1, metaData.getColumnCount());
             assertEquals("Unexpected first column", "ID", metaData.getColumnName(1));
 
-            assertTrue("Expected first row in resultset", rs.next());
+            assertTrue("Expected first row in result set", rs.next());
             assertEquals(513, rs.getInt(1));
             assertFalse("Expected no second row", rs.next());
 
@@ -219,9 +224,10 @@ public class TestFBStatementGeneratedKeys extends FBTestGeneratedKeysBase {
     }
 
     /**
-     * Test for {@link FBStatement#executeUpdate(String, int)} with {@link Statement#RETURN_GENERATED_KEYS} with an INSERT which already has a RETURNING clause.
+     * Test for {@link FBStatement#executeUpdate(String, int)} with {@link Statement#RETURN_GENERATED_KEYS} with an
+     * INSERT which already has a RETURNING clause.
      * <p>
-     * Expected: all columns of table returned, single row resultset
+     * Expected: all columns of table returned, single row result set
      * </p>
      */
     @Test
@@ -231,17 +237,16 @@ public class TestFBStatementGeneratedKeys extends FBTestGeneratedKeysBase {
             Statement stmt = con.createStatement();
 
             int updateCount = stmt.executeUpdate(TEST_INSERT_QUERY + " RETURNING ID", Statement.RETURN_GENERATED_KEYS);
-            // TODO: We need to revise how generated keys are processed, we should get the update count!
-            assertEquals("Expected -1 update count", -1, updateCount);
+            assertEquals("Expected -1 update count", 1, updateCount);
 
             ResultSet rs = stmt.getGeneratedKeys();
-            assertNotNull("Expected a non-null resultset from getGeneratedKeys", rs);
+            assertNotNull("Expected a non-null result set from getGeneratedKeys", rs);
 
             ResultSetMetaData metaData = rs.getMetaData();
-            assertEquals("Expected resultset with 1 column", 1, metaData.getColumnCount());
+            assertEquals("Expected result set with 1 column", 1, metaData.getColumnCount());
             assertEquals("Unexpected first column", "ID", metaData.getColumnName(1));
 
-            assertTrue("Expected first row in resultset", rs.next());
+            assertTrue("Expected first row in result set", rs.next());
             assertEquals(513, rs.getInt(1));
             assertFalse("Expected no second row", rs.next());
 
@@ -253,7 +258,8 @@ public class TestFBStatementGeneratedKeys extends FBTestGeneratedKeysBase {
     }
 
     /**
-     * Test for {@link FBStatement#execute(String, int)} with {@link Statement#RETURN_GENERATED_KEYS} with an INSERT for a non existent table.
+     * Test for {@link FBStatement#execute(String, int)} with {@link Statement#RETURN_GENERATED_KEYS} with an INSERT for
+     * a non existent table.
      * <p>
      * Expected: SQLException Table unknown
      * </p>
@@ -270,7 +276,8 @@ public class TestFBStatementGeneratedKeys extends FBTestGeneratedKeysBase {
                     message(containsString("Table unknown\nTABLE_NON_EXISTENT"))
             ));
 
-            stmt.execute("INSERT INTO TABLE_NON_EXISTENT(TEXT) VALUES ('" + TEXT_VALUE + "')", Statement.RETURN_GENERATED_KEYS);
+            stmt.execute("INSERT INTO TABLE_NON_EXISTENT(TEXT) VALUES ('" + TEXT_VALUE + "')",
+                    Statement.RETURN_GENERATED_KEYS);
         } finally {
             closeQuietly(con);
         }
@@ -279,7 +286,7 @@ public class TestFBStatementGeneratedKeys extends FBTestGeneratedKeysBase {
     /**
      * Test for {@link FBStatement#execute(String, int[])} with a single column index.
      * <p>
-     * Expected: single row resultset with only the specified column.
+     * Expected: single row result set with only the specified column.
      * </p>
      *
      * @throws Exception
@@ -291,16 +298,17 @@ public class TestFBStatementGeneratedKeys extends FBTestGeneratedKeysBase {
             Statement stmt = con.createStatement();
 
             boolean producedResultSet = stmt.execute(TEST_INSERT_QUERY, new int[] { 1 });
-            assertTrue("Expected execute to report true (has resultset) for INSERT with generated keys returned", producedResultSet);
+            assertFalse("Expected execute to report false (has no result set) for INSERT with generated keys returned",
+                    producedResultSet);
 
             ResultSet rs = stmt.getGeneratedKeys();
-            assertNotNull("Expected a non-null resultset from getGeneratedKeys", rs);
+            assertNotNull("Expected a non-null result set from getGeneratedKeys", rs);
 
             ResultSetMetaData metaData = rs.getMetaData();
-            assertEquals("Expected resultset with 1 column", 1, metaData.getColumnCount());
+            assertEquals("Expected result set with 1 column", 1, metaData.getColumnCount());
             assertEquals("Unexpected first column", "ID", metaData.getColumnName(1));
 
-            assertTrue("Expected first row in resultset", rs.next());
+            assertTrue("Expected first row in result set", rs.next());
             assertEquals(513, rs.getInt(1));
             assertFalse("Expected no second row", rs.next());
 
@@ -314,7 +322,7 @@ public class TestFBStatementGeneratedKeys extends FBTestGeneratedKeysBase {
     /**
      * Test for {@link FBStatement#executeUpdate(String, int[])} with a single column index.
      * <p>
-     * Expected: single row resultset with only the specified column.
+     * Expected: single row result set with only the specified column.
      * </p>
      *
      * @throws Exception
@@ -326,17 +334,16 @@ public class TestFBStatementGeneratedKeys extends FBTestGeneratedKeysBase {
             Statement stmt = con.createStatement();
 
             int updateCount = stmt.executeUpdate(TEST_INSERT_QUERY, new int[] { 1 });
-            // TODO: We need to revise how generated keys are processed, we should get the update count!
-            assertEquals("Expected -1 update count", -1, updateCount);
+            assertEquals("Expected  update count", 1, updateCount);
 
             ResultSet rs = stmt.getGeneratedKeys();
-            assertNotNull("Expected a non-null resultset from getGeneratedKeys", rs);
+            assertNotNull("Expected a non-null result set from getGeneratedKeys", rs);
 
             ResultSetMetaData metaData = rs.getMetaData();
-            assertEquals("Expected resultset with 1 column", 1, metaData.getColumnCount());
+            assertEquals("Expected result set with 1 column", 1, metaData.getColumnCount());
             assertEquals("Unexpected first column", "ID", metaData.getColumnName(1));
 
-            assertTrue("Expected first row in resultset", rs.next());
+            assertTrue("Expected first row in result set", rs.next());
             assertEquals(513, rs.getInt(1));
             assertFalse("Expected no second row", rs.next());
 
@@ -348,9 +355,10 @@ public class TestFBStatementGeneratedKeys extends FBTestGeneratedKeysBase {
     }
 
     /**
-     * Test for {@link FBStatement#execute(String, int[])} with multiple indexes, one for a column which requires a quoted name.
+     * Test for {@link FBStatement#execute(String, int[])} with multiple indexes, one for a column which requires a
+     * quoted name.
      * <p>
-     * Expected: single row resultset with only the specified columns.
+     * Expected: single row result set with only the specified columns.
      * </p>
      *
      * @throws Exception
@@ -362,17 +370,18 @@ public class TestFBStatementGeneratedKeys extends FBTestGeneratedKeysBase {
             Statement stmt = con.createStatement();
 
             boolean producedResultSet = stmt.execute(TEST_INSERT_QUERY, new int[] { 1, 3 });
-            assertTrue("Expected execute to report true (has resultset) for INSERT with generated keys returned", producedResultSet);
+            assertFalse("Expected execute to report false (has no result set) for INSERT with generated keys returned",
+                    producedResultSet);
 
             ResultSet rs = stmt.getGeneratedKeys();
-            assertNotNull("Expected a non-null resultset from getGeneratedKeys", rs);
+            assertNotNull("Expected a non-null result set from getGeneratedKeys", rs);
 
             ResultSetMetaData metaData = rs.getMetaData();
-            assertEquals("Expected resultset with 2 column", 2, metaData.getColumnCount());
+            assertEquals("Expected result set with 2 column", 2, metaData.getColumnCount());
             assertEquals("Unexpected first column", "ID", metaData.getColumnName(1));
             assertEquals("Unexpected second column", "quote_column", metaData.getColumnName(2));
 
-            assertTrue("Expected first row in resultset", rs.next());
+            assertTrue("Expected first row in result set", rs.next());
             assertEquals(513, rs.getInt(1));
             assertEquals(2, rs.getInt(2));
             assertFalse("Expected no second row", rs.next());
@@ -385,9 +394,10 @@ public class TestFBStatementGeneratedKeys extends FBTestGeneratedKeysBase {
     }
 
     /**
-     * Test for {@link FBStatement#executeUpdate(String, int[])} with multiple indexes, one for a column which requires a quoted name.
+     * Test for {@link FBStatement#executeUpdate(String, int[])} with multiple indexes, one for a column which requires
+     * a quoted name.
      * <p>
-     * Expected: single row resultset with only the specified columns.
+     * Expected: single row result set with only the specified columns.
      * </p>
      *
      * @throws Exception
@@ -399,18 +409,17 @@ public class TestFBStatementGeneratedKeys extends FBTestGeneratedKeysBase {
             Statement stmt = con.createStatement();
 
             int updateCount = stmt.executeUpdate(TEST_INSERT_QUERY, new int[] { 1, 3 });
-            // TODO: We need to revise how generated keys are processed, we should get the update count!
-            assertEquals("Expected -1 update count", -1, updateCount);
+            assertEquals("Expected update count", 1, updateCount);
 
             ResultSet rs = stmt.getGeneratedKeys();
-            assertNotNull("Expected a non-null resultset from getGeneratedKeys", rs);
+            assertNotNull("Expected a non-null result set from getGeneratedKeys", rs);
 
             ResultSetMetaData metaData = rs.getMetaData();
-            assertEquals("Expected resultset with 2 column", 2, metaData.getColumnCount());
+            assertEquals("Expected result set with 2 column", 2, metaData.getColumnCount());
             assertEquals("Unexpected first column", "ID", metaData.getColumnName(1));
             assertEquals("Unexpected second column", "quote_column", metaData.getColumnName(2));
 
-            assertTrue("Expected first row in resultset", rs.next());
+            assertTrue("Expected first row in result set", rs.next());
             assertEquals(513, rs.getInt(1));
             assertEquals(2, rs.getInt(2));
             assertFalse("Expected no second row", rs.next());
@@ -427,7 +436,7 @@ public class TestFBStatementGeneratedKeys extends FBTestGeneratedKeysBase {
     /**
      * Test for {@link FBStatement#execute(String, String[])} with a single column name.
      * <p>
-     * Expected: single row resultset with only the specified column.
+     * Expected: single row result set with only the specified column.
      * </p>
      *
      * @throws Exception
@@ -439,16 +448,17 @@ public class TestFBStatementGeneratedKeys extends FBTestGeneratedKeysBase {
             Statement stmt = con.createStatement();
 
             boolean producedResultSet = stmt.execute(TEST_INSERT_QUERY, new String[] { "ID" });
-            assertTrue("Expected execute to report true (has resultset) for INSERT with generated keys returned", producedResultSet);
+            assertFalse("Expected execute to report false (has no result set) for INSERT with generated keys returned",
+                    producedResultSet);
 
             ResultSet rs = stmt.getGeneratedKeys();
-            assertNotNull("Expected a non-null resultset from getGeneratedKeys", rs);
+            assertNotNull("Expected a non-null result set from getGeneratedKeys", rs);
 
             ResultSetMetaData metaData = rs.getMetaData();
-            assertEquals("Expected resultset with 1 column", 1, metaData.getColumnCount());
+            assertEquals("Expected result set with 1 column", 1, metaData.getColumnCount());
             assertEquals("Unexpected first column", "ID", metaData.getColumnName(1));
 
-            assertTrue("Expected first row in resultset", rs.next());
+            assertTrue("Expected first row in result set", rs.next());
             assertEquals(513, rs.getInt(1));
             assertFalse("Expected no second row", rs.next());
 
@@ -462,7 +472,7 @@ public class TestFBStatementGeneratedKeys extends FBTestGeneratedKeysBase {
     /**
      * Test for {@link FBStatement#executeUpdate(String, String[])} with a single column name.
      * <p>
-     * Expected: single row resultset with only the specified column.
+     * Expected: single row result set with only the specified column.
      * </p>
      *
      * @throws Exception
@@ -474,17 +484,16 @@ public class TestFBStatementGeneratedKeys extends FBTestGeneratedKeysBase {
             Statement stmt = con.createStatement();
 
             int updateCount = stmt.executeUpdate(TEST_INSERT_QUERY, new String[] { "ID" });
-            // TODO: We need to revise how generated keys are processed, we should get the update count!
-            assertEquals("Expected -1 update count", -1, updateCount);
+            assertEquals("Expected update count", 1, updateCount);
 
             ResultSet rs = stmt.getGeneratedKeys();
-            assertNotNull("Expected a non-null resultset from getGeneratedKeys", rs);
+            assertNotNull("Expected a non-null result set from getGeneratedKeys", rs);
 
             ResultSetMetaData metaData = rs.getMetaData();
-            assertEquals("Expected resultset with 1 column", 1, metaData.getColumnCount());
+            assertEquals("Expected result set with 1 column", 1, metaData.getColumnCount());
             assertEquals("Unexpected first column", "ID", metaData.getColumnName(1));
 
-            assertTrue("Expected first row in resultset", rs.next());
+            assertTrue("Expected first row in result set", rs.next());
             assertEquals(513, rs.getInt(1));
             assertFalse("Expected no second row", rs.next());
 
@@ -496,7 +505,8 @@ public class TestFBStatementGeneratedKeys extends FBTestGeneratedKeysBase {
     }
 
     /**
-     * Test for {@link FBStatement#execute(String, String[])} with an array of columns containing a non-existent column name.
+     * Test for {@link FBStatement#execute(String, String[])} with an array of columns containing a non-existent column
+     * name.
      * <p>
      * Expected: SQLException for Column unknown.
      * </p>
