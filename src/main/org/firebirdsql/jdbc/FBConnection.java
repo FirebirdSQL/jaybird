@@ -1193,13 +1193,9 @@ public class FBConnection implements FirebirdConnection {
               resultSetType = ResultSet.TYPE_SCROLL_INSENSITIVE;
           }
 
-		  if (resultSetType == ResultSet.TYPE_SCROLL_SENSITIVE)
-		  {
+		  if (resultSetType == ResultSet.TYPE_SCROLL_SENSITIVE) {
 		      addWarning(new FBSQLWarning("resultSetType or resultSetConcurrency changed"));
-              
-              if (resultSetType == ResultSet.TYPE_SCROLL_SENSITIVE)
-                  resultSetType = ResultSet.TYPE_SCROLL_INSENSITIVE;
-              
+              resultSetType = ResultSet.TYPE_SCROLL_INSENSITIVE;
 		  }
           
           checkHoldability(resultSetType, resultSetHoldability);
