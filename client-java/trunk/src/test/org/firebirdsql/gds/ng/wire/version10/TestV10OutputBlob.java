@@ -39,7 +39,9 @@ import org.junit.rules.ExpectedException;
 import java.sql.SQLException;
 import java.sql.SQLNonTransientException;
 
-import static org.firebirdsql.common.matchers.SQLExceptionMatchers.sqlExceptionEqualTo;
+import static org.firebirdsql.common.matchers.SQLExceptionMatchers.*;
+import static org.hamcrest.CoreMatchers.allOf;
+import static org.hamcrest.CoreMatchers.startsWith;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
@@ -195,7 +197,10 @@ public class TestV10OutputBlob extends BaseTestV10Blob {
     @Test
     public void testUsingCancelledBlob() throws Exception {
         expectedException.expect(SQLException.class);
-        expectedException.expect(sqlExceptionEqualTo(ISCConstants.isc_bad_segstr_id));
+        expectedException.expect(allOf(
+                errorCodeEquals(ISCConstants.isc_bad_segstr_id),
+                message(startsWith(getFbMessage(ISCConstants.isc_bad_segstr_id)))
+        ));
 
         final int testId = 1;
         final byte[] baseContent = generateBaseContent();
@@ -240,7 +245,10 @@ public class TestV10OutputBlob extends BaseTestV10Blob {
     @Test
     public void testReopen() throws Exception {
         expectedException.expect(SQLNonTransientException.class);
-        expectedException.expect(sqlExceptionEqualTo(ISCConstants.isc_segstr_no_op));
+        expectedException.expect(allOf(
+                errorCodeEquals(ISCConstants.isc_segstr_no_op),
+                fbMessageEquals(ISCConstants.isc_segstr_no_op)
+        ));
 
         final byte[] baseContent = generateBaseContent();
         final int requiredSize = 256;
@@ -274,7 +282,10 @@ public class TestV10OutputBlob extends BaseTestV10Blob {
     @Test
     public void testDoubleOpen() throws Exception {
         expectedException.expect(SQLNonTransientException.class);
-        expectedException.expect(sqlExceptionEqualTo(ISCConstants.isc_segstr_no_op));
+        expectedException.expect(allOf(
+                errorCodeEquals(ISCConstants.isc_segstr_no_op),
+                fbMessageEquals(ISCConstants.isc_segstr_no_op)
+        ));
 
         final FbWireDatabase db = createDatabaseConnection();
         try {

@@ -38,6 +38,7 @@ import java.sql.SQLException;
 import java.sql.SQLNonTransientException;
 
 import static org.firebirdsql.common.matchers.SQLExceptionMatchers.*;
+import static org.hamcrest.CoreMatchers.allOf;
 import static org.hamcrest.CoreMatchers.endsWith;
 import static org.hamcrest.CoreMatchers.startsWith;
 import static org.jmock.Expectations.returnValue;
@@ -79,7 +80,10 @@ public class TestV10InputBlobMock {
     @Test
     public void testPutSegment() throws Exception {
         expectedException.expect(SQLNonTransientException.class);
-        expectedException.expect(sqlExceptionEqualTo(ISCConstants.isc_segstr_no_write));
+        expectedException.expect(allOf(
+                errorCodeEquals(ISCConstants.isc_segstr_no_write),
+                fbMessageEquals(ISCConstants.isc_segstr_no_write)
+        ));
 
         V10InputBlob blob = new V10InputBlob(db, transaction, null, 1);
 
@@ -129,7 +133,10 @@ public class TestV10InputBlobMock {
     @Test
     public void testGetSegment_blobClosed() throws Exception {
         expectedException.expect(SQLNonTransientException.class);
-        expectedException.expect(sqlExceptionEqualTo(ISCConstants.isc_bad_segstr_handle));
+        expectedException.expect(allOf(
+                errorCodeEquals(ISCConstants.isc_bad_segstr_handle),
+                fbMessageEquals(ISCConstants.isc_bad_segstr_handle)
+        ));
 
         V10InputBlob blob = new V10InputBlob(db, transaction, null, 1);
 

@@ -1,3 +1,23 @@
+/*
+ * $Id$
+ *
+ * Firebird Open Source JavaEE Connector - JDBC Driver
+ *
+ * Distributable under LGPL license.
+ * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * LGPL License for more details.
+ *
+ * This file was created by members of the firebird development team.
+ * All individual contributions remain the Copyright (C) of those
+ * individuals.  Contributors to this file are either listed here or
+ * can be obtained from a source control history command.
+ *
+ * All rights reserved.
+ */
 package org.firebirdsql.common.matchers;
 
 import org.firebirdsql.gds.GDSExceptionHelper;
@@ -94,11 +114,11 @@ public class SQLExceptionMatchers {
     }
 
     /**
-     * Convenience factory for matcher that checks a Firebird exception message based on its error code
-     * and message parameters.
+     * Convenience factory for matcher that checks a Firebird exception message for an exact match based on its error
+     * code and message parameters.
      * <p>
      * This matcher does not check the error code itself, it just constructs and checks the message looked up
-     * with the error code and populated with the parameters
+     * with the error code and populated with the parameters. The exception message must match exactly (string equals).
      * </p>
      *
      * @param fbErrorCode
@@ -124,23 +144,6 @@ public class SQLExceptionMatchers {
         GDSExceptionHelper.GDSMessage message = GDSExceptionHelper.getMessage(fbErrorCode);
         message.setParameters(Arrays.asList(messageParameters));
         return message.toString();
-    }
-
-    /**
-     * Convenience factory for matcher that checks if an SQLException has a specific Firebird error code
-     * and error message.
-     * <p>
-     * This matcher combines {@link #errorCodeEquals(int)} and {@link #fbMessageEquals(int, String...)}
-     * </p>
-     *
-     * @param fbErrorCode
-     *         The Firebird error code, see {@link org.firebirdsql.gds.ISCConstants}
-     * @param messageParameters
-     *         The message parameters
-     * @return The Matcher
-     */
-    public static Matcher<SQLException> sqlExceptionEqualTo(int fbErrorCode, String... messageParameters) {
-        return allOf(errorCodeEquals(fbErrorCode), fbMessageEquals(fbErrorCode, messageParameters));
     }
 
     /**
