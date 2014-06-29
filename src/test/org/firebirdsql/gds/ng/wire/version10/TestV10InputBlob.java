@@ -41,7 +41,9 @@ import java.sql.SQLException;
 import java.sql.SQLNonTransientException;
 import java.util.Arrays;
 
-import static org.firebirdsql.common.matchers.SQLExceptionMatchers.sqlExceptionEqualTo;
+import static org.firebirdsql.common.matchers.SQLExceptionMatchers.*;
+import static org.hamcrest.CoreMatchers.allOf;
+import static org.hamcrest.CoreMatchers.startsWith;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -142,7 +144,10 @@ public class TestV10InputBlob extends BaseTestV10Blob {
             int offset = baseContent.length / 2;
 
             expectedException.expect(SQLException.class);
-            expectedException.expect(sqlExceptionEqualTo(ISCConstants.isc_bad_segstr_type));
+            expectedException.expect(allOf(
+                    errorCodeEquals(ISCConstants.isc_bad_segstr_type),
+                    message(startsWith(getFbMessage(ISCConstants.isc_bad_segstr_type)))
+            ));
 
             blob.seek(offset, FbBlob.SeekMode.ABSOLUTE);
         } finally {
@@ -271,7 +276,10 @@ public class TestV10InputBlob extends BaseTestV10Blob {
     @Test
     public void testDoubleOpen() throws Exception {
         expectedException.expect(SQLNonTransientException.class);
-        expectedException.expect(sqlExceptionEqualTo(ISCConstants.isc_segstr_no_op));
+        expectedException.expect(allOf(
+                errorCodeEquals(ISCConstants.isc_segstr_no_op),
+                fbMessageEquals(ISCConstants.isc_segstr_no_op)
+        ));
 
         final int testId = 1;
         final byte[] baseContent = generateBaseContent();

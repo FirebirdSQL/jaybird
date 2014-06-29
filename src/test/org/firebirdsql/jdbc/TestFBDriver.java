@@ -35,11 +35,8 @@ import java.util.TimeZone;
 
 import static org.firebirdsql.common.FBTestProperties.*;
 import static org.firebirdsql.common.JdbcResourceHelper.closeQuietly;
-import static org.firebirdsql.common.matchers.SQLExceptionMatchers.sqlExceptionEqualTo;
-import static org.firebirdsql.common.matchers.SQLExceptionMatchers.sqlState;
-import static org.hamcrest.CoreMatchers.allOf;
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.CoreMatchers.isA;
+import static org.firebirdsql.common.matchers.SQLExceptionMatchers.*;
+import static org.hamcrest.CoreMatchers.*;
 import static org.junit.Assert.*;
 
 /**
@@ -100,8 +97,9 @@ public class TestFBDriver extends FBJUnit4TestBase {
         assertNotNull("Connection should have at least one warning.", warning);
         assertThat(warning, allOf(
                 isA(SQLWarning.class),
-                sqlExceptionEqualTo(ISCConstants.isc_dialect_reset_warning))
-        );
+                errorCodeEquals(ISCConstants.isc_dialect_reset_warning),
+                message(startsWith(getFbMessage(ISCConstants.isc_dialect_reset_warning)))
+        ));
 
         connection.clearWarnings();
 

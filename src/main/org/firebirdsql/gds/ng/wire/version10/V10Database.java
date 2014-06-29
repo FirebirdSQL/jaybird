@@ -1,7 +1,7 @@
 /*
  * $Id$
- * 
- * Firebird Open Source J2EE Connector - JDBC Driver
+ *
+ * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -14,7 +14,7 @@
  * This file was created by members of the firebird development team.
  * All individual contributions remain the Copyright (C) of those
  * individuals.  Contributors to this file are either listed here or
- * can be obtained from a CVS history command.
+ * can be obtained from a source control history command.
  *
  * All rights reserved.
  */
@@ -637,7 +637,7 @@ public class V10Database extends AbstractFbWireDatabase implements FbWireDatabas
                     builder.messageParameter(intValue);
                     break;
                 case ISCConstants.isc_arg_end:
-                    return builder.toSQLException();
+                    return builder.toFlatSQLException();
                 default:
                     int e = xdrIn.readInt();
                     if (debug) log.debug("readStatusVector arg: " + arg + " int: " + e);

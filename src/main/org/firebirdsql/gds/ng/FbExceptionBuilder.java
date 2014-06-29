@@ -1,7 +1,7 @@
 /*
  * $Id$
  *
- * Firebird Open Source J2EE Connector - JDBC Driver
+ * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -14,7 +14,7 @@
  * This file was created by members of the firebird development team.
  * All individual contributions remain the Copyright (C) of those
  * individuals.  Contributors to this file are either listed here or
- * can be obtained from a source repository history command.
+ * can be obtained from a source control history command.
  *
  * All rights reserved.
  */
@@ -22,13 +22,14 @@ package org.firebirdsql.gds.ng;
 
 import org.firebirdsql.gds.GDSExceptionHelper;
 import org.firebirdsql.jdbc.FBSQLException;
+import org.firebirdsql.jdbc.FBSQLExceptionInfo;
 import org.firebirdsql.jdbc.FBSQLWarning;
 import org.firebirdsql.util.SQLExceptionChainBuilder;
 
 import java.sql.*;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
+
+import static org.firebirdsql.gds.ISCConstants.*;
 
 /**
  * Builder for exceptions received from Firebird.
@@ -160,18 +161,100 @@ public final class FbExceptionBuilder {
     /**
      * Converts the builder to the appropriate SQLException instance (optionally with a chain of additional
      * exceptions).
+     * <p>
+     * When returning exception information from the status vector, it is advisable to use {@link #toFlatSQLException()}
+     * as this applies some heuristics to get more specific error codes and flattens the message into a single
+     * exception.
+     * </p>
      *
      * @return SQLException object
+     * @see #toFlatSQLException()
      */
     public SQLException toSQLException() {
         if (exceptionInfo.isEmpty()) return null;
         SQLExceptionChainBuilder<SQLException> chain = new SQLExceptionChainBuilder<SQLException>();
         for (ExceptionInformation info : exceptionInfo) {
-            // TODO: Reorder or coalesce uninformative exceptions like those with error 335544569, see also JDBC-221
-            // TODO: Reordering/coalesce may need to be part of setNextExceptionInformation instead
             chain.append(info.toSQLException());
         }
         return chain.getException();
+    }
+
+    /**
+     * Array of uninteresting error codes.
+     */
+    private static final Integer[] UNINTERESTING_ERROR_CODES_ARR =
+            { 0, isc_dsql_error, isc_dsql_line_col_error, isc_dsql_unknown_pos, isc_sqlerr, isc_dsql_command_err };
+
+    /**
+     * Set of uninteresting error codes derived from {@link #UNINTERESTING_ERROR_CODES_ARR}.
+     * <p>
+     * This is used by {@link #toFlatSQLException()} to find a more suitable error code.
+     * </p>
+     */
+    private static final Set<Integer> UNINTERESTING_ERROR_CODES =
+            Collections.unmodifiableSet(new HashSet<Integer>(Arrays.asList(UNINTERESTING_ERROR_CODES_ARR)));
+
+    /**
+     * SQLState success is linked to some informational error message, we consider those 'not interesting' either.
+     */
+    private static final String SQLSTATE_SUCCESS = "00000";
+
+    /**
+     * Converts the builder to a single SQLException instance with a single exception message.
+     * <p>
+     * This method attempts to assign the most specific error code and SQL state to the returned exception.
+     * </p>
+     * <p>
+     * The cause of the returned exception is set to an instance of {@link org.firebirdsql.jdbc.FBSQLExceptionInfo}
+     * which contains the separate items obtained from the status vector. These items are chained together using
+     * the SQLException chain.
+     * </p>
+     *
+     * @return SQLException object
+     * @see org.firebirdsql.jdbc.FBSQLExceptionInfo
+     */
+    public SQLException toFlatSQLException() {
+        if (exceptionInfo.isEmpty()) return null;
+        // We are recording the unflattened state if people need the details
+        SQLExceptionChainBuilder<FBSQLExceptionInfo> chain = new SQLExceptionChainBuilder<FBSQLExceptionInfo>();
+        StringBuilder fullExceptionMessage = new StringBuilder();
+        ExceptionInformation interestingExceptionInfo = null;
+
+        for (ExceptionInformation info : exceptionInfo) {
+            if (interestingExceptionInfo == null
+                    && !UNINTERESTING_ERROR_CODES.contains(info.errorCode)
+                    && !SQLSTATE_SUCCESS.equals(info.sqlState)) {
+                interestingExceptionInfo = info;
+            }
+
+            if (fullExceptionMessage.length() > 0) {
+                fullExceptionMessage.append(", ");
+            }
+            fullExceptionMessage.append(info.toMessage());
+
+            chain.append(info.toSQLExceptionInfo());
+        }
+
+        final ExceptionInformation firstExceptionInfo = exceptionInfo.get(0);
+        if (interestingExceptionInfo == null) {
+            interestingExceptionInfo = firstExceptionInfo;
+        }
+
+        fullExceptionMessage
+                .append(" [SQLState:").append(interestingExceptionInfo.sqlState)
+                .append(", ISC error code:").append(interestingExceptionInfo.errorCode)
+                .append(']');
+
+        /* If the type of the head of the chain is not Type.EXCEPTION we use that, not the type of the interesting
+         * exception info as the head of the chain will been set explicitly to an expected exception type (eg Type.WARNING).
+         */
+        Type exceptionType = firstExceptionInfo.type != Type.EXCEPTION
+                ? firstExceptionInfo.type
+                : interestingExceptionInfo.type;
+        SQLException exception = exceptionType.createSQLException(
+                fullExceptionMessage.toString(), interestingExceptionInfo.sqlState, interestingExceptionInfo.errorCode);
+        exception.initCause(chain.getException());
+        return exception;
     }
 
     /**
@@ -294,6 +377,14 @@ public final class FbExceptionBuilder {
          */
         SQLException toSQLException() {
             SQLException result = type.createSQLException(toMessage(), sqlState, errorCode);
+            if (cause != null) {
+                result.initCause(cause);
+            }
+            return result;
+        }
+
+        FBSQLExceptionInfo toSQLExceptionInfo() {
+            FBSQLExceptionInfo result = new FBSQLExceptionInfo(toMessage(), sqlState, errorCode);
             if (cause != null) {
                 result.initCause(cause);
             }

@@ -29,9 +29,7 @@ import java.sql.*;
 
 import static org.firebirdsql.common.FBTestProperties.getConnectionViaDriverManager;
 import static org.firebirdsql.common.JdbcResourceHelper.closeQuietly;
-import static org.firebirdsql.common.matchers.SQLExceptionMatchers.errorCode;
-import static org.firebirdsql.common.matchers.SQLExceptionMatchers.message;
-import static org.firebirdsql.common.matchers.SQLExceptionMatchers.sqlState;
+import static org.firebirdsql.common.matchers.SQLExceptionMatchers.*;
 import static org.hamcrest.CoreMatchers.*;
 import static org.junit.Assert.*;
 
@@ -165,9 +163,9 @@ public class TestFBPreparedStatementGeneratedKeys extends FBTestGeneratedKeysBas
         try {
             expectedException.expect(allOf(
                     isA(SQLException.class),
-                    errorCode(equalTo(ISCConstants.isc_dsql_error)),
-                    sqlState(equalTo("42000")),
-                    message(containsString("Table unknown\nTABLE_NON_EXISTENT"))
+                    errorCode(equalTo(ISCConstants.isc_dsql_relation_err)),
+                    sqlState(equalTo("42S02")),
+                    message(containsString("Table unknown, TABLE_NON_EXISTENT"))
             ));
 
             con.prepareStatement("INSERT INTO TABLE_NON_EXISTENT(TEXT) VALUES (?)", Statement.RETURN_GENERATED_KEYS);
@@ -294,9 +292,9 @@ public class TestFBPreparedStatementGeneratedKeys extends FBTestGeneratedKeysBas
         try {
             expectedException.expect(allOf(
                     isA(SQLException.class),
-                    errorCode(equalTo(ISCConstants.isc_dsql_error)),
-                    sqlState(equalTo("42000")),
-                    message(containsString("Column unknown\nNON_EXISTENT"))
+                    errorCode(equalTo(ISCConstants.isc_dsql_field_err)),
+                    sqlState(equalTo("42S22")),
+                    message(containsString("Column unknown, NON_EXISTENT"))
             ));
 
             con.prepareStatement(TEST_INSERT_QUERY, new String[] { "ID", "NON_EXISTENT" });

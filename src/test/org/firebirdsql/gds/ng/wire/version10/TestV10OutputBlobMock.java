@@ -35,7 +35,9 @@ import org.junit.rules.ExpectedException;
 
 import java.sql.SQLNonTransientException;
 
-import static org.firebirdsql.common.matchers.SQLExceptionMatchers.sqlExceptionEqualTo;
+import static org.firebirdsql.common.matchers.SQLExceptionMatchers.errorCodeEquals;
+import static org.firebirdsql.common.matchers.SQLExceptionMatchers.fbMessageEquals;
+import static org.hamcrest.CoreMatchers.allOf;
 import static org.junit.Assert.assertTrue;
 
 /**
@@ -73,7 +75,10 @@ public class TestV10OutputBlobMock {
     @Test
     public final void testGetSegment() throws Exception {
         expectedException.expect(SQLNonTransientException.class);
-        expectedException.expect(sqlExceptionEqualTo(ISCConstants.isc_segstr_no_read));
+        expectedException.expect(allOf(
+                errorCodeEquals(ISCConstants.isc_segstr_no_read),
+                fbMessageEquals(ISCConstants.isc_segstr_no_read)
+        ));
 
         V10OutputBlob blob = new V10OutputBlob(db, transaction, null);
 
@@ -87,7 +92,10 @@ public class TestV10OutputBlobMock {
     @Test
     public final void testSeek() throws Exception {
         expectedException.expect(SQLNonTransientException.class);
-        expectedException.expect(sqlExceptionEqualTo(ISCConstants.isc_segstr_no_read));
+        expectedException.expect(allOf(
+                errorCodeEquals(ISCConstants.isc_segstr_no_read),
+                fbMessageEquals(ISCConstants.isc_segstr_no_read)
+        ));
 
         V10OutputBlob blob = new V10OutputBlob(db, transaction, null);
 
