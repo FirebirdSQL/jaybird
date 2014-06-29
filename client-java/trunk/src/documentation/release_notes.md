@@ -12,7 +12,7 @@ this version is **unstable** and **not ready for production**.
 
 The protocol implementation has been fundamentally rewritten and changes have
 been made for stricter JDBC conformance. As a result the driver might exhibit
-different behavior than previous versions. Read this release notes carefully to
+different behavior than previous versions. Read these release notes carefully to
 see if those differences are intentional. Bug reports about undocumented changes
 in behavior are appreciated.
 
@@ -67,8 +67,19 @@ Specification support
 What's new in Jaybird 3.0
 =========================
 
-Important changes to implementation
------------------------------------
+Java support
+------------
+
+Support for Java 5 has been dropped.
+
+Firebird support
+----------------
+
+Support for Firebird 1.0 and 1.5 has been dropped. See [Firebird 1.0 and 1.5 no
+longer supported] for details.
+
+New low-level implementation
+----------------------------
 
 Jaybird 3.0 has a substantially rewritten low-level implementation (the wire
 protocol ~~and native~~ implementation) and a number of changes for JDBC
@@ -86,7 +97,7 @@ encryption. This is planned for Jaybird 3.1, but might be moved into Jaybird
 3.0 before the final release.
 
 **The current snapshot version only supports the version 10 protocol of Firebird
- 1.0**
+1.0**
 
 The new low-level implementation also means that the old GDS API 
 (`org.firebirdsql.gds.GDS`) is no longer available. *GDS API hasn't been removed
@@ -109,7 +120,8 @@ document, but it could just as well be an implementation bug.
     specification does not consider the generated keys `ResultSet` a normal
     `ResultSet`. 
     
-    This applies to statements executed (or prepared) using:
+    <span id="generated-query-types">This applies to statements executed (or
+    prepared) using:</span>
     
     * `Statement.execute(String, int)` or `Statement.executeUpdate(String, int)`
       with value `Statement.RETURN_GENERATED_KEYS`,
@@ -124,6 +136,16 @@ document, but it could just as well be an implementation bug.
     
     This change does not apply to executing `INSERT ... RETURNING ...` as a
     normal statement.
+
+* Update count immediately available after executing generated keys queries.
+
+    Previously the update count of a generated keys query was only available
+    after calling `getMoreResults` followed by a call to `getUpdateCount`. This
+    change means that `executeUpdate` will now correctly return the update count
+    (usually `1`) instead of `-1`. The same applies to calling `getUpdateCount`
+    after `execute` (without the need to call `getMoreResults`).
+
+    For the definition of generated keys queries see [the previous item](#generated-query-types).
 
 ### Exceptions ###
 
@@ -178,3 +200,90 @@ document, but it could just as well be an implementation bug.
     In previous versions a large class of errors always reported error 335544569
     (or `isc_dsql_error`) with SQLState 42000, Jaybird now tries to find a more
     specific error code (and SQLState) in the status vector.
+
+Removal of deprecated classes and packages
+------------------------------------------
+
+See [Removal of deprecated classes, packages and methods] in 
+[Compatibility changes] for more details.
+
+Compatibility changes
+=====================
+
+Jaybird 3.0 introduces some changes in compatibility and announces future
+breaking changes.
+
+**Some of the compatibility changes are documented in [What's new in Jaybird 3.0].**
+
+Firebird 1.0 and 1.5 no longer supported
+----------------------------------------
+
+Support for Firebird 1.0 and 1.5 has been dropped in Jaybird 3.0. In general we
+expect the driver to remain functional, but chances are certain metadata (eg 
+`DatabaseMetaData`) will break if we use features introduced in newer versions.
+
+In general we will no longer fix issues that only occur with Firebird 1.5 or
+earlier.
+
+Java 5 no longer supported
+--------------------------
+
+Support for Java 5 (JDBC 3.0) has been dropped in Jaybird 3.0. The Jaybird 3.0
+sources no longer compile with Java 5 due to use of Java 6 language features and
+JDBC 4.0 specific features.
+
+Stricter JDBC compliance
+------------------------
+
+In Jaybird 3.0 a number of changes were made for stricter compliance to the JDBC
+specification.
+
+**TODO: Document or refer to change what's new?**
+
+Removal of deprecated classes, packages and methods
+---------------------------------------------------
+
+### DataSource and connection pooling ###
+
+The classes in `org.firebirdsql.pool` and `org.firebirdsql.pool.sun` have been
+removed completely, with the exception of 
+`org.firebirdsql.pool.FBSimpleDataSource`. This class has been moved to
+`org.firebirdsql.ds.FBSimpleDataSource`. A subclass with the same name is kept
+in `org.firebirdsql.pool` for backwards compatibility. This subclass will be
+removed in future versions of Jaybird.
+
+With this change, there are no `DataSource` implementations in Jaybird to
+provide connection pooling (the `ConnectionPoolDataSource` implementations are
+for use by a connection pool and not a connection pool themselves). Either use
+the connection pool provided by your Application Server, or use a third-party
+connection pool like c3p0, Apache DBCP or BoneCP.
+
+The class `org.firebirdsql.jca.FBXADataSource` has been removed as well. Its
+replacement is `org.firebirdsql.ds.FBXADataSource` (which was introduced in
+Jaybird 2.2).
+
+### FirebirdSavepoint ###
+
+All method definitions in the interface 
+`org.firebirdsql.jdbc.FirebirdSavepoint` were removed, and methods referencing
+this interface in `org.firebirdsql.jdbc.FirebirdConnection` have been removed as
+the interface duplicated the `java.sql.Savepoint` interface and related methods
+in `java.sql.Connection`. The interface itself remains for potential future
+Firebird-specific extensions.
+
+Breaking changes for Jaybird 3.1
+--------------------------------
+
+With Jaybird 3.1 the following breaking changes will be introduced.
+
+### Dropping support for Java 6 ###
+
+Jaybird 3.1 will drop support for Java 6, as Java 6 has gone 
+end-of-public-updates in February, 2013^[See the Java SE EOL policy on
+<http://www.oracle.com/technetwork/java/eol-135779.html>]
+
+### Dropping support for Firebird 2.0 ###
+
+Jaybird 3.1 will drop support for Firebird 2.0. In general we expect the driver
+to remain functional, but chances are certain metadata (eg `DatabaseMetaData`)
+will break if we use features introduced in newer versions.
