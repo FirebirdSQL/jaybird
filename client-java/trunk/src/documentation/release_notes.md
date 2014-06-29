@@ -1,0 +1,180 @@
+---
+title: Jaybird 3.0 (SNAPSHOT) Release Notes
+tags: [jaybird, firebird, jdbc, sql, database, java]
+...
+
+WARNING {-}
+=======
+
+Jaybird 3.0 is still in development. This version is provided for testing
+purposes only. We'd appreciate your feedback, but we'd like to emphasize that
+this version is **unstable** and **not ready for production**.
+
+The protocol implementation has been fundamentally rewritten and changes have
+been made for stricter JDBC conformance. As a result the driver might exhibit
+different behavior than previous versions. Read this release notes carefully to
+see if those differences are intentional. Bug reports about undocumented changes
+in behavior are appreciated.
+
+**Current snapshot versions do not support Type 2 and embedded driver**
+
+General Notes
+=============
+
+Jaybird is a JCA/JDBC driver suite to connect to Firebird database servers. 
+
+This driver is based on both the JCA standard for application server
+connections to enterprise information systems and the well-known JDBC standard.
+The JCA standard specifies an architecture in which an application server can
+cooperate with a driver so that the application server manages transactions,
+security, and resource pooling, and the driver supplies only the connection
+functionality. While similar to the JDBC XADataSource concept, the JCA
+specification is considerably clearer on the division of responsibility between
+the application server and driver.
+
+Supported Firebird versions
+---------------------------
+
+Jaybird 3.0 was tested against Firebird ~~2.1.5 and~~ 2.5.2, but should also
+support other Firebird versions from 2.0 and up. Formal support for Firebird 1.x
+has been dropped (although in general we expect the driver to work). ~~The Type 
+2 and embedded server JDBC drivers require the appropriate JNI library. 
+Pre-compiled JNI binaries for Win32 and Linux platforms are shipped in the
+default installation, other platforms require porting/building the JNI library
+for that platform.~~
+
+**Current snapshot versions do not support Type 2 and embedded driver**
+ 
+This driver does not supports InterBase servers due to Firebird-specific changes
+in the protocol and database attachment parameters that are sent to the server.
+
+Jaybird 3.0 is the last version to support Firebird 2.0.
+
+Supported Java versions
+-----------------------
+
+Jaybird 3.0.0 supports Java 6 (JDBC 4.0) and Java 7 (JDBC 4.1). 
+Java 8 (JDBC 4.2) support has not yet been front-ported from Jaybird 2.2.x.
+Support for earlier Java versions has been dropped.
+
+Jaybird 3.0 is the last version to support Java 6.
+
+Specification support
+---------------------
+
+**TODO: Take and update table from old ODT release notes**
+
+What's new in Jaybird 3.0
+=========================
+
+Important changes to implementation
+-----------------------------------
+
+Jaybird 3.0 has a substantially rewritten low-level implementation (the wire
+protocol ~~and native~~ implementation) and a number of changes for JDBC
+conformance.
+
+The rewrite of the low-level implementation was prompted by the new
+authentication (and wire encryption) in Firebird 3.0 (protocol version 13), and
+the fact that other improvements in the Firebird wire protocol (versions 11 and
+12) were not yet available in Jaybird. The old implementation of the wire
+protocol did not lend itself for - easily - supporting multiple protocol
+versions.
+
+Jaybird 3.0 does not yet provide the new Firebird 3.0 authentication and wire
+encryption. This is planned for Jaybird 3.1, but might be moved into Jaybird 
+3.0 before the final release.
+
+**The current snapshot version only supports the version 10 protocol of Firebird
+ 1.0**
+
+The new low-level implementation also means that the old GDS API 
+(`org.firebirdsql.gds.GDS`) is no longer available. *GDS API hasn't been removed
+from the snapshot yet as events haven't been rewritten yet, **will be removed
+from final release***
+
+The changes due to the new protocol implementation and/or JDBC conformance are
+listed below.
+
+**The list is not yet complete, if you notice a difference in behavior that is
+not listed, please report it as bug.** It might have been a change we forgot to
+document, but it could just as well be an implementation bug.
+
+### Statement ###
+
+* Generated keys `ResultSet` only available through `getGeneratedKeys`.
+
+    The generated keys `ResultSet` from a statement is no longer available
+    through `getResultSet`, but only through `getGeneratedKeys` as the JDBC
+    specification does not consider the generated keys `ResultSet` a normal
+    `ResultSet`. 
+    
+    This applies to statements executed (or prepared) using:
+    
+    * `Statement.execute(String, int)` or `Statement.executeUpdate(String, int)`
+      with value `Statement.RETURN_GENERATED_KEYS`,
+    * `Connection.prepareStatement(String, int)` with value 
+      `Statement.RETURN_GENERATED_KEYS`,
+    * `Statement.execute(String, int[])` or 
+      `Statement.executeUpdate(String, int[])`,
+    * `Statement.execute(String, String[])` or 
+      `Statement.executeUpdate(String, String[])`,
+    * `Connection.prepareStatement(String, int[])`,
+    * `Connection.prepareStatement(String, String[])`.
+    
+    This change does not apply to executing `INSERT ... RETURNING ...` as a
+    normal statement.
+
+### Exceptions ###
+
+* `FBSQLException` and sub-classes replaced with actual `java.sql.*` exceptions.
+
+    Over time the JDBC exception hierarchy has become more complicated with more
+    specific exceptions. It was easier to use the `java.sql` exception-
+    hierarchy, than to duplicate the hierarchy within Jaybird.
+    
+    This change does not mean that there are no Firebird-specific `SQLException`
+    sub-classes anymore, but in general we strive to use the standard 
+    exceptions.
+
+* `org.firebirdsql.gds.GDSException` removed from exception causes.
+
+    The new low-level implementation throws `java.sql.SQLException` classes
+    eliminating the need for `GDSException` (which was usually set as the
+    `cause` of an `SQLException`). In some cases uses of `GDSException`
+    have been replaced by `org.firebirdsql.jdbc.FBSQLExceptionInfo` to
+    report exception message elements and their error codes.
+
+* Exception message format changed:
+    * Exception message elements now separated by semi-colon, not by 
+      linebreak. 
+
+        Errors reported by Firebird can consist of multiple elements. In Jaybird
+        2.2 and earlier the final exception message was constructed by
+        separating these elements by a linebreak. These elements are now
+        separated by a semi-colon and a space.
+        
+    * Exception message now reports SQLState and error code. 
+    
+    For example, a "Table unknown" (error 335544580) in Jaybird 3.0 has message:
+    
+    ~~~
+    Dynamic SQL Error; SQL error code = -204; Table unknown; TABLE_NON_EXISTENT; At line 1, column 13 [SQLState:42S02, ISC error code:335544580]
+    ~~~
+    
+    Jaybird 2.2 and earlier reported this as (`\n` added to show line break):
+    
+    ~~~
+    Dynamic SQL Error\n
+    SQL error code = -204\n
+    Table unknown\n
+    TABLE_NON_EXISTENT\n
+    At line 1, column 13
+    ~~~
+
+* More specific error reported by `SQLException.getErrorCode` and 
+  `SQLException.getSQLState`.
+  
+    In previous versions a large class of errors always reported error 335544569
+    (or `isc_dsql_error`) with SQLState 42000, Jaybird now tries to find a more
+    specific error code (and SQLState) in the status vector.
