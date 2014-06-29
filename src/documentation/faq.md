@@ -20,7 +20,7 @@ for each supported Java version.
 
 Groupid: `org.firebirdsql.jdbc`,\
 Artifactid: `jaybird-jdkXX` (where `XX` is `15`, `16`, `17` or `18`).\
-Version: `2.2.4`
+Version: `2.2.5`
 
 For example:
 
@@ -28,7 +28,7 @@ For example:
 <dependency>
     <groupId>org.firebirdsql.jdbc</groupId>
     <artifactId>jaybird-jdk17</artifactId>
-    <version>2.2.4</version>
+    <version>2.2.5</version>
 </dependency>
 ~~~
 
@@ -83,14 +83,24 @@ fully implemented.
 Jaybird 2.2.x is the last version to support Java 5, support will be dropped
 with Jaybird 3.0.
 
+Jaybird 3.0.x supports Java 6, 7 and 8.
+
+Jaybird 3.0.x is the last version to support Java 6, support will be dropped
+with Jaybird 3.1.
+
 Which Firebird versions are supported?
 --------------------------------------
 
 Jaybird 2.2.x supports all Firebird versions since 1.0. Jaybird 2.2.4 will add
 support for some new features of Firebird 3 (eg `BOOLEAN` support).
 
-Jaybird 2.2.x is the last version to officially support Firebird 1.0 and 1.5.
-Future versions of Jaybird are not guaranteed to work with these versions.
+Jaybird 2.2.x is the last version to support Firebird 1.0 and 1.5. Future
+versions of Jaybird are not guaranteed to work with these versions.
+
+Jaybird 3.0.x support Firebird versions since 2.0.
+
+Jaybird 3.0.x is the last version to support Firebird 2.0. Future versions of
+Jaybird are not guaranteed to work with version 2.0 and earlier.
 
 Can Jaybird connect to Interbase?
 ---------------------------------

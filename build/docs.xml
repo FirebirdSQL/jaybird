@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <project name="docs">
 
-    <target name="buildalldocs" depends="buildfaq"/>
+    <target name="buildalldocs" depends="buildfaq, buildreleasenotes"/>
 
     <target name="buildfaq" depends="init">
         <mkdir dir="${build.documentation}"/>
@@ -18,6 +18,24 @@
             <arg value="-o"/>
             <arg value="${build.documentation}/faq.html"/>
             <arg value="${source.documentation}/faq.md"/>
+        </exec>
+    </target>
+
+    <target name="buildreleasenotes" depends="init">
+        <mkdir dir="${build.documentation}"/>
+        <exec executable="${pandoc.app}">
+            <arg value="-s"/>
+            <arg value="-f"/>
+            <arg value="markdown"/>
+            <arg value="-t"/>
+            <arg value="html5"/>
+            <arg value="--toc"/>
+            <arg value="-N"/>
+            <arg value="--section-divs"/>
+            <arg value="--email-obfuscation=none"/>
+            <arg value="-o"/>
+            <arg value="${build.documentation}/release_notes.html"/>
+            <arg value="${source.documentation}/release_notes.md"/>
         </exec>
     </target>
 </project>
