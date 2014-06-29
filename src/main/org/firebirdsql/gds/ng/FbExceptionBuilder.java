@@ -228,7 +228,7 @@ public final class FbExceptionBuilder {
             }
 
             if (fullExceptionMessage.length() > 0) {
-                fullExceptionMessage.append(", ");
+                fullExceptionMessage.append("; ");
             }
             fullExceptionMessage.append(info.toMessage());
 
