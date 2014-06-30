@@ -20,8 +20,8 @@
  */
 package org.firebirdsql.jdbc;
 
+import org.firebirdsql.common.DataGenerator;
 import org.firebirdsql.common.FBJUnit4TestBase;
-import org.firebirdsql.common.TestDataGeneration;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
@@ -212,7 +212,7 @@ public class TestFBBlobInputStream extends FBJUnit4TestBase {
 
     @Test
     public void testRead_byteArr_moreThanAvailable_returnsAvailable() throws Exception {
-        final byte[] bytes = TestDataGeneration.createRandomBytes(128 * 1024);
+        final byte[] bytes = DataGenerator.createRandomBytes(128 * 1024);
         populateBlob(1, bytes);
 
         PreparedStatement pstmt = connection.prepareStatement(SELECT_BLOB);
@@ -405,7 +405,7 @@ public class TestFBBlobInputStream extends FBJUnit4TestBase {
 
     @Test
     public void testReadFully_byteArr_moreThanAvailable_returnsAllRead() throws Exception {
-        final byte[] bytes = TestDataGeneration.createRandomBytes(128 * 1024);
+        final byte[] bytes = DataGenerator.createRandomBytes(128 * 1024);
         populateBlob(1, bytes);
 
         PreparedStatement pstmt = connection.prepareStatement(SELECT_BLOB);

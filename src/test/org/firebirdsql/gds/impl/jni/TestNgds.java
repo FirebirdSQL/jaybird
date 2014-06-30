@@ -24,7 +24,7 @@ import java.util.Arrays;
 
 import org.firebirdsql.common.FBTestProperties;
 import org.firebirdsql.common.StringHelper;
-import org.firebirdsql.common.rules.TestTypeRule;
+import org.firebirdsql.common.rules.GdsTypeRule;
 import org.firebirdsql.gds.BlobParameterBuffer;
 import org.firebirdsql.gds.DatabaseParameterBuffer;
 import org.firebirdsql.gds.GDS;
@@ -53,7 +53,7 @@ import static org.junit.Assert.assertEquals;
 public class TestNgds {
 
     @Rule
-    public final TestTypeRule testTypes = TestTypeRule.supports(
+    public final GdsTypeRule testTypes = GdsTypeRule.supports(
             EmbeddedGDSImpl.EMBEDDED_TYPE_NAME,
             NativeGDSImpl.NATIVE_TYPE_NAME);
 

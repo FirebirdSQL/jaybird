@@ -18,9 +18,9 @@
  */
 package org.firebirdsql.jdbc;
 
+import org.firebirdsql.common.DataGenerator;
 import org.firebirdsql.common.FBTestBase;
 import org.firebirdsql.common.JdbcResourceHelper;
-import org.firebirdsql.common.TestDataGeneration;
 
 import java.io.ByteArrayInputStream;
 import java.io.OutputStream;
@@ -95,7 +95,7 @@ public class TestFBBlobStream extends FBTestBase {
             "INSERT INTO test_blob(id, bin_data) VALUES (?, ?)");
         
         int size = generateRandomLength();
-        byte[] data = TestDataGeneration.createRandomBytes(size);
+        byte[] data = DataGenerator.createRandomBytes(size);
 
         try {
             ps.setInt(1, 1);
@@ -137,7 +137,7 @@ public class TestFBBlobStream extends FBTestBase {
         PreparedStatement ps = connection.prepareStatement(
             "INSERT INTO test_blob(id, bin_data) VALUES (?, ?)");
 
-        byte[] data = TestDataGeneration.createRandomBytes(generateRandomLength());
+        byte[] data = DataGenerator.createRandomBytes(generateRandomLength());
         try {
             ps.setInt(1, 1);
             ps.setBytes(2, data);
@@ -350,7 +350,7 @@ public class TestFBBlobStream extends FBTestBase {
         PreparedStatement ps = connection.prepareCall("{call test_procedure(?, ?)}");
         
         try {
-            byte[] data = TestDataGeneration.createRandomBytes(generateRandomLength());
+            byte[] data = DataGenerator.createRandomBytes(generateRandomLength());
             
             ByteArrayInputStream in = new ByteArrayInputStream(data);
             
@@ -376,7 +376,7 @@ public class TestFBBlobStream extends FBTestBase {
     }
     
     public void testWriteBytes() throws Exception {
-        final byte[] data = TestDataGeneration.createRandomBytes(75 * 1024); // should be more than 64k
+        final byte[] data = DataGenerator.createRandomBytes(75 * 1024); // should be more than 64k
         
         FirebirdConnection fbConnection = (FirebirdConnection)connection;
         fbConnection.setAutoCommit(false);
@@ -417,6 +417,6 @@ public class TestFBBlobStream extends FBTestBase {
      * @return generated length
      */
     private static int generateRandomLength() {
-        return TestDataGeneration.generateRandom(128, 100 * 1024);
+        return DataGenerator.generateRandom(128, 100 * 1024);
     }
 }

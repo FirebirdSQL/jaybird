@@ -44,11 +44,11 @@ import static org.junit.Assume.assumeThat;
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @since 3.0
  */
-public final class TestTypeRule implements TestRule {
+public final class GdsTypeRule implements TestRule {
 
     private Matcher<String> testTypeMatcher;
 
-    private TestTypeRule(Matcher<String> testTypeMatcher) {
+    private GdsTypeRule(Matcher<String> testTypeMatcher) {
         this.testTypeMatcher = testTypeMatcher;
     }
 
@@ -78,9 +78,9 @@ public final class TestTypeRule implements TestRule {
      * @param supportedTypes The types to be supported
      * @return Instance
      */
-    public static TestTypeRule supports(String... supportedTypes) {
+    public static GdsTypeRule supports(String... supportedTypes) {
         final Set<String> supportedTypesSet = new HashSet<String>(Arrays.asList(supportedTypes));
-        return new TestTypeRule(isIn(supportedTypesSet));
+        return new GdsTypeRule(isIn(supportedTypesSet));
     }
 
     /**
@@ -89,8 +89,8 @@ public final class TestTypeRule implements TestRule {
      * @param excludedTypes The types to be excluded
      * @return Instance
      */
-    public static TestTypeRule excludes(String... excludedTypes) {
+    public static GdsTypeRule excludes(String... excludedTypes) {
         final Set<String> excludedTypesSet = new HashSet<String>(Arrays.asList(excludedTypes));
-        return new TestTypeRule(not(isIn(excludedTypesSet)));
+        return new GdsTypeRule(not(isIn(excludedTypesSet)));
     }
 }

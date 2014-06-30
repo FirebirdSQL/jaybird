@@ -28,11 +28,11 @@ import java.util.Random;
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @since 3.0
  */
-public class TestDataGeneration {
+public class DataGenerator {
 
     private static final Random rnd = new Random();
 
-    private TestDataGeneration() {
+    private DataGenerator() {
         // No instance
     }
 

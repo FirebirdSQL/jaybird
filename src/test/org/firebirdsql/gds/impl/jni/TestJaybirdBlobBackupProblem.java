@@ -28,7 +28,7 @@
 package org.firebirdsql.gds.impl.jni;
 
 import org.firebirdsql.common.FBTestProperties;
-import org.firebirdsql.common.rules.TestTypeRule;
+import org.firebirdsql.common.rules.GdsTypeRule;
 import org.firebirdsql.gds.*;
 import org.firebirdsql.gds.impl.GDSFactory;
 import org.firebirdsql.gds.impl.GDSType;
@@ -90,7 +90,7 @@ import static org.junit.Assert.assertTrue;
 public class TestJaybirdBlobBackupProblem {
 
     @Rule
-    public final TestTypeRule testTypes = TestTypeRule.supports(EmbeddedGDSImpl.EMBEDDED_TYPE_NAME);
+    public final GdsTypeRule testTypes = GdsTypeRule.supports(EmbeddedGDSImpl.EMBEDDED_TYPE_NAME);
 
     protected final Logger log = LoggerFactory.getLogger(getClass(), true);
 

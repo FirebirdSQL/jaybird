@@ -20,8 +20,8 @@
  */
 package org.firebirdsql.jdbc;
 
+import org.firebirdsql.common.DataGenerator;
 import org.firebirdsql.common.FBJUnit4TestBase;
-import org.firebirdsql.common.TestDataGeneration;
 import org.junit.After;
 import org.junit.Rule;
 import org.junit.Test;
@@ -90,7 +90,7 @@ public class TestFBBlobOutputStream extends FBJUnit4TestBase {
     @Test
     public void testWrite_byteArr_equalToBufferSize_writtenImmediately() throws Exception {
         initDefault();
-        byte[] data = TestDataGeneration.createRandomBytes(((FBBlob) stream.getBlob()).getBufferLength());
+        byte[] data = DataGenerator.createRandomBytes(((FBBlob) stream.getBlob()).getBufferLength());
 
         stream.write(data);
 
@@ -100,7 +100,7 @@ public class TestFBBlobOutputStream extends FBJUnit4TestBase {
     @Test
     public void testWrite_byteArr_twoHalfBufferSize_writtenOnSecondWrite() throws Exception {
         initDefault();
-        byte[] data = TestDataGeneration.createRandomBytes(((FBBlob) stream.getBlob()).getBufferLength());
+        byte[] data = DataGenerator.createRandomBytes(((FBBlob) stream.getBlob()).getBufferLength());
         int halfLength = data.length / 2;
 
         stream.write(data, 0, halfLength);
@@ -115,7 +115,7 @@ public class TestFBBlobOutputStream extends FBJUnit4TestBase {
     @Test
     public void testWrite_byteArr_halfAndRemainderPlus1OfBufferSize_writtenOnSecondWrite() throws Exception {
         initDefault();
-        byte[] data = TestDataGeneration.createRandomBytes(((FBBlob) stream.getBlob()).getBufferLength());
+        byte[] data = DataGenerator.createRandomBytes(((FBBlob) stream.getBlob()).getBufferLength());
         int halfLength = data.length / 2;
 
         stream.write(data, 0, halfLength);
@@ -131,7 +131,7 @@ public class TestFBBlobOutputStream extends FBJUnit4TestBase {
     @Test
     public void testWrite_byteArr_largerThanBufferSize_writtenImmediately() throws Exception {
         initDefault();
-        byte[] data = TestDataGeneration.createRandomBytes((int) (((FBBlob) stream.getBlob()).getBufferLength() * 1.5));
+        byte[] data = DataGenerator.createRandomBytes((int) (((FBBlob) stream.getBlob()).getBufferLength() * 1.5));
 
         stream.write(data);
 
@@ -229,7 +229,7 @@ public class TestFBBlobOutputStream extends FBJUnit4TestBase {
     @Test
     public void testWrite_byte_fillsBuffer_writtenImmediately() throws Exception {
         initDefault();
-        byte[] data = TestDataGeneration.createRandomBytes(((FBBlob) stream.getBlob()).getBufferLength() - 1);
+        byte[] data = DataGenerator.createRandomBytes(((FBBlob) stream.getBlob()).getBufferLength() - 1);
         stream.write(data);
 
         assertEquals("Write less than internal buffer not written immediately", 0, stream.length());
