@@ -32,7 +32,7 @@
     <!-- =================================================================== -->
     <!-- Creates the distribution                                            -->
     <!-- =================================================================== -->
-    <target name="dist" depends="jars,javadocs">
+    <target name="dist" depends="jars,javadocs,buildalldocs">
         <mkdir dir="${build.dist}"/>
         <zip zipfile="${build.dist}/${Name}-${version.full}.zip">
             <fileset dir="${build.lib}">
@@ -42,16 +42,17 @@
                 <include name="${archive.name.sources}"/>
                 <include name="${archive.name.javadoc}"/>
             </fileset>
-            <fileset dir="${module.etc}">
-                <include name="release_notes.pdf"/>
+            <fileset dir="${build.documentation}">
                 <include name="release_notes.html"/>
             </fileset>
             <fileset dir=".">
                 <include name="CONTRIBUTING"/>
             </fileset>
+            <!-- TODO: Disabled while org.firebirdsql.gds.ng.* implementation for native isn't done
             <fileset dir="native">
                 <include name="**/*"/>
             </fileset>
+            -->
             <zipfileset dir="${build.lib}" prefix="lib">
                 <include name="connector-api-1.5.jar"/>
             </zipfileset>
@@ -62,7 +63,7 @@
             <zipfileset dir="${source.examples}" prefix="examples">
                 <include name="*"/>
             </zipfileset>
-            <zipfileset dir="${module.etc}" prefix="docs">
+            <zipfileset dir="${build.documentation}" prefix="docs">
                 <include name="faq.html"/>
             </zipfileset>
             <zipfileset dir="${build.docs}" prefix="docs/api">
