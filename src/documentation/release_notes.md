@@ -88,16 +88,16 @@ conformance.
 The rewrite of the low-level implementation was prompted by the new
 authentication (and wire encryption) in Firebird 3.0 (protocol version 13), and
 the fact that other improvements in the Firebird wire protocol (versions 11 and
-12) were not yet available in Jaybird. The old implementation of the wire
-protocol did not lend itself for - easily - supporting multiple protocol
-versions.
+12) were not yet available in the pure Java implementation in Jaybird. The old
+implementation of the wire protocol did not lend itself for - easily - 
+supporting multiple protocol versions.
 
 Jaybird 3.0 does not yet provide the new Firebird 3.0 authentication and wire
 encryption. This is planned for Jaybird 3.1, but might be moved into Jaybird 
 3.0 before the final release.
 
 **The current snapshot version only supports the version 10 protocol of Firebird
-1.0**
+1.0 which works on all Firebird versions**
 
 The new low-level implementation also means that the old GDS API 
 (`org.firebirdsql.gds.GDS`) is no longer available. *GDS API hasn't been removed
@@ -200,6 +200,27 @@ document, but it could just as well be an implementation bug.
     In previous versions a large class of errors always reported error 335544569
     (or `isc_dsql_error`) with SQLState 42000, Jaybird now tries to find a more
     specific error code (and SQLState) in the status vector.
+
+Other fixes and changes
+-----------------------
+
+* Fix: IP-address is reversed on big-endian platforms ([JDBC-98](http://tracker.firebirdsql.org/browse/JDBC-98))
+
+* Reimplemented character set handling (*TODO: Provide more info?*)
+
+* Improved support of JDBC Escape syntax (`{...}`) and supported functions (*TODO: Provide more info?*) 
+  ([JDBC-223](http://tracker.firebirdsql.org/browse/JDBC-223))
+
+    The escape parser will now only allow the function names defined in
+    Appendix D of the JDBC specification (4.1 for now). For unsupported
+    functions or functions not listed in Appendix D a `FBSQLParseException` will
+    be thrown.
+    
+    The database metadata will now correctly report supported functions for
+    `getNumericFunctions`, `getStringFunctions`, `getSystemFunctions` and 
+    `getTimeDateFunctions`.
+    
+* Nested JDBC escapes are now supported ([JDBC-292](http://tracker.firebirdsql.org/browse/JDBC-292))
 
 Removal of deprecated classes and packages
 ------------------------------------------
