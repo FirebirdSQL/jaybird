@@ -495,7 +495,7 @@ public class TestFBStatement extends FBJUnit4TestBase {
 
             expectedException.expect(SQLException.class);
             expectedException.expect(sqlStateEquals("42S22"));
-            expectedException.expectMessage(containsString("Column unknown, {FN"));
+            expectedException.expectMessage(containsString("Column unknown; {FN"));
 
             stmt.executeQuery(testQuery);
         } finally {

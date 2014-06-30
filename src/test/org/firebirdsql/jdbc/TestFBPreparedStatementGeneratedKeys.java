@@ -165,7 +165,7 @@ public class TestFBPreparedStatementGeneratedKeys extends FBTestGeneratedKeysBas
                     isA(SQLException.class),
                     errorCode(equalTo(ISCConstants.isc_dsql_relation_err)),
                     sqlState(equalTo("42S02")),
-                    message(containsString("Table unknown, TABLE_NON_EXISTENT"))
+                    message(containsString("Table unknown; TABLE_NON_EXISTENT"))
             ));
 
             con.prepareStatement("INSERT INTO TABLE_NON_EXISTENT(TEXT) VALUES (?)", Statement.RETURN_GENERATED_KEYS);
@@ -294,7 +294,7 @@ public class TestFBPreparedStatementGeneratedKeys extends FBTestGeneratedKeysBas
                     isA(SQLException.class),
                     errorCode(equalTo(ISCConstants.isc_dsql_field_err)),
                     sqlState(equalTo("42S22")),
-                    message(containsString("Column unknown, NON_EXISTENT"))
+                    message(containsString("Column unknown; NON_EXISTENT"))
             ));
 
             con.prepareStatement(TEST_INSERT_QUERY, new String[] { "ID", "NON_EXISTENT" });
