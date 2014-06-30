@@ -155,6 +155,7 @@
         <!-- Documentation build options -->
         <!--
             NOTE: Install pandoc from http://johnmacfarlane.net/pandoc/installing.html
+            Override by use of build-local.properties in the root of the project.
         -->
         <property name="pandoc.app" location="/home/${user.name}/.cabal/bin/pandoc"/>
 
