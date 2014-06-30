@@ -24,7 +24,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.firebirdsql.common.StringHelper;
-import org.firebirdsql.common.rules.TestTypeRule;
+import org.firebirdsql.common.rules.GdsTypeRule;
 import org.firebirdsql.gds.BlobParameterBuffer;
 import org.firebirdsql.gds.DatabaseParameterBuffer;
 import org.firebirdsql.gds.GDS;
@@ -60,7 +60,7 @@ import static org.junit.Assert.assertArrayEquals;
 public class TestNgdsBlobReadBug {
 
     @Rule
-    public final TestTypeRule testTypes = TestTypeRule.excludes(
+    public final GdsTypeRule testTypes = GdsTypeRule.excludes(
             JavaGDSImpl.PURE_JAVA_TYPE_NAME,
             LocalGDSImpl.LOCAL_TYPE_NAME,
             EmbeddedGDSImpl.EMBEDDED_TYPE_NAME);

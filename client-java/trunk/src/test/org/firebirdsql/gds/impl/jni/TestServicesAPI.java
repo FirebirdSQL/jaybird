@@ -20,7 +20,7 @@
  */
 package org.firebirdsql.gds.impl.jni;
 
-import org.firebirdsql.common.rules.TestTypeRule;
+import org.firebirdsql.common.rules.GdsTypeRule;
 import org.firebirdsql.logging.Logger;
 import org.firebirdsql.logging.LoggerFactory;
 import org.firebirdsql.jdbc.FBDriver;
@@ -47,7 +47,7 @@ import static org.junit.Assert.assertTrue;
 public class TestServicesAPI {
 
     @Rule
-    public final TestTypeRule testType = TestTypeRule.supports(EmbeddedGDSImpl.EMBEDDED_TYPE_NAME);
+    public final GdsTypeRule testType = GdsTypeRule.supports(EmbeddedGDSImpl.EMBEDDED_TYPE_NAME);
 
     private final Logger log = LoggerFactory.getLogger(getClass(), true);
 

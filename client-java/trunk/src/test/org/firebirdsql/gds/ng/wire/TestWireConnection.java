@@ -29,7 +29,7 @@ import java.sql.SQLTimeoutException;
 import org.firebirdsql.common.BlackholeServer;
 import org.firebirdsql.common.FBJUnit4TestBase;
 import org.firebirdsql.common.FBTestProperties;
-import org.firebirdsql.common.rules.TestTypeRule;
+import org.firebirdsql.common.rules.GdsTypeRule;
 import org.firebirdsql.encodings.EncodingFactory;
 import org.firebirdsql.gds.impl.jni.EmbeddedGDSImpl;
 import org.firebirdsql.gds.impl.jni.NativeGDSImpl;
@@ -45,7 +45,7 @@ import org.junit.Test;
 public class TestWireConnection extends FBJUnit4TestBase {
 
     @Rule
-    public final TestTypeRule testTypes = TestTypeRule.excludes(
+    public final GdsTypeRule testTypes = GdsTypeRule.excludes(
             EmbeddedGDSImpl.EMBEDDED_TYPE_NAME,
             NativeGDSImpl.NATIVE_TYPE_NAME);
 

@@ -20,7 +20,7 @@
  */
 package org.firebirdsql.gds.impl.jni;
 
-import org.firebirdsql.common.rules.TestTypeRule;
+import org.firebirdsql.common.rules.GdsTypeRule;
 import org.firebirdsql.management.FBManager;
 import org.firebirdsql.gds.impl.GDSType;
 import org.firebirdsql.jdbc.FBDriver;
@@ -39,7 +39,7 @@ import java.sql.DriverManager;
 public class TestSpecialEmbeddedServerUrls {
 
     @Rule
-    public final TestTypeRule testType = TestTypeRule.supports(EmbeddedGDSImpl.EMBEDDED_TYPE_NAME);
+    public final GdsTypeRule testType = GdsTypeRule.supports(EmbeddedGDSImpl.EMBEDDED_TYPE_NAME);
 
     private String mRelativeDatabasePath;
     private String mAbsoluteDatabasePath;
