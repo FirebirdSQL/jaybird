@@ -44,10 +44,10 @@ import org.firebirdsql.jdbc.field.FBFlushableField.CachedObject;
  * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  */
-public class FBPreparedStatement extends FBStatement implements
-        FirebirdPreparedStatement {
+public class FBPreparedStatement extends FBStatement implements FirebirdPreparedStatement {
 
-    public static final String METHOD_NOT_SUPPORTED = "This method is only supported on Statement and not supported on PreparedStatement and CallableStatement";
+    public static final String METHOD_NOT_SUPPORTED =
+            "This method is only supported on Statement and not supported on PreparedStatement and CallableStatement";
 
     private final boolean metaDataQuery;
     
@@ -158,8 +158,8 @@ public class FBPreparedStatement extends FBStatement implements
         }
     }
 
-    protected void notifyStatementCompleted(boolean success)
-            throws SQLException {
+    @Override
+    protected void notifyStatementCompleted(boolean success) throws SQLException {
         try {
             super.notifyStatementCompleted(success);
         } finally {
@@ -177,16 +177,14 @@ public class FBPreparedStatement extends FBStatement implements
      * @exception SQLException
      *                if a database access error occurs
      */
+    @Override
     public ResultSet executeQuery() throws SQLException {
-
-        Object syncObject = getSynchronizationObject();
-        synchronized (syncObject) {
+        checkValidity();
+        synchronized (getSynchronizationObject()) {
             notifyStatementStarted();
 
             if (!internalExecute(isExecuteProcedureStatement))  
-                throw new FBSQLException(
-                    "No resultset for sql",
-                    FBSQLException.SQL_STATE_NO_RESULT_SET); 
+                throw new FBSQLException("No resultset for sql", FBSQLException.SQL_STATE_NO_RESULT_SET);
 
             return getResultSet();
         }
@@ -203,16 +201,13 @@ public class FBPreparedStatement extends FBStatement implements
      *                if a database access error occurs
      */
     public int executeUpdate() throws SQLException {
-
-        Object syncObject = getSynchronizationObject();
-        synchronized (syncObject) {
+        checkValidity();
+        synchronized (getSynchronizationObject()) {
             notifyStatementStarted();
             try {
                 if (internalExecute(isExecuteProcedureStatement) && !generatedKeys) {
-                    throw new FBSQLException(
-                            "Update statement returned results.");
+                    throw new FBSQLException("Update statement returned results.");
                 }
-
                 return getUpdateCount();
             } finally {
                 notifyStatementCompleted();
@@ -259,14 +254,12 @@ public class FBPreparedStatement extends FBStatement implements
      * @exception SQLException
      *                if a database access error occurs
      */
-    public void setBinaryStream(int parameterIndex, InputStream inputStream,
-            int length) throws SQLException {
+    public void setBinaryStream(int parameterIndex, InputStream inputStream, int length) throws SQLException {
         getField(parameterIndex).setBinaryStream(inputStream, length);
         isParamSet[parameterIndex - 1] = true;
     }
     
-    public void setBinaryStream(int parameterIndex, InputStream x, long length)
-            throws SQLException {
+    public void setBinaryStream(int parameterIndex, InputStream x, long length) throws SQLException {
         if (length > Integer.MAX_VALUE)
             throw new FBDriverNotCapableException("Only length <= Integer.MAX_VALUE supported");
         setBinaryStream(parameterIndex, x, (int)length);
@@ -455,8 +448,7 @@ public class FBPreparedStatement extends FBStatement implements
      * @throws SQLException
      *             if a database access occurs
      */
-    public void setStringForced(int parameterIndex, String x)
-            throws SQLException {
+    public void setStringForced(int parameterIndex, String x) throws SQLException {
         FBField field = getField(parameterIndex);
         if (field instanceof FBWorkaroundStringField)
             ((FBWorkaroundStringField) field).setStringForced(x);
@@ -490,8 +482,7 @@ public class FBPreparedStatement extends FBStatement implements
      * @throws SQLException
      *             if a database access occurs
      */
-    public void setTimestamp(int parameterIndex, Timestamp x)
-            throws SQLException {
+    public void setTimestamp(int parameterIndex, Timestamp x) throws SQLException {
         getField(parameterIndex).setTimestamp(x);
         isParamSet[parameterIndex - 1] = true;
     }
@@ -506,8 +497,7 @@ public class FBPreparedStatement extends FBStatement implements
      * @throws SQLException
      *             if a database access error occurs
      */
-    public void setBigDecimal(int parameterIndex, BigDecimal x)
-            throws SQLException {
+    public void setBigDecimal(int parameterIndex, BigDecimal x) throws SQLException {
         getField(parameterIndex).setBigDecimal(x);
         isParamSet[parameterIndex - 1] = true;
     }
@@ -526,9 +516,9 @@ public class FBPreparedStatement extends FBStatement implements
      * Factory method for the field access objects
      */
     protected FBField getField(int columnIndex) throws SQLException {
+        checkValidity();
         if (columnIndex > fields.length)
-            throw new FBSQLException("Invalid column index.",
-                    FBSQLException.SQL_STATE_INVALID_COLUMN);
+            throw new FBSQLException("Invalid column index.", FBSQLException.SQL_STATE_INVALID_COLUMN);
 
         return fields[columnIndex - 1];
     }
@@ -554,13 +544,11 @@ public class FBPreparedStatement extends FBStatement implements
      * @exception SQLException
      *                if a database access error occurs
      */
-    public void setAsciiStream(int parameterIndex, InputStream x, int length)
-            throws SQLException {
+    public void setAsciiStream(int parameterIndex, InputStream x, int length) throws SQLException {
         setBinaryStream(parameterIndex, x, length);
     }
     
-    public void setAsciiStream(int parameterIndex, InputStream x, long length)
-            throws SQLException {
+    public void setAsciiStream(int parameterIndex, InputStream x, long length) throws SQLException {
         setBinaryStream(parameterIndex, x, length);
     }
 
@@ -597,8 +585,7 @@ public class FBPreparedStatement extends FBStatement implements
      * I really have no idea if there is anything else we should be doing here
      */
     @Deprecated
-    public void setUnicodeStream(int parameterIndex, InputStream x, int length)
-            throws SQLException {
+    public void setUnicodeStream(int parameterIndex, InputStream x, int length) throws SQLException {
         setBinaryStream(parameterIndex, x, length);
         isParamSet[parameterIndex - 1] = true;
     }
@@ -607,8 +594,7 @@ public class FBPreparedStatement extends FBStatement implements
         throw new FBDriverNotCapableException();
     }
     
-    public void setNCharacterStream(int parameterIndex, Reader value,
-            long length) throws SQLException {
+    public void setNCharacterStream(int parameterIndex, Reader value, long length) throws SQLException {
         throw new FBDriverNotCapableException();
     }
 
@@ -644,6 +630,7 @@ public class FBPreparedStatement extends FBStatement implements
      *                if a database access error occurs
      */
     public void clearParameters() throws SQLException {
+        checkValidity();
         if (fieldValues == null) return;
 
         // TODO Remove: should be based on FieldValue#isInitialized
@@ -694,8 +681,7 @@ public class FBPreparedStatement extends FBStatement implements
      *                if a database access error occurs
      * @see Types
      */
-    public void setObject(int parameterIndex, Object x, int targetSqlType,
-            int scale) throws SQLException {
+    public void setObject(int parameterIndex, Object x, int targetSqlType, int scale) throws SQLException {
         // Workaround for JBuilder DataSets
         setObject(parameterIndex, x);
         isParamSet[parameterIndex - 1] = true;
@@ -716,8 +702,7 @@ public class FBPreparedStatement extends FBStatement implements
      * @exception SQLException
      *                if a database access error occurs
      */
-    public void setObject(int parameterIndex, Object x, int targetSqlType)
-            throws SQLException {
+    public void setObject(int parameterIndex, Object x, int targetSqlType) throws SQLException {
         // well, for now
         setObject(parameterIndex, x);
         isParamSet[parameterIndex - 1] = true;
@@ -734,9 +719,8 @@ public class FBPreparedStatement extends FBStatement implements
      * @see Statement#execute
      */
     public boolean execute() throws SQLException {
-
-        Object syncObject = getSynchronizationObject();
-        synchronized (syncObject) {
+        checkValidity();
+        synchronized (getSynchronizationObject()) {
             notifyStatementStarted();
             
             boolean hasResultSet = internalExecute(isExecuteProcedureStatement);
@@ -760,9 +744,8 @@ public class FBPreparedStatement extends FBStatement implements
      *             if something went wrong or no result set was available.
      */
     ResultSet executeMetaDataQuery() throws SQLException {
-
-        Object syncObject = getSynchronizationObject();
-        synchronized (syncObject) {
+        checkValidity();
+        synchronized (getSynchronizationObject()) {
             notifyStatementStarted();
 
             boolean hasResultSet = internalExecute(isExecuteProcedureStatement);
@@ -784,9 +767,7 @@ public class FBPreparedStatement extends FBStatement implements
      * @return <code>true</code> if the statement has more result sets. 
      * @throws SQLException
      */
-    protected boolean internalExecute(boolean sendOutParams)
-            throws SQLException {
-        
+    protected boolean internalExecute(boolean sendOutParams) throws SQLException {
         boolean canExecute = true;
         // TODO replace with FieldValue#isInitialized
         for (boolean anIsParamSet : isParamSet) {
@@ -846,6 +827,7 @@ public class FBPreparedStatement extends FBStatement implements
      *      </a>
      */
     public void addBatch() throws SQLException {
+        checkValidity();
         boolean allParamsSet = true;
         // TODO Replace with check of FieldValue#isInitialized
         for (boolean anIsParamSet : isParamSet) {
@@ -931,8 +913,8 @@ public class FBPreparedStatement extends FBStatement implements
      *      </a>
      */
     public int[] executeBatch() throws SQLException {
-        Object syncObject = getSynchronizationObject();
-        synchronized (syncObject) {
+        checkValidity();
+        synchronized (getSynchronizationObject()) {
 
             boolean commit = false;
             try {
@@ -1011,21 +993,18 @@ public class FBPreparedStatement extends FBStatement implements
      * @see <a href="package-summary.html#2.0 API">What Is in the JDBC 2.0 API
      *      </a>
      */
-    public void setCharacterStream(int parameterIndex, Reader reader, int length)
-            throws SQLException {
+    public void setCharacterStream(int parameterIndex, Reader reader, int length) throws SQLException {
         getField(parameterIndex).setCharacterStream(reader, length);
         isParamSet[parameterIndex - 1] = true;
     }
     
-    public void setCharacterStream(int parameterIndex, Reader reader,
-            long length) throws SQLException {
+    public void setCharacterStream(int parameterIndex, Reader reader, long length) throws SQLException {
         if (length > Integer.MAX_VALUE)
             throw new FBDriverNotCapableException("Only length <= Integer.MAX_VALUE supported");
         setCharacterStream(parameterIndex, reader, (int)length);
     }
 
-    public void setCharacterStream(int parameterIndex, Reader reader)
-            throws SQLException {
+    public void setCharacterStream(int parameterIndex, Reader reader) throws SQLException {
         throw new FBDriverNotCapableException();
     }
     
@@ -1062,7 +1041,6 @@ public class FBPreparedStatement extends FBStatement implements
      *      </a>
      */
     public void setBlob(int parameterIndex, Blob blob) throws SQLException {
-        
         // if the passed BLOB is not instance of our class, copy its content
         // into the our BLOB
         if (!(blob instanceof FBBlob)) {
@@ -1075,13 +1053,11 @@ public class FBPreparedStatement extends FBStatement implements
         isParamSet[parameterIndex - 1] = true;
     }
     
-    public void setBlob(int parameterIndex, InputStream inputStream, long length)
-            throws SQLException {
+    public void setBlob(int parameterIndex, InputStream inputStream, long length) throws SQLException {
         throw new FBDriverNotCapableException();
     }
 
-    public void setBlob(int parameterIndex, InputStream inputStream)
-            throws SQLException {
+    public void setBlob(int parameterIndex, InputStream inputStream) throws SQLException {
         FBBlob blob = new FBBlob(gdsHelper, blobListener);
         blob.copyStream(inputStream);
         setBlob(parameterIndex, blob);
@@ -1112,8 +1088,7 @@ public class FBPreparedStatement extends FBStatement implements
         isParamSet[parameterIndex - 1] = true;
     }
     
-    public void setClob(int parameterIndex, Reader reader, long length)
-            throws SQLException {
+    public void setClob(int parameterIndex, Reader reader, long length) throws SQLException {
         throw new FBDriverNotCapableException();
     }
 
@@ -1194,8 +1169,7 @@ public class FBPreparedStatement extends FBStatement implements
      * @see <a href="package-summary.html#2.0 API">What Is in the JDBC 2.0 API
      *      </a>
      */
-    public void setDate(int parameterIndex, Date x, Calendar cal)
-            throws SQLException {
+    public void setDate(int parameterIndex, Date x, Calendar cal) throws SQLException {
         getField(parameterIndex).setDate(x, cal);
         isParamSet[parameterIndex - 1] = true;
     }
@@ -1223,8 +1197,7 @@ public class FBPreparedStatement extends FBStatement implements
      * @see <a href="package-summary.html#2.0 API">What Is in the JDBC 2.0 API
      *      </a>
      */
-    public void setTime(int parameterIndex, Time x, Calendar cal)
-            throws SQLException {
+    public void setTime(int parameterIndex, Time x, Calendar cal) throws SQLException {
         getField(parameterIndex).setTime(x, cal);
         isParamSet[parameterIndex - 1] = true;
     }
@@ -1253,8 +1226,7 @@ public class FBPreparedStatement extends FBStatement implements
      * @see <a href="package-summary.html#2.0 API">What Is in the JDBC 2.0 API
      *      </a>
      */
-    public void setTimestamp(int parameterIndex, Timestamp x, Calendar cal)
-            throws SQLException {
+    public void setTimestamp(int parameterIndex, Timestamp x, Calendar cal) throws SQLException {
         getField(parameterIndex).setTimestamp(x, cal);
         isParamSet[parameterIndex - 1] = true;
     }
@@ -1291,8 +1263,7 @@ public class FBPreparedStatement extends FBStatement implements
      * @see <a href="package-summary.html#2.0 API">What Is in the JDBC 2.0 API
      *      </a>
      */
-    public void setNull(int parameterIndex, int sqlType, String typeName)
-            throws SQLException {
+    public void setNull(int parameterIndex, int sqlType, String typeName) throws SQLException {
         // all nulls are represented the same irrespective of type
         setNull(parameterIndex, sqlType); 
     }
