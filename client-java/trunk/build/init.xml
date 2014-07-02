@@ -147,8 +147,8 @@
         <property name="test.db.dir" value="${module.output}/db"/>
         <property name="test.db.lc_ctype" value="NONE"/>
 
-        <property name="packages"
-                  value="org.firebirdsql.ds,org.firebirdsql.gds,org.firebirdsql.jca,org.firebirdsql.jdbc,org.firebirdsql.management,org.firebirdsql.pool,org.firebirdsql.event"/>
+        <property name="excludedPackages"
+                  value="org.firebirdsql.pool,org.firebirdsql.util,org.firebirdsql.jdbc.oo"/>
 
         <property name="build.compiler" value="modern"/>
 
