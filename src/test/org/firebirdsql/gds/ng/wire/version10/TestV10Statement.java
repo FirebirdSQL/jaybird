@@ -50,6 +50,7 @@ import java.util.List;
 
 import static org.firebirdsql.common.FBTestProperties.DB_PASSWORD;
 import static org.firebirdsql.common.FBTestProperties.DB_USER;
+import static org.firebirdsql.util.FirebirdSupportInfo.supportInfoFor;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.junit.Assert.*;
 import static org.junit.Assume.assumeThat;
@@ -161,9 +162,10 @@ public class TestV10Statement extends FBJUnit4TestBase {
         final RowDescriptor fields = statement.getFieldDescriptor();
         assertNotNull("Fields", fields);
         // Note that in the V10 protocol we don't have support for the table alias, so it is always null
+        final boolean supportsCharsetInScale = supportInfoFor(db).reportsBlobCharSetInDescriptor();
         List<FieldDescriptor> expectedFields =
                 Arrays.asList(
-                        new FieldDescriptor(ISCConstants.SQL_BLOB | 1, 1, 3, 8, "Description", null, "RDB$DESCRIPTION", "RDB$DATABASE", "SYSDBA"),
+                        new FieldDescriptor(ISCConstants.SQL_BLOB | 1, 1, supportsCharsetInScale ? 3 : 0, 8, "Description", null, "RDB$DESCRIPTION", "RDB$DATABASE", "SYSDBA"),
                         new FieldDescriptor(ISCConstants.SQL_SHORT | 1, 0, 0, 2, "RDB$RELATION_ID", null, "RDB$RELATION_ID", "RDB$DATABASE", "SYSDBA"),
                         new FieldDescriptor(ISCConstants.SQL_TEXT | 1, 3, 0, 93, "RDB$SECURITY_CLASS", null, "RDB$SECURITY_CLASS", "RDB$DATABASE", "SYSDBA"),
                         new FieldDescriptor(ISCConstants.SQL_TEXT | 1, 3, 0, 93, "RDB$CHARACTER_SET_NAME", null, "RDB$CHARACTER_SET_NAME", "RDB$DATABASE", "SYSDBA")
@@ -209,9 +211,10 @@ public class TestV10Statement extends FBJUnit4TestBase {
         final RowDescriptor fields = statement.getFieldDescriptor();
         assertNotNull("Fields", fields);
         // Note that in the V10 protocol we don't have support for the table alias, so it is always null
+        final boolean unicodeFssLengthReported = supportInfoFor(db).reportsByteLengthInDescriptor();
         List<FieldDescriptor> expectedFields =
                 Arrays.asList(
-                        new FieldDescriptor(ISCConstants.SQL_TEXT | 1, 3, 0, 93, "RDB$CHARACTER_SET_NAME", null, "RDB$CHARACTER_SET_NAME", "RDB$CHARACTER_SETS", "SYSDBA")
+                        new FieldDescriptor(ISCConstants.SQL_TEXT | 1, 3, 0, unicodeFssLengthReported ? 93 : 31, "RDB$CHARACTER_SET_NAME", null, "RDB$CHARACTER_SET_NAME", "RDB$CHARACTER_SETS", "SYSDBA")
                 );
         assertEquals("Unexpected values for fields", expectedFields, fields.getFieldDescriptors());
 
@@ -342,6 +345,8 @@ public class TestV10Statement extends FBJUnit4TestBase {
 
     @Test
     public void test_PrepareInsertReturning() throws Exception {
+        assumeTrue("Test requires INSERT .. RETURNING ... support", supportInfoFor(db).supportsInsertReturning());
+
         allocateStatement();
         statement.prepare(INSERT_RETURNING_KEY_VALUE);
 

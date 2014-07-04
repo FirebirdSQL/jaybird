@@ -20,21 +20,7 @@
  */
 package org.firebirdsql.jdbc;
 
-import java.sql.Array;
-import java.sql.Blob;
-import java.sql.CallableStatement;
-import java.sql.Clob;
-import java.sql.DatabaseMetaData;
-import java.sql.NClob;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLClientInfoException;
-import java.sql.SQLException;
-import java.sql.SQLWarning;
-import java.sql.SQLXML;
-import java.sql.Savepoint;
-import java.sql.Statement;
-import java.sql.Struct;
+import java.sql.*;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -1531,10 +1517,24 @@ public class FBConnection implements FirebirdConnection {
     protected void finalize() throws Throwable {
         close();
     }
+
+    /**
+     * Checks if client info is supported.
+     *
+     * @throws SQLException If the client info is not supported, or if there is no database connection.
+     */
+    protected void checkClientInfoSupport() throws SQLException {
+        if (!getFbDatabase().getServerVersion().isEqualOrAbove(2, 0)) {
+            throw new FBDriverNotCapableException(
+                    "Required functionality (RDB$SET_CONTEXT()) only available in Firebird 2.0 or higher");
+        }
+    }
     
     public Properties getClientInfo() throws SQLException {
+        checkValidity();
+        checkClientInfoSupport();
+
         Properties result = new Properties();
-    
         PreparedStatement stmt = prepareStatement(GET_CLIENT_INFO_SQL);
         try {
             for (String propName : clientInfoPropNames) {
@@ -1548,6 +1548,9 @@ public class FBConnection implements FirebirdConnection {
     }
 
     public String getClientInfo(String name) throws SQLException {
+        checkValidity();
+        checkClientInfoSupport();
+
         PreparedStatement stmt = prepareStatement(GET_CLIENT_INFO_SQL);
         try {
             return getClientInfo(stmt, name);
@@ -1585,8 +1588,10 @@ public class FBConnection implements FirebirdConnection {
 
     public void setClientInfo(Properties properties) throws SQLClientInfoException {
         SQLExceptionChainBuilder<SQLClientInfoException> chain = new SQLExceptionChainBuilder<SQLClientInfoException>();
-    
         try {
+            checkValidity();
+            checkClientInfoSupport();
+
             PreparedStatement stmt = prepareStatement(SET_CLIENT_INFO_SQL);
             try {
     
@@ -1613,6 +1618,9 @@ public class FBConnection implements FirebirdConnection {
 
     public void setClientInfo(String name, String value) throws SQLClientInfoException {
         try {
+            checkValidity();
+            checkClientInfoSupport();
+
             PreparedStatement stmt = prepareStatement(SET_CLIENT_INFO_SQL);
             try {
                 setClientInfo(stmt, name, value);

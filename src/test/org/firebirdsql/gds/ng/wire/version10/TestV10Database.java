@@ -310,9 +310,10 @@ public class TestV10Database {
             dpb.addArgument(ISCConstants.isc_dpb_password, DB_PASSWORD);
 
             db.createDatabase(dpb);
-            assertTrue(db.isAttached());
-            assertTrue(gdsConnection.isConnected());
-            assertTrue(dbFile.exists());
+            assertTrue("Database should be attached after create", db.isAttached());
+            assertTrue("Connection should be connected after create", gdsConnection.isConnected());
+            assertTrue("Expected database file to exist (NOTE: only works on localhost)",
+                    dbFile.exists() || !FBTestProperties.DB_SERVER_URL.equalsIgnoreCase("localhost") );
 
             db.dropDatabase();
             assertFalse(gdsConnection.isConnected());

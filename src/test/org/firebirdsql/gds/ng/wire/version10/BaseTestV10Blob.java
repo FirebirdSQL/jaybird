@@ -52,7 +52,7 @@ public abstract class BaseTestV10Blob extends FBJUnit4TestBase {
     protected static final String CREATE_BLOB_TABLE =
             "CREATE TABLE blob_table (" +
             "  id INTEGER PRIMARY KEY," +
-            "  blobvalue BLOB SUB_TYPE BINARY" +
+            "  blobvalue BLOB SUB_TYPE 0" +
             ")";
 
     private static final int BASE_CONTENT_SIZE = 16384;
@@ -67,7 +67,7 @@ public abstract class BaseTestV10Blob extends FBJUnit4TestBase {
             "AS \n" +
             "  DECLARE VARIABLE REMAINING INTEGER;\n" +
             "  DECLARE VARIABLE BASE_CONTENT_SIZE INTEGER;\n" +
-            "  DECLARE VARIABLE TEMP_BLOB BLOB SUB_TYPE BINARY;\n" +
+            "  DECLARE VARIABLE TEMP_BLOB BLOB SUB_TYPE 0;\n" +
             "BEGIN\n" +
             "  REMAINING = REQUIRED_SIZE;\n" +
             "  TEMP_BLOB = '';\n" +
@@ -100,7 +100,7 @@ public abstract class BaseTestV10Blob extends FBJUnit4TestBase {
             "AS \n" +
             "  DECLARE VARIABLE REMAINING INTEGER;\n" +
             "  DECLARE VARIABLE BASE_CONTENT_SIZE INTEGER;\n" +
-            "  DECLARE VARIABLE TEMP_BLOB BLOB SUB_TYPE BINARY;\n" +
+            "  DECLARE VARIABLE TEMP_BLOB BLOB SUB_TYPE 0;\n" +
             "BEGIN\n" +
             "  REMAINING = REQUIRED_SIZE;\n" +
             "  TEMP_BLOB = '';\n" +
