@@ -28,6 +28,8 @@ import org.firebirdsql.jca.FBManagedConnection;
 
 import static org.firebirdsql.common.JdbcResourceHelper.*;
 import static org.firebirdsql.common.FBTestProperties.*;
+import static org.firebirdsql.util.FirebirdSupportInfo.supportInfoFor;
+import static org.junit.Assume.assumeTrue;
 
 /**
  * Test cases for FirebirdConnection interface.
@@ -442,7 +444,7 @@ public class TestFBConnection extends FBTestBase {
         }
 
         Properties props = getDefaultPropertiesForConnection();
-        props.setProperty("lc_ctype", "UTF8");
+        props.setProperty("lc_ctype", "WIN1252");
         
         Connection con = null;
         try {
@@ -456,8 +458,11 @@ public class TestFBConnection extends FBTestBase {
     
     public void testClientInfo() throws Exception {
         FBConnection connection = (FBConnection)getConnectionViaDriverManager();
+
         try {
-            
+            assumeTrue("This test requires GET_CONTEXT/SET_CONTEXT support",
+                    supportInfoFor(connection).supportsGetSetContext());
+
             connection.setClientInfo("TestProperty", "testValue");
             String checkValue = connection.getClientInfo("TestProperty");
             assertEquals("testValue", checkValue);

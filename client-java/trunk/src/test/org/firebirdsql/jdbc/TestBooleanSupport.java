@@ -26,6 +26,7 @@ import org.junit.Test;
 
 import java.sql.*;
 
+import static org.firebirdsql.util.FirebirdSupportInfo.supportInfoFor;
 import static org.junit.Assert.*;
 import static org.junit.Assume.assumeTrue;
 
@@ -54,7 +55,7 @@ public class TestBooleanSupport extends FBJUnit4TestBase {
     public void setUp() throws Exception {
         Connection con = FBTestProperties.getConnectionViaDriverManager();
         try {
-            assumeTrue("Test only works on Firebird 3 or higher", con.getMetaData().getDatabaseMajorVersion() >= 3);
+            assumeTrue("Test requires BOOLEAN support on server", supportInfoFor(con).supportsBoolean());
 
             DdlHelper.executeDropTable(con, DROP_TABLE);
             DdlHelper.executeCreateTable(con, CREATE_TABLE);

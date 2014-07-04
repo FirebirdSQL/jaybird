@@ -34,6 +34,7 @@ import java.util.Set;
 import static org.firebirdsql.common.FBTestProperties.getConnectionViaDriverManager;
 import static org.firebirdsql.common.FBTestProperties.getProperty;
 import static org.firebirdsql.common.JdbcResourceHelper.closeQuietly;
+import static org.firebirdsql.util.FirebirdSupportInfo.supportInfoFor;
 import static org.junit.Assert.*;
 
 /**
@@ -46,11 +47,13 @@ import static org.junit.Assert.*;
 public class TestFBDatabaseMetaData extends FBJUnit4TestBase {
 
     private Connection connection;
+    private boolean supportsComment;
     private DatabaseMetaData dmd;
 
     @Before
     public void setupConnection() throws SQLException {
         connection = getConnectionViaDriverManager();
+        supportsComment = supportInfoFor(connection).supportsComment();
         dmd = connection.getMetaData();
     }
 
@@ -374,9 +377,13 @@ public class TestFBDatabaseMetaData extends FBJUnit4TestBase {
                     gotproc1 = true;
                     assertEquals("result set from getProcedures had wrong procedure type for TESTPROC1 "
                             + "(should be procedureReturnsResult)", DatabaseMetaData.procedureReturnsResult, type);
-                    assertNotNull("result set from getProcedures did not return a value for REMARKS.", remarks);
-                    assertEquals("result set from getProcedures did not return correct REMARKS section.",
-                            "Test description", remarks);
+                    if (supportsComment) {
+                        assertNotNull("result set from getProcedures did not return a value for REMARKS.", remarks);
+                        assertEquals("result set from getProcedures did not return correct REMARKS section.",
+                                "Test description", remarks);
+                    } else {
+                        assertNull("result set from getProcedures should not return a value for REMARKS.", remarks);
+                    }
                 } else if (name.equals("TESTPROC2")) {
                     assertFalse("result set from getProcedures had duplicate entry for TESTPROC2", gotproc2);
                     gotproc2 = true;
@@ -394,7 +401,6 @@ public class TestFBDatabaseMetaData extends FBJUnit4TestBase {
 
     @Test
     public void testGetProcedureColumns() throws Exception {
-        if (log != null) log.info("testGetProcedureColumns");
         createProcedure("testproc1", true);
         createProcedure("testproc2", false);
 
@@ -618,12 +624,14 @@ public class TestFBDatabaseMetaData extends FBJUnit4TestBase {
                         + " OUT3 = IN1;"
                         + "END");
 
-                stmt.execute("COMMENT ON PROCEDURE " + procedureName + " IS 'Test description'");
-            } else
+                if (supportsComment) {
+                    stmt.execute("COMMENT ON PROCEDURE " + procedureName + " IS 'Test description'");
+                }
+            } else {
                 stmt.execute("CREATE PROCEDURE " + procedureName
                         + " (INP INTEGER) AS BEGIN exit; END");
+            }
         } catch (Exception e) {
-            if (log != null) log.warn("error creating procedure: " + e.getMessage());
             throw e;
         } finally {
             closeQuietly(stmt);

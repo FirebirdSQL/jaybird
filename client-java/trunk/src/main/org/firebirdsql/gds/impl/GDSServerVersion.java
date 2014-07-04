@@ -41,7 +41,7 @@ import java.util.regex.Pattern;
  * "V" - production version, "T" - beta version, "X" - development version.
  * </p>
  */
-public class GDSServerVersion implements Serializable {
+public final class GDSServerVersion implements Serializable {
     
     // TODO Document why this class is serializable (or remove it)
     
@@ -178,5 +178,19 @@ public class GDSServerVersion implements Serializable {
                 matcher.group(EXTENDED_INFO_IDX));
 
         return version;
+    }
+
+    /**
+     * Convenience method to check if the major.minor of this version is equal to or larger than the specified required
+     * version.
+     *
+     * @param requiredMajorVersion Required major version
+     * @param requiredMinorVersion Required minor version
+     * @return <code>true</code> when current major is larger than required, or major is same and minor is equal to or
+     * larger than required</code>
+     */
+    public boolean isEqualOrAbove(int requiredMajorVersion, int requiredMinorVersion) {
+        return majorVersion > requiredMajorVersion ||
+                (majorVersion == requiredMajorVersion && minorVersion >= requiredMinorVersion);
     }
 }
