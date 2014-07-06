@@ -39,6 +39,7 @@ import org.firebirdsql.gds.ng.wire.FbWireDatabase;
 import org.firebirdsql.gds.ng.wire.ProtocolCollection;
 import org.firebirdsql.gds.ng.wire.SimpleStatementListener;
 import org.firebirdsql.gds.ng.wire.WireConnection;
+import org.firebirdsql.util.FirebirdSupportInfo;
 import org.junit.*;
 import org.junit.rules.ExpectedException;
 
@@ -162,13 +163,13 @@ public class TestV10Statement extends FBJUnit4TestBase {
         final RowDescriptor fields = statement.getFieldDescriptor();
         assertNotNull("Fields", fields);
         // Note that in the V10 protocol we don't have support for the table alias, so it is always null
-        final boolean supportsCharsetInScale = supportInfoFor(db).reportsBlobCharSetInDescriptor();
+        final FirebirdSupportInfo supportInfo = supportInfoFor(db);
         List<FieldDescriptor> expectedFields =
                 Arrays.asList(
-                        new FieldDescriptor(ISCConstants.SQL_BLOB | 1, 1, supportsCharsetInScale ? 3 : 0, 8, "Description", null, "RDB$DESCRIPTION", "RDB$DATABASE", "SYSDBA"),
+                        new FieldDescriptor(ISCConstants.SQL_BLOB | 1, 1, supportInfo.reportsBlobCharSetInDescriptor() ? 3 : 0, 8, "Description", null, "RDB$DESCRIPTION", "RDB$DATABASE", "SYSDBA"),
                         new FieldDescriptor(ISCConstants.SQL_SHORT | 1, 0, 0, 2, "RDB$RELATION_ID", null, "RDB$RELATION_ID", "RDB$DATABASE", "SYSDBA"),
-                        new FieldDescriptor(ISCConstants.SQL_TEXT | 1, 3, 0, 93, "RDB$SECURITY_CLASS", null, "RDB$SECURITY_CLASS", "RDB$DATABASE", "SYSDBA"),
-                        new FieldDescriptor(ISCConstants.SQL_TEXT | 1, 3, 0, 93, "RDB$CHARACTER_SET_NAME", null, "RDB$CHARACTER_SET_NAME", "RDB$DATABASE", "SYSDBA")
+                        new FieldDescriptor(ISCConstants.SQL_TEXT | 1, 3, 0, supportInfo.reportsByteLengthInDescriptor() ? 93 : 31, "RDB$SECURITY_CLASS", null, "RDB$SECURITY_CLASS", "RDB$DATABASE", "SYSDBA"),
+                        new FieldDescriptor(ISCConstants.SQL_TEXT | 1, 3, 0, supportInfo.reportsByteLengthInDescriptor() ? 93 : 31, "RDB$CHARACTER_SET_NAME", null, "RDB$CHARACTER_SET_NAME", "RDB$DATABASE", "SYSDBA")
                 );
         assertEquals("Unexpected values for fields", expectedFields, fields.getFieldDescriptors());
         assertNotNull("Parameters", statement.getParameterDescriptor());

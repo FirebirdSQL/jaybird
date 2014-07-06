@@ -49,8 +49,9 @@ public class TestFBDatabaseMetaDataProcedures extends
             "CREATE PROCEDURE normal_proc_no_return\n" +
             " ( param1 VARCHAR(100))\n" +
             "AS\n" +
+            "DECLARE VARIABLE dummy INTEGER;\n" +
             "BEGIN\n" +
-            "  /* does nothing */\n" +
+            "  dummy = 1 + 1;\n" +
             "END";
 
     public static final String CREATE_NORMAL_PROC_WITH_RETURN = 
@@ -67,8 +68,9 @@ public class TestFBDatabaseMetaDataProcedures extends
             "CREATE PROCEDURE \"quoted_proc_no_return\"\n" +
             " ( param1 VARCHAR(100))\n" +
             "AS\n" +
+            "DECLARE VARIABLE dummy INTEGER;\n" +
             "BEGIN\n" +
-            "  /* does nothing */\n" +
+            "  dummy = 1 + 1;\n" +
             "END";
 
     public static final String ADD_COMMENT_ON_NORMAL_PROC_WITH_RETURN = 

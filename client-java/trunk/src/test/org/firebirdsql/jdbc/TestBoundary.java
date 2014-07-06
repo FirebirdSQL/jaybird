@@ -11,6 +11,8 @@ import static org.firebirdsql.common.JdbcResourceHelper.*;
 
 public class TestBoundary extends FBTestBase {
 
+    // TODO: document what this test is supposed to test
+
     private static final String CREATE_META_ONE = 
             "CREATE TABLE COMMUNICATIONS_FIT ( \n"
             + "ID INTEGER NOT NULL, \n" 

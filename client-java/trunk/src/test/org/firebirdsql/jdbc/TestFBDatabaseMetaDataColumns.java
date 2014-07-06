@@ -94,8 +94,8 @@ public class TestFBDatabaseMetaDataColumns extends FBMetaDataTestBase<TestFBData
         if (supportInfo.supportsBigint()) {
             statements.add(CREATE_COLUMN_METADATA_TEST_TABLE);
         } else {
-            // No bigint support (Firebird 1), don't include column
-            statements.add(CREATE_COLUMN_METADATA_TEST_TABLE.replace("col_bigint BIGINT,", ""));
+            // No BIGINT support, replacing type so number of columns remain the same
+            statements.add(CREATE_COLUMN_METADATA_TEST_TABLE.replace("col_bigint BIGINT,", "col_bigint DOUBLE PRECISION,"));
         }
         if (supportInfo.supportsComment()) {
             statements.add(ADD_COMMENT_ON_COLUMN);

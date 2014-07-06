@@ -84,6 +84,13 @@ public class FirebirdSupportInfo {
     }
 
     /**
+     * @return <code>true</code> when CASE (simple or searched) is supported
+     */
+    public boolean supportsCase() {
+        return serverVersion.isEqualOrAbove(1, 5);
+    }
+
+    /**
      * @return <code>true</code> when the blob character set is reported in the scale of the field descriptor
      */
     public boolean reportsBlobCharSetInDescriptor() {
@@ -107,6 +114,21 @@ public class FirebirdSupportInfo {
      */
     public boolean supportsInsertReturning() {
         return serverVersion.isEqualOrAbove(2, 0);
+    }
+
+    /**
+     * @return <code>true</code> when the server knows the UTF8 character set (NOTE: For firebird 1.5 it is an alias for
+     * UNICODE_FSS)
+     */
+    public boolean supportsUtf8() {
+        return serverVersion.isEqualOrAbove(1, 5);
+    }
+
+    /**
+     * @return <code>true</code> when SAVEPOINT is supported
+     */
+    public boolean supportsSavepoint() {
+        return serverVersion.isEqualOrAbove(1, 5);
     }
 
     /**
