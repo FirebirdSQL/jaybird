@@ -1,7 +1,7 @@
 /*
  * $Id$
- * 
- * Firebird Open Source J2EE Connector - JDBC Driver
+ *
+ * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -14,7 +14,7 @@
  * This file was created by members of the firebird development team.
  * All individual contributions remain the Copyright (C) of those
  * individuals.  Contributors to this file are either listed here or
- * can be obtained from a CVS history command.
+ * can be obtained from a source control history command.
  *
  * All rights reserved.
  */
@@ -45,7 +45,9 @@ import org.junit.rules.ExpectedException;
 import static org.firebirdsql.common.JdbcResourceHelper.*;
 import static org.firebirdsql.common.FBTestProperties.*;
 import static org.firebirdsql.common.matchers.SQLExceptionMatchers.sqlStateEquals;
+import static org.firebirdsql.util.FirebirdSupportInfo.supportInfoFor;
 import static org.junit.Assert.*;
+import static org.junit.Assume.assumeTrue;
 
 /**
  * Test for XADataSource. Note behavior of XAResource (ManagedConnection) is tested in {@link org.firebirdsql.jca.TestFBXAResource}.
@@ -236,20 +238,24 @@ public class TestFBXADataSource extends FBJUnit4TestBase {
         XAConnection pc = getXAConnection();
         XAResource xa = pc.getXAResource();
         Connection con = pc.getConnection();
-        Xid xid = new XidImpl();
+        assumeTrue("Test requires SAVEPOINT support", supportInfoFor(con).supportsSavepoint());
         try {
-            con.setAutoCommit(false);
-            Savepoint savepoint = con.setSavepoint(); // Just to create one
-            con.rollback(); // Required to make sure start() works.
-            xa.start(xid, XAResource.TMNOFLAGS);
+            Xid xid = new XidImpl();
+            try {
+                con.setAutoCommit(false);
+                Savepoint savepoint = con.setSavepoint(); // Just to create one
+                con.rollback(); // Required to make sure start() works.
+                xa.start(xid, XAResource.TMNOFLAGS);
 
-            expectedException.expect(SQLException.class);
-            expectedException.expect(sqlStateEquals(FBSQLException.SQL_STATE_INVALID_TX_STATE));
+                expectedException.expect(SQLException.class);
+                expectedException.expect(sqlStateEquals(FBSQLException.SQL_STATE_INVALID_TX_STATE));
 
-            con.rollback(savepoint);
+                con.rollback(savepoint);
+            } finally {
+                xa.end(xid, XAResource.TMSUCCESS);
+                xa.rollback(xid);
+            }
         } finally {
-            xa.end(xid, XAResource.TMSUCCESS);
-            xa.rollback(xid);
             con.close();
         }
     }

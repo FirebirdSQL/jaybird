@@ -46,7 +46,11 @@ public class TestLimitEscape extends FBJUnit4TestBase {
         Connection con = FBTestProperties.getConnectionViaDriverManager();
         try {
             Statement stmt = con.createStatement();
-            stmt.execute("CREATE TABLE TAB1 (" + "  ID INT CONSTRAINT PK_TAB1 PRIMARY KEY" + ")");
+//@formatter:off
+            stmt.execute("CREATE TABLE TAB1 (" +
+                         "  ID INT NOT NULL CONSTRAINT PK_TAB1 PRIMARY KEY" +
+                         ")");
+//@formatter:on
             stmt.close();
 
             con.setAutoCommit(false);

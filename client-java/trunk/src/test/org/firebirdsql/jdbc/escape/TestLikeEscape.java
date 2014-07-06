@@ -54,7 +54,7 @@ public class TestLikeEscape extends FBJUnit4TestBase {
 //@formatter:off
             stmt.execute(
                     "CREATE TABLE TAB1 (" +
-                    "  ID INT CONSTRAINT PK_TAB1 PRIMARY KEY," +
+                    "  ID INT NOT NULL CONSTRAINT PK_TAB1 PRIMARY KEY," +
                     "  VAL VARCHAR(30)" +
                     ")");
 //@formatter:on

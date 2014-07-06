@@ -1,7 +1,7 @@
 /*
  * $Id$
- * 
- * Firebird Open Source J2ee connector - jdbc driver
+ *
+ * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -14,7 +14,7 @@
  * This file was created by members of the firebird development team.
  * All individual contributions remain the Copyright (C) of those
  * individuals.  Contributors to this file are either listed here or
- * can be obtained from a CVS history command.
+ * can be obtained from a source control history command.
  *
  * All rights reserved.
  */
@@ -33,6 +33,7 @@ import java.util.Map;
 import org.firebirdsql.jdbc.MetaDataValidator.MetaDataInfo;
 
 import static org.firebirdsql.common.JdbcResourceHelper.*;
+import static org.firebirdsql.util.FirebirdSupportInfo.supportInfoFor;
 
 /**
  * Tests for {@link FBDatabaseMetaData} for procedure columns related metadata.
@@ -93,12 +94,16 @@ public class TestFBDatabaseMetaDataProcedureColumns extends FBMetaDataTestBase<T
 
     @Override
     protected List<String> getCreateStatements() {
-        return Arrays.asList(
+        List<String> statements = new ArrayList<String>();
+        statements.addAll(Arrays.asList(
                 CREATE_NORMAL_PROC_NO_ARG_NO_RETURN,
                 CREATE_NORMAL_PROC_NO_RETURN,
                 CREATE_NORMAL_PROC_WITH_RETURN,
-                CREATE_QUOTED_PROC_NO_RETURN,
-                ADD_COMMENT_ON_NORMAL_PROC_WITH_RETURN_PARAM2);
+                CREATE_QUOTED_PROC_NO_RETURN));
+        if (supportInfoFor(con).supportsComment()) {
+            statements.add(ADD_COMMENT_ON_NORMAL_PROC_WITH_RETURN_PARAM2);
+        }
+        return statements;
     }
     
     /**
