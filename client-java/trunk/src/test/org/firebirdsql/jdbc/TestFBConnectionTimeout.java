@@ -109,6 +109,9 @@ public class TestFBConnectionTimeout {
             long difference = endTime - startTime;
             assertEquals("Expected error code for \"Unable to complete network request\"", 335544721, e.getErrorCode());
             assertEquals("Unexpected timeout duration (in ms)", 2000, difference, TIMEOUT_DELTA_MS);
+        } finally {
+            // Reset to default
+            DriverManager.setLoginTimeout(0);
         }
     }
     
@@ -164,6 +167,8 @@ public class TestFBConnectionTimeout {
             Connection connection = DriverManager.getConnection(FBTestProperties.getUrl(), properties);
             connection.close();
         } finally {
+            // Reset to default
+            DriverManager.setLoginTimeout(0);
             defaultDatabaseTearDown(fbManager);
         }
     }
