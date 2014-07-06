@@ -20,9 +20,10 @@
  */
 package org.firebirdsql.jdbc;
 
-import org.firebirdsql.common.DdlHelper;
 import org.firebirdsql.management.FBManager;
+import org.firebirdsql.util.FirebirdSupportInfo;
 import org.junit.AfterClass;
+import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -37,9 +38,12 @@ import java.util.Collection;
 import static java.sql.ParameterMetaData.parameterModeIn;
 import static java.sql.ParameterMetaData.parameterNullable;
 import static java.sql.Types.*;
+import static org.firebirdsql.common.DdlHelper.executeCreateTable;
 import static org.firebirdsql.common.FBTestProperties.*;
 import static org.firebirdsql.common.JdbcResourceHelper.closeQuietly;
+import static org.firebirdsql.util.FirebirdSupportInfo.supportInfoFor;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assume.assumeFalse;
 
 /**
  * Tests {@link org.firebirdsql.jdbc.FBParameterMetaData} for a {@link org.firebirdsql.jdbc.FBPreparedStatement}.
@@ -95,6 +99,7 @@ public class TestFBPreparedStatementMetaData {
     private static Connection connection;
     private static PreparedStatement pstmt;
     private static ParameterMetaData parameterMetaData;
+    private static FirebirdSupportInfo supportInfo;
 
     private final Integer parameterIndex;
     private final ParameterMetaDataInfo expectedMetaData;
@@ -106,8 +111,16 @@ public class TestFBPreparedStatementMetaData {
         defaultDatabaseSetUp(fbManager);
 
         connection = getConnectionViaDriverManager();
+        supportInfo = supportInfoFor(connection);
 
-        DdlHelper.executeCreateTable(connection, CREATE_TABLE);
+        String createTable;
+        if (supportInfo.supportsBigint()) {
+            createTable = CREATE_TABLE;
+        } else {
+            // No BIGINT support, replacing type so number of columns remain the same
+            createTable = CREATE_TABLE.replace("long_field BIGINT,", "long field DOUBLE PRECISION,");
+        }
+        executeCreateTable(connection, createTable);
 
         pstmt = connection.prepareStatement(TEST_QUERY);
         parameterMetaData = pstmt.getParameterMetaData();
@@ -157,6 +170,11 @@ public class TestFBPreparedStatementMetaData {
                 // TODO Report actual subtype value
                 create(20, "java.sql.Blob", parameterModeIn, BLOB, "BLOB SUB_TYPE <0", 0, 0, parameterNullable, false, "blob_minus_one")
         );
+    }
+
+    @Before
+    public void checkAssumptions() {
+        assumeFalse("Test requires BIGINT support", expectedMetaData.getType() == BIGINT && !supportInfo.supportsBigint());
     }
 
     @Test

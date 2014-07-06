@@ -22,7 +22,9 @@ package org.firebirdsql.jdbc;
 
 import org.firebirdsql.common.DdlHelper;
 import org.firebirdsql.management.FBManager;
+import org.firebirdsql.util.FirebirdSupportInfo;
 import org.junit.AfterClass;
+import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -36,7 +38,9 @@ import static java.sql.ResultSetMetaData.*;
 import static java.sql.Types.*;
 import static org.firebirdsql.common.FBTestProperties.*;
 import static org.firebirdsql.common.JdbcResourceHelper.closeQuietly;
+import static org.firebirdsql.util.FirebirdSupportInfo.supportInfoFor;
 import static org.junit.Assert.*;
+import static org.junit.Assume.assumeFalse;
 
 /**
  * Test for {@link org.firebirdsql.jdbc.FBResultSetMetaData}.
@@ -93,6 +97,7 @@ public class TestFBResultSetMetaDataParametrized {
     private static Connection connection;
     private static PreparedStatement pstmt;
     private static ResultSetMetaData rsmd;
+    private static FirebirdSupportInfo supportInfo;
 
     private final Integer columnIndex;
     private final ResultSetMetaDataInfo expectedMetaData;
@@ -104,8 +109,17 @@ public class TestFBResultSetMetaDataParametrized {
         defaultDatabaseSetUp(fbManager);
 
         connection = getConnectionViaDriverManager();
+        supportInfo = supportInfoFor(connection);
 
-        DdlHelper.executeCreateTable(connection, CREATE_TABLE);
+        String createTable;
+        if (supportInfo.supportsBigint()) {
+            createTable = CREATE_TABLE;
+        } else {
+            // No BIGINT support, replacing type so number of columns remain the same
+            createTable = CREATE_TABLE.replace("long_field BIGINT,", "long_field DOUBLE PRECISION,");
+        }
+
+        DdlHelper.executeCreateTable(connection, createTable);
 
         pstmt = connection.prepareStatement(TEST_QUERY);
         rsmd = pstmt.getMetaData();
@@ -155,6 +169,11 @@ public class TestFBResultSetMetaDataParametrized {
                 // TODO Report actual subtype value
                 create(20, "java.sql.Blob", 0, "BLOB_MINUS_ONE", "BLOB_MINUS_ONE", BLOB, "BLOB SUB_TYPE <0", 0, 0, TABLE_NAME, columnNullable, false, false)
         );
+    }
+
+    @Before
+    public void checkAssumptions() {
+        assumeFalse("Test requires BIGINT support", expectedMetaData.getType() == BIGINT && !supportInfo.supportsBigint());
     }
 
     @Test
@@ -283,6 +302,7 @@ public class TestFBResultSetMetaDataParametrized {
         private ResultSetMetaDataInfo(String className, int displaySize, String label, String name, int type,
                 String typeName, int precision, int scale, String tableName, int nullable, boolean searchable,
                 boolean signed) {
+
             this.className = className;
             this.displaySize = displaySize;
             this.label = label;

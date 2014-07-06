@@ -21,13 +21,15 @@ package org.firebirdsql.jdbc;
 import java.sql.*;
 
 import org.firebirdsql.common.FBJUnit4TestBase;
-import org.firebirdsql.common.JdbcResourceHelper;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
 import static org.firebirdsql.common.FBTestProperties.*;
+import static org.firebirdsql.common.JdbcResourceHelper.closeQuietly;
+import static org.firebirdsql.util.FirebirdSupportInfo.supportInfoFor;
 import static org.junit.Assert.*;
+import static org.junit.Assume.assumeTrue;
 
 /**
  * Tests for savepoint handling.
@@ -40,11 +42,9 @@ public class TestFBSavepoint extends FBJUnit4TestBase {
     
     @Before
     public void setUp() throws Exception {
-        
-        Class.forName(FBDriver.class.getName());
-        
         connection = getConnectionViaDriverManager();
-        
+        assumeTrue("Test requires SAVEPOINT support", supportInfoFor(connection).supportsSavepoint());
+
         Statement stmt = connection.createStatement();
         try {
             stmt.execute("CREATE TABLE test_svpt(id INTEGER)");
@@ -57,7 +57,7 @@ public class TestFBSavepoint extends FBJUnit4TestBase {
 
     @After
     public void tearDown() throws Exception {
-        JdbcResourceHelper.closeQuietly(connection);
+        closeQuietly(connection);
     }
 
     /**

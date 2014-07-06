@@ -42,6 +42,8 @@ import static org.firebirdsql.common.FBTestProperties.DB_PASSWORD;
 import static org.firebirdsql.common.FBTestProperties.DB_USER;
 import static org.firebirdsql.common.FBTestProperties.getConnectionViaDriverManager;
 import static org.firebirdsql.common.JdbcResourceHelper.closeQuietly;
+import static org.firebirdsql.util.FirebirdSupportInfo.supportInfoFor;
+import static org.junit.Assume.assumeTrue;
 
 /**
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
@@ -141,6 +143,8 @@ public abstract class BaseTestV10Blob extends FBJUnit4TestBase {
     public final void setUp() throws SQLException {
         Connection con = FBTestProperties.getConnectionViaDriverManager();
         try {
+            assumeTrue("Test requires CASE support", supportInfoFor(con).supportsCase());
+
             DdlHelper.executeCreateTable(con, CREATE_BLOB_TABLE);
             DdlHelper.executeDDL(con, CREATE_PROC_FILL_BINARY_BLOB);
             DdlHelper.executeDDL(con, CREATE_PROC_CHECK_BINARY_BLOB);

@@ -45,7 +45,9 @@ public class TestFBParameterMetaData extends FBJUnit4TestBase {
             ")" +
             "  RETURNS (res1 CHAR(2)) " +
             "AS " +
+            "DECLARE VARIABLE dummy INTEGER;\n" +
             "BEGIN " +
+            "  dummy = 1 + 1;\n" +
             "END";
     //@formatter:on
 
