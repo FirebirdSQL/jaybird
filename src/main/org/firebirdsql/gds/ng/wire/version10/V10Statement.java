@@ -442,7 +442,7 @@ public class V10Statement extends AbstractFbWireStatement implements FbWireState
 
             final RowDescriptor parameterDescriptor = getParameterDescriptor();
             if (parameterDescriptor != null && parameterDescriptor.getCount() > 0) {
-                xdrOut.writeBuffer(calculateBlr(parameterDescriptor));
+                xdrOut.writeBuffer(calculateBlr(parameters));
                 xdrOut.writeInt(0); // message number = in_message_type
                 xdrOut.writeInt(1); // Number of messages
                 writeSqlData(parameters);
@@ -613,7 +613,7 @@ public class V10Statement extends AbstractFbWireStatement implements FbWireState
                 // We assume that the FieldDescriptors of the FieldValues have already been validated with the expected types
                 final FieldDescriptor fieldDescriptor = fieldValue.getFieldDescriptor();
 
-                int len = blrCalculator.calculateIoLength(fieldDescriptor);
+                int len = blrCalculator.calculateIoLength(fieldValue);
                 final byte[] buffer = fieldValue.getFieldData();
                 final int tempType = fieldDescriptor.getType() & ~1;
 
