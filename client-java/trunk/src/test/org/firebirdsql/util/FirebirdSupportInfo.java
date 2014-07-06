@@ -132,9 +132,23 @@ public class FirebirdSupportInfo {
     }
 
     /**
+     * @return <code>true</code> when EXECUTE BLOCK is supported
+     */
+    public boolean supportsExecuteBlock() {
+        return serverVersion.isEqualOrAbove(2, 0);
+    }
+
+    /**
      * @return <code>true</code> when CREATE/ALTER/DROP USER is supported
      */
     public boolean supportsSqlUserManagement() {
+        return serverVersion.isEqualOrAbove(2, 5);
+    }
+
+    /**
+     * @return <code>true</code> when fb_cancel_operation is supported
+     */
+    public boolean supportsCancelOperation() {
         return serverVersion.isEqualOrAbove(2, 5);
     }
 

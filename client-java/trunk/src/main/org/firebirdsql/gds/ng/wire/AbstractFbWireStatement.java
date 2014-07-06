@@ -25,6 +25,7 @@ import org.firebirdsql.gds.impl.wire.XdrOutputStream;
 import org.firebirdsql.gds.ng.AbstractFbStatement;
 import org.firebirdsql.gds.ng.FbTransaction;
 import org.firebirdsql.gds.ng.fields.RowDescriptor;
+import org.firebirdsql.gds.ng.fields.RowValue;
 
 import java.sql.SQLException;
 import java.util.Collections;
@@ -110,6 +111,24 @@ public abstract class AbstractFbWireStatement extends AbstractFbStatement implem
             blrCache.put(rowDescriptor, blr);
         }
         return blr;
+    }
+
+    /**
+     * Returns the blr byte array for a {@link RowValue}, or <code>null</code> if the parameter is null.
+     * <p>
+     * Contrary to {@link #calculateBlr(org.firebirdsql.gds.ng.fields.RowDescriptor)}, it is not allowed
+     * to cache this value as it depends on the actual row value.
+     * </p>
+     *
+     * @param rowValue
+     *         The row value.
+     * @return blr byte array or <code>null</code> when <code>rowValue</code> is <code>null</code>
+     * @throws SQLException
+     *         When the {@link RowValue} contains an unsupported field type.
+     */
+    protected final byte[] calculateBlr(RowValue rowValue) throws SQLException {
+        if (rowValue == null) return null;
+        return getDatabase().getBlrCalculator().calculateBlr(rowValue);
     }
 
     @Override

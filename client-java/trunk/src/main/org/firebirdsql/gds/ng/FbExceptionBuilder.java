@@ -183,7 +183,8 @@ public final class FbExceptionBuilder {
      * Array of uninteresting error codes.
      */
     private static final Integer[] UNINTERESTING_ERROR_CODES_ARR =
-            { 0, isc_dsql_error, isc_dsql_line_col_error, isc_dsql_unknown_pos, isc_sqlerr, isc_dsql_command_err };
+            { 0, isc_dsql_error, isc_dsql_line_col_error, isc_dsql_unknown_pos, isc_sqlerr, isc_dsql_command_err,
+                    isc_arith_except };
 
     /**
      * Set of uninteresting error codes derived from {@link #UNINTERESTING_ERROR_CODES_ARR}.
@@ -393,14 +394,12 @@ public final class FbExceptionBuilder {
 
         @Override
         public String toString() {
-            StringBuilder sb = new StringBuilder();
-            sb.append("Type: ").append(type);
-            sb.append("; ErrorCode: ").append(errorCode);
-            sb.append("; Message: \"").append(toMessage()).append('"');
-            sb.append("; SQLstate: ").append(sqlState);
-            sb.append("; MessageParameters: ").append(getMessageParameters());
-            sb.append("; Cause: ").append(cause);
-            return sb.toString();
+            return "Type: " + type +
+                    "; ErrorCode: " + errorCode +
+                    "; Message: \"" + toMessage() + '"' +
+                    "; SQLstate: " + sqlState +
+                    "; MessageParameters: " + getMessageParameters() +
+                    "; Cause: " + cause;
         }
     }
 
