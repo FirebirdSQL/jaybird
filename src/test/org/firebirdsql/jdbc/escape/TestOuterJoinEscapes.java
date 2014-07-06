@@ -52,11 +52,11 @@ public class TestOuterJoinEscapes extends FBJUnit4TestBase {
 //@formatter:off
             stmt.execute(
                     "CREATE TABLE TAB1 (" +
-                    "  ID INT CONSTRAINT PK_TAB1 PRIMARY KEY" +
+                    "  ID INT NOT NULL CONSTRAINT PK_TAB1 PRIMARY KEY" +
                     ")");
             stmt.execute(
                     "CREATE TABLE TAB2 (" +
-                    "  ID INT CONSTRAINT PK_TAB2 PRIMARY KEY," +
+                    "  ID INT NOT NULL CONSTRAINT PK_TAB2 PRIMARY KEY," +
                     "  TAB1_ID INT CONSTRAINT FK_TAB2_TAB1 REFERENCES TAB1 (ID)" +
                     ")");
 //@formatter:on

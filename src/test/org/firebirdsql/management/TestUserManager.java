@@ -1,7 +1,7 @@
 /*
  * $Id$
- * 
- * Firebird Open Source J2ee connector - jdbc driver
+ *
+ * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -14,7 +14,7 @@
  * This file was created by members of the firebird development team.
  * All individual contributions remain the Copyright (C) of those
  * individuals.  Contributors to this file are either listed here or
- * can be obtained from a CVS history command.
+ * can be obtained from a source control history command.
  *
  * All rights reserved.
  */
@@ -24,24 +24,26 @@ import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.SQLException;
 
-import org.firebirdsql.common.DdlHelper;
 import org.firebirdsql.common.FBJUnit4TestBase;
-import org.firebirdsql.common.JdbcResourceHelper;
 import org.firebirdsql.gds.ISCConstants;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+import static org.firebirdsql.common.DdlHelper.executeDDL;
 import static org.firebirdsql.common.FBTestProperties.*;
+import static org.firebirdsql.common.JdbcResourceHelper.closeQuietly;
+import static org.firebirdsql.util.FirebirdSupportInfo.supportInfoFor;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assume.assumeTrue;
 
 /**
  * Tests the UserManager class which uses the Services API to display, add,
  * delete, and modify users.
  * 
- * @author <a href="mailto:sjardine@users.sourceforge.net">Steven Jardine </a>
+ * @author <a href="mailto:sjardine@users.sourceforge.net">Steven Jardine</a>
  */
 public class TestUserManager extends FBJUnit4TestBase {
 
@@ -52,9 +54,10 @@ public class TestUserManager extends FBJUnit4TestBase {
     public void ensureTestUserDoesNotExist() throws SQLException {
         Connection connection = getConnectionViaDriverManager();
         try {
-            DdlHelper.executeDDL(connection, "DROP USER " + USER_NAME, ISCConstants.isc_gsec_err_rec_not_found);
+            assumeTrue("Test requires DROP USER support", supportInfoFor(connection).supportsSqlUserManagement());
+            executeDDL(connection, "DROP USER " + USER_NAME, ISCConstants.isc_gsec_err_rec_not_found);
         } finally {
-            JdbcResourceHelper.closeQuietly(connection);
+            closeQuietly(connection);
         }
     }
 
@@ -67,7 +70,7 @@ public class TestUserManager extends FBJUnit4TestBase {
             DatabaseMetaData dbmd = connection.getMetaData();
             isFirebird3 = dbmd.getDatabaseMajorVersion() == 3;
         } finally {
-            JdbcResourceHelper.closeQuietly(connection);
+            closeQuietly(connection);
         }
 
         // Initialize the UserManager.

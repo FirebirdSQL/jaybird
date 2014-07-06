@@ -132,6 +132,13 @@ public class FirebirdSupportInfo {
     }
 
     /**
+     * @return <code>true</code> when CREATE/ALTER/DROP USER is supported
+     */
+    public boolean supportsSqlUserManagement() {
+        return serverVersion.isEqualOrAbove(2, 5);
+    }
+
+    /**
      * @param serverVersion
      *         Server version
      * @return FirebirdVersionSupport instance
