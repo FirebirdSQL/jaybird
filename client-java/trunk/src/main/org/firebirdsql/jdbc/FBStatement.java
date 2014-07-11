@@ -1484,10 +1484,6 @@ public class FBStatement implements FirebirdStatement, Synchronizable {
             throw new FBSQLException("Statement is already closed.", FBSQLException.SQL_STATE_INVALID_STATEMENT_ID);
     }
 
-    public Logger getParentLogger() throws SQLFeatureNotSupportedException {
-        throw new FBDriverNotCapableException();
-    }
-
     // TODO Implement large update count methods below using SqlCountHolder
 
     /**
