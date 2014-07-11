@@ -44,7 +44,7 @@ import org.firebirdsql.jdbc.field.FBFlushableField.CachedObject;
  * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  */
-public class FBPreparedStatement extends FBStatement implements FirebirdPreparedStatement {
+public abstract class AbstractPreparedStatement extends FBStatement implements FirebirdPreparedStatement {
 
     public static final String METHOD_NOT_SUPPORTED =
             "This method is only supported on Statement and not supported on PreparedStatement and CallableStatement";
@@ -95,7 +95,7 @@ public class FBPreparedStatement extends FBStatement implements FirebirdPrepared
      * 
      * @throws SQLException if something went wrong.
      */
-    protected FBPreparedStatement(GDSHelper c, int rsType,
+    protected AbstractPreparedStatement(GDSHelper c, int rsType,
             int rsConcurrency, int rsHoldability,
             FBObjectListener.StatementListener statementListener,
             FBObjectListener.BlobListener blobListener)
@@ -123,7 +123,7 @@ public class FBPreparedStatement extends FBStatement implements FirebirdPrepared
      * @throws SQLException
      *             if something went wrong.
      */
-    protected FBPreparedStatement(GDSHelper c, String sql, int rsType,
+    protected AbstractPreparedStatement(GDSHelper c, String sql, int rsType,
             int rsConcurrency, int rsHoldability,
             FBObjectListener.StatementListener statementListener,
             FBObjectListener.BlobListener blobListener,

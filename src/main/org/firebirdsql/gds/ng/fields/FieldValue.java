@@ -151,7 +151,7 @@ public final class FieldValue implements FieldDataProvider, Cloneable {
             }
             return clonedFieldValue;
         } catch (CloneNotSupportedException e) {
-            throw new AssertionError("Unexpected (and impossible) CloneNotSupportedException", e);
+            throw new AssertionError("Unexpected (and impossible) CloneNotSupportedException");
         }
     }
 }

@@ -72,7 +72,7 @@ import org.firebirdsql.jdbc.field.TypeConversionException;
  * @author <a href="mailto:sjardine@users.sourceforge.net">Steven Jardine</a>
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  */
-public class FBCallableStatement extends FBPreparedStatement implements CallableStatement, FirebirdCallableStatement {
+public abstract class AbstractCallableStatement extends FBPreparedStatement implements CallableStatement, FirebirdCallableStatement {
     
     static final String NATIVE_CALL_COMMAND = "EXECUTE PROCEDURE";
     static final String NATIVE_SELECT_COMMAND = "SELECT * FROM";
@@ -83,7 +83,7 @@ public class FBCallableStatement extends FBPreparedStatement implements Callable
 
     protected FBProcedureCall procedureCall;
 
-    protected FBCallableStatement(GDSHelper c, String sql, int rsType, 
+    protected AbstractCallableStatement(GDSHelper c, String sql, int rsType,
             int rsConcurrency, int rsHoldability, 
             StoredProcedureMetaData storedProcMetaData,
             FBObjectListener.StatementListener statementListener, 

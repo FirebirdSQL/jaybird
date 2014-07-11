@@ -1649,7 +1649,7 @@ public class FBStatement implements FirebirdStatement, Synchronizable {
                     clearWarnings();
                 } catch (SQLException e) {
                     // Ignoring exception (can't happen in current implementation)
-                    throw new AssertionError("Unexpected SQLException", e);
+                    throw new AssertionError("Unexpected SQLException");
                 }
                 break;
             }

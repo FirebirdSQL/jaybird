@@ -42,7 +42,7 @@ import org.firebirdsql.util.SQLExceptionChainBuilder;
  * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  */
-public class FBResultSet implements ResultSet, FirebirdResultSet, Synchronizable, FBObjectListener.FetcherListener {
+public abstract class AbstractResultSet implements ResultSet, FirebirdResultSet, Synchronizable, FBObjectListener.FetcherListener {
 
     private final FBStatement fbStatement;
     private FBFetcher fbFetcher;
@@ -97,7 +97,7 @@ public class FBResultSet implements ResultSet, FirebirdResultSet, Synchronizable
      * @param fbStatement a <code>AbstractStatement</code> value
      * @param stmt an <code>isc_stmt_handle</code> value
      */
-    public FBResultSet(GDSHelper gdsHelper,
+    public AbstractResultSet(GDSHelper gdsHelper,
             FBStatement fbStatement,
             FbStatement stmt,
             FBObjectListener.ResultSetListener listener,
@@ -163,7 +163,7 @@ public class FBResultSet implements ResultSet, FirebirdResultSet, Synchronizable
      * @param rows Row data
      * @throws SQLException
      */
-    public FBResultSet(RowDescriptor rowDescriptor, List<RowValue> rows, FBObjectListener.ResultSetListener listener) throws SQLException {
+    public AbstractResultSet(RowDescriptor rowDescriptor, List<RowValue> rows, FBObjectListener.ResultSetListener listener) throws SQLException {
         // TODO Evaluate if we need to share more implementation with constructor above
         gdsHelper = null;
         fbStatement = null;
@@ -194,7 +194,7 @@ public class FBResultSet implements ResultSet, FirebirdResultSet, Synchronizable
      * @param rows Row data
      * @throws SQLException
      */
-    public FBResultSet(RowDescriptor rowDescriptor, List<RowValue> rows) throws SQLException {
+    public AbstractResultSet(RowDescriptor rowDescriptor, List<RowValue> rows) throws SQLException {
         gdsHelper = null;
         fbStatement = null;
         listener = FBObjectListener.NoActionResultSetListener.instance();
@@ -210,7 +210,7 @@ public class FBResultSet implements ResultSet, FirebirdResultSet, Synchronizable
         rsHoldability = ResultSet.CLOSE_CURSORS_AT_COMMIT;
     }
 
-    public FBResultSet(XSQLVAR[] xsqlvars, List<byte[][]> rows) throws SQLException {
+    public AbstractResultSet(XSQLVAR[] xsqlvars, List<byte[][]> rows) throws SQLException {
         throw new UnsupportedOperationException("This constructor needs to be removed");
     }
 
