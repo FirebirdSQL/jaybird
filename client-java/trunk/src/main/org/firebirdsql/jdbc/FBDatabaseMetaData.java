@@ -138,7 +138,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
         this.gdsHelper = gdsHelper;
     }
 
-    protected FBDatabaseMetaData(FBConnection c) throws GDSException {
+    protected FBDatabaseMetaData(FBConnection c) throws SQLException {
         this.gdsHelper = c.getGDSHelper();
         this.connection = c;
     }

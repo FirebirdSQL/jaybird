@@ -27,19 +27,14 @@ import java.util.Collections;
 import java.util.List;
 
 import org.firebirdsql.gds.*;
-import org.firebirdsql.gds.impl.GDSHelper;
 import org.firebirdsql.gds.ng.fields.RowDescriptor;
 import org.firebirdsql.gds.ng.fields.RowValue;
 import org.firebirdsql.jdbc.*;
 
 public class OODatabaseMetaData extends FBDatabaseMetaData {
 
-    public OODatabaseMetaData(FBConnection c) throws GDSException {
+    public OODatabaseMetaData(FBConnection c) throws SQLException {
         super(c);
-    }
-
-    public OODatabaseMetaData(GDSHelper gdsHelper) {
-        super(gdsHelper);
     }
 
     private static final String DEFAULT_SCHEMA = "DEFAULT";
