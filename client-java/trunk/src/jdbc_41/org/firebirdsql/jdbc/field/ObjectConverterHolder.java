@@ -23,7 +23,7 @@ package org.firebirdsql.jdbc.field;
 /**
  * Holder for the instance of {@link ObjectConverter} to use.
  * <p>
- * This implementation is specific to a Java version (note: not in current Jaybird 3.0 implementation)
+ * This implementation is specific to a Java version.
  * </p>
  *
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
