@@ -22,7 +22,6 @@ package org.firebirdsql.jdbc;
 
 import java.sql.*;
 import java.util.*;
-import java.util.logging.Logger;
 
 import org.firebirdsql.gds.*;
 import org.firebirdsql.gds.impl.*;

@@ -1378,4 +1378,17 @@ public class FBPreparedStatement extends FBStatement implements FirebirdPrepared
     public boolean execute(String sql, String[] columnNames) throws SQLException {
         throw new FBSQLException(METHOD_NOT_SUPPORTED);
     }
+
+    // TODO Implement large update count method below using SqlCountHolder
+
+    /**
+     * {@inheritDoc}
+     * <p>
+     * Jaybird does not support update counts exceeding {@link Integer#MAX_VALUE}, this method calls
+     * {@link #executeUpdate()}.
+     * </p>
+     */
+    public long executeLargeUpdate() throws SQLException {
+        return executeUpdate();
+    }
 }
