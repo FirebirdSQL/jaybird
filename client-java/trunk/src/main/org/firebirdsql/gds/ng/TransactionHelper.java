@@ -33,6 +33,8 @@ import java.sql.SQLNonTransientException;
  */
 public class TransactionHelper {
 
+    public static final String NO_TRANSACTION_ACTIVE = "No transaction or transaction not ACTIVE";
+
     private TransactionHelper() {
     }
 
@@ -46,7 +48,7 @@ public class TransactionHelper {
      */
     public static void checkTransactionActive(final FbTransaction transaction) throws SQLException {
         if (transaction == null || transaction.getState() != TransactionState.ACTIVE) {
-            throw new SQLNonTransientException("No transaction or transaction not ACTIVE", FBSQLException.SQL_STATE_INVALID_TX_STATE);
+            throw new SQLNonTransientException(NO_TRANSACTION_ACTIVE, FBSQLException.SQL_STATE_INVALID_TX_STATE);
         }
     }
 
