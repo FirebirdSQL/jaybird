@@ -53,8 +53,8 @@ Jaybird 3.0 is the last version to support Firebird 2.0.
 Supported Java versions
 -----------------------
 
-Jaybird 3.0.0 supports Java 6 (JDBC 4.0) and Java 7 (JDBC 4.1). 
-Java 8 (JDBC 4.2) support has not yet been front-ported from Jaybird 2.2.x.
+Jaybird 3.0.0 supports Java 6 (JDBC 4.0), Java 7 (JDBC 4.1) and 
+Java 8 (JDBC 4.2). 
 Support for earlier Java versions has been dropped.
 
 Jaybird 3.0 is the last version to support Java 6.
