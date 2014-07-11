@@ -1,5 +1,7 @@
 /*
- * Firebird Open Source J2ee connector - jdbc driver
+ * $Id$
+ *
+ * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -12,19 +14,19 @@
  * This file was created by members of the firebird development team.
  * All individual contributions remain the Copyright (C) of those
  * individuals.  Contributors to this file are either listed here or
- * can be obtained from a CVS history command.
+ * can be obtained from a source control history command.
  *
  * All rights reserved.
  */
-
 package org.firebirdsql.jca;
 
 import javax.resource.ResourceException;
 import javax.resource.spi.*;
 import javax.transaction.xa.*;
 
-import org.firebirdsql.gds.GDSException;
 import org.firebirdsql.jdbc.FBConnection;
+
+import java.sql.SQLException;
 
 /**
  * The class <code>FBLocalTransaction</code> implements LocalTransaction both
@@ -91,7 +93,7 @@ public class FBLocalTransaction implements FirebirdLocalTransaction,
     public boolean inTransaction() throws ResourceException {
         try {
             return mc.getGDSHelper().inTransaction();
-        } catch (GDSException ex) {
+        } catch (SQLException ex) {
             throw new FBResourceException(ex);
         }
     }
@@ -141,7 +143,7 @@ public class FBLocalTransaction implements FirebirdLocalTransaction,
         } catch (XAException ex) {
             xid = null;
             throw new FBResourceException(ex);
-        } catch (GDSException ex) {
+        } catch (SQLException ex) {
             xid = null;
             throw new FBResourceException(ex);
         }
@@ -193,7 +195,7 @@ public class FBLocalTransaction implements FirebirdLocalTransaction,
                 mc.internalCommit(xid, true);
             } catch (XAException ex) {
                 throw new FBResourceTransactionException(ex.getMessage(), ex);
-            } catch (GDSException ex) {
+            } catch (SQLException ex) {
                 throw new FBResourceException(ex);
             } finally {
                 xid = null;
@@ -250,7 +252,9 @@ public class FBLocalTransaction implements FirebirdLocalTransaction,
                                                             // XAResource
                 mc.internalRollback(xid);
             } catch (XAException ex) {
-                throw new FBResourceTransactionException(ex.getMessage());
+                throw new FBResourceTransactionException(ex.getMessage(), ex);
+            } catch (SQLException ex) {
+                throw new FBResourceTransactionException(ex.getMessage(), ex);
             } finally {
                 xid = null;
             }

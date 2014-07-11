@@ -1,5 +1,7 @@
 /*
- * Firebird Open Source J2ee connector - jdbc driver
+ * $Id$
+ *
+ * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -12,7 +14,7 @@
  * This file was created by members of the firebird development team.
  * All individual contributions remain the Copyright (C) of those
  * individuals.  Contributors to this file are either listed here or
- * can be obtained from a CVS history command.
+ * can be obtained from a source control history command.
  *
  * All rights reserved.
  */
@@ -21,8 +23,7 @@ package org.firebirdsql.jca;
 import javax.resource.spi.ManagedConnectionMetaData;
 import javax.resource.ResourceException;
 
-import org.firebirdsql.gds.GDSException;
-
+import java.sql.SQLException;
 
 /**
  * The class <code>FBManagedConnectionMetaData</code> implements 
@@ -50,8 +51,8 @@ public class FBManagedConnectionMetaData implements ManagedConnectionMetaData {
      */
      public String getEISProductName() throws ResourceException {
          try {
-             return mc.getGDSHelper().getIscDBHandle().getDatabaseProductName();
-         } catch(GDSException ex) {
+             return mc.getGDSHelper().getCurrentDatabase().getServerVersion().getServerName();
+         } catch(SQLException ex) {
              throw new FBResourceException(ex);
          }
      }
@@ -65,13 +66,11 @@ public class FBManagedConnectionMetaData implements ManagedConnectionMetaData {
       */
      public String getEISProductVersion() throws ResourceException {
          try {
-             return mc.getGDSHelper().getIscDBHandle().getDatabaseProductVersion();
-         } catch(GDSException ex) {
+             return mc.getGDSHelper().getCurrentDatabase().getServerVersion().getFullVersion();
+         } catch(SQLException ex) {
              throw new FBResourceException(ex);
          }
      }
-
-
 
     /** Returns maximum limit on number of active concurrent connections that 
      * an EIS instance can support across client processes. If an EIS instance 
@@ -96,9 +95,8 @@ public class FBManagedConnectionMetaData implements ManagedConnectionMetaData {
     public String getUserName() throws ResourceException {
         try {
             return mc.getGDSHelper().getUserName();
-        } catch(GDSException ex) {
+        } catch(SQLException ex) {
             throw new FBResourceException(ex);
         }
     }
-
  }

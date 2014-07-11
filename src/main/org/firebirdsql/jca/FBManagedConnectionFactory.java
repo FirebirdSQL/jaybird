@@ -1,7 +1,7 @@
 /*
  * $Id$
- * 
- * Firebird Open Source J2ee connector - jdbc driver
+ *
+ * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -14,7 +14,7 @@
  * This file was created by members of the firebird development team.
  * All individual contributions remain the Copyright (C) of those
  * individuals.  Contributors to this file are either listed here or
- * can be obtained from a CVS history command.
+ * can be obtained from a source control history command.
  *
  * All rights reserved.
  */
@@ -126,7 +126,7 @@ public class FBManagedConnectionFactory implements ManagedConnectionFactory,
         
         return gdsType;
     }
-    
+
     /**
      * @deprecated use {@link #getBlobBufferSize()}
      */
@@ -134,7 +134,7 @@ public class FBManagedConnectionFactory implements ManagedConnectionFactory,
     public int getBlobBufferLength() {
         return getBlobBufferSize();
     }
-    
+
     /**
      * @deprecated use {@link #setBlobBufferSize(int)}
      */
@@ -142,7 +142,7 @@ public class FBManagedConnectionFactory implements ManagedConnectionFactory,
     public void setBlobBufferLength(int value) {
         setBlobBufferSize(value);
     }
-    
+
     /**
      * @deprecated use {@link #getDefaultTransactionIsolation()}
      */
@@ -784,24 +784,6 @@ public class FBManagedConnectionFactory implements ManagedConnectionFactory,
                     } else if (ex.getMessage().contains("rolled back")) {
                         errorCode = XAException.XA_HEURCOM;
                     }
-                }
-
-                throw new FBXAException("unable to complete in limbo transaction", errorCode, ex);
-            } catch (GDSException ex) {
-                /*
-                 * if ex.getIntParam() is 335544353 (transaction is not in limbo) and next ex.getIntParam() is 335544468 (transaction {0} is {1})
-                 *  => detected heuristic
-                 */
-                int errorCode = XAException.XAER_RMERR;
-                int intParam = ex.getIntParam();
-                int nextIntParam = ex.getNext().getIntParam();
-
-                if (intParam == ISCConstants.isc_no_recon && nextIntParam == ISCConstants.isc_tra_state) {
-                    String param = ex.getNext().getNext().getNext().getParam();
-                    if ("committed".equals(param))
-                        errorCode = XAException.XA_HEURCOM;
-                    else if ("rolled back".equals(param))
-                        errorCode = XAException.XA_HEURRB;
                 }
 
                 throw new FBXAException("unable to complete in limbo transaction", errorCode, ex);
