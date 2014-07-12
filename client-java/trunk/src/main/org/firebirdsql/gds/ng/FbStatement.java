@@ -33,6 +33,8 @@ import org.firebirdsql.gds.ng.listeners.StatementListener;
 import java.sql.SQLException;
 
 /**
+ * API for statement handles.
+ *
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @since 3.0
  */
@@ -47,14 +49,6 @@ public interface FbStatement {
      * @return The database connection that created this statement
      */
     FbDatabase getDatabase();
-
-    /**
-     * Allocate a statement handle for this statement on the server.
-     *
-     * @throws SQLException
-     *         If a database access error occurs, or if the statement has been allocated already.
-     */
-    void allocateStatement() throws SQLException;
 
     /**
      * Associates a transaction with this statement
@@ -106,12 +100,15 @@ public interface FbStatement {
     void closeCursor() throws SQLException;
 
     /**
-     * Prepare the statement text
+     * Prepare the statement text.
+     * <p>
+     * If this handle is in state {@link StatementState#NEW} then it will first allocate the statement.
+     * </p>
      *
      * @param statementText
      *         Statement text
      * @throws SQLException
-     *         If a database access error occurs, or if no statement handle as been allocated, or this statement is currently executing a query.
+     *         If a database access error occurs, or this statement is currently executing a query.
      */
     void prepare(String statementText) throws SQLException;
 
@@ -125,15 +122,6 @@ public interface FbStatement {
      *         a parameter value was not set, or when an error occurred executing this statement.
      */
     void execute(RowValue parameters) throws SQLException;
-
-//    /**
-//     * Prepares and executes the statement. This method cannot be used for statements expecting parameters.
-//     *
-//     * @param statementText
-//     *         Statement text
-//     * @throws SQLException
-//     */
-//    void execute(String statementText) throws SQLException;
 
     /**
      * Requests this statement to fetch the next <code>fetchSize</code> rows.

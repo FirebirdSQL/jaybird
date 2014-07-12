@@ -37,7 +37,6 @@ import org.firebirdsql.gds.ng.FbTransaction;
 import org.firebirdsql.logging.Logger;
 import org.firebirdsql.logging.LoggerFactory;
 
-
 /**
  * Helper class for all GDS-related operations.
  */
@@ -108,9 +107,7 @@ public class GDSHelper {
      */
     public FbStatement allocateStatement() throws SQLException {
         try {
-            final FbStatement statement = database.createStatement(getCurrentTransaction());
-            statement.allocateStatement();
-            return statement;
+            return database.createStatement(getCurrentTransaction());
         } catch (SQLException ex) {
             notifyListeners(ex);
             throw ex;

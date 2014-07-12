@@ -1,7 +1,7 @@
 /*
  * $Id$
- * 
- * Firebird Open Source J2EE Connector - JDBC Driver
+ *
+ * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -14,7 +14,7 @@
  * This file was created by members of the firebird development team.
  * All individual contributions remain the Copyright (C) of those
  * individuals.  Contributors to this file are either listed here or
- * can be obtained from a CVS history command.
+ * can be obtained from a source control history command.
  *
  * All rights reserved.
  */
@@ -23,6 +23,7 @@ package org.firebirdsql.gds.ng.wire;
 import org.firebirdsql.gds.impl.wire.WireProtocolConstants;
 import org.firebirdsql.gds.ng.EmptyProtocolDescriptor;
 import org.firebirdsql.gds.ng.wire.version10.Version10Descriptor;
+import org.firebirdsql.gds.ng.wire.version11.Version11Descriptor;
 import org.junit.Test;
 
 import java.util.Arrays;
@@ -34,7 +35,7 @@ import static org.junit.Assert.*;
 
 /**
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
- * @since 2.3
+ * @since 3.0
  */
 public class TestProtocolCollection {
 
@@ -50,7 +51,9 @@ public class TestProtocolCollection {
     @SuppressWarnings("unchecked")
     public void testGetDefaultCollection() {
         assertProtocolCollection(ProtocolCollection.getDefaultCollection(),
-                Arrays.<Class<? extends ProtocolDescriptor>>asList(Version10Descriptor.class));
+                Arrays.<Class<? extends ProtocolDescriptor>>asList(
+                        Version10Descriptor.class,
+                        Version11Descriptor.class));
     }
 
     /**

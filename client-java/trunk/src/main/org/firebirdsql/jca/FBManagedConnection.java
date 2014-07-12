@@ -761,7 +761,6 @@ public class FBManagedConnection implements ManagedConnection, XAResource, Excep
             // TODO: Is there a reason why this pieace of code can't use the JDBC Statement class?
             FbTransaction trHandle2 = database.startTransaction(tpb.getTransactionParameterBuffer());
             FbStatement stmtHandle2 = database.createStatement(trHandle2);
-            stmtHandle2.allocateStatement();
 
             GDSHelper gdsHelper2 = new GDSHelper(gds, getGDSHelper().getDatabaseParameterBuffer(), null, null, database);
             gdsHelper2.setCurrentTransaction(trHandle2);
@@ -826,7 +825,6 @@ public class FBManagedConnection implements ManagedConnection, XAResource, Excep
             FbTransaction trHandle2 = database.startTransaction(tpb.getTransactionParameterBuffer());
 
             FbStatement stmtHandle2 = database.createStatement(trHandle2);
-            stmtHandle2.allocateStatement();
 
             GDSHelper gdsHelper2 = new GDSHelper(gds, getGDSHelper().getDatabaseParameterBuffer(), null, null, database);
             gdsHelper2.setCurrentTransaction(trHandle2);
@@ -956,7 +954,6 @@ public class FBManagedConnection implements ManagedConnection, XAResource, Excep
             FbTransaction trHandle2 = database.startTransaction(tpb.getTransactionParameterBuffer());
 
             FbStatement stmtHandle2 = database.createStatement(trHandle2);
-            stmtHandle2.allocateStatement();
 
             GDSHelper gdsHelper2 = new GDSHelper(gds, getGDSHelper().getDatabaseParameterBuffer(), null, null, database);
             gdsHelper2.setCurrentTransaction(trHandle2);

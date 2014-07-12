@@ -51,13 +51,14 @@ import static org.junit.Assume.assumeTrue;
  */
 public abstract class BaseTestV10Blob extends FBJUnit4TestBase {
 
+    private static final int BASE_CONTENT_SIZE = 16384;
+
+    //@formatter:off
     protected static final String CREATE_BLOB_TABLE =
             "CREATE TABLE blob_table (" +
             "  id INTEGER PRIMARY KEY," +
             "  blobvalue BLOB SUB_TYPE 0" +
             ")";
-
-    private static final int BASE_CONTENT_SIZE = 16384;
 
     protected static final String CREATE_PROC_FILL_BINARY_BLOB =
             "CREATE PROCEDURE FILL_BINARY_BLOB \n" +
@@ -136,6 +137,7 @@ public abstract class BaseTestV10Blob extends FBJUnit4TestBase {
 
     protected static final String SELECT_BLOB_TABLE =
             "SELECT blobvalue FROM blob_table WHERE id = ?";
+    //@formatter:on
 
     protected static final Random rnd = new Random();
 
@@ -151,6 +153,10 @@ public abstract class BaseTestV10Blob extends FBJUnit4TestBase {
         } finally {
             closeQuietly(con);
         }
+    }
+
+    protected ProtocolCollection getProtocolCollection() {
+        return ProtocolCollection.create(new Version10Descriptor());
     }
 
     /**
@@ -258,7 +264,7 @@ public abstract class BaseTestV10Blob extends FBJUnit4TestBase {
         connectionInfo.setPassword(DB_PASSWORD);
         connectionInfo.setDatabaseName(FBTestProperties.getDatabasePath());
         connectionInfo.setEncoding("NONE");
-        WireConnection gdsConnection = new WireConnection(connectionInfo, EncodingFactory.getDefaultInstance(), ProtocolCollection.create(new Version10Descriptor()));
+        WireConnection gdsConnection = new WireConnection(connectionInfo, EncodingFactory.getDefaultInstance(), getProtocolCollection());
         gdsConnection.socketConnect();
         FbWireDatabase db = gdsConnection.identify();
         db.attach();

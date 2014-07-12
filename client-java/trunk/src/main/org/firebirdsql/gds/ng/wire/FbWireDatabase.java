@@ -103,11 +103,26 @@ public interface FbWireDatabase extends FbDatabase {
     BlrCalculator getBlrCalculator();
 
     /**
-     * Reads the next operation. Forwards call to {@link org.firebirdsql.gds.ng.wire.WireConnection#readNextOperation()}. The result is stored internally and
-     * can be retrieved once using {@link #readNextOperation()}
+     * Enqueue a deferred action.
+     * <p>
+     * FbDatabase implementations that do not support deferred actions are allowed to throw an
+     * {@link java.lang.UnsupportedOperationException}
+     * </p>
      *
-     * @return next operation
-     * @throws IOException
+     * @param deferredAction Deferred action
      */
-    int readNextOperation() throws IOException;
+    void enqueueDeferredAction(DeferredAction deferredAction);
+
+    /**
+     * Consumes packets notifying for warnings, but ignoring exceptions thrown from the packet.
+     * <p>
+     * This method should only be used inside the implementation if either packets need to be ignored,
+     * or to ensure that there is no backlog of packets (eg when an exception occurs during processing of multiple
+     * package responses).
+     * </p>
+     *
+     * @param numberOfResponses Number of responses to consume.
+     * @param warningCallback Callback for warnings
+     */
+    void consumePackets(int numberOfResponses, WarningMessageCallback warningCallback);
 }

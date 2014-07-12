@@ -516,42 +516,6 @@ public class V10Database extends AbstractFbWireDatabase implements FbWireDatabas
     }
 
     /**
-     * @param response
-     *         Response to process
-     * @throws SQLException
-     *         For errors returned from the server.
-     */
-    protected void processResponse(Response response) throws SQLException {
-        if (response instanceof GenericResponse) {
-            GenericResponse genericResponse = (GenericResponse) response;
-            SQLException exception = genericResponse.getException();
-            if (exception != null && !(exception instanceof SQLWarning)) {
-                throw exception;
-            }
-        }
-    }
-
-    /**
-     * Checks if the response included a warning and signals that warning to the
-     * WarningMessageCallback.
-     *
-     * @param response
-     *         Response to process
-     */
-    protected void processResponseWarnings(final Response response, WarningMessageCallback warningCallback) {
-        if (warningCallback == null) {
-            warningCallback = getDatabaseWarningCallback();
-        }
-        if (response instanceof GenericResponse) {
-            GenericResponse genericResponse = (GenericResponse) response;
-            SQLException exception = genericResponse.getException();
-            if (exception != null && exception instanceof SQLWarning) {
-                warningCallback.processWarning((SQLWarning) exception);
-            }
-        }
-    }
-
-    /**
      * Reads the response based on the specified operation.
      *
      * @param operation
@@ -577,10 +541,8 @@ public class V10Database extends AbstractFbWireDatabase implements FbWireDatabas
     }
 
     @Override
-    public final int readNextOperation() throws IOException {
-        synchronized (getSynchronizationObject()) {
-            return connection.readNextOperation();
-        }
+    public void enqueueDeferredAction(DeferredAction deferredAction) {
+        throw new UnsupportedOperationException("enqueueDeferredAction is not supported in the V10 protocol");
     }
 
     /**
