@@ -19,6 +19,7 @@
             </fileset>
             <fileset dir="${build.resources}">
                 <exclude name="log4j.properties"/>
+                <exclude name="META-INF/ra.xml"/>
                 <include name="**/*.properties"/>
                 <include name="**/*.xml"/>
             </fileset>
@@ -36,6 +37,7 @@
             </fileset>
             <fileset dir="${build.resources}">
                 <exclude name="log4j.properties"/>
+                <exclude name="META-INF/ra.xml"/>
                 <include name="**/*.properties"/>
                 <include name="**/*.xml"/>
             </fileset>
