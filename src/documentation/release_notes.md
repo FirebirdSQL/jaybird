@@ -228,6 +228,23 @@ Removal of deprecated classes and packages
 See [Removal of deprecated classes, packages and methods] in 
 [Compatibility changes] for more details.
 
+Known Issues
+============
+
+* `ResultSetMetaData.getTableAlias` reports the original table name. 
+  
+    In the new protocol implementation, the information items to retrieve this
+    information are dependent on the protocol version. Older Firebird versions
+    don't know the required information item (`isc_info_sql_relation_alias`).
+    
+    As soon as other protocol versions get implemented, this problem will be 
+    solved.
+
+* Native and embedded protocol are not working.
+
+    The new protocol implementation has a new set of interfaces, the native
+    implementation hasn't been rewritten yet to conform to these interfaces.
+
 Compatibility changes
 =====================
 
