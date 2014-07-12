@@ -51,6 +51,9 @@ import static org.junit.Assert.*;
 import static org.junit.Assume.assumeTrue;
 
 /**
+ * Tests for {@link org.firebirdsql.gds.ng.wire.version10.V10Database}. This test class can
+ * be sub-classed for tests running on newer protocol versions.
+ *
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @since 3.0
  */
@@ -59,7 +62,7 @@ public class TestV10Database {
     @Rule
     public final ExpectedException expectedException = ExpectedException.none();
 
-    private static final WireConnection DUMMY_CONNECTION;
+    protected static final WireConnection DUMMY_CONNECTION;
     static {
         try {
             FbConnectionProperties connectionInfo = new FbConnectionProperties();
@@ -93,13 +96,25 @@ public class TestV10Database {
         assumeTrue(!FBTestProperties.getGdsType().toString().equals(NativeGDSImpl.NATIVE_TYPE_NAME));
     }
 
+    protected AbstractFbWireDatabase createDummyDatabase() {
+        return new V10Database(DUMMY_CONNECTION, DUMMY_DESCRIPTOR);
+    }
+
+    protected ProtocolCollection getProtocolCollection() {
+        return ProtocolCollection.create(new Version10Descriptor());
+    }
+
+    protected Class<? extends FbWireDatabase> getExpectedDatabaseType() {
+        return V10Database.class;
+    }
+
     /**
      * Test if processResponse does not throw an exception if the response does
      * not contain an exception.
      */
     @Test
     public void testProcessResponse_noException() throws Exception {
-        V10Database db = new V10Database(DUMMY_CONNECTION, DUMMY_DESCRIPTOR);
+        AbstractFbWireDatabase db = createDummyDatabase();
 
         GenericResponse genericResponse = new GenericResponse(-1, -1, null, null);
         db.processResponse(genericResponse);
@@ -111,7 +126,7 @@ public class TestV10Database {
      */
     @Test
     public void testProcessResponse_exception() throws Exception {
-        V10Database db = new V10Database(DUMMY_CONNECTION, DUMMY_DESCRIPTOR);
+        AbstractFbWireDatabase db = createDummyDatabase();
         SQLException exception = new FbExceptionBuilder().exception(ISCConstants.isc_numeric_out_of_range).toSQLException();
         expectedException.expect(sameInstance(exception));
 
@@ -126,7 +141,7 @@ public class TestV10Database {
      */
     @Test
     public void testProcessResponse_warning() throws Exception {
-        V10Database db = new V10Database(DUMMY_CONNECTION, DUMMY_DESCRIPTOR);
+        AbstractFbWireDatabase db = createDummyDatabase();
 
         SQLException exception = new FbExceptionBuilder().warning(ISCConstants.isc_numeric_out_of_range).toSQLException();
         GenericResponse genericResponse = new GenericResponse(-1, -1, null, exception);
@@ -140,7 +155,7 @@ public class TestV10Database {
      */
     @Test
     public void testProcessResponseWarnings_noException() throws Exception {
-        V10Database db = new V10Database(DUMMY_CONNECTION, DUMMY_DESCRIPTOR);
+        AbstractFbWireDatabase db = createDummyDatabase();
         SimpleDatabaseListener callback = new SimpleDatabaseListener();
         db.addDatabaseListener(callback);
 
@@ -157,7 +172,7 @@ public class TestV10Database {
      */
     @Test
     public void testProcessResponseWarnings_exception() throws Exception {
-        V10Database db = new V10Database(DUMMY_CONNECTION, DUMMY_DESCRIPTOR);
+        AbstractFbWireDatabase db = createDummyDatabase();
         SimpleDatabaseListener callback = new SimpleDatabaseListener();
         db.addDatabaseListener(callback);
 
@@ -175,7 +190,7 @@ public class TestV10Database {
      */
     @Test
     public void testProcessResponseWarnings_warning() throws Exception {
-        V10Database db = new V10Database(DUMMY_CONNECTION, DUMMY_DESCRIPTOR);
+        AbstractFbWireDatabase db = createDummyDatabase();
         SimpleDatabaseListener callback = new SimpleDatabaseListener();
         db.addDatabaseListener(callback);
 
@@ -193,7 +208,7 @@ public class TestV10Database {
      */
     @Test
     public void testProcessResponseWarnings_warning_noCallback() throws Exception {
-        V10Database db = new V10Database(DUMMY_CONNECTION, DUMMY_DESCRIPTOR);
+        AbstractFbWireDatabase db = createDummyDatabase();
 
         SQLException warning = new FbExceptionBuilder().warning(ISCConstants.isc_numeric_out_of_range).toSQLException();
         GenericResponse genericResponse = new GenericResponse(-1, -1, null, warning);
@@ -209,12 +224,12 @@ public class TestV10Database {
         FBManager fbManager = createFBManager();
         defaultDatabaseSetUp(fbManager);
         try {
-            WireConnection gdsConnection = new WireConnection(connectionInfo, EncodingFactory.getDefaultInstance(), ProtocolCollection.create(new Version10Descriptor()));
+            WireConnection gdsConnection = new WireConnection(connectionInfo, EncodingFactory.getDefaultInstance(), getProtocolCollection());
             FbWireDatabase db = null;
             try {
                 gdsConnection.socketConnect();
                 db = gdsConnection.identify();
-                assertEquals("Unexpected FbWireDatabase implementation", V10Database.class, db.getClass());
+                assertEquals("Unexpected FbWireDatabase implementation", getExpectedDatabaseType(), db.getClass());
 
                 db.attach();
                 System.out.println(db.getHandle());
@@ -244,12 +259,12 @@ public class TestV10Database {
         FBManager fbManager = createFBManager();
         defaultDatabaseSetUp(fbManager);
         try {
-            WireConnection gdsConnection = new WireConnection(connectionInfo, EncodingFactory.getDefaultInstance(), ProtocolCollection.create(new Version10Descriptor()));
+            WireConnection gdsConnection = new WireConnection(connectionInfo, EncodingFactory.getDefaultInstance(), getProtocolCollection());
             FbWireDatabase db = null;
             try {
                 gdsConnection.socketConnect();
                 db = gdsConnection.identify();
-                assertEquals("Unexpected FbWireDatabase implementation", V10Database.class, db.getClass());
+                assertEquals("Unexpected FbWireDatabase implementation", getExpectedDatabaseType(), db.getClass());
                 db.attach();
 
                 //Second attach should throw exception
@@ -273,12 +288,12 @@ public class TestV10Database {
      */
     @Test
     public void testAttach_NonExistentDatabase() throws Exception {
-        WireConnection gdsConnection = new WireConnection(connectionInfo, EncodingFactory.getDefaultInstance(), ProtocolCollection.create(new Version10Descriptor()));
+        WireConnection gdsConnection = new WireConnection(connectionInfo, EncodingFactory.getDefaultInstance(), getProtocolCollection());
         FbWireDatabase db;
         try {
             gdsConnection.socketConnect();
             db = gdsConnection.identify();
-            assertEquals("Unexpected FbWireDatabase implementation", V10Database.class, db.getClass());
+            assertEquals("Unexpected FbWireDatabase implementation", getExpectedDatabaseType(), db.getClass());
 
             db.attach();
             fail("Expected the attach to fail because the database doesn't exist");
@@ -296,13 +311,13 @@ public class TestV10Database {
      */
     @Test
     public void testBasicCreateAndDrop() throws Exception {
-        WireConnection gdsConnection = new WireConnection(connectionInfo, EncodingFactory.getDefaultInstance(), ProtocolCollection.create(new Version10Descriptor()));
+        WireConnection gdsConnection = new WireConnection(connectionInfo, EncodingFactory.getDefaultInstance(), getProtocolCollection());
         FbWireDatabase db;
         File dbFile = new File(gdsConnection.getDatabaseName());
         try {
             gdsConnection.socketConnect();
             db = gdsConnection.identify();
-            assertEquals("Unexpected FbWireDatabase implementation", V10Database.class, db.getClass());
+            assertEquals("Unexpected FbWireDatabase implementation", getExpectedDatabaseType(), db.getClass());
 
             DatabaseParameterBufferImp dpb = new DatabaseParameterBufferImp();
             dpb.addArgument(ISCConstants.isc_dpb_sql_dialect, 3);
@@ -337,12 +352,12 @@ public class TestV10Database {
         FBManager fbManager = createFBManager();
         defaultDatabaseSetUp(fbManager);
         try {
-            WireConnection gdsConnection = new WireConnection(connectionInfo, EncodingFactory.getDefaultInstance(), ProtocolCollection.create(new Version10Descriptor()));
+            WireConnection gdsConnection = new WireConnection(connectionInfo, EncodingFactory.getDefaultInstance(), getProtocolCollection());
             FbWireDatabase db;
             try {
                 gdsConnection.socketConnect();
                 db = gdsConnection.identify();
-                assertEquals("Unexpected FbWireDatabase implementation", V10Database.class, db.getClass());
+                assertEquals("Unexpected FbWireDatabase implementation", getExpectedDatabaseType(), db.getClass());
 
                 db.dropDatabase();
             } finally {
@@ -371,12 +386,12 @@ public class TestV10Database {
         FBManager fbManager = createFBManager();
         defaultDatabaseSetUp(fbManager);
         try {
-            WireConnection gdsConnection = new WireConnection(connectionInfo, EncodingFactory.getDefaultInstance(), ProtocolCollection.create(new Version10Descriptor()));
+            WireConnection gdsConnection = new WireConnection(connectionInfo, EncodingFactory.getDefaultInstance(), getProtocolCollection());
             FbWireDatabase db;
             try {
                 gdsConnection.socketConnect();
                 db = gdsConnection.identify();
-                assertEquals("Unexpected FbWireDatabase implementation", V10Database.class, db.getClass());
+                assertEquals("Unexpected FbWireDatabase implementation", getExpectedDatabaseType(), db.getClass());
 
                 // Detach for connected but not attached should work
                 db.detach();
@@ -397,12 +412,12 @@ public class TestV10Database {
         FBManager fbManager = createFBManager();
         defaultDatabaseSetUp(fbManager);
         try {
-            WireConnection gdsConnection = new WireConnection(connectionInfo, EncodingFactory.getDefaultInstance(), ProtocolCollection.create(new Version10Descriptor()));
+            WireConnection gdsConnection = new WireConnection(connectionInfo, EncodingFactory.getDefaultInstance(), getProtocolCollection());
             FbWireDatabase db = null;
             try {
                 gdsConnection.socketConnect();
                 db = gdsConnection.identify();
-                assertEquals("Unexpected FbWireDatabase implementation", V10Database.class, db.getClass());
+                assertEquals("Unexpected FbWireDatabase implementation", getExpectedDatabaseType(), db.getClass());
                 db.attach();
 
                 db.detach();
@@ -428,7 +443,7 @@ public class TestV10Database {
         FBManager fbManager = createFBManager();
         defaultDatabaseSetUp(fbManager);
         try {
-            WireConnection gdsConnection = new WireConnection(connectionInfo, EncodingFactory.getDefaultInstance(), ProtocolCollection.create(new Version10Descriptor()));
+            WireConnection gdsConnection = new WireConnection(connectionInfo, EncodingFactory.getDefaultInstance(), getProtocolCollection());
             FbWireDatabase db = null;
             try {
                 gdsConnection.socketConnect();
@@ -436,7 +451,7 @@ public class TestV10Database {
                 SimpleDatabaseListener callback = new SimpleDatabaseListener();
                 db.addDatabaseListener(callback);
 
-                assertEquals("Unexpected FbWireDatabase implementation", V10Database.class, db.getClass());
+                assertEquals("Unexpected FbWireDatabase implementation", getExpectedDatabaseType(), db.getClass());
                 db.attach();
                 // Starting an active transaction
                 FbTransaction transaction = getTransaction(db);

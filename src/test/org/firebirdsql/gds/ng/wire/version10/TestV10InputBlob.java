@@ -49,6 +49,9 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 /**
+ * Tests for {@link org.firebirdsql.gds.ng.wire.version10.V10InputBlob}. This test class can
+ * be sub-classed for tests running on newer protocol versions.
+ *
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @since 3.0
  */
@@ -73,7 +76,6 @@ public class TestV10InputBlob extends BaseTestV10Blob {
         transaction = getTransaction(db);
         statement = db.createStatement(transaction);
         statement.addStatementListener(listener);
-        statement.allocateStatement();
         statement.prepare(SELECT_BLOB_TABLE);
 
         RowDescriptor descriptor = statement.getParameterDescriptor();
@@ -204,7 +206,6 @@ public class TestV10InputBlob extends BaseTestV10Blob {
             transaction = getTransaction(db);
             statement = db.createStatement(transaction);
             statement.addStatementListener(listener);
-            statement.allocateStatement();
 
             final BlobParameterBuffer blobParameterBuffer = new BlobParameterBufferImp();
             blobParameterBuffer.addArgument(BlobParameterBuffer.TYPE, BlobParameterBuffer.TYPE_STREAM);

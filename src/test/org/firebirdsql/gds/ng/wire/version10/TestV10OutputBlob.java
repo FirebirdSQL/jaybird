@@ -90,7 +90,6 @@ public class TestV10OutputBlob extends BaseTestV10Blob {
         final FbTransaction transaction = getTransaction(db);
         final FbStatement statement = db.createStatement(transaction);
         statement.addStatementListener(listener);
-        statement.allocateStatement();
         final FbBlob blob = db.createBlobForOutput(transaction, blobParameterBuffer);
         blob.open();
         int bytesWritten = 0;
@@ -213,7 +212,6 @@ public class TestV10OutputBlob extends BaseTestV10Blob {
             final FbTransaction transaction = getTransaction(db);
             final FbStatement statement = db.createStatement(transaction);
             statement.addStatementListener(listener);
-            statement.allocateStatement();
             final FbBlob blob = db.createBlobForOutput(transaction, null);
             blob.open();
             int bytesWritten = 0;

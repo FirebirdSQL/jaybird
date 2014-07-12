@@ -20,6 +20,7 @@
  */
 package org.firebirdsql.gds.ng.wire;
 
+import org.firebirdsql.gds.impl.wire.WireProtocolConstants;
 import org.firebirdsql.gds.impl.wire.XdrInputStream;
 import org.firebirdsql.gds.impl.wire.XdrOutputStream;
 import org.firebirdsql.gds.ng.AbstractFbStatement;
@@ -39,7 +40,7 @@ import java.util.WeakHashMap;
 public abstract class AbstractFbWireStatement extends AbstractFbStatement implements FbWireStatement {
 
     private final Map<RowDescriptor, byte[]> blrCache = Collections.synchronizedMap(new WeakHashMap<RowDescriptor, byte[]>());
-    private volatile int handle;
+    private volatile int handle = WireProtocolConstants.INVALID_OBJECT;
     private FbWireDatabase database;
 
     public AbstractFbWireStatement(FbWireDatabase database) {

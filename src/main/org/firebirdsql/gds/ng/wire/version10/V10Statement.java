@@ -27,7 +27,6 @@ import org.firebirdsql.gds.impl.wire.XdrOutputStream;
 import org.firebirdsql.gds.ng.*;
 import org.firebirdsql.gds.ng.fields.*;
 import org.firebirdsql.gds.ng.wire.*;
-import org.firebirdsql.jdbc.FBSQLException;
 import org.firebirdsql.util.SQLExceptionChainBuilder;
 
 import java.io.IOException;
@@ -185,17 +184,12 @@ public class V10Statement extends AbstractFbWireStatement implements FbWireState
      *         Free statement option
      * @throws SQLException
      */
-    protected void doFreePacket(int option) throws SQLException {
+    protected void doFreePacket(int option) throws SQLException, IOException {
         synchronized (getDatabase().getSynchronizationObject()) {
-            try {
-                sendFree(option);
+            sendFree(option);
 
-                // Reset statement information
-                reset(option == ISCConstants.DSQL_drop);
-            } catch (IOException e) {
-                switchState(StatementState.ERROR);
-                throw new FbExceptionBuilder().exception(ISCConstants.isc_net_write_err).cause(e).toSQLException();
-            }
+            // Reset statement information
+            reset(option == ISCConstants.DSQL_drop);
         }
     }
 
@@ -221,14 +215,13 @@ public class V10Statement extends AbstractFbWireStatement implements FbWireState
      *
      * @param response
      *         Response object
-     * @throws IOException
-     * @throws SQLException
      */
-    protected void processFreeResponse(Response response) throws IOException, SQLException {
+    protected void processFreeResponse(Response response) {
         // No processing needed
     }
 
-    private static final EnumSet<StatementState> PREPARE_ALLOWED_STATES = EnumSet.of(StatementState.ALLOCATED, StatementState.PREPARED);
+    private static final EnumSet<StatementState> PREPARE_ALLOWED_STATES = EnumSet.of(
+            StatementState.NEW, StatementState.ALLOCATED, StatementState.PREPARED);
 
     /**
      * Is a call to {@link #prepare(String)} allowed for the supplied {@link StatementState}.
@@ -243,14 +236,32 @@ public class V10Statement extends AbstractFbWireStatement implements FbWireState
     @Override
     public void prepare(final String statementText) throws SQLException {
         synchronized (getSynchronizationObject()) {
-            checkStatementValid();
             checkTransactionActive(getTransaction());
             final StatementState currentState = getState();
             if (!isPrepareAllowed(currentState)) {
                 throw new SQLNonTransientException(String.format("Current statement state (%s) does not allow call to prepare", currentState));
             }
             resetAll();
-            synchronized (getDatabase().getSynchronizationObject()) {
+            final FbWireDatabase db = getDatabase();
+            synchronized (db.getSynchronizationObject()) {
+                if (currentState == StatementState.NEW) {
+                    try {
+                        sendAllocate();
+                        getXdrOut().flush();
+                    } catch (IOException ex) {
+                        switchState(StatementState.ERROR);
+                        throw new FbExceptionBuilder().exception(ISCConstants.isc_net_write_err).cause(ex).toSQLException();
+                    }
+                    try {
+                        processAllocateResponse(db.readGenericResponse(getStatementWarningCallback()));
+                    } catch (IOException ex) {
+                        switchState(StatementState.ERROR);
+                        throw new FbExceptionBuilder().exception(ISCConstants.isc_net_read_err).cause(ex).toSQLException();
+                    }
+                } else {
+                    checkStatementValid();
+                }
+
                 try {
                     sendPrepare(statementText);
                     getXdrOut().flush();
@@ -259,7 +270,7 @@ public class V10Statement extends AbstractFbWireStatement implements FbWireState
                     throw new FbExceptionBuilder().exception(ISCConstants.isc_net_write_err).cause(ex).toSQLException();
                 }
                 try {
-                    processPrepareResponse(getDatabase().readGenericResponse(getStatementWarningCallback()));
+                    processPrepareResponse(db.readGenericResponse(getStatementWarningCallback()));
                 } catch (IOException ex) {
                     switchState(StatementState.ERROR);
                     throw new FbExceptionBuilder().exception(ISCConstants.isc_net_read_err).cause(ex).toSQLException();
@@ -350,25 +361,29 @@ public class V10Statement extends AbstractFbWireStatement implements FbWireState
 
     @Override
     public void execute(final RowValue parameters) throws SQLException {
-        // TODO Validate transaction state?
         synchronized (getSynchronizationObject()) {
             checkStatementValid();
             checkTransactionActive(getTransaction());
             validateParameters(parameters);
             reset(false);
 
-            synchronized (getDatabase().getSynchronizationObject()) {
+            final FbWireDatabase db = getDatabase();
+            synchronized (db.getSynchronizationObject()) {
                 // TODO Which state to switch to when an exception occurs (always ERROR might be wrong, see to do at start of class)
                 switchState(StatementState.EXECUTING);
                 final StatementType statementType = getType();
                 final SqlCountProcessor sqlCountProcessor;
+                int expectedResponseCount = 0;
                 try {
+                    if (statementType.isTypeWithSingletonResult()) {
+                        expectedResponseCount++;
+                    }
                     sendExecute(statementType.isTypeWithSingletonResult() ? WireProtocolConstants.op_execute2 : WireProtocolConstants.op_execute, parameters);
+                    expectedResponseCount++;
                     if (!statementType.isTypeWithCursor()) {
-                        // TODO Test if batching requests like this also work with earlier version of Firebird (works on 2.5)
-                        // TODO Batching requests this way has a flaw: if an exception occurs is returned in the response, the next still needs to be read (but probably not always!)
                         sqlCountProcessor = createSqlCountProcessor();
                         sendInfoSql(sqlCountProcessor.getRecordCountInfoItems(), getDefaultSqlInfoSize());
+                        expectedResponseCount++;
                     } else {
                         sqlCountProcessor = null;
                     }
@@ -377,34 +392,44 @@ public class V10Statement extends AbstractFbWireStatement implements FbWireState
                     switchState(StatementState.ERROR);
                     throw new FbExceptionBuilder().exception(ISCConstants.isc_net_write_err).cause(ex).toSQLException();
                 }
+
                 final SQLExceptionChainBuilder<SQLException> chain = new SQLExceptionChainBuilder<SQLException>();
                 try {
                     final boolean hasFields = getFieldDescriptor() != null && getFieldDescriptor().getCount() > 0;
                     final WarningMessageCallback statementWarningCallback = getStatementWarningCallback();
 
                     try {
-                        if (statementType.isTypeWithSingletonResult()) {
-                            // A type with a singleton result (ie an execute procedure), doesn't actually have a result set that will be fetched, instead we have a singleton result if we have fields
-                            statementListenerDispatcher.statementExecuted(this, false, hasFields);
-                            processExecuteSingletonResponse(getDatabase().readSqlResponse(statementWarningCallback));
-                            if (hasFields) {
-                                setAllRowsFetched(true);
-                            }
-                        } else {
-                            // A normal execute is never a singleton result (even if it only produces a single result)
-                            statementListenerDispatcher.statementExecuted(this, hasFields, false);
-                        }
-                        processExecuteResponse(getDatabase().readGenericResponse(statementWarningCallback));
-                    } catch (SQLException ex) {
-                        chain.append(ex);
-                    }
-
-                    if (sqlCountProcessor != null) {
                         try {
-                            statementListenerDispatcher.sqlCounts(this, sqlCountProcessor.process(processInfoSqlResponse(getDatabase().readGenericResponse(statementWarningCallback))));
+                            if (statementType.isTypeWithSingletonResult()) {
+                                /* A type with a singleton result (ie an execute procedure), doesn't actually have a
+                                 * result set that will be fetched, instead we have a singleton result if we have fields
+                                 */
+                                statementListenerDispatcher.statementExecuted(this, false, hasFields);
+                                expectedResponseCount--;
+                                processExecuteSingletonResponse(db.readSqlResponse(statementWarningCallback));
+                                if (hasFields) {
+                                    setAllRowsFetched(true);
+                                }
+                            } else {
+                                // A normal execute is never a singleton result (even if it only produces a single result)
+                                statementListenerDispatcher.statementExecuted(this, hasFields, false);
+                            }
+                            expectedResponseCount--;
+                            processExecuteResponse(db.readGenericResponse(statementWarningCallback));
                         } catch (SQLException ex) {
                             chain.append(ex);
                         }
+
+                        if (sqlCountProcessor != null) {
+                            try {
+                                expectedResponseCount--;
+                                statementListenerDispatcher.sqlCounts(this, sqlCountProcessor.process(processInfoSqlResponse(db.readGenericResponse(statementWarningCallback))));
+                            } catch (SQLException ex) {
+                                chain.append(ex);
+                            }
+                        }
+                    } finally {
+                        db.consumePackets(expectedResponseCount, getStatementWarningCallback());
                     }
 
                     if (chain.hasException()) {
@@ -652,29 +677,6 @@ public class V10Statement extends AbstractFbWireStatement implements FbWireState
                 }
                 // sqlind (null indicator)
                 xdrOut.writeInt(buffer != null ? NULL_INDICATOR_NOT_NULL : NULL_INDICATOR_NULL);
-            }
-        }
-    }
-
-    @Override
-    public void allocateStatement() throws SQLException {
-        if (getState() != StatementState.NEW) {
-            // TODO Is there a better sqlstate?
-            throw new SQLNonTransientException("allocateOldStatement only allowed when current state is NEW", FBSQLException.SQL_STATE_GENERAL_ERROR);
-        }
-        synchronized (getDatabase().getSynchronizationObject()) {
-            try {
-                sendAllocate();
-                getXdrOut().flush();
-            } catch (IOException ex) {
-                switchState(StatementState.ERROR);
-                throw new FbExceptionBuilder().exception(ISCConstants.isc_net_write_err).cause(ex).toSQLException();
-            }
-            try {
-                processAllocateResponse(getDatabase().readGenericResponse(getStatementWarningCallback()));
-            } catch (IOException ex) {
-                switchState(StatementState.ERROR);
-                throw new FbExceptionBuilder().exception(ISCConstants.isc_net_read_err).cause(ex).toSQLException();
             }
         }
     }

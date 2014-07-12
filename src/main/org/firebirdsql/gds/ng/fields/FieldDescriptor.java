@@ -82,7 +82,9 @@ public final class FieldDescriptor {
         this.scale = scale;
         this.length = length;
         this.fieldName = fieldName;
-        this.tableAlias = tableAlias;
+        // Assign null if table alias is empty string
+        // TODO May want to do the reverse, or handle this better; see FirebirdResultSetMetaData contract
+        this.tableAlias = tableAlias == null || !tableAlias.isEmpty() ? tableAlias : null;
         this.originalName = originalName;
         this.originalTableName = originalTableName;
         this.ownerName = ownerName;

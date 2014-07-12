@@ -35,7 +35,7 @@ import java.sql.SQLException;
  * InfoProcessor to retrieve the statement information associated with {@link org.firebirdsql.gds.ng.wire.version10.V10Statement#getStatementInfoRequestItems()}
  * and {@link org.firebirdsql.gds.ng.wire.version10.V10Statement#getParameterDescriptionInfoRequestItems()}.
  * <p>
- * TODO Potentially this class can be rewritten so it can be used to process statement info for all protocol versions.
+ * Although this class is in version10, it can be used to process statement info for all protocol versions.
  * </p>
  *
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
@@ -202,16 +202,23 @@ public final class V10StatementInfoProcessor implements InfoProcessor<InfoProces
                 rdb.setOriginalName(readStringValue(info));
                 break;
 
+            case ISCConstants.isc_info_sql_alias:
+                rdb.setFieldName(readStringValue(info));
+                break;
+
             case ISCConstants.isc_info_sql_relation:
                 rdb.setOriginalTableName(readStringValue(info));
                 break;
 
-            case ISCConstants.isc_info_sql_owner:
-                rdb.setOwnerName(readStringValue(info));
+            /* NOTE This constant is not available in the V10 implementation, but we include it so this processor can be
+             * used for newer protocol versions
+             */
+            case ISCConstants.isc_info_sql_relation_alias:
+                rdb.setTableAlias(readStringValue(info));
                 break;
 
-            case ISCConstants.isc_info_sql_alias:
-                rdb.setFieldName(readStringValue(info));
+            case ISCConstants.isc_info_sql_owner:
+                rdb.setOwnerName(readStringValue(info));
                 break;
 
             case ISCConstants.isc_info_sql_describe_end:

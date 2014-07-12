@@ -123,7 +123,6 @@ public class TestReconnectTransaction extends FBJUnit4TestBase {
         gdsHelper2.setCurrentTransaction(trHandle2);
 
         FbStatement stmtHandle2 = dbHandle2.createStatement(trHandle2);
-        stmtHandle2.allocateStatement();
         stmtHandle2.prepare(RECOVERY_QUERY);
 
         final List<RowValue> rows = new ArrayList<RowValue>();

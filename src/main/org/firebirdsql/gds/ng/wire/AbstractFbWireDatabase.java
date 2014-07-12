@@ -28,15 +28,24 @@ import org.firebirdsql.gds.impl.wire.XdrOutputStream;
 import org.firebirdsql.gds.ng.AbstractFbDatabase;
 import org.firebirdsql.gds.ng.FbBlob;
 import org.firebirdsql.gds.ng.FbTransaction;
+import org.firebirdsql.gds.ng.WarningMessageCallback;
+import org.firebirdsql.logging.Logger;
+import org.firebirdsql.logging.LoggerFactory;
 
+import java.io.IOException;
 import java.sql.SQLException;
+import java.sql.SQLWarning;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
+ * Abstract class for operations common to all version of the wire protocol implementation.
+ *
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @since 3.0
  */
 public abstract class AbstractFbWireDatabase extends AbstractFbDatabase implements FbWireDatabase {
+
+    private static final Logger log = LoggerFactory.getLogger(AbstractFbWireDatabase.class, false);
 
     protected final AtomicBoolean attached = new AtomicBoolean();
     protected final ProtocolDescriptor protocolDescriptor;
@@ -121,5 +130,68 @@ public abstract class AbstractFbWireDatabase extends AbstractFbDatabase implemen
     @Override
     public FbBlob createBlobForInput(FbTransaction transaction, BlobParameterBuffer blobParameterBuffer, long blobId) throws SQLException {
         return protocolDescriptor.createInputBlob(this, (FbWireTransaction) transaction, blobParameterBuffer, blobId);
+    }
+
+    @Override
+    public void consumePackets(int numberOfResponses, WarningMessageCallback warningCallback) {
+        while (numberOfResponses > 0) {
+            numberOfResponses--;
+            try {
+                readResponse(warningCallback);
+            } catch (Exception e) {
+                // TODO Wrap in SQLWarning and register on warning callback?
+                // ignoring exceptions
+                log.debug("Exception in consumePackets", e);
+            }
+        }
+    }
+
+    /**
+     * @param response
+     *         Response to process
+     * @throws java.sql.SQLException
+     *         For errors returned from the server.
+     */
+    public void processResponse(Response response) throws SQLException {
+        if (response instanceof GenericResponse) {
+            GenericResponse genericResponse = (GenericResponse) response;
+            SQLException exception = genericResponse.getException();
+            if (exception != null && !(exception instanceof SQLWarning)) {
+                throw exception;
+            }
+        }
+    }
+
+    /**
+     * Checks if the response included a warning and signals that warning to the
+     * WarningMessageCallback.
+     *
+     * @param response
+     *         Response to process
+     */
+    public void processResponseWarnings(final Response response, WarningMessageCallback warningCallback) {
+        if (warningCallback == null) {
+            warningCallback = getDatabaseWarningCallback();
+        }
+        if (response instanceof GenericResponse) {
+            GenericResponse genericResponse = (GenericResponse) response;
+            @SuppressWarnings("ThrowableResultOfMethodCallIgnored")
+            SQLException exception = genericResponse.getException();
+            if (exception != null && exception instanceof SQLWarning) {
+                warningCallback.processWarning((SQLWarning) exception);
+            }
+        }
+    }
+
+    /**
+     * Reads the next operation. Forwards call to {@link WireConnection#readNextOperation()}.
+     *
+     * @return next operation
+     * @throws java.io.IOException
+     */
+    public int readNextOperation() throws IOException {
+        synchronized (getSynchronizationObject()) {
+            return connection.readNextOperation();
+        }
     }
 }

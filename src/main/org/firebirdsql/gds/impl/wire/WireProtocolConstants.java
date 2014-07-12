@@ -31,6 +31,8 @@ package org.firebirdsql.gds.impl.wire;
  */
 public interface WireProtocolConstants {
 
+    int INVALID_OBJECT = 0xFFFF;
+
     /* Operation (packet) types */
     int op_void = 0; /* Packet has been voided */
     int op_connect = 1; /* Connect to remote server */

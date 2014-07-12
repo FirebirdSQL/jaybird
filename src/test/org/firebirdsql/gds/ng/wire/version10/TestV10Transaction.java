@@ -55,6 +55,9 @@ import static org.junit.Assert.*;
 import static org.junit.Assume.assumeTrue;
 
 /**
+ * Tests for {@link org.firebirdsql.gds.ng.wire.version10.V10Transaction}. This test class can
+ * be sub-classed for tests running on newer protocol versions.
+ *
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @since 3.0
  */
@@ -99,10 +102,10 @@ public class TestV10Transaction extends FBJUnit4TestBase {
             closeQuietly(con);
         }
 
-        WireConnection gdsConnection = new WireConnection(connectionInfo, EncodingFactory.getDefaultInstance(), ProtocolCollection.create(new Version10Descriptor()));
+        WireConnection gdsConnection = new WireConnection(connectionInfo, EncodingFactory.getDefaultInstance(), getProtocolCollection());
         gdsConnection.socketConnect();
         db = gdsConnection.identify();
-        assertEquals("Unexpected FbWireDatabase implementation", V10Database.class, db.getClass());
+        assertEquals("Unexpected FbWireDatabase implementation", getExpectedDatabaseType(), db.getClass());
 
         db.attach();
     }
@@ -116,6 +119,14 @@ public class TestV10Transaction extends FBJUnit4TestBase {
                 log.debug("Exception on detach", ex);
             }
         }
+    }
+
+    protected ProtocolCollection getProtocolCollection() {
+        return ProtocolCollection.create(new Version10Descriptor());
+    }
+
+    protected Class<? extends FbWireDatabase> getExpectedDatabaseType() {
+        return V10Database.class;
     }
 
     @Test
@@ -204,7 +215,6 @@ public class TestV10Transaction extends FBJUnit4TestBase {
     private void insertKeyValue(FbTransaction transaction, int key, String value) throws SQLException {
         FbStatement statement = db.createStatement(transaction);
         try {
-            statement.allocateStatement();
             statement.prepare("INSERT INTO keyvalue (thekey, thevalue) VALUES (?, ?)");
 
             FieldValue parameter1 = statement.getParameterDescriptor().getFieldDescriptor(0).createDefaultFieldValue();

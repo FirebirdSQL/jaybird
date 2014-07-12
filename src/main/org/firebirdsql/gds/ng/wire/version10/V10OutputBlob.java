@@ -42,8 +42,8 @@ public class V10OutputBlob extends AbstractFbWireOutputBlob implements FbWireBlo
 
     // TODO V10OutputBlob and V10InputBlob share some common behavior and information (eg in open() and getMaximumSegmentSize()), find a way to unify this
 
-    protected V10OutputBlob(FbWireDatabase database, FbWireTransaction transaction,
-                            BlobParameterBuffer blobParameterBuffer) {
+    public V10OutputBlob(FbWireDatabase database, FbWireTransaction transaction,
+            BlobParameterBuffer blobParameterBuffer) {
         super(database, transaction, blobParameterBuffer);
     }
 

@@ -58,52 +58,57 @@ import static org.junit.Assume.assumeThat;
 import static org.junit.Assume.assumeTrue;
 
 /**
+ * Tests for {@link org.firebirdsql.gds.ng.wire.version10.V10Statement}. This test class can
+ * be sub-classed for tests running on newer protocol versions.
+ *
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @since 3.0
  */
 public class TestV10Statement extends FBJUnit4TestBase {
 
+    //@formatter:off
     private static final String CREATE_EXECUTABLE_STORED_PROCEDURE =
             "CREATE PROCEDURE increment " +
-                    " (intvalue INTEGER) " +
-                    "RETURNS " +
-                    " (outvalue INTEGER) " +
-                    "AS " +
-                    "BEGIN " +
-                    " outvalue = intvalue + 1; " +
-                    "END";
+            " (intvalue INTEGER) " +
+            "RETURNS " +
+            " (outvalue INTEGER) " +
+            "AS " +
+            "BEGIN " +
+            " outvalue = intvalue + 1; " +
+            "END";
 
     private static final String EXECUTE_EXECUTABLE_STORED_PROCEDURE =
             "EXECUTE PROCEDURE INCREMENT(?)";
 
     private static final String CREATE_SELECTABLE_STORED_PROCEDURE =
             "CREATE PROCEDURE range " +
-                    " (startvalue INTEGER, rowcount INTEGER) " +
-                    "RETURNS " +
-                    " (outvalue INTEGER) " +
-                    "AS " +
-                    "DECLARE VARIABLE actualcount INTEGER; " +
-                    "BEGIN " +
-                    "  actualcount = 0; " +
-                    "  WHILE (actualcount < rowcount) DO " +
-                    "  BEGIN " +
-                    "    outvalue = startvalue + actualcount; " +
-                    "    suspend; " +
-                    "    actualcount = actualcount + 1; " +
-                    "  END " +
-                    "END";
+            " (startvalue INTEGER, rowcount INTEGER) " +
+            "RETURNS " +
+            " (outvalue INTEGER) " +
+            "AS " +
+            "DECLARE VARIABLE actualcount INTEGER; " +
+            "BEGIN " +
+            "  actualcount = 0; " +
+            "  WHILE (actualcount < rowcount) DO " +
+            "  BEGIN " +
+            "    outvalue = startvalue + actualcount; " +
+            "    suspend; " +
+            "    actualcount = actualcount + 1; " +
+            "  END " +
+            "END";
 
     private static final String EXECUTE_SELECTABLE_STORED_PROCEDURE =
             "SELECT OUTVALUE FROM RANGE(?, ?)";
 
     private static final String CREATE_KEY_VALUE_TABLE =
             "CREATE TABLE keyvalue ( " +
-                    " thekey INTEGER, " +
-                    " thevalue VARCHAR(5)" +
-                    ")";
+            " thekey INTEGER, " +
+            " thevalue VARCHAR(5)" +
+            ")";
 
     private static final String INSERT_RETURNING_KEY_VALUE =
             "INSERT INTO keyvalue (thevalue) VALUES (?) RETURNING thekey";
+    //@formatter:on
 
     private final FbConnectionProperties connectionInfo;
     private final SimpleStatementListener listener = new SimpleStatementListener();
@@ -132,6 +137,18 @@ public class TestV10Statement extends FBJUnit4TestBase {
         assumeTrue(!FBTestProperties.getGdsType().toString().equals(NativeGDSImpl.NATIVE_TYPE_NAME));
     }
 
+    protected ProtocolCollection getProtocolCollection() {
+        return ProtocolCollection.create(new Version10Descriptor());
+    }
+
+    protected Class<? extends FbWireDatabase> getExpectedDatabaseType() {
+        return V10Database.class;
+    }
+
+    protected boolean supportsTableAlias() {
+        return false;
+    }
+
     @Before
     public void setUp() throws Exception {
         Connection con = FBTestProperties.getConnectionViaDriverManager();
@@ -143,10 +160,10 @@ public class TestV10Statement extends FBJUnit4TestBase {
             JdbcResourceHelper.closeQuietly(con);
         }
 
-        WireConnection gdsConnection = new WireConnection(connectionInfo, EncodingFactory.getDefaultInstance(), ProtocolCollection.create(new Version10Descriptor()));
+        WireConnection gdsConnection = new WireConnection(connectionInfo, EncodingFactory.getDefaultInstance(), getProtocolCollection());
         gdsConnection.socketConnect();
         db = gdsConnection.identify();
-        assertEquals("Unexpected FbWireDatabase implementation", V10Database.class, db.getClass());
+        assertEquals("Unexpected FbWireDatabase implementation", getExpectedDatabaseType(), db.getClass());
 
         db.attach();
     }
@@ -211,11 +228,10 @@ public class TestV10Statement extends FBJUnit4TestBase {
 
         final RowDescriptor fields = statement.getFieldDescriptor();
         assertNotNull("Fields", fields);
-        // Note that in the V10 protocol we don't have support for the table alias, so it is always null
         final boolean unicodeFssLengthReported = supportInfoFor(db).reportsByteLengthInDescriptor();
         List<FieldDescriptor> expectedFields =
                 Arrays.asList(
-                        new FieldDescriptor(ISCConstants.SQL_TEXT | 1, 3, 0, unicodeFssLengthReported ? 93 : 31, "RDB$CHARACTER_SET_NAME", null, "RDB$CHARACTER_SET_NAME", "RDB$CHARACTER_SETS", "SYSDBA")
+                        new FieldDescriptor(ISCConstants.SQL_TEXT | 1, 3, 0, unicodeFssLengthReported ? 93 : 31, "RDB$CHARACTER_SET_NAME", supportsTableAlias() ? "A" : null, "RDB$CHARACTER_SET_NAME", "RDB$CHARACTER_SETS", "SYSDBA")
                 );
         assertEquals("Unexpected values for fields", expectedFields, fields.getFieldDescriptors());
 
@@ -262,17 +278,6 @@ public class TestV10Statement extends FBJUnit4TestBase {
     }
 
     // TODO Test with executable stored procedure
-
-    @Test
-    public void testAllocate_NotNew() throws Exception {
-        statement = db.createStatement(null);
-
-        statement.allocateStatement();
-
-        expectedException.expect(SQLNonTransientException.class);
-        expectedException.expectMessage("allocateOldStatement only allowed when current state is NEW");
-        statement.allocateStatement();
-    }
 
     @Test
     public void test_PrepareExecutableStoredProcedure() throws Exception {
@@ -386,17 +391,8 @@ public class TestV10Statement extends FBJUnit4TestBase {
     @Test
     public void test_GetExecutionPlan_noStatementPrepared() throws Exception {
         allocateStatement();
-
-        String executionPlan = statement.getExecutionPlan();
-        // TODO: Behavior is different for Firebird 3: throws an exception "Attempt to execute an unprepared dynamic SQL statement."
-        assertEquals("Unexpected plan for allocated statement (not prepared)", "", executionPlan);
-    }
-
-    @Test
-    public void test_GetExecutionPlan_notAllocated() throws Exception {
         expectedException.expect(SQLNonTransientException.class);
         expectedException.expectMessage("Statement not yet allocated");
-        statement = db.createStatement(null);
 
         statement.getExecutionPlan();
     }
@@ -445,19 +441,6 @@ public class TestV10Statement extends FBJUnit4TestBase {
     }
 
     /**
-     * Test calling {@link org.firebirdsql.gds.ng.FbStatement#closeCursor()} on statement with state ALLOCATED,
-     * expectation: no error, state unchanged
-     */
-    @Test
-    public void test_CloseCursor_State_ALLOCATED() throws Exception {
-        allocateStatement();
-        assumeThat(statement.getState(), equalTo(StatementState.ALLOCATED));
-
-        statement.closeCursor();
-        assertEquals(StatementState.ALLOCATED, statement.getState());
-    }
-
-    /**
      * Test calling {@link org.firebirdsql.gds.ng.FbStatement#closeCursor()} on statement with state PREPARED,
      * expectation: no error, state unchanged
      */
@@ -500,6 +483,87 @@ public class TestV10Statement extends FBJUnit4TestBase {
         assertEquals(StatementState.CLOSED, statement.getState());
     }
 
+    @Test
+    public void testMultipleExecute() throws Exception {
+        allocateStatement();
+        statement.prepare(
+                "SELECT RDB$DESCRIPTION AS \"Description\", RDB$RELATION_ID, RDB$SECURITY_CLASS, RDB$CHARACTER_SET_NAME " +
+                        "FROM RDB$DATABASE");
+
+        final SimpleStatementListener statementListener = new SimpleStatementListener();
+        statement.addStatementListener(statementListener);
+
+        statement.execute(RowValue.EMPTY_ROW_VALUE);
+
+        assertEquals("Expected hasResultSet to be set to true", Boolean.TRUE, statementListener.hasResultSet());
+        assertEquals("Expected hasSingletonResult to be set to false", Boolean.FALSE, statementListener.hasSingletonResult());
+        assertNull("Expected allRowsFetched not set yet", statementListener.isAllRowsFetched());
+        assertEquals("Expected no rows to be fetched yet", 0, statementListener.getRows().size());
+
+        statement.fetchRows(10);
+
+        assertEquals("Expected allRowsFetched to be set to true", Boolean.TRUE, statementListener.isAllRowsFetched());
+        assertEquals("Expected a single row to have been fetched", 1, statementListener.getRows().size());
+
+        statement.closeCursor();
+        final SimpleStatementListener statementListener2 = new SimpleStatementListener();
+        statement.addStatementListener(statementListener2);
+        statement.execute(RowValue.EMPTY_ROW_VALUE);
+
+        assertEquals("Expected hasResultSet to be set to true", Boolean.TRUE, statementListener2.hasResultSet());
+        assertEquals("Expected hasSingletonResult to be set to false", Boolean.FALSE, statementListener2.hasSingletonResult());
+        assertNull("Expected allRowsFetched not set yet", statementListener2.isAllRowsFetched());
+        assertEquals("Expected no rows to be fetched yet", 0, statementListener2.getRows().size());
+
+        statement.fetchRows(10);
+
+        assertEquals("Expected allRowsFetched to be set to true", Boolean.TRUE, statementListener2.isAllRowsFetched());
+        assertEquals("Expected a single row to have been fetched", 1, statementListener2.getRows().size());
+    }
+
+    @Test
+    public void testMultiplePrepare() throws Exception {
+        allocateStatement();
+        statement.prepare(
+                "SELECT RDB$DESCRIPTION AS \"Description\", RDB$RELATION_ID, RDB$SECURITY_CLASS, RDB$CHARACTER_SET_NAME " +
+                        "FROM RDB$DATABASE");
+
+        final SimpleStatementListener statementListener = new SimpleStatementListener();
+        statement.addStatementListener(statementListener);
+
+        statement.execute(RowValue.EMPTY_ROW_VALUE);
+
+        assertEquals("Expected hasResultSet to be set to true", Boolean.TRUE, statementListener.hasResultSet());
+        assertEquals("Expected hasSingletonResult to be set to false", Boolean.FALSE, statementListener.hasSingletonResult());
+        assertNull("Expected allRowsFetched not set yet", statementListener.isAllRowsFetched());
+        assertEquals("Expected no rows to be fetched yet", 0, statementListener.getRows().size());
+
+        statement.fetchRows(10);
+
+        assertEquals("Expected allRowsFetched to be set to true", Boolean.TRUE, statementListener.isAllRowsFetched());
+        assertEquals("Expected a single row to have been fetched", 1, statementListener.getRows().size());
+
+        statement.closeCursor();
+
+        statement.prepare(
+                "SELECT RDB$DESCRIPTION AS \"Description\", RDB$RELATION_ID, RDB$SECURITY_CLASS, RDB$CHARACTER_SET_NAME " +
+                        "FROM RDB$DATABASE");
+
+        final SimpleStatementListener statementListener2 = new SimpleStatementListener();
+        statement.addStatementListener(statementListener2);
+        statement.execute(RowValue.EMPTY_ROW_VALUE);
+
+        assertEquals("Expected hasResultSet to be set to true", Boolean.TRUE, statementListener2.hasResultSet());
+        assertEquals("Expected hasSingletonResult to be set to false", Boolean.FALSE, statementListener2.hasSingletonResult());
+        assertNull("Expected allRowsFetched not set yet", statementListener2.isAllRowsFetched());
+        assertEquals("Expected no rows to be fetched yet", 0, statementListener2.getRows().size());
+
+        statement.fetchRows(10);
+
+        assertEquals("Expected allRowsFetched to be set to true", Boolean.TRUE, statementListener2.isAllRowsFetched());
+        assertEquals("Expected a single row to have been fetched", 1, statementListener2.getRows().size());
+    }
+
     private FbTransaction getTransaction() throws SQLException {
         TransactionParameterBuffer tpb = new TransactionParameterBufferImpl();
         tpb.addArgument(ISCConstants.isc_tpb_read_committed);
@@ -514,7 +578,6 @@ public class TestV10Statement extends FBJUnit4TestBase {
             transaction = getTransaction();
         }
         statement = db.createStatement(transaction);
-        statement.allocateStatement();
     }
 
     @After

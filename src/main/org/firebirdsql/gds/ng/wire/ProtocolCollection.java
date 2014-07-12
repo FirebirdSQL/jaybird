@@ -1,7 +1,7 @@
 /*
  * $Id$
- * 
- * Firebird Open Source J2EE Connector - JDBC Driver
+ *
+ * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -14,7 +14,7 @@
  * This file was created by members of the firebird development team.
  * All individual contributions remain the Copyright (C) of those
  * individuals.  Contributors to this file are either listed here or
- * can be obtained from a CVS history command.
+ * can be obtained from a source control history command.
  *
  * All rights reserved.
  */
@@ -30,7 +30,7 @@ import java.util.*;
  * </p>
  * 
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
- * @since 2.3
+ * @since 3.0
  */
 public final class ProtocolCollection implements Iterable<ProtocolDescriptor> {
 
@@ -84,7 +84,7 @@ public final class ProtocolCollection implements Iterable<ProtocolDescriptor> {
      * Loads the protocols from a hardcoded list of class names.
      * <p>
      * This method is intended as a fallback in case the plugins could not be discovered from the
-     * {@code META-INF/services/org.firebirdsql.gds.ng.wire.version10.Version10Descriptor} file(s). See also
+     * {@code META-INF/services/org.firebirdsql.gds.ng.wire.ProtocolDescriptor} file(s). See also
      * <a href="http://tracker.firebirdsql.org/browse/JDBC-325">issue JDBC-325</a>
      * </p>
      *
@@ -94,7 +94,8 @@ public final class ProtocolCollection implements Iterable<ProtocolDescriptor> {
     private static List<ProtocolDescriptor> loadProtocolsFallback(ClassLoader classLoader) {
         // TODO Make sure all classes from default implementation are included
         String[] protocolClasses = {
-                "org.firebirdsql.gds.ng.wire.version10.Version10Descriptor"
+                "org.firebirdsql.gds.ng.wire.version10.Version10Descriptor",
+                "org.firebirdsql.gds.ng.wire.version11.Version11Descriptor"
         };
         final List<ProtocolDescriptor> protocols = new ArrayList<ProtocolDescriptor>(protocolClasses.length);
         for (String className : protocolClasses) {
