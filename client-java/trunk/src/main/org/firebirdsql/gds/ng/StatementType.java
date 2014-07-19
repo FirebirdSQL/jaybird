@@ -41,16 +41,40 @@ public enum StatementType {
         public boolean isTypeWithCursor() {
             return true;
         }
+        @Override
+        public boolean isTypeWithUpdateCounts() {
+            return true;
+        }
     },
-    INSERT(ISCConstants.isc_info_sql_stmt_insert),
-    UPDATE(ISCConstants.isc_info_sql_stmt_update),
-    DELETE(ISCConstants.isc_info_sql_stmt_delete),
+    INSERT(ISCConstants.isc_info_sql_stmt_insert) {
+        @Override
+        public boolean isTypeWithUpdateCounts() {
+            return true;
+        }
+    },
+    UPDATE(ISCConstants.isc_info_sql_stmt_update) {
+        @Override
+        public boolean isTypeWithUpdateCounts() {
+            return true;
+        }
+    },
+    DELETE(ISCConstants.isc_info_sql_stmt_delete) {
+        @Override
+        public boolean isTypeWithUpdateCounts() {
+            return true;
+        }
+    },
     DDL(ISCConstants.isc_info_sql_stmt_ddl),
     GET_SEGMENT(ISCConstants.isc_info_sql_stmt_get_segment),
     PUT_SEGMENT(ISCConstants.isc_info_sql_stmt_put_segment),
     STORED_PROCEDURE(ISCConstants.isc_info_sql_stmt_exec_procedure) {
         @Override
         public boolean isTypeWithSingletonResult() {
+            return true;
+        }
+        @Override
+        public boolean isTypeWithUpdateCounts() {
+            // TODO: Not sure
             return true;
         }
     },
@@ -60,6 +84,10 @@ public enum StatementType {
     SELECT_FOR_UPDATE(ISCConstants.isc_info_sql_stmt_select_for_upd) {
         @Override
         public boolean isTypeWithCursor() {
+            return true;
+        }
+        @Override
+        public boolean isTypeWithUpdateCounts() {
             return true;
         }
     },
@@ -115,6 +143,18 @@ public enum StatementType {
      * @return <code>true</code> statement type will produce a singleton result.
      */
     public boolean isTypeWithSingletonResult() {
+        return false;
+    }
+
+    /**
+     * Indicates whether this statement type can produce update counts.
+     * <p>
+     * Note that in some cases (eg a select) the update count might not be available immediately.
+     * </p>
+     *
+     * @return <code>true</code> of this statement type produces an update count.
+     */
+    public boolean isTypeWithUpdateCounts() {
         return false;
     }
 

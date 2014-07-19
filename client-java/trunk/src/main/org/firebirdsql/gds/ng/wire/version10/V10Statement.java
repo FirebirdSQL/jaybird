@@ -380,7 +380,7 @@ public class V10Statement extends AbstractFbWireStatement implements FbWireState
                     }
                     sendExecute(statementType.isTypeWithSingletonResult() ? WireProtocolConstants.op_execute2 : WireProtocolConstants.op_execute, parameters);
                     expectedResponseCount++;
-                    if (!statementType.isTypeWithCursor()) {
+                    if (!statementType.isTypeWithCursor() && statementType.isTypeWithUpdateCounts()) {
                         sqlCountProcessor = createSqlCountProcessor();
                         sendInfoSql(sqlCountProcessor.getRecordCountInfoItems(), getDefaultSqlInfoSize());
                         expectedResponseCount++;

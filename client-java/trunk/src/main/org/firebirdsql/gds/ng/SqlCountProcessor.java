@@ -82,6 +82,7 @@ public class SqlCountProcessor implements InfoProcessor<SqlCountHolder> {
             // TODO Handle isc_info_truncated, or do we simply assume we always use a sufficiently large buffer?
         } else if (infoResponse[0] == ISCConstants.isc_info_end) {
             // TODO Check necessity of checking this, seems to happen with DDL
+            // TODO Return all -1 instead?
             return new SqlCountHolder(0, 0, 0, 0);
         } else {
             // TODO SQL state, better error?
