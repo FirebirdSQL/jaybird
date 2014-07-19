@@ -106,20 +106,23 @@ public class TestV10InputBlob extends BaseTestV10Blob {
 
         final FbWireDatabase db = createDatabaseConnection();
         try {
-            long blobId = getBlobId(testId, db);
+            try {
+                long blobId = getBlobId(testId, db);
 
-            final FbBlob blob = db.createBlobForInput(transaction, null, blobId);
-            blob.open();
-            ByteArrayOutputStream bos = new ByteArrayOutputStream(requiredSize);
-            while (!blob.isEof()) {
-                bos.write(blob.getSegment(blob.getMaximumSegmentSize()));
+                final FbBlob blob = db.createBlobForInput(transaction, null, blobId);
+                blob.open();
+                ByteArrayOutputStream bos = new ByteArrayOutputStream(requiredSize);
+                while (!blob.isEof()) {
+                    bos.write(blob.getSegment(blob.getMaximumSegmentSize()));
+                }
+                blob.close();
+                statement.close();
+                byte[] result = bos.toByteArray();
+                assertEquals("Unexpected length read from blob", requiredSize, result.length);
+                assertTrue("Unexpected blob content", validateBlobContent(result, baseContent, requiredSize));
+            } finally {
+                if (transaction != null) transaction.commit();
             }
-            blob.close();
-            transaction.commit();
-            statement.close();
-            byte[] result = bos.toByteArray();
-            assertEquals("Unexpected length read from blob", requiredSize, result.length);
-            assertTrue("Unexpected blob content", validateBlobContent(result, baseContent, requiredSize));
         } finally {
             db.detach();
         }
@@ -138,20 +141,24 @@ public class TestV10InputBlob extends BaseTestV10Blob {
 
         final FbWireDatabase db = createDatabaseConnection();
         try {
-            long blobId = getBlobId(testId, db);
+            try {
+                long blobId = getBlobId(testId, db);
 
-            // NOTE: What matters is if the blob on the server is stream or segment
-            final FbBlob blob = db.createBlobForInput(transaction, null, blobId);
-            blob.open();
-            int offset = baseContent.length / 2;
+                // NOTE: What matters is if the blob on the server is stream or segment
+                final FbBlob blob = db.createBlobForInput(transaction, null, blobId);
+                blob.open();
+                int offset = baseContent.length / 2;
 
-            expectedException.expect(SQLException.class);
-            expectedException.expect(allOf(
-                    errorCodeEquals(ISCConstants.isc_bad_segstr_type),
-                    message(startsWith(getFbMessage(ISCConstants.isc_bad_segstr_type)))
-            ));
+                expectedException.expect(SQLException.class);
+                expectedException.expect(allOf(
+                        errorCodeEquals(ISCConstants.isc_bad_segstr_type),
+                        message(startsWith(getFbMessage(ISCConstants.isc_bad_segstr_type)))
+                ));
 
-            blob.seek(offset, FbBlob.SeekMode.ABSOLUTE);
+                blob.seek(offset, FbBlob.SeekMode.ABSOLUTE);
+            } finally {
+                if (transaction != null) transaction.commit();
+            }
         } finally {
             db.detach();
         }
@@ -170,22 +177,25 @@ public class TestV10InputBlob extends BaseTestV10Blob {
 
         final FbWireDatabase db = createDatabaseConnection();
         try {
-            long blobId = getBlobId(testId, db);
+            try {
+                long blobId = getBlobId(testId, db);
 
-            // NOTE: What matters is if the blob on the server is stream or segment
-            final FbBlob blob = db.createBlobForInput(transaction, null, blobId);
-            blob.open();
-            final int offset = requiredSize / 2;
+                // NOTE: What matters is if the blob on the server is stream or segment
+                final FbBlob blob = db.createBlobForInput(transaction, null, blobId);
+                blob.open();
+                final int offset = requiredSize / 2;
 
-            blob.seek(offset, FbBlob.SeekMode.ABSOLUTE);
-            byte[] segment = blob.getSegment(100);
-            byte[] expected = Arrays.copyOfRange(baseContent, offset, offset + 100);
+                blob.seek(offset, FbBlob.SeekMode.ABSOLUTE);
+                byte[] segment = blob.getSegment(100);
+                byte[] expected = Arrays.copyOfRange(baseContent, offset, offset + 100);
 
-            blob.close();
-            transaction.commit();
-            statement.close();
-            assertEquals("Unexpected length read from blob", 100, segment.length);
-            assertArrayEquals("Unexpected segment content", expected, segment);
+                blob.close();
+                statement.close();
+                assertEquals("Unexpected length read from blob", 100, segment.length);
+                assertArrayEquals("Unexpected segment content", expected, segment);
+            } finally {
+                if (transaction != null) transaction.commit();
+            }
         } finally {
             db.detach();
         }
@@ -204,29 +214,32 @@ public class TestV10InputBlob extends BaseTestV10Blob {
         try {
             listener = new SimpleStatementListener();
             transaction = getTransaction(db);
-            statement = db.createStatement(transaction);
-            statement.addStatementListener(listener);
+            try {
+                statement = db.createStatement(transaction);
+                statement.addStatementListener(listener);
 
-            final BlobParameterBuffer blobParameterBuffer = new BlobParameterBufferImp();
-            blobParameterBuffer.addArgument(BlobParameterBuffer.TYPE, BlobParameterBuffer.TYPE_STREAM);
-            final FbBlob blob = db.createBlobForOutput(transaction, blobParameterBuffer);
-            blob.open();
-            int bytesWritten = 0;
-            while (bytesWritten < testBytes.length) {
-                byte[] buffer = new byte[Math.min(blob.getMaximumSegmentSize(), testBytes.length - bytesWritten)];
-                System.arraycopy(testBytes, bytesWritten, buffer, 0, buffer.length);
-                blob.putSegment(buffer);
-                bytesWritten += buffer.length;
+                final BlobParameterBuffer blobParameterBuffer = new BlobParameterBufferImp();
+                blobParameterBuffer.addArgument(BlobParameterBuffer.TYPE, BlobParameterBuffer.TYPE_STREAM);
+                final FbBlob blob = db.createBlobForOutput(transaction, blobParameterBuffer);
+                blob.open();
+                int bytesWritten = 0;
+                while (bytesWritten < testBytes.length) {
+                    byte[] buffer = new byte[Math.min(blob.getMaximumSegmentSize(), testBytes.length - bytesWritten)];
+                    System.arraycopy(testBytes, bytesWritten, buffer, 0, buffer.length);
+                    blob.putSegment(buffer);
+                    bytesWritten += buffer.length;
+                }
+                blob.close();
+
+                statement.prepare(INSERT_BLOB_TABLE);
+                RowDescriptor descriptor = statement.getParameterDescriptor();
+                FieldValue param1 = new FieldValue(descriptor.getFieldDescriptor(0), XSQLVAR.intToBytes(testId));
+                FieldValue param2 = new FieldValue(descriptor.getFieldDescriptor(1), XSQLVAR.longToBytes(blob.getBlobId()));
+                statement.execute(RowValue.of(param1, param2));
+                statement.close();
+            } finally {
+                transaction.commit();
             }
-            blob.close();
-
-            statement.prepare(INSERT_BLOB_TABLE);
-            RowDescriptor descriptor = statement.getParameterDescriptor();
-            FieldValue param1 = new FieldValue(descriptor.getFieldDescriptor(0), XSQLVAR.intToBytes(testId));
-            FieldValue param2 = new FieldValue(descriptor.getFieldDescriptor(1), XSQLVAR.longToBytes(blob.getBlobId()));
-            statement.execute(RowValue.of(param1, param2));
-            statement.close();
-            transaction.commit();
         } finally {
             db.detach();
         }
@@ -244,28 +257,31 @@ public class TestV10InputBlob extends BaseTestV10Blob {
 
         final FbWireDatabase db = createDatabaseConnection();
         try {
-            long blobId = getBlobId(testId, db);
+            try {
+                long blobId = getBlobId(testId, db);
 
-            final FbBlob blob = db.createBlobForInput(transaction, null, blobId);
-            blob.open();
-            ByteArrayOutputStream bos = new ByteArrayOutputStream(requiredSize);
-            while (!blob.isEof()) {
-                bos.write(blob.getSegment(blob.getMaximumSegmentSize()));
-            }
-            blob.close();
-            // Reopen
-            blob.open();
-            bos = new ByteArrayOutputStream(requiredSize);
-            while (!blob.isEof()) {
-                bos.write(blob.getSegment(blob.getMaximumSegmentSize()));
-            }
-            blob.close();
+                final FbBlob blob = db.createBlobForInput(transaction, null, blobId);
+                blob.open();
+                ByteArrayOutputStream bos = new ByteArrayOutputStream(requiredSize);
+                while (!blob.isEof()) {
+                    bos.write(blob.getSegment(blob.getMaximumSegmentSize()));
+                }
+                blob.close();
+                // Reopen
+                blob.open();
+                bos = new ByteArrayOutputStream(requiredSize);
+                while (!blob.isEof()) {
+                    bos.write(blob.getSegment(blob.getMaximumSegmentSize()));
+                }
+                blob.close();
 
-            transaction.commit();
-            statement.close();
-            byte[] result = bos.toByteArray();
-            assertEquals("Unexpected length read from blob", requiredSize, result.length);
-            assertTrue("Unexpected blob content", validateBlobContent(result, baseContent, requiredSize));
+                statement.close();
+                byte[] result = bos.toByteArray();
+                assertEquals("Unexpected length read from blob", requiredSize, result.length);
+                assertTrue("Unexpected blob content", validateBlobContent(result, baseContent, requiredSize));
+            } finally {
+                if (transaction != null) transaction.commit();
+            }
         } finally {
             db.detach();
         }
@@ -289,12 +305,16 @@ public class TestV10InputBlob extends BaseTestV10Blob {
 
         final FbWireDatabase db = createDatabaseConnection();
         try {
-            long blobId = getBlobId(testId, db);
+            try {
+                long blobId = getBlobId(testId, db);
 
-            final FbBlob blob = db.createBlobForInput(transaction, null, blobId);
-            blob.open();
-            // Double open
-            blob.open();
+                final FbBlob blob = db.createBlobForInput(transaction, null, blobId);
+                blob.open();
+                // Double open
+                blob.open();
+            } finally {
+                if (transaction != null) transaction.commit();
+            }
         } finally {
             db.detach();
         }

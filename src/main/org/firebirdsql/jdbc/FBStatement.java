@@ -1628,7 +1628,8 @@ public class FBStatement implements FirebirdStatement, Synchronizable {
             if (!isValidSender(sender)) return;
             // TODO If true create ResultSet and attach listener to sender
             isResultSet = hasResultSet;
-            hasMoreResults = hasResultSet;
+            // TODO Is this also valid for CallableStatement?
+            hasMoreResults = hasResultSet || hasSingletonResult && !isGeneratedKeyQuery();
             isSingletonResult = hasSingletonResult;
         }
 

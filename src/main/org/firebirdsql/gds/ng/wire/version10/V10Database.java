@@ -192,14 +192,14 @@ public class V10Database extends AbstractFbWireDatabase implements FbWireDatabas
     @Override
     protected void internalDetach() throws SQLException {
         synchronized (getSynchronizationObject()) {
-            if (getTransactionCount() > 0) {
-                // Register open transactions as warning, we are going to detach and close the connection anyway
-                // TODO: Change exception creation
-                // TODO: Rollback transactions?
-                FbExceptionBuilder builder = new FbExceptionBuilder();
-                builder.warning(ISCConstants.isc_open_trans).messageParameter(getTransactionCount());
-                getDatabaseWarningCallback().processWarning(builder.toSQLException(SQLWarning.class));
-            }
+                if (getTransactionCount() > 0) {
+                    // Register open transactions as warning, we are going to detach and close the connection anyway
+                    // TODO: Change exception creation
+                    // TODO: Rollback transactions?
+                    FbExceptionBuilder builder = new FbExceptionBuilder();
+                    builder.warning(ISCConstants.isc_open_trans).messageParameter(getTransactionCount());
+                    getDatabaseWarningCallback().processWarning(builder.toSQLException(SQLWarning.class));
+                }
 
             try {
                 final XdrOutputStream xdrOut = getXdrOut();
@@ -543,6 +543,10 @@ public class V10Database extends AbstractFbWireDatabase implements FbWireDatabas
     @Override
     public void enqueueDeferredAction(DeferredAction deferredAction) {
         throw new UnsupportedOperationException("enqueueDeferredAction is not supported in the V10 protocol");
+    }
+
+    protected void processDeferredActions() {
+        // does nothing in V10 protocol
     }
 
     /**

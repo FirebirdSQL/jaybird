@@ -88,27 +88,30 @@ public class TestV10OutputBlob extends BaseTestV10Blob {
     private void writeBlob(int testId, byte[] testBytes, FbWireDatabase db, BlobParameterBuffer blobParameterBuffer) throws SQLException {
         final SimpleStatementListener listener = new SimpleStatementListener();
         final FbTransaction transaction = getTransaction(db);
-        final FbStatement statement = db.createStatement(transaction);
-        statement.addStatementListener(listener);
-        final FbBlob blob = db.createBlobForOutput(transaction, blobParameterBuffer);
-        blob.open();
-        int bytesWritten = 0;
-        while (bytesWritten < testBytes.length) {
-            // TODO the interface for writing blobs should be simpler
-            byte[] buffer = new byte[Math.min(blob.getMaximumSegmentSize(), testBytes.length - bytesWritten)];
-            System.arraycopy(testBytes, bytesWritten, buffer, 0, buffer.length);
-            blob.putSegment(buffer);
-            bytesWritten += buffer.length;
-        }
-        blob.close();
+        try {
+            final FbStatement statement = db.createStatement(transaction);
+            statement.addStatementListener(listener);
+            final FbBlob blob = db.createBlobForOutput(transaction, blobParameterBuffer);
+            blob.open();
+            int bytesWritten = 0;
+            while (bytesWritten < testBytes.length) {
+                // TODO the interface for writing blobs should be simpler
+                byte[] buffer = new byte[Math.min(blob.getMaximumSegmentSize(), testBytes.length - bytesWritten)];
+                System.arraycopy(testBytes, bytesWritten, buffer, 0, buffer.length);
+                blob.putSegment(buffer);
+                bytesWritten += buffer.length;
+            }
+            blob.close();
 
-        statement.prepare(INSERT_BLOB_TABLE);
-        RowDescriptor descriptor = statement.getParameterDescriptor();
-        FieldValue param1 = new FieldValue(descriptor.getFieldDescriptor(0), XSQLVAR.intToBytes(testId));
-        FieldValue param2 = new FieldValue(descriptor.getFieldDescriptor(1), XSQLVAR.longToBytes(blob.getBlobId()));
-        statement.execute(RowValue.of(param1, param2));
-        statement.close();
-        transaction.commit();
+            statement.prepare(INSERT_BLOB_TABLE);
+            RowDescriptor descriptor = statement.getParameterDescriptor();
+            FieldValue param1 = new FieldValue(descriptor.getFieldDescriptor(0), XSQLVAR.intToBytes(testId));
+            FieldValue param2 = new FieldValue(descriptor.getFieldDescriptor(1), XSQLVAR.longToBytes(blob.getBlobId()));
+            statement.execute(RowValue.of(param1, param2));
+            statement.close();
+        } finally {
+            transaction.commit();
+        }
     }
 
     /**
@@ -142,11 +145,15 @@ public class TestV10OutputBlob extends BaseTestV10Blob {
         final FbWireDatabase db = createDatabaseConnection();
         try {
             final FbTransaction transaction = getTransaction(db);
-            FbBlob blob = db.createBlobForOutput(transaction, null);
-            assumeTrue("Output blob before open should be eof", blob.isEof());
+            try {
+                FbBlob blob = db.createBlobForOutput(transaction, null);
+                assumeTrue("Output blob before open should be eof", blob.isEof());
 
-            blob.open();
-            assertFalse("Output blob after open should not be eof", blob.isEof());
+                blob.open();
+                assertFalse("Output blob after open should not be eof", blob.isEof());
+            } finally {
+                transaction.commit();
+            }
         } finally {
             db.detach();
         }
@@ -160,12 +167,16 @@ public class TestV10OutputBlob extends BaseTestV10Blob {
         final FbWireDatabase db = createDatabaseConnection();
         try {
             final FbTransaction transaction = getTransaction(db);
-            FbBlob blob = db.createBlobForOutput(transaction, null);
-            assumeTrue("Output blob before open should be eof", blob.isEof());
-            blob.open();
+            try {
+                FbBlob blob = db.createBlobForOutput(transaction, null);
+                assumeTrue("Output blob before open should be eof", blob.isEof());
+                blob.open();
 
-            blob.close();
-            assertTrue("Output blob after close should be eof", blob.isEof());
+                blob.close();
+                assertTrue("Output blob after close should be eof", blob.isEof());
+            } finally {
+                transaction.commit();
+            }
         } finally {
             db.detach();
         }
@@ -179,12 +190,16 @@ public class TestV10OutputBlob extends BaseTestV10Blob {
         final FbWireDatabase db = createDatabaseConnection();
         try {
             final FbTransaction transaction = getTransaction(db);
-            FbBlob blob = db.createBlobForOutput(transaction, null);
-            assumeTrue("Output blob before open should be eof", blob.isEof());
-            blob.open();
+            try {
+                FbBlob blob = db.createBlobForOutput(transaction, null);
+                assumeTrue("Output blob before open should be eof", blob.isEof());
+                blob.open();
 
-            blob.cancel();
-            assertTrue("Output blob after cancel should be eof", blob.isEof());
+                blob.cancel();
+                assertTrue("Output blob after cancel should be eof", blob.isEof());
+            } finally {
+                transaction.commit();
+            }
         } finally {
             db.detach();
         }
@@ -210,28 +225,31 @@ public class TestV10OutputBlob extends BaseTestV10Blob {
         try {
             final SimpleStatementListener listener = new SimpleStatementListener();
             final FbTransaction transaction = getTransaction(db);
-            final FbStatement statement = db.createStatement(transaction);
-            statement.addStatementListener(listener);
-            final FbBlob blob = db.createBlobForOutput(transaction, null);
-            blob.open();
-            int bytesWritten = 0;
-            while (bytesWritten < testBytes.length) {
-                // TODO the interface for writing blobs should be simpler
-                byte[] buffer = new byte[Math.min(blob.getMaximumSegmentSize(), testBytes.length - bytesWritten)];
-                System.arraycopy(testBytes, bytesWritten, buffer, 0, buffer.length);
-                blob.putSegment(buffer);
-                bytesWritten += buffer.length;
+            try {
+                final FbStatement statement = db.createStatement(transaction);
+                statement.addStatementListener(listener);
+                final FbBlob blob = db.createBlobForOutput(transaction, null);
+                blob.open();
+                int bytesWritten = 0;
+                while (bytesWritten < testBytes.length) {
+                    // TODO the interface for writing blobs should be simpler
+                    byte[] buffer = new byte[Math.min(blob.getMaximumSegmentSize(), testBytes.length - bytesWritten)];
+                    System.arraycopy(testBytes, bytesWritten, buffer, 0, buffer.length);
+                    blob.putSegment(buffer);
+                    bytesWritten += buffer.length;
+                }
+
+                blob.cancel();
+
+                statement.prepare(INSERT_BLOB_TABLE);
+                RowDescriptor descriptor = statement.getParameterDescriptor();
+                FieldValue param1 = new FieldValue(descriptor.getFieldDescriptor(0), XSQLVAR.intToBytes(testId));
+                FieldValue param2 = new FieldValue(descriptor.getFieldDescriptor(1), XSQLVAR.longToBytes(blob.getBlobId()));
+                statement.execute(RowValue.of(param1, param2));
+                statement.close();
+            } finally {
+                transaction.commit();
             }
-
-            blob.cancel();
-
-            statement.prepare(INSERT_BLOB_TABLE);
-            RowDescriptor descriptor = statement.getParameterDescriptor();
-            FieldValue param1 = new FieldValue(descriptor.getFieldDescriptor(0), XSQLVAR.intToBytes(testId));
-            FieldValue param2 = new FieldValue(descriptor.getFieldDescriptor(1), XSQLVAR.longToBytes(blob.getBlobId()));
-            statement.execute(RowValue.of(param1, param2));
-            statement.close();
-            transaction.commit();
         } finally {
             db.detach();
         }
@@ -255,20 +273,24 @@ public class TestV10OutputBlob extends BaseTestV10Blob {
         final FbWireDatabase db = createDatabaseConnection();
         try {
             final FbTransaction transaction = getTransaction(db);
-            final FbBlob blob = db.createBlobForOutput(transaction, null);
-            blob.open();
-            int bytesWritten = 0;
-            while (bytesWritten < testBytes.length) {
-                // TODO the interface for writing blobs should be simpler
-                byte[] buffer = new byte[Math.min(blob.getMaximumSegmentSize(), testBytes.length - bytesWritten)];
-                System.arraycopy(testBytes, bytesWritten, buffer, 0, buffer.length);
-                blob.putSegment(buffer);
-                bytesWritten += buffer.length;
-            }
-            blob.close();
+            try {
+                final FbBlob blob = db.createBlobForOutput(transaction, null);
+                blob.open();
+                int bytesWritten = 0;
+                while (bytesWritten < testBytes.length) {
+                    // TODO the interface for writing blobs should be simpler
+                    byte[] buffer = new byte[Math.min(blob.getMaximumSegmentSize(), testBytes.length - bytesWritten)];
+                    System.arraycopy(testBytes, bytesWritten, buffer, 0, buffer.length);
+                    blob.putSegment(buffer);
+                    bytesWritten += buffer.length;
+                }
+                blob.close();
 
-            // Reopen
-            blob.open();
+                // Reopen
+                blob.open();
+            } finally {
+                transaction.commit();
+            }
         } finally {
             db.detach();
         }
@@ -288,9 +310,13 @@ public class TestV10OutputBlob extends BaseTestV10Blob {
         final FbWireDatabase db = createDatabaseConnection();
         try {
             final FbTransaction transaction = getTransaction(db);
-            final FbBlob blob = db.createBlobForOutput(transaction, null);
-            blob.open();
-            blob.open();
+            try {
+                final FbBlob blob = db.createBlobForOutput(transaction, null);
+                blob.open();
+                blob.open();
+            } finally {
+                transaction.commit();
+            }
         } finally {
             db.detach();
         }
