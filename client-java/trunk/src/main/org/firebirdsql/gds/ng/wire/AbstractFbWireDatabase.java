@@ -146,6 +146,8 @@ public abstract class AbstractFbWireDatabase extends AbstractFbDatabase implemen
         }
     }
 
+    protected abstract void processDeferredActions();
+
     /**
      * @param response
      *         Response to process
@@ -191,6 +193,7 @@ public abstract class AbstractFbWireDatabase extends AbstractFbDatabase implemen
      */
     public int readNextOperation() throws IOException {
         synchronized (getSynchronizationObject()) {
+            processDeferredActions();
             return connection.readNextOperation();
         }
     }

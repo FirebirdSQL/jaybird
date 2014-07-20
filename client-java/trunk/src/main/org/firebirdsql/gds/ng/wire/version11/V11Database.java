@@ -36,6 +36,8 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
+import static org.firebirdsql.gds.impl.wire.WireProtocolConstants.*;
+
 /**
  * {@link org.firebirdsql.gds.ng.wire.FbWireDatabase} implementation for the version 11 wire protocol.
  *
@@ -72,6 +74,7 @@ public class V11Database extends V10Database {
     }
 
     // TODO Implement trusted auth?
+    // NOTE: Not implementing trusted auth for the time being. It seems to be harder than is worth the effort.
 
     @Override
     public void releaseObject(int operation, int objectId) throws SQLException {
@@ -80,16 +83,26 @@ public class V11Database extends V10Database {
             try {
                 doReleaseObjectPacket(operation, objectId);
                 // NOTE: Intentionally no flush!
-                enqueueDeferredAction(new DeferredAction() {
-                    @Override
-                    public void processResponse(Response response) {
-                        processReleaseObjectResponse(response);
-                    }
-                    @Override
-                    public WarningMessageCallback getWarningMessageCallback() {
-                        return null;
-                    }
-                });
+                switch (operation) {
+                case op_close_blob:
+                case op_cancel_blob:
+                    enqueueDeferredAction(new DeferredAction() {
+                        @Override
+                        public void processResponse(Response response) {
+                            processReleaseObjectResponse(response);
+                        }
+
+                        @Override
+                        public WarningMessageCallback getWarningMessageCallback() {
+                            return null;
+                        }
+                    });
+                    return;
+                default:
+                    // According to Firebird source code for other operations we need to process response normally,
+                    // however we only expect calls for op_close_blob and op_cancel_blob
+                    throw new IllegalArgumentException(String.format("Unexpected operation in V11Databsase.releaseObject: %d", operation));
+                }
             } catch (IOException ex) {
                 throw new FbExceptionBuilder().exception(ISCConstants.isc_net_write_err).cause(ex).toSQLException();
             }
@@ -97,13 +110,6 @@ public class V11Database extends V10Database {
     }
 
     @Override
-    public final int readNextOperation() throws IOException {
-        synchronized (getSynchronizationObject()) {
-            processDeferredActions();
-            return super.readNextOperation();
-        }
-    }
-
     protected void processDeferredActions() {
         synchronized (getSynchronizationObject()) {
             if (deferredActions.size() == 0) return;
