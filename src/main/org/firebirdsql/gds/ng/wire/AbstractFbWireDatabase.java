@@ -146,6 +146,9 @@ public abstract class AbstractFbWireDatabase extends AbstractFbDatabase implemen
         }
     }
 
+    /**
+     * Processes any deferred actions. Protocol versions that do not support deferred actions should simply do nothing.
+     */
     protected abstract void processDeferredActions();
 
     /**

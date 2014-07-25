@@ -45,7 +45,7 @@ public final class Version11Descriptor extends AbstractProtocolDescriptor implem
         super(
                 WireProtocolConstants.PROTOCOL_VERSION11,
                 WireProtocolConstants.arch_generic,
-                WireProtocolConstants.ptype_rpc,
+                WireProtocolConstants.ptype_lazy_send, // Protocol implementation expects lazy send
                 WireProtocolConstants.ptype_lazy_send,
                 2);
     }
