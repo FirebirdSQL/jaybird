@@ -20,6 +20,7 @@
  */
 package org.firebirdsql.jca;
 
+import org.firebirdsql.encodings.Encoding;
 import org.firebirdsql.gds.DatabaseParameterBuffer;
 import org.firebirdsql.gds.Parameter;
 import org.firebirdsql.gds.impl.DatabaseParameterBufferExtension;
@@ -79,6 +80,11 @@ public class FBConnectionRequestInfo implements DatabaseParameterBufferExtension
     @Override
     public void addArgument(int argumentType, String value) {
         dpb.addArgument(argumentType, value);
+    }
+
+    @Override
+    public void addArgument(int argumentType, String value, Encoding encoding) {
+        dpb.addArgument(argumentType, value, encoding);
     }
 
     @Override

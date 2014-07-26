@@ -20,6 +20,7 @@
  */
 package org.firebirdsql.gds.impl.argument;
 
+import org.firebirdsql.encodings.Encoding;
 import org.firebirdsql.gds.ParameterBuffer;
 
 import java.io.IOException;
@@ -80,7 +81,7 @@ public final class ByteArrayArgument extends Argument {
     }
 
     @Override
-    public void copyTo(ParameterBuffer buffer) {
+    public void copyTo(ParameterBuffer buffer, Encoding encoding) {
         buffer.addArgument(getType(), value.clone());
     }
 

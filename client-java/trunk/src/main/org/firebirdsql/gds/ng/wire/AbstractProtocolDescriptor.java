@@ -20,16 +20,17 @@
  */
 package org.firebirdsql.gds.ng.wire;
 
+import org.firebirdsql.gds.DatabaseParameterBuffer;
 import org.firebirdsql.util.ObjectUtils;
 
 /**
  * Abstract class to simplify implementation of {@link ProtocolDescriptor}
- * 
+ *
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @since 3.0
  */
 public abstract class AbstractProtocolDescriptor implements ProtocolDescriptor {
-    
+
     private final int version;
     private final int architecture;
     private final int minimumType;
@@ -39,12 +40,17 @@ public abstract class AbstractProtocolDescriptor implements ProtocolDescriptor {
 
     /**
      * Initializes the basic ProtocolDescriptor fields.
-     * 
-     * @param version Version of the protocol
-     * @param architecture Architecture of the protocol
-     * @param minimumType Minimum supported protocol type
-     * @param maximumType Maximum supported protocol type
-     * @param weight Preference weight
+     *
+     * @param version
+     *         Version of the protocol
+     * @param architecture
+     *         Architecture of the protocol
+     * @param minimumType
+     *         Minimum supported protocol type
+     * @param maximumType
+     *         Maximum supported protocol type
+     * @param weight
+     *         Preference weight
      */
     protected AbstractProtocolDescriptor(int version, int architecture, int minimumType, int maximumType, int weight) {
         this.version = version;
@@ -81,7 +87,8 @@ public abstract class AbstractProtocolDescriptor implements ProtocolDescriptor {
     }
 
     /**
-     * @return Hash code based on {@code version}, {@code architecture}, {@code minimumType}, {@code maximumType} and {@code weight}.
+     * @return Hash code based on {@code version}, {@code architecture}, {@code minimumType}, {@code maximumType} and
+     * {@code weight}.
      */
     @Override
     public final int hashCode() {
@@ -91,11 +98,23 @@ public abstract class AbstractProtocolDescriptor implements ProtocolDescriptor {
     /**
      * {@inheritDoc}
      * <p>
-     * Default implementation for the rules described in {@link ProtocolDescriptor}. Returns {@code true} if the other object is of the exact same class as this instance.
+     * Default implementation for the rules described in {@link ProtocolDescriptor}. Returns {@code true} if the other
+     * object is of the exact same class as this instance.
      * </p>
      */
     @Override
     public boolean equals(Object other) {
         return other != null && this.getClass() == other.getClass();
     }
+
+    @Override
+    public final DatabaseParameterBuffer createDatabaseParameterBuffer(final WireConnection connection) {
+        return getParameterConverter()
+                .toDatabaseParameterBuffer(connection.getConnectionProperties(), connection.getEncodingFactory());
+    }
+
+    /**
+     * @return {@code ParameterConverter} for populating the database parameter buffer.
+     */
+    protected abstract ParameterConverter getParameterConverter();
 }

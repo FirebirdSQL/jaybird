@@ -83,7 +83,7 @@ public final class FbConnectionProperties implements IConnectionProperties {
             soTimeout = src.getSoTimeout();
             connectTimeout = src.getConnectTimeout();
             for (Parameter parameter : src.getExtraDatabaseParameters()) {
-                parameter.copyTo(extraDatabaseParameters);
+                parameter.copyTo(extraDatabaseParameters, null);
             }
         }
     }
@@ -303,9 +303,13 @@ public final class FbConnectionProperties implements IConnectionProperties {
                 break;
             case isc_dpb_column_label_for_name:
                 setColumnLabelForName(true);
+                break;
+            case isc_dpb_utf8_filename:
+                // Filter out, handled explicitly in protocol implementation
+                break;
             default:
                 log.warn(String.format("Unknown or unsupported parameter with type %d added to extra database parameters", parameter.getType()));
-                parameter.copyTo(getExtraDatabaseParameters());
+                parameter.copyTo(getExtraDatabaseParameters(), null);
             }
         }
     }

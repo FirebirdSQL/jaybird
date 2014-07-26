@@ -20,6 +20,7 @@
  */
 package org.firebirdsql.gds.impl.wire;
 
+import org.firebirdsql.encodings.Encoding;
 import org.firebirdsql.gds.ServiceRequestBuffer;
 import org.firebirdsql.gds.impl.argument.NumericArgument;
 import org.firebirdsql.gds.impl.argument.StringArgument;
@@ -51,25 +52,12 @@ class ServiceRequestBufferImp extends ParameterBufferBase implements ServiceRequ
 
     @Override
     public void addArgument(int argumentType, String value) {
-        getArgumentsList().add(new StringArgument(argumentType, value) {
+        getArgumentsList().add(new ServiceStringArgument(argumentType, value));
+    }
 
-            @Override
-            public int getLength() {
-                return super.getLength() + 1;
-            }
-
-            @Override
-            protected void writeLength(int length, OutputStream outputStream) throws IOException {
-                outputStream.write(length);
-                outputStream.write(length >> 8);
-            }
-
-            @Override
-            protected int getMaxSupportedLength() {
-                // TODO Check if this might be signed
-                return 65535;
-            }
-        });
+    @Override
+    public void addArgument(int argumentType, String value, Encoding encoding) {
+        getArgumentsList().add(new ServiceStringArgument(argumentType, value, encoding));
     }
 
     @Override
@@ -115,14 +103,38 @@ class ServiceRequestBufferImp extends ParameterBufferBase implements ServiceRequ
     }
 
     public byte[] toByteArray() throws IOException {
-        ByteArrayOutputStream out = new ByteArrayOutputStream();
-        XdrOutputStream outputStream = new XdrOutputStream(out);
-
+        final ByteArrayOutputStream out = new ByteArrayOutputStream();
+        final XdrOutputStream outputStream = new XdrOutputStream(out, false);
         write(outputStream);
-
-        outputStream.flush();
-        out.flush();
-
         return out.toByteArray();
+    }
+
+    private static final class ServiceStringArgument extends StringArgument {
+
+        @Deprecated
+        public ServiceStringArgument(int argumentType, String value) {
+            super(argumentType, value);
+        }
+
+        public ServiceStringArgument(int argumentType, String value, Encoding encoding) {
+            super(argumentType, value, encoding);
+        }
+
+        @Override
+        public int getLength() {
+            return super.getLength() + 1;
+        }
+
+        @Override
+        protected void writeLength(int length, OutputStream outputStream) throws IOException {
+            outputStream.write(length);
+            outputStream.write(length >> 8);
+        }
+
+        @Override
+        protected int getMaxSupportedLength() {
+            // TODO Check if this might be signed
+            return 65535;
+        }
     }
 }

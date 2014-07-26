@@ -36,6 +36,7 @@ import org.firebirdsql.logging.LoggerFactory;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.net.*;
 import java.security.AccessController;
 import java.security.PrivilegedAction;
@@ -244,7 +245,7 @@ public final class WireConnection {
             }
 
             final int socketBufferSize = connectionProperties.getSocketBufferSize();
-            if (socketBufferSize != -1) {
+            if (socketBufferSize != IConnectionProperties.DEFAULT_SOCKET_BUFFER_SIZE) {
                 socket.setReceiveBufferSize(socketBufferSize);
                 socket.setSendBufferSize(socketBufferSize);
             }
@@ -446,5 +447,20 @@ public final class WireConnection {
                 return System.getProperty(propertyName);
             }
         });
+    }
+
+    /**
+     * Writes directly to the {@code OutputStream} of the underlying socket.
+     *
+     * @param data
+     *         Data to write
+     * @throws IOException
+     *         If there is no socket, the socket is closed, or for errors writing to the socket.
+     */
+    public void writeDirect(byte[] data) throws IOException {
+        if (!isConnected()) throw new SocketException("Socket closed");
+        final OutputStream outputStream = socket.getOutputStream();
+        outputStream.write(data);
+        outputStream.flush();
     }
 }

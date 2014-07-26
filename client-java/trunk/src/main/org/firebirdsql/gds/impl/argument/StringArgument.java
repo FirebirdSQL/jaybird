@@ -20,6 +20,8 @@
  */
 package org.firebirdsql.gds.impl.argument;
 
+import org.firebirdsql.encodings.Encoding;
+import org.firebirdsql.encodings.EncodingFactory;
 import org.firebirdsql.gds.ParameterBuffer;
 
 import java.io.IOException;
@@ -32,15 +34,24 @@ public class StringArgument extends Argument {
 
     private final String value;
     private final byte[] asBytes;
+    private final Encoding encoding;
 
+    @Deprecated
     public StringArgument(int type, String value) {
+        this(type, value, EncodingFactory.getDefaultInstance().getDefaultEncoding());
+    }
+
+    public StringArgument(int type, String value, Encoding encoding) {
         super(type);
+        if (encoding == null) {
+            throw new IllegalArgumentException("Encoding is required");
+        }
         if (value == null) {
             throw new IllegalArgumentException("String value should not be null");
         }
         this.value = value;
-        // TODO Use correct Encoding
-        asBytes = value.getBytes();
+        asBytes = encoding.encodeToCharset(value);
+        this.encoding = encoding;
         if (asBytes.length > getMaxSupportedLength()) {
             throw new IllegalArgumentException(String.format("byte array derived from String value should not be longer than %d bytes, length was %d", getMaxSupportedLength(), asBytes.length));
         }
@@ -76,8 +87,8 @@ public class StringArgument extends Argument {
     }
 
     @Override
-    public void copyTo(ParameterBuffer buffer) {
-        buffer.addArgument(getType(), value);
+    public void copyTo(ParameterBuffer buffer, Encoding stringEncoding) {
+        buffer.addArgument(getType(), value, stringEncoding != null ? stringEncoding : encoding);
     }
 
     protected void writeLength(int length, OutputStream outputStream) throws IOException {

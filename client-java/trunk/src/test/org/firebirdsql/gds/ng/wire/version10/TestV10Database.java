@@ -40,6 +40,7 @@ import org.junit.rules.ExpectedException;
 
 import java.io.File;
 import java.sql.SQLException;
+import java.sql.SQLFeatureNotSupportedException;
 import java.sql.SQLWarning;
 import java.util.Arrays;
 import java.util.List;
@@ -86,6 +87,10 @@ public class TestV10Database {
         connectionInfo.setPassword(DB_PASSWORD);
         connectionInfo.setDatabaseName(FBTestProperties.getDatabasePath());
         connectionInfo.setEncoding("NONE");
+    }
+
+    protected FbConnectionProperties getConnectionInfo() {
+        return connectionInfo;
     }
 
     @BeforeClass
@@ -224,7 +229,7 @@ public class TestV10Database {
         FBManager fbManager = createFBManager();
         defaultDatabaseSetUp(fbManager);
         try {
-            WireConnection gdsConnection = new WireConnection(connectionInfo, EncodingFactory.getDefaultInstance(), getProtocolCollection());
+            WireConnection gdsConnection = new WireConnection(getConnectionInfo(), EncodingFactory.getDefaultInstance(), getProtocolCollection());
             FbWireDatabase db = null;
             try {
                 gdsConnection.socketConnect();
@@ -259,7 +264,7 @@ public class TestV10Database {
         FBManager fbManager = createFBManager();
         defaultDatabaseSetUp(fbManager);
         try {
-            WireConnection gdsConnection = new WireConnection(connectionInfo, EncodingFactory.getDefaultInstance(), getProtocolCollection());
+            WireConnection gdsConnection = new WireConnection(getConnectionInfo(), EncodingFactory.getDefaultInstance(), getProtocolCollection());
             FbWireDatabase db = null;
             try {
                 gdsConnection.socketConnect();
@@ -288,7 +293,7 @@ public class TestV10Database {
      */
     @Test
     public void testAttach_NonExistentDatabase() throws Exception {
-        WireConnection gdsConnection = new WireConnection(connectionInfo, EncodingFactory.getDefaultInstance(), getProtocolCollection());
+        WireConnection gdsConnection = new WireConnection(getConnectionInfo(), EncodingFactory.getDefaultInstance(), getProtocolCollection());
         FbWireDatabase db;
         try {
             gdsConnection.socketConnect();
@@ -311,7 +316,7 @@ public class TestV10Database {
      */
     @Test
     public void testBasicCreateAndDrop() throws Exception {
-        WireConnection gdsConnection = new WireConnection(connectionInfo, EncodingFactory.getDefaultInstance(), getProtocolCollection());
+        WireConnection gdsConnection = new WireConnection(getConnectionInfo(), EncodingFactory.getDefaultInstance(), getProtocolCollection());
         FbWireDatabase db;
         File dbFile = new File(gdsConnection.getDatabaseName());
         try {
@@ -352,7 +357,7 @@ public class TestV10Database {
         FBManager fbManager = createFBManager();
         defaultDatabaseSetUp(fbManager);
         try {
-            WireConnection gdsConnection = new WireConnection(connectionInfo, EncodingFactory.getDefaultInstance(), getProtocolCollection());
+            WireConnection gdsConnection = new WireConnection(getConnectionInfo(), EncodingFactory.getDefaultInstance(), getProtocolCollection());
             FbWireDatabase db;
             try {
                 gdsConnection.socketConnect();
@@ -386,7 +391,7 @@ public class TestV10Database {
         FBManager fbManager = createFBManager();
         defaultDatabaseSetUp(fbManager);
         try {
-            WireConnection gdsConnection = new WireConnection(connectionInfo, EncodingFactory.getDefaultInstance(), getProtocolCollection());
+            WireConnection gdsConnection = new WireConnection(getConnectionInfo(), EncodingFactory.getDefaultInstance(), getProtocolCollection());
             FbWireDatabase db;
             try {
                 gdsConnection.socketConnect();
@@ -412,7 +417,7 @@ public class TestV10Database {
         FBManager fbManager = createFBManager();
         defaultDatabaseSetUp(fbManager);
         try {
-            WireConnection gdsConnection = new WireConnection(connectionInfo, EncodingFactory.getDefaultInstance(), getProtocolCollection());
+            WireConnection gdsConnection = new WireConnection(getConnectionInfo(), EncodingFactory.getDefaultInstance(), getProtocolCollection());
             FbWireDatabase db = null;
             try {
                 gdsConnection.socketConnect();
@@ -443,7 +448,7 @@ public class TestV10Database {
         FBManager fbManager = createFBManager();
         defaultDatabaseSetUp(fbManager);
         try {
-            WireConnection gdsConnection = new WireConnection(connectionInfo, EncodingFactory.getDefaultInstance(), getProtocolCollection());
+            WireConnection gdsConnection = new WireConnection(getConnectionInfo(), EncodingFactory.getDefaultInstance(), getProtocolCollection());
             FbWireDatabase db = null;
             try {
                 gdsConnection.socketConnect();
@@ -463,6 +468,89 @@ public class TestV10Database {
                 assertEquals("Expected one warning", 1, callback.getWarnings().size());
                 SQLWarning warning = callback.getWarnings().get(0);
                 assertThat(warning, allOf(errorCodeEquals(ISCConstants.isc_open_trans), fbMessageEquals(ISCConstants.isc_open_trans, "1")));
+            } finally {
+                if (db != null) {
+                    try {
+                        db.detach();
+                    } catch (SQLException ex) {
+                        // ignore (TODO: log)
+                    }
+                }
+            }
+        } finally {
+            defaultDatabaseTearDown(fbManager);
+        }
+    }
+
+    @Test
+    public void testCancelOperation_abortSupported() throws Exception {
+        FBManager fbManager = createFBManager();
+        defaultDatabaseSetUp(fbManager);
+        try {
+            WireConnection gdsConnection = new WireConnection(getConnectionInfo(), EncodingFactory.getDefaultInstance(), getProtocolCollection());
+            FbWireDatabase db = null;
+            try {
+                gdsConnection.socketConnect();
+                db = gdsConnection.identify();
+                assertEquals("Unexpected FbWireDatabase implementation", getExpectedDatabaseType(), db.getClass());
+                db.attach();
+
+                assertTrue("expected database attached", db.isAttached());
+
+                db.cancelOperation(ISCConstants.fb_cancel_abort);
+
+                assertFalse("Expected database not attached after abort", db.isAttached());
+                assertFalse("Expected connection closed after abort", gdsConnection.isConnected());
+            } finally {
+                if (db != null) {
+                    try {
+                        db.detach();
+                    } catch (SQLException ex) {
+                        // ignore (TODO: log)
+                    }
+                }
+            }
+        } finally {
+            defaultDatabaseTearDown(fbManager);
+        }
+    }
+
+    @Test
+    public void testCancelOperation_raiseNotSupported() throws Exception {
+        checkCancelOperationNotSupported(ISCConstants.fb_cancel_raise);
+    }
+
+    @Test
+    public void testCancelOperation_disableNotSupported() throws Exception {
+        checkCancelOperationNotSupported(ISCConstants.fb_cancel_disable);
+    }
+
+    @Test
+    public void testCancelOperation_enableNotSupported() throws Exception {
+        checkCancelOperationNotSupported(ISCConstants.fb_cancel_enable);
+    }
+
+    private void checkCancelOperationNotSupported(int kind) throws Exception {
+        FBManager fbManager = createFBManager();
+        defaultDatabaseSetUp(fbManager);
+        try {
+            WireConnection gdsConnection = new WireConnection(getConnectionInfo(), EncodingFactory.getDefaultInstance(), getProtocolCollection());
+            FbWireDatabase db = null;
+            try {
+                gdsConnection.socketConnect();
+                db = gdsConnection.identify();
+                assertEquals("Unexpected FbWireDatabase implementation", getExpectedDatabaseType(), db.getClass());
+                db.attach();
+
+                assertTrue("expected database attached", db.isAttached());
+
+                expectedException.expect(allOf(
+                        isA(SQLFeatureNotSupportedException.class),
+                        message(startsWith("Cancel Operation isn't supported in this version of the wire protocol"))
+                ));
+
+                db.cancelOperation(kind);
+
             } finally {
                 if (db != null) {
                     try {

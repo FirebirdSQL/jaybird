@@ -21,6 +21,7 @@
 package org.firebirdsql.jdbc;
 
 import org.firebirdsql.common.FBJUnit4TestBase;
+import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.util.FirebirdSupportInfo;
 import org.hamcrest.number.OrderingComparison;
 import org.junit.*;
@@ -31,13 +32,13 @@ import java.io.InputStream;
 import java.math.BigDecimal;
 import java.sql.*;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import static org.firebirdsql.common.DdlHelper.executeCreateTable;
 import static org.firebirdsql.common.DdlHelper.executeDDL;
 import static org.firebirdsql.common.FBTestProperties.*;
 import static org.firebirdsql.common.JdbcResourceHelper.closeQuietly;
-import static org.firebirdsql.common.matchers.SQLExceptionMatchers.message;
-import static org.firebirdsql.common.matchers.SQLExceptionMatchers.sqlState;
+import static org.firebirdsql.common.matchers.SQLExceptionMatchers.*;
 import static org.firebirdsql.util.FirebirdSupportInfo.supportInfoFor;
 import static org.hamcrest.CoreMatchers.*;
 import static org.junit.Assert.*;
@@ -816,38 +817,36 @@ public class TestFBPreparedStatement extends FBJUnit4TestBase {
         }
     }
 
-    private static final String dummySelect =
-            "execute block returns(a integer) "
-                    + " as"
-                    + "     declare variable i integer;"
-                    + " begin"
-                    + "    i = 1;"
-                    + "    while(i < 10000) do begin"
-                    + "     EXECUTE STATEMENT 'SELECT ' || :i || ' FROM rdb$database' INTO :a;"
-                    + "     i = i + 1;"
-                    + "     suspend;"
-                    + "    end"
-                    + " end";
+    //@formatter:off
+    private static final String LONG_RUNNING_STATEMENT =
+            "execute block " +
+            " as" +
+            "     declare variable i integer;" +
+            "     declare variable a varchar(100);" +
+            " begin" +
+            "    i = 1;" +
+            "    while(i < 1000000) do begin" +
+            "      EXECUTE STATEMENT 'SELECT ' || :i || ' FROM rdb$database' INTO :a;" +
+            "      i = i + 1;" +
+            "    end" +
+            " end";
+    //@formatter:on
 
-    // TODO: This test intermittently fails
     @Test
     public void testCancelStatement() throws Exception {
         final FirebirdSupportInfo supportInfo = supportInfoFor(con);
         assumeTrue("Test requires fb_cancel_operations support", supportInfo.supportsCancelOperation());
         assumeTrue("Test requires EXECUTE BLOCK support", supportInfo.supportsExecuteBlock());
         final Statement stmt = con.createStatement();
+        final AtomicBoolean cancelFailed = new AtomicBoolean(false);
         try {
-            ResultSet rs = stmt.executeQuery(dummySelect);
-
-            boolean hasRecord = rs.next();
-            assertTrue("Should fetch at least one record", hasRecord);
             Thread cancelThread = new Thread(new Runnable() {
                 public void run() {
                     try {
-                        Thread.sleep(20);
+                        Thread.sleep(5);
                         stmt.cancel();
                     } catch (SQLException ex) {
-                        fail("Cancel operation should work.");
+                        cancelFailed.set(true);
                     } catch (InterruptedException ex) {
                         // empty
                     }
@@ -856,19 +855,24 @@ public class TestFBPreparedStatement extends FBJUnit4TestBase {
 
             cancelThread.start();
 
-            int i = 0;
+            long start = 0;
             try {
-                while (hasRecord) {
-                    i = rs.getInt(1);
-                    hasRecord = rs.next();
-                }
-                fail("Should raise an error on one of the records.");
+                start = System.currentTimeMillis();
+                stmt.execute(LONG_RUNNING_STATEMENT);
+                fail("Statement should raise a cancel exception");
             } catch (SQLException ex) {
-                System.out.println("testCancelStatement: RS was closed on record " + i);
+                long end = System.currentTimeMillis();
+                System.out.println("testCancelStatement: statement cancelled after " + (end - start) + " milliseconds");
+                assertThat("Unexpected exception for cancellation", ex, allOf(
+                        message(startsWith(getFbMessage(ISCConstants.isc_cancelled))),
+                        errorCode(equalTo(ISCConstants.isc_cancelled)),
+                        sqlState(equalTo("HY008"))
+                ));
                 // everything is fine
             } finally {
                 cancelThread.join();
             }
+            assertFalse("Issuing statement cancel failed", cancelFailed.get());
         } finally {
             closeQuietly(stmt);
         }

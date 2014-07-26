@@ -200,4 +200,17 @@ public abstract class AbstractFbWireDatabase extends AbstractFbDatabase implemen
             return connection.readNextOperation();
         }
     }
+
+    /**
+     * Writes directly to the {@code OutputStream} of the underlying connection.
+     *
+     * @param data
+     *         Data to write
+     * @throws IOException
+     *         If there is no socket, the socket is closed, or for errors writing to the socket.
+     * @see org.firebirdsql.gds.ng.wire.WireConnection#writeDirect(byte[])
+     */
+    protected final void writeDirect(byte[] data) throws IOException {
+        connection.writeDirect(data);
+    }
 }

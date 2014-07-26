@@ -18,7 +18,7 @@
  *
  * All rights reserved.
  */
-package org.firebirdsql.gds.ng.wire.version11;
+package org.firebirdsql.gds.ng.wire.version12;
 
 import org.firebirdsql.gds.BlobParameterBuffer;
 import org.firebirdsql.gds.ISCConstants;
@@ -26,20 +26,23 @@ import org.firebirdsql.gds.impl.wire.WireProtocolConstants;
 import org.firebirdsql.gds.ng.TransactionState;
 import org.firebirdsql.gds.ng.fields.BlrCalculator;
 import org.firebirdsql.gds.ng.wire.*;
-import org.firebirdsql.gds.ng.wire.version10.*;
+import org.firebirdsql.gds.ng.wire.version10.V10BlrCalculator;
+import org.firebirdsql.gds.ng.wire.version10.V10InputBlob;
+import org.firebirdsql.gds.ng.wire.version10.V10OutputBlob;
+import org.firebirdsql.gds.ng.wire.version10.V10Transaction;
 
 /**
- * The {@link org.firebirdsql.gds.ng.wire.ProtocolDescriptor} for the Firebird version 11 protocol. This version
- * applies to Firebird 2.1, but also works with newer Firebird versions.
+ * The {@link org.firebirdsql.gds.ng.wire.ProtocolDescriptor} for the Firebird version 12 protocol. This version
+ * applies to Firebird 2.5, but also works with newer Firebird versions.
  *
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @since 3.0
  */
-public final class Version11Descriptor extends AbstractProtocolDescriptor implements ProtocolDescriptor {
+public class Version12Descriptor extends AbstractProtocolDescriptor implements ProtocolDescriptor {
 
-    public Version11Descriptor() {
+    public Version12Descriptor() {
         super(
-                WireProtocolConstants.PROTOCOL_VERSION11,
+                WireProtocolConstants.PROTOCOL_VERSION12,
                 WireProtocolConstants.arch_generic,
                 WireProtocolConstants.ptype_lazy_send, // Protocol implementation expects lazy send
                 WireProtocolConstants.ptype_lazy_send,
@@ -48,7 +51,7 @@ public final class Version11Descriptor extends AbstractProtocolDescriptor implem
 
     @Override
     public FbWireDatabase createDatabase(final WireConnection connection) {
-        return new V11Database(connection, this);
+        return new V12Database(connection, this);
     }
 
     @Override
@@ -59,7 +62,7 @@ public final class Version11Descriptor extends AbstractProtocolDescriptor implem
 
     @Override
     public FbWireStatement createStatement(final FbWireDatabase database) {
-        return new V11Statement(database);
+        return new V12Statement(database);
     }
 
     @Override
@@ -80,6 +83,6 @@ public final class Version11Descriptor extends AbstractProtocolDescriptor implem
 
     @Override
     protected ParameterConverter getParameterConverter() {
-        return new V11ParameterConverter();
+        return new V12ParameterConverter();
     }
 }
