@@ -1,7 +1,7 @@
 /*
  * $Id$
- * 
- * Firebird Open Source J2EE Connector - JDBC Driver
+ *
+ * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -14,12 +14,13 @@
  * This file was created by members of the firebird development team.
  * All individual contributions remain the Copyright (C) of those
  * individuals.  Contributors to this file are either listed here or
- * can be obtained from a CVS history command.
+ * can be obtained from a source control history command.
  *
  * All rights reserved.
  */
 package org.firebirdsql.gds.impl;
 
+import org.firebirdsql.encodings.Encoding;
 import org.firebirdsql.gds.Parameter;
 import org.firebirdsql.gds.ParameterBuffer;
 import org.firebirdsql.gds.impl.argument.*;
@@ -28,7 +29,6 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
@@ -42,6 +42,11 @@ public class ParameterBufferBase implements ParameterBuffer, Serializable {
     @Override
     public void addArgument(int argumentType, String value) {
         getArgumentsList().add(new StringArgument(argumentType, value));
+    }
+
+    @Override
+    public void addArgument(int argumentType, String value, Encoding encoding) {
+        getArgumentsList().add(new StringArgument(argumentType, value, encoding));
     }
 
     @Override

@@ -24,6 +24,7 @@ import org.firebirdsql.gds.impl.wire.WireProtocolConstants;
 import org.firebirdsql.gds.ng.EmptyProtocolDescriptor;
 import org.firebirdsql.gds.ng.wire.version10.Version10Descriptor;
 import org.firebirdsql.gds.ng.wire.version11.Version11Descriptor;
+import org.firebirdsql.gds.ng.wire.version12.Version12Descriptor;
 import org.junit.Test;
 
 import java.util.Arrays;
@@ -53,7 +54,8 @@ public class TestProtocolCollection {
         assertProtocolCollection(ProtocolCollection.getDefaultCollection(),
                 Arrays.<Class<? extends ProtocolDescriptor>>asList(
                         Version10Descriptor.class,
-                        Version11Descriptor.class));
+                        Version11Descriptor.class,
+                        Version12Descriptor.class));
     }
 
     /**
@@ -65,15 +67,15 @@ public class TestProtocolCollection {
     public void testCreate() {
         // Version 10 with weight 3, type 1
         ProtocolDescriptor alternativeDescriptorV10Weight3_1 = new EmptyProtocolDescriptor(
-                WireProtocolConstants.PROTOCOL_VERSION11, WireProtocolConstants.arch_generic,
+                WireProtocolConstants.PROTOCOL_VERSION10, WireProtocolConstants.arch_generic,
                 WireProtocolConstants.ptype_rpc, WireProtocolConstants.ptype_batch_send, 3);
         // Version 10 with weight 2
         ProtocolDescriptor alternativeDescriptorV10Weight2 = new EmptyProtocolDescriptor(
-                WireProtocolConstants.PROTOCOL_VERSION11, WireProtocolConstants.arch_generic,
+                WireProtocolConstants.PROTOCOL_VERSION10, WireProtocolConstants.arch_generic,
                 WireProtocolConstants.ptype_rpc, WireProtocolConstants.ptype_batch_send, 2);
         // Version 10 with weight 3, type 2
         ProtocolDescriptor alternativeDescriptorV10Weight3_2 = new EmptyProtocolDescriptor(
-                WireProtocolConstants.PROTOCOL_VERSION11, WireProtocolConstants.arch_generic,
+                WireProtocolConstants.PROTOCOL_VERSION10, WireProtocolConstants.arch_generic,
                 WireProtocolConstants.ptype_rpc, WireProtocolConstants.ptype_batch_send, 3);
 
         ProtocolCollection collection = ProtocolCollection.create(new Version10Descriptor(),
@@ -81,7 +83,7 @@ public class TestProtocolCollection {
 
         // We expect the descriptor 'Version 10 with weight 3, type 1' to be returned
         assertProtocolCollection(collection, Arrays.<Class<? extends ProtocolDescriptor>>asList(
-                Version10Descriptor.class, alternativeDescriptorV10Weight3_1.getClass()));
+                alternativeDescriptorV10Weight3_1.getClass()));
     }
 
     /**

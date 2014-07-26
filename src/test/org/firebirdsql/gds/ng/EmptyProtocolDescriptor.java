@@ -1,7 +1,7 @@
 /*
  * $Id$
  *
- * Firebird Open Source J2EE Connector - JDBC Driver
+ * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -14,12 +14,13 @@
  * This file was created by members of the firebird development team.
  * All individual contributions remain the Copyright (C) of those
  * individuals.  Contributors to this file are either listed here or
- * can be obtained from a source repository history command.
+ * can be obtained from a source control history command.
  *
  * All rights reserved.
  */
 package org.firebirdsql.gds.ng;
 
+import org.firebirdsql.encodings.IEncodingFactory;
 import org.firebirdsql.gds.BlobParameterBuffer;
 import org.firebirdsql.gds.DatabaseParameterBuffer;
 import org.firebirdsql.gds.ng.fields.BlrCalculator;
@@ -58,11 +59,6 @@ public class EmptyProtocolDescriptor extends AbstractProtocolDescriptor {
     }
 
     @Override
-    public DatabaseParameterBuffer createDatabaseParameterBuffer(final WireConnection connection) {
-        return null;
-    }
-
-    @Override
     public BlrCalculator createBlrCalculator(FbWireDatabase database) {
         return null;
     }
@@ -75,5 +71,16 @@ public class EmptyProtocolDescriptor extends AbstractProtocolDescriptor {
     @Override
     public FbWireBlob createInputBlob(FbWireDatabase database, FbWireTransaction transaction, BlobParameterBuffer blobParameterBuffer, long blobId) {
         return null;
+    }
+
+    @Override
+    protected ParameterConverter getParameterConverter() {
+        return new ParameterConverter() {
+            @Override
+            public DatabaseParameterBuffer toDatabaseParameterBuffer(IConnectionProperties connectionProperties,
+                    IEncodingFactory encodingFactory) {
+                return null;
+            }
+        };
     }
 }

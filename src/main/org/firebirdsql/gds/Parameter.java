@@ -26,6 +26,8 @@
  */
 package org.firebirdsql.gds;
 
+import org.firebirdsql.encodings.Encoding;
+
 /**
  * Interface for parameters stored in a {@link org.firebirdsql.gds.ParameterBuffer}.
  *
@@ -65,18 +67,22 @@ public interface Parameter {
     int getValueAsInt();
 
     /**
-     * Copies this argument into the supplied buffer.
+     * Copies this argument into the supplied buffer, uses the supplied {@code Encoding} for string arguments.
      * <p>
      * An instance of <code>Parameter</code> should know how to copy itself into another buffer (eg an instance
      * of {@link org.firebirdsql.gds.impl.argument.StringArgument} would know to call
-     * {@link org.firebirdsql.gds.ParameterBuffer#addArgument(int, String)}).
+     * {@link org.firebirdsql.gds.ParameterBuffer#addArgument(int, String, Encoding)}).
      * </p>
      * <p>
      * The parameter does not need to check if it is the right type of destination buffer (if someone tries to
      * add a TPB argument to a DPB he is free to try that).
      * </p>
      *
-     * @param buffer ParameterBuffer instance
+     * @param buffer
+     *         ParameterBuffer instance
+     * @param stringEncoding
+     *         Encoding to use for string properties. A value of {@code null} can be used to signal that the
+     *         original encoding should be used.
      */
-    void copyTo(ParameterBuffer buffer);
+    void copyTo(ParameterBuffer buffer, Encoding stringEncoding);
 }

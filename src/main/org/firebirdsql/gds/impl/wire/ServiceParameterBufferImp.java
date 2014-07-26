@@ -43,14 +43,9 @@ class ServiceParameterBufferImp extends ParameterBufferBase implements ServicePa
     }
     
     public byte[] toByteArray() throws IOException {
-        ByteArrayOutputStream out = new ByteArrayOutputStream();
-        XdrOutputStream outputStream = new XdrOutputStream(out);
-        
+        final ByteArrayOutputStream out = new ByteArrayOutputStream();
+        final XdrOutputStream outputStream = new XdrOutputStream(out, false);
         write(outputStream);
-        
-        outputStream.flush();
-        out.flush();
-        
         return out.toByteArray();
     }
 

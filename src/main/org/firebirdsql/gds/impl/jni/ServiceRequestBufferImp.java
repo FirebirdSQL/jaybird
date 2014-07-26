@@ -1,5 +1,7 @@
 /*
- * Firebird Open Source J2ee connector - jdbc driver
+ * $Id$
+ *
+ * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -12,12 +14,13 @@
  * This file was created by members of the firebird development team.
  * All individual contributions remain the Copyright (C) of those
  * individuals.  Contributors to this file are either listed here or
- * can be obtained from a CVS history command.
+ * can be obtained from a source control history command.
  *
  * All rights reserved.
  */
 package org.firebirdsql.gds.impl.jni;
 
+import org.firebirdsql.encodings.Encoding;
 import org.firebirdsql.gds.ServiceRequestBuffer;
 import org.firebirdsql.gds.impl.argument.NumericArgument;
 import org.firebirdsql.gds.impl.argument.StringArgument;
@@ -45,25 +48,12 @@ class ServiceRequestBufferImp extends ParameterBufferBase implements ServiceRequ
 
     @Override
     public void addArgument(int argumentType, String value) {
-        getArgumentsList().add(new StringArgument(argumentType, value) {
+        getArgumentsList().add(new ServiceStringArgument(argumentType, value));
+    }
 
-            @Override
-            public int getLength() {
-                return super.getLength() + 1;
-            }
-
-            @Override
-            protected void writeLength(int length, OutputStream outputStream) throws IOException {
-                outputStream.write(length);
-                outputStream.write(length >> 8);
-            }
-
-            @Override
-            protected int getMaxSupportedLength() {
-                // TODO Check if this might be signed
-                return 65535;
-            }
-        });
+    @Override
+    public void addArgument(int argumentType, String value, Encoding encoding) {
+        getArgumentsList().add(new ServiceStringArgument(argumentType, value, encoding));
     }
 
     @Override
@@ -118,5 +108,34 @@ class ServiceRequestBufferImp extends ParameterBufferBase implements ServiceRequ
         }
 
         return byteArrayOutputStream.toByteArray();
+    }
+
+    private static final class ServiceStringArgument extends StringArgument {
+
+        @Deprecated
+        public ServiceStringArgument(int argumentType, String value) {
+            super(argumentType, value);
+        }
+
+        public ServiceStringArgument(int argumentType, String value, Encoding encoding) {
+            super(argumentType, value, encoding);
+        }
+
+        @Override
+        public int getLength() {
+            return super.getLength() + 1;
+        }
+
+        @Override
+        protected void writeLength(int length, OutputStream outputStream) throws IOException {
+            outputStream.write(length);
+            outputStream.write(length >> 8);
+        }
+
+        @Override
+        protected int getMaxSupportedLength() {
+            // TODO Check if this might be signed
+            return 65535;
+        }
     }
 }

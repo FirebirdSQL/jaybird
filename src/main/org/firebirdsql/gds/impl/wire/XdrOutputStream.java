@@ -52,24 +52,46 @@ public final class XdrOutputStream extends OutputStream {
     private static final int BUF_SIZE = 32767;
 
     private static final Logger log = LoggerFactory.getLogger(XdrOutputStream.class, false);
-    private static final byte[] textPad = new byte[BUF_SIZE];
+    private static final byte[] TEXT_PAD;
     private static final byte[] ZERO_PADDING = new byte[3];
     public static final int SPACE_BYTE = 0x20;
     public static final int NULL_BYTE = 0x0;
+    static {
+        // fill the padding with blanks
+        byte[] textPad = new byte[BUF_SIZE];
+        Arrays.fill(textPad, (byte) SPACE_BYTE);
+        TEXT_PAD = textPad;
+    }
 
     private final OutputStream out;
 
     // TODO In a lot of cases the padding written in this class should be NULL_BYTE instead of SPACE_BYTE
 
     /**
-     * Create a new instance of <code>XdrOutputStream</code>.
+     * Create a new instance of <code>XdrOutputStream</code> with buffering.
      *
-     * @param out The underlying <code>OutputStream</code> to write to
+     * @param out
+     *         The underlying <code>OutputStream</code> to write to
      */
     public XdrOutputStream(OutputStream out) {
-        this.out = new BufferedOutputStream(out, BUF_SIZE);
-        // fill the padding with blanks
-        Arrays.fill(textPad, (byte) SPACE_BYTE);
+        this(out, true);
+    }
+
+    /**
+     * Create a new instance of <code>XdrOutputStream</code> with either a buffered or an unbuffered stream.
+     *
+     * @param out
+     *         The underlying <code>OutputStream</code> to write to
+     * @param buffered
+     *         {@code true} Uses buffering (like {@link #XdrOutputStream(java.io.OutputStream)} or
+     *         {@code false} writes directly to provided {@code OutputStream}.
+     */
+    public XdrOutputStream(OutputStream out, boolean buffered) {
+        if (buffered) {
+            this.out = new BufferedOutputStream(out, BUF_SIZE);
+        } else {
+            this.out = out;
+        }
     }
 
     /**
@@ -99,8 +121,8 @@ public final class XdrOutputStream extends OutputStream {
      */
     public void writePadding(int length, int padByte) throws IOException {
         final byte[] padding;
-        if (padByte == SPACE_BYTE && length <= textPad.length) {
-            padding = textPad;
+        if (padByte == SPACE_BYTE && length <= TEXT_PAD.length) {
+            padding = TEXT_PAD;
         } else if (padByte == NULL_BYTE && length <= ZERO_PADDING.length) {
             padding = ZERO_PADDING;
         } else {

@@ -42,6 +42,7 @@ import java.io.IOException;
 import java.nio.charset.Charset;
 import java.sql.SQLException;
 import java.sql.SQLFeatureNotSupportedException;
+import java.sql.SQLNonTransientConnectionException;
 import java.sql.SQLWarning;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -145,22 +146,30 @@ public class V10Database extends AbstractFbWireDatabase implements FbWireDatabas
         final int operation = create ? op_create : op_attach;
         final XdrOutputStream xdrOut = getXdrOut();
 
-        String filenameCharset = dpb.getArgumentAsString(DatabaseParameterBufferExtension.FILENAME_CHARSET);
+        final Encoding filenameEncoding = getFilenameEncoding(dpb);
 
         xdrOut.writeInt(operation);
         xdrOut.writeInt(0); // Database object ID
-        final Encoding filenameEncoding;
-        if (filenameCharset == null) {
-            filenameEncoding = getEncoding();
-        } else {
-            filenameEncoding = EncodingFactory.getDefaultInstance().getOrCreateEncodingForCharset(Charset.forName(filenameCharset));
-        }
         xdrOut.writeString(connection.getDatabaseName(), filenameEncoding);
 
         dpb = ((DatabaseParameterBufferExtension) dpb).removeExtensionParams();
-        // TODO Include ProcessID and ProcessName as in JavaGDSImpl implementation (or move that to different part?) See also Version10ProtocolDescriptor
 
         xdrOut.writeTyped(ISCConstants.isc_dpb_version1, (Xdrable) dpb);
+    }
+
+    /**
+     * Gets the {@code Encoding} to use for the database filename.
+     *
+     * @param dpb
+     *         Database parameter buffer
+     * @return Encoding
+     */
+    protected Encoding getFilenameEncoding(DatabaseParameterBuffer dpb) {
+        String filenameCharset = dpb.getArgumentAsString(DatabaseParameterBufferExtension.FILENAME_CHARSET);
+        if (filenameCharset != null) {
+            return EncodingFactory.getDefaultInstance().getOrCreateEncodingForCharset(Charset.forName(filenameCharset));
+        }
+        return getEncoding();
     }
 
     /**
@@ -192,14 +201,14 @@ public class V10Database extends AbstractFbWireDatabase implements FbWireDatabas
     @Override
     protected void internalDetach() throws SQLException {
         synchronized (getSynchronizationObject()) {
-                if (getTransactionCount() > 0) {
-                    // Register open transactions as warning, we are going to detach and close the connection anyway
-                    // TODO: Change exception creation
-                    // TODO: Rollback transactions?
-                    FbExceptionBuilder builder = new FbExceptionBuilder();
-                    builder.warning(ISCConstants.isc_open_trans).messageParameter(getTransactionCount());
-                    getDatabaseWarningCallback().processWarning(builder.toSQLException(SQLWarning.class));
-                }
+            if (getTransactionCount() > 0) {
+                // Register open transactions as warning, we are going to detach and close the connection anyway
+                // TODO: Change exception creation
+                // TODO: Rollback transactions?
+                FbExceptionBuilder builder = new FbExceptionBuilder();
+                builder.warning(ISCConstants.isc_open_trans).messageParameter(getTransactionCount());
+                getDatabaseWarningCallback().processWarning(builder.toSQLException(SQLWarning.class));
+            }
 
             try {
                 final XdrOutputStream xdrOut = getXdrOut();
@@ -357,7 +366,19 @@ public class V10Database extends AbstractFbWireDatabase implements FbWireDatabas
 
     @Override
     public void cancelOperation(int kind) throws SQLException {
-        throw new SQLFeatureNotSupportedException(String.format("Cancel Operation isn't supported in this version of the wire protocol (%d).", protocolDescriptor.getVersion()), FBDriverNotCapableException.SQL_STATE_FEATURE_NOT_SUPPORTED);
+        if (kind == ISCConstants.fb_cancel_abort) {
+            try {
+                // In case of abort we forcibly close the connection
+                closeConnection();
+            } catch (IOException ioe) {
+                throw new SQLNonTransientConnectionException("Connection abort failed", ioe);
+            }
+        } else {
+            throw new SQLFeatureNotSupportedException(
+                    String.format("Cancel Operation isn't supported in this version of the wire protocol (%d).",
+                            protocolDescriptor.getVersion()),
+                    FBDriverNotCapableException.SQL_STATE_FEATURE_NOT_SUPPORTED);
+        }
     }
 
     @Override
@@ -480,7 +501,8 @@ public class V10Database extends AbstractFbWireDatabase implements FbWireDatabas
     }
 
     @Override
-    public GenericResponse readGenericResponse(WarningMessageCallback warningCallback) throws SQLException, IOException {
+    public GenericResponse readGenericResponse(
+            WarningMessageCallback warningCallback) throws SQLException, IOException {
         return (GenericResponse) readResponse(warningCallback);
     }
 
@@ -695,7 +717,7 @@ public class V10Database extends AbstractFbWireDatabase implements FbWireDatabas
 
     @Override
     public void transactionStateChanged(FbTransaction transaction, TransactionState newState,
-                                        TransactionState previousState) {
+            TransactionState previousState) {
         switch (newState) {
         case COMMITTED:
         case ROLLED_BACK:

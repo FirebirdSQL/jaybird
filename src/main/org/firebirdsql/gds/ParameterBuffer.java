@@ -26,6 +26,8 @@
  */
 package org.firebirdsql.gds;
 
+import org.firebirdsql.encodings.Encoding;
+
 import java.util.Iterator;
 
 /**
@@ -55,8 +57,22 @@ public interface ParameterBuffer extends Iterable<Parameter> {
      *         type of argument.
      * @param value
      *         string value to add.
+     * @deprecated Use {@link #addArgument(int, String, org.firebirdsql.encodings.Encoding)}
      */
+    @Deprecated
     void addArgument(int argumentType, String value);
+
+    /**
+     * Add string argument.
+     *
+     * @param argumentType
+     *         type of argument.
+     * @param value
+     *         string value to add.
+     * @param encoding
+     *         encoding to use for conversion to bytes
+     */
+    void addArgument(int argumentType, String value, Encoding encoding);
 
     /**
      * Add integer argument.
