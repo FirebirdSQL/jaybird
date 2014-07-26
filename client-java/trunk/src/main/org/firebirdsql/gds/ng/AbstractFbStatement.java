@@ -336,13 +336,17 @@ public abstract class AbstractFbStatement implements FbStatement {
      * @return The (full) statement info request items.
      * @see #getParameterDescriptionInfoRequestItems()
      */
-    public abstract byte[] getStatementInfoRequestItems();
+    public byte[] getStatementInfoRequestItems() {
+        return ((AbstractFbDatabase) getDatabase()).getStatementInfoRequestItems();
+    }
 
     /**
-     * @return The <tt>isc_info_sql_describe_vars</tt> info request items.
+     * @return The {@code isc_info_sql_describe_vars} info request items.
      * @see #getStatementInfoRequestItems()
      */
-    public abstract byte[] getParameterDescriptionInfoRequestItems();
+    public byte[] getParameterDescriptionInfoRequestItems() {
+        return ((AbstractFbDatabase) getDatabase()).getParameterDescriptionInfoRequestItems();
+    }
 
     /**
      * Request statement info.

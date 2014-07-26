@@ -60,7 +60,7 @@ public interface EncodingSet {
      * lower number.
      * </p>
      *
-     * @return
+     * @return Preference weight
      */
     int getPreferenceWeight();
 

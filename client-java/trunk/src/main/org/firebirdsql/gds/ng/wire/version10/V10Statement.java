@@ -49,51 +49,6 @@ public class V10Statement extends AbstractFbWireStatement implements FbWireState
     private static final int NULL_INDICATOR_NULL = -1;
 
     /**
-     * Statement description information items for the V10 protocol
-     */
-    private static final byte[] STATEMENT_INFO_REQUEST_ITEMS = new byte[]{
-            ISCConstants.isc_info_sql_stmt_type,
-            ISCConstants.isc_info_sql_select,
-            ISCConstants.isc_info_sql_describe_vars,
-            ISCConstants.isc_info_sql_sqlda_seq,
-            ISCConstants.isc_info_sql_type, ISCConstants.isc_info_sql_sub_type,
-            ISCConstants.isc_info_sql_scale, ISCConstants.isc_info_sql_length,
-            ISCConstants.isc_info_sql_field,
-            ISCConstants.isc_info_sql_alias,
-            ISCConstants.isc_info_sql_relation,
-            //ISCConstants.isc_info_sql_relation_alias,
-            ISCConstants.isc_info_sql_owner,
-            ISCConstants.isc_info_sql_describe_end,
-
-            ISCConstants.isc_info_sql_bind,
-            ISCConstants.isc_info_sql_describe_vars,
-            ISCConstants.isc_info_sql_sqlda_seq,
-            ISCConstants.isc_info_sql_type, ISCConstants.isc_info_sql_sub_type,
-            ISCConstants.isc_info_sql_scale, ISCConstants.isc_info_sql_length,
-            // TODO: Information not available in normal queries, check for procedures, otherwise remove
-            //ISCConstants.isc_info_sql_field,
-            //ISCConstants.isc_info_sql_alias,
-            //ISCConstants.isc_info_sql_relation,
-            //ISCConstants.isc_info_sql_relation_alias,
-            //ISCConstants.isc_info_sql_owner,
-            ISCConstants.isc_info_sql_describe_end
-    };
-
-    // TODO Do we actually need this separate from above?
-    private static final byte[] PARAMETER_DESCRIPTION_INFO_REQUEST_ITEMS = new byte[]{
-            ISCConstants.isc_info_sql_describe_vars,
-            ISCConstants.isc_info_sql_sqlda_seq,
-            ISCConstants.isc_info_sql_type, ISCConstants.isc_info_sql_sub_type,
-            ISCConstants.isc_info_sql_scale, ISCConstants.isc_info_sql_length,
-            ISCConstants.isc_info_sql_field,
-            ISCConstants.isc_info_sql_alias,
-            ISCConstants.isc_info_sql_relation,
-            //ISCConstants.isc_info_sql_relation_alias,
-            ISCConstants.isc_info_sql_owner,
-            ISCConstants.isc_info_sql_describe_end
-    };
-
-    /**
      * Creates a new instance of V10Statement for the specified database.
      *
      * @param database
@@ -216,7 +171,7 @@ public class V10Statement extends AbstractFbWireStatement implements FbWireState
      * @param response
      *         Response object
      */
-    protected void processFreeResponse(Response response) {
+    protected void processFreeResponse(@SuppressWarnings("UnusedParameters") Response response) {
         // No processing needed
     }
 
@@ -720,15 +675,5 @@ public class V10Statement extends AbstractFbWireStatement implements FbWireState
     public int getMaxSqlInfoSize() {
         // TODO Is this the actual max for the v10 protocol, or is it 65535?
         return 32767;
-    }
-
-    @Override
-    public byte[] getStatementInfoRequestItems() {
-        return STATEMENT_INFO_REQUEST_ITEMS.clone();
-    }
-
-    @Override
-    public byte[] getParameterDescriptionInfoRequestItems() {
-        return PARAMETER_DESCRIPTION_INFO_REQUEST_ITEMS.clone();
     }
 }
