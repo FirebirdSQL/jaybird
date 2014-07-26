@@ -33,7 +33,7 @@ import java.nio.charset.Charset;
  * information needed by Jaybird to process this encoding.
  *
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
- * @since 2.3
+ * @since 3.0
  */
 public interface EncodingDefinition {
 

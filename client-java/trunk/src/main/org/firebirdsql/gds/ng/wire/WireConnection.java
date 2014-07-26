@@ -117,15 +117,21 @@ public final class WireConnection {
     public WireConnection(IConnectionProperties connectionProperties, IEncodingFactory encodingFactory, ProtocolCollection protocols) throws SQLException {
         this.connectionProperties = new FbConnectionProperties(connectionProperties);
         this.protocols = protocols;
-        encodingDefinition = encodingFactory.getEncodingDefinition(connectionProperties.getEncoding(), connectionProperties.getCharSet());
+        final String firebirdEncodingName = connectionProperties.getEncoding();
+        final String javaCharsetAlias = connectionProperties.getCharSet();
+
+        encodingDefinition = encodingFactory.getEncodingDefinition(firebirdEncodingName, javaCharsetAlias);
         if (encodingDefinition == null || encodingDefinition.isInformationOnly()) {
-            if (connectionProperties.getEncoding() == null && connectionProperties.getCharSet() == null) {
+            if (firebirdEncodingName == null && javaCharsetAlias == null) {
                 // TODO Signal warning?
-                encodingDefinition = encodingFactory.getDefaultEncodingDefinition();
+                // TODO Use the default encoding (and its matching Firebird encoding) instead of NONE
+                encodingDefinition = encodingFactory.getEncodingDefinition("NONE", null);
             } else {
                 // TODO Don't throw exception if encoding/charSet is null (see also TODO inside EncodingFactory.getEncodingDefinition)
-                throw new SQLNonTransientConnectionException(String.format("No valid encoding definition for Firebird encoding %s and/or Java charset %s",
-                        connectionProperties.getEncoding(), connectionProperties.getCharSet()), FBSQLException.SQL_STATE_CONNECTION_ERROR);
+                throw new SQLNonTransientConnectionException(
+                        String.format("No valid encoding definition for Firebird encoding %s and/or Java charset %s",
+                            firebirdEncodingName, javaCharsetAlias),
+                        FBSQLException.SQL_STATE_CONNECTION_ERROR);
             }
         }
         this.encodingFactory = encodingFactory.withDefaultEncodingDefinition(encodingDefinition);

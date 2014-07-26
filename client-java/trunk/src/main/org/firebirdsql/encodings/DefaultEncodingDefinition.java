@@ -1,7 +1,7 @@
 /*
  * $Id$
  *
- * Firebird Open Source J2EE Connector - JDBC Driver
+ * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -14,7 +14,7 @@
  * This file was created by members of the firebird development team.
  * All individual contributions remain the Copyright (C) of those
  * individuals.  Contributors to this file are either listed here or
- * can be obtained from a source repository history command.
+ * can be obtained from a source control history command.
  *
  * All rights reserved.
  */
@@ -26,7 +26,7 @@ import java.nio.charset.Charset;
  * Definition of a Firebird encoding. This is the default implementation of {@link EncodingDefinition}.
  *
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
- * @since 2.3
+ * @since 3.0
  */
 public final class DefaultEncodingDefinition implements EncodingDefinition {
 
@@ -112,7 +112,9 @@ public final class DefaultEncodingDefinition implements EncodingDefinition {
             // Multiple initialization might be a bit wasteful, but it has no other side effects
             if (isInformationOnly()) {
                 encoding = null;
-            } else if (getMaxBytesPerChar() == 1) {
+            } else if (getMaxBytesPerChar() == 1
+                    // Exception for NONE / UTF-8 (prevents it from creating a single byte encoding)
+                    && !("NONE".equals(getFirebirdEncodingName()) && "UTF-8".equals(getJavaEncodingName()))) {
                 encoding = new EncodingSingleByte(getJavaCharset());
             } else {
                 encoding = new EncodingGeneric(getJavaCharset());
@@ -123,15 +125,13 @@ public final class DefaultEncodingDefinition implements EncodingDefinition {
 
     @Override
     public String toString() {
-        StringBuilder sb = new StringBuilder();
-        sb.append('[');
-        sb.append("firebirdEncodingName='").append(getFirebirdEncodingName()).append("',");
-        sb.append("javaEncodingName='").append(getJavaEncodingName()).append("',");
-        sb.append("maxBytesPerChar=").append(getMaxBytesPerChar()).append(',');
-        sb.append("firebirdOnly=").append(isFirebirdOnly()).append(',');
-        sb.append("firebirdCharacterSetId=").append(getFirebirdCharacterSetId()).append(',');
-        sb.append("informationOnly=").append(isInformationOnly());
-        sb.append(']');
-        return sb.toString();
+        return "[" +
+                "firebirdEncodingName='" + getFirebirdEncodingName() + "'," +
+                "javaEncodingName='" + getJavaEncodingName() + "'," +
+                "maxBytesPerChar=" + getMaxBytesPerChar() + "," +
+                "firebirdOnly=" + isFirebirdOnly() + "," +
+                "firebirdCharacterSetId=" + getFirebirdCharacterSetId() + "," +
+                "informationOnly=" + isInformationOnly() +
+                "]";
     }
 }
