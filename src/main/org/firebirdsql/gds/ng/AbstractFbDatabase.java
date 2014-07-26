@@ -49,6 +49,7 @@ public abstract class AbstractFbDatabase implements FbDatabase {
     private int odsMajor;
     private int odsMinor;
     private GDSServerVersion serverVersion;
+    private ServerVersionInformation serverVersionInformation;
 
     /**
      * @return The warning callback for this database.
@@ -180,6 +181,23 @@ public abstract class AbstractFbDatabase implements FbDatabase {
             log.error(String.format("Received unsupported server version \"%s\", replacing with dummy invalid version ", versionString), e);
             serverVersion = GDSServerVersion.INVALID_VERSION;
         }
+        serverVersionInformation = ServerVersionInformation.getForVersion(serverVersion);
+    }
+
+    /**
+     * @return The (full) statement info request items.
+     * @see #getParameterDescriptionInfoRequestItems()
+     */
+    public final byte[] getStatementInfoRequestItems() {
+        return serverVersionInformation.getStatementInfoRequestItems();
+    }
+
+    /**
+     * @return The {@code isc_info_sql_describe_vars} info request items.
+     * @see #getStatementInfoRequestItems()
+     */
+    public final byte[] getParameterDescriptionInfoRequestItems() {
+        return serverVersionInformation.getParameterDescriptionInfoRequestItems();
     }
 
     @Override

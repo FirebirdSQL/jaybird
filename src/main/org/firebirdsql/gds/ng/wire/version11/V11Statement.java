@@ -52,51 +52,6 @@ public class V11Statement extends V10Statement {
         super(database);
     }
 
-    /**
-     * Statement description information items for the V11 protocol
-     */
-    private static final byte[] STATEMENT_INFO_REQUEST_ITEMS = new byte[]{
-            ISCConstants.isc_info_sql_stmt_type,
-            ISCConstants.isc_info_sql_select,
-            ISCConstants.isc_info_sql_describe_vars,
-            ISCConstants.isc_info_sql_sqlda_seq,
-            ISCConstants.isc_info_sql_type, ISCConstants.isc_info_sql_sub_type,
-            ISCConstants.isc_info_sql_scale, ISCConstants.isc_info_sql_length,
-            ISCConstants.isc_info_sql_field,
-            ISCConstants.isc_info_sql_alias,
-            ISCConstants.isc_info_sql_relation,
-            ISCConstants.isc_info_sql_relation_alias,
-            ISCConstants.isc_info_sql_owner,
-            ISCConstants.isc_info_sql_describe_end,
-
-            ISCConstants.isc_info_sql_bind,
-            ISCConstants.isc_info_sql_describe_vars,
-            ISCConstants.isc_info_sql_sqlda_seq,
-            ISCConstants.isc_info_sql_type, ISCConstants.isc_info_sql_sub_type,
-            ISCConstants.isc_info_sql_scale, ISCConstants.isc_info_sql_length,
-            // TODO: Information not available in normal queries, check for procedures, otherwise remove
-            //ISCConstants.isc_info_sql_field,
-            //ISCConstants.isc_info_sql_alias,
-            //ISCConstants.isc_info_sql_relation,
-            //ISCConstants.isc_info_sql_relation_alias,
-            //ISCConstants.isc_info_sql_owner,
-            ISCConstants.isc_info_sql_describe_end
-    };
-
-    // TODO Do we actually need this separate from above?
-    private static final byte[] PARAMETER_DESCRIPTION_INFO_REQUEST_ITEMS = new byte[]{
-            ISCConstants.isc_info_sql_describe_vars,
-            ISCConstants.isc_info_sql_sqlda_seq,
-            ISCConstants.isc_info_sql_type, ISCConstants.isc_info_sql_sub_type,
-            ISCConstants.isc_info_sql_scale, ISCConstants.isc_info_sql_length,
-            ISCConstants.isc_info_sql_field,
-            ISCConstants.isc_info_sql_alias,
-            ISCConstants.isc_info_sql_relation,
-            ISCConstants.isc_info_sql_relation_alias,
-            ISCConstants.isc_info_sql_owner,
-            ISCConstants.isc_info_sql_describe_end
-    };
-
     @Override
     public void prepare(final String statementText) throws SQLException {
         synchronized (getSynchronizationObject()) {
@@ -166,15 +121,5 @@ public class V11Statement extends V10Statement {
                 }
             }
         }
-    }
-
-    @Override
-    public byte[] getStatementInfoRequestItems() {
-        return STATEMENT_INFO_REQUEST_ITEMS.clone();
-    }
-
-    @Override
-    public byte[] getParameterDescriptionInfoRequestItems() {
-        return PARAMETER_DESCRIPTION_INFO_REQUEST_ITEMS.clone();
     }
 }
