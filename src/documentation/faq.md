@@ -76,30 +76,30 @@ specify an explicit version, or be released under a different license.
 Which Java versions are supported?
 ----------------------------------
 
-Jaybird 2.2.x supports Java 5, 6 and 7. Jaybird 2.2.4 adds basic support for
+Jaybird 2.2 supports Java 5, 6 and 7. Jaybird 2.2.4 adds basic support for
 Java 8 (JDBC 4.2), although not all JDBC 4.2 features will be supported or
 fully implemented.
 
-Jaybird 2.2.x is the last version to support Java 5, support will be dropped
+Jaybird 2.2 is the last version to support Java 5, support will be dropped
 with Jaybird 3.0.
 
-Jaybird 3.0.x supports Java 6, 7 and 8.
+Jaybird 3.0 supports Java 6, 7 and 8.
 
-Jaybird 3.0.x is the last version to support Java 6, support will be dropped
+Jaybird 3.0 is the last version to support Java 6, support will be dropped
 with Jaybird 3.1.
 
 Which Firebird versions are supported?
 --------------------------------------
 
-Jaybird 2.2.x supports all Firebird versions since 1.0. Jaybird 2.2.4 will add
-support for some new features of Firebird 3 (eg `BOOLEAN` support).
+Jaybird 2.2 supports all Firebird versions 1.0 and higher. Jaybird 2.2.4 added
+support for new features of Firebird 3 (eg `BOOLEAN` support).
 
-Jaybird 2.2.x is the last version to support Firebird 1.0 and 1.5. Future
+Jaybird 2.2 is the last version to support Firebird 1.0 and 1.5. Future
 versions of Jaybird are not guaranteed to work with these versions.
 
-Jaybird 3.0.x support Firebird versions since 2.0.
+Jaybird 3.0 supports Firebird versions 2.0 and higher.
 
-Jaybird 3.0.x is the last version to support Firebird 2.0. Future versions of
+Jaybird 3.0 is the last version to support Firebird 2.0. Future versions of
 Jaybird are not guaranteed to work with version 2.0 and earlier.
 
 Can Jaybird connect to Interbase?
@@ -266,51 +266,15 @@ The following optional features are NOT supported:
 The following optional features and the methods that support it are not
 implemented:
 
-* Batch Updates
-    * `java.sql.Statement`
-        * `addBatch(String sql)`
-        * `clearBatch()`
-        * `executeBatch()`
-        * `addBatch()`
-* Scrollable cursors
-    * `java.sql.ResultSet`
-        * `beforeFirst()`
-        * `afterLast()`
-        * `first()`
-        * `last()`
-        * `absolute(int row)`
-        * `relative(int rows)`
-        * `previous()`
-* Updateable cursors
-    * `java.sql.ResultSet`
-        * `rowUpdated()`
-        * `rowInserted()`
-        * `rowDeleted()`
-        * `updateXXX(....)`
-        * `insertRow()`
-        * `updateRow()`
-        * `deleteRow()`
-        * `refreshRow()`
-        * `cancelRowUpdates()`
-        * `moveToInsertRow()`
-        * `moveToCurrentRow()`
-* Cursors/Positioned update/delete
-    * `java.sql.Statement`
-        * `setCursorName()`
-    * `java.sql.ResultSet`
-        * `getCursorName()`
-* Ref, Clob and Array types.
+* Ref and Array types.
     * `java.sql.PreparedStatement`
         * `setRef(int i, Ref x)`
-        * `setClob (int i, Clob x)`
         * `setArray(int i, Array x)`
     * `java.sql.ResultSet`
         * `getArray(int i)`
         * `getArray(String columnName)`
         * `getRef(int i)`
         * `getRef(String columnName)`
-        * `getClob(int i)`
-        * `getClob(String columnName)`
 * User Defined Types/Type Maps.
     * `java.sql.ResultSet`
         * `getObject(int i, java.util.Map map)`
@@ -321,8 +285,6 @@ implemented:
 
 Excluding the unsupported features, the following methods are not yet implemented:
 
-* `java.sql.Statement`
-    * `cancel()`
 * `java.sql.CallableStatement`
     * `registerOutParameter(int parameterIndex, int sqlType)`
     * `registerOutParameter(int parameterIndex, int sqlType, int scale)`
@@ -345,8 +307,6 @@ The following methods are implemented, but do not work as expected:
     * `isReadOnly(i)` always returns false
     * `isWritable(i)` always returns true
     * `isDefinitivelyWritable(i)` always returns true
-* `java.sql.DatabaseMetaData`
-    * `getBestRowIdentifier(i)` always returns empty resultSet
 
 Features
 ========
@@ -360,8 +320,8 @@ severe bugs. This implementation (and all other classes in
 `org.firebirdsql.pool`) was deprecated in 2.2 and dropped in 3.0.
 
 Jaybird provides a basic `DataSource` implementation and a
-`ConnectionPoolDataSource` implementation. Contrary to its name the latter does
-not provide a connection pool, but is intended to be used by a connection pool
+`ConnectionPoolDataSource` implementation. Contrary to its name the latter **does
+not provide a connection pool**, but is intended to be used by a connection pool
 (as implemented in an application server) to create connections *for* the
 connection pool.
 
