@@ -96,13 +96,10 @@ Jaybird 3.0 does not yet provide the new Firebird 3.0 authentication and wire
 encryption. This is planned for Jaybird 3.1, but might be moved into Jaybird 
 3.0 before the final release.
 
-**The current snapshot version only supports the version 10 protocol of Firebird
-1.0 which works on all Firebird versions**
-
 The new low-level implementation also means that the old GDS API 
 (`org.firebirdsql.gds.GDS`) is no longer available. *GDS API hasn't been removed
-from the snapshot yet as events haven't been rewritten yet, **will be removed
-from final release***
+from the snapshot yet as events haven't been rewritten yet, **this API will be
+removed from final release***
 
 The changes due to the new protocol implementation and/or JDBC conformance are
 listed below.
@@ -125,12 +122,12 @@ document, but it could just as well be an implementation bug.
     
     * `Statement.execute(String, int)` or `Statement.executeUpdate(String, int)`
       with value `Statement.RETURN_GENERATED_KEYS`,
-    * `Connection.prepareStatement(String, int)` with value 
-      `Statement.RETURN_GENERATED_KEYS`,
     * `Statement.execute(String, int[])` or 
       `Statement.executeUpdate(String, int[])`,
     * `Statement.execute(String, String[])` or 
       `Statement.executeUpdate(String, String[])`,
+    * `Connection.prepareStatement(String, int)` with value 
+      `Statement.RETURN_GENERATED_KEYS`,
     * `Connection.prepareStatement(String, int[])`,
     * `Connection.prepareStatement(String, String[])`.
     
