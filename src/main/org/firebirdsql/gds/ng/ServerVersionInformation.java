@@ -34,7 +34,7 @@ import static org.firebirdsql.gds.ISCConstants.*;
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @since 3.0
  */
-public enum ServerVersionInformation {
+enum ServerVersionInformation {
 
     // IMPORTANT: Enums should be defined from low versions to high versions
     /**

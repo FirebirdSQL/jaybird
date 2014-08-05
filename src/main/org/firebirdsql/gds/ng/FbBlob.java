@@ -26,6 +26,8 @@
  */
 package org.firebirdsql.gds.ng;
 
+import org.firebirdsql.gds.ISCConstants;
+
 import java.sql.SQLException;
 
 /**
@@ -215,15 +217,15 @@ public interface FbBlob {
         /**
          * Absolute seek from start of blob.
          */
-        ABSOLUTE(0),
+        ABSOLUTE(ISCConstants.blb_seek_from_head),
         /**
          * Relative seek from current position in blob.
          */
-        RELATIVE(1),
+        RELATIVE(ISCConstants.blb_seek_relative),
         /**
          * Absolute seek from end of blob.
          */
-        ABSOLUTE_FROM_END(2);
+        ABSOLUTE_FROM_END(ISCConstants.blb_seek_from_tail);
 
         final int seekModeId;
 

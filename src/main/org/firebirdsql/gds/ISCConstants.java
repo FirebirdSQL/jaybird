@@ -54,6 +54,21 @@ public interface ISCConstants {
     int DSQL_close   =  1;
     int DSQL_drop    =  2;
 
+    /************************/
+    /* Blob seek parameters */
+    /************************/
+
+    int blb_seek_from_head = 0;
+    int blb_seek_relative =  1;
+    int blb_seek_from_tail = 2;
+
+    /*******************/
+    /* blob_get_result */
+    /*******************/
+    int blb_got_fragment     = -1;
+    int blb_got_eof          = 0;
+    int blb_got_full_segment = 1;
+
     /**********************************/
     /* Database parameter block stuff */
     /**********************************/
@@ -526,7 +541,6 @@ public interface ISCConstants {
     int isc_info_writes = 6;
     int isc_info_fetches = 7;
     int isc_info_marks = 8;
-
     int isc_info_implementation = 11;
     int isc_info_isc_version = 12;
     int isc_info_base_level = 13;
@@ -537,7 +551,6 @@ public interface ISCConstants {
     int isc_info_max_memory = 18;
     int isc_info_window_turns = 19;
     int isc_info_license = 20;
-
     int isc_info_allocation = 21;
     int isc_info_attachment_id = 22;
     int isc_info_read_seq_count = 23;
@@ -548,7 +561,6 @@ public interface ISCConstants {
     int isc_info_backout_count = 28;
     int isc_info_purge_count = 29;
     int isc_info_expunge_count = 30;
-
     int isc_info_sweep_interval = 31;
     int isc_info_ods_version = 32;
     int isc_info_ods_minor_version = 33;
@@ -559,7 +571,6 @@ public interface ISCConstants {
     int isc_info_num_wal_buffers = 38;
     int isc_info_wal_buffer_size = 39;
     int isc_info_wal_ckpt_length = 40;
-
     int isc_info_wal_cur_ckpt_interval = 41;
     int isc_info_wal_prv_ckpt_fname = 42;
     int isc_info_wal_prv_ckpt_poffset = 43;
@@ -569,7 +580,6 @@ public interface ISCConstants {
     int isc_info_wal_num_io = 48;
     int isc_info_wal_avg_io_size = 49;
     int isc_info_wal_num_commits = 50;
-
     int isc_info_wal_avg_grpc_size = 51;
     int isc_info_forced_writes = 52;
     int isc_info_user_names = 53;
@@ -580,13 +590,12 @@ public interface ISCConstants {
     int isc_info_ipage_errors = 58;
     int isc_info_ppage_errors = 59;
     int isc_info_tpage_errors = 60;
-
     int isc_info_set_page_buffers = 61;
     int isc_info_db_sql_dialect = 62;
     int isc_info_db_read_only = 63;
     int isc_info_db_size_in_pages = 64;
 
-    /* Values 65 -100 unused to avoid conflict with InterBase */
+    /* Values 65-100 unused to avoid conflict with InterBase */
 	
     int frb_info_att_charset = 101;
     int isc_info_db_class = 102;
@@ -599,6 +608,7 @@ public interface ISCConstants {
     int isc_info_active_transactions = 109;
     int isc_info_active_tran_count = 110;
     int isc_info_creation_date = 111;
+    int fb_info_page_contents = 113;
     
     int isc_info_db_impl_rdb_vms = 1;
     int isc_info_db_impl_rdb_eln = 2;
@@ -607,14 +617,12 @@ public interface ISCConstants {
     int isc_info_db_impl_rdb_eln_y = 5;
     int isc_info_db_impl_jri = 6;
     int isc_info_db_impl_jsv = 7;
-
     int isc_info_db_impl_isc_apl_68K = 25;
     int isc_info_db_impl_isc_vax_ultr = 26;
     int isc_info_db_impl_isc_vms = 27;
     int isc_info_db_impl_isc_sun_68k = 28;
     int isc_info_db_impl_isc_os2 = 29;
     int isc_info_db_impl_isc_sun4 = 30;
-    
     int isc_info_db_impl_isc_hp_ux = 31;
     int isc_info_db_impl_isc_sun_386i = 32;
     int isc_info_db_impl_isc_vms_orcl = 33;
@@ -625,7 +633,6 @@ public interface ISCConstants {
     int isc_info_db_impl_isc_dg = 38;
     int isc_info_db_impl_isc_hp_mpexl = 39;
     int isc_info_db_impl_isc_hp_ux68K = 40;
-
     int isc_info_db_impl_isc_sgi = 41;
     int isc_info_db_impl_isc_sco_unix = 42;
     int isc_info_db_impl_isc_cray = 43;
@@ -636,7 +643,6 @@ public interface ISCConstants {
     int isc_info_db_impl_m88K = 48;
     int isc_info_db_impl_unixware = 49;
     int isc_info_db_impl_isc_winnt_x86 = 50;
-
     int isc_info_db_impl_isc_epson = 51;
     int isc_info_db_impl_alpha_osf = 52;
     int isc_info_db_impl_alpha_vms = 53;
@@ -647,14 +653,29 @@ public interface ISCConstants {
     int isc_info_db_impl_dg_x86 = 58;
     int isc_info_db_impl_sco_ev = 59;
     int isc_info_db_impl_i386 = 60;
-
     int isc_info_db_impl_freebsd = 61;
     int isc_info_db_impl_netbsd = 62;
     int isc_info_db_impl_darwin = 63;
     int isc_info_db_impl_sinixz = 64;
-
     int isc_info_db_impl_linux_sparc = 65;
     int isc_info_db_impl_linux_amd64 = 66;
+    int isc_info_db_impl_winnt_amd64 = 68;
+    int isc_info_db_impl_linux_ppc = 69;
+    int isc_info_db_impl_darwin_x86 = 70;
+    int isc_info_db_impl_linux_mipsel = 71;
+    int isc_info_db_impl_linux_mips = 72;
+    int isc_info_db_impl_darwin_x64 = 73;
+    int isc_info_db_impl_sun_amd64 = 74;
+    int isc_info_db_impl_linux_arm = 75;
+    int isc_info_db_impl_linux_ia64 = 76;
+    int isc_info_db_impl_darwin_ppc64 = 77;
+    int isc_info_db_impl_linux_s390x = 78;
+    int isc_info_db_impl_linux_s390 = 79;
+    int isc_info_db_impl_linux_sh = 80;
+    int isc_info_db_impl_linux_sheb = 81;
+    int isc_info_db_impl_linux_hppa = 82;
+    int isc_info_db_impl_linux_alpha = 83;
+    int isc_info_db_impl_linux_arm64 = 84;
 
     int isc_info_db_class_access = 1;
     int isc_info_db_class_y_valve = 2;
@@ -674,7 +695,6 @@ public interface ISCConstants {
     int isc_info_db_code_interbase = 3;
     int isc_info_db_code_firebird = 4;
 
-    
     /************************/
     /* Blob Parameter Block */
     /************************/
