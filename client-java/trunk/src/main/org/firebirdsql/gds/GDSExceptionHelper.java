@@ -27,6 +27,7 @@ package org.firebirdsql.gds;
 import org.firebirdsql.logging.Logger;
 import org.firebirdsql.logging.LoggerFactory;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
 import java.io.InputStream;
@@ -128,6 +129,7 @@ public class GDSExceptionHelper {
     public static final class GDSMessage {
         private final String template;
         private final String[] params;
+        private final List<String> extraParameters = new ArrayList<String>();
 
         /**
          * Constructs an instance of GDSMessage for the specified template.
@@ -173,8 +175,15 @@ public class GDSExceptionHelper {
          * @param messageParameters Message parameters
          */
         public void setParameters(List<String> messageParameters) {
-            for (int position = 0; position < Math.min(params.length, messageParameters.size()); position++) {
+            int position;
+            for (position = 0; position < Math.min(params.length, messageParameters.size()); position++) {
                 params[position] = messageParameters.get(position);
+            }
+            // If we have more messageParameters we need to store the separately
+            if (params.length < messageParameters.size()) {
+                for (; position < messageParameters.size(); position++) {
+                    extraParameters.add(messageParameters.get(position));
+                }
             }
         }
 
@@ -188,13 +197,16 @@ public class GDSExceptionHelper {
             for(int i = 0; i < params.length; i++) {
                 String param = "{" + i + "}";
                 int pos = message.indexOf(param);
-                if (pos > -1) 
-                {
+                if (pos > -1) {
                    String temp = message.substring(0, pos);
                    temp += (params[i] != null) ? params[i] : "(null)";
                    temp += message.substring(pos + param.length());
                    message = temp;
-                } // end of if ()
+                }
+            }
+            // Include extra parameters at the end of the message
+            for (String extraParameter : extraParameters) {
+                message = message + "; " + extraParameter;
             }
             return message;
         }
