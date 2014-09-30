@@ -137,6 +137,7 @@ public class JnaStatement extends AbstractFbStatement {
                     checkStatementValid();
                 }
 
+                // Information in tempXSqlDa is ignored, as we are retrieving more detailed information using getSqlInfo
                 final XSQLDA tempXSqlDa = new XSQLDA();
                 clientLibrary.isc_dsql_prepare(statusVector, getTransaction().getJnaHandle(), handle,
                         (short) statementArray.length, statementArray, db.getConnectionDialect(), tempXSqlDa);
@@ -159,6 +160,7 @@ public class JnaStatement extends AbstractFbStatement {
             checkTransactionActive(getTransaction());
             validateParameters(parameters);
             reset(false);
+
             final JnaDatabase db = getDatabase();
             synchronized (db.getSynchronizationObject()) {
                 final FbClientLibrary clientLibrary = db.getClientLibrary();
@@ -264,8 +266,7 @@ public class JnaStatement extends AbstractFbStatement {
             xSqlVar.sqllen = (short) fieldDescriptor.getLength();
             xSqlVar.sqlind = new ShortByReference();
 
-            boolean isVarying = (fieldDescriptor.getType() & ~1) == ISCConstants.SQL_VARYING;
-            final int requiredDataSize = isVarying
+            final int requiredDataSize = fieldDescriptor.isVarying()
                     ? fieldDescriptor.getLength() + 3 // 2 bytes for length, 1 byte for nul terminator
                     : fieldDescriptor.getLength() + 1; // 1 byte for nul terminator
 
@@ -297,8 +298,7 @@ public class JnaStatement extends AbstractFbStatement {
                 int bufferOffset = 0;
                 int bufferLength = xSqlVar.sqllen;
 
-                boolean isVarying = (rowDescriptor.getFieldDescriptor(idx).getType() & ~1) == ISCConstants.SQL_VARYING;
-                if (isVarying) {
+                if (rowDescriptor.getFieldDescriptor(idx).isVarying()) {
                     bufferOffset = 2;
                     bufferLength = xSqlVar.sqldata.getShort(0) & 0xff;
                 }

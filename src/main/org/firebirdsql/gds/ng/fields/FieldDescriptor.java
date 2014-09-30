@@ -26,6 +26,7 @@
  */
 package org.firebirdsql.gds.ng.fields;
 
+import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.XSQLVAR;
 import org.firebirdsql.util.ObjectUtils;
 
@@ -151,6 +152,13 @@ public final class FieldDescriptor {
      */
     public String getOwnerName() {
         return ownerName;
+    }
+
+    /**
+     * @return {@code true} if the type is variable length (ie {@link org.firebirdsql.gds.ISCConstants#SQL_VARYING}).
+     */
+    public boolean isVarying() {
+        return (getType() & ~1) == ISCConstants.SQL_VARYING;
     }
 
     /**

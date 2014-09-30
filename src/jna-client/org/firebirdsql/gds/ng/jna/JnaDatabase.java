@@ -47,6 +47,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 import static org.firebirdsql.gds.ISCConstants.*;
 
 /**
+ * Implementation of {@link org.firebirdsql.gds.ng.FbDatabase} for native client access.
+ *
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @since 3.0
  */
