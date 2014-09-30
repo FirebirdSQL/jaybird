@@ -30,6 +30,8 @@ import java.nio.ByteBuffer;
 import java.sql.SQLException;
 
 /**
+ * Implementation of {@link org.firebirdsql.gds.ng.FbTransaction} for native client access.
+ *
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @since 3.0
  */

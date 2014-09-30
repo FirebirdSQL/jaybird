@@ -40,7 +40,7 @@ public final class JnaConnection extends AbstractConnection {
     private FbClientLibrary clientLibrary;
 
     /**
-     * Creates a NativeConnection (without establishing a connection to the server).
+     * Creates a JnaConnection (without establishing a connection to the server).
      *
      * @param clientLibrary
      *         Client library to use
@@ -53,7 +53,7 @@ public final class JnaConnection extends AbstractConnection {
     }
 
     /**
-     * Creates a WireConnection (without establishing a connection to the server).
+     * Creates a JnaConnection (without establishing a connection to the server).
      *
      * @param clientLibrary
      *         Client library to use
