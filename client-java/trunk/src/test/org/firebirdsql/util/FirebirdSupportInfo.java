@@ -153,6 +153,13 @@ public class FirebirdSupportInfo {
     }
 
     /**
+     * @return {@code true} when field descriptors contain table alias information
+     */
+    public boolean supportsTableAlias() {
+        return serverVersion.isEqualOrAbove(2, 0);
+    }
+
+    /**
      * @param serverVersion
      *         Server version
      * @return FirebirdVersionSupport instance

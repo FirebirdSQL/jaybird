@@ -66,6 +66,7 @@ public class V12Database extends V11Database {
                 throw new SQLNonTransientConnectionException("Connection abort failed", ioe);
             }
         } else {
+            checkConnected();
             try {
                 // We circumvent the normal xdrOut to minimize the chance of interleaved writes
                 // TODO We may still need to do separate write / read synchronization to ensure this works correctly

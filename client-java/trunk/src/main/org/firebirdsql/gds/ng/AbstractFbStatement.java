@@ -66,7 +66,8 @@ public abstract class AbstractFbStatement implements FbStatement {
 
     private final TransactionListener transactionListener = new TransactionListener() {
         @Override
-        public void transactionStateChanged(FbTransaction transaction, TransactionState newState, TransactionState previousState) {
+        public void transactionStateChanged(FbTransaction transaction, TransactionState newState,
+                TransactionState previousState) {
             if (getTransaction() != transaction) {
                 transaction.removeTransactionListener(this);
                 return;
@@ -298,6 +299,20 @@ public abstract class AbstractFbStatement implements FbStatement {
         }
     }
 
+    private static final EnumSet<StatementState> PREPARE_ALLOWED_STATES = EnumSet.of(
+            StatementState.NEW, StatementState.ALLOCATED, StatementState.PREPARED);
+
+    /**
+     * Is a call to {@link #prepare(String)} allowed for the supplied {@link StatementState}.
+     *
+     * @param state
+     *         The statement state
+     * @return <code>true</code> call to <code>prepare</code> is allowed
+     */
+    protected boolean isPrepareAllowed(final StatementState state) {
+        return PREPARE_ALLOWED_STATES.contains(state);
+    }
+
     @Override
     public final RowDescriptor getParameterDescriptor() {
         return parameterDescriptor;
@@ -309,7 +324,7 @@ public abstract class AbstractFbStatement implements FbStatement {
      * @param parameterDescriptor
      *         Parameter descriptor
      */
-    protected final void setParameterDescriptor(RowDescriptor parameterDescriptor) {
+    protected void setParameterDescriptor(RowDescriptor parameterDescriptor) {
         synchronized (getSynchronizationObject()) {
             this.parameterDescriptor = parameterDescriptor;
         }
@@ -326,7 +341,7 @@ public abstract class AbstractFbStatement implements FbStatement {
      * @param fieldDescriptor
      *         Field descriptor
      */
-    protected final void setFieldDescriptor(RowDescriptor fieldDescriptor) {
+    protected void setFieldDescriptor(RowDescriptor fieldDescriptor) {
         synchronized (getSynchronizationObject()) {
             this.fieldDescriptor = fieldDescriptor;
         }
@@ -363,7 +378,8 @@ public abstract class AbstractFbStatement implements FbStatement {
      *         For errors retrieving or transforming the response.
      */
     @Override
-    public final <T> T getSqlInfo(final byte[] requestItems, final int bufferLength, final InfoProcessor<T> infoProcessor) throws SQLException {
+    public final <T> T getSqlInfo(final byte[] requestItems, final int bufferLength,
+            final InfoProcessor<T> infoProcessor) throws SQLException {
         return infoProcessor.process(getSqlInfo(requestItems, bufferLength));
     }
 
@@ -390,8 +406,8 @@ public abstract class AbstractFbStatement implements FbStatement {
             throw new SQLNonTransientException("Cursor still open, fetch all rows or close cursor before fetching SQL counts");
         }
         final SqlCountProcessor countProcessor = createSqlCountProcessor();
-        // NOTE: implementation of SqlCountProcessor assumes the default buffer size is sufficient (actual requirement is 49 bytes max) and does not handle truncation
-        final SqlCountHolder sqlCounts = getSqlInfo(countProcessor.getRecordCountInfoItems(), getDefaultSqlInfoSize(), countProcessor);
+        // NOTE: implementation of SqlCountProcessor assumes the specified size is sufficient (actual requirement is 49 bytes max) and does not handle truncation
+        final SqlCountHolder sqlCounts = getSqlInfo(countProcessor.getRecordCountInfoItems(), 64, countProcessor);
         statementListenerDispatcher.sqlCounts(this, sqlCounts);
         return sqlCounts;
     }
@@ -497,7 +513,7 @@ public abstract class AbstractFbStatement implements FbStatement {
     }
 
     @Override
-    public final FbTransaction getTransaction() {
+    public FbTransaction getTransaction() {
         return transaction;
     }
 
@@ -533,5 +549,21 @@ public abstract class AbstractFbStatement implements FbStatement {
             throw new SQLNonTransientException(String.format("Invalid transaction handle type, got \"%s\"", newTransaction.getClass().getName()),
                     FBSQLException.SQL_STATE_GENERAL_ERROR);
         }
+    }
+
+    /**
+     * Parse the statement info response in <code>statementInfoResponse</code>. If the response is truncated, a new
+     * request is done using {@link #getStatementInfoRequestItems()}
+     *
+     * @param statementInfoResponse
+     *         Statement info response
+     */
+    protected void parseStatementInfo(final byte[] statementInfoResponse) throws SQLException {
+        final StatementInfoProcessor infoProcessor = new StatementInfoProcessor(this, this.getDatabase());
+        InfoProcessor.StatementInfo statementInfo = infoProcessor.process(statementInfoResponse);
+
+        setType(statementInfo.getStatementType());
+        setFieldDescriptor(statementInfo.getFields());
+        setParameterDescriptor(statementInfo.getParameters());
     }
 }

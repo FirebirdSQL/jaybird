@@ -32,7 +32,6 @@ import org.firebirdsql.util.SQLExceptionChainBuilder;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.sql.SQLNonTransientException;
-import java.util.EnumSet;
 
 import static org.firebirdsql.gds.ng.TransactionHelper.checkTransactionActive;
 
@@ -61,6 +60,7 @@ public class V10Statement extends AbstractFbWireStatement implements FbWireState
     @Override
     public byte[] getSqlInfo(final byte[] requestItems, final int bufferLength) throws SQLException {
         synchronized (getSynchronizationObject()) {
+            checkStatementValid();
             synchronized (getDatabase().getSynchronizationObject()) {
                 try {
                     sendInfoSql(requestItems, bufferLength);
@@ -175,19 +175,6 @@ public class V10Statement extends AbstractFbWireStatement implements FbWireState
         // No processing needed
     }
 
-    private static final EnumSet<StatementState> PREPARE_ALLOWED_STATES = EnumSet.of(
-            StatementState.NEW, StatementState.ALLOCATED, StatementState.PREPARED);
-
-    /**
-     * Is a call to {@link #prepare(String)} allowed for the supplied {@link StatementState}.
-     *
-     * @param state The statement state
-     * @return <code>true</code> call to <code>prepare</code> is allowed
-     */
-    protected boolean isPrepareAllowed(final StatementState state) {
-        return PREPARE_ALLOWED_STATES.contains(state);
-    }
-
     @Override
     public void prepare(final String statementText) throws SQLException {
         synchronized (getSynchronizationObject()) {
@@ -298,22 +285,6 @@ public class V10Statement extends AbstractFbWireStatement implements FbWireState
         }
     }
 
-    /**
-     * Parse the statement info response in <code>statementInfoResponse</code>. If the response is truncated, a new
-     * request is done using {@link #getStatementInfoRequestItems()}
-     *
-     * @param statementInfoResponse
-     *         Statement info response
-     */
-    protected void parseStatementInfo(final byte[] statementInfoResponse) throws SQLException {
-        final V10StatementInfoProcessor infoProcessor = new V10StatementInfoProcessor(this, this.getDatabase());
-        InfoProcessor.StatementInfo statementInfo = infoProcessor.process(statementInfoResponse);
-
-        setType(statementInfo.getStatementType());
-        setFieldDescriptor(statementInfo.getFields());
-        setParameterDescriptor(statementInfo.getParameters());
-    }
-
     @Override
     public void execute(final RowValue parameters) throws SQLException {
         synchronized (getSynchronizationObject()) {
@@ -420,8 +391,7 @@ public class V10Statement extends AbstractFbWireStatement implements FbWireState
             xdrOut.writeInt(getHandle());
             xdrOut.writeInt(getTransaction().getHandle());
 
-            final RowDescriptor parameterDescriptor = getParameterDescriptor();
-            if (parameterDescriptor != null && parameterDescriptor.getCount() > 0) {
+            if (parameters != null && parameters.getCount() > 0) {
                 xdrOut.writeBuffer(calculateBlr(parameters));
                 xdrOut.writeInt(0); // message number = in_message_type
                 xdrOut.writeInt(1); // Number of messages

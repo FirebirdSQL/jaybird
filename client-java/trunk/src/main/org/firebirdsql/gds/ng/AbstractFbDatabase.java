@@ -20,6 +20,7 @@
  */
 package org.firebirdsql.gds.ng;
 
+import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.impl.GDSServerVersion;
 import org.firebirdsql.gds.impl.GDSServerVersionException;
 import org.firebirdsql.gds.ng.listeners.DatabaseListener;
@@ -30,6 +31,8 @@ import org.firebirdsql.logging.LoggerFactory;
 import java.sql.SQLException;
 import java.sql.SQLWarning;
 
+import static org.firebirdsql.gds.ISCConstants.*;
+
 /**
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @since 3.0
@@ -37,6 +40,22 @@ import java.sql.SQLWarning;
 public abstract class AbstractFbDatabase implements FbDatabase {
 
     private static final Logger log = LoggerFactory.getLogger(AbstractFbDatabase.class, false);
+
+    /**
+     * Info-request block for database information.
+     * <p>
+     * TODO Move to FbDatabase interface? Will this vary with versions of
+     * Firebird?
+     * </p>
+     */
+    // @formatter:off
+    private static final byte[] DESCRIBE_DATABASE_INFO_BLOCK = new byte[]{
+            isc_info_db_sql_dialect,
+            isc_info_firebird_version,
+            isc_info_ods_version,
+            isc_info_ods_minor_version,
+            isc_info_end };
+    // @formatter:on
 
     protected final DatabaseListenerDispatcher databaseListenerDispatcher = new DatabaseListenerDispatcher();
     private final WarningMessageCallback warningCallback = new WarningMessageCallback() {
@@ -119,6 +138,18 @@ public abstract class AbstractFbDatabase implements FbDatabase {
                 databaseListenerDispatcher.detached(this);
                 databaseListenerDispatcher.shutdown();
             }
+        }
+    }
+
+    /**
+     * Performs {@link #detach()} suppressing any exception.
+     */
+    protected void safelyDetach() {
+        try {
+            detach();
+        } catch (Exception ex) {
+            // ignore, but log
+            log.debug("Exception on safely detach", ex);
         }
     }
 
@@ -242,5 +273,71 @@ public abstract class AbstractFbDatabase implements FbDatabase {
     @Override
     public int iscVaxInteger2(final byte[] buffer, final int startPosition) {
         return (buffer[startPosition] & 0xff) | ((buffer[startPosition + 1] & 0xff) << 8);
+    }
+
+    protected byte[] getDescribeDatabaseInfoBlock() {
+        return DESCRIBE_DATABASE_INFO_BLOCK;
+    }
+
+    protected InfoProcessor<FbDatabase> getDatabaseInformationProcessor() {
+        return new DatabaseInformationProcessor();
+    }
+
+    private class DatabaseInformationProcessor implements InfoProcessor<FbDatabase> {
+        @Override
+        public FbDatabase process(byte[] info) throws SQLException {
+            boolean debug = log.isDebugEnabled();
+            if (info.length == 0) {
+                throw new SQLException("Response buffer for database information request is empty");
+            }
+            if (debug)
+                log.debug(String.format("DatabaseInformationProcessor.process: first 2 bytes are %04X or: %02X, %02X",
+                        iscVaxInteger2(info, 0), info[0], info[1]));
+            int value;
+            int len;
+            int i = 0;
+            while (info[i] != ISCConstants.isc_info_end) {
+                switch (info[i++]) {
+                case ISCConstants.isc_info_db_sql_dialect:
+                    len = iscVaxInteger2(info, i);
+                    i += 2;
+                    value = iscVaxInteger(info, i, len);
+                    i += len;
+                    setDatabaseDialect((short) value);
+                    if (debug) log.debug("isc_info_db_sql_dialect:" + value);
+                    break;
+                case ISCConstants.isc_info_ods_version:
+                    len = iscVaxInteger2(info, i);
+                    i += 2;
+                    value = iscVaxInteger(info, i, len);
+                    i += len;
+                    setOdsMajor(value);
+                    if (debug) log.debug("isc_info_ods_version:" + value);
+                    break;
+                case ISCConstants.isc_info_ods_minor_version:
+                    len = iscVaxInteger2(info, i);
+                    i += 2;
+                    value = iscVaxInteger(info, i, len);
+                    i += len;
+                    setOdsMinor(value);
+                    if (debug) log.debug("isc_info_ods_minor_version:" + value);
+                    break;
+                case ISCConstants.isc_info_firebird_version:
+                    len = iscVaxInteger2(info, i);
+                    i += 2;
+                    String firebirdVersion = new String(info, i + 2, len - 2);
+                    i += len;
+                    setServerVersion(firebirdVersion);
+                    if (debug) log.debug("isc_info_firebird_version:" + firebirdVersion);
+                    break;
+                case ISCConstants.isc_info_truncated:
+                    if (debug) log.debug("isc_info_truncated ");
+                    return AbstractFbDatabase.this;
+                default:
+                    throw new FbExceptionBuilder().exception(ISCConstants.isc_infunk).toSQLException();
+                }
+            }
+            return AbstractFbDatabase.this;
+        }
     }
 }

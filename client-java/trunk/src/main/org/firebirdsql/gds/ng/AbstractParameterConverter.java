@@ -18,13 +18,12 @@
  *
  * All rights reserved.
  */
-package org.firebirdsql.gds.ng.wire;
+package org.firebirdsql.gds.ng;
 
 import org.firebirdsql.encodings.Encoding;
 import org.firebirdsql.encodings.IEncodingFactory;
 import org.firebirdsql.gds.DatabaseParameterBuffer;
 import org.firebirdsql.gds.Parameter;
-import org.firebirdsql.gds.ng.IConnectionProperties;
 
 import static org.firebirdsql.gds.ISCConstants.*;
 

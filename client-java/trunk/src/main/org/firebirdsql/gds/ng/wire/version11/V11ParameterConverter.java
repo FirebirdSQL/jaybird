@@ -30,7 +30,7 @@ import java.security.AccessController;
 import java.security.PrivilegedAction;
 
 /**
- * Implementation of {@link org.firebirdsql.gds.ng.wire.ParameterConverter} for the version 11 protocol.
+ * Implementation of {@link org.firebirdsql.gds.ng.ParameterConverter} for the version 11 protocol.
  * <p>
  * Adds support for including the process name and process id from the system properties
  * {@code org.firebirdsql.jdbc.processName} and {@code org.firebirdsql.jdbc.pid}

@@ -20,17 +20,14 @@
  */
 package org.firebirdsql.gds.ng.wire;
 
-import org.firebirdsql.encodings.Encoding;
-import org.firebirdsql.encodings.EncodingDefinition;
 import org.firebirdsql.encodings.EncodingFactory;
 import org.firebirdsql.encodings.IEncodingFactory;
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.impl.wire.XdrInputStream;
 import org.firebirdsql.gds.impl.wire.XdrOutputStream;
-import org.firebirdsql.gds.ng.FbConnectionProperties;
+import org.firebirdsql.gds.ng.AbstractConnection;
 import org.firebirdsql.gds.ng.FbExceptionBuilder;
 import org.firebirdsql.gds.ng.IConnectionProperties;
-import org.firebirdsql.jdbc.FBSQLException;
 import org.firebirdsql.logging.Logger;
 import org.firebirdsql.logging.LoggerFactory;
 
@@ -41,7 +38,6 @@ import java.net.*;
 import java.security.AccessController;
 import java.security.PrivilegedAction;
 import java.sql.SQLException;
-import java.sql.SQLNonTransientConnectionException;
 import java.sql.SQLTimeoutException;
 import java.util.concurrent.TimeUnit;
 
@@ -54,7 +50,7 @@ import static org.firebirdsql.gds.impl.wire.WireProtocolConstants.*;
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @since 3.0
  */
-public final class WireConnection {
+public final class WireConnection extends AbstractConnection {
 
     // TODO Include character set
     // TODO Check if methods currently throwing IOException should throw SQLException instead
@@ -64,12 +60,9 @@ public final class WireConnection {
 
     private Socket socket;
     private ProtocolCollection protocols;
-    private IConnectionProperties connectionProperties;
     private int protocolVersion;
     private int protocolArchitecture;
     private int protocolMinimumType;
-    private EncodingDefinition encodingDefinition;
-    private IEncodingFactory encodingFactory;
 
     private XdrOutputStream xdrOut;
     private XdrInputStream xdrIn;
@@ -115,47 +108,14 @@ public final class WireConnection {
      * @param protocols
      *         The collection of protocols to use for this connection.
      */
-    public WireConnection(IConnectionProperties connectionProperties, IEncodingFactory encodingFactory, ProtocolCollection protocols) throws SQLException {
-        this.connectionProperties = new FbConnectionProperties(connectionProperties);
+    public WireConnection(IConnectionProperties connectionProperties, IEncodingFactory encodingFactory,
+            ProtocolCollection protocols) throws SQLException {
+        super(connectionProperties, encodingFactory);
         this.protocols = protocols;
-        final String firebirdEncodingName = connectionProperties.getEncoding();
-        final String javaCharsetAlias = connectionProperties.getCharSet();
-
-        encodingDefinition = encodingFactory.getEncodingDefinition(firebirdEncodingName, javaCharsetAlias);
-        if (encodingDefinition == null || encodingDefinition.isInformationOnly()) {
-            if (firebirdEncodingName == null && javaCharsetAlias == null) {
-                // TODO Signal warning?
-                // TODO Use the default encoding (and its matching Firebird encoding) instead of NONE
-                encodingDefinition = encodingFactory.getEncodingDefinition("NONE", null);
-            } else {
-                // TODO Don't throw exception if encoding/charSet is null (see also TODO inside EncodingFactory.getEncodingDefinition)
-                throw new SQLNonTransientConnectionException(
-                        String.format("No valid encoding definition for Firebird encoding %s and/or Java charset %s",
-                            firebirdEncodingName, javaCharsetAlias),
-                        FBSQLException.SQL_STATE_CONNECTION_ERROR);
-            }
-        }
-        this.encodingFactory = encodingFactory.withDefaultEncodingDefinition(encodingDefinition);
     }
 
     public boolean isConnected() {
         return !(socket == null || socket.isClosed());
-    }
-
-    public String getServerName() {
-        return connectionProperties.getServerName();
-    }
-
-    public int getPortNumber() {
-        return connectionProperties.getPortNumber();
-    }
-
-    public String getDatabaseName() {
-        return connectionProperties.getDatabaseName();
-    }
-
-    public short getConnectionDialect() {
-        return connectionProperties.getConnectionDialect();
     }
 
     public int getProtocolVersion() {
@@ -168,13 +128,6 @@ public final class WireConnection {
 
     public int getProtocolMinimumType() {
         return protocolMinimumType;
-    }
-
-    /**
-     * @return An immutable copy of the current connection properties.
-     */
-    public IConnectionProperties getConnectionProperties() {
-        return connectionProperties.asImmutable();
     }
 
     /**
@@ -262,18 +215,6 @@ public final class WireConnection {
         return streamAccess;
     }
 
-    public EncodingDefinition getEncodingDefinition() {
-        return this.encodingDefinition;
-    }
-
-    public Encoding getEncoding() {
-        return this.encodingDefinition.getEncoding();
-    }
-
-    public IEncodingFactory getEncodingFactory() {
-        return encodingFactory;
-    }
-
     /**
      * Performs the connection identification phase of the Wire protocol and
      * returns the FbWireDatabase implementation for the agreed protocol.
@@ -282,6 +223,7 @@ public final class WireConnection {
      * @throws SQLTimeoutException
      * @throws SQLException
      */
+    @Override
     public FbWireDatabase identify() throws SQLException {
         try {
             xdrIn = new XdrInputStream(socket.getInputStream());

@@ -18,11 +18,10 @@
  *
  * All rights reserved.
  */
-package org.firebirdsql.gds.ng.wire;
+package org.firebirdsql.gds.ng;
 
 import org.firebirdsql.encodings.IEncodingFactory;
 import org.firebirdsql.gds.DatabaseParameterBuffer;
-import org.firebirdsql.gds.ng.IConnectionProperties;
 
 /**
  * Provides conversion of parameters (eg from {@link org.firebirdsql.gds.ng.IConnectionProperties} to a

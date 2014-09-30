@@ -52,7 +52,7 @@ public class V10Transaction extends AbstractFbTransaction implements FbWireTrans
      * @param database
      *         FbWireDatabase implementation
      * @param transactionHandle
-     *         transactionHandle
+     *         Transaction handle
      * @param initialState
      *         The initial state of the transaction (only <code>ACTIVE</code> or <code>PREPARED</code> allowed).
      */

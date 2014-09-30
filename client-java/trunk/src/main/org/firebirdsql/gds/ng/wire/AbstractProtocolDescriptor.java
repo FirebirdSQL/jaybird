@@ -21,6 +21,7 @@
 package org.firebirdsql.gds.ng.wire;
 
 import org.firebirdsql.gds.DatabaseParameterBuffer;
+import org.firebirdsql.gds.ng.ParameterConverter;
 import org.firebirdsql.util.ObjectUtils;
 
 /**

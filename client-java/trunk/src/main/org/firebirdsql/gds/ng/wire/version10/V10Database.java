@@ -193,7 +193,7 @@ public class V10Database extends AbstractFbWireDatabase implements FbWireDatabas
      *         For errors reading or writing database information.
      */
     protected void afterAttachActions() throws SQLException {
-        getDatabaseInfo(DESCRIBE_DATABASE_INFO_BLOCK, 1024, new DatabaseInformationProcessor());
+        getDatabaseInfo(getDescribeDatabaseInfoBlock(), 1024, getDatabaseInformationProcessor());
         // During connect and attach the socketTimeout might be set to the connectTimeout, now reset to 'normal' socketTimeout
         connection.resetSocketTimeout();
     }
@@ -203,6 +203,7 @@ public class V10Database extends AbstractFbWireDatabase implements FbWireDatabas
         synchronized (getSynchronizationObject()) {
             if (getTransactionCount() > 0) {
                 // Register open transactions as warning, we are going to detach and close the connection anyway
+                // TODO: Use same behavior as in JnaDatabase (which throws an exception and doesn't register a warning)
                 // TODO: Change exception creation
                 // TODO: Rollback transactions?
                 FbExceptionBuilder builder = new FbExceptionBuilder();
@@ -233,18 +234,6 @@ public class V10Database extends AbstractFbWireDatabase implements FbWireDatabas
             } finally {
                 attached.set(false);
             }
-        }
-    }
-
-    /**
-     * Performs {@link #detach()} suppressing any exception.
-     */
-    protected void safelyDetach() {
-        try {
-            detach();
-        } catch (Exception ex) {
-            // ignore, but log
-            log.debug("Exception on safely detach", ex);
         }
     }
 
@@ -301,6 +290,7 @@ public class V10Database extends AbstractFbWireDatabase implements FbWireDatabas
 
     @Override
     public FbWireTransaction startTransaction(TransactionParameterBuffer tpb) throws SQLException {
+        checkAttached();
         final FbWireTransaction transaction;
         synchronized (getSynchronizationObject()) {
             GenericResponse response;
@@ -327,6 +317,7 @@ public class V10Database extends AbstractFbWireDatabase implements FbWireDatabas
 
     @Override
     public FbTransaction reconnectTransaction(long transactionId) throws SQLException {
+        checkAttached();
         final FbWireTransaction transaction;
         synchronized (getSynchronizationObject()) {
             GenericResponse response;
@@ -359,6 +350,7 @@ public class V10Database extends AbstractFbWireDatabase implements FbWireDatabas
 
     @Override
     public FbStatement createStatement(FbTransaction transaction) throws SQLException {
+        checkAttached();
         FbStatement stmt = protocolDescriptor.createStatement(this);
         stmt.setTransaction(transaction);
         return stmt;
@@ -637,82 +629,6 @@ public class V10Database extends AbstractFbWireDatabase implements FbWireDatabas
             }
         } catch (IOException ioe) {
             throw new FbExceptionBuilder().exception(ISCConstants.isc_net_read_err).cause(ioe).toSQLException();
-        }
-    }
-
-    // TODO: Move iscVax* up in inheritance tree, or move to helper class
-
-    /**
-     * Info-request block for database information.
-     * <p>
-     * TODO Move to FbDatabase interface? Will this vary with versions of
-     * Firebird?
-     * </p>
-     */
-    // @formatter:off
-    protected static final byte[] DESCRIBE_DATABASE_INFO_BLOCK = new byte[]{
-            ISCConstants.isc_info_db_sql_dialect,
-            ISCConstants.isc_info_firebird_version,
-            ISCConstants.isc_info_ods_version,
-            ISCConstants.isc_info_ods_minor_version,
-            ISCConstants.isc_info_end };
-    // @formatter:on
-
-    protected class DatabaseInformationProcessor implements InfoProcessor<V10Database> {
-        @Override
-        public V10Database process(byte[] info) throws SQLException {
-            boolean debug = log.isDebugEnabled();
-            if (info.length == 0) {
-                throw new SQLException("Response buffer for database information request is empty");
-            }
-            if (debug)
-                log.debug(String.format("DatabaseInformationProcessor.process: first 2 bytes are %04X or: %02X, %02X",
-                        iscVaxInteger2(info, 0), info[0], info[1]));
-            int value;
-            int len;
-            int i = 0;
-            while (info[i] != ISCConstants.isc_info_end) {
-                switch (info[i++]) {
-                case ISCConstants.isc_info_db_sql_dialect:
-                    len = iscVaxInteger2(info, i);
-                    i += 2;
-                    value = iscVaxInteger(info, i, len);
-                    i += len;
-                    setDatabaseDialect((short) value);
-                    if (debug) log.debug("isc_info_db_sql_dialect:" + value);
-                    break;
-                case ISCConstants.isc_info_ods_version:
-                    len = iscVaxInteger2(info, i);
-                    i += 2;
-                    value = iscVaxInteger(info, i, len);
-                    i += len;
-                    setOdsMajor(value);
-                    if (debug) log.debug("isc_info_ods_version:" + value);
-                    break;
-                case ISCConstants.isc_info_ods_minor_version:
-                    len = iscVaxInteger2(info, i);
-                    i += 2;
-                    value = iscVaxInteger(info, i, len);
-                    i += len;
-                    setOdsMinor(value);
-                    if (debug) log.debug("isc_info_ods_minor_version:" + value);
-                    break;
-                case ISCConstants.isc_info_firebird_version:
-                    len = iscVaxInteger2(info, i);
-                    i += 2;
-                    String firebirdVersion = new String(info, i + 2, len - 2);
-                    i += len;
-                    setServerVersion(firebirdVersion);
-                    if (debug) log.debug("isc_info_firebird_version:" + firebirdVersion);
-                    break;
-                case ISCConstants.isc_info_truncated:
-                    if (debug) log.debug("isc_info_truncated ");
-                    return V10Database.this;
-                default:
-                    throw new FbExceptionBuilder().exception(ISCConstants.isc_infunk).toSQLException();
-                }
-            }
-            return V10Database.this;
         }
     }
 

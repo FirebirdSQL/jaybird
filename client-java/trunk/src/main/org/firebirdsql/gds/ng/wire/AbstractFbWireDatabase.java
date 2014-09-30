@@ -25,10 +25,7 @@ import org.firebirdsql.encodings.IEncodingFactory;
 import org.firebirdsql.gds.BlobParameterBuffer;
 import org.firebirdsql.gds.impl.wire.XdrInputStream;
 import org.firebirdsql.gds.impl.wire.XdrOutputStream;
-import org.firebirdsql.gds.ng.AbstractFbDatabase;
-import org.firebirdsql.gds.ng.FbBlob;
-import org.firebirdsql.gds.ng.FbTransaction;
-import org.firebirdsql.gds.ng.WarningMessageCallback;
+import org.firebirdsql.gds.ng.*;
 import org.firebirdsql.logging.Logger;
 import org.firebirdsql.logging.LoggerFactory;
 
@@ -86,6 +83,11 @@ public abstract class AbstractFbWireDatabase extends AbstractFbDatabase implemen
     @Override
     public final Encoding getEncoding() {
         return connection.getEncoding();
+    }
+
+    @Override
+    public final DatatypeCoder getDatatypeCoder() {
+        return DefaultDatatypeCoder.getInstance();
     }
 
     /**
