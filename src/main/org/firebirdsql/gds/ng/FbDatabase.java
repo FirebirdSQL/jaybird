@@ -259,6 +259,11 @@ public interface FbDatabase {
     Encoding getEncoding();
 
     /**
+     * @return The {@link org.firebirdsql.gds.ng.DatatypeCoder} for this database implementation.
+     */
+    DatatypeCoder getDatatypeCoder();
+
+    /**
      * Adds a {@link DatabaseListener} instance to this database.
      *
      * @param listener

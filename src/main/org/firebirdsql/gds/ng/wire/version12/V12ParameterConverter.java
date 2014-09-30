@@ -29,7 +29,7 @@ import org.firebirdsql.gds.ng.IConnectionProperties;
 import org.firebirdsql.gds.ng.wire.version11.V11ParameterConverter;
 
 /**
- * Implementation of {@link org.firebirdsql.gds.ng.wire.ParameterConverter} for the version 12 protocol.
+ * Implementation of {@link org.firebirdsql.gds.ng.ParameterConverter} for the version 12 protocol.
  * <p>
  * Adds support for {@code isc_dpb_utf8_filename} and encodes all string properties in UTF-8.
  * </p>

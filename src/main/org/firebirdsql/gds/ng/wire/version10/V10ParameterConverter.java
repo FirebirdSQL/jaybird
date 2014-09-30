@@ -25,11 +25,11 @@ import org.firebirdsql.encodings.IEncodingFactory;
 import org.firebirdsql.gds.DatabaseParameterBuffer;
 import org.firebirdsql.gds.impl.wire.DatabaseParameterBufferImp;
 import org.firebirdsql.gds.ng.IConnectionProperties;
-import org.firebirdsql.gds.ng.wire.AbstractParameterConverter;
-import org.firebirdsql.gds.ng.wire.ParameterConverter;
+import org.firebirdsql.gds.ng.AbstractParameterConverter;
+import org.firebirdsql.gds.ng.ParameterConverter;
 
 /**
- * Implementation of {@link org.firebirdsql.gds.ng.wire.ParameterConverter} for the version 10 protocol.
+ * Implementation of {@link org.firebirdsql.gds.ng.ParameterConverter} for the version 10 protocol.
  *
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @since 3.0

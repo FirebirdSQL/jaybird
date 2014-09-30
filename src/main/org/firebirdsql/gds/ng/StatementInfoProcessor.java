@@ -18,35 +18,29 @@
  *
  * All rights reserved.
  */
-package org.firebirdsql.gds.ng.wire.version10;
+package org.firebirdsql.gds.ng;
 
 import org.firebirdsql.gds.ISCConstants;
-import org.firebirdsql.gds.ng.*;
 import org.firebirdsql.gds.ng.fields.RowDescriptor;
 import org.firebirdsql.gds.ng.fields.RowDescriptorBuilder;
-import org.firebirdsql.gds.ng.wire.AbstractFbWireStatement;
-import org.firebirdsql.gds.ng.wire.FbWireDatabase;
 import org.firebirdsql.logging.Logger;
 import org.firebirdsql.logging.LoggerFactory;
 
 import java.sql.SQLException;
 
 /**
- * InfoProcessor to retrieve the statement information associated with {@link org.firebirdsql.gds.ng.wire.version10.V10Statement#getStatementInfoRequestItems()}
- * and {@link org.firebirdsql.gds.ng.wire.version10.V10Statement#getParameterDescriptionInfoRequestItems()}.
- * <p>
- * Although this class is in version10, it can be used to process statement info for all protocol versions.
- * </p>
+ * InfoProcessor to retrieve the statement information associated with {@link org.firebirdsql.gds.ng.AbstractFbStatement#getStatementInfoRequestItems()}
+ * and {@link org.firebirdsql.gds.ng.AbstractFbStatement#getParameterDescriptionInfoRequestItems()}.
  *
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @since 3.0
  */
-public final class V10StatementInfoProcessor implements InfoProcessor<InfoProcessor.StatementInfo> {
+public final class StatementInfoProcessor implements InfoProcessor<InfoProcessor.StatementInfo> {
 
-    private static final Logger log = LoggerFactory.getLogger(V10Statement.class, false);
+    private static final Logger log = LoggerFactory.getLogger(StatementInfoProcessor.class, false);
 
-    private final AbstractFbWireStatement statement;
-    private final FbWireDatabase database;
+    private final AbstractFbStatement statement;
+    private final FbDatabase database;
 
     /**
      * Creates an instance of this class.
@@ -56,7 +50,7 @@ public final class V10StatementInfoProcessor implements InfoProcessor<InfoProces
      * @param database
      *         Database object
      */
-    public V10StatementInfoProcessor(final AbstractFbWireStatement statement, final FbWireDatabase database) {
+    public StatementInfoProcessor(final AbstractFbStatement statement, final FbDatabase database) {
         this.statement = statement;
         this.database = database;
     }
@@ -210,9 +204,6 @@ public final class V10StatementInfoProcessor implements InfoProcessor<InfoProces
                 rdb.setOriginalTableName(readStringValue(info));
                 break;
 
-            /* NOTE This constant is not available in the V10 implementation, but we include it so this processor can be
-             * used for newer protocol versions
-             */
             case ISCConstants.isc_info_sql_relation_alias:
                 rdb.setTableAlias(readStringValue(info));
                 break;

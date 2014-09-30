@@ -41,12 +41,11 @@ public class DatabaseParameterBufferImp extends ParameterBufferBase implements D
     }
 
     /**
-     * Package local method for obtaining buffer suitable for passing to native
-     * method.
+     * Method for obtaining buffer suitable for passing to native method.
      *
      * @return Buffer for native method
      */
-    byte[] getBytesForNativeCode() {
+    public byte[] getBytesForNativeCode() {
         final ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
         byteArrayOutputStream.write(ISCConstants.isc_dpb_version1);
 

@@ -42,9 +42,4 @@ public class TestV11Statement extends TestV10Statement {
         return V11Database.class;
     }
 
-    @Override
-    protected boolean supportsTableAlias() {
-        return true;
-    }
-
 }

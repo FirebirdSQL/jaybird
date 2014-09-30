@@ -18,18 +18,19 @@
  *
  * All rights reserved.
  */
-package org.firebirdsql.gds.ng.wire.version10;
+package org.firebirdsql.gds.ng.wire;
 
-import org.firebirdsql.gds.BlrConstants;
-import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.ng.FbExceptionBuilder;
 import org.firebirdsql.gds.ng.fields.*;
 
 import java.io.ByteArrayOutputStream;
 import java.sql.SQLException;
 
+import static org.firebirdsql.gds.BlrConstants.*;
+import static org.firebirdsql.gds.ISCConstants.*;
+
 /**
- * BLR Calculator for the version 10 protocol.
+ * Default BLR calculator for the wire protocol.
  * <p>
  * Most likely this can be used without change for other protocol versions as well, although we may need to investigate
  * the TODOs specified in {@link #calculateBlr(org.firebirdsql.gds.ng.fields.RowDescriptor)}.
@@ -38,37 +39,35 @@ import java.sql.SQLException;
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @since 3.0
  */
-public class V10BlrCalculator implements BlrCalculator {
+public class DefaultBlrCalculator implements BlrCalculator {
 
     /**
-     * Cached instance of {@link V10BlrCalculator} for dialect 3 databases.
+     * Cached instance of {@link DefaultBlrCalculator} for dialect 3 databases.
      */
-    public static final V10BlrCalculator CALCULATOR_DIALECT_3 = new V10BlrCalculator((short) 3);
+    public static final DefaultBlrCalculator CALCULATOR_DIALECT_3 = new DefaultBlrCalculator((short) 3);
 
     private final short dialect;
 
-    public V10BlrCalculator(short dialect) {
+    public DefaultBlrCalculator(short dialect) {
         this.dialect = dialect;
     }
 
     @Override
     public byte[] calculateBlr(RowDescriptor rowDescriptor) throws SQLException {
-        // TODO Return null for input null or 0 rows?
         final ByteArrayOutputStream bout = getByteArrayOutputStream(rowDescriptor.getCount());
 
         for (FieldDescriptor field : rowDescriptor) {
             calculateFieldBlr(bout, field, field.getLength());
         }
 
-        bout.write(BlrConstants.blr_end);
-        bout.write(BlrConstants.blr_eoc);
+        bout.write(blr_end);
+        bout.write(blr_eoc);
 
         return bout.toByteArray();
     }
 
     @Override
     public byte[] calculateBlr(RowValue rowValue) throws SQLException {
-        // TODO Return null for input null or 0 rows?
         final ByteArrayOutputStream bout = getByteArrayOutputStream(rowValue.getCount());
 
         for (FieldValue fieldValue : rowValue) {
@@ -77,8 +76,8 @@ public class V10BlrCalculator implements BlrCalculator {
             calculateFieldBlr(bout, field, actualDataLength);
         }
 
-        bout.write(BlrConstants.blr_end);
-        bout.write(BlrConstants.blr_eoc);
+        bout.write(blr_end);
+        bout.write(blr_eoc);
 
         return bout.toByteArray();
     }
@@ -98,9 +97,9 @@ public class V10BlrCalculator implements BlrCalculator {
         final int parameterCount = 2 * fieldCount; // 1 actual field, 1 null descriptor (?)
 
         // TODO Previous Jaybird implementation always wrote blr_version5
-        bout.write(dialect <= 1 ? BlrConstants.blr_version4 : BlrConstants.blr_version5);
-        bout.write(BlrConstants.blr_begin);
-        bout.write(BlrConstants.blr_message);
+        bout.write(dialect <= 1 ? blr_version4 : blr_version5);
+        bout.write(blr_begin);
+        bout.write(blr_message);
         bout.write(0);
         bout.write(parameterCount);
         bout.write(parameterCount >> 8);
@@ -119,103 +118,103 @@ public class V10BlrCalculator implements BlrCalculator {
     private void calculateFieldBlr(final ByteArrayOutputStream bout, final FieldDescriptor field, final int len) throws SQLException {
         final int fieldType = field.getType() & ~1;
         switch (fieldType) {
-        case ISCConstants.SQL_VARYING:
+        case SQL_VARYING:
             // TODO Use blr_varying2 instead, blr_varying2 was already in Firebird 1
-            bout.write(BlrConstants.blr_varying);
+            bout.write(blr_varying);
             bout.write(len);
             bout.write(len >> 8);
             break;
-        case ISCConstants.SQL_TEXT:
+        case SQL_TEXT:
             // TODO Use blr_text2 instead, brl_text2 was already in Firebird 1
-            bout.write(BlrConstants.blr_text);
+            bout.write(blr_text);
             bout.write(len);
             bout.write(len >> 8);
             break;
-        case ISCConstants.SQL_NULL:
-            bout.write(BlrConstants.blr_text);
+        case SQL_NULL:
+            bout.write(blr_text);
             bout.write(0);
             bout.write(0);
             break;
-        case ISCConstants.SQL_DOUBLE:
-            bout.write(BlrConstants.blr_double);
+        case SQL_DOUBLE:
+            bout.write(blr_double);
             break;
-        case ISCConstants.SQL_FLOAT:
-            bout.write(BlrConstants.blr_float);
+        case SQL_FLOAT:
+            bout.write(blr_float);
             break;
-        case ISCConstants.SQL_D_FLOAT:
-            bout.write(BlrConstants.blr_d_float);
+        case SQL_D_FLOAT:
+            bout.write(blr_d_float);
             break;
-        case ISCConstants.SQL_TYPE_DATE:
-            bout.write(BlrConstants.blr_sql_date);
+        case SQL_TYPE_DATE:
+            bout.write(blr_sql_date);
             break;
-        case ISCConstants.SQL_TYPE_TIME:
-            bout.write(BlrConstants.blr_sql_time);
+        case SQL_TYPE_TIME:
+            bout.write(blr_sql_time);
             break;
-        case ISCConstants.SQL_TIMESTAMP:
-            bout.write(BlrConstants.blr_timestamp);
+        case SQL_TIMESTAMP:
+            bout.write(blr_timestamp);
             break;
-        case ISCConstants.SQL_BLOB:
+        case SQL_BLOB:
             // TODO Use blr_blob2 instead, find out which Firebird version added that
-            bout.write(BlrConstants.blr_quad);
+            bout.write(blr_quad);
             bout.write(0); // scale?
             break;
-        case ISCConstants.SQL_ARRAY:
-            bout.write(BlrConstants.blr_quad);
+        case SQL_ARRAY:
+            bout.write(blr_quad);
             bout.write(0); // scale?
             break;
-        case ISCConstants.SQL_LONG:
-            bout.write(BlrConstants.blr_long);
+        case SQL_LONG:
+            bout.write(blr_long);
             bout.write(field.getScale());
             break;
-        case ISCConstants.SQL_SHORT:
-            bout.write(BlrConstants.blr_short);
+        case SQL_SHORT:
+            bout.write(blr_short);
             bout.write(field.getScale());
             break;
-        case ISCConstants.SQL_INT64:
-            bout.write(BlrConstants.blr_int64);
+        case SQL_INT64:
+            bout.write(blr_int64);
             bout.write(field.getScale());
             break;
-        case ISCConstants.SQL_QUAD:
-            bout.write(BlrConstants.blr_quad);
+        case SQL_QUAD:
+            bout.write(blr_quad);
             bout.write(field.getScale());
             break;
-        case ISCConstants.SQL_BOOLEAN:
-            bout.write(BlrConstants.blr_bool);
+        case SQL_BOOLEAN:
+            bout.write(blr_bool);
             break;
         default:
-            throw new FbExceptionBuilder().exception(ISCConstants.isc_dsql_sqlda_value_err).toSQLException();
+            throw new FbExceptionBuilder().exception(isc_dsql_sqlda_value_err).toSQLException();
         }
 
-        bout.write(BlrConstants.blr_short); // Null indicator
+        bout.write(blr_short); // Null indicator
         bout.write(0); // End of parameter?
     }
 
     @Override
     public int calculateIoLength(FieldDescriptor fieldDescriptor) throws SQLException {
         switch (fieldDescriptor.getType() & ~1) {
-        case ISCConstants.SQL_TEXT:
+        case SQL_TEXT:
             return fieldDescriptor.getLength() + 1;
-        case ISCConstants.SQL_VARYING:
+        case SQL_VARYING:
             return 0;
-        case ISCConstants.SQL_SHORT:
-        case ISCConstants.SQL_LONG:
-        case ISCConstants.SQL_FLOAT:
-        case ISCConstants.SQL_TYPE_TIME:
-        case ISCConstants.SQL_TYPE_DATE:
+        case SQL_SHORT:
+        case SQL_LONG:
+        case SQL_FLOAT:
+        case SQL_TYPE_TIME:
+        case SQL_TYPE_DATE:
             return -4;
-        case ISCConstants.SQL_DOUBLE:
-        case ISCConstants.SQL_TIMESTAMP:
-        case ISCConstants.SQL_BLOB:
-        case ISCConstants.SQL_ARRAY:
-        case ISCConstants.SQL_QUAD:
-        case ISCConstants.SQL_INT64:
+        case SQL_DOUBLE:
+        case SQL_TIMESTAMP:
+        case SQL_BLOB:
+        case SQL_ARRAY:
+        case SQL_QUAD:
+        case SQL_INT64:
             return -8;
-        case ISCConstants.SQL_NULL:
+        case SQL_NULL:
             return 0;
-        case ISCConstants.SQL_BOOLEAN:
+        case SQL_BOOLEAN:
             return 1 + 1;
         default:
-            throw new FbExceptionBuilder().exception(ISCConstants.isc_dsql_datatype_err).toSQLException();
+            throw new FbExceptionBuilder().exception(isc_dsql_datatype_err).toSQLException();
         }
     }
 
@@ -223,7 +222,7 @@ public class V10BlrCalculator implements BlrCalculator {
     public int calculateIoLength(FieldValue fieldValue) throws SQLException {
         final FieldDescriptor fieldDescriptor = fieldValue.getFieldDescriptor();
         final int fieldType = fieldDescriptor.getType() & ~1;
-        if (fieldType == ISCConstants.SQL_TEXT) {
+        if (fieldType == SQL_TEXT) {
             // Use actual data length for SQL_TEXT
             return (fieldValue.getFieldData() != null ? fieldValue.getFieldData().length : 0) + 1;
         }

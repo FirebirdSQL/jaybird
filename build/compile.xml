@@ -78,6 +78,7 @@
                 >
             <classpath refid="javac.driver.classpath"/>
             <src path="${source.java}"/>
+            <src path="${source.jna-client}"/>
             <src refid="source.java.openoffice"/>
             <src refid="source.java.additional"/>
         </javac>
@@ -122,6 +123,7 @@
                 >
             <classpath refid="javac.test.classpath"/>
             <src path="${source.test}"/>
+            <src path="${source.test.jna}"/>
             <src refid="source.test.additional"/>
         </javac>
 

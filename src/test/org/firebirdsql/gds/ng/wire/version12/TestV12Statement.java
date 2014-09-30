@@ -36,17 +36,12 @@ public class TestV12Statement extends TestV11Statement {
 
     @Override
     protected ProtocolCollection getProtocolCollection() {
-        return ProtocolCollection.create(new Version11Descriptor());
+        return ProtocolCollection.create(new Version12Descriptor());
     }
 
     @Override
     protected Class<? extends FbWireDatabase> getExpectedDatabaseType() {
-        return V11Database.class;
-    }
-
-    @Override
-    protected boolean supportsTableAlias() {
-        return true;
+        return V12Database.class;
     }
 
 }
