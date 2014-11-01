@@ -32,7 +32,6 @@ import org.firebirdsql.logging.LoggerFactory;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.sql.SQLWarning;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * Abstract class for operations common to all version of the wire protocol implementation.
@@ -44,10 +43,8 @@ public abstract class AbstractFbWireDatabase extends AbstractFbDatabase implemen
 
     private static final Logger log = LoggerFactory.getLogger(AbstractFbWireDatabase.class, false);
 
-    protected final AtomicBoolean attached = new AtomicBoolean();
     protected final ProtocolDescriptor protocolDescriptor;
     protected final WireConnection connection;
-    private final Object syncObject = new Object();
 
     /**
      * Creates an AbstractFbWireDatabase instance.
@@ -63,11 +60,6 @@ public abstract class AbstractFbWireDatabase extends AbstractFbDatabase implemen
         if (descriptor == null) throw new IllegalArgumentException("parameter descriptor should be non-null");
         this.connection = connection;
         protocolDescriptor = descriptor;
-    }
-
-    @Override
-    public final Object getSynchronizationObject() {
-        return syncObject;
     }
 
     @Override
@@ -121,7 +113,7 @@ public abstract class AbstractFbWireDatabase extends AbstractFbDatabase implemen
 
     @Override
     public final boolean isAttached() {
-        return attached.get() && connection.isConnected();
+        return super.isAttached() && connection.isConnected();
     }
 
     @Override
