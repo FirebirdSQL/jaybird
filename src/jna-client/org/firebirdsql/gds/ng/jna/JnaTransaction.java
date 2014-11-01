@@ -133,10 +133,10 @@ public class JnaTransaction extends AbstractFbTransaction {
                         (short) maxBufferLength, responseBuffer);
             }
             processStatusVector();
-            final byte[] responseArray = new byte[maxBufferLength];
-            responseBuffer.get(responseArray);
-            return responseArray;
         }
+        final byte[] responseArray = new byte[maxBufferLength];
+        responseBuffer.get(responseArray);
+        return responseArray;
     }
 
     private void processStatusVector() throws SQLException {

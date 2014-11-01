@@ -46,7 +46,7 @@ import static org.firebirdsql.gds.ng.TransactionHelper.checkTransactionActive;
  */
 public class JnaStatement extends AbstractFbStatement {
 
-    // TODO: Clear on commit/rollback?
+    // TODO: Clear on close()?
     private final IntByReference handle = new IntByReference(0);
     private JnaDatabase database;
     private final ISC_STATUS[] statusVector = new ISC_STATUS[JnaDatabase.STATUS_VECTOR_SIZE];
@@ -59,16 +59,18 @@ public class JnaStatement extends AbstractFbStatement {
 
     @Override
     protected void setParameterDescriptor(RowDescriptor parameterDescriptor) {
+        final XSQLDA xsqlda = allocateXSqlDa(parameterDescriptor);
         synchronized (getSynchronizationObject()) {
-            inXSqlDa = allocateXSqlDa(parameterDescriptor);
+            inXSqlDa = xsqlda;
             super.setParameterDescriptor(parameterDescriptor);
         }
     }
 
     @Override
     protected void setFieldDescriptor(RowDescriptor fieldDescriptor) {
+        final XSQLDA xsqlda = allocateXSqlDa(fieldDescriptor);
         synchronized (getSynchronizationObject()) {
-            outXSqlDa = allocateXSqlDa(fieldDescriptor);
+            outXSqlDa = xsqlda;
             super.setFieldDescriptor(fieldDescriptor);
         }
     }
@@ -81,10 +83,9 @@ public class JnaStatement extends AbstractFbStatement {
                 final FbClientLibrary clientLibrary = db.getClientLibrary();
                 clientLibrary.isc_dsql_free_statement(statusVector, handle, (short) option);
                 processStatusVector();
-
-                // Reset statement information
-                reset(option == ISCConstants.DSQL_drop);
             }
+            // Reset statement information
+            reset(option == ISCConstants.DSQL_drop);
         }
     }
 
@@ -147,9 +148,8 @@ public class JnaStatement extends AbstractFbStatement {
                 final int responseLength = getDefaultSqlInfoSize();
                 byte[] statementInfo = getSqlInfo(statementInfoRequestItems, responseLength);
                 parseStatementInfo(statementInfo);
-
-                switchState(StatementState.PREPARED);
             }
+            switchState(StatementState.PREPARED);
         }
     }
 
@@ -357,8 +357,8 @@ public class JnaStatement extends AbstractFbStatement {
                 clientLibrary.isc_dsql_sql_info(statusVector, handle,
                         (short) requestItems.length, requestItems,
                         (short) bufferLength, responseBuffer);
-                processStatusVector();
             }
+            processStatusVector();
         }
 
         byte[] responseArr = new byte[bufferLength];
