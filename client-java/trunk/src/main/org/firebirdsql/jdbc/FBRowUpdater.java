@@ -289,7 +289,6 @@ public class FBRowUpdater implements FirebirdRowUpdater {
         }
 
         if (hasDbKey) {
-            // TODO: For Firebird 3 alpha 1 see JDBC-330 and CORE-4255
             sb.append("RDB$DB_KEY = ?");
             return;
         }
