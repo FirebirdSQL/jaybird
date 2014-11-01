@@ -301,12 +301,7 @@ public class FBRowUpdater implements FirebirdRowUpdater  {
         }
         
         if (hasDbKey) {
-            if (gdsHelper.getDatabaseProductMajorVersion() == 3) {
-                // TODO Remove Workaround for CORE-4255 when fixed (and released as alpha 2)
-                sb.append("RDB$DB_KEY = CAST(? AS CHAR(8) CHARACTER SET OCTETS)");
-            } else {
-                sb.append("RDB$DB_KEY = ?");
-            }
+            sb.append("RDB$DB_KEY = ?");
             return;
         }
         
@@ -437,9 +432,8 @@ public class FBRowUpdater implements FirebirdRowUpdater  {
     public void updateRow() throws SQLException {
         
         boolean success = false;
-        
-        Object mutex = syncProvider.getSynchronizationObject();
-        synchronized(mutex) {
+
+        synchronized(syncProvider.getSynchronizationObject()) {
             try {
                 
                 notifyExecutionStarted();
@@ -465,9 +459,8 @@ public class FBRowUpdater implements FirebirdRowUpdater  {
     public void deleteRow() throws SQLException {
         
         boolean success = false;
-        
-        Object mutex = syncProvider.getSynchronizationObject();
-        synchronized(mutex) {
+
+        synchronized(syncProvider.getSynchronizationObject()) {
             try {
                 
                 notifyExecutionStarted();
@@ -493,9 +486,8 @@ public class FBRowUpdater implements FirebirdRowUpdater  {
     public void insertRow() throws SQLException {
         
         boolean success = false;
-        
-        Object mutex = syncProvider.getSynchronizationObject();
-        synchronized(mutex) {
+
+        synchronized(syncProvider.getSynchronizationObject()) {
             try {
                 
                 notifyExecutionStarted();
@@ -521,9 +513,8 @@ public class FBRowUpdater implements FirebirdRowUpdater  {
     public void refreshRow() throws SQLException {
         
         boolean success = false;
-        
-        Object mutex = syncProvider.getSynchronizationObject();
-        synchronized(mutex) {
+
+        synchronized(syncProvider.getSynchronizationObject()) {
             try {
                 
                 notifyExecutionStarted();
