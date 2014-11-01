@@ -205,6 +205,10 @@ public abstract class AbstractFbWireDatabase extends AbstractFbDatabase implemen
 
     /**
      * Writes directly to the {@code OutputStream} of the underlying connection.
+     * <p>
+     * Use of this method might lead to hard to find race conditions in the protocol. It is currently only used
+     * to allow {@link org.firebirdsql.gds.ng.FbDatabase#cancelOperation(int)} to work.
+     * </p>
      *
      * @param data
      *         Data to write

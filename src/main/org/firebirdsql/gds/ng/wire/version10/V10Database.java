@@ -608,7 +608,6 @@ public class V10Database extends AbstractFbWireDatabase implements FbWireDatabas
                     builder.messageParameter(stringValue);
                     break;
                 case ISCConstants.isc_arg_sql_state:
-                    // TODO Is this actually returned from server?
                     String sqlState = xdrIn.readString(getEncoding());
                     if (debug) log.debug("readStatusVector sqlstate: " + sqlState);
                     builder.sqlState(sqlState);
