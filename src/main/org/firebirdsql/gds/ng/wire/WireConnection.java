@@ -347,9 +347,6 @@ public final class WireConnection extends AbstractConnection {
             xdrIn = null;
             socket = null;
             protocols = null;
-            connectionProperties = null;
-            encodingDefinition = null;
-            encodingFactory = null;
         }
     }
 
