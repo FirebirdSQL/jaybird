@@ -99,9 +99,10 @@ public class JnaDatabase extends AbstractFbDatabase implements TransactionListen
                 // Throw open transactions as exception, client doesn't disconnect with outstanding connections
                 // TODO: Change exception creation
                 // TODO: Rollback transactions?
-                FbExceptionBuilder builder = new FbExceptionBuilder();
-                builder.exception(ISCConstants.isc_open_trans).messageParameter(getTransactionCount());
-                throw builder.toFlatSQLException();
+                throw new FbExceptionBuilder()
+                        .exception(ISCConstants.isc_open_trans)
+                        .messageParameter(getTransactionCount())
+                        .toSQLException();
             }
             try {
                 final FbClientLibrary clientLibrary = getClientLibrary();
@@ -114,7 +115,11 @@ public class JnaDatabase extends AbstractFbDatabase implements TransactionListen
             } catch (Exception ex) {
                 closeConnection();
                 // TODO Replace with specific error (eg native client error)
-                throw new FbExceptionBuilder().exception(ISCConstants.isc_network_error).messageParameter(jnaConnection.getServerName()).cause(ex).toSQLException();
+                throw new FbExceptionBuilder()
+                        .exception(ISCConstants.isc_network_error)
+                        .messageParameter(jnaConnection.getServerName())
+                        .cause(ex)
+                        .toSQLException();
             } finally {
                 attached.set(false);
             }
@@ -141,10 +146,10 @@ public class JnaDatabase extends AbstractFbDatabase implements TransactionListen
             }
             dpb = tempDpb;
         }
+        final byte[] dbName = getEncoding().encodeToCharset(getDatabaseUrl());
+        final byte[] dpbArray = ((DatabaseParameterBufferImp) dpb).getBytesForNativeCode();
         synchronized (getSynchronizationObject()) {
             try {
-                final byte[] dbName = getEncoding().encodeToCharset(getDatabaseUrl());
-                final byte[] dpbArray = ((DatabaseParameterBufferImp) dpb).getBytesForNativeCode();
                 if (!create) {
                     clientLibrary.isc_attach_database(statusVector, (short) dbName.length, dbName, handle,
                             (short) dpbArray.length, dpbArray);
@@ -159,7 +164,11 @@ public class JnaDatabase extends AbstractFbDatabase implements TransactionListen
             } catch (Exception ex) {
                 safelyDetach();
                 // TODO Replace with specific error (eg native client error)
-                throw new FbExceptionBuilder().exception(ISCConstants.isc_network_error).messageParameter(jnaConnection.getServerName()).cause(ex).toSQLException();
+                throw new FbExceptionBuilder()
+                        .exception(ISCConstants.isc_network_error)
+                        .messageParameter(jnaConnection.getServerName())
+                        .cause(ex)
+                        .toSQLException();
             }
             attached.set(true);
             afterAttachActions();
@@ -224,15 +233,14 @@ public class JnaDatabase extends AbstractFbDatabase implements TransactionListen
             }
             tpb = tempTpb;
         }
-        final JnaTransaction transaction;
+        final IntByReference transactionHandle = new IntByReference(0);
+        byte[] tpbArray = ((TransactionParameterBufferImpl) tpb).getBytesForNativeCode();
         synchronized (getSynchronizationObject()) {
             final FbClientLibrary clientLibrary = getClientLibrary();
-            final IntByReference transactionHandle = new IntByReference(0);
-            byte[] tpbArray = ((TransactionParameterBufferImpl) tpb).getBytesForNativeCode();
             clientLibrary.isc_start_transaction(statusVector, transactionHandle, (short) 1, handle, (short) tpbArray.length, tpbArray);
             processStatusVector();
-            transaction = new JnaTransaction(this, transactionHandle, TransactionState.ACTIVE);
         }
+        final JnaTransaction transaction = new JnaTransaction(this, transactionHandle, TransactionState.ACTIVE);
         transaction.addTransactionListener(this);
         transactionCount.incrementAndGet();
         return transaction;
@@ -246,15 +254,14 @@ public class JnaDatabase extends AbstractFbDatabase implements TransactionListen
         for (int i = 0; i < 4; i++) {
             transactionIdBuffer[i] = (byte) (transactionId >>> (i * 8));
         }
-        final JnaTransaction transaction;
+        final IntByReference transactionHandle = new IntByReference(0);
         synchronized (getSynchronizationObject()) {
             final FbClientLibrary clientLibrary = getClientLibrary();
-            final IntByReference transactionHandle = new IntByReference(0);
             clientLibrary.isc_reconnect_transaction(statusVector, handle, transactionHandle,
                     (short) transactionIdBuffer.length, transactionIdBuffer);
             processStatusVector();
-            transaction = new JnaTransaction(this, transactionHandle, TransactionState.PREPARED);
         }
+        final JnaTransaction transaction = new JnaTransaction(this, transactionHandle, TransactionState.PREPARED);
         transaction.addTransactionListener(this);
         transactionCount.incrementAndGet();
         return transaction;
@@ -288,10 +295,10 @@ public class JnaDatabase extends AbstractFbDatabase implements TransactionListen
             clientLibrary.isc_database_info(statusVector, handle, (short) requestItems.length, requestItems,
                     (short) maxBufferLength, responseBuffer);
             processStatusVector();
-            byte[] responseArray = new byte[maxBufferLength];
-            responseBuffer.get(responseArray);
-            return responseArray;
         }
+        byte[] responseArray = new byte[maxBufferLength];
+        responseBuffer.get(responseArray);
+        return responseArray;
     }
 
     @Override
