@@ -31,7 +31,6 @@ import org.firebirdsql.gds.impl.wire.XdrOutputStream;
 import org.firebirdsql.gds.impl.wire.Xdrable;
 import org.firebirdsql.gds.ng.*;
 import org.firebirdsql.gds.ng.fields.BlrCalculator;
-import org.firebirdsql.gds.ng.listeners.TransactionListener;
 import org.firebirdsql.gds.ng.wire.*;
 import org.firebirdsql.jdbc.FBDriverNotCapableException;
 import org.firebirdsql.jdbc.FBSQLException;
@@ -44,7 +43,6 @@ import java.sql.SQLException;
 import java.sql.SQLFeatureNotSupportedException;
 import java.sql.SQLNonTransientConnectionException;
 import java.sql.SQLWarning;
-import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.firebirdsql.gds.impl.wire.WireProtocolConstants.*;
 import static org.firebirdsql.gds.ng.TransactionHelper.checkTransactionActive;
@@ -55,11 +53,10 @@ import static org.firebirdsql.gds.ng.TransactionHelper.checkTransactionActive;
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @since 3.0
  */
-public class V10Database extends AbstractFbWireDatabase implements FbWireDatabase, TransactionListener {
+public class V10Database extends AbstractFbWireDatabase implements FbWireDatabase {
 
     private static final Logger log = LoggerFactory.getLogger(V10Database.class, false);
 
-    private final AtomicInteger transactionCount = new AtomicInteger();
     private int handle;
     private BlrCalculator blrCalculator;
 
@@ -82,11 +79,6 @@ public class V10Database extends AbstractFbWireDatabase implements FbWireDatabas
     }
 
     @Override
-    public int getTransactionCount() {
-        return transactionCount.get();
-    }
-
-    @Override
     public void attach() throws SQLException {
         final DatabaseParameterBuffer dpb = protocolDescriptor.createDatabaseParameterBuffer(connection);
         attachOrCreate(dpb, false);
@@ -103,7 +95,7 @@ public class V10Database extends AbstractFbWireDatabase implements FbWireDatabas
      */
     protected void attachOrCreate(DatabaseParameterBuffer dpb, boolean create) throws SQLException {
         checkConnected();
-        if (attached.get()) {
+        if (isAttached()) {
             throw new SQLException("Already attached to a database");
         }
         synchronized (getSynchronizationObject()) {
@@ -123,7 +115,7 @@ public class V10Database extends AbstractFbWireDatabase implements FbWireDatabas
                 safelyDetach();
                 throw e;
             }
-            attached.set(true);
+            setAttached();
             afterAttachActions();
         }
     }
@@ -213,7 +205,7 @@ public class V10Database extends AbstractFbWireDatabase implements FbWireDatabas
 
             try {
                 final XdrOutputStream xdrOut = getXdrOut();
-                if (attached.get()) {
+                if (isAttached()) {
                     xdrOut.writeInt(op_detach);
                     xdrOut.writeInt(getHandle());
                 }
@@ -232,7 +224,7 @@ public class V10Database extends AbstractFbWireDatabase implements FbWireDatabas
                 }
                 throw new FbExceptionBuilder().exception(ISCConstants.isc_net_write_err).cause(ex).toSQLException();
             } finally {
-                attached.set(false);
+                setDetached();
             }
         }
     }
@@ -249,7 +241,7 @@ public class V10Database extends AbstractFbWireDatabase implements FbWireDatabas
             try {
                 connection.disconnect();
             } finally {
-                attached.set(false);
+                setDetached();
             }
         }
     }
@@ -291,9 +283,8 @@ public class V10Database extends AbstractFbWireDatabase implements FbWireDatabas
     @Override
     public FbWireTransaction startTransaction(TransactionParameterBuffer tpb) throws SQLException {
         checkAttached();
-        final FbWireTransaction transaction;
+        final GenericResponse response;
         synchronized (getSynchronizationObject()) {
-            GenericResponse response;
             try {
                 final XdrOutputStream xdrOut = getXdrOut();
                 xdrOut.writeInt(op_transaction);
@@ -308,19 +299,18 @@ public class V10Database extends AbstractFbWireDatabase implements FbWireDatabas
             } catch (IOException ioex) {
                 throw new FbExceptionBuilder().exception(ISCConstants.isc_net_read_err).cause(ioex).toSQLException();
             }
-            transaction = protocolDescriptor.createTransaction(this, response.getObjectHandle(), TransactionState.ACTIVE);
+            transactionAdded();
         }
+        final FbWireTransaction transaction = protocolDescriptor.createTransaction(this, response.getObjectHandle(), TransactionState.ACTIVE);
         transaction.addTransactionListener(this);
-        transactionCount.incrementAndGet();
         return transaction;
     }
 
     @Override
     public FbTransaction reconnectTransaction(long transactionId) throws SQLException {
         checkAttached();
-        final FbWireTransaction transaction;
+        final GenericResponse response;
         synchronized (getSynchronizationObject()) {
-            GenericResponse response;
             try {
                 final XdrOutputStream xdrOut = getXdrOut();
                 xdrOut.writeInt(op_reconnect);
@@ -341,10 +331,10 @@ public class V10Database extends AbstractFbWireDatabase implements FbWireDatabas
             } catch (IOException ioex) {
                 throw new FbExceptionBuilder().exception(ISCConstants.isc_net_read_err).cause(ioex).toSQLException();
             }
-            transaction = protocolDescriptor.createTransaction(this, response.getObjectHandle(), TransactionState.PREPARED);
+            transactionAdded();
         }
+        final FbWireTransaction transaction = protocolDescriptor.createTransaction(this, response.getObjectHandle(), TransactionState.PREPARED);
         transaction.addTransactionListener(this);
-        transactionCount.incrementAndGet();
         return transaction;
     }
 
@@ -631,20 +621,6 @@ public class V10Database extends AbstractFbWireDatabase implements FbWireDatabas
         }
     }
 
-    @Override
-    public void transactionStateChanged(FbTransaction transaction, TransactionState newState,
-            TransactionState previousState) {
-        switch (newState) {
-        case COMMITTED:
-        case ROLLED_BACK:
-            transactionCount.decrementAndGet();
-            break;
-        default:
-            // do nothing
-            break;
-        }
-    }
-
     /**
      * Checks if a physical connection to the server is established and if the
      * connection is attached to a database.
@@ -654,11 +630,11 @@ public class V10Database extends AbstractFbWireDatabase implements FbWireDatabas
      * </p>
      *
      * @throws SQLException
-     *         If the not connected or attached.
+     *         If the database not connected or attached.
      */
     protected final void checkAttached() throws SQLException {
         checkConnected();
-        if (!attached.get()) {
+        if (!isAttached()) {
             // TODO Update message / externalize + Check if SQL State right
             throw new SQLException("The connection is not attached to a database", FBSQLException.SQL_STATE_CONNECTION_ERROR);
         }
@@ -682,7 +658,7 @@ public class V10Database extends AbstractFbWireDatabase implements FbWireDatabas
     protected void finalize() throws Throwable {
         try {
             if (connection.isConnected()) {
-                if (attached.get()) {
+                if (isAttached()) {
                     safelyDetach();
                 } else {
                     closeConnection();

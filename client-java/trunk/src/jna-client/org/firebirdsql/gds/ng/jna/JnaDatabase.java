@@ -41,8 +41,6 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.sql.SQLException;
 import java.sql.SQLWarning;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.firebirdsql.gds.ISCConstants.*;
 
@@ -65,10 +63,7 @@ public class JnaDatabase extends AbstractFbDatabase implements TransactionListen
     public static final int STATUS_VECTOR_SIZE = 20;
     public static final int MAX_STATEMENT_LENGTH = 64 * 1024;
 
-    protected final AtomicBoolean attached = new AtomicBoolean();
     private final JnaConnection jnaConnection;
-    private final Object syncObject = new Object();
-    private final AtomicInteger transactionCount = new AtomicInteger();
     // TODO Clear on disconnect?
     private final IntByReference handle = new IntByReference(0);
     private final ISC_STATUS[] statusVector = new ISC_STATUS[STATUS_VECTOR_SIZE];
@@ -87,7 +82,7 @@ public class JnaDatabase extends AbstractFbDatabase implements TransactionListen
         if (getClientLibrary() == null) {
             throw new SQLException("Client library has been unloaded", FBSQLException.SQL_STATE_CONNECTION_ERROR);
         }
-        if (!attached.get()) {
+        if (!isAttached()) {
             throw new SQLException("The connection is not attached to a database", FBSQLException.SQL_STATE_CONNECTION_ERROR);
         }
     }
@@ -104,6 +99,7 @@ public class JnaDatabase extends AbstractFbDatabase implements TransactionListen
                         .messageParameter(getTransactionCount())
                         .toSQLException();
             }
+
             try {
                 final FbClientLibrary clientLibrary = getClientLibrary();
                 clientLibrary.isc_detach_database(statusVector, handle);
@@ -121,7 +117,7 @@ public class JnaDatabase extends AbstractFbDatabase implements TransactionListen
                         .cause(ex)
                         .toSQLException();
             } finally {
-                attached.set(false);
+                setDetached();
             }
         }
     }
@@ -136,7 +132,7 @@ public class JnaDatabase extends AbstractFbDatabase implements TransactionListen
 
     protected void attachOrCreate(DatabaseParameterBuffer dpb, boolean create) throws SQLException {
         final FbClientLibrary clientLibrary = getClientLibrary();
-        if (attached.get()) {
+        if (isAttached()) {
             throw new SQLException("Already attached to a database");
         }
         if (!(dpb instanceof DatabaseParameterBufferImp)) {
@@ -148,6 +144,7 @@ public class JnaDatabase extends AbstractFbDatabase implements TransactionListen
         }
         final byte[] dbName = getEncoding().encodeToCharset(getDatabaseUrl());
         final byte[] dpbArray = ((DatabaseParameterBufferImp) dpb).getBytesForNativeCode();
+
         synchronized (getSynchronizationObject()) {
             try {
                 if (!create) {
@@ -170,7 +167,7 @@ public class JnaDatabase extends AbstractFbDatabase implements TransactionListen
                         .cause(ex)
                         .toSQLException();
             }
-            attached.set(true);
+            setAttached();
             afterAttachActions();
         }
     }
@@ -239,10 +236,10 @@ public class JnaDatabase extends AbstractFbDatabase implements TransactionListen
             final FbClientLibrary clientLibrary = getClientLibrary();
             clientLibrary.isc_start_transaction(statusVector, transactionHandle, (short) 1, handle, (short) tpbArray.length, tpbArray);
             processStatusVector();
+            transactionAdded();
         }
         final JnaTransaction transaction = new JnaTransaction(this, transactionHandle, TransactionState.ACTIVE);
         transaction.addTransactionListener(this);
-        transactionCount.incrementAndGet();
         return transaction;
     }
 
@@ -260,10 +257,10 @@ public class JnaDatabase extends AbstractFbDatabase implements TransactionListen
             clientLibrary.isc_reconnect_transaction(statusVector, handle, transactionHandle,
                     (short) transactionIdBuffer.length, transactionIdBuffer);
             processStatusVector();
+            transactionAdded();
         }
         final JnaTransaction transaction = new JnaTransaction(this, transactionHandle, TransactionState.PREPARED);
         transaction.addTransactionListener(this);
-        transactionCount.incrementAndGet();
         return transaction;
     }
 
@@ -321,21 +318,6 @@ public class JnaDatabase extends AbstractFbDatabase implements TransactionListen
     }
 
     @Override
-    public int getTransactionCount() {
-        return transactionCount.get();
-    }
-
-    @Override
-    public boolean isAttached() {
-        return attached.get();
-    }
-
-    @Override
-    public Object getSynchronizationObject() {
-        return syncObject;
-    }
-
-    @Override
     public final IEncodingFactory getEncodingFactory() {
         return jnaConnection.getEncodingFactory();
     }
@@ -362,7 +344,7 @@ public class JnaDatabase extends AbstractFbDatabase implements TransactionListen
             try {
                 jnaConnection.disconnect();
             } finally {
-                attached.set(false);
+                setDetached();
             }
         }
     }
@@ -463,27 +445,13 @@ public class JnaDatabase extends AbstractFbDatabase implements TransactionListen
     @Override
     protected void finalize() throws Throwable {
         try {
-            if (attached.get()) {
+            if (isAttached()) {
                 safelyDetach();
             } else {
                 closeConnection();
             }
         } finally {
             super.finalize();
-        }
-    }
-
-    @Override
-    public void transactionStateChanged(FbTransaction transaction, TransactionState newState,
-            TransactionState previousState) {
-        switch (newState) {
-        case COMMITTED:
-        case ROLLED_BACK:
-            transactionCount.decrementAndGet();
-            break;
-        default:
-            // do nothing
-            break;
         }
     }
 }

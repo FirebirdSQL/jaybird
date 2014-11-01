@@ -25,19 +25,25 @@ import org.firebirdsql.gds.impl.GDSServerVersion;
 import org.firebirdsql.gds.impl.GDSServerVersionException;
 import org.firebirdsql.gds.ng.listeners.DatabaseListener;
 import org.firebirdsql.gds.ng.listeners.DatabaseListenerDispatcher;
+import org.firebirdsql.gds.ng.listeners.TransactionListener;
 import org.firebirdsql.logging.Logger;
 import org.firebirdsql.logging.LoggerFactory;
 
 import java.sql.SQLException;
 import java.sql.SQLWarning;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.firebirdsql.gds.ISCConstants.*;
 
 /**
+ * Abstract implementation of {@link org.firebirdsql.gds.ng.FbDatabase} with behavior common to the various
+ * implementations.
+ *
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @since 3.0
  */
-public abstract class AbstractFbDatabase implements FbDatabase {
+public abstract class AbstractFbDatabase implements FbDatabase, TransactionListener {
 
     private static final Logger log = LoggerFactory.getLogger(AbstractFbDatabase.class, false);
 
@@ -58,12 +64,15 @@ public abstract class AbstractFbDatabase implements FbDatabase {
     // @formatter:on
 
     protected final DatabaseListenerDispatcher databaseListenerDispatcher = new DatabaseListenerDispatcher();
+    private final AtomicBoolean attached = new AtomicBoolean();
+    private final AtomicInteger transactionCount = new AtomicInteger();
     private final WarningMessageCallback warningCallback = new WarningMessageCallback() {
         @Override
         public void processWarning(SQLWarning warning) {
             databaseListenerDispatcher.warningReceived(AbstractFbDatabase.this, warning);
         }
     };
+    private final Object syncObject = new Object();
     private short databaseDialect;
     private int odsMajor;
     private int odsMinor;
@@ -75,6 +84,51 @@ public abstract class AbstractFbDatabase implements FbDatabase {
      */
     protected final WarningMessageCallback getDatabaseWarningCallback() {
         return warningCallback;
+    }
+
+    @Override
+    public int getTransactionCount() {
+        return transactionCount.get();
+    }
+
+    /**
+     * Called when a transaction is added by the database.
+     * <p>
+     * Only this {@link org.firebirdsql.gds.ng.AbstractFbDatabase} instance should call this method.
+     * </p>
+     */
+    protected final void transactionAdded() {
+       transactionCount.incrementAndGet();
+    }
+
+    @Override
+    public final Object getSynchronizationObject() {
+        return syncObject;
+    }
+
+    @Override
+    public boolean isAttached() {
+        return attached.get();
+    }
+
+    /**
+     * Called when this database is attached.
+     * <p>
+     * Only this {@link org.firebirdsql.gds.ng.AbstractFbDatabase} instance should call this method.
+     * </p>
+     */
+    protected final void setAttached() {
+        attached.set(true);
+    }
+
+    /**
+     * Called when this database is detached.
+     * <p>
+     * Only this {@link org.firebirdsql.gds.ng.AbstractFbDatabase} instance should call this method.
+     * </p>
+     */
+    protected final void setDetached() {
+        attached.set(false);
     }
 
     @Override
@@ -281,6 +335,21 @@ public abstract class AbstractFbDatabase implements FbDatabase {
 
     protected InfoProcessor<FbDatabase> getDatabaseInformationProcessor() {
         return new DatabaseInformationProcessor();
+    }
+
+    @Override
+    public void transactionStateChanged(FbTransaction transaction, TransactionState newState,
+            TransactionState previousState) {
+        switch (newState) {
+        case COMMITTED:
+        case ROLLED_BACK:
+            transactionCount.decrementAndGet();
+            transaction.removeTransactionListener(this);
+            break;
+        default:
+            // do nothing
+            break;
+        }
     }
 
     private class DatabaseInformationProcessor implements InfoProcessor<FbDatabase> {
