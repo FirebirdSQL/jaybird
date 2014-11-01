@@ -110,7 +110,7 @@ public class V11Database extends V10Database {
     }
 
     @Override
-    protected void processDeferredActions() {
+    protected final void processDeferredActions() {
         synchronized (getSynchronizationObject()) {
             if (deferredActions.size() == 0) return;
 
