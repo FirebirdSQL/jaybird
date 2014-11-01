@@ -77,9 +77,6 @@ public final class JnaConnection extends AbstractConnection {
 
     public void disconnect() {
         clientLibrary = null;
-        connectionProperties = null;
-        encodingDefinition = null;
-        encodingFactory = null;
     }
 
     /**

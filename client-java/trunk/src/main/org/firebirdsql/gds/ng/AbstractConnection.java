@@ -36,21 +36,21 @@ import java.sql.SQLNonTransientConnectionException;
  */
 public abstract class AbstractConnection {
 
-    protected IConnectionProperties connectionProperties;
-    protected EncodingDefinition encodingDefinition;
-    protected IEncodingFactory encodingFactory;
+    protected final IConnectionProperties connectionProperties;
+    private final EncodingDefinition encodingDefinition;
+    private final IEncodingFactory encodingFactory;
 
     protected AbstractConnection(IConnectionProperties connectionProperties, IEncodingFactory encodingFactory) throws SQLException {
         this.connectionProperties = new FbConnectionProperties(connectionProperties);
         final String firebirdEncodingName = connectionProperties.getEncoding();
         final String javaCharsetAlias = connectionProperties.getCharSet();
 
-        encodingDefinition = encodingFactory.getEncodingDefinition(firebirdEncodingName, javaCharsetAlias);
-        if (encodingDefinition == null || encodingDefinition.isInformationOnly()) {
+        EncodingDefinition tempEncodingDefinition = encodingFactory.getEncodingDefinition(firebirdEncodingName, javaCharsetAlias);
+        if (tempEncodingDefinition == null || tempEncodingDefinition.isInformationOnly()) {
             if (firebirdEncodingName == null && javaCharsetAlias == null) {
                 // TODO Signal warning?
                 // TODO Use the default encoding (and its matching Firebird encoding) instead of NONE
-                encodingDefinition = encodingFactory.getEncodingDefinition("NONE", null);
+                tempEncodingDefinition = encodingFactory.getEncodingDefinition("NONE", null);
             } else {
                 // TODO Don't throw exception if encoding/charSet is null (see also TODO inside EncodingFactory.getEncodingDefinition)
                 throw new SQLNonTransientConnectionException(
@@ -59,6 +59,7 @@ public abstract class AbstractConnection {
                         FBSQLException.SQL_STATE_CONNECTION_ERROR);
             }
         }
+        encodingDefinition = tempEncodingDefinition;
         this.encodingFactory = encodingFactory.withDefaultEncodingDefinition(encodingDefinition);
     }
 
