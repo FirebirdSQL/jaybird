@@ -100,6 +100,7 @@ public class V10InputBlob extends AbstractFbWireInputBlob implements FbWireBlob,
             checkTransactionActive();
             checkBlobOpen();
 
+            GenericResponse response;
             final FbWireDatabase database = getDatabase();
             synchronized (database.getSynchronizationObject()) {
                 try {
@@ -113,31 +114,31 @@ public class V10InputBlob extends AbstractFbWireInputBlob implements FbWireBlob,
                     throw new FbExceptionBuilder().exception(ISCConstants.isc_net_write_err).cause(e).toSQLException();
                 }
                 try {
-                    GenericResponse response = database.readGenericResponse(null);
+                    response = database.readGenericResponse(null);
                     // TODO Meaning of 2
                     if (response.getObjectHandle() == 2) {
                         // TODO what if I seek on a stream blob?
                         setEof();
                     }
-
-                    final byte[] responseBuffer = response.getData();
-                    if (responseBuffer.length == 0) {
-                        return responseBuffer;
-                    }
-
-                    final ByteArrayOutputStream bos = new ByteArrayOutputStream(actualSize);
-                    int position = 0;
-                    while (position < responseBuffer.length) {
-                        int segmentLength = database.iscVaxInteger2(responseBuffer, position);
-                        position += 2;
-                        bos.write(responseBuffer, position, segmentLength);
-                        position += segmentLength;
-                    }
-                    return bos.toByteArray();
                 } catch (IOException e) {
                     throw new FbExceptionBuilder().exception(ISCConstants.isc_net_read_err).cause(e).toSQLException();
                 }
             }
+
+            final byte[] responseBuffer = response.getData();
+            if (responseBuffer.length == 0) {
+                return responseBuffer;
+            }
+
+            final ByteArrayOutputStream bos = new ByteArrayOutputStream(actualSize);
+            int position = 0;
+            while (position < responseBuffer.length) {
+                int segmentLength = database.iscVaxInteger2(responseBuffer, position);
+                position += 2;
+                bos.write(responseBuffer, position, segmentLength);
+                position += segmentLength;
+            }
+            return bos.toByteArray();
         }
     }
 
