@@ -95,7 +95,8 @@ public final class ProtocolCollection implements Iterable<ProtocolDescriptor> {
         // TODO Make sure all classes from default implementation are included
         String[] protocolClasses = {
                 "org.firebirdsql.gds.ng.wire.version10.Version10Descriptor",
-                "org.firebirdsql.gds.ng.wire.version11.Version11Descriptor"
+                "org.firebirdsql.gds.ng.wire.version11.Version11Descriptor",
+                "org.firebirdsql.gds.ng.wire.version12.Version12Descriptor"
         };
         final List<ProtocolDescriptor> protocols = new ArrayList<ProtocolDescriptor>(protocolClasses.length);
         for (String className : protocolClasses) {
