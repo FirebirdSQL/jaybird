@@ -179,7 +179,7 @@ public class FirebirdSupportInfo {
 
     /**
      * @param connection
-     *         A database connection (NOTE: {@link java.sql.Connection} is used, but it most be or unwrap to a
+     *         A database connection (NOTE: {@link java.sql.Connection} is used, but it must be or unwrap to a
      *         {@link org.firebirdsql.jdbc.FBConnection}.
      * @return FirebirdVersionSupport instance
      */

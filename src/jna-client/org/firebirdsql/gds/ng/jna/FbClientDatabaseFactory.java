@@ -44,12 +44,7 @@ public class FbClientDatabaseFactory implements FbDatabaseFactory {
     @Override
     public JnaDatabase connect(IConnectionProperties connectionProperties) throws SQLException {
         final JnaConnection jnaConnection = new JnaConnection(getClientLibrary(), connectionProperties);
-        try {
-            return jnaConnection.identify();
-        } catch (SQLException ex) {
-            jnaConnection.disconnect();
-            throw ex;
-        }
+        return jnaConnection.identify();
     }
 
     protected FbClientLibrary getClientLibrary() {
