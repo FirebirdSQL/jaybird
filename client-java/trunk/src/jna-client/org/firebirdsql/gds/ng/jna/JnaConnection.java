@@ -24,7 +24,6 @@ import org.firebirdsql.encodings.EncodingFactory;
 import org.firebirdsql.encodings.IEncodingFactory;
 import org.firebirdsql.gds.ng.AbstractConnection;
 import org.firebirdsql.gds.ng.IConnectionProperties;
-import org.firebirdsql.jdbc.FBSQLException;
 import org.firebirdsql.jna.fbclient.FbClientLibrary;
 
 import java.sql.SQLException;
@@ -37,7 +36,7 @@ import java.sql.SQLException;
  */
 public final class JnaConnection extends AbstractConnection {
 
-    private FbClientLibrary clientLibrary;
+    private final FbClientLibrary clientLibrary;
 
     /**
      * Creates a JnaConnection (without establishing a connection to the server).
@@ -65,18 +64,14 @@ public final class JnaConnection extends AbstractConnection {
     public JnaConnection(FbClientLibrary clientLibrary, IConnectionProperties connectionProperties,
             IEncodingFactory encodingFactory) throws SQLException {
         super(connectionProperties, encodingFactory);
+        if (clientLibrary == null) {
+            throw new IllegalArgumentException("parameter clientLibrary cannot be null");
+        }
         this.clientLibrary = clientLibrary;
     }
 
     public FbClientLibrary getClientLibrary() throws SQLException {
-        if (clientLibrary == null) {
-            throw new SQLException("Client library has been unloaded", FBSQLException.SQL_STATE_CONNECTION_ERROR);
-        }
         return clientLibrary;
-    }
-
-    public void disconnect() {
-        clientLibrary = null;
     }
 
     /**
@@ -87,9 +82,6 @@ public final class JnaConnection extends AbstractConnection {
      */
     @Override
     public JnaDatabase identify() throws SQLException {
-        if (clientLibrary == null) {
-            throw new SQLException("Client library has been unloaded", FBSQLException.SQL_STATE_CONNECTION_ERROR);
-        }
         return new JnaDatabase(this);
     }
 }

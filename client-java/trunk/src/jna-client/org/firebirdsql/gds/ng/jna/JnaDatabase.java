@@ -78,10 +78,6 @@ public class JnaDatabase extends AbstractFbDatabase implements TransactionListen
 
     @Override
     protected void checkConnected() throws SQLException {
-        // TODO Handle differently? getClientLibrary already throws the exception
-        if (getClientLibrary() == null) {
-            throw new SQLException("Client library has been unloaded", FBSQLException.SQL_STATE_CONNECTION_ERROR);
-        }
         if (!isAttached()) {
             throw new SQLException("The connection is not attached to a database", FBSQLException.SQL_STATE_CONNECTION_ERROR);
         }
@@ -104,12 +100,9 @@ public class JnaDatabase extends AbstractFbDatabase implements TransactionListen
                 final FbClientLibrary clientLibrary = getClientLibrary();
                 clientLibrary.isc_detach_database(statusVector, handle);
                 processStatusVector();
-                closeConnection();
             } catch (SQLException ex) {
-                closeConnection();
                 throw ex;
             } catch (Exception ex) {
-                closeConnection();
                 // TODO Replace with specific error (eg native client error)
                 throw new FbExceptionBuilder()
                         .exception(ISCConstants.isc_network_error)
@@ -200,7 +193,7 @@ public class JnaDatabase extends AbstractFbDatabase implements TransactionListen
                 clientLibrary.isc_drop_database(statusVector, handle);
                 processStatusVector();
             } finally {
-                closeConnection();
+                setDetached();
             }
         }
     }
@@ -214,7 +207,7 @@ public class JnaDatabase extends AbstractFbDatabase implements TransactionListen
                 clientLibrary.fb_cancel_operation(statusVector, handle, (short) kind);
             } finally {
                 if (kind == fb_cancel_abort) {
-                    closeConnection();
+                    setDetached();
                 }
             }
         }
@@ -337,19 +330,6 @@ public class JnaDatabase extends AbstractFbDatabase implements TransactionListen
     }
 
     /**
-     * Closes the JnaConnection associated with this connection.
-     */
-    protected void closeConnection() {
-        synchronized (getSynchronizationObject()) {
-            try {
-                jnaConnection.disconnect();
-            } finally {
-                setDetached();
-            }
-        }
-    }
-
-    /**
      * Builds the database URL for the library.
      *
      * @return Database URL
@@ -447,8 +427,6 @@ public class JnaDatabase extends AbstractFbDatabase implements TransactionListen
         try {
             if (isAttached()) {
                 safelyDetach();
-            } else {
-                closeConnection();
             }
         } finally {
             super.finalize();
