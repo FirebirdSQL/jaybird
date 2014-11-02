@@ -20,28 +20,31 @@
  */
 package org.firebirdsql.gds.ng.jna;
 
-import org.firebirdsql.common.FBJUnit4TestBase;
 import org.firebirdsql.common.FBTestProperties;
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.TransactionParameterBuffer;
 import org.firebirdsql.gds.impl.GDSServerVersion;
+import org.firebirdsql.gds.impl.wire.DatabaseParameterBufferImp;
 import org.firebirdsql.gds.impl.wire.TransactionParameterBufferImpl;
 import org.firebirdsql.gds.ng.FbConnectionProperties;
 import org.firebirdsql.gds.ng.FbDatabase;
 import org.firebirdsql.gds.ng.FbTransaction;
 import org.firebirdsql.gds.ng.TransactionState;
+import org.firebirdsql.jdbc.FBSQLException;
+import org.firebirdsql.management.FBManager;
 import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
+import java.io.File;
 import java.sql.SQLException;
 
-import static org.firebirdsql.common.FBTestProperties.DB_PASSWORD;
-import static org.firebirdsql.common.FBTestProperties.DB_USER;
+import static org.firebirdsql.common.FBTestProperties.*;
 import static org.firebirdsql.common.matchers.SQLExceptionMatchers.*;
 import static org.hamcrest.CoreMatchers.*;
 import static org.junit.Assert.*;
+import static org.junit.Assume.assumeTrue;
 
 /**
  * Tests for JNA database
@@ -49,7 +52,7 @@ import static org.junit.Assert.*;
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @since 3.0
  */
-public class TestJnaDatabase extends FBJUnit4TestBase {
+public class TestJnaDatabase {
 
     // TODO Assert in tests need to be checked (and more need to be added)
 
@@ -77,27 +80,50 @@ public class TestJnaDatabase extends FBJUnit4TestBase {
 
     @Test
     public void testBasicAttach() throws Exception {
-        final JnaDatabase db = factory.connect(connectionInfo);
+        FBManager fbManager = createFBManager();
+        defaultDatabaseSetUp(fbManager);
         try {
-            db.attach();
+            final JnaDatabase db = factory.connect(connectionInfo);
+            try {
+                db.attach();
 
-            assertTrue("Expected isAttached() to return true", db.isAttached());
-            assertThat("Expected non-zero connection handle", db.getHandle(), not(equalTo(0)));
-            assertNotNull("Expected version string to be not null", db.getServerVersion());
-            assertNotEquals("Expected version should not be invalid", GDSServerVersion.INVALID_VERSION, db.getServerVersion());
-        } finally {
-            if (db != null) {
-                try {
-                    db.detach();
-                } catch (SQLException ex) {
-                    // ignore (TODO: log)
-                }
+                assertTrue("Expected isAttached() to return true", db.isAttached());
+                assertThat("Expected non-zero connection handle", db.getHandle(), not(equalTo(0)));
+                assertNotNull("Expected version string to be not null", db.getServerVersion());
+                assertNotEquals("Expected version should not be invalid", GDSServerVersion.INVALID_VERSION, db.getServerVersion());
+            } finally {
+                safelyClose(db);
             }
+        } finally {
+            defaultDatabaseTearDown(fbManager);
         }
     }
 
     @Test
-    public void testBasicStatusVectorProcessing_wrongLogin() throws Exception {
+    public void doubleAttach() throws Exception {
+        expectedException.expect(SQLException.class);
+        expectedException.expectMessage(equalTo("Already attached to a database"));
+
+        FBManager fbManager = createFBManager();
+        defaultDatabaseSetUp(fbManager);
+
+        try {
+            final JnaDatabase db = factory.connect(connectionInfo);
+            try {
+                db.attach();
+
+                //Second attach should throw exception
+                db.attach();
+            } finally {
+                safelyClose(db);
+            }
+        } finally {
+            defaultDatabaseTearDown(fbManager);
+        }
+    }
+
+    @Test
+    public void basicStatusVectorProcessing_wrongLogin() throws Exception {
         // set invalid password
         connectionInfo.setPassword("abcd");
         final JnaDatabase db = factory.connect(connectionInfo);
@@ -108,17 +134,7 @@ public class TestJnaDatabase extends FBJUnit4TestBase {
                 errorCode(equalTo(ISCConstants.isc_login))
         ));
 
-        try {
-            db.attach();
-        } finally {
-            if (db != null) {
-                try {
-                    db.detach();
-                } catch (SQLException ex) {
-                    // ignore (TODO: log)
-                }
-            }
-        }
+        db.attach();
     }
 
     @Test
@@ -135,73 +151,135 @@ public class TestJnaDatabase extends FBJUnit4TestBase {
                 errorCode(equalTo(ISCConstants.isc_io_error))
         ));
 
+        db.attach();
+    }
+
+    /**
+     * Tests creating and subsequently dropping a database
+     */
+    @Test
+    public void testBasicCreateAndDrop() throws Exception {
+        final JnaDatabase db = factory.connect(connectionInfo);
+        File dbFile = new File(connectionInfo.getDatabaseName());
         try {
-            db.attach();
+            DatabaseParameterBufferImp dpb = new DatabaseParameterBufferImp();
+            dpb.addArgument(ISCConstants.isc_dpb_sql_dialect, 3);
+            dpb.addArgument(ISCConstants.isc_dpb_user_name, DB_USER);
+            dpb.addArgument(ISCConstants.isc_dpb_password, DB_PASSWORD);
+
+            db.createDatabase(dpb);
+            assertTrue("Database should be attached after create", db.isAttached());
+            assertTrue("Expected database file to exist (NOTE: only works on localhost)",
+                    dbFile.exists() || !FBTestProperties.DB_SERVER_URL.equalsIgnoreCase("localhost") );
+
+            db.dropDatabase();
+            assertFalse("Database should be detached after drop", db.isAttached());
+            assertFalse("Expected database file to have been removed after drop", dbFile.exists());
         } finally {
-            if (db != null) {
-                try {
-                    db.detach();
-                } catch (SQLException ex) {
-                    // ignore (TODO: log)
-                }
+            safelyClose(db);
+            if (dbFile.exists()) {
+                dbFile.delete();
             }
+        }
+    }
+
+    @Test
+    public void testDrop_NotAttached() throws Exception {
+        expectedException.expect(SQLException.class);
+        expectedException.expectMessage(equalTo("The connection is not attached to a database"));
+        expectedException.expect(sqlStateEquals(FBSQLException.SQL_STATE_CONNECTION_ERROR));
+
+        FBManager fbManager = createFBManager();
+        defaultDatabaseSetUp(fbManager);
+        try {
+            final JnaDatabase db = factory.connect(connectionInfo);
+            db.dropDatabase();
+        } finally {
+            defaultDatabaseTearDown(fbManager);
+        }
+    }
+
+    @Test
+    public void testDetach_NotConnected() throws Exception {
+        final JnaDatabase db = factory.connect(connectionInfo);
+
+        // Note: the error is different from the one in the pure java implementation as we cannot discern between
+        // not connected and not attached
+        expectedException.expect(SQLException.class);
+        expectedException.expectMessage(equalTo("The connection is not attached to a database"));
+        expectedException.expect(sqlStateEquals(FBSQLException.SQL_STATE_CONNECTION_ERROR));
+
+        db.detach();
+    }
+
+    @Test
+    public void testBasicDetach() throws Exception {
+        FBManager fbManager = createFBManager();
+        defaultDatabaseSetUp(fbManager);
+        try {
+            final JnaDatabase db = factory.connect(connectionInfo);
+            try {
+                db.attach();
+
+                db.detach();
+
+                assertFalse("Expected database not attached", db.isAttached());
+            } finally {
+                safelyClose(db);
+            }
+        } finally {
+            defaultDatabaseTearDown(fbManager);
         }
     }
 
     @Test
     public void testDetach_openTransactions() throws Exception {
-        JnaDatabase db = factory.connect(connectionInfo);
-        FbTransaction transaction = null;
+        FBManager fbManager = createFBManager();
+        defaultDatabaseSetUp(fbManager);
+
         try {
-            db.attach();
-            // Starting an active transaction
-            transaction = getTransaction(db);
+            JnaDatabase db = factory.connect(connectionInfo);
+            FbTransaction transaction = null;
+            try {
+                db.attach();
+                // Starting an active transaction
+                transaction = getTransaction(db);
 
-            expectedException.expect(allOf(
-                    errorCodeEquals(ISCConstants.isc_open_trans),
-                    message(startsWith(getFbMessage(ISCConstants.isc_open_trans, "1")))
-            ));
+                expectedException.expect(allOf(
+                        errorCodeEquals(ISCConstants.isc_open_trans),
+                        message(startsWith(getFbMessage(ISCConstants.isc_open_trans, "1")))
+                ));
 
-            db.detach();
-        } finally {
-            if (db != null) {
+                db.detach();
+            } finally {
                 if (transaction != null && transaction.getState() == TransactionState.ACTIVE) {
                     transaction.commit();
                 }
-                try {
-                    db.detach();
-                } catch (SQLException ex) {
-                    // ignore (TODO: log)
-                }
+                safelyClose(db);
             }
+        } finally {
+            defaultDatabaseTearDown(fbManager);
         }
     }
 
     @Test
-    public void testCreateAndPrepareStatement() throws Exception {
-        JnaDatabase db = factory.connect(connectionInfo);
-        FbTransaction transaction = null;
+    public void testCancelOperation_abortSupported() throws Exception {
+        FBManager fbManager = createFBManager();
+        defaultDatabaseSetUp(fbManager);
         try {
-            db.attach();
-            // Starting an active transaction
-            transaction = getTransaction(db);
+            JnaDatabase db = factory.connect(connectionInfo);
+            try {
+                db.attach();
+                assumeTrue("expected database attached", db.isAttached());
 
-            JnaStatement statement = db.createStatement(transaction);
-            statement.prepare("SELECT * FROM RDB$DATABASE");
+                db.cancelOperation(ISCConstants.fb_cancel_abort);
 
-            statement.close();
-            transaction.commit();
-        } finally {
-            if (db != null) {
-                if (transaction != null && transaction.getState() == TransactionState.ACTIVE) {
-                    transaction.commit();
-                }
-                try {
-                    db.detach();
-                } catch (SQLException ex) {
-                    // ignore (TODO: log)
-                }
+                assertFalse("Expected database not attached after abort", db.isAttached());
+            } finally {
+                safelyClose(db);
             }
+        } finally {
+            defaultDatabaseTearDown(fbManager);
         }
     }
 
@@ -212,5 +290,14 @@ public class TestJnaDatabase extends FBJUnit4TestBase {
         tpb.addArgument(ISCConstants.isc_tpb_write);
         tpb.addArgument(ISCConstants.isc_tpb_wait);
         return db.startTransaction(tpb);
+    }
+
+    private static void safelyClose(FbDatabase db) {
+        if (db == null) return;
+        try {
+            db.detach();
+        } catch (SQLException ex) {
+            // ignore (TODO: log)
+        }
     }
 }

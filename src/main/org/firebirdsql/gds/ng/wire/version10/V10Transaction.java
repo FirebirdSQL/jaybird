@@ -26,6 +26,8 @@ import org.firebirdsql.gds.ng.*;
 import org.firebirdsql.gds.ng.wire.FbWireDatabase;
 import org.firebirdsql.gds.ng.wire.FbWireTransaction;
 import org.firebirdsql.gds.ng.wire.GenericResponse;
+import org.firebirdsql.logging.Logger;
+import org.firebirdsql.logging.LoggerFactory;
 
 import java.io.IOException;
 import java.sql.SQLException;
@@ -39,6 +41,8 @@ import static org.firebirdsql.gds.impl.wire.WireProtocolConstants.*;
  * @since 3.0
  */
 public class V10Transaction extends AbstractFbTransaction implements FbWireTransaction {
+
+    private static final Logger log = LoggerFactory.getLogger(V10Transaction.class, false);
 
     private final int handle;
 
@@ -77,71 +81,89 @@ public class V10Transaction extends AbstractFbTransaction implements FbWireTrans
 
     @Override
     public void commit() throws SQLException {
-        synchronized (getSynchronizationObject()) {
-            switchState(TransactionState.COMMITTING);
-            synchronized (getDatabase().getSynchronizationObject()) {
-                try {
-                    final XdrOutputStream xdrOut = getXdrOut();
-                    xdrOut.writeInt(op_commit);
-                    xdrOut.writeInt(handle);
-                    xdrOut.flush();
-                } catch (IOException ioex) {
-                    throw new FbExceptionBuilder().exception(ISCConstants.isc_net_write_err).cause(ioex).toSQLException();
+        try {
+            synchronized (getSynchronizationObject()) {
+                switchState(TransactionState.COMMITTING);
+                synchronized (getDatabase().getSynchronizationObject()) {
+                    try {
+                        final XdrOutputStream xdrOut = getXdrOut();
+                        xdrOut.writeInt(op_commit);
+                        xdrOut.writeInt(handle);
+                        xdrOut.flush();
+                    } catch (IOException ioex) {
+                        throw new FbExceptionBuilder().exception(ISCConstants.isc_net_write_err).cause(ioex).toSQLException();
+                    }
+                    try {
+                        getDatabase().readResponse(null);
+                    } catch (IOException ioex) {
+                        throw new FbExceptionBuilder().exception(ISCConstants.isc_net_read_err).cause(ioex).toSQLException();
+                    }
                 }
-                try {
-                    getDatabase().readResponse(null);
-                } catch (IOException ioex) {
-                    throw new FbExceptionBuilder().exception(ISCConstants.isc_net_read_err).cause(ioex).toSQLException();
-                }
+                switchState(TransactionState.COMMITTED);
             }
-            switchState(TransactionState.COMMITTED);
+        } finally {
+            if (getState() != TransactionState.COMMITTED) {
+                log.warn("Commit not completed", new RuntimeException("Commit not completed"));
+            }
         }
     }
 
     @Override
     public void rollback() throws SQLException {
-        synchronized (getSynchronizationObject()) {
-            switchState(TransactionState.ROLLING_BACK);
-            synchronized (getDatabase().getSynchronizationObject()) {
-                try {
-                    final XdrOutputStream xdrOut = getXdrOut();
-                    xdrOut.writeInt(op_rollback);
-                    xdrOut.writeInt(handle);
-                    xdrOut.flush();
-                } catch (IOException ioex) {
-                    throw new FbExceptionBuilder().exception(ISCConstants.isc_net_write_err).cause(ioex).toSQLException();
+        try {
+            synchronized (getSynchronizationObject()) {
+                switchState(TransactionState.ROLLING_BACK);
+                synchronized (getDatabase().getSynchronizationObject()) {
+                    try {
+                        final XdrOutputStream xdrOut = getXdrOut();
+                        xdrOut.writeInt(op_rollback);
+                        xdrOut.writeInt(handle);
+                        xdrOut.flush();
+                    } catch (IOException ioex) {
+                        throw new FbExceptionBuilder().exception(ISCConstants.isc_net_write_err).cause(ioex).toSQLException();
+                    }
+                    try {
+                        getDatabase().readResponse(null);
+                    } catch (IOException ioex) {
+                        throw new FbExceptionBuilder().exception(ISCConstants.isc_net_read_err).cause(ioex).toSQLException();
+                    }
                 }
-                try {
-                    getDatabase().readResponse(null);
-                } catch (IOException ioex) {
-                    throw new FbExceptionBuilder().exception(ISCConstants.isc_net_read_err).cause(ioex).toSQLException();
-                }
+                switchState(TransactionState.ROLLED_BACK);
             }
-            switchState(TransactionState.ROLLED_BACK);
+        } finally {
+            if (getState() != TransactionState.ROLLED_BACK) {
+                log.warn("Rollback not completed", new RuntimeException("Rollback not completed"));
+            }
         }
     }
 
     @Override
     public void prepare(byte[] recoveryInformation) throws SQLException {
-        synchronized (getSynchronizationObject()) {
-            switchState(TransactionState.PREPARING);
-            synchronized (getDatabase().getSynchronizationObject()) {
-                try {
-                    final XdrOutputStream xdrOut = getXdrOut();
-                    xdrOut.writeInt(op_prepare2);
-                    xdrOut.writeInt(handle);
-                    xdrOut.writeBuffer(recoveryInformation);
-                    xdrOut.flush();
-                } catch (IOException ioex) {
-                    throw new FbExceptionBuilder().exception(ISCConstants.isc_net_write_err).cause(ioex).toSQLException();
+        try {
+            synchronized (getSynchronizationObject()) {
+                switchState(TransactionState.PREPARING);
+                synchronized (getDatabase().getSynchronizationObject()) {
+                    try {
+                        final XdrOutputStream xdrOut = getXdrOut();
+                        xdrOut.writeInt(op_prepare2);
+                        xdrOut.writeInt(handle);
+                        xdrOut.writeBuffer(recoveryInformation);
+                        xdrOut.flush();
+                    } catch (IOException ioex) {
+                        throw new FbExceptionBuilder().exception(ISCConstants.isc_net_write_err).cause(ioex).toSQLException();
+                    }
+                    try {
+                        getDatabase().readResponse(null);
+                    } catch (IOException ioex) {
+                        throw new FbExceptionBuilder().exception(ISCConstants.isc_net_read_err).cause(ioex).toSQLException();
+                    }
                 }
-                try {
-                    getDatabase().readResponse(null);
-                } catch (IOException ioex) {
-                    throw new FbExceptionBuilder().exception(ISCConstants.isc_net_read_err).cause(ioex).toSQLException();
-                }
+                switchState(TransactionState.PREPARED);
             }
-            switchState(TransactionState.PREPARED);
+        } finally {
+            if (getState() != TransactionState.PREPARED) {
+                log.warn("Prepare not completed", new RuntimeException("Prepare not completed"));
+            }
         }
     }
 

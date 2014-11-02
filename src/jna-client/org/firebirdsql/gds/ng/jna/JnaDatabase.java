@@ -86,16 +86,6 @@ public class JnaDatabase extends AbstractFbDatabase implements TransactionListen
     @Override
     protected void internalDetach() throws SQLException {
         synchronized (getSynchronizationObject()) {
-            if (getTransactionCount() > 0) {
-                // Throw open transactions as exception, client doesn't disconnect with outstanding connections
-                // TODO: Change exception creation
-                // TODO: Rollback transactions?
-                throw new FbExceptionBuilder()
-                        .exception(ISCConstants.isc_open_trans)
-                        .messageParameter(getTransactionCount())
-                        .toSQLException();
-            }
-
             try {
                 final FbClientLibrary clientLibrary = getClientLibrary();
                 clientLibrary.isc_detach_database(statusVector, handle);
@@ -140,12 +130,12 @@ public class JnaDatabase extends AbstractFbDatabase implements TransactionListen
 
         synchronized (getSynchronizationObject()) {
             try {
-                if (!create) {
-                    clientLibrary.isc_attach_database(statusVector, (short) dbName.length, dbName, handle,
-                            (short) dpbArray.length, dpbArray);
-                } else {
+                if (create) {
                     clientLibrary.isc_create_database(statusVector, (short) dbName.length, dbName, handle,
                             (short) dpbArray.length, dpbArray, getConnectionDialect());
+                } else {
+                    clientLibrary.isc_attach_database(statusVector, (short) dbName.length, dbName, handle,
+                            (short) dpbArray.length, dpbArray);
                 }
                 processStatusVector();
             } catch (SQLException ex) {
@@ -229,11 +219,11 @@ public class JnaDatabase extends AbstractFbDatabase implements TransactionListen
             final FbClientLibrary clientLibrary = getClientLibrary();
             clientLibrary.isc_start_transaction(statusVector, transactionHandle, (short) 1, handle, (short) tpbArray.length, tpbArray);
             processStatusVector();
-            transactionAdded();
+
+            final JnaTransaction transaction = new JnaTransaction(this, transactionHandle, TransactionState.ACTIVE);
+            transactionAdded(transaction);
+            return transaction;
         }
-        final JnaTransaction transaction = new JnaTransaction(this, transactionHandle, TransactionState.ACTIVE);
-        transaction.addTransactionListener(this);
-        return transaction;
     }
 
     @Override
@@ -250,11 +240,11 @@ public class JnaDatabase extends AbstractFbDatabase implements TransactionListen
             clientLibrary.isc_reconnect_transaction(statusVector, handle, transactionHandle,
                     (short) transactionIdBuffer.length, transactionIdBuffer);
             processStatusVector();
-            transactionAdded();
+
+            final JnaTransaction transaction = new JnaTransaction(this, transactionHandle, TransactionState.PREPARED);
+            transactionAdded(transaction);
+            return transaction;
         }
-        final JnaTransaction transaction = new JnaTransaction(this, transactionHandle, TransactionState.PREPARED);
-        transaction.addTransactionListener(this);
-        return transaction;
     }
 
     @Override

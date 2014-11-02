@@ -243,13 +243,7 @@ public class TestV10Database {
                 assertNotNull("Expected version string to be not null", db.getServerVersion());
                 assertNotEquals("Expected version should not be invalid", GDSServerVersion.INVALID_VERSION, db.getServerVersion());
             } finally {
-                if (db != null) {
-                    try {
-                        db.detach();
-                    } catch (SQLException ex) {
-                        // ignore (TODO: log)
-                    }
-                }
+                safelyClose(db);
             }
         } finally {
             defaultDatabaseTearDown(fbManager);
@@ -275,13 +269,7 @@ public class TestV10Database {
                 //Second attach should throw exception
                 db.attach();
             } finally {
-                if (db != null) {
-                    try {
-                        db.detach();
-                    } catch (SQLException ex) {
-                        // ignore (TODO: log)
-                    }
-                }
+                safelyClose(db);
             }
         } finally {
             defaultDatabaseTearDown(fbManager);
@@ -303,6 +291,7 @@ public class TestV10Database {
             db.attach();
             fail("Expected the attach to fail because the database doesn't exist");
         } catch (SQLException e) {
+            // NOTE: Not using expectedException because of the final assertion that isConnected is false
             // TODO Is this actually the right SQLState?
             assertThat("Expected SQLState for 'Client unable to establish connection' (08001)", e, sqlStateEquals("08001"));
             // TODO Seems to be the least specific error, deeper in there is a more specific 335544734 (isc_io_open_err)
@@ -430,13 +419,7 @@ public class TestV10Database {
                 assertFalse("Expected database not attached", db.isAttached());
                 assertFalse("Expected connection closed", gdsConnection.isConnected());
             } finally {
-                if (db != null) {
-                    try {
-                        db.detach();
-                    } catch (SQLException ex) {
-                        // ignore (TODO: log)
-                    }
-                }
+                safelyClose(db);
             }
         } finally {
             defaultDatabaseTearDown(fbManager);
@@ -450,6 +433,7 @@ public class TestV10Database {
         try {
             WireConnection gdsConnection = new WireConnection(getConnectionInfo(), EncodingFactory.getDefaultInstance(), getProtocolCollection());
             FbWireDatabase db = null;
+            FbTransaction transaction = null;
             try {
                 gdsConnection.socketConnect();
                 db = gdsConnection.identify();
@@ -459,23 +443,20 @@ public class TestV10Database {
                 assertEquals("Unexpected FbWireDatabase implementation", getExpectedDatabaseType(), db.getClass());
                 db.attach();
                 // Starting an active transaction
-                FbTransaction transaction = getTransaction(db);
+                transaction = getTransaction(db);
 
+                expectedException.expect(allOf(
+                        errorCodeEquals(ISCConstants.isc_open_trans),
+                        message(startsWith(getFbMessage(ISCConstants.isc_open_trans, "1")))
+                ));
+
+                // Triggers exception
                 db.detach();
-
-                assertFalse("Expected database not attached", db.isAttached());
-                assertFalse("Expected connection closed", gdsConnection.isConnected());
-                assertEquals("Expected one warning", 1, callback.getWarnings().size());
-                SQLWarning warning = callback.getWarnings().get(0);
-                assertThat(warning, allOf(errorCodeEquals(ISCConstants.isc_open_trans), fbMessageEquals(ISCConstants.isc_open_trans, "1")));
             } finally {
-                if (db != null) {
-                    try {
-                        db.detach();
-                    } catch (SQLException ex) {
-                        // ignore (TODO: log)
-                    }
+                if (transaction != null && transaction.getState() == TransactionState.ACTIVE) {
+                    transaction.commit();
                 }
+                safelyClose(db);
             }
         } finally {
             defaultDatabaseTearDown(fbManager);
@@ -495,20 +476,14 @@ public class TestV10Database {
                 assertEquals("Unexpected FbWireDatabase implementation", getExpectedDatabaseType(), db.getClass());
                 db.attach();
 
-                assertTrue("expected database attached", db.isAttached());
+                assumeTrue("expected database attached", db.isAttached());
 
                 db.cancelOperation(ISCConstants.fb_cancel_abort);
 
                 assertFalse("Expected database not attached after abort", db.isAttached());
                 assertFalse("Expected connection closed after abort", gdsConnection.isConnected());
             } finally {
-                if (db != null) {
-                    try {
-                        db.detach();
-                    } catch (SQLException ex) {
-                        // ignore (TODO: log)
-                    }
-                }
+                safelyClose(db);
             }
         } finally {
             defaultDatabaseTearDown(fbManager);
@@ -552,13 +527,7 @@ public class TestV10Database {
                 db.cancelOperation(kind);
 
             } finally {
-                if (db != null) {
-                    try {
-                        db.detach();
-                    } catch (SQLException ex) {
-                        // ignore (TODO: log)
-                    }
-                }
+                safelyClose(db);
             }
         } finally {
             defaultDatabaseTearDown(fbManager);
@@ -572,5 +541,14 @@ public class TestV10Database {
         tpb.addArgument(ISCConstants.isc_tpb_write);
         tpb.addArgument(ISCConstants.isc_tpb_wait);
         return db.startTransaction(tpb);
+    }
+
+    private static void safelyClose(FbDatabase db) {
+        if (db == null) return;
+        try {
+            db.detach();
+        } catch (SQLException ex) {
+            // ignore (TODO: log)
+        }
     }
 }
