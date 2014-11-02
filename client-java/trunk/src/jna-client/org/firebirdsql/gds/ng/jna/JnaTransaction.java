@@ -25,6 +25,8 @@ import org.firebirdsql.gds.ng.AbstractFbTransaction;
 import org.firebirdsql.gds.ng.TransactionState;
 import org.firebirdsql.jna.fbclient.FbClientLibrary;
 import org.firebirdsql.jna.fbclient.ISC_STATUS;
+import org.firebirdsql.logging.Logger;
+import org.firebirdsql.logging.LoggerFactory;
 
 import java.nio.ByteBuffer;
 import java.sql.SQLException;
@@ -36,6 +38,8 @@ import java.sql.SQLException;
  * @since 3.0
  */
 public class JnaTransaction extends AbstractFbTransaction {
+
+    private static final Logger log = LoggerFactory.getLogger(JnaTransaction.class, false);
 
     // TODO: Clear on commit/rollback?
     private final IntByReference handle;
@@ -73,51 +77,69 @@ public class JnaTransaction extends AbstractFbTransaction {
 
     @Override
     public void commit() throws SQLException {
-        synchronized (getSynchronizationObject()) {
-            final JnaDatabase db = getDatabase();
-            db.checkConnected();
-            final FbClientLibrary clientLibrary = db.getClientLibrary();
-            switchState(TransactionState.COMMITTING);
-            synchronized (db.getSynchronizationObject()) {
-                clientLibrary.isc_commit_transaction(statusVector, handle);
+        try {
+            synchronized (getSynchronizationObject()) {
+                final JnaDatabase db = getDatabase();
+                db.checkConnected();
+                final FbClientLibrary clientLibrary = db.getClientLibrary();
+                switchState(TransactionState.COMMITTING);
+                synchronized (db.getSynchronizationObject()) {
+                    clientLibrary.isc_commit_transaction(statusVector, handle);
+                }
+                processStatusVector();
+                switchState(TransactionState.COMMITTED);
             }
-            processStatusVector();
-            switchState(TransactionState.COMMITTED);
+        } finally {
+            if (getState() != TransactionState.COMMITTED) {
+                log.warn("Commit not completed", new RuntimeException("Commit not completed"));
+            }
         }
     }
 
     @Override
     public void rollback() throws SQLException {
-        synchronized (getSynchronizationObject()) {
-            final JnaDatabase db = getDatabase();
-            db.checkConnected();
-            final FbClientLibrary clientLibrary = db.getClientLibrary();
-            switchState(TransactionState.ROLLING_BACK);
-            synchronized (db.getSynchronizationObject()) {
-                clientLibrary.isc_rollback_transaction(statusVector, handle);
+        try {
+            synchronized (getSynchronizationObject()) {
+                final JnaDatabase db = getDatabase();
+                db.checkConnected();
+                final FbClientLibrary clientLibrary = db.getClientLibrary();
+                switchState(TransactionState.ROLLING_BACK);
+                synchronized (db.getSynchronizationObject()) {
+                    clientLibrary.isc_rollback_transaction(statusVector, handle);
+                }
+                processStatusVector();
+                switchState(TransactionState.ROLLED_BACK);
             }
-            processStatusVector();
-            switchState(TransactionState.ROLLED_BACK);
+        } finally {
+            if (getState() != TransactionState.ROLLED_BACK) {
+                log.warn("Rollback not completed", new RuntimeException("Rollback not completed"));
+            }
         }
     }
 
     @Override
     public void prepare(byte[] recoveryInformation) throws SQLException {
-        synchronized (getSynchronizationObject()) {
-            final JnaDatabase db = getDatabase();
-            db.checkConnected();
-            final FbClientLibrary clientLibrary = db.getClientLibrary();
-            switchState(TransactionState.PREPARING);
-            synchronized (db.getSynchronizationObject()) {
-                if (recoveryInformation == null || recoveryInformation.length == 0) {
-                    clientLibrary.isc_prepare_transaction(statusVector, handle);
-                } else {
-                    clientLibrary.isc_prepare_transaction2(statusVector, handle, (short) recoveryInformation.length,
-                            recoveryInformation);
+        try {
+            synchronized (getSynchronizationObject()) {
+                final JnaDatabase db = getDatabase();
+                db.checkConnected();
+                final FbClientLibrary clientLibrary = db.getClientLibrary();
+                switchState(TransactionState.PREPARING);
+                synchronized (db.getSynchronizationObject()) {
+                    if (recoveryInformation == null || recoveryInformation.length == 0) {
+                        clientLibrary.isc_prepare_transaction(statusVector, handle);
+                    } else {
+                        clientLibrary.isc_prepare_transaction2(statusVector, handle, (short) recoveryInformation.length,
+                                recoveryInformation);
+                    }
                 }
+                processStatusVector();
+                switchState(TransactionState.PREPARED);
             }
-            processStatusVector();
-            switchState(TransactionState.PREPARED);
+        } finally {
+            if (getState() != TransactionState.PREPARED) {
+                log.warn("Prepare not completed", new RuntimeException("Prepare not completed"));
+            }
         }
     }
 

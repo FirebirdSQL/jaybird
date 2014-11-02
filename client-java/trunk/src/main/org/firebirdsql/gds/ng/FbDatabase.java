@@ -213,11 +213,6 @@ public interface FbDatabase {
     int getHandle();
 
     /**
-     * @return Number of open transactions
-     */
-    int getTransactionCount();
-
-    /**
      * Current attachment status of the database.
      *
      * @return <code>true</code> if connected to the server and attached to a

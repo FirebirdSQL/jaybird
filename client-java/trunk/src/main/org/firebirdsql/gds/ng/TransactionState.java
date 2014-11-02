@@ -59,7 +59,7 @@ public enum TransactionState {
     COMMITTING {
         @Override
         Set<TransactionState> createValidTransitionSet() {
-            return EnumSet.of(COMMITTED);
+            return EnumSet.of(COMMITTED, ROLLING_BACK /* To be able to rollback for errors during commit */);
         }
     },
     COMMITTED {

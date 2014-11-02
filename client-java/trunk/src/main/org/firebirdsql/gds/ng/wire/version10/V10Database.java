@@ -193,16 +193,6 @@ public class V10Database extends AbstractFbWireDatabase implements FbWireDatabas
     @Override
     protected void internalDetach() throws SQLException {
         synchronized (getSynchronizationObject()) {
-            if (getTransactionCount() > 0) {
-                // Register open transactions as warning, we are going to detach and close the connection anyway
-                // TODO: Use same behavior as in JnaDatabase (which throws an exception and doesn't register a warning)
-                // TODO: Change exception creation
-                // TODO: Rollback transactions?
-                FbExceptionBuilder builder = new FbExceptionBuilder();
-                builder.warning(ISCConstants.isc_open_trans).messageParameter(getTransactionCount());
-                getDatabaseWarningCallback().processWarning(builder.toSQLException(SQLWarning.class));
-            }
-
             try {
                 final XdrOutputStream xdrOut = getXdrOut();
                 if (isAttached()) {
@@ -283,7 +273,6 @@ public class V10Database extends AbstractFbWireDatabase implements FbWireDatabas
     @Override
     public FbWireTransaction startTransaction(TransactionParameterBuffer tpb) throws SQLException {
         checkAttached();
-        final GenericResponse response;
         synchronized (getSynchronizationObject()) {
             try {
                 final XdrOutputStream xdrOut = getXdrOut();
@@ -295,21 +284,21 @@ public class V10Database extends AbstractFbWireDatabase implements FbWireDatabas
                 throw new FbExceptionBuilder().exception(ISCConstants.isc_net_write_err).cause(ioex).toSQLException();
             }
             try {
-                response = (GenericResponse) readResponse(null);
+                final GenericResponse response = (GenericResponse) readResponse(null);
+                final FbWireTransaction transaction = protocolDescriptor.createTransaction(this,
+                        response.getObjectHandle(), TransactionState.ACTIVE);
+                transactionAdded(transaction);
+                return transaction;
             } catch (IOException ioex) {
                 throw new FbExceptionBuilder().exception(ISCConstants.isc_net_read_err).cause(ioex).toSQLException();
             }
-            transactionAdded();
         }
-        final FbWireTransaction transaction = protocolDescriptor.createTransaction(this, response.getObjectHandle(), TransactionState.ACTIVE);
-        transaction.addTransactionListener(this);
-        return transaction;
+
     }
 
     @Override
     public FbTransaction reconnectTransaction(long transactionId) throws SQLException {
         checkAttached();
-        final GenericResponse response;
         synchronized (getSynchronizationObject()) {
             try {
                 final XdrOutputStream xdrOut = getXdrOut();
@@ -326,16 +315,17 @@ public class V10Database extends AbstractFbWireDatabase implements FbWireDatabas
             } catch (IOException ioex) {
                 throw new FbExceptionBuilder().exception(ISCConstants.isc_net_write_err).cause(ioex).toSQLException();
             }
+
             try {
-                response = (GenericResponse) readResponse(null);
+                final GenericResponse response = (GenericResponse) readResponse(null);
+                final FbWireTransaction transaction = protocolDescriptor.createTransaction(this,
+                        response.getObjectHandle(), TransactionState.PREPARED);
+                transactionAdded(transaction);
+                return transaction;
             } catch (IOException ioex) {
                 throw new FbExceptionBuilder().exception(ISCConstants.isc_net_read_err).cause(ioex).toSQLException();
             }
-            transactionAdded();
         }
-        final FbWireTransaction transaction = protocolDescriptor.createTransaction(this, response.getObjectHandle(), TransactionState.PREPARED);
-        transaction.addTransactionListener(this);
-        return transaction;
     }
 
     @Override

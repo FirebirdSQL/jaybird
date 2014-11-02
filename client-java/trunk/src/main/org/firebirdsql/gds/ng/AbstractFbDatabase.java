@@ -31,8 +31,10 @@ import org.firebirdsql.logging.LoggerFactory;
 
 import java.sql.SQLException;
 import java.sql.SQLWarning;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.firebirdsql.gds.ISCConstants.*;
 
@@ -63,9 +65,9 @@ public abstract class AbstractFbDatabase implements FbDatabase, TransactionListe
             isc_info_end };
     // @formatter:on
 
-    protected final DatabaseListenerDispatcher databaseListenerDispatcher = new DatabaseListenerDispatcher();
+    private final DatabaseListenerDispatcher databaseListenerDispatcher = new DatabaseListenerDispatcher();
     private final AtomicBoolean attached = new AtomicBoolean();
-    private final AtomicInteger transactionCount = new AtomicInteger();
+    private final Set<FbTransaction> activeTransactions = Collections.synchronizedSet(new HashSet<FbTransaction>());
     private final WarningMessageCallback warningCallback = new WarningMessageCallback() {
         @Override
         public void processWarning(SQLWarning warning) {
@@ -86,9 +88,11 @@ public abstract class AbstractFbDatabase implements FbDatabase, TransactionListe
         return warningCallback;
     }
 
-    @Override
-    public int getTransactionCount() {
-        return transactionCount.get();
+    /**
+     * @return Number of active (not prepared or committed/rolled back) transactions
+     */
+    public final int getActiveTransactionCount() {
+        return activeTransactions.size();
     }
 
     /**
@@ -97,8 +101,13 @@ public abstract class AbstractFbDatabase implements FbDatabase, TransactionListe
      * Only this {@link org.firebirdsql.gds.ng.AbstractFbDatabase} instance should call this method.
      * </p>
      */
-    protected final void transactionAdded() {
-       transactionCount.incrementAndGet();
+    protected final void transactionAdded(FbTransaction transaction) {
+        synchronized (activeTransactions) {
+            if (transaction.getState() == TransactionState.ACTIVE) {
+                activeTransactions.add(transaction);
+            }
+            transaction.addTransactionListener(this);
+        }
     }
 
     @Override
@@ -185,6 +194,16 @@ public abstract class AbstractFbDatabase implements FbDatabase, TransactionListe
     public final void detach() throws SQLException {
         checkConnected();
         synchronized (getSynchronizationObject()) {
+            if (getActiveTransactionCount() > 0) {
+                // Throw open transactions as exception, fbclient doesn't disconnect with outstanding (unprepared) transactions
+                // In the case of wire protocol we could ignore this and simply close, but that would be inconsistent with fbclient
+                // TODO: Rollback transactions; or leave that to the caller?
+                throw new FbExceptionBuilder()
+                        .exception(ISCConstants.isc_open_trans)
+                        .messageParameter(getActiveTransactionCount())
+                        .toSQLException();
+            }
+
             databaseListenerDispatcher.detaching(this);
             try {
                 internalDetach();
@@ -338,12 +357,15 @@ public abstract class AbstractFbDatabase implements FbDatabase, TransactionListe
     }
 
     @Override
-    public void transactionStateChanged(FbTransaction transaction, TransactionState newState,
+    public final void transactionStateChanged(FbTransaction transaction, TransactionState newState,
             TransactionState previousState) {
         switch (newState) {
+        case PREPARED:
+            activeTransactions.remove(transaction);
+            break;
         case COMMITTED:
         case ROLLED_BACK:
-            transactionCount.decrementAndGet();
+            activeTransactions.remove(transaction);
             transaction.removeTransactionListener(this);
             break;
         default:
