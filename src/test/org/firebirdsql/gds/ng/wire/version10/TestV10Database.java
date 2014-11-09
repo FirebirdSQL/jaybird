@@ -34,6 +34,7 @@ import org.firebirdsql.gds.ng.wire.*;
 import org.firebirdsql.jdbc.FBSQLException;
 import org.firebirdsql.management.FBManager;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -503,6 +504,27 @@ public class TestV10Database {
     @Test
     public void testCancelOperation_enableNotSupported() throws Exception {
         checkCancelOperationNotSupported(ISCConstants.fb_cancel_enable);
+    }
+
+    // TODO Investigate why this doesn't work in wire protocol, but works in native
+    @Ignore("Test not working")
+    @Test
+    public void testExecuteImmediate_createDatabase() throws Exception {
+        WireConnection gdsConnection = new WireConnection(getConnectionInfo(), EncodingFactory.getDefaultInstance(), getProtocolCollection());
+        try {
+            gdsConnection.socketConnect();
+            FbWireDatabase db = gdsConnection.identify();
+            assertEquals("Unexpected FbWireDatabase implementation", getExpectedDatabaseType(), db.getClass());
+
+            String createDb = String.format("CREATE DATABASE '%s' USER '%s' PASSWORD '%s'",
+                    getDatabasePath(), DB_USER, DB_PASSWORD);
+            db.executeImmediate(createDb, null);
+            assertTrue("Expected to be attached after create database", db.isAttached());
+            db.dropDatabase();
+        } finally {
+            new File(getDatabasePath()).delete();
+            gdsConnection.disconnect();
+        }
     }
 
     private void checkCancelOperationNotSupported(int kind) throws Exception {

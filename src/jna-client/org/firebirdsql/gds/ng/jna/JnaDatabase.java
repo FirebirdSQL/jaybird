@@ -40,9 +40,11 @@ import org.firebirdsql.logging.LoggerFactory;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.sql.SQLException;
+import java.sql.SQLNonTransientException;
 import java.sql.SQLWarning;
 
 import static org.firebirdsql.gds.ISCConstants.*;
+import static org.firebirdsql.gds.ng.TransactionHelper.checkTransactionActive;
 
 /**
  * Implementation of {@link org.firebirdsql.gds.ng.FbDatabase} for native client access.
@@ -191,6 +193,7 @@ public class JnaDatabase extends AbstractFbDatabase implements TransactionListen
     @Override
     public void cancelOperation(int kind) throws SQLException {
         checkConnected();
+        // TODO Test what happens with 2.1 and earlier client library
         synchronized (getSynchronizationObject()) {
             final FbClientLibrary clientLibrary = getClientLibrary();
             try {
@@ -283,7 +286,37 @@ public class JnaDatabase extends AbstractFbDatabase implements TransactionListen
 
     @Override
     public void executeImmediate(String statementText, FbTransaction transaction) throws SQLException {
+        // TODO also implement op_exec_immediate2
+        if (isAttached()) {
+            if (transaction == null) {
+                // TODO SQLState and/or Firebird specific error
+                throw new SQLException("executeImmediate requires a transaction when attached");
+            } else if (!(transaction instanceof JnaTransaction)) {
+                // TODO SQLState and/or Firebird specific error
+                throw new SQLNonTransientException(String.format("Invalid transaction handle type: %s, expected: %s",
+                        transaction.getClass(), JnaTransaction.class));
+            }
+            checkTransactionActive(transaction);
+        } else if (transaction != null) {
+            // TODO SQLState and/or Firebird specific error
+            throw new SQLException("executeImmediate when not attached should have no transaction");
+        }
 
+        final byte[] statementArray = getEncoding().encodeToCharset(statementText);
+        synchronized (getSynchronizationObject()) {
+            final FbClientLibrary clientLibrary = getClientLibrary();
+            // Information in tempXSqlDa is ignored
+            final org.firebirdsql.jna.fbclient.XSQLDA tempXSqlDa = new org.firebirdsql.jna.fbclient.XSQLDA();
+            clientLibrary.isc_dsql_execute_immediate(statusVector, handle,
+                    transaction != null ? ((JnaTransaction) transaction).getJnaHandle() : new IntByReference(),
+                    (short) statementArray.length, statementArray, getConnectionDialect(), tempXSqlDa);
+            processStatusVector();
+
+            if (!isAttached()) {
+                setAttached();
+                afterAttachActions();
+            }
+        }
     }
 
     @Override

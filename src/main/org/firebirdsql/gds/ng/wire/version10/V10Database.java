@@ -42,7 +42,6 @@ import java.nio.charset.Charset;
 import java.sql.SQLException;
 import java.sql.SQLFeatureNotSupportedException;
 import java.sql.SQLNonTransientConnectionException;
-import java.sql.SQLWarning;
 
 import static org.firebirdsql.gds.impl.wire.WireProtocolConstants.*;
 import static org.firebirdsql.gds.ng.TransactionHelper.checkTransactionActive;
