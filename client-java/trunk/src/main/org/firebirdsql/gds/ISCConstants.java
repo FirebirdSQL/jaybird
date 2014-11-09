@@ -1455,11 +1455,11 @@ public interface ISCConstants {
     int isc_eem_engine_notfound              = 335545001;
     int isc_attachment_in_use                = 335545002;
     int isc_transaction_in_use               = 335545003;
-    int isc_pman_plugin_notfound             = 335545004;
-    int isc_pman_cannot_load_plugin          = 335545005;
+    int isc_pman_cannot_load_plugin          = 335545004;
+    int isc_pman_module_notfound             = 335545005;
     int isc_pman_entrypoint_notfound         = 335545006;
-    int isc_pman_bad_conf_index              = 335545007;
-    int isc_pman_unknown_instance            = 335545008;
+    int isc_pman_module_bad                  = 335545007;
+    int isc_pman_plugin_notfound             = 335545008;
     int isc_sysf_invalid_trig_namespace      = 335545009;
     int isc_unexpected_null                  = 335545010;
     int isc_type_notcompat_blob              = 335545011;
@@ -1523,6 +1523,34 @@ public interface ISCConstants {
     int isc_auth_data                        = 335545069;
     int isc_auth_datalength                  = 335545070;
     int isc_info_unprepared_stmt             = 335545071;
+    int isc_idx_key_value                    = 335545072;
+    int isc_forupdate_virtualtbl             = 335545073;
+    int isc_forupdate_systbl                 = 335545074;
+    int isc_forupdate_temptbl                = 335545075;
+    int isc_cant_modify_sysobj               = 335545076;
+    int isc_server_misconfigured             = 335545077;
+    int isc_alter_role                       = 335545078;
+    int isc_map_already_exists               = 335545079;
+    int isc_map_not_exists                   = 335545080;
+    int isc_map_load                         = 335545081;
+    int isc_map_aster                        = 335545082;
+    int isc_map_multi                        = 335545083;
+    int isc_map_undefined                    = 335545084;
+    int isc_baddpb_damaged_mode              = 335545085;
+    int isc_baddpb_buffers_range             = 335545086;
+    int isc_baddpb_temp_buffers              = 335545087;
+    int isc_map_nodb                         = 335545088;
+    int isc_map_notable                      = 335545089;
+    int isc_miss_trusted_role                = 335545090;
+    int isc_set_invalid_role                 = 335545091;
+    int isc_cursor_not_positioned            = 335545092;
+    int isc_dup_attribute                    = 335545093;
+    int isc_dyn_no_priv                      = 335545094;
+    int isc_dsql_cant_grant_option           = 335545095;
+    int isc_read_conflict                    = 335545096;
+    int isc_crdb_load                        = 335545097;
+    int isc_crdb_nodb                        = 335545098;
+    int isc_crdb_notable                     = 335545099;
     int isc_gfix_db_name                     = 335740929;
     int isc_gfix_invalid_sw                  = 335740930;
     int isc_gfix_incmp_sw                    = 335740932;
@@ -1652,6 +1680,10 @@ public interface ISCConstants {
     int isc_dyn_coll_used_function           = 336068889;
     int isc_dyn_domain_used_function         = 336068890;
     int isc_dyn_alter_user_no_clause         = 336068891;
+    int isc_dyn_duplicate_package_item       = 336068894;
+    int isc_dyn_cant_modify_sysobj           = 336068895;
+    int isc_dyn_cant_use_zero_increment      = 336068896;
+    int isc_dyn_cant_use_in_foreignkey       = 336068897;
     int isc_gbak_unknown_switch              = 336330753;
     int isc_gbak_page_size_missing           = 336330754;
     int isc_gbak_page_size_toobig            = 336330755;
@@ -1866,6 +1898,15 @@ public interface ISCConstants {
     int isc_dsql_alter_user_failed           = 336397318;
     int isc_dsql_grant_failed                = 336397319;
     int isc_dsql_revoke_failed               = 336397320;
+    int isc_dsql_cte_recursive_aggregate     = 336397321;
+    int isc_dsql_mapping_failed              = 336397322;
+    int isc_dsql_alter_sequence_failed       = 336397323;
+    int isc_dsql_create_generator_failed     = 336397324;
+    int isc_dsql_set_generator_failed        = 336397325;
+    int isc_dsql_wlock_simple                = 336397326;
+    int isc_dsql_firstskip_rows              = 336397327;
+    int isc_dsql_wlock_aggregates            = 336397328;
+    int isc_dsql_wlock_conflict              = 336397329;
     int isc_gsec_cant_open_db                = 336723983;
     int isc_gsec_switches_error              = 336723984;
     int isc_gsec_no_op_spec                  = 336723985;
@@ -1956,6 +1997,7 @@ public interface ISCConstants {
     int isc_nbackup_lostguid_l0bk            = 337117251;
     int isc_nbackup_switchd_parameter        = 337117255;
     int isc_nbackup_user_stop                = 337117257;
+    int isc_nbackup_deco_parse               = 337117259;
     int isc_trace_conflict_acts              = 337182750;
     int isc_trace_act_notfound               = 337182751;
     int isc_trace_switch_once                = 337182752;
@@ -1967,7 +2009,7 @@ public interface ISCConstants {
     int isc_trace_switch_param_miss          = 337182758;
     int isc_trace_param_act_notcompat        = 337182759;
     int isc_trace_mandatory_switch_miss      = 337182760;
-    int isc_err_max                          = 1195;
+    int isc_err_max                          = 1237;
 
     /*******************/
     /* SQL definitions */
