@@ -547,6 +547,20 @@ public abstract class AbstractStatementTest extends FBJUnit4TestBase {
         assertEquals("Expected a single row to have been fetched", 1, statementListener2.getRows().size());
     }
 
+    @Test
+    public void testSetCursorName() throws Exception {
+        allocateStatement();
+
+        statement.prepare(
+                "SELECT RDB$DESCRIPTION AS \"Description\", RDB$RELATION_ID, RDB$SECURITY_CLASS, RDB$CHARACTER_SET_NAME " +
+                        "FROM RDB$DATABASE");
+
+        statement.setCursorName("abc1");
+
+        // Just checking if this doesn't throw errors
+        // TODO: Add/check existing tests using cursorName.
+    }
+
     private FbTransaction getTransaction() throws SQLException {
         TransactionParameterBuffer tpb = new TransactionParameterBufferImpl();
         tpb.addArgument(ISCConstants.isc_tpb_read_committed);
