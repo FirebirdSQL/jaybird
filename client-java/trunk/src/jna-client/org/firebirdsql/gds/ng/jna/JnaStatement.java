@@ -325,7 +325,8 @@ public class JnaStatement extends AbstractFbStatement {
                 final FbClientLibrary clientLibrary = db.getClientLibrary();
                 int count = 0;
                 while (!isAllRowsFetched() && count < fetchSize) {
-                    ISC_STATUS fetchStatus = clientLibrary.isc_dsql_fetch(statusVector, handle, outXSqlDa.version, outXSqlDa);
+                    ISC_STATUS fetchStatus = clientLibrary.isc_dsql_fetch(statusVector, handle, outXSqlDa.version,
+                            outXSqlDa);
                     processStatusVector();
                     count++;
 
@@ -380,7 +381,19 @@ public class JnaStatement extends AbstractFbStatement {
 
     @Override
     public void setCursorName(String cursorName) throws SQLException {
-
+        synchronized (getSynchronizationObject()) {
+            checkStatementValid();
+            final JnaDatabase db = getDatabase();
+            synchronized (db.getSynchronizationObject()) {
+                final FbClientLibrary clientLibrary = db.getClientLibrary();
+                clientLibrary.isc_dsql_set_cursor_name(statusVector, handle,
+                        // Null termination is needed due to a quirk of the protocol
+                        db.getEncoding().encodeToCharset(cursorName + '\0'),
+                        // Cursor type
+                        (short) 0);
+            }
+            processStatusVector();
+        }
     }
 
     private void processStatusVector() throws SQLException {
