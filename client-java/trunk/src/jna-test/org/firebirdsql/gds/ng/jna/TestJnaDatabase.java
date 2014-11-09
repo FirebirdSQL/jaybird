@@ -283,6 +283,20 @@ public class TestJnaDatabase {
         }
     }
 
+    @Test
+    public void testExecuteImmediate_createDatabase() throws Exception {
+        JnaDatabase db = factory.connect(connectionInfo);
+        try {
+            String createDb = String.format("CREATE DATABASE '%s' USER '%s' PASSWORD '%s'",
+                    getDatabasePath(), DB_USER, DB_PASSWORD);
+            db.executeImmediate(createDb, null);
+            assertTrue("Expected to be attached after create database", db.isAttached());
+            db.dropDatabase();
+        } finally {
+            new File(getDatabasePath()).delete();
+        }
+    }
+
     private FbTransaction getTransaction(FbDatabase db) throws SQLException {
         TransactionParameterBuffer tpb = new TransactionParameterBufferImpl();
         tpb.addArgument(ISCConstants.isc_tpb_read_committed);
