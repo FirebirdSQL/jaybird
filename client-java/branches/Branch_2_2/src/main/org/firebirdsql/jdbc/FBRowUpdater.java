@@ -377,7 +377,7 @@ public class FBRowUpdater implements FirebirdRowUpdater  {
                 params.append(", ");
             }
             
-            columns.append(xsqlvars[i].sqlname);
+            columns.append('"').append(xsqlvars[i].sqlname).append('"');
             params.append("?");
             
             first = false;

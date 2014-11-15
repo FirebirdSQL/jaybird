@@ -20,103 +20,73 @@ package org.firebirdsql.jdbc;
 
 import org.firebirdsql.common.FBTestBase;
 
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
+import java.sql.*;
 import java.util.Properties;
 import java.util.Random;
 
-import junit.textui.TestRunner;
-
 public class TestFBResultSet extends FBTestBase {
-    
-    public static final String SELECT_STATEMENT = ""
-        + "SELECT "
-        + "  1 AS col1,"
-        + "  2 AS \"col1\","
-        + "  3 AS \"Col1\""
-        + "FROM rdb$database"
-        ;
+
+    //@formatter:off
+    public static final String SELECT_STATEMENT =
+        "SELECT " +
+        "  1 AS col1," +
+        "  2 AS \"col1\"," +
+        "  3 AS \"Col1\""  +
+        "FROM rdb$database";
         
-    public static final String CREATE_TABLE_STATEMENT = ""
-        + "CREATE TABLE test_table(" 
-        + "  id INTEGER NOT NULL PRIMARY KEY, " 
-        + "  str VARCHAR(10), " 
-        + "  long_str VARCHAR(255), "
-        + "  very_long_str VARCHAR(20000), "
-        + "  blob_str BLOB SUB_TYPE 1, "
-        + "  \"CamelStr\" VARCHAR(255)"
-        + ")"
-        ;
+    public static final String CREATE_TABLE_STATEMENT =
+        "CREATE TABLE test_table(" +
+        "  id INTEGER NOT NULL PRIMARY KEY, " +
+        "  str VARCHAR(10), " +
+        "  long_str VARCHAR(255), " +
+        "  very_long_str VARCHAR(20000), " +
+        "  blob_str BLOB SUB_TYPE 1, " +
+        "  \"CamelStr\" VARCHAR(255)" +
+        ")";
     
     public static final String SELECT_TEST_TABLE =
-            "SELECT id, str FROM test_table";
+        "SELECT id, str FROM test_table";
 
-    public static final String CREATE_TABLE_STATEMENT2 = ""
-        + "CREATE TABLE test_table2(" 
-        + "  id INTEGER NOT NULL, " 
-        + "  str VARCHAR(10), " 
-        + "  long_str VARCHAR(255), "
-        + "  very_long_str VARCHAR(20000), "
-        + "  blob_str BLOB SUB_TYPE 1, "
-        + "  \"CamelStr\" VARCHAR(255)"
-        + ")"
-        ;
+    public static final String CREATE_TABLE_STATEMENT2 =
+        "CREATE TABLE test_table2(" +
+        "  id INTEGER NOT NULL, " +
+        "  str VARCHAR(10), " +
+        "  long_str VARCHAR(255), " +
+        "  very_long_str VARCHAR(20000), " +
+        "  blob_str BLOB SUB_TYPE 1, " +
+        "  \"CamelStr\" VARCHAR(255)" +
+        ")";
 
-    public static final String DROP_TABLE_STATEMENT = ""
-        + "DROP TABLE test_table"
-        ;
+    public static final String CREATE_VIEW_STATEMENT =
+        "CREATE VIEW test_empty_string_view(marker, id, empty_char) " +
+        "  AS  " +
+        "  SELECT " +
+        "    CAST('marker' AS VARCHAR(6)), " +
+        "    id, " +
+        "    '' " +
+        "  FROM " +
+        "    test_table";
 
-    public static final String DROP_TABLE_STATEMENT2 = ""
-        + "DROP TABLE test_table2"
-        ;
+    public static final String CREATE_SUBSTR_FUNCTION =
+        "DECLARE EXTERNAL FUNCTION substr " +
+        "  CSTRING(80), SMALLINT, SMALLINT " +
+        "RETURNS CSTRING(80) FREE_IT " +
+        "ENTRY_POINT 'IB_UDF_substr' MODULE_NAME 'ib_udf'";
 
-    public static final String CREATE_VIEW_STATEMENT = ""
-        + "CREATE VIEW test_empty_string_view(marker, id, empty_char) "
-        + "  AS  "
-        + "  SELECT "
-        + "    CAST('marker' AS VARCHAR(6)), "
-        + "    id, "
-        + "    '' "
-        + "  FROM "
-        + "    test_table"
-        ;
-        
-    public static final String DROP_VIEW_STATEMENT = ""
-        + "DROP VIEW test_empty_string_view"
-        ;
-
-    public static final String CREATE_SUBSTR_FUNCTION = ""
-        + "DECLARE EXTERNAL FUNCTION substr " 
-        + "  CSTRING(80), SMALLINT, SMALLINT "
-        + "RETURNS CSTRING(80) FREE_IT " 
-        + "ENTRY_POINT 'IB_UDF_substr' MODULE_NAME 'ib_udf'"
-        ;
+    public static final String SELECT_FROM_VIEW_STATEMENT =
+        "SELECT * FROM test_empty_string_view";
     
-    public static final String DROP_SUBSTR_FUNCTION = ""
-        + "DROP EXTERNAL FUNCTION substr"
-        ;
+    public static final String INSERT_INTO_TABLE_STATEMENT =
+        "INSERT INTO test_table (id, str) VALUES(?, ?)";
     
-    public static final String SELECT_FROM_VIEW_STATEMENT = ""
-        + "SELECT * FROM test_empty_string_view"
-        ;
-    
-    public static final String INSERT_INTO_TABLE_STATEMENT = ""
-        + "INSERT INTO test_table (id, str) VALUES(?, ?)"
-        ;
-    
-    public static final String INSERT_LONG_STR_STATEMENT = ""
-        + "INSERT INTO test_table (id, long_str) VALUES(?, ?)"
-        ;
+    public static final String INSERT_LONG_STR_STATEMENT =
+        "INSERT INTO test_table (id, long_str) VALUES(?, ?)";
         
     public static final String CURSOR_NAME = "some_cursor";
         
-    public static final String UPDATE_TABLE_STATEMENT = ""
-        + "UPDATE test_table SET str = ? WHERE CURRENT OF " + CURSOR_NAME
-        ;
+    public static final String UPDATE_TABLE_STATEMENT =
+        "UPDATE test_table SET str = ? WHERE CURRENT OF " + CURSOR_NAME;
+    //@formatter:on
 
     public TestFBResultSet(String name) {
         super(name);
@@ -130,48 +100,19 @@ public class TestFBResultSet extends FBTestBase {
         Class.forName(FBDriver.class.getName());
         
         connection = this.getConnectionViaDriverManager();
-            
-        Statement stmt = connection.createStatement();
-        
-        try {
-            try {
-                stmt.execute(DROP_VIEW_STATEMENT);
-            } catch (SQLException ex) {
-                // do nothing here
-            }
-            
-            try {
-                stmt.execute(DROP_TABLE_STATEMENT);
-            } catch (SQLException ex) {
-                // do nothing here
-            }
 
-            try {
-                stmt.execute(DROP_TABLE_STATEMENT2);
-            } catch (SQLException ex) {
-                // do nothing here
-            }
-
-            try {
-                stmt.execute(DROP_SUBSTR_FUNCTION);
-            } catch(SQLException ex) {
-                // do nothing here
-            }
-            
-            stmt.execute(CREATE_TABLE_STATEMENT);
-            stmt.execute(CREATE_TABLE_STATEMENT2);
-            stmt.execute(CREATE_VIEW_STATEMENT);
-            stmt.execute(CREATE_SUBSTR_FUNCTION);
-        } finally {
-            stmt.close();
-        }
+        executeCreateTable(connection, CREATE_TABLE_STATEMENT);
+        executeCreateTable(connection, CREATE_TABLE_STATEMENT2);
+        executeCreateTable(connection, CREATE_VIEW_STATEMENT);
+        executeCreateTable(connection, CREATE_SUBSTR_FUNCTION);
     }
 
     protected void tearDown() throws Exception {
-        
-        connection.close();
-        
-        super.tearDown();
+        try {
+            connection.close();
+        } finally {
+            super.tearDown();
+        }
     }
     
     /**
@@ -181,17 +122,21 @@ public class TestFBResultSet extends FBTestBase {
      */
     public void testFindColumn() throws Exception {
         Statement stmt = connection.createStatement();
-        
-        ResultSet rs = stmt.executeQuery(SELECT_STATEMENT);
-        
-        assertTrue("Should have at least one row.", rs.next());
-        
-        assertTrue("COL1 should be 1.", rs.getInt("COL1") == 1);
-        assertTrue("col1 should be 1.", rs.getInt("col1") == 1);
-        assertTrue("\"col1\" should be 2.", rs.getInt("\"col1\"") == 2);
-        assertTrue("Col1 should be 1.", rs.getInt("Col1") == 1);
-        
-        stmt.close();
+
+        try {
+            ResultSet rs = stmt.executeQuery(SELECT_STATEMENT);
+
+            assertTrue("Should have at least one row.", rs.next());
+
+            assertEquals("COL1 should be 1.", 1, rs.getInt("COL1"));
+            assertEquals("col1 should be 1.", 1, rs.getInt("col1"));
+            assertEquals("\"col1\" should be 2.", 2, rs.getInt("\"col1\""));
+            assertEquals("Col1 should be 1.", 1, rs.getInt("Col1"));
+
+            rs.close();
+        } finally {
+            stmt.close();
+        }
     }
     
     /**
@@ -200,10 +145,9 @@ public class TestFBResultSet extends FBTestBase {
      * @throws java.lang.Exception if something went wrong.
      */
     public void testPositionedUpdate() throws Exception {
-        int recordCount = 10;
+        final int recordCount = 10;
         
-        PreparedStatement ps = 
-            connection.prepareStatement(INSERT_INTO_TABLE_STATEMENT);
+        PreparedStatement ps = connection.prepareStatement(INSERT_INTO_TABLE_STATEMENT);
 
         try {
             for(int i = 0; i < recordCount; i++) {
@@ -221,76 +165,47 @@ public class TestFBResultSet extends FBTestBase {
         Statement select = connection.createStatement();
         select.setCursorName(CURSOR_NAME);
         try {
-            rs = select.executeQuery(
-                "SELECT id, str FROM test_table FOR UPDATE OF " + CURSOR_NAME);
-                
-            assertTrue("ResultSet.isBeforeFirst() should be true.", 
-                rs.isBeforeFirst());
+            rs = select.executeQuery("SELECT id, str FROM test_table FOR UPDATE OF " + CURSOR_NAME);
 
-                PreparedStatement update = connection.prepareStatement(
-                    UPDATE_TABLE_STATEMENT);
+            assertTrue("ResultSet.isBeforeFirst() should be true.", rs.isBeforeFirst());
 
-                try {
-                    int counter = 0;
-                    
-                    while (rs.next()) {
-                        
-                        if (counter == 0) {
-                            assertTrue("ResultSet.isFirst() should be true", 
-                                rs.isFirst());
-                        } else
-                        if (counter == recordCount - 1) {
-                            try {
-                                rs.isLast();
-                                assertTrue("ResultSet.isLast() should be true", 
-                                    false);
-                            } catch(SQLException ex) {
-                                // correct
-                            }
+            PreparedStatement update = connection.prepareStatement(UPDATE_TABLE_STATEMENT);
+            try {
+                int counter = 0;
+
+                while (rs.next()) {
+                    if (counter == 0) {
+                        assertTrue("ResultSet.isFirst() should be true", rs.isFirst());
+                    } else if (counter == recordCount - 1) {
+                        try {
+                            rs.isLast();
+                            assertTrue("ResultSet.isLast() should be true", false);
+                        } catch(SQLException ex) {
+                            // TODO Ignoring exception probably wrong
+                            // correct
                         }
-
-                        counter++;
-
-                        assertTrue("ResultSet.getRow() should be correct", 
-                            rs.getRow() == counter);
-                        
-                        update.setInt(1, rs.getInt(1) + 1);
-                        int updatedCount = update.executeUpdate();
-                        
-                        assertTrue("Number of update rows should be 1, is " + updatedCount, 
-                            updatedCount == 1);
                     }
-                    
-                    assertTrue("ResultSet.isAfterLast() should be true", 
-                        rs.isAfterLast());
-                    
-                    assertTrue("ResultSet.next() should return false.",
-                        !rs.next());
-                    
-                } finally {
-                    update.close();
+
+                    counter++;
+
+                    assertEquals("ResultSet.getRow() should be correct", counter, rs.getRow());
+
+                    update.setInt(1, rs.getInt(1) + 1);
+                    int updatedCount = update.executeUpdate();
+
+                    assertEquals("Number of update rows", 1, updatedCount);
                 }
-                
+
+                assertTrue("ResultSet.isAfterLast() should be true", rs.isAfterLast());
+                assertTrue("ResultSet.next() should return false.", !rs.next());
+            } finally {
+                update.close();
+            }
         } finally {
             select.close();
         }
 
         connection.commit();
-        
-
-        /*
-         
-        // Commented out by R.Rokytskyy. We no longer throw exception
-        // when ResultSet.close() is called twice.
-        try {
-            rs.close();
-            assertTrue(
-                "Result set should be closed after statemnet close", false);
-        } catch(SQLException ex) {
-            // everything is ok
-        }
-        */
-        
         connection.setAutoCommit(false);
         
         select = connection.createStatement();
@@ -299,18 +214,13 @@ public class TestFBResultSet extends FBTestBase {
             
             int counter = 0;
             
-            assertTrue("ResultSet.isBeforeFirst() should be true",
-                    rs.isBeforeFirst());
+            assertTrue("ResultSet.isBeforeFirst() should be true", rs.isBeforeFirst());
             
             while (rs.next()) {
-                
                 if (counter == 0) {
-                    assertTrue("ResultSet.isFirst() should be true", 
-                        rs.isFirst());
-                } else
-                if (counter == recordCount - 1) {
-                    assertTrue("ResultSet.isLast() should be true", 
-                        rs.isLast());
+                    assertTrue("ResultSet.isFirst() should be true", rs.isFirst());
+                } else if (counter == recordCount - 1) {
+                    assertTrue("ResultSet.isLast() should be true", rs.isLast());
                 }
 
                 counter++;
@@ -318,20 +228,11 @@ public class TestFBResultSet extends FBTestBase {
                 int idValue = rs.getInt(1);
                 int strValue = rs.getInt(2);
 
-                assertTrue("Value of str column must be equal to id + 1, " +
-                    "idValue = " + idValue + ", strValue = " + strValue,
-                    strValue == (idValue + 1));
+                assertEquals("Value of str column must be equal to id + 1", idValue + 1, strValue);
             }
             
-            assertTrue("ResultSet.isAfterLast() should be true",
-                    rs.isAfterLast());
-            
-            assertTrue("ResultSet.next() should return false.",
-                    !rs.next());
-            
-        } catch(Exception e) {
-            e.printStackTrace();
-            throw e;
+            assertTrue("ResultSet.isAfterLast() should be true", rs.isAfterLast());
+            assertTrue("ResultSet.next() should return false.", !rs.next());
         } finally {
             select.close();
             connection.commit();
@@ -345,8 +246,7 @@ public class TestFBResultSet extends FBTestBase {
      * @throws Exception if something went wrong.
      */
     public void testEmptyColumnInView() throws Exception {
-        PreparedStatement ps = 
-            connection.prepareStatement(INSERT_INTO_TABLE_STATEMENT);
+        PreparedStatement ps = connection.prepareStatement(INSERT_INTO_TABLE_STATEMENT);
             
         try {
             for(int i = 0; i < 10; i++) {
@@ -357,14 +257,11 @@ public class TestFBResultSet extends FBTestBase {
         } finally {
             ps.close();
         }
-        
-        
-        connection.setAutoCommit(false);
 
+        connection.setAutoCommit(false);
         Statement stmt = connection.createStatement();
-        
+
         try {
-            
             ResultSet rs = stmt.executeQuery(SELECT_FROM_VIEW_STATEMENT);
             
             int counter = 0;
@@ -373,15 +270,14 @@ public class TestFBResultSet extends FBTestBase {
                 int key = rs.getInt(2);
                 String value = rs.getString(3);
                 
-                assertTrue("Marker should be correct.", "marker".equals(marker));
-                assertTrue("Key should be same as counter.", key == counter);
-                assertTrue("EMPTY_CHAR string should be empty.", "".equals(value));
+                assertEquals("Marker should be correct.", "marker", marker);
+                assertEquals("Key should be same as counter.", counter, key);
+                assertEquals("EMPTY_CHAR string should be empty.", "", value);
                 
                 counter++;
             }
-            
-            assertTrue("Should read 10 records", counter == 10);
-            
+
+            assertEquals("Should read 10 records", 10, counter);
         }finally {
             stmt.close();
         }
@@ -395,10 +291,9 @@ public class TestFBResultSet extends FBTestBase {
      * @throws Exception if something went wrong.
      */
     public void testScrollInsensitive() throws Exception {
-        int recordCount = 10;
+        final int recordCount = 10;
         
-        PreparedStatement ps = 
-        connection.prepareStatement(INSERT_INTO_TABLE_STATEMENT);
+        PreparedStatement ps = connection.prepareStatement(INSERT_INTO_TABLE_STATEMENT);
 
         try {
             for(int i = 0; i < recordCount; i++) {
@@ -412,9 +307,7 @@ public class TestFBResultSet extends FBTestBase {
         
         connection.setAutoCommit(false);
         
-        Statement stmt = connection.createStatement(
-                ResultSet.TYPE_SCROLL_INSENSITIVE, 
-                ResultSet.CONCUR_READ_ONLY);
+        Statement stmt = connection.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
         
         try {
             ResultSet rs = stmt.executeQuery("SELECT id, str FROM test_table");
@@ -423,24 +316,21 @@ public class TestFBResultSet extends FBTestBase {
             
             rs.last();
             testValue = recordCount - 1;
-            assertTrue("ID of last record should be equal to " + testValue,
-                    rs.getInt(1) == testValue );
+            assertEquals("ID of last record should be equal to " + testValue, testValue, rs.getInt(1));
             assertTrue("isLast() should return true", rs.isLast());
             
             rs.absolute(recordCount / 2);
             testValue = recordCount / 2 - 1;
-            assertTrue("ID after absolute positioning should return " + testValue,
-                    rs.getInt(1) == testValue);
+            assertEquals("ID after absolute positioning should return " + testValue, testValue, rs.getInt(1));
             
             rs.absolute(-1);
             testValue = recordCount - 1;
-            assertTrue("ID after absolute positioning with negative position " +
-                    "should return " + testValue, rs.getInt(1) == testValue);
+            assertEquals("ID after absolute positioning with negative position should return " + testValue,
+                    testValue, rs.getInt(1));
             
             rs.first();
             testValue = 0;
-            assertTrue("ID after first() should return " + testValue,
-                    rs.getInt(1) == testValue);
+            assertEquals("ID after first() should return " + testValue, testValue, rs.getInt(1));
             assertTrue("isFirst() should report true", rs.isFirst());
             
             boolean hasRow = rs.previous();
@@ -450,15 +340,13 @@ public class TestFBResultSet extends FBTestBase {
             rs.relative(5);
             rs.relative(-4);
             testValue = 0;
-            assertTrue("ID after relative positioning should return " + testValue,
-                    rs.getInt(1) == testValue);
-            
+            assertEquals("ID after relative positioning should return " + testValue, testValue, rs.getInt(1));
+
             rs.beforeFirst();
             assertTrue("isBeforeFirst() should return true", rs.isBeforeFirst());
             try {
                 rs.getInt(1);
-                assertTrue("Should not be possibe to access column if cursor " +
-                        "does not point to a row.", false);
+                fail("Should not be possible to access column if cursor does not point to a row.");
             } catch(SQLException ex) {
                 // everything is fine
             }
@@ -467,13 +355,11 @@ public class TestFBResultSet extends FBTestBase {
             assertTrue("isAfterLast() should return true", rs.isAfterLast());
             try {
                 rs.getInt(1);
-                assertTrue("Should not be possibe to access column if cursor " +
-                        "does not point to a row.", false);
+                fail("Should not be possible to access column if cursor does not point to a row.");
             } catch(SQLException ex) {
                 // everything is fine
             }
             assertTrue("ResultSet.next() should return false.", !rs.next());
-            
         } finally {
             stmt.close();
         }
@@ -486,8 +372,7 @@ public class TestFBResultSet extends FBTestBase {
      * @throws Exception if something goes wrong.
      */
     public void testBugReport1() throws Exception {
-        PreparedStatement insertStmt = 
-            connection.prepareStatement(INSERT_LONG_STR_STATEMENT);
+        PreparedStatement insertStmt = connection.prepareStatement(INSERT_LONG_STR_STATEMENT);
         try {
             insertStmt.setInt(1, 1);
             insertStmt.setString(2, "aaa");
@@ -496,15 +381,13 @@ public class TestFBResultSet extends FBTestBase {
             
             insertStmt.setInt(1, 2);
             insertStmt.setString(2, "'more than 80 chars are in " +
-                    "hereeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee" +
-                    "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee");
+                    "hereeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee");
             
             insertStmt.execute();
             
             insertStmt.setInt(1, 3);
             insertStmt.setString(2, "more than 80 chars are in " +
-                    "hereeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee" +
-                    "eeeeeeeeeeeeeeeeee");
+                    "hereeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee");
             
             insertStmt.execute();
         } finally {
@@ -538,7 +421,6 @@ public class TestFBResultSet extends FBTestBase {
                 // and truncation error happens
                 System.out.println("Second query generated exception" + ex.getMessage());
             }
-            
         } finally {
             stmt.close();
         }
@@ -550,10 +432,9 @@ public class TestFBResultSet extends FBTestBase {
      * @throws Exception if something went wrong.
      */
     public void testBugReport2() throws Exception {
-        int recordCount = 10;
+        final int recordCount = 10;
         
-        PreparedStatement ps = 
-        connection.prepareStatement(INSERT_INTO_TABLE_STATEMENT);
+        PreparedStatement ps = connection.prepareStatement(INSERT_INTO_TABLE_STATEMENT);
 
         try {
             for(int i = 0; i < recordCount; i++) {
@@ -567,36 +448,29 @@ public class TestFBResultSet extends FBTestBase {
         
         connection.setAutoCommit(false);
         
-        Statement stmt = connection.createStatement(
-                ResultSet.TYPE_SCROLL_INSENSITIVE, 
-                ResultSet.CONCUR_READ_ONLY);
+        Statement stmt = connection.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
         
         try {
             ResultSet rs = stmt.executeQuery("SELECT id, str FROM test_table");
             
             assertTrue("Should have at least one row", rs.next());
-            
-            assertTrue("ResultSet type should be TYPE_SCROLL_INSENSITIVE",
-                rs.getType() == ResultSet.TYPE_SCROLL_INSENSITIVE);
-            
-            assertTrue("ResultSet concurrency should be CONCUR_READ_ONLY",
-                rs.getConcurrency() == ResultSet.CONCUR_READ_ONLY);
+            assertEquals("ResultSet type should be TYPE_SCROLL_INSENSITIVE",
+                    ResultSet.TYPE_SCROLL_INSENSITIVE, rs.getType());
+            assertEquals("ResultSet concurrency should be CONCUR_READ_ONLY",
+                    ResultSet.CONCUR_READ_ONLY, rs.getConcurrency());
             
             rs.last();
-            
-            assertTrue("ResultSet type should not change.",
-                rs.getType() == ResultSet.TYPE_SCROLL_INSENSITIVE);
-            
+
+            assertEquals("ResultSet type should not change.", ResultSet.TYPE_SCROLL_INSENSITIVE, rs.getType());
         } finally {
             stmt.close();
         }
     }
     
     public void testBugReport3() throws Exception {
-        int recordCount = 10;
-        
-        PreparedStatement ps = 
-        connection.prepareStatement(INSERT_INTO_TABLE_STATEMENT);
+        final int recordCount = 10;
+
+        PreparedStatement ps = connection.prepareStatement(INSERT_INTO_TABLE_STATEMENT);
 
         try {
             for(int i = 0; i < recordCount; i++) {
@@ -607,57 +481,47 @@ public class TestFBResultSet extends FBTestBase {
         } finally {
             ps.close();
         }
-        
+
         connection.setAutoCommit(true);
-        
-        Statement stmt = connection.createStatement(
-                ResultSet.TYPE_FORWARD_ONLY, 
-                ResultSet.CONCUR_READ_ONLY);
-        
+
+        Statement stmt = connection.createStatement(ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
+
         try {
             ResultSet rs = stmt.executeQuery("SELECT id, str FROM test_table");
-            
+
             try {
                 rs.first();
                 fail("first() should not work in TYPE_FORWARD_ONLY result sets");
             } catch(SQLException ex) {
                 // should fail, everything is fine.
             }
-            
+
             while(rs.next()) {
                 // do nothing, just loop.
             }
-            
+
             try {
                 rs.first();
                 fail("first() should not work in TYPE_FORWARD_ONLY result sets.");
             } catch(SQLException ex) {
                 // everything is fine
             }
-            
         } finally {
             stmt.close();
         }
     }
     
     public void _testMemoryGrowth() throws Exception {
-        
         Properties props = getDefaultPropertiesForConnection();
         props.put("no_result_set_tracking", "");
-        
-        Class.forName(FBDriver.class.getName());
         Connection connection = DriverManager.getConnection(getUrl(), props);
-        
         connection.setAutoCommit(false);
         
         System.out.println("Inserting...");
         int recordCount = 1;
-        PreparedStatement ps = connection
-                .prepareStatement("INSERT INTO test_table("
-                        + "id, very_long_str) VALUES (?, ?)");
+        PreparedStatement ps = connection.prepareStatement("INSERT INTO test_table(id, very_long_str) VALUES (?, ?)");
 
         try {
-
             byte[] string = createRandomByteString(19000);
 
             for (int i = 0; i < recordCount; i++) {
@@ -673,8 +537,7 @@ public class TestFBResultSet extends FBTestBase {
 
         System.gc();
 
-        long memoryBeforeSelects = Runtime.getRuntime().totalMemory()
-                - Runtime.getRuntime().freeMemory();
+        long memoryBeforeSelects = Runtime.getRuntime().totalMemory()- Runtime.getRuntime().freeMemory();
 
         System.out.println("Selecting...");
         int selectRuns = 10000;
@@ -687,45 +550,33 @@ public class TestFBResultSet extends FBTestBase {
                 while (rs.next()) {
                     // just loop through result set
                 }
-
             } finally {
                 stmt.close();
             }
         }
         System.gc();
 
-        long memoryAfterSelects = Runtime.getRuntime().totalMemory()
-                - Runtime.getRuntime().freeMemory();
+        long memoryAfterSelects = Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory();
 
         connection.commit();
 
         System.gc();
 
-        long memoryAfterCommit = Runtime.getRuntime().totalMemory()
-                - Runtime.getRuntime().freeMemory();
+        long memoryAfterCommit = Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory();
 
         System.out.println("Memory before selects " + memoryBeforeSelects);
         System.out.println("Memory after selects " + memoryAfterSelects);
         System.out.println("Memory after commit " + memoryAfterCommit);
-        System.out.println("Commit freed "
-                + (memoryAfterSelects - memoryAfterCommit));
-        
+        System.out.println("Commit freed " + (memoryAfterSelects - memoryAfterCommit));
     }
 
     public void testResultSetNotClosed() throws Exception {
-        
-
-        //System.setProperty("test.gds_type", "NATIVE");
-        
         connection.setAutoCommit(false);
         
-        int recordCount = 1;
-        PreparedStatement ps = connection
-                .prepareStatement("INSERT INTO test_table("
-                        + "id, very_long_str) VALUES (?, ?)");
+        final int recordCount = 1;
+        PreparedStatement ps = connection.prepareStatement("INSERT INTO test_table(id, very_long_str) VALUES (?, ?)");
 
         try {
-
             byte[] string = createRandomByteString(19000);
 
             for (int i = 0; i < recordCount; i++) {
@@ -738,11 +589,9 @@ public class TestFBResultSet extends FBTestBase {
         }
 
         connection.commit();
-
         connection.setAutoCommit(false);
         
-        PreparedStatement stmt = connection.prepareStatement(
-            "SELECT * FROM test_table WHERE id = ?");
+        PreparedStatement stmt = connection.prepareStatement("SELECT * FROM test_table WHERE id = ?");
         try {
             stmt.setInt(1, recordCount + 10);
             
@@ -755,7 +604,6 @@ public class TestFBResultSet extends FBTestBase {
 
             assertTrue("Should find a record", rs.next());
             rs.close();
-            
         } finally {
             stmt.close();
         }
@@ -773,13 +621,10 @@ public class TestFBResultSet extends FBTestBase {
     public void testUpdatableResultSet() throws Exception {
         connection.setAutoCommit(false);
         
-        int recordCount = 10;
-        PreparedStatement ps = connection
-                .prepareStatement("INSERT INTO test_table("
-                        + "id, long_str) VALUES (?, ?)");
+        final int recordCount = 10;
+        PreparedStatement ps = connection.prepareStatement("INSERT INTO test_table(id, long_str) VALUES (?, ?)");
 
         try {
-
             for (int i = 0; i < recordCount; i++) {
                 ps.setInt(1, i);
                 ps.setString(2, "oldString" + i);
@@ -794,18 +639,15 @@ public class TestFBResultSet extends FBTestBase {
         connection.setAutoCommit(true);
         
         connection.clearWarnings();
-        Statement stmt = connection.createStatement(
-            ResultSet.TYPE_SCROLL_INSENSITIVE, 
-            ResultSet.CONCUR_UPDATABLE);
+        Statement stmt = connection.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_UPDATABLE);
         
         try {
-            assertTrue("No warnings should be added", connection.getWarnings() == null);
+            assertNull("No warnings should be added", connection.getWarnings());
             
             ResultSet rs = stmt.executeQuery("SELECT id, long_str, str, \"CamelStr\" FROM test_table ORDER BY id");
 
             int counter = 0;
             while(rs.next()) {
-                
                 int id = rs.getInt(1);
                 assertEquals(counter, id);
                 
@@ -844,6 +686,7 @@ public class TestFBResultSet extends FBTestBase {
             rs.updateInt(1, recordCount);
             rs.updateString(2, "newString" + recordCount);
             rs.updateString(3, "bug");
+            rs.updateString(4, "quoted column");
             rs.insertRow();
             rs.moveToCurrentRow();
 
@@ -857,40 +700,35 @@ public class TestFBResultSet extends FBTestBase {
             counter = 0;
             while(rs.next()) {
                 int id = rs.getInt(1);
-                assertTrue(id == counter);
+                assertEquals(counter, id);
                 
                 String longStr = rs.getString(2);
-                assertTrue(("newString" + counter).equals(longStr));
-                assertTrue(("str" + counter).equals(rs.getString(3)));
+                assertEquals("newString" + counter, longStr);
+                assertEquals("str" + counter, rs.getString(3));
                 counter++;
                 
                 if (counter == recordCount + 1)
                     rs.deleteRow();
             }
             
-            assertTrue(counter == recordCount + 1);
+            assertEquals(counter, recordCount + 1);
             
             rs = stmt.executeQuery("SELECT count(*) FROM test_table");
             
             assertTrue(rs.next());
-            assertTrue(rs.getInt(1) == recordCount);
-            
+            assertEquals(recordCount, rs.getInt(1));
         } finally {
             stmt.close();
         }
-        
     }
 
     public void testUpdatableResultSetNoPK() throws Exception {
         connection.setAutoCommit(false);
         
-        int recordCount = 10;
-        PreparedStatement ps = connection
-                .prepareStatement("INSERT INTO test_table2("
-                        + "id, long_str) VALUES (?, ?)");
+        final int recordCount = 10;
+        PreparedStatement ps = connection.prepareStatement("INSERT INTO test_table2(id, long_str) VALUES (?, ?)");
 
         try {
-
             for (int i = 0; i < recordCount; i++) {
                 ps.setInt(1, i);
                 ps.setString(2, "oldString" + i);
@@ -901,18 +739,15 @@ public class TestFBResultSet extends FBTestBase {
         }
 
         connection.commit();
-
         connection.setAutoCommit(true);
-        
         connection.clearWarnings();
-        Statement stmt = connection.createStatement(
-            ResultSet.TYPE_SCROLL_INSENSITIVE, 
-            ResultSet.CONCUR_UPDATABLE);
+        Statement stmt = connection.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_UPDATABLE);
         
         try {
-            assertTrue("No warnings should be added", connection.getWarnings() == null);
+            assertNull("No warnings should be added", connection.getWarnings());
             
-            ResultSet rs = stmt.executeQuery("SELECT rdb$db_key, id, long_str, str, \"CamelStr\" FROM test_table2 ORDER BY 2");
+            ResultSet rs = stmt.executeQuery(
+                    "SELECT rdb$db_key, id, long_str, str, \"CamelStr\" FROM test_table2 ORDER BY 2");
 
             int counter = 0;
             while(rs.next()) {
@@ -947,32 +782,26 @@ public class TestFBResultSet extends FBTestBase {
                 
                 counter++;
             }
-            
         } finally {
             stmt.close();
         }
-        
     }
 
     public void testGetExecutionPlan() throws Exception {
         Statement stmt = connection.createStatement();
         try {
-            FBResultSet rs = (FBResultSet)stmt.executeQuery(
-                    "SELECT id, str FROM test_table");
+            FBResultSet rs = (FBResultSet)stmt.executeQuery("SELECT id, str FROM test_table");
             String execPlan = rs.getExecutionPlan();
-            assertTrue("Execution plan should reference test_table",
-                    execPlan.toUpperCase().indexOf("TEST_TABLE") >= 0);
+            assertTrue("Execution plan should reference test_table", execPlan.toUpperCase().contains("TEST_TABLE"));
         } finally {
             stmt.close();
         }
 
-        PreparedStatement pStmt = 
-            connection.prepareStatement("SELECT * FROM TEST_TABLE");
+        PreparedStatement pStmt = connection.prepareStatement("SELECT * FROM TEST_TABLE");
         try {
             FBResultSet rs = (FBResultSet)pStmt.executeQuery();
             String execPlan = rs.getExecutionPlan();
-            assertTrue("Execution plan should reference test_table",
-                    execPlan.toUpperCase().indexOf("TEST_TABLE") >= 0);
+            assertTrue("Execution plan should reference test_table", execPlan.toUpperCase().contains("TEST_TABLE"));
         } finally {
             pStmt.close();
         }
@@ -981,15 +810,13 @@ public class TestFBResultSet extends FBTestBase {
         // execution plan from a non-statement-based ResultSet
         java.sql.DatabaseMetaData metaData = connection.getMetaData();
         FBResultSet rs = (FBResultSet)metaData.getSchemas();
-        assertEquals("Non-statement-based result set has no execution plan",
-                "", rs.getExecutionPlan());
+        assertEquals("Non-statement-based result set has no execution plan", "", rs.getExecutionPlan());
     }
     
     public void testHoldabilityStatement() throws Exception {
         final int recordCount = 10;
         
-        PreparedStatement ps = 
-            connection.prepareStatement(INSERT_INTO_TABLE_STATEMENT);
+        PreparedStatement ps = connection.prepareStatement(INSERT_INTO_TABLE_STATEMENT);
 
         try {
             for(int i = 0; i < recordCount; i++) {
@@ -1001,8 +828,8 @@ public class TestFBResultSet extends FBTestBase {
             ps.close();
         }
 
-        Statement stmt = connection.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, 
-        		ResultSet.CONCUR_READ_ONLY, ResultSet.HOLD_CURSORS_OVER_COMMIT);
+        Statement stmt = connection.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY,
+                ResultSet.HOLD_CURSORS_OVER_COMMIT);
         Statement stmt2 = connection.createStatement();
         
         try {
@@ -1019,7 +846,7 @@ public class TestFBResultSet extends FBTestBase {
                 rs.getString(1);
                 actualCount++;
             }
-            assertEquals("Unexpected number of reads from holdable resultset", recordCount, actualCount);
+            assertEquals("Unexpected number of reads from holdable result set", recordCount, actualCount);
         } finally {
             closeQuietly(stmt);
             closeQuietly(stmt2);
@@ -1029,8 +856,7 @@ public class TestFBResultSet extends FBTestBase {
     public void testHoldabilityPreparedStatement() throws Exception {
         final int recordCount = 10;
         
-        PreparedStatement ps = 
-            connection.prepareStatement(INSERT_INTO_TABLE_STATEMENT);
+        PreparedStatement ps = connection.prepareStatement(INSERT_INTO_TABLE_STATEMENT);
 
         try {
             for(int i = 0; i < recordCount; i++) {
@@ -1073,15 +899,11 @@ public class TestFBResultSet extends FBTestBase {
         try {
             int fetchSize = stmt.getFetchSize();
             ResultSet rs = stmt.executeQuery("SELECT * FROM test_table");
-            assertEquals(
-                "Default stmt fetch size must match ResultSet fetch size",
-                fetchSize, rs.getFetchSize());
+            assertEquals("Default stmt fetch size must match ResultSet fetch size", fetchSize, rs.getFetchSize());
 
             stmt.setFetchSize(FETCH_SIZE);
             rs = stmt.executeQuery("SELECT * FROM test_table");
-            assertEquals("ResultSet fetchsize must match Statement fetchSize",
-                    FETCH_SIZE, rs.getFetchSize());
-
+            assertEquals("ResultSet fetchsize must match Statement fetchSize", FETCH_SIZE, rs.getFetchSize());
         } finally {
             stmt.close();
         }
@@ -1102,7 +924,6 @@ public class TestFBResultSet extends FBTestBase {
     }
 
     public void testInsertUpdatableCursor() throws Exception {
-        
         Statement stmt = connection.createStatement(ResultSet.TYPE_SCROLL_SENSITIVE, ResultSet.CONCUR_UPDATABLE);
         
         try {
@@ -1111,6 +932,7 @@ public class TestFBResultSet extends FBTestBase {
             rs.moveToInsertRow();
             rs.updateInt("id", 1);
             rs.updateString("blob_str", "test");
+            rs.updateString("CamelStr", "quoted string");
             try {
                 rs.updateRow();
                 fail("Should fail, since updateRow() is used to update rows.");
@@ -1123,10 +945,9 @@ public class TestFBResultSet extends FBTestBase {
 
             rs = stmt.executeQuery("SELECT * FROM test_table");
             assertTrue("Should have at least one row", rs.next());
-            assertTrue("First record should have ID=1", rs.getInt("id") == 1);
-            assertTrue("BLOB should be also saved", "test".equals(rs.getString("blob_str")));
+            assertEquals("First record should have ID=1", 1, rs.getInt("id"));
+            assertEquals("BLOB should be also saved", "test", rs.getString("blob_str"));
             assertTrue("Should have only one row.", !rs.next());
-            
         } finally {
             stmt.close();
         }
@@ -1139,9 +960,7 @@ public class TestFBResultSet extends FBTestBase {
             ResultSet rs = stmt.executeQuery("SELECT * FROM test_table");
             
             try {
-                
-                ResultSet bestRowId = connection.getMetaData().getBestRowIdentifier(
-                    null, null, "test_table", 1, false);
+                ResultSet bestRowId = connection.getMetaData().getBestRowIdentifier(null, null, "test_table", 1, false);
                 assertTrue("Should have row ID", bestRowId.next());
                 bestRowId.close();
                 
@@ -1154,12 +973,10 @@ public class TestFBResultSet extends FBTestBase {
         }
     }
     
-    public void testUpdatableResultSetMutipleStatements() throws Exception {
-        
+    public void testUpdatableResultSetMultipleStatements() throws Exception {
         int recordCount = 10;
         PreparedStatement ps = connection.prepareStatement(
-            "INSERT INTO test_table("
-            + "id, long_str) VALUES (?, ?)");
+            "INSERT INTO test_table(id, long_str) VALUES (?, ?)");
 
         try {
             for (int i = 0; i < recordCount; i++) {
@@ -1172,19 +989,13 @@ public class TestFBResultSet extends FBTestBase {
         }
         
         connection.setAutoCommit(true);
-        Statement stmt = connection.createStatement(
-            ResultSet.TYPE_SCROLL_INSENSITIVE, 
-            ResultSet.CONCUR_UPDATABLE);
+        Statement stmt = connection.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_UPDATABLE);
         
         try {
-            ResultSet rs = stmt.executeQuery(
-                "SELECT * FROM test_table");
-            
+            ResultSet rs = stmt.executeQuery("SELECT * FROM test_table");
             rs.first();
             
-            PreparedStatement anotherStmt = 
-                stmt.getConnection().prepareStatement(
-                    "SELECT * FROM rdb$database");
+            PreparedStatement anotherStmt = stmt.getConnection().prepareStatement("SELECT * FROM rdb$database");
             try {
                 ResultSet anotherRs = anotherStmt.executeQuery();
                 while (anotherRs.next()) {
@@ -1199,17 +1010,14 @@ public class TestFBResultSet extends FBTestBase {
                     rs.updateRow();
                     
                     fail("Should produce exception.");
-                    
                 } catch(SQLException ex) {
                     // everything is ok
                 }
-
             } finally {
                 anotherStmt.close();
             }
             
             rs.close();
-
         } finally {
             stmt.close();
         }
@@ -1221,7 +1029,10 @@ public class TestFBResultSet extends FBTestBase {
         
         try {
             // execute first query
-            ResultSet rs = stmt.executeQuery("SELECT a.rdb$description, b.rdb$character_set_name FROM rdb$database a, rdb$database b where a.rdb$relation_id = b.rdb$relation_id");
+            ResultSet rs = stmt.executeQuery(
+                    "SELECT a.rdb$description, b.rdb$character_set_name " +
+                            "FROM rdb$database a, rdb$database b " +
+                            "where a.rdb$relation_id = b.rdb$relation_id");
             
             // now let's access the result set
             assertTrue(rs.next());
@@ -1230,7 +1041,6 @@ public class TestFBResultSet extends FBTestBase {
             
             assertEquals("A", frsMeta.getTableAlias(1));
             assertEquals("B", frsMeta.getTableAlias(2));
-            
         } finally {
             stmt.close();
         }
@@ -1251,9 +1061,4 @@ public class TestFBResultSet extends FBTestBase {
     	    stmt.close();
     	}
     }
-
-    public static void main(String[] args) {
-        TestRunner.run(new TestFBResultSet("testMemoryGrowth"));
-    }
-
 }
