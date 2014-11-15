@@ -364,7 +364,7 @@ public class FBRowUpdater implements FirebirdRowUpdater {
                 params.append(',');
             }
 
-            columns.append(rowDescriptor.getFieldDescriptor(i).getOriginalName());
+            columns.append('"').append(rowDescriptor.getFieldDescriptor(i).getOriginalName()).append('"');
             params.append('?');
 
             first = false;
