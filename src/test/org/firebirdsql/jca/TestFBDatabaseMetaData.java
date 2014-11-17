@@ -18,19 +18,21 @@
  */
 package org.firebirdsql.jca;
 
-import java.sql.*;
+import org.firebirdsql.jdbc.*;
+
+import javax.resource.spi.LocalTransaction;
+import javax.sql.DataSource;
+import java.sql.DatabaseMetaData;
+import java.sql.ResultSet;
+import java.sql.Statement;
+import java.sql.Types;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 
-import javax.resource.spi.LocalTransaction;
-import javax.sql.DataSource;
-
-import org.firebirdsql.jdbc.*;
-
 /**
  * Describe class <code>TestFBDatabaseMetaData</code> here.
- * 
+ *
  * @author <a href="mailto:d_jencks@users.sourceforge.net">David Jencks </a>
  * @version 1.0
  */
@@ -40,6 +42,7 @@ public class TestFBDatabaseMetaData extends TestXABase {
     private Statement s;
     private DatabaseMetaData dmd;
     private LocalTransaction t;
+    private boolean supportsComment;
 
     public TestFBDatabaseMetaData(String name) {
         super(name);
@@ -50,22 +53,25 @@ public class TestFBDatabaseMetaData extends TestXABase {
         FBManagedConnectionFactory mcf = initMcf();
         DataSource ds = (DataSource) mcf.createConnectionFactory();
         c = (AbstractConnection) ds.getConnection();
+        supportsComment = c.getGDSHelper().compareToVersion(2, 0) >= 0;
         s = c.createStatement();
         t = c.getLocalTransaction();
         dmd = c.getMetaData();
     }
 
     public void tearDown() throws Exception {
-        s.close();
-        if (c.inTransaction()) {
-            t.commit();
+        try {
+            s.close();
+            if (c.inTransaction()) {
+                t.commit();
+            }
+            c.close();
+        } finally {
+            super.tearDown();
         }
-        c.close();
-        super.tearDown();
     }
 
     public void testGetTablesNull() throws Exception {
-        if (log != null) log.info("testGetTablesNull");
         createTable("T1");
 
         t.begin();
@@ -77,8 +83,6 @@ public class TestFBDatabaseMetaData extends TestXABase {
         assertFalse("Got more than one table name back!", rs.next());
         rs.close();
         t.commit();
-
-        dropTable("T1");
     }
 
     public void testGetTableTypes() throws Exception {
@@ -94,7 +98,6 @@ public class TestFBDatabaseMetaData extends TestXABase {
     }
 
     public void testGetTablesSystem() throws Exception {
-        if (log != null) log.info("testGetTablesSystem");
         createTable("T1");
 
         t.begin();
@@ -102,12 +105,9 @@ public class TestFBDatabaseMetaData extends TestXABase {
         assertFalse("Expected no tables to be returned (T1 is not a system table)", rs.next());
         rs.close();
         t.commit();
-
-        dropTable("T1");
     }
 
     public void testGetTablesTable() throws Exception {
-        if (log != null) log.info("testGetTablesTable");
         createTable("T1");
 
         t.begin();
@@ -119,12 +119,9 @@ public class TestFBDatabaseMetaData extends TestXABase {
         assertFalse("Expected only one row in resultset", rs.next());
         rs.close();
         t.commit();
-
-        dropTable("T1");
     }
 
     public void testGetTablesView() throws Exception {
-        if (log != null) log.info("testGetTablesView");
         createTable("T1");
 
         t.begin();
@@ -132,13 +129,9 @@ public class TestFBDatabaseMetaData extends TestXABase {
         assertFalse("Expected no resultset (table T1 is not a view)", rs.next());
         rs.close();
         t.commit();
-
-        dropTable("T1");
     }
 
     public void testGetSystemTablesSystem() throws Exception {
-        if (log != null) log.info("testGetSystemTablesSystem");
-
         t.begin();
         ResultSet rs = dmd.getTables(null, null, "RDB$RELATIONS", new String[] { "SYSTEM TABLE" });
         assertTrue("Expected one result in resultset", rs.next());
@@ -152,8 +145,6 @@ public class TestFBDatabaseMetaData extends TestXABase {
     }
 
     public void testGetAllSystemTablesSystem() throws Exception {
-        if (log != null) log.info("testGetSystemTablesSystem");
-
         t.begin();
         ResultSet rs = dmd.getTables(null, null, "%", new String[] { "SYSTEM TABLE" });
         int count = 0;
@@ -190,7 +181,6 @@ public class TestFBDatabaseMetaData extends TestXABase {
     }
 
     public void testAAStringFunctions() {
-        if (log != null) log.info("testAAStringFunctions");
         FBDatabaseMetaData d = (FBDatabaseMetaData) dmd;
 
         assertTrue("claims test\\_me has wildcards", d.hasNoWildcards("test\\_me"));
@@ -203,7 +193,6 @@ public class TestFBDatabaseMetaData extends TestXABase {
     }
 
     public void testGetTablesWildcardQuote() throws Exception {
-        if (log != null) log.info("testGetTablesWildcardQuote");
         createTable("test_me");
         createTable("test__me");
         createTable("\"test_ me\"");
@@ -257,16 +246,9 @@ public class TestFBDatabaseMetaData extends TestXABase {
         assertFalse("Expected only one row in resultset", rs.next());
         rs.close();
         t.commit();
-
-        dropTable("test_me");
-        dropTable("test__me");
-        dropTable("\"test_ me\"");
-        dropTable("\"test_ me too\"");
-        dropTable("\"test_me too\"");
     }
 
     public void testGetColumnsWildcardQuote() throws Exception {
-        if (log != null) log.info("testGetColumnsWildcardQuote");
         createTable("test_me");
         createTable("test__me");
         createTable("\"test_ me\"");
@@ -285,17 +267,10 @@ public class TestFBDatabaseMetaData extends TestXABase {
         assertFalse("Expected only one row in resultset", rs.next());
         rs.close();
         t.commit();
-
-        dropTable("test_me");
-        dropTable("test__me");
-        dropTable("\"test_ me\"");
-        dropTable("\"test_ me too\"");
-        dropTable("\"test_me too\"");
     }
 
     // test case for JDBC-130, similar to the one above
     public void testGetColumnsWildcardQuote2() throws Exception {
-        if (log != null) log.info("testGetColumnsWildcardQuote2");
         createTable("TABLE_A");
         createTable("TABLE_A_B");
 
@@ -308,9 +283,6 @@ public class TestFBDatabaseMetaData extends TestXABase {
         assertEquals("should find one table", 1, tableNames.size());
         rs.close();
         t.commit();
-
-        dropTable("TABLE_A");
-        dropTable("TABLE_A_B");
     }
 
     /**
@@ -320,14 +292,10 @@ public class TestFBDatabaseMetaData extends TestXABase {
     public void testGetTablesLongTableName() throws Exception {
         String tableName = "PLANILLAS_PREVISION_MANTENIMIEN";
         createTable(tableName);
-        try {
-            t.begin();
-            ResultSet rs = dmd.getTables(null, null, tableName, null);
-            assertTrue("Should return primary key information", rs.next());
-            t.commit();
-        } finally {
-            dropTable(tableName);
-        }
+        t.begin();
+        ResultSet rs = dmd.getTables(null, null, tableName, null);
+        assertTrue("Should return primary key information", rs.next());
+        t.commit();
     }
 
     /**
@@ -337,18 +305,13 @@ public class TestFBDatabaseMetaData extends TestXABase {
     public void testGetTablesLongTableName_WithWildcard() throws Exception {
         String tableName = "PLANILLAS_PREVISION_MANTENIMIEN";
         createTable(tableName);
-        try {
-            t.begin();
-            ResultSet rs = dmd.getTables(null, null, tableName + "%", null);
-            assertTrue("Should return primary key information", rs.next());
-            t.commit();
-        } finally {
-            dropTable(tableName);
-        }
+        t.begin();
+        ResultSet rs = dmd.getTables(null, null, tableName + "%", null);
+        assertTrue("Should return primary key information", rs.next());
+        t.commit();
     }
 
     public void testGetProcedures() throws Exception {
-        if (log != null) log.info("testGetProcedures");
         createProcedure("testproc1", true);
         createProcedure("testproc2", false);
 
@@ -365,7 +328,7 @@ public class TestFBDatabaseMetaData extends TestXABase {
             String lit_remarks = rs.getString("REMARKS");
             // TODO: Double check meaning and reason for this check
             if (remarks == null || lit_remarks == null) {
-            	if (remarks != null || lit_remarks != null)
+                if (remarks != null || lit_remarks != null)
                     fail("result set from getProcedures schema mismatch only one of field 7 or 'REMARKS' returned null");
                 else
                     assertTrue("all OK on the western front", true);
@@ -383,9 +346,13 @@ public class TestFBDatabaseMetaData extends TestXABase {
                 gotproc1 = true;
                 assertEquals("result set from getProcedures had wrong procedure type for TESTPROC1 "
                         + "(should be procedureReturnsResult)", DatabaseMetaData.procedureReturnsResult, type);
-                assertNotNull("result set from getProcedures did not return a value for REMARKS.", remarks);
-                assertEquals("result set from getProcedures did not return correct REMARKS section.",
-                        "Test description", remarks);
+                if (supportsComment) {
+                    assertNotNull("result set from getProcedures did not return a value for REMARKS.", remarks);
+                    assertEquals("result set from getProcedures did not return correct REMARKS section.",
+                            "Test description", remarks);
+                } else {
+                    assertNull("result set from getProcedures should not return a value for REMARKS.", remarks);
+                }
             } else if (name.equals("TESTPROC2")) {
                 assertFalse("result set from getProcedures had duplicate entry for TESTPROC2", gotproc2);
                 gotproc2 = true;
@@ -398,13 +365,9 @@ public class TestFBDatabaseMetaData extends TestXABase {
         assertTrue("result set from getProcedures did not return procedure testproc2", gotproc2);
         rs.close();
         t.commit();
-
-        dropProcedure("testproc1");
-        dropProcedure("testproc2");
     }
 
     public void testGetProcedureColumns() throws Exception {
-        if (log != null) log.info("testGetProcedureColumns");
         createProcedure("testproc1", true);
         createProcedure("testproc2", false);
 
@@ -465,13 +428,9 @@ public class TestFBDatabaseMetaData extends TestXABase {
         }
 
         t.commit();
-        dropProcedure("testproc1");
-        dropProcedure("testproc2");
     }
 
     public void testGetColumnPrivileges() throws Exception {
-        if (log != null) log.info("testGetColumnPrivileges");
-
         t.begin();
         ResultSet rs = dmd.getColumnPrivileges(null, null, "RDB$RELATIONS", "%");
         assertNotNull("No resultset returned from getColumnPrivileges", rs);
@@ -480,8 +439,6 @@ public class TestFBDatabaseMetaData extends TestXABase {
     }
 
     public void testGetTablePrivileges() throws Exception {
-        if (log != null) log.info("testGetTablePrivileges");
-
         t.begin();
         ResultSet rs = dmd.getTablePrivileges(null, null, "%");
         assertNotNull("No resultset returned from getTablePrivileges", rs);
@@ -490,8 +447,6 @@ public class TestFBDatabaseMetaData extends TestXABase {
     }
 
     public void testGetTypeInfo() throws Exception {
-        if (log != null) log.info("testGetTypeInfo");
-
         ResultSet rs = dmd.getTypeInfo();
         assertNotNull("No resultset returned from getTypeInfo", rs);
         int count = 0;
@@ -523,7 +478,6 @@ public class TestFBDatabaseMetaData extends TestXABase {
             String defaultValue = rs.getString("COLUMN_DEF");
             assertEquals("Default value should be correct.", "0", defaultValue);
         } finally {
-            // s.execute("DROP TABLE test_default");
             t.commit();
         }
     }
@@ -535,14 +489,10 @@ public class TestFBDatabaseMetaData extends TestXABase {
     public void testGetPrimaryKeysLongTableName() throws Exception {
         String tableName = "PLANILLAS_PREVISION_MANTENIMIEN";
         createTable(tableName);
-        try {
-            t.begin();
-            ResultSet rs = dmd.getPrimaryKeys(null, null, tableName);
-            assertTrue("Should return primary key information", rs.next());
-            t.commit();
-        } finally {
-            dropTable(tableName);
-        }
+        t.begin();
+        ResultSet rs = dmd.getPrimaryKeys(null, null, tableName);
+        assertTrue("Should return primary key information", rs.next());
+        t.commit();
     }
 
     /**
@@ -552,14 +502,10 @@ public class TestFBDatabaseMetaData extends TestXABase {
     public void testGetPrimaryKeysShortTableName() throws Exception {
         String tableName = "A";
         createTable(tableName);
-        try {
-            t.begin();
-            ResultSet rs = dmd.getPrimaryKeys(null, null, tableName);
-            assertTrue("Should return primary key information", rs.next());
-            t.commit();
-        } finally {
-            dropTable(tableName);
-        }
+        t.begin();
+        ResultSet rs = dmd.getPrimaryKeys(null, null, tableName);
+        assertTrue("Should return primary key information", rs.next());
+        t.commit();
     }
 
     /**
@@ -569,29 +515,24 @@ public class TestFBDatabaseMetaData extends TestXABase {
         String tableName = "PLANILLAS_PREVISION_MANTENIMIEN";
         String tableNamePattern = "PLANILLAS_PREVISION_%";
         createTable(tableName);
-        try {
-            t.begin();
-            ResultSet rs = dmd.getPrimaryKeys(null, null, tableNamePattern);
-            assertFalse("Should return primary key information", rs.next());
-            t.commit();
-        } finally {
-            dropTable(tableName);
-        }
+        t.begin();
+        ResultSet rs = dmd.getPrimaryKeys(null, null, tableNamePattern);
+        assertFalse("Should return primary key information", rs.next());
+        t.commit();
     }
 
     private void createTable(String tableName, String constraint) throws Exception {
-        dropTable(tableName);
         t.begin();
         String sql = "CREATE TABLE " + tableName + " ( "
                 + "C1 INTEGER not null, "
-        		+ "C2 SMALLINT, "
+                + "C2 SMALLINT, "
                 + "C3 DECIMAL(18,0), "
-        		+ "C4 FLOAT, "
+                + "C4 FLOAT, "
                 + "C5 DOUBLE PRECISION, "
                 + "C6 INTEGER, "
-        		+ "\"my column1\" CHAR(10), "
+                + "\"my column1\" CHAR(10), "
                 + "\"my_ column2\" VARCHAR(20)"
-        		+ (constraint != null ? ", " + constraint + ")" : ")");
+                + (constraint != null ? ", " + constraint + ")" : ")");
 
         s.execute(sql);
         t.commit();
@@ -602,55 +543,32 @@ public class TestFBDatabaseMetaData extends TestXABase {
     }
 
     private void createProcedure(String procedureName, boolean returnsData) throws Exception {
-        dropProcedure(procedureName);
         t.begin();
         try {
             if (returnsData) {
                 s.execute("CREATE PROCEDURE " + procedureName
-                		+ "(IN1 INTEGER, IN2 FLOAT)"
+                        + "(IN1 INTEGER, IN2 FLOAT)"
                         + "RETURNS (OUT1 VARCHAR(20), "
-                		+ "OUT2 DOUBLE PRECISION, OUT3 INTEGER) AS "
+                        + "OUT2 DOUBLE PRECISION, OUT3 INTEGER) AS "
                         + "DECLARE VARIABLE X INTEGER;"
-                		+ "BEGIN"
+                        + "BEGIN"
                         + " OUT1 = 'Out String';"
-                		+ " OUT2 = 45;"
-                        + " OUT3 = IN1;" 
-                		+ "END");
+                        + " OUT2 = 45;"
+                        + " OUT3 = IN1;"
+                        + "END");
 
-                int updateCount = s.executeUpdate("UPDATE RDB$PROCEDURES "
-                        + "SET RDB$DESCRIPTION='Test description' "
-                        + "WHERE RDB$PROCEDURE_NAME='"
-                        + procedureName.toUpperCase() + "'");
-
-                assertEquals("Could not set procedure description", 1, updateCount);
+                if (supportsComment) {
+                    s.execute("COMMENT ON PROCEDURE " + procedureName + " IS 'Test description'");
+                }
             } else
                 s.execute("CREATE PROCEDURE " + procedureName
-                		+ " (INP INTEGER) AS BEGIN exit; END");
+                        + " (INP INTEGER) AS BEGIN exit; END");
         } catch (Exception e) {
             if (log != null) log.warn("error creating procedure: " + e.getMessage());
             throw e;
         }
         t.commit();
     }
-
-    private void dropTable(String tableName) throws Exception {
-        t.begin();
-        try {
-            s.execute("drop table " + tableName);
-        } catch (Exception e) {
-        }
-        t.commit();
-    }
-
-    private void dropProcedure(String procedureName) throws Exception {
-        t.begin();
-        try {
-            s.execute("DROP PROCEDURE " + procedureName);
-        } catch (Exception e) {
-        }
-        t.commit();
-    }
-
 
     // TODO Test does not actually check results
     public void testCatalogsAndSchema() throws Exception {
@@ -712,9 +630,6 @@ public class TestFBDatabaseMetaData extends TestXABase {
         } catch (Exception e) {
             t.rollback();
             throw e;
-        } finally {
-            dropTable("best_row_pk");
-            dropTable("best_row_no_pk");
         }
     }
 
@@ -828,7 +743,7 @@ public class TestFBDatabaseMetaData extends TestXABase {
     }
 
     public void testGetClientInfoProperties() throws Exception {
-        ResultSet rs = ((FBDatabaseMetaData)dmd).getClientInfoProperties();
+        ResultSet rs = ((FBDatabaseMetaData) dmd).getClientInfoProperties();
 
         // TODO Extend to verify columns as defined in JDBC
         assertFalse("Expected no results for getClientInfoProperties", rs.next());
