@@ -1,5 +1,7 @@
- /*
- * Firebird Open Source J2ee connector - jdbc driver
+/*
+ * $Id$
+ *
+ * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -12,11 +14,13 @@
  * This file was created by members of the firebird development team.
  * All individual contributions remain the Copyright (C) of those
  * individuals.  Contributors to this file are either listed here or
- * can be obtained from a CVS history command.
+ * can be obtained from a source control history command.
  *
  * All rights reserved.
  */
 package org.firebirdsql.jca;
+
+import org.junit.Test;
 
 import javax.resource.spi.ManagedConnection;
 
@@ -28,18 +32,15 @@ import javax.resource.spi.ManagedConnection;
  */
 public class TestFBManagedConnectionFactory extends TestXABase {
 
-
-    public TestFBManagedConnectionFactory(String name) {
-        super(name);
-    }
-
+    @Test
     public void testCreateMcf() throws Exception {
-        if (log != null) log.info("testCreateMcf");
+        // TODO Test doesn't assert anything
         initMcf();
     }
 
+    @Test
     public void testCreateMc() throws Exception {
-        if (log != null) log.info("testCreateMc");
+        // TODO Test doesn't assert anything
         FBManagedConnectionFactory mcf = initMcf();
         ManagedConnection mc = mcf.createManagedConnection(null, null);
         mc.destroy();

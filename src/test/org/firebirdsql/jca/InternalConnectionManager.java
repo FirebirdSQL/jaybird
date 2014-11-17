@@ -1,7 +1,7 @@
 /*
  * $Id$
- * 
- * Firebird Open Source J2EE Connector - JDBC Driver
+ *
+ * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -14,21 +14,16 @@
  * This file was created by members of the firebird development team.
  * All individual contributions remain the Copyright (C) of those
  * individuals.  Contributors to this file are either listed here or
- * can be obtained from a CVS history command.
+ * can be obtained from a source control history command.
  *
  * All rights reserved.
  */
 package org.firebirdsql.jca;
 
+import javax.resource.ResourceException;
+import javax.resource.spi.*;
 import java.io.PrintWriter;
 import java.io.Serializable;
-
-import javax.resource.ResourceException;
-import javax.resource.spi.ConnectionEvent;
-import javax.resource.spi.ConnectionEventListener;
-import javax.resource.spi.ConnectionManager;
-import javax.resource.spi.ConnectionRequestInfo;
-import javax.resource.spi.ManagedConnectionFactory;
 
 public class InternalConnectionManager implements ConnectionManager,
         ConnectionEventListener, Serializable {
@@ -40,7 +35,7 @@ public class InternalConnectionManager implements ConnectionManager,
     public Object allocateConnection(ManagedConnectionFactory mcf,
             ConnectionRequestInfo cxRequestInfo) throws ResourceException {
 
-        FBManagedConnection mc = (FBManagedConnection)((FBManagedConnectionFactory)mcf).createManagedConnection(null, cxRequestInfo);
+        FBManagedConnection mc = (FBManagedConnection) mcf.createManagedConnection(null, cxRequestInfo);
         mc.setManagedEnvironment(true);
         mc.setConnectionSharing(true);
         mc.addConnectionEventListener(this);
@@ -48,11 +43,10 @@ public class InternalConnectionManager implements ConnectionManager,
     }
 
     public void connectionClosed(ConnectionEvent event) {
-        PrintWriter externalLog = ((FBManagedConnection)event.getSource()).getLogWriter();
+        PrintWriter externalLog = ((FBManagedConnection) event.getSource()).getLogWriter();
         try {
-            ((FBManagedConnection)event.getSource()).destroy();
-        }
-        catch (ResourceException e) {
+            ((FBManagedConnection) event.getSource()).destroy();
+        } catch (ResourceException e) {
             if (externalLog != null) externalLog.println("Exception closing unmanaged connection: " + e);
         }
     }
@@ -67,11 +61,10 @@ public class InternalConnectionManager implements ConnectionManager,
     }
 
     public void connectionErrorOccurred(ConnectionEvent event) {
-        PrintWriter externalLog = ((FBManagedConnection)event.getSource()).getLogWriter();
+        PrintWriter externalLog = ((FBManagedConnection) event.getSource()).getLogWriter();
         try {
-            ((FBManagedConnection)event.getSource()).destroy();
-        }
-        catch (ResourceException e) {
+            ((FBManagedConnection) event.getSource()).destroy();
+        } catch (ResourceException e) {
             if (externalLog != null) externalLog.println("Exception closing unmanaged connection: " + e);
         }
     }

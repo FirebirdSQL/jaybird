@@ -1,5 +1,7 @@
 /*
- * Firebird Open Source J2ee connector - jdbc driver
+ * $Id$
+ *
+ * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -12,36 +14,36 @@
  * This file was created by members of the firebird development team.
  * All individual contributions remain the Copyright (C) of those
  * individuals.  Contributors to this file are either listed here or
- * can be obtained from a CVS history command.
+ * can be obtained from a source control history command.
  *
  * All rights reserved.
  */
 package org.firebirdsql.jca;
 
+import org.junit.Test;
+
+import javax.sql.DataSource;
 import java.rmi.MarshalledObject;
 import java.sql.Connection;
-import javax.sql.DataSource;
+
+import static org.junit.Assert.assertNotNull;
 
 /**
  * TestDataSourceSerialization.java
  *
  * @author <a href="mailto:d_jencks@users.sourceforge.net">David Jencks</a>
- * @version
  */
 public class TestDataSourceSerialization extends TestXABase {
-    
-    public TestDataSourceSerialization(String name) {
-        super(name);
-    }
-    
+
+    @Test
     public void testDataSourceSerialization() throws Exception {
         FBManagedConnectionFactory mcf = initMcf();
-        DataSource ds = (DataSource)mcf.createConnectionFactory();
+        DataSource ds = (DataSource) mcf.createConnectionFactory();
         assertNotNull("Could not get DataSource", ds);
-        
+
         Connection c = ds.getConnection();
         assertNotNull("Could not get Connection", c);
-        
+
         c.close();
         MarshalledObject<DataSource> mo = new MarshalledObject<DataSource>(ds);
         ds = mo.get();

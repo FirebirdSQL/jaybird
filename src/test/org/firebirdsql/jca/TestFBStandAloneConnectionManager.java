@@ -1,5 +1,7 @@
- /*
- * Firebird Open Source J2ee connector - jdbc driver
+/*
+ * $Id$
+ *
+ * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -12,22 +14,20 @@
  * This file was created by members of the firebird development team.
  * All individual contributions remain the Copyright (C) of those
  * individuals.  Contributors to this file are either listed here or
- * can be obtained from a CVS history command.
+ * can be obtained from a source control history command.
  *
  * All rights reserved.
  */
 package org.firebirdsql.jca;
 
+import org.firebirdsql.jdbc.FBConnection;
+import org.junit.Test;
+
+import javax.sql.DataSource;
 import java.sql.Connection;
 import java.sql.Statement;
 
-import javax.sql.DataSource;
-
-import junit.framework.Test;
-import junit.framework.TestSuite;
-
-import org.firebirdsql.jdbc.FBConnection;
-
+import static org.junit.Assert.assertNotNull;
 
 /**
  * Describe class <code>TestFBStandAloneConnectionManager</code> here.
@@ -37,57 +37,39 @@ import org.firebirdsql.jdbc.FBConnection;
  */
 public class TestFBStandAloneConnectionManager extends TestXABase {
 
-
-    public TestFBStandAloneConnectionManager(String name) {
-        super(name);
-    }
-
-    public static Test suite() {
-
-        return new TestSuite(TestFBStandAloneConnectionManager.class);
-    }
-
-
-
+    @Test
     public void testCreateDCM() throws Exception {
-        
-        if (log != null) log.info("testCreateDCM");
         FBManagedConnectionFactory mcf = initMcf();
-        DataSource ds = (DataSource)mcf.createConnectionFactory();
-        assertTrue("Could not get DataSource", ds != null);
+        DataSource ds = (DataSource) mcf.createConnectionFactory();
+        assertNotNull("Could not get DataSource", ds);
         Connection c = ds.getConnection();
-        assertTrue("Could not get Connection", c != null);
+        assertNotNull("Could not get Connection", c);
         c.close();
     }
 
-
+    @Test
     public void testCreateStatement() throws Exception {
-        
-        if (log != null) log.info("testCreateStatement");
         FBManagedConnectionFactory mcf = initMcf();
-        DataSource ds = (DataSource)mcf.createConnectionFactory();
+        DataSource ds = (DataSource) mcf.createConnectionFactory();
         Connection c = ds.getConnection();
         Statement s = c.createStatement();
-        assertTrue("Could not get Statement", s != null);
+        assertNotNull("Could not get Statement", s);
         c.close();
     }
 
+    @Test
     public void testUseStatement() throws Exception {
-        
-        if (log != null) log.info("testUseStatement");
         FBManagedConnectionFactory mcf = initMcf();
-        DataSource ds = (DataSource)mcf.createConnectionFactory();
-        FBConnection c = (FBConnection)ds.getConnection();
+        DataSource ds = (DataSource) mcf.createConnectionFactory();
+        FBConnection c = (FBConnection) ds.getConnection();
         Statement s = c.createStatement();
         FirebirdLocalTransaction t = c.getLocalTransaction();
-        assertTrue("Could not get LocalTransaction", t != null);
+        assertNotNull("Could not get LocalTransaction", t);
         Exception ex = null;
         t.begin();
         try {
             s.execute("CREATE TABLE T1 ( C1 SMALLINT, C2 SMALLINT)");
-            //s.close();
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             ex = e;
         }
         t.commit();
@@ -100,9 +82,6 @@ public class TestFBStandAloneConnectionManager extends TestXABase {
         if (ex != null) {
             throw ex;
         }
-
     }
-
-
 
 }
