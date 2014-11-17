@@ -1,4 +1,4 @@
- /*
+/*
  * $Id$
  *
  * Firebird Open Source JavaEE Connector - JDBC Driver
@@ -20,22 +20,17 @@
  */
 package org.firebirdsql.jca;
 
+import org.firebirdsql.jdbc.FBConnection;
+import org.junit.Test;
+
 import javax.resource.spi.LocalTransaction;
 import javax.resource.spi.ManagedConnection;
+import javax.sql.DataSource;
 import javax.transaction.xa.XAResource;
 import javax.transaction.xa.Xid;
-import java.sql.CallableStatement;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.Statement;
+import java.sql.*;
 
-import javax.sql.DataSource;
-
-import junit.framework.Test;
-import junit.framework.TestSuite;
-
-import org.firebirdsql.jdbc.FBConnection;
+import static org.junit.Assert.*;
 
 /**
  * Describe class <code>TestFBResultSet</code> here.
@@ -45,24 +40,11 @@ import org.firebirdsql.jdbc.FBConnection;
  */
 public class TestFBResultSet extends TestXABase {
 
-
-    public TestFBResultSet(String name) {
-        super(name);
-    }
-
-    public static Test suite() {
-
-        return new TestSuite(TestFBResultSet.class);
-    }
-
-
-
+    @Test
     public void testUseResultSet() throws Exception {
-        
-        if (log != null) log.info("testUseResultSet");
         FBManagedConnectionFactory mcf = initMcf();
         ManagedConnection mc = mcf.createManagedConnection(null, null);
-        Connection c = (Connection)mc.getConnection(null, null);
+        Connection c = (Connection) mc.getConnection(null, null);
         Statement s = c.createStatement();
         XAResource xa = mc.getXAResource();
         Exception ex = null;
@@ -70,9 +52,7 @@ public class TestFBResultSet extends TestXABase {
         xa.start(xid, XAResource.TMNOFLAGS);
         try {
             s.execute("CREATE TABLE T1 ( C1 SMALLINT, C2 SMALLINT)");
-            //s.close();
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             ex = e;
         }
         xa.end(xid, XAResource.TMSUCCESS);
@@ -80,15 +60,14 @@ public class TestFBResultSet extends TestXABase {
 
         xid = new XidImpl();
         xa.start(xid, XAResource.TMNOFLAGS);
-        assertTrue("execute returned true for insert statement", !s.execute("insert into T1 values (1, 1)"));
-        assertTrue("executeUpdate did not return 1 for single row insert", s.executeUpdate("insert into T1 values (2, 2)") == 1);
+        assertFalse("execute returned true for insert statement", s.execute("insert into T1 values (1, 1)"));
+        assertEquals("executeUpdate did not return 1 for single row insert", 1, s.executeUpdate("insert into T1 values (2, 2)"));
         assertTrue("execute returned false for select statement", s.execute("select C1, C2 from T1"));
         ResultSet rs = s.getResultSet();
         while (rs.next()) {
             if (log != null) log.info("C1: " + rs.getShort(1) + " C2: " + rs.getShort(2));
         }
         rs.close();
-        //s.close();
         xa.end(xid, XAResource.TMSUCCESS);
         xa.commit(xid, true);
 
@@ -102,15 +81,13 @@ public class TestFBResultSet extends TestXABase {
         if (ex != null) {
             throw ex;
         }
-
     }
 
+    @Test
     public void testUseResultSetMore() throws Exception {
-        
-        if (log != null) log.info("testUseResultSetMore");
         FBManagedConnectionFactory mcf = initMcf();
         ManagedConnection mc = mcf.createManagedConnection(null, null);
-        Connection c = (Connection)mc.getConnection(null, null);
+        Connection c = (Connection) mc.getConnection(null, null);
         Statement s = c.createStatement();
         XAResource xa = mc.getXAResource();
         Exception ex = null;
@@ -118,9 +95,7 @@ public class TestFBResultSet extends TestXABase {
         xa.start(xid, XAResource.TMNOFLAGS);
         try {
             s.execute("CREATE TABLE T1 ( C1 INTEGER not null primary key, C2 SMALLINT, C3 DECIMAL(18,0), C4 FLOAT, C5 DOUBLE PRECISION, C6 CHAR(10), C7 VARCHAR(20), C8 TIME, C9 DATE, C10 TIMESTAMP)");
-            //s.close();
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             ex = e;
         }
         xa.end(xid, XAResource.TMSUCCESS);
@@ -128,37 +103,32 @@ public class TestFBResultSet extends TestXABase {
 
         xid = new XidImpl();
         xa.start(xid, XAResource.TMNOFLAGS);
-        assertTrue("execute returned true for insert statement",
-            !s.execute("insert into T1 values (1, 1, 1, 1.0, 1.0, 'one', 'one', '8:00:03.1234', '2002-JAN-11', '2001-JAN-6:8:00:03.1223')"));
-        //s.close();
-        // s.execute("insert into T1 values (2, 2,2,  2.0, 2.0, 'two', 'two')");
-        //s.close();
+        assertFalse("execute returned true for insert statement",
+                s.execute("insert into T1 values (1, 1, 1, 1.0, 1.0, 'one', 'one', '8:00:03.1234', '2002-JAN-11', '2001-JAN-6:8:00:03.1223')"));
         assertTrue("execute returned false for select statement", s.execute("select C1, C2, C3,  C4, C5, C6, C7, C8, C9, C10 from T1"));
         ResultSet rs = s.getResultSet();
         while (rs.next()) {
             if (log != null) log.info("C1: " + rs.getInt(1)
-                + " C2: " + rs.getShort(2)
-                + " C3: " + rs.getLong(3)
-                + " C4: " + rs.getFloat(4)
-                + " C5: " + rs.getDouble(5)
-                + " C6: " + rs.getString(6)
-                + " C7: " + rs.getString(7)
-                + " C8: " + rs.getTime(8)
-                + " C9: " + rs.getDate(9)
-                + " C10: " + rs.getTimestamp(10)
-
-                );
+                            + " C2: " + rs.getShort(2)
+                            + " C3: " + rs.getLong(3)
+                            + " C4: " + rs.getFloat(4)
+                            + " C5: " + rs.getDouble(5)
+                            + " C6: " + rs.getString(6)
+                            + " C7: " + rs.getString(7)
+                            + " C8: " + rs.getTime(8)
+                            + " C9: " + rs.getDate(9)
+                            + " C10: " + rs.getTimestamp(10)
+            );
             if (log != null) log.info("C1: " + rs.getInt("C1")
-                + " C2: " + rs.getShort("C2")
-                + " C3: " + rs.getLong("C3")
-                + " C4: " + rs.getFloat("C4")
-                + " C5: " + rs.getDouble("C5")
-                + " C6: " + rs.getString("C6")
-                + " C7: " + rs.getString("C7")
-                );
+                            + " C2: " + rs.getShort("C2")
+                            + " C3: " + rs.getLong("C3")
+                            + " C4: " + rs.getFloat("C4")
+                            + " C5: " + rs.getDouble("C5")
+                            + " C6: " + rs.getString("C6")
+                            + " C7: " + rs.getString("C7")
+            );
         }
         rs.close();
-        //s.close();
         xa.end(xid, XAResource.TMSUCCESS);
         xa.commit(xid, true);
 
@@ -172,24 +142,20 @@ public class TestFBResultSet extends TestXABase {
         if (ex != null) {
             throw ex;
         }
-
     }
 
+    @Test
     public void testUseResultSetWithPreparedStatement() throws Exception {
-        
-        if (log != null) log.info("testUseResultSetWithPreparedStatement");
         FBManagedConnectionFactory mcf = initMcf();
-        DataSource ds = (DataSource)mcf.createConnectionFactory();
-        FBConnection c = (FBConnection)ds.getConnection();
+        DataSource ds = (DataSource) mcf.createConnectionFactory();
+        FBConnection c = (FBConnection) ds.getConnection();
         Statement s = c.createStatement();
         LocalTransaction t = c.getLocalTransaction();
         Exception ex = null;
         t.begin();
         try {
             s.execute("CREATE TABLE T1 ( C1 INTEGER not null primary key, C2 SMALLINT, C3 DECIMAL(18,0), C4 FLOAT, C5 DOUBLE PRECISION, C6 CHAR(10), C7 VARCHAR(20))");
-            //s.close();
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             ex = e;
         }
         t.commit();
@@ -197,22 +163,22 @@ public class TestFBResultSet extends TestXABase {
         t.begin();
         PreparedStatement p = c.prepareStatement("insert into T1 values (?, ?, ?, ?, ?, ?, ?)");
         p.setInt(1, 1);
-        p.setShort(2, (short)1);
+        p.setShort(2, (short) 1);
         p.setLong(3, 1);
-        p.setFloat(4, (float)1.0);
+        p.setFloat(4, (float) 1.0);
         p.setDouble(5, 1.0);
         p.setString(6, "one");
         p.setString(7, "one");
 
-        assertTrue("execute returned true for insert statement", !p.execute());
+        assertFalse("execute returned true for insert statement", p.execute());
         p.setInt(1, 2);
-        p.setShort(2, (short)2);
+        p.setShort(2, (short) 2);
         p.setLong(3, 2);
-        p.setFloat(4, (float)2.0);
+        p.setFloat(4, (float) 2.0);
         p.setDouble(5, 2.0);
         p.setString(6, "two");
         p.setString(7, "two");
-        assertTrue("executeUpdate count != 1", p.executeUpdate() == 1);
+        assertEquals("executeUpdate count != 1", 1, p.executeUpdate());
 
         p.close();
         p = c.prepareStatement("select * from T1 where C1 = ?");
@@ -220,42 +186,41 @@ public class TestFBResultSet extends TestXABase {
         ResultSet rs = p.executeQuery();
         while (rs.next()) {
             if (log != null) log.info("C1: " + rs.getInt(1)
-                + " C2: " + rs.getShort(2)
-                + " C3: " + rs.getLong(3)
-                + " C4: " + rs.getFloat(4)
-                + " C5: " + rs.getDouble(5)
-                + " C6: " + rs.getString(6)
-                + " C7: " + rs.getString(7)
-                );
+                            + " C2: " + rs.getShort(2)
+                            + " C3: " + rs.getLong(3)
+                            + " C4: " + rs.getFloat(4)
+                            + " C5: " + rs.getDouble(5)
+                            + " C6: " + rs.getString(6)
+                            + " C7: " + rs.getString(7)
+            );
             if (log != null) log.info("C1: " + rs.getInt("C1")
-                + " C2: " + rs.getShort("C2")
-                + " C3: " + rs.getLong("C3")
-                + " C4: " + rs.getFloat("C4")
-                + " C5: " + rs.getDouble("C5")
-                + " C6: " + rs.getString("C6")
-                + " C7: " + rs.getString("C7")
-                );
+                            + " C2: " + rs.getShort("C2")
+                            + " C3: " + rs.getLong("C3")
+                            + " C4: " + rs.getFloat("C4")
+                            + " C5: " + rs.getDouble("C5")
+                            + " C6: " + rs.getString("C6")
+                            + " C7: " + rs.getString("C7")
+            );
         }
-//        rs.close(); //should be automatic
         p.setInt(1, 2);
         rs = p.executeQuery();
         while (rs.next()) {
             if (log != null) log.info("C1: " + rs.getInt(1)
-                + " C2: " + rs.getShort(2)
-                + " C3: " + rs.getLong(3)
-                + " C4: " + rs.getFloat(4)
-                + " C5: " + rs.getDouble(5)
-                + " C6: " + rs.getString(6)
-                + " C7: " + rs.getString(7)
-                );
+                            + " C2: " + rs.getShort(2)
+                            + " C3: " + rs.getLong(3)
+                            + " C4: " + rs.getFloat(4)
+                            + " C5: " + rs.getDouble(5)
+                            + " C6: " + rs.getString(6)
+                            + " C7: " + rs.getString(7)
+            );
             if (log != null) log.info("C1: " + rs.getInt("C1")
-                + " C2: " + rs.getShort("C2")
-                + " C3: " + rs.getLong("C3")
-                + " C4: " + rs.getFloat("C4")
-                + " C5: " + rs.getDouble("C5")
-                + " C6: " + rs.getString("C6")
-                + " C7: " + rs.getString("C7")
-                );
+                            + " C2: " + rs.getShort("C2")
+                            + " C3: " + rs.getLong("C3")
+                            + " C4: " + rs.getFloat("C4")
+                            + " C5: " + rs.getDouble("C5")
+                            + " C6: " + rs.getString("C6")
+                            + " C7: " + rs.getString("C7")
+            );
         }
         p.close();
         t.commit();
@@ -268,31 +233,26 @@ public class TestFBResultSet extends TestXABase {
         if (ex != null) {
             throw ex;
         }
-
     }
 
+    @Test
     public void testUsePreparedStatementAcrossTransactions() throws Exception {
-        
-        if (log != null) log.info("testUsePreparedStatementAcrossTransactions");
         FBManagedConnectionFactory mcf = initMcf();
-        DataSource ds = (DataSource)mcf.createConnectionFactory();
-        FBConnection c = (FBConnection)ds.getConnection();
+        DataSource ds = (DataSource) mcf.createConnectionFactory();
+        FBConnection c = (FBConnection) ds.getConnection();
         Statement s = c.createStatement();
         LocalTransaction t = c.getLocalTransaction();
         Exception ex = null;
         t.begin();
         try {
             s.execute("DROP TABLE T1");
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
         }
         t.commit();
         t.begin();
         try {
             s.execute("CREATE TABLE T1 ( C1 INTEGER not null primary key, C2 SMALLINT, C3 DECIMAL(18,0), C4 FLOAT, C5 DOUBLE PRECISION, C6 CHAR(10), C7 VARCHAR(20))");
-            //s.close();
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             ex = e;
         }
         t.commit();
@@ -300,22 +260,22 @@ public class TestFBResultSet extends TestXABase {
         t.begin();
         PreparedStatement p = c.prepareStatement("insert into T1 values (?, ?, ?, ?, ?, ?, ?)");
         p.setInt(1, 1);
-        p.setShort(2, (short)1);
+        p.setShort(2, (short) 1);
         p.setLong(3, 1);
-        p.setFloat(4, (float)1.0);
+        p.setFloat(4, (float) 1.0);
         p.setDouble(5, 1.0);
         p.setString(6, "one");
         p.setString(7, "one");
 
-        assertTrue("execute returned true for insert statement", !p.execute());
+        assertFalse("execute returned true for insert statement", p.execute());
         p.setInt(1, 2);
-        p.setShort(2, (short)2);
+        p.setShort(2, (short) 2);
         p.setLong(3, 2);
-        p.setFloat(4, (float)2.0);
+        p.setFloat(4, (float) 2.0);
         p.setDouble(5, 2.0);
         p.setString(6, "two");
         p.setString(7, "two");
-        assertTrue("executeUpdate count != 1", p.executeUpdate() == 1);
+        assertEquals("executeUpdate count != 1", 1, p.executeUpdate());
 
         p.close();
         p = c.prepareStatement("select * from T1 where C1 = ?");
@@ -323,45 +283,44 @@ public class TestFBResultSet extends TestXABase {
         ResultSet rs = p.executeQuery();
         while (rs.next()) {
             if (log != null) log.info("C1: " + rs.getInt(1)
-                + " C2: " + rs.getShort(2)
-                + " C3: " + rs.getLong(3)
-                + " C4: " + rs.getFloat(4)
-                + " C5: " + rs.getDouble(5)
-                + " C6: " + rs.getString(6)
-                + " C7: " + rs.getString(7)
-                );
+                            + " C2: " + rs.getShort(2)
+                            + " C3: " + rs.getLong(3)
+                            + " C4: " + rs.getFloat(4)
+                            + " C5: " + rs.getDouble(5)
+                            + " C6: " + rs.getString(6)
+                            + " C7: " + rs.getString(7)
+            );
             if (log != null) log.info("C1: " + rs.getInt("C1")
-                + " C2: " + rs.getShort("C2")
-                + " C3: " + rs.getLong("C3")
-                + " C4: " + rs.getFloat("C4")
-                + " C5: " + rs.getDouble("C5")
-                + " C6: " + rs.getString("C6")
-                + " C7: " + rs.getString("C7")
-                );
+                            + " C2: " + rs.getShort("C2")
+                            + " C3: " + rs.getLong("C3")
+                            + " C4: " + rs.getFloat("C4")
+                            + " C5: " + rs.getDouble("C5")
+                            + " C6: " + rs.getString("C6")
+                            + " C7: " + rs.getString("C7")
+            );
         }
-//        rs.close(); //should be automatic
         t.commit();
-        //does prepared statemen persist across transactions?
+        //does prepared statement persist across transactions?
         t.begin();
         p.setInt(1, 2);
         rs = p.executeQuery();
         while (rs.next()) {
             if (log != null) log.info("C1: " + rs.getInt(1)
-                + " C2: " + rs.getShort(2)
-                + " C3: " + rs.getLong(3)
-                + " C4: " + rs.getFloat(4)
-                + " C5: " + rs.getDouble(5)
-                + " C6: " + rs.getString(6)
-                + " C7: " + rs.getString(7)
-                );
+                            + " C2: " + rs.getShort(2)
+                            + " C3: " + rs.getLong(3)
+                            + " C4: " + rs.getFloat(4)
+                            + " C5: " + rs.getDouble(5)
+                            + " C6: " + rs.getString(6)
+                            + " C7: " + rs.getString(7)
+            );
             if (log != null) log.info("C1: " + rs.getInt("C1")
-                + " C2: " + rs.getShort("C2")
-                + " C3: " + rs.getLong("C3")
-                + " C4: " + rs.getFloat("C4")
-                + " C5: " + rs.getDouble("C5")
-                + " C6: " + rs.getString("C6")
-                + " C7: " + rs.getString("C7")
-                );
+                            + " C2: " + rs.getShort("C2")
+                            + " C3: " + rs.getLong("C3")
+                            + " C4: " + rs.getFloat("C4")
+                            + " C5: " + rs.getDouble("C5")
+                            + " C6: " + rs.getString("C6")
+                            + " C7: " + rs.getString("C7")
+            );
         }
         p.close();
         t.commit();
@@ -374,24 +333,20 @@ public class TestFBResultSet extends TestXABase {
         if (ex != null) {
             throw ex;
         }
-
     }
 
+    @Test
     public void testUseResultSetWithCount() throws Exception {
-        
-        if (log != null) log.info("testUseResultSetWithCount");
         FBManagedConnectionFactory mcf = initMcf();
-        DataSource ds = (DataSource)mcf.createConnectionFactory();
-        FBConnection c = (FBConnection)ds.getConnection();
+        DataSource ds = (DataSource) mcf.createConnectionFactory();
+        FBConnection c = (FBConnection) ds.getConnection();
         Statement s = c.createStatement();
         LocalTransaction t = c.getLocalTransaction();
         Exception ex = null;
         t.begin();
         try {
             s.execute(" CREATE TABLE Customer (name VARCHAR(256),accounts VARCHAR(2000),id VARCHAR(256))");
-            //s.close();
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             ex = e;
         }
         t.commit();
@@ -401,12 +356,11 @@ public class TestFBResultSet extends TestXABase {
         p.setString(1, "1");
         p.setString(2, "First Customer");
 
-        assertTrue("execute returned false for insert statement", p.execute());
+        assertTrue("execute returned false for select statement", p.execute());
         ResultSet rs = p.getResultSet();
         while (rs.next()) {
-            if (log != null) log.info("count: " + rs.getInt(1) );
+            if (log != null) log.info("count: " + rs.getInt(1));
         }
-//        rs.close(); //should be automatic
         p.close();
         t.commit();
 
@@ -421,21 +375,19 @@ public class TestFBResultSet extends TestXABase {
     }
 
     public static final String CREATE_PROCEDURE =
-        "CREATE PROCEDURE testproc(number INTEGER) RETURNS (result INTEGER) AS BEGIN result = number; END";
+            "CREATE PROCEDURE testproc(number INTEGER) RETURNS (result INTEGER) AS BEGIN result = number; END";
 
+    @Test
     public void testExecutableProcedure() throws Exception {
-        
-        if (log != null) log.info("testExecutableProcedure");
         FBManagedConnectionFactory mcf = initMcf();
-        DataSource ds = (DataSource)mcf.createConnectionFactory();
-        FBConnection c = (FBConnection)ds.getConnection();
+        DataSource ds = (DataSource) mcf.createConnectionFactory();
+        FBConnection c = (FBConnection) ds.getConnection();
         Statement s = c.createStatement();
         LocalTransaction t = c.getLocalTransaction();
         t.begin();
         try {
             s.execute("DROP PROCEDURE testproc");
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
         }
         t.commit();
         t.begin();
@@ -447,7 +399,7 @@ public class TestFBResultSet extends TestXABase {
         p.setInt(1, 5);
 
         assertTrue("execute returned false for execute procedure statement", p.execute());
-        assertTrue("wrong answer from sp invocation", p.getInt(1) == 5);
+        assertEquals("wrong answer from sp invocation", 5, p.getInt(1));
         p.close();
         t.commit();
 

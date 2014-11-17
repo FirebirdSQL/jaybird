@@ -569,8 +569,9 @@ public class FBConnection implements FirebirdConnection {
                     // leave managed transactions alone, they are normally
                     // committed after the Connection handle is closed.
 
-                    if (!getAutoCommit() && getLocalTransaction().inTransaction()) {
-                        // autocommit is always true for managed tx.
+                    if (!mc.inDistributedTransaction()
+                            && !getAutoCommit()
+                            && getLocalTransaction().inTransaction()) {
                         try {
                             txCoordinator.rollback();
                         } finally {
