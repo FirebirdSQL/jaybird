@@ -292,4 +292,36 @@ public class TestFBXAResource extends TestXABase {
             mc.destroy();
         }
     }
+
+    /**
+     * Tests whether a connection obtained from a managed connection during a distributed transaction can be closed.
+     * <p>
+     * See <a href="http://tracker.firebirdsql.org/browse/JDBC-362">JDBC-362</a>.
+     * </p>
+     */
+    public void testCloseConnectionDuringXA() throws Throwable {
+        FBManagedConnectionFactory mcf = initMcf();
+        FBManagedConnection mc = (FBManagedConnection) mcf.createManagedConnection(null, null);
+        // TODO Original issue could not be reproduced with connectionSharing=true
+        mc.setConnectionSharing(false);
+        try {
+            XAResource xa = mc.getXAResource();
+            Connection con = (Connection) mc.getConnection(null, null);
+            Xid xid = new XidImpl();
+            xa.start(xid, XAResource.TMNOFLAGS);
+
+            try {
+                con.close();
+
+                xa.end(xid, XAResource.TMSUCCESS);
+                xa.commit(xid, true);
+            } catch (Throwable t) {
+                xa.end(xid, XAResource.TMSUCCESS);
+                xa.rollback(xid);
+                throw t;
+            }
+        } finally {
+            mc.destroy();
+        }
+    }
 }
