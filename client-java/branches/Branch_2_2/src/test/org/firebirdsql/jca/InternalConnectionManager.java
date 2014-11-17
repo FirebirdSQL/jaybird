@@ -40,7 +40,7 @@ public class InternalConnectionManager implements ConnectionManager,
     public Object allocateConnection(ManagedConnectionFactory mcf,
             ConnectionRequestInfo cxRequestInfo) throws ResourceException {
 
-        FBManagedConnection mc = (FBManagedConnection)((FBManagedConnectionFactory)mcf).createManagedConnection(null, cxRequestInfo);
+        FBManagedConnection mc = (FBManagedConnection) mcf.createManagedConnection(null, cxRequestInfo);
         mc.setManagedEnvironment(true);
         mc.setConnectionSharing(true);
         mc.addConnectionEventListener(this);

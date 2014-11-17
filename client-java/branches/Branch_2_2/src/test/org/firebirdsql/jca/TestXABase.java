@@ -18,7 +18,6 @@
  */
 package org.firebirdsql.jca;
 
-
 import java.io.Serializable;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
@@ -38,14 +37,11 @@ import org.firebirdsql.common.FBTestBase;
  */
 public abstract class TestXABase extends FBTestBase {
 
-
     public TestXABase(String name) {
         super(name);
     }
 
-
     public FBManagedConnectionFactory initMcf() {
-
         FBManagedConnectionFactory mcf = createFBManagedConnectionFactory(new InternalConnectionManager());
         mcf.setDatabase(DB_DATASOURCE_URL);
         mcf.setUserName(DB_USER);
@@ -55,9 +51,6 @@ public abstract class TestXABase extends FBTestBase {
         
         return mcf;
     }
-
-
-
 
     /*Borrowed from
      * JBoss, the OpenSource EJB server
@@ -71,7 +64,7 @@ public abstract class TestXABase extends FBTestBase {
      *  This implementation is immutable and always serializable at runtime.
      *
      *  @see TransactionImpl
-     *  @author Rickard Öberg (rickard.oberg@telkel.com)
+     *  @author Rickard ï¿½berg (rickard.oberg@telkel.com)
      *  @author <a href="mailto:osh@sparre.dk">Ole Husgaard</a>
      *  @version $Revision$
      */
