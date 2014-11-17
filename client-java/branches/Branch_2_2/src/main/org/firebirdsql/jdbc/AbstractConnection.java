@@ -65,11 +65,9 @@ import org.firebirdsql.util.SQLExceptionChainBuilder;
  */
 public abstract class AbstractConnection implements FirebirdConnection {
 
-    
-    // This flag is set tu true in close() method to indicate that this 
+    // This flag is set tu true in close() method to indicate that this
     // instance is invalid and cannot be used anymore
     private boolean invalid = false;
-
 
     protected FBManagedConnection mc;
 
@@ -558,8 +556,9 @@ public abstract class AbstractConnection implements FirebirdConnection {
                     // leave managed transactions alone, they are normally
                     // committed after the Connection handle is closed.
 
-                    if (!getAutoCommit() && getLocalTransaction().inTransaction()) {
-                        // autocommit is always true for managed tx.
+                    if (!mc.inDistributedTransaction()
+                            && !getAutoCommit()
+                            && getLocalTransaction().inTransaction()) {
                         try {
                             txCoordinator.rollback();
                         } finally {
