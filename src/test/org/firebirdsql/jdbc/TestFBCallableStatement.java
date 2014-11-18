@@ -30,6 +30,7 @@ import java.sql.*;
  * @version 1.0
  */
 public class TestFBCallableStatement extends FBTestBase {
+    //@formatter:off
     public static final String CREATE_PROCEDURE =
         "CREATE PROCEDURE factorial( " 
         + "  max_rows INTEGER, "
@@ -59,23 +60,13 @@ public class TestFBCallableStatement extends FBTestBase {
         + "END " 
         ;
 
-    public static final String DROP_PROCEDURE =
-        "DROP PROCEDURE factorial;";
-
-    public static final String SELECT_PROCEDURE =
-        "SELECT * FROM factorial(?, 2)";
+    public static final String SELECT_PROCEDURE = "SELECT * FROM factorial(?, 2)";
+    public static final String CALL_SELECT_PROCEDURE = "{call factorial(?, 1, ?, ?)}";
+    public static final String EXECUTE_PROCEDURE = "{call factorial(?, ?, ?, ?)}";
+    public static final String EXECUTE_PROCEDURE_AS_STMT = "{call factorial(?, 0)}";
     
-    public static final String CALL_SELECT_PROCEDURE =
-        "{call factorial(?, 1, ?, ?)}";
-
-    public static final String EXECUTE_PROCEDURE =
-        "{call factorial(?, ?, ?, ?)}";
-    
-    public static final String EXECUTE_PROCEDURE_AS_STMT =
-        "{call factorial(?, 0)}";
-    
-	 public static final String CREATE_PROCEDURE_EMP_SELECT = ""
-	     + "CREATE PROCEDURE get_emp_proj(emp_no SMALLINT) "	
+	 public static final String CREATE_PROCEDURE_EMP_SELECT =
+          "CREATE PROCEDURE get_emp_proj(emp_no SMALLINT) "
 		  + " RETURNS (proj_id VARCHAR(25)) AS "
 		  + " BEGIN "
 		  + "    FOR SELECT PROJ_ID "
@@ -86,37 +77,24 @@ public class TestFBCallableStatement extends FBTestBase {
 		  + "        SUSPEND; "
 		  + "END";
 
-    public static final String DROP_PROCEDURE_EMP_SELECT =
-        "DROP PROCEDURE get_emp_proj;";
-    public static final String SELECT_PROCEDURE_EMP_SELECT =
-        "SELECT * FROM get_emp_proj(?)";
+    public static final String SELECT_PROCEDURE_EMP_SELECT = "SELECT * FROM get_emp_proj(?)";
+    public static final String EXECUTE_PROCEDURE_EMP_SELECT = "{call get_emp_proj(?)}";
 
-    public static final String EXECUTE_PROCEDURE_EMP_SELECT =
-        "{call get_emp_proj(?)}";
-
-	 public static final String CREATE_PROCEDURE_EMP_INSERT = ""
-	     + "CREATE PROCEDURE set_emp_proj(emp_no SMALLINT, proj_id VARCHAR(10)"
+	 public static final String CREATE_PROCEDURE_EMP_INSERT =
+	      "CREATE PROCEDURE set_emp_proj(emp_no SMALLINT, proj_id VARCHAR(10)"
 		  + " , last_name VARCHAR(10), proj_name VARCHAR(25)) "
 		  + " AS "
 		  + " BEGIN "
-        + "    INSERT INTO employee_project (emp_no, proj_id, last_name, proj_name) "
+          + "    INSERT INTO employee_project (emp_no, proj_id, last_name, proj_name) "
 		  + "    VALUES (:emp_no, :proj_id, :last_name, :proj_name); "
 		  + "END";
 
-    public static final String DROP_PROCEDURE_EMP_INSERT =
-        "DROP PROCEDURE set_emp_proj;";
+    public static final String EXECUTE_PROCEDURE_EMP_INSERT = "{call set_emp_proj (?,?,?,?)}";
+    public static final String EXECUTE_PROCEDURE_EMP_INSERT_1 = "EXECUTE PROCEDURE set_emp_proj (?,?,?,?)";
+    public static final String EXECUTE_PROCEDURE_EMP_INSERT_SPACES = "EXECUTE PROCEDURE \nset_emp_proj\t   ( ?,?\t,?\n  ,?)";
 
-    public static final String EXECUTE_PROCEDURE_EMP_INSERT =
-        "{call set_emp_proj (?,?,?,?)}";
-
-    public static final String EXECUTE_PROCEDURE_EMP_INSERT_1 =
-        "EXECUTE PROCEDURE set_emp_proj (?,?,?,?)";
-
-    public static final String EXECUTE_PROCEDURE_EMP_INSERT_SPACES =
-        "EXECUTE PROCEDURE \nset_emp_proj\t   ( ?,?\t,?\n  ,?)";
-
-	 public static final String CREATE_EMPLOYEE_PROJECT = ""
-	     + "CREATE TABLE employee_project( "
+	public static final String CREATE_EMPLOYEE_PROJECT =
+          "CREATE TABLE employee_project( "
 		  + " emp_no INTEGER NOT NULL, "
 		  + " proj_id VARCHAR(10) NOT NULL, "
 		  + " last_name VARCHAR(10) NOT NULL, "
@@ -124,64 +102,41 @@ public class TestFBCallableStatement extends FBTestBase {
 		  + " proj_desc BLOB SUB_TYPE 1, "
 		  + " product VARCHAR(25) )";
 
-	 public static final String DROP_EMPLOYEE_PROJECT = 
-	     "DROP TABLE employee_project;";
-     
-     public static final String CREATE_SIMPLE_OUT_PROC = ""
-         + "CREATE PROCEDURE test_out (inParam VARCHAR(10)) RETURNS (outParam VARCHAR(10)) "
+    public static final String CREATE_SIMPLE_OUT_PROC =
+         "CREATE PROCEDURE test_out (inParam VARCHAR(10)) RETURNS (outParam VARCHAR(10)) "
          + "AS BEGIN "
          + "    outParam = inParam; "
-         + "END"
-         ;
+         + "END";
      
-     public static final String DROP_SIMPLE_OUT_PROC = ""
-         + "DROP PROCEDURE test_out"
-         ;
+    public static final String EXECUTE_SIMPLE_OUT_PROCEDURE = "{call test_out ?, ? }";
+    public static final String EXECUTE_SIMPLE_OUT_PROCEDURE_1 = "{?=CALL test_out(?)}";
+    public static final String EXECUTE_IN_OUT_PROCEDURE = "{call test_out ?}";
+    public static final String EXECUTE_SIMPLE_OUT_PROCEDURE_CONST = "EXECUTE PROCEDURE test_out 'test'";
+    public static final String EXECUTE_SIMPLE_OUT_PROCEDURE_CONST_WITH_QUESTION = "EXECUTE PROCEDURE test_out 'test?'";
      
-     public static final String EXECUTE_SIMPLE_OUT_PROCEDURE = ""
-         + "{call test_out ?, ? }"
-         ;
-         
-     public static final String EXECUTE_SIMPLE_OUT_PROCEDURE_1 = ""
-         + "{?=CALL test_out(?)}"
-         ;
-     
-     public static final String EXECUTE_IN_OUT_PROCEDURE = ""
-         + "{call test_out ?}"
-         ;
-     
-     public static final String CREATE_PROCEDURE_WITHOUT_PARAMS = ""
-         + "CREATE PROCEDURE test_no_params "
+    public static final String CREATE_PROCEDURE_WITHOUT_PARAMS =
+         "CREATE PROCEDURE test_no_params "
          + "AS BEGIN "
          + "    exit; "
-         + "END"
-         ;
-     
-     public static final String DROP_PROCEDURE_WITHOUT_PARAMS = ""
-         + "DROP PROCEDURE test_no_params"
-         ;
-     
-     public static final String EXECUTE_PROCEDURE_WITHOUT_PARAMS = ""
-         + "{call test_no_params}"
-         ;
-     
-     public static final String EXECUTE_PROCEDURE_WITHOUT_PARAMS_1 = ""
-         + "{call test_no_params()}"
-         ;
-     
-     public static final String EXECUTE_PROCEDURE_WITHOUT_PARAMS_2 = ""
-         + "{call test_no_params () }"
-         ;
-     
-     public static final String EXECUTE_PROCEDURE_WITHOUT_PARAMS_3 = ""
-         + "EXECUTE PROCEDURE test_no_params ()"
-         ;
-     
-     public static final String EXECUTE_SIMPLE_OUT_PROCEDURE_CONST = ""
-         + "EXECUTE PROCEDURE test_out 'test'";
-     
-     public static final String EXECUTE_SIMPLE_OUT_PROCEDURE_CONST_WITH_QUESTION = ""
-         + "EXECUTE PROCEDURE test_out 'test?'";
+         + "END";
+
+    public static final String EXECUTE_PROCEDURE_WITHOUT_PARAMS = "{call test_no_params}";
+    public static final String EXECUTE_PROCEDURE_WITHOUT_PARAMS_1 = "{call test_no_params()}";
+    public static final String EXECUTE_PROCEDURE_WITHOUT_PARAMS_2 = "{call test_no_params () }";
+    public static final String EXECUTE_PROCEDURE_WITHOUT_PARAMS_3 = "EXECUTE PROCEDURE test_no_params ()";
+
+    public static final String CREATE_PROCEDURE_SELECT_WITHOUT_PARAMS =
+            "CREATE PROCEDURE select_no_params "
+                    + " RETURNS (proj_id VARCHAR(25)) "
+                    + "AS BEGIN "
+                    + "    proj_id = 'abc'; "
+                    + "    SUSPEND;"
+                    + "END";
+
+    public static final String EXECUTE_PROCEDURE_SELECT_WITHOUT_PARAMS = "{call select_no_params}";
+    public static final String EXECUTE_PROCEDURE_SELECT_WITHOUT_PARAMS_1 = "{call select_no_params()}";
+    public static final String EXECUTE_PROCEDURE_SELECT_WITHOUT_PARAMS_2 = "{call select_no_params () }";
+    //@formatter:on
 
     private Connection con;
 
@@ -194,105 +149,79 @@ public class TestFBCallableStatement extends FBTestBase {
         con = getConnectionViaDriverManager();
         Statement stmt = con.createStatement();
         try {
-            try {
-                stmt.executeUpdate(DROP_PROCEDURE);
-            } catch (Exception e) {}
-            try {
-                stmt.executeUpdate(DROP_PROCEDURE_EMP_SELECT);
-            } catch (Exception e) {}
-            try {
-                stmt.executeUpdate(DROP_PROCEDURE_EMP_INSERT);
-            } catch (Exception e) {}
-            try {
-                stmt.executeUpdate(DROP_EMPLOYEE_PROJECT);
-            } catch (Exception e) {}
-            try {
-                stmt.executeUpdate(DROP_SIMPLE_OUT_PROC);
-            } catch (Exception e) {}
-            try {
-                stmt.executeUpdate(DROP_PROCEDURE_WITHOUT_PARAMS);
-            } catch (Exception e) {}
-
-            stmt.executeUpdate(CREATE_PROCEDURE);
-            stmt.executeUpdate(CREATE_EMPLOYEE_PROJECT);
-            stmt.executeUpdate(CREATE_PROCEDURE_EMP_SELECT);
-            stmt.executeUpdate(CREATE_PROCEDURE_EMP_INSERT);
-            stmt.executeUpdate(CREATE_SIMPLE_OUT_PROC);
-            stmt.executeUpdate(CREATE_PROCEDURE_WITHOUT_PARAMS);
+            stmt.execute(CREATE_PROCEDURE);
+            stmt.execute(CREATE_EMPLOYEE_PROJECT);
+            stmt.execute(CREATE_PROCEDURE_EMP_SELECT);
+            stmt.execute(CREATE_PROCEDURE_EMP_INSERT);
+            stmt.execute(CREATE_SIMPLE_OUT_PROC);
+            stmt.execute(CREATE_PROCEDURE_WITHOUT_PARAMS);
+            stmt.execute(CREATE_PROCEDURE_SELECT_WITHOUT_PARAMS);
 
         } finally {
             closeQuietly(stmt);
         }
     }
-    
+
     protected void tearDown() throws Exception {
         try {
-            Statement stmt = con.createStatement();
-            stmt.executeUpdate(DROP_PROCEDURE);
-            stmt.executeUpdate(DROP_PROCEDURE_EMP_SELECT);
-            stmt.executeUpdate(DROP_PROCEDURE_EMP_INSERT);
-            stmt.executeUpdate(DROP_EMPLOYEE_PROJECT);
-            stmt.executeUpdate(DROP_SIMPLE_OUT_PROC);
-            stmt.executeUpdate(DROP_PROCEDURE_WITHOUT_PARAMS);
-            closeQuietly(stmt);
-        } finally {
             closeQuietly(con);
+        } finally {
             super.tearDown();
         }
     }
 
     public void testRun() throws Exception {
-    	CallableStatement cstmt = con.prepareCall(EXECUTE_PROCEDURE);
+        CallableStatement cstmt = con.prepareCall(EXECUTE_PROCEDURE);
         try {
-          cstmt.registerOutParameter(3, Types.INTEGER);
-          cstmt.registerOutParameter(4, Types.INTEGER);
-          ((FirebirdCallableStatement)cstmt).setSelectableProcedure(false);
-          cstmt.setInt(1, 5);
-          cstmt.setInt(2, 0);
-          cstmt.execute();
-          int ans = cstmt.getInt(4);
-          assertTrue("got wrong answer, expected 120: " + ans, ans == 120);
+            cstmt.registerOutParameter(3, Types.INTEGER);
+            cstmt.registerOutParameter(4, Types.INTEGER);
+            ((FirebirdCallableStatement) cstmt).setSelectableProcedure(false);
+            cstmt.setInt(1, 5);
+            cstmt.setInt(2, 0);
+            cstmt.execute();
+            int ans = cstmt.getInt(4);
+            assertTrue("got wrong answer, expected 120: " + ans, ans == 120);
         } finally {
-          cstmt.close();
+            cstmt.close();
         }
-        
+
         PreparedStatement stmt = con.prepareStatement(SELECT_PROCEDURE);
         try {
-          stmt.setInt(1, 5);
-          ResultSet rs = stmt.executeQuery();
-          assertTrue("Should have at least one row", rs.next());
-          int result = rs.getInt(2);
-          assertTrue("Wrong result: expecting 120, received " + result, result == 120);
-                
-          assertTrue("Should have exactly one row.", !rs.next());
-          rs.close();
+            stmt.setInt(1, 5);
+            ResultSet rs = stmt.executeQuery();
+            assertTrue("Should have at least one row", rs.next());
+            int result = rs.getInt(2);
+            assertTrue("Wrong result: expecting 120, received " + result, result == 120);
+
+            assertTrue("Should have exactly one row.", !rs.next());
+            rs.close();
         } finally {
-          stmt.close();
+            stmt.close();
         }
-        
+
         CallableStatement cs = con.prepareCall(CALL_SELECT_PROCEDURE);
         try {
-          ((FirebirdCallableStatement)cs).setSelectableProcedure(true);
-          cs.registerOutParameter(2, Types.INTEGER);
-          cs.registerOutParameter(3, Types.INTEGER);
-          cs.setInt(1, 5);
-          cs.execute();
-          ResultSet rs = cs.getResultSet();
-          assertTrue("Should have at least one row", rs.next());
-          int result = cs.getInt(3);
-          assertTrue("Wrong result: expecting 120, received " + result, result == 1);
-                
-          int counter = 1;
-          while(rs.next()) {
-              assertTrue(rs.getInt(2) == cs.getInt(3));
-              counter++;
-          }
-          
-          assertTrue("Should have 6 rows", counter == 6);
-          rs.close();
+            ((FirebirdCallableStatement) cs).setSelectableProcedure(true);
+            cs.registerOutParameter(2, Types.INTEGER);
+            cs.registerOutParameter(3, Types.INTEGER);
+            cs.setInt(1, 5);
+            cs.execute();
+            ResultSet rs = cs.getResultSet();
+            assertTrue("Should have at least one row", rs.next());
+            int result = cs.getInt(3);
+            assertTrue("Wrong result: expecting 120, received " + result, result == 1);
+
+            int counter = 1;
+            while (rs.next()) {
+                assertTrue(rs.getInt(2) == cs.getInt(3));
+                counter++;
+            }
+
+            assertTrue("Should have 6 rows", counter == 6);
+            rs.close();
         } finally {
-          cs.close();
-        }        
+            cs.close();
+        }
     }
 
     public void testRun_emp_cs() throws Exception {
@@ -301,114 +230,114 @@ public class TestFBCallableStatement extends FBTestBase {
         // 		 
         CallableStatement cstmt = con.prepareCall(EXECUTE_PROCEDURE_EMP_INSERT);
         try {
-          cstmt.setInt(1, 44);
-          cstmt.setString(2, "DGPII");
-          cstmt.setString(3, "Smith");
-          cstmt.setString(4, "Automap");
-          cstmt.execute();
-          cstmt.setInt(1, 44);
-          cstmt.setString(2, "VBASE");
-          cstmt.setString(3, "Jenner");
-          cstmt.setString(4, "Video Database");
-          cstmt.execute();
-          cstmt.setInt(1, 44);
-          cstmt.setString(2, "HWRII");
-          cstmt.setString(3, "Stevens");
-          cstmt.setString(4, "Translator upgrade");
-          cstmt.execute();			 
-          cstmt.setInt(1, 22);
-          cstmt.setString(2, "OTHER");
-          cstmt.setString(3, "Smith");
-          cstmt.setString(4, "Automap");
-          cstmt.execute();
+            cstmt.setInt(1, 44);
+            cstmt.setString(2, "DGPII");
+            cstmt.setString(3, "Smith");
+            cstmt.setString(4, "Automap");
+            cstmt.execute();
+            cstmt.setInt(1, 44);
+            cstmt.setString(2, "VBASE");
+            cstmt.setString(3, "Jenner");
+            cstmt.setString(4, "Video Database");
+            cstmt.execute();
+            cstmt.setInt(1, 44);
+            cstmt.setString(2, "HWRII");
+            cstmt.setString(3, "Stevens");
+            cstmt.setString(4, "Translator upgrade");
+            cstmt.execute();
+            cstmt.setInt(1, 22);
+            cstmt.setString(2, "OTHER");
+            cstmt.setString(3, "Smith");
+            cstmt.setString(4, "Automap");
+            cstmt.execute();
         } finally {
-          cstmt.close();
-        }
-        
-        cstmt = con.prepareCall(EXECUTE_PROCEDURE_EMP_SELECT);
-        try {
-          cstmt.setInt(1, 44);
-          ResultSet rs = cstmt.executeQuery();
-          assertTrue("Should have at least one row", rs.next());
-			 assertTrue("First row value must be DGPII", rs.getString(1).equals("DGPII"));
-          //assertTrue("Should have three rows", !rs.next());
-			 
-          cstmt.setInt(1, 22);			 
-          rs = cstmt.executeQuery();
-          assertTrue("Should have one row", rs.next());
-			 assertTrue("First row value must be OTHER", rs.getString(1).equals("OTHER"));
-          assertTrue("Should have one row", !rs.next());
-			 
-          rs.close();
-        } finally {
-          cstmt.close();
+            cstmt.close();
         }
 
         cstmt = con.prepareCall(EXECUTE_PROCEDURE_EMP_SELECT);
         try {
-          cstmt.setInt(1, 44);
-          cstmt.execute();
-			 assertTrue("First row value must be DGPII", cstmt.getString(1).equals("DGPII"));
+            cstmt.setInt(1, 44);
+            ResultSet rs = cstmt.executeQuery();
+            assertTrue("Should have at least one row", rs.next());
+            assertTrue("First row value must be DGPII", rs.getString(1).equals("DGPII"));
+            //assertTrue("Should have three rows", !rs.next());
 
-          cstmt.setInt(1, 22);			 
-          cstmt.execute();
-			 assertTrue("First row value must be OTHER, is " + 
-                     cstmt.getString(1), cstmt.getString(1).equals("OTHER"));
-			 
+            cstmt.setInt(1, 22);
+            rs = cstmt.executeQuery();
+            assertTrue("Should have one row", rs.next());
+            assertTrue("First row value must be OTHER", rs.getString(1).equals("OTHER"));
+            assertTrue("Should have one row", !rs.next());
+
+            rs.close();
         } finally {
-          cstmt.close();
+            cstmt.close();
         }
-		  
+
+        cstmt = con.prepareCall(EXECUTE_PROCEDURE_EMP_SELECT);
+        try {
+            cstmt.setInt(1, 44);
+            cstmt.execute();
+            assertTrue("First row value must be DGPII", cstmt.getString(1).equals("DGPII"));
+
+            cstmt.setInt(1, 22);
+            cstmt.execute();
+            assertTrue("First row value must be OTHER, is " +
+                    cstmt.getString(1), cstmt.getString(1).equals("OTHER"));
+
+        } finally {
+            cstmt.close();
+        }
+
         con.setAutoCommit(true);
         PreparedStatement stmt = con.prepareStatement(SELECT_PROCEDURE_EMP_SELECT);
         try {
-          stmt.setInt(1, 44);
-          stmt.execute();
-          //ResultSet rs = stmt.executeQuery();
-          ResultSet rs = stmt.getResultSet();
-          assertTrue("Should have three rows", rs.next());
-			 assertTrue("First row value must be DGPII", rs.getString(1).equals("DGPII"));
-          assertTrue("Should have three rows", rs.next());
-			 assertTrue("Second row value must be HWRII", rs.getString(1).equals("HWRII"));
-          assertTrue("Should have three rows", rs.next());
-			 assertTrue("First row value must be VBASE", rs.getString(1).equals("VBASE"));
-          assertTrue("Should have three rows", !rs.next());
-			 
-          stmt.setInt(1, 22);
-          rs = stmt.executeQuery();
-          assertTrue("Should have one row", rs.next());
-			 assertTrue("First row value must be OTHER", rs.getString(1).equals("OTHER"));
-          assertTrue("Should have one row", !rs.next());
+            stmt.setInt(1, 44);
+            stmt.execute();
+            //ResultSet rs = stmt.executeQuery();
+            ResultSet rs = stmt.getResultSet();
+            assertTrue("Should have three rows", rs.next());
+            assertTrue("First row value must be DGPII", rs.getString(1).equals("DGPII"));
+            assertTrue("Should have three rows", rs.next());
+            assertTrue("Second row value must be HWRII", rs.getString(1).equals("HWRII"));
+            assertTrue("Should have three rows", rs.next());
+            assertTrue("First row value must be VBASE", rs.getString(1).equals("VBASE"));
+            assertTrue("Should have three rows", !rs.next());
 
-          rs.close();
+            stmt.setInt(1, 22);
+            rs = stmt.executeQuery();
+            assertTrue("Should have one row", rs.next());
+            assertTrue("First row value must be OTHER", rs.getString(1).equals("OTHER"));
+            assertTrue("Should have one row", !rs.next());
+
+            rs.close();
         } finally {
-          stmt.close();
+            stmt.close();
         }
-        
+
         cstmt = con.prepareCall(EXECUTE_PROCEDURE_EMP_INSERT_1);
         try {
-          cstmt.setInt(1, 44);
-          cstmt.setString(2, "DGPII");
-          cstmt.setString(3, "Smith");
-          cstmt.setString(4, "Automap");
-          cstmt.execute();
-          cstmt.setInt(1, 44);
-          cstmt.setString(2, "VBASE");
-          cstmt.setString(3, "Jenner");
-          cstmt.setString(4, "Video Database");
-          cstmt.execute();
-          cstmt.setInt(1, 44);
-          cstmt.setString(2, "HWRII");
-          cstmt.setString(3, "Stevens");
-          cstmt.setString(4, "Translator upgrade");
-          cstmt.execute();           
-          cstmt.setInt(1, 22);
-          cstmt.setString(2, "OTHER");
-          cstmt.setString(3, "Smith");
-          cstmt.setString(4, "Automap");
-          cstmt.execute();
+            cstmt.setInt(1, 44);
+            cstmt.setString(2, "DGPII");
+            cstmt.setString(3, "Smith");
+            cstmt.setString(4, "Automap");
+            cstmt.execute();
+            cstmt.setInt(1, 44);
+            cstmt.setString(2, "VBASE");
+            cstmt.setString(3, "Jenner");
+            cstmt.setString(4, "Video Database");
+            cstmt.execute();
+            cstmt.setInt(1, 44);
+            cstmt.setString(2, "HWRII");
+            cstmt.setString(3, "Stevens");
+            cstmt.setString(4, "Translator upgrade");
+            cstmt.execute();
+            cstmt.setInt(1, 22);
+            cstmt.setString(2, "OTHER");
+            cstmt.setString(3, "Smith");
+            cstmt.setString(4, "Automap");
+            cstmt.execute();
         } finally {
-          cstmt.close();
+            cstmt.close();
         }
 
         cstmt = con.prepareCall(EXECUTE_PROCEDURE_EMP_INSERT_SPACES);
@@ -431,22 +360,22 @@ public class TestFBCallableStatement extends FBTestBase {
     public void testFatalError() throws Exception {
         PreparedStatement stmt = con.prepareStatement(EXECUTE_PROCEDURE_AS_STMT);
         try {
-          stmt.setInt(1, 5);
-          ResultSet rs = stmt.executeQuery();
-          assertTrue("Should have at least one row", rs.next());
-          int result = rs.getInt(2);
-          assertTrue("Wrong result: expecting 120, received " + result, result == 120);
+            stmt.setInt(1, 5);
+            ResultSet rs = stmt.executeQuery();
+            assertTrue("Should have at least one row", rs.next());
+            int result = rs.getInt(2);
+            assertTrue("Wrong result: expecting 120, received " + result, result == 120);
 
-          assertTrue("Should have exactly one row.", !rs.next());
-          rs.close();
+            assertTrue("Should have exactly one row.", !rs.next());
+            rs.close();
         } finally {
-          stmt.close();
+            stmt.close();
         }
     }
-	 
+
     public void testOutProcedure() throws Exception {
-        CallableStatement stmt = 
-            con.prepareCall(EXECUTE_SIMPLE_OUT_PROCEDURE);
+        CallableStatement stmt =
+                con.prepareCall(EXECUTE_SIMPLE_OUT_PROCEDURE);
         try {
             stmt.setInt(1, 1);
             stmt.registerOutParameter(2, Types.INTEGER);
@@ -455,12 +384,12 @@ public class TestFBCallableStatement extends FBTestBase {
         } finally {
             stmt.close();
         }
-        
+
     }
 
     public void testOutProcedure1() throws Exception {
-        CallableStatement stmt = 
-            con.prepareCall(EXECUTE_SIMPLE_OUT_PROCEDURE_1);
+        CallableStatement stmt =
+                con.prepareCall(EXECUTE_SIMPLE_OUT_PROCEDURE_1);
         try {
             stmt.registerOutParameter(1, Types.INTEGER);
             stmt.setInt(2, 1);
@@ -469,12 +398,12 @@ public class TestFBCallableStatement extends FBTestBase {
         } finally {
             stmt.close();
         }
-        
+
     }
-    
+
     public void testOutProcedureWithConst() throws Exception {
-        CallableStatement stmt = 
-            con.prepareCall(EXECUTE_SIMPLE_OUT_PROCEDURE_CONST);
+        CallableStatement stmt =
+                con.prepareCall(EXECUTE_SIMPLE_OUT_PROCEDURE_CONST);
         try {
             //stmt.setInt(1, 1);
             //stmt.registerOutParameter(2, Types.INTEGER);
@@ -483,12 +412,12 @@ public class TestFBCallableStatement extends FBTestBase {
         } finally {
             stmt.close();
         }
-        
+
     }
-    
+
     public void testOutProcedureWithConstWithQuestionMart() throws Exception {
-        CallableStatement stmt = 
-            con.prepareCall(EXECUTE_SIMPLE_OUT_PROCEDURE_CONST_WITH_QUESTION);
+        CallableStatement stmt =
+                con.prepareCall(EXECUTE_SIMPLE_OUT_PROCEDURE_CONST_WITH_QUESTION);
         try {
             //stmt.setInt(1, 1);
             //stmt.registerOutParameter(2, Types.INTEGER);
@@ -497,11 +426,11 @@ public class TestFBCallableStatement extends FBTestBase {
         } finally {
             stmt.close();
         }
-        
     }
+
     public void testInOutProcedure() throws Exception {
-        CallableStatement stmt = 
-            con.prepareCall(EXECUTE_IN_OUT_PROCEDURE);
+        CallableStatement stmt =
+                con.prepareCall(EXECUTE_IN_OUT_PROCEDURE);
         try {
             stmt.clearParameters();
             stmt.setInt(1, 1);
@@ -517,16 +446,16 @@ public class TestFBCallableStatement extends FBTestBase {
             stmt.close();
         }
     }
-    
+
     /**
-     * Test case that reproduces problem executing procedures without 
+     * Test case that reproduces problem executing procedures without
      * parameters. Bug found and reported by Stanislav Bernatsky.
-     * 
+     *
      * @throws Exception if something went wrong.
      */
     public void testProcedureWithoutParams() throws Exception {
-        CallableStatement stmt = 
-            con.prepareCall(EXECUTE_PROCEDURE_WITHOUT_PARAMS);
+        CallableStatement stmt =
+                con.prepareCall(EXECUTE_PROCEDURE_WITHOUT_PARAMS);
         try {
             stmt.execute();
         } finally {
@@ -535,14 +464,14 @@ public class TestFBCallableStatement extends FBTestBase {
     }
 
     /**
-     * Test case that reproduces problem executing procedures without 
+     * Test case that reproduces problem executing procedures without
      * parameters but with braces in call. Reported by Ben (vmdd_tech).
-     * 
+     *
      * @throws Exception if something went wrong.
      */
     public void testProcedureWithoutParams1() throws Exception {
-        CallableStatement stmt = 
-            con.prepareCall(EXECUTE_PROCEDURE_WITHOUT_PARAMS_1);
+        CallableStatement stmt =
+                con.prepareCall(EXECUTE_PROCEDURE_WITHOUT_PARAMS_1);
         try {
             stmt.execute();
         } finally {
@@ -551,22 +480,22 @@ public class TestFBCallableStatement extends FBTestBase {
     }
 
     /**
-     * Test case that reproduces problem executing procedures without 
+     * Test case that reproduces problem executing procedures without
      * parameters, with braces in call, but with space between procedure
      * name and braces. Reported by Ben (vmdd_tech).
-     * 
+     *
      * @throws Exception if something went wrong.
      */
     public void testProcedureWithoutParams2() throws Exception {
-        CallableStatement stmt = 
-            con.prepareCall(EXECUTE_PROCEDURE_WITHOUT_PARAMS_2);
+        CallableStatement stmt =
+                con.prepareCall(EXECUTE_PROCEDURE_WITHOUT_PARAMS_2);
         try {
             stmt.execute();
             // assertTrue("Should return correct value", stmt.getInt(1) == 1);
         } finally {
             stmt.close();
         }
-        
+
         // and now test EXECUTE PROCEDURE syntax
         stmt = con.prepareCall(EXECUTE_PROCEDURE_WITHOUT_PARAMS_3);
         try {
@@ -574,104 +503,103 @@ public class TestFBCallableStatement extends FBTestBase {
         } finally {
             stmt.close();
         }
-        
+
     }
-    
+
     public void testBatch() throws Exception {
         CallableStatement cstmt = con.prepareCall(EXECUTE_PROCEDURE_EMP_INSERT);
         try {
-          cstmt.setInt(1, 44);
-          cstmt.setString(2, "DGPII");
-          cstmt.setString(3, "Smith");
-          cstmt.setString(4, "Automap");
-          cstmt.addBatch();
-          cstmt.setInt(1, 44);
-          cstmt.setString(2, "VBASE");
-          cstmt.setString(3, "Jenner");
-          cstmt.setString(4, "Video Database");
-          cstmt.addBatch();
-          cstmt.setInt(1, 44);
-          cstmt.setString(2, "HWRII");
-          cstmt.setString(3, "Stevens");
-          cstmt.setString(4, "Translator upgrade");
-          cstmt.addBatch();
-          cstmt.setInt(1, 22);
-          cstmt.setString(2, "OTHER");
-          cstmt.setString(3, "Smith");
-          cstmt.setString(4, "Automap");
-          cstmt.addBatch();
-          
-          cstmt.executeBatch();
-         
-          Statement stmt = con.createStatement(
-              ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
-          
-          try {
-              ResultSet rs = stmt.executeQuery("SELECT * FROM employee_project");
-              rs.last();
-              assertEquals("Should find 4 records.", 4, rs.getRow());
+            cstmt.setInt(1, 44);
+            cstmt.setString(2, "DGPII");
+            cstmt.setString(3, "Smith");
+            cstmt.setString(4, "Automap");
+            cstmt.addBatch();
+            cstmt.setInt(1, 44);
+            cstmt.setString(2, "VBASE");
+            cstmt.setString(3, "Jenner");
+            cstmt.setString(4, "Video Database");
+            cstmt.addBatch();
+            cstmt.setInt(1, 44);
+            cstmt.setString(2, "HWRII");
+            cstmt.setString(3, "Stevens");
+            cstmt.setString(4, "Translator upgrade");
+            cstmt.addBatch();
+            cstmt.setInt(1, 22);
+            cstmt.setString(2, "OTHER");
+            cstmt.setString(3, "Smith");
+            cstmt.setString(4, "Automap");
+            cstmt.addBatch();
 
-              cstmt.setInt(1, 22);
-              cstmt.setString(2, "VBASE");
-              cstmt.setString(3, "Stevens");
-              cstmt.setString(4, "Translator upgrade");
-              cstmt.addBatch();
-              
-              cstmt.setInt(1, 22);
-              cstmt.setNull(2, Types.CHAR);
-              cstmt.setString(3, "Roman");
-              cstmt.setString(4, "Failure upgrade");
-              cstmt.addBatch();
-              
-              try {
-                  cstmt.executeBatch();
-                  fail("Should throw an error.");
-              } catch(SQLException ex) {
-                  // everything is ok
-              }
+            cstmt.executeBatch();
+
+            Statement stmt = con.createStatement(
+                    ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
+
+            try {
+                ResultSet rs = stmt.executeQuery("SELECT * FROM employee_project");
+                rs.last();
+                assertEquals("Should find 4 records.", 4, rs.getRow());
+
+                cstmt.setInt(1, 22);
+                cstmt.setString(2, "VBASE");
+                cstmt.setString(3, "Stevens");
+                cstmt.setString(4, "Translator upgrade");
+                cstmt.addBatch();
+
+                cstmt.setInt(1, 22);
+                cstmt.setNull(2, Types.CHAR);
+                cstmt.setString(3, "Roman");
+                cstmt.setString(4, "Failure upgrade");
+                cstmt.addBatch();
+
+                try {
+                    cstmt.executeBatch();
+                    fail("Should throw an error.");
+                } catch (SQLException ex) {
+                    // everything is ok
+                }
 
 
-              rs = stmt.executeQuery("SELECT * FROM employee_project");
-              rs.last();
-              assertEquals("Should find 4 records.", 4, rs.getRow());
+                rs = stmt.executeQuery("SELECT * FROM employee_project");
+                rs.last();
+                assertEquals("Should find 4 records.", 4, rs.getRow());
 
-          } finally {
-              stmt.close();
-          }
-          
+            } finally {
+                stmt.close();
+            }
+
         } finally {
-          cstmt.close();
+            cstmt.close();
         }
     }
-    
-    public void testBatchResultSet() throws Exception
-    {
+
+    public void testBatchResultSet() throws Exception {
         CallableStatement cstmt = con.prepareCall(EXECUTE_PROCEDURE_EMP_INSERT);
         try {
-          cstmt.setInt(1, 44);
-          cstmt.setString(2, "DGPII");
-          cstmt.setString(3, "Smith");
-          cstmt.setString(4, "Automap");
-          cstmt.execute();
-          cstmt.setInt(1, 44);
-          cstmt.setString(2, "VBASE");
-          cstmt.setString(3, "Jenner");
-          cstmt.setString(4, "Video Database");
-          cstmt.execute();
-          cstmt.setInt(1, 44);
-          cstmt.setString(2, "HWRII");
-          cstmt.setString(3, "Stevens");
-          cstmt.setString(4, "Translator upgrade");
-          cstmt.execute();			 
-          cstmt.setInt(1, 22);
-          cstmt.setString(2, "OTHER");
-          cstmt.setString(3, "Smith");
-          cstmt.setString(4, "Automap");
-          cstmt.execute();
+            cstmt.setInt(1, 44);
+            cstmt.setString(2, "DGPII");
+            cstmt.setString(3, "Smith");
+            cstmt.setString(4, "Automap");
+            cstmt.execute();
+            cstmt.setInt(1, 44);
+            cstmt.setString(2, "VBASE");
+            cstmt.setString(3, "Jenner");
+            cstmt.setString(4, "Video Database");
+            cstmt.execute();
+            cstmt.setInt(1, 44);
+            cstmt.setString(2, "HWRII");
+            cstmt.setString(3, "Stevens");
+            cstmt.setString(4, "Translator upgrade");
+            cstmt.execute();
+            cstmt.setInt(1, 22);
+            cstmt.setString(2, "OTHER");
+            cstmt.setString(3, "Smith");
+            cstmt.setString(4, "Automap");
+            cstmt.execute();
         } finally {
-          cstmt.close();
+            cstmt.close();
         }
-        
+
         cstmt = con.prepareCall(EXECUTE_PROCEDURE_EMP_SELECT);
         try {
             cstmt.setInt(1, 44);
@@ -680,26 +608,24 @@ public class TestFBCallableStatement extends FBTestBase {
             cstmt.addBatch();
             cstmt.executeBatch();
             fail("Result sets not allowed in batch execution.");
-        }
-        catch (BatchUpdateException e)
-        {
-        	
-        	//Do nothing.  Exception should be thrown.
-        
+        } catch (BatchUpdateException e) {
+
+            //Do nothing.  Exception should be thrown.
+
         } finally {
-          cstmt.close();
+            cstmt.close();
         }
-    	
+
     }
-    
+
     /**
      * Test Batch.  IN-OUT parameters are prohibited in batch execution.
-     * 
+     *
      * @throws Exception if something went wrong.
      */
     public void testBatchInOut() throws Exception {
-       CallableStatement stmt = 
-            con.prepareCall(EXECUTE_IN_OUT_PROCEDURE);
+        CallableStatement stmt =
+                con.prepareCall(EXECUTE_IN_OUT_PROCEDURE);
         try {
             stmt.clearParameters();
             stmt.setInt(1, 1);
@@ -711,21 +637,21 @@ public class TestFBCallableStatement extends FBTestBase {
             stmt.addBatch();
             stmt.executeBatch();
             fail("IN-OUT parameters not allowed in batch execution");
-        }
-        catch (BatchUpdateException e){}
-        finally {
+        } catch (BatchUpdateException e) {
+            //Expected exception
+        } finally {
             stmt.close();
         }
     }
 
     /**
      * Test Batch.  OUT parameters are prohibited in batch execution.
-     * 
+     *
      * @throws Exception if something went wrong.
      */
     public void testBatchOut() throws Exception {
-        CallableStatement stmt = 
-            con.prepareCall(EXECUTE_SIMPLE_OUT_PROCEDURE);
+        CallableStatement stmt =
+                con.prepareCall(EXECUTE_SIMPLE_OUT_PROCEDURE);
         try {
             stmt.setInt(1, 1);
             stmt.registerOutParameter(2, Types.INTEGER);
@@ -734,103 +660,98 @@ public class TestFBCallableStatement extends FBTestBase {
             stmt.setInt(1, 1);
             stmt.registerOutParameter(2, Types.INTEGER);
             stmt.addBatch();
-            
-            stmt.executeBatch();            
-            
+
+            stmt.executeBatch();
+
             fail("OUT parameters not allowed in batch execution");
-        }
-        catch (BatchUpdateException e){}
-        finally {
+        } catch (BatchUpdateException e) {
+            // Expected exception
+        } finally {
             stmt.close();
         }
     }
-    
-    
-    
+
     /**
      * Test automatic retrieval of the selectability of a procedure from the
      * RDB$PROCEDURE_TYPE field. This test is only run starting from Firebird 2.1.
-     * @throws SQLException 
+     * @throws SQLException
      */
-    public void testAutomaticSetSelectableProcedure() throws SQLException{
-    	if (!databaseEngineHasSelectabilityInfo()){
-    		return;
-    	}
-    	
-    	FirebirdCallableStatement cs = (FirebirdCallableStatement) con.prepareCall(CALL_SELECT_PROCEDURE);
-        try {
-	        	assertTrue(cs.isSelectableProcedure());
-        } finally {
-        	cs.close();
+    public void testAutomaticSetSelectableProcedure() throws SQLException {
+        if (!databaseEngineHasSelectabilityInfo()) {
+            return;
         }
-        
+
+        FirebirdCallableStatement cs = (FirebirdCallableStatement) con.prepareCall(CALL_SELECT_PROCEDURE);
+        try {
+            assertTrue(cs.isSelectableProcedure());
+        } finally {
+            cs.close();
+        }
+
         cs = (FirebirdCallableStatement) con.prepareCall(EXECUTE_PROCEDURE_EMP_INSERT);
         try {
-        	assertFalse(cs.isSelectableProcedure());
+            assertFalse(cs.isSelectableProcedure());
         } finally {
-        	cs.close();
+            cs.close();
         }
     }
-    
+
     public void testAutomaticSetSelectableProcedureAfterMetaUpdate() throws SQLException {
-    	if (!databaseEngineHasSelectabilityInfo()){
-    		return;
-    	}
-    	
-    	final String CREATE_SIMPLE_PROC = ""
-    		+ "CREATE PROCEDURE MULT (A INTEGER, B INTEGER) RETURNS (C INTEGER)"
-    		+ "AS BEGIN "
-    		+ "    C = A * B;"
-    		+ "    SUSPEND;"
-    		+ "END";
-    	
-    	final String DROP_SIMPLE_PROC = "DROP PROCEDURE MULT";
-    	
-    	con.setAutoCommit(false);
-    	CallableStatement callableStatement = con.prepareCall(CALL_SELECT_PROCEDURE);
-    	callableStatement.close();
-    	
-    	Statement stmt = con.createStatement();
-    	
-    	stmt.execute(CREATE_SIMPLE_PROC);
-    	con.commit();
-    	
-    	try {
-	    	FirebirdCallableStatement cs = (FirebirdCallableStatement) con.prepareCall("{call mult(?, ?)}");
-	    	try {
-	    		assertTrue(cs.isSelectableProcedure());
-	    	} finally {
-	    		cs.close();
-	    	}
-    	} finally {
-    		stmt.execute(DROP_SIMPLE_PROC);
-    		stmt.close();
-    	}
+        if (!databaseEngineHasSelectabilityInfo()) {
+            return;
+        }
+
+        final String CREATE_SIMPLE_PROC =
+            "CREATE PROCEDURE MULT (A INTEGER, B INTEGER) RETURNS (C INTEGER)"
+            + "AS BEGIN "
+            + "    C = A * B;"
+            + "    SUSPEND;"
+            + "END";
+
+        con.setAutoCommit(false);
+        CallableStatement callableStatement = con.prepareCall(CALL_SELECT_PROCEDURE);
+        callableStatement.close();
+
+        Statement stmt = con.createStatement();
+
+        stmt.execute(CREATE_SIMPLE_PROC);
+        con.commit();
+
+        try {
+            FirebirdCallableStatement cs = (FirebirdCallableStatement) con.prepareCall("{call mult(?, ?)}");
+            try {
+                assertTrue(cs.isSelectableProcedure());
+            } finally {
+                cs.close();
+            }
+        } finally {
+            stmt.close();
+        }
     }
-    
+
     private boolean databaseEngineHasSelectabilityInfo() throws SQLException {
-    	DatabaseMetaData metaData = con.getMetaData();
-    	int majorVersion = metaData.getDatabaseMajorVersion();
-    	int minorVersion = metaData.getDatabaseMinorVersion();
-    	
-    	if (majorVersion > 2){
-    		return true;
-    	}
-    	if (majorVersion == 2 && minorVersion >= 1){
-    		return true;
-    	}
-    	return false;
+        DatabaseMetaData metaData = con.getMetaData();
+        int majorVersion = metaData.getDatabaseMajorVersion();
+        int minorVersion = metaData.getDatabaseMinorVersion();
+
+        if (majorVersion > 2) {
+            return true;
+        }
+        if (majorVersion == 2 && minorVersion >= 1) {
+            return true;
+        }
+        return false;
     }
-    
+
     public void testJdbc181() throws Exception {
         PreparedStatement ps = con.prepareCall("{call factorial(?, ?)}"); //con.prepareStatement("EXECUTE PROCEDURE factorial(?, ?)");
         try {
             ps.setInt(1, 5);
             ps.setInt(2, 1);
             ResultSet rs = ps.executeQuery();
-            int counter = 0; 
+            int counter = 0;
             int factorial = 1;
-            while(rs.next()) {
+            while (rs.next()) {
                 assertEquals(counter, rs.getInt(1));
                 assertEquals(factorial, rs.getInt(2));
                 counter++;
@@ -841,10 +762,10 @@ public class TestFBCallableStatement extends FBTestBase {
             closeQuietly(ps);
         }
     }
-    
+
     /**
      * Closing a statement twice should not result in an Exception.
-     * 
+     *
      * @throws SQLException
      */
     public void testDoubleClose() throws SQLException {
@@ -856,25 +777,25 @@ public class TestFBCallableStatement extends FBTestBase {
             closeQuietly(stmt);
         }
     }
-    
+
     /**
      * Test if an implicit close (by fully reading the resultset) while closeOnCompletion is true, will close
      * the statement.
      * <p>
      * JDBC 4.1 feature
      * </p>
-     * 
+     *
      * @throws SQLException
      */
     public void testCloseOnCompletion_StatementClosed_afterImplicitResultSetClose() throws SQLException {
-        FBCallableStatement stmt = (FBCallableStatement)con.prepareCall("{call factorial(?, ?)}");
+        FBCallableStatement stmt = (FBCallableStatement) con.prepareCall("{call factorial(?, ?)}");
         try {
             stmt.closeOnCompletion();
             stmt.setInt(1, 5);
             stmt.setInt(2, 1);
             stmt.execute();
             // Cast so it also works under JDBC 3.0
-            FBResultSet rs = (FBResultSet)stmt.getResultSet();
+            FBResultSet rs = (FBResultSet) stmt.getResultSet();
             int count = 0;
             while (rs.next()) {
                 assertEquals(count, rs.getInt(1));
@@ -886,6 +807,45 @@ public class TestFBCallableStatement extends FBTestBase {
             stmt.close();
         }
     }
-    
+
     // Other closeOnCompletion behavior considered to be sufficiently tested in TestFBStatement
+
+    public void testExecuteSelectableProcedureNoParameters_call_noBraces() throws Exception {
+        CallableStatement cs = con.prepareCall(EXECUTE_PROCEDURE_SELECT_WITHOUT_PARAMS);
+        try {
+            assertTrue("Expected ResultSet", cs.execute());
+            ResultSet rs = cs.getResultSet();
+            assertNotNull("Expected ResultSet", rs);
+            assertTrue("Expected at least one row", rs.next());
+            assertEquals("abc", rs.getString("proj_id"));
+        } finally {
+            cs.close();
+        }
+    }
+
+    public void testExecuteSelectableProcedureNoParameters_call_emptyBraces() throws Exception {
+        CallableStatement cs = con.prepareCall(EXECUTE_PROCEDURE_SELECT_WITHOUT_PARAMS_1);
+        try {
+            assertTrue("Expected ResultSet", cs.execute());
+            ResultSet rs = cs.getResultSet();
+            assertNotNull("Expected ResultSet", rs);
+            assertTrue("Expected at least one row", rs.next());
+            assertEquals("abc", rs.getString("proj_id"));
+        } finally {
+            cs.close();
+        }
+    }
+
+    public void testExecuteSelectableProcedureNoParameters_call_emptyBraces_withWhitespace() throws Exception {
+        CallableStatement cs = con.prepareCall(EXECUTE_PROCEDURE_SELECT_WITHOUT_PARAMS_2);
+        try {
+            assertTrue("Expected ResultSet", cs.execute());
+            ResultSet rs = cs.getResultSet();
+            assertNotNull("Expected ResultSet", rs);
+            assertTrue("Expected at least one row", rs.next());
+            assertEquals("abc", rs.getString("proj_id"));
+        } finally {
+            cs.close();
+        }
+    }
 }
