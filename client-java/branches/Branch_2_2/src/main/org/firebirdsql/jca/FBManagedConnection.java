@@ -920,8 +920,8 @@ public class FBManagedConnection implements ManagedConnection, XAResource, GDSHe
         return XA_OK;
     }
 
-    private static final String RECOVERY_QUERY = ""
-            + "SELECT RDB$TRANSACTION_ID, RDB$TRANSACTION_DESCRIPTION "
+    private static final String RECOVERY_QUERY =
+            "SELECT RDB$TRANSACTION_ID, RDB$TRANSACTION_DESCRIPTION "
             + "FROM RDB$TRANSACTIONS";
 
     /**
@@ -1011,6 +1011,76 @@ public class FBManagedConnection implements ManagedConnection, XAResource, GDSHe
         } catch (ResourceException re) {
             throw new FBXAException("can't perform query to fetch xids", XAException.XAER_RMFAIL, re);
         } 
+    }
+
+    private static final String RECOVERY_QUERY_PARAMETRIZED =
+            "SELECT RDB$TRANSACTION_ID, RDB$TRANSACTION_DESCRIPTION "
+            + "FROM RDB$TRANSACTIONS "
+            + "WHERE RDB$TRANSACTION_DESCRIPTION = CAST(? AS VARCHAR(32764) CHARACTER SET OCTETS)";
+
+    /**
+     * Obtain a single prepared transaction branch from a resource manager, based on a Xid
+     *
+     * @param externalXid
+     *            The Xid to find
+     * @return The Xid if found, otherwise null.
+     * @throws XAException
+     *             An error has occurred. Possible values are XAER_RMERR,
+     *             XAER_RMFAIL, XAER_INVAL, and XAER_PROTO.
+     */
+    protected Xid findSingleXid(Xid externalXid) throws javax.transaction.xa.XAException {
+        try {
+            AbstractIscTrHandle trHandle2 = (AbstractIscTrHandle)gds.createIscTrHandle();
+            gds.iscStartTransaction(trHandle2, getGDSHelper().getCurrentDbHandle(), tpb.getTransactionParameterBuffer());
+
+            AbstractIscStmtHandle stmtHandle2 = (AbstractIscStmtHandle)gds.createIscStmtHandle();
+            gds.iscDsqlAllocateStatement(getGDSHelper().getCurrentDbHandle(), stmtHandle2);
+
+            GDSHelper gdsHelper2 = new GDSHelper(gds, getGDSHelper().getDatabaseParameterBuffer(), getGDSHelper().getCurrentDbHandle(), null);
+            gdsHelper2.setCurrentTrHandle(trHandle2);
+
+            gdsHelper2.prepareStatement(stmtHandle2, RECOVERY_QUERY_PARAMETRIZED, true);
+            FBXid tempXid = new FBXid(externalXid);
+            stmtHandle2.getInSqlda().sqlvar[0].sqldata = tempXid.toBytes();
+            gdsHelper2.executeStatement(stmtHandle2, false);
+            gdsHelper2.fetch(stmtHandle2, 1);
+
+            DataProvider dataProvider0 = new DataProvider(stmtHandle2, 0);
+            DataProvider dataProvider1 = new DataProvider(stmtHandle2, 1);
+
+            FBField field0 = FBField.createField(stmtHandle2.getOutSqlda().sqlvar[0], dataProvider0, gdsHelper2, false);
+            FBField field1 = FBField.createField(stmtHandle2.getOutSqlda().sqlvar[1], dataProvider1, gdsHelper2, false);
+
+            field0.setConnection(gdsHelper2);
+            field1.setConnection(gdsHelper2);
+
+            FBXid xid = null;
+            if (stmtHandle2.getRows().length > 0) {
+                dataProvider0.setRow(0);
+                dataProvider1.setRow(0);
+
+                long inLimboTxId = field0.getLong();
+                byte[] inLimboMessage = field1.getBytes();
+
+                try {
+                    xid = new FBXid(new ByteArrayInputStream(inLimboMessage), inLimboTxId);
+                } catch(FBIncorrectXidException ex) {
+                    if (log != null)
+                        log.warn("ignoring XID stored with invalid format in RDB$TRANSACTIONS for RDB$TRANSACTION_ID=" + inLimboTxId);
+                }
+            }
+
+            gdsHelper2.closeStatement(stmtHandle2, true);
+            gds.iscCommitTransaction(trHandle2);
+
+            return xid;
+        } catch(GDSException ex) {
+            throw new FBXAException("can't perform query to fetch xids", XAException.XAER_RMFAIL, ex);
+        } catch (SQLException sqle) {
+            throw new FBXAException("can't perform query to fetch xids", XAException.XAER_RMFAIL, sqle);
+        } catch (ResourceException re) {
+            throw new FBXAException("can't perform query to fetch xids", XAException.XAER_RMFAIL, re);
+        }
     }
 
     private static class DataProvider implements FieldDataProvider {

@@ -704,11 +704,21 @@ public class FBManagedConnectionFactory implements ManagedConnectionFactory,
                 long fbTransactionId = 0;
                 boolean found = false;
 
-                FBXid[] inLimboIds = (FBXid[]) tempMc.recover(XAResource.TMSTARTRSCAN);
-                for (int i = 0; i < inLimboIds.length; i++) {
-                    if (inLimboIds[i].equals(xid)) {
+                if (tempMc.getGDSHelper().compareToVersion(2, 0) < 0) {
+                    // Find Xid by scanning
+                    FBXid[] inLimboIds = (FBXid[]) tempMc.recover(XAResource.TMSTARTRSCAN);
+                    for (int i = 0; i < inLimboIds.length; i++) {
+                        if (inLimboIds[i].equals(xid)) {
+                            found = true;
+                            fbTransactionId = inLimboIds[i].getFirebirdTransactionId();
+                        }
+                    }
+                } else {
+                    // Find Xid by intelligent scan
+                    FBXid foundXid = (FBXid) tempMc.findSingleXid(xid);
+                    if (foundXid != null && foundXid.equals(xid)) {
                         found = true;
-                        fbTransactionId = inLimboIds[i].getFirebirdTransactionId();
+                        fbTransactionId = foundXid.getFirebirdTransactionId();
                     }
                 }
 
@@ -728,31 +738,27 @@ public class FBManagedConnectionFactory implements ManagedConnectionFactory,
                     gds.iscCommitTransaction(trHandle);
                 else
                     gds.iscRollbackTransaction(trHandle);
-                
-                // remove heuristic data from rdb$transactions
-                try {
-                    String query = "delete from rdb$transactions where rdb$transaction_id = " + fbTransactionId;
-                    GDSHelper gdsHelper = new GDSHelper(gds, getDatabaseParameterBuffer(), dbHandle, null);
 
-                    AbstractIscTrHandle trHandle2 = (AbstractIscTrHandle)gds.createIscTrHandle();
-                    gds.iscStartTransaction(trHandle2, gdsHelper.getCurrentDbHandle(), getDefaultTpb().getTransactionParameterBuffer());
+                if (tempMc.getGDSHelper().compareToVersion(3, 0) < 0) {
+                    // remove heuristic data from rdb$transactions (only possible in versions before Firebird 3)
+                    try {
+                        String query = "delete from rdb$transactions where rdb$transaction_id = " + fbTransactionId;
+                        GDSHelper gdsHelper = new GDSHelper(gds, getDatabaseParameterBuffer(), dbHandle, null);
 
-                    AbstractIscStmtHandle stmtHandle2 = (AbstractIscStmtHandle)gds.createIscStmtHandle();
-                    gds.iscDsqlAllocateStatement(gdsHelper.getCurrentDbHandle(), stmtHandle2);
+                        AbstractIscTrHandle trHandle2 = (AbstractIscTrHandle) gds.createIscTrHandle();
+                        gds.iscStartTransaction(trHandle2, gdsHelper.getCurrentDbHandle(), getDefaultTpb().getTransactionParameterBuffer());
 
-                    stmtHandle2 = (AbstractIscStmtHandle)gds.createIscStmtHandle();
-                    gds.iscDsqlAllocateStatement(gdsHelper.getCurrentDbHandle(), stmtHandle2);
-                    
-                    GDSHelper gdsHelper2 = new GDSHelper(gds, gdsHelper.getDatabaseParameterBuffer(), gdsHelper.getCurrentDbHandle(), null);
-                    gdsHelper2.setCurrentTrHandle(trHandle2);
+                        AbstractIscStmtHandle stmtHandle2 = (AbstractIscStmtHandle) gds.createIscStmtHandle();
+                        gds.iscDsqlAllocateStatement(gdsHelper.getCurrentDbHandle(), stmtHandle2);
 
-                    gdsHelper2.prepareStatement(stmtHandle2, query, false);
-                    gdsHelper2.executeStatement(stmtHandle2, false);
+                        gdsHelper.prepareStatement(stmtHandle2, query, false);
+                        gdsHelper.executeStatement(stmtHandle2, false);
 
-                    gdsHelper2.closeStatement(stmtHandle2, true);
-                    gds.iscCommitTransaction(trHandle2);
-                } catch (SQLException sqle) {
-                    throw new FBXAException("unable to remove in limbo transaction from rdb$transactions where rdb$transaction_id = " + fbTransactionId, XAException.XAER_RMERR);
+                        gdsHelper.closeStatement(stmtHandle2, true);
+                        gds.iscCommitTransaction(trHandle2);
+                    } catch (SQLException sqle) {
+                        throw new FBXAException("unable to remove in limbo transaction from rdb$transactions where rdb$transaction_id = " + fbTransactionId, XAException.XAER_RMERR);
+                    }
                 }
 
             } catch (GDSException ex) {
