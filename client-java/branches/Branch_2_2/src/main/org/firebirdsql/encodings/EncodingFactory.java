@@ -18,13 +18,20 @@
  */
 package org.firebirdsql.encodings;
 
+import org.firebirdsql.logging.Logger;
+import org.firebirdsql.logging.LoggerFactory;
+
 import java.io.*;
 import java.nio.charset.Charset;
+import java.nio.charset.IllegalCharsetNameException;
+import java.nio.charset.UnsupportedCharsetException;
 import java.sql.SQLException;
 import java.util.*;
 import java.util.Map.Entry;
 
 public class EncodingFactory {
+
+    private static final Logger logger = LoggerFactory.getLogger(EncodingFactory.class, false);
    
     private static final int[][] CHARSET_MAXIMUM_SIZE = new int[][] {
         { 0, 1}   // NONE
@@ -442,18 +449,26 @@ public class EncodingFactory {
             // it is safe to return UTF8 for all cases
             if ("UNICODE_FSS".equals(iscEncoding))
                 continue;
-            
-            Charset javaCharset = Charset.forName(javaEncoding);
-            // TODO: Remove iscEncoding if javaCharset is null?
-            // TODO: Replace mapping for iscEncoding to javaEncoding with canonical name?
-            
-            String canonicalNameLowerCase = javaCharset.name().toLowerCase();
-            javaEncodings.put(canonicalNameLowerCase, iscEncoding);
-            javaAliases.put(canonicalNameLowerCase, javaEncoding);
-            for (String alias : javaCharset.aliases()) {
-                String lowerCaseAlias = alias.toLowerCase();
-                javaEncodings.put(lowerCaseAlias, iscEncoding);
-                javaAliases.put(lowerCaseAlias, javaEncoding);
+
+            try {
+                Charset javaCharset = Charset.forName(javaEncoding);
+                // TODO: Remove iscEncoding if javaCharset is null?
+                // TODO: Replace mapping for iscEncoding to javaEncoding with canonical name?
+
+                String canonicalNameLowerCase = javaCharset.name().toLowerCase();
+                javaEncodings.put(canonicalNameLowerCase, iscEncoding);
+                javaAliases.put(canonicalNameLowerCase, javaEncoding);
+                for (String alias : javaCharset.aliases()) {
+                    String lowerCaseAlias = alias.toLowerCase();
+                    javaEncodings.put(lowerCaseAlias, iscEncoding);
+                    javaAliases.put(lowerCaseAlias, javaEncoding);
+                }
+            } catch (IllegalCharsetNameException e) {
+                if (logger != null ) logger.warn(String.format("javaName=\"%s\" specified for encoding \"%s\" is an illegal character set name, skipping encoding",
+                        javaEncoding, iscEncoding), e);
+            } catch (UnsupportedCharsetException e) {
+                if (logger != null ) logger.warn(String.format("javaName=\"%s\" specified for encoding \"%s\" is not supported by the jvm, skipping encoding",
+                        javaEncoding, iscEncoding));
             }
         }
 
