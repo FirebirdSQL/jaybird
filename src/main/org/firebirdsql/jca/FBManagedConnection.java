@@ -201,7 +201,7 @@ public class FBManagedConnection implements ManagedConnection, XAResource, Excep
      * Get instance of {@link GDSHelper} connected with this managed connection.
      * 
      * @return instance of {@link GDSHelper}.
-     * @throws GDSException If this connection has no GDSHelper
+     * @throws SQLException If this connection has no GDSHelper
      */
     public GDSHelper getGDSHelper() throws SQLException {
         if (gdsHelper == null)
@@ -918,8 +918,8 @@ public class FBManagedConnection implements ManagedConnection, XAResource, Excep
         return XA_OK;
     }
 
-    private static final String RECOVERY_QUERY = ""
-            + "SELECT RDB$TRANSACTION_ID, RDB$TRANSACTION_DESCRIPTION "
+    private static final String RECOVERY_QUERY =
+            "SELECT RDB$TRANSACTION_ID, RDB$TRANSACTION_DESCRIPTION "
             + "FROM RDB$TRANSACTIONS";
 
     /**
@@ -927,7 +927,7 @@ public class FBManagedConnection implements ManagedConnection, XAResource, Excep
      * The transaction manager calls this method during recovery to obtain the
      * list of transaction branches that are currently in prepared or
      * heuristically completed states.
-     * 
+     *
      * @param flags
      *            One of TMSTARTRSCAN, TMENDRSCAN, TMNOFLAGS. TMNOFLAGS must be
      *            used when no other flags are set in flags.
@@ -943,12 +943,12 @@ public class FBManagedConnection implements ManagedConnection, XAResource, Excep
     public Xid[] recover(int flags) throws javax.transaction.xa.XAException {
         if (flags != XAResource.TMSTARTRSCAN && flags != XAResource.TMENDRSCAN && flags != XAResource.TMNOFLAGS && flags != (XAResource.TMSTARTRSCAN|XAResource.TMENDRSCAN))
             throw new FBXAException("flag not allowed in this context: " + flags + ", valid flags are TMSTARTRSCAN, TMENDRSCAN, TMNOFLAGS, TMSTARTRSCAN|TMENDRSCAN", XAException.XAER_PROTO);
-        
+
         try {
             // if (!((flags & XAResource.TMSTARTRSCAN) == 0))
 //            if ((flags & XAResource.TMENDRSCAN) == 0 && (flags & XAResource.TMNOFLAGS) == 0)
 //                return new Xid[0];
-            
+
             List<FBXid> xids = new ArrayList<FBXid>();
 
             FbTransaction trHandle2 = database.startTransaction(tpb.getTransactionParameterBuffer());
@@ -975,10 +975,10 @@ public class FBManagedConnection implements ManagedConnection, XAResource, Excep
             while(row < dataProvider0.getRowCount()) {
                 dataProvider0.setRow(row);
                 dataProvider1.setRow(row);
-                
+
                 long inLimboTxId = field0.getLong();
                 byte[] inLimboMessage = field1.getBytes();
-            
+
                 try {
                     FBXid xid = new FBXid(new ByteArrayInputStream(inLimboMessage), inLimboTxId);
                     xids.add(xid);
@@ -986,7 +986,7 @@ public class FBManagedConnection implements ManagedConnection, XAResource, Excep
                     if (log != null)
                         log.warn("ignoring XID stored with invalid format in RDB$TRANSACTIONS for RDB$TRANSACTION_ID=" + inLimboTxId);
                 }
-    
+
                 row++;
             }
 
@@ -998,7 +998,74 @@ public class FBManagedConnection implements ManagedConnection, XAResource, Excep
             throw new FBXAException("can't perform query to fetch xids", XAException.XAER_RMFAIL, sqle);
         } catch (ResourceException re) {
             throw new FBXAException("can't perform query to fetch xids", XAException.XAER_RMFAIL, re);
-        } 
+        }
+    }
+
+    private static final String RECOVERY_QUERY_PARAMETRIZED =
+            "SELECT RDB$TRANSACTION_ID, RDB$TRANSACTION_DESCRIPTION "
+                    + "FROM RDB$TRANSACTIONS "
+                    + "WHERE RDB$TRANSACTION_DESCRIPTION = CAST(? AS VARCHAR(32764) CHARACTER SET OCTETS)";
+
+    /**
+     * Obtain a single prepared transaction branch from a resource manager, based on a Xid
+     *
+     * @param externalXid
+     *            The Xid to find
+     * @return The Xid if found, otherwise null.
+     * @throws XAException
+     *             An error has occurred. Possible values are XAER_RMERR,
+     *             XAER_RMFAIL, XAER_INVAL, and XAER_PROTO.
+     */
+    protected Xid findSingleXid(Xid externalXid) throws javax.transaction.xa.XAException {
+        try {
+            FbTransaction trHandle2 = database.startTransaction(tpb.getTransactionParameterBuffer());
+
+            FbStatement stmtHandle2 = database.createStatement(trHandle2);
+
+            GDSHelper gdsHelper2 = new GDSHelper(gds, getGDSHelper().getDatabaseParameterBuffer(), null, null, database);
+            gdsHelper2.setCurrentTransaction(trHandle2);
+
+            stmtHandle2.prepare(RECOVERY_QUERY_PARAMETRIZED);
+
+            DataProvider dataProvider0 = new DataProvider(0);
+            stmtHandle2.addStatementListener(dataProvider0);
+            DataProvider dataProvider1 = new DataProvider(1);
+            stmtHandle2.addStatementListener(dataProvider1);
+
+            final RowValue parameters = stmtHandle2.getParameterDescriptor().createDefaultFieldValues();
+            FBXid tempXid = new FBXid(externalXid);
+            parameters.getFieldValue(0).setFieldData(tempXid.toBytes());
+            stmtHandle2.execute(parameters);
+            stmtHandle2.fetchRows(1);
+
+            FBField field0 = FBField.createField(stmtHandle2.getFieldDescriptor().getFieldDescriptor(0), dataProvider0, gdsHelper2, false);
+            FBField field1 = FBField.createField(stmtHandle2.getFieldDescriptor().getFieldDescriptor(1), dataProvider1, gdsHelper2, false);
+
+            FBXid xid = null;
+            if (dataProvider0.getRowCount() > 0) {
+                dataProvider0.setRow(0);
+                dataProvider1.setRow(0);
+
+                long inLimboTxId = field0.getLong();
+                byte[] inLimboMessage = field1.getBytes();
+
+                try {
+                    xid = new FBXid(new ByteArrayInputStream(inLimboMessage), inLimboTxId);
+                } catch(FBIncorrectXidException ex) {
+                    if (log != null)
+                        log.warn("ignoring XID stored with invalid format in RDB$TRANSACTIONS for RDB$TRANSACTION_ID=" + inLimboTxId);
+                }
+            }
+
+            stmtHandle2.close();
+            trHandle2.commit();
+
+            return xid;
+        } catch (SQLException sqle) {
+            throw new FBXAException("can't perform query to fetch xids", XAException.XAER_RMFAIL, sqle);
+        } catch (ResourceException re) {
+            throw new FBXAException("can't perform query to fetch xids", XAException.XAER_RMFAIL, re);
+        }
     }
 
     private static class DataProvider extends DefaultStatementListener implements FieldDataProvider {
