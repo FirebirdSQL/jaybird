@@ -27,6 +27,8 @@ import org.junit.rules.ExpectedException;
 
 import java.sql.*;
 
+import static org.firebirdsql.common.DdlHelper.executeCreateTable;
+import static org.firebirdsql.common.DdlHelper.executeDDL;
 import static org.firebirdsql.common.FBTestProperties.getConnectionViaDriverManager;
 import static org.firebirdsql.common.JdbcResourceHelper.closeQuietly;
 import static org.firebirdsql.common.matchers.SQLExceptionMatchers.*;
@@ -41,6 +43,7 @@ import static org.junit.Assume.assumeTrue;
  * @version 1.0
  */
 public class TestFBCallableStatement extends FBJUnit4TestBase {
+    //@formatter:off
     public static final String CREATE_PROCEDURE =
             "CREATE PROCEDURE factorial( "
             + "  max_rows INTEGER, "
@@ -120,19 +123,32 @@ public class TestFBCallableStatement extends FBJUnit4TestBase {
     public static final String EXECUTE_SIMPLE_OUT_PROCEDURE = "{call test_out ?, ? }";
     public static final String EXECUTE_SIMPLE_OUT_PROCEDURE_1 = "{?=CALL test_out(?)}";
     public static final String EXECUTE_IN_OUT_PROCEDURE = "{call test_out ?}";
+    public static final String EXECUTE_SIMPLE_OUT_PROCEDURE_CONST = "EXECUTE PROCEDURE test_out 'test'";
+    public static final String EXECUTE_SIMPLE_OUT_PROCEDURE_CONST_WITH_QUESTION = "EXECUTE PROCEDURE test_out 'test?'";
 
     public static final String CREATE_PROCEDURE_WITHOUT_PARAMS =
             "CREATE PROCEDURE test_no_params "
             + "AS BEGIN "
-            + "    exit; "
+            + "    exit;"
             + "END";
 
     public static final String EXECUTE_PROCEDURE_WITHOUT_PARAMS = "{call test_no_params}";
     public static final String EXECUTE_PROCEDURE_WITHOUT_PARAMS_1 = "{call test_no_params()}";
     public static final String EXECUTE_PROCEDURE_WITHOUT_PARAMS_2 = "{call test_no_params () }";
     public static final String EXECUTE_PROCEDURE_WITHOUT_PARAMS_3 = "EXECUTE PROCEDURE test_no_params ()";
-    public static final String EXECUTE_SIMPLE_OUT_PROCEDURE_CONST = "EXECUTE PROCEDURE test_out 'test'";
-    public static final String EXECUTE_SIMPLE_OUT_PROCEDURE_CONST_WITH_QUESTION = "EXECUTE PROCEDURE test_out 'test?'";
+
+    public static final String CREATE_PROCEDURE_SELECT_WITHOUT_PARAMS =
+            "CREATE PROCEDURE select_no_params "
+            + " RETURNS (proj_id VARCHAR(25)) "
+            + "AS BEGIN "
+            + "    proj_id = 'abc'; "
+            + "    SUSPEND;"
+            + "END";
+
+    public static final String EXECUTE_PROCEDURE_SELECT_WITHOUT_PARAMS = "{call select_no_params}";
+    public static final String EXECUTE_PROCEDURE_SELECT_WITHOUT_PARAMS_1 = "{call select_no_params()}";
+    public static final String EXECUTE_PROCEDURE_SELECT_WITHOUT_PARAMS_2 = "{call select_no_params () }";
+    //@formatter:on
 
     private Connection con;
 
@@ -142,17 +158,6 @@ public class TestFBCallableStatement extends FBJUnit4TestBase {
     @Before
     public void setUp() throws Exception {
         con = getConnectionViaDriverManager();
-        Statement stmt = con.createStatement();
-        try {
-            stmt.executeUpdate(CREATE_PROCEDURE);
-            stmt.executeUpdate(CREATE_EMPLOYEE_PROJECT);
-            stmt.executeUpdate(CREATE_PROCEDURE_EMP_SELECT);
-            stmt.executeUpdate(CREATE_PROCEDURE_EMP_INSERT);
-            stmt.executeUpdate(CREATE_SIMPLE_OUT_PROC);
-            stmt.executeUpdate(CREATE_PROCEDURE_WITHOUT_PARAMS);
-        } finally {
-            closeQuietly(stmt);
-        }
     }
 
     @After
@@ -162,6 +167,8 @@ public class TestFBCallableStatement extends FBJUnit4TestBase {
 
     @Test
     public void testRun() throws Exception {
+        executeDDL(con, CREATE_PROCEDURE);
+
         CallableStatement cstmt = con.prepareCall(EXECUTE_PROCEDURE);
         try {
             cstmt.registerOutParameter(3, Types.INTEGER);
@@ -217,9 +224,10 @@ public class TestFBCallableStatement extends FBJUnit4TestBase {
 
     @Test
     public void testRun_emp_cs() throws Exception {
-        //
-        // Insert and select with callable statement
-        // 		 
+        executeCreateTable(con, CREATE_EMPLOYEE_PROJECT);
+        executeDDL(con, CREATE_PROCEDURE_EMP_INSERT);
+        executeDDL(con, CREATE_PROCEDURE_EMP_SELECT);
+
         CallableStatement cstmt = con.prepareCall(EXECUTE_PROCEDURE_EMP_INSERT);
         try {
             cstmt.setInt(1, 44);
@@ -348,6 +356,8 @@ public class TestFBCallableStatement extends FBJUnit4TestBase {
 
     @Test
     public void testFatalError() throws Exception {
+        executeDDL(con, CREATE_PROCEDURE);
+
         PreparedStatement stmt = con.prepareStatement(EXECUTE_PROCEDURE_AS_STMT);
         try {
             stmt.setInt(1, 5);
@@ -365,6 +375,8 @@ public class TestFBCallableStatement extends FBJUnit4TestBase {
 
     @Test
     public void testOutProcedure() throws Exception {
+        executeDDL(con, CREATE_SIMPLE_OUT_PROC);
+
         CallableStatement stmt = con.prepareCall(EXECUTE_SIMPLE_OUT_PROCEDURE);
         try {
             stmt.setInt(1, 1);
@@ -378,6 +390,8 @@ public class TestFBCallableStatement extends FBJUnit4TestBase {
 
     @Test
     public void testOutProcedure1() throws Exception {
+        executeDDL(con, CREATE_SIMPLE_OUT_PROC);
+
         CallableStatement stmt = con.prepareCall(EXECUTE_SIMPLE_OUT_PROCEDURE_1);
         try {
             stmt.registerOutParameter(1, Types.INTEGER);
@@ -391,6 +405,8 @@ public class TestFBCallableStatement extends FBJUnit4TestBase {
 
     @Test
     public void testOutProcedureWithConst() throws Exception {
+        executeDDL(con, CREATE_SIMPLE_OUT_PROC);
+
         CallableStatement stmt = con.prepareCall(EXECUTE_SIMPLE_OUT_PROCEDURE_CONST);
         try {
             stmt.execute();
@@ -402,6 +418,8 @@ public class TestFBCallableStatement extends FBJUnit4TestBase {
 
     @Test
     public void testOutProcedureWithConstWithQuestionMark() throws Exception {
+        executeDDL(con, CREATE_SIMPLE_OUT_PROC);
+
         CallableStatement stmt = con.prepareCall(EXECUTE_SIMPLE_OUT_PROCEDURE_CONST_WITH_QUESTION);
         try {
             stmt.execute();
@@ -413,6 +431,8 @@ public class TestFBCallableStatement extends FBJUnit4TestBase {
 
     @Test
     public void testInOutProcedure() throws Exception {
+        executeDDL(con, CREATE_SIMPLE_OUT_PROC);
+
         CallableStatement stmt = con.prepareCall(EXECUTE_IN_OUT_PROCEDURE);
         try {
             stmt.clearParameters();
@@ -437,6 +457,8 @@ public class TestFBCallableStatement extends FBJUnit4TestBase {
      */
     @Test
     public void testProcedureWithoutParams() throws Exception {
+        executeDDL(con, CREATE_PROCEDURE_WITHOUT_PARAMS);
+
         CallableStatement stmt = con.prepareCall(EXECUTE_PROCEDURE_WITHOUT_PARAMS);
         try {
             stmt.execute();
@@ -451,6 +473,8 @@ public class TestFBCallableStatement extends FBJUnit4TestBase {
      */
     @Test
     public void testProcedureWithoutParams1() throws Exception {
+        executeDDL(con, CREATE_PROCEDURE_WITHOUT_PARAMS);
+
         CallableStatement stmt = con.prepareCall(EXECUTE_PROCEDURE_WITHOUT_PARAMS_1);
         try {
             stmt.execute();
@@ -466,6 +490,8 @@ public class TestFBCallableStatement extends FBJUnit4TestBase {
      */
     @Test
     public void testProcedureWithoutParams2() throws Exception {
+        executeDDL(con, CREATE_PROCEDURE_WITHOUT_PARAMS);
+
         CallableStatement stmt = con.prepareCall(EXECUTE_PROCEDURE_WITHOUT_PARAMS_2);
         try {
             stmt.execute();
@@ -485,6 +511,9 @@ public class TestFBCallableStatement extends FBJUnit4TestBase {
 
     @Test
     public void testBatch() throws Exception {
+        executeCreateTable(con, CREATE_EMPLOYEE_PROJECT);
+        executeDDL(con, CREATE_PROCEDURE_EMP_INSERT);
+
         CallableStatement cstmt = con.prepareCall(EXECUTE_PROCEDURE_EMP_INSERT);
         try {
             cstmt.setInt(1, 44);
@@ -550,6 +579,9 @@ public class TestFBCallableStatement extends FBJUnit4TestBase {
 
     @Test
     public void testBatchResultSet() throws Exception {
+        executeCreateTable(con, CREATE_EMPLOYEE_PROJECT);
+        executeDDL(con, CREATE_PROCEDURE_EMP_INSERT);
+
         CallableStatement cstmt = con.prepareCall(EXECUTE_PROCEDURE_EMP_INSERT);
         try {
             cstmt.setInt(1, 44);
@@ -637,6 +669,7 @@ public class TestFBCallableStatement extends FBJUnit4TestBase {
     @Test
     public void testAutomaticSetSelectableProcedure_Selectable() throws SQLException {
         assumeTrue("Firebird version does not support RDB$PROCEDURE_TYPE", databaseEngineHasSelectabilityInfo());
+        executeDDL(con, CREATE_PROCEDURE);
 
         FirebirdCallableStatement cs = (FirebirdCallableStatement) con.prepareCall(CALL_SELECT_PROCEDURE);
         try {
@@ -704,6 +737,8 @@ public class TestFBCallableStatement extends FBJUnit4TestBase {
 
     @Test
     public void testJdbc181() throws Exception {
+        executeDDL(con, CREATE_PROCEDURE);
+
         CallableStatement cs = con.prepareCall("{call factorial(?, ?)}"); //con.prepareStatement("EXECUTE PROCEDURE factorial(?, ?)");
         try {
             cs.setInt(1, 5);
@@ -746,6 +781,8 @@ public class TestFBCallableStatement extends FBJUnit4TestBase {
      */
     @Test
     public void testCloseOnCompletion_StatementClosed_afterImplicitResultSetClose() throws SQLException {
+        executeDDL(con, CREATE_PROCEDURE);
+
         FBCallableStatement stmt = (FBCallableStatement) con.prepareCall("{call factorial(?, ?)}");
         try {
             stmt.closeOnCompletion();
@@ -923,6 +960,9 @@ public class TestFBCallableStatement extends FBJUnit4TestBase {
      */
     @Test
     public void testGetMetaData() throws Exception {
+        executeCreateTable(con, CREATE_EMPLOYEE_PROJECT);
+        executeDDL(con, CREATE_PROCEDURE_EMP_SELECT);
+
         CallableStatement cs = con.prepareCall(EXECUTE_PROCEDURE_EMP_SELECT);
         try {
             ResultSetMetaData metaData = cs.getMetaData();
@@ -949,4 +989,51 @@ public class TestFBCallableStatement extends FBJUnit4TestBase {
         cs.getMetaData();
     }
 
+    @Test
+    public void testExecuteSelectableProcedureNoParameters_call_noBraces() throws Exception {
+        executeDDL(con, CREATE_PROCEDURE_SELECT_WITHOUT_PARAMS);
+
+        CallableStatement cs = con.prepareCall(EXECUTE_PROCEDURE_SELECT_WITHOUT_PARAMS);
+        try {
+            assertTrue("Expected ResultSet", cs.execute());
+            ResultSet rs = cs.getResultSet();
+            assertNotNull("Expected ResultSet", rs);
+            assertTrue("Expected at least one row", rs.next());
+            assertEquals("abc", rs.getString("proj_id"));
+        } finally {
+            cs.close();
+        }
+    }
+
+    @Test
+    public void testExecuteSelectableProcedureNoParameters_call_emptyBraces() throws Exception {
+        executeDDL(con, CREATE_PROCEDURE_SELECT_WITHOUT_PARAMS);
+
+        CallableStatement cs = con.prepareCall(EXECUTE_PROCEDURE_SELECT_WITHOUT_PARAMS_1);
+        try {
+            assertTrue("Expected ResultSet", cs.execute());
+            ResultSet rs = cs.getResultSet();
+            assertNotNull("Expected ResultSet", rs);
+            assertTrue("Expected at least one row", rs.next());
+            assertEquals("abc", rs.getString("proj_id"));
+        } finally {
+            cs.close();
+        }
+    }
+
+    @Test
+     public void testExecuteSelectableProcedureNoParameters_call_emptyBraces_withWhitespace() throws Exception {
+        executeDDL(con, CREATE_PROCEDURE_SELECT_WITHOUT_PARAMS);
+
+        CallableStatement cs = con.prepareCall(EXECUTE_PROCEDURE_SELECT_WITHOUT_PARAMS_2);
+        try {
+            assertTrue("Expected ResultSet", cs.execute());
+            ResultSet rs = cs.getResultSet();
+            assertNotNull("Expected ResultSet", rs);
+            assertTrue("Expected at least one row", rs.next());
+            assertEquals("abc", rs.getString("proj_id"));
+        } finally {
+            cs.close();
+        }
+    }
 }
