@@ -858,7 +858,7 @@ public class FBManagedConnectionFactory implements ManagedConnectionFactory,
         }
     }
 
-    public FBConnectionProperties getCacheKey() {
+    public final FBConnectionProperties getCacheKey() {
         return (FBConnectionProperties) connectionProperties.clone();
     }
 }
