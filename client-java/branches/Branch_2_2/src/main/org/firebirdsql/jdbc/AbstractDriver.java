@@ -144,23 +144,21 @@ public abstract class AbstractDriver implements FirebirdDriver {
         }
     }
 
-    private FBDataSource createDataSource(FBManagedConnectionFactory mcf) throws ResourceException {
-        try {
-            FBDataSource dataSource = dataSourceFromCache(mcf);
-            if (dataSource != null) return dataSource;
-            synchronized (createDataSourceLock) {
-                // Obtain again
-                dataSource = dataSourceFromCache(mcf);
-                if (dataSource == null) {
-                    dataSource = (FBDataSource) mcf.createConnectionFactory();
-                    mcfToDataSourceMap.put(mcf.getCacheKey(),
-                            new SoftReference<FBDataSource>(dataSource, dataSourceReferenceQueue));
-                }
+    private FBDataSource createDataSource(final FBManagedConnectionFactory mcf) throws ResourceException {
+        final FBConnectionProperties cacheKey = mcf.getCacheKey();
+        FBDataSource dataSource = dataSourceFromCache(cacheKey);
+        if (dataSource != null) return dataSource;
+        synchronized (createDataSourceLock) {
+            // Obtain again
+            dataSource = dataSourceFromCache(cacheKey);
+            if (dataSource == null) {
+                dataSource = (FBDataSource) mcf.createConnectionFactory();
+                mcfToDataSourceMap.put(cacheKey,
+                        new SoftReference<FBDataSource>(dataSource, dataSourceReferenceQueue));
             }
-            return dataSource;
-        } finally {
-            cleanDataSourceCache();
         }
+        cleanDataSourceCache();
+        return dataSource;
     }
 
     /**
@@ -173,8 +171,8 @@ public abstract class AbstractDriver implements FirebirdDriver {
         }
     }
 
-    private FBDataSource dataSourceFromCache(FBManagedConnectionFactory mcf) {
-        final SoftReference<FBDataSource> dataSourceReference = mcfToDataSourceMap.get(mcf.getCacheKey());
+    private FBDataSource dataSourceFromCache(final FBConnectionProperties cacheKey) {
+        final SoftReference<FBDataSource> dataSourceReference = mcfToDataSourceMap.get(cacheKey);
         return dataSourceReference != null ? dataSourceReference.get() : null;
     }
     
