@@ -20,28 +20,41 @@
  */
 package org.firebirdsql.jca;
 
-import java.io.*;
-import java.lang.reflect.Constructor;
-import java.lang.reflect.InvocationTargetException;
-import java.sql.SQLException;
-import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
+import org.firebirdsql.gds.*;
+import org.firebirdsql.gds.impl.GDSFactory;
+import org.firebirdsql.gds.impl.GDSHelper;
+import org.firebirdsql.gds.impl.GDSType;
+import org.firebirdsql.gds.ng.FbDatabase;
+import org.firebirdsql.gds.ng.FbDatabaseFactory;
+import org.firebirdsql.gds.ng.FbStatement;
+import org.firebirdsql.gds.ng.FbTransaction;
+import org.firebirdsql.gds.ng.fields.RowValue;
+import org.firebirdsql.jdbc.FBConnection;
+import org.firebirdsql.jdbc.FBConnectionProperties;
+import org.firebirdsql.jdbc.FBDataSource;
+import org.firebirdsql.jdbc.FirebirdConnectionProperties;
 
 import javax.resource.NotSupportedException;
 import javax.resource.ResourceException;
 import javax.resource.spi.*;
 import javax.resource.spi.SecurityException;
 import javax.security.auth.Subject;
-import javax.transaction.xa.*;
-
-import org.firebirdsql.gds.*;
-import org.firebirdsql.gds.impl.*;
-import org.firebirdsql.gds.ng.FbDatabase;
-import org.firebirdsql.gds.ng.FbDatabaseFactory;
-import org.firebirdsql.gds.ng.FbStatement;
-import org.firebirdsql.gds.ng.FbTransaction;
-import org.firebirdsql.gds.ng.fields.RowValue;
-import org.firebirdsql.jdbc.*;
+import javax.transaction.xa.XAException;
+import javax.transaction.xa.XAResource;
+import javax.transaction.xa.Xid;
+import java.io.ObjectStreamException;
+import java.io.PrintWriter;
+import java.io.Serializable;
+import java.lang.ref.Reference;
+import java.lang.ref.ReferenceQueue;
+import java.lang.ref.SoftReference;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
+import java.sql.SQLException;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * FBManagedConnectionFactory implements the jca ManagedConnectionFactory
@@ -66,9 +79,14 @@ public class FBManagedConnectionFactory implements ManagedConnectionFactory,
     /**
      * The <code>mcfInstances</code> weak hash map is used in deserialization
      * to find the correct instance of a mcf after deserializing.
+     * <p>
+     * It is also used to return a canonical instance to {@link org.firebirdsql.jdbc.FBDriver}.
+     * </p>
      */
-    private final static Map<FBManagedConnectionFactory, FBManagedConnectionFactory> mcfInstances = 
-            Collections.synchronizedMap(new WeakHashMap<FBManagedConnectionFactory, FBManagedConnectionFactory>());
+    private static final Map<FBConnectionProperties, SoftReference<FBManagedConnectionFactory>> mcfInstances =
+            new ConcurrentHashMap<FBConnectionProperties, SoftReference<FBManagedConnectionFactory>>();
+    private static final ReferenceQueue<FBManagedConnectionFactory> mcfReferenceQueue =
+            new ReferenceQueue<FBManagedConnectionFactory>();
 
     private ConnectionManager defaultCm;
     private int hashCode;
@@ -595,13 +613,10 @@ public class FBManagedConnectionFactory implements ManagedConnectionFactory,
 
     // Serialization support
     private Object readResolve() throws ObjectStreamException {
-        FBManagedConnectionFactory mcf = mcfInstances.get(this);
+        FBManagedConnectionFactory mcf = internalCanonicalize();
+        if (mcf != null)  return mcf;
         
-        if (mcf != null)  return mcf; 
-        
-        mcf = new FBManagedConnectionFactory(getGDSType(), 
-                (FBConnectionProperties)this.connectionProperties.clone());
-        
+        mcf = new FBManagedConnectionFactory(getGDSType(), (FBConnectionProperties)this.connectionProperties.clone());
         return mcf;
     }
 
@@ -613,20 +628,40 @@ public class FBManagedConnectionFactory implements ManagedConnectionFactory,
      * @return a <code>FBManagedConnectionFactory</code> value
      */
     public FBManagedConnectionFactory canonicalize() {
-        FBManagedConnectionFactory mcf = mcfInstances.get(this);
-        
-        if (mcf != null) 
-            return mcf;
-        
+        final FBManagedConnectionFactory mcf = internalCanonicalize();
+        if (mcf != null) return mcf;
+        start();
         return this;
     }
 
+    private FBManagedConnectionFactory internalCanonicalize() {
+        final SoftReference<FBManagedConnectionFactory> factoryReference = mcfInstances.get(getCacheKey());
+        return factoryReference != null ? factoryReference.get() : null;
+    }
+
+    /**
+     * Starts this MCF and adds this instance to {@code #mcfInstances} cache.
+     * <p>
+     * This implementation (together with {@link #canonicalize()} has a race condition with regard to the
+     * instance cache. As this is a relatively harmless one, we leave it as is.
+     * </p>
+     */
     private void start() {
         synchronized (startLock) {
-            if (!started) {
-                mcfInstances.put(this, this);
-                started = true;
-            }
+            if (started) return;
+            mcfInstances.put(getCacheKey(), new SoftReference<FBManagedConnectionFactory>(this, mcfReferenceQueue));
+            started = true;
+        }
+        cleanMcfInstances();
+    }
+
+    /**
+     * Removes cleared references from the {@link #mcfInstances} cache.
+     */
+    private void cleanMcfInstances() {
+        Reference<? extends FBManagedConnectionFactory> reference;
+        while ((reference = mcfReferenceQueue.poll()) != null) {
+            mcfInstances.values().remove(reference);
         }
     }
 
@@ -843,5 +878,9 @@ public class FBManagedConnectionFactory implements ManagedConnectionFactory,
             throw new FBResourceException("Cannot instantiate class"
                     + connectionClass.getName());
         }
+    }
+
+    public FBConnectionProperties getCacheKey() {
+        return (FBConnectionProperties) connectionProperties.clone();
     }
 }
