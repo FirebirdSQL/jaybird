@@ -1,5 +1,7 @@
 /*
- * Firebird Open Source J2ee connector - jdbc driver
+ * $Id$
+ *
+ * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -12,23 +14,27 @@
  * This file was created by members of the firebird development team.
  * All individual contributions remain the Copyright (C) of those
  * individuals.  Contributors to this file are either listed here or
- * can be obtained from a CVS history command.
+ * can be obtained from a source control history command.
  *
  * All rights reserved.
  */
 package org.firebirdsql.jdbc;
 
-
-import java.sql.*;
-import java.util.*;
-
-import javax.resource.ResourceException;
-
-import org.firebirdsql.gds.*;
-import org.firebirdsql.gds.impl.*;
-import org.firebirdsql.jca.*;
+import org.firebirdsql.gds.GDSException;
+import org.firebirdsql.gds.impl.GDSFactory;
+import org.firebirdsql.gds.impl.GDSType;
+import org.firebirdsql.jca.FBManagedConnectionFactory;
 import org.firebirdsql.logging.Logger;
 import org.firebirdsql.logging.LoggerFactory;
+
+import javax.resource.ResourceException;
+import java.lang.ref.Reference;
+import java.lang.ref.ReferenceQueue;
+import java.lang.ref.SoftReference;
+import java.sql.*;
+import java.util.Map;
+import java.util.Properties;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * The Jaybird JDBC Driver implementation for the Firebird database.
@@ -54,8 +60,10 @@ public class FBDriver implements FirebirdDriver {
      * standard connection.
      */
 
-    private final Map<FBManagedConnectionFactory, FBDataSource> mcfToDataSourceMap =
-            Collections.synchronizedMap(new WeakHashMap<FBManagedConnectionFactory, FBDataSource>());
+    private final Map<FBConnectionProperties, SoftReference<FBDataSource>> mcfToDataSourceMap =
+            new ConcurrentHashMap<FBConnectionProperties, SoftReference<FBDataSource>>();
+    private final ReferenceQueue<FBDataSource> dataSourceReferenceQueue = new ReferenceQueue<FBDataSource>();
+    private final Object createDataSourceLock = new Object();
 
     static {
         log = LoggerFactory.getLogger(FBDriver.class, false);
@@ -136,16 +144,37 @@ public class FBDriver implements FirebirdDriver {
     }
 
     private FBDataSource createDataSource(FBManagedConnectionFactory mcf) throws ResourceException {
-        FBDataSource dataSource;
-        synchronized (mcfToDataSourceMap) {
-            dataSource = mcfToDataSourceMap.get(mcf);
-            
-            if (dataSource == null) {
-                dataSource = (FBDataSource)mcf.createConnectionFactory();
-                mcfToDataSourceMap.put(mcf, dataSource);
+        try {
+            FBDataSource dataSource = dataSourceFromCache(mcf);
+            if (dataSource != null) return dataSource;
+            synchronized (createDataSourceLock) {
+                // Obtain again
+                dataSource = dataSourceFromCache(mcf);
+                if (dataSource == null) {
+                    dataSource = (FBDataSource) mcf.createConnectionFactory();
+                    mcfToDataSourceMap.put(mcf.getCacheKey(),
+                            new SoftReference<FBDataSource>(dataSource, dataSourceReferenceQueue));
+                }
             }
+            return dataSource;
+        } finally {
+            cleanDataSourceCache();
         }
-        return dataSource;
+    }
+
+    /**
+     * Removes cleared references from the {@link #mcfToDataSourceMap} cache.
+     */
+    private void cleanDataSourceCache() {
+        Reference<? extends FBDataSource> reference;
+        while ((reference = dataSourceReferenceQueue.poll()) != null) {
+            mcfToDataSourceMap.values().remove(reference);
+        }
+    }
+
+    private FBDataSource dataSourceFromCache(FBManagedConnectionFactory mcf) {
+        final SoftReference<FBDataSource> dataSourceReference = mcfToDataSourceMap.get(mcf.getCacheKey());
+        return dataSourceReference != null ? dataSourceReference.get() : null;
     }
     
     public FirebirdConnection connect(FirebirdConnectionProperties properties) throws SQLException {
