@@ -21,16 +21,15 @@
 package org.firebirdsql.jdbc;
 
 import org.firebirdsql.common.FBJUnit4TestBase;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Ignore;
-import org.junit.Test;
+import org.firebirdsql.gds.ISCConstants;
+import org.junit.*;
 
 import java.sql.*;
 import java.util.Properties;
 import java.util.Random;
 
 import static org.firebirdsql.common.DdlHelper.executeCreateTable;
+import static org.firebirdsql.common.DdlHelper.executeDDL;
 import static org.firebirdsql.common.FBTestProperties.*;
 import static org.firebirdsql.common.JdbcResourceHelper.closeQuietly;
 import static org.junit.Assert.*;
@@ -104,11 +103,6 @@ public class TestFBResultSet extends FBJUnit4TestBase {
     @Before
     public void setUp() throws Exception {
         connection = getConnectionViaDriverManager();
-
-        executeCreateTable(connection, CREATE_TABLE_STATEMENT);
-        executeCreateTable(connection, CREATE_TABLE_STATEMENT2);
-        executeCreateTable(connection, CREATE_VIEW_STATEMENT);
-        executeCreateTable(connection, CREATE_SUBSTR_FUNCTION);
     }
 
     @After
@@ -148,6 +142,8 @@ public class TestFBResultSet extends FBJUnit4TestBase {
      */
     @Test
     public void testPositionedUpdate() throws Exception {
+        executeCreateTable(connection, CREATE_TABLE_STATEMENT);
+
         final int recordCount = 10;
 
         PreparedStatement ps = connection.prepareStatement(INSERT_INTO_TABLE_STATEMENT);
@@ -250,6 +246,9 @@ public class TestFBResultSet extends FBJUnit4TestBase {
      */
     @Test
     public void testEmptyColumnInView() throws Exception {
+        executeCreateTable(connection, CREATE_TABLE_STATEMENT);
+        executeCreateTable(connection, CREATE_VIEW_STATEMENT);
+
         PreparedStatement ps = connection.prepareStatement(INSERT_INTO_TABLE_STATEMENT);
 
         try {
@@ -296,6 +295,8 @@ public class TestFBResultSet extends FBJUnit4TestBase {
      */
     @Test
     public void testScrollInsensitive() throws Exception {
+        executeCreateTable(connection, CREATE_TABLE_STATEMENT);
+
         final int recordCount = 10;
 
         PreparedStatement ps = connection.prepareStatement(INSERT_INTO_TABLE_STATEMENT);
@@ -378,6 +379,9 @@ public class TestFBResultSet extends FBJUnit4TestBase {
      */
     @Test
     public void testBugReport1() throws Exception {
+        executeCreateTable(connection, CREATE_TABLE_STATEMENT);
+        executeDDL(connection, CREATE_SUBSTR_FUNCTION);
+
         PreparedStatement insertStmt = connection.prepareStatement(INSERT_LONG_STR_STATEMENT);
         try {
             insertStmt.setInt(1, 1);
@@ -410,6 +414,7 @@ public class TestFBResultSet extends FBJUnit4TestBase {
                 assertTrue("Should have at least one row", rs.next());
                 rs.close();
             } catch(SQLException ex) {
+                if (ex.getErrorCode() != ISCConstants.isc_string_truncation) throw ex;
                 // it is ok as well, since substr is declared as CSTRING(80)
                 // and truncation error happens
                 System.out.println("First query generated exception" + ex.getMessage());
@@ -423,6 +428,7 @@ public class TestFBResultSet extends FBJUnit4TestBase {
 
                 rs.close();
             } catch(SQLException ex) {
+                if (ex.getErrorCode() != ISCConstants.isc_string_truncation) throw ex;
                 // it is ok as well, since substr is declared as CSTRING(80)
                 // and truncation error happens
                 System.out.println("Second query generated exception" + ex.getMessage());
@@ -439,6 +445,7 @@ public class TestFBResultSet extends FBJUnit4TestBase {
      */
     @Test
     public void testBugReport2() throws Exception {
+        executeCreateTable(connection, CREATE_TABLE_STATEMENT);
         final int recordCount = 10;
 
         PreparedStatement ps = connection.prepareStatement(INSERT_INTO_TABLE_STATEMENT);
@@ -476,6 +483,7 @@ public class TestFBResultSet extends FBJUnit4TestBase {
 
     @Test
     public void testBugReport3() throws Exception {
+        executeCreateTable(connection, CREATE_TABLE_STATEMENT);
         final int recordCount = 10;
 
         PreparedStatement ps = connection.prepareStatement(INSERT_INTO_TABLE_STATEMENT);
@@ -582,6 +590,8 @@ public class TestFBResultSet extends FBJUnit4TestBase {
 
     @Test
     public void testResultSetNotClosed() throws Exception {
+        executeCreateTable(connection, CREATE_TABLE_STATEMENT);
+
         connection.setAutoCommit(false);
 
         final int recordCount = 1;
@@ -631,6 +641,8 @@ public class TestFBResultSet extends FBJUnit4TestBase {
 
     @Test
     public void testUpdatableResultSet() throws Exception {
+        executeCreateTable(connection, CREATE_TABLE_STATEMENT);
+
         connection.setAutoCommit(false);
 
         final int recordCount = 10;
@@ -736,6 +748,8 @@ public class TestFBResultSet extends FBJUnit4TestBase {
 
     @Test
     public void testUpdatableResultSetNoPK() throws Exception {
+        executeCreateTable(connection, CREATE_TABLE_STATEMENT2);
+
         connection.setAutoCommit(false);
 
         final int recordCount = 10;
@@ -802,6 +816,8 @@ public class TestFBResultSet extends FBJUnit4TestBase {
 
     @Test
     public void testGetExecutionPlan() throws Exception {
+        executeCreateTable(connection, CREATE_TABLE_STATEMENT);
+
         Statement stmt = connection.createStatement();
         try {
             FBResultSet rs = (FBResultSet)stmt.executeQuery("SELECT id, str FROM test_table");
@@ -829,6 +845,7 @@ public class TestFBResultSet extends FBJUnit4TestBase {
 
     @Test
     public void testHoldabilityStatement() throws Exception {
+        executeCreateTable(connection, CREATE_TABLE_STATEMENT);
         final int recordCount = 10;
 
         PreparedStatement ps = connection.prepareStatement(INSERT_INTO_TABLE_STATEMENT);
@@ -870,6 +887,8 @@ public class TestFBResultSet extends FBJUnit4TestBase {
 
     @Test
     public void testHoldabilityPreparedStatement() throws Exception {
+        executeCreateTable(connection, CREATE_TABLE_STATEMENT);
+
         final int recordCount = 10;
 
         PreparedStatement ps = connection.prepareStatement(INSERT_INTO_TABLE_STATEMENT);
@@ -911,6 +930,8 @@ public class TestFBResultSet extends FBJUnit4TestBase {
 
     @Test
     public void testFetchSize() throws Exception {
+        executeCreateTable(connection, CREATE_TABLE_STATEMENT);
+
         final int FETCH_SIZE = 3;
         Statement stmt = connection.createStatement();
         try {
@@ -943,6 +964,8 @@ public class TestFBResultSet extends FBJUnit4TestBase {
 
     @Test
     public void testInsertUpdatableCursor() throws Exception {
+        executeCreateTable(connection, CREATE_TABLE_STATEMENT);
+
         Statement stmt = connection.createStatement(ResultSet.TYPE_SCROLL_SENSITIVE, ResultSet.CONCUR_UPDATABLE);
 
         try {
@@ -974,6 +997,8 @@ public class TestFBResultSet extends FBJUnit4TestBase {
 
     @Test
     public void testMetaDataQueryShouldKeepRsOpen() throws Exception {
+        executeCreateTable(connection, CREATE_TABLE_STATEMENT);
+
         Statement stmt = connection.createStatement(ResultSet.TYPE_SCROLL_SENSITIVE, ResultSet.CONCUR_UPDATABLE);
 
         try {
@@ -995,6 +1020,8 @@ public class TestFBResultSet extends FBJUnit4TestBase {
 
     @Test
     public void testUpdatableResultSetMultipleStatements() throws Exception {
+        executeCreateTable(connection, CREATE_TABLE_STATEMENT);
+
         int recordCount = 10;
         PreparedStatement ps = connection.prepareStatement(
                 "INSERT INTO test_table(id, long_str) VALUES (?, ?)");
@@ -1070,6 +1097,8 @@ public class TestFBResultSet extends FBJUnit4TestBase {
 
     @Test
     public void testUpdatableHoldableResultSet() throws Exception {
+        executeCreateTable(connection, CREATE_TABLE_STATEMENT);
+
 	    connection.setAutoCommit(true);
 	
 	    int recordCount = 10;
