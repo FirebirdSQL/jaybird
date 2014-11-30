@@ -883,6 +883,9 @@ public class TestFBPreparedStatement extends FBJUnit4TestBase {
      */
     @Test
     public void testParameterIsNullQuerySetNull() throws Throwable {
+        final FirebirdSupportInfo supportInfo = supportInfoFor(con);
+        assumeTrue("test requires support for ? IS NULL", supportInfo.supportsNullDataType());
+
         createIsNullTestData();
 
         PreparedStatement ps = con.prepareStatement("SELECT id FROM testtab WHERE field2 = ? OR ? IS NULL ORDER BY 1");
@@ -907,6 +910,9 @@ public class TestFBPreparedStatement extends FBJUnit4TestBase {
      */
     @Test
     public void testParameterIsNullQueryWithValues() throws Throwable {
+        final FirebirdSupportInfo supportInfo = supportInfoFor(con);
+        assumeTrue("test requires support for ? IS NULL", supportInfo.supportsNullDataType());
+
         createIsNullTestData();
 
         PreparedStatement ps = con.prepareStatement("SELECT id FROM testtab WHERE field2 = ? OR ? IS NULL ORDER BY 1");
@@ -930,6 +936,9 @@ public class TestFBPreparedStatement extends FBJUnit4TestBase {
      */
     @Test
     public void testParameterIsNullQueryWithNull() throws Throwable {
+        final FirebirdSupportInfo supportInfo = supportInfoFor(con);
+        assumeTrue("test requires support for ? IS NULL", supportInfo.supportsNullDataType());
+
         createIsNullTestData();
 
         PreparedStatement ps = con.prepareStatement("SELECT id FROM testtab WHERE field2 = ? OR ? IS NULL ORDER BY 1");
