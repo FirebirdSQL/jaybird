@@ -160,6 +160,13 @@ public class FirebirdSupportInfo {
     }
 
     /**
+     * @return {@code true} when the {@code NULL} data type and {@code ? IS NULL} is supported
+     */
+    public boolean supportsNullDataType() {
+        return serverVersion.isEqualOrAbove(2, 5);
+    }
+
+    /**
      * @param serverVersion
      *         Server version
      * @return FirebirdVersionSupport instance
