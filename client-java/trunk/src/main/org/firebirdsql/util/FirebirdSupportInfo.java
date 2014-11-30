@@ -28,10 +28,7 @@ import java.sql.SQLException;
 
 /**
  * Helper class that reports if a Firebird version supports a specific feature. Intended as a repository for
- * tests to check their assumptions, or decide on test behavior based on functionality support.
- * <p>
- * TODO Consider moving to org.firebirdsql.util in main instead of test
- * </p>
+ * tests to check their assumptions, or decide on test or application behavior based on functionality support.
  *
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @since 3.0
