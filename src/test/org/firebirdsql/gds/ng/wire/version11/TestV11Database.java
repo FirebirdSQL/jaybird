@@ -25,6 +25,10 @@ import org.firebirdsql.gds.ng.wire.FbWireDatabase;
 import org.firebirdsql.gds.ng.wire.ProtocolCollection;
 import org.firebirdsql.gds.ng.wire.ProtocolDescriptor;
 import org.firebirdsql.gds.ng.wire.version10.TestV10Database;
+import org.junit.BeforeClass;
+
+import static org.firebirdsql.common.FBTestProperties.getDefaultSupportInfo;
+import static org.junit.Assume.assumeTrue;
 
 /**
  * Tests for {@link org.firebirdsql.gds.ng.wire.version11.V11Database}, reuses test for V10.
@@ -35,6 +39,11 @@ import org.firebirdsql.gds.ng.wire.version10.TestV10Database;
 public class TestV11Database extends TestV10Database {
 
     private static final ProtocolDescriptor DUMMY_DESCRIPTOR = new Version11Descriptor();
+
+    @BeforeClass
+    public static void checkDbVersion() {
+        assumeTrue(getDefaultSupportInfo().supportsProtocol(11));
+    }
 
     @Override
     protected AbstractFbWireDatabase createDummyDatabase() {

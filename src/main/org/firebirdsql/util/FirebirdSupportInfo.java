@@ -164,6 +164,22 @@ public class FirebirdSupportInfo {
     }
 
     /**
+     * @return {@code true} when the database supports wire protocol 11
+     */
+    public boolean supportsProtocol(int version) {
+        switch (version) {
+        case 10:
+            return true;
+        case 11:
+            return serverVersion.isEqualOrAbove(2, 1);
+        case 12:
+            return serverVersion.isEqualOrAbove(2, 5);
+        default:
+            return false;
+        }
+    }
+
+    /**
      * @param serverVersion
      *         Server version
      * @return FirebirdVersionSupport instance
