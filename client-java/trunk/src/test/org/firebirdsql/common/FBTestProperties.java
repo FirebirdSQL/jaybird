@@ -20,28 +20,27 @@
  */
 package org.firebirdsql.common;
 
-import java.io.File;
-import java.sql.DriverManager;
-import java.sql.SQLException;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.MissingResourceException;
-import java.util.Properties;
-import java.util.ResourceBundle;
-
-import javax.resource.spi.ConnectionManager;
-
 import org.firebirdsql.gds.impl.GDSType;
 import org.firebirdsql.jca.FBManagedConnectionFactory;
 import org.firebirdsql.jca.InternalConnectionManager;
 import org.firebirdsql.jdbc.FBDriver;
 import org.firebirdsql.jdbc.FirebirdConnection;
 import org.firebirdsql.management.FBManager;
+import org.firebirdsql.management.FBServiceManager;
+import org.firebirdsql.util.FirebirdSupportInfo;
+
+import javax.resource.spi.ConnectionManager;
+import java.io.File;
+import java.sql.DriverManager;
+import java.sql.SQLException;
+import java.util.*;
 
 /**
  * Helper class for test properties (database user, password, paths etc)
  */
 public final class FBTestProperties {
+
+    private static FirebirdSupportInfo firebirdSupportInfo;
     
     static {
         // Needed for supporting tests that don't reference DriverManager
@@ -94,8 +93,8 @@ public final class FBTestProperties {
      * Builds a firebird database connection string for the supplied database
      * file.
      * 
-     * @param name
-     * @return
+     * @param name Database name
+     * @return URL or path for the gds type.
      */
     public static String getdbpath(String name) {
         final String gdsType = getProperty("test.gds_type", null);
@@ -128,6 +127,29 @@ public final class FBTestProperties {
             throw new RuntimeException("Unrecognized value for 'test.gds_type' property.");
         }
         return gdsType;
+    }
+
+    /**
+     * The {@link org.firebirdsql.util.FirebirdSupportInfo} for the default test server.
+     *
+     * @return Support info object
+     */
+    public static FirebirdSupportInfo getDefaultSupportInfo() {
+        try {
+            if (firebirdSupportInfo == null) {
+                final FBServiceManager fbServiceManager = new FBServiceManager(getGdsType());
+                if (getGdsType() == GDSType.getType("PURE_JAVA") || getGdsType() == GDSType.getType("NATIVE")) {
+                    fbServiceManager.setHost(DB_SERVER_URL);
+                    fbServiceManager.setPort(DB_SERVER_PORT);
+                }
+                fbServiceManager.setUser(FBTestProperties.DB_USER);
+                fbServiceManager.setPassword(FBTestProperties.DB_PASSWORD);
+                firebirdSupportInfo = FirebirdSupportInfo.supportInfoFor(fbServiceManager.getServerVersion());
+            }
+            return firebirdSupportInfo;
+        } catch (Exception e) {
+            throw new IllegalStateException("Cannot initialize support info", e);
+        }
     }
 
     private static final Map<GDSType, String> gdsTypeToUrlPrefixMap = new HashMap<GDSType, String>();

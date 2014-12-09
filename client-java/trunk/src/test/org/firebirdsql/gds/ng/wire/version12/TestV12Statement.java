@@ -25,6 +25,10 @@ import org.firebirdsql.gds.ng.wire.ProtocolCollection;
 import org.firebirdsql.gds.ng.wire.version11.TestV11Statement;
 import org.firebirdsql.gds.ng.wire.version11.V11Database;
 import org.firebirdsql.gds.ng.wire.version11.Version11Descriptor;
+import org.junit.BeforeClass;
+
+import static org.firebirdsql.common.FBTestProperties.getDefaultSupportInfo;
+import static org.junit.Assume.assumeTrue;
 
 /**
  * Tests for {@link org.firebirdsql.gds.ng.wire.version12.V12Statement}, reuses test for V11.
@@ -33,6 +37,11 @@ import org.firebirdsql.gds.ng.wire.version11.Version11Descriptor;
  * @since 3.0
  */
 public class TestV12Statement extends TestV11Statement {
+
+    @BeforeClass
+    public static void checkDbVersion() {
+        assumeTrue(getDefaultSupportInfo().supportsProtocol(12));
+    }
 
     @Override
     protected ProtocolCollection getProtocolCollection() {
