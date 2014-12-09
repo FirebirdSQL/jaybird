@@ -334,6 +334,6 @@ resource-adapter of the JCA implementation of Jaybird, or using the
 If you develop standalone applications, or you use an application server without
 connection pooling, we suggest you use third-party libraries like:
 
-* [BoneCP](http://jolbox.com/)
+* [HikariCP](http://brettwooldridge.github.io/HikariCP/)
 * [c3p0](http://www.mchange.com/projects/c3p0/)
 * [Apache DBCP](http://commons.apache.org/proper/commons-dbcp/)
