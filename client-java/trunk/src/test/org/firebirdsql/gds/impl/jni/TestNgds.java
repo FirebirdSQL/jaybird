@@ -20,29 +20,20 @@
  */
 package org.firebirdsql.gds.impl.jni;
 
-import java.util.Arrays;
-
 import org.firebirdsql.common.FBTestProperties;
 import org.firebirdsql.common.StringHelper;
 import org.firebirdsql.common.rules.GdsTypeRule;
-import org.firebirdsql.gds.BlobParameterBuffer;
-import org.firebirdsql.gds.DatabaseParameterBuffer;
-import org.firebirdsql.gds.GDS;
-import org.firebirdsql.gds.ISCConstants;
-import org.firebirdsql.gds.IscBlobHandle;
-import org.firebirdsql.gds.IscDbHandle;
-import org.firebirdsql.gds.IscStmtHandle;
-import org.firebirdsql.gds.IscTrHandle;
-import org.firebirdsql.gds.XSQLDA;
-import org.firebirdsql.gds.XSQLVAR;
+import org.firebirdsql.gds.*;
 import org.firebirdsql.gds.impl.GDSFactory;
 import org.firebirdsql.gds.impl.GDSType;
 import org.firebirdsql.jca.FBTpb;
 import org.firebirdsql.logging.Logger;
 import org.firebirdsql.logging.LoggerFactory;
 import org.junit.Before;
-import org.junit.Rule;
+import org.junit.ClassRule;
 import org.junit.Test;
+
+import java.util.Arrays;
 
 import static org.firebirdsql.common.FBTestProperties.*;
 import static org.junit.Assert.assertEquals;
@@ -52,8 +43,8 @@ import static org.junit.Assert.assertEquals;
  */
 public class TestNgds {
 
-    @Rule
-    public final GdsTypeRule testTypes = GdsTypeRule.supports(
+    @ClassRule
+    public static final GdsTypeRule testTypes = GdsTypeRule.supports(
             EmbeddedGDSImpl.EMBEDDED_TYPE_NAME,
             NativeGDSImpl.NATIVE_TYPE_NAME);
 

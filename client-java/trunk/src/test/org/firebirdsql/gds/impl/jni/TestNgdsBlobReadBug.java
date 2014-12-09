@@ -1,7 +1,7 @@
 /*
  * $Id$
- * 
- * Firebird Open Source J2ee connector - jdbc driver
+ *
+ * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -14,27 +14,15 @@
  * This file was created by members of the firebird development team.
  * All individual contributions remain the Copyright (C) of those
  * individuals.  Contributors to this file are either listed here or
- * can be obtained from a CVS history command.
+ * can be obtained from a source control history command.
  *
  * All rights reserved.
  */
 package org.firebirdsql.gds.impl.jni;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import org.firebirdsql.common.StringHelper;
 import org.firebirdsql.common.rules.GdsTypeRule;
-import org.firebirdsql.gds.BlobParameterBuffer;
-import org.firebirdsql.gds.DatabaseParameterBuffer;
-import org.firebirdsql.gds.GDS;
-import org.firebirdsql.gds.GDSException;
-import org.firebirdsql.gds.ISCConstants;
-import org.firebirdsql.gds.IscBlobHandle;
-import org.firebirdsql.gds.IscDbHandle;
-import org.firebirdsql.gds.IscTrHandle;
-import org.firebirdsql.gds.XSQLDA;
-import org.firebirdsql.gds.XSQLVAR;
+import org.firebirdsql.gds.*;
 import org.firebirdsql.gds.impl.AbstractIscStmtHandle;
 import org.firebirdsql.gds.impl.GDSFactory;
 import org.firebirdsql.gds.impl.GDSType;
@@ -43,8 +31,11 @@ import org.firebirdsql.gds.impl.wire.JavaGDSImpl;
 import org.firebirdsql.jca.FBTpb;
 import org.firebirdsql.logging.Logger;
 import org.firebirdsql.logging.LoggerFactory;
-import org.junit.Rule;
+import org.junit.ClassRule;
 import org.junit.Test;
+
+import java.util.ArrayList;
+import java.util.List;
 
 import static org.firebirdsql.common.FBTestProperties.*;
 import static org.junit.Assert.assertArrayEquals;
@@ -59,8 +50,8 @@ import static org.junit.Assert.assertArrayEquals;
  */
 public class TestNgdsBlobReadBug {
 
-    @Rule
-    public final GdsTypeRule testTypes = GdsTypeRule.excludes(
+    @ClassRule
+    public static final GdsTypeRule testTypes = GdsTypeRule.excludes(
             JavaGDSImpl.PURE_JAVA_TYPE_NAME,
             LocalGDSImpl.LOCAL_TYPE_NAME,
             EmbeddedGDSImpl.EMBEDDED_TYPE_NAME);

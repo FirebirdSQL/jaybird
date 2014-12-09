@@ -20,12 +20,6 @@
  */
 package org.firebirdsql.gds.ng.wire;
 
-import static org.junit.Assert.*;
-
-import java.io.IOException;
-import java.sql.SQLException;
-import java.sql.SQLTimeoutException;
-
 import org.firebirdsql.common.BlackholeServer;
 import org.firebirdsql.common.FBJUnit4TestBase;
 import org.firebirdsql.common.FBTestProperties;
@@ -35,8 +29,14 @@ import org.firebirdsql.gds.impl.jni.EmbeddedGDSImpl;
 import org.firebirdsql.gds.impl.jni.NativeGDSImpl;
 import org.firebirdsql.gds.ng.FbConnectionProperties;
 import org.firebirdsql.gds.ng.wire.version10.Version10Descriptor;
-import org.junit.Rule;
+import org.junit.ClassRule;
 import org.junit.Test;
+
+import java.io.IOException;
+import java.sql.SQLException;
+import java.sql.SQLTimeoutException;
+
+import static org.junit.Assert.*;
 
 /**
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
@@ -44,8 +44,8 @@ import org.junit.Test;
  */
 public class TestWireConnection extends FBJUnit4TestBase {
 
-    @Rule
-    public final GdsTypeRule testTypes = GdsTypeRule.excludes(
+    @ClassRule
+    public static final GdsTypeRule testTypes = GdsTypeRule.excludes(
             EmbeddedGDSImpl.EMBEDDED_TYPE_NAME,
             NativeGDSImpl.NATIVE_TYPE_NAME);
 

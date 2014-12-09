@@ -28,10 +28,7 @@ import org.firebirdsql.management.FBManager;
 import org.firebirdsql.gds.*;
 import org.firebirdsql.gds.impl.GDSFactory;
 import org.firebirdsql.gds.impl.GDSType;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.*;
 
 import java.io.*;
 import java.sql.Connection;
@@ -46,8 +43,8 @@ import static org.junit.Assert.assertTrue;
  */
 public class TestServicesAPI {
 
-    @Rule
-    public final GdsTypeRule testType = GdsTypeRule.supports(EmbeddedGDSImpl.EMBEDDED_TYPE_NAME);
+    @ClassRule
+    public static final GdsTypeRule testType = GdsTypeRule.supports(EmbeddedGDSImpl.EMBEDDED_TYPE_NAME);
 
     private final Logger log = LoggerFactory.getLogger(getClass(), true);
 
