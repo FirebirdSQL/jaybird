@@ -89,8 +89,8 @@ import static org.junit.Assert.assertTrue;
   */
 public class TestJaybirdBlobBackupProblem {
 
-    @Rule
-    public final GdsTypeRule testTypes = GdsTypeRule.supports(EmbeddedGDSImpl.EMBEDDED_TYPE_NAME);
+    @ClassRule
+    public static final GdsTypeRule testTypes = GdsTypeRule.supports(EmbeddedGDSImpl.EMBEDDED_TYPE_NAME);
 
     protected final Logger log = LoggerFactory.getLogger(getClass(), true);
 

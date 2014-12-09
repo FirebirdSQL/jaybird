@@ -24,10 +24,7 @@ import org.firebirdsql.common.rules.GdsTypeRule;
 import org.firebirdsql.management.FBManager;
 import org.firebirdsql.gds.impl.GDSType;
 import org.firebirdsql.jdbc.FBDriver;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.*;
 
 import java.io.File;
 import java.sql.Connection;
@@ -38,8 +35,8 @@ import java.sql.DriverManager;
  */
 public class TestSpecialEmbeddedServerUrls {
 
-    @Rule
-    public final GdsTypeRule testType = GdsTypeRule.supports(EmbeddedGDSImpl.EMBEDDED_TYPE_NAME);
+    @ClassRule
+    public static final GdsTypeRule testType = GdsTypeRule.supports(EmbeddedGDSImpl.EMBEDDED_TYPE_NAME);
 
     private String mRelativeDatabasePath;
     private String mAbsoluteDatabasePath;
