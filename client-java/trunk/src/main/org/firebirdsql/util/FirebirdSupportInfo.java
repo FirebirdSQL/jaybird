@@ -164,10 +164,11 @@ public class FirebirdSupportInfo {
     }
 
     /**
-     * @return {@code true} when the database supports wire protocol 11
+     * @param protocolVersion Protocol version number
+     * @return {@code true} when the database supports the specified protocol
      */
-    public boolean supportsProtocol(int version) {
-        switch (version) {
+    public boolean supportsProtocol(int protocolVersion) {
+        switch (protocolVersion) {
         case 10:
             return true;
         case 11:
