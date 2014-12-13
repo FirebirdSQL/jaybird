@@ -729,7 +729,7 @@ public class TestFBResultSet extends FBTestBase {
         PreparedStatement ps = connection.prepareStatement("INSERT INTO test_table2(id, long_str) VALUES (?, ?)");
 
         try {
-            for (int i = 0; i < recordCount; i++) {
+            for (int i = 1; i <= recordCount; i++) {
                 ps.setInt(1, i);
                 ps.setString(2, "oldString" + i);
                 ps.executeUpdate();
@@ -749,7 +749,7 @@ public class TestFBResultSet extends FBTestBase {
             ResultSet rs = stmt.executeQuery(
                     "SELECT rdb$db_key, id, long_str, str, \"CamelStr\" FROM test_table2 ORDER BY 2");
 
-            int counter = 0;
+            int counter = 1;
             while(rs.next()) {
                 
                 int id = rs.getInt(2);

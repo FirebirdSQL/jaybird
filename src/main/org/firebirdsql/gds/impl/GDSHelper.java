@@ -106,6 +106,15 @@ public class GDSHelper {
     public DatabaseParameterBuffer getDatabaseParameterBuffer() {
         return dpb;
     }
+
+    /**
+     * @return Connection dialect from DPB (or default if not specified)
+     */
+    public int getDialect() {
+        if (dpb.hasArgument(ISCConstants.isc_dpb_sql_dialect))
+            return dpb.getArgumentAsInt(ISCConstants.isc_dpb_sql_dialect);
+        return ISCConstants.SQL_DIALECT_CURRENT;
+    }
     
     /**
      * Retrieve a newly allocated statment handle with the current connection.
@@ -182,10 +191,8 @@ public class GDSHelper {
     
             Encoding encoding = 
                 EncodingFactory.getEncoding(localEncoding, mappingPath);
-    
-            int dialect = ISCConstants.SQL_DIALECT_CURRENT;
-            if (dpb.hasArgument(ISCConstants.isc_dpb_sql_dialect))
-                dialect = dpb.getArgumentAsInt(ISCConstants.isc_dpb_sql_dialect);
+
+            int dialect = getDialect();
     
             XSQLDA out = gds.iscDsqlPrepare(currentTr, stmt, 
                 encoding.encodeToCharset(sql), dialect);
