@@ -73,6 +73,7 @@ public class FBRowUpdater implements FirebirdRowUpdater {
     private final Synchronizable syncProvider;
     private final RowDescriptor rowDescriptor;
     private final FBField[] fields;
+    private final QuoteStrategy quoteStrategy;
 
     private boolean inInsertRow;
 
@@ -98,11 +99,13 @@ public class FBRowUpdater implements FirebirdRowUpdater {
 
         this.rsListener = rsListener;
 
-        this.gdsHelper = connection;
+        gdsHelper = connection;
         this.syncProvider = syncProvider;
 
         this.rowDescriptor = rowDescriptor;
-        this.fields = new FBField[rowDescriptor.getCount()];
+        fields = new FBField[rowDescriptor.getCount()];
+
+        quoteStrategy = QuoteStrategy.forDialect(connection.getDialect());
 
         newRow = rowDescriptor.createDefaultFieldValues();
         updatedFlags = new boolean[rowDescriptor.getCount()];
@@ -226,7 +229,6 @@ public class FBRowUpdater implements FirebirdRowUpdater {
      * @return array of booleans that represent parameter mask.
      */
     private int[] getParameterMask() throws SQLException {
-
         // loop through the "best row identifiers" and set appropriate flags.
         FBDatabaseMetaData metaData = new FBDatabaseMetaData(gdsHelper);
 
@@ -276,8 +278,7 @@ public class FBRowUpdater implements FirebirdRowUpdater {
     }
 
     private void appendWhereClause(StringBuilder sb, int[] parameterMask) {
-        sb.append("WHERE");
-        sb.append('\n');
+        sb.append("WHERE ");
 
         // handle the RDB$DB_KEY case first
         boolean hasDbKey = false;
@@ -298,24 +299,21 @@ public class FBRowUpdater implements FirebirdRowUpdater {
         // WHERE clause
         boolean first = true;
         for (int i = 0; i < rowDescriptor.getCount(); i++) {
-            if (parameterMask[i] == PARAMETER_UNUSED)
-                continue;
+            if (parameterMask[i] == PARAMETER_UNUSED) continue;
 
-            if (!first)
-                sb.append("AND");
+            if (!first) sb.append(" AND");
 
             sb.append("\n\t");
-            sb.append('"').append(rowDescriptor.getFieldDescriptor(i).getOriginalName()).append("\" = ").append('?');
+            quoteStrategy.appendQuoted(rowDescriptor.getFieldDescriptor(i).getOriginalName(), sb).append(" = ?");
 
             first = false;
         }
     }
 
     private String buildUpdateStatement(int[] parameterMask) {
-        StringBuilder sb = new StringBuilder();
-
-        sb.append("UPDATE ").append(tableName).append('\n');
-        sb.append("SET").append('\n');
+        StringBuilder sb = new StringBuilder("UPDATE ");
+        quoteStrategy.appendQuoted(tableName, sb)
+                .append("\nSET\n");
 
         boolean first = true;
         for (int i = 0; i < rowDescriptor.getCount(); i++) {
@@ -326,7 +324,7 @@ public class FBRowUpdater implements FirebirdRowUpdater {
                 sb.append(',');
 
             sb.append("\n\t");
-            sb.append('"').append(rowDescriptor.getFieldDescriptor(i).getOriginalName()).append("\" = ").append('?');
+            quoteStrategy.appendQuoted(rowDescriptor.getFieldDescriptor(i).getOriginalName(), sb).append(" = ?");
 
             first = false;
         }
@@ -338,9 +336,8 @@ public class FBRowUpdater implements FirebirdRowUpdater {
     }
 
     private String buildDeleteStatement(int[] parameterMask) {
-        StringBuilder sb = new StringBuilder();
-
-        sb.append("DELETE FROM ").append(tableName).append('\n');
+        StringBuilder sb = new StringBuilder("DELETE FROM ");
+        quoteStrategy.appendQuoted(tableName, sb).append('\n');
         appendWhereClause(sb, parameterMask);
 
         return sb.toString();
@@ -349,9 +346,6 @@ public class FBRowUpdater implements FirebirdRowUpdater {
     private String buildInsertStatement() {
         StringBuilder columns = new StringBuilder();
         StringBuilder params = new StringBuilder();
-
-        StringBuilder sb = new StringBuilder("INSERT INTO ");
-        sb.append(tableName);
 
         boolean first = true;
         for (int i = 0; i < rowDescriptor.getCount(); i++) {
@@ -364,21 +358,20 @@ public class FBRowUpdater implements FirebirdRowUpdater {
                 params.append(',');
             }
 
-            columns.append('"').append(rowDescriptor.getFieldDescriptor(i).getOriginalName()).append('"');
+            quoteStrategy.appendQuoted(rowDescriptor.getFieldDescriptor(i).getOriginalName(), columns);
             params.append('?');
 
             first = false;
         }
 
-        sb.append('(').append(columns).append(')');
-        sb.append(" VALUES ");
-        sb.append('(').append(params).append(')');
+        StringBuilder sb = new StringBuilder("INSERT INTO ");
+        quoteStrategy.appendQuoted(tableName, sb)
+                .append(" (").append(columns).append(") VALUES (").append(params).append(')');
 
         return sb.toString();
     }
 
     private String buildSelectStatement(int[] parameterMask) {
-        StringBuilder sb = new StringBuilder("SELECT ");
         StringBuilder columns = new StringBuilder();
 
         boolean first = true;
@@ -391,14 +384,15 @@ public class FBRowUpdater implements FirebirdRowUpdater {
             if (isDbKey(fieldDescriptor)) {
                 columns.append("RDB$DB_KEY");
             } else {
-                columns.append('"').append(fieldDescriptor.getOriginalName()).append('"');
+                quoteStrategy.appendQuoted(fieldDescriptor.getOriginalName(), columns);
             }
             first = false;
         }
 
-        sb.append(columns).append('\n');
-        sb.append("FROM ");
-        sb.append(tableName).append(' ');
+        StringBuilder sb = new StringBuilder("SELECT ");
+        sb.append(columns).append('\n')
+                .append("FROM ");
+        quoteStrategy.appendQuoted(tableName, sb).append('\n');
         appendWhereClause(sb, parameterMask);
         return sb.toString();
     }
@@ -473,7 +467,6 @@ public class FBRowUpdater implements FirebirdRowUpdater {
 
         synchronized (syncProvider.getSynchronizationObject()) {
             try {
-
                 notifyExecutionStarted();
 
                 if (insertStatement == null) {

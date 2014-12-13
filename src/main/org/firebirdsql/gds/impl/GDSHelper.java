@@ -58,7 +58,7 @@ public class GDSHelper {
     private boolean registerResultSets;
     
     private final ExceptionListener listener;
-    
+
     /**
      * Create instance of this class.
      */
@@ -97,7 +97,14 @@ public class GDSHelper {
     public DatabaseParameterBuffer getDatabaseParameterBuffer() {
         return dpb;
     }
-    
+
+    /**
+     * @return Connection dialect
+     */
+    public int getDialect() {
+        return database.getConnectionDialect();
+    }
+
     /**
      * Retrieve a newly allocated statement handle with the current connection.
      *
@@ -706,5 +713,4 @@ public class GDSHelper {
     public GDS getInternalAPIHandler() {
         return gds;
     }
-
 }
