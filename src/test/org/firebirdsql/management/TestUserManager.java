@@ -20,23 +20,20 @@
  */
 package org.firebirdsql.management;
 
-import java.sql.Connection;
-import java.sql.DatabaseMetaData;
-import java.sql.SQLException;
-
 import org.firebirdsql.common.FBJUnit4TestBase;
 import org.firebirdsql.gds.ISCConstants;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
+
+import java.sql.Connection;
+import java.sql.SQLException;
 
 import static org.firebirdsql.common.DdlHelper.executeDDL;
 import static org.firebirdsql.common.FBTestProperties.*;
 import static org.firebirdsql.common.JdbcResourceHelper.closeQuietly;
-import static org.firebirdsql.util.FirebirdSupportInfo.supportInfoFor;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
+import static org.junit.Assert.*;
 import static org.junit.Assume.assumeTrue;
 
 /**
@@ -49,12 +46,16 @@ public class TestUserManager extends FBJUnit4TestBase {
 
     public static final String USER_NAME = "TESTUSER123";
 
+    @BeforeClass
+    public static void checkDropUserSupport() {
+        assumeTrue("Test requires DROP USER support", getDefaultSupportInfo().supportsSqlUserManagement());
+    }
+
     @Before
     @After
     public void ensureTestUserDoesNotExist() throws SQLException {
         Connection connection = getConnectionViaDriverManager();
         try {
-            assumeTrue("Test requires DROP USER support", supportInfoFor(connection).supportsSqlUserManagement());
             executeDDL(connection, "DROP USER " + USER_NAME, ISCConstants.isc_gsec_err_rec_not_found);
         } finally {
             closeQuietly(connection);
@@ -63,16 +64,6 @@ public class TestUserManager extends FBJUnit4TestBase {
 
     @Test
     public void testUsers() throws Exception {
-        boolean isFirebird3 = false;
-        Connection connection = null;
-        try {
-            connection = getConnectionViaDriverManager();
-            DatabaseMetaData dbmd = connection.getMetaData();
-            isFirebird3 = dbmd.getDatabaseMajorVersion() == 3;
-        } finally {
-            closeQuietly(connection);
-        }
-
         // Initialize the UserManager.
         UserManager userManager = new FBUserManager(getGdsType());
         userManager.setHost(DB_SERVER_URL);
@@ -88,8 +79,9 @@ public class TestUserManager extends FBJUnit4TestBase {
         user1.setMiddleName("Middle");
         user1.setLastName("Last");
         // Setting userid and groupid to 0 for Firebird 3 as it isn't supported for the SRP usermanager
-        user1.setUserId(isFirebird3 ? 0 : 222);
-        user1.setGroupId(isFirebird3 ? 0 : 222);
+        final boolean supportsUserAndGroupId = getDefaultSupportInfo().supportsUserAndGroupIdInUser();
+        user1.setUserId(supportsUserAndGroupId ? 222 : 0);
+        user1.setGroupId(supportsUserAndGroupId ? 222 : 0);
 
         try {
             userManager.add(user1);
@@ -107,8 +99,8 @@ public class TestUserManager extends FBJUnit4TestBase {
         user1.setFirstName("Name First");
         user1.setMiddleName("Name Middle");
         user1.setLastName("Name Last");
-        user1.setUserId(isFirebird3 ? 0 : 111);
-        user1.setGroupId(isFirebird3 ? 0 : 111);
+        user1.setUserId(supportsUserAndGroupId ? 111 : 0);
+        user1.setGroupId(supportsUserAndGroupId ? 111 : 0);
 
         userManager.update(user1);
 

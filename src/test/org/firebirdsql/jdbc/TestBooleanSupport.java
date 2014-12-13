@@ -1,7 +1,7 @@
 /*
  * $Id$
  *
- * Firebird Open Source J2ee connector - jdbc driver
+ * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -14,19 +14,23 @@
  * This file was created by members of the firebird development team.
  * All individual contributions remain the Copyright (C) of those
  * individuals.  Contributors to this file are either listed here or
- * can be obtained from a CVS history command.
+ * can be obtained from a source control history command.
  *
  * All rights reserved.
  */
 package org.firebirdsql.jdbc;
 
-import org.firebirdsql.common.*;
+import org.firebirdsql.common.DdlHelper;
+import org.firebirdsql.common.FBJUnit4TestBase;
+import org.firebirdsql.common.FBTestProperties;
+import org.firebirdsql.common.JdbcResourceHelper;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 import java.sql.*;
 
-import static org.firebirdsql.util.FirebirdSupportInfo.supportInfoFor;
+import static org.firebirdsql.common.FBTestProperties.getDefaultSupportInfo;
 import static org.junit.Assert.*;
 import static org.junit.Assume.assumeTrue;
 
@@ -39,8 +43,6 @@ public class TestBooleanSupport extends FBJUnit4TestBase {
 
     private static final String CREATE_TABLE =
             "CREATE TABLE withboolean ( id INTEGER, bool BOOLEAN )";
-    private static final String DROP_TABLE =
-            "DROP TABLE withboolean";
     private static final String INSERT = "INSERT INTO withboolean (id, bool) VALUES (?, ?)";
     private static final String SELECT = "SELECT id, bool FROM withboolean";
     private static final String SELECT_CONDITION_BOOL_FIELD = SELECT + " WHERE bool = ?";
@@ -51,13 +53,15 @@ public class TestBooleanSupport extends FBJUnit4TestBase {
             "INSERT INTO withboolean (id, bool) VALUES (2, UNKNOWN)"
     };
 
+    @BeforeClass
+    public static void checkBooleanSupport() {
+        assumeTrue("Test requires BOOLEAN support on server", getDefaultSupportInfo().supportsBoolean());
+    }
+
     @Before
     public void setUp() throws Exception {
         Connection con = FBTestProperties.getConnectionViaDriverManager();
         try {
-            assumeTrue("Test requires BOOLEAN support on server", supportInfoFor(con).supportsBoolean());
-
-            DdlHelper.executeDropTable(con, DROP_TABLE);
             DdlHelper.executeCreateTable(con, CREATE_TABLE);
             con.setAutoCommit(false);
             Statement stmt = con.createStatement();
