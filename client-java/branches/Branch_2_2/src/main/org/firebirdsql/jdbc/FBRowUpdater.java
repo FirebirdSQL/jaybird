@@ -1,6 +1,7 @@
 /*
+ * $Id$
  *
- * Firebird Open Source J2ee connector - jdbc driver
+ * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -13,7 +14,7 @@
  * This file was created by members of the firebird development team.
  * All individual contributions remain the Copyright (C) of those
  * individuals.  Contributors to this file are either listed here or
- * can be obtained from a CVS history command.
+ * can be obtained from a source control history command.
  *
  * All rights reserved.
  */
@@ -30,7 +31,6 @@ import org.firebirdsql.jdbc.field.FBField;
 import org.firebirdsql.jdbc.field.FBFlushableField;
 import org.firebirdsql.jdbc.field.FieldDataProvider;
 import org.firebirdsql.util.SQLExceptionChainBuilder;
-
 
 /**
  * Class responsible for modifying updatable result sets.
@@ -61,11 +61,11 @@ public class FBRowUpdater implements FirebirdRowUpdater  {
     private static final int PARAMETER_USED = 1;
     private static final int PARAMETER_DBKEY = 2;
 
-    private GDSHelper gdsHelper;
-    private Synchronizable syncProvider;
-    private XSQLVAR[] xsqlvars;
-    
-    private FBField[] fields;
+    private final GDSHelper gdsHelper;
+    private final Synchronizable syncProvider;
+    private final XSQLVAR[] xsqlvars;
+    private final FBField[] fields;
+    private final QuoteStrategy quoteStrategy;
     
     private boolean inInsertRow;
     
@@ -81,7 +81,7 @@ public class FBRowUpdater implements FirebirdRowUpdater  {
     private AbstractIscStmtHandle insertStatement;
     private AbstractIscStmtHandle selectStatement;
 
-    private FBObjectListener.ResultSetListener rsListener;
+    private final FBObjectListener.ResultSetListener rsListener;
     private boolean closed;
     private boolean processing;
     
@@ -96,6 +96,8 @@ public class FBRowUpdater implements FirebirdRowUpdater  {
         
         this.xsqlvars = new XSQLVAR[xsqlvars.length];
         this.fields = new FBField[xsqlvars.length];
+
+        quoteStrategy = QuoteStrategy.forDialect(connection.getDialect());
         
         for (int i = 0; i < xsqlvars.length; i++) {
             XSQLVAR xsqlvar = xsqlvars[i].deepCopy();
@@ -176,7 +178,6 @@ public class FBRowUpdater implements FirebirdRowUpdater  {
     }
     
     public void close() throws SQLException {
-    	
     	SQLExceptionChainBuilder chain = new SQLExceptionChainBuilder();
     	deallocateStatement(selectStatement, chain);
     	deallocateStatement(insertStatement, chain);
@@ -192,27 +193,18 @@ public class FBRowUpdater implements FirebirdRowUpdater  {
             notifyExecutionCompleted(true);
     }
     
-    /* (non-Javadoc)
-     * @see org.firebirdsql.jdbc.FirebirdRowUpdater#setRow(byte[][])
-     */
     public void setRow(byte[][] row) {
         this.oldRow = row;
         this.updatedFlags = new boolean[xsqlvars.length];
         this.inInsertRow = false;
     }
 
-    /* (non-Javadoc)
-     * @see org.firebirdsql.jdbc.FirebirdRowUpdater#cancelRowUpdates()
-     */
     public void cancelRowUpdates() {
         this.newRow = new byte[xsqlvars.length][];
         this.updatedFlags = new boolean[xsqlvars.length];
         this.inInsertRow = false;
     }
     
-    /* (non-Javadoc)
-     * @see org.firebirdsql.jdbc.FirebirdRowUpdater#getField(int)
-     */
     public FBField getField(int fieldPosition) {
         return fields[fieldPosition];
     }
@@ -231,8 +223,7 @@ public class FBRowUpdater implements FirebirdRowUpdater  {
      * @return array of booleans that represent parameter mask.
      */
     private int[] getParameterMask() throws SQLException {
-
-        // loop through the "best row identifiers" and set appropriate falgs.
+        // loop through the "best row identifiers" and set appropriate flags.
         FBDatabaseMetaData metaData = new FBDatabaseMetaData(gdsHelper);
         
         ResultSet bestRowIdentifier = metaData.getBestRowIdentifier(
@@ -249,20 +240,16 @@ public class FBRowUpdater implements FirebirdRowUpdater  {
                 
                 boolean found = false;
                 for (int i = 0; i < xsqlvars.length; i++) {
-
                     // special handling for the RDB$DB_KEY columns that must be
                     // selected as RDB$DB_KEY, but in XSQLVAR are represented
                     // as DB_KEY
                     if ("RDB$DB_KEY".equals(columnName) && "DB_KEY".equals(xsqlvars[i].sqlname)) {
                         result[i] = PARAMETER_DBKEY;
                         found = true;
-                    } else
-                    if (columnName.equals(xsqlvars[i].sqlname)) {
+                    } else if (columnName.equals(xsqlvars[i].sqlname)) {
                         result[i] = PARAMETER_USED;
                         found = true;
                     } 
-                    //else
-                    //    result[i] = PARAMETER_UNUSED;
                 }
                 
                 // if we did not found a column from the best row identifier
@@ -288,9 +275,8 @@ public class FBRowUpdater implements FirebirdRowUpdater  {
     }
     
     private void appendWhereClause(StringBuffer sb, int[] parameterMask) {
-        sb.append("WHERE");
-        sb.append("\n");
-        
+        sb.append("WHERE ");
+
         // handle the RDB$DB_KEY case first
         boolean hasDbKey = false;
         for (int i = 0; i < parameterMask.length; i++) {
@@ -310,14 +296,12 @@ public class FBRowUpdater implements FirebirdRowUpdater  {
         // WHERE clause
         boolean first = true;
         for (int i = 0; i < xsqlvars.length; i++) {
-            if (parameterMask[i] == PARAMETER_UNUSED)
-                continue;
+            if (parameterMask[i] == PARAMETER_UNUSED) continue;
             
-            if (!first)
-                sb.append("AND");
+            if (!first) sb.append(" AND");
             
             sb.append("\n\t");
-            sb.append("\"").append(xsqlvars[i].sqlname).append("\" = ").append("?");
+            quoteStrategy.appendQuoted(xsqlvars[i].sqlname, sb).append(" = ?");
             
             first = false;
         }
@@ -326,8 +310,9 @@ public class FBRowUpdater implements FirebirdRowUpdater  {
     private String buildUpdateStatement(int[] parameterMask) {
         StringBuffer sb = new StringBuffer();
         
-        sb.append("UPDATE ").append(tableName).append("\n");
-        sb.append("SET").append("\n");
+        sb.append("UPDATE ");
+        quoteStrategy.appendQuoted(tableName, sb);
+        sb.append("\nSET\n");
         
         boolean first = true;
         for (int i = 0; i < xsqlvars.length; i++) {
@@ -338,12 +323,12 @@ public class FBRowUpdater implements FirebirdRowUpdater  {
                 sb.append(",");
             
             sb.append("\n\t");
-            sb.append("\"").append(xsqlvars[i].sqlname).append("\" = ").append("?");
+            quoteStrategy.appendQuoted(xsqlvars[i].sqlname, sb).append(" = ?");
             
             first = false;
         }
         
-        sb.append("\n");
+        sb.append('\n');
         appendWhereClause(sb, parameterMask);
         
         return sb.toString();
@@ -352,7 +337,8 @@ public class FBRowUpdater implements FirebirdRowUpdater  {
     private String buildDeleteStatement(int[] parameterMask) {
         StringBuffer sb = new StringBuffer();
         
-        sb.append("DELETE FROM ").append(tableName).append("\n");
+        sb.append("DELETE FROM ");
+        quoteStrategy.appendQuoted(tableName, sb).append('\n');
         appendWhereClause(sb, parameterMask);
         
         return sb.toString();
@@ -364,7 +350,8 @@ public class FBRowUpdater implements FirebirdRowUpdater  {
         StringBuffer columns = new StringBuffer();
         StringBuffer params = new StringBuffer();
         
-        sb.append("INSERT INTO ").append(tableName);
+        sb.append("INSERT INTO ");
+        quoteStrategy.appendQuoted(tableName, sb);
         
         boolean first = true;
         for (int i = 0; i < xsqlvars.length; i++) {
@@ -376,17 +363,15 @@ public class FBRowUpdater implements FirebirdRowUpdater  {
                 columns.append(", ");
                 params.append(", ");
             }
-            
-            columns.append('"').append(xsqlvars[i].sqlname).append('"');
-            params.append("?");
+
+            quoteStrategy.appendQuoted(xsqlvars[i].sqlname, columns);
+            params.append('?');
             
             first = false;
         }
-        
-        sb.append("(\n\t").append(columns).append("\n)");
-        sb.append("VALUES");
-        sb.append("(\n\t").append(params).append("\n)");
-        
+
+        sb.append('(').append(columns).append(") VALUES (").append(params).append(')');
+
         return sb.toString();
     }
     
@@ -409,14 +394,14 @@ public class FBRowUpdater implements FirebirdRowUpdater  {
                     && xsqlvars[i].sqllen == 8)
                 columns.append("RDB$DB_KEY");
             else
-                columns.append("\"").append(xsqlvars[i].sqlname).append("\"");
+                quoteStrategy.appendQuoted(xsqlvars[i].sqlname, columns);
             
             first = false;
         }
         
-        sb.append("\n\t").append(columns).append("\n");
-        sb.append("FROM");
-        sb.append("\n\t").append(tableName).append("\n");
+        sb.append("\n\t").append(columns).append('\n')
+                .append("FROM\n\t");
+        quoteStrategy.appendQuoted(tableName, sb).append('\n');
         appendWhereClause(sb, parameterMask);
         return sb.toString();
     }
@@ -426,16 +411,11 @@ public class FBRowUpdater implements FirebirdRowUpdater  {
     private static final int INSERT_STATEMENT_TYPE = 3;
     private static final int SELECT_STATEMENT_TYPE = 4;
     
-    /* (non-Javadoc)
-     * @see org.firebirdsql.jdbc.FirebirdRowUpdater#updateRow()
-     */
     public void updateRow() throws SQLException {
-        
         boolean success = false;
 
         synchronized(syncProvider.getSynchronizationObject()) {
             try {
-                
                 notifyExecutionStarted();
                 
                 if (updateStatement == null)
@@ -444,7 +424,6 @@ public class FBRowUpdater implements FirebirdRowUpdater  {
                 executeStatement(UPDATE_STATEMENT_TYPE, updateStatement);
                 
                 success = true;
-                
             } catch(GDSException ex) {
                 throw new FBSQLException(ex);
             } finally {
@@ -453,16 +432,11 @@ public class FBRowUpdater implements FirebirdRowUpdater  {
         }
     }
     
-    /* (non-Javadoc)
-     * @see org.firebirdsql.jdbc.FirebirdRowUpdater#deleteRow()
-     */
     public void deleteRow() throws SQLException {
-        
         boolean success = false;
 
         synchronized(syncProvider.getSynchronizationObject()) {
             try {
-                
                 notifyExecutionStarted();
                 
                 if (deleteStatement == null)
@@ -471,7 +445,6 @@ public class FBRowUpdater implements FirebirdRowUpdater  {
                 executeStatement(DELETE_STATEMENT_TYPE, deleteStatement);
                 
                 success = true;
-                
             } catch(GDSException ex) {
                 throw new FBSQLException(ex);
             } finally {
@@ -480,16 +453,11 @@ public class FBRowUpdater implements FirebirdRowUpdater  {
         }
     }
     
-    /* (non-Javadoc)
-     * @see org.firebirdsql.jdbc.FirebirdRowUpdater#insertRow()
-     */
     public void insertRow() throws SQLException {
-        
         boolean success = false;
 
         synchronized(syncProvider.getSynchronizationObject()) {
             try {
-                
                 notifyExecutionStarted();
                 
                 if (insertStatement == null)
@@ -498,7 +466,6 @@ public class FBRowUpdater implements FirebirdRowUpdater  {
                 executeStatement(INSERT_STATEMENT_TYPE, insertStatement);
                 
                 success = true;
-                
             } catch(GDSException ex) {
                 throw new FBSQLException(ex);
             } finally {
@@ -507,16 +474,11 @@ public class FBRowUpdater implements FirebirdRowUpdater  {
         }
     }
     
-    /* (non-Javadoc)
-     * @see org.firebirdsql.jdbc.FirebirdRowUpdater#refreshRow()
-     */
     public void refreshRow() throws SQLException {
-        
         boolean success = false;
 
         synchronized(syncProvider.getSynchronizationObject()) {
             try {
-                
                 notifyExecutionStarted();
                 
                 if (selectStatement == null)
@@ -542,7 +504,6 @@ public class FBRowUpdater implements FirebirdRowUpdater  {
                 }
                 
                 success = true;
-                
             } catch(GDSException ex) {
                 throw new FBSQLException(ex);
             } finally {
@@ -622,7 +583,7 @@ public class FBRowUpdater implements FirebirdRowUpdater  {
                     continue;
                 
                 params[paramIterator].copyFrom(xsqlvars[i]);
-                
+
                 if (statementType == INSERT_STATEMENT_TYPE)
                     params[paramIterator].sqldata = insertRow[i];
                 else
@@ -640,30 +601,18 @@ public class FBRowUpdater implements FirebirdRowUpdater  {
         }
     }
     
-    /* (non-Javadoc)
-     * @see org.firebirdsql.jdbc.FirebirdRowUpdater#rowInserted()
-     */
     public boolean rowInserted() throws SQLException {
         return false;
     }
     
-    /* (non-Javadoc)
-     * @see org.firebirdsql.jdbc.FirebirdRowUpdater#rowDeleted()
-     */
     public boolean rowDeleted() throws SQLException {
         return false;
     }
     
-    /* (non-Javadoc)
-     * @see org.firebirdsql.jdbc.FirebirdRowUpdater#rowUpdated()
-     */
     public boolean rowUpdated() throws SQLException {
         return false;
     }
     
-    /* (non-Javadoc)
-     * @see org.firebirdsql.jdbc.FirebirdRowUpdater#getNewRow()
-     */
     public byte[][] getNewRow() {
         byte[][] result = new byte[oldRow.length][];
         for (int i = 0; i < result.length; i++) {
@@ -687,32 +636,20 @@ public class FBRowUpdater implements FirebirdRowUpdater  {
         return result;
     }
     
-    /* (non-Javadoc)
-     * @see org.firebirdsql.jdbc.FirebirdRowUpdater#getInsertRow()
-     */
     public byte[][] getInsertRow() {
         return insertRow;
     }
 
-    /* (non-Javadoc)
-     * @see org.firebirdsql.jdbc.FirebirdRowUpdater#getOldRow()
-     */
     public byte[][] getOldRow() {
         return oldRow;
     }
     
-    /* (non-Javadoc)
-     * @see org.firebirdsql.jdbc.FirebirdRowUpdater#moveToInsertRow()
-     */
     public void moveToInsertRow() throws SQLException {
         inInsertRow = true;
         insertRow = new byte[xsqlvars.length][];
         this.updatedFlags = new boolean[xsqlvars.length];
     }
     
-    /* (non-Javadoc)
-     * @see org.firebirdsql.jdbc.FirebirdRowUpdater#moveToCurrentRow()
-     */
     public void moveToCurrentRow() throws SQLException {
         inInsertRow = false;
         insertRow = new byte[xsqlvars.length][];
