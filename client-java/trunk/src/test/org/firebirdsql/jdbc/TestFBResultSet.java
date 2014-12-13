@@ -414,7 +414,7 @@ public class TestFBResultSet extends FBJUnit4TestBase {
                 assertTrue("Should have at least one row", rs.next());
                 rs.close();
             } catch(SQLException ex) {
-                if (ex.getErrorCode() != ISCConstants.isc_string_truncation) throw ex;
+                if (ex.getErrorCode() != ISCConstants.isc_string_truncation && !ex.getMessage().contains("string truncation")) throw ex;
                 // it is ok as well, since substr is declared as CSTRING(80)
                 // and truncation error happens
                 System.out.println("First query generated exception" + ex.getMessage());
@@ -428,7 +428,7 @@ public class TestFBResultSet extends FBJUnit4TestBase {
 
                 rs.close();
             } catch(SQLException ex) {
-                if (ex.getErrorCode() != ISCConstants.isc_string_truncation) throw ex;
+                if (ex.getErrorCode() != ISCConstants.isc_string_truncation && !ex.getMessage().contains("string truncation")) throw ex;
                 // it is ok as well, since substr is declared as CSTRING(80)
                 // and truncation error happens
                 System.out.println("Second query generated exception" + ex.getMessage());

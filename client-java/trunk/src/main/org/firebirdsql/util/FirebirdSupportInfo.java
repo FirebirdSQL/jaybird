@@ -164,6 +164,13 @@ public class FirebirdSupportInfo {
     }
 
     /**
+     * @return {@code true} when {@code isc_spb_sec_userid} and {@code isc_spb_sec_groupid} are supported.
+     */
+    public boolean supportsUserAndGroupIdInUser() {
+        return serverVersion.getMajorVersion() < 3;
+    }
+
+    /**
      * @param protocolVersion Protocol version number
      * @return {@code true} when the database supports the specified protocol
      */
