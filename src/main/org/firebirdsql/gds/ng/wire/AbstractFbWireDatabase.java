@@ -23,6 +23,7 @@ package org.firebirdsql.gds.ng.wire;
 import org.firebirdsql.encodings.Encoding;
 import org.firebirdsql.encodings.IEncodingFactory;
 import org.firebirdsql.gds.BlobParameterBuffer;
+import org.firebirdsql.gds.impl.wire.BlobParameterBufferImp;
 import org.firebirdsql.gds.impl.wire.XdrInputStream;
 import org.firebirdsql.gds.impl.wire.XdrOutputStream;
 import org.firebirdsql.gds.ng.*;
@@ -124,6 +125,11 @@ public abstract class AbstractFbWireDatabase extends AbstractFbDatabase implemen
     @Override
     public FbBlob createBlobForInput(FbTransaction transaction, BlobParameterBuffer blobParameterBuffer, long blobId) throws SQLException {
         return protocolDescriptor.createInputBlob(this, (FbWireTransaction) transaction, blobParameterBuffer, blobId);
+    }
+
+    @Override
+    public BlobParameterBuffer createBlobParameterBuffer() {
+        return new BlobParameterBufferImp();
     }
 
     @Override

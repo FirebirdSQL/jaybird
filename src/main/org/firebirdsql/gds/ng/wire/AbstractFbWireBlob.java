@@ -37,6 +37,8 @@ import java.sql.SQLException;
  */
 public abstract class AbstractFbWireBlob extends AbstractFbBlob implements FbWireBlob {
 
+    private int blobHandle;
+
     protected AbstractFbWireBlob(FbWireDatabase database, FbWireTransaction transaction,
                                  BlobParameterBuffer blobParameterBuffer) {
         super(database, transaction, blobParameterBuffer);
@@ -45,6 +47,23 @@ public abstract class AbstractFbWireBlob extends AbstractFbBlob implements FbWir
     @Override
     public FbWireDatabase getDatabase() {
         return (FbWireDatabase) super.getDatabase();
+    }
+
+    @Override
+    public final int getHandle() {
+        synchronized (getSynchronizationObject()) {
+            return blobHandle;
+        }
+    }
+
+    /**
+     * @param blobHandle
+     *         The Firebird blob handle identifier
+     */
+    protected final void setHandle(int blobHandle) {
+        synchronized (getSynchronizationObject()) {
+            this.blobHandle = blobHandle;
+        }
     }
 
     /**

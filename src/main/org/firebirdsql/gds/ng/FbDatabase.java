@@ -151,6 +151,14 @@ public interface FbDatabase {
             long blobId) throws SQLException;
 
     /**
+     * Creates a blob parameter buffer that is usable with {@link #createBlobForInput(FbTransaction, org.firebirdsql.gds.BlobParameterBuffer, long)}
+     * and {@link #createBlobForOutput(FbTransaction, org.firebirdsql.gds.BlobParameterBuffer)} of this instance.
+     *
+     * @return A blob parameter buffer.
+     */
+    BlobParameterBuffer createBlobParameterBuffer();
+
+    /**
      * Request database info.
      *
      * @param requestItems

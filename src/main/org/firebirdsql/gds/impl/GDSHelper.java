@@ -359,7 +359,7 @@ public class GDSHelper {
      */
     public FbBlob openBlob(long blob_id, boolean segmented) throws SQLException {
         try {
-            BlobParameterBuffer blobParameterBuffer = gds.createBlobParameterBuffer();
+            BlobParameterBuffer blobParameterBuffer = database.createBlobParameterBuffer();
 
             blobParameterBuffer.addArgument(BlobParameterBuffer.TYPE,
                     segmented ? BlobParameterBuffer.TYPE_SEGMENTED
@@ -386,7 +386,7 @@ public class GDSHelper {
      */
     public FbBlob createBlob(boolean segmented) throws SQLException {
         try {
-            BlobParameterBuffer blobParameterBuffer = gds.createBlobParameterBuffer();
+            BlobParameterBuffer blobParameterBuffer = database.createBlobParameterBuffer();
 
             blobParameterBuffer.addArgument(BlobParameterBuffer.TYPE,
                     segmented ? BlobParameterBuffer.TYPE_SEGMENTED
