@@ -27,6 +27,7 @@ import org.firebirdsql.encodings.EncodingDefinition;
 import org.firebirdsql.encodings.IEncodingFactory;
 import org.firebirdsql.gds.*;
 import org.firebirdsql.gds.impl.DatabaseParameterBufferExtension;
+import org.firebirdsql.gds.impl.jni.BlobParameterBufferImp;
 import org.firebirdsql.gds.impl.jni.DatabaseParameterBufferImp;
 import org.firebirdsql.gds.impl.jni.TransactionParameterBufferImpl;
 import org.firebirdsql.gds.ng.*;
@@ -261,13 +262,18 @@ public class JnaDatabase extends AbstractFbDatabase implements TransactionListen
     @Override
     public FbBlob createBlobForOutput(FbTransaction transaction, BlobParameterBuffer blobParameterBuffer)
             throws SQLException {
-        return null;
+        return new JnaBlob(this, (JnaTransaction) transaction, blobParameterBuffer);
     }
 
     @Override
     public FbBlob createBlobForInput(FbTransaction transaction, BlobParameterBuffer blobParameterBuffer,
             long blobId) throws SQLException {
-        return null;
+        return new JnaBlob(this, (JnaTransaction) transaction, blobParameterBuffer, blobId);
+    }
+
+    @Override
+    public BlobParameterBuffer createBlobParameterBuffer() {
+        return new BlobParameterBufferImp();
     }
 
     @Override

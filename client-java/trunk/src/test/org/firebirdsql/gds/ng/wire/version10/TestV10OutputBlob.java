@@ -23,7 +23,6 @@ package org.firebirdsql.gds.ng.wire.version10;
 import org.firebirdsql.gds.BlobParameterBuffer;
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.XSQLVAR;
-import org.firebirdsql.gds.impl.wire.BlobParameterBufferImp;
 import org.firebirdsql.gds.ng.FbBlob;
 import org.firebirdsql.gds.ng.FbStatement;
 import org.firebirdsql.gds.ng.FbTransaction;
@@ -32,9 +31,7 @@ import org.firebirdsql.gds.ng.fields.RowDescriptor;
 import org.firebirdsql.gds.ng.fields.RowValue;
 import org.firebirdsql.gds.ng.wire.FbWireDatabase;
 import org.firebirdsql.gds.ng.wire.SimpleStatementListener;
-import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.ExpectedException;
 
 import java.sql.SQLException;
 import java.sql.SQLNonTransientException;
@@ -47,13 +44,16 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
 
 /**
+ * Tests for {@link org.firebirdsql.gds.ng.wire.version10.V10OutputBlob}. This test class can
+ * be sub-classed for tests running on newer protocol versions.
+ * <p>
+ * Tests from this class are also copied to {@link org.firebirdsql.gds.ng.jna.TestJnaBlob} TODO: Consider refactoring test hierarchy
+ * </p>
+ *
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @since 3.0
  */
 public class TestV10OutputBlob extends BaseTestV10Blob {
-
-    @Rule
-    public final ExpectedException expectedException = ExpectedException.none();
 
     /**
      * Tests storage of a blob (what goes in is what comes out).
@@ -77,44 +77,6 @@ public class TestV10OutputBlob extends BaseTestV10Blob {
     }
 
     /**
-     * Writes a blob using the gds.ng API.
-     *
-     * @param testId Id of the record to insert
-     * @param testBytes Bytes to write
-     * @param db Database to use
-     * @param blobParameterBuffer Blob parameter buffer (or null)
-     * @throws SQLException
-     */
-    private void writeBlob(int testId, byte[] testBytes, FbWireDatabase db, BlobParameterBuffer blobParameterBuffer) throws SQLException {
-        final SimpleStatementListener listener = new SimpleStatementListener();
-        final FbTransaction transaction = getTransaction(db);
-        try {
-            final FbStatement statement = db.createStatement(transaction);
-            statement.addStatementListener(listener);
-            final FbBlob blob = db.createBlobForOutput(transaction, blobParameterBuffer);
-            blob.open();
-            int bytesWritten = 0;
-            while (bytesWritten < testBytes.length) {
-                // TODO the interface for writing blobs should be simpler
-                byte[] buffer = new byte[Math.min(blob.getMaximumSegmentSize(), testBytes.length - bytesWritten)];
-                System.arraycopy(testBytes, bytesWritten, buffer, 0, buffer.length);
-                blob.putSegment(buffer);
-                bytesWritten += buffer.length;
-            }
-            blob.close();
-
-            statement.prepare(INSERT_BLOB_TABLE);
-            RowDescriptor descriptor = statement.getParameterDescriptor();
-            FieldValue param1 = new FieldValue(descriptor.getFieldDescriptor(0), XSQLVAR.intToBytes(testId));
-            FieldValue param2 = new FieldValue(descriptor.getFieldDescriptor(1), XSQLVAR.longToBytes(blob.getBlobId()));
-            statement.execute(RowValue.of(param1, param2));
-            statement.close();
-        } finally {
-            transaction.commit();
-        }
-    }
-
-    /**
      * Tests storage of a stream blob (what goes in is what comes out).
      */
     @Test
@@ -127,7 +89,7 @@ public class TestV10OutputBlob extends BaseTestV10Blob {
 
         final FbWireDatabase db = createDatabaseConnection();
         try {
-            final BlobParameterBuffer blobParameterBuffer = new BlobParameterBufferImp();
+            final BlobParameterBuffer blobParameterBuffer = db.createBlobParameterBuffer();
             blobParameterBuffer.addArgument(BlobParameterBuffer.TYPE, BlobParameterBuffer.TYPE_STREAM);
             writeBlob(testId, testBytes, db, blobParameterBuffer);
         } finally {

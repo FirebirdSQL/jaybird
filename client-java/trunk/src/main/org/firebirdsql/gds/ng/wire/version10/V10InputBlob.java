@@ -169,11 +169,4 @@ public class V10InputBlob extends AbstractFbWireInputBlob implements FbWireBlob,
             }
         }
     }
-
-    @Override
-    public int getMaximumSegmentSize() {
-        // TODO Max size in FB 3 is 2^16, not 2^15 - 1, is that for all versions, or only for newer protocols?
-        // Subtracting 2 because the maximum size includes length TODO: verify if true
-        return Short.MAX_VALUE - 2;
-    }
 }

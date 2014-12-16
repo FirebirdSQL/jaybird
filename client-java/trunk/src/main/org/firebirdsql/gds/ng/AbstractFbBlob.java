@@ -43,7 +43,6 @@ public abstract class AbstractFbBlob implements FbBlob, TransactionListener, Dat
     private FbTransaction transaction;
     private FbDatabase database;
     private boolean open;
-    private int blobHandle;
     private boolean eof;
 
     protected AbstractFbBlob(FbDatabase database, FbTransaction transaction, BlobParameterBuffer blobParameterBuffer) {
@@ -54,21 +53,6 @@ public abstract class AbstractFbBlob implements FbBlob, TransactionListener, Dat
         this.blobParameterBuffer = blobParameterBuffer;
         transaction.addTransactionListener(this);
         database.addDatabaseListener(this);
-    }
-
-    @Override
-    public final int getHandle() {
-        return blobHandle;
-    }
-
-    /**
-     * @param blobHandle
-     *         The Firebird blob handle identifier
-     */
-    protected final void setHandle(int blobHandle) {
-        synchronized (getSynchronizationObject()) {
-            this.blobHandle = blobHandle;
-        }
     }
 
     @Override
@@ -340,5 +324,12 @@ public abstract class AbstractFbBlob implements FbBlob, TransactionListener, Dat
      */
     protected BlobLengthProcessor createBlobLengthProcessor() {
         return new BlobLengthProcessor(this);
+    }
+
+    @Override
+    public int getMaximumSegmentSize() {
+        // TODO Max size in FB 3 is 2^16, not 2^15 - 1, is that for all versions, or only for newer protocols?
+        // Subtracting 2 because the maximum size includes length TODO: verify if true
+        return Short.MAX_VALUE - 2;
     }
 }

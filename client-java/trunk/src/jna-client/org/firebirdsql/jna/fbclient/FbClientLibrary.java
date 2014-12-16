@@ -23,6 +23,7 @@ package org.firebirdsql.jna.fbclient;
 import com.sun.jna.Callback;
 import com.sun.jna.Pointer;
 import com.sun.jna.ptr.IntByReference;
+import com.sun.jna.ptr.LongByReference;
 import com.sun.jna.ptr.PointerByReference;
 import com.sun.jna.ptr.ShortByReference;
 
@@ -157,6 +158,12 @@ public interface FbClientLibrary {
 	 */
 	ISC_STATUS isc_create_blob2(ISC_STATUS[] statusVector, IntByReference dbHandle, IntByReference trHandle,
             IntByReference blobHandle, GDS_QUAD_t blobId, short bpbLength, byte[] bpb);
+	/**
+	 * Original signature : <code>ISC_STATUS isc_create_blob2(ISC_STATUS*, isc_db_handle*, isc_tr_handle*, isc_blob_handle*, ISC_QUAD*, short, const ISC_SCHAR*)</code><br>
+	 * <i>native declaration : C:\Program Files\Firebird\Firebird_2_5\include\ibase.h:511</i>
+	 */
+	ISC_STATUS isc_create_blob2(ISC_STATUS[] statusVector, IntByReference dbHandle, IntByReference trHandle,
+			IntByReference blobHandle, LongByReference blobId, short bpbLength, byte[] bpb);
 	/**
 	 * Original signature : <code>ISC_STATUS isc_create_database(ISC_STATUS*, short, const ISC_SCHAR*, isc_db_handle*, short, const ISC_SCHAR*, short)</code><br>
 	 * <i>native declaration : C:\Program Files\Firebird\Firebird_2_5\include\ibase.h:519</i>
@@ -372,6 +379,12 @@ public interface FbClientLibrary {
 	ISC_STATUS isc_open_blob2(ISC_STATUS[] statusVector, IntByReference dbHandle, IntByReference trHandle,
             IntByReference blobHandle, GDS_QUAD_t blobId, short bpbLength, byte[] bpb);
 	/**
+	 * Original signature : <code>ISC_STATUS isc_open_blob2(ISC_STATUS*, isc_db_handle*, isc_tr_handle*, isc_blob_handle*, ISC_QUAD*, ISC_USHORT, const ISC_UCHAR*)</code><br>
+	 * <i>native declaration : C:\Program Files\Firebird\Firebird_2_5\include\ibase.h:713</i>
+	 */
+	ISC_STATUS isc_open_blob2(ISC_STATUS[] statusVector, IntByReference dbHandle, IntByReference trHandle,
+			IntByReference blobHandle, LongByReference blobId, short bpbLength, byte[] bpb);
+	/**
 	 * Original signature : <code>ISC_STATUS isc_prepare_transaction2(ISC_STATUS*, isc_tr_handle*, ISC_USHORT, const ISC_UCHAR*)</code><br>
 	 * <i>native declaration : C:\Program Files\Firebird\Firebird_2_5\include\ibase.h:721</i>
 	 */
@@ -529,8 +542,8 @@ public interface FbClientLibrary {
 	 * Original signature : <code>ISC_STATUS isc_seek_blob(ISC_STATUS*, isc_blob_handle*, short, ISC_LONG, ISC_LONG*)</code><br>
 	 * <i>native declaration : C:\Program Files\Firebird\Firebird_2_5\include\ibase.h:899</i>
 	 */
-	ISC_STATUS isc_seek_blob(ISC_STATUS[] statusVector, IntByReference blobHandle, short s1, int ISC_LONG1,
-            IntBuffer ISC_LONGPtr1);
+	ISC_STATUS isc_seek_blob(ISC_STATUS[] statusVector, IntByReference blobHandle, short mode, int offset,
+            IntByReference result);
 	/**
 	 * Original signature : <code>ISC_STATUS isc_send(ISC_STATUS*, isc_req_handle*, short, short, const void*, short)</code><br>
 	 * <i>native declaration : C:\Program Files\Firebird\Firebird_2_5\include\ibase.h:905</i>
