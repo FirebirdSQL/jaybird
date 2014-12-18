@@ -132,7 +132,7 @@ public class JnaBlob extends AbstractFbBlob implements FbBlob, DatabaseListener 
             throw new SQLException(String.format("getSegment called with sizeRequested %d, should be > 0",
                     sizeRequested));
         }
-        // TODO Is this actually a real limitation, or are larger sizes possible?
+        // TODO Honour request for larger sizes by looping?
         sizeRequested = Math.min(sizeRequested, getMaximumSegmentSize());
         final ByteBuffer responseBuffer = ByteBuffer.allocateDirect(sizeRequested);
         final ShortByReference actualLength = new ShortByReference();
@@ -159,7 +159,7 @@ public class JnaBlob extends AbstractFbBlob implements FbBlob, DatabaseListener 
         }
         final int actualLengthInt = ((int) actualLength.getValue()) & 0xFFFF;
         final byte[] segment = new byte[actualLengthInt];
-        responseBuffer.get(segment, 0, actualLengthInt);
+        responseBuffer.get(segment);
         return segment;
     }
 
@@ -170,6 +170,7 @@ public class JnaBlob extends AbstractFbBlob implements FbBlob, DatabaseListener 
             // TODO Add SQL State, make non transient?
             throw new SQLException("putSegment called with zero-length segment, should be > 0");
         }
+        // TODO Handle by performing multiple puts? (Wrap in byte buffer, use position to move pointer?)
         if (segment.length > getMaximumSegmentSize()) {
             // TODO Add SQL State, make non transient?
             throw new SQLException(String.format("Segment longer than maximum segment size. Received: %d, maximum %d",
