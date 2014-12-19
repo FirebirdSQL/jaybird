@@ -83,8 +83,8 @@ public class JnaStatement extends AbstractFbStatement {
             final JnaDatabase db = getDatabase();
             synchronized (db.getSynchronizationObject()) {
                 clientLibrary.isc_dsql_free_statement(statusVector, handle, (short) option);
-                processStatusVector();
             }
+            processStatusVector();
             // Reset statement information
             reset(option == ISCConstants.DSQL_drop);
         }
