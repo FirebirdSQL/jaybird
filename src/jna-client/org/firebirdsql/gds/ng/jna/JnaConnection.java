@@ -70,7 +70,10 @@ public final class JnaConnection extends AbstractConnection {
         this.clientLibrary = clientLibrary;
     }
 
-    public FbClientLibrary getClientLibrary() throws SQLException {
+    /**
+     * @return The client library instance associated with the connection.
+     */
+    public FbClientLibrary getClientLibrary() {
         return clientLibrary;
     }
 
