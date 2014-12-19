@@ -27,7 +27,7 @@ package org.firebirdsql.logging;
  */
 final class ConsoleLogger implements Logger {
     
-    private static final boolean debugEnabled = false;
+    private static final boolean debugEnabled = true;
     private static final boolean traceEnabled = true;
     private static final boolean infoEnabled = true;
     private static final boolean warnEnabled = true;
