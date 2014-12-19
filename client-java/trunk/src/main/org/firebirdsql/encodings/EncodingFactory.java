@@ -37,7 +37,7 @@ import java.util.concurrent.ConcurrentMap;
  */
 public final class EncodingFactory implements IEncodingFactory {
 
-    private static final Logger log = LoggerFactory.getLogger(EncodingFactory.class, false);
+    private static final Logger log = LoggerFactory.getLogger(EncodingFactory.class);
 
     private static final Charset DEFAULT_CHARSET = Charset.defaultCharset();
     private static final Comparator<EncodingSet> ENCODING_SET_COMPARATOR = new Comparator<EncodingSet>() {

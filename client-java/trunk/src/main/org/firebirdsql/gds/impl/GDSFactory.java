@@ -42,8 +42,8 @@ import java.util.Map.Entry;
  */
 public class GDSFactory {
 
-    private static Logger log = LoggerFactory.getLogger(GDSFactory.class,
-        false);
+    private static Logger log = LoggerFactory.getLogger(GDSFactory.class
+    );
 
     /**
      * Class for string comparison in the descendant order. This effectively

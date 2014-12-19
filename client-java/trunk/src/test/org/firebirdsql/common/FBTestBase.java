@@ -37,7 +37,7 @@ import static org.firebirdsql.common.FBTestProperties.*;
  */
 public abstract class FBTestBase extends TestCase {
 
-    protected final Logger log = LoggerFactory.getLogger(getClass(), true);
+    protected final Logger log = LoggerFactory.getLogger(getClass());
 
     protected FBManager fbManager = null;
 

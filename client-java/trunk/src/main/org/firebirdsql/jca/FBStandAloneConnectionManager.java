@@ -45,7 +45,7 @@ public class FBStandAloneConnectionManager
     private static final long serialVersionUID = -4933951275930670896L;
     
     private transient final static Logger log = 
-        LoggerFactory.getLogger(FBStandAloneConnectionManager.class,false);
+        LoggerFactory.getLogger(FBStandAloneConnectionManager.class);
         
      //package constructor
      FBStandAloneConnectionManager() {

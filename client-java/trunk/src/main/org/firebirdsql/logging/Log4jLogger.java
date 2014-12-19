@@ -1,5 +1,7 @@
 /*
- * Firebird Open Source J2ee connector - jdbc driver
+ * $Id$
+ *
+ * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -12,7 +14,7 @@
  * This file was created by members of the firebird development team.
  * All individual contributions remain the Copyright (C) of those
  * individuals.  Contributors to this file are either listed here or
- * can be obtained from a CVS history command.
+ * can be obtained from a source control history command.
  *
  * All rights reserved.
  */
@@ -22,12 +24,12 @@ import org.apache.log4j.Category;
 import org.apache.log4j.Priority;
 
 /**
- * Describe class <code>Log4jLogger</code> here.
+ * Logger implementation for Log4J
  *
  * @author <a href="mailto:brodsom@users.sourceforge.net">Blas Rodriguez Somoza</a>
  * @version 1.0
  */
-public class Log4jLogger extends Logger{
+class Log4jLogger implements Logger{
 	
     private static boolean loggingAvailable = true;
 	
@@ -38,15 +40,13 @@ public class Log4jLogger extends Logger{
             Category myLog = null;
             try {
                 myLog = Category.getInstance(name);
-            }
-            catch (Throwable t) {
+            } catch (Throwable t) {
                 loggingAvailable = false;
-            } // end of try-catch
+            }
             log = myLog;
-        } // end of if ()
-        else {
+        } else {
             log = null;
-        } // end of else
+        }
     }
 		
     public boolean isDebugEnabled() {
@@ -56,7 +56,7 @@ public class Log4jLogger extends Logger{
     public void debug(Object message) {
         if (isDebugEnabled()) {
             log.log(Priority.DEBUG, message);
-        } // end of if ()
+        }
     }
 	
     public void debug(Object message, Throwable t) {

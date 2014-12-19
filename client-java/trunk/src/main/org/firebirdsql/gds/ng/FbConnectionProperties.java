@@ -37,7 +37,7 @@ import static org.firebirdsql.gds.ISCConstants.*;
  */
 public final class FbConnectionProperties implements IConnectionProperties {
 
-    private static final Logger log = LoggerFactory.getLogger(FbConnectionProperties.class, false);
+    private static final Logger log = LoggerFactory.getLogger(FbConnectionProperties.class);
 
     private String databaseName;
     private String serverName = IConnectionProperties.DEFAULT_SERVER_NAME;

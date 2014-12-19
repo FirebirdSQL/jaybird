@@ -28,7 +28,7 @@ import org.firebirdsql.logging.LoggerFactory;
 
 public class NativeGDSImpl extends JniGDSImpl {
 
-    private static Logger log = LoggerFactory.getLogger(NativeGDSImpl.class, false);
+    private static Logger log = LoggerFactory.getLogger(NativeGDSImpl.class);
     
     /**
      * When initializing in type2 mode this class will attempt too load the

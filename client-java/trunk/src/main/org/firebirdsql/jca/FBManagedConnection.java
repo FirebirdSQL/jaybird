@@ -59,7 +59,7 @@ public class FBManagedConnection implements ManagedConnection, XAResource, Excep
 
     public static final String WARNING_NO_CHARSET = "WARNING: No connection characterset specified (property lc_ctype, encoding, charSet or localEncoding), defaulting to characterset NONE";
 
-    private static final Logger log = LoggerFactory.getLogger(FBManagedConnection.class, false);
+    private static final Logger log = LoggerFactory.getLogger(FBManagedConnection.class);
 
     private final FBManagedConnectionFactory mcf;
 

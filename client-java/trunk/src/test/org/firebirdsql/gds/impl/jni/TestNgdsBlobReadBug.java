@@ -56,7 +56,7 @@ public class TestNgdsBlobReadBug {
             LocalGDSImpl.LOCAL_TYPE_NAME,
             EmbeddedGDSImpl.EMBEDDED_TYPE_NAME);
 
-    private Logger log = LoggerFactory.getLogger(getClass(), false);
+    private Logger log = LoggerFactory.getLogger(getClass());
 
     @Test
     public void testBlobReadBug() throws Exception {

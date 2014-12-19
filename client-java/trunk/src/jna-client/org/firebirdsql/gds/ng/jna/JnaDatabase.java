@@ -57,7 +57,7 @@ public class JnaDatabase extends AbstractFbDatabase implements TransactionListen
 
     // TODO Find out if there are any exception from JNA that we need to be prepared to handle.
 
-    private static final Logger log = LoggerFactory.getLogger(JnaDatabase.class, false);
+    private static final Logger log = LoggerFactory.getLogger(JnaDatabase.class);
     private static final ParameterConverter PARAMETER_CONVERTER = new JnaParameterConverter();
     private static final DatatypeCoder datatypeCoder =
             java.nio.ByteOrder.nativeOrder() == ByteOrder.LITTLE_ENDIAN

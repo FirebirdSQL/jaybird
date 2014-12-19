@@ -51,7 +51,7 @@ public final class XdrOutputStream extends OutputStream {
 
     private static final int BUF_SIZE = 32767;
 
-    private static final Logger log = LoggerFactory.getLogger(XdrOutputStream.class, false);
+    private static final Logger log = LoggerFactory.getLogger(XdrOutputStream.class);
     private static final byte[] TEXT_PAD;
     private static final byte[] ZERO_PADDING = new byte[3];
     public static final int SPACE_BYTE = 0x20;

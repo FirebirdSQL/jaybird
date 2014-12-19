@@ -37,7 +37,7 @@ import java.sql.SQLException;
  */
 public final class StatementInfoProcessor implements InfoProcessor<InfoProcessor.StatementInfo> {
 
-    private static final Logger log = LoggerFactory.getLogger(StatementInfoProcessor.class, false);
+    private static final Logger log = LoggerFactory.getLogger(StatementInfoProcessor.class);
 
     private final AbstractFbStatement statement;
     private final FbDatabase database;

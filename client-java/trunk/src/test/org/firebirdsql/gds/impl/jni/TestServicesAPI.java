@@ -46,7 +46,7 @@ public class TestServicesAPI {
     @ClassRule
     public static final GdsTypeRule testType = GdsTypeRule.supports(EmbeddedGDSImpl.EMBEDDED_TYPE_NAME);
 
-    private final Logger log = LoggerFactory.getLogger(getClass(), true);
+    private final Logger log = LoggerFactory.getLogger(getClass());
 
     private String mAbsoluteDatabasePath;
     private String mAbsoluteBackupPath;
