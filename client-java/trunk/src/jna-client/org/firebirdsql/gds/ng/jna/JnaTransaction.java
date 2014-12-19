@@ -44,6 +44,7 @@ public class JnaTransaction extends AbstractFbTransaction {
     // TODO: Clear on commit/rollback?
     private final IntByReference handle;
     private final ISC_STATUS[] statusVector = new ISC_STATUS[JnaDatabase.STATUS_VECTOR_SIZE];
+    private final FbClientLibrary clientLibrary;
 
     /**
      * Initializes AbstractFbTransaction.
@@ -59,6 +60,7 @@ public class JnaTransaction extends AbstractFbTransaction {
     protected JnaTransaction(JnaDatabase database, IntByReference transactionHandle, TransactionState initialState) {
         super(initialState, database);
         handle = transactionHandle;
+        clientLibrary = database.getClientLibrary();
     }
 
     @Override
@@ -81,7 +83,6 @@ public class JnaTransaction extends AbstractFbTransaction {
             synchronized (getSynchronizationObject()) {
                 final JnaDatabase db = getDatabase();
                 db.checkConnected();
-                final FbClientLibrary clientLibrary = db.getClientLibrary();
                 switchState(TransactionState.COMMITTING);
                 synchronized (db.getSynchronizationObject()) {
                     clientLibrary.isc_commit_transaction(statusVector, handle);
@@ -102,7 +103,6 @@ public class JnaTransaction extends AbstractFbTransaction {
             synchronized (getSynchronizationObject()) {
                 final JnaDatabase db = getDatabase();
                 db.checkConnected();
-                final FbClientLibrary clientLibrary = db.getClientLibrary();
                 switchState(TransactionState.ROLLING_BACK);
                 synchronized (db.getSynchronizationObject()) {
                     clientLibrary.isc_rollback_transaction(statusVector, handle);
@@ -123,7 +123,6 @@ public class JnaTransaction extends AbstractFbTransaction {
             synchronized (getSynchronizationObject()) {
                 final JnaDatabase db = getDatabase();
                 db.checkConnected();
-                final FbClientLibrary clientLibrary = db.getClientLibrary();
                 switchState(TransactionState.PREPARING);
                 synchronized (db.getSynchronizationObject()) {
                     if (recoveryInformation == null || recoveryInformation.length == 0) {
@@ -149,7 +148,6 @@ public class JnaTransaction extends AbstractFbTransaction {
         synchronized (getSynchronizationObject()) {
             final JnaDatabase db = getDatabase();
             db.checkConnected();
-            final FbClientLibrary clientLibrary = db.getClientLibrary();
             synchronized (db.getSynchronizationObject()) {
                 clientLibrary.isc_transaction_info(statusVector, handle, (short) requestItems.length, requestItems,
                         (short) maxBufferLength, responseBuffer);

@@ -67,16 +67,21 @@ public class JnaDatabase extends AbstractFbDatabase implements TransactionListen
     public static final int MAX_STATEMENT_LENGTH = 64 * 1024;
 
     private final JnaConnection jnaConnection;
+    private final FbClientLibrary clientLibrary;
     // TODO Clear on disconnect?
     private final IntByReference handle = new IntByReference(0);
     private final ISC_STATUS[] statusVector = new ISC_STATUS[STATUS_VECTOR_SIZE];
 
     public JnaDatabase(JnaConnection jnaConnection) {
         this.jnaConnection = jnaConnection;
+        clientLibrary = jnaConnection.getClientLibrary();
     }
 
-    protected FbClientLibrary getClientLibrary() throws SQLException {
-        return jnaConnection.getClientLibrary();
+    /**
+     * @return The client library instance associated with the database.
+     */
+    protected final FbClientLibrary getClientLibrary() {
+        return clientLibrary;
     }
 
     @Override
@@ -90,7 +95,6 @@ public class JnaDatabase extends AbstractFbDatabase implements TransactionListen
     protected void internalDetach() throws SQLException {
         synchronized (getSynchronizationObject()) {
             try {
-                final FbClientLibrary clientLibrary = getClientLibrary();
                 clientLibrary.isc_detach_database(statusVector, handle);
                 processStatusVector();
             } catch (SQLException ex) {
@@ -117,7 +121,6 @@ public class JnaDatabase extends AbstractFbDatabase implements TransactionListen
     }
 
     protected void attachOrCreate(DatabaseParameterBuffer dpb, boolean create) throws SQLException {
-        final FbClientLibrary clientLibrary = getClientLibrary();
         if (isAttached()) {
             throw new SQLException("Already attached to a database");
         }
@@ -181,7 +184,6 @@ public class JnaDatabase extends AbstractFbDatabase implements TransactionListen
     public void dropDatabase() throws SQLException {
         checkConnected();
         synchronized (getSynchronizationObject()) {
-            final FbClientLibrary clientLibrary = getClientLibrary();
             try {
                 clientLibrary.isc_drop_database(statusVector, handle);
                 processStatusVector();
@@ -196,7 +198,6 @@ public class JnaDatabase extends AbstractFbDatabase implements TransactionListen
         checkConnected();
         // TODO Test what happens with 2.1 and earlier client library
         synchronized (getSynchronizationObject()) {
-            final FbClientLibrary clientLibrary = getClientLibrary();
             try {
                 clientLibrary.fb_cancel_operation(statusVector, handle, (short) kind);
             } finally {
@@ -220,7 +221,6 @@ public class JnaDatabase extends AbstractFbDatabase implements TransactionListen
         final IntByReference transactionHandle = new IntByReference(0);
         byte[] tpbArray = ((TransactionParameterBufferImpl) tpb).getBytesForNativeCode();
         synchronized (getSynchronizationObject()) {
-            final FbClientLibrary clientLibrary = getClientLibrary();
             clientLibrary.isc_start_transaction(statusVector, transactionHandle, (short) 1, handle, (short) tpbArray.length, tpbArray);
             processStatusVector();
 
@@ -234,13 +234,12 @@ public class JnaDatabase extends AbstractFbDatabase implements TransactionListen
     public FbTransaction reconnectTransaction(long transactionId) throws SQLException {
         checkConnected();
         byte[] transactionIdBuffer = new byte[4];
-        // Note: This uses a atypical encoding (as this is actually a TPB without a type)
+        // Note: This uses an atypical encoding (as this is actually a TPB without a type)
         for (int i = 0; i < 4; i++) {
             transactionIdBuffer[i] = (byte) (transactionId >>> (i * 8));
         }
         final IntByReference transactionHandle = new IntByReference(0);
         synchronized (getSynchronizationObject()) {
-            final FbClientLibrary clientLibrary = getClientLibrary();
             clientLibrary.isc_reconnect_transaction(statusVector, handle, transactionHandle,
                     (short) transactionIdBuffer.length, transactionIdBuffer);
             processStatusVector();
@@ -280,7 +279,6 @@ public class JnaDatabase extends AbstractFbDatabase implements TransactionListen
     public byte[] getDatabaseInfo(final byte[] requestItems, final int maxBufferLength) throws SQLException {
         final ByteBuffer responseBuffer = ByteBuffer.allocateDirect(maxBufferLength);
         synchronized (getSynchronizationObject()) {
-            final FbClientLibrary clientLibrary = getClientLibrary();
             clientLibrary.isc_database_info(statusVector, handle, (short) requestItems.length, requestItems,
                     (short) maxBufferLength, responseBuffer);
             processStatusVector();
@@ -310,7 +308,6 @@ public class JnaDatabase extends AbstractFbDatabase implements TransactionListen
 
         final byte[] statementArray = getEncoding().encodeToCharset(statementText);
         synchronized (getSynchronizationObject()) {
-            final FbClientLibrary clientLibrary = getClientLibrary();
             // Information in tempXSqlDa is ignored
             final org.firebirdsql.jna.fbclient.XSQLDA tempXSqlDa = new org.firebirdsql.jna.fbclient.XSQLDA();
             clientLibrary.isc_dsql_execute_immediate(statusVector, handle,

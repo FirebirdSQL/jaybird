@@ -50,11 +50,13 @@ public class JnaStatement extends AbstractFbStatement {
     private final IntByReference handle = new IntByReference(0);
     private JnaDatabase database;
     private final ISC_STATUS[] statusVector = new ISC_STATUS[JnaDatabase.STATUS_VECTOR_SIZE];
+    private final FbClientLibrary clientLibrary;
     private XSQLDA inXSqlDa;
     private XSQLDA outXSqlDa;
 
     public JnaStatement(JnaDatabase database) {
         this.database = database;
+        clientLibrary = database.getClientLibrary();
     }
 
     @Override
@@ -80,7 +82,6 @@ public class JnaStatement extends AbstractFbStatement {
         synchronized (getSynchronizationObject()) {
             final JnaDatabase db = getDatabase();
             synchronized (db.getSynchronizationObject()) {
-                final FbClientLibrary clientLibrary = db.getClientLibrary();
                 clientLibrary.isc_dsql_free_statement(statusVector, handle, (short) option);
                 processStatusVector();
             }
@@ -126,8 +127,6 @@ public class JnaStatement extends AbstractFbStatement {
             resetAll();
             final JnaDatabase db = getDatabase();
             synchronized (db.getSynchronizationObject()) {
-                final FbClientLibrary clientLibrary = db.getClientLibrary();
-
                 if (currentState == StatementState.NEW) {
                     clientLibrary.isc_dsql_allocate_statement(statusVector, db.getJnaHandle(), handle);
                     processStatusVector();
@@ -163,7 +162,6 @@ public class JnaStatement extends AbstractFbStatement {
 
             final JnaDatabase db = getDatabase();
             synchronized (db.getSynchronizationObject()) {
-                final FbClientLibrary clientLibrary = db.getClientLibrary();
                 switchState(StatementState.EXECUTING);
 
                 setXSqlDaData(inXSqlDa, parameters);
@@ -322,7 +320,6 @@ public class JnaStatement extends AbstractFbStatement {
 
             final JnaDatabase db = getDatabase();
             synchronized (db.getSynchronizationObject()) {
-                final FbClientLibrary clientLibrary = db.getClientLibrary();
                 int count = 0;
                 while (!isAllRowsFetched() && count < fetchSize) {
                     ISC_STATUS fetchStatus = clientLibrary.isc_dsql_fetch(statusVector, handle, outXSqlDa.version,
@@ -354,7 +351,6 @@ public class JnaStatement extends AbstractFbStatement {
             checkStatementValid();
             final JnaDatabase db = getDatabase();
             synchronized (db.getSynchronizationObject()) {
-                final FbClientLibrary clientLibrary = db.getClientLibrary();
                 clientLibrary.isc_dsql_sql_info(statusVector, handle,
                         (short) requestItems.length, requestItems,
                         (short) bufferLength, responseBuffer);
@@ -385,7 +381,6 @@ public class JnaStatement extends AbstractFbStatement {
             checkStatementValid();
             final JnaDatabase db = getDatabase();
             synchronized (db.getSynchronizationObject()) {
-                final FbClientLibrary clientLibrary = db.getClientLibrary();
                 clientLibrary.isc_dsql_set_cursor_name(statusVector, handle,
                         // Null termination is needed due to a quirk of the protocol
                         db.getEncoding().encodeToCharset(cursorName + '\0'),

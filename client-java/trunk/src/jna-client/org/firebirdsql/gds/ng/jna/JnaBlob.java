@@ -48,6 +48,7 @@ public class JnaBlob extends AbstractFbBlob implements FbBlob, DatabaseListener 
     private final boolean outputBlob;
     private final IntByReference jnaHandle = new IntByReference(0);
     private final ISC_STATUS[] statusVector = new ISC_STATUS[JnaDatabase.STATUS_VECTOR_SIZE];
+    private final FbClientLibrary clientLibrary;
 
     public JnaBlob(JnaDatabase database, JnaTransaction transaction, BlobParameterBuffer blobParameterBuffer) {
         this(database, transaction, blobParameterBuffer, NO_BLOB_ID);
@@ -58,6 +59,7 @@ public class JnaBlob extends AbstractFbBlob implements FbBlob, DatabaseListener 
         super(database, transaction, blobParameterBuffer);
         this.blobId = new LongByReference(blobId);
         outputBlob = blobId == NO_BLOB_ID;
+        clientLibrary = database.getClientLibrary();
     }
 
     @Override
@@ -105,7 +107,6 @@ public class JnaBlob extends AbstractFbBlob implements FbBlob, DatabaseListener 
 
             final JnaDatabase db = getDatabase();
             synchronized (db.getSynchronizationObject()) {
-                final FbClientLibrary clientLibrary = db.getClientLibrary();
                 if (isOutput()) {
                     clientLibrary.isc_create_blob2(statusVector, db.getJnaHandle(), getTransaction().getJnaHandle(),
                             getJnaHandle(), blobId, (short) bpb.length, bpb);
@@ -143,7 +144,6 @@ public class JnaBlob extends AbstractFbBlob implements FbBlob, DatabaseListener 
 
             final JnaDatabase db = getDatabase();
             synchronized (db.getSynchronizationObject()) {
-                final FbClientLibrary clientLibrary = db.getClientLibrary();
                 clientLibrary.isc_get_segment(statusVector, getJnaHandle(), actualLength, (short) sizeRequested,
                         responseBuffer);
             }
@@ -183,7 +183,6 @@ public class JnaBlob extends AbstractFbBlob implements FbBlob, DatabaseListener 
 
             final JnaDatabase db = getDatabase();
             synchronized (db.getSynchronizationObject()) {
-                final FbClientLibrary clientLibrary = db.getClientLibrary();
                 clientLibrary.isc_put_segment(statusVector, getJnaHandle(), (short) segment.length, segment);
             }
             processStatusVector();
@@ -198,7 +197,6 @@ public class JnaBlob extends AbstractFbBlob implements FbBlob, DatabaseListener 
 
             final JnaDatabase db = getDatabase();
             synchronized (db.getSynchronizationObject()) {
-                final FbClientLibrary clientLibrary = db.getClientLibrary();
                 // result is the current position in the blob (see .NET provider source)
                 // We ignore the result TODO check if useful; not used in wire protocol either
                 IntByReference result = new IntByReference();
@@ -217,7 +215,6 @@ public class JnaBlob extends AbstractFbBlob implements FbBlob, DatabaseListener 
             checkDatabaseAttached();
             final JnaDatabase db = getDatabase();
             synchronized (db.getSynchronizationObject()) {
-                final FbClientLibrary clientLibrary = db.getClientLibrary();
                 clientLibrary.isc_blob_info(statusVector, getJnaHandle(),
                         (short) requestItems.length, requestItems,
                         (short) bufferLength, responseBuffer);
@@ -235,7 +232,6 @@ public class JnaBlob extends AbstractFbBlob implements FbBlob, DatabaseListener 
         synchronized (getSynchronizationObject()) {
             final JnaDatabase db = getDatabase();
             synchronized (db.getSynchronizationObject()) {
-                final FbClientLibrary clientLibrary = db.getClientLibrary();
                 clientLibrary.isc_close_blob(statusVector, getJnaHandle());
             }
             processStatusVector();
@@ -247,7 +243,6 @@ public class JnaBlob extends AbstractFbBlob implements FbBlob, DatabaseListener 
         synchronized (getSynchronizationObject()) {
             final JnaDatabase db = getDatabase();
             synchronized (db.getSynchronizationObject()) {
-                final FbClientLibrary clientLibrary = db.getClientLibrary();
                 clientLibrary.isc_cancel_blob(statusVector, getJnaHandle());
             }
             processStatusVector();
