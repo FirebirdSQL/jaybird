@@ -7,8 +7,8 @@ import org.firebirdsql.logging.LoggerFactory;
 
 public class LocalGDSImpl extends JniGDSImpl {
 
-    private static Logger log = LoggerFactory.getLogger(LocalGDSImpl.class,
-            false);
+    private static Logger log = LoggerFactory.getLogger(LocalGDSImpl.class
+    );
 
     private static final String[] LIST_OF_CLIENT_LIBRARIES_TO_TRY = {
             "fbclient.dll", "libfbclient.so"};

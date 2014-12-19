@@ -44,7 +44,7 @@ public class GDSHelper {
     
     public static final int DEFAULT_BLOB_BUFFER_SIZE = 16 * 1024;
 
-    private static final Logger log = LoggerFactory.getLogger(GDSHelper.class, false);
+    private static final Logger log = LoggerFactory.getLogger(GDSHelper.class);
 
     private final GDS gds;
     private final FbDatabase database;

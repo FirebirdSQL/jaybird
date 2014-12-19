@@ -38,7 +38,7 @@ import org.firebirdsql.logging.LoggerFactory;
 public class FBManager implements FBManagerMBean {
 
     private static final int DEFAULT_PORT = 3050;
-    private final static Logger log = LoggerFactory.getLogger(FBManager.class, false);
+    private final static Logger log = LoggerFactory.getLogger(FBManager.class);
 
     private GDS gds;
     private String host = "localhost";

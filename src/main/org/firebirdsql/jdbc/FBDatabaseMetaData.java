@@ -65,7 +65,7 @@ import static org.firebirdsql.gds.ISCConstants.*;
  */
 public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
 
-    private final static Logger log = LoggerFactory.getLogger(FBDatabaseMetaData.class,false);
+    private final static Logger log = LoggerFactory.getLogger(FBDatabaseMetaData.class);
     private static final String SPACES_31 = "                               "; // 31 spaces
     private static final String SPACES_15 = "               "; // 15 spaces
 

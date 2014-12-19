@@ -56,7 +56,7 @@ public abstract class AbstractGeneratedKeysQuery {
             temp = (StatementParser)Class.forName("org.firebirdsql.jdbc.parser.StatementParserImpl").newInstance();
         } catch (Throwable ex) {
             // Unable to load class of parser implementation, antlr-runtime not in path
-            Logger log = LoggerFactory.getLogger(AbstractGeneratedKeysQuery.class, true);
+            Logger log = LoggerFactory.getLogger(AbstractGeneratedKeysQuery.class);
             if (log != null) {
                 log.error("Unable to load generated key parser", ex);
             }

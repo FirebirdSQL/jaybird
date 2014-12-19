@@ -39,7 +39,7 @@ import java.sql.SQLException;
  */
 public class JnaTransaction extends AbstractFbTransaction {
 
-    private static final Logger log = LoggerFactory.getLogger(JnaTransaction.class, false);
+    private static final Logger log = LoggerFactory.getLogger(JnaTransaction.class);
 
     // TODO: Clear on commit/rollback?
     private final IntByReference handle;

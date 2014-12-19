@@ -47,7 +47,7 @@ import static org.firebirdsql.gds.ISCConstants.*;
  */
 public abstract class AbstractFbDatabase implements FbDatabase, TransactionListener {
 
-    private static final Logger log = LoggerFactory.getLogger(AbstractFbDatabase.class, false);
+    private static final Logger log = LoggerFactory.getLogger(AbstractFbDatabase.class);
 
     /**
      * Info-request block for database information.

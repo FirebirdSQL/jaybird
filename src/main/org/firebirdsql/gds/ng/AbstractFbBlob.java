@@ -36,7 +36,7 @@ import java.sql.SQLWarning;
  */
 public abstract class AbstractFbBlob implements FbBlob, TransactionListener, DatabaseListener {
 
-    private static final Logger log = LoggerFactory.getLogger(AbstractFbBlob.class, false);
+    private static final Logger log = LoggerFactory.getLogger(AbstractFbBlob.class);
 
     private final Object syncObject = new Object();
     private final BlobParameterBuffer blobParameterBuffer;

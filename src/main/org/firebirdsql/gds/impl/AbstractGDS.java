@@ -39,7 +39,7 @@ import org.firebirdsql.logging.LoggerFactory;
  */
 public abstract class AbstractGDS implements GDS, Externalizable {
 
-    private static Logger log = LoggerFactory.getLogger(AbstractGDS.class, false);
+    private static Logger log = LoggerFactory.getLogger(AbstractGDS.class);
 
     private GDSType gdsType;
     

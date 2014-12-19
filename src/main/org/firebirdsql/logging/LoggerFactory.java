@@ -1,5 +1,7 @@
 /*
- * Firebird Open Source J2ee connector - jdbc driver
+ * $Id$
+ *
+ * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -12,7 +14,7 @@
  * This file was created by members of the firebird development team.
  * All individual contributions remain the Copyright (C) of those
  * individuals.  Contributors to this file are either listed here or
- * can be obtained from a CVS history command.
+ * can be obtained from a source control history command.
  *
  * All rights reserved.
  */
@@ -22,60 +24,65 @@ import java.security.AccessController;
 import java.security.PrivilegedAction;
 
 /**
- * Describe class <code>LoggerFactory</code> here.
+ * Factory for Logger instances
  * 
  * @author <a href="mailto:brodsom@users.sourceforge.net">Blas Rodriguez Somoza</a>
  * @version 1.0
  */
-public class LoggerFactory {
+public final class LoggerFactory {
 
-    // TODO Use system property
-    private static final boolean forceConsoleLogger = true;
-
-    private static boolean checked = false;
-    private static boolean log4j = false;
-    
+    private static final boolean forceConsoleLogger;
     /**
      * NullLogger to use for all getLogger requests if no logging is configured
      */
-    private static final Logger NULL_LOGGER = new NullLogger(null);
+    private static final Logger NULL_LOGGER = new NullLogger();
 
-    public static Logger getLogger(String name, boolean def) {
-        if (!checked) {
-            try {
-                String sLog4j = getSystemPropertyPrivileged("FBLog4j");
-                log4j = sLog4j != null && sLog4j.equals("true");
-                // TODO: Code smell: logging initialization logic decided by first to call getLogger
-                if (!def) {
-                    log4j = sLog4j != null && sLog4j.equals("true");
-                } else {
-                    log4j = !(sLog4j != null && sLog4j.equals("false"));
+    private static final boolean log4j;
+
+    static {
+        boolean useLog4j = false;
+        boolean fallbackConsoleLogger = false;
+        try {
+            // TODO Add system property to documentation
+            String sFallbackConsoleLogger = getSystemPropertyPrivileged("org.firebirdsql.jdbc.fallbackConsoleLogger");
+            fallbackConsoleLogger = "true".equals(sFallbackConsoleLogger);
+            String sLog4j = getSystemPropertyPrivileged("FBLog4j");
+            // TODO Add system property to documentation
+            String sUseLog4j = getSystemPropertyPrivileged("org.firebirdsql.jdbc.useLog4j");
+            useLog4j = "true".equals(sLog4j) || "true".equals(sUseLog4j);
+
+            if (useLog4j) {
+                // Detect if we can load log4j
+                try {
+                    Class.forName("org.apache.log4j.Category");
+                    useLog4j = true;
+                } catch (ClassNotFoundException cnfe) {
+                    useLog4j = false;
                 }
-    
-                if (log4j) {
-                    try {
-                        Class.forName("org.apache.log4j.Category");
-                        log4j = true;
-                    } catch (ClassNotFoundException cnfe) {
-                        log4j = false;
-                    }
-                }
-            } catch (RuntimeException ex) {
-                log4j = false;
-            } finally {
-                checked = true;
             }
+        } catch (Exception ex) {
+            useLog4j = false;
+        } finally {
+            forceConsoleLogger = fallbackConsoleLogger;
+            log4j = useLog4j;
         }
-        if (log4j)
-            return new Log4jLogger(name);
-        else if (forceConsoleLogger)
-            return new ConsoleLogger(name);
-        else
-            return NULL_LOGGER;
     }
 
-    public static Logger getLogger(Class<?> clazz, boolean def) {
-        return getLogger(clazz.getName(), def);
+    private LoggerFactory() {
+        // Do not instantiate
+    }
+
+    public static Logger getLogger(String name) {
+        if (log4j) {
+            return new Log4jLogger(name);
+        } else if (forceConsoleLogger) {
+            return new ConsoleLogger(name);
+        }
+        return NULL_LOGGER;
+    }
+
+    public static Logger getLogger(Class<?> clazz) {
+        return getLogger(clazz.getName());
     }
     
     private static String getSystemPropertyPrivileged(final String propertyName) {

@@ -51,7 +51,7 @@ import java.util.List;
  */
 public class DefaultEncodingSet implements EncodingSet {
 
-    private static final Logger logger = LoggerFactory.getLogger(DefaultEncodingSet.class, false);
+    private static final Logger logger = LoggerFactory.getLogger(DefaultEncodingSet.class);
     private List<EncodingDefinition> encodingDefinitions = null;
 
     @Override

@@ -48,7 +48,7 @@ public class TestNgds {
             EmbeddedGDSImpl.EMBEDDED_TYPE_NAME,
             NativeGDSImpl.NATIVE_TYPE_NAME);
 
-    private Logger log = LoggerFactory.getLogger(getClass(), false);
+    private Logger log = LoggerFactory.getLogger(getClass());
 
     private static final String dbName = "testdb.gdb";
     private static final String dbName2 = "testdb2.gdb";

@@ -46,7 +46,7 @@ import static org.firebirdsql.gds.impl.wire.WireProtocolConstants.*;
  */
 public class V11Database extends V10Database {
 
-    private static final Logger log = LoggerFactory.getLogger(V11Database.class, false);
+    private static final Logger log = LoggerFactory.getLogger(V11Database.class);
 
     /**
      * Actions on this object need to be synchronized on {@link #getSynchronizationObject()}.

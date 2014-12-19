@@ -46,7 +46,7 @@ public class GDSExceptionHelper {
 
    private static final String SQLSTATE_CLI_GENERIC_ERROR = "HY000";
 
-   private static final Logger log = LoggerFactory.getLogger(GDSExceptionHelper.class,false);
+   private static final Logger log = LoggerFactory.getLogger(GDSExceptionHelper.class);
 
     private static final String MESSAGES = "isc_error_msg";
     private static final String SQLSTATES = "isc_error_sqlstates";

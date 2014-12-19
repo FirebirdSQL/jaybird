@@ -55,7 +55,7 @@ import org.firebirdsql.logging.LoggerFactory;
  */
 public class FBStatement implements FirebirdStatement, Synchronizable {
 
-    private static final org.firebirdsql.logging.Logger log = LoggerFactory.getLogger(FBStatement.class, false);
+    private static final org.firebirdsql.logging.Logger log = LoggerFactory.getLogger(FBStatement.class);
     
     protected final GDSHelper gdsHelper;
     protected final FBObjectListener.StatementListener statementListener;

@@ -26,8 +26,6 @@ import org.firebirdsql.logging.Logger;
 import org.firebirdsql.logging.LoggerFactory;
 import org.firebirdsql.gds.*;
 import org.firebirdsql.gds.impl.GDSFactory;
-import org.firebirdsql.gds.impl.wire.isc_db_handle_impl;
-import org.firebirdsql.gds.impl.wire.isc_stmt_handle_impl;
 import org.firebirdsql.jca.FBTpb;
 
 import static org.firebirdsql.common.FBTestProperties.*;
@@ -39,7 +37,7 @@ import static org.firebirdsql.common.FBTestProperties.*;
  */
 public class TestGds extends TestCase {
 
-    private Logger log = LoggerFactory.getLogger(getClass(), true);
+    private Logger log = LoggerFactory.getLogger(getClass());
 
     static final String dbName = "testdb.gdb";
     static final String dbName2 = "testdb2.gdb";

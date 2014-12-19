@@ -56,7 +56,7 @@ public final class WireConnection extends AbstractConnection {
     // TODO Check if methods currently throwing IOException should throw SQLException instead
     // TODO Change how information is passed?
 
-    private static final Logger log = LoggerFactory.getLogger(WireConnection.class, false);
+    private static final Logger log = LoggerFactory.getLogger(WireConnection.class);
 
     private Socket socket;
     private ProtocolCollection protocols;

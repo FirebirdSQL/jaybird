@@ -54,7 +54,7 @@ import static org.firebirdsql.gds.ng.TransactionHelper.checkTransactionActive;
  */
 public class V10Database extends AbstractFbWireDatabase implements FbWireDatabase {
 
-    private static final Logger log = LoggerFactory.getLogger(V10Database.class, false);
+    private static final Logger log = LoggerFactory.getLogger(V10Database.class);
 
     private int handle;
     private BlrCalculator blrCalculator;

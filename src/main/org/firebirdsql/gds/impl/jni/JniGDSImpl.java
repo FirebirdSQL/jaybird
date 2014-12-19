@@ -40,8 +40,8 @@ public abstract class JniGDSImpl extends BaseGDSImpl {
     public static final String JAYBIRD_JNI_LIBRARY = "jaybird23";
     public static final String JAYBIRD_JNI_LIBRARY_X64 = "jaybird23_x64";
     
-    private static Logger log = LoggerFactory.getLogger(JniGDSImpl.class,
-            false);
+    private static Logger log = LoggerFactory.getLogger(JniGDSImpl.class
+    );
 
     static {
         initJNIBridge();

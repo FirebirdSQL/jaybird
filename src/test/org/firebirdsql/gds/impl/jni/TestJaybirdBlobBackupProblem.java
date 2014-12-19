@@ -92,7 +92,7 @@ public class TestJaybirdBlobBackupProblem {
     @ClassRule
     public static final GdsTypeRule testTypes = GdsTypeRule.supports(EmbeddedGDSImpl.EMBEDDED_TYPE_NAME);
 
-    protected final Logger log = LoggerFactory.getLogger(getClass(), true);
+    protected final Logger log = LoggerFactory.getLogger(getClass());
 
     private String mAbsoluteDatabasePath = null;
     private String mAbsoluteBackupPath = null;

@@ -38,7 +38,7 @@ import org.junit.Before;
  */
 public abstract class FBJUnit4TestBase {
 
-    protected final Logger log = LoggerFactory.getLogger(getClass(), true);
+    protected final Logger log = LoggerFactory.getLogger(getClass());
 
     protected FBManager fbManager = null;
 

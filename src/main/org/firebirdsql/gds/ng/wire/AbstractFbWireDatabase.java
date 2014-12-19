@@ -42,7 +42,7 @@ import java.sql.SQLWarning;
  */
 public abstract class AbstractFbWireDatabase extends AbstractFbDatabase implements FbWireDatabase {
 
-    private static final Logger log = LoggerFactory.getLogger(AbstractFbWireDatabase.class, false);
+    private static final Logger log = LoggerFactory.getLogger(AbstractFbWireDatabase.class);
 
     protected final ProtocolDescriptor protocolDescriptor;
     protected final WireConnection connection;

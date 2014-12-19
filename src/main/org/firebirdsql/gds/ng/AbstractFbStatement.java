@@ -47,7 +47,7 @@ public abstract class AbstractFbStatement implements FbStatement {
      * Set of states that will be reset to {@link StatementState#PREPARED} on transaction change
      */
     private static final EnumSet<StatementState> RESET_TO_PREPARED = EnumSet.of(StatementState.EXECUTING, StatementState.CURSOR_OPEN);
-    private static final Logger log = LoggerFactory.getLogger(AbstractFbStatement.class, false);
+    private static final Logger log = LoggerFactory.getLogger(AbstractFbStatement.class);
 
     private final Object syncObject = new Object();
     private final WarningMessageCallback warningCallback = new WarningMessageCallback() {

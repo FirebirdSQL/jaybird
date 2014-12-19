@@ -35,7 +35,7 @@ public abstract class BaseGDSImpl extends AbstractGDS {
     // TODO Synchronization seems to be inconsistent: sometimes on dbhandle, sometimes on this (and sometimes on blobhandle)
     // TODO Checking for validity of dbhandle is inconsistent (sometimes only null check, sometimes also .isValid())
 
-    private static Logger log = LoggerFactory.getLogger(BaseGDSImpl.class, false);
+    private static Logger log = LoggerFactory.getLogger(BaseGDSImpl.class);
 
     private static final String WARNING_CONNECT_TIMEOUT_NATIVE = 
             "WARNING: The native driver does not apply connectTimeout for establishing the socket connection (only for protocol negotiation with the Firebird server), " + 

@@ -77,7 +77,7 @@ public abstract class AbstractJavaGDSImpl extends AbstractGDS implements GDS {
 
 	public static final String PURE_JAVA_TYPE_NAME = "PURE_JAVA";
 
-	private static Logger log = LoggerFactory.getLogger(AbstractJavaGDSImpl.class, false);
+	private static Logger log = LoggerFactory.getLogger(AbstractJavaGDSImpl.class);
 
     private static final byte[] zero = new XSQLVAR().encodeInt(0);
     private static final byte[] minusOne = new XSQLVAR().encodeInt(-1);

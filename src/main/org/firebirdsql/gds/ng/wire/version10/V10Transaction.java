@@ -42,7 +42,7 @@ import static org.firebirdsql.gds.impl.wire.WireProtocolConstants.*;
  */
 public class V10Transaction extends AbstractFbTransaction implements FbWireTransaction {
 
-    private static final Logger log = LoggerFactory.getLogger(V10Transaction.class, false);
+    private static final Logger log = LoggerFactory.getLogger(V10Transaction.class);
 
     private final int handle;
 

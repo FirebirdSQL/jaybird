@@ -66,7 +66,7 @@ public class FBDriver implements FirebirdDriver {
     private final Object createDataSourceLock = new Object();
 
     static {
-        log = LoggerFactory.getLogger(FBDriver.class, false);
+        log = LoggerFactory.getLogger(FBDriver.class);
         try {
             DriverManager.registerDriver(new FBDriver());
         } catch (Exception ex) {
