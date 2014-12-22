@@ -41,14 +41,10 @@ public class GDSServerVersionException extends GDSException {
         GDSException messageEx = new GDSException(message);
         GDSException expectedFormatEx = new GDSException(
             "Expected engine version format: " + 
-            "<platform>-<type>" + 
-            "<major version>.<minor version>.<variant>.<build number>" + 
-            " " + 
-            "<server name>");
+            "<platform>-<type><major version>.<minor version>.<variant>.<build number> <server name>");
         
         messageEx.setNext(expectedFormatEx);
         setNext(messageEx);
-        
     }
 
 }

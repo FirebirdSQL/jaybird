@@ -161,11 +161,11 @@ public final class GDSServerVersion implements Serializable {
     public static GDSServerVersion parseRawVersion(String versionString) throws GDSServerVersionException {
         Matcher matcher = VERSION_PATTERN.matcher(versionString);
         if (!matcher.matches()) {
-            throw new GDSServerVersionException(String.format("Version string \"%s\" does not match expected format \"%s\"", 
-            		versionString, VERSION_PATTERN));
+            throw new GDSServerVersionException(String.format("Version string \"%s\" does not match expected format",
+            		versionString));
         }
 
-        GDSServerVersion version = new GDSServerVersion(
+        return new GDSServerVersion(
                 versionString, 
                 matcher.group(PLATFORM_IDX),
                 matcher.group(TYPE_IDX), 
@@ -176,8 +176,6 @@ public final class GDSServerVersion implements Serializable {
                 Integer.parseInt(matcher.group(BUILD_IDX)), 
                 matcher.group(SERVER_NAME_IDX),
                 matcher.group(EXTENDED_INFO_IDX));
-
-        return version;
     }
 
     /**
