@@ -142,7 +142,8 @@ public class GDSServerVersion implements Serializable {
     public static GDSServerVersion parseRawVersion(String versionString) throws GDSServerVersionException {
     	Matcher matcher = VERSION_PATTERN.matcher(versionString);
     	if (!matcher.matches()) {
-    		throw new GDSServerVersionException("Version string does not match expected format");
+            throw new GDSServerVersionException(String.format("Version string \"%s\" does not match expected format",
+                    versionString));
     	}
     	
     	GDSServerVersion version = new GDSServerVersion();
