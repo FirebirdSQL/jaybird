@@ -43,6 +43,9 @@ public class TestGDSServerVersion {
     
     private static final String TEST_NO_EXTENDED_INFO =
     	"WI-V2.1.3.18185 Firebird 2.1";
+
+    private static final String TEST_NO_EXTENDED_INFO_SPARC =
+            "S4-V2.1.3.18185 Firebird 2.1";
     
     private static final String TEST_INCORRECT_FORMAT =
         "WI-V2.5.2a.26540 Firebird 2.5";
@@ -93,6 +96,25 @@ public class TestGDSServerVersion {
     	assertEquals(null, 
     			version.getExtendedServerName());
     	assertEquals("WI-V2.1.3.18185", version.getFullVersion());
+    }
+
+    /**
+     * Check if version with a number in the platform (ie Sparc 4) is correctly parsed
+     */
+    @Test
+    public void testParseSparcVersion() throws Exception {
+        GDSServerVersion version = GDSServerVersion.parseRawVersion(TEST_NO_EXTENDED_INFO_SPARC);
+
+        assertEquals("S4", version.getPlatform());
+        assertEquals("V", version.getType());
+        assertEquals(2, version.getMajorVersion());
+        assertEquals(1, version.getMinorVersion());
+        assertEquals(3, version.getVariant());
+        assertEquals(18185, version.getBuildNumber());
+        assertEquals("Firebird 2.1", version.getServerName());
+        assertEquals(null,
+                version.getExtendedServerName());
+        assertEquals("S4-V2.1.3.18185", version.getFullVersion());
     }
     
     @Test(expected = GDSServerVersionException.class)
