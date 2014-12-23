@@ -1,5 +1,7 @@
 /*
- * Firebird Open Source J2ee connector - jdbc driver
+ * $Id$
+ *
+ * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -12,7 +14,7 @@
  * This file was created by members of the firebird development team.
  * All individual contributions remain the Copyright (C) of those
  * individuals.  Contributors to this file are either listed here or
- * can be obtained from a CVS history command.
+ * can be obtained from a source control history command.
  *
  * All rights reserved.
  */
@@ -844,6 +846,34 @@ public class TestFBCallableStatement extends FBTestBase {
             assertNotNull("Expected ResultSet", rs);
             assertTrue("Expected at least one row", rs.next());
             assertEquals("abc", rs.getString("proj_id"));
+        } finally {
+            cs.close();
+        }
+    }
+
+    /**
+     * Test if first accessing and processing the result set from an <b>executable</b> procedure,
+     * and then accessing the getters works.
+     * <p>
+     * See <a href="http://tracker.firebirdsql.org/browse/JDBC-350">JDBC-350</a>,
+     * </p>
+     * <p>
+     * NOTE: This tests behavior we maintain for compatibility with previous versions; a correct implementation
+     * shouldn't return a result set at all.
+     * </p>
+     */
+    public void testExecutableProcedureAccessResultSetFirst_thenGetter_shouldWork() throws Exception {
+        CallableStatement cs = con.prepareCall(EXECUTE_IN_OUT_PROCEDURE);
+        try {
+            cs.setString(1, "paramvalue");
+            assertTrue("Expected ResultSet", cs.execute());
+            ResultSet rs = cs.getResultSet();
+            assertNotNull("Expected ResultSet", rs);
+            assertTrue("Expected at least one row", rs.next());
+            assertEquals("paramvalue", rs.getString("outParam"));
+            rs.close();
+
+            assertEquals("paramvalue", cs.getString(1));
         } finally {
             cs.close();
         }

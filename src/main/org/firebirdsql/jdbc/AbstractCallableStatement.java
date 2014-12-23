@@ -1,7 +1,7 @@
 /*
  * $Id$
- * 
- * Firebird Open Source J2ee connector - jdbc driver
+ *
+ * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -14,7 +14,7 @@
  * This file was created by members of the firebird development team.
  * All individual contributions remain the Copyright (C) of those
  * individuals.  Contributors to this file are either listed here or
- * can be obtained from a CVS history command.
+ * can be obtained from a source control history command.
  *
  * All rights reserved.
  */
@@ -86,6 +86,7 @@ public abstract class AbstractCallableStatement extends FBPreparedStatement impl
     static final String NATIVE_SELECT_COMMAND = "SELECT * FROM";
 
     private ResultSet currentRs;
+    private ResultSet singletonRs;
 
     protected boolean selectableProcedure;
 
@@ -183,9 +184,6 @@ public abstract class AbstractCallableStatement extends FBPreparedStatement impl
         }
     }
 
-    /* (non-Javadoc)
-     * @see org.firebirdsql.jdbc.FirebirdCallableStatement#setSelectableProcedure(boolean)
-     */
     public void setSelectableProcedure(boolean selectableProcedure) {
         this.selectableProcedure = selectableProcedure;
     }
@@ -200,9 +198,13 @@ public abstract class AbstractCallableStatement extends FBPreparedStatement impl
      * @throws SQLException if something went wrong.
      */
     protected void setRequiredTypes() throws SQLException {
+        if (singletonRs != null) {
+            setRequiredTypesInternal((FBResultSet) singletonRs);
+        }
+        setRequiredTypesInternal((FBResultSet) getCurrentResultSet());
+    }
 
-        FBResultSet resultSet = (FBResultSet) getCurrentResultSet();
-
+    private void setRequiredTypesInternal(FBResultSet resultSet) throws SQLException {
         Iterator iter = procedureCall.getOutputParams().iterator();
         while (iter.hasNext()) {
             FBProcedureParam param = (FBProcedureParam) iter.next();
@@ -223,11 +225,8 @@ public abstract class AbstractCallableStatement extends FBPreparedStatement impl
      * This is an workaround to the issue that the statement is actually prepared
      * only after all OUT parameters are registered.
      */
-    protected void prepareFixedStatement(String sql, boolean describeBind)
-            throws GDSException, SQLException {
-
-        if (fixedStmt != null)
-            return;
+    protected void prepareFixedStatement(String sql, boolean describeBind) throws GDSException, SQLException {
+        if (fixedStmt != null) return;
 
         super.prepareFixedStatement(sql, describeBind);
     }
@@ -238,11 +237,9 @@ public abstract class AbstractCallableStatement extends FBPreparedStatement impl
      * data for the callable statement is obtained.
      */
     public ResultSetMetaData getMetaData() throws SQLException {
-
         statementListener.executionStarted(this);
 
-        Object syncObject = getSynchronizationObject();
-        synchronized (syncObject) {
+        synchronized (getSynchronizationObject()) {
             try {
                 prepareFixedStatement(procedureCall.getSQL(isSelectableProcedure()), true);
             } catch (GDSException ge) {
@@ -265,13 +262,10 @@ public abstract class AbstractCallableStatement extends FBPreparedStatement impl
      */
     public boolean execute() throws SQLException {
         boolean hasResultSet = false;
-        Object syncObject = getSynchronizationObject();
-        synchronized (syncObject) {
+        synchronized (getSynchronizationObject()) {
             notifyStatementStarted();
 
             try {
-                currentRs = null;
-
                 prepareFixedStatement(procedureCall.getSQL(isSelectableProcedure()), true);
                 hasResultSet = internalExecute(!isSelectableProcedure());
 
@@ -285,7 +279,6 @@ public abstract class AbstractCallableStatement extends FBPreparedStatement impl
 
             return hasResultSet;
         }
-
     }
 
     /**
@@ -293,14 +286,10 @@ public abstract class AbstractCallableStatement extends FBPreparedStatement impl
      * the processing is done by superclass.
      */
     public ResultSet executeQuery() throws SQLException {
-
-        Object syncObject = getSynchronizationObject();
-        synchronized (syncObject) {
+        synchronized (getSynchronizationObject()) {
             notifyStatementStarted();
 
             try {
-                currentRs = null;
-
                 prepareFixedStatement(procedureCall.getSQL(isSelectableProcedure()), true);
 
                 if (!internalExecute(!isSelectableProcedure()))
@@ -325,12 +314,9 @@ public abstract class AbstractCallableStatement extends FBPreparedStatement impl
      * the processing is done by superclass.
      */
     public int executeUpdate() throws SQLException {
-        Object syncObject = getSynchronizationObject();
-        synchronized (syncObject) {
+        synchronized (getSynchronizationObject()) {
             try {
                 notifyStatementStarted();
-
-                currentRs = null;
 
                 prepareFixedStatement(procedureCall.getSQL(isSelectableProcedure()), true);
 
@@ -363,7 +349,8 @@ public abstract class AbstractCallableStatement extends FBPreparedStatement impl
      * the processing is done by superclass.
      */
     protected boolean internalExecute(boolean sendOutParams) throws SQLException {
-
+        currentRs = null;
+        singletonRs = null;
         int counter = 0;
 
         List inputParams = procedureCall.getInputParams();
@@ -391,7 +378,17 @@ public abstract class AbstractCallableStatement extends FBPreparedStatement impl
             }
         }
 
-        return super.internalExecute(sendOutParams);
+        boolean hasResultSet = super.internalExecute(sendOutParams);
+        if (hasResultSet && !isSelectableProcedure()) {
+            // Safeguarding first row so it will work even if the result set from getResultSet is manipulated
+            final byte[][][] rows = fixedStmt.getRows();
+            if (rows.length > 0) {
+                ArrayList<byte[][]> rowList = new ArrayList<byte[][]>();
+                rowList.add(rows[0]);
+                singletonRs = new FBResultSet(fixedStmt.getOutSqlda().sqlvar, rowList);
+            }
+        }
+        return  hasResultSet;
     }
 
     private void setField(FBField field, WrapperWithInt value) throws SQLException {
@@ -454,9 +451,7 @@ public abstract class AbstractCallableStatement extends FBPreparedStatement impl
      * @exception SQLException if a database access error occurs
      * @see Types
      */
-    public void registerOutParameter(int parameterIndex, int sqlType)
-            throws SQLException
-    {
+    public void registerOutParameter(int parameterIndex, int sqlType) throws SQLException {
         procedureCall.registerOutParam(parameterIndex, sqlType);
     }
 
@@ -481,9 +476,7 @@ public abstract class AbstractCallableStatement extends FBPreparedStatement impl
      * @exception SQLException if a database access error occurs
      * @see Types
      */
-    public void registerOutParameter(int parameterIndex, int sqlType, int scale)
-        throws SQLException
-    {
+    public void registerOutParameter(int parameterIndex, int sqlType, int scale) throws SQLException {
         procedureCall.registerOutParam(parameterIndex, sqlType);
     }
 
@@ -497,8 +490,7 @@ public abstract class AbstractCallableStatement extends FBPreparedStatement impl
      * @exception SQLException if a database access error occurs
      */
     public boolean wasNull() throws SQLException {
-        assertHasData(getCurrentResultSet());
-        return getCurrentResultSet().wasNull();
+        return getAndAssertSingletonResultSet().wasNull();
     }
 
     /**
@@ -518,9 +510,8 @@ public abstract class AbstractCallableStatement extends FBPreparedStatement impl
      * @exception SQLException if a database access error occurs
      */
     public String getString(int parameterIndex) throws SQLException {
-        assertHasData(getCurrentResultSet());
         parameterIndex = procedureCall.mapOutParamIndexToPosition(parameterIndex);
-        return getCurrentResultSet().getString(parameterIndex);
+        return getAndAssertSingletonResultSet().getString(parameterIndex);
     }
 
     /**
@@ -533,9 +524,8 @@ public abstract class AbstractCallableStatement extends FBPreparedStatement impl
      * @exception SQLException if a database access error occurs
      */
     public boolean getBoolean(int parameterIndex) throws SQLException {
-        assertHasData(getCurrentResultSet());
         parameterIndex = procedureCall.mapOutParamIndexToPosition(parameterIndex);
-        return getCurrentResultSet().getBoolean(parameterIndex);
+        return getAndAssertSingletonResultSet().getBoolean(parameterIndex);
     }
 
     /**
@@ -548,9 +538,8 @@ public abstract class AbstractCallableStatement extends FBPreparedStatement impl
      * @exception SQLException if a database access error occurs
      */
     public byte getByte(int parameterIndex) throws SQLException {
-        assertHasData(getCurrentResultSet());
         parameterIndex = procedureCall.mapOutParamIndexToPosition(parameterIndex);
-        return getCurrentResultSet().getByte(parameterIndex);
+        return getAndAssertSingletonResultSet().getByte(parameterIndex);
     }
 
     /**
@@ -563,9 +552,8 @@ public abstract class AbstractCallableStatement extends FBPreparedStatement impl
      * @exception SQLException if a database access error occurs
      */
     public short getShort(int parameterIndex) throws SQLException {
-        assertHasData(getCurrentResultSet());
         parameterIndex = procedureCall.mapOutParamIndexToPosition(parameterIndex);
-        return getCurrentResultSet().getShort(parameterIndex);
+        return getAndAssertSingletonResultSet().getShort(parameterIndex);
     }
 
     /**
@@ -578,9 +566,8 @@ public abstract class AbstractCallableStatement extends FBPreparedStatement impl
      * @exception SQLException if a database access error occurs
      */
     public int getInt(int parameterIndex) throws SQLException {
-        assertHasData(getCurrentResultSet());
         parameterIndex = procedureCall.mapOutParamIndexToPosition(parameterIndex);
-        return getCurrentResultSet().getInt(parameterIndex);
+        return getAndAssertSingletonResultSet().getInt(parameterIndex);
     }
 
     /**
@@ -593,9 +580,8 @@ public abstract class AbstractCallableStatement extends FBPreparedStatement impl
      * @exception SQLException if a database access error occurs
      */
     public long getLong(int parameterIndex) throws SQLException {
-        assertHasData(getCurrentResultSet());
         parameterIndex = procedureCall.mapOutParamIndexToPosition(parameterIndex);
-        return getCurrentResultSet().getLong(parameterIndex);
+        return getAndAssertSingletonResultSet().getLong(parameterIndex);
     }
 
     /**
@@ -608,9 +594,8 @@ public abstract class AbstractCallableStatement extends FBPreparedStatement impl
      * @exception SQLException if a database access error occurs
      */
     public float getFloat(int parameterIndex) throws SQLException {
-        assertHasData(getCurrentResultSet());
         parameterIndex = procedureCall.mapOutParamIndexToPosition(parameterIndex);
-        return getCurrentResultSet().getFloat(parameterIndex);
+        return getAndAssertSingletonResultSet().getFloat(parameterIndex);
     }
 
     /**
@@ -623,9 +608,8 @@ public abstract class AbstractCallableStatement extends FBPreparedStatement impl
      * @exception SQLException if a database access error occurs
      */
     public double getDouble(int parameterIndex) throws SQLException {
-        assertHasData(getCurrentResultSet());
         parameterIndex = procedureCall.mapOutParamIndexToPosition(parameterIndex);
-        return getCurrentResultSet().getDouble(parameterIndex);
+        return getAndAssertSingletonResultSet().getDouble(parameterIndex);
     }
 
     /**
@@ -640,12 +624,9 @@ public abstract class AbstractCallableStatement extends FBPreparedStatement impl
      * @exception SQLException if a database access error occurs
      * @deprecated
      */
-    public BigDecimal getBigDecimal(int parameterIndex, int scale)
-        throws SQLException
-    {
-        assertHasData(getCurrentResultSet());
+    public BigDecimal getBigDecimal(int parameterIndex, int scale) throws SQLException {
         parameterIndex = procedureCall.mapOutParamIndexToPosition(parameterIndex);
-        return getCurrentResultSet().getBigDecimal(parameterIndex, scale);
+        return getAndAssertSingletonResultSet().getBigDecimal(parameterIndex, scale);
     }
 
     /**
@@ -659,9 +640,8 @@ public abstract class AbstractCallableStatement extends FBPreparedStatement impl
      * @exception SQLException if a database access error occurs
      */
     public byte[] getBytes(int parameterIndex) throws SQLException {
-        assertHasData(getCurrentResultSet());
         parameterIndex = procedureCall.mapOutParamIndexToPosition(parameterIndex);
-        return getCurrentResultSet().getBytes(parameterIndex);
+        return getAndAssertSingletonResultSet().getBytes(parameterIndex);
     }
 
     /**
@@ -674,9 +654,8 @@ public abstract class AbstractCallableStatement extends FBPreparedStatement impl
      * @exception SQLException if a database access error occurs
      */
     public java.sql.Date getDate(int parameterIndex) throws SQLException {
-        assertHasData(getCurrentResultSet());
         parameterIndex = procedureCall.mapOutParamIndexToPosition(parameterIndex);
-        return getCurrentResultSet().getDate(parameterIndex);
+        return getAndAssertSingletonResultSet().getDate(parameterIndex);
     }
 
     /**
@@ -689,9 +668,8 @@ public abstract class AbstractCallableStatement extends FBPreparedStatement impl
      * @exception SQLException if a database access error occurs
      */
     public Time getTime(int parameterIndex) throws SQLException {
-        assertHasData(getCurrentResultSet());
         parameterIndex = procedureCall.mapOutParamIndexToPosition(parameterIndex);
-        return getCurrentResultSet().getTime(parameterIndex);
+        return getAndAssertSingletonResultSet().getTime(parameterIndex);
     }
 
     /**
@@ -703,12 +681,9 @@ public abstract class AbstractCallableStatement extends FBPreparedStatement impl
      * is <code>null</code>.
      * @exception SQLException if a database access error occurs
      */
-    public Timestamp getTimestamp(int parameterIndex)
-        throws SQLException
-    {
-        assertHasData(getCurrentResultSet());
+    public Timestamp getTimestamp(int parameterIndex) throws SQLException {
         parameterIndex = procedureCall.mapOutParamIndexToPosition(parameterIndex);
-        return getCurrentResultSet().getTimestamp(parameterIndex);
+        return getAndAssertSingletonResultSet().getTimestamp(parameterIndex);
     }
 
     /**
@@ -727,9 +702,8 @@ public abstract class AbstractCallableStatement extends FBPreparedStatement impl
      * @see Types
      */
     public Object getObject(int parameterIndex) throws SQLException {
-        assertHasData(getCurrentResultSet());
         parameterIndex = procedureCall.mapOutParamIndexToPosition(parameterIndex);
-        return getCurrentResultSet().getObject(parameterIndex);
+        return getAndAssertSingletonResultSet().getObject(parameterIndex);
     }
     
     public Object getObject(String colName) throws SQLException {
@@ -737,7 +711,6 @@ public abstract class AbstractCallableStatement extends FBPreparedStatement impl
     }
     
    /**
-    *
     * Returns an object representing the value of OUT parameter
     * <code>i</code> and uses <code>map</code> for the custom
     * mapping of the parameter value.
@@ -755,9 +728,8 @@ public abstract class AbstractCallableStatement extends FBPreparedStatement impl
     * @see <a href="package-summary.html#2.0 API">What Is in the JDBC 2.0 API</a>
     */
     public Object getObject(int parameterIndex, Map map) throws SQLException {
-        assertHasData(getCurrentResultSet());
         parameterIndex = procedureCall.mapOutParamIndexToPosition(parameterIndex);
-        return getCurrentResultSet().getObject(parameterIndex, map);
+        return getAndAssertSingletonResultSet().getObject(parameterIndex, map);
     }
     
     public Object getObject(String colName, Map map) throws SQLException {
@@ -765,9 +737,8 @@ public abstract class AbstractCallableStatement extends FBPreparedStatement impl
     }
     
     public <T> T getObject(int parameterIndex, Class<T> type) throws SQLException {
-        assertHasData(getCurrentResultSet());
         parameterIndex = procedureCall.mapOutParamIndexToPosition(parameterIndex);
-        return ((FBResultSet)getCurrentResultSet()).getObject(parameterIndex, type);
+        return ((FBResultSet) getAndAssertSingletonResultSet()).getObject(parameterIndex, type);
     }
 
     public <T> T getObject(String parameterName, Class<T> type) throws SQLException {
@@ -788,9 +759,8 @@ public abstract class AbstractCallableStatement extends FBPreparedStatement impl
     * @see <a href="package-summary.html#2.0 API">What Is in the JDBC 2.0 API</a>
     */
     public BigDecimal getBigDecimal(int parameterIndex) throws SQLException {
-        assertHasData(getCurrentResultSet());
         parameterIndex = procedureCall.mapOutParamIndexToPosition(parameterIndex);
-        return getCurrentResultSet().getBigDecimal(parameterIndex);
+        return getAndAssertSingletonResultSet().getBigDecimal(parameterIndex);
     }
     
    /**
@@ -807,9 +777,8 @@ public abstract class AbstractCallableStatement extends FBPreparedStatement impl
     * @see <a href="package-summary.html#2.0 API">What Is in the JDBC 2.0 API</a>
     */
     public Ref getRef(int parameterIndex) throws SQLException {
-        assertHasData(getCurrentResultSet());
         parameterIndex = procedureCall.mapOutParamIndexToPosition(parameterIndex);
-        return getCurrentResultSet().getRef(parameterIndex);
+        return getAndAssertSingletonResultSet().getRef(parameterIndex);
     }
 
     /**
@@ -825,9 +794,8 @@ public abstract class AbstractCallableStatement extends FBPreparedStatement impl
     * @see <a href="package-summary.html#2.0 API">What Is in the JDBC 2.0 API</a>
     */
     public Blob getBlob(int parameterIndex) throws SQLException {
-        assertHasData(getCurrentResultSet());
         parameterIndex = procedureCall.mapOutParamIndexToPosition(parameterIndex);
-        return getCurrentResultSet().getBlob(parameterIndex);
+        return getAndAssertSingletonResultSet().getBlob(parameterIndex);
     }
 
     /**
@@ -844,9 +812,8 @@ public abstract class AbstractCallableStatement extends FBPreparedStatement impl
     * @see <a href="package-summary.html#2.0 API">What Is in the JDBC 2.0 API</a>
     */
     public Clob getClob(int parameterIndex) throws SQLException {
-        assertHasData(getCurrentResultSet());
         parameterIndex = procedureCall.mapOutParamIndexToPosition(parameterIndex);
-        return getCurrentResultSet().getClob(parameterIndex);
+        return getAndAssertSingletonResultSet().getClob(parameterIndex);
     }
 
     /**
@@ -863,9 +830,8 @@ public abstract class AbstractCallableStatement extends FBPreparedStatement impl
     * @see <a href="package-summary.html#2.0 API">What Is in the JDBC 2.0 API</a>
     */
     public Array getArray(int parameterIndex) throws SQLException {
-        assertHasData(getCurrentResultSet());
         parameterIndex = procedureCall.mapOutParamIndexToPosition(parameterIndex);
-        return getCurrentResultSet().getArray(parameterIndex);
+        return getAndAssertSingletonResultSet().getArray(parameterIndex);
     }
 
     /**
@@ -886,12 +852,9 @@ public abstract class AbstractCallableStatement extends FBPreparedStatement impl
      * <code>null</code>.
      * @exception SQLException if a database access error occurs
      */
-    public java.sql.Date getDate(int parameterIndex, Calendar cal)
-        throws SQLException
-    {
-        assertHasData(getCurrentResultSet());
+    public java.sql.Date getDate(int parameterIndex, Calendar cal) throws SQLException {
         parameterIndex = procedureCall.mapOutParamIndexToPosition(parameterIndex);
-        return getCurrentResultSet().getDate(parameterIndex, cal);
+        return getAndAssertSingletonResultSet().getDate(parameterIndex, cal);
     }
 
     /**
@@ -912,12 +875,9 @@ public abstract class AbstractCallableStatement extends FBPreparedStatement impl
      * <code>null</code>.
      * @exception SQLException if a database access error occurs
      */
-    public Time getTime(int parameterIndex, Calendar cal)
-        throws SQLException
-    {
-        assertHasData(getCurrentResultSet());
+    public Time getTime(int parameterIndex, Calendar cal) throws SQLException {
         parameterIndex = procedureCall.mapOutParamIndexToPosition(parameterIndex);
-        return getCurrentResultSet().getTime(parameterIndex, cal);
+        return getAndAssertSingletonResultSet().getTime(parameterIndex, cal);
     }
 
     /**
@@ -939,17 +899,14 @@ public abstract class AbstractCallableStatement extends FBPreparedStatement impl
      * <code>null</code>.
      * @exception SQLException if a database access error occurs
      */
-    public Timestamp getTimestamp(int parameterIndex, Calendar cal)
-        throws SQLException
-    {
-        assertHasData(getCurrentResultSet());
+    public Timestamp getTimestamp(int parameterIndex, Calendar cal) throws SQLException {
         parameterIndex = procedureCall.mapOutParamIndexToPosition(parameterIndex);
-        return getCurrentResultSet().getTimestamp(parameterIndex, cal);
+        return getAndAssertSingletonResultSet().getTimestamp(parameterIndex, cal);
     }
 
     public URL getURL(int colIndex) throws SQLException {
-        assertHasData(getCurrentResultSet());
-        return getCurrentResultSet().getURL(colIndex);
+        colIndex = procedureCall.mapOutParamIndexToPosition(colIndex);
+        return getAndAssertSingletonResultSet().getURL(colIndex);
     }
 
     public String getString(String colName) throws SQLException {
@@ -1037,9 +994,8 @@ public abstract class AbstractCallableStatement extends FBPreparedStatement impl
     }
 
     public Reader getCharacterStream(int parameterIndex) throws SQLException {
-        assertHasData(getCurrentResultSet());
         parameterIndex = procedureCall.mapOutParamIndexToPosition(parameterIndex);
-        return getCurrentResultSet().getCharacterStream(parameterIndex);
+        return getAndAssertSingletonResultSet().getCharacterStream(parameterIndex);
     }
 
     public Reader getCharacterStream(String parameterName) throws SQLException {
@@ -1047,9 +1003,8 @@ public abstract class AbstractCallableStatement extends FBPreparedStatement impl
     }
 
     public Reader getNCharacterStream(int parameterIndex) throws SQLException {
-        assertHasData(getCurrentResultSet());
         parameterIndex = procedureCall.mapOutParamIndexToPosition(parameterIndex);
-        return ((FBResultSet)getCurrentResultSet()).getNCharacterStream(parameterIndex);
+        return ((FBResultSet) getAndAssertSingletonResultSet()).getNCharacterStream(parameterIndex);
     }
 
     public Reader getNCharacterStream(String parameterName) throws SQLException {
@@ -1057,17 +1012,15 @@ public abstract class AbstractCallableStatement extends FBPreparedStatement impl
     }
 
     public String getNString(int parameterIndex) throws SQLException {
-        assertHasData(getCurrentResultSet());
         parameterIndex = procedureCall.mapOutParamIndexToPosition(parameterIndex);
-        return ((FBResultSet)getCurrentResultSet()).getNString(parameterIndex);
+        return ((FBResultSet) getAndAssertSingletonResultSet()).getNString(parameterIndex);
     }
 
     public String getNString(String parameterName) throws SQLException {
         return getNString(findOutParameter(parameterName));
     }
 
-    public void setAsciiStream(String parameterName, InputStream x, long length)
-            throws SQLException {
+    public void setAsciiStream(String parameterName, InputStream x, long length) throws SQLException {
         throw new FBDriverNotCapableException();
     }
 
@@ -1075,8 +1028,7 @@ public abstract class AbstractCallableStatement extends FBPreparedStatement impl
         throw new FBDriverNotCapableException();
     }
 
-    public void setBinaryStream(String parameterName, InputStream x, long length)
-            throws SQLException {
+    public void setBinaryStream(String parameterName, InputStream x, long length) throws SQLException {
         throw new FBDriverNotCapableException();
     }
 
@@ -1088,8 +1040,7 @@ public abstract class AbstractCallableStatement extends FBPreparedStatement impl
         throw new FBDriverNotCapableException();
     }
 
-    public void setBlob(String parameterName, InputStream inputStream, long length)
-            throws SQLException {
+    public void setBlob(String parameterName, InputStream inputStream, long length) throws SQLException {
         throw new FBDriverNotCapableException();
     }
 
@@ -1097,8 +1048,7 @@ public abstract class AbstractCallableStatement extends FBPreparedStatement impl
         throw new FBDriverNotCapableException();
     }
 
-    public void setCharacterStream(String parameterName, Reader reader, long length)
-            throws SQLException {
+    public void setCharacterStream(String parameterName, Reader reader, long length) throws SQLException {
         throw new FBDriverNotCapableException();
     }
 
@@ -1118,8 +1068,7 @@ public abstract class AbstractCallableStatement extends FBPreparedStatement impl
         throw new FBDriverNotCapableException();
     }
 
-    public void setNCharacterStream(String parameterName, Reader value, long length)
-            throws SQLException {
+    public void setNCharacterStream(String parameterName, Reader value, long length) throws SQLException {
         throw new FBDriverNotCapableException();
     }
 
@@ -1255,8 +1204,7 @@ public abstract class AbstractCallableStatement extends FBPreparedStatement impl
         throw new FBDriverNotCapableException();
     }
 
-    public void registerOutParameter(int parameterIndex, int sqlType, String typeName)
-            throws SQLException {
+    public void registerOutParameter(int parameterIndex, int sqlType, String typeName) throws SQLException {
         throw new FBDriverNotCapableException();
     }
 
@@ -1271,7 +1219,10 @@ public abstract class AbstractCallableStatement extends FBPreparedStatement impl
      * @param rs result set to test
      * @throws java.sql.SQLException when the result set has no data.
      */
-    protected void assertHasData(ResultSet rs) throws SQLException {
+    private void assertHasData(ResultSet rs) throws SQLException {
+        if (rs == null) {
+            throw new SQLException("Current statement has no data to return.", FBSQLException.SQL_STATE_NO_RESULT_SET);
+        }
         // check if we have a row, and try to move to the first position.
         if (rs.getRow() == 0)
             rs.next();
@@ -1280,9 +1231,9 @@ public abstract class AbstractCallableStatement extends FBPreparedStatement impl
 
         // check if we still have no row and throw an exception in this case.
         if (rs.getRow() == 0)
-        	throw new FBSQLException(
-                    "Current statement has not data to return.",
-                        FBSQLException.SQL_STATE_NO_RESULT_SET);
+            throw new FBSQLException(
+                    "Current statement has no data to return.",
+                    FBSQLException.SQL_STATE_NO_RESULT_SET);
     }
 
     // this method doesn't give an exception if it is called twice.
@@ -1290,6 +1241,28 @@ public abstract class AbstractCallableStatement extends FBPreparedStatement impl
         if (currentRs == null)
             currentRs = super.getResultSet();
         return currentRs;
+    }
+
+    /**
+     * Returns the result set for the singleton row of the callable statement and asserts it has data. If this is a
+     * selectable procedure, or there is no singleton row, it will return the normal result set.
+     * <p>
+     * This should fix the problem described in <a href="http://tracker.firebirdsql.org/browse/JDBC-350">JDBC-350</a>
+     * in most circumstances.
+     * </p>
+     *
+     * @return Either the singleton result set, or the current result set as described above
+     * @throws SQLException For database access errors
+     */
+    protected ResultSet getAndAssertSingletonResultSet() throws SQLException {
+        final ResultSet rs;
+        if (!isSelectableProcedure() && singletonRs != null) {
+            rs = singletonRs;
+        } else {
+            rs = getCurrentResultSet();
+        }
+        assertHasData(rs);
+        return rs;
     }
 
     /**
@@ -1439,7 +1412,7 @@ public abstract class AbstractCallableStatement extends FBPreparedStatement impl
      *            Name of the OUT parameter
      */
     protected int findOutParameter(String paramName) throws SQLException {
-        return getCurrentResultSet().findColumn(paramName);
+        return getAndAssertSingletonResultSet().findColumn(paramName);
     }
 
     private static class WrapperWithCalendar {
@@ -1477,5 +1450,4 @@ public abstract class AbstractCallableStatement extends FBPreparedStatement impl
             return intValue;
         }
     }
-
 }

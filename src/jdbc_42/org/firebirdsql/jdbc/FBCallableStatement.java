@@ -1,20 +1,21 @@
 /*
  * $Id$
- * 
- * Firebird Open Source J2ee connector - jdbc driver
- * 
- * Distributable under LGPL license. You may obtain a copy of the License at
- * http://www.gnu.org/copyleft/lgpl.html
- * 
- * This program is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE. See the LGPL License for more details.
- * 
- * This file was created by members of the firebird development team. All
- * individual contributions remain the Copyright (C) of those individuals.
- * Contributors to this file are either listed here or can be obtained from a
- * CVS history command.
- * 
+ *
+ * Firebird Open Source JavaEE Connector - JDBC Driver
+ *
+ * Distributable under LGPL license.
+ * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * LGPL License for more details.
+ *
+ * This file was created by members of the firebird development team.
+ * All individual contributions remain the Copyright (C) of those
+ * individuals.  Contributors to this file are either listed here or
+ * can be obtained from a source control history command.
+ *
  * All rights reserved.
  */
 package org.firebirdsql.jdbc;
@@ -48,9 +49,8 @@ public class FBCallableStatement extends AbstractCallableStatement {
     }
 
     public NClob getNClob(int parameterIndex) throws SQLException {
-        assertHasData(getCurrentResultSet());
         parameterIndex = procedureCall.mapOutParamIndexToPosition(parameterIndex);
-        return getCurrentResultSet().getNClob(parameterIndex);
+        return getAndAssertSingletonResultSet().getNClob(parameterIndex);
     }
 
     public NClob getNClob(String parameterName) throws SQLException {
@@ -58,9 +58,8 @@ public class FBCallableStatement extends AbstractCallableStatement {
     }
 
     public RowId getRowId(int parameterIndex) throws SQLException {
-        assertHasData(getCurrentResultSet());
         parameterIndex = procedureCall.mapOutParamIndexToPosition(parameterIndex);
-        return getCurrentResultSet().getRowId(parameterIndex);
+        return getAndAssertSingletonResultSet().getRowId(parameterIndex);
     }
 
     public RowId getRowId(String parameterName) throws SQLException {
@@ -68,9 +67,8 @@ public class FBCallableStatement extends AbstractCallableStatement {
     }
 
     public SQLXML getSQLXML(int parameterIndex) throws SQLException {
-        assertHasData(getCurrentResultSet());
         parameterIndex = procedureCall.mapOutParamIndexToPosition(parameterIndex);
-        return getCurrentResultSet().getSQLXML(parameterIndex);
+        return getAndAssertSingletonResultSet().getSQLXML(parameterIndex);
     }
 
     public SQLXML getSQLXML(String parameterName) throws SQLException {
