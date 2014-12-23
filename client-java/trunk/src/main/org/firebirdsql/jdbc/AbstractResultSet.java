@@ -253,14 +253,14 @@ public abstract class AbstractResultSet implements ResultSet, FirebirdResultSet,
     }
 
     /**
-     * Check if ResultSet is open and prepare ResultSet for cursor move.
+     * Check if ResultSet is open.
      *
      * @throws SQLException
      *         if ResultSet is closed.
      */
     protected void checkOpen() throws SQLException {
         if (isClosed())
-            throw new FBSQLException("The result set is closed");
+            throw new FBSQLException("The result set is closed", FBSQLException.SQL_STATE_NO_RESULT_SET);
     }
 
     /**
@@ -1331,14 +1331,20 @@ public abstract class AbstractResultSet implements ResultSet, FirebirdResultSet,
     /**
      * Retrieves the current row number.  The first row is number 1, the
      * second number 2, and so on.
+     * <p>
+     * <strong>Note:</strong>Support for the <code>getRow</code> method
+     * is optional for <code>ResultSet</code>s with a result
+     * set type of <code>TYPE_FORWARD_ONLY</code>
      *
      * @return the current row number; <code>0</code> if there is no current row
      * @exception SQLException if a database access error occurs
+     * or this method is called on a closed result set
+     * @exception SQLFeatureNotSupportedException if the JDBC driver does not support
+     * this method
      * @since 1.2
-     * @see <a href="package-summary.html#2.0 API">What Is in the JDBC
-     *      2.0 API</a>
      */
     public int getRow() throws SQLException {
+        checkOpen();
         return fbFetcher.getRowNum();
     }
 

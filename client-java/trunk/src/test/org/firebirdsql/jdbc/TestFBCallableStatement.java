@@ -1036,4 +1036,35 @@ public class TestFBCallableStatement extends FBJUnit4TestBase {
             cs.close();
         }
     }
+
+    /**
+     * Test if first accessing and processing the result set from an <b>executable</b> procedure,
+     * and then accessing the getters works.
+     * <p>
+     * See <a href="http://tracker.firebirdsql.org/browse/JDBC-350">JDBC-350</a>,
+     * </p>
+     * <p>
+     * NOTE: This tests behavior we maintain for compatibility with previous versions; a correct implementation
+     * shouldn't return a result set at all.
+     * </p>
+     */
+    @Test
+    public void testExecutableProcedureAccessResultSetFirst_thenGetter_shouldWork() throws Exception {
+        executeDDL(con, CREATE_SIMPLE_OUT_PROC);
+
+        CallableStatement cs = con.prepareCall(EXECUTE_IN_OUT_PROCEDURE);
+        try {
+            cs.setString(1, "paramvalue");
+            assertTrue("Expected ResultSet", cs.execute());
+            ResultSet rs = cs.getResultSet();
+            assertNotNull("Expected ResultSet", rs);
+            assertTrue("Expected at least one row", rs.next());
+            assertEquals("paramvalue", rs.getString("outParam"));
+            rs.close();
+
+            assertEquals("paramvalue", cs.getString(1));
+        } finally {
+            cs.close();
+        }
+    }
 }

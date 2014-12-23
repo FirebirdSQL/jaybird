@@ -147,7 +147,12 @@ public class TestJnaDatabase {
         expectedException.expect(allOf(
                 isA(SQLException.class),
                 // TODO Error parameter might be platform dependent
-                message(startsWith(getFbMessage(ISCConstants.isc_io_error, "CreateFile (open)", invalidDatabaseName))),
+                anyOf(
+                        message(startsWith(getFbMessage(ISCConstants.isc_io_error, "CreateFile (open)",
+                                invalidDatabaseName))),
+                        message(startsWith(getFbMessage(ISCConstants.isc_io_error, "CreateFile (open)",
+                                invalidDatabaseName.toUpperCase())))
+                ),
                 errorCode(equalTo(ISCConstants.isc_io_error))
         ));
 
