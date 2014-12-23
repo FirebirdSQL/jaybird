@@ -1,11 +1,31 @@
+/*
+ * $Id$
+ *
+ * Firebird Open Source JavaEE Connector - JDBC Driver
+ *
+ * Distributable under LGPL license.
+ * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * LGPL License for more details.
+ *
+ * This file was created by members of the firebird development team.
+ * All individual contributions remain the Copyright (C) of those
+ * individuals.  Contributors to this file are either listed here or
+ * can be obtained from a source control history command.
+ *
+ * All rights reserved.
+ */
 package org.firebirdsql.jdbc;
+
+import org.firebirdsql.common.FBTestBase;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Statement;
-
-import org.firebirdsql.common.FBTestBase;
 
 public class TestFBStatement extends FBTestBase {
 
@@ -29,7 +49,7 @@ public class TestFBStatement extends FBTestBase {
 
         try {
             executeDropTable(con, DROP_TABLE);
-            
+
             executeCreateTable(con, CREATE_TABLE);
             prepareTestData();
         } finally {
@@ -49,7 +69,7 @@ public class TestFBStatement extends FBTestBase {
 
     /**
      * Closing a statement twice should not result in an Exception.
-     * 
+     *
      * @throws SQLException
      */
     public void testDoubleClose() throws SQLException {
@@ -63,7 +83,7 @@ public class TestFBStatement extends FBTestBase {
      * <p>
      * JDBC 4.1 feature.
      * </p>
-     * 
+     *
      * @throws SQLException
      */
     public void testIsCloseOnCompletion_initial() throws SQLException {
@@ -79,7 +99,7 @@ public class TestFBStatement extends FBTestBase {
      * <p>
      * JDBC 4.1 feature.
      * </p>
-     * 
+     *
      * @throws SQLException
      */
     public void testIsCloseOnCompletion_afterCloseOnCompletion() throws SQLException {
@@ -96,7 +116,7 @@ public class TestFBStatement extends FBTestBase {
      * <p>
      * JDBC 4.1 feature.
      * </p>
-     * 
+     *
      * @throws SQLException
      */
     public void testIsCloseOnCompletion_multipleCloseOnCompletion() throws SQLException {
@@ -111,15 +131,15 @@ public class TestFBStatement extends FBTestBase {
     /**
      * Test if an implicit close (by fully reading the resultset) while closeOnCompletion is false, will not close
      * the statement.
-     * 
+     *
      * @throws SQLException
      */
     public void testNoCloseOnCompletion_StatementOpen_afterImplicitResultSetClose() throws SQLException {
-        FBStatement stmt = (FBStatement)con.createStatement();
+        FBStatement stmt = (FBStatement) con.createStatement();
         try {
             stmt.execute(SELECT_DATA);
             // Cast so it also works under JDBC 3.0
-            FBResultSet rs = (FBResultSet)stmt.getResultSet();
+            FBResultSet rs = (FBResultSet) stmt.getResultSet();
             int count = 0;
             while (rs.next()) {
                 assertFalse("Resultset should be open", rs.isClosed());
@@ -134,22 +154,22 @@ public class TestFBStatement extends FBTestBase {
             stmt.close();
         }
     }
-    
+
     /**
      * Test if an explicit close (by calling close()) while closeOnCompletion is false, will not close
      * the statement.
-     * 
+     *
      * @throws SQLException
      */
     public void testNoCloseOnCompletion_StatementOpen_afterExplicitResultSetClose() throws SQLException {
-        FBStatement stmt = (FBStatement)con.createStatement();
+        FBStatement stmt = (FBStatement) con.createStatement();
         try {
             stmt.execute(SELECT_DATA);
             // Cast so it also works under JDBC 3.0
-            FBResultSet rs = (FBResultSet)stmt.getResultSet();
+            FBResultSet rs = (FBResultSet) stmt.getResultSet();
             assertFalse("Resultset should be open", rs.isClosed());
             assertFalse("Statement should be open", stmt.isClosed());
-            
+
             rs.close();
 
             assertTrue("Resultset should be closed", rs.isClosed());
@@ -158,20 +178,20 @@ public class TestFBStatement extends FBTestBase {
             stmt.close();
         }
     }
-    
+
     /**
      * Test if an implicit close (by fully reading the resultset) while closeOnCompletion is true, will close
      * the statement.
-     * 
+     *
      * @throws SQLException
      */
     public void testCloseOnCompletion_StatementClosed_afterImplicitResultSetClose() throws SQLException {
-        FBStatement stmt = (FBStatement)con.createStatement();
+        FBStatement stmt = (FBStatement) con.createStatement();
         try {
             stmt.execute(SELECT_DATA);
             stmt.closeOnCompletion();
             // Cast so it also works under JDBC 3.0
-            FBResultSet rs = (FBResultSet)stmt.getResultSet();
+            FBResultSet rs = (FBResultSet) stmt.getResultSet();
             int count = 0;
             while (rs.next()) {
                 assertFalse("Resultset should be open", rs.isClosed());
@@ -186,23 +206,23 @@ public class TestFBStatement extends FBTestBase {
             stmt.close();
         }
     }
-    
+
     /**
      * Test if an explicit close (by calling close()) while closeOnCompletion is true, will close
      * the statement.
-     * 
+     *
      * @throws SQLException
      */
     public void testCloseOnCompletion_StatementClosed_afterExplicitResultSetClose() throws SQLException {
-        FBStatement stmt = (FBStatement)con.createStatement();
+        FBStatement stmt = (FBStatement) con.createStatement();
         try {
             stmt.execute(SELECT_DATA);
             stmt.closeOnCompletion();
             // Cast so it also works under JDBC 3.0
-            FBResultSet rs = (FBResultSet)stmt.getResultSet();
+            FBResultSet rs = (FBResultSet) stmt.getResultSet();
             assertFalse("Resultset should be open", rs.isClosed());
             assertFalse("Statement should be open", stmt.isClosed());
-            
+
             rs.close();
 
             assertTrue("Resultset should be closed", rs.isClosed());
@@ -211,20 +231,44 @@ public class TestFBStatement extends FBTestBase {
             stmt.close();
         }
     }
-    
+
     /**
      * Test if a executing a query which does not produce a resultset (eg an INSERT without generated keys) will not close the
      * statement.
-     *  
-     * @throws SQLException
      */
     public void testCloseOnCompletion_StatementOpen_afterNonResultSetQuery() throws SQLException {
-        FBStatement stmt = (FBStatement)con.createStatement();
+        FBStatement stmt = (FBStatement) con.createStatement();
         try {
             stmt.closeOnCompletion();
-            stmt.execute("INSERT INTO test(col1) VALUES(" + DATA_ITEMS +")");
-            
+            stmt.execute("INSERT INTO test(col1) VALUES(" + DATA_ITEMS + ")");
+
             assertFalse("Statement should be open", stmt.isClosed());
+        } finally {
+            stmt.close();
+        }
+    }
+
+    /**
+     * Tests if Firebird 3 parametrized exceptions are correctly rendered.
+     */
+    public void testParametrizedExceptions() throws Exception {
+        assertTrue("Test only works on Firebird 3 or higher", con.getMetaData().getDatabaseMajorVersion() >= 3);
+        executeDDL(con, "CREATE EXCEPTION two_param_exception 'Param 1 ''@1'', Param 2 ''@2'''", new int[0]);
+
+        Statement stmt = con.createStatement();
+        try {
+            //@formatter:off
+            stmt.execute(
+                "EXECUTE BLOCK AS " +
+                "BEGIN " +
+                "  EXCEPTION two_param_exception USING ('value_1', 'value2'); " +
+                "END"
+            );
+            //@formatter:on
+            fail("Expected an exception");
+        } catch (SQLException e) {
+            assertTrue("Parametrized exception does not contain expected message",
+                    e.getMessage().contains("\nParam 1 'value_1', Param 2 'value2'\n"));
         } finally {
             stmt.close();
         }
