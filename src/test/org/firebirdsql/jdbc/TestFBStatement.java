@@ -34,9 +34,13 @@ import static org.firebirdsql.common.DdlHelper.*;
 import static org.firebirdsql.common.FBTestProperties.getConnectionViaDriverManager;
 import static org.firebirdsql.common.JdbcResourceHelper.*;
 import static org.firebirdsql.common.matchers.SQLExceptionMatchers.*;
+import static org.firebirdsql.util.FirebirdSupportInfo.supportInfoFor;
 import static org.hamcrest.CoreMatchers.*;
+import static org.hamcrest.Matchers.allOf;
+import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.isEmptyOrNullString;
 import static org.junit.Assert.*;
+import static org.junit.Assume.assumeTrue;
 
 /**
  * Tests for {@link org.firebirdsql.jdbc.FBStatement}.
@@ -55,13 +59,6 @@ public class TestFBStatement extends FBJUnit4TestBase {
 
     @Before
     public void setUp() throws Exception {
-        con = getConnectionViaDriverManager();
-
-        try {
-            executeCreateTable(con, CREATE_TABLE);
-        } finally {
-            closeQuietly(con);
-        }
         con = getConnectionViaDriverManager();
     }
 
@@ -137,8 +134,7 @@ public class TestFBStatement extends FBJUnit4TestBase {
         FBStatement stmt = (FBStatement)con.createStatement();
         try {
             stmt.execute(SELECT_DATA);
-            // Cast so it also works under JDBC 3.0
-            FBResultSet rs = (FBResultSet)stmt.getResultSet();
+            ResultSet rs = stmt.getResultSet();
             int count = 0;
             while (rs.next()) {
                 assertFalse("Resultset should be open", rs.isClosed());
@@ -160,11 +156,12 @@ public class TestFBStatement extends FBJUnit4TestBase {
      */
     @Test
     public void testNoCloseOnCompletion_StatementOpen_afterExplicitResultSetClose() throws SQLException {
+        executeCreateTable(con, CREATE_TABLE);
+
         FBStatement stmt = (FBStatement)con.createStatement();
         try {
             stmt.execute(SELECT_DATA);
-            // Cast so it also works under JDBC 3.0
-            FBResultSet rs = (FBResultSet)stmt.getResultSet();
+            ResultSet rs = stmt.getResultSet();
             assertFalse("Resultset should be open", rs.isClosed());
             assertFalse("Statement should be open", stmt.isClosed());
             
@@ -188,8 +185,7 @@ public class TestFBStatement extends FBJUnit4TestBase {
         try {
             stmt.execute(SELECT_DATA);
             stmt.closeOnCompletion();
-            // Cast so it also works under JDBC 3.0
-            FBResultSet rs = (FBResultSet)stmt.getResultSet();
+            ResultSet rs = stmt.getResultSet();
             int count = 0;
             while (rs.next()) {
                 assertFalse("Resultset should be open", rs.isClosed());
@@ -211,12 +207,13 @@ public class TestFBStatement extends FBJUnit4TestBase {
      */
     @Test
     public void testCloseOnCompletion_StatementClosed_afterExplicitResultSetClose() throws SQLException {
+        executeCreateTable(con, CREATE_TABLE);
+
         FBStatement stmt = (FBStatement)con.createStatement();
         try {
             stmt.execute(SELECT_DATA);
             stmt.closeOnCompletion();
-            // Cast so it also works under JDBC 3.0
-            FBResultSet rs = (FBResultSet)stmt.getResultSet();
+            ResultSet rs = stmt.getResultSet();
             assertFalse("Resultset should be open", rs.isClosed());
             assertFalse("Statement should be open", stmt.isClosed());
             
@@ -235,6 +232,8 @@ public class TestFBStatement extends FBJUnit4TestBase {
      */
     @Test
     public void testCloseOnCompletion_StatementOpen_afterNonResultSetQuery() throws SQLException {
+        executeCreateTable(con, CREATE_TABLE);
+
         FBStatement stmt = (FBStatement)con.createStatement();
         try {
             stmt.closeOnCompletion();
@@ -254,6 +253,8 @@ public class TestFBStatement extends FBJUnit4TestBase {
      */
     @Test
     public void testExecuteQuery_NonQuery() throws SQLException {
+        executeCreateTable(con, CREATE_TABLE);
+
         Statement stmt = con.createStatement();
         try {
             expectedException.expect(SQLException.class);
@@ -508,6 +509,8 @@ public class TestFBStatement extends FBJUnit4TestBase {
      */
     @Test
     public void testGetLastExecutionPlan_select() throws SQLException {
+        executeCreateTable(con, CREATE_TABLE);
+
         FirebirdStatement stmt = (FirebirdStatement) con.createStatement();
         try {
             ResultSet rs = stmt.executeQuery(SELECT_DATA);
@@ -575,6 +578,8 @@ public class TestFBStatement extends FBJUnit4TestBase {
      */
     @Test
     public void testBatch_Insert() throws SQLException {
+        executeCreateTable(con, CREATE_TABLE);
+
         Statement stmt = con.createStatement();
         try {
             for (int item = 1; item <= DATA_ITEMS; item++) {
@@ -911,7 +916,37 @@ public class TestFBStatement extends FBJUnit4TestBase {
         }
     }
 
+    /**
+     * Tests if Firebird 3 parametrized exceptions are correctly rendered.
+     */
+    @Test
+    public void testParametrizedExceptions() throws Exception {
+        assumeTrue("Test requires parametrized exceptions", supportInfoFor(con).supportsParametrizedExceptions());
+        executeDDL(con, "CREATE EXCEPTION two_param_exception 'Param 1 ''@1'', Param 2 ''@2'''");
+
+        Statement stmt = con.createStatement();
+        try {
+            expectedException.expect(allOf(
+                    isA(SQLException.class),
+                    message(containsString("; Param 1 'value_1', Param 2 'value2'; "))
+            ));
+
+            //@formatter:off
+            stmt.execute(
+                "EXECUTE BLOCK AS " +
+                "BEGIN " +
+                "  EXCEPTION two_param_exception USING ('value_1', 'value2'); " +
+                "END"
+            );
+            //@formatter:on
+        } finally {
+            stmt.close();
+        }
+    }
+
     private void prepareTestData() throws SQLException {
+        executeCreateTable(con, CREATE_TABLE);
+
         PreparedStatement pstmt = con.prepareStatement(INSERT_DATA);
         try {
             for (int i = 0; i < DATA_ITEMS; i++) {

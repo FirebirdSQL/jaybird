@@ -188,6 +188,13 @@ public class FirebirdSupportInfo {
     }
 
     /**
+     * @return {@code true} when parametrized exceptions are supported.
+     */
+    public boolean supportsParametrizedExceptions() {
+        return serverVersion.isEqualOrAbove(3, 0);
+    }
+
+    /**
      * @param serverVersion
      *         Server version
      * @return FirebirdVersionSupport instance
