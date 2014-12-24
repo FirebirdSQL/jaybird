@@ -1,5 +1,7 @@
 /*
- * Firebird Open Source J2ee connector - jdbc driver
+ * $Id$
+ *
+ * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -12,7 +14,7 @@
  * This file was created by members of the firebird development team.
  * All individual contributions remain the Copyright (C) of those
  * individuals.  Contributors to this file are either listed here or
- * can be obtained from a CVS history command.
+ * can be obtained from a source control history command.
  *
  * All rights reserved.
  */
@@ -32,46 +34,31 @@ import org.firebirdsql.gds.impl.GDSHelper;
 class FBStatementFetcher implements FBFetcher {
 
     private boolean closed;
-
     private boolean wasFetched;
 
-    protected GDSHelper gdsHelper;
+    protected final GDSHelper gdsHelper;
+    protected final FBObjectListener.FetcherListener fetcherListener;
 
-    protected FBObjectListener.FetcherListener fetcherListener;
-
-    protected int maxRows;
-
+    protected final int maxRows;
     protected int fetchSize;
 
-    protected Synchronizable syncProvider;
-
-    protected AbstractIscStmtHandle stmt;
+    protected final Synchronizable syncProvider;
+    protected final AbstractIscStmtHandle stmt;
 
     private Object[] rowsArray;
-
     private int size;
-
     protected byte[][] _nextRow;
-
     private int rowNum = 0;
-
     private int rowPosition = 0;
 
-    private boolean isEmpty = false;
+    private boolean isEmpty;
+    private boolean isBeforeFirst;
+    private boolean isFirst;
+    private boolean isLast;
+    private boolean isAfterLast;
 
-    private boolean isBeforeFirst = false;
-
-    private boolean isFirst = false;
-
-    private boolean isLast = false;
-
-    private boolean isAfterLast = false;
-
-    FBStatementFetcher(GDSHelper gdsHelper, Synchronizable syncProvider,
-            AbstractIscStmtHandle stmth,
-            FBObjectListener.FetcherListener fetcherListener, int maxRows,
-            int fetchSize) throws SQLException {
-
+    FBStatementFetcher(GDSHelper gdsHelper, Synchronizable syncProvider, AbstractIscStmtHandle stmth,
+            FBObjectListener.FetcherListener fetcherListener, int maxRows, int fetchSize) throws SQLException {
         this.gdsHelper = gdsHelper;
         this.stmt = stmth;
         this.syncProvider = syncProvider;
@@ -79,15 +66,7 @@ class FBStatementFetcher implements FBFetcher {
         this.maxRows = maxRows;
         this.fetchSize = fetchSize;
 
-        Object syncObject = syncProvider.getSynchronizationObject();
-        synchronized (syncObject) {
-
-            isEmpty = false;
-            isBeforeFirst = false;
-            isFirst = false;
-            isLast = false;
-            isAfterLast = false;
-
+        synchronized (syncProvider.getSynchronizationObject()) {
             // stored procedures
             if (stmt.isAllRowsFetched()) {
                 rowsArray = stmt.getRows();
@@ -98,7 +77,6 @@ class FBStatementFetcher implements FBFetcher {
 
     protected byte[][] getNextRow() throws SQLException {
         if (!wasFetched) fetch();
-
         return _nextRow;
     }
 
@@ -132,22 +110,17 @@ class FBStatementFetcher implements FBFetcher {
             setRowNum(0);
             return false;
         } else {
-            try {
-                fetcherListener.rowChanged(this, getNextRow());
-                fetch();
-                setRowNum(getRowNum() + 1);
+            fetcherListener.rowChanged(this, getNextRow());
+            fetch();
+            setRowNum(getRowNum() + 1);
 
-                if (getRowNum() == 1) setIsFirst(true);
+            if (getRowNum() == 1) setIsFirst(true);
 
-                if ((getNextRow() == null)
-                        || (maxRows != 0 && getRowNum() == maxRows)) {
-                    setIsLast(true);
-                }
-
-                return true;
-            } catch (SQLException sqle) {
-                throw sqle;
+            if (getNextRow() == null
+                    || (maxRows != 0 && getRowNum() == maxRows)) {
+                setIsLast(true);
             }
+            return true;
         }
     }
 
@@ -180,10 +153,7 @@ class FBStatementFetcher implements FBFetcher {
     }
 
     public void fetch() throws SQLException {
-
-        Object syncObject = syncProvider.getSynchronizationObject();
-        synchronized (syncObject) {
-
+        synchronized (syncProvider.getSynchronizationObject()) {
             checkClosed();
 
             int maxRows = 0;
@@ -281,7 +251,6 @@ class FBStatementFetcher implements FBFetcher {
     }
 
     public boolean isAfterLast() throws SQLException {
-
         if (!wasFetched) fetch();
 
         return isAfterLast;
@@ -291,29 +260,14 @@ class FBStatementFetcher implements FBFetcher {
         this.isAfterLast = isAfterLastValue;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see org.firebirdsql.jdbc.FBFetcher#deleteRow()
-     */
     public void deleteRow() throws SQLException {
         // empty
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see org.firebirdsql.jdbc.FBFetcher#insertRow(byte[][])
-     */
     public void insertRow(byte[][] data) throws SQLException {
         // empty
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see org.firebirdsql.jdbc.FBFetcher#updateRow(byte[][])
-     */
     public void updateRow(byte[][] data) throws SQLException {
         // empty
     }
