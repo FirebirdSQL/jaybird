@@ -47,6 +47,7 @@ public class FBManager implements FBManagerMBean {
     private String userName;
     private String password;
     private int dialect = ISCConstants.SQL_DIALECT_CURRENT;
+    private int pageSize = -1;
     private boolean forceCreate;
     private boolean createOnStart;
     private boolean dropOnStop;
@@ -149,6 +150,17 @@ public class FBManager implements FBManagerMBean {
         return fileName;
     }
 
+    /**
+     * Set the value of fileName
+     *
+     * @param fileName
+     *         Value to assign to fileName
+     * @jmx:managed-attribute
+     */
+    public void setFileName(final String fileName) {
+        this.fileName = fileName;
+    }
+
     public String getType() {
         return this.type.toString();
     }
@@ -160,17 +172,6 @@ public class FBManager implements FBManagerMBean {
             throw new RuntimeException("Unrecognized type '" + type + "'");
 
         this.type = gdsType;
-    }
-
-    /**
-     * Set the value of fileName
-     *
-     * @param fileName
-     *         Value to assign to fileName
-     * @jmx:managed-attribute
-     */
-    public void setFileName(final String fileName) {
-        this.fileName = fileName;
     }
 
     /**
@@ -230,6 +231,33 @@ public class FBManager implements FBManagerMBean {
 
     public int getDialect() {
         return dialect;
+    }
+
+    /**
+     * Set the page size that will be used for the database. The value
+     * for <code>pageSize</code> must be one of: 1024, 2048, 4096, 8192 or 16384. The
+     * default value depends on the Firebird version.
+     * <p>
+     * Some values are not valid on all Firebird versions.
+     * </p>
+     *
+     * @param pageSize The page size to be used in a restored database,
+     *        one of 1024, 2048, 4196, 8192 or 16384
+     */
+    public void setPageSize(int pageSize) {
+        if (pageSize != 1024 && pageSize != 2048
+                && pageSize != 4096 && pageSize != 8192 && pageSize != 16384){
+            throw new IllegalArgumentException(
+                    "Page size must be one of 1024, 2048, 4096, 8192 or 16384");
+        }
+        this.pageSize = pageSize;
+    }
+
+    /**
+     * @return The page size to be used when creating a database, or {@code -1} if the database default is used.
+     */
+    public int getPageSize() {
+        return pageSize;
     }
 
     /**
@@ -324,6 +352,9 @@ public class FBManager implements FBManagerMBean {
         try {
             DatabaseParameterBuffer dpb = createDefaultDpb(user, password);
             dpb.addArgument(DatabaseParameterBuffer.SET_DB_SQL_DIALECT, dialect);
+            if (getPageSize() != -1) {
+                dpb.addArgument(DatabaseParameterBuffer.PAGE_SIZE, getPageSize());
+            }
             gds.iscCreateDatabase(getConnectString(fileName), db, dpb);
             gds.iscDetachDatabase(db);
         } catch (Exception e) {

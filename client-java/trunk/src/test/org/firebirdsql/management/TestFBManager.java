@@ -1,5 +1,7 @@
 /*
- * Firebird Open Source J2ee connector - jdbc driver
+ * $Id$
+ *
+ * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -12,19 +14,23 @@
  * This file was created by members of the firebird development team.
  * All individual contributions remain the Copyright (C) of those
  * individuals.  Contributors to this file are either listed here or
- * can be obtained from a CVS history command.
+ * can be obtained from a source control history command.
  *
  * All rights reserved.
  */
 package org.firebirdsql.management;
 
+import org.firebirdsql.gds.ISCConstants;
+import org.firebirdsql.gds.ng.FbDatabase;
+import org.firebirdsql.jdbc.FBConnection;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.rules.ExpectedException;
 
-import org.firebirdsql.common.FBTestBase;
-
-import junit.framework.Test;
-import junit.framework.TestSuite;
+import java.sql.DriverManager;
 
 import static org.firebirdsql.common.FBTestProperties.*;
+import static org.junit.Assert.*;
 
 /**
  * Describe class <code>TestFBManager</code> here.
@@ -32,22 +38,12 @@ import static org.firebirdsql.common.FBTestProperties.*;
  * @author <a href="mailto:d_jencks@users.sourceforge.net">David Jencks</a>
  * @version 1.0
  */
-public class TestFBManager extends FBTestBase {
+public class TestFBManager {
 
-    public TestFBManager(String name) {
-        super(name);
-    }
+    @Rule
+    public final ExpectedException expectedException = ExpectedException.none();
 
-    @Override
-    public void setUp() {
-        // We don't want the setup in FBTestBase
-    }
-
-    @Override
-    public void tearDown() {
-        // We don't want the teardown in FBTestBase
-    }
-
+    @Test
     public void testStart() throws Exception {
         FBManager m = createFBManager();
         m.setServer(DB_SERVER_URL);
@@ -56,32 +52,85 @@ public class TestFBManager extends FBTestBase {
         m.stop();
     }
 
+    @Test
     public void testCreateDrop() throws Exception {
         FBManager m = createFBManager();
         m.setServer(DB_SERVER_URL);
         m.setPort(DB_SERVER_PORT);
         m.start();
-        // Adding .fdb suffix to prevent conflicts with other tests if drop fails
-        final String databasePath = getDatabasePath() + ".fdb";
-        // check create
-        m.createDatabase(databasePath, DB_USER, DB_PASSWORD);
+        try {
+            // Adding .fdb suffix to prevent conflicts with other tests if drop fails
+            final String databasePath = getDatabasePath() + ".fdb";
+            // check create
+            m.createDatabase(databasePath, DB_USER, DB_PASSWORD);
 
-        // check create with set forceCreate
-        m.setForceCreate(true);
-        m.createDatabase(databasePath, DB_USER, DB_PASSWORD);
+            // check create with set forceCreate
+            m.setForceCreate(true);
+            m.createDatabase(databasePath, DB_USER, DB_PASSWORD);
 
-        assertTrue("Must report that database exists", m.isDatabaseExists(
-                databasePath, DB_USER, DB_PASSWORD));
+            assertTrue("Must report that database exists", m.isDatabaseExists(databasePath, DB_USER, DB_PASSWORD));
 
-        // check drop
-        m.dropDatabase(databasePath, DB_USER, DB_PASSWORD);
+            // check drop
+            m.dropDatabase(databasePath, DB_USER, DB_PASSWORD);
 
-        assertTrue("Must report that database does not exist", !m.isDatabaseExists(
-                databasePath, DB_USER, DB_PASSWORD));
-
-        m.stop();
+            assertFalse("Must report that database does not exist",
+                    m.isDatabaseExists(databasePath, DB_USER, DB_PASSWORD));
+        } finally {
+            m.stop();
+        }
     }
 
+    @Test
+    public void testSetPageSize_createdDatabaseHasSize() throws Exception {
+        FBManager m = createFBManager();
+        m.setServer(DB_SERVER_URL);
+        m.setPort(DB_SERVER_PORT);
+        m.start();
+        try {
+            // Adding .fdb suffix to prevent conflicts with other tests if drop fails
+            final String databasePath = getDatabasePath() + ".fdb";
 
+            m.setPageSize(16384);
 
+            // check create
+            m.createDatabase(databasePath, DB_USER, DB_PASSWORD);
+            try {
+                FBConnection connection = (FBConnection) DriverManager.getConnection(getUrl() + ".fdb",
+                        getDefaultPropertiesForConnection());
+                try {
+                    final FbDatabase currentDatabase = connection.getGDSHelper().getCurrentDatabase();
+                    final byte[] databaseInfo = currentDatabase.getDatabaseInfo(
+                            new byte[] { ISCConstants.isc_info_page_size }, 10);
+                    assertEquals("Unexpected info item", ISCConstants.isc_info_page_size, databaseInfo[0]);
+                    int length = currentDatabase.iscVaxInteger2(databaseInfo, 1);
+                    int pageSize = currentDatabase.iscVaxInteger(databaseInfo, 3, length);
+                    assertEquals("Unexpected page size", 16384, pageSize);
+                } finally {
+                    connection.close();
+                }
+            } finally {
+                m.dropDatabase(databasePath, DB_USER, DB_PASSWORD);
+            }
+        } finally {
+            m.stop();
+        }
+    }
+
+    @Test
+    public void testSetPageSize_Invalid_throwsIllegalArgumentException() {
+        FBManager m = createFBManager();
+        expectedException.expect(IllegalArgumentException.class);
+
+        m.setPageSize(4000);
+    }
+
+    @Test
+    public void testSetPageSize_ValidValues() {
+        FBManager m = createFBManager();
+
+        final int[] pageSizes = {1024, 2048, 4096, 8192, 16384};
+        for (int pageSize : pageSizes) {
+            m.setPageSize(pageSize);
+        }
+    }
 }

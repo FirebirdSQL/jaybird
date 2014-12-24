@@ -1,19 +1,20 @@
 package org.firebirdsql.management;
 
+import org.firebirdsql.common.FBTestBase;
+import org.firebirdsql.gds.ISCConstants;
+import org.firebirdsql.gds.impl.GDSHelper;
+import org.firebirdsql.gds.impl.GDSType;
+import org.firebirdsql.gds.ng.FbDatabase;
+import org.firebirdsql.jdbc.FBConnection;
+
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.sql.Connection;
-import java.sql.ResultSet;
-import java.sql.Statement;
 import java.sql.SQLException;
+import java.sql.Statement;
 
-import org.firebirdsql.common.FBTestBase;
-import org.firebirdsql.gds.impl.GDSHelper;
-import org.firebirdsql.gds.impl.GDSType;
-import org.firebirdsql.jdbc.FBConnection;
-
-import static org.firebirdsql.common.JdbcResourceHelper.*;
 import static org.firebirdsql.common.FBTestProperties.*;
+import static org.firebirdsql.common.JdbcResourceHelper.closeQuietly;
 
 /**
  * TODO: This test assumes it is run against localhost 
@@ -24,9 +25,6 @@ public class TestBackupManager extends FBTestBase {
 
     private static final String TEST_TABLE = "CREATE TABLE TEST (A INT)";
 
-    /**
-     * @param name
-     */
     public TestBackupManager(String name) {
         super(name);
     }
@@ -189,18 +187,13 @@ public class TestBackupManager extends FBTestBase {
         try {
             con = getConnectionViaDriverManager();
             GDSHelper gdsHelper = ((FBConnection)con).getGDSHelper();
-            if (gdsHelper.compareToVersion(2, 1) < 0) {
-                // No support for MON$DATABASE, skipping test for actual page size
-                return;
-            }
-            
-            Statement stmt = con.createStatement();
-            ResultSet rs = stmt.executeQuery("SELECT MON$PAGE_SIZE FROM MON$DATABASE");
-            if (rs.next()) {
-                assertEquals("Expected restored database to have pagesize 16384", 16384, rs.getInt(1));
-            } else {
-                fail("Expected at least one record");
-            }
+            final FbDatabase currentDatabase = gdsHelper.getCurrentDatabase();
+            final byte[] databaseInfo = currentDatabase.getDatabaseInfo(
+                    new byte[] { ISCConstants.isc_info_page_size }, 10);
+            assertEquals("Unexpected info item", ISCConstants.isc_info_page_size, databaseInfo[0]);
+            int length = currentDatabase.iscVaxInteger2(databaseInfo, 1);
+            int pageSize = currentDatabase.iscVaxInteger(databaseInfo, 3, length);
+            assertEquals("Unexpected page size", 16384, pageSize);
         } finally {
             closeQuietly(con);
         }
