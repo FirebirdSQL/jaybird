@@ -38,12 +38,10 @@ import java.util.List;
 
 class FBCachedFetcher implements FBFetcher {
 
-    private boolean forwardOnly;
+    private final boolean forwardOnly;
     private List<RowValue> rows;
     private int rowNum = 0;
-
     private int fetchSize;
-
     private final FBObjectListener.FetcherListener fetcherListener;
 
     FBCachedFetcher(GDSHelper gdsHelper, int fetchSize, int maxRows, FbStatement stmt_handle,
@@ -53,12 +51,12 @@ class FBCachedFetcher implements FBFetcher {
         final RowDescriptor rowDescriptor = stmt_handle.getFieldDescriptor();
 
         // Check if there is blobs to catch
-        boolean[] isBlob = new boolean[rowDescriptor.getCount()];
+        final boolean[] isBlob = new boolean[rowDescriptor.getCount()];
         boolean hasBlobs = false;
         for (int i = 0; i < rowDescriptor.getCount(); i++) {
             final FieldDescriptor field = rowDescriptor.getFieldDescriptor(i);
             isBlob[i] = FBField.isType(field, Types.BLOB) ||
-                    FBField.isType(field, Types.BINARY) ||
+                    FBField.isType(field, Types.BINARY) || // TODO: Types.BINARY seems wrong
                     FBField.isType(field, Types.LONGVARCHAR);
             if (isBlob[i])
                 hasBlobs = true;
@@ -69,15 +67,14 @@ class FBCachedFetcher implements FBFetcher {
             fetchSize = MAX_FETCH_ROWS;
         this.fetchSize = fetchSize;
 
-        // the following if, is only for callable statement
-        // TODO Need to add handling (probably to FBStatement) for EXECUTE PROCEDURE singleton result
+        // TODO Check handling (probably in FBStatement) for EXECUTE PROCEDURE singleton result
         RowListener rowListener = new RowListener();
         stmt_handle.addStatementListener(rowListener);
         try {
             int actualFetchSize = getFetchSize();
-            while (!rowListener.isAllRowsFetched() && (maxRows == 0 || rowListener.getRows().size() < maxRows)) {
+            while (!rowListener.isAllRowsFetched() && (maxRows == 0 || rowListener.size() < maxRows)) {
                 if (maxRows > 0) {
-                    actualFetchSize = Math.min(actualFetchSize, maxRows - rowListener.getRows().size());
+                    actualFetchSize = Math.min(actualFetchSize, maxRows - rowListener.size());
                 }
                 assert actualFetchSize > 0 : "actualFetchSize should be > 0";
                 stmt_handle.fetchRows(actualFetchSize);
@@ -86,15 +83,6 @@ class FBCachedFetcher implements FBFetcher {
         } finally {
             stmt_handle.removeStatementListener(rowListener);
         }
-
-        /*
-        if (!stmt_handle.isAllRowsFetched() && stmt_handle.size() == 0) {
-            // Already replaced with new implementation
-        } else {
-            rowsArray = stmt_handle.getRows();
-            stmt_handle.removeRows();
-        }
-        */
 
         if (hasBlobs) {
             for (RowValue row : rows) {
@@ -107,6 +95,7 @@ class FBCachedFetcher implements FBFetcher {
     FBCachedFetcher(List<RowValue> rows, FBObjectListener.FetcherListener fetcherListener) throws SQLException {
         this.rows = new ArrayList<RowValue>(rows);
         this.fetcherListener = fetcherListener;
+        forwardOnly = false;
     }
 
     private static void cacheBlobsInRow(final GDSHelper gdsHelper, final RowDescriptor rowDescriptor,
@@ -116,7 +105,7 @@ class FBCachedFetcher implements FBFetcher {
             // if field is blob and there is a value to cache
             if (isBlob[j] && localRow.getFieldValue(j).getFieldData() != null) {
                 final byte[] tempData = localRow.getFieldValue(j).getFieldData();
-                FieldDataProvider dataProvider = new FieldDataProvider() {
+                final FieldDataProvider dataProvider = new FieldDataProvider() {
                     @Override
                     public byte[] getFieldData() {
                         return tempData;
@@ -338,7 +327,7 @@ class FBCachedFetcher implements FBFetcher {
         this.fetchSize = fetchSize;
     }
 
-    private static class RowListener extends DefaultStatementListener {
+    private static final class RowListener extends DefaultStatementListener {
         private final List<RowValue> rows = new ArrayList<RowValue>();
         private boolean allRowsFetched = false;
 
@@ -358,6 +347,13 @@ class FBCachedFetcher implements FBFetcher {
 
         public List<RowValue> getRows() {
             return rows;
+        }
+
+        /**
+         * @return Number of received rows.
+         */
+        public int size() {
+            return rows.size();
         }
     }
 }
