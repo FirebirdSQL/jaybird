@@ -1,5 +1,7 @@
 /*
- * Firebird Open Source J2ee connector - jdbc driver
+ * $Id$
+ *
+ * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -12,22 +14,15 @@
  * This file was created by members of the firebird development team.
  * All individual contributions remain the Copyright (C) of those
  * individuals.  Contributors to this file are either listed here or
- * can be obtained from a CVS history command.
+ * can be obtained from a source control history command.
  *
  * All rights reserved.
  */
 package org.firebirdsql.jdbc.field;
 
-import static org.junit.Assert.*;
-
-import java.io.InputStream;
-import java.io.Reader;
-import java.math.BigDecimal;
-import java.sql.SQLException;
-import java.util.Calendar;
-import java.util.HashMap;
-
-import org.firebirdsql.gds.XSQLVAR;
+import org.firebirdsql.gds.ng.DefaultDatatypeCoder;
+import org.firebirdsql.gds.ng.fields.FieldDescriptor;
+import org.firebirdsql.gds.ng.fields.RowDescriptorBuilder;
 import org.firebirdsql.jdbc.FBBlob;
 import org.firebirdsql.jdbc.FBClob;
 import org.firebirdsql.jdbc.FBDriverNotCapableException;
@@ -38,6 +33,15 @@ import org.jmock.lib.legacy.ClassImposteriser;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
+
+import java.io.InputStream;
+import java.io.Reader;
+import java.math.BigDecimal;
+import java.sql.SQLException;
+import java.util.Calendar;
+import java.util.HashMap;
+
+import static org.junit.Assert.*;
 
 /**
  * Abstract base class for testing {@link FBField} implementations.
@@ -74,22 +78,21 @@ public abstract class BaseJUnit4TestFBField<T extends FBField, O> {
     // TODO Convert exception expectation to @Rule (needs to wait until JMock 2.6 is released)
 
     protected FieldDataProvider fieldData;
-    protected XSQLVAR xsqlvar;
+    protected final RowDescriptorBuilder rowDescriptorBuilder =
+            new RowDescriptorBuilder(1, DefaultDatatypeCoder.getInstance());
+    protected FieldDescriptor fieldDescriptor;
     protected T field;
 
     @Before
     public void setUp() throws Exception {
         context.setImposteriser(ClassImposteriser.INSTANCE);
         fieldData = context.mock(FieldDataProvider.class);
-        xsqlvar = new XSQLVAR();
-        xsqlvar.aliasname = ALIAS_VALUE;
-        xsqlvar.sqlname = NAME_VALUE;
-        xsqlvar.relname = RELATION_NAME_VALUE;
+        rowDescriptorBuilder
+                .setFieldName(ALIAS_VALUE)
+                .setOriginalName(NAME_VALUE)
+                .setOriginalTableName(RELATION_NAME_VALUE);
     }
 
-    /**
-     * @throws SQLException
-     */
     @Test
     public void getAlias() throws SQLException {
         assertEquals("Unexpected value for getAlias()", ALIAS_VALUE, field.getAlias());
@@ -444,7 +447,7 @@ public abstract class BaseJUnit4TestFBField<T extends FBField, O> {
      * @param value Double value that is expected to be set
      */
     protected final void setDoubleExpectations(final double value) {
-        setValueExpectations(xsqlvar.encodeDouble(value));
+        setValueExpectations(fieldDescriptor.getDatatypeCoder().encodeDouble(value));
     }
 
     /**
@@ -452,7 +455,7 @@ public abstract class BaseJUnit4TestFBField<T extends FBField, O> {
      * @param value Double value to return
      */
     protected final void toReturnDoubleExpectations(final double value) {
-        toReturnValueExpectations(xsqlvar.encodeDouble(value));
+        toReturnValueExpectations(fieldDescriptor.getDatatypeCoder().encodeDouble(value));
     }
 
     /**
@@ -460,7 +463,7 @@ public abstract class BaseJUnit4TestFBField<T extends FBField, O> {
      * @param value Short value that is expected to be set
      */
     protected final void setShortExpectations(final short value) {
-        setValueExpectations(xsqlvar.encodeShort(value));
+        setValueExpectations(fieldDescriptor.getDatatypeCoder().encodeShort(value));
     }
 
     /**
@@ -468,7 +471,7 @@ public abstract class BaseJUnit4TestFBField<T extends FBField, O> {
      * @param value Short value to return
      */
     protected final void toReturnShortExpectations(final short value) {
-        toReturnValueExpectations(xsqlvar.encodeShort(value));
+        toReturnValueExpectations(fieldDescriptor.getDatatypeCoder().encodeShort(value));
     }
 
     /**
@@ -476,7 +479,7 @@ public abstract class BaseJUnit4TestFBField<T extends FBField, O> {
      * @param value Integer value that is expected to be set
      */
     protected final void setIntegerExpectations(final int value) {
-        setValueExpectations(xsqlvar.encodeInt(value));
+        setValueExpectations(fieldDescriptor.getDatatypeCoder().encodeInt(value));
     }
 
     /**
@@ -484,7 +487,7 @@ public abstract class BaseJUnit4TestFBField<T extends FBField, O> {
      * @param value Integer value to return
      */
     protected final void toReturnIntegerExpectations(final int value) {
-        toReturnValueExpectations(xsqlvar.encodeInt(value));
+        toReturnValueExpectations(fieldDescriptor.getDatatypeCoder().encodeInt(value));
     }
 
     /**
@@ -492,7 +495,7 @@ public abstract class BaseJUnit4TestFBField<T extends FBField, O> {
      * @param value Long value that is expected to be set
      */
     protected final void setLongExpectations(final long value) {
-        setValueExpectations(xsqlvar.encodeLong(value));
+        setValueExpectations(fieldDescriptor.getDatatypeCoder().encodeLong(value));
     }
 
     /**
@@ -500,7 +503,7 @@ public abstract class BaseJUnit4TestFBField<T extends FBField, O> {
      * @param value Long value to return
      */
     protected final void toReturnLongExpectations(final long value) {
-        toReturnValueExpectations(xsqlvar.encodeLong(value));
+        toReturnValueExpectations(fieldDescriptor.getDatatypeCoder().encodeLong(value));
     }
 
     /**
@@ -508,7 +511,7 @@ public abstract class BaseJUnit4TestFBField<T extends FBField, O> {
      * @param value Date value that is expected to be set
      */
     protected final void setDateExpectations(final java.sql.Date value) {
-        setValueExpectations(xsqlvar.encodeDate(value));
+        setValueExpectations(fieldDescriptor.getDatatypeCoder().encodeDate(value));
     }
 
     /**
@@ -516,7 +519,7 @@ public abstract class BaseJUnit4TestFBField<T extends FBField, O> {
      * @param value Date value to return
      */
     protected final void toReturnDateExpectations(final java.sql.Date value) {
-        toReturnValueExpectations(xsqlvar.encodeDate(value));
+        toReturnValueExpectations(fieldDescriptor.getDatatypeCoder().encodeDate(value));
     }
 
     /**
@@ -525,7 +528,7 @@ public abstract class BaseJUnit4TestFBField<T extends FBField, O> {
      * @param calendar Calendar instance for timezone
      */
     protected final void setDateExpectations(final java.sql.Date value, Calendar calendar) {
-        setValueExpectations(xsqlvar.encodeDateCalendar(value, calendar));
+        setValueExpectations(fieldDescriptor.getDatatypeCoder().encodeDateCalendar(value, calendar));
     }
 
     /**
@@ -534,7 +537,7 @@ public abstract class BaseJUnit4TestFBField<T extends FBField, O> {
      * @param calendar Calendar instance for timezone
      */
     protected final void toReturnDateExpectations(final java.sql.Date value, Calendar calendar) {
-        toReturnValueExpectations(xsqlvar.encodeDateCalendar(value, calendar));
+        toReturnValueExpectations(fieldDescriptor.getDatatypeCoder().encodeDateCalendar(value, calendar));
     }
 
     /**
@@ -542,7 +545,7 @@ public abstract class BaseJUnit4TestFBField<T extends FBField, O> {
      * @param value Boolean value to return
      */
     protected final void toReturnBooleanExpectations(final boolean value) {
-        toReturnValueExpectations(xsqlvar.encodeBoolean(value));
+        toReturnValueExpectations(fieldDescriptor.getDatatypeCoder().encodeBoolean(value));
     }
 
     /**
@@ -550,6 +553,6 @@ public abstract class BaseJUnit4TestFBField<T extends FBField, O> {
      * @param value Boolean value that is expected to be set
      */
     protected final void setBooleanExpectations(final boolean value) {
-        setValueExpectations(xsqlvar.encodeBoolean(value));
+        setValueExpectations(fieldDescriptor.getDatatypeCoder().encodeBoolean(value));
     }
 }

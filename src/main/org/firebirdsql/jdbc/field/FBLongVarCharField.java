@@ -1,5 +1,7 @@
 /*
- * Firebird Open Source J2ee connector - jdbc driver
+ * $Id$
+ *
+ * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -12,12 +14,16 @@
  * This file was created by members of the firebird development team.
  * All individual contributions remain the Copyright (C) of those
  * individuals.  Contributors to this file are either listed here or
- * can be obtained from a CVS history command.
+ * can be obtained from a source control history command.
  *
  * All rights reserved.
  */
-
 package org.firebirdsql.jdbc.field;
+
+import org.firebirdsql.gds.ng.fields.FieldDescriptor;
+import org.firebirdsql.jdbc.FBBlob;
+import org.firebirdsql.jdbc.FBClob;
+import org.firebirdsql.jdbc.FBSQLException;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -27,16 +33,13 @@ import java.sql.Blob;
 import java.sql.Clob;
 import java.sql.SQLException;
 
-import org.firebirdsql.gds.XSQLVAR;
-import org.firebirdsql.jdbc.*;
-
 /**
  * This is Blob-based implementation of {@link FBStringField}. It should be used
  * for fields declared in database as <code>BLOB SUB_TYPE 1</code>. This 
  * implementation provides all conversion routines {@link FBStringField} has.
  * 
  * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
- * @version 1.0
+ * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  */
 public class FBLongVarCharField extends FBStringField implements FBFlushableField{
 
@@ -50,10 +53,9 @@ public class FBLongVarCharField extends FBStringField implements FBFlushableFiel
     private InputStream binaryStream;
     private Reader characterStream;
 
-    FBLongVarCharField(XSQLVAR field, FieldDataProvider dataProvider, int requiredType) 
-        throws SQLException 
-    {
-        super(field, dataProvider, requiredType);
+    FBLongVarCharField(FieldDescriptor fieldDescriptor, FieldDataProvider dataProvider, int requiredType)
+            throws SQLException {
+        super(fieldDescriptor, dataProvider, requiredType);
     }
     
     public void close() throws SQLException {
@@ -77,18 +79,18 @@ public class FBLongVarCharField extends FBStringField implements FBFlushableFiel
         if (blob != null)
             return blob;
         
-        if (getFieldData() == null)
-            return BLOB_NULL_VALUE;
+        if (isNull())
+            return null;
 
-        blob = new FBBlob(gdsHelper, field.decodeLong(getFieldData()));
+        blob = new FBBlob(gdsHelper, getDatatypeCoder().decodeLong(getFieldData()));
         return blob;
     }
     
     public Clob getClob() throws SQLException {
     	FBBlob blob = (FBBlob) getBlob();
     	
-    	if (blob == BLOB_NULL_VALUE){
-    		return CLOB_NULL_VALUE;
+    	if (blob == null){
+    		return null;
     	}
     	
     	return new FBClob(blob);
@@ -97,8 +99,8 @@ public class FBLongVarCharField extends FBStringField implements FBFlushableFiel
     public InputStream getBinaryStream() throws SQLException {
         Blob blob = getBlob();
 
-        if (blob == BLOB_NULL_VALUE)
-            return STREAM_NULL_VALUE;
+        if (blob == null)
+            return null;
 
         return blob.getBinaryStream();
     }
@@ -107,13 +109,13 @@ public class FBLongVarCharField extends FBStringField implements FBFlushableFiel
 
         Blob blob = getBlob();
 
-        if (blob == BLOB_NULL_VALUE)
-            return BYTES_NULL_VALUE;
+        if (blob == null)
+            return null;
 
         InputStream in = blob.getBinaryStream();
 
-        if (in == STREAM_NULL_VALUE)
-            return BYTES_NULL_VALUE;
+        if (in == null)
+            return null;
 
         ByteArrayOutputStream bout = new ByteArrayOutputStream();
 
@@ -144,19 +146,15 @@ public class FBLongVarCharField extends FBStringField implements FBFlushableFiel
     }
 
     public byte[] getCachedData() throws SQLException {
-        if (getFieldData() == null) {
-            
-            if (bytes != null)
-                return bytes;
-            else
-                return BYTES_NULL_VALUE;
+        if (isNull()) {
+            return bytes;
         }
 
-          return getBytes();
+        return getBytes();
     }
     
     public FBFlushableField.CachedObject getCachedObject() throws SQLException {
-        if (getFieldData() == null) 
+        if (isNull())
             return new FBFlushableField.CachedObject(bytes, binaryStream, characterStream, length);
         
         return new CachedObject(getBytes(), null, null, 0);
@@ -172,14 +170,14 @@ public class FBLongVarCharField extends FBStringField implements FBFlushableFiel
     public String getString() throws SQLException {
         byte[] data = getBytes();
         
-        if (data == BYTES_NULL_VALUE)
-            return STRING_NULL_VALUE;
+        if (data == null)
+            return null;
         
-        return field.decodeString(data, javaEncoding, mappingPath);
+        return getDatatypeCoder().decodeString(data, javaEncoding, mappingPath);
     }
 
     public void setBlob(FBBlob blob) throws SQLException {
-        setFieldData(field.encodeLong(blob.getBlobId()));
+        setFieldData(getDatatypeCoder().encodeLong(blob.getBlobId()));
         this.blob = blob;
     }
     
@@ -189,7 +187,7 @@ public class FBLongVarCharField extends FBStringField implements FBFlushableFiel
     }
 
     public void setCharacterStream(Reader in, int length) throws SQLException {
-        if (in == READER_NULL_VALUE) {
+        if (in == null) {
             setNull();
             return;
         }
@@ -202,17 +200,17 @@ public class FBLongVarCharField extends FBStringField implements FBFlushableFiel
 
     public void setString(String value) throws SQLException {
         
-        if (value == STRING_NULL_VALUE) {
+        if (value == null) {
             setNull();
             return;
         }
         
-        setBytes(field.encodeString(value,javaEncoding, mappingPath));
+        setBytes(getDatatypeCoder().encodeString(value, javaEncoding, mappingPath));
     }
 
     public void setBytes(byte[] value) throws SQLException {
 
-        if (value == BYTES_NULL_VALUE) {
+        if (value == null) {
             setNull();
             return;
         }
@@ -225,7 +223,7 @@ public class FBLongVarCharField extends FBStringField implements FBFlushableFiel
 
     public void setBinaryStream(InputStream in, int length) throws SQLException {
         
-        if (in == STREAM_NULL_VALUE) {
+        if (in == null) {
             setNull();
             return;
         }
@@ -259,19 +257,19 @@ public class FBLongVarCharField extends FBStringField implements FBFlushableFiel
         
         FBBlob blob =  new FBBlob(gdsHelper);
         blob.copyStream(in, length);
-        setFieldData(field.encodeLong(blob.getBlobId()));
+        setFieldData(getDatatypeCoder().encodeLong(blob.getBlobId()));
     }
 
     private void copyCharacterStream(Reader in, int length, String encoding) throws SQLException {
         FBBlob blob =  new FBBlob(gdsHelper);
         blob.copyCharacterStream(in, length, encoding);
-        setFieldData(field.encodeLong(blob.getBlobId()));
+        setFieldData(getDatatypeCoder().encodeLong(blob.getBlobId()));
     }
     
     private void copyBytes(byte[] bytes, int length) throws SQLException {
         FBBlob blob = new FBBlob(gdsHelper);
         blob.copyBytes(bytes, 0, length);
-        setFieldData(field.encodeLong(blob.getBlobId()));
+        setFieldData(getDatatypeCoder().encodeLong(blob.getBlobId()));
     }
 
 }

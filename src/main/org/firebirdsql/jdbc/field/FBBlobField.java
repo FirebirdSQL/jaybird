@@ -1,7 +1,7 @@
 /*
  * $Id$
  *
- * Firebird Open Source J2ee connector - jdbc driver
+ * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -14,15 +14,14 @@
  * This file was created by members of the firebird development team.
  * All individual contributions remain the Copyright (C) of those
  * individuals.  Contributors to this file are either listed here or
- * can be obtained from a CVS history command.
+ * can be obtained from a source control history command.
  *
  * All rights reserved.
  */
-
 package org.firebirdsql.jdbc.field;
 
-import org.firebirdsql.gds.XSQLVAR;
 import org.firebirdsql.gds.ng.FbBlob;
+import org.firebirdsql.gds.ng.fields.FieldDescriptor;
 import org.firebirdsql.jdbc.FBBlob;
 import org.firebirdsql.jdbc.FBClob;
 import org.firebirdsql.jdbc.Synchronizable;
@@ -37,29 +36,26 @@ import java.sql.SQLException;
  * Describe class <code>FBBlobField</code> here.
  *
  * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
- * @version 1.0
+ * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  */
-public class FBBlobField extends FBField implements FBFlushableField {
-    private FBBlob blob;
+class FBBlobField extends FBField implements FBFlushableField {
 
-    // Rather then hold cached data in the XSQLDAVar we will hold it in here.
+    private FBBlob blob;
     private int length;
     private InputStream binaryStream;
     private Reader characterStream;
     private byte[] bytes;
 
-    FBBlobField(XSQLVAR field, FieldDataProvider dataProvider, int requiredType) throws SQLException {
-        super(field, dataProvider, requiredType);
+    FBBlobField(FieldDescriptor fieldDescriptor, FieldDataProvider dataProvider, int requiredType) throws SQLException {
+        super(fieldDescriptor, dataProvider, requiredType);
     }
 
     public void close() throws SQLException {
         try {
             if (blob != null) blob.free();
         } finally {
-            // forget this blob instance, resource waste
-            // but simplifies our life. BLOB handle will be
+            // forget this blob instance, resource waste but simplifies our life. BLOB handle will be
             // released by a server automatically later
-
             blob = null;
             bytes = null;
             binaryStream = null;
@@ -71,17 +67,17 @@ public class FBBlobField extends FBField implements FBFlushableField {
     public Blob getBlob() throws SQLException {
         if (blob != null) return blob;
         final byte[] bytes = getFieldData();
-        if (bytes == null) return BLOB_NULL_VALUE;
+        if (bytes == null) return null;
 
         /*@todo convert this into a method of FirebirdConnection */
-        blob = new FBBlob(gdsHelper, field.decodeLong(bytes));
+        blob = new FBBlob(gdsHelper, getDatatypeCoder().decodeLong(bytes));
 
         return blob;
     }
 
     public Clob getClob() throws SQLException {
         FBBlob blob = (FBBlob) getBlob();
-        if (blob == BLOB_NULL_VALUE) return CLOB_NULL_VALUE;
+        if (blob == null) return null;
         return new FBClob(blob);
     }
 
@@ -91,11 +87,11 @@ public class FBBlobField extends FBField implements FBFlushableField {
 
     public InputStream getBinaryStream() throws SQLException {
         // getBinaryStream() is not defined for BLOB types, only for BINARY
-        if (field.sqlsubtype < 0)
+        if (fieldDescriptor.getSubType() < 0)
             throw new TypeConversionException(BINARY_STREAM_CONVERSION_ERROR);
 
         Blob blob = getBlob();
-        if (blob == BLOB_NULL_VALUE) return STREAM_NULL_VALUE;
+        if (blob == null) return null;
 
         return blob.getBinaryStream();
     }
@@ -111,9 +107,9 @@ public class FBBlobField extends FBField implements FBFlushableField {
 
     public byte[] getBytesInternal() throws SQLException {
         final byte[] blobIdBuffer = getFieldData();
-        if (blobIdBuffer == null) return BYTES_NULL_VALUE;
+        if (blobIdBuffer == null) return null;
 
-        final long blobId = field.decodeLong(blobIdBuffer);
+        final long blobId = getDatatypeCoder().decodeLong(blobIdBuffer);
         synchronized (((Synchronizable) getBlob()).getSynchronizationObject()) {
             final FbBlob blobHandle = gdsHelper.openBlob(blobId, FBBlob.SEGMENTED);
 
@@ -145,17 +141,14 @@ public class FBBlobField extends FBField implements FBFlushableField {
     }
 
     public byte[] getCachedData() throws SQLException {
-        if (getFieldData() != null) {
-            return getBytesInternal();
-        } else if (bytes != null) {
+        if (isNull()) {
             return bytes;
-        } else {
-            return BYTES_NULL_VALUE;
         }
+        return getBytesInternal();
     }
 
     public FBFlushableField.CachedObject getCachedObject() throws SQLException {
-        if (getFieldData() == null)
+        if (isNull())
             return new FBFlushableField.CachedObject(bytes, binaryStream, characterStream, length);
         return new CachedObject(getBytesInternal(), null, null, 0);
     }
@@ -171,14 +164,14 @@ public class FBBlobField extends FBField implements FBFlushableField {
 
     public String getString() throws SQLException {
         // getString() is not defined for BLOB fields, only for BINARY
-        if (field.sqlsubtype < 0)
+        if (fieldDescriptor.getSubType() < 0)
             throw new TypeConversionException(STRING_CONVERSION_ERROR);
 
         Blob blob = getBlob();
 
-        if (blob == BLOB_NULL_VALUE) return STRING_NULL_VALUE;
+        if (blob == null) return null;
 
-        return field.decodeString(getBytes(), javaEncoding, mappingPath);
+        return getDatatypeCoder().decodeString(getBytes(), javaEncoding, mappingPath);
     }
 
     public InputStream getUnicodeStream() throws SQLException {
@@ -194,7 +187,7 @@ public class FBBlobField extends FBField implements FBFlushableField {
     public void setCharacterStream(Reader in, int length) throws SQLException {
         // setNull() to reset field to empty state
         setNull();
-        if (in != READER_NULL_VALUE) {
+        if (in != null) {
             characterStream = in;
             this.length = length;
         }
@@ -203,7 +196,7 @@ public class FBBlobField extends FBField implements FBFlushableField {
     public void setBinaryStream(InputStream in, int length) throws SQLException {
         // setNull() to reset field to empty state
         setNull();
-        if (in != STREAM_NULL_VALUE) {
+        if (in != null) {
             binaryStream = in;
             this.length = length;
         }
@@ -228,37 +221,37 @@ public class FBBlobField extends FBField implements FBFlushableField {
     private void copyBinaryStream(InputStream in, int length) throws SQLException {
         FBBlob blob = new FBBlob(gdsHelper);
         blob.copyStream(in, length);
-        setFieldData(field.encodeLong(blob.getBlobId()));
+        setFieldData(getDatatypeCoder().encodeLong(blob.getBlobId()));
     }
 
     private void copyCharacterStream(Reader in, int length, String encoding) throws SQLException {
         FBBlob blob = new FBBlob(gdsHelper);
         blob.copyCharacterStream(in, length, encoding);
-        setFieldData(field.encodeLong(blob.getBlobId()));
+        setFieldData(getDatatypeCoder().encodeLong(blob.getBlobId()));
     }
 
     private void copyBytes(byte[] bytes, int length) throws SQLException {
         FBBlob blob = new FBBlob(gdsHelper);
         blob.copyBytes(bytes, 0, length);
-        setFieldData(field.encodeLong(blob.getBlobId()));
+        setFieldData(getDatatypeCoder().encodeLong(blob.getBlobId()));
     }
 
     public void setBytes(byte[] value) throws SQLException {
         // setNull() to reset field to empty state
         setNull();
-        if (value != BYTES_NULL_VALUE) {
+        if (value != null) {
             bytes = value;
             length = value.length;
         }
     }
 
     public void setString(String value) throws SQLException {
-        if (value == STRING_NULL_VALUE) {
+        if (value == null) {
             setNull();
             return;
         }
 
-        setBytes(field.encodeString(value, javaEncoding, mappingPath));
+        setBytes(getDatatypeCoder().encodeString(value, javaEncoding, mappingPath));
     }
 
     public void setUnicodeStream(InputStream in, int length) throws SQLException {
@@ -268,7 +261,7 @@ public class FBBlobField extends FBField implements FBFlushableField {
     public void setBlob(FBBlob blob) throws SQLException {
         // setNull() to reset field to empty state
         setNull();
-        setFieldData(field.encodeLong(blob.getBlobId()));
+        setFieldData(getDatatypeCoder().encodeLong(blob.getBlobId()));
         this.blob = blob;
     }
 

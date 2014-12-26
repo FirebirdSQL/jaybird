@@ -32,12 +32,12 @@ import java.time.*;
  */
 public class JDBC42ObjectConverter implements ObjectConverter {
     @Override
-    public boolean setObject(FBField field, Object object) throws SQLException {
+    public boolean setObject(final FBField field, final Object object) throws SQLException {
         if (object instanceof LocalDate) {
             switch (field.requiredType) {
             case Types.DATE:
                 LocalDate localDate = (LocalDate) object;
-                field.setFieldData(field.field.encodeLocalDate(
+                field.setFieldData(field.getDatatypeCoder().encodeLocalDate(
                         localDate.getYear(), localDate.getMonthValue(), localDate.getDayOfMonth()));
                 return true;
             case Types.CHAR:
@@ -50,7 +50,7 @@ public class JDBC42ObjectConverter implements ObjectConverter {
             switch (field.requiredType) {
             case Types.TIME:
                 LocalTime localTime = (LocalTime) object;
-                field.setFieldData(field.field.encodeLocalTime(
+                field.setFieldData(field.getDatatypeCoder().encodeLocalTime(
                         localTime.getHour(), localTime.getMinute(), localTime.getSecond(), localTime.getNano()));
                 return true;
             case Types.CHAR:
@@ -63,16 +63,16 @@ public class JDBC42ObjectConverter implements ObjectConverter {
             LocalDateTime localDateTime = (LocalDateTime) object;
             switch (field.requiredType) {
             case Types.DATE:
-                field.setFieldData(field.field.encodeLocalDate(
+                field.setFieldData(field.getDatatypeCoder().encodeLocalDate(
                         localDateTime.getYear(), localDateTime.getMonthValue(), localDateTime.getDayOfMonth()));
                 return true;
             case Types.TIME:
-                field.setFieldData(field.field.encodeLocalTime(
+                field.setFieldData(field.getDatatypeCoder().encodeLocalTime(
                         localDateTime.getHour(), localDateTime.getMinute(), localDateTime.getSecond(),
                         localDateTime.getNano()));
                 return true;
             case Types.TIMESTAMP:
-                field.setFieldData(field.field.encodeLocalDateTime(
+                field.setFieldData(field.getDatatypeCoder().encodeLocalDateTime(
                         localDateTime.getYear(), localDateTime.getMonthValue(), localDateTime.getDayOfMonth(),
                         localDateTime.getHour(), localDateTime.getMinute(), localDateTime.getSecond(),
                         localDateTime.getNano()));

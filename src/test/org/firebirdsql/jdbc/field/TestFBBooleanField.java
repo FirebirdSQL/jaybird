@@ -1,7 +1,7 @@
 /*
  * $Id$
  *
- * Firebird Open Source J2ee connector - jdbc driver
+ * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -14,7 +14,7 @@
  * This file was created by members of the firebird development team.
  * All individual contributions remain the Copyright (C) of those
  * individuals.  Contributors to this file are either listed here or
- * can be obtained from a CVS history command.
+ * can be obtained from a source control history command.
  *
  * All rights reserved.
  */
@@ -44,8 +44,9 @@ public class TestFBBooleanField extends BaseJUnit4TestFBField<FBBooleanField, Bo
     public void setUp() throws Exception{
         super.setUp();
 
-        xsqlvar.sqltype = ISCConstants.SQL_BOOLEAN;
-        field = new FBBooleanField(xsqlvar, fieldData, Types.BOOLEAN);
+        rowDescriptorBuilder.setType(ISCConstants.SQL_BOOLEAN);
+        fieldDescriptor = rowDescriptorBuilder.toFieldDescriptor();
+        field = new FBBooleanField(fieldDescriptor, fieldData, Types.BOOLEAN);
     }
 
     @Test

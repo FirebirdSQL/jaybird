@@ -1,36 +1,60 @@
+/*
+ * $Id$
+ *
+ * Firebird Open Source JavaEE Connector - JDBC Driver
+ *
+ * Distributable under LGPL license.
+ * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * LGPL License for more details.
+ *
+ * This file was created by members of the firebird development team.
+ * All individual contributions remain the Copyright (C) of those
+ * individuals.  Contributors to this file are either listed here or
+ * can be obtained from a source control history command.
+ *
+ * All rights reserved.
+ */
 package org.firebirdsql.jdbc.field;
 
-import java.io.*;
-import java.math.BigDecimal;
-import java.sql.*;
-import java.util.Calendar;
+import org.firebirdsql.gds.ng.fields.FieldDescriptor;
 
-import org.firebirdsql.gds.XSQLVAR;
+import java.io.InputStream;
+import java.io.Reader;
+import java.math.BigDecimal;
+import java.sql.Date;
+import java.sql.SQLException;
+import java.sql.Time;
+import java.sql.Timestamp;
+import java.util.Calendar;
 
 /**
  * FBField implementation for NULL fields (eg in condition ? IS NULL).
+ *
+ * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  */
-public class FBNullField extends FBField {
+final class FBNullField extends FBField {
 
-    private static final String NULL_CONVERSION_ERROR = 
-        "Received non-NULL value of a NULL field.";
+    private static final String NULL_CONVERSION_ERROR = "Received non-NULL value of a NULL field.";
 
     private static final byte[] DUMMY_OBJECT = new byte[0];
 
-    public FBNullField(XSQLVAR field, FieldDataProvider dataProvider,
-            int requiredType) throws SQLException {
-        super(field, dataProvider, requiredType);
+    FBNullField(FieldDescriptor fieldDescriptor, FieldDataProvider dataProvider, int requiredType) throws SQLException {
+        super(fieldDescriptor, dataProvider, requiredType);
     }
 
     @Override
     public Object getObject() throws SQLException {
         checkNull();
-        return OBJECT_NULL_VALUE;
+        return null;
     }
 
     @Override
     public void setObject(Object value) throws SQLException {
-        if (value == OBJECT_NULL_VALUE)
+        if (value == null)
             setNull();
         else
             setDummyObject();
@@ -43,7 +67,7 @@ public class FBNullField extends FBField {
     }
 
     private void checkNull() throws SQLException {
-        if (getFieldData() != null) {
+        if (isNull()) {
             throw new TypeConversionException(NULL_CONVERSION_ERROR);
         }
     }
@@ -72,7 +96,7 @@ public class FBNullField extends FBField {
 
     public BigDecimal getBigDecimal() throws SQLException {
         checkNull();
-        return BIGDECIMAL_NULL_VALUE;
+        return null;
     }
 
     public float getFloat() throws SQLException {
@@ -94,61 +118,61 @@ public class FBNullField extends FBField {
 
     public String getString() throws SQLException {
         checkNull();
-        return STRING_NULL_VALUE;
+        return null;
     }
 
     // ----- getXXXStream code
 
     public InputStream getBinaryStream() throws SQLException {
         checkNull();
-        return STREAM_NULL_VALUE;
+        return null;
     }
 
     public InputStream getUnicodeStream() throws SQLException {
         checkNull();
-        return STREAM_NULL_VALUE;
+        return null;
     }
 
     public InputStream getAsciiStream() throws SQLException {
         checkNull();
-        return STREAM_NULL_VALUE;
+        return null;
     }
 
     public byte[] getBytes() throws SQLException {
         checkNull();
-        return BYTES_NULL_VALUE;
+        return null;
     }
 
     // ----- getDate, getTime and getTimestamp code
 
     public Date getDate(Calendar cal) throws SQLException {
         checkNull();
-        return DATE_NULL_VALUE;
+        return null;
     }
 
     public Date getDate() throws SQLException {
         checkNull();
-        return DATE_NULL_VALUE;
+        return null;
     }
 
     public Time getTime(Calendar cal) throws SQLException {
         checkNull();
-        return TIME_NULL_VALUE;
+        return null;
     }
 
     public Time getTime() throws SQLException {
         checkNull();
-        return TIME_NULL_VALUE;
+        return null;
     }
 
     public Timestamp getTimestamp(Calendar cal) throws SQLException {
         checkNull();
-        return TIMESTAMP_NULL_VALUE;
+        return null;
     }
 
     public Timestamp getTimestamp() throws SQLException {
         checkNull();
-        return TIMESTAMP_NULL_VALUE;
+        return null;
     }
 
     // --- setXXX methods
@@ -178,7 +202,7 @@ public class FBNullField extends FBField {
     }
 
     public void setBigDecimal(BigDecimal value) throws SQLException {
-        if (value == BIGDECIMAL_NULL_VALUE) {
+        if (value == null) {
             setNull();
             return;
         }
@@ -194,7 +218,7 @@ public class FBNullField extends FBField {
     // ----- setXXXStream code
 
     public void setAsciiStream(InputStream in, int length) throws SQLException {
-        if (in == STREAM_NULL_VALUE) {
+        if (in == null) {
             setNull();
             return;
         }
@@ -203,7 +227,7 @@ public class FBNullField extends FBField {
     }
 
     public void setUnicodeStream(InputStream in, int length) throws SQLException {
-        if (in == STREAM_NULL_VALUE) {
+        if (in == null) {
             setNull();
             return;
         }
@@ -212,7 +236,7 @@ public class FBNullField extends FBField {
     }
 
     public void setBinaryStream(InputStream in, int length) throws SQLException {
-        if (in == STREAM_NULL_VALUE) {
+        if (in == null) {
             setNull();
             return;
         }
@@ -221,7 +245,7 @@ public class FBNullField extends FBField {
     }
 
     public void setCharacterStream(Reader in, int length) throws SQLException {
-        if (in == READER_NULL_VALUE) {
+        if (in == null) {
             setNull();
             return;
         }
@@ -230,7 +254,7 @@ public class FBNullField extends FBField {
     }
 
     public void setBytes(byte[] value) throws SQLException {
-        if (value == BYTES_NULL_VALUE) {
+        if (value == null) {
             setNull();
             return;
         }
@@ -240,7 +264,7 @@ public class FBNullField extends FBField {
     // ----- setDate, setTime and setTimestamp code
 
     public void setDate(Date value, Calendar cal) throws SQLException {
-        if (value == DATE_NULL_VALUE) {
+        if (value == null) {
             setNull();
             return;
         }
@@ -248,7 +272,7 @@ public class FBNullField extends FBField {
     }
 
     public void setDate(Date value) throws SQLException {
-        if (value == DATE_NULL_VALUE) {
+        if (value == null) {
             setNull();
             return;
         }
@@ -256,7 +280,7 @@ public class FBNullField extends FBField {
     }
 
     public void setTime(Time value, Calendar cal) throws SQLException {
-        if (value == TIME_NULL_VALUE) {
+        if (value == null) {
             setNull();
             return;
         }
@@ -264,7 +288,7 @@ public class FBNullField extends FBField {
     }
 
     public void setTime(Time value) throws SQLException {
-        if (value == TIME_NULL_VALUE) {
+        if (value == null) {
             setNull();
             return;
         }
@@ -272,7 +296,7 @@ public class FBNullField extends FBField {
     }
 
     public void setTimestamp(Timestamp value, Calendar cal) throws SQLException {
-        if (value == TIMESTAMP_NULL_VALUE) {
+        if (value == null) {
             setNull();
             return;
         }
@@ -280,7 +304,7 @@ public class FBNullField extends FBField {
     }
 
     public void setTimestamp(Timestamp value) throws SQLException {
-        if (value == TIMESTAMP_NULL_VALUE) {
+        if (value == null) {
             setNull();
             return;
         }
@@ -289,7 +313,7 @@ public class FBNullField extends FBField {
 
     @Override
     public void setString(String value) throws SQLException {
-        if (value == STRING_NULL_VALUE) {
+        if (value == null) {
             setNull();
             return;
         }

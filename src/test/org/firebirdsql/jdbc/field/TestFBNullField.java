@@ -1,3 +1,23 @@
+/*
+ * $Id$
+ *
+ * Firebird Open Source JavaEE Connector - JDBC Driver
+ *
+ * Distributable under LGPL license.
+ * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * LGPL License for more details.
+ *
+ * This file was created by members of the firebird development team.
+ * All individual contributions remain the Copyright (C) of those
+ * individuals.  Contributors to this file are either listed here or
+ * can be obtained from a source control history command.
+ *
+ * All rights reserved.
+ */
 package org.firebirdsql.jdbc.field;
 
 import java.io.InputStream;
@@ -7,7 +27,9 @@ import java.sql.SQLException;
 import java.sql.Types;
 import java.util.Calendar;
 
-import org.firebirdsql.gds.XSQLVAR;
+import org.firebirdsql.gds.ng.DefaultDatatypeCoder;
+import org.firebirdsql.gds.ng.fields.FieldDescriptor;
+import org.firebirdsql.gds.ng.fields.RowDescriptorBuilder;
 import org.jmock.Expectations;
 import org.jmock.integration.junit4.JUnitRuleMockery;
 import org.jmock.lib.concurrent.Synchroniser;
@@ -36,7 +58,9 @@ public class TestFBNullField {
     @Before
     public void setUp() throws Exception {
         fieldData = context.mock(FieldDataProvider.class);
-        field = new FBNullField(new XSQLVAR(), fieldData, Types.NULL);
+        FieldDescriptor fieldDescriptor = new RowDescriptorBuilder(1, DefaultDatatypeCoder.getInstance())
+                .toFieldDescriptor();
+        field = new FBNullField(fieldDescriptor, fieldData, Types.NULL);
     }
     
     // TODO Investigate necessity to test getters, it looks like FBNullField is only used for parameters and never for ResultSet columns
