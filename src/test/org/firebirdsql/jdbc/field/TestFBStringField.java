@@ -21,6 +21,7 @@
 package org.firebirdsql.jdbc.field;
 
 import org.firebirdsql.gds.ISCConstants;
+import org.firebirdsql.gds.ng.DefaultDatatypeCoder;
 import org.firebirdsql.gds.ng.fields.RowDescriptor;
 import org.firebirdsql.gds.ng.fields.RowDescriptorBuilder;
 import org.junit.Before;
@@ -51,12 +52,12 @@ public class TestFBStringField extends BaseTestFBField {
 
     @Before
     public void setUp() throws SQLException {
-        RowDescriptorBuilder rowDescriptorBuilder = new RowDescriptorBuilder(1);
-        rowDescriptorBuilder.setFieldIndex(0);
-        rowDescriptorBuilder.setType(ISCConstants.SQL_TEXT);
-        rowDescriptorBuilder.setLength(TEST_STRING_SIZE);
-        rowDescriptorBuilder.addField();
-        RowDescriptor rowDescriptor = rowDescriptorBuilder.toRowDescriptor();
+        RowDescriptor rowDescriptor = new RowDescriptorBuilder(1, DefaultDatatypeCoder.getInstance())
+                .setFieldIndex(0)
+                .setType(ISCConstants.SQL_TEXT)
+                .setLength(TEST_STRING_SIZE)
+                .addField()
+                .toRowDescriptor();
         field = FBField.createField(rowDescriptor.getFieldDescriptor(0), createDataProvider(rowDescriptor), null, false);
     }
 

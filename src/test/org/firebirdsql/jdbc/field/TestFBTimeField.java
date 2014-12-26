@@ -22,6 +22,7 @@ package org.firebirdsql.jdbc.field;
 
 
 import org.firebirdsql.gds.ISCConstants;
+import org.firebirdsql.gds.ng.DefaultDatatypeCoder;
 import org.firebirdsql.gds.ng.fields.RowDescriptor;
 import org.firebirdsql.gds.ng.fields.RowDescriptorBuilder;
 import org.junit.Before;
@@ -43,11 +44,11 @@ public class TestFBTimeField extends BaseTestFBField {
 
     @Before
     public void setUp() throws SQLException {
-        RowDescriptorBuilder rowDescriptorBuilder = new RowDescriptorBuilder(1);
-        rowDescriptorBuilder.setFieldIndex(0);
-        rowDescriptorBuilder.setType(ISCConstants.SQL_TYPE_TIME);
-        rowDescriptorBuilder.addField();
-        RowDescriptor rowDescriptor = rowDescriptorBuilder.toRowDescriptor();
+        RowDescriptor rowDescriptor = new RowDescriptorBuilder(1, DefaultDatatypeCoder.getInstance())
+                .setFieldIndex(0)
+                .setType(ISCConstants.SQL_TYPE_TIME)
+                .addField()
+                .toRowDescriptor();
         field = FBField.createField(rowDescriptor.getFieldDescriptor(0), createDataProvider(rowDescriptor), null, false);
     }
 

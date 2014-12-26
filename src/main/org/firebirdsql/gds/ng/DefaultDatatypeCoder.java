@@ -47,6 +47,9 @@ public class DefaultDatatypeCoder implements DatatypeCoder {
         return INSTANCE;
     }
 
+    protected DefaultDatatypeCoder() {
+    }
+
     @Override
     public byte[] encodeShort(short value) {
         return intToBytes(value);

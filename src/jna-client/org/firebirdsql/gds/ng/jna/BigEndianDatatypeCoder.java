@@ -31,12 +31,15 @@ import org.firebirdsql.gds.ng.DefaultDatatypeCoder;
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @since 3.0
  */
-public class BigEndianDatatypeCoder extends DefaultDatatypeCoder {
+public final class BigEndianDatatypeCoder extends DefaultDatatypeCoder {
 
     private static final BigEndianDatatypeCoder INSTANCE = new BigEndianDatatypeCoder();
 
     public static BigEndianDatatypeCoder getInstance() {
         return INSTANCE;
+    }
+
+    private BigEndianDatatypeCoder() {
     }
 
     @Override
