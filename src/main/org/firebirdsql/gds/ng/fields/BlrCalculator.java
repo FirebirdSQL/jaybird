@@ -53,13 +53,15 @@ public interface BlrCalculator {
      * This allows to optimize for the actual length of the field.
      * </p>
      *
+     * @param rowDescriptor
+     *         Row descriptor
      * @param rowValue
      *         Row value
      * @return Byte array with the blr
      * @throws SQLException
      *         When the {@link RowValue} contains an unsupported field type.
      */
-    byte[] calculateBlr(RowValue rowValue) throws SQLException;
+    byte[] calculateBlr(RowDescriptor rowDescriptor, RowValue rowValue) throws SQLException;
 
     /**
      * Calculates the io length for the field descriptor.
@@ -94,12 +96,14 @@ public interface BlrCalculator {
      * </p>
      * <p>
      * For <code>CHAR</code> ({@link org.firebirdsql.gds.ISCConstants#SQL_TEXT} the implementation should be consistent
-     * with the lengths as given by {@link #calculateBlr(RowValue)}.
+     * with the lengths as given by {@link #calculateBlr(RowDescriptor, RowValue)}.
      * </p>
      *
+     * @param fieldDescriptor
+     *         Field descriptor
      * @param fieldValue
      *         Field value
      * @return The io length
      */
-    public int calculateIoLength(FieldValue fieldValue) throws SQLException;
+    public int calculateIoLength(FieldDescriptor fieldDescriptor, FieldValue fieldValue) throws SQLException;
 }

@@ -167,7 +167,7 @@ public final class FieldDescriptor {
      * @return A new {@link FieldValue}
      */
     public FieldValue createDefaultFieldValue() {
-        return new FieldValue(this);
+        return new FieldValue();
     }
 
     /**

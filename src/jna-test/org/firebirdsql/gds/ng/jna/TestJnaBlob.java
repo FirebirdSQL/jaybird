@@ -23,11 +23,9 @@ package org.firebirdsql.gds.ng.jna;
 import org.firebirdsql.gds.BlobParameterBuffer;
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.TransactionParameterBuffer;
-import org.firebirdsql.gds.XSQLVAR;
 import org.firebirdsql.gds.impl.jni.TransactionParameterBufferImpl;
 import org.firebirdsql.gds.ng.*;
 import org.firebirdsql.gds.ng.fields.FieldValue;
-import org.firebirdsql.gds.ng.fields.RowDescriptor;
 import org.firebirdsql.gds.ng.fields.RowValue;
 import org.firebirdsql.gds.ng.wire.SimpleStatementListener;
 import org.junit.Test;
@@ -388,9 +386,9 @@ public class TestJnaBlob extends BaseTestBlob {
                 blob.cancel();
 
                 statement.prepare(INSERT_BLOB_TABLE);
-                RowDescriptor descriptor = statement.getParameterDescriptor();
-                FieldValue param1 = new FieldValue(descriptor.getFieldDescriptor(0), XSQLVAR.intToBytes(testId));
-                FieldValue param2 = new FieldValue(descriptor.getFieldDescriptor(1), XSQLVAR.longToBytes(blob.getBlobId()));
+                final DatatypeCoder datatypeCoder = db.getDatatypeCoder();
+                FieldValue param1 = new FieldValue(datatypeCoder.encodeInt(testId));
+                FieldValue param2 = new FieldValue(datatypeCoder.encodeLong(blob.getBlobId()));
                 statement.execute(RowValue.of(param1, param2));
                 statement.close();
             } finally {

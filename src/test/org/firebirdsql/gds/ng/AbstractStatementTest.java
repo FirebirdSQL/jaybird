@@ -236,10 +236,9 @@ public abstract class AbstractStatementTest extends FBJUnit4TestBase {
                         "FROM RDB$CHARACTER_SETS a " +
                         "WHERE a.RDB$CHARACTER_SET_ID = ? OR a.RDB$BYTES_PER_CHARACTER = ?");
 
-        RowDescriptor descriptor = statement.getParameterDescriptor();
         final DatatypeCoder coder = db.getDatatypeCoder();
-        FieldValue param1 = new FieldValue(descriptor.getFieldDescriptor(0), coder.encodeShort(3)); // smallint = 3 (id of UNICODE_FSS)
-        FieldValue param2 = new FieldValue(descriptor.getFieldDescriptor(1), coder.encodeShort(1)); // smallint = 1 (single byte character sets)
+        FieldValue param1 = new FieldValue(coder.encodeShort(3)); // smallint = 3 (id of UNICODE_FSS)
+        FieldValue param2 = new FieldValue(coder.encodeShort(1)); // smallint = 1 (single byte character sets)
 
         statement.execute(RowValue.of(param1, param2));
 

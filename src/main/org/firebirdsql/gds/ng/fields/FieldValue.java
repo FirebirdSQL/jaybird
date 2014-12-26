@@ -33,45 +33,36 @@ import org.firebirdsql.jdbc.field.FieldDataProvider;
  */
 public final class FieldValue implements FieldDataProvider, Cloneable {
 
-    private final FieldDescriptor fieldDescriptor;
     private byte[] fieldData;
     private boolean initialized;
     private Object cachedObject;
 
     /**
-     * Creates an uninitialized FieldValue instance with the supplied {@link FieldDescriptor}.
-     *
-     * @param fieldDescriptor
-     *         <code>FieldDescriptor</code> object.
+     * Creates an uninitialized FieldValue instance.
      */
-    public FieldValue(FieldDescriptor fieldDescriptor) {
-        this(fieldDescriptor, null, false);
+    public FieldValue() {
+        this(null, false);
     }
 
     /**
-     * Creates an initialized FieldValue instance with the supplied {@link FieldDescriptor} and <code>fieldData</code>.
+     * Creates an initialized FieldValue instance with the supplied <code>fieldData</code>.
      *
-     * @param fieldDescriptor
-     *         <code>FieldDescriptor</code> object.
      * @param fieldData
      *         Byte array with the value encoded as required by the type described in <code>fieldDescriptor</code>
      */
-    public FieldValue(final FieldDescriptor fieldDescriptor, final byte[] fieldData) {
-        this(fieldDescriptor, fieldData, true);
+    public FieldValue(final byte[] fieldData) {
+        this(fieldData, true);
     }
 
     /**
-     * Creates a FieldValue instance with the supplied {@link FieldDescriptor} and <code>fieldData</code> and <code>initialized</code> value.
+     * Creates a FieldValue instance with the supplied <code>fieldData</code> and <code>initialized</code> value.
      *
-     * @param fieldDescriptor
-     *         <code>FieldDescriptor</code> object.
      * @param fieldData
      *         Byte array with the value encoded as required by the type described in <code>fieldDescriptor</code>
      * @param initialized
      *         Is this field in the initialized state
      */
-    private FieldValue(final FieldDescriptor fieldDescriptor, final byte[] fieldData, final boolean initialized) {
-        this.fieldDescriptor = fieldDescriptor;
+    private FieldValue(final byte[] fieldData, final boolean initialized) {
         // TODO Defensively copy fieldData?
         this.fieldData = fieldData;
         this.initialized = initialized;
@@ -125,13 +116,6 @@ public final class FieldValue implements FieldDataProvider, Cloneable {
         initialized = false;
         fieldData = null;
         cachedObject = null;
-    }
-
-    /**
-     * @return The field descriptor instance of this field.
-     */
-    public FieldDescriptor getFieldDescriptor() {
-        return fieldDescriptor;
     }
 
     /**
