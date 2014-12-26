@@ -144,13 +144,13 @@ public final class StatementInfoProcessor implements InfoProcessor<InfoProcessor
         switch (info.currentItem) {
         case ISCConstants.isc_info_sql_select:
             if (info.fieldBuilder == null) {
-                info.fieldBuilder = new RowDescriptorBuilder(descriptorCount);
+                info.fieldBuilder = new RowDescriptorBuilder(descriptorCount, database.getDatatypeCoder());
             }
             processDescriptors(info, info.fieldBuilder);
             break;
         case ISCConstants.isc_info_sql_bind:
             if (info.parameterBuilder == null) {
-                info.parameterBuilder = new RowDescriptorBuilder(descriptorCount);
+                info.parameterBuilder = new RowDescriptorBuilder(descriptorCount, database.getDatatypeCoder());
             }
             processDescriptors(info, info.parameterBuilder);
             break;

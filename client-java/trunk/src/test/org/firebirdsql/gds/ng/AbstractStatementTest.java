@@ -162,10 +162,17 @@ public abstract class AbstractStatementTest extends FBJUnit4TestBase {
         final FirebirdSupportInfo supportInfo = supportInfoFor(db);
         List<FieldDescriptor> expectedFields =
                 Arrays.asList(
-                        new FieldDescriptor(ISCConstants.SQL_BLOB | 1, 1, supportInfo.reportsBlobCharSetInDescriptor() ? 3 : 0, 8, "Description", null, "RDB$DESCRIPTION", "RDB$DATABASE", "SYSDBA"),
-                        new FieldDescriptor(ISCConstants.SQL_SHORT | 1, 0, 0, 2, "RDB$RELATION_ID", null, "RDB$RELATION_ID", "RDB$DATABASE", "SYSDBA"),
-                        new FieldDescriptor(ISCConstants.SQL_TEXT | 1, 3, 0, supportInfo.reportsByteLengthInDescriptor() ? 93 : 31, "RDB$SECURITY_CLASS", null, "RDB$SECURITY_CLASS", "RDB$DATABASE", "SYSDBA"),
-                        new FieldDescriptor(ISCConstants.SQL_TEXT | 1, 3, 0, supportInfo.reportsByteLengthInDescriptor() ? 93 : 31, "RDB$CHARACTER_SET_NAME", null, "RDB$CHARACTER_SET_NAME", "RDB$DATABASE", "SYSDBA")
+                        new FieldDescriptor(db.getDatatypeCoder(), ISCConstants.SQL_BLOB | 1, 1,
+                                supportInfo.reportsBlobCharSetInDescriptor() ? 3 : 0, 8, "Description", null,
+                                "RDB$DESCRIPTION", "RDB$DATABASE", "SYSDBA"),
+                        new FieldDescriptor(db.getDatatypeCoder(), ISCConstants.SQL_SHORT | 1, 0, 0, 2,
+                                "RDB$RELATION_ID", null, "RDB$RELATION_ID", "RDB$DATABASE", "SYSDBA"),
+                        new FieldDescriptor(db.getDatatypeCoder(), ISCConstants.SQL_TEXT | 1, 3, 0,
+                                supportInfo.reportsByteLengthInDescriptor() ? 93 : 31, "RDB$SECURITY_CLASS", null,
+                                "RDB$SECURITY_CLASS", "RDB$DATABASE", "SYSDBA"),
+                        new FieldDescriptor(db.getDatatypeCoder(), ISCConstants.SQL_TEXT | 1, 3, 0,
+                                supportInfo.reportsByteLengthInDescriptor() ? 93 : 31, "RDB$CHARACTER_SET_NAME", null,
+                                "RDB$CHARACTER_SET_NAME", "RDB$DATABASE", "SYSDBA")
                 );
         assertEquals("Unexpected values for fields", expectedFields, fields.getFieldDescriptors());
         assertNotNull("Parameters", statement.getParameterDescriptor());
@@ -213,7 +220,10 @@ public abstract class AbstractStatementTest extends FBJUnit4TestBase {
 
         List<FieldDescriptor> expectedFields =
                 Arrays.asList(
-                        new FieldDescriptor(ISCConstants.SQL_TEXT | 1, 3, 0, unicodeFssLengthReported ? 93 : 31, "RDB$CHARACTER_SET_NAME", supportsTableAlias ? "A" : null, "RDB$CHARACTER_SET_NAME", "RDB$CHARACTER_SETS", "SYSDBA")
+                        new FieldDescriptor(db.getDatatypeCoder(), ISCConstants.SQL_TEXT | 1, 3, 0,
+                                unicodeFssLengthReported ? 93 : 31, "RDB$CHARACTER_SET_NAME",
+                                supportsTableAlias ? "A" : null, "RDB$CHARACTER_SET_NAME", "RDB$CHARACTER_SETS",
+                                "SYSDBA")
                 );
         assertEquals("Unexpected values for fields", expectedFields, fields.getFieldDescriptors());
 
@@ -221,8 +231,10 @@ public abstract class AbstractStatementTest extends FBJUnit4TestBase {
         assertNotNull("Parameters", parameters);
         List<FieldDescriptor> expectedParameters =
                 Arrays.asList(
-                        new FieldDescriptor(ISCConstants.SQL_SHORT | 1, 0, 0, 2, null, null, null, null, null),
-                        new FieldDescriptor(ISCConstants.SQL_SHORT | 1, 0, 0, 2, null, null, null, null, null)
+                        new FieldDescriptor(db.getDatatypeCoder(), ISCConstants.SQL_SHORT | 1, 0, 0, 2,
+                                null, null, null, null, null),
+                        new FieldDescriptor(db.getDatatypeCoder(), ISCConstants.SQL_SHORT | 1, 0, 0, 2,
+                                null, null, null, null, null)
                 );
         assertEquals("Unexpected values for parameters", expectedParameters, parameters.getFieldDescriptors());
     }
@@ -272,7 +284,8 @@ public abstract class AbstractStatementTest extends FBJUnit4TestBase {
         assertNotNull("Fields", fields);
         List<FieldDescriptor> expectedFields =
                 Arrays.asList(
-                        new FieldDescriptor(ISCConstants.SQL_LONG | 1, 0, 0, 4, "OUTVALUE", null, "OUTVALUE", "INCREMENT", "SYSDBA")
+                        new FieldDescriptor(db.getDatatypeCoder(), ISCConstants.SQL_LONG | 1, 0, 0, 4, "OUTVALUE", null,
+                                "OUTVALUE", "INCREMENT", "SYSDBA")
                 );
         assertEquals("Unexpected values for fields", expectedFields, fields.getFieldDescriptors());
 
@@ -280,7 +293,8 @@ public abstract class AbstractStatementTest extends FBJUnit4TestBase {
         assertNotNull("Parameters", parameters);
         List<FieldDescriptor> expectedParameters =
                 Arrays.asList(
-                        new FieldDescriptor(ISCConstants.SQL_LONG | 1, 0, 0, 4, null, null, null, null, null)
+                        new FieldDescriptor(db.getDatatypeCoder(), ISCConstants.SQL_LONG | 1, 0, 0, 4, null, null, null,
+                                null, null)
                 );
         assertEquals("Unexpected values for parameters", expectedParameters, parameters.getFieldDescriptors());
     }
@@ -317,7 +331,8 @@ public abstract class AbstractStatementTest extends FBJUnit4TestBase {
         assertNotNull("Fields", fields);
         List<FieldDescriptor> expectedFields =
                 Arrays.asList(
-                        new FieldDescriptor(ISCConstants.SQL_LONG | 1, 0, 0, 4, "OUTVALUE", null, "OUTVALUE", "RANGE", "SYSDBA")
+                        new FieldDescriptor(db.getDatatypeCoder(), ISCConstants.SQL_LONG | 1, 0, 0, 4, "OUTVALUE", null,
+                                "OUTVALUE", "RANGE", "SYSDBA")
                 );
         assertEquals("Unexpected values for fields", expectedFields, fields.getFieldDescriptors());
 
@@ -325,8 +340,10 @@ public abstract class AbstractStatementTest extends FBJUnit4TestBase {
         assertNotNull("Parameters", parameters);
         List<FieldDescriptor> expectedParameters =
                 Arrays.asList(
-                        new FieldDescriptor(ISCConstants.SQL_LONG | 1, 0, 0, 4, null, null, null, null, null),
-                        new FieldDescriptor(ISCConstants.SQL_LONG | 1, 0, 0, 4, null, null, null, null, null)
+                        new FieldDescriptor(db.getDatatypeCoder(), ISCConstants.SQL_LONG | 1, 0, 0, 4, null, null, null,
+                                null, null),
+                        new FieldDescriptor(db.getDatatypeCoder(), ISCConstants.SQL_LONG | 1, 0, 0, 4, null, null, null,
+                                null, null)
                 );
         assertEquals("Unexpected values for parameters", expectedParameters, parameters.getFieldDescriptors());
     }
@@ -345,7 +362,8 @@ public abstract class AbstractStatementTest extends FBJUnit4TestBase {
         assertNotNull("Fields", fields);
         List<FieldDescriptor> expectedFields =
                 Arrays.asList(
-                        new FieldDescriptor(ISCConstants.SQL_LONG | 1, 0, 0, 4, "THEKEY", null, "THEKEY", "KEYVALUE", "SYSDBA")
+                        new FieldDescriptor(db.getDatatypeCoder(), ISCConstants.SQL_LONG | 1, 0, 0, 4, "THEKEY", null,
+                                "THEKEY", "KEYVALUE", "SYSDBA")
                 );
         assertEquals("Unexpected values for fields", expectedFields, fields.getFieldDescriptors());
 
@@ -353,7 +371,8 @@ public abstract class AbstractStatementTest extends FBJUnit4TestBase {
         assertNotNull("Parameters", parameters);
         List<FieldDescriptor> expectedParameters =
                 Arrays.asList(
-                        new FieldDescriptor(ISCConstants.SQL_VARYING | 1, 0, 0, 5, null, null, null, null, null)
+                        new FieldDescriptor(db.getDatatypeCoder(), ISCConstants.SQL_VARYING | 1, 0, 0, 5, null, null,
+                                null, null, null)
                 );
         assertEquals("Unexpected values for parameters", expectedParameters, parameters.getFieldDescriptors());
     }

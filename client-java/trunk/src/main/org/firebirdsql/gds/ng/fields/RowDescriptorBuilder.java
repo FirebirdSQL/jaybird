@@ -20,6 +20,8 @@
  */
 package org.firebirdsql.gds.ng.fields;
 
+import org.firebirdsql.gds.ng.DatatypeCoder;
+
 /**
  * Builder to construct an immutable {@link RowDescriptor}.
  * <p>
@@ -36,6 +38,7 @@ package org.firebirdsql.gds.ng.fields;
  */
 public final class RowDescriptorBuilder {
 
+    private final DatatypeCoder datatypeCoder;
     private int type;
     private int subType;
     private int scale;
@@ -54,8 +57,11 @@ public final class RowDescriptorBuilder {
      *
      * @param size
      *         Number of fields
+     * @param datatypeCoder
+     *         DatatypeCoder for decoding field data
      */
-    public RowDescriptorBuilder(final int size) {
+    public RowDescriptorBuilder(final int size, DatatypeCoder datatypeCoder) {
+        this.datatypeCoder = datatypeCoder;
         fieldDescriptors = new FieldDescriptor[size];
     }
 
@@ -258,7 +264,8 @@ public final class RowDescriptorBuilder {
      * @return FieldDescriptor
      */
     public FieldDescriptor toFieldDescriptor() {
-        return new FieldDescriptor(type, subType, scale, length, fieldName, tableAlias, originalName, originalTableName, ownerName);
+        return new FieldDescriptor(datatypeCoder, type, subType, scale, length, fieldName, tableAlias, originalName,
+                originalTableName, ownerName);
     }
 
     /**

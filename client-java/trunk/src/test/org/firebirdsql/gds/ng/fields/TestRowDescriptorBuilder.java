@@ -20,6 +20,7 @@
  */
 package org.firebirdsql.gds.ng.fields;
 
+import org.firebirdsql.gds.ng.DefaultDatatypeCoder;
 import org.junit.Test;
 
 import java.util.ArrayList;
@@ -38,18 +39,18 @@ public class TestRowDescriptorBuilder {
     private static final List<FieldDescriptor> TEST_FIELD_DESCRIPTORS;
     static {
         List<FieldDescriptor> fields = new ArrayList<FieldDescriptor>();
-        fields.add(new FieldDescriptor(1, 1, 1, 1, "1", "1", "1", "1", "1"));
-        fields.add(new FieldDescriptor(2, 2, 2, 2, "2", "2", "2", "2", "2"));
-        fields.add(new FieldDescriptor(3, 3, 3, 3, "3", "3", "3", "3", "3"));
+        fields.add(new FieldDescriptor(DefaultDatatypeCoder.getInstance(), 1, 1, 1, 1, "1", "1", "1", "1", "1"));
+        fields.add(new FieldDescriptor(DefaultDatatypeCoder.getInstance(), 2, 2, 2, 2, "2", "2", "2", "2", "2"));
+        fields.add(new FieldDescriptor(DefaultDatatypeCoder.getInstance(), 3, 3, 3, 3, "3", "3", "3", "3", "3"));
 
         TEST_FIELD_DESCRIPTORS = Collections.unmodifiableList(fields);
     }
 
-    private static final FieldDescriptor SOURCE = new FieldDescriptor(1, 2, 3, 4, "5", "6", "7", "8", "9");
+    private static final FieldDescriptor SOURCE = new FieldDescriptor(DefaultDatatypeCoder.getInstance(), 1, 2, 3, 4, "5", "6", "7", "8", "9");
 
     @Test
     public void testEmptyField() {
-        FieldDescriptor descriptor = new RowDescriptorBuilder(0)
+        FieldDescriptor descriptor = new RowDescriptorBuilder(0, DefaultDatatypeCoder.getInstance())
                 .toFieldDescriptor();
 
         assertEquals("Unexpected Type", 0, descriptor.getType());
@@ -66,7 +67,7 @@ public class TestRowDescriptorBuilder {
     @Test
     public void testBasicFieldInitialization() {
         FieldDescriptor descriptor =
-                new RowDescriptorBuilder(1)
+                new RowDescriptorBuilder(1, DefaultDatatypeCoder.getInstance())
                         .setType(1)
                         .setSubType(2)
                         .setScale(3)
@@ -91,7 +92,7 @@ public class TestRowDescriptorBuilder {
 
     @Test
     public void testCopyFrom() {
-        FieldDescriptor fieldDescriptor = new RowDescriptorBuilder(0)
+        FieldDescriptor fieldDescriptor = new RowDescriptorBuilder(0, DefaultDatatypeCoder.getInstance())
                 .copyFieldFrom(SOURCE)
                 .toFieldDescriptor();
 
@@ -108,7 +109,7 @@ public class TestRowDescriptorBuilder {
 
     @Test
     public void testResetField() {
-        FieldDescriptor fieldDescriptor = new RowDescriptorBuilder(0)
+        FieldDescriptor fieldDescriptor = new RowDescriptorBuilder(0, DefaultDatatypeCoder.getInstance())
                 .copyFieldFrom(SOURCE)
                 .resetField()
                 .toFieldDescriptor();
@@ -126,7 +127,7 @@ public class TestRowDescriptorBuilder {
 
     @Test
     public void testEmpty() {
-        RowDescriptor rowDescriptor = new RowDescriptorBuilder(0)
+        RowDescriptor rowDescriptor = new RowDescriptorBuilder(0, DefaultDatatypeCoder.getInstance())
                 .toRowDescriptor();
 
         assertEquals("Unexpected count of fields in RowDescriptor", 0, rowDescriptor.getCount());
@@ -134,7 +135,7 @@ public class TestRowDescriptorBuilder {
 
     @Test
     public void testBasicInitialization() {
-        RowDescriptorBuilder builder = new RowDescriptorBuilder(TEST_FIELD_DESCRIPTORS.size());
+        RowDescriptorBuilder builder = new RowDescriptorBuilder(TEST_FIELD_DESCRIPTORS.size(), DefaultDatatypeCoder.getInstance());
         for (FieldDescriptor fieldDescriptor : TEST_FIELD_DESCRIPTORS) {
             builder.addField(fieldDescriptor);
         }
@@ -146,7 +147,7 @@ public class TestRowDescriptorBuilder {
 
     @Test
     public void testAddingFieldsChained() {
-        RowDescriptorBuilder descriptorBuilder = new RowDescriptorBuilder(2)
+        RowDescriptorBuilder descriptorBuilder = new RowDescriptorBuilder(2, DefaultDatatypeCoder.getInstance())
                 .setType(1)
                 .setSubType(1)
                 .setFieldName("Field1")
@@ -177,7 +178,7 @@ public class TestRowDescriptorBuilder {
 
     @Test
     public void testAddingFieldsChained_DifferentOrder() {
-        RowDescriptorBuilder descriptorBuilder = new RowDescriptorBuilder(2)
+        RowDescriptorBuilder descriptorBuilder = new RowDescriptorBuilder(2, DefaultDatatypeCoder.getInstance())
                 .setFieldIndex(1)
                 .setType(1)
                 .setSubType(1)

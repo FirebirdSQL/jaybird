@@ -28,6 +28,7 @@ package org.firebirdsql.gds.ng.fields;
 
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.XSQLVAR;
+import org.firebirdsql.gds.ng.DatatypeCoder;
 import org.firebirdsql.util.ObjectUtils;
 
 /**
@@ -42,6 +43,7 @@ import org.firebirdsql.util.ObjectUtils;
  */
 public final class FieldDescriptor {
 
+    private final DatatypeCoder datatypeCoder;
     private final int type;
     private final int subType;
     private final int scale;
@@ -56,6 +58,8 @@ public final class FieldDescriptor {
     /**
      * Constructor for metadata FieldDescriptor.
      *
+     * @param datatypeCoder
+     *         Instance of DatatypeCoder to use when decoding column data
      * @param type
      *         Column SQL type
      * @param subType
@@ -75,9 +79,11 @@ public final class FieldDescriptor {
      * @param ownerName
      *         Owner of the column
      */
-    public FieldDescriptor(int type, final int subType, final int scale, int length, final String fieldName,
+    public FieldDescriptor(DatatypeCoder datatypeCoder, int type, final int subType, final int scale, int length,
+            final String fieldName,
             final String tableAlias, String originalName,
             String originalTableName, final String ownerName) {
+        this.datatypeCoder = datatypeCoder;
         this.type = type;
         this.subType = subType;
         this.scale = scale;
@@ -89,6 +95,13 @@ public final class FieldDescriptor {
         this.originalName = originalName;
         this.originalTableName = originalTableName;
         this.ownerName = ownerName;
+    }
+
+    /**
+     * @return The {@link org.firebirdsql.gds.ng.DatatypeCoder} to use when decoding field data.
+     */
+    public DatatypeCoder getDatatypeCoder() {
+        return datatypeCoder;
     }
 
     /**
@@ -231,7 +244,8 @@ public final class FieldDescriptor {
                 && ObjectUtils.equals(this.tableAlias, other.tableAlias)
                 && ObjectUtils.equals(this.originalName, other.originalName)
                 && ObjectUtils.equals(this.originalTableName, other.originalTableName)
-                && ObjectUtils.equals(this.ownerName, other.ownerName);
+                && ObjectUtils.equals(this.ownerName, other.ownerName)
+                && this.datatypeCoder == other.datatypeCoder;
     }
 
     @Override
