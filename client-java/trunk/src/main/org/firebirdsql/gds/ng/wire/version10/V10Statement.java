@@ -392,10 +392,11 @@ public class V10Statement extends AbstractFbWireStatement implements FbWireState
             xdrOut.writeInt(getTransaction().getHandle());
 
             if (parameters != null && parameters.getCount() > 0) {
-                xdrOut.writeBuffer(calculateBlr(parameters));
+                final RowDescriptor parameterDescriptor = getParameterDescriptor();
+                xdrOut.writeBuffer(calculateBlr(parameterDescriptor, parameters));
                 xdrOut.writeInt(0); // message number = in_message_type
                 xdrOut.writeInt(1); // Number of messages
-                writeSqlData(parameters);
+                writeSqlData(parameterDescriptor, parameters);
             } else {
                 xdrOut.writeBuffer(null);
                 xdrOut.writeInt(0); // message number = in_message_type
@@ -513,14 +514,17 @@ public class V10Statement extends AbstractFbWireStatement implements FbWireState
      * @throws IOException
      */
     protected RowValue readSqlData() throws SQLException, IOException {
-        final RowValue rowValue = getFieldDescriptor().createDefaultFieldValues();
+        final RowDescriptor rowDescriptor = getFieldDescriptor();
+        final RowValue rowValue = rowDescriptor.createDefaultFieldValues();
         final BlrCalculator blrCalculator = getDatabase().getBlrCalculator();
 
         synchronized (getDatabase().getSynchronizationObject()) {
             final XdrInputStream xdrIn = getXdrIn();
 
-            for (FieldValue fieldValue : rowValue) {
-                int len = blrCalculator.calculateIoLength(fieldValue.getFieldDescriptor());
+            for (int idx = 0; idx < rowDescriptor.getCount(); idx++) {
+                final FieldDescriptor fieldDescriptor = rowDescriptor.getFieldDescriptor(idx);
+                final FieldValue fieldValue = rowValue.getFieldValue(idx);
+                int len = blrCalculator.calculateIoLength(fieldDescriptor);
                 byte[] buffer;
                 if (len == 0) {
                     // Length specified in response
@@ -550,20 +554,22 @@ public class V10Statement extends AbstractFbWireStatement implements FbWireState
     /**
      * Write a set of SQL data from a list of {@link FieldValue} instances.
      *
+     * @param rowDescriptor
+     *         The row descriptor
      * @param fieldValues
      *         The List containing the SQL data to be written
      * @throws IOException
      *         if an error occurs while writing to the underlying output stream
      */
-    protected void writeSqlData(final RowValue fieldValues) throws IOException, SQLException {
+    protected void writeSqlData(final RowDescriptor rowDescriptor, final RowValue fieldValues) throws IOException, SQLException {
         synchronized (getDatabase().getSynchronizationObject()) {
             final XdrOutputStream xdrOut = getXdrOut();
             final BlrCalculator blrCalculator = getDatabase().getBlrCalculator();
-            for (final FieldValue fieldValue : fieldValues) {
-                // We assume that the FieldDescriptors of the FieldValues have already been validated with the expected types
-                final FieldDescriptor fieldDescriptor = fieldValue.getFieldDescriptor();
+            for (int idx = 0; idx < fieldValues.getCount(); idx++) {
+                final FieldValue fieldValue = fieldValues.getFieldValue(idx);
+                final FieldDescriptor fieldDescriptor = rowDescriptor.getFieldDescriptor(idx);
 
-                int len = blrCalculator.calculateIoLength(fieldValue);
+                int len = blrCalculator.calculateIoLength(fieldDescriptor, fieldValue);
                 final byte[] buffer = fieldValue.getFieldData();
                 final int tempType = fieldDescriptor.getType() & ~1;
 

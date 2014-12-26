@@ -455,13 +455,6 @@ public abstract class AbstractFbStatement implements FbStatement {
                 throw new SQLTransientException(String.format("Parameter with index %d was not set",
                         fieldIndex + 1), "0700C"); // undefined DATA value
             }
-            if (!fieldValue.getFieldDescriptor().typeEquals(parameterDescriptor.getFieldDescriptor(fieldIndex))) {
-                // Communicating 1-based index, so it doesn't cause confusion when JDBC user sees this.
-                // TODO use HY021 (inconsistent descriptor information) or HY091 (invalid descriptor field identifier) instead?
-                // TODO Use isc_field_ref_err?
-                throw new SQLNonTransientException(String.format("Parameter with index %d has an unexpected descriptor (expected %s, got %s)",
-                        fieldIndex + 1, parameterDescriptor.getFieldDescriptor(fieldIndex), fieldValue.getFieldDescriptor()), "07009"); // invalid descriptor index
-            }
         }
     }
 

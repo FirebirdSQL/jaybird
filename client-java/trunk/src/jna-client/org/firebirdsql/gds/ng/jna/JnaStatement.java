@@ -164,7 +164,7 @@ public class JnaStatement extends AbstractFbStatement {
             synchronized (db.getSynchronizationObject()) {
                 switchState(StatementState.EXECUTING);
 
-                setXSqlDaData(inXSqlDa, parameters);
+                setXSqlDaData(inXSqlDa, getParameterDescriptor(), parameters);
                 final StatementType statementType = getType();
                 if (statementType.isTypeWithSingletonResult()) {
                     clientLibrary.isc_dsql_execute2(statusVector, getTransaction().getJnaHandle(), handle,
@@ -206,10 +206,12 @@ public class JnaStatement extends AbstractFbStatement {
      *
      * @param xSqlDa
      *         XSQLDA
+     * @param rowDescriptor
+     *         Row descriptor
      * @param parameters
      *         Parameter values
      */
-    protected void setXSqlDaData(XSQLDA xSqlDa, RowValue parameters) {
+    protected void setXSqlDaData(final XSQLDA xSqlDa, final RowDescriptor rowDescriptor, final RowValue parameters) {
         for (int idx = 0; idx < parameters.getCount(); idx++) {
             XSQLVAR xSqlVar = xSqlDa.sqlvar[idx];
             // Zero-fill sqldata
@@ -224,7 +226,7 @@ public class JnaStatement extends AbstractFbStatement {
 
                 // TODO Throw truncation error if fieldData longer than sqllen?
 
-                int fieldType = value.getFieldDescriptor().getType() & ~1;
+                int fieldType = rowDescriptor.getFieldDescriptor(idx).getType() & ~1;
                 boolean isVarying = fieldType == ISCConstants.SQL_VARYING;
                 int bufferOffset = 0;
                 if (isVarying) {

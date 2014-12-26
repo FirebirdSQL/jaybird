@@ -165,8 +165,7 @@ public abstract class BaseTestBlob extends FBJUnit4TestBase {
         statement.addStatementListener(listener);
         statement.prepare(SELECT_BLOB_TABLE);
 
-        RowDescriptor descriptor = statement.getParameterDescriptor();
-        FieldValue param1 = new FieldValue(descriptor.getFieldDescriptor(0), db.getDatatypeCoder().encodeInt(testId));
+        FieldValue param1 = new FieldValue(db.getDatatypeCoder().encodeInt(testId));
 
         statement.execute(RowValue.of(param1));
 
@@ -291,10 +290,9 @@ public abstract class BaseTestBlob extends FBJUnit4TestBase {
                 blob.close();
 
                 statement.prepare(INSERT_BLOB_TABLE);
-                RowDescriptor descriptor = statement.getParameterDescriptor();
                 final DatatypeCoder datatypeCoder = db.getDatatypeCoder();
-                FieldValue param1 = new FieldValue(descriptor.getFieldDescriptor(0), datatypeCoder.encodeInt(testId));
-                FieldValue param2 = new FieldValue(descriptor.getFieldDescriptor(1), datatypeCoder.encodeLong(blob.getBlobId()));
+                FieldValue param1 = new FieldValue(datatypeCoder.encodeInt(testId));
+                FieldValue param2 = new FieldValue(datatypeCoder.encodeLong(blob.getBlobId()));
                 statement.execute(RowValue.of(param1, param2));
                 statement.close();
             } finally {
@@ -333,10 +331,9 @@ public abstract class BaseTestBlob extends FBJUnit4TestBase {
             blob.close();
 
             statement.prepare(INSERT_BLOB_TABLE);
-            RowDescriptor descriptor = statement.getParameterDescriptor();
             final DatatypeCoder datatypeCoder = db.getDatatypeCoder();
-            FieldValue param1 = new FieldValue(descriptor.getFieldDescriptor(0), datatypeCoder.encodeInt(testId));
-            FieldValue param2 = new FieldValue(descriptor.getFieldDescriptor(1), datatypeCoder.encodeLong(blob.getBlobId()));
+            FieldValue param1 = new FieldValue(datatypeCoder.encodeInt(testId));
+            FieldValue param2 = new FieldValue(datatypeCoder.encodeLong(blob.getBlobId()));
             statement.execute(RowValue.of(param1, param2));
             statement.close();
         } finally {

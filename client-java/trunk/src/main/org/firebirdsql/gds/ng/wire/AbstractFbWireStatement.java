@@ -127,9 +127,9 @@ public abstract class AbstractFbWireStatement extends AbstractFbStatement implem
      * @throws SQLException
      *         When the {@link RowValue} contains an unsupported field type.
      */
-    protected final byte[] calculateBlr(RowValue rowValue) throws SQLException {
-        if (rowValue == null) return null;
-        return getDatabase().getBlrCalculator().calculateBlr(rowValue);
+    protected final byte[] calculateBlr(RowDescriptor rowDescriptor, RowValue rowValue) throws SQLException {
+        if (rowDescriptor == null || rowValue == null) return null;
+        return getDatabase().getBlrCalculator().calculateBlr(rowDescriptor, rowValue);
     }
 
     @Override
