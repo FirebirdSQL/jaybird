@@ -20,31 +20,24 @@
  */
 package org.firebirdsql.jdbc.field;
 
-import java.io.InputStream;
-import java.io.Reader;
-import java.math.BigDecimal;
-import java.sql.Array;
-import java.sql.Blob;
-import java.sql.Clob;
-import java.sql.Date;
-import java.sql.Ref;
-import java.sql.SQLException;
-import java.sql.Time;
-import java.sql.Timestamp;
-import java.sql.Types;
-import java.util.Calendar;
-import java.util.Map;
-
 import org.firebirdsql.gds.DatabaseParameterBuffer;
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.XSQLVAR;
 import org.firebirdsql.gds.impl.DatabaseParameterBufferExtension;
 import org.firebirdsql.gds.impl.GDSHelper;
+import org.firebirdsql.gds.ng.DatatypeCoder;
 import org.firebirdsql.gds.ng.fields.FieldDescriptor;
 import org.firebirdsql.jdbc.FBBlob;
 import org.firebirdsql.jdbc.FBClob;
 import org.firebirdsql.jdbc.FBDriverNotCapableException;
 import org.firebirdsql.jdbc.FBSQLException;
+
+import java.io.InputStream;
+import java.io.Reader;
+import java.math.BigDecimal;
+import java.sql.*;
+import java.util.Calendar;
+import java.util.Map;
 
 /**
  * Describe class <code>FBField</code> here.
@@ -83,21 +76,7 @@ public abstract class FBField {
     static final long LONG_NULL_VALUE = 0;
     static final float FLOAT_NULL_VALUE = 0.0f;
     static final double DOUBLE_NULL_VALUE = 0.0;
-    static final BigDecimal BIGDECIMAL_NULL_VALUE = null;
-    static final String STRING_NULL_VALUE = null;
-    static final Object OBJECT_NULL_VALUE = null;
-
     static final boolean BOOLEAN_NULL_VALUE = false;
-
-    static final Date DATE_NULL_VALUE = null;
-    static final Time TIME_NULL_VALUE = null;
-    static final Timestamp TIMESTAMP_NULL_VALUE = null;
-
-    static final InputStream STREAM_NULL_VALUE = null;
-    static final Reader READER_NULL_VALUE = null;
-    static final byte[] BYTES_NULL_VALUE = null;
-    static final FBBlob BLOB_NULL_VALUE = null;
-    static final FBClob CLOB_NULL_VALUE = null;
 
     static final byte MAX_BYTE_VALUE = Byte.MAX_VALUE;
     static final byte MIN_BYTE_VALUE = Byte.MIN_VALUE;
@@ -119,31 +98,31 @@ public abstract class FBField {
 
     private static final ObjectConverter OBJECT_CONVERTER = ObjectConverterHolder.INSTANCE.getObjectConverter();
 
-    protected XSQLVAR field;
+    protected final FieldDescriptor fieldDescriptor;
     private final FieldDataProvider dataProvider;
-    protected GDSHelper gdsHelper = null;
-    protected String iscEncoding = null;
-    protected String javaEncoding = null;
-    protected String mappingPath = null;
+    protected GDSHelper gdsHelper;
+    protected String iscEncoding;
+    protected String javaEncoding;
+    protected String mappingPath;
     protected int requiredType;
     protected int scale = -1;
 
-    FBField(XSQLVAR field, FieldDataProvider dataProvider, int requiredType) throws SQLException {
-        if (field == null) {
-            throw new FBSQLException("Cannot create FBField instance for null as XSQLVAR.",
+    FBField(FieldDescriptor fieldDescriptor, FieldDataProvider dataProvider, int requiredType) throws SQLException {
+        if (fieldDescriptor == null) {
+            throw new FBSQLException("Cannot create FBField instance with fieldDescriptor null.",
                     FBSQLException.SQL_STATE_INVALID_ARG_VALUE);
         }
 
-        this.field = field;
+        this.fieldDescriptor = fieldDescriptor;
         this.dataProvider = dataProvider;
         this.requiredType = requiredType;
     }
 
-    protected byte[] getFieldData() {
+    protected final byte[] getFieldData() {
         return dataProvider.getFieldData();
     }
 
-    protected void setFieldData(byte[] data) {
+    protected final void setFieldData(byte[] data) {
         dataProvider.setFieldData(data);
     }
 
@@ -151,13 +130,17 @@ public abstract class FBField {
         return OBJECT_CONVERTER;
     }
 
+    protected final DatatypeCoder getDatatypeCoder() {
+        return fieldDescriptor.getDatatypeCoder();
+    }
+
     /**
      * @return <code>true</code> if the corresponding <code>field</code> is
      *         <code>null</code>, otherwise <code>false</code>.
      * @throws SQLException
      */
-    public boolean isNull() throws SQLException {
-        return dataProvider.getFieldData() == null;
+    public final boolean isNull() throws SQLException {
+        return getFieldData() == null;
     }
 
     public void setNull() {
@@ -350,8 +333,8 @@ public abstract class FBField {
         }
     }
 
-    public static boolean isNullType(XSQLVAR field) {
-        final int tempType = field.sqltype & ~1;
+    public static boolean isNullType(FieldDescriptor fieldDescriptor) {
+        final int tempType = fieldDescriptor.getType() & ~1;
 
         return tempType == ISCConstants.SQL_NULL;
     }
@@ -361,47 +344,41 @@ public abstract class FBField {
      * <code>FBField</code> class according to the SQL datatype. This instance
      * knows how to perform all necessary type conversions.
      */
-    public static FBField createField(XSQLVAR field, FieldDataProvider dataProvider, GDSHelper gdsHelper, boolean cached) throws SQLException {
-        final FBField result = FBField.createField(field, dataProvider, cached);
+    public static FBField createField(FieldDescriptor fieldDescriptor, FieldDataProvider dataProvider, GDSHelper gdsHelper, boolean cached) throws SQLException {
+        final FBField result = FBField.createField(fieldDescriptor, fieldDescriptor.toXSQLVAR(), dataProvider, cached);
         result.setConnection(gdsHelper);
         return result;
     }
 
-    public static FBField createField(FieldDescriptor field, FieldDataProvider dataProvider, GDSHelper gdsHelper, boolean cached) throws SQLException {
-        final FBField result = FBField.createField(field.toXSQLVAR(), dataProvider, cached);
-        result.setConnection(gdsHelper);
-        return result;
-    }
-
-    private static FBField createField(XSQLVAR field, FieldDataProvider dataProvider, boolean cached)
+    private static FBField createField(FieldDescriptor fieldDescriptor, XSQLVAR field, FieldDataProvider dataProvider, boolean cached)
             throws SQLException {
-
-        if (FBField.isType(field, Types.SMALLINT)) {
-            if (field.sqlscale == 0) {
-                return new FBShortField(field, dataProvider, Types.SMALLINT);
+        // TODO Change isType to 'toJdbcType' and use a switch (if possible)
+        if (FBField.isType(fieldDescriptor, Types.SMALLINT)) {
+            if (fieldDescriptor.getScale() == 0) {
+                return new FBShortField(fieldDescriptor, dataProvider, Types.SMALLINT);
             } else {
-                return new FBBigDecimalField(field, dataProvider,
-                        field.sqlsubtype == 2 ? Types.DECIMAL : Types.NUMERIC);
+                return new FBBigDecimalField(fieldDescriptor, dataProvider,
+                        fieldDescriptor.getSubType() == 2 ? Types.DECIMAL : Types.NUMERIC);
             }
-        } else if (FBField.isType(field, Types.INTEGER)) {
-            if (field.sqlscale == 0) {
-                return new FBIntegerField(field, dataProvider, Types.INTEGER);
+        } else if (FBField.isType(fieldDescriptor, Types.INTEGER)) {
+            if (fieldDescriptor.getScale() == 0) {
+                return new FBIntegerField(fieldDescriptor, dataProvider, Types.INTEGER);
             } else {
-                return new FBBigDecimalField(field, dataProvider,
-                        field.sqlsubtype == 2 ? Types.DECIMAL : Types.NUMERIC);
+                return new FBBigDecimalField(fieldDescriptor, dataProvider,
+                        fieldDescriptor.getSubType() == 2 ? Types.DECIMAL : Types.NUMERIC);
             }
-        } else if (FBField.isType(field, Types.BIGINT)) {
-            if (field.sqlscale == 0) {
-                return new FBLongField(field, dataProvider, Types.BIGINT);
+        } else if (FBField.isType(fieldDescriptor, Types.BIGINT)) {
+            if (fieldDescriptor.getScale() == 0) {
+                return new FBLongField(fieldDescriptor, dataProvider, Types.BIGINT);
             } else {
-                return new FBBigDecimalField(field, dataProvider,
-                        field.sqlsubtype == 2 ? Types.DECIMAL : Types.NUMERIC);
+                return new FBBigDecimalField(fieldDescriptor, dataProvider,
+                        fieldDescriptor.getSubType() == 2 ? Types.DECIMAL : Types.NUMERIC);
             }
-        } else if (FBField.isType(field, Types.FLOAT)) {
-            return new FBFloatField(field, dataProvider, Types.FLOAT);
-        } else if (FBField.isType(field, Types.DOUBLE)) {
-            return new FBDoubleField(field, dataProvider, Types.DOUBLE);
-        } else if (FBField.isType(field, Types.CHAR)) {
+        } else if (FBField.isType(fieldDescriptor, Types.FLOAT)) {
+            return new FBFloatField(fieldDescriptor, dataProvider, Types.FLOAT);
+        } else if (FBField.isType(fieldDescriptor, Types.DOUBLE)) {
+            return new FBDoubleField(fieldDescriptor, dataProvider, Types.DOUBLE);
+        } else if (FBField.isType(fieldDescriptor, Types.CHAR)) {
             /*
              * TODO: Remove workaround
              * Commented by R.Rokytskyy. Until the bug is fixed in the server
@@ -411,8 +388,8 @@ public abstract class FBField {
              * 
              * return new FBStringField(field, dataProvider, Types.CHAR);
              */
-            return new FBWorkaroundStringField(field, dataProvider, Types.CHAR);
-        } else if (FBField.isType(field, Types.VARCHAR)) {
+            return new FBWorkaroundStringField(fieldDescriptor, dataProvider, Types.CHAR);
+        } else if (FBField.isType(fieldDescriptor, Types.VARCHAR)) {
             /*
              * TODO: Remove workaround
              * Commented by R.Rokytskyy. Until the bug is fixed in the server
@@ -422,37 +399,37 @@ public abstract class FBField {
              * 
              * return new FBStringField(field, dataProvider, Types.VARCHAR);
              */
-            return new FBWorkaroundStringField(field, dataProvider, Types.VARCHAR);
-        } else if (FBField.isType(field, Types.DATE)) {
-            return new FBDateField(field, dataProvider, Types.DATE);
-        } else if (FBField.isType(field, Types.TIME)) {
-            return new FBTimeField(field, dataProvider, Types.TIME);
-        } else if (FBField.isType(field, Types.TIMESTAMP)) {
-            return new FBTimestampField(field, dataProvider, Types.TIMESTAMP);
-        } else if (FBField.isType(field, Types.BLOB)) {
+            return new FBWorkaroundStringField(fieldDescriptor, dataProvider, Types.VARCHAR);
+        } else if (FBField.isType(fieldDescriptor, Types.DATE)) {
+            return new FBDateField(fieldDescriptor, dataProvider, Types.DATE);
+        } else if (FBField.isType(fieldDescriptor, Types.TIME)) {
+            return new FBTimeField(fieldDescriptor, dataProvider, Types.TIME);
+        } else if (FBField.isType(fieldDescriptor, Types.TIMESTAMP)) {
+            return new FBTimestampField(fieldDescriptor, dataProvider, Types.TIMESTAMP);
+        } else if (FBField.isType(fieldDescriptor, Types.BLOB)) {
             if (cached) {
-                return new FBCachedBlobField(field, dataProvider, Types.BLOB);
+                return new FBCachedBlobField(fieldDescriptor, dataProvider, Types.BLOB);
             } else {
-                return new FBBlobField(field, dataProvider, Types.BLOB);
+                return new FBBlobField(fieldDescriptor, dataProvider, Types.BLOB);
             }
-        } else if (FBField.isType(field, Types.LONGVARBINARY)) {
+        } else if (FBField.isType(fieldDescriptor, Types.LONGVARBINARY)) {
             if (cached) {
-                return new FBCachedBlobField(field, dataProvider, Types.LONGVARBINARY);
+                return new FBCachedBlobField(fieldDescriptor, dataProvider, Types.LONGVARBINARY);
             } else {
-                return new FBBlobField(field, dataProvider, Types.LONGVARBINARY);
+                return new FBBlobField(fieldDescriptor, dataProvider, Types.LONGVARBINARY);
             }
-        } else if (FBField.isType(field, Types.LONGVARCHAR)) {
+        } else if (FBField.isType(fieldDescriptor, Types.LONGVARCHAR)) {
             if (cached) {
-                return new FBCachedLongVarCharField(field, dataProvider, Types.LONGVARCHAR);
+                return new FBCachedLongVarCharField(fieldDescriptor, dataProvider, Types.LONGVARCHAR);
             } else {
-                return new FBLongVarCharField(field, dataProvider, Types.LONGVARCHAR);
+                return new FBLongVarCharField(fieldDescriptor, dataProvider, Types.LONGVARCHAR);
             }
-        } else if (FBField.isType(field, Types.ARRAY)) {
+        } else if (FBField.isType(fieldDescriptor, Types.ARRAY)) {
             throw new FBDriverNotCapableException(FBField.SQL_ARRAY_NOT_SUPPORTED);
-        } else if (FBField.isType(field, Types.BOOLEAN)) {
-            return new FBBooleanField(field, dataProvider, Types.BOOLEAN);
-        } else if (FBField.isNullType(field)) {
-            return new FBNullField(field, dataProvider, Types.NULL);
+        } else if (FBField.isType(fieldDescriptor, Types.BOOLEAN)) {
+            return new FBBooleanField(fieldDescriptor, dataProvider, Types.BOOLEAN);
+        } else if (FBField.isNullType(fieldDescriptor)) {
+            return new FBNullField(fieldDescriptor, dataProvider, Types.NULL);
         } else {
             throw new FBDriverNotCapableException(FBField.SQL_TYPE_NOT_SUPPORTED);
         }
@@ -462,21 +439,21 @@ public abstract class FBField {
      * Returns the name of the column as declared in the XSQLVAR.
      */
     public String getName() {
-        return field.sqlname;
+        return fieldDescriptor.getOriginalName();
     }
 
     /**
      * Returns the alias of the column as declared in XSQLVAR.
      */
     public String getAlias() {
-        return field.aliasname;
+        return fieldDescriptor.getFieldName();
     }
 
     /**
      * Returns the relation to which belongs column as declared in XSQLVAR.
      */
     public String getRelationName() {
-        return field.relname;
+        return fieldDescriptor.getOriginalTableName();
     }
 
     /**
@@ -553,7 +530,7 @@ public abstract class FBField {
         case Types.VARCHAR:
         case Types.LONGVARCHAR:
             // check whether OCTETS should be returned as byte[]
-            if (isOctetsAsBytes() && field.sqlsubtype == 1) {
+            if (isOctetsAsBytes() && fieldDescriptor.getSubType() == 1) {
                 return getBytes();
             } else {
                 return getString();
@@ -633,7 +610,7 @@ public abstract class FBField {
     public Reader getCharacterStream() throws SQLException {
         final InputStream is = getBinaryStream();
         if (is == null) {
-            return FBField.READER_NULL_VALUE;
+            return null;
         } else {
             return TranslatingReader.getInstance(is, javaEncoding, mappingPath);
         }

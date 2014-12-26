@@ -1,5 +1,7 @@
  /*
- * Firebird Open Source J2ee connector - jdbc driver
+ * $Id$
+ *
+ * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -12,14 +14,13 @@
  * This file was created by members of the firebird development team.
  * All individual contributions remain the Copyright (C) of those
  * individuals.  Contributors to this file are either listed here or
- * can be obtained from a CVS history command.
+ * can be obtained from a source control history command.
  *
  * All rights reserved.
  */
-
 package org.firebirdsql.jdbc.field;
 
-import org.firebirdsql.gds.XSQLVAR;
+import org.firebirdsql.gds.ng.fields.FieldDescriptor;
 
 import java.math.BigDecimal;
 import java.sql.SQLException;
@@ -29,23 +30,22 @@ import java.sql.SQLException;
  * conversions.
  * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
  * @author <a href="mailto:d_jencks@users.sourceforge.net">David Jencks</a>
- * @version 1.0
+ * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  */
 class FBShortField extends FBField {
 
     private static final BigDecimal BD_MAX_SHORT = BigDecimal.valueOf(MAX_SHORT_VALUE);
     private static final BigDecimal BD_MIN_SHORT = BigDecimal.valueOf(MIN_SHORT_VALUE);
 
-    FBShortField(XSQLVAR field, FieldDataProvider dataProvider, int requiredType) 
-        throws SQLException 
-    {
-        super(field, dataProvider, requiredType);
+    FBShortField(FieldDescriptor fieldDescriptor, FieldDataProvider dataProvider, int requiredType)
+            throws SQLException {
+        super(fieldDescriptor, dataProvider, requiredType);
     }
 
     public byte getByte() throws SQLException {
-        if (getFieldData()==null) return BYTE_NULL_VALUE;
+        if (isNull()) return BYTE_NULL_VALUE;
 
-        short value = field.decodeShort(getFieldData());
+        short value = getDatatypeCoder().decodeShort(getFieldData());
 
         // check if value is within bounds
         if (value > MAX_BYTE_VALUE ||
@@ -56,65 +56,57 @@ class FBShortField extends FBField {
     }
     
     public short getShort() throws SQLException {
-        if (getFieldData()==null) return SHORT_NULL_VALUE;
+        if (isNull()) return SHORT_NULL_VALUE;
 
-        return field.decodeShort(getFieldData());
+        return getDatatypeCoder().decodeShort(getFieldData());
     }
     
     public int getInt() throws SQLException {
-        if (getFieldData()==null) return INT_NULL_VALUE;
+        if (isNull()) return INT_NULL_VALUE;
 
-        return field.decodeShort(getFieldData());
+        return getDatatypeCoder().decodeShort(getFieldData());
     }
     
     public long getLong() throws SQLException {
-        if (getFieldData()==null) return LONG_NULL_VALUE;
+        if (isNull()) return LONG_NULL_VALUE;
 
-        return field.decodeShort(getFieldData());
+        return getDatatypeCoder().decodeShort(getFieldData());
     }
     
     public float getFloat() throws SQLException {
-        if (getFieldData()==null) return FLOAT_NULL_VALUE;
+        if (isNull()) return FLOAT_NULL_VALUE;
 
-        return field.decodeShort(getFieldData());
+        return getDatatypeCoder().decodeShort(getFieldData());
     }
     
     public double getDouble() throws SQLException {
-        if (getFieldData()==null) return DOUBLE_NULL_VALUE;
+        if (isNull()) return DOUBLE_NULL_VALUE;
 
-        return field.decodeShort(getFieldData());
+        return getDatatypeCoder().decodeShort(getFieldData());
     }
     
     public BigDecimal getBigDecimal() throws SQLException {
-        if (getFieldData()==null) return BIGDECIMAL_NULL_VALUE;
+        if (isNull()) return null;
 
-        return BigDecimal.valueOf(field.decodeShort(getFieldData()));
+        return BigDecimal.valueOf(getDatatypeCoder().decodeShort(getFieldData()));
     }
-    
-    /*
-    public Object getObject() throws SQLException {
-        if (getFieldData()==null) return OBJECT_NULL_VALUE;
 
-        return new Short(field.decodeShort(getFieldData()));
-    }
-    */
-    
     public boolean getBoolean() throws SQLException {
-        if (getFieldData()==null) return BOOLEAN_NULL_VALUE;
+        if (isNull()) return BOOLEAN_NULL_VALUE;
 
-        return field.decodeShort(getFieldData()) == 1;
+        return getDatatypeCoder().decodeShort(getFieldData()) == 1;
     }
     
     public String getString() throws SQLException {
-        if (getFieldData()==null) return STRING_NULL_VALUE;
+        if (isNull()) return null;
 
-        return String.valueOf(field.decodeShort(getFieldData()));
+        return String.valueOf(getDatatypeCoder().decodeShort(getFieldData()));
     }
 
     //--- setXXX methods
 
     public void setString(String value) throws SQLException {
-        if (value == STRING_NULL_VALUE) {
+        if (value == null) {
             setNull();
             return;
         }
@@ -127,7 +119,7 @@ class FBShortField extends FBField {
     }
     
     public void setShort(short value) throws SQLException {
-        setFieldData(field.encodeShort(value));
+        setFieldData(getDatatypeCoder().encodeShort(value));
     }
     
     public void setBoolean(boolean value) throws SQLException {
@@ -175,7 +167,7 @@ class FBShortField extends FBField {
     }
     
     public void setBigDecimal(BigDecimal value) throws SQLException {
-        if (value == BIGDECIMAL_NULL_VALUE) {
+        if (value == null) {
             setNull();
             return;
         }

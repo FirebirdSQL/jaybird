@@ -20,7 +20,10 @@
  */
 package org.firebirdsql.gds.ng;
 
+import org.firebirdsql.encodings.EncodingFactory;
+
 import java.sql.Date;
+import java.sql.SQLException;
 import java.sql.Time;
 import java.sql.Timestamp;
 import java.util.Calendar;
@@ -142,6 +145,18 @@ public class DefaultDatatypeCoder implements DatatypeCoder {
     @Override
     public double decodeDouble(byte[] byte_int) {
         return Double.longBitsToDouble(decodeLong(byte_int));
+    }
+
+    @Override
+    public byte[] encodeString(String value, String encoding, String mappingPath) throws SQLException {
+        // TODO This is not how this should be done; needs to be changed
+        return EncodingFactory.getEncoding(encoding, mappingPath).encodeToCharset(value);
+    }
+
+    @Override
+    public String decodeString(byte[] value, String encoding, String mappingPath) throws SQLException {
+        // TODO This is not how this should be done; needs to be changed
+        return EncodingFactory.getEncoding(encoding, mappingPath).decodeFromCharset(value);
     }
 
     // times,dates...
