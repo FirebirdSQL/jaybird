@@ -133,4 +133,66 @@ public class TestFBManager {
             m.setPageSize(pageSize);
         }
     }
+
+    @Test
+    public void testDialect3_dbCreatedWithRightDialect() throws Exception {
+        FBManager m = createFBManager();
+        m.setServer(DB_SERVER_URL);
+        m.setPort(DB_SERVER_PORT);
+        m.start();
+        try {
+            // Adding .fdb suffix to prevent conflicts with other tests if drop fails
+            final String databasePath = getDatabasePath() + ".fdb";
+
+            m.setDialect(3);
+
+            // check create
+            m.createDatabase(databasePath, DB_USER, DB_PASSWORD);
+            try {
+                FBConnection connection = (FBConnection) DriverManager.getConnection(getUrl() + ".fdb",
+                        getDefaultPropertiesForConnection());
+                try {
+                    final FbDatabase currentDatabase = connection.getGDSHelper().getCurrentDatabase();
+                    assertEquals("Unexpected database dialect", 3, currentDatabase.getDatabaseDialect());
+                } finally {
+                    connection.close();
+                }
+            } finally {
+                m.dropDatabase(databasePath, DB_USER, DB_PASSWORD);
+            }
+        } finally {
+            m.stop();
+        }
+    }
+
+    @Test
+    public void testDialect1_dbCreatedWithRightDialect() throws Exception {
+        FBManager m = createFBManager();
+        m.setServer(DB_SERVER_URL);
+        m.setPort(DB_SERVER_PORT);
+        m.start();
+        try {
+            // Adding .fdb suffix to prevent conflicts with other tests if drop fails
+            final String databasePath = getDatabasePath() + ".fdb";
+
+            m.setDialect(1);
+
+            // check create
+            m.createDatabase(databasePath, DB_USER, DB_PASSWORD);
+            try {
+                FBConnection connection = (FBConnection) DriverManager.getConnection(getUrl() + ".fdb",
+                        getDefaultPropertiesForConnection());
+                try {
+                    final FbDatabase currentDatabase = connection.getGDSHelper().getCurrentDatabase();
+                    assertEquals("Unexpected database dialect", 1, currentDatabase.getDatabaseDialect());
+                } finally {
+                    connection.close();
+                }
+            } finally {
+                m.dropDatabase(databasePath, DB_USER, DB_PASSWORD);
+            }
+        } finally {
+            m.stop();
+        }
+    }
 }
