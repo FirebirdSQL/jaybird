@@ -308,11 +308,9 @@ public class JnaDatabase extends AbstractFbDatabase implements TransactionListen
 
         final byte[] statementArray = getEncoding().encodeToCharset(statementText);
         synchronized (getSynchronizationObject()) {
-            // Information in tempXSqlDa is ignored
-            final org.firebirdsql.jna.fbclient.XSQLDA tempXSqlDa = new org.firebirdsql.jna.fbclient.XSQLDA();
             clientLibrary.isc_dsql_execute_immediate(statusVector, handle,
                     transaction != null ? ((JnaTransaction) transaction).getJnaHandle() : new IntByReference(),
-                    (short) statementArray.length, statementArray, getConnectionDialect(), tempXSqlDa);
+                    (short) statementArray.length, statementArray, getConnectionDialect(), null);
             processStatusVector();
 
             if (!isAttached()) {
