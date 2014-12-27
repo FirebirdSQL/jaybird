@@ -351,7 +351,7 @@ public class FBManager implements FBManagerMBean {
         db = gds.createIscDbHandle();
         try {
             DatabaseParameterBuffer dpb = createDefaultDpb(user, password);
-            dpb.addArgument(DatabaseParameterBuffer.SET_DB_SQL_DIALECT, dialect);
+            dpb.addArgument(DatabaseParameterBuffer.SQL_DIALECT, dialect);
             if (getPageSize() != -1) {
                 dpb.addArgument(DatabaseParameterBuffer.PAGE_SIZE, getPageSize());
             }
