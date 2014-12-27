@@ -197,13 +197,12 @@ public class JnaDatabase extends AbstractFbDatabase implements TransactionListen
     public void cancelOperation(int kind) throws SQLException {
         checkConnected();
         // TODO Test what happens with 2.1 and earlier client library
-        synchronized (getSynchronizationObject()) {
-            try {
-                clientLibrary.fb_cancel_operation(statusVector, handle, (short) kind);
-            } finally {
-                if (kind == fb_cancel_abort) {
-                    setDetached();
-                }
+        // No synchronization, otherwise cancel will never work; might conflict with sync policy of JNA (TODO: find out)
+        try {
+            clientLibrary.fb_cancel_operation(statusVector, handle, (short) kind);
+        } finally {
+            if (kind == fb_cancel_abort) {
+                setDetached();
             }
         }
     }
