@@ -1,7 +1,5 @@
 /*
- * $Id$
- *
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source J2ee connector - jdbc driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -14,10 +12,11 @@
  * This file was created by members of the firebird development team.
  * All individual contributions remain the Copyright (C) of those
  * individuals.  Contributors to this file are either listed here or
- * can be obtained from a source control history command.
+ * can be obtained from a CVS history command.
  *
  * All rights reserved.
  */
+
 package org.firebirdsql.jdbc.field;
 
 import java.sql.DataTruncation;
@@ -25,7 +24,6 @@ import java.sql.SQLException;
 import java.sql.Types;
 
 import org.firebirdsql.gds.XSQLVAR;
-import org.firebirdsql.gds.ng.fields.FieldDescriptor;
 
 /**
  * Class implementing workaround for "operation was cancelled" bug in server.
@@ -44,25 +42,24 @@ import org.firebirdsql.gds.ng.fields.FieldDescriptor;
  * to the system table and do not throw data truncation error locally. 
  * 
  * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  */
-public final class FBWorkaroundStringField extends FBStringField {
+public class FBWorkaroundStringField extends FBStringField {
 
     private boolean trimString;
     
     /**
      * Create instance of this class for the specified field and result set.
      * 
-     *
-     * @param fieldDescriptor Field descriptor
+     * @param field instance of {@link XSQLVAR} containing field value.
      * @param dataProvider data provider for this field
      * @param requiredType required type.
-     *
+     * 
      * @throws SQLException if something went wrong.
      */
-    FBWorkaroundStringField(FieldDescriptor fieldDescriptor, FieldDataProvider dataProvider, int requiredType)
-            throws SQLException {
-        super(fieldDescriptor, dataProvider, requiredType);
+    public FBWorkaroundStringField(XSQLVAR field, FieldDataProvider dataProvider,
+            int requiredType) throws SQLException 
+    {
+        super(field, dataProvider, requiredType);
     }
     
     public void setTrimString(boolean trimString) {
@@ -72,12 +69,13 @@ public final class FBWorkaroundStringField extends FBStringField {
     public void setString(String value) throws SQLException {
         byte[] data = setStringForced(value);
 
-        if (value == null) return;
+        if (value == STRING_NULL_VALUE)
+            return;
         
-        if (data.length > fieldDescriptor.getLength() && !isSystemTable(fieldDescriptor.getOriginalTableName())) {
+        if (data.length > field.sqllen && !isSystemTable(field.relname)) {
             // special handling for the LIKE ? queries with CHAR(1) fields
-            if (!(value.length() <= fieldDescriptor.getLength() + 2 && (value.charAt(0) == '%' || value.charAt(value.length() - 1) == '%')))
-                throw new DataTruncation(-1, true, false, data.length, fieldDescriptor.getLength());
+            if (!(value.length() <= field.sqllen + 2 && (value.charAt(0) == '%' || value.charAt(value.length() - 1) == '%'))) 
+                throw new DataTruncation(-1, true, false, data.length, field.sqllen);
         }
     }    
     
@@ -90,11 +88,11 @@ public final class FBWorkaroundStringField extends FBStringField {
      * @throws SQLException if something went wrong.
      */
     public byte[] setStringForced(String value) throws SQLException {
-        if (value == null) {
+        if (value == STRING_NULL_VALUE) {
             setNull();
             return null;
         }
-        byte[] data = getDatatypeCoder().encodeString(value, javaEncoding, mappingPath);
+        byte[] data = field.encodeString(value,javaEncoding, mappingPath);
         setFieldData(data);
         return data;
     }   
@@ -108,14 +106,14 @@ public final class FBWorkaroundStringField extends FBStringField {
     public String getString() throws SQLException {
         String result = super.getString();
         
-        if (result == null)
-            return null;
+        if (result == STRING_NULL_VALUE)
+            return STRING_NULL_VALUE;
         
-        if (isType(fieldDescriptor, Types.VARCHAR))
+        if (isType(field, Types.VARCHAR))
             return result;
         
         // fix incorrect padding done by the database for multibyte charsets
-        if ((fieldDescriptor.getLength() % bytesPerCharacter) == 0 && result.length() > possibleCharLength)
+        if ((field.sqllen % bytesPerCharacter) == 0 && result.length() > possibleCharLength)
             result = result.substring(0, possibleCharLength);
         
         if (trimString)
@@ -123,7 +121,6 @@ public final class FBWorkaroundStringField extends FBStringField {
         
         return result;
     }
-
     /**
      * List of system tables from Firebird 1.5
      */

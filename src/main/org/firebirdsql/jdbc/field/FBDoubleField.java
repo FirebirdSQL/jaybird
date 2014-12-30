@@ -1,7 +1,5 @@
 /*
- * $Id$
- *
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source J2ee connector - jdbc driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -14,141 +12,142 @@
  * This file was created by members of the firebird development team.
  * All individual contributions remain the Copyright (C) of those
  * individuals.  Contributors to this file are either listed here or
- * can be obtained from a source control history command.
+ * can be obtained from a CVS history command.
  *
  * All rights reserved.
  */
+
 package org.firebirdsql.jdbc.field;
 
-import org.firebirdsql.gds.ng.fields.FieldDescriptor;
+import org.firebirdsql.gds.XSQLVAR;
 
-import java.math.BigDecimal;
 import java.sql.SQLException;
+import java.math.BigDecimal;
 
 /**
  * Describe class <code>FBDoubleField</code> here.
  *
  * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @version 1.0
  */
 class FBDoubleField extends FBField {
-    private static final BigDecimal BD_MAX_DOUBLE = new BigDecimal(MAX_DOUBLE_VALUE);
-    private static final BigDecimal BD_MIN_DOUBLE = new BigDecimal(MIN_DOUBLE_VALUE);
-
-    FBDoubleField(FieldDescriptor fieldDescriptor, FieldDataProvider dataProvider, int requiredType)
-            throws SQLException {
-        super(fieldDescriptor, dataProvider, requiredType);
+    FBDoubleField(XSQLVAR field, FieldDataProvider dataProvider, int requiredType) 
+        throws SQLException 
+    {
+        super(field, dataProvider, requiredType);
     }
 
     public byte getByte() throws SQLException {
-        if (isNull()) return BYTE_NULL_VALUE;
+        if (getFieldData()==null) return BYTE_NULL_VALUE;
 
-        double value = getDatatypeCoder().decodeDouble(getFieldData());
+        Double value = new Double(field.decodeDouble(getFieldData()));
 
-        // check if value is within bounds
-        if (value > MAX_BYTE_VALUE ||
-            value < MIN_BYTE_VALUE)
-                throw new TypeConversionException(BYTE_CONVERSION_ERROR + " " + value);
+        // check if value is withing bounds
+        if (value.doubleValue() > MAX_BYTE_VALUE ||
+            value.doubleValue() < MIN_BYTE_VALUE)
+                throw (SQLException)createException(
+                    BYTE_CONVERSION_ERROR+" "+value).fillInStackTrace();
 
-        return (byte) value;
+        return value.byteValue();
     }
-    
     public short getShort() throws SQLException {
-        if (isNull()) return SHORT_NULL_VALUE;
+        if (getFieldData()==null) return SHORT_NULL_VALUE;
 
-        double value = getDatatypeCoder().decodeDouble(getFieldData());
+        Double value = new Double(field.decodeDouble(getFieldData()));
 
-        // check if value is within bounds
-        if (value > MAX_SHORT_VALUE ||
-            value < MIN_SHORT_VALUE)
-                throw new TypeConversionException(SHORT_CONVERSION_ERROR + " " + value);
+        // check if value is withing bounds
+        if (value.doubleValue() > MAX_SHORT_VALUE ||
+            value.doubleValue() < MIN_SHORT_VALUE)
+                throw (SQLException)createException(
+                    SHORT_CONVERSION_ERROR+" "+value).fillInStackTrace();
 
-        return (short) value;
+        return value.shortValue();
     }
-    
     public int getInt() throws SQLException {
-        if (isNull()) return INT_NULL_VALUE;
+        if (getFieldData()==null) return INT_NULL_VALUE;
 
-        double value = getDatatypeCoder().decodeDouble(getFieldData());
+        Double value = new Double(field.decodeDouble(getFieldData()));
 
-        // check if value is within bounds
-        if (value > MAX_INT_VALUE ||
-            value < MIN_INT_VALUE)
-                throw new TypeConversionException(INT_CONVERSION_ERROR + " " + value);
+        // check if value is withing bounds
+        if (value.doubleValue() > MAX_INT_VALUE ||
+            value.doubleValue() < MIN_INT_VALUE)
+                throw (SQLException)createException(
+                    INT_CONVERSION_ERROR+" "+value).fillInStackTrace();
 
-        return (int) value;
+        return value.intValue();
     }
-    
     public long getLong() throws SQLException {
-        if (isNull()) return LONG_NULL_VALUE;
+        if (getFieldData()==null) return LONG_NULL_VALUE;
 
-        double value = getDatatypeCoder().decodeDouble(getFieldData());
+        Double value = new Double(field.decodeDouble(getFieldData()));
 
-        // check if value is within bounds
-        if (value > MAX_LONG_VALUE ||
-            value < MIN_LONG_VALUE)
-                throw new TypeConversionException(LONG_CONVERSION_ERROR + " " + value);
+        // check if value is withing bounds
+        if (value.doubleValue() > MAX_LONG_VALUE ||
+            value.doubleValue() < MIN_LONG_VALUE)
+                throw (SQLException)createException(
+                    LONG_CONVERSION_ERROR+" "+value).fillInStackTrace();
 
-        return (long) value;
+        return value.longValue();
     }
-    
     public float getFloat() throws SQLException {
-        if (isNull()) return FLOAT_NULL_VALUE;
+        if (getFieldData()==null) return FLOAT_NULL_VALUE;
 
-        // TODO Does this match with the way getDouble() works?
-        double value = getDatatypeCoder().decodeDouble(getFieldData());
-        float cValue = (float) value;
-        // check if value is within bounds
-        if (cValue == Float.POSITIVE_INFINITY || 
-        	cValue == Float.NEGATIVE_INFINITY)
-            throw new TypeConversionException(FLOAT_CONVERSION_ERROR + " " + value);
+        Double value = new Double(field.decodeDouble(getFieldData()));
+        float cValue = value.floatValue();
+        // check if value is withing bounds
+        if (cValue == Float.POSITIVE_INFINITY || cValue == Float.NEGATIVE_INFINITY)
+            throw (SQLException)createException(
+                FLOAT_CONVERSION_ERROR+" "+value).fillInStackTrace();
 
-        return cValue;
+        return value.floatValue();
     }
-    
     public double getDouble() throws SQLException {
-        if (isNull()) return DOUBLE_NULL_VALUE;
+        if (getFieldData()==null) return DOUBLE_NULL_VALUE;
 
-        double result = getDatatypeCoder().decodeDouble(getFieldData());
+        double result = field.decodeDouble(getFieldData());
         
-        // TODO Is this even possible? Wouldn't it be seen as a FBBigDecimalField ?
-        // TODO Mismatch with all other getters
-        if (fieldDescriptor.getScale() != 0) {
+        if (field.sqlscale != 0) {
             BigDecimal tempValue = new BigDecimal(result);
-            tempValue = tempValue.setScale(Math.abs(fieldDescriptor.getScale()), BigDecimal.ROUND_HALF_EVEN);
+            tempValue = tempValue.setScale(Math.abs(field.sqlscale), BigDecimal.ROUND_HALF_EVEN);
             result = tempValue.doubleValue();
         }
         
         return result;
     }
-    
     public BigDecimal getBigDecimal() throws SQLException {
-        if (isNull()) return null;
+        if (getFieldData()==null) return BIGDECIMAL_NULL_VALUE;
 
-        BigDecimal result = new BigDecimal(getDatatypeCoder().decodeDouble(getFieldData()));
-        // TODO Is this even possible? Wouldn't it be seen as a FBBigDecimalField ?
-        if (fieldDescriptor.getScale() != 0)
-            result = result.setScale(Math.abs(fieldDescriptor.getScale()), BigDecimal.ROUND_HALF_EVEN);
+        BigDecimal result = new BigDecimal(field.decodeDouble(getFieldData()));
+        
+        if (field.sqlscale != 0)
+            result = result.setScale(Math.abs(field.sqlscale), BigDecimal.ROUND_HALF_EVEN);
         
         return result;
     }
-
-    public boolean getBoolean() throws SQLException {
-        if (isNull()) return BOOLEAN_NULL_VALUE;
-
-        return getDatatypeCoder().decodeDouble(getFieldData()) == 1;
-    }
     
-    public String getString() throws SQLException {
-        if (isNull()) return null;
+    /*
+    public Object getObject() throws SQLException {
+        if (getFieldData()==null) return OBJECT_NULL_VALUE;
 
-        return String.valueOf(getDatatypeCoder().decodeDouble(getFieldData()));
+        return new Double(field.decodeDouble(getFieldData()));
+    }
+    */
+    
+    public boolean getBoolean() throws SQLException {
+        if (getFieldData()==null) return BOOLEAN_NULL_VALUE;
+
+        return field.decodeDouble(getFieldData()) == 1;
+    }
+    public String getString() throws SQLException {
+        if (getFieldData()==null) return STRING_NULL_VALUE;
+
+        return String.valueOf(field.decodeDouble(getFieldData()));
     }
 
     //--- setXXX methods
 
     public void setString(String value) throws SQLException {
-        if (value == null) {
+        if (value == STRING_NULL_VALUE) {
             setNull();
             return;
         }
@@ -156,48 +155,42 @@ class FBDoubleField extends FBField {
         try {
             setDouble(Double.parseDouble(value));
         } catch(NumberFormatException nfex) {
-            throw new TypeConversionException(DOUBLE_CONVERSION_ERROR + " " + value);
+            throw (SQLException)createException(
+                STRING_CONVERSION_ERROR+" "+value).fillInStackTrace();
         }
     }
-    
     public void setShort(short value) throws SQLException {
-        setDouble(value);
+        setDouble((double)value);
     }
-    
     public void setBoolean(boolean value) throws SQLException {
         setDouble(value ? 1 : 0);
     }
-    
     public void setFloat(float value) throws SQLException {
-        setDouble(value);
+        setDouble((double)value);
     }
-    
     public void setDouble(double value) throws SQLException {
-        setFieldData(getDatatypeCoder().encodeDouble(value));
+        setFieldData(field.encodeDouble(value));
     }
-    
     public void setLong(long value) throws SQLException {
-        setDouble(value);
+        setDouble((double)value);
     }
-    
     public void setInteger(int value) throws SQLException {
-        setDouble(value);
+        setDouble((double)value);
     }
-    
     public void setByte(byte value) throws SQLException {
-        setDouble(value);
+        setDouble((double)value);
     }
-    
     public void setBigDecimal(BigDecimal value) throws SQLException {
-        if (value == null) {
+        if (value == BIGDECIMAL_NULL_VALUE) {
             setNull();
             return;
         }
 
         // check if value is within bounds
-        if (value.compareTo(BD_MAX_DOUBLE) > 0 ||
-            value.compareTo(BD_MIN_DOUBLE) < 0)
-                throw new TypeConversionException(DOUBLE_CONVERSION_ERROR + " " + value);
+        if (value.compareTo(new BigDecimal(MAX_DOUBLE_VALUE)) > 0 ||
+            value.compareTo(new BigDecimal(MIN_DOUBLE_VALUE)) < 0)
+                throw (SQLException)createException(
+                    BIGDECIMAL_CONVERSION_ERROR+" "+value).fillInStackTrace();
 
         setDouble(value.doubleValue());
     }

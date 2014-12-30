@@ -18,38 +18,21 @@
  */
 package org.firebirdsql.encodings;
 
-import java.sql.SQLException;
-import java.sql.SQLNonTransientException;
 import java.util.*;
+
+import org.firebirdsql.jdbc.FBSQLException;
 
 /**
  * Class responsible for character translation.
  */
 public class CharacterTranslator {
 
-    /**
-     * Default mapping table, provides an "identity" mapping of characters
-     */
-    private static final char[] DEFAULT_MAPPING;
-    private static final int FULL_CHAR_RANGE = 256 * 256;
-
-    static {
-        DEFAULT_MAPPING = new char[FULL_CHAR_RANGE];
-        for (int i = 0; i < DEFAULT_MAPPING.length; i++) {
-            DEFAULT_MAPPING[i] = (char) i;
-        }
-    }
-
-    /**
-     * CharacterTranslator with the identity mapping established by {@link #DEFAULT_MAPPING};
-     */
-    public static final CharacterTranslator IDENTITY_TRANSLATOR = new CharacterTranslator(DEFAULT_MAPPING);
-
-    private final char[] mapping;
+    private char[] mapping = new char[256 * 256]; // cover all unicode chars
     
-    private CharacterTranslator(char[] mapping) {
-        assert mapping.length == FULL_CHAR_RANGE : "Invalid length for mapping table"; // need to cover all possible char values
-        this.mapping = mapping;
+    public CharacterTranslator() {
+        for (int i = 0; i < mapping.length; i++) {
+            mapping[i] = (char)i;
+        }
     }
 
     /**
@@ -58,7 +41,6 @@ public class CharacterTranslator {
      * @return mapping table.
      */
     public char[] getMapping() {
-        // TODO We shouldn't return the mapping (or at least clone it), eliminate direct usages of mapping table if possible
         return mapping;
     }
     
@@ -79,52 +61,55 @@ public class CharacterTranslator {
      * @param mappingPath path to the .properties file with the corresponding 
      * mapping.
      * 
-     * @throws SQLException if I/O error occurred or specified mapping is
+     * @throws FBSQLException if I/O error occured or specified mapping is 
      * incorrect or cannot be found.
      */
-    public static CharacterTranslator create(String mappingPath) throws SQLException {
+    public void init(String mappingPath) throws FBSQLException {
+        
         Properties props = new Properties();
 
         try {
             ResourceBundle res = ResourceBundle.getBundle(
-                    mappingPath, Locale.getDefault(), CharacterTranslator.class.getClassLoader());
+                mappingPath, Locale.getDefault(), getClass().getClassLoader());
                 
-            Enumeration<String> en = res.getKeys();
+            Enumeration en = res.getKeys();
             while(en.hasMoreElements()) {
-                String key = en.nextElement();
+                String key = (String)en.nextElement();
                 String value = res.getString(key);
                 props.put(key, value);
             }
-
-            final char[] mapping = DEFAULT_MAPPING.clone();
-            for (Map.Entry<Object, Object> entry : props.entrySet()) {
+    
+            
+            for (Iterator iter = props.entrySet().iterator(); iter.hasNext();) {
+                Map.Entry entry = (Map.Entry) iter.next();
+                
                 String key = (String)entry.getKey();
                 String value = (String)entry.getValue();
                 
                 if (!key.startsWith("db."))
-                    throw new SQLNonTransientException("Incorrect mapping format. " +
+                    throw new FBSQLException("Incorrect mapping format. " +
                             "All properties should start with \"db.\", but " + 
                             key + " found.");
                 
                 if (key.length() != 4)
-                    throw new SQLNonTransientException("Incorrect mapping format. " +
+                    throw new FBSQLException("Incorrect mapping format. " +
                             "Key should consist only of 4 characters, but " + 
                             key + " found.");
                 
                 if (value.length() != 1)
-                    throw new SQLNonTransientException("Incorrect mapping format. " +
+                    throw new FBSQLException("Incorrect mapping format. " + 
                         "Mapped value should consist only of single character, but " + 
                         value + " found.");
                 
                 char dbChar = key.charAt(3);
                 char javaChar = value.charAt(0);
-
+                
                 mapping[dbChar] = javaChar;
                 mapping[javaChar] = dbChar;
             }
-            return new CharacterTranslator(mapping);
         } catch(MissingResourceException ex) {
-            throw new SQLNonTransientException("Character translation " + mappingPath + " could not be found.");
+            throw new FBSQLException("Character translation " + mappingPath + 
+                " could not be found.");
         }
     }
 }

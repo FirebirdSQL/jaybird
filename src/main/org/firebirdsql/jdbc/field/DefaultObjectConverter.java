@@ -36,7 +36,6 @@ public final class DefaultObjectConverter implements ObjectConverter {
      * <b>This implementation always returns <code>false</code>.</b>
      * </p>
      */
-    @Override
     public boolean setObject(FBField field, Object object) throws java.sql.SQLException {
         return false;
     }

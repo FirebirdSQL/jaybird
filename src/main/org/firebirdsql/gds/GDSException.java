@@ -25,8 +25,6 @@
 
 package org.firebirdsql.gds;
 
-import java.util.concurrent.atomic.AtomicReferenceFieldUpdater;
-
 /**
  * A GDS-specific exception
  *
@@ -36,9 +34,6 @@ import java.util.concurrent.atomic.AtomicReferenceFieldUpdater;
 public class GDSException extends Exception {
 
     private static final long serialVersionUID = -2993273656432230359L;
-    
-    private static final AtomicReferenceFieldUpdater<GDSException,GDSException> nextUpdater = 
-            AtomicReferenceFieldUpdater.newUpdater(GDSException.class, GDSException.class, "next");
     
     private final int type;
     private final int intParam;
@@ -58,7 +53,7 @@ public class GDSException extends Exception {
     /**
      * My child
      */
-    private volatile GDSException next;
+    private GDSException next;
 
     /**
      * Factory method to create a new instance with a given <code>XA</code>
@@ -191,7 +186,6 @@ public class GDSException extends Exception {
         switch (type) {
         case ISCConstants.isc_arg_number:
         case ISCConstants.isc_arg_gds:
-        case ISCConstants.isc_arg_warning:
             return intParam;
         default:
             return -1;
@@ -246,19 +240,7 @@ public class GDSException extends Exception {
      * @param e The next chained exception
      */
     public void setNext(GDSException e) {
-        GDSException current = this;
-        for(;;) {
-            GDSException next = current.next;
-            if (next != null) {
-                current = next;
-                continue;
-            }
-
-            if (nextUpdater.compareAndSet(current, null, e)) {
-                return;
-            }
-            current = current.next;
-        }
+        next = e;
     }
 
     /**

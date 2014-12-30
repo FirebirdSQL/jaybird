@@ -28,7 +28,7 @@ import org.firebirdsql.logging.LoggerFactory;
 
 public class NativeGDSImpl extends JniGDSImpl {
 
-    private static Logger log = LoggerFactory.getLogger(NativeGDSImpl.class);
+    private static Logger log = LoggerFactory.getLogger(NativeGDSImpl.class, false);
     
     /**
      * When initializing in type2 mode this class will attempt too load the
@@ -51,12 +51,12 @@ public class NativeGDSImpl extends JniGDSImpl {
         final boolean logging = log != null;
 
         if (logging) 
-            log.info("Attempting to initialize native library.");
+            log.info("Attempting to initilize native library.");
 
         attemptToLoadAClientLibraryFromList(CLIENT_LIBRARIES_TO_TRY);
 
         if (logging) 
-            log.info("Initialized native library OK.");
+            log.info("Initilized native library OK.");
     }
 
     protected String getServerUrl(String file_name) throws GDSException {

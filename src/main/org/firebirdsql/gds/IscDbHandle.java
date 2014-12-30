@@ -32,9 +32,6 @@
 
 package org.firebirdsql.gds;
 
-import org.firebirdsql.encodings.IEncodingFactory;
-
-import java.util.Collection;
 import java.util.List;
 
 /**
@@ -54,7 +51,7 @@ public interface IscDbHandle {
      * {@link GDSException} representing server warnings (method 
      * {@link GDSException#isWarning()} returns <code>true</code>).
      */
-    List<GDSException> getWarnings();
+    List getWarnings();
     
     /**
      * Add a warning from the server to this connection.
@@ -114,8 +111,6 @@ public interface IscDbHandle {
      * @return Protocol version number
      */
     int getProtocol();
-    
-    void setProtocol(int value);
 
     /**
      * @return the major ODS version of the database. 
@@ -150,25 +145,5 @@ public interface IscDbHandle {
      *         <code>false</code> otherwise
      */
     boolean isValid();
-    
-    void invalidate() throws Exception;
-    
-    void addTransaction(IscTrHandle tr);
-    
-    void removeTransaction(IscTrHandle tr);
-    
-    Collection<IscTrHandle> getTransactions();
-    
-    boolean hasTransactions();
-    
-    int getOpenTransactionCount();
-    
-    void setRdbId(int rdb_id);
-    
-    int getRdbId();
-
-    IEncodingFactory getEncodingFactory();
-
-    void setEncodingFactory(IEncodingFactory encodingFactory);
 }
 

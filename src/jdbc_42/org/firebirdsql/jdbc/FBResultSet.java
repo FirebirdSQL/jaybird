@@ -1,7 +1,7 @@
 /*
  * $Id$
  *
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source J2ee connector - jdbc driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -14,28 +14,23 @@
  * This file was created by members of the firebird development team.
  * All individual contributions remain the Copyright (C) of those
  * individuals.  Contributors to this file are either listed here or
- * can be obtained from a source control history command.
+ * can be obtained from a CVS history command.
  *
  * All rights reserved.
  */
 package org.firebirdsql.jdbc;
 
 import org.firebirdsql.gds.XSQLVAR;
+import org.firebirdsql.gds.impl.AbstractIscStmtHandle;
 import org.firebirdsql.gds.impl.GDSHelper;
-import org.firebirdsql.gds.ng.FbStatement;
-import org.firebirdsql.gds.ng.fields.RowDescriptor;
-import org.firebirdsql.gds.ng.fields.RowValue;
+import org.firebirdsql.jdbc.FBObjectListener.ResultSetListener;
 
-import java.sql.SQLException;
-import java.sql.SQLType;
-import java.util.List;
+import java.io.Reader;
+import java.sql.*;
+import java.util.ArrayList;
 
 /**
  * JDBC 4.2 implementation of {@link java.sql.ResultSet} interface.
- * <p>
- * Contains methods specific to the JDBC 4.2 implementation, or exists if there are methods in higher JDBC versions
- * that cannot be defined in JDBC 4.2.
- * </p>
  *
  * @author <a href="mailto:d_jencks@users.sourceforge.net">David Jencks</a>
  * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
@@ -43,23 +38,86 @@ import java.util.List;
  */
 public class FBResultSet extends AbstractResultSet {
 
-    public FBResultSet(GDSHelper gdsHelper, FBStatement fbStatement, FbStatement stmt,
-            FBObjectListener.ResultSetListener listener, boolean metaDataQuery, int rsType, int rsConcurrency,
+    public FBResultSet(GDSHelper gdsHelper, AbstractStatement fbStatement,
+            AbstractIscStmtHandle stmt, ResultSetListener listener,
+            boolean metaDataQuery, int rsType, int rsConcurrency,
             int rsHoldability, boolean cached) throws SQLException {
-        super(gdsHelper, fbStatement, stmt, listener, metaDataQuery, rsType, rsConcurrency, rsHoldability, cached);
+        
+        super(gdsHelper, fbStatement, stmt, listener, metaDataQuery, rsType,
+                rsConcurrency, rsHoldability, cached);
     }
 
-    public FBResultSet(RowDescriptor rowDescriptor, List<RowValue> rows, FBObjectListener.ResultSetListener listener)
-            throws SQLException {
-        super(rowDescriptor, rows, listener);
-    }
-
-    public FBResultSet(RowDescriptor rowDescriptor, List<RowValue> rows) throws SQLException {
-        super(rowDescriptor, rows);
-    }
-
-    public FBResultSet(XSQLVAR[] xsqlvars, List<byte[][]> rows) throws SQLException {
+    public FBResultSet(XSQLVAR[] xsqlvars, ArrayList rows) throws SQLException {
         super(xsqlvars, rows);
+    }
+
+    public NClob getNClob(int columnIndex) throws SQLException {
+        throw new FBDriverNotCapableException();
+    }
+
+    public NClob getNClob(String columnLabel) throws SQLException {
+        throw new FBDriverNotCapableException();
+    }
+
+    public RowId getRowId(int columnIndex) throws SQLException {
+        throw new FBDriverNotCapableException();
+    }
+
+    public RowId getRowId(String columnLabel) throws SQLException {
+        throw new FBDriverNotCapableException();
+    }
+
+    public SQLXML getSQLXML(int columnIndex) throws SQLException {
+        throw new FBDriverNotCapableException();
+    }
+
+    public SQLXML getSQLXML(String columnLabel) throws SQLException {
+        throw new FBDriverNotCapableException();
+    }
+
+    public void updateNClob(int columnIndex, NClob clob) throws SQLException {
+        throw new FBDriverNotCapableException();
+    }
+
+    public void updateNClob(int columnIndex, Reader reader, long length)
+            throws SQLException {
+        throw new FBDriverNotCapableException();
+    }
+
+    public void updateNClob(int columnIndex, Reader reader) throws SQLException {
+        throw new FBDriverNotCapableException();
+    }
+
+    public void updateNClob(String columnLabel, NClob clob) throws SQLException {
+        throw new FBDriverNotCapableException();
+    }
+
+    public void updateNClob(String columnLabel, Reader reader, long length)
+            throws SQLException {
+        throw new FBDriverNotCapableException();
+    }
+
+    public void updateNClob(String columnLabel, Reader reader)
+            throws SQLException {
+        throw new FBDriverNotCapableException();
+    }
+
+    public void updateRowId(int columnIndex, RowId x) throws SQLException {
+        throw new FBDriverNotCapableException();
+    }
+
+    public void updateRowId(String columnLabel, RowId x) throws SQLException {
+        throw new FBDriverNotCapableException();
+    }
+
+    public void updateSQLXML(int columnIndex, SQLXML xmlObject)
+            throws SQLException {
+        throw new FBDriverNotCapableException();
+    }
+
+    public void updateSQLXML(String columnLabel, SQLXML xmlObject)
+            throws SQLException {
+        throw new FBDriverNotCapableException();
     }
 
     /**

@@ -84,11 +84,11 @@ public class FBUserManager extends FBServiceManager implements UserManager {
      * @throws SQLException
      * @throws IOException
      */
-    private Map<String, User> getFBUsers() throws SQLException, IOException {
+    private Map getFBUsers() throws SQLException, IOException {
         
         User user = null;
 
-        Map<String, User> users = new TreeMap<String, User>();
+        Map users = new TreeMap();
 
         byte[] displayBuffer = ((ByteArrayOutputStream)getLogger()).toByteArray();
 
@@ -302,7 +302,7 @@ public class FBUserManager extends FBServiceManager implements UserManager {
      * 
      * @see org.firebirdsql.management.UserManager#getUsers()
      */
-    public Map<String, User> getUsers() throws SQLException, IOException {
+    public Map getUsers() throws SQLException, IOException {
         
         OutputStream savedStream = getLogger();
         

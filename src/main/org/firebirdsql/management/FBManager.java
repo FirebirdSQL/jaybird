@@ -32,22 +32,21 @@ import org.firebirdsql.logging.LoggerFactory;
  * dropped using the jboss service lifecycle operations start and stop.
  *
  * @author <a href="mailto:d_jencks@users.sourceforge.net">David Jencks</a>
- * @version 1.0
  * @jmx.mbean
  */
 public class FBManager implements FBManagerMBean {
 
     private static final int DEFAULT_PORT = 3050;
-    private final static Logger log = LoggerFactory.getLogger(FBManager.class);
+    private final static Logger log = LoggerFactory.getLogger(FBManager.class, false);
 
     private GDS gds;
+    private DatabaseParameterBuffer c;
     private String host = "localhost";
     private Integer port;
     private String fileName;
     private String userName;
     private String password;
     private int dialect = ISCConstants.SQL_DIALECT_CURRENT;
-    private int pageSize = -1;
     private boolean forceCreate;
     private boolean createOnStart;
     private boolean dropOnStop;
@@ -75,6 +74,9 @@ public class FBManager implements FBManagerMBean {
      */
     public void start() throws Exception {
         gds = GDSFactory.getGDSForType(type);
+        c = gds.createDatabaseParameterBuffer();
+        c.addArgument(DatabaseParameterBuffer.DUMMY_PACKET_INTERVAL, new byte[] { 120, 10, 0, 0 });
+
         state = STARTED;
         if (isCreateOnStart()) {
             createDatabase(getFileName(), getUserName(), getPassword());
@@ -89,6 +91,7 @@ public class FBManager implements FBManagerMBean {
             dropDatabase(getFileName(), getUserName(), getPassword());
         }
 
+        c = null;
         gds.close();
         gds = null;
         state = STOPPED;
@@ -129,14 +132,14 @@ public class FBManager implements FBManagerMBean {
      * @jmx.managed-attribute
      */
     public void setPort(int port) {
-        this.port = port;
+        this.port = new Integer(port);
     }
 
     /**
      * @jmx.managed-attribute
      */
     public int getPort() {
-        return port != null ? port : DEFAULT_PORT;
+        return port != null ? port.intValue() : DEFAULT_PORT;
     }
 
     /**
@@ -150,17 +153,6 @@ public class FBManager implements FBManagerMBean {
         return fileName;
     }
 
-    /**
-     * Set the value of fileName
-     *
-     * @param fileName
-     *         Value to assign to fileName
-     * @jmx:managed-attribute
-     */
-    public void setFileName(final String fileName) {
-        this.fileName = fileName;
-    }
-
     public String getType() {
         return this.type.toString();
     }
@@ -172,6 +164,17 @@ public class FBManager implements FBManagerMBean {
             throw new RuntimeException("Unrecognized type '" + type + "'");
 
         this.type = gdsType;
+    }
+
+    /**
+     * Set the value of fileName
+     *
+     * @param fileName
+     *         Value to assign to fileName
+     * @jmx:managed-attribute
+     */
+    public void setFileName(final String fileName) {
+        this.fileName = fileName;
     }
 
     /**
@@ -231,33 +234,6 @@ public class FBManager implements FBManagerMBean {
 
     public int getDialect() {
         return dialect;
-    }
-
-    /**
-     * Set the page size that will be used for the database. The value
-     * for <code>pageSize</code> must be one of: 1024, 2048, 4096, 8192 or 16384. The
-     * default value depends on the Firebird version.
-     * <p>
-     * Some values are not valid on all Firebird versions.
-     * </p>
-     *
-     * @param pageSize The page size to be used in a restored database,
-     *        one of 1024, 2048, 4196, 8192 or 16384
-     */
-    public void setPageSize(int pageSize) {
-        if (pageSize != 1024 && pageSize != 2048
-                && pageSize != 4096 && pageSize != 8192 && pageSize != 16384){
-            throw new IllegalArgumentException(
-                    "Page size must be one of 1024, 2048, 4096, 8192 or 16384");
-        }
-        this.pageSize = pageSize;
-    }
-
-    /**
-     * @return The page size to be used when creating a database, or {@code -1} if the database default is used.
-     */
-    public int getPageSize() {
-        return pageSize;
     }
 
     /**
@@ -333,7 +309,9 @@ public class FBManager implements FBManagerMBean {
     public void createDatabase(String fileName, String user, String password) throws Exception {
         IscDbHandle db = gds.createIscDbHandle();
         try {
-            DatabaseParameterBuffer dpb = createDefaultDpb(user, password);
+            DatabaseParameterBuffer dpb = c.deepCopy();
+            dpb.addArgument(DatabaseParameterBuffer.USER_NAME, user);
+            dpb.addArgument(DatabaseParameterBuffer.PASSWORD, password);
             gds.iscAttachDatabase(getConnectString(fileName), db, dpb);
 
             // if forceCreate is set, drop the database correctly
@@ -350,11 +328,10 @@ public class FBManager implements FBManagerMBean {
 
         db = gds.createIscDbHandle();
         try {
-            DatabaseParameterBuffer dpb = createDefaultDpb(user, password);
-            dpb.addArgument(DatabaseParameterBuffer.SQL_DIALECT, dialect);
-            if (getPageSize() != -1) {
-                dpb.addArgument(DatabaseParameterBuffer.PAGE_SIZE, getPageSize());
-            }
+            DatabaseParameterBuffer dpb = c.deepCopy();
+            dpb.addArgument(DatabaseParameterBuffer.USER_NAME, user);
+            dpb.addArgument(DatabaseParameterBuffer.PASSWORD, password);
+            dpb.addArgument(DatabaseParameterBuffer.SET_DB_SQL_DIALECT, dialect);
             gds.iscCreateDatabase(getConnectString(fileName), db, dpb);
             gds.iscDetachDatabase(db);
         } catch (Exception e) {
@@ -371,7 +348,9 @@ public class FBManager implements FBManagerMBean {
     public void dropDatabase(String fileName, String user, String password) throws Exception {
         try {
             IscDbHandle db = gds.createIscDbHandle();
-            DatabaseParameterBuffer dpb = createDefaultDpb(user, password);
+            DatabaseParameterBuffer dpb = c.deepCopy();
+            dpb.addArgument(DatabaseParameterBuffer.USER_NAME, user);
+            dpb.addArgument(DatabaseParameterBuffer.PASSWORD, password);
             gds.iscAttachDatabase(getConnectString(fileName), db, dpb);
             gds.iscDropDatabase(db);
         } catch (Exception e) {
@@ -385,7 +364,9 @@ public class FBManager implements FBManagerMBean {
     public boolean isDatabaseExists(String fileName, String user, String password) throws Exception {
         IscDbHandle db = gds.createIscDbHandle();
         try {
-            DatabaseParameterBuffer dpb = createDefaultDpb(user, password);
+            DatabaseParameterBuffer dpb = c.deepCopy();
+            dpb.addArgument(DatabaseParameterBuffer.USER_NAME, user);
+            dpb.addArgument(DatabaseParameterBuffer.PASSWORD, password);
             gds.iscAttachDatabase(getConnectString(fileName), db, dpb);
 
             gds.iscDetachDatabase(db);
@@ -399,12 +380,6 @@ public class FBManager implements FBManagerMBean {
         return GDSFactory.getDatabasePath(type, host, port, filename);
     }
 
-    private DatabaseParameterBuffer createDefaultDpb(String user, String password) {
-        DatabaseParameterBuffer dpb = gds.createDatabaseParameterBuffer();
-        dpb.addArgument(DatabaseParameterBuffer.USER_NAME, user);
-        dpb.addArgument(DatabaseParameterBuffer.PASSWORD, password);
-        return dpb;
-    }
 }
 
 

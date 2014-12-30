@@ -1,34 +1,17 @@
-/*
- * $Id$
- * 
- * Firebird Open Source J2ee connector - jdbc driver
- *
- * Distributable under LGPL license.
- * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * LGPL License for more details.
- *
- * This file was created by members of the firebird development team.
- * All individual contributions remain the Copyright (C) of those
- * individuals.  Contributors to this file are either listed here or
- * can be obtained from a CVS history command.
- *
- * All rights reserved.
- */
 package org.firebirdsql.gds.impl.wire;
 
+import org.firebirdsql.gds.ClassFactory;
 import org.firebirdsql.gds.GDS;
 import org.firebirdsql.gds.GDSException;
-import org.firebirdsql.gds.impl.BaseGDSFactoryPlugin;
-import org.firebirdsql.gds.ng.wire.FbWireDatabaseFactory;
+import org.firebirdsql.gds.GDSObjectFactory;
+import org.firebirdsql.gds.impl.GDSFactoryPlugin;
 
-public class WireGDSFactoryPlugin extends BaseGDSFactoryPlugin {
+public class WireGDSFactoryPlugin implements GDSFactoryPlugin {
 
     private static final String[] TYPE_ALIASES = new String[]{"TYPE4"};
     private static final String[] JDBC_PROTOCOLS = new String[]{"jdbc:firebirdsql:java:", "jdbc:firebirdsql:"};
+    
+    private static AbstractJavaGDSImpl gdsImpl;
     
     public String getPluginName() {
         return "Pure Java GDS implementation.";
@@ -42,8 +25,19 @@ public class WireGDSFactoryPlugin extends BaseGDSFactoryPlugin {
         return TYPE_ALIASES;
     }
 
+    public Class getConnectionClass() {
+        return ClassFactory.get(ClassFactory.FBConnection);
+    }
+
     public String[] getSupportedProtocols() {
         return JDBC_PROTOCOLS;
+    }
+
+    public GDS getGDS() {
+        if (gdsImpl == null)
+            gdsImpl = GDSObjectFactory.createJavaGDSImpl();
+
+        return gdsImpl;
     }
 
     public String getDatabasePath(String server, Integer port, String path) throws GDSException{
@@ -54,31 +48,44 @@ public class WireGDSFactoryPlugin extends BaseGDSFactoryPlugin {
         if (path == null)
             throw new GDSException("Database name/path is required.");
         
-        StringBuilder sb = new StringBuilder();
+        StringBuffer sb = new StringBuffer();
         
-        sb.append("//");
         sb.append(server);
         if (port != null)
-            sb.append(':').append(port.intValue());
+            sb.append("/").append(port.intValue());
         
-        sb.append('/').append(path);
+        sb.append(":").append(path);
         
         return sb.toString();
     }
+
+    public String getDatabasePath(String jdbcUrl) throws GDSException {
+
+        String[] protocols = getSupportedProtocols();
+        for (int i = 0; i < protocols.length; i++) {
+            if (jdbcUrl.startsWith(protocols[i]))
+                return jdbcUrl.substring(protocols[i].length());
+        }
+
+        throw new IllegalArgumentException("Incorrect JDBC protocol handling: "
+                + jdbcUrl);
+    }
+
+    public String getDefaultProtocol() {
+        return getSupportedProtocols()[0];
+    }
+
+    public int hashCode() {
+        return getTypeName().hashCode();
+    }
     
-    /**
-     * Initialization-on-demand depending on classloading behavior specified in JLS 12.4
-     */
-    private static final class GDSHolder {
-        private static final GDS gds = new JavaGDSImpl();
-    }
-
-    public GDS getGDS() {
-        return GDSHolder.gds;
-    }
-
-    @Override
-    public FbWireDatabaseFactory getDatabaseFactory() {
-        return FbWireDatabaseFactory.getInstance();
-    }
+    public boolean equals(Object obj) {
+        if (obj == this) 
+            return true;
+        
+        if (!(obj instanceof WireGDSFactoryPlugin))
+            return false;
+        
+        return true;
+    }   
 }

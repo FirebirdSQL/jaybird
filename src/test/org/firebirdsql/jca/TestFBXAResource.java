@@ -18,7 +18,7 @@
 */
 package org.firebirdsql.jca;
 
-import org.junit.Test;
+import org.firebirdsql.jdbc.FirebirdResultSet;
 
 import javax.resource.spi.ManagedConnection;
 import javax.transaction.xa.XAResource;
@@ -28,11 +28,6 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 
-import static org.firebirdsql.common.FBTestProperties.getConnectionViaDriverManager;
-import static org.firebirdsql.common.FBTestProperties.getGdsType;
-import static org.firebirdsql.common.JdbcResourceHelper.closeQuietly;
-import static org.junit.Assert.*;
-
 /**
  * Describe class <code>TestFBXAResource</code> here.
  *
@@ -41,7 +36,10 @@ import static org.junit.Assert.*;
  */
 public class TestFBXAResource extends TestXABase {
 
-    @Test
+    public TestFBXAResource(String name) {
+        super(name);
+    }
+
     public void testGetXAResource() throws Exception {
         FBManagedConnectionFactory mcf = initMcf();
         ManagedConnection mc = mcf.createManagedConnection(null, null);
@@ -54,7 +52,6 @@ public class TestFBXAResource extends TestXABase {
         }
     }
 
-    @Test
     public void testIsSameRM() throws Exception {
         FBManagedConnectionFactory mcf1 = initMcf();
         ManagedConnection mc1 = mcf1.createManagedConnection(null, null);
@@ -75,7 +72,6 @@ public class TestFBXAResource extends TestXABase {
         mc3.destroy();
     }
 
-    @Test
     public void testStartXATrans() throws Exception {
         FBManagedConnectionFactory mcf = initMcf();
         ManagedConnection mc = mcf.createManagedConnection(null, null);
@@ -83,13 +79,12 @@ public class TestFBXAResource extends TestXABase {
         XAResource xa = mc.getXAResource();
         Xid xid = new XidImpl();
         xa.start(xid, XAResource.TMNOFLAGS);
-        assertNotNull("no db handle after start xid", fbmc.getGDSHelper().getCurrentDatabase());
+        assertNotNull("no db handle after start xid", fbmc.getGDSHelper().getCurrentDbHandle());
         xa.end(xid, XAResource.TMSUCCESS);
         xa.commit(xid, true);
         mc.destroy();
     }
 
-    @Test
     public void testRollbackXATrans() throws Exception {
         FBManagedConnectionFactory mcf = initMcf();
         ManagedConnection mc = mcf.createManagedConnection(null, null);
@@ -97,13 +92,12 @@ public class TestFBXAResource extends TestXABase {
         XAResource xa = mc.getXAResource();
         Xid xid = new XidImpl();
         xa.start(xid, XAResource.TMNOFLAGS);
-        assertNotNull("no db handle after start xid", fbmc.getGDSHelper().getCurrentDatabase());
+        assertNotNull("no db handle after start xid", fbmc.getGDSHelper().getCurrentDbHandle());
         xa.end(xid, XAResource.TMSUCCESS);
         xa.rollback(xid);
         mc.destroy();
     }
 
-    @Test
     public void test2PCXATrans() throws Exception {
         FBManagedConnectionFactory mcf = initMcf();
         ManagedConnection mc = mcf.createManagedConnection(null, null);
@@ -111,14 +105,13 @@ public class TestFBXAResource extends TestXABase {
         XAResource xa = mc.getXAResource();
         Xid xid = new XidImpl();
         xa.start(xid, XAResource.TMNOFLAGS);
-        assertNotNull("no db handle after start xid", fbmc.getGDSHelper().getCurrentDatabase());
+        assertNotNull("no db handle after start xid", fbmc.getGDSHelper().getCurrentDbHandle());
         xa.end(xid, XAResource.TMSUCCESS);
         xa.prepare(xid);
         xa.commit(xid, false);
         mc.destroy();
     }
 
-    @Test
     public void testRollback2PCXATrans() throws Exception {
         FBManagedConnectionFactory mcf = initMcf();
         ManagedConnection mc = mcf.createManagedConnection(null, null);
@@ -126,14 +119,13 @@ public class TestFBXAResource extends TestXABase {
         XAResource xa = mc.getXAResource();
         Xid xid = new XidImpl();
         xa.start(xid, XAResource.TMNOFLAGS);
-        assertNotNull("no db handle after start xid", fbmc.getGDSHelper().getCurrentDatabase());
+        assertNotNull("no db handle after start xid", fbmc.getGDSHelper().getCurrentDbHandle());
         xa.end(xid, XAResource.TMSUCCESS);
         xa.prepare(xid);
         xa.rollback(xid);
         mc.destroy();
     }
 
-    @Test
     public void testDo2XATrans() throws Exception {
         FBManagedConnectionFactory mcf = initMcf();
         ManagedConnection mc1 = mcf.createManagedConnection(null, null);
@@ -141,13 +133,13 @@ public class TestFBXAResource extends TestXABase {
         XAResource xa1 = mc1.getXAResource();
         Xid xid1 = new XidImpl();
         xa1.start(xid1, XAResource.TMNOFLAGS);
-        assertNotNull("no db handle after start xid", fbmc1.getGDSHelper().getCurrentDatabase());
+        assertNotNull("no db handle after start xid", fbmc1.getGDSHelper().getCurrentDbHandle());
         ManagedConnection mc2 = mcf.createManagedConnection(null, null);
         FBManagedConnection fbmc2 = (FBManagedConnection) mc2;
         XAResource xa2 = mc2.getXAResource();
         Xid xid2 = new XidImpl();
         xa2.start(xid2, XAResource.TMNOFLAGS);
-        assertNotNull("no db handle after start xid", fbmc2.getGDSHelper().getCurrentDatabase());
+        assertNotNull("no db handle after start xid", fbmc2.getGDSHelper().getCurrentDbHandle());
         //commit each tr on other xares
         xa1.end(xid1, XAResource.TMSUCCESS);
         xa2.commit(xid1, true);
@@ -157,7 +149,6 @@ public class TestFBXAResource extends TestXABase {
         mc2.destroy();
     }
 
-    @Test
     public void testRecover() throws Exception {
         if ("NATIVE".equals(getGdsType().toString()) ||
                 "EMBEDDED".equals(getGdsType().toString()) ||
@@ -178,7 +169,6 @@ public class TestFBXAResource extends TestXABase {
             } finally {
                 stmt.close();
             }
-
         } finally {
             connection.close();
         }
@@ -228,8 +218,8 @@ public class TestFBXAResource extends TestXABase {
             assertTrue("Should recover at least one transaction", xids.length > 0);
 
             boolean found = false;
-            for (Xid xid : xids) {
-                if (xid.equals(xid1)) {
+            for (int i = 0; i < xids.length; i++) {
+                if (xids[i].equals(xid1)) {
                     found = true;
                     break;
                 }
@@ -248,7 +238,7 @@ public class TestFBXAResource extends TestXABase {
             try {
                 ResultSet rs = stmt.executeQuery("SELECT * FROM test_reconnect");
                 assertTrue("Should find at least one row.", rs.next());
-                assertEquals("Should read correct value", 1, rs.getInt(1));
+                assertTrue("Should read correct value", rs.getInt(1) == 1);
                 assertTrue("Should select only one row", !rs.next());
             } finally {
                 stmt.close();
@@ -264,7 +254,6 @@ public class TestFBXAResource extends TestXABase {
      * See <a href="http://tracker.firebirdsql.org/browse/JDBC-344">JDBC-344</a>
      * </p>
      */
-    @Test
     public void testXAMultipleStatements() throws Throwable {
         FBManagedConnectionFactory mcf = initMcf();
         FBManagedConnection mc = (FBManagedConnection) mcf.createManagedConnection(null, null);
@@ -279,7 +268,7 @@ public class TestFBXAResource extends TestXABase {
             Statement stmt1 = con.createStatement();
             Statement stmt2 = con.createStatement();
             try {
-                ResultSet rs1 = stmt1.executeQuery("SELECT RDB$CHARACTER_SET_NAME FROM RDB$CHARACTER_SETS");
+                FirebirdResultSet rs1 = (FirebirdResultSet) stmt1.executeQuery("SELECT RDB$CHARACTER_SET_NAME FROM RDB$CHARACTER_SETS");
                 assertTrue("Expected rs1 row 1", rs1.next());
                 assertNotNull("Expected rs1 value for row 1, column 1", rs1.getString(1));
                 ResultSet rs2 = stmt2.executeQuery("SELECT 1 FROM RDB$DATABASE");
@@ -310,7 +299,6 @@ public class TestFBXAResource extends TestXABase {
      * See <a href="http://tracker.firebirdsql.org/browse/JDBC-362">JDBC-362</a>.
      * </p>
      */
-    @Test
     public void testCloseConnectionDuringXA() throws Throwable {
         FBManagedConnectionFactory mcf = initMcf();
         FBManagedConnection mc = (FBManagedConnection) mcf.createManagedConnection(null, null);

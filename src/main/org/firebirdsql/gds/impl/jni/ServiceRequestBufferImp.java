@@ -1,7 +1,5 @@
 /*
- * $Id$
- *
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source J2ee connector - jdbc driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -14,33 +12,26 @@
  * This file was created by members of the firebird development team.
  * All individual contributions remain the Copyright (C) of those
  * individuals.  Contributors to this file are either listed here or
- * can be obtained from a source control history command.
+ * can be obtained from a CVS history command.
  *
  * All rights reserved.
  */
 package org.firebirdsql.gds.impl.jni;
 
-import org.firebirdsql.encodings.Encoding;
 import org.firebirdsql.gds.ServiceRequestBuffer;
-import org.firebirdsql.gds.impl.argument.NumericArgument;
-import org.firebirdsql.gds.impl.argument.StringArgument;
 
 import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.OutputStream;
 
 /**
  * ngds implementation for ServiceRequestBufferImp.
  */
-class ServiceRequestBufferImp extends ParameterBufferBase implements ServiceRequestBuffer {
-
-    private final int taskIdentifier;
+class ServiceRequestBufferImp extends ParameterBufferBase implements
+        ServiceRequestBuffer {
 
     /**
      * Every ServiceRequestBuffer has an associated taskIdentifier.
-     *
+     * 
      * @param taskIdentifier
-     *         Service request task
      */
     ServiceRequestBufferImp(int taskIdentifier) {
         this.taskIdentifier = taskIdentifier;
@@ -48,94 +39,59 @@ class ServiceRequestBufferImp extends ParameterBufferBase implements ServiceRequ
 
     @Override
     public void addArgument(int argumentType, String value) {
-        getArgumentsList().add(new ServiceStringArgument(argumentType, value));
-    }
+        getArgumentsList().add(new StringArgument(argumentType, value) {
 
-    @Override
-    public void addArgument(int argumentType, String value, Encoding encoding) {
-        getArgumentsList().add(new ServiceStringArgument(argumentType, value, encoding));
+            @Override
+            protected void writeLength(int length,
+                    ByteArrayOutputStream outputStream) {
+                outputStream.write(length);
+                outputStream.write(length >> 8);
+            }
+        });
     }
-
+    
     @Override
     public void addArgument(int argumentType, int value) {
         getArgumentsList().add(new NumericArgument(argumentType, value) {
 
             @Override
-            public int getLength() {
-                return 5;
-            }
-
-            @Override
-            protected void writeValue(OutputStream outputStream, int value) throws IOException {
+            protected void writeValue(ByteArrayOutputStream outputStream, int value)  {
                 outputStream.write(value);
-                outputStream.write(value >> 8);
-                outputStream.write(value >> 16);
-                outputStream.write(value >> 24);
+                outputStream.write(value>>8);
+                outputStream.write(value>>16);
+                outputStream.write(value>>24);
             }
         });
     }
-
-    @Override
+    
     public void addArgument(int argumentType, byte value) {
         getArgumentsList().add(new NumericArgument(argumentType, value) {
-
+            
             @Override
-            public int getLength() {
-                return 2;
-            }
-
-            @Override
-            protected void writeValue(OutputStream outputStream, final int value) throws IOException {
+            protected void writeValue(ByteArrayOutputStream outputStream,
+                    final int value) {
                 outputStream.write(value);
             }
         });
     }
 
     /**
-     * Package local method for obtaining buffer suitable for passing to native
+     * Pacakage local method for obtaining buffer suitable for passing to native
      * method.
-     *
-     * @return Buffer for native method
+     * 
+     * @return
      */
     byte[] toByteArray() {
         final ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+
         byteArrayOutputStream.write(taskIdentifier);
 
-        try {
-            super.writeArgumentsTo(byteArrayOutputStream);
-        } catch (IOException e) {
-            // Ignoring IOException, not thrown by ByteArrayOutputStream
-        }
+        super.writeArgumentsTo(byteArrayOutputStream);
 
         return byteArrayOutputStream.toByteArray();
     }
 
-    private static final class ServiceStringArgument extends StringArgument {
+    // PRIVATE MEMBERS
 
-        @Deprecated
-        public ServiceStringArgument(int argumentType, String value) {
-            super(argumentType, value);
-        }
-
-        public ServiceStringArgument(int argumentType, String value, Encoding encoding) {
-            super(argumentType, value, encoding);
-        }
-
-        @Override
-        public int getLength() {
-            return super.getLength() + 1;
-        }
-
-        @Override
-        protected void writeLength(int length, OutputStream outputStream) throws IOException {
-            outputStream.write(length);
-            outputStream.write(length >> 8);
-        }
-
-        @Override
-        protected int getMaxSupportedLength() {
-            // TODO Check if this might be signed
-            return 65535;
-        }
-    }
+    private int taskIdentifier;
 }

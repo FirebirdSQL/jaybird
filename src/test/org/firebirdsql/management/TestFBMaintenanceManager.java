@@ -1,54 +1,70 @@
 package org.firebirdsql.management;
 
-import org.firebirdsql.common.FBJUnit4TestBase;
-import org.firebirdsql.gds.*;
-import org.firebirdsql.gds.impl.GDSType;
-import org.firebirdsql.jdbc.FBConnection;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
-
-import java.io.ByteArrayOutputStream;
 import java.sql.Connection;
-import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.List;
+import java.sql.ResultSet;
+
+import java.io.ByteArrayOutputStream;
 import java.util.StringTokenizer;
 
-import static org.firebirdsql.common.FBTestProperties.*;
-import static org.firebirdsql.common.JdbcResourceHelper.closeQuietly;
-import static org.junit.Assert.*;
+import org.firebirdsql.common.FBTestBase;
+import org.firebirdsql.jdbc.AbstractConnection;
 
-/**
+import org.firebirdsql.gds.GDS;
+import org.firebirdsql.gds.IscDbHandle;
+import org.firebirdsql.gds.IscTrHandle;
+import org.firebirdsql.gds.DatabaseParameterBuffer;
+import org.firebirdsql.gds.TransactionParameterBuffer;
+import org.firebirdsql.gds.impl.GDSType;
+
+/** 
  * Test the FBMaintenanceManager class
  */
-public class TestFBMaintenanceManager extends FBJUnit4TestBase {
+public class TestFBMaintenanceManager extends FBTestBase {
 
-    @Rule
-    public final ExpectedException expectedException = ExpectedException.none();
+//    private FBManager fbManager;
 
     private FBMaintenanceManager maintenanceManager;
 
-    public static final String DEFAULT_TABLE =
-              "CREATE TABLE TEST ("
-            + "     TESTVAL INTEGER NOT NULL"
-            + ")";
+    public static final String DEFAULT_TABLE = ""
+        + "CREATE TABLE TEST ("
+        + "     TESTVAL INTEGER NOT NULL"
+        + ")";
 
-    public static final String DIALECT3_TABLE =
-              "CREATE TABLE DIALECTTHREE ("
-            + "     TESTVAL TIME NOT NULL"
-            + ")";
+    public static final String DIALECT3_TABLE = ""
+        + "CREATE TABLE DIALECTTHREE ("
+        + "     TESTVAL TIME NOT NULL"
+        + ")";
 
-    @Before
-    public void setUp() throws Exception {
+    public TestFBMaintenanceManager(String name) throws Exception {
+        super(name);
+        Class.forName("org.firebirdsql.jdbc.FBDriver");
+    }
+
+    protected void setUp() throws Exception {
+        super.setUp();
+        
+//        fbManager = createFBManager();
+//        
+//        String gdsType = getProperty("test.gds_type", "PURE_JAVA");
+//        
+//        if (!"EMBEDDED".equalsIgnoreCase(gdsType) && !"LOCAL".equalsIgnoreCase(gdsType)) {
+//            fbManager.setServer(DB_SERVER_URL);
+//            fbManager.setPort(DB_SERVER_PORT);
+//        }
+//
+//        fbManager.start();
+//
+//        fbManager.setForceCreate(true);
+//        fbManager.createDatabase(getDatabasePath(), DB_USER, DB_PASSWORD);
+
         maintenanceManager = new FBMaintenanceManager(getGdsType());
         if (getGdsType() == GDSType.getType("PURE_JAVA") || getGdsType() == GDSType.getType("NATIVE")) {
             maintenanceManager.setHost(DB_SERVER_URL);
             maintenanceManager.setPort(DB_SERVER_PORT);
         }
-
+        
         maintenanceManager.setUser(DB_USER);
         maintenanceManager.setPassword(DB_PASSWORD);
         maintenanceManager.setDatabase(getDatabasePath());
@@ -69,7 +85,11 @@ public class TestFBMaintenanceManager extends FBJUnit4TestBase {
         }
     }
 
-    @Test
+    protected void tearDown() throws Exception {
+//        fbManager.stop();
+        super.tearDown();
+    }
+    
     public void testSetModeReadOnly() throws Exception {
         createTestTable();
         Connection conn = getConnectionViaDriverManager();
@@ -83,25 +103,26 @@ public class TestFBMaintenanceManager extends FBJUnit4TestBase {
             // Try read-only mode
             maintenanceManager.setDatabaseAccessMode(
                     MaintenanceManager.ACCESS_MODE_READ_ONLY);
-
+            
             conn = getConnectionViaDriverManager();
             stmt = conn.createStatement();
             ResultSet resultSet = stmt.executeQuery("SELECT * FROM TEST");
-            assertTrue("SELECT should succeed while in read-only mode",
+            assertTrue("SELECT should succeed while in read-only mode", 
                     resultSet.next());
-
-            expectedException.expect(SQLException.class);
-
-            stmt.executeUpdate("INSERT INTO TEST VALUES (2)");
+            try {
+                stmt.executeUpdate("INSERT INTO TEST VALUES (2)");
+                fail("INSERT should fail when database is in read-only mode");
+            } catch (SQLException e1){ 
+                // Ignore
+            }
         } finally {
-            closeQuietly(conn);
+            conn.close();
         }
     }
 
-    @Test
     public void testSetModeReadWrite() throws Exception {
         createTestTable();
-
+        
         Connection conn = null;
         try {
             maintenanceManager.setDatabaseAccessMode(
@@ -115,34 +136,36 @@ public class TestFBMaintenanceManager extends FBJUnit4TestBase {
 
             // This has to fail unless the db is read-write
             stmt.executeUpdate("INSERT INTO TEST VALUES (3)");
+
         } finally {
-            closeQuietly(conn);
+            if (conn != null){
+                conn.close();
+            }
         }
     }
 
-    @Test
     public void testSetAccessModeWithBadMode() throws Exception {
-        expectedException.expect(IllegalArgumentException.class);
-
-        maintenanceManager.setDatabaseAccessMode(
-                MaintenanceManager.ACCESS_MODE_READ_ONLY
-                    | MaintenanceManager.ACCESS_MODE_READ_WRITE);
+        try {
+            maintenanceManager.setDatabaseAccessMode(
+                    MaintenanceManager.ACCESS_MODE_READ_ONLY 
+                        | MaintenanceManager.ACCESS_MODE_READ_WRITE);
+            fail("Access mode must be either read-only or read-write");
+        } catch (IllegalArgumentException e){
+            // Ignore
+        }
     }
-
-    /**
-     * Dialect-3 table must fail if the dialect is 1
-     */
-    @Test
+   
     public void testSetDialectOne() throws Exception {
         createTestTable();
         maintenanceManager.setDatabaseDialect(1);
-
-        expectedException.expect(SQLException.class);
-
-        createTestTable(DIALECT3_TABLE);
+        try {
+            createTestTable(DIALECT3_TABLE);
+            fail("Dialect-3 table must fail if the dialect is 1");
+        } catch (SQLException e){
+            // Ignore
+        }
     }
 
-    @Test
     public void testSetDialectThree() throws Exception {
         maintenanceManager.setDatabaseDialect(1);
         maintenanceManager.setDatabaseDialect(3);
@@ -151,42 +174,43 @@ public class TestFBMaintenanceManager extends FBJUnit4TestBase {
         createTestTable(DIALECT3_TABLE);
     }
 
-    /**
-     * Database dialect must be either 1 or 3
-     */
-    @Test
     public void testSetBadDialect() throws Exception {
-        expectedException.expect(IllegalArgumentException.class);
-
-        maintenanceManager.setDatabaseDialect(5);
-    }
-
-    /**
-     * Query must fail on an offline database
-     */
-    @Test
-    public void testForcedShutdown() throws Exception {
-        Connection conn = getConnectionViaDriverManager();
         try {
-            String sql = "SELECT * FROM TEST";
-            createTestTable();
-
-            Statement stmt = conn.createStatement();
-            stmt.executeQuery(sql);
-            maintenanceManager.shutdownDatabase(MaintenanceManager.SHUTDOWN_FORCE, 0);
-
-            expectedException.expect(SQLException.class);
-
-            stmt.executeQuery(sql);
-        } finally {
-            closeQuietly(conn);
+            maintenanceManager.setDatabaseDialect(5);
+            fail("Database dialect must be either 1 or 3");
+        } catch (IllegalArgumentException e){
+            // Ignore
         }
     }
 
-    /**
-     * A transaction shutdown fails with open transactions at the end of the timeout
-     */
-    @Test
+    public void testForcedShutdown() throws Exception {
+        Connection conn = getConnectionViaDriverManager();
+        String sql = "SELECT * FROM TEST";
+        createTestTable();
+        try {
+            Statement stmt = conn.createStatement();
+            stmt.executeQuery(sql);
+            maintenanceManager.shutdownDatabase(
+                    MaintenanceManager.SHUTDOWN_FORCE, 0);
+            try {
+                stmt.executeQuery(sql);
+                fail("Query must fail on an offline database");
+            } catch (SQLException e){
+                // Ignore
+            }
+        } finally {
+            try {
+                conn.close();
+            } catch (SQLException e2){
+                // Ignore this exception, which will always be thrown due 
+                // to the database being shutdown
+            } catch(IllegalStateException e2) {
+                // Ignore this exception, which will always be thrown due 
+                // to the database being shutdown
+            }
+        }
+    }
+
     public void testTransactionalShutdown() throws Exception {
         Connection conn = getConnectionViaDriverManager();
         String sql = "UPDATE TEST SET TESTVAL = 5";
@@ -199,113 +223,112 @@ public class TestFBMaintenanceManager extends FBJUnit4TestBase {
             conn.close();
 
             // Shutting down when no transactions are active should work
-            maintenanceManager.shutdownDatabase(MaintenanceManager.SHUTDOWN_TRANSACTIONAL, 0);
+            maintenanceManager.shutdownDatabase(
+                    MaintenanceManager.SHUTDOWN_TRANSACTIONAL, 0);
             Thread.sleep(100);
             maintenanceManager.bringDatabaseOnline();
             Thread.sleep(100);
             conn = getConnectionViaDriverManager();
             conn.setAutoCommit(false);
 
-            stmt = conn.createStatement();
-            stmt.executeUpdate(sql);
-
-            expectedException.expect(SQLException.class);
-
-            maintenanceManager.shutdownDatabase(MaintenanceManager.SHUTDOWN_TRANSACTIONAL, 0);
+            try {
+                stmt = conn.createStatement();
+                stmt.executeUpdate(sql);
+                maintenanceManager.shutdownDatabase(
+                    MaintenanceManager.SHUTDOWN_TRANSACTIONAL, 0);
+                fail("A transaction shutdown fails with open transactions "
+                        + "at the end of the timeout");
+            } catch (SQLException se){
+                // Ignore
+            }
         } finally {
-            closeQuietly(conn);
+            try {
+                conn.close();
+            } catch(SQLException ex) {
+                // empty
+            }
         }
     }
 
-    /**
-     * Shutdown mode must be one of: SHUTDOWN_ATTACH, SHUTDOWN_TRANSACTIONAL, SHUTDOWN_FORCE
-     */
-    @Test
-    public void testShutdownWithBadMode_1() throws Exception {
-        expectedException.expect(IllegalArgumentException.class);
+    public void testShutdownWithBadMode() throws Exception {
+        try {
+            maintenanceManager.shutdownDatabase(
+                    MaintenanceManager.SHUTDOWN_ATTACH 
+                        | MaintenanceManager.SHUTDOWN_TRANSACTIONAL 
+                        | MaintenanceManager.SHUTDOWN_FORCE,
+                    0);
+            fail("Shutdown mode must be one of: SHUTDOWN_ATTACH, "
+                    + "SHUTDOWN_TRANSACTIONAL, SHUTDOWN_FORCE");
+        } catch (IllegalArgumentException e1){
+            // Ignore
+        }
 
-        maintenanceManager.shutdownDatabase(
-                MaintenanceManager.SHUTDOWN_ATTACH
-                    | MaintenanceManager.SHUTDOWN_TRANSACTIONAL
-                    | MaintenanceManager.SHUTDOWN_FORCE,
-                0);
+        try {
+            maintenanceManager.shutdownDatabase(0, 0);
+            fail("Shutdown mode must be one of: SHUTDOWN_ATTACH, "
+                    + "SHUTDOWN_TRANSACTIONAL, SHUTDOWN_FORCE");
+        } catch (IllegalArgumentException e2){
+            // Ignore
+        }
     }
 
-    /**
-     * Shutdown mode must be one of: SHUTDOWN_ATTACH, SHUTDOWN_TRANSACTIONAL, SHUTDOWN_FORCE
-     */
-    @Test
-    public void testShutdownWithBadMode_2() throws Exception {
-        expectedException.expect(IllegalArgumentException.class);
-
-        maintenanceManager.shutdownDatabase(0, 0);
-    }
-
-    /**
-     * Shutdown timeout must be >= 0
-     */
-    @Test
     public void testShutdownWithBadTimeout() throws Exception {
-        expectedException.expect(IllegalArgumentException.class);
-
-        maintenanceManager.shutdownDatabase(MaintenanceManager.SHUTDOWN_FORCE, -1);
+        try {
+            maintenanceManager.shutdownDatabase(
+                    MaintenanceManager.SHUTDOWN_FORCE, -1);
+            fail("Shutdown timeout must be >= 0");
+        } catch (IllegalArgumentException e){
+            // Ignore
+        }
     }
 
-    /**
-     * Default cache buffer must be a positive integer
-     */
-    @Test
     public void testSetDefaultCacheBufferBadCount() throws Exception {
-        expectedException.expect(IllegalArgumentException.class);
-
-        maintenanceManager.setDefaultCacheBuffer(-1);
+        try {
+            maintenanceManager.setDefaultCacheBuffer(-1);
+            fail("Default cache buffer must be a positive integer");
+        } catch (IllegalArgumentException e){
+            // Ignore
+        }
     }
 
-    @Test
+ 
     public void testSetDefaultCacheBuffer() throws Exception {
         // Unfortunately, we can really just run it and see if it fails...
         maintenanceManager.setDefaultCacheBuffer(2000);
     }
 
-    @Test
     public void testSetForcedWrites() throws Exception {
         // No test we can really do other than make sure it doesn't just fail
         maintenanceManager.setForcedWrites(true);
         maintenanceManager.setForcedWrites(false);
     }
 
-    /**
-     * page fill must be PAGE_FILL_FULL or PAGE_FILL_RESERVE
-     */
-    @Test
-    public void testSetPageFillBadParam_1() throws Exception {
-        expectedException.expect(IllegalArgumentException.class);
-
-        maintenanceManager.setPageFill(
-                MaintenanceManager.PAGE_FILL_FULL
+    public void testSetPageFillBadParam() throws Exception {
+        try {
+            maintenanceManager.setPageFill(
+                    MaintenanceManager.PAGE_FILL_FULL 
                     | MaintenanceManager.PAGE_FILL_RESERVE);
-    }
+            fail("page fill must be PAGE_FILL_FULL or PAGE_FILL_RESERVE");
+        } catch (IllegalArgumentException e1){
+            // Ignore
+        }
 
-    /**
-     * page fill must be PAGE_FILL_FULL or PAGE_FILL_RESERVE
-     */
-    @Test
-    public void testSetPageFillBadParam_2() throws Exception {
-        expectedException.expect(IllegalArgumentException.class);
-
-        maintenanceManager.setPageFill(
-                Math.min(MaintenanceManager.PAGE_FILL_FULL,
+        try {
+            maintenanceManager.setPageFill(
+                    Math.min(MaintenanceManager.PAGE_FILL_FULL,
                         MaintenanceManager.PAGE_FILL_RESERVE) - 1);
+            fail("page fill must be PAGE_FILL_FULL or PAGE_FILL_RESERVE");
+        } catch  (IllegalArgumentException e2){
+            // Ignore
+        }
     }
 
-    @Test
     public void testSetPageFill() throws Exception {
         // Just make sure it runs without an exception
         maintenanceManager.setPageFill(MaintenanceManager.PAGE_FILL_FULL);
         maintenanceManager.setPageFill(MaintenanceManager.PAGE_FILL_RESERVE);
     }
 
-    @Test
     public void testMarkCorruptRecords() throws Exception {
         // ensure that our maintenance manager has exclusive connection
         fbManager.stop();
@@ -317,7 +340,6 @@ public class TestFBMaintenanceManager extends FBJUnit4TestBase {
         }
     }
 
-    @Test
     public void testValidateDatabase() throws Exception {
         // ensure that our maintenance manager has exclusive connection
         fbManager.stop();
@@ -329,52 +351,43 @@ public class TestFBMaintenanceManager extends FBJUnit4TestBase {
         }
     }
 
-    /**
-     * Validation must be either 0, read-only, or full
-     */
-    @Test
-    public void testValidateDatabaseBadParam_1() throws Exception {
-        expectedException.expect(IllegalArgumentException.class);
-
-        maintenanceManager.validateDatabase(
-                (MaintenanceManager.VALIDATE_READ_ONLY
+    public void testValidateDatabaseBadParam() throws Exception {
+        try {
+            maintenanceManager.validateDatabase(
+                    (MaintenanceManager.VALIDATE_READ_ONLY
                     | MaintenanceManager.VALIDATE_FULL
                     | MaintenanceManager.VALIDATE_IGNORE_CHECKSUM) * 2);
-    }
+            fail("Validation options must be either 0, read-only, or full");
+        } catch (IllegalArgumentException e1){
+            // Ignore
+        }
 
-    /**
-     * Validation must be either 0, read-only, or full
-     */
-    @Test
-    public void testValidateDatabaseBadParam_2() throws Exception {
-        expectedException.expect(IllegalArgumentException.class);
-
-        maintenanceManager.validateDatabase(
-                MaintenanceManager.VALIDATE_READ_ONLY
+        try {
+            maintenanceManager.validateDatabase(
+                    MaintenanceManager.VALIDATE_READ_ONLY 
                     | MaintenanceManager.VALIDATE_FULL);
+            fail("Validation must be either 0, read-only, or full");
+
+        } catch (IllegalArgumentException e2){
+            // Ignore
+        }
+
+        try {
+            maintenanceManager.validateDatabase(
+                    MaintenanceManager.VALIDATE_FULL / 2);
+            fail("Validation must be either 0, read-only, or full");
+        } catch (IllegalArgumentException e3){
+            // Ignore
+        }
+
+        try {
+            maintenanceManager.validateDatabase(-1);
+            fail("Validation must be either 0, read-only, or full");
+        } catch (IllegalArgumentException e4){
+            // Ignore
+        }
     }
 
-    /**
-     * Validation must be either 0, read-only, or full
-     */
-    @Test
-    public void testValidateDatabaseBadParam_3() throws Exception {
-        expectedException.expect(IllegalArgumentException.class);
-
-        maintenanceManager.validateDatabase(MaintenanceManager.VALIDATE_FULL / 2);
-    }
-
-    /**
-     * Validation must be either 0, read-only, or full
-     */
-    @Test
-    public void testValidateDatabaseBadParam_4() throws Exception {
-        expectedException.expect(IllegalArgumentException.class);
-
-        maintenanceManager.validateDatabase(-1);
-    }
-
-    @Test
     public void testValidateDatabaseFull() throws Exception {
         // ensure that our maintenance manager has exclusive connection
         fbManager.stop();
@@ -386,55 +399,46 @@ public class TestFBMaintenanceManager extends FBJUnit4TestBase {
         }
     }
 
-    /**
-     * Sweep threshold must be positive
-     */
-    @Test
     public void testSetSweepThresholdBadParams() throws Exception {
-        expectedException.expect(IllegalArgumentException.class);
-
-        maintenanceManager.setSweepThreshold(-1);
+        try {
+            maintenanceManager.setSweepThreshold(-1);
+            fail("Sweep threshold must be positive");
+        } catch (IllegalArgumentException e){
+            // Ignore
+        }
     }
-
-    @Test
     public void testSetSweepThreshold() throws Exception {
         // Just run it to see if it throws an exception
         maintenanceManager.setSweepThreshold(0);
         maintenanceManager.setSweepThreshold(2000);
     }
 
-    @Test
     public void testSweepDatabase() throws Exception {
         // Just run it to see if it throws an exception 
         maintenanceManager.sweepDatabase();
     }
 
-    @Test
     public void testActivateShadowFile() throws Exception {
         // Just run it to see if it throws an exception
         maintenanceManager.activateShadowFile();
     }
 
-    @Test
     public void testKillUnavailableShadows() throws Exception {
         // Just run it to see if it throws an exception
         maintenanceManager.killUnavailableShadows();
     }
 
-    @Test
     public void testListLimboTransactions() throws Exception {
         final int COUNT_LIMBO = 5;
         createLimboTransaction(COUNT_LIMBO);
         ByteArrayOutputStream byteOut = new ByteArrayOutputStream();
         maintenanceManager.setLogger(byteOut);
-        //noinspection deprecation
         maintenanceManager.listLimboTransactions();
-
-        StringTokenizer limboTransactions = new StringTokenizer(byteOut.toString(), "\n");
+        
+        StringTokenizer limboTransactions = new StringTokenizer(byteOut.toString(),"\n");
         assertEquals(COUNT_LIMBO, limboTransactions.countTokens());
     }
 
-    @Test
     public void testGetLimboTransactions() throws Exception {
         final int COUNT_LIMBO = 5;
         createLimboTransaction(COUNT_LIMBO);
@@ -442,42 +446,54 @@ public class TestFBMaintenanceManager extends FBJUnit4TestBase {
         assertEquals(COUNT_LIMBO, limboTransactions.length);
     }
 
-    @Test
+    
     public void testRollbackLimboTransaction() throws Exception {
-        List<Integer> limboTransactions = maintenanceManager.limboTransactionsAsList();
-        assertEquals(0, limboTransactions.size());
-
+        ByteArrayOutputStream byteOut = new ByteArrayOutputStream();
+        maintenanceManager.setLogger(byteOut);
+        maintenanceManager.listLimboTransactions();
+        StringTokenizer limboTransactions = new StringTokenizer(byteOut.toString(),"\n");
+        assertEquals(0, limboTransactions.countTokens());
         createLimboTransaction(3);
-
-        limboTransactions = maintenanceManager.limboTransactionsAsList();
-        assertEquals(3, limboTransactions.size());
-
-        int trId = limboTransactions.get(0);
-        maintenanceManager.rollbackTransaction(trId);
-
-        limboTransactions = maintenanceManager.limboTransactionsAsList();
-        assertEquals(2, limboTransactions.size());
+        byteOut.reset();
+        maintenanceManager.listLimboTransactions();
+        limboTransactions = new StringTokenizer(byteOut.toString(),"\n");
+        assertEquals(3, limboTransactions.countTokens());
+        if (limboTransactions.hasMoreTokens()) {
+            int trId = Integer.parseInt(limboTransactions.nextToken());
+            maintenanceManager.rollbackTransaction(trId);
+        }
+        else fail("There should be 3 limbo transactions.");
+        byteOut.reset();
+        maintenanceManager.listLimboTransactions();
+        limboTransactions = new StringTokenizer(byteOut.toString(),"\n");
+        assertEquals(2, limboTransactions.countTokens());
     }
 
-    @Test
     public void testCommitLimboTransaction() throws Exception {
-        List<Integer> limboTransactions = maintenanceManager.limboTransactionsAsList();
-        assertEquals(0, limboTransactions.size());
-
+        ByteArrayOutputStream byteOut = new ByteArrayOutputStream();
+        maintenanceManager.setLogger(byteOut);
+        maintenanceManager.listLimboTransactions();
+        StringTokenizer limboTransactions = new StringTokenizer(byteOut.toString(),"\n");
+        assertEquals(0, limboTransactions.countTokens());
         createLimboTransaction(3);
-
-        limboTransactions = maintenanceManager.limboTransactionsAsList();
-        assertEquals(3, limboTransactions.size());
-
-        int trId = limboTransactions.get(0);
-        maintenanceManager.commitTransaction(trId);
-
-        limboTransactions = maintenanceManager.limboTransactionsAsList();
-        assertEquals(2, limboTransactions.size());
+        byteOut.reset();
+        maintenanceManager.listLimboTransactions();
+        limboTransactions = new StringTokenizer(byteOut.toString(),"\n");
+        assertEquals(3, limboTransactions.countTokens());
+        if (limboTransactions.hasMoreTokens()) {
+            int trId = Integer.parseInt(limboTransactions.nextToken());
+            maintenanceManager.commitTransaction(trId);
+        }
+        else fail("There should be 3 limbo transactions.");
+        byteOut.reset();
+        maintenanceManager.listLimboTransactions();
+        limboTransactions = new StringTokenizer(byteOut.toString(),"\n");
+        assertEquals(2, limboTransactions.countTokens());
     }
+
 
     private void createLimboTransaction(int count) throws Exception {
-        FBConnection conn = (FBConnection) getConnectionViaDriverManager();
+        AbstractConnection conn = (AbstractConnection)getConnectionViaDriverManager();
         try {
             GDS gds = conn.getInternalAPIHandler();
             DatabaseParameterBuffer dpb = gds.createDatabaseParameterBuffer();
@@ -485,8 +501,9 @@ public class TestFBMaintenanceManager extends FBJUnit4TestBase {
             dpb.addArgument(DatabaseParameterBuffer.PASSWORD, DB_PASSWORD);
             IscDbHandle dbh = gds.createIscDbHandle();
             gds.iscAttachDatabase(getdbpath(DB_NAME), dbh, dpb);
-            for (int i = 0; i < count; i++) {
-                TransactionParameterBuffer tpBuf = gds.newTransactionParameterBuffer();
+            for (int i = 0; i < count; i++){
+                TransactionParameterBuffer tpBuf = 
+                    gds.newTransactionParameterBuffer();
                 IscTrHandle trh = gds.createIscTrHandle();
                 gds.iscStartTransaction(trh, dbh, tpBuf);
                 gds.iscPrepareTransaction(trh);
@@ -496,4 +513,5 @@ public class TestFBMaintenanceManager extends FBJUnit4TestBase {
             conn.close();
         }
     }
+
 }

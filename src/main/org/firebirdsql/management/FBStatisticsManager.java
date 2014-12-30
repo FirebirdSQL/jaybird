@@ -58,7 +58,8 @@ import org.firebirdsql.gds.impl.GDSType;
  *
  * @author <a href="mailto:gab_reid@users.sourceforge.net">Gabriel Reid</a>
  */
-public class FBStatisticsManager extends FBServiceManager implements StatisticsManager {
+public class FBStatisticsManager extends FBServiceManager 
+                                implements StatisticsManager {
 
     private static final int possibleStatistics = 
         DATA_TABLE_STATISTICS | SYSTEM_TABLE_STATISTICS | INDEX_STATISTICS |
@@ -118,19 +119,23 @@ public class FBStatisticsManager extends FBServiceManager implements StatisticsM
         ServiceRequestBuffer srb = createStatsSRB(ISCConstants.isc_spb_sts_table);
 
         // create space-separated list of tables
-        StringBuilder commandLine = new StringBuilder();
+        StringBuffer commandLine = new StringBuffer();
         for (int i = 0; i < tableNames.length; i++) {
             commandLine.append(tableNames[i]);
             if (i < tableNames.length - 1)
                 commandLine.append(' ');
         }
+        
+        //FIXME should be isc_spb_command_line, but FB 2.0 does not like it
         srb.addArgument(ISCConstants.isc_spb_command_line, commandLine.toString());
         
         executeServicesOperation(srb);
     }
 
+
     //---------- Private implementation methods -----------------
     
+
     /**
      * Get a mostly empty buffer that can be filled in as needed. 
      * The buffer created by this method cannot have the options bitmask
@@ -151,4 +156,5 @@ public class FBStatisticsManager extends FBServiceManager implements StatisticsM
                 ISCConstants.isc_action_svc_db_stats, 
                 options);
     }
+
 }

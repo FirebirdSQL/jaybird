@@ -1,7 +1,5 @@
  /*
- * $Id$
- *
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source J2ee connector - jdbc driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -14,54 +12,54 @@
  * This file was created by members of the firebird development team.
  * All individual contributions remain the Copyright (C) of those
  * individuals.  Contributors to this file are either listed here or
- * can be obtained from a source control history command.
+ * can be obtained from a CVS history command.
  *
  * All rights reserved.
  */
 package org.firebirdsql.logging;
 
 /**
- * Logger is a facade to hide the logging implementation used from the rest of Jaybird.
+ * Describe class <code>Logger</code> here.
  *
  * @author <a href="mailto:d_jencks@users.sourceforge.net">David Jencks</a>
  * @author <a href="mailto:brodsom@users.sourceforge.net">Blas Rodriguez Somoza</a>
  * @version 1.0
  */
-public interface Logger{
+public abstract class Logger{
 	
-	boolean isDebugEnabled();
+	abstract public boolean isDebugEnabled();
 	
-	void debug(Object message);
+	abstract public void debug(Object message);
 	
-	void debug(Object message, Throwable t);
+	abstract public void debug(Object message, Throwable t);
     
-    boolean isTraceEnabled();
+    abstract public boolean isTraceEnabled();
     
-    void trace(Object message);
+    abstract public void trace(Object message);
     
-    void trace(Object message, Throwable t);
+    abstract public void trace(Object message, Throwable t);
 	
-	boolean isInfoEnabled();
+	abstract public boolean isInfoEnabled();
 	
-	void info(Object message);
+	abstract public void info(Object message);
 	
-	void info(Object message, Throwable t);
+	abstract public void info(Object message, Throwable t);
 	
-	boolean isWarnEnabled();
+	abstract public boolean isWarnEnabled();
 	
-	void warn(Object message);
+	abstract public void warn(Object message);
 	
-	void warn(Object message, Throwable t);
+	abstract public void warn(Object message, Throwable t);
 	
-	boolean isErrorEnabled();
+	abstract public boolean isErrorEnabled();
 	
-	void error(Object message);
+	abstract public void error(Object message);
 	
-	void error(Object message, Throwable t);
+	abstract public void error(Object message, Throwable t);
 	
-	boolean isFatalEnabled();
+	abstract public boolean isFatalEnabled();
 	
-	void fatal(Object message);
+	abstract public void fatal(Object message);
 	
-	void fatal(Object message, Throwable t);
+	abstract public void fatal(Object message, Throwable t);
 }

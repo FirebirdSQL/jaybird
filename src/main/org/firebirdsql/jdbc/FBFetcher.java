@@ -1,7 +1,5 @@
 /*
- * $Id$
- *
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source J2ee connector - jdbc driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -14,13 +12,12 @@
  * This file was created by members of the firebird development team.
  * All individual contributions remain the Copyright (C) of those
  * individuals.  Contributors to this file are either listed here or
- * can be obtained from a source control history command.
+ * can be obtained from a CVS history command.
  *
  * All rights reserved.
  */
-package org.firebirdsql.jdbc;
 
-import org.firebirdsql.gds.ng.fields.RowValue;
+package org.firebirdsql.jdbc;
 
 import java.sql.SQLException;
 
@@ -132,7 +129,7 @@ interface FBFetcher {
      * 
      * @throws SQLException if operation cannot be completed.
      */
-    void insertRow(RowValue data) throws SQLException;
+    void insertRow(byte[][] data) throws SQLException;
     
     /**
      * Delete row at current position. This method deletes a row at the current
@@ -152,7 +149,7 @@ interface FBFetcher {
      * 
      * @throws SQLException if operation cannot be completed.
      */
-    void updateRow(RowValue data) throws SQLException;
+    void updateRow(byte[][] data) throws SQLException;
 
     /**
      * Set the suggested number of rows to fetch with each batch fetch.

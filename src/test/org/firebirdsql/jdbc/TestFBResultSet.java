@@ -1,7 +1,5 @@
 /*
- * $Id$
- *
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source J2ee connector - jdbc driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -14,27 +12,19 @@
  * This file was created by members of the firebird development team.
  * All individual contributions remain the Copyright (C) of those
  * individuals.  Contributors to this file are either listed here or
- * can be obtained from a source control history command.
+ * can be obtained from a CVS history command.
  *
  * All rights reserved.
  */
 package org.firebirdsql.jdbc;
 
-import org.firebirdsql.common.FBJUnit4TestBase;
-import org.firebirdsql.gds.ISCConstants;
-import org.junit.*;
+import org.firebirdsql.common.FBTestBase;
 
 import java.sql.*;
 import java.util.Properties;
 import java.util.Random;
 
-import static org.firebirdsql.common.DdlHelper.executeCreateTable;
-import static org.firebirdsql.common.DdlHelper.executeDDL;
-import static org.firebirdsql.common.FBTestProperties.*;
-import static org.firebirdsql.common.JdbcResourceHelper.closeQuietly;
-import static org.junit.Assert.*;
-
-public class TestFBResultSet extends FBJUnit4TestBase {
+public class TestFBResultSet extends FBTestBase {
 
     //@formatter:off
     public static final String SELECT_STATEMENT =
@@ -43,7 +33,7 @@ public class TestFBResultSet extends FBJUnit4TestBase {
         "  2 AS \"col1\"," +
         "  3 AS \"Col1\""  +
         "FROM rdb$database";
-
+        
     public static final String CREATE_TABLE_STATEMENT =
         "CREATE TABLE test_table(" +
         "  id INTEGER NOT NULL PRIMARY KEY, " +
@@ -85,29 +75,44 @@ public class TestFBResultSet extends FBJUnit4TestBase {
 
     public static final String SELECT_FROM_VIEW_STATEMENT =
         "SELECT * FROM test_empty_string_view";
-
+    
     public static final String INSERT_INTO_TABLE_STATEMENT =
         "INSERT INTO test_table (id, str) VALUES(?, ?)";
-
+    
     public static final String INSERT_LONG_STR_STATEMENT =
         "INSERT INTO test_table (id, long_str) VALUES(?, ?)";
-
+        
     public static final String CURSOR_NAME = "some_cursor";
-
+        
     public static final String UPDATE_TABLE_STATEMENT =
         "UPDATE test_table SET str = ? WHERE CURRENT OF " + CURSOR_NAME;
     //@formatter:on
 
-    protected Connection connection;
-
-    @Before
-    public void setUp() throws Exception {
-        connection = getConnectionViaDriverManager();
+    public TestFBResultSet(String name) {
+        super(name);
     }
 
-    @After
-    public void tearDown() throws Exception {
-        closeQuietly(connection);
+    protected Connection connection;
+
+    protected void setUp() throws Exception {
+        super.setUp();
+        
+        Class.forName(FBDriver.class.getName());
+        
+        connection = this.getConnectionViaDriverManager();
+
+        executeCreateTable(connection, CREATE_TABLE_STATEMENT);
+        executeCreateTable(connection, CREATE_TABLE_STATEMENT2);
+        executeCreateTable(connection, CREATE_VIEW_STATEMENT);
+        executeCreateTable(connection, CREATE_SUBSTR_FUNCTION);
+    }
+
+    protected void tearDown() throws Exception {
+        try {
+            connection.close();
+        } finally {
+            super.tearDown();
+        }
     }
     
     /**
@@ -115,7 +120,6 @@ public class TestFBResultSet extends FBJUnit4TestBase {
      * 
      * @throws Exception if something went wrong.
      */
-    @Test
     public void testFindColumn() throws Exception {
         Statement stmt = connection.createStatement();
 
@@ -140,12 +144,9 @@ public class TestFBResultSet extends FBJUnit4TestBase {
      * 
      * @throws java.lang.Exception if something went wrong.
      */
-    @Test
     public void testPositionedUpdate() throws Exception {
-        executeCreateTable(connection, CREATE_TABLE_STATEMENT);
-
         final int recordCount = 10;
-
+        
         PreparedStatement ps = connection.prepareStatement(INSERT_INTO_TABLE_STATEMENT);
 
         try {
@@ -157,10 +158,10 @@ public class TestFBResultSet extends FBJUnit4TestBase {
         } finally {
             ps.close();
         }
-
+        
         ResultSet rs;
         connection.setAutoCommit(false);
-
+        
         Statement select = connection.createStatement();
         select.setCursorName(CURSOR_NAME);
         try {
@@ -206,15 +207,15 @@ public class TestFBResultSet extends FBJUnit4TestBase {
 
         connection.commit();
         connection.setAutoCommit(false);
-
+        
         select = connection.createStatement();
         try {
             rs = select.executeQuery("SELECT id, str FROM test_table");
-
+            
             int counter = 0;
-
+            
             assertTrue("ResultSet.isBeforeFirst() should be true", rs.isBeforeFirst());
-
+            
             while (rs.next()) {
                 if (counter == 0) {
                     assertTrue("ResultSet.isFirst() should be true", rs.isFirst());
@@ -229,7 +230,7 @@ public class TestFBResultSet extends FBJUnit4TestBase {
 
                 assertEquals("Value of str column must be equal to id + 1", idValue + 1, strValue);
             }
-
+            
             assertTrue("ResultSet.isAfterLast() should be true", rs.isAfterLast());
             assertTrue("ResultSet.next() should return false.", !rs.next());
         } finally {
@@ -244,13 +245,9 @@ public class TestFBResultSet extends FBJUnit4TestBase {
      * 
      * @throws Exception if something went wrong.
      */
-    @Test
     public void testEmptyColumnInView() throws Exception {
-        executeCreateTable(connection, CREATE_TABLE_STATEMENT);
-        executeCreateTable(connection, CREATE_VIEW_STATEMENT);
-
         PreparedStatement ps = connection.prepareStatement(INSERT_INTO_TABLE_STATEMENT);
-
+            
         try {
             for(int i = 0; i < 10; i++) {
                 ps.setInt(1, i);
@@ -266,17 +263,17 @@ public class TestFBResultSet extends FBJUnit4TestBase {
 
         try {
             ResultSet rs = stmt.executeQuery(SELECT_FROM_VIEW_STATEMENT);
-
+            
             int counter = 0;
             while(rs.next()) {
                 String marker = rs.getString(1);
                 int key = rs.getInt(2);
                 String value = rs.getString(3);
-
+                
                 assertEquals("Marker should be correct.", "marker", marker);
                 assertEquals("Key should be same as counter.", counter, key);
                 assertEquals("EMPTY_CHAR string should be empty.", "", value);
-
+                
                 counter++;
             }
 
@@ -284,7 +281,7 @@ public class TestFBResultSet extends FBJUnit4TestBase {
         }finally {
             stmt.close();
         }
-
+        
         connection.setAutoCommit(true);
     }
 
@@ -293,12 +290,9 @@ public class TestFBResultSet extends FBJUnit4TestBase {
      * 
      * @throws Exception if something went wrong.
      */
-    @Test
     public void testScrollInsensitive() throws Exception {
-        executeCreateTable(connection, CREATE_TABLE_STATEMENT);
-
         final int recordCount = 10;
-
+        
         PreparedStatement ps = connection.prepareStatement(INSERT_INTO_TABLE_STATEMENT);
 
         try {
@@ -310,39 +304,39 @@ public class TestFBResultSet extends FBJUnit4TestBase {
         } finally {
             ps.close();
         }
-
+        
         connection.setAutoCommit(false);
-
+        
         Statement stmt = connection.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
-
+        
         try {
             ResultSet rs = stmt.executeQuery("SELECT id, str FROM test_table");
-
+            
             int testValue;
-
+            
             rs.last();
             testValue = recordCount - 1;
             assertEquals("ID of last record should be equal to " + testValue, testValue, rs.getInt(1));
             assertTrue("isLast() should return true", rs.isLast());
-
+            
             rs.absolute(recordCount / 2);
             testValue = recordCount / 2 - 1;
             assertEquals("ID after absolute positioning should return " + testValue, testValue, rs.getInt(1));
-
+            
             rs.absolute(-1);
             testValue = recordCount - 1;
             assertEquals("ID after absolute positioning with negative position should return " + testValue,
                     testValue, rs.getInt(1));
-
+            
             rs.first();
             testValue = 0;
             assertEquals("ID after first() should return " + testValue, testValue, rs.getInt(1));
             assertTrue("isFirst() should report true", rs.isFirst());
-
+            
             boolean hasRow = rs.previous();
             assertTrue("Should not point to the row", !hasRow);
             assertTrue("isBeforeFirst() should return true", rs.isBeforeFirst());
-
+            
             rs.relative(5);
             rs.relative(-4);
             testValue = 0;
@@ -356,7 +350,7 @@ public class TestFBResultSet extends FBJUnit4TestBase {
             } catch(SQLException ex) {
                 // everything is fine
             }
-
+            
             rs.afterLast();
             assertTrue("isAfterLast() should return true", rs.isAfterLast());
             try {
@@ -377,44 +371,39 @@ public class TestFBResultSet extends FBJUnit4TestBase {
      *  
      * @throws Exception if something goes wrong.
      */
-    @Test
     public void testBugReport1() throws Exception {
-        executeCreateTable(connection, CREATE_TABLE_STATEMENT);
-        executeDDL(connection, CREATE_SUBSTR_FUNCTION);
-
         PreparedStatement insertStmt = connection.prepareStatement(INSERT_LONG_STR_STATEMENT);
         try {
             insertStmt.setInt(1, 1);
             insertStmt.setString(2, "aaa");
-
+            
             insertStmt.execute();
-
+            
             insertStmt.setInt(1, 2);
             insertStmt.setString(2, "'more than 80 chars are in " +
                     "hereeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee");
-
+            
             insertStmt.execute();
-
+            
             insertStmt.setInt(1, 3);
             insertStmt.setString(2, "more than 80 chars are in " +
                     "hereeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee");
-
+            
             insertStmt.execute();
         } finally {
             insertStmt.close();
         }
-
+        
         Statement stmt = connection.createStatement();
         try {
             String query = "SELECT id, substr(long_str,1,2) FROM test_table ORDER BY id DESC";
             ResultSet rs;
-
+            
             try {
                 rs = stmt.executeQuery(query);
                 assertTrue("Should have at least one row", rs.next());
                 rs.close();
             } catch(SQLException ex) {
-                if (ex.getErrorCode() != ISCConstants.isc_string_truncation && !ex.getMessage().contains("string truncation")) throw ex;
                 // it is ok as well, since substr is declared as CSTRING(80)
                 // and truncation error happens
                 System.out.println("First query generated exception" + ex.getMessage());
@@ -423,12 +412,11 @@ public class TestFBResultSet extends FBJUnit4TestBase {
             try  {
                 rs = stmt.executeQuery(query);
                 assertTrue("Should have at least one row", rs.next());
-
+                
                 rs.getObject(1);
-
+                
                 rs.close();
             } catch(SQLException ex) {
-                if (ex.getErrorCode() != ISCConstants.isc_string_truncation && !ex.getMessage().contains("string truncation")) throw ex;
                 // it is ok as well, since substr is declared as CSTRING(80)
                 // and truncation error happens
                 System.out.println("Second query generated exception" + ex.getMessage());
@@ -443,11 +431,9 @@ public class TestFBResultSet extends FBJUnit4TestBase {
      * 
      * @throws Exception if something went wrong.
      */
-    @Test
     public void testBugReport2() throws Exception {
-        executeCreateTable(connection, CREATE_TABLE_STATEMENT);
         final int recordCount = 10;
-
+        
         PreparedStatement ps = connection.prepareStatement(INSERT_INTO_TABLE_STATEMENT);
 
         try {
@@ -459,20 +445,20 @@ public class TestFBResultSet extends FBJUnit4TestBase {
         } finally {
             ps.close();
         }
-
+        
         connection.setAutoCommit(false);
-
+        
         Statement stmt = connection.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
-
+        
         try {
             ResultSet rs = stmt.executeQuery("SELECT id, str FROM test_table");
-
+            
             assertTrue("Should have at least one row", rs.next());
             assertEquals("ResultSet type should be TYPE_SCROLL_INSENSITIVE",
                     ResultSet.TYPE_SCROLL_INSENSITIVE, rs.getType());
             assertEquals("ResultSet concurrency should be CONCUR_READ_ONLY",
                     ResultSet.CONCUR_READ_ONLY, rs.getConcurrency());
-
+            
             rs.last();
 
             assertEquals("ResultSet type should not change.", ResultSet.TYPE_SCROLL_INSENSITIVE, rs.getType());
@@ -480,10 +466,8 @@ public class TestFBResultSet extends FBJUnit4TestBase {
             stmt.close();
         }
     }
-
-    @Test
+    
     public void testBugReport3() throws Exception {
-        executeCreateTable(connection, CREATE_TABLE_STATEMENT);
         final int recordCount = 10;
 
         PreparedStatement ps = connection.prepareStatement(INSERT_INTO_TABLE_STATEMENT);
@@ -526,15 +510,13 @@ public class TestFBResultSet extends FBJUnit4TestBase {
             stmt.close();
         }
     }
-
-    @Ignore
-    @Test
-    public void testMemoryGrowth() throws Exception {
+    
+    public void _testMemoryGrowth() throws Exception {
         Properties props = getDefaultPropertiesForConnection();
         props.put("no_result_set_tracking", "");
         Connection connection = DriverManager.getConnection(getUrl(), props);
         connection.setAutoCommit(false);
-
+        
         System.out.println("Inserting...");
         int recordCount = 1;
         PreparedStatement ps = connection.prepareStatement("INSERT INTO test_table(id, very_long_str) VALUES (?, ?)");
@@ -588,12 +570,9 @@ public class TestFBResultSet extends FBJUnit4TestBase {
         System.out.println("Commit freed " + (memoryAfterSelects - memoryAfterCommit));
     }
 
-    @Test
     public void testResultSetNotClosed() throws Exception {
-        executeCreateTable(connection, CREATE_TABLE_STATEMENT);
-
         connection.setAutoCommit(false);
-
+        
         final int recordCount = 1;
         PreparedStatement ps = connection.prepareStatement("INSERT INTO test_table(id, very_long_str) VALUES (?, ?)");
 
@@ -611,15 +590,15 @@ public class TestFBResultSet extends FBJUnit4TestBase {
 
         connection.commit();
         connection.setAutoCommit(false);
-
+        
         PreparedStatement stmt = connection.prepareStatement("SELECT * FROM test_table WHERE id = ?");
         try {
             stmt.setInt(1, recordCount + 10);
-
+            
             ResultSet rs = stmt.executeQuery();
             assertTrue("Should not find any record", !rs.next());
             rs.close();
-
+            
             stmt.setInt(1, recordCount - 1);
             rs = stmt.executeQuery();
 
@@ -638,13 +617,10 @@ public class TestFBResultSet extends FBJUnit4TestBase {
 		}
 		return string;
 	}
-
-    @Test
+    
     public void testUpdatableResultSet() throws Exception {
-        executeCreateTable(connection, CREATE_TABLE_STATEMENT);
-
         connection.setAutoCommit(false);
-
+        
         final int recordCount = 10;
         PreparedStatement ps = connection.prepareStatement("INSERT INTO test_table(id, long_str) VALUES (?, ?)");
 
@@ -661,48 +637,48 @@ public class TestFBResultSet extends FBJUnit4TestBase {
         connection.commit();
 
         connection.setAutoCommit(true);
-
+        
         connection.clearWarnings();
         Statement stmt = connection.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_UPDATABLE);
-
+        
         try {
             assertNull("No warnings should be added", connection.getWarnings());
-
+            
             ResultSet rs = stmt.executeQuery("SELECT id, long_str, str, \"CamelStr\" FROM test_table ORDER BY id");
 
             int counter = 0;
             while(rs.next()) {
                 int id = rs.getInt(1);
                 assertEquals(counter, id);
-
+                
                 String longStr = rs.getString(2);
                 assertEquals("oldString" + counter, longStr);
-
+                
                 rs.updateString(2, "newString" + counter);
-
-                assertEquals(counter, rs.getInt(1));
+                
+                assertEquals(counter, rs.getInt(1)); 
                 assertEquals("newString" + counter, rs.getString(2));
 
                 assertEquals(null, rs.getString(3));
                 rs.updateString(3, "str" + counter);
-
+                
                 assertEquals(null, rs.getString(4));
                 rs.updateString(4, "str" + counter);
-
+                
                 // check whether row can be updated
                 rs.updateRow();
-
+                
                 // check whether row can be refreshed
                 rs.refreshRow();
 
-                assertEquals(counter, rs.getInt(1));
+                assertEquals(counter, rs.getInt(1)); 
                 assertEquals("newString" + counter, rs.getString(2));
                 assertEquals("str" + counter, rs.getString(3));
                 assertEquals("str" + counter, rs.getString(4));
-
+                
                 counter++;
             }
-
+            
             assertTrue("Should process " + recordCount + " rows.", counter == recordCount);
 
             // check the insertRow() feature
@@ -718,27 +694,27 @@ public class TestFBResultSet extends FBJUnit4TestBase {
             rs.last();
             rs.updateString(3, "str" + recordCount);
             rs.updateRow();
-
+            
             rs = stmt.executeQuery("SELECT id, long_str, str FROM test_table ORDER BY id");
-
+            
             counter = 0;
             while(rs.next()) {
                 int id = rs.getInt(1);
                 assertEquals(counter, id);
-
+                
                 String longStr = rs.getString(2);
                 assertEquals("newString" + counter, longStr);
                 assertEquals("str" + counter, rs.getString(3));
                 counter++;
-
+                
                 if (counter == recordCount + 1)
                     rs.deleteRow();
             }
-
+            
             assertEquals(counter, recordCount + 1);
-
+            
             rs = stmt.executeQuery("SELECT count(*) FROM test_table");
-
+            
             assertTrue(rs.next());
             assertEquals(recordCount, rs.getInt(1));
         } finally {
@@ -746,12 +722,9 @@ public class TestFBResultSet extends FBJUnit4TestBase {
         }
     }
 
-    @Test
     public void testUpdatableResultSetNoPK() throws Exception {
-        executeCreateTable(connection, CREATE_TABLE_STATEMENT2);
-
         connection.setAutoCommit(false);
-
+        
         final int recordCount = 10;
         PreparedStatement ps = connection.prepareStatement("INSERT INTO test_table2(id, long_str) VALUES (?, ?)");
 
@@ -769,44 +742,44 @@ public class TestFBResultSet extends FBJUnit4TestBase {
         connection.setAutoCommit(true);
         connection.clearWarnings();
         Statement stmt = connection.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_UPDATABLE);
-
+        
         try {
             assertNull("No warnings should be added", connection.getWarnings());
-
+            
             ResultSet rs = stmt.executeQuery(
                     "SELECT rdb$db_key, id, long_str, str, \"CamelStr\" FROM test_table2 ORDER BY 2");
 
             int counter = 1;
             while(rs.next()) {
-
+                
                 int id = rs.getInt(2);
                 assertEquals(counter, id);
-
+                
                 String longStr = rs.getString(3);
                 assertEquals("oldString" + counter, longStr);
-
+                
                 rs.updateString(3, "newString" + counter);
-
-                assertEquals(counter, rs.getInt(2));
+                
+                assertEquals(counter, rs.getInt(2)); 
                 assertEquals("newString" + counter, rs.getString(3));
 
                 assertEquals(null, rs.getString(4));
                 rs.updateString(4, "str" + counter);
-
+                
                 assertEquals(null, rs.getString(5));
                 rs.updateString(5, "str" + counter);
-
+                
                 // check whether row can be updated
                 rs.updateRow();
-
+                
                 // check whether row can be refreshed
                 rs.refreshRow();
 
-                assertEquals(counter, rs.getInt(2));
+                assertEquals(counter, rs.getInt(2)); 
                 assertEquals("newString" + counter, rs.getString(3));
                 assertEquals("str" + counter, rs.getString(4));
                 assertEquals("str" + counter, rs.getString(5));
-
+                
                 counter++;
             }
         } finally {
@@ -814,10 +787,7 @@ public class TestFBResultSet extends FBJUnit4TestBase {
         }
     }
 
-    @Test
     public void testGetExecutionPlan() throws Exception {
-        executeCreateTable(connection, CREATE_TABLE_STATEMENT);
-
         Statement stmt = connection.createStatement();
         try {
             FBResultSet rs = (FBResultSet)stmt.executeQuery("SELECT id, str FROM test_table");
@@ -835,19 +805,17 @@ public class TestFBResultSet extends FBJUnit4TestBase {
         } finally {
             pStmt.close();
         }
-
+        
         // Ensure there isn't a crash when attempting to retrieve the
         // execution plan from a non-statement-based ResultSet
         java.sql.DatabaseMetaData metaData = connection.getMetaData();
         FBResultSet rs = (FBResultSet)metaData.getSchemas();
         assertEquals("Non-statement-based result set has no execution plan", "", rs.getExecutionPlan());
     }
-
-    @Test
+    
     public void testHoldabilityStatement() throws Exception {
-        executeCreateTable(connection, CREATE_TABLE_STATEMENT);
         final int recordCount = 10;
-
+        
         PreparedStatement ps = connection.prepareStatement(INSERT_INTO_TABLE_STATEMENT);
 
         try {
@@ -863,14 +831,14 @@ public class TestFBResultSet extends FBJUnit4TestBase {
         Statement stmt = connection.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY,
                 ResultSet.HOLD_CURSORS_OVER_COMMIT);
         Statement stmt2 = connection.createStatement();
-
+        
         try {
             // execute first query
             FirebirdResultSet rs = (FirebirdResultSet) stmt.executeQuery(SELECT_TEST_TABLE);
-
+            
             // now execute another query, causes commit in auto-commit mode
             stmt2.executeQuery("SELECT * FROM rdb$database");
-
+            
             // now let's access the result set
             int actualCount = 0;
             assertEquals("Unexpected holdability", ResultSet.HOLD_CURSORS_OVER_COMMIT, rs.getHoldability());
@@ -884,13 +852,10 @@ public class TestFBResultSet extends FBJUnit4TestBase {
             closeQuietly(stmt2);
         }
     }
-
-    @Test
+    
     public void testHoldabilityPreparedStatement() throws Exception {
-        executeCreateTable(connection, CREATE_TABLE_STATEMENT);
-
         final int recordCount = 10;
-
+        
         PreparedStatement ps = connection.prepareStatement(INSERT_INTO_TABLE_STATEMENT);
 
         try {
@@ -903,17 +868,17 @@ public class TestFBResultSet extends FBJUnit4TestBase {
             ps.close();
         }
 
-        PreparedStatement stmt = connection.prepareStatement(SELECT_TEST_TABLE, ResultSet.TYPE_SCROLL_INSENSITIVE,
+        PreparedStatement stmt = connection.prepareStatement(SELECT_TEST_TABLE, ResultSet.TYPE_SCROLL_INSENSITIVE, 
                 ResultSet.CONCUR_READ_ONLY, ResultSet.HOLD_CURSORS_OVER_COMMIT);
         Statement stmt2 = connection.createStatement();
-
+        
         try {
             // execute first query
             FirebirdResultSet rs = (FirebirdResultSet) stmt.executeQuery();
-
+            
             // now execute another query, causes commit in auto-commit mode
             stmt2.executeQuery("SELECT * FROM rdb$database");
-
+            
             // now let's access the result set
             int actualCount = 0;
             assertEquals("Unexpected holdability", ResultSet.HOLD_CURSORS_OVER_COMMIT, rs.getHoldability());
@@ -928,10 +893,7 @@ public class TestFBResultSet extends FBJUnit4TestBase {
         }
     }
 
-    @Test
     public void testFetchSize() throws Exception {
-        executeCreateTable(connection, CREATE_TABLE_STATEMENT);
-
         final int FETCH_SIZE = 3;
         Statement stmt = connection.createStatement();
         try {
@@ -946,8 +908,7 @@ public class TestFBResultSet extends FBJUnit4TestBase {
             stmt.close();
         }
     }
-
-    @Test
+    
     public void testDoubleNext() throws Exception {
         connection.setAutoCommit(false);
         Statement stmt = connection.createStatement();
@@ -962,12 +923,9 @@ public class TestFBResultSet extends FBJUnit4TestBase {
         connection.setAutoCommit(true);
     }
 
-    @Test
     public void testInsertUpdatableCursor() throws Exception {
-        executeCreateTable(connection, CREATE_TABLE_STATEMENT);
-
         Statement stmt = connection.createStatement(ResultSet.TYPE_SCROLL_SENSITIVE, ResultSet.CONCUR_UPDATABLE);
-
+        
         try {
             ResultSet rs = stmt.executeQuery("SELECT * FROM test_table");
             // rs.next();
@@ -982,7 +940,7 @@ public class TestFBResultSet extends FBJUnit4TestBase {
                 // ok, let's try to insert row
                 rs.insertRow();
             }
-
+            
             rs.close();
 
             rs = stmt.executeQuery("SELECT * FROM test_table");
@@ -994,21 +952,18 @@ public class TestFBResultSet extends FBJUnit4TestBase {
             stmt.close();
         }
     }
-
-    @Test
+    
     public void testMetaDataQueryShouldKeepRsOpen() throws Exception {
-        executeCreateTable(connection, CREATE_TABLE_STATEMENT);
-
         Statement stmt = connection.createStatement(ResultSet.TYPE_SCROLL_SENSITIVE, ResultSet.CONCUR_UPDATABLE);
-
+        
         try {
             ResultSet rs = stmt.executeQuery("SELECT * FROM test_table");
-
+            
             try {
                 ResultSet bestRowId = connection.getMetaData().getBestRowIdentifier(null, null, "test_table", 1, false);
                 assertTrue("Should have row ID", bestRowId.next());
                 bestRowId.close();
-
+                
                 rs.next();
             } catch(SQLException ex) {
                 fail("Should throw no exception that result set is closed.");
@@ -1017,14 +972,11 @@ public class TestFBResultSet extends FBJUnit4TestBase {
             stmt.close();
         }
     }
-
-    @Test
+    
     public void testUpdatableResultSetMultipleStatements() throws Exception {
-        executeCreateTable(connection, CREATE_TABLE_STATEMENT);
-
         int recordCount = 10;
         PreparedStatement ps = connection.prepareStatement(
-                "INSERT INTO test_table(id, long_str) VALUES (?, ?)");
+            "INSERT INTO test_table(id, long_str) VALUES (?, ?)");
 
         try {
             for (int i = 0; i < recordCount; i++) {
@@ -1035,14 +987,14 @@ public class TestFBResultSet extends FBJUnit4TestBase {
         } finally {
             ps.close();
         }
-
+        
         connection.setAutoCommit(true);
         Statement stmt = connection.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_UPDATABLE);
-
+        
         try {
             ResultSet rs = stmt.executeQuery("SELECT * FROM test_table");
             rs.first();
-
+            
             PreparedStatement anotherStmt = stmt.getConnection().prepareStatement("SELECT * FROM rdb$database");
             try {
                 ResultSet anotherRs = anotherStmt.executeQuery();
@@ -1050,13 +1002,13 @@ public class TestFBResultSet extends FBJUnit4TestBase {
                     anotherRs.getObject(1);
                 }
                 anotherRs.close();
-
+  
                 try {
                     rs.updateInt("id", 1);
                     rs.updateString("blob_str", "test");
                     rs.updateNull("str");
                     rs.updateRow();
-
+                    
                     fail("Should produce exception.");
                 } catch(SQLException ex) {
                     // everything is ok
@@ -1064,7 +1016,7 @@ public class TestFBResultSet extends FBJUnit4TestBase {
             } finally {
                 anotherStmt.close();
             }
-
+            
             rs.close();
         } finally {
             stmt.close();
@@ -1072,90 +1024,41 @@ public class TestFBResultSet extends FBJUnit4TestBase {
         connection.setAutoCommit(true);
     }
 
-    @Test
     public void testRelAlias() throws Exception {
         Statement stmt = connection.createStatement();
-
+        
         try {
             // execute first query
             ResultSet rs = stmt.executeQuery(
                     "SELECT a.rdb$description, b.rdb$character_set_name " +
                             "FROM rdb$database a, rdb$database b " +
                             "where a.rdb$relation_id = b.rdb$relation_id");
-
+            
             // now let's access the result set
             assertTrue(rs.next());
-
+            
             FirebirdResultSetMetaData frsMeta = (FirebirdResultSetMetaData)rs.getMetaData();
-
+            
             assertEquals("A", frsMeta.getTableAlias(1));
             assertEquals("B", frsMeta.getTableAlias(2));
         } finally {
             stmt.close();
         }
     }
-
-    @Test
-    public void testUpdatableHoldableResultSet() throws Exception {
-        executeCreateTable(connection, CREATE_TABLE_STATEMENT);
-
-	    connection.setAutoCommit(true);
-	
-	    int recordCount = 10;
-	    PreparedStatement ps = connection.prepareStatement("INSERT INTO test_table(id, long_str) VALUES (?, ?)");
-	
-	    try {
-	        for (int i = 0; i < recordCount; i++) {
-	            ps.setInt(1, i);
-	            ps.setString(2, "oldString" + i);
-	            ps.executeUpdate();
-	        }
-	    } finally {
-	        ps.close();
-	    }
-	
-	    connection.setAutoCommit(false);
-	
-	    Statement stmt = connection.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_UPDATABLE,
-                ResultSet.HOLD_CURSORS_OVER_COMMIT);
-	
-	    try {
-	        ResultSet rs = stmt.executeQuery("SELECT id, long_str FROM test_table");
-	
-	        while (rs.next()) {
-	            rs.updateString(2, rs.getString(2) + "a");
-	            rs.updateRow();
-	            connection.commit();
-	        }
-	
-	        int counter = 0;
-	
-	        rs = stmt.executeQuery("SELECT id, long_str FROM test_table");
-	        while (rs.next()) {
-	            assertEquals("oldString" + counter + "a", rs.getString(2));
-	            counter++;
-	        }
-	
-	    } finally {
-	        stmt.close();
-	    }
-	}
     
     // TODO Ignored, see JDBC-307 http://tracker.firebirdsql.org/browse/JDBC-307
-    @Ignore
-    @Test
     public void _testClosedOnCommit() throws Exception {
-        connection.setAutoCommit(false);
-        Statement stmt = connection.createStatement();
-        try {
-            FirebirdResultSet rs = (FirebirdResultSet) stmt.executeQuery("SELECT * FROM RDB$DATABASE");
-            assertEquals("Unexpected holdability", ResultSet.CLOSE_CURSORS_AT_COMMIT, rs.getHoldability());
-            assertFalse("Expected resultset to be open", rs.isClosed());
-
-            connection.commit();
-            assertTrue("Expected resultset to be closed", rs.isClosed());
-        } finally {
-            stmt.close();
-        }
+    	connection.setAutoCommit(false);
+    	Statement stmt = connection.createStatement();
+    	try {
+    		FirebirdResultSet rs = (FirebirdResultSet) stmt.executeQuery("SELECT * FROM RDB$DATABASE");
+    		assertEquals("Unexpected holdability", ResultSet.CLOSE_CURSORS_AT_COMMIT, rs.getHoldability());
+    		assertFalse("Expected resultset to be open", rs.isClosed());
+    		
+    		connection.commit();
+    		assertTrue("Expected resultset to be closed", rs.isClosed());
+    	} finally {
+    	    stmt.close();
+    	}
     }
 }

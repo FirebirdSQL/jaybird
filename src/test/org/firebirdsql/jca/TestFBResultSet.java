@@ -1,27 +1,26 @@
 /*
- * $Id$
- *
- * Firebird Open Source JavaEE Connector - JDBC Driver
- *
- * Distributable under LGPL license.
- * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * LGPL License for more details.
- *
- * This file was created by members of the firebird development team.
- * All individual contributions remain the Copyright (C) of those
- * individuals.  Contributors to this file are either listed here or
- * can be obtained from a source control history command.
- *
- * All rights reserved.
- */
+* Firebird Open Source J2ee connector - jdbc driver
+*
+* Distributable under LGPL license.
+* You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
+*
+* This program is distributed in the hope that it will be useful,
+* but WITHOUT ANY WARRANTY; without even the implied warranty of
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+* LGPL License for more details.
+*
+* This file was created by members of the firebird development team.
+* All individual contributions remain the Copyright (C) of those
+* individuals.  Contributors to this file are either listed here or
+* can be obtained from a CVS history command.
+*
+* All rights reserved.
+*/
 package org.firebirdsql.jca;
 
-import org.firebirdsql.jdbc.FBConnection;
-import org.junit.Test;
+import junit.framework.Test;
+import junit.framework.TestSuite;
+import org.firebirdsql.jdbc.AbstractConnection;
 
 import javax.resource.spi.LocalTransaction;
 import javax.resource.spi.ManagedConnection;
@@ -29,8 +28,6 @@ import javax.sql.DataSource;
 import javax.transaction.xa.XAResource;
 import javax.transaction.xa.Xid;
 import java.sql.*;
-
-import static org.junit.Assert.*;
 
 /**
  * Describe class <code>TestFBResultSet</code> here.
@@ -40,7 +37,14 @@ import static org.junit.Assert.*;
  */
 public class TestFBResultSet extends TestXABase {
 
-    @Test
+    public TestFBResultSet(String name) {
+        super(name);
+    }
+
+    public static Test suite() {
+        return new TestSuite(TestFBResultSet.class);
+    }
+
     public void testUseResultSet() throws Exception {
         FBManagedConnectionFactory mcf = initMcf();
         ManagedConnection mc = mcf.createManagedConnection(null, null);
@@ -83,7 +87,6 @@ public class TestFBResultSet extends TestXABase {
         }
     }
 
-    @Test
     public void testUseResultSetMore() throws Exception {
         FBManagedConnectionFactory mcf = initMcf();
         ManagedConnection mc = mcf.createManagedConnection(null, null);
@@ -144,11 +147,10 @@ public class TestFBResultSet extends TestXABase {
         }
     }
 
-    @Test
     public void testUseResultSetWithPreparedStatement() throws Exception {
         FBManagedConnectionFactory mcf = initMcf();
         DataSource ds = (DataSource) mcf.createConnectionFactory();
-        FBConnection c = (FBConnection) ds.getConnection();
+        AbstractConnection c = (AbstractConnection) ds.getConnection();
         Statement s = c.createStatement();
         LocalTransaction t = c.getLocalTransaction();
         Exception ex = null;
@@ -178,7 +180,7 @@ public class TestFBResultSet extends TestXABase {
         p.setDouble(5, 2.0);
         p.setString(6, "two");
         p.setString(7, "two");
-        assertEquals("executeUpdate count != 1", 1, p.executeUpdate());
+        assertTrue("executeUpdate count != 1", p.executeUpdate() == 1);
 
         p.close();
         p = c.prepareStatement("select * from T1 where C1 = ?");
@@ -235,11 +237,10 @@ public class TestFBResultSet extends TestXABase {
         }
     }
 
-    @Test
     public void testUsePreparedStatementAcrossTransactions() throws Exception {
         FBManagedConnectionFactory mcf = initMcf();
         DataSource ds = (DataSource) mcf.createConnectionFactory();
-        FBConnection c = (FBConnection) ds.getConnection();
+        AbstractConnection c = (AbstractConnection) ds.getConnection();
         Statement s = c.createStatement();
         LocalTransaction t = c.getLocalTransaction();
         Exception ex = null;
@@ -335,11 +336,10 @@ public class TestFBResultSet extends TestXABase {
         }
     }
 
-    @Test
     public void testUseResultSetWithCount() throws Exception {
         FBManagedConnectionFactory mcf = initMcf();
         DataSource ds = (DataSource) mcf.createConnectionFactory();
-        FBConnection c = (FBConnection) ds.getConnection();
+        AbstractConnection c = (AbstractConnection) ds.getConnection();
         Statement s = c.createStatement();
         LocalTransaction t = c.getLocalTransaction();
         Exception ex = null;
@@ -356,7 +356,7 @@ public class TestFBResultSet extends TestXABase {
         p.setString(1, "1");
         p.setString(2, "First Customer");
 
-        assertTrue("execute returned false for select statement", p.execute());
+        assertTrue("execute returned false for insert statement", p.execute());
         ResultSet rs = p.getResultSet();
         while (rs.next()) {
             if (log != null) log.info("count: " + rs.getInt(1));
@@ -375,13 +375,12 @@ public class TestFBResultSet extends TestXABase {
     }
 
     public static final String CREATE_PROCEDURE =
-            "CREATE PROCEDURE testproc(number INTEGER) RETURNS (result INTEGER) AS BEGIN result = number; END";
+            "CREATE PROCEDURE testproc(number INTEGER) RETURNS (result INTEGER) AS BEGIN     result = number; END";
 
-    @Test
     public void testExecutableProcedure() throws Exception {
         FBManagedConnectionFactory mcf = initMcf();
         DataSource ds = (DataSource) mcf.createConnectionFactory();
-        FBConnection c = (FBConnection) ds.getConnection();
+        AbstractConnection c = (AbstractConnection) ds.getConnection();
         Statement s = c.createStatement();
         LocalTransaction t = c.getLocalTransaction();
         t.begin();

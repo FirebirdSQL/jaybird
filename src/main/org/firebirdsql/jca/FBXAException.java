@@ -81,7 +81,6 @@ public class FBXAException extends XAException {
         this(errorCode);
         
         this.reason = reason;
-        initCause(reason);
     }
     
     /**
@@ -96,7 +95,6 @@ public class FBXAException extends XAException {
         this(msg, errorCode);
         
         this.reason = reason;
-        initCause(reason);
     }
     
     /**

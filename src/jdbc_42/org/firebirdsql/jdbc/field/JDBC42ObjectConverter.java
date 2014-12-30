@@ -1,6 +1,6 @@
 /*
  * $Id$
- *
+ * 
  * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
@@ -25,19 +25,19 @@ import java.sql.Types;
 import java.time.*;
 
 /**
- * Implementation of {@link ObjectConverter} to support JDBC 4.2 type conversions.
+ * Implementation of {@link org.firebirdsql.jdbc.field.ObjectConverter} to support JDBC 4.2 type conversions.
  *
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @since 2.2
  */
 public class JDBC42ObjectConverter implements ObjectConverter {
     @Override
-    public boolean setObject(final FBField field, final Object object) throws SQLException {
+    public boolean setObject(FBField field, Object object) throws SQLException {
         if (object instanceof LocalDate) {
             switch (field.requiredType) {
             case Types.DATE:
                 LocalDate localDate = (LocalDate) object;
-                field.setFieldData(field.getDatatypeCoder().encodeLocalDate(
+                field.setFieldData(field.field.encodeLocalDate(
                         localDate.getYear(), localDate.getMonthValue(), localDate.getDayOfMonth()));
                 return true;
             case Types.CHAR:
@@ -50,7 +50,7 @@ public class JDBC42ObjectConverter implements ObjectConverter {
             switch (field.requiredType) {
             case Types.TIME:
                 LocalTime localTime = (LocalTime) object;
-                field.setFieldData(field.getDatatypeCoder().encodeLocalTime(
+                field.setFieldData(field.field.encodeLocalTime(
                         localTime.getHour(), localTime.getMinute(), localTime.getSecond(), localTime.getNano()));
                 return true;
             case Types.CHAR:
@@ -63,16 +63,16 @@ public class JDBC42ObjectConverter implements ObjectConverter {
             LocalDateTime localDateTime = (LocalDateTime) object;
             switch (field.requiredType) {
             case Types.DATE:
-                field.setFieldData(field.getDatatypeCoder().encodeLocalDate(
+                field.setFieldData(field.field.encodeLocalDate(
                         localDateTime.getYear(), localDateTime.getMonthValue(), localDateTime.getDayOfMonth()));
                 return true;
             case Types.TIME:
-                field.setFieldData(field.getDatatypeCoder().encodeLocalTime(
+                field.setFieldData(field.field.encodeLocalTime(
                         localDateTime.getHour(), localDateTime.getMinute(), localDateTime.getSecond(),
                         localDateTime.getNano()));
                 return true;
             case Types.TIMESTAMP:
-                field.setFieldData(field.getDatatypeCoder().encodeLocalDateTime(
+                field.setFieldData(field.field.encodeLocalDateTime(
                         localDateTime.getYear(), localDateTime.getMonthValue(), localDateTime.getDayOfMonth(),
                         localDateTime.getHour(), localDateTime.getMinute(), localDateTime.getSecond(),
                         localDateTime.getNano()));

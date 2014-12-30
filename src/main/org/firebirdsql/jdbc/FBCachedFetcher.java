@@ -20,198 +20,208 @@
  */
 package org.firebirdsql.jdbc;
 
-import org.firebirdsql.gds.impl.GDSHelper;
-import org.firebirdsql.gds.ng.FbStatement;
-import org.firebirdsql.gds.ng.fields.FieldDescriptor;
-import org.firebirdsql.gds.ng.fields.RowDescriptor;
-import org.firebirdsql.gds.ng.fields.RowValue;
-import org.firebirdsql.gds.ng.listeners.DefaultStatementListener;
-import org.firebirdsql.jdbc.field.FBField;
-import org.firebirdsql.jdbc.field.FBFlushableField;
-import org.firebirdsql.jdbc.field.FieldDataProvider;
-
-import java.sql.SQLException;
-import java.sql.Types;
+import java.sql.*;
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+
+import org.firebirdsql.gds.GDSException;
+import org.firebirdsql.gds.XSQLVAR;
+import org.firebirdsql.gds.impl.AbstractIscStmtHandle;
+import org.firebirdsql.gds.impl.GDSHelper;
+import org.firebirdsql.jdbc.field.*;
 
 class FBCachedFetcher implements FBFetcher {
 
     private final boolean forwardOnly;
-    private List<RowValue> rows;
+    private Object[] rowsArray;
     private int rowNum = 0;
+
     private int fetchSize;
+    
     private final FBObjectListener.FetcherListener fetcherListener;
 
-    FBCachedFetcher(GDSHelper gdsHelper, int fetchSize, int maxRows, FbStatement stmt_handle,
+    FBCachedFetcher(GDSHelper gdsHelper, int fetchSize, int maxRows, AbstractIscStmtHandle stmt_handle,
             FBObjectListener.FetcherListener fetcherListener, boolean forwardOnly) throws SQLException {
         this.fetcherListener = fetcherListener;
         this.forwardOnly = forwardOnly;
-        final RowDescriptor rowDescriptor = stmt_handle.getFieldDescriptor();
+        final ArrayList rowsSets = new ArrayList(100);
+        final XSQLVAR[] xsqlvars = stmt_handle.getOutSqlda().sqlvar;
 
         // Check if there is blobs to catch
-        final boolean[] isBlob = new boolean[rowDescriptor.getCount()];
+        final boolean[] isBlob = new boolean[xsqlvars.length];
         boolean hasBlobs = false;
-        for (int i = 0; i < rowDescriptor.getCount(); i++) {
-            final FieldDescriptor field = rowDescriptor.getFieldDescriptor(i);
-            isBlob[i] = FBField.isType(field, Types.BLOB) ||
-                    FBField.isType(field, Types.BINARY) || // TODO: Types.BINARY seems wrong
-                    FBField.isType(field, Types.LONGVARCHAR);
-            if (isBlob[i])
+        for (int i = 0; i < xsqlvars.length; i++){
+            isBlob[i] = FBField.isType(xsqlvars[i], Types.BLOB) ||
+                FBField.isType(xsqlvars[i], Types.BINARY) ||
+                FBField.isType(xsqlvars[i], Types.LONGVARCHAR);
+            if (isBlob[i]) 
                 hasBlobs = true;
         }
-
+        
         // load all rows from statement
-        if (fetchSize == 0)
-            fetchSize = MAX_FETCH_ROWS;
-        this.fetchSize = fetchSize;
-
-        // TODO Check handling (probably in FBStatement) for EXECUTE PROCEDURE singleton result
-        RowListener rowListener = new RowListener();
-        stmt_handle.addStatementListener(rowListener);
+        int rowsCount = 0;
         try {
-            int actualFetchSize = getFetchSize();
-            while (!rowListener.isAllRowsFetched() && (maxRows == 0 || rowListener.size() < maxRows)) {
-                if (maxRows > 0) {
-                    actualFetchSize = Math.min(actualFetchSize, maxRows - rowListener.size());
-                }
-                assert actualFetchSize > 0 : "actualFetchSize should be > 0";
-                stmt_handle.fetchRows(actualFetchSize);
-            }
-            rows = rowListener.getRows();
-        } finally {
-            stmt_handle.removeStatementListener(rowListener);
-        }
+            if (fetchSize == 0)
+                fetchSize = MAX_FETCH_ROWS;
+            this.fetchSize = fetchSize;
 
-        if (hasBlobs) {
-            for (RowValue row : rows) {
-                cacheBlobsInRow(gdsHelper, rowDescriptor, isBlob, row);
+            // the following if, is only for callable statement				
+            if (!stmt_handle.isAllRowsFetched() && stmt_handle.size() == 0) {
+                do {
+                    if (maxRows != 0 && fetchSize > maxRows - rowsCount)
+                        fetchSize = maxRows - rowsCount;
+                    gdsHelper.fetch(stmt_handle, fetchSize);
+
+                    final int fetchedRowCount = stmt_handle.size();
+                    if (fetchedRowCount > 0){
+                        byte[][][] rows = stmt_handle.getRows();
+                        // Copy of right length when less rows fetched than requested
+                        if (rows.length > fetchedRowCount) {
+                            final byte[][][] tempRows = new byte[fetchedRowCount][][];
+                            System.arraycopy(rows, 0, tempRows, 0, fetchedRowCount);
+                            rows = tempRows;
+                        }
+                        rowsSets.add(rows);
+                        rowsCount += fetchedRowCount;
+                        stmt_handle.removeRows();
+                    }
+                } while (!stmt_handle.isAllRowsFetched() && (maxRows == 0 || rowsCount <maxRows));
+
+                // now create one list with known capacity					 
+                int rowCount = 0;
+                rowsArray = new Object[rowsCount];
+                for (int i = 0; i < rowsSets.size(); i++){
+                    final Object[] oneSet = (Object[]) rowsSets.get(i);
+                    final int toCopy = Math.min(oneSet.length, rowsCount - rowCount);
+                    System.arraycopy(oneSet, 0, rowsArray, rowCount, toCopy);
+                    rowCount += toCopy;
+                }
+                rowsSets.clear();
+            } else {
+                rowsArray = stmt_handle.getRows();
+                stmt_handle.removeRows();
             }
+
+            if (hasBlobs){
+                for (int i=0; i < rowsArray.length; i++){
+                    final byte[][] localRow = (byte[][]) rowsArray[i];
+                    //ugly blob caching workaround.
+                    for (int j = 0; j < localRow.length; j++) {
+                        // if field is blob and there is a value in cache
+                        if (isBlob[j] && localRow[j] != null ) {
+                            // anonymous implementation of the FieldDataProvider interface
+                            final byte[] tempData = localRow[j];
+                            final FieldDataProvider dataProvider = new FieldDataProvider() {
+                                public byte[] getFieldData() {
+                                    return tempData;
+                                }
+                                
+                                public void setFieldData(byte[] data) {
+                                    throw new UnsupportedOperationException();
+                                }
+                            };
+
+                            // copy data from current row
+                            final FBFlushableField blob = (FBFlushableField) FBField
+                                    .createField(xsqlvars[j], dataProvider, gdsHelper, false);
+                            localRow[j] = blob.getCachedData();
+                        }
+                    }
+                }
+            }
+            gdsHelper.closeStatement(stmt_handle, false);
+        } catch (GDSException ge) {
+            throw new FBSQLException(ge);
         }
-        stmt_handle.closeCursor();
     }
 
-    FBCachedFetcher(List<RowValue> rows, FBObjectListener.FetcherListener fetcherListener) throws SQLException {
-        this.rows = new ArrayList<RowValue>(rows);
+    FBCachedFetcher(ArrayList rows, FBObjectListener.FetcherListener fetcherListener) throws SQLException {
+        rowsArray = rows.toArray();
         this.fetcherListener = fetcherListener;
         forwardOnly = false;
     }
 
-    private static void cacheBlobsInRow(final GDSHelper gdsHelper, final RowDescriptor rowDescriptor,
-            final boolean[] isBlob, final RowValue localRow) throws SQLException {
-        //ugly blob caching workaround.
-        for (int j = 0; j < localRow.getCount(); j++) {
-            // if field is blob and there is a value to cache
-            if (isBlob[j] && localRow.getFieldValue(j).getFieldData() != null) {
-                final byte[] tempData = localRow.getFieldValue(j).getFieldData();
-                final FieldDataProvider dataProvider = new FieldDataProvider() {
-                    @Override
-                    public byte[] getFieldData() {
-                        return tempData;
-                    }
-
-                    @Override
-                    public void setFieldData(byte[] data) {
-                        throw new UnsupportedOperationException();
-                    }
-                };
-
-                // copy data from current row
-                final FBFlushableField blob = (FBFlushableField) FBField.createField(
-                        rowDescriptor.getFieldDescriptor(j), dataProvider, gdsHelper, false);
-                // TODO setCachedObject instead?
-                localRow.getFieldValue(j).setFieldData(blob.getCachedData());
-            }
-        }
-    }
-
-    @Override
     public boolean next() throws SQLException {
         if (isEmpty())
             return false;
-
+        
         rowNum++;
-
+        
         if (isAfterLast()) {
             fetcherListener.rowChanged(this, null);
             // keep cursor right after last row 
-            rowNum = rows.size() + 1;
-
+            rowNum = rowsArray.length + 1;
+            
             return false;
         }
 
-        fetcherListener.rowChanged(this, rows.get(rowNum - 1));
-
+        fetcherListener.rowChanged(this, (byte[][])rowsArray[rowNum-1]);
+               
         return true;
     }
 
-    @Override
     public boolean previous() throws SQLException {
         if (forwardOnly)
             throw new FBDriverNotCapableException("Result set is TYPE_FORWARD_ONLY");
-
+        
         if (isEmpty())
             return false;
-
+        
         rowNum--;
 
-        if (isBeforeFirst()) {
+        if(isBeforeFirst()) {
             fetcherListener.rowChanged(this, null);
-
+            
             // keep cursor right before the first row
             rowNum = 0;
             return false;
         }
 
-        fetcherListener.rowChanged(this, rows.get(rowNum - 1));
-
+        fetcherListener.rowChanged(this, (byte[][])rowsArray[rowNum-1]);
+        
         return true;
     }
-
-    @Override
+    
     public boolean absolute(int row) throws SQLException {
         if (forwardOnly)
             throw new FBDriverNotCapableException("Result set is TYPE_FORWARD_ONLY");
 
         return absolute(row, false);
     }
-
+    
     private boolean absolute(int row, boolean internal) throws SQLException {
         if (forwardOnly && !internal)
             throw new FBDriverNotCapableException("Result set is TYPE_FORWARD_ONLY");
-
+        
         if (row < 0)
-            row = rows.size() + row + 1;
-
+            row = rowsArray.length + row + 1;
+        
         if (row == 0 && !internal)
-            throw new FBSQLException("You cannot position to row 0 with absolute() method.");
-
+            throw new FBSQLException("You cannot position to the row 0 with absolute() method.");
+        
         if (isEmpty())
             return false;
-
+        
         rowNum = row;
 
-        if (isBeforeFirst()) {
+        if(isBeforeFirst()) {
             fetcherListener.rowChanged(this, null);
-
+            
             // keep cursor right before the first row
             rowNum = 0;
             return false;
-        }
-
+        } 
+        
         if (isAfterLast()) {
             fetcherListener.rowChanged(this, null);
-            rowNum = rows.size() + 1;
+            rowNum = rowsArray.length + 1;
             return false;
         }
 
-        fetcherListener.rowChanged(this, rows.get(rowNum - 1));
-
+        fetcherListener.rowChanged(this, (byte[][])rowsArray[rowNum-1]);
+        
         return true;
     }
 
-    @Override
     public boolean first() throws SQLException {
         if (forwardOnly)
             throw new FBDriverNotCapableException("Result set is TYPE_FORWARD_ONLY");
@@ -219,7 +229,6 @@ class FBCachedFetcher implements FBFetcher {
         return absolute(1, true);
     }
 
-    @Override
     public boolean last() throws SQLException {
         if (forwardOnly)
             throw new FBDriverNotCapableException("Result set is TYPE_FORWARD_ONLY");
@@ -227,133 +236,94 @@ class FBCachedFetcher implements FBFetcher {
         return absolute(-1, true);
     }
 
-    @Override
     public boolean relative(int row) throws SQLException {
         if (forwardOnly)
             throw new FBDriverNotCapableException("Result set is TYPE_FORWARD_ONLY");
 
         return absolute(rowNum + row, true);
     }
-
-    @Override
+    
     public void beforeFirst() throws SQLException {
         first();
         previous();
     }
-
-    @Override
+    
     public void afterLast() throws SQLException {
         last();
         next();
     }
 
-    @Override
     public void close() throws SQLException {
-        rows = Collections.emptyList();
+        rowsArray = new Object[0];
     }
 
-    @Override
     public int getRowNum() {
         return rowNum;
     }
-
-    @Override
     public boolean isEmpty() {
-        return rows == null || rows.size() == 0;
+        return rowsArray == null || rowsArray.length == 0;
     }
-
-    @Override
     public boolean isBeforeFirst() {
         return !isEmpty() && rowNum < 1;
     }
-
-    @Override
     public boolean isFirst() {
         return rowNum == 1;
     }
-
-    @Override
     public boolean isLast() {
-        return rows != null && rowNum == rows.size();
+        return rowsArray != null && rowNum == rowsArray.length;
     }
-
-    @Override
     public boolean isAfterLast() {
-        return rowNum > rows.size();
+        return rowNum > rowsArray.length;
     }
 
-    @Override
     public void deleteRow() throws SQLException {
-        rows.remove(rowNum - 1);
-
-        if (isAfterLast() || isBeforeFirst())
+        final Object[] newRows = new Object[rowsArray.length - 1];
+        System.arraycopy(rowsArray, 0, newRows, 0, rowNum - 1);
+        
+        if (rowNum < rowsArray.length)
+            System.arraycopy(rowsArray, rowNum, newRows, rowNum - 1, rowsArray.length - rowNum);
+        
+        rowsArray = newRows;
+        
+        if (isAfterLast())
             fetcherListener.rowChanged(this, null);
         else
-            fetcherListener.rowChanged(this, rows.get(rowNum - 1));
+        if (isBeforeFirst())
+            fetcherListener.rowChanged(this, null);
+        else
+            fetcherListener.rowChanged(this, (byte[][])rowsArray[rowNum-1]);
     }
 
-    @Override
-    public void insertRow(RowValue data) throws SQLException {
+    public void insertRow(byte[][] data) throws SQLException {
+        final Object[] newRows = new Object[rowsArray.length + 1];
+        
         if (rowNum == 0)
             rowNum++;
+        
+        System.arraycopy(rowsArray, 0, newRows, 0, rowNum - 1);
+        System.arraycopy(rowsArray, rowNum - 1, newRows, rowNum, rowsArray.length - rowNum + 1);
+        newRows[rowNum - 1] = data;
 
-        if (rowNum > rows.size()) {
-            rows.add(data);
-        } else {
-            rows.add(rowNum - 1, data);
-        }
+        rowsArray = newRows;
 
         if (isAfterLast() || isBeforeFirst())
             fetcherListener.rowChanged(this, null);
         else
-            fetcherListener.rowChanged(this, rows.get(rowNum - 1));
+            fetcherListener.rowChanged(this, (byte[][])rowsArray[rowNum-1]);
     }
 
-    @Override
-    public void updateRow(RowValue data) throws SQLException {
+    public void updateRow(byte[][] data) throws SQLException {
         if (!isAfterLast() && !isBeforeFirst()) {
-            rows.set(rowNum - 1, data);
+            rowsArray[rowNum - 1] = data;
             fetcherListener.rowChanged(this, data);
         }
     }
 
-    @Override
-    public int getFetchSize() {
+    public int getFetchSize(){
         return fetchSize;
     }
 
-    @Override
-    public void setFetchSize(int fetchSize) {
+    public void setFetchSize(int fetchSize){
         this.fetchSize = fetchSize;
-    }
-
-    private static final class RowListener extends DefaultStatementListener {
-        private final List<RowValue> rows = new ArrayList<RowValue>();
-        private boolean allRowsFetched = false;
-
-        @Override
-        public void receivedRow(FbStatement sender, RowValue rowValue) {
-            rows.add(rowValue);
-        }
-
-        @Override
-        public void allRowsFetched(FbStatement sender) {
-            allRowsFetched = true;
-        }
-
-        public boolean isAllRowsFetched() {
-            return allRowsFetched;
-        }
-
-        public List<RowValue> getRows() {
-            return rows;
-        }
-
-        /**
-         * @return Number of received rows.
-         */
-        public int size() {
-            return rows.size();
-        }
     }
 }

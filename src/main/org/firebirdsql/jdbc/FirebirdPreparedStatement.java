@@ -26,7 +26,6 @@
 package org.firebirdsql.jdbc;
 
 import java.sql.PreparedStatement;
-import java.sql.SQLException;
 
 import org.firebirdsql.gds.ISCConstants;
 
@@ -94,7 +93,7 @@ public interface FirebirdPreparedStatement extends FirebirdStatement, PreparedSt
      *
      * @return The execution plan of the statement
      */
-    String getExecutionPlan() throws FBSQLException, SQLException;
+    String getExecutionPlan() throws FBSQLException;
 
     /**
      * Get the statement type of this PreparedStatement.

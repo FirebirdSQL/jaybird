@@ -37,7 +37,7 @@ import java.sql.Statement;
  * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
  */
 public interface FirebirdStatement extends Statement {
-
+    
     /**
      * Get number of inserted rows. You can call this method multiple times,
      * it does not affect the JDBC result number.

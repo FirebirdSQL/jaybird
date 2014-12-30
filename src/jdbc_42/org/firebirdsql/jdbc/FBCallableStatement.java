@@ -22,27 +22,69 @@ package org.firebirdsql.jdbc;
 
 import org.firebirdsql.gds.impl.GDSHelper;
 
-import java.sql.SQLException;
-import java.sql.SQLType;
+import java.sql.*;
 
 /**
- * JDBC 4.2 implementation of {@link java.sql.PreparedStatement} interface.
- * <p>
- * Contains methods specific to the JDBC 4.2 implementation, or exists if there are methods in higher JDBC versions
- * that cannot be defined in JDBC 4.2.
- * </p>
- *
- * @author <a href="mailto:d_jencks@users.sourceforge.net">David Jencks</a>
- * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
- * @author <a href="mailto:sjardine@users.sourceforge.net">Steven Jardine</a>
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * JDBC 4.2 compliant implementation of {@link java.sql.CallableStatement}.
  */
 public class FBCallableStatement extends AbstractCallableStatement {
 
-    protected FBCallableStatement(GDSHelper c, String sql, int rsType, int rsConcurrency, int rsHoldability,
-            StoredProcedureMetaData storedProcMetaData, FBObjectListener.StatementListener statementListener,
+    /**
+     * Create instance of this class.
+     * 
+     * @param c
+     *            instance of {@link org.firebirdsql.jdbc.AbstractConnection}
+     * @param sql
+     *            SQL statement containing procedure call.
+     *
+     * @throws java.sql.SQLException
+     *             if SQL error occured.
+     */
+    public FBCallableStatement(GDSHelper c, String sql, int rsType, int rsConcurrency,
+            int rsHoldability, StoredProcedureMetaData storedProcedureMetaData,
+            FBObjectListener.StatementListener statementListener,
             FBObjectListener.BlobListener blobListener) throws SQLException {
-        super(c, sql, rsType, rsConcurrency, rsHoldability, storedProcMetaData, statementListener, blobListener);
+        super(c, sql, rsType, rsConcurrency, rsHoldability, storedProcedureMetaData,
+                statementListener, blobListener);
+    }
+
+    public NClob getNClob(int parameterIndex) throws SQLException {
+        parameterIndex = procedureCall.mapOutParamIndexToPosition(parameterIndex);
+        return getAndAssertSingletonResultSet().getNClob(parameterIndex);
+    }
+
+    public NClob getNClob(String parameterName) throws SQLException {
+        return getNClob(findOutParameter(parameterName));
+    }
+
+    public RowId getRowId(int parameterIndex) throws SQLException {
+        parameterIndex = procedureCall.mapOutParamIndexToPosition(parameterIndex);
+        return getAndAssertSingletonResultSet().getRowId(parameterIndex);
+    }
+
+    public RowId getRowId(String parameterName) throws SQLException {
+        return getRowId(findOutParameter(parameterName));
+    }
+
+    public SQLXML getSQLXML(int parameterIndex) throws SQLException {
+        parameterIndex = procedureCall.mapOutParamIndexToPosition(parameterIndex);
+        return getAndAssertSingletonResultSet().getSQLXML(parameterIndex);
+    }
+
+    public SQLXML getSQLXML(String parameterName) throws SQLException {
+        return getSQLXML(findOutParameter(parameterName));
+    }
+
+    public void setNClob(String parameterName, NClob value) throws SQLException {
+        throw new FBDriverNotCapableException();
+    }
+
+    public void setRowId(String parameterName, RowId x) throws SQLException {
+        throw new FBDriverNotCapableException();
+    }
+
+    public void setSQLXML(String parameterName, SQLXML xmlObject) throws SQLException {
+        throw new FBDriverNotCapableException();
     }
 
     @Override
