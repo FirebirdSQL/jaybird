@@ -1,0 +1,22 @@
+<?xml version='1.0' ?> 
+<settings>
+  <resource name='src/main/org/firebirdsql/jdbc/parser/JaybirdSql.g3'>
+    <property name='traceParser' value='false' />
+    <property name='docbookOutput' value='false' />
+    <property name='installSmap' value='false' />
+    <property name='normalOuput' value='true' />
+    <property name='noTrace' value='true' />
+    <property name='trace' value='false' />
+    <property name='cleanWarnings' value='false' />
+    <property name='htmlOutput' value='false' />
+    <property name='traceTreeParser' value='false' />
+    <property name='debug' value='false' />
+    <property name='superGrammars' value='' />
+    <property name='traceLexer' value='false' />
+    <property name='output' value='/client-java.22.head/src/main/org/firebirdsql/jdbc/parser' />
+    <property name='diagnosticOutput' value='false' />
+  </resource>
+  <resource name='**ANTXR-ECLIPSE-PLUGIN**'>
+    <property name='pluginVersion' value='2.7.6' />
+  </resource>
+</settings>
