@@ -41,6 +41,8 @@ import java.sql.SQLException;
  */
 public class FbClientDatabaseFactory implements FbDatabaseFactory {
 
+    private static final FbClientDatabaseFactory INSTANCE = new FbClientDatabaseFactory();
+
     @Override
     public JnaDatabase connect(IConnectionProperties connectionProperties) throws SQLException {
         final JnaConnection jnaConnection = new JnaConnection(getClientLibrary(), connectionProperties);
@@ -67,5 +69,9 @@ public class FbClientDatabaseFactory implements FbDatabaseFactory {
                 return (FbClientLibrary) Native.synchronizedLibrary(library);
             }
         }
+    }
+
+    public static FbClientDatabaseFactory getInstance() {
+        return INSTANCE;
     }
 }
