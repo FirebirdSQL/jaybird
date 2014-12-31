@@ -1,17 +1,36 @@
 package org.firebirdsql.event;
 
-import java.io.File;
-import java.sql.*;
-
-import org.firebirdsql.common.FBTestBase;
+import org.firebirdsql.common.FBJUnit4TestBase;
+import org.firebirdsql.common.rules.GdsTypeRule;
 import org.firebirdsql.gds.impl.GDSType;
+import org.firebirdsql.gds.impl.jni.EmbeddedGDSImpl;
+import org.firebirdsql.gds.impl.jni.LocalGDSImpl;
+import org.firebirdsql.gds.impl.jni.NativeGDSImpl;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.ClassRule;
+import org.junit.Test;
+
+import java.io.File;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
+import java.sql.Statement;
 
 import static org.firebirdsql.common.FBTestProperties.*;
+import static org.junit.Assert.assertEquals;
 
 /** 
  * Test the FBEventManager class
  */
-public class TestFBEventManager extends FBTestBase {
+public class TestFBEventManager extends FBJUnit4TestBase {
+
+    // TODO Remove once Firebird 3 fbclient bug with isc_detach_database + events has been fixed
+    @ClassRule
+    public static final GdsTypeRule gdsTypeRule = GdsTypeRule.excludes(
+            NativeGDSImpl.NATIVE_TYPE_NAME,
+            LocalGDSImpl.LOCAL_TYPE_NAME,
+            EmbeddedGDSImpl.EMBEDDED_TYPE_NAME);
 
     private EventManager eventManager;
     private boolean eventManagerDisconnected;
@@ -33,14 +52,8 @@ public class TestFBEventManager extends FBTestBase {
     // Delay to wait after registering an event listener before testing
     static final int DELAY = 500;
 
-    public TestFBEventManager(String name) throws Exception {
-        super(name);
-        Class.forName("org.firebirdsql.jdbc.FBDriver");
-    }
-
-    protected void setUp() throws Exception {
-        super.setUp();
-        
+    @Before
+    public void setUp() throws Exception {
         executeSql(TABLE_DEF);
         executeSql(TRIGGER_DEF);
 
@@ -70,46 +83,52 @@ public class TestFBEventManager extends FBTestBase {
         }
     }
 
-    protected void tearDown() throws Exception {
+    @After
+    public void tearDown() throws Exception {
         if (!eventManagerDisconnected)
             eventManager.disconnect();
         
         eventManagerDisconnected = true;
-        
-        super.tearDown();
     }
 
+    @Test
     public void testWaitForEventNoEvent() throws Exception {
         assertEquals(-1, eventManager.waitForEvent("TEST_EVENT_B", 500));
     }
 
+    @Test
     public void testWaitForEventIndefinitely() throws Exception {
-        EventWaitThread waitThread = new EventWaitThread("TEST_EVENT_B", 0);
+        EventWait eventWait = new EventWait("TEST_EVENT_B", 0);
+        Thread waitThread = new Thread(eventWait);
         waitThread.start();
-        Thread.sleep(1000);
-        waitThread.interrupt();
-        assertEquals(0, waitThread.getEventCount());
+        waitThread.join(1000);
+        if (waitThread.isAlive()) waitThread.interrupt();
+        assertEquals(0, eventWait.getEventCount());
     }
 
+    @Test
     public void testWaitForEventWithOccurrence() throws Exception {
-        EventWaitThread waitThread = 
-            new EventWaitThread("TEST_EVENT_B", 10000);
+        EventWait eventWait = new EventWait("TEST_EVENT_B", 10000);
+        Thread waitThread = new Thread(eventWait);
         waitThread.start();
         Thread.sleep(DELAY);
         executeSql("INSERT INTO TEST VALUES (1)");
         waitThread.join();
-        assertEquals(1, waitThread.getEventCount());
+        assertEquals(1, eventWait.getEventCount());
     }
 
+    @Test
     public void testWaitForEventWithOccurrenceNoTimeout() throws Exception {
-        EventWaitThread waitThread = new EventWaitThread("TEST_EVENT_A", 0);
+        EventWait eventWait = new EventWait("TEST_EVENT_A", 0);
+        Thread waitThread = new Thread(eventWait);
         waitThread.start();
         Thread.sleep(DELAY);
         executeSql("INSERT INTO TEST VALUES (2)");
         waitThread.join();
-        assertEquals(2, waitThread.getEventCount());
+        assertEquals(2, eventWait.getEventCount());
     }
 
+    @Test
     public void testBasicEventMechanism() throws Exception {
         AccumulatingEventListener ael = new AccumulatingEventListener();
         eventManager.addEventListener("TEST_EVENT_B", ael);
@@ -123,7 +142,8 @@ public class TestFBEventManager extends FBTestBase {
         assertEquals("No notification for events after removal of listener", 
                 totalEvents, ael.getTotalEvents());
     }
-    
+
+    @Test
     public void testAsyncEventsNoEvents() throws Exception {
         Thread.sleep(DELAY);
         try {
@@ -131,9 +151,9 @@ public class TestFBEventManager extends FBTestBase {
         } finally {
             eventManagerDisconnected = true;
         }
-        
     }
 
+    @Test
     public void testMultipleListenersOnOneEvent() throws Exception {
         AccumulatingEventListener ael1 = new AccumulatingEventListener();
         AccumulatingEventListener ael2 = new AccumulatingEventListener();
@@ -152,6 +172,7 @@ public class TestFBEventManager extends FBTestBase {
         assertEquals(0, ael3.getTotalEvents());
     }
 
+    @Test
     public void testLargeMultiLoad() throws Exception {
         final int THREAD_COUNT = 5;
         final int REP_COUNT = 100;
@@ -183,6 +204,7 @@ public class TestFBEventManager extends FBTestBase {
         assertEquals(THREAD_COUNT * REP_COUNT * 3, ael3.getTotalEvents());
     }
 
+    @Test
     public void testSlowCallback() throws Exception {
         final int REP_COUNT = 5;
         AccumulatingEventListener ael = new AccumulatingEventListener(){
@@ -190,6 +212,7 @@ public class TestFBEventManager extends FBTestBase {
                 try {
                     Thread.sleep(300);
                 } catch (InterruptedException ie){
+                    // ignore
                 }
                 super.eventOccurred(e);
             }
@@ -204,16 +227,13 @@ public class TestFBEventManager extends FBTestBase {
         assertEquals(REP_COUNT, ael.getTotalEvents());
     }
 
-
-    class EventWaitThread extends Thread {
+    class EventWait implements Runnable {
         
-        private String eventName;
-
+        private final String eventName;
         private int eventCount;
+        private final int timeout;
 
-        private int timeout;
-
-        public EventWaitThread(String eventName, int timeout){
+        public EventWait(String eventName, int timeout){
             this.eventName = eventName;
             this.timeout = timeout;
         }
@@ -257,7 +277,7 @@ public class TestFBEventManager extends FBTestBase {
 
         public void run(){
             try {
-                Connection conn = TestFBEventManager.this.getConnectionViaDriverManager();
+                Connection conn = getConnectionViaDriverManager();
                 PreparedStatement stmt = conn.prepareStatement(
                     "INSERT INTO TEST VALUES (?)");
                 try {
