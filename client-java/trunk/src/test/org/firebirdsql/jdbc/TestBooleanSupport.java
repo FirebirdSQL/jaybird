@@ -55,6 +55,7 @@ public class TestBooleanSupport extends FBJUnit4TestBase {
 
     @BeforeClass
     public static void checkBooleanSupport() {
+        // NOTE: For native tests this also requires use of a Firebird 3 client library
         assumeTrue("Test requires BOOLEAN support on server", getDefaultSupportInfo().supportsBoolean());
     }
 
