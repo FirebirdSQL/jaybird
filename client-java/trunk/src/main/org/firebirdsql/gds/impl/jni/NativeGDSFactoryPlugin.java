@@ -23,6 +23,7 @@ package org.firebirdsql.gds.impl.jni;
 import org.firebirdsql.gds.GDS;
 import org.firebirdsql.gds.GDSException;
 import org.firebirdsql.gds.impl.BaseGDSFactoryPlugin;
+import org.firebirdsql.gds.ng.jna.FbClientDatabaseFactory;
 
 public class NativeGDSFactoryPlugin extends BaseGDSFactoryPlugin {
 
@@ -73,5 +74,11 @@ public class NativeGDSFactoryPlugin extends BaseGDSFactoryPlugin {
 
     public GDS getGDS() {
         return GDSHolder.gds;
-    }   
+    }
+
+    @Override
+    public FbClientDatabaseFactory getDatabaseFactory() {
+        // TODO This needs to change if we are going to release jna-client as a separate jar
+        return FbClientDatabaseFactory.getInstance();
+    }
 }
