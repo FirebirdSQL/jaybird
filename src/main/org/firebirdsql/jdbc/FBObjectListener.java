@@ -211,6 +211,10 @@ public interface FBObjectListener {
         void executionCompleted(FirebirdBlob blob) throws SQLException;
     }
 
+    /**
+     * Implementation of {@link org.firebirdsql.jdbc.FBObjectListener.BlobListener} that implements all methods as
+     * empty methods.
+     */
     final class NoActionBlobListener implements BlobListener {
 
         private static final BlobListener INSTANCE = new NoActionBlobListener();
