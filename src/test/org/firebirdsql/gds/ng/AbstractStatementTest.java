@@ -24,6 +24,7 @@ import org.firebirdsql.common.DdlHelper;
 import org.firebirdsql.common.FBJUnit4TestBase;
 import org.firebirdsql.common.FBTestProperties;
 import org.firebirdsql.common.JdbcResourceHelper;
+import org.firebirdsql.encodings.Encoding;
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.TransactionParameterBuffer;
 import org.firebirdsql.gds.impl.wire.TransactionParameterBufferImpl;
@@ -101,11 +102,19 @@ public abstract class AbstractStatementTest extends FBJUnit4TestBase {
     private static final String CREATE_KEY_VALUE_TABLE =
             "CREATE TABLE keyvalue ( " +
             " thekey INTEGER, " +
-            " thevalue VARCHAR(5)" +
+            " thevalue VARCHAR(5), " +
+            " theUTFVarcharValue VARCHAR(5) CHARACTER SET UTF8, " +
+            " theUTFCharValue CHAR(5) CHARACTER SET UTF8 " +
             ")";
 
     protected static final String INSERT_RETURNING_KEY_VALUE =
             "INSERT INTO keyvalue (thevalue) VALUES (?) RETURNING thekey";
+
+    protected static final String INSERT_THEUTFVALUE =
+            "INSERT INTO keyvalue (thekey, theUTFVarcharValue, theUTFCharValue) VALUES (?, ?, ?)";
+
+    protected static final String SELECT_THEUTFVALUE =
+            "SELECT theUTFVarcharValue, theUTFCharValue FROM keyvalue WHERE thekey = ?";
     //@formatter:on
 
     protected final FbConnectionProperties connectionInfo;
@@ -577,6 +586,52 @@ public abstract class AbstractStatementTest extends FBJUnit4TestBase {
 
         // Just checking if this doesn't throw errors
         // TODO: Add/check existing tests using cursorName.
+    }
+
+    @Test
+    public void testInsertSelectUTF8Value() throws Exception {
+        allocateStatement();
+
+        // Insert UTF8 columns
+        statement.prepare(INSERT_THEUTFVALUE);
+        final RowDescriptor parametersInsert = statement.getParameterDescriptor();
+        final RowValue parameterValuesInsert = parametersInsert.createDefaultFieldValues();
+        parameterValuesInsert.getFieldValue(0).setFieldData(db.getDatatypeCoder().encodeInt(1));
+        final Encoding utf8Encoding = db.getEncodingFactory().getEncodingForFirebirdName("UTF8");
+        final String aEuro = "a\u20AC";
+        final byte[] insertFieldData = utf8Encoding.encodeToCharset(aEuro);
+        parameterValuesInsert.getFieldValue(1).setFieldData(insertFieldData);
+        parameterValuesInsert.getFieldValue(2).setFieldData(insertFieldData);
+        statement.execute(parameterValuesInsert);
+
+        // Retrieve the just inserted UTF8 values from the database for comparison
+        statement.prepare(SELECT_THEUTFVALUE);
+        final RowDescriptor parametersSelect = statement.getParameterDescriptor();
+        final RowValue parameterValuesSelect = parametersSelect.createDefaultFieldValues();
+        parameterValuesSelect.getFieldValue(0).setFieldData(db.getDatatypeCoder().encodeInt(1));
+        final SimpleStatementListener statementListener = new SimpleStatementListener();
+        statement.addStatementListener(statementListener);
+        statement.execute(parameterValuesSelect);
+        statement.fetchRows(1);
+
+        final List<RowValue> rows = statementListener.getRows();
+        assertEquals("Expected a row", 1, rows.size());
+        final RowValue selectResult = rows.get(0);
+        final byte[] selectVarcharFieldData = selectResult.getFieldValue(0).getFieldData();
+        final byte[] selectCharFieldData = selectResult.getFieldValue(1).getFieldData();
+        assertEquals("Length of selected varchar field data", 4, selectVarcharFieldData.length);
+        assertEquals("Length of selected char field data", 20, selectCharFieldData.length);
+
+        String decodedVarchar = utf8Encoding.decodeFromCharset(selectVarcharFieldData);
+        String decodedChar = utf8Encoding.decodeFromCharset(selectCharFieldData);
+
+        assertEquals("Unexpected value for varchar", aEuro, decodedVarchar);
+        assertEquals("Unexpected value for trimmed char", aEuro, decodedChar.trim());
+        // Note artificial result from the way UTF8 is handled
+        assertEquals("Unexpected length for char", 18, decodedChar.length());
+        char[] spaceChars16 = new char[16];
+        Arrays.fill(spaceChars16, ' ');
+        assertEquals("Unexpected trailing characters for char", new String(spaceChars16), decodedChar.substring(2));
     }
 
     private FbTransaction getTransaction() throws SQLException {
