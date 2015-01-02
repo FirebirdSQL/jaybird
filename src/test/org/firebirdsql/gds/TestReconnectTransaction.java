@@ -24,7 +24,6 @@ import org.firebirdsql.common.FBJUnit4TestBase;
 import org.firebirdsql.common.FBTestProperties;
 import org.firebirdsql.gds.impl.GDSFactory;
 import org.firebirdsql.gds.impl.GDSHelper;
-import org.firebirdsql.gds.impl.GDSType;
 import org.firebirdsql.gds.ng.*;
 import org.firebirdsql.gds.ng.fields.RowValue;
 import org.firebirdsql.gds.ng.listeners.DefaultStatementListener;
@@ -41,7 +40,8 @@ import java.util.Arrays;
 import java.util.List;
 
 import static org.firebirdsql.common.FBTestProperties.*;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 public class TestReconnectTransaction extends FBJUnit4TestBase {
 
@@ -94,10 +94,6 @@ public class TestReconnectTransaction extends FBJUnit4TestBase {
 
     @Test
     public void testReconnectTransaction() throws Exception {
-        // TODO Expect this to work on all types
-        if (getGdsType() != GDSType.getType("PURE_JAVA"))
-            fail("This test case does not work with JNI connections.");
-
         FbConnectionProperties connectionInfo = new FbConnectionProperties();
         connectionInfo.setServerName(FBTestProperties.DB_SERVER_URL);
         connectionInfo.setPortNumber(FBTestProperties.DB_SERVER_PORT);

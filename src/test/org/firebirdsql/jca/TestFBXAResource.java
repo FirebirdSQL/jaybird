@@ -159,8 +159,7 @@ public class TestFBXAResource extends TestXABase {
 
     @Test
     public void testRecover() throws Exception {
-        if ("NATIVE".equals(getGdsType().toString()) ||
-                "EMBEDDED".equals(getGdsType().toString()) ||
+        if ("EMBEDDED".equals(getGdsType().toString()) ||
                 "LOCAL".equals(getGdsType().toString()))
             fail("This method does not work with JNI-based connections.");
 
