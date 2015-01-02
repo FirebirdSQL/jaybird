@@ -220,21 +220,27 @@ public class JnaStatement extends AbstractFbStatement {
             FieldValue value = parameters.getFieldValue(idx);
             byte[] fieldData = value.getFieldData();
             if (fieldData == null) {
+                // Note this only works because we mark the type as nullable in allocateXSqlDa
                 xSqlVar.sqlind.setValue(XSQLVAR.SQLIND_NULL);
             } else {
                 xSqlVar.sqlind.setValue(XSQLVAR.SQLIND_NOT_NULL);
 
                 // TODO Throw truncation error if fieldData longer than sqllen?
 
-                int fieldType = rowDescriptor.getFieldDescriptor(idx).getType() & ~1;
-                boolean isVarying = fieldType == ISCConstants.SQL_VARYING;
+                final FieldDescriptor fieldDescriptor = rowDescriptor.getFieldDescriptor(idx);
                 int bufferOffset = 0;
-                if (isVarying) {
+                if (fieldDescriptor.isVarying()) {
+                    // Only send the data we need
+                    xSqlVar.sqllen = (short) Math.min(fieldDescriptor.getLength(), fieldData.length);
                     xSqlVar.sqldata.setShort(0, (short) fieldData.length);
                     bufferOffset = 2;
-                } else if (fieldType == ISCConstants.SQL_TEXT && xSqlVar.sqlsubtype != ISCConstants.CS_BINARY) {
-                    // Non-binary CHAR field: fill with spaces
-                    xSqlVar.sqldata.setMemory(0, xSqlVar.sqllen & 0xff, (byte) ' ');
+                } else if (fieldDescriptor.isFbType(ISCConstants.SQL_TEXT)) {
+                    // Only send the data we need
+                    xSqlVar.sqllen = (short) Math.min(fieldDescriptor.getLength(), fieldData.length);
+                    if (fieldDescriptor.getSubType() != ISCConstants.CS_BINARY){
+                        // Non-binary CHAR field: fill with spaces
+                        xSqlVar.sqldata.setMemory(0, xSqlVar.sqllen & 0xff, (byte) ' ');
+                    }
                 }
                 xSqlVar.sqldata.write(bufferOffset, fieldData, 0, fieldData.length);
             }

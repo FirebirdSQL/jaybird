@@ -171,7 +171,28 @@ public final class FieldDescriptor {
      * @return {@code true} if the type is variable length (ie {@link org.firebirdsql.gds.ISCConstants#SQL_VARYING}).
      */
     public boolean isVarying() {
-        return (getType() & ~1) == ISCConstants.SQL_VARYING;
+        return isFbType(ISCConstants.SQL_VARYING);
+    }
+
+    /**
+     * Check if the type of this field is the specified Firebird data type.
+     * <p>
+     * This method assumes the not-nullable data type is passed, on checking the nullable bit of {@link #getType()} is
+     * set to {@code 0}.
+     * </p>
+     *
+     * @param fbType One of the {@code SQL_} data type identifier values
+     * @return {@code true} if the type is the same as the type of this field
+     */
+    public boolean isFbType(int fbType) {
+        return (getType() & ~1) == fbType;
+    }
+
+    /**
+     * @return {@code true} if this field is nullable.
+     */
+    public boolean isNullable() {
+        return (getType() & 1) == 1;
     }
 
     /**
