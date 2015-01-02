@@ -123,7 +123,7 @@ public class FBManagedConnection implements ManagedConnection, XAResource, Excep
             database.addDatabaseListener(new MCDatabaseListener());
             database.attach();
 
-            gdsHelper = new GDSHelper(gds, dpb, null, this, database);
+            gdsHelper = new GDSHelper(gds, dpb, this, database);
         } catch(GDSException ex) {
             throw new FBResourceException(ex);
         } catch (SQLException ex) {
@@ -762,7 +762,7 @@ public class FBManagedConnection implements ManagedConnection, XAResource, Excep
             FbTransaction trHandle2 = database.startTransaction(tpb.getTransactionParameterBuffer());
             FbStatement stmtHandle2 = database.createStatement(trHandle2);
 
-            GDSHelper gdsHelper2 = new GDSHelper(gds, getGDSHelper().getDatabaseParameterBuffer(), null, null, database);
+            GDSHelper gdsHelper2 = new GDSHelper(gds, getGDSHelper().getDatabaseParameterBuffer(), null, database);
             gdsHelper2.setCurrentTransaction(trHandle2);
 
             stmtHandle2.prepare(FORGET_FIND_QUERY);
@@ -826,7 +826,7 @@ public class FBManagedConnection implements ManagedConnection, XAResource, Excep
 
             FbStatement stmtHandle2 = database.createStatement(trHandle2);
 
-            GDSHelper gdsHelper2 = new GDSHelper(gds, getGDSHelper().getDatabaseParameterBuffer(), null, null, database);
+            GDSHelper gdsHelper2 = new GDSHelper(gds, getGDSHelper().getDatabaseParameterBuffer(), null, database);
             gdsHelper2.setCurrentTransaction(trHandle2);
 
             stmtHandle2.prepare(FORGET_DELETE_QUERY + inLimboId);
@@ -955,7 +955,7 @@ public class FBManagedConnection implements ManagedConnection, XAResource, Excep
 
             FbStatement stmtHandle2 = database.createStatement(trHandle2);
 
-            GDSHelper gdsHelper2 = new GDSHelper(gds, getGDSHelper().getDatabaseParameterBuffer(), null, null, database);
+            GDSHelper gdsHelper2 = new GDSHelper(gds, getGDSHelper().getDatabaseParameterBuffer(), null, database);
             gdsHelper2.setCurrentTransaction(trHandle2);
 
             stmtHandle2.prepare(RECOVERY_QUERY);
@@ -1022,7 +1022,7 @@ public class FBManagedConnection implements ManagedConnection, XAResource, Excep
 
             FbStatement stmtHandle2 = database.createStatement(trHandle2);
 
-            GDSHelper gdsHelper2 = new GDSHelper(gds, getGDSHelper().getDatabaseParameterBuffer(), null, null, database);
+            GDSHelper gdsHelper2 = new GDSHelper(gds, getGDSHelper().getDatabaseParameterBuffer(), null, database);
             gdsHelper2.setCurrentTransaction(trHandle2);
 
             stmtHandle2.prepare(RECOVERY_QUERY_PARAMETRIZED);

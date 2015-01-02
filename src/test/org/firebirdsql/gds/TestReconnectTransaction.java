@@ -114,7 +114,7 @@ public class TestReconnectTransaction extends FBJUnit4TestBase {
 
         FbDatabase dbHandle2 = databaseFactory.connect(connectionInfo);
         dbHandle2.attach();
-        GDSHelper gdsHelper2 = new GDSHelper(gds, dpb, null, null, dbHandle2);
+        GDSHelper gdsHelper2 = new GDSHelper(gds, dpb, null, dbHandle2);
         FbTransaction trHandle2 = dbHandle2.startTransaction(tpb.getTransactionParameterBuffer());
         gdsHelper2.setCurrentTransaction(trHandle2);
 
