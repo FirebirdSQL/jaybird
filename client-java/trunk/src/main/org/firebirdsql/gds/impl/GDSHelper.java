@@ -26,16 +26,14 @@
  */
 package org.firebirdsql.gds.impl;
 
-import java.sql.SQLException;
-import java.util.List;
-
 import org.firebirdsql.gds.*;
 import org.firebirdsql.gds.ng.FbBlob;
 import org.firebirdsql.gds.ng.FbDatabase;
 import org.firebirdsql.gds.ng.FbStatement;
 import org.firebirdsql.gds.ng.FbTransaction;
-import org.firebirdsql.logging.Logger;
-import org.firebirdsql.logging.LoggerFactory;
+
+import java.sql.SQLException;
+import java.util.List;
 
 /**
  * Helper class for all GDS-related operations.
@@ -43,8 +41,6 @@ import org.firebirdsql.logging.LoggerFactory;
 public class GDSHelper {
     
     public static final int DEFAULT_BLOB_BUFFER_SIZE = 16 * 1024;
-
-    private static final Logger log = LoggerFactory.getLogger(GDSHelper.class);
 
     private final GDS gds;
     private final FbDatabase database;
@@ -56,13 +52,13 @@ public class GDSHelper {
     protected DatabaseParameterBuffer dpb;
     
     private boolean registerResultSets;
-    
+
     private final ExceptionListener listener;
 
     /**
      * Create instance of this class.
      */
-    public GDSHelper(GDS gds, DatabaseParameterBuffer dpb, IscDbHandle dbHandle, ExceptionListener listener, FbDatabase database) {
+    public GDSHelper(GDS gds, DatabaseParameterBuffer dpb, ExceptionListener listener, FbDatabase database) {
         this.gds = gds;
         this.dpb = dpb;
 
@@ -710,6 +706,7 @@ public class GDSHelper {
      * 
      * @return handler object for internal API calls
      */
+    @Deprecated
     public GDS getInternalAPIHandler() {
         return gds;
     }

@@ -786,7 +786,7 @@ public class FBManagedConnectionFactory implements ManagedConnectionFactory,
                     // remove heuristic data from rdb$transactions (only possible in versions before Firebird 3)
                     try {
                         String query = "delete from rdb$transactions where rdb$transaction_id = " + fbTransactionId;
-                        GDSHelper gdsHelper = new GDSHelper(gds, getDatabaseParameterBuffer(), null, null, dbHandle);
+                        GDSHelper gdsHelper = new GDSHelper(gds, getDatabaseParameterBuffer(), null, dbHandle);
 
                         FbTransaction trHandle2 = dbHandle.startTransaction(getDefaultTpb().getTransactionParameterBuffer());
                         gdsHelper.setCurrentTransaction(trHandle2);
