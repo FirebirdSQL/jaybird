@@ -236,8 +236,8 @@ public class V10Database extends AbstractFbWireDatabase implements FbWireDatabas
     }
 
     @Override
-    public void createDatabase(DatabaseParameterBuffer dpb) throws SQLException {
-        // TODO Handle create database similar to attach (don't pass dpb in)?
+    public void createDatabase() throws SQLException {
+        final DatabaseParameterBuffer dpb = protocolDescriptor.createDatabaseParameterBuffer(connection);
         attachOrCreate(dpb, true);
     }
 

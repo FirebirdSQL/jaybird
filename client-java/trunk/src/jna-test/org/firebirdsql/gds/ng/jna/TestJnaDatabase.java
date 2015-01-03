@@ -24,7 +24,6 @@ import org.firebirdsql.common.FBTestProperties;
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.TransactionParameterBuffer;
 import org.firebirdsql.gds.impl.GDSServerVersion;
-import org.firebirdsql.gds.impl.wire.DatabaseParameterBufferImp;
 import org.firebirdsql.gds.impl.wire.TransactionParameterBufferImpl;
 import org.firebirdsql.gds.ng.FbConnectionProperties;
 import org.firebirdsql.gds.ng.FbDatabase;
@@ -54,6 +53,7 @@ import static org.junit.Assume.assumeTrue;
  */
 public class TestJnaDatabase {
 
+    // TODO Check if tests can be unified with equivalent wire protocol tests
     // TODO Assert in tests need to be checked (and more need to be added)
 
     @Rule
@@ -164,15 +164,12 @@ public class TestJnaDatabase {
      */
     @Test
     public void testBasicCreateAndDrop() throws Exception {
+        connectionInfo.getExtraDatabaseParameters()
+                .addArgument(ISCConstants.isc_dpb_sql_dialect, 3);
         final JnaDatabase db = factory.connect(connectionInfo);
         File dbFile = new File(connectionInfo.getDatabaseName());
         try {
-            DatabaseParameterBufferImp dpb = new DatabaseParameterBufferImp();
-            dpb.addArgument(ISCConstants.isc_dpb_sql_dialect, 3);
-            dpb.addArgument(ISCConstants.isc_dpb_user_name, DB_USER);
-            dpb.addArgument(ISCConstants.isc_dpb_password, DB_PASSWORD);
-
-            db.createDatabase(dpb);
+            db.createDatabase();
             assertTrue("Database should be attached after create", db.isAttached());
             assertTrue("Expected database file to exist (NOTE: only works on localhost)",
                     dbFile.exists() || !FBTestProperties.DB_SERVER_URL.equalsIgnoreCase("localhost") );

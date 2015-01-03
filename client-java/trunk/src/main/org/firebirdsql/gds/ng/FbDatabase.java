@@ -59,11 +59,9 @@ public interface FbDatabase {
     /**
      * Creates a new database, connection remains attached to database.
      *
-     * @param dpb
-     *         DatabaseParameterBuffer with all required values
      * @throws SQLException
      */
-    void createDatabase(DatabaseParameterBuffer dpb) throws SQLException;
+    void createDatabase() throws SQLException;
 
     /**
      * Drops (and deletes) the currently attached database.

@@ -176,7 +176,10 @@ public class JnaDatabase extends AbstractFbDatabase implements TransactionListen
     }
 
     @Override
-    public void createDatabase(DatabaseParameterBuffer dpb) throws SQLException {
+    public void createDatabase() throws SQLException {
+        DatabaseParameterBuffer dpb = ((DatabaseParameterBufferExtension) PARAMETER_CONVERTER
+                .toDatabaseParameterBuffer(jnaConnection.getConnectionProperties(), jnaConnection.getEncodingFactory()))
+                .removeExtensionParams();
         attachOrCreate(dpb, true);
     }
 

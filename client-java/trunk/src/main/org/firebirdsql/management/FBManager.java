@@ -20,11 +20,17 @@
  */
 package org.firebirdsql.management;
 
-import org.firebirdsql.gds.*;
+import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.impl.GDSFactory;
 import org.firebirdsql.gds.impl.GDSType;
+import org.firebirdsql.gds.ng.FbConnectionProperties;
+import org.firebirdsql.gds.ng.FbDatabase;
+import org.firebirdsql.gds.ng.FbDatabaseFactory;
+import org.firebirdsql.gds.ng.IConnectionProperties;
 import org.firebirdsql.logging.Logger;
 import org.firebirdsql.logging.LoggerFactory;
+
+import java.sql.SQLException;
 
 /**
  * The class <code>FBManager</code> is a simple jmx mbean that allows you
@@ -40,7 +46,7 @@ public class FBManager implements FBManagerMBean {
     private static final int DEFAULT_PORT = 3050;
     private final static Logger log = LoggerFactory.getLogger(FBManager.class);
 
-    private GDS gds;
+    private FbDatabaseFactory dbFactory;
     private String host = "localhost";
     private Integer port;
     private String fileName;
@@ -74,7 +80,7 @@ public class FBManager implements FBManagerMBean {
      * @jmx.managed-operation
      */
     public void start() throws Exception {
-        gds = GDSFactory.getGDSForType(type);
+        dbFactory = GDSFactory.getDatabaseFactoryForType(type);
         state = STARTED;
         if (isCreateOnStart()) {
             createDatabase(getFileName(), getUserName(), getPassword());
@@ -89,8 +95,7 @@ public class FBManager implements FBManagerMBean {
             dropDatabase(getFileName(), getUserName(), getPassword());
         }
 
-        gds.close();
-        gds = null;
+        dbFactory = null;
         state = STOPPED;
     }
 
@@ -331,36 +336,37 @@ public class FBManager implements FBManagerMBean {
      * @jmx.managed-operation
      */
     public void createDatabase(String fileName, String user, String password) throws Exception {
-        IscDbHandle db = gds.createIscDbHandle();
         try {
-            DatabaseParameterBuffer dpb = createDefaultDpb(user, password);
-            gds.iscAttachDatabase(getConnectString(fileName), db, dpb);
+            IConnectionProperties connectionProperties = createDefaultConnectionProperties(user, password);
+            connectionProperties.setDatabaseName(fileName);
+            FbDatabase db = dbFactory.connect(connectionProperties);
+            db.attach();
 
             // if forceCreate is set, drop the database correctly
             // otherwise exit, database already exists
             if (forceCreate)
-                gds.iscDropDatabase(db);
+                db.dropDatabase();
             else {
-                gds.iscDetachDatabase(db);
+                db.detach();
                 return; //database exists, don't wipe it out.
             }
-        } catch (GDSException e) {
+        } catch (SQLException e) {
             // we ignore it
         }
 
-        db = gds.createIscDbHandle();
         try {
-            DatabaseParameterBuffer dpb = createDefaultDpb(user, password);
-            dpb.addArgument(DatabaseParameterBuffer.SQL_DIALECT, dialect);
+            IConnectionProperties connectionProperties = createDefaultConnectionProperties(user, password);
+            connectionProperties.setDatabaseName(fileName);
+            connectionProperties.setConnectionDialect((short) dialect);
             if (getPageSize() != -1) {
-                dpb.addArgument(DatabaseParameterBuffer.PAGE_SIZE, getPageSize());
+                connectionProperties.getExtraDatabaseParameters()
+                        .addArgument(ISCConstants.isc_dpb_page_size, getPageSize());
             }
-            gds.iscCreateDatabase(getConnectString(fileName), db, dpb);
-            gds.iscDetachDatabase(db);
+            FbDatabase db = dbFactory.connect(connectionProperties);
+            db.createDatabase();
+            db.detach();
         } catch (Exception e) {
-            if (log != null) {
-                log.error("Exception creating database", e);
-            }
+            log.error("Exception creating database", e);
             throw e;
         }
     }
@@ -370,40 +376,37 @@ public class FBManager implements FBManagerMBean {
      */
     public void dropDatabase(String fileName, String user, String password) throws Exception {
         try {
-            IscDbHandle db = gds.createIscDbHandle();
-            DatabaseParameterBuffer dpb = createDefaultDpb(user, password);
-            gds.iscAttachDatabase(getConnectString(fileName), db, dpb);
-            gds.iscDropDatabase(db);
+            IConnectionProperties connectionProperties = createDefaultConnectionProperties(user, password);
+            connectionProperties.setDatabaseName(fileName);
+            FbDatabase db = dbFactory.connect(connectionProperties);
+            db.attach();
+            db.dropDatabase();
         } catch (Exception e) {
-            if (log != null) {
-                log.error("Exception dropping database", e);
-            }
+            log.error("Exception dropping database", e);
             throw e;
         }
     }
 
     public boolean isDatabaseExists(String fileName, String user, String password) throws Exception {
-        IscDbHandle db = gds.createIscDbHandle();
         try {
-            DatabaseParameterBuffer dpb = createDefaultDpb(user, password);
-            gds.iscAttachDatabase(getConnectString(fileName), db, dpb);
-
-            gds.iscDetachDatabase(db);
+            IConnectionProperties connectionProperties = createDefaultConnectionProperties(user, password);
+            connectionProperties.setDatabaseName(fileName);
+            FbDatabase db = dbFactory.connect(connectionProperties);
+            db.attach();
+            db.detach();
             return true;
-        } catch (GDSException e) {
+        } catch (Exception e) {
             return false;
         }
     }
 
-    private String getConnectString(String filename) throws GDSException {
-        return GDSFactory.getDatabasePath(type, host, port, filename);
-    }
-
-    private DatabaseParameterBuffer createDefaultDpb(String user, String password) {
-        DatabaseParameterBuffer dpb = gds.createDatabaseParameterBuffer();
-        dpb.addArgument(DatabaseParameterBuffer.USER_NAME, user);
-        dpb.addArgument(DatabaseParameterBuffer.PASSWORD, password);
-        return dpb;
+    private IConnectionProperties createDefaultConnectionProperties(String user, String password) {
+        FbConnectionProperties connectionProperties = new FbConnectionProperties();
+        connectionProperties.setUser(user);
+        connectionProperties.setPassword(password);
+        connectionProperties.setServerName(getServer());
+        connectionProperties.setPortNumber(getPort());
+        return connectionProperties;
     }
 }
 

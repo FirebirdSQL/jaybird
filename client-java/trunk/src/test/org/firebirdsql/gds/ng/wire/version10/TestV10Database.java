@@ -27,7 +27,6 @@ import org.firebirdsql.gds.TransactionParameterBuffer;
 import org.firebirdsql.gds.impl.GDSServerVersion;
 import org.firebirdsql.gds.impl.jni.EmbeddedGDSImpl;
 import org.firebirdsql.gds.impl.jni.NativeGDSImpl;
-import org.firebirdsql.gds.impl.wire.DatabaseParameterBufferImp;
 import org.firebirdsql.gds.impl.wire.TransactionParameterBufferImpl;
 import org.firebirdsql.gds.ng.*;
 import org.firebirdsql.gds.ng.wire.*;
@@ -306,7 +305,10 @@ public class TestV10Database {
      */
     @Test
     public void testBasicCreateAndDrop() throws Exception {
-        WireConnection gdsConnection = new WireConnection(getConnectionInfo(), EncodingFactory.getDefaultInstance(), getProtocolCollection());
+        IConnectionProperties connectionProperties = getConnectionInfo();
+        connectionProperties.getExtraDatabaseParameters()
+                .addArgument(ISCConstants.isc_dpb_sql_dialect, 3);
+        WireConnection gdsConnection = new WireConnection(connectionProperties, EncodingFactory.getDefaultInstance(), getProtocolCollection());
         FbWireDatabase db;
         File dbFile = new File(gdsConnection.getDatabaseName());
         try {
@@ -314,12 +316,7 @@ public class TestV10Database {
             db = gdsConnection.identify();
             assertEquals("Unexpected FbWireDatabase implementation", getExpectedDatabaseType(), db.getClass());
 
-            DatabaseParameterBufferImp dpb = new DatabaseParameterBufferImp();
-            dpb.addArgument(ISCConstants.isc_dpb_sql_dialect, 3);
-            dpb.addArgument(ISCConstants.isc_dpb_user_name, DB_USER);
-            dpb.addArgument(ISCConstants.isc_dpb_password, DB_PASSWORD);
-
-            db.createDatabase(dpb);
+            db.createDatabase();
             assertTrue("Database should be attached after create", db.isAttached());
             assertTrue("Connection should be connected after create", gdsConnection.isConnected());
             assertTrue("Expected database file to exist (NOTE: only works on localhost)",
