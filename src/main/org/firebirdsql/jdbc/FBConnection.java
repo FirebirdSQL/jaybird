@@ -1,7 +1,7 @@
 /*
  * $Id$
- * 
- * Firebird Open Source J2ee connector - jdbc driver
+ *
+ * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -14,32 +14,15 @@
  * This file was created by members of the firebird development team.
  * All individual contributions remain the Copyright (C) of those
  * individuals.  Contributors to this file are either listed here or
- * can be obtained from a CVS history command.
+ * can be obtained from a source control history command.
  *
  * All rights reserved.
  */
 package org.firebirdsql.jdbc;
 
-import java.sql.*;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
-import java.util.Set;
-import java.util.concurrent.Executor;
-import java.util.concurrent.atomic.AtomicInteger;
-
-import javax.resource.ResourceException;
-
 import org.firebirdsql.gds.DatabaseParameterBuffer;
 import org.firebirdsql.gds.GDS;
-import org.firebirdsql.gds.GDSException;
 import org.firebirdsql.gds.ISCConstants;
-import org.firebirdsql.gds.IscDbHandle;
 import org.firebirdsql.gds.TransactionParameterBuffer;
 import org.firebirdsql.gds.impl.DatabaseParameterBufferExtension;
 import org.firebirdsql.gds.impl.GDSHelper;
@@ -53,12 +36,18 @@ import org.firebirdsql.jdbc.escape.FBEscapedParser;
 import org.firebirdsql.jdbc.escape.FBEscapedParser.EscapeParserMode;
 import org.firebirdsql.util.SQLExceptionChainBuilder;
 
+import javax.resource.ResourceException;
+import java.sql.*;
+import java.util.*;
+import java.util.concurrent.Executor;
+import java.util.concurrent.atomic.AtomicInteger;
+
 /**
  * The class <code>FBConnection</code> is a handle to a 
  * {@link FBManagedConnection}.
  *
  * @author <a href="mailto:d_jencks@users.sourceforge.net">David Jencks</a>
- * @version 1.0
+ * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  */
 public class FBConnection implements FirebirdConnection {
 
@@ -204,21 +193,11 @@ public class FBConnection implements FirebirdConnection {
     }
 
     /**
-     * Get connection handle for direct Firebird API access
-     *
-     * @return internal handle for connection
-     * @exception SQLException if handle needed to be created and creation failed
-     * @deprecated TODO Remove
-     */
-    @Deprecated
-    public IscDbHandle getIscDBHandle() throws SQLException {
-        return getGDSHelper().getIscDBHandle();
-    }
-
-    /**
      * Get Firebird API handler (sockets/native/embeded/etc)
      * @return handler object for internal API calls
+     * @deprecated to be removed/replaced by {@link #getFbDatabase()}
      */
+    @Deprecated
     public GDS getInternalAPIHandler() throws SQLException {
         return getGDSHelper().getInternalAPIHandler();
     }
@@ -588,7 +567,6 @@ public class FBConnection implements FirebirdConnection {
         }
     }
 
-
     /**
      * Tests to see if a Connection is closed.
      * 
@@ -599,13 +577,21 @@ public class FBConnection implements FirebirdConnection {
     }
     
     public boolean isValid(int timeout) throws SQLException {
+        if (timeout < 0) {
+            throw new SQLException("Timeout should be >= 0", FBSQLException.SQL_STATE_INVALID_ARG_VALUE);
+        }
+        // TODO Check if we can set the connection timeout temporarily for this call
+        if (timeout != 0) {
+            addWarning(new SQLWarning(
+                    String.format("Connection.isValid does not support non-zero timeouts, timeout value %d has been ignored",
+                            timeout)));
+        }
         try {
-            GDS gds = getInternalAPIHandler();
-            
-            byte[] infoRequest = new byte[] {ISCConstants.isc_info_user_names, ISCConstants.isc_info_end};
-            gds.iscDatabaseInfo(getIscDBHandle(), infoRequest, 1024);
+            // TODO Is isc_info_user_names a good info item to use?
+            getFbDatabase().getDatabaseInfo(new byte[] { ISCConstants.isc_info_user_names, ISCConstants.isc_info_end },
+                    1024);
             return true;
-        } catch(GDSException ex) {
+        } catch(SQLException ex) {
             return false;
         }
     }
@@ -1380,11 +1366,6 @@ public class FBConnection implements FirebirdConnection {
         return iface.cast(this);
     }
 
-    /**
-     * 
-     * @param schema
-     * @throws SQLException
-     */
     public void setSchema(String schema) throws SQLException {
         // Ignore: no schema support
         checkValidity();
