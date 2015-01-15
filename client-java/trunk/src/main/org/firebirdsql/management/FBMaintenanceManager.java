@@ -291,7 +291,7 @@ public class FBMaintenanceManager extends FBServiceManager implements Maintenanc
                 case ISCConstants.isc_spb_multi_tra_id:
                     int trId = getGds().iscVaxInteger(output, idx, 4);
                     idx += 4;
-                    result.add(Integer.valueOf(trId));
+                    result.add(trId);
                     break;
                 // Information items we will ignore for now
                 case ISCConstants.isc_spb_tra_id:
@@ -326,7 +326,7 @@ public class FBMaintenanceManager extends FBServiceManager implements Maintenanc
         int[] trans = new int[limboTransactions.size()];
         int idx = 0;
         for (Integer trId : limboTransactions) {
-            trans[idx++] = trId.intValue();
+            trans[idx++] = trId;
         }
         return trans;
     }
