@@ -48,14 +48,7 @@ class FBCachedFetcher implements FBFetcher {
 
         // Check if there is blobs to catch
         final boolean[] isBlob = new boolean[xsqlvars.length];
-        boolean hasBlobs = false;
-        for (int i = 0; i < xsqlvars.length; i++){
-            isBlob[i] = FBField.isType(xsqlvars[i], Types.BLOB) ||
-                FBField.isType(xsqlvars[i], Types.BINARY) ||
-                FBField.isType(xsqlvars[i], Types.LONGVARCHAR);
-            if (isBlob[i]) 
-                hasBlobs = true;
-        }
+        final boolean hasBlobs = determineBlobs(xsqlvars, isBlob);
         
         // load all rows from statement
         int rowsCount = 0;
@@ -102,31 +95,7 @@ class FBCachedFetcher implements FBFetcher {
             }
 
             if (hasBlobs){
-                for (int i=0; i < rowsArray.length; i++){
-                    final byte[][] localRow = (byte[][]) rowsArray[i];
-                    //ugly blob caching workaround.
-                    for (int j = 0; j < localRow.length; j++) {
-                        // if field is blob and there is a value in cache
-                        if (isBlob[j] && localRow[j] != null ) {
-                            // anonymous implementation of the FieldDataProvider interface
-                            final byte[] tempData = localRow[j];
-                            final FieldDataProvider dataProvider = new FieldDataProvider() {
-                                public byte[] getFieldData() {
-                                    return tempData;
-                                }
-                                
-                                public void setFieldData(byte[] data) {
-                                    throw new UnsupportedOperationException();
-                                }
-                            };
-
-                            // copy data from current row
-                            final FBFlushableField blob = (FBFlushableField) FBField
-                                    .createField(xsqlvars[j], dataProvider, gdsHelper, false);
-                            localRow[j] = blob.getCachedData();
-                        }
-                    }
-                }
+                cacheBlobs(gdsHelper, xsqlvars, isBlob);
             }
             gdsHelper.closeStatement(stmt_handle, false);
         } catch (GDSException ge) {
@@ -134,10 +103,85 @@ class FBCachedFetcher implements FBFetcher {
         }
     }
 
-    FBCachedFetcher(ArrayList rows, FBObjectListener.FetcherListener fetcherListener) throws SQLException {
+    /**
+     * Populates the cached fetcher with the supplied data.
+     *
+     * @param rows
+     *         Data for the rows
+     * @param fetcherListener
+     *         Fetcher listener
+     * @param xsqlvars
+     *         Row descriptor (cannot be null when {@code retrieveBlobs} is {@code true})
+     * @param gdsHelper
+     *         GDS Helper (cannot be null when {@code retrieveBlobs} is {@code true})
+     * @param retrieveBlobs
+     *         {@code true} when the blobs need to be retrieved from the server and the current column values in
+     *         {@code rows} of a blob is the blobid, otherwise the column values in {@code rows} for a blob should be
+     *         the blob data.
+     * @throws SQLException
+     */
+    FBCachedFetcher(ArrayList rows, FBObjectListener.FetcherListener fetcherListener, XSQLVAR[] xsqlvars,
+            GDSHelper gdsHelper, boolean retrieveBlobs) throws SQLException {
+        assert retrieveBlobs && xsqlvars != null && gdsHelper != null || !retrieveBlobs : "Need non-null xsqlvars and gdsHelper for retrieving blobs";
         rowsArray = rows.toArray();
         this.fetcherListener = fetcherListener;
         forwardOnly = false;
+        if (retrieveBlobs) {
+            final boolean[] isBlob = new boolean[xsqlvars.length];
+            final boolean hasBlobs = determineBlobs(xsqlvars, isBlob);
+            if (hasBlobs){
+                cacheBlobs(gdsHelper, xsqlvars, isBlob);
+            }
+        }
+    }
+
+    /**
+     * Determines the columns that are blobs.
+     *
+     * @param xsqlvars The row descriptor
+     * @param isBlob Boolean array with length equal to {@code xsqlvars}, modified by this method
+     * @return {@code true} if there are one or more blob columns.
+     */
+    private static boolean determineBlobs(final XSQLVAR[] xsqlvars, final boolean[] isBlob) {
+        assert xsqlvars.length == isBlob.length : "length of isBlob should be equal to length of xsqlvars";
+        boolean hasBlobs = false;
+        for (int i = 0; i < xsqlvars.length; i++){
+            isBlob[i] = FBField.isType(xsqlvars[i], Types.BLOB) ||
+                    FBField.isType(xsqlvars[i], Types.BINARY) ||
+                    FBField.isType(xsqlvars[i], Types.LONGVARCHAR);
+            if (isBlob[i])
+                hasBlobs = true;
+        }
+        return hasBlobs;
+    }
+
+    private void cacheBlobs(final GDSHelper gdsHelper, final XSQLVAR[] xsqlvars, final boolean[] isBlob)
+            throws SQLException {
+        for (int i=0; i < rowsArray.length; i++){
+            final byte[][] localRow = (byte[][]) rowsArray[i];
+            //ugly blob caching workaround.
+            for (int j = 0; j < localRow.length; j++) {
+                // if field is blob and there is a value in cache
+                if (isBlob[j] && localRow[j] != null ) {
+                    // anonymous implementation of the FieldDataProvider interface
+                    final byte[] tempData = localRow[j];
+                    final FieldDataProvider dataProvider = new FieldDataProvider() {
+                        public byte[] getFieldData() {
+                            return tempData;
+                        }
+
+                        public void setFieldData(byte[] data) {
+                            throw new UnsupportedOperationException();
+                        }
+                    };
+
+                    // copy data from current row
+                    final FBFlushableField blob = (FBFlushableField) FBField
+                            .createField(xsqlvars[j], dataProvider, gdsHelper, false);
+                    localRow[j] = blob.getCachedData();
+                }
+            }
+        }
     }
 
     public boolean next() throws SQLException {
