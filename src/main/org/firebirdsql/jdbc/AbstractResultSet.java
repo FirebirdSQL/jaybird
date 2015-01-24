@@ -151,7 +151,7 @@ public abstract class AbstractResultSet implements ResultSet, FirebirdResultSet,
     }
 
     /**
-     * Creates a FBResultSet with the columns specified by <code>xsqlvars</code> and the data in <code>rows</code>.
+     * Creates a FBResultSet with the columns specified by <code>rowDescriptor</code> and the data in <code>rows</code>.
      * <p>
      * This constructor is intended for metadata result sets, but can be used for other purposes as well.
      * </p>
@@ -169,7 +169,7 @@ public abstract class AbstractResultSet implements ResultSet, FirebirdResultSet,
         fbStatement = null;
         this.listener = listener != null ? listener : FBObjectListener.NoActionResultSetListener.instance();
         cursorName = null;
-        fbFetcher = new FBCachedFetcher(rows, this);
+        fbFetcher = new FBCachedFetcher(rows, this, rowDescriptor, null, false);
         trimStrings = false;
         this.rowDescriptor = rowDescriptor;
         fields = new FBField[rowDescriptor.getCount()];
@@ -182,7 +182,7 @@ public abstract class AbstractResultSet implements ResultSet, FirebirdResultSet,
     }
 
     /**
-     * Creates a FBResultSet with the columns specified by <code>xsqlvars</code> and the data in <code>rows</code>.
+     * Creates a FBResultSet with the columns specified by <code>rowDescriptor</code> and the data in <code>rows</code>.
      * <p>
      * This constructor is intended for metadata result sets, but can be used for other purposes as well.
      * </p>
@@ -195,11 +195,31 @@ public abstract class AbstractResultSet implements ResultSet, FirebirdResultSet,
      * @throws SQLException
      */
     public AbstractResultSet(RowDescriptor rowDescriptor, List<RowValue> rows) throws SQLException {
-        gdsHelper = null;
+        this(rowDescriptor, null, rows, false);
+    }
+
+    /**
+     * Creates a FBResultSet with the columns specified by <code>rowDescriptor</code> and the data in <code>rows</code>.
+     * <p>
+     * This constructor is intended for metadata result sets, but can be used for other purposes as well.
+     * </p>
+     * <p>
+     * Current implementation will ensure that strings will be trimmed on retrieval.
+     * </p>
+     *
+     * @param rowDescriptor Column definition
+     * @param gdsHelper GDS Helper (cannot be null when {@code retrieveBlobs} is {@code true}
+     * @param rows Row data
+     * @param retrieveBlobs {@code true} retrieves the blob data
+     * @throws SQLException
+     */
+    public AbstractResultSet(RowDescriptor rowDescriptor, GDSHelper gdsHelper, List<RowValue> rows,
+            boolean retrieveBlobs) throws SQLException {
+        this.gdsHelper = gdsHelper;
         fbStatement = null;
         listener = FBObjectListener.NoActionResultSetListener.instance();
         cursorName = null;
-        fbFetcher = new FBCachedFetcher(rows, this);
+        fbFetcher = new FBCachedFetcher(rows, this, rowDescriptor, gdsHelper, retrieveBlobs);
         trimStrings = true;
         this.rowDescriptor = rowDescriptor;
         fields = new FBField[rowDescriptor.getCount()];

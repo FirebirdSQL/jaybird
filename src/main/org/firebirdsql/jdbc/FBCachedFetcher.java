@@ -52,15 +52,7 @@ class FBCachedFetcher implements FBFetcher {
 
         // Check if there is blobs to catch
         final boolean[] isBlob = new boolean[rowDescriptor.getCount()];
-        boolean hasBlobs = false;
-        for (int i = 0; i < rowDescriptor.getCount(); i++) {
-            final FieldDescriptor field = rowDescriptor.getFieldDescriptor(i);
-            isBlob[i] = FBField.isType(field, Types.BLOB) ||
-                    FBField.isType(field, Types.BINARY) || // TODO: Types.BINARY seems wrong
-                    FBField.isType(field, Types.LONGVARCHAR);
-            if (isBlob[i])
-                hasBlobs = true;
-        }
+        final boolean hasBlobs = determineBlobs(rowDescriptor, isBlob);
 
         // load all rows from statement
         if (fetchSize == 0)
@@ -92,10 +84,59 @@ class FBCachedFetcher implements FBFetcher {
         stmt_handle.closeCursor();
     }
 
-    FBCachedFetcher(List<RowValue> rows, FBObjectListener.FetcherListener fetcherListener) throws SQLException {
+    /**
+     * Populates the cached fetcher with the supplied data.
+     *
+     * @param rows
+     *         Data for the rows
+     * @param fetcherListener
+     *         Fetcher listener
+     * @param rowDescriptor
+     *         Row descriptor (cannot be null when {@code retrieveBlobs} is {@code true})
+     * @param gdsHelper
+     *         GDS Helper (cannot be null when {@code retrieveBlobs} is {@code true})
+     * @param retrieveBlobs
+     *         {@code true} when the blobs need to be retrieved from the server and the current column values in
+     *         {@code rows} of a blob is the blobid, otherwise the column values in {@code rows} for a blob should be
+     *         the blob data.
+     * @throws SQLException
+     */
+    FBCachedFetcher(List<RowValue> rows, FBObjectListener.FetcherListener fetcherListener, RowDescriptor rowDescriptor,
+            GDSHelper gdsHelper, boolean retrieveBlobs) throws SQLException {
+        assert retrieveBlobs && rowDescriptor != null && gdsHelper != null || !retrieveBlobs : "Need non-null rowDescriptor and gdsHelper for retrieving blobs";
         this.rows = new ArrayList<RowValue>(rows);
         this.fetcherListener = fetcherListener;
         forwardOnly = false;
+        if (retrieveBlobs) {
+            final boolean[] isBlob = new boolean[rowDescriptor.getCount()];
+            final boolean hasBlobs = determineBlobs(rowDescriptor, isBlob);
+            if (hasBlobs){
+                for (RowValue row : rows) {
+                    cacheBlobsInRow(gdsHelper, rowDescriptor, isBlob, row);
+                }
+            }
+        }
+    }
+
+    /**
+     * Determines the columns that are blobs.
+     *
+     * @param rowDescriptor The row descriptor
+     * @param isBlob Boolean array with length equal to {@code rowDescriptor}, modified by this method
+     * @return {@code true} if there are one or more blob columns.
+     */
+    private static boolean determineBlobs(final RowDescriptor rowDescriptor, final boolean[] isBlob) {
+        assert rowDescriptor.getCount() == isBlob.length : "length of isBlob should be equal to length of rowDescriptor";
+        boolean hasBlobs = false;
+        for (int i = 0; i < rowDescriptor.getCount(); i++) {
+            final FieldDescriptor field = rowDescriptor.getFieldDescriptor(i);
+            isBlob[i] = FBField.isType(field, Types.BLOB) ||
+                    FBField.isType(field, Types.LONGVARBINARY) ||
+                    FBField.isType(field, Types.LONGVARCHAR);
+            if (isBlob[i])
+                hasBlobs = true;
+        }
+        return hasBlobs;
     }
 
     private static void cacheBlobsInRow(final GDSHelper gdsHelper, final RowDescriptor rowDescriptor,

@@ -57,6 +57,11 @@ public class FBResultSet extends AbstractResultSet {
         super(rowDescriptor, rows);
     }
 
+    public FBResultSet(RowDescriptor rowDescriptor, GDSHelper gdsHelper, List<RowValue> rows, boolean retrieveBlobs)
+            throws SQLException {
+        super(rowDescriptor, gdsHelper, rows, retrieveBlobs);
+    }
+
     public FBResultSet(XSQLVAR[] xsqlvars, List<byte[][]> rows) throws SQLException {
         super(xsqlvars, rows);
     }
