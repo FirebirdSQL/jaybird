@@ -385,7 +385,7 @@ public abstract class AbstractCallableStatement extends FBPreparedStatement impl
             if (rows.length > 0) {
                 ArrayList<byte[][]> rowList = new ArrayList<byte[][]>();
                 rowList.add(rows[0]);
-                singletonRs = new FBResultSet(fixedStmt.getOutSqlda().sqlvar, rowList);
+                singletonRs = new FBResultSet(fixedStmt.getOutSqlda().sqlvar, gdsHelper, rowList, true);
             }
         }
         return  hasResultSet;

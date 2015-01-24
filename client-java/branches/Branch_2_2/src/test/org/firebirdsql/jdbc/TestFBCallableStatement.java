@@ -33,7 +33,7 @@ import java.sql.*;
  */
 public class TestFBCallableStatement extends FBTestBase {
     //@formatter:off
-    public static final String CREATE_PROCEDURE =
+    private static final String CREATE_PROCEDURE =
         "CREATE PROCEDURE factorial( " 
         + "  max_rows INTEGER, "
         + "  mode INTEGER "
@@ -62,12 +62,12 @@ public class TestFBCallableStatement extends FBTestBase {
         + "END " 
         ;
 
-    public static final String SELECT_PROCEDURE = "SELECT * FROM factorial(?, 2)";
-    public static final String CALL_SELECT_PROCEDURE = "{call factorial(?, 1, ?, ?)}";
-    public static final String EXECUTE_PROCEDURE = "{call factorial(?, ?, ?, ?)}";
-    public static final String EXECUTE_PROCEDURE_AS_STMT = "{call factorial(?, 0)}";
-    
-	 public static final String CREATE_PROCEDURE_EMP_SELECT =
+    private static final String SELECT_PROCEDURE = "SELECT * FROM factorial(?, 2)";
+    private static final String CALL_SELECT_PROCEDURE = "{call factorial(?, 1, ?, ?)}";
+    private static final String EXECUTE_PROCEDURE = "{call factorial(?, ?, ?, ?)}";
+    private static final String EXECUTE_PROCEDURE_AS_STMT = "{call factorial(?, 0)}";
+
+    private static final String CREATE_PROCEDURE_EMP_SELECT =
           "CREATE PROCEDURE get_emp_proj(emp_no SMALLINT) "
 		  + " RETURNS (proj_id VARCHAR(25)) AS "
 		  + " BEGIN "
@@ -79,10 +79,10 @@ public class TestFBCallableStatement extends FBTestBase {
 		  + "        SUSPEND; "
 		  + "END";
 
-    public static final String SELECT_PROCEDURE_EMP_SELECT = "SELECT * FROM get_emp_proj(?)";
-    public static final String EXECUTE_PROCEDURE_EMP_SELECT = "{call get_emp_proj(?)}";
+    private static final String SELECT_PROCEDURE_EMP_SELECT = "SELECT * FROM get_emp_proj(?)";
+    private static final String EXECUTE_PROCEDURE_EMP_SELECT = "{call get_emp_proj(?)}";
 
-	 public static final String CREATE_PROCEDURE_EMP_INSERT =
+    private static final String CREATE_PROCEDURE_EMP_INSERT =
 	      "CREATE PROCEDURE set_emp_proj(emp_no SMALLINT, proj_id VARCHAR(10)"
 		  + " , last_name VARCHAR(10), proj_name VARCHAR(25)) "
 		  + " AS "
@@ -91,11 +91,11 @@ public class TestFBCallableStatement extends FBTestBase {
 		  + "    VALUES (:emp_no, :proj_id, :last_name, :proj_name); "
 		  + "END";
 
-    public static final String EXECUTE_PROCEDURE_EMP_INSERT = "{call set_emp_proj (?,?,?,?)}";
-    public static final String EXECUTE_PROCEDURE_EMP_INSERT_1 = "EXECUTE PROCEDURE set_emp_proj (?,?,?,?)";
-    public static final String EXECUTE_PROCEDURE_EMP_INSERT_SPACES = "EXECUTE PROCEDURE \nset_emp_proj\t   ( ?,?\t,?\n  ,?)";
+    private static final String EXECUTE_PROCEDURE_EMP_INSERT = "{call set_emp_proj (?,?,?,?)}";
+    private static final String EXECUTE_PROCEDURE_EMP_INSERT_1 = "EXECUTE PROCEDURE set_emp_proj (?,?,?,?)";
+    private static final String EXECUTE_PROCEDURE_EMP_INSERT_SPACES = "EXECUTE PROCEDURE \nset_emp_proj\t   ( ?,?\t,?\n  ,?)";
 
-	public static final String CREATE_EMPLOYEE_PROJECT =
+    private static final String CREATE_EMPLOYEE_PROJECT =
           "CREATE TABLE employee_project( "
 		  + " emp_no INTEGER NOT NULL, "
 		  + " proj_id VARCHAR(10) NOT NULL, "
@@ -104,40 +104,70 @@ public class TestFBCallableStatement extends FBTestBase {
 		  + " proj_desc BLOB SUB_TYPE 1, "
 		  + " product VARCHAR(25) )";
 
-    public static final String CREATE_SIMPLE_OUT_PROC =
+    private static final String CREATE_SIMPLE_OUT_PROC =
          "CREATE PROCEDURE test_out (inParam VARCHAR(10)) RETURNS (outParam VARCHAR(10)) "
          + "AS BEGIN "
          + "    outParam = inParam; "
          + "END";
-     
-    public static final String EXECUTE_SIMPLE_OUT_PROCEDURE = "{call test_out ?, ? }";
-    public static final String EXECUTE_SIMPLE_OUT_PROCEDURE_1 = "{?=CALL test_out(?)}";
-    public static final String EXECUTE_IN_OUT_PROCEDURE = "{call test_out ?}";
-    public static final String EXECUTE_SIMPLE_OUT_PROCEDURE_CONST = "EXECUTE PROCEDURE test_out 'test'";
-    public static final String EXECUTE_SIMPLE_OUT_PROCEDURE_CONST_WITH_QUESTION = "EXECUTE PROCEDURE test_out 'test?'";
-     
-    public static final String CREATE_PROCEDURE_WITHOUT_PARAMS =
+
+    private static final String EXECUTE_SIMPLE_OUT_PROCEDURE = "{call test_out ?, ? }";
+    private static final String EXECUTE_SIMPLE_OUT_PROCEDURE_1 = "{?=CALL test_out(?)}";
+    private static final String EXECUTE_IN_OUT_PROCEDURE = "{call test_out ?}";
+    private static final String EXECUTE_SIMPLE_OUT_PROCEDURE_CONST = "EXECUTE PROCEDURE test_out 'test'";
+    private static final String EXECUTE_SIMPLE_OUT_PROCEDURE_CONST_WITH_QUESTION = "EXECUTE PROCEDURE test_out 'test?'";
+
+    private static final String CREATE_PROCEDURE_WITHOUT_PARAMS =
          "CREATE PROCEDURE test_no_params "
          + "AS BEGIN "
          + "    exit; "
          + "END";
 
-    public static final String EXECUTE_PROCEDURE_WITHOUT_PARAMS = "{call test_no_params}";
-    public static final String EXECUTE_PROCEDURE_WITHOUT_PARAMS_1 = "{call test_no_params()}";
-    public static final String EXECUTE_PROCEDURE_WITHOUT_PARAMS_2 = "{call test_no_params () }";
-    public static final String EXECUTE_PROCEDURE_WITHOUT_PARAMS_3 = "EXECUTE PROCEDURE test_no_params ()";
+    private static final String EXECUTE_PROCEDURE_WITHOUT_PARAMS = "{call test_no_params}";
+    private static final String EXECUTE_PROCEDURE_WITHOUT_PARAMS_1 = "{call test_no_params()}";
+    private static final String EXECUTE_PROCEDURE_WITHOUT_PARAMS_2 = "{call test_no_params () }";
+    private static final String EXECUTE_PROCEDURE_WITHOUT_PARAMS_3 = "EXECUTE PROCEDURE test_no_params ()";
 
-    public static final String CREATE_PROCEDURE_SELECT_WITHOUT_PARAMS =
+    private static final String CREATE_PROCEDURE_SELECT_WITHOUT_PARAMS =
             "CREATE PROCEDURE select_no_params "
-                    + " RETURNS (proj_id VARCHAR(25)) "
-                    + "AS BEGIN "
-                    + "    proj_id = 'abc'; "
-                    + "    SUSPEND;"
-                    + "END";
+            + " RETURNS (proj_id VARCHAR(25)) "
+            + "AS BEGIN "
+            + "    proj_id = 'abc'; "
+            + "    SUSPEND;"
+            + "END";
 
-    public static final String EXECUTE_PROCEDURE_SELECT_WITHOUT_PARAMS = "{call select_no_params}";
-    public static final String EXECUTE_PROCEDURE_SELECT_WITHOUT_PARAMS_1 = "{call select_no_params()}";
-    public static final String EXECUTE_PROCEDURE_SELECT_WITHOUT_PARAMS_2 = "{call select_no_params () }";
+    private static final String EXECUTE_PROCEDURE_SELECT_WITHOUT_PARAMS = "{call select_no_params}";
+    private static final String EXECUTE_PROCEDURE_SELECT_WITHOUT_PARAMS_1 = "{call select_no_params()}";
+    private static final String EXECUTE_PROCEDURE_SELECT_WITHOUT_PARAMS_2 = "{call select_no_params () }";
+
+    private static final String CREATE_PROCEDURE_BLOB_RESULT =
+            "CREATE PROCEDURE blob_result\n" +
+            "RETURNS (\n" +
+            "    SQL_SELECT BLOB SUB_TYPE 1 )\n" +
+            "AS\n" +
+            "BEGIN\n" +
+            "    sql_select = '\n" +
+            "        EXECUTE BLOCK\n" +
+            "        RETURNS(\n" +
+            "            column_info_column_name VARCHAR(30),\n" +
+            "            column_value VARCHAR(100),\n" +
+            "            column_alias VARCHAR(20))\n" +
+            "        AS\n" +
+            "        DECLARE VARIABLE i INTEGER;\n" +
+            "        BEGIN\n" +
+            "          i = 0;\n" +
+            "          WHILE (i < 10)\n" +
+            "          DO BEGIN\n" +
+            "            column_info_column_name = ''FK_TETEL__DYN'';\n" +
+            "            column_value = ascii_char(ascii_val(''a'') + i);\n" +
+            "            column_alias = UPPER(column_value);\n" +
+            "            SUSPEND;\n" +
+            "\n" +
+            "            i = i + 1;\n" +
+            "          END\n" +
+            "        END';\n" +
+            "END";
+
+    private static final String EXECUTE_PROCEDURE_BLOB_RESULT = "EXECUTE PROCEDURE blob_result";
     //@formatter:on
 
     private Connection con;
@@ -158,7 +188,7 @@ public class TestFBCallableStatement extends FBTestBase {
             stmt.execute(CREATE_SIMPLE_OUT_PROC);
             stmt.execute(CREATE_PROCEDURE_WITHOUT_PARAMS);
             stmt.execute(CREATE_PROCEDURE_SELECT_WITHOUT_PARAMS);
-
+            stmt.execute(CREATE_PROCEDURE_BLOB_RESULT);
         } finally {
             closeQuietly(stmt);
         }
@@ -874,6 +904,24 @@ public class TestFBCallableStatement extends FBTestBase {
             rs.close();
 
             assertEquals("paramvalue", cs.getString(1));
+        } finally {
+            cs.close();
+        }
+    }
+
+    /**
+     * Tests if the blob result of an executable procedure can be retrieved and is non-empty.
+     * <p>
+     * See <a href="http://tracker.firebirdsql.org/browse/JDBC-381">JDBC-381</a>.
+     * </p>
+     */
+    public void testExecutableProcedureBlobResult_shouldGetNonEmptyValue() throws Exception {
+        CallableStatement cs = con.prepareCall(EXECUTE_PROCEDURE_BLOB_RESULT);
+        try {
+            cs.execute();
+            String value = cs.getString(1);
+            assertNotNull("Expected non-null value", value);
+            assertTrue("Expected non-empty value", value.trim().length() > 0);
         } finally {
             cs.close();
         }

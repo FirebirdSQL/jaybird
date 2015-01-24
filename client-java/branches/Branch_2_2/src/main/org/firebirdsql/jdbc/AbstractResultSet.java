@@ -173,8 +173,12 @@ public abstract class AbstractResultSet implements ResultSet, FirebirdResultSet,
     }
 
     protected AbstractResultSet(XSQLVAR[] xsqlvars, ArrayList rows) throws SQLException {
+        this(xsqlvars, null, rows, false);
+    }
+
+    protected AbstractResultSet(XSQLVAR[] xsqlvars, GDSHelper gdsHelper, ArrayList rows, boolean retrieveBlobs) throws SQLException {
         maxRows = 0;
-        fbFetcher = new FBCachedFetcher(rows,this);
+        fbFetcher = new FBCachedFetcher(rows, this, xsqlvars, gdsHelper, retrieveBlobs);
         this.xsqlvars = xsqlvars;
         prepareVars(true);
     }
@@ -182,7 +186,7 @@ public abstract class AbstractResultSet implements ResultSet, FirebirdResultSet,
     private void prepareVars(boolean cached) throws SQLException {
         fields = new FBField[xsqlvars.length];
         colNames = new HashMap(xsqlvars.length,1);
-        for (int i=0; i<xsqlvars.length; i++){
+        for (int i=0; i < xsqlvars.length; i++){
             final int fieldPosition = i;
             
               // anonymous implementation of the FieldDataProvider interface
