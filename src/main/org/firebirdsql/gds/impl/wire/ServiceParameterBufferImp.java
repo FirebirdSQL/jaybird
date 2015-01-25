@@ -1,7 +1,5 @@
 /*
- * $Id$
- *
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source J2ee connector - jdbc driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -14,7 +12,7 @@
  * This file was created by members of the firebird development team.
  * All individual contributions remain the Copyright (C) of those
  * individuals.  Contributors to this file are either listed here or
- * can be obtained from a source control history command.
+ * can be obtained from a CVS history command.
  *
  * All rights reserved.
  */
@@ -29,23 +27,32 @@ import org.firebirdsql.gds.ServiceParameterBuffer;
 /**
  * ngds implementation for ServiceParameterBuffer.
  */
-class ServiceParameterBufferImp extends ParameterBufferBase implements ServiceParameterBuffer {
+class ServiceParameterBufferImp extends ParameterBufferBase implements
+        ServiceParameterBuffer {
 
-    @Override
+    /* (non-Javadoc)
+     * @see org.firebirdsql.gds.Xdrable#getLength()
+     */
     public int getLength() {
         return super.getLength() + 1;
     }
-
-    @Override
+    /* (non-Javadoc)
+     * @see org.firebirdsql.gds.Xdrable#write(org.firebirdsql.gds.XdrOutputStream)
+     */
     public void write(XdrOutputStream outputStream) throws IOException {
         outputStream.write(ISCConstants.isc_spb_current_version);
         super.write(outputStream);
     }
     
     public byte[] toByteArray() throws IOException {
-        final ByteArrayOutputStream out = new ByteArrayOutputStream();
-        final XdrOutputStream outputStream = new XdrOutputStream(out, false);
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        XdrOutputStream outputStream = new XdrOutputStream(out);
+        
         write(outputStream);
+        
+        outputStream.flush();
+        out.flush();
+        
         return out.toByteArray();
     }
 

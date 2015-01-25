@@ -1,201 +1,182 @@
-/*
- * $Id$
- *
- * Firebird Open Source JavaEE Connector - JDBC Driver
- *
- * Distributable under LGPL license.
- * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * LGPL License for more details.
- *
- * This file was created by members of the firebird development team.
- * All individual contributions remain the Copyright (C) of those
- * individuals.  Contributors to this file are either listed here or
- * can be obtained from a source control history command.
- *
- * All rights reserved.
- */
 package org.firebirdsql.jdbc;
 
-import org.firebirdsql.gds.ng.FbBlob;
-
-import java.io.EOFException;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 import java.sql.SQLException;
+
+import org.firebirdsql.gds.*;
 
 /**
  * An input stream for reading directly from a FBBlob instance.
  */
-public final class FBBlobInputStream extends InputStream implements FirebirdBlob.BlobInputStream {
+public class FBBlobInputStream extends InputStream 
+    implements FirebirdBlob.BlobInputStream
+{
 
-    /**
-     * Maximum blob segment size, see IB 6 Data Definition Guide, page 78 ("BLOB segment length")
-     */
-    private static final int READ_FULLY_BUFFER_SIZE = 32 * 1024;
-    private static final byte[] EMPTY_BUFFER = new byte[0];
 
-    private byte[] buffer = EMPTY_BUFFER;
-    private FbBlob blobHandle;
+    private byte[] buffer = null;
+    private IscBlobHandle blobHandle;
     private int pos = 0;
-
+    
     private boolean closed;
-
-    private final FBBlob owner;
+    
+    private FBBlob owner;
 
     FBBlobInputStream(FBBlob owner) throws SQLException {
-        if (owner.isNew())
-            throw new FBSQLException("You can't read a new blob");
-
         this.owner = owner;
+        
         closed = false;
-
-        synchronized (owner.getSynchronizationObject()) {
-            blobHandle = owner.getGdsHelper().openBlob(owner.getBlobId(), FBBlob.SEGMENTED);
+        
+        if (owner.isNew) 
+            throw new FBSQLException("You can't read a new blob");
+        
+        Object syncObject = owner.getSynchronizationObject();
+        
+        synchronized(syncObject) {
+            try {
+                blobHandle = owner.gdsHelper.openBlob(owner.blob_id, FBBlob.SEGMENTED);
+            } catch (GDSException ge) {
+                throw new FBSQLException(ge);
+            }
         }
     }
-
+    
     public FirebirdBlob getBlob() {
         return owner;
     }
 
     public void seek(int position) throws IOException {
-        seek(position, FbBlob.SeekMode.ABSOLUTE);
+        seek(position, SEEK_MODE_ABSOLUTE);
     }
 
     public void seek(int position, int seekMode) throws IOException {
-        seek(position, FbBlob.SeekMode.getById(seekMode));
-    }
-
-    public void seek(int position, FbBlob.SeekMode seekMode) throws IOException {
-        synchronized (owner.getSynchronizationObject()) {
+        
+        Object syncObject = owner.getSynchronizationObject();
+        
+        synchronized(syncObject) {
             checkClosed();
             try {
-                blobHandle.seek(position, seekMode);
-            } catch (SQLException ex) {
+                owner.gdsHelper.seekBlob(blobHandle, position, seekMode);
+            } catch (GDSException ex) {
                 /** @todo fix this */
-                throw new IOException(ex.getMessage(), ex);
+                throw new IOException(ex.getMessage());
             }
         }
     }
-
+    
     public long length() throws IOException {
-        synchronized (owner.getSynchronizationObject()) {
+        
+        Object syncObject = owner.getSynchronizationObject();
+        
+        synchronized(syncObject) {
             checkClosed();
             try {
-                return blobHandle.length();
-            } catch (SQLException e) {
-                throw new IOException(e);
+                byte[] info = owner.gdsHelper.getBlobInfo(
+                    blobHandle, new byte[] {ISCConstants.isc_info_blob_total_length}, 20);
+
+                return owner.interpretLength(info, 0);
+            } catch (GDSException ex) {
+                throw new IOException(ex.getMessage());
+            } catch (SQLException ex) {
+                throw new IOException(ex.getMessage());
             }
         }
     }
 
     public int available() throws IOException {
-        assert buffer != null : "Buffer should never be null";
-        return buffer.length - pos;
-    }
-
-    /**
-     * Checks the available buffer size, retrieving a segment from the server if necessary.
-     *
-     * @return The number of bytes available in the buffer, or <code>-1</code> if the end of the stream is reached.
-     * @throws IOException if an I/O error occurs, or if the stream has been closed.
-     */
-    private int checkBuffer() throws IOException {
-        assert buffer != null : "Buffer should never be null";
-        synchronized (owner.getSynchronizationObject()) {
+        
+        Object syncObject = owner.getSynchronizationObject();
+        synchronized(syncObject) {
             checkClosed();
-            if (pos < buffer.length) {
-                return buffer.length - pos;
-            }
-            if (blobHandle.isEof()) {
-                return -1;
-            }
-
-            try {
-                buffer = blobHandle.getSegment(owner.getBufferLength());
+            if (buffer == null) {
+                if (blobHandle.isEof()) {
+                    return -1;
+                }
+                
+                try {
+                    //bufferlength is in FBBlob enclosing class
+                    buffer = owner.gdsHelper.getBlobSegment(blobHandle, owner.bufferlength);
+                } catch (GDSException ge) {
+                    throw new IOException("Blob read problem: " +
+                        ge.toString());
+                }
+                
                 pos = 0;
-                return buffer.length != 0 ? buffer.length : -1;
-            } catch (SQLException ge) {
-                throw new IOException("Blob read problem: " + ge.toString(), ge);
+                if (buffer.length == 0) {
+                   return -1;
+                }
             }
+            return buffer.length - pos;
         }
     }
 
     public int read() throws IOException {
-        if (checkBuffer() == -1) {
+        if (available() <= 0) {
             return -1;
         }
-        return buffer[pos++] & 0xFF;
+        int result = buffer[pos++] & 0x00FF;//& seems to convert signed byte to unsigned byte
+        if (pos == buffer.length) {
+            buffer = null;
+        }
+        return result;
     }
 
     public int read(byte[] b, int off, int len) throws IOException {
-        if (b == null) {
-            throw new NullPointerException();
-        } else if (off < 0 || len < 0 || len > b.length - off) {
-            throw new IndexOutOfBoundsException();
-        } else if (len == 0) {
-            return 0;
-        }
-
-        final int toCopy = Math.min(checkBuffer(), len);
-        if (toCopy == -1) {
+        int result = available();
+        if (result <= 0) {
             return -1;
         }
-        System.arraycopy(buffer, pos, b, off, toCopy);
-        pos += toCopy;
-        return toCopy;
-    }
-
-    public void readFully(byte[] b, int off, int len) throws IOException {
-        if (b == null) {
-            throw new NullPointerException();
-        } else if (off < 0 || len < 0 || len > b.length - off) {
-            throw new IndexOutOfBoundsException();
-        } else if (len == 0) {
-            return;
+        if (result > len) {//not expected to happen
+            System.arraycopy(buffer, pos, b, off, len);
+            pos += len;
+            return len;
         }
-
+        System.arraycopy(buffer, pos, b, off, result);
+        buffer = null;
+        pos = 0;
+        return result;
+    }
+    
+    public void readFully(byte[] b, int off, int len) throws IOException {
         int counter = 0;
-        int pos = off;
-        byte[] buffer = new byte[Math.min(READ_FULLY_BUFFER_SIZE, len)];
+        int pos = 0;
+        byte[] buffer = new byte[Math.min(FBBlob.READ_FULLY_BUFFER_SIZE, len)];
 
         int toRead = len;
 
-        while (toRead > 0 && (counter = read(buffer, 0, Math.min(toRead, buffer.length))) != -1) {
+        while(toRead > 0 && (counter = read(buffer, 0, toRead)) != -1) {
             System.arraycopy(buffer, 0, b, pos, counter);
             pos += counter;
+            
             toRead -= counter;
         }
-
+        
         if (counter == -1)
             throw new EOFException();
     }
-
+    
     public void readFully(byte[] b) throws IOException {
         readFully(b, 0, b.length);
     }
 
     public void close() throws IOException {
-        synchronized (owner.getSynchronizationObject()) {
+        
+        Object syncObject = owner.getSynchronizationObject();
+        
+        synchronized(syncObject) {
             if (blobHandle != null) {
                 try {
-                    blobHandle.close();
-                    owner.notifyClosed(this);
-                } catch (SQLException ge) {
+                    owner.gdsHelper.closeBlob(blobHandle);
+                    
+                    owner.inputStreams.remove(this);
+                } catch (GDSException ge) {
                     throw new IOException("couldn't close blob: " + ge);
                 }
                 blobHandle = null;
                 closed = true;
-                buffer = EMPTY_BUFFER;
-                pos = 0;
             }
         }
     }
-
+    
     private void checkClosed() throws IOException {
         if (closed) throw new IOException("Input stream is already closed.");
     }

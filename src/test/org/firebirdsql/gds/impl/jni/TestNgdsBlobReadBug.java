@@ -1,7 +1,7 @@
 /*
  * $Id$
- *
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * 
+ * Firebird Open Source J2ee connector - jdbc driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -14,31 +14,34 @@
  * This file was created by members of the firebird development team.
  * All individual contributions remain the Copyright (C) of those
  * individuals.  Contributors to this file are either listed here or
- * can be obtained from a source control history command.
+ * can be obtained from a CVS history command.
  *
  * All rights reserved.
  */
 package org.firebirdsql.gds.impl.jni;
 
-import org.firebirdsql.common.StringHelper;
-import org.firebirdsql.common.rules.GdsTypeRule;
-import org.firebirdsql.gds.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
+import org.firebirdsql.common.SimpleFBTestBase;
+import org.firebirdsql.gds.BlobParameterBuffer;
+import org.firebirdsql.gds.DatabaseParameterBuffer;
+import org.firebirdsql.gds.GDS;
+import org.firebirdsql.gds.GDSException;
+import org.firebirdsql.gds.ISCConstants;
+import org.firebirdsql.gds.IscBlobHandle;
+import org.firebirdsql.gds.IscDbHandle;
+import org.firebirdsql.gds.IscTrHandle;
+import org.firebirdsql.gds.XSQLDA;
+import org.firebirdsql.gds.XSQLVAR;
 import org.firebirdsql.gds.impl.AbstractIscStmtHandle;
 import org.firebirdsql.gds.impl.GDSFactory;
 import org.firebirdsql.gds.impl.GDSType;
 import org.firebirdsql.gds.impl.wire.AbstractJavaGDSImpl;
-import org.firebirdsql.gds.impl.wire.JavaGDSImpl;
 import org.firebirdsql.jca.FBTpb;
 import org.firebirdsql.logging.Logger;
 import org.firebirdsql.logging.LoggerFactory;
-import org.junit.ClassRule;
-import org.junit.Test;
-
-import java.util.ArrayList;
-import java.util.List;
-
-import static org.firebirdsql.common.FBTestProperties.*;
-import static org.junit.Assert.assertArrayEquals;
 
 /**
  * Performs test to reproduce bug found in blob reading done by type 2 driver.
@@ -48,24 +51,34 @@ import static org.junit.Assert.assertArrayEquals;
  * If a blob greater then 65536 bytes in length is written to a database using
  * jaybird in type 4 mode it will not be possible to read it in type 2 mode.
  */
-public class TestNgdsBlobReadBug {
+public class TestNgdsBlobReadBug extends SimpleFBTestBase {
 
-    @ClassRule
-    public static final GdsTypeRule testTypes = GdsTypeRule.excludes(
-            JavaGDSImpl.PURE_JAVA_TYPE_NAME,
-            LocalGDSImpl.LOCAL_TYPE_NAME,
-            EmbeddedGDSImpl.EMBEDDED_TYPE_NAME);
+    private Logger log = LoggerFactory.getLogger(getClass(), false);
 
-    private Logger log = LoggerFactory.getLogger(getClass());
+    public TestNgdsBlobReadBug(String name) {
+        super(name);
+    }
 
-    @Test
+    protected void setUp() {
+    }
+
+    protected void tearDown() {
+    }
+
     public void testBlobReadBug() throws Exception {
+        String gdsType = getProperty("test.gds_type", "PURE_JAVA");
+
+        // no tests for embedded or local mode
+        if ("LOCAL".equalsIgnoreCase(gdsType) || "EMBEDDED".equals(gdsType))
+            return;
+
         final byte[] testbuf = createTestData();
         createDatabaseAndWriteBlobAndDetatch(testbuf);
         try {
             byte[] dataReadFromBlob;
 
-            // First lets just ensure that the type 4 GDS can read the blob data it just wrote correctly.
+            // First lets just ensure that the type 4 GDS can read the blob data
+            // it just wrote correctly.
             try {
                 dataReadFromBlob = openDatabaseReadBlobAndDetatch(getType4Gds());
             } catch (Throwable th) {
@@ -73,21 +86,24 @@ public class TestNgdsBlobReadBug {
                         "Problem trying to read blob data using type 4 driver - is there a problem with the type 4 or the test itself ?");
             }
 
-            assertArrayEquals(
+            assertTrue(
                     "Bad blob data read using type 4 driver - is there a problem with the type 4 or the test itself ?",
-                    testbuf, dataReadFromBlob);
+                    Arrays.equals(testbuf, dataReadFromBlob));
 
-            // Now for the actual test - can we read the blob data correctly with the type 2 GDS.
+            // Now for the actual test - can we read the blob data correctly
+            // with the type 2 GDS.
             dataReadFromBlob = openDatabaseReadBlobAndDetatch(getType2Gds());
 
-            assertArrayEquals("Bad blob data read using type 2 driver.", testbuf, dataReadFromBlob);
+            assertTrue("Bad blob data read using type 2 driver.",
+                    Arrays.equals(testbuf, dataReadFromBlob));
         } finally {
             dropDatabase(getType4Gds());
         }
     }
 
-    // The following two methods perform the actual read test on the test database.
-    // The supplied GDS implementation is used to perform the read test.
+    // The following two methods perform the actual read test on the test
+    // database. A the supplied GDS implementation is
+    // used to perform the read test.
 
     private byte[] openDatabaseReadBlobAndDetatch(GDS gds) throws Exception {
         DatabaseParameterBuffer databaseParameterBuffer = createDatabaseParameterBuffer(gds);
@@ -105,8 +121,8 @@ public class TestNgdsBlobReadBug {
     }
 
     private byte[] readAndBlobRecord(GDS gds, IscDbHandle database_handle) throws Exception {
-        int readCount = 0;
-        final List<byte[]> results = new ArrayList<byte[]>();
+        int readcount = 0;
+        final List results = new ArrayList();
         IscTrHandle transaction_handle = startTransaction(gds, database_handle);
 
         try {
@@ -116,25 +132,30 @@ public class TestNgdsBlobReadBug {
             AbstractIscStmtHandle statement_handle = (AbstractIscStmtHandle) gds
                     .createIscStmtHandle();
 
+            if (log != null) log.info("test- isc_dsql_allocate_statement");
+
             gds.iscDsqlAllocateStatement(database_handle, statement_handle);
             XSQLDA out_xsqlda = gds.iscDsqlPrepare(transaction_handle, statement_handle,
                     "SELECT COL1, COL2 FROM R2", ISCConstants.SQL_DIALECT_CURRENT);
 
+            if (log != null) log.info("test- isc_dsql_execute2");
+
             gds.iscDsqlExecute2(transaction_handle, statement_handle, 1, null, null);
             IscBlobHandle blob_handle = gds.createIscBlobHandle();
-            byte[][] row;
+            byte[][] row = null;
             gds.iscDsqlFetch(statement_handle, 1, out_xsqlda, 200);
             byte[][][] rows = statement_handle.getRows();
             int size = statement_handle.size();
 
             for (int rowNum = 0; rowNum < size; rowNum++) {
-                row = rows[rowNum];
+                row = (byte[][]) rows[rowNum];
 
                 StringBuilder out = new StringBuilder();
 
                 for (int i = 0; i < out_xsqlda.sqld; i++) {
-                    byte[] data = row[i];
-                    out.append("column: ").append(i).append(", value: ").append(StringHelper.toHex(data));
+                    Object data = row[i];
+
+                    out.append("column: ").append(i).append(", value: ").append(data);
                 }
 
                 if (log != null) log.info(out);
@@ -150,15 +171,17 @@ public class TestNgdsBlobReadBug {
                         log.info("test- answer length: " + answer.length + ", answer string: "
                                 + new String(answer));
 
-                    readCount += answer.length;
+                    readcount += answer.length;
                     results.add(answer);
 
                     if (log != null)
-                    	log.info("test- read bytes: " + readCount);
+                    	log.info("test- read bytes: " + readcount);
                 } while (!blob_handle.isEof());
 
                 gds.iscCloseBlob(blob_handle);
             }
+
+            if (log != null) log.info("test- isc_dsql_free_statement");
 
             gds.iscDsqlFreeStatement(statement_handle, ISCConstants.DSQL_drop);
         } finally {
@@ -166,9 +189,11 @@ public class TestNgdsBlobReadBug {
         }
 
         int currentWritePosition = 0;
-        final byte[] returnValue = new byte[readCount];
-        for (final byte[] currentArray : results) {
-            System.arraycopy(currentArray, 0, returnValue, currentWritePosition, currentArray.length);
+        final byte[] returnValue = new byte[readcount];
+        for (int i = 0, n = results.size(); i < n; i++) {
+            final byte[] currentArray = (byte[]) results.get(i);
+            System.arraycopy(currentArray, 0, returnValue, currentWritePosition,
+                    currentArray.length);
             currentWritePosition += currentArray.length;
         }
 
@@ -188,6 +213,8 @@ public class TestNgdsBlobReadBug {
     private IscDbHandle createAndSetupDatabase(GDS gds) throws Exception {
         DatabaseParameterBuffer databaseParameterBuffer = createDatabaseParameterBuffer(gds);
         IscDbHandle database_handle = gds.createIscDbHandle();
+
+        if (log != null) log.info("test- isc_create_database");
 
         gds.iscCreateDatabase(getdbpath(DB_NAME), database_handle, databaseParameterBuffer);
         IscTrHandle transaction_handle = startTransaction(gds, database_handle);
@@ -244,6 +271,9 @@ public class TestNgdsBlobReadBug {
         commit(gds, transaction_handle);
     }
 
+    // Method used to drop the database created above
+    // ------------------------------------------------------------------
+
     private void dropDatabase(GDS gds) throws GDSException {
         DatabaseParameterBuffer c = createDatabaseParameterBuffer(gds);
         IscDbHandle db = gds.createIscDbHandle();
@@ -251,9 +281,9 @@ public class TestNgdsBlobReadBug {
         gds.iscDropDatabase(db);
     }
 
-    /**
-     * basic helper for creating an appropriate DPB for the supplied GDS
-     */
+    // basic helper for creating an appropriate DPB for the suplied GDS
+    // ------------------------------------------------
+
     private DatabaseParameterBuffer createDatabaseParameterBuffer(GDS gds) {
         final DatabaseParameterBuffer databaseParameterBuffer = gds.createDatabaseParameterBuffer();
         databaseParameterBuffer.addArgument(ISCConstants.isc_dpb_num_buffers, new byte[] { 90 });
@@ -265,6 +295,9 @@ public class TestNgdsBlobReadBug {
         return databaseParameterBuffer;
     }
 
+    // basic helpers for obtaining references to GDS implementations
+    // ---------------------------------------------------
+
     private GDS getType2Gds() {
         return GDSFactory.getGDSForType(GDSType.getType("NATIVE"));
     }
@@ -273,8 +306,13 @@ public class TestNgdsBlobReadBug {
         return GDSFactory.getGDSForType(GDSType.getType("PURE_JAVA"));
     }
 
+    // basic helpers for starting and ending transactions
+    // --------------------------------------------------------------
+
     private IscTrHandle startTransaction(GDS gds, IscDbHandle database_handle) throws Exception {
         IscTrHandle tr = gds.createIscTrHandle();
+
+        if (log != null) log.info("test- isc_start_transaction");
 
         FBTpb tpb = new FBTpb(gds.newTransactionParameterBuffer());
         tpb.getTransactionParameterBuffer().addArgument(ISCConstants.isc_tpb_write);
@@ -288,7 +326,15 @@ public class TestNgdsBlobReadBug {
     }
 
     private void commit(GDS gds, IscTrHandle transaction_handle) throws Exception {
-        gds.iscCommitTransaction(transaction_handle);
+        if (log != null) log.info("test- isc_commit_transaction");
+
+        try {
+            gds.iscCommitTransaction(transaction_handle);
+        } catch (Exception e) {
+            if (log != null) log.info("exception in commit", e);
+
+            throw e;
+        }
     }
 
     // constants and methods used for generating and manipulating the test data

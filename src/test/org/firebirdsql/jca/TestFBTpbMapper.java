@@ -1,7 +1,5 @@
 /*
- * $Id$
- *
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source J2ee connector - jdbc driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -14,37 +12,35 @@
  * This file was created by members of the firebird development team.
  * All individual contributions remain the Copyright (C) of those
  * individuals.  Contributors to this file are either listed here or
- * can be obtained from a source control history command.
+ * can be obtained from a CVS history command.
  *
  * All rights reserved.
  */
 package org.firebirdsql.jca;
 
-import org.firebirdsql.common.FBJUnit4TestBase;
+import org.firebirdsql.common.FBTestBase;
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.TransactionParameterBuffer;
 import org.firebirdsql.jdbc.FBTpbMapper;
-import org.junit.Before;
-import org.junit.Test;
 
 import java.sql.Connection;
-
-import static org.firebirdsql.common.FBTestProperties.createFBManagedConnectionFactory;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 
 /**
  * <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
  */
-public class TestFBTpbMapper extends FBJUnit4TestBase {
+public class TestFBTpbMapper extends FBTestBase {
 
     public static final String TEST_TPB_MAPPING = "org.firebirdsql.jca.test_tpb_mapping";
 
+    public TestFBTpbMapper(String string) {
+        super(string);
+    }
+
     FBManagedConnectionFactory mcf;
 
-    @Before
-    public void setUp() throws Exception {
-        mcf = createFBManagedConnectionFactory();
+    protected void setUp() throws Exception {
+        super.setUp();
+        mcf = super.createFBManagedConnectionFactory();//new FBManagedConnectionFactory();
     }
 
     /**
@@ -53,7 +49,6 @@ public class TestFBTpbMapper extends FBJUnit4TestBase {
      * @throws Exception
      *         if something went wrong.
      */
-    @Test
     public void testDefaultIsolationLevel() throws Exception {
         assertEquals("Default tx isolation level must be READ_COMMITTED",
                 Connection.TRANSACTION_READ_COMMITTED, mcf.getDefaultTransactionIsolation());
@@ -67,7 +62,6 @@ public class TestFBTpbMapper extends FBJUnit4TestBase {
      * @throws Exception
      *         if something went wrong.
      */
-    @Test
     public void testTpbMapper() throws Exception {
         // TODO Why is this mapper created and then not used?
         FBTpbMapper mapper = new FBTpbMapper(mcf.getGDS(), TEST_TPB_MAPPING, getClass().getClassLoader());

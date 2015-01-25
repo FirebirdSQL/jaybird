@@ -59,6 +59,12 @@ public class TestMultithreadedAccess extends FBTestBase {
         + "  blobValue BLOB"
         + ")";
     
+    public static final String DROP_TABLE_1 = ""
+        + "DROP TABLE table1";
+    
+    public static final String DROP_TABLE_2 = ""
+        + "DROP TABLE table2";
+    
     public static final String INSERT_TABLE_1 = ""
         + "INSERT INTO table1 (id, charValue) VALUES (?, ?)";
     
@@ -81,6 +87,10 @@ public class TestMultithreadedAccess extends FBTestBase {
         try {
             Statement stmt = connection.createStatement();
             try {
+                
+                executeDDL(stmt, DROP_TABLE_1, true);
+                executeDDL(stmt, DROP_TABLE_2, true);
+                
                 executeDDL(stmt, CREATE_TABLE_1, false);
                 executeDDL(stmt, CREATE_TABLE_2, false);
                 
@@ -98,6 +108,25 @@ public class TestMultithreadedAccess extends FBTestBase {
         } finally {
             connection.close();
         }
+    }
+    
+    
+    protected void tearDown() throws Exception {
+        
+        Connection connection = getConnectionViaDriverManager();
+        try {
+            Statement stmt = connection.createStatement();
+            try {
+                executeDDL(stmt, DROP_TABLE_1, true);
+                executeDDL(stmt, DROP_TABLE_2, true);
+            } finally {
+                stmt.close();
+            }
+        } finally {
+            connection.close();
+        }
+        
+        super.tearDown();
     }
     
     /**

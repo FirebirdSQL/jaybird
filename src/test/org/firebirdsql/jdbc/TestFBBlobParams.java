@@ -21,6 +21,10 @@ package org.firebirdsql.jdbc;
 import org.firebirdsql.common.FBTestBase;
 
 import java.sql.*;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.Statement;
 
 
 /**
@@ -37,6 +41,9 @@ public class TestFBBlobParams extends FBTestBase {
         "  codebase BLOB SUB_TYPE 1, " + 
         " PRIMARY KEY (oid) " +
         ")";
+        
+    public static final String DROP_TABLE = 
+        "DROP TABLE ClassMap";
        
     public TestFBBlobParams(String testName) {
         super(testName);
@@ -48,10 +55,26 @@ public class TestFBBlobParams extends FBTestBase {
         Connection connection = getConnectionViaDriverManager();
        
         Statement stmt = connection.createStatement();
+        try {
+            stmt.executeUpdate(DROP_TABLE);
+        }
+        catch (Exception e) {
+            // e.printStackTrace();
+        }
 
         stmt.executeUpdate(CREATE_TABLE);
         stmt.close();
         connection.close();
+    }
+
+    protected void tearDown() throws Exception {
+        Connection connection = getConnectionViaDriverManager();
+        
+        Statement stmt = connection.createStatement();
+        stmt.executeUpdate(DROP_TABLE);
+        stmt.close();
+        connection.close();
+        super.tearDown();
     }
     
     /**

@@ -37,13 +37,11 @@ import java.sql.Date;
 import java.sql.SQLException;
 import java.sql.Time;
 import java.sql.Timestamp;
-import java.util.Arrays;
 import java.util.Calendar;
 import java.util.GregorianCalendar;
 
 import org.firebirdsql.encodings.Encoding;
 import org.firebirdsql.encodings.EncodingFactory;
-import org.firebirdsql.gds.ng.DatatypeCoder;
 
 /**
  * The class <code>XSQLDA</code> is a java mapping of the XSQLVAR server
@@ -52,7 +50,7 @@ import org.firebirdsql.gds.ng.DatatypeCoder;
  * @author <a href="mailto:alberola@users.sourceforge.net">Alejandro Alberola</a>
  * @version 1.0
  */
-public class XSQLVAR implements DatatypeCoder {
+public class XSQLVAR {
     
     public int sqltype;
     public int sqlscale;
@@ -70,21 +68,6 @@ public class XSQLVAR implements DatatypeCoder {
     protected Encoding coder;
 
     public XSQLVAR() {
-    }
-
-    /**
-     * Constructor for metadata XSQLVAR.
-     *
-     * @param sqltype Column SQL type
-     * @param sqllen Column length
-     * @param sqlname Column name
-     * @param relname Column table
-     */
-    public XSQLVAR(int sqltype, int sqllen, String sqlname, String relname) {
-        this.sqltype = sqltype;
-        this.sqllen = sqllen;
-        this.sqlname = sqlname;
-        this.relname = relname;
     }
     
     /**
@@ -123,7 +106,7 @@ public class XSQLVAR implements DatatypeCoder {
         this.sqllen = original.sqllen;
         
         if (original.sqldata != null && copyData) {
-            this.sqldata = new byte[original.sqldata.length];
+            this.sqldata = new byte[original.sqldata.length]; 
             System.arraycopy(original.sqldata, 0, this.sqldata, 0, original.sqldata.length);
         } else
             this.sqldata = null;
@@ -137,48 +120,36 @@ public class XSQLVAR implements DatatypeCoder {
 
     // numbers
 
-    @Override
+    /**
+     * Encode a <code>short</code> value as a <code>byte</code> array.
+     *
+     * @param value The value to be encoded
+     * @return The value of <code>value</code> encoded as a 
+     *         <code>byte</code> array
+     */
     public byte[] encodeShort(short value){
         return encodeInt(value);
     }
 
-    @Override
-    public byte[] encodeShort(int value) {
-        return encodeShort((short) value);
-    }
-
     /**
-     * Encode a <code>short</code> value as a <code>byte</code> array in network-order(big-endian) representation.
-     * <p>
-     * NOTE: Implementation is identical to {@link #intToBytes(int)}
-     * </p>
+     * Decode a <code>byte</code> array into a <code>short</code> value.
      *
-     * @param value The value to be encoded
-     * @return The value of <code>value</code> encoded as a
+     * @param byte_int The <code>byte</code> array to be decoded
+     * @return The <code>short</code> value of the decoded 
      *         <code>byte</code> array
      */
-    public static byte[] shortToBytes(short value) {
-        return intToBytes(value);
-    }
-
-    @Override
     public short decodeShort(byte[] byte_int){
         return (short) decodeInt(byte_int);		 
     }
 
-    @Override
-    public byte[] encodeInt(int value){
-        return intToBytes(value);
-    }
-
     /**
-     * Encode an <code>int</code> value as a <code>byte</code> array in network-order(big-endian) representation.
+     * Encode an <code>int</code> value as a <code>byte</code> array.
      *
      * @param value The value to be encoded
-     * @return The value of <code>value</code> encoded as a
+     * @return The value of <code>value</code> encoded as a 
      *         <code>byte</code> array
      */
-    public static byte[] intToBytes(int value) {
+    public byte[] encodeInt(int value){
         byte ret[] = new byte[4];
         ret[0] = (byte) ((value >>> 24) & 0xff);
         ret[1] = (byte) ((value >>> 16) & 0xff);
@@ -187,28 +158,29 @@ public class XSQLVAR implements DatatypeCoder {
         return ret;
     }
 
-    @Override
+    /**
+     * Decode a <code>byte</code> array into an <code>int</code> value.
+     *
+     * @param byte_int The <code>byte</code> array to be decoded
+     * @return The <code>int</code> value of the decoded 
+     *         <code>byte</code> array
+     */
     public int decodeInt(byte[] byte_int){
         int b1 = byte_int[0]&0xFF;
         int b2 = byte_int[1]&0xFF;
         int b3 = byte_int[2]&0xFF;
         int b4 = byte_int[3]&0xFF;
-        return ((b1 << 24) + (b2 << 16) + (b3 << 8) + b4);
-    }
-
-    @Override
-    public byte[] encodeLong(long value){
-        return longToBytes(value);
+        return ((b1 << 24) + (b2 << 16) + (b3 << 8) + (b4));
     }
 
     /**
-     * Encode a <code>long</code> value as a <code>byte</code> array in network-order(big-endian) representation.
+     * Encode a <code>long</code> value as a <code>byte</code> array.
      *
      * @param value The value to be encoded
-     * @return The value of <code>value</code> encoded as a
+     * @return The value of <code>value</code> encoded as a 
      *         <code>byte</code> array
      */
-    public static byte[] longToBytes(long value) {
+    public  byte[] encodeLong(long value){
         byte[] ret = new byte[8];
         ret[0] = (byte) (value >>> 56 & 0xFF);
         ret[1] = (byte) (value >>> 48 & 0xFF);
@@ -221,8 +193,15 @@ public class XSQLVAR implements DatatypeCoder {
         return ret;
     }
 
-    @Override
-    public long decodeLong(byte[] byte_int){
+
+    /**
+     * Decode a <code>byte</code> array into a <code>long</code> value.
+     *
+     * @param byte_int The <code>byte</code> array to be decoded
+     * @return The <code>long</code> value of the decoded 
+     *         <code>byte</code> array
+     */
+    public  long decodeLong(byte[] byte_int){
         long b1 = byte_int[0]&0xFF;
         long b2 = byte_int[1]&0xFF;
         long b3 = byte_int[2]&0xFF;
@@ -232,25 +211,49 @@ public class XSQLVAR implements DatatypeCoder {
         long b7 = byte_int[6]&0xFF;
         long b8 = byte_int[7]&0xFF;
         return ((b1 << 56) + (b2 << 48) + (b3 << 40) + (b4 << 32) 
-        + (b5 << 24) + (b6 << 16) + (b7 << 8) + b8);
+        + (b5 << 24) + (b6 << 16) + (b7 << 8) + (b8));
     }
 
-    @Override
+    /**
+     * Encode a <code>float</code> value as a <code>byte</code> array.
+     *
+     * @param value The value to be encoded
+     * @return The value of <code>value</code> encoded as a 
+     *         <code>byte</code> array
+     */
     public byte[] encodeFloat(float value){
         return encodeInt(Float.floatToIntBits(value));
     }
 
-    @Override
+    /**
+     * Decode a <code>byte</code> array into a <code>float</code> value.
+     *
+     * @param byte_int The <code>byte</code> array to be decoded
+     * @return The <code>float</code> value of the decoded 
+     *         <code>byte</code> array
+     */
     public float decodeFloat(byte[] byte_int){
         return Float.intBitsToFloat(decodeInt(byte_int));
     }
 
-    @Override
+    /**
+     * Encode a <code>double</code> value as a <code>byte</code> array.
+     *
+     * @param value The value to be encoded
+     * @return The value of <code>value</code> encoded as a 
+     *         <code>byte</code> array
+     */
     public byte[] encodeDouble(double value){
         return encodeLong(Double.doubleToLongBits(value));
     }
 
-    @Override
+    /**
+     * Decode a <code>byte</code> array into a <code>double</code> value.
+     *
+     * @param byte_int The <code>byte</code> array to be decoded
+     * @return The <code>double</code> value of the decoded 
+     *         <code>byte</code> array
+     */
     public double decodeDouble(byte[] byte_int){
         return Double.longBitsToDouble(decodeLong(byte_int));
     }
@@ -265,7 +268,7 @@ public class XSQLVAR implements DatatypeCoder {
      * @param encoding The encoding to use in the encoding process
      * @param mappingPath The character mapping path to be used in the encoding
      * @return The value of <code>value</code> as a <code>byte</code> array
-     * @throws java.sql.SQLException if the given encoding cannot be found, or an error
+     * @throws SQLException if the given encoding cannot be found, or an error 
      *         occurs during the encoding
      */
     public byte[] encodeString(String value, String encoding, String mappingPath) throws SQLException {
@@ -281,7 +284,7 @@ public class XSQLVAR implements DatatypeCoder {
      * @param encoding The encoding to use in the encoding process
      * @param mappingPath The character mapping path to be used in the encoding
      * @return The value of <code>value</code> encoded using the given encoding
-     * @throws java.sql.SQLException if the given encoding cannot be found, or an error
+     * @throws SQLException if the given encoding cannot be found, or an error 
      *         occurs during the encoding
      */
     public byte[] encodeString(byte[] value, String encoding, String mappingPath)throws SQLException {
@@ -295,14 +298,14 @@ public class XSQLVAR implements DatatypeCoder {
     }
 
     /**
-     * Decode an encoded <code>byte</code> array into a <code>String</code>
+     * Decode an encoded <code>byte</code> array into a <code>String</code> 
      * using a given encoding.
      *
      * @param value The value to be decoded
      * @param encoding The encoding to be used in the decoding process
      * @param mappingPath The character mapping path to be used in the decoding
      * @return The decoded <code>String</code>
-     * @throws java.sql.SQLException if the given encoding cannot be found, or an
+     * @throws SQLException if the given encoding cannot be found, or an
      *         error occurs during the decoding
      */
     public String decodeString(byte[] value, String encoding, String mappingPath) throws SQLException{
@@ -313,12 +316,28 @@ public class XSQLVAR implements DatatypeCoder {
     
     // times,dates...
    
-    @Override
+    /**
+     * Encode a <code>Timestamp</code> using a given <code>Calendar</code>.
+     *
+     * @param value The <code>Timestamp</code> to be encoded
+     * @param cal The <code>Calendar</code> to be used for encoding,
+     *        may be <code>null</code>
+     */
     public Timestamp encodeTimestamp(java.sql.Timestamp value, Calendar cal){
         return encodeTimestamp(value, cal, false);
     }
     
-    @Override
+    /**
+     * Encode a <code>Timestamp</code> using a given <code>Calendar</code>.
+     *
+     * @param value The <code>Timestamp</code> to be encoded
+     * @param cal The <code>Calendar</code> to be used for encoding, 
+     *        may be <code>null</code>
+     * @param invertTimeZone If <code>true</code>, the timezone offset value 
+     *        will be subtracted from the encoded value, otherwise it will
+     *        be added
+     * @return The encoded <code>Timestamp</code>
+     */
     public Timestamp encodeTimestamp(java.sql.Timestamp value, Calendar cal, boolean invertTimeZone){
         if (cal == null) {
             return value;
@@ -332,13 +351,18 @@ public class XSQLVAR implements DatatypeCoder {
         }
     }
 
-    @Override
+    /**
+     * Encode a <code>Timestamp</code> as a <code>byte</code> array.
+     *
+     * @param value The <code>Timestamp</code> to be encoded
+     * @return The array of <code>byte</code>s that represents the given
+     *         <code>Timestamp</code> value
+     */
     public byte[] encodeTimestamp(Timestamp value){
     	return encodeTimestampCalendar(value, new GregorianCalendar());
     }
     	
-	@Override
-    public byte[] encodeTimestampCalendar(Timestamp value, Calendar c){
+	public byte[] encodeTimestampCalendar(Timestamp value, Calendar c){
 
         /* note, we cannot simply pass millis to the database, because
          * Firebird stores timestamp in format (citing Ann W. Harrison):
@@ -359,12 +383,31 @@ public class XSQLVAR implements DatatypeCoder {
         return result;
     }
 
-    @Override
+    /**
+     * Decode a <code>Timestamp</code> value using a given 
+     * <code>Calendar</code>.
+     *
+     * @param value The <code>Timestamp</code> to be decoded
+     * @param cal The <code>Calendar</code> to be used in decoding, 
+     *        may be <code>null</code>
+     * @return The decoded <code>Timestamp</code>
+     */
     public java.sql.Timestamp decodeTimestamp(Timestamp value, Calendar cal) {
         return decodeTimestamp(value, cal, false);
     }
 
-    @Override
+    /**
+     * Decode a <code>Timestamp</code> value using a given 
+     * <code>Calendar</code>.
+     *
+     * @param value The <code>Timestamp</code> to be decoded
+     * @param cal The <code>Calendar</code> to be used in decoding, 
+     *        may be <code>null</code>
+     * @param invertTimeZone If <code>true</code>, the timezone offset value 
+     *        will be subtracted from the decoded value, otherwise it will
+     *        be added
+     * @return The encoded <code>Timestamp</code>
+     */
     public java.sql.Timestamp decodeTimestamp(Timestamp value, Calendar cal, boolean invertTimeZone){
         if (cal == null) {
             return value;
@@ -378,13 +421,18 @@ public class XSQLVAR implements DatatypeCoder {
         }
     }
 
-    @Override
+    /**
+     * Decode a <code>byte</code> array into a <code>Timestamp</code>.
+     *
+     * @param byte_int The <code>byte</code> array to be decoded
+     * @return A <code>Timestamp</code> value from the decoded 
+     *         <code>byte</code>s
+     */
     public Timestamp decodeTimestamp(byte[] byte_int){
     	return decodeTimestampCalendar(byte_int, new GregorianCalendar());
     }
     
-	@Override
-    public Timestamp decodeTimestampCalendar(byte[] byte_int, Calendar c){
+	public Timestamp decodeTimestampCalendar(byte[] byte_int, Calendar c){
 
         
         if (byte_int.length != 8)
@@ -404,7 +452,15 @@ public class XSQLVAR implements DatatypeCoder {
         return d.toTimestamp(c);
     }
 
-    @Override
+    /**
+     * Encode a given <code>Time</code> value using a given 
+     * <code>Calendar</code>.
+     *
+     * @param d The <code>Time</code> to be encoded
+     * @param cal The <code>Calendar</code> to be used in the encoding,
+     *        may be <code>null</code>
+     * @return The encoded <code>Time</code>
+     */
     public java.sql.Time encodeTime(Time d, Calendar cal, boolean invertTimeZone) {
         if (cal == null) {
             return d;
@@ -418,19 +474,31 @@ public class XSQLVAR implements DatatypeCoder {
         }
     }
 
-    @Override
+    /**
+     * Encode a <code>Time</code> value into a <code>byte</code> array.
+     *
+     * @param d The <code>Time</code> to be encoded
+     * @return The array of <code>byte</code>s representing the given 
+     *         <code>Time</code>
+     */
     public byte[] encodeTime(Time d) {
     	return encodeTimeCalendar(d, new GregorianCalendar());
     }
     	
-	@Override
-    public byte[] encodeTimeCalendar(Time d, Calendar c) {
+	public byte[] encodeTimeCalendar(Time d, Calendar c) {
 
         datetime dt = new datetime(d, c);
         return dt.toTimeBytes();
     }
 
-    @Override
+    /**
+     * Decode a <code>Time</code> value using a given <code>Calendar</code>.
+     *
+     * @param d The <code>Time</code> to be decoded
+     * @param cal The <code>Calendar</code> to be used in the decoding, may
+     *        be <code>null</code>
+     * @return The decooded <code>Time</code>
+     */
     public java.sql.Time decodeTime(java.sql.Time d, Calendar cal, boolean invertTimeZone) {
         if (cal == null) {
             return d;
@@ -444,18 +512,30 @@ public class XSQLVAR implements DatatypeCoder {
         }
     }
 
-    @Override
+    /**
+     * Decode a <code>byte</code> array into a <code>Time</code> value.
+     *
+     * @param int_byte The <code>byte</code> array to be decoded
+     * @return The decoded <code>Time</code>
+     */
     public Time decodeTime(byte[] int_byte) {
     	return decodeTimeCalendar(int_byte, new GregorianCalendar());
     }
     
-	@Override
-    public Time decodeTimeCalendar(byte[] int_byte, Calendar c) {
+	public Time decodeTimeCalendar(byte[] int_byte, Calendar c) {
         datetime dt = new datetime(null,int_byte);
         return dt.toTime(c);
     }
 
-    @Override
+    /**
+     * Encode a given <code>Date</code> value using a given 
+     * <code>Calendar</code>.
+     *
+     * @param d The <code>Date</code> to be encoded
+     * @param cal The <code>Calendar</code> to be used in the encoding,
+     *        may be <code>null</code>
+     * @return The encoded <code>Date</code>
+     */
     public Date encodeDate(java.sql.Date d, Calendar cal) {
         if (cal == null) {
             return (d);
@@ -466,19 +546,30 @@ public class XSQLVAR implements DatatypeCoder {
         }
     }
 
-    @Override
+    /**
+     * Encode a <code>Date</code> value into a <code>byte</code> array.
+     *
+     * @param d The <code>Date</code> to be encoded
+     * @return The array of <code>byte</code>s representing the given 
+     *         <code>Date</code>
+     */
     public byte[] encodeDate(Date d) {
     	return encodeDateCalendar(d, new GregorianCalendar());
     }
     
-	@Override
-    public byte[] encodeDateCalendar(Date d, Calendar c) {
+	public byte[] encodeDateCalendar(Date d, Calendar c) {
         datetime dt = new datetime(d, c);
         return dt.toDateBytes();
     }
 
-
-    @Override
+    /**
+     * Decode a <code>Date</code> value using a given <code>Calendar</code>.
+     *
+     * @param d The <code>Date</code> to be decoded
+     * @param cal The <code>Calendar</code> to be used in the decoding, may
+     *        be <code>null</code>
+     * @return The decoded <code>Date</code>
+     */
     public java.sql.Date decodeDate(Date d, Calendar cal) {
         if (cal == null || d == null) {
             return d;
@@ -489,40 +580,80 @@ public class XSQLVAR implements DatatypeCoder {
         }
     }
 
-    @Override
+    /**
+     * Decode a <code>byte</code> array into a <code>Date</code> value.
+     *
+     * @param byte_int The <code>byte</code> array to be decoded
+     * @return The decoded <code>Date</code>
+     */
     public Date decodeDate(byte[] byte_int) {
     	return decodeDateCalendar(byte_int, new GregorianCalendar());
     }
     
-	@Override
-    public Date decodeDateCalendar(byte[] byte_int, Calendar c) {
+	public Date decodeDateCalendar(byte[] byte_int, Calendar c) {
        datetime dt = new datetime(byte_int, null);
-        return dt.toDate(c);
+       return dt.toDate(c);
     }
 
-    @Override
+    /**
+     * Decode boolean from supplied data.
+     *
+     * @param data (expected) 1 bytes
+     * @return <code>false</code> when 0, <code>true</code> for all other values
+     */
     public boolean decodeBoolean(byte[] data) {
         return data[0] != 0;
     }
 
-    @Override
+    /**
+     * Encodes boolean to 1 byte data.
+     *
+     * @param value Boolean value to encode
+     * @return <code>true</code> as 1, <code>false</code> as 0.
+     */
     public byte[] encodeBoolean(boolean value) {
         return new byte[] { (byte) (value ? 1 : 0) };
     }
 
-    @Override
+    /**
+     * Encodes a java.time.LocalTime equivalent to time bytes.
+     *
+     * @param hour Number of hours (is assumed to be 0..23)
+     * @param minute Number of minutes (is assumed to be 0..59)
+     * @param second Number of seconds (is assumed to be 0..59)
+     * @param nanos Sub-second nanoseconds (actual resolution is 100 microseconds, is assumed to be 0 .. 10^9 - 1 ns)
+     * @return Byte array for time
+     */
     public byte[] encodeLocalTime(int hour, int minute, int second, int nanos) {
         datetime dt = new datetime(0, 0, 0, hour, minute, second, nanos);
         return dt.toTimeBytes();
     }
 
-    @Override
+    /**
+     * Encodes a java.time.LocalDate equivalent to date bytes.
+     *
+     * @param year Year
+     * @param month Month (is assumed to be 1..12)
+     * @param day Day (is assumed to be valid for year and month)
+     * @return Byte array for date
+     */
     public byte[] encodeLocalDate(int year, int month, int day) {
         datetime dt = new datetime(year, month, day, 0, 0, 0, 0);
         return dt.toDateBytes();
     }
 
-    @Override
+    /**
+     * Encodes a java.time.LocalDateTime equivalent to timestamp bytes.
+     *
+     * @param year Year
+     * @param month Month (is assumed to be 1..12)
+     * @param day Day (is assumed to be valid for year and month)
+     * @param hour Number of hours (is assumed to be 0..23)
+     * @param minute Number of minutes (is assumed to be 0..59)
+     * @param second Number of seconds (is assumed to be 0..59)
+     * @param nanos Sub-second nanoseconds (actual resolution is 100 microseconds, is assumed to be 0 .. 10^9 - 1 ns)
+     * @return Byte array for timestamp
+     */
     public byte[] encodeLocalDateTime(int year, int month, int day, int hour, int minute, int second, int nanos) {
         datetime dt = new datetime(year, month, day, hour, minute, second, nanos);
         byte[] date = dt.toDateBytes();
@@ -627,7 +758,7 @@ public class XSQLVAR implements DatatypeCoder {
                     year += 1;
                 }
             }
-            if (time != null){
+            if (time != null){		
                 int fractionsInDay = decodeInt(time);
                 hour = fractionsInDay / FRACTIONS_PER_HOUR;
                 fractionsInDay -= hour * FRACTIONS_PER_HOUR;
@@ -641,9 +772,9 @@ public class XSQLVAR implements DatatypeCoder {
         byte[] toTimeBytes(){
             int fractionsInDay =
                     hour * FRACTIONS_PER_HOUR
-                            + minute * FRACTIONS_PER_MINUTE
-                            + second * FRACTIONS_PER_SECOND
-                            + fractions;
+                    + minute * FRACTIONS_PER_MINUTE
+                    + second * FRACTIONS_PER_SECOND
+                    + fractions;
             return encodeInt(fractionsInDay);
         }
 
@@ -674,7 +805,7 @@ public class XSQLVAR implements DatatypeCoder {
             c.set(Calendar.YEAR, 1970);
             c.set(Calendar.MONTH, Calendar.JANUARY);
             c.set(Calendar.DAY_OF_MONTH, 1);
-            c.set(Calendar.HOUR_OF_DAY, hour);
+            c.set(Calendar.HOUR_OF_DAY,hour);
             c.set(Calendar.MINUTE, minute);
             c.set(Calendar.SECOND, second);
             c.set(Calendar.MILLISECOND, fractions / FRACTIONS_PER_MILLISECOND);

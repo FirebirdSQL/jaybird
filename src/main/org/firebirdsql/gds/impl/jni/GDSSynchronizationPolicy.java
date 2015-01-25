@@ -23,11 +23,10 @@ import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
-import java.security.AccessController;
-import java.security.PrivilegedAction;
+import java.util.HashSet;
 
 import org.firebirdsql.gds.GDS;
-import org.firebirdsql.util.ReflectionHelper;
+
 
 /**
  * GDS library synchronization policy.
@@ -35,24 +34,6 @@ import org.firebirdsql.util.ReflectionHelper;
  * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
  */
 public class GDSSynchronizationPolicy {
-    
-    /**
-     * Apply the synchronization policy if the current platform is not Windows.
-     * 
-     * @param tempGds instance if {@link GDS} to which policy should be applied.
-     */
-    static GDS applyClientSyncPolicyNonWindows(GDS tempGds) {
-        GDSSynchronizationPolicy.AbstractSynchronizationPolicy syncPolicy = null;
-
-        String osName = getSystemPropertyPrivileged("os.name");
-        if (osName != null && osName.indexOf("Windows") == -1)
-            syncPolicy = new GDSSynchronizationPolicy.ClientLibrarySyncPolicy(tempGds);
-
-        if (syncPolicy != null)
-            return GDSSynchronizationPolicy.applySyncronizationPolicy(tempGds, syncPolicy);
-        else
-            return tempGds;
-    }
     
     /**
      * Apply synchronization policy on the specfied instance of {@link GDS}.
@@ -69,12 +50,33 @@ public class GDSSynchronizationPolicy {
         
         GDS wrappedObject = (GDS)Proxy.newProxyInstance(
                 gds.getClass().getClassLoader(),
-                ReflectionHelper.getAllInterfaces(gds.getClass()),
+                getAllInterfaces(gds.getClass()),
                 syncPolicy);
         
         return wrappedObject;
     }
-  
+    
+    
+    /**
+     * Get all implemented interfaces by the class.
+     * 
+     * @param clazz class to inspect.
+     * 
+     * @return array of all implemented interfaces.
+     */
+    private static Class[] getAllInterfaces(Class clazz) {
+        HashSet result = new HashSet();
+        
+        do {
+            Class[] interfaces = clazz.getInterfaces();
+            for (int i = 0; i < interfaces.length; i++) {
+                result.add(interfaces[i]);
+            }
+            clazz = clazz.getSuperclass();
+        } while(clazz.getSuperclass() != null);
+        
+        return (Class[])result.toArray(new Class[result.size()]);
+    }    
     /**
      * Abstract synchronization policy. This class should be used as invocation
      * handler for dynamic proxy that will wrap corresponding {@link GDS} 
@@ -142,14 +144,6 @@ public class GDSSynchronizationPolicy {
         protected Object getSynchronizationObject() {
             return SYNC_OBJECT;
         }
-    }
-    
-    private static String getSystemPropertyPrivileged(final String propertyName) {
-        return AccessController.doPrivileged(new PrivilegedAction<String>() {
-           public String run() {
-               return System.getProperty(propertyName);
-           } 
-        });
     }
 
 }

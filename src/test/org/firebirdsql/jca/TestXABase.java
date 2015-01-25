@@ -24,10 +24,7 @@ import java.net.UnknownHostException;
 
 import javax.transaction.xa.Xid;
 
-import org.firebirdsql.common.FBJUnit4TestBase;
 import org.firebirdsql.common.FBTestBase;
-
-import static org.firebirdsql.common.FBTestProperties.*;
 
 /**
  * THIS FILE INCLUDES AN XID IMPLEMENTATION FROM THE JBOSS PROJECT
@@ -38,7 +35,11 @@ import static org.firebirdsql.common.FBTestProperties.*;
  * @author <a href="mailto:d_jencks@users.sourceforge.net">David Jencks</a>
  * @version 1.0
  */
-public abstract class TestXABase extends FBJUnit4TestBase {
+public abstract class TestXABase extends FBTestBase {
+
+    public TestXABase(String name) {
+        super(name);
+    }
 
     public FBManagedConnectionFactory initMcf() {
         FBManagedConnectionFactory mcf = createFBManagedConnectionFactory(new InternalConnectionManager());
@@ -190,7 +191,7 @@ public abstract class TestXABase extends FBJUnit4TestBase {
         */
        public byte[] getGlobalTransactionId()
        {
-          return globalId.clone();
+          return (byte[])globalId.clone();
        }
 
        /**
@@ -201,7 +202,7 @@ public abstract class TestXABase extends FBJUnit4TestBase {
           if (branchId.length == 0)
              return branchId; // Zero length arrays are immutable.
           else
-             return branchId.clone();
+             return (byte[])branchId.clone();
        }
 
        /**
@@ -273,7 +274,7 @@ public abstract class TestXABase extends FBJUnit4TestBase {
         */
        public byte[] getInternalGlobalTransactionId()
        {
-          return globalId.clone();
+          return (byte[])globalId.clone();
        }
 
     }

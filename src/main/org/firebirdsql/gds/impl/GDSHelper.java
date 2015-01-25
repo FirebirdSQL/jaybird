@@ -26,14 +26,16 @@
  */
 package org.firebirdsql.gds.impl;
 
-import org.firebirdsql.gds.*;
-import org.firebirdsql.gds.ng.FbBlob;
-import org.firebirdsql.gds.ng.FbDatabase;
-import org.firebirdsql.gds.ng.FbStatement;
-import org.firebirdsql.gds.ng.FbTransaction;
-
 import java.sql.SQLException;
+import java.util.Collections;
 import java.util.List;
+
+import org.firebirdsql.encodings.Encoding;
+import org.firebirdsql.encodings.EncodingFactory;
+import org.firebirdsql.gds.*;
+import org.firebirdsql.logging.Logger;
+import org.firebirdsql.logging.LoggerFactory;
+
 
 /**
  * Helper class for all GDS-related operations.
@@ -41,77 +43,92 @@ import java.util.List;
 public class GDSHelper {
     
     public static final int DEFAULT_BLOB_BUFFER_SIZE = 16 * 1024;
+    
+    /**
+     * Notification listener about any error that occured in this class.
+     */
+    public interface GDSHelperErrorListener {
 
-    private final GDS gds;
-    private final FbDatabase database;
-    private FbTransaction transaction;
+        /**
+         * Notify about the error in this class.
+         * 
+         * @param ex error that occured.
+         */
+        void errorOccured(GDSException ex);
+    }
 
+    private static final Logger log = LoggerFactory.getLogger(GDSHelper.class, false);
+
+    private GDS gds;
+    private IscDbHandle currentDbHandle;
+    private AbstractIscTrHandle currentTr;
     /**
      * Needed from mcf when killing a db handle when a new tx cannot be started.
      */
     protected DatabaseParameterBuffer dpb;
     
     private boolean registerResultSets;
-
-    private final ExceptionListener listener;
-
+    
+    private GDSHelperErrorListener listener;
+    
     /**
      * Create instance of this class.
      */
-    public GDSHelper(GDS gds, DatabaseParameterBuffer dpb, ExceptionListener listener, FbDatabase database) {
+    public GDSHelper(GDS gds, DatabaseParameterBuffer dpb, IscDbHandle dbHandle, GDSHelperErrorListener listener) {
         this.gds = gds;
         this.dpb = dpb;
+        this.currentDbHandle = dbHandle;
 
         this.registerResultSets = !getDatabaseParameterBuffer().hasArgument(
                 DatabaseParameterBufferExtension.NO_RESULT_SET_TRACKING);
         
-        this.listener = listener != null ? listener : ExceptionListener.NULL_LISTENER;
-        this.database = database;
+        this.listener = listener;
     }
-
+    
     private void notifyListeners(GDSException ex) {
-        listener.errorOccurred(ex);
+        if (listener != null)
+            listener.errorOccured(ex);
     }
-
-    private void notifyListeners(SQLException ex) {
-        listener.errorOccurred(ex);
+        
+    public synchronized AbstractIscTrHandle getCurrentTrHandle() {
+        return currentTr;
     }
-
-    public synchronized FbTransaction getCurrentTransaction() {
-        return transaction;
+    
+    public synchronized void setCurrentTrHandle(AbstractIscTrHandle currentTr) {
+        this.currentTr = currentTr;
+        notify();
     }
-
-    public synchronized void setCurrentTransaction(FbTransaction transaction) {
-        this.transaction = transaction;
-        notifyAll();
+    
+    public IscDbHandle getCurrentDbHandle() {
+        return currentDbHandle;
     }
-
-    public FbDatabase getCurrentDatabase() {
-        return database;
-    }
-
+    
     public DatabaseParameterBuffer getDatabaseParameterBuffer() {
         return dpb;
     }
 
     /**
-     * @return Connection dialect
+     * @return Connection dialect from DPB (or default if not specified)
      */
     public int getDialect() {
-        return database.getConnectionDialect();
+        if (dpb.hasArgument(ISCConstants.isc_dpb_sql_dialect))
+            return dpb.getArgumentAsInt(ISCConstants.isc_dpb_sql_dialect);
+        return ISCConstants.SQL_DIALECT_CURRENT;
     }
-
+    
     /**
-     * Retrieve a newly allocated statement handle with the current connection.
-     *
+     * Retrieve a newly allocated statment handle with the current connection.
+     * 
      * @return The new statement handle
-     * @throws java.sql.SQLException
+     * @throws GDSException
      *             if a database access error occurs
      */
-    public FbStatement allocateStatement() throws SQLException {
+    public AbstractIscStmtHandle allocateStatement() throws GDSException {
         try {
-            return database.createStatement(getCurrentTransaction());
-        } catch (SQLException ex) {
+            AbstractIscStmtHandle stmt = (AbstractIscStmtHandle)gds.createIscStmtHandle();
+            gds.iscDsqlAllocateStatement(getCurrentDbHandle(), stmt);
+            return stmt;
+        } catch(GDSException ex) {
             notifyListeners(ex);
             throw ex;
         }
@@ -124,8 +141,7 @@ public class GDSHelper {
      *         transaction, <code>false</code> otherwise.
      */
     public boolean inTransaction() {
-        // TODO Check state?
-        return transaction != null;
+        return currentTr != null;
     }
 
     public int getTransactionId(IscTrHandle trHandle) 
@@ -161,12 +177,9 @@ public class GDSHelper {
      * @throws SQLException
      *             if a database access error occurs
      */
-    @Deprecated
     public void prepareStatement(AbstractIscStmtHandle stmt, String sql,
             boolean describeBind) throws GDSException, SQLException {
-
-        throw new UnsupportedOperationException("prepareStatement is no longer implemented/supported");
-        /*
+        
         try {
             if (log != null) log.trace("preparing sql: " + sql);
     
@@ -178,10 +191,8 @@ public class GDSHelper {
     
             Encoding encoding = 
                 EncodingFactory.getEncoding(localEncoding, mappingPath);
-    
-            int dialect = ISCConstants.SQL_DIALECT_CURRENT;
-            if (dpb.hasArgument(ISCConstants.isc_dpb_sql_dialect))
-                dialect = dpb.getArgumentAsInt(ISCConstants.isc_dpb_sql_dialect);
+
+            int dialect = getDialect();
     
             XSQLDA out = gds.iscDsqlPrepare(currentTr, stmt, 
                 encoding.encodeToCharset(sql), dialect);
@@ -192,13 +203,12 @@ public class GDSHelper {
             if (describeBind) 
                 gds.iscDsqlDescribeBind(stmt, ISCConstants.SQLDA_VERSION1);
             
-            stmt.setStatementText(sql);
+            stmt.statement = sql;
             
         } catch(GDSException ex) {
             notifyListeners(ex);
             throw ex;
         }
-        */
     }
 
     /**
@@ -212,14 +222,12 @@ public class GDSHelper {
      * @throws GDSException
      *             if a Firebird-specific error occurs
      */
-    @Deprecated
-    public void executeStatement(AbstractIscStmtHandle stmt, boolean sendOutSqlda) throws GDSException {
-        throw new UnsupportedOperationException("executeStatement is no longer supported/implemented");
-        /*
+    public void executeStatement(AbstractIscStmtHandle stmt, boolean sendOutSqlda)
+            throws GDSException {
         try {
             
             if (log != null && log.isDebugEnabled())
-                log.debug("Executing " + stmt.getStatementText());
+                log.debug("Executing " + stmt.statement);
             
             // System.out.println("Executing " + stmt.statement);
             
@@ -229,7 +237,6 @@ public class GDSHelper {
             notifyListeners(ex);
             throw ex;
         }
-        */
     }
 
     /**
@@ -237,11 +244,17 @@ public class GDSHelper {
      * 
      * @param statement
      *            The SQL statement to execute
-     * @throws SQLException
+     * @throws GDSException
      *             if a Firebird-specific error occurs
      */
-    public void executeImmediate(String statement) throws SQLException {
-        database.executeImmediate(statement, getCurrentTransaction());
+    public void executeImmediate(String statement) throws GDSException {
+        try {
+            gds.iscDsqlExecImmed2(getIscDBHandle(), currentTr, statement, 3,
+                null, null);
+        } catch(GDSException ex) {
+            notifyListeners(ex);
+            throw ex;
+        }
     }
 
     /**
@@ -254,10 +267,7 @@ public class GDSHelper {
      * @throws GDSException
      *             if a Firebird-specific error occurs
      */
-    @Deprecated
     public void fetch(AbstractIscStmtHandle stmt, int fetchSize) throws GDSException {
-        throw new UnsupportedOperationException("fetch is no longer supported/implemented");
-        /*
         try {
             gds.iscDsqlFetch(stmt, ISCConstants.SQLDA_VERSION1, 
                 stmt.getOutSqlda(), fetchSize);
@@ -268,7 +278,6 @@ public class GDSHelper {
             notifyListeners(ex);
             throw ex;
         }
-        */
     }
 
     /**
@@ -342,6 +351,84 @@ public class GDSHelper {
     }
 
     /**
+     * Fetch the count information for a statement handle. The count information
+     * that is updated includes the counts for update, insert, delete and
+     * select, and it is set in the handle itself.
+     * 
+     * @param stmt
+     *            handle to the statement for which counts will be fetched
+     * @throws GDSException
+     *             if a Firebird-specific database access error occurs
+     */
+    public void getSqlCounts(AbstractIscStmtHandle stmt) throws GDSException {
+        try {
+            gds.getSqlCounts(stmt);
+        } catch(GDSException ex) {
+            notifyListeners(ex);
+            throw ex;
+        }
+    }
+    
+    public void populateStatementInfo(AbstractIscStmtHandle fixedStmt) throws GDSException {
+        final byte [] REQUEST = new byte [] {
+                ISCConstants.isc_info_sql_get_plan,
+                ISCConstants.isc_info_sql_stmt_type,
+                ISCConstants.isc_info_end };
+
+        try {
+            int bufferSize = 1024;
+            byte[] buffer;
+            while (true){
+                buffer = gds.iscDsqlSqlInfo(fixedStmt, REQUEST, bufferSize);
+                
+                if (buffer[0] != ISCConstants.isc_info_truncated){
+                    break;
+                } 
+                bufferSize *= 2;
+            }
+
+            if (buffer[0] == ISCConstants.isc_info_end){
+                throw new GDSException(ISCConstants.isc_req_sync);
+            }
+
+            String executionPlan = null;
+            int statementType = IscStmtHandle.TYPE_UNKNOWN;
+            
+            int dataLength = -1; 
+            for (int i = 0; i < buffer.length; i++){
+                switch(buffer[i]){
+                    case ISCConstants.isc_info_sql_get_plan:
+                        dataLength = gds.iscVaxInteger(buffer, ++i, 2);
+                        i += 2;
+                        // Skipping first char as it is a linefeed
+                        executionPlan = new String(buffer, i + 1, dataLength - 1);
+                        i += dataLength - 1;
+                        break;
+                    case ISCConstants.isc_info_sql_stmt_type:
+                        dataLength = gds.iscVaxInteger(buffer, ++i, 2);
+                        i += 2;
+                        statementType = gds.iscVaxInteger(buffer, i, dataLength);
+                        i += dataLength;
+                        break;
+                    case ISCConstants.isc_info_end:
+                    case 0:
+                        break;
+                    default:
+                        throw new GDSException(ISCConstants.isc_req_sync);
+                }
+            }
+            
+            fixedStmt.setExecutionPlan(executionPlan);
+            fixedStmt.setStatementType(statementType);
+            
+        } catch(GDSException ex) {
+            notifyListeners(ex);
+            throw ex;
+        }
+
+    }
+
+    /**
      * Open a handle to a new blob within the current transaction with the given
      * id.
      * 
@@ -350,22 +437,27 @@ public class GDSHelper {
      * @param segmented
      *            If <code>true</code>, the blob will be segmented, otherwise
      *            is will be streamed
-     * @throws SQLException
+     * @throws GDSException
      *             if a Firebird-specific database error occurs
      */
-    public FbBlob openBlob(long blob_id, boolean segmented) throws SQLException {
+    public IscBlobHandle openBlob(long blob_id, boolean segmented)
+            throws GDSException {
+
         try {
-            BlobParameterBuffer blobParameterBuffer = database.createBlobParameterBuffer();
-
+            IscBlobHandle blob = gds.createIscBlobHandle();
+            blob.setBlobId(blob_id);
+    
+            BlobParameterBuffer blobParameterBuffer = gds.createBlobParameterBuffer();
+    
             blobParameterBuffer.addArgument(BlobParameterBuffer.TYPE,
-                    segmented ? BlobParameterBuffer.TYPE_SEGMENTED
-                            : BlobParameterBuffer.TYPE_STREAM);
-
-            FbBlob blob = database.createBlobForInput(getCurrentTransaction(), blobParameterBuffer, blob_id);
-            blob.open();
+                segmented ? BlobParameterBuffer.TYPE_SEGMENTED
+                        : BlobParameterBuffer.TYPE_STREAM);
+    
+            gds.iscOpenBlob2(currentDbHandle, currentTr, blob,
+                blobParameterBuffer);
     
             return blob;
-        } catch(SQLException ex) {
+        } catch(GDSException ex) {
             notifyListeners(ex);
             throw ex;
         }
@@ -377,22 +469,25 @@ public class GDSHelper {
      * @param segmented
      *            If <code>true</code> the blob will be segmented, otherwise
      *            it will be streamed
-     * @throws SQLException
+     * @throws GDSException
      *             if a Firebird-specific database error occurs
      */
-    public FbBlob createBlob(boolean segmented) throws SQLException {
+    public IscBlobHandle createBlob(boolean segmented) throws GDSException {
+        
         try {
-            BlobParameterBuffer blobParameterBuffer = database.createBlobParameterBuffer();
-
+            IscBlobHandle blob = gds.createIscBlobHandle();
+    
+            BlobParameterBuffer blobParameterBuffer = gds.createBlobParameterBuffer();
+    
             blobParameterBuffer.addArgument(BlobParameterBuffer.TYPE,
-                    segmented ? BlobParameterBuffer.TYPE_SEGMENTED
-                            : BlobParameterBuffer.TYPE_STREAM);
-
-            FbBlob blob = database.createBlobForOutput(getCurrentTransaction(), blobParameterBuffer);
-            blob.open();
-
+                segmented ? BlobParameterBuffer.TYPE_SEGMENTED
+                        : BlobParameterBuffer.TYPE_STREAM);
+    
+            gds.iscCreateBlob2(currentDbHandle, currentTr, blob,
+                blobParameterBuffer);
+    
             return blob;
-        } catch(SQLException ex) {
+        } catch(GDSException ex) {
             notifyListeners(ex);
             throw ex;
         }
@@ -491,49 +586,51 @@ public class GDSHelper {
         }
     }
     
-    public FbTransaction startTransaction(TransactionParameterBuffer tpb) throws SQLException {
+    public AbstractIscTrHandle startTransaction(TransactionParameterBuffer tpb) throws GDSException {
         try {
-            FbTransaction transaction = database.startTransaction(tpb);
-            setCurrentTransaction(transaction);
+            AbstractIscTrHandle trHandle = (AbstractIscTrHandle)gds.createIscTrHandle();
             
-            return transaction;
-        } catch (SQLException e) {
-            notifyListeners(e);
-            throw e;
-        }
-    }
-
-    public void prepareTransaction(FbTransaction transaction, byte[] message) throws SQLException {
-        try {
-            transaction.prepare(message);
-        } catch(SQLException ex) {
+            gds.iscStartTransaction(trHandle, currentDbHandle, tpb);
+            setCurrentTrHandle(trHandle);
+            
+            return trHandle;
+        } catch(GDSException ex) {
             notifyListeners(ex);
             throw ex;
         }
     }
-
-    public void commitTransaction(FbTransaction transaction) throws SQLException {
+    
+    public void prepareTransaction(AbstractIscTrHandle trHandle, byte[] message) throws GDSException {
         try {
-            transaction.commit();
-        } catch (SQLException e) {
-            notifyListeners(e);
-            throw e;
-        }
-    }
-
-    public void rollbackTransaction(FbTransaction transaction) throws SQLException {
-        try {
-            transaction.rollback();
-        } catch (SQLException e) {
-            notifyListeners(e);
-            throw e;
+            gds.iscPrepareTransaction2(trHandle, message);
+        } catch(GDSException ex) {
+            notifyListeners(ex);
+            throw ex;
         }
     }
     
-    public void detachDatabase() throws SQLException {
+    public void commitTransaction(AbstractIscTrHandle trHandle) throws GDSException {
         try {
-            database.detach();
-        } catch(SQLException ex) {
+            gds.iscCommitTransaction(trHandle);
+        } catch(GDSException ex) {
+            notifyListeners(ex);
+            throw ex;
+        }
+    }
+    
+    public void rollbackTransaction(AbstractIscTrHandle trHandle) throws GDSException {
+        try {
+            gds.iscRollbackTransaction(trHandle);
+        } catch(GDSException ex) {
+            notifyListeners(ex);
+            throw ex;
+        }
+    }
+    
+    public void detachDatabase() throws GDSException {
+        try {
+            gds.iscDetachDatabase(currentDbHandle);
+        } catch(GDSException ex) {
             notifyListeners(ex);
             throw ex;
         }
@@ -543,21 +640,16 @@ public class GDSHelper {
      * Cancel the currently running operation.
      */
     public void cancelOperation() throws GDSException {
-        // TODO rewrite to throw SQLException
         try {
-            database.cancelOperation(ISCConstants.fb_cancel_raise);
-        } catch(SQLException ex) {
+            gds.fbCancelOperation(currentDbHandle, ISCConstants.fb_cancel_raise);
+        } catch(GDSException ex) {
             notifyListeners(ex);
-            throw new GDSException(ex.getErrorCode(), ex);
+            throw ex;
         }
     }
 
     public int iscVaxInteger(byte[] buffer, int pos, int length) {
         return gds.iscVaxInteger(buffer, pos, length);
-    }
-    
-    public long iscVaxLong(byte[] buffer, int pos, int length) {
-        return gds.iscVaxLong(buffer, pos, length);
     }
 
     // for DatabaseMetaData.
@@ -569,7 +661,7 @@ public class GDSHelper {
      */
     public String getDatabaseProductName() {
         /** @todo add check if mc is not null */
-        return database.getServerVersion().getServerName();
+        return currentDbHandle.getDatabaseProductName();
     }
 
     /**
@@ -579,7 +671,7 @@ public class GDSHelper {
      */
     public String getDatabaseProductVersion() {
         /** @todo add check if mc is not null */
-        return database.getServerVersion().getFullVersion();
+        return currentDbHandle.getDatabaseProductVersion();
     }
 
     /**
@@ -589,7 +681,7 @@ public class GDSHelper {
      */
     public int getDatabaseProductMajorVersion() {
         /** @todo add check if mc is not null */
-        return database.getServerVersion().getMajorVersion();
+        return currentDbHandle.getDatabaseProductMajorVersion();
     }
 
     /**
@@ -599,7 +691,7 @@ public class GDSHelper {
      */
     public int getDatabaseProductMinorVersion() {
         /** @todo add check if mc is not null */
-        return database.getServerVersion().getMinorVersion();
+        return currentDbHandle.getDatabaseProductMinorVersion();
     }
     
     /**
@@ -677,28 +769,27 @@ public class GDSHelper {
      * @return list of {@link GDSException}instances representing warnings for
      *         this database connection.
      */
-    @Deprecated
-    public List<GDSException> getWarnings() {
-        // TODO consider resurrecting?
-        throw new UnsupportedOperationException("getWarnings is no longer supported/implemented");
+    public List getWarnings() {
+        if (currentDbHandle == null)
+            return Collections.EMPTY_LIST;
+        else
+            return currentDbHandle.getWarnings();
     }
 
     /**
      * Clear warnings for this database connection.
      */
     public void clearWarnings() {
-        // TODO Remove or reimplement
-        //if (currentDbHandle != null) currentDbHandle.clearWarnings();
+        if (currentDbHandle != null) currentDbHandle.clearWarnings();
     }
 
     /**
      * Get connection handle for direct Firebird API access
-     *
+     * 
      * @return internal handle for connection
      */
-    @Deprecated
     public IscDbHandle getIscDBHandle() {
-        throw new UnsupportedOperationException("getIscDBHandle is no longer supported/implemented");
+        return currentDbHandle;
     }
 
     /**
@@ -706,8 +797,8 @@ public class GDSHelper {
      * 
      * @return handler object for internal API calls
      */
-    @Deprecated
     public GDS getInternalAPIHandler() {
         return gds;
     }
+
 }

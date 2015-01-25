@@ -19,7 +19,6 @@
 package org.firebirdsql.jdbc.parser;
 
 import java.util.ArrayList;
-import java.util.List;
 
 /**
  * Simple model of the parsed statement. At the moment the original statement 
@@ -38,9 +37,9 @@ public class JaybirdStatementModel {
     
     private String tableName;
     private String selectClause;
-    private List<String> columns = new ArrayList<String>();
-    private List<String> values = new ArrayList<String>();
-    private List<String> returningColumns = new ArrayList<String>();
+    private ArrayList columns = new ArrayList();
+    private ArrayList values = new ArrayList();
+    private ArrayList returningColumns = new ArrayList();
     
     private boolean defaultValues;
     
@@ -76,7 +75,7 @@ public class JaybirdStatementModel {
         this.selectClause = selectClause;
     }
     
-    public List<String> getColumns() {
+    public ArrayList getColumns() {
         return columns;
     }
     
@@ -84,7 +83,7 @@ public class JaybirdStatementModel {
         columns.add(columnName);
     }
     
-    public List<String> getValues() {
+    public ArrayList getValues() {
         return values;
     }
     
@@ -92,7 +91,7 @@ public class JaybirdStatementModel {
         values.add(value);
     }
     
-    public List<String> getReturningColumns() {
+    public ArrayList getReturningColumns() {
         return returningColumns;
     }
     

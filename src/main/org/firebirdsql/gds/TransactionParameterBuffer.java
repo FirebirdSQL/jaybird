@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * Public Firebird Java API.
  *
  * Redistribution and use in source and binary forms, with or without 
@@ -24,15 +22,16 @@
  * OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+
 package org.firebirdsql.gds;
+
 
 /**
  * Instances of this interface represent Transaction Parameter Buffer from the
  * Firebird API.
  */
-public interface TransactionParameterBuffer extends ParameterBuffer {
-
-    //@formatter:off
+public interface TransactionParameterBuffer {
+    
     int AUTOCOMMIT         = ISCConstants.isc_tpb_autocommit;
 
     int READ_COMMITTED      = ISCConstants.isc_tpb_read_committed;
@@ -64,12 +63,64 @@ public interface TransactionParameterBuffer extends ParameterBuffer {
     int NO_AUTO_UNDO        = ISCConstants.isc_tpb_no_auto_undo;
     
     int LOCK_TIMEOUT        = ISCConstants.isc_tpb_lock_timeout;
-    //@formatter:on
+
+    /**
+     * Add argument.
+     * @param argumentType type of argument.
+     */
+    void addArgument(int argumentType);
+
+    /**
+     * Add string argument.
+     * @param argumentType type of argument.
+     * @param value string value to add.
+     */
+    void addArgument(int argumentType, String value);
+
+    /**
+     * Add integer argument.
+     * @param argumentType type of argument.
+     * @param value integer value to add.
+     */
+    void addArgument(int argumentType, int value);
+    
+    /**
+     * Add array of bytes.
+     * @param argumentType type of argument.
+     * @param content content of argument.
+     */ 
+    void addArgument(int argumentType, byte[] content);
+
+    /**
+     * Remove specified argument.
+     * @param argumentType type of argument to remove.
+     */ 
+    void removeArgument(int argumentType);
+
+    /**
+     * Get argument as string.
+     * @param argumentType type of argument to find.
+     * @return argument as string or <code>null</code> if nothing found.
+     */ 
+    String getArgumentAsString(int argumentType);
+    
+    /**
+     * Get argument as int.
+     * @param argumentType type of argument to find.
+     * @return argument as string or <code>0</code> if nothing found.
+     */ 
+    int getArgumentAsInt(int argumentType);
+    
+    /**
+     * Check if this parameter buffer has specified argument.
+     * @param argumentType type of argument to find.
+     * @return <code>true</code> if this buffer contains specified argument.
+     */
+    boolean hasArgument(int argumentType);
 
     /**
      * Make a deep copy of this object.
-     *
      * @return deep copy of this object.
-     */
+     */ 
     TransactionParameterBuffer deepCopy();
 }

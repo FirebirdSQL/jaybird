@@ -1,28 +1,24 @@
 /*
- * $Id$
- *
- * Firebird Open Source JavaEE Connector - JDBC Driver
- *
- * Distributable under LGPL license.
- * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * LGPL License for more details.
- *
- * This file was created by members of the firebird development team.
- * All individual contributions remain the Copyright (C) of those
- * individuals.  Contributors to this file are either listed here or
- * can be obtained from a source control history command.
- *
- * All rights reserved.
- */
+* Firebird Open Source J2ee connector - jdbc driver
+*
+* Distributable under LGPL license.
+* You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
+*
+* This program is distributed in the hope that it will be useful,
+* but WITHOUT ANY WARRANTY; without even the implied warranty of
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+* LGPL License for more details.
+*
+* This file was created by members of the firebird development team.
+* All individual contributions remain the Copyright (C) of those
+* individuals.  Contributors to this file are either listed here or
+* can be obtained from a CVS history command.
+*
+* All rights reserved.
+*/
 package org.firebirdsql.jca;
 
-import org.firebirdsql.jdbc.FBConnection;
-import org.junit.After;
-import org.junit.Test;
+import org.firebirdsql.jdbc.AbstractConnection;
 
 import javax.resource.spi.LocalTransaction;
 import javax.sql.DataSource;
@@ -35,8 +31,6 @@ import java.sql.ResultSet;
 import java.sql.Statement;
 import java.util.Arrays;
 
-import static org.junit.Assert.assertEquals;
-
 /**
  * Describe class <code>TestFBBlob</code> here.
  *
@@ -45,32 +39,41 @@ import static org.junit.Assert.assertEquals;
  */
 public class TestFBBlob extends TestXABase {
 
-    private FBConnection c;
+    private AbstractConnection c;
     private LocalTransaction t;
     private Exception ex = null;
 
     private int bloblength = 40960 * 10;
 
+    public TestFBBlob(String name) {
+        super(name);
+    }
+
     protected void setupTable(String name) throws Exception {
         FBManagedConnectionFactory mcf = initMcf();
         DataSource ds = (DataSource) mcf.createConnectionFactory();
-        c = (FBConnection) ds.getConnection();
+        c = (AbstractConnection) ds.getConnection();
         Statement s = c.createStatement();
         t = c.getLocalTransaction();
         t.begin();
         try {
             s.execute("CREATE TABLE " + name + " ( C1 INTEGER not null primary key, C2 BLOB)");
+            s.close();
         } catch (Exception e) {
             ex = e;
         }
         t.commit();
     }
 
-    @After
-    public void cleanUp() throws Exception {
-        c.close();
-        if (ex != null) {
-            throw ex;
+    @Override
+    protected void tearDown() throws Exception {
+        try {
+            c.close();
+            if (ex != null) {
+                throw ex;
+            }
+        } finally {
+            super.tearDown();
         }
     }
 
@@ -92,7 +95,7 @@ public class TestFBBlob extends TestXABase {
         p.close();
     }
 
-    @Test
+
     public void testUseBlob() throws Exception {
         setupTable("T1");
 
@@ -116,7 +119,6 @@ public class TestFBBlob extends TestXABase {
         t.commit();
     }
 
-    @Test
     public void testUseBlobViapsSetBinaryStream() throws Exception {
         setupTable("T2");
 
@@ -136,7 +138,6 @@ public class TestFBBlob extends TestXABase {
         t.commit();
     }
 
-    @Test
     public void testUseBlobViapsSetBytes() throws Exception {
         setupTable("T3");
 
@@ -154,5 +155,4 @@ public class TestFBBlob extends TestXABase {
         checkReadBlob("T3");
         t.commit();
     }
-
 }

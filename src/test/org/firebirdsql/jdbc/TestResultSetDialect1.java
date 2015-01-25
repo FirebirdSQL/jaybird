@@ -20,21 +20,12 @@
  */
 package org.firebirdsql.jdbc;
 
-import org.firebirdsql.common.FBJUnit4TestBase;
+import org.firebirdsql.common.FBTestBase;
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.impl.GDSType;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
 
 import java.sql.*;
 import java.util.Properties;
-
-import static org.firebirdsql.common.DdlHelper.executeCreateTable;
-import static org.firebirdsql.common.FBTestProperties.*;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
 
 /**
  * Tests for updatable result sets with a dialect 1 database.
@@ -42,7 +33,7 @@ import static org.junit.Assert.assertTrue;
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @since 2.2
  */
-public class TestResultSetDialect1 extends FBJUnit4TestBase {
+public class TestResultSetDialect1 extends FBTestBase {
 
     //@formatter:off
     public static final String CREATE_TABLE_STATEMENT =
@@ -58,9 +49,12 @@ public class TestResultSetDialect1 extends FBJUnit4TestBase {
 
     private Connection connection;
 
-    @Before
+    public TestResultSetDialect1(String name) {
+        super(name);
+    }
+
     @Override
-    public void basicSetUp() throws Exception {
+    protected void setUp() throws Exception {
         fbManager = createFBManager();
 
         if (getGdsType() == GDSType.getType("PURE_JAVA")
@@ -80,9 +74,8 @@ public class TestResultSetDialect1 extends FBJUnit4TestBase {
         executeCreateTable(connection, CREATE_TABLE_STATEMENT);
     }
 
-    @After
     @Override
-    public void basicTearDown() throws Exception {
+    protected void tearDown() throws Exception {
         try {
             connection.close();
         } finally {
@@ -99,7 +92,6 @@ public class TestResultSetDialect1 extends FBJUnit4TestBase {
      * happen in dialect 1.
      * </p>
      */
-    @Test
     public void testUpdateRow() throws Exception {
         createTestData(1);
 
@@ -128,7 +120,6 @@ public class TestResultSetDialect1 extends FBJUnit4TestBase {
      * happen in dialect 1.
      * </p>
      */
-    @Test
     public void testInsertRow() throws Exception {
         createTestData(1);
 
@@ -158,7 +149,6 @@ public class TestResultSetDialect1 extends FBJUnit4TestBase {
      * happen in dialect 1.
      * </p>
      */
-    @Test
     public void testDeleteRow() throws Exception {
         createTestData(1);
 

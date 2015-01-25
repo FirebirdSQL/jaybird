@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * Public Firebird Java API.
  *
  * Redistribution and use in source and binary forms, with or without 
@@ -24,6 +22,7 @@
  * OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+
 package org.firebirdsql.gds;
 
 /**
@@ -31,21 +30,18 @@ package org.firebirdsql.gds;
  * Firebird API documentation and specifies the attributes for the Services API
  * operation.
  */
-public interface ServiceRequestBuffer extends ParameterBuffer {
+public interface ServiceRequestBuffer {
 
-    //@formatter:off
-
-    /**
-     * **********************************************************************
-     * Operations that can be called via Services API. There are following
+    /*************************************************************************
+     * Operations that can be called via Services API. There are following 
      * groups of operations:
-     * <p/>
-     * - backup/restore
-     * - database repair
-     * - user management
-     * - changing the database properties
-     * - license management
-     * - database and server information
+     * 
+     *  - backup/restore
+     *  - database repair
+     *  - user management
+     *  - changing the database properties
+     *  - license management
+     *  - database and server information
      */
     
     // Backup/restore actions
@@ -72,8 +68,9 @@ public interface ServiceRequestBuffer extends ParameterBuffer {
     int ACTION_DB_STATS                 = ISCConstants.isc_action_svc_db_stats;
     int ACTION_GET_SERVER_LOG           = ISCConstants.isc_action_svc_get_ib_log;
     
-    /**
-     * ***********************************************************************
+    
+    
+    /**************************************************************************
      * Constants for GDS.iscServiceQuery(...) call
      */
     int INFO_SVR_DB_INFO                = ISCConstants.isc_info_svc_svr_db_info;
@@ -119,8 +116,7 @@ public interface ServiceRequestBuffer extends ParameterBuffer {
     
     int INFO_FLAG_END                   = ISCConstants.isc_info_flag_end;
     
-    /**
-     * **********************************************************************
+    /*************************************************************************
      * Parameters for ACTION_ADD_USER, ACTION_DELETE_USER, ACTION_MODIFY_USER,
      * and ACTION_DISPLAY_USER service calls.
      */
@@ -133,16 +129,18 @@ public interface ServiceRequestBuffer extends ParameterBuffer {
     int SECURITY_MIDDLE_NAME            = ISCConstants.isc_spb_sec_middlename;
     int SECURITY_LAST_NAME              = ISCConstants.isc_spb_sec_lastname;
     
-    /**
-     * **********************************************************************
+    
+    
+    /*************************************************************************
      * Parameters for ACTION_ADD_LICENSE and ACTION_REMOVE_LICENSE calls.
      */
     int LICENSE_KEY                     = ISCConstants.isc_spb_lic_key;
     int LICENSE_ID                      = ISCConstants.isc_spb_lic_id;
     int LICENSE_DESCRIPTION             = ISCConstants.isc_spb_lic_desc;
     
-    /**
-     * **********************************************************************
+    
+    
+    /*************************************************************************
      * Parameters for ACTION_BACKUP call.
      */
     int BACKUP_DB_NAME                  = ServiceParameterBuffer.DBNAME;
@@ -163,8 +161,9 @@ public interface ServiceRequestBuffer extends ParameterBuffer {
     int BACKUP_CONVERT                  = ISCConstants.isc_spb_bkp_convert;
     int BACKUP_EXPAND                   = ISCConstants.isc_spb_bkp_expand;
     
-    /**
-     * **********************************************************************
+    
+    
+    /*************************************************************************
      * Parameters for ACTION_RESTORE call.
      */
     int RESTORE_DB_NAME                 = ServiceParameterBuffer.DBNAME;
@@ -190,8 +189,9 @@ public interface ServiceRequestBuffer extends ParameterBuffer {
     int RESTORE_CREATE                  = ISCConstants.isc_spb_res_create;
     int RESTORE_USE_ALL_SPACE           = ISCConstants.isc_spb_res_use_all_space;
     
-    /**
-     * **********************************************************************
+    
+    
+    /*************************************************************************
      * Parameters for setting database properties.
      */
     int PROPS_DB_NAME                   = ServiceParameterBuffer.DBNAME;
@@ -224,8 +224,9 @@ public interface ServiceRequestBuffer extends ParameterBuffer {
     int PROPS_ACTIVATE_SHADOW           = ISCConstants.isc_spb_prp_activate;
     int PROPS_DB_ONLINE                 = ISCConstants.isc_spb_prp_db_online;
     
-    /**
-     * **********************************************************************
+    
+
+    /*************************************************************************
      * Parameters for database repair.
      */
     int REPAIR_DB_NAME                  = ServiceParameterBuffer.DBNAME;
@@ -247,8 +248,9 @@ public interface ServiceRequestBuffer extends ParameterBuffer {
     int REPAIR_KILL_SHADOWS             = ISCConstants.isc_spb_rpr_kill_shadows;
     int REPAIR_FULL                     = ISCConstants.isc_spb_rpr_full;
 
-    /**
-     * **********************************************************************
+    
+    
+    /*************************************************************************
      * Parameters for database statistics.
      */
     int STATS_DB_NAME                   = ServiceParameterBuffer.DBNAME;
@@ -265,17 +267,47 @@ public interface ServiceRequestBuffer extends ParameterBuffer {
     int STATS_RECORD_VERSIONS           = ISCConstants.isc_spb_sts_record_versions;
     int STATS_TABLE                     = ISCConstants.isc_spb_sts_table;
     int STATS_NOCREATION                = ISCConstants.isc_spb_sts_nocreation;
+    
+    
+    /**
+     * Set a void (valueless) parameter on this
+     * <code>ServiceRequestBuffer</code>.
+     * 
+     * @param argumentType
+     *            The parameter to be set
+     */
+    public void addArgument(int argumentType);
 
-    //@formatter:on
+    /**
+     * Set a <code>String</code> parameter on this
+     * <code>ServiceRequestBuffer</code>.
+     * 
+     * @param argumentType
+     *            The parameter to be set
+     * @param value
+     *            The value to set for the given parameter
+     */
+    public void addArgument(int argumentType, String value);
+
+    /**
+     * Set an <code>int</code> parameter on this
+     * <code>ServiceRequestBuffer</code>.
+     * 
+     * @param argumentType
+     *            The parameter to be set
+     * @param value
+     *            The value to set for the given parameter
+     */
+    public void addArgument(int argumentType, int value);
 
     /**
      * Set a <code>byte</code> parameter on this
      * <code>ServiceRequestBuffer</code>.
-     *
+     * 
      * @param argumentType
-     *         The parameter to be set
+     *            The parameter to be set
      * @param value
-     *         The value to the set for the given parameter
+     *            The value to the set for the given parameter
      */
     public void addArgument(int argumentType, byte value);
 }

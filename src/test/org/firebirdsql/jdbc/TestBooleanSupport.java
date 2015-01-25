@@ -1,7 +1,7 @@
 /*
  * $Id$
  *
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source J2ee connector - jdbc driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -14,35 +14,27 @@
  * This file was created by members of the firebird development team.
  * All individual contributions remain the Copyright (C) of those
  * individuals.  Contributors to this file are either listed here or
- * can be obtained from a source control history command.
+ * can be obtained from a CVS history command.
  *
  * All rights reserved.
  */
 package org.firebirdsql.jdbc;
 
-import org.firebirdsql.common.DdlHelper;
-import org.firebirdsql.common.FBJUnit4TestBase;
-import org.firebirdsql.common.FBTestProperties;
-import org.firebirdsql.common.JdbcResourceHelper;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.firebirdsql.common.FBTestBase;
 
 import java.sql.*;
-
-import static org.firebirdsql.common.FBTestProperties.getDefaultSupportInfo;
-import static org.junit.Assert.*;
-import static org.junit.Assume.assumeTrue;
 
 /**
  * Tests the boolean support, which is only available in Firebird 3.0 or higher.
  *
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  */
-public class TestBooleanSupport extends FBJUnit4TestBase {
+public class TestBooleanSupport extends FBTestBase {
 
     private static final String CREATE_TABLE =
             "CREATE TABLE withboolean ( id INTEGER, bool BOOLEAN )";
+    private static final String DROP_TABLE =
+            "DROP TABLE withboolean";
     private static final String INSERT = "INSERT INTO withboolean (id, bool) VALUES (?, ?)";
     private static final String SELECT = "SELECT id, bool FROM withboolean";
     private static final String SELECT_CONDITION_BOOL_FIELD = SELECT + " WHERE bool = ?";
@@ -53,17 +45,18 @@ public class TestBooleanSupport extends FBJUnit4TestBase {
             "INSERT INTO withboolean (id, bool) VALUES (2, UNKNOWN)"
     };
 
-    @BeforeClass
-    public static void checkBooleanSupport() {
-        // NOTE: For native tests this also requires use of a Firebird 3 client library
-        assumeTrue("Test requires BOOLEAN support on server", getDefaultSupportInfo().supportsBoolean());
+    public TestBooleanSupport(String name) {
+        super(name);
     }
 
-    @Before
-    public void setUp() throws Exception {
-        Connection con = FBTestProperties.getConnectionViaDriverManager();
+    protected void setUp() throws Exception {
+        super.setUp();
+        Connection con = getConnectionViaDriverManager();
         try {
-            DdlHelper.executeCreateTable(con, CREATE_TABLE);
+            assertTrue("Test only works on Firebird 3 or higher", con.getMetaData().getDatabaseMajorVersion() >= 3);
+
+            executeDropTable(con, DROP_TABLE);
+            executeCreateTable(con, CREATE_TABLE);
             con.setAutoCommit(false);
             Statement stmt = con.createStatement();
             try {
@@ -71,20 +64,19 @@ public class TestBooleanSupport extends FBJUnit4TestBase {
                     stmt.execute(query);
                 }
             } finally {
-                JdbcResourceHelper.closeQuietly(stmt);
+                closeQuietly(stmt);
             }
             con.commit();
         } finally {
-            JdbcResourceHelper.closeQuietly(con);
+            closeQuietly(con);
         }
     }
 
     /**
      * Test if a simple select returns the right boolean values in the ResultSet.
      */
-    @Test
     public void testSimpleSelect_Values() throws Exception {
-        Connection con = FBTestProperties.getConnectionViaDriverManager();
+        Connection con = getConnectionViaDriverManager();
         Statement stmt = null;
         ResultSet rs = null;
         try {
@@ -114,18 +106,17 @@ public class TestBooleanSupport extends FBJUnit4TestBase {
             }
             assertEquals("Expected 3 rows", 3, count);
         } finally {
-            JdbcResourceHelper.closeQuietly(rs);
-            JdbcResourceHelper.closeQuietly(stmt);
-            JdbcResourceHelper.closeQuietly(con);
+            closeQuietly(rs);
+            closeQuietly(stmt);
+            closeQuietly(con);
         }
     }
 
     /**
      * Tests if the ResultSetMetaData contains the right information on boolean columns.
      */
-    @Test
     public void testSimpleSelect_ResultSetMetaData() throws Exception {
-        Connection con = FBTestProperties.getConnectionViaDriverManager();
+        Connection con = getConnectionViaDriverManager();
         Statement stmt = null;
         ResultSet rs = null;
         try {
@@ -137,18 +128,17 @@ public class TestBooleanSupport extends FBJUnit4TestBase {
             assertEquals("Unexpected precision for boolean column", 1, rsmd.getPrecision(2));
             // Not testing other values
         } finally {
-            JdbcResourceHelper.closeQuietly(rs);
-            JdbcResourceHelper.closeQuietly(stmt);
-            JdbcResourceHelper.closeQuietly(con);
+            closeQuietly(rs);
+            closeQuietly(stmt);
+            closeQuietly(con);
         }
     }
 
     /**
      * Tests if boolean values inserted using a parametrized query are correctly roundtripped in a query.
      */
-    @Test
     public void testParametrizedInsert() throws Exception {
-        Connection con = FBTestProperties.getConnectionViaDriverManager();
+        Connection con = getConnectionViaDriverManager();
         Statement stmt = null;
         PreparedStatement pstmt = null;
         ResultSet rs = null;
@@ -198,19 +188,18 @@ public class TestBooleanSupport extends FBJUnit4TestBase {
             assertEquals("Expected 6 rows", 6, count);
 
         } finally {
-            JdbcResourceHelper.closeQuietly(rs);
-            JdbcResourceHelper.closeQuietly(stmt);
-            JdbcResourceHelper.closeQuietly(pstmt);
-            JdbcResourceHelper.closeQuietly(con);
+            closeQuietly(rs);
+            closeQuietly(stmt);
+            closeQuietly(pstmt);
+            closeQuietly(con);
         }
     }
 
     /**
      * Tests if the ParameterMetaData contains the right information on boolean columns.
      */
-    @Test
     public void testParametrizedInsert_ParameterMetaData() throws Exception {
-        Connection con = FBTestProperties.getConnectionViaDriverManager();
+        Connection con = getConnectionViaDriverManager();
         PreparedStatement pstmt = null;
         try {
             pstmt = con.prepareStatement(INSERT);
@@ -220,17 +209,16 @@ public class TestBooleanSupport extends FBJUnit4TestBase {
             assertEquals("Unexpected precision for boolean column", 1, parameterMetaData.getPrecision(2));
             // Not testing other values
         } finally {
-            JdbcResourceHelper.closeQuietly(pstmt);
-            JdbcResourceHelper.closeQuietly(con);
+            closeQuietly(pstmt);
+            closeQuietly(con);
         }
     }
 
     /**
      * Test select with condition on a boolean field.
      */
-    @Test
     public void testSelectFieldCondition() throws Exception {
-        Connection con = FBTestProperties.getConnectionViaDriverManager();
+        Connection con = getConnectionViaDriverManager();
         PreparedStatement pstmt = null;
         ResultSet rs = null;
         try {
@@ -242,18 +230,17 @@ public class TestBooleanSupport extends FBJUnit4TestBase {
             assertEquals("Expected row with id=1", 1, rs.getInt(1));
             assertFalse("Did not expect a second row", rs.next());
         } finally {
-            JdbcResourceHelper.closeQuietly(rs);
-            JdbcResourceHelper.closeQuietly(pstmt);
-            JdbcResourceHelper.closeQuietly(con);
+            closeQuietly(rs);
+            closeQuietly(pstmt);
+            closeQuietly(con);
         }
     }
 
     /**
      * Test a select with a boolean parameter only (ie <code>WHERE ?"</code>) with value true
      */
-    @Test
     public void testSelect_ConditionOnly_true() throws Exception {
-        Connection con = FBTestProperties.getConnectionViaDriverManager();
+        Connection con = getConnectionViaDriverManager();
         PreparedStatement pstmt = null;
         ResultSet rs = null;
         try {
@@ -285,18 +272,17 @@ public class TestBooleanSupport extends FBJUnit4TestBase {
             }
             assertEquals("Expected 3 rows", 3, count);
         } finally {
-            JdbcResourceHelper.closeQuietly(rs);
-            JdbcResourceHelper.closeQuietly(pstmt);
-            JdbcResourceHelper.closeQuietly(con);
+            closeQuietly(rs);
+            closeQuietly(pstmt);
+            closeQuietly(con);
         }
     }
 
     /**
      * Test a select with a boolean parameter only (ie <code>WHERE ?"</code>) with value false
      */
-    @Test
     public void testSelect_ConditionOnly_false() throws Exception {
-        Connection con = FBTestProperties.getConnectionViaDriverManager();
+        Connection con = getConnectionViaDriverManager();
         PreparedStatement pstmt = null;
         ResultSet rs = null;
         try {
@@ -306,18 +292,17 @@ public class TestBooleanSupport extends FBJUnit4TestBase {
 
             assertFalse("Expected no rows", rs.next());
         } finally {
-            JdbcResourceHelper.closeQuietly(rs);
-            JdbcResourceHelper.closeQuietly(pstmt);
-            JdbcResourceHelper.closeQuietly(con);
+            closeQuietly(rs);
+            closeQuietly(pstmt);
+            closeQuietly(con);
         }
     }
 
     /**
      * Test a select with a boolean parameter only (ie <code>WHERE ?"</code>) with value null
      */
-    @Test
     public void testSelect_ConditionOnly_null() throws Exception {
-        Connection con = FBTestProperties.getConnectionViaDriverManager();
+        Connection con = getConnectionViaDriverManager();
         PreparedStatement pstmt = null;
         ResultSet rs = null;
         try {
@@ -327,19 +312,18 @@ public class TestBooleanSupport extends FBJUnit4TestBase {
 
             assertFalse("Expected no rows", rs.next());
         } finally {
-            JdbcResourceHelper.closeQuietly(rs);
-            JdbcResourceHelper.closeQuietly(pstmt);
-            JdbcResourceHelper.closeQuietly(con);
+            closeQuietly(rs);
+            closeQuietly(pstmt);
+            closeQuietly(con);
         }
     }
 
     /**
      * Tests the value returned by {@link FBDatabaseMetaData#getTypeInfo()} (specifically only for BOOLEAN).
      */
-    @Test
     public void testMetaData_TypeInfo() throws Exception {
         // TODO Create separate test for all typeinfo information
-        Connection con = FBTestProperties.getConnectionViaDriverManager();
+        Connection con = getConnectionViaDriverManager();
         ResultSet rs = null;
         try {
             DatabaseMetaData dbmd = con.getMetaData();
@@ -364,18 +348,17 @@ public class TestBooleanSupport extends FBJUnit4TestBase {
             }
             assertTrue("Expected to find boolean type in typeInfo", foundBooleanType);
         } finally {
-            JdbcResourceHelper.closeQuietly(rs);
-            JdbcResourceHelper.closeQuietly(con);
+            closeQuietly(rs);
+            closeQuietly(con);
         }
     }
 
     /**
      * Test {@link FBDatabaseMetaData#getColumns(String, String, String, String)} for a boolean column.
      */
-    @Test
     public void testMetaData_getColumns() throws Exception {
         // TODO Consider moving to TestFBDatabaseMetaDataColumns
-        Connection con = FBTestProperties.getConnectionViaDriverManager();
+        Connection con = getConnectionViaDriverManager();
         ResultSet rs = null;
         try {
             DatabaseMetaData dbmd = con.getMetaData();
@@ -391,8 +374,8 @@ public class TestBooleanSupport extends FBJUnit4TestBase {
 
             assertFalse("Expected no second row", rs.next());
         } finally {
-            JdbcResourceHelper.closeQuietly(rs);
-            JdbcResourceHelper.closeQuietly(con);
+            closeQuietly(rs);
+            closeQuietly(con);
         }
     }
 }

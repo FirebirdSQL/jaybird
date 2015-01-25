@@ -31,8 +31,6 @@ import java.util.Map;
 
 import org.firebirdsql.jdbc.MetaDataValidator.MetaDataInfo;
 
-import static org.firebirdsql.common.JdbcResourceHelper.*;
-
 /**
  * Tests for {@link FBDatabaseMetaData} for index info related metadata.
  * 
@@ -82,6 +80,19 @@ public class TestFBDatabaseMetaDataIndexInfo extends FBMetaDataTestBase<TestFBDa
     
     public static final String CREATE_UQ_DESC_IDX_TBL_2_COL3_AND_COL2 =
             "CREATE UNIQUE DESCENDING INDEX uq_desc_idx_tbl2_col3_col2 ON index_test_table_2 (column3, column2)";
+    
+    public static final String DROP_INDEX_TEST_TABLE_1 =
+            "DROP TABLE index_test_table_1";
+    
+    public static final String DROP_INDEX_TEST_TABLE_2 =
+            "DROP TABLE index_test_table_2";
+
+    @Override
+    protected List<String> getDropStatements() {
+        return Arrays.asList(
+                DROP_INDEX_TEST_TABLE_2,
+                DROP_INDEX_TEST_TABLE_1);
+    }
 
     @Override
     protected List<String> getCreateStatements() {
@@ -233,7 +244,7 @@ public class TestFBDatabaseMetaDataIndexInfo extends FBMetaDataTestBase<TestFBDa
 
     @Override
     protected Map<IndexInfoMetaData, Object> getDefaultValueValidationRules() throws Exception {
-        return new EnumMap<IndexInfoMetaData, Object>(DEFAULT_COLUMN_VALUES);
+        return new EnumMap(DEFAULT_COLUMN_VALUES);
     }
 
     /**

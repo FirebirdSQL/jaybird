@@ -7,8 +7,8 @@ import org.firebirdsql.logging.LoggerFactory;
 
 public class EmbeddedGDSImpl extends JniGDSImpl {
 
-    private static Logger log = LoggerFactory.getLogger(EmbeddedGDSImpl.class
-    );
+    private static Logger log = LoggerFactory.getLogger(EmbeddedGDSImpl.class,
+            false);
 
     private static final String[] EMBEDDED_LIBRARIES_TO_TRY = { 
         "fbembed.dll",
@@ -30,7 +30,7 @@ public class EmbeddedGDSImpl extends JniGDSImpl {
 
         attemptToLoadAClientLibraryFromList(EMBEDDED_LIBRARIES_TO_TRY);
 
-        if (logging) log.info("Initialized native library OK.");
+        if (logging) log.info("Initilized native library OK.");
     }
 
     protected String getServerUrl(String file_name) throws GDSException {

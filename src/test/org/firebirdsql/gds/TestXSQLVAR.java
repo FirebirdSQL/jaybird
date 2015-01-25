@@ -20,11 +20,9 @@
  */
 package org.firebirdsql.gds;
 
-import org.junit.Test;
+import junit.framework.TestCase;
 
 import java.util.concurrent.TimeUnit;
-
-import static org.junit.Assert.assertEquals;
 
 /**
  * Test for internal consistency of encoding and decoding provided by {@link org.firebirdsql.gds.XSQLVAR}.
@@ -35,11 +33,10 @@ import static org.junit.Assert.assertEquals;
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @since 2.2.5
  */
-public class TestXSQLVAR {
+public class TestXSQLVAR extends TestCase {
 
     private final XSQLVAR xsqlvar = new XSQLVAR();
 
-    @Test
     public void testShort() {
         final short testShort = 513;
         final byte[] shortBytes = xsqlvar.encodeShort(testShort);
@@ -49,7 +46,6 @@ public class TestXSQLVAR {
         assertEquals("Unexpected short", testShort, result);
     }
 
-    @Test
     public void testInt() {
         final int testInt = -1405525771;
         final byte[] intBytes = xsqlvar.encodeInt(testInt);
@@ -59,7 +55,6 @@ public class TestXSQLVAR {
         assertEquals("Unexpected int", testInt, result);
     }
 
-    @Test
     public void testLong() {
         final long testLong = Long.MAX_VALUE ^ ((132L << 56) + 513);
         final byte[] longBytes = xsqlvar.encodeLong(testLong);
@@ -75,7 +70,6 @@ public class TestXSQLVAR {
 
     // Skipping string encoding
 
-    @Test
     public void testTimestamp() {
         final java.util.Date date = new java.util.Date();
         final java.sql.Timestamp testTimestamp = new java.sql.Timestamp(date.getTime());
@@ -93,7 +87,6 @@ public class TestXSQLVAR {
     /**
      * NOTE: {@link java.sql.Time} only supports second precision!
      */
-    @Test
     public void testTime() {
         final java.sql.Time testTime = java.sql.Time.valueOf("17:23:01");
         final byte[] timeBytes = xsqlvar.encodeTime(testTime);
@@ -103,7 +96,6 @@ public class TestXSQLVAR {
         assertEquals("Unexpected time", testTime, result);
     }
 
-    @Test
     public void testDate() {
         final java.sql.Date testDate = java.sql.Date.valueOf("2014-03-29");
         final byte[] dateBytes = xsqlvar.encodeDate(testDate);
@@ -113,12 +105,10 @@ public class TestXSQLVAR {
         assertEquals("Unexpected date", testDate, result);
     }
 
-    @Test
     public void testBooleanTrue() {
         checkBoolean(true);
     }
 
-    @Test
     public void testBooleanFalse() {
         checkBoolean(false);
     }
@@ -134,9 +124,8 @@ public class TestXSQLVAR {
     // TODO java.time roundtrip tests
 
     /**
-     * Test round trip for {@link XSQLVAR#encodeLocalDateTime(int, int, int, int, int, int, int)} using {@link XSQLVAR#decodeTimestamp(byte[])}.
+     * Test roundtrip for {@link XSQLVAR#encodeLocalDateTime(int, int, int, int, int, int, int)} using {@link XSQLVAR#decodeTimestamp(byte[])}
      */
-    @Test
     public void testLocalDateTimeToTimestamp() {
         final java.sql.Timestamp expected = java.sql.Timestamp.valueOf("2013-03-29 17:43:01.9751");
         final byte[] localDateTimeBytes = xsqlvar.encodeLocalDateTime(2013, 3, 29, 17, 43, 1, (int) TimeUnit.MICROSECONDS.toNanos(975100));
@@ -149,7 +138,6 @@ public class TestXSQLVAR {
     /**
      * Test round trip for {@link XSQLVAR#encodeLocalDate(int, int, int)} using {@link XSQLVAR#decodeDate(byte[])}.
      */
-    @Test
     public void testLocalDateToDate() {
         final java.sql.Date expected = java.sql.Date.valueOf("2014-03-29");
         final byte[] localDateBytes = xsqlvar.encodeLocalDate(2014, 3, 29);
@@ -165,7 +153,6 @@ public class TestXSQLVAR {
      * We test using java.sql.Timestamp so we can check the maximum precision (which is not available through java.sql.Time)
      * </p>
      */
-    @Test
     public void testLocalTimeToTimestamp() {
         final java.sql.Timestamp expected = java.sql.Timestamp.valueOf("2014-03-29 17:43:01.9751");
         // We need a date part as well to construct a valid timestamp

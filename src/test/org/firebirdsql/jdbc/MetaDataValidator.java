@@ -24,7 +24,7 @@ import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Types;
-import static org.junit.Assert.*;
+import static junit.framework.Assert.*;
 
 /**
  * Validator for columns of metadata resultsets.
@@ -33,7 +33,7 @@ import static org.junit.Assert.*;
  *
  * @param <T> Enum type, implementing {@link MetaDataInfo} for metadata column information
  */
-public class MetaDataValidator<T extends Enum<T> & MetaDataValidator.MetaDataInfo> {
+public class MetaDataValidator<T extends Enum & MetaDataValidator.MetaDataInfo> {
     
     private T mdi;
     

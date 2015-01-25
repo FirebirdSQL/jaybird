@@ -33,7 +33,7 @@ public enum QuoteStrategy {
      */
     NO_QUOTES {
         @Override
-        public StringBuilder appendQuoted(final String objectName, final StringBuilder sb) {
+        public StringBuffer appendQuoted(final String objectName, final StringBuffer sb) {
             return sb.append(objectName);
         }
     },
@@ -42,7 +42,7 @@ public enum QuoteStrategy {
      */
     QUOTES {
         @Override
-        public StringBuilder appendQuoted(final String objectName, final StringBuilder sb) {
+        public StringBuffer appendQuoted(final String objectName, final StringBuffer sb) {
             return sb.append('"').append(objectName).append('"');
         }
     };
@@ -54,7 +54,7 @@ public enum QuoteStrategy {
      * @param sb StringBuilder for appending
      * @return The StringBuilder for method chaining
      */
-    public abstract StringBuilder appendQuoted(String objectName, StringBuilder sb);
+    public abstract StringBuffer appendQuoted(String objectName, StringBuffer sb);
 
     /**
      * Obtain the {@link QuoteStrategy} for the specified dialect.

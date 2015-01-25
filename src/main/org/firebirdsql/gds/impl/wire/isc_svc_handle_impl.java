@@ -24,17 +24,15 @@
  * Portions created by Alejandro Alberola are Copyright (C) 2001
  * Boix i Oltra, S.L. All Rights Reserved.
  */
+
 package org.firebirdsql.gds.impl.wire;
+
 
 import java.io.IOException;
 import java.net.Socket;
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.LinkedList;
 import java.util.List;
 
-import org.firebirdsql.encodings.EncodingFactory;
-import org.firebirdsql.encodings.IEncodingFactory;
 import org.firebirdsql.gds.GDSException;
 import org.firebirdsql.gds.IscSvcHandle;
 
@@ -44,7 +42,7 @@ import org.firebirdsql.gds.IscSvcHandle;
 public final class isc_svc_handle_impl implements IscSvcHandle {
     
     private int handle;
-    private List<GDSException> warnings = Collections.synchronizedList(new LinkedList<GDSException>());
+    private List warnings = new ArrayList();
     
     private boolean invalid;
 
@@ -54,7 +52,6 @@ public final class isc_svc_handle_impl implements IscSvcHandle {
     private int resp_object;
     private long resp_blob_id;
     private byte[] resp_data;
-    private IEncodingFactory encodingFactory = EncodingFactory.getDefaultInstance().withDefaultEncodingDefinition();
 
     public isc_svc_handle_impl() {
         this.invalid = true;
@@ -86,6 +83,8 @@ public final class isc_svc_handle_impl implements IscSvcHandle {
         checkValidity();
         return handle;
     }
+
+    
     
     /**
      * @return Returns the resp_blob_id.
@@ -123,43 +122,38 @@ public final class isc_svc_handle_impl implements IscSvcHandle {
     public void setResp_object(int resp_object) {
         this.resp_object = resp_object;
     }
-    public List<GDSException> getWarnings() {
+    public List getWarnings() {
         checkValidity();
         synchronized(warnings) {
-            return new ArrayList<GDSException>(warnings);
+            return new ArrayList(warnings);
         }
     }
     
     public void addWarning(GDSException warning) {
         checkValidity();
-        warnings.add(warning);
+        synchronized(warnings) {
+            warnings.add(warning);
+        }
     }
     
     public void clearWarnings() {
         checkValidity();
-        warnings.clear();
+        synchronized(warnings) {
+            warnings.clear();
+        }
     }
-
-    @Override
-    public IEncodingFactory getEncodingFactory() {
-        return encodingFactory;
-    }
-
-    @Override
-    public void setEncodingFactory(IEncodingFactory encodingFactory) {
-        this.encodingFactory = encodingFactory;
-    }
-
+    
     /* (non-Javadoc)
      * @see org.firebirdsql.gds.isc_svc_handle#isNotValid()
      */
     public boolean isNotValid() {
         return invalid;
     }
-    
     private void checkValidity() {
         if (invalid)
             throw new IllegalStateException(
                 "This database handle is invalid and cannot be used anymore.");
     }
+    
+
 }
