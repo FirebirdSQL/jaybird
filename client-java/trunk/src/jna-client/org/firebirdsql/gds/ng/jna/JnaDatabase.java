@@ -59,10 +59,8 @@ public class JnaDatabase extends AbstractFbDatabase implements TransactionListen
 
     private static final Logger log = LoggerFactory.getLogger(JnaDatabase.class);
     private static final ParameterConverter PARAMETER_CONVERTER = new JnaParameterConverter();
-    private static final DatatypeCoder datatypeCoder =
-            java.nio.ByteOrder.nativeOrder() == ByteOrder.LITTLE_ENDIAN
-                    ? LittleEndianDatatypeCoder.getInstance()
-                    : BigEndianDatatypeCoder.getInstance();
+    private static final boolean bigEndian = ByteOrder.nativeOrder() == ByteOrder.BIG_ENDIAN;
+    private final DatatypeCoder datatypeCoder;
     public static final int STATUS_VECTOR_SIZE = 20;
     public static final int MAX_STATEMENT_LENGTH = 64 * 1024;
 
@@ -75,6 +73,11 @@ public class JnaDatabase extends AbstractFbDatabase implements TransactionListen
     public JnaDatabase(JnaConnection jnaConnection) {
         this.jnaConnection = jnaConnection;
         clientLibrary = jnaConnection.getClientLibrary();
+        if (bigEndian) {
+            datatypeCoder = new BigEndianDatatypeCoder(jnaConnection.getEncodingFactory());
+        } else {
+            datatypeCoder = new LittleEndianDatatypeCoder(jnaConnection.getEncodingFactory());
+        }
     }
 
     /**
@@ -352,7 +355,7 @@ public class JnaDatabase extends AbstractFbDatabase implements TransactionListen
 
     @Override
     public final DatatypeCoder getDatatypeCoder() {
-        return JnaDatabase.datatypeCoder;
+        return datatypeCoder;
     }
 
     /**

@@ -21,6 +21,7 @@
 package org.firebirdsql.gds.ng;
 
 import org.firebirdsql.encodings.EncodingFactory;
+import org.firebirdsql.encodings.IEncodingFactory;
 
 import java.sql.Date;
 import java.sql.SQLException;
@@ -44,13 +45,22 @@ import java.util.GregorianCalendar;
  */
 public class DefaultDatatypeCoder implements DatatypeCoder {
 
-    private static final DefaultDatatypeCoder INSTANCE = new DefaultDatatypeCoder();
+    private static final DefaultDatatypeCoder INSTANCE = new DefaultDatatypeCoder(EncodingFactory.getDefaultInstance());
 
-    public static DefaultDatatypeCoder getInstance() {
+    private final IEncodingFactory encodingFactory;
+
+    /**
+     * @return DatatypeCoder with the default {@link org.firebirdsql.encodings.EncodingFactory}.
+     */
+    public static DefaultDatatypeCoder getDefaultInstance() {
         return INSTANCE;
     }
 
-    protected DefaultDatatypeCoder() {
+    public DefaultDatatypeCoder(IEncodingFactory encodingFactory) {
+        if (encodingFactory == null) {
+            throw new NullPointerException("encodingFactory should not be null");
+        }
+        this.encodingFactory = encodingFactory;
     }
 
     @Override
@@ -148,15 +158,21 @@ public class DefaultDatatypeCoder implements DatatypeCoder {
     }
 
     @Override
-    public byte[] encodeString(String value, String encoding, String mappingPath) throws SQLException {
-        // TODO This is not how this should be done; needs to be changed
-        return EncodingFactory.getEncoding(encoding, mappingPath).encodeToCharset(value);
+    public byte[] encodeString(String value, String javaEncoding, String mappingPath) throws SQLException {
+        // TODO mappingPath (or translator) might need to be property of DefaultDataTypeCoder itself, and not handed over at each invocation
+        return encodingFactory
+                .getEncodingForCharsetAlias(javaEncoding)
+                .withTranslation(encodingFactory.getCharacterTranslator(mappingPath))
+                .encodeToCharset(value);
     }
 
     @Override
-    public String decodeString(byte[] value, String encoding, String mappingPath) throws SQLException {
-        // TODO This is not how this should be done; needs to be changed
-        return EncodingFactory.getEncoding(encoding, mappingPath).decodeFromCharset(value);
+    public String decodeString(byte[] value, String javaEncoding, String mappingPath) throws SQLException {
+        // TODO mappingPath (or translator) might need to be property of DefaultDataTypeCoder itself, and not handed over at each invocation
+        return encodingFactory
+                .getEncodingForCharsetAlias(javaEncoding)
+                .withTranslation(encodingFactory.getCharacterTranslator(mappingPath))
+                .decodeFromCharset(value);
     }
 
     // times,dates...
@@ -371,6 +387,11 @@ public class DefaultDatatypeCoder implements DatatypeCoder {
         System.arraycopy(time, 0, result, 4, 4);
 
         return result;
+    }
+
+    @Override
+    public IEncodingFactory getEncodingFactory() {
+        return encodingFactory;
     }
 
     /**

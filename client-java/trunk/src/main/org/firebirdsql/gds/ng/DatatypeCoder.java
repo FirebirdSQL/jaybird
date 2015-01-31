@@ -20,6 +20,8 @@
  */
 package org.firebirdsql.gds.ng;
 
+import org.firebirdsql.encodings.IEncodingFactory;
+
 import java.sql.Date;
 import java.sql.SQLException;
 import java.sql.Time;
@@ -144,14 +146,15 @@ public interface DatatypeCoder {
      * a given encoding.
      *
      * @param value The <code>String</code> to be encoded
-     * @param encoding The encoding to use in the encoding process
+     * @param javaEncoding The java encoding to use in the encoding process
      * @param mappingPath The character mapping path to be used in the encoding
      * @return The value of <code>value</code> as a <code>byte</code> array
      * @throws java.sql.SQLException if the given encoding cannot be found, or an error
      *         occurs during the encoding
      */
-    byte[] encodeString(String value, String encoding, String mappingPath) throws SQLException;
+    byte[] encodeString(String value, String javaEncoding, String mappingPath) throws SQLException;
 
+    // TODO Is below method needed?
 //    /**
 //     * Encode a <code>byte</code> array using a given encoding.
 //     *
@@ -169,13 +172,13 @@ public interface DatatypeCoder {
      * using a given encoding.
      *
      * @param value The value to be decoded
-     * @param encoding The encoding to be used in the decoding process
+     * @param javaEncoding The java encoding to be used in the decoding process
      * @param mappingPath The character mapping path to be used in the decoding
      * @return The decoded <code>String</code>
      * @throws java.sql.SQLException if the given encoding cannot be found, or an
      *         error occurs during the decoding
      */
-    String decodeString(byte[] value, String encoding, String mappingPath) throws SQLException;
+    String decodeString(byte[] value, String javaEncoding, String mappingPath) throws SQLException;
 
     /**
      * Encode a <code>Timestamp</code> using a given <code>Calendar</code>.
@@ -380,4 +383,9 @@ public interface DatatypeCoder {
      * @return Byte array for timestamp
      */
     byte[] encodeLocalDateTime(int year, int month, int day, int hour, int minute, int second, int nanos);
+
+    /**
+     * @return The encoding factory.
+     */
+    IEncodingFactory getEncodingFactory();
 }

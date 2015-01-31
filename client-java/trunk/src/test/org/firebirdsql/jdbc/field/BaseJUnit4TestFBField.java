@@ -79,7 +79,7 @@ public abstract class BaseJUnit4TestFBField<T extends FBField, O> {
 
     protected FieldDataProvider fieldData;
     protected final RowDescriptorBuilder rowDescriptorBuilder =
-            new RowDescriptorBuilder(1, DefaultDatatypeCoder.getInstance());
+            new RowDescriptorBuilder(1, DefaultDatatypeCoder.getDefaultInstance());
     protected FieldDescriptor fieldDescriptor;
     protected T field;
 

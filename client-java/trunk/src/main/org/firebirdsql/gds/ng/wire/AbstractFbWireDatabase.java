@@ -45,6 +45,7 @@ public abstract class AbstractFbWireDatabase extends AbstractFbDatabase implemen
     private static final Logger log = LoggerFactory.getLogger(AbstractFbWireDatabase.class);
 
     protected final ProtocolDescriptor protocolDescriptor;
+    private final DatatypeCoder datatypeCoder;
     protected final WireConnection connection;
 
     /**
@@ -61,6 +62,7 @@ public abstract class AbstractFbWireDatabase extends AbstractFbDatabase implemen
         if (descriptor == null) throw new IllegalArgumentException("parameter descriptor should be non-null");
         this.connection = connection;
         protocolDescriptor = descriptor;
+        datatypeCoder = new DefaultDatatypeCoder(connection.getEncodingFactory());
     }
 
     @Override
@@ -80,7 +82,7 @@ public abstract class AbstractFbWireDatabase extends AbstractFbDatabase implemen
 
     @Override
     public final DatatypeCoder getDatatypeCoder() {
-        return DefaultDatatypeCoder.getInstance();
+        return datatypeCoder;
     }
 
     /**

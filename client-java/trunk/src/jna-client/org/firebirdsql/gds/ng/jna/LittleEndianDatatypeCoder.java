@@ -20,6 +20,7 @@
  */
 package org.firebirdsql.gds.ng.jna;
 
+import org.firebirdsql.encodings.IEncodingFactory;
 import org.firebirdsql.gds.ng.DefaultDatatypeCoder;
 
 /**
@@ -33,13 +34,8 @@ import org.firebirdsql.gds.ng.DefaultDatatypeCoder;
  */
 public final class LittleEndianDatatypeCoder extends DefaultDatatypeCoder {
 
-    private static final LittleEndianDatatypeCoder INSTANCE = new LittleEndianDatatypeCoder();
-
-    public static LittleEndianDatatypeCoder getInstance() {
-        return INSTANCE;
-    }
-
-    private LittleEndianDatatypeCoder() {
+    public LittleEndianDatatypeCoder(IEncodingFactory encodingFactory) {
+        super(encodingFactory);
     }
 
     @Override
