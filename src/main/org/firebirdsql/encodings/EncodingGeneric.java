@@ -30,7 +30,7 @@ import java.nio.charset.Charset;
  * although {@link EncodingSingleByte} is more efficient for shorter strings.
  * </p>
  */
-public final class EncodingGeneric implements Encoding {
+final class EncodingGeneric implements Encoding {
 
     // TODO Test claim that EncodingSingleByte is more efficient
     // Some testing seems to indicate that EncodingSingleByte is (slightly) faster for up to +/- 1500-2000 chars),
@@ -38,7 +38,7 @@ public final class EncodingGeneric implements Encoding {
 
     private final Charset charset;
 
-    public EncodingGeneric(final Charset charset) {
+    EncodingGeneric(final Charset charset) {
         this.charset = charset;
     }
 
@@ -59,6 +59,7 @@ public final class EncodingGeneric implements Encoding {
 
     @Override
     public Encoding withTranslation(final CharacterTranslator translator) {
+        if (translator == null) return this;
         return new EncodingGenericWithTranslation(translator);
     }
 
@@ -75,6 +76,7 @@ public final class EncodingGeneric implements Encoding {
          *         The translation to apply
          */
         private EncodingGenericWithTranslation(CharacterTranslator translator) {
+            assert translator != null : "CharacterTranslator should never be null";
             this.translator = translator;
         }
 

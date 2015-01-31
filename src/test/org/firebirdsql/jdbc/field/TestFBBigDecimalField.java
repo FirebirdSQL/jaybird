@@ -580,21 +580,21 @@ public class TestFBBigDecimalField extends BaseJUnit4TestFBField<FBBigDecimalFie
     }
 
     private static FieldDescriptor createShortFieldDescriptor(int scale) {
-        return new RowDescriptorBuilder(1, DefaultDatatypeCoder.getInstance())
+        return new RowDescriptorBuilder(1, DefaultDatatypeCoder.getDefaultInstance())
                 .setType(ISCConstants.SQL_SHORT)
                 .setScale(scale)
                 .toFieldDescriptor();
     }
 
     private static FieldDescriptor createIntegerFieldDescriptor(int scale) {
-        return new RowDescriptorBuilder(1, DefaultDatatypeCoder.getInstance())
+        return new RowDescriptorBuilder(1, DefaultDatatypeCoder.getDefaultInstance())
                 .setType(ISCConstants.SQL_LONG)
                 .setScale(scale)
                 .toFieldDescriptor();
     }
 
     private static FieldDescriptor createLongFieldDescriptor(int scale) {
-        return new RowDescriptorBuilder(1, DefaultDatatypeCoder.getInstance())
+        return new RowDescriptorBuilder(1, DefaultDatatypeCoder.getDefaultInstance())
                 .setType(ISCConstants.SQL_INT64)
                 .setScale(scale)
                 .toFieldDescriptor();

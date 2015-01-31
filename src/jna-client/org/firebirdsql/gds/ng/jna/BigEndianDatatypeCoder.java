@@ -20,6 +20,7 @@
  */
 package org.firebirdsql.gds.ng.jna;
 
+import org.firebirdsql.encodings.IEncodingFactory;
 import org.firebirdsql.gds.ng.DefaultDatatypeCoder;
 
 /**
@@ -33,13 +34,8 @@ import org.firebirdsql.gds.ng.DefaultDatatypeCoder;
  */
 public final class BigEndianDatatypeCoder extends DefaultDatatypeCoder {
 
-    private static final BigEndianDatatypeCoder INSTANCE = new BigEndianDatatypeCoder();
-
-    public static BigEndianDatatypeCoder getInstance() {
-        return INSTANCE;
-    }
-
-    private BigEndianDatatypeCoder() {
+    public BigEndianDatatypeCoder(IEncodingFactory encodingFactory) {
+        super(encodingFactory);
     }
 
     @Override

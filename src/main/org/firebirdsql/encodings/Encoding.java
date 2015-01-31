@@ -66,11 +66,11 @@ public interface Encoding {
     String decodeFromCharset(byte[] in, int offset, int length);
 
     /**
-     * Derives an {@link Encoding} that applies the specified character translation
+     * Derives an {@link Encoding} that applies the specified character translation.
      *
      * @param translator
      *         The translation to apply
-     * @return The derived Encoding
+     * @return The derived Encoding, or this encoding if {@code translator} is {@code null}
      */
     Encoding withTranslation(CharacterTranslator translator);
 }

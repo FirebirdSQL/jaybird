@@ -58,7 +58,7 @@ public class TestFBNullField {
     @Before
     public void setUp() throws Exception {
         fieldData = context.mock(FieldDataProvider.class);
-        FieldDescriptor fieldDescriptor = new RowDescriptorBuilder(1, DefaultDatatypeCoder.getInstance())
+        FieldDescriptor fieldDescriptor = new RowDescriptorBuilder(1, DefaultDatatypeCoder.getDefaultInstance())
                 .toFieldDescriptor();
         field = new FBNullField(fieldDescriptor, fieldData, Types.NULL);
     }

@@ -25,7 +25,7 @@ import java.nio.charset.Charset;
 /**
  * Implementation of {@link Encoding} for single byte character sets.
  */
-public final class EncodingSingleByte implements Encoding {
+final class EncodingSingleByte implements Encoding {
 
     private final char[] byteToChar;
     private final byte[] charToByte;
@@ -36,6 +36,8 @@ public final class EncodingSingleByte implements Encoding {
     }
 
     EncodingSingleByte(final Charset charset, final CharacterTranslator translator) {
+        assert charset != null : "charset should not be null";
+        assert translator != null : "translator should not be null";
         byteToChar = new char[256];
         charToByte = new byte[256 * 256];
         this.charset = charset;
@@ -75,6 +77,9 @@ public final class EncodingSingleByte implements Encoding {
 
     @Override
     public Encoding withTranslation(final CharacterTranslator translator) {
-        return new EncodingSingleByte(charset, translator);
+        if (translator != null) {
+            return new EncodingSingleByte(charset, translator);
+        }
+        return this;
     }
 }

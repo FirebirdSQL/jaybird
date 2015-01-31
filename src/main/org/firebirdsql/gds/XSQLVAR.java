@@ -1,4 +1,6 @@
 /*
+ * $Id$
+ *
  * Public Firebird Java API.
  *
  * Redistribution and use in source and binary forms, with or without 
@@ -33,17 +35,17 @@
  */
 package org.firebirdsql.gds;
 
+import org.firebirdsql.encodings.Encoding;
+import org.firebirdsql.encodings.EncodingFactory;
+import org.firebirdsql.encodings.IEncodingFactory;
+import org.firebirdsql.gds.ng.DatatypeCoder;
+
 import java.sql.Date;
 import java.sql.SQLException;
 import java.sql.Time;
 import java.sql.Timestamp;
-import java.util.Arrays;
 import java.util.Calendar;
 import java.util.GregorianCalendar;
-
-import org.firebirdsql.encodings.Encoding;
-import org.firebirdsql.encodings.EncodingFactory;
-import org.firebirdsql.gds.ng.DatatypeCoder;
 
 /**
  * The class <code>XSQLDA</code> is a java mapping of the XSQLVAR server
@@ -262,15 +264,15 @@ public class XSQLVAR implements DatatypeCoder {
      * a given encoding.
      *
      * @param value The <code>String</code> to be encoded
-     * @param encoding The encoding to use in the encoding process
+     * @param javaEncoding The encoding to use in the encoding process
      * @param mappingPath The character mapping path to be used in the encoding
      * @return The value of <code>value</code> as a <code>byte</code> array
      * @throws java.sql.SQLException if the given encoding cannot be found, or an error
      *         occurs during the encoding
      */
-    public byte[] encodeString(String value, String encoding, String mappingPath) throws SQLException {
+    public byte[] encodeString(String value, String javaEncoding, String mappingPath) throws SQLException {
         if (coder == null)
-            coder = EncodingFactory.getEncoding(encoding, mappingPath);
+            coder = EncodingFactory.getEncoding(javaEncoding, mappingPath);
         return coder.encodeToCharset(value);
     }
 
@@ -299,15 +301,15 @@ public class XSQLVAR implements DatatypeCoder {
      * using a given encoding.
      *
      * @param value The value to be decoded
-     * @param encoding The encoding to be used in the decoding process
+     * @param javaEncoding The encoding to be used in the decoding process
      * @param mappingPath The character mapping path to be used in the decoding
      * @return The decoded <code>String</code>
      * @throws java.sql.SQLException if the given encoding cannot be found, or an
      *         error occurs during the decoding
      */
-    public String decodeString(byte[] value, String encoding, String mappingPath) throws SQLException{
+    public String decodeString(byte[] value, String javaEncoding, String mappingPath) throws SQLException{
         if (coder == null)
-            coder = EncodingFactory.getEncoding(encoding, mappingPath);
+            coder = EncodingFactory.getEncoding(javaEncoding, mappingPath);
         return coder.decodeFromCharset(value);
     }
     
@@ -533,6 +535,11 @@ public class XSQLVAR implements DatatypeCoder {
         System.arraycopy(time, 0, result, 4, 4);
 
         return result;
+    }
+
+    @Override
+    public IEncodingFactory getEncodingFactory() {
+        return EncodingFactory.getDefaultInstance();
     }
 
     /**

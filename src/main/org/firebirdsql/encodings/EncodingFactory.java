@@ -231,6 +231,7 @@ public final class EncodingFactory implements IEncodingFactory {
 
     @Override
     public CharacterTranslator getCharacterTranslator(String mappingPath) throws SQLException {
+        if (mappingPath == null) return null;
         CharacterTranslator translator = translations.get(mappingPath);
         if (translator != null) {
             return translator;

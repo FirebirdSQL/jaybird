@@ -42,7 +42,7 @@ public class TestFBShortField extends BaseTestFBField {
 
     @Before
     public void setUp() throws SQLException {
-        RowDescriptor rowDescriptor = new RowDescriptorBuilder(1, DefaultDatatypeCoder.getInstance())
+        RowDescriptor rowDescriptor = new RowDescriptorBuilder(1, DefaultDatatypeCoder.getDefaultInstance())
                 .setFieldIndex(0)
                 .setType(ISCConstants.SQL_SHORT)
                 .addField()
