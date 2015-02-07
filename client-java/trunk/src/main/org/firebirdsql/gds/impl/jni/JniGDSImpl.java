@@ -164,17 +164,8 @@ public abstract class JniGDSImpl extends BaseGDSImpl {
     public native void native_isc_attach_database(byte[] file_name,
             IscDbHandle db_handle, byte[] dpbBytes);
 
-    public native void native_isc_close_blob(IscBlobHandle blob)
-            throws GDSException;
-
-    public native void native_isc_commit_transaction(IscTrHandle tr_handle)
-            throws GDSException;
-
     public native void native_isc_create_blob2(IscDbHandle db, IscTrHandle tr,
             IscBlobHandle blob, byte[] dpbBytes);
-
-    public native void native_isc_create_database(byte[] file_name,
-            IscDbHandle db_handle, byte[] dpbBytes);
 
     public native void native_isc_database_info(IscDbHandle db_handle,
             int item_length, byte[] items, int buffer_length, byte[] buffer)
@@ -183,45 +174,11 @@ public abstract class JniGDSImpl extends BaseGDSImpl {
     public native void native_isc_detach_database(IscDbHandle db_handle)
             throws GDSException;
 
-    public native void native_isc_drop_database(IscDbHandle db_handle)
-            throws GDSException;
-
-    public native void native_isc_dsql_allocate_statement(
-            IscDbHandle db_handle, IscStmtHandle stmt_handle)
-            throws GDSException;
-
-    public native void native_isc_dsql_exec_immed2(IscDbHandle db_handle,
-            IscTrHandle tr_handle, byte[] statement, int dialect,
-            XSQLDA in_xsqlda, XSQLDA out_xsqlda) throws GDSException;
-
-    public native void native_isc_dsql_execute2(IscTrHandle tr_handle,
-            IscStmtHandle stmt_handle, int da_version, XSQLDA in_xsqlda,
-            XSQLDA out_xsqlda) throws GDSException;
-
-    public native boolean native_isc_dsql_fetch(IscStmtHandle stmt_handle,
-            int da_version, XSQLDA xsqlda, int fetchSize) throws GDSException;
-
-    public native void native_isc_dsql_free_statement(
-            IscStmtHandle stmt_handle, int option) throws GDSException;
-
-    public native XSQLDA native_isc_dsql_prepare(IscTrHandle tr_handle,
-            IscStmtHandle stmt_handle, byte[] statement, int dialect)
-            throws GDSException;
-
-    public native byte[] native_isc_dsql_sql_info(IscStmtHandle stmt_handle,
-            byte[] items, int buffer_length) throws GDSException;
-
-    public native byte[] native_isc_get_segment(IscBlobHandle blob, int maxread)
-            throws GDSException;
-
     public native void native_isc_open_blob2(IscDbHandle db, IscTrHandle tr,
             IscBlobHandle blob, byte[] dpbBytes);
 
     public native void native_isc_prepare_transaction(IscTrHandle tr_handle)
             throws GDSException;
-
-    public native void native_isc_put_segment(IscBlobHandle blob_handle,
-            byte[] buffer) throws GDSException;
 
     public native void native_isc_seek_blob(isc_blob_handle_impl handle,
             int position, int mode) throws GDSException;
