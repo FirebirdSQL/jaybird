@@ -170,9 +170,6 @@ public abstract class JniGDSImpl extends BaseGDSImpl {
     public native void native_isc_close_blob(IscBlobHandle blob)
             throws GDSException;
 
-    public native void native_isc_commit_retaining(IscTrHandle tr_handle)
-            throws GDSException;
-
     public native void native_isc_commit_transaction(IscTrHandle tr_handle)
             throws GDSException;
 
@@ -192,18 +189,9 @@ public abstract class JniGDSImpl extends BaseGDSImpl {
     public native void native_isc_drop_database(IscDbHandle db_handle)
             throws GDSException;
 
-    public native void native_isc_dsql_alloc_statement2(IscDbHandle db_handle,
-            IscStmtHandle stmt_handle) throws GDSException;
-
     public native void native_isc_dsql_allocate_statement(
             IscDbHandle db_handle, IscStmtHandle stmt_handle)
             throws GDSException;
-
-    public native XSQLDA native_isc_dsql_describe(IscStmtHandle stmt_handle,
-            int da_version) throws GDSException;
-
-    public native XSQLDA native_isc_dsql_describe_bind(
-            IscStmtHandle stmt_handle, int da_version) throws GDSException;
 
     public native void native_isc_dsql_exec_immed2(IscDbHandle db_handle,
             IscTrHandle tr_handle, byte[] statement, int dialect,
@@ -238,18 +226,9 @@ public abstract class JniGDSImpl extends BaseGDSImpl {
 
     public native void native_isc_prepare_transaction(IscTrHandle tr_handle)
             throws GDSException;
-    
-    public native void native_isc_prepare_transaction2(IscTrHandle tr_handle,
-            byte[] bytes) throws GDSException;
 
     public native void native_isc_put_segment(IscBlobHandle blob_handle,
             byte[] buffer) throws GDSException;
-
-    public native void native_isc_rollback_retaining(IscTrHandle tr_handle)
-            throws GDSException;
-
-    public native void native_isc_rollback_transaction(IscTrHandle tr_handle)
-            throws GDSException;
 
     public native void native_isc_seek_blob(isc_blob_handle_impl handle,
             int position, int mode) throws GDSException;
@@ -273,9 +252,6 @@ public abstract class JniGDSImpl extends BaseGDSImpl {
             IscDbHandle db_handle,
             byte[] tpb) throws GDSException;
 
-    public native void native_isc_reconnect_transaction(IscDbHandle dbHandle,
-            IscTrHandle tr_handle, byte[] txId) throws GDSException;
-
     public native byte[] native_isc_transaction_info(IscTrHandle tr_handle, 
             byte[] info, int bufferLength) throws GDSException;
 
@@ -296,9 +272,6 @@ public abstract class JniGDSImpl extends BaseGDSImpl {
     protected native void native_isc_finalize(int isc_api_handle)
         throws GDSException;
 
-    public native void native_fb_cancel_operation(IscDbHandle dbHanle, int kind) 
-        throws GDSException;
-    
     protected void finalize() throws Throwable {
         native_isc_finalize(isc_api_handle);
     }
