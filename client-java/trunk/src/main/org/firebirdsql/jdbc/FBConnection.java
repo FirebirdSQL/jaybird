@@ -229,7 +229,7 @@ public class FBConnection implements FirebirdConnection {
     }
 
     public TransactionParameterBuffer createTransactionParameterBuffer() throws SQLException {
-        return getInternalAPIHandler().newTransactionParameterBuffer();
+        return getFbDatabase().createTransactionParameterBuffer();
     }
     
     public void setTransactionParameters(int isolationLevel, TransactionParameterBuffer tpb) throws SQLException {

@@ -82,7 +82,8 @@ public interface FbTransaction {
      * Prepare the transaction for two-phase commit/rollback.
      *
      * @param recoveryInformation
-     *         Transaction recovery information (stored in RDB$TRANSACTION_DESCRIPTION of RDB$TRANSACTIONS)
+     *         Transaction recovery information (stored in RDB$TRANSACTION_DESCRIPTION of RDB$TRANSACTIONS),
+     *         or {@code null} to prepare without recovery information.
      * @throws SQLException
      */
     void prepare(byte[] recoveryInformation) throws SQLException;

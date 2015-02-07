@@ -178,29 +178,6 @@ public interface GDS {
      */
     void iscDetachDatabase(IscDbHandle dbHandle) throws GDSException;
 
-    // ------------------ Transactions -------------------------
-    /**
-     * Start a transaction based on a handle to a transaction.
-     * 
-     * @param trHandle
-     *            Handle to the transaction that is to be started
-     * @param dbHandle
-     *            Handle to the database in which the transaction is to be
-     *            started
-     * @param tpb
-     *            Transaction Parameter Block in the form of a byte array,
-     *            contains parameter data for the transaction attributes
-     * @throws GDSException
-     *             if an error occurs while starting the transaction
-     * @see #createIscTrHandle()
-     */
-    void iscStartTransaction(IscTrHandle trHandle, IscDbHandle dbHandle,
-            TransactionParameterBuffer tpb) throws GDSException;
-
-    void iscPrepareTransaction(IscTrHandle trHandle) throws GDSException;
-
-    // ---------------------- Dynamic SQL ------------------------
-
     /**
      * Retrieve an integer value from a sequence of bytes.
      * <p>

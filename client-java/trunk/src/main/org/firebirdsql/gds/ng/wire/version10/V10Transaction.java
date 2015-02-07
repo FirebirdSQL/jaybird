@@ -145,9 +145,14 @@ public class V10Transaction extends AbstractFbTransaction implements FbWireTrans
                 synchronized (getDatabase().getSynchronizationObject()) {
                     try {
                         final XdrOutputStream xdrOut = getXdrOut();
-                        xdrOut.writeInt(op_prepare2);
-                        xdrOut.writeInt(handle);
-                        xdrOut.writeBuffer(recoveryInformation);
+                        if (recoveryInformation != null) {
+                            xdrOut.writeInt(op_prepare2);
+                            xdrOut.writeInt(handle);
+                            xdrOut.writeBuffer(recoveryInformation);
+                        } else {
+                            xdrOut.writeInt(op_prepare);
+                            xdrOut.writeInt(handle);
+                        }
                         xdrOut.flush();
                     } catch (IOException ioex) {
                         throw new FbExceptionBuilder().exception(ISCConstants.isc_net_write_err).cause(ioex).toSQLException();

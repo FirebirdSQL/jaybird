@@ -3,6 +3,8 @@ package org.firebirdsql.management;
 import org.firebirdsql.common.FBJUnit4TestBase;
 import org.firebirdsql.gds.*;
 import org.firebirdsql.gds.impl.GDSType;
+import org.firebirdsql.gds.ng.FbDatabase;
+import org.firebirdsql.gds.ng.FbTransaction;
 import org.firebirdsql.jdbc.FBConnection;
 import org.junit.Before;
 import org.junit.Rule;
@@ -479,19 +481,12 @@ public class TestFBMaintenanceManager extends FBJUnit4TestBase {
     private void createLimboTransaction(int count) throws Exception {
         FBConnection conn = (FBConnection) getConnectionViaDriverManager();
         try {
-            GDS gds = conn.getInternalAPIHandler();
-            DatabaseParameterBuffer dpb = gds.createDatabaseParameterBuffer();
-            dpb.addArgument(DatabaseParameterBuffer.USER, DB_USER);
-            dpb.addArgument(DatabaseParameterBuffer.PASSWORD, DB_PASSWORD);
-            IscDbHandle dbh = gds.createIscDbHandle();
-            gds.iscAttachDatabase(getdbpath(DB_NAME), dbh, dpb);
+            final FbDatabase fbDatabase = conn.getFbDatabase();
             for (int i = 0; i < count; i++) {
-                TransactionParameterBuffer tpBuf = gds.newTransactionParameterBuffer();
-                IscTrHandle trh = gds.createIscTrHandle();
-                gds.iscStartTransaction(trh, dbh, tpBuf);
-                gds.iscPrepareTransaction(trh);
+                TransactionParameterBuffer tpBuf = conn.createTransactionParameterBuffer();
+                FbTransaction transaction = fbDatabase.startTransaction(tpBuf);
+                transaction.prepare(null);
             }
-            gds.iscDetachDatabase(dbh);
         } finally {
             conn.close();
         }
