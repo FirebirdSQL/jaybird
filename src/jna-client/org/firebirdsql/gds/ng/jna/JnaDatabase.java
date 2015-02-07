@@ -217,6 +217,7 @@ public class JnaDatabase extends AbstractFbDatabase implements TransactionListen
     public JnaTransaction startTransaction(TransactionParameterBuffer tpb) throws SQLException {
         checkConnected();
         if (!(tpb instanceof TransactionParameterBufferImpl)) {
+            // TODO Should we support this?
             TransactionParameterBufferImpl tempTpb = new TransactionParameterBufferImpl();
             for (Parameter parameter : tpb) {
                 parameter.copyTo(tempTpb, getEncoding());
@@ -278,6 +279,11 @@ public class JnaDatabase extends AbstractFbDatabase implements TransactionListen
     @Override
     public BlobParameterBuffer createBlobParameterBuffer() {
         return new BlobParameterBufferImp();
+    }
+
+    @Override
+    public TransactionParameterBufferImpl createTransactionParameterBuffer() {
+        return new TransactionParameterBufferImpl();
     }
 
     @Override

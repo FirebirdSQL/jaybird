@@ -216,25 +216,6 @@ public abstract class BaseGDSImpl extends AbstractGDS {
         }
     }
 
-    // isc_prepare_transaction
-    // ---------------------------------------------------------------------------------------------
-    public void iscPrepareTransaction(IscTrHandle tr_handle)
-            throws GDSException {
-        if (tr_handle == null) { 
-            throw new GDSException(ISCConstants.isc_bad_trans_handle); 
-        }
-        
-        synchronized (tr_handle.getDbHandle()) {
-            if (tr_handle.getState() != IscTrHandle.TRANSACTIONSTARTED) { throw new GDSException(
-                    ISCConstants.isc_tra_state); }
-            tr_handle.setState(IscTrHandle.TRANSACTIONPREPARING);
-
-            native_isc_prepare_transaction(tr_handle);
-
-            tr_handle.setState(IscTrHandle.TRANSACTIONPREPARED);
-        }
-    }
-
     public void iscSeekBlob(IscBlobHandle handle, int position, int mode)
             throws GDSException {
         isc_blob_handle_impl blob = (isc_blob_handle_impl) handle;
@@ -306,36 +287,6 @@ public abstract class BaseGDSImpl extends AbstractGDS {
         }
     }
 
-    // isc_start_transaction
-    // ---------------------------------------------------------------------------------------------
-    public void iscStartTransaction(IscTrHandle tr_handle,
-            IscDbHandle db_handle, TransactionParameterBuffer tpb)
-            throws GDSException {
-        TransactionParameterBufferImpl tpbImpl = (TransactionParameterBufferImpl) tpb;
-
-        if (tr_handle == null) { 
-            throw new GDSException(ISCConstants.isc_bad_trans_handle); 
-        }
-
-        if (db_handle == null) { 
-            throw new GDSException(ISCConstants.isc_bad_db_handle); 
-        }
-
-        synchronized (db_handle) {
-            if (tr_handle.getState() != IscTrHandle.NOTRANSACTION)
-                throw new GDSException(ISCConstants.isc_tra_state);
-
-            tr_handle.setState(IscTrHandle.TRANSACTIONSTARTING);
-
-            byte[] arg = tpbImpl.getBytesForNativeCode();
-            native_isc_start_transaction(tr_handle, db_handle, arg);
-
-            tr_handle.setDbHandle(db_handle);
-
-            tr_handle.setState(IscTrHandle.TRANSACTIONSTARTED);
-        }
-    }
-
     public abstract void native_isc_attach_database(byte[] file_name,
             IscDbHandle db_handle, byte[] dpbBytes);
 
@@ -351,9 +302,6 @@ public abstract class BaseGDSImpl extends AbstractGDS {
 
     public abstract void native_isc_open_blob2(IscDbHandle db, IscTrHandle tr,
             IscBlobHandle blob, byte[] dpbBytes);
-
-    public abstract void native_isc_prepare_transaction(IscTrHandle tr_handle)
-            throws GDSException;
 
     public abstract void native_isc_seek_blob(isc_blob_handle_impl handle,
             int position, int mode) throws GDSException;
@@ -373,11 +321,6 @@ public abstract class BaseGDSImpl extends AbstractGDS {
 
     public abstract void native_isc_service_start(IscSvcHandle serviceHandle,
             byte[] serviceParameterBuffer) throws GDSException;
-
-    public abstract void native_isc_start_transaction(IscTrHandle tr_handle,
-            IscDbHandle db_handle,
-            // Set tpb) throws GDSException;
-            byte[] tpb) throws GDSException;
 
     public abstract int native_isc_que_events(IscDbHandle db_handle,
             EventHandleImp eventHandle, EventHandler handler) 

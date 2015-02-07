@@ -177,9 +177,6 @@ public abstract class JniGDSImpl extends BaseGDSImpl {
     public native void native_isc_open_blob2(IscDbHandle db, IscTrHandle tr,
             IscBlobHandle blob, byte[] dpbBytes);
 
-    public native void native_isc_prepare_transaction(IscTrHandle tr_handle)
-            throws GDSException;
-
     public native void native_isc_seek_blob(isc_blob_handle_impl handle,
             int position, int mode) throws GDSException;
 
@@ -197,10 +194,6 @@ public abstract class JniGDSImpl extends BaseGDSImpl {
 
     public native void native_isc_service_start(IscSvcHandle serviceHandle,
             byte[] serviceParameterBuffer) throws GDSException;
-
-    public native void native_isc_start_transaction(IscTrHandle tr_handle,
-            IscDbHandle db_handle,
-            byte[] tpb) throws GDSException;
 
     public native int native_isc_que_events(IscDbHandle db_handle,
             EventHandleImp eventHandle, EventHandler handler) 

@@ -157,6 +157,13 @@ public interface FbDatabase {
     BlobParameterBuffer createBlobParameterBuffer();
 
     /**
+     * Creates a transaction parameter buffer that is usable with {@link #startTransaction(org.firebirdsql.gds.TransactionParameterBuffer)}.
+     *
+     * @return A transaction parameter buffer
+     */
+    TransactionParameterBuffer createTransactionParameterBuffer();
+
+    /**
      * Request database info.
      *
      * @param requestItems

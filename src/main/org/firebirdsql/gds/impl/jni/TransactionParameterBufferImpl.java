@@ -48,7 +48,7 @@ public class TransactionParameterBufferImpl extends ParameterBufferBase implemen
         byteArrayOutputStream.write(ISCConstants.isc_tpb_version3);
 
         try {
-            super.writeArgumentsTo(byteArrayOutputStream);
+            writeArgumentsTo(byteArrayOutputStream);
         } catch (IOException e) {
             // Ignoring IOException, not thrown by ByteArrayOutputStream
         }
