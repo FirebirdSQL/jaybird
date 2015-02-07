@@ -23,6 +23,7 @@ package org.firebirdsql.gds.impl.jni;
 import org.firebirdsql.gds.DatabaseParameterBuffer;
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.impl.DatabaseParameterBufferExtension;
+import org.firebirdsql.gds.impl.ParameterBufferBase;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;

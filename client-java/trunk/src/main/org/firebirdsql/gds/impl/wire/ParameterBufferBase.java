@@ -26,12 +26,7 @@ import java.io.IOException;
  * Base class for BlobParameterBufferImp and DatabaseParameterBufferImp and
  * perhaps eventually TransactionParameterBuffer.
  */
-public abstract class ParameterBufferBase extends org.firebirdsql.gds.impl.ParameterBufferBase implements java.io.Serializable, Xdrable {
-
-    @Override
-    public int getLength() {
-        return super.getLength();
-    }
+public abstract class ParameterBufferBase extends org.firebirdsql.gds.impl.ParameterBufferBase implements Xdrable {
 
     @Override
     public void read(XdrInputStream inputStream, int length) throws IOException {
@@ -41,20 +36,5 @@ public abstract class ParameterBufferBase extends org.firebirdsql.gds.impl.Param
     @Override
     public void write(XdrOutputStream outputStream) throws IOException {
         writeArgumentsTo(outputStream);
-    }
-
-    @Override
-    public boolean equals(Object other) {
-        if (other == null || !(other instanceof ParameterBufferBase))
-            return false;
-
-        final ParameterBufferBase otherServiceBufferBase = (ParameterBufferBase) other;
-
-        return otherServiceBufferBase.getArgumentsList().equals(this.getArgumentsList());
-    }
-
-    @Override
-    public int hashCode() {
-        return getArgumentsList().hashCode();
     }
 }
