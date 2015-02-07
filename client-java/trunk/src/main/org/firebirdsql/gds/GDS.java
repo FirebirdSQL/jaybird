@@ -264,9 +264,6 @@ public interface GDS {
 
     void iscPrepareTransaction(IscTrHandle trHandle) throws GDSException;
 
-    byte [] iscTransactionInformation(IscTrHandle trHandle,
-            byte [] requestBuffer, int bufferLen) throws GDSException;
-
     // ---------------------- Dynamic SQL ------------------------
 
     /**
@@ -454,21 +451,6 @@ public interface GDS {
             byte[] statement, int dialect) throws GDSException;
 
     /**
-     * Set the name to be used for a given statement.
-     * 
-     * @param stmtHandle
-     *            Handle to the statement for which the cursor name is to be set
-     * @param cursorName
-     *            Name to set for the cursor
-     * @param type
-     *            Reserved for future use
-     * @throws GDSException
-     *             if an error occurs while setting the cursor name
-     */
-    void iscDsqlSetCursorName(IscStmtHandle stmtHandle, String cursorName,
-            int type) throws GDSException;
-
-    /**
      * Retrieve data about a statement. The parameters that are requested are
      * defined by the <code>isc_info_sql_*</code> constants defined in
      * {@link ISCConstants}. An array with corresponding values for the
@@ -595,26 +577,6 @@ public interface GDS {
      *             if an error occurs while closing the blob
      */
     void iscCloseBlob(IscBlobHandle blob) throws GDSException;
-
-    /**
-     * Retrieve data about an existing blob. The parameters to be retrieved are
-     * placed in <code>items</code>, and the corresponding values are
-     * returned. The values in <code>items</code> should be
-     * <code>isc_info_blob_*</code> constants from {@link ISCConstants}.
-     * 
-     * @param handle
-     *            Handle to the blob for which data is to be retrieved
-     * @param items
-     *            Parameters to be fetched about the blob
-     * @param bufferLength
-     *            Length of the byte array to be returned
-     * @return Data corresponding to the parameters requested in
-     *         <code>items</code>
-     * @throws GDSException
-     *             if an error occurs while fetching data about the blob
-     */
-    byte[] iscBlobInfo(IscBlobHandle handle, byte[] items, int bufferLength)
-            throws GDSException;
 
     /**
      * Seek to a given position in a blob. <code>seekMode</code> is used in
