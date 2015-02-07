@@ -28,9 +28,9 @@ package org.firebirdsql.gds;
 /**
  * Instance of this interface represents a BLOB Parameter Buffer from the
  * Firebird API documentation and specifies attributes for
- * {@link GDS#iscCreateBlob2(IscDbHandle, IscTrHandle, IscBlobHandle, BlobParameterBuffer)}
+ * {@link org.firebirdsql.gds.ng.FbDatabase#createBlobForOutput(org.firebirdsql.gds.ng.FbTransaction, BlobParameterBuffer)}
  * or
- * {@link GDS#iscOpenBlob2(IscDbHandle, IscTrHandle, IscBlobHandle, BlobParameterBuffer)}
+ * {@link org.firebirdsql.gds.ng.FbDatabase#createBlobForInput(org.firebirdsql.gds.ng.FbTransaction, BlobParameterBuffer, long)}
  * operations.
  * <p>
  * Two features are available:
@@ -40,7 +40,8 @@ package org.firebirdsql.gds;
  * <li>Specifying type of the BLOB - either segmented or stream. The only
  * visible to user difference between segmented and stream BLOBs is the fact
  * that "seek" operation is not defined for segmented BLOBs (see
- * {@link GDS#iscSeekBlob(IscBlobHandle, int, int)} for more details).
+ * {@link org.firebirdsql.gds.ng.FbBlob#seek(int, org.firebirdsql.gds.ng.FbBlob.SeekMode)}
+ * for more details).
  * </ul>
  */
 public interface BlobParameterBuffer {

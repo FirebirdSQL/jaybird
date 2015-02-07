@@ -164,21 +164,12 @@ public abstract class JniGDSImpl extends BaseGDSImpl {
     public native void native_isc_attach_database(byte[] file_name,
             IscDbHandle db_handle, byte[] dpbBytes);
 
-    public native void native_isc_create_blob2(IscDbHandle db, IscTrHandle tr,
-            IscBlobHandle blob, byte[] dpbBytes);
-
     public native void native_isc_database_info(IscDbHandle db_handle,
             int item_length, byte[] items, int buffer_length, byte[] buffer)
             throws GDSException;
 
     public native void native_isc_detach_database(IscDbHandle db_handle)
             throws GDSException;
-
-    public native void native_isc_open_blob2(IscDbHandle db, IscTrHandle tr,
-            IscBlobHandle blob, byte[] dpbBytes);
-
-    public native void native_isc_seek_blob(isc_blob_handle_impl handle,
-            int position, int mode) throws GDSException;
 
     public native void native_isc_service_attach(String service,
             IscSvcHandle serviceHandle, byte[] serviceParameterBuffer)
