@@ -282,33 +282,6 @@ public abstract class AbstractJavaGDSImpl extends AbstractGDS implements GDS {
 		}
 	}
 
-	public byte[] iscBlobInfo(IscBlobHandle handle, byte[] items,
-			int buffer_length) throws GDSException {
-		boolean debug = log != null && log.isDebugEnabled();
-		isc_db_handle_impl db = (isc_db_handle_impl) handle.getDb();
-		synchronized (handle) {
-			try {
-				if (debug)
-					log.debug("op_info_blob ");
-				db.out.writeInt(op_info_blob);
-				db.out.writeInt(handle.getRblId());
-				db.out.writeInt(0);
-				db.out.writeBuffer(items);
-				db.out.writeInt(buffer_length);
-				db.out.flush();
-				if (debug)
-					log.debug("sent");
-				receiveResponse(db, -1);
-				// if (debug) log.debug("parseSqlInfo: first 2 bytes are " +
-				// iscVaxInteger2(db.getResp_data(), 0) + " or: " +
-				// db.getResp_data()[0] + ", " + db.getResp_data()[1]);
-				return db.getResp_data_truncated();
-			} catch (IOException ex) {
-				throw new GDSException(ISCConstants.isc_network_error, ex);
-			}
-		}
-	}
-
 	public void iscSeekBlob(IscBlobHandle handle, int position, int seekMode)
 			throws GDSException {
 		boolean debug = log != null && log.isDebugEnabled();
@@ -504,35 +477,6 @@ public abstract class AbstractJavaGDSImpl extends AbstractGDS implements GDS {
 				throw new GDSException(ISCConstants.isc_net_read_err);
 			}
 			tr_handle.setState(IscTrHandle.TRANSACTIONPREPARED);
-		}
-	}
-
-	public byte[] iscTransactionInformation(IscTrHandle tr_handle,
-			byte[] requestBuffer, int bufferLen) throws GDSException {
-
-		boolean debug = log != null && log.isDebugEnabled();
-		if (tr_handle == null) {
-			throw new GDSException(ISCConstants.isc_bad_trans_handle);
-		}
-		isc_db_handle_impl db = (isc_db_handle_impl) tr_handle.getDbHandle();
-
-		synchronized (db) {
-			try {
-				if (debug)
-					log.debug("op_info_transaction ");
-				db.out.writeInt(op_info_transaction);
-				db.out.writeInt(tr_handle.getTransactionId());
-				db.out.writeInt(0);
-				db.out.writeBuffer(requestBuffer);
-				db.out.writeInt(bufferLen);
-				db.out.flush();
-				if (debug)
-					log.debug("sent");
-				receiveResponse(db, -1);
-				return db.getResp_data();
-			} catch (IOException ex) {
-				throw new GDSException(ISCConstants.isc_net_read_err);
-			}
 		}
 	}
 
@@ -1052,42 +996,6 @@ public abstract class AbstractJavaGDSImpl extends AbstractGDS implements GDS {
 			}
 
 			// RSR_blob ??????????
-		}
-
-	}
-
-	public void iscDsqlSetCursorName(IscStmtHandle stmt_handle,
-			String cursor_name, int type) throws GDSException {
-	    
-	    if (stmt_handle == null) {
-            throw new GDSException(ISCConstants.isc_bad_req_handle);
-        }
-	    
-		boolean debug = log != null && log.isDebugEnabled();
-		isc_db_handle_impl db = (isc_db_handle_impl) stmt_handle.getRsr_rdb();
-
-		synchronized (db) {
-			try {
-				if (debug)
-					log.debug("op_set_cursor ");
-				db.out.writeInt(op_set_cursor);
-				db.out.writeInt(stmt_handle.getRsrId());
-
-				byte[] buffer = new byte[cursor_name.length() + 1];
-				System.arraycopy(cursor_name.getBytes(), 0, buffer, 0,
-						cursor_name.length());
-				buffer[cursor_name.length()] = (byte) 0;
-
-				db.out.writeBuffer(buffer);
-				db.out.writeInt(0);
-				db.out.flush();
-				if (debug)
-					log.debug("sent");
-
-				receiveResponse(db, -1);
-			} catch (IOException ex) {
-				throw new GDSException(ISCConstants.isc_net_read_err);
-			}
 		}
 
 	}

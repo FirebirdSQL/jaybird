@@ -164,9 +164,6 @@ public abstract class JniGDSImpl extends BaseGDSImpl {
     public native void native_isc_attach_database(byte[] file_name,
             IscDbHandle db_handle, byte[] dpbBytes);
 
-    public native byte[] native_isc_blob_info(isc_blob_handle_impl handle,
-            byte[] items, int buffer_length) throws GDSException;
-
     public native void native_isc_close_blob(IscBlobHandle blob)
             throws GDSException;
 
@@ -211,10 +208,6 @@ public abstract class JniGDSImpl extends BaseGDSImpl {
             IscStmtHandle stmt_handle, byte[] statement, int dialect)
             throws GDSException;
 
-    public native void native_isc_dsql_set_cursor_name(
-            IscStmtHandle stmt_handle, String cursor_name, int type)
-            throws GDSException;
-
     public native byte[] native_isc_dsql_sql_info(IscStmtHandle stmt_handle,
             byte[] items, int buffer_length) throws GDSException;
 
@@ -251,9 +244,6 @@ public abstract class JniGDSImpl extends BaseGDSImpl {
     public native void native_isc_start_transaction(IscTrHandle tr_handle,
             IscDbHandle db_handle,
             byte[] tpb) throws GDSException;
-
-    public native byte[] native_isc_transaction_info(IscTrHandle tr_handle, 
-            byte[] info, int bufferLength) throws GDSException;
 
     public native int native_isc_que_events(IscDbHandle db_handle,
             EventHandleImp eventHandle, EventHandler handler) 
