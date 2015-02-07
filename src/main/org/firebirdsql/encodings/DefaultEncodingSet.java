@@ -20,6 +20,7 @@
  */
 package org.firebirdsql.encodings;
 
+import org.firebirdsql.encodings.xml.EncodingDefinitionType;
 import org.firebirdsql.encodings.xml.Encodings;
 import org.firebirdsql.logging.Logger;
 import org.firebirdsql.logging.LoggerFactory;
@@ -130,7 +131,7 @@ public class DefaultEncodingSet implements EncodingSet {
                 return Collections.emptyList();
             }
             List<EncodingDefinition> encodingSet = new ArrayList<EncodingDefinition>();
-            for (Encodings.EncodingDefinition definition : encodings.getEncodingDefinition()) {
+            for (EncodingDefinitionType definition : encodings.getEncodingDefinition()) {
                 final EncodingDefinition encoding = createEncodingDefinition(definition);
                 if (encoding != null) {
                     encodingSet.add(encoding);
@@ -150,7 +151,7 @@ public class DefaultEncodingSet implements EncodingSet {
      *         XML definition of the encoding
      * @return Encoding instance or <code>null</code> if creating the instance failed for any reason.
      */
-    protected EncodingDefinition createEncodingDefinition(final Encodings.EncodingDefinition definition) {
+    protected EncodingDefinition createEncodingDefinition(final EncodingDefinitionType definition) {
         try {
             if (definition.getEncodingDefinitionImplementation() != null) {
                 return createEncodingDefinitionImplementation(definition);
@@ -185,7 +186,7 @@ public class DefaultEncodingSet implements EncodingSet {
      *         the
      *         expectations.
      */
-    protected EncodingDefinition createEncodingDefinitionImplementation(final Encodings.EncodingDefinition definition) {
+    protected EncodingDefinition createEncodingDefinitionImplementation(final EncodingDefinitionType definition) {
         assert definition.getEncodingDefinitionImplementation() != null;
         try {
             final Class<?> encodingClazz = Class.forName(definition.getEncodingDefinitionImplementation());

@@ -38,11 +38,11 @@ public class ObjectFactory {
     }
 
     /**
-     * Create an instance of {@link Encodings.EncodingDefinition }
+     * Create an instance of {@link EncodingDefinitionType }
      * 
      */
-    public Encodings.EncodingDefinition createEncodingsEncodingDefinition() {
-        return new Encodings.EncodingDefinition();
+    public EncodingDefinitionType createEncodingDefinitionType() {
+        return new EncodingDefinitionType();
     }
 
 }
