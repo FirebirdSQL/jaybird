@@ -20,18 +20,17 @@
  */
 package org.firebirdsql.gds.impl;
 
-import java.io.Externalizable;
-import java.io.ObjectOutput;
-import java.io.IOException;
-import java.io.ObjectInput;
-
 import org.firebirdsql.gds.GDS;
 import org.firebirdsql.gds.GDSException;
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.IscDbHandle;
-import org.firebirdsql.gds.IscStmtHandle;
 import org.firebirdsql.logging.Logger;
 import org.firebirdsql.logging.LoggerFactory;
+
+import java.io.Externalizable;
+import java.io.IOException;
+import java.io.ObjectInput;
+import java.io.ObjectOutput;
 
 /**
  * Base class for GDS implementations. This base class allows the GDS
@@ -86,62 +85,6 @@ public abstract class AbstractGDS implements GDS, Externalizable {
 
     public Object readResolve() {
         return GDSFactory.getGDSForType(gdsType);
-    }
-
-    private static final byte[] stmtInfo = new byte[] { 
-    	    ISCConstants.isc_info_sql_records,
-            ISCConstants.isc_info_sql_stmt_type, 
-            ISCConstants.isc_info_end };
-
-    private static final int INFO_SIZE = 128;
-
-    public void getSqlCounts(final IscStmtHandle stmt_handle) throws GDSException {
-        stmt_handle.setInsertCount(0);
-        stmt_handle.setUpdateCount(0);
-        stmt_handle.setDeleteCount(0);
-        stmt_handle.setSelectCount(0);
-
-        final byte[] buffer = iscDsqlSqlInfo(stmt_handle, stmtInfo, INFO_SIZE);
-        int pos = 0;
-        int type;
-        while ((type = buffer[pos++]) != ISCConstants.isc_info_end) {
-            int infoLength = iscVaxInteger2(buffer, pos);
-            pos += 2;
-            switch (type) {
-            case ISCConstants.isc_info_sql_records:
-                int countLength;
-                int t;
-                while ((t = buffer[pos++]) != ISCConstants.isc_info_end) {
-                    countLength = iscVaxInteger2(buffer, pos);
-                    pos += 2;
-                    switch (t) {
-                    case ISCConstants.isc_info_req_insert_count:
-                        stmt_handle.setInsertCount(iscVaxInteger(buffer, pos, countLength));
-                        break;
-                    case ISCConstants.isc_info_req_update_count:
-                        stmt_handle.setUpdateCount(iscVaxInteger(buffer, pos, countLength));
-                        break;
-                    case ISCConstants.isc_info_req_delete_count:
-                        stmt_handle.setDeleteCount(iscVaxInteger(buffer, pos, countLength));
-                        break;
-                    case ISCConstants.isc_info_req_select_count:
-                        stmt_handle.setSelectCount(iscVaxInteger(buffer, pos, countLength));
-                        break;
-                    default:
-                        break;
-                    }
-                    pos += countLength;
-                }
-                break;
-            case ISCConstants.isc_info_sql_stmt_type:
-                stmt_handle.setStatementType(iscVaxInteger(buffer, pos, infoLength));
-                pos += infoLength;
-                break;
-            default:
-                pos += infoLength;
-                break;
-            }
-        }
     }
 
     public int iscVaxInteger(final byte[] buffer, int pos, int length) {
@@ -204,8 +147,8 @@ public abstract class AbstractGDS implements GDS, Externalizable {
         if (debug)
             log.debug("parseDatabaseInfo: first 2 bytes are " + 
                     iscVaxInteger2(info, 0) + " or: " + info[0] + ", " + info[1]);
-        int value = 0;
-        int len = 0;
+        int value;
+        int len;
         int i = 0;
         while (info[i] != ISCConstants.isc_info_end) {
             switch (info[i++]) {

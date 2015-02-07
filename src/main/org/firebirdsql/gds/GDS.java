@@ -253,53 +253,18 @@ public interface GDS {
             TransactionParameterBuffer tpb) throws GDSException;
 
     /**
-     * Reconnect "in limbo" transaction using new database handle.
-     * 
-     * @param trHandle
-     *            transaction handle that will be reconnected.
-     * @param dbHandle
-     *            database handle in which "in limbo" transaction will be
-     *            reconnected.
-     * @param transactionId ID of the transaction to reconnect.
-     * 
-     * @throws GDSException
-     *             if something went wrong.
-     */
-    void iscReconnectTransaction(IscTrHandle trHandle, IscDbHandle dbHandle,
-            long transactionId) throws GDSException;
-
-    /**
      * Commit a transaction.
      * 
      * @param trHandle
      *            Handle to the transaction to be committed.
      * @throws GDSException
      *             if an error occurs while committing the transaction
-     * @see #iscRollbackTransaction(IscTrHandle)
      */
     void iscCommitTransaction(IscTrHandle trHandle) throws GDSException;
 
-    void iscCommitRetaining(IscTrHandle trHandle) throws GDSException;
-
     void iscPrepareTransaction(IscTrHandle trHandle) throws GDSException;
 
-    void iscPrepareTransaction2(IscTrHandle trHandle, byte[] bytes)
-            throws GDSException;
-
-    /**
-     * Rollback a transaction.
-     * 
-     * @param trHandle
-     *            Handle to the transaction that is to be rolled back
-     * @throws GDSException
-     *             if an error occurs while rolling back
-     * @see #iscCommitTransaction(IscTrHandle)
-     */
-    void iscRollbackTransaction(IscTrHandle trHandle) throws GDSException;
-
-    void iscRollbackRetaining(IscTrHandle trHandle) throws GDSException;
-
-    byte [] iscTransactionInformation(IscTrHandle trHandle, 
+    byte [] iscTransactionInformation(IscTrHandle trHandle,
             byte [] requestBuffer, int bufferLen) throws GDSException;
 
     // ---------------------- Dynamic SQL ------------------------
@@ -317,53 +282,6 @@ public interface GDS {
      */
     void iscDsqlAllocateStatement(IscDbHandle dbHandle, IscStmtHandle stmtHandle)
             throws GDSException;
-
-    /**
-     * Retrieve data for a statement.
-     * 
-     * @param stmtHandle
-     *            Handle to the statement about which data is to be retrieved
-     * @param daVersion
-     *            Version of the XSQLDA to be retrieved
-     * @return data for the given statement
-     * @throws GDSException
-     *             if an error occurs while retrieving statement data
-     */
-    XSQLDA iscDsqlDescribe(IscStmtHandle stmtHandle, int daVersion)
-            throws GDSException;
-
-    /**
-     * Retrieve data for a bind statement.
-     * 
-     * @param stmtHandle
-     *            Handle to the bind statement about which bind data is to be
-     *            retrieved
-     * @param daVersion
-     *            Version of the XSQLDA to be retrieved
-     * @return data for the given bind statement
-     * @throws GDSException
-     *             if an error occurs while retrieving statement data
-     */
-    XSQLDA iscDsqlDescribeBind(IscStmtHandle stmtHandle, int daVersion)
-            throws GDSException;
-
-    /**
-     * Execute a statement with only outgoing data.
-     * 
-     * @param trHandle
-     *            Handle to the transaction in which the statement is to be
-     *            executed
-     * @param stmtHandle
-     *            Handle to the statement to be executed
-     * @param daVersion
-     *            Version of XSQLDA to be used
-     * @param xsqlda
-     *            Input data for executing the statement
-     * @throws GDSException
-     *             if an error occurs while executing the statement
-     */
-    void iscDsqlExecute(IscTrHandle trHandle, IscStmtHandle stmtHandle,
-            int daVersion, XSQLDA xsqlda) throws GDSException;
 
     /**
      * Execute a statement with outgoing and incoming data.
@@ -385,61 +303,6 @@ public interface GDS {
     void iscDsqlExecute2(IscTrHandle trHandle, IscStmtHandle stmtHandle,
             int daVersion, XSQLDA inXSQLDA, XSQLDA outXSQLDA)
             throws GDSException;
-
-    /**
-     * Execute a string SQL statement directly, without first allocating a
-     * statement handle. No data is retrieved using this method.
-     * 
-     * @param dbHandle
-     *            Handle to the database where the statement is to be executed
-     * @param trHandle
-     *            Handle to the transaction in which the statement is to be
-     *            executed
-     * @param statement
-     *            SQL command to be executed
-     * @param dialect
-     *            Interbase dialect for the SQL, should be one of the
-     *            <code>SQL_DIALECT_*</code> constants from
-     *            {@link ISCConstants}
-     * @param xsqlda
-     *            Data to be sent to the database for the statement
-     * @throws GDSException
-     *             if an error occurs while executing the statement
-     */
-    void iscDsqlExecuteImmediate(IscDbHandle dbHandle, IscTrHandle trHandle,
-            String statement, int dialect, XSQLDA xsqlda) throws GDSException;
-
-    /**
-     * @deprecated use
-     *             {@link #iscDsqlExecuteImmediate(IscDbHandle, IscTrHandle, byte[], int, XSQLDA)}
-     */
-    @Deprecated
-    void iscDsqlExecuteImmediate(IscDbHandle dbHandle, IscTrHandle trHandle,
-            String statement, String encoding, int dialect, XSQLDA xsqlda)
-            throws GDSException;
-
-    /**
-     * Execute a string SQL statement directly, without first allocating a
-     * statement handle. No data is retrieved using this method.
-     * 
-     * @param dbHandle
-     *            Handle to the database where the statement is to be executed
-     * @param trHandle
-     *            Handle to the transaction in which the statement is to be
-     *            executed
-     * @param statement
-     *            byte array holding the SQL to be executed
-     * @param dialect
-     *            Interbase dialect for the SQL, should be one of the
-     *            <code>SQL_DIALECT_*</code> constants from
-     *            {@link ISCConstants}
-     * @param xsqlda
-     *            Data to be sent to the database for the statement
-     * @throws GDSException
-     *             if an error occurs while executing the statement
-     */
-    void iscDsqlExecuteImmediate(IscDbHandle dbHandle, IscTrHandle trHandle,
-            byte[] statement, int dialect, XSQLDA xsqlda) throws GDSException;
 
     /**
      * Execute a string SQL statement directly, without first allocating a
@@ -623,19 +486,6 @@ public interface GDS {
      */
     byte[] iscDsqlSqlInfo(IscStmtHandle stmtHandle, byte[] items,
             int bufferLength) throws GDSException;
-
-    /**
-     * Fetch count information for a statement. The count information that is
-     * retrieved includes counts for all CRUD operations, and is set in the
-     * handle itself.
-     * 
-     * @param stmt
-     *            Handle to the statement for which count data is to be
-     *            retrieved
-     * @throws GDSException
-     *             if an error occurs while retrieving the count data
-     */
-    void getSqlCounts(IscStmtHandle stmt) throws GDSException;
 
     /**
      * Retrieve an integer value from a sequence of bytes.
@@ -911,22 +761,7 @@ public interface GDS {
      * @return The newly created {@link EventHandle}
      */
     EventHandle createEventHandle(String eventName);
-    
-    /**
-     * Cancel the currently running operation on the server 
-     * 
-     * @param dbHandle Handle to the database operation of which should be
-     * cancelled.
-     * 
-     * @param kind one of {@link ISCConstants#fb_cancel_disable},
-     * {@link ISCConstants#fb_cancel_enable}, {@link ISCConstants#fb_cancel_raise}
-     * or {@link ISCConstants#fb_cancel_abort} 
-     * 
-     * @throws GDSException If a database communication error happens.
-     */
-    void fbCancelOperation(IscDbHandle dbHandle, int kind) 
-        throws GDSException;
-    
+
     /**
      * Get type of this instance.
      * 
