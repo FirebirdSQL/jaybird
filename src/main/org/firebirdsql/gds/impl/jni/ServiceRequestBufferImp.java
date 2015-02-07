@@ -22,6 +22,7 @@ package org.firebirdsql.gds.impl.jni;
 
 import org.firebirdsql.encodings.Encoding;
 import org.firebirdsql.gds.ServiceRequestBuffer;
+import org.firebirdsql.gds.impl.ParameterBufferBase;
 import org.firebirdsql.gds.impl.argument.NumericArgument;
 import org.firebirdsql.gds.impl.argument.StringArgument;
 

@@ -112,13 +112,13 @@ public class ParameterBufferBase implements ParameterBuffer, Serializable {
         return new ArrayList<Parameter>(arguments).iterator();
     }
 
-    protected void writeArgumentsTo(OutputStream outputStream) throws IOException {
+    public void writeArgumentsTo(OutputStream outputStream) throws IOException {
         for (final Argument currentArgument : arguments) {
             currentArgument.writeTo(outputStream);
         }
     }
 
-    protected int getLength() {
+    public int getLength() {
         final List<Argument> argumentsList = getArgumentsList();
         int length = 0;
         for (final Argument currentArgument : argumentsList) {
@@ -131,4 +131,17 @@ public class ParameterBufferBase implements ParameterBuffer, Serializable {
         return arguments;
     }
 
+    @Override
+    public boolean equals(Object other) {
+        if (other == null || !(this.getClass().isAssignableFrom(other.getClass())))
+            return false;
+
+        final ParameterBufferBase otherServiceBufferBase = (ParameterBufferBase) other;
+        return otherServiceBufferBase.getArgumentsList().equals(this.getArgumentsList());
+    }
+
+    @Override
+    public int hashCode() {
+        return getArgumentsList().hashCode();
+    }
 }

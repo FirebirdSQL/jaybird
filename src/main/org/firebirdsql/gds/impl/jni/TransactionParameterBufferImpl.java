@@ -22,6 +22,7 @@ package org.firebirdsql.gds.impl.jni;
 
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.TransactionParameterBuffer;
+import org.firebirdsql.gds.impl.ParameterBufferBase;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;

@@ -22,6 +22,7 @@ package org.firebirdsql.gds.impl.jni;
 
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.ServiceParameterBuffer;
+import org.firebirdsql.gds.impl.ParameterBufferBase;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -29,8 +30,7 @@ import java.io.IOException;
 /**
  * ngds implementation for ServiceParameterBuffer.
  */
-class ServiceParameterBufferImp extends ParameterBufferBase implements
-        ServiceParameterBuffer {
+class ServiceParameterBufferImp extends ParameterBufferBase implements ServiceParameterBuffer {
 
     /**
      * Package local method for obtaining buffer suitable for passing to native
