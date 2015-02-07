@@ -64,10 +64,6 @@ public abstract class BaseGDSImpl extends AbstractGDS {
         return new isc_svc_handle_impl();
     }
 
-    public IscTrHandle createIscTrHandle() {
-        return new isc_tr_handle_impl();
-    }
-
     public ServiceParameterBuffer createServiceParameterBuffer() {
         return new ServiceParameterBufferImp();
     }
@@ -129,34 +125,6 @@ public abstract class BaseGDSImpl extends AbstractGDS {
                 AbstractGDS.DESCRIBE_DATABASE_INFO_BLOCK, 1024), db_handle);
     }
 
-    // isc_create_blob2
-    // ---------------------------------------------------------------------------------------------
-    public void iscCreateBlob2(IscDbHandle db_handle, IscTrHandle tr_handle,
-            IscBlobHandle blob_handle, BlobParameterBuffer blobParameterBuffer)
-            throws GDSException {
-        if (db_handle == null) { 
-            throw new GDSException(ISCConstants.isc_bad_db_handle); 
-        }
-        if (tr_handle == null) { 
-            throw new GDSException(ISCConstants.isc_bad_trans_handle); 
-        }
-        if (blob_handle == null) { 
-            throw new GDSException(ISCConstants.isc_bad_segstr_handle); 
-        }
-
-        final byte[] bpb = blobParameterBuffer == null ? null
-                : ((BlobParameterBufferImp) blobParameterBuffer)
-                        .getBytesForNativeCode();
-
-        synchronized (db_handle) {
-            native_isc_create_blob2(db_handle, tr_handle, blob_handle, bpb);
-
-            blob_handle.setDb(db_handle);
-            blob_handle.setTr(tr_handle);
-            tr_handle.addBlob(blob_handle);
-        }
-    }
-
     // isc_attach_database
     // ---------------------------------------------------------------------------------------------
     public byte[] iscDatabaseInfo(IscDbHandle db_handle, byte[] items,
@@ -185,43 +153,6 @@ public abstract class BaseGDSImpl extends AbstractGDS {
                 // TODO : Invalidate should throw GDSException?
                 throw new GDSException(ISCConstants.isc_network_error, e);
             }
-        }
-    }
-
-    // isc_open_blob2
-    // ---------------------------------------------------------------------------------------------
-    public void iscOpenBlob2(IscDbHandle db_handle, IscTrHandle tr_handle,
-            IscBlobHandle blob_handle, BlobParameterBuffer blobParameterBuffer)
-            throws GDSException {
-        if (db_handle == null) { 
-            throw new GDSException(ISCConstants.isc_bad_db_handle); 
-        }
-        if (tr_handle == null) { 
-            throw new GDSException(ISCConstants.isc_bad_trans_handle); 
-        }
-        if (blob_handle == null) { 
-            throw new GDSException(ISCConstants.isc_bad_segstr_handle); 
-        }
-
-        final byte[] bpb = blobParameterBuffer == null ? null
-                : ((BlobParameterBufferImp) blobParameterBuffer)
-                        .getBytesForNativeCode();
-
-        synchronized (db_handle) {
-            native_isc_open_blob2(db_handle, tr_handle, blob_handle, bpb);
-
-            blob_handle.setDb(db_handle);
-            blob_handle.setTr(tr_handle);
-            tr_handle.addBlob(blob_handle);
-        }
-    }
-
-    public void iscSeekBlob(IscBlobHandle handle, int position, int mode)
-            throws GDSException {
-        isc_blob_handle_impl blob = (isc_blob_handle_impl) handle;
-        synchronized (handle.getDb()) {
-            // TODO Change native method to accept IscBlobHandle
-            native_isc_seek_blob(blob, position, mode);
         }
     }
 
@@ -290,21 +221,12 @@ public abstract class BaseGDSImpl extends AbstractGDS {
     public abstract void native_isc_attach_database(byte[] file_name,
             IscDbHandle db_handle, byte[] dpbBytes);
 
-    public abstract void native_isc_create_blob2(IscDbHandle db,
-            IscTrHandle tr, IscBlobHandle blob, byte[] dpbBytes);
-
     public abstract void native_isc_database_info(IscDbHandle db_handle,
             int item_length, byte[] items, int buffer_length, byte[] buffer)
             throws GDSException;
 
     public abstract void native_isc_detach_database(IscDbHandle db_handle)
             throws GDSException;
-
-    public abstract void native_isc_open_blob2(IscDbHandle db, IscTrHandle tr,
-            IscBlobHandle blob, byte[] dpbBytes);
-
-    public abstract void native_isc_seek_blob(isc_blob_handle_impl handle,
-            int position, int mode) throws GDSException;
 
     // Services API abstract methods
     public abstract void native_isc_service_attach(String service,

@@ -200,28 +200,6 @@ public abstract class AbstractJavaGDSImpl extends AbstractGDS implements GDS {
 		}
 	}
 
-	public void iscSeekBlob(IscBlobHandle handle, int position, int seekMode)
-			throws GDSException {
-		boolean debug = log != null && log.isDebugEnabled();
-		isc_db_handle_impl db = (isc_db_handle_impl) handle.getDb();
-		synchronized (handle) {
-			try {
-				if (debug)
-					log.debug("op_info_blob ");
-				db.out.writeInt(op_seek_blob);
-				db.out.writeInt(handle.getRblId());
-				db.out.writeInt(seekMode);
-				db.out.writeInt(position);
-				db.out.flush();
-				if (debug)
-					log.debug("sent");
-				receiveResponse(db, -1);
-			} catch (IOException ex) {
-				throw new GDSException(ISCConstants.isc_network_error, ex);
-			}
-		}
-	}
-
 	public void iscDetachDatabase(IscDbHandle db_handle) throws GDSException {
 		boolean debug = log != null && log.isDebugEnabled();
 		isc_db_handle_impl db = (isc_db_handle_impl) db_handle;
@@ -257,84 +235,9 @@ public abstract class AbstractJavaGDSImpl extends AbstractGDS implements GDS {
 		}
 	}
 
-	// -----------------------------------------------
-	// Blob methods
-	// -----------------------------------------------
-
-	public void iscCreateBlob2(IscDbHandle db_handle, IscTrHandle tr_handle,
-			IscBlobHandle blob_handle, // contains blob_id
-			BlobParameterBuffer blobParameterBuffer) throws GDSException {
-		openOrCreateBlob(db_handle, tr_handle, blob_handle,
-				blobParameterBuffer,
-				(blobParameterBuffer == null) ? op_create_blob
-						: op_create_blob2);
-	}
-
-	public void iscOpenBlob2(IscDbHandle db_handle, IscTrHandle tr_handle,
-			IscBlobHandle blob_handle, // contains blob_id
-			BlobParameterBuffer blobParameterBuffer) throws GDSException {
-		openOrCreateBlob(db_handle, tr_handle, blob_handle,
-				blobParameterBuffer,
-				(blobParameterBuffer == null) ? op_open_blob : op_open_blob2);
-	}
-
-	private void openOrCreateBlob(IscDbHandle db_handle,
-			IscTrHandle tr_handle, IscBlobHandle blob_handle, // contains
-			// blob_id
-			BlobParameterBuffer blobParameterBuffer, int op)
-			throws GDSException {
-		boolean debug = log != null && log.isDebugEnabled();
-		isc_db_handle_impl db = (isc_db_handle_impl) db_handle;
-		if (db == null) {
-			throw new GDSException(ISCConstants.isc_bad_db_handle);
-		}
-		if (tr_handle == null) {
-			throw new GDSException(ISCConstants.isc_bad_trans_handle);
-		}
-		if (blob_handle == null) {
-			throw new GDSException(ISCConstants.isc_bad_segstr_handle);
-		}
-		synchronized (db) {
-			try {
-
-				if (debug) {
-					log
-							.debug((blobParameterBuffer == null) ? "op_open/create_blob "
-									: "op_open/create_blob2 ");
-					log.debug("op: " + op);
-				}
-				db.out.writeInt(op);
-				if (blobParameterBuffer != null) {
-					db.out.writeTyped(ISCConstants.isc_bpb_version1,
-							(Xdrable) blobParameterBuffer);
-				}
-				db.out.writeInt(tr_handle.getTransactionId());
-				if (debug)
-					log.debug("sending blob_id: " + blob_handle.getBlobId());
-				db.out.writeLong(blob_handle.getBlobId());
-				db.out.flush();
-
-				if (debug)
-					log.debug("sent");
-				receiveResponse(db, -1);
-				blob_handle.setDb(db);
-				blob_handle.setTr(tr_handle);
-				blob_handle.setRblId(db.getResp_object());
-				blob_handle.setBlobId(db.getResp_blob_id());
-				tr_handle.addBlob(blob_handle);
-			} catch (IOException ioe) {
-				throw new GDSException(ISCConstants.isc_net_read_err);
-			}
-		}
-	}
-
 	// Handle declaration methods
 	public IscDbHandle createIscDbHandle() {
 		return new isc_db_handle_impl();
-	}
-
-	public IscTrHandle createIscTrHandle() {
-		return new isc_tr_handle_impl();
 	}
 
 	public void connect(isc_db_handle_impl db, String host, Integer port,

@@ -65,14 +65,6 @@ public interface GDS {
     IscDbHandle createIscDbHandle();
 
     /**
-     * Factory method to create a new {@link IscTrHandle} instance that
-     * is linked to the current <code>GDS</code> implementation.
-     * 
-     * @return A new {@link IscTrHandle} instance
-     */
-    IscTrHandle createIscTrHandle();
-
-    /**
      * Factory method to create a new {@link IscSvcHandle} instance
      * that is linked to the current <code>GDS</code> implemenation.
      * 
@@ -211,70 +203,6 @@ public interface GDS {
      * @return The long value retrieved from the bytes
      */
     long iscVaxLong(byte[] buffer, int pos, int length);
-
-    // -----------------------------------------------
-    // Blob methods
-    // -----------------------------------------------
-
-    /**
-     * Create a new blob within a given transaction.
-     * 
-     * @param db
-     *            Handle to the database in which the blob will be created
-     * @param tr
-     *            Handle to the transaction in which the blob will be created
-     * @param blob
-     *            Handle to be attached to the newly created blob
-     * @param blobParameterBuffer
-     *            contains parameters for creation of the new blob, can be null
-     * @throws GDSException
-     *             if an error occurs while creating the blob
-     */
-    void iscCreateBlob2(IscDbHandle db, IscTrHandle tr, IscBlobHandle blob,
-            BlobParameterBuffer blobParameterBuffer) throws GDSException;
-
-    /**
-     * Open a blob within a given transaction.
-     * 
-     * @param db
-     *            Handle to the database in which the blob will be opened
-     * @param tr
-     *            Handle to the transaction in which the blob will be opened
-     * @param blob
-     *            Handle to the blob to be opened
-     * @param blobParameterBuffer
-     *            Contains parameters for the blob
-     * @throws GDSException
-     *             if an error occurs while opening the blob
-     */
-    void iscOpenBlob2(IscDbHandle db, IscTrHandle tr, IscBlobHandle blob,
-            BlobParameterBuffer blobParameterBuffer) throws GDSException;
-
-    /**
-     * Seek to a given position in a blob. <code>seekMode</code> is used in
-     * the same way as the system fseek call, i.e.:
-     * <ul>
-     * <li>0 - seek relative to the start of the blob
-     * <li>1 - seek relative to the current position in the blob
-     * <li>2 - seek relative to the end of the blob
-     * </ul>
-     * <p>
-     * <code>position</code> is the offset number of bytes to seek to,
-     * relative to the position described by <code>seekMode</code>. Seeking
-     * can only be done in a forward direction.
-     * 
-     * @param handle
-     *            Handle to the blob for which seeking will be done
-     * @param position
-     *            The offset number of bytes to seek to
-     * @param seekMode
-     *            Describes the base point to be used in seeking, should be
-     *            negative if <code>seekMode</code> is equal to 2
-     * @throws GDSException
-     *             if an error occurs while seeking
-     */
-    void iscSeekBlob(IscBlobHandle handle, int position, int seekMode)
-            throws GDSException;
 
     // -----------------------------------------------
     // Services API methods
