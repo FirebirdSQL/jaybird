@@ -33,7 +33,7 @@ package org.firebirdsql.gds;
  * </p>
  *
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
- * @since 2.3
+ * @since 3.0
  */
 @SuppressWarnings("unused")
 public interface BlrConstants {
