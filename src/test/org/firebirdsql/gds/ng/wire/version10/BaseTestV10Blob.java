@@ -22,7 +22,7 @@ package org.firebirdsql.gds.ng.wire.version10;
 
 import org.firebirdsql.encodings.EncodingFactory;
 import org.firebirdsql.gds.TransactionParameterBuffer;
-import org.firebirdsql.gds.impl.wire.TransactionParameterBufferImpl;
+import org.firebirdsql.gds.impl.TransactionParameterBufferImpl;
 import org.firebirdsql.gds.ng.BaseTestBlob;
 import org.firebirdsql.gds.ng.FbConnectionProperties;
 import org.firebirdsql.gds.ng.FbDatabase;

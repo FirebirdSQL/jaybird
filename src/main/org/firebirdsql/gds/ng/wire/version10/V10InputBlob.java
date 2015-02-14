@@ -23,7 +23,6 @@ package org.firebirdsql.gds.ng.wire.version10;
 import org.firebirdsql.gds.BlobParameterBuffer;
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.impl.wire.XdrOutputStream;
-import org.firebirdsql.gds.impl.wire.Xdrable;
 import org.firebirdsql.gds.ng.FbExceptionBuilder;
 import org.firebirdsql.gds.ng.listeners.DatabaseListener;
 import org.firebirdsql.gds.ng.wire.*;
@@ -65,8 +64,7 @@ public class V10InputBlob extends AbstractFbWireInputBlob implements FbWireBlob,
                         xdrOut.writeInt(op_open_blob);
                     } else {
                         xdrOut.writeInt(op_open_blob2);
-                        xdrOut.writeTyped(ISCConstants.isc_bpb_version1,
-                                (Xdrable) blobParameterBuffer);
+                        xdrOut.writeTyped(blobParameterBuffer);
                     }
                     xdrOut.writeInt(getTransaction().getHandle());
                     xdrOut.writeLong(getBlobId());

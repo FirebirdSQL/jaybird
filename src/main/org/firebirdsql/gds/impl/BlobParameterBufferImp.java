@@ -18,23 +18,18 @@
  *
  * All rights reserved.
  */
-package org.firebirdsql.gds.impl.wire;
+package org.firebirdsql.gds.impl;
 
-import org.firebirdsql.gds.TransactionParameterBuffer;
+import org.firebirdsql.gds.BlobParameterBuffer;
+import org.firebirdsql.gds.ISCConstants;
 
 /**
- * Implementation of the {@link org.firebirdsql.gds.TransactionParameterBuffer}
- * interface.
+ * Implementation of BlobParameterBuffer.
  */
-public class TransactionParameterBufferImpl extends ParameterBufferBase implements TransactionParameterBuffer {
+public class BlobParameterBufferImp extends ParameterBufferBase implements BlobParameterBuffer {
 
-    @Override
-    public TransactionParameterBuffer deepCopy() {
-        TransactionParameterBufferImpl result = new TransactionParameterBufferImpl();
-
-        result.getArgumentsList().addAll(this.getArgumentsList());
-
-        return result;
+    public BlobParameterBufferImp() {
+        super(ISCConstants.isc_bpb_version1);
     }
 
 }

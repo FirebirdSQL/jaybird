@@ -1,7 +1,7 @@
 /*
  * $Id$
- * 
- * Firebird Open Source J2ee connector - jdbc driver
+ *
+ * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -14,16 +14,14 @@
  * This file was created by members of the firebird development team.
  * All individual contributions remain the Copyright (C) of those
  * individuals.  Contributors to this file are either listed here or
- * can be obtained from a CVS history command.
+ * can be obtained from a source control history command.
  *
  * All rights reserved.
  */
 package org.firebirdsql.gds.impl.jni;
 
 import org.firebirdsql.gds.*;
-import org.firebirdsql.gds.impl.AbstractGDS;
-import org.firebirdsql.gds.impl.DatabaseParameterBufferExtension;
-import org.firebirdsql.gds.impl.GDSType;
+import org.firebirdsql.gds.impl.*;
 import org.firebirdsql.logging.Logger;
 import org.firebirdsql.logging.LoggerFactory;
 
@@ -94,7 +92,7 @@ public abstract class BaseGDSImpl extends AbstractGDS {
                 db_handle.addWarning(new GDSWarning(WARNING_CONNECT_TIMEOUT_NATIVE));
             }
 
-            dpbBytes = ((DatabaseParameterBufferImp) cleanDPB).getBytesForNativeCode();
+            dpbBytes = cleanDPB.toBytes();
             filenameCharset = databaseParameterBuffer.getArgumentAsString(DatabaseParameterBufferExtension.FILENAME_CHARSET);
         } else {
             dpbBytes = null;
@@ -160,9 +158,8 @@ public abstract class BaseGDSImpl extends AbstractGDS {
 
     public void iscServiceAttach(String service, IscSvcHandle serviceHandle,
             ServiceParameterBuffer serviceParameterBuffer) throws GDSException {
-        final ServiceParameterBufferImp serviceParameterBufferImp = (ServiceParameterBufferImp) serviceParameterBuffer;
-        final byte[] serviceParameterBufferBytes = serviceParameterBufferImp == null ? null
-                : serviceParameterBufferImp.toByteArray();
+        final byte[] serviceParameterBufferBytes = serviceParameterBuffer == null ? null
+                : serviceParameterBuffer.toBytesWithType();
 
         synchronized (serviceHandle) {
             if (serviceHandle.isValid())
@@ -186,13 +183,10 @@ public abstract class BaseGDSImpl extends AbstractGDS {
             ServiceParameterBuffer serviceParameterBuffer,
             ServiceRequestBuffer serviceRequestBuffer, byte[] resultBuffer)
             throws GDSException {
-        final ServiceParameterBufferImp serviceParameterBufferImp = (ServiceParameterBufferImp) serviceParameterBuffer;
-        final byte[] serviceParameterBufferBytes = serviceParameterBufferImp == null ? null
-                : serviceParameterBufferImp.toByteArray();
+        final byte[] serviceParameterBufferBytes = serviceParameterBuffer == null ? null
+                : serviceParameterBuffer.toBytesWithType();
 
-        final ServiceRequestBufferImp serviceRequestBufferImp = (ServiceRequestBufferImp) serviceRequestBuffer;
-        final byte[] serviceRequestBufferBytes = serviceRequestBufferImp == null ? null
-                : serviceRequestBufferImp.toByteArray();
+        final byte[] serviceRequestBufferBytes = serviceRequestBuffer == null ? null : serviceRequestBuffer.toBytes();
 
         synchronized (serviceHandle) {
             if (serviceHandle.isNotValid())
@@ -206,9 +200,7 @@ public abstract class BaseGDSImpl extends AbstractGDS {
 
     public void iscServiceStart(IscSvcHandle serviceHandle,
             ServiceRequestBuffer serviceRequestBuffer) throws GDSException {
-        final ServiceRequestBufferImp serviceRequestBufferImp = (ServiceRequestBufferImp) serviceRequestBuffer;
-        final byte[] serviceRequestBufferBytes = serviceRequestBufferImp == null ? null
-                : serviceRequestBufferImp.toByteArray();
+        final byte[] serviceRequestBufferBytes = serviceRequestBuffer == null ? null : serviceRequestBuffer.toBytes();
 
         synchronized (serviceHandle) {
             if (serviceHandle.isNotValid())

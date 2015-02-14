@@ -24,7 +24,6 @@ import org.firebirdsql.gds.BlobParameterBuffer;
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.impl.wire.WireProtocolConstants;
 import org.firebirdsql.gds.impl.wire.XdrOutputStream;
-import org.firebirdsql.gds.impl.wire.Xdrable;
 import org.firebirdsql.gds.ng.AbstractFbBlob;
 import org.firebirdsql.gds.ng.FbExceptionBuilder;
 
@@ -92,11 +91,6 @@ public abstract class AbstractFbWireBlob extends AbstractFbBlob implements FbWir
     @Override
     protected void cancelImpl() throws SQLException {
         releaseBlob(WireProtocolConstants.op_cancel_blob);
-    }
-
-    @Override
-    protected boolean isValidBlobParameterBufferClass(Class<? extends BlobParameterBuffer> blobParameterBufferClass) {
-        return Xdrable.class.isAssignableFrom(blobParameterBufferClass);
     }
 
     // NOTE If we need to override some of the blob operations below in the future, consider introducing a separate

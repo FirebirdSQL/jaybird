@@ -18,23 +18,21 @@
  *
  * All rights reserved.
  */
-package org.firebirdsql.gds.impl.wire;
+package org.firebirdsql.gds.impl;
 
 import org.firebirdsql.encodings.Encoding;
+import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.ServiceRequestBuffer;
 import org.firebirdsql.gds.impl.argument.NumericArgument;
 import org.firebirdsql.gds.impl.argument.StringArgument;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 
 /**
- * Implementation for ServiceRequestBufferImp.
+ * Implementation of ServiceRequestBufferImp.
  */
-class ServiceRequestBufferImp extends ParameterBufferBase implements ServiceRequestBuffer {
-
-    private final int taskIdentifier;
+public class ServiceRequestBufferImp extends ParameterBufferBase implements ServiceRequestBuffer {
 
     /**
      * Every ServiceRequestBuffer has an associated taskIdentifier.
@@ -42,12 +40,8 @@ class ServiceRequestBufferImp extends ParameterBufferBase implements ServiceRequ
      * @param taskIdentifier
      *         Service request task
      */
-    ServiceRequestBufferImp(int taskIdentifier) {
-        this.taskIdentifier = taskIdentifier;
-    }
-
-    public int getTaskIdentifier() {
-        return taskIdentifier;
+    public ServiceRequestBufferImp(int taskIdentifier) {
+        super(ISCConstants.isc_spb_current_version, new byte[] { (byte) taskIdentifier });
     }
 
     @Override
@@ -94,19 +88,6 @@ class ServiceRequestBufferImp extends ParameterBufferBase implements ServiceRequ
                 outputStream.write(value);
             }
         });
-    }
-
-    @Override
-    public void write(XdrOutputStream outputStream) throws IOException {
-        outputStream.write(taskIdentifier);
-        super.write(outputStream);
-    }
-
-    public byte[] toByteArray() throws IOException {
-        final ByteArrayOutputStream out = new ByteArrayOutputStream();
-        final XdrOutputStream outputStream = new XdrOutputStream(out, false);
-        write(outputStream);
-        return out.toByteArray();
     }
 
     private static final class ServiceStringArgument extends StringArgument {

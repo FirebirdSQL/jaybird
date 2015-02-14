@@ -22,7 +22,7 @@ package org.firebirdsql.gds.ng;
 
 import org.firebirdsql.gds.DatabaseParameterBuffer;
 import org.firebirdsql.gds.Parameter;
-import org.firebirdsql.gds.impl.wire.DatabaseParameterBufferImp;
+import org.firebirdsql.gds.impl.DatabaseParameterBufferImp;
 import org.firebirdsql.logging.Logger;
 import org.firebirdsql.logging.LoggerFactory;
 

@@ -28,7 +28,6 @@ import org.firebirdsql.gds.TransactionParameterBuffer;
 import org.firebirdsql.gds.impl.DatabaseParameterBufferExtension;
 import org.firebirdsql.gds.impl.wire.XdrInputStream;
 import org.firebirdsql.gds.impl.wire.XdrOutputStream;
-import org.firebirdsql.gds.impl.wire.Xdrable;
 import org.firebirdsql.gds.ng.*;
 import org.firebirdsql.gds.ng.fields.BlrCalculator;
 import org.firebirdsql.gds.ng.wire.*;
@@ -145,7 +144,7 @@ public class V10Database extends AbstractFbWireDatabase implements FbWireDatabas
 
         dpb = ((DatabaseParameterBufferExtension) dpb).removeExtensionParams();
 
-        xdrOut.writeTyped(ISCConstants.isc_dpb_version1, (Xdrable) dpb);
+        xdrOut.writeTyped(dpb);
     }
 
     /**
@@ -277,7 +276,7 @@ public class V10Database extends AbstractFbWireDatabase implements FbWireDatabas
                 final XdrOutputStream xdrOut = getXdrOut();
                 xdrOut.writeInt(op_transaction);
                 xdrOut.writeInt(getHandle());
-                xdrOut.writeTyped(ISCConstants.isc_tpb_version3, (Xdrable) tpb);
+                xdrOut.writeTyped(tpb);
                 xdrOut.flush();
             } catch (IOException ioex) {
                 throw new FbExceptionBuilder().exception(ISCConstants.isc_net_write_err).cause(ioex).toSQLException();

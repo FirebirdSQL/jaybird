@@ -26,10 +26,9 @@ import org.firebirdsql.encodings.Encoding;
 import org.firebirdsql.encodings.EncodingDefinition;
 import org.firebirdsql.encodings.IEncodingFactory;
 import org.firebirdsql.gds.*;
+import org.firebirdsql.gds.impl.BlobParameterBufferImp;
 import org.firebirdsql.gds.impl.DatabaseParameterBufferExtension;
-import org.firebirdsql.gds.impl.jni.BlobParameterBufferImp;
-import org.firebirdsql.gds.impl.jni.DatabaseParameterBufferImp;
-import org.firebirdsql.gds.impl.jni.TransactionParameterBufferImpl;
+import org.firebirdsql.gds.impl.TransactionParameterBufferImpl;
 import org.firebirdsql.gds.ng.*;
 import org.firebirdsql.gds.ng.listeners.TransactionListener;
 import org.firebirdsql.jdbc.FBSQLException;
@@ -123,19 +122,12 @@ public class JnaDatabase extends AbstractFbDatabase implements TransactionListen
         attachOrCreate(dpb, false);
     }
 
-    protected void attachOrCreate(DatabaseParameterBuffer dpb, boolean create) throws SQLException {
+    protected void attachOrCreate(final DatabaseParameterBuffer dpb, final boolean create) throws SQLException {
         if (isAttached()) {
             throw new SQLException("Already attached to a database");
         }
-        if (!(dpb instanceof DatabaseParameterBufferImp)) {
-            DatabaseParameterBuffer tempDpb = new DatabaseParameterBufferImp();
-            for (Parameter parameter : dpb) {
-                parameter.copyTo(tempDpb, getEncoding());
-            }
-            dpb = tempDpb;
-        }
         final byte[] dbName = getEncoding().encodeToCharset(getDatabaseUrl());
-        final byte[] dpbArray = ((DatabaseParameterBufferImp) dpb).getBytesForNativeCode();
+        final byte[] dpbArray = dpb.toBytesWithType();
 
         synchronized (getSynchronizationObject()) {
             try {
@@ -214,18 +206,10 @@ public class JnaDatabase extends AbstractFbDatabase implements TransactionListen
     }
 
     @Override
-    public JnaTransaction startTransaction(TransactionParameterBuffer tpb) throws SQLException {
+    public JnaTransaction startTransaction(final TransactionParameterBuffer tpb) throws SQLException {
         checkConnected();
-        if (!(tpb instanceof TransactionParameterBufferImpl)) {
-            // TODO Should we support this?
-            TransactionParameterBufferImpl tempTpb = new TransactionParameterBufferImpl();
-            for (Parameter parameter : tpb) {
-                parameter.copyTo(tempTpb, getEncoding());
-            }
-            tpb = tempTpb;
-        }
         final IntByReference transactionHandle = new IntByReference(0);
-        byte[] tpbArray = ((TransactionParameterBufferImpl) tpb).getBytesForNativeCode();
+        byte[] tpbArray = tpb.toBytesWithType();
         synchronized (getSynchronizationObject()) {
             clientLibrary.isc_start_transaction(statusVector, transactionHandle, (short) 1, handle, (short) tpbArray.length, tpbArray);
             processStatusVector();
