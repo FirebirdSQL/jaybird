@@ -15,6 +15,8 @@ import java.sql.Statement;
 
 import static org.firebirdsql.common.FBTestProperties.*;
 import static org.firebirdsql.common.JdbcResourceHelper.closeQuietly;
+import static org.firebirdsql.gds.VaxEncoding.iscVaxInteger;
+import static org.firebirdsql.gds.VaxEncoding.iscVaxInteger2;
 
 /**
  * TODO: This test assumes it is run against localhost 
@@ -191,8 +193,8 @@ public class TestBackupManager extends FBTestBase {
             final byte[] databaseInfo = currentDatabase.getDatabaseInfo(
                     new byte[] { ISCConstants.isc_info_page_size }, 10);
             assertEquals("Unexpected info item", ISCConstants.isc_info_page_size, databaseInfo[0]);
-            int length = currentDatabase.iscVaxInteger2(databaseInfo, 1);
-            int pageSize = currentDatabase.iscVaxInteger(databaseInfo, 3, length);
+            int length = iscVaxInteger2(databaseInfo, 1);
+            int pageSize = iscVaxInteger(databaseInfo, 3, length);
             assertEquals("Unexpected page size", 16384, pageSize);
         } finally {
             closeQuietly(con);

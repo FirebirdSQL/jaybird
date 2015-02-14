@@ -28,6 +28,9 @@ import org.firebirdsql.logging.LoggerFactory;
 
 import java.sql.SQLException;
 
+import static org.firebirdsql.gds.VaxEncoding.iscVaxInteger;
+import static org.firebirdsql.gds.VaxEncoding.iscVaxInteger2;
+
 /**
  * InfoProcessor to retrieve the statement information associated with {@link org.firebirdsql.gds.ng.AbstractFbStatement#getStatementInfoRequestItems()}
  * and {@link org.firebirdsql.gds.ng.AbstractFbStatement#getParameterDescriptionInfoRequestItems()}.
@@ -232,15 +235,15 @@ public final class StatementInfoProcessor implements InfoProcessor<InfoProcessor
     }
 
     private int readIntValue(StatementInfo info) {
-        int len = database.iscVaxInteger2(info.buffer, info.currentIndex);
+        int len = iscVaxInteger2(info.buffer, info.currentIndex);
         info.currentIndex += 2;
-        int value = database.iscVaxInteger(info.buffer, info.currentIndex, len);
+        int value = iscVaxInteger(info.buffer, info.currentIndex, len);
         info.currentIndex += len;
         return value;
     }
 
     private String readStringValue(StatementInfo info) {
-        int len = database.iscVaxInteger2(info.buffer, info.currentIndex);
+        int len = iscVaxInteger2(info.buffer, info.currentIndex);
         info.currentIndex += 2;
         // TODO use correct characterset
         String value = new String(info.buffer, info.currentIndex, len);

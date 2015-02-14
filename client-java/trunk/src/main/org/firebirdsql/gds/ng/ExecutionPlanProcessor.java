@@ -24,6 +24,8 @@ import org.firebirdsql.gds.ISCConstants;
 
 import java.sql.SQLException;
 
+import static org.firebirdsql.gds.VaxEncoding.iscVaxInteger2;
+
 /**
  * InfoProcessor to retrieve the (normal) execution plan of a statement.
  *
@@ -64,7 +66,7 @@ public class ExecutionPlanProcessor implements InfoProcessor<String> {
             throw new FbExceptionBuilder().exception(ISCConstants.isc_infunk).toSQLException();
         }
 
-        int len = statement.getDatabase().iscVaxInteger2(buffer, 1);
+        int len = iscVaxInteger2(buffer, 1);
         if (len > 1) {
             // Trimming, because first character is a linefeed (0x0A)
             // Not skipping to prevent (potential) encoding issues

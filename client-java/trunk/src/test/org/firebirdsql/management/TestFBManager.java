@@ -30,6 +30,8 @@ import org.junit.rules.ExpectedException;
 import java.sql.DriverManager;
 
 import static org.firebirdsql.common.FBTestProperties.*;
+import static org.firebirdsql.gds.VaxEncoding.iscVaxInteger;
+import static org.firebirdsql.gds.VaxEncoding.iscVaxInteger2;
 import static org.junit.Assert.*;
 
 /**
@@ -102,8 +104,8 @@ public class TestFBManager {
                     final byte[] databaseInfo = currentDatabase.getDatabaseInfo(
                             new byte[] { ISCConstants.isc_info_page_size }, 10);
                     assertEquals("Unexpected info item", ISCConstants.isc_info_page_size, databaseInfo[0]);
-                    int length = currentDatabase.iscVaxInteger2(databaseInfo, 1);
-                    int pageSize = currentDatabase.iscVaxInteger(databaseInfo, 3, length);
+                    int length = iscVaxInteger2(databaseInfo, 1);
+                    int pageSize = iscVaxInteger(databaseInfo, 3, length);
                     assertEquals("Unexpected page size", 16384, pageSize);
                 } finally {
                     connection.close();

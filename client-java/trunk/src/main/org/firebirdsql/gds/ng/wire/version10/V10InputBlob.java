@@ -31,6 +31,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.sql.SQLException;
 
+import static org.firebirdsql.gds.VaxEncoding.iscVaxInteger2;
 import static org.firebirdsql.gds.impl.wire.WireProtocolConstants.*;
 
 /**
@@ -131,7 +132,7 @@ public class V10InputBlob extends AbstractFbWireInputBlob implements FbWireBlob,
             final ByteArrayOutputStream bos = new ByteArrayOutputStream(actualSize);
             int position = 0;
             while (position < responseBuffer.length) {
-                int segmentLength = database.iscVaxInteger2(responseBuffer, position);
+                int segmentLength = iscVaxInteger2(responseBuffer, position);
                 position += 2;
                 bos.write(responseBuffer, position, segmentLength);
                 position += segmentLength;

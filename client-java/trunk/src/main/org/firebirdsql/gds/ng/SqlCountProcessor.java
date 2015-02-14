@@ -24,6 +24,9 @@ import org.firebirdsql.gds.ISCConstants;
 
 import java.sql.SQLException;
 
+import static org.firebirdsql.gds.VaxEncoding.iscVaxInteger2;
+import static org.firebirdsql.gds.VaxEncoding.iscVaxLong;
+
 /**
  * Info processor for retrieving affected record count.
  *
@@ -56,9 +59,9 @@ public class SqlCountProcessor implements InfoProcessor<SqlCountHolder> {
             long selectCount = 0;
             int t;
             while ((t = infoResponse[pos++]) != ISCConstants.isc_info_end) {
-                final int countLength = statement.getDatabase().iscVaxInteger2(infoResponse, pos);
+                final int countLength = iscVaxInteger2(infoResponse, pos);
                 pos += 2;
-                final long count = statement.getDatabase().iscVaxLong(infoResponse, pos, countLength);
+                final long count = iscVaxLong(infoResponse, pos, countLength);
                 switch (t) {
                 case ISCConstants.isc_info_req_select_count:
                     selectCount = count;
