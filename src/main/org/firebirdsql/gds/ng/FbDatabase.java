@@ -29,7 +29,6 @@ package org.firebirdsql.gds.ng;
 import org.firebirdsql.encodings.Encoding;
 import org.firebirdsql.encodings.IEncodingFactory;
 import org.firebirdsql.gds.BlobParameterBuffer;
-import org.firebirdsql.gds.DatabaseParameterBuffer;
 import org.firebirdsql.gds.TransactionParameterBuffer;
 import org.firebirdsql.gds.impl.GDSServerVersion;
 import org.firebirdsql.gds.ng.listeners.DatabaseListener;
@@ -287,62 +286,4 @@ public interface FbDatabase {
      */
     void removeDatabaseListener(DatabaseListener listener);
 
-    /**
-     * Reads Vax style integers from the supplied buffer, starting at
-     * <code>startPosition</code> and reading for <code>length</code> bytes.
-     * <p>
-     * This method is useful for lengths up to 4 bytes (ie normal Java integers
-     * (<code>int</code>). For larger lengths it will return 0. Use
-     * {@link #iscVaxLong(byte[], int, int)} for reading values with length up
-     * to 8 bytes.
-     * </p>
-     *
-     * @param buffer
-     *         The byte array from which the integer is to be retrieved
-     * @param startPosition
-     *         The offset starting position from which to start retrieving
-     *         byte values
-     * @return The integer value retrieved from the bytes
-     * @see #iscVaxLong(byte[], int, int)
-     * @see #iscVaxInteger2(byte[], int)
-     */
-    int iscVaxInteger(byte[] buffer, int startPosition, int length);
-
-    /**
-     * Reads Vax style integers from the supplied buffer, starting at
-     * <code>startPosition</code> and reading for <code>length</code> bytes.
-     * <p>
-     * This method is useful for lengths up to 8 bytes (ie normal Java longs (
-     * <code>long</code>). For larger lengths it will return 0.
-     * </p>
-     *
-     * @param buffer
-     *         The byte array from which the integer is to be retrieved
-     * @param startPosition
-     *         The offset starting position from which to start retrieving
-     *         byte values
-     * @return The integer value retrieved from the bytes
-     * @see #iscVaxLong(byte[], int, int)
-     * @see #iscVaxInteger2(byte[], int)
-     */
-    long iscVaxLong(byte[] buffer, int startPosition, int length);
-
-    /**
-     * Variant of {@link #iscVaxInteger(byte[], int, int)} specifically
-     * for two-byte integers.
-     * <p>
-     * Implementations can either delegate to {@link #iscVaxInteger(byte[], int, int)},
-     * or implement an optimized version.
-     * </p>
-     *
-     * @param buffer
-     *         The byte array from which the integer is to be retrieved
-     * @param startPosition
-     *         The offset starting position from which to start retrieving
-     *         byte values
-     * @return The integer value retrieved from the bytes
-     * @see #iscVaxInteger(byte[], int, int)
-     * @see #iscVaxLong(byte[], int, int)
-     */
-    int iscVaxInteger2(byte[] buffer, int startPosition);
 }

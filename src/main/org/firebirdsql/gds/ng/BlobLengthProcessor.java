@@ -24,6 +24,9 @@ import org.firebirdsql.gds.ISCConstants;
 
 import java.sql.SQLException;
 
+import static org.firebirdsql.gds.VaxEncoding.iscVaxInteger2;
+import static org.firebirdsql.gds.VaxEncoding.iscVaxLong;
+
 /**
  * Blob information processor for retrieving blob length.
  *
@@ -47,8 +50,8 @@ public class BlobLengthProcessor implements InfoProcessor<Long> {
         if (infoResponse.length == 0 || infoResponse[0] != ISCConstants.isc_info_blob_total_length)
             throw new FbExceptionBuilder().exception(ISCConstants.isc_req_sync).toSQLException();
 
-        int dataLength = blob.getDatabase().iscVaxInteger2(infoResponse, 1);
-        return blob.getDatabase().iscVaxLong(infoResponse, 3, dataLength);
+        int dataLength = iscVaxInteger2(infoResponse, 1);
+        return iscVaxLong(infoResponse, 3, dataLength);
     }
 
     public byte[] getBlobLengthItems() {

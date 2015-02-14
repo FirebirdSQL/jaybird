@@ -37,6 +37,8 @@ import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import static org.firebirdsql.gds.ISCConstants.*;
+import static org.firebirdsql.gds.VaxEncoding.iscVaxInteger;
+import static org.firebirdsql.gds.VaxEncoding.iscVaxInteger2;
 
 /**
  * Abstract implementation of {@link org.firebirdsql.gds.ng.FbDatabase} with behavior common to the various
@@ -52,8 +54,7 @@ public abstract class AbstractFbDatabase implements FbDatabase, TransactionListe
     /**
      * Info-request block for database information.
      * <p>
-     * TODO Move to FbDatabase interface? Will this vary with versions of
-     * Firebird?
+     * TODO Move to FbDatabase interface? Will this vary with versions of Firebird?
      * </p>
      */
     // @formatter:off
@@ -309,43 +310,6 @@ public abstract class AbstractFbDatabase implements FbDatabase, TransactionListe
             throws SQLException {
         byte[] responseBuffer = getDatabaseInfo(requestItems, bufferLength);
         return infoProcessor.process(responseBuffer);
-    }
-
-    @Override
-    public int iscVaxInteger(final byte[] buffer, final int startPosition, int length) {
-        if (length > 4) {
-            return 0;
-        }
-        int value = 0;
-        int shift = 0;
-
-        int index = startPosition;
-        while (--length >= 0) {
-            value += (buffer[index++] & 0xff) << shift;
-            shift += 8;
-        }
-        return value;
-    }
-
-    @Override
-    public long iscVaxLong(final byte[] buffer, final int startPosition, int length) {
-        if (length > 8) {
-            return 0;
-        }
-        long value = 0;
-        int shift = 0;
-
-        int index = startPosition;
-        while (--length >= 0) {
-            value += (buffer[index++] & 0xffL) << shift;
-            shift += 8;
-        }
-        return value;
-    }
-
-    @Override
-    public int iscVaxInteger2(final byte[] buffer, final int startPosition) {
-        return (buffer[startPosition] & 0xff) | ((buffer[startPosition + 1] & 0xff) << 8);
     }
 
     protected byte[] getDescribeDatabaseInfoBlock() {

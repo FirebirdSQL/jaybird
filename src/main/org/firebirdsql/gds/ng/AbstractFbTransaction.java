@@ -29,6 +29,9 @@ import java.util.Collections;
 import java.util.EnumSet;
 import java.util.Set;
 
+import static org.firebirdsql.gds.VaxEncoding.iscVaxInteger2;
+import static org.firebirdsql.gds.VaxEncoding.iscVaxLong;
+
 /**
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @since 3.0
@@ -114,8 +117,8 @@ public abstract class AbstractFbTransaction implements FbTransaction {
                     // TODO Message, SQL state, error code?
                     throw new SQLException("Unexpected response buffer");
                 }
-                int length = getDatabase().iscVaxInteger2(infoResponse, 1);
-                return getDatabase().iscVaxLong(infoResponse, 3, length);
+                int length = iscVaxInteger2(infoResponse, 1);
+                return iscVaxLong(infoResponse, 3, length);
             }
         });
     }
