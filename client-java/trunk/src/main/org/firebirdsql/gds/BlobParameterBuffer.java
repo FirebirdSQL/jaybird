@@ -24,7 +24,6 @@
  */
 package org.firebirdsql.gds;
 
-
 /**
  * Instance of this interface represents a BLOB Parameter Buffer from the
  * Firebird API documentation and specifies attributes for
@@ -44,7 +43,7 @@ package org.firebirdsql.gds;
  * for more details).
  * </ul>
  */
-public interface BlobParameterBuffer {
+public interface BlobParameterBuffer extends ParameterBuffer {
     
     int SOURCE_TYPE             =  ISCConstants.isc_bpb_source_type;
     int TARGET_TYPE             =  ISCConstants.isc_bpb_target_type;
@@ -59,35 +58,32 @@ public interface BlobParameterBuffer {
     int TYPE_STREAM             =  ISCConstants.isc_bpb_type_stream;
 
     /**
-     * Set a void (valueless) parameter on this 
-     * <code>BlobParameterBuffer</code>.
+     * Set a void (valueless) parameter on this {@code BlobParameterBuffer}.
      *
-     * @param argumentType The parameter to be set, either an 
-     *        <code>ISCConstantsone.isc_bpb_*</code> constant, or one of the 
-     *        fields of this interface
+     * @param argumentType The parameter to be set, either an {@code ISCConstants.isc_bpb_*} constant, or one of the
+     *        constants of this interface
      */
+    @Override
     void addArgument(int argumentType);
 
     /**
-     * Set a <code>String</code> parameter on this 
-     * <code>BlobParameterBuffer</code>.
+     * Set a {@code String} parameter on this {@code BlobParameterBuffer}.
      *
-     * @param argumentType The parameter to be set, either an 
-     *        <code>ISCConstantsone.isc_bpb_*</code> constant, or one of the 
-     *        fields of this interface
+     * @param argumentType The parameter to be set, either an {@code ISCConstants.isc_bpb_*} constant, or one of the
+     *        constants of this interface
      * @param value The value to set for the given parameter
      */
+    @Override
     void addArgument(int argumentType, String value);
 
     /**
-     * Set an <code>int</code> parameter on this 
-     * <code>BlobParameterBuffer</code>.
+     * Set an {@code int} parameter on this {@code BlobParameterBuffer}.
      *
-     * @param argumentType The parameter to be set, either an 
-     *        <code>ISCConstantsone.isc_bpb_*</code> constant, or one of the 
-     *        fields of this interface
+     * @param argumentType The parameter to be set, either an {@code ISCConstants.isc_bpb_*} constant, or one of the
+     *        constants of this interface
      * @param value The value to set for the given parameter
      */
+    @Override
     void addArgument(int argumentType, int value);
 
 }

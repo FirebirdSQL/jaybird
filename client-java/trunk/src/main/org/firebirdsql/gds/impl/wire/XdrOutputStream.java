@@ -27,6 +27,7 @@ package org.firebirdsql.gds.impl.wire;
 
 import org.firebirdsql.encodings.Encoding;
 import org.firebirdsql.gds.ISCConstants;
+import org.firebirdsql.gds.ParameterBuffer;
 import org.firebirdsql.logging.Logger;
 import org.firebirdsql.logging.LoggerFactory;
 
@@ -201,15 +202,19 @@ public final class XdrOutputStream extends OutputStream {
         int size;
         if (item == null) {
             writeInt(1);
-            write(type); //e.g. gds.isc_tpb_version3
+            write(type); //e.g. isc_tpb_version3
             size = 1;
         } else {
             size = item.getLength() + 1;
             writeInt(size);
-            write(type); //e.g. gds.isc_tpb_version3
+            write(type); //e.g. isc_tpb_version3
             item.write(this);
         }
         writeAlignment(size);
+    }
+
+    public void writeTyped(ParameterBuffer parameterBuffer) throws IOException {
+        writeTyped(parameterBuffer.getType(), parameterBuffer.toXdrable());
     }
 
     private final byte writeBuffer[] = new byte[8];

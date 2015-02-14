@@ -25,7 +25,6 @@ import com.sun.jna.ptr.LongByReference;
 import com.sun.jna.ptr.ShortByReference;
 import org.firebirdsql.gds.BlobParameterBuffer;
 import org.firebirdsql.gds.ISCConstants;
-import org.firebirdsql.gds.impl.jni.BlobParameterBufferImp;
 import org.firebirdsql.gds.ng.AbstractFbBlob;
 import org.firebirdsql.gds.ng.FbBlob;
 import org.firebirdsql.gds.ng.FbExceptionBuilder;
@@ -93,10 +92,10 @@ public class JnaBlob extends AbstractFbBlob implements FbBlob, DatabaseListener 
             throw new FbExceptionBuilder().nonTransientException(ISCConstants.isc_segstr_no_op).toSQLException();
         }
 
-        final BlobParameterBufferImp blobParameterBuffer = (BlobParameterBufferImp) getBlobParameterBuffer();
+        final BlobParameterBuffer blobParameterBuffer = getBlobParameterBuffer();
         final byte[] bpb;
         if (blobParameterBuffer != null) {
-            bpb = blobParameterBuffer.getBytesForNativeCode();
+            bpb = blobParameterBuffer.toBytesWithType();
         } else {
             bpb = new byte[0];
         }
@@ -247,11 +246,6 @@ public class JnaBlob extends AbstractFbBlob implements FbBlob, DatabaseListener 
             }
             processStatusVector();
         }
-    }
-
-    @Override
-    protected boolean isValidBlobParameterBufferClass(Class<? extends BlobParameterBuffer> blobParameterBufferClass) {
-        return org.firebirdsql.gds.impl.jni.BlobParameterBufferImp.class.isAssignableFrom(blobParameterBufferClass);
     }
 
     private void processStatusVector() throws SQLException {

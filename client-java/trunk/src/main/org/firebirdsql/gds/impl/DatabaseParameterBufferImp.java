@@ -18,23 +18,25 @@
  *
  * All rights reserved.
  */
-package org.firebirdsql.gds.impl.wire;
+package org.firebirdsql.gds.impl;
 
 import org.firebirdsql.gds.DatabaseParameterBuffer;
-import org.firebirdsql.gds.impl.DatabaseParameterBufferExtension;
+import org.firebirdsql.gds.ISCConstants;
 
 /**
- * jdgs implementation for DatabaseParameterBuffer. The base class
- * ParameterBufferBase contains most the implementation.
+ * Implementation for DatabaseParameterBuffer.
  */
-public class DatabaseParameterBufferImp extends ParameterBufferBase implements DatabaseParameterBufferExtension {
+public final class DatabaseParameterBufferImp extends ParameterBufferBase implements DatabaseParameterBufferExtension {
+
+    public DatabaseParameterBufferImp() {
+        super(ISCConstants.isc_dpb_version1);
+    }
 
     @Override
     public DatabaseParameterBuffer deepCopy() {
         final DatabaseParameterBufferImp copy = new DatabaseParameterBufferImp();
 
-        // All the Argument sub classes are immutable so to make a 'deep' copy
-        // this is all we have to do.
+        // All the Argument sub classes are immutable so to make a 'deep' copy this is all we have to do.
         copy.getArgumentsList().addAll(this.getArgumentsList());
 
         return copy;
@@ -42,7 +44,7 @@ public class DatabaseParameterBufferImp extends ParameterBufferBase implements D
 
     @Override
     public DatabaseParameterBuffer removeExtensionParams() {
-        DatabaseParameterBuffer copy = deepCopy();
+        final DatabaseParameterBuffer copy = deepCopy();
 
         for (int i = 0; i < DatabaseParameterBufferExtension.EXTENSION_PARAMETERS.length; i++) {
             copy.removeArgument(DatabaseParameterBufferExtension.EXTENSION_PARAMETERS[i]);

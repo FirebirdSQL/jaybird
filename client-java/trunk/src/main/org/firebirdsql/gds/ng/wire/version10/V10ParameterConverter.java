@@ -23,7 +23,7 @@ package org.firebirdsql.gds.ng.wire.version10;
 import org.firebirdsql.encodings.Encoding;
 import org.firebirdsql.encodings.IEncodingFactory;
 import org.firebirdsql.gds.DatabaseParameterBuffer;
-import org.firebirdsql.gds.impl.wire.DatabaseParameterBufferImp;
+import org.firebirdsql.gds.impl.DatabaseParameterBufferImp;
 import org.firebirdsql.gds.ng.IConnectionProperties;
 import org.firebirdsql.gds.ng.AbstractParameterConverter;
 import org.firebirdsql.gds.ng.ParameterConverter;

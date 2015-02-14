@@ -18,23 +18,27 @@
  *
  * All rights reserved.
  */
-package org.firebirdsql.gds.impl.wire;
+package org.firebirdsql.gds.impl;
 
-import java.io.IOException;
+import org.firebirdsql.gds.ISCConstants;
+import org.firebirdsql.gds.TransactionParameterBuffer;
 
 /**
- * Base class for BlobParameterBufferImp and DatabaseParameterBufferImp and
- * perhaps eventually TransactionParameterBuffer.
+ * Implementation of the {@link org.firebirdsql.gds.TransactionParameterBuffer} interface.
  */
-public abstract class ParameterBufferBase extends org.firebirdsql.gds.impl.ParameterBufferBase implements Xdrable {
+public final class TransactionParameterBufferImpl extends ParameterBufferBase implements TransactionParameterBuffer {
 
-    @Override
-    public void read(XdrInputStream inputStream, int length) throws IOException {
-        throw new UnsupportedOperationException();
+    public TransactionParameterBufferImpl() {
+        super(ISCConstants.isc_tpb_version3);
     }
 
     @Override
-    public void write(XdrOutputStream outputStream) throws IOException {
-        writeArgumentsTo(outputStream);
+    public TransactionParameterBuffer deepCopy() {
+        final TransactionParameterBufferImpl result = new TransactionParameterBufferImpl();
+
+        result.getArgumentsList().addAll(this.getArgumentsList());
+
+        return result;
     }
+
 }

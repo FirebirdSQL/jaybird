@@ -1,7 +1,7 @@
 /*
  * $Id$
- * 
- * Firebird Open Source J2ee connector - jdbc driver
+ *
+ * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -14,7 +14,7 @@
  * This file was created by members of the firebird development team.
  * All individual contributions remain the Copyright (C) of those
  * individuals.  Contributors to this file are either listed here or
- * can be obtained from a CVS history command.
+ * can be obtained from a source control history command.
  *
  * All rights reserved.
  */
@@ -30,10 +30,7 @@ import org.firebirdsql.encodings.Encoding;
 import org.firebirdsql.encodings.EncodingDefinition;
 import org.firebirdsql.encodings.EncodingFactory;
 import org.firebirdsql.gds.*;
-import org.firebirdsql.gds.impl.AbstractGDS;
-import org.firebirdsql.gds.impl.DatabaseParameterBufferExtension;
-import org.firebirdsql.gds.impl.DbAttachInfo;
-import org.firebirdsql.gds.impl.GDSType;
+import org.firebirdsql.gds.impl.*;
 import org.firebirdsql.logging.Logger;
 import org.firebirdsql.logging.LoggerFactory;
 
@@ -111,11 +108,11 @@ public abstract class AbstractJavaGDSImpl extends AbstractGDS implements GDS {
 				db.out.writeString(dbai.getFileName(), filenameEncoding);
 
 			    databaseParameterBuffer = ((DatabaseParameterBufferExtension)
-			            databaseParameterBuffer).removeExtensionParams();
+                        databaseParameterBuffer).removeExtensionParams();
                 addProcessId(databaseParameterBuffer);
                 addProcessName(databaseParameterBuffer);
 
-				db.out.writeTyped(ISCConstants.isc_dpb_version1, (Xdrable) databaseParameterBuffer);
+				db.out.writeTyped(databaseParameterBuffer);
 				db.out.flush();
 				if (debug)
 					log.debug("sent");
@@ -688,8 +685,7 @@ public abstract class AbstractJavaGDSImpl extends AbstractGDS implements GDS {
 				svc.out.writeInt(0);
                 svc.out.writeString(serviceMgrStr, svc.getEncodingFactory().getDefaultEncoding());
 
-				svc.out.writeTyped(ISCConstants.isc_spb_version,
-						(Xdrable) serviceParameterBuffer);
+				svc.out.writeTyped(serviceParameterBuffer);
 				svc.out.flush();
 
 				if (debug)
@@ -877,7 +873,7 @@ public abstract class AbstractJavaGDSImpl extends AbstractGDS implements GDS {
 			svc.out.writeInt(svc.getHandle());
 			svc.out.writeInt(0);
 
-			svc.out.writeBuffer(svcBuff.toByteArray());
+			svc.out.writeBuffer(svcBuff.toBytes());
 			svc.out.flush();
 
 			receiveResponse(svc, -1);
@@ -891,14 +887,10 @@ public abstract class AbstractJavaGDSImpl extends AbstractGDS implements GDS {
 		}
 	}
 
-	public void iscServiceQuery(IscSvcHandle serviceHandle,
-			ServiceParameterBuffer serviceParameterBuffer,
-			ServiceRequestBuffer serviceRequestBuffer, byte[] resultBuffer)
-			throws GDSException {
+	public void iscServiceQuery(IscSvcHandle serviceHandle, ServiceParameterBuffer serviceParameterBuffer,
+			ServiceRequestBuffer serviceRequestBuffer, byte[] resultBuffer) throws GDSException {
 
 		isc_svc_handle_impl svc = (isc_svc_handle_impl) serviceHandle;
-		ServiceParameterBufferImp spb = (ServiceParameterBufferImp) serviceParameterBuffer;
-		ServiceRequestBufferImp srb = (ServiceRequestBufferImp) serviceRequestBuffer;
 
 		if (svc == null || svc.out == null)
 			throw new GDSException(ISCConstants.isc_bad_svc_handle);
@@ -907,8 +899,8 @@ public abstract class AbstractJavaGDSImpl extends AbstractGDS implements GDS {
 			svc.out.writeInt(op_service_info);
 			svc.out.writeInt(svc.getHandle());
 			svc.out.writeInt(0);
-			svc.out.writeBuffer(spb != null ? spb.toByteArray() : null);
-			svc.out.writeBuffer(srb != null ? srb.toByteArray() : null);
+            svc.out.writeBuffer(serviceParameterBuffer != null ? serviceParameterBuffer.toBytes() : null);
+			svc.out.writeBuffer(serviceRequestBuffer != null ? serviceRequestBuffer.toBytes() : null);
 			svc.out.writeInt(resultBuffer.length);
 			svc.out.flush();
 

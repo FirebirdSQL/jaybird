@@ -27,7 +27,10 @@
 package org.firebirdsql.gds;
 
 import org.firebirdsql.encodings.Encoding;
+import org.firebirdsql.gds.impl.wire.Xdrable;
 
+import java.io.IOException;
+import java.io.OutputStream;
 import java.util.Iterator;
 
 /**
@@ -42,6 +45,12 @@ import java.util.Iterator;
  * @since 3.0
  */
 public interface ParameterBuffer extends Iterable<Parameter> {
+
+    /**
+     * @return The parameter buffer type identifier
+     */
+    int getType();
+
     /**
      * Add argument with no parameters.
      *
@@ -140,4 +149,41 @@ public interface ParameterBuffer extends Iterable<Parameter> {
      */
     @Override
     Iterator<Parameter> iterator();
+
+    /**
+     * Writes the arguments in the implementation specific serialization into the {@code OutputStream}.
+     *
+     * @param outputStream
+     *         The {@code OutputStream} to write to
+     * @throws IOException
+     *         Errors produced by the output stream during writes
+     */
+    void writeArgumentsTo(OutputStream outputStream) throws IOException;
+
+    /**
+     * @return {@code Xdrable} to write (and optionally read) this instance as Xdr.
+     */
+    Xdrable toXdrable();
+
+    /**
+     * Converts this parameter buffer to a byte array.
+     * <p>
+     * This byte array includes the extra header-bytes (if any), but does not include the type information
+     * </p>
+     *
+     * @return Byte array with serialization of this parameter buffer
+     * @see #toBytesWithType()
+     */
+    byte[] toBytes();
+
+    /**
+     * Converts this parameter buffer to a byte array with type information.
+     * <p>
+     * This byte array includes the type information and the extra header bytes (if any).
+     * </p>
+     *
+     * @return Byte array with serialization of this parameter buffer
+     * @see #toBytes()
+     */
+    byte[] toBytesWithType();
 }

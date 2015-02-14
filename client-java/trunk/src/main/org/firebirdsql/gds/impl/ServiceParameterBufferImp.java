@@ -18,12 +18,18 @@
  *
  * All rights reserved.
  */
-package org.firebirdsql.gds.impl.wire;
+package org.firebirdsql.gds.impl;
 
-import org.firebirdsql.gds.BlobParameterBuffer;
+import org.firebirdsql.gds.ISCConstants;
+import org.firebirdsql.gds.ServiceParameterBuffer;
 
 /**
- * jdgs implementation for BlobParameterBuffer. The base class ParameterBufferBase contains the implementation.
+ * Implementation of ServiceParameterBuffer.
  */
-public class BlobParameterBufferImp extends ParameterBufferBase implements BlobParameterBuffer {
+public class ServiceParameterBufferImp extends org.firebirdsql.gds.impl.ParameterBufferBase implements ServiceParameterBuffer {
+
+    public ServiceParameterBufferImp() {
+        super(ISCConstants.isc_spb_version, new byte[] { ISCConstants.isc_spb_current_version });
+    }
+
 }

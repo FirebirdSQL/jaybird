@@ -24,9 +24,12 @@ import org.firebirdsql.encodings.Encoding;
 import org.firebirdsql.gds.DatabaseParameterBuffer;
 import org.firebirdsql.gds.Parameter;
 import org.firebirdsql.gds.impl.DatabaseParameterBufferExtension;
+import org.firebirdsql.gds.impl.wire.Xdrable;
 
 import javax.resource.cci.ConnectionSpec;
 import javax.resource.spi.ConnectionRequestInfo;
+import java.io.IOException;
+import java.io.OutputStream;
 import java.io.Serializable;
 import java.util.Iterator;
 
@@ -88,6 +91,11 @@ public class FBConnectionRequestInfo implements DatabaseParameterBufferExtension
     }
 
     @Override
+    public int getType() {
+        return dpb.getType();
+    }
+
+    @Override
     public void addArgument(int argumentType) {
         dpb.addArgument(argumentType);
     }
@@ -123,6 +131,26 @@ public class FBConnectionRequestInfo implements DatabaseParameterBufferExtension
     @Override
     public Iterator<Parameter> iterator() {
         return dpb.iterator();
+    }
+
+    @Override
+    public void writeArgumentsTo(OutputStream outputStream) throws IOException {
+        dpb.writeArgumentsTo(outputStream);
+    }
+
+    @Override
+    public Xdrable toXdrable() {
+        return dpb.toXdrable();
+    }
+
+    @Override
+    public byte[] toBytes() {
+        return dpb.toBytes();
+    }
+
+    @Override
+    public byte[] toBytesWithType() {
+        return dpb.toBytesWithType();
     }
 
     public void setUserName(String userName) {
