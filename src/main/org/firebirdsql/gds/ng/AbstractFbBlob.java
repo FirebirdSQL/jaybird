@@ -22,7 +22,6 @@ package org.firebirdsql.gds.ng;
 
 import org.firebirdsql.gds.BlobParameterBuffer;
 import org.firebirdsql.gds.ISCConstants;
-import org.firebirdsql.gds.impl.BlobParameterBufferImp;
 import org.firebirdsql.gds.ng.listeners.DatabaseListener;
 import org.firebirdsql.gds.ng.listeners.TransactionListener;
 import org.firebirdsql.logging.Logger;
@@ -47,8 +46,6 @@ public abstract class AbstractFbBlob implements FbBlob, TransactionListener, Dat
     private boolean eof;
 
     protected AbstractFbBlob(FbDatabase database, FbTransaction transaction, BlobParameterBuffer blobParameterBuffer) {
-        assert blobParameterBuffer == null || isValidBlobParameterBufferClass(blobParameterBuffer.getClass())
-                : "blobParameterBuffer is of an unsupported type for this implementation";
         this.database = database;
         this.transaction = transaction;
         this.blobParameterBuffer = blobParameterBuffer;
@@ -305,21 +302,6 @@ public abstract class AbstractFbBlob implements FbBlob, TransactionListener, Dat
      */
     protected BlobParameterBuffer getBlobParameterBuffer() {
         return blobParameterBuffer;
-    }
-
-    /**
-     * Method to decide if a blob parameter buffer implementation class is valid for the blob implementation.
-     * <p>
-     * Eg a {@link org.firebirdsql.gds.ng.wire.version10.V10InputBlob} will only work with a blob parameter buffer
-     * that is (or extends) {@link org.firebirdsql.gds.impl.BlobParameterBufferImp}.
-     * </p>
-     *
-     * @param blobParameterBufferClass
-     *         Class of the blob parameter buffer
-     * @return <code>true</code> when the blob parameter buffer class is valid for the blob implementation.
-     */
-    protected boolean isValidBlobParameterBufferClass(Class<? extends BlobParameterBuffer> blobParameterBufferClass) {
-        return BlobParameterBufferImp.class.isAssignableFrom(blobParameterBufferClass);
     }
 
     /**
