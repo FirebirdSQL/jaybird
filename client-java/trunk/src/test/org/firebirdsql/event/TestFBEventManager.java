@@ -256,13 +256,13 @@ public class TestFBEventManager extends FBJUnit4TestBase {
 
     class AccumulatingEventListener implements EventListener {
 
-        private int eventCount = 0;
+        private volatile int eventCount = 0;
        
         public int getTotalEvents(){
            return eventCount;
         } 
         
-        public void eventOccurred(DatabaseEvent event){
+        public synchronized void eventOccurred(DatabaseEvent event){
             eventCount += event.getEventCount();
         }
     }
@@ -278,8 +278,7 @@ public class TestFBEventManager extends FBJUnit4TestBase {
         public void run(){
             try {
                 Connection conn = getConnectionViaDriverManager();
-                PreparedStatement stmt = conn.prepareStatement(
-                    "INSERT INTO TEST VALUES (?)");
+                PreparedStatement stmt = conn.prepareStatement("INSERT INTO TEST VALUES (?)");
                 try {
                     for (int i = 0; i < count; i++){
                         stmt.setInt(1, i);

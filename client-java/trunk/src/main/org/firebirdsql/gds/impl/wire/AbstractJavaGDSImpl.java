@@ -360,9 +360,8 @@ public abstract class AbstractJavaGDSImpl extends AbstractGDS implements GDS {
 
 		if (debug)
 			log.debug("op_accept ");
-		
-		int nextOperation = nextOperation(in);
-		return nextOperation;
+
+        return nextOperation(in);
 	}
 	
 	private String getSystemUser() {
@@ -978,19 +977,12 @@ public abstract class AbstractJavaGDSImpl extends AbstractGDS implements GDS {
                     db.in.readRawBuffer(respLen);
                     readStatusVector(db);
 
-                    db.eventCoordinator = 
-                        new EventCoordinatorImp(auxHandle, ipAddress, port);
+                    db.eventCoordinator = new EventCoordinatorImp(auxHandle, ipAddress, port);
                 }
 
-                db.eventCoordinator.queueEvents(
-                    db,
-                    (EventHandleImp)eventHandle, 
-                    eventHandler);
+                db.eventCoordinator.queueEvents(db, (EventHandleImp) eventHandle, eventHandler);
             } catch (IOException ioe){
-                throw new GDSException(
-                        ISCConstants.isc_arg_gds, 
-                        ISCConstants.isc_net_read_err, 
-                        ioe.getMessage());
+                throw new GDSException(ISCConstants.isc_arg_gds, ISCConstants.isc_net_read_err, ioe.getMessage());
             }
         }
 
@@ -1047,11 +1039,10 @@ public abstract class AbstractJavaGDSImpl extends AbstractGDS implements GDS {
         private final int port;
         private int eventsId;
         isc_db_handle_impl db;
-        private final Map<String, EventGlob> globMap = Collections.synchronizedMap(new HashMap<String, EventGlob>());
+        private final Map<Integer, EventGlob> globMap = Collections.synchronizedMap(new HashMap<Integer, EventGlob>());
         private volatile boolean running = true;
 
-        public EventCoordinatorImp(int handle, String ipAddress, int port) 
-                throws GDSException {
+        public EventCoordinatorImp(int handle, String ipAddress, int port) throws GDSException {
             this.handle = handle;
             this.ipAddress = ipAddress;
             this.port = port;
@@ -1062,8 +1053,7 @@ public abstract class AbstractJavaGDSImpl extends AbstractGDS implements GDS {
         }
 
         public boolean cancelEvents(EventHandleImp eventHandle){
-            return globMap.remove(
-                    Integer.toString(eventHandle.getLocalId())) != null;
+            return globMap.remove(eventHandle.getLocalId()) != null;
         }
 
         public void run(){
@@ -1092,14 +1082,13 @@ public abstract class AbstractJavaGDSImpl extends AbstractGDS implements GDS {
                         int shift = 0;
                         
                         if (buffer.length > 4) {
-                            for (int i = buffer.length - 4; 
-                                    i < buffer.length; i++){
+                            for (int i = buffer.length - 4; i < buffer.length; i++){
                                 count += ((buffer[i] & 0xff) << shift);
                                 shift += 8;
                             }
                         }
 
-                        EventGlob glob = globMap.remove(Integer.toString(eventId));
+                        EventGlob glob = globMap.remove(eventId);
                         if (glob != null){
                             glob.getEventHandle().setInternalCount(count);
                             glob.getEventHandler().eventOccurred();
@@ -1137,15 +1126,9 @@ public abstract class AbstractJavaGDSImpl extends AbstractGDS implements GDS {
                 db.out = new XdrOutputStream(db.socket.getOutputStream());
                 db.in = new XdrInputStream(db.socket.getInputStream());
             } catch (UnknownHostException uhe){
-                throw new GDSException(
-                        ISCConstants.isc_arg_gds, 
-                        ISCConstants.isc_network_error,
-                        ipAddress, uhe);
+                throw new GDSException(ISCConstants.isc_arg_gds, ISCConstants.isc_network_error, ipAddress, uhe);
             } catch (IOException ioe){
-                throw new GDSException(
-                        ISCConstants.isc_arg_gds, 
-                        ISCConstants.isc_network_error, 
-                        ipAddress, ioe);
+                throw new GDSException(ISCConstants.isc_arg_gds, ISCConstants.isc_network_error, ipAddress, ioe);
             }
         }
 
@@ -1157,9 +1140,8 @@ public abstract class AbstractJavaGDSImpl extends AbstractGDS implements GDS {
             db.invalidate();
         }
 
-        public void queueEvents(isc_db_handle_impl mainDb, 
-                EventHandleImp eventHandle, 
-                EventHandler eventHandler) throws GDSException {
+        public void queueEvents(isc_db_handle_impl mainDb, EventHandleImp eventHandle, EventHandler eventHandler)
+                throws GDSException {
             synchronized (mainDb){
                 try {
                     synchronized (globMap){
@@ -1176,16 +1158,11 @@ public abstract class AbstractJavaGDSImpl extends AbstractGDS implements GDS {
                         receiveResponse(mainDb,-1);
                         int eventId = mainDb.getResp_object();
                         eventHandle.setEventId(eventId);
-                        globMap.put(
-                                Integer.toString(eventHandle.getLocalId()), 
-                                new EventGlob(eventHandler, eventHandle));
+                        globMap.put(eventHandle.getLocalId(), new EventGlob(eventHandler, eventHandle));
                     }
 
                 } catch (IOException ioe){
-                    throw new GDSException(
-                            ISCConstants.isc_arg_gds, 
-                            ISCConstants.isc_net_read_err, 
-                            ioe.getMessage());
+                    throw new GDSException(ISCConstants.isc_arg_gds, ISCConstants.isc_net_read_err, ioe.getMessage());
                 }
             }
         }
