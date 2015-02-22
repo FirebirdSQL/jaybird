@@ -56,7 +56,7 @@ public abstract class AbstractJavaGDSImpl extends AbstractGDS implements GDS {
 
 	public static final String PURE_JAVA_TYPE_NAME = "PURE_JAVA";
 
-	private static Logger log = LoggerFactory.getLogger(AbstractJavaGDSImpl.class);
+    private static Logger log = LoggerFactory.getLogger(AbstractJavaGDSImpl.class);
 
 	public AbstractJavaGDSImpl() {
 		super(GDSType.getType(PURE_JAVA_TYPE_NAME));
@@ -940,9 +940,9 @@ public abstract class AbstractJavaGDSImpl extends AbstractGDS implements GDS {
                         log.debug("op_connect_request ");
                     
                     db.out.writeInt(op_connect_request);
-                    db.out.writeInt(1);  // Connection type
-                    db.out.writeInt(db.getRdbId());
-                    db.out.writeInt(0);
+                    db.out.writeInt(P_REQ_async);  // Connection type (p_req_type)
+                    db.out.writeInt(db.getRdbId()); // p_req_object
+                    db.out.writeInt(0); // p_req_partner
                     db.out.flush();
                    
                     nextOperation(db.in); 
@@ -1079,13 +1079,9 @@ public abstract class AbstractJavaGDSImpl extends AbstractGDS implements GDS {
                         int eventId = db.in.readInt();
                         
                         int count = 0;
-                        int shift = 0;
-                        
+
                         if (buffer.length > 4) {
-                            for (int i = buffer.length - 4; i < buffer.length; i++){
-                                count += ((buffer[i] & 0xff) << shift);
-                                shift += 8;
-                            }
+                            count = iscVaxInteger(buffer, buffer.length - 4, 4);
                         }
 
                         EventGlob glob = globMap.remove(eventId);
