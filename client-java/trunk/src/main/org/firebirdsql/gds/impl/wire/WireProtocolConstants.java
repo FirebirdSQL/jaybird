@@ -222,4 +222,6 @@ public interface WireProtocolConstants {
     // TODO These values are also used in native interface. Move to ISCConstants
     int FETCH_OK = 0;
     int FETCH_NO_MORE_ROWS = 100;
+
+    int P_REQ_async = 1;
 }
