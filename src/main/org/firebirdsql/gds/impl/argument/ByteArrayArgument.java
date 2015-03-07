@@ -94,4 +94,12 @@ public final class ByteArrayArgument extends Argument {
 
         return this.getType() == otherByteArrayArgument.getType() && Arrays.equals(this.value, otherByteArrayArgument.value);
     }
+
+    @Override
+    public int hashCode() {
+        int result = 23;
+        result = 41 * result + getType();
+        result = 41 * result + Arrays.hashCode(value);
+        return result;
+    }
 }

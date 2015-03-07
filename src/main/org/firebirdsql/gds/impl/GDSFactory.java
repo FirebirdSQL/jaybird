@@ -30,6 +30,7 @@ import org.firebirdsql.gds.ng.FbDatabaseFactory;
 import org.firebirdsql.logging.Logger;
 import org.firebirdsql.logging.LoggerFactory;
 
+import java.io.Serializable;
 import java.util.*;
 import java.util.Map.Entry;
 
@@ -50,7 +51,7 @@ public class GDSFactory {
      * puts the most short JDBC URLs at the end of the list, so the correct
      * default protocol handling can be implemented.
      */
-    private static class ReversedStringComparator implements Comparator<String> {
+    private static class ReversedStringComparator implements Comparator<String>, Serializable {
 
         public int compare(String s1, String s2) {
             // note, we compare here s2 to s1,

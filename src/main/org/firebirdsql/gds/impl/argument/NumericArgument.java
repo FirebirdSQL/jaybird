@@ -74,4 +74,12 @@ public class NumericArgument extends Argument {
 
         return this.getType() == otherNumericArgument.getType() && this.value == otherNumericArgument.value;
     }
+
+    @Override
+    public int hashCode() {
+        int result = 23;
+        result = 41 * result + getType();
+        result = 41 * result + value;
+        return result;
+    }
 }
