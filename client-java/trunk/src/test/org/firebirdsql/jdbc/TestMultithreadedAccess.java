@@ -214,10 +214,8 @@ public class TestMultithreadedAccess extends FBTestBase {
         
         protected ResultSet executeQuery(int id) throws SQLException {
             String sql = MessageFormat.format(
-                    sqlTemplate, 
-                    new Object[]{
-                            new Integer(id)
-                    });
+                    sqlTemplate,
+                    id);
             
             System.out.println(sql);
             
