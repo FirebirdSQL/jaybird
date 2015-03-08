@@ -20,17 +20,39 @@
  */
 package org.firebirdsql.jdbc.oo;
 
-import java.sql.*;
-
 import org.firebirdsql.jca.FBManagedConnection;
-import org.firebirdsql.jdbc.*;
+import org.firebirdsql.jdbc.FBConnection;
+import org.firebirdsql.logging.Logger;
+import org.firebirdsql.logging.LoggerFactory;
+
+import java.sql.DatabaseMetaData;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.SQLWarning;
 
 public class OOConnection extends FBConnection {
+
+    private static final Logger log = LoggerFactory.getLogger(OOConnection.class);
 
     private OODatabaseMetaData metaData;
 
     public OOConnection(FBManagedConnection mc) {
         super(mc);
+        try {
+            super.setHoldability(ResultSet.HOLD_CURSORS_OVER_COMMIT);
+        } catch (SQLException e) {
+            // ignore
+            log.debug("Unexpected exception setting holdability", e);
+        }
+    }
+
+    @Override
+    public void setHoldability(int holdability) {
+        if (holdability == ResultSet.HOLD_CURSORS_OVER_COMMIT) return;
+
+        final String message = "Holdability not modified. OpenOffice/LibreOffice compatibility always uses HOLD_CURSORS_OVER_COMMIT";
+        log.debug(message);
+        addWarning(new SQLWarning(message));
     }
 
     public synchronized DatabaseMetaData getMetaData() throws SQLException {
@@ -38,28 +60,4 @@ public class OOConnection extends FBConnection {
         return metaData;
     }
 
-    public synchronized Statement createStatement(int resultSetType, int resultSetConcurrency, int resultSetHoldability)
-            throws SQLException {
-        Statement stmt = new OOStatement(getGDSHelper(), resultSetType,
-                resultSetConcurrency, resultSetHoldability, txCoordinator);
-
-        activeStatements.add(stmt);
-        return stmt;
-    }
-
-    public synchronized PreparedStatement prepareStatement(String sql, int resultSetType, int resultSetConcurrency,
-            int resultSetHoldability, boolean metaData, boolean generatedKeys) throws SQLException {
-        FBObjectListener.StatementListener coordinator = txCoordinator;
-        if (metaData)
-            coordinator = new InternalTransactionCoordinator.MetaDataTransactionCoordinator(txCoordinator);
-
-        FBObjectListener.BlobListener blobCoordinator;
-        blobCoordinator = metaData ? null : txCoordinator;
-
-        PreparedStatement stmt = new OOPreparedStatement(getGDSHelper(), sql, resultSetType, resultSetConcurrency,
-                resultSetHoldability, coordinator, blobCoordinator, metaData, false, generatedKeys);
-
-        activeStatements.add(stmt);
-        return stmt;
-    }
 }
