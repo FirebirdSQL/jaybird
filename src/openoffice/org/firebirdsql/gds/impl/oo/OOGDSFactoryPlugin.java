@@ -1,3 +1,23 @@
+/*
+ * $Id$
+ *
+ * Firebird Open Source JavaEE Connector - JDBC Driver
+ *
+ * Distributable under LGPL license.
+ * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * LGPL License for more details.
+ *
+ * This file was created by members of the firebird development team.
+ * All individual contributions remain the Copyright (C) of those
+ * individuals.  Contributors to this file are either listed here or
+ * can be obtained from a source control history command.
+ *
+ * All rights reserved.
+ */
 package org.firebirdsql.gds.impl.oo;
 
 import org.firebirdsql.gds.*;
@@ -10,8 +30,7 @@ public class OOGDSFactoryPlugin implements GDSFactoryPlugin {
 
     private static final String[] TYPE_ALIASES = new String[] {};
 
-    private static final String[] JDBC_PROTOCOLS = new String[] {
-            "jdbc:firebird:oo:", "jdbc:firebirdsql:oo:"};
+    private static final String[] JDBC_PROTOCOLS = new String[] { "jdbc:firebird:oo:", "jdbc:firebirdsql:oo:"};
 
     private static AbstractJavaGDSImpl gdsImpl;
 
@@ -41,11 +60,9 @@ public class OOGDSFactoryPlugin implements GDSFactoryPlugin {
         return gdsImpl;
     }
 
-    public String getDatabasePath(String server, Integer port, String path)
-            throws GDSException {
+    public String getDatabasePath(String server, Integer port, String path) throws GDSException {
         if (server == null)
-            throw new GDSException("Server name/address is required "
-                    + "for pure Java implementation.");
+            throw new GDSException("Server name/address is required for pure Java implementation.");
 
         if (path == null)
             throw new GDSException("Database name/path is required.");
@@ -68,8 +85,7 @@ public class OOGDSFactoryPlugin implements GDSFactoryPlugin {
                 return jdbcUrl.substring(protocols[i].length());
         }
 
-        throw new IllegalArgumentException("Incorrect JDBC protocol handling: "
-                + jdbcUrl);
+        throw new IllegalArgumentException("Incorrect JDBC protocol handling: " + jdbcUrl);
     }
 
     public String getDefaultProtocol() {

@@ -54,7 +54,7 @@ public abstract class FBTestBase extends SimpleFBTestBase {
         }
     }
 
-    protected final Logger log = LoggerFactory.getLogger(getClass(), true);
+    protected final Logger log = LoggerFactory.getLogger(getClass());
 
     protected static final String DB_LC_CTYPE = getProperty("test.db.lc_ctype", "NONE");
 
@@ -199,7 +199,8 @@ public abstract class FBTestBase extends SimpleFBTestBase {
         fbManager = createFBManager();
 
         if (getGdsType() == GDSType.getType("PURE_JAVA")
-                || getGdsType() == GDSType.getType("NATIVE")) {
+                || getGdsType() == GDSType.getType("NATIVE")
+                || getGdsType() == GDSType.getType("OOREMOTE")) {
             fbManager.setServer(DB_SERVER_URL);
             fbManager.setPort(DB_SERVER_PORT);
         }
@@ -218,18 +219,13 @@ public abstract class FBTestBase extends SimpleFBTestBase {
 
     private static final Map gdsTypeToUrlPrefixMap = new HashMap();
     static {
-        gdsTypeToUrlPrefixMap.put(GDSType.getType("PURE_JAVA"),
-            "jdbc:firebirdsql:");
-        gdsTypeToUrlPrefixMap.put(GDSType.getType("EMBEDDED"),
-            "jdbc:firebirdsql:embedded:");
-        gdsTypeToUrlPrefixMap.put(GDSType.getType("NATIVE"),
-            "jdbc:firebirdsql:native:");
-        gdsTypeToUrlPrefixMap.put(GDSType.getType("ORACLE_MODE"),
-            "jdbc:firebirdsql:oracle:");
-        gdsTypeToUrlPrefixMap.put(GDSType.getType("LOCAL"),
-            "jdbc:firebirdsql:local:");
-        gdsTypeToUrlPrefixMap.put(GDSType.getType("NIO"),
-            "jdbc:firebirdsql:nio:");
+        gdsTypeToUrlPrefixMap.put(GDSType.getType("PURE_JAVA"), "jdbc:firebirdsql:");
+        gdsTypeToUrlPrefixMap.put(GDSType.getType("EMBEDDED"), "jdbc:firebirdsql:embedded:");
+        gdsTypeToUrlPrefixMap.put(GDSType.getType("NATIVE"), "jdbc:firebirdsql:native:");
+        gdsTypeToUrlPrefixMap.put(GDSType.getType("ORACLE_MODE"), "jdbc:firebirdsql:oracle:");
+        gdsTypeToUrlPrefixMap.put(GDSType.getType("LOCAL"), "jdbc:firebirdsql:local:");
+        gdsTypeToUrlPrefixMap.put(GDSType.getType("NIO"), "jdbc:firebirdsql:nio:");
+        gdsTypeToUrlPrefixMap.put(GDSType.getType("OOREMOTE"), "jdbc:firebirdsql:oo:");
     }
     
     /**
