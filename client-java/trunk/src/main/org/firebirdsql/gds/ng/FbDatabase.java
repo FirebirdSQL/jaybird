@@ -29,6 +29,8 @@ package org.firebirdsql.gds.ng;
 import org.firebirdsql.encodings.Encoding;
 import org.firebirdsql.encodings.IEncodingFactory;
 import org.firebirdsql.gds.BlobParameterBuffer;
+import org.firebirdsql.gds.EventHandle;
+import org.firebirdsql.gds.EventHandler;
 import org.firebirdsql.gds.TransactionParameterBuffer;
 import org.firebirdsql.gds.impl.GDSServerVersion;
 import org.firebirdsql.gds.ng.listeners.DatabaseListener;
@@ -286,4 +288,47 @@ public interface FbDatabase {
      */
     void removeDatabaseListener(DatabaseListener listener);
 
+    /**
+     * Creates an event handle for this database type.
+     * <p>
+     * The returned event handle can be used with {@link #queueEvent(org.firebirdsql.gds.EventHandle)}.
+     * </p>
+     *
+     * @param eventName
+     *         Name of the event
+     * @param eventHandler
+     *         The event handler to call when the event occurred
+     * @return A suitable event handle instance
+     */
+    EventHandle createEventHandle(String eventName, EventHandler eventHandler);
+
+    /**
+     * Counts the events occurred.
+     *
+     * @param eventHandle
+     *         The event handle
+     * @throws SQLException
+     *         When the count can not be done (as - for example - the event handle is of the wrong type)
+     */
+    void countEvents(EventHandle eventHandle) throws SQLException;
+
+    /**
+     * Queues a wait for an event.
+     *
+     * @param eventHandle
+     *         The event handle (created using {@link #createEventHandle(String, EventHandler)} of this instance).
+     * @throws SQLException
+     *         For errors establishing the asynchronous channel, or for queuing the event.
+     */
+    void queueEvent(EventHandle eventHandle) throws SQLException;
+
+    /**
+     * Cancels a registered event.
+     *
+     * @param eventHandle
+     *         The event handle to cancel
+     * @throws SQLException
+     *         For errors cancelling the event
+     */
+    void cancelEvent(EventHandle eventHandle) throws SQLException;
 }

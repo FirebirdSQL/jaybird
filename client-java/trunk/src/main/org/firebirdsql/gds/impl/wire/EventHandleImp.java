@@ -94,7 +94,7 @@ public class EventHandleImp implements EventHandle {
 
     byte[] toByteArray() throws IOException {
         ByteArrayOutputStream byteOut = new ByteArrayOutputStream();
-        XdrOutputStream xdr = new XdrOutputStream(byteOut);
+        XdrOutputStream xdr = new XdrOutputStream(byteOut, false);
 
         byte[] eventNameBytes = this.eventName.getBytes();
         xdr.write(1);   // Event version

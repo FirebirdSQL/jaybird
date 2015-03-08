@@ -348,6 +348,26 @@ public class JnaDatabase extends AbstractFbDatabase implements TransactionListen
         return datatypeCoder;
     }
 
+    @Override
+    public EventHandle createEventHandle(String eventName, EventHandler eventHandler) {
+        throw new UnsupportedOperationException("Not implemented");
+    }
+
+    @Override
+    public void countEvents(EventHandle eventHandle) throws SQLException {
+        throw new UnsupportedOperationException("Not implemented");
+    }
+
+    @Override
+    public void queueEvent(EventHandle eventHandle) throws SQLException {
+        throw new UnsupportedOperationException("Not implemented");
+    }
+
+    @Override
+    public void cancelEvent(EventHandle eventHandle) throws SQLException {
+        throw new UnsupportedOperationException("Not implemented");
+    }
+
     /**
      * Builds the database URL for the library.
      *

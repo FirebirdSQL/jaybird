@@ -28,6 +28,7 @@ import org.firebirdsql.gds.ng.TransactionState;
 import org.firebirdsql.gds.ng.fields.BlrCalculator;
 import org.firebirdsql.gds.ng.wire.*;
 import org.firebirdsql.gds.ng.wire.DefaultBlrCalculator;
+import org.firebirdsql.gds.ng.wire.version10.V10AsynchronousChannel;
 import org.firebirdsql.gds.ng.wire.version10.V10InputBlob;
 import org.firebirdsql.gds.ng.wire.version10.V10OutputBlob;
 import org.firebirdsql.gds.ng.wire.version10.V10Transaction;
@@ -80,6 +81,11 @@ public class Version12Descriptor extends AbstractProtocolDescriptor implements P
     @Override
     public FbWireBlob createInputBlob(FbWireDatabase database, FbWireTransaction transaction, BlobParameterBuffer blobParameterBuffer, long blobId) {
         return new V10InputBlob(database, transaction, blobParameterBuffer, blobId);
+    }
+
+    @Override
+    public FbWireAsynchronousChannel createAsynchronousChannel(FbWireDatabase database) {
+        return new V10AsynchronousChannel(database);
     }
 
     @Override

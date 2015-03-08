@@ -1087,7 +1087,7 @@ public abstract class AbstractJavaGDSImpl extends AbstractGDS implements GDS {
                         EventGlob glob = globMap.remove(eventId);
                         if (glob != null){
                             glob.getEventHandle().setInternalCount(count);
-                            glob.getEventHandler().eventOccurred();
+                            glob.getEventHandler().eventOccurred(glob.getEventHandle());
                         }
                         break;
                     }
