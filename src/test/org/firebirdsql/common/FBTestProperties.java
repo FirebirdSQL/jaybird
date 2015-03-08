@@ -137,8 +137,11 @@ public final class FBTestProperties {
     public static FirebirdSupportInfo getDefaultSupportInfo() {
         try {
             if (firebirdSupportInfo == null) {
-                final FBServiceManager fbServiceManager = new FBServiceManager(getGdsType());
-                if (getGdsType() == GDSType.getType("PURE_JAVA") || getGdsType() == GDSType.getType("NATIVE")) {
+                final GDSType gdsType = getGdsType();
+                final FBServiceManager fbServiceManager = new FBServiceManager(gdsType);
+                if (gdsType == GDSType.getType("PURE_JAVA")
+                        || gdsType == GDSType.getType("NATIVE")
+                        || gdsType == GDSType.getType("OOREMOTE") ) {
                     fbServiceManager.setHost(DB_SERVER_URL);
                     fbServiceManager.setPort(DB_SERVER_PORT);
                 }
@@ -157,8 +160,11 @@ public final class FBTestProperties {
         gdsTypeToUrlPrefixMap.put(GDSType.getType("PURE_JAVA"), "jdbc:firebirdsql:");
         gdsTypeToUrlPrefixMap.put(GDSType.getType("EMBEDDED"), "jdbc:firebirdsql:embedded:");
         gdsTypeToUrlPrefixMap.put(GDSType.getType("NATIVE"), "jdbc:firebirdsql:native:");
-        gdsTypeToUrlPrefixMap.put(GDSType.getType("ORACLE_MODE"), "jdbc:firebirdsql:oracle:");
         gdsTypeToUrlPrefixMap.put(GDSType.getType("LOCAL"), "jdbc:firebirdsql:local:");
+        gdsTypeToUrlPrefixMap.put(GDSType.getType("OOREMOTE"), "jdbc:firebirdsql:oo:");
+
+        // Not part of Jaybird:
+        gdsTypeToUrlPrefixMap.put(GDSType.getType("ORACLE_MODE"), "jdbc:firebirdsql:oracle:");
         gdsTypeToUrlPrefixMap.put(GDSType.getType("NIO"), "jdbc:firebirdsql:nio:");
     }
 
@@ -201,8 +207,10 @@ public final class FBTestProperties {
      * @throws Exception
      */
     public static void defaultDatabaseSetUp(FBManager fbManager) throws Exception {
-        if (getGdsType() == GDSType.getType("PURE_JAVA")
-                || getGdsType() == GDSType.getType("NATIVE")) {
+        final GDSType gdsType = getGdsType();
+        if (gdsType == GDSType.getType("PURE_JAVA")
+                || gdsType == GDSType.getType("NATIVE")
+                || gdsType == GDSType.getType("OOREMOTE")) {
             fbManager.setServer(DB_SERVER_URL);
             fbManager.setPort(DB_SERVER_PORT);
         }

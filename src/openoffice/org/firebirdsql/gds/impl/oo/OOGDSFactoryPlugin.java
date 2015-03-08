@@ -1,7 +1,7 @@
 /*
  * $Id$
- * 
- * Firebird Open Source J2ee connector - jdbc driver
+ *
+ * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -14,7 +14,7 @@
  * This file was created by members of the firebird development team.
  * All individual contributions remain the Copyright (C) of those
  * individuals.  Contributors to this file are either listed here or
- * can be obtained from a CVS history command.
+ * can be obtained from a source control history command.
  *
  * All rights reserved.
  */
@@ -31,8 +31,7 @@ public class OOGDSFactoryPlugin extends BaseGDSFactoryPlugin {
 
     private static final String[] TYPE_ALIASES = new String[] {};
 
-    private static final String[] JDBC_PROTOCOLS = new String[] {
-            "jdbc:firebird:oo:", "jdbc:firebirdsql:oo:"};
+    private static final String[] JDBC_PROTOCOLS = new String[] { "jdbc:firebird:oo:", "jdbc:firebirdsql:oo:"};
 
     public String getPluginName() {
         return "GDS implementation for OpenOffice.";
@@ -55,11 +54,9 @@ public class OOGDSFactoryPlugin extends BaseGDSFactoryPlugin {
         return JDBC_PROTOCOLS;
     }
 
-    public String getDatabasePath(String server, Integer port, String path)
-            throws GDSException {
+    public String getDatabasePath(String server, Integer port, String path) throws GDSException {
         if (server == null)
-            throw new GDSException("Server name/address is required "
-                    + "for pure Java implementation.");
+            throw new GDSException("Server name/address is required for pure Java implementation.");
 
         if (path == null)
             throw new GDSException("Database name/path is required.");

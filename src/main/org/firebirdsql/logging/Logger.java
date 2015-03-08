@@ -27,7 +27,7 @@ package org.firebirdsql.logging;
  * @author <a href="mailto:brodsom@users.sourceforge.net">Blas Rodriguez Somoza</a>
  * @version 1.0
  */
-public interface Logger{
+public interface Logger {
 	
 	boolean isDebugEnabled();
 	
