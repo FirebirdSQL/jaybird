@@ -1,5 +1,7 @@
- /*
- * Firebird Open Source J2ee connector - jdbc driver
+/*
+ * $Id$
+ *
+ * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -12,54 +14,54 @@
  * This file was created by members of the firebird development team.
  * All individual contributions remain the Copyright (C) of those
  * individuals.  Contributors to this file are either listed here or
- * can be obtained from a CVS history command.
+ * can be obtained from a source control history command.
  *
  * All rights reserved.
  */
 package org.firebirdsql.logging;
 
 /**
- * Describe class <code>Logger</code> here.
+ * Logger is a facade to hide the logging implementation used from the rest of Jaybird.
  *
  * @author <a href="mailto:d_jencks@users.sourceforge.net">David Jencks</a>
  * @author <a href="mailto:brodsom@users.sourceforge.net">Blas Rodriguez Somoza</a>
  * @version 1.0
  */
-public abstract class Logger{
-	
-	abstract public boolean isDebugEnabled();
-	
-	abstract public void debug(Object message);
-	
-	abstract public void debug(Object message, Throwable t);
-    
-    abstract public boolean isTraceEnabled();
-    
-    abstract public void trace(Object message);
-    
-    abstract public void trace(Object message, Throwable t);
-	
-	abstract public boolean isInfoEnabled();
-	
-	abstract public void info(Object message);
-	
-	abstract public void info(Object message, Throwable t);
-	
-	abstract public boolean isWarnEnabled();
-	
-	abstract public void warn(Object message);
-	
-	abstract public void warn(Object message, Throwable t);
-	
-	abstract public boolean isErrorEnabled();
-	
-	abstract public void error(Object message);
-	
-	abstract public void error(Object message, Throwable t);
-	
-	abstract public boolean isFatalEnabled();
-	
-	abstract public void fatal(Object message);
-	
-	abstract public void fatal(Object message, Throwable t);
+public interface Logger {
+
+    boolean isDebugEnabled();
+
+    void debug(Object message);
+
+    void debug(Object message, Throwable t);
+
+    boolean isTraceEnabled();
+
+    void trace(Object message);
+
+    void trace(Object message, Throwable t);
+
+    boolean isInfoEnabled();
+
+    void info(Object message);
+
+    void info(Object message, Throwable t);
+
+    boolean isWarnEnabled();
+
+    void warn(Object message);
+
+    void warn(Object message, Throwable t);
+
+    boolean isErrorEnabled();
+
+    void error(Object message);
+
+    void error(Object message, Throwable t);
+
+    boolean isFatalEnabled();
+
+    void fatal(Object message);
+
+    void fatal(Object message, Throwable t);
 }
