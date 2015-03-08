@@ -81,6 +81,11 @@ public final class Version11Descriptor extends AbstractProtocolDescriptor implem
     }
 
     @Override
+    public FbWireAsynchronousChannel createAsynchronousChannel(FbWireDatabase database) {
+        return new V10AsynchronousChannel(database);
+    }
+
+    @Override
     protected ParameterConverter getParameterConverter() {
         return new V11ParameterConverter();
     }

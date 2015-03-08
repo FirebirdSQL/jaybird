@@ -157,4 +157,14 @@ public interface ProtocolDescriptor {
      */
     FbWireBlob createInputBlob(FbWireDatabase database, FbWireTransaction transaction,
             BlobParameterBuffer blobParameterBuffer, long blobId);
+
+    /**
+     * Create a disconnected asynchronous channel.
+     *
+     * @param database
+     *         The parent database handle.
+     * @return Asynchronous channel implementation
+     */
+    FbWireAsynchronousChannel createAsynchronousChannel(FbWireDatabase database);
+
 }

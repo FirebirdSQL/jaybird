@@ -242,10 +242,9 @@ public class TestFBEventManager extends FBJUnit4TestBase {
             try {
                 eventCount = eventManager.waitForEvent(eventName, timeout);
             } catch (InterruptedException ie){
-                ie.printStackTrace();
                 eventCount = 0;
             } catch (Exception e){
-                throw new RuntimeException(e.getMessage());
+                throw new RuntimeException(e.getMessage(), e);
             }
         }
 
@@ -267,7 +266,7 @@ public class TestFBEventManager extends FBJUnit4TestBase {
         }
     }
 
-    class EventProducerThread extends Thread {
+    static class EventProducerThread extends Thread {
 
         private int count;
 

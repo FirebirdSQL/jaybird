@@ -23,6 +23,8 @@ package org.firebirdsql.gds.ng.wire;
 import org.firebirdsql.encodings.Encoding;
 import org.firebirdsql.encodings.IEncodingFactory;
 import org.firebirdsql.gds.BlobParameterBuffer;
+import org.firebirdsql.gds.EventHandle;
+import org.firebirdsql.gds.EventHandler;
 import org.firebirdsql.gds.impl.BlobParameterBufferImp;
 import org.firebirdsql.gds.impl.TransactionParameterBufferImpl;
 import org.firebirdsql.gds.impl.wire.XdrInputStream;
@@ -119,6 +121,19 @@ public abstract class AbstractFbWireDatabase extends AbstractFbDatabase implemen
     public final boolean isAttached() {
         return super.isAttached() && connection.isConnected();
     }
+
+    /**
+     * Checks if a physical connection to the server is established and if the
+     * connection is attached to a database.
+     * <p>
+     * This method calls {@link #checkConnected()}, so it is not necessary to
+     * call both.
+     * </p>
+     *
+     * @throws SQLException
+     *         If the database not connected or attached.
+     */
+    protected abstract void checkAttached() throws SQLException;
 
     @Override
     public FbBlob createBlobForOutput(FbTransaction transaction, BlobParameterBuffer blobParameterBuffer) throws SQLException {
@@ -225,4 +240,24 @@ public abstract class AbstractFbWireDatabase extends AbstractFbDatabase implemen
     protected final void writeDirect(byte[] data) throws IOException {
         connection.writeDirect(data);
     }
+
+    public EventHandle createEventHandle(String eventName, EventHandler eventHandler) {
+        return new WireEventHandle(eventName, eventHandler, getEncoding());
+    }
+
+    public void countEvents(EventHandle eventHandle) throws SQLException {
+        if (!(eventHandle instanceof WireEventHandle))
+            throw new SQLException("Invalid event handle, type: " + eventHandle.getClass().getName());
+
+        ((WireEventHandle) eventHandle).calculateCount();
+    }
+
+    /**
+     * Initializes the asynchronous channel (for event notification).
+     *
+     * @throws java.sql.SQLException
+     *         For errors establishing the channel, or if the channel already exists.
+     */
+    // TODO make protected?
+    public abstract FbWireAsynchronousChannel initAsynchronousChannel() throws SQLException;
 }

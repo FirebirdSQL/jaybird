@@ -23,6 +23,7 @@ package org.firebirdsql.gds.ng.wire.version10;
 import org.firebirdsql.encodings.Encoding;
 import org.firebirdsql.encodings.EncodingFactory;
 import org.firebirdsql.gds.DatabaseParameterBuffer;
+import org.firebirdsql.gds.EventHandle;
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.TransactionParameterBuffer;
 import org.firebirdsql.gds.impl.DatabaseParameterBufferExtension;
@@ -41,6 +42,8 @@ import java.nio.charset.Charset;
 import java.sql.SQLException;
 import java.sql.SQLFeatureNotSupportedException;
 import java.sql.SQLNonTransientConnectionException;
+import java.sql.SQLNonTransientException;
+import java.util.concurrent.Future;
 
 import static org.firebirdsql.gds.impl.wire.WireProtocolConstants.*;
 import static org.firebirdsql.gds.ng.TransactionHelper.checkTransactionActive;
@@ -57,6 +60,7 @@ public class V10Database extends AbstractFbWireDatabase implements FbWireDatabas
 
     private int handle;
     private BlrCalculator blrCalculator;
+    private FbWireAsynchronousChannel asynchronousChannel;
 
     /**
      * Creates a V10Database instance.
@@ -74,6 +78,31 @@ public class V10Database extends AbstractFbWireDatabase implements FbWireDatabas
     @Override
     public int getHandle() {
         return handle;
+    }
+
+    @Override
+    public void queueEvent(EventHandle eventHandle) throws SQLException {
+        checkAttached();
+        // TODO Move to AbstractFbWireDatabase?
+        synchronized (getSynchronizationObject()) {
+            if (asynchronousChannel == null || !asynchronousChannel.isConnected()) {
+                asynchronousChannel = initAsynchronousChannel();
+                AsynchronousProcessor.getInstance().registerAsynchronousChannel(asynchronousChannel);
+            }
+            asynchronousChannel.queueEvent(eventHandle);
+        }
+    }
+
+    @Override
+    public void cancelEvent(EventHandle eventHandle) throws SQLException {
+        checkAttached();
+        synchronized (getSynchronizationObject()) {
+            if (asynchronousChannel == null || !asynchronousChannel.isConnected()) {
+                // TODO SQL state, standard firebird error code?
+                throw new SQLNonTransientException("Asynchronous channel is not connected, cannot cancel event");
+            }
+            asynchronousChannel.cancelEvent(eventHandle);
+        }
     }
 
     @Override
@@ -444,6 +473,40 @@ public class V10Database extends AbstractFbWireDatabase implements FbWireDatabas
         }
     }
 
+    @Override
+    public FbWireAsynchronousChannel initAsynchronousChannel() throws SQLException {
+        checkAttached();
+        final int auxHandle;
+        final int port;
+        synchronized (getSynchronizationObject()) {
+            try {
+                final XdrOutputStream xdrOut = getXdrOut();
+                xdrOut.writeInt(op_connect_request);
+                xdrOut.writeInt(P_REQ_async); // Connection type (p_req_type)
+                xdrOut.writeInt(getHandle()); // p_req_object
+                xdrOut.writeInt(0); // p_req_partner
+                xdrOut.flush();
+            } catch (IOException ex) {
+                throw new FbExceptionBuilder().exception(ISCConstants.isc_net_write_err).cause(ex).toSQLException();
+            }
+            try {
+                GenericResponse response = readGenericResponse(null);
+
+                auxHandle = response.getObjectHandle();
+                final byte[] data = response.getData();
+                // bytes 0 - 1: sin family (ignore)
+                // bytes 2 - 3: sin port (port to connect to)
+                port = ((data[2] & 0xFF) << 8) + (data[3] & 0xFF);
+                // remaining bytes: IP address + other info(?) (ignore, can't be trusted, and invalid in FB3 and higher; always use original hostname)
+            } catch (IOException ex) {
+                throw new FbExceptionBuilder().exception(ISCConstants.isc_net_read_err).cause(ex).toSQLException();
+            }
+        }
+        final FbWireAsynchronousChannel channel = protocolDescriptor.createAsynchronousChannel(this);
+        channel.connect(connection.getServerName(), port, auxHandle);
+        return channel;
+    }
+
     /**
      * Sends - without flushing - the (release) operation and objectId.
      *
@@ -609,17 +672,7 @@ public class V10Database extends AbstractFbWireDatabase implements FbWireDatabas
         }
     }
 
-    /**
-     * Checks if a physical connection to the server is established and if the
-     * connection is attached to a database.
-     * <p>
-     * This method calls {@link #checkConnected()}, so it is not necessary to
-     * call both.
-     * </p>
-     *
-     * @throws SQLException
-     *         If the database not connected or attached.
-     */
+    @Override
     protected final void checkAttached() throws SQLException {
         checkConnected();
         if (!isAttached()) {

@@ -74,6 +74,11 @@ public class EmptyProtocolDescriptor extends AbstractProtocolDescriptor {
     }
 
     @Override
+    public FbWireAsynchronousChannel createAsynchronousChannel(FbWireDatabase database) {
+        return null;
+    }
+
+    @Override
     protected ParameterConverter getParameterConverter() {
         return new ParameterConverter() {
             @Override

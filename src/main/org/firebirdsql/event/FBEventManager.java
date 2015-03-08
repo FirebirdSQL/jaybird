@@ -40,26 +40,23 @@
  */
 package org.firebirdsql.event;
 
-import org.firebirdsql.gds.GDS;
-import org.firebirdsql.gds.GDSException;
-import org.firebirdsql.gds.DatabaseParameterBuffer;
 import org.firebirdsql.gds.EventHandle;
-import org.firebirdsql.gds.IscDbHandle;
-
-import org.firebirdsql.gds.impl.GDSType;
 import org.firebirdsql.gds.impl.GDSFactory;
+import org.firebirdsql.gds.impl.GDSType;
+import org.firebirdsql.gds.ng.FbConnectionProperties;
+import org.firebirdsql.gds.ng.FbDatabase;
+import org.firebirdsql.gds.ng.FbDatabaseFactory;
+import org.firebirdsql.gds.ng.IConnectionProperties;
 import org.firebirdsql.jdbc.FBSQLException;
+import org.firebirdsql.logging.Logger;
+import org.firebirdsql.logging.LoggerFactory;
 import org.firebirdsql.util.SQLExceptionChainBuilder;
 
-import java.util.Map;
-import java.util.Set;
-import java.util.List;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.ArrayList;
-import java.util.Collections;
-
 import java.sql.SQLException;
+import java.util.*;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.TimeUnit;
 
 /**
  * An {@link org.firebirdsql.event.EventManager} implementation to listen for database events.
@@ -68,44 +65,38 @@ import java.sql.SQLException;
  */
 public class FBEventManager implements EventManager {
 
-    private GDS gds;
-    private IscDbHandle dbHandle;
+    private static final Logger log = LoggerFactory.getLogger(FBEventManager.class);
+
+    private final GDSType gdsType;
+    private FbDatabase fbDatabase;
+    private final IConnectionProperties connectionProperties = new FbConnectionProperties();
     private boolean connected = false;
-    private String user = "";
-    private String password = "";
-    private String database = "";
-    private int port = 3050;
-    private String host = "localhost";
     private final Map<String, Set<EventListener>> listenerMap = Collections.synchronizedMap(new HashMap<String, Set<EventListener>>());
     private final Map<String, GdsEventHandler> handlerMap = Collections.synchronizedMap(new HashMap<String, GdsEventHandler>());
-    private final List<DatabaseEvent> eventQueue = new ArrayList<DatabaseEvent>();
+    private final BlockingQueue<DatabaseEvent> eventQueue = new LinkedBlockingQueue<DatabaseEvent>();
     private EventDispatcher eventDispatcher;
     private Thread dispatchThread;
-    private long waitTimeout = 1000;
+    private volatile long waitTimeout = 1000;
 
+    @SuppressWarnings("UnusedDeclaration")
     public FBEventManager() {
-    	this(GDSFactory.getDefaultGDSType());
+        this(GDSFactory.getDefaultGDSType());
     }
 
-    public FBEventManager(GDSType gdsType){
-        gds = GDSFactory.getGDSForType(gdsType);
-        dbHandle = gds.createIscDbHandle();
+    public FBEventManager(GDSType gdsType) {
+        this.gdsType = gdsType;
     }
 
     public void connect() throws SQLException {
-        if (connected){
+        if (connected) {
             throw new IllegalStateException("Connect called while already connected");
         }
-        DatabaseParameterBuffer dpb = gds.createDatabaseParameterBuffer();
-        dpb.addArgument(DatabaseParameterBuffer.USER, user);
-        dpb.addArgument(DatabaseParameterBuffer.PASSWORD, password);
-        try {
-            String connString = GDSFactory.getDatabasePath(gds.getType(), host, port, database);
-            gds.iscAttachDatabase(connString, dbHandle, dpb);
-        } catch (GDSException e){
-            throw new FBSQLException(e);
-        }
+        final FbDatabaseFactory databaseFactory = GDSFactory.getDatabaseFactoryForType(gdsType);
+
+        fbDatabase = databaseFactory.connect(connectionProperties);
+        fbDatabase.attach();
         connected = true;
+
         eventDispatcher = new EventDispatcher();
         dispatchThread = new Thread(eventDispatcher);
         dispatchThread.setDaemon(true);
@@ -113,35 +104,40 @@ public class FBEventManager implements EventManager {
     }
 
     public void disconnect() throws SQLException {
-        if (!connected){
+        if (!connected) {
             throw new IllegalStateException("Disconnect called while not connected");
         }
         SQLExceptionChainBuilder<SQLException> chain = new SQLExceptionChainBuilder<SQLException>();
-        for (String eventName : new HashSet<String>(handlerMap.keySet())) {
+        try {
             try {
-                unregisterListener(eventName);
-            } catch (GDSException e1){
-                chain.append(new FBSQLException(e1));
+                for (String eventName : new HashSet<String>(handlerMap.keySet())) {
+                    try {
+                        unregisterListener(eventName);
+                    } catch (SQLException e) {
+                        chain.append(e);
+                    } catch (Exception e) {
+                        chain.append(new SQLException(e));
+                    }
+                }
+            } finally {
+                handlerMap.clear();
+                listenerMap.clear();
+                try {
+                    fbDatabase.detach();
+                } catch (SQLException e) {
+                    chain.append(e);
+                }
+                connected = false;
             }
-        }
+        } finally {
+            eventDispatcher.stop();
 
-        handlerMap.clear();
-        listenerMap.clear();
-
-        try {
-            gds.iscDetachDatabase(dbHandle);
-        } catch (GDSException e2){
-            chain.append(new FBSQLException(e2));
-        }
-        connected = false;
-
-        eventDispatcher.stop();
-
-        // join the thread and wait until it dies
-        try {
-            dispatchThread.join();
-        } catch(InterruptedException ex) {
-            chain.append(new FBSQLException(ex));
+            // join the thread and wait until it dies
+            try {
+                dispatchThread.join();
+            } catch (InterruptedException ex) {
+                chain.append(new FBSQLException(ex));
+            }
         }
         if (chain.hasException()) throw chain.getException();
     }
@@ -150,55 +146,56 @@ public class FBEventManager implements EventManager {
         return connected;
     }
 
-    public void setUser(String user){
-        this.user = user;
+    public void setUser(String user) {
+        connectionProperties.setUser(user);
     }
 
-    public String getUser(){
-        return this.user;
+    public String getUser() {
+        return connectionProperties.getUser();
     }
 
-    public void setPassword(String password){
-        this.password = password;
+    public void setPassword(String password) {
+        connectionProperties.setPassword(password);
     }
 
-    public String getPassword(){
-        return this.password;
+    public String getPassword() {
+        return connectionProperties.getPassword();
     }
 
-    public void setDatabase(String database){
-        this.database = database;
+    public void setDatabase(String database) {
+        connectionProperties.setDatabaseName(database);
     }
 
-    public String getDatabase(){
-        return this.database;
+    public String getDatabase() {
+        return connectionProperties.getDatabaseName();
     }
 
-    public String getHost(){
-        return this.host;
+    public String getHost() {
+        return connectionProperties.getServerName();
     }
 
-    public void setHost(String host){
-        this.host = host;
-    }
-       
-    public int getPort(){
-        return this.port;
+    public void setHost(String host) {
+        connectionProperties.setServerName(host);
     }
 
-    public void setPort(int port){
-        this.port = port;
+    public int getPort() {
+        return connectionProperties.getPortNumber();
     }
-    
+
+    public void setPort(int port) {
+        connectionProperties.setPortNumber(port);
+    }
+
     /**
      * Get the time in milliseconds, after which the async thread will exit from the {@link Object#wait(long)} method
      * and check whether it was stopped or not.
      * <p>
      * Default value is 1000 (1 second).
      * </p>
-     * 
+     *
      * @return wait timeout in milliseconds
      */
+    @SuppressWarnings("UnusedDeclaration")
     public long getWaitTimeout() {
         return waitTimeout;
     }
@@ -209,27 +206,25 @@ public class FBEventManager implements EventManager {
      * <p>
      * Default value is 1000 (1 second).
      * </p>
-     * 
-     * @param waitTimeout wait timeout in milliseconds
+     *
+     * @param waitTimeout
+     *         wait timeout in milliseconds
      */
-    public void setWaitTimeout(long waitTimeout) {
+    @SuppressWarnings("UnusedDeclaration")
+    public synchronized void setWaitTimeout(long waitTimeout) {
         this.waitTimeout = waitTimeout;
     }
 
     public void addEventListener(String eventName, EventListener listener) throws SQLException {
-        if (!connected){
+        if (!connected) {
             throw new IllegalStateException("Can't add event listeners to disconnected EventManager");
         }
-        if (listener == null || eventName == null){
+        if (listener == null || eventName == null) {
             throw new NullPointerException();
         }
-        synchronized (listenerMap){
-            if (!listenerMap.containsKey(eventName)){
-                try {
-                    registerListener(eventName);
-                } catch (GDSException e){
-                    throw new FBSQLException(e);
-                }
+        synchronized (listenerMap) {
+            if (!listenerMap.containsKey(eventName)) {
+                registerListener(eventName);
                 listenerMap.put(eventName, new HashSet<EventListener>());
             }
             Set<EventListener> listenerSet = listenerMap.get(eventName);
@@ -238,19 +233,15 @@ public class FBEventManager implements EventManager {
     }
 
     public void removeEventListener(String eventName, EventListener listener) throws SQLException {
-        if (eventName == null || listener == null){
+        if (eventName == null || listener == null) {
             throw new NullPointerException();
         }
         Set<EventListener> listenerSet = listenerMap.get(eventName);
-        if (listenerSet != null){
+        if (listenerSet != null) {
             listenerSet.remove(listener);
-            if (listenerSet.isEmpty()){
+            if (listenerSet.isEmpty()) {
                 listenerMap.remove(eventName);
-                try {
-                    unregisterListener(eventName);
-                } catch (GDSException e){
-                    throw new FBSQLException(e);
-                }
+                unregisterListener(eventName);
             }
         }
     }
@@ -260,123 +251,113 @@ public class FBEventManager implements EventManager {
     }
 
     public int waitForEvent(String eventName, final int timeout) throws InterruptedException, SQLException {
-        if (!connected){
+        if (!connected) {
             throw new IllegalStateException("Can't wait for events with disconnected EventManager");
         }
-        if (eventName == null){
+        if (eventName == null) {
             throw new NullPointerException();
         }
         final Object lock = new Object();
         OneTimeEventListener listener = new OneTimeEventListener(lock);
-        synchronized (lock){
-            addEventListener(eventName, listener);
-            lock.wait(timeout);
+        try {
+            synchronized (lock) {
+                addEventListener(eventName, listener);
+                lock.wait(timeout);
+            }
+        } finally {
+            removeEventListener(eventName, listener);
         }
-              
-        removeEventListener(eventName, listener);
         return listener.getEventCount();
     }
 
-    private void registerListener(String eventName) throws GDSException {
+    private void registerListener(String eventName) throws SQLException {
         GdsEventHandler handler = new GdsEventHandler(eventName);
         handlerMap.put(eventName, handler);
         handler.register();
     }
 
-    private void unregisterListener(String eventName) throws GDSException {
+    private void unregisterListener(String eventName) throws SQLException {
         GdsEventHandler handler = handlerMap.get(eventName);
-        handler.unregister();
-        handlerMap.remove(eventName);
+        try {
+            handler.unregister();
+        } finally {
+            handlerMap.remove(eventName);
+        }
     }
 
     class GdsEventHandler implements org.firebirdsql.gds.EventHandler {
 
-        private EventHandle eventHandle;
+        private final EventHandle eventHandle;
         private boolean initialized = false;
         private boolean cancelled = false;
 
-        public GdsEventHandler(String eventName) throws GDSException {
-            eventHandle = gds.createEventHandle(eventName);
-            gds.iscEventBlock(eventHandle);
+        public GdsEventHandler(String eventName) {
+            eventHandle = fbDatabase.createEventHandle(eventName, this);
         }
 
-        public synchronized void register() throws GDSException {
-            if (cancelled){
+        public synchronized void register() throws SQLException {
+            if (cancelled) {
                 throw new IllegalStateException("Trying to register a cancelled event handler");
             }
-            gds.iscQueueEvents(dbHandle, eventHandle, this);
+            fbDatabase.queueEvent(eventHandle);
         }
 
-        public synchronized void unregister() throws GDSException {
-            if (cancelled){
-                throw new IllegalStateException("Trying to cancel a cancelled event handler");
-            }
-            gds.iscCancelEvents(dbHandle, eventHandle);
+        public synchronized void unregister() throws SQLException {
+            if (cancelled) return;
+            fbDatabase.cancelEvent(eventHandle);
             cancelled = true;
         }
 
-        public synchronized void eventOccurred() {
-            if (!cancelled){
+        public synchronized void eventOccurred(EventHandle eventHandle) {
+            if (!cancelled) {
                 try {
-                    gds.iscEventCounts(eventHandle);
-                } catch (GDSException e1){
-                    e1.printStackTrace();
+                    fbDatabase.countEvents(eventHandle);
+                } catch (SQLException e) {
+                    log.warn("Exception processing event counts", e);
                 }
 
-                if (initialized && !cancelled){
-                    DatabaseEvent event = new DatabaseEventImpl(eventHandle.getEventName(), eventHandle.getEventCount());
-
-                    synchronized (eventQueue){
-                        eventQueue.add(event);
-                        eventQueue.notify();
-                    }
+                if (initialized && !cancelled) {
+                    eventQueue.add(new DatabaseEventImpl(eventHandle.getEventName(), eventHandle.getEventCount()));
                 } else {
                     initialized = true;
                 }
-                 
+
                 try {
                     register();
-                } catch (GDSException e2){
-                    e2.printStackTrace();
+                } catch (SQLException e) {
+                    log.warn("Exception registering for event", e);
                 }
-            }         
+            }
         }
-
     }
 
     class EventDispatcher implements Runnable {
-        
+
         private volatile boolean running = false;
 
-        public void stop(){
+        public void stop() {
             running = false;
         }
 
-        public void run(){
+        public void run() {
             running = true;
-            final List<DatabaseEvent> events = new ArrayList<DatabaseEvent>();
-            while (running){
-                synchronized (eventQueue){
-                    while (eventQueue.isEmpty() && running){
-                        try {
-                            eventQueue.wait(waitTimeout);
-                        } catch (InterruptedException ie){ }
-                    }
-                    events.addAll(eventQueue);
-                    eventQueue.clear();
-                }
-                
-                for (DatabaseEvent event : events) {
-                    synchronized (listenerMap){
+            DatabaseEvent event;
+            while (running) {
+                try {
+                    event = eventQueue.poll(waitTimeout, TimeUnit.MILLISECONDS);
+                    if (event == null) continue;
+
+                    synchronized (listenerMap) {
                         Set<EventListener> listenerSet = listenerMap.get(event.getEventName());
-                        if (listenerSet != null){
+                        if (listenerSet != null) {
                             for (EventListener listener : listenerSet) {
                                 listener.eventOccurred(event);
                             }
                         }
                     }
+                } catch (InterruptedException ie) {
+                    // Ignore interruption; continue if not explicitly stopped
                 }
-                events.clear();
             }
         }
     }
@@ -388,44 +369,44 @@ class OneTimeEventListener implements EventListener {
 
     private final Object lock;
 
-    public OneTimeEventListener(Object lock){
+    public OneTimeEventListener(Object lock) {
         this.lock = lock;
     }
 
-    public  void eventOccurred(DatabaseEvent event){
-        if (eventCount == -1){
+    public void eventOccurred(DatabaseEvent event) {
+        if (eventCount == -1) {
             eventCount = event.getEventCount();
         }
-        synchronized (lock){
-            lock.notify();
+        synchronized (lock) {
+            lock.notifyAll();
         }
     }
 
-    public int getEventCount(){
+    public int getEventCount() {
         return eventCount;
     }
 }
 
 class DatabaseEventImpl implements DatabaseEvent {
-    
+
     private int eventCount;
 
     private String eventName;
 
-    public DatabaseEventImpl(String eventName, int eventCount){
+    public DatabaseEventImpl(String eventName, int eventCount) {
         this.eventName = eventName;
         this.eventCount = eventCount;
     }
 
-    public int getEventCount(){
+    public int getEventCount() {
         return this.eventCount;
     }
 
-    public String getEventName(){
+    public String getEventName() {
         return this.eventName;
     }
 
-    public String toString(){
+    public String toString() {
         return "DatabaseEvent['" + eventName + " * " + eventCount + "]";
     }
 }
