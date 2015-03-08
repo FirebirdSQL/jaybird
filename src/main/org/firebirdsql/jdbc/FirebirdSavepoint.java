@@ -1,7 +1,7 @@
 /*
  * $Id$
  * 
- * Firebird Open Source J2ee connector - jdbc driver, public Firebird-specific 
+ * Firebird Open Source JavaEE connector - jdbc driver, public Firebird-specific
  * JDBC extensions.
  *
  * Redistribution and use in source and binary forms, with or without 
@@ -33,5 +33,5 @@ import java.sql.Savepoint;
  * Firebird-specific extensions to the {@link java.sql.Savepoint} interface.
  */
 public interface FirebirdSavepoint extends Savepoint {
-
+    /* Empty interface retained for backwards compatibility and potential future extension */
 }
