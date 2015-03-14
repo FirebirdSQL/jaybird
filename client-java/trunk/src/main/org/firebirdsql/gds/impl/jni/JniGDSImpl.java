@@ -49,8 +49,7 @@ public abstract class JniGDSImpl extends BaseGDSImpl {
     
     /**
      * Create instance of this class. This constructor attempts to load Jaybird
-     * JNI library. Subclasses are responsible for initializing JNI layer by 
-     * calling {@link #nativeInitilize(String)} method.
+     * JNI library.
      * 
      * @param gdsType type of GDS module being created.
      */
@@ -73,140 +72,77 @@ public abstract class JniGDSImpl extends BaseGDSImpl {
      * @throws UnsatisfiedLinkError if JNI bridge cannot be initialized.
      */
     protected static void initJNIBridge() throws UnsatisfiedLinkError {
-        final boolean logging = log != null;
-        
-        try {
-            boolean amd64Architecture = "amd64".equals(getSystemPropertyPrivileged("os.arch"));
-    
-            String jaybirdJniLibrary = amd64Architecture ? JAYBIRD_JNI_LIBRARY_X64 : JAYBIRD_JNI_LIBRARY;
-            
-    		if (logging)
-                log.info("Attempting to load JNI library : [" + jaybirdJniLibrary + "]");
-        
-            System.loadLibrary(jaybirdJniLibrary);
-        } catch (SecurityException ex) {
-            if (logging)
-                log.error("No permission to load JNI libraries.", ex);
-            
-            throw ex;
-        } catch (UnsatisfiedLinkError ex) {
-            if (logging)
-                log.error("No JNI library was found in the path.", ex);
-            
-            throw ex;
-        }
+//        final boolean logging = log != null;
+//
+//        try {
+//            boolean amd64Architecture = "amd64".equals(getSystemPropertyPrivileged("os.arch"));
+//
+//            String jaybirdJniLibrary = amd64Architecture ? JAYBIRD_JNI_LIBRARY_X64 : JAYBIRD_JNI_LIBRARY;
+//
+//    		if (logging)
+//                log.info("Attempting to load JNI library : [" + jaybirdJniLibrary + "]");
+//
+//            System.loadLibrary(jaybirdJniLibrary);
+//        } catch (SecurityException ex) {
+//            if (logging)
+//                log.error("No permission to load JNI libraries.", ex);
+//
+//            throw ex;
+//        } catch (UnsatisfiedLinkError ex) {
+//            if (logging)
+//                log.error("No JNI library was found in the path.", ex);
+//
+//            throw ex;
+//        }
     }
 
     /**
      * Attempts too load a Firebird client or embedded server library. Method 
      * tries all specified libraries one by one, and when the 
-     * {@link #nativeInitilize(String)} method does not throw an exception, it 
+     * nativeInitilize(String) method does not throw an exception, it
      * assumes that initialization was successful. 
      * 
      * @param clientLibraryList list of library names including file extension
      * that will be tried. 
      */
     protected void attemptToLoadAClientLibraryFromList(String[] clientLibraryList) {
-        final boolean logging = log != null;
-
-        for (int i = 0, n = clientLibraryList.length; i < n; i++) {
-            final String currentClientLibraryToTry = clientLibraryList[i];
-            try {
-                nativeInitilize(currentClientLibraryToTry);
-            } catch (Throwable th) {
-                if (DEVELOPMENT_DEBUG_OUTPUT)
-                	th.printStackTrace(); // Dont hide it completly
-
-                if (logging && DEVELOPMENT_DEBUG_OUTPUT)
-                    System.out.println("Failed to load client library # " + i
-                        + " - \"" + currentClientLibraryToTry + "\"."
-                        + th.toString());
-
-                // If we have just failed to load the last client library
-                // then we need to throw an exception.
-                if (i == clientLibraryList.length - 1)
-                    throw new RuntimeException(
-                            "Failed to initialize Jaybird native library. " +
-                            "This is most likely due to a failure to load the " +
-                            "firebird client library.");
-
-                // Otherwise we continue to next client library
-                continue;
-            }
-
-            if (logging)
-                log.info("Successfully loaded client library # " + i + " - \""
-                        + currentClientLibraryToTry + "\".");
-
-            // If we get here we have been loaded a client library so we stop
-            // here.
-            break;
-        }
+//        final boolean logging = log != null;
+//
+//        for (int i = 0, n = clientLibraryList.length; i < n; i++) {
+//            final String currentClientLibraryToTry = clientLibraryList[i];
+//            try {
+//                nativeInitilize(currentClientLibraryToTry);
+//            } catch (Throwable th) {
+//                if (DEVELOPMENT_DEBUG_OUTPUT)
+//                	th.printStackTrace(); // Dont hide it completly
+//
+//                if (logging && DEVELOPMENT_DEBUG_OUTPUT)
+//                    System.out.println("Failed to load client library # " + i
+//                        + " - \"" + currentClientLibraryToTry + "\"."
+//                        + th.toString());
+//
+//                // If we have just failed to load the last client library
+//                // then we need to throw an exception.
+//                if (i == clientLibraryList.length - 1)
+//                    throw new RuntimeException(
+//                            "Failed to initialize Jaybird native library. " +
+//                            "This is most likely due to a failure to load the " +
+//                            "firebird client library.");
+//
+//                // Otherwise we continue to next client library
+//                continue;
+//            }
+//
+//            if (logging)
+//                log.info("Successfully loaded client library # " + i + " - \""
+//                        + currentClientLibraryToTry + "\".");
+//
+//            // If we get here we have been loaded a client library so we stop
+//            // here.
+//            break;
+//        }
     }
-    
-    /**
-     * Attempt to load a specified library. JNI layer tries to load the 
-     * specified library and to resolve the needed entry points. If this fails,
-     * and exception is thrown (instance of <code>java.lang.Throwable</code>).
-     * If no exception was thrown, we assume that initialization succeeded. 
-     * 
-     * @param sharedLibraryName name of the shared library including file
-     * extension.
-     */
-    public native void nativeInitilize(String sharedLibraryName);
 
-    
-    /*
-     * Methods below must have corresponding implementations in the Jaybird JNI
-     * layer (see code for jaybird2 shared library).
-     */
-
-    public native void native_isc_attach_database(byte[] file_name,
-            IscDbHandle db_handle, byte[] dpbBytes);
-
-    public native void native_isc_database_info(IscDbHandle db_handle,
-            int item_length, byte[] items, int buffer_length, byte[] buffer)
-            throws GDSException;
-
-    public native void native_isc_detach_database(IscDbHandle db_handle)
-            throws GDSException;
-
-    public native void native_isc_service_attach(String service,
-            IscSvcHandle serviceHandle, byte[] serviceParameterBuffer)
-            throws GDSException;
-
-    public native void native_isc_service_detach(IscSvcHandle serviceHandle)
-            throws GDSException;
-
-    public native void native_isc_service_query(IscSvcHandle serviceHandle,
-            byte[] sendServiceParameterBuffer,
-            byte[] requestServiceParameterBuffer, byte[] resultBuffer)
-            throws GDSException;
-
-    public native void native_isc_service_start(IscSvcHandle serviceHandle,
-            byte[] serviceParameterBuffer) throws GDSException;
-
-    public native int native_isc_que_events(IscDbHandle db_handle,
-            EventHandleImp eventHandle, EventHandler handler) 
-            throws GDSException;
-
-    public native long native_isc_event_block(
-            EventHandleImp eventHandle,
-            String eventName) throws GDSException;
-
-    public native void native_isc_event_counts(EventHandleImp eventHandle)
-            throws GDSException;
-
-    public native void native_isc_cancel_events(IscDbHandle db_handle,
-            EventHandleImp eventHandle) throws GDSException;
-
-    protected native void native_isc_finalize(int isc_api_handle)
-        throws GDSException;
-
-    protected void finalize() throws Throwable {
-        native_isc_finalize(isc_api_handle);
-    }
-    
     private static String getSystemPropertyPrivileged(final String propertyName) {
         return AccessController.doPrivileged(new PrivilegedAction<String>() {
            public String run() {

@@ -116,11 +116,12 @@ public abstract class BaseGDSImpl extends AbstractGDS {
         }
         
         synchronized (db_handle) {
-            native_isc_attach_database(urlData, db_handle, dpbBytes);
+            throw new UnsupportedOperationException();
+            //native_isc_attach_database(urlData, db_handle, dpbBytes);
         }
 
-        parseAttachDatabaseInfo(iscDatabaseInfo(db_handle,
-                AbstractGDS.DESCRIBE_DATABASE_INFO_BLOCK, 1024), db_handle);
+//        parseAttachDatabaseInfo(iscDatabaseInfo(db_handle,
+//                AbstractGDS.DESCRIBE_DATABASE_INFO_BLOCK, 1024), db_handle);
     }
 
     // isc_attach_database
@@ -130,10 +131,11 @@ public abstract class BaseGDSImpl extends AbstractGDS {
         synchronized (db_handle) {
             final byte[] returnValue = new byte[buffer_length];
 
-            native_isc_database_info(db_handle, items.length, items,
-                    buffer_length, returnValue);
-
-            return returnValue;
+            throw new UnsupportedOperationException();
+//            native_isc_database_info(db_handle, items.length, items,
+//                    buffer_length, returnValue);
+//
+//            return returnValue;
         }
     }
 
@@ -143,14 +145,15 @@ public abstract class BaseGDSImpl extends AbstractGDS {
         if (db_handle == null) { throw new GDSException(ISCConstants.isc_bad_db_handle); }
 
         synchronized (db_handle) {
-            native_isc_detach_database(db_handle);
-            try {
-                db_handle.invalidate();
-            } catch (Exception e) {
-                // Actual implementation does not throw exception
-                // TODO : Invalidate should throw GDSException?
-                throw new GDSException(ISCConstants.isc_network_error, e);
-            }
+            throw new UnsupportedOperationException();
+//            native_isc_detach_database(db_handle);
+//            try {
+//                db_handle.invalidate();
+//            } catch (Exception e) {
+//                // Actual implementation does not throw exception
+//                // TODO : Invalidate should throw GDSException?
+//                throw new GDSException(ISCConstants.isc_network_error, e);
+//            }
         }
     }
 
@@ -165,8 +168,9 @@ public abstract class BaseGDSImpl extends AbstractGDS {
             if (serviceHandle.isValid())
                 throw new GDSException("serviceHandle is already attached.");
 
-            native_isc_service_attach(service, serviceHandle,
-                    serviceParameterBufferBytes);
+            throw new UnsupportedOperationException();
+//            native_isc_service_attach(service, serviceHandle,
+//                    serviceParameterBufferBytes);
         }
     }
 
@@ -175,7 +179,8 @@ public abstract class BaseGDSImpl extends AbstractGDS {
             if (serviceHandle.isNotValid())
                 throw new GDSException("serviceHandle is not attached.");
 
-            native_isc_service_detach(serviceHandle);
+            throw new UnsupportedOperationException();
+//            native_isc_service_detach(serviceHandle);
         }
     }
 
@@ -192,9 +197,10 @@ public abstract class BaseGDSImpl extends AbstractGDS {
             if (serviceHandle.isNotValid())
                 throw new GDSException("serviceHandle is not attached.");
 
-            native_isc_service_query(serviceHandle,
-                    serviceParameterBufferBytes, serviceRequestBufferBytes,
-                    resultBuffer);
+            throw new UnsupportedOperationException();
+//            native_isc_service_query(serviceHandle,
+//                    serviceParameterBufferBytes, serviceRequestBufferBytes,
+//                    resultBuffer);
         }
     }
 
@@ -206,48 +212,10 @@ public abstract class BaseGDSImpl extends AbstractGDS {
             if (serviceHandle.isNotValid())
                 throw new GDSException("serviceHandle is not attached.");
 
-            native_isc_service_start(serviceHandle, serviceRequestBufferBytes);
+            throw new UnsupportedOperationException();
+//            native_isc_service_start(serviceHandle, serviceRequestBufferBytes);
         }
     }
-
-    public abstract void native_isc_attach_database(byte[] file_name,
-            IscDbHandle db_handle, byte[] dpbBytes);
-
-    public abstract void native_isc_database_info(IscDbHandle db_handle,
-            int item_length, byte[] items, int buffer_length, byte[] buffer)
-            throws GDSException;
-
-    public abstract void native_isc_detach_database(IscDbHandle db_handle)
-            throws GDSException;
-
-    // Services API abstract methods
-    public abstract void native_isc_service_attach(String service,
-            IscSvcHandle serviceHandle, byte[] serviceParameterBuffer)
-            throws GDSException;
-
-    public abstract void native_isc_service_detach(IscSvcHandle serviceHandle)
-            throws GDSException;
-
-    public abstract void native_isc_service_query(IscSvcHandle serviceHandle,
-            byte[] sendServiceParameterBuffer,
-            byte[] requestServiceParameterBuffer, byte[] resultBuffer)
-            throws GDSException;
-
-    public abstract void native_isc_service_start(IscSvcHandle serviceHandle,
-            byte[] serviceParameterBuffer) throws GDSException;
-
-    public abstract int native_isc_que_events(IscDbHandle db_handle,
-            EventHandleImp eventHandle, EventHandler handler) 
-            throws GDSException;
-
-    public abstract long native_isc_event_block(EventHandleImp eventHandle,
-            String eventNames) throws GDSException;
-
-    public abstract void native_isc_event_counts(EventHandleImp eventHandle)
-            throws GDSException;
-
-    public abstract void native_isc_cancel_events(IscDbHandle db_handle,
-            EventHandleImp eventHandle) throws GDSException;
 
     public TransactionParameterBuffer newTransactionParameterBuffer() {
         return new TransactionParameterBufferImpl();
@@ -267,8 +235,9 @@ public abstract class BaseGDSImpl extends AbstractGDS {
                     "Can't queue events on a cancelled EventHandle");
         }
         synchronized (dbHandle) {
-            return native_isc_que_events(
-                    dbHandle, eventHandleImp, eventHandler);
+            throw new UnsupportedOperationException();
+//            return native_isc_que_events(
+//                    dbHandle, eventHandleImp, eventHandler);
         }
     }
 
@@ -276,8 +245,9 @@ public abstract class BaseGDSImpl extends AbstractGDS {
             throws GDSException {
         
         EventHandleImp eventHandleImp = (EventHandleImp)eventHandle;
-        native_isc_event_block(
-                eventHandleImp, eventHandle.getEventName());
+        throw new UnsupportedOperationException();
+//        native_isc_event_block(
+//                eventHandleImp, eventHandle.getEventName());
     }
 
     public void iscEventCounts(EventHandle eventHandle)
@@ -288,7 +258,8 @@ public abstract class BaseGDSImpl extends AbstractGDS {
             throw new IllegalStateException(
                     "Can't get counts on an invalid EventHandle");
         }
-        native_isc_event_counts(eventHandleImp);
+        throw new UnsupportedOperationException();
+//        native_isc_event_counts(eventHandleImp);
     }
 
 
@@ -306,7 +277,8 @@ public abstract class BaseGDSImpl extends AbstractGDS {
         }
         eventHandleImp.cancel();
         synchronized (dbHandle){
-            native_isc_cancel_events(dbHandle, eventHandleImp);
+            throw new UnsupportedOperationException();
+//            native_isc_cancel_events(dbHandle, eventHandleImp);
         }
     }
 
