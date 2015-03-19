@@ -917,6 +917,36 @@ public class TestFBStatement extends FBJUnit4TestBase {
     }
 
     /**
+     * Tests if Firebird 1.5+ custom exception messages work.
+     */
+    @Test
+    public void testCustomExceptionMessage() throws Exception {
+        assumeTrue("Test requires custom exception messages", supportInfoFor(con).supportsCustomExceptionMessages());
+
+        //@formatter:off
+        executeDDL(con, "CREATE EXCEPTION simple_exception 'Standard message'");
+        executeDDL(con,
+                "CREATE PROCEDURE testexception " +
+                "AS " +
+                "BEGIN " +
+                "  EXCEPTION simple_exception 'Custom message';" +
+                "END");
+        //@formatter:on
+
+        Statement stmt = con.createStatement();
+        try {
+            expectedException.expect(allOf(
+                    isA(SQLException.class),
+                    message(containsString("; Custom message; "))
+            ));
+
+            stmt.execute("EXECUTE PROCEDURE testexception");
+        } finally {
+            stmt.close();
+        }
+    }
+
+    /**
      * Tests if Firebird 3 parametrized exceptions are correctly rendered.
      */
     @Test
