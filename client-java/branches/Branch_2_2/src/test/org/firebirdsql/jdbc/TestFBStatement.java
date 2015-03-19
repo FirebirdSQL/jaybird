@@ -22,10 +22,7 @@ package org.firebirdsql.jdbc;
 
 import org.firebirdsql.common.FBTestBase;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
-import java.sql.Statement;
+import java.sql.*;
 
 public class TestFBStatement extends FBTestBase {
 
@@ -243,6 +240,38 @@ public class TestFBStatement extends FBTestBase {
             stmt.execute("INSERT INTO test(col1) VALUES(" + DATA_ITEMS + ")");
 
             assertFalse("Statement should be open", stmt.isClosed());
+        } finally {
+            stmt.close();
+        }
+    }
+
+    /**
+     * Tests if Firebird 1.5+ custom exception messages work.
+     */
+    public void testCustomExceptionMessage() throws Exception {
+        final DatabaseMetaData metaData = con.getMetaData();
+        final int databaseMajorVersion = metaData.getDatabaseMajorVersion();
+        final int databaseMinorVersion = metaData.getDatabaseMinorVersion();
+        assertTrue("Test only works on Firebird 1.5 or higher",
+                databaseMajorVersion == 1 && databaseMinorVersion >= 5 || databaseMajorVersion > 1);
+
+        //@formatter:off
+        executeDDL(con, "CREATE EXCEPTION simple_exception 'Standard message'", new int[0]);
+        executeDDL(con,
+                "CREATE PROCEDURE testexception " +
+                "AS " +
+                "BEGIN " +
+                "  EXCEPTION simple_exception 'Custom message';" +
+                "END", new int[0]);
+        //@formatter:on
+
+        Statement stmt = con.createStatement();
+        try {
+            stmt.execute("EXECUTE PROCEDURE testexception");
+
+            fail("Expected an exception");
+        } catch (SQLException e) {
+            assertTrue("Exception does not contain the custom message", e.getMessage().contains("\nCustom message\n"));
         } finally {
             stmt.close();
         }
