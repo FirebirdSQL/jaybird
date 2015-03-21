@@ -22,6 +22,9 @@ package org.firebirdsql.jdbc;
 
 import org.firebirdsql.common.DataGenerator;
 import org.firebirdsql.common.FBJUnit4TestBase;
+import org.firebirdsql.common.FBTestProperties;
+import org.firebirdsql.gds.impl.oo.OOGDSFactoryPlugin;
+import org.firebirdsql.gds.impl.wire.JavaGDSImpl;
 import org.junit.After;
 import org.junit.Rule;
 import org.junit.Test;
@@ -29,13 +32,16 @@ import org.junit.rules.ExpectedException;
 
 import java.io.IOException;
 import java.sql.Connection;
+import java.util.Arrays;
 
 import static org.firebirdsql.common.FBTestProperties.getConnectionViaDriverManager;
 import static org.firebirdsql.common.matchers.SQLExceptionMatchers.message;
 import static org.hamcrest.CoreMatchers.allOf;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.isA;
+import static org.hamcrest.Matchers.isIn;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assume.assumeThat;
 
 /**
  * Tests for {@link org.firebirdsql.jdbc.FBBlobOutputStream}.
@@ -66,6 +72,8 @@ public class TestFBBlobOutputStream extends FBJUnit4TestBase {
 
     @Test
     public void testWrite_byteArr_lengthEqualToBuffer_notWrittenImmediately() throws Exception {
+        assumePureJavaTestType();
+
         initDefault();
         stream.write(new byte[]{ 1, 2, 3, 4 });
 
@@ -78,6 +86,8 @@ public class TestFBBlobOutputStream extends FBJUnit4TestBase {
 
     @Test
     public void testWrite_byteArr_lengthSmallerThanBuffer_notWrittenImmediately() throws Exception {
+        assumePureJavaTestType();
+
         initDefault();
         stream.write(new byte[]{ 1, 2, 3, 4 }, 0, 3);
         assertEquals("Partial array writes (smaller than internal buffer) are buffered", 0, stream.length());
@@ -114,6 +124,8 @@ public class TestFBBlobOutputStream extends FBJUnit4TestBase {
 
     @Test
     public void testWrite_byteArr_halfAndRemainderPlus1OfBufferSize_writtenOnSecondWrite() throws Exception {
+        assumePureJavaTestType();
+
         initDefault();
         byte[] data = DataGenerator.createRandomBytes(((FBBlob) stream.getBlob()).getBufferLength());
         int halfLength = data.length / 2;
@@ -130,6 +142,8 @@ public class TestFBBlobOutputStream extends FBJUnit4TestBase {
 
     @Test
     public void testWrite_byteArr_largerThanBufferSize_writtenImmediately() throws Exception {
+        assumePureJavaTestType();
+
         initDefault();
         byte[] data = DataGenerator.createRandomBytes((int) (((FBBlob) stream.getBlob()).getBufferLength() * 1.5));
 
@@ -216,6 +230,8 @@ public class TestFBBlobOutputStream extends FBJUnit4TestBase {
 
     @Test
     public void testWrite_byte_notWrittenImmediately() throws Exception {
+        assumePureJavaTestType();
+
         initDefault();
         stream.write(1);
 
@@ -254,5 +270,11 @@ public class TestFBBlobOutputStream extends FBJUnit4TestBase {
                 isA(IOException.class),
                 message(equalTo("Output stream is already closed."))
         ));
+    }
+
+    private void assumePureJavaTestType() {
+        assumeThat("Test only works with pure java implementations", FBTestProperties.GDS_TYPE, isIn(Arrays.asList(
+                JavaGDSImpl.PURE_JAVA_TYPE_NAME,
+                OOGDSFactoryPlugin.TYPE_NAME)));
     }
 }

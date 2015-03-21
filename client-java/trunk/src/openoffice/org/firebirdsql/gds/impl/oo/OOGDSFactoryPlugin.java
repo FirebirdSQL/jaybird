@@ -27,7 +27,7 @@ import org.firebirdsql.jdbc.oo.OOConnection;
 
 public class OOGDSFactoryPlugin extends BaseGDSFactoryPlugin {
 
-    private static final String TYPE_NAME = "OOREMOTE";
+    public static final String TYPE_NAME = "OOREMOTE";
 
     private static final String[] TYPE_ALIASES = new String[] {};
 
