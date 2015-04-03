@@ -136,7 +136,8 @@ public abstract class AbstractFbTransaction implements FbTransaction {
     protected void finalize() throws Throwable {
         try {
             try {
-                rollback();
+                if (getState() == TransactionState.ACTIVE)
+                    rollback();
             } catch (Throwable t) {
                 // ignore TODO: Log?
             }
