@@ -20,6 +20,7 @@
  */
 package org.firebirdsql.gds.ng.jna;
 
+import com.sun.jna.Platform;
 import com.sun.jna.Pointer;
 import com.sun.jna.ptr.IntByReference;
 import org.firebirdsql.encodings.Encoding;
@@ -34,6 +35,7 @@ import org.firebirdsql.gds.ng.listeners.TransactionListener;
 import org.firebirdsql.jdbc.FBSQLException;
 import org.firebirdsql.jna.fbclient.FbClientLibrary;
 import org.firebirdsql.jna.fbclient.ISC_STATUS;
+import org.firebirdsql.jna.fbclient.WinFbClientLibrary;
 import org.firebirdsql.logging.Logger;
 import org.firebirdsql.logging.LoggerFactory;
 
@@ -41,6 +43,7 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.sql.SQLException;
 import java.sql.SQLNonTransientException;
+import java.sql.SQLTransientException;
 import java.sql.SQLWarning;
 
 import static org.firebirdsql.gds.ISCConstants.*;
@@ -349,23 +352,86 @@ public class JnaDatabase extends AbstractFbDatabase implements TransactionListen
     }
 
     @Override
-    public EventHandle createEventHandle(String eventName, EventHandler eventHandler) {
-        throw new UnsupportedOperationException("Not implemented");
+    public JnaEventHandle createEventHandle(String eventName, EventHandler eventHandler) throws SQLException {
+        final JnaEventHandle eventHandle = new JnaEventHandle(eventName, eventHandler, getEncoding());
+
+        int size;
+        synchronized (getSynchronizationObject()) {
+            size = clientLibrary.isc_event_block(eventHandle.getEventBuffer(), eventHandle.getResultBuffer(),
+                    (short) 1, eventHandle.getEventNameMemory());
+        }
+        eventHandle.setSize(size);
+
+        return eventHandle;
     }
 
     @Override
     public void countEvents(EventHandle eventHandle) throws SQLException {
-        throw new UnsupportedOperationException("Not implemented");
+        if (!(eventHandle instanceof JnaEventHandle)) {
+            // TODO SQLState and/or Firebird specific error
+            throw new SQLNonTransientException(String.format("Invalid event handle type: %s, expected: %s",
+                    eventHandle.getClass(), JnaEventHandle.class));
+        }
+        JnaEventHandle jnaEventHandle = (JnaEventHandle) eventHandle;
+
+        final ISC_STATUS[] localStatusVector = new ISC_STATUS[STATUS_VECTOR_SIZE];
+        synchronized (getSynchronizationObject()) {
+            synchronized (eventHandle) {
+                clientLibrary.isc_event_counts(localStatusVector,
+                        (short) jnaEventHandle.getSize(), jnaEventHandle.getEventBuffer().getValue(), jnaEventHandle.getResultBuffer().getValue());
+            }
+        }
+        jnaEventHandle.setEventCount(localStatusVector[0].intValue());
     }
 
     @Override
     public void queueEvent(EventHandle eventHandle) throws SQLException {
-        throw new UnsupportedOperationException("Not implemented");
+        checkConnected();
+        if (!(eventHandle instanceof JnaEventHandle)) {
+            // TODO SQLState and/or Firebird specific error
+            throw new SQLNonTransientException(String.format("Invalid event handle type: %s, expected: %s",
+                    eventHandle.getClass(), JnaEventHandle.class));
+        }
+        JnaEventHandle jnaEventHandle = (JnaEventHandle) eventHandle;
+        if (jnaEventHandle.getSize() == -1) {
+            // TODO SQLState and/or Firebird specific error
+            throw new SQLTransientException("Event handle hasn't been initialized");
+        }
+
+        synchronized (getSynchronizationObject()) {
+            synchronized (eventHandle) {
+                System.out.println("Before queue " + jnaEventHandle.getEventName());
+                jnaEventHandle.debugMemoryDump();
+                if (Platform.isWindows()) {
+                    ((WinFbClientLibrary) clientLibrary).isc_que_events(statusVector, getJnaHandle(), jnaEventHandle.getJnaEventId(),
+                            (short) jnaEventHandle.getSize(), jnaEventHandle.getEventBuffer().getValue(),
+                            (WinFbClientLibrary.IscEventStdCallback) jnaEventHandle.getCallback(), jnaEventHandle.getResultBuffer().getValue());
+                } else {
+                    clientLibrary.isc_que_events(statusVector, getJnaHandle(), jnaEventHandle.getJnaEventId(),
+                            (short) jnaEventHandle.getSize(), jnaEventHandle.getEventBuffer().getValue(),
+                            jnaEventHandle.getCallback(), jnaEventHandle.getResultBuffer().getValue());
+                }
+            }
+            processStatusVector();
+        }
     }
 
     @Override
     public void cancelEvent(EventHandle eventHandle) throws SQLException {
-        throw new UnsupportedOperationException("Not implemented");
+        checkConnected();
+        if (!(eventHandle instanceof JnaEventHandle)) {
+            // TODO SQLState and/or Firebird specific error
+            throw new SQLNonTransientException(String.format("Invalid event handle type: %s, expected: %s",
+                    eventHandle.getClass(), JnaEventHandle.class));
+        }
+        JnaEventHandle jnaEventHandle = (JnaEventHandle) eventHandle;
+
+        synchronized (getSynchronizationObject()) {
+            synchronized (eventHandle) {
+                clientLibrary.isc_cancel_events(statusVector, getJnaHandle(), jnaEventHandle.getJnaEventId());
+                processStatusVector();
+            }
+        }
     }
 
     /**

@@ -48,13 +48,23 @@ import java.nio.ShortBuffer;
 @SuppressWarnings("UnusedDeclaration")
 public interface FbClientLibrary {
 
-    /// <i>native declaration : C:\Program Files\Firebird\Firebird_2_5\include\ibase.h</i>
-	public interface FbShutdownCallback extends Callback {
+    /**
+     * FbShutdown callback.
+     * <p>
+     * <b>Important:</b> On windows, use {@link org.firebirdsql.jna.fbclient.WinFbClientLibrary.FbShutdownStdCallback}
+     * </p>
+     */
+	interface FbShutdownCallback extends Callback {
 		int apply(int reason, int mask, Pointer arg);
 	}
-	/// <i>native declaration : C:\Program Files\Firebird\Firebird_2_5\include\ibase.h</i>
-	public interface IscEventCallback extends Callback {
-		void apply(Pointer voidPtr1, short ISC_USHORT1, Pointer ISC_UCHARPtr1);
+    /**
+     * IscEvent callback.
+     * <p>
+     * <b>Important:</b> On windows, use {@link org.firebirdsql.jna.fbclient.WinFbClientLibrary.IscEventStdCallback}
+     * </p>
+     */
+	interface IscEventCallback extends Callback {
+		void apply(Pointer resultBuffer, short eventBufferLength, Pointer eventBuffer);
 	}
 	/**
 	 * Original signature : <code>ISC_STATUS isc_attach_database(ISC_STATUS*, short, const ISC_SCHAR*, isc_db_handle*, short, const ISC_SCHAR*)</code><br>
@@ -130,7 +140,7 @@ public interface FbClientLibrary {
 	 * Original signature : <code>ISC_STATUS isc_cancel_events(ISC_STATUS*, isc_db_handle*, ISC_LONG*)</code><br>
 	 * <i>native declaration : C:\Program Files\Firebird\Firebird_2_5\include\ibase.h:492</i>
 	 */
-	ISC_STATUS isc_cancel_events(ISC_STATUS[] statusVector, IntByReference dbHandle, IntBuffer eventIds);
+	ISC_STATUS isc_cancel_events(ISC_STATUS[] statusVector, IntByReference dbHandle, IntByReference eventId);
 	/**
 	 * Original signature : <code>ISC_STATUS isc_close_blob(ISC_STATUS*, isc_blob_handle*)</code><br>
 	 * <i>native declaration : C:\Program Files\Firebird\Firebird_2_5\include\ibase.h:496</i>
@@ -324,7 +334,7 @@ public interface FbClientLibrary {
 	 * Original signature : <code>void isc_event_counts(ISC_ULONG*, short, ISC_UCHAR*, const ISC_UCHAR*)</code><br>
 	 * <i>native declaration : C:\Program Files\Firebird\Firebird_2_5\include\ibase.h:663</i>
 	 */
-	void isc_event_counts(ISC_STATUS[] statusVector, short bufferLength, ByteBuffer eventBuffer, byte[] resultBuffer);
+	void isc_event_counts(ISC_STATUS[] statusVector, short bufferLength, Pointer eventBuffer, Pointer resultBuffer);
 	/**
 	 * 17 May 2001 - isc_expand_dpb is DEPRECATED<br>
 	 * Original signature : <code>void isc_expand_dpb(ISC_SCHAR**, short*, null)</code><br>
@@ -408,8 +418,8 @@ public interface FbClientLibrary {
 	 * <i>native declaration : C:\Program Files\Firebird\Firebird_2_5\include\ibase.h:747</i>
      * TODO: Currently does not satisfy requirements in documentation!
 	 */
-	ISC_STATUS isc_que_events(ISC_STATUS[] statusVector, IntByReference dbHandle, IntBuffer eventId, short length,
-            byte[] eventBuffer, IscEventCallback eventFunction, Pointer eventFunctionArg);
+	ISC_STATUS isc_que_events(ISC_STATUS[] statusVector, IntByReference dbHandle, IntByReference eventId, short length,
+            Pointer eventBuffer, IscEventCallback eventFunction, Pointer eventFunctionArg);
 	/**
 	 * Original signature : <code>ISC_STATUS isc_rollback_retaining(ISC_STATUS*, isc_tr_handle*)</code><br>
 	 * <i>native declaration : C:\Program Files\Firebird\Firebird_2_5\include\ibase.h:755</i>
