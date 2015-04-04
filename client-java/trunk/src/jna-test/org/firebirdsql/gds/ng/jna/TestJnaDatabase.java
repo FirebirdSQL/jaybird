@@ -20,15 +20,16 @@
  */
 package org.firebirdsql.gds.ng.jna;
 
+import com.sun.jna.Native;
 import org.firebirdsql.common.FBTestProperties;
+import org.firebirdsql.gds.EventHandle;
+import org.firebirdsql.gds.EventHandler;
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.TransactionParameterBuffer;
 import org.firebirdsql.gds.impl.GDSServerVersion;
 import org.firebirdsql.gds.impl.TransactionParameterBufferImpl;
-import org.firebirdsql.gds.ng.FbConnectionProperties;
-import org.firebirdsql.gds.ng.FbDatabase;
-import org.firebirdsql.gds.ng.FbTransaction;
-import org.firebirdsql.gds.ng.TransactionState;
+import org.firebirdsql.gds.ng.*;
+import org.firebirdsql.gds.ng.fields.RowValue;
 import org.firebirdsql.jdbc.FBSQLException;
 import org.firebirdsql.management.FBManager;
 import org.junit.BeforeClass;
@@ -55,6 +56,21 @@ public class TestJnaDatabase {
 
     // TODO Check if tests can be unified with equivalent wire protocol tests
     // TODO Assert in tests need to be checked (and more need to be added)
+
+    //@formatter:off
+    public static final String TABLE_DEF =
+            "CREATE TABLE TEST (" +
+            "     TESTVAL INTEGER NOT NULL" +
+            ")";
+
+    public static final String TRIGGER_DEF =
+            "CREATE TRIGGER INSERT_TRIG " +
+            "     FOR TEST AFTER INSERT " +
+            "AS BEGIN " +
+            "     POST_EVENT 'TEST_EVENT_A';" +
+            "     POST_EVENT 'TEST_EVENT_B';" +
+            "END";
+    //@formatter:on
 
     @Rule
     public final ExpectedException expectedException = ExpectedException.none();
@@ -286,6 +302,98 @@ public class TestJnaDatabase {
     }
 
     @Test
+    public void testCreateEventHandle() throws Exception {
+        FBManager fbManager = createFBManager();
+        defaultDatabaseSetUp(fbManager);
+        try {
+            JnaDatabase db = factory.connect(connectionInfo);
+            try {
+                db.attach();
+
+                JnaEventHandle eventHandle = db.createEventHandle("TEST_EVENT", new EventHandler() {
+                    @Override
+                    public void eventOccurred(EventHandle eventHandle) { }
+                });
+
+                assertNotEquals("Event handle should have a size set", -1, eventHandle.getSize());
+            } finally {
+                safelyClose(db);
+            }
+        } finally {
+            defaultDatabaseTearDown(fbManager);
+        }
+    }
+
+    @Test
+    public void testQueueEvent_andNotification() throws Exception {
+        FBManager fbManager = createFBManager();
+        defaultDatabaseSetUp(fbManager);
+        try {
+            JnaDatabase db = factory.connect(connectionInfo);
+            try {
+                db.attach();
+
+                FbTransaction transaction = getTransaction(db);
+                final FbStatement statement = db.createStatement(transaction);
+                statement.prepare(TABLE_DEF);
+                statement.execute(RowValue.EMPTY_ROW_VALUE);
+                statement.prepare(TRIGGER_DEF);
+                statement.execute(RowValue.EMPTY_ROW_VALUE);
+                transaction.commit();
+
+                SimpleEventHandler eventHandler = new SimpleEventHandler();
+
+                EventHandle eventHandleA = db.createEventHandle("TEST_EVENT_A", eventHandler);
+                db.queueEvent(eventHandleA);
+                EventHandle eventHandleB = db.createEventHandle("TEST_EVENT_B", eventHandler);
+                db.queueEvent(eventHandleB);
+
+                Thread.sleep(50);
+                eventHandler.clearEvents();
+                db.countEvents(eventHandleA);
+//                System.out.println("A");
+//                ((JnaEventHandle) eventHandleA).debugMemoryDump();
+                db.queueEvent(eventHandleA);
+                db.countEvents(eventHandleB);
+//                System.out.println("B");
+//                ((JnaEventHandle) eventHandleB).debugMemoryDump();
+                db.queueEvent(eventHandleB);
+
+//                assertTrue("Expected events to not have been triggered", eventHandler.getReceivedEventHandles().isEmpty());
+//
+//                transaction = getTransaction(db);
+//                statement.setTransaction(transaction);
+//                statement.prepare("INSERT INTO TEST VALUES (1)");
+//                statement.execute(RowValue.EMPTY_ROW_VALUE);
+//                transaction.commit();
+//
+//                int retry = 0;
+//                while (!eventHandler.getReceivedEventHandles().contains(eventHandleA) && retry++ < 10) {
+//                    Thread.sleep(50);
+//                }
+//
+//                db.countEvents(eventHandleA);
+//                assertEquals(1, eventHandleA.getEventCount());
+//
+//                retry = 0;
+//                while (!eventHandler.getReceivedEventHandles().contains(eventHandleB) && retry++ < 10) {
+//                    Thread.sleep(50);
+//                }
+//
+//                db.countEvents(eventHandleB);
+//                assertEquals(1, eventHandleB.getEventCount());
+
+                db.cancelEvent(eventHandleA);
+                db.cancelEvent(eventHandleB);
+            } finally {
+                safelyClose(db);
+            }
+        } finally {
+            defaultDatabaseTearDown(fbManager);
+        }
+    }
+
+    @Test
     public void testExecuteImmediate_createDatabase() throws Exception {
         JnaDatabase db = factory.connect(connectionInfo);
         try {
@@ -313,6 +421,7 @@ public class TestJnaDatabase {
         try {
             db.detach();
         } catch (SQLException ex) {
+            ex.printStackTrace();
             // ignore (TODO: log)
         }
     }

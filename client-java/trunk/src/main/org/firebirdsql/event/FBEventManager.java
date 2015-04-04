@@ -291,7 +291,7 @@ public class FBEventManager implements EventManager {
         private boolean initialized = false;
         private boolean cancelled = false;
 
-        public GdsEventHandler(String eventName) {
+        public GdsEventHandler(String eventName) throws SQLException {
             eventHandle = fbDatabase.createEventHandle(eventName, this);
         }
 

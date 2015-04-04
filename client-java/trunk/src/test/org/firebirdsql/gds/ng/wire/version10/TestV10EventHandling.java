@@ -25,15 +25,11 @@ import org.firebirdsql.common.FBTestProperties;
 import org.firebirdsql.common.SimpleServer;
 import org.firebirdsql.encodings.EncodingFactory;
 import org.firebirdsql.gds.EventHandle;
-import org.firebirdsql.gds.EventHandler;
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.TransactionParameterBuffer;
 import org.firebirdsql.gds.impl.TransactionParameterBufferImpl;
 import org.firebirdsql.gds.impl.wire.XdrOutputStream;
-import org.firebirdsql.gds.ng.FbConnectionProperties;
-import org.firebirdsql.gds.ng.FbDatabase;
-import org.firebirdsql.gds.ng.FbStatement;
-import org.firebirdsql.gds.ng.FbTransaction;
+import org.firebirdsql.gds.ng.*;
 import org.firebirdsql.gds.ng.fields.RowValue;
 import org.firebirdsql.gds.ng.wire.*;
 import org.junit.After;
@@ -43,8 +39,6 @@ import org.junit.rules.ExpectedException;
 
 import java.io.OutputStream;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 import static org.firebirdsql.common.FBTestProperties.DB_PASSWORD;
@@ -416,21 +410,5 @@ public class TestV10EventHandling extends FBJUnit4TestBase {
         tpb.addArgument(ISCConstants.isc_tpb_write);
         tpb.addArgument(ISCConstants.isc_tpb_wait);
         return db.startTransaction(tpb);
-    }
-
-    protected static class SimpleEventHandler implements EventHandler {
-
-        private final List<EventHandle> receivedEventHandles = Collections.synchronizedList(new ArrayList<EventHandle>());
-
-        @Override
-        public void eventOccurred(EventHandle eventHandle) {
-            receivedEventHandles.add(eventHandle);
-        }
-
-        public List<EventHandle> getReceivedEventHandles() {
-            synchronized (receivedEventHandles) {
-                return new ArrayList<EventHandle>(receivedEventHandles);
-            }
-        }
     }
 }

@@ -299,8 +299,9 @@ public interface FbDatabase {
      * @param eventHandler
      *         The event handler to call when the event occurred
      * @return A suitable event handle instance
+     * @throws java.sql.SQLException For errors creating the event handle
      */
-    EventHandle createEventHandle(String eventName, EventHandler eventHandler);
+    EventHandle createEventHandle(String eventName, EventHandler eventHandler) throws SQLException;
 
     /**
      * Counts the events occurred.
