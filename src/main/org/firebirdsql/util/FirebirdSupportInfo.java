@@ -119,6 +119,13 @@ public class FirebirdSupportInfo {
     }
 
     /**
+     * @return <code>true</code> when UPDATE ... RETURNING ... is supported
+     */
+    public boolean supportsUpdateReturning() {
+        return serverVersion.isEqualOrAbove(2, 1);
+    }
+
+    /**
      * @return <code>true</code> when the server knows the UTF8 character set (NOTE: For firebird 1.5 it is an alias for
      * UNICODE_FSS)
      */
