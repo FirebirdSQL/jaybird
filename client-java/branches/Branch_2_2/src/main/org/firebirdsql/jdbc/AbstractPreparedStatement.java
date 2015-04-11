@@ -1,7 +1,7 @@
 /*
  * $Id$
- * 
- * Firebird Open Source J2ee connector - jdbc driver
+ *
+ * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -14,7 +14,7 @@
  * This file was created by members of the firebird development team.
  * All individual contributions remain the Copyright (C) of those
  * individuals.  Contributors to this file are either listed here or
- * can be obtained from a CVS history command.
+ * can be obtained from a source control history command.
  *
  * All rights reserved.
  */
@@ -784,23 +784,21 @@ public abstract class AbstractPreparedStatement extends AbstractStatement implem
         }
 
         if (!canExecute)
-            throw new FBMissingParameterException(
-                    "Not all parameters were set.", isParamSet);
+            throw new FBMissingParameterException("Not all parameters were set.", isParamSet);
 
-        Object syncObject = getSynchronizationObject();
-
-        synchronized (syncObject) {
-
+        synchronized (getSynchronizationObject()) {
             flushFields();
 
             try {
                 gdsHelper.executeStatement(fixedStmt, sendOutParams);
-                isResultSet = (fixedStmt.getOutSqlda().sqld > 0);
-                return (fixedStmt.getOutSqlda().sqld > 0);
+                boolean hasResultSet = fixedStmt.getOutSqlda().sqld > 0;
+                currentStatementResult = hasResultSet
+                        ? StatementResult.RESULT_SET
+                        : StatementResult.UPDATE_COUNT;
+                return hasResultSet;
             } catch (GDSException ge) {
+                currentStatementResult = StatementResult.NO_MORE_RESULTS;
                 throw new FBSQLException(ge);
-            } finally {
-                hasMoreResults = true;
             }
         }
     }
