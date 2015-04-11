@@ -30,7 +30,6 @@ public class TestFBStatement extends FBTestBase {
 
     private static final int DATA_ITEMS = 5;
     private static final String CREATE_TABLE = "CREATE TABLE test ( col1 INTEGER )";
-    private static final String DROP_TABLE = "DROP TABLE test";
     private static final String INSERT_DATA = "INSERT INTO test(col1) VALUES(?)";
     private static final String SELECT_DATA = "SELECT col1 FROM test ORDER BY col1";
 
@@ -41,12 +40,9 @@ public class TestFBStatement extends FBTestBase {
     protected void setUp() throws Exception {
         super.setUp();
 
-        Class.forName(FBDriver.class.getName());
         con = this.getConnectionViaDriverManager();
 
         try {
-            executeDropTable(con, DROP_TABLE);
-
             executeCreateTable(con, CREATE_TABLE);
             prepareTestData();
         } finally {
@@ -57,9 +53,8 @@ public class TestFBStatement extends FBTestBase {
 
     protected void tearDown() throws Exception {
         try {
-            executeDropTable(con, DROP_TABLE);
-        } finally {
             closeQuietly(con);
+        } finally {
             super.tearDown();
         }
     }
@@ -298,6 +293,37 @@ public class TestFBStatement extends FBTestBase {
         } catch (SQLException e) {
             assertTrue("Parametrized exception does not contain expected message",
                     e.getMessage().contains("\nParam 1 'value_1', Param 2 'value2'\n"));
+        } finally {
+            stmt.close();
+        }
+    }
+
+    public void testRetrievingUpdateCountAndResultSet() throws Exception {
+        DatabaseMetaData md = con.getMetaData();
+        int majorVersion = md.getDatabaseMajorVersion();
+        int minorVersion = md.getDatabaseMinorVersion();
+        assertTrue("Test only works on Firebird 2.1 or higher",
+                majorVersion == 2 && minorVersion >= 1 || majorVersion > 2);
+
+        Statement stmt = con.createStatement();
+        try {
+            boolean isResultSet = stmt.execute("INSERT INTO test(col1) VALUES(5) RETURNING col1");
+
+            assertTrue("Expected first result to be a result set", isResultSet);
+            ResultSet rs = stmt.getResultSet();
+            assertNotNull("Result set should not be null", rs);
+            assertTrue("Expected a row in the result set", rs.next());
+            assertEquals("Unexpected value in result set", 5, rs.getInt(1));
+            assertFalse("Expected only one row", rs.next());
+            assertEquals("Update count should be -1 before first call to getMoreResults", -1, stmt.getUpdateCount());
+
+            assertFalse("Next result should not be a result set", stmt.getMoreResults());
+            assertNull("Expected null result set", stmt.getResultSet());
+            assertEquals("Update count should be 1 after first call to getMoreResults", 1, stmt.getUpdateCount());
+
+            assertFalse("Next result should not be a result set", stmt.getMoreResults());
+            assertNull("Expected null result set", stmt.getResultSet());
+            assertEquals("Update count should be -1 after second call to getMoreResults", -1, stmt.getUpdateCount());
         } finally {
             stmt.close();
         }
