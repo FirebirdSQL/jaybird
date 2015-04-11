@@ -974,6 +974,35 @@ public class TestFBStatement extends FBJUnit4TestBase {
         }
     }
 
+    @Test
+    public void testRetrievingUpdateCountAndResultSet() throws Exception {
+        assumeTrue("Test requires UPDATE .. RETURNING .. support", supportInfoFor(con).supportsUpdateReturning());
+        executeDDL(con, CREATE_TABLE);
+
+        Statement stmt = con.createStatement();
+        try {
+            boolean isResultSet = stmt.execute("INSERT INTO test(col1) VALUES(5) RETURNING col1");
+
+            assertTrue("Expected first result to be a result set", isResultSet);
+            ResultSet rs = stmt.getResultSet();
+            assertNotNull("Result set should not be null", rs);
+            assertTrue("Expected a row in the result set", rs.next());
+            assertEquals("Unexpected value in result set", 5, rs.getInt(1));
+            assertFalse("Expected only one row", rs.next());
+            assertEquals("Update count should be -1 before first call to getMoreResults", -1, stmt.getUpdateCount());
+
+            assertFalse("Next result should not be a result set", stmt.getMoreResults());
+            assertNull("Expected null result set", stmt.getResultSet());
+            assertEquals("Update count should be 1 after first call to getMoreResults", 1, stmt.getUpdateCount());
+
+            assertFalse("Next result should not be a result set", stmt.getMoreResults());
+            assertNull("Expected null result set", stmt.getResultSet());
+            assertEquals("Update count should be -1 after second call to getMoreResults", -1, stmt.getUpdateCount());
+        } finally {
+            stmt.close();
+        }
+    }
+
     private void prepareTestData() throws SQLException {
         executeCreateTable(con, CREATE_TABLE);
 

@@ -782,11 +782,16 @@ public abstract class AbstractPreparedStatement extends FBStatement implements F
 
             try {
                 // TODO: add a statement listener for controlling information exchange
+                // TODO Is this still correct in light of the listener in FBStatement
                 fbStatement.execute(fieldValues);
-                isResultSet = fbStatement.getFieldDescriptor().getCount() > 0;
-                return isResultSet;
-            } finally {
-                hasMoreResults = true;
+                boolean hasResultSet = fbStatement.getFieldDescriptor().getCount() > 0;
+                currentStatementResult = hasResultSet
+                        ? StatementResult.RESULT_SET
+                        : StatementResult.UPDATE_COUNT;
+                return hasResultSet;
+            } catch (SQLException e) {
+                currentStatementResult = StatementResult.NO_MORE_RESULTS;
+                throw e;
             }
         }
     }
