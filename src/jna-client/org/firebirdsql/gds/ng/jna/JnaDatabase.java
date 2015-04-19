@@ -374,14 +374,14 @@ public class JnaDatabase extends AbstractFbDatabase implements TransactionListen
         }
         JnaEventHandle jnaEventHandle = (JnaEventHandle) eventHandle;
 
-        final ISC_STATUS[] localStatusVector = new ISC_STATUS[STATUS_VECTOR_SIZE];
         synchronized (getSynchronizationObject()) {
             synchronized (eventHandle) {
-                clientLibrary.isc_event_counts(localStatusVector,
+                clientLibrary.isc_event_counts(statusVector,
                         (short) jnaEventHandle.getSize(), jnaEventHandle.getEventBuffer().getValue(), jnaEventHandle.getResultBuffer().getValue());
+                processStatusVector();
             }
         }
-        jnaEventHandle.setEventCount(localStatusVector[0].intValue());
+        jnaEventHandle.setEventCount(statusVector[0].intValue());
     }
 
     @Override
@@ -400,8 +400,6 @@ public class JnaDatabase extends AbstractFbDatabase implements TransactionListen
 
         synchronized (getSynchronizationObject()) {
             synchronized (eventHandle) {
-                System.out.println("Before queue " + jnaEventHandle.getEventName());
-                jnaEventHandle.debugMemoryDump();
                 if (Platform.isWindows()) {
                     ((WinFbClientLibrary) clientLibrary).isc_que_events(statusVector, getJnaHandle(), jnaEventHandle.getJnaEventId(),
                             (short) jnaEventHandle.getSize(), jnaEventHandle.getEventBuffer().getValue(),

@@ -64,7 +64,7 @@ public interface FbClientLibrary {
      * </p>
      */
 	interface IscEventCallback extends Callback {
-		void apply(Pointer resultBuffer, short eventBufferLength, Pointer eventBuffer);
+		void apply(Pointer resultArgument, short eventBufferLength, Pointer eventsList);
 	}
 	/**
 	 * Original signature : <code>ISC_STATUS isc_attach_database(ISC_STATUS*, short, const ISC_SCHAR*, isc_db_handle*, short, const ISC_SCHAR*)</code><br>
