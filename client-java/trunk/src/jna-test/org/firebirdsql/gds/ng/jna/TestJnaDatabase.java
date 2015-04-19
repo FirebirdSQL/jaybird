@@ -20,7 +20,10 @@
  */
 package org.firebirdsql.gds.ng.jna;
 
-import com.sun.jna.Native;
+import com.sun.jna.Memory;
+import com.sun.jna.Pointer;
+import com.sun.jna.ptr.IntByReference;
+import com.sun.jna.ptr.PointerByReference;
 import org.firebirdsql.common.FBTestProperties;
 import org.firebirdsql.gds.EventHandle;
 import org.firebirdsql.gds.EventHandler;
@@ -31,8 +34,11 @@ import org.firebirdsql.gds.impl.TransactionParameterBufferImpl;
 import org.firebirdsql.gds.ng.*;
 import org.firebirdsql.gds.ng.fields.RowValue;
 import org.firebirdsql.jdbc.FBSQLException;
+import org.firebirdsql.jna.fbclient.FbClientLibrary;
+import org.firebirdsql.jna.fbclient.ISC_STATUS;
 import org.firebirdsql.management.FBManager;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -344,19 +350,19 @@ public class TestJnaDatabase {
                 SimpleEventHandler eventHandler = new SimpleEventHandler();
 
                 EventHandle eventHandleA = db.createEventHandle("TEST_EVENT_A", eventHandler);
-                db.queueEvent(eventHandleA);
                 EventHandle eventHandleB = db.createEventHandle("TEST_EVENT_B", eventHandler);
+
+                db.queueEvent(eventHandleA);
+                //Thread.sleep(5);
                 db.queueEvent(eventHandleB);
 
                 Thread.sleep(50);
                 eventHandler.clearEvents();
                 db.countEvents(eventHandleA);
-//                System.out.println("A");
-//                ((JnaEventHandle) eventHandleA).debugMemoryDump();
+
                 db.queueEvent(eventHandleA);
                 db.countEvents(eventHandleB);
-//                System.out.println("B");
-//                ((JnaEventHandle) eventHandleB).debugMemoryDump();
+
                 db.queueEvent(eventHandleB);
 
 //                assertTrue("Expected events to not have been triggered", eventHandler.getReceivedEventHandles().isEmpty());
@@ -385,6 +391,145 @@ public class TestJnaDatabase {
 
                 db.cancelEvent(eventHandleA);
                 db.cancelEvent(eventHandleB);
+            } finally {
+                safelyClose(db);
+            }
+        } finally {
+            defaultDatabaseTearDown(fbManager);
+        }
+    }
+
+    @Ignore
+    @Test
+    public void testQueueEvent_andNotification_plainAPI() throws Exception {
+        FBManager fbManager = createFBManager();
+        defaultDatabaseSetUp(fbManager);
+        try {
+            JnaDatabase db = factory.connect(connectionInfo);
+            try {
+                db.attach();
+                final FbClientLibrary clientLibrary = db.getClientLibrary();
+
+                // Block for event A
+                byte[] eventNameA = db.getEncoding().encodeToCharset("TEST_EVENT_A");
+                Memory eventNameMemoryA = new Memory(eventNameA.length + 1);
+                eventNameMemoryA.clear();
+                eventNameMemoryA.write(0, eventNameA, 0, eventNameA.length);
+                PointerByReference eventBufferA = new PointerByReference();
+                PointerByReference resultBufferA = new PointerByReference();
+                int sizeA = clientLibrary.isc_event_block(eventBufferA, resultBufferA,
+                        (short) 1, eventNameMemoryA);
+
+                // Block for event B
+                byte[] eventNameB = db.getEncoding().encodeToCharset("TEST_EVENT_B");
+                Memory eventNameMemoryB = new Memory(eventNameB.length + 1);
+                eventNameMemoryB.clear();
+                eventNameMemoryB.write(0, eventNameB, 0, eventNameB.length);
+                PointerByReference eventBufferB = new PointerByReference();
+                PointerByReference resultBufferB = new PointerByReference();
+                int sizeB = clientLibrary.isc_event_block(eventBufferB, resultBufferB,
+                        (short) 1, eventNameMemoryB);
+
+                final FbClientLibrary.IscEventCallback callbackA = new FbClientLibrary.IscEventCallback() {
+                    @Override
+                    public void apply(Pointer resultArgument, short eventBufferLength, Pointer eventsList) {
+                        System.out.println("Callback for A");
+                        if (eventBufferLength == 0) {
+                            System.out.println("Zero");
+                            return;
+                        }
+                        byte[] tempBuffer = new byte[eventBufferLength];
+                        eventsList.read(0, tempBuffer, 0, eventBufferLength);
+                        resultArgument.write(0, tempBuffer, 0, eventBufferLength);
+                    }
+                };
+
+                final FbClientLibrary.IscEventCallback callbackB = new FbClientLibrary.IscEventCallback() {
+                    @Override
+                    public void apply(Pointer resultArgument, short eventBufferLength, Pointer eventsList) {
+                        System.out.println("Callback for B");
+                        if (eventBufferLength == 0) {
+                            System.out.println("Zero");
+                            return;
+                        }
+                        byte[] tempBuffer = new byte[eventBufferLength];
+                        eventsList.read(0, tempBuffer, 0, eventBufferLength);
+                        resultArgument.write(0, tempBuffer, 0, eventBufferLength);
+                    }
+                };
+
+                ISC_STATUS[] statusVector = new ISC_STATUS[20];
+
+                IntByReference eventAId = new IntByReference();
+                clientLibrary.isc_que_events(statusVector, db.getJnaHandle(), eventAId,
+                        (short) sizeA, eventBufferA.getValue(),
+                        callbackA, resultBufferA.getValue());
+                db.processStatusVector(statusVector, null);
+
+                //Thread.sleep(5);
+                IntByReference eventBId = new IntByReference();
+                clientLibrary.isc_que_events(statusVector, db.getJnaHandle(), eventBId,
+                        (short) sizeB, eventBufferB.getValue(),
+                        callbackB, resultBufferB.getValue());
+                db.processStatusVector(statusVector, null);
+
+                Thread.sleep(50);
+                System.out.println(eventBufferA.getValue().dump(0, sizeA));
+                System.out.println(eventBufferB.getValue().dump(0, sizeB));
+
+                clientLibrary.isc_event_counts(statusVector, (short) sizeA, eventBufferA.getValue(), resultBufferA.getValue());
+                db.processStatusVector(statusVector, null);
+
+                clientLibrary.isc_que_events(statusVector, db.getJnaHandle(), eventAId,
+                        (short) sizeA, eventBufferA.getValue(),
+                        callbackA, resultBufferA.getValue());
+                db.processStatusVector(statusVector, null);
+
+                clientLibrary.isc_event_counts(statusVector, (short) sizeB, eventBufferA.getValue(), resultBufferB.getValue());
+                db.processStatusVector(statusVector, null);
+
+                clientLibrary.isc_que_events(statusVector, db.getJnaHandle(), eventBId,
+                        (short) sizeB, eventBufferB.getValue(),
+                        callbackB, resultBufferB.getValue());
+                db.processStatusVector(statusVector, null);
+
+                Thread.sleep(50);
+                System.out.println(eventBufferA.getValue().dump(0, sizeA));
+                System.out.println(eventBufferB.getValue().dump(0, sizeB));
+
+//                assertTrue("Expected events to not have been triggered", eventHandler.getReceivedEventHandles().isEmpty());
+//
+//                transaction = getTransaction(db);
+//                statement.setTransaction(transaction);
+//                statement.prepare("INSERT INTO TEST VALUES (1)");
+//                statement.execute(RowValue.EMPTY_ROW_VALUE);
+//                transaction.commit();
+//
+//                int retry = 0;
+//                while (!eventHandler.getReceivedEventHandles().contains(eventHandleA) && retry++ < 10) {
+//                    Thread.sleep(50);
+//                }
+//
+//                db.countEvents(eventHandleA);
+//                assertEquals(1, eventHandleA.getEventCount());
+//
+//                retry = 0;
+//                while (!eventHandler.getReceivedEventHandles().contains(eventHandleB) && retry++ < 10) {
+//                    Thread.sleep(50);
+//                }
+//
+//                db.countEvents(eventHandleB);
+//                assertEquals(1, eventHandleB.getEventCount());
+
+                Thread.sleep(100);
+
+                System.out.println(eventAId.getValue());
+                clientLibrary.isc_cancel_events(statusVector, db.getJnaHandle(), eventAId);
+                db.processStatusVector(statusVector, null);
+                Thread.sleep(100);
+                System.out.println(eventBId.getValue());
+                clientLibrary.isc_cancel_events(statusVector, db.getJnaHandle(), eventBId);
+                db.processStatusVector(statusVector, null);
             } finally {
                 safelyClose(db);
             }

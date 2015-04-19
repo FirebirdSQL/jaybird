@@ -135,10 +135,12 @@ public class JnaEventHandle implements EventHandle {
     }
 
     void debugMemoryDump() {
-        System.out.println("Event Buffer");
-        System.out.println(getEventBuffer().getValue().dump(0, size));
-        System.out.println("Result Buffer");
-        System.out.println(getResultBuffer().getValue().dump(0, size));
+        synchronized (JnaEventHandle.class) {
+            System.out.println("Event Buffer " + getEventName());
+            System.out.println(getEventBuffer().getValue().dump(0, size));
+            System.out.println("Result Buffer " + getEventName());
+            System.out.println(getResultBuffer().getValue().dump(0, size));
+        }
     }
 
     private JnaEventCallback createEventCallback() {
@@ -149,15 +151,14 @@ public class JnaEventHandle implements EventHandle {
 
     private class JnaEventCallback implements FbClientLibrary.IscEventCallback {
         @Override
-        public void apply(Pointer resultBuffer, short eventBufferLength, Pointer eventBuffer) {
+        public void apply(Pointer resultArgument, short eventBufferLength, Pointer eventsList) {
             synchronized (JnaEventHandle.this) {
                 final int length = eventBufferLength & 0xFFFF;
-                if (length == 0 || eventBuffer == null) return;
+                System.out.println("Length for " + getEventName() + " " + length);
+                if (length == 0 || eventsList == null) return;
                 byte[] tempBuffer = new byte[length];
-                eventBuffer.read(0, tempBuffer, 0, length);
-                resultBuffer.write(0, tempBuffer, 0, length);
-
-                debugMemoryDump();
+                eventsList.read(0, tempBuffer, 0, length);
+                resultArgument.write(0, tempBuffer, 0, length);
             }
 
             // TODO Push to executor?
