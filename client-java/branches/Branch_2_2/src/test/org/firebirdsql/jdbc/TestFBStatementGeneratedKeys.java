@@ -297,7 +297,7 @@ public class TestFBStatementGeneratedKeys extends FBTestGeneratedKeysBase {
     // TODO In the current implementation executeUpdate uses execute, decide to test separately or not
 
     /**
-     * See <a href="">JDBC-391</a>.
+     * See <a href="http://tracker.firebirdsql.org/browse/JDBC-391">JDBC-391</a>.
      * <p>
      * TODO: Broken until JDBC-391 implemented; add more tests
      * </p>
