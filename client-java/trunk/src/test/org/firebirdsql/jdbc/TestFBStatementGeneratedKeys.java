@@ -461,7 +461,7 @@ public class TestFBStatementGeneratedKeys extends FBTestGeneratedKeysBase {
     }
 
     /**
-     * See <a href="">JDBC-391</a>.
+     * See <a href="http://tracker.firebirdsql.org/browse/JDBC-391">JDBC-391</a>.
      * <p>
      * TODO: Broken until JDBC-391 implemented; add more tests
      * </p>
