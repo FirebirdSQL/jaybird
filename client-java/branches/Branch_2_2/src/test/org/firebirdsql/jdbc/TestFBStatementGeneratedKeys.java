@@ -293,6 +293,25 @@ public class TestFBStatementGeneratedKeys extends FBTestGeneratedKeysBase {
             closeQuietly(con);
         }
     }
-    
+
     // TODO In the current implementation executeUpdate uses execute, decide to test separately or not
+
+    /**
+     * See <a href="">JDBC-391</a>.
+     * <p>
+     * TODO: Broken until JDBC-391 implemented; add more tests
+     * </p>
+     */
+    public void testExecute_SELECT_shouldNotThrowException() throws Exception {
+        Connection con = getConnectionViaDriverManager();
+        try {
+            Statement stmt = con.createStatement();
+
+            stmt.execute("SELECT * FROM RDB$DATABASE", Statement.RETURN_GENERATED_KEYS);
+            ResultSet rs = stmt.getResultSet();
+            assertTrue(rs.next());
+        } finally {
+            closeQuietly(con);
+        }
+    }
 }
