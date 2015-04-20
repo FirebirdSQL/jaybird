@@ -459,4 +459,19 @@ public class TestFBStatementGeneratedKeys extends FBTestGeneratedKeysBase {
 
         stmt.execute(TEST_INSERT_QUERY, new String[] { "ID", "NON_EXISTENT" });
     }
+
+    /**
+     * See <a href="">JDBC-391</a>.
+     * <p>
+     * TODO: Broken until JDBC-391 implemented; add more tests
+     * </p>
+     */
+    @Test
+    public void testExecute_SELECT_shouldNotThrowException() throws Exception {
+        Statement stmt = con.createStatement();
+
+        stmt.execute("SELECT * FROM RDB$DATABASE", Statement.RETURN_GENERATED_KEYS);
+        ResultSet rs = stmt.getResultSet();
+        assertTrue(rs.next());
+    }
 }
