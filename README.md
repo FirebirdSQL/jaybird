@@ -8,6 +8,7 @@ The JCA standard specifies an architecture in which an application server can co
 ## Resources
 
 - [Downloads](http://www.firebirdsql.org/en/jdbc-driver/)
+- [Issue tracker](http://tracker.firebirdsql.org/browse/JDBC) (or create a GitHub issue)
 - [Wiki](http://jaybirdwiki.firebirdsql.org)
 - [FAQ](src/documentation/faq.md)
 - [Release notes](src/documentation/release_notes.md)
