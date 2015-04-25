@@ -29,12 +29,12 @@ import org.apache.log4j.Priority;
  * @author <a href="mailto:brodsom@users.sourceforge.net">Blas Rodriguez Somoza</a>
  * @version 1.0
  */
-class Log4jLogger implements Logger{
-	
+final class Log4jLogger implements Logger{
+
     private static boolean loggingAvailable = true;
-	
+
     private final Category log;
-	
+
     protected Log4jLogger(String name) {
         if (loggingAvailable) {
             Category myLog = null;
@@ -48,23 +48,23 @@ class Log4jLogger implements Logger{
             log = null;
         }
     }
-		
+
     public boolean isDebugEnabled() {
         return loggingAvailable && log.isEnabledFor(Priority.DEBUG);
     }
-	
+
     public void debug(Object message) {
         if (isDebugEnabled()) {
             log.log(Priority.DEBUG, message);
         }
     }
-	
+
     public void debug(Object message, Throwable t) {
         if (isDebugEnabled()) {
             log.log(Priority.DEBUG, message, t);
         }
     }
-    
+
     public boolean isTraceEnabled() {
         return isDebugEnabled();
     }
@@ -80,64 +80,64 @@ class Log4jLogger implements Logger{
     public boolean isInfoEnabled() {
         return loggingAvailable && log.isEnabledFor(Priority.INFO);
     }
-	
+
     public void info(Object message) {
         if (isInfoEnabled()) {
             log.log(Priority.INFO, message);
         }
     }
-	
+
     public void info(Object message, Throwable t) {
         if (isInfoEnabled()) {
             log.log(Priority.INFO, message, t);
         }
     }
-	
+
     public boolean isWarnEnabled() {
         return loggingAvailable && log.isEnabledFor(Priority.WARN);
     }
-	
+
     public void warn(Object message) {
         if (isWarnEnabled()) {
             log.log(Priority.WARN, message);
         }
     }
-	
+
     public void warn(Object message, Throwable t) {
         if (isWarnEnabled()) {
             log.log(Priority.WARN, message, t);
         }
     }
-	
+
     public boolean isErrorEnabled() {
         return loggingAvailable && log.isEnabledFor(Priority.ERROR);
     }
-	
+
     public void error(Object message) {
         if (isErrorEnabled()) {
             log.log(Priority.ERROR, message);
         }
     }
-	
+
     public void error(Object message, Throwable t) {
         if (isErrorEnabled()) {
             log.log(Priority.ERROR, message, t);
         }
     }
-	
+
     public boolean isFatalEnabled() {
         return loggingAvailable && log.isEnabledFor(Priority.FATAL);
     }
-	
+
     public void fatal(Object message) {
         if (isFatalEnabled()) {
             log.log(Priority.FATAL, message);
         }
     }
-	
+
     public void fatal(Object message, Throwable t) {
         if (isFatalEnabled()) {
             log.log(Priority.FATAL, message, t);
         }
-    }	
+    }
 }

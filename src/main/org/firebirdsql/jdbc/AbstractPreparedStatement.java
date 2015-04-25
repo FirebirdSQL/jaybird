@@ -27,12 +27,8 @@ import java.sql.*;
 import java.sql.Date;
 import java.util.*;
 
+import org.firebirdsql.gds.*;
 import org.firebirdsql.gds.impl.GDSHelper;
-import org.firebirdsql.gds.ng.StatementType;
-import org.firebirdsql.gds.ng.fields.FieldDescriptor;
-import org.firebirdsql.gds.ng.fields.FieldValue;
-import org.firebirdsql.gds.ng.fields.RowDescriptor;
-import org.firebirdsql.gds.ng.fields.RowValue;
 import org.firebirdsql.jdbc.field.*;
 import org.firebirdsql.jdbc.field.FBFlushableField.CachedObject;
 
@@ -44,26 +40,26 @@ import org.firebirdsql.jdbc.field.FBFlushableField.CachedObject;
  * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  */
-public abstract class AbstractPreparedStatement extends FBStatement implements FirebirdPreparedStatement {
-
-    public static final String METHOD_NOT_SUPPORTED =
-            "This method is only supported on Statement and not supported on PreparedStatement and CallableStatement";
-
-    private final boolean metaDataQuery;
+public abstract class AbstractPreparedStatement extends AbstractStatement implements
+        FirebirdPreparedStatement {
     
+    static final String METHOD_NOT_SUPPORTED = "This method is only supported on Statement and not supported on PreparedStatement and CallableStatement";
+
+    private boolean metaDataQuery;
+
     /**
-     * This flag is needed to guarantee the correct behavior in case when it 
+     * This flag is needed to guarantee the correct behavior in case when it
      * was created without controlling Connection object (in some metadata
      * queries we have only GDSHelper instance)
      */
-    private final boolean standaloneStatement;
-    
+    private boolean standaloneStatement;
+
     /**
      * This flag is needed to prevent throwing an exception for the case when
      * result set is returned for INSERT statement and the statement should
      * return the generated keys.
      */
-    private final boolean generatedKeys;
+    private boolean generatedKeys;
 
     // this array contains either true or false indicating if parameter
     // was initialized, executeQuery, executeUpdate and execute methods
@@ -76,23 +72,24 @@ public abstract class AbstractPreparedStatement extends FBStatement implements F
     // because in this case we must send out_xsqlda to the server.
     private boolean isExecuteProcedureStatement;
 
-    private final FBObjectListener.BlobListener blobListener;
-    private RowValue fieldValues;
+    private boolean trimStrings;
+
+    private FBObjectListener.BlobListener blobListener;
 
     /**
-     * Create instance of this class for the specified result set type and 
-     * concurrency. This constructor is used only in {@link FBCallableStatement}
+     * Create instance of this class for the specified result set type and
+     * concurrency. This constructor is used only in {@link AbstractCallableStatement}
      * since the statement is prepared right before the execution.
-     * 
+     *
      * @param c instance of {@link GDSHelper} that will be used to perform all
      * database activities.
-     * 
+     *
      * @param rsType desired result set type.
      * @param rsConcurrency desired result set concurrency.
-     * 
+     *
      * @param statementListener statement listener that will be notified about
      * the statement start, close and completion.
-     * 
+     *
      * @throws SQLException if something went wrong.
      */
     protected AbstractPreparedStatement(GDSHelper c, int rsType,
@@ -100,17 +97,14 @@ public abstract class AbstractPreparedStatement extends FBStatement implements F
             FBObjectListener.StatementListener statementListener,
             FBObjectListener.BlobListener blobListener)
             throws SQLException {
-        
+
         super(c, rsType, rsConcurrency, rsHoldability, statementListener);
         this.blobListener = blobListener;
-        this.standaloneStatement = false;
-        this.metaDataQuery = false;
-        this.generatedKeys = false;
     }
 
     /**
      * Create instance of this class and prepare SQL statement.
-     * 
+     *
      * @param c
      *            connection to be used.
      * @param sql
@@ -119,7 +113,7 @@ public abstract class AbstractPreparedStatement extends FBStatement implements F
      *            type of result set to create.
      * @param rsConcurrency
      *            result set concurrency.
-     * 
+     *
      * @throws SQLException
      *             if something went wrong.
      */
@@ -135,14 +129,16 @@ public abstract class AbstractPreparedStatement extends FBStatement implements F
         this.metaDataQuery = metaDataQuery;
         this.standaloneStatement = standaloneStatement;
         this.generatedKeys = generatedKeys;
-        
+
         try {
-            // TODO See http://tracker.firebirdsql.org/browse/JDBC-352
             notifyStatementStarted();
-            prepareFixedStatement(sql);
-        } catch (SQLException e) {
+            prepareFixedStatement(sql, true);
+        } catch (GDSException ge) {
             notifyStatementCompleted(false);
-            throw e;
+            throw new FBSQLException(ge);
+        } catch (SQLException sqle) {
+            notifyStatementCompleted(false);
+            throw sqle;
         } catch (RuntimeException e) {
             notifyStatementCompleted(false);
             throw e;
@@ -157,9 +153,9 @@ public abstract class AbstractPreparedStatement extends FBStatement implements F
             notifyStatementCompleted();
         }
     }
-
-    @Override
-    protected void notifyStatementCompleted(boolean success) throws SQLException {
+    
+    protected void notifyStatementCompleted(boolean success)
+            throws SQLException {
         try {
             super.notifyStatementCompleted(success);
         } finally {
@@ -171,20 +167,22 @@ public abstract class AbstractPreparedStatement extends FBStatement implements F
     /**
      * Executes the SQL query in this <code>PreparedStatement</code> object
      * and returns the result set generated by the query.
-     * 
+     *
      * @return a <code>ResultSet</code> object that contains the data produced
      *         by the query; never <code>null</code>
      * @exception SQLException
      *                if a database access error occurs
      */
-    @Override
     public ResultSet executeQuery() throws SQLException {
-        checkValidity();
-        synchronized (getSynchronizationObject()) {
+
+        Object syncObject = getSynchronizationObject();
+        synchronized (syncObject) {
             notifyStatementStarted();
 
-            if (!internalExecute(isExecuteProcedureStatement))  
-                throw new FBSQLException("No resultset for sql", FBSQLException.SQL_STATE_NO_RESULT_SET);
+            if (!internalExecute(isExecuteProcedureStatement))
+                throw new FBSQLException(
+                    "No resultset for sql",
+                    FBSQLException.SQL_STATE_NO_RESULT_SET);
 
             return getResultSet();
         }
@@ -194,20 +192,23 @@ public abstract class AbstractPreparedStatement extends FBStatement implements F
      * Executes the SQL INSERT, UPDATE or DELETE statement in this
      * <code>PreparedStatement</code> object. In addition, SQL statements that
      * return nothing, such as SQL DDL statements, can be executed.
-     * 
+     *
      * @return either the row count for INSERT, UPDATE or DELETE statements; or
      *         0 for SQL statements that return nothing
      * @exception SQLException
      *                if a database access error occurs
      */
     public int executeUpdate() throws SQLException {
-        checkValidity();
-        synchronized (getSynchronizationObject()) {
+
+        Object syncObject = getSynchronizationObject();
+        synchronized (syncObject) {
             notifyStatementStarted();
             try {
                 if (internalExecute(isExecuteProcedureStatement) && !generatedKeys) {
-                    throw new FBSQLException("Update statement returned results.");
+                    throw new FBSQLException(
+                            "Update statement returned results.");
                 }
+
                 return getUpdateCount();
             } finally {
                 notifyStatementCompleted();
@@ -216,15 +217,15 @@ public abstract class AbstractPreparedStatement extends FBStatement implements F
     }
 
     public FirebirdParameterMetaData getFirebirdParameterMetaData() throws SQLException {
-        return new FBParameterMetaData(fbStatement.getParameterDescriptor(), gdsHelper);
+        return new FBParameterMetaData(fixedStmt.getInSqlda().sqlvar, gdsHelper);
     }
 
     /**
      * Sets the designated parameter to SQL <code>NULL</code>.
-     * 
+     *
      * <P>
      * <B>Note: </B> You must specify the parameter's SQL type.
-     * 
+     *
      * @param parameterIndex
      *            the first parameter is 1, the second is 2, ...
      * @param sqlType
@@ -240,11 +241,11 @@ public abstract class AbstractPreparedStatement extends FBStatement implements F
     /**
      * Sets the designated parameter to the given input stream, which will have
      * the specified number of bytes.
-     * 
+     *
      * <P>
      * <B>Note: </B> This stream object can either be a standard Java stream
      * object or your own subclass that implements the standard interface.
-     * 
+     *
      * @param parameterIndex
      *            the first parameter is 1, the second is 2, ...
      * @param inputStream
@@ -254,12 +255,14 @@ public abstract class AbstractPreparedStatement extends FBStatement implements F
      * @exception SQLException
      *                if a database access error occurs
      */
-    public void setBinaryStream(int parameterIndex, InputStream inputStream, int length) throws SQLException {
+    public void setBinaryStream(int parameterIndex, InputStream inputStream,
+            int length) throws SQLException {
         getField(parameterIndex).setBinaryStream(inputStream, length);
         isParamSet[parameterIndex - 1] = true;
     }
     
-    public void setBinaryStream(int parameterIndex, InputStream x, long length) throws SQLException {
+    public void setBinaryStream(int parameterIndex, InputStream x, long length)
+            throws SQLException {
         if (length > Integer.MAX_VALUE)
             throw new FBDriverNotCapableException("Only length <= Integer.MAX_VALUE supported");
         setBinaryStream(parameterIndex, x, (int)length);
@@ -272,7 +275,7 @@ public abstract class AbstractPreparedStatement extends FBStatement implements F
 
     /**
      * Set the designated parameter to the given byte array.
-     * 
+     *
      * @param parameterIndex
      *            the first parameter is 1, the second is 2, ...
      * @param x
@@ -287,7 +290,7 @@ public abstract class AbstractPreparedStatement extends FBStatement implements F
 
     /**
      * Sets the designated parameter to the given boolean value.
-     * 
+     *
      * @param parameterIndex
      *            the first parameter is 1, the second is 2, ...
      * @param x
@@ -302,7 +305,7 @@ public abstract class AbstractPreparedStatement extends FBStatement implements F
 
     /**
      * Sets the designated parameter to the given byte value.
-     * 
+     *
      * @param parameterIndex
      *            the first parameter is 1, the second is 2, ...
      * @param x
@@ -317,7 +320,7 @@ public abstract class AbstractPreparedStatement extends FBStatement implements F
 
     /**
      * Sets the designated parameter to the given date value.
-     * 
+     *
      * @param parameterIndex
      *            the first parameter is 1, the second is 2, ...
      * @param x
@@ -332,7 +335,7 @@ public abstract class AbstractPreparedStatement extends FBStatement implements F
 
     /**
      * Sets the designated parameter to the given double value.
-     * 
+     *
      * @param parameterIndex
      *            the first parameter is 1, the second is 2, ...
      * @param x
@@ -347,7 +350,7 @@ public abstract class AbstractPreparedStatement extends FBStatement implements F
 
     /**
      * Sets the designated parameter to the given floate value.
-     * 
+     *
      * @param parameterIndex
      *            the first parameter is 1, the second is 2, ...
      * @param x
@@ -362,7 +365,7 @@ public abstract class AbstractPreparedStatement extends FBStatement implements F
 
     /**
      * Sets the designated parameter to the given int value.
-     * 
+     *
      * @param parameterIndex
      *            the first parameter is 1, the second is 2, ...
      * @param x
@@ -377,7 +380,7 @@ public abstract class AbstractPreparedStatement extends FBStatement implements F
 
     /**
      * Sets the designated parameter to the given long value.
-     * 
+     *
      * @param parameterIndex
      *            the first parameter is 1, the second is 2, ...
      * @param x
@@ -392,7 +395,7 @@ public abstract class AbstractPreparedStatement extends FBStatement implements F
 
     /**
      * Sets the value of the designated parameter with the given object.
-     * 
+     *
      * @param parameterIndex
      *            the first parameter is 1, the second is 2, ...
      * @param x
@@ -407,7 +410,7 @@ public abstract class AbstractPreparedStatement extends FBStatement implements F
 
     /**
      * Sets the designated parameter to the given short value.
-     * 
+     *
      * @param parameterIndex
      *            the first parameter is 1, the second is 2, ...
      * @param x
@@ -422,7 +425,7 @@ public abstract class AbstractPreparedStatement extends FBStatement implements F
 
     /**
      * Sets the designated parameter to the given String value.
-     * 
+     *
      * @param parameterIndex
      *            the first parameter is 1, the second is 2, ...
      * @param x
@@ -440,7 +443,7 @@ public abstract class AbstractPreparedStatement extends FBStatement implements F
      * workaround for the ambiguous "operation was cancelled" response from the
      * server for when an oversized string is set for a limited-size field. This
      * method sets the string parameter without checking size constraints.
-     * 
+     *
      * @param parameterIndex
      *            the first parameter is 1, the second is 2, ...
      * @param x
@@ -448,7 +451,8 @@ public abstract class AbstractPreparedStatement extends FBStatement implements F
      * @throws SQLException
      *             if a database access occurs
      */
-    public void setStringForced(int parameterIndex, String x) throws SQLException {
+    public void setStringForced(int parameterIndex, String x)
+            throws SQLException {
         FBField field = getField(parameterIndex);
         if (field instanceof FBWorkaroundStringField)
             ((FBWorkaroundStringField) field).setStringForced(x);
@@ -459,7 +463,7 @@ public abstract class AbstractPreparedStatement extends FBStatement implements F
 
     /**
      * Sets the designated parameter to the given Time value.
-     * 
+     *
      * @param parameterIndex
      *            the first parameter is 1, the second is 2, ...
      * @param x
@@ -474,7 +478,7 @@ public abstract class AbstractPreparedStatement extends FBStatement implements F
 
     /**
      * Sets the designated parameter to the given Timestamp value.
-     * 
+     *
      * @param parameterIndex
      *            the first parameter is 1, the second is 2, ...
      * @param x
@@ -482,14 +486,15 @@ public abstract class AbstractPreparedStatement extends FBStatement implements F
      * @throws SQLException
      *             if a database access occurs
      */
-    public void setTimestamp(int parameterIndex, Timestamp x) throws SQLException {
+    public void setTimestamp(int parameterIndex, Timestamp x)
+            throws SQLException {
         getField(parameterIndex).setTimestamp(x);
         isParamSet[parameterIndex - 1] = true;
     }
 
     /**
      * Sets the designated parameter to the given BigDecimal
-     * 
+     *
      * @param parameterIndex
      *            The first parameter is 1, second is 2, ...
      * @param x
@@ -497,28 +502,26 @@ public abstract class AbstractPreparedStatement extends FBStatement implements F
      * @throws SQLException
      *             if a database access error occurs
      */
-    public void setBigDecimal(int parameterIndex, BigDecimal x) throws SQLException {
+    public void setBigDecimal(int parameterIndex, BigDecimal x)
+            throws SQLException {
         getField(parameterIndex).setBigDecimal(x);
         isParamSet[parameterIndex - 1] = true;
     }
 
     /**
-     * Returns the {@link FieldDescriptor} of the specified parameter.
-     *
-     * @param columnIndex 1-based index of the parameter
-     * @return Field descriptor
+     * Returns the XSQLVAR structure for the specified column.
      */
-    protected FieldDescriptor getParameterDescriptor(int columnIndex) {
-        return fbStatement.getParameterDescriptor().getFieldDescriptor(columnIndex - 1);
+    protected XSQLVAR getXsqlvar(int columnIndex) {
+        return fixedStmt.getInSqlda().sqlvar[columnIndex - 1];
     }
 
     /**
      * Factory method for the field access objects
      */
     protected FBField getField(int columnIndex) throws SQLException {
-        checkValidity();
         if (columnIndex > fields.length)
-            throw new FBSQLException("Invalid column index.", FBSQLException.SQL_STATE_INVALID_COLUMN);
+            throw new FBSQLException("Invalid column index.",
+                    FBSQLException.SQL_STATE_INVALID_COLUMN);
 
         return fields[columnIndex - 1];
     }
@@ -530,11 +533,11 @@ public abstract class AbstractPreparedStatement extends FBStatement implements F
      * it via a <code>java.io.InputStream</code>. Data will be read from the
      * stream as needed until end-of-file is reached. The JDBC driver will do
      * any necessary conversion from ASCII to the database char format.
-     * 
+     *
      * <P>
      * <B>Note: </B> This stream object can either be a standard Java stream
      * object or your own subclass that implements the standard interface.
-     * 
+     *
      * @param parameterIndex
      *            the first parameter is 1, the second is 2, ...
      * @param x
@@ -544,11 +547,13 @@ public abstract class AbstractPreparedStatement extends FBStatement implements F
      * @exception SQLException
      *                if a database access error occurs
      */
-    public void setAsciiStream(int parameterIndex, InputStream x, int length) throws SQLException {
+    public void setAsciiStream(int parameterIndex, InputStream x, int length)
+            throws SQLException {
         setBinaryStream(parameterIndex, x, length);
     }
     
-    public void setAsciiStream(int parameterIndex, InputStream x, long length) throws SQLException {
+    public void setAsciiStream(int parameterIndex, InputStream x, long length)
+            throws SQLException {
         setBinaryStream(parameterIndex, x, length);
     }
 
@@ -566,11 +571,11 @@ public abstract class AbstractPreparedStatement extends FBStatement implements F
      * driver will do any necessary conversion from UNICODE to the database char
      * format. The byte format of the Unicode stream must be Java UTF-8, as
      * defined in the Java Virtual Machine Specification.
-     * 
+     *
      * <P>
      * <B>Note: </B> This stream object can either be a standard Java stream
      * object or your own subclass that implements the standard interface.
-     * 
+     *
      * @param parameterIndex
      *            the first parameter is 1, the second is 2, ...
      * @param x
@@ -581,11 +586,11 @@ public abstract class AbstractPreparedStatement extends FBStatement implements F
      * @exception SQLException
      *                if a database access error occurs
      * @deprecated
-     * 
+     *
      * I really have no idea if there is anything else we should be doing here
      */
-    @Deprecated
-    public void setUnicodeStream(int parameterIndex, InputStream x, int length) throws SQLException {
+    public void setUnicodeStream(int parameterIndex, InputStream x, int length)
+            throws SQLException {
         setBinaryStream(parameterIndex, x, length);
         isParamSet[parameterIndex - 1] = true;
     }
@@ -594,7 +599,8 @@ public abstract class AbstractPreparedStatement extends FBStatement implements F
         throw new FBDriverNotCapableException();
     }
     
-    public void setNCharacterStream(int parameterIndex, Reader value, long length) throws SQLException {
+    public void setNCharacterStream(int parameterIndex, Reader value,
+            long length) throws SQLException {
         throw new FBDriverNotCapableException();
     }
 
@@ -625,20 +631,19 @@ public abstract class AbstractPreparedStatement extends FBStatement implements F
      * value. However, in some cases it is useful to immediately release the
      * resources used by the current parameter values; this can be done by
      * calling the method <code>clearParameters</code>.
-     * 
+     *
      * @exception SQLException
      *                if a database access error occurs
      */
     public void clearParameters() throws SQLException {
-        checkValidity();
-        if (fieldValues == null) return;
+        if (isParamSet == null) return;
 
-        // TODO Remove: should be based on FieldValue#isInitialized
         for (int i = 0; i < isParamSet.length; i++)
             isParamSet[i] = false;
 
-        for (FieldValue fieldValue : fieldValues) {
-            fieldValue.reset();
+        XSQLVAR[] xsqlvar = fixedStmt.getInSqlda().sqlvar;
+        for (int i = 0; i < xsqlvar.length; i++) {
+            xsqlvar[i].sqldata = null;
         }
     }
 
@@ -650,22 +655,22 @@ public abstract class AbstractPreparedStatement extends FBStatement implements F
      * Sets the value of the designated parameter with the given object. The
      * second argument must be an object type; for integral values, the
      * <code>java.lang</code> equivalent objects should be used.
-     * 
+     *
      * <p>
      * The given Java object will be converted to the given targetSqlType before
      * being sent to the database.
-     * 
+     *
      * If the object has a custom mapping (is of a class implementing the
      * interface <code>SQLData</code>), the JDBC driver should call the
      * method <code>SQLData.writeSQL</code> to write it to the SQL data
      * stream. If, on the other hand, the object is of a class implementing Ref,
      * Blob, Clob, Struct, or Array, the driver should pass it to the database
      * as a value of the corresponding SQL type.
-     * 
+     *
      * <p>
      * Note that this method may be used to pass datatabase- specific abstract
      * data types.
-     * 
+     *
      * @param parameterIndex
      *            the first parameter is 1, the second is 2, ...
      * @param x
@@ -681,7 +686,8 @@ public abstract class AbstractPreparedStatement extends FBStatement implements F
      *                if a database access error occurs
      * @see Types
      */
-    public void setObject(int parameterIndex, Object x, int targetSqlType, int scale) throws SQLException {
+    public void setObject(int parameterIndex, Object x, int targetSqlType,
+            int scale) throws SQLException {
         // Workaround for JBuilder DataSets
         setObject(parameterIndex, x);
         isParamSet[parameterIndex - 1] = true;
@@ -691,7 +697,7 @@ public abstract class AbstractPreparedStatement extends FBStatement implements F
      * Sets the value of the designated parameter with the given object. This
      * method is like the method <code>setObject</code> above, except that it
      * assumes a scale of zero.
-     * 
+     *
      * @param parameterIndex
      *            the first parameter is 1, the second is 2, ...
      * @param x
@@ -702,7 +708,8 @@ public abstract class AbstractPreparedStatement extends FBStatement implements F
      * @exception SQLException
      *                if a database access error occurs
      */
-    public void setObject(int parameterIndex, Object x, int targetSqlType) throws SQLException {
+    public void setObject(int parameterIndex, Object x, int targetSqlType)
+            throws SQLException {
         // well, for now
         setObject(parameterIndex, x);
         isParamSet[parameterIndex - 1] = true;
@@ -713,19 +720,20 @@ public abstract class AbstractPreparedStatement extends FBStatement implements F
      * multiple results; the <code>execute</code> method handles these complex
      * statements as well as the simpler form of statements handled by the
      * methods <code>executeQuery</code> and <code>executeUpdate</code>.
-     * 
+     *
      * @exception SQLException
      *                if a database access error occurs
      * @see Statement#execute
      */
     public boolean execute() throws SQLException {
-        checkValidity();
-        synchronized (getSynchronizationObject()) {
+
+        Object syncObject = getSynchronizationObject();
+        synchronized (syncObject) {
             notifyStatementStarted();
-            
+
             boolean hasResultSet = internalExecute(isExecuteProcedureStatement);
 
-            if (!hasResultSet) 
+            if (!hasResultSet)
                 notifyStatementCompleted();
 
             return hasResultSet;
@@ -737,15 +745,16 @@ public abstract class AbstractPreparedStatement extends FBStatement implements F
      * {@link #executeQuery()}however, it always returns cached result set and
      * strings in the result set are always trimmed (server defines system
      * tables using CHAR data type, but it should be used as VARCHAR).
-     * 
+     *
      * @return result set corresponding to the specified query.
-     * 
+     *
      * @throws SQLException
      *             if something went wrong or no result set was available.
      */
     ResultSet executeMetaDataQuery() throws SQLException {
-        checkValidity();
-        synchronized (getSynchronizationObject()) {
+
+        Object syncObject = getSynchronizationObject();
+        synchronized (syncObject) {
             notifyStatementStarted();
 
             boolean hasResultSet = internalExecute(isExecuteProcedureStatement);
@@ -760,18 +769,18 @@ public abstract class AbstractPreparedStatement extends FBStatement implements F
     /**
      * Execute this statement. Method checks whether all parameters are set,
      * flushes all "flushable" fields that might contain cached data and
-     * executes the statement. 
-     * 
-     * @param sendOutParams Determines if the XSQLDA structure should be sent to the
-     *            database
-     * @return <code>true</code> if the statement has more result sets. 
+     * executes the statement.
+     *
+     * @param sendOutParams
+     * @return <code>true</code> if the statement has more result sets.
      * @throws SQLException
      */
-    protected boolean internalExecute(boolean sendOutParams) throws SQLException {
+    protected boolean internalExecute(boolean sendOutParams)
+            throws SQLException {
+
         boolean canExecute = true;
-        // TODO replace with FieldValue#isInitialized
-        for (boolean anIsParamSet : isParamSet) {
-            canExecute = canExecute && anIsParamSet;
+        for (int i = 0; i < isParamSet.length; i++) {
+            canExecute = canExecute && isParamSet[i];
         }
 
         if (!canExecute)
@@ -781,29 +790,22 @@ public abstract class AbstractPreparedStatement extends FBStatement implements F
             flushFields();
 
             try {
-                // TODO: add a statement listener for controlling information exchange
-                // TODO Is this still correct in light of the listener in FBStatement
-                fbStatement.execute(fieldValues);
-                boolean hasResultSet = fbStatement.getFieldDescriptor().getCount() > 0;
+                gdsHelper.executeStatement(fixedStmt, sendOutParams);
+                boolean hasResultSet = fixedStmt.getOutSqlda().sqld > 0;
                 currentStatementResult = hasResultSet
                         ? StatementResult.RESULT_SET
                         : StatementResult.UPDATE_COUNT;
                 return hasResultSet;
-            } catch (SQLException e) {
+            } catch (GDSException ge) {
                 currentStatementResult = StatementResult.NO_MORE_RESULTS;
-                throw e;
+                throw new FBSQLException(ge);
             }
         }
     }
 
-    @Override
-    protected boolean isGeneratedKeyQuery() {
-        return generatedKeys;
-    }
-
     /**
      * Flush fields that might have cached data.
-     * 
+     *
      * @throws SQLException if something went wrong.
      */
     private void flushFields() throws SQLException {
@@ -817,8 +819,7 @@ public abstract class AbstractPreparedStatement extends FBStatement implements F
         }
     }
 
-    // TODO: AbstractCallableStatement adds FBProcedureCall, while AbstractPreparedStatement adds XSQLVAR[]: separate?
-    protected final List<Object> batchList = new LinkedList<Object>();
+    protected final List batchList = new LinkedList();
 
     /**
      * Adds a set of parameters to this <code>PreparedStatement</code>
@@ -832,23 +833,26 @@ public abstract class AbstractPreparedStatement extends FBStatement implements F
      *      </a>
      */
     public void addBatch() throws SQLException {
-        checkValidity();
+
         boolean allParamsSet = true;
-        // TODO Replace with check of FieldValue#isInitialized
-        for (boolean anIsParamSet : isParamSet) {
-            allParamsSet &= anIsParamSet;
+        for (int i = 0; i < isParamSet.length; i++) {
+            allParamsSet &= isParamSet[i];
         }
 
         if (!allParamsSet) throw new FBSQLException("Not all parameters set.");
 
-        final RowValue batchedValues = fieldValues.deepCopy();
-        for (int i = 0; i < batchedValues.getCount(); i++) {
+        XSQLVAR[] oldXsqlvar = fixedStmt.getInSqlda().sqlvar;
+
+        XSQLVAR[] newXsqlvar = new XSQLVAR[oldXsqlvar.length];
+        for (int i = 0; i < newXsqlvar.length; i++) {
+            newXsqlvar[i] = oldXsqlvar[i].deepCopy();
+
             FBField field = getField(i + 1);
             if (field instanceof FBFlushableField)
-                batchedValues.getFieldValue(i).setCachedObject(((FBFlushableField) field).getCachedObject());
+                newXsqlvar[i].cachedobject = ((FBFlushableField)field).getCachedObject();
         }
 
-        batchList.add(batchedValues);
+        batchList.add(newXsqlvar);
     }
 
     /**
@@ -918,32 +922,30 @@ public abstract class AbstractPreparedStatement extends FBStatement implements F
      *      </a>
      */
     public int[] executeBatch() throws SQLException {
-        checkValidity();
-        synchronized (getSynchronizationObject()) {
+        Object syncObject = getSynchronizationObject();
+        synchronized (syncObject) {
 
             boolean commit = false;
             try {
                 notifyStatementStarted();
 
-                List<Integer> results = new ArrayList<Integer>(batchList.size());
-                Iterator<Object> iter = batchList.iterator();
+                ArrayList results = new ArrayList(batchList.size());
+                Iterator iter = batchList.iterator();
 
                 try {
                     while (iter.hasNext()) {
-                        RowValue data = (RowValue) iter.next();
+                        XSQLVAR[] data = (XSQLVAR[]) iter.next();
 
-                        for (int i = 0; i < fieldValues.getCount(); i++) {
-                            FieldValue fieldValue = fieldValues.getFieldValue(i);
-                            fieldValue.reset();
-
+                        XSQLVAR[] vars = fixedStmt.getInSqlda().sqlvar;
+                        for (int i = 0; i < vars.length; i++) {
                             FBField field = getField(i + 1);
                             if (field instanceof FBFlushableField) {
-                                // Explicitly set to null to ensure initialized property set to true
-                                fieldValue.setFieldData(null);
-                                ((FBFlushableField) field).setCachedObject((CachedObject) data.getFieldValue(i).getCachedObject());
+                                vars[i].copyFrom(data[i], false);
+                                ((FBFlushableField)field).setCachedObject((CachedObject)data[i].cachedobject);
                             } else {
-                                fieldValue.setFieldData(data.getFieldValue(i).getFieldData());
+                                vars[i].copyFrom(data[i], true);
                             }
+                                
                             isParamSet[i] = true;
                         }
 
@@ -951,7 +953,9 @@ public abstract class AbstractPreparedStatement extends FBStatement implements F
                             if (internalExecute(isExecuteProcedureStatement))
                                 throw new BatchUpdateException(toArray(results));
 
-                            results.add(getUpdateCount());
+                            int updateCount = getUpdateCount();
+
+                            results.add(new Integer(updateCount));
 
                         } catch (SQLException ex) {
                             throw new BatchUpdateException(ex.getMessage(), ex
@@ -998,18 +1002,21 @@ public abstract class AbstractPreparedStatement extends FBStatement implements F
      * @see <a href="package-summary.html#2.0 API">What Is in the JDBC 2.0 API
      *      </a>
      */
-    public void setCharacterStream(int parameterIndex, Reader reader, int length) throws SQLException {
+    public void setCharacterStream(int parameterIndex, Reader reader, int length)
+            throws SQLException {
         getField(parameterIndex).setCharacterStream(reader, length);
         isParamSet[parameterIndex - 1] = true;
     }
     
-    public void setCharacterStream(int parameterIndex, Reader reader, long length) throws SQLException {
+    public void setCharacterStream(int parameterIndex, Reader reader,
+            long length) throws SQLException {
         if (length > Integer.MAX_VALUE)
             throw new FBDriverNotCapableException("Only length <= Integer.MAX_VALUE supported");
         setCharacterStream(parameterIndex, reader, (int)length);
     }
 
-    public void setCharacterStream(int parameterIndex, Reader reader) throws SQLException {
+    public void setCharacterStream(int parameterIndex, Reader reader)
+            throws SQLException {
         throw new FBDriverNotCapableException();
     }
     
@@ -1046,6 +1053,7 @@ public abstract class AbstractPreparedStatement extends FBStatement implements F
      *      </a>
      */
     public void setBlob(int parameterIndex, Blob blob) throws SQLException {
+        
         // if the passed BLOB is not instance of our class, copy its content
         // into the our BLOB
         if (!(blob instanceof FBBlob)) {
@@ -1058,11 +1066,13 @@ public abstract class AbstractPreparedStatement extends FBStatement implements F
         isParamSet[parameterIndex - 1] = true;
     }
     
-    public void setBlob(int parameterIndex, InputStream inputStream, long length) throws SQLException {
+    public void setBlob(int parameterIndex, InputStream inputStream, long length)
+            throws SQLException {
         throw new FBDriverNotCapableException();
     }
 
-    public void setBlob(int parameterIndex, InputStream inputStream) throws SQLException {
+    public void setBlob(int parameterIndex, InputStream inputStream)
+            throws SQLException {
         FBBlob blob = new FBBlob(gdsHelper, blobListener);
         blob.copyStream(inputStream);
         setBlob(parameterIndex, blob);
@@ -1093,7 +1103,8 @@ public abstract class AbstractPreparedStatement extends FBStatement implements F
         isParamSet[parameterIndex - 1] = true;
     }
     
-    public void setClob(int parameterIndex, Reader reader, long length) throws SQLException {
+    public void setClob(int parameterIndex, Reader reader, long length)
+            throws SQLException {
         throw new FBDriverNotCapableException();
     }
 
@@ -1123,32 +1134,19 @@ public abstract class AbstractPreparedStatement extends FBStatement implements F
     }
 
     /**
-     * Retrieves a <code>ResultSetMetaData</code> object that contains
-     * information about the columns of the <code>ResultSet</code> object
-     * that will be returned when this <code>PreparedStatement</code> object
-     * is executed.
-     * <P>
-     * Because a <code>PreparedStatement</code> object is precompiled, it is
-     * possible to know about the <code>ResultSet</code> object that it will
-     * return without having to execute it.  Consequently, it is possible
-     * to invoke the method <code>getMetaData</code> on a
-     * <code>PreparedStatement</code> object rather than waiting to execute
-     * it and then invoking the <code>ResultSet.getMetaData</code> method
-     * on the <code>ResultSet</code> object that is returned.
-     * <P>
-     *
-     * @return the description of a <code>ResultSet</code> object's columns or
-     *         <code>null</code> if the driver cannot return a
-     *         <code>ResultSetMetaData</code> object
-     * @exception SQLException if a database access error occurs or
-     * this method is called on a closed <code>PreparedStatement</code>
-     * @exception SQLFeatureNotSupportedException if the JDBC driver does not support
-     * this method
+     * Gets the number, types and properties of a <code>ResultSet</code>
+     * object's columns.
+     * 
+     * @return the description of a <code>ResultSet</code> object's columns
+     * @exception SQLException
+     *                if a database access error occurs
      * @since 1.2
+     * @see <a href="package-summary.html#2.0 API">What Is in the JDBC 2.0 API
+     *      </a>
      */
     public ResultSetMetaData getMetaData() throws SQLException {
-        checkValidity();
-        return new FBResultSetMetaData(fbStatement.getFieldDescriptor(), gdsHelper);
+        return new FBResultSetMetaData(fixedStmt.getOutSqlda().sqlvar,
+                gdsHelper);
     }
 
     /**
@@ -1174,7 +1172,8 @@ public abstract class AbstractPreparedStatement extends FBStatement implements F
      * @see <a href="package-summary.html#2.0 API">What Is in the JDBC 2.0 API
      *      </a>
      */
-    public void setDate(int parameterIndex, Date x, Calendar cal) throws SQLException {
+    public void setDate(int parameterIndex, Date x, Calendar cal)
+            throws SQLException {
         getField(parameterIndex).setDate(x, cal);
         isParamSet[parameterIndex - 1] = true;
     }
@@ -1202,7 +1201,8 @@ public abstract class AbstractPreparedStatement extends FBStatement implements F
      * @see <a href="package-summary.html#2.0 API">What Is in the JDBC 2.0 API
      *      </a>
      */
-    public void setTime(int parameterIndex, Time x, Calendar cal) throws SQLException {
+    public void setTime(int parameterIndex, Time x, Calendar cal)
+            throws SQLException {
         getField(parameterIndex).setTime(x, cal);
         isParamSet[parameterIndex - 1] = true;
     }
@@ -1231,7 +1231,8 @@ public abstract class AbstractPreparedStatement extends FBStatement implements F
      * @see <a href="package-summary.html#2.0 API">What Is in the JDBC 2.0 API
      *      </a>
      */
-    public void setTimestamp(int parameterIndex, Timestamp x, Calendar cal) throws SQLException {
+    public void setTimestamp(int parameterIndex, Timestamp x, Calendar cal)
+            throws SQLException {
         getField(parameterIndex).setTimestamp(x, cal);
         isParamSet[parameterIndex - 1] = true;
     }
@@ -1268,7 +1269,8 @@ public abstract class AbstractPreparedStatement extends FBStatement implements F
      * @see <a href="package-summary.html#2.0 API">What Is in the JDBC 2.0 API
      *      </a>
      */
-    public void setNull(int parameterIndex, int sqlType, String typeName) throws SQLException {
+    public void setNull(int parameterIndex, int sqlType, String typeName)
+            throws SQLException {
         // all nulls are represented the same irrespective of type
         setNull(parameterIndex, sqlType); 
     }
@@ -1276,24 +1278,46 @@ public abstract class AbstractPreparedStatement extends FBStatement implements F
     /**
      * Prepare fixed statement and initialize parameters.
      */
-    protected void prepareFixedStatement(String sql) throws SQLException {
-        super.prepareFixedStatement(sql);
+    protected void prepareFixedStatement(String sql, boolean describeBind)
+            throws GDSException, SQLException {
+        super.prepareFixedStatement(sql, describeBind);
 
-        RowDescriptor rowDescriptor = fbStatement.getParameterDescriptor();
-        assert rowDescriptor != null : "RowDescriptor should not be null after prepare";
+        XSQLDA inSqlda = fixedStmt.getInSqlda();
 
-        isParamSet = new boolean[rowDescriptor.getCount()];
-        fieldValues = rowDescriptor.createDefaultFieldValues();
-        fields = new FBField[rowDescriptor.getCount()];
-
-        for (int i = 0; i < isParamSet.length; i++) {
-            FieldDataProvider dataProvider = fieldValues.getFieldValue(i);
-
-            // FIXME check if we can safely pass cached here
-            fields[i] = FBField.createField(getParameterDescriptor(i + 1), dataProvider, gdsHelper, false);
+        if (!describeBind && inSqlda == null) {
+            inSqlda = new XSQLDA();
+            inSqlda.sqln = 0;
+            inSqlda.sqlvar = new XSQLVAR[0];
         }
 
-        this.isExecuteProcedureStatement = fbStatement.getType() == StatementType.STORED_PROCEDURE;
+        // initialize isParamSet member
+        isParamSet = new boolean[inSqlda.sqln];
+        fields = new FBField[inSqlda.sqln];
+
+        for (int i = 0; i < isParamSet.length; i++) {
+            final int fieldPos = i;
+
+            FieldDataProvider dataProvider = new FieldDataProvider() {
+
+                public byte[] getFieldData() {
+                    return getXsqlvar(fieldPos + 1).sqldata;
+                }
+
+                public void setFieldData(byte[] data) {
+                    getXsqlvar(fieldPos + 1).sqldata = data;
+                }
+            };
+
+            // FIXME check if we can safely pass cached here
+            fields[i] = FBField.createField(getXsqlvar(i + 1), dataProvider,
+                gdsHelper, false);
+
+            if (fields[i] instanceof FBWorkaroundStringField)
+                ((FBWorkaroundStringField) fields[i])
+                        .setTrimString(trimStrings);
+        }
+
+        this.isExecuteProcedureStatement = fixedStmt.getStatementType() == FirebirdPreparedStatement.TYPE_EXEC_PROCEDURE;
     }
 
     /**
@@ -1301,7 +1325,7 @@ public abstract class AbstractPreparedStatement extends FBStatement implements F
      *
      * @return The execution plan of the statement
      */
-    public String getExecutionPlan() throws SQLException {
+    public String getExecutionPlan() throws FBSQLException {
         return super.getExecutionPlan();
     }
 
@@ -1317,19 +1341,7 @@ public abstract class AbstractPreparedStatement extends FBStatement implements F
     }
 
     public ParameterMetaData getParameterMetaData() throws SQLException {
-        return getFirebirdParameterMetaData();
-    }
-    
-    public void setNClob(int parameterIndex, NClob value) throws SQLException {
-        throw new FBDriverNotCapableException();
-    }
-
-    public void setRowId(int parameterIndex, RowId x) throws SQLException {
-        throw new FBDriverNotCapableException();
-    }
-
-    public void setSQLXML(int parameterIndex, SQLXML xmlObject) throws SQLException {
-        throw new FBDriverNotCapableException();
+        return new FBParameterMetaData(fixedStmt.getInSqlda().sqlvar, gdsHelper);
     }
     
     // Methods not allowed to be used on PreparedStatement and CallableStatement
@@ -1382,18 +1394,5 @@ public abstract class AbstractPreparedStatement extends FBStatement implements F
     @Override 
     public boolean execute(String sql, String[] columnNames) throws SQLException {
         throw new FBSQLException(METHOD_NOT_SUPPORTED);
-    }
-
-    // TODO Implement large update count method below using SqlCountHolder
-
-    /**
-     * {@inheritDoc}
-     * <p>
-     * Jaybird does not support update counts exceeding {@link Integer#MAX_VALUE}, this method calls
-     * {@link #executeUpdate()}.
-     * </p>
-     */
-    public long executeLargeUpdate() throws SQLException {
-        return executeUpdate();
     }
 }

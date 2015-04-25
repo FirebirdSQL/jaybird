@@ -16,6 +16,7 @@
  *
  * All rights reserved.
  */
+
 /*
  * The Original Code is the Firebird Java GDS implementation.
  *
@@ -24,90 +25,60 @@
  * Boix i Oltra, S.L. All Rights Reserved.
  *
  */
+
 package org.firebirdsql.gds.impl.wire;
 
-import org.firebirdsql.encodings.Encoding;
-
-import java.io.BufferedInputStream;
 import java.io.EOFException;
 import java.io.IOException;
 import java.io.InputStream;
 
+
+
 /**
  * <code>XdrInputStream</code> is an input stream for reading in data that
- * is in the XDR format. An <code>XdrInputStream</code> instance is wrapped
+ * is in the XDR format. An <code>XdrInputStream</code> instance is wrapped 
  * around an underlying <code>java.io.InputStream</code>.
- * <p>
- * This class is not thread-safe.
- * </p>
  *
  * @author <a href="mailto:alberola@users.sourceforge.net">Alejandro Alberola</a>
  * @author <a href="mailto:d_jencks@users.sourceforge.net">David Jencks</a>
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @version 1.0
  */
-public final class XdrInputStream {
+public class XdrInputStream {
 
-    private InputStream in = null;
+    protected final static byte[] pad = new byte[8];
+    protected InputStream in = null;
+    // Buffer
+    protected static int defaultBufferSize = 16384;
+    protected byte buf[];
+    protected int count;
+    protected int pos;
 
-    private static final int DEFAULT_BUFFER_SIZE = 16384;
-
+    protected XdrInputStream() {
+        // empty, for subclasses only
+    }
+    
     /**
      * Create a new instance of <code>XdrInputStream</code>.
      *
      * @param in The underlying <code>InputStream</code> to read from
      */
     public XdrInputStream(InputStream in) {
-        this.in = new BufferedInputStream(in, DEFAULT_BUFFER_SIZE);
-    }
-
-    /**
-     * Skips the padding after a buffer of the specified length. The number of bytes to skip is calculated as
-     * <code>(4 - length) & 3</code>.
-     *
-     * @param length
-     *         Length of the previously read buffer
-     * @return Actual number of bytes skipped
-     * @throws IOException
-     *         IOException if an error occurs while reading from the
-     *         underlying input stream
-     * @see XdrOutputStream#writePadding(int, int)
-     */
-    public int skipPadding(int length) throws IOException {
-        return skipFully((4 - length) & 3);
-    }
-
-    /**
-     * Skips the specified number of bytes.
-     *
-     * @param n
-     *         Number of bytes to skip.
-     * @return Actual number of bytes skipped (usually <code>n</code>, unless the underlying input stream is closed).
-     * @throws IOException
-     *         IOException if an error occurs while reading from the
-     *         underlying input stream
-     */
-    public int skipFully(int n) throws IOException {
-        int total = 0;
-        int cur;
-        while (total < n && (cur = (int) in.skip(n - total)) > 0) {
-            total += cur;
-        }
-        return total;
+        buf = new byte[defaultBufferSize];
+        this.in = in;
     }
 
     /**
      * Read in a byte buffer.
      *
      * @return The buffer that was read
-     * @throws IOException if an error occurs while reading from the
+     * @throws IOException if an error occurs while reading from the 
      *         underlying input stream
      */
     public byte[] readBuffer() throws IOException {
         int len = readInt();
         byte[] buffer = new byte[len];
-        readFully(buffer, 0, len);
-        skipPadding(len);
+        readFully(buffer,0,len);
+        readFully(pad,0,(4 - len) & 3);
         return buffer;
     }
 
@@ -116,78 +87,115 @@ public final class XdrInputStream {
      *
      * @param len The number of bytes to read
      * @return The byte buffer that was read
-     * @throws IOException if an error occurs while reading from the
+     * @throws IOException if an error occurs while reading from the 
      *         underlying input stream
      */
-    public byte[] readRawBuffer(int len) throws IOException {
-        byte[] buffer = new byte[len];
+    public byte [] readRawBuffer(int len) throws IOException {
+        byte [] buffer = new byte[len];
         readFully(buffer, 0, len);
         return buffer;
     }
-
+    
     /**
      * Read in a <code>String</code>.
      *
      * @return The <code>String</code> that was read
-     * @throws IOException if an error occurs while reading from the
+     * @throws IOException if an error occurs while reading from the 
      *         underlying input stream
      */
-    public String readString(Encoding encoding) throws IOException {
-        byte[] buffer = readBuffer();
-        return encoding.decodeFromCharset(buffer);
+    public String readString() throws IOException {
+        int len = readInt();
+        byte[] buffer = new byte[len];
+        readFully(buffer,0,len);
+        readFully(pad,0,(4 - len) & 3);
+        return new String(buffer);
     }
 
-    private final byte readBuffer[] = new byte[8];
+
+    //
+    // Read SQL data
+    //
+    //Now returns results in Object[] and in xsqlda.data
+    //Nulls are represented by null values in Object array
+
+    /**
+     * Read a row of SQL data and store it in the results set of a statement.
+     *
+     * @param ioLength array containing the lengths of each column in the
+     *        data row that is to be read
+     * @param stmt The statement where the row is to be stored
+     * @throws IOException if an error occurs while reading from the 
+     *         underlying input stream
+     */
+    public void readSQLData(int[] ioLength, isc_stmt_handle_impl stmt) throws IOException {
+        // This only works if not (port->port_flags & PORT_symmetric)		 
+        int numCols = ioLength.length;
+        byte[][] row = new byte[numCols][];
+        byte[] buffer;
+        for (int i = 0; i < numCols; i++) {
+            int len = ioLength[i];
+            if (len == 0){
+                len = readInt();
+                buffer = new byte[len];
+                readFully(buffer,0,len);
+                readFully(pad,0,(4 - len) & 3);
+            }
+            else if (len < 0){
+                buffer = new byte[-len];
+                readFully(buffer,0,-len);
+            }
+            else {
+                // len is incremented to avoid value 0 so it must be decremented					
+                len --;
+                buffer = new byte[len];
+                readFully(buffer,0,len);
+                readFully(pad,0,(4 - len) & 3);
+            }
+            if (readInt()==-1)
+                buffer = null;
+            row[i] = buffer;
+        }
+        if (stmt != null) 
+            stmt.addRow(row);
+    }
+
+    //
+    // Substitute DataInputStream
+    //
+
 
     /**
      * Read in a <code>long</code>.
      *
      * @return The <code>long</code> that was read
-     * @throws IOException if an error occurs while reading from the
+     * @throws IOException if an error occurs while reading from the 
      *         underlying input stream
      */
     public long readLong() throws IOException {
-        readFully(readBuffer, 0, 8);
-        return (((long) readBuffer[0] << 56) +
-                ((long) (readBuffer[1] & 0xFF) << 48) +
-                ((long) (readBuffer[2] & 0xFF) << 40) +
-                ((long) (readBuffer[3] & 0xFF) << 32) +
-                ((long) (readBuffer[4] & 0xFF) << 24) +
-                ((readBuffer[5] & 0xFF) << 16) +
-                ((readBuffer[6] & 0xFF) << 8) +
-                ((readBuffer[7] & 0xFF)));
+        return ((long)read() << 56) | ((long)read() << 48) | ((long)read() << 40) | ((long)read() << 32) 
+        | ((long)read() << 24) | ((long)read() << 16) | ((long)read() << 8) | ((long)read() << 0);
     }
 
     /**
      * Read in an <code>int</code>.
      *
      * @return The <code>int</code> that was read
-     * @throws IOException if an error occurs while reading from the
+     * @throws IOException if an error occurs while reading from the 
      *         underlying input stream
      */
     public int readInt() throws IOException {
-        int ch1 = in.read();
-        int ch2 = in.read();
-        int ch3 = in.read();
-        int ch4 = in.read();
-        if ((ch1 | ch2 | ch3 | ch4) < 0)
-            throw new EOFException();
-        return ((ch1 << 24) + (ch2 << 16) + (ch3 << 8) + (ch4));
+        return (read() << 24) | (read() << 16) | (read() << 8) | (read() << 0);
     }
-
+    
     /**
      * Read in a <code>short</code>.
      *
      * @return The <code>short</code> that was read
-     * @throws IOException if an error occurs while reading from the
+     * @throws IOException if an error occurs while reading from the 
      *         underlying input stream
      */
     public int readShort() throws IOException {
-        int ch1 = in.read();
-        int ch2 = in.read();
-        if ((ch1 | ch2) < 0)
-            throw new EOFException();
-        return (ch1 << 8) + (ch2);
+        return (read() << 8) | (read() << 0);
     }
 
     /**
@@ -198,19 +206,57 @@ public final class XdrInputStream {
      * @param b The byte buffer to hold the data that is read
      * @param off The offset at which to start storing data in <code>b</code>
      * @param len The number of bytes to be read
-     * @throws IOException if an error occurs while reading from the
+     * @throws IOException if an error occurs while reading from the 
      *         underlying input stream
      */
     public void readFully(byte b[], int off, int len) throws IOException {
-        if (len < 0)
-            throw new IndexOutOfBoundsException();
-        int n = 0;
-        while (n < len) {
-            int count = in.read(b, off + n, len - n);
-            if (count < 0)
-                throw new EOFException();
-            n += count;
+
+        if (len <= count-pos){
+            System.arraycopy(buf, pos, b, off, len);
+            pos += len;
         }
+        else {
+            int n = 0;
+            while (n < len) {
+                if (count <= pos){
+                   pos = count = 0;
+                   int readn = in.read(buf, 0, defaultBufferSize);
+                   if (readn > 0)
+                       count = readn;
+                   else 
+                       throw new EOFException();
+                }
+                int lenN = len-n;
+                int avail = count - pos;
+                int cnt = (avail < lenN) ? avail : lenN;
+                System.arraycopy(buf, pos, b, off+n, cnt);
+                pos += cnt;
+                n += cnt;
+            }
+        }
+    }
+
+    //
+    // Buffering classes (those interface with the real InputStream
+    //
+
+    /**
+     * Read in the next byte of data from the underlying input stream.
+     *
+     * @return The value that was read
+     * @throws IOException if an error occurs while reading from the 
+     *         underlying input stream
+     */
+    public int read() throws IOException {
+        if (pos >= count){
+            pos = count = 0;
+            int readn = in.read(buf, 0, defaultBufferSize);
+            if (readn > 0)
+                count = readn;
+            else 
+                throw new EOFException();
+        }
+        return buf[pos++] & 0xff;
     }
 
     /**
@@ -220,6 +266,13 @@ public final class XdrInputStream {
      *         input stream
      */
     public void close() throws IOException {
-        in.close();
+        if (in == null)
+            return;
+        try {
+            in.close();
+        } finally {
+            in = null;
+            buf = null;
+        }
     }
 }

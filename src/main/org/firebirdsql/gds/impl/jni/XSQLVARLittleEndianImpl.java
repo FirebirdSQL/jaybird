@@ -142,6 +142,13 @@ public class XSQLVARLittleEndianImpl extends XSQLVARImpl {
         return Double.longBitsToDouble(decodeLong(byte_int));
     }
 
+    public byte[] encodeString(String value, String encoding, String mappingPath)
+            throws SQLException {
+        if (coder == null)
+            coder = EncodingFactory.getEncoding(encoding, mappingPath);
+        return coder.encodeToCharset(value);
+    }
+
     public byte[] encodeString(byte[] value, String encoding, String mappingPath)
             throws SQLException {
         if (encoding == null)
@@ -151,6 +158,13 @@ public class XSQLVARLittleEndianImpl extends XSQLVARImpl {
                 coder = EncodingFactory.getEncoding(encoding, mappingPath);
             return coder.encodeToCharset(coder.decodeFromCharset(value));
         }
+    }
+
+    public String decodeString(byte[] value, String encoding, String mappingPath)
+            throws SQLException {
+        if (coder == null)
+            coder = EncodingFactory.getEncoding(encoding, mappingPath);
+        return coder.decodeFromCharset(value);
     }
 
     public java.sql.Timestamp encodeTimestamp(java.sql.Timestamp value,

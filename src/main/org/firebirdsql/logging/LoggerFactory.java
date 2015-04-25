@@ -25,11 +25,11 @@ import java.security.PrivilegedAction;
 
 /**
  * Factory for Logger instances
- * 
+ *
  * @author <a href="mailto:brodsom@users.sourceforge.net">Blas Rodriguez Somoza</a>
  * @version 1.0
  */
-public final class LoggerFactory {
+public class LoggerFactory {
 
     private static final boolean forceConsoleLogger;
     /**
@@ -81,10 +81,18 @@ public final class LoggerFactory {
         return NULL_LOGGER;
     }
 
-    public static Logger getLogger(Class<?> clazz) {
+    public static Logger getLogger(String name, boolean def) {
+        return getLogger(name);
+    }
+
+    public static Logger getLogger(Class clazz) {
         return getLogger(clazz.getName());
     }
-    
+
+    public static Logger getLogger(Class clazz, boolean def) {
+        return getLogger(clazz);
+    }
+
     private static String getSystemPropertyPrivileged(final String propertyName) {
         return AccessController.doPrivileged(new PrivilegedAction<String>() {
             public String run() {

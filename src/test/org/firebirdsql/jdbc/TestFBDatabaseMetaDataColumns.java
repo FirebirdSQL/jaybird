@@ -24,14 +24,15 @@ import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
-import java.util.*;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.EnumMap;
+import java.util.EnumSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import org.firebirdsql.jdbc.MetaDataValidator.MetaDataInfo;
-import org.firebirdsql.util.FirebirdSupportInfo;
-
-import static org.firebirdsql.common.JdbcResourceHelper.*;
-import static org.firebirdsql.util.FirebirdSupportInfo.supportInfoFor;
-import static org.junit.Assume.assumeTrue;
 
 /**
  * Tests for {@link FBDatabaseMetaData} for column related metadata.
@@ -88,19 +89,18 @@ public class TestFBDatabaseMetaDataColumns extends FBMetaDataTestBase<TestFBData
     public static final String ADD_COMMENT_ON_COLUMN = 
             "COMMENT ON COLUMN test_column_metadata.col_integer IS 'Some comment'";
 
+    public static final String DROP_COLUMN_METADATA_TEST_TABLE = 
+            "DROP TABLE test_column_metadata";
+
+    protected List<String> getDropStatements() {
+        return Arrays.asList(
+                DROP_COLUMN_METADATA_TEST_TABLE);
+    }
+    
     protected List<String> getCreateStatements() {
-        FirebirdSupportInfo supportInfo = supportInfoFor(con);
-        List<String> statements = new ArrayList<String>();
-        if (supportInfo.supportsBigint()) {
-            statements.add(CREATE_COLUMN_METADATA_TEST_TABLE);
-        } else {
-            // No BIGINT support, replacing type so number of columns remain the same
-            statements.add(CREATE_COLUMN_METADATA_TEST_TABLE.replace("col_bigint BIGINT,", "col_bigint DOUBLE PRECISION,"));
-        }
-        if (supportInfo.supportsComment()) {
-            statements.add(ADD_COMMENT_ON_COLUMN);
-        }
-        return statements;
+        return Arrays.asList(
+                CREATE_COLUMN_METADATA_TEST_TABLE,
+                ADD_COMMENT_ON_COLUMN);
     }
     
     /**
@@ -189,7 +189,6 @@ public class TestFBDatabaseMetaDataColumns extends FBMetaDataTestBase<TestFBData
      * constraints, defaults and remarks.
      */
     public void testBigintColumn() throws Exception {
-        assumeTrue("Test requires BIGINT support", supportInfoFor(con).supportsBigint());
         Map<ColumnMetaData, Object> validationRules = getDefaultValueValidationRules();
         validationRules.put(ColumnMetaData.DATA_TYPE, Types.BIGINT);
         validationRules.put(ColumnMetaData.TYPE_NAME, "BIGINT");

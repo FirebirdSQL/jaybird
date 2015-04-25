@@ -20,41 +20,45 @@
  */
 package org.firebirdsql.jdbc.oo;
 
+import org.firebirdsql.gds.GDSException;
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.XSQLVAR;
-import org.firebirdsql.gds.ng.fields.RowDescriptor;
-import org.firebirdsql.gds.ng.fields.RowValue;
-import org.firebirdsql.jdbc.FBConnection;
+import org.firebirdsql.gds.impl.GDSHelper;
+import org.firebirdsql.jdbc.AbstractConnection;
 import org.firebirdsql.jdbc.FBDatabaseMetaData;
 import org.firebirdsql.jdbc.FBResultSet;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
 
 public class OODatabaseMetaData extends FBDatabaseMetaData {
 
-    public OODatabaseMetaData(FBConnection c) throws SQLException {
+    public OODatabaseMetaData(AbstractConnection c) throws GDSException {
         super(c);
+    }
+
+    public OODatabaseMetaData(GDSHelper gdsHelper) {
+        super(gdsHelper);
     }
 
     private static final String DEFAULT_SCHEMA = "DEFAULT";
 
-    @Override
     public ResultSet getSchemas() throws SQLException {
         XSQLVAR[] xsqlvars = new XSQLVAR[1];
 
-        xsqlvars[0] = new XSQLVAR(ISCConstants.SQL_VARYING, 31, "TABLE_SCHEM", "TABLESCHEMAS");
+        xsqlvars[0] = new XSQLVAR();
+        xsqlvars[0].sqltype = ISCConstants.SQL_VARYING;
+        xsqlvars[0].sqllen = 31;
+        xsqlvars[0].sqlname = "TABLE_SCHEM";
+        xsqlvars[0].relname = "TABLESCHEMAS";
 
-        List<byte[][]> rows = new ArrayList<byte[][]>(1);
+        ArrayList rows = new ArrayList(1);
         rows.add(new byte[][] { getBytes(DEFAULT_SCHEMA) });
 
         return new FBResultSet(xsqlvars, rows);
     }
 
-    @Override
     public ResultSet getTables(String catalog, String schemaPattern,
             String tableNamePattern, String[] types) throws SQLException {
 
@@ -73,7 +77,6 @@ public class OODatabaseMetaData extends FBDatabaseMetaData {
         return super.getTables(catalog, schemaPattern, tableNamePattern, types);
     }
 
-    @Override
     public ResultSet getColumns(String catalog, String schemaPattern,
             String tableNamePattern, String columnNamePattern)
             throws SQLException {
@@ -140,7 +143,6 @@ public class OODatabaseMetaData extends FBDatabaseMetaData {
             " RDB$USER IN (CURRENT_ROLE, 'PUBLIC') AND RDB$FIELD_NAME IS NULL AND RDB$OBJECT_TYPE = 0 " +
             "ORDER BY 3, 6";
 
-    @Override
     public ResultSet getTablePrivileges(String catalog, String schemaPattern,
             String tableNamePattern) throws SQLException {
         if (DEFAULT_SCHEMA.equals(schemaPattern)) schemaPattern = null;
@@ -148,7 +150,7 @@ public class OODatabaseMetaData extends FBDatabaseMetaData {
         checkCatalogAndSchema(catalog, schemaPattern);
         tableNamePattern = stripQuotes(stripEscape(tableNamePattern), true);
 
-        final RowDescriptor rowDescriptor = buildTablePrivilegeRSMetaData();
+        XSQLVAR[] xsqlvars = buildTablePrivilegeRSMetaData();
 
         Clause tableClause1 = new Clause("RDB$RELATION_NAME", tableNamePattern);
         Clause tableClause2 = new Clause("RDB$RELATION_NAME", tableNamePattern);
@@ -161,7 +163,7 @@ public class OODatabaseMetaData extends FBDatabaseMetaData {
         sql += GET_TABLE_PRIVILEGES_END_2;
 
         // check the original case identifiers first
-        List<String> params = new ArrayList<String>();
+        ArrayList params = new ArrayList();
         if (!tableClause1.getCondition().equals("")) {
             params.add(tableClause1.getOriginalCaseValue());
         }
@@ -185,9 +187,9 @@ public class OODatabaseMetaData extends FBDatabaseMetaData {
 
             // if nothing found, return an empty result set
             if (!rs.next())
-                return new FBResultSet(rowDescriptor, Collections.<RowValue>emptyList());
+                return new FBResultSet(xsqlvars, new ArrayList());
         }
 
-        return processTablePrivileges(rowDescriptor, rs);
+        return processTablePrivileges(xsqlvars, rs);
     }
 }

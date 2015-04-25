@@ -39,34 +39,49 @@ public abstract class StoredProcedureMetaDataFactory {
 
     /**
      * Retrieve a {@link StoredProcedureMetaData} object for a Connection.
-     *
+     * 
      * @param connection
-     *         The connection for which data is to be retrieved
+     *            The connection for which data is to be retrieved
      * @return {@link StoredProcedureMetaData} for the current connection
      * @throws SQLException
-     *         if an exception occurs while retrieving meta-data
+     *             if an exception occurs while retrieving meta-data
      */
-    public static StoredProcedureMetaData getInstance(FBConnection connection) throws SQLException {
+    public static StoredProcedureMetaData getInstance(
+            AbstractConnection connection) throws SQLException {
+
+        StoredProcedureMetaData metaData;
+
         if (connectionHasProcedureMetadata(connection)) {
-            return new DefaultCallableStatementMetaData(connection);
+            metaData = new DefaultCallableStatementMetaData(connection);
         } else {
-            return new DummyCallableStatementMetaData();
+            metaData = new DummyCallableStatementMetaData();
         }
+
+        return metaData;
     }
 
-    private static boolean connectionHasProcedureMetadata(FBConnection connection) throws SQLException {
-        FirebirdDatabaseMetaData metaData = (FirebirdDatabaseMetaData) connection.getMetaData();
+    private static boolean connectionHasProcedureMetadata(
+            AbstractConnection connection) throws SQLException {
 
-        return versionInformationEqualOrAbove(metaData.getDatabaseMajorVersion(), metaData.getDatabaseMinorVersion(), 2, 1)
-                && versionInformationEqualOrAbove(metaData.getOdsMajorVersion(), metaData.getOdsMinorVersion(), 2, 1);
+        FirebirdDatabaseMetaData metaData = 
+            (FirebirdDatabaseMetaData) connection.getMetaData();
+
+        return versionInformationEqualOrAbove(
+                metaData.getDatabaseMajorVersion(), metaData
+                        .getDatabaseMinorVersion(), 2, 1)
+                && versionInformationEqualOrAbove(metaData.getOdsMajorVersion(),
+                        metaData.getOdsMinorVersion(), 2, 1);
     }
 
-    private static boolean versionInformationEqualOrAbove(int majorVersion, int minorVersion,
-            int requiredMajorVersion, int requiredMinorVersion) {
+    private static boolean versionInformationEqualOrAbove(int majorVersion,
+            int minorVersion, int requiredMajorVersion, 
+            int requiredMinorVersion) {
 
-        return majorVersion > requiredMajorVersion ||
-                (majorVersion == requiredMajorVersion && minorVersion >= requiredMinorVersion);
+        return majorVersion > requiredMajorVersion || 
+            (majorVersion == requiredMajorVersion 
+             && minorVersion >= requiredMinorVersion);
     }
+
 }
 
 /**
@@ -74,7 +89,7 @@ public abstract class StoredProcedureMetaDataFactory {
  */
 class DefaultCallableStatementMetaData implements StoredProcedureMetaData {
 
-    Set<String> selectableProcedureNames = new HashSet<String>();
+    Set selectableProcedureNames = new HashSet();
 
     public DefaultCallableStatementMetaData(Connection connection)
             throws SQLException {
@@ -85,12 +100,13 @@ class DefaultCallableStatementMetaData implements StoredProcedureMetaData {
             throws SQLException {
         Statement stmt = connection.createStatement();
         try {
-            // TODO Replace with looking for specific procedure
-            String sql = "SELECT RDB$PROCEDURE_NAME FROM RDB$PROCEDURES WHERE RDB$PROCEDURE_TYPE = 1";
+            String sql = "SELECT RDB$PROCEDURE_NAME FROM " + 
+                "RDB$PROCEDURES WHERE RDB$PROCEDURE_TYPE = 1";
             ResultSet resultSet = stmt.executeQuery(sql);
             try {
                 while (resultSet.next()) {
-                    selectableProcedureNames.add(resultSet.getString(1).trim().toUpperCase());
+                    selectableProcedureNames.add(resultSet.getString(1).trim()
+                            .toUpperCase());
                 }
             } finally {
                 resultSet.close();
@@ -105,8 +121,11 @@ class DefaultCallableStatementMetaData implements StoredProcedureMetaData {
     }
 
     public boolean isSelectable(String procedureName) throws SQLException {
-        return selectableProcedureNames.contains(procedureName.toUpperCase());
+        boolean value = selectableProcedureNames.contains(procedureName
+                .toUpperCase());
+        return value;
     }
+
 }
 
 /**
@@ -120,7 +139,8 @@ class DummyCallableStatementMetaData implements StoredProcedureMetaData {
     }
 
     public boolean isSelectable(String procedureName) throws SQLException {
-        throw new FBSQLException("A DummyCallableStatementMetaData can't retrieve selectable settings");
+        throw new FBSQLException("A DefaultCallableStatementMetaData can't "
+                + "retrieve selectable settings");
     }
 
 }

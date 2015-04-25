@@ -20,12 +20,7 @@
  */
 package org.firebirdsql.jdbc;
 
-import org.firebirdsql.common.FBJUnit4TestBase;
-import org.firebirdsql.gds.ISCConstants;
-import org.junit.After;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
+import org.firebirdsql.common.FBTestBase;
 
 import java.sql.*;
 import java.util.Calendar;
@@ -33,49 +28,42 @@ import java.util.GregorianCalendar;
 import java.util.Properties;
 import java.util.TimeZone;
 
-import static org.firebirdsql.common.FBTestProperties.*;
-import static org.firebirdsql.common.JdbcResourceHelper.closeQuietly;
-import static org.firebirdsql.common.matchers.SQLExceptionMatchers.*;
-import static org.hamcrest.CoreMatchers.*;
-import static org.junit.Assert.*;
-
 /**
  * Test suite for the FBDriver class implementation.
  *
  * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @version 1.0
  */
-public class TestFBDriver extends FBJUnit4TestBase {
+public class TestFBDriver extends FBTestBase {
 
-    private Connection connection;
+    private Driver driver;
 
-    @Rule
-    public final ExpectedException expectedException = ExpectedException.none();
-
-    @After
-    public void tearDown() throws Exception {
-        closeQuietly(connection);
+    public TestFBDriver(String testName) {
+        super(testName);
     }
 
-    @Test
-    public void testAcceptsURL() throws Exception {
-        Driver driver = DriverManager.getDriver(getUrl());
+    protected void setUp() throws Exception {
+        super.setUp();
+        Class.forName(org.firebirdsql.jdbc.FBDriver.class.getName());
+        driver = DriverManager.getDriver(getUrl());
+    }
 
+    public void testAcceptsURL() throws Exception {
         assertTrue(driver.acceptsURL(getUrl()));
     }
 
-    @Test
     public void testConnect() throws Exception {
-        Driver driver = DriverManager.getDriver(getUrl());
-        connection = driver.connect(getUrl(), getDefaultPropertiesForConnection());
-
-        assertNotNull("Connection is null", connection);
+        Connection connection = driver.connect(getUrl(), getDefaultPropertiesForConnection());
+        try {
+            assertTrue("Connection is null", connection != null);
+        } finally {
+            if (connection != null) {
+                connection.close();
+            }
+        }
     }
 
-    @Test
-    public void testJdbcCompliant() throws Exception {
-        Driver driver = DriverManager.getDriver(getUrl());
-
+    public void testJdbcCompliant() {
         // current driver is not JDBC compliant.
         assertTrue(driver.jdbcCompliant());
     }
@@ -85,115 +73,153 @@ public class TestFBDriver extends FBJUnit4TestBase {
      * database. We use SQL dialect mismatch between client and server to
      * make server return us a warning.
      */
-    @Test
     public void testWarnings() throws Exception {
         Properties info = (Properties) getDefaultPropertiesForConnection().clone();
         info.setProperty("set_db_sql_dialect", "1");
 
-        // open connection and convert DB to SQL dialect 1
-        connection = DriverManager.getConnection(getUrl(), info);
-        SQLWarning warning = connection.getWarnings();
+        try {
+            // open connection and convert DB to SQL dialect 1
+            Connection dialect1Connection = DriverManager.getConnection(getUrl(), info);
 
-        assertNotNull("Connection should have at least one warning.", warning);
-        assertThat(warning, allOf(
-                isA(SQLWarning.class),
-                errorCodeEquals(ISCConstants.isc_dialect_reset_warning),
-                message(startsWith(getFbMessage(ISCConstants.isc_dialect_reset_warning)))
-        ));
+            try {
+                Statement stmt = dialect1Connection.createStatement();
 
-        connection.clearWarnings();
+                // execute select statement, driver will pass SQL dialect 3
+                // for this statement and database server will return a warning
+                stmt.executeQuery("SELECT 1 as col1 FROM rdb$database");
 
-        assertNull("After clearing no warnings should be present.", connection.getWarnings());
+                stmt.close();
+
+                SQLWarning warning = dialect1Connection.getWarnings();
+
+                assertTrue("Connection should have at least one warning.", warning != null);
+
+                dialect1Connection.clearWarnings();
+
+                assertTrue("After clearing no warnings should be present.", dialect1Connection.getWarnings() == null);
+            } finally {
+                dialect1Connection.close();
+            }
+        } finally {
+            info.setProperty("set_db_sql_dialect", "3");
+
+            Connection dialect3Connection = DriverManager.getConnection(getUrl(), info);
+            dialect3Connection.close();
+        }
     }
 
-    @Test
     public void testDialect1() throws Exception {
         Properties info = (Properties) getDefaultPropertiesForConnection().clone();
         info.setProperty("isc_dpb_sql_dialect", "1");
 
-        connection = DriverManager.getConnection(getUrl(), info);
-        Statement stmt = connection.createStatement();
+        Connection dialect1Connection = DriverManager.getConnection(getUrl(), info);
         try {
-            // Dialect 1 allows double quotes in strings
-            ResultSet rs = stmt.executeQuery("SELECT  cast(\"today\" as date) - 7 FROM rdb$database");
-
-            assertTrue("Should have at least one row.", rs.next());
+            Statement stmt = dialect1Connection.createStatement();
+            try {
+                ResultSet rs = stmt.executeQuery("SELECT  cast(\"today\" as date) - 7 FROM rdb$database");
+                assertTrue("Should have at least one row.", rs.next());
+            } catch (SQLException ex) {
+                ex.printStackTrace();
+                fail("In dialect 1 doublequotes in strings are allowed.");
+            } finally {
+                stmt.close();
+            }
         } finally {
-            stmt.close();
+            dialect1Connection.close();
         }
     }
 
-    @Test
     public void testGetSQLState() throws Exception {
-        connection = getConnectionViaDriverManager();
-        Statement stmt = connection.createStatement();
-        try {
-            expectedException.expect(SQLSyntaxErrorException.class);
-            expectedException.expect(sqlState(is(FBSQLException.SQL_STATE_SYNTAX_ERROR)));
+        Connection connection = getConnectionViaDriverManager();
 
-            stmt.executeQuery("select * from");
+        try {
+            Statement stmt = connection.createStatement();
+            try {
+                stmt.executeQuery("select * from");
+                fail("Expected exception to be thrown");
+            } catch (SQLException ex) {
+                String sqlState = ex.getSQLState();
+                assertNotNull("getSQLState() method does not return value", sqlState);
+            } finally {
+                stmt.close();
+            }
         } finally {
-            stmt.close();
+            connection.close();
         }
     }
 
-    @Test
     public void testLongRange() throws Exception {
-        connection = getConnectionViaDriverManager();
-        Statement s = connection.createStatement();
+        Connection c = getConnectionViaDriverManager();
         try {
-            s.execute("CREATE TABLE LONGTEST (LONGID DECIMAL(18) NOT NULL PRIMARY KEY)");
-            s.execute("INSERT INTO LONGTEST (LONGID) VALUES (" + Long.MAX_VALUE + ")");
-            ResultSet rs = s.executeQuery("SELECT LONGID FROM LONGTEST");
+            Statement s = c.createStatement();
             try {
-                assertTrue("Should have one row!", rs.next());
-                assertEquals("Retrieved wrong value!", Long.MAX_VALUE, rs.getLong(1));
+                s.execute("CREATE TABLE LONGTEST (LONGID DECIMAL(18) NOT NULL PRIMARY KEY)");
+                try {
+                    s.execute("INSERT INTO LONGTEST (LONGID) VALUES (" + Long.MAX_VALUE + ")");
+                    ResultSet rs = s.executeQuery("SELECT LONGID FROM LONGTEST");
+                    try {
+                        assertTrue("Should have one row!", rs.next());
+                        assertTrue("Retrieved wrong value!", rs.getLong(1) == Long.MAX_VALUE);
+                    } finally {
+                        rs.close();
+                    }
+                    s.execute("DELETE FROM LONGTEST");
+                    s.execute("INSERT INTO LONGTEST (LONGID) VALUES (" + Long.MIN_VALUE + ")");
+                    rs = s.executeQuery("SELECT LONGID FROM LONGTEST");
+                    try {
+                        assertTrue("Should have one row!", rs.next());
+                        assertTrue("Retrieved wrong value!", rs.getLong(1) == Long.MIN_VALUE);
+                    } finally {
+                        rs.close();
+                    }
+                } finally {
+                    s.execute("DROP TABLE LONGTEST");
+                }
             } finally {
-                rs.close();
-            }
-
-            s.execute("DELETE FROM LONGTEST");
-            s.execute("INSERT INTO LONGTEST (LONGID) VALUES (" + Long.MIN_VALUE + ")");
-            rs = s.executeQuery("SELECT LONGID FROM LONGTEST");
-            try {
-                assertTrue("Should have one row!", rs.next());
-                assertEquals("Retrieved wrong value!", Long.MIN_VALUE, rs.getLong(1));
-            } finally {
-                rs.close();
+                s.close();
             }
         } finally {
-            s.close();
+            c.close();
         }
     }
 
     private static final TimeZone timeZoneUTC = TimeZone.getTimeZone("UTC");
 
-    @Test
     public void testDate() throws Exception {
-        connection = getConnectionViaDriverManager();
-        Statement s = connection.createStatement();
+        Connection c = getConnectionViaDriverManager();
         try {
-            s.execute("CREATE TABLE DATETEST (DATEID INTEGER NOT NULL PRIMARY KEY, TESTDATE TIMESTAMP)");
-            PreparedStatement ps = connection.prepareStatement("INSERT INTO DATETEST (DATEID, TESTDATE) VALUES (?,?)");
-            Calendar cal = new GregorianCalendar(timeZoneUTC);
-            Timestamp x = Timestamp.valueOf("1917-02-17 20:59:31");
+            Statement s = c.createStatement();
             try {
-                ps.setInt(1, 1);
-                ps.setTimestamp(2, x, cal);
-                ps.execute();
-            } finally {
-                ps.close();
-            }
+                s.execute("CREATE TABLE DATETEST (DATEID INTEGER NOT NULL PRIMARY KEY, TESTDATE TIMESTAMP)");
+                PreparedStatement ps = c.prepareStatement("INSERT INTO DATETEST (DATEID, TESTDATE) VALUES (?,?)");
+                Calendar cal = new GregorianCalendar(timeZoneUTC);
+                Timestamp x = Timestamp.valueOf("1917-02-17 20:59:31");
+                try {
+                    ps.setInt(1, 1);
+                    ps.setTimestamp(2, x, cal);
+                    ps.execute();
+                } finally {
+                    ps.close();
+                }
 
-            ResultSet rs = s.executeQuery("SELECT TESTDATE FROM DATETEST WHERE DATEID=1");
-            try {
-                assertTrue("Should have one row!", rs.next());
-                assertEquals("Retrieved wrong value!", x, rs.getTimestamp(1, cal));
+                try {
+                    ResultSet rs = s.executeQuery("SELECT TESTDATE FROM DATETEST WHERE DATEID=1");
+                    try {
+
+                        assertTrue("Should have one row!", rs.next());
+                        Timestamp x2 = rs.getTimestamp(1, cal);
+                        assertTrue("Retrieved wrong value! expected: " + x + ", actual: " + x2, x.equals(x2));
+                    } finally {
+                        rs.close();
+                    }
+                } finally {
+                    s.execute("DROP TABLE DATETEST");
+                }
             } finally {
-                rs.close();
+                s.close();
             }
         } finally {
-            s.close();
+            c.close();
         }
     }
 
@@ -204,15 +230,18 @@ public class TestFBDriver extends FBJUnit4TestBase {
      * @throws Exception
      *         if something went wrong.
      */
-    @Test
     public void testClose() throws Exception {
-        connection = getConnectionViaDriverManager();
+        Connection connection = getConnectionViaDriverManager();
         try {
             Statement stmt = connection.createStatement();
+
             stmt.executeUpdate("CREATE TABLE test(id INTEGER, test_value INTEGER)");
             stmt.executeUpdate("INSERT INTO test VALUES (1, 1)");
+
             connection.setAutoCommit(false);
+
             stmt.executeUpdate("UPDATE test SET test_value = 2 WHERE id = 1");
+
             stmt.close();
         } finally {
             connection.close();
@@ -221,10 +250,11 @@ public class TestFBDriver extends FBJUnit4TestBase {
         connection = getConnectionViaDriverManager();
         try {
             Statement stmt = connection.createStatement();
+
             ResultSet rs = stmt.executeQuery("SELECT test_value FROM test WHERE id = 1");
 
             assertTrue("Should have at least one row", rs.next());
-            assertEquals("Value should be 1.", 1, rs.getInt(1));
+            assertTrue("Value should be 1.", rs.getInt(1) == 1);
             assertTrue("Should have only one row.", !rs.next());
 
             rs.close();
@@ -235,15 +265,18 @@ public class TestFBDriver extends FBJUnit4TestBase {
         }
     }
 
-    @Test
     public void testDummyPacketIntervalConnect() throws Exception {
+        if (log != null) log.info(getUrl());
         Properties props = getDefaultPropertiesForConnection();
         props.setProperty("soTimeout", "2000");
-
-        Driver driver = DriverManager.getDriver(getUrl());
-        connection = driver.connect(getUrl(), props);
-
-        assertNotNull("Connection is null", connection);
+        Connection connection = driver.connect(getUrl(), props);
+        try {
+            assertTrue("Connection is null", connection != null);
+        } finally {
+            if (connection != null) {
+                connection.close();
+            }
+        }
     }
 
 }

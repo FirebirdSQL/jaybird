@@ -26,7 +26,7 @@ package org.firebirdsql.gds.impl;
 
 import org.firebirdsql.gds.GDS;
 import org.firebirdsql.gds.GDSException;
-import org.firebirdsql.gds.ng.FbDatabaseFactory;
+
 
 public interface GDSFactoryPlugin {
 
@@ -36,16 +36,13 @@ public interface GDSFactoryPlugin {
     
     String[] getTypeAliases();
     
-    Class<?> getConnectionClass();
+    Class getConnectionClass();
     
     String getDefaultProtocol();
     
     String[] getSupportedProtocols();
-
-    @Deprecated
+    
     GDS getGDS();
-
-    FbDatabaseFactory getDatabaseFactory();
     
     String getDatabasePath(String server, Integer port, String path) throws GDSException;
     

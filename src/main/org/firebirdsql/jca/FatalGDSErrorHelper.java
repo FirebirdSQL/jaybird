@@ -18,7 +18,6 @@
  */
 package org.firebirdsql.jca;
 
-import java.sql.SQLException;
 import java.util.Arrays;
 
 import org.firebirdsql.gds.GDSException;
@@ -50,19 +49,6 @@ class FatalGDSErrorHelper {
     static boolean isFatal(GDSException ex) {
         int iscErrorCode = ex.getFbErrorCode();
         return Arrays.binarySearch(FATAL_ERRORS, iscErrorCode) >= 0;
-    }
-
-    /**
-     * Check whether the specified exception is fatal from the JCA point of
-     * view.
-     *
-     * @param ex exception to check.
-     *
-     * @return <code>true</code> if the exception that happened is fatal
-     */
-    static boolean isFatal(SQLException ex) {
-        int errorCode = ex.getErrorCode();
-        return Arrays.binarySearch(FATAL_ERRORS, errorCode) >= 0;
     }
     
     /**

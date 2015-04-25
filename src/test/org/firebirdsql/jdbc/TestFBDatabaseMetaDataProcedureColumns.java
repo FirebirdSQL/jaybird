@@ -1,7 +1,7 @@
 /*
  * $Id$
- *
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * 
+ * Firebird Open Source J2ee connector - jdbc driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -14,7 +14,7 @@
  * This file was created by members of the firebird development team.
  * All individual contributions remain the Copyright (C) of those
  * individuals.  Contributors to this file are either listed here or
- * can be obtained from a source control history command.
+ * can be obtained from a CVS history command.
  *
  * All rights reserved.
  */
@@ -31,9 +31,6 @@ import java.util.List;
 import java.util.Map;
 
 import org.firebirdsql.jdbc.MetaDataValidator.MetaDataInfo;
-
-import static org.firebirdsql.common.JdbcResourceHelper.*;
-import static org.firebirdsql.util.FirebirdSupportInfo.supportInfoFor;
 
 /**
  * Tests for {@link FBDatabaseMetaData} for procedure columns related metadata.
@@ -62,9 +59,8 @@ public class TestFBDatabaseMetaDataProcedureColumns extends FBMetaDataTestBase<T
             " ( param1 VARCHAR(100),\n" +
             "   \"param2\" INTEGER)\n" +
             "AS\n" +
-            "DECLARE VARIABLE dummy INTEGER;\n" +
             "BEGIN\n" +
-            "  dummy = 1 + 1;\n" +
+            "  /* does nothing */\n" +
             "END";
 
     public static final String CREATE_NORMAL_PROC_WITH_RETURN = 
@@ -84,26 +80,42 @@ public class TestFBDatabaseMetaDataProcedureColumns extends FBMetaDataTestBase<T
             "CREATE PROCEDURE \"quoted_proc_no_return\"\n" +
             " ( param1 VARCHAR(100))\n" +
             "AS\n" +
-            "DECLARE VARIABLE dummy INTEGER;\n" +
             "BEGIN\n" +
-            "  dummy = 1 + 1;\n" +
+            "  /* does nothing */\n" +
             "END";
     
     public static final String ADD_COMMENT_ON_NORMAL_PROC_WITH_RETURN_PARAM2 = 
             "COMMENT ON PARAMETER normal_proc_with_return.param2 IS 'Some comment'";
+    
+    public static final String DROP_PROC_NO_ARG_NO_RETURN =
+            "DROP PROCEDURE proc_no_arg_no_return";
+    
+    public static final String DROP_NORMAL_PROC_NO_RETURN = 
+            "DROP PROCEDURE normal_proc_no_return";
+
+    public static final String DROP_NORMAL_PROC_WITH_RETURN = 
+            "DROP PROCEDURE normal_proc_with_return";
+
+    public static final String DROP_QUOTED_PROC_NO_RETURN = 
+            "DROP PROCEDURE \"quoted_proc_no_return\"";
+
+    @Override
+    protected List<String> getDropStatements() {
+        return Arrays.asList(
+                DROP_PROC_NO_ARG_NO_RETURN,
+                DROP_NORMAL_PROC_NO_RETURN,
+                DROP_NORMAL_PROC_WITH_RETURN,
+                DROP_QUOTED_PROC_NO_RETURN);
+    }
 
     @Override
     protected List<String> getCreateStatements() {
-        List<String> statements = new ArrayList<String>();
-        statements.addAll(Arrays.asList(
+        return Arrays.asList(
                 CREATE_NORMAL_PROC_NO_ARG_NO_RETURN,
                 CREATE_NORMAL_PROC_NO_RETURN,
                 CREATE_NORMAL_PROC_WITH_RETURN,
-                CREATE_QUOTED_PROC_NO_RETURN));
-        if (supportInfoFor(con).supportsComment()) {
-            statements.add(ADD_COMMENT_ON_NORMAL_PROC_WITH_RETURN_PARAM2);
-        }
-        return statements;
+                CREATE_QUOTED_PROC_NO_RETURN,
+                ADD_COMMENT_ON_NORMAL_PROC_WITH_RETURN_PARAM2);
     }
     
     /**
@@ -321,7 +333,7 @@ public class TestFBDatabaseMetaDataProcedureColumns extends FBMetaDataTestBase<T
 
     @Override
     protected Map<ProcedureColumnMetaData, Object> getDefaultValueValidationRules() throws Exception {
-        return new EnumMap<ProcedureColumnMetaData, Object>(DEFAULT_COLUMN_VALUES);
+        return new EnumMap(DEFAULT_COLUMN_VALUES);
     }
     
     /**

@@ -1,7 +1,5 @@
 /*
- * $Id$
- *
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source J2ee connector - jdbc driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -14,23 +12,23 @@
  * This file was created by members of the firebird development team.
  * All individual contributions remain the Copyright (C) of those
  * individuals.  Contributors to this file are either listed here or
- * can be obtained from a source control history command.
+ * can be obtained from a CVS history command.
  *
  * All rights reserved.
  */
+
 package org.firebirdsql.jdbc.field;
 
+
+import org.firebirdsql.gds.XSQLVAR;
 import org.firebirdsql.gds.ISCConstants;
-import org.firebirdsql.gds.ng.DefaultDatatypeCoder;
-import org.firebirdsql.gds.ng.fields.RowDescriptor;
-import org.firebirdsql.gds.ng.fields.RowDescriptorBuilder;
-import org.junit.Before;
-import org.junit.Test;
 
 import java.math.BigDecimal;
 import java.sql.SQLException;
 
-import static org.junit.Assert.assertEquals;
+import junit.framework.Test;
+import junit.framework.TestSuite;
+
 
 /**
  * Describe class <code>TestFBLongField</code> here.
@@ -39,90 +37,117 @@ import static org.junit.Assert.assertEquals;
  * @version 1.0
  */
 public class TestFBLongField extends BaseTestFBField {
-
-    @Before
-    public void setUp() throws SQLException {
-        RowDescriptor rowDescriptor = new RowDescriptorBuilder(1, DefaultDatatypeCoder.getDefaultInstance())
-                .setFieldIndex(0)
-                .setType(ISCConstants.SQL_INT64)
-                .addField()
-                .toRowDescriptor();
-        field = FBField.createField(rowDescriptor.getFieldDescriptor(0), createDataProvider(rowDescriptor), null, false);
+    public TestFBLongField(String testName) {
+        super(testName);
+    }
+    public static Test suite() {
+        return new TestSuite(TestFBLongField.class);
+    }
+    protected void setUp() throws SQLException{
+        XSQLVAR[] xsqlvars = new XSQLVAR[1];
+        xsqlvars[0] = createXSQLVAR();
+        xsqlvars[0].sqltype = ISCConstants.SQL_INT64;
+        field = FBField.createField(xsqlvars[0], createDataProvider(xsqlvars), null, false);
+    }
+    protected void tearDown() {
     }
 
-    @Test
     public void testObject() throws SQLException {
-        field.setObject(TEST_LONG);
-        assertEquals(TEST_LONG, field.getObject());
+        field.setObject(new Long(TEST_LONG));
+        field.copyOI();
+        assertTrue(field.getObject().equals(new Long(TEST_LONG)));
     }
-
-    @Test
     public void testUnicodeStream() throws SQLException {
-        expectedException.expect(TypeConversionException.class);
-        super.testUnicodeStream();
+        try {
+            super.testUnicodeStream();
+            assertTrue("This method should fail.", false);
+        } catch(SQLException ex) {
+            //everything is ok :)
+        }
     }
-
-    @Test
+    public void testByte() throws SQLException {
+        super.testByte();
+    }
     public void testBinaryStream() throws SQLException {
-        expectedException.expect(TypeConversionException.class);
-        super.testBinaryStream();
-    }
+        try {
+            super.testBinaryStream();
+            assertTrue("This method should fail.", false);
+        } catch(SQLException ex) {
+            //everything is ok :)
+        }
 
-    @Test
+    }
     public void testString() throws SQLException {
-        final String longString = Long.toString(TEST_LONG);
-        field.setString(longString);
-        assertEquals(longString, field.getString());
+        field.setString(Long.toString(TEST_LONG));
+        field.copyOI();
+        assertTrue(field.getString().equals(Long.toString(TEST_LONG)));
     }
-
-    @Test
     public void testAsciiStream() throws SQLException {
-        expectedException.expect(TypeConversionException.class);
-        super.testAsciiStream();
+        try {
+            super.testAsciiStream();
+            assertTrue("This method should fail.", false);
+        } catch(SQLException ex) {
+            //everything is ok :)
+        }
     }
-
-    @Test
     public void testTimestamp() throws SQLException {
-        expectedException.expect(TypeConversionException.class);
-        super.testTimestamp();
+        try {
+            super.testTimestamp();
+            assertTrue("This method should fail.", false);
+        } catch(SQLException ex) {
+            //everything is ok :)
+        }
     }
-
-    @Test
     public void testBigDecimal() throws SQLException {
-        // Unfortunately we lose some digits while converting between BigDecimal and long, so we have to test long values
+        //unfortunatelly we loose some digits while converting
+        // between BigDecimal and long, so we have to test long values
         BigDecimal testBigDecimal = BigDecimal.valueOf(TEST_LONG);
         field.setBigDecimal(testBigDecimal);
-        assertEquals(testBigDecimal.longValue(), field.getLong());
+        field.copyOI();
+        assertTrue(field.getLong() == testBigDecimal.longValue());
     }
-
-    @Test
     public void testDate() throws SQLException {
-        expectedException.expect(TypeConversionException.class);
-        super.testDate();
+        try {
+            super.testDate();
+            assertTrue("This method should fail.", false);
+        } catch(SQLException ex) {
+            //everything is ok :)
+        }
     }
-
-    @Test
     public void testTime() throws SQLException {
-        expectedException.expect(TypeConversionException.class);
-        super.testTime();
+        try {
+            super.testTime();
+            assertTrue("This method should fail.", false);
+        } catch(SQLException ex) {
+            //everything is ok :)
+        }
     }
-
-    @Test
     public void testBytes() throws SQLException {
-        expectedException.expect(TypeConversionException.class);
-        super.testBytes();
-    }
+        try {
+            super.testBytes();
+            assertTrue("This method should fail.", false);
+        } catch(SQLException ex) {
+            //everything is ok :)
+        }
 
-    @Test
+    }
     public void testFloat() throws SQLException {
-        // unfortunately we lose some digits while converting between float and long, so we have to test long values
-        field.setFloat(TEST_LONG);
-        assertEquals("Float values test failure", TEST_LONG, field.getLong());
+        //unfortunatelly we loose some digits while converting
+        // between float and long, so we have to test long values
+        try {
+            field.setFloat(TEST_FLOAT);
+            field.copyOI();
+            assertTrue("Float values test failure", field.getLong() == (long)TEST_FLOAT);
+        } catch(SQLException sqlex) {
+            // everything is ok
+        }
     }
-
-    @Test
     public void testDouble() throws SQLException {
-        expectedException.expect(TypeConversionException.class);
-        super.testDouble();
+        try {
+            super.testDouble();
+            assertTrue("This method should fail.", false);
+        } catch(SQLException sqlex) {
+            //everything is ok :)
+        }
     }
 }

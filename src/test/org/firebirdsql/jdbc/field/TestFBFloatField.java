@@ -1,7 +1,5 @@
 /*
- * $Id$
- *
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source J2ee connector - jdbc driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -14,23 +12,22 @@
  * This file was created by members of the firebird development team.
  * All individual contributions remain the Copyright (C) of those
  * individuals.  Contributors to this file are either listed here or
- * can be obtained from a source control history command.
+ * can be obtained from a CVS history command.
  *
  * All rights reserved.
  */
+
 package org.firebirdsql.jdbc.field;
 
+
+import org.firebirdsql.gds.XSQLVAR;
 import org.firebirdsql.gds.ISCConstants;
-import org.firebirdsql.gds.ng.DefaultDatatypeCoder;
-import org.firebirdsql.gds.ng.fields.RowDescriptor;
-import org.firebirdsql.gds.ng.fields.RowDescriptorBuilder;
-import org.junit.Before;
-import org.junit.Test;
 
 import java.math.BigDecimal;
 import java.sql.SQLException;
 
-import static org.junit.Assert.assertEquals;
+import junit.framework.Test;
+import junit.framework.TestSuite;
 
 /**
  * Describe class <code>TestFBFloatField</code> here.
@@ -39,98 +36,124 @@ import static org.junit.Assert.assertEquals;
  * @version 1.0
  */
 public class TestFBFloatField extends BaseTestFBField {
+	public TestFBFloatField(String testName) {
+		super(testName);
+	}
+	public static Test suite() {
+		return new TestSuite(TestFBFloatField.class);
+	}
+	protected void setUp() throws SQLException{
+        XSQLVAR[] xsqlvars = new XSQLVAR[1];
+        xsqlvars[0] = createXSQLVAR();
+        xsqlvars[0].sqltype = ISCConstants.SQL_FLOAT;
+        field = FBField.createField(xsqlvars[0], createDataProvider(xsqlvars), null, false);
+	}
+	protected void tearDown() {
+	}
 
-    @Before
-    public void setUp() throws SQLException {
-        RowDescriptor rowDescriptor  = new RowDescriptorBuilder(1, DefaultDatatypeCoder.getDefaultInstance())
-                .setFieldIndex(0)
-                .setType(ISCConstants.SQL_FLOAT)
-                .addField()
-                .toRowDescriptor();
-        field = FBField.createField(rowDescriptor.getFieldDescriptor(0), createDataProvider(rowDescriptor), null, false);
+	public void testObject() throws SQLException {
+		field.setObject(new Float(TEST_FLOAT));
+		field.copyOI();
+        
+        /*
+		// JDBC CTS requires getObject() to return java.lang.Double
+        // for float columns, let it be so 
+
+        assertTrue(field.getObject().equals(new Float(TEST_FLOAT)));
+        */
+        assertTrue(field.getObject().equals(new Double(TEST_FLOAT)));
     }
+	public void testUnicodeStream() throws SQLException {
+		try {
+			super.testUnicodeStream();
+			assertTrue("This method should fail.", false);
+		} catch(SQLException ex) {
+			//everything is ok :)
+		}
+	}
+	public void testByte() throws SQLException {
+		super.testByte();
+	}
+	public void testBinaryStream() throws SQLException {
+		try {
+			super.testBinaryStream();
+			assertTrue("This method should fail.", false);
+		} catch(SQLException ex) {
+			//everything is ok :)
+		}
 
-    @Test
-    public void testObject() throws SQLException {
-        field.setObject(TEST_FLOAT);
-
-        //JDBC requires getObject() to return java.lang.Double for float columns
-        assertEquals((double) TEST_FLOAT, field.getObject());
-    }
-
-    @Test
-    public void testUnicodeStream() throws SQLException {
-        expectedException.expect(TypeConversionException.class);
-        super.testUnicodeStream();
-    }
-
-    @Test
-    public void testBinaryStream() throws SQLException {
-        expectedException.expect(TypeConversionException.class);
-        super.testBinaryStream();
-    }
-
-    @Test
-    public void testString() throws SQLException {
-        final String floatString = Float.toString(TEST_FLOAT);
-        field.setString(floatString);
-        assertEquals(floatString, field.getString());
-    }
-
-    @Test
-    public void testAsciiStream() throws SQLException {
-        expectedException.expect(TypeConversionException.class);
-        super.testAsciiStream();
-    }
-
-    @Test
-    public void testTimestamp() throws SQLException {
-        expectedException.expect(TypeConversionException.class);
-        super.testTimestamp();
-    }
-
-    @Test
-    public void testBigDecimal() throws SQLException {
-        BigDecimal testBigDecimal = new BigDecimal(TEST_FLOAT);
-        field.setBigDecimal(testBigDecimal);
-        assertEquals(testBigDecimal, field.getBigDecimal());
-    }
-
-    @Test
-    public void testDate() throws SQLException {
-        expectedException.expect(TypeConversionException.class);
-        super.testDate();
-    }
-
-    @Test
-    public void testTime() throws SQLException {
-        expectedException.expect(TypeConversionException.class);
-        super.testTime();
-    }
-
-    @Test
-    public void testBytes() throws SQLException {
-        expectedException.expect(TypeConversionException.class);
-        super.testBytes();
-    }
-
-    @Test
-    public void testInteger() throws SQLException {
-        // unfortunately (long)((float)myLong) != myLong so we can test only float values.
-        field.setLong(TEST_INT);
-        assertEquals(TEST_INT, field.getFloat(), 1.0);
-    }
-
-    @Test
-    public void testLong() throws SQLException {
-        // unfortunately (long)((float)myLong) != myLong so we can test only float values.
-        field.setLong(TEST_LONG);
-        assertEquals(TEST_LONG, field.getFloat(), 0.0);
-    }
-
-    @Test
-    public void testDouble() throws SQLException {
-        expectedException.expect(TypeConversionException.class);
-        super.testDouble();
-    }
+	}
+	public void testString() throws SQLException {
+		field.setString(Float.toString(TEST_FLOAT));
+		field.copyOI();		
+		assertTrue(field.getString().equals(Float.toString(TEST_FLOAT)));
+	}
+	public void testAsciiStream() throws SQLException {
+		try {
+			super.testAsciiStream();
+			assertTrue("This method should fail.", false);
+		} catch(SQLException ex) {
+			//everything is ok :)
+		}
+	}
+	public void testTimestamp() throws SQLException {
+		try {
+			super.testTimestamp();
+			assertTrue("This method should fail.", false);
+		} catch(SQLException ex) {
+			//everything is ok :)
+		}
+	}
+	public void testBigDecimal() throws SQLException {
+		BigDecimal testBigDecimal =	new BigDecimal((double)TEST_FLOAT);
+		field.setBigDecimal(testBigDecimal);
+		field.copyOI();		
+		assertTrue(field.getBigDecimal().equals(testBigDecimal));
+	}
+	public void testDate() throws SQLException {
+		try {
+			super.testDate();
+			assertTrue("This method should fail.", false);
+		} catch(SQLException ex) {
+			//everything is ok :)
+		}
+	}
+	public void testTime() throws SQLException {
+		try {
+			super.testTime();
+			assertTrue("This method should fail.", false);
+		} catch(SQLException ex) {
+			//everything is ok :)
+		}
+	}
+	public void testBytes() throws SQLException {
+		try {
+			super.testBytes();
+			assertTrue("This method should fail.", false);
+		} catch(SQLException ex) {
+			//everything is ok :)
+		}
+	}
+	public void testInteger() throws SQLException {
+		// unfortunately (long)((float)myLong) != myLong....
+		// so we can test only float values...
+		field.setLong(TEST_INT);
+		field.copyOI();		
+		assertTrue(field.getFloat() == (float)TEST_INT);
+	}
+	public void testLong() throws SQLException {
+		// unfortunately (long)((float)myLong) != myLong....
+		// so we can test only float values...
+		field.setLong(TEST_LONG);
+		field.copyOI();		
+		assertTrue(field.getFloat() == (float)TEST_LONG);
+	}
+	public void testDouble() throws SQLException {
+		try {
+			super.testDouble();
+			assertTrue("This method should fail.", false);
+		} catch(SQLException sqlex) {
+			//everything is ok :)
+		}
+	}
 }

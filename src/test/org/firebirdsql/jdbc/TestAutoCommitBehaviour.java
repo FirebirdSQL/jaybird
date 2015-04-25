@@ -20,16 +20,9 @@
  */
 package org.firebirdsql.jdbc;
 
-import org.firebirdsql.common.FBJUnit4TestBase;
-import org.junit.Before;
-import org.junit.Test;
+import org.firebirdsql.common.FBTestBase;
 
 import java.sql.*;
-
-import static org.firebirdsql.common.FBTestProperties.getConnectionViaDriverManager;
-import static org.hamcrest.CoreMatchers.is;
-import static org.junit.Assert.*;
-import static org.junit.Assume.assumeThat;
 
 /**
  * Tests for behaviour surrounding autocommit.
@@ -41,15 +34,21 @@ import static org.junit.Assume.assumeThat;
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @since 2.2
  */
-public class TestAutoCommitBehaviour extends FBJUnit4TestBase {
+public class TestAutoCommitBehaviour extends FBTestBase {
 
     private static final String CREATE_ID_TABLE = "CREATE TABLE ID_TABLE (ID INTEGER PRIMARY KEY)";
     private static final String INSERT_ID_TABLE = "INSERT INTO ID_TABLE (ID) VALUES (?)";
     private static final String SELECT_ALL_ID_TABLE = "SELECT ID FROM ID_TABLE";
     private static final int MAX_ID = 50;
 
-    @Before
+    public TestAutoCommitBehaviour(String name) {
+        super(name);
+    }
+
+    @Override
     public void setUp() throws Exception {
+        super.setUp();
+
         Connection connection = getConnectionViaDriverManager();
         try {
             Statement stmt = connection.createStatement();
@@ -78,13 +77,12 @@ public class TestAutoCommitBehaviour extends FBJUnit4TestBase {
     /**
      * Executing another statement in autocommit should close any previously opened result set if it isn't holdable.
      */
-    @Test
     public void testDifferentStatementExecution_ClosesResultSet() throws Exception {
         Connection connection = getConnectionViaDriverManager();
         try {
             // Check actual holdability, for example OOConnection forces HOLD_CURSORS_OVER_COMMIT always
-            assumeThat("Test requires ResultSet.CLOSE_CURSORS_AT_COMMIT", connection.getHoldability(),
-                    is(ResultSet.CLOSE_CURSORS_AT_COMMIT));
+            assertEquals("Test requires ResultSet.CLOSE_CURSORS_AT_COMMIT", ResultSet.CLOSE_CURSORS_AT_COMMIT,
+                    connection.getHoldability());
 
             Statement stmt1 = connection.createStatement();
             Statement stmt2 = connection.createStatement();
@@ -99,7 +97,7 @@ public class TestAutoCommitBehaviour extends FBJUnit4TestBase {
 
             try {
                 rs1.next();
-                fail("Expected exception on rs1.next()");
+                fail ("Expected exception on rs1.next()");
             } catch (SQLException ex) {
                 assertEquals("The result set is closed", ex.getMessage());
             }
@@ -115,7 +113,6 @@ public class TestAutoCommitBehaviour extends FBJUnit4TestBase {
     /**
      * Executing another statement in autocommit and the result set is holdable should keep it open.
      */
-    @Test
     public void testHoldableDifferentStatementExecution_ResultSetRemainsOpen() throws Exception {
         Connection connection = getConnectionViaDriverManager();
 

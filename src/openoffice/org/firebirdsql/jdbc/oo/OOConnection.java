@@ -20,8 +20,10 @@
  */
 package org.firebirdsql.jdbc.oo;
 
+import org.firebirdsql.gds.GDSException;
 import org.firebirdsql.jca.FBManagedConnection;
 import org.firebirdsql.jdbc.FBConnection;
+import org.firebirdsql.jdbc.FBSQLException;
 import org.firebirdsql.logging.Logger;
 import org.firebirdsql.logging.LoggerFactory;
 
@@ -56,8 +58,12 @@ public class OOConnection extends FBConnection {
     }
 
     public synchronized DatabaseMetaData getMetaData() throws SQLException {
-        if (metaData == null) metaData = new OODatabaseMetaData(this);
-        return metaData;
-    }
+        try {
+            if (metaData == null) metaData = new OODatabaseMetaData(this);
 
+            return metaData;
+        } catch (GDSException ex) {
+            throw new FBSQLException(ex);
+        }
+    }
 }

@@ -1,41 +1,25 @@
-/*
- * $Id$
- * 
- * Firebird Open Source J2EE Connector - JDBC Driver
- *
- * Distributable under LGPL license.
- * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * LGPL License for more details.
- *
- * This file was created by members of the firebird development team.
- * All individual contributions remain the Copyright (C) of those
- * individuals.  Contributors to this file are either listed here or
- * can be obtained from a CVS history command.
- *
- * All rights reserved.
- */
 package org.firebirdsql.util;
 
 import java.io.*;
 import java.sql.*;
-import java.util.Map;
-import java.util.TreeMap;
+import java.util.*;
+
+import org.firebirdsql.jdbc.FBDriver;
+import org.firebirdsql.jdbc.FirebirdConnection;
 
 /**
- * Utility class for generating the property files containing the errorcodes and error messages.
+ * 
  */
 public class MessageDump {
 
     private static final int ISC_CODE = 0x14000000;
 
-    private static Connection getConnection(String database) throws Exception {
-        Class.forName("org.firebirdsql.jdbc.FBDriver");
+    private static FirebirdConnection getConnection(String database)
+            throws Exception {
+        Class.forName(FBDriver.class.getName());
         String url = "jdbc:firebirdsql:" + database;
-        return DriverManager.getConnection(url, "SYSDBA", "masterkey");
+        return (FirebirdConnection) DriverManager.getConnection(url, "SYSDBA",
+            "masterkey");
     }
 
     private static int getErrorCode(int code, int number) {
@@ -45,7 +29,7 @@ public class MessageDump {
     private static String extractMessage(String fbMessage) {
         char[] chars = fbMessage.toCharArray();
 
-        StringBuilder sb = new StringBuilder();
+        StringBuffer sb = new StringBuffer();
         int counter = 0;
 
         for (int i = 0; i < chars.length; i++) {
@@ -64,16 +48,16 @@ public class MessageDump {
                         sb.append("%ld");
                 } else
                     sb.append('%').append(chars[i]);
-            } else if (chars[i] == '@') {
-                i++;
-
-                try {
-                    // Currently assumes parameter-number not to exceed 9.
-                    int msgNum = Integer.parseInt("" + chars[i]);
-                    sb.append('{').append(Integer.toString(msgNum - 1)).append('}');
-                } catch (NumberFormatException ex) {
-                    sb.append(chars[i]);
-                }
+            } else
+            if (chars[i] == '@') {
+            	i++;
+            	
+            	try {
+            		int msgNum = Integer.parseInt("" + chars[i]);
+            		sb.append('{').append(Integer.toString(msgNum - 1)).append('}');
+            	} catch(NumberFormatException ex) {
+            		sb.append(chars[i]);
+            	}
             } else
                 sb.append(chars[i]);
         }
@@ -81,8 +65,9 @@ public class MessageDump {
         return sb.toString();
     }
 
-    private static Map<Integer, String> extractErrorMessages(Connection connection) throws Exception {
-        Map<Integer, String> result = new TreeMap<Integer, String>();
+    private static Properties extractProperties(FirebirdConnection connection)
+            throws Exception {
+        Properties result = new Properties();
 
         Statement stmt = connection.createStatement();
         try {
@@ -94,18 +79,20 @@ public class MessageDump {
                 int number = rs.getInt(2);
                 String message = rs.getString(3);
 
-                result.put(
-                        getErrorCode(code, number),
-                        extractMessage(message));
+                result.setProperty(
+                    Integer.toString(getErrorCode(code, number)),
+                    extractMessage(message));
             }
+
         } finally {
             stmt.close();
         }
+
         return result;
     }
-
-    private static Map<Integer, String> extractSQLStates(Connection connection) throws SQLException {
-        Map<Integer, String> result = new TreeMap<Integer, String>();
+    
+    private static Properties extractSQLStates(FirebirdConnection connection) throws SQLException {
+        Properties result = new Properties();
 
         Statement stmt = connection.createStatement();
         try {
@@ -117,10 +104,11 @@ public class MessageDump {
                 int number = rs.getInt(2);
                 String sqlState = rs.getString(3);
 
-                result.put(
-                        getErrorCode(code, number),
-                        extractMessage(sqlState));
+                result.setProperty(
+                    Integer.toString(getErrorCode(code, number)),
+                    extractMessage(sqlState));
             }
+
         } finally {
             stmt.close();
         }
@@ -129,98 +117,93 @@ public class MessageDump {
     }
 
     public static void main(String[] args) throws Exception {
-        if (args.length == 0) {
-            args = new String[] { "localhost:d:/data/db/fb3/msg.fdb" };
-        }
 
-        Connection connection = getConnection(args[0]);
+        if (args.length == 0)
+            args = new String[] { "localhost:d:/database/fb_messages.fdb"};
+
+        FirebirdConnection connection = getConnection(args[0]);
         try {
-            System.out.println("Retrieving error messages");
-            final Map<Integer, String> errorMessages = extractErrorMessages(connection);
-            final FileOutputStream errorStream = new FileOutputStream("./error.properties");
-            try {
-                store(errorMessages, errorStream, null);
-            } finally {
-                errorStream.close();
-            }
+            Properties props = extractProperties(connection);
+            TreeMap sortedMap = new TreeMap(props);
 
-            System.out.println("Retrieving SQL State values");
-            final Map<Integer, String> sqlStates = extractSQLStates(connection);
-            final FileOutputStream sqlstateStream = new FileOutputStream("./sqlstates.properties");
-            try {
-                store(sqlStates, sqlstateStream, null);
-            } finally {
-                sqlstateStream.close();
-            }
+            store(sortedMap, new FileOutputStream("./error.properties"), "");
+            
+            props = extractSQLStates(connection);
+            TreeMap sqlStates = new TreeMap(props);
+            
+            store(sqlStates, new FileOutputStream("./sqlstates.properties"), "");
         } finally {
             connection.close();
         }
     }
 
-    public static void store(Map<Integer, String> map, OutputStream out, String header)
+    public static void store(Map map, OutputStream out, String header)
             throws IOException {
         BufferedWriter awriter;
         awriter = new BufferedWriter(new OutputStreamWriter(out, "8859_1"));
         if (header != null) writeln(awriter, "#" + header);
         writeln(awriter, "#" + new java.util.Date().toString());
-        for (Map.Entry<Integer, String> entry : map.entrySet()) {
-            String key = saveConvert(Integer.toString(entry.getKey()), true);
+        synchronized (map) {
+            for (Iterator iter = map.entrySet().iterator(); iter.hasNext();) {
+                Map.Entry entry = (Map.Entry) iter.next();
+                String key = saveConvert((String)entry.getKey(), true);
 
-            /*
-             * No need to escape embedded and trailing spaces for value,
-             * hence pass false to flag.
-             */
-            String val = saveConvert(entry.getValue(), false);
-            writeln(awriter, key + "=" + val);
+                /*
+                 * No need to escape embedded and trailing spaces for value,
+                 * hence pass false to flag.
+                 */
+                String val = saveConvert((String)entry.getValue(), false);
+                writeln(awriter, key + "=" + val);
+            }
         }
         awriter.flush();
     }
 
     private static String saveConvert(String theString, boolean escapeSpace) {
         int len = theString.length();
-        StringBuilder outBuffer = new StringBuilder(len * 2);
+        StringBuffer outBuffer = new StringBuffer(len * 2);
 
         for (int x = 0; x < len; x++) {
             char aChar = theString.charAt(x);
             switch (aChar) {
-            case ' ':
-                if (x == 0 || escapeSpace) outBuffer.append('\\');
+                case ' ':
+                    if (x == 0 || escapeSpace) outBuffer.append('\\');
 
-                outBuffer.append(' ');
-                break;
-            case '\\':
-                outBuffer.append('\\');
-                outBuffer.append('\\');
-                break;
-            case '\t':
-                outBuffer.append('\\');
-                outBuffer.append('t');
-                break;
-            case '\n':
-                outBuffer.append('\\');
-                outBuffer.append('n');
-                break;
-            case '\r':
-                outBuffer.append('\\');
-                outBuffer.append('r');
-                break;
-            case '\f':
-                outBuffer.append('\\');
-                outBuffer.append('f');
-                break;
-            default:
-                if ((aChar < 0x0020) || (aChar > 0x007e)) {
+                    outBuffer.append(' ');
+                    break;
+                case '\\':
                     outBuffer.append('\\');
-                    outBuffer.append('u');
-                    outBuffer.append(toHex((aChar >> 12) & 0xF));
-                    outBuffer.append(toHex((aChar >> 8) & 0xF));
-                    outBuffer.append(toHex((aChar >> 4) & 0xF));
-                    outBuffer.append(toHex(aChar & 0xF));
-                } else {
-                    if (specialSaveChars.indexOf(aChar) != -1)
+                    outBuffer.append('\\');
+                    break;
+                case '\t':
+                    outBuffer.append('\\');
+                    outBuffer.append('t');
+                    break;
+                case '\n':
+                    outBuffer.append('\\');
+                    outBuffer.append('n');
+                    break;
+                case '\r':
+                    outBuffer.append('\\');
+                    outBuffer.append('r');
+                    break;
+                case '\f':
+                    outBuffer.append('\\');
+                    outBuffer.append('f');
+                    break;
+                default:
+                    if ((aChar < 0x0020) || (aChar > 0x007e)) {
                         outBuffer.append('\\');
-                    outBuffer.append(aChar);
-                }
+                        outBuffer.append('u');
+                        outBuffer.append(toHex((aChar >> 12) & 0xF));
+                        outBuffer.append(toHex((aChar >> 8) & 0xF));
+                        outBuffer.append(toHex((aChar >> 4) & 0xF));
+                        outBuffer.append(toHex(aChar & 0xF));
+                    } else {
+                        if (specialSaveChars.indexOf(aChar) != -1)
+                            outBuffer.append('\\');
+                        outBuffer.append(aChar);
+                    }
             }
         }
         return outBuffer.toString();
@@ -235,11 +218,9 @@ public class MessageDump {
         return hexDigit[(nibble & 0xF)];
     }
 
-    /**
-     * A table of hex digits
-     */
+    /** A table of hex digits */
     private static final char[] hexDigit = { '0', '1', '2', '3', '4', '5', '6',
-            '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F' };
+            '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F'};
 
     private static final String specialSaveChars = "=: \t\r\n\f#!";
 

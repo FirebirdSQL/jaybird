@@ -1,6 +1,6 @@
 /*
  * $Id$
- *
+ * 
  * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
@@ -21,7 +21,7 @@
 package org.firebirdsql.jdbc.field;
 
 /**
- * Holder for the instance of {@link org.firebirdsql.jdbc.field.ObjectConverter} to use.
+ * Holder for the instance of {@link ObjectConverter} to use.
  * <p>
  * This implementation is for JDBC 4.2.
  * </p>

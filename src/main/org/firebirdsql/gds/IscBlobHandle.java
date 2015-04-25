@@ -48,44 +48,7 @@ public interface IscBlobHandle {
      */
     void setBlobId(long blobId);
     
-    /**
-     * Get the database handle for this blob
-     * 
-     * @return Database handle for this blob
-     */
-    IscDbHandle getDb();
-    
-    /**
-     * Set the database handle for this blob
-     * 
-     * @param value Database handle for this blob
-     */
-    void setDb(IscDbHandle value);
-    
-    /**
-     * Get the transaction handle for this blob
-     * 
-     * @return Transaction handle for this blob
-     */
-    IscTrHandle getTr();
-    
-    /**
-     * Set the transaction handle for this blob
-     * 
-     * @param value Transaction handle for this blob
-     */
-    void setTr(IscTrHandle value);
-    
-    /**
-     * Add a warning to the connection associated with this blob.
-     * 
-     * @param warning Warning to add
-     */
-    void addWarning(GDSException warning);
-    
-    int getRblId();
-    
-    void setRblId(int value);
+    // only used in the tests
 
     /**
      * Retrieve whether the <code>EOF</code> has been reached with this blob.
@@ -94,9 +57,5 @@ public interface IscBlobHandle {
      *         <code>false</code> otherwise
      */
     boolean isEof();
-    
-    /**
-     * Sets this blob handle as being eof
-     */
-    void setEof();
+
 }

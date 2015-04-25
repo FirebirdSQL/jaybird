@@ -27,13 +27,9 @@
  */
 package org.firebirdsql.jdbc;
 
-import java.sql.ResultSet;
 import java.sql.SQLException;
 
-/**
- * Firebird-specific extensions to the {@link java.sql.ResultSet} interface.
- */
-public interface FirebirdResultSet extends ResultSet {
+public interface FirebirdResultSet extends java.sql.ResultSet {
 
     /**
      * Get execution plan for the specified result set. 
@@ -46,4 +42,28 @@ public interface FirebirdResultSet extends ResultSet {
      * @see FirebirdPreparedStatement#getExecutionPlan()
      */
     String getExecutionPlan() throws SQLException;
+    
+    /**
+     * Retrieves the holdability of this <code>ResultSet</code> object
+     * <p>
+     * Copied from java.sql.ResultSet of Java 6 for Java 5 compatibility
+     * </p>
+     * @return  either <code>ResultSet.HOLD_CURSORS_OVER_COMMIT</code> or <code>ResultSet.CLOSE_CURSORS_AT_COMMIT</code>
+     * @throws SQLException if a database access error occurs
+     * or this method is called on a closed result set
+     * @since 1.6
+     */
+    int getHoldability() throws SQLException;
+    
+    /**
+     * Retrieves whether this <code>ResultSet</code> object has been closed. A <code>ResultSet</code> is closed if the
+     * method close has been called on it, or if it is automatically closed.
+     * <p>
+     * Copied from java.sql.ResultSet of Java 6 for Java 5 compatibility
+     * </p>
+     * @return true if this <code>ResultSet</code> object is closed; false if it is still open
+     * @throws SQLException if a database access error occurs
+     * @since 1.6
+     */
+    boolean isClosed() throws SQLException;
 }

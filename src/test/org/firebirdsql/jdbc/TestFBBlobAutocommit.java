@@ -19,7 +19,6 @@
 package org.firebirdsql.jdbc;
 
 import org.firebirdsql.common.FBTestBase;
-import org.firebirdsql.common.JdbcResourceHelper;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
@@ -41,6 +40,10 @@ public class TestFBBlobAutocommit extends FBTestBase {
         "  blob_data BLOB SUB_TYPE -1" + 
         ")";
         
+    public static final String DROP_TABLE = 
+        "DROP TABLE test_blob";
+        
+        
     public static final String TEST_STRING = "just a test string";
     
     public static final byte[] TEST_BYTES = TEST_STRING.getBytes();
@@ -49,6 +52,8 @@ public class TestFBBlobAutocommit extends FBTestBase {
         
     private Connection connection;
 
+    
+    
     public TestFBBlobAutocommit(String testName) {
         super(testName);
     }
@@ -59,13 +64,20 @@ public class TestFBBlobAutocommit extends FBTestBase {
         connection = getConnectionViaDriverManager();
         
         Statement stmt = connection.createStatement();
+        try {
+            stmt.executeUpdate(DROP_TABLE);
+        }
+        catch (Exception e) {}
 
         stmt.executeUpdate(CREATE_TABLE);
         stmt.close();
     }
-    
+
     protected void tearDown() throws Exception {
-        JdbcResourceHelper.closeQuietly(connection);
+        Statement stmt = connection.createStatement();
+        stmt.executeUpdate(DROP_TABLE);
+        stmt.close();
+        connection.close();
         super.tearDown();
     }
     

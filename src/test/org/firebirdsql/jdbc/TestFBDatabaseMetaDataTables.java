@@ -31,8 +31,6 @@ import java.util.Set;
 
 import org.firebirdsql.jdbc.MetaDataValidator.MetaDataInfo;
 
-import static org.firebirdsql.common.JdbcResourceHelper.*;
-
 /**
  * Tests for {@link FBDatabaseMetaData} for table related metadata.
  * 
@@ -74,6 +72,26 @@ public class TestFBDatabaseMetaDataTables extends FBMetaDataTestBase<TestFBDatab
             "SELECT t1.id, t1.varchar_field, t2.varchar_field " + 
             "FROM test_normal_table t1 " + 
             "INNER JOIN \"test_quoted_normal_table\" t2 ON t1.id = t2.id";
+    
+    public static final String DROP_NORMAL_TABLE =
+            "DROP TABLE test_normal_table";
+    
+    public static final String DROP_QUOTED_NORMAL_TABLE =
+            "DROP TABLE \"test_quoted_normal_table\"";
+    
+    public static final String DROP_NORMAL_VIEW =
+            "DROP VIEW test_normal_view";
+    
+    public static final String DROP_QUOTED_NORMAL_VIEW =
+            "DROP view \"test_quoted_normal_view\"";
+    
+    protected List<String> getDropStatements() {
+        return Arrays.asList(
+                DROP_NORMAL_VIEW,
+                DROP_QUOTED_NORMAL_VIEW,
+                DROP_NORMAL_TABLE,
+                DROP_QUOTED_NORMAL_TABLE);
+    }
     
     protected List<String> getCreateStatements() {
         return Arrays.asList(
@@ -151,7 +169,7 @@ public class TestFBDatabaseMetaDataTables extends FBMetaDataTestBase<TestFBDatab
         // TODO: Should quoted table names be returned quoted?
         // Expected user tables + a selection of expected system tables (some that existed in Firebird 1.0)
         // TODO Add test for order?
-        Set<String> expectedTables = new HashSet<String>(Arrays.asList("TEST_NORMAL_TABLE",
+        Set<String> expectedTables = new HashSet(Arrays.asList("TEST_NORMAL_TABLE",
                 "test_quoted_normal_table", "TEST_NORMAL_VIEW", "test_quoted_normal_view",
                 "RDB$FIELDS", "RDB$GENERATORS", "RDB$ROLES", "RDB$DATABASE", "RDB$TRIGGERS"));
         try {
@@ -228,7 +246,7 @@ public class TestFBDatabaseMetaDataTables extends FBMetaDataTestBase<TestFBDatab
         ResultSet tables = dbmd.getTables(null, null, tableNamePattern,
                 new String[] { SYSTEM_TABLE });
         // Expected selection of expected system tables (some that existed in Firebird 1.0); we don't check all system tables
-        Set<String> expectedTables = new HashSet<String>(Arrays.asList("RDB$FIELDS", "RDB$GENERATORS",
+        Set<String> expectedTables = new HashSet(Arrays.asList("RDB$FIELDS", "RDB$GENERATORS",
                 "RDB$ROLES", "RDB$DATABASE", "RDB$TRIGGERS"));
         Map<TableMetaData, Object> rules = getDefaultValueValidationRules();
         rules.put(TableMetaData.TABLE_TYPE, SYSTEM_TABLE);
@@ -298,7 +316,7 @@ public class TestFBDatabaseMetaDataTables extends FBMetaDataTestBase<TestFBDatab
         ResultSet tables = dbmd.getTables(null, null, tableNamePattern, new String[] { TABLE });
         // TODO: Should quoted table names be returned quoted?
         // Expected normal tables
-        Set<String> expectedTables = new HashSet<String>(Arrays.asList("TEST_NORMAL_TABLE",
+        Set<String> expectedTables = new HashSet(Arrays.asList("TEST_NORMAL_TABLE",
                 "test_quoted_normal_table"));
         Set<String> retrievedTables = new HashSet<String>();
         Map<TableMetaData, Object> rules = getDefaultValueValidationRules();
@@ -369,7 +387,7 @@ public class TestFBDatabaseMetaDataTables extends FBMetaDataTestBase<TestFBDatab
         ResultSet tables = dbmd.getTables(null, null, tableNamePattern, new String[] { VIEW });
         // TODO: Should quoted table names be returned quoted?
         // Expected normal tables
-        Set<String> expectedTables = new HashSet<String>(Arrays.asList("TEST_NORMAL_VIEW",
+        Set<String> expectedTables = new HashSet(Arrays.asList("TEST_NORMAL_VIEW",
                 "test_quoted_normal_view"));
         Set<String> retrievedTables = new HashSet<String>();
         Map<TableMetaData, Object> rules = getDefaultValueValidationRules();

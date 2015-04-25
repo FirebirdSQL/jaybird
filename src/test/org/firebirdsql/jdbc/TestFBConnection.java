@@ -1,4 +1,6 @@
 /*
+ * $Id$
+ * 
  * Firebird Open Source J2ee connector - jdbc driver
  *
  * Distributable under LGPL license.
@@ -23,13 +25,7 @@ import java.util.Properties;
 
 import org.firebirdsql.common.FBTestBase;
 import org.firebirdsql.gds.*;
-import org.firebirdsql.gds.ng.FbDatabase;
 import org.firebirdsql.jca.FBManagedConnection;
-
-import static org.firebirdsql.common.JdbcResourceHelper.*;
-import static org.firebirdsql.common.FBTestProperties.*;
-import static org.firebirdsql.util.FirebirdSupportInfo.supportInfoFor;
-import static org.junit.Assume.assumeTrue;
 
 /**
  * Test cases for FirebirdConnection interface.
@@ -42,6 +38,10 @@ public class TestFBConnection extends FBTestBase {
         + "CREATE TABLE test ("
         + "  col1 INTEGER"
         + ")"
+        ;
+    
+    public static final String DROP_TABLE = ""
+        + "DROP TABLE test"
         ;
     
     public static final String INSERT_DATA = ""
@@ -59,7 +59,14 @@ public class TestFBConnection extends FBTestBase {
         try {
             Statement ddlStmt = connection.createStatement();
             try {
+                try {
+                    ddlStmt.execute(DROP_TABLE);
+                } catch(SQLException ex) {
+                    // ignore
+                }
+                
                 ddlStmt.execute(CREATE_TABLE);
+                
             } finally {
                 ddlStmt.close();
             }
@@ -69,6 +76,23 @@ public class TestFBConnection extends FBTestBase {
         }
         
 	}
+
+	protected void tearDown() throws Exception {
+        
+        Connection connection = getConnectionViaDriverManager();
+        try {
+            Statement ddlStmt = connection.createStatement();
+            try {
+                ddlStmt.execute(DROP_TABLE);
+            } finally {
+                ddlStmt.close();
+            }
+        } finally {
+            connection.close();
+        }
+        
+        super.tearDown();
+    }
     
     /**
      * Test if {@link FirebirdConnection#setTransactionParameters(int, int[])}
@@ -222,7 +246,7 @@ public class TestFBConnection extends FBTestBase {
     
     public void testLockTable() throws Exception {
         FirebirdConnection connection = 
-            getConnectionViaDriverManager();
+            (FirebirdConnection)getConnectionViaDriverManager();
         
         try {
             Statement stmt = connection.createStatement();
@@ -235,7 +259,7 @@ public class TestFBConnection extends FBTestBase {
             connection.close();
         }
 
-        connection = getConnectionViaDriverManager();
+        connection = (FirebirdConnection)getConnectionViaDriverManager();
         try {
             
             Statement stmt = connection.createStatement();
@@ -255,7 +279,7 @@ public class TestFBConnection extends FBTestBase {
                 connection.setAutoCommit(false);
                 
                 FirebirdConnection anotherConnection = 
-                    getConnectionViaDriverManager();
+                    (FirebirdConnection)getConnectionViaDriverManager();
                 anotherConnection.setAutoCommit(false);
                 
                 try {
@@ -340,7 +364,7 @@ public class TestFBConnection extends FBTestBase {
         Connection connection = DriverManager.getConnection(getUrl(), props);
         try {
             
-            FBStatement stmt1 = (FBStatement)connection.createStatement();
+            AbstractStatement stmt1 = (AbstractStatement)connection.createStatement();
             assertEquals(ResultSet.HOLD_CURSORS_OVER_COMMIT, stmt1.getResultSetHoldability());
             
             Statement stmt2 = connection.createStatement();
@@ -363,19 +387,20 @@ public class TestFBConnection extends FBTestBase {
     public void testGetAttachments() throws Exception {
         FirebirdConnection connection = getConnectionViaDriverManager();
         try {
-            FBConnection abstractConnection = (FBConnection)connection;
-
-            FbDatabase database = abstractConnection.getFbDatabase();
-
+            AbstractConnection abstractConnection = (AbstractConnection)connection;
+            
+            GDS gds = (abstractConnection).getInternalAPIHandler();
+            
             byte[] infoRequest = new byte[] {ISCConstants.isc_info_user_names, ISCConstants.isc_info_end};
-            byte[] reply = database.getDatabaseInfo(infoRequest, 1024);
+            byte[] reply = gds.iscDatabaseInfo(
+                abstractConnection.getIscDBHandle(), infoRequest, 1024);
             
             int i = 0;
             
             while(reply[i] != ISCConstants.isc_info_end) {
                 switch(reply[i++]) {
                     case ISCConstants.isc_info_user_names :
-                        //iscVaxInteger2(reply, i); // can be ignored
+                        gds.iscVaxInteger(reply, i, 2); // can be ignored
                         i += 2;
                         int strLen = reply[i] & 0xff;
                         i += 1;
@@ -444,7 +469,7 @@ public class TestFBConnection extends FBTestBase {
         }
 
         Properties props = getDefaultPropertiesForConnection();
-        props.setProperty("lc_ctype", "WIN1252");
+        props.setProperty("lc_ctype", "UTF8");
         
         Connection con = null;
         try {
@@ -453,22 +478,6 @@ public class TestFBConnection extends FBTestBase {
             assertNull("Expected no warning when specifying connection characterset", warnings);
         } finally {
             closeQuietly(con);
-        }
-    }
-    
-    public void testClientInfo() throws Exception {
-        FBConnection connection = (FBConnection)getConnectionViaDriverManager();
-
-        try {
-            assumeTrue("This test requires GET_CONTEXT/SET_CONTEXT support",
-                    supportInfoFor(connection).supportsGetSetContext());
-
-            connection.setClientInfo("TestProperty", "testValue");
-            String checkValue = connection.getClientInfo("TestProperty");
-            assertEquals("testValue", checkValue);
-            
-        } finally {
-            connection.close();
         }
     }
 }

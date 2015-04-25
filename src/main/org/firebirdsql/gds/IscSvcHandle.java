@@ -25,8 +25,6 @@
 
 package org.firebirdsql.gds;
 
-import org.firebirdsql.encodings.IEncodingFactory;
-
 import java.util.List;
 
 /**
@@ -58,14 +56,10 @@ public interface IscSvcHandle {
      *         {@link GDSException}representing server warnings (method
      *         {@link GDSException#isWarning()}returns <code>true</code>).
      */
-    List<GDSException> getWarnings();
+    List getWarnings();
 
     /**
      * Clear warning list associated with this connection.
      */
     void clearWarnings();
-
-    IEncodingFactory getEncodingFactory();
-
-    void setEncodingFactory(IEncodingFactory encodingFactory);
 }

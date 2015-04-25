@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * Public Firebird Java API.
  *
  * Redistribution and use in source and binary forms, with or without 
@@ -24,20 +22,20 @@
  * OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+
 package org.firebirdsql.gds;
 
 /**
  * Instance of this interface represents a Database Parameter Buffer from the
  * Firebird API documentation and specifies the attributes for the
  * current connection.
- * <p/>
+ * <p>
  * Additionally it is possible to change some database properties in a permanent
  * way, however this approach is not recommended. Please use instead management
  * API.
  */
-public interface DatabaseParameterBuffer extends ParameterBuffer {
-
-    //@formatter:off
+public interface DatabaseParameterBuffer {
+    
     int CDD_PATHNAME            = ISCConstants.isc_dpb_cdd_pathname;
     int ALLOCATION              = ISCConstants.isc_dpb_allocation;
     int JOURNAL                 = ISCConstants.isc_dpb_journal;
@@ -107,19 +105,73 @@ public interface DatabaseParameterBuffer extends ParameterBuffer {
     int GFIX_ATTACH             = ISCConstants.isc_dpb_gfix_attach;
     int GSTAT_ATTACH            = ISCConstants.isc_dpb_gstat_attach;
     int SET_DB_CHARSET          = ISCConstants.isc_dpb_set_db_charset;
-
+    
     int GSEC_ATTACH             = ISCConstants.isc_dpb_gsec_attach;
     int ADDRESS_PATH            = ISCConstants.isc_dpb_address_path;
     int PROCESS_ID              = ISCConstants.isc_dpb_process_id;
     int NO_DB_TRIGGERS          = ISCConstants.isc_dpb_no_db_triggers;
     int TRUSTED_AUTH            = ISCConstants.isc_dpb_trusted_auth;
     int PROCESS_NAME            = ISCConstants.isc_dpb_process_name;
-    //@formatter:on
+    
+    /**
+     * Add argument with no parameters.
+     * 
+     * @param argumentType type of argument.
+     */
+    void addArgument(int argumentType);
 
     /**
-     * Make a deep copy of this object.
-     *
-     * @return deep copy of this object.
+     * Add string argument.
+     * @param argumentType type of argument.
+     * @param value string value to add.
      */
+    void addArgument(int argumentType, String value);
+
+    /**
+     * Add integer argument.
+     * @param argumentType type of argument.
+     * @param value integer value to add.
+     */
+    void addArgument(int argumentType, int value);
+	
+	/**
+	 * Add array of bytes.
+	 * @param argumentType type of argument.
+	 * @param content content of argument.
+	 */ 
+	void addArgument(int argumentType, byte[] content);
+
+	/**
+	 * Remove specified argument.
+	 * @param argumentType type of argument to remove.
+	 */ 
+	void removeArgument(int argumentType);
+
+	/**
+	 * Get argument as string.
+	 * @param argumentType type of argument to find.
+	 * @return argument as string or <code>null</code> if nothing found.
+	 */ 
+	String getArgumentAsString(int argumentType);
+    
+    /**
+     * Get argument as int.
+     * @param argumentType type of argument to find.
+     * @return argument as string or <code>0</code> if nothing found.
+     */ 
+    int getArgumentAsInt(int argumentType);
+    
+	/**
+     * Check if this parameter buffer has specified argument.
+	 * @param argumentType type of argument to find.
+	 * @return <code>true</code> if this buffer contains specified argument.
+	 */
+    boolean hasArgument(int argumentType);
+
+    /**
+	 * Make a deep copy of this object.
+	 * @return deep copy of this object.
+	 */ 
     DatabaseParameterBuffer deepCopy();
+    
 }

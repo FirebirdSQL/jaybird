@@ -138,7 +138,6 @@ public class FBDataSource extends RootCommonDataSource implements DataSource, Se
         loginTimeout = seconds;
     }
 
-
     /**
      * Gets the maximum time in seconds that this data source can wait
      * while attempting to connect to a database.  A value of zero
@@ -163,7 +162,7 @@ public class FBDataSource extends RootCommonDataSource implements DataSource, Se
 
     public <T> T unwrap(Class<T> iface) throws SQLException {
         if (!isWrapperFor(iface))
-            throw new SQLException("Unable to unwrap to class " + iface.getName());
+            throw new FBDriverNotCapableException();
 
         return iface.cast(this);
     }

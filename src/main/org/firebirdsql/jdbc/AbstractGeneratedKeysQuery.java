@@ -56,7 +56,7 @@ public abstract class AbstractGeneratedKeysQuery {
             temp = (StatementParser)Class.forName("org.firebirdsql.jdbc.parser.StatementParserImpl").newInstance();
         } catch (Throwable ex) {
             // Unable to load class of parser implementation, antlr-runtime not in path
-            Logger log = LoggerFactory.getLogger(AbstractGeneratedKeysQuery.class);
+            Logger log = LoggerFactory.getLogger(AbstractGeneratedKeysQuery.class, true);
             if (log != null) {
                 log.error("Unable to load generated key parser", ex);
             }
@@ -312,7 +312,7 @@ public abstract class AbstractGeneratedKeysQuery {
         } finally {
             rs.close();
         }
-        columnNames = columns.toArray(new String[0]);
+        columnNames = (String[]) columns.toArray(new String[0]);
         addReturningClause();
     }
 
@@ -338,7 +338,7 @@ public abstract class AbstractGeneratedKeysQuery {
         } finally {
             rs.close();
         }
-        columnNames = columns.toArray(new String[0]);
+        columnNames = (String[]) columns.toArray(new String[0]);
         addReturningClause();
     }
 
@@ -352,9 +352,9 @@ public abstract class AbstractGeneratedKeysQuery {
         }
         generatesKeys = true;
 
-        StringBuilder query = new StringBuilder(originalSQL);
+        StringBuffer query = new StringBuffer(originalSQL);
         if (query.charAt(query.length() - 1) == ';') {
-            query.setLength(query.length() - 1);
+            query.deleteCharAt(query.length() - 1);
         }
         query.append('\n');
         query.append("RETURNING ");
@@ -362,7 +362,7 @@ public abstract class AbstractGeneratedKeysQuery {
             query.append(columnNames[i]);
 
             if (i < columnNames.length - 1) {
-                query.append(',');
+                query.append(", ");
             }
         }
 

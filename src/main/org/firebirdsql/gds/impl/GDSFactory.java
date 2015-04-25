@@ -26,45 +26,49 @@ package org.firebirdsql.gds.impl;
 
 import org.firebirdsql.gds.GDS;
 import org.firebirdsql.gds.GDSException;
-import org.firebirdsql.gds.ng.FbDatabaseFactory;
 import org.firebirdsql.logging.Logger;
 import org.firebirdsql.logging.LoggerFactory;
 
-import java.io.Serializable;
+import java.io.*;
+import java.net.URL;
 import java.util.*;
-import java.util.Map.Entry;
 
 /**
  * The class <code>GDSFactory</code> exists to provide a way to obtain objects
  * implementing GDS and Clumplet.
  * 
  * @author <a href="mailto:d_jencks@users.sourceforge.net">David Jencks</a>
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @version 1.0
  */
 public class GDSFactory {
 
-    private static Logger log = LoggerFactory.getLogger(GDSFactory.class
-    );
+    private static final Logger log = LoggerFactory.getLogger(GDSFactory.class,
+        false);
 
     /**
-     * Class for string comparison in the descendant order. This effectively
-     * puts the most short JDBC URLs at the end of the list, so the correct
+     * Class for string comparison in descending order. This effectively
+     * puts the shortest JDBC URLs at the end of the list, so the correct
      * default protocol handling can be implemented.
      */
-    private static class ReversedStringComparator implements Comparator<String>, Serializable {
+    private static class ReversedStringComparator implements Comparator {
 
-        public int compare(String s1, String s2) {
+        public int compare(Object o1, Object o2) {
+            String s1 = (String) o1;
+            String s2 = (String) o2;
+
             // note, we compare here s2 to s1,
             // this causes descending sorting
             return s2.compareTo(s1);
         }
+
     }
 
-    private static final Set<GDSFactoryPlugin> registeredPlugins = new HashSet<GDSFactoryPlugin>();
+    private static HashSet registeredPlugins = new HashSet();
 
-    private static final Map<GDSType, GDSFactoryPlugin> typeToPluginMap = new HashMap<GDSType, GDSFactoryPlugin>();
+    private static HashMap typeToPluginMap = new HashMap();
 
-    private static final TreeMap<String, GDSFactoryPlugin> jdbcUrlToPluginMap = new TreeMap<String, GDSFactoryPlugin>(new ReversedStringComparator());
+    private static TreeMap jdbcUrlToPluginMap = new TreeMap(
+            new ReversedStringComparator());
 
     private static GDSType defaultType;
 
@@ -95,7 +99,7 @@ public class GDSFactory {
      * @return Collection of {@link ClassLoader} instances
      */
     private static List<ClassLoader> classLoadersForLoading() {
-        final List<ClassLoader> classLoaders = new ArrayList<ClassLoader>(2);
+        List<ClassLoader> classLoaders = new ArrayList<ClassLoader>();
         final ClassLoader classLoader = GDSFactory.class.getClassLoader();
         if (classLoader != null) {
             classLoaders.add(classLoader);
@@ -108,18 +112,6 @@ public class GDSFactory {
             classLoaders.add(contextClassLoader);
         }
         return classLoaders;
-    }
-
-    /**
-     * Load all existing plugins from the specified class loader.
-     * 
-     * @param classLoader instance of {@link ClassLoader}.
-     */
-    private static void loadPluginsFromClassLoader(ClassLoader classLoader) {
-        ServiceLoader<GDSFactoryPlugin> pluginLoader = ServiceLoader.load(GDSFactoryPlugin.class, classLoader);
-        for (GDSFactoryPlugin plugin : pluginLoader) {
-            registerPlugin(plugin);
-        }
     }
 
     /**
@@ -157,6 +149,51 @@ public class GDSFactory {
     }
 
     /**
+     * Load all existing plugins from the specified classloader.
+     * 
+     * @param classLoader instance of {@link ClassLoader}.
+     * 
+     * @throws IOException if I/O error occured.
+     */
+    private static void loadPluginsFromClassLoader(ClassLoader classLoader) throws IOException {
+        Enumeration res = classLoader.getResources(
+            "META-INF/services/" + GDSFactoryPlugin.class.getName());
+
+        if (!res.hasMoreElements() && log != null) {
+            log.warn("No GDSFactoryPlugin service file(s) found");
+        }
+
+        while (res.hasMoreElements()) {
+            URL url = (URL) res.nextElement();
+            
+            InputStreamReader rin = new InputStreamReader(url.openStream());
+            BufferedReader bin = new BufferedReader(rin);
+            
+            try {
+                String className;
+                while ((className = bin.readLine()) != null) {
+                    try {
+                        Class<?> clazz = classLoader.loadClass(className);
+                        GDSFactoryPlugin plugin = (GDSFactoryPlugin)clazz.newInstance();
+                        registerPlugin(plugin);
+                    } catch (ClassNotFoundException ex) {
+                        if (log != null)
+                            log.error("Can't register plugin" + className, ex);
+                    } catch (IllegalAccessException ex) {
+                        if (log != null)
+                            log.error("Can't register plugin" + className, ex);
+                    } catch(InstantiationException ex) {
+                        if (log != null)
+                            log.error("Can't register plugin" + className, ex);
+                    }
+                }
+            } finally {
+                bin.close();
+            }
+        }
+    }
+
+    /**
      * Register plugin for this factory. Usually there is no need to register
      * plugins, since this happens automatically during initialization of this
      * class. However, there might be a situation when automatic plugin
@@ -166,6 +203,7 @@ public class GDSFactory {
      *            instance of {@link GDSFactoryPlugin} to register.
      */
     public static void registerPlugin(GDSFactoryPlugin plugin) {
+
         boolean newPlugin = registeredPlugins.add(plugin);
         if (!newPlugin)
             return;
@@ -178,24 +216,29 @@ public class GDSFactory {
 
         // register aliases
         String[] aliases = plugin.getTypeAliases();
-        for (String alias : aliases) {
-            GDSType aliasType = GDSType.registerType(alias);
+        for (int i = 0; i < aliases.length; i++) {
+            GDSType aliasType = GDSType.registerType(aliases[i]);
             typeToPluginMap.put(aliasType, plugin);
         }
 
-        String[] jdbcUrls = plugin.getSupportedProtocols();
-        for (String jdbcUrl : jdbcUrls) {
-            GDSFactoryPlugin otherPlugin = jdbcUrlToPluginMap.put(jdbcUrl, plugin);
+        String[] jdbcUrls = (String[]) plugin.getSupportedProtocols();
+        for (int i = 0; i < jdbcUrls.length; i++) {
 
-            if (otherPlugin != null && !otherPlugin.equals(plugin))
+            GDSFactoryPlugin otherPlugin = 
+                (GDSFactoryPlugin)jdbcUrlToPluginMap.put(jdbcUrls[i], plugin);
+            
+            if (otherPlugin == null)
+                continue;
+            
+            if (!otherPlugin.equals(plugin))
                 throw new IllegalArgumentException(
-                        "Duplicate JDBC URL pattern detected: URL " + jdbcUrl + ", " +
-                                "plugin " + plugin.getTypeName() + ", other plugin " + otherPlugin.getTypeName());
+                "Duplicate JDBC URL pattern detected: URL " + jdbcUrls[i] + ", " +
+                "plugin " + plugin.getTypeName() + ", other plugin " + otherPlugin.getTypeName());
         }
     }
 
     /**
-     * Get an instance of the default <code>GDS</code> implementation.
+     * Get an instance of the default <code>GDS</code> implemenation.
      * 
      * @return A default <code>GDS</code> instance
      */
@@ -219,14 +262,17 @@ public class GDSFactory {
      *            The type of the <code>GDS</code> instance to be returned
      * @return A <code>GDS</code> implementation of the given type
      */
-    public static GDS getGDSForType(GDSType gdsType) {
+    public synchronized static GDS getGDSForType(GDSType gdsType) {
         if (gdsType == null) gdsType = defaultType;
-        return getPlugin(gdsType).getGDS();
-    }
 
-    public static FbDatabaseFactory getDatabaseFactoryForType(GDSType gdsType) {
-        if (gdsType == null) gdsType = defaultType;
-        return getPlugin(gdsType).getDatabaseFactory();
+        GDSFactoryPlugin gdsPlugin = (GDSFactoryPlugin) typeToPluginMap
+                .get(gdsType);
+
+        if (gdsPlugin == null)
+            throw new IllegalArgumentException("Specified GDS type " + gdsType
+                    + " is unknown.");
+
+        return gdsPlugin.getGDS();
     }
 
     /**
@@ -288,8 +334,8 @@ public class GDSFactory {
      * 
      * @return set of the supported protocols.
      */
-    public static Set<String> getSupportedProtocols() {
-        return Collections.unmodifiableSet(jdbcUrlToPluginMap.keySet());
+    public static Set getSupportedProtocols() {
+        return jdbcUrlToPluginMap.keySet();
     }
 
     /**
@@ -316,19 +362,23 @@ public class GDSFactory {
      * @return instance of {@link GDSType}.
      */
     public static GDSType getTypeForProtocol(String jdbcUrl) {
-        // TODO use TreeMap functionality to locate protocol (eg using floorKey() or ceilingKey())?
-        for (Entry<String, GDSFactoryPlugin> entry : jdbcUrlToPluginMap.entrySet()) {
-            String jdbcProtocol = entry.getKey();
+        for (Iterator iter = jdbcUrlToPluginMap.entrySet().iterator(); iter
+                .hasNext();) {
+            Map.Entry entry = (Map.Entry) iter.next();
 
-            if (jdbcUrl.startsWith(jdbcProtocol))
-                return GDSType.getType(entry.getValue().getTypeName());
+            String jdbcProtocol = (String) entry.getKey();
+            GDSFactoryPlugin plugin = (GDSFactoryPlugin) entry.getValue();
+
+            if (jdbcUrl.startsWith(jdbcProtocol)) {
+                return GDSType.getType(plugin.getTypeName());
+            }
         }
-
+        if (log != null) log.debug("No protocol match found for url " + jdbcUrl);
         return null;
     }
 
     /**
-     * Get class extending the {@link org.firebirdsql.jdbc.FBConnection}
+     * Get class extending the {@link org.firebirdsql.jdbc.AbstractConnection}
      * that will be instantiated when new connection is created. This method
      * finds the plugin for the specified type and delegates the call to it.
      * 
@@ -337,7 +387,7 @@ public class GDSFactory {
      * 
      * @return class to instantiate for the database connection.
      */
-    public static Class<?> getConnectionClass(GDSType gdsType) {
+    public static Class getConnectionClass(GDSType gdsType) {
         return getPlugin(gdsType).getConnectionClass();
     }
 
@@ -353,9 +403,11 @@ public class GDSFactory {
      *             if specified type is not known.
      */
     private static GDSFactoryPlugin getPlugin(GDSType gdsType) {
-        GDSFactoryPlugin gdsPlugin = typeToPluginMap.get(gdsType);
+        GDSFactoryPlugin gdsPlugin = (GDSFactoryPlugin) typeToPluginMap
+                .get(gdsType);
         if (gdsPlugin == null)
-            throw new IllegalArgumentException("Specified GDS type " + gdsType + " is unknown.");
+            throw new IllegalArgumentException("Specified GDS type " + gdsType
+                    + " is unknown.");
         return gdsPlugin;
     }
 }
