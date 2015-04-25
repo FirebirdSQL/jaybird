@@ -4,11 +4,11 @@
 	<classpathentry kind="src" path="src/messages"/>
 	<classpathentry kind="src" path="src/resources"/>
 	<classpathentry kind="src" path="src/main"/>
-	<classpathentry excluding="org/firebirdsql/hibernate/" kind="src" path="src/test"/>
 	<classpathentry kind="src" path="src/openoffice"/>
+	<classpathentry excluding="org/firebirdsql/hibernate/" kind="src" path="src/test"/>
 	<classpathentry kind="src" path="src/jdbc_42"/>
-	<classpathentry kind="src" path="src/test_42"/>
 	<classpathentry kind="src" path="src/jna-client"/>
+	<classpathentry kind="src" path="src/test_42"/>
 	<classpathentry kind="src" path="src/jna-test"/>
 	<classpathentry kind="lib" path="src/lib/fscontext.jar"/>
 	<classpathentry kind="lib" path="src/lib/providerutil.jar"/>
