@@ -53,11 +53,10 @@ Jaybird 3.0 is the last version to support Firebird 2.0.
 Supported Java versions
 -----------------------
 
-Jaybird 3.0.0 supports Java 6 (JDBC 4.0), Java 7 (JDBC 4.1) and 
-Java 8 (JDBC 4.2). 
+Jaybird 3.0.0 supports Java 7 (JDBC 4.1) and Java 8 (JDBC 4.2). 
 Support for earlier Java versions has been dropped.
 
-Jaybird 3.0 is the last version to support Java 6.
+Support for Java 7 might still be dropped before Jaybird 3.0 final release.
 
 Specification support
 ---------------------
@@ -260,12 +259,12 @@ expect the driver to remain functional, but chances are certain metadata (eg
 In general we will no longer fix issues that only occur with Firebird 1.5 or
 earlier.
 
-Java 5 no longer supported
---------------------------
+Java 5 and 6 no longer supported
+--------------------------------
 
-Support for Java 5 (JDBC 3.0) has been dropped in Jaybird 3.0. The Jaybird 3.0
-sources no longer compile with Java 5 due to use of Java 6 language features and
-JDBC 4.0 specific features.
+Support for Java 5 (JDBC 3.0) and Java 6 (JDBC 4.0) has been dropped in 
+Jaybird 3.0. The Jaybird 3.0 sources no longer compile with Java 5 and 6 due to 
+use of Java 7 language features and JDBC 4.1 specific features.
 
 Stricter JDBC compliance
 ------------------------
@@ -310,12 +309,6 @@ Breaking changes for Jaybird 3.1
 --------------------------------
 
 With Jaybird 3.1 the following breaking changes will be introduced.
-
-### Dropping support for Java 6 ###
-
-Jaybird 3.1 will drop support for Java 6, as Java 6 has gone 
-end-of-public-updates in February, 2013^[See the Java SE EOL policy on
-<http://www.oracle.com/technetwork/java/eol-135779.html>]
 
 ### Dropping support for Firebird 2.0 ###
 
