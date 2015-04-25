@@ -6,3 +6,4 @@ build_18.bat
 client-java.eml
 client-java.iml
 .idea/
+build-local.properties
