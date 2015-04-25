@@ -68,7 +68,7 @@ linking is applicable in this case.
 Which version of the LGPL applies?
 ----------------------------------
 
-Current releases of Jaybird do not explicitly specify an LPGL version. This
+Current releases of Jaybird do not explicitly specify an LGPL version. This
 means that you can choose which version applies. Future versions of Jaybird may
 specify an explicit version, or be released under a different license.
 
