@@ -114,7 +114,6 @@
         <property name="source.test" value="${module.source}/test"/>
         <property name="source.test.42" value="${module.source}/test_42"/>
         <property name="source.test.jna" value="${module.source}/jna-test"/>
-        <property name="source.compatibility" value="${module.source}/compatibility"/>
         <property name="source.documentation" value="${module.source}/documentation"/>
 
         <property name="thirdparty" value="${module.root}/thirdparty"/>
@@ -124,7 +123,6 @@
         <!-- Where build generated files will go -->
         <property name="build.j2ee" value="${module.output}/j2ee"/>
         <property name="build.classes" value="${module.output}/classes"/>
-        <property name="build.compatibility" value="${module.output}/compatibility"/>
         <property name="build.test" value="${module.output}/test"/>
         <property name="build.lib" value="${module.output}/lib"/>
         <property name="build.api" value="${module.output}/api"/>
@@ -199,11 +197,6 @@
             <pathelement location="${module.thirdparty}/log4j-core.jar"/>
             <pathelement location="${module.thirdparty}/antlr-runtime-3.4.jar"/>
             <pathelement location="${module.thirdparty}/jna-4.1.0.jar"/>
-        </path>
-
-        <path id="javac.compatibility.classpath">
-            <path refid="javac.driver.classpath"/>
-            <pathelement location="${build.classes}"/>
         </path>
 
         <path id="javac.test.classpath">

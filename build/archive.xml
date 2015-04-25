@@ -32,9 +32,6 @@
             <fileset dir="${build.classes}">
                 <include name="org/firebirdsql/**"/>
             </fileset>
-            <fileset dir="${build.compatibility}">
-                <include name="org/firebirdsql/**"/>
-            </fileset>
             <fileset dir="${build.resources}">
                 <exclude name="log4j.properties"/>
                 <exclude name="META-INF/ra.xml"/>
