@@ -20,7 +20,7 @@ for each supported Java version.
 
 Groupid: `org.firebirdsql.jdbc`,\
 Artifactid: `jaybird-jdkXX` (where `XX` is `15`, `16`, `17` or `18`).\
-Version: `2.2.5`
+Version: `2.2.7`
 
 For example:
 
@@ -28,7 +28,7 @@ For example:
 <dependency>
     <groupId>org.firebirdsql.jdbc</groupId>
     <artifactId>jaybird-jdk17</artifactId>
-    <version>2.2.5</version>
+    <version>2.2.7</version>
 </dependency>
 ~~~
 
@@ -40,10 +40,9 @@ Where can I get the sourcecode?
 
 All Jaybird distribution zips contain a `jaybird-<version>-sources.zip` with the
 sources used for that specific version. The full Jaybird sourcecode is also
-available from Source Forge in the Firebird subversion repository, under
-client-java. The full URL (trunk) is:
+available from GitHub in the jaybird repository:
 
-[http://svn.code.sf.net/p/firebird/code/client-java/trunk](http://svn.code.sf.net/p/firebird/code/client-java/trunk)
+[https://github.com/FirebirdSQL/jaybird](https://github.com/FirebirdSQL/jaybird)
 
 Each release is also tagged in the repository.
 
@@ -143,6 +142,7 @@ There are several ways you can contribute to Jaybird or Firebird in general:
 
 * Participate on the mailing lists (see [http://www.firebirdsql.org/en/mailing-lists/](http://www.firebirdsql.org/en/mailing-lists/))
 * Report bugs or submit patches on the tracker (see [Reporting Bugs])
+* Create pull requests on GitHub ([https://github.com/FirebirdSQL/jaybird](https://github.com/FirebirdSQL/jaybird))
 * Become a developer (for Jaybird contact us on firebird-java, for Firebird in
   general, use the Firebird-devel mailing list)
 * Become a paying member or sponsor of the Firebird Foundation (see
