@@ -14,19 +14,6 @@
         </tstamp>
         <property name="build.id" value="${build.number}"/>
 
-        <condition property="jdbc.40" value="true">
-            <or>
-                <equals arg1="${ant.java.version}" arg2="1.6"/>
-                <!-- Technically JDK 1.7 is JDBC 4.1, we use this here as an indication to use the jdbc4.0 sources -->
-                <equals arg1="${ant.java.version}" arg2="1.7"/>
-            </or>
-        </condition>
-
-        <!-- We set jdk1.6 property if JDK version is 1.6 -->
-        <condition property="jdk1.6" value="true">
-            <equals arg1="${ant.java.version}" arg2="1.6"/>
-        </condition>
-
         <!-- We set jdk1.7 property if JDK version is 1.7 -->
         <condition property="jdk1.7" value="true">
             <equals arg1="${ant.java.version}" arg2="1.7"/>
@@ -38,11 +25,7 @@
         </condition>
 
         <condition property="jdbc.41" value="true">
-            <or>
-                <!-- Technically JDK 1.6 is JDBC 4.0, we use this here as an indication to use the jdbc4.1 sources -->
-                <equals arg1="${ant.java.version}" arg2="1.6"/>
-                <equals arg1="${ant.java.version}" arg2="1.7"/>
-            </or>
+            <equals arg1="${ant.java.version}" arg2="1.7"/>
         </condition>
 
         <condition property="jdbc.42" value="true">
@@ -62,9 +45,6 @@
 
         <!-- Manifest version info -->
         <property name="specification.title" value="JSR 221 JDBC API"/>
-        <condition property="specification.version" value="4.0">
-            <isset property="jdk1.6"/>
-        </condition>
         <condition property="specification.version" value="4.1">
             <isset property="jdk1.7"/>
         </condition>
@@ -176,7 +156,7 @@
         <property name="test.db.lc_ctype" value="NONE"/>
 
         <property name="excludedPackages"
-                  value="org.firebirdsql.pool,org.firebirdsql.util,org.firebirdsql.jdbc.oo"/>
+                  value="org.firebirdsql.pool,org.firebirdsql.jdbc.oo"/>
 
         <property name="build.compiler" value="modern"/>
 
