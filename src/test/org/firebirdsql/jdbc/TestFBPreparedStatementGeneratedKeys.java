@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
@@ -281,4 +279,33 @@ public class TestFBPreparedStatementGeneratedKeys extends FBTestGeneratedKeysBas
 
     // TODO In the current implementation executeUpdate uses almost identical logic as execute, decide to test separately or not
 
+    @Test
+    public void testPrepare_SELECT_RETURN_GENERATED_KEYS_handledNormally() throws Exception {
+        PreparedStatement pstmt = con.prepareStatement("SELECT * FROM RDB$DATABASE", Statement.RETURN_GENERATED_KEYS);
+        boolean isResultSet = pstmt.execute();
+        assertTrue("Expected first result to be a result set", isResultSet);
+        ResultSet rs = pstmt.getResultSet();
+        assertNotNull("Expected a result set", rs);
+        assertTrue("Expected a row", rs.next());
+    }
+
+    @Test
+    public void testPrepare_SELECT_columnIndexes_handledNormally() throws Exception {
+        PreparedStatement pstmt = con.prepareStatement("SELECT * FROM RDB$DATABASE", new int[] { 1, 2 });
+        boolean isResultSet = pstmt.execute();
+        assertTrue("Expected first result to be a result set", isResultSet);
+        ResultSet rs = pstmt.getResultSet();
+        assertNotNull("Expected a result set", rs);
+        assertTrue("Expected a row", rs.next());
+    }
+
+    @Test
+    public void testPrepare_SELECT_columnNames_handledNormally() throws Exception {
+        PreparedStatement pstmt = con.prepareStatement("SELECT * FROM RDB$DATABASE", new String[] { "field1", "field2" });
+        boolean isResultSet = pstmt.execute();
+        assertTrue("Expected first result to be a result set", isResultSet);
+        ResultSet rs = pstmt.getResultSet();
+        assertNotNull("Expected a result set", rs);
+        assertTrue("Expected a row", rs.next());
+    }
 }

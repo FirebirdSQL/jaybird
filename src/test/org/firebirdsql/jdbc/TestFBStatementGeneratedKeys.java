@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
@@ -460,18 +458,33 @@ public class TestFBStatementGeneratedKeys extends FBTestGeneratedKeysBase {
         stmt.execute(TEST_INSERT_QUERY, new String[] { "ID", "NON_EXISTENT" });
     }
 
-    /**
-     * See <a href="http://tracker.firebirdsql.org/browse/JDBC-391">JDBC-391</a>.
-     * <p>
-     * TODO: Broken until JDBC-391 implemented; add more tests
-     * </p>
-     */
     @Test
-    public void testExecute_SELECT_shouldNotThrowException() throws Exception {
+    public void testExecute_SELECT_RETURN_GENERATED_KEYS_handledNormally() throws Exception {
         Statement stmt = con.createStatement();
-
-        stmt.execute("SELECT * FROM RDB$DATABASE", Statement.RETURN_GENERATED_KEYS);
+        boolean isResultSet = stmt.execute("SELECT * FROM RDB$DATABASE", Statement.RETURN_GENERATED_KEYS);
+        assertTrue("Expected first result to be a result set", isResultSet);
         ResultSet rs = stmt.getResultSet();
-        assertTrue(rs.next());
+        assertNotNull("Expected a result set", rs);
+        assertTrue("Expected a row", rs.next());
+    }
+
+    @Test
+    public void testExecute_SELECT_columnIndexes_handledNormally() throws Exception {
+        Statement stmt = con.createStatement();
+        boolean isResultSet = stmt.execute("SELECT * FROM RDB$DATABASE", new int[] { 1, 2 });
+        assertTrue("Expected first result to be a result set", isResultSet);
+        ResultSet rs = stmt.getResultSet();
+        assertNotNull("Expected a result set", rs);
+        assertTrue("Expected a row", rs.next());
+    }
+
+    @Test
+    public void testExecute_SELECT_columnNames_handledNormally() throws Exception {
+        Statement stmt = con.createStatement();
+        boolean isResultSet = stmt.execute("SELECT * FROM RDB$DATABASE", new String[] { "field1", "field2" });
+        assertTrue("Expected first result to be a result set", isResultSet);
+        ResultSet rs = stmt.getResultSet();
+        assertNotNull("Expected a result set", rs);
+        assertTrue("Expected a row", rs.next());
     }
 }
