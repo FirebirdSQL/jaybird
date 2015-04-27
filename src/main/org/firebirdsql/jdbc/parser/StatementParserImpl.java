@@ -22,8 +22,6 @@ import org.antlr.runtime.CharStream;
 import org.antlr.runtime.CommonTokenStream;
 import org.antlr.runtime.RecognitionException;
 
-import java.util.Collection;
-
 /**
  * Concrete implementation for accessing the parser. This is intended to shield the rest of Jaybird from
  * problems when the antlr-runtime is not on the classpath.
@@ -41,11 +39,7 @@ public class StatementParserImpl implements StatementParser {
             
             JaybirdSqlParser parser = new JaybirdSqlParser(tokenStream);
             parser.statement().getTree();
-            Collection errorMessages = parser.getErrorMessages();
-            if (!errorMessages.isEmpty()) {
-                throw new ParseException("Unable to parse query: " + errorMessages);
-            }
-            
+
             JaybirdStatementModel statementModel = parser.getStatementModel();
             if (statementModel.getTableName() == null) {
                 throw new ParseException("Unable to parse query: no table name found");
