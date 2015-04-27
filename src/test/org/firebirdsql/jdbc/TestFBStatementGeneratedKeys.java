@@ -149,6 +149,44 @@ public class TestFBStatementGeneratedKeys extends FBTestGeneratedKeysBase {
     }
 
     /**
+     * Test for {@link FBStatement#execute(String, int)} for an UPDATE statement including a WHERE with {@link Statement#RETURN_GENERATED_KEYS}.
+     * <p>
+     * Expected: all columns of table returned, single row result set
+     * </p>
+     * <p>
+     * Rationale: the (current) parser doesn't check the full UPDATE syntax, it just parses enough to find the table name.
+     * </p>
+     */
+    @Test
+    public void testExecute_UPDATE_with_WHERE_returnGeneratedKeys() throws Exception {
+        Statement stmt = con.createStatement();
+        // Add row
+        stmt.executeUpdate(TEST_INSERT_QUERY);
+
+        boolean producedResultSet = stmt.execute(
+                "UPDATE TABLE_WITH_TRIGGER SET TEXT = '" + TEXT_VALUE + "_1' WHERE 1 = 1",
+                Statement.RETURN_GENERATED_KEYS);
+        assertFalse("Expected execute to report false (has no result set) for UPDATE with generated keys returned",
+                producedResultSet);
+
+        ResultSet rs = stmt.getGeneratedKeys();
+        assertNotNull("Expected a non-null result set from getGeneratedKeys", rs);
+
+        ResultSetMetaData metaData = rs.getMetaData();
+        assertEquals("Expected result set with 3 columns", 3, metaData.getColumnCount());
+        assertEquals("Unexpected first column", "ID", metaData.getColumnName(1));
+        assertEquals("Unexpected second column", "TEXT", metaData.getColumnName(2));
+
+        assertTrue("Expected first row in result set", rs.next());
+        assertEquals(513, rs.getInt(1));
+        assertEquals(TEXT_VALUE + "_1", rs.getString(2));
+        assertFalse("Expected no second row", rs.next());
+
+        closeQuietly(rs);
+        closeQuietly(stmt);
+    }
+
+    /**
      * Test for {@link FBStatement#executeUpdate(String, int)} with {@link Statement#RETURN_GENERATED_KEYS}.
      * <p>
      * Expected: all columns of table returned, single row result set
