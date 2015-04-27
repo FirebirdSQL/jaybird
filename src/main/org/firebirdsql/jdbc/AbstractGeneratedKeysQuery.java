@@ -1,7 +1,5 @@
 /*
- * $Id$
- * 
- * Firebird Open Source J2EE Connector - JDBC Driver
+ * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -14,7 +12,7 @@
  * This file was created by members of the firebird development team.
  * All individual contributions remain the Copyright (C) of those
  * individuals.  Contributors to this file are either listed here or
- * can be obtained from a CVS history command.
+ * can be obtained from a source control history command.
  *
  * All rights reserved.
  */
@@ -42,6 +40,7 @@ import org.firebirdsql.logging.LoggerFactory;
  */
 public abstract class AbstractGeneratedKeysQuery {
 
+    private static final Logger logger = LoggerFactory.getLogger(AbstractGeneratedKeysQuery.class);
     private static final int QUERY_TYPE_KEEP_UNMODIFIED = 1;
     private static final int QUERY_TYPE_ADD_ALL_COLUMNS = 2;
     private static final int QUERY_TYPE_ADD_INDEXED = 3;
@@ -254,8 +253,8 @@ public abstract class AbstractGeneratedKeysQuery {
                 queryType = QUERY_TYPE_ALREADY_HAS_RETURNING;
             }
         } catch (ParseException e) {
-            // Unrecognized statement (so no INSERT, DELETE, UPDATE or UPDATE OR
-            // INSERT statement), keep as is
+            if (logger.isDebugEnabled()) logger.debug("Exception parsing query: " + originalSQL, e);
+            // Unrecognized statement (so no INSERT, DELETE, UPDATE or UPDATE OR INSERT statement), keep as is
             queryType = QUERY_TYPE_KEEP_UNMODIFIED;
         }
     }
