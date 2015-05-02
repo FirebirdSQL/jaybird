@@ -1,4 +1,4 @@
-// $ANTLR 3.4 D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g 2011-10-30 20:15:38
+// $ANTLR 3.4 JaybirdSql.g 2015-05-02 17:09:44
 
 package org.firebirdsql.jdbc.parser;
 
@@ -93,32 +93,32 @@ public class JaybirdSqlLexer extends Lexer {
     public static final int VALUES=72;
     public static final int WS=73;
 
-    	protected int _mismatchCount;
-    	protected java.util.ArrayList _errorMessages = new java.util.ArrayList();
-    	
-    	public int getMismatchCount() {
-    		return _mismatchCount;
-    	}
-    	
-    	public java.util.Collection getErrorMessages() {
-    		return _errorMessages;
+        protected int _mismatchCount;
+        protected java.util.ArrayList _errorMessages = new java.util.ArrayList();
+        
+        public int getMismatchCount() {
+            return _mismatchCount;
+        }
+        
+        public java.util.Collection getErrorMessages() {
+            return _errorMessages;
+        }
+
+        public boolean mismatchIsUnwantedToken(IntStream input, int ttype) {
+            boolean result = super.mismatchIsUnwantedToken(input, ttype);
+            _mismatchCount++;
+            return result;
+        }
+
+        public boolean mismatchIsMissingToken(IntStream input, BitSet follow) {
+            boolean result = super.mismatchIsMissingToken(input, follow);
+            _mismatchCount++;
+            return result;
     	}
 
-      public boolean mismatchIsUnwantedToken(IntStream input, int ttype) {
-        boolean result = super.mismatchIsUnwantedToken(input, ttype);
-        _mismatchCount++;
-        return result;
-      }
-
-      public boolean mismatchIsMissingToken(IntStream input, BitSet follow) {
-        boolean result = super.mismatchIsMissingToken(input, follow);
-        _mismatchCount++;
-        return result;
-      }
-
-    	public void emitErrorMessage(String msg) {
-    		_errorMessages.add(msg);
-    	}
+        public void emitErrorMessage(String msg) {
+            _errorMessages.add(msg);
+        }
 
 
     // delegates
@@ -134,15 +134,15 @@ public class JaybirdSqlLexer extends Lexer {
     public JaybirdSqlLexer(CharStream input, RecognizerSharedState state) {
         super(input,state);
     }
-    public String getGrammarFileName() { return "D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g"; }
+    public String getGrammarFileName() { return "JaybirdSql.g"; }
 
     // $ANTLR start "ALL"
     public final void mALL() throws RecognitionException {
         try {
             int _type = ALL;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:34:5: ( 'all' )
-            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:34:7: 'all'
+            // JaybirdSql.g:34:5: ( 'all' )
+            // JaybirdSql.g:34:7: 'all'
             {
             match("all"); 
 
@@ -164,8 +164,8 @@ public class JaybirdSqlLexer extends Lexer {
         try {
             int _type = AS;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:35:4: ( 'as' )
-            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:35:6: 'as'
+            // JaybirdSql.g:35:4: ( 'as' )
+            // JaybirdSql.g:35:6: 'as'
             {
             match("as"); 
 
@@ -187,8 +187,8 @@ public class JaybirdSqlLexer extends Lexer {
         try {
             int _type = AVG;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:36:5: ( 'avg' )
-            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:36:7: 'avg'
+            // JaybirdSql.g:36:5: ( 'avg' )
+            // JaybirdSql.g:36:7: 'avg'
             {
             match("avg"); 
 
@@ -210,8 +210,8 @@ public class JaybirdSqlLexer extends Lexer {
         try {
             int _type = BOTH;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:37:6: ( 'both' )
-            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:37:8: 'both'
+            // JaybirdSql.g:37:6: ( 'both' )
+            // JaybirdSql.g:37:8: 'both'
             {
             match("both"); 
 
@@ -233,8 +233,8 @@ public class JaybirdSqlLexer extends Lexer {
         try {
             int _type = CAST;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:38:6: ( 'cast' )
-            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:38:8: 'cast'
+            // JaybirdSql.g:38:6: ( 'cast' )
+            // JaybirdSql.g:38:8: 'cast'
             {
             match("cast"); 
 
@@ -256,8 +256,8 @@ public class JaybirdSqlLexer extends Lexer {
         try {
             int _type = CHARACTER;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:39:11: ( 'character' )
-            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:39:13: 'character'
+            // JaybirdSql.g:39:11: ( 'character' )
+            // JaybirdSql.g:39:13: 'character'
             {
             match("character"); 
 
@@ -279,8 +279,8 @@ public class JaybirdSqlLexer extends Lexer {
         try {
             int _type = COLLATE;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:40:9: ( 'collate' )
-            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:40:11: 'collate'
+            // JaybirdSql.g:40:9: ( 'collate' )
+            // JaybirdSql.g:40:11: 'collate'
             {
             match("collate"); 
 
@@ -302,8 +302,8 @@ public class JaybirdSqlLexer extends Lexer {
         try {
             int _type = COUNT;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:41:7: ( 'count' )
-            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:41:9: 'count'
+            // JaybirdSql.g:41:7: ( 'count' )
+            // JaybirdSql.g:41:9: 'count'
             {
             match("count"); 
 
@@ -325,8 +325,8 @@ public class JaybirdSqlLexer extends Lexer {
         try {
             int _type = CURRENT_DATE;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:42:14: ( 'current_date' )
-            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:42:16: 'current_date'
+            // JaybirdSql.g:42:14: ( 'current_date' )
+            // JaybirdSql.g:42:16: 'current_date'
             {
             match("current_date"); 
 
@@ -348,8 +348,8 @@ public class JaybirdSqlLexer extends Lexer {
         try {
             int _type = CURRENT_ROLE;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:43:14: ( 'current_role' )
-            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:43:16: 'current_role'
+            // JaybirdSql.g:43:14: ( 'current_role' )
+            // JaybirdSql.g:43:16: 'current_role'
             {
             match("current_role"); 
 
@@ -371,8 +371,8 @@ public class JaybirdSqlLexer extends Lexer {
         try {
             int _type = CURRENT_TIME;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:44:14: ( 'current_time' )
-            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:44:16: 'current_time'
+            // JaybirdSql.g:44:14: ( 'current_time' )
+            // JaybirdSql.g:44:16: 'current_time'
             {
             match("current_time"); 
 
@@ -394,8 +394,8 @@ public class JaybirdSqlLexer extends Lexer {
         try {
             int _type = CURRENT_TIMESTAMP;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:45:19: ( 'current_timestamp' )
-            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:45:21: 'current_timestamp'
+            // JaybirdSql.g:45:19: ( 'current_timestamp' )
+            // JaybirdSql.g:45:21: 'current_timestamp'
             {
             match("current_timestamp"); 
 
@@ -417,8 +417,8 @@ public class JaybirdSqlLexer extends Lexer {
         try {
             int _type = CURRENT_USER;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:46:14: ( 'current_user' )
-            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:46:16: 'current_user'
+            // JaybirdSql.g:46:14: ( 'current_user' )
+            // JaybirdSql.g:46:16: 'current_user'
             {
             match("current_user"); 
 
@@ -440,8 +440,8 @@ public class JaybirdSqlLexer extends Lexer {
         try {
             int _type = DB_KEY;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:47:8: ( 'db_key' )
-            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:47:10: 'db_key'
+            // JaybirdSql.g:47:8: ( 'db_key' )
+            // JaybirdSql.g:47:10: 'db_key'
             {
             match("db_key"); 
 
@@ -463,8 +463,8 @@ public class JaybirdSqlLexer extends Lexer {
         try {
             int _type = DEFAULT;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:48:9: ( 'default' )
-            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:48:11: 'default'
+            // JaybirdSql.g:48:9: ( 'default' )
+            // JaybirdSql.g:48:11: 'default'
             {
             match("default"); 
 
@@ -486,8 +486,8 @@ public class JaybirdSqlLexer extends Lexer {
         try {
             int _type = DELETE;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:49:8: ( 'delete' )
-            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:49:10: 'delete'
+            // JaybirdSql.g:49:8: ( 'delete' )
+            // JaybirdSql.g:49:10: 'delete'
             {
             match("delete"); 
 
@@ -509,8 +509,8 @@ public class JaybirdSqlLexer extends Lexer {
         try {
             int _type = DISTINCT;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:50:10: ( 'distinct' )
-            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:50:12: 'distinct'
+            // JaybirdSql.g:50:10: ( 'distinct' )
+            // JaybirdSql.g:50:12: 'distinct'
             {
             match("distinct"); 
 
@@ -532,8 +532,8 @@ public class JaybirdSqlLexer extends Lexer {
         try {
             int _type = EXECUTE;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:51:9: ( 'execute' )
-            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:51:11: 'execute'
+            // JaybirdSql.g:51:9: ( 'execute' )
+            // JaybirdSql.g:51:11: 'execute'
             {
             match("execute"); 
 
@@ -555,8 +555,8 @@ public class JaybirdSqlLexer extends Lexer {
         try {
             int _type = EXTRACT;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:52:9: ( 'extract' )
-            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:52:11: 'extract'
+            // JaybirdSql.g:52:9: ( 'extract' )
+            // JaybirdSql.g:52:11: 'extract'
             {
             match("extract"); 
 
@@ -578,8 +578,8 @@ public class JaybirdSqlLexer extends Lexer {
         try {
             int _type = FOR;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:53:5: ( 'for' )
-            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:53:7: 'for'
+            // JaybirdSql.g:53:5: ( 'for' )
+            // JaybirdSql.g:53:7: 'for'
             {
             match("for"); 
 
@@ -601,8 +601,8 @@ public class JaybirdSqlLexer extends Lexer {
         try {
             int _type = FROM;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:54:6: ( 'from' )
-            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:54:8: 'from'
+            // JaybirdSql.g:54:6: ( 'from' )
+            // JaybirdSql.g:54:8: 'from'
             {
             match("from"); 
 
@@ -624,8 +624,8 @@ public class JaybirdSqlLexer extends Lexer {
         try {
             int _type = GEN_ID;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:55:8: ( 'gen_id' )
-            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:55:10: 'gen_id'
+            // JaybirdSql.g:55:8: ( 'gen_id' )
+            // JaybirdSql.g:55:10: 'gen_id'
             {
             match("gen_id"); 
 
@@ -647,8 +647,8 @@ public class JaybirdSqlLexer extends Lexer {
         try {
             int _type = INSERT;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:56:8: ( 'insert' )
-            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:56:10: 'insert'
+            // JaybirdSql.g:56:8: ( 'insert' )
+            // JaybirdSql.g:56:10: 'insert'
             {
             match("insert"); 
 
@@ -670,8 +670,8 @@ public class JaybirdSqlLexer extends Lexer {
         try {
             int _type = INTO;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:57:6: ( 'into' )
-            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:57:8: 'into'
+            // JaybirdSql.g:57:6: ( 'into' )
+            // JaybirdSql.g:57:8: 'into'
             {
             match("into"); 
 
@@ -693,8 +693,8 @@ public class JaybirdSqlLexer extends Lexer {
         try {
             int _type = KW_BIGINT;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:58:11: ( 'bigint' )
-            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:58:13: 'bigint'
+            // JaybirdSql.g:58:11: ( 'bigint' )
+            // JaybirdSql.g:58:13: 'bigint'
             {
             match("bigint"); 
 
@@ -716,8 +716,8 @@ public class JaybirdSqlLexer extends Lexer {
         try {
             int _type = KW_BLOB;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:59:9: ( 'blob' )
-            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:59:11: 'blob'
+            // JaybirdSql.g:59:9: ( 'blob' )
+            // JaybirdSql.g:59:11: 'blob'
             {
             match("blob"); 
 
@@ -739,8 +739,8 @@ public class JaybirdSqlLexer extends Lexer {
         try {
             int _type = KW_CHAR;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:60:9: ( 'char' )
-            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:60:11: 'char'
+            // JaybirdSql.g:60:9: ( 'char' )
+            // JaybirdSql.g:60:11: 'char'
             {
             match("char"); 
 
@@ -762,8 +762,8 @@ public class JaybirdSqlLexer extends Lexer {
         try {
             int _type = KW_DATE;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:61:9: ( 'date' )
-            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:61:11: 'date'
+            // JaybirdSql.g:61:9: ( 'date' )
+            // JaybirdSql.g:61:11: 'date'
             {
             match("date"); 
 
@@ -785,8 +785,8 @@ public class JaybirdSqlLexer extends Lexer {
         try {
             int _type = KW_DECIMAL;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:62:12: ( 'decimal' )
-            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:62:14: 'decimal'
+            // JaybirdSql.g:62:12: ( 'decimal' )
+            // JaybirdSql.g:62:14: 'decimal'
             {
             match("decimal"); 
 
@@ -808,8 +808,8 @@ public class JaybirdSqlLexer extends Lexer {
         try {
             int _type = KW_DOUBLE;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:63:11: ( 'double' )
-            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:63:13: 'double'
+            // JaybirdSql.g:63:11: ( 'double' )
+            // JaybirdSql.g:63:13: 'double'
             {
             match("double"); 
 
@@ -831,8 +831,8 @@ public class JaybirdSqlLexer extends Lexer {
         try {
             int _type = KW_FLOAT;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:64:10: ( 'float' )
-            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:64:12: 'float'
+            // JaybirdSql.g:64:10: ( 'float' )
+            // JaybirdSql.g:64:12: 'float'
             {
             match("float"); 
 
@@ -854,8 +854,8 @@ public class JaybirdSqlLexer extends Lexer {
         try {
             int _type = KW_INT;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:65:8: ( 'int' )
-            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:65:10: 'int'
+            // JaybirdSql.g:65:8: ( 'int' )
+            // JaybirdSql.g:65:10: 'int'
             {
             match("int"); 
 
@@ -877,8 +877,8 @@ public class JaybirdSqlLexer extends Lexer {
         try {
             int _type = KW_INTEGER;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:66:12: ( 'integer' )
-            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:66:14: 'integer'
+            // JaybirdSql.g:66:12: ( 'integer' )
+            // JaybirdSql.g:66:14: 'integer'
             {
             match("integer"); 
 
@@ -900,8 +900,8 @@ public class JaybirdSqlLexer extends Lexer {
         try {
             int _type = KW_NUMERIC;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:67:12: ( 'numeric' )
-            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:67:14: 'numeric'
+            // JaybirdSql.g:67:12: ( 'numeric' )
+            // JaybirdSql.g:67:14: 'numeric'
             {
             match("numeric"); 
 
@@ -923,8 +923,8 @@ public class JaybirdSqlLexer extends Lexer {
         try {
             int _type = KW_PRECISION;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:68:14: ( 'precision' )
-            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:68:16: 'precision'
+            // JaybirdSql.g:68:14: ( 'precision' )
+            // JaybirdSql.g:68:16: 'precision'
             {
             match("precision"); 
 
@@ -946,8 +946,8 @@ public class JaybirdSqlLexer extends Lexer {
         try {
             int _type = KW_SIZE;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:69:9: ( 'size' )
-            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:69:11: 'size'
+            // JaybirdSql.g:69:9: ( 'size' )
+            // JaybirdSql.g:69:11: 'size'
             {
             match("size"); 
 
@@ -969,8 +969,8 @@ public class JaybirdSqlLexer extends Lexer {
         try {
             int _type = KW_SMALLINT;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:70:13: ( 'smallint' )
-            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:70:15: 'smallint'
+            // JaybirdSql.g:70:13: ( 'smallint' )
+            // JaybirdSql.g:70:15: 'smallint'
             {
             match("smallint"); 
 
@@ -992,8 +992,8 @@ public class JaybirdSqlLexer extends Lexer {
         try {
             int _type = KW_TIME;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:71:9: ( 'time' )
-            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:71:11: 'time'
+            // JaybirdSql.g:71:9: ( 'time' )
+            // JaybirdSql.g:71:11: 'time'
             {
             match("time"); 
 
@@ -1015,8 +1015,8 @@ public class JaybirdSqlLexer extends Lexer {
         try {
             int _type = KW_TIMESTAMP;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:72:14: ( 'timestamp' )
-            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:72:16: 'timestamp'
+            // JaybirdSql.g:72:14: ( 'timestamp' )
+            // JaybirdSql.g:72:16: 'timestamp'
             {
             match("timestamp"); 
 
@@ -1038,8 +1038,8 @@ public class JaybirdSqlLexer extends Lexer {
         try {
             int _type = KW_VARCHAR;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:73:12: ( 'varchar' )
-            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:73:14: 'varchar'
+            // JaybirdSql.g:73:12: ( 'varchar' )
+            // JaybirdSql.g:73:14: 'varchar'
             {
             match("varchar"); 
 
@@ -1061,8 +1061,8 @@ public class JaybirdSqlLexer extends Lexer {
         try {
             int _type = LEADING;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:74:9: ( 'leading' )
-            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:74:11: 'leading'
+            // JaybirdSql.g:74:9: ( 'leading' )
+            // JaybirdSql.g:74:11: 'leading'
             {
             match("leading"); 
 
@@ -1084,8 +1084,8 @@ public class JaybirdSqlLexer extends Lexer {
         try {
             int _type = MATCHING;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:75:10: ( 'matching' )
-            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:75:12: 'matching'
+            // JaybirdSql.g:75:10: ( 'matching' )
+            // JaybirdSql.g:75:12: 'matching'
             {
             match("matching"); 
 
@@ -1107,8 +1107,8 @@ public class JaybirdSqlLexer extends Lexer {
         try {
             int _type = MAXIMUM;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:76:9: ( 'max' )
-            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:76:11: 'max'
+            // JaybirdSql.g:76:9: ( 'max' )
+            // JaybirdSql.g:76:11: 'max'
             {
             match("max"); 
 
@@ -1130,8 +1130,8 @@ public class JaybirdSqlLexer extends Lexer {
         try {
             int _type = MINIMUM;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:77:9: ( 'min' )
-            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:77:11: 'min'
+            // JaybirdSql.g:77:9: ( 'min' )
+            // JaybirdSql.g:77:11: 'min'
             {
             match("min"); 
 
@@ -1153,8 +1153,8 @@ public class JaybirdSqlLexer extends Lexer {
         try {
             int _type = NEXT;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:78:6: ( 'next' )
-            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:78:8: 'next'
+            // JaybirdSql.g:78:6: ( 'next' )
+            // JaybirdSql.g:78:8: 'next'
             {
             match("next"); 
 
@@ -1176,8 +1176,8 @@ public class JaybirdSqlLexer extends Lexer {
         try {
             int _type = NULL;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:79:6: ( 'null' )
-            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:79:8: 'null'
+            // JaybirdSql.g:79:6: ( 'null' )
+            // JaybirdSql.g:79:8: 'null'
             {
             match("null"); 
 
@@ -1199,8 +1199,8 @@ public class JaybirdSqlLexer extends Lexer {
         try {
             int _type = OR;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:80:4: ( 'or' )
-            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:80:6: 'or'
+            // JaybirdSql.g:80:4: ( 'or' )
+            // JaybirdSql.g:80:6: 'or'
             {
             match("or"); 
 
@@ -1222,8 +1222,8 @@ public class JaybirdSqlLexer extends Lexer {
         try {
             int _type = PROCEDURE;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:81:11: ( 'procedure' )
-            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:81:13: 'procedure'
+            // JaybirdSql.g:81:11: ( 'procedure' )
+            // JaybirdSql.g:81:13: 'procedure'
             {
             match("procedure"); 
 
@@ -1245,8 +1245,8 @@ public class JaybirdSqlLexer extends Lexer {
         try {
             int _type = RETURNING;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:82:11: ( 'returning' )
-            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:82:13: 'returning'
+            // JaybirdSql.g:82:11: ( 'returning' )
+            // JaybirdSql.g:82:13: 'returning'
             {
             match("returning"); 
 
@@ -1268,8 +1268,8 @@ public class JaybirdSqlLexer extends Lexer {
         try {
             int _type = SEGMENT;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:83:9: ( 'segment' )
-            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:83:11: 'segment'
+            // JaybirdSql.g:83:9: ( 'segment' )
+            // JaybirdSql.g:83:11: 'segment'
             {
             match("segment"); 
 
@@ -1291,8 +1291,8 @@ public class JaybirdSqlLexer extends Lexer {
         try {
             int _type = SELECT;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:84:8: ( 'select' )
-            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:84:10: 'select'
+            // JaybirdSql.g:84:8: ( 'select' )
+            // JaybirdSql.g:84:10: 'select'
             {
             match("select"); 
 
@@ -1314,8 +1314,8 @@ public class JaybirdSqlLexer extends Lexer {
         try {
             int _type = SET;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:85:5: ( 'set' )
-            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:85:7: 'set'
+            // JaybirdSql.g:85:5: ( 'set' )
+            // JaybirdSql.g:85:7: 'set'
             {
             match("set"); 
 
@@ -1337,8 +1337,8 @@ public class JaybirdSqlLexer extends Lexer {
         try {
             int _type = SUBSTRING;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:86:11: ( 'substring' )
-            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:86:13: 'substring'
+            // JaybirdSql.g:86:11: ( 'substring' )
+            // JaybirdSql.g:86:13: 'substring'
             {
             match("substring"); 
 
@@ -1360,8 +1360,8 @@ public class JaybirdSqlLexer extends Lexer {
         try {
             int _type = SUB_TYPE;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:87:10: ( 'sub_type' )
-            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:87:12: 'sub_type'
+            // JaybirdSql.g:87:10: ( 'sub_type' )
+            // JaybirdSql.g:87:12: 'sub_type'
             {
             match("sub_type"); 
 
@@ -1383,8 +1383,8 @@ public class JaybirdSqlLexer extends Lexer {
         try {
             int _type = SUM;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:88:5: ( 'sum' )
-            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:88:7: 'sum'
+            // JaybirdSql.g:88:5: ( 'sum' )
+            // JaybirdSql.g:88:7: 'sum'
             {
             match("sum"); 
 
@@ -1406,8 +1406,8 @@ public class JaybirdSqlLexer extends Lexer {
         try {
             int _type = TRAILING;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:89:10: ( 'trailing' )
-            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:89:12: 'trailing'
+            // JaybirdSql.g:89:10: ( 'trailing' )
+            // JaybirdSql.g:89:12: 'trailing'
             {
             match("trailing"); 
 
@@ -1429,8 +1429,8 @@ public class JaybirdSqlLexer extends Lexer {
         try {
             int _type = TRIM;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:90:6: ( 'trim' )
-            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:90:8: 'trim'
+            // JaybirdSql.g:90:6: ( 'trim' )
+            // JaybirdSql.g:90:8: 'trim'
             {
             match("trim"); 
 
@@ -1452,8 +1452,8 @@ public class JaybirdSqlLexer extends Lexer {
         try {
             int _type = UPDATE;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:91:8: ( 'update' )
-            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:91:10: 'update'
+            // JaybirdSql.g:91:8: ( 'update' )
+            // JaybirdSql.g:91:10: 'update'
             {
             match("update"); 
 
@@ -1475,8 +1475,8 @@ public class JaybirdSqlLexer extends Lexer {
         try {
             int _type = VALUE;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:92:7: ( 'value' )
-            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:92:9: 'value'
+            // JaybirdSql.g:92:7: ( 'value' )
+            // JaybirdSql.g:92:9: 'value'
             {
             match("value"); 
 
@@ -1498,8 +1498,8 @@ public class JaybirdSqlLexer extends Lexer {
         try {
             int _type = VALUES;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:93:8: ( 'values' )
-            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:93:10: 'values'
+            // JaybirdSql.g:93:8: ( 'values' )
+            // JaybirdSql.g:93:10: 'values'
             {
             match("values"); 
 
@@ -1521,8 +1521,8 @@ public class JaybirdSqlLexer extends Lexer {
         try {
             int _type = T__74;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:94:7: ( '*' )
-            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:94:9: '*'
+            // JaybirdSql.g:94:7: ( '*' )
+            // JaybirdSql.g:94:9: '*'
             {
             match('*'); 
 
@@ -1542,8 +1542,8 @@ public class JaybirdSqlLexer extends Lexer {
         try {
             int _type = T__75;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:95:7: ( '+' )
-            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:95:9: '+'
+            // JaybirdSql.g:95:7: ( '+' )
+            // JaybirdSql.g:95:9: '+'
             {
             match('+'); 
 
@@ -1563,8 +1563,8 @@ public class JaybirdSqlLexer extends Lexer {
         try {
             int _type = T__76;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:96:7: ( '-' )
-            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:96:9: '-'
+            // JaybirdSql.g:96:7: ( '-' )
+            // JaybirdSql.g:96:9: '-'
             {
             match('-'); 
 
@@ -1584,8 +1584,8 @@ public class JaybirdSqlLexer extends Lexer {
         try {
             int _type = T__77;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:97:7: ( '.' )
-            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:97:9: '.'
+            // JaybirdSql.g:97:7: ( '.' )
+            // JaybirdSql.g:97:9: '.'
             {
             match('.'); 
 
@@ -1605,8 +1605,8 @@ public class JaybirdSqlLexer extends Lexer {
         try {
             int _type = T__78;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:98:7: ( '/' )
-            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:98:9: '/'
+            // JaybirdSql.g:98:7: ( '/' )
+            // JaybirdSql.g:98:9: '/'
             {
             match('/'); 
 
@@ -1626,8 +1626,8 @@ public class JaybirdSqlLexer extends Lexer {
         try {
             int _type = T__79;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:99:7: ( ':' )
-            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:99:9: ':'
+            // JaybirdSql.g:99:7: ( ':' )
+            // JaybirdSql.g:99:9: ':'
             {
             match(':'); 
 
@@ -1647,8 +1647,8 @@ public class JaybirdSqlLexer extends Lexer {
         try {
             int _type = T__80;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:100:7: ( '=' )
-            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:100:9: '='
+            // JaybirdSql.g:100:7: ( '=' )
+            // JaybirdSql.g:100:9: '='
             {
             match('='); 
 
@@ -1668,8 +1668,8 @@ public class JaybirdSqlLexer extends Lexer {
         try {
             int _type = T__81;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:101:7: ( '?' )
-            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:101:9: '?'
+            // JaybirdSql.g:101:7: ( '?' )
+            // JaybirdSql.g:101:9: '?'
             {
             match('?'); 
 
@@ -1689,8 +1689,8 @@ public class JaybirdSqlLexer extends Lexer {
         try {
             int _type = T__82;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:102:7: ( '[' )
-            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:102:9: '['
+            // JaybirdSql.g:102:7: ( '[' )
+            // JaybirdSql.g:102:9: '['
             {
             match('['); 
 
@@ -1710,8 +1710,8 @@ public class JaybirdSqlLexer extends Lexer {
         try {
             int _type = T__83;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:103:7: ( ']' )
-            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:103:9: ']'
+            // JaybirdSql.g:103:7: ( ']' )
+            // JaybirdSql.g:103:9: ']'
             {
             match(']'); 
 
@@ -1731,8 +1731,8 @@ public class JaybirdSqlLexer extends Lexer {
         try {
             int _type = T__84;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:104:7: ( '||' )
-            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:104:9: '||'
+            // JaybirdSql.g:104:7: ( '||' )
+            // JaybirdSql.g:104:9: '||'
             {
             match("||"); 
 
@@ -1754,8 +1754,8 @@ public class JaybirdSqlLexer extends Lexer {
         try {
             int _type = LEFT_PAREN;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:559:3: ( '(' )
-            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:559:5: '('
+            // JaybirdSql.g:554:9: ( '(' )
+            // JaybirdSql.g:554:14: '('
             {
             match('('); 
 
@@ -1775,8 +1775,8 @@ public class JaybirdSqlLexer extends Lexer {
         try {
             int _type = RIGHT_PAREN;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:563:3: ( ')' )
-            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:563:5: ')'
+            // JaybirdSql.g:558:9: ( ')' )
+            // JaybirdSql.g:558:14: ')'
             {
             match(')'); 
 
@@ -1796,8 +1796,8 @@ public class JaybirdSqlLexer extends Lexer {
         try {
             int _type = COMMA;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:566:8: ( ',' )
-            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:566:10: ','
+            // JaybirdSql.g:561:11: ( ',' )
+            // JaybirdSql.g:561:16: ','
             {
             match(','); 
 
@@ -1817,8 +1817,8 @@ public class JaybirdSqlLexer extends Lexer {
         try {
             int _type = GENERIC_ID;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:570:6: ( ( 'a' .. 'z' | 'A' .. 'Z' | '_' | ':' | '$' ) ( options {greedy=true; } : 'a' .. 'z' | 'A' .. 'Z' | '0' .. '9' | '.' | '-' | '_' | ':' | '$' )* )
-            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:570:8: ( 'a' .. 'z' | 'A' .. 'Z' | '_' | ':' | '$' ) ( options {greedy=true; } : 'a' .. 'z' | 'A' .. 'Z' | '0' .. '9' | '.' | '-' | '_' | ':' | '$' )*
+            // JaybirdSql.g:565:9: ( ( 'a' .. 'z' | 'A' .. 'Z' | '_' | ':' | '$' ) ( options {greedy=true; } : 'a' .. 'z' | 'A' .. 'Z' | '0' .. '9' | '.' | '-' | '_' | ':' | '$' )* )
+            // JaybirdSql.g:565:14: ( 'a' .. 'z' | 'A' .. 'Z' | '_' | ':' | '$' ) ( options {greedy=true; } : 'a' .. 'z' | 'A' .. 'Z' | '0' .. '9' | '.' | '-' | '_' | ':' | '$' )*
             {
             if ( input.LA(1)=='$'||input.LA(1)==':'||(input.LA(1) >= 'A' && input.LA(1) <= 'Z')||input.LA(1)=='_'||(input.LA(1) >= 'a' && input.LA(1) <= 'z') ) {
                 input.consume();
@@ -1830,7 +1830,7 @@ public class JaybirdSqlLexer extends Lexer {
             }
 
 
-            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:571:10: ( options {greedy=true; } : 'a' .. 'z' | 'A' .. 'Z' | '0' .. '9' | '.' | '-' | '_' | ':' | '$' )*
+            // JaybirdSql.g:566:13: ( options {greedy=true; } : 'a' .. 'z' | 'A' .. 'Z' | '0' .. '9' | '.' | '-' | '_' | ':' | '$' )*
             loop1:
             do {
                 int alt1=9;
@@ -1939,56 +1939,56 @@ public class JaybirdSqlLexer extends Lexer {
 
                 switch (alt1) {
             	case 1 :
-            	    // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:571:37: 'a' .. 'z'
+            	    // JaybirdSql.g:566:40: 'a' .. 'z'
             	    {
             	    matchRange('a','z'); 
 
             	    }
             	    break;
             	case 2 :
-            	    // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:571:46: 'A' .. 'Z'
+            	    // JaybirdSql.g:566:49: 'A' .. 'Z'
             	    {
             	    matchRange('A','Z'); 
 
             	    }
             	    break;
             	case 3 :
-            	    // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:571:57: '0' .. '9'
+            	    // JaybirdSql.g:566:60: '0' .. '9'
             	    {
             	    matchRange('0','9'); 
 
             	    }
             	    break;
             	case 4 :
-            	    // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:571:68: '.'
+            	    // JaybirdSql.g:566:71: '.'
             	    {
             	    match('.'); 
 
             	    }
             	    break;
             	case 5 :
-            	    // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:571:74: '-'
+            	    // JaybirdSql.g:566:77: '-'
             	    {
             	    match('-'); 
 
             	    }
             	    break;
             	case 6 :
-            	    // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:571:80: '_'
+            	    // JaybirdSql.g:566:83: '_'
             	    {
             	    match('_'); 
 
             	    }
             	    break;
             	case 7 :
-            	    // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:571:86: ':'
+            	    // JaybirdSql.g:566:89: ':'
             	    {
             	    match(':'); 
 
             	    }
             	    break;
             	case 8 :
-            	    // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:571:91: '$'
+            	    // JaybirdSql.g:566:94: '$'
             	    {
             	    match('$'); 
 
@@ -2017,65 +2017,95 @@ public class JaybirdSqlLexer extends Lexer {
         try {
             int _type = QUOTED_ID;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:575:3: ( '\\\"' ( '$' | '_' | '\\u00A0' .. '\\uFFFF' | '\\\"\\\"' | '0' .. '9' )+ '\\\"' )
-            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:575:5: '\\\"' ( '$' | '_' | '\\u00A0' .. '\\uFFFF' | '\\\"\\\"' | '0' .. '9' )+ '\\\"'
+            // JaybirdSql.g:570:9: ( '\\\"' ( 'a' .. 'z' | 'A' .. 'Z' | '_' | ':' | '$' | '\\u00A0' .. '\\uFFFF' | '\\\"\\\"' | '0' .. '9' )+ '\\\"' )
+            // JaybirdSql.g:570:11: '\\\"' ( 'a' .. 'z' | 'A' .. 'Z' | '_' | ':' | '$' | '\\u00A0' .. '\\uFFFF' | '\\\"\\\"' | '0' .. '9' )+ '\\\"'
             {
             match('\"'); 
 
-            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:575:10: ( '$' | '_' | '\\u00A0' .. '\\uFFFF' | '\\\"\\\"' | '0' .. '9' )+
+            // JaybirdSql.g:570:16: ( 'a' .. 'z' | 'A' .. 'Z' | '_' | ':' | '$' | '\\u00A0' .. '\\uFFFF' | '\\\"\\\"' | '0' .. '9' )+
             int cnt2=0;
             loop2:
             do {
-                int alt2=6;
+                int alt2=9;
                 int LA2_0 = input.LA(1);
 
                 if ( (LA2_0=='\"') ) {
                     int LA2_1 = input.LA(2);
 
                     if ( (LA2_1=='\"') ) {
-                        alt2=4;
+                        alt2=7;
                     }
 
 
                 }
-                else if ( (LA2_0=='$') ) {
+                else if ( ((LA2_0 >= 'a' && LA2_0 <= 'z')) ) {
                     alt2=1;
                 }
-                else if ( (LA2_0=='_') ) {
+                else if ( ((LA2_0 >= 'A' && LA2_0 <= 'Z')) ) {
                     alt2=2;
                 }
-                else if ( ((LA2_0 >= '\u00A0' && LA2_0 <= '\uFFFF')) ) {
+                else if ( (LA2_0=='_') ) {
                     alt2=3;
                 }
-                else if ( ((LA2_0 >= '0' && LA2_0 <= '9')) ) {
+                else if ( (LA2_0==':') ) {
+                    alt2=4;
+                }
+                else if ( (LA2_0=='$') ) {
                     alt2=5;
+                }
+                else if ( ((LA2_0 >= '\u00A0' && LA2_0 <= '\uFFFF')) ) {
+                    alt2=6;
+                }
+                else if ( ((LA2_0 >= '0' && LA2_0 <= '9')) ) {
+                    alt2=8;
                 }
 
 
                 switch (alt2) {
             	case 1 :
-            	    // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:575:11: '$'
+            	    // JaybirdSql.g:570:18: 'a' .. 'z'
             	    {
-            	    match('$'); 
+            	    matchRange('a','z'); 
 
             	    }
             	    break;
             	case 2 :
-            	    // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:575:15: '_'
+            	    // JaybirdSql.g:570:29: 'A' .. 'Z'
+            	    {
+            	    matchRange('A','Z'); 
+
+            	    }
+            	    break;
+            	case 3 :
+            	    // JaybirdSql.g:570:40: '_'
             	    {
             	    match('_'); 
 
             	    }
             	    break;
-            	case 3 :
-            	    // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:575:19: '\\u00A0' .. '\\uFFFF'
+            	case 4 :
+            	    // JaybirdSql.g:570:46: ':'
+            	    {
+            	    match(':'); 
+
+            	    }
+            	    break;
+            	case 5 :
+            	    // JaybirdSql.g:570:52: '$'
+            	    {
+            	    match('$'); 
+
+            	    }
+            	    break;
+            	case 6 :
+            	    // JaybirdSql.g:570:58: '\\u00A0' .. '\\uFFFF'
             	    {
             	    matchRange('\u00A0','\uFFFF'); 
 
             	    }
             	    break;
-            	case 4 :
-            	    // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:575:41: '\\\"\\\"'
+            	case 7 :
+            	    // JaybirdSql.g:570:81: '\\\"\\\"'
             	    {
             	    match("\"\""); 
 
@@ -2083,8 +2113,8 @@ public class JaybirdSqlLexer extends Lexer {
 
             	    }
             	    break;
-            	case 5 :
-            	    // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:575:50: '0' .. '9'
+            	case 8 :
+            	    // JaybirdSql.g:570:90: '0' .. '9'
             	    {
             	    matchRange('0','9'); 
 
@@ -2119,10 +2149,10 @@ public class JaybirdSqlLexer extends Lexer {
         try {
             int _type = INTEGER;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:582:9: ( ( '-' )? ( '0' .. '9' )+ )
-            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:582:11: ( '-' )? ( '0' .. '9' )+
+            // JaybirdSql.g:577:9: ( ( '-' )? ( '0' .. '9' )+ )
+            // JaybirdSql.g:577:14: ( '-' )? ( '0' .. '9' )+
             {
-            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:582:11: ( '-' )?
+            // JaybirdSql.g:577:14: ( '-' )?
             int alt3=2;
             int LA3_0 = input.LA(1);
 
@@ -2131,7 +2161,7 @@ public class JaybirdSqlLexer extends Lexer {
             }
             switch (alt3) {
                 case 1 :
-                    // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:582:12: '-'
+                    // JaybirdSql.g:577:15: '-'
                     {
                     match('-'); 
 
@@ -2141,7 +2171,7 @@ public class JaybirdSqlLexer extends Lexer {
             }
 
 
-            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:582:17: ( '0' .. '9' )+
+            // JaybirdSql.g:577:20: ( '0' .. '9' )+
             int cnt4=0;
             loop4:
             do {
@@ -2155,7 +2185,7 @@ public class JaybirdSqlLexer extends Lexer {
 
                 switch (alt4) {
             	case 1 :
-            	    // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:
+            	    // JaybirdSql.g:
             	    {
             	    if ( (input.LA(1) >= '0' && input.LA(1) <= '9') ) {
             	        input.consume();
@@ -2196,10 +2226,10 @@ public class JaybirdSqlLexer extends Lexer {
         try {
             int _type = REAL;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:585:7: ( ( '-' )? ( '0' .. '9' )* '.' ( '0' .. '9' )+ )
-            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:585:9: ( '-' )? ( '0' .. '9' )* '.' ( '0' .. '9' )+
+            // JaybirdSql.g:580:10: ( ( '-' )? ( '0' .. '9' )* '.' ( '0' .. '9' )+ )
+            // JaybirdSql.g:580:15: ( '-' )? ( '0' .. '9' )* '.' ( '0' .. '9' )+
             {
-            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:585:9: ( '-' )?
+            // JaybirdSql.g:580:15: ( '-' )?
             int alt5=2;
             int LA5_0 = input.LA(1);
 
@@ -2208,7 +2238,7 @@ public class JaybirdSqlLexer extends Lexer {
             }
             switch (alt5) {
                 case 1 :
-                    // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:585:10: '-'
+                    // JaybirdSql.g:580:16: '-'
                     {
                     match('-'); 
 
@@ -2218,7 +2248,7 @@ public class JaybirdSqlLexer extends Lexer {
             }
 
 
-            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:585:15: ( '0' .. '9' )*
+            // JaybirdSql.g:580:21: ( '0' .. '9' )*
             loop6:
             do {
                 int alt6=2;
@@ -2231,7 +2261,7 @@ public class JaybirdSqlLexer extends Lexer {
 
                 switch (alt6) {
             	case 1 :
-            	    // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:
+            	    // JaybirdSql.g:
             	    {
             	    if ( (input.LA(1) >= '0' && input.LA(1) <= '9') ) {
             	        input.consume();
@@ -2254,7 +2284,7 @@ public class JaybirdSqlLexer extends Lexer {
 
             match('.'); 
 
-            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:585:29: ( '0' .. '9' )+
+            // JaybirdSql.g:580:35: ( '0' .. '9' )+
             int cnt7=0;
             loop7:
             do {
@@ -2268,7 +2298,7 @@ public class JaybirdSqlLexer extends Lexer {
 
                 switch (alt7) {
             	case 1 :
-            	    // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:
+            	    // JaybirdSql.g:
             	    {
             	    if ( (input.LA(1) >= '0' && input.LA(1) <= '9') ) {
             	        input.consume();
@@ -2309,10 +2339,10 @@ public class JaybirdSqlLexer extends Lexer {
         try {
             int _type = WS;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:588:5: ( ( ' ' | '\\t' | '\\n' | '\\r' )+ )
-            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:588:7: ( ' ' | '\\t' | '\\n' | '\\r' )+
+            // JaybirdSql.g:583:11: ( ( ' ' | '\\t' | '\\n' | '\\r' )+ )
+            // JaybirdSql.g:583:16: ( ' ' | '\\t' | '\\n' | '\\r' )+
             {
-            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:588:7: ( ' ' | '\\t' | '\\n' | '\\r' )+
+            // JaybirdSql.g:583:16: ( ' ' | '\\t' | '\\n' | '\\r' )+
             int cnt8=0;
             loop8:
             do {
@@ -2326,7 +2356,7 @@ public class JaybirdSqlLexer extends Lexer {
 
                 switch (alt8) {
             	case 1 :
-            	    // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:
+            	    // JaybirdSql.g:
             	    {
             	    if ( (input.LA(1) >= '\t' && input.LA(1) <= '\n')||input.LA(1)=='\r'||input.LA(1)==' ' ) {
             	        input.consume();
@@ -2369,14 +2399,14 @@ public class JaybirdSqlLexer extends Lexer {
         try {
             int _type = SL_COMMENT;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:592:9: ( '--' (~ ( '\\n' | '\\r' ) )* ( '\\n' | '\\r' ( '\\n' )? ) )
-            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:592:11: '--' (~ ( '\\n' | '\\r' ) )* ( '\\n' | '\\r' ( '\\n' )? )
+            // JaybirdSql.g:587:9: ( '--' (~ ( '\\n' | '\\r' ) )* ( '\\n' | '\\r' ( '\\n' )? ) )
+            // JaybirdSql.g:587:14: '--' (~ ( '\\n' | '\\r' ) )* ( '\\n' | '\\r' ( '\\n' )? )
             {
             match("--"); 
 
 
 
-            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:592:16: (~ ( '\\n' | '\\r' ) )*
+            // JaybirdSql.g:587:19: (~ ( '\\n' | '\\r' ) )*
             loop9:
             do {
                 int alt9=2;
@@ -2389,7 +2419,7 @@ public class JaybirdSqlLexer extends Lexer {
 
                 switch (alt9) {
             	case 1 :
-            	    // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:
+            	    // JaybirdSql.g:
             	    {
             	    if ( (input.LA(1) >= '\u0000' && input.LA(1) <= '\t')||(input.LA(1) >= '\u000B' && input.LA(1) <= '\f')||(input.LA(1) >= '\u000E' && input.LA(1) <= '\uFFFF') ) {
             	        input.consume();
@@ -2410,7 +2440,7 @@ public class JaybirdSqlLexer extends Lexer {
             } while (true);
 
 
-            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:592:32: ( '\\n' | '\\r' ( '\\n' )? )
+            // JaybirdSql.g:587:35: ( '\\n' | '\\r' ( '\\n' )? )
             int alt11=2;
             int LA11_0 = input.LA(1);
 
@@ -2429,18 +2459,18 @@ public class JaybirdSqlLexer extends Lexer {
             }
             switch (alt11) {
                 case 1 :
-                    // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:592:33: '\\n'
+                    // JaybirdSql.g:587:36: '\\n'
                     {
                     match('\n'); 
 
                     }
                     break;
                 case 2 :
-                    // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:592:38: '\\r' ( '\\n' )?
+                    // JaybirdSql.g:587:41: '\\r' ( '\\n' )?
                     {
                     match('\r'); 
 
-                    // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:592:42: ( '\\n' )?
+                    // JaybirdSql.g:587:45: ( '\\n' )?
                     int alt10=2;
                     int LA10_0 = input.LA(1);
 
@@ -2449,7 +2479,7 @@ public class JaybirdSqlLexer extends Lexer {
                     }
                     switch (alt10) {
                         case 1 :
-                            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:592:43: '\\n'
+                            // JaybirdSql.g:587:46: '\\n'
                             {
                             match('\n'); 
 
@@ -2481,15 +2511,15 @@ public class JaybirdSqlLexer extends Lexer {
         try {
             int _type = STRING;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:596:3: ( ( '\\'' (~ '\\'' )* '\\'' ) )
-            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:596:5: ( '\\'' (~ '\\'' )* '\\'' )
+            // JaybirdSql.g:591:9: ( ( '\\'' (~ '\\'' )* '\\'' ) )
+            // JaybirdSql.g:591:14: ( '\\'' (~ '\\'' )* '\\'' )
             {
-            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:596:5: ( '\\'' (~ '\\'' )* '\\'' )
-            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:596:7: '\\'' (~ '\\'' )* '\\''
+            // JaybirdSql.g:591:14: ( '\\'' (~ '\\'' )* '\\'' )
+            // JaybirdSql.g:591:16: '\\'' (~ '\\'' )* '\\''
             {
             match('\''); 
 
-            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:596:12: (~ '\\'' )*
+            // JaybirdSql.g:591:21: (~ '\\'' )*
             loop12:
             do {
                 int alt12=2;
@@ -2502,7 +2532,7 @@ public class JaybirdSqlLexer extends Lexer {
 
                 switch (alt12) {
             	case 1 :
-            	    // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:
+            	    // JaybirdSql.g:
             	    {
             	    if ( (input.LA(1) >= '\u0000' && input.LA(1) <= '&')||(input.LA(1) >= '(' && input.LA(1) <= '\uFFFF') ) {
             	        input.consume();
@@ -2540,12 +2570,12 @@ public class JaybirdSqlLexer extends Lexer {
     // $ANTLR end "STRING"
 
     public void mTokens() throws RecognitionException {
-        // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:1:8: ( ALL | AS | AVG | BOTH | CAST | CHARACTER | COLLATE | COUNT | CURRENT_DATE | CURRENT_ROLE | CURRENT_TIME | CURRENT_TIMESTAMP | CURRENT_USER | DB_KEY | DEFAULT | DELETE | DISTINCT | EXECUTE | EXTRACT | FOR | FROM | GEN_ID | INSERT | INTO | KW_BIGINT | KW_BLOB | KW_CHAR | KW_DATE | KW_DECIMAL | KW_DOUBLE | KW_FLOAT | KW_INT | KW_INTEGER | KW_NUMERIC | KW_PRECISION | KW_SIZE | KW_SMALLINT | KW_TIME | KW_TIMESTAMP | KW_VARCHAR | LEADING | MATCHING | MAXIMUM | MINIMUM | NEXT | NULL | OR | PROCEDURE | RETURNING | SEGMENT | SELECT | SET | SUBSTRING | SUB_TYPE | SUM | TRAILING | TRIM | UPDATE | VALUE | VALUES | T__74 | T__75 | T__76 | T__77 | T__78 | T__79 | T__80 | T__81 | T__82 | T__83 | T__84 | LEFT_PAREN | RIGHT_PAREN | COMMA | GENERIC_ID | QUOTED_ID | INTEGER | REAL | WS | SL_COMMENT | STRING )
+        // JaybirdSql.g:1:8: ( ALL | AS | AVG | BOTH | CAST | CHARACTER | COLLATE | COUNT | CURRENT_DATE | CURRENT_ROLE | CURRENT_TIME | CURRENT_TIMESTAMP | CURRENT_USER | DB_KEY | DEFAULT | DELETE | DISTINCT | EXECUTE | EXTRACT | FOR | FROM | GEN_ID | INSERT | INTO | KW_BIGINT | KW_BLOB | KW_CHAR | KW_DATE | KW_DECIMAL | KW_DOUBLE | KW_FLOAT | KW_INT | KW_INTEGER | KW_NUMERIC | KW_PRECISION | KW_SIZE | KW_SMALLINT | KW_TIME | KW_TIMESTAMP | KW_VARCHAR | LEADING | MATCHING | MAXIMUM | MINIMUM | NEXT | NULL | OR | PROCEDURE | RETURNING | SEGMENT | SELECT | SET | SUBSTRING | SUB_TYPE | SUM | TRAILING | TRIM | UPDATE | VALUE | VALUES | T__74 | T__75 | T__76 | T__77 | T__78 | T__79 | T__80 | T__81 | T__82 | T__83 | T__84 | LEFT_PAREN | RIGHT_PAREN | COMMA | GENERIC_ID | QUOTED_ID | INTEGER | REAL | WS | SL_COMMENT | STRING )
         int alt13=81;
         alt13 = dfa13.predict(input);
         switch (alt13) {
             case 1 :
-                // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:1:10: ALL
+                // JaybirdSql.g:1:10: ALL
                 {
                 mALL(); 
 
@@ -2553,7 +2583,7 @@ public class JaybirdSqlLexer extends Lexer {
                 }
                 break;
             case 2 :
-                // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:1:14: AS
+                // JaybirdSql.g:1:14: AS
                 {
                 mAS(); 
 
@@ -2561,7 +2591,7 @@ public class JaybirdSqlLexer extends Lexer {
                 }
                 break;
             case 3 :
-                // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:1:17: AVG
+                // JaybirdSql.g:1:17: AVG
                 {
                 mAVG(); 
 
@@ -2569,7 +2599,7 @@ public class JaybirdSqlLexer extends Lexer {
                 }
                 break;
             case 4 :
-                // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:1:21: BOTH
+                // JaybirdSql.g:1:21: BOTH
                 {
                 mBOTH(); 
 
@@ -2577,7 +2607,7 @@ public class JaybirdSqlLexer extends Lexer {
                 }
                 break;
             case 5 :
-                // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:1:26: CAST
+                // JaybirdSql.g:1:26: CAST
                 {
                 mCAST(); 
 
@@ -2585,7 +2615,7 @@ public class JaybirdSqlLexer extends Lexer {
                 }
                 break;
             case 6 :
-                // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:1:31: CHARACTER
+                // JaybirdSql.g:1:31: CHARACTER
                 {
                 mCHARACTER(); 
 
@@ -2593,7 +2623,7 @@ public class JaybirdSqlLexer extends Lexer {
                 }
                 break;
             case 7 :
-                // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:1:41: COLLATE
+                // JaybirdSql.g:1:41: COLLATE
                 {
                 mCOLLATE(); 
 
@@ -2601,7 +2631,7 @@ public class JaybirdSqlLexer extends Lexer {
                 }
                 break;
             case 8 :
-                // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:1:49: COUNT
+                // JaybirdSql.g:1:49: COUNT
                 {
                 mCOUNT(); 
 
@@ -2609,7 +2639,7 @@ public class JaybirdSqlLexer extends Lexer {
                 }
                 break;
             case 9 :
-                // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:1:55: CURRENT_DATE
+                // JaybirdSql.g:1:55: CURRENT_DATE
                 {
                 mCURRENT_DATE(); 
 
@@ -2617,7 +2647,7 @@ public class JaybirdSqlLexer extends Lexer {
                 }
                 break;
             case 10 :
-                // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:1:68: CURRENT_ROLE
+                // JaybirdSql.g:1:68: CURRENT_ROLE
                 {
                 mCURRENT_ROLE(); 
 
@@ -2625,7 +2655,7 @@ public class JaybirdSqlLexer extends Lexer {
                 }
                 break;
             case 11 :
-                // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:1:81: CURRENT_TIME
+                // JaybirdSql.g:1:81: CURRENT_TIME
                 {
                 mCURRENT_TIME(); 
 
@@ -2633,7 +2663,7 @@ public class JaybirdSqlLexer extends Lexer {
                 }
                 break;
             case 12 :
-                // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:1:94: CURRENT_TIMESTAMP
+                // JaybirdSql.g:1:94: CURRENT_TIMESTAMP
                 {
                 mCURRENT_TIMESTAMP(); 
 
@@ -2641,7 +2671,7 @@ public class JaybirdSqlLexer extends Lexer {
                 }
                 break;
             case 13 :
-                // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:1:112: CURRENT_USER
+                // JaybirdSql.g:1:112: CURRENT_USER
                 {
                 mCURRENT_USER(); 
 
@@ -2649,7 +2679,7 @@ public class JaybirdSqlLexer extends Lexer {
                 }
                 break;
             case 14 :
-                // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:1:125: DB_KEY
+                // JaybirdSql.g:1:125: DB_KEY
                 {
                 mDB_KEY(); 
 
@@ -2657,7 +2687,7 @@ public class JaybirdSqlLexer extends Lexer {
                 }
                 break;
             case 15 :
-                // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:1:132: DEFAULT
+                // JaybirdSql.g:1:132: DEFAULT
                 {
                 mDEFAULT(); 
 
@@ -2665,7 +2695,7 @@ public class JaybirdSqlLexer extends Lexer {
                 }
                 break;
             case 16 :
-                // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:1:140: DELETE
+                // JaybirdSql.g:1:140: DELETE
                 {
                 mDELETE(); 
 
@@ -2673,7 +2703,7 @@ public class JaybirdSqlLexer extends Lexer {
                 }
                 break;
             case 17 :
-                // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:1:147: DISTINCT
+                // JaybirdSql.g:1:147: DISTINCT
                 {
                 mDISTINCT(); 
 
@@ -2681,7 +2711,7 @@ public class JaybirdSqlLexer extends Lexer {
                 }
                 break;
             case 18 :
-                // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:1:156: EXECUTE
+                // JaybirdSql.g:1:156: EXECUTE
                 {
                 mEXECUTE(); 
 
@@ -2689,7 +2719,7 @@ public class JaybirdSqlLexer extends Lexer {
                 }
                 break;
             case 19 :
-                // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:1:164: EXTRACT
+                // JaybirdSql.g:1:164: EXTRACT
                 {
                 mEXTRACT(); 
 
@@ -2697,7 +2727,7 @@ public class JaybirdSqlLexer extends Lexer {
                 }
                 break;
             case 20 :
-                // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:1:172: FOR
+                // JaybirdSql.g:1:172: FOR
                 {
                 mFOR(); 
 
@@ -2705,7 +2735,7 @@ public class JaybirdSqlLexer extends Lexer {
                 }
                 break;
             case 21 :
-                // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:1:176: FROM
+                // JaybirdSql.g:1:176: FROM
                 {
                 mFROM(); 
 
@@ -2713,7 +2743,7 @@ public class JaybirdSqlLexer extends Lexer {
                 }
                 break;
             case 22 :
-                // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:1:181: GEN_ID
+                // JaybirdSql.g:1:181: GEN_ID
                 {
                 mGEN_ID(); 
 
@@ -2721,7 +2751,7 @@ public class JaybirdSqlLexer extends Lexer {
                 }
                 break;
             case 23 :
-                // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:1:188: INSERT
+                // JaybirdSql.g:1:188: INSERT
                 {
                 mINSERT(); 
 
@@ -2729,7 +2759,7 @@ public class JaybirdSqlLexer extends Lexer {
                 }
                 break;
             case 24 :
-                // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:1:195: INTO
+                // JaybirdSql.g:1:195: INTO
                 {
                 mINTO(); 
 
@@ -2737,7 +2767,7 @@ public class JaybirdSqlLexer extends Lexer {
                 }
                 break;
             case 25 :
-                // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:1:200: KW_BIGINT
+                // JaybirdSql.g:1:200: KW_BIGINT
                 {
                 mKW_BIGINT(); 
 
@@ -2745,7 +2775,7 @@ public class JaybirdSqlLexer extends Lexer {
                 }
                 break;
             case 26 :
-                // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:1:210: KW_BLOB
+                // JaybirdSql.g:1:210: KW_BLOB
                 {
                 mKW_BLOB(); 
 
@@ -2753,7 +2783,7 @@ public class JaybirdSqlLexer extends Lexer {
                 }
                 break;
             case 27 :
-                // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:1:218: KW_CHAR
+                // JaybirdSql.g:1:218: KW_CHAR
                 {
                 mKW_CHAR(); 
 
@@ -2761,7 +2791,7 @@ public class JaybirdSqlLexer extends Lexer {
                 }
                 break;
             case 28 :
-                // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:1:226: KW_DATE
+                // JaybirdSql.g:1:226: KW_DATE
                 {
                 mKW_DATE(); 
 
@@ -2769,7 +2799,7 @@ public class JaybirdSqlLexer extends Lexer {
                 }
                 break;
             case 29 :
-                // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:1:234: KW_DECIMAL
+                // JaybirdSql.g:1:234: KW_DECIMAL
                 {
                 mKW_DECIMAL(); 
 
@@ -2777,7 +2807,7 @@ public class JaybirdSqlLexer extends Lexer {
                 }
                 break;
             case 30 :
-                // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:1:245: KW_DOUBLE
+                // JaybirdSql.g:1:245: KW_DOUBLE
                 {
                 mKW_DOUBLE(); 
 
@@ -2785,7 +2815,7 @@ public class JaybirdSqlLexer extends Lexer {
                 }
                 break;
             case 31 :
-                // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:1:255: KW_FLOAT
+                // JaybirdSql.g:1:255: KW_FLOAT
                 {
                 mKW_FLOAT(); 
 
@@ -2793,7 +2823,7 @@ public class JaybirdSqlLexer extends Lexer {
                 }
                 break;
             case 32 :
-                // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:1:264: KW_INT
+                // JaybirdSql.g:1:264: KW_INT
                 {
                 mKW_INT(); 
 
@@ -2801,7 +2831,7 @@ public class JaybirdSqlLexer extends Lexer {
                 }
                 break;
             case 33 :
-                // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:1:271: KW_INTEGER
+                // JaybirdSql.g:1:271: KW_INTEGER
                 {
                 mKW_INTEGER(); 
 
@@ -2809,7 +2839,7 @@ public class JaybirdSqlLexer extends Lexer {
                 }
                 break;
             case 34 :
-                // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:1:282: KW_NUMERIC
+                // JaybirdSql.g:1:282: KW_NUMERIC
                 {
                 mKW_NUMERIC(); 
 
@@ -2817,7 +2847,7 @@ public class JaybirdSqlLexer extends Lexer {
                 }
                 break;
             case 35 :
-                // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:1:293: KW_PRECISION
+                // JaybirdSql.g:1:293: KW_PRECISION
                 {
                 mKW_PRECISION(); 
 
@@ -2825,7 +2855,7 @@ public class JaybirdSqlLexer extends Lexer {
                 }
                 break;
             case 36 :
-                // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:1:306: KW_SIZE
+                // JaybirdSql.g:1:306: KW_SIZE
                 {
                 mKW_SIZE(); 
 
@@ -2833,7 +2863,7 @@ public class JaybirdSqlLexer extends Lexer {
                 }
                 break;
             case 37 :
-                // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:1:314: KW_SMALLINT
+                // JaybirdSql.g:1:314: KW_SMALLINT
                 {
                 mKW_SMALLINT(); 
 
@@ -2841,7 +2871,7 @@ public class JaybirdSqlLexer extends Lexer {
                 }
                 break;
             case 38 :
-                // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:1:326: KW_TIME
+                // JaybirdSql.g:1:326: KW_TIME
                 {
                 mKW_TIME(); 
 
@@ -2849,7 +2879,7 @@ public class JaybirdSqlLexer extends Lexer {
                 }
                 break;
             case 39 :
-                // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:1:334: KW_TIMESTAMP
+                // JaybirdSql.g:1:334: KW_TIMESTAMP
                 {
                 mKW_TIMESTAMP(); 
 
@@ -2857,7 +2887,7 @@ public class JaybirdSqlLexer extends Lexer {
                 }
                 break;
             case 40 :
-                // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:1:347: KW_VARCHAR
+                // JaybirdSql.g:1:347: KW_VARCHAR
                 {
                 mKW_VARCHAR(); 
 
@@ -2865,7 +2895,7 @@ public class JaybirdSqlLexer extends Lexer {
                 }
                 break;
             case 41 :
-                // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:1:358: LEADING
+                // JaybirdSql.g:1:358: LEADING
                 {
                 mLEADING(); 
 
@@ -2873,7 +2903,7 @@ public class JaybirdSqlLexer extends Lexer {
                 }
                 break;
             case 42 :
-                // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:1:366: MATCHING
+                // JaybirdSql.g:1:366: MATCHING
                 {
                 mMATCHING(); 
 
@@ -2881,7 +2911,7 @@ public class JaybirdSqlLexer extends Lexer {
                 }
                 break;
             case 43 :
-                // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:1:375: MAXIMUM
+                // JaybirdSql.g:1:375: MAXIMUM
                 {
                 mMAXIMUM(); 
 
@@ -2889,7 +2919,7 @@ public class JaybirdSqlLexer extends Lexer {
                 }
                 break;
             case 44 :
-                // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:1:383: MINIMUM
+                // JaybirdSql.g:1:383: MINIMUM
                 {
                 mMINIMUM(); 
 
@@ -2897,7 +2927,7 @@ public class JaybirdSqlLexer extends Lexer {
                 }
                 break;
             case 45 :
-                // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:1:391: NEXT
+                // JaybirdSql.g:1:391: NEXT
                 {
                 mNEXT(); 
 
@@ -2905,7 +2935,7 @@ public class JaybirdSqlLexer extends Lexer {
                 }
                 break;
             case 46 :
-                // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:1:396: NULL
+                // JaybirdSql.g:1:396: NULL
                 {
                 mNULL(); 
 
@@ -2913,7 +2943,7 @@ public class JaybirdSqlLexer extends Lexer {
                 }
                 break;
             case 47 :
-                // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:1:401: OR
+                // JaybirdSql.g:1:401: OR
                 {
                 mOR(); 
 
@@ -2921,7 +2951,7 @@ public class JaybirdSqlLexer extends Lexer {
                 }
                 break;
             case 48 :
-                // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:1:404: PROCEDURE
+                // JaybirdSql.g:1:404: PROCEDURE
                 {
                 mPROCEDURE(); 
 
@@ -2929,7 +2959,7 @@ public class JaybirdSqlLexer extends Lexer {
                 }
                 break;
             case 49 :
-                // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:1:414: RETURNING
+                // JaybirdSql.g:1:414: RETURNING
                 {
                 mRETURNING(); 
 
@@ -2937,7 +2967,7 @@ public class JaybirdSqlLexer extends Lexer {
                 }
                 break;
             case 50 :
-                // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:1:424: SEGMENT
+                // JaybirdSql.g:1:424: SEGMENT
                 {
                 mSEGMENT(); 
 
@@ -2945,7 +2975,7 @@ public class JaybirdSqlLexer extends Lexer {
                 }
                 break;
             case 51 :
-                // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:1:432: SELECT
+                // JaybirdSql.g:1:432: SELECT
                 {
                 mSELECT(); 
 
@@ -2953,7 +2983,7 @@ public class JaybirdSqlLexer extends Lexer {
                 }
                 break;
             case 52 :
-                // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:1:439: SET
+                // JaybirdSql.g:1:439: SET
                 {
                 mSET(); 
 
@@ -2961,7 +2991,7 @@ public class JaybirdSqlLexer extends Lexer {
                 }
                 break;
             case 53 :
-                // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:1:443: SUBSTRING
+                // JaybirdSql.g:1:443: SUBSTRING
                 {
                 mSUBSTRING(); 
 
@@ -2969,7 +2999,7 @@ public class JaybirdSqlLexer extends Lexer {
                 }
                 break;
             case 54 :
-                // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:1:453: SUB_TYPE
+                // JaybirdSql.g:1:453: SUB_TYPE
                 {
                 mSUB_TYPE(); 
 
@@ -2977,7 +3007,7 @@ public class JaybirdSqlLexer extends Lexer {
                 }
                 break;
             case 55 :
-                // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:1:462: SUM
+                // JaybirdSql.g:1:462: SUM
                 {
                 mSUM(); 
 
@@ -2985,7 +3015,7 @@ public class JaybirdSqlLexer extends Lexer {
                 }
                 break;
             case 56 :
-                // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:1:466: TRAILING
+                // JaybirdSql.g:1:466: TRAILING
                 {
                 mTRAILING(); 
 
@@ -2993,7 +3023,7 @@ public class JaybirdSqlLexer extends Lexer {
                 }
                 break;
             case 57 :
-                // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:1:475: TRIM
+                // JaybirdSql.g:1:475: TRIM
                 {
                 mTRIM(); 
 
@@ -3001,7 +3031,7 @@ public class JaybirdSqlLexer extends Lexer {
                 }
                 break;
             case 58 :
-                // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:1:480: UPDATE
+                // JaybirdSql.g:1:480: UPDATE
                 {
                 mUPDATE(); 
 
@@ -3009,7 +3039,7 @@ public class JaybirdSqlLexer extends Lexer {
                 }
                 break;
             case 59 :
-                // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:1:487: VALUE
+                // JaybirdSql.g:1:487: VALUE
                 {
                 mVALUE(); 
 
@@ -3017,7 +3047,7 @@ public class JaybirdSqlLexer extends Lexer {
                 }
                 break;
             case 60 :
-                // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:1:493: VALUES
+                // JaybirdSql.g:1:493: VALUES
                 {
                 mVALUES(); 
 
@@ -3025,7 +3055,7 @@ public class JaybirdSqlLexer extends Lexer {
                 }
                 break;
             case 61 :
-                // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:1:500: T__74
+                // JaybirdSql.g:1:500: T__74
                 {
                 mT__74(); 
 
@@ -3033,7 +3063,7 @@ public class JaybirdSqlLexer extends Lexer {
                 }
                 break;
             case 62 :
-                // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:1:506: T__75
+                // JaybirdSql.g:1:506: T__75
                 {
                 mT__75(); 
 
@@ -3041,7 +3071,7 @@ public class JaybirdSqlLexer extends Lexer {
                 }
                 break;
             case 63 :
-                // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:1:512: T__76
+                // JaybirdSql.g:1:512: T__76
                 {
                 mT__76(); 
 
@@ -3049,7 +3079,7 @@ public class JaybirdSqlLexer extends Lexer {
                 }
                 break;
             case 64 :
-                // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:1:518: T__77
+                // JaybirdSql.g:1:518: T__77
                 {
                 mT__77(); 
 
@@ -3057,7 +3087,7 @@ public class JaybirdSqlLexer extends Lexer {
                 }
                 break;
             case 65 :
-                // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:1:524: T__78
+                // JaybirdSql.g:1:524: T__78
                 {
                 mT__78(); 
 
@@ -3065,7 +3095,7 @@ public class JaybirdSqlLexer extends Lexer {
                 }
                 break;
             case 66 :
-                // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:1:530: T__79
+                // JaybirdSql.g:1:530: T__79
                 {
                 mT__79(); 
 
@@ -3073,7 +3103,7 @@ public class JaybirdSqlLexer extends Lexer {
                 }
                 break;
             case 67 :
-                // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:1:536: T__80
+                // JaybirdSql.g:1:536: T__80
                 {
                 mT__80(); 
 
@@ -3081,7 +3111,7 @@ public class JaybirdSqlLexer extends Lexer {
                 }
                 break;
             case 68 :
-                // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:1:542: T__81
+                // JaybirdSql.g:1:542: T__81
                 {
                 mT__81(); 
 
@@ -3089,7 +3119,7 @@ public class JaybirdSqlLexer extends Lexer {
                 }
                 break;
             case 69 :
-                // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:1:548: T__82
+                // JaybirdSql.g:1:548: T__82
                 {
                 mT__82(); 
 
@@ -3097,7 +3127,7 @@ public class JaybirdSqlLexer extends Lexer {
                 }
                 break;
             case 70 :
-                // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:1:554: T__83
+                // JaybirdSql.g:1:554: T__83
                 {
                 mT__83(); 
 
@@ -3105,7 +3135,7 @@ public class JaybirdSqlLexer extends Lexer {
                 }
                 break;
             case 71 :
-                // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:1:560: T__84
+                // JaybirdSql.g:1:560: T__84
                 {
                 mT__84(); 
 
@@ -3113,7 +3143,7 @@ public class JaybirdSqlLexer extends Lexer {
                 }
                 break;
             case 72 :
-                // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:1:566: LEFT_PAREN
+                // JaybirdSql.g:1:566: LEFT_PAREN
                 {
                 mLEFT_PAREN(); 
 
@@ -3121,7 +3151,7 @@ public class JaybirdSqlLexer extends Lexer {
                 }
                 break;
             case 73 :
-                // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:1:577: RIGHT_PAREN
+                // JaybirdSql.g:1:577: RIGHT_PAREN
                 {
                 mRIGHT_PAREN(); 
 
@@ -3129,7 +3159,7 @@ public class JaybirdSqlLexer extends Lexer {
                 }
                 break;
             case 74 :
-                // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:1:589: COMMA
+                // JaybirdSql.g:1:589: COMMA
                 {
                 mCOMMA(); 
 
@@ -3137,7 +3167,7 @@ public class JaybirdSqlLexer extends Lexer {
                 }
                 break;
             case 75 :
-                // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:1:595: GENERIC_ID
+                // JaybirdSql.g:1:595: GENERIC_ID
                 {
                 mGENERIC_ID(); 
 
@@ -3145,7 +3175,7 @@ public class JaybirdSqlLexer extends Lexer {
                 }
                 break;
             case 76 :
-                // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:1:606: QUOTED_ID
+                // JaybirdSql.g:1:606: QUOTED_ID
                 {
                 mQUOTED_ID(); 
 
@@ -3153,7 +3183,7 @@ public class JaybirdSqlLexer extends Lexer {
                 }
                 break;
             case 77 :
-                // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:1:616: INTEGER
+                // JaybirdSql.g:1:616: INTEGER
                 {
                 mINTEGER(); 
 
@@ -3161,7 +3191,7 @@ public class JaybirdSqlLexer extends Lexer {
                 }
                 break;
             case 78 :
-                // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:1:624: REAL
+                // JaybirdSql.g:1:624: REAL
                 {
                 mREAL(); 
 
@@ -3169,7 +3199,7 @@ public class JaybirdSqlLexer extends Lexer {
                 }
                 break;
             case 79 :
-                // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:1:629: WS
+                // JaybirdSql.g:1:629: WS
                 {
                 mWS(); 
 
@@ -3177,7 +3207,7 @@ public class JaybirdSqlLexer extends Lexer {
                 }
                 break;
             case 80 :
-                // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:1:632: SL_COMMENT
+                // JaybirdSql.g:1:632: SL_COMMENT
                 {
                 mSL_COMMENT(); 
 
@@ -3185,7 +3215,7 @@ public class JaybirdSqlLexer extends Lexer {
                 }
                 break;
             case 81 :
-                // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:1:643: STRING
+                // JaybirdSql.g:1:643: STRING
                 {
                 mSTRING(); 
 

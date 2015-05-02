@@ -249,7 +249,7 @@ public abstract class AbstractGeneratedKeysQuery {
         }
         try {
             statementModel = parseInsertStatement(originalSQL);
-            if (statementModel.getReturningColumns().size() > 0) {
+            if (statementModel.hasReturning()) {
                 queryType = QUERY_TYPE_ALREADY_HAS_RETURNING;
             }
         } catch (ParseException e) {

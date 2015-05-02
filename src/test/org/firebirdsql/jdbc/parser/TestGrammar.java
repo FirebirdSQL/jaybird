@@ -1,11 +1,32 @@
+/*
+ * Firebird Open Source JavaEE Connector - JDBC Driver
+ *
+ * Distributable under LGPL license.
+ * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * LGPL License for more details.
+ *
+ * This file was created by members of the firebird development team.
+ * All individual contributions remain the Copyright (C) of those
+ * individuals.  Contributors to this file are either listed here or
+ * can be obtained from a source control history command.
+ *
+ * All rights reserved.
+ */
 package org.firebirdsql.jdbc.parser;
 
-import org.antlr.runtime.*;
-import org.antlr.runtime.tree.CommonTree;
+import org.antlr.runtime.CharStream;
+import org.antlr.runtime.CommonTokenStream;
+import org.junit.Ignore;
+import org.junit.Test;
 
-import junit.framework.TestCase;
+import static org.hamcrest.Matchers.hasItem;
+import static org.junit.Assert.*;
 
-public class TestGrammar extends TestCase {
+public class TestGrammar {
 	
 	// TODO Add more testcases for grammar
 
@@ -17,49 +38,199 @@ public class TestGrammar extends TestCase {
     
         return new JaybirdSqlParser(tokenStream);
     }
-    
-    public void testGrammar() throws Exception {
-        
+
+    @Test
+    public void insert_values() throws Exception {
         JaybirdSqlParser parser = createParser(
-            "insert into someTable(a, \"\u0442\u0435\"\"\u0441\u0442\", aaa) " +
-            "values('a', -1.23, a(a,aa))");
+                "insert into someTable(a, \"\u0442\u0435\"\"\u0441\u0442\", aaa) values('a', -1.23, a(a,aa))");
         
-        CommonTree tree = (CommonTree)parser.statement().getTree();
-        
-        assertEquals("someTable", parser.getStatementModel().getTableName());
-        assertTrue(parser.getStatementModel().getColumns().contains("\"\u0442\u0435\"\"\u0441\u0442\""));
-        
-        System.out.println(tree.toStringTree());
-        System.out.println(parser.getStatementModel().getTableName());
-        System.out.println(parser.getStatementModel().getColumns());
+        parser.statement();
+
+        JaybirdStatementModel statementModel = parser.getStatementModel();
+        assertEquals("Unexpected statement type", JaybirdStatementModel.INSERT_TYPE, statementModel.getStatementType());
+        assertEquals("Unexpected table name", "someTable", statementModel.getTableName());
+        assertThat("Column missing", statementModel.getColumns(), hasItem("\"\u0442\u0435\"\"\u0441\u0442\""));
+        assertFalse("Statement should have no returning", statementModel.hasReturning());
     }
-    
-    public void testInsertIntoSelect() throws Exception {
+
+    @Test
+    public void insert_values_quotedTable() throws Exception {
         JaybirdSqlParser parser = createParser(
-            "Insert Into someTable " +
-            "Select * From anotherTable");
-        
-        parser.statement().getTree();
-        assertEquals("someTable", parser.getStatementModel().getTableName());        
+                "insert into \"someTable\"(a, b, c) values('a', -1.23, a(a,aa))");
+
+        parser.statement();
+
+        JaybirdStatementModel statementModel = parser.getStatementModel();
+        assertEquals("Unexpected statement type", JaybirdStatementModel.INSERT_TYPE, statementModel.getStatementType());
+        assertEquals("Unexpected table name", "\"someTable\"", statementModel.getTableName());
+        assertFalse("Statement should have no returning", statementModel.hasReturning());
     }
-    
-    public void testInsertWithCase() throws Exception {
+
+    @Test
+    public void insert_values_withReturning() throws Exception {
         JaybirdSqlParser parser = createParser(
-            "Insert Into someTable ( col1, col2) " +
-            "values((case when a = 1 Then 2 else 3 end), 2)");
+                "insert into someTable(a, b, c) values('a', -1.23, a(a,aa)) returning id");
+
+        parser.statement();
+
+        JaybirdStatementModel statementModel = parser.getStatementModel();
+        assertEquals("Unexpected statement type", JaybirdStatementModel.INSERT_TYPE, statementModel.getStatementType());
+        assertEquals("Unexpected table name", "someTable", statementModel.getTableName());
+        assertTrue("Statement should have returning", statementModel.hasReturning());
+    }
+
+    @Test
+    public void insertIntoSelect() throws Exception {
+        JaybirdSqlParser parser = createParser("Insert Into someTable Select * From anotherTable");
         
-        parser.statement().getTree();
-        assertEquals("someTable", parser.getStatementModel().getTableName());
+        parser.statement();
+
+        JaybirdStatementModel statementModel = parser.getStatementModel();
+        assertEquals("Unexpected statement type", JaybirdStatementModel.INSERT_TYPE, statementModel.getStatementType());
+        assertEquals("someTable", statementModel.getTableName());
+        assertFalse("Statement should have no returning", statementModel.hasReturning());
+    }
+
+    @Test
+    @Ignore("See JDBC-394")
+    public void insertIntoSelect_withReturning() throws Exception {
+        JaybirdSqlParser parser = createParser("Insert Into someTable Select * From anotherTable returning id");
+
+        parser.statement();
+
+        JaybirdStatementModel statementModel = parser.getStatementModel();
+        assertEquals("Unexpected statement type", JaybirdStatementModel.INSERT_TYPE, statementModel.getStatementType());
+        assertEquals("someTable", statementModel.getTableName());
+        assertTrue("Statement should have returning", statementModel.hasReturning());
+    }
+
+    @Test
+    public void insertWithCase() throws Exception {
+        JaybirdSqlParser parser = createParser(
+                "Insert Into someTable ( col1, col2) values((case when a = 1 Then 2 else 3 end), 2)");
+        
+        parser.statement();
+
+        JaybirdStatementModel statementModel = parser.getStatementModel();
+        assertEquals("Unexpected statement type", JaybirdStatementModel.INSERT_TYPE, statementModel.getStatementType());
+        assertEquals("someTable", statementModel.getTableName());
         assertTrue(parser.getMismatchCount() > 0);
+        assertFalse("Statement should have no returning", statementModel.hasReturning());
     }
-    
-    public void testUpdate() throws Exception {
+
+    @Test
+    public void insertDefaultValues() throws Exception {
+        JaybirdSqlParser parser = createParser("INSERT INTO someTable DEFAULT VALUES");
+
+        parser.statement();
+
+        JaybirdStatementModel statementModel = parser.getStatementModel();
+        assertEquals("Unexpected statement type", JaybirdStatementModel.INSERT_TYPE, statementModel.getStatementType());
+        assertTrue("Expected default values", statementModel.isDefaultValues());
+        assertEquals("someTable", statementModel.getTableName());
+        assertFalse("Statement should have no returning", statementModel.hasReturning());
+    }
+
+    @Test
+    public void insertDefaultValues_withReturning() throws Exception {
+        JaybirdSqlParser parser = createParser("INSERT INTO someTable DEFAULT VALUES RETURNING \"ID\"");
+
+        parser.statement();
+
+        JaybirdStatementModel statementModel = parser.getStatementModel();
+        assertEquals("Unexpected statement type", JaybirdStatementModel.INSERT_TYPE, statementModel.getStatementType());
+        assertTrue("Expected default values", statementModel.isDefaultValues());
+        assertEquals("someTable", statementModel.getTableName());
+        assertTrue("Statement should have returning", statementModel.hasReturning());
+        assertThat("Should contain column \"ID\"", statementModel.getReturningColumns(), hasItem("\"ID\""));
+    }
+
+    @Test
+    public void update() throws Exception {
         JaybirdSqlParser parser = createParser(
-            "Update someTable Set " +
-            "col1 = 25, col2 = 'abc' Where 1=0 Returning col3");
+                "Update someTable Set col1 = 25, col2 = 'abc' Where 1=0");
         
-        parser.statement().getTree();
-        assertEquals("someTable", parser.getStatementModel().getTableName());
+        parser.statement();
+
+        JaybirdStatementModel statementModel = parser.getStatementModel();
+        assertEquals("Unexpected statement type", JaybirdStatementModel.UPDATE_TYPE, statementModel.getStatementType());
+        assertEquals("someTable", statementModel.getTableName());
         assertEquals(0, parser.getMismatchCount());
+    }
+
+    @Test
+    public void update_quotedTableName() throws Exception {
+        JaybirdSqlParser parser = createParser(
+                "Update \"someTable\" Set col1 = 25, col2 = 'abc' Where 1=0");
+
+        parser.statement();
+
+        JaybirdStatementModel statementModel = parser.getStatementModel();
+        assertEquals("Unexpected statement type", JaybirdStatementModel.UPDATE_TYPE, statementModel.getStatementType());
+        assertEquals("\"someTable\"", statementModel.getTableName());
+        assertEquals(0, parser.getMismatchCount());
+    }
+
+    @Test
+    public void update_withReturning() throws Exception {
+        JaybirdSqlParser parser = createParser(
+                "Update someTable Set col1 = 25, col2 = 'abc' Where 1=0 Returning col3");
+
+        parser.statement();
+
+        JaybirdStatementModel statementModel = parser.getStatementModel();
+        assertEquals("Unexpected statement type", JaybirdStatementModel.UPDATE_TYPE, statementModel.getStatementType());
+        assertEquals("someTable", statementModel.getTableName());
+        assertEquals(0, parser.getMismatchCount());
+        assertTrue("Statement should have returning", statementModel.hasReturning());
+    }
+
+    @Test
+    public void delete() throws Exception {
+        JaybirdSqlParser parser = createParser(
+                "DELETE FROM someTable Where 1=0");
+
+        parser.statement();
+
+        JaybirdStatementModel statementModel = parser.getStatementModel();
+        assertEquals("Unexpected statement type", JaybirdStatementModel.DELETE_TYPE, statementModel.getStatementType());
+        assertEquals("someTable", statementModel.getTableName());
+        assertEquals(0, parser.getMismatchCount());
+    }
+
+    @Test
+    public void delete_quotedTableName() throws Exception {
+        JaybirdSqlParser parser = createParser("delete from \"someTable\"");
+
+        parser.statement();
+
+        JaybirdStatementModel statementModel = parser.getStatementModel();
+        assertEquals("Unexpected statement type", JaybirdStatementModel.DELETE_TYPE, statementModel.getStatementType());
+        assertEquals("\"someTable\"", statementModel.getTableName());
+        assertEquals(0, parser.getMismatchCount());
+    }
+
+    @Test
+    public void delete_withReturning() throws Exception {
+        JaybirdSqlParser parser = createParser("Delete From someTable Returning col3");
+
+        parser.statement();
+
+        JaybirdStatementModel statementModel = parser.getStatementModel();
+        assertEquals("Unexpected statement type", JaybirdStatementModel.DELETE_TYPE, statementModel.getStatementType());
+        assertEquals("someTable", statementModel.getTableName());
+        assertEquals(0, parser.getMismatchCount());
+        assertTrue("Statement should have returning", statementModel.hasReturning());
+    }
+
+    @Test
+    public void select() throws Exception {
+        JaybirdSqlParser parser = createParser("select * from RDB$DATABASE");
+
+        parser.statement();
+
+        JaybirdStatementModel statementModel = parser.getStatementModel();
+        assertEquals("Expected default statement type (0)", 0, statementModel.getStatementType());
+        assertNull("Expected no table name", statementModel.getTableName());
     }
 }
