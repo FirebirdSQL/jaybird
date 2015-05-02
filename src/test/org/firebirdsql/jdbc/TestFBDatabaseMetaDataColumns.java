@@ -1,7 +1,5 @@
 /*
- * $Id$
- * 
- * Firebird Open Source J2ee connector - jdbc driver
+ * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -14,7 +12,7 @@
  * This file was created by members of the firebird development team.
  * All individual contributions remain the Copyright (C) of those
  * individuals.  Contributors to this file are either listed here or
- * can be obtained from a CVS history command.
+ * can be obtained from a source control history command.
  *
  * All rights reserved.
  */
@@ -43,6 +41,9 @@ public class TestFBDatabaseMetaDataColumns extends FBMetaDataTestBase<TestFBData
     public TestFBDatabaseMetaDataColumns(String name) {
         super(name, ColumnMetaData.class);
     }
+
+    public static final String CREATE_DOMAIN_WITH_DEFAULT =
+            "CREATE DOMAIN DOMAIN_WITH_DEFAULT AS VARCHAR(100) DEFAULT 'this is a default'";
 
     public static final String CREATE_COLUMN_METADATA_TEST_TABLE =
             "CREATE TABLE test_column_metadata (" + 
@@ -82,7 +83,9 @@ public class TestFBDatabaseMetaDataColumns extends FBMetaDataTestBase<TestFBData
             "    col_varchar_default_null VARCHAR(100) DEFAULT NULL," + 
             "    col_varchar_default_user VARCHAR(100) DEFAULT USER," + 
             "    col_varchar_default_literal VARCHAR(100) DEFAULT 'literal'," + 
-            "    col_varchar_generated VARCHAR(200) COMPUTED BY (col_varchar_default_user || ' ' || col_varchar_default_literal)" +
+            "    col_varchar_generated VARCHAR(200) COMPUTED BY (col_varchar_default_user || ' ' || col_varchar_default_literal)," +
+            "    col_domain_with_default DOMAIN_WITH_DEFAULT," +
+            "    col_domain_w_default_overridden DOMAIN_WITH_DEFAULT DEFAULT 'overridden default'" +
             ")";
 
     public static final String ADD_COMMENT_ON_COLUMN = 
@@ -90,7 +93,8 @@ public class TestFBDatabaseMetaDataColumns extends FBMetaDataTestBase<TestFBData
 
     protected List<String> getCreateStatements() {
         FirebirdSupportInfo supportInfo = supportInfoFor(con);
-        List<String> statements = new ArrayList<String>();
+        List<String> statements = new ArrayList<>();
+        statements.add(CREATE_DOMAIN_WITH_DEFAULT);
         if (supportInfo.supportsBigint()) {
             statements.add(CREATE_COLUMN_METADATA_TEST_TABLE);
         } else {
@@ -705,6 +709,38 @@ public class TestFBDatabaseMetaDataColumns extends FBMetaDataTestBase<TestFBData
 
         validate("test_column_metadata", "col_blob_binary", validationRules);
     }
+
+    /**
+     * Tests getColumns() metadata for a column that is defined through a domain with a
+     * default (VARCHAR(100) DEFAULT 'this is a default')
+     */
+    public void testDomainWithDefaultColumn() throws Exception {
+        Map<ColumnMetaData, Object> validationRules = getDefaultValueValidationRules();
+        validationRules.put(ColumnMetaData.DATA_TYPE, Types.VARCHAR);
+        validationRules.put(ColumnMetaData.TYPE_NAME, "VARCHAR");
+        validationRules.put(ColumnMetaData.COLUMN_SIZE, 100);
+        validationRules.put(ColumnMetaData.ORDINAL_POSITION, 38);
+        validationRules.put(ColumnMetaData.CHAR_OCTET_LENGTH, 100);
+        validationRules.put(ColumnMetaData.COLUMN_DEF, "'this is a default'");
+
+        validate("test_column_metadata", "col_domain_with_default", validationRules);
+    }
+
+    /**
+     * Tests getColumns() metadata for a column that is defined through a domain with a
+     * default (VARCHAR(100) DEFAULT 'this is a default') and has its own default.
+     */
+    public void testDomainWithDefaultOverriddenColumn() throws Exception {
+        Map<ColumnMetaData, Object> validationRules = getDefaultValueValidationRules();
+        validationRules.put(ColumnMetaData.DATA_TYPE, Types.VARCHAR);
+        validationRules.put(ColumnMetaData.TYPE_NAME, "VARCHAR");
+        validationRules.put(ColumnMetaData.COLUMN_SIZE, 100);
+        validationRules.put(ColumnMetaData.ORDINAL_POSITION, 39);
+        validationRules.put(ColumnMetaData.CHAR_OCTET_LENGTH, 100);
+        validationRules.put(ColumnMetaData.COLUMN_DEF, "'overridden default'");
+
+        validate("test_column_metadata", "col_domain_w_default_overridden", validationRules);
+    }
     
     // TODO: Add more extensive tests of patterns
 
@@ -733,7 +769,7 @@ public class TestFBDatabaseMetaDataColumns extends FBMetaDataTestBase<TestFBData
 
     private static final Map<ColumnMetaData, Object> DEFAULT_COLUMN_VALUES;
     static {
-        Map<ColumnMetaData, Object> defaults = new EnumMap<ColumnMetaData, Object>(ColumnMetaData.class);
+        Map<ColumnMetaData, Object> defaults = new EnumMap<>(ColumnMetaData.class);
         defaults.put(ColumnMetaData.TABLE_CAT, null);
         defaults.put(ColumnMetaData.TABLE_SCHEM, null);
         defaults.put(ColumnMetaData.BUFFER_LENGTH, null);
@@ -756,7 +792,7 @@ public class TestFBDatabaseMetaDataColumns extends FBMetaDataTestBase<TestFBData
     }
 
     protected Map<ColumnMetaData, Object> getDefaultValueValidationRules() throws Exception {
-        Map<ColumnMetaData, Object> defaults = new EnumMap<ColumnMetaData, Object>(DEFAULT_COLUMN_VALUES);
+        Map<ColumnMetaData, Object> defaults = new EnumMap<>(DEFAULT_COLUMN_VALUES);
         if (dbmd.getJDBCMajorVersion() > 4 || dbmd.getJDBCMajorVersion() == 4 && dbmd.getJDBCMinorVersion() >= 1) {
             defaults.put(ColumnMetaData.SCOPE_CATALOG, null);
         } else {
@@ -829,7 +865,7 @@ public class TestFBDatabaseMetaDataColumns extends FBMetaDataTestBase<TestFBData
         }
         
         public MetaDataValidator<?> getValidator() {
-            return new MetaDataValidator<ColumnMetaData>(this);
+            return new MetaDataValidator<>(this);
         }
     }
 }

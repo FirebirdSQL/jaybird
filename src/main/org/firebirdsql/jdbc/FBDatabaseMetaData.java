@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
@@ -2364,6 +2362,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
             "F.RDB$CHARACTER_LENGTH AS CHAR_LEN," +
             "RF.RDB$DESCRIPTION AS REMARKS," +
             "RF.RDB$DEFAULT_SOURCE AS DEFAULT_SOURCE," +
+            "F.RDB$DEFAULT_SOURCE AS DOMAIN_DEFAULT_SOURCE," +
             "RF.RDB$FIELD_POSITION + 1 AS FIELD_POSITION," +
             "RF.RDB$NULL_FLAG AS NULL_FLAG," +
             "F.RDB$NULL_FLAG AS SOURCE_NULL_FLAG," +
@@ -2614,6 +2613,9 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
                         .at(11).set(getBytes(rs.getString("REMARKS")));
 
                 String column_def = rs.getString("DEFAULT_SOURCE");
+                if (column_def == null) {
+                    column_def = rs.getString("DOMAIN_DEFAULT_SOURCE");
+                }
                 if (column_def != null) {
                     // TODO This looks suspicious (what if it contain default)
                     int defaultPos = column_def.toUpperCase().indexOf("DEFAULT");
