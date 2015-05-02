@@ -45,6 +45,9 @@ public class TestFBDatabaseMetaDataColumns extends FBMetaDataTestBase<TestFBData
         super(name, ColumnMetaData.class);
     }
 
+    public static final String CREATE_DOMAIN_WITH_DEFAULT =
+            "CREATE DOMAIN DOMAIN_WITH_DEFAULT AS VARCHAR(100) DEFAULT 'this is a default'";
+
     public static final String CREATE_COLUMN_METADATA_TEST_TABLE =
             "CREATE TABLE test_column_metadata (" + 
             "    col_integer INTEGER," + 
@@ -82,8 +85,10 @@ public class TestFBDatabaseMetaDataColumns extends FBMetaDataTestBase<TestFBData
             "    col_integer_default_999 INTEGER DEFAULT 999," + 
             "    col_varchar_default_null VARCHAR(100) DEFAULT NULL," + 
             "    col_varchar_default_user VARCHAR(100) DEFAULT USER," + 
-            "    col_varchar_default_literal VARCHAR(100) DEFAULT 'literal'," + 
-            "    col_varchar_generated VARCHAR(200) COMPUTED BY (col_varchar_default_user || ' ' || col_varchar_default_literal)" +
+            "    col_varchar_default_literal VARCHAR(100) DEFAULT 'literal'," +
+            "    col_varchar_generated VARCHAR(200) COMPUTED BY (col_varchar_default_user || ' ' || col_varchar_default_literal)," +
+            "    col_domain_with_default DOMAIN_WITH_DEFAULT," +
+            "    col_domain_w_default_overridden DOMAIN_WITH_DEFAULT DEFAULT 'overridden default'" +
             ")";
 
     public static final String ADD_COMMENT_ON_COLUMN = 
@@ -99,6 +104,7 @@ public class TestFBDatabaseMetaDataColumns extends FBMetaDataTestBase<TestFBData
     
     protected List<String> getCreateStatements() {
         return Arrays.asList(
+                CREATE_DOMAIN_WITH_DEFAULT,
                 CREATE_COLUMN_METADATA_TEST_TABLE,
                 ADD_COMMENT_ON_COLUMN);
     }
@@ -703,6 +709,38 @@ public class TestFBDatabaseMetaDataColumns extends FBMetaDataTestBase<TestFBData
         validationRules.put(ColumnMetaData.ORDINAL_POSITION, 29);
 
         validate("test_column_metadata", "col_blob_binary", validationRules);
+    }
+
+    /**
+     * Tests getColumns() metadata for a column that is defined through a domain with a
+     * default (VARCHAR(100) DEFAULT 'this is a default')
+     */
+    public void testDomainWithDefaultColumn() throws Exception {
+        Map<ColumnMetaData, Object> validationRules = getDefaultValueValidationRules();
+        validationRules.put(ColumnMetaData.DATA_TYPE, Types.VARCHAR);
+        validationRules.put(ColumnMetaData.TYPE_NAME, "VARCHAR");
+        validationRules.put(ColumnMetaData.COLUMN_SIZE, 100);
+        validationRules.put(ColumnMetaData.ORDINAL_POSITION, 38);
+        validationRules.put(ColumnMetaData.CHAR_OCTET_LENGTH, 100);
+        validationRules.put(ColumnMetaData.COLUMN_DEF, "'this is a default'");
+
+        validate("test_column_metadata", "col_domain_with_default", validationRules);
+    }
+
+    /**
+     * Tests getColumns() metadata for a column that is defined through a domain with a
+     * default (VARCHAR(100) DEFAULT 'this is a default') and has its own default.
+     */
+    public void testDomainWithDefaultOverriddenColumn() throws Exception {
+        Map<ColumnMetaData, Object> validationRules = getDefaultValueValidationRules();
+        validationRules.put(ColumnMetaData.DATA_TYPE, Types.VARCHAR);
+        validationRules.put(ColumnMetaData.TYPE_NAME, "VARCHAR");
+        validationRules.put(ColumnMetaData.COLUMN_SIZE, 100);
+        validationRules.put(ColumnMetaData.ORDINAL_POSITION, 39);
+        validationRules.put(ColumnMetaData.CHAR_OCTET_LENGTH, 100);
+        validationRules.put(ColumnMetaData.COLUMN_DEF, "'overridden default'");
+
+        validate("test_column_metadata", "col_domain_w_default_overridden", validationRules);
     }
     
     // TODO: Add more extensive tests of patterns

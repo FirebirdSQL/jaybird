@@ -2541,6 +2541,7 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
     		"F.RDB$CHARACTER_LENGTH AS CHAR_LEN," +
     		"RF.RDB$DESCRIPTION AS REMARKS," +
     		"RF.RDB$DEFAULT_SOURCE AS DEFAULT_SOURCE," +
+            "F.RDB$DEFAULT_SOURCE AS DOMAIN_DEFAULT_SOURCE," +
     		"RF.RDB$FIELD_POSITION + 1 AS FIELD_POSITION," +
     		"RF.RDB$NULL_FLAG AS NULL_FLAG," +
     		"F.RDB$NULL_FLAG AS SOURCE_NULL_FLAG," +
@@ -2909,6 +2910,9 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
                 xsqlvars[11].sqllen = remarks.length();
             
             String column_def = rs.getString("DEFAULT_SOURCE");
+            if (column_def == null) {
+                column_def = rs.getString("DOMAIN_DEFAULT_SOURCE");
+            }
             if (column_def != null) {
                 int defaultPos = column_def.toUpperCase().indexOf("DEFAULT");
                 if (defaultPos >= 0)
