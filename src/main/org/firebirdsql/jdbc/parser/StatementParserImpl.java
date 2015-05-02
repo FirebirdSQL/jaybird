@@ -38,9 +38,12 @@ public class StatementParserImpl implements StatementParser {
             CommonTokenStream tokenStream = new CommonTokenStream(lexer);
             
             JaybirdSqlParser parser = new JaybirdSqlParser(tokenStream);
-            parser.statement().getTree();
+            parser.statement();
 
             JaybirdStatementModel statementModel = parser.getStatementModel();
+            if (statementModel.getStatementType() == JaybirdStatementModel.UNDETECTED_TYPE) {
+                throw new ParseException("Unable to detect statement type or unsupported statement type");
+            }
             if (statementModel.getTableName() == null) {
                 throw new ParseException("Unable to parse query: no table name found");
             }

@@ -1,4 +1,4 @@
-// $ANTLR 3.4 D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g 2011-10-30 20:15:37
+// $ANTLR 3.4 JaybirdSql.g 2015-05-02 17:09:43
 
 package org.firebirdsql.jdbc.parser;
 
@@ -115,7 +115,7 @@ public class JaybirdSqlParser extends Parser {
     }
     public JaybirdSqlParser(TokenStream input, RecognizerSharedState state) {
         super(input, state);
-        this.state.ruleMemo = new HashMap[139+1];
+        this.state.ruleMemo = new HashMap[141+1];
          
 
     }
@@ -129,60 +129,55 @@ public TreeAdaptor getTreeAdaptor() {
     return adaptor;
 }
     public String[] getTokenNames() { return JaybirdSqlParser.tokenNames; }
-    public String getGrammarFileName() { return "D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g"; }
+    public String getGrammarFileName() { return "JaybirdSql.g"; }
 
 
-    	private boolean _inReturning;
-    	protected boolean _defaultValues;
-    	protected JaybirdStatementModel statementModel = new JaybirdStatementModel();
-    	
-    	protected int _mismatchCount;
-    	protected java.util.ArrayList _errorMessages = new java.util.ArrayList();
-    	
-    	
-    	public boolean hasReturning() {
-    		return statementModel.getReturningColumns().size() == 0;
-    	}
-    	
-    	public JaybirdStatementModel getStatementModel() {
-    		return statementModel;
-    	}
-    	
-    	public int getMismatchCount() {
-    		return _mismatchCount;
-    	}
-    	
-    	public java.util.Collection getErrorMessages() {
-    		return _errorMessages;
-    	}
-    	
-    	public String getColumn(int index) {
-    		return (String)statementModel.getColumns().get(index);
-    	}
-    	
-    	public String getValue(int index) {
-    		return (String)statementModel.getValues().get(index);
-    	}
-    	
-    	public String getTableName() {
-    		return statementModel.getTableName();
-    	}
-    	
-      public boolean mismatchIsUnwantedToken(IntStream input, int ttype) {
-        boolean result = super.mismatchIsUnwantedToken(input, ttype);
-        _mismatchCount++;
-        return result;
-      }
+        private boolean _inReturning;
+        protected boolean _defaultValues;
+        protected JaybirdStatementModel statementModel = new JaybirdStatementModel();
+        
+        protected int _mismatchCount;
+        protected java.util.ArrayList _errorMessages = new java.util.ArrayList();
+        
+        public JaybirdStatementModel getStatementModel() {
+            return statementModel;
+        }
+        
+        public int getMismatchCount() {
+            return _mismatchCount;
+        }
+        
+        public java.util.Collection getErrorMessages() {
+            return _errorMessages;
+        }
+        
+        public String getColumn(int index) {
+            return (String)statementModel.getColumns().get(index);
+        }
+        
+        public String getValue(int index) {
+            return (String)statementModel.getValues().get(index);
+        }
+        
+        public String getTableName() {
+            return statementModel.getTableName();
+        }
+        
+        public boolean mismatchIsUnwantedToken(IntStream input, int ttype) {
+            boolean result = super.mismatchIsUnwantedToken(input, ttype);
+            _mismatchCount++;
+            return result;
+        }
 
-      public boolean mismatchIsMissingToken(IntStream input, BitSet follow) {
-        boolean result = super.mismatchIsMissingToken(input, follow);
-        _mismatchCount++;
-        return result;
-      }
+        public boolean mismatchIsMissingToken(IntStream input, BitSet follow) {
+            boolean result = super.mismatchIsMissingToken(input, follow);
+            _mismatchCount++;
+            return result;
+        }
 
-    	public void emitErrorMessage(String msg) {
-    		_errorMessages.add(msg);
-    	}
+        public void emitErrorMessage(String msg) {
+            _errorMessages.add(msg);
+        }
 
 
     public static class statement_return extends ParserRuleReturnScope {
@@ -192,7 +187,7 @@ public TreeAdaptor getTreeAdaptor() {
 
 
     // $ANTLR start "statement"
-    // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:185:1: statement : ( insertStatement | deleteStatement | updateStatement | updateOrInsertStatement );
+    // JaybirdSql.g:180:1: statement : ( insertStatement | deleteStatement | updateStatement | updateOrInsertStatement );
     public final JaybirdSqlParser.statement_return statement() throws RecognitionException {
         JaybirdSqlParser.statement_return retval = new JaybirdSqlParser.statement_return();
         retval.start = input.LT(1);
@@ -214,7 +209,7 @@ public TreeAdaptor getTreeAdaptor() {
         try {
             if ( state.backtracking>0 && alreadyParsedRule(input, 1) ) { return retval; }
 
-            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:186:3: ( insertStatement | deleteStatement | updateStatement | updateOrInsertStatement )
+            // JaybirdSql.g:181:9: ( insertStatement | deleteStatement | updateStatement | updateOrInsertStatement )
             int alt1=4;
             switch ( input.LA(1) ) {
             case INSERT:
@@ -258,12 +253,12 @@ public TreeAdaptor getTreeAdaptor() {
 
             switch (alt1) {
                 case 1 :
-                    // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:186:5: insertStatement
+                    // JaybirdSql.g:181:14: insertStatement
                     {
                     root_0 = (CommonTree)adaptor.nil();
 
 
-                    pushFollow(FOLLOW_insertStatement_in_statement474);
+                    pushFollow(FOLLOW_insertStatement_in_statement708);
                     insertStatement1=insertStatement();
 
                     state._fsp--;
@@ -273,12 +268,12 @@ public TreeAdaptor getTreeAdaptor() {
                     }
                     break;
                 case 2 :
-                    // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:187:5: deleteStatement
+                    // JaybirdSql.g:182:14: deleteStatement
                     {
                     root_0 = (CommonTree)adaptor.nil();
 
 
-                    pushFollow(FOLLOW_deleteStatement_in_statement480);
+                    pushFollow(FOLLOW_deleteStatement_in_statement723);
                     deleteStatement2=deleteStatement();
 
                     state._fsp--;
@@ -288,12 +283,12 @@ public TreeAdaptor getTreeAdaptor() {
                     }
                     break;
                 case 3 :
-                    // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:188:5: updateStatement
+                    // JaybirdSql.g:183:14: updateStatement
                     {
                     root_0 = (CommonTree)adaptor.nil();
 
 
-                    pushFollow(FOLLOW_updateStatement_in_statement486);
+                    pushFollow(FOLLOW_updateStatement_in_statement738);
                     updateStatement3=updateStatement();
 
                     state._fsp--;
@@ -303,12 +298,12 @@ public TreeAdaptor getTreeAdaptor() {
                     }
                     break;
                 case 4 :
-                    // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:190:5: updateOrInsertStatement
+                    // JaybirdSql.g:185:14: updateOrInsertStatement
                     {
                     root_0 = (CommonTree)adaptor.nil();
 
 
-                    pushFollow(FOLLOW_updateOrInsertStatement_in_statement493);
+                    pushFollow(FOLLOW_updateOrInsertStatement_in_statement754);
                     updateOrInsertStatement4=updateOrInsertStatement();
 
                     state._fsp--;
@@ -352,7 +347,7 @@ public TreeAdaptor getTreeAdaptor() {
 
 
     // $ANTLR start "deleteStatement"
-    // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:210:1: deleteStatement : DELETE FROM tableName ;
+    // JaybirdSql.g:205:1: deleteStatement : DELETE FROM tableName ( returningClause )? ;
     public final JaybirdSqlParser.deleteStatement_return deleteStatement() throws RecognitionException {
         JaybirdSqlParser.deleteStatement_return retval = new JaybirdSqlParser.deleteStatement_return();
         retval.start = input.LT(1);
@@ -365,6 +360,8 @@ public TreeAdaptor getTreeAdaptor() {
         Token FROM6=null;
         JaybirdSqlParser.tableName_return tableName7 =null;
 
+        JaybirdSqlParser.returningClause_return returningClause8 =null;
+
 
         CommonTree DELETE5_tree=null;
         CommonTree FROM6_tree=null;
@@ -372,13 +369,13 @@ public TreeAdaptor getTreeAdaptor() {
         try {
             if ( state.backtracking>0 && alreadyParsedRule(input, 2) ) { return retval; }
 
-            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:210:17: ( DELETE FROM tableName )
-            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:211:4: DELETE FROM tableName
+            // JaybirdSql.g:205:20: ( DELETE FROM tableName ( returningClause )? )
+            // JaybirdSql.g:206:13: DELETE FROM tableName ( returningClause )?
             {
             root_0 = (CommonTree)adaptor.nil();
 
 
-            DELETE5=(Token)match(input,DELETE,FOLLOW_DELETE_in_deleteStatement510); if (state.failed) return retval;
+            DELETE5=(Token)match(input,DELETE,FOLLOW_DELETE_in_deleteStatement789); if (state.failed) return retval;
             if ( state.backtracking==0 ) {
             DELETE5_tree = 
             (CommonTree)adaptor.create(DELETE5)
@@ -386,7 +383,7 @@ public TreeAdaptor getTreeAdaptor() {
             adaptor.addChild(root_0, DELETE5_tree);
             }
 
-            FROM6=(Token)match(input,FROM,FOLLOW_FROM_in_deleteStatement512); if (state.failed) return retval;
+            FROM6=(Token)match(input,FROM,FOLLOW_FROM_in_deleteStatement791); if (state.failed) return retval;
             if ( state.backtracking==0 ) {
             FROM6_tree = 
             (CommonTree)adaptor.create(FROM6)
@@ -394,16 +391,40 @@ public TreeAdaptor getTreeAdaptor() {
             adaptor.addChild(root_0, FROM6_tree);
             }
 
-            pushFollow(FOLLOW_tableName_in_deleteStatement514);
+            pushFollow(FOLLOW_tableName_in_deleteStatement793);
             tableName7=tableName();
 
             state._fsp--;
             if (state.failed) return retval;
             if ( state.backtracking==0 ) adaptor.addChild(root_0, tableName7.getTree());
 
+            // JaybirdSql.g:206:71: ( returningClause )?
+            int alt2=2;
+            int LA2_0 = input.LA(1);
+
+            if ( (LA2_0==RETURNING) ) {
+                alt2=1;
+            }
+            switch (alt2) {
+                case 1 :
+                    // JaybirdSql.g:206:71: returningClause
+                    {
+                    pushFollow(FOLLOW_returningClause_in_deleteStatement797);
+                    returningClause8=returningClause();
+
+                    state._fsp--;
+                    if (state.failed) return retval;
+                    if ( state.backtracking==0 ) adaptor.addChild(root_0, returningClause8.getTree());
+
+                    }
+                    break;
+
+            }
+
+
             if ( state.backtracking==0 ) {
-            				statementModel.setStatementType(JaybirdStatementModel.DELETE_TYPE);
-            			}
+                            statementModel.setStatementType(JaybirdStatementModel.DELETE_TYPE);
+                        }
 
             }
 
@@ -440,7 +461,7 @@ public TreeAdaptor getTreeAdaptor() {
 
 
     // $ANTLR start "updateStatement"
-    // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:234:1: updateStatement : UPDATE tableName SET assignments ;
+    // JaybirdSql.g:229:1: updateStatement : UPDATE tableName SET assignments ( returningClause )? ;
     public final JaybirdSqlParser.updateStatement_return updateStatement() throws RecognitionException {
         JaybirdSqlParser.updateStatement_return retval = new JaybirdSqlParser.updateStatement_return();
         retval.start = input.LT(1);
@@ -449,58 +470,84 @@ public TreeAdaptor getTreeAdaptor() {
 
         CommonTree root_0 = null;
 
-        Token UPDATE8=null;
-        Token SET10=null;
-        JaybirdSqlParser.tableName_return tableName9 =null;
+        Token UPDATE9=null;
+        Token SET11=null;
+        JaybirdSqlParser.tableName_return tableName10 =null;
 
-        JaybirdSqlParser.assignments_return assignments11 =null;
+        JaybirdSqlParser.assignments_return assignments12 =null;
+
+        JaybirdSqlParser.returningClause_return returningClause13 =null;
 
 
-        CommonTree UPDATE8_tree=null;
-        CommonTree SET10_tree=null;
+        CommonTree UPDATE9_tree=null;
+        CommonTree SET11_tree=null;
 
         try {
             if ( state.backtracking>0 && alreadyParsedRule(input, 3) ) { return retval; }
 
-            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:234:17: ( UPDATE tableName SET assignments )
-            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:235:4: UPDATE tableName SET assignments
+            // JaybirdSql.g:229:20: ( UPDATE tableName SET assignments ( returningClause )? )
+            // JaybirdSql.g:230:13: UPDATE tableName SET assignments ( returningClause )?
             {
             root_0 = (CommonTree)adaptor.nil();
 
 
-            UPDATE8=(Token)match(input,UPDATE,FOLLOW_UPDATE_in_updateStatement538); if (state.failed) return retval;
+            UPDATE9=(Token)match(input,UPDATE,FOLLOW_UPDATE_in_updateStatement855); if (state.failed) return retval;
             if ( state.backtracking==0 ) {
-            UPDATE8_tree = 
-            (CommonTree)adaptor.create(UPDATE8)
+            UPDATE9_tree = 
+            (CommonTree)adaptor.create(UPDATE9)
             ;
-            adaptor.addChild(root_0, UPDATE8_tree);
+            adaptor.addChild(root_0, UPDATE9_tree);
             }
 
-            pushFollow(FOLLOW_tableName_in_updateStatement540);
-            tableName9=tableName();
+            pushFollow(FOLLOW_tableName_in_updateStatement857);
+            tableName10=tableName();
 
             state._fsp--;
             if (state.failed) return retval;
-            if ( state.backtracking==0 ) adaptor.addChild(root_0, tableName9.getTree());
+            if ( state.backtracking==0 ) adaptor.addChild(root_0, tableName10.getTree());
 
-            SET10=(Token)match(input,SET,FOLLOW_SET_in_updateStatement542); if (state.failed) return retval;
+            SET11=(Token)match(input,SET,FOLLOW_SET_in_updateStatement859); if (state.failed) return retval;
             if ( state.backtracking==0 ) {
-            SET10_tree = 
-            (CommonTree)adaptor.create(SET10)
+            SET11_tree = 
+            (CommonTree)adaptor.create(SET11)
             ;
-            adaptor.addChild(root_0, SET10_tree);
+            adaptor.addChild(root_0, SET11_tree);
             }
 
-            pushFollow(FOLLOW_assignments_in_updateStatement544);
-            assignments11=assignments();
+            pushFollow(FOLLOW_assignments_in_updateStatement861);
+            assignments12=assignments();
 
             state._fsp--;
             if (state.failed) return retval;
-            if ( state.backtracking==0 ) adaptor.addChild(root_0, assignments11.getTree());
+            if ( state.backtracking==0 ) adaptor.addChild(root_0, assignments12.getTree());
+
+            // JaybirdSql.g:230:82: ( returningClause )?
+            int alt3=2;
+            int LA3_0 = input.LA(1);
+
+            if ( (LA3_0==RETURNING) ) {
+                alt3=1;
+            }
+            switch (alt3) {
+                case 1 :
+                    // JaybirdSql.g:230:82: returningClause
+                    {
+                    pushFollow(FOLLOW_returningClause_in_updateStatement865);
+                    returningClause13=returningClause();
+
+                    state._fsp--;
+                    if (state.failed) return retval;
+                    if ( state.backtracking==0 ) adaptor.addChild(root_0, returningClause13.getTree());
+
+                    }
+                    break;
+
+            }
+
 
             if ( state.backtracking==0 ) {
-            				statementModel.setStatementType(JaybirdStatementModel.UPDATE_TYPE);
-            			}
+                            statementModel.setStatementType(JaybirdStatementModel.UPDATE_TYPE);
+                        }
 
             }
 
@@ -537,7 +584,7 @@ public TreeAdaptor getTreeAdaptor() {
 
 
     // $ANTLR start "assignments"
-    // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:241:1: assignments : assignment ( ',' assignment )* ;
+    // JaybirdSql.g:236:1: assignments : assignment ( ',' assignment )* ;
     public final JaybirdSqlParser.assignments_return assignments() throws RecognitionException {
         JaybirdSqlParser.assignments_return retval = new JaybirdSqlParser.assignments_return();
         retval.start = input.LT(1);
@@ -546,65 +593,65 @@ public TreeAdaptor getTreeAdaptor() {
 
         CommonTree root_0 = null;
 
-        Token char_literal13=null;
-        JaybirdSqlParser.assignment_return assignment12 =null;
-
+        Token char_literal15=null;
         JaybirdSqlParser.assignment_return assignment14 =null;
 
+        JaybirdSqlParser.assignment_return assignment16 =null;
 
-        CommonTree char_literal13_tree=null;
+
+        CommonTree char_literal15_tree=null;
 
         try {
             if ( state.backtracking>0 && alreadyParsedRule(input, 4) ) { return retval; }
 
-            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:241:13: ( assignment ( ',' assignment )* )
-            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:241:15: assignment ( ',' assignment )*
+            // JaybirdSql.g:236:16: ( assignment ( ',' assignment )* )
+            // JaybirdSql.g:236:21: assignment ( ',' assignment )*
             {
             root_0 = (CommonTree)adaptor.nil();
 
 
-            pushFollow(FOLLOW_assignment_in_assignments562);
-            assignment12=assignment();
+            pushFollow(FOLLOW_assignment_in_assignments911);
+            assignment14=assignment();
 
             state._fsp--;
             if (state.failed) return retval;
-            if ( state.backtracking==0 ) adaptor.addChild(root_0, assignment12.getTree());
+            if ( state.backtracking==0 ) adaptor.addChild(root_0, assignment14.getTree());
 
-            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:241:26: ( ',' assignment )*
-            loop2:
+            // JaybirdSql.g:236:32: ( ',' assignment )*
+            loop4:
             do {
-                int alt2=2;
-                int LA2_0 = input.LA(1);
+                int alt4=2;
+                int LA4_0 = input.LA(1);
 
-                if ( (LA2_0==COMMA) ) {
-                    alt2=1;
+                if ( (LA4_0==COMMA) ) {
+                    alt4=1;
                 }
 
 
-                switch (alt2) {
+                switch (alt4) {
             	case 1 :
-            	    // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:241:27: ',' assignment
+            	    // JaybirdSql.g:236:33: ',' assignment
             	    {
-            	    char_literal13=(Token)match(input,COMMA,FOLLOW_COMMA_in_assignments565); if (state.failed) return retval;
+            	    char_literal15=(Token)match(input,COMMA,FOLLOW_COMMA_in_assignments914); if (state.failed) return retval;
             	    if ( state.backtracking==0 ) {
-            	    char_literal13_tree = 
-            	    (CommonTree)adaptor.create(char_literal13)
+            	    char_literal15_tree = 
+            	    (CommonTree)adaptor.create(char_literal15)
             	    ;
-            	    adaptor.addChild(root_0, char_literal13_tree);
+            	    adaptor.addChild(root_0, char_literal15_tree);
             	    }
 
-            	    pushFollow(FOLLOW_assignment_in_assignments567);
-            	    assignment14=assignment();
+            	    pushFollow(FOLLOW_assignment_in_assignments916);
+            	    assignment16=assignment();
 
             	    state._fsp--;
             	    if (state.failed) return retval;
-            	    if ( state.backtracking==0 ) adaptor.addChild(root_0, assignment14.getTree());
+            	    if ( state.backtracking==0 ) adaptor.addChild(root_0, assignment16.getTree());
 
             	    }
             	    break;
 
             	default :
-            	    break loop2;
+            	    break loop4;
                 }
             } while (true);
 
@@ -644,7 +691,7 @@ public TreeAdaptor getTreeAdaptor() {
 
 
     // $ANTLR start "assignment"
-    // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:244:1: assignment : columnName '=' value ;
+    // JaybirdSql.g:239:1: assignment : columnName '=' value ;
     public final JaybirdSqlParser.assignment_return assignment() throws RecognitionException {
         JaybirdSqlParser.assignment_return retval = new JaybirdSqlParser.assignment_return();
         retval.start = input.LT(1);
@@ -653,44 +700,44 @@ public TreeAdaptor getTreeAdaptor() {
 
         CommonTree root_0 = null;
 
-        Token char_literal16=null;
-        JaybirdSqlParser.columnName_return columnName15 =null;
+        Token char_literal18=null;
+        JaybirdSqlParser.columnName_return columnName17 =null;
 
-        JaybirdSqlParser.value_return value17 =null;
+        JaybirdSqlParser.value_return value19 =null;
 
 
-        CommonTree char_literal16_tree=null;
+        CommonTree char_literal18_tree=null;
 
         try {
             if ( state.backtracking>0 && alreadyParsedRule(input, 5) ) { return retval; }
 
-            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:244:12: ( columnName '=' value )
-            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:244:14: columnName '=' value
+            // JaybirdSql.g:239:15: ( columnName '=' value )
+            // JaybirdSql.g:239:20: columnName '=' value
             {
             root_0 = (CommonTree)adaptor.nil();
 
 
-            pushFollow(FOLLOW_columnName_in_assignment582);
-            columnName15=columnName();
+            pushFollow(FOLLOW_columnName_in_assignment949);
+            columnName17=columnName();
 
             state._fsp--;
             if (state.failed) return retval;
-            if ( state.backtracking==0 ) adaptor.addChild(root_0, columnName15.getTree());
+            if ( state.backtracking==0 ) adaptor.addChild(root_0, columnName17.getTree());
 
-            char_literal16=(Token)match(input,80,FOLLOW_80_in_assignment584); if (state.failed) return retval;
+            char_literal18=(Token)match(input,80,FOLLOW_80_in_assignment951); if (state.failed) return retval;
             if ( state.backtracking==0 ) {
-            char_literal16_tree = 
-            (CommonTree)adaptor.create(char_literal16)
+            char_literal18_tree = 
+            (CommonTree)adaptor.create(char_literal18)
             ;
-            adaptor.addChild(root_0, char_literal16_tree);
+            adaptor.addChild(root_0, char_literal18_tree);
             }
 
-            pushFollow(FOLLOW_value_in_assignment586);
-            value17=value();
+            pushFollow(FOLLOW_value_in_assignment953);
+            value19=value();
 
             state._fsp--;
             if (state.failed) return retval;
-            if ( state.backtracking==0 ) adaptor.addChild(root_0, value17.getTree());
+            if ( state.backtracking==0 ) adaptor.addChild(root_0, value19.getTree());
 
             }
 
@@ -727,7 +774,7 @@ public TreeAdaptor getTreeAdaptor() {
 
 
     // $ANTLR start "updateOrInsertStatement"
-    // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:260:1: updateOrInsertStatement : UPDATE OR INSERT INTO tableName ( insertColumns )? insertValues ( matchingClause )? ( returningClause )? ;
+    // JaybirdSql.g:255:1: updateOrInsertStatement : UPDATE OR INSERT INTO tableName ( insertColumns )? insertValues ( matchingClause )? ( returningClause )? ;
     public final JaybirdSqlParser.updateOrInsertStatement_return updateOrInsertStatement() throws RecognitionException {
         JaybirdSqlParser.updateOrInsertStatement_return retval = new JaybirdSqlParser.updateOrInsertStatement_return();
         retval.start = input.LT(1);
@@ -736,146 +783,146 @@ public TreeAdaptor getTreeAdaptor() {
 
         CommonTree root_0 = null;
 
-        Token UPDATE18=null;
-        Token OR19=null;
-        Token INSERT20=null;
-        Token INTO21=null;
-        JaybirdSqlParser.tableName_return tableName22 =null;
+        Token UPDATE20=null;
+        Token OR21=null;
+        Token INSERT22=null;
+        Token INTO23=null;
+        JaybirdSqlParser.tableName_return tableName24 =null;
 
-        JaybirdSqlParser.insertColumns_return insertColumns23 =null;
+        JaybirdSqlParser.insertColumns_return insertColumns25 =null;
 
-        JaybirdSqlParser.insertValues_return insertValues24 =null;
+        JaybirdSqlParser.insertValues_return insertValues26 =null;
 
-        JaybirdSqlParser.matchingClause_return matchingClause25 =null;
+        JaybirdSqlParser.matchingClause_return matchingClause27 =null;
 
-        JaybirdSqlParser.returningClause_return returningClause26 =null;
+        JaybirdSqlParser.returningClause_return returningClause28 =null;
 
 
-        CommonTree UPDATE18_tree=null;
-        CommonTree OR19_tree=null;
-        CommonTree INSERT20_tree=null;
-        CommonTree INTO21_tree=null;
+        CommonTree UPDATE20_tree=null;
+        CommonTree OR21_tree=null;
+        CommonTree INSERT22_tree=null;
+        CommonTree INTO23_tree=null;
 
         try {
             if ( state.backtracking>0 && alreadyParsedRule(input, 6) ) { return retval; }
 
-            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:261:3: ( UPDATE OR INSERT INTO tableName ( insertColumns )? insertValues ( matchingClause )? ( returningClause )? )
-            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:261:5: UPDATE OR INSERT INTO tableName ( insertColumns )? insertValues ( matchingClause )? ( returningClause )?
+            // JaybirdSql.g:256:9: ( UPDATE OR INSERT INTO tableName ( insertColumns )? insertValues ( matchingClause )? ( returningClause )? )
+            // JaybirdSql.g:256:14: UPDATE OR INSERT INTO tableName ( insertColumns )? insertValues ( matchingClause )? ( returningClause )?
             {
             root_0 = (CommonTree)adaptor.nil();
 
 
-            UPDATE18=(Token)match(input,UPDATE,FOLLOW_UPDATE_in_updateOrInsertStatement603); if (state.failed) return retval;
+            UPDATE20=(Token)match(input,UPDATE,FOLLOW_UPDATE_in_updateOrInsertStatement991); if (state.failed) return retval;
             if ( state.backtracking==0 ) {
-            UPDATE18_tree = 
-            (CommonTree)adaptor.create(UPDATE18)
+            UPDATE20_tree = 
+            (CommonTree)adaptor.create(UPDATE20)
             ;
-            adaptor.addChild(root_0, UPDATE18_tree);
+            adaptor.addChild(root_0, UPDATE20_tree);
             }
 
-            OR19=(Token)match(input,OR,FOLLOW_OR_in_updateOrInsertStatement605); if (state.failed) return retval;
+            OR21=(Token)match(input,OR,FOLLOW_OR_in_updateOrInsertStatement993); if (state.failed) return retval;
             if ( state.backtracking==0 ) {
-            OR19_tree = 
-            (CommonTree)adaptor.create(OR19)
+            OR21_tree = 
+            (CommonTree)adaptor.create(OR21)
             ;
-            adaptor.addChild(root_0, OR19_tree);
+            adaptor.addChild(root_0, OR21_tree);
             }
 
-            INSERT20=(Token)match(input,INSERT,FOLLOW_INSERT_in_updateOrInsertStatement607); if (state.failed) return retval;
+            INSERT22=(Token)match(input,INSERT,FOLLOW_INSERT_in_updateOrInsertStatement995); if (state.failed) return retval;
             if ( state.backtracking==0 ) {
-            INSERT20_tree = 
-            (CommonTree)adaptor.create(INSERT20)
+            INSERT22_tree = 
+            (CommonTree)adaptor.create(INSERT22)
             ;
-            adaptor.addChild(root_0, INSERT20_tree);
+            adaptor.addChild(root_0, INSERT22_tree);
             }
 
-            INTO21=(Token)match(input,INTO,FOLLOW_INTO_in_updateOrInsertStatement609); if (state.failed) return retval;
+            INTO23=(Token)match(input,INTO,FOLLOW_INTO_in_updateOrInsertStatement997); if (state.failed) return retval;
             if ( state.backtracking==0 ) {
-            INTO21_tree = 
-            (CommonTree)adaptor.create(INTO21)
+            INTO23_tree = 
+            (CommonTree)adaptor.create(INTO23)
             ;
-            adaptor.addChild(root_0, INTO21_tree);
+            adaptor.addChild(root_0, INTO23_tree);
             }
 
-            pushFollow(FOLLOW_tableName_in_updateOrInsertStatement611);
-            tableName22=tableName();
+            pushFollow(FOLLOW_tableName_in_updateOrInsertStatement999);
+            tableName24=tableName();
 
             state._fsp--;
             if (state.failed) return retval;
-            if ( state.backtracking==0 ) adaptor.addChild(root_0, tableName22.getTree());
+            if ( state.backtracking==0 ) adaptor.addChild(root_0, tableName24.getTree());
 
-            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:261:37: ( insertColumns )?
-            int alt3=2;
-            int LA3_0 = input.LA(1);
-
-            if ( (LA3_0==LEFT_PAREN) ) {
-                alt3=1;
-            }
-            switch (alt3) {
-                case 1 :
-                    // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:261:37: insertColumns
-                    {
-                    pushFollow(FOLLOW_insertColumns_in_updateOrInsertStatement613);
-                    insertColumns23=insertColumns();
-
-                    state._fsp--;
-                    if (state.failed) return retval;
-                    if ( state.backtracking==0 ) adaptor.addChild(root_0, insertColumns23.getTree());
-
-                    }
-                    break;
-
-            }
-
-
-            pushFollow(FOLLOW_insertValues_in_updateOrInsertStatement621);
-            insertValues24=insertValues();
-
-            state._fsp--;
-            if (state.failed) return retval;
-            if ( state.backtracking==0 ) adaptor.addChild(root_0, insertValues24.getTree());
-
-            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:262:18: ( matchingClause )?
-            int alt4=2;
-            int LA4_0 = input.LA(1);
-
-            if ( (LA4_0==MATCHING) ) {
-                alt4=1;
-            }
-            switch (alt4) {
-                case 1 :
-                    // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:262:18: matchingClause
-                    {
-                    pushFollow(FOLLOW_matchingClause_in_updateOrInsertStatement623);
-                    matchingClause25=matchingClause();
-
-                    state._fsp--;
-                    if (state.failed) return retval;
-                    if ( state.backtracking==0 ) adaptor.addChild(root_0, matchingClause25.getTree());
-
-                    }
-                    break;
-
-            }
-
-
-            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:262:34: ( returningClause )?
+            // JaybirdSql.g:256:46: ( insertColumns )?
             int alt5=2;
             int LA5_0 = input.LA(1);
 
-            if ( (LA5_0==RETURNING) ) {
+            if ( (LA5_0==LEFT_PAREN) ) {
                 alt5=1;
             }
             switch (alt5) {
                 case 1 :
-                    // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:262:34: returningClause
+                    // JaybirdSql.g:256:46: insertColumns
                     {
-                    pushFollow(FOLLOW_returningClause_in_updateOrInsertStatement626);
-                    returningClause26=returningClause();
+                    pushFollow(FOLLOW_insertColumns_in_updateOrInsertStatement1001);
+                    insertColumns25=insertColumns();
 
                     state._fsp--;
                     if (state.failed) return retval;
-                    if ( state.backtracking==0 ) adaptor.addChild(root_0, returningClause26.getTree());
+                    if ( state.backtracking==0 ) adaptor.addChild(root_0, insertColumns25.getTree());
+
+                    }
+                    break;
+
+            }
+
+
+            pushFollow(FOLLOW_insertValues_in_updateOrInsertStatement1021);
+            insertValues26=insertValues();
+
+            state._fsp--;
+            if (state.failed) return retval;
+            if ( state.backtracking==0 ) adaptor.addChild(root_0, insertValues26.getTree());
+
+            // JaybirdSql.g:257:30: ( matchingClause )?
+            int alt6=2;
+            int LA6_0 = input.LA(1);
+
+            if ( (LA6_0==MATCHING) ) {
+                alt6=1;
+            }
+            switch (alt6) {
+                case 1 :
+                    // JaybirdSql.g:257:30: matchingClause
+                    {
+                    pushFollow(FOLLOW_matchingClause_in_updateOrInsertStatement1023);
+                    matchingClause27=matchingClause();
+
+                    state._fsp--;
+                    if (state.failed) return retval;
+                    if ( state.backtracking==0 ) adaptor.addChild(root_0, matchingClause27.getTree());
+
+                    }
+                    break;
+
+            }
+
+
+            // JaybirdSql.g:257:46: ( returningClause )?
+            int alt7=2;
+            int LA7_0 = input.LA(1);
+
+            if ( (LA7_0==RETURNING) ) {
+                alt7=1;
+            }
+            switch (alt7) {
+                case 1 :
+                    // JaybirdSql.g:257:46: returningClause
+                    {
+                    pushFollow(FOLLOW_returningClause_in_updateOrInsertStatement1026);
+                    returningClause28=returningClause();
+
+                    state._fsp--;
+                    if (state.failed) return retval;
+                    if ( state.backtracking==0 ) adaptor.addChild(root_0, returningClause28.getTree());
 
                     }
                     break;
@@ -884,8 +931,8 @@ public TreeAdaptor getTreeAdaptor() {
 
 
             if ( state.backtracking==0 ) {
-            				statementModel.setStatementType(JaybirdStatementModel.UPDATE_OR_INSERT_TYPE);
-            			}
+                            statementModel.setStatementType(JaybirdStatementModel.UPDATE_OR_INSERT_TYPE);
+                        }
 
             }
 
@@ -922,7 +969,7 @@ public TreeAdaptor getTreeAdaptor() {
 
 
     // $ANTLR start "matchingClause"
-    // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:268:1: matchingClause : MATCHING columnList ;
+    // JaybirdSql.g:263:1: matchingClause : MATCHING columnList ;
     public final JaybirdSqlParser.matchingClause_return matchingClause() throws RecognitionException {
         JaybirdSqlParser.matchingClause_return retval = new JaybirdSqlParser.matchingClause_return();
         retval.start = input.LT(1);
@@ -931,35 +978,35 @@ public TreeAdaptor getTreeAdaptor() {
 
         CommonTree root_0 = null;
 
-        Token MATCHING27=null;
-        JaybirdSqlParser.columnList_return columnList28 =null;
+        Token MATCHING29=null;
+        JaybirdSqlParser.columnList_return columnList30 =null;
 
 
-        CommonTree MATCHING27_tree=null;
+        CommonTree MATCHING29_tree=null;
 
         try {
             if ( state.backtracking>0 && alreadyParsedRule(input, 7) ) { return retval; }
 
-            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:268:16: ( MATCHING columnList )
-            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:268:18: MATCHING columnList
+            // JaybirdSql.g:263:19: ( MATCHING columnList )
+            // JaybirdSql.g:263:24: MATCHING columnList
             {
             root_0 = (CommonTree)adaptor.nil();
 
 
-            MATCHING27=(Token)match(input,MATCHING,FOLLOW_MATCHING_in_matchingClause645); if (state.failed) return retval;
+            MATCHING29=(Token)match(input,MATCHING,FOLLOW_MATCHING_in_matchingClause1072); if (state.failed) return retval;
             if ( state.backtracking==0 ) {
-            MATCHING27_tree = 
-            (CommonTree)adaptor.create(MATCHING27)
+            MATCHING29_tree = 
+            (CommonTree)adaptor.create(MATCHING29)
             ;
-            adaptor.addChild(root_0, MATCHING27_tree);
+            adaptor.addChild(root_0, MATCHING29_tree);
             }
 
-            pushFollow(FOLLOW_columnList_in_matchingClause647);
-            columnList28=columnList();
+            pushFollow(FOLLOW_columnList_in_matchingClause1074);
+            columnList30=columnList();
 
             state._fsp--;
             if (state.failed) return retval;
-            if ( state.backtracking==0 ) adaptor.addChild(root_0, columnList28.getTree());
+            if ( state.backtracking==0 ) adaptor.addChild(root_0, columnList30.getTree());
 
             }
 
@@ -996,7 +1043,7 @@ public TreeAdaptor getTreeAdaptor() {
 
 
     // $ANTLR start "insertStatement"
-    // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:279:1: insertStatement : INSERT INTO tableName ( insertColumns )? ( insertValues ( returningClause )? | selectClause | defaultValuesClause ( returningClause )? ) ;
+    // JaybirdSql.g:274:1: insertStatement : INSERT INTO tableName ( insertColumns )? ( insertValues ( returningClause )? | selectClause | defaultValuesClause ( returningClause )? ) ;
     public final JaybirdSqlParser.insertStatement_return insertStatement() throws RecognitionException {
         JaybirdSqlParser.insertStatement_return retval = new JaybirdSqlParser.insertStatement_return();
         retval.start = input.LT(1);
@@ -1005,75 +1052,75 @@ public TreeAdaptor getTreeAdaptor() {
 
         CommonTree root_0 = null;
 
-        Token INSERT29=null;
-        Token INTO30=null;
-        JaybirdSqlParser.tableName_return tableName31 =null;
+        Token INSERT31=null;
+        Token INTO32=null;
+        JaybirdSqlParser.tableName_return tableName33 =null;
 
-        JaybirdSqlParser.insertColumns_return insertColumns32 =null;
+        JaybirdSqlParser.insertColumns_return insertColumns34 =null;
 
-        JaybirdSqlParser.insertValues_return insertValues33 =null;
+        JaybirdSqlParser.insertValues_return insertValues35 =null;
 
-        JaybirdSqlParser.returningClause_return returningClause34 =null;
+        JaybirdSqlParser.returningClause_return returningClause36 =null;
 
-        JaybirdSqlParser.selectClause_return selectClause35 =null;
+        JaybirdSqlParser.selectClause_return selectClause37 =null;
 
-        JaybirdSqlParser.defaultValuesClause_return defaultValuesClause36 =null;
+        JaybirdSqlParser.defaultValuesClause_return defaultValuesClause38 =null;
 
-        JaybirdSqlParser.returningClause_return returningClause37 =null;
+        JaybirdSqlParser.returningClause_return returningClause39 =null;
 
 
-        CommonTree INSERT29_tree=null;
-        CommonTree INTO30_tree=null;
+        CommonTree INSERT31_tree=null;
+        CommonTree INTO32_tree=null;
 
         try {
             if ( state.backtracking>0 && alreadyParsedRule(input, 8) ) { return retval; }
 
-            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:280:3: ( INSERT INTO tableName ( insertColumns )? ( insertValues ( returningClause )? | selectClause | defaultValuesClause ( returningClause )? ) )
-            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:280:6: INSERT INTO tableName ( insertColumns )? ( insertValues ( returningClause )? | selectClause | defaultValuesClause ( returningClause )? )
+            // JaybirdSql.g:275:9: ( INSERT INTO tableName ( insertColumns )? ( insertValues ( returningClause )? | selectClause | defaultValuesClause ( returningClause )? ) )
+            // JaybirdSql.g:275:15: INSERT INTO tableName ( insertColumns )? ( insertValues ( returningClause )? | selectClause | defaultValuesClause ( returningClause )? )
             {
             root_0 = (CommonTree)adaptor.nil();
 
 
-            INSERT29=(Token)match(input,INSERT,FOLLOW_INSERT_in_insertStatement664); if (state.failed) return retval;
+            INSERT31=(Token)match(input,INSERT,FOLLOW_INSERT_in_insertStatement1106); if (state.failed) return retval;
             if ( state.backtracking==0 ) {
-            INSERT29_tree = 
-            (CommonTree)adaptor.create(INSERT29)
+            INSERT31_tree = 
+            (CommonTree)adaptor.create(INSERT31)
             ;
-            adaptor.addChild(root_0, INSERT29_tree);
+            adaptor.addChild(root_0, INSERT31_tree);
             }
 
-            INTO30=(Token)match(input,INTO,FOLLOW_INTO_in_insertStatement666); if (state.failed) return retval;
+            INTO32=(Token)match(input,INTO,FOLLOW_INTO_in_insertStatement1108); if (state.failed) return retval;
             if ( state.backtracking==0 ) {
-            INTO30_tree = 
-            (CommonTree)adaptor.create(INTO30)
+            INTO32_tree = 
+            (CommonTree)adaptor.create(INTO32)
             ;
-            adaptor.addChild(root_0, INTO30_tree);
+            adaptor.addChild(root_0, INTO32_tree);
             }
 
-            pushFollow(FOLLOW_tableName_in_insertStatement668);
-            tableName31=tableName();
+            pushFollow(FOLLOW_tableName_in_insertStatement1110);
+            tableName33=tableName();
 
             state._fsp--;
             if (state.failed) return retval;
-            if ( state.backtracking==0 ) adaptor.addChild(root_0, tableName31.getTree());
+            if ( state.backtracking==0 ) adaptor.addChild(root_0, tableName33.getTree());
 
-            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:280:28: ( insertColumns )?
-            int alt6=2;
-            int LA6_0 = input.LA(1);
+            // JaybirdSql.g:275:37: ( insertColumns )?
+            int alt8=2;
+            int LA8_0 = input.LA(1);
 
-            if ( (LA6_0==LEFT_PAREN) ) {
-                alt6=1;
+            if ( (LA8_0==LEFT_PAREN) ) {
+                alt8=1;
             }
-            switch (alt6) {
+            switch (alt8) {
                 case 1 :
-                    // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:280:28: insertColumns
+                    // JaybirdSql.g:275:37: insertColumns
                     {
-                    pushFollow(FOLLOW_insertColumns_in_insertStatement670);
-                    insertColumns32=insertColumns();
+                    pushFollow(FOLLOW_insertColumns_in_insertStatement1112);
+                    insertColumns34=insertColumns();
 
                     state._fsp--;
                     if (state.failed) return retval;
-                    if ( state.backtracking==0 ) adaptor.addChild(root_0, insertColumns32.getTree());
+                    if ( state.backtracking==0 ) adaptor.addChild(root_0, insertColumns34.getTree());
 
                     }
                     break;
@@ -1081,61 +1128,61 @@ public TreeAdaptor getTreeAdaptor() {
             }
 
 
-            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:281:6: ( insertValues ( returningClause )? | selectClause | defaultValuesClause ( returningClause )? )
-            int alt9=3;
+            // JaybirdSql.g:276:21: ( insertValues ( returningClause )? | selectClause | defaultValuesClause ( returningClause )? )
+            int alt11=3;
             switch ( input.LA(1) ) {
             case VALUES:
                 {
-                alt9=1;
+                alt11=1;
                 }
                 break;
             case SELECT:
                 {
-                alt9=2;
+                alt11=2;
                 }
                 break;
             case DEFAULT:
                 {
-                alt9=3;
+                alt11=3;
                 }
                 break;
             default:
                 if (state.backtracking>0) {state.failed=true; return retval;}
                 NoViableAltException nvae =
-                    new NoViableAltException("", 9, 0, input);
+                    new NoViableAltException("", 11, 0, input);
 
                 throw nvae;
 
             }
 
-            switch (alt9) {
+            switch (alt11) {
                 case 1 :
-                    // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:281:8: insertValues ( returningClause )?
+                    // JaybirdSql.g:276:26: insertValues ( returningClause )?
                     {
-                    pushFollow(FOLLOW_insertValues_in_insertStatement680);
-                    insertValues33=insertValues();
+                    pushFollow(FOLLOW_insertValues_in_insertStatement1140);
+                    insertValues35=insertValues();
 
                     state._fsp--;
                     if (state.failed) return retval;
-                    if ( state.backtracking==0 ) adaptor.addChild(root_0, insertValues33.getTree());
+                    if ( state.backtracking==0 ) adaptor.addChild(root_0, insertValues35.getTree());
 
-                    // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:281:21: ( returningClause )?
-                    int alt7=2;
-                    int LA7_0 = input.LA(1);
+                    // JaybirdSql.g:276:39: ( returningClause )?
+                    int alt9=2;
+                    int LA9_0 = input.LA(1);
 
-                    if ( (LA7_0==RETURNING) ) {
-                        alt7=1;
+                    if ( (LA9_0==RETURNING) ) {
+                        alt9=1;
                     }
-                    switch (alt7) {
+                    switch (alt9) {
                         case 1 :
-                            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:281:21: returningClause
+                            // JaybirdSql.g:276:39: returningClause
                             {
-                            pushFollow(FOLLOW_returningClause_in_insertStatement682);
-                            returningClause34=returningClause();
+                            pushFollow(FOLLOW_returningClause_in_insertStatement1142);
+                            returningClause36=returningClause();
 
                             state._fsp--;
                             if (state.failed) return retval;
-                            if ( state.backtracking==0 ) adaptor.addChild(root_0, returningClause34.getTree());
+                            if ( state.backtracking==0 ) adaptor.addChild(root_0, returningClause36.getTree());
 
                             }
                             break;
@@ -1146,44 +1193,44 @@ public TreeAdaptor getTreeAdaptor() {
                     }
                     break;
                 case 2 :
-                    // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:282:8: selectClause
+                    // JaybirdSql.g:277:26: selectClause
                     {
-                    pushFollow(FOLLOW_selectClause_in_insertStatement692);
-                    selectClause35=selectClause();
+                    pushFollow(FOLLOW_selectClause_in_insertStatement1170);
+                    selectClause37=selectClause();
 
                     state._fsp--;
                     if (state.failed) return retval;
-                    if ( state.backtracking==0 ) adaptor.addChild(root_0, selectClause35.getTree());
+                    if ( state.backtracking==0 ) adaptor.addChild(root_0, selectClause37.getTree());
 
                     }
                     break;
                 case 3 :
-                    // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:283:8: defaultValuesClause ( returningClause )?
+                    // JaybirdSql.g:278:26: defaultValuesClause ( returningClause )?
                     {
-                    pushFollow(FOLLOW_defaultValuesClause_in_insertStatement701);
-                    defaultValuesClause36=defaultValuesClause();
+                    pushFollow(FOLLOW_defaultValuesClause_in_insertStatement1197);
+                    defaultValuesClause38=defaultValuesClause();
 
                     state._fsp--;
                     if (state.failed) return retval;
-                    if ( state.backtracking==0 ) adaptor.addChild(root_0, defaultValuesClause36.getTree());
+                    if ( state.backtracking==0 ) adaptor.addChild(root_0, defaultValuesClause38.getTree());
 
-                    // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:283:28: ( returningClause )?
-                    int alt8=2;
-                    int LA8_0 = input.LA(1);
+                    // JaybirdSql.g:278:46: ( returningClause )?
+                    int alt10=2;
+                    int LA10_0 = input.LA(1);
 
-                    if ( (LA8_0==RETURNING) ) {
-                        alt8=1;
+                    if ( (LA10_0==RETURNING) ) {
+                        alt10=1;
                     }
-                    switch (alt8) {
+                    switch (alt10) {
                         case 1 :
-                            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:283:28: returningClause
+                            // JaybirdSql.g:278:46: returningClause
                             {
-                            pushFollow(FOLLOW_returningClause_in_insertStatement703);
-                            returningClause37=returningClause();
+                            pushFollow(FOLLOW_returningClause_in_insertStatement1199);
+                            returningClause39=returningClause();
 
                             state._fsp--;
                             if (state.failed) return retval;
-                            if ( state.backtracking==0 ) adaptor.addChild(root_0, returningClause37.getTree());
+                            if ( state.backtracking==0 ) adaptor.addChild(root_0, returningClause39.getTree());
 
                             }
                             break;
@@ -1198,8 +1245,8 @@ public TreeAdaptor getTreeAdaptor() {
 
 
             if ( state.backtracking==0 ) {
-            				statementModel.setStatementType(JaybirdStatementModel.INSERT_TYPE);
-            			}
+                            statementModel.setStatementType(JaybirdStatementModel.INSERT_TYPE);
+                        }
 
             }
 
@@ -1236,7 +1283,7 @@ public TreeAdaptor getTreeAdaptor() {
 
 
     // $ANTLR start "insertColumns"
-    // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:290:1: insertColumns : '(' columnList ')' ;
+    // JaybirdSql.g:285:1: insertColumns : '(' columnList ')' ;
     public final JaybirdSqlParser.insertColumns_return insertColumns() throws RecognitionException {
         JaybirdSqlParser.insertColumns_return retval = new JaybirdSqlParser.insertColumns_return();
         retval.start = input.LT(1);
@@ -1245,39 +1292,24 @@ public TreeAdaptor getTreeAdaptor() {
 
         CommonTree root_0 = null;
 
-        Token char_literal38=null;
         Token char_literal40=null;
-        JaybirdSqlParser.columnList_return columnList39 =null;
+        Token char_literal42=null;
+        JaybirdSqlParser.columnList_return columnList41 =null;
 
 
-        CommonTree char_literal38_tree=null;
         CommonTree char_literal40_tree=null;
+        CommonTree char_literal42_tree=null;
 
         try {
             if ( state.backtracking>0 && alreadyParsedRule(input, 9) ) { return retval; }
 
-            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:291:3: ( '(' columnList ')' )
-            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:291:5: '(' columnList ')'
+            // JaybirdSql.g:286:9: ( '(' columnList ')' )
+            // JaybirdSql.g:286:14: '(' columnList ')'
             {
             root_0 = (CommonTree)adaptor.nil();
 
 
-            char_literal38=(Token)match(input,LEFT_PAREN,FOLLOW_LEFT_PAREN_in_insertColumns730); if (state.failed) return retval;
-            if ( state.backtracking==0 ) {
-            char_literal38_tree = 
-            (CommonTree)adaptor.create(char_literal38)
-            ;
-            adaptor.addChild(root_0, char_literal38_tree);
-            }
-
-            pushFollow(FOLLOW_columnList_in_insertColumns732);
-            columnList39=columnList();
-
-            state._fsp--;
-            if (state.failed) return retval;
-            if ( state.backtracking==0 ) adaptor.addChild(root_0, columnList39.getTree());
-
-            char_literal40=(Token)match(input,RIGHT_PAREN,FOLLOW_RIGHT_PAREN_in_insertColumns734); if (state.failed) return retval;
+            char_literal40=(Token)match(input,LEFT_PAREN,FOLLOW_LEFT_PAREN_in_insertColumns1265); if (state.failed) return retval;
             if ( state.backtracking==0 ) {
             char_literal40_tree = 
             (CommonTree)adaptor.create(char_literal40)
@@ -1285,9 +1317,24 @@ public TreeAdaptor getTreeAdaptor() {
             adaptor.addChild(root_0, char_literal40_tree);
             }
 
+            pushFollow(FOLLOW_columnList_in_insertColumns1267);
+            columnList41=columnList();
+
+            state._fsp--;
+            if (state.failed) return retval;
+            if ( state.backtracking==0 ) adaptor.addChild(root_0, columnList41.getTree());
+
+            char_literal42=(Token)match(input,RIGHT_PAREN,FOLLOW_RIGHT_PAREN_in_insertColumns1269); if (state.failed) return retval;
             if ( state.backtracking==0 ) {
-            				_inReturning = false;
-            			}
+            char_literal42_tree = 
+            (CommonTree)adaptor.create(char_literal42)
+            ;
+            adaptor.addChild(root_0, char_literal42_tree);
+            }
+
+            if ( state.backtracking==0 ) {
+                            _inReturning = false;
+                        }
 
             }
 
@@ -1324,7 +1371,7 @@ public TreeAdaptor getTreeAdaptor() {
 
 
     // $ANTLR start "insertValues"
-    // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:297:1: insertValues : VALUES '(' valueList ')' ;
+    // JaybirdSql.g:292:1: insertValues : VALUES '(' valueList ')' ;
     public final JaybirdSqlParser.insertValues_return insertValues() throws RecognitionException {
         JaybirdSqlParser.insertValues_return retval = new JaybirdSqlParser.insertValues_return();
         retval.start = input.LT(1);
@@ -1333,54 +1380,54 @@ public TreeAdaptor getTreeAdaptor() {
 
         CommonTree root_0 = null;
 
-        Token VALUES41=null;
-        Token char_literal42=null;
+        Token VALUES43=null;
         Token char_literal44=null;
-        JaybirdSqlParser.valueList_return valueList43 =null;
+        Token char_literal46=null;
+        JaybirdSqlParser.valueList_return valueList45 =null;
 
 
-        CommonTree VALUES41_tree=null;
-        CommonTree char_literal42_tree=null;
+        CommonTree VALUES43_tree=null;
         CommonTree char_literal44_tree=null;
+        CommonTree char_literal46_tree=null;
 
         try {
             if ( state.backtracking>0 && alreadyParsedRule(input, 10) ) { return retval; }
 
-            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:298:3: ( VALUES '(' valueList ')' )
-            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:298:5: VALUES '(' valueList ')'
+            // JaybirdSql.g:293:9: ( VALUES '(' valueList ')' )
+            // JaybirdSql.g:293:14: VALUES '(' valueList ')'
             {
             root_0 = (CommonTree)adaptor.nil();
 
 
-            VALUES41=(Token)match(input,VALUES,FOLLOW_VALUES_in_insertValues753); if (state.failed) return retval;
+            VALUES43=(Token)match(input,VALUES,FOLLOW_VALUES_in_insertValues1312); if (state.failed) return retval;
             if ( state.backtracking==0 ) {
-            VALUES41_tree = 
-            (CommonTree)adaptor.create(VALUES41)
+            VALUES43_tree = 
+            (CommonTree)adaptor.create(VALUES43)
             ;
-            adaptor.addChild(root_0, VALUES41_tree);
+            adaptor.addChild(root_0, VALUES43_tree);
             }
 
-            char_literal42=(Token)match(input,LEFT_PAREN,FOLLOW_LEFT_PAREN_in_insertValues755); if (state.failed) return retval;
-            if ( state.backtracking==0 ) {
-            char_literal42_tree = 
-            (CommonTree)adaptor.create(char_literal42)
-            ;
-            adaptor.addChild(root_0, char_literal42_tree);
-            }
-
-            pushFollow(FOLLOW_valueList_in_insertValues757);
-            valueList43=valueList();
-
-            state._fsp--;
-            if (state.failed) return retval;
-            if ( state.backtracking==0 ) adaptor.addChild(root_0, valueList43.getTree());
-
-            char_literal44=(Token)match(input,RIGHT_PAREN,FOLLOW_RIGHT_PAREN_in_insertValues759); if (state.failed) return retval;
+            char_literal44=(Token)match(input,LEFT_PAREN,FOLLOW_LEFT_PAREN_in_insertValues1314); if (state.failed) return retval;
             if ( state.backtracking==0 ) {
             char_literal44_tree = 
             (CommonTree)adaptor.create(char_literal44)
             ;
             adaptor.addChild(root_0, char_literal44_tree);
+            }
+
+            pushFollow(FOLLOW_valueList_in_insertValues1316);
+            valueList45=valueList();
+
+            state._fsp--;
+            if (state.failed) return retval;
+            if ( state.backtracking==0 ) adaptor.addChild(root_0, valueList45.getTree());
+
+            char_literal46=(Token)match(input,RIGHT_PAREN,FOLLOW_RIGHT_PAREN_in_insertValues1318); if (state.failed) return retval;
+            if ( state.backtracking==0 ) {
+            char_literal46_tree = 
+            (CommonTree)adaptor.create(char_literal46)
+            ;
+            adaptor.addChild(root_0, char_literal46_tree);
             }
 
             }
@@ -1418,7 +1465,7 @@ public TreeAdaptor getTreeAdaptor() {
 
 
     // $ANTLR start "returningClause"
-    // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:301:1: returningClause : RETURNING columnList ;
+    // JaybirdSql.g:296:1: returningClause : RETURNING columnList ;
     public final JaybirdSqlParser.returningClause_return returningClause() throws RecognitionException {
         JaybirdSqlParser.returningClause_return retval = new JaybirdSqlParser.returningClause_return();
         retval.start = input.LT(1);
@@ -1427,37 +1474,37 @@ public TreeAdaptor getTreeAdaptor() {
 
         CommonTree root_0 = null;
 
-        Token RETURNING45=null;
-        JaybirdSqlParser.columnList_return columnList46 =null;
+        Token RETURNING47=null;
+        JaybirdSqlParser.columnList_return columnList48 =null;
 
 
-        CommonTree RETURNING45_tree=null;
+        CommonTree RETURNING47_tree=null;
 
         try {
             if ( state.backtracking>0 && alreadyParsedRule(input, 11) ) { return retval; }
 
-            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:302:3: ( RETURNING columnList )
-            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:302:5: RETURNING columnList
+            // JaybirdSql.g:297:9: ( RETURNING columnList )
+            // JaybirdSql.g:297:14: RETURNING columnList
             {
             root_0 = (CommonTree)adaptor.nil();
 
 
-            RETURNING45=(Token)match(input,RETURNING,FOLLOW_RETURNING_in_returningClause774); if (state.failed) return retval;
+            RETURNING47=(Token)match(input,RETURNING,FOLLOW_RETURNING_in_returningClause1354); if (state.failed) return retval;
             if ( state.backtracking==0 ) {
-            RETURNING45_tree = 
-            (CommonTree)adaptor.create(RETURNING45)
+            RETURNING47_tree = 
+            (CommonTree)adaptor.create(RETURNING47)
             ;
-            adaptor.addChild(root_0, RETURNING45_tree);
+            adaptor.addChild(root_0, RETURNING47_tree);
             }
 
             if ( state.backtracking==0 ) {_inReturning = true;}
 
-            pushFollow(FOLLOW_columnList_in_returningClause778);
-            columnList46=columnList();
+            pushFollow(FOLLOW_columnList_in_returningClause1358);
+            columnList48=columnList();
 
             state._fsp--;
             if (state.failed) return retval;
-            if ( state.backtracking==0 ) adaptor.addChild(root_0, columnList46.getTree());
+            if ( state.backtracking==0 ) adaptor.addChild(root_0, columnList48.getTree());
 
             if ( state.backtracking==0 ) {_inReturning = true;}
 
@@ -1496,7 +1543,7 @@ public TreeAdaptor getTreeAdaptor() {
 
 
     // $ANTLR start "defaultValuesClause"
-    // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:305:1: defaultValuesClause : DEFAULT VALUES ;
+    // JaybirdSql.g:300:1: defaultValuesClause : DEFAULT VALUES ;
     public final JaybirdSqlParser.defaultValuesClause_return defaultValuesClause() throws RecognitionException {
         JaybirdSqlParser.defaultValuesClause_return retval = new JaybirdSqlParser.defaultValuesClause_return();
         retval.start = input.LT(1);
@@ -1505,40 +1552,40 @@ public TreeAdaptor getTreeAdaptor() {
 
         CommonTree root_0 = null;
 
-        Token DEFAULT47=null;
-        Token VALUES48=null;
+        Token DEFAULT49=null;
+        Token VALUES50=null;
 
-        CommonTree DEFAULT47_tree=null;
-        CommonTree VALUES48_tree=null;
+        CommonTree DEFAULT49_tree=null;
+        CommonTree VALUES50_tree=null;
 
         try {
             if ( state.backtracking>0 && alreadyParsedRule(input, 12) ) { return retval; }
 
-            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:306:3: ( DEFAULT VALUES )
-            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:306:5: DEFAULT VALUES
+            // JaybirdSql.g:301:9: ( DEFAULT VALUES )
+            // JaybirdSql.g:301:14: DEFAULT VALUES
             {
             root_0 = (CommonTree)adaptor.nil();
 
 
-            DEFAULT47=(Token)match(input,DEFAULT,FOLLOW_DEFAULT_in_defaultValuesClause793); if (state.failed) return retval;
+            DEFAULT49=(Token)match(input,DEFAULT,FOLLOW_DEFAULT_in_defaultValuesClause1388); if (state.failed) return retval;
             if ( state.backtracking==0 ) {
-            DEFAULT47_tree = 
-            (CommonTree)adaptor.create(DEFAULT47)
+            DEFAULT49_tree = 
+            (CommonTree)adaptor.create(DEFAULT49)
             ;
-            adaptor.addChild(root_0, DEFAULT47_tree);
+            adaptor.addChild(root_0, DEFAULT49_tree);
             }
 
-            VALUES48=(Token)match(input,VALUES,FOLLOW_VALUES_in_defaultValuesClause795); if (state.failed) return retval;
+            VALUES50=(Token)match(input,VALUES,FOLLOW_VALUES_in_defaultValuesClause1390); if (state.failed) return retval;
             if ( state.backtracking==0 ) {
-            VALUES48_tree = 
-            (CommonTree)adaptor.create(VALUES48)
+            VALUES50_tree = 
+            (CommonTree)adaptor.create(VALUES50)
             ;
-            adaptor.addChild(root_0, VALUES48_tree);
+            adaptor.addChild(root_0, VALUES50_tree);
             }
 
             if ( state.backtracking==0 ) {
-            				statementModel.setDefaultValues(true);
-            			}
+                            statementModel.setDefaultValues(true);
+                        }
 
             }
 
@@ -1575,7 +1622,7 @@ public TreeAdaptor getTreeAdaptor() {
 
 
     // $ANTLR start "simpleIdentifier"
-    // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:312:1: simpleIdentifier : ( GENERIC_ID | QUOTED_ID );
+    // JaybirdSql.g:307:1: simpleIdentifier : ( GENERIC_ID | QUOTED_ID );
     public final JaybirdSqlParser.simpleIdentifier_return simpleIdentifier() throws RecognitionException {
         JaybirdSqlParser.simpleIdentifier_return retval = new JaybirdSqlParser.simpleIdentifier_return();
         retval.start = input.LT(1);
@@ -1584,25 +1631,25 @@ public TreeAdaptor getTreeAdaptor() {
 
         CommonTree root_0 = null;
 
-        Token set49=null;
+        Token set51=null;
 
-        CommonTree set49_tree=null;
+        CommonTree set51_tree=null;
 
         try {
             if ( state.backtracking>0 && alreadyParsedRule(input, 13) ) { return retval; }
 
-            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:313:3: ( GENERIC_ID | QUOTED_ID )
-            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:
+            // JaybirdSql.g:308:9: ( GENERIC_ID | QUOTED_ID )
+            // JaybirdSql.g:
             {
             root_0 = (CommonTree)adaptor.nil();
 
 
-            set49=(Token)input.LT(1);
+            set51=(Token)input.LT(1);
 
             if ( input.LA(1)==GENERIC_ID||input.LA(1)==QUOTED_ID ) {
                 input.consume();
                 if ( state.backtracking==0 ) adaptor.addChild(root_0, 
-                (CommonTree)adaptor.create(set49)
+                (CommonTree)adaptor.create(set51)
                 );
                 state.errorRecovery=false;
                 state.failed=false;
@@ -1649,7 +1696,7 @@ public TreeAdaptor getTreeAdaptor() {
 
 
     // $ANTLR start "fullIdentifier"
-    // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:317:1: fullIdentifier : simpleIdentifier '.' simpleIdentifier ;
+    // JaybirdSql.g:312:1: fullIdentifier : simpleIdentifier '.' simpleIdentifier ;
     public final JaybirdSqlParser.fullIdentifier_return fullIdentifier() throws RecognitionException {
         JaybirdSqlParser.fullIdentifier_return retval = new JaybirdSqlParser.fullIdentifier_return();
         retval.start = input.LT(1);
@@ -1658,44 +1705,44 @@ public TreeAdaptor getTreeAdaptor() {
 
         CommonTree root_0 = null;
 
-        Token char_literal51=null;
-        JaybirdSqlParser.simpleIdentifier_return simpleIdentifier50 =null;
-
+        Token char_literal53=null;
         JaybirdSqlParser.simpleIdentifier_return simpleIdentifier52 =null;
 
+        JaybirdSqlParser.simpleIdentifier_return simpleIdentifier54 =null;
 
-        CommonTree char_literal51_tree=null;
+
+        CommonTree char_literal53_tree=null;
 
         try {
             if ( state.backtracking>0 && alreadyParsedRule(input, 14) ) { return retval; }
 
-            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:318:3: ( simpleIdentifier '.' simpleIdentifier )
-            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:318:5: simpleIdentifier '.' simpleIdentifier
+            // JaybirdSql.g:313:9: ( simpleIdentifier '.' simpleIdentifier )
+            // JaybirdSql.g:313:14: simpleIdentifier '.' simpleIdentifier
             {
             root_0 = (CommonTree)adaptor.nil();
 
 
-            pushFollow(FOLLOW_simpleIdentifier_in_fullIdentifier835);
-            simpleIdentifier50=simpleIdentifier();
-
-            state._fsp--;
-            if (state.failed) return retval;
-            if ( state.backtracking==0 ) adaptor.addChild(root_0, simpleIdentifier50.getTree());
-
-            char_literal51=(Token)match(input,77,FOLLOW_77_in_fullIdentifier837); if (state.failed) return retval;
-            if ( state.backtracking==0 ) {
-            char_literal51_tree = 
-            (CommonTree)adaptor.create(char_literal51)
-            ;
-            adaptor.addChild(root_0, char_literal51_tree);
-            }
-
-            pushFollow(FOLLOW_simpleIdentifier_in_fullIdentifier839);
+            pushFollow(FOLLOW_simpleIdentifier_in_fullIdentifier1481);
             simpleIdentifier52=simpleIdentifier();
 
             state._fsp--;
             if (state.failed) return retval;
             if ( state.backtracking==0 ) adaptor.addChild(root_0, simpleIdentifier52.getTree());
+
+            char_literal53=(Token)match(input,77,FOLLOW_77_in_fullIdentifier1483); if (state.failed) return retval;
+            if ( state.backtracking==0 ) {
+            char_literal53_tree = 
+            (CommonTree)adaptor.create(char_literal53)
+            ;
+            adaptor.addChild(root_0, char_literal53_tree);
+            }
+
+            pushFollow(FOLLOW_simpleIdentifier_in_fullIdentifier1485);
+            simpleIdentifier54=simpleIdentifier();
+
+            state._fsp--;
+            if (state.failed) return retval;
+            if ( state.backtracking==0 ) adaptor.addChild(root_0, simpleIdentifier54.getTree());
 
             }
 
@@ -1732,7 +1779,7 @@ public TreeAdaptor getTreeAdaptor() {
 
 
     // $ANTLR start "tableName"
-    // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:321:1: tableName : t= simpleIdentifier ;
+    // JaybirdSql.g:316:1: tableName : t= simpleIdentifier ;
     public final JaybirdSqlParser.tableName_return tableName() throws RecognitionException {
         JaybirdSqlParser.tableName_return retval = new JaybirdSqlParser.tableName_return();
         retval.start = input.LT(1);
@@ -1748,13 +1795,13 @@ public TreeAdaptor getTreeAdaptor() {
         try {
             if ( state.backtracking>0 && alreadyParsedRule(input, 15) ) { return retval; }
 
-            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:322:3: (t= simpleIdentifier )
-            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:322:5: t= simpleIdentifier
+            // JaybirdSql.g:317:9: (t= simpleIdentifier )
+            // JaybirdSql.g:317:14: t= simpleIdentifier
             {
             root_0 = (CommonTree)adaptor.nil();
 
 
-            pushFollow(FOLLOW_simpleIdentifier_in_tableName858);
+            pushFollow(FOLLOW_simpleIdentifier_in_tableName1522);
             t=simpleIdentifier();
 
             state._fsp--;
@@ -1762,8 +1809,8 @@ public TreeAdaptor getTreeAdaptor() {
             if ( state.backtracking==0 ) adaptor.addChild(root_0, t.getTree());
 
             if ( state.backtracking==0 ) {
-            				statementModel.setTableName((t!=null?input.toString(t.start,t.stop):null));
-            			}
+                            statementModel.setTableName((t!=null?input.toString(t.start,t.stop):null));
+                        }
 
             }
 
@@ -1800,7 +1847,7 @@ public TreeAdaptor getTreeAdaptor() {
 
 
     // $ANTLR start "columnList"
-    // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:328:1: columnList : columnName ( ',' columnName )* ;
+    // JaybirdSql.g:323:1: columnList : columnName ( ',' columnName )* ;
     public final JaybirdSqlParser.columnList_return columnList() throws RecognitionException {
         JaybirdSqlParser.columnList_return retval = new JaybirdSqlParser.columnList_return();
         retval.start = input.LT(1);
@@ -1809,65 +1856,65 @@ public TreeAdaptor getTreeAdaptor() {
 
         CommonTree root_0 = null;
 
-        Token char_literal54=null;
-        JaybirdSqlParser.columnName_return columnName53 =null;
-
+        Token char_literal56=null;
         JaybirdSqlParser.columnName_return columnName55 =null;
 
+        JaybirdSqlParser.columnName_return columnName57 =null;
 
-        CommonTree char_literal54_tree=null;
+
+        CommonTree char_literal56_tree=null;
 
         try {
             if ( state.backtracking>0 && alreadyParsedRule(input, 16) ) { return retval; }
 
-            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:329:3: ( columnName ( ',' columnName )* )
-            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:329:5: columnName ( ',' columnName )*
+            // JaybirdSql.g:324:9: ( columnName ( ',' columnName )* )
+            // JaybirdSql.g:324:14: columnName ( ',' columnName )*
             {
             root_0 = (CommonTree)adaptor.nil();
 
 
-            pushFollow(FOLLOW_columnName_in_columnList879);
-            columnName53=columnName();
+            pushFollow(FOLLOW_columnName_in_columnList1570);
+            columnName55=columnName();
 
             state._fsp--;
             if (state.failed) return retval;
-            if ( state.backtracking==0 ) adaptor.addChild(root_0, columnName53.getTree());
+            if ( state.backtracking==0 ) adaptor.addChild(root_0, columnName55.getTree());
 
-            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:329:16: ( ',' columnName )*
-            loop10:
+            // JaybirdSql.g:324:25: ( ',' columnName )*
+            loop12:
             do {
-                int alt10=2;
-                int LA10_0 = input.LA(1);
+                int alt12=2;
+                int LA12_0 = input.LA(1);
 
-                if ( (LA10_0==COMMA) ) {
-                    alt10=1;
+                if ( (LA12_0==COMMA) ) {
+                    alt12=1;
                 }
 
 
-                switch (alt10) {
+                switch (alt12) {
             	case 1 :
-            	    // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:329:17: ',' columnName
+            	    // JaybirdSql.g:324:26: ',' columnName
             	    {
-            	    char_literal54=(Token)match(input,COMMA,FOLLOW_COMMA_in_columnList882); if (state.failed) return retval;
+            	    char_literal56=(Token)match(input,COMMA,FOLLOW_COMMA_in_columnList1573); if (state.failed) return retval;
             	    if ( state.backtracking==0 ) {
-            	    char_literal54_tree = 
-            	    (CommonTree)adaptor.create(char_literal54)
+            	    char_literal56_tree = 
+            	    (CommonTree)adaptor.create(char_literal56)
             	    ;
-            	    adaptor.addChild(root_0, char_literal54_tree);
+            	    adaptor.addChild(root_0, char_literal56_tree);
             	    }
 
-            	    pushFollow(FOLLOW_columnName_in_columnList884);
-            	    columnName55=columnName();
+            	    pushFollow(FOLLOW_columnName_in_columnList1575);
+            	    columnName57=columnName();
 
             	    state._fsp--;
             	    if (state.failed) return retval;
-            	    if ( state.backtracking==0 ) adaptor.addChild(root_0, columnName55.getTree());
+            	    if ( state.backtracking==0 ) adaptor.addChild(root_0, columnName57.getTree());
 
             	    }
             	    break;
 
             	default :
-            	    break loop10;
+            	    break loop12;
                 }
             } while (true);
 
@@ -1907,7 +1954,7 @@ public TreeAdaptor getTreeAdaptor() {
 
 
     // $ANTLR start "columnName"
-    // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:332:1: columnName : (si= simpleIdentifier |fi= fullIdentifier );
+    // JaybirdSql.g:327:1: columnName : (si= simpleIdentifier |fi= fullIdentifier );
     public final JaybirdSqlParser.columnName_return columnName() throws RecognitionException {
         JaybirdSqlParser.columnName_return retval = new JaybirdSqlParser.columnName_return();
         retval.start = input.LT(1);
@@ -1925,23 +1972,23 @@ public TreeAdaptor getTreeAdaptor() {
         try {
             if ( state.backtracking>0 && alreadyParsedRule(input, 17) ) { return retval; }
 
-            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:333:3: (si= simpleIdentifier |fi= fullIdentifier )
-            int alt11=2;
-            int LA11_0 = input.LA(1);
+            // JaybirdSql.g:328:9: (si= simpleIdentifier |fi= fullIdentifier )
+            int alt13=2;
+            int LA13_0 = input.LA(1);
 
-            if ( (LA11_0==GENERIC_ID||LA11_0==QUOTED_ID) ) {
-                int LA11_1 = input.LA(2);
+            if ( (LA13_0==GENERIC_ID||LA13_0==QUOTED_ID) ) {
+                int LA13_1 = input.LA(2);
 
-                if ( (LA11_1==EOF||LA11_1==COMMA||(LA11_1 >= RETURNING && LA11_1 <= RIGHT_PAREN)||LA11_1==80) ) {
-                    alt11=1;
+                if ( (LA13_1==EOF||LA13_1==COMMA||(LA13_1 >= RETURNING && LA13_1 <= RIGHT_PAREN)||LA13_1==80) ) {
+                    alt13=1;
                 }
-                else if ( (LA11_1==77) ) {
-                    alt11=2;
+                else if ( (LA13_1==77) ) {
+                    alt13=2;
                 }
                 else {
                     if (state.backtracking>0) {state.failed=true; return retval;}
                     NoViableAltException nvae =
-                        new NoViableAltException("", 11, 1, input);
+                        new NoViableAltException("", 13, 1, input);
 
                     throw nvae;
 
@@ -1950,19 +1997,19 @@ public TreeAdaptor getTreeAdaptor() {
             else {
                 if (state.backtracking>0) {state.failed=true; return retval;}
                 NoViableAltException nvae =
-                    new NoViableAltException("", 11, 0, input);
+                    new NoViableAltException("", 13, 0, input);
 
                 throw nvae;
 
             }
-            switch (alt11) {
+            switch (alt13) {
                 case 1 :
-                    // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:333:5: si= simpleIdentifier
+                    // JaybirdSql.g:328:14: si= simpleIdentifier
                     {
                     root_0 = (CommonTree)adaptor.nil();
 
 
-                    pushFollow(FOLLOW_simpleIdentifier_in_columnName903);
+                    pushFollow(FOLLOW_simpleIdentifier_in_columnName1609);
                     si=simpleIdentifier();
 
                     state._fsp--;
@@ -1970,21 +2017,21 @@ public TreeAdaptor getTreeAdaptor() {
                     if ( state.backtracking==0 ) adaptor.addChild(root_0, si.getTree());
 
                     if ( state.backtracking==0 ) {
-                    				if (_inReturning)
-                    					statementModel.addReturningColumn((si!=null?input.toString(si.start,si.stop):null));
-                    				else
-                    					statementModel.addColumn((si!=null?input.toString(si.start,si.stop):null));
-                    			}
+                                    if (_inReturning)
+                                        statementModel.addReturningColumn((si!=null?input.toString(si.start,si.stop):null));
+                                    else
+                                        statementModel.addColumn((si!=null?input.toString(si.start,si.stop):null));
+                                }
 
                     }
                     break;
                 case 2 :
-                    // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:341:5: fi= fullIdentifier
+                    // JaybirdSql.g:336:14: fi= fullIdentifier
                     {
                     root_0 = (CommonTree)adaptor.nil();
 
 
-                    pushFollow(FOLLOW_fullIdentifier_in_columnName923);
+                    pushFollow(FOLLOW_fullIdentifier_in_columnName1656);
                     fi=fullIdentifier();
 
                     state._fsp--;
@@ -1992,11 +2039,11 @@ public TreeAdaptor getTreeAdaptor() {
                     if ( state.backtracking==0 ) adaptor.addChild(root_0, fi.getTree());
 
                     if ( state.backtracking==0 ) {
-                    				if (_inReturning)
-                    					statementModel.addReturningColumn((fi!=null?input.toString(fi.start,fi.stop):null));
-                    				else
-                    					statementModel.addColumn((fi!=null?input.toString(fi.start,fi.stop):null));
-                    			}
+                                    if (_inReturning)
+                                        statementModel.addReturningColumn((fi!=null?input.toString(fi.start,fi.stop):null));
+                                    else
+                                        statementModel.addColumn((fi!=null?input.toString(fi.start,fi.stop):null));
+                                }
 
                     }
                     break;
@@ -2035,7 +2082,7 @@ public TreeAdaptor getTreeAdaptor() {
 
 
     // $ANTLR start "valueList"
-    // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:350:1: valueList : value ( ',' value )* ;
+    // JaybirdSql.g:345:1: valueList : value ( ',' value )* ;
     public final JaybirdSqlParser.valueList_return valueList() throws RecognitionException {
         JaybirdSqlParser.valueList_return retval = new JaybirdSqlParser.valueList_return();
         retval.start = input.LT(1);
@@ -2044,65 +2091,65 @@ public TreeAdaptor getTreeAdaptor() {
 
         CommonTree root_0 = null;
 
-        Token char_literal57=null;
-        JaybirdSqlParser.value_return value56 =null;
-
+        Token char_literal59=null;
         JaybirdSqlParser.value_return value58 =null;
 
+        JaybirdSqlParser.value_return value60 =null;
 
-        CommonTree char_literal57_tree=null;
+
+        CommonTree char_literal59_tree=null;
 
         try {
             if ( state.backtracking>0 && alreadyParsedRule(input, 18) ) { return retval; }
 
-            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:351:3: ( value ( ',' value )* )
-            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:351:5: value ( ',' value )*
+            // JaybirdSql.g:346:9: ( value ( ',' value )* )
+            // JaybirdSql.g:346:14: value ( ',' value )*
             {
             root_0 = (CommonTree)adaptor.nil();
 
 
-            pushFollow(FOLLOW_value_in_valueList942);
-            value56=value();
+            pushFollow(FOLLOW_value_in_valueList1699);
+            value58=value();
 
             state._fsp--;
             if (state.failed) return retval;
-            if ( state.backtracking==0 ) adaptor.addChild(root_0, value56.getTree());
+            if ( state.backtracking==0 ) adaptor.addChild(root_0, value58.getTree());
 
-            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:351:11: ( ',' value )*
-            loop12:
+            // JaybirdSql.g:346:20: ( ',' value )*
+            loop14:
             do {
-                int alt12=2;
-                int LA12_0 = input.LA(1);
+                int alt14=2;
+                int LA14_0 = input.LA(1);
 
-                if ( (LA12_0==COMMA) ) {
-                    alt12=1;
+                if ( (LA14_0==COMMA) ) {
+                    alt14=1;
                 }
 
 
-                switch (alt12) {
+                switch (alt14) {
             	case 1 :
-            	    // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:351:12: ',' value
+            	    // JaybirdSql.g:346:21: ',' value
             	    {
-            	    char_literal57=(Token)match(input,COMMA,FOLLOW_COMMA_in_valueList945); if (state.failed) return retval;
+            	    char_literal59=(Token)match(input,COMMA,FOLLOW_COMMA_in_valueList1702); if (state.failed) return retval;
             	    if ( state.backtracking==0 ) {
-            	    char_literal57_tree = 
-            	    (CommonTree)adaptor.create(char_literal57)
+            	    char_literal59_tree = 
+            	    (CommonTree)adaptor.create(char_literal59)
             	    ;
-            	    adaptor.addChild(root_0, char_literal57_tree);
+            	    adaptor.addChild(root_0, char_literal59_tree);
             	    }
 
-            	    pushFollow(FOLLOW_value_in_valueList947);
-            	    value58=value();
+            	    pushFollow(FOLLOW_value_in_valueList1704);
+            	    value60=value();
 
             	    state._fsp--;
             	    if (state.failed) return retval;
-            	    if ( state.backtracking==0 ) adaptor.addChild(root_0, value58.getTree());
+            	    if ( state.backtracking==0 ) adaptor.addChild(root_0, value60.getTree());
 
             	    }
             	    break;
 
             	default :
-            	    break loop12;
+            	    break loop14;
                 }
             } while (true);
 
@@ -2142,7 +2189,7 @@ public TreeAdaptor getTreeAdaptor() {
 
 
     // $ANTLR start "value"
-    // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:385:1: value : ( simpleValue | simpleValue '+' simpleValue | simpleValue '-' simpleValue | simpleValue '*' simpleValue | simpleValue '/' simpleValue | simpleValue '||' simpleValue | '+' simpleValue | '-' simpleValue | LEFT_PAREN simpleValue RIGHT_PAREN | simpleValue COLLATE simpleIdentifier | parameter | CURRENT_USER | CURRENT_ROLE | CURRENT_DATE | CURRENT_TIME | CURRENT_TIMESTAMP | nullValue | function | nextValueExpression | castExpression | arrayElement | DB_KEY | simpleIdentifier '.' DB_KEY );
+    // JaybirdSql.g:380:1: value : ( simpleValue | simpleValue '+' simpleValue | simpleValue '-' simpleValue | simpleValue '*' simpleValue | simpleValue '/' simpleValue | simpleValue '||' simpleValue | '+' simpleValue | '-' simpleValue | LEFT_PAREN simpleValue RIGHT_PAREN | simpleValue COLLATE simpleIdentifier | parameter | CURRENT_USER | CURRENT_ROLE | CURRENT_DATE | CURRENT_TIME | CURRENT_TIMESTAMP | nullValue | function | nextValueExpression | castExpression | arrayElement | DB_KEY | simpleIdentifier '.' DB_KEY );
     public final JaybirdSqlParser.value_return value() throws RecognitionException {
         JaybirdSqlParser.value_return retval = new JaybirdSqlParser.value_return();
         retval.start = input.LT(1);
@@ -2151,43 +2198,41 @@ public TreeAdaptor getTreeAdaptor() {
 
         CommonTree root_0 = null;
 
-        Token char_literal61=null;
-        Token char_literal64=null;
-        Token char_literal67=null;
-        Token char_literal70=null;
-        Token string_literal73=null;
-        Token char_literal75=null;
+        Token char_literal63=null;
+        Token char_literal66=null;
+        Token char_literal69=null;
+        Token char_literal72=null;
+        Token string_literal75=null;
         Token char_literal77=null;
-        Token LEFT_PAREN79=null;
-        Token RIGHT_PAREN81=null;
-        Token COLLATE83=null;
-        Token CURRENT_USER86=null;
-        Token CURRENT_ROLE87=null;
-        Token CURRENT_DATE88=null;
-        Token CURRENT_TIME89=null;
-        Token CURRENT_TIMESTAMP90=null;
-        Token DB_KEY96=null;
-        Token char_literal98=null;
-        Token DB_KEY99=null;
-        JaybirdSqlParser.simpleValue_return simpleValue59 =null;
-
-        JaybirdSqlParser.simpleValue_return simpleValue60 =null;
+        Token char_literal79=null;
+        Token LEFT_PAREN81=null;
+        Token RIGHT_PAREN83=null;
+        Token COLLATE85=null;
+        Token CURRENT_USER88=null;
+        Token CURRENT_ROLE89=null;
+        Token CURRENT_DATE90=null;
+        Token CURRENT_TIME91=null;
+        Token CURRENT_TIMESTAMP92=null;
+        Token DB_KEY98=null;
+        Token char_literal100=null;
+        Token DB_KEY101=null;
+        JaybirdSqlParser.simpleValue_return simpleValue61 =null;
 
         JaybirdSqlParser.simpleValue_return simpleValue62 =null;
 
-        JaybirdSqlParser.simpleValue_return simpleValue63 =null;
+        JaybirdSqlParser.simpleValue_return simpleValue64 =null;
 
         JaybirdSqlParser.simpleValue_return simpleValue65 =null;
 
-        JaybirdSqlParser.simpleValue_return simpleValue66 =null;
+        JaybirdSqlParser.simpleValue_return simpleValue67 =null;
 
         JaybirdSqlParser.simpleValue_return simpleValue68 =null;
 
-        JaybirdSqlParser.simpleValue_return simpleValue69 =null;
+        JaybirdSqlParser.simpleValue_return simpleValue70 =null;
 
         JaybirdSqlParser.simpleValue_return simpleValue71 =null;
 
-        JaybirdSqlParser.simpleValue_return simpleValue72 =null;
+        JaybirdSqlParser.simpleValue_return simpleValue73 =null;
 
         JaybirdSqlParser.simpleValue_return simpleValue74 =null;
 
@@ -2199,47 +2244,49 @@ public TreeAdaptor getTreeAdaptor() {
 
         JaybirdSqlParser.simpleValue_return simpleValue82 =null;
 
-        JaybirdSqlParser.simpleIdentifier_return simpleIdentifier84 =null;
+        JaybirdSqlParser.simpleValue_return simpleValue84 =null;
 
-        JaybirdSqlParser.parameter_return parameter85 =null;
+        JaybirdSqlParser.simpleIdentifier_return simpleIdentifier86 =null;
 
-        JaybirdSqlParser.nullValue_return nullValue91 =null;
+        JaybirdSqlParser.parameter_return parameter87 =null;
 
-        JaybirdSqlParser.function_return function92 =null;
+        JaybirdSqlParser.nullValue_return nullValue93 =null;
 
-        JaybirdSqlParser.nextValueExpression_return nextValueExpression93 =null;
+        JaybirdSqlParser.function_return function94 =null;
 
-        JaybirdSqlParser.castExpression_return castExpression94 =null;
+        JaybirdSqlParser.nextValueExpression_return nextValueExpression95 =null;
 
-        JaybirdSqlParser.arrayElement_return arrayElement95 =null;
+        JaybirdSqlParser.castExpression_return castExpression96 =null;
 
-        JaybirdSqlParser.simpleIdentifier_return simpleIdentifier97 =null;
+        JaybirdSqlParser.arrayElement_return arrayElement97 =null;
+
+        JaybirdSqlParser.simpleIdentifier_return simpleIdentifier99 =null;
 
 
-        CommonTree char_literal61_tree=null;
-        CommonTree char_literal64_tree=null;
-        CommonTree char_literal67_tree=null;
-        CommonTree char_literal70_tree=null;
-        CommonTree string_literal73_tree=null;
-        CommonTree char_literal75_tree=null;
+        CommonTree char_literal63_tree=null;
+        CommonTree char_literal66_tree=null;
+        CommonTree char_literal69_tree=null;
+        CommonTree char_literal72_tree=null;
+        CommonTree string_literal75_tree=null;
         CommonTree char_literal77_tree=null;
-        CommonTree LEFT_PAREN79_tree=null;
-        CommonTree RIGHT_PAREN81_tree=null;
-        CommonTree COLLATE83_tree=null;
-        CommonTree CURRENT_USER86_tree=null;
-        CommonTree CURRENT_ROLE87_tree=null;
-        CommonTree CURRENT_DATE88_tree=null;
-        CommonTree CURRENT_TIME89_tree=null;
-        CommonTree CURRENT_TIMESTAMP90_tree=null;
-        CommonTree DB_KEY96_tree=null;
-        CommonTree char_literal98_tree=null;
-        CommonTree DB_KEY99_tree=null;
+        CommonTree char_literal79_tree=null;
+        CommonTree LEFT_PAREN81_tree=null;
+        CommonTree RIGHT_PAREN83_tree=null;
+        CommonTree COLLATE85_tree=null;
+        CommonTree CURRENT_USER88_tree=null;
+        CommonTree CURRENT_ROLE89_tree=null;
+        CommonTree CURRENT_DATE90_tree=null;
+        CommonTree CURRENT_TIME91_tree=null;
+        CommonTree CURRENT_TIMESTAMP92_tree=null;
+        CommonTree DB_KEY98_tree=null;
+        CommonTree char_literal100_tree=null;
+        CommonTree DB_KEY101_tree=null;
 
         try {
             if ( state.backtracking>0 && alreadyParsedRule(input, 19) ) { return retval; }
 
-            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:386:3: ( simpleValue | simpleValue '+' simpleValue | simpleValue '-' simpleValue | simpleValue '*' simpleValue | simpleValue '/' simpleValue | simpleValue '||' simpleValue | '+' simpleValue | '-' simpleValue | LEFT_PAREN simpleValue RIGHT_PAREN | simpleValue COLLATE simpleIdentifier | parameter | CURRENT_USER | CURRENT_ROLE | CURRENT_DATE | CURRENT_TIME | CURRENT_TIMESTAMP | nullValue | function | nextValueExpression | castExpression | arrayElement | DB_KEY | simpleIdentifier '.' DB_KEY )
-            int alt13=23;
+            // JaybirdSql.g:381:9: ( simpleValue | simpleValue '+' simpleValue | simpleValue '-' simpleValue | simpleValue '*' simpleValue | simpleValue '/' simpleValue | simpleValue '||' simpleValue | '+' simpleValue | '-' simpleValue | LEFT_PAREN simpleValue RIGHT_PAREN | simpleValue COLLATE simpleIdentifier | parameter | CURRENT_USER | CURRENT_ROLE | CURRENT_DATE | CURRENT_TIME | CURRENT_TIMESTAMP | nullValue | function | nextValueExpression | castExpression | arrayElement | DB_KEY | simpleIdentifier '.' DB_KEY )
+            int alt15=23;
             switch ( input.LA(1) ) {
             case GENERIC_ID:
                 {
@@ -2249,61 +2296,62 @@ public TreeAdaptor getTreeAdaptor() {
                 case COMMA:
                 case FOR:
                 case FROM:
+                case RETURNING:
                 case RIGHT_PAREN:
                 case 83:
                     {
-                    alt13=1;
+                    alt15=1;
                     }
                     break;
                 case 75:
                     {
-                    alt13=2;
+                    alt15=2;
                     }
                     break;
                 case 76:
                     {
-                    alt13=3;
+                    alt15=3;
                     }
                     break;
                 case 74:
                     {
-                    alt13=4;
+                    alt15=4;
                     }
                     break;
                 case 78:
                     {
-                    alt13=5;
+                    alt15=5;
                     }
                     break;
                 case 84:
                     {
-                    alt13=6;
+                    alt15=6;
                     }
                     break;
                 case COLLATE:
                     {
-                    alt13=10;
+                    alt15=10;
                     }
                     break;
                 case LEFT_PAREN:
                     {
-                    alt13=18;
+                    alt15=18;
                     }
                     break;
                 case 82:
                     {
-                    alt13=21;
+                    alt15=21;
                     }
                     break;
                 case 77:
                     {
-                    alt13=23;
+                    alt15=23;
                     }
                     break;
                 default:
                     if (state.backtracking>0) {state.failed=true; return retval;}
                     NoViableAltException nvae =
-                        new NoViableAltException("", 13, 1, input);
+                        new NoViableAltException("", 15, 1, input);
 
                     throw nvae;
 
@@ -2313,52 +2361,52 @@ public TreeAdaptor getTreeAdaptor() {
                 break;
             case 75:
                 {
-                alt13=7;
+                alt15=7;
                 }
                 break;
             case 76:
                 {
-                alt13=8;
+                alt15=8;
                 }
                 break;
             case LEFT_PAREN:
                 {
-                alt13=9;
+                alt15=9;
                 }
                 break;
             case 81:
                 {
-                alt13=11;
+                alt15=11;
                 }
                 break;
             case CURRENT_USER:
                 {
-                alt13=12;
+                alt15=12;
                 }
                 break;
             case CURRENT_ROLE:
                 {
-                alt13=13;
+                alt15=13;
                 }
                 break;
             case CURRENT_DATE:
                 {
-                alt13=14;
+                alt15=14;
                 }
                 break;
             case CURRENT_TIME:
                 {
-                alt13=15;
+                alt15=15;
                 }
                 break;
             case CURRENT_TIMESTAMP:
                 {
-                alt13=16;
+                alt15=16;
                 }
                 break;
             case NULL:
                 {
-                alt13=17;
+                alt15=17;
                 }
                 break;
             case INTEGER:
@@ -2371,46 +2419,47 @@ public TreeAdaptor getTreeAdaptor() {
                 case COMMA:
                 case FOR:
                 case FROM:
+                case RETURNING:
                 case RIGHT_PAREN:
                 case 83:
                     {
-                    alt13=1;
+                    alt15=1;
                     }
                     break;
                 case 75:
                     {
-                    alt13=2;
+                    alt15=2;
                     }
                     break;
                 case 76:
                     {
-                    alt13=3;
+                    alt15=3;
                     }
                     break;
                 case 74:
                     {
-                    alt13=4;
+                    alt15=4;
                     }
                     break;
                 case 78:
                     {
-                    alt13=5;
+                    alt15=5;
                     }
                     break;
                 case 84:
                     {
-                    alt13=6;
+                    alt15=6;
                     }
                     break;
                 case COLLATE:
                     {
-                    alt13=10;
+                    alt15=10;
                     }
                     break;
                 default:
                     if (state.backtracking>0) {state.failed=true; return retval;}
                     NoViableAltException nvae =
-                        new NoViableAltException("", 13, 12, input);
+                        new NoViableAltException("", 15, 12, input);
 
                     throw nvae;
 
@@ -2423,23 +2472,23 @@ public TreeAdaptor getTreeAdaptor() {
                 switch ( input.LA(2) ) {
                 case LEFT_PAREN:
                     {
-                    alt13=18;
+                    alt15=18;
                     }
                     break;
                 case 82:
                     {
-                    alt13=21;
+                    alt15=21;
                     }
                     break;
                 case 77:
                     {
-                    alt13=23;
+                    alt15=23;
                     }
                     break;
                 default:
                     if (state.backtracking>0) {state.failed=true; return retval;}
                     NoViableAltException nvae =
-                        new NoViableAltException("", 13, 13, input);
+                        new NoViableAltException("", 15, 13, input);
 
                     throw nvae;
 
@@ -2456,215 +2505,192 @@ public TreeAdaptor getTreeAdaptor() {
             case SUM:
             case TRIM:
                 {
-                alt13=18;
+                alt15=18;
                 }
                 break;
             case GEN_ID:
             case NEXT:
                 {
-                alt13=19;
+                alt15=19;
                 }
                 break;
             case CAST:
                 {
-                alt13=20;
+                alt15=20;
                 }
                 break;
             case DB_KEY:
                 {
-                alt13=22;
+                alt15=22;
                 }
                 break;
             default:
                 if (state.backtracking>0) {state.failed=true; return retval;}
                 NoViableAltException nvae =
-                    new NoViableAltException("", 13, 0, input);
+                    new NoViableAltException("", 15, 0, input);
 
                 throw nvae;
 
             }
 
-            switch (alt13) {
+            switch (alt15) {
                 case 1 :
-                    // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:386:5: simpleValue
+                    // JaybirdSql.g:381:14: simpleValue
                     {
                     root_0 = (CommonTree)adaptor.nil();
 
 
-                    pushFollow(FOLLOW_simpleValue_in_value965);
-                    simpleValue59=simpleValue();
+                    pushFollow(FOLLOW_simpleValue_in_value1740);
+                    simpleValue61=simpleValue();
 
                     state._fsp--;
                     if (state.failed) return retval;
-                    if ( state.backtracking==0 ) adaptor.addChild(root_0, simpleValue59.getTree());
+                    if ( state.backtracking==0 ) adaptor.addChild(root_0, simpleValue61.getTree());
 
                     }
                     break;
                 case 2 :
-                    // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:387:5: simpleValue '+' simpleValue
+                    // JaybirdSql.g:382:14: simpleValue '+' simpleValue
                     {
                     root_0 = (CommonTree)adaptor.nil();
 
 
-                    pushFollow(FOLLOW_simpleValue_in_value971);
-                    simpleValue60=simpleValue();
-
-                    state._fsp--;
-                    if (state.failed) return retval;
-                    if ( state.backtracking==0 ) adaptor.addChild(root_0, simpleValue60.getTree());
-
-                    char_literal61=(Token)match(input,75,FOLLOW_75_in_value973); if (state.failed) return retval;
-                    if ( state.backtracking==0 ) {
-                    char_literal61_tree = 
-                    (CommonTree)adaptor.create(char_literal61)
-                    ;
-                    adaptor.addChild(root_0, char_literal61_tree);
-                    }
-
-                    pushFollow(FOLLOW_simpleValue_in_value975);
+                    pushFollow(FOLLOW_simpleValue_in_value1755);
                     simpleValue62=simpleValue();
 
                     state._fsp--;
                     if (state.failed) return retval;
                     if ( state.backtracking==0 ) adaptor.addChild(root_0, simpleValue62.getTree());
 
+                    char_literal63=(Token)match(input,75,FOLLOW_75_in_value1757); if (state.failed) return retval;
+                    if ( state.backtracking==0 ) {
+                    char_literal63_tree = 
+                    (CommonTree)adaptor.create(char_literal63)
+                    ;
+                    adaptor.addChild(root_0, char_literal63_tree);
+                    }
+
+                    pushFollow(FOLLOW_simpleValue_in_value1759);
+                    simpleValue64=simpleValue();
+
+                    state._fsp--;
+                    if (state.failed) return retval;
+                    if ( state.backtracking==0 ) adaptor.addChild(root_0, simpleValue64.getTree());
+
                     }
                     break;
                 case 3 :
-                    // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:388:5: simpleValue '-' simpleValue
+                    // JaybirdSql.g:383:14: simpleValue '-' simpleValue
                     {
                     root_0 = (CommonTree)adaptor.nil();
 
 
-                    pushFollow(FOLLOW_simpleValue_in_value981);
-                    simpleValue63=simpleValue();
-
-                    state._fsp--;
-                    if (state.failed) return retval;
-                    if ( state.backtracking==0 ) adaptor.addChild(root_0, simpleValue63.getTree());
-
-                    char_literal64=(Token)match(input,76,FOLLOW_76_in_value983); if (state.failed) return retval;
-                    if ( state.backtracking==0 ) {
-                    char_literal64_tree = 
-                    (CommonTree)adaptor.create(char_literal64)
-                    ;
-                    adaptor.addChild(root_0, char_literal64_tree);
-                    }
-
-                    pushFollow(FOLLOW_simpleValue_in_value985);
+                    pushFollow(FOLLOW_simpleValue_in_value1774);
                     simpleValue65=simpleValue();
 
                     state._fsp--;
                     if (state.failed) return retval;
                     if ( state.backtracking==0 ) adaptor.addChild(root_0, simpleValue65.getTree());
 
+                    char_literal66=(Token)match(input,76,FOLLOW_76_in_value1776); if (state.failed) return retval;
+                    if ( state.backtracking==0 ) {
+                    char_literal66_tree = 
+                    (CommonTree)adaptor.create(char_literal66)
+                    ;
+                    adaptor.addChild(root_0, char_literal66_tree);
+                    }
+
+                    pushFollow(FOLLOW_simpleValue_in_value1778);
+                    simpleValue67=simpleValue();
+
+                    state._fsp--;
+                    if (state.failed) return retval;
+                    if ( state.backtracking==0 ) adaptor.addChild(root_0, simpleValue67.getTree());
+
                     }
                     break;
                 case 4 :
-                    // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:389:5: simpleValue '*' simpleValue
+                    // JaybirdSql.g:384:14: simpleValue '*' simpleValue
                     {
                     root_0 = (CommonTree)adaptor.nil();
 
 
-                    pushFollow(FOLLOW_simpleValue_in_value991);
-                    simpleValue66=simpleValue();
-
-                    state._fsp--;
-                    if (state.failed) return retval;
-                    if ( state.backtracking==0 ) adaptor.addChild(root_0, simpleValue66.getTree());
-
-                    char_literal67=(Token)match(input,74,FOLLOW_74_in_value993); if (state.failed) return retval;
-                    if ( state.backtracking==0 ) {
-                    char_literal67_tree = 
-                    (CommonTree)adaptor.create(char_literal67)
-                    ;
-                    adaptor.addChild(root_0, char_literal67_tree);
-                    }
-
-                    pushFollow(FOLLOW_simpleValue_in_value995);
+                    pushFollow(FOLLOW_simpleValue_in_value1793);
                     simpleValue68=simpleValue();
 
                     state._fsp--;
                     if (state.failed) return retval;
                     if ( state.backtracking==0 ) adaptor.addChild(root_0, simpleValue68.getTree());
 
+                    char_literal69=(Token)match(input,74,FOLLOW_74_in_value1795); if (state.failed) return retval;
+                    if ( state.backtracking==0 ) {
+                    char_literal69_tree = 
+                    (CommonTree)adaptor.create(char_literal69)
+                    ;
+                    adaptor.addChild(root_0, char_literal69_tree);
+                    }
+
+                    pushFollow(FOLLOW_simpleValue_in_value1797);
+                    simpleValue70=simpleValue();
+
+                    state._fsp--;
+                    if (state.failed) return retval;
+                    if ( state.backtracking==0 ) adaptor.addChild(root_0, simpleValue70.getTree());
+
                     }
                     break;
                 case 5 :
-                    // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:390:5: simpleValue '/' simpleValue
+                    // JaybirdSql.g:385:14: simpleValue '/' simpleValue
                     {
                     root_0 = (CommonTree)adaptor.nil();
 
 
-                    pushFollow(FOLLOW_simpleValue_in_value1001);
-                    simpleValue69=simpleValue();
-
-                    state._fsp--;
-                    if (state.failed) return retval;
-                    if ( state.backtracking==0 ) adaptor.addChild(root_0, simpleValue69.getTree());
-
-                    char_literal70=(Token)match(input,78,FOLLOW_78_in_value1003); if (state.failed) return retval;
-                    if ( state.backtracking==0 ) {
-                    char_literal70_tree = 
-                    (CommonTree)adaptor.create(char_literal70)
-                    ;
-                    adaptor.addChild(root_0, char_literal70_tree);
-                    }
-
-                    pushFollow(FOLLOW_simpleValue_in_value1005);
+                    pushFollow(FOLLOW_simpleValue_in_value1812);
                     simpleValue71=simpleValue();
 
                     state._fsp--;
                     if (state.failed) return retval;
                     if ( state.backtracking==0 ) adaptor.addChild(root_0, simpleValue71.getTree());
 
+                    char_literal72=(Token)match(input,78,FOLLOW_78_in_value1817); if (state.failed) return retval;
+                    if ( state.backtracking==0 ) {
+                    char_literal72_tree = 
+                    (CommonTree)adaptor.create(char_literal72)
+                    ;
+                    adaptor.addChild(root_0, char_literal72_tree);
+                    }
+
+                    pushFollow(FOLLOW_simpleValue_in_value1819);
+                    simpleValue73=simpleValue();
+
+                    state._fsp--;
+                    if (state.failed) return retval;
+                    if ( state.backtracking==0 ) adaptor.addChild(root_0, simpleValue73.getTree());
+
                     }
                     break;
                 case 6 :
-                    // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:391:5: simpleValue '||' simpleValue
+                    // JaybirdSql.g:386:14: simpleValue '||' simpleValue
                     {
                     root_0 = (CommonTree)adaptor.nil();
 
 
-                    pushFollow(FOLLOW_simpleValue_in_value1011);
-                    simpleValue72=simpleValue();
-
-                    state._fsp--;
-                    if (state.failed) return retval;
-                    if ( state.backtracking==0 ) adaptor.addChild(root_0, simpleValue72.getTree());
-
-                    string_literal73=(Token)match(input,84,FOLLOW_84_in_value1013); if (state.failed) return retval;
-                    if ( state.backtracking==0 ) {
-                    string_literal73_tree = 
-                    (CommonTree)adaptor.create(string_literal73)
-                    ;
-                    adaptor.addChild(root_0, string_literal73_tree);
-                    }
-
-                    pushFollow(FOLLOW_simpleValue_in_value1015);
+                    pushFollow(FOLLOW_simpleValue_in_value1834);
                     simpleValue74=simpleValue();
 
                     state._fsp--;
                     if (state.failed) return retval;
                     if ( state.backtracking==0 ) adaptor.addChild(root_0, simpleValue74.getTree());
 
-                    }
-                    break;
-                case 7 :
-                    // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:392:5: '+' simpleValue
-                    {
-                    root_0 = (CommonTree)adaptor.nil();
-
-
-                    char_literal75=(Token)match(input,75,FOLLOW_75_in_value1021); if (state.failed) return retval;
+                    string_literal75=(Token)match(input,84,FOLLOW_84_in_value1836); if (state.failed) return retval;
                     if ( state.backtracking==0 ) {
-                    char_literal75_tree = 
-                    (CommonTree)adaptor.create(char_literal75)
+                    string_literal75_tree = 
+                    (CommonTree)adaptor.create(string_literal75)
                     ;
-                    adaptor.addChild(root_0, char_literal75_tree);
+                    adaptor.addChild(root_0, string_literal75_tree);
                     }
 
-                    pushFollow(FOLLOW_simpleValue_in_value1023);
+                    pushFollow(FOLLOW_simpleValue_in_value1838);
                     simpleValue76=simpleValue();
 
                     state._fsp--;
@@ -2673,13 +2699,13 @@ public TreeAdaptor getTreeAdaptor() {
 
                     }
                     break;
-                case 8 :
-                    // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:393:5: '-' simpleValue
+                case 7 :
+                    // JaybirdSql.g:387:14: '+' simpleValue
                     {
                     root_0 = (CommonTree)adaptor.nil();
 
 
-                    char_literal77=(Token)match(input,76,FOLLOW_76_in_value1029); if (state.failed) return retval;
+                    char_literal77=(Token)match(input,75,FOLLOW_75_in_value1853); if (state.failed) return retval;
                     if ( state.backtracking==0 ) {
                     char_literal77_tree = 
                     (CommonTree)adaptor.create(char_literal77)
@@ -2687,7 +2713,7 @@ public TreeAdaptor getTreeAdaptor() {
                     adaptor.addChild(root_0, char_literal77_tree);
                     }
 
-                    pushFollow(FOLLOW_simpleValue_in_value1031);
+                    pushFollow(FOLLOW_simpleValue_in_value1855);
                     simpleValue78=simpleValue();
 
                     state._fsp--;
@@ -2696,280 +2722,303 @@ public TreeAdaptor getTreeAdaptor() {
 
                     }
                     break;
-                case 9 :
-                    // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:395:5: LEFT_PAREN simpleValue RIGHT_PAREN
+                case 8 :
+                    // JaybirdSql.g:388:14: '-' simpleValue
                     {
                     root_0 = (CommonTree)adaptor.nil();
 
 
-                    LEFT_PAREN79=(Token)match(input,LEFT_PAREN,FOLLOW_LEFT_PAREN_in_value1040); if (state.failed) return retval;
+                    char_literal79=(Token)match(input,76,FOLLOW_76_in_value1870); if (state.failed) return retval;
                     if ( state.backtracking==0 ) {
-                    LEFT_PAREN79_tree = 
-                    (CommonTree)adaptor.create(LEFT_PAREN79)
+                    char_literal79_tree = 
+                    (CommonTree)adaptor.create(char_literal79)
                     ;
-                    adaptor.addChild(root_0, LEFT_PAREN79_tree);
+                    adaptor.addChild(root_0, char_literal79_tree);
                     }
 
-                    pushFollow(FOLLOW_simpleValue_in_value1042);
+                    pushFollow(FOLLOW_simpleValue_in_value1872);
                     simpleValue80=simpleValue();
 
                     state._fsp--;
                     if (state.failed) return retval;
                     if ( state.backtracking==0 ) adaptor.addChild(root_0, simpleValue80.getTree());
 
-                    RIGHT_PAREN81=(Token)match(input,RIGHT_PAREN,FOLLOW_RIGHT_PAREN_in_value1044); if (state.failed) return retval;
-                    if ( state.backtracking==0 ) {
-                    RIGHT_PAREN81_tree = 
-                    (CommonTree)adaptor.create(RIGHT_PAREN81)
-                    ;
-                    adaptor.addChild(root_0, RIGHT_PAREN81_tree);
-                    }
-
                     }
                     break;
-                case 10 :
-                    // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:397:5: simpleValue COLLATE simpleIdentifier
+                case 9 :
+                    // JaybirdSql.g:390:14: LEFT_PAREN simpleValue RIGHT_PAREN
                     {
                     root_0 = (CommonTree)adaptor.nil();
 
 
-                    pushFollow(FOLLOW_simpleValue_in_value1053);
+                    LEFT_PAREN81=(Token)match(input,LEFT_PAREN,FOLLOW_LEFT_PAREN_in_value1896); if (state.failed) return retval;
+                    if ( state.backtracking==0 ) {
+                    LEFT_PAREN81_tree = 
+                    (CommonTree)adaptor.create(LEFT_PAREN81)
+                    ;
+                    adaptor.addChild(root_0, LEFT_PAREN81_tree);
+                    }
+
+                    pushFollow(FOLLOW_simpleValue_in_value1898);
                     simpleValue82=simpleValue();
 
                     state._fsp--;
                     if (state.failed) return retval;
                     if ( state.backtracking==0 ) adaptor.addChild(root_0, simpleValue82.getTree());
 
-                    COLLATE83=(Token)match(input,COLLATE,FOLLOW_COLLATE_in_value1055); if (state.failed) return retval;
+                    RIGHT_PAREN83=(Token)match(input,RIGHT_PAREN,FOLLOW_RIGHT_PAREN_in_value1900); if (state.failed) return retval;
                     if ( state.backtracking==0 ) {
-                    COLLATE83_tree = 
-                    (CommonTree)adaptor.create(COLLATE83)
+                    RIGHT_PAREN83_tree = 
+                    (CommonTree)adaptor.create(RIGHT_PAREN83)
                     ;
-                    adaptor.addChild(root_0, COLLATE83_tree);
+                    adaptor.addChild(root_0, RIGHT_PAREN83_tree);
                     }
 
-                    pushFollow(FOLLOW_simpleIdentifier_in_value1057);
-                    simpleIdentifier84=simpleIdentifier();
+                    }
+                    break;
+                case 10 :
+                    // JaybirdSql.g:392:14: simpleValue COLLATE simpleIdentifier
+                    {
+                    root_0 = (CommonTree)adaptor.nil();
+
+
+                    pushFollow(FOLLOW_simpleValue_in_value1924);
+                    simpleValue84=simpleValue();
 
                     state._fsp--;
                     if (state.failed) return retval;
-                    if ( state.backtracking==0 ) adaptor.addChild(root_0, simpleIdentifier84.getTree());
+                    if ( state.backtracking==0 ) adaptor.addChild(root_0, simpleValue84.getTree());
+
+                    COLLATE85=(Token)match(input,COLLATE,FOLLOW_COLLATE_in_value1926); if (state.failed) return retval;
+                    if ( state.backtracking==0 ) {
+                    COLLATE85_tree = 
+                    (CommonTree)adaptor.create(COLLATE85)
+                    ;
+                    adaptor.addChild(root_0, COLLATE85_tree);
+                    }
+
+                    pushFollow(FOLLOW_simpleIdentifier_in_value1931);
+                    simpleIdentifier86=simpleIdentifier();
+
+                    state._fsp--;
+                    if (state.failed) return retval;
+                    if ( state.backtracking==0 ) adaptor.addChild(root_0, simpleIdentifier86.getTree());
 
                     }
                     break;
                 case 11 :
-                    // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:399:5: parameter
+                    // JaybirdSql.g:394:14: parameter
                     {
                     root_0 = (CommonTree)adaptor.nil();
 
 
-                    pushFollow(FOLLOW_parameter_in_value1065);
-                    parameter85=parameter();
+                    pushFollow(FOLLOW_parameter_in_value1951);
+                    parameter87=parameter();
 
                     state._fsp--;
                     if (state.failed) return retval;
-                    if ( state.backtracking==0 ) adaptor.addChild(root_0, parameter85.getTree());
+                    if ( state.backtracking==0 ) adaptor.addChild(root_0, parameter87.getTree());
 
                     }
                     break;
                 case 12 :
-                    // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:401:5: CURRENT_USER
+                    // JaybirdSql.g:396:14: CURRENT_USER
                     {
                     root_0 = (CommonTree)adaptor.nil();
 
 
-                    CURRENT_USER86=(Token)match(input,CURRENT_USER,FOLLOW_CURRENT_USER_in_value1074); if (state.failed) return retval;
+                    CURRENT_USER88=(Token)match(input,CURRENT_USER,FOLLOW_CURRENT_USER_in_value1975); if (state.failed) return retval;
                     if ( state.backtracking==0 ) {
-                    CURRENT_USER86_tree = 
-                    (CommonTree)adaptor.create(CURRENT_USER86)
+                    CURRENT_USER88_tree = 
+                    (CommonTree)adaptor.create(CURRENT_USER88)
                     ;
-                    adaptor.addChild(root_0, CURRENT_USER86_tree);
+                    adaptor.addChild(root_0, CURRENT_USER88_tree);
                     }
 
                     }
                     break;
                 case 13 :
-                    // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:402:5: CURRENT_ROLE
+                    // JaybirdSql.g:397:14: CURRENT_ROLE
                     {
                     root_0 = (CommonTree)adaptor.nil();
 
 
-                    CURRENT_ROLE87=(Token)match(input,CURRENT_ROLE,FOLLOW_CURRENT_ROLE_in_value1080); if (state.failed) return retval;
+                    CURRENT_ROLE89=(Token)match(input,CURRENT_ROLE,FOLLOW_CURRENT_ROLE_in_value1990); if (state.failed) return retval;
                     if ( state.backtracking==0 ) {
-                    CURRENT_ROLE87_tree = 
-                    (CommonTree)adaptor.create(CURRENT_ROLE87)
+                    CURRENT_ROLE89_tree = 
+                    (CommonTree)adaptor.create(CURRENT_ROLE89)
                     ;
-                    adaptor.addChild(root_0, CURRENT_ROLE87_tree);
+                    adaptor.addChild(root_0, CURRENT_ROLE89_tree);
                     }
 
                     }
                     break;
                 case 14 :
-                    // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:403:5: CURRENT_DATE
+                    // JaybirdSql.g:398:14: CURRENT_DATE
                     {
                     root_0 = (CommonTree)adaptor.nil();
 
 
-                    CURRENT_DATE88=(Token)match(input,CURRENT_DATE,FOLLOW_CURRENT_DATE_in_value1086); if (state.failed) return retval;
+                    CURRENT_DATE90=(Token)match(input,CURRENT_DATE,FOLLOW_CURRENT_DATE_in_value2005); if (state.failed) return retval;
                     if ( state.backtracking==0 ) {
-                    CURRENT_DATE88_tree = 
-                    (CommonTree)adaptor.create(CURRENT_DATE88)
+                    CURRENT_DATE90_tree = 
+                    (CommonTree)adaptor.create(CURRENT_DATE90)
                     ;
-                    adaptor.addChild(root_0, CURRENT_DATE88_tree);
+                    adaptor.addChild(root_0, CURRENT_DATE90_tree);
                     }
 
                     }
                     break;
                 case 15 :
-                    // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:404:5: CURRENT_TIME
+                    // JaybirdSql.g:399:14: CURRENT_TIME
                     {
                     root_0 = (CommonTree)adaptor.nil();
 
 
-                    CURRENT_TIME89=(Token)match(input,CURRENT_TIME,FOLLOW_CURRENT_TIME_in_value1092); if (state.failed) return retval;
+                    CURRENT_TIME91=(Token)match(input,CURRENT_TIME,FOLLOW_CURRENT_TIME_in_value2020); if (state.failed) return retval;
                     if ( state.backtracking==0 ) {
-                    CURRENT_TIME89_tree = 
-                    (CommonTree)adaptor.create(CURRENT_TIME89)
+                    CURRENT_TIME91_tree = 
+                    (CommonTree)adaptor.create(CURRENT_TIME91)
                     ;
-                    adaptor.addChild(root_0, CURRENT_TIME89_tree);
+                    adaptor.addChild(root_0, CURRENT_TIME91_tree);
                     }
 
                     }
                     break;
                 case 16 :
-                    // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:405:5: CURRENT_TIMESTAMP
+                    // JaybirdSql.g:400:14: CURRENT_TIMESTAMP
                     {
                     root_0 = (CommonTree)adaptor.nil();
 
 
-                    CURRENT_TIMESTAMP90=(Token)match(input,CURRENT_TIMESTAMP,FOLLOW_CURRENT_TIMESTAMP_in_value1098); if (state.failed) return retval;
+                    CURRENT_TIMESTAMP92=(Token)match(input,CURRENT_TIMESTAMP,FOLLOW_CURRENT_TIMESTAMP_in_value2035); if (state.failed) return retval;
                     if ( state.backtracking==0 ) {
-                    CURRENT_TIMESTAMP90_tree = 
-                    (CommonTree)adaptor.create(CURRENT_TIMESTAMP90)
+                    CURRENT_TIMESTAMP92_tree = 
+                    (CommonTree)adaptor.create(CURRENT_TIMESTAMP92)
                     ;
-                    adaptor.addChild(root_0, CURRENT_TIMESTAMP90_tree);
+                    adaptor.addChild(root_0, CURRENT_TIMESTAMP92_tree);
                     }
 
                     }
                     break;
                 case 17 :
-                    // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:407:5: nullValue
+                    // JaybirdSql.g:402:14: nullValue
                     {
                     root_0 = (CommonTree)adaptor.nil();
 
 
-                    pushFollow(FOLLOW_nullValue_in_value1107);
-                    nullValue91=nullValue();
+                    pushFollow(FOLLOW_nullValue_in_value2059);
+                    nullValue93=nullValue();
 
                     state._fsp--;
                     if (state.failed) return retval;
-                    if ( state.backtracking==0 ) adaptor.addChild(root_0, nullValue91.getTree());
+                    if ( state.backtracking==0 ) adaptor.addChild(root_0, nullValue93.getTree());
 
                     }
                     break;
                 case 18 :
-                    // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:409:5: function
+                    // JaybirdSql.g:404:14: function
                     {
                     root_0 = (CommonTree)adaptor.nil();
 
 
-                    pushFollow(FOLLOW_function_in_value1116);
-                    function92=function();
+                    pushFollow(FOLLOW_function_in_value2083);
+                    function94=function();
 
                     state._fsp--;
                     if (state.failed) return retval;
-                    if ( state.backtracking==0 ) adaptor.addChild(root_0, function92.getTree());
+                    if ( state.backtracking==0 ) adaptor.addChild(root_0, function94.getTree());
 
                     }
                     break;
                 case 19 :
-                    // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:410:5: nextValueExpression
+                    // JaybirdSql.g:405:14: nextValueExpression
                     {
                     root_0 = (CommonTree)adaptor.nil();
 
 
-                    pushFollow(FOLLOW_nextValueExpression_in_value1122);
-                    nextValueExpression93=nextValueExpression();
+                    pushFollow(FOLLOW_nextValueExpression_in_value2098);
+                    nextValueExpression95=nextValueExpression();
 
                     state._fsp--;
                     if (state.failed) return retval;
-                    if ( state.backtracking==0 ) adaptor.addChild(root_0, nextValueExpression93.getTree());
+                    if ( state.backtracking==0 ) adaptor.addChild(root_0, nextValueExpression95.getTree());
 
                     }
                     break;
                 case 20 :
-                    // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:411:5: castExpression
+                    // JaybirdSql.g:406:14: castExpression
                     {
                     root_0 = (CommonTree)adaptor.nil();
 
 
-                    pushFollow(FOLLOW_castExpression_in_value1128);
-                    castExpression94=castExpression();
+                    pushFollow(FOLLOW_castExpression_in_value2113);
+                    castExpression96=castExpression();
 
                     state._fsp--;
                     if (state.failed) return retval;
-                    if ( state.backtracking==0 ) adaptor.addChild(root_0, castExpression94.getTree());
+                    if ( state.backtracking==0 ) adaptor.addChild(root_0, castExpression96.getTree());
 
                     }
                     break;
                 case 21 :
-                    // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:414:5: arrayElement
+                    // JaybirdSql.g:409:14: arrayElement
                     {
                     root_0 = (CommonTree)adaptor.nil();
 
 
-                    pushFollow(FOLLOW_arrayElement_in_value1138);
-                    arrayElement95=arrayElement();
+                    pushFollow(FOLLOW_arrayElement_in_value2138);
+                    arrayElement97=arrayElement();
 
                     state._fsp--;
                     if (state.failed) return retval;
-                    if ( state.backtracking==0 ) adaptor.addChild(root_0, arrayElement95.getTree());
+                    if ( state.backtracking==0 ) adaptor.addChild(root_0, arrayElement97.getTree());
 
                     }
                     break;
                 case 22 :
-                    // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:416:5: DB_KEY
+                    // JaybirdSql.g:411:14: DB_KEY
                     {
                     root_0 = (CommonTree)adaptor.nil();
 
 
-                    DB_KEY96=(Token)match(input,DB_KEY,FOLLOW_DB_KEY_in_value1147); if (state.failed) return retval;
+                    DB_KEY98=(Token)match(input,DB_KEY,FOLLOW_DB_KEY_in_value2162); if (state.failed) return retval;
                     if ( state.backtracking==0 ) {
-                    DB_KEY96_tree = 
-                    (CommonTree)adaptor.create(DB_KEY96)
+                    DB_KEY98_tree = 
+                    (CommonTree)adaptor.create(DB_KEY98)
                     ;
-                    adaptor.addChild(root_0, DB_KEY96_tree);
+                    adaptor.addChild(root_0, DB_KEY98_tree);
                     }
 
                     }
                     break;
                 case 23 :
-                    // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:417:5: simpleIdentifier '.' DB_KEY
+                    // JaybirdSql.g:412:14: simpleIdentifier '.' DB_KEY
                     {
                     root_0 = (CommonTree)adaptor.nil();
 
 
-                    pushFollow(FOLLOW_simpleIdentifier_in_value1153);
-                    simpleIdentifier97=simpleIdentifier();
+                    pushFollow(FOLLOW_simpleIdentifier_in_value2177);
+                    simpleIdentifier99=simpleIdentifier();
 
                     state._fsp--;
                     if (state.failed) return retval;
-                    if ( state.backtracking==0 ) adaptor.addChild(root_0, simpleIdentifier97.getTree());
+                    if ( state.backtracking==0 ) adaptor.addChild(root_0, simpleIdentifier99.getTree());
 
-                    char_literal98=(Token)match(input,77,FOLLOW_77_in_value1155); if (state.failed) return retval;
+                    char_literal100=(Token)match(input,77,FOLLOW_77_in_value2179); if (state.failed) return retval;
                     if ( state.backtracking==0 ) {
-                    char_literal98_tree = 
-                    (CommonTree)adaptor.create(char_literal98)
+                    char_literal100_tree = 
+                    (CommonTree)adaptor.create(char_literal100)
                     ;
-                    adaptor.addChild(root_0, char_literal98_tree);
+                    adaptor.addChild(root_0, char_literal100_tree);
                     }
 
-                    DB_KEY99=(Token)match(input,DB_KEY,FOLLOW_DB_KEY_in_value1157); if (state.failed) return retval;
+                    DB_KEY101=(Token)match(input,DB_KEY,FOLLOW_DB_KEY_in_value2181); if (state.failed) return retval;
                     if ( state.backtracking==0 ) {
-                    DB_KEY99_tree = 
-                    (CommonTree)adaptor.create(DB_KEY99)
+                    DB_KEY101_tree = 
+                    (CommonTree)adaptor.create(DB_KEY101)
                     ;
-                    adaptor.addChild(root_0, DB_KEY99_tree);
+                    adaptor.addChild(root_0, DB_KEY101_tree);
                     }
 
                     }
@@ -3009,7 +3058,7 @@ public TreeAdaptor getTreeAdaptor() {
 
 
     // $ANTLR start "parameter"
-    // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:420:1: parameter : '?' ;
+    // JaybirdSql.g:415:1: parameter : '?' ;
     public final JaybirdSqlParser.parameter_return parameter() throws RecognitionException {
         JaybirdSqlParser.parameter_return retval = new JaybirdSqlParser.parameter_return();
         retval.start = input.LT(1);
@@ -3018,25 +3067,25 @@ public TreeAdaptor getTreeAdaptor() {
 
         CommonTree root_0 = null;
 
-        Token char_literal100=null;
+        Token char_literal102=null;
 
-        CommonTree char_literal100_tree=null;
+        CommonTree char_literal102_tree=null;
 
         try {
             if ( state.backtracking>0 && alreadyParsedRule(input, 20) ) { return retval; }
 
-            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:421:3: ( '?' )
-            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:421:5: '?'
+            // JaybirdSql.g:416:9: ( '?' )
+            // JaybirdSql.g:416:14: '?'
             {
             root_0 = (CommonTree)adaptor.nil();
 
 
-            char_literal100=(Token)match(input,81,FOLLOW_81_in_parameter1171); if (state.failed) return retval;
+            char_literal102=(Token)match(input,81,FOLLOW_81_in_parameter2213); if (state.failed) return retval;
             if ( state.backtracking==0 ) {
-            char_literal100_tree = 
-            (CommonTree)adaptor.create(char_literal100)
+            char_literal102_tree = 
+            (CommonTree)adaptor.create(char_literal102)
             ;
-            adaptor.addChild(root_0, char_literal100_tree);
+            adaptor.addChild(root_0, char_literal102_tree);
             }
 
             }
@@ -3074,7 +3123,7 @@ public TreeAdaptor getTreeAdaptor() {
 
 
     // $ANTLR start "nullValue"
-    // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:424:1: nullValue : NULL ;
+    // JaybirdSql.g:419:1: nullValue : NULL ;
     public final JaybirdSqlParser.nullValue_return nullValue() throws RecognitionException {
         JaybirdSqlParser.nullValue_return retval = new JaybirdSqlParser.nullValue_return();
         retval.start = input.LT(1);
@@ -3083,25 +3132,25 @@ public TreeAdaptor getTreeAdaptor() {
 
         CommonTree root_0 = null;
 
-        Token NULL101=null;
+        Token NULL103=null;
 
-        CommonTree NULL101_tree=null;
+        CommonTree NULL103_tree=null;
 
         try {
             if ( state.backtracking>0 && alreadyParsedRule(input, 21) ) { return retval; }
 
-            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:425:3: ( NULL )
-            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:425:5: NULL
+            // JaybirdSql.g:420:9: ( NULL )
+            // JaybirdSql.g:420:14: NULL
             {
             root_0 = (CommonTree)adaptor.nil();
 
 
-            NULL101=(Token)match(input,NULL,FOLLOW_NULL_in_nullValue1184); if (state.failed) return retval;
+            NULL103=(Token)match(input,NULL,FOLLOW_NULL_in_nullValue2241); if (state.failed) return retval;
             if ( state.backtracking==0 ) {
-            NULL101_tree = 
-            (CommonTree)adaptor.create(NULL101)
+            NULL103_tree = 
+            (CommonTree)adaptor.create(NULL103)
             ;
-            adaptor.addChild(root_0, NULL101_tree);
+            adaptor.addChild(root_0, NULL103_tree);
             }
 
             }
@@ -3139,7 +3188,7 @@ public TreeAdaptor getTreeAdaptor() {
 
 
     // $ANTLR start "simpleValue"
-    // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:428:1: simpleValue : ( GENERIC_ID | STRING | INTEGER | REAL );
+    // JaybirdSql.g:423:1: simpleValue : ( GENERIC_ID | STRING | INTEGER | REAL );
     public final JaybirdSqlParser.simpleValue_return simpleValue() throws RecognitionException {
         JaybirdSqlParser.simpleValue_return retval = new JaybirdSqlParser.simpleValue_return();
         retval.start = input.LT(1);
@@ -3148,25 +3197,25 @@ public TreeAdaptor getTreeAdaptor() {
 
         CommonTree root_0 = null;
 
-        Token set102=null;
+        Token set104=null;
 
-        CommonTree set102_tree=null;
+        CommonTree set104_tree=null;
 
         try {
             if ( state.backtracking>0 && alreadyParsedRule(input, 22) ) { return retval; }
 
-            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:429:3: ( GENERIC_ID | STRING | INTEGER | REAL )
-            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:
+            // JaybirdSql.g:424:9: ( GENERIC_ID | STRING | INTEGER | REAL )
+            // JaybirdSql.g:
             {
             root_0 = (CommonTree)adaptor.nil();
 
 
-            set102=(Token)input.LT(1);
+            set104=(Token)input.LT(1);
 
             if ( input.LA(1)==GENERIC_ID||input.LA(1)==INTEGER||input.LA(1)==REAL||input.LA(1)==STRING ) {
                 input.consume();
                 if ( state.backtracking==0 ) adaptor.addChild(root_0, 
-                (CommonTree)adaptor.create(set102)
+                (CommonTree)adaptor.create(set104)
                 );
                 state.errorRecovery=false;
                 state.failed=false;
@@ -3213,7 +3262,7 @@ public TreeAdaptor getTreeAdaptor() {
 
 
     // $ANTLR start "nextValueExpression"
-    // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:435:1: nextValueExpression : ( NEXT VALUE FOR simpleIdentifier | GEN_ID '(' simpleIdentifier ',' INTEGER ')' );
+    // JaybirdSql.g:430:1: nextValueExpression : ( NEXT VALUE FOR simpleIdentifier | GEN_ID '(' simpleIdentifier ',' INTEGER ')' );
     public final JaybirdSqlParser.nextValueExpression_return nextValueExpression() throws RecognitionException {
         JaybirdSqlParser.nextValueExpression_return retval = new JaybirdSqlParser.nextValueExpression_return();
         retval.start = input.LT(1);
@@ -3222,119 +3271,104 @@ public TreeAdaptor getTreeAdaptor() {
 
         CommonTree root_0 = null;
 
-        Token NEXT103=null;
-        Token VALUE104=null;
-        Token FOR105=null;
-        Token GEN_ID107=null;
-        Token char_literal108=null;
+        Token NEXT105=null;
+        Token VALUE106=null;
+        Token FOR107=null;
+        Token GEN_ID109=null;
         Token char_literal110=null;
-        Token INTEGER111=null;
         Token char_literal112=null;
-        JaybirdSqlParser.simpleIdentifier_return simpleIdentifier106 =null;
+        Token INTEGER113=null;
+        Token char_literal114=null;
+        JaybirdSqlParser.simpleIdentifier_return simpleIdentifier108 =null;
 
-        JaybirdSqlParser.simpleIdentifier_return simpleIdentifier109 =null;
+        JaybirdSqlParser.simpleIdentifier_return simpleIdentifier111 =null;
 
 
-        CommonTree NEXT103_tree=null;
-        CommonTree VALUE104_tree=null;
-        CommonTree FOR105_tree=null;
-        CommonTree GEN_ID107_tree=null;
-        CommonTree char_literal108_tree=null;
+        CommonTree NEXT105_tree=null;
+        CommonTree VALUE106_tree=null;
+        CommonTree FOR107_tree=null;
+        CommonTree GEN_ID109_tree=null;
         CommonTree char_literal110_tree=null;
-        CommonTree INTEGER111_tree=null;
         CommonTree char_literal112_tree=null;
+        CommonTree INTEGER113_tree=null;
+        CommonTree char_literal114_tree=null;
 
         try {
             if ( state.backtracking>0 && alreadyParsedRule(input, 23) ) { return retval; }
 
-            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:436:3: ( NEXT VALUE FOR simpleIdentifier | GEN_ID '(' simpleIdentifier ',' INTEGER ')' )
-            int alt14=2;
-            int LA14_0 = input.LA(1);
+            // JaybirdSql.g:431:9: ( NEXT VALUE FOR simpleIdentifier | GEN_ID '(' simpleIdentifier ',' INTEGER ')' )
+            int alt16=2;
+            int LA16_0 = input.LA(1);
 
-            if ( (LA14_0==NEXT) ) {
-                alt14=1;
+            if ( (LA16_0==NEXT) ) {
+                alt16=1;
             }
-            else if ( (LA14_0==GEN_ID) ) {
-                alt14=2;
+            else if ( (LA16_0==GEN_ID) ) {
+                alt16=2;
             }
             else {
                 if (state.backtracking>0) {state.failed=true; return retval;}
                 NoViableAltException nvae =
-                    new NoViableAltException("", 14, 0, input);
+                    new NoViableAltException("", 16, 0, input);
 
                 throw nvae;
 
             }
-            switch (alt14) {
+            switch (alt16) {
                 case 1 :
-                    // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:436:5: NEXT VALUE FOR simpleIdentifier
+                    // JaybirdSql.g:431:14: NEXT VALUE FOR simpleIdentifier
                     {
                     root_0 = (CommonTree)adaptor.nil();
 
 
-                    NEXT103=(Token)match(input,NEXT,FOLLOW_NEXT_in_nextValueExpression1233); if (state.failed) return retval;
+                    NEXT105=(Token)match(input,NEXT,FOLLOW_NEXT_in_nextValueExpression2359); if (state.failed) return retval;
                     if ( state.backtracking==0 ) {
-                    NEXT103_tree = 
-                    (CommonTree)adaptor.create(NEXT103)
+                    NEXT105_tree = 
+                    (CommonTree)adaptor.create(NEXT105)
                     ;
-                    adaptor.addChild(root_0, NEXT103_tree);
+                    adaptor.addChild(root_0, NEXT105_tree);
                     }
 
-                    VALUE104=(Token)match(input,VALUE,FOLLOW_VALUE_in_nextValueExpression1235); if (state.failed) return retval;
+                    VALUE106=(Token)match(input,VALUE,FOLLOW_VALUE_in_nextValueExpression2361); if (state.failed) return retval;
                     if ( state.backtracking==0 ) {
-                    VALUE104_tree = 
-                    (CommonTree)adaptor.create(VALUE104)
+                    VALUE106_tree = 
+                    (CommonTree)adaptor.create(VALUE106)
                     ;
-                    adaptor.addChild(root_0, VALUE104_tree);
+                    adaptor.addChild(root_0, VALUE106_tree);
                     }
 
-                    FOR105=(Token)match(input,FOR,FOLLOW_FOR_in_nextValueExpression1237); if (state.failed) return retval;
+                    FOR107=(Token)match(input,FOR,FOLLOW_FOR_in_nextValueExpression2363); if (state.failed) return retval;
                     if ( state.backtracking==0 ) {
-                    FOR105_tree = 
-                    (CommonTree)adaptor.create(FOR105)
+                    FOR107_tree = 
+                    (CommonTree)adaptor.create(FOR107)
                     ;
-                    adaptor.addChild(root_0, FOR105_tree);
+                    adaptor.addChild(root_0, FOR107_tree);
                     }
 
-                    pushFollow(FOLLOW_simpleIdentifier_in_nextValueExpression1239);
-                    simpleIdentifier106=simpleIdentifier();
+                    pushFollow(FOLLOW_simpleIdentifier_in_nextValueExpression2365);
+                    simpleIdentifier108=simpleIdentifier();
 
                     state._fsp--;
                     if (state.failed) return retval;
-                    if ( state.backtracking==0 ) adaptor.addChild(root_0, simpleIdentifier106.getTree());
+                    if ( state.backtracking==0 ) adaptor.addChild(root_0, simpleIdentifier108.getTree());
 
                     }
                     break;
                 case 2 :
-                    // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:437:5: GEN_ID '(' simpleIdentifier ',' INTEGER ')'
+                    // JaybirdSql.g:432:14: GEN_ID '(' simpleIdentifier ',' INTEGER ')'
                     {
                     root_0 = (CommonTree)adaptor.nil();
 
 
-                    GEN_ID107=(Token)match(input,GEN_ID,FOLLOW_GEN_ID_in_nextValueExpression1245); if (state.failed) return retval;
+                    GEN_ID109=(Token)match(input,GEN_ID,FOLLOW_GEN_ID_in_nextValueExpression2380); if (state.failed) return retval;
                     if ( state.backtracking==0 ) {
-                    GEN_ID107_tree = 
-                    (CommonTree)adaptor.create(GEN_ID107)
+                    GEN_ID109_tree = 
+                    (CommonTree)adaptor.create(GEN_ID109)
                     ;
-                    adaptor.addChild(root_0, GEN_ID107_tree);
+                    adaptor.addChild(root_0, GEN_ID109_tree);
                     }
 
-                    char_literal108=(Token)match(input,LEFT_PAREN,FOLLOW_LEFT_PAREN_in_nextValueExpression1247); if (state.failed) return retval;
-                    if ( state.backtracking==0 ) {
-                    char_literal108_tree = 
-                    (CommonTree)adaptor.create(char_literal108)
-                    ;
-                    adaptor.addChild(root_0, char_literal108_tree);
-                    }
-
-                    pushFollow(FOLLOW_simpleIdentifier_in_nextValueExpression1249);
-                    simpleIdentifier109=simpleIdentifier();
-
-                    state._fsp--;
-                    if (state.failed) return retval;
-                    if ( state.backtracking==0 ) adaptor.addChild(root_0, simpleIdentifier109.getTree());
-
-                    char_literal110=(Token)match(input,COMMA,FOLLOW_COMMA_in_nextValueExpression1251); if (state.failed) return retval;
+                    char_literal110=(Token)match(input,LEFT_PAREN,FOLLOW_LEFT_PAREN_in_nextValueExpression2382); if (state.failed) return retval;
                     if ( state.backtracking==0 ) {
                     char_literal110_tree = 
                     (CommonTree)adaptor.create(char_literal110)
@@ -3342,20 +3376,35 @@ public TreeAdaptor getTreeAdaptor() {
                     adaptor.addChild(root_0, char_literal110_tree);
                     }
 
-                    INTEGER111=(Token)match(input,INTEGER,FOLLOW_INTEGER_in_nextValueExpression1253); if (state.failed) return retval;
-                    if ( state.backtracking==0 ) {
-                    INTEGER111_tree = 
-                    (CommonTree)adaptor.create(INTEGER111)
-                    ;
-                    adaptor.addChild(root_0, INTEGER111_tree);
-                    }
+                    pushFollow(FOLLOW_simpleIdentifier_in_nextValueExpression2384);
+                    simpleIdentifier111=simpleIdentifier();
 
-                    char_literal112=(Token)match(input,RIGHT_PAREN,FOLLOW_RIGHT_PAREN_in_nextValueExpression1255); if (state.failed) return retval;
+                    state._fsp--;
+                    if (state.failed) return retval;
+                    if ( state.backtracking==0 ) adaptor.addChild(root_0, simpleIdentifier111.getTree());
+
+                    char_literal112=(Token)match(input,COMMA,FOLLOW_COMMA_in_nextValueExpression2386); if (state.failed) return retval;
                     if ( state.backtracking==0 ) {
                     char_literal112_tree = 
                     (CommonTree)adaptor.create(char_literal112)
                     ;
                     adaptor.addChild(root_0, char_literal112_tree);
+                    }
+
+                    INTEGER113=(Token)match(input,INTEGER,FOLLOW_INTEGER_in_nextValueExpression2388); if (state.failed) return retval;
+                    if ( state.backtracking==0 ) {
+                    INTEGER113_tree = 
+                    (CommonTree)adaptor.create(INTEGER113)
+                    ;
+                    adaptor.addChild(root_0, INTEGER113_tree);
+                    }
+
+                    char_literal114=(Token)match(input,RIGHT_PAREN,FOLLOW_RIGHT_PAREN_in_nextValueExpression2390); if (state.failed) return retval;
+                    if ( state.backtracking==0 ) {
+                    char_literal114_tree = 
+                    (CommonTree)adaptor.create(char_literal114)
+                    ;
+                    adaptor.addChild(root_0, char_literal114_tree);
                     }
 
                     }
@@ -3395,7 +3444,7 @@ public TreeAdaptor getTreeAdaptor() {
 
 
     // $ANTLR start "castExpression"
-    // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:440:1: castExpression : CAST '(' value AS dataTypeDescriptor ')' ;
+    // JaybirdSql.g:435:1: castExpression : CAST '(' value AS dataTypeDescriptor ')' ;
     public final JaybirdSqlParser.castExpression_return castExpression() throws RecognitionException {
         JaybirdSqlParser.castExpression_return retval = new JaybirdSqlParser.castExpression_return();
         retval.start = input.LT(1);
@@ -3404,73 +3453,73 @@ public TreeAdaptor getTreeAdaptor() {
 
         CommonTree root_0 = null;
 
-        Token CAST113=null;
-        Token char_literal114=null;
-        Token AS116=null;
-        Token char_literal118=null;
-        JaybirdSqlParser.value_return value115 =null;
+        Token CAST115=null;
+        Token char_literal116=null;
+        Token AS118=null;
+        Token char_literal120=null;
+        JaybirdSqlParser.value_return value117 =null;
 
-        JaybirdSqlParser.dataTypeDescriptor_return dataTypeDescriptor117 =null;
+        JaybirdSqlParser.dataTypeDescriptor_return dataTypeDescriptor119 =null;
 
 
-        CommonTree CAST113_tree=null;
-        CommonTree char_literal114_tree=null;
-        CommonTree AS116_tree=null;
-        CommonTree char_literal118_tree=null;
+        CommonTree CAST115_tree=null;
+        CommonTree char_literal116_tree=null;
+        CommonTree AS118_tree=null;
+        CommonTree char_literal120_tree=null;
 
         try {
             if ( state.backtracking>0 && alreadyParsedRule(input, 24) ) { return retval; }
 
-            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:441:3: ( CAST '(' value AS dataTypeDescriptor ')' )
-            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:441:5: CAST '(' value AS dataTypeDescriptor ')'
+            // JaybirdSql.g:436:9: ( CAST '(' value AS dataTypeDescriptor ')' )
+            // JaybirdSql.g:436:14: CAST '(' value AS dataTypeDescriptor ')'
             {
             root_0 = (CommonTree)adaptor.nil();
 
 
-            CAST113=(Token)match(input,CAST,FOLLOW_CAST_in_castExpression1270); if (state.failed) return retval;
+            CAST115=(Token)match(input,CAST,FOLLOW_CAST_in_castExpression2426); if (state.failed) return retval;
             if ( state.backtracking==0 ) {
-            CAST113_tree = 
-            (CommonTree)adaptor.create(CAST113)
+            CAST115_tree = 
+            (CommonTree)adaptor.create(CAST115)
             ;
-            adaptor.addChild(root_0, CAST113_tree);
+            adaptor.addChild(root_0, CAST115_tree);
             }
 
-            char_literal114=(Token)match(input,LEFT_PAREN,FOLLOW_LEFT_PAREN_in_castExpression1272); if (state.failed) return retval;
+            char_literal116=(Token)match(input,LEFT_PAREN,FOLLOW_LEFT_PAREN_in_castExpression2428); if (state.failed) return retval;
             if ( state.backtracking==0 ) {
-            char_literal114_tree = 
-            (CommonTree)adaptor.create(char_literal114)
+            char_literal116_tree = 
+            (CommonTree)adaptor.create(char_literal116)
             ;
-            adaptor.addChild(root_0, char_literal114_tree);
+            adaptor.addChild(root_0, char_literal116_tree);
             }
 
-            pushFollow(FOLLOW_value_in_castExpression1274);
-            value115=value();
+            pushFollow(FOLLOW_value_in_castExpression2430);
+            value117=value();
 
             state._fsp--;
             if (state.failed) return retval;
-            if ( state.backtracking==0 ) adaptor.addChild(root_0, value115.getTree());
+            if ( state.backtracking==0 ) adaptor.addChild(root_0, value117.getTree());
 
-            AS116=(Token)match(input,AS,FOLLOW_AS_in_castExpression1276); if (state.failed) return retval;
+            AS118=(Token)match(input,AS,FOLLOW_AS_in_castExpression2432); if (state.failed) return retval;
             if ( state.backtracking==0 ) {
-            AS116_tree = 
-            (CommonTree)adaptor.create(AS116)
+            AS118_tree = 
+            (CommonTree)adaptor.create(AS118)
             ;
-            adaptor.addChild(root_0, AS116_tree);
+            adaptor.addChild(root_0, AS118_tree);
             }
 
-            pushFollow(FOLLOW_dataTypeDescriptor_in_castExpression1278);
-            dataTypeDescriptor117=dataTypeDescriptor();
+            pushFollow(FOLLOW_dataTypeDescriptor_in_castExpression2434);
+            dataTypeDescriptor119=dataTypeDescriptor();
 
             state._fsp--;
             if (state.failed) return retval;
-            if ( state.backtracking==0 ) adaptor.addChild(root_0, dataTypeDescriptor117.getTree());
+            if ( state.backtracking==0 ) adaptor.addChild(root_0, dataTypeDescriptor119.getTree());
 
-            char_literal118=(Token)match(input,RIGHT_PAREN,FOLLOW_RIGHT_PAREN_in_castExpression1280); if (state.failed) return retval;
+            char_literal120=(Token)match(input,RIGHT_PAREN,FOLLOW_RIGHT_PAREN_in_castExpression2436); if (state.failed) return retval;
             if ( state.backtracking==0 ) {
-            char_literal118_tree = 
-            (CommonTree)adaptor.create(char_literal118)
+            char_literal120_tree = 
+            (CommonTree)adaptor.create(char_literal120)
             ;
-            adaptor.addChild(root_0, char_literal118_tree);
+            adaptor.addChild(root_0, char_literal120_tree);
             }
 
             }
@@ -3508,7 +3557,7 @@ public TreeAdaptor getTreeAdaptor() {
 
 
     // $ANTLR start "dataTypeDescriptor"
-    // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:444:1: dataTypeDescriptor : ( nonArrayType | arrayType );
+    // JaybirdSql.g:439:1: dataTypeDescriptor : ( nonArrayType | arrayType );
     public final JaybirdSqlParser.dataTypeDescriptor_return dataTypeDescriptor() throws RecognitionException {
         JaybirdSqlParser.dataTypeDescriptor_return retval = new JaybirdSqlParser.dataTypeDescriptor_return();
         retval.start = input.LT(1);
@@ -3517,32 +3566,32 @@ public TreeAdaptor getTreeAdaptor() {
 
         CommonTree root_0 = null;
 
-        JaybirdSqlParser.nonArrayType_return nonArrayType119 =null;
+        JaybirdSqlParser.nonArrayType_return nonArrayType121 =null;
 
-        JaybirdSqlParser.arrayType_return arrayType120 =null;
+        JaybirdSqlParser.arrayType_return arrayType122 =null;
 
 
 
         try {
             if ( state.backtracking>0 && alreadyParsedRule(input, 25) ) { return retval; }
 
-            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:445:3: ( nonArrayType | arrayType )
-            int alt15=2;
+            // JaybirdSql.g:440:9: ( nonArrayType | arrayType )
+            int alt17=2;
             switch ( input.LA(1) ) {
             case KW_BIGINT:
                 {
-                int LA15_1 = input.LA(2);
+                int LA17_1 = input.LA(2);
 
-                if ( (LA15_1==RIGHT_PAREN) ) {
-                    alt15=1;
+                if ( (LA17_1==RIGHT_PAREN) ) {
+                    alt17=1;
                 }
-                else if ( (LA15_1==82) ) {
-                    alt15=2;
+                else if ( (LA17_1==82) ) {
+                    alt17=2;
                 }
                 else {
                     if (state.backtracking>0) {state.failed=true; return retval;}
                     NoViableAltException nvae =
-                        new NoViableAltException("", 15, 1, input);
+                        new NoViableAltException("", 17, 1, input);
 
                     throw nvae;
 
@@ -3551,18 +3600,18 @@ public TreeAdaptor getTreeAdaptor() {
                 break;
             case KW_DATE:
                 {
-                int LA15_2 = input.LA(2);
+                int LA17_2 = input.LA(2);
 
-                if ( (LA15_2==RIGHT_PAREN) ) {
-                    alt15=1;
+                if ( (LA17_2==RIGHT_PAREN) ) {
+                    alt17=1;
                 }
-                else if ( (LA15_2==82) ) {
-                    alt15=2;
+                else if ( (LA17_2==82) ) {
+                    alt17=2;
                 }
                 else {
                     if (state.backtracking>0) {state.failed=true; return retval;}
                     NoViableAltException nvae =
-                        new NoViableAltException("", 15, 2, input);
+                        new NoViableAltException("", 17, 2, input);
 
                     throw nvae;
 
@@ -3571,33 +3620,33 @@ public TreeAdaptor getTreeAdaptor() {
                 break;
             case KW_DECIMAL:
                 {
-                int LA15_3 = input.LA(2);
+                int LA17_3 = input.LA(2);
 
-                if ( (LA15_3==LEFT_PAREN) ) {
-                    int LA15_16 = input.LA(3);
+                if ( (LA17_3==LEFT_PAREN) ) {
+                    int LA17_16 = input.LA(3);
 
-                    if ( (LA15_16==INTEGER) ) {
-                        int LA15_21 = input.LA(4);
+                    if ( (LA17_16==INTEGER) ) {
+                        int LA17_21 = input.LA(4);
 
-                        if ( (LA15_21==COMMA) ) {
-                            int LA15_25 = input.LA(5);
+                        if ( (LA17_21==COMMA) ) {
+                            int LA17_25 = input.LA(5);
 
-                            if ( (LA15_25==INTEGER) ) {
-                                int LA15_31 = input.LA(6);
+                            if ( (LA17_25==INTEGER) ) {
+                                int LA17_31 = input.LA(6);
 
-                                if ( (LA15_31==RIGHT_PAREN) ) {
-                                    int LA15_26 = input.LA(7);
+                                if ( (LA17_31==RIGHT_PAREN) ) {
+                                    int LA17_26 = input.LA(7);
 
-                                    if ( (LA15_26==RIGHT_PAREN) ) {
-                                        alt15=1;
+                                    if ( (LA17_26==RIGHT_PAREN) ) {
+                                        alt17=1;
                                     }
-                                    else if ( (LA15_26==82) ) {
-                                        alt15=2;
+                                    else if ( (LA17_26==82) ) {
+                                        alt17=2;
                                     }
                                     else {
                                         if (state.backtracking>0) {state.failed=true; return retval;}
                                         NoViableAltException nvae =
-                                            new NoViableAltException("", 15, 26, input);
+                                            new NoViableAltException("", 17, 26, input);
 
                                         throw nvae;
 
@@ -3606,7 +3655,7 @@ public TreeAdaptor getTreeAdaptor() {
                                 else {
                                     if (state.backtracking>0) {state.failed=true; return retval;}
                                     NoViableAltException nvae =
-                                        new NoViableAltException("", 15, 31, input);
+                                        new NoViableAltException("", 17, 31, input);
 
                                     throw nvae;
 
@@ -3615,25 +3664,25 @@ public TreeAdaptor getTreeAdaptor() {
                             else {
                                 if (state.backtracking>0) {state.failed=true; return retval;}
                                 NoViableAltException nvae =
-                                    new NoViableAltException("", 15, 25, input);
+                                    new NoViableAltException("", 17, 25, input);
 
                                 throw nvae;
 
                             }
                         }
-                        else if ( (LA15_21==RIGHT_PAREN) ) {
-                            int LA15_26 = input.LA(5);
+                        else if ( (LA17_21==RIGHT_PAREN) ) {
+                            int LA17_26 = input.LA(5);
 
-                            if ( (LA15_26==RIGHT_PAREN) ) {
-                                alt15=1;
+                            if ( (LA17_26==RIGHT_PAREN) ) {
+                                alt17=1;
                             }
-                            else if ( (LA15_26==82) ) {
-                                alt15=2;
+                            else if ( (LA17_26==82) ) {
+                                alt17=2;
                             }
                             else {
                                 if (state.backtracking>0) {state.failed=true; return retval;}
                                 NoViableAltException nvae =
-                                    new NoViableAltException("", 15, 26, input);
+                                    new NoViableAltException("", 17, 26, input);
 
                                 throw nvae;
 
@@ -3642,7 +3691,7 @@ public TreeAdaptor getTreeAdaptor() {
                         else {
                             if (state.backtracking>0) {state.failed=true; return retval;}
                             NoViableAltException nvae =
-                                new NoViableAltException("", 15, 21, input);
+                                new NoViableAltException("", 17, 21, input);
 
                             throw nvae;
 
@@ -3651,7 +3700,7 @@ public TreeAdaptor getTreeAdaptor() {
                     else {
                         if (state.backtracking>0) {state.failed=true; return retval;}
                         NoViableAltException nvae =
-                            new NoViableAltException("", 15, 16, input);
+                            new NoViableAltException("", 17, 16, input);
 
                         throw nvae;
 
@@ -3660,7 +3709,7 @@ public TreeAdaptor getTreeAdaptor() {
                 else {
                     if (state.backtracking>0) {state.failed=true; return retval;}
                     NoViableAltException nvae =
-                        new NoViableAltException("", 15, 3, input);
+                        new NoViableAltException("", 17, 3, input);
 
                     throw nvae;
 
@@ -3669,21 +3718,21 @@ public TreeAdaptor getTreeAdaptor() {
                 break;
             case KW_DOUBLE:
                 {
-                int LA15_4 = input.LA(2);
+                int LA17_4 = input.LA(2);
 
-                if ( (LA15_4==KW_PRECISION) ) {
-                    int LA15_17 = input.LA(3);
+                if ( (LA17_4==KW_PRECISION) ) {
+                    int LA17_17 = input.LA(3);
 
-                    if ( (LA15_17==RIGHT_PAREN) ) {
-                        alt15=1;
+                    if ( (LA17_17==RIGHT_PAREN) ) {
+                        alt17=1;
                     }
-                    else if ( (LA15_17==82) ) {
-                        alt15=2;
+                    else if ( (LA17_17==82) ) {
+                        alt17=2;
                     }
                     else {
                         if (state.backtracking>0) {state.failed=true; return retval;}
                         NoViableAltException nvae =
-                            new NoViableAltException("", 15, 17, input);
+                            new NoViableAltException("", 17, 17, input);
 
                         throw nvae;
 
@@ -3692,7 +3741,7 @@ public TreeAdaptor getTreeAdaptor() {
                 else {
                     if (state.backtracking>0) {state.failed=true; return retval;}
                     NoViableAltException nvae =
-                        new NoViableAltException("", 15, 4, input);
+                        new NoViableAltException("", 17, 4, input);
 
                     throw nvae;
 
@@ -3701,18 +3750,18 @@ public TreeAdaptor getTreeAdaptor() {
                 break;
             case KW_FLOAT:
                 {
-                int LA15_5 = input.LA(2);
+                int LA17_5 = input.LA(2);
 
-                if ( (LA15_5==RIGHT_PAREN) ) {
-                    alt15=1;
+                if ( (LA17_5==RIGHT_PAREN) ) {
+                    alt17=1;
                 }
-                else if ( (LA15_5==82) ) {
-                    alt15=2;
+                else if ( (LA17_5==82) ) {
+                    alt17=2;
                 }
                 else {
                     if (state.backtracking>0) {state.failed=true; return retval;}
                     NoViableAltException nvae =
-                        new NoViableAltException("", 15, 5, input);
+                        new NoViableAltException("", 17, 5, input);
 
                     throw nvae;
 
@@ -3721,18 +3770,18 @@ public TreeAdaptor getTreeAdaptor() {
                 break;
             case KW_INTEGER:
                 {
-                int LA15_6 = input.LA(2);
+                int LA17_6 = input.LA(2);
 
-                if ( (LA15_6==RIGHT_PAREN) ) {
-                    alt15=1;
+                if ( (LA17_6==RIGHT_PAREN) ) {
+                    alt17=1;
                 }
-                else if ( (LA15_6==82) ) {
-                    alt15=2;
+                else if ( (LA17_6==82) ) {
+                    alt17=2;
                 }
                 else {
                     if (state.backtracking>0) {state.failed=true; return retval;}
                     NoViableAltException nvae =
-                        new NoViableAltException("", 15, 6, input);
+                        new NoViableAltException("", 17, 6, input);
 
                     throw nvae;
 
@@ -3741,18 +3790,18 @@ public TreeAdaptor getTreeAdaptor() {
                 break;
             case KW_INT:
                 {
-                int LA15_7 = input.LA(2);
+                int LA17_7 = input.LA(2);
 
-                if ( (LA15_7==RIGHT_PAREN) ) {
-                    alt15=1;
+                if ( (LA17_7==RIGHT_PAREN) ) {
+                    alt17=1;
                 }
-                else if ( (LA15_7==82) ) {
-                    alt15=2;
+                else if ( (LA17_7==82) ) {
+                    alt17=2;
                 }
                 else {
                     if (state.backtracking>0) {state.failed=true; return retval;}
                     NoViableAltException nvae =
-                        new NoViableAltException("", 15, 7, input);
+                        new NoViableAltException("", 17, 7, input);
 
                     throw nvae;
 
@@ -3761,33 +3810,33 @@ public TreeAdaptor getTreeAdaptor() {
                 break;
             case KW_NUMERIC:
                 {
-                int LA15_8 = input.LA(2);
+                int LA17_8 = input.LA(2);
 
-                if ( (LA15_8==LEFT_PAREN) ) {
-                    int LA15_18 = input.LA(3);
+                if ( (LA17_8==LEFT_PAREN) ) {
+                    int LA17_18 = input.LA(3);
 
-                    if ( (LA15_18==INTEGER) ) {
-                        int LA15_22 = input.LA(4);
+                    if ( (LA17_18==INTEGER) ) {
+                        int LA17_22 = input.LA(4);
 
-                        if ( (LA15_22==COMMA) ) {
-                            int LA15_27 = input.LA(5);
+                        if ( (LA17_22==COMMA) ) {
+                            int LA17_27 = input.LA(5);
 
-                            if ( (LA15_27==INTEGER) ) {
-                                int LA15_32 = input.LA(6);
+                            if ( (LA17_27==INTEGER) ) {
+                                int LA17_32 = input.LA(6);
 
-                                if ( (LA15_32==RIGHT_PAREN) ) {
-                                    int LA15_28 = input.LA(7);
+                                if ( (LA17_32==RIGHT_PAREN) ) {
+                                    int LA17_28 = input.LA(7);
 
-                                    if ( (LA15_28==RIGHT_PAREN) ) {
-                                        alt15=1;
+                                    if ( (LA17_28==RIGHT_PAREN) ) {
+                                        alt17=1;
                                     }
-                                    else if ( (LA15_28==82) ) {
-                                        alt15=2;
+                                    else if ( (LA17_28==82) ) {
+                                        alt17=2;
                                     }
                                     else {
                                         if (state.backtracking>0) {state.failed=true; return retval;}
                                         NoViableAltException nvae =
-                                            new NoViableAltException("", 15, 28, input);
+                                            new NoViableAltException("", 17, 28, input);
 
                                         throw nvae;
 
@@ -3796,7 +3845,7 @@ public TreeAdaptor getTreeAdaptor() {
                                 else {
                                     if (state.backtracking>0) {state.failed=true; return retval;}
                                     NoViableAltException nvae =
-                                        new NoViableAltException("", 15, 32, input);
+                                        new NoViableAltException("", 17, 32, input);
 
                                     throw nvae;
 
@@ -3805,25 +3854,25 @@ public TreeAdaptor getTreeAdaptor() {
                             else {
                                 if (state.backtracking>0) {state.failed=true; return retval;}
                                 NoViableAltException nvae =
-                                    new NoViableAltException("", 15, 27, input);
+                                    new NoViableAltException("", 17, 27, input);
 
                                 throw nvae;
 
                             }
                         }
-                        else if ( (LA15_22==RIGHT_PAREN) ) {
-                            int LA15_28 = input.LA(5);
+                        else if ( (LA17_22==RIGHT_PAREN) ) {
+                            int LA17_28 = input.LA(5);
 
-                            if ( (LA15_28==RIGHT_PAREN) ) {
-                                alt15=1;
+                            if ( (LA17_28==RIGHT_PAREN) ) {
+                                alt17=1;
                             }
-                            else if ( (LA15_28==82) ) {
-                                alt15=2;
+                            else if ( (LA17_28==82) ) {
+                                alt17=2;
                             }
                             else {
                                 if (state.backtracking>0) {state.failed=true; return retval;}
                                 NoViableAltException nvae =
-                                    new NoViableAltException("", 15, 28, input);
+                                    new NoViableAltException("", 17, 28, input);
 
                                 throw nvae;
 
@@ -3832,7 +3881,7 @@ public TreeAdaptor getTreeAdaptor() {
                         else {
                             if (state.backtracking>0) {state.failed=true; return retval;}
                             NoViableAltException nvae =
-                                new NoViableAltException("", 15, 22, input);
+                                new NoViableAltException("", 17, 22, input);
 
                             throw nvae;
 
@@ -3841,7 +3890,7 @@ public TreeAdaptor getTreeAdaptor() {
                     else {
                         if (state.backtracking>0) {state.failed=true; return retval;}
                         NoViableAltException nvae =
-                            new NoViableAltException("", 15, 18, input);
+                            new NoViableAltException("", 17, 18, input);
 
                         throw nvae;
 
@@ -3850,7 +3899,7 @@ public TreeAdaptor getTreeAdaptor() {
                 else {
                     if (state.backtracking>0) {state.failed=true; return retval;}
                     NoViableAltException nvae =
-                        new NoViableAltException("", 15, 8, input);
+                        new NoViableAltException("", 17, 8, input);
 
                     throw nvae;
 
@@ -3859,18 +3908,18 @@ public TreeAdaptor getTreeAdaptor() {
                 break;
             case KW_SMALLINT:
                 {
-                int LA15_9 = input.LA(2);
+                int LA17_9 = input.LA(2);
 
-                if ( (LA15_9==RIGHT_PAREN) ) {
-                    alt15=1;
+                if ( (LA17_9==RIGHT_PAREN) ) {
+                    alt17=1;
                 }
-                else if ( (LA15_9==82) ) {
-                    alt15=2;
+                else if ( (LA17_9==82) ) {
+                    alt17=2;
                 }
                 else {
                     if (state.backtracking>0) {state.failed=true; return retval;}
                     NoViableAltException nvae =
-                        new NoViableAltException("", 15, 9, input);
+                        new NoViableAltException("", 17, 9, input);
 
                     throw nvae;
 
@@ -3879,18 +3928,18 @@ public TreeAdaptor getTreeAdaptor() {
                 break;
             case KW_TIME:
                 {
-                int LA15_10 = input.LA(2);
+                int LA17_10 = input.LA(2);
 
-                if ( (LA15_10==RIGHT_PAREN) ) {
-                    alt15=1;
+                if ( (LA17_10==RIGHT_PAREN) ) {
+                    alt17=1;
                 }
-                else if ( (LA15_10==82) ) {
-                    alt15=2;
+                else if ( (LA17_10==82) ) {
+                    alt17=2;
                 }
                 else {
                     if (state.backtracking>0) {state.failed=true; return retval;}
                     NoViableAltException nvae =
-                        new NoViableAltException("", 15, 10, input);
+                        new NoViableAltException("", 17, 10, input);
 
                     throw nvae;
 
@@ -3899,18 +3948,18 @@ public TreeAdaptor getTreeAdaptor() {
                 break;
             case KW_TIMESTAMP:
                 {
-                int LA15_11 = input.LA(2);
+                int LA17_11 = input.LA(2);
 
-                if ( (LA15_11==RIGHT_PAREN) ) {
-                    alt15=1;
+                if ( (LA17_11==RIGHT_PAREN) ) {
+                    alt17=1;
                 }
-                else if ( (LA15_11==82) ) {
-                    alt15=2;
+                else if ( (LA17_11==82) ) {
+                    alt17=2;
                 }
                 else {
                     if (state.backtracking>0) {state.failed=true; return retval;}
                     NoViableAltException nvae =
-                        new NoViableAltException("", 15, 11, input);
+                        new NoViableAltException("", 17, 11, input);
 
                     throw nvae;
 
@@ -3922,24 +3971,24 @@ public TreeAdaptor getTreeAdaptor() {
                 switch ( input.LA(2) ) {
                 case LEFT_PAREN:
                     {
-                    int LA15_19 = input.LA(3);
+                    int LA17_19 = input.LA(3);
 
-                    if ( (LA15_19==INTEGER) ) {
-                        int LA15_23 = input.LA(4);
+                    if ( (LA17_19==INTEGER) ) {
+                        int LA17_23 = input.LA(4);
 
-                        if ( (LA15_23==RIGHT_PAREN) ) {
-                            int LA15_29 = input.LA(5);
+                        if ( (LA17_23==RIGHT_PAREN) ) {
+                            int LA17_29 = input.LA(5);
 
-                            if ( (LA15_29==CHARACTER||LA15_29==RIGHT_PAREN) ) {
-                                alt15=1;
+                            if ( (LA17_29==CHARACTER||LA17_29==RIGHT_PAREN) ) {
+                                alt17=1;
                             }
-                            else if ( (LA15_29==82) ) {
-                                alt15=2;
+                            else if ( (LA17_29==82) ) {
+                                alt17=2;
                             }
                             else {
                                 if (state.backtracking>0) {state.failed=true; return retval;}
                                 NoViableAltException nvae =
-                                    new NoViableAltException("", 15, 29, input);
+                                    new NoViableAltException("", 17, 29, input);
 
                                 throw nvae;
 
@@ -3948,7 +3997,7 @@ public TreeAdaptor getTreeAdaptor() {
                         else {
                             if (state.backtracking>0) {state.failed=true; return retval;}
                             NoViableAltException nvae =
-                                new NoViableAltException("", 15, 23, input);
+                                new NoViableAltException("", 17, 23, input);
 
                             throw nvae;
 
@@ -3957,7 +4006,7 @@ public TreeAdaptor getTreeAdaptor() {
                     else {
                         if (state.backtracking>0) {state.failed=true; return retval;}
                         NoViableAltException nvae =
-                            new NoViableAltException("", 15, 19, input);
+                            new NoViableAltException("", 17, 19, input);
 
                         throw nvae;
 
@@ -3967,18 +4016,18 @@ public TreeAdaptor getTreeAdaptor() {
                 case CHARACTER:
                 case RIGHT_PAREN:
                     {
-                    alt15=1;
+                    alt17=1;
                     }
                     break;
                 case 82:
                     {
-                    alt15=2;
+                    alt17=2;
                     }
                     break;
                 default:
                     if (state.backtracking>0) {state.failed=true; return retval;}
                     NoViableAltException nvae =
-                        new NoViableAltException("", 15, 12, input);
+                        new NoViableAltException("", 17, 12, input);
 
                     throw nvae;
 
@@ -3988,27 +4037,27 @@ public TreeAdaptor getTreeAdaptor() {
                 break;
             case KW_VARCHAR:
                 {
-                int LA15_13 = input.LA(2);
+                int LA17_13 = input.LA(2);
 
-                if ( (LA15_13==LEFT_PAREN) ) {
-                    int LA15_20 = input.LA(3);
+                if ( (LA17_13==LEFT_PAREN) ) {
+                    int LA17_20 = input.LA(3);
 
-                    if ( (LA15_20==INTEGER) ) {
-                        int LA15_24 = input.LA(4);
+                    if ( (LA17_20==INTEGER) ) {
+                        int LA17_24 = input.LA(4);
 
-                        if ( (LA15_24==RIGHT_PAREN) ) {
-                            int LA15_30 = input.LA(5);
+                        if ( (LA17_24==RIGHT_PAREN) ) {
+                            int LA17_30 = input.LA(5);
 
-                            if ( (LA15_30==CHARACTER||LA15_30==RIGHT_PAREN) ) {
-                                alt15=1;
+                            if ( (LA17_30==CHARACTER||LA17_30==RIGHT_PAREN) ) {
+                                alt17=1;
                             }
-                            else if ( (LA15_30==82) ) {
-                                alt15=2;
+                            else if ( (LA17_30==82) ) {
+                                alt17=2;
                             }
                             else {
                                 if (state.backtracking>0) {state.failed=true; return retval;}
                                 NoViableAltException nvae =
-                                    new NoViableAltException("", 15, 30, input);
+                                    new NoViableAltException("", 17, 30, input);
 
                                 throw nvae;
 
@@ -4017,7 +4066,7 @@ public TreeAdaptor getTreeAdaptor() {
                         else {
                             if (state.backtracking>0) {state.failed=true; return retval;}
                             NoViableAltException nvae =
-                                new NoViableAltException("", 15, 24, input);
+                                new NoViableAltException("", 17, 24, input);
 
                             throw nvae;
 
@@ -4026,7 +4075,7 @@ public TreeAdaptor getTreeAdaptor() {
                     else {
                         if (state.backtracking>0) {state.failed=true; return retval;}
                         NoViableAltException nvae =
-                            new NoViableAltException("", 15, 20, input);
+                            new NoViableAltException("", 17, 20, input);
 
                         throw nvae;
 
@@ -4035,7 +4084,7 @@ public TreeAdaptor getTreeAdaptor() {
                 else {
                     if (state.backtracking>0) {state.failed=true; return retval;}
                     NoViableAltException nvae =
-                        new NoViableAltException("", 15, 13, input);
+                        new NoViableAltException("", 17, 13, input);
 
                     throw nvae;
 
@@ -4044,46 +4093,46 @@ public TreeAdaptor getTreeAdaptor() {
                 break;
             case KW_BLOB:
                 {
-                alt15=1;
+                alt17=1;
                 }
                 break;
             default:
                 if (state.backtracking>0) {state.failed=true; return retval;}
                 NoViableAltException nvae =
-                    new NoViableAltException("", 15, 0, input);
+                    new NoViableAltException("", 17, 0, input);
 
                 throw nvae;
 
             }
 
-            switch (alt15) {
+            switch (alt17) {
                 case 1 :
-                    // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:445:5: nonArrayType
+                    // JaybirdSql.g:440:14: nonArrayType
                     {
                     root_0 = (CommonTree)adaptor.nil();
 
 
-                    pushFollow(FOLLOW_nonArrayType_in_dataTypeDescriptor1295);
-                    nonArrayType119=nonArrayType();
+                    pushFollow(FOLLOW_nonArrayType_in_dataTypeDescriptor2472);
+                    nonArrayType121=nonArrayType();
 
                     state._fsp--;
                     if (state.failed) return retval;
-                    if ( state.backtracking==0 ) adaptor.addChild(root_0, nonArrayType119.getTree());
+                    if ( state.backtracking==0 ) adaptor.addChild(root_0, nonArrayType121.getTree());
 
                     }
                     break;
                 case 2 :
-                    // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:446:5: arrayType
+                    // JaybirdSql.g:441:14: arrayType
                     {
                     root_0 = (CommonTree)adaptor.nil();
 
 
-                    pushFollow(FOLLOW_arrayType_in_dataTypeDescriptor1301);
-                    arrayType120=arrayType();
+                    pushFollow(FOLLOW_arrayType_in_dataTypeDescriptor2487);
+                    arrayType122=arrayType();
 
                     state._fsp--;
                     if (state.failed) return retval;
-                    if ( state.backtracking==0 ) adaptor.addChild(root_0, arrayType120.getTree());
+                    if ( state.backtracking==0 ) adaptor.addChild(root_0, arrayType122.getTree());
 
                     }
                     break;
@@ -4122,7 +4171,7 @@ public TreeAdaptor getTreeAdaptor() {
 
 
     // $ANTLR start "nonArrayType"
-    // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:449:1: nonArrayType : ( simpleType | blobType );
+    // JaybirdSql.g:444:1: nonArrayType : ( simpleType | blobType );
     public final JaybirdSqlParser.nonArrayType_return nonArrayType() throws RecognitionException {
         JaybirdSqlParser.nonArrayType_return retval = new JaybirdSqlParser.nonArrayType_return();
         retval.start = input.LT(1);
@@ -4131,61 +4180,61 @@ public TreeAdaptor getTreeAdaptor() {
 
         CommonTree root_0 = null;
 
-        JaybirdSqlParser.simpleType_return simpleType121 =null;
+        JaybirdSqlParser.simpleType_return simpleType123 =null;
 
-        JaybirdSqlParser.blobType_return blobType122 =null;
+        JaybirdSqlParser.blobType_return blobType124 =null;
 
 
 
         try {
             if ( state.backtracking>0 && alreadyParsedRule(input, 26) ) { return retval; }
 
-            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:450:3: ( simpleType | blobType )
-            int alt16=2;
-            int LA16_0 = input.LA(1);
+            // JaybirdSql.g:445:9: ( simpleType | blobType )
+            int alt18=2;
+            int LA18_0 = input.LA(1);
 
-            if ( (LA16_0==KW_BIGINT||(LA16_0 >= KW_CHAR && LA16_0 <= KW_NUMERIC)||(LA16_0 >= KW_SMALLINT && LA16_0 <= KW_VARCHAR)) ) {
-                alt16=1;
+            if ( (LA18_0==KW_BIGINT||(LA18_0 >= KW_CHAR && LA18_0 <= KW_NUMERIC)||(LA18_0 >= KW_SMALLINT && LA18_0 <= KW_VARCHAR)) ) {
+                alt18=1;
             }
-            else if ( (LA16_0==KW_BLOB) ) {
-                alt16=2;
+            else if ( (LA18_0==KW_BLOB) ) {
+                alt18=2;
             }
             else {
                 if (state.backtracking>0) {state.failed=true; return retval;}
                 NoViableAltException nvae =
-                    new NoViableAltException("", 16, 0, input);
+                    new NoViableAltException("", 18, 0, input);
 
                 throw nvae;
 
             }
-            switch (alt16) {
+            switch (alt18) {
                 case 1 :
-                    // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:450:5: simpleType
+                    // JaybirdSql.g:445:14: simpleType
                     {
                     root_0 = (CommonTree)adaptor.nil();
 
 
-                    pushFollow(FOLLOW_simpleType_in_nonArrayType1316);
-                    simpleType121=simpleType();
+                    pushFollow(FOLLOW_simpleType_in_nonArrayType2523);
+                    simpleType123=simpleType();
 
                     state._fsp--;
                     if (state.failed) return retval;
-                    if ( state.backtracking==0 ) adaptor.addChild(root_0, simpleType121.getTree());
+                    if ( state.backtracking==0 ) adaptor.addChild(root_0, simpleType123.getTree());
 
                     }
                     break;
                 case 2 :
-                    // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:451:5: blobType
+                    // JaybirdSql.g:446:14: blobType
                     {
                     root_0 = (CommonTree)adaptor.nil();
 
 
-                    pushFollow(FOLLOW_blobType_in_nonArrayType1322);
-                    blobType122=blobType();
+                    pushFollow(FOLLOW_blobType_in_nonArrayType2538);
+                    blobType124=blobType();
 
                     state._fsp--;
                     if (state.failed) return retval;
-                    if ( state.backtracking==0 ) adaptor.addChild(root_0, blobType122.getTree());
+                    if ( state.backtracking==0 ) adaptor.addChild(root_0, blobType124.getTree());
 
                     }
                     break;
@@ -4224,7 +4273,7 @@ public TreeAdaptor getTreeAdaptor() {
 
 
     // $ANTLR start "simpleType"
-    // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:454:1: simpleType : ( nonCharType | charType );
+    // JaybirdSql.g:449:1: simpleType : ( nonCharType | charType );
     public final JaybirdSqlParser.simpleType_return simpleType() throws RecognitionException {
         JaybirdSqlParser.simpleType_return retval = new JaybirdSqlParser.simpleType_return();
         retval.start = input.LT(1);
@@ -4233,61 +4282,61 @@ public TreeAdaptor getTreeAdaptor() {
 
         CommonTree root_0 = null;
 
-        JaybirdSqlParser.nonCharType_return nonCharType123 =null;
+        JaybirdSqlParser.nonCharType_return nonCharType125 =null;
 
-        JaybirdSqlParser.charType_return charType124 =null;
+        JaybirdSqlParser.charType_return charType126 =null;
 
 
 
         try {
             if ( state.backtracking>0 && alreadyParsedRule(input, 27) ) { return retval; }
 
-            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:455:3: ( nonCharType | charType )
-            int alt17=2;
-            int LA17_0 = input.LA(1);
+            // JaybirdSql.g:450:9: ( nonCharType | charType )
+            int alt19=2;
+            int LA19_0 = input.LA(1);
 
-            if ( (LA17_0==KW_BIGINT||(LA17_0 >= KW_DATE && LA17_0 <= KW_NUMERIC)||(LA17_0 >= KW_SMALLINT && LA17_0 <= KW_TIMESTAMP)) ) {
-                alt17=1;
+            if ( (LA19_0==KW_BIGINT||(LA19_0 >= KW_DATE && LA19_0 <= KW_NUMERIC)||(LA19_0 >= KW_SMALLINT && LA19_0 <= KW_TIMESTAMP)) ) {
+                alt19=1;
             }
-            else if ( (LA17_0==KW_CHAR||LA17_0==KW_VARCHAR) ) {
-                alt17=2;
+            else if ( (LA19_0==KW_CHAR||LA19_0==KW_VARCHAR) ) {
+                alt19=2;
             }
             else {
                 if (state.backtracking>0) {state.failed=true; return retval;}
                 NoViableAltException nvae =
-                    new NoViableAltException("", 17, 0, input);
+                    new NoViableAltException("", 19, 0, input);
 
                 throw nvae;
 
             }
-            switch (alt17) {
+            switch (alt19) {
                 case 1 :
-                    // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:455:5: nonCharType
+                    // JaybirdSql.g:450:14: nonCharType
                     {
                     root_0 = (CommonTree)adaptor.nil();
 
 
-                    pushFollow(FOLLOW_nonCharType_in_simpleType1335);
-                    nonCharType123=nonCharType();
+                    pushFollow(FOLLOW_nonCharType_in_simpleType2566);
+                    nonCharType125=nonCharType();
 
                     state._fsp--;
                     if (state.failed) return retval;
-                    if ( state.backtracking==0 ) adaptor.addChild(root_0, nonCharType123.getTree());
+                    if ( state.backtracking==0 ) adaptor.addChild(root_0, nonCharType125.getTree());
 
                     }
                     break;
                 case 2 :
-                    // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:456:5: charType
+                    // JaybirdSql.g:451:14: charType
                     {
                     root_0 = (CommonTree)adaptor.nil();
 
 
-                    pushFollow(FOLLOW_charType_in_simpleType1341);
-                    charType124=charType();
+                    pushFollow(FOLLOW_charType_in_simpleType2581);
+                    charType126=charType();
 
                     state._fsp--;
                     if (state.failed) return retval;
-                    if ( state.backtracking==0 ) adaptor.addChild(root_0, charType124.getTree());
+                    if ( state.backtracking==0 ) adaptor.addChild(root_0, charType126.getTree());
 
                     }
                     break;
@@ -4326,7 +4375,7 @@ public TreeAdaptor getTreeAdaptor() {
 
 
     // $ANTLR start "charType"
-    // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:459:1: charType : ( nonCharSetCharType | charSetCharType );
+    // JaybirdSql.g:454:1: charType : ( nonCharSetCharType | charSetCharType );
     public final JaybirdSqlParser.charType_return charType() throws RecognitionException {
         JaybirdSqlParser.charType_return retval = new JaybirdSqlParser.charType_return();
         retval.start = input.LT(1);
@@ -4335,41 +4384,41 @@ public TreeAdaptor getTreeAdaptor() {
 
         CommonTree root_0 = null;
 
-        JaybirdSqlParser.nonCharSetCharType_return nonCharSetCharType125 =null;
+        JaybirdSqlParser.nonCharSetCharType_return nonCharSetCharType127 =null;
 
-        JaybirdSqlParser.charSetCharType_return charSetCharType126 =null;
+        JaybirdSqlParser.charSetCharType_return charSetCharType128 =null;
 
 
 
         try {
             if ( state.backtracking>0 && alreadyParsedRule(input, 28) ) { return retval; }
 
-            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:460:3: ( nonCharSetCharType | charSetCharType )
-            int alt18=2;
-            int LA18_0 = input.LA(1);
+            // JaybirdSql.g:455:9: ( nonCharSetCharType | charSetCharType )
+            int alt20=2;
+            int LA20_0 = input.LA(1);
 
-            if ( (LA18_0==KW_CHAR) ) {
+            if ( (LA20_0==KW_CHAR) ) {
                 switch ( input.LA(2) ) {
                 case LEFT_PAREN:
                     {
-                    int LA18_3 = input.LA(3);
+                    int LA20_3 = input.LA(3);
 
-                    if ( (LA18_3==INTEGER) ) {
-                        int LA18_7 = input.LA(4);
+                    if ( (LA20_3==INTEGER) ) {
+                        int LA20_7 = input.LA(4);
 
-                        if ( (LA18_7==RIGHT_PAREN) ) {
-                            int LA18_9 = input.LA(5);
+                        if ( (LA20_7==RIGHT_PAREN) ) {
+                            int LA20_9 = input.LA(5);
 
-                            if ( (LA18_9==EOF||LA18_9==RIGHT_PAREN) ) {
-                                alt18=1;
+                            if ( (LA20_9==EOF||LA20_9==RIGHT_PAREN) ) {
+                                alt20=1;
                             }
-                            else if ( (LA18_9==CHARACTER) ) {
-                                alt18=2;
+                            else if ( (LA20_9==CHARACTER) ) {
+                                alt20=2;
                             }
                             else {
                                 if (state.backtracking>0) {state.failed=true; return retval;}
                                 NoViableAltException nvae =
-                                    new NoViableAltException("", 18, 9, input);
+                                    new NoViableAltException("", 20, 9, input);
 
                                 throw nvae;
 
@@ -4378,7 +4427,7 @@ public TreeAdaptor getTreeAdaptor() {
                         else {
                             if (state.backtracking>0) {state.failed=true; return retval;}
                             NoViableAltException nvae =
-                                new NoViableAltException("", 18, 7, input);
+                                new NoViableAltException("", 20, 7, input);
 
                             throw nvae;
 
@@ -4387,7 +4436,7 @@ public TreeAdaptor getTreeAdaptor() {
                     else {
                         if (state.backtracking>0) {state.failed=true; return retval;}
                         NoViableAltException nvae =
-                            new NoViableAltException("", 18, 3, input);
+                            new NoViableAltException("", 20, 3, input);
 
                         throw nvae;
 
@@ -4397,46 +4446,46 @@ public TreeAdaptor getTreeAdaptor() {
                 case EOF:
                 case RIGHT_PAREN:
                     {
-                    alt18=1;
+                    alt20=1;
                     }
                     break;
                 case CHARACTER:
                     {
-                    alt18=2;
+                    alt20=2;
                     }
                     break;
                 default:
                     if (state.backtracking>0) {state.failed=true; return retval;}
                     NoViableAltException nvae =
-                        new NoViableAltException("", 18, 1, input);
+                        new NoViableAltException("", 20, 1, input);
 
                     throw nvae;
 
                 }
 
             }
-            else if ( (LA18_0==KW_VARCHAR) ) {
-                int LA18_2 = input.LA(2);
+            else if ( (LA20_0==KW_VARCHAR) ) {
+                int LA20_2 = input.LA(2);
 
-                if ( (LA18_2==LEFT_PAREN) ) {
-                    int LA18_6 = input.LA(3);
+                if ( (LA20_2==LEFT_PAREN) ) {
+                    int LA20_6 = input.LA(3);
 
-                    if ( (LA18_6==INTEGER) ) {
-                        int LA18_8 = input.LA(4);
+                    if ( (LA20_6==INTEGER) ) {
+                        int LA20_8 = input.LA(4);
 
-                        if ( (LA18_8==RIGHT_PAREN) ) {
-                            int LA18_10 = input.LA(5);
+                        if ( (LA20_8==RIGHT_PAREN) ) {
+                            int LA20_10 = input.LA(5);
 
-                            if ( (LA18_10==EOF||LA18_10==RIGHT_PAREN) ) {
-                                alt18=1;
+                            if ( (LA20_10==EOF||LA20_10==RIGHT_PAREN) ) {
+                                alt20=1;
                             }
-                            else if ( (LA18_10==CHARACTER) ) {
-                                alt18=2;
+                            else if ( (LA20_10==CHARACTER) ) {
+                                alt20=2;
                             }
                             else {
                                 if (state.backtracking>0) {state.failed=true; return retval;}
                                 NoViableAltException nvae =
-                                    new NoViableAltException("", 18, 10, input);
+                                    new NoViableAltException("", 20, 10, input);
 
                                 throw nvae;
 
@@ -4445,7 +4494,7 @@ public TreeAdaptor getTreeAdaptor() {
                         else {
                             if (state.backtracking>0) {state.failed=true; return retval;}
                             NoViableAltException nvae =
-                                new NoViableAltException("", 18, 8, input);
+                                new NoViableAltException("", 20, 8, input);
 
                             throw nvae;
 
@@ -4454,7 +4503,7 @@ public TreeAdaptor getTreeAdaptor() {
                     else {
                         if (state.backtracking>0) {state.failed=true; return retval;}
                         NoViableAltException nvae =
-                            new NoViableAltException("", 18, 6, input);
+                            new NoViableAltException("", 20, 6, input);
 
                         throw nvae;
 
@@ -4463,7 +4512,7 @@ public TreeAdaptor getTreeAdaptor() {
                 else {
                     if (state.backtracking>0) {state.failed=true; return retval;}
                     NoViableAltException nvae =
-                        new NoViableAltException("", 18, 2, input);
+                        new NoViableAltException("", 20, 2, input);
 
                     throw nvae;
 
@@ -4472,39 +4521,39 @@ public TreeAdaptor getTreeAdaptor() {
             else {
                 if (state.backtracking>0) {state.failed=true; return retval;}
                 NoViableAltException nvae =
-                    new NoViableAltException("", 18, 0, input);
+                    new NoViableAltException("", 20, 0, input);
 
                 throw nvae;
 
             }
-            switch (alt18) {
+            switch (alt20) {
                 case 1 :
-                    // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:460:5: nonCharSetCharType
+                    // JaybirdSql.g:455:14: nonCharSetCharType
                     {
                     root_0 = (CommonTree)adaptor.nil();
 
 
-                    pushFollow(FOLLOW_nonCharSetCharType_in_charType1356);
-                    nonCharSetCharType125=nonCharSetCharType();
+                    pushFollow(FOLLOW_nonCharSetCharType_in_charType2617);
+                    nonCharSetCharType127=nonCharSetCharType();
 
                     state._fsp--;
                     if (state.failed) return retval;
-                    if ( state.backtracking==0 ) adaptor.addChild(root_0, nonCharSetCharType125.getTree());
+                    if ( state.backtracking==0 ) adaptor.addChild(root_0, nonCharSetCharType127.getTree());
 
                     }
                     break;
                 case 2 :
-                    // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:461:5: charSetCharType
+                    // JaybirdSql.g:456:14: charSetCharType
                     {
                     root_0 = (CommonTree)adaptor.nil();
 
 
-                    pushFollow(FOLLOW_charSetCharType_in_charType1362);
-                    charSetCharType126=charSetCharType();
+                    pushFollow(FOLLOW_charSetCharType_in_charType2632);
+                    charSetCharType128=charSetCharType();
 
                     state._fsp--;
                     if (state.failed) return retval;
-                    if ( state.backtracking==0 ) adaptor.addChild(root_0, charSetCharType126.getTree());
+                    if ( state.backtracking==0 ) adaptor.addChild(root_0, charSetCharType128.getTree());
 
                     }
                     break;
@@ -4543,7 +4592,7 @@ public TreeAdaptor getTreeAdaptor() {
 
 
     // $ANTLR start "nonCharSetCharType"
-    // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:464:1: nonCharSetCharType : ( KW_CHAR ( '(' INTEGER ')' )? | KW_VARCHAR '(' INTEGER ')' );
+    // JaybirdSql.g:459:1: nonCharSetCharType : ( KW_CHAR ( '(' INTEGER ')' )? | KW_VARCHAR '(' INTEGER ')' );
     public final JaybirdSqlParser.nonCharSetCharType_return nonCharSetCharType() throws RecognitionException {
         JaybirdSqlParser.nonCharSetCharType_return retval = new JaybirdSqlParser.nonCharSetCharType_return();
         retval.start = input.LT(1);
@@ -4552,93 +4601,93 @@ public TreeAdaptor getTreeAdaptor() {
 
         CommonTree root_0 = null;
 
-        Token KW_CHAR127=null;
-        Token char_literal128=null;
-        Token INTEGER129=null;
+        Token KW_CHAR129=null;
         Token char_literal130=null;
-        Token KW_VARCHAR131=null;
+        Token INTEGER131=null;
         Token char_literal132=null;
-        Token INTEGER133=null;
+        Token KW_VARCHAR133=null;
         Token char_literal134=null;
+        Token INTEGER135=null;
+        Token char_literal136=null;
 
-        CommonTree KW_CHAR127_tree=null;
-        CommonTree char_literal128_tree=null;
-        CommonTree INTEGER129_tree=null;
+        CommonTree KW_CHAR129_tree=null;
         CommonTree char_literal130_tree=null;
-        CommonTree KW_VARCHAR131_tree=null;
+        CommonTree INTEGER131_tree=null;
         CommonTree char_literal132_tree=null;
-        CommonTree INTEGER133_tree=null;
+        CommonTree KW_VARCHAR133_tree=null;
         CommonTree char_literal134_tree=null;
+        CommonTree INTEGER135_tree=null;
+        CommonTree char_literal136_tree=null;
 
         try {
             if ( state.backtracking>0 && alreadyParsedRule(input, 29) ) { return retval; }
 
-            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:465:3: ( KW_CHAR ( '(' INTEGER ')' )? | KW_VARCHAR '(' INTEGER ')' )
-            int alt20=2;
-            int LA20_0 = input.LA(1);
+            // JaybirdSql.g:460:9: ( KW_CHAR ( '(' INTEGER ')' )? | KW_VARCHAR '(' INTEGER ')' )
+            int alt22=2;
+            int LA22_0 = input.LA(1);
 
-            if ( (LA20_0==KW_CHAR) ) {
-                alt20=1;
+            if ( (LA22_0==KW_CHAR) ) {
+                alt22=1;
             }
-            else if ( (LA20_0==KW_VARCHAR) ) {
-                alt20=2;
+            else if ( (LA22_0==KW_VARCHAR) ) {
+                alt22=2;
             }
             else {
                 if (state.backtracking>0) {state.failed=true; return retval;}
                 NoViableAltException nvae =
-                    new NoViableAltException("", 20, 0, input);
+                    new NoViableAltException("", 22, 0, input);
 
                 throw nvae;
 
             }
-            switch (alt20) {
+            switch (alt22) {
                 case 1 :
-                    // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:465:5: KW_CHAR ( '(' INTEGER ')' )?
+                    // JaybirdSql.g:460:14: KW_CHAR ( '(' INTEGER ')' )?
                     {
                     root_0 = (CommonTree)adaptor.nil();
 
 
-                    KW_CHAR127=(Token)match(input,KW_CHAR,FOLLOW_KW_CHAR_in_nonCharSetCharType1375); if (state.failed) return retval;
+                    KW_CHAR129=(Token)match(input,KW_CHAR,FOLLOW_KW_CHAR_in_nonCharSetCharType2660); if (state.failed) return retval;
                     if ( state.backtracking==0 ) {
-                    KW_CHAR127_tree = 
-                    (CommonTree)adaptor.create(KW_CHAR127)
+                    KW_CHAR129_tree = 
+                    (CommonTree)adaptor.create(KW_CHAR129)
                     ;
-                    adaptor.addChild(root_0, KW_CHAR127_tree);
+                    adaptor.addChild(root_0, KW_CHAR129_tree);
                     }
 
-                    // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:465:13: ( '(' INTEGER ')' )?
-                    int alt19=2;
-                    int LA19_0 = input.LA(1);
+                    // JaybirdSql.g:460:22: ( '(' INTEGER ')' )?
+                    int alt21=2;
+                    int LA21_0 = input.LA(1);
 
-                    if ( (LA19_0==LEFT_PAREN) ) {
-                        alt19=1;
+                    if ( (LA21_0==LEFT_PAREN) ) {
+                        alt21=1;
                     }
-                    switch (alt19) {
+                    switch (alt21) {
                         case 1 :
-                            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:465:14: '(' INTEGER ')'
+                            // JaybirdSql.g:460:23: '(' INTEGER ')'
                             {
-                            char_literal128=(Token)match(input,LEFT_PAREN,FOLLOW_LEFT_PAREN_in_nonCharSetCharType1378); if (state.failed) return retval;
-                            if ( state.backtracking==0 ) {
-                            char_literal128_tree = 
-                            (CommonTree)adaptor.create(char_literal128)
-                            ;
-                            adaptor.addChild(root_0, char_literal128_tree);
-                            }
-
-                            INTEGER129=(Token)match(input,INTEGER,FOLLOW_INTEGER_in_nonCharSetCharType1380); if (state.failed) return retval;
-                            if ( state.backtracking==0 ) {
-                            INTEGER129_tree = 
-                            (CommonTree)adaptor.create(INTEGER129)
-                            ;
-                            adaptor.addChild(root_0, INTEGER129_tree);
-                            }
-
-                            char_literal130=(Token)match(input,RIGHT_PAREN,FOLLOW_RIGHT_PAREN_in_nonCharSetCharType1382); if (state.failed) return retval;
+                            char_literal130=(Token)match(input,LEFT_PAREN,FOLLOW_LEFT_PAREN_in_nonCharSetCharType2663); if (state.failed) return retval;
                             if ( state.backtracking==0 ) {
                             char_literal130_tree = 
                             (CommonTree)adaptor.create(char_literal130)
                             ;
                             adaptor.addChild(root_0, char_literal130_tree);
+                            }
+
+                            INTEGER131=(Token)match(input,INTEGER,FOLLOW_INTEGER_in_nonCharSetCharType2665); if (state.failed) return retval;
+                            if ( state.backtracking==0 ) {
+                            INTEGER131_tree = 
+                            (CommonTree)adaptor.create(INTEGER131)
+                            ;
+                            adaptor.addChild(root_0, INTEGER131_tree);
+                            }
+
+                            char_literal132=(Token)match(input,RIGHT_PAREN,FOLLOW_RIGHT_PAREN_in_nonCharSetCharType2667); if (state.failed) return retval;
+                            if ( state.backtracking==0 ) {
+                            char_literal132_tree = 
+                            (CommonTree)adaptor.create(char_literal132)
+                            ;
+                            adaptor.addChild(root_0, char_literal132_tree);
                             }
 
                             }
@@ -4650,41 +4699,41 @@ public TreeAdaptor getTreeAdaptor() {
                     }
                     break;
                 case 2 :
-                    // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:466:5: KW_VARCHAR '(' INTEGER ')'
+                    // JaybirdSql.g:461:14: KW_VARCHAR '(' INTEGER ')'
                     {
                     root_0 = (CommonTree)adaptor.nil();
 
 
-                    KW_VARCHAR131=(Token)match(input,KW_VARCHAR,FOLLOW_KW_VARCHAR_in_nonCharSetCharType1390); if (state.failed) return retval;
+                    KW_VARCHAR133=(Token)match(input,KW_VARCHAR,FOLLOW_KW_VARCHAR_in_nonCharSetCharType2684); if (state.failed) return retval;
                     if ( state.backtracking==0 ) {
-                    KW_VARCHAR131_tree = 
-                    (CommonTree)adaptor.create(KW_VARCHAR131)
+                    KW_VARCHAR133_tree = 
+                    (CommonTree)adaptor.create(KW_VARCHAR133)
                     ;
-                    adaptor.addChild(root_0, KW_VARCHAR131_tree);
+                    adaptor.addChild(root_0, KW_VARCHAR133_tree);
                     }
 
-                    char_literal132=(Token)match(input,LEFT_PAREN,FOLLOW_LEFT_PAREN_in_nonCharSetCharType1392); if (state.failed) return retval;
-                    if ( state.backtracking==0 ) {
-                    char_literal132_tree = 
-                    (CommonTree)adaptor.create(char_literal132)
-                    ;
-                    adaptor.addChild(root_0, char_literal132_tree);
-                    }
-
-                    INTEGER133=(Token)match(input,INTEGER,FOLLOW_INTEGER_in_nonCharSetCharType1394); if (state.failed) return retval;
-                    if ( state.backtracking==0 ) {
-                    INTEGER133_tree = 
-                    (CommonTree)adaptor.create(INTEGER133)
-                    ;
-                    adaptor.addChild(root_0, INTEGER133_tree);
-                    }
-
-                    char_literal134=(Token)match(input,RIGHT_PAREN,FOLLOW_RIGHT_PAREN_in_nonCharSetCharType1396); if (state.failed) return retval;
+                    char_literal134=(Token)match(input,LEFT_PAREN,FOLLOW_LEFT_PAREN_in_nonCharSetCharType2686); if (state.failed) return retval;
                     if ( state.backtracking==0 ) {
                     char_literal134_tree = 
                     (CommonTree)adaptor.create(char_literal134)
                     ;
                     adaptor.addChild(root_0, char_literal134_tree);
+                    }
+
+                    INTEGER135=(Token)match(input,INTEGER,FOLLOW_INTEGER_in_nonCharSetCharType2688); if (state.failed) return retval;
+                    if ( state.backtracking==0 ) {
+                    INTEGER135_tree = 
+                    (CommonTree)adaptor.create(INTEGER135)
+                    ;
+                    adaptor.addChild(root_0, INTEGER135_tree);
+                    }
+
+                    char_literal136=(Token)match(input,RIGHT_PAREN,FOLLOW_RIGHT_PAREN_in_nonCharSetCharType2690); if (state.failed) return retval;
+                    if ( state.backtracking==0 ) {
+                    char_literal136_tree = 
+                    (CommonTree)adaptor.create(char_literal136)
+                    ;
+                    adaptor.addChild(root_0, char_literal136_tree);
                     }
 
                     }
@@ -4724,7 +4773,7 @@ public TreeAdaptor getTreeAdaptor() {
 
 
     // $ANTLR start "charSetCharType"
-    // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:469:1: charSetCharType : nonCharSetCharType charSetClause ;
+    // JaybirdSql.g:464:1: charSetCharType : nonCharSetCharType charSetClause ;
     public final JaybirdSqlParser.charSetCharType_return charSetCharType() throws RecognitionException {
         JaybirdSqlParser.charSetCharType_return retval = new JaybirdSqlParser.charSetCharType_return();
         retval.start = input.LT(1);
@@ -4733,34 +4782,34 @@ public TreeAdaptor getTreeAdaptor() {
 
         CommonTree root_0 = null;
 
-        JaybirdSqlParser.nonCharSetCharType_return nonCharSetCharType135 =null;
+        JaybirdSqlParser.nonCharSetCharType_return nonCharSetCharType137 =null;
 
-        JaybirdSqlParser.charSetClause_return charSetClause136 =null;
+        JaybirdSqlParser.charSetClause_return charSetClause138 =null;
 
 
 
         try {
             if ( state.backtracking>0 && alreadyParsedRule(input, 30) ) { return retval; }
 
-            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:470:3: ( nonCharSetCharType charSetClause )
-            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:470:5: nonCharSetCharType charSetClause
+            // JaybirdSql.g:465:9: ( nonCharSetCharType charSetClause )
+            // JaybirdSql.g:465:14: nonCharSetCharType charSetClause
             {
             root_0 = (CommonTree)adaptor.nil();
 
 
-            pushFollow(FOLLOW_nonCharSetCharType_in_charSetCharType1409);
-            nonCharSetCharType135=nonCharSetCharType();
+            pushFollow(FOLLOW_nonCharSetCharType_in_charSetCharType2718);
+            nonCharSetCharType137=nonCharSetCharType();
 
             state._fsp--;
             if (state.failed) return retval;
-            if ( state.backtracking==0 ) adaptor.addChild(root_0, nonCharSetCharType135.getTree());
+            if ( state.backtracking==0 ) adaptor.addChild(root_0, nonCharSetCharType137.getTree());
 
-            pushFollow(FOLLOW_charSetClause_in_charSetCharType1411);
-            charSetClause136=charSetClause();
+            pushFollow(FOLLOW_charSetClause_in_charSetCharType2720);
+            charSetClause138=charSetClause();
 
             state._fsp--;
             if (state.failed) return retval;
-            if ( state.backtracking==0 ) adaptor.addChild(root_0, charSetClause136.getTree());
+            if ( state.backtracking==0 ) adaptor.addChild(root_0, charSetClause138.getTree());
 
             }
 
@@ -4797,7 +4846,7 @@ public TreeAdaptor getTreeAdaptor() {
 
 
     // $ANTLR start "nonCharType"
-    // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:473:1: nonCharType : ( KW_BIGINT | KW_DATE | KW_DECIMAL '(' INTEGER ( ',' INTEGER )? ')' | KW_DOUBLE KW_PRECISION | KW_FLOAT | KW_INTEGER | KW_INT | KW_NUMERIC '(' INTEGER ( ',' INTEGER )? ')' | KW_SMALLINT | KW_TIME | KW_TIMESTAMP );
+    // JaybirdSql.g:468:1: nonCharType : ( KW_BIGINT | KW_DATE | KW_DECIMAL '(' INTEGER ( ',' INTEGER )? ')' | KW_DOUBLE KW_PRECISION | KW_FLOAT | KW_INTEGER | KW_INT | KW_NUMERIC '(' INTEGER ( ',' INTEGER )? ')' | KW_SMALLINT | KW_TIME | KW_TIMESTAMP );
     public final JaybirdSqlParser.nonCharType_return nonCharType() throws RecognitionException {
         JaybirdSqlParser.nonCharType_return retval = new JaybirdSqlParser.nonCharType_return();
         retval.start = input.LT(1);
@@ -4806,210 +4855,210 @@ public TreeAdaptor getTreeAdaptor() {
 
         CommonTree root_0 = null;
 
-        Token KW_BIGINT137=null;
-        Token KW_DATE138=null;
-        Token KW_DECIMAL139=null;
-        Token char_literal140=null;
-        Token INTEGER141=null;
+        Token KW_BIGINT139=null;
+        Token KW_DATE140=null;
+        Token KW_DECIMAL141=null;
         Token char_literal142=null;
         Token INTEGER143=null;
         Token char_literal144=null;
-        Token KW_DOUBLE145=null;
-        Token KW_PRECISION146=null;
-        Token KW_FLOAT147=null;
-        Token KW_INTEGER148=null;
-        Token KW_INT149=null;
-        Token KW_NUMERIC150=null;
-        Token char_literal151=null;
-        Token INTEGER152=null;
+        Token INTEGER145=null;
+        Token char_literal146=null;
+        Token KW_DOUBLE147=null;
+        Token KW_PRECISION148=null;
+        Token KW_FLOAT149=null;
+        Token KW_INTEGER150=null;
+        Token KW_INT151=null;
+        Token KW_NUMERIC152=null;
         Token char_literal153=null;
         Token INTEGER154=null;
         Token char_literal155=null;
-        Token KW_SMALLINT156=null;
-        Token KW_TIME157=null;
-        Token KW_TIMESTAMP158=null;
+        Token INTEGER156=null;
+        Token char_literal157=null;
+        Token KW_SMALLINT158=null;
+        Token KW_TIME159=null;
+        Token KW_TIMESTAMP160=null;
 
-        CommonTree KW_BIGINT137_tree=null;
-        CommonTree KW_DATE138_tree=null;
-        CommonTree KW_DECIMAL139_tree=null;
-        CommonTree char_literal140_tree=null;
-        CommonTree INTEGER141_tree=null;
+        CommonTree KW_BIGINT139_tree=null;
+        CommonTree KW_DATE140_tree=null;
+        CommonTree KW_DECIMAL141_tree=null;
         CommonTree char_literal142_tree=null;
         CommonTree INTEGER143_tree=null;
         CommonTree char_literal144_tree=null;
-        CommonTree KW_DOUBLE145_tree=null;
-        CommonTree KW_PRECISION146_tree=null;
-        CommonTree KW_FLOAT147_tree=null;
-        CommonTree KW_INTEGER148_tree=null;
-        CommonTree KW_INT149_tree=null;
-        CommonTree KW_NUMERIC150_tree=null;
-        CommonTree char_literal151_tree=null;
-        CommonTree INTEGER152_tree=null;
+        CommonTree INTEGER145_tree=null;
+        CommonTree char_literal146_tree=null;
+        CommonTree KW_DOUBLE147_tree=null;
+        CommonTree KW_PRECISION148_tree=null;
+        CommonTree KW_FLOAT149_tree=null;
+        CommonTree KW_INTEGER150_tree=null;
+        CommonTree KW_INT151_tree=null;
+        CommonTree KW_NUMERIC152_tree=null;
         CommonTree char_literal153_tree=null;
         CommonTree INTEGER154_tree=null;
         CommonTree char_literal155_tree=null;
-        CommonTree KW_SMALLINT156_tree=null;
-        CommonTree KW_TIME157_tree=null;
-        CommonTree KW_TIMESTAMP158_tree=null;
+        CommonTree INTEGER156_tree=null;
+        CommonTree char_literal157_tree=null;
+        CommonTree KW_SMALLINT158_tree=null;
+        CommonTree KW_TIME159_tree=null;
+        CommonTree KW_TIMESTAMP160_tree=null;
 
         try {
             if ( state.backtracking>0 && alreadyParsedRule(input, 31) ) { return retval; }
 
-            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:474:3: ( KW_BIGINT | KW_DATE | KW_DECIMAL '(' INTEGER ( ',' INTEGER )? ')' | KW_DOUBLE KW_PRECISION | KW_FLOAT | KW_INTEGER | KW_INT | KW_NUMERIC '(' INTEGER ( ',' INTEGER )? ')' | KW_SMALLINT | KW_TIME | KW_TIMESTAMP )
-            int alt23=11;
+            // JaybirdSql.g:469:9: ( KW_BIGINT | KW_DATE | KW_DECIMAL '(' INTEGER ( ',' INTEGER )? ')' | KW_DOUBLE KW_PRECISION | KW_FLOAT | KW_INTEGER | KW_INT | KW_NUMERIC '(' INTEGER ( ',' INTEGER )? ')' | KW_SMALLINT | KW_TIME | KW_TIMESTAMP )
+            int alt25=11;
             switch ( input.LA(1) ) {
             case KW_BIGINT:
                 {
-                alt23=1;
+                alt25=1;
                 }
                 break;
             case KW_DATE:
                 {
-                alt23=2;
+                alt25=2;
                 }
                 break;
             case KW_DECIMAL:
                 {
-                alt23=3;
+                alt25=3;
                 }
                 break;
             case KW_DOUBLE:
                 {
-                alt23=4;
+                alt25=4;
                 }
                 break;
             case KW_FLOAT:
                 {
-                alt23=5;
+                alt25=5;
                 }
                 break;
             case KW_INTEGER:
                 {
-                alt23=6;
+                alt25=6;
                 }
                 break;
             case KW_INT:
                 {
-                alt23=7;
+                alt25=7;
                 }
                 break;
             case KW_NUMERIC:
                 {
-                alt23=8;
+                alt25=8;
                 }
                 break;
             case KW_SMALLINT:
                 {
-                alt23=9;
+                alt25=9;
                 }
                 break;
             case KW_TIME:
                 {
-                alt23=10;
+                alt25=10;
                 }
                 break;
             case KW_TIMESTAMP:
                 {
-                alt23=11;
+                alt25=11;
                 }
                 break;
             default:
                 if (state.backtracking>0) {state.failed=true; return retval;}
                 NoViableAltException nvae =
-                    new NoViableAltException("", 23, 0, input);
+                    new NoViableAltException("", 25, 0, input);
 
                 throw nvae;
 
             }
 
-            switch (alt23) {
+            switch (alt25) {
                 case 1 :
-                    // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:474:5: KW_BIGINT
+                    // JaybirdSql.g:469:14: KW_BIGINT
                     {
                     root_0 = (CommonTree)adaptor.nil();
 
 
-                    KW_BIGINT137=(Token)match(input,KW_BIGINT,FOLLOW_KW_BIGINT_in_nonCharType1424); if (state.failed) return retval;
+                    KW_BIGINT139=(Token)match(input,KW_BIGINT,FOLLOW_KW_BIGINT_in_nonCharType2748); if (state.failed) return retval;
                     if ( state.backtracking==0 ) {
-                    KW_BIGINT137_tree = 
-                    (CommonTree)adaptor.create(KW_BIGINT137)
+                    KW_BIGINT139_tree = 
+                    (CommonTree)adaptor.create(KW_BIGINT139)
                     ;
-                    adaptor.addChild(root_0, KW_BIGINT137_tree);
+                    adaptor.addChild(root_0, KW_BIGINT139_tree);
                     }
 
                     }
                     break;
                 case 2 :
-                    // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:475:5: KW_DATE
+                    // JaybirdSql.g:470:14: KW_DATE
                     {
                     root_0 = (CommonTree)adaptor.nil();
 
 
-                    KW_DATE138=(Token)match(input,KW_DATE,FOLLOW_KW_DATE_in_nonCharType1430); if (state.failed) return retval;
+                    KW_DATE140=(Token)match(input,KW_DATE,FOLLOW_KW_DATE_in_nonCharType2763); if (state.failed) return retval;
                     if ( state.backtracking==0 ) {
-                    KW_DATE138_tree = 
-                    (CommonTree)adaptor.create(KW_DATE138)
+                    KW_DATE140_tree = 
+                    (CommonTree)adaptor.create(KW_DATE140)
                     ;
-                    adaptor.addChild(root_0, KW_DATE138_tree);
+                    adaptor.addChild(root_0, KW_DATE140_tree);
                     }
 
                     }
                     break;
                 case 3 :
-                    // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:476:5: KW_DECIMAL '(' INTEGER ( ',' INTEGER )? ')'
+                    // JaybirdSql.g:471:14: KW_DECIMAL '(' INTEGER ( ',' INTEGER )? ')'
                     {
                     root_0 = (CommonTree)adaptor.nil();
 
 
-                    KW_DECIMAL139=(Token)match(input,KW_DECIMAL,FOLLOW_KW_DECIMAL_in_nonCharType1436); if (state.failed) return retval;
+                    KW_DECIMAL141=(Token)match(input,KW_DECIMAL,FOLLOW_KW_DECIMAL_in_nonCharType2778); if (state.failed) return retval;
                     if ( state.backtracking==0 ) {
-                    KW_DECIMAL139_tree = 
-                    (CommonTree)adaptor.create(KW_DECIMAL139)
+                    KW_DECIMAL141_tree = 
+                    (CommonTree)adaptor.create(KW_DECIMAL141)
                     ;
-                    adaptor.addChild(root_0, KW_DECIMAL139_tree);
+                    adaptor.addChild(root_0, KW_DECIMAL141_tree);
                     }
 
-                    char_literal140=(Token)match(input,LEFT_PAREN,FOLLOW_LEFT_PAREN_in_nonCharType1438); if (state.failed) return retval;
+                    char_literal142=(Token)match(input,LEFT_PAREN,FOLLOW_LEFT_PAREN_in_nonCharType2780); if (state.failed) return retval;
                     if ( state.backtracking==0 ) {
-                    char_literal140_tree = 
-                    (CommonTree)adaptor.create(char_literal140)
+                    char_literal142_tree = 
+                    (CommonTree)adaptor.create(char_literal142)
                     ;
-                    adaptor.addChild(root_0, char_literal140_tree);
+                    adaptor.addChild(root_0, char_literal142_tree);
                     }
 
-                    INTEGER141=(Token)match(input,INTEGER,FOLLOW_INTEGER_in_nonCharType1440); if (state.failed) return retval;
+                    INTEGER143=(Token)match(input,INTEGER,FOLLOW_INTEGER_in_nonCharType2782); if (state.failed) return retval;
                     if ( state.backtracking==0 ) {
-                    INTEGER141_tree = 
-                    (CommonTree)adaptor.create(INTEGER141)
+                    INTEGER143_tree = 
+                    (CommonTree)adaptor.create(INTEGER143)
                     ;
-                    adaptor.addChild(root_0, INTEGER141_tree);
+                    adaptor.addChild(root_0, INTEGER143_tree);
                     }
 
-                    // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:476:28: ( ',' INTEGER )?
-                    int alt21=2;
-                    int LA21_0 = input.LA(1);
+                    // JaybirdSql.g:471:37: ( ',' INTEGER )?
+                    int alt23=2;
+                    int LA23_0 = input.LA(1);
 
-                    if ( (LA21_0==COMMA) ) {
-                        alt21=1;
+                    if ( (LA23_0==COMMA) ) {
+                        alt23=1;
                     }
-                    switch (alt21) {
+                    switch (alt23) {
                         case 1 :
-                            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:476:29: ',' INTEGER
+                            // JaybirdSql.g:471:38: ',' INTEGER
                             {
-                            char_literal142=(Token)match(input,COMMA,FOLLOW_COMMA_in_nonCharType1443); if (state.failed) return retval;
+                            char_literal144=(Token)match(input,COMMA,FOLLOW_COMMA_in_nonCharType2785); if (state.failed) return retval;
                             if ( state.backtracking==0 ) {
-                            char_literal142_tree = 
-                            (CommonTree)adaptor.create(char_literal142)
+                            char_literal144_tree = 
+                            (CommonTree)adaptor.create(char_literal144)
                             ;
-                            adaptor.addChild(root_0, char_literal142_tree);
+                            adaptor.addChild(root_0, char_literal144_tree);
                             }
 
-                            INTEGER143=(Token)match(input,INTEGER,FOLLOW_INTEGER_in_nonCharType1445); if (state.failed) return retval;
+                            INTEGER145=(Token)match(input,INTEGER,FOLLOW_INTEGER_in_nonCharType2787); if (state.failed) return retval;
                             if ( state.backtracking==0 ) {
-                            INTEGER143_tree = 
-                            (CommonTree)adaptor.create(INTEGER143)
+                            INTEGER145_tree = 
+                            (CommonTree)adaptor.create(INTEGER145)
                             ;
-                            adaptor.addChild(root_0, INTEGER143_tree);
+                            adaptor.addChild(root_0, INTEGER145_tree);
                             }
 
                             }
@@ -5018,143 +5067,143 @@ public TreeAdaptor getTreeAdaptor() {
                     }
 
 
-                    char_literal144=(Token)match(input,RIGHT_PAREN,FOLLOW_RIGHT_PAREN_in_nonCharType1449); if (state.failed) return retval;
+                    char_literal146=(Token)match(input,RIGHT_PAREN,FOLLOW_RIGHT_PAREN_in_nonCharType2791); if (state.failed) return retval;
                     if ( state.backtracking==0 ) {
-                    char_literal144_tree = 
-                    (CommonTree)adaptor.create(char_literal144)
+                    char_literal146_tree = 
+                    (CommonTree)adaptor.create(char_literal146)
                     ;
-                    adaptor.addChild(root_0, char_literal144_tree);
+                    adaptor.addChild(root_0, char_literal146_tree);
                     }
 
                     }
                     break;
                 case 4 :
-                    // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:477:5: KW_DOUBLE KW_PRECISION
+                    // JaybirdSql.g:472:14: KW_DOUBLE KW_PRECISION
                     {
                     root_0 = (CommonTree)adaptor.nil();
 
 
-                    KW_DOUBLE145=(Token)match(input,KW_DOUBLE,FOLLOW_KW_DOUBLE_in_nonCharType1455); if (state.failed) return retval;
+                    KW_DOUBLE147=(Token)match(input,KW_DOUBLE,FOLLOW_KW_DOUBLE_in_nonCharType2806); if (state.failed) return retval;
                     if ( state.backtracking==0 ) {
-                    KW_DOUBLE145_tree = 
-                    (CommonTree)adaptor.create(KW_DOUBLE145)
+                    KW_DOUBLE147_tree = 
+                    (CommonTree)adaptor.create(KW_DOUBLE147)
                     ;
-                    adaptor.addChild(root_0, KW_DOUBLE145_tree);
+                    adaptor.addChild(root_0, KW_DOUBLE147_tree);
                     }
 
-                    KW_PRECISION146=(Token)match(input,KW_PRECISION,FOLLOW_KW_PRECISION_in_nonCharType1457); if (state.failed) return retval;
+                    KW_PRECISION148=(Token)match(input,KW_PRECISION,FOLLOW_KW_PRECISION_in_nonCharType2808); if (state.failed) return retval;
                     if ( state.backtracking==0 ) {
-                    KW_PRECISION146_tree = 
-                    (CommonTree)adaptor.create(KW_PRECISION146)
+                    KW_PRECISION148_tree = 
+                    (CommonTree)adaptor.create(KW_PRECISION148)
                     ;
-                    adaptor.addChild(root_0, KW_PRECISION146_tree);
+                    adaptor.addChild(root_0, KW_PRECISION148_tree);
                     }
 
                     }
                     break;
                 case 5 :
-                    // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:478:5: KW_FLOAT
+                    // JaybirdSql.g:473:14: KW_FLOAT
                     {
                     root_0 = (CommonTree)adaptor.nil();
 
 
-                    KW_FLOAT147=(Token)match(input,KW_FLOAT,FOLLOW_KW_FLOAT_in_nonCharType1463); if (state.failed) return retval;
+                    KW_FLOAT149=(Token)match(input,KW_FLOAT,FOLLOW_KW_FLOAT_in_nonCharType2823); if (state.failed) return retval;
                     if ( state.backtracking==0 ) {
-                    KW_FLOAT147_tree = 
-                    (CommonTree)adaptor.create(KW_FLOAT147)
+                    KW_FLOAT149_tree = 
+                    (CommonTree)adaptor.create(KW_FLOAT149)
                     ;
-                    adaptor.addChild(root_0, KW_FLOAT147_tree);
+                    adaptor.addChild(root_0, KW_FLOAT149_tree);
                     }
 
                     }
                     break;
                 case 6 :
-                    // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:479:5: KW_INTEGER
+                    // JaybirdSql.g:474:14: KW_INTEGER
                     {
                     root_0 = (CommonTree)adaptor.nil();
 
 
-                    KW_INTEGER148=(Token)match(input,KW_INTEGER,FOLLOW_KW_INTEGER_in_nonCharType1469); if (state.failed) return retval;
+                    KW_INTEGER150=(Token)match(input,KW_INTEGER,FOLLOW_KW_INTEGER_in_nonCharType2838); if (state.failed) return retval;
                     if ( state.backtracking==0 ) {
-                    KW_INTEGER148_tree = 
-                    (CommonTree)adaptor.create(KW_INTEGER148)
+                    KW_INTEGER150_tree = 
+                    (CommonTree)adaptor.create(KW_INTEGER150)
                     ;
-                    adaptor.addChild(root_0, KW_INTEGER148_tree);
+                    adaptor.addChild(root_0, KW_INTEGER150_tree);
                     }
 
                     }
                     break;
                 case 7 :
-                    // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:480:5: KW_INT
+                    // JaybirdSql.g:475:14: KW_INT
                     {
                     root_0 = (CommonTree)adaptor.nil();
 
 
-                    KW_INT149=(Token)match(input,KW_INT,FOLLOW_KW_INT_in_nonCharType1475); if (state.failed) return retval;
+                    KW_INT151=(Token)match(input,KW_INT,FOLLOW_KW_INT_in_nonCharType2853); if (state.failed) return retval;
                     if ( state.backtracking==0 ) {
-                    KW_INT149_tree = 
-                    (CommonTree)adaptor.create(KW_INT149)
+                    KW_INT151_tree = 
+                    (CommonTree)adaptor.create(KW_INT151)
                     ;
-                    adaptor.addChild(root_0, KW_INT149_tree);
+                    adaptor.addChild(root_0, KW_INT151_tree);
                     }
 
                     }
                     break;
                 case 8 :
-                    // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:481:5: KW_NUMERIC '(' INTEGER ( ',' INTEGER )? ')'
+                    // JaybirdSql.g:476:14: KW_NUMERIC '(' INTEGER ( ',' INTEGER )? ')'
                     {
                     root_0 = (CommonTree)adaptor.nil();
 
 
-                    KW_NUMERIC150=(Token)match(input,KW_NUMERIC,FOLLOW_KW_NUMERIC_in_nonCharType1481); if (state.failed) return retval;
+                    KW_NUMERIC152=(Token)match(input,KW_NUMERIC,FOLLOW_KW_NUMERIC_in_nonCharType2868); if (state.failed) return retval;
                     if ( state.backtracking==0 ) {
-                    KW_NUMERIC150_tree = 
-                    (CommonTree)adaptor.create(KW_NUMERIC150)
+                    KW_NUMERIC152_tree = 
+                    (CommonTree)adaptor.create(KW_NUMERIC152)
                     ;
-                    adaptor.addChild(root_0, KW_NUMERIC150_tree);
+                    adaptor.addChild(root_0, KW_NUMERIC152_tree);
                     }
 
-                    char_literal151=(Token)match(input,LEFT_PAREN,FOLLOW_LEFT_PAREN_in_nonCharType1483); if (state.failed) return retval;
+                    char_literal153=(Token)match(input,LEFT_PAREN,FOLLOW_LEFT_PAREN_in_nonCharType2870); if (state.failed) return retval;
                     if ( state.backtracking==0 ) {
-                    char_literal151_tree = 
-                    (CommonTree)adaptor.create(char_literal151)
+                    char_literal153_tree = 
+                    (CommonTree)adaptor.create(char_literal153)
                     ;
-                    adaptor.addChild(root_0, char_literal151_tree);
+                    adaptor.addChild(root_0, char_literal153_tree);
                     }
 
-                    INTEGER152=(Token)match(input,INTEGER,FOLLOW_INTEGER_in_nonCharType1485); if (state.failed) return retval;
+                    INTEGER154=(Token)match(input,INTEGER,FOLLOW_INTEGER_in_nonCharType2872); if (state.failed) return retval;
                     if ( state.backtracking==0 ) {
-                    INTEGER152_tree = 
-                    (CommonTree)adaptor.create(INTEGER152)
+                    INTEGER154_tree = 
+                    (CommonTree)adaptor.create(INTEGER154)
                     ;
-                    adaptor.addChild(root_0, INTEGER152_tree);
+                    adaptor.addChild(root_0, INTEGER154_tree);
                     }
 
-                    // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:481:28: ( ',' INTEGER )?
-                    int alt22=2;
-                    int LA22_0 = input.LA(1);
+                    // JaybirdSql.g:476:37: ( ',' INTEGER )?
+                    int alt24=2;
+                    int LA24_0 = input.LA(1);
 
-                    if ( (LA22_0==COMMA) ) {
-                        alt22=1;
+                    if ( (LA24_0==COMMA) ) {
+                        alt24=1;
                     }
-                    switch (alt22) {
+                    switch (alt24) {
                         case 1 :
-                            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:481:29: ',' INTEGER
+                            // JaybirdSql.g:476:38: ',' INTEGER
                             {
-                            char_literal153=(Token)match(input,COMMA,FOLLOW_COMMA_in_nonCharType1488); if (state.failed) return retval;
+                            char_literal155=(Token)match(input,COMMA,FOLLOW_COMMA_in_nonCharType2875); if (state.failed) return retval;
                             if ( state.backtracking==0 ) {
-                            char_literal153_tree = 
-                            (CommonTree)adaptor.create(char_literal153)
+                            char_literal155_tree = 
+                            (CommonTree)adaptor.create(char_literal155)
                             ;
-                            adaptor.addChild(root_0, char_literal153_tree);
+                            adaptor.addChild(root_0, char_literal155_tree);
                             }
 
-                            INTEGER154=(Token)match(input,INTEGER,FOLLOW_INTEGER_in_nonCharType1490); if (state.failed) return retval;
+                            INTEGER156=(Token)match(input,INTEGER,FOLLOW_INTEGER_in_nonCharType2877); if (state.failed) return retval;
                             if ( state.backtracking==0 ) {
-                            INTEGER154_tree = 
-                            (CommonTree)adaptor.create(INTEGER154)
+                            INTEGER156_tree = 
+                            (CommonTree)adaptor.create(INTEGER156)
                             ;
-                            adaptor.addChild(root_0, INTEGER154_tree);
+                            adaptor.addChild(root_0, INTEGER156_tree);
                             }
 
                             }
@@ -5163,60 +5212,60 @@ public TreeAdaptor getTreeAdaptor() {
                     }
 
 
-                    char_literal155=(Token)match(input,RIGHT_PAREN,FOLLOW_RIGHT_PAREN_in_nonCharType1494); if (state.failed) return retval;
+                    char_literal157=(Token)match(input,RIGHT_PAREN,FOLLOW_RIGHT_PAREN_in_nonCharType2881); if (state.failed) return retval;
                     if ( state.backtracking==0 ) {
-                    char_literal155_tree = 
-                    (CommonTree)adaptor.create(char_literal155)
+                    char_literal157_tree = 
+                    (CommonTree)adaptor.create(char_literal157)
                     ;
-                    adaptor.addChild(root_0, char_literal155_tree);
+                    adaptor.addChild(root_0, char_literal157_tree);
                     }
 
                     }
                     break;
                 case 9 :
-                    // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:482:5: KW_SMALLINT
+                    // JaybirdSql.g:477:14: KW_SMALLINT
                     {
                     root_0 = (CommonTree)adaptor.nil();
 
 
-                    KW_SMALLINT156=(Token)match(input,KW_SMALLINT,FOLLOW_KW_SMALLINT_in_nonCharType1500); if (state.failed) return retval;
+                    KW_SMALLINT158=(Token)match(input,KW_SMALLINT,FOLLOW_KW_SMALLINT_in_nonCharType2896); if (state.failed) return retval;
                     if ( state.backtracking==0 ) {
-                    KW_SMALLINT156_tree = 
-                    (CommonTree)adaptor.create(KW_SMALLINT156)
+                    KW_SMALLINT158_tree = 
+                    (CommonTree)adaptor.create(KW_SMALLINT158)
                     ;
-                    adaptor.addChild(root_0, KW_SMALLINT156_tree);
+                    adaptor.addChild(root_0, KW_SMALLINT158_tree);
                     }
 
                     }
                     break;
                 case 10 :
-                    // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:483:5: KW_TIME
+                    // JaybirdSql.g:478:14: KW_TIME
                     {
                     root_0 = (CommonTree)adaptor.nil();
 
 
-                    KW_TIME157=(Token)match(input,KW_TIME,FOLLOW_KW_TIME_in_nonCharType1506); if (state.failed) return retval;
+                    KW_TIME159=(Token)match(input,KW_TIME,FOLLOW_KW_TIME_in_nonCharType2911); if (state.failed) return retval;
                     if ( state.backtracking==0 ) {
-                    KW_TIME157_tree = 
-                    (CommonTree)adaptor.create(KW_TIME157)
+                    KW_TIME159_tree = 
+                    (CommonTree)adaptor.create(KW_TIME159)
                     ;
-                    adaptor.addChild(root_0, KW_TIME157_tree);
+                    adaptor.addChild(root_0, KW_TIME159_tree);
                     }
 
                     }
                     break;
                 case 11 :
-                    // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:484:5: KW_TIMESTAMP
+                    // JaybirdSql.g:479:14: KW_TIMESTAMP
                     {
                     root_0 = (CommonTree)adaptor.nil();
 
 
-                    KW_TIMESTAMP158=(Token)match(input,KW_TIMESTAMP,FOLLOW_KW_TIMESTAMP_in_nonCharType1512); if (state.failed) return retval;
+                    KW_TIMESTAMP160=(Token)match(input,KW_TIMESTAMP,FOLLOW_KW_TIMESTAMP_in_nonCharType2926); if (state.failed) return retval;
                     if ( state.backtracking==0 ) {
-                    KW_TIMESTAMP158_tree = 
-                    (CommonTree)adaptor.create(KW_TIMESTAMP158)
+                    KW_TIMESTAMP160_tree = 
+                    (CommonTree)adaptor.create(KW_TIMESTAMP160)
                     ;
-                    adaptor.addChild(root_0, KW_TIMESTAMP158_tree);
+                    adaptor.addChild(root_0, KW_TIMESTAMP160_tree);
                     }
 
                     }
@@ -5256,7 +5305,7 @@ public TreeAdaptor getTreeAdaptor() {
 
 
     // $ANTLR start "blobType"
-    // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:487:1: blobType : ( KW_BLOB ( blobSubtype )? ( blobSegSize )? ( charSetClause )? | KW_BLOB '(' ( INTEGER )? ( ',' INTEGER )? ')' );
+    // JaybirdSql.g:482:1: blobType : ( KW_BLOB ( blobSubtype )? ( blobSegSize )? ( charSetClause )? | KW_BLOB '(' ( INTEGER )? ( ',' INTEGER )? ')' );
     public final JaybirdSqlParser.blobType_return blobType() throws RecognitionException {
         JaybirdSqlParser.blobType_return retval = new JaybirdSqlParser.blobType_return();
         retval.start = input.LT(1);
@@ -5265,48 +5314,48 @@ public TreeAdaptor getTreeAdaptor() {
 
         CommonTree root_0 = null;
 
-        Token KW_BLOB159=null;
-        Token KW_BLOB163=null;
-        Token char_literal164=null;
-        Token INTEGER165=null;
+        Token KW_BLOB161=null;
+        Token KW_BLOB165=null;
         Token char_literal166=null;
         Token INTEGER167=null;
         Token char_literal168=null;
-        JaybirdSqlParser.blobSubtype_return blobSubtype160 =null;
+        Token INTEGER169=null;
+        Token char_literal170=null;
+        JaybirdSqlParser.blobSubtype_return blobSubtype162 =null;
 
-        JaybirdSqlParser.blobSegSize_return blobSegSize161 =null;
+        JaybirdSqlParser.blobSegSize_return blobSegSize163 =null;
 
-        JaybirdSqlParser.charSetClause_return charSetClause162 =null;
+        JaybirdSqlParser.charSetClause_return charSetClause164 =null;
 
 
-        CommonTree KW_BLOB159_tree=null;
-        CommonTree KW_BLOB163_tree=null;
-        CommonTree char_literal164_tree=null;
-        CommonTree INTEGER165_tree=null;
+        CommonTree KW_BLOB161_tree=null;
+        CommonTree KW_BLOB165_tree=null;
         CommonTree char_literal166_tree=null;
         CommonTree INTEGER167_tree=null;
         CommonTree char_literal168_tree=null;
+        CommonTree INTEGER169_tree=null;
+        CommonTree char_literal170_tree=null;
 
         try {
             if ( state.backtracking>0 && alreadyParsedRule(input, 32) ) { return retval; }
 
-            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:488:3: ( KW_BLOB ( blobSubtype )? ( blobSegSize )? ( charSetClause )? | KW_BLOB '(' ( INTEGER )? ( ',' INTEGER )? ')' )
-            int alt29=2;
-            int LA29_0 = input.LA(1);
+            // JaybirdSql.g:483:9: ( KW_BLOB ( blobSubtype )? ( blobSegSize )? ( charSetClause )? | KW_BLOB '(' ( INTEGER )? ( ',' INTEGER )? ')' )
+            int alt31=2;
+            int LA31_0 = input.LA(1);
 
-            if ( (LA29_0==KW_BLOB) ) {
-                int LA29_1 = input.LA(2);
+            if ( (LA31_0==KW_BLOB) ) {
+                int LA31_1 = input.LA(2);
 
-                if ( (LA29_1==LEFT_PAREN) ) {
-                    alt29=2;
+                if ( (LA31_1==LEFT_PAREN) ) {
+                    alt31=2;
                 }
-                else if ( (LA29_1==EOF||LA29_1==CHARACTER||(LA29_1 >= RIGHT_PAREN && LA29_1 <= SEGMENT)||LA29_1==SUB_TYPE) ) {
-                    alt29=1;
+                else if ( (LA31_1==EOF||LA31_1==CHARACTER||(LA31_1 >= RIGHT_PAREN && LA31_1 <= SEGMENT)||LA31_1==SUB_TYPE) ) {
+                    alt31=1;
                 }
                 else {
                     if (state.backtracking>0) {state.failed=true; return retval;}
                     NoViableAltException nvae =
-                        new NoViableAltException("", 29, 1, input);
+                        new NoViableAltException("", 31, 1, input);
 
                     throw nvae;
 
@@ -5315,91 +5364,91 @@ public TreeAdaptor getTreeAdaptor() {
             else {
                 if (state.backtracking>0) {state.failed=true; return retval;}
                 NoViableAltException nvae =
-                    new NoViableAltException("", 29, 0, input);
+                    new NoViableAltException("", 31, 0, input);
 
                 throw nvae;
 
             }
-            switch (alt29) {
+            switch (alt31) {
                 case 1 :
-                    // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:488:5: KW_BLOB ( blobSubtype )? ( blobSegSize )? ( charSetClause )?
+                    // JaybirdSql.g:483:14: KW_BLOB ( blobSubtype )? ( blobSegSize )? ( charSetClause )?
                     {
                     root_0 = (CommonTree)adaptor.nil();
 
 
-                    KW_BLOB159=(Token)match(input,KW_BLOB,FOLLOW_KW_BLOB_in_blobType1526); if (state.failed) return retval;
+                    KW_BLOB161=(Token)match(input,KW_BLOB,FOLLOW_KW_BLOB_in_blobType2955); if (state.failed) return retval;
                     if ( state.backtracking==0 ) {
-                    KW_BLOB159_tree = 
-                    (CommonTree)adaptor.create(KW_BLOB159)
+                    KW_BLOB161_tree = 
+                    (CommonTree)adaptor.create(KW_BLOB161)
                     ;
-                    adaptor.addChild(root_0, KW_BLOB159_tree);
+                    adaptor.addChild(root_0, KW_BLOB161_tree);
                     }
 
-                    // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:488:13: ( blobSubtype )?
-                    int alt24=2;
-                    int LA24_0 = input.LA(1);
-
-                    if ( (LA24_0==SUB_TYPE) ) {
-                        alt24=1;
-                    }
-                    switch (alt24) {
-                        case 1 :
-                            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:488:13: blobSubtype
-                            {
-                            pushFollow(FOLLOW_blobSubtype_in_blobType1528);
-                            blobSubtype160=blobSubtype();
-
-                            state._fsp--;
-                            if (state.failed) return retval;
-                            if ( state.backtracking==0 ) adaptor.addChild(root_0, blobSubtype160.getTree());
-
-                            }
-                            break;
-
-                    }
-
-
-                    // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:488:26: ( blobSegSize )?
-                    int alt25=2;
-                    int LA25_0 = input.LA(1);
-
-                    if ( (LA25_0==SEGMENT) ) {
-                        alt25=1;
-                    }
-                    switch (alt25) {
-                        case 1 :
-                            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:488:26: blobSegSize
-                            {
-                            pushFollow(FOLLOW_blobSegSize_in_blobType1531);
-                            blobSegSize161=blobSegSize();
-
-                            state._fsp--;
-                            if (state.failed) return retval;
-                            if ( state.backtracking==0 ) adaptor.addChild(root_0, blobSegSize161.getTree());
-
-                            }
-                            break;
-
-                    }
-
-
-                    // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:488:39: ( charSetClause )?
+                    // JaybirdSql.g:483:22: ( blobSubtype )?
                     int alt26=2;
                     int LA26_0 = input.LA(1);
 
-                    if ( (LA26_0==CHARACTER) ) {
+                    if ( (LA26_0==SUB_TYPE) ) {
                         alt26=1;
                     }
                     switch (alt26) {
                         case 1 :
-                            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:488:39: charSetClause
+                            // JaybirdSql.g:483:22: blobSubtype
                             {
-                            pushFollow(FOLLOW_charSetClause_in_blobType1534);
-                            charSetClause162=charSetClause();
+                            pushFollow(FOLLOW_blobSubtype_in_blobType2957);
+                            blobSubtype162=blobSubtype();
 
                             state._fsp--;
                             if (state.failed) return retval;
-                            if ( state.backtracking==0 ) adaptor.addChild(root_0, charSetClause162.getTree());
+                            if ( state.backtracking==0 ) adaptor.addChild(root_0, blobSubtype162.getTree());
+
+                            }
+                            break;
+
+                    }
+
+
+                    // JaybirdSql.g:483:35: ( blobSegSize )?
+                    int alt27=2;
+                    int LA27_0 = input.LA(1);
+
+                    if ( (LA27_0==SEGMENT) ) {
+                        alt27=1;
+                    }
+                    switch (alt27) {
+                        case 1 :
+                            // JaybirdSql.g:483:35: blobSegSize
+                            {
+                            pushFollow(FOLLOW_blobSegSize_in_blobType2960);
+                            blobSegSize163=blobSegSize();
+
+                            state._fsp--;
+                            if (state.failed) return retval;
+                            if ( state.backtracking==0 ) adaptor.addChild(root_0, blobSegSize163.getTree());
+
+                            }
+                            break;
+
+                    }
+
+
+                    // JaybirdSql.g:483:48: ( charSetClause )?
+                    int alt28=2;
+                    int LA28_0 = input.LA(1);
+
+                    if ( (LA28_0==CHARACTER) ) {
+                        alt28=1;
+                    }
+                    switch (alt28) {
+                        case 1 :
+                            // JaybirdSql.g:483:48: charSetClause
+                            {
+                            pushFollow(FOLLOW_charSetClause_in_blobType2963);
+                            charSetClause164=charSetClause();
+
+                            state._fsp--;
+                            if (state.failed) return retval;
+                            if ( state.backtracking==0 ) adaptor.addChild(root_0, charSetClause164.getTree());
 
                             }
                             break;
@@ -5410,72 +5459,39 @@ public TreeAdaptor getTreeAdaptor() {
                     }
                     break;
                 case 2 :
-                    // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:490:5: KW_BLOB '(' ( INTEGER )? ( ',' INTEGER )? ')'
+                    // JaybirdSql.g:485:14: KW_BLOB '(' ( INTEGER )? ( ',' INTEGER )? ')'
                     {
                     root_0 = (CommonTree)adaptor.nil();
 
 
-                    KW_BLOB163=(Token)match(input,KW_BLOB,FOLLOW_KW_BLOB_in_blobType1546); if (state.failed) return retval;
+                    KW_BLOB165=(Token)match(input,KW_BLOB,FOLLOW_KW_BLOB_in_blobType2993); if (state.failed) return retval;
                     if ( state.backtracking==0 ) {
-                    KW_BLOB163_tree = 
-                    (CommonTree)adaptor.create(KW_BLOB163)
+                    KW_BLOB165_tree = 
+                    (CommonTree)adaptor.create(KW_BLOB165)
                     ;
-                    adaptor.addChild(root_0, KW_BLOB163_tree);
+                    adaptor.addChild(root_0, KW_BLOB165_tree);
                     }
 
-                    char_literal164=(Token)match(input,LEFT_PAREN,FOLLOW_LEFT_PAREN_in_blobType1548); if (state.failed) return retval;
+                    char_literal166=(Token)match(input,LEFT_PAREN,FOLLOW_LEFT_PAREN_in_blobType2995); if (state.failed) return retval;
                     if ( state.backtracking==0 ) {
-                    char_literal164_tree = 
-                    (CommonTree)adaptor.create(char_literal164)
+                    char_literal166_tree = 
+                    (CommonTree)adaptor.create(char_literal166)
                     ;
-                    adaptor.addChild(root_0, char_literal164_tree);
+                    adaptor.addChild(root_0, char_literal166_tree);
                     }
 
-                    // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:490:17: ( INTEGER )?
-                    int alt27=2;
-                    int LA27_0 = input.LA(1);
+                    // JaybirdSql.g:485:26: ( INTEGER )?
+                    int alt29=2;
+                    int LA29_0 = input.LA(1);
 
-                    if ( (LA27_0==INTEGER) ) {
-                        alt27=1;
+                    if ( (LA29_0==INTEGER) ) {
+                        alt29=1;
                     }
-                    switch (alt27) {
+                    switch (alt29) {
                         case 1 :
-                            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:490:17: INTEGER
+                            // JaybirdSql.g:485:26: INTEGER
                             {
-                            INTEGER165=(Token)match(input,INTEGER,FOLLOW_INTEGER_in_blobType1550); if (state.failed) return retval;
-                            if ( state.backtracking==0 ) {
-                            INTEGER165_tree = 
-                            (CommonTree)adaptor.create(INTEGER165)
-                            ;
-                            adaptor.addChild(root_0, INTEGER165_tree);
-                            }
-
-                            }
-                            break;
-
-                    }
-
-
-                    // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:490:26: ( ',' INTEGER )?
-                    int alt28=2;
-                    int LA28_0 = input.LA(1);
-
-                    if ( (LA28_0==COMMA) ) {
-                        alt28=1;
-                    }
-                    switch (alt28) {
-                        case 1 :
-                            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:490:27: ',' INTEGER
-                            {
-                            char_literal166=(Token)match(input,COMMA,FOLLOW_COMMA_in_blobType1554); if (state.failed) return retval;
-                            if ( state.backtracking==0 ) {
-                            char_literal166_tree = 
-                            (CommonTree)adaptor.create(char_literal166)
-                            ;
-                            adaptor.addChild(root_0, char_literal166_tree);
-                            }
-
-                            INTEGER167=(Token)match(input,INTEGER,FOLLOW_INTEGER_in_blobType1556); if (state.failed) return retval;
+                            INTEGER167=(Token)match(input,INTEGER,FOLLOW_INTEGER_in_blobType2997); if (state.failed) return retval;
                             if ( state.backtracking==0 ) {
                             INTEGER167_tree = 
                             (CommonTree)adaptor.create(INTEGER167)
@@ -5489,12 +5505,45 @@ public TreeAdaptor getTreeAdaptor() {
                     }
 
 
-                    char_literal168=(Token)match(input,RIGHT_PAREN,FOLLOW_RIGHT_PAREN_in_blobType1560); if (state.failed) return retval;
+                    // JaybirdSql.g:485:35: ( ',' INTEGER )?
+                    int alt30=2;
+                    int LA30_0 = input.LA(1);
+
+                    if ( (LA30_0==COMMA) ) {
+                        alt30=1;
+                    }
+                    switch (alt30) {
+                        case 1 :
+                            // JaybirdSql.g:485:36: ',' INTEGER
+                            {
+                            char_literal168=(Token)match(input,COMMA,FOLLOW_COMMA_in_blobType3001); if (state.failed) return retval;
+                            if ( state.backtracking==0 ) {
+                            char_literal168_tree = 
+                            (CommonTree)adaptor.create(char_literal168)
+                            ;
+                            adaptor.addChild(root_0, char_literal168_tree);
+                            }
+
+                            INTEGER169=(Token)match(input,INTEGER,FOLLOW_INTEGER_in_blobType3003); if (state.failed) return retval;
+                            if ( state.backtracking==0 ) {
+                            INTEGER169_tree = 
+                            (CommonTree)adaptor.create(INTEGER169)
+                            ;
+                            adaptor.addChild(root_0, INTEGER169_tree);
+                            }
+
+                            }
+                            break;
+
+                    }
+
+
+                    char_literal170=(Token)match(input,RIGHT_PAREN,FOLLOW_RIGHT_PAREN_in_blobType3007); if (state.failed) return retval;
                     if ( state.backtracking==0 ) {
-                    char_literal168_tree = 
-                    (CommonTree)adaptor.create(char_literal168)
+                    char_literal170_tree = 
+                    (CommonTree)adaptor.create(char_literal170)
                     ;
-                    adaptor.addChild(root_0, char_literal168_tree);
+                    adaptor.addChild(root_0, char_literal170_tree);
                     }
 
                     }
@@ -5534,7 +5583,7 @@ public TreeAdaptor getTreeAdaptor() {
 
 
     // $ANTLR start "blobSubtype"
-    // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:493:1: blobSubtype : ( SUB_TYPE INTEGER | SUB_TYPE GENERIC_ID );
+    // JaybirdSql.g:488:1: blobSubtype : ( SUB_TYPE INTEGER | SUB_TYPE GENERIC_ID );
     public final JaybirdSqlParser.blobSubtype_return blobSubtype() throws RecognitionException {
         JaybirdSqlParser.blobSubtype_return retval = new JaybirdSqlParser.blobSubtype_return();
         retval.start = input.LT(1);
@@ -5543,36 +5592,36 @@ public TreeAdaptor getTreeAdaptor() {
 
         CommonTree root_0 = null;
 
-        Token SUB_TYPE169=null;
-        Token INTEGER170=null;
         Token SUB_TYPE171=null;
-        Token GENERIC_ID172=null;
+        Token INTEGER172=null;
+        Token SUB_TYPE173=null;
+        Token GENERIC_ID174=null;
 
-        CommonTree SUB_TYPE169_tree=null;
-        CommonTree INTEGER170_tree=null;
         CommonTree SUB_TYPE171_tree=null;
-        CommonTree GENERIC_ID172_tree=null;
+        CommonTree INTEGER172_tree=null;
+        CommonTree SUB_TYPE173_tree=null;
+        CommonTree GENERIC_ID174_tree=null;
 
         try {
             if ( state.backtracking>0 && alreadyParsedRule(input, 33) ) { return retval; }
 
-            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:494:3: ( SUB_TYPE INTEGER | SUB_TYPE GENERIC_ID )
-            int alt30=2;
-            int LA30_0 = input.LA(1);
+            // JaybirdSql.g:489:9: ( SUB_TYPE INTEGER | SUB_TYPE GENERIC_ID )
+            int alt32=2;
+            int LA32_0 = input.LA(1);
 
-            if ( (LA30_0==SUB_TYPE) ) {
-                int LA30_1 = input.LA(2);
+            if ( (LA32_0==SUB_TYPE) ) {
+                int LA32_1 = input.LA(2);
 
-                if ( (LA30_1==INTEGER) ) {
-                    alt30=1;
+                if ( (LA32_1==INTEGER) ) {
+                    alt32=1;
                 }
-                else if ( (LA30_1==GENERIC_ID) ) {
-                    alt30=2;
+                else if ( (LA32_1==GENERIC_ID) ) {
+                    alt32=2;
                 }
                 else {
                     if (state.backtracking>0) {state.failed=true; return retval;}
                     NoViableAltException nvae =
-                        new NoViableAltException("", 30, 1, input);
+                        new NoViableAltException("", 32, 1, input);
 
                     throw nvae;
 
@@ -5581,43 +5630,19 @@ public TreeAdaptor getTreeAdaptor() {
             else {
                 if (state.backtracking>0) {state.failed=true; return retval;}
                 NoViableAltException nvae =
-                    new NoViableAltException("", 30, 0, input);
+                    new NoViableAltException("", 32, 0, input);
 
                 throw nvae;
 
             }
-            switch (alt30) {
+            switch (alt32) {
                 case 1 :
-                    // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:494:5: SUB_TYPE INTEGER
+                    // JaybirdSql.g:489:14: SUB_TYPE INTEGER
                     {
                     root_0 = (CommonTree)adaptor.nil();
 
 
-                    SUB_TYPE169=(Token)match(input,SUB_TYPE,FOLLOW_SUB_TYPE_in_blobSubtype1575); if (state.failed) return retval;
-                    if ( state.backtracking==0 ) {
-                    SUB_TYPE169_tree = 
-                    (CommonTree)adaptor.create(SUB_TYPE169)
-                    ;
-                    adaptor.addChild(root_0, SUB_TYPE169_tree);
-                    }
-
-                    INTEGER170=(Token)match(input,INTEGER,FOLLOW_INTEGER_in_blobSubtype1577); if (state.failed) return retval;
-                    if ( state.backtracking==0 ) {
-                    INTEGER170_tree = 
-                    (CommonTree)adaptor.create(INTEGER170)
-                    ;
-                    adaptor.addChild(root_0, INTEGER170_tree);
-                    }
-
-                    }
-                    break;
-                case 2 :
-                    // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:495:5: SUB_TYPE GENERIC_ID
-                    {
-                    root_0 = (CommonTree)adaptor.nil();
-
-
-                    SUB_TYPE171=(Token)match(input,SUB_TYPE,FOLLOW_SUB_TYPE_in_blobSubtype1583); if (state.failed) return retval;
+                    SUB_TYPE171=(Token)match(input,SUB_TYPE,FOLLOW_SUB_TYPE_in_blobSubtype3043); if (state.failed) return retval;
                     if ( state.backtracking==0 ) {
                     SUB_TYPE171_tree = 
                     (CommonTree)adaptor.create(SUB_TYPE171)
@@ -5625,12 +5650,36 @@ public TreeAdaptor getTreeAdaptor() {
                     adaptor.addChild(root_0, SUB_TYPE171_tree);
                     }
 
-                    GENERIC_ID172=(Token)match(input,GENERIC_ID,FOLLOW_GENERIC_ID_in_blobSubtype1585); if (state.failed) return retval;
+                    INTEGER172=(Token)match(input,INTEGER,FOLLOW_INTEGER_in_blobSubtype3045); if (state.failed) return retval;
                     if ( state.backtracking==0 ) {
-                    GENERIC_ID172_tree = 
-                    (CommonTree)adaptor.create(GENERIC_ID172)
+                    INTEGER172_tree = 
+                    (CommonTree)adaptor.create(INTEGER172)
                     ;
-                    adaptor.addChild(root_0, GENERIC_ID172_tree);
+                    adaptor.addChild(root_0, INTEGER172_tree);
+                    }
+
+                    }
+                    break;
+                case 2 :
+                    // JaybirdSql.g:490:14: SUB_TYPE GENERIC_ID
+                    {
+                    root_0 = (CommonTree)adaptor.nil();
+
+
+                    SUB_TYPE173=(Token)match(input,SUB_TYPE,FOLLOW_SUB_TYPE_in_blobSubtype3060); if (state.failed) return retval;
+                    if ( state.backtracking==0 ) {
+                    SUB_TYPE173_tree = 
+                    (CommonTree)adaptor.create(SUB_TYPE173)
+                    ;
+                    adaptor.addChild(root_0, SUB_TYPE173_tree);
+                    }
+
+                    GENERIC_ID174=(Token)match(input,GENERIC_ID,FOLLOW_GENERIC_ID_in_blobSubtype3062); if (state.failed) return retval;
+                    if ( state.backtracking==0 ) {
+                    GENERIC_ID174_tree = 
+                    (CommonTree)adaptor.create(GENERIC_ID174)
+                    ;
+                    adaptor.addChild(root_0, GENERIC_ID174_tree);
                     }
 
                     }
@@ -5670,7 +5719,7 @@ public TreeAdaptor getTreeAdaptor() {
 
 
     // $ANTLR start "blobSegSize"
-    // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:498:1: blobSegSize : SEGMENT KW_SIZE INTEGER ;
+    // JaybirdSql.g:493:1: blobSegSize : SEGMENT KW_SIZE INTEGER ;
     public final JaybirdSqlParser.blobSegSize_return blobSegSize() throws RecognitionException {
         JaybirdSqlParser.blobSegSize_return retval = new JaybirdSqlParser.blobSegSize_return();
         retval.start = input.LT(1);
@@ -5679,45 +5728,45 @@ public TreeAdaptor getTreeAdaptor() {
 
         CommonTree root_0 = null;
 
-        Token SEGMENT173=null;
-        Token KW_SIZE174=null;
-        Token INTEGER175=null;
+        Token SEGMENT175=null;
+        Token KW_SIZE176=null;
+        Token INTEGER177=null;
 
-        CommonTree SEGMENT173_tree=null;
-        CommonTree KW_SIZE174_tree=null;
-        CommonTree INTEGER175_tree=null;
+        CommonTree SEGMENT175_tree=null;
+        CommonTree KW_SIZE176_tree=null;
+        CommonTree INTEGER177_tree=null;
 
         try {
             if ( state.backtracking>0 && alreadyParsedRule(input, 34) ) { return retval; }
 
-            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:499:3: ( SEGMENT KW_SIZE INTEGER )
-            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:499:5: SEGMENT KW_SIZE INTEGER
+            // JaybirdSql.g:494:9: ( SEGMENT KW_SIZE INTEGER )
+            // JaybirdSql.g:494:14: SEGMENT KW_SIZE INTEGER
             {
             root_0 = (CommonTree)adaptor.nil();
 
 
-            SEGMENT173=(Token)match(input,SEGMENT,FOLLOW_SEGMENT_in_blobSegSize1600); if (state.failed) return retval;
+            SEGMENT175=(Token)match(input,SEGMENT,FOLLOW_SEGMENT_in_blobSegSize3098); if (state.failed) return retval;
             if ( state.backtracking==0 ) {
-            SEGMENT173_tree = 
-            (CommonTree)adaptor.create(SEGMENT173)
+            SEGMENT175_tree = 
+            (CommonTree)adaptor.create(SEGMENT175)
             ;
-            adaptor.addChild(root_0, SEGMENT173_tree);
+            adaptor.addChild(root_0, SEGMENT175_tree);
             }
 
-            KW_SIZE174=(Token)match(input,KW_SIZE,FOLLOW_KW_SIZE_in_blobSegSize1602); if (state.failed) return retval;
+            KW_SIZE176=(Token)match(input,KW_SIZE,FOLLOW_KW_SIZE_in_blobSegSize3100); if (state.failed) return retval;
             if ( state.backtracking==0 ) {
-            KW_SIZE174_tree = 
-            (CommonTree)adaptor.create(KW_SIZE174)
+            KW_SIZE176_tree = 
+            (CommonTree)adaptor.create(KW_SIZE176)
             ;
-            adaptor.addChild(root_0, KW_SIZE174_tree);
+            adaptor.addChild(root_0, KW_SIZE176_tree);
             }
 
-            INTEGER175=(Token)match(input,INTEGER,FOLLOW_INTEGER_in_blobSegSize1604); if (state.failed) return retval;
+            INTEGER177=(Token)match(input,INTEGER,FOLLOW_INTEGER_in_blobSegSize3102); if (state.failed) return retval;
             if ( state.backtracking==0 ) {
-            INTEGER175_tree = 
-            (CommonTree)adaptor.create(INTEGER175)
+            INTEGER177_tree = 
+            (CommonTree)adaptor.create(INTEGER177)
             ;
-            adaptor.addChild(root_0, INTEGER175_tree);
+            adaptor.addChild(root_0, INTEGER177_tree);
             }
 
             }
@@ -5755,7 +5804,7 @@ public TreeAdaptor getTreeAdaptor() {
 
 
     // $ANTLR start "charSetClause"
-    // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:502:1: charSetClause : CHARACTER SET GENERIC_ID ;
+    // JaybirdSql.g:497:1: charSetClause : CHARACTER SET GENERIC_ID ;
     public final JaybirdSqlParser.charSetClause_return charSetClause() throws RecognitionException {
         JaybirdSqlParser.charSetClause_return retval = new JaybirdSqlParser.charSetClause_return();
         retval.start = input.LT(1);
@@ -5764,45 +5813,45 @@ public TreeAdaptor getTreeAdaptor() {
 
         CommonTree root_0 = null;
 
-        Token CHARACTER176=null;
-        Token SET177=null;
-        Token GENERIC_ID178=null;
+        Token CHARACTER178=null;
+        Token SET179=null;
+        Token GENERIC_ID180=null;
 
-        CommonTree CHARACTER176_tree=null;
-        CommonTree SET177_tree=null;
-        CommonTree GENERIC_ID178_tree=null;
+        CommonTree CHARACTER178_tree=null;
+        CommonTree SET179_tree=null;
+        CommonTree GENERIC_ID180_tree=null;
 
         try {
             if ( state.backtracking>0 && alreadyParsedRule(input, 35) ) { return retval; }
 
-            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:503:3: ( CHARACTER SET GENERIC_ID )
-            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:503:5: CHARACTER SET GENERIC_ID
+            // JaybirdSql.g:498:9: ( CHARACTER SET GENERIC_ID )
+            // JaybirdSql.g:498:14: CHARACTER SET GENERIC_ID
             {
             root_0 = (CommonTree)adaptor.nil();
 
 
-            CHARACTER176=(Token)match(input,CHARACTER,FOLLOW_CHARACTER_in_charSetClause1619); if (state.failed) return retval;
+            CHARACTER178=(Token)match(input,CHARACTER,FOLLOW_CHARACTER_in_charSetClause3138); if (state.failed) return retval;
             if ( state.backtracking==0 ) {
-            CHARACTER176_tree = 
-            (CommonTree)adaptor.create(CHARACTER176)
+            CHARACTER178_tree = 
+            (CommonTree)adaptor.create(CHARACTER178)
             ;
-            adaptor.addChild(root_0, CHARACTER176_tree);
+            adaptor.addChild(root_0, CHARACTER178_tree);
             }
 
-            SET177=(Token)match(input,SET,FOLLOW_SET_in_charSetClause1621); if (state.failed) return retval;
+            SET179=(Token)match(input,SET,FOLLOW_SET_in_charSetClause3140); if (state.failed) return retval;
             if ( state.backtracking==0 ) {
-            SET177_tree = 
-            (CommonTree)adaptor.create(SET177)
+            SET179_tree = 
+            (CommonTree)adaptor.create(SET179)
             ;
-            adaptor.addChild(root_0, SET177_tree);
+            adaptor.addChild(root_0, SET179_tree);
             }
 
-            GENERIC_ID178=(Token)match(input,GENERIC_ID,FOLLOW_GENERIC_ID_in_charSetClause1623); if (state.failed) return retval;
+            GENERIC_ID180=(Token)match(input,GENERIC_ID,FOLLOW_GENERIC_ID_in_charSetClause3142); if (state.failed) return retval;
             if ( state.backtracking==0 ) {
-            GENERIC_ID178_tree = 
-            (CommonTree)adaptor.create(GENERIC_ID178)
+            GENERIC_ID180_tree = 
+            (CommonTree)adaptor.create(GENERIC_ID180)
             ;
-            adaptor.addChild(root_0, GENERIC_ID178_tree);
+            adaptor.addChild(root_0, GENERIC_ID180_tree);
             }
 
             }
@@ -5840,7 +5889,7 @@ public TreeAdaptor getTreeAdaptor() {
 
 
     // $ANTLR start "arrayType"
-    // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:506:1: arrayType : ( nonCharSetCharType '[' arraySpec ']' ( charSetClause )? | nonCharType '[' arraySpec ']' );
+    // JaybirdSql.g:501:1: arrayType : ( nonCharSetCharType '[' arraySpec ']' ( charSetClause )? | nonCharType '[' arraySpec ']' );
     public final JaybirdSqlParser.arrayType_return arrayType() throws RecognitionException {
         JaybirdSqlParser.arrayType_return retval = new JaybirdSqlParser.arrayType_return();
         retval.start = input.LT(1);
@@ -5849,77 +5898,62 @@ public TreeAdaptor getTreeAdaptor() {
 
         CommonTree root_0 = null;
 
-        Token char_literal180=null;
         Token char_literal182=null;
-        Token char_literal185=null;
+        Token char_literal184=null;
         Token char_literal187=null;
-        JaybirdSqlParser.nonCharSetCharType_return nonCharSetCharType179 =null;
+        Token char_literal189=null;
+        JaybirdSqlParser.nonCharSetCharType_return nonCharSetCharType181 =null;
 
-        JaybirdSqlParser.arraySpec_return arraySpec181 =null;
+        JaybirdSqlParser.arraySpec_return arraySpec183 =null;
 
-        JaybirdSqlParser.charSetClause_return charSetClause183 =null;
+        JaybirdSqlParser.charSetClause_return charSetClause185 =null;
 
-        JaybirdSqlParser.nonCharType_return nonCharType184 =null;
+        JaybirdSqlParser.nonCharType_return nonCharType186 =null;
 
-        JaybirdSqlParser.arraySpec_return arraySpec186 =null;
+        JaybirdSqlParser.arraySpec_return arraySpec188 =null;
 
 
-        CommonTree char_literal180_tree=null;
         CommonTree char_literal182_tree=null;
-        CommonTree char_literal185_tree=null;
+        CommonTree char_literal184_tree=null;
         CommonTree char_literal187_tree=null;
+        CommonTree char_literal189_tree=null;
 
         try {
             if ( state.backtracking>0 && alreadyParsedRule(input, 36) ) { return retval; }
 
-            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:507:3: ( nonCharSetCharType '[' arraySpec ']' ( charSetClause )? | nonCharType '[' arraySpec ']' )
-            int alt32=2;
-            int LA32_0 = input.LA(1);
+            // JaybirdSql.g:502:9: ( nonCharSetCharType '[' arraySpec ']' ( charSetClause )? | nonCharType '[' arraySpec ']' )
+            int alt34=2;
+            int LA34_0 = input.LA(1);
 
-            if ( (LA32_0==KW_CHAR||LA32_0==KW_VARCHAR) ) {
-                alt32=1;
+            if ( (LA34_0==KW_CHAR||LA34_0==KW_VARCHAR) ) {
+                alt34=1;
             }
-            else if ( (LA32_0==KW_BIGINT||(LA32_0 >= KW_DATE && LA32_0 <= KW_NUMERIC)||(LA32_0 >= KW_SMALLINT && LA32_0 <= KW_TIMESTAMP)) ) {
-                alt32=2;
+            else if ( (LA34_0==KW_BIGINT||(LA34_0 >= KW_DATE && LA34_0 <= KW_NUMERIC)||(LA34_0 >= KW_SMALLINT && LA34_0 <= KW_TIMESTAMP)) ) {
+                alt34=2;
             }
             else {
                 if (state.backtracking>0) {state.failed=true; return retval;}
                 NoViableAltException nvae =
-                    new NoViableAltException("", 32, 0, input);
+                    new NoViableAltException("", 34, 0, input);
 
                 throw nvae;
 
             }
-            switch (alt32) {
+            switch (alt34) {
                 case 1 :
-                    // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:507:5: nonCharSetCharType '[' arraySpec ']' ( charSetClause )?
+                    // JaybirdSql.g:502:14: nonCharSetCharType '[' arraySpec ']' ( charSetClause )?
                     {
                     root_0 = (CommonTree)adaptor.nil();
 
 
-                    pushFollow(FOLLOW_nonCharSetCharType_in_arrayType1636);
-                    nonCharSetCharType179=nonCharSetCharType();
+                    pushFollow(FOLLOW_nonCharSetCharType_in_arrayType3170);
+                    nonCharSetCharType181=nonCharSetCharType();
 
                     state._fsp--;
                     if (state.failed) return retval;
-                    if ( state.backtracking==0 ) adaptor.addChild(root_0, nonCharSetCharType179.getTree());
+                    if ( state.backtracking==0 ) adaptor.addChild(root_0, nonCharSetCharType181.getTree());
 
-                    char_literal180=(Token)match(input,82,FOLLOW_82_in_arrayType1638); if (state.failed) return retval;
-                    if ( state.backtracking==0 ) {
-                    char_literal180_tree = 
-                    (CommonTree)adaptor.create(char_literal180)
-                    ;
-                    adaptor.addChild(root_0, char_literal180_tree);
-                    }
-
-                    pushFollow(FOLLOW_arraySpec_in_arrayType1640);
-                    arraySpec181=arraySpec();
-
-                    state._fsp--;
-                    if (state.failed) return retval;
-                    if ( state.backtracking==0 ) adaptor.addChild(root_0, arraySpec181.getTree());
-
-                    char_literal182=(Token)match(input,83,FOLLOW_83_in_arrayType1642); if (state.failed) return retval;
+                    char_literal182=(Token)match(input,82,FOLLOW_82_in_arrayType3172); if (state.failed) return retval;
                     if ( state.backtracking==0 ) {
                     char_literal182_tree = 
                     (CommonTree)adaptor.create(char_literal182)
@@ -5927,23 +5961,38 @@ public TreeAdaptor getTreeAdaptor() {
                     adaptor.addChild(root_0, char_literal182_tree);
                     }
 
-                    // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:507:42: ( charSetClause )?
-                    int alt31=2;
-                    int LA31_0 = input.LA(1);
+                    pushFollow(FOLLOW_arraySpec_in_arrayType3174);
+                    arraySpec183=arraySpec();
 
-                    if ( (LA31_0==CHARACTER) ) {
-                        alt31=1;
+                    state._fsp--;
+                    if (state.failed) return retval;
+                    if ( state.backtracking==0 ) adaptor.addChild(root_0, arraySpec183.getTree());
+
+                    char_literal184=(Token)match(input,83,FOLLOW_83_in_arrayType3176); if (state.failed) return retval;
+                    if ( state.backtracking==0 ) {
+                    char_literal184_tree = 
+                    (CommonTree)adaptor.create(char_literal184)
+                    ;
+                    adaptor.addChild(root_0, char_literal184_tree);
                     }
-                    switch (alt31) {
+
+                    // JaybirdSql.g:502:51: ( charSetClause )?
+                    int alt33=2;
+                    int LA33_0 = input.LA(1);
+
+                    if ( (LA33_0==CHARACTER) ) {
+                        alt33=1;
+                    }
+                    switch (alt33) {
                         case 1 :
-                            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:507:42: charSetClause
+                            // JaybirdSql.g:502:51: charSetClause
                             {
-                            pushFollow(FOLLOW_charSetClause_in_arrayType1644);
-                            charSetClause183=charSetClause();
+                            pushFollow(FOLLOW_charSetClause_in_arrayType3178);
+                            charSetClause185=charSetClause();
 
                             state._fsp--;
                             if (state.failed) return retval;
-                            if ( state.backtracking==0 ) adaptor.addChild(root_0, charSetClause183.getTree());
+                            if ( state.backtracking==0 ) adaptor.addChild(root_0, charSetClause185.getTree());
 
                             }
                             break;
@@ -5954,39 +6003,39 @@ public TreeAdaptor getTreeAdaptor() {
                     }
                     break;
                 case 2 :
-                    // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:508:5: nonCharType '[' arraySpec ']'
+                    // JaybirdSql.g:503:14: nonCharType '[' arraySpec ']'
                     {
                     root_0 = (CommonTree)adaptor.nil();
 
 
-                    pushFollow(FOLLOW_nonCharType_in_arrayType1651);
-                    nonCharType184=nonCharType();
+                    pushFollow(FOLLOW_nonCharType_in_arrayType3194);
+                    nonCharType186=nonCharType();
 
                     state._fsp--;
                     if (state.failed) return retval;
-                    if ( state.backtracking==0 ) adaptor.addChild(root_0, nonCharType184.getTree());
+                    if ( state.backtracking==0 ) adaptor.addChild(root_0, nonCharType186.getTree());
 
-                    char_literal185=(Token)match(input,82,FOLLOW_82_in_arrayType1653); if (state.failed) return retval;
-                    if ( state.backtracking==0 ) {
-                    char_literal185_tree = 
-                    (CommonTree)adaptor.create(char_literal185)
-                    ;
-                    adaptor.addChild(root_0, char_literal185_tree);
-                    }
-
-                    pushFollow(FOLLOW_arraySpec_in_arrayType1655);
-                    arraySpec186=arraySpec();
-
-                    state._fsp--;
-                    if (state.failed) return retval;
-                    if ( state.backtracking==0 ) adaptor.addChild(root_0, arraySpec186.getTree());
-
-                    char_literal187=(Token)match(input,83,FOLLOW_83_in_arrayType1657); if (state.failed) return retval;
+                    char_literal187=(Token)match(input,82,FOLLOW_82_in_arrayType3196); if (state.failed) return retval;
                     if ( state.backtracking==0 ) {
                     char_literal187_tree = 
                     (CommonTree)adaptor.create(char_literal187)
                     ;
                     adaptor.addChild(root_0, char_literal187_tree);
+                    }
+
+                    pushFollow(FOLLOW_arraySpec_in_arrayType3198);
+                    arraySpec188=arraySpec();
+
+                    state._fsp--;
+                    if (state.failed) return retval;
+                    if ( state.backtracking==0 ) adaptor.addChild(root_0, arraySpec188.getTree());
+
+                    char_literal189=(Token)match(input,83,FOLLOW_83_in_arrayType3200); if (state.failed) return retval;
+                    if ( state.backtracking==0 ) {
+                    char_literal189_tree = 
+                    (CommonTree)adaptor.create(char_literal189)
+                    ;
+                    adaptor.addChild(root_0, char_literal189_tree);
                     }
 
                     }
@@ -6026,7 +6075,7 @@ public TreeAdaptor getTreeAdaptor() {
 
 
     // $ANTLR start "arraySpec"
-    // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:511:1: arraySpec : arrayRange ( ',' arrayRange )? ;
+    // JaybirdSql.g:506:1: arraySpec : arrayRange ( ',' arrayRange )? ;
     public final JaybirdSqlParser.arraySpec_return arraySpec() throws RecognitionException {
         JaybirdSqlParser.arraySpec_return retval = new JaybirdSqlParser.arraySpec_return();
         retval.start = input.LT(1);
@@ -6035,55 +6084,55 @@ public TreeAdaptor getTreeAdaptor() {
 
         CommonTree root_0 = null;
 
-        Token char_literal189=null;
-        JaybirdSqlParser.arrayRange_return arrayRange188 =null;
-
+        Token char_literal191=null;
         JaybirdSqlParser.arrayRange_return arrayRange190 =null;
 
+        JaybirdSqlParser.arrayRange_return arrayRange192 =null;
 
-        CommonTree char_literal189_tree=null;
+
+        CommonTree char_literal191_tree=null;
 
         try {
             if ( state.backtracking>0 && alreadyParsedRule(input, 37) ) { return retval; }
 
-            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:512:3: ( arrayRange ( ',' arrayRange )? )
-            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:512:5: arrayRange ( ',' arrayRange )?
+            // JaybirdSql.g:507:9: ( arrayRange ( ',' arrayRange )? )
+            // JaybirdSql.g:507:14: arrayRange ( ',' arrayRange )?
             {
             root_0 = (CommonTree)adaptor.nil();
 
 
-            pushFollow(FOLLOW_arrayRange_in_arraySpec1672);
-            arrayRange188=arrayRange();
+            pushFollow(FOLLOW_arrayRange_in_arraySpec3236);
+            arrayRange190=arrayRange();
 
             state._fsp--;
             if (state.failed) return retval;
-            if ( state.backtracking==0 ) adaptor.addChild(root_0, arrayRange188.getTree());
+            if ( state.backtracking==0 ) adaptor.addChild(root_0, arrayRange190.getTree());
 
-            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:512:16: ( ',' arrayRange )?
-            int alt33=2;
-            int LA33_0 = input.LA(1);
+            // JaybirdSql.g:507:25: ( ',' arrayRange )?
+            int alt35=2;
+            int LA35_0 = input.LA(1);
 
-            if ( (LA33_0==COMMA) ) {
-                alt33=1;
+            if ( (LA35_0==COMMA) ) {
+                alt35=1;
             }
-            switch (alt33) {
+            switch (alt35) {
                 case 1 :
-                    // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:512:17: ',' arrayRange
+                    // JaybirdSql.g:507:26: ',' arrayRange
                     {
-                    char_literal189=(Token)match(input,COMMA,FOLLOW_COMMA_in_arraySpec1675); if (state.failed) return retval;
+                    char_literal191=(Token)match(input,COMMA,FOLLOW_COMMA_in_arraySpec3239); if (state.failed) return retval;
                     if ( state.backtracking==0 ) {
-                    char_literal189_tree = 
-                    (CommonTree)adaptor.create(char_literal189)
+                    char_literal191_tree = 
+                    (CommonTree)adaptor.create(char_literal191)
                     ;
-                    adaptor.addChild(root_0, char_literal189_tree);
+                    adaptor.addChild(root_0, char_literal191_tree);
                     }
 
-                    pushFollow(FOLLOW_arrayRange_in_arraySpec1677);
-                    arrayRange190=arrayRange();
+                    pushFollow(FOLLOW_arrayRange_in_arraySpec3241);
+                    arrayRange192=arrayRange();
 
                     state._fsp--;
                     if (state.failed) return retval;
-                    if ( state.backtracking==0 ) adaptor.addChild(root_0, arrayRange190.getTree());
+                    if ( state.backtracking==0 ) adaptor.addChild(root_0, arrayRange192.getTree());
 
                     }
                     break;
@@ -6126,7 +6175,7 @@ public TreeAdaptor getTreeAdaptor() {
 
 
     // $ANTLR start "arrayRange"
-    // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:515:1: arrayRange : INTEGER ( ':' INTEGER ) ;
+    // JaybirdSql.g:510:1: arrayRange : INTEGER ( ':' INTEGER ) ;
     public final JaybirdSqlParser.arrayRange_return arrayRange() throws RecognitionException {
         JaybirdSqlParser.arrayRange_return retval = new JaybirdSqlParser.arrayRange_return();
         retval.start = input.LT(1);
@@ -6135,48 +6184,48 @@ public TreeAdaptor getTreeAdaptor() {
 
         CommonTree root_0 = null;
 
-        Token INTEGER191=null;
-        Token char_literal192=null;
         Token INTEGER193=null;
+        Token char_literal194=null;
+        Token INTEGER195=null;
 
-        CommonTree INTEGER191_tree=null;
-        CommonTree char_literal192_tree=null;
         CommonTree INTEGER193_tree=null;
+        CommonTree char_literal194_tree=null;
+        CommonTree INTEGER195_tree=null;
 
         try {
             if ( state.backtracking>0 && alreadyParsedRule(input, 38) ) { return retval; }
 
-            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:516:3: ( INTEGER ( ':' INTEGER ) )
-            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:516:5: INTEGER ( ':' INTEGER )
+            // JaybirdSql.g:511:9: ( INTEGER ( ':' INTEGER ) )
+            // JaybirdSql.g:511:14: INTEGER ( ':' INTEGER )
             {
             root_0 = (CommonTree)adaptor.nil();
 
 
-            INTEGER191=(Token)match(input,INTEGER,FOLLOW_INTEGER_in_arrayRange1694); if (state.failed) return retval;
-            if ( state.backtracking==0 ) {
-            INTEGER191_tree = 
-            (CommonTree)adaptor.create(INTEGER191)
-            ;
-            adaptor.addChild(root_0, INTEGER191_tree);
-            }
-
-            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:516:13: ( ':' INTEGER )
-            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:516:14: ':' INTEGER
-            {
-            char_literal192=(Token)match(input,79,FOLLOW_79_in_arrayRange1697); if (state.failed) return retval;
-            if ( state.backtracking==0 ) {
-            char_literal192_tree = 
-            (CommonTree)adaptor.create(char_literal192)
-            ;
-            adaptor.addChild(root_0, char_literal192_tree);
-            }
-
-            INTEGER193=(Token)match(input,INTEGER,FOLLOW_INTEGER_in_arrayRange1699); if (state.failed) return retval;
+            INTEGER193=(Token)match(input,INTEGER,FOLLOW_INTEGER_in_arrayRange3279); if (state.failed) return retval;
             if ( state.backtracking==0 ) {
             INTEGER193_tree = 
             (CommonTree)adaptor.create(INTEGER193)
             ;
             adaptor.addChild(root_0, INTEGER193_tree);
+            }
+
+            // JaybirdSql.g:511:22: ( ':' INTEGER )
+            // JaybirdSql.g:511:23: ':' INTEGER
+            {
+            char_literal194=(Token)match(input,79,FOLLOW_79_in_arrayRange3282); if (state.failed) return retval;
+            if ( state.backtracking==0 ) {
+            char_literal194_tree = 
+            (CommonTree)adaptor.create(char_literal194)
+            ;
+            adaptor.addChild(root_0, char_literal194_tree);
+            }
+
+            INTEGER195=(Token)match(input,INTEGER,FOLLOW_INTEGER_in_arrayRange3284); if (state.failed) return retval;
+            if ( state.backtracking==0 ) {
+            INTEGER195_tree = 
+            (CommonTree)adaptor.create(INTEGER195)
+            ;
+            adaptor.addChild(root_0, INTEGER195_tree);
             }
 
             }
@@ -6217,7 +6266,7 @@ public TreeAdaptor getTreeAdaptor() {
 
 
     // $ANTLR start "arrayElement"
-    // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:519:1: arrayElement : simpleIdentifier '[' valueList ']' ;
+    // JaybirdSql.g:514:1: arrayElement : simpleIdentifier '[' valueList ']' ;
     public final JaybirdSqlParser.arrayElement_return arrayElement() throws RecognitionException {
         JaybirdSqlParser.arrayElement_return retval = new JaybirdSqlParser.arrayElement_return();
         retval.start = input.LT(1);
@@ -6226,53 +6275,53 @@ public TreeAdaptor getTreeAdaptor() {
 
         CommonTree root_0 = null;
 
-        Token char_literal195=null;
         Token char_literal197=null;
-        JaybirdSqlParser.simpleIdentifier_return simpleIdentifier194 =null;
+        Token char_literal199=null;
+        JaybirdSqlParser.simpleIdentifier_return simpleIdentifier196 =null;
 
-        JaybirdSqlParser.valueList_return valueList196 =null;
+        JaybirdSqlParser.valueList_return valueList198 =null;
 
 
-        CommonTree char_literal195_tree=null;
         CommonTree char_literal197_tree=null;
+        CommonTree char_literal199_tree=null;
 
         try {
             if ( state.backtracking>0 && alreadyParsedRule(input, 39) ) { return retval; }
 
-            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:520:3: ( simpleIdentifier '[' valueList ']' )
-            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:520:5: simpleIdentifier '[' valueList ']'
+            // JaybirdSql.g:515:9: ( simpleIdentifier '[' valueList ']' )
+            // JaybirdSql.g:515:14: simpleIdentifier '[' valueList ']'
             {
             root_0 = (CommonTree)adaptor.nil();
 
 
-            pushFollow(FOLLOW_simpleIdentifier_in_arrayElement1715);
-            simpleIdentifier194=simpleIdentifier();
+            pushFollow(FOLLOW_simpleIdentifier_in_arrayElement3321);
+            simpleIdentifier196=simpleIdentifier();
 
             state._fsp--;
             if (state.failed) return retval;
-            if ( state.backtracking==0 ) adaptor.addChild(root_0, simpleIdentifier194.getTree());
+            if ( state.backtracking==0 ) adaptor.addChild(root_0, simpleIdentifier196.getTree());
 
-            char_literal195=(Token)match(input,82,FOLLOW_82_in_arrayElement1717); if (state.failed) return retval;
-            if ( state.backtracking==0 ) {
-            char_literal195_tree = 
-            (CommonTree)adaptor.create(char_literal195)
-            ;
-            adaptor.addChild(root_0, char_literal195_tree);
-            }
-
-            pushFollow(FOLLOW_valueList_in_arrayElement1719);
-            valueList196=valueList();
-
-            state._fsp--;
-            if (state.failed) return retval;
-            if ( state.backtracking==0 ) adaptor.addChild(root_0, valueList196.getTree());
-
-            char_literal197=(Token)match(input,83,FOLLOW_83_in_arrayElement1721); if (state.failed) return retval;
+            char_literal197=(Token)match(input,82,FOLLOW_82_in_arrayElement3323); if (state.failed) return retval;
             if ( state.backtracking==0 ) {
             char_literal197_tree = 
             (CommonTree)adaptor.create(char_literal197)
             ;
             adaptor.addChild(root_0, char_literal197_tree);
+            }
+
+            pushFollow(FOLLOW_valueList_in_arrayElement3325);
+            valueList198=valueList();
+
+            state._fsp--;
+            if (state.failed) return retval;
+            if ( state.backtracking==0 ) adaptor.addChild(root_0, valueList198.getTree());
+
+            char_literal199=(Token)match(input,83,FOLLOW_83_in_arrayElement3327); if (state.failed) return retval;
+            if ( state.backtracking==0 ) {
+            char_literal199_tree = 
+            (CommonTree)adaptor.create(char_literal199)
+            ;
+            adaptor.addChild(root_0, char_literal199_tree);
             }
 
             }
@@ -6310,7 +6359,7 @@ public TreeAdaptor getTreeAdaptor() {
 
 
     // $ANTLR start "function"
-    // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:523:1: function : ( simpleIdentifier '(' valueList ')' | simpleIdentifier '(' ')' | substringFunction | trimFunction | extractFunction | SUM '(' ( ALL | DISTINCT )? value ')' | COUNT '(' ( ALL | DISTINCT )? value ')' | AVG '(' ( ALL | DISTINCT )? value ')' | MINIMUM '(' ( ALL | DISTINCT )? value ')' | MAXIMUM '(' ( ALL | DISTINCT )? value ')' );
+    // JaybirdSql.g:518:1: function : ( simpleIdentifier '(' valueList ')' | simpleIdentifier '(' ')' | substringFunction | trimFunction | extractFunction | SUM '(' ( ALL | DISTINCT )? value ')' | COUNT '(' ( ALL | DISTINCT )? value ')' | AVG '(' ( ALL | DISTINCT )? value ')' | MINIMUM '(' ( ALL | DISTINCT )? value ')' | MAXIMUM '(' ( ALL | DISTINCT )? value ')' );
     public final JaybirdSqlParser.function_return function() throws RecognitionException {
         JaybirdSqlParser.function_return retval = new JaybirdSqlParser.function_return();
         retval.start = input.LT(1);
@@ -6319,102 +6368,102 @@ public TreeAdaptor getTreeAdaptor() {
 
         CommonTree root_0 = null;
 
-        Token char_literal199=null;
         Token char_literal201=null;
         Token char_literal203=null;
-        Token char_literal204=null;
-        Token SUM208=null;
-        Token char_literal209=null;
-        Token set210=null;
-        Token char_literal212=null;
-        Token COUNT213=null;
+        Token char_literal205=null;
+        Token char_literal206=null;
+        Token SUM210=null;
+        Token char_literal211=null;
+        Token set212=null;
         Token char_literal214=null;
-        Token set215=null;
-        Token char_literal217=null;
-        Token AVG218=null;
+        Token COUNT215=null;
+        Token char_literal216=null;
+        Token set217=null;
         Token char_literal219=null;
-        Token set220=null;
-        Token char_literal222=null;
-        Token MINIMUM223=null;
+        Token AVG220=null;
+        Token char_literal221=null;
+        Token set222=null;
         Token char_literal224=null;
-        Token set225=null;
-        Token char_literal227=null;
-        Token MAXIMUM228=null;
+        Token MINIMUM225=null;
+        Token char_literal226=null;
+        Token set227=null;
         Token char_literal229=null;
-        Token set230=null;
-        Token char_literal232=null;
-        JaybirdSqlParser.simpleIdentifier_return simpleIdentifier198 =null;
+        Token MAXIMUM230=null;
+        Token char_literal231=null;
+        Token set232=null;
+        Token char_literal234=null;
+        JaybirdSqlParser.simpleIdentifier_return simpleIdentifier200 =null;
 
-        JaybirdSqlParser.valueList_return valueList200 =null;
+        JaybirdSqlParser.valueList_return valueList202 =null;
 
-        JaybirdSqlParser.simpleIdentifier_return simpleIdentifier202 =null;
+        JaybirdSqlParser.simpleIdentifier_return simpleIdentifier204 =null;
 
-        JaybirdSqlParser.substringFunction_return substringFunction205 =null;
+        JaybirdSqlParser.substringFunction_return substringFunction207 =null;
 
-        JaybirdSqlParser.trimFunction_return trimFunction206 =null;
+        JaybirdSqlParser.trimFunction_return trimFunction208 =null;
 
-        JaybirdSqlParser.extractFunction_return extractFunction207 =null;
+        JaybirdSqlParser.extractFunction_return extractFunction209 =null;
 
-        JaybirdSqlParser.value_return value211 =null;
+        JaybirdSqlParser.value_return value213 =null;
 
-        JaybirdSqlParser.value_return value216 =null;
+        JaybirdSqlParser.value_return value218 =null;
 
-        JaybirdSqlParser.value_return value221 =null;
+        JaybirdSqlParser.value_return value223 =null;
 
-        JaybirdSqlParser.value_return value226 =null;
+        JaybirdSqlParser.value_return value228 =null;
 
-        JaybirdSqlParser.value_return value231 =null;
+        JaybirdSqlParser.value_return value233 =null;
 
 
-        CommonTree char_literal199_tree=null;
         CommonTree char_literal201_tree=null;
         CommonTree char_literal203_tree=null;
-        CommonTree char_literal204_tree=null;
-        CommonTree SUM208_tree=null;
-        CommonTree char_literal209_tree=null;
-        CommonTree set210_tree=null;
-        CommonTree char_literal212_tree=null;
-        CommonTree COUNT213_tree=null;
+        CommonTree char_literal205_tree=null;
+        CommonTree char_literal206_tree=null;
+        CommonTree SUM210_tree=null;
+        CommonTree char_literal211_tree=null;
+        CommonTree set212_tree=null;
         CommonTree char_literal214_tree=null;
-        CommonTree set215_tree=null;
-        CommonTree char_literal217_tree=null;
-        CommonTree AVG218_tree=null;
+        CommonTree COUNT215_tree=null;
+        CommonTree char_literal216_tree=null;
+        CommonTree set217_tree=null;
         CommonTree char_literal219_tree=null;
-        CommonTree set220_tree=null;
-        CommonTree char_literal222_tree=null;
-        CommonTree MINIMUM223_tree=null;
+        CommonTree AVG220_tree=null;
+        CommonTree char_literal221_tree=null;
+        CommonTree set222_tree=null;
         CommonTree char_literal224_tree=null;
-        CommonTree set225_tree=null;
-        CommonTree char_literal227_tree=null;
-        CommonTree MAXIMUM228_tree=null;
+        CommonTree MINIMUM225_tree=null;
+        CommonTree char_literal226_tree=null;
+        CommonTree set227_tree=null;
         CommonTree char_literal229_tree=null;
-        CommonTree set230_tree=null;
-        CommonTree char_literal232_tree=null;
+        CommonTree MAXIMUM230_tree=null;
+        CommonTree char_literal231_tree=null;
+        CommonTree set232_tree=null;
+        CommonTree char_literal234_tree=null;
 
         try {
             if ( state.backtracking>0 && alreadyParsedRule(input, 40) ) { return retval; }
 
-            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:524:3: ( simpleIdentifier '(' valueList ')' | simpleIdentifier '(' ')' | substringFunction | trimFunction | extractFunction | SUM '(' ( ALL | DISTINCT )? value ')' | COUNT '(' ( ALL | DISTINCT )? value ')' | AVG '(' ( ALL | DISTINCT )? value ')' | MINIMUM '(' ( ALL | DISTINCT )? value ')' | MAXIMUM '(' ( ALL | DISTINCT )? value ')' )
-            int alt39=10;
+            // JaybirdSql.g:519:9: ( simpleIdentifier '(' valueList ')' | simpleIdentifier '(' ')' | substringFunction | trimFunction | extractFunction | SUM '(' ( ALL | DISTINCT )? value ')' | COUNT '(' ( ALL | DISTINCT )? value ')' | AVG '(' ( ALL | DISTINCT )? value ')' | MINIMUM '(' ( ALL | DISTINCT )? value ')' | MAXIMUM '(' ( ALL | DISTINCT )? value ')' )
+            int alt41=10;
             switch ( input.LA(1) ) {
             case GENERIC_ID:
             case QUOTED_ID:
                 {
-                int LA39_1 = input.LA(2);
+                int LA41_1 = input.LA(2);
 
-                if ( (LA39_1==LEFT_PAREN) ) {
-                    int LA39_10 = input.LA(3);
+                if ( (LA41_1==LEFT_PAREN) ) {
+                    int LA41_10 = input.LA(3);
 
-                    if ( (LA39_10==RIGHT_PAREN) ) {
-                        alt39=2;
+                    if ( (LA41_10==RIGHT_PAREN) ) {
+                        alt41=2;
                     }
-                    else if ( (LA39_10==AVG||LA39_10==CAST||(LA39_10 >= COUNT && LA39_10 <= DB_KEY)||LA39_10==EXTRACT||(LA39_10 >= GENERIC_ID && LA39_10 <= GEN_ID)||LA39_10==INTEGER||LA39_10==LEFT_PAREN||(LA39_10 >= MAXIMUM && LA39_10 <= NULL)||(LA39_10 >= QUOTED_ID && LA39_10 <= REAL)||(LA39_10 >= STRING && LA39_10 <= SUBSTRING)||LA39_10==SUM||LA39_10==TRIM||(LA39_10 >= 75 && LA39_10 <= 76)||LA39_10==81) ) {
-                        alt39=1;
+                    else if ( (LA41_10==AVG||LA41_10==CAST||(LA41_10 >= COUNT && LA41_10 <= DB_KEY)||LA41_10==EXTRACT||(LA41_10 >= GENERIC_ID && LA41_10 <= GEN_ID)||LA41_10==INTEGER||LA41_10==LEFT_PAREN||(LA41_10 >= MAXIMUM && LA41_10 <= NULL)||(LA41_10 >= QUOTED_ID && LA41_10 <= REAL)||(LA41_10 >= STRING && LA41_10 <= SUBSTRING)||LA41_10==SUM||LA41_10==TRIM||(LA41_10 >= 75 && LA41_10 <= 76)||LA41_10==81) ) {
+                        alt41=1;
                     }
                     else {
                         if (state.backtracking>0) {state.failed=true; return retval;}
                         NoViableAltException nvae =
-                            new NoViableAltException("", 39, 10, input);
+                            new NoViableAltException("", 41, 10, input);
 
                         throw nvae;
 
@@ -6423,7 +6472,7 @@ public TreeAdaptor getTreeAdaptor() {
                 else {
                     if (state.backtracking>0) {state.failed=true; return retval;}
                     NoViableAltException nvae =
-                        new NoViableAltException("", 39, 1, input);
+                        new NoViableAltException("", 41, 1, input);
 
                     throw nvae;
 
@@ -6432,83 +6481,68 @@ public TreeAdaptor getTreeAdaptor() {
                 break;
             case SUBSTRING:
                 {
-                alt39=3;
+                alt41=3;
                 }
                 break;
             case TRIM:
                 {
-                alt39=4;
+                alt41=4;
                 }
                 break;
             case EXTRACT:
                 {
-                alt39=5;
+                alt41=5;
                 }
                 break;
             case SUM:
                 {
-                alt39=6;
+                alt41=6;
                 }
                 break;
             case COUNT:
                 {
-                alt39=7;
+                alt41=7;
                 }
                 break;
             case AVG:
                 {
-                alt39=8;
+                alt41=8;
                 }
                 break;
             case MINIMUM:
                 {
-                alt39=9;
+                alt41=9;
                 }
                 break;
             case MAXIMUM:
                 {
-                alt39=10;
+                alt41=10;
                 }
                 break;
             default:
                 if (state.backtracking>0) {state.failed=true; return retval;}
                 NoViableAltException nvae =
-                    new NoViableAltException("", 39, 0, input);
+                    new NoViableAltException("", 41, 0, input);
 
                 throw nvae;
 
             }
 
-            switch (alt39) {
+            switch (alt41) {
                 case 1 :
-                    // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:524:5: simpleIdentifier '(' valueList ')'
+                    // JaybirdSql.g:519:14: simpleIdentifier '(' valueList ')'
                     {
                     root_0 = (CommonTree)adaptor.nil();
 
 
-                    pushFollow(FOLLOW_simpleIdentifier_in_function1734);
-                    simpleIdentifier198=simpleIdentifier();
+                    pushFollow(FOLLOW_simpleIdentifier_in_function3355);
+                    simpleIdentifier200=simpleIdentifier();
 
                     state._fsp--;
                     if (state.failed) return retval;
-                    if ( state.backtracking==0 ) adaptor.addChild(root_0, simpleIdentifier198.getTree());
+                    if ( state.backtracking==0 ) adaptor.addChild(root_0, simpleIdentifier200.getTree());
 
-                    char_literal199=(Token)match(input,LEFT_PAREN,FOLLOW_LEFT_PAREN_in_function1736); if (state.failed) return retval;
-                    if ( state.backtracking==0 ) {
-                    char_literal199_tree = 
-                    (CommonTree)adaptor.create(char_literal199)
-                    ;
-                    adaptor.addChild(root_0, char_literal199_tree);
-                    }
-
-                    pushFollow(FOLLOW_valueList_in_function1738);
-                    valueList200=valueList();
-
-                    state._fsp--;
-                    if (state.failed) return retval;
-                    if ( state.backtracking==0 ) adaptor.addChild(root_0, valueList200.getTree());
-
-                    char_literal201=(Token)match(input,RIGHT_PAREN,FOLLOW_RIGHT_PAREN_in_function1740); if (state.failed) return retval;
+                    char_literal201=(Token)match(input,LEFT_PAREN,FOLLOW_LEFT_PAREN_in_function3357); if (state.failed) return retval;
                     if ( state.backtracking==0 ) {
                     char_literal201_tree = 
                     (CommonTree)adaptor.create(char_literal201)
@@ -6516,22 +6550,14 @@ public TreeAdaptor getTreeAdaptor() {
                     adaptor.addChild(root_0, char_literal201_tree);
                     }
 
-                    }
-                    break;
-                case 2 :
-                    // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:525:5: simpleIdentifier '(' ')'
-                    {
-                    root_0 = (CommonTree)adaptor.nil();
-
-
-                    pushFollow(FOLLOW_simpleIdentifier_in_function1746);
-                    simpleIdentifier202=simpleIdentifier();
+                    pushFollow(FOLLOW_valueList_in_function3359);
+                    valueList202=valueList();
 
                     state._fsp--;
                     if (state.failed) return retval;
-                    if ( state.backtracking==0 ) adaptor.addChild(root_0, simpleIdentifier202.getTree());
+                    if ( state.backtracking==0 ) adaptor.addChild(root_0, valueList202.getTree());
 
-                    char_literal203=(Token)match(input,LEFT_PAREN,FOLLOW_LEFT_PAREN_in_function1748); if (state.failed) return retval;
+                    char_literal203=(Token)match(input,RIGHT_PAREN,FOLLOW_RIGHT_PAREN_in_function3361); if (state.failed) return retval;
                     if ( state.backtracking==0 ) {
                     char_literal203_tree = 
                     (CommonTree)adaptor.create(char_literal203)
@@ -6539,230 +6565,107 @@ public TreeAdaptor getTreeAdaptor() {
                     adaptor.addChild(root_0, char_literal203_tree);
                     }
 
-                    char_literal204=(Token)match(input,RIGHT_PAREN,FOLLOW_RIGHT_PAREN_in_function1750); if (state.failed) return retval;
+                    }
+                    break;
+                case 2 :
+                    // JaybirdSql.g:520:14: simpleIdentifier '(' ')'
+                    {
+                    root_0 = (CommonTree)adaptor.nil();
+
+
+                    pushFollow(FOLLOW_simpleIdentifier_in_function3376);
+                    simpleIdentifier204=simpleIdentifier();
+
+                    state._fsp--;
+                    if (state.failed) return retval;
+                    if ( state.backtracking==0 ) adaptor.addChild(root_0, simpleIdentifier204.getTree());
+
+                    char_literal205=(Token)match(input,LEFT_PAREN,FOLLOW_LEFT_PAREN_in_function3378); if (state.failed) return retval;
                     if ( state.backtracking==0 ) {
-                    char_literal204_tree = 
-                    (CommonTree)adaptor.create(char_literal204)
+                    char_literal205_tree = 
+                    (CommonTree)adaptor.create(char_literal205)
                     ;
-                    adaptor.addChild(root_0, char_literal204_tree);
+                    adaptor.addChild(root_0, char_literal205_tree);
+                    }
+
+                    char_literal206=(Token)match(input,RIGHT_PAREN,FOLLOW_RIGHT_PAREN_in_function3380); if (state.failed) return retval;
+                    if ( state.backtracking==0 ) {
+                    char_literal206_tree = 
+                    (CommonTree)adaptor.create(char_literal206)
+                    ;
+                    adaptor.addChild(root_0, char_literal206_tree);
                     }
 
                     }
                     break;
                 case 3 :
-                    // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:526:5: substringFunction
+                    // JaybirdSql.g:521:14: substringFunction
                     {
                     root_0 = (CommonTree)adaptor.nil();
 
 
-                    pushFollow(FOLLOW_substringFunction_in_function1756);
-                    substringFunction205=substringFunction();
+                    pushFollow(FOLLOW_substringFunction_in_function3395);
+                    substringFunction207=substringFunction();
 
                     state._fsp--;
                     if (state.failed) return retval;
-                    if ( state.backtracking==0 ) adaptor.addChild(root_0, substringFunction205.getTree());
+                    if ( state.backtracking==0 ) adaptor.addChild(root_0, substringFunction207.getTree());
 
                     }
                     break;
                 case 4 :
-                    // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:527:5: trimFunction
+                    // JaybirdSql.g:522:14: trimFunction
                     {
                     root_0 = (CommonTree)adaptor.nil();
 
 
-                    pushFollow(FOLLOW_trimFunction_in_function1762);
-                    trimFunction206=trimFunction();
+                    pushFollow(FOLLOW_trimFunction_in_function3410);
+                    trimFunction208=trimFunction();
 
                     state._fsp--;
                     if (state.failed) return retval;
-                    if ( state.backtracking==0 ) adaptor.addChild(root_0, trimFunction206.getTree());
+                    if ( state.backtracking==0 ) adaptor.addChild(root_0, trimFunction208.getTree());
 
                     }
                     break;
                 case 5 :
-                    // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:528:5: extractFunction
+                    // JaybirdSql.g:523:14: extractFunction
                     {
                     root_0 = (CommonTree)adaptor.nil();
 
 
-                    pushFollow(FOLLOW_extractFunction_in_function1768);
-                    extractFunction207=extractFunction();
+                    pushFollow(FOLLOW_extractFunction_in_function3425);
+                    extractFunction209=extractFunction();
 
                     state._fsp--;
                     if (state.failed) return retval;
-                    if ( state.backtracking==0 ) adaptor.addChild(root_0, extractFunction207.getTree());
+                    if ( state.backtracking==0 ) adaptor.addChild(root_0, extractFunction209.getTree());
 
                     }
                     break;
                 case 6 :
-                    // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:529:5: SUM '(' ( ALL | DISTINCT )? value ')'
+                    // JaybirdSql.g:524:14: SUM '(' ( ALL | DISTINCT )? value ')'
                     {
                     root_0 = (CommonTree)adaptor.nil();
 
 
-                    SUM208=(Token)match(input,SUM,FOLLOW_SUM_in_function1774); if (state.failed) return retval;
+                    SUM210=(Token)match(input,SUM,FOLLOW_SUM_in_function3440); if (state.failed) return retval;
                     if ( state.backtracking==0 ) {
-                    SUM208_tree = 
-                    (CommonTree)adaptor.create(SUM208)
+                    SUM210_tree = 
+                    (CommonTree)adaptor.create(SUM210)
                     ;
-                    adaptor.addChild(root_0, SUM208_tree);
+                    adaptor.addChild(root_0, SUM210_tree);
                     }
 
-                    char_literal209=(Token)match(input,LEFT_PAREN,FOLLOW_LEFT_PAREN_in_function1777); if (state.failed) return retval;
+                    char_literal211=(Token)match(input,LEFT_PAREN,FOLLOW_LEFT_PAREN_in_function3446); if (state.failed) return retval;
                     if ( state.backtracking==0 ) {
-                    char_literal209_tree = 
-                    (CommonTree)adaptor.create(char_literal209)
+                    char_literal211_tree = 
+                    (CommonTree)adaptor.create(char_literal211)
                     ;
-                    adaptor.addChild(root_0, char_literal209_tree);
+                    adaptor.addChild(root_0, char_literal211_tree);
                     }
 
-                    // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:529:14: ( ALL | DISTINCT )?
-                    int alt34=2;
-                    int LA34_0 = input.LA(1);
-
-                    if ( (LA34_0==ALL||LA34_0==DISTINCT) ) {
-                        alt34=1;
-                    }
-                    switch (alt34) {
-                        case 1 :
-                            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:
-                            {
-                            set210=(Token)input.LT(1);
-
-                            if ( input.LA(1)==ALL||input.LA(1)==DISTINCT ) {
-                                input.consume();
-                                if ( state.backtracking==0 ) adaptor.addChild(root_0, 
-                                (CommonTree)adaptor.create(set210)
-                                );
-                                state.errorRecovery=false;
-                                state.failed=false;
-                            }
-                            else {
-                                if (state.backtracking>0) {state.failed=true; return retval;}
-                                MismatchedSetException mse = new MismatchedSetException(null,input);
-                                throw mse;
-                            }
-
-
-                            }
-                            break;
-
-                    }
-
-
-                    pushFollow(FOLLOW_value_in_function1786);
-                    value211=value();
-
-                    state._fsp--;
-                    if (state.failed) return retval;
-                    if ( state.backtracking==0 ) adaptor.addChild(root_0, value211.getTree());
-
-                    char_literal212=(Token)match(input,RIGHT_PAREN,FOLLOW_RIGHT_PAREN_in_function1788); if (state.failed) return retval;
-                    if ( state.backtracking==0 ) {
-                    char_literal212_tree = 
-                    (CommonTree)adaptor.create(char_literal212)
-                    ;
-                    adaptor.addChild(root_0, char_literal212_tree);
-                    }
-
-                    }
-                    break;
-                case 7 :
-                    // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:530:5: COUNT '(' ( ALL | DISTINCT )? value ')'
-                    {
-                    root_0 = (CommonTree)adaptor.nil();
-
-
-                    COUNT213=(Token)match(input,COUNT,FOLLOW_COUNT_in_function1794); if (state.failed) return retval;
-                    if ( state.backtracking==0 ) {
-                    COUNT213_tree = 
-                    (CommonTree)adaptor.create(COUNT213)
-                    ;
-                    adaptor.addChild(root_0, COUNT213_tree);
-                    }
-
-                    char_literal214=(Token)match(input,LEFT_PAREN,FOLLOW_LEFT_PAREN_in_function1797); if (state.failed) return retval;
-                    if ( state.backtracking==0 ) {
-                    char_literal214_tree = 
-                    (CommonTree)adaptor.create(char_literal214)
-                    ;
-                    adaptor.addChild(root_0, char_literal214_tree);
-                    }
-
-                    // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:530:16: ( ALL | DISTINCT )?
-                    int alt35=2;
-                    int LA35_0 = input.LA(1);
-
-                    if ( (LA35_0==ALL||LA35_0==DISTINCT) ) {
-                        alt35=1;
-                    }
-                    switch (alt35) {
-                        case 1 :
-                            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:
-                            {
-                            set215=(Token)input.LT(1);
-
-                            if ( input.LA(1)==ALL||input.LA(1)==DISTINCT ) {
-                                input.consume();
-                                if ( state.backtracking==0 ) adaptor.addChild(root_0, 
-                                (CommonTree)adaptor.create(set215)
-                                );
-                                state.errorRecovery=false;
-                                state.failed=false;
-                            }
-                            else {
-                                if (state.backtracking>0) {state.failed=true; return retval;}
-                                MismatchedSetException mse = new MismatchedSetException(null,input);
-                                throw mse;
-                            }
-
-
-                            }
-                            break;
-
-                    }
-
-
-                    pushFollow(FOLLOW_value_in_function1806);
-                    value216=value();
-
-                    state._fsp--;
-                    if (state.failed) return retval;
-                    if ( state.backtracking==0 ) adaptor.addChild(root_0, value216.getTree());
-
-                    char_literal217=(Token)match(input,RIGHT_PAREN,FOLLOW_RIGHT_PAREN_in_function1808); if (state.failed) return retval;
-                    if ( state.backtracking==0 ) {
-                    char_literal217_tree = 
-                    (CommonTree)adaptor.create(char_literal217)
-                    ;
-                    adaptor.addChild(root_0, char_literal217_tree);
-                    }
-
-                    }
-                    break;
-                case 8 :
-                    // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:531:5: AVG '(' ( ALL | DISTINCT )? value ')'
-                    {
-                    root_0 = (CommonTree)adaptor.nil();
-
-
-                    AVG218=(Token)match(input,AVG,FOLLOW_AVG_in_function1814); if (state.failed) return retval;
-                    if ( state.backtracking==0 ) {
-                    AVG218_tree = 
-                    (CommonTree)adaptor.create(AVG218)
-                    ;
-                    adaptor.addChild(root_0, AVG218_tree);
-                    }
-
-                    char_literal219=(Token)match(input,LEFT_PAREN,FOLLOW_LEFT_PAREN_in_function1817); if (state.failed) return retval;
-                    if ( state.backtracking==0 ) {
-                    char_literal219_tree = 
-                    (CommonTree)adaptor.create(char_literal219)
-                    ;
-                    adaptor.addChild(root_0, char_literal219_tree);
-                    }
-
-                    // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:531:14: ( ALL | DISTINCT )?
+                    // JaybirdSql.g:524:26: ( ALL | DISTINCT )?
                     int alt36=2;
                     int LA36_0 = input.LA(1);
 
@@ -6771,14 +6674,14 @@ public TreeAdaptor getTreeAdaptor() {
                     }
                     switch (alt36) {
                         case 1 :
-                            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:
+                            // JaybirdSql.g:
                             {
-                            set220=(Token)input.LT(1);
+                            set212=(Token)input.LT(1);
 
                             if ( input.LA(1)==ALL||input.LA(1)==DISTINCT ) {
                                 input.consume();
                                 if ( state.backtracking==0 ) adaptor.addChild(root_0, 
-                                (CommonTree)adaptor.create(set220)
+                                (CommonTree)adaptor.create(set212)
                                 );
                                 state.errorRecovery=false;
                                 state.failed=false;
@@ -6796,46 +6699,46 @@ public TreeAdaptor getTreeAdaptor() {
                     }
 
 
-                    pushFollow(FOLLOW_value_in_function1826);
-                    value221=value();
+                    pushFollow(FOLLOW_value_in_function3455);
+                    value213=value();
 
                     state._fsp--;
                     if (state.failed) return retval;
-                    if ( state.backtracking==0 ) adaptor.addChild(root_0, value221.getTree());
+                    if ( state.backtracking==0 ) adaptor.addChild(root_0, value213.getTree());
 
-                    char_literal222=(Token)match(input,RIGHT_PAREN,FOLLOW_RIGHT_PAREN_in_function1828); if (state.failed) return retval;
+                    char_literal214=(Token)match(input,RIGHT_PAREN,FOLLOW_RIGHT_PAREN_in_function3457); if (state.failed) return retval;
                     if ( state.backtracking==0 ) {
-                    char_literal222_tree = 
-                    (CommonTree)adaptor.create(char_literal222)
+                    char_literal214_tree = 
+                    (CommonTree)adaptor.create(char_literal214)
                     ;
-                    adaptor.addChild(root_0, char_literal222_tree);
+                    adaptor.addChild(root_0, char_literal214_tree);
                     }
 
                     }
                     break;
-                case 9 :
-                    // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:532:5: MINIMUM '(' ( ALL | DISTINCT )? value ')'
+                case 7 :
+                    // JaybirdSql.g:525:14: COUNT '(' ( ALL | DISTINCT )? value ')'
                     {
                     root_0 = (CommonTree)adaptor.nil();
 
 
-                    MINIMUM223=(Token)match(input,MINIMUM,FOLLOW_MINIMUM_in_function1834); if (state.failed) return retval;
+                    COUNT215=(Token)match(input,COUNT,FOLLOW_COUNT_in_function3472); if (state.failed) return retval;
                     if ( state.backtracking==0 ) {
-                    MINIMUM223_tree = 
-                    (CommonTree)adaptor.create(MINIMUM223)
+                    COUNT215_tree = 
+                    (CommonTree)adaptor.create(COUNT215)
                     ;
-                    adaptor.addChild(root_0, MINIMUM223_tree);
+                    adaptor.addChild(root_0, COUNT215_tree);
                     }
 
-                    char_literal224=(Token)match(input,LEFT_PAREN,FOLLOW_LEFT_PAREN_in_function1836); if (state.failed) return retval;
+                    char_literal216=(Token)match(input,LEFT_PAREN,FOLLOW_LEFT_PAREN_in_function3478); if (state.failed) return retval;
                     if ( state.backtracking==0 ) {
-                    char_literal224_tree = 
-                    (CommonTree)adaptor.create(char_literal224)
+                    char_literal216_tree = 
+                    (CommonTree)adaptor.create(char_literal216)
                     ;
-                    adaptor.addChild(root_0, char_literal224_tree);
+                    adaptor.addChild(root_0, char_literal216_tree);
                     }
 
-                    // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:532:17: ( ALL | DISTINCT )?
+                    // JaybirdSql.g:525:28: ( ALL | DISTINCT )?
                     int alt37=2;
                     int LA37_0 = input.LA(1);
 
@@ -6844,14 +6747,14 @@ public TreeAdaptor getTreeAdaptor() {
                     }
                     switch (alt37) {
                         case 1 :
-                            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:
+                            // JaybirdSql.g:
                             {
-                            set225=(Token)input.LT(1);
+                            set217=(Token)input.LT(1);
 
                             if ( input.LA(1)==ALL||input.LA(1)==DISTINCT ) {
                                 input.consume();
                                 if ( state.backtracking==0 ) adaptor.addChild(root_0, 
-                                (CommonTree)adaptor.create(set225)
+                                (CommonTree)adaptor.create(set217)
                                 );
                                 state.errorRecovery=false;
                                 state.failed=false;
@@ -6869,46 +6772,46 @@ public TreeAdaptor getTreeAdaptor() {
                     }
 
 
-                    pushFollow(FOLLOW_value_in_function1845);
-                    value226=value();
+                    pushFollow(FOLLOW_value_in_function3487);
+                    value218=value();
 
                     state._fsp--;
                     if (state.failed) return retval;
-                    if ( state.backtracking==0 ) adaptor.addChild(root_0, value226.getTree());
+                    if ( state.backtracking==0 ) adaptor.addChild(root_0, value218.getTree());
 
-                    char_literal227=(Token)match(input,RIGHT_PAREN,FOLLOW_RIGHT_PAREN_in_function1847); if (state.failed) return retval;
+                    char_literal219=(Token)match(input,RIGHT_PAREN,FOLLOW_RIGHT_PAREN_in_function3489); if (state.failed) return retval;
                     if ( state.backtracking==0 ) {
-                    char_literal227_tree = 
-                    (CommonTree)adaptor.create(char_literal227)
+                    char_literal219_tree = 
+                    (CommonTree)adaptor.create(char_literal219)
                     ;
-                    adaptor.addChild(root_0, char_literal227_tree);
+                    adaptor.addChild(root_0, char_literal219_tree);
                     }
 
                     }
                     break;
-                case 10 :
-                    // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:533:5: MAXIMUM '(' ( ALL | DISTINCT )? value ')'
+                case 8 :
+                    // JaybirdSql.g:526:14: AVG '(' ( ALL | DISTINCT )? value ')'
                     {
                     root_0 = (CommonTree)adaptor.nil();
 
 
-                    MAXIMUM228=(Token)match(input,MAXIMUM,FOLLOW_MAXIMUM_in_function1853); if (state.failed) return retval;
+                    AVG220=(Token)match(input,AVG,FOLLOW_AVG_in_function3504); if (state.failed) return retval;
                     if ( state.backtracking==0 ) {
-                    MAXIMUM228_tree = 
-                    (CommonTree)adaptor.create(MAXIMUM228)
+                    AVG220_tree = 
+                    (CommonTree)adaptor.create(AVG220)
                     ;
-                    adaptor.addChild(root_0, MAXIMUM228_tree);
+                    adaptor.addChild(root_0, AVG220_tree);
                     }
 
-                    char_literal229=(Token)match(input,LEFT_PAREN,FOLLOW_LEFT_PAREN_in_function1855); if (state.failed) return retval;
+                    char_literal221=(Token)match(input,LEFT_PAREN,FOLLOW_LEFT_PAREN_in_function3513); if (state.failed) return retval;
                     if ( state.backtracking==0 ) {
-                    char_literal229_tree = 
-                    (CommonTree)adaptor.create(char_literal229)
+                    char_literal221_tree = 
+                    (CommonTree)adaptor.create(char_literal221)
                     ;
-                    adaptor.addChild(root_0, char_literal229_tree);
+                    adaptor.addChild(root_0, char_literal221_tree);
                     }
 
-                    // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:533:17: ( ALL | DISTINCT )?
+                    // JaybirdSql.g:526:29: ( ALL | DISTINCT )?
                     int alt38=2;
                     int LA38_0 = input.LA(1);
 
@@ -6917,14 +6820,14 @@ public TreeAdaptor getTreeAdaptor() {
                     }
                     switch (alt38) {
                         case 1 :
-                            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:
+                            // JaybirdSql.g:
                             {
-                            set230=(Token)input.LT(1);
+                            set222=(Token)input.LT(1);
 
                             if ( input.LA(1)==ALL||input.LA(1)==DISTINCT ) {
                                 input.consume();
                                 if ( state.backtracking==0 ) adaptor.addChild(root_0, 
-                                (CommonTree)adaptor.create(set230)
+                                (CommonTree)adaptor.create(set222)
                                 );
                                 state.errorRecovery=false;
                                 state.failed=false;
@@ -6942,19 +6845,165 @@ public TreeAdaptor getTreeAdaptor() {
                     }
 
 
-                    pushFollow(FOLLOW_value_in_function1864);
-                    value231=value();
+                    pushFollow(FOLLOW_value_in_function3522);
+                    value223=value();
 
                     state._fsp--;
                     if (state.failed) return retval;
-                    if ( state.backtracking==0 ) adaptor.addChild(root_0, value231.getTree());
+                    if ( state.backtracking==0 ) adaptor.addChild(root_0, value223.getTree());
 
-                    char_literal232=(Token)match(input,RIGHT_PAREN,FOLLOW_RIGHT_PAREN_in_function1866); if (state.failed) return retval;
+                    char_literal224=(Token)match(input,RIGHT_PAREN,FOLLOW_RIGHT_PAREN_in_function3524); if (state.failed) return retval;
                     if ( state.backtracking==0 ) {
-                    char_literal232_tree = 
-                    (CommonTree)adaptor.create(char_literal232)
+                    char_literal224_tree = 
+                    (CommonTree)adaptor.create(char_literal224)
                     ;
-                    adaptor.addChild(root_0, char_literal232_tree);
+                    adaptor.addChild(root_0, char_literal224_tree);
+                    }
+
+                    }
+                    break;
+                case 9 :
+                    // JaybirdSql.g:527:14: MINIMUM '(' ( ALL | DISTINCT )? value ')'
+                    {
+                    root_0 = (CommonTree)adaptor.nil();
+
+
+                    MINIMUM225=(Token)match(input,MINIMUM,FOLLOW_MINIMUM_in_function3539); if (state.failed) return retval;
+                    if ( state.backtracking==0 ) {
+                    MINIMUM225_tree = 
+                    (CommonTree)adaptor.create(MINIMUM225)
+                    ;
+                    adaptor.addChild(root_0, MINIMUM225_tree);
+                    }
+
+                    char_literal226=(Token)match(input,LEFT_PAREN,FOLLOW_LEFT_PAREN_in_function3544); if (state.failed) return retval;
+                    if ( state.backtracking==0 ) {
+                    char_literal226_tree = 
+                    (CommonTree)adaptor.create(char_literal226)
+                    ;
+                    adaptor.addChild(root_0, char_literal226_tree);
+                    }
+
+                    // JaybirdSql.g:527:29: ( ALL | DISTINCT )?
+                    int alt39=2;
+                    int LA39_0 = input.LA(1);
+
+                    if ( (LA39_0==ALL||LA39_0==DISTINCT) ) {
+                        alt39=1;
+                    }
+                    switch (alt39) {
+                        case 1 :
+                            // JaybirdSql.g:
+                            {
+                            set227=(Token)input.LT(1);
+
+                            if ( input.LA(1)==ALL||input.LA(1)==DISTINCT ) {
+                                input.consume();
+                                if ( state.backtracking==0 ) adaptor.addChild(root_0, 
+                                (CommonTree)adaptor.create(set227)
+                                );
+                                state.errorRecovery=false;
+                                state.failed=false;
+                            }
+                            else {
+                                if (state.backtracking>0) {state.failed=true; return retval;}
+                                MismatchedSetException mse = new MismatchedSetException(null,input);
+                                throw mse;
+                            }
+
+
+                            }
+                            break;
+
+                    }
+
+
+                    pushFollow(FOLLOW_value_in_function3553);
+                    value228=value();
+
+                    state._fsp--;
+                    if (state.failed) return retval;
+                    if ( state.backtracking==0 ) adaptor.addChild(root_0, value228.getTree());
+
+                    char_literal229=(Token)match(input,RIGHT_PAREN,FOLLOW_RIGHT_PAREN_in_function3555); if (state.failed) return retval;
+                    if ( state.backtracking==0 ) {
+                    char_literal229_tree = 
+                    (CommonTree)adaptor.create(char_literal229)
+                    ;
+                    adaptor.addChild(root_0, char_literal229_tree);
+                    }
+
+                    }
+                    break;
+                case 10 :
+                    // JaybirdSql.g:528:14: MAXIMUM '(' ( ALL | DISTINCT )? value ')'
+                    {
+                    root_0 = (CommonTree)adaptor.nil();
+
+
+                    MAXIMUM230=(Token)match(input,MAXIMUM,FOLLOW_MAXIMUM_in_function3570); if (state.failed) return retval;
+                    if ( state.backtracking==0 ) {
+                    MAXIMUM230_tree = 
+                    (CommonTree)adaptor.create(MAXIMUM230)
+                    ;
+                    adaptor.addChild(root_0, MAXIMUM230_tree);
+                    }
+
+                    char_literal231=(Token)match(input,LEFT_PAREN,FOLLOW_LEFT_PAREN_in_function3572); if (state.failed) return retval;
+                    if ( state.backtracking==0 ) {
+                    char_literal231_tree = 
+                    (CommonTree)adaptor.create(char_literal231)
+                    ;
+                    adaptor.addChild(root_0, char_literal231_tree);
+                    }
+
+                    // JaybirdSql.g:528:26: ( ALL | DISTINCT )?
+                    int alt40=2;
+                    int LA40_0 = input.LA(1);
+
+                    if ( (LA40_0==ALL||LA40_0==DISTINCT) ) {
+                        alt40=1;
+                    }
+                    switch (alt40) {
+                        case 1 :
+                            // JaybirdSql.g:
+                            {
+                            set232=(Token)input.LT(1);
+
+                            if ( input.LA(1)==ALL||input.LA(1)==DISTINCT ) {
+                                input.consume();
+                                if ( state.backtracking==0 ) adaptor.addChild(root_0, 
+                                (CommonTree)adaptor.create(set232)
+                                );
+                                state.errorRecovery=false;
+                                state.failed=false;
+                            }
+                            else {
+                                if (state.backtracking>0) {state.failed=true; return retval;}
+                                MismatchedSetException mse = new MismatchedSetException(null,input);
+                                throw mse;
+                            }
+
+
+                            }
+                            break;
+
+                    }
+
+
+                    pushFollow(FOLLOW_value_in_function3581);
+                    value233=value();
+
+                    state._fsp--;
+                    if (state.failed) return retval;
+                    if ( state.backtracking==0 ) adaptor.addChild(root_0, value233.getTree());
+
+                    char_literal234=(Token)match(input,RIGHT_PAREN,FOLLOW_RIGHT_PAREN_in_function3583); if (state.failed) return retval;
+                    if ( state.backtracking==0 ) {
+                    char_literal234_tree = 
+                    (CommonTree)adaptor.create(char_literal234)
+                    ;
+                    adaptor.addChild(root_0, char_literal234_tree);
                     }
 
                     }
@@ -6994,7 +7043,7 @@ public TreeAdaptor getTreeAdaptor() {
 
 
     // $ANTLR start "substringFunction"
-    // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:536:1: substringFunction : SUBSTRING '(' value FROM value ( FOR INTEGER )? ')' ;
+    // JaybirdSql.g:531:1: substringFunction : SUBSTRING '(' value FROM value ( FOR INTEGER )? ')' ;
     public final JaybirdSqlParser.substringFunction_return substringFunction() throws RecognitionException {
         JaybirdSqlParser.substringFunction_return retval = new JaybirdSqlParser.substringFunction_return();
         retval.start = input.LT(1);
@@ -7003,96 +7052,96 @@ public TreeAdaptor getTreeAdaptor() {
 
         CommonTree root_0 = null;
 
-        Token SUBSTRING233=null;
-        Token char_literal234=null;
-        Token FROM236=null;
-        Token FOR238=null;
-        Token INTEGER239=null;
-        Token char_literal240=null;
-        JaybirdSqlParser.value_return value235 =null;
-
+        Token SUBSTRING235=null;
+        Token char_literal236=null;
+        Token FROM238=null;
+        Token FOR240=null;
+        Token INTEGER241=null;
+        Token char_literal242=null;
         JaybirdSqlParser.value_return value237 =null;
 
+        JaybirdSqlParser.value_return value239 =null;
 
-        CommonTree SUBSTRING233_tree=null;
-        CommonTree char_literal234_tree=null;
-        CommonTree FROM236_tree=null;
-        CommonTree FOR238_tree=null;
-        CommonTree INTEGER239_tree=null;
-        CommonTree char_literal240_tree=null;
+
+        CommonTree SUBSTRING235_tree=null;
+        CommonTree char_literal236_tree=null;
+        CommonTree FROM238_tree=null;
+        CommonTree FOR240_tree=null;
+        CommonTree INTEGER241_tree=null;
+        CommonTree char_literal242_tree=null;
 
         try {
             if ( state.backtracking>0 && alreadyParsedRule(input, 41) ) { return retval; }
 
-            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:537:3: ( SUBSTRING '(' value FROM value ( FOR INTEGER )? ')' )
-            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:537:5: SUBSTRING '(' value FROM value ( FOR INTEGER )? ')'
+            // JaybirdSql.g:532:9: ( SUBSTRING '(' value FROM value ( FOR INTEGER )? ')' )
+            // JaybirdSql.g:532:14: SUBSTRING '(' value FROM value ( FOR INTEGER )? ')'
             {
             root_0 = (CommonTree)adaptor.nil();
 
 
-            SUBSTRING233=(Token)match(input,SUBSTRING,FOLLOW_SUBSTRING_in_substringFunction1883); if (state.failed) return retval;
+            SUBSTRING235=(Token)match(input,SUBSTRING,FOLLOW_SUBSTRING_in_substringFunction3621); if (state.failed) return retval;
             if ( state.backtracking==0 ) {
-            SUBSTRING233_tree = 
-            (CommonTree)adaptor.create(SUBSTRING233)
+            SUBSTRING235_tree = 
+            (CommonTree)adaptor.create(SUBSTRING235)
             ;
-            adaptor.addChild(root_0, SUBSTRING233_tree);
+            adaptor.addChild(root_0, SUBSTRING235_tree);
             }
 
-            char_literal234=(Token)match(input,LEFT_PAREN,FOLLOW_LEFT_PAREN_in_substringFunction1885); if (state.failed) return retval;
+            char_literal236=(Token)match(input,LEFT_PAREN,FOLLOW_LEFT_PAREN_in_substringFunction3623); if (state.failed) return retval;
             if ( state.backtracking==0 ) {
-            char_literal234_tree = 
-            (CommonTree)adaptor.create(char_literal234)
+            char_literal236_tree = 
+            (CommonTree)adaptor.create(char_literal236)
             ;
-            adaptor.addChild(root_0, char_literal234_tree);
+            adaptor.addChild(root_0, char_literal236_tree);
             }
 
-            pushFollow(FOLLOW_value_in_substringFunction1887);
-            value235=value();
-
-            state._fsp--;
-            if (state.failed) return retval;
-            if ( state.backtracking==0 ) adaptor.addChild(root_0, value235.getTree());
-
-            FROM236=(Token)match(input,FROM,FOLLOW_FROM_in_substringFunction1889); if (state.failed) return retval;
-            if ( state.backtracking==0 ) {
-            FROM236_tree = 
-            (CommonTree)adaptor.create(FROM236)
-            ;
-            adaptor.addChild(root_0, FROM236_tree);
-            }
-
-            pushFollow(FOLLOW_value_in_substringFunction1891);
+            pushFollow(FOLLOW_value_in_substringFunction3625);
             value237=value();
 
             state._fsp--;
             if (state.failed) return retval;
             if ( state.backtracking==0 ) adaptor.addChild(root_0, value237.getTree());
 
-            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:537:36: ( FOR INTEGER )?
-            int alt40=2;
-            int LA40_0 = input.LA(1);
-
-            if ( (LA40_0==FOR) ) {
-                alt40=1;
+            FROM238=(Token)match(input,FROM,FOLLOW_FROM_in_substringFunction3627); if (state.failed) return retval;
+            if ( state.backtracking==0 ) {
+            FROM238_tree = 
+            (CommonTree)adaptor.create(FROM238)
+            ;
+            adaptor.addChild(root_0, FROM238_tree);
             }
-            switch (alt40) {
+
+            pushFollow(FOLLOW_value_in_substringFunction3629);
+            value239=value();
+
+            state._fsp--;
+            if (state.failed) return retval;
+            if ( state.backtracking==0 ) adaptor.addChild(root_0, value239.getTree());
+
+            // JaybirdSql.g:532:45: ( FOR INTEGER )?
+            int alt42=2;
+            int LA42_0 = input.LA(1);
+
+            if ( (LA42_0==FOR) ) {
+                alt42=1;
+            }
+            switch (alt42) {
                 case 1 :
-                    // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:537:37: FOR INTEGER
+                    // JaybirdSql.g:532:46: FOR INTEGER
                     {
-                    FOR238=(Token)match(input,FOR,FOLLOW_FOR_in_substringFunction1894); if (state.failed) return retval;
+                    FOR240=(Token)match(input,FOR,FOLLOW_FOR_in_substringFunction3632); if (state.failed) return retval;
                     if ( state.backtracking==0 ) {
-                    FOR238_tree = 
-                    (CommonTree)adaptor.create(FOR238)
+                    FOR240_tree = 
+                    (CommonTree)adaptor.create(FOR240)
                     ;
-                    adaptor.addChild(root_0, FOR238_tree);
+                    adaptor.addChild(root_0, FOR240_tree);
                     }
 
-                    INTEGER239=(Token)match(input,INTEGER,FOLLOW_INTEGER_in_substringFunction1896); if (state.failed) return retval;
+                    INTEGER241=(Token)match(input,INTEGER,FOLLOW_INTEGER_in_substringFunction3634); if (state.failed) return retval;
                     if ( state.backtracking==0 ) {
-                    INTEGER239_tree = 
-                    (CommonTree)adaptor.create(INTEGER239)
+                    INTEGER241_tree = 
+                    (CommonTree)adaptor.create(INTEGER241)
                     ;
-                    adaptor.addChild(root_0, INTEGER239_tree);
+                    adaptor.addChild(root_0, INTEGER241_tree);
                     }
 
                     }
@@ -7101,12 +7150,12 @@ public TreeAdaptor getTreeAdaptor() {
             }
 
 
-            char_literal240=(Token)match(input,RIGHT_PAREN,FOLLOW_RIGHT_PAREN_in_substringFunction1900); if (state.failed) return retval;
+            char_literal242=(Token)match(input,RIGHT_PAREN,FOLLOW_RIGHT_PAREN_in_substringFunction3638); if (state.failed) return retval;
             if ( state.backtracking==0 ) {
-            char_literal240_tree = 
-            (CommonTree)adaptor.create(char_literal240)
+            char_literal242_tree = 
+            (CommonTree)adaptor.create(char_literal242)
             ;
-            adaptor.addChild(root_0, char_literal240_tree);
+            adaptor.addChild(root_0, char_literal242_tree);
             }
 
             }
@@ -7144,7 +7193,7 @@ public TreeAdaptor getTreeAdaptor() {
 
 
     // $ANTLR start "trimFunction"
-    // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:540:1: trimFunction : TRIM '(' ( trimSpecification )? value ( FROM value )? ')' ;
+    // JaybirdSql.g:535:1: trimFunction : TRIM '(' ( trimSpecification )? value ( FROM value )? ')' ;
     public final JaybirdSqlParser.trimFunction_return trimFunction() throws RecognitionException {
         JaybirdSqlParser.trimFunction_return retval = new JaybirdSqlParser.trimFunction_return();
         retval.start = input.LT(1);
@@ -7153,64 +7202,64 @@ public TreeAdaptor getTreeAdaptor() {
 
         CommonTree root_0 = null;
 
-        Token TRIM241=null;
-        Token char_literal242=null;
-        Token FROM245=null;
-        Token char_literal247=null;
-        JaybirdSqlParser.trimSpecification_return trimSpecification243 =null;
-
-        JaybirdSqlParser.value_return value244 =null;
+        Token TRIM243=null;
+        Token char_literal244=null;
+        Token FROM247=null;
+        Token char_literal249=null;
+        JaybirdSqlParser.trimSpecification_return trimSpecification245 =null;
 
         JaybirdSqlParser.value_return value246 =null;
 
+        JaybirdSqlParser.value_return value248 =null;
 
-        CommonTree TRIM241_tree=null;
-        CommonTree char_literal242_tree=null;
-        CommonTree FROM245_tree=null;
-        CommonTree char_literal247_tree=null;
+
+        CommonTree TRIM243_tree=null;
+        CommonTree char_literal244_tree=null;
+        CommonTree FROM247_tree=null;
+        CommonTree char_literal249_tree=null;
 
         try {
             if ( state.backtracking>0 && alreadyParsedRule(input, 42) ) { return retval; }
 
-            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:541:3: ( TRIM '(' ( trimSpecification )? value ( FROM value )? ')' )
-            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:541:5: TRIM '(' ( trimSpecification )? value ( FROM value )? ')'
+            // JaybirdSql.g:536:9: ( TRIM '(' ( trimSpecification )? value ( FROM value )? ')' )
+            // JaybirdSql.g:536:14: TRIM '(' ( trimSpecification )? value ( FROM value )? ')'
             {
             root_0 = (CommonTree)adaptor.nil();
 
 
-            TRIM241=(Token)match(input,TRIM,FOLLOW_TRIM_in_trimFunction1915); if (state.failed) return retval;
+            TRIM243=(Token)match(input,TRIM,FOLLOW_TRIM_in_trimFunction3674); if (state.failed) return retval;
             if ( state.backtracking==0 ) {
-            TRIM241_tree = 
-            (CommonTree)adaptor.create(TRIM241)
+            TRIM243_tree = 
+            (CommonTree)adaptor.create(TRIM243)
             ;
-            adaptor.addChild(root_0, TRIM241_tree);
+            adaptor.addChild(root_0, TRIM243_tree);
             }
 
-            char_literal242=(Token)match(input,LEFT_PAREN,FOLLOW_LEFT_PAREN_in_trimFunction1917); if (state.failed) return retval;
+            char_literal244=(Token)match(input,LEFT_PAREN,FOLLOW_LEFT_PAREN_in_trimFunction3676); if (state.failed) return retval;
             if ( state.backtracking==0 ) {
-            char_literal242_tree = 
-            (CommonTree)adaptor.create(char_literal242)
+            char_literal244_tree = 
+            (CommonTree)adaptor.create(char_literal244)
             ;
-            adaptor.addChild(root_0, char_literal242_tree);
+            adaptor.addChild(root_0, char_literal244_tree);
             }
 
-            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:541:14: ( trimSpecification )?
-            int alt41=2;
-            int LA41_0 = input.LA(1);
+            // JaybirdSql.g:536:23: ( trimSpecification )?
+            int alt43=2;
+            int LA43_0 = input.LA(1);
 
-            if ( (LA41_0==BOTH||LA41_0==LEADING||LA41_0==TRAILING) ) {
-                alt41=1;
+            if ( (LA43_0==BOTH||LA43_0==LEADING||LA43_0==TRAILING) ) {
+                alt43=1;
             }
-            switch (alt41) {
+            switch (alt43) {
                 case 1 :
-                    // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:541:15: trimSpecification
+                    // JaybirdSql.g:536:24: trimSpecification
                     {
-                    pushFollow(FOLLOW_trimSpecification_in_trimFunction1920);
-                    trimSpecification243=trimSpecification();
+                    pushFollow(FOLLOW_trimSpecification_in_trimFunction3679);
+                    trimSpecification245=trimSpecification();
 
                     state._fsp--;
                     if (state.failed) return retval;
-                    if ( state.backtracking==0 ) adaptor.addChild(root_0, trimSpecification243.getTree());
+                    if ( state.backtracking==0 ) adaptor.addChild(root_0, trimSpecification245.getTree());
 
                     }
                     break;
@@ -7218,38 +7267,38 @@ public TreeAdaptor getTreeAdaptor() {
             }
 
 
-            pushFollow(FOLLOW_value_in_trimFunction1924);
-            value244=value();
+            pushFollow(FOLLOW_value_in_trimFunction3683);
+            value246=value();
 
             state._fsp--;
             if (state.failed) return retval;
-            if ( state.backtracking==0 ) adaptor.addChild(root_0, value244.getTree());
+            if ( state.backtracking==0 ) adaptor.addChild(root_0, value246.getTree());
 
-            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:541:41: ( FROM value )?
-            int alt42=2;
-            int LA42_0 = input.LA(1);
+            // JaybirdSql.g:536:50: ( FROM value )?
+            int alt44=2;
+            int LA44_0 = input.LA(1);
 
-            if ( (LA42_0==FROM) ) {
-                alt42=1;
+            if ( (LA44_0==FROM) ) {
+                alt44=1;
             }
-            switch (alt42) {
+            switch (alt44) {
                 case 1 :
-                    // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:541:42: FROM value
+                    // JaybirdSql.g:536:51: FROM value
                     {
-                    FROM245=(Token)match(input,FROM,FOLLOW_FROM_in_trimFunction1927); if (state.failed) return retval;
+                    FROM247=(Token)match(input,FROM,FOLLOW_FROM_in_trimFunction3686); if (state.failed) return retval;
                     if ( state.backtracking==0 ) {
-                    FROM245_tree = 
-                    (CommonTree)adaptor.create(FROM245)
+                    FROM247_tree = 
+                    (CommonTree)adaptor.create(FROM247)
                     ;
-                    adaptor.addChild(root_0, FROM245_tree);
+                    adaptor.addChild(root_0, FROM247_tree);
                     }
 
-                    pushFollow(FOLLOW_value_in_trimFunction1929);
-                    value246=value();
+                    pushFollow(FOLLOW_value_in_trimFunction3688);
+                    value248=value();
 
                     state._fsp--;
                     if (state.failed) return retval;
-                    if ( state.backtracking==0 ) adaptor.addChild(root_0, value246.getTree());
+                    if ( state.backtracking==0 ) adaptor.addChild(root_0, value248.getTree());
 
                     }
                     break;
@@ -7257,12 +7306,12 @@ public TreeAdaptor getTreeAdaptor() {
             }
 
 
-            char_literal247=(Token)match(input,RIGHT_PAREN,FOLLOW_RIGHT_PAREN_in_trimFunction1933); if (state.failed) return retval;
+            char_literal249=(Token)match(input,RIGHT_PAREN,FOLLOW_RIGHT_PAREN_in_trimFunction3692); if (state.failed) return retval;
             if ( state.backtracking==0 ) {
-            char_literal247_tree = 
-            (CommonTree)adaptor.create(char_literal247)
+            char_literal249_tree = 
+            (CommonTree)adaptor.create(char_literal249)
             ;
-            adaptor.addChild(root_0, char_literal247_tree);
+            adaptor.addChild(root_0, char_literal249_tree);
             }
 
             }
@@ -7300,7 +7349,7 @@ public TreeAdaptor getTreeAdaptor() {
 
 
     // $ANTLR start "extractFunction"
-    // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:544:1: extractFunction : EXTRACT '(' value FROM value ')' ;
+    // JaybirdSql.g:539:1: extractFunction : EXTRACT '(' value FROM value ')' ;
     public final JaybirdSqlParser.extractFunction_return extractFunction() throws RecognitionException {
         JaybirdSqlParser.extractFunction_return retval = new JaybirdSqlParser.extractFunction_return();
         retval.start = input.LT(1);
@@ -7309,73 +7358,73 @@ public TreeAdaptor getTreeAdaptor() {
 
         CommonTree root_0 = null;
 
-        Token EXTRACT248=null;
-        Token char_literal249=null;
-        Token FROM251=null;
-        Token char_literal253=null;
-        JaybirdSqlParser.value_return value250 =null;
-
+        Token EXTRACT250=null;
+        Token char_literal251=null;
+        Token FROM253=null;
+        Token char_literal255=null;
         JaybirdSqlParser.value_return value252 =null;
 
+        JaybirdSqlParser.value_return value254 =null;
 
-        CommonTree EXTRACT248_tree=null;
-        CommonTree char_literal249_tree=null;
-        CommonTree FROM251_tree=null;
-        CommonTree char_literal253_tree=null;
+
+        CommonTree EXTRACT250_tree=null;
+        CommonTree char_literal251_tree=null;
+        CommonTree FROM253_tree=null;
+        CommonTree char_literal255_tree=null;
 
         try {
             if ( state.backtracking>0 && alreadyParsedRule(input, 43) ) { return retval; }
 
-            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:545:3: ( EXTRACT '(' value FROM value ')' )
-            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:545:5: EXTRACT '(' value FROM value ')'
+            // JaybirdSql.g:540:9: ( EXTRACT '(' value FROM value ')' )
+            // JaybirdSql.g:540:14: EXTRACT '(' value FROM value ')'
             {
             root_0 = (CommonTree)adaptor.nil();
 
 
-            EXTRACT248=(Token)match(input,EXTRACT,FOLLOW_EXTRACT_in_extractFunction1948); if (state.failed) return retval;
+            EXTRACT250=(Token)match(input,EXTRACT,FOLLOW_EXTRACT_in_extractFunction3728); if (state.failed) return retval;
             if ( state.backtracking==0 ) {
-            EXTRACT248_tree = 
-            (CommonTree)adaptor.create(EXTRACT248)
+            EXTRACT250_tree = 
+            (CommonTree)adaptor.create(EXTRACT250)
             ;
-            adaptor.addChild(root_0, EXTRACT248_tree);
+            adaptor.addChild(root_0, EXTRACT250_tree);
             }
 
-            char_literal249=(Token)match(input,LEFT_PAREN,FOLLOW_LEFT_PAREN_in_extractFunction1950); if (state.failed) return retval;
+            char_literal251=(Token)match(input,LEFT_PAREN,FOLLOW_LEFT_PAREN_in_extractFunction3730); if (state.failed) return retval;
             if ( state.backtracking==0 ) {
-            char_literal249_tree = 
-            (CommonTree)adaptor.create(char_literal249)
+            char_literal251_tree = 
+            (CommonTree)adaptor.create(char_literal251)
             ;
-            adaptor.addChild(root_0, char_literal249_tree);
+            adaptor.addChild(root_0, char_literal251_tree);
             }
 
-            pushFollow(FOLLOW_value_in_extractFunction1952);
-            value250=value();
-
-            state._fsp--;
-            if (state.failed) return retval;
-            if ( state.backtracking==0 ) adaptor.addChild(root_0, value250.getTree());
-
-            FROM251=(Token)match(input,FROM,FOLLOW_FROM_in_extractFunction1954); if (state.failed) return retval;
-            if ( state.backtracking==0 ) {
-            FROM251_tree = 
-            (CommonTree)adaptor.create(FROM251)
-            ;
-            adaptor.addChild(root_0, FROM251_tree);
-            }
-
-            pushFollow(FOLLOW_value_in_extractFunction1956);
+            pushFollow(FOLLOW_value_in_extractFunction3732);
             value252=value();
 
             state._fsp--;
             if (state.failed) return retval;
             if ( state.backtracking==0 ) adaptor.addChild(root_0, value252.getTree());
 
-            char_literal253=(Token)match(input,RIGHT_PAREN,FOLLOW_RIGHT_PAREN_in_extractFunction1958); if (state.failed) return retval;
+            FROM253=(Token)match(input,FROM,FOLLOW_FROM_in_extractFunction3734); if (state.failed) return retval;
             if ( state.backtracking==0 ) {
-            char_literal253_tree = 
-            (CommonTree)adaptor.create(char_literal253)
+            FROM253_tree = 
+            (CommonTree)adaptor.create(FROM253)
             ;
-            adaptor.addChild(root_0, char_literal253_tree);
+            adaptor.addChild(root_0, FROM253_tree);
+            }
+
+            pushFollow(FOLLOW_value_in_extractFunction3736);
+            value254=value();
+
+            state._fsp--;
+            if (state.failed) return retval;
+            if ( state.backtracking==0 ) adaptor.addChild(root_0, value254.getTree());
+
+            char_literal255=(Token)match(input,RIGHT_PAREN,FOLLOW_RIGHT_PAREN_in_extractFunction3738); if (state.failed) return retval;
+            if ( state.backtracking==0 ) {
+            char_literal255_tree = 
+            (CommonTree)adaptor.create(char_literal255)
+            ;
+            adaptor.addChild(root_0, char_literal255_tree);
             }
 
             }
@@ -7413,7 +7462,7 @@ public TreeAdaptor getTreeAdaptor() {
 
 
     // $ANTLR start "trimSpecification"
-    // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:548:1: trimSpecification : ( BOTH | TRAILING | LEADING );
+    // JaybirdSql.g:543:1: trimSpecification : ( BOTH | TRAILING | LEADING );
     public final JaybirdSqlParser.trimSpecification_return trimSpecification() throws RecognitionException {
         JaybirdSqlParser.trimSpecification_return retval = new JaybirdSqlParser.trimSpecification_return();
         retval.start = input.LT(1);
@@ -7422,25 +7471,25 @@ public TreeAdaptor getTreeAdaptor() {
 
         CommonTree root_0 = null;
 
-        Token set254=null;
+        Token set256=null;
 
-        CommonTree set254_tree=null;
+        CommonTree set256_tree=null;
 
         try {
             if ( state.backtracking>0 && alreadyParsedRule(input, 44) ) { return retval; }
 
-            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:549:3: ( BOTH | TRAILING | LEADING )
-            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:
+            // JaybirdSql.g:544:9: ( BOTH | TRAILING | LEADING )
+            // JaybirdSql.g:
             {
             root_0 = (CommonTree)adaptor.nil();
 
 
-            set254=(Token)input.LT(1);
+            set256=(Token)input.LT(1);
 
             if ( input.LA(1)==BOTH||input.LA(1)==LEADING||input.LA(1)==TRAILING ) {
                 input.consume();
                 if ( state.backtracking==0 ) adaptor.addChild(root_0, 
-                (CommonTree)adaptor.create(set254)
+                (CommonTree)adaptor.create(set256)
                 );
                 state.errorRecovery=false;
                 state.failed=false;
@@ -7487,7 +7536,7 @@ public TreeAdaptor getTreeAdaptor() {
 
 
     // $ANTLR start "selectClause"
-    // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:554:1: selectClause : SELECT ;
+    // JaybirdSql.g:549:1: selectClause : SELECT ;
     public final JaybirdSqlParser.selectClause_return selectClause() throws RecognitionException {
         JaybirdSqlParser.selectClause_return retval = new JaybirdSqlParser.selectClause_return();
         retval.start = input.LT(1);
@@ -7496,25 +7545,25 @@ public TreeAdaptor getTreeAdaptor() {
 
         CommonTree root_0 = null;
 
-        Token SELECT255=null;
+        Token SELECT257=null;
 
-        CommonTree SELECT255_tree=null;
+        CommonTree SELECT257_tree=null;
 
         try {
             if ( state.backtracking>0 && alreadyParsedRule(input, 45) ) { return retval; }
 
-            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:555:3: ( SELECT )
-            // D:\\Users\\rrokytskyy\\workspace\\client-java\\src\\main\\org\\firebirdsql\\jdbc\\parser\\JaybirdSql.g:555:5: SELECT
+            // JaybirdSql.g:550:9: ( SELECT )
+            // JaybirdSql.g:550:14: SELECT
             {
             root_0 = (CommonTree)adaptor.nil();
 
 
-            SELECT255=(Token)match(input,SELECT,FOLLOW_SELECT_in_selectClause2002); if (state.failed) return retval;
+            SELECT257=(Token)match(input,SELECT,FOLLOW_SELECT_in_selectClause3842); if (state.failed) return retval;
             if ( state.backtracking==0 ) {
-            SELECT255_tree = 
-            (CommonTree)adaptor.create(SELECT255)
+            SELECT257_tree = 
+            (CommonTree)adaptor.create(SELECT257)
             ;
-            adaptor.addChild(root_0, SELECT255_tree);
+            adaptor.addChild(root_0, SELECT257_tree);
             }
 
             }
@@ -7549,255 +7598,257 @@ public TreeAdaptor getTreeAdaptor() {
 
  
 
-    public static final BitSet FOLLOW_insertStatement_in_statement474 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_deleteStatement_in_statement480 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_updateStatement_in_statement486 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_updateOrInsertStatement_in_statement493 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_DELETE_in_deleteStatement510 = new BitSet(new long[]{0x0000000002000000L});
-    public static final BitSet FOLLOW_FROM_in_deleteStatement512 = new BitSet(new long[]{0x0100000004000000L});
-    public static final BitSet FOLLOW_tableName_in_deleteStatement514 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_UPDATE_in_updateStatement538 = new BitSet(new long[]{0x0100000004000000L});
-    public static final BitSet FOLLOW_tableName_in_updateStatement540 = new BitSet(new long[]{0x4000000000000000L});
-    public static final BitSet FOLLOW_SET_in_updateStatement542 = new BitSet(new long[]{0x0100000004000000L});
-    public static final BitSet FOLLOW_assignments_in_updateStatement544 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_assignment_in_assignments562 = new BitSet(new long[]{0x0000000000000802L});
-    public static final BitSet FOLLOW_COMMA_in_assignments565 = new BitSet(new long[]{0x0100000004000000L});
-    public static final BitSet FOLLOW_assignment_in_assignments567 = new BitSet(new long[]{0x0000000000000802L});
-    public static final BitSet FOLLOW_columnName_in_assignment582 = new BitSet(new long[]{0x0000000000000000L,0x0000000000010000L});
-    public static final BitSet FOLLOW_80_in_assignment584 = new BitSet(new long[]{0x033D00002C87F140L,0x000000000002182BL});
-    public static final BitSet FOLLOW_value_in_assignment586 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_UPDATE_in_updateOrInsertStatement603 = new BitSet(new long[]{0x0040000000000000L});
-    public static final BitSet FOLLOW_OR_in_updateOrInsertStatement605 = new BitSet(new long[]{0x0000000010000000L});
-    public static final BitSet FOLLOW_INSERT_in_updateOrInsertStatement607 = new BitSet(new long[]{0x0000000040000000L});
-    public static final BitSet FOLLOW_INTO_in_updateOrInsertStatement609 = new BitSet(new long[]{0x0100000004000000L});
-    public static final BitSet FOLLOW_tableName_in_updateOrInsertStatement611 = new BitSet(new long[]{0x0001000000000000L,0x0000000000000100L});
-    public static final BitSet FOLLOW_insertColumns_in_updateOrInsertStatement613 = new BitSet(new long[]{0x0000000000000000L,0x0000000000000100L});
-    public static final BitSet FOLLOW_insertValues_in_updateOrInsertStatement621 = new BitSet(new long[]{0x0402000000000002L});
-    public static final BitSet FOLLOW_matchingClause_in_updateOrInsertStatement623 = new BitSet(new long[]{0x0400000000000002L});
-    public static final BitSet FOLLOW_returningClause_in_updateOrInsertStatement626 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_MATCHING_in_matchingClause645 = new BitSet(new long[]{0x0100000004000000L});
-    public static final BitSet FOLLOW_columnList_in_matchingClause647 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_INSERT_in_insertStatement664 = new BitSet(new long[]{0x0000000040000000L});
-    public static final BitSet FOLLOW_INTO_in_insertStatement666 = new BitSet(new long[]{0x0100000004000000L});
-    public static final BitSet FOLLOW_tableName_in_insertStatement668 = new BitSet(new long[]{0x2001000000080000L,0x0000000000000100L});
-    public static final BitSet FOLLOW_insertColumns_in_insertStatement670 = new BitSet(new long[]{0x2000000000080000L,0x0000000000000100L});
-    public static final BitSet FOLLOW_insertValues_in_insertStatement680 = new BitSet(new long[]{0x0400000000000002L});
-    public static final BitSet FOLLOW_returningClause_in_insertStatement682 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_selectClause_in_insertStatement692 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_defaultValuesClause_in_insertStatement701 = new BitSet(new long[]{0x0400000000000002L});
-    public static final BitSet FOLLOW_returningClause_in_insertStatement703 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_LEFT_PAREN_in_insertColumns730 = new BitSet(new long[]{0x0100000004000000L});
-    public static final BitSet FOLLOW_columnList_in_insertColumns732 = new BitSet(new long[]{0x0800000000000000L});
-    public static final BitSet FOLLOW_RIGHT_PAREN_in_insertColumns734 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_VALUES_in_insertValues753 = new BitSet(new long[]{0x0001000000000000L});
-    public static final BitSet FOLLOW_LEFT_PAREN_in_insertValues755 = new BitSet(new long[]{0x033D00002C87F140L,0x000000000002182BL});
-    public static final BitSet FOLLOW_valueList_in_insertValues757 = new BitSet(new long[]{0x0800000000000000L});
-    public static final BitSet FOLLOW_RIGHT_PAREN_in_insertValues759 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_RETURNING_in_returningClause774 = new BitSet(new long[]{0x0100000004000000L});
-    public static final BitSet FOLLOW_columnList_in_returningClause778 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_DEFAULT_in_defaultValuesClause793 = new BitSet(new long[]{0x0000000000000000L,0x0000000000000100L});
-    public static final BitSet FOLLOW_VALUES_in_defaultValuesClause795 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_simpleIdentifier_in_fullIdentifier835 = new BitSet(new long[]{0x0000000000000000L,0x0000000000002000L});
-    public static final BitSet FOLLOW_77_in_fullIdentifier837 = new BitSet(new long[]{0x0100000004000000L});
-    public static final BitSet FOLLOW_simpleIdentifier_in_fullIdentifier839 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_simpleIdentifier_in_tableName858 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_columnName_in_columnList879 = new BitSet(new long[]{0x0000000000000802L});
-    public static final BitSet FOLLOW_COMMA_in_columnList882 = new BitSet(new long[]{0x0100000004000000L});
-    public static final BitSet FOLLOW_columnName_in_columnList884 = new BitSet(new long[]{0x0000000000000802L});
-    public static final BitSet FOLLOW_simpleIdentifier_in_columnName903 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_fullIdentifier_in_columnName923 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_value_in_valueList942 = new BitSet(new long[]{0x0000000000000802L});
-    public static final BitSet FOLLOW_COMMA_in_valueList945 = new BitSet(new long[]{0x033D00002C87F140L,0x000000000002182BL});
-    public static final BitSet FOLLOW_value_in_valueList947 = new BitSet(new long[]{0x0000000000000802L});
-    public static final BitSet FOLLOW_simpleValue_in_value965 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_simpleValue_in_value971 = new BitSet(new long[]{0x0000000000000000L,0x0000000000000800L});
-    public static final BitSet FOLLOW_75_in_value973 = new BitSet(new long[]{0x0200000024000000L,0x0000000000000001L});
-    public static final BitSet FOLLOW_simpleValue_in_value975 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_simpleValue_in_value981 = new BitSet(new long[]{0x0000000000000000L,0x0000000000001000L});
-    public static final BitSet FOLLOW_76_in_value983 = new BitSet(new long[]{0x0200000024000000L,0x0000000000000001L});
-    public static final BitSet FOLLOW_simpleValue_in_value985 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_simpleValue_in_value991 = new BitSet(new long[]{0x0000000000000000L,0x0000000000000400L});
-    public static final BitSet FOLLOW_74_in_value993 = new BitSet(new long[]{0x0200000024000000L,0x0000000000000001L});
-    public static final BitSet FOLLOW_simpleValue_in_value995 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_simpleValue_in_value1001 = new BitSet(new long[]{0x0000000000000000L,0x0000000000004000L});
-    public static final BitSet FOLLOW_78_in_value1003 = new BitSet(new long[]{0x0200000024000000L,0x0000000000000001L});
-    public static final BitSet FOLLOW_simpleValue_in_value1005 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_simpleValue_in_value1011 = new BitSet(new long[]{0x0000000000000000L,0x0000000000100000L});
-    public static final BitSet FOLLOW_84_in_value1013 = new BitSet(new long[]{0x0200000024000000L,0x0000000000000001L});
-    public static final BitSet FOLLOW_simpleValue_in_value1015 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_75_in_value1021 = new BitSet(new long[]{0x0200000024000000L,0x0000000000000001L});
-    public static final BitSet FOLLOW_simpleValue_in_value1023 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_76_in_value1029 = new BitSet(new long[]{0x0200000024000000L,0x0000000000000001L});
-    public static final BitSet FOLLOW_simpleValue_in_value1031 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_LEFT_PAREN_in_value1040 = new BitSet(new long[]{0x0200000024000000L,0x0000000000000001L});
-    public static final BitSet FOLLOW_simpleValue_in_value1042 = new BitSet(new long[]{0x0800000000000000L});
-    public static final BitSet FOLLOW_RIGHT_PAREN_in_value1044 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_simpleValue_in_value1053 = new BitSet(new long[]{0x0000000000000400L});
-    public static final BitSet FOLLOW_COLLATE_in_value1055 = new BitSet(new long[]{0x0100000004000000L});
-    public static final BitSet FOLLOW_simpleIdentifier_in_value1057 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_parameter_in_value1065 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_CURRENT_USER_in_value1074 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_CURRENT_ROLE_in_value1080 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_CURRENT_DATE_in_value1086 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_CURRENT_TIME_in_value1092 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_CURRENT_TIMESTAMP_in_value1098 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_nullValue_in_value1107 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_function_in_value1116 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_nextValueExpression_in_value1122 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_castExpression_in_value1128 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_arrayElement_in_value1138 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_DB_KEY_in_value1147 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_simpleIdentifier_in_value1153 = new BitSet(new long[]{0x0000000000000000L,0x0000000000002000L});
-    public static final BitSet FOLLOW_77_in_value1155 = new BitSet(new long[]{0x0000000000040000L});
-    public static final BitSet FOLLOW_DB_KEY_in_value1157 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_81_in_parameter1171 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_NULL_in_nullValue1184 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_NEXT_in_nextValueExpression1233 = new BitSet(new long[]{0x0000000000000000L,0x0000000000000080L});
-    public static final BitSet FOLLOW_VALUE_in_nextValueExpression1235 = new BitSet(new long[]{0x0000000001000000L});
-    public static final BitSet FOLLOW_FOR_in_nextValueExpression1237 = new BitSet(new long[]{0x0100000004000000L});
-    public static final BitSet FOLLOW_simpleIdentifier_in_nextValueExpression1239 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_GEN_ID_in_nextValueExpression1245 = new BitSet(new long[]{0x0001000000000000L});
-    public static final BitSet FOLLOW_LEFT_PAREN_in_nextValueExpression1247 = new BitSet(new long[]{0x0100000004000000L});
-    public static final BitSet FOLLOW_simpleIdentifier_in_nextValueExpression1249 = new BitSet(new long[]{0x0000000000000800L});
-    public static final BitSet FOLLOW_COMMA_in_nextValueExpression1251 = new BitSet(new long[]{0x0000000020000000L});
-    public static final BitSet FOLLOW_INTEGER_in_nextValueExpression1253 = new BitSet(new long[]{0x0800000000000000L});
-    public static final BitSet FOLLOW_RIGHT_PAREN_in_nextValueExpression1255 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_CAST_in_castExpression1270 = new BitSet(new long[]{0x0001000000000000L});
-    public static final BitSet FOLLOW_LEFT_PAREN_in_castExpression1272 = new BitSet(new long[]{0x033D00002C87F140L,0x000000000002182BL});
-    public static final BitSet FOLLOW_value_in_castExpression1274 = new BitSet(new long[]{0x0000000000000020L});
-    public static final BitSet FOLLOW_AS_in_castExpression1276 = new BitSet(new long[]{0x000079FF80000000L});
-    public static final BitSet FOLLOW_dataTypeDescriptor_in_castExpression1278 = new BitSet(new long[]{0x0800000000000000L});
-    public static final BitSet FOLLOW_RIGHT_PAREN_in_castExpression1280 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_nonArrayType_in_dataTypeDescriptor1295 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_arrayType_in_dataTypeDescriptor1301 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_simpleType_in_nonArrayType1316 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_blobType_in_nonArrayType1322 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_nonCharType_in_simpleType1335 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_charType_in_simpleType1341 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_nonCharSetCharType_in_charType1356 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_charSetCharType_in_charType1362 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_KW_CHAR_in_nonCharSetCharType1375 = new BitSet(new long[]{0x0001000000000002L});
-    public static final BitSet FOLLOW_LEFT_PAREN_in_nonCharSetCharType1378 = new BitSet(new long[]{0x0000000020000000L});
-    public static final BitSet FOLLOW_INTEGER_in_nonCharSetCharType1380 = new BitSet(new long[]{0x0800000000000000L});
-    public static final BitSet FOLLOW_RIGHT_PAREN_in_nonCharSetCharType1382 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_KW_VARCHAR_in_nonCharSetCharType1390 = new BitSet(new long[]{0x0001000000000000L});
-    public static final BitSet FOLLOW_LEFT_PAREN_in_nonCharSetCharType1392 = new BitSet(new long[]{0x0000000020000000L});
-    public static final BitSet FOLLOW_INTEGER_in_nonCharSetCharType1394 = new BitSet(new long[]{0x0800000000000000L});
-    public static final BitSet FOLLOW_RIGHT_PAREN_in_nonCharSetCharType1396 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_nonCharSetCharType_in_charSetCharType1409 = new BitSet(new long[]{0x0000000000000200L});
-    public static final BitSet FOLLOW_charSetClause_in_charSetCharType1411 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_KW_BIGINT_in_nonCharType1424 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_KW_DATE_in_nonCharType1430 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_KW_DECIMAL_in_nonCharType1436 = new BitSet(new long[]{0x0001000000000000L});
-    public static final BitSet FOLLOW_LEFT_PAREN_in_nonCharType1438 = new BitSet(new long[]{0x0000000020000000L});
-    public static final BitSet FOLLOW_INTEGER_in_nonCharType1440 = new BitSet(new long[]{0x0800000000000800L});
-    public static final BitSet FOLLOW_COMMA_in_nonCharType1443 = new BitSet(new long[]{0x0000000020000000L});
-    public static final BitSet FOLLOW_INTEGER_in_nonCharType1445 = new BitSet(new long[]{0x0800000000000000L});
-    public static final BitSet FOLLOW_RIGHT_PAREN_in_nonCharType1449 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_KW_DOUBLE_in_nonCharType1455 = new BitSet(new long[]{0x0000020000000000L});
-    public static final BitSet FOLLOW_KW_PRECISION_in_nonCharType1457 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_KW_FLOAT_in_nonCharType1463 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_KW_INTEGER_in_nonCharType1469 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_KW_INT_in_nonCharType1475 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_KW_NUMERIC_in_nonCharType1481 = new BitSet(new long[]{0x0001000000000000L});
-    public static final BitSet FOLLOW_LEFT_PAREN_in_nonCharType1483 = new BitSet(new long[]{0x0000000020000000L});
-    public static final BitSet FOLLOW_INTEGER_in_nonCharType1485 = new BitSet(new long[]{0x0800000000000800L});
-    public static final BitSet FOLLOW_COMMA_in_nonCharType1488 = new BitSet(new long[]{0x0000000020000000L});
-    public static final BitSet FOLLOW_INTEGER_in_nonCharType1490 = new BitSet(new long[]{0x0800000000000000L});
-    public static final BitSet FOLLOW_RIGHT_PAREN_in_nonCharType1494 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_KW_SMALLINT_in_nonCharType1500 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_KW_TIME_in_nonCharType1506 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_KW_TIMESTAMP_in_nonCharType1512 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_KW_BLOB_in_blobType1526 = new BitSet(new long[]{0x1000000000000202L,0x0000000000000004L});
-    public static final BitSet FOLLOW_blobSubtype_in_blobType1528 = new BitSet(new long[]{0x1000000000000202L});
-    public static final BitSet FOLLOW_blobSegSize_in_blobType1531 = new BitSet(new long[]{0x0000000000000202L});
-    public static final BitSet FOLLOW_charSetClause_in_blobType1534 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_KW_BLOB_in_blobType1546 = new BitSet(new long[]{0x0001000000000000L});
-    public static final BitSet FOLLOW_LEFT_PAREN_in_blobType1548 = new BitSet(new long[]{0x0800000020000800L});
-    public static final BitSet FOLLOW_INTEGER_in_blobType1550 = new BitSet(new long[]{0x0800000000000800L});
-    public static final BitSet FOLLOW_COMMA_in_blobType1554 = new BitSet(new long[]{0x0000000020000000L});
-    public static final BitSet FOLLOW_INTEGER_in_blobType1556 = new BitSet(new long[]{0x0800000000000000L});
-    public static final BitSet FOLLOW_RIGHT_PAREN_in_blobType1560 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_SUB_TYPE_in_blobSubtype1575 = new BitSet(new long[]{0x0000000020000000L});
-    public static final BitSet FOLLOW_INTEGER_in_blobSubtype1577 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_SUB_TYPE_in_blobSubtype1583 = new BitSet(new long[]{0x0000000004000000L});
-    public static final BitSet FOLLOW_GENERIC_ID_in_blobSubtype1585 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_SEGMENT_in_blobSegSize1600 = new BitSet(new long[]{0x0000040000000000L});
-    public static final BitSet FOLLOW_KW_SIZE_in_blobSegSize1602 = new BitSet(new long[]{0x0000000020000000L});
-    public static final BitSet FOLLOW_INTEGER_in_blobSegSize1604 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_CHARACTER_in_charSetClause1619 = new BitSet(new long[]{0x4000000000000000L});
-    public static final BitSet FOLLOW_SET_in_charSetClause1621 = new BitSet(new long[]{0x0000000004000000L});
-    public static final BitSet FOLLOW_GENERIC_ID_in_charSetClause1623 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_nonCharSetCharType_in_arrayType1636 = new BitSet(new long[]{0x0000000000000000L,0x0000000000040000L});
-    public static final BitSet FOLLOW_82_in_arrayType1638 = new BitSet(new long[]{0x0000000020000000L});
-    public static final BitSet FOLLOW_arraySpec_in_arrayType1640 = new BitSet(new long[]{0x0000000000000000L,0x0000000000080000L});
-    public static final BitSet FOLLOW_83_in_arrayType1642 = new BitSet(new long[]{0x0000000000000202L});
-    public static final BitSet FOLLOW_charSetClause_in_arrayType1644 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_nonCharType_in_arrayType1651 = new BitSet(new long[]{0x0000000000000000L,0x0000000000040000L});
-    public static final BitSet FOLLOW_82_in_arrayType1653 = new BitSet(new long[]{0x0000000020000000L});
-    public static final BitSet FOLLOW_arraySpec_in_arrayType1655 = new BitSet(new long[]{0x0000000000000000L,0x0000000000080000L});
-    public static final BitSet FOLLOW_83_in_arrayType1657 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_arrayRange_in_arraySpec1672 = new BitSet(new long[]{0x0000000000000802L});
-    public static final BitSet FOLLOW_COMMA_in_arraySpec1675 = new BitSet(new long[]{0x0000000020000000L});
-    public static final BitSet FOLLOW_arrayRange_in_arraySpec1677 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_INTEGER_in_arrayRange1694 = new BitSet(new long[]{0x0000000000000000L,0x0000000000008000L});
-    public static final BitSet FOLLOW_79_in_arrayRange1697 = new BitSet(new long[]{0x0000000020000000L});
-    public static final BitSet FOLLOW_INTEGER_in_arrayRange1699 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_simpleIdentifier_in_arrayElement1715 = new BitSet(new long[]{0x0000000000000000L,0x0000000000040000L});
-    public static final BitSet FOLLOW_82_in_arrayElement1717 = new BitSet(new long[]{0x033D00002C87F140L,0x000000000002182BL});
-    public static final BitSet FOLLOW_valueList_in_arrayElement1719 = new BitSet(new long[]{0x0000000000000000L,0x0000000000080000L});
-    public static final BitSet FOLLOW_83_in_arrayElement1721 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_simpleIdentifier_in_function1734 = new BitSet(new long[]{0x0001000000000000L});
-    public static final BitSet FOLLOW_LEFT_PAREN_in_function1736 = new BitSet(new long[]{0x033D00002C87F140L,0x000000000002182BL});
-    public static final BitSet FOLLOW_valueList_in_function1738 = new BitSet(new long[]{0x0800000000000000L});
-    public static final BitSet FOLLOW_RIGHT_PAREN_in_function1740 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_simpleIdentifier_in_function1746 = new BitSet(new long[]{0x0001000000000000L});
-    public static final BitSet FOLLOW_LEFT_PAREN_in_function1748 = new BitSet(new long[]{0x0800000000000000L});
-    public static final BitSet FOLLOW_RIGHT_PAREN_in_function1750 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_substringFunction_in_function1756 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_trimFunction_in_function1762 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_extractFunction_in_function1768 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_SUM_in_function1774 = new BitSet(new long[]{0x0001000000000000L});
-    public static final BitSet FOLLOW_LEFT_PAREN_in_function1777 = new BitSet(new long[]{0x033D00002CA7F150L,0x000000000002182BL});
-    public static final BitSet FOLLOW_value_in_function1786 = new BitSet(new long[]{0x0800000000000000L});
-    public static final BitSet FOLLOW_RIGHT_PAREN_in_function1788 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_COUNT_in_function1794 = new BitSet(new long[]{0x0001000000000000L});
-    public static final BitSet FOLLOW_LEFT_PAREN_in_function1797 = new BitSet(new long[]{0x033D00002CA7F150L,0x000000000002182BL});
-    public static final BitSet FOLLOW_value_in_function1806 = new BitSet(new long[]{0x0800000000000000L});
-    public static final BitSet FOLLOW_RIGHT_PAREN_in_function1808 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_AVG_in_function1814 = new BitSet(new long[]{0x0001000000000000L});
-    public static final BitSet FOLLOW_LEFT_PAREN_in_function1817 = new BitSet(new long[]{0x033D00002CA7F150L,0x000000000002182BL});
-    public static final BitSet FOLLOW_value_in_function1826 = new BitSet(new long[]{0x0800000000000000L});
-    public static final BitSet FOLLOW_RIGHT_PAREN_in_function1828 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_MINIMUM_in_function1834 = new BitSet(new long[]{0x0001000000000000L});
-    public static final BitSet FOLLOW_LEFT_PAREN_in_function1836 = new BitSet(new long[]{0x033D00002CA7F150L,0x000000000002182BL});
-    public static final BitSet FOLLOW_value_in_function1845 = new BitSet(new long[]{0x0800000000000000L});
-    public static final BitSet FOLLOW_RIGHT_PAREN_in_function1847 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_MAXIMUM_in_function1853 = new BitSet(new long[]{0x0001000000000000L});
-    public static final BitSet FOLLOW_LEFT_PAREN_in_function1855 = new BitSet(new long[]{0x033D00002CA7F150L,0x000000000002182BL});
-    public static final BitSet FOLLOW_value_in_function1864 = new BitSet(new long[]{0x0800000000000000L});
-    public static final BitSet FOLLOW_RIGHT_PAREN_in_function1866 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_SUBSTRING_in_substringFunction1883 = new BitSet(new long[]{0x0001000000000000L});
-    public static final BitSet FOLLOW_LEFT_PAREN_in_substringFunction1885 = new BitSet(new long[]{0x033D00002C87F140L,0x000000000002182BL});
-    public static final BitSet FOLLOW_value_in_substringFunction1887 = new BitSet(new long[]{0x0000000002000000L});
-    public static final BitSet FOLLOW_FROM_in_substringFunction1889 = new BitSet(new long[]{0x033D00002C87F140L,0x000000000002182BL});
-    public static final BitSet FOLLOW_value_in_substringFunction1891 = new BitSet(new long[]{0x0800000001000000L});
-    public static final BitSet FOLLOW_FOR_in_substringFunction1894 = new BitSet(new long[]{0x0000000020000000L});
-    public static final BitSet FOLLOW_INTEGER_in_substringFunction1896 = new BitSet(new long[]{0x0800000000000000L});
-    public static final BitSet FOLLOW_RIGHT_PAREN_in_substringFunction1900 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_TRIM_in_trimFunction1915 = new BitSet(new long[]{0x0001000000000000L});
-    public static final BitSet FOLLOW_LEFT_PAREN_in_trimFunction1917 = new BitSet(new long[]{0x033D80002C87F1C0L,0x000000000002183BL});
-    public static final BitSet FOLLOW_trimSpecification_in_trimFunction1920 = new BitSet(new long[]{0x033D00002C87F140L,0x000000000002182BL});
-    public static final BitSet FOLLOW_value_in_trimFunction1924 = new BitSet(new long[]{0x0800000002000000L});
-    public static final BitSet FOLLOW_FROM_in_trimFunction1927 = new BitSet(new long[]{0x033D00002C87F140L,0x000000000002182BL});
-    public static final BitSet FOLLOW_value_in_trimFunction1929 = new BitSet(new long[]{0x0800000000000000L});
-    public static final BitSet FOLLOW_RIGHT_PAREN_in_trimFunction1933 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_EXTRACT_in_extractFunction1948 = new BitSet(new long[]{0x0001000000000000L});
-    public static final BitSet FOLLOW_LEFT_PAREN_in_extractFunction1950 = new BitSet(new long[]{0x033D00002C87F140L,0x000000000002182BL});
-    public static final BitSet FOLLOW_value_in_extractFunction1952 = new BitSet(new long[]{0x0000000002000000L});
-    public static final BitSet FOLLOW_FROM_in_extractFunction1954 = new BitSet(new long[]{0x033D00002C87F140L,0x000000000002182BL});
-    public static final BitSet FOLLOW_value_in_extractFunction1956 = new BitSet(new long[]{0x0800000000000000L});
-    public static final BitSet FOLLOW_RIGHT_PAREN_in_extractFunction1958 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_SELECT_in_selectClause2002 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_insertStatement_in_statement708 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_deleteStatement_in_statement723 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_updateStatement_in_statement738 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_updateOrInsertStatement_in_statement754 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_DELETE_in_deleteStatement789 = new BitSet(new long[]{0x0000000002000000L});
+    public static final BitSet FOLLOW_FROM_in_deleteStatement791 = new BitSet(new long[]{0x0100000004000000L});
+    public static final BitSet FOLLOW_tableName_in_deleteStatement793 = new BitSet(new long[]{0x0400000000000002L});
+    public static final BitSet FOLLOW_returningClause_in_deleteStatement797 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_UPDATE_in_updateStatement855 = new BitSet(new long[]{0x0100000004000000L});
+    public static final BitSet FOLLOW_tableName_in_updateStatement857 = new BitSet(new long[]{0x4000000000000000L});
+    public static final BitSet FOLLOW_SET_in_updateStatement859 = new BitSet(new long[]{0x0100000004000000L});
+    public static final BitSet FOLLOW_assignments_in_updateStatement861 = new BitSet(new long[]{0x0400000000000002L});
+    public static final BitSet FOLLOW_returningClause_in_updateStatement865 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_assignment_in_assignments911 = new BitSet(new long[]{0x0000000000000802L});
+    public static final BitSet FOLLOW_COMMA_in_assignments914 = new BitSet(new long[]{0x0100000004000000L});
+    public static final BitSet FOLLOW_assignment_in_assignments916 = new BitSet(new long[]{0x0000000000000802L});
+    public static final BitSet FOLLOW_columnName_in_assignment949 = new BitSet(new long[]{0x0000000000000000L,0x0000000000010000L});
+    public static final BitSet FOLLOW_80_in_assignment951 = new BitSet(new long[]{0x033D00002C87F140L,0x000000000002182BL});
+    public static final BitSet FOLLOW_value_in_assignment953 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_UPDATE_in_updateOrInsertStatement991 = new BitSet(new long[]{0x0040000000000000L});
+    public static final BitSet FOLLOW_OR_in_updateOrInsertStatement993 = new BitSet(new long[]{0x0000000010000000L});
+    public static final BitSet FOLLOW_INSERT_in_updateOrInsertStatement995 = new BitSet(new long[]{0x0000000040000000L});
+    public static final BitSet FOLLOW_INTO_in_updateOrInsertStatement997 = new BitSet(new long[]{0x0100000004000000L});
+    public static final BitSet FOLLOW_tableName_in_updateOrInsertStatement999 = new BitSet(new long[]{0x0001000000000000L,0x0000000000000100L});
+    public static final BitSet FOLLOW_insertColumns_in_updateOrInsertStatement1001 = new BitSet(new long[]{0x0000000000000000L,0x0000000000000100L});
+    public static final BitSet FOLLOW_insertValues_in_updateOrInsertStatement1021 = new BitSet(new long[]{0x0402000000000002L});
+    public static final BitSet FOLLOW_matchingClause_in_updateOrInsertStatement1023 = new BitSet(new long[]{0x0400000000000002L});
+    public static final BitSet FOLLOW_returningClause_in_updateOrInsertStatement1026 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_MATCHING_in_matchingClause1072 = new BitSet(new long[]{0x0100000004000000L});
+    public static final BitSet FOLLOW_columnList_in_matchingClause1074 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_INSERT_in_insertStatement1106 = new BitSet(new long[]{0x0000000040000000L});
+    public static final BitSet FOLLOW_INTO_in_insertStatement1108 = new BitSet(new long[]{0x0100000004000000L});
+    public static final BitSet FOLLOW_tableName_in_insertStatement1110 = new BitSet(new long[]{0x2001000000080000L,0x0000000000000100L});
+    public static final BitSet FOLLOW_insertColumns_in_insertStatement1112 = new BitSet(new long[]{0x2000000000080000L,0x0000000000000100L});
+    public static final BitSet FOLLOW_insertValues_in_insertStatement1140 = new BitSet(new long[]{0x0400000000000002L});
+    public static final BitSet FOLLOW_returningClause_in_insertStatement1142 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_selectClause_in_insertStatement1170 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_defaultValuesClause_in_insertStatement1197 = new BitSet(new long[]{0x0400000000000002L});
+    public static final BitSet FOLLOW_returningClause_in_insertStatement1199 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_LEFT_PAREN_in_insertColumns1265 = new BitSet(new long[]{0x0100000004000000L});
+    public static final BitSet FOLLOW_columnList_in_insertColumns1267 = new BitSet(new long[]{0x0800000000000000L});
+    public static final BitSet FOLLOW_RIGHT_PAREN_in_insertColumns1269 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_VALUES_in_insertValues1312 = new BitSet(new long[]{0x0001000000000000L});
+    public static final BitSet FOLLOW_LEFT_PAREN_in_insertValues1314 = new BitSet(new long[]{0x033D00002C87F140L,0x000000000002182BL});
+    public static final BitSet FOLLOW_valueList_in_insertValues1316 = new BitSet(new long[]{0x0800000000000000L});
+    public static final BitSet FOLLOW_RIGHT_PAREN_in_insertValues1318 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_RETURNING_in_returningClause1354 = new BitSet(new long[]{0x0100000004000000L});
+    public static final BitSet FOLLOW_columnList_in_returningClause1358 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_DEFAULT_in_defaultValuesClause1388 = new BitSet(new long[]{0x0000000000000000L,0x0000000000000100L});
+    public static final BitSet FOLLOW_VALUES_in_defaultValuesClause1390 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_simpleIdentifier_in_fullIdentifier1481 = new BitSet(new long[]{0x0000000000000000L,0x0000000000002000L});
+    public static final BitSet FOLLOW_77_in_fullIdentifier1483 = new BitSet(new long[]{0x0100000004000000L});
+    public static final BitSet FOLLOW_simpleIdentifier_in_fullIdentifier1485 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_simpleIdentifier_in_tableName1522 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_columnName_in_columnList1570 = new BitSet(new long[]{0x0000000000000802L});
+    public static final BitSet FOLLOW_COMMA_in_columnList1573 = new BitSet(new long[]{0x0100000004000000L});
+    public static final BitSet FOLLOW_columnName_in_columnList1575 = new BitSet(new long[]{0x0000000000000802L});
+    public static final BitSet FOLLOW_simpleIdentifier_in_columnName1609 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_fullIdentifier_in_columnName1656 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_value_in_valueList1699 = new BitSet(new long[]{0x0000000000000802L});
+    public static final BitSet FOLLOW_COMMA_in_valueList1702 = new BitSet(new long[]{0x033D00002C87F140L,0x000000000002182BL});
+    public static final BitSet FOLLOW_value_in_valueList1704 = new BitSet(new long[]{0x0000000000000802L});
+    public static final BitSet FOLLOW_simpleValue_in_value1740 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_simpleValue_in_value1755 = new BitSet(new long[]{0x0000000000000000L,0x0000000000000800L});
+    public static final BitSet FOLLOW_75_in_value1757 = new BitSet(new long[]{0x0200000024000000L,0x0000000000000001L});
+    public static final BitSet FOLLOW_simpleValue_in_value1759 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_simpleValue_in_value1774 = new BitSet(new long[]{0x0000000000000000L,0x0000000000001000L});
+    public static final BitSet FOLLOW_76_in_value1776 = new BitSet(new long[]{0x0200000024000000L,0x0000000000000001L});
+    public static final BitSet FOLLOW_simpleValue_in_value1778 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_simpleValue_in_value1793 = new BitSet(new long[]{0x0000000000000000L,0x0000000000000400L});
+    public static final BitSet FOLLOW_74_in_value1795 = new BitSet(new long[]{0x0200000024000000L,0x0000000000000001L});
+    public static final BitSet FOLLOW_simpleValue_in_value1797 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_simpleValue_in_value1812 = new BitSet(new long[]{0x0000000000000000L,0x0000000000004000L});
+    public static final BitSet FOLLOW_78_in_value1817 = new BitSet(new long[]{0x0200000024000000L,0x0000000000000001L});
+    public static final BitSet FOLLOW_simpleValue_in_value1819 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_simpleValue_in_value1834 = new BitSet(new long[]{0x0000000000000000L,0x0000000000100000L});
+    public static final BitSet FOLLOW_84_in_value1836 = new BitSet(new long[]{0x0200000024000000L,0x0000000000000001L});
+    public static final BitSet FOLLOW_simpleValue_in_value1838 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_75_in_value1853 = new BitSet(new long[]{0x0200000024000000L,0x0000000000000001L});
+    public static final BitSet FOLLOW_simpleValue_in_value1855 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_76_in_value1870 = new BitSet(new long[]{0x0200000024000000L,0x0000000000000001L});
+    public static final BitSet FOLLOW_simpleValue_in_value1872 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_LEFT_PAREN_in_value1896 = new BitSet(new long[]{0x0200000024000000L,0x0000000000000001L});
+    public static final BitSet FOLLOW_simpleValue_in_value1898 = new BitSet(new long[]{0x0800000000000000L});
+    public static final BitSet FOLLOW_RIGHT_PAREN_in_value1900 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_simpleValue_in_value1924 = new BitSet(new long[]{0x0000000000000400L});
+    public static final BitSet FOLLOW_COLLATE_in_value1926 = new BitSet(new long[]{0x0100000004000000L});
+    public static final BitSet FOLLOW_simpleIdentifier_in_value1931 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_parameter_in_value1951 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_CURRENT_USER_in_value1975 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_CURRENT_ROLE_in_value1990 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_CURRENT_DATE_in_value2005 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_CURRENT_TIME_in_value2020 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_CURRENT_TIMESTAMP_in_value2035 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_nullValue_in_value2059 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_function_in_value2083 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_nextValueExpression_in_value2098 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_castExpression_in_value2113 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_arrayElement_in_value2138 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_DB_KEY_in_value2162 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_simpleIdentifier_in_value2177 = new BitSet(new long[]{0x0000000000000000L,0x0000000000002000L});
+    public static final BitSet FOLLOW_77_in_value2179 = new BitSet(new long[]{0x0000000000040000L});
+    public static final BitSet FOLLOW_DB_KEY_in_value2181 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_81_in_parameter2213 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_NULL_in_nullValue2241 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_NEXT_in_nextValueExpression2359 = new BitSet(new long[]{0x0000000000000000L,0x0000000000000080L});
+    public static final BitSet FOLLOW_VALUE_in_nextValueExpression2361 = new BitSet(new long[]{0x0000000001000000L});
+    public static final BitSet FOLLOW_FOR_in_nextValueExpression2363 = new BitSet(new long[]{0x0100000004000000L});
+    public static final BitSet FOLLOW_simpleIdentifier_in_nextValueExpression2365 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_GEN_ID_in_nextValueExpression2380 = new BitSet(new long[]{0x0001000000000000L});
+    public static final BitSet FOLLOW_LEFT_PAREN_in_nextValueExpression2382 = new BitSet(new long[]{0x0100000004000000L});
+    public static final BitSet FOLLOW_simpleIdentifier_in_nextValueExpression2384 = new BitSet(new long[]{0x0000000000000800L});
+    public static final BitSet FOLLOW_COMMA_in_nextValueExpression2386 = new BitSet(new long[]{0x0000000020000000L});
+    public static final BitSet FOLLOW_INTEGER_in_nextValueExpression2388 = new BitSet(new long[]{0x0800000000000000L});
+    public static final BitSet FOLLOW_RIGHT_PAREN_in_nextValueExpression2390 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_CAST_in_castExpression2426 = new BitSet(new long[]{0x0001000000000000L});
+    public static final BitSet FOLLOW_LEFT_PAREN_in_castExpression2428 = new BitSet(new long[]{0x033D00002C87F140L,0x000000000002182BL});
+    public static final BitSet FOLLOW_value_in_castExpression2430 = new BitSet(new long[]{0x0000000000000020L});
+    public static final BitSet FOLLOW_AS_in_castExpression2432 = new BitSet(new long[]{0x000079FF80000000L});
+    public static final BitSet FOLLOW_dataTypeDescriptor_in_castExpression2434 = new BitSet(new long[]{0x0800000000000000L});
+    public static final BitSet FOLLOW_RIGHT_PAREN_in_castExpression2436 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_nonArrayType_in_dataTypeDescriptor2472 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_arrayType_in_dataTypeDescriptor2487 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_simpleType_in_nonArrayType2523 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_blobType_in_nonArrayType2538 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_nonCharType_in_simpleType2566 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_charType_in_simpleType2581 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_nonCharSetCharType_in_charType2617 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_charSetCharType_in_charType2632 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_KW_CHAR_in_nonCharSetCharType2660 = new BitSet(new long[]{0x0001000000000002L});
+    public static final BitSet FOLLOW_LEFT_PAREN_in_nonCharSetCharType2663 = new BitSet(new long[]{0x0000000020000000L});
+    public static final BitSet FOLLOW_INTEGER_in_nonCharSetCharType2665 = new BitSet(new long[]{0x0800000000000000L});
+    public static final BitSet FOLLOW_RIGHT_PAREN_in_nonCharSetCharType2667 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_KW_VARCHAR_in_nonCharSetCharType2684 = new BitSet(new long[]{0x0001000000000000L});
+    public static final BitSet FOLLOW_LEFT_PAREN_in_nonCharSetCharType2686 = new BitSet(new long[]{0x0000000020000000L});
+    public static final BitSet FOLLOW_INTEGER_in_nonCharSetCharType2688 = new BitSet(new long[]{0x0800000000000000L});
+    public static final BitSet FOLLOW_RIGHT_PAREN_in_nonCharSetCharType2690 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_nonCharSetCharType_in_charSetCharType2718 = new BitSet(new long[]{0x0000000000000200L});
+    public static final BitSet FOLLOW_charSetClause_in_charSetCharType2720 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_KW_BIGINT_in_nonCharType2748 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_KW_DATE_in_nonCharType2763 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_KW_DECIMAL_in_nonCharType2778 = new BitSet(new long[]{0x0001000000000000L});
+    public static final BitSet FOLLOW_LEFT_PAREN_in_nonCharType2780 = new BitSet(new long[]{0x0000000020000000L});
+    public static final BitSet FOLLOW_INTEGER_in_nonCharType2782 = new BitSet(new long[]{0x0800000000000800L});
+    public static final BitSet FOLLOW_COMMA_in_nonCharType2785 = new BitSet(new long[]{0x0000000020000000L});
+    public static final BitSet FOLLOW_INTEGER_in_nonCharType2787 = new BitSet(new long[]{0x0800000000000000L});
+    public static final BitSet FOLLOW_RIGHT_PAREN_in_nonCharType2791 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_KW_DOUBLE_in_nonCharType2806 = new BitSet(new long[]{0x0000020000000000L});
+    public static final BitSet FOLLOW_KW_PRECISION_in_nonCharType2808 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_KW_FLOAT_in_nonCharType2823 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_KW_INTEGER_in_nonCharType2838 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_KW_INT_in_nonCharType2853 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_KW_NUMERIC_in_nonCharType2868 = new BitSet(new long[]{0x0001000000000000L});
+    public static final BitSet FOLLOW_LEFT_PAREN_in_nonCharType2870 = new BitSet(new long[]{0x0000000020000000L});
+    public static final BitSet FOLLOW_INTEGER_in_nonCharType2872 = new BitSet(new long[]{0x0800000000000800L});
+    public static final BitSet FOLLOW_COMMA_in_nonCharType2875 = new BitSet(new long[]{0x0000000020000000L});
+    public static final BitSet FOLLOW_INTEGER_in_nonCharType2877 = new BitSet(new long[]{0x0800000000000000L});
+    public static final BitSet FOLLOW_RIGHT_PAREN_in_nonCharType2881 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_KW_SMALLINT_in_nonCharType2896 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_KW_TIME_in_nonCharType2911 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_KW_TIMESTAMP_in_nonCharType2926 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_KW_BLOB_in_blobType2955 = new BitSet(new long[]{0x1000000000000202L,0x0000000000000004L});
+    public static final BitSet FOLLOW_blobSubtype_in_blobType2957 = new BitSet(new long[]{0x1000000000000202L});
+    public static final BitSet FOLLOW_blobSegSize_in_blobType2960 = new BitSet(new long[]{0x0000000000000202L});
+    public static final BitSet FOLLOW_charSetClause_in_blobType2963 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_KW_BLOB_in_blobType2993 = new BitSet(new long[]{0x0001000000000000L});
+    public static final BitSet FOLLOW_LEFT_PAREN_in_blobType2995 = new BitSet(new long[]{0x0800000020000800L});
+    public static final BitSet FOLLOW_INTEGER_in_blobType2997 = new BitSet(new long[]{0x0800000000000800L});
+    public static final BitSet FOLLOW_COMMA_in_blobType3001 = new BitSet(new long[]{0x0000000020000000L});
+    public static final BitSet FOLLOW_INTEGER_in_blobType3003 = new BitSet(new long[]{0x0800000000000000L});
+    public static final BitSet FOLLOW_RIGHT_PAREN_in_blobType3007 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_SUB_TYPE_in_blobSubtype3043 = new BitSet(new long[]{0x0000000020000000L});
+    public static final BitSet FOLLOW_INTEGER_in_blobSubtype3045 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_SUB_TYPE_in_blobSubtype3060 = new BitSet(new long[]{0x0000000004000000L});
+    public static final BitSet FOLLOW_GENERIC_ID_in_blobSubtype3062 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_SEGMENT_in_blobSegSize3098 = new BitSet(new long[]{0x0000040000000000L});
+    public static final BitSet FOLLOW_KW_SIZE_in_blobSegSize3100 = new BitSet(new long[]{0x0000000020000000L});
+    public static final BitSet FOLLOW_INTEGER_in_blobSegSize3102 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_CHARACTER_in_charSetClause3138 = new BitSet(new long[]{0x4000000000000000L});
+    public static final BitSet FOLLOW_SET_in_charSetClause3140 = new BitSet(new long[]{0x0000000004000000L});
+    public static final BitSet FOLLOW_GENERIC_ID_in_charSetClause3142 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_nonCharSetCharType_in_arrayType3170 = new BitSet(new long[]{0x0000000000000000L,0x0000000000040000L});
+    public static final BitSet FOLLOW_82_in_arrayType3172 = new BitSet(new long[]{0x0000000020000000L});
+    public static final BitSet FOLLOW_arraySpec_in_arrayType3174 = new BitSet(new long[]{0x0000000000000000L,0x0000000000080000L});
+    public static final BitSet FOLLOW_83_in_arrayType3176 = new BitSet(new long[]{0x0000000000000202L});
+    public static final BitSet FOLLOW_charSetClause_in_arrayType3178 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_nonCharType_in_arrayType3194 = new BitSet(new long[]{0x0000000000000000L,0x0000000000040000L});
+    public static final BitSet FOLLOW_82_in_arrayType3196 = new BitSet(new long[]{0x0000000020000000L});
+    public static final BitSet FOLLOW_arraySpec_in_arrayType3198 = new BitSet(new long[]{0x0000000000000000L,0x0000000000080000L});
+    public static final BitSet FOLLOW_83_in_arrayType3200 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_arrayRange_in_arraySpec3236 = new BitSet(new long[]{0x0000000000000802L});
+    public static final BitSet FOLLOW_COMMA_in_arraySpec3239 = new BitSet(new long[]{0x0000000020000000L});
+    public static final BitSet FOLLOW_arrayRange_in_arraySpec3241 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_INTEGER_in_arrayRange3279 = new BitSet(new long[]{0x0000000000000000L,0x0000000000008000L});
+    public static final BitSet FOLLOW_79_in_arrayRange3282 = new BitSet(new long[]{0x0000000020000000L});
+    public static final BitSet FOLLOW_INTEGER_in_arrayRange3284 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_simpleIdentifier_in_arrayElement3321 = new BitSet(new long[]{0x0000000000000000L,0x0000000000040000L});
+    public static final BitSet FOLLOW_82_in_arrayElement3323 = new BitSet(new long[]{0x033D00002C87F140L,0x000000000002182BL});
+    public static final BitSet FOLLOW_valueList_in_arrayElement3325 = new BitSet(new long[]{0x0000000000000000L,0x0000000000080000L});
+    public static final BitSet FOLLOW_83_in_arrayElement3327 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_simpleIdentifier_in_function3355 = new BitSet(new long[]{0x0001000000000000L});
+    public static final BitSet FOLLOW_LEFT_PAREN_in_function3357 = new BitSet(new long[]{0x033D00002C87F140L,0x000000000002182BL});
+    public static final BitSet FOLLOW_valueList_in_function3359 = new BitSet(new long[]{0x0800000000000000L});
+    public static final BitSet FOLLOW_RIGHT_PAREN_in_function3361 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_simpleIdentifier_in_function3376 = new BitSet(new long[]{0x0001000000000000L});
+    public static final BitSet FOLLOW_LEFT_PAREN_in_function3378 = new BitSet(new long[]{0x0800000000000000L});
+    public static final BitSet FOLLOW_RIGHT_PAREN_in_function3380 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_substringFunction_in_function3395 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_trimFunction_in_function3410 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_extractFunction_in_function3425 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_SUM_in_function3440 = new BitSet(new long[]{0x0001000000000000L});
+    public static final BitSet FOLLOW_LEFT_PAREN_in_function3446 = new BitSet(new long[]{0x033D00002CA7F150L,0x000000000002182BL});
+    public static final BitSet FOLLOW_value_in_function3455 = new BitSet(new long[]{0x0800000000000000L});
+    public static final BitSet FOLLOW_RIGHT_PAREN_in_function3457 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_COUNT_in_function3472 = new BitSet(new long[]{0x0001000000000000L});
+    public static final BitSet FOLLOW_LEFT_PAREN_in_function3478 = new BitSet(new long[]{0x033D00002CA7F150L,0x000000000002182BL});
+    public static final BitSet FOLLOW_value_in_function3487 = new BitSet(new long[]{0x0800000000000000L});
+    public static final BitSet FOLLOW_RIGHT_PAREN_in_function3489 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_AVG_in_function3504 = new BitSet(new long[]{0x0001000000000000L});
+    public static final BitSet FOLLOW_LEFT_PAREN_in_function3513 = new BitSet(new long[]{0x033D00002CA7F150L,0x000000000002182BL});
+    public static final BitSet FOLLOW_value_in_function3522 = new BitSet(new long[]{0x0800000000000000L});
+    public static final BitSet FOLLOW_RIGHT_PAREN_in_function3524 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_MINIMUM_in_function3539 = new BitSet(new long[]{0x0001000000000000L});
+    public static final BitSet FOLLOW_LEFT_PAREN_in_function3544 = new BitSet(new long[]{0x033D00002CA7F150L,0x000000000002182BL});
+    public static final BitSet FOLLOW_value_in_function3553 = new BitSet(new long[]{0x0800000000000000L});
+    public static final BitSet FOLLOW_RIGHT_PAREN_in_function3555 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_MAXIMUM_in_function3570 = new BitSet(new long[]{0x0001000000000000L});
+    public static final BitSet FOLLOW_LEFT_PAREN_in_function3572 = new BitSet(new long[]{0x033D00002CA7F150L,0x000000000002182BL});
+    public static final BitSet FOLLOW_value_in_function3581 = new BitSet(new long[]{0x0800000000000000L});
+    public static final BitSet FOLLOW_RIGHT_PAREN_in_function3583 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_SUBSTRING_in_substringFunction3621 = new BitSet(new long[]{0x0001000000000000L});
+    public static final BitSet FOLLOW_LEFT_PAREN_in_substringFunction3623 = new BitSet(new long[]{0x033D00002C87F140L,0x000000000002182BL});
+    public static final BitSet FOLLOW_value_in_substringFunction3625 = new BitSet(new long[]{0x0000000002000000L});
+    public static final BitSet FOLLOW_FROM_in_substringFunction3627 = new BitSet(new long[]{0x033D00002C87F140L,0x000000000002182BL});
+    public static final BitSet FOLLOW_value_in_substringFunction3629 = new BitSet(new long[]{0x0800000001000000L});
+    public static final BitSet FOLLOW_FOR_in_substringFunction3632 = new BitSet(new long[]{0x0000000020000000L});
+    public static final BitSet FOLLOW_INTEGER_in_substringFunction3634 = new BitSet(new long[]{0x0800000000000000L});
+    public static final BitSet FOLLOW_RIGHT_PAREN_in_substringFunction3638 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_TRIM_in_trimFunction3674 = new BitSet(new long[]{0x0001000000000000L});
+    public static final BitSet FOLLOW_LEFT_PAREN_in_trimFunction3676 = new BitSet(new long[]{0x033D80002C87F1C0L,0x000000000002183BL});
+    public static final BitSet FOLLOW_trimSpecification_in_trimFunction3679 = new BitSet(new long[]{0x033D00002C87F140L,0x000000000002182BL});
+    public static final BitSet FOLLOW_value_in_trimFunction3683 = new BitSet(new long[]{0x0800000002000000L});
+    public static final BitSet FOLLOW_FROM_in_trimFunction3686 = new BitSet(new long[]{0x033D00002C87F140L,0x000000000002182BL});
+    public static final BitSet FOLLOW_value_in_trimFunction3688 = new BitSet(new long[]{0x0800000000000000L});
+    public static final BitSet FOLLOW_RIGHT_PAREN_in_trimFunction3692 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_EXTRACT_in_extractFunction3728 = new BitSet(new long[]{0x0001000000000000L});
+    public static final BitSet FOLLOW_LEFT_PAREN_in_extractFunction3730 = new BitSet(new long[]{0x033D00002C87F140L,0x000000000002182BL});
+    public static final BitSet FOLLOW_value_in_extractFunction3732 = new BitSet(new long[]{0x0000000002000000L});
+    public static final BitSet FOLLOW_FROM_in_extractFunction3734 = new BitSet(new long[]{0x033D00002C87F140L,0x000000000002182BL});
+    public static final BitSet FOLLOW_value_in_extractFunction3736 = new BitSet(new long[]{0x0800000000000000L});
+    public static final BitSet FOLLOW_RIGHT_PAREN_in_extractFunction3738 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_SELECT_in_selectClause3842 = new BitSet(new long[]{0x0000000000000002L});
 
 }
