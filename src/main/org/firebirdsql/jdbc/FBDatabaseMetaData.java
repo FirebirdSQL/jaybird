@@ -2372,7 +2372,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
             "WHERE ";
 
     public static final String GET_COLUMNS_END = " RF.RDB$FIELD_SOURCE = F.RDB$FIELD_NAME " +
-        "order by 1, 11";
+        "order by RF.RDB$RELATION_NAME, RF.RDB$FIELD_POSITION";
 
     /**
      * Retrieves a description of table columns available in
