@@ -334,6 +334,10 @@ public interface FbDatabase extends AutoCloseable {
 
     /**
      * Cancels a registered event.
+     * <p>
+     * After cancellation, the event handle should be considered unusable. Before queueing a new event, an new
+     * handle needs to be created.
+     * </p>
      *
      * @param eventHandle
      *         The event handle to cancel

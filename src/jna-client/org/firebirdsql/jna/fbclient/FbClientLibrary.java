@@ -350,7 +350,7 @@ public interface FbClientLibrary {
 	 * Original signature : <code>ISC_LONG isc_free(ISC_SCHAR*)</code><br>
 	 * <i>native declaration : C:\Program Files\Firebird\Firebird_2_5\include\ibase.h:678</i>
 	 */
-	int isc_free(ByteBuffer ISC_SCHARPtr1);
+	int isc_free(Pointer ISC_SCHARPtr1);
 	/**
 	 * Original signature : <code>ISC_STATUS isc_get_segment(ISC_STATUS*, isc_blob_handle*, unsigned short*, unsigned short, ISC_SCHAR*)</code><br>
 	 * <i>native declaration : C:\Program Files\Firebird\Firebird_2_5\include\ibase.h:680</i>

@@ -44,7 +44,6 @@ public final class JnaEventHandle extends AbstractEventHandle {
     private final Memory eventNameMemory;
     private final IntByReference eventId = new IntByReference(0);
     private int size = -1;
-    // TODO These buffers are never cleared, find out how and where to delete/free them
     private final PointerByReference eventBuffer = new PointerByReference();
     private final PointerByReference resultBuffer = new PointerByReference();
     private final JnaEventHandle.JnaEventCallback callback = createEventCallback();
@@ -121,6 +120,9 @@ public final class JnaEventHandle extends AbstractEventHandle {
      */
     public void debugMemoryDump() {
         if (!LOG.isDebugEnabled()) return;
+        if (size == -1) {
+            LOG.debug("Event handle not allocated");
+        }
         synchronized (JnaEventHandle.class) {
             StringBuilder sb = new StringBuilder();
             sb.append("Event Buffer ").append(getEventName()).append(':')
@@ -135,6 +137,36 @@ public final class JnaEventHandle extends AbstractEventHandle {
         return Platform.isWindows()
                 ? new WinJnaEventCallback()
                 : new JnaEventCallback();
+    }
+
+    /**
+     * Releases the native memory held by this event handle.
+     *
+     * @param clientLibrary The client library instance
+     */
+    public synchronized void releaseMemory(FbClientLibrary clientLibrary) {
+        if (size == -1) return;
+        try {
+            if (eventBuffer.getValue() != Pointer.NULL) {
+                clientLibrary.isc_free(eventBuffer.getValue());
+                eventBuffer.setValue(Pointer.NULL);
+            }
+            if (resultBuffer.getValue() != Pointer.NULL) {
+                clientLibrary.isc_free(resultBuffer.getValue());
+                resultBuffer.setValue(Pointer.NULL);
+            }
+        } finally {
+            size = -1;
+        }
+    }
+
+    @Override
+    protected void finalize() throws Throwable {
+        try {
+            releaseMemory(FbClientDatabaseFactory.getInstance().getClientLibrary());
+        } finally {
+            super.finalize();
+        }
     }
 
     private class JnaEventCallback implements FbClientLibrary.IscEventCallback {

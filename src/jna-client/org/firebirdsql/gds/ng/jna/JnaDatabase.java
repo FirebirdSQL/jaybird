@@ -351,30 +351,37 @@ public class JnaDatabase extends AbstractFbDatabase implements TransactionListen
         return datatypeCoder;
     }
 
-    @Override
-    public JnaEventHandle createEventHandle(String eventName, EventHandler eventHandler) throws SQLException {
-        final JnaEventHandle eventHandle = new JnaEventHandle(eventName, eventHandler, getEncoding());
-
-        int size;
-        synchronized (getSynchronizationObject()) {
-            size = clientLibrary.isc_event_block(eventHandle.getEventBuffer(), eventHandle.getResultBuffer(),
-                    (short) 1, eventHandle.getEventNameMemory());
-        }
-        eventHandle.setSize(size);
-
-        return eventHandle;
-    }
-
-    @Override
-    public void countEvents(EventHandle eventHandle) throws SQLException {
+    protected JnaEventHandle validateEventHandle(EventHandle eventHandle) throws SQLException {
         if (!(eventHandle instanceof JnaEventHandle)) {
             // TODO SQLState and/or Firebird specific error
             throw new SQLNonTransientException(String.format("Invalid event handle type: %s, expected: %s",
                     eventHandle.getClass(), JnaEventHandle.class));
         }
         JnaEventHandle jnaEventHandle = (JnaEventHandle) eventHandle;
+        if (jnaEventHandle.getSize() == -1) {
+            // TODO SQLState and/or Firebird specific error
+            throw new SQLTransientException("Event handle hasn't been initialized");
+        }
+        return jnaEventHandle;
+    }
+
+    @Override
+    public JnaEventHandle createEventHandle(String eventName, EventHandler eventHandler) throws SQLException {
+        final JnaEventHandle eventHandle = new JnaEventHandle(eventName, eventHandler, getEncoding());
+        synchronized (getSynchronizationObject()) {
+            int size = clientLibrary.isc_event_block(eventHandle.getEventBuffer(), eventHandle.getResultBuffer(),
+                    (short) 1, eventHandle.getEventNameMemory());
+            eventHandle.setSize(size);
+        }
+        return eventHandle;
+    }
+
+    @Override
+    public void countEvents(EventHandle eventHandle) throws SQLException {
+        final JnaEventHandle jnaEventHandle = validateEventHandle(eventHandle);
 
         synchronized (getSynchronizationObject()) {
+            //noinspection SynchronizationOnLocalVariableOrMethodParameter
             synchronized (eventHandle) {
                 clientLibrary.isc_event_counts(statusVector, (short) jnaEventHandle.getSize(),
                         jnaEventHandle.getEventBuffer().getValue(), jnaEventHandle.getResultBuffer().getValue());
@@ -386,18 +393,10 @@ public class JnaDatabase extends AbstractFbDatabase implements TransactionListen
     @Override
     public void queueEvent(EventHandle eventHandle) throws SQLException {
         checkConnected();
-        if (!(eventHandle instanceof JnaEventHandle)) {
-            // TODO SQLState and/or Firebird specific error
-            throw new SQLNonTransientException(String.format("Invalid event handle type: %s, expected: %s",
-                    eventHandle.getClass(), JnaEventHandle.class));
-        }
-        JnaEventHandle jnaEventHandle = (JnaEventHandle) eventHandle;
-        if (jnaEventHandle.getSize() == -1) {
-            // TODO SQLState and/or Firebird specific error
-            throw new SQLTransientException("Event handle hasn't been initialized");
-        }
+        final JnaEventHandle jnaEventHandle = validateEventHandle(eventHandle);
 
         synchronized (getSynchronizationObject()) {
+            //noinspection SynchronizationOnLocalVariableOrMethodParameter
             synchronized (eventHandle) {
                 if (Platform.isWindows()) {
                     ((WinFbClientLibrary) clientLibrary).isc_que_events(statusVector, getJnaHandle(), jnaEventHandle.getJnaEventId(),
@@ -416,17 +415,17 @@ public class JnaDatabase extends AbstractFbDatabase implements TransactionListen
     @Override
     public void cancelEvent(EventHandle eventHandle) throws SQLException {
         checkConnected();
-        if (!(eventHandle instanceof JnaEventHandle)) {
-            // TODO SQLState and/or Firebird specific error
-            throw new SQLNonTransientException(String.format("Invalid event handle type: %s, expected: %s",
-                    eventHandle.getClass(), JnaEventHandle.class));
-        }
-        JnaEventHandle jnaEventHandle = (JnaEventHandle) eventHandle;
+        final JnaEventHandle jnaEventHandle = validateEventHandle(eventHandle);
 
         synchronized (getSynchronizationObject()) {
+            //noinspection SynchronizationOnLocalVariableOrMethodParameter
             synchronized (eventHandle) {
-                clientLibrary.isc_cancel_events(statusVector, getJnaHandle(), jnaEventHandle.getJnaEventId());
-                processStatusVector();
+                try {
+                    clientLibrary.isc_cancel_events(statusVector, getJnaHandle(), jnaEventHandle.getJnaEventId());
+                    processStatusVector();
+                } finally {
+                    jnaEventHandle.releaseMemory(clientLibrary);
+                }
             }
         }
     }
@@ -483,6 +482,10 @@ public class JnaDatabase extends AbstractFbDatabase implements TransactionListen
             case isc_arg_string:
             case isc_arg_sql_state:
                 long stringPointerAddress = statusVector[vectorIndex++].longValue();
+                if (stringPointerAddress == 0L) {
+                    log.warn("Received NULL pointer address for isc_arg_interpreted, isc_arg_string or isc_arg_sql_state");
+                    break processingLoop;
+                }
                 Pointer stringPointer = new Pointer(stringPointerAddress);
                 String stringValue = stringPointer.getString(0, getEncodingDefinition().getJavaEncodingName());
                 if (arg != isc_arg_sql_state) {
