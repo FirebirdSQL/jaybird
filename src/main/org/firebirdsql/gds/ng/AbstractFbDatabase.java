@@ -1,6 +1,4 @@
 /*
- * $Id$
- * 
  * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
@@ -213,6 +211,11 @@ public abstract class AbstractFbDatabase implements FbDatabase, TransactionListe
                 databaseListenerDispatcher.shutdown();
             }
         }
+    }
+
+    @Override
+    public final void close() throws SQLException {
+        detach();
     }
 
     /**

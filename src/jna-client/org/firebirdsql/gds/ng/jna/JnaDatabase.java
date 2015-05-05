@@ -376,9 +376,8 @@ public class JnaDatabase extends AbstractFbDatabase implements TransactionListen
 
         synchronized (getSynchronizationObject()) {
             synchronized (eventHandle) {
-                clientLibrary.isc_event_counts(statusVector,
-                        (short) jnaEventHandle.getSize(), jnaEventHandle.getEventBuffer().getValue(), jnaEventHandle.getResultBuffer().getValue());
-                processStatusVector();
+                clientLibrary.isc_event_counts(statusVector, (short) jnaEventHandle.getSize(),
+                        jnaEventHandle.getEventBuffer().getValue(), jnaEventHandle.getResultBuffer().getValue());
             }
         }
         jnaEventHandle.setEventCount(statusVector[0].intValue());

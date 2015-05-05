@@ -285,7 +285,7 @@ public class V10AsynchronousChannel implements FbWireAsynchronousChannel {
             try {
                 close();
             } catch (Exception ex) {
-                // ignore // TODO: log
+                log.error("Exception closing V10AsynchronousChannel in response to a FbDatabase detached event", ex);
             }
         }
     }

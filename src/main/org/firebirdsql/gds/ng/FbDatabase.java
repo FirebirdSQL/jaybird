@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * Public Firebird Java API.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -41,7 +39,7 @@ import java.sql.SQLException;
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @since 3.0
  */
-public interface FbDatabase {
+public interface FbDatabase extends AutoCloseable {
 
     /**
      * Attach to a database.
@@ -53,9 +51,20 @@ public interface FbDatabase {
     /**
      * Detaches from the current database.
      *
-     * @throws SQLException
+     * @throws SQLException If the database is not currently connected, there are still transactions open or another
+     * problem occurred detaching.
      */
     void detach() throws SQLException;
+
+    /**
+     * Implementations should call {@link #detach()} from this method.
+     * <p>
+     * Provided for {@link AutoCloseable} support.
+     * </p>
+     *
+     * @throws SQLException As thrown by {@link #detach()}
+     */
+    void close() throws SQLException;
 
     /**
      * Creates a new database, connection remains attached to database.

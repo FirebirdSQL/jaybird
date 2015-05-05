@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
@@ -26,10 +24,12 @@ import com.sun.jna.Pointer;
 import com.sun.jna.ptr.IntByReference;
 import com.sun.jna.ptr.PointerByReference;
 import org.firebirdsql.encodings.Encoding;
-import org.firebirdsql.gds.EventHandle;
 import org.firebirdsql.gds.EventHandler;
+import org.firebirdsql.gds.ng.AbstractEventHandle;
 import org.firebirdsql.jna.fbclient.FbClientLibrary;
 import org.firebirdsql.jna.fbclient.WinFbClientLibrary;
+import org.firebirdsql.logging.Logger;
+import org.firebirdsql.logging.LoggerFactory;
 
 /**
  * Event handle for the JNA protocol.
@@ -37,24 +37,22 @@ import org.firebirdsql.jna.fbclient.WinFbClientLibrary;
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @since 3.0
  */
-public class JnaEventHandle implements EventHandle {
+public final class JnaEventHandle extends AbstractEventHandle {
 
-    private final String eventName;
-    private final byte[] eventNameBytes;
+    private static final Logger LOG = LoggerFactory.getLogger(JnaEventHandle.class);
+
     private final Memory eventNameMemory;
-    private volatile int eventCount;
-    private final EventHandler eventHandler;
     private final IntByReference eventId = new IntByReference(0);
     private int size = -1;
+    // TODO These buffers are never cleared, find out how and where to delete/free them
     private final PointerByReference eventBuffer = new PointerByReference();
     private final PointerByReference resultBuffer = new PointerByReference();
     private final JnaEventHandle.JnaEventCallback callback = createEventCallback();
 
     JnaEventHandle(String eventName, EventHandler eventHandler, Encoding encoding) {
-        this.eventName = eventName;
-        this.eventHandler = eventHandler;
+        super(eventName, eventHandler);
         // Requires null-termination
-        eventNameBytes = encoding.encodeToCharset(eventName + '\0');
+        final byte[] eventNameBytes = encoding.encodeToCharset(eventName + '\0');
         if (eventNameBytes.length > 256) {
             throw new IllegalArgumentException("Event name as bytes too long");
         }
@@ -63,17 +61,8 @@ public class JnaEventHandle implements EventHandle {
     }
 
     @Override
-    public String getEventName() {
-        return eventName;
-    }
-
-    void setEventCount(int eventCount) {
-        this.eventCount = eventCount;
-    }
-
-    @Override
-    public int getEventCount() {
-        return eventCount;
+    protected void setEventCount(int eventCount) {
+        super.setEventCount(eventCount);
     }
 
     @Override
@@ -88,14 +77,7 @@ public class JnaEventHandle implements EventHandle {
         return eventId;
     }
 
-    /**
-     * @return Null-terminated name of the event.
-     */
-    public byte[] getEventNameBytes() {
-        return eventNameBytes;
-    }
-
-    public Memory getEventNameMemory() {
+    Memory getEventNameMemory() {
         return eventNameMemory;
     }
 
@@ -134,12 +116,18 @@ public class JnaEventHandle implements EventHandle {
         return callback;
     }
 
-    void debugMemoryDump() {
+    /**
+     * Dumps the event buffers to the logger, if debug is enabled.
+     */
+    public void debugMemoryDump() {
+        if (!LOG.isDebugEnabled()) return;
         synchronized (JnaEventHandle.class) {
-            System.out.println("Event Buffer " + getEventName());
-            System.out.println(getEventBuffer().getValue().dump(0, size));
-            System.out.println("Result Buffer " + getEventName());
-            System.out.println(getResultBuffer().getValue().dump(0, size));
+            StringBuilder sb = new StringBuilder();
+            sb.append("Event Buffer ").append(getEventName()).append(':')
+                    .append(getEventBuffer().getValue().dump(0, size))
+                    .append("Result Buffer ").append(getEventName()).append(':')
+                    .append(getResultBuffer().getValue().dump(0, size));
+            LOG.debug(sb);
         }
     }
 
@@ -154,15 +142,13 @@ public class JnaEventHandle implements EventHandle {
         public void apply(Pointer resultArgument, short eventBufferLength, Pointer eventsList) {
             synchronized (JnaEventHandle.this) {
                 final int length = eventBufferLength & 0xFFFF;
-                System.out.println("Length for " + getEventName() + " " + length);
                 if (length == 0 || eventsList == null) return;
-                byte[] tempBuffer = new byte[length];
-                eventsList.read(0, tempBuffer, 0, length);
+                byte[] tempBuffer = eventsList.getByteArray(0 ,length);
                 resultArgument.write(0, tempBuffer, 0, length);
             }
 
             // TODO Push to executor?
-            eventHandler.eventOccurred(JnaEventHandle.this);
+            onEventOccurred();
         }
     }
 

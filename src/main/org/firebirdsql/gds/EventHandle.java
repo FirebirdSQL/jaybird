@@ -22,7 +22,6 @@
  * OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-
 package org.firebirdsql.gds;
 
 /**
@@ -34,22 +33,22 @@ public interface EventHandle {
      * Get the name of the event for which this handle is set to listen for
      *
      * @return The name of the event
-     */ 
-    public String getEventName();
+     */
+    String getEventName();
 
     /**
-     * Get the count of event occurences for the most recent occurrence(s)
+     * Get the count of event occurrences for the most recent occurrence(s)
      * of the event for which this handle is registered.
      *
      * @return The event count
      */
-    public int getEventCount();
+    int getEventCount();
 
     /**
      * Get the internal event id number for this handle
      *
      * @return The internal event id
      */
-    public int getEventId();
+    int getEventId();
 
 }

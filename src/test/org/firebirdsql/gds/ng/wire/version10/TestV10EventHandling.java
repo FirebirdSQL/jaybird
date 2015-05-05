@@ -326,11 +326,22 @@ public class TestV10EventHandling extends FBJUnit4TestBase {
         SimpleEventHandler eventHandler = new SimpleEventHandler();
 
         EventHandle eventHandleA = db.createEventHandle("TEST_EVENT_A", eventHandler);
-        db.queueEvent(eventHandleA);
         EventHandle eventHandleB = db.createEventHandle("TEST_EVENT_B", eventHandler);
+
+        // Initial queue will return events immediately
+        db.queueEvent(eventHandleA);
+        db.queueEvent(eventHandleB);
+        Thread.sleep(50);
+        db.countEvents(eventHandleA);
+        db.countEvents(eventHandleB);
+
+        eventHandler.clearEvents();
+
+        db.queueEvent(eventHandleA);
         db.queueEvent(eventHandleB);
 
-        assertTrue(eventHandler.getReceivedEventHandles().isEmpty());
+        Thread.sleep(50);
+        assertTrue("Expected events to not have been triggered", eventHandler.getReceivedEventHandles().isEmpty());
 
         transaction = getTransaction(db);
         statement.setTransaction(transaction);
@@ -338,18 +349,17 @@ public class TestV10EventHandling extends FBJUnit4TestBase {
         statement.execute(RowValue.EMPTY_ROW_VALUE);
         transaction.commit();
 
-        while (!eventHandler.getReceivedEventHandles().contains(eventHandleA)) {
+        int retry = 0;
+        while (!eventHandler.getReceivedEventHandles().contains(eventHandleA)
+                && !eventHandler.getReceivedEventHandles().contains(eventHandleB)
+                && retry++ < 10) {
             Thread.sleep(50);
         }
+        assertEquals("Unexpected number of events received", 2, eventHandler.getReceivedEventHandles().size());
 
         db.countEvents(eventHandleA);
-        assertEquals(1, eventHandleA.getEventCount());
-
-        while (!eventHandler.getReceivedEventHandles().contains(eventHandleB)) {
-            Thread.sleep(50);
-        }
-
         db.countEvents(eventHandleB);
+        assertEquals(1, eventHandleA.getEventCount());
         assertEquals(1, eventHandleB.getEventCount());
     }
 

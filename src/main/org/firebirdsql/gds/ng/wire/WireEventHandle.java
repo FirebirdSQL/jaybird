@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
@@ -21,9 +19,9 @@
 package org.firebirdsql.gds.ng.wire;
 
 import org.firebirdsql.encodings.Encoding;
-import org.firebirdsql.gds.EventHandle;
 import org.firebirdsql.gds.EventHandler;
 import org.firebirdsql.gds.impl.wire.XdrOutputStream;
+import org.firebirdsql.gds.ng.AbstractEventHandle;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -35,42 +33,28 @@ import java.util.concurrent.atomic.AtomicInteger;
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @since 3.0
  */
-public class WireEventHandle implements EventHandle, AsynchronousChannelListener {
+public final class WireEventHandle extends AbstractEventHandle implements AsynchronousChannelListener {
 
     private static final AtomicInteger localEventId = new AtomicInteger();
 
-    private final String eventName;
     private final byte[] eventNameBytes;
-    private volatile int eventCount;
     private int internalCount;
     private int previousInternalCount;
-    private final EventHandler eventHandler;
     private int localId;
     private int eventId;
 
     public WireEventHandle(String eventName, EventHandler eventHandler, Encoding encoding) {
-        this.eventName = eventName;
-        this.eventHandler = eventHandler;
+        super(eventName, eventHandler);
         eventNameBytes = encoding.encodeToCharset(eventName);
         if (eventNameBytes.length > 256) {
             throw new IllegalArgumentException("Event name as bytes too long");
         }
     }
 
-    @Override
-    public String getEventName() {
-        return eventName;
-    }
-
     public synchronized void calculateCount() {
         // TODO Can't we just set the count directly?
-        eventCount = internalCount - previousInternalCount;
+        setEventCount(internalCount - previousInternalCount);
         previousInternalCount = internalCount;
-    }
-
-    @Override
-    public int getEventCount() {
-        return eventCount;
     }
 
     /**
@@ -129,6 +113,6 @@ public class WireEventHandle implements EventHandle, AsynchronousChannelListener
         synchronized (this) {
             internalCount = event.getEventCount();
         }
-        eventHandler.eventOccurred(this);
+        onEventOccurred();
     }
 }
