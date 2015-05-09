@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
@@ -23,7 +21,9 @@ package org.firebirdsql.gds.ng.jna;
 import com.sun.jna.Native;
 import com.sun.jna.Platform;
 import org.firebirdsql.gds.ng.FbDatabaseFactory;
+import org.firebirdsql.gds.ng.FbService;
 import org.firebirdsql.gds.ng.IConnectionProperties;
+import org.firebirdsql.gds.ng.IServiceProperties;
 import org.firebirdsql.jna.fbclient.FbClientLibrary;
 import org.firebirdsql.jna.fbclient.WinFbClientLibrary;
 
@@ -45,8 +45,14 @@ public class FbClientDatabaseFactory implements FbDatabaseFactory {
 
     @Override
     public JnaDatabase connect(IConnectionProperties connectionProperties) throws SQLException {
-        final JnaConnection jnaConnection = new JnaConnection(getClientLibrary(), connectionProperties);
-        return jnaConnection.identify();
+        final JnaDatabaseConnection jnaDatabaseConnection = new JnaDatabaseConnection(getClientLibrary(),
+                connectionProperties);
+        return jnaDatabaseConnection.identify();
+    }
+
+    @Override
+    public FbService serviceConnect(IServiceProperties serviceProperties) throws SQLException {
+        throw new UnsupportedOperationException("serviceConnect not yet supported");
     }
 
     protected FbClientLibrary getClientLibrary() {

@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
@@ -31,19 +29,21 @@ import java.sql.SQLNonTransientConnectionException;
 /**
  * Abstract class with common logic for connections.
  *
+ * @param <T> Type of attach properties
+ * @param <C> Type of connection handle
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @since 3.0
  */
-public abstract class AbstractConnection {
+public abstract class AbstractConnection<T extends IAttachProperties<T>, C> {
 
-    protected final IConnectionProperties connectionProperties;
+    protected final T attachProperties;
     private final EncodingDefinition encodingDefinition;
     private final IEncodingFactory encodingFactory;
 
-    protected AbstractConnection(IConnectionProperties connectionProperties, IEncodingFactory encodingFactory) throws SQLException {
-        this.connectionProperties = new FbConnectionProperties(connectionProperties);
-        final String firebirdEncodingName = connectionProperties.getEncoding();
-        final String javaCharsetAlias = connectionProperties.getCharSet();
+    protected AbstractConnection(T attachProperties, IEncodingFactory encodingFactory) throws SQLException {
+        this.attachProperties = attachProperties.asNewMutable();
+        final String firebirdEncodingName = attachProperties.getEncoding();
+        final String javaCharsetAlias = attachProperties.getCharSet();
 
         EncodingDefinition tempEncodingDefinition = encodingFactory.getEncodingDefinition(firebirdEncodingName, javaCharsetAlias);
         if (tempEncodingDefinition == null || tempEncodingDefinition.isInformationOnly()) {
@@ -64,31 +64,31 @@ public abstract class AbstractConnection {
     }
 
     /**
-     * Performs the connection identification phase of the protocol and
-     * returns the FbWireDatabase implementation for the agreed protocol.
+     * Performs the connection identification phase of the protocol and returns the connection handle implementation
+     * for the agreed protocol.
      *
-     * @return FbDatabase
+     * @return Connection handle (ie {@link FbDatabase} or {@link FbService})
      * @throws SQLException
      */
-    public abstract FbDatabase identify() throws SQLException;
+    public abstract C identify() throws SQLException;
 
     public final String getServerName() {
-        return connectionProperties.getServerName();
+        return attachProperties.getServerName();
     }
 
     public final int getPortNumber() {
-        return connectionProperties.getPortNumber();
+        return attachProperties.getPortNumber();
     }
 
-    public final String getDatabaseName() {
-        return connectionProperties.getDatabaseName();
+    public final String getAttachObjectName() {
+        return attachProperties.getAttachObjectName();
     }
 
     /**
-     * @return An immutable copy of the current connection properties.
+     * @return An immutable copy of the current attach properties.
      */
-    public final IConnectionProperties getConnectionProperties() {
-        return connectionProperties.asImmutable();
+    public final T getAttachProperties() {
+        return attachProperties.asImmutable();
     }
 
     public final EncodingDefinition getEncodingDefinition() {
@@ -101,9 +101,5 @@ public abstract class AbstractConnection {
 
     public final IEncodingFactory getEncodingFactory() {
         return encodingFactory;
-    }
-
-    public final short getConnectionDialect() {
-        return connectionProperties.getConnectionDialect();
     }
 }

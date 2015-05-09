@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
@@ -21,7 +19,9 @@
 package org.firebirdsql.gds.ng.wire;
 
 import org.firebirdsql.gds.ng.FbDatabaseFactory;
+import org.firebirdsql.gds.ng.FbService;
 import org.firebirdsql.gds.ng.IConnectionProperties;
+import org.firebirdsql.gds.ng.IServiceProperties;
 
 import java.io.IOException;
 import java.sql.SQLException;
@@ -38,19 +38,24 @@ public final class FbWireDatabaseFactory implements FbDatabaseFactory {
 
     @Override
     public FbWireDatabase connect(IConnectionProperties connectionProperties) throws SQLException {
-        final WireConnection wireConnection = new WireConnection(connectionProperties);
+        final WireDatabaseConnection wireConnection = new WireDatabaseConnection(connectionProperties);
 
         try {
             wireConnection.socketConnect();
             return wireConnection.identify();
         } catch (SQLException ex) {
             try {
-                wireConnection.disconnect();
+                wireConnection.close();
             } catch (IOException ioex) {
                 ex.setNextException(new SQLException(ioex.getMessage(), ioex));
             }
             throw ex;
         }
+    }
+
+    @Override
+    public FbService serviceConnect(IServiceProperties serviceProperties) throws SQLException {
+        throw new UnsupportedOperationException("serviceConnect not yet implemented");
     }
 
     public static FbWireDatabaseFactory getInstance() {

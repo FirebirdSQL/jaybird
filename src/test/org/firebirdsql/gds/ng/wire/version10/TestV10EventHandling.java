@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
@@ -23,16 +21,20 @@ package org.firebirdsql.gds.ng.wire.version10;
 import org.firebirdsql.common.FBJUnit4TestBase;
 import org.firebirdsql.common.FBTestProperties;
 import org.firebirdsql.common.SimpleServer;
+import org.firebirdsql.common.rules.GdsTypeRule;
 import org.firebirdsql.encodings.EncodingFactory;
 import org.firebirdsql.gds.EventHandle;
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.TransactionParameterBuffer;
 import org.firebirdsql.gds.impl.TransactionParameterBufferImpl;
+import org.firebirdsql.gds.impl.jni.EmbeddedGDSImpl;
+import org.firebirdsql.gds.impl.jni.NativeGDSImpl;
 import org.firebirdsql.gds.impl.wire.XdrOutputStream;
 import org.firebirdsql.gds.ng.*;
 import org.firebirdsql.gds.ng.fields.RowValue;
 import org.firebirdsql.gds.ng.wire.*;
 import org.junit.After;
+import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -54,6 +56,11 @@ import static org.junit.Assert.*;
  */
 public class TestV10EventHandling extends FBJUnit4TestBase {
 
+    @ClassRule
+    public static final GdsTypeRule gdsTypeRule = GdsTypeRule.excludes(
+            EmbeddedGDSImpl.EMBEDDED_TYPE_NAME,
+            NativeGDSImpl.NATIVE_TYPE_NAME);
+
     //@formatter:off
     public static final String TABLE_DEF =
             "CREATE TABLE TEST (" +
@@ -69,14 +76,13 @@ public class TestV10EventHandling extends FBJUnit4TestBase {
             "END";
     //@formatter:on
 
-    protected static final WireConnection DUMMY_CONNECTION;
-
+    protected static final WireDatabaseConnection DUMMY_CONNECTION;
     static {
         try {
             FbConnectionProperties connectionInfo = new FbConnectionProperties();
             connectionInfo.setEncoding("NONE");
 
-            DUMMY_CONNECTION = new WireConnection(connectionInfo);
+            DUMMY_CONNECTION = new WireDatabaseConnection(connectionInfo);
         } catch (SQLException e) {
             throw new ExceptionInInitializerError(e);
         }
@@ -397,8 +403,8 @@ public class TestV10EventHandling extends FBJUnit4TestBase {
 
 
     private AbstractFbWireDatabase createAndAttachDatabase() throws SQLException {
-        WireConnection gdsConnection = new WireConnection(connectionInfo, EncodingFactory.getDefaultInstance(),
-                getProtocolCollection());
+        WireDatabaseConnection gdsConnection = new WireDatabaseConnection(connectionInfo,
+                EncodingFactory.getDefaultInstance(), getProtocolCollection());
         gdsConnection.socketConnect();
         final AbstractFbWireDatabase database = (AbstractFbWireDatabase) gdsConnection.identify();
         database.attach();

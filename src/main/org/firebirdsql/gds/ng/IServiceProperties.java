@@ -24,36 +24,47 @@
  */
 package org.firebirdsql.gds.ng;
 
-import java.sql.SQLException;
-
 /**
- * Factory for {@link org.firebirdsql.gds.ng.FbDatabase} instances.
- * <p>
- * A <code>FbDatabaseFactory</code> knows how to create connected (but unattached) instance of {@link org.firebirdsql.gds.ng.FbDatabase}
- * for a specific protocol type (eg wire protocol, embedded or native).
- * </p>
+ * Connection properties for a Firebird service attachment.
  *
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @since 3.0
  */
-public interface FbDatabaseFactory {
+public interface IServiceProperties extends IAttachProperties<IServiceProperties> {
+
+    String DEFAULT_SERVICE_NAME = "service_mgr";
 
     /**
-     * Connects to a Firebird server based on the supplied connection properties.
+     * Get the service name
      * <p>
-     * The {@link org.firebirdsql.gds.ng.FbDatabase} instance will be connected to the server, but is not yet attached.
+     * NOTE: Implementer should take care to return {@link #DEFAULT_SERVICE_NAME} if
+     * value hasn't been set yet.
      * </p>
      *
-     * @param connectionProperties Connection properties
-     * @return Database instance
+     * @return Service name
      */
-    FbDatabase connect(IConnectionProperties connectionProperties) throws SQLException;
+    String getServiceName();
 
     /**
-     * Connects to the service manager of a Firebird server with the supplied service properties.
+     * Set the service name.
+     * <p>
+     * NOTE: Implementer should take care to use the {@link #DEFAULT_SERVICE_NAME} if
+     * this method hasn't been called yet.
+     * </p>
      *
-     * @param serviceProperties Service properties
-     * @return Service instance
+     * @param serviceName Service name
      */
-    FbService serviceConnect(IServiceProperties serviceProperties) throws SQLException;
+    void setServiceName(String serviceName);
+
+    /**
+     * @return An immutable version of this instance as an implementation of {@link IServiceProperties}
+     */
+    @Override
+    IServiceProperties asImmutable();
+
+    /**
+     * @return A new, mutable, instance as an implementation of {@link IServiceProperties} with all properties copied.
+     */
+    @Override
+    IServiceProperties asNewMutable();
 }

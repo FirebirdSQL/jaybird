@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
@@ -23,10 +21,7 @@ package org.firebirdsql.gds.ng.wire.version11;
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.ng.FbExceptionBuilder;
 import org.firebirdsql.gds.ng.WarningMessageCallback;
-import org.firebirdsql.gds.ng.wire.DeferredAction;
-import org.firebirdsql.gds.ng.wire.ProtocolDescriptor;
-import org.firebirdsql.gds.ng.wire.Response;
-import org.firebirdsql.gds.ng.wire.WireConnection;
+import org.firebirdsql.gds.ng.wire.*;
 import org.firebirdsql.gds.ng.wire.version10.V10Database;
 import org.firebirdsql.logging.Logger;
 import org.firebirdsql.logging.LoggerFactory;
@@ -62,8 +57,7 @@ public class V11Database extends V10Database {
      *         The ProtocolDescriptor that created this connection (this is
      *         used for creating further dependent objects).
      */
-    protected V11Database(WireConnection connection,
-            ProtocolDescriptor descriptor) {
+    protected V11Database(WireDatabaseConnection connection, ProtocolDescriptor descriptor) {
         super(connection, descriptor);
     }
 

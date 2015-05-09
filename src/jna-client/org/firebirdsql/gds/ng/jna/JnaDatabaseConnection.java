@@ -29,12 +29,12 @@ import org.firebirdsql.jna.fbclient.FbClientLibrary;
 import java.sql.SQLException;
 
 /**
- * Class handling the initial setup of the JNA connection.
+ * Class handling the initial setup of the JNA database connection.
  *
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @since 3.0
  */
-public final class JnaConnection extends AbstractConnection {
+public final class JnaDatabaseConnection extends AbstractConnection<IConnectionProperties, JnaDatabase>  {
 
     private final FbClientLibrary clientLibrary;
 
@@ -46,7 +46,7 @@ public final class JnaConnection extends AbstractConnection {
      * @param connectionProperties
      *         Connection properties
      */
-    public JnaConnection(FbClientLibrary clientLibrary, IConnectionProperties connectionProperties)
+    public JnaDatabaseConnection(FbClientLibrary clientLibrary, IConnectionProperties connectionProperties)
             throws SQLException {
         this(clientLibrary, connectionProperties, EncodingFactory.getDefaultInstance());
     }
@@ -61,7 +61,7 @@ public final class JnaConnection extends AbstractConnection {
      * @param encodingFactory
      *         Factory for encoding definitions
      */
-    public JnaConnection(FbClientLibrary clientLibrary, IConnectionProperties connectionProperties,
+    public JnaDatabaseConnection(FbClientLibrary clientLibrary, IConnectionProperties connectionProperties,
             IEncodingFactory encodingFactory) throws SQLException {
         super(connectionProperties, encodingFactory);
         if (clientLibrary == null) {

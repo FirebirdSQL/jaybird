@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
@@ -21,6 +19,7 @@
 package org.firebirdsql.gds.ng.wire.version10;
 
 import org.firebirdsql.common.FBTestProperties;
+import org.firebirdsql.common.rules.GdsTypeRule;
 import org.firebirdsql.encodings.EncodingFactory;
 import org.firebirdsql.gds.impl.jni.EmbeddedGDSImpl;
 import org.firebirdsql.gds.impl.jni.NativeGDSImpl;
@@ -28,8 +27,9 @@ import org.firebirdsql.gds.ng.AbstractStatementTest;
 import org.firebirdsql.gds.ng.FbDatabase;
 import org.firebirdsql.gds.ng.wire.FbWireDatabase;
 import org.firebirdsql.gds.ng.wire.ProtocolCollection;
-import org.firebirdsql.gds.ng.wire.WireConnection;
+import org.firebirdsql.gds.ng.wire.WireDatabaseConnection;
 import org.junit.BeforeClass;
+import org.junit.ClassRule;
 
 import java.sql.SQLException;
 
@@ -44,13 +44,10 @@ import static org.junit.Assume.assumeTrue;
  */
 public class TestV10Statement extends AbstractStatementTest {
 
-    @BeforeClass
-    public static void verifyTestType() {
-        // Test irrelevant for embedded
-        assumeTrue(!FBTestProperties.getGdsType().toString().equals(EmbeddedGDSImpl.EMBEDDED_TYPE_NAME));
-        // Test irrelevant for native
-        assumeTrue(!FBTestProperties.getGdsType().toString().equals(NativeGDSImpl.NATIVE_TYPE_NAME));
-    }
+    @ClassRule
+    public static final GdsTypeRule gdsTypeRule = GdsTypeRule.excludes(
+            EmbeddedGDSImpl.EMBEDDED_TYPE_NAME,
+            NativeGDSImpl.NATIVE_TYPE_NAME);
 
     protected ProtocolCollection getProtocolCollection() {
         return ProtocolCollection.create(new Version10Descriptor());
@@ -63,7 +60,8 @@ public class TestV10Statement extends AbstractStatementTest {
 
     @Override
     protected FbDatabase createDatabase() throws SQLException {
-        WireConnection gdsConnection = new WireConnection(connectionInfo, EncodingFactory.getDefaultInstance(), getProtocolCollection());
+        WireDatabaseConnection gdsConnection = new WireDatabaseConnection(connectionInfo,
+                EncodingFactory.getDefaultInstance(), getProtocolCollection());
         gdsConnection.socketConnect();
         return gdsConnection.identify();
     }

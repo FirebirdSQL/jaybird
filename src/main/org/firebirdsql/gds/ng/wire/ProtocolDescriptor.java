@@ -84,7 +84,7 @@ public interface ProtocolDescriptor {
      *         WireConnection to this database
      * @return FbWireDatabase implementation
      */
-    FbWireDatabase createDatabase(WireConnection connection);
+    FbWireDatabase createDatabase(WireDatabaseConnection connection);
 
     /**
      * Create {@link FbTransaction} implementation for this protocol.
@@ -117,7 +117,7 @@ public interface ProtocolDescriptor {
      *         Connection
      * @return DatabaseParameterBuffer implementation
      */
-    DatabaseParameterBuffer createDatabaseParameterBuffer(WireConnection connection);
+    DatabaseParameterBuffer createDatabaseParameterBuffer(WireDatabaseConnection connection);
 
     /**
      * Create {@link BlrCalculator} implementation for this protocol version.

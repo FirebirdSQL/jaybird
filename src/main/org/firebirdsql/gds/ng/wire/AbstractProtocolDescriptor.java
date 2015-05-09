@@ -1,6 +1,4 @@
 /*
- * $Id$
- * 
  * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
@@ -109,9 +107,9 @@ public abstract class AbstractProtocolDescriptor implements ProtocolDescriptor {
     }
 
     @Override
-    public final DatabaseParameterBuffer createDatabaseParameterBuffer(final WireConnection connection) {
+    public final DatabaseParameterBuffer createDatabaseParameterBuffer(WireDatabaseConnection connection) {
         return getParameterConverter()
-                .toDatabaseParameterBuffer(connection.getConnectionProperties(), connection.getEncodingFactory());
+                .toDatabaseParameterBuffer(connection.getAttachProperties(), connection.getEncodingFactory());
     }
 
     /**

@@ -1,6 +1,4 @@
 /*
- * $Id$
- * 
  * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
@@ -49,7 +47,7 @@ public abstract class AbstractFbWireDatabase extends AbstractFbDatabase implemen
 
     protected final ProtocolDescriptor protocolDescriptor;
     private final DatatypeCoder datatypeCoder;
-    protected final WireConnection connection;
+    protected final WireDatabaseConnection connection;
 
     /**
      * Creates an AbstractFbWireDatabase instance.
@@ -60,7 +58,7 @@ public abstract class AbstractFbWireDatabase extends AbstractFbDatabase implemen
      *         The ProtocolDescriptor that created this connection (this is
      *         used for creating further dependent objects).
      */
-    protected AbstractFbWireDatabase(WireConnection connection, ProtocolDescriptor descriptor) {
+    protected AbstractFbWireDatabase(WireDatabaseConnection connection, ProtocolDescriptor descriptor) {
         if (connection == null) throw new IllegalArgumentException("parameter connection should be non-null");
         if (descriptor == null) throw new IllegalArgumentException("parameter descriptor should be non-null");
         this.connection = connection;
@@ -70,7 +68,7 @@ public abstract class AbstractFbWireDatabase extends AbstractFbDatabase implemen
 
     @Override
     public final short getConnectionDialect() {
-        return connection.getConnectionDialect();
+        return connection.getAttachProperties().getConnectionDialect();
     }
 
     @Override

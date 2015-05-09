@@ -1,6 +1,4 @@
 /*
- * $Id$
- * 
  * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
@@ -28,7 +26,7 @@ import org.firebirdsql.gds.ng.FbConnectionProperties;
 import org.firebirdsql.gds.ng.FbDatabase;
 import org.firebirdsql.gds.ng.wire.FbWireDatabase;
 import org.firebirdsql.gds.ng.wire.ProtocolCollection;
-import org.firebirdsql.gds.ng.wire.WireConnection;
+import org.firebirdsql.gds.ng.wire.WireDatabaseConnection;
 
 import java.sql.SQLException;
 
@@ -44,7 +42,8 @@ public abstract class BaseTestV10Blob extends BaseTestBlob {
 
     @Override
     protected FbDatabase createFbDatabase(FbConnectionProperties connectionInfo) throws SQLException {
-        WireConnection gdsConnection = new WireConnection(connectionInfo, EncodingFactory.getDefaultInstance(), getProtocolCollection());
+        WireDatabaseConnection gdsConnection = new WireDatabaseConnection(connectionInfo,
+                EncodingFactory.getDefaultInstance(), getProtocolCollection());
         gdsConnection.socketConnect();
         FbWireDatabase db = gdsConnection.identify();
         db.attach();

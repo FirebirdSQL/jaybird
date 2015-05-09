@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
@@ -52,7 +50,7 @@ public class Version12Descriptor extends AbstractProtocolDescriptor implements P
     }
 
     @Override
-    public FbWireDatabase createDatabase(final WireConnection connection) {
+    public FbWireDatabase createDatabase(final WireDatabaseConnection connection) {
         return new V12Database(connection, this);
     }
 

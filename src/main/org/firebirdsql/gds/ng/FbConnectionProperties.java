@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
@@ -35,23 +33,14 @@ import static org.firebirdsql.gds.ISCConstants.*;
  * @see FbImmutableConnectionProperties
  * @since 3.0
  */
-public final class FbConnectionProperties implements IConnectionProperties {
+public final class FbConnectionProperties extends AbstractAttachProperties<IConnectionProperties>
+        implements IConnectionProperties {
 
     private static final Logger log = LoggerFactory.getLogger(FbConnectionProperties.class);
 
     private String databaseName;
-    private String serverName = IConnectionProperties.DEFAULT_SERVER_NAME;
-    private int portNumber = IConnectionProperties.DEFAULT_PORT;
-    private String user;
-    private String password;
-    private String charSet;
-    private String encoding;
-    private String roleName;
     private short connectionDialect = IConnectionProperties.DEFAULT_DIALECT;
-    private int socketBufferSize = IConnectionProperties.DEFAULT_SOCKET_BUFFER_SIZE;
     private int pageCacheSize;
-    private int soTimeout = IConnectionProperties.DEFAULT_SO_TIMEOUT;
-    private int connectTimeout = IConnectionProperties.DEFAULT_CONNECT_TIMEOUT;
     private boolean resultSetDefaultHoldable;
     private boolean columnLabelForName;
     private final DatabaseParameterBuffer extraDatabaseParameters = new DatabaseParameterBufferImp();
@@ -67,21 +56,11 @@ public final class FbConnectionProperties implements IConnectionProperties {
      *         Source to copy from
      */
     public FbConnectionProperties(IConnectionProperties src) {
-        this();
+        super(src);
         if (src != null) {
             databaseName = src.getDatabaseName();
-            serverName = src.getServerName();
-            portNumber = src.getPortNumber();
-            user = src.getUser();
-            password = src.getPassword();
-            charSet = src.getCharSet();
-            encoding = src.getEncoding();
-            roleName = src.getRoleName();
             connectionDialect = src.getConnectionDialect();
-            socketBufferSize = src.getSocketBufferSize();
             pageCacheSize = src.getPageCacheSize();
-            soTimeout = src.getSoTimeout();
-            connectTimeout = src.getConnectTimeout();
             for (Parameter parameter : src.getExtraDatabaseParameters()) {
                 parameter.copyTo(extraDatabaseParameters, null);
             }
@@ -105,73 +84,8 @@ public final class FbConnectionProperties implements IConnectionProperties {
     }
 
     @Override
-    public String getServerName() {
-        return serverName;
-    }
-
-    @Override
-    public void setServerName(String serverName) {
-        this.serverName = serverName;
-    }
-
-    @Override
-    public int getPortNumber() {
-        return portNumber;
-    }
-
-    @Override
-    public void setPortNumber(int portNumber) {
-        this.portNumber = portNumber;
-    }
-
-    @Override
-    public String getUser() {
-        return user;
-    }
-
-    @Override
-    public void setUser(String user) {
-        this.user = user;
-    }
-
-    @Override
-    public String getPassword() {
-        return password;
-    }
-
-    @Override
-    public void setPassword(String password) {
-        this.password = password;
-    }
-
-    @Override
-    public String getCharSet() {
-        return charSet;
-    }
-
-    @Override
-    public void setCharSet(String charSet) {
-        this.charSet = charSet;
-    }
-
-    @Override
-    public String getEncoding() {
-        return encoding;
-    }
-
-    @Override
-    public void setEncoding(String encoding) {
-        this.encoding = encoding;
-    }
-
-    @Override
-    public String getRoleName() {
-        return roleName;
-    }
-
-    @Override
-    public void setRoleName(String roleName) {
-        this.roleName = roleName;
+    public String getAttachObjectName() {
+        return getDatabaseName();
     }
 
     @Override
@@ -185,16 +99,6 @@ public final class FbConnectionProperties implements IConnectionProperties {
     }
 
     @Override
-    public int getSocketBufferSize() {
-        return socketBufferSize;
-    }
-
-    @Override
-    public void setSocketBufferSize(int socketBufferSize) {
-        this.socketBufferSize = socketBufferSize;
-    }
-
-    @Override
     public int getPageCacheSize() {
         return pageCacheSize;
     }
@@ -202,26 +106,6 @@ public final class FbConnectionProperties implements IConnectionProperties {
     @Override
     public void setPageCacheSize(int pageCacheSize) {
         this.pageCacheSize = pageCacheSize;
-    }
-
-    @Override
-    public int getSoTimeout() {
-        return soTimeout;
-    }
-
-    @Override
-    public void setSoTimeout(int soTimeout) {
-        this.soTimeout = soTimeout;
-    }
-
-    @Override
-    public int getConnectTimeout() {
-        return connectTimeout;
-    }
-
-    @Override
-    public void setConnectTimeout(int connectTimeout) {
-        this.connectTimeout = connectTimeout;
     }
 
     @Override
@@ -252,6 +136,11 @@ public final class FbConnectionProperties implements IConnectionProperties {
     @Override
     public IConnectionProperties asImmutable() {
         return new FbImmutableConnectionProperties(this);
+    }
+
+    @Override
+    public IConnectionProperties asNewMutable() {
+        return new FbConnectionProperties(this);
     }
 
     /**

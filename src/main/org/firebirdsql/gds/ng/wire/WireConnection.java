@@ -1,6 +1,4 @@
 /*
- * $Id$
- * 
  * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
@@ -27,11 +25,13 @@ import org.firebirdsql.gds.impl.wire.XdrInputStream;
 import org.firebirdsql.gds.impl.wire.XdrOutputStream;
 import org.firebirdsql.gds.ng.AbstractConnection;
 import org.firebirdsql.gds.ng.FbExceptionBuilder;
+import org.firebirdsql.gds.ng.IAttachProperties;
 import org.firebirdsql.gds.ng.IConnectionProperties;
 import org.firebirdsql.logging.Logger;
 import org.firebirdsql.logging.LoggerFactory;
 
 import java.io.ByteArrayOutputStream;
+import java.io.Closeable;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.*;
@@ -47,14 +47,15 @@ import static org.firebirdsql.gds.impl.wire.WireProtocolConstants.*;
  * Class managing the TCP/IP connection and initial handshaking with the
  * Firebird server.
  *
+ * @param <T> Type of attach properties
+ * @param <C> Type of connection handle
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @since 3.0
  */
-public final class WireConnection extends AbstractConnection {
+public abstract class WireConnection<T extends IAttachProperties<T>, C> extends AbstractConnection<T, C>
+        implements Closeable {
 
-    // TODO Include character set
     // TODO Check if methods currently throwing IOException should throw SQLException instead
-    // TODO Change how information is passed?
 
     private static final Logger log = LoggerFactory.getLogger(WireConnection.class);
 
@@ -90,43 +91,43 @@ public final class WireConnection extends AbstractConnection {
      * Creates a WireConnection (without establishing a connection to the
      * server) with the default protocol collection.
      *
-     * @param connectionProperties
-     *         Connection properties
+     * @param attachProperties
+     *         Attach properties
      */
-    public WireConnection(IConnectionProperties connectionProperties) throws SQLException {
-        this(connectionProperties, EncodingFactory.getDefaultInstance(), ProtocolCollection.getDefaultCollection());
+    protected WireConnection(T attachProperties) throws SQLException {
+        this(attachProperties, EncodingFactory.getDefaultInstance(), ProtocolCollection.getDefaultCollection());
     }
 
     /**
      * Creates a WireConnection (without establishing a connection to the
      * server).
      *
-     * @param connectionProperties
-     *         Connection properties
+     * @param attachProperties
+     *         Attach properties
      * @param encodingFactory
      *         Factory for encoding definitions
      * @param protocols
      *         The collection of protocols to use for this connection.
      */
-    public WireConnection(IConnectionProperties connectionProperties, IEncodingFactory encodingFactory,
+    protected WireConnection(T attachProperties, IEncodingFactory encodingFactory,
             ProtocolCollection protocols) throws SQLException {
-        super(connectionProperties, encodingFactory);
+        super(attachProperties, encodingFactory);
         this.protocols = protocols;
     }
 
-    public boolean isConnected() {
+    public final boolean isConnected() {
         return !(socket == null || socket.isClosed());
     }
 
-    public int getProtocolVersion() {
+    public final int getProtocolVersion() {
         return protocolVersion;
     }
 
-    public int getProtocolArchitecture() {
+    public final int getProtocolArchitecture() {
         return protocolArchitecture;
     }
 
-    public int getProtocolMinimumType() {
+    public final int getProtocolMinimumType() {
         return protocolMinimumType;
     }
 
@@ -141,8 +142,8 @@ public final class WireConnection extends AbstractConnection {
      * @throws SQLException
      *         If the timeout value cannot be changed
      */
-    public void setSoTimeout(int socketTimeout) throws SQLException {
-        connectionProperties.setSoTimeout(socketTimeout);
+    public final void setSoTimeout(int socketTimeout) throws SQLException {
+        attachProperties.setSoTimeout(socketTimeout);
         resetSocketTimeout();
     }
 
@@ -153,10 +154,10 @@ public final class WireConnection extends AbstractConnection {
      * @throws SQLException
      *         If the timeout value cannot be changed
      */
-    public void resetSocketTimeout() throws SQLException {
+    public final void resetSocketTimeout() throws SQLException {
         if (isConnected()) {
             try {
-                final int soTimeout = connectionProperties.getSoTimeout();
+                final int soTimeout = attachProperties.getSoTimeout();
                 final int desiredTimeout = soTimeout != -1 ? soTimeout : 0;
                 if (socket.getSoTimeout() != desiredTimeout) {
                     socket.setSoTimeout(desiredTimeout);
@@ -179,11 +180,11 @@ public final class WireConnection extends AbstractConnection {
      * @throws SQLException
      *         If the connection cannot be established.
      */
-    public void socketConnect() throws SQLException {
+    public final void socketConnect() throws SQLException {
         try {
             socket = new Socket();
             socket.setTcpNoDelay(true);
-            final int connectTimeout = connectionProperties.getConnectTimeout();
+            final int connectTimeout = attachProperties.getConnectTimeout();
             final int socketConnectTimeout;
             if (connectTimeout != -1) {
                 // connectTimeout is in seconds, need milliseconds
@@ -194,10 +195,10 @@ public final class WireConnection extends AbstractConnection {
                 // socket connect timeout is not set, so indefinite (0)
                 socketConnectTimeout = 0;
                 // Blocking timeout to normal socket timeout, 0 if not set
-                socket.setSoTimeout(Math.max(connectionProperties.getSoTimeout(), 0));
+                socket.setSoTimeout(Math.max(attachProperties.getSoTimeout(), 0));
             }
 
-            final int socketBufferSize = connectionProperties.getSocketBufferSize();
+            final int socketBufferSize = attachProperties.getSocketBufferSize();
             if (socketBufferSize != IConnectionProperties.DEFAULT_SOCKET_BUFFER_SIZE) {
                 socket.setReceiveBufferSize(socketBufferSize);
                 socket.setSendBufferSize(socketBufferSize);
@@ -211,7 +212,7 @@ public final class WireConnection extends AbstractConnection {
         }
     }
 
-    public XdrStreamAccess getXdrStreamAccess() {
+    public final XdrStreamAccess getXdrStreamAccess() {
         return streamAccess;
     }
 
@@ -224,7 +225,7 @@ public final class WireConnection extends AbstractConnection {
      * @throws SQLException
      */
     @Override
-    public FbWireDatabase identify() throws SQLException {
+    public final C identify() throws SQLException {
         try {
             xdrIn = new XdrInputStream(socket.getInputStream());
             xdrOut = new XdrOutputStream(socket.getOutputStream());
@@ -252,7 +253,7 @@ public final class WireConnection extends AbstractConnection {
             xdrOut.writeInt(CONNECT_VERSION2);
             xdrOut.writeInt(arch_generic);
 
-            xdrOut.writeString(getDatabaseName(), getEncoding());
+            xdrOut.writeString(getAttachObjectName(), getEncoding());
             xdrOut.writeInt(protocols.getProtocolCount()); // Count of protocols understood
             xdrOut.writeBuffer(userId.toByteArray());
 
@@ -281,10 +282,10 @@ public final class WireConnection extends AbstractConnection {
                                     "Unsupported or unexpected protocol version %d connecting to database %s. Supported version(s): %s",
                                     protocolVersion, getServerName(), protocols.getProtocolVersions()));
                 }
-                return descriptor.createDatabase(this);
+                return createConnectionHandle(descriptor);
             } else {
                 try {
-                    disconnect();
+                    close();
                 } catch (Exception ex) {
                     log.debug("Ignoring exception on disconnect in connect phase of protocol", ex);
                 }
@@ -298,13 +299,21 @@ public final class WireConnection extends AbstractConnection {
     }
 
     /**
+     * Creates the connection handle for this type of connection.
+     *
+     * @param protocolDescriptor The protocol descriptor selected by the identify phase
+     * @return Connection handle
+     */
+    protected abstract C createConnectionHandle(ProtocolDescriptor protocolDescriptor);
+
+    /**
      * Reads the next operation code. Skips all {@link org.firebirdsql.gds.impl.wire.WireProtocolConstants#op_dummy} codes received.
      *
      * @return Operation code
      * @throws IOException
      *         if an error occurs while reading from the underlying InputStream
      */
-    public int readNextOperation() throws IOException {
+    public final int readNextOperation() throws IOException {
         int op;
         do {
             op = xdrIn.readInt();
@@ -318,7 +327,7 @@ public final class WireConnection extends AbstractConnection {
      * @throws IOException
      *         if closing fails
      */
-    public void disconnect() throws IOException {
+    public final void close() throws IOException {
         IOException ioex = null;
         try {
             if (socket != null) {
@@ -351,9 +360,9 @@ public final class WireConnection extends AbstractConnection {
     }
 
     @Override
-    protected void finalize() throws Throwable {
+    protected final void finalize() throws Throwable {
         try {
-            disconnect();
+            close();
         } finally {
             super.finalize();
         }
@@ -396,7 +405,7 @@ public final class WireConnection extends AbstractConnection {
      * @throws IOException
      *         If there is no socket, the socket is closed, or for errors writing to the socket.
      */
-    public void writeDirect(byte[] data) throws IOException {
+    public final void writeDirect(byte[] data) throws IOException {
         if (!isConnected()) throw new SocketException("Socket closed");
         final OutputStream outputStream = socket.getOutputStream();
         outputStream.write(data);

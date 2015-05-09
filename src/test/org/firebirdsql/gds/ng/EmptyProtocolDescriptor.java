@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
@@ -43,18 +41,18 @@ public class EmptyProtocolDescriptor extends AbstractProtocolDescriptor {
     }
 
     @Override
-    public FbWireDatabase createDatabase(final WireConnection connection) {
+    public FbWireDatabase createDatabase(WireDatabaseConnection connection) {
         return null;
     }
 
     @Override
-    public FbWireTransaction createTransaction(final FbWireDatabase database, final int transactionHandle,
+    public FbWireTransaction createTransaction(FbWireDatabase database, int transactionHandle,
             final TransactionState initialState) {
         return null;
     }
 
     @Override
-    public FbWireStatement createStatement(final FbWireDatabase database) {
+    public FbWireStatement createStatement(FbWireDatabase database) {
         return null;
     }
 

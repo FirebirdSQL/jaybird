@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * Public Firebird Java API.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -31,21 +29,16 @@ import org.firebirdsql.gds.DatabaseParameterBuffer;
 /**
  * Connection properties for the Firebird connection.
  * <p>
- * TODO Do refactor to remove overlap/duplication with {@link org.firebirdsql.jdbc.FirebirdConnectionProperties}
+ * TODO Remove overlap/duplication with {@link org.firebirdsql.jdbc.FirebirdConnectionProperties}
  * </p>
  *
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
- * @since 2.3
+ * @since 3.0
  */
-public interface IConnectionProperties {
+public interface IConnectionProperties extends IAttachProperties<IConnectionProperties> {
 
-    final int DEFAULT_PORT = 3050;
-    final short DEFAULT_DIALECT = 3;
-    final String DEFAULT_SERVER_NAME = "localhost";
-    final int DEFAULT_SOCKET_BUFFER_SIZE = -1;
-    final int DEFAULT_BUFFERS_NUMBER = 0;
-    final int DEFAULT_SO_TIMEOUT = -1;
-    final int DEFAULT_CONNECT_TIMEOUT = -1;
+    short DEFAULT_DIALECT = 3;
+    int DEFAULT_BUFFERS_NUMBER = 0;
 
     /**
      * @return Name or alias of the database
@@ -57,125 +50,6 @@ public interface IConnectionProperties {
      *         Name or alias of the database
      */
     void setDatabaseName(String databaseName);
-
-    /**
-     * Get the hostname or IP address of the Firebird server.
-     * <p>
-     * NOTE: Implementer should take care to return {@link IConnectionProperties#DEFAULT_SERVER_NAME}
-     * if value hasn't been set yet.
-     * </p>
-     *
-     * @return Hostname or IP address of the server
-     */
-    String getServerName();
-
-    /**
-     * Set the hostname or IP address of the Firebird server.
-     * <p>
-     * NOTE: Implementer should take care to use {@link #DEFAULT_SERVER_NAME} if
-     * value hasn't been set yet.
-     * </p>
-     *
-     * @param serverName
-     *         Hostname or IP address of the server
-     */
-    void setServerName(String serverName);
-
-    /**
-     * Get the portnumber of the server.
-     * <p>
-     * NOTE: Implementer should take care to return {@link IConnectionProperties#DEFAULT_PORT} if
-     * value hasn't been set yet.
-     * </p>
-     *
-     * @return Portnumber of the server
-     */
-    int getPortNumber();
-
-    /**
-     * Set the port number of the server.
-     * <p>
-     * NOTE: Implementer should take care to use the {@link #DEFAULT_PORT} if
-     * this method hasn't been called yet.
-     * </p>
-     *
-     * @param portNumber
-     *         Port number of the server
-     */
-    void setPortNumber(int portNumber);
-
-    /**
-     * @return Name of the user to authenticate to the server.
-     */
-    String getUser();
-
-    /**
-     * @param user
-     *         Name of the user to authenticate to the server.
-     */
-    void setUser(String user);
-
-    /**
-     * @return Password to authenticate to the server.
-     */
-    String getPassword();
-
-    /**
-     * @param password
-     *         Password to authenticate to the server.
-     */
-    void setPassword(String password);
-
-    /**
-     * @return Java character set for the connection.
-     */
-    String getCharSet();
-
-    /**
-     * Set the Java character set for the connection.
-     * <p>
-     * Contrary to other parts of the codebase, the value of
-     * <code>encoding</code> should not be changed when <code>charSet</code> is
-     * set.
-     * </p>
-     *
-     * @param charSet
-     *         Character set for the connection. Similar to
-     *         <code>encoding</code> property, but accepts Java names instead
-     *         of Firebird ones.
-     * @see #setEncoding(String)
-     */
-    void setCharSet(String charSet);
-
-    /**
-     * @return Firebird character encoding for the connection.
-     */
-    String getEncoding();
-
-    /**
-     * Set the Firebird character set for the connection.
-     * <p>
-     * Contrary to other parts of the codebase, the value of
-     * <code>charSet</code> should not be changed when <code>encoding</code> is
-     * set.
-     * </p>
-     *
-     * @param encoding
-     *         Firebird character encoding for the connection. See Firebird
-     *         documentation for more information.
-     */
-    void setEncoding(String encoding);
-
-    /**
-     * @return SQL role to use.
-     */
-    String getRoleName();
-
-    /**
-     * @param roleName
-     *         SQL role to use.
-     */
-    void setRoleName(String roleName);
 
     /**
      * Get the dialect of the client connection
@@ -199,29 +73,6 @@ public interface IConnectionProperties {
      *         SQL dialect of the client.
      */
     void setConnectionDialect(short connectionDialect);
-
-    /**
-     * Get the socket buffer size.
-     * <p>
-     * NOTE: Implementer should take care to return {@link IConnectionProperties#DEFAULT_SOCKET_BUFFER_SIZE} if the
-     * value hasn't been set yet.
-     * </p>
-     *
-     * @return socket buffer size in bytes, or -1 if not specified.
-     */
-    int getSocketBufferSize();
-
-    /**
-     * Set the socket buffer size.
-     * <p>
-     * NOTE: Implementer should take care to use {@link #DEFAULT_SOCKET_BUFFER_SIZE} if the
-     * value hasn't been set yet.
-     * </p>
-     *
-     * @param socketBufferSize
-     *         socket buffer size in bytes.
-     */
-    void setSocketBufferSize(int socketBufferSize);
 
     /**
      * Get the page cache size.
@@ -263,55 +114,6 @@ public interface IConnectionProperties {
      *         SuperServer has a server-wide configuration parameter.
      */
     void setPageCacheSize(int pageCacheSize);
-
-    /**
-     * Get the initial Socket blocking timeout (SoTimeout).
-     * <p>
-     * NOTE: Implementer should take care to return {@link IConnectionProperties#DEFAULT_SO_TIMEOUT} if the
-     * value hasn't been set yet.
-     * </p>
-     *
-     * @return The initial socket blocking timeout in milliseconds (0 is
-     *         'infinite')
-     */
-    int getSoTimeout();
-
-    /**
-     * Set the initial Socket blocking timeout (SoTimeout).
-     * <p>
-     * NOTE: Implementer should take care to use {@link #DEFAULT_SO_TIMEOUT} if the
-     * value hasn't been set yet.
-     * </p>
-     *
-     * @param soTimeout
-     *         Timeout in milliseconds (0 is 'infinite')
-     */
-    void setSoTimeout(int soTimeout);
-
-    /**
-     * Get the connect timeout in seconds.
-     * <p>
-     * NOTE: Implementer should take care to return {@link IConnectionProperties#DEFAULT_CONNECT_TIMEOUT} if the
-     * value hasn't been set yet.
-     * </p>
-     *
-     * @return Connect timeout in seconds (0 is 'infinite', or better: OS
-     *         specific timeout)
-     */
-    int getConnectTimeout();
-
-    /**
-     * Set the connect timeout in seconds.
-     * <p>
-     * NOTE: Implementer should take care to use {@link #DEFAULT_CONNECT_TIMEOUT} if the
-     * value hasn't been set yet.
-     * </p>
-     *
-     * @param connectTimeout
-     *         Connect timeout in seconds (0 is 'infinite', or better: OS
-     *         specific timeout)
-     */
-    void setConnectTimeout(int connectTimeout);
 
     /**
      * Set if {@link java.sql.ResultSet} should be {@link java.sql.ResultSet#HOLD_CURSORS_OVER_COMMIT} by default.
@@ -369,5 +171,13 @@ public interface IConnectionProperties {
     /**
      * @return An immutable version of this instance as an implementation of {@link IConnectionProperties}
      */
+    @Override
     IConnectionProperties asImmutable();
+
+    /**
+     * @return A new, mutable, instance as an implementation of {@link IConnectionProperties} with all properties
+     * copied.
+     */
+    @Override
+    IConnectionProperties asNewMutable();
 }

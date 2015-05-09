@@ -1,6 +1,4 @@
 /*
- * $Id$
- * 
  * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
@@ -32,7 +30,6 @@ import org.firebirdsql.gds.ng.wire.version10.Version10Descriptor;
 import org.junit.ClassRule;
 import org.junit.Test;
 
-import java.io.IOException;
 import java.sql.SQLException;
 import java.sql.SQLTimeoutException;
 
@@ -42,7 +39,7 @@ import static org.junit.Assert.*;
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @since 3.0
  */
-public class TestWireConnection extends FBJUnit4TestBase {
+public class TestWireDatabaseConnection extends FBJUnit4TestBase {
 
     @ClassRule
     public static final GdsTypeRule testTypes = GdsTypeRule.excludes(
@@ -77,7 +74,7 @@ public class TestWireConnection extends FBJUnit4TestBase {
      */
     @Test
     public void testIsConnectedNoConnection() throws SQLException {
-        WireConnection gdsConnection = new WireConnection(connectionInfo);
+        WireDatabaseConnection gdsConnection = new WireDatabaseConnection(connectionInfo);
         assertFalse("Not connected, isConnected() should return false", gdsConnection.isConnected());
     }
 
@@ -87,17 +84,9 @@ public class TestWireConnection extends FBJUnit4TestBase {
      */
     @Test
     public void testIsConnectedWithConnection() throws Exception {
-        WireConnection gdsConnection = new WireConnection(connectionInfo);
-        try {
+        try (WireDatabaseConnection gdsConnection = new WireDatabaseConnection(connectionInfo)) {
             gdsConnection.socketConnect();
             assertTrue("Connected to existing server, isConnected() should return true", gdsConnection.isConnected());
-        } finally {
-            try {
-                gdsConnection.disconnect();
-            } catch (IOException e) {
-                // Ignore, but print for troubleshooting
-                e.printStackTrace();
-            }
         }
     }
 
@@ -107,9 +96,9 @@ public class TestWireConnection extends FBJUnit4TestBase {
      */
     @Test
     public void testIsConnectedAfterDisconnect() throws Exception {
-        WireConnection gdsConnection = new WireConnection(connectionInfo);
+        WireDatabaseConnection gdsConnection = new WireDatabaseConnection(connectionInfo);
         gdsConnection.socketConnect();
-        gdsConnection.disconnect();
+        gdsConnection.close();
         
         assertFalse("Disconnected, isConnected() should return false", gdsConnection.isConnected());
     }
@@ -120,8 +109,8 @@ public class TestWireConnection extends FBJUnit4TestBase {
     @Test
     public void testIdentifyExistingDb() throws Exception {
         ProtocolDescriptor expectedProtocol = new Version10Descriptor();
-        WireConnection gdsConnection = new WireConnection(connectionInfo, EncodingFactory.getDefaultInstance(), ProtocolCollection.create(expectedProtocol));
-        try {
+        try (WireDatabaseConnection gdsConnection = new WireDatabaseConnection(connectionInfo,
+                EncodingFactory.getDefaultInstance(), ProtocolCollection.create(expectedProtocol))) {
             gdsConnection.socketConnect();
             assertTrue(gdsConnection.isConnected());
 
@@ -133,13 +122,6 @@ public class TestWireConnection extends FBJUnit4TestBase {
                     gdsConnection.getProtocolArchitecture());
             assertEquals("Unexpected type", expectedProtocol.getMaximumType(), gdsConnection.getProtocolMinimumType());
             assertEquals("Unexpected version", expectedProtocol.getVersion(), gdsConnection.getProtocolVersion());
-        } finally {
-            try {
-                gdsConnection.disconnect();
-            } catch (IOException e) {
-                // Ignore, but print for troubleshooting
-                e.printStackTrace();
-            }
         }
     }
 
@@ -152,7 +134,7 @@ public class TestWireConnection extends FBJUnit4TestBase {
         try {
             connectionInfo.setServerName(NON_EXISTENT_IP);
             connectionInfo.setConnectTimeout(2);
-            WireConnection gdsConnection = new WireConnection(connectionInfo);
+            WireDatabaseConnection gdsConnection = new WireDatabaseConnection(connectionInfo);
             gdsConnection.socketConnect();
             
             fail("Expected connection to fail");
@@ -184,7 +166,7 @@ public class TestWireConnection extends FBJUnit4TestBase {
             connectionInfo.setPortNumber(server.getPort());
             connectionInfo.setDatabaseName("somedb");
             connectionInfo.setConnectTimeout(2);
-            WireConnection gdsConnection = new WireConnection(connectionInfo);
+            WireDatabaseConnection gdsConnection = new WireDatabaseConnection(connectionInfo);
             gdsConnection.socketConnect();
             gdsConnection.identify();
             
@@ -220,7 +202,7 @@ public class TestWireConnection extends FBJUnit4TestBase {
             connectionInfo.setPortNumber(server.getPort());
             connectionInfo.setDatabaseName("somedb");
             connectionInfo.setSoTimeout(2000);
-            WireConnection gdsConnection = new WireConnection(connectionInfo);
+            WireDatabaseConnection gdsConnection = new WireDatabaseConnection(connectionInfo);
             gdsConnection.socketConnect();
             gdsConnection.identify();
             
@@ -248,7 +230,7 @@ public class TestWireConnection extends FBJUnit4TestBase {
      */
     @Test(expected = SQLException.class)
     public void testUnconnected_CreateXdrIn() throws Exception {
-        WireConnection gdsConnection = new WireConnection(connectionInfo);
+        WireDatabaseConnection gdsConnection = new WireDatabaseConnection(connectionInfo);
         gdsConnection.getXdrStreamAccess().getXdrIn();
     }
 
@@ -258,17 +240,17 @@ public class TestWireConnection extends FBJUnit4TestBase {
      */
     @Test(expected = SQLException.class)
     public void testUnconnected_CreateXdrOut() throws Exception {
-        WireConnection gdsConnection = new WireConnection(connectionInfo);
+        WireDatabaseConnection gdsConnection = new WireDatabaseConnection(connectionInfo);
         gdsConnection.getXdrStreamAccess().getXdrOut();
     }
 
     /**
-     * Tests if calling {@link WireConnection#disconnect()} does not throw an
+     * Tests if calling {@link WireConnection#close()} does not throw an
      * exception when not connected.
      */
     @Test
     public void testUnconnected_Disconnect() throws Exception {
-        WireConnection gdsConnection = new WireConnection(connectionInfo);
-        gdsConnection.disconnect();
+        WireDatabaseConnection gdsConnection = new WireDatabaseConnection(connectionInfo);
+        gdsConnection.close();
     }
 }

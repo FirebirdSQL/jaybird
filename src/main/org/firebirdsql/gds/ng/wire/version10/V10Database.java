@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
@@ -43,7 +41,6 @@ import java.sql.SQLException;
 import java.sql.SQLFeatureNotSupportedException;
 import java.sql.SQLNonTransientConnectionException;
 import java.sql.SQLNonTransientException;
-import java.util.concurrent.Future;
 
 import static org.firebirdsql.gds.impl.wire.WireProtocolConstants.*;
 import static org.firebirdsql.gds.ng.TransactionHelper.checkTransactionActive;
@@ -71,7 +68,7 @@ public class V10Database extends AbstractFbWireDatabase implements FbWireDatabas
      *         The ProtocolDescriptor that created this connection (this is
      *         used for creating further dependent objects).
      */
-    protected V10Database(WireConnection connection, ProtocolDescriptor descriptor) {
+    protected V10Database(WireDatabaseConnection connection, ProtocolDescriptor descriptor) {
         super(connection, descriptor);
     }
 
@@ -169,7 +166,7 @@ public class V10Database extends AbstractFbWireDatabase implements FbWireDatabas
 
         xdrOut.writeInt(operation);
         xdrOut.writeInt(0); // Database object ID
-        xdrOut.writeString(connection.getDatabaseName(), filenameEncoding);
+        xdrOut.writeString(connection.getAttachObjectName(), filenameEncoding);
 
         dpb = ((DatabaseParameterBufferExtension) dpb).removeExtensionParams();
 
@@ -256,7 +253,7 @@ public class V10Database extends AbstractFbWireDatabase implements FbWireDatabas
         if (!connection.isConnected()) return;
         synchronized (getSynchronizationObject()) {
             try {
-                connection.disconnect();
+                connection.close();
             } finally {
                 setDetached();
             }

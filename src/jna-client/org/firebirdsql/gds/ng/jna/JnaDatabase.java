@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
@@ -66,19 +64,19 @@ public class JnaDatabase extends AbstractFbDatabase implements TransactionListen
     public static final int STATUS_VECTOR_SIZE = 20;
     public static final int MAX_STATEMENT_LENGTH = 64 * 1024;
 
-    private final JnaConnection jnaConnection;
+    private final JnaDatabaseConnection jnaDatabaseConnection;
     private final FbClientLibrary clientLibrary;
     // TODO Clear on disconnect?
     private final IntByReference handle = new IntByReference(0);
     private final ISC_STATUS[] statusVector = new ISC_STATUS[STATUS_VECTOR_SIZE];
 
-    public JnaDatabase(JnaConnection jnaConnection) {
-        this.jnaConnection = jnaConnection;
-        clientLibrary = jnaConnection.getClientLibrary();
+    public JnaDatabase(JnaDatabaseConnection jnaDatabaseConnection) {
+        this.jnaDatabaseConnection = jnaDatabaseConnection;
+        clientLibrary = jnaDatabaseConnection.getClientLibrary();
         if (bigEndian) {
-            datatypeCoder = new BigEndianDatatypeCoder(jnaConnection.getEncodingFactory());
+            datatypeCoder = new BigEndianDatatypeCoder(jnaDatabaseConnection.getEncodingFactory());
         } else {
-            datatypeCoder = new LittleEndianDatatypeCoder(jnaConnection.getEncodingFactory());
+            datatypeCoder = new LittleEndianDatatypeCoder(jnaDatabaseConnection.getEncodingFactory());
         }
     }
 
@@ -108,7 +106,7 @@ public class JnaDatabase extends AbstractFbDatabase implements TransactionListen
                 // TODO Replace with specific error (eg native client error)
                 throw new FbExceptionBuilder()
                         .exception(ISCConstants.isc_network_error)
-                        .messageParameter(jnaConnection.getServerName())
+                        .messageParameter(jnaDatabaseConnection.getServerName())
                         .cause(ex)
                         .toSQLException();
             } finally {
@@ -120,7 +118,8 @@ public class JnaDatabase extends AbstractFbDatabase implements TransactionListen
     @Override
     public void attach() throws SQLException {
         DatabaseParameterBuffer dpb = ((DatabaseParameterBufferExtension) PARAMETER_CONVERTER
-                .toDatabaseParameterBuffer(jnaConnection.getConnectionProperties(), jnaConnection.getEncodingFactory()))
+                .toDatabaseParameterBuffer(jnaDatabaseConnection.getAttachProperties(),
+                        jnaDatabaseConnection.getEncodingFactory()))
                 .removeExtensionParams();
         attachOrCreate(dpb, false);
     }
@@ -150,7 +149,7 @@ public class JnaDatabase extends AbstractFbDatabase implements TransactionListen
                 // TODO Replace with specific error (eg native client error)
                 throw new FbExceptionBuilder()
                         .exception(ISCConstants.isc_network_error)
-                        .messageParameter(jnaConnection.getServerName())
+                        .messageParameter(jnaDatabaseConnection.getServerName())
                         .cause(ex)
                         .toSQLException();
             }
@@ -176,7 +175,8 @@ public class JnaDatabase extends AbstractFbDatabase implements TransactionListen
     @Override
     public void createDatabase() throws SQLException {
         DatabaseParameterBuffer dpb = ((DatabaseParameterBufferExtension) PARAMETER_CONVERTER
-                .toDatabaseParameterBuffer(jnaConnection.getConnectionProperties(), jnaConnection.getEncodingFactory()))
+                .toDatabaseParameterBuffer(jnaDatabaseConnection.getAttachProperties(),
+                        jnaDatabaseConnection.getEncodingFactory()))
                 .removeExtensionParams();
         attachOrCreate(dpb, true);
     }
@@ -320,7 +320,7 @@ public class JnaDatabase extends AbstractFbDatabase implements TransactionListen
 
     @Override
     public short getConnectionDialect() {
-        return jnaConnection.getConnectionDialect();
+        return jnaDatabaseConnection.getAttachProperties().getConnectionDialect();
     }
 
     @Override
@@ -334,16 +334,16 @@ public class JnaDatabase extends AbstractFbDatabase implements TransactionListen
 
     @Override
     public final IEncodingFactory getEncodingFactory() {
-        return jnaConnection.getEncodingFactory();
+        return jnaDatabaseConnection.getEncodingFactory();
     }
 
     @Override
     public final Encoding getEncoding() {
-        return jnaConnection.getEncoding();
+        return jnaDatabaseConnection.getEncoding();
     }
 
     public final EncodingDefinition getEncodingDefinition() {
-        return jnaConnection.getEncodingDefinition();
+        return jnaDatabaseConnection.getEncodingDefinition();
     }
 
     @Override
@@ -437,13 +437,13 @@ public class JnaDatabase extends AbstractFbDatabase implements TransactionListen
      */
     protected String getDatabaseUrl() {
         StringBuilder sb = new StringBuilder();
-        if (jnaConnection.getServerName() != null) {
-            sb.append(jnaConnection.getServerName())
+        if (jnaDatabaseConnection.getServerName() != null) {
+            sb.append(jnaDatabaseConnection.getServerName())
                     .append('/');
         }
-        sb.append(jnaConnection.getPortNumber())
+        sb.append(jnaDatabaseConnection.getPortNumber())
                 .append(':')
-                .append(jnaConnection.getDatabaseName());
+                .append(jnaDatabaseConnection.getAttachObjectName());
         return sb.toString();
     }
 

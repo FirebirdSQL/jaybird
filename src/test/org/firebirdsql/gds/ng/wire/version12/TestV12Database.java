@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
@@ -123,12 +121,10 @@ public class TestV12Database extends TestV11Database {
     private void checkCancelOperationSupported(int kind, String kindName) throws Exception {
         FBManager fbManager = createFBManager();
         defaultDatabaseSetUp(fbManager);
-        try {
-            WireConnection gdsConnection = new WireConnection(getConnectionInfo(), EncodingFactory.getDefaultInstance(), getProtocolCollection());
-            FbWireDatabase db = null;
-            try {
-                gdsConnection.socketConnect();
-                db = gdsConnection.identify();
+        try (WireDatabaseConnection gdsConnection = new WireDatabaseConnection(getConnectionInfo(),
+                EncodingFactory.getDefaultInstance(), getProtocolCollection())) {
+            gdsConnection.socketConnect();
+            try (FbWireDatabase db = gdsConnection.identify()) {
                 assertEquals("Unexpected FbWireDatabase implementation", getExpectedDatabaseType(), db.getClass());
                 db.attach();
 
@@ -138,14 +134,6 @@ public class TestV12Database extends TestV11Database {
 
                 assertTrue("Expected database still attached after " + kindName, db.isAttached());
                 assertTrue("Expected connection still open after " + kindName, gdsConnection.isConnected());
-            } finally {
-                if (db != null) {
-                    try {
-                        db.detach();
-                    } catch (SQLException ex) {
-                        // ignore (TODO: log)
-                    }
-                }
             }
         } finally {
             defaultDatabaseTearDown(fbManager);

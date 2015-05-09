@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
@@ -57,14 +55,14 @@ public class TestJnaConnection {
     public void construct_clientLibraryNull_IllegalArgument() throws Exception {
         expectedException.expect(IllegalArgumentException.class);
 
-        new JnaConnection(null, connectionInfo);
+        new JnaDatabaseConnection(null, connectionInfo);
     }
 
     @Test
     public void getClientLibrary_returnsSuppliedLibrary() throws Exception {
         FbClientDatabaseFactory factory = new FbClientDatabaseFactory();
         final FbClientLibrary clientLibrary = factory.getClientLibrary();
-        JnaConnection connection = new JnaConnection(clientLibrary, connectionInfo);
+        JnaDatabaseConnection connection = new JnaDatabaseConnection(clientLibrary, connectionInfo);
 
         assertSame("Expected returned client library to be identical", clientLibrary, connection.getClientLibrary());
     }
@@ -72,7 +70,7 @@ public class TestJnaConnection {
     @Test
     public void identify_unconnected() throws Exception {
         FbClientDatabaseFactory factory = new FbClientDatabaseFactory();
-        JnaConnection connection = new JnaConnection(factory.getClientLibrary(), connectionInfo);
+        JnaDatabaseConnection connection = new JnaDatabaseConnection(factory.getClientLibrary(), connectionInfo);
 
         FbDatabase db = connection.identify();
 
