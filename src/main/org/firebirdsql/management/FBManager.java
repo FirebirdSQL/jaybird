@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
@@ -347,7 +345,7 @@ public class FBManager implements FBManagerMBean {
             if (forceCreate)
                 db.dropDatabase();
             else {
-                db.detach();
+                db.close();
                 return; //database exists, don't wipe it out.
             }
         } catch (SQLException e) {
@@ -364,7 +362,7 @@ public class FBManager implements FBManagerMBean {
             }
             FbDatabase db = dbFactory.connect(connectionProperties);
             db.createDatabase();
-            db.detach();
+            db.close();
         } catch (Exception e) {
             log.error("Exception creating database", e);
             throw e;
@@ -393,7 +391,7 @@ public class FBManager implements FBManagerMBean {
             connectionProperties.setDatabaseName(fileName);
             FbDatabase db = dbFactory.connect(connectionProperties);
             db.attach();
-            db.detach();
+            db.close();
             return true;
         } catch (Exception e) {
             return false;

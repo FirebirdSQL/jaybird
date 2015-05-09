@@ -348,7 +348,7 @@ public class TestV10Database {
         expectedException.expectMessage(equalTo("No connection established to the database server"));
         expectedException.expect(sqlStateEquals(FBSQLException.SQL_STATE_CONNECTION_CLOSED));
 
-        db.detach();
+        db.close();
     }
 
     @Test
@@ -362,7 +362,7 @@ public class TestV10Database {
             assertEquals("Unexpected FbWireDatabase implementation", getExpectedDatabaseType(), db.getClass());
 
             // Detach for connected but not attached should work
-            db.detach();
+            db.close();
 
             assertFalse("Expected connection closed after detach", gdsConnection.isConnected());
         } finally {
@@ -382,7 +382,7 @@ public class TestV10Database {
                 assertEquals("Unexpected FbWireDatabase implementation", getExpectedDatabaseType(), db.getClass());
                 db.attach();
 
-                db.detach();
+                db.close();
 
                 assertFalse("Expected database not attached", db.isAttached());
                 assertFalse("Expected connection closed", gdsConnection.isConnected());
@@ -418,7 +418,7 @@ public class TestV10Database {
                     ));
 
                     // Triggers exception
-                    db.detach();
+                    db.close();
                 } finally {
                     if (transaction != null && transaction.getState() == TransactionState.ACTIVE) {
                         transaction.commit();
@@ -527,7 +527,7 @@ public class TestV10Database {
     private static void safelyClose(FbDatabase db) {
         if (db == null) return;
         try {
-            db.detach();
+            db.close();
         } catch (SQLException ex) {
             // ignore (TODO: log)
         }

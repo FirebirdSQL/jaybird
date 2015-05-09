@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
@@ -668,7 +666,7 @@ public abstract class AbstractStatementTest extends FBJUnit4TestBase {
         }
         if (db != null) {
             try {
-                db.detach();
+                db.close();
             } catch (SQLException ex) {
                 log.debug("Exception on detach", ex);
             }

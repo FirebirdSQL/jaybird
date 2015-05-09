@@ -36,6 +36,8 @@ import org.firebirdsql.gds.ng.listeners.DatabaseListener;
 import java.sql.SQLException;
 
 /**
+ * Connection handle to a database.
+ *
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @since 3.0
  */
@@ -54,16 +56,7 @@ public interface FbDatabase extends AutoCloseable {
      * @throws SQLException If the database is not currently connected, there are still transactions open or another
      * problem occurred detaching.
      */
-    void detach() throws SQLException;
-
-    /**
-     * Implementations should call {@link #detach()} from this method.
-     * <p>
-     * Provided for {@link AutoCloseable} support.
-     * </p>
-     *
-     * @throws SQLException As thrown by {@link #detach()}
-     */
+    @Override
     void close() throws SQLException;
 
     /**

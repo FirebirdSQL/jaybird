@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
@@ -65,11 +63,8 @@ public class TestV10OutputBlob extends BaseTestV10Blob {
         final int requiredSize = 4 * Short.MAX_VALUE;
         final byte[] testBytes = generateBlobContent(baseContent, requiredSize);
 
-        final FbWireDatabase db = createDatabaseConnection();
-        try {
+        try (FbWireDatabase db = createDatabaseConnection()) {
             writeBlob(testId, testBytes, db, null);
-        } finally {
-            db.detach();
         }
 
         assertTrue("Unexpected blob content", validateBlob(testId, baseContent, requiredSize));
@@ -86,13 +81,10 @@ public class TestV10OutputBlob extends BaseTestV10Blob {
         final int requiredSize = 4 * Short.MAX_VALUE;
         final byte[] testBytes = generateBlobContent(baseContent, requiredSize);
 
-        final FbWireDatabase db = createDatabaseConnection();
-        try {
+        try (FbWireDatabase db = createDatabaseConnection()) {
             final BlobParameterBuffer blobParameterBuffer = db.createBlobParameterBuffer();
             blobParameterBuffer.addArgument(BlobParameterBuffer.TYPE, BlobParameterBuffer.TYPE_STREAM);
             writeBlob(testId, testBytes, db, blobParameterBuffer);
-        } finally {
-            db.detach();
         }
 
         assertTrue("Unexpected blob content", validateBlob(testId, baseContent, requiredSize));
@@ -103,8 +95,7 @@ public class TestV10OutputBlob extends BaseTestV10Blob {
      */
     @Test
     public void testIsEof_afterOpen() throws Exception {
-        final FbWireDatabase db = createDatabaseConnection();
-        try {
+        try (FbWireDatabase db = createDatabaseConnection()) {
             final FbTransaction transaction = getTransaction(db);
             try {
                 FbBlob blob = db.createBlobForOutput(transaction, null);
@@ -115,8 +106,6 @@ public class TestV10OutputBlob extends BaseTestV10Blob {
             } finally {
                 transaction.commit();
             }
-        } finally {
-            db.detach();
         }
     }
 
@@ -125,8 +114,7 @@ public class TestV10OutputBlob extends BaseTestV10Blob {
      */
     @Test
     public void testIsEof_afterClose() throws Exception {
-        final FbWireDatabase db = createDatabaseConnection();
-        try {
+        try (FbWireDatabase db = createDatabaseConnection()) {
             final FbTransaction transaction = getTransaction(db);
             try {
                 FbBlob blob = db.createBlobForOutput(transaction, null);
@@ -138,8 +126,6 @@ public class TestV10OutputBlob extends BaseTestV10Blob {
             } finally {
                 transaction.commit();
             }
-        } finally {
-            db.detach();
         }
     }
 
@@ -148,8 +134,7 @@ public class TestV10OutputBlob extends BaseTestV10Blob {
      */
     @Test
     public void testIsEof_afterCancel() throws Exception {
-        final FbWireDatabase db = createDatabaseConnection();
-        try {
+        try (FbWireDatabase db = createDatabaseConnection()) {
             final FbTransaction transaction = getTransaction(db);
             try {
                 FbBlob blob = db.createBlobForOutput(transaction, null);
@@ -161,8 +146,6 @@ public class TestV10OutputBlob extends BaseTestV10Blob {
             } finally {
                 transaction.commit();
             }
-        } finally {
-            db.detach();
         }
     }
 
@@ -182,8 +165,7 @@ public class TestV10OutputBlob extends BaseTestV10Blob {
         final int requiredSize = 256;
         final byte[] testBytes = generateBlobContent(baseContent, requiredSize);
 
-        final FbWireDatabase db = createDatabaseConnection();
-        try {
+        try (FbWireDatabase db = createDatabaseConnection()) {
             final SimpleStatementListener listener = new SimpleStatementListener();
             final FbTransaction transaction = getTransaction(db);
             try {
@@ -211,8 +193,6 @@ public class TestV10OutputBlob extends BaseTestV10Blob {
             } finally {
                 transaction.commit();
             }
-        } finally {
-            db.detach();
         }
     }
 
@@ -231,8 +211,7 @@ public class TestV10OutputBlob extends BaseTestV10Blob {
         final int requiredSize = 256;
         final byte[] testBytes = generateBlobContent(baseContent, requiredSize);
 
-        final FbWireDatabase db = createDatabaseConnection();
-        try {
+        try (FbWireDatabase db = createDatabaseConnection()) {
             final FbTransaction transaction = getTransaction(db);
             try {
                 final FbBlob blob = db.createBlobForOutput(transaction, null);
@@ -252,8 +231,6 @@ public class TestV10OutputBlob extends BaseTestV10Blob {
             } finally {
                 transaction.commit();
             }
-        } finally {
-            db.detach();
         }
     }
 
@@ -268,8 +245,7 @@ public class TestV10OutputBlob extends BaseTestV10Blob {
                 fbMessageEquals(ISCConstants.isc_segstr_no_op)
         ));
 
-        final FbWireDatabase db = createDatabaseConnection();
-        try {
+        try (FbWireDatabase db = createDatabaseConnection()) {
             final FbTransaction transaction = getTransaction(db);
             try {
                 final FbBlob blob = db.createBlobForOutput(transaction, null);
@@ -278,8 +254,6 @@ public class TestV10OutputBlob extends BaseTestV10Blob {
             } finally {
                 transaction.commit();
             }
-        } finally {
-            db.detach();
         }
     }
 }

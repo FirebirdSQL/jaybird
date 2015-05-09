@@ -175,7 +175,7 @@ public abstract class AbstractFbDatabase implements FbDatabase, TransactionListe
     /**
      * Actual implementation of database detach.
      * <p>
-     * Implementations of this method should only be called from {@link #detach()}, and should <strong>not</strong> notify database
+     * Implementations of this method should only be called from {@link #close()}, and should <strong>not</strong> notify database
      * listeners of the database {@link DatabaseListener#detaching(FbDatabase)} and
      * {@link DatabaseListener#detached(FbDatabase)} events.
      * </p>
@@ -190,7 +190,7 @@ public abstract class AbstractFbDatabase implements FbDatabase, TransactionListe
      * </p>
      */
     @Override
-    public final void detach() throws SQLException {
+    public final void close() throws SQLException {
         checkConnected();
         synchronized (getSynchronizationObject()) {
             if (getActiveTransactionCount() > 0) {
@@ -213,17 +213,12 @@ public abstract class AbstractFbDatabase implements FbDatabase, TransactionListe
         }
     }
 
-    @Override
-    public final void close() throws SQLException {
-        detach();
-    }
-
     /**
-     * Performs {@link #detach()} suppressing any exception.
+     * Performs {@link #close()} suppressing any exception.
      */
     protected void safelyDetach() {
         try {
-            detach();
+            close();
         } catch (Exception ex) {
             // ignore, but log
             log.debug("Exception on safely detach", ex);

@@ -1,6 +1,4 @@
 /*
- * $Id$
- * 
  * Public Firebird Java API.
  *
  * Redistribution and use in source and binary forms, with or without 
@@ -238,7 +236,7 @@ public class GDSHelper {
     
     public void detachDatabase() throws SQLException {
         try {
-            database.detach();
+            database.close();
         } catch(SQLException ex) {
             notifyListeners(ex);
             throw ex;

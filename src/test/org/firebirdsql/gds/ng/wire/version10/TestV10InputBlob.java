@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
@@ -58,8 +56,7 @@ public class TestV10InputBlob extends BaseTestV10Blob {
         final int requiredSize = 4 * Short.MAX_VALUE;
         populateBlob(testId, baseContent, requiredSize);
 
-        final FbWireDatabase db = createDatabaseConnection();
-        try {
+        try (FbWireDatabase db = createDatabaseConnection()) {
             try {
                 long blobId = getBlobId(testId, db);
 
@@ -77,8 +74,6 @@ public class TestV10InputBlob extends BaseTestV10Blob {
             } finally {
                 if (transaction != null) transaction.commit();
             }
-        } finally {
-            db.detach();
         }
     }
 
@@ -93,8 +88,7 @@ public class TestV10InputBlob extends BaseTestV10Blob {
         final int requiredSize = 4 * Short.MAX_VALUE;
         populateBlob(testId, baseContent, requiredSize);
 
-        final FbWireDatabase db = createDatabaseConnection();
-        try {
+        try (FbWireDatabase db = createDatabaseConnection()) {
             try {
                 long blobId = getBlobId(testId, db);
 
@@ -113,8 +107,6 @@ public class TestV10InputBlob extends BaseTestV10Blob {
             } finally {
                 if (transaction != null) transaction.commit();
             }
-        } finally {
-            db.detach();
         }
     }
 
@@ -129,8 +121,7 @@ public class TestV10InputBlob extends BaseTestV10Blob {
         final int requiredSize = 200;
         populateStreamBlob(testId, baseContent, requiredSize);
 
-        final FbWireDatabase db = createDatabaseConnection();
-        try {
+        try (FbWireDatabase db = createDatabaseConnection()) {
             try {
                 long blobId = getBlobId(testId, db);
 
@@ -150,8 +141,6 @@ public class TestV10InputBlob extends BaseTestV10Blob {
             } finally {
                 if (transaction != null) transaction.commit();
             }
-        } finally {
-            db.detach();
         }
     }
 
@@ -165,8 +154,7 @@ public class TestV10InputBlob extends BaseTestV10Blob {
         final int requiredSize = 256;
         populateBlob(testId, baseContent, requiredSize);
 
-        final FbWireDatabase db = createDatabaseConnection();
-        try {
+        try (FbWireDatabase db = createDatabaseConnection()) {
             try {
                 long blobId = getBlobId(testId, db);
 
@@ -192,8 +180,6 @@ public class TestV10InputBlob extends BaseTestV10Blob {
             } finally {
                 if (transaction != null) transaction.commit();
             }
-        } finally {
-            db.detach();
         }
     }
 
@@ -213,8 +199,7 @@ public class TestV10InputBlob extends BaseTestV10Blob {
         final int requiredSize = 256;
         populateBlob(testId, baseContent, requiredSize);
 
-        final FbWireDatabase db = createDatabaseConnection();
-        try {
+        try (FbWireDatabase db = createDatabaseConnection()) {
             try {
                 long blobId = getBlobId(testId, db);
 
@@ -225,8 +210,6 @@ public class TestV10InputBlob extends BaseTestV10Blob {
             } finally {
                 if (transaction != null) transaction.commit();
             }
-        } finally {
-            db.detach();
         }
     }
 }

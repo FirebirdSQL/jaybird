@@ -86,7 +86,7 @@ public class TestJnaEvents extends FBJUnit4TestBase {
     public final void tearDown() throws Exception {
         if (db != null && db.isAttached()) {
             try {
-                db.detach();
+                db.close();
             } catch (SQLException ex) {
                 log.debug("Exception on detach", ex);
             }

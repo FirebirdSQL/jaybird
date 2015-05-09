@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
@@ -103,66 +101,66 @@ public class TestReconnectTransaction extends FBJUnit4TestBase {
         connectionInfo.setEncoding("NONE");
 
         FbDatabaseFactory databaseFactory = GDSFactory.getDatabaseFactoryForType(getGdsType());
-        FbDatabase dbHandle1 = databaseFactory.connect(connectionInfo);
-        dbHandle1.attach();
-        FbTransaction trHandle1 = dbHandle1.startTransaction(tpb.getTransactionParameterBuffer());
-        trHandle1.prepare(message);
+        try (FbDatabase dbHandle1 = databaseFactory.connect(connectionInfo)) {
+            dbHandle1.attach();
+            FbTransaction trHandle1 = dbHandle1.startTransaction(tpb.getTransactionParameterBuffer());
+            trHandle1.prepare(message);
 
-        // No commit! We leave trHandle1 in Limbo.
-
-        dbHandle1.detach();
-
-        FbDatabase dbHandle2 = databaseFactory.connect(connectionInfo);
-        dbHandle2.attach();
-        GDSHelper gdsHelper2 = new GDSHelper(gds, dpb, null, dbHandle2);
-        FbTransaction trHandle2 = dbHandle2.startTransaction(tpb.getTransactionParameterBuffer());
-        gdsHelper2.setCurrentTransaction(trHandle2);
-
-        FbStatement stmtHandle2 = dbHandle2.createStatement(trHandle2);
-        stmtHandle2.prepare(RECOVERY_QUERY);
-
-        final List<RowValue> rows = new ArrayList<RowValue>();
-        StatementListener stmtListener = new DefaultStatementListener() {
-            @Override
-            public void receivedRow(FbStatement sender, RowValue rowValues) {
-                rows.add(rowValues);
-            }
-        };
-        stmtHandle2.addStatementListener(stmtListener);
-        stmtHandle2.execute(RowValue.EMPTY_ROW_VALUE);
-        stmtHandle2.fetchRows(10);
-
-        DataProvider dataProvider0 = new DataProvider(rows, 0);
-        DataProvider dataProvider1 = new DataProvider(rows, 1);
-
-        FBField field0 = FBField.createField(stmtHandle2.getFieldDescriptor().getFieldDescriptor(0), dataProvider0, gdsHelper2, false);
-        FBField field1 = FBField.createField(stmtHandle2.getFieldDescriptor().getFieldDescriptor(1), dataProvider1, gdsHelper2, false);
-
-        boolean foundInLimboTx = false;
-        int row = 0;
-        while (row < rows.size()) {
-            dataProvider0.setRow(row);
-            dataProvider1.setRow(row);
-
-            long inLimboTxId = field0.getLong();
-            byte[] inLimboMessage = field1.getBytes();
-
-            if (Arrays.equals(message, inLimboMessage)) {
-                foundInLimboTx = true;
-
-                FbTransaction inLimboTrHandle = dbHandle2.reconnectTransaction(inLimboTxId);
-                assertEquals(inLimboTxId, inLimboTrHandle.getTransactionId());
-                inLimboTrHandle.rollback();
-                break;
-            }
-            row++;
+            // No commit! We leave trHandle1 in Limbo.
         }
 
-        stmtHandle2.close();
+        try (FbDatabase dbHandle2 = databaseFactory.connect(connectionInfo)) {
+            dbHandle2.attach();
+            GDSHelper gdsHelper2 = new GDSHelper(gds, dpb, null, dbHandle2);
+            FbTransaction trHandle2 = dbHandle2.startTransaction(tpb.getTransactionParameterBuffer());
+            gdsHelper2.setCurrentTransaction(trHandle2);
 
-        trHandle2.commit();
-        dbHandle2.detach();
+            FbStatement stmtHandle2 = dbHandle2.createStatement(trHandle2);
+            stmtHandle2.prepare(RECOVERY_QUERY);
 
-        assertTrue("Should find in-limbo tx.", foundInLimboTx);
+            final List<RowValue> rows = new ArrayList<>();
+            StatementListener stmtListener = new DefaultStatementListener() {
+                @Override
+                public void receivedRow(FbStatement sender, RowValue rowValues) {
+                    rows.add(rowValues);
+                }
+            };
+            stmtHandle2.addStatementListener(stmtListener);
+            stmtHandle2.execute(RowValue.EMPTY_ROW_VALUE);
+            stmtHandle2.fetchRows(10);
+
+            DataProvider dataProvider0 = new DataProvider(rows, 0);
+            DataProvider dataProvider1 = new DataProvider(rows, 1);
+
+            FBField field0 = FBField.createField(stmtHandle2.getFieldDescriptor().getFieldDescriptor(0), dataProvider0, gdsHelper2, false);
+            FBField field1 = FBField.createField(stmtHandle2.getFieldDescriptor().getFieldDescriptor(1), dataProvider1, gdsHelper2, false);
+
+            boolean foundInLimboTx = false;
+            int row = 0;
+            while (row < rows.size()) {
+                dataProvider0.setRow(row);
+                dataProvider1.setRow(row);
+
+                long inLimboTxId = field0.getLong();
+                byte[] inLimboMessage = field1.getBytes();
+
+                if (Arrays.equals(message, inLimboMessage)) {
+                    foundInLimboTx = true;
+
+                    FbTransaction inLimboTrHandle = dbHandle2.reconnectTransaction(inLimboTxId);
+                    assertEquals(inLimboTxId, inLimboTrHandle.getTransactionId());
+                    inLimboTrHandle.rollback();
+                    break;
+                }
+                row++;
+            }
+
+            stmtHandle2.close();
+            trHandle2.commit();
+
+            assertTrue("Should find in-limbo tx.", foundInLimboTx);
+        }
+
+
     }
 }

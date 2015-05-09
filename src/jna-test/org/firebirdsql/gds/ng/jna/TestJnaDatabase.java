@@ -201,7 +201,7 @@ public class TestJnaDatabase {
         expectedException.expectMessage(equalTo("The connection is not attached to a database"));
         expectedException.expect(sqlStateEquals(FBSQLException.SQL_STATE_CONNECTION_ERROR));
 
-        db.detach();
+        db.close();
     }
 
     @Test
@@ -213,7 +213,7 @@ public class TestJnaDatabase {
             try {
                 db.attach();
 
-                db.detach();
+                db.close();
 
                 assertFalse("Expected database not attached", db.isAttached());
             } finally {
@@ -242,7 +242,7 @@ public class TestJnaDatabase {
                         message(startsWith(getFbMessage(ISCConstants.isc_open_trans, "1")))
                 ));
 
-                db.detach();
+                db.close();
             } finally {
                 if (transaction != null && transaction.getState() == TransactionState.ACTIVE) {
                     transaction.commit();
@@ -302,7 +302,7 @@ public class TestJnaDatabase {
     private static void safelyClose(FbDatabase db) {
         if (db == null) return;
         try {
-            db.detach();
+            db.close();
         } catch (SQLException ex) {
             // ignore
         }

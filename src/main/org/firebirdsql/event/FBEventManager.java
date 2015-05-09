@@ -1,14 +1,12 @@
 /*
- * $Id$
- * 
- * Firebird Open Source J2EE Connector - JDBC Driver
+ * Firebird Open Source JavaEE Connector - JDBC Driver
  * 
  * Copyright (C) All Rights Reserved.
  * 
  * This file was created by members of the firebird development team.
  * All individual contributions remain the Copyright (C) of those
  * individuals.  Contributors to this file are either listed here or
- * can be obtained from a CVS history command.
+ * can be obtained from a source control history command.
  * 
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -123,7 +121,7 @@ public class FBEventManager implements EventManager {
                 handlerMap.clear();
                 listenerMap.clear();
                 try {
-                    fbDatabase.detach();
+                    fbDatabase.close();
                 } catch (SQLException e) {
                     chain.append(e);
                 }

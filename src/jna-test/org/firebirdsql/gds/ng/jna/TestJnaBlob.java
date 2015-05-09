@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
@@ -65,8 +63,7 @@ public class TestJnaBlob extends BaseTestBlob {
         final int requiredSize = 4 * Short.MAX_VALUE;
         populateBlob(testId, baseContent, requiredSize);
 
-        final FbDatabase db = createDatabaseConnection();
-        try {
+        try (FbDatabase db = createDatabaseConnection()) {
             try {
                 long blobId = getBlobId(testId, db);
 
@@ -84,8 +81,6 @@ public class TestJnaBlob extends BaseTestBlob {
             } finally {
                 if (transaction != null) transaction.commit();
             }
-        } finally {
-            db.detach();
         }
     }
 
@@ -100,8 +95,7 @@ public class TestJnaBlob extends BaseTestBlob {
         final int requiredSize = 4 * Short.MAX_VALUE;
         populateBlob(testId, baseContent, requiredSize);
 
-        final JnaDatabase db = createDatabaseConnection();
-        try {
+        try (JnaDatabase db = createDatabaseConnection()) {
             try {
                 long blobId = getBlobId(testId, db);
 
@@ -120,8 +114,6 @@ public class TestJnaBlob extends BaseTestBlob {
             } finally {
                 if (transaction != null) transaction.commit();
             }
-        } finally {
-            db.detach();
         }
     }
 
@@ -136,8 +128,7 @@ public class TestJnaBlob extends BaseTestBlob {
         final int requiredSize = 200;
         populateStreamBlob(testId, baseContent, requiredSize);
 
-        final JnaDatabase db = createDatabaseConnection();
-        try {
+        try (JnaDatabase db = createDatabaseConnection()) {
             try {
                 long blobId = getBlobId(testId, db);
 
@@ -157,8 +148,6 @@ public class TestJnaBlob extends BaseTestBlob {
             } finally {
                 if (transaction != null) transaction.commit();
             }
-        } finally {
-            db.detach();
         }
     }
 
@@ -172,8 +161,7 @@ public class TestJnaBlob extends BaseTestBlob {
         final int requiredSize = 256;
         populateBlob(testId, baseContent, requiredSize);
 
-        final JnaDatabase db = createDatabaseConnection();
-        try {
+        try (JnaDatabase db = createDatabaseConnection()) {
             try {
                 long blobId = getBlobId(testId, db);
 
@@ -199,8 +187,6 @@ public class TestJnaBlob extends BaseTestBlob {
             } finally {
                 if (transaction != null) transaction.commit();
             }
-        } finally {
-            db.detach();
         }
     }
 
@@ -220,8 +206,7 @@ public class TestJnaBlob extends BaseTestBlob {
         final int requiredSize = 256;
         populateBlob(testId, baseContent, requiredSize);
 
-        final JnaDatabase db = createDatabaseConnection();
-        try {
+        try (JnaDatabase db = createDatabaseConnection()) {
             try {
                 long blobId = getBlobId(testId, db);
 
@@ -232,8 +217,6 @@ public class TestJnaBlob extends BaseTestBlob {
             } finally {
                 if (transaction != null) transaction.commit();
             }
-        } finally {
-            db.detach();
         }
     }
 
@@ -248,11 +231,8 @@ public class TestJnaBlob extends BaseTestBlob {
         final int requiredSize = 4 * Short.MAX_VALUE;
         final byte[] testBytes = generateBlobContent(baseContent, requiredSize);
 
-        final JnaDatabase db = createDatabaseConnection();
-        try {
+        try (JnaDatabase db = createDatabaseConnection()) {
             writeBlob(testId, testBytes, db, null);
-        } finally {
-            db.detach();
         }
 
         assertTrue("Unexpected blob content", validateBlob(testId, baseContent, requiredSize));
@@ -269,13 +249,10 @@ public class TestJnaBlob extends BaseTestBlob {
         final int requiredSize = 4 * Short.MAX_VALUE;
         final byte[] testBytes = generateBlobContent(baseContent, requiredSize);
 
-        final JnaDatabase db = createDatabaseConnection();
-        try {
+        try (JnaDatabase db = createDatabaseConnection()) {
             final BlobParameterBuffer blobParameterBuffer = db.createBlobParameterBuffer();
             blobParameterBuffer.addArgument(BlobParameterBuffer.TYPE, BlobParameterBuffer.TYPE_STREAM);
             writeBlob(testId, testBytes, db, blobParameterBuffer);
-        } finally {
-            db.detach();
         }
 
         assertTrue("Unexpected blob content", validateBlob(testId, baseContent, requiredSize));
@@ -286,8 +263,7 @@ public class TestJnaBlob extends BaseTestBlob {
      */
     @Test
     public void testOutputBlobIsEof_afterOpen() throws Exception {
-        final JnaDatabase db = createDatabaseConnection();
-        try {
+        try (JnaDatabase db = createDatabaseConnection()) {
             final FbTransaction transaction = getTransaction(db);
             try {
                 FbBlob blob = db.createBlobForOutput(transaction, null);
@@ -298,8 +274,6 @@ public class TestJnaBlob extends BaseTestBlob {
             } finally {
                 transaction.commit();
             }
-        } finally {
-            db.detach();
         }
     }
 
@@ -308,8 +282,7 @@ public class TestJnaBlob extends BaseTestBlob {
      */
     @Test
     public void testOutputBlobIsEof_afterClose() throws Exception {
-        final JnaDatabase db = createDatabaseConnection();
-        try {
+        try (JnaDatabase db = createDatabaseConnection()) {
             final FbTransaction transaction = getTransaction(db);
             try {
                 FbBlob blob = db.createBlobForOutput(transaction, null);
@@ -321,8 +294,6 @@ public class TestJnaBlob extends BaseTestBlob {
             } finally {
                 transaction.commit();
             }
-        } finally {
-            db.detach();
         }
     }
 
@@ -331,8 +302,7 @@ public class TestJnaBlob extends BaseTestBlob {
      */
     @Test
     public void testOutputBlobIsEof_afterCancel() throws Exception {
-        final JnaDatabase db = createDatabaseConnection();
-        try {
+        try (JnaDatabase db = createDatabaseConnection()) {
             final FbTransaction transaction = getTransaction(db);
             try {
                 FbBlob blob = db.createBlobForOutput(transaction, null);
@@ -344,8 +314,6 @@ public class TestJnaBlob extends BaseTestBlob {
             } finally {
                 transaction.commit();
             }
-        } finally {
-            db.detach();
         }
     }
 
@@ -365,8 +333,7 @@ public class TestJnaBlob extends BaseTestBlob {
         final int requiredSize = 256;
         final byte[] testBytes = generateBlobContent(baseContent, requiredSize);
 
-        final JnaDatabase db = createDatabaseConnection();
-        try {
+        try (JnaDatabase db = createDatabaseConnection()) {
             final SimpleStatementListener listener = new SimpleStatementListener();
             final FbTransaction transaction = getTransaction(db);
             try {
@@ -394,8 +361,6 @@ public class TestJnaBlob extends BaseTestBlob {
             } finally {
                 transaction.commit();
             }
-        } finally {
-            db.detach();
         }
     }
 
@@ -414,8 +379,7 @@ public class TestJnaBlob extends BaseTestBlob {
         final int requiredSize = 256;
         final byte[] testBytes = generateBlobContent(baseContent, requiredSize);
 
-        final JnaDatabase db = createDatabaseConnection();
-        try {
+        try (JnaDatabase db = createDatabaseConnection()) {
             final FbTransaction transaction = getTransaction(db);
             try {
                 final FbBlob blob = db.createBlobForOutput(transaction, null);
@@ -435,8 +399,6 @@ public class TestJnaBlob extends BaseTestBlob {
             } finally {
                 transaction.commit();
             }
-        } finally {
-            db.detach();
         }
     }
 
@@ -451,8 +413,7 @@ public class TestJnaBlob extends BaseTestBlob {
                 fbMessageEquals(ISCConstants.isc_segstr_no_op)
         ));
 
-        final JnaDatabase db = createDatabaseConnection();
-        try {
+        try (JnaDatabase db = createDatabaseConnection()) {
             final FbTransaction transaction = getTransaction(db);
             try {
                 final FbBlob blob = db.createBlobForOutput(transaction, null);
@@ -461,8 +422,6 @@ public class TestJnaBlob extends BaseTestBlob {
             } finally {
                 transaction.commit();
             }
-        } finally {
-            db.detach();
         }
     }
 

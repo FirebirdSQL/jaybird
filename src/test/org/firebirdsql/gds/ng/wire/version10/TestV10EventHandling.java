@@ -110,7 +110,7 @@ public class TestV10EventHandling extends FBJUnit4TestBase {
     public final void tearDown() throws Exception {
         if (db != null && db.isAttached()) {
             try {
-                db.detach();
+                db.close();
             } catch (SQLException ex) {
                 log.debug("Exception on detach", ex);
             }
@@ -145,7 +145,7 @@ public class TestV10EventHandling extends FBJUnit4TestBase {
         final FbWireAsynchronousChannel channel = db.initAsynchronousChannel();
         channel.addChannelListener(listener);
 
-        db.detach();
+        db.close();
 
         assertTrue("Expected to have received channel closing event", listener.hasReceivedChannelClosing());
         assertFalse("Expected channel to have been closed", channel.isConnected());
