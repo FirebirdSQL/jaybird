@@ -23,13 +23,12 @@ import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.impl.wire.WireProtocolConstants;
 import org.firebirdsql.gds.ng.ParameterConverter;
 import org.firebirdsql.gds.ng.TransactionState;
+import org.firebirdsql.gds.ng.WarningMessageCallback;
 import org.firebirdsql.gds.ng.fields.BlrCalculator;
 import org.firebirdsql.gds.ng.wire.*;
 import org.firebirdsql.gds.ng.wire.DefaultBlrCalculator;
-import org.firebirdsql.gds.ng.wire.version10.V10AsynchronousChannel;
-import org.firebirdsql.gds.ng.wire.version10.V10InputBlob;
-import org.firebirdsql.gds.ng.wire.version10.V10OutputBlob;
-import org.firebirdsql.gds.ng.wire.version10.V10Transaction;
+import org.firebirdsql.gds.ng.wire.version10.*;
+import org.firebirdsql.gds.ng.wire.version11.V11WireOperations;
 
 /**
  * The {@link org.firebirdsql.gds.ng.wire.ProtocolDescriptor} for the Firebird version 12 protocol. This version
@@ -52,6 +51,11 @@ public class Version12Descriptor extends AbstractProtocolDescriptor implements P
     @Override
     public FbWireDatabase createDatabase(final WireDatabaseConnection connection) {
         return new V12Database(connection, this);
+    }
+
+    @Override
+    public FbWireService createService(WireServiceConnection connection) {
+        return new V10Service(connection, this);
     }
 
     @Override
@@ -89,5 +93,12 @@ public class Version12Descriptor extends AbstractProtocolDescriptor implements P
     @Override
     protected ParameterConverter getParameterConverter() {
         return new V12ParameterConverter();
+    }
+
+    @Override
+    public FbWireOperations createWireOperations(WireConnection<?, ?> connection,
+            WarningMessageCallback defaultWarningMessageCallback, Object syncObject) {
+        // TODO Needs V12 version?
+        return new V11WireOperations(connection, defaultWarningMessageCallback, syncObject);
     }
 }

@@ -21,6 +21,7 @@ package org.firebirdsql.gds.ng.wire.version11;
 import org.firebirdsql.gds.BlobParameterBuffer;
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.impl.wire.WireProtocolConstants;
+import org.firebirdsql.gds.ng.WarningMessageCallback;
 import org.firebirdsql.gds.ng.wire.DefaultBlrCalculator;
 import org.firebirdsql.gds.ng.ParameterConverter;
 import org.firebirdsql.gds.ng.TransactionState;
@@ -49,6 +50,11 @@ public final class Version11Descriptor extends AbstractProtocolDescriptor implem
     @Override
     public FbWireDatabase createDatabase(final WireDatabaseConnection connection) {
         return new V11Database(connection, this);
+    }
+
+    @Override
+    public FbWireService createService(WireServiceConnection connection) {
+        return new V10Service(connection, this);
     }
 
     @Override
@@ -86,5 +92,11 @@ public final class Version11Descriptor extends AbstractProtocolDescriptor implem
     @Override
     protected ParameterConverter getParameterConverter() {
         return new V11ParameterConverter();
+    }
+
+    @Override
+    public FbWireOperations createWireOperations(WireConnection<?, ?> connection,
+            WarningMessageCallback defaultWarningMessageCallback, Object syncObject) {
+        return new V11WireOperations(connection, defaultWarningMessageCallback, syncObject);
     }
 }

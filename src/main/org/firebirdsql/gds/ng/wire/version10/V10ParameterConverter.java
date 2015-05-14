@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
@@ -23,10 +21,15 @@ package org.firebirdsql.gds.ng.wire.version10;
 import org.firebirdsql.encodings.Encoding;
 import org.firebirdsql.encodings.IEncodingFactory;
 import org.firebirdsql.gds.DatabaseParameterBuffer;
+import org.firebirdsql.gds.ServiceParameterBuffer;
 import org.firebirdsql.gds.impl.DatabaseParameterBufferImp;
+import org.firebirdsql.gds.impl.ServiceParameterBufferImp;
 import org.firebirdsql.gds.ng.IConnectionProperties;
 import org.firebirdsql.gds.ng.AbstractParameterConverter;
+import org.firebirdsql.gds.ng.IServiceProperties;
 import org.firebirdsql.gds.ng.ParameterConverter;
+
+import static org.firebirdsql.gds.ISCConstants.isc_spb_current_version;
 
 /**
  * Implementation of {@link org.firebirdsql.gds.ng.ParameterConverter} for the version 10 protocol.
@@ -48,5 +51,18 @@ public class V10ParameterConverter extends AbstractParameterConverter implements
         populateNonStandardProperties(props, dpb, stringEncoding);
 
         return dpb;
+    }
+
+    @Override
+    public ServiceParameterBuffer toServiceParameterBuffer(IServiceProperties serviceProperties,
+            IEncodingFactory encodingFactory) {
+        final ServiceParameterBuffer spb = new ServiceParameterBufferImp();
+        spb.addArgument(isc_spb_current_version);
+        final Encoding stringEncoding = encodingFactory.getDefaultEncoding();
+
+        // Map standard properties
+        populateDefaultProperties(serviceProperties, encodingFactory, spb, stringEncoding);
+
+        return spb;
     }
 }

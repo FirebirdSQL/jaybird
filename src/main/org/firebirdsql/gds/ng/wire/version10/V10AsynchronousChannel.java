@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
@@ -285,7 +283,7 @@ public class V10AsynchronousChannel implements FbWireAsynchronousChannel {
             try {
                 close();
             } catch (Exception ex) {
-                log.error("Exception closing V10AsynchronousChannel in response to a FbDatabase detached event", ex);
+                log.error("Exception closing asynchronous channel in response to a FbDatabase detached event", ex);
             }
         }
     }

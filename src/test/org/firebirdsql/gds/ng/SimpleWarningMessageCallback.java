@@ -16,20 +16,31 @@
  *
  * All rights reserved.
  */
-package org.firebirdsql.gds.impl;
+package org.firebirdsql.gds.ng;
 
-import org.firebirdsql.gds.ISCConstants;
-import org.firebirdsql.gds.ServiceParameterBuffer;
+import java.sql.SQLWarning;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
- * Implementation of ServiceParameterBuffer.
+ * Implementation of {@link WarningMessageCallback} for testing.
+ *
+ * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @since 3.0
  */
-public class ServiceParameterBufferImp extends ParameterBufferBase implements ServiceParameterBuffer {
+public class SimpleWarningMessageCallback implements WarningMessageCallback {
+
+    private final List<SQLWarning> warnings = new ArrayList<>();
+
+    @Override
+    public void processWarning(SQLWarning warning) {
+        warnings.add(warning);
+    }
 
     /**
-     * Creates an empty service parameter buffer
+     * @return List with received warnings (direct access)
      */
-    public ServiceParameterBufferImp() {
-        super(ISCConstants.isc_spb_version);
+    public List<SQLWarning> getWarnings() {
+        return warnings;
     }
 }

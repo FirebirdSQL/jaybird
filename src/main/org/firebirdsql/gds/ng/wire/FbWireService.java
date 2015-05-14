@@ -16,20 +16,19 @@
  *
  * All rights reserved.
  */
-package org.firebirdsql.gds.impl;
+package org.firebirdsql.gds.ng.wire;
 
-import org.firebirdsql.gds.ISCConstants;
-import org.firebirdsql.gds.ServiceParameterBuffer;
+import org.firebirdsql.gds.ng.FbService;
 
 /**
- * Implementation of ServiceParameterBuffer.
+ * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @since 3.0
  */
-public class ServiceParameterBufferImp extends ParameterBufferBase implements ServiceParameterBuffer {
+public interface FbWireService extends FbService {
 
     /**
-     * Creates an empty service parameter buffer
+     * @return Instance of {@link XdrStreamAccess} for this database.
      */
-    public ServiceParameterBufferImp() {
-        super(ISCConstants.isc_spb_version);
-    }
+    XdrStreamAccess getXdrStreamAccess();
+
 }

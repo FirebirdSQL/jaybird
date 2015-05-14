@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
@@ -43,12 +41,9 @@ import java.util.List;
  */
 public abstract class ParameterBufferBase implements ParameterBuffer, Serializable {
 
-    private final List<Argument> arguments = new ArrayList<Argument>();
-
-    private static final byte[] NO_HEADER_BYTES = {};
+    private final List<Argument> arguments = new ArrayList<>();
 
     private final int type;
-    private final byte[] extraHeaderBytes;
 
     /**
      * Creates a {@code ParameterBufferBase}.
@@ -56,19 +51,7 @@ public abstract class ParameterBufferBase implements ParameterBuffer, Serializab
      * @param type Firebird type/version code for the parameter buffer
      */
     protected ParameterBufferBase(int type) {
-        this(type, NO_HEADER_BYTES);
-    }
-
-    /**
-     * Creates a {@code ParameterBufferBase} with extra bytes in the header.
-     *
-     * @param type Firebird type/version code for the parameter buffer
-     * @param extraHeaderBytes Extra bytes to add as a header to the buffer
-     */
-    protected ParameterBufferBase(int type, byte[] extraHeaderBytes) {
-        assert extraHeaderBytes != null : "extraHeaderBytes cannot be null";
         this.type = type;
-        this.extraHeaderBytes = extraHeaderBytes;
     }
 
     @Override
@@ -162,7 +145,7 @@ public abstract class ParameterBufferBase implements ParameterBuffer, Serializab
 
     protected int getLength() {
         final List<Argument> argumentsList = getArgumentsList();
-        int length = extraHeaderBytes.length;
+        int length = 0;
         for (final Argument currentArgument : argumentsList) {
             length += currentArgument.getLength();
         }
@@ -177,7 +160,6 @@ public abstract class ParameterBufferBase implements ParameterBuffer, Serializab
     public byte[] toBytes() {
         final ByteArrayOutputStream bout = new ByteArrayOutputStream();
         try {
-            bout.write(extraHeaderBytes);
             writeArgumentsTo(bout);
         } catch (IOException e) {
             // Doesn't happen with ByteArrayOutputStream
@@ -190,7 +172,6 @@ public abstract class ParameterBufferBase implements ParameterBuffer, Serializab
         final ByteArrayOutputStream bout = new ByteArrayOutputStream();
         try {
             bout.write(getType());
-            bout.write(extraHeaderBytes);
             writeArgumentsTo(bout);
         } catch (IOException e) {
             // Doesn't happen with ByteArrayOutputStream
@@ -228,7 +209,6 @@ public abstract class ParameterBufferBase implements ParameterBuffer, Serializab
 
         @Override
         public void write(final XdrOutputStream outputStream) throws IOException {
-            outputStream.write(extraHeaderBytes);
             writeArgumentsTo(outputStream);
         }
     }

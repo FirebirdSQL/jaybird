@@ -19,8 +19,6 @@
 package org.firebirdsql.gds.ng;
 
 import org.firebirdsql.gds.ISCConstants;
-import org.firebirdsql.gds.impl.GDSServerVersion;
-import org.firebirdsql.gds.impl.GDSServerVersionException;
 import org.firebirdsql.gds.ng.listeners.DatabaseListener;
 import org.firebirdsql.gds.ng.listeners.DatabaseListenerDispatcher;
 import org.firebirdsql.gds.ng.listeners.TransactionListener;
@@ -32,7 +30,6 @@ import java.sql.SQLWarning;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 import static org.firebirdsql.gds.ISCConstants.*;
 import static org.firebirdsql.gds.VaxEncoding.iscVaxInteger;
@@ -45,14 +42,15 @@ import static org.firebirdsql.gds.VaxEncoding.iscVaxInteger2;
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @since 3.0
  */
-public abstract class AbstractFbDatabase implements FbDatabase, TransactionListener {
+public abstract class AbstractFbDatabase<T extends AbstractConnection<IConnectionProperties, ? extends FbDatabase>>
+        extends AbstractFbAttachment<T> implements FbDatabase, TransactionListener {
 
     private static final Logger log = LoggerFactory.getLogger(AbstractFbDatabase.class);
 
     /**
      * Info-request block for database information.
      * <p>
-     * TODO Move to FbDatabase interface? Will this vary with versions of Firebird?
+     * Must match with processing in {@link org.firebirdsql.gds.ng.AbstractFbDatabase.DatabaseInformationProcessor}.
      * </p>
      */
     // @formatter:off
@@ -65,7 +63,6 @@ public abstract class AbstractFbDatabase implements FbDatabase, TransactionListe
     // @formatter:on
 
     private final DatabaseListenerDispatcher databaseListenerDispatcher = new DatabaseListenerDispatcher();
-    private final AtomicBoolean attached = new AtomicBoolean();
     private final Set<FbTransaction> activeTransactions = Collections.synchronizedSet(new HashSet<FbTransaction>());
     private final WarningMessageCallback warningCallback = new WarningMessageCallback() {
         @Override
@@ -73,17 +70,18 @@ public abstract class AbstractFbDatabase implements FbDatabase, TransactionListe
             databaseListenerDispatcher.warningReceived(AbstractFbDatabase.this, warning);
         }
     };
-    private final Object syncObject = new Object();
     private short databaseDialect;
     private int odsMajor;
     private int odsMinor;
-    private GDSServerVersion serverVersion;
-    private ServerVersionInformation serverVersionInformation;
+
+    protected AbstractFbDatabase(T connection, DatatypeCoder datatypeCoder) {
+        super(connection, datatypeCoder);
+    }
 
     /**
      * @return The warning callback for this database.
      */
-    protected final WarningMessageCallback getDatabaseWarningCallback() {
+    public final WarningMessageCallback getDatabaseWarningCallback() {
         return warningCallback;
     }
 
@@ -110,33 +108,8 @@ public abstract class AbstractFbDatabase implements FbDatabase, TransactionListe
     }
 
     @Override
-    public final Object getSynchronizationObject() {
-        return syncObject;
-    }
-
-    @Override
-    public boolean isAttached() {
-        return attached.get();
-    }
-
-    /**
-     * Called when this database is attached.
-     * <p>
-     * Only this {@link org.firebirdsql.gds.ng.AbstractFbDatabase} instance should call this method.
-     * </p>
-     */
-    protected final void setAttached() {
-        attached.set(true);
-    }
-
-    /**
-     * Called when this database is detached.
-     * <p>
-     * Only this {@link org.firebirdsql.gds.ng.AbstractFbDatabase} instance should call this method.
-     * </p>
-     */
-    protected final void setDetached() {
-        attached.set(false);
+    public final short getConnectionDialect() {
+        return connection.getAttachProperties().getConnectionDialect();
     }
 
     @Override
@@ -168,11 +141,6 @@ public abstract class AbstractFbDatabase implements FbDatabase, TransactionListe
     }
 
     /**
-     * Checks if the database is connected, and throws a {@link SQLException} if it isn't connected.
-     */
-    protected abstract void checkConnected() throws SQLException;
-
-    /**
      * Actual implementation of database detach.
      * <p>
      * Implementations of this method should only be called from {@link #close()}, and should <strong>not</strong> notify database
@@ -191,6 +159,7 @@ public abstract class AbstractFbDatabase implements FbDatabase, TransactionListe
      */
     @Override
     public final void close() throws SQLException {
+        // TODO return silently if not connected?
         checkConnected();
         synchronized (getSynchronizationObject()) {
             if (getActiveTransactionCount() > 0) {
@@ -210,18 +179,6 @@ public abstract class AbstractFbDatabase implements FbDatabase, TransactionListe
                 databaseListenerDispatcher.detached(this);
                 databaseListenerDispatcher.shutdown();
             }
-        }
-    }
-
-    /**
-     * Performs {@link #close()} suppressing any exception.
-     */
-    protected void safelyDetach() {
-        try {
-            close();
-        } catch (Exception ex) {
-            // ignore, but log
-            log.debug("Exception on safely detach", ex);
         }
     }
 
@@ -263,36 +220,12 @@ public abstract class AbstractFbDatabase implements FbDatabase, TransactionListe
         this.odsMinor = odsMinor;
     }
 
-    @Override
-    public final GDSServerVersion getServerVersion() {
-        return serverVersion;
-    }
-
-    /**
-     * Sets the Firebird version string.
-     * <p>
-     * This method should only be called by this instance.
-     * </p>
-     *
-     * @param versionString
-     *         Raw version string
-     */
-    protected final void setServerVersion(String versionString) {
-        try {
-            serverVersion = GDSServerVersion.parseRawVersion(versionString);
-        } catch (GDSServerVersionException e) {
-            log.error(String.format("Received unsupported server version \"%s\", replacing with dummy invalid version ", versionString), e);
-            serverVersion = GDSServerVersion.INVALID_VERSION;
-        }
-        serverVersionInformation = ServerVersionInformation.getForVersion(serverVersion);
-    }
-
     /**
      * @return The (full) statement info request items.
      * @see #getParameterDescriptionInfoRequestItems()
      */
     public final byte[] getStatementInfoRequestItems() {
-        return serverVersionInformation.getStatementInfoRequestItems();
+        return getServerVersionInformation().getStatementInfoRequestItems();
     }
 
     /**
@@ -300,11 +233,11 @@ public abstract class AbstractFbDatabase implements FbDatabase, TransactionListe
      * @see #getStatementInfoRequestItems()
      */
     public final byte[] getParameterDescriptionInfoRequestItems() {
-        return serverVersionInformation.getParameterDescriptionInfoRequestItems();
+        return getServerVersionInformation().getParameterDescriptionInfoRequestItems();
     }
 
     @Override
-    public <T> T getDatabaseInfo(byte[] requestItems, int bufferLength, InfoProcessor<T> infoProcessor)
+    public final <R> R getDatabaseInfo(byte[] requestItems, int bufferLength, InfoProcessor<R> infoProcessor)
             throws SQLException {
         byte[] responseBuffer = getDatabaseInfo(requestItems, bufferLength);
         return infoProcessor.process(responseBuffer);
@@ -376,9 +309,10 @@ public abstract class AbstractFbDatabase implements FbDatabase, TransactionListe
                     if (debug) log.debug("isc_info_ods_minor_version:" + value);
                     break;
                 case ISCConstants.isc_info_firebird_version:
-                    len = iscVaxInteger2(info, i);
-                    i += 2;
-                    String firebirdVersion = new String(info, i + 2, len - 2);
+                    // The first two bytes of the version are garbage
+                    len = iscVaxInteger2(info, i) - 2;
+                    i += 4;
+                    String firebirdVersion = new String(info, i, len);
                     i += len;
                     setServerVersion(firebirdVersion);
                     if (debug) log.debug("isc_info_firebird_version:" + firebirdVersion);

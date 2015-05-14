@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
@@ -35,13 +33,21 @@ import java.io.OutputStream;
 public class ServiceRequestBufferImp extends ParameterBufferBase implements ServiceRequestBuffer {
 
     /**
-     * Every ServiceRequestBuffer has an associated taskIdentifier.
+     * Creates an empty service request buffer.
+     */
+    public ServiceRequestBufferImp() {
+        super(ISCConstants.isc_spb_current_version);
+    }
+
+    /**
+     * Create a service request buffer with a task identifier as the first item.
      *
      * @param taskIdentifier
      *         Service request task
      */
     public ServiceRequestBufferImp(int taskIdentifier) {
-        super(ISCConstants.isc_spb_current_version, new byte[] { (byte) taskIdentifier });
+        this();
+        addArgument(taskIdentifier);
     }
 
     @Override

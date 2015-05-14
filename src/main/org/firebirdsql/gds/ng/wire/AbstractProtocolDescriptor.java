@@ -19,6 +19,7 @@
 package org.firebirdsql.gds.ng.wire;
 
 import org.firebirdsql.gds.DatabaseParameterBuffer;
+import org.firebirdsql.gds.ServiceParameterBuffer;
 import org.firebirdsql.gds.ng.ParameterConverter;
 import org.firebirdsql.util.ObjectUtils;
 
@@ -110,6 +111,12 @@ public abstract class AbstractProtocolDescriptor implements ProtocolDescriptor {
     public final DatabaseParameterBuffer createDatabaseParameterBuffer(WireDatabaseConnection connection) {
         return getParameterConverter()
                 .toDatabaseParameterBuffer(connection.getAttachProperties(), connection.getEncodingFactory());
+    }
+
+    @Override
+    public final ServiceParameterBuffer createServiceParameterBuffer(WireServiceConnection connection) {
+        return getParameterConverter()
+                .toServiceParameterBuffer(connection.getAttachProperties(), connection.getEncodingFactory());
     }
 
     /**

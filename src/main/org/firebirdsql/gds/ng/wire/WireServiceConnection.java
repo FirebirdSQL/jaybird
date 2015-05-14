@@ -19,46 +19,46 @@
 package org.firebirdsql.gds.ng.wire;
 
 import org.firebirdsql.encodings.IEncodingFactory;
-import org.firebirdsql.gds.ng.IConnectionProperties;
+import org.firebirdsql.gds.ng.IServiceProperties;
 
 import java.sql.SQLException;
 
 /**
- * Wire connection instance for connecting to a database
+ * Wire connection instance for connecting to a service.
  *
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @since 3.0
  */
-public final class WireDatabaseConnection extends WireConnection<IConnectionProperties, FbWireDatabase> {
+public class WireServiceConnection extends WireConnection<IServiceProperties, FbWireService> {
 
     /**
-     * Creates a WireDatabaseConnection (without establishing a connection to the server) with the default
+     * Creates a WireServiceConnection (without establishing a connection to the  server) with the default
      * protocol collection.
      *
-     * @param connectionProperties
-     *         Connection properties
+     * @param serviceProperties
+     *         Service properties
      */
-    public WireDatabaseConnection(IConnectionProperties connectionProperties) throws SQLException {
-        super(connectionProperties);
+    public WireServiceConnection(IServiceProperties serviceProperties) throws SQLException {
+        super(serviceProperties);
     }
 
     /**
-     * Creates a WireDatabaseConnection (without establishing a connection to the server).
+     * Creates a WireServiceConnection (without establishing a connection to the server).
      *
-     * @param connectionProperties
-     *         Connection properties
+     * @param serviceProperties
+     *         Service properties
      * @param encodingFactory
      *         Factory for encoding definitions
      * @param protocols
      *         The collection of protocols to use for this connection.
      */
-    public WireDatabaseConnection(IConnectionProperties connectionProperties, IEncodingFactory encodingFactory,
+    public WireServiceConnection(IServiceProperties serviceProperties, IEncodingFactory encodingFactory,
             ProtocolCollection protocols) throws SQLException {
-        super(connectionProperties, encodingFactory, protocols);
+        super(serviceProperties, encodingFactory, protocols);
     }
 
     @Override
-    protected FbWireDatabase createConnectionHandle(ProtocolDescriptor protocolDescriptor) {
-        return protocolDescriptor.createDatabase(this);
+    protected FbWireService createConnectionHandle(ProtocolDescriptor protocolDescriptor) {
+        return protocolDescriptor.createService(this);
     }
 }

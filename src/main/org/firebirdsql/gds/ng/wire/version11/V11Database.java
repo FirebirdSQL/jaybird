@@ -21,15 +21,14 @@ package org.firebirdsql.gds.ng.wire.version11;
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.ng.FbExceptionBuilder;
 import org.firebirdsql.gds.ng.WarningMessageCallback;
-import org.firebirdsql.gds.ng.wire.*;
+import org.firebirdsql.gds.ng.wire.DeferredAction;
+import org.firebirdsql.gds.ng.wire.ProtocolDescriptor;
+import org.firebirdsql.gds.ng.wire.Response;
+import org.firebirdsql.gds.ng.wire.WireDatabaseConnection;
 import org.firebirdsql.gds.ng.wire.version10.V10Database;
-import org.firebirdsql.logging.Logger;
-import org.firebirdsql.logging.LoggerFactory;
 
 import java.io.IOException;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.List;
 
 import static org.firebirdsql.gds.impl.wire.WireProtocolConstants.*;
 
@@ -40,13 +39,6 @@ import static org.firebirdsql.gds.impl.wire.WireProtocolConstants.*;
  * @since 3.0
  */
 public class V11Database extends V10Database {
-
-    private static final Logger log = LoggerFactory.getLogger(V11Database.class);
-
-    /**
-     * Actions on this object need to be synchronized on {@link #getSynchronizationObject()}.
-     */
-    private final List<DeferredAction> deferredActions = new ArrayList<DeferredAction>();
 
     /**
      * Creates a V11Database instance.
@@ -62,9 +54,7 @@ public class V11Database extends V10Database {
     }
 
     public final void enqueueDeferredAction(DeferredAction deferredAction) {
-        synchronized (getSynchronizationObject()) {
-            deferredActions.add(deferredAction);
-        }
+        wireOperations.enqueueDeferredAction(deferredAction);
     }
 
     // TODO Implement trusted auth?
@@ -99,25 +89,6 @@ public class V11Database extends V10Database {
                 }
             } catch (IOException ex) {
                 throw new FbExceptionBuilder().exception(ISCConstants.isc_net_write_err).cause(ex).toSQLException();
-            }
-        }
-    }
-
-    @Override
-    protected final void processDeferredActions() {
-        synchronized (getSynchronizationObject()) {
-            if (deferredActions.size() == 0) return;
-
-            final DeferredAction[] actions = deferredActions.toArray(new DeferredAction[deferredActions.size()]);
-            deferredActions.clear();
-            for (DeferredAction action : actions) {
-                try {
-                    action.processResponse(readSingleResponse(action.getWarningMessageCallback()));
-                } catch (Exception ex) {
-                    // This only happen if the connection is no longer available
-                    // We ignore the exception and assume the next operation by the caller will fail as well
-                    log.debug("Exception in processDeferredActions", ex);
-                }
             }
         }
     }

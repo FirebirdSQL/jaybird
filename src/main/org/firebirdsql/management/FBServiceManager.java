@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
@@ -197,6 +195,7 @@ public class FBServiceManager implements ServiceManager {
     public IscSvcHandle attachServiceManager(GDS gds) throws GDSException {
         ServiceParameterBuffer serviceParameterBuffer =
                 gds.createServiceParameterBuffer();
+        serviceParameterBuffer.addArgument(ISCConstants.isc_spb_current_version);
 
         if (getUser() != null)
             serviceParameterBuffer.addArgument(

@@ -16,20 +16,18 @@
  *
  * All rights reserved.
  */
-package org.firebirdsql.gds.impl;
+package org.firebirdsql.gds.ng.wire.version11;
 
-import org.firebirdsql.gds.ISCConstants;
-import org.firebirdsql.gds.ServiceParameterBuffer;
+import org.firebirdsql.gds.ng.wire.AbstractWireOperations;
+import org.firebirdsql.gds.ng.wire.version10.TestV10WireOperations;
 
 /**
- * Implementation of ServiceParameterBuffer.
+ * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @since 3.0
  */
-public class ServiceParameterBufferImp extends ParameterBufferBase implements ServiceParameterBuffer {
+public class TestV11WireOperations extends TestV10WireOperations {
 
-    /**
-     * Creates an empty service parameter buffer
-     */
-    public ServiceParameterBufferImp() {
-        super(ISCConstants.isc_spb_version);
+    protected AbstractWireOperations createDummyWireOperations() {
+        return new V11WireOperations(DUMMY_CONNECTION, warningCallback, new Object());
     }
 }

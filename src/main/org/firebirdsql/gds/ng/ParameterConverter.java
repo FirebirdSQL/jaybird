@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
@@ -22,6 +20,7 @@ package org.firebirdsql.gds.ng;
 
 import org.firebirdsql.encodings.IEncodingFactory;
 import org.firebirdsql.gds.DatabaseParameterBuffer;
+import org.firebirdsql.gds.ServiceParameterBuffer;
 
 /**
  * Provides conversion of parameters (eg from {@link org.firebirdsql.gds.ng.IConnectionProperties} to a
@@ -42,5 +41,17 @@ public interface ParameterConverter {
      * @return Database parameter buffer populated based on the connection properties
      */
     DatabaseParameterBuffer toDatabaseParameterBuffer(IConnectionProperties connectionProperties,
+            IEncodingFactory encodingFactory);
+
+    /**
+     * Builds a {@code ServiceParameterBuffer} from the supplied {code IServiceProperties}.
+     *
+     * @param serviceProperties
+     *         Service properties
+     * @param encodingFactory
+     *         Encoding factory
+     * @return Service parameter buffer populated based on the service properties
+     */
+    ServiceParameterBuffer toServiceParameterBuffer(IServiceProperties serviceProperties,
             IEncodingFactory encodingFactory);
 }

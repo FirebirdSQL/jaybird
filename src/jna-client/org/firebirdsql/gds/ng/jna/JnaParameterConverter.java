@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
@@ -23,9 +21,11 @@ package org.firebirdsql.gds.ng.jna;
 import org.firebirdsql.encodings.Encoding;
 import org.firebirdsql.encodings.IEncodingFactory;
 import org.firebirdsql.gds.DatabaseParameterBuffer;
+import org.firebirdsql.gds.ServiceParameterBuffer;
 import org.firebirdsql.gds.impl.DatabaseParameterBufferImp;
 import org.firebirdsql.gds.ng.AbstractParameterConverter;
 import org.firebirdsql.gds.ng.IConnectionProperties;
+import org.firebirdsql.gds.ng.IServiceProperties;
 import org.firebirdsql.gds.ng.ParameterConverter;
 
 /**
@@ -48,5 +48,11 @@ public class JnaParameterConverter extends AbstractParameterConverter implements
         populateNonStandardProperties(props, dpb, stringEncoding);
 
         return dpb;
+    }
+
+    @Override
+    public ServiceParameterBuffer toServiceParameterBuffer(IServiceProperties serviceProperties,
+            IEncodingFactory encodingFactory) {
+        throw new UnsupportedOperationException("Not yet implemented");
     }
 }

@@ -18,8 +18,6 @@
  */
 package org.firebirdsql.gds.ng.wire;
 
-import org.firebirdsql.encodings.Encoding;
-import org.firebirdsql.encodings.IEncodingFactory;
 import org.firebirdsql.gds.BlobParameterBuffer;
 import org.firebirdsql.gds.EventHandle;
 import org.firebirdsql.gds.EventHandler;
@@ -28,12 +26,12 @@ import org.firebirdsql.gds.impl.TransactionParameterBufferImpl;
 import org.firebirdsql.gds.impl.wire.XdrInputStream;
 import org.firebirdsql.gds.impl.wire.XdrOutputStream;
 import org.firebirdsql.gds.ng.*;
-import org.firebirdsql.logging.Logger;
-import org.firebirdsql.logging.LoggerFactory;
+import org.firebirdsql.jdbc.FBSQLException;
 
 import java.io.IOException;
 import java.sql.SQLException;
-import java.sql.SQLWarning;
+
+import static java.util.Objects.requireNonNull;
 
 /**
  * Abstract class for operations common to all version of the wire protocol implementation.
@@ -41,13 +39,11 @@ import java.sql.SQLWarning;
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @since 3.0
  */
-public abstract class AbstractFbWireDatabase extends AbstractFbDatabase implements FbWireDatabase {
-
-    private static final Logger log = LoggerFactory.getLogger(AbstractFbWireDatabase.class);
+public abstract class AbstractFbWireDatabase extends AbstractFbDatabase<WireDatabaseConnection>
+        implements FbWireDatabase {
 
     protected final ProtocolDescriptor protocolDescriptor;
-    private final DatatypeCoder datatypeCoder;
-    protected final WireDatabaseConnection connection;
+    protected final FbWireOperations wireOperations;
 
     /**
      * Creates an AbstractFbWireDatabase instance.
@@ -59,31 +55,10 @@ public abstract class AbstractFbWireDatabase extends AbstractFbDatabase implemen
      *         used for creating further dependent objects).
      */
     protected AbstractFbWireDatabase(WireDatabaseConnection connection, ProtocolDescriptor descriptor) {
-        if (connection == null) throw new IllegalArgumentException("parameter connection should be non-null");
-        if (descriptor == null) throw new IllegalArgumentException("parameter descriptor should be non-null");
-        this.connection = connection;
-        protocolDescriptor = descriptor;
-        datatypeCoder = new DefaultDatatypeCoder(connection.getEncodingFactory());
-    }
-
-    @Override
-    public final short getConnectionDialect() {
-        return connection.getAttachProperties().getConnectionDialect();
-    }
-
-    @Override
-    public final IEncodingFactory getEncodingFactory() {
-        return connection.getEncodingFactory();
-    }
-
-    @Override
-    public final Encoding getEncoding() {
-        return connection.getEncoding();
-    }
-
-    @Override
-    public final DatatypeCoder getDatatypeCoder() {
-        return datatypeCoder;
+        super(connection, new DefaultDatatypeCoder(connection.getEncodingFactory()));
+        protocolDescriptor = requireNonNull(descriptor, "parameter descriptor should be non-null");
+        wireOperations = descriptor.createWireOperations(connection, getDatabaseWarningCallback(),
+                getSynchronizationObject());
     }
 
     /**
@@ -121,6 +96,20 @@ public abstract class AbstractFbWireDatabase extends AbstractFbDatabase implemen
     }
 
     /**
+     * Checks if a physical connection to the server is established.
+     *
+     * @throws SQLException
+     *         If not connected.
+     */
+    @Override
+    protected final void checkConnected() throws SQLException {
+        if (!connection.isConnected()) {
+            // TODO Update message / externalize
+            throw new SQLException("No connection established to the database server", FBSQLException.SQL_STATE_CONNECTION_CLOSED);
+        }
+    }
+
+    /**
      * Checks if a physical connection to the server is established and if the
      * connection is attached to a database.
      * <p>
@@ -131,15 +120,40 @@ public abstract class AbstractFbWireDatabase extends AbstractFbDatabase implemen
      * @throws SQLException
      *         If the database not connected or attached.
      */
-    protected abstract void checkAttached() throws SQLException;
+    protected final void checkAttached() throws SQLException {
+        checkConnected();
+        if (!isAttached()) {
+            // TODO Update message / externalize + Check if SQL State right
+            throw new SQLException("The connection is not attached to a database", FBSQLException.SQL_STATE_CONNECTION_ERROR);
+        }
+    }
+
+    /**
+     * Closes the WireConnection associated with this connection.
+     *
+     * @throws IOException
+     *         For errors closing the connection.
+     */
+    protected final void closeConnection() throws IOException {
+        if (!connection.isConnected()) return;
+        synchronized (getSynchronizationObject()) {
+            try {
+                connection.close();
+            } finally {
+                setDetached();
+            }
+        }
+    }
 
     @Override
-    public FbBlob createBlobForOutput(FbTransaction transaction, BlobParameterBuffer blobParameterBuffer) throws SQLException {
+    public final FbBlob createBlobForOutput(FbTransaction transaction, BlobParameterBuffer blobParameterBuffer)
+            throws SQLException {
         return protocolDescriptor.createOutputBlob(this, (FbWireTransaction) transaction, blobParameterBuffer);
     }
 
     @Override
-    public FbBlob createBlobForInput(FbTransaction transaction, BlobParameterBuffer blobParameterBuffer, long blobId) throws SQLException {
+    public final FbBlob createBlobForInput(FbTransaction transaction, BlobParameterBuffer blobParameterBuffer,
+            long blobId) throws SQLException {
         return protocolDescriptor.createInputBlob(this, (FbWireTransaction) transaction, blobParameterBuffer, blobId);
     }
 
@@ -154,89 +168,24 @@ public abstract class AbstractFbWireDatabase extends AbstractFbDatabase implemen
     }
 
     @Override
-    public void consumePackets(int numberOfResponses, WarningMessageCallback warningCallback) {
-        while (numberOfResponses > 0) {
-            numberOfResponses--;
-            try {
-                readResponse(warningCallback);
-            } catch (Exception e) {
-                // TODO Wrap in SQLWarning and register on warning callback?
-                // ignoring exceptions
-                log.debug("Exception in consumePackets", e);
-            }
-        }
+    public final void consumePackets(int numberOfResponses, WarningMessageCallback warningCallback) {
+        wireOperations.consumePackets(numberOfResponses, warningCallback);
     }
 
-    /**
-     * Processes any deferred actions. Protocol versions that do not support deferred actions should simply do nothing.
-     */
-    protected abstract void processDeferredActions();
-
-    /**
-     * @param response
-     *         Response to process
-     * @throws java.sql.SQLException
-     *         For errors returned from the server.
-     */
-    public void processResponse(Response response) throws SQLException {
-        if (response instanceof GenericResponse) {
-            GenericResponse genericResponse = (GenericResponse) response;
-            SQLException exception = genericResponse.getException();
-            if (exception != null && !(exception instanceof SQLWarning)) {
-                throw exception;
-            }
-        }
+    @Override
+    public final GenericResponse readGenericResponse(WarningMessageCallback warningCallback)
+            throws SQLException, IOException {
+        return wireOperations.readGenericResponse(warningCallback);
     }
 
-    /**
-     * Checks if the response included a warning and signals that warning to the
-     * WarningMessageCallback.
-     *
-     * @param response
-     *         Response to process
-     */
-    public void processResponseWarnings(final Response response, WarningMessageCallback warningCallback) {
-        if (warningCallback == null) {
-            warningCallback = getDatabaseWarningCallback();
-        }
-        if (response instanceof GenericResponse) {
-            GenericResponse genericResponse = (GenericResponse) response;
-            @SuppressWarnings("ThrowableResultOfMethodCallIgnored")
-            SQLException exception = genericResponse.getException();
-            if (exception != null && exception instanceof SQLWarning) {
-                warningCallback.processWarning((SQLWarning) exception);
-            }
-        }
+    @Override
+    public final SqlResponse readSqlResponse(WarningMessageCallback warningCallback) throws SQLException, IOException {
+        return wireOperations.readSqlResponse(warningCallback);
     }
 
-    /**
-     * Reads the next operation. Forwards call to {@link WireConnection#readNextOperation()}.
-     *
-     * @return next operation
-     * @throws java.io.IOException
-     */
-    public int readNextOperation() throws IOException {
-        synchronized (getSynchronizationObject()) {
-            processDeferredActions();
-            return connection.readNextOperation();
-        }
-    }
-
-    /**
-     * Writes directly to the {@code OutputStream} of the underlying connection.
-     * <p>
-     * Use of this method might lead to hard to find race conditions in the protocol. It is currently only used
-     * to allow {@link org.firebirdsql.gds.ng.FbDatabase#cancelOperation(int)} to work.
-     * </p>
-     *
-     * @param data
-     *         Data to write
-     * @throws IOException
-     *         If there is no socket, the socket is closed, or for errors writing to the socket.
-     * @see org.firebirdsql.gds.ng.wire.WireConnection#writeDirect(byte[])
-     */
-    protected final void writeDirect(byte[] data) throws IOException {
-        connection.writeDirect(data);
+    @Override
+    public final Response readResponse(WarningMessageCallback warningCallback) throws SQLException, IOException {
+        return wireOperations.readResponse(warningCallback);
     }
 
     public EventHandle createEventHandle(String eventName, EventHandler eventHandler) {
@@ -258,4 +207,18 @@ public abstract class AbstractFbWireDatabase extends AbstractFbDatabase implemen
      */
     // TODO make protected?
     public abstract FbWireAsynchronousChannel initAsynchronousChannel() throws SQLException;
+
+    @Override
+    protected void finalize() throws Throwable {
+        try {
+            if (!connection.isConnected()) return;
+            if (isAttached()) {
+                safelyDetach();
+            } else {
+                closeConnection();
+            }
+        } finally {
+            super.finalize();
+        }
+    }
 }

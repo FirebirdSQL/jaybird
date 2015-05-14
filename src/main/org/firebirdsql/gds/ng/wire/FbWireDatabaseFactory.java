@@ -18,10 +18,7 @@
  */
 package org.firebirdsql.gds.ng.wire;
 
-import org.firebirdsql.gds.ng.FbDatabaseFactory;
-import org.firebirdsql.gds.ng.FbService;
-import org.firebirdsql.gds.ng.IConnectionProperties;
-import org.firebirdsql.gds.ng.IServiceProperties;
+import org.firebirdsql.gds.ng.*;
 
 import java.io.IOException;
 import java.sql.SQLException;
@@ -38,24 +35,28 @@ public final class FbWireDatabaseFactory implements FbDatabaseFactory {
 
     @Override
     public FbWireDatabase connect(IConnectionProperties connectionProperties) throws SQLException {
-        final WireDatabaseConnection wireConnection = new WireDatabaseConnection(connectionProperties);
+        final WireDatabaseConnection connection = new WireDatabaseConnection(connectionProperties);
+        return performConnect(connection);
+    }
 
+    @Override
+    public FbService serviceConnect(IServiceProperties serviceProperties) throws SQLException {
+        final WireServiceConnection connection = new WireServiceConnection(serviceProperties);
+        return performConnect(connection);
+    }
+
+    private <T extends FbAttachment> T performConnect(WireConnection<?, T> connection) throws SQLException {
         try {
-            wireConnection.socketConnect();
-            return wireConnection.identify();
+            connection.socketConnect();
+            return connection.identify();
         } catch (SQLException ex) {
             try {
-                wireConnection.close();
+                connection.close();
             } catch (IOException ioex) {
                 ex.setNextException(new SQLException(ioex.getMessage(), ioex));
             }
             throw ex;
         }
-    }
-
-    @Override
-    public FbService serviceConnect(IServiceProperties serviceProperties) throws SQLException {
-        throw new UnsupportedOperationException("serviceConnect not yet implemented");
     }
 
     public static FbWireDatabaseFactory getInstance() {

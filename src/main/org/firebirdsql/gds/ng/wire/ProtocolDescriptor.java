@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * Public Firebird Java API.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -28,8 +26,10 @@ package org.firebirdsql.gds.ng.wire;
 
 import org.firebirdsql.gds.BlobParameterBuffer;
 import org.firebirdsql.gds.DatabaseParameterBuffer;
+import org.firebirdsql.gds.ServiceParameterBuffer;
 import org.firebirdsql.gds.ng.FbTransaction;
 import org.firebirdsql.gds.ng.TransactionState;
+import org.firebirdsql.gds.ng.WarningMessageCallback;
 import org.firebirdsql.gds.ng.fields.BlrCalculator;
 
 /**
@@ -42,7 +42,7 @@ import org.firebirdsql.gds.ng.fields.BlrCalculator;
  * Protocol descriptors loaded this way are required to adhere to the following rules:
  * <ul>
  * <li>They provide a no-arg constructor</li>
- * <li>All instances of a specific implementation class created with the no-arg constructor have the same {@link #hashCode()}.
+ * <li>All instances of a specific implementation class created with the no-arg constructor have the same {@link #hashCode()}.</li>
  * <li>All instances of a specific implementation class created with the no-arg constructor are considered equal to each other by the {@link #equals(Object)} implementation</li>
  * </ul>
  * </p>
@@ -81,10 +81,19 @@ public interface ProtocolDescriptor {
      * Create {@link FbWireDatabase} implementation for this protocol.
      *
      * @param connection
-     *         WireConnection to this database
+     *         WireDatabaseConnection to this database
      * @return FbWireDatabase implementation
      */
     FbWireDatabase createDatabase(WireDatabaseConnection connection);
+
+    /**
+     * Create {@link FbWireService} implementation for this protocol.
+     *
+     * @param connection
+     *         WireServiceConnection to this service
+     * @return FbWireService implementation
+     */
+    FbWireService createService(WireServiceConnection connection);
 
     /**
      * Create {@link FbTransaction} implementation for this protocol.
@@ -118,6 +127,16 @@ public interface ProtocolDescriptor {
      * @return DatabaseParameterBuffer implementation
      */
     DatabaseParameterBuffer createDatabaseParameterBuffer(WireDatabaseConnection connection);
+
+    /**
+     * Create {@link ServiceParameterBuffer} implementation and populate it with supported properties for
+     * this protocol version.
+     *
+     * @param connection
+     *         Connection
+     * @return ServiceParameterBuffer implementation
+     */
+    ServiceParameterBuffer createServiceParameterBuffer(WireServiceConnection connection);
 
     /**
      * Create {@link BlrCalculator} implementation for this protocol version.
@@ -167,4 +186,14 @@ public interface ProtocolDescriptor {
      */
     FbWireAsynchronousChannel createAsynchronousChannel(FbWireDatabase database);
 
+    /**
+     * Create an {@link FbWireOperations} implementation for this protocol version.
+     *
+     * @param connection WireConnection instance
+     * @param defaultWarningMessageCallback Default warning message callback
+     * @param syncObject Object to use for synchronization
+     * @return Wire operations implementation
+     */
+    FbWireOperations createWireOperations(WireConnection<?, ?> connection,
+            WarningMessageCallback defaultWarningMessageCallback, Object syncObject);
 }

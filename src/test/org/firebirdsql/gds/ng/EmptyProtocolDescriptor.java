@@ -21,6 +21,7 @@ package org.firebirdsql.gds.ng;
 import org.firebirdsql.encodings.IEncodingFactory;
 import org.firebirdsql.gds.BlobParameterBuffer;
 import org.firebirdsql.gds.DatabaseParameterBuffer;
+import org.firebirdsql.gds.ServiceParameterBuffer;
 import org.firebirdsql.gds.ng.fields.BlrCalculator;
 import org.firebirdsql.gds.ng.wire.*;
 
@@ -36,12 +37,18 @@ import org.firebirdsql.gds.ng.wire.*;
  */
 public class EmptyProtocolDescriptor extends AbstractProtocolDescriptor {
 
-    public EmptyProtocolDescriptor(final int version, final int architecture, final int minimumType, final int maximumType, final int weight) {
+    public EmptyProtocolDescriptor(final int version, final int architecture, final int minimumType,
+            final int maximumType, final int weight) {
         super(version, architecture, minimumType, maximumType, weight);
     }
 
     @Override
     public FbWireDatabase createDatabase(WireDatabaseConnection connection) {
+        return null;
+    }
+
+    @Override
+    public FbWireService createService(WireServiceConnection connection) {
         return null;
     }
 
@@ -62,12 +69,14 @@ public class EmptyProtocolDescriptor extends AbstractProtocolDescriptor {
     }
 
     @Override
-     public FbWireBlob createOutputBlob(FbWireDatabase database, FbWireTransaction transaction, BlobParameterBuffer blobParameterBuffer) {
+    public FbWireBlob createOutputBlob(FbWireDatabase database, FbWireTransaction transaction,
+            BlobParameterBuffer blobParameterBuffer) {
         return null;
     }
 
     @Override
-    public FbWireBlob createInputBlob(FbWireDatabase database, FbWireTransaction transaction, BlobParameterBuffer blobParameterBuffer, long blobId) {
+    public FbWireBlob createInputBlob(FbWireDatabase database, FbWireTransaction transaction,
+            BlobParameterBuffer blobParameterBuffer, long blobId) {
         return null;
     }
 
@@ -77,10 +86,22 @@ public class EmptyProtocolDescriptor extends AbstractProtocolDescriptor {
     }
 
     @Override
+    public FbWireOperations createWireOperations(WireConnection<?, ?> connection,
+            WarningMessageCallback defaultWarningMessageCallback, Object syncObject) {
+        return null;
+    }
+
+    @Override
     protected ParameterConverter getParameterConverter() {
         return new ParameterConverter() {
             @Override
             public DatabaseParameterBuffer toDatabaseParameterBuffer(IConnectionProperties connectionProperties,
+                    IEncodingFactory encodingFactory) {
+                return null;
+            }
+
+            @Override
+            public ServiceParameterBuffer toServiceParameterBuffer(IServiceProperties serviceProperties,
                     IEncodingFactory encodingFactory) {
                 return null;
             }

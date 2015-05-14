@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
@@ -24,6 +22,7 @@ import org.firebirdsql.encodings.Encoding;
 import org.firebirdsql.encodings.IEncodingFactory;
 import org.firebirdsql.gds.DatabaseParameterBuffer;
 import org.firebirdsql.gds.Parameter;
+import org.firebirdsql.gds.ServiceParameterBuffer;
 
 import static org.firebirdsql.gds.ISCConstants.*;
 
@@ -85,6 +84,38 @@ public abstract class AbstractParameterConverter {
             final Encoding encoding) {
         for (Parameter parameter : props.getExtraDatabaseParameters()) {
             parameter.copyTo(dpb, encoding);
+        }
+    }
+
+    /**
+     * Populates the database parameter buffer with the standard Firebird properties explicitly supported through
+     * {@code IConnectionProperties}.
+     *
+     * @param props
+     *         Properties
+     * @param encodingFactory
+     *         Encoding factory
+     * @param spb
+     *         Service parameter buffer to populate
+     * @param encoding
+     *         Encoding to use for string properties
+     */
+    protected void populateDefaultProperties(final IServiceProperties props, final IEncodingFactory encodingFactory,
+            final ServiceParameterBuffer spb, final Encoding encoding) {
+        // TODO Is there an equivalent to set connection character set for a service
+//        dpb.addArgument(isc_dpb_lc_ctype,
+//                encodingFactory.getDefaultEncodingDefinition().getFirebirdEncodingName(), encoding);
+        if (props.getUser() != null) {
+            spb.addArgument(isc_spb_user_name, props.getUser(), encoding);
+        }
+        if (props.getPassword() != null) {
+            spb.addArgument(isc_spb_password, props.getPassword(), encoding);
+        }
+        if (props.getRoleName() != null) {
+            spb.addArgument(isc_spb_sql_role_name, props.getRoleName(), encoding);
+        }
+        if (props.getConnectTimeout() != IConnectionProperties.DEFAULT_CONNECT_TIMEOUT) {
+            spb.addArgument(isc_spb_connect_timeout, props.getConnectTimeout());
         }
     }
 }

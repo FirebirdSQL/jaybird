@@ -72,7 +72,7 @@ public class V12Database extends V11Database {
                 final XdrOutputStream xdr = new XdrOutputStream(out, false);
                 xdr.writeInt(WireProtocolConstants.op_cancel);
                 xdr.writeInt(kind);
-                writeDirect(out.toByteArray());
+                wireOperations.writeDirect(out.toByteArray());
             } catch (IOException ioe) {
                 throw new FbExceptionBuilder().exception(ISCConstants.isc_net_write_err).cause(ioe).toSQLException();
             }

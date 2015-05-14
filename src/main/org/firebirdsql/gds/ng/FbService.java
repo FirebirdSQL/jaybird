@@ -24,11 +24,84 @@
  */
 package org.firebirdsql.gds.ng;
 
+import org.firebirdsql.gds.ServiceParameterBuffer;
+import org.firebirdsql.gds.ServiceRequestBuffer;
+
+import java.sql.SQLException;
+
 /**
  * Connection handle to a service.
  *
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @since 3.0
  */
-public interface FbService extends AutoCloseable {
+public interface FbService extends FbAttachment {
+
+    /**
+     * @return The service handle value
+     */
+    @Override
+    int getHandle();
+
+    /**
+     * Request service info (service query).
+     *
+     * @param serviceParameterBuffer
+     *         Service parameters
+     * @param serviceRequestBuffer
+     *         Service request info
+     * @param bufferLength
+     *         Response buffer length to use
+     * @param infoProcessor
+     *         Implementation of {@link InfoProcessor} to transform
+     *         the info response
+     * @return Transformed info response of type T
+     * @throws SQLException
+     *         For errors retrieving or transforming the response.
+     */
+    <T> T getServiceInfo(ServiceParameterBuffer serviceParameterBuffer, ServiceRequestBuffer serviceRequestBuffer,
+            int bufferLength, InfoProcessor<T> infoProcessor)
+            throws SQLException;
+
+    /**
+     * Performs a service info request (service query.
+     *
+     * @param serviceParameterBuffer
+     *         Service parameters
+     * @param serviceRequestBuffer
+     *         Service request info
+     * @param maxBufferLength
+     *         Maximum response buffer length to use
+     * @return The response buffer (note: length is the actual length of the response, not {@code maxBufferLength}
+     * @throws SQLException
+     *         For errors retrieving the information.
+     */
+    byte[] getServiceInfo(ServiceParameterBuffer serviceParameterBuffer, ServiceRequestBuffer serviceRequestBuffer,
+            int maxBufferLength) throws SQLException;
+
+    /**
+     * Starts a service action.
+     *
+     * @param serviceRequestBuffer
+     *         Service action request details
+     * @throws SQLException
+     *         For errors starting the service action.
+     */
+    void startServiceAction(ServiceRequestBuffer serviceRequestBuffer) throws SQLException;
+
+    /**
+     * Creates an empty {@link ServiceParameterBuffer}.
+     * <p>
+     * Attach expects a service parameter buffer to have the version as the first item. This needs to be added
+     * explicitly.
+     * </p>
+     *
+     * @return Service
+     */
+    ServiceParameterBuffer createServiceParameterBuffer();
+
+    /**
+     * @return An empty service request buffer
+     */
+    ServiceRequestBuffer createServiceRequestBuffer();
 }

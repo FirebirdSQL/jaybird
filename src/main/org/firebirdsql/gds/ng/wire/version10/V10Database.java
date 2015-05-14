@@ -25,13 +25,14 @@ import org.firebirdsql.gds.EventHandle;
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.TransactionParameterBuffer;
 import org.firebirdsql.gds.impl.DatabaseParameterBufferExtension;
-import org.firebirdsql.gds.impl.wire.XdrInputStream;
 import org.firebirdsql.gds.impl.wire.XdrOutputStream;
-import org.firebirdsql.gds.ng.*;
+import org.firebirdsql.gds.ng.FbExceptionBuilder;
+import org.firebirdsql.gds.ng.FbStatement;
+import org.firebirdsql.gds.ng.FbTransaction;
+import org.firebirdsql.gds.ng.TransactionState;
 import org.firebirdsql.gds.ng.fields.BlrCalculator;
 import org.firebirdsql.gds.ng.wire.*;
 import org.firebirdsql.jdbc.FBDriverNotCapableException;
-import org.firebirdsql.jdbc.FBSQLException;
 import org.firebirdsql.logging.Logger;
 import org.firebirdsql.logging.LoggerFactory;
 
@@ -201,8 +202,7 @@ public class V10Database extends AbstractFbWireDatabase implements FbWireDatabas
     /**
      * Additional tasks to execute directly after attach operation.
      * <p>
-     * Implementation retrieves database information like dialect ODS and server
-     * version.
+     * Implementation retrieves database information like dialect ODS and server version.
      * </p>
      *
      * @throws SQLException
@@ -237,23 +237,6 @@ public class V10Database extends AbstractFbWireDatabase implements FbWireDatabas
                     // ignore
                 }
                 throw new FbExceptionBuilder().exception(ISCConstants.isc_net_write_err).cause(ex).toSQLException();
-            } finally {
-                setDetached();
-            }
-        }
-    }
-
-    /**
-     * Closes the WireConnection associated with this connection.
-     *
-     * @throws IOException
-     *         For errors closing the connection.
-     */
-    protected void closeConnection() throws IOException {
-        if (!connection.isConnected()) return;
-        synchronized (getSynchronizationObject()) {
-            try {
-                connection.close();
             } finally {
                 setDetached();
             }
@@ -308,7 +291,7 @@ public class V10Database extends AbstractFbWireDatabase implements FbWireDatabas
                 throw new FbExceptionBuilder().exception(ISCConstants.isc_net_write_err).cause(ioex).toSQLException();
             }
             try {
-                final GenericResponse response = (GenericResponse) readResponse(null);
+                final GenericResponse response = readGenericResponse(null);
                 final FbWireTransaction transaction = protocolDescriptor.createTransaction(this,
                         response.getObjectHandle(), TransactionState.ACTIVE);
                 transactionAdded(transaction);
@@ -341,7 +324,7 @@ public class V10Database extends AbstractFbWireDatabase implements FbWireDatabas
             }
 
             try {
-                final GenericResponse response = (GenericResponse) readResponse(null);
+                final GenericResponse response = readGenericResponse(null);
                 final FbWireTransaction transaction = protocolDescriptor.createTransaction(this,
                         response.getObjectHandle(), TransactionState.PREPARED);
                 transactionAdded(transaction);
@@ -446,13 +429,6 @@ public class V10Database extends AbstractFbWireDatabase implements FbWireDatabas
     }
 
     @Override
-    public Response readResponse(WarningMessageCallback warningCallback) throws SQLException, IOException {
-        Response response = readSingleResponse(warningCallback);
-        processResponse(response);
-        return response;
-    }
-
-    @Override
     public void releaseObject(int operation, int objectId) throws SQLException {
         checkAttached();
         synchronized (getSynchronizationObject()) {
@@ -527,19 +503,8 @@ public class V10Database extends AbstractFbWireDatabase implements FbWireDatabas
      * @param response
      *         The response object
      */
-    protected void processReleaseObjectResponse(Response response) {
+    protected void processReleaseObjectResponse(@SuppressWarnings("UnusedParameters") Response response) {
         // Do nothing
-    }
-
-    @Override
-    public GenericResponse readGenericResponse(
-            WarningMessageCallback warningCallback) throws SQLException, IOException {
-        return (GenericResponse) readResponse(warningCallback);
-    }
-
-    @Override
-    public SqlResponse readSqlResponse(WarningMessageCallback warningCallback) throws SQLException, IOException {
-        return (SqlResponse) readResponse(warningCallback);
     }
 
     @Override
@@ -550,160 +515,8 @@ public class V10Database extends AbstractFbWireDatabase implements FbWireDatabas
         return blrCalculator;
     }
 
-    /**
-     * Reads the response from the server.
-     *
-     * @param warningCallback
-     *         Callback object for signalling warnings, <code>null</code> to register warning on the default callback
-     * @return Response
-     * @throws SQLException
-     *         For errors returned from the server, or when attempting to
-     *         read
-     * @throws IOException
-     *         For errors reading the response from the connection.
-     */
-    protected Response readSingleResponse(WarningMessageCallback warningCallback) throws SQLException, IOException {
-        Response response = processOperation(readNextOperation());
-        processResponseWarnings(response, warningCallback);
-        return response;
-    }
-
-    /**
-     * Reads the response based on the specified operation.
-     *
-     * @param operation
-     *         Database operation
-     * @return Response object for the operation
-     * @throws SQLException
-     *         For errors reading the response from the connection.
-     * @throws IOException
-     *         For errors reading the response from the connection.
-     */
-    protected Response processOperation(int operation) throws SQLException, IOException {
-        final XdrInputStream xdrIn = getXdrIn();
-        switch (operation) {
-        case op_response:
-            return new GenericResponse(xdrIn.readInt(), xdrIn.readLong(), xdrIn.readBuffer(), readStatusVector());
-        case op_fetch_response:
-            return new FetchResponse(xdrIn.readInt(), xdrIn.readInt());
-        case op_sql_response:
-            return new SqlResponse(xdrIn.readInt());
-        default:
-            return null;
-        }
-    }
-
     @Override
     public void enqueueDeferredAction(DeferredAction deferredAction) {
         throw new UnsupportedOperationException("enqueueDeferredAction is not supported in the V10 protocol");
-    }
-
-    @Override
-    protected void processDeferredActions() {
-        // does nothing in V10 protocol
-    }
-
-    /**
-     * Process the status vector and returns the associated {@link SQLException}
-     * instance.
-     * <p>
-     * NOTE: This method <b>returns</b> the SQLException read from the
-     * status vector, and only <b>throws</b> SQLException when an error occurs
-     * processing the status ector.
-     * </p>
-     *
-     * @return SQLException from the status vector
-     * @throws SQLException
-     *         for errors reading or processing the status vector
-     */
-    protected SQLException readStatusVector() throws SQLException {
-        boolean debug = log.isDebugEnabled();
-        final FbExceptionBuilder builder = new FbExceptionBuilder();
-        final XdrInputStream xdrIn = getXdrIn();
-        try {
-            while (true) {
-                int arg = xdrIn.readInt();
-                int errorCode;
-                switch (arg) {
-                case ISCConstants.isc_arg_gds:
-                    errorCode = xdrIn.readInt();
-                    if (debug) log.debug("readStatusVector arg:isc_arg_gds int: " + errorCode);
-                    if (errorCode != 0) {
-                        builder.exception(errorCode);
-                    }
-                    break;
-                case ISCConstants.isc_arg_warning:
-                    errorCode = xdrIn.readInt();
-                    if (debug) log.debug("readStatusVector arg:isc_arg_warning int: " + errorCode);
-                    if (errorCode != 0) {
-                        builder.warning(errorCode);
-                    }
-                    break;
-                case ISCConstants.isc_arg_interpreted:
-                case ISCConstants.isc_arg_string:
-                    String stringValue = xdrIn.readString(getEncoding());
-                    if (debug) log.debug("readStatusVector string: " + stringValue);
-                    builder.messageParameter(stringValue);
-                    break;
-                case ISCConstants.isc_arg_sql_state:
-                    String sqlState = xdrIn.readString(getEncoding());
-                    if (debug) log.debug("readStatusVector sqlstate: " + sqlState);
-                    builder.sqlState(sqlState);
-                    break;
-                case ISCConstants.isc_arg_number:
-                    int intValue = xdrIn.readInt();
-                    if (debug) log.debug("readStatusVector arg:isc_arg_number int: " + intValue);
-                    builder.messageParameter(intValue);
-                    break;
-                case ISCConstants.isc_arg_end:
-                    return builder.toFlatSQLException();
-                default:
-                    int e = xdrIn.readInt();
-                    if (debug) log.debug("readStatusVector arg: " + arg + " int: " + e);
-                    builder.messageParameter(e);
-                    break;
-                }
-            }
-        } catch (IOException ioe) {
-            throw new FbExceptionBuilder().exception(ISCConstants.isc_net_read_err).cause(ioe).toSQLException();
-        }
-    }
-
-    @Override
-    protected final void checkAttached() throws SQLException {
-        checkConnected();
-        if (!isAttached()) {
-            // TODO Update message / externalize + Check if SQL State right
-            throw new SQLException("The connection is not attached to a database", FBSQLException.SQL_STATE_CONNECTION_ERROR);
-        }
-    }
-
-    /**
-     * Checks if a physical connection to the server is established.
-     *
-     * @throws SQLException
-     *         If not connected.
-     */
-    @Override
-    protected final void checkConnected() throws SQLException {
-        if (!connection.isConnected()) {
-            // TODO Update message / externalize
-            throw new SQLException("No connection established to the database server", FBSQLException.SQL_STATE_CONNECTION_CLOSED);
-        }
-    }
-
-    @Override
-    protected void finalize() throws Throwable {
-        try {
-            if (connection.isConnected()) {
-                if (isAttached()) {
-                    safelyDetach();
-                } else {
-                    closeConnection();
-                }
-            }
-        } finally {
-            super.finalize();
-        }
     }
 }

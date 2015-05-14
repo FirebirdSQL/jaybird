@@ -107,97 +107,19 @@ public class TestV10Database {
     }
 
     /**
-     * Test if processResponse does not throw an exception if the response does
-     * not contain an exception.
-     */
-    @Test
-    public void testProcessResponse_noException() throws Exception {
-        AbstractFbWireDatabase db = createDummyDatabase();
-
-        GenericResponse genericResponse = new GenericResponse(-1, -1, null, null);
-        db.processResponse(genericResponse);
-    }
-
-    /**
-     * Test if processResponse throws the exception in the response if the
-     * exception is not a warning.
-     */
-    @Test
-    public void testProcessResponse_exception() throws Exception {
-        AbstractFbWireDatabase db = createDummyDatabase();
-        SQLException exception = new FbExceptionBuilder().exception(ISCConstants.isc_numeric_out_of_range).toSQLException();
-        expectedException.expect(sameInstance(exception));
-
-        GenericResponse genericResponse = new GenericResponse(-1, -1, null, exception);
-
-        db.processResponse(genericResponse);
-    }
-
-    /**
-     * Test if processResponse does not throw an exception if the response
-     * contains an exception that is warning.
-     */
-    @Test
-    public void testProcessResponse_warning() throws Exception {
-        AbstractFbWireDatabase db = createDummyDatabase();
-
-        SQLException exception = new FbExceptionBuilder().warning(ISCConstants.isc_numeric_out_of_range).toSQLException();
-        GenericResponse genericResponse = new GenericResponse(-1, -1, null, exception);
-
-        db.processResponse(genericResponse);
-    }
-
-    /**
-     * Test if no warning is registered with the callback if the response does
-     * not contain an exception.
-     */
-    @Test
-    public void testProcessResponseWarnings_noException() throws Exception {
-        AbstractFbWireDatabase db = createDummyDatabase();
-        SimpleDatabaseListener callback = new SimpleDatabaseListener();
-        db.addDatabaseListener(callback);
-
-        GenericResponse genericResponse = new GenericResponse(-1, -1, null, null);
-        db.processResponseWarnings(genericResponse, null);
-
-        List<SQLWarning> warnings = callback.getWarnings();
-        assertEquals("Expected no warnings to be registered", 0, warnings.size());
-    }
-
-    /**
-     * Test if no warning is registered with the callback if the response
-     * contains an exception that is not a warning.
-     */
-    @Test
-    public void testProcessResponseWarnings_exception() throws Exception {
-        AbstractFbWireDatabase db = createDummyDatabase();
-        SimpleDatabaseListener callback = new SimpleDatabaseListener();
-        db.addDatabaseListener(callback);
-
-        SQLException exception = new FbExceptionBuilder().exception(ISCConstants.isc_numeric_out_of_range).toSQLException();
-        GenericResponse genericResponse = new GenericResponse(-1, -1, null, exception);
-        db.processResponseWarnings(genericResponse, null);
-
-        List<SQLWarning> warnings = callback.getWarnings();
-        assertEquals("Expected no warnings to be registered", 0, warnings.size());
-    }
-
-    /**
      * Test if a warning is registered with the callback if the response
      * contains an exception that is a warning.
      */
     @Test
-    public void testProcessResponseWarnings_warning() throws Exception {
+    public void testWarningOnCallback_warningOnListener() throws Exception {
         AbstractFbWireDatabase db = createDummyDatabase();
         SimpleDatabaseListener callback = new SimpleDatabaseListener();
         db.addDatabaseListener(callback);
 
         SQLWarning warning = new FbExceptionBuilder().warning(ISCConstants.isc_numeric_out_of_range).toSQLException(SQLWarning.class);
-        GenericResponse genericResponse = new GenericResponse(-1, -1, null, warning);
-        db.processResponseWarnings(genericResponse, null);
+        db.getDatabaseWarningCallback().processWarning(warning);
 
         List<SQLWarning> warnings = callback.getWarnings();
-
         assertEquals("Unexpected warnings registered or no warnings registered", Arrays.asList(warning), warnings);
     }
 
@@ -208,10 +130,9 @@ public class TestV10Database {
     public void testProcessResponseWarnings_warning_noCallback() throws Exception {
         AbstractFbWireDatabase db = createDummyDatabase();
 
-        SQLException warning = new FbExceptionBuilder().warning(ISCConstants.isc_numeric_out_of_range).toSQLException();
-        GenericResponse genericResponse = new GenericResponse(-1, -1, null, warning);
+        SQLWarning warning = new FbExceptionBuilder().warning(ISCConstants.isc_numeric_out_of_range).toSQLException(SQLWarning.class);
 
-        db.processResponseWarnings(genericResponse, null);
+        db.getDatabaseWarningCallback().processWarning(warning);
     }
 
     /**

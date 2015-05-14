@@ -24,13 +24,10 @@
  */
 package org.firebirdsql.gds.ng;
 
-import org.firebirdsql.encodings.Encoding;
-import org.firebirdsql.encodings.IEncodingFactory;
 import org.firebirdsql.gds.BlobParameterBuffer;
 import org.firebirdsql.gds.EventHandle;
 import org.firebirdsql.gds.EventHandler;
 import org.firebirdsql.gds.TransactionParameterBuffer;
-import org.firebirdsql.gds.impl.GDSServerVersion;
 import org.firebirdsql.gds.ng.listeners.DatabaseListener;
 
 import java.sql.SQLException;
@@ -41,23 +38,7 @@ import java.sql.SQLException;
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @since 3.0
  */
-public interface FbDatabase extends AutoCloseable {
-
-    /**
-     * Attach to a database.
-     *
-     * @throws SQLException
-     */
-    void attach() throws SQLException;
-
-    /**
-     * Detaches from the current database.
-     *
-     * @throws SQLException If the database is not currently connected, there are still transactions open or another
-     * problem occurred detaching.
-     */
-    @Override
-    void close() throws SQLException;
+public interface FbDatabase extends FbAttachment {
 
     /**
      * Creates a new database, connection remains attached to database.
@@ -226,22 +207,8 @@ public interface FbDatabase extends AutoCloseable {
     /**
      * @return The database handle value
      */
+    @Override
     int getHandle();
-
-    /**
-     * Current attachment status of the database.
-     *
-     * @return <code>true</code> if connected to the server and attached to a
-     * database, <code>false</code> otherwise.
-     */
-    boolean isAttached();
-
-    /**
-     * Get synchronization object.
-     *
-     * @return object, cannot be <code>null</code>.
-     */
-    Object getSynchronizationObject();
 
     /**
      * @return ODS major version
@@ -252,27 +219,6 @@ public interface FbDatabase extends AutoCloseable {
      * @return ODS minor version
      */
     int getOdsMinor();
-
-    /**
-     * @return Firebird version string
-     */
-    GDSServerVersion getServerVersion();
-
-    /**
-     * @return The {@link IEncodingFactory} for this connection
-     */
-    IEncodingFactory getEncodingFactory();
-
-    /**
-     * @return The connection encoding (should be the same as returned from calling {@link org.firebirdsql.encodings.IEncodingFactory#getDefaultEncoding()}
-     * on the result of {@link #getEncodingFactory()}.
-     */
-    Encoding getEncoding();
-
-    /**
-     * @return The {@link org.firebirdsql.gds.ng.DatatypeCoder} for this database implementation.
-     */
-    DatatypeCoder getDatatypeCoder();
 
     /**
      * Adds a {@link DatabaseListener} instance to this database.
@@ -301,7 +247,8 @@ public interface FbDatabase extends AutoCloseable {
      * @param eventHandler
      *         The event handler to call when the event occurred
      * @return A suitable event handle instance
-     * @throws java.sql.SQLException For errors creating the event handle
+     * @throws java.sql.SQLException
+     *         For errors creating the event handle
      */
     EventHandle createEventHandle(String eventName, EventHandler eventHandler) throws SQLException;
 

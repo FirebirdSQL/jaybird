@@ -21,9 +21,7 @@ package org.firebirdsql.gds.ng.jna;
 import com.sun.jna.Platform;
 import com.sun.jna.Pointer;
 import com.sun.jna.ptr.IntByReference;
-import org.firebirdsql.encodings.Encoding;
 import org.firebirdsql.encodings.EncodingDefinition;
-import org.firebirdsql.encodings.IEncodingFactory;
 import org.firebirdsql.gds.*;
 import org.firebirdsql.gds.impl.BlobParameterBufferImp;
 import org.firebirdsql.gds.impl.DatabaseParameterBufferExtension;
@@ -53,31 +51,31 @@ import static org.firebirdsql.gds.ng.TransactionHelper.checkTransactionActive;
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @since 3.0
  */
-public class JnaDatabase extends AbstractFbDatabase implements TransactionListener {
+public class JnaDatabase extends AbstractFbDatabase<JnaDatabaseConnection> implements TransactionListener {
 
     // TODO Find out if there are any exception from JNA that we need to be prepared to handle.
 
     private static final Logger log = LoggerFactory.getLogger(JnaDatabase.class);
     private static final ParameterConverter PARAMETER_CONVERTER = new JnaParameterConverter();
     private static final boolean bigEndian = ByteOrder.nativeOrder() == ByteOrder.BIG_ENDIAN;
-    private final DatatypeCoder datatypeCoder;
     public static final int STATUS_VECTOR_SIZE = 20;
     public static final int MAX_STATEMENT_LENGTH = 64 * 1024;
 
-    private final JnaDatabaseConnection jnaDatabaseConnection;
     private final FbClientLibrary clientLibrary;
     // TODO Clear on disconnect?
     private final IntByReference handle = new IntByReference(0);
     private final ISC_STATUS[] statusVector = new ISC_STATUS[STATUS_VECTOR_SIZE];
 
-    public JnaDatabase(JnaDatabaseConnection jnaDatabaseConnection) {
-        this.jnaDatabaseConnection = jnaDatabaseConnection;
-        clientLibrary = jnaDatabaseConnection.getClientLibrary();
+    public JnaDatabase(JnaDatabaseConnection connection) {
+        super(connection, createDatatypeCoder(connection));
+        clientLibrary = connection.getClientLibrary();
+    }
+
+    private static DatatypeCoder createDatatypeCoder(JnaDatabaseConnection connection) {
         if (bigEndian) {
-            datatypeCoder = new BigEndianDatatypeCoder(jnaDatabaseConnection.getEncodingFactory());
-        } else {
-            datatypeCoder = new LittleEndianDatatypeCoder(jnaDatabaseConnection.getEncodingFactory());
+            return new BigEndianDatatypeCoder(connection.getEncodingFactory());
         }
+        return new LittleEndianDatatypeCoder(connection.getEncodingFactory());
     }
 
     /**
@@ -90,6 +88,7 @@ public class JnaDatabase extends AbstractFbDatabase implements TransactionListen
     @Override
     protected void checkConnected() throws SQLException {
         if (!isAttached()) {
+            // TODO Update message / externalize
             throw new SQLException("The connection is not attached to a database", FBSQLException.SQL_STATE_CONNECTION_ERROR);
         }
     }
@@ -106,7 +105,7 @@ public class JnaDatabase extends AbstractFbDatabase implements TransactionListen
                 // TODO Replace with specific error (eg native client error)
                 throw new FbExceptionBuilder()
                         .exception(ISCConstants.isc_network_error)
-                        .messageParameter(jnaDatabaseConnection.getServerName())
+                        .messageParameter(connection.getServerName())
                         .cause(ex)
                         .toSQLException();
             } finally {
@@ -118,8 +117,7 @@ public class JnaDatabase extends AbstractFbDatabase implements TransactionListen
     @Override
     public void attach() throws SQLException {
         DatabaseParameterBuffer dpb = ((DatabaseParameterBufferExtension) PARAMETER_CONVERTER
-                .toDatabaseParameterBuffer(jnaDatabaseConnection.getAttachProperties(),
-                        jnaDatabaseConnection.getEncodingFactory()))
+                .toDatabaseParameterBuffer(connection.getAttachProperties(), getEncodingFactory()))
                 .removeExtensionParams();
         attachOrCreate(dpb, false);
     }
@@ -149,7 +147,7 @@ public class JnaDatabase extends AbstractFbDatabase implements TransactionListen
                 // TODO Replace with specific error (eg native client error)
                 throw new FbExceptionBuilder()
                         .exception(ISCConstants.isc_network_error)
-                        .messageParameter(jnaDatabaseConnection.getServerName())
+                        .messageParameter(connection.getServerName())
                         .cause(ex)
                         .toSQLException();
             }
@@ -175,8 +173,7 @@ public class JnaDatabase extends AbstractFbDatabase implements TransactionListen
     @Override
     public void createDatabase() throws SQLException {
         DatabaseParameterBuffer dpb = ((DatabaseParameterBufferExtension) PARAMETER_CONVERTER
-                .toDatabaseParameterBuffer(jnaDatabaseConnection.getAttachProperties(),
-                        jnaDatabaseConnection.getEncodingFactory()))
+                .toDatabaseParameterBuffer(connection.getAttachProperties(), getEncodingFactory()))
                 .removeExtensionParams();
         attachOrCreate(dpb, true);
     }
@@ -319,11 +316,6 @@ public class JnaDatabase extends AbstractFbDatabase implements TransactionListen
     }
 
     @Override
-    public short getConnectionDialect() {
-        return jnaDatabaseConnection.getAttachProperties().getConnectionDialect();
-    }
-
-    @Override
     public int getHandle() {
         return handle.getValue();
     }
@@ -332,23 +324,8 @@ public class JnaDatabase extends AbstractFbDatabase implements TransactionListen
         return handle;
     }
 
-    @Override
-    public final IEncodingFactory getEncodingFactory() {
-        return jnaDatabaseConnection.getEncodingFactory();
-    }
-
-    @Override
-    public final Encoding getEncoding() {
-        return jnaDatabaseConnection.getEncoding();
-    }
-
     public final EncodingDefinition getEncodingDefinition() {
-        return jnaDatabaseConnection.getEncodingDefinition();
-    }
-
-    @Override
-    public final DatatypeCoder getDatatypeCoder() {
-        return datatypeCoder;
+        return connection.getEncodingDefinition();
     }
 
     protected JnaEventHandle validateEventHandle(EventHandle eventHandle) throws SQLException {
@@ -437,13 +414,13 @@ public class JnaDatabase extends AbstractFbDatabase implements TransactionListen
      */
     protected String getDatabaseUrl() {
         StringBuilder sb = new StringBuilder();
-        if (jnaDatabaseConnection.getServerName() != null) {
-            sb.append(jnaDatabaseConnection.getServerName())
+        if (connection.getServerName() != null) {
+            sb.append(connection.getServerName())
                     .append('/');
         }
-        sb.append(jnaDatabaseConnection.getPortNumber())
+        sb.append(connection.getPortNumber())
                 .append(':')
-                .append(jnaDatabaseConnection.getAttachObjectName());
+                .append(connection.getAttachObjectName());
         return sb.toString();
     }
 
@@ -451,8 +428,8 @@ public class JnaDatabase extends AbstractFbDatabase implements TransactionListen
         processStatusVector(statusVector, getDatabaseWarningCallback());
     }
 
-    public void processStatusVector(ISC_STATUS[] statusVector,
-            WarningMessageCallback warningMessageCallback) throws SQLException {
+    public void processStatusVector(ISC_STATUS[] statusVector, WarningMessageCallback warningMessageCallback)
+            throws SQLException {
         if (warningMessageCallback == null) {
             warningMessageCallback = getDatabaseWarningCallback();
         }
