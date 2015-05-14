@@ -120,6 +120,8 @@ public class TestV10EventHandling extends FBJUnit4TestBase {
     @Test
     public void testInitAsynchronousChannel() throws SQLException {
         db = createAndAttachDatabase();
+        assertEquals("Unexpected FbWireDatabase implementation", getExpectedDatabaseType(), db.getClass());
+
         final FbWireAsynchronousChannel channel = db.initAsynchronousChannel();
 
         assertTrue("Expected connected channel", channel.isConnected());
@@ -407,6 +409,7 @@ public class TestV10EventHandling extends FBJUnit4TestBase {
                 EncodingFactory.getDefaultInstance(), getProtocolCollection());
         gdsConnection.socketConnect();
         final AbstractFbWireDatabase database = (AbstractFbWireDatabase) gdsConnection.identify();
+        assertEquals("Unexpected FbWireDatabase implementation", getExpectedDatabaseType(), database.getClass());
         database.attach();
         return database;
     }
@@ -417,6 +420,10 @@ public class TestV10EventHandling extends FBJUnit4TestBase {
 
     protected ProtocolCollection getProtocolCollection() {
         return ProtocolCollection.create(new Version10Descriptor());
+    }
+
+    protected Class<? extends FbWireDatabase> getExpectedDatabaseType() {
+        return V10Database.class;
     }
 
     private FbTransaction getTransaction(FbDatabase db) throws SQLException {

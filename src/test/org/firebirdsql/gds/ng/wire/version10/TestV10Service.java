@@ -92,7 +92,7 @@ public class TestV10Service {
         return ProtocolCollection.create(new Version10Descriptor());
     }
 
-    protected Class<? extends FbWireService> getExpectedDatabaseType() {
+    protected Class<? extends FbWireService> getExpectedServiceType() {
         return V10Service.class;
     }
 
@@ -105,7 +105,7 @@ public class TestV10Service {
                 getConnectionInfo(), EncodingFactory.getDefaultInstance(), getProtocolCollection())) {
             gdsConnection.socketConnect();
             try (FbWireService service = gdsConnection.identify()) {
-                assertEquals("Unexpected FbWireDatabase implementation", getExpectedDatabaseType(), service.getClass());
+                assertEquals("Unexpected FbWireDatabase implementation", getExpectedServiceType(), service.getClass());
 
                 service.attach();
                 System.out.println(service.getHandle());
