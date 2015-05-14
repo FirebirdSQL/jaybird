@@ -119,7 +119,7 @@ public class TestV10Service {
                 getConnectionInfo(), EncodingFactory.getDefaultInstance(), getProtocolCollection())) {
             gdsConnection.socketConnect();
             try (FbWireService service = gdsConnection.identify()) {
-                assertEquals("Unexpected FbWireDatabase implementation", getExpectedServiceType(), service.getClass());
+                assertEquals("Unexpected FbWireService implementation", getExpectedServiceType(), service.getClass());
                 service.attach();
 
                 assertTrue("Expected isAttached() to return true", service.isAttached());
@@ -144,7 +144,7 @@ public class TestV10Service {
                 getConnectionInfo(), EncodingFactory.getDefaultInstance(), getProtocolCollection())) {
             gdsConnection.socketConnect();
             try (FbWireService service = gdsConnection.identify()) {
-                assertEquals("Unexpected FbWireDatabase implementation", getExpectedServiceType(), service.getClass());
+                assertEquals("Unexpected FbWireService implementation", getExpectedServiceType(), service.getClass());
                 service.attach();
 
                 ServiceRequestBuffer actionSrb = service.createServiceRequestBuffer();
@@ -188,7 +188,6 @@ public class TestV10Service {
                         startsWith("\nDatabase"),
                         containsString("Database header page information"),
                         endsWith("*END*\n")));
-                System.out.println(headerPage);
             }
         } finally {
             defaultDatabaseTearDown(fbManager);
