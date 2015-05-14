@@ -21,23 +21,31 @@ package org.firebirdsql.gds.ng.wire.version10;
 import org.firebirdsql.common.FBTestProperties;
 import org.firebirdsql.common.rules.GdsTypeRule;
 import org.firebirdsql.encodings.EncodingFactory;
+import org.firebirdsql.gds.ServiceParameterBuffer;
+import org.firebirdsql.gds.ServiceRequestBuffer;
 import org.firebirdsql.gds.impl.GDSServerVersion;
 import org.firebirdsql.gds.impl.jni.EmbeddedGDSImpl;
 import org.firebirdsql.gds.impl.jni.NativeGDSImpl;
+import org.firebirdsql.gds.ng.FbService;
 import org.firebirdsql.gds.ng.FbServiceProperties;
 import org.firebirdsql.gds.ng.wire.FbWireService;
 import org.firebirdsql.gds.ng.wire.ProtocolCollection;
 import org.firebirdsql.gds.ng.wire.ProtocolDescriptor;
 import org.firebirdsql.gds.ng.wire.WireServiceConnection;
+import org.firebirdsql.management.FBManager;
+import org.firebirdsql.management.FBStatisticsManager;
 import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
+import java.io.ByteArrayOutputStream;
 import java.sql.SQLException;
 
-import static org.firebirdsql.common.FBTestProperties.DB_PASSWORD;
-import static org.firebirdsql.common.FBTestProperties.DB_USER;
+import static org.firebirdsql.common.FBTestProperties.*;
+import static org.firebirdsql.gds.ISCConstants.*;
+import static org.firebirdsql.gds.VaxEncoding.iscVaxInteger2;
+import static org.hamcrest.CoreMatchers.*;
 import static org.junit.Assert.*;
 
 /**
@@ -57,6 +65,7 @@ public class TestV10Service {
     public final ExpectedException expectedException = ExpectedException.none();
 
     protected static final WireServiceConnection DUMMY_CONNECTION;
+
     static {
         try {
             FbServiceProperties connectionInfo = new FbServiceProperties();
@@ -71,6 +80,7 @@ public class TestV10Service {
     private static final ProtocolDescriptor DUMMY_DESCRIPTOR = new Version10Descriptor();
 
     private final FbServiceProperties connectionInfo;
+
     {
         connectionInfo = new FbServiceProperties();
         connectionInfo.setServerName(FBTestProperties.DB_SERVER_URL);
@@ -97,7 +107,11 @@ public class TestV10Service {
     }
 
     /**
-     * Tests if attaching to an existing database works.
+     * Tests if attaching to a service works.
+     * <p>
+     * Includes a test of {@link FbService#getServiceInfo(ServiceParameterBuffer, ServiceRequestBuffer, int)} (which is
+     * called to populate the server version after attach).
+     * </p>
      */
     @Test
     public void testBasicAttach() throws Exception {
@@ -106,15 +120,78 @@ public class TestV10Service {
             gdsConnection.socketConnect();
             try (FbWireService service = gdsConnection.identify()) {
                 assertEquals("Unexpected FbWireDatabase implementation", getExpectedServiceType(), service.getClass());
-
                 service.attach();
-                System.out.println(service.getHandle());
 
                 assertTrue("Expected isAttached() to return true", service.isAttached());
                 assertNotNull("Expected version string to be not null", service.getServerVersion());
                 assertNotEquals("Expected version should not be invalid", GDSServerVersion.INVALID_VERSION,
                         service.getServerVersion());
             }
+        }
+    }
+
+    /**
+     * Test for service action.
+     * <p>
+     * Replicates the behavior of {@link FBStatisticsManager#getHeaderPage()}.
+     * </p>
+     */
+    @Test
+    public void testStartServiceAction() throws Exception {
+        FBManager fbManager = createFBManager();
+        defaultDatabaseSetUp(fbManager);
+        try (WireServiceConnection gdsConnection = new WireServiceConnection(
+                getConnectionInfo(), EncodingFactory.getDefaultInstance(), getProtocolCollection())) {
+            gdsConnection.socketConnect();
+            try (FbWireService service = gdsConnection.identify()) {
+                assertEquals("Unexpected FbWireDatabase implementation", getExpectedServiceType(), service.getClass());
+                service.attach();
+
+                ServiceRequestBuffer actionSrb = service.createServiceRequestBuffer();
+                actionSrb.addArgument(isc_action_svc_db_stats);
+                actionSrb.addArgument(isc_spb_dbname, getDatabasePath(), service.getEncoding());
+                actionSrb.addArgument(isc_spb_options, isc_spb_sts_hdr_pages);
+
+                service.startServiceAction(actionSrb);
+
+                ServiceRequestBuffer infoSrb = service.createServiceRequestBuffer();
+                infoSrb.addArgument(isc_info_svc_to_eof);
+                int bufferSize = 1024;
+                ByteArrayOutputStream bos = new ByteArrayOutputStream();
+                boolean processing = true;
+                while (processing) {
+                    byte[] buffer = service.getServiceInfo(null, infoSrb, bufferSize);
+
+                    switch (buffer[0]) {
+                    case isc_info_svc_to_eof:
+                        int dataLength = iscVaxInteger2(buffer, 1);
+                        if (dataLength == 0) {
+                            if (buffer[3] != isc_info_end) {
+                                throw new SQLException("Unexpected end of stream reached.");
+                            } else {
+                                processing = false;
+                                break;
+                            }
+                        }
+                        bos.write(buffer, 3, dataLength);
+                        break;
+                    case isc_info_truncated:
+                        bufferSize = bufferSize * 2;
+                        break;
+                    case isc_info_end:
+                        processing = false;
+                        break;
+                    }
+                }
+                String headerPage = service.getEncoding().decodeFromCharset(bos.toByteArray());
+                assertThat("Expected database header page content", headerPage, allOf(
+                        startsWith("\nDatabase"),
+                        containsString("Database header page information"),
+                        endsWith("*END*\n")));
+                System.out.println(headerPage);
+            }
+        } finally {
+            defaultDatabaseTearDown(fbManager);
         }
     }
 }
