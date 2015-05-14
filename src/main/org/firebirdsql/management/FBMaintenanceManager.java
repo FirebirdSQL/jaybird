@@ -1,12 +1,12 @@
 /*
- * Firebird Open Source J2EE Connector - JDBC Driver
+ * Firebird Open Source JavaEE Connector - JDBC Driver
  * 
  * Copyright (C) All Rights Reserved.
  * 
  * This file was created by members of the firebird development team.
  * All individual contributions remain the Copyright (C) of those
  * individuals.  Contributors to this file are either listed here or
- * can be obtained from a CVS history command.
+ * can be obtained from a source control history command.
  * 
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -38,69 +38,69 @@
  */
 package org.firebirdsql.management;
 
-import java.sql.SQLException;
-import java.util.LinkedList;
-import java.util.List;
-
-import org.firebirdsql.gds.GDSException;
-import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.ServiceRequestBuffer;
 import org.firebirdsql.gds.impl.GDSType;
-import org.firebirdsql.jdbc.FBSQLException;
+import org.firebirdsql.gds.ng.FbExceptionBuilder;
+import org.firebirdsql.gds.ng.FbService;
 
+import java.io.ByteArrayOutputStream;
 import java.io.OutputStream;
 import java.io.PrintStream;
-import java.io.ByteArrayOutputStream;
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
+
+import static org.firebirdsql.gds.ISCConstants.*;
+import static org.firebirdsql.gds.VaxEncoding.iscVaxInteger;
+import static org.firebirdsql.gds.VaxEncoding.iscVaxInteger2;
 
 /**
- * The <code>FBMaintenanceManager</code> class is responsible for replicating
- * the functionality provided by the <code>gfix</code> command-line tool.
+ * The <code>FBMaintenanceManager</code> class is responsible for replicating the functionality provided by
+ * the <code>gfix</code> command-line tool.
  * <p>
  * Among the responsibilities of this class are:
  * <ul>
- *      <li>Database shutdown
- *      <li>Extended database shutdown/online modes new with Firebird 2.5
- *      <li>Changing database mode to read-only or read-write
- *      <li>Enabling or disabling forced writes in the database
- *      <li>Changing the dialect of the database
- *      <li>Setting the cache size at database-level
- *      <li>Mending databases and making minor repairs
- *      <li>Sweeping databases
- *      <li>Activating and killing shadow files
- *      <li>Displaying, committing, or recovering limbo transactions
+ * <li>Database shutdown</li>
+ * <li>Extended database shutdown/online modes new with Firebird 2.5</li>
+ * <li>Changing database mode to read-only or read-write</li>
+ * <li>Enabling or disabling forced writes in the database</li>
+ * <li>Changing the dialect of the database</li>
+ * <li>Setting the cache size at database-level</li>
+ * <li>Mending databases and making minor repairs</li>
+ * <li>Sweeping databases</li>
+ * <li>Activating and killing shadow files</li>
+ * <li>Displaying, committing, or recovering limbo transactions</li>
  * </ul>
  * </p>
  *
  * @author <a href="mailto:gab_reid@users.sourceforge.net">Gabriel Reid</a>
  * @author <a href="mailto:tsteinmaurer@users.sourceforge.net">Thomas Steinmaurer</a>
+ * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  */
 public class FBMaintenanceManager extends FBServiceManager implements MaintenanceManager {
 
     /**
-     * Create a new instance of <code>FBMaintenanceManager</code> based on
-     * the default GDSType.
+     * Create a new instance of <code>FBMaintenanceManager</code> based on the default GDSType.
      */
     public FBMaintenanceManager() {
         super();
     }
 
     /**
-     * Create a new instance of <code>FBMaintenanceManager</code> based on
-     * a given GDSType.
-     * 
+     * Create a new instance of <code>FBMaintenanceManager</code> based on a given GDSType.
+     *
      * @param gdsType
-     *            type must be PURE_JAVA, EMBEDDED, or NATIVE
+     *         type must be PURE_JAVA, EMBEDDED, or NATIVE
      */
     public FBMaintenanceManager(String gdsType) {
         super(gdsType);
     }
 
     /**
-     * Create a new instance of <code>FBMaintenanceManager</code> based on
-     * a given GDSType.
+     * Create a new instance of <code>FBMaintenanceManager</code> based on a given GDSType.
      *
      * @param gdsType
-     *            The GDS implementation type to use
+     *         The GDS implementation type to use
      */
     public FBMaintenanceManager(GDSType gdsType) {
         super(gdsType);
@@ -108,13 +108,14 @@ public class FBMaintenanceManager extends FBServiceManager implements Maintenanc
 
     public void setDatabaseAccessMode(int mode) throws SQLException {
         if (mode != ACCESS_MODE_READ_WRITE && mode != ACCESS_MODE_READ_ONLY) {
-            throw new IllegalArgumentException("mode must be one of "
-                    + "ACCESS_MODE_READ_WRITE or ACCESS_MODE_READ_ONLY");
+            throw new IllegalArgumentException("mode must be one of ACCESS_MODE_READ_WRITE or ACCESS_MODE_READ_ONLY");
         }
 
-        ServiceRequestBuffer srb = createDefaultPropertiesSRB();
-        srb.addArgument(ISCConstants.isc_spb_prp_access_mode, (byte) mode);
-        executeServicesOperation(srb);
+        try (FbService service = attachServiceManager()) {
+            ServiceRequestBuffer srb = createDefaultPropertiesSRB(service);
+            srb.addArgument(isc_spb_prp_access_mode, (byte) mode);
+            executeServicesOperation(service, srb);
+        }
     }
 
     public void setDatabaseDialect(int dialect) throws SQLException {
@@ -122,9 +123,11 @@ public class FBMaintenanceManager extends FBServiceManager implements Maintenanc
             throw new IllegalArgumentException("dialect must be either 1 or 3");
         }
 
-        ServiceRequestBuffer srb = createDefaultPropertiesSRB();
-        srb.addArgument(ISCConstants.isc_spb_prp_set_sql_dialect, dialect);
-        executeServicesOperation(srb);
+        try (FbService service = attachServiceManager()) {
+            ServiceRequestBuffer srb = createDefaultPropertiesSRB(service);
+            srb.addArgument(isc_spb_prp_set_sql_dialect, dialect);
+            executeServicesOperation(service, srb);
+        }
     }
 
     public void setDefaultCacheBuffer(int pageCount) throws SQLException {
@@ -132,26 +135,32 @@ public class FBMaintenanceManager extends FBServiceManager implements Maintenanc
         if (pageCount < 1) {
             throw new IllegalArgumentException("page count must be positive");
         }
-        ServiceRequestBuffer srb = createDefaultPropertiesSRB();
-        srb.addArgument(ISCConstants.isc_spb_prp_page_buffers, pageCount);
-        executeServicesOperation(srb);
+
+        try (FbService service = attachServiceManager()) {
+            ServiceRequestBuffer srb = createDefaultPropertiesSRB(service);
+            srb.addArgument(isc_spb_prp_page_buffers, pageCount);
+            executeServicesOperation(service, srb);
+        }
     }
 
     public void setForcedWrites(boolean forced) throws SQLException {
-        ServiceRequestBuffer srb = createDefaultPropertiesSRB();
-        srb.addArgument(ISCConstants.isc_spb_prp_write_mode, (byte) (forced ? ISCConstants.isc_spb_prp_wm_sync
-                : ISCConstants.isc_spb_prp_wm_async));
-        executeServicesOperation(srb);
+        try (FbService service = attachServiceManager()) {
+            ServiceRequestBuffer srb = createDefaultPropertiesSRB(service);
+            srb.addArgument(isc_spb_prp_write_mode, (byte) (forced ? isc_spb_prp_wm_sync : isc_spb_prp_wm_async));
+            executeServicesOperation(service, srb);
+        }
     }
 
     public void setPageFill(int pageFill) throws SQLException {
         if (pageFill != PAGE_FILL_FULL && pageFill != PAGE_FILL_RESERVE) {
             throw new IllegalArgumentException("Page fill must be either PAGE_FILL_FULL or PAGE_FILL_RESERVE");
         }
-        ServiceRequestBuffer srb = createDefaultPropertiesSRB();
-        srb.addArgument(ISCConstants.isc_spb_prp_reserve_space, (byte) pageFill);
 
-        executeServicesOperation(srb);
+        try (FbService service = attachServiceManager()) {
+            ServiceRequestBuffer srb = createDefaultPropertiesSRB(service);
+            srb.addArgument(isc_spb_prp_reserve_space, (byte) pageFill);
+            executeServicesOperation(service, srb);
+        }
     }
 
     // ----------- Database Shutdown -------------------
@@ -167,19 +176,21 @@ public class FBMaintenanceManager extends FBServiceManager implements Maintenanc
             throw new IllegalArgumentException("Timeout must be >= 0");
         }
 
-        ServiceRequestBuffer srb = createDefaultPropertiesSRB();
-        srb.addArgument(shutdownMode, timeout);
-        executeServicesOperation(srb);
+        try (FbService service = attachServiceManager()) {
+            ServiceRequestBuffer srb = createDefaultPropertiesSRB(service);
+            srb.addArgument(shutdownMode, timeout);
+            executeServicesOperation(service, srb);
+        }
     }
 
     public void shutdownDatabase(byte operationMode, int shutdownModeEx, int timeout) throws SQLException {
-        if (operationMode != OPERATION_MODE_MULTI 
+        if (operationMode != OPERATION_MODE_MULTI
                 && operationMode != OPERATION_MODE_SINGLE
                 && operationMode != OPERATION_MODE_FULL_SHUTDOWN) {
             throw new IllegalArgumentException("Operation mode must be one of: OPERATION_MODE_MULTI, "
                     + "OPERATION_MODE_SINGLE, OPERATION_MODE_FULL_SHUTDOWN");
         }
-        if (shutdownModeEx != SHUTDOWNEX_FORCE 
+        if (shutdownModeEx != SHUTDOWNEX_FORCE
                 && shutdownModeEx != SHUTDOWNEX_ATTACHMENTS
                 && shutdownModeEx != SHUTDOWNEX_TRANSACTIONS) {
             throw new IllegalArgumentException("Extended shutdown mode must be "
@@ -189,42 +200,45 @@ public class FBMaintenanceManager extends FBServiceManager implements Maintenanc
             throw new IllegalArgumentException("Timeout must be >= 0");
         }
 
-        ServiceRequestBuffer srb = createDefaultPropertiesSRB();
-        srb.addArgument(ISCConstants.isc_spb_prp_shutdown_mode, operationMode);
-        srb.addArgument(shutdownModeEx, timeout);
-        executeServicesOperation(srb);
+        try (FbService service = attachServiceManager()) {
+            ServiceRequestBuffer srb = createDefaultPropertiesSRB(service);
+            srb.addArgument(isc_spb_prp_shutdown_mode, operationMode);
+            srb.addArgument(shutdownModeEx, timeout);
+            executeServicesOperation(service, srb);
+        }
     }
 
     public void bringDatabaseOnline() throws SQLException {
-        executePropertiesOperation(ISCConstants.isc_spb_prp_db_online);
+        executePropertiesOperation(isc_spb_prp_db_online);
     }
 
     public void bringDatabaseOnline(byte operationMode) throws SQLException {
-        if (operationMode != OPERATION_MODE_NORMAL 
+        if (operationMode != OPERATION_MODE_NORMAL
                 && operationMode != OPERATION_MODE_MULTI
                 && operationMode != OPERATION_MODE_SINGLE) {
             throw new IllegalArgumentException("Operation mode must be "
                     + "one of: OPERATION_MODE_NORMAL, OPERATION_MODE_MULTI, OPERATION_MODE_SINGLE");
         }
 
-        ServiceRequestBuffer srb = createDefaultPropertiesSRB();
-        srb.addArgument(ISCConstants.isc_spb_prp_online_mode, operationMode);
-        executeServicesOperation(srb);
+        try (FbService service = attachServiceManager()) {
+            ServiceRequestBuffer srb = createDefaultPropertiesSRB(service);
+            srb.addArgument(isc_spb_prp_online_mode, operationMode);
+            executeServicesOperation(service, srb);
+        }
     }
 
     // -------------- Database Repair ----------------------
 
     public void markCorruptRecords() throws SQLException {
-        executeRepairOperation(ISCConstants.isc_spb_rpr_mend_db);
+        executeRepairOperation(isc_spb_rpr_mend_db);
     }
 
     public void validateDatabase() throws SQLException {
-        executeRepairOperation(ISCConstants.isc_spb_rpr_validate_db);
+        executeRepairOperation(isc_spb_rpr_validate_db);
     }
 
     public void validateDatabase(int options) throws SQLException {
-
-        if (options < 0 
+        if (options < 0
                 || options != 0 && options != VALIDATE_IGNORE_CHECKSUM
                 && (options & ~VALIDATE_IGNORE_CHECKSUM) != VALIDATE_READ_ONLY
                 && (options & ~VALIDATE_IGNORE_CHECKSUM) != VALIDATE_FULL
@@ -234,8 +248,10 @@ public class FBMaintenanceManager extends FBServiceManager implements Maintenanc
                     + "VALIDATE_READ_ONLY, or VALIDATE_FULL, optionally combined with VALIDATE_IGNORE_CHECKSUM");
         }
 
-        ServiceRequestBuffer srb = createRepairSRB(options | ISCConstants.isc_spb_rpr_validate_db);
-        executeServicesOperation(srb);
+        try (FbService service = attachServiceManager()) {
+            ServiceRequestBuffer srb = createRepairSRB(service, options | isc_spb_rpr_validate_db);
+            executeServicesOperation(service, srb);
+        }
     }
 
     // ----------- Sweeping -------------------------
@@ -245,23 +261,25 @@ public class FBMaintenanceManager extends FBServiceManager implements Maintenanc
             throw new IllegalArgumentException("transactions must be >= 0");
         }
 
-        ServiceRequestBuffer srb = createDefaultPropertiesSRB();
-        srb.addArgument(ISCConstants.isc_spb_prp_sweep_interval, transactions);
-        executeServicesOperation(srb);
+        try (FbService service = attachServiceManager()) {
+            ServiceRequestBuffer srb = createDefaultPropertiesSRB(service);
+            srb.addArgument(isc_spb_prp_sweep_interval, transactions);
+            executeServicesOperation(service, srb);
+        }
     }
 
     public void sweepDatabase() throws SQLException {
-        executeRepairOperation(ISCConstants.isc_spb_rpr_sweep_db);
+        executeRepairOperation(isc_spb_rpr_sweep_db);
     }
 
     // ----------- Shadow Files ------------------------------------
 
     public void activateShadowFile() throws SQLException {
-        executePropertiesOperation(ISCConstants.isc_spb_prp_activate);
+        executePropertiesOperation(isc_spb_prp_activate);
     }
 
     public void killUnavailableShadows() throws SQLException {
-        executeRepairOperation(ISCConstants.isc_spb_rpr_kill_shadows);
+        executeRepairOperation(isc_spb_rpr_kill_shadows);
     }
 
     // ----------- Transaction Management ----------------------------
@@ -273,46 +291,46 @@ public class FBMaintenanceManager extends FBServiceManager implements Maintenanc
             ps.print(trId + "\n");
         }
     }
-    
+
     public List<Integer> limboTransactionsAsList() throws SQLException {
         // See also fbscvmgr.cpp method printInfo
         OutputStream saveOut = getLogger();
         try {
-            List<Integer> result = new LinkedList<Integer>();
+            List<Integer> result = new ArrayList<>();
             ByteArrayOutputStream out = new ByteArrayOutputStream();
             setLogger(out);
-            executeRepairOperation(ISCConstants.isc_spb_rpr_list_limbo_trans);
+            executeRepairOperation(isc_spb_rpr_list_limbo_trans);
             byte output[] = out.toByteArray();
 
             int idx = 0;
             while (idx < output.length) {
                 switch (output[idx++]) {
-                case ISCConstants.isc_spb_single_tra_id:
-                case ISCConstants.isc_spb_multi_tra_id:
-                    int trId = getGds().iscVaxInteger(output, idx, 4);
+                case isc_spb_single_tra_id:
+                case isc_spb_multi_tra_id:
+                    int trId = iscVaxInteger(output, idx, 4);
                     idx += 4;
                     result.add(trId);
                     break;
                 // Information items we will ignore for now
-                case ISCConstants.isc_spb_tra_id:
+                case isc_spb_tra_id:
                     idx += 4;
                     break;
-                case ISCConstants.isc_spb_tra_state:
-                case ISCConstants.isc_spb_tra_advise:
+                case isc_spb_tra_state:
+                case isc_spb_tra_advise:
                     idx++;
                     break;
-                case ISCConstants.isc_spb_tra_host_site:
-                case ISCConstants.isc_spb_tra_remote_site:
-                case ISCConstants.isc_spb_tra_db_path:
-                    int length = getGds().iscVaxInteger(output, idx, 2);
+                case isc_spb_tra_host_site:
+                case isc_spb_tra_remote_site:
+                case isc_spb_tra_db_path:
+                    int length = iscVaxInteger2(output, idx);
                     idx += 2;
                     idx += length;
                     break;
                 default:
-                    GDSException gdsException = new GDSException(ISCConstants.isc_arg_gds,
-                            ISCConstants.isc_fbsvcmgr_info_err);
-                    gdsException.setNext(new GDSException(ISCConstants.isc_arg_number, output[idx - 1] & 0xFF));
-                    throw new FBSQLException(gdsException);
+                    throw new FbExceptionBuilder()
+                            .exception(isc_fbsvcmgr_info_err)
+                            .messageParameter(output[idx - 1] & 0xFF)
+                            .toSQLException();
                 }
             }
             return result;
@@ -332,15 +350,19 @@ public class FBMaintenanceManager extends FBServiceManager implements Maintenanc
     }
 
     public void commitTransaction(int transactionId) throws SQLException {
-        ServiceRequestBuffer srb = createDefaultRepairSRB();
-        srb.addArgument(ISCConstants.isc_spb_rpr_commit_trans, transactionId);
-        executeServicesOperation(srb);
+        try (FbService service = attachServiceManager()) {
+            ServiceRequestBuffer srb = createDefaultRepairSRB(service);
+            srb.addArgument(isc_spb_rpr_commit_trans, transactionId);
+            executeServicesOperation(service, srb);
+        }
     }
 
     public void rollbackTransaction(int transactionId) throws SQLException {
-        ServiceRequestBuffer srb = createDefaultRepairSRB();
-        srb.addArgument(ISCConstants.isc_spb_rpr_rollback_trans, transactionId);
-        executeServicesOperation(srb);
+        try (FbService service = attachServiceManager()) {
+            ServiceRequestBuffer srb = createDefaultRepairSRB(service);
+            srb.addArgument(isc_spb_rpr_rollback_trans, transactionId);
+            executeServicesOperation(service, srb);
+        }
     }
 
     // ----------- Private implementation methods --------------------
@@ -349,65 +371,73 @@ public class FBMaintenanceManager extends FBServiceManager implements Maintenanc
      * Execute a isc_spb_rpr_* (repair) services operation.
      *
      * @param operation
-     *            The identifier for the operation to be executed
+     *         The identifier for the operation to be executed
      * @throws SQLException
-     *             if a database access error occurs
+     *         if a database access error occurs
      */
     private void executeRepairOperation(int operation) throws SQLException {
-        ServiceRequestBuffer srb = createRepairSRB(operation);
-        executeServicesOperation(srb);
+        try (FbService service = attachServiceManager()) {
+            ServiceRequestBuffer srb = createRepairSRB(service, operation);
+            executeServicesOperation(service, srb);
+        }
     }
 
     /**
      * Execute a isc_spb_prp_* (properties) services operation.
      *
      * @param operation
-     *            The identifier for the operation to be executed
+     *         The identifier for the operation to be executed
      * @throws SQLException
-     *             if a database access error occurs
+     *         if a database access error occurs
      */
     private void executePropertiesOperation(int operation) throws SQLException {
-        ServiceRequestBuffer srb = createPropertiesSRB(operation);
-        executeServicesOperation(srb);
+        try (FbService service = attachServiceManager()) {
+            ServiceRequestBuffer srb = createPropertiesSRB(service, operation);
+            executeServicesOperation(service, srb);
+        }
     }
 
     /**
-     * Get a mostly empty properties-operation buffer that can be filled in as 
-     * needed. The buffer created by this method cannot have the options 
+     * Get a mostly empty properties-operation buffer that can be filled in as
+     * needed. The buffer created by this method cannot have the options
      * bitmask set on it.
      */
-    private ServiceRequestBuffer createDefaultPropertiesSRB() {
-        return createPropertiesSRB(0);
+    private ServiceRequestBuffer createDefaultPropertiesSRB(FbService service) {
+        return createPropertiesSRB(service, 0);
     }
 
     /**
-     * Get a mostly empty repair-operation buffer that can be filled in as 
-     * needed. The buffer created by this method cannot have the options 
+     * Get a mostly empty repair-operation buffer that can be filled in as
+     * needed. The buffer created by this method cannot have the options
      * bitmask set on it.
      */
-    private ServiceRequestBuffer createDefaultRepairSRB() {
-        return createRepairSRB(0);
+    private ServiceRequestBuffer createDefaultRepairSRB(FbService service) {
+        return createRepairSRB(service, 0);
     }
 
     /**
-     * Get a mostly-empty properties-operation request buffer that can be 
+     * Get a mostly-empty properties-operation request buffer that can be
      * filled as needed.
      *
+     * @param service
+     *         Service handle
      * @param options
-     *            The options bitmask for the request buffer
+     *         The options bitmask for the request buffer
      */
-    private ServiceRequestBuffer createPropertiesSRB(int options) {
-        return createRequestBuffer(ISCConstants.isc_action_svc_properties, options);
+    private ServiceRequestBuffer createPropertiesSRB(FbService service, int options) {
+        return createRequestBuffer(service, isc_action_svc_properties, options);
     }
 
     /**
      * Get a mostly-empty repair-operation request buffer that can be
      * filled as needed.
      *
+     * @param service
+     *         Service handle
      * @param options
-     *            The options bitmask for the request buffer
+     *         The options bitmask for the request buffer
      */
-    private ServiceRequestBuffer createRepairSRB(int options) {
-        return createRequestBuffer(ISCConstants.isc_action_svc_repair, options);
+    private ServiceRequestBuffer createRepairSRB(FbService service, int options) {
+        return createRequestBuffer(service, isc_action_svc_repair, options);
     }
 }

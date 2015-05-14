@@ -67,7 +67,7 @@ public interface FbService extends FbAttachment {
      * Performs a service info request (service query.
      *
      * @param serviceParameterBuffer
-     *         Service parameters
+     *         Service parameters (can be null)
      * @param serviceRequestBuffer
      *         Service request info
      * @param maxBufferLength

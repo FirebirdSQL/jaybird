@@ -1,12 +1,12 @@
 /*
- * Firebird Open Source J2EE Connector - JDBC Driver
+ * Firebird Open Source JavaEE Connector - JDBC Driver
  * 
  * Copyright (C) All Rights Reserved.
  * 
  * This file was created by members of the firebird development team.
  * All individual contributions remain the Copyright (C) of those
  * individuals.  Contributors to this file are either listed here or
- * can be obtained from a CVS history command.
+ * can be obtained from a source control history command.
  * 
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -38,85 +38,94 @@
  */
 package org.firebirdsql.management;
 
-import java.sql.SQLException;
-
-import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.ServiceRequestBuffer;
 import org.firebirdsql.gds.impl.GDSType;
+import org.firebirdsql.gds.ng.FbService;
+
+import java.sql.SQLException;
+
+import static org.firebirdsql.gds.ISCConstants.*;
 
 /**
- * The <code>FBStatisticsManager</code> class is responsible for replicating 
- * the functionality of the <code>gstat</code> command-line tool.
+ * The <code>FBStatisticsManager</code> class is responsible for replicating the functionality of
+ * the <code>gstat</code> command-line tool.
+ * <p>
  * This functionality includes:
  * <ul>
- *      <li>Retrieving data table statistics
- *      <li>Retrieving the database header page
- *      <li>Retrieving index statistics
- *      <li>Retrieving database logging information
- *      <li>Retrieving statistics for the data dictionary
+ * <li>Retrieving data table statistics</li>
+ * <li>Retrieving the database header page</li>
+ * <li>Retrieving index statistics</li>
+ * <li>Retrieving database logging information</li>
+ * <li>Retrieving statistics for the data dictionary</li>
  * </ul>
+ * </p>
  *
  * @author <a href="mailto:gab_reid@users.sourceforge.net">Gabriel Reid</a>
  */
 public class FBStatisticsManager extends FBServiceManager implements StatisticsManager {
 
-    private static final int possibleStatistics = 
-        DATA_TABLE_STATISTICS | SYSTEM_TABLE_STATISTICS | INDEX_STATISTICS |
-        RECORD_VERSION_STATISTICS;
+    private static final int possibleStatistics =
+            DATA_TABLE_STATISTICS | SYSTEM_TABLE_STATISTICS | INDEX_STATISTICS |
+                    RECORD_VERSION_STATISTICS;
 
     /**
      * Create a new instance of <code>FBMaintenanceManager</code> based on
      * the default GDSType.
      */
     public FBStatisticsManager() {
-    	super();
-    }
-
-    /**
-     * Create a new instance of <code>FBMaintenanceManager</code> based on
-     * a given GDSType.
-     * 
-     * @param gdsType type must be PURE_JAVA, EMBEDDED, or NATIVE
-     */
-    public FBStatisticsManager(String gdsType) {
-    	super(gdsType);
+        super();
     }
 
     /**
      * Create a new instance of <code>FBMaintenanceManager</code> based on
      * a given GDSType.
      *
-     * @param gdsType The GDS implementation type to use
+     * @param gdsType
+     *         type must be PURE_JAVA, EMBEDDED, or NATIVE
+     */
+    public FBStatisticsManager(String gdsType) {
+        super(gdsType);
+    }
+
+    /**
+     * Create a new instance of <code>FBMaintenanceManager</code> based on
+     * a given GDSType.
+     *
+     * @param gdsType
+     *         The GDS implementation type to use
      */
     public FBStatisticsManager(GDSType gdsType) {
         super(gdsType);
     }
 
     public void getHeaderPage() throws SQLException {
-        ServiceRequestBuffer srb = createStatsSRB(
-                ISCConstants.isc_spb_sts_hdr_pages);
-        executeServicesOperation(srb);
+        try (FbService service = attachServiceManager()) {
+            ServiceRequestBuffer srb = createStatsSRB(service, isc_spb_sts_hdr_pages);
+            executeServicesOperation(service, srb);
+        }
     }
 
     public void getDatabaseStatistics() throws SQLException {
-        ServiceRequestBuffer srb = createDefaultStatsSRB();
-        executeServicesOperation(srb);
+        try (FbService service = attachServiceManager()) {
+            ServiceRequestBuffer srb = createDefaultStatsSRB(service);
+            executeServicesOperation(service, srb);
+        }
     }
 
     public void getDatabaseStatistics(int options) throws SQLException {
-        if (options != 0 && (options | possibleStatistics) != possibleStatistics){
-            throw new IllegalArgumentException("options must be 0 or a " 
+        if (options != 0 && (options | possibleStatistics) != possibleStatistics) {
+            throw new IllegalArgumentException("options must be 0 or a "
                     + "combination of DATA_TABLE_STATISTICS, "
                     + "SYSTEM_TABLE_STATISTICS, INDEX_STATISTICS, or 0");
         }
-        
-        ServiceRequestBuffer srb = createStatsSRB(options);
-        executeServicesOperation(srb);
+
+        try (FbService service = attachServiceManager()) {
+            ServiceRequestBuffer srb = createStatsSRB(service, options);
+            executeServicesOperation(service, srb);
+        }
     }
 
     public void getTableStatistics(String[] tableNames) throws SQLException {
-        ServiceRequestBuffer srb = createStatsSRB(ISCConstants.isc_spb_sts_table);
-
         // create space-separated list of tables
         StringBuilder commandLine = new StringBuilder();
         for (int i = 0; i < tableNames.length; i++) {
@@ -124,31 +133,38 @@ public class FBStatisticsManager extends FBServiceManager implements StatisticsM
             if (i < tableNames.length - 1)
                 commandLine.append(' ');
         }
-        srb.addArgument(ISCConstants.isc_spb_command_line, commandLine.toString());
-        
-        executeServicesOperation(srb);
+
+        try (FbService service = attachServiceManager()) {
+            ServiceRequestBuffer srb = createStatsSRB(service, isc_spb_sts_table);
+            srb.addArgument(isc_spb_command_line, commandLine.toString(), service.getEncoding());
+            executeServicesOperation(service, srb);
+        }
     }
 
     //---------- Private implementation methods -----------------
-    
+
     /**
-     * Get a mostly empty buffer that can be filled in as needed. 
+     * Get a mostly empty buffer that can be filled in as needed.
      * The buffer created by this method cannot have the options bitmask
      * set on it.
+     *
+     * @param service
+     *         Service handle
      */
-    private ServiceRequestBuffer createDefaultStatsSRB(){
-        return createStatsSRB(0);
+    private ServiceRequestBuffer createDefaultStatsSRB(FbService service) {
+        return createStatsSRB(service, 0);
     }
 
     /**
      * Get a mostly-empty repair-operation request buffer that can be
      * filled as needed.
      *
-     * @param options The options bitmask for the request buffer
+     * @param service
+     *         Service handle
+     * @param options
+     *         The options bitmask for the request buffer
      */
-    private ServiceRequestBuffer createStatsSRB(int options){
-        return createRequestBuffer(
-                ISCConstants.isc_action_svc_db_stats, 
-                options);
+    private ServiceRequestBuffer createStatsSRB(FbService service, int options) {
+        return createRequestBuffer(service, isc_action_svc_db_stats, options);
     }
 }

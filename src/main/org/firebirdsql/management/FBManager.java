@@ -61,7 +61,7 @@ public class FBManager implements FBManagerMBean {
     private GDSType type;
 
     public FBManager() {
-        this(GDSFactory.getDefaultGDS().getType());
+        this(GDSFactory.getDefaultGDSType());
     }
 
     public FBManager(GDSType type) {
@@ -224,8 +224,10 @@ public class FBManager implements FBManagerMBean {
     /**
      * Sets the dialect.
      *
-     * @param dialect Database dialect (1 or 3)
-     * @throws java.lang.IllegalArgumentException if value is not 1 or 3
+     * @param dialect
+     *         Database dialect (1 or 3)
+     * @throws java.lang.IllegalArgumentException
+     *         if value is not 1 or 3
      */
     public void setDialect(int dialect) {
         if (!(dialect == 1 || dialect == 3)) throw new IllegalArgumentException("Only dialect 1 or 3 allowed");
@@ -244,12 +246,13 @@ public class FBManager implements FBManagerMBean {
      * Some values are not valid on all Firebird versions.
      * </p>
      *
-     * @param pageSize The page size to be used in a restored database,
-     *        one of 1024, 2048, 4196, 8192 or 16384
+     * @param pageSize
+     *         The page size to be used in a restored database,
+     *         one of 1024, 2048, 4196, 8192 or 16384
      */
     public void setPageSize(int pageSize) {
         if (pageSize != 1024 && pageSize != 2048
-                && pageSize != 4096 && pageSize != 8192 && pageSize != 16384){
+                && pageSize != 4096 && pageSize != 8192 && pageSize != 16384) {
             throw new IllegalArgumentException(
                     "Page size must be one of 1024, 2048, 4096, 8192 or 16384");
         }

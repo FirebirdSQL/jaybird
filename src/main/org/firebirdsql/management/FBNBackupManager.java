@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source J2EE Connector - JDBC Driver
+ * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -12,122 +12,105 @@
  * This file was created by members of the firebird development team.
  * All individual contributions remain the Copyright (C) of those
  * individuals.  Contributors to this file are either listed here or
- * can be obtained from a CVS history command.
+ * can be obtained from a source control history command.
  *
  * All rights reserved.
  */
 package org.firebirdsql.management;
 
+import org.firebirdsql.gds.ServiceRequestBuffer;
+import org.firebirdsql.gds.impl.GDSType;
+import org.firebirdsql.gds.ng.FbService;
+
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.firebirdsql.gds.GDS;
-import org.firebirdsql.gds.ISCConstants;
-import org.firebirdsql.gds.ServiceRequestBuffer;
-import org.firebirdsql.gds.impl.GDSType;
-import org.firebirdsql.jdbc.FBSQLException;
+import static org.firebirdsql.gds.ISCConstants.*;
 
 /**
- * Implements the incremental backup and restore functionality of NBackup
- * via the Firebird Services API.
- * 
+ * Implements the incremental backup and restore functionality of NBackup via the Firebird Services API.
+ *
  * @author <a href="mailto:tsteinmaurer@users.sourceforge.net">Thomas Steinmaurer</a>
+ * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  */
 public class FBNBackupManager extends FBServiceManager implements NBackupManager {
 
-    private final List<String> backupFiles = new ArrayList<String>();
-    
-    private int backupLevel = 0;
-    private boolean noDBTriggers = false;
-    
+    private final List<String> backupFiles = new ArrayList<>();
+
+    private int backupLevel;
+    private boolean noDBTriggers;
+
     /**
-     * Create a new instance of <code>FBNBackupManager</code> based on
-     * the default GDSType.
+     * Create a new instance of <code>FBNBackupManager</code> based on the default GDSType.
      */
-    public FBNBackupManager()
-    {
-    	super();
+    public FBNBackupManager() {
     }
 
     /**
-     * Create a new instance of <code>FBNBackupManager</code> based on
-     * a given GDSType.
-     * 
-     * @param gdsType type must be PURE_JAVA, EMBEDDED, or NATIVE
+     * Create a new instance of <code>FBNBackupManager</code> based on a given GDSType.
+     *
+     * @param gdsType
+     *         type must be PURE_JAVA, EMBEDDED, or NATIVE
      */
-    public FBNBackupManager(String gdsType)
-    {
-    	super(gdsType);
+    public FBNBackupManager(String gdsType) {
+        super(gdsType);
     }
 
     /**
-     * Create a new instance of <code>FBNBackupManager</code> based on
-     * a given GDSType.
-     * 
-     * @param gdsType type must be PURE_JAVA, EMBEDDED, or NATIVE
+     * Create a new instance of <code>FBNBackupManager</code> based on a given GDSType.
+     *
+     * @param gdsType
+     *         type must be PURE_JAVA, EMBEDDED, or NATIVE
      */
     public FBNBackupManager(GDSType gdsType) {
-    	super(gdsType);
+        super(gdsType);
     }
-    
-    /**
-     * @see org.firebirdsql.management.NBackupManager#setBackupFile(java.lang.String)
-     */
+
     public void setBackupFile(String backupFile) {
         addBackupFile(backupFile);
     }
 
-    /**
-     * @see org.firebirdsql.management.NBackupManager#addBackupFile(java.lang.String)
-     */
     public void addBackupFile(String backupFile) {
         backupFiles.add(backupFile);
     }
-    
-    /**
-     * @see org.firebirdsql.management.NBackupManager#clearBackupFiles()
-     */
+
     public void clearBackupFiles() {
         backupFiles.clear();
     }
-    
-    /**
-     * @see org.firebirdsql.management.ServiceManager#setDatabase(java.lang.String)
-     */
+
     public void setDatabase(String database) {
         super.setDatabase(database);
     }
-    
-    /**
-     * @see org.firebirdsql.management.NBackupManager#backupDatabase()
-     */
+
     public void backupDatabase() throws SQLException {
-        executeServicesOperation(getBackupSRB());
+        try (FbService service = attachServiceManager()) {
+            executeServicesOperation(service, getBackupSRB(service));
+        }
     }
 
     /**
-     * Creates and returns the "backup" service request buffer for the Service
-     * Manager.
-     * 
+     * Creates and returns the "backup" service request buffer for the Service Manager.
+     *
+     * @param service
+     *         Service handle
      * @return the "backup" service request buffer for the Service Manager.
      */
-    private ServiceRequestBuffer getBackupSRB() throws SQLException {
-
-        ServiceRequestBuffer backupSPB = getGds().createServiceRequestBuffer(
-                ISCConstants.isc_action_svc_nbak);
-
-        backupSPB.addArgument(ISCConstants.isc_spb_dbname, getDatabase());
+    private ServiceRequestBuffer getBackupSRB(FbService service) throws SQLException {
+        ServiceRequestBuffer backupSPB = service.createServiceRequestBuffer();
+        backupSPB.addArgument(isc_action_svc_nbak);
+        backupSPB.addArgument(isc_spb_dbname, getDatabase(), service.getEncoding());
         if (backupFiles.size() == 0) {
-            throw new FBSQLException("No backup file specified");
+            throw new SQLException("No backup file specified");
         }
         String backupFile = backupFiles.get(0);
-        
-        backupSPB.addArgument(ISCConstants.isc_spb_nbk_file, backupFile);
-        backupSPB.addArgument(ISCConstants.isc_spb_nbk_level, backupLevel);
-        if (noDBTriggers)
-        	backupSPB.addArgument(ISCConstants.isc_spb_options, ISCConstants.isc_spb_nbk_no_triggers);
-        
+
+        backupSPB.addArgument(isc_spb_nbk_file, backupFile, service.getEncoding());
+        backupSPB.addArgument(isc_spb_nbk_level, backupLevel);
+        if (noDBTriggers) {
+            backupSPB.addArgument(isc_spb_options, isc_spb_nbk_no_triggers);
+        }
+
         return backupSPB;
     }
 
@@ -135,45 +118,37 @@ public class FBNBackupManager extends FBServiceManager implements NBackupManager
      * @see org.firebirdsql.management.NBackupManager#restoreDatabase()
      */
     public void restoreDatabase() throws SQLException {
-        executeServicesOperation(getRestoreSRB());
+        try (FbService service = attachServiceManager()) {
+            executeServicesOperation(service, getRestoreSRB(service));
+        }
     }
 
     /**
-     * Creates and returns the "restore" service request buffer for the Service
-     * Manager.
-     * 
+     * Creates and returns the "restore" service request buffer for the Service Manager.
+     *
      * @return the "restore" service request buffer for the Service Manager.
      */
-    private ServiceRequestBuffer getRestoreSRB() throws SQLException {
+    private ServiceRequestBuffer getRestoreSRB(FbService service) throws SQLException {
+        ServiceRequestBuffer restoreSPB = service.createServiceRequestBuffer();
+        restoreSPB.addArgument(isc_action_svc_nrest);
+        restoreSPB.addArgument(isc_spb_dbname, getDatabase(), service.getEncoding());
 
-        GDS gds = getGds();
-        ServiceRequestBuffer restoreSPB = gds
-                .createServiceRequestBuffer(ISCConstants.isc_action_svc_nrest);
-
-        restoreSPB.addArgument(ISCConstants.isc_spb_dbname, getDatabase());
-        
         if (backupFiles.size() == 0) {
-            throw new FBSQLException("No backup file specified");
+            throw new SQLException("No backup file specified");
         }
-    	for (String backupFile : backupFiles) {
-            restoreSPB.addArgument(ISCConstants.isc_spb_nbk_file, backupFile);
-    	}
+        for (String backupFile : backupFiles) {
+            restoreSPB.addArgument(isc_spb_nbk_file, backupFile, service.getEncoding());
+        }
 
         return restoreSPB;
     }
-    
-    /**
-     * @see org.firebirdsql.management.NBackupManager#setBackupLevel(int)
-     */
+
     public void setBackupLevel(int backupLevel) {
-    	this.backupLevel = backupLevel;
+        this.backupLevel = backupLevel;
     }
-    
-    /**
-     * @see org.firebirdsql.management.NBackupManager#setNoDBTriggers(boolean)
-     */
+
     public void setNoDBTriggers(boolean noDBTriggers) {
-    	this.noDBTriggers = noDBTriggers;
+        this.noDBTriggers = noDBTriggers;
     }
 
 }

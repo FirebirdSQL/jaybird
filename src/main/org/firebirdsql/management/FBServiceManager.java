@@ -18,33 +18,34 @@
  */
 package org.firebirdsql.management;
 
-import org.firebirdsql.gds.*;
+import org.firebirdsql.gds.ServiceRequestBuffer;
 import org.firebirdsql.gds.impl.GDSFactory;
 import org.firebirdsql.gds.impl.GDSServerVersion;
-import org.firebirdsql.gds.impl.GDSServerVersionException;
 import org.firebirdsql.gds.impl.GDSType;
-import org.firebirdsql.jdbc.FBSQLException;
+import org.firebirdsql.gds.ng.FbDatabaseFactory;
+import org.firebirdsql.gds.ng.FbService;
+import org.firebirdsql.gds.ng.FbServiceProperties;
+import org.firebirdsql.gds.ng.IServiceProperties;
 
 import java.io.IOException;
 import java.io.OutputStream;
 import java.sql.SQLException;
 
+import static org.firebirdsql.gds.ISCConstants.*;
+import static org.firebirdsql.gds.VaxEncoding.iscVaxInteger2;
+
 /**
  * An implementation of the basic Firebird Service API functionality.
  *
  * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
+ * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  */
 public class FBServiceManager implements ServiceManager {
 
-    private String user;
-    private String password;
+    private final IServiceProperties serviceProperties = new FbServiceProperties();
+    private FbDatabaseFactory dbFactory;
     private String database;
-    private String host;
-    private int port = 3050;
-
     private OutputStream logger;
-
-    private GDS gds;
 
     public final static int BUFFER_SIZE = 1024; //1K
 
@@ -53,7 +54,7 @@ public class FBServiceManager implements ServiceManager {
      * the default GDSType.
      */
     public FBServiceManager() {
-        this.gds = GDSFactory.getGDSForType(GDSFactory.getDefaultGDSType());
+        this(GDSFactory.getDefaultGDSType());
     }
 
     /**
@@ -64,7 +65,7 @@ public class FBServiceManager implements ServiceManager {
      *         type must be PURE_JAVA, EMBEDDED, or NATIVE
      */
     public FBServiceManager(String gdsType) {
-        this.gds = GDSFactory.getGDSForType(GDSType.getType(gdsType));
+        this(GDSType.getType(gdsType));
     }
 
     /**
@@ -75,7 +76,7 @@ public class FBServiceManager implements ServiceManager {
      *         The GDS implementation type to use
      */
     public FBServiceManager(GDSType gdsType) {
-        this.gds = GDSFactory.getGDSForType(gdsType);
+        dbFactory = GDSFactory.getDatabaseFactoryForType(gdsType);
     }
 
     /**
@@ -85,7 +86,7 @@ public class FBServiceManager implements ServiceManager {
      *         name of the user.
      */
     public void setUser(String user) {
-        this.user = user;
+        serviceProperties.setUser(user);
     }
 
     /**
@@ -94,7 +95,7 @@ public class FBServiceManager implements ServiceManager {
      * @return name of the user that performs the operation.
      */
     public String getUser() {
-        return user;
+        return serviceProperties.getUser();
     }
 
     /**
@@ -102,14 +103,14 @@ public class FBServiceManager implements ServiceManager {
      *         The password to set.
      */
     public void setPassword(String password) {
-        this.password = password;
+        serviceProperties.setPassword(password);
     }
 
     /**
      * @return Returns the password.
      */
     public String getPassword() {
-        return password;
+        return serviceProperties.getPassword();
     }
 
     public void setDatabase(String database) {
@@ -124,7 +125,7 @@ public class FBServiceManager implements ServiceManager {
      * @return Returns the host.
      */
     public String getHost() {
-        return host;
+        return serviceProperties.getServerName();
     }
 
     /**
@@ -132,14 +133,14 @@ public class FBServiceManager implements ServiceManager {
      *         The host to set.
      */
     public void setHost(String host) {
-        this.host = host;
+        serviceProperties.setServerName(host);
     }
 
     /**
      * @return Returns the port.
      */
     public int getPort() {
-        return port;
+        return serviceProperties.getPortNumber();
     }
 
     /**
@@ -147,7 +148,7 @@ public class FBServiceManager implements ServiceManager {
      *         The port to set.
      */
     public void setPort(int port) {
-        this.port = port;
+        serviceProperties.setPortNumber(port);
     }
 
     /**
@@ -163,16 +164,6 @@ public class FBServiceManager implements ServiceManager {
      */
     public synchronized void setLogger(OutputStream logger) {
         this.logger = logger;
-    }
-
-    /**
-     * Get {@link GDS} implementation depending on the type specified
-     * during instantiation.
-     *
-     * @return instance of {@link GDS}.
-     */
-    public GDS getGds() {
-        return gds;
     }
 
     public String getServiceName() {
@@ -192,70 +183,51 @@ public class FBServiceManager implements ServiceManager {
         return sb.toString();
     }
 
-    public IscSvcHandle attachServiceManager(GDS gds) throws GDSException {
-        ServiceParameterBuffer serviceParameterBuffer =
-                gds.createServiceParameterBuffer();
-        serviceParameterBuffer.addArgument(ISCConstants.isc_spb_current_version);
-
-        if (getUser() != null)
-            serviceParameterBuffer.addArgument(
-                    ISCConstants.isc_spb_user_name, getUser());
-
-        if (getPassword() != null)
-            serviceParameterBuffer.addArgument(
-                    ISCConstants.isc_spb_password, getPassword());
-
-        serviceParameterBuffer.addArgument(
-                ISCConstants.isc_spb_dummy_packet_interval, new byte[] { 120, 10, 0, 0 });
-
-        final IscSvcHandle handle = gds.createIscSvcHandle();
-        gds.iscServiceAttach(getServiceName(), handle, serviceParameterBuffer);
-
-        return handle;
+    public FbService attachServiceManager() throws SQLException {
+        // TODO: Do we need to add dummy packet interval support for the service attachment
+//        serviceParameterBuffer.addArgument(
+//                ISCConstants.isc_spb_dummy_packet_interval, new byte[] { 120, 10, 0, 0 });
+        FbService fbService = dbFactory.serviceConnect(serviceProperties);
+        fbService.attach();
+        return fbService;
     }
 
-    public void detachServiceManager(GDS gds, IscSvcHandle handle) throws GDSException {
-        gds.iscServiceDetach(handle);
-    }
-
-    public void queueService(GDS gds, IscSvcHandle handle) throws GDSException, FBSQLException, IOException {
-
+    public void queueService(FbService service) throws SQLException, IOException {
         OutputStream currentLogger = getLogger();
 
-        ServiceRequestBuffer infoSRB = gds.createServiceRequestBuffer(ISCConstants.isc_info_svc_to_eof);
+        ServiceRequestBuffer infoSRB = service.createServiceRequestBuffer();
+        infoSRB.addArgument(isc_info_svc_to_eof);
 
         int bufferSize = BUFFER_SIZE;
-        byte[] buffer = new byte[bufferSize];
 
         boolean processing = true;
         while (processing) {
-            gds.iscServiceQuery(handle, gds.createServiceParameterBuffer(), infoSRB, buffer);
+            byte[] buffer = service.getServiceInfo(null, infoSRB, bufferSize);
 
             switch (buffer[0]) {
+            case isc_info_svc_to_eof:
 
-            case ISCConstants.isc_info_svc_to_eof:
-
-                int dataLength = (buffer[1] & 0xff) | ((buffer[2] & 0xff) << 8);
+                int dataLength = iscVaxInteger2(buffer, 1);
                 if (dataLength == 0) {
-                    if (buffer[3] != ISCConstants.isc_info_end)
-                        throw new FBSQLException("Unexpected end of stream reached.");
+                    if (buffer[3] != isc_info_end)
+                        throw new SQLException("Unexpected end of stream reached.");
                     else {
                         processing = false;
                         break;
                     }
                 }
 
-                if (currentLogger != null)
+                if (currentLogger != null) {
                     currentLogger.write(buffer, 3, dataLength);
+                }
 
                 break;
 
-            case ISCConstants.isc_info_truncated:
+            case isc_info_truncated:
                 bufferSize = bufferSize * 2;
-                buffer = new byte[bufferSize];
                 break;
 
-            case ISCConstants.isc_info_end:
+            case isc_info_end:
                 processing = false;
                 break;
             }
@@ -268,43 +240,35 @@ public class FBServiceManager implements ServiceManager {
      *
      * @param srb
      *         The buffer containing the task request
-     * @throws FBSQLException
+     * @throws SQLException
      *         if a database access error occurs or
      *         incorrect parameters are supplied
      */
-    protected void executeServicesOperation(ServiceRequestBuffer srb)
-            throws FBSQLException {
-
-        try {
-            IscSvcHandle svcHandle = attachServiceManager(gds);
-            try {
-                gds.iscServiceStart(svcHandle, srb);
-                queueService(gds, svcHandle);
-            } finally {
-                detachServiceManager(gds, svcHandle);
-            }
-        } catch (GDSException gdse) {
-            throw new FBSQLException(gdse);
+    protected void executeServicesOperation(ServiceRequestBuffer srb) throws SQLException {
+        try (FbService service = attachServiceManager()) {
+            service.startServiceAction(srb);
+            queueService(service);
         } catch (IOException ioe) {
-            throw new FBSQLException(ioe);
+            throw new SQLException(ioe);
         }
     }
 
-    /**
-     * Build up a request buffer for the specified operation.
-     *
-     * @param operation
-     *         The isc_action_svc_* operation
-     * @param options
-     *         The options bitmask for the request buffer
-     */
-    protected ServiceRequestBuffer createRequestBuffer(int operation,
-            int options) {
-        ServiceRequestBuffer srb = gds.createServiceRequestBuffer(operation);
-        if (getDatabase() != null) {
-            srb.addArgument(ISCConstants.isc_spb_dbname, getDatabase());
+    protected final void executeServicesOperation(FbService service, ServiceRequestBuffer srb) throws SQLException {
+        try {
+            service.startServiceAction(srb);
+            queueService(service);
+        } catch (IOException ioe) {
+            throw new SQLException(ioe);
         }
-        srb.addArgument(ISCConstants.isc_spb_options, options);
+    }
+
+    protected ServiceRequestBuffer createRequestBuffer(FbService service, int operation, int options) {
+        ServiceRequestBuffer srb = service.createServiceRequestBuffer();
+        srb.addArgument(operation);
+        if (getDatabase() != null) {
+            srb.addArgument(isc_spb_dbname, getDatabase(), service.getEncoding());
+        }
+        srb.addArgument(isc_spb_options, options);
         return srb;
     }
 
@@ -317,27 +281,8 @@ public class FBServiceManager implements ServiceManager {
      *         For errors connecting to the service manager.
      */
     public GDSServerVersion getServerVersion() throws SQLException {
-        final ServiceParameterBuffer spb = gds.createServiceParameterBuffer();
-        final ServiceRequestBuffer srb = gds.createServiceRequestBuffer(ISCConstants.isc_info_svc_server_version);
-        byte[] displayBuffer = new byte[256];
-        try {
-            IscSvcHandle svcHandle = attachServiceManager(gds);
-            try {
-                gds.iscServiceQuery(svcHandle, spb, srb, displayBuffer);
-            } finally {
-                detachServiceManager(gds, svcHandle);
-            }
-
-            // Assuming the specified buffer is long enough, not checking for truncation
-            int length = getGds().iscVaxInteger(displayBuffer, 1, 2);
-            String value = new String(displayBuffer, 3, length);
-            try {
-                return GDSServerVersion.parseRawVersion(value);
-            } catch (GDSServerVersionException ex) {
-                return GDSServerVersion.INVALID_VERSION;
-            }
-        } catch (GDSException gdse) {
-            throw new FBSQLException(gdse);
+        try (FbService service = attachServiceManager()) {
+            return service.getServerVersion();
         }
     }
 }
