@@ -966,13 +966,20 @@ JNIEXPORT void JNICALL Java_org_firebirdsql_gds_impl_jni_JniGDSImpl_native_1isc_
  */
 isc_callback event_function(event_struct* es, short length, char* updated)
 	{
+	if (es->state == EVENT_ACTIVE && length == 0)
+		{
+		return 0;
+		}
+
     JNIEnv* javaEnvironment;
     jint attachment = jvm->GetEnv((void**)&javaEnvironment, JNI_VERSION_1_1);
     if (attachment == JNI_EDETACHED)
 		{
-        if (jvm->AttachCurrentThread((void **)&javaEnvironment, NULL) != JNI_OK)
+		jint attachResult = jvm->AttachCurrentThread((void **)&javaEnvironment, NULL);
+        if (attachResult != JNI_OK)
 			{
-            fprintf(stderr, "Attach thread failed\n");
+            fprintf(stderr, "Attach thread failed, error: %i\n", (int)attachResult);
+			fflush(stderr);
             return 0;
 			}
 		}
@@ -1021,9 +1028,11 @@ isc_callback event_function(event_struct* es, short length, char* updated)
 
     if (attachment == JNI_EDETACHED)
 		{
-        if (jvm->DetachCurrentThread() != JNI_OK)
+		jint detachResult = jvm->DetachCurrentThread();
+        if (detachResult != JNI_OK)
 			{
-            fprintf(stderr, "Detach thread failed\n");
+            fprintf(stderr, "Detach thread failed, error code: %i\n", (int)detachResult);
+			fflush(stderr);
 			}
 		}
     return 0;
