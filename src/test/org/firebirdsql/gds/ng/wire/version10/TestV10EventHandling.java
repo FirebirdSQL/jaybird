@@ -358,8 +358,8 @@ public class TestV10EventHandling extends FBJUnit4TestBase {
         transaction.commit();
 
         int retry = 0;
-        while (!eventHandler.getReceivedEventHandles().contains(eventHandleA)
-                && !eventHandler.getReceivedEventHandles().contains(eventHandleB)
+        while (!(eventHandler.getReceivedEventHandles().contains(eventHandleA)
+                && eventHandler.getReceivedEventHandles().contains(eventHandleB))
                 && retry++ < 10) {
             Thread.sleep(50);
         }
