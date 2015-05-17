@@ -358,11 +358,8 @@ public class JnaDatabase extends AbstractFbDatabase<JnaDatabaseConnection> imple
         final JnaEventHandle jnaEventHandle = validateEventHandle(eventHandle);
 
         synchronized (getSynchronizationObject()) {
-            //noinspection SynchronizationOnLocalVariableOrMethodParameter
-            synchronized (eventHandle) {
-                clientLibrary.isc_event_counts(statusVector, (short) jnaEventHandle.getSize(),
-                        jnaEventHandle.getEventBuffer().getValue(), jnaEventHandle.getResultBuffer().getValue());
-            }
+            clientLibrary.isc_event_counts(statusVector, (short) jnaEventHandle.getSize(),
+                    jnaEventHandle.getEventBuffer().getValue(), jnaEventHandle.getResultBuffer().getValue());
         }
         jnaEventHandle.setEventCount(statusVector[0].intValue());
     }
@@ -373,17 +370,14 @@ public class JnaDatabase extends AbstractFbDatabase<JnaDatabaseConnection> imple
         final JnaEventHandle jnaEventHandle = validateEventHandle(eventHandle);
 
         synchronized (getSynchronizationObject()) {
-            //noinspection SynchronizationOnLocalVariableOrMethodParameter
-            synchronized (eventHandle) {
-                if (Platform.isWindows()) {
-                    ((WinFbClientLibrary) clientLibrary).isc_que_events(statusVector, getJnaHandle(), jnaEventHandle.getJnaEventId(),
-                            (short) jnaEventHandle.getSize(), jnaEventHandle.getEventBuffer().getValue(),
-                            (WinFbClientLibrary.IscEventStdCallback) jnaEventHandle.getCallback(), jnaEventHandle.getResultBuffer().getValue());
-                } else {
-                    clientLibrary.isc_que_events(statusVector, getJnaHandle(), jnaEventHandle.getJnaEventId(),
-                            (short) jnaEventHandle.getSize(), jnaEventHandle.getEventBuffer().getValue(),
-                            jnaEventHandle.getCallback(), jnaEventHandle.getResultBuffer().getValue());
-                }
+            if (Platform.isWindows()) {
+                ((WinFbClientLibrary) clientLibrary).isc_que_events(statusVector, getJnaHandle(), jnaEventHandle.getJnaEventId(),
+                        (short) jnaEventHandle.getSize(), jnaEventHandle.getEventBuffer().getValue(),
+                        (WinFbClientLibrary.IscEventStdCallback) jnaEventHandle.getCallback(), jnaEventHandle.getResultBuffer().getValue());
+            } else {
+                clientLibrary.isc_que_events(statusVector, getJnaHandle(), jnaEventHandle.getJnaEventId(),
+                        (short) jnaEventHandle.getSize(), jnaEventHandle.getEventBuffer().getValue(),
+                        jnaEventHandle.getCallback(), jnaEventHandle.getResultBuffer().getValue());
             }
             processStatusVector();
         }
@@ -395,14 +389,11 @@ public class JnaDatabase extends AbstractFbDatabase<JnaDatabaseConnection> imple
         final JnaEventHandle jnaEventHandle = validateEventHandle(eventHandle);
 
         synchronized (getSynchronizationObject()) {
-            //noinspection SynchronizationOnLocalVariableOrMethodParameter
-            synchronized (eventHandle) {
-                try {
-                    clientLibrary.isc_cancel_events(statusVector, getJnaHandle(), jnaEventHandle.getJnaEventId());
-                    processStatusVector();
-                } finally {
-                    jnaEventHandle.releaseMemory(clientLibrary);
-                }
+            try {
+                clientLibrary.isc_cancel_events(statusVector, getJnaHandle(), jnaEventHandle.getJnaEventId());
+                processStatusVector();
+            } finally {
+                jnaEventHandle.releaseMemory(clientLibrary);
             }
         }
     }

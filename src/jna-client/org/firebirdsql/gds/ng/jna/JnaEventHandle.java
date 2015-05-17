@@ -171,13 +171,12 @@ public final class JnaEventHandle extends AbstractEventHandle {
 
     private class JnaEventCallback implements FbClientLibrary.IscEventCallback {
         @Override
-        public void apply(Pointer resultArgument, short eventBufferLength, Pointer eventsList) {
-            synchronized (JnaEventHandle.this) {
-                final int length = eventBufferLength & 0xFFFF;
-                if (length == 0 || eventsList == null) return;
-                byte[] tempBuffer = eventsList.getByteArray(0 ,length);
-                resultArgument.write(0, tempBuffer, 0, length);
-            }
+        public synchronized void apply(Pointer resultArgument, short eventBufferLength, Pointer eventsList) {
+            final int length = eventBufferLength & 0xFFFF;
+            if (length == 0 || eventsList == null) return;
+
+            byte[] tempBuffer = eventsList.getByteArray(0, length);
+            resultArgument.write(0, tempBuffer, 0, length);
 
             // TODO Push to executor?
             onEventOccurred();
