@@ -147,8 +147,8 @@ public class TestJnaEvents extends FBJUnit4TestBase {
         transaction.commit();
 
         int retry = 0;
-        while (!eventHandler.getReceivedEventHandles().contains(eventHandleA)
-                && !eventHandler.getReceivedEventHandles().contains(eventHandleB)
+        while (!(eventHandler.getReceivedEventHandles().contains(eventHandleA)
+                && eventHandler.getReceivedEventHandles().contains(eventHandleB))
                 && retry++ < 10) {
             Thread.sleep(50);
         }
@@ -158,6 +158,11 @@ public class TestJnaEvents extends FBJUnit4TestBase {
         db.countEvents(eventHandleB);
         assertEquals(1, eventHandleA.getEventCount());
         assertEquals(1, eventHandleB.getEventCount());
+
+
+        // TODO Workaround for CORE-4794
+        db.queueEvent(eventHandleA);
+        db.queueEvent(eventHandleB);
 
         db.cancelEvent(eventHandleA);
         db.cancelEvent(eventHandleB);
