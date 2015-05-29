@@ -41,6 +41,8 @@ import java.util.Map;
 import java.util.Set;
 
 import javax.resource.ResourceException;
+import javax.transaction.xa.XAException;
+import javax.transaction.xa.XAResource;
 
 import org.firebirdsql.gds.DatabaseParameterBuffer;
 import org.firebirdsql.gds.GDS;
@@ -426,22 +428,21 @@ public abstract class AbstractConnection implements FirebirdConnection {
      */
     public synchronized void setAutoCommit(boolean autoCommit) throws SQLException {
         checkValidity();
-        
-        if (this.autoCommit == autoCommit) 
+
+        if (this.autoCommit == autoCommit) {
             return;
-        
+        }
+
         if (autoCommit && mc.inDistributedTransaction()) {
             throw new FBSQLException("Connection enlisted in distributed transaction", FBSQLException.SQL_STATE_INVALID_TX_STATE);
         }
-        
+
         InternalTransactionCoordinator.AbstractTransactionCoordinator coordinator;
-        if (autoCommit)
-            coordinator = new InternalTransactionCoordinator.AutoCommitCoordinator(this, getLocalTransaction());
-        else
-            coordinator = new InternalTransactionCoordinator.LocalTransactionCoordinator(this, getLocalTransaction());
-        
-        txCoordinator.setCoordinator(coordinator);
+        this.commit();
+        mc.setAutoCommit(autoCommit);
         this.autoCommit = autoCommit;
+        coordinator = new InternalTransactionCoordinator.LocalTransactionCoordinator(this, getLocalTransaction(), autoCommit);
+        txCoordinator.setCoordinator(coordinator);
     }
 
     public synchronized void setManagedEnvironment(boolean managedConnection) throws SQLException {
@@ -449,11 +450,17 @@ public abstract class AbstractConnection implements FirebirdConnection {
         
         InternalTransactionCoordinator.AbstractTransactionCoordinator coordinator;
         if (managedConnection && mc.inDistributedTransaction()) {
-            coordinator = new InternalTransactionCoordinator.ManagedTransactionCoordinator(this);
+            mc.setAutoCommit(false);
             this.autoCommit = false;
+            coordinator = new InternalTransactionCoordinator.ManagedTransactionCoordinator(this);
         } else {
-            coordinator = new InternalTransactionCoordinator.AutoCommitCoordinator(this, getLocalTransaction());
+            if (!this.autoCommit && mc.inTransaction() && !mc.inDistributedTransaction()) {
+                this.commit();
+            }
+            mc.setAutoCommit(true);
             this.autoCommit = true;
+            coordinator = new InternalTransactionCoordinator.LocalTransactionCoordinator(this, getLocalTransaction(), true);
+            txCoordinator.setCoordinator(coordinator);
         }
          
         txCoordinator.setCoordinator(coordinator);
@@ -550,14 +557,7 @@ public abstract class AbstractConnection implements FirebirdConnection {
             } finally {
 
                 if (mc != null) {
-                    // if we are in a transaction started
-                    // automatically because autocommit = false, roll it back.
-
-                    // leave managed transactions alone, they are normally
-                    // committed after the Connection handle is closed.
-
                     if (!mc.inDistributedTransaction()
-                            && !getAutoCommit()
                             && getLocalTransaction().inTransaction()) {
                         try {
                             txCoordinator.rollback();
@@ -709,7 +709,7 @@ public abstract class AbstractConnection implements FirebirdConnection {
         
         try {
 
-            if (!getAutoCommit() && !mc.isManagedEnvironment())
+            if (!mc.isManagedEnvironment())
                 txCoordinator.commit();
 
             mc.setTransactionIsolation(level);

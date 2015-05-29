@@ -172,13 +172,7 @@ public abstract class AbstractStatement implements FirebirdStatement, Synchroniz
     public Object getSynchronizationObject() throws SQLException {
         // TODO: Has potential race condition
         
-        if (connection == null)
-            return this;
-        
-        if (connection.getAutoCommit()) 
-            return connection;
-        else
-            return this;
+        return this;
     }
     
     protected void finalize() throws Throwable {
