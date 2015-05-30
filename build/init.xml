@@ -14,13 +14,19 @@
         </tstamp>
         <property name="build.id" value="${build.number}"/>
 
-        <!-- We set jdk1.7 property if JDK version is 1.7 -->
+        <!-- Java 7 specific properties -->
         <condition property="jdk1.7" value="true">
             <equals arg1="${ant.java.version}" arg2="1.7"/>
         </condition>
+        <condition property="maven.jdkversion" value="jdk17">
+            <equals arg1="${ant.java.version}" arg2="1.7"/>
+        </condition>
 
-        <!-- We set jdk1.8 property if JDK version is 1.8 -->
+        <!-- Java 8 specific properties -->
         <condition property="jdk1.8" value="true">
+            <equals arg1="${ant.java.version}" arg2="1.8"/>
+        </condition>
+        <condition property="maven.jdkversion" value="jdk18">
             <equals arg1="${ant.java.version}" arg2="1.8"/>
         </condition>
 
@@ -37,11 +43,11 @@
 
         <property name="version.name" value="-JDK_${ant.java.version}"/>
 
-        <property name="version.full"
-                  value="${version.major}.${version.minor}.${version.revision}${version.tag}${version.name}"/>
+        <property name="version.maven" value="${version.major}.${version.minor}.${version.revision}${version.tag}"/>
+        <property name="version.full" value="${version.maven}${version.name}"/>
 
         <!-- This must be set to the Subversion tag for any release -->
-        <property name="version.svntag" value="HEAD"/>
+        <property name="version.svntag" value="master"/>
 
         <!-- Manifest version info -->
         <property name="specification.title" value="JSR 221 JDBC API"/>
@@ -56,7 +62,7 @@
         <property name="implementation.title" value="Jaybird"/>
         <property name="implementation.url" value="http://www.firebirdsql.org"/>
         <property name="implementation.version"
-                  value="${version.full} (build: SVNTag=${version.svntag} date=${build.id})"/>
+                  value="${version.full} (build: branch=${version.svntag} date=${build.id})"/>
         <property name="implementation.vendor" value="Firebird project"/>
         <property name="implementation.vendor.id" value="${implementation.url}"/>
 
@@ -97,8 +103,7 @@
         <property name="source.documentation" value="${module.source}/documentation"/>
 
         <property name="thirdparty" value="${module.root}/thirdparty"/>
-        <property name="jboss.source.root"
-                  location="${thirdparty}/jboss/"/>
+        <property name="jboss.source.root" location="${thirdparty}/jboss/"/>
 
         <!-- Where build generated files will go -->
         <property name="build.j2ee" value="${module.output}/j2ee"/>
@@ -120,16 +125,24 @@
         <property name="build.native" value="${module.output}/native"/>
         <property name="build.native.output" value="${build.native}"/>
         <property name="build.documentation" value="${module.output}/documentation"/>
+        <property name="build.maven" value="${module.output}/maven"/>
 
-        <property name="archive.name.main" value="jaybird"/>
-        <property name="archive.name.version" value="${version.major}.${version.minor}.${version.revision}"/>
+        <property name="archive.name.main" value="${name}"/>
 
-        <property name="archive.name.rar" value="${archive.name.main}-${archive.name.version}.rar"/>
-        <property name="archive.name.full" value="${archive.name.main}-full-${archive.name.version}.jar"/>
-        <property name="archive.name.simple" value="${archive.name.main}-${archive.name.version}.jar"/>
-        <property name="archive.name.test" value="${archive.name.main}-test-${archive.name.version}.jar"/>
-        <property name="archive.name.sources" value="${archive.name.main}-${archive.name.version}-sources.jar"/>
-        <property name="archive.name.javadoc" value="${archive.name.main}-${archive.name.version}-javadoc.jar"/>
+        <property name="archive.name.rar" value="${archive.name.main}-${version.maven}.rar"/>
+        <property name="archive.name.full" value="${archive.name.main}-full-${version.maven}.jar"/>
+        <property name="archive.name.simple" value="${archive.name.main}-${version.maven}.jar"/>
+        <property name="archive.name.test" value="${archive.name.main}-test-${version.maven}.jar"/>
+        <property name="archive.name.sources" value="${archive.name.main}-${version.maven}-sources.jar"/>
+        <property name="archive.name.javadoc" value="${archive.name.main}-${version.maven}-javadoc.jar"/>
+
+        <!-- Names for maven -->
+        <property name="maven.artifactId" value="${name}-${maven.jdkversion}"/>
+        <property name="archive.maven.simple" value="${maven.artifactId}-${version.maven}.jar"/>
+        <property name="archive.maven.sources" value="${maven.artifactId}-${version.maven}-sources.jar"/>
+        <property name="archive.maven.javadoc" value="${maven.artifactId}-${version.maven}-javadoc.jar"/>
+        <property name="maven.pom.template" value="${module.root}/build/maven-release/jaybird-example.pom"/>
+        <property name="maven.pom.target" value="${maven.artifactId}-${version.maven}.pom"/>
 
         <property name="junit.timeout" value="600000"/>
         <!-- 10 minutes -->
