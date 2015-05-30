@@ -259,7 +259,7 @@ public class TestFBConnection extends FBTestBase {
             connection.close();
         }
 
-        connection = (FirebirdConnection)getConnectionViaDriverManager();
+        connection = getConnectionViaDriverManager();
         try {
             
             Statement stmt = connection.createStatement();
@@ -278,8 +278,7 @@ public class TestFBConnection extends FBTestBase {
                 
                 connection.setAutoCommit(false);
                 
-                FirebirdConnection anotherConnection = 
-                    (FirebirdConnection)getConnectionViaDriverManager();
+                FirebirdConnection anotherConnection = getConnectionViaDriverManager();
                 anotherConnection.setAutoCommit(false);
                 
                 try {
@@ -478,6 +477,19 @@ public class TestFBConnection extends FBTestBase {
             assertNull("Expected no warning when specifying connection characterset", warnings);
         } finally {
             closeQuietly(con);
+        }
+    }
+
+    public void testClientInfo() throws Exception {
+        AbstractConnection connection = (AbstractConnection)getConnectionViaDriverManager();
+        try {
+
+            connection.setClientInfo("TestProperty", "testValue");
+            String checkValue = connection.getClientInfo("TestProperty");
+            assertEquals("testValue", checkValue);
+
+        } finally {
+            connection.close();
         }
     }
 }

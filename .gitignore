@@ -8,3 +8,5 @@ build-local.properties
 classes/
 *.iml
 *.eml
+hs_err_pid*.log
+*.suo

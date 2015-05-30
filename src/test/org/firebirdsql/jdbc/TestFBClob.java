@@ -286,6 +286,29 @@ public class TestFBClob extends FBTestBase {
         }
     }
 
+    public void testWriteClobUsingReader() throws Exception {
+        Connection con = getEncodedConnection("ISO8859_1");
+        try {
+            PreparedStatement insertStmt = con.prepareStatement("INSERT INTO test_clob (" + TEXT_BLOB + ") VALUES (?)");
+
+            insertStmt.setClob(1, new StringReader(LATIN1_TEST_STRING));
+            insertStmt.execute();
+            insertStmt.close();
+
+            PreparedStatement selStatement = con.prepareStatement("SELECT " + TEXT_BLOB + " FROM test_clob");
+            ResultSet rs = selStatement.executeQuery();
+
+            if (rs.next()) {
+                String result = rs.getString(1);
+                assertEquals("Unexpected value for clob roundtrip", LATIN1_TEST_STRING, result);
+            } else {
+                fail("Expected a row");
+            }
+        } finally {
+            closeQuietly(con);
+        }
+    }
+
     private void runHoldableClobTest(String colName, String testString, String javaEncoding, String fbEncoding)
             throws Exception, SQLException, IOException {
 

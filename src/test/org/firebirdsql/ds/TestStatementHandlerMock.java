@@ -151,4 +151,60 @@ public class TestStatementHandlerMock extends MockObjectTestCase {
         assertSame("Statement.getConnection should return the Connection-proxy of the PooledConnectionHandler", connectionProxy, con);
     }
 
+    /**
+     * The isClosed() method of the StatementHandler and its proxy should return
+     * <code>true</code> after closing the Handler.
+     * <p>
+     * As a secondary test, checks 1) if the wrapped statement is closed and 2)
+     * if owner is notified of statement close.
+     * </p>
+     *
+     * @throws SQLException
+     */
+    public void testHandlerClose_IsClosed() throws SQLException {
+        final PooledConnectionHandler conHandler = mock(PooledConnectionHandler.class);
+        final Statement statement = mock(Statement.class);
+        final StatementHandler handler = new StatementHandler(conHandler, statement);
+
+        checking(new Expectations() {
+            {
+                oneOf(statement).close();
+                oneOf(conHandler).forgetStatement(handler);
+            }
+        });
+
+        Statement proxy = handler.getProxy();
+        handler.close();
+        assertTrue("Closed handler should report isClosed() true", handler.isClosed());
+        assertTrue("Proxy of closed handler should report isClosed() true", proxy.isClosed());
+    }
+
+    /**
+     * The isClosed() method of the StatementHandler and its proxy should return
+     * <code>true</code> after closing the proxy.
+     * <p>
+     * As a secondary test, checks 1) if the wrapped statement is closed and 2)
+     * if owner is notified of statement close.
+     * </p>
+     *
+     * @throws SQLException
+     */
+    public void testProxyClose_IsClosed() throws SQLException {
+        final PooledConnectionHandler conHandler = mock(PooledConnectionHandler.class);
+        final Statement statement = mock(Statement.class);
+        final StatementHandler handler = new StatementHandler(conHandler, statement);
+
+        checking(new Expectations() {
+            {
+                oneOf(statement).close();
+                oneOf(conHandler).forgetStatement(handler);
+            }
+        });
+
+        Statement proxy = handler.getProxy();
+        proxy.close();
+        assertTrue("Handler of closed proxy should report isClosed() true", handler.isClosed());
+        assertTrue("Closed proxy should report isClosed() true", proxy.isClosed());
+    }
+
 }
