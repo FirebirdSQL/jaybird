@@ -62,7 +62,7 @@
         <property name="implementation.title" value="Jaybird"/>
         <property name="implementation.url" value="http://www.firebirdsql.org"/>
         <property name="implementation.version"
-                  value="${version.full} (build: branch=${version.svntag} date=${build.id})"/>
+                  value="${version.full} (build: tag=${version.svntag} date=${build.id})"/>
         <property name="implementation.vendor" value="Firebird project"/>
         <property name="implementation.vendor.id" value="${implementation.url}"/>
 
