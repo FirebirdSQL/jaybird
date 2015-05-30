@@ -4,8 +4,8 @@
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>org.firebirdsql.jdbc</groupId>
-	<artifactId>jaybird-jdkXX</artifactId>
-	<version>2.2.0-beta-1-SNAPSHOT</version>
+	<artifactId>@ARTIFACT_ID@</artifactId>
+	<version>@VERSION@</version>
 	<packaging>jar</packaging>
 	<name>Jaybird JDBC Driver</name>
 	<description>JDBC Driver for the Firebird RDBMS</description>
