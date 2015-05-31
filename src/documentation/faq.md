@@ -20,7 +20,7 @@ for each supported Java version.
 
 Groupid: `org.firebirdsql.jdbc`,\
 Artifactid: `jaybird-jdkXX` (where `XX` is `15`, `16`, `17` or `18`).\
-Version: `2.2.7`
+Version: `2.2.8`
 
 For example:
 
@@ -28,7 +28,7 @@ For example:
 <dependency>
     <groupId>org.firebirdsql.jdbc</groupId>
     <artifactId>jaybird-jdk17</artifactId>
-    <version>2.2.7</version>
+    <version>2.2.8</version>
 </dependency>
 ~~~
 
@@ -78,15 +78,13 @@ Which Java versions are supported?
 Jaybird 2.2 supports Java 6, 7 and 8. 
 
 Jaybird 2.2.4 added basic support for Java 8 (JDBC 4.2), although not all 
-JDBC 4.2 features will be supported or fully implemented.
+JDBC 4.2 features are supported or fully implemented.
 
-Jaybird 2.2.7 is the last version to support Java 5, support will be dropped
+Jaybird 2.2.7 is the last version to support Java 5, support has been dropped
 with Jaybird 2.2.8.
 
 Jaybird 2.2 is the last version to support Java 6, support will be dropped with
-Jaybird 3.0. Starting with Jaybird 2.2.8 we will no longer release Java 6
-binaries. If you need Java 6 binaries, you can compile them yourself from
-source.
+Jaybird 3.0.
 
 Jaybird 3.0 supports Java 7 and 8 (actual support subject to change before 
 release).
