@@ -12,14 +12,14 @@ Where do I get Jaybird?
 Firebird can be downloaded from the Firebird website, under Downloads,
 [JDBC Driver](http://www.firebirdsql.org/en/jdbc-driver/).
 
-Alternatively, you can go directly to Source Forge and download Jaybird from the
-[firebird-jca-jdc-driver files section](http://sourceforge.net/projects/firebird/files/firebird-jca-jdbc-driver/).
+Alternatively, you can go directly to GitHub and download Jaybird from the
+[jaybird releases](https://github.com/FirebirdSQL/jaybird/releases).
 
 Jaybird is available on maven (since version 2.2.0), with a separate artifact
 for each supported Java version.
 
 Groupid: `org.firebirdsql.jdbc`,\
-Artifactid: `jaybird-jdkXX` (where `XX` is `15`, `16`, `17` or `18`).\
+Artifactid: `jaybird-jdkXX` (where `XX` is `16`, `17` or `18`).\
 Version: `2.2.8`
 
 For example:
@@ -27,7 +27,7 @@ For example:
 ~~~ {.xml}
 <dependency>
     <groupId>org.firebirdsql.jdbc</groupId>
-    <artifactId>jaybird-jdk17</artifactId>
+    <artifactId>jaybird-jdk18</artifactId>
     <version>2.2.8</version>
 </dependency>
 ~~~
@@ -86,7 +86,7 @@ with Jaybird 2.2.8.
 Jaybird 2.2 is the last version to support Java 6, support will be dropped with
 Jaybird 3.0.
 
-Jaybird 3.0 supports Java 7 and 8 (actual support subject to change before 
+Jaybird 3.0 will support Java 7 and 8 (actual support subject to change before 
 release).
 
 Which Firebird versions are supported?
@@ -120,7 +120,7 @@ Apart from this FAQ, you can get additional information from:
 
 * [JaybirdWiki](http://jaybirdwiki.firebirdsql.org/)
 * [Jaybird 2.1 Programmers Manual](http://www.firebirdsql.org/file/documentation/drivers_documentation/Jaybird_2_1_JDBC_driver_manual.pdf) (PDF)
-* [Firebird Website: Development, JDBC Driver](http://www.firebirdsql.org/en/jdbc-devel-status/)
+* [Firebird Website: Development, JDBC Driver](http://www.firebirdsql.org/en/devel-jdbc-driver/)
 
 Where to get help
 -----------------
