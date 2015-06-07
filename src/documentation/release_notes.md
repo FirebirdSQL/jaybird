@@ -16,7 +16,7 @@ different behavior than previous versions. Read these release notes carefully to
 see if those differences are intentional. Bug reports about undocumented changes
 in behavior are appreciated.
 
-**Current snapshot versions do not support Type 2 and embedded driver**
+**Current snapshot versions do not support the embedded driver**
 
 General Notes
 =============
@@ -35,15 +35,13 @@ the application server and driver.
 Supported Firebird versions
 ---------------------------
 
-Jaybird 3.0 was tested against Firebird ~~2.1.5 and~~ 2.5.2, but should also
-support other Firebird versions from 2.0 and up. Formal support for Firebird 1.x
-has been dropped (although in general we expect the driver to work). ~~The Type 
-2 and embedded server JDBC drivers require the appropriate JNI library. 
-Pre-compiled JNI binaries for Win32 and Linux platforms are shipped in the
-default installation, other platforms require porting/building the JNI library
-for that platform.~~
+Jaybird 3.0 was tested against Firebird ~~2.1.7 and~~ 2.5.4, and recent 
+snapshots of Firebird 3, but should also support other Firebird versions 
+from 2.0 and up. Formal support for Firebird 1.x has been dropped (although in
+general we expect the driver to work). The Type 2 ~~and embedded server~~ JDBC 
+drivers use JNA to access the Firebird client ~~or embedded library~~.
 
-**Current snapshot versions do not support Type 2 and embedded driver**
+**Current snapshot versions do not support the embedded driver**
  
 This driver does not supports InterBase servers due to Firebird-specific changes
 in the protocol and database attachment parameters that are sent to the server.
@@ -69,7 +67,7 @@ What's new in Jaybird 3.0
 Java support
 ------------
 
-Support for Java 5 has been dropped.
+Support for Java 5 and 6 has been dropped.
 
 Firebird support
 ----------------
@@ -81,7 +79,7 @@ New low-level implementation
 ----------------------------
 
 Jaybird 3.0 has a substantially rewritten low-level implementation (the wire
-protocol ~~and native~~ implementation) and a number of changes for JDBC
+protocol and native implementation) and a number of changes for JDBC 
 conformance.
 
 The rewrite of the low-level implementation was prompted by the new
@@ -96,9 +94,7 @@ encryption. This is planned for Jaybird 3.1, but might be moved into Jaybird
 3.0 before the final release.
 
 The new low-level implementation also means that the old GDS API 
-(`org.firebirdsql.gds.GDS`) is no longer available. *GDS API hasn't been removed
-from the snapshot yet as events haven't been rewritten yet, **this API will be
-removed from final release***
+(`org.firebirdsql.gds.GDS`) has been removed and is no longer available.
 
 The changes due to the new protocol implementation and/or JDBC conformance are
 listed below.
@@ -273,6 +269,24 @@ In Jaybird 3.0 a number of changes were made for stricter compliance to the JDBC
 specification.
 
 **TODO: Document or refer to change what's new?**
+
+Removal of old GDS API
+----------------------
+
+The old GDS API (`org.firebirdsql.gds.GDS`) has been removed. This removal
+includes a number of related classes and methods.
+
+Type 2 (native) and embedded driver
+-----------------------------------
+
+Jaybird no longer needs a `jaybirdxx.dll` or `jaybirdxx.so` for the Type 2 and 
+embedded driver. Jaybird now uses JNA to access the client library.
+
+If you want to use the Type 2 driver, or Firebird embedded, then you need to
+include the `jna-x.x.x.jar` on the classpath. The `fbclient.dll`, `fbembed.dll`, 
+`libfbclient.so`, or `libfbembed.so` need to be on the path.
+
+**TODO: May need further documentation**
 
 Removal of deprecated classes, packages and methods
 ---------------------------------------------------
