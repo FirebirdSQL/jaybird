@@ -27,6 +27,8 @@ import org.firebirdsql.gds.TransactionParameterBuffer;
 import org.firebirdsql.gds.impl.TransactionParameterBufferImpl;
 import org.firebirdsql.gds.ng.*;
 import org.firebirdsql.gds.ng.fields.RowValue;
+import org.firebirdsql.jna.fbclient.FbClientLibrary;
+import org.firebirdsql.jna.fbclient.ISC_STATUS;
 import org.junit.After;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -128,7 +130,12 @@ public class TestJnaEvents extends FBJUnit4TestBase {
         // Initial queue will return events immediately
         db.queueEvent(eventHandleA);
         db.queueEvent(eventHandleB);
-        Thread.sleep(50);
+        int retry = 0;
+        while (!(eventHandler.getReceivedEventHandles().contains(eventHandleA)
+                && eventHandler.getReceivedEventHandles().contains(eventHandleB))
+                && retry++ < 10) {
+            Thread.sleep(50);
+        }
         db.countEvents(eventHandleA);
         db.countEvents(eventHandleB);
 
@@ -146,7 +153,7 @@ public class TestJnaEvents extends FBJUnit4TestBase {
         statement.execute(RowValue.EMPTY_ROW_VALUE);
         transaction.commit();
 
-        int retry = 0;
+        retry = 0;
         while (!(eventHandler.getReceivedEventHandles().contains(eventHandleA)
                 && eventHandler.getReceivedEventHandles().contains(eventHandleB))
                 && retry++ < 10) {
@@ -166,6 +173,32 @@ public class TestJnaEvents extends FBJUnit4TestBase {
 
         db.cancelEvent(eventHandleA);
         db.cancelEvent(eventHandleB);
+    }
+
+
+    @Test
+    public void cancelAfterCallback_directJNA() throws Exception {
+        db = factory.connect(connectionInfo);
+        db.attach();
+
+        FbClientLibrary lib = db.getClientLibrary();
+        ISC_STATUS[] statusVector = new ISC_STATUS[20];
+        SimpleEventHandler eventHandler = new SimpleEventHandler();
+
+        final JnaEventHandle eventHandle = new JnaEventHandle("TEST_EVENT_A", eventHandler, db.getEncoding());
+        int size = lib.isc_event_block(eventHandle.getEventBuffer(), eventHandle.getResultBuffer(), (short) 1,
+                eventHandle.getEventNameMemory());
+        eventHandle.setSize(size);
+
+        // Queue event
+        lib.isc_que_events(statusVector, db.getJnaHandle(), eventHandle.getJnaEventId(),
+                (short) eventHandle.getSize(), eventHandle.getEventBuffer().getValue(),
+                eventHandle.getCallback(), eventHandle.getResultBuffer().getValue());
+        // Event will notify almost immediately for initial setup.
+        Thread.sleep(50);
+
+        // Cancel (no event queued right now)
+        lib.isc_cancel_events(statusVector, db.getJnaHandle(), eventHandle.getJnaEventId());
     }
 
     private FbTransaction getTransaction(FbDatabase db) throws SQLException {
