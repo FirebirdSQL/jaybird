@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
@@ -20,7 +18,10 @@
  */
 package org.firebirdsql.jca;
 
-import org.firebirdsql.gds.*;
+import org.firebirdsql.gds.DatabaseParameterBuffer;
+import org.firebirdsql.gds.GDSException;
+import org.firebirdsql.gds.ISCConstants;
+import org.firebirdsql.gds.TransactionParameterBuffer;
 import org.firebirdsql.gds.impl.GDSFactory;
 import org.firebirdsql.gds.impl.GDSHelper;
 import org.firebirdsql.gds.impl.GDSType;
@@ -51,7 +52,6 @@ import java.lang.ref.SoftReference;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.sql.SQLException;
-import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -71,8 +71,8 @@ import java.util.concurrent.ConcurrentHashMap;
  * @author <a href="mailto:d_jencks@users.sourceforge.net">David Jencks </a>
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  */
-public class FBManagedConnectionFactory implements ManagedConnectionFactory,
-        Serializable, FirebirdConnectionProperties {
+public class FBManagedConnectionFactory implements ManagedConnectionFactory, Serializable,
+        FirebirdConnectionProperties {
     
     private static final long serialVersionUID = 7500832904323015501L;
 
@@ -84,17 +84,15 @@ public class FBManagedConnectionFactory implements ManagedConnectionFactory,
      * </p>
      */
     private static final Map<FBConnectionProperties, SoftReference<FBManagedConnectionFactory>> mcfInstances =
-            new ConcurrentHashMap<FBConnectionProperties, SoftReference<FBManagedConnectionFactory>>();
-    private static final ReferenceQueue<FBManagedConnectionFactory> mcfReferenceQueue =
-            new ReferenceQueue<FBManagedConnectionFactory>();
+            new ConcurrentHashMap<>();
+    private static final ReferenceQueue<FBManagedConnectionFactory> mcfReferenceQueue = new ReferenceQueue<>();
 
     private ConnectionManager defaultCm;
     private int hashCode;
     private GDSType gdsType;
 
     // Maps supplied XID to internal transaction handle.
-    private transient final Map<Xid, FBManagedConnection> xidMap = 
-            new ConcurrentHashMap<Xid, FBManagedConnection>();
+    private transient final Map<Xid, FBManagedConnection> xidMap = new ConcurrentHashMap<>();
 
     private transient final Object startLock = new Object();
     private transient boolean started = false;
@@ -122,11 +120,6 @@ public class FBManagedConnectionFactory implements ManagedConnectionFactory,
         this.defaultCm = new FBStandAloneConnectionManager();
         this.connectionProperties = connectionProperties;
         setType(gdsType.toString());
-    }
-
-    @Deprecated
-    public GDS getGDS() {
-        return GDSFactory.getGDSForType(getGDSType());
     }
 
     public FbDatabaseFactory getDatabaseFactory() {
@@ -547,13 +540,10 @@ public class FBManagedConnectionFactory implements ManagedConnectionFactory,
      * @throws NotSupportedException -
      *             if operation is not supported
      */
-    public ManagedConnection matchManagedConnections(Set connectionSet,
-            javax.security.auth.Subject subject,
+    public ManagedConnection matchManagedConnections(Set connectionSet, javax.security.auth.Subject subject,
             ConnectionRequestInfo cxRequestInfo) throws ResourceException {
-        
-        Iterator i = connectionSet.iterator();
-        while (i.hasNext()) {
-            Object connection = i.next();
+
+        for (Object connection : connectionSet) {
             if (!(connection instanceof FBManagedConnection)) continue;
             FBManagedConnection mc = (FBManagedConnection) connection;
 
@@ -649,7 +639,7 @@ public class FBManagedConnectionFactory implements ManagedConnectionFactory,
     private void start() {
         synchronized (startLock) {
             if (started) return;
-            mcfInstances.put(getCacheKey(), new SoftReference<FBManagedConnectionFactory>(this, mcfReferenceQueue));
+            mcfInstances.put(getCacheKey(), new SoftReference<>(this, mcfReferenceQueue));
             started = true;
         }
         cleanMcfInstances();
@@ -673,36 +663,32 @@ public class FBManagedConnectionFactory implements ManagedConnectionFactory,
         // empty
     }
 
-    int notifyPrepare(FBManagedConnection mc, Xid xid) throws GDSException,
-            XAException {
+    int notifyPrepare(FBManagedConnection mc, Xid xid) throws GDSException, XAException {
         FBManagedConnection targetMc = xidMap.get(xid);
 
         if (targetMc == null)
-            throw new FBXAException("Commit called with unknown transaction",
-                    XAException.XAER_NOTA);
+            throw new FBXAException("Commit called with unknown transaction", XAException.XAER_NOTA);
 
         return targetMc.internalPrepare(xid);
     }
 
-    void notifyCommit(FBManagedConnection mc, Xid xid, boolean onePhase)
-            throws GDSException, XAException {
+    void notifyCommit(FBManagedConnection mc, Xid xid, boolean onePhase) throws GDSException, XAException {
 
         FBManagedConnection targetMc = xidMap.get(xid);
 
         if (targetMc == null)
-            tryCompleteInLimboTransaction(getGDS(), xid, true);
+            tryCompleteInLimboTransaction(xid, true);
         else
             targetMc.internalCommit(xid, onePhase);
 
         xidMap.remove(xid);
     }
 
-    void notifyRollback(FBManagedConnection mc, Xid xid) throws GDSException,
-            XAException {
+    void notifyRollback(FBManagedConnection mc, Xid xid) throws GDSException, XAException {
         FBManagedConnection targetMc = xidMap.get(xid);
 
         if (targetMc == null)
-            tryCompleteInLimboTransaction(getGDS(), xid, false);
+            tryCompleteInLimboTransaction(xid, false);
         else
             targetMc.internalRollback(xid);
 
@@ -723,21 +709,16 @@ public class FBManagedConnectionFactory implements ManagedConnectionFactory,
      * rollback. If no "in limbo" transaction can be found, or error happens
      * during completion, an exception is thrown.
      * 
-     * @param gds
-     *            instance of {@link GDS} that will be used to reconnect
-     *            transaction.
      * @param xid
      *            Xid of the transaction to reconnect.
      * @param commit
      *            <code>true</code> if "in limbo" transaction should be
      *            committed, otherwise <code>false</code>.
-     * 
+     *
      * @throws XAException
      *             if "in limbo" transaction cannot be completed.
      */
-    private void tryCompleteInLimboTransaction(GDS gds, Xid xid, boolean commit)
-            throws XAException {
-
+    private void tryCompleteInLimboTransaction(Xid xid, boolean commit) throws XAException {
         try {
             FBManagedConnection tempMc = null;
             FirebirdLocalTransaction tempLocalTx = null;
@@ -752,10 +733,10 @@ public class FBManagedConnectionFactory implements ManagedConnectionFactory,
                 if (tempMc.getGDSHelper().compareToVersion(2, 0) < 0) {
                     // Find Xid by scanning
                     FBXid[] inLimboIds = (FBXid[]) tempMc.recover(XAResource.TMSTARTRSCAN);
-                    for (int i = 0; i < inLimboIds.length; i++) {
-                        if (inLimboIds[i].equals(xid)) {
+                    for (FBXid inLimboId : inLimboIds) {
+                        if (inLimboId.equals(xid)) {
                             found = true;
-                            fbTransactionId = inLimboIds[i].getFirebirdTransactionId();
+                            fbTransactionId = inLimboId.getFirebirdTransactionId();
                         }
                     }
                 } else {
@@ -786,7 +767,7 @@ public class FBManagedConnectionFactory implements ManagedConnectionFactory,
                     // remove heuristic data from rdb$transactions (only possible in versions before Firebird 3)
                     try {
                         String query = "delete from rdb$transactions where rdb$transaction_id = " + fbTransactionId;
-                        GDSHelper gdsHelper = new GDSHelper(gds, getDatabaseParameterBuffer(), null, dbHandle);
+                        GDSHelper gdsHelper = new GDSHelper(null, dbHandle);
 
                         FbTransaction trHandle2 = dbHandle.startTransaction(getDefaultTpb().getTransactionParameterBuffer());
                         gdsHelper.setCurrentTransaction(trHandle2);
@@ -850,10 +831,10 @@ public class FBManagedConnectionFactory implements ManagedConnectionFactory,
 
         try {
             Constructor<?> constructor = connectionClass
-                    .getConstructor(new Class[] { FBManagedConnection.class});
+                    .getConstructor(FBManagedConnection.class);
 
             return (FBConnection) constructor
-                    .newInstance(new Object[] { mc});
+                    .newInstance(mc);
 
         } catch (NoSuchMethodException ex) {
             throw new FBResourceException(

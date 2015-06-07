@@ -122,8 +122,6 @@
         <property name="build.reports.embedded" value="${module.output}/reports/embedded"/>
         <property name="build.testlog" value="${module.output}/log"/>
         <property name="build.dist" value="${module.output}/dist"/>
-        <property name="build.native" value="${module.output}/native"/>
-        <property name="build.native.output" value="${build.native}"/>
         <property name="build.documentation" value="${module.output}/documentation"/>
         <property name="build.maven" value="${module.output}/maven"/>
 
@@ -205,28 +203,6 @@
             <path refid="javac.driver.classpath"/>
             <pathelement location="${build.classes}"/>
         </path>
-
-        <!--
-        Determine if native code has been built and if so set 'native_library_present' property
-        For amd64 it is set to jaybird22_x64 (note: detection depends on the bitness of the JVM used to run ANT!)
-        -->
-        <condition property="native.library.name" value="jaybird23" else="jaybird23_x64">
-            <not>
-                <os arch="amd64"/>
-            </not>
-        </condition>
-        <property name="native.library.location" value="${module.output}/native"/>
-        <condition property="native_library_present">
-            <or>
-                <available file="${native.library.location}/${native.library.name}.dll"/>
-                <available file="${native.library.location}/lib${native.library.name}.so"/>
-            </or>
-        </condition>
-        <condition property="no_type2_tests">
-            <not>
-                <isset property="native_library_present"/>
-            </not>
-        </condition>
 
         <!--
          Java 8 Javadoc has doclint which refuses to build Javadoc for HTML 4.01 syntax errors.

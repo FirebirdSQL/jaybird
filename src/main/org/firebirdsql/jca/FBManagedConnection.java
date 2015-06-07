@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
@@ -63,7 +61,7 @@ public class FBManagedConnection implements ManagedConnection, XAResource, Excep
 
     private final FBManagedConnectionFactory mcf;
 
-    private final List<ConnectionEventListener> connectionEventListeners = new CopyOnWriteArrayList<ConnectionEventListener>();
+    private final List<ConnectionEventListener> connectionEventListeners = new CopyOnWriteArrayList<>();
     // TODO Review synchronization of connectionHandles (especially in blocks like in disassociateConnections, setConnectionSharing etc)
     private final List<FBConnection> connectionHandles = Collections.synchronizedList(new ArrayList<FBConnection>());
     // TODO This is a bit of hack to be able to get attach warnings into the FBConnection that is created later.
@@ -71,9 +69,8 @@ public class FBManagedConnection implements ManagedConnection, XAResource, Excep
 
     private int timeout = 0;
 
-    private final Map<Xid, FbTransaction> xidMap = new ConcurrentHashMap<Xid, FbTransaction>();
+    private final Map<Xid, FbTransaction> xidMap = new ConcurrentHashMap<>();
     
-    private final GDS gds;
     private GDSHelper gdsHelper;
     private final FbDatabase database;
 
@@ -86,11 +83,9 @@ public class FBManagedConnection implements ManagedConnection, XAResource, Excep
     private final Set<Xid> preparedXid = Collections.synchronizedSet(new HashSet<Xid>());
     private volatile boolean inDistributedTransaction = false;
 
-    FBManagedConnection(Subject subject, ConnectionRequestInfo cri,
-            FBManagedConnectionFactory mcf) throws ResourceException {
-        
+    FBManagedConnection(Subject subject, ConnectionRequestInfo cri, FBManagedConnectionFactory mcf)
+            throws ResourceException {
         this.mcf = mcf;
-        this.gds = mcf.getGDS();
         this.cri = getCombinedConnectionRequestInfo(subject, cri);
         this.tpb = mcf.getDefaultTpb();
         this.transactionIsolation = mcf.getDefaultTransactionIsolation();
@@ -123,7 +118,7 @@ public class FBManagedConnection implements ManagedConnection, XAResource, Excep
             database.addDatabaseListener(new MCDatabaseListener());
             database.attach();
 
-            gdsHelper = new GDSHelper(gds, dpb, this, database);
+            gdsHelper = new GDSHelper(this, database);
         } catch(GDSException ex) {
             throw new FBResourceException(ex);
         } catch (SQLException ex) {
@@ -465,10 +460,10 @@ public class FBManagedConnection implements ManagedConnection, XAResource, Excep
      * Disassociate connections from current managed connection.
      */
     private void disassociateConnections() throws ResourceException {
-        SQLExceptionChainBuilder<SQLException> chain = new SQLExceptionChainBuilder<SQLException>();
+        SQLExceptionChainBuilder<SQLException> chain = new SQLExceptionChainBuilder<>();
         
         // Iterate over copy of list as connection.close() will remove connection
-        List<FBConnection> connectionHandleCopy = new ArrayList<FBConnection>(connectionHandles);
+        List<FBConnection> connectionHandleCopy = new ArrayList<>(connectionHandles);
         for (FBConnection connection : connectionHandleCopy) {
             try {
                 connection.close();
@@ -621,7 +616,7 @@ public class FBManagedConnection implements ManagedConnection, XAResource, Excep
      *            a <code>Xid</code> value
      * @param onePhase
      *            a <code>boolean</code> value
-     * @exception GDSException
+     * @exception XAException
      *                if an error occurs
      */
     void internalCommit(Xid xid, boolean onePhase) throws XAException {
@@ -762,7 +757,7 @@ public class FBManagedConnection implements ManagedConnection, XAResource, Excep
             FbTransaction trHandle2 = database.startTransaction(tpb.getTransactionParameterBuffer());
             FbStatement stmtHandle2 = database.createStatement(trHandle2);
 
-            GDSHelper gdsHelper2 = new GDSHelper(gds, getGDSHelper().getDatabaseParameterBuffer(), null, database);
+            GDSHelper gdsHelper2 = new GDSHelper(null, database);
             gdsHelper2.setCurrentTransaction(trHandle2);
 
             stmtHandle2.prepare(FORGET_FIND_QUERY);
@@ -826,7 +821,7 @@ public class FBManagedConnection implements ManagedConnection, XAResource, Excep
 
             FbStatement stmtHandle2 = database.createStatement(trHandle2);
 
-            GDSHelper gdsHelper2 = new GDSHelper(gds, getGDSHelper().getDatabaseParameterBuffer(), null, database);
+            GDSHelper gdsHelper2 = new GDSHelper(null, database);
             gdsHelper2.setCurrentTransaction(trHandle2);
 
             stmtHandle2.prepare(FORGET_DELETE_QUERY + inLimboId);
@@ -949,13 +944,13 @@ public class FBManagedConnection implements ManagedConnection, XAResource, Excep
 //            if ((flags & XAResource.TMENDRSCAN) == 0 && (flags & XAResource.TMNOFLAGS) == 0)
 //                return new Xid[0];
 
-            List<FBXid> xids = new ArrayList<FBXid>();
+            List<FBXid> xids = new ArrayList<>();
 
             FbTransaction trHandle2 = database.startTransaction(tpb.getTransactionParameterBuffer());
 
             FbStatement stmtHandle2 = database.createStatement(trHandle2);
 
-            GDSHelper gdsHelper2 = new GDSHelper(gds, getGDSHelper().getDatabaseParameterBuffer(), null, database);
+            GDSHelper gdsHelper2 = new GDSHelper(null, database);
             gdsHelper2.setCurrentTransaction(trHandle2);
 
             stmtHandle2.prepare(RECOVERY_QUERY);
@@ -1022,7 +1017,7 @@ public class FBManagedConnection implements ManagedConnection, XAResource, Excep
 
             FbStatement stmtHandle2 = database.createStatement(trHandle2);
 
-            GDSHelper gdsHelper2 = new GDSHelper(gds, getGDSHelper().getDatabaseParameterBuffer(), null, database);
+            GDSHelper gdsHelper2 = new GDSHelper(null, database);
             gdsHelper2.setCurrentTransaction(trHandle2);
 
             stmtHandle2.prepare(RECOVERY_QUERY_PARAMETRIZED);
@@ -1069,7 +1064,7 @@ public class FBManagedConnection implements ManagedConnection, XAResource, Excep
     }
 
     private static class DataProvider extends DefaultStatementListener implements FieldDataProvider {
-        private final List<RowValue> rows = new ArrayList<RowValue>();
+        private final List<RowValue> rows = new ArrayList<>();
         private final int fieldPos;
         private int row;
         
@@ -1455,7 +1450,7 @@ public class FBManagedConnection implements ManagedConnection, XAResource, Excep
                 unnotifiedWarnings.setNextWarning(warning);
             }
         }
-        for (FBConnection connection : new ArrayList<FBConnection>(connectionHandles)) {
+        for (FBConnection connection : new ArrayList<>(connectionHandles)) {
             connection.addWarning(warning);
         }
     }

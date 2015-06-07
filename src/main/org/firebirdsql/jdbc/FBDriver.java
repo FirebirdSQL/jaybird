@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
@@ -61,8 +59,8 @@ public class FBDriver implements FirebirdDriver {
      */
 
     private final Map<FBConnectionProperties, SoftReference<FBDataSource>> mcfToDataSourceMap =
-            new ConcurrentHashMap<FBConnectionProperties, SoftReference<FBDataSource>>();
-    private final ReferenceQueue<FBDataSource> dataSourceReferenceQueue = new ReferenceQueue<FBDataSource>();
+            new ConcurrentHashMap<>();
+    private final ReferenceQueue<FBDataSource> dataSourceReferenceQueue = new ReferenceQueue<>();
     private final Object createDataSourceLock = new Object();
 
     static {
@@ -70,8 +68,7 @@ public class FBDriver implements FirebirdDriver {
         try {
             DriverManager.registerDriver(new FBDriver());
         } catch (Exception ex) {
-            if (log != null)
-                log.error("Could not register with driver manager", ex);
+            log.error("Could not register with driver manager", ex);
         }
     }
 
@@ -128,7 +125,7 @@ public class FBDriver implements FirebirdDriver {
                 mcf.setNonStandardProperty(entry.getKey(), entry.getValue());
             }
 
-            FBTpbMapper.processMapping(mcf.getGDS(), mcf, originalInfo);
+            FBTpbMapper.processMapping(mcf, originalInfo);
             
             mcf = mcf.canonicalize();
 
@@ -152,8 +149,7 @@ public class FBDriver implements FirebirdDriver {
             dataSource = dataSourceFromCache(cacheKey);
             if (dataSource == null) {
                 dataSource = (FBDataSource) mcf.createConnectionFactory();
-                mcfToDataSourceMap.put(cacheKey,
-                        new SoftReference<FBDataSource>(dataSource, dataSourceReferenceQueue));
+                mcfToDataSourceMap.put(cacheKey, new SoftReference<>(dataSource, dataSourceReferenceQueue));
             }
         }
         cleanDataSourceCache();
@@ -179,7 +175,7 @@ public class FBDriver implements FirebirdDriver {
         GDSType type = GDSType.getType(properties.getType());
         
         if (type == null)
-            type = GDSFactory.getDefaultGDS().getType();
+            type = GDSFactory.getDefaultGDSType();
         try {
             FBManagedConnectionFactory mcf = new FBManagedConnectionFactory(type);
     

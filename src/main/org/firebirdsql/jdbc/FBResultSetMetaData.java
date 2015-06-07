@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
@@ -60,7 +58,7 @@ public class FBResultSetMetaData extends AbstractFieldMetaData implements Firebi
         super(rowDescriptor, connection);
 
         // Decide how to handle column names and column labels
-        if (connection != null && connection.getDatabaseParameterBuffer().hasArgument(ISCConstants.isc_dpb_column_label_for_name)) {
+        if (connection != null && connection.getConnectionProperties().isColumnLabelForName()) {
             columnStrategy = ColumnStrategy.COLUMN_LABEL_FOR_NAME;
         } else {
             columnStrategy = ColumnStrategy.DEFAULT;
@@ -473,11 +471,11 @@ public class FBResultSetMetaData extends AbstractFieldMetaData implements Firebi
         // It is necessary to split in several queries
         // Although the problem reported with 93 UNION use only 70
         int pending = getFieldCount();
-        Map<FieldKey, ExtendedFieldInfo> result = new HashMap<FieldKey, ExtendedFieldInfo>();
+        Map<FieldKey, ExtendedFieldInfo> result = new HashMap<>();
         final FBDatabaseMetaData metaData = new FBDatabaseMetaData(gdsHelper);
         while (pending > 0) {
             StringBuilder sb = new StringBuilder();
-            List<String> params = new ArrayList<String>();
+            List<String> params = new ArrayList<>();
 
             int maxLength = Math.min(pending, 70);
             for (int i = 1; i <= maxLength; i++) {
@@ -501,8 +499,7 @@ public class FBResultSetMetaData extends AbstractFieldMetaData implements Firebi
 
             if (sb.length() == 0) continue;
 
-            ResultSet rs = metaData.doQuery(sb.toString(), params);
-            try {
+            try (ResultSet rs = metaData.doQuery(sb.toString(), params)) {
                 while (rs.next()) {
                     ExtendedFieldInfo fieldInfo = new ExtendedFieldInfo();
 
@@ -522,8 +519,6 @@ public class FBResultSetMetaData extends AbstractFieldMetaData implements Firebi
 
                     result.put(new FieldKey(fieldInfo.relationName, fieldInfo.fieldName), fieldInfo);
                 }
-            } finally {
-                rs.close();
             }
         }
         return result;

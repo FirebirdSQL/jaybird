@@ -1,6 +1,5 @@
 /*
- * $Id$
- * Firebird Open Source J2ee connector - jdbc driver
+ * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -13,27 +12,25 @@
  * This file was created by members of the firebird development team.
  * All individual contributions remain the Copyright (C) of those
  * individuals.  Contributors to this file are either listed here or
- * can be obtained from a CVS history command.
+ * can be obtained from a source control history command.
  *
  * All rights reserved.
  */
 package org.firebirdsql.jdbc;
+
+import org.firebirdsql.encodings.EncodingFactory;
+import org.firebirdsql.gds.DatabaseParameterBuffer;
+import org.firebirdsql.gds.ParameterBufferHelper;
+import org.firebirdsql.gds.TransactionParameterBuffer;
+import org.firebirdsql.gds.impl.DatabaseParameterBufferImp;
+import org.firebirdsql.jca.FBResourceException;
+import org.firebirdsql.util.ObjectUtils;
 
 import java.io.Serializable;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Map;
-
-import org.firebirdsql.encodings.EncodingFactory;
-import org.firebirdsql.gds.DatabaseParameterBuffer;
-import org.firebirdsql.gds.GDS;
-import org.firebirdsql.gds.ParameterBufferHelper;
-import org.firebirdsql.gds.TransactionParameterBuffer;
-import org.firebirdsql.gds.impl.GDSFactory;
-import org.firebirdsql.gds.impl.GDSType;
-import org.firebirdsql.jca.FBResourceException;
-import org.firebirdsql.util.ObjectUtils;
 
 public class FBConnectionProperties implements FirebirdConnectionProperties, Serializable, Cloneable {
 
@@ -61,13 +58,13 @@ public class FBConnectionProperties implements FirebirdConnectionProperties, Ser
     public static final String SO_TIMEOUT = "soTimeout";
     public static final String CONNECT_TIMEOUT = "connectTimeout";
 
-    private Map<String, Object> properties = new HashMap<String, Object>();
+    private Map<String, Object> properties = new HashMap<>();
     private String type;
     private String database;
 
     private String tpbMapping;
     private int defaultTransactionIsolation = Connection.TRANSACTION_READ_COMMITTED;
-    private Map<Integer, TransactionParameterBuffer> customMapping = new HashMap<Integer, TransactionParameterBuffer>();
+    private Map<Integer, TransactionParameterBuffer> customMapping = new HashMap<>();
     private FBTpbMapper mapper;
 
     private int getIntProperty(String name) {
@@ -129,9 +126,7 @@ public class FBConnectionProperties implements FirebirdConnectionProperties, Ser
 
         FBConnectionProperties that = (FBConnectionProperties) obj;
 
-        boolean result = true;
-
-        result &= this.properties.equals(that.properties);
+        boolean result = this.properties.equals(that.properties);
         result &= ObjectUtils.equals(this.type, that.type);
         result &= ObjectUtils.equals(this.database, that.database);
         result &= ObjectUtils.equals(this.tpbMapping, that.tpbMapping);
@@ -147,8 +142,8 @@ public class FBConnectionProperties implements FirebirdConnectionProperties, Ser
         try {
             FBConnectionProperties clone = (FBConnectionProperties) super.clone();
 
-            clone.properties = new HashMap<String, Object>(properties);
-            clone.customMapping = new HashMap<Integer, TransactionParameterBuffer>(customMapping);
+            clone.properties = new HashMap<>(properties);
+            clone.customMapping = new HashMap<>(customMapping);
             clone.mapper = mapper != null ? (FBTpbMapper) mapper.clone() : null;
 
             return clone;
@@ -392,8 +387,8 @@ public class FBConnectionProperties implements FirebirdConnectionProperties, Ser
     }
 
     public DatabaseParameterBuffer getDatabaseParameterBuffer() throws SQLException {
-        GDS gds = getGds();
-        DatabaseParameterBuffer dpb = gds.createDatabaseParameterBuffer();
+        // TODO Instance creation should be done through FbDatabase or database factory?
+        DatabaseParameterBuffer dpb = new DatabaseParameterBufferImp();
         for (Map.Entry<String, Object> entry : properties.entrySet()) {
 
             String propertyName = entry.getKey();
@@ -468,11 +463,10 @@ public class FBConnectionProperties implements FirebirdConnectionProperties, Ser
         if (mapper != null)
             return mapper;
 
-        GDS gds = getGds();
         if (tpbMapping == null)
-            mapper = FBTpbMapper.getDefaultMapper(gds);
+            mapper = FBTpbMapper.getDefaultMapper();
         else
-            mapper = new FBTpbMapper(gds, tpbMapping, getClass().getClassLoader());
+            mapper = new FBTpbMapper(tpbMapping, getClass().getClassLoader());
 
         mapper.setDefaultTransactionIsolation(defaultTransactionIsolation);
 
@@ -484,20 +478,5 @@ public class FBConnectionProperties implements FirebirdConnectionProperties, Ser
         }
 
         return mapper;
-    }
-    
-    /**
-     * Returns the GDS instance for value of field type.
-     * <p>
-     * Will return the default GDS if type is not set.
-     * </p>
-     * @return GDS instance
-     * @throws IllegalArgumentException if the value of type does not match a loaded GDSType
-     */
-    private GDS getGds() {
-        GDSType gdsType = GDSType.getType(type);
-        if (gdsType == null && type != null)
-            throw new IllegalArgumentException("Unknown GDS type " + type);
-        return GDSFactory.getGDSForType(gdsType);
     }
 }

@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
@@ -24,7 +22,7 @@ import org.firebirdsql.common.DataGenerator;
 import org.firebirdsql.common.FBJUnit4TestBase;
 import org.firebirdsql.common.FBTestProperties;
 import org.firebirdsql.gds.impl.oo.OOGDSFactoryPlugin;
-import org.firebirdsql.gds.impl.wire.JavaGDSImpl;
+import org.firebirdsql.gds.impl.wire.WireGDSFactoryPlugin;
 import org.junit.After;
 import org.junit.Rule;
 import org.junit.Test;
@@ -36,9 +34,7 @@ import java.util.Arrays;
 
 import static org.firebirdsql.common.FBTestProperties.getConnectionViaDriverManager;
 import static org.firebirdsql.common.matchers.SQLExceptionMatchers.message;
-import static org.hamcrest.CoreMatchers.allOf;
-import static org.hamcrest.CoreMatchers.equalTo;
-import static org.hamcrest.CoreMatchers.isA;
+import static org.hamcrest.CoreMatchers.*;
 import static org.hamcrest.Matchers.isIn;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assume.assumeThat;
@@ -274,7 +270,7 @@ public class TestFBBlobOutputStream extends FBJUnit4TestBase {
 
     private void assumePureJavaTestType() {
         assumeThat("Test only works with pure java implementations", FBTestProperties.GDS_TYPE, isIn(Arrays.asList(
-                JavaGDSImpl.PURE_JAVA_TYPE_NAME,
+                WireGDSFactoryPlugin.PURE_JAVA_TYPE_NAME,
                 OOGDSFactoryPlugin.TYPE_NAME)));
     }
 }

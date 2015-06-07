@@ -25,10 +25,7 @@
 package org.firebirdsql.gds.impl;
 
 import org.firebirdsql.gds.*;
-import org.firebirdsql.gds.ng.FbBlob;
-import org.firebirdsql.gds.ng.FbDatabase;
-import org.firebirdsql.gds.ng.FbStatement;
-import org.firebirdsql.gds.ng.FbTransaction;
+import org.firebirdsql.gds.ng.*;
 
 import java.sql.SQLException;
 import java.util.List;
@@ -40,15 +37,9 @@ public class GDSHelper {
     
     public static final int DEFAULT_BLOB_BUFFER_SIZE = 16 * 1024;
 
-    private final GDS gds;
     private final FbDatabase database;
     private FbTransaction transaction;
 
-    /**
-     * Needed from mcf when killing a db handle when a new tx cannot be started.
-     */
-    protected DatabaseParameterBuffer dpb;
-    
     private boolean registerResultSets;
 
     private final ExceptionListener listener;
@@ -56,12 +47,10 @@ public class GDSHelper {
     /**
      * Create instance of this class.
      */
-    public GDSHelper(GDS gds, DatabaseParameterBuffer dpb, ExceptionListener listener, FbDatabase database) {
-        this.gds = gds;
-        this.dpb = dpb;
-
-        this.registerResultSets = !getDatabaseParameterBuffer().hasArgument(
-                DatabaseParameterBufferExtension.NO_RESULT_SET_TRACKING);
+    public GDSHelper(ExceptionListener listener, FbDatabase database) {
+        // TODO Make explicit property
+        this.registerResultSets = !database.getConnectionProperties().getExtraDatabaseParameters()
+                .hasArgument(DatabaseParameterBufferExtension.NO_RESULT_SET_TRACKING);
         
         this.listener = listener != null ? listener : ExceptionListener.NULL_LISTENER;
         this.database = database;
@@ -88,8 +77,13 @@ public class GDSHelper {
         return database;
     }
 
+    public IConnectionProperties getConnectionProperties() {
+        return database.getConnectionProperties();
+    }
+
     public DatabaseParameterBuffer getDatabaseParameterBuffer() {
-        return dpb;
+        // TODO Calls to this method should be replaced with an explicit property check
+        return database.getConnectionProperties().getExtraDatabaseParameters();
     }
 
     /**
@@ -135,7 +129,12 @@ public class GDSHelper {
      *             if a Firebird-specific error occurs
      */
     public void executeImmediate(String statement) throws SQLException {
-        database.executeImmediate(statement, getCurrentTransaction());
+        try {
+            database.executeImmediate(statement, getCurrentTransaction());
+        } catch (SQLException ex) {
+            notifyListeners(ex);
+            throw ex;
+        }
     }
 
     /**
@@ -256,12 +255,14 @@ public class GDSHelper {
         }
     }
 
+    @Deprecated
     public int iscVaxInteger(byte[] buffer, int pos, int length) {
-        return gds.iscVaxInteger(buffer, pos, length);
+        return VaxEncoding.iscVaxInteger(buffer, pos, length);
     }
-    
+
+    @Deprecated
     public long iscVaxLong(byte[] buffer, int pos, int length) {
-        return gds.iscVaxLong(buffer, pos, length);
+        return VaxEncoding.iscVaxLong(buffer, pos, length);
     }
 
     // for DatabaseMetaData.
@@ -337,7 +338,7 @@ public class GDSHelper {
      * @return The username of the current database user
      */
     public String getUserName() {
-        return dpb.getArgumentAsString(ISCConstants.isc_dpb_user);
+        return database.getConnectionProperties().getUser();
     }
 
     /**
@@ -346,6 +347,8 @@ public class GDSHelper {
      * @return The length of blob buffers
      */
     public int getBlobBufferLength() {
+        // TODO Add as explicit property on IConnectionProperties
+        DatabaseParameterBuffer dpb = database.getConnectionProperties().getExtraDatabaseParameters();
         if (dpb.hasArgument(DatabaseParameterBufferExtension.BLOB_BUFFER_SIZE))
             return dpb.getArgumentAsInt(DatabaseParameterBufferExtension.BLOB_BUFFER_SIZE);
         else
@@ -358,20 +361,16 @@ public class GDSHelper {
      * @return The name of the encoding used
      */
     public String getIscEncoding() {
-        try {
-            String result = dpb.getArgumentAsString(ISCConstants.isc_dpb_lc_ctype);
-            if (result == null) result = "NONE";
-            return result;
-        } catch (NullPointerException ex) {
-            return "NONE";
-        }
+        return database.getEncodingFactory().getDefaultEncodingDefinition().getFirebirdEncodingName();
     }
 
     public String getJavaEncoding() {
-        return dpb.getArgumentAsString(DatabaseParameterBufferExtension.LOCAL_ENCODING);
+        return database.getEncodingFactory().getDefaultEncodingDefinition().getJavaEncodingName();
     }
     
     public String getMappingPath() {
+        // TODO Add as explicit property on IConnectionProperties
+        DatabaseParameterBuffer dpb = database.getConnectionProperties().getExtraDatabaseParameters();
         return dpb.getArgumentAsString(DatabaseParameterBufferExtension.MAPPING_PATH);
     }
     
@@ -395,13 +394,4 @@ public class GDSHelper {
         //if (currentDbHandle != null) currentDbHandle.clearWarnings();
     }
 
-    /**
-     * Get Firebird API handler (sockets/native/embeded/etc)
-     * 
-     * @return handler object for internal API calls
-     */
-    @Deprecated
-    public GDS getInternalAPIHandler() {
-        return gds;
-    }
 }

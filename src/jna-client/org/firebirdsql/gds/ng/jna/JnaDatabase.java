@@ -22,9 +22,7 @@ import com.sun.jna.Platform;
 import com.sun.jna.ptr.IntByReference;
 import org.firebirdsql.encodings.EncodingDefinition;
 import org.firebirdsql.gds.*;
-import org.firebirdsql.gds.impl.BlobParameterBufferImp;
 import org.firebirdsql.gds.impl.DatabaseParameterBufferExtension;
-import org.firebirdsql.gds.impl.TransactionParameterBufferImpl;
 import org.firebirdsql.gds.ng.*;
 import org.firebirdsql.gds.ng.listeners.TransactionListener;
 import org.firebirdsql.jdbc.FBSQLException;
@@ -244,16 +242,6 @@ public final class JnaDatabase extends AbstractFbDatabase<JnaDatabaseConnection>
     public FbBlob createBlobForInput(FbTransaction transaction, BlobParameterBuffer blobParameterBuffer,
             long blobId) throws SQLException {
         return new JnaBlob(this, (JnaTransaction) transaction, blobParameterBuffer, blobId);
-    }
-
-    @Override
-    public BlobParameterBuffer createBlobParameterBuffer() {
-        return new BlobParameterBufferImp();
-    }
-
-    @Override
-    public TransactionParameterBufferImpl createTransactionParameterBuffer() {
-        return new TransactionParameterBufferImpl();
     }
 
     @Override

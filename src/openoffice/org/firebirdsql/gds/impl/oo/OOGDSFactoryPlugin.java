@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
@@ -20,9 +18,8 @@
  */
 package org.firebirdsql.gds.impl.oo;
 
-import org.firebirdsql.gds.*;
+import org.firebirdsql.gds.GDSException;
 import org.firebirdsql.gds.impl.BaseGDSFactoryPlugin;
-import org.firebirdsql.gds.impl.wire.JavaGDSImpl;
 import org.firebirdsql.jdbc.oo.OOConnection;
 
 public class OOGDSFactoryPlugin extends BaseGDSFactoryPlugin {
@@ -69,16 +66,5 @@ public class OOGDSFactoryPlugin extends BaseGDSFactoryPlugin {
         sb.append(':').append(path);
 
         return sb.toString();
-    }
-
-    /**
-     * Initialization-on-demand depending on classloading behavior specified in JLS 12.4
-     */
-    private static final class GDSHolder {
-        private static final GDS gds = new JavaGDSImpl();
-    }
-
-    public GDS getGDS() {
-        return GDSHolder.gds;
     }
 }

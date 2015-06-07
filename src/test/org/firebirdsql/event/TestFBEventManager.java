@@ -1,14 +1,27 @@
+/*
+ * Firebird Open Source JavaEE Connector - JDBC Driver
+ *
+ * Distributable under LGPL license.
+ * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * LGPL License for more details.
+ *
+ * This file was created by members of the firebird development team.
+ * All individual contributions remain the Copyright (C) of those
+ * individuals.  Contributors to this file are either listed here or
+ * can be obtained from a source control history command.
+ *
+ * All rights reserved.
+ */
 package org.firebirdsql.event;
 
 import org.firebirdsql.common.FBJUnit4TestBase;
-import org.firebirdsql.common.rules.GdsTypeRule;
 import org.firebirdsql.gds.impl.GDSType;
-import org.firebirdsql.gds.impl.jni.EmbeddedGDSImpl;
-import org.firebirdsql.gds.impl.jni.LocalGDSImpl;
-import org.firebirdsql.gds.impl.jni.NativeGDSImpl;
 import org.junit.After;
 import org.junit.Before;
-import org.junit.ClassRule;
 import org.junit.Test;
 
 import java.io.File;
@@ -24,13 +37,6 @@ import static org.junit.Assert.assertEquals;
  * Test the FBEventManager class
  */
 public class TestFBEventManager extends FBJUnit4TestBase {
-
-    // TODO Remove once Firebird 3 fbclient bug with isc_detach_database + events has been fixed
-    @ClassRule
-    public static final GdsTypeRule gdsTypeRule = GdsTypeRule.excludes(
-            NativeGDSImpl.NATIVE_TYPE_NAME,
-            LocalGDSImpl.LOCAL_TYPE_NAME,
-            EmbeddedGDSImpl.EMBEDDED_TYPE_NAME);
 
     private EventManager eventManager;
     private boolean eventManagerDisconnected;
@@ -74,12 +80,9 @@ public class TestFBEventManager extends FBJUnit4TestBase {
     }
 
     private void executeSql(String sql) throws SQLException {
-        Connection conn = getConnectionViaDriverManager();
-        try {
+        try (Connection conn = getConnectionViaDriverManager()) {
             Statement stmt = conn.createStatement();
             stmt.execute(sql);
-        } finally {
-            conn.close();
         }
     }
 

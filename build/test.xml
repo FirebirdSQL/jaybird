@@ -65,7 +65,7 @@
         </junit>
     </target>
 
-    <target name="all-tests-native" depends="jars,compile-native,copy_native_to_test_path,all-tests-native-only"/>
+    <target name="all-tests-native" depends="jars,all-tests-native-only"/>
     <target name="all-tests-native-only" depends="init">
 
         <!-- Override JUnit defaults -->
@@ -86,7 +86,6 @@
                jvm="${junit.jvm}">
 
             <jvmarg value="${junit.jvm.options}"/>
-            <sysproperty key="java.library.path" value="${native.library.location}"/>
             <sysproperty key="jbosstest.deploy.dir" file="${build.lib}"/>
             <sysproperty key="log4j.properties" file="${build.resources}/log4j.properties"/>
             <sysproperty key="test.db.dir" value="${test.db.dir}"/>
@@ -135,7 +134,7 @@
         </junit>
     </target>
 
-    <target name="all-tests-embedded" depends="jars,compile-native,copy_native_to_test_path,all-tests-embedded-only"/>
+    <target name="all-tests-embedded" depends="jars,all-tests-embedded-only"/>
     <target name="all-tests-embedded-only" depends="init">
 
         <!-- Override JUnit defaults -->
@@ -156,7 +155,6 @@
                jvm="${junit.jvm}">
 
             <jvmarg value="${junit.jvm.options}"/>
-            <sysproperty key="java.library.path" value="${module.output}/native"/>
             <sysproperty key="jbosstest.deploy.dir" file="${build.lib}"/>
             <sysproperty key="log4j.properties" file="${build.resources}/log4j.properties"/>
             <sysproperty key="test.db.dir" value="${test.db.dir}"/>
@@ -258,7 +256,7 @@
     </target>
 
     <target name="one-test-native"
-            depends="jars,compile-native,copy_native_to_test_path,one-test-native-only"
+            depends="jars,one-test-native-only"
             description="Execute a single test."/>
     <target name="one-test-native-only" depends="init">
         <mkdir dir="${test.db.dir}"/>
@@ -275,7 +273,6 @@
                jvm="${junit.jvm}">
 
             <jvmarg value="${junit.jvm.options}"/>
-            <sysproperty key="java.library.path" value="${module.output}/native"/>
             <sysproperty key="jbosstest.deploy.dir" file="${build.lib}"/>
             <sysproperty key="log4j.properties" file="${build.resources}/log4j.properties"/>
             <sysproperty key="test.db.dir" value="${test.db.dir}"/>

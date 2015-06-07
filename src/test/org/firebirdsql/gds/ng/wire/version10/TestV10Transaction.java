@@ -20,8 +20,8 @@ package org.firebirdsql.gds.ng.wire.version10;
 
 import org.firebirdsql.common.rules.GdsTypeRule;
 import org.firebirdsql.encodings.EncodingFactory;
-import org.firebirdsql.gds.impl.jni.EmbeddedGDSImpl;
-import org.firebirdsql.gds.impl.jni.NativeGDSImpl;
+import org.firebirdsql.gds.impl.jni.EmbeddedGDSFactoryPlugin;
+import org.firebirdsql.gds.impl.jni.NativeGDSFactoryPlugin;
 import org.firebirdsql.gds.ng.FbDatabase;
 import org.firebirdsql.gds.ng.wire.FbWireDatabase;
 import org.firebirdsql.gds.ng.wire.ProtocolCollection;
@@ -41,8 +41,8 @@ public class TestV10Transaction extends org.firebirdsql.gds.ng.AbstractTransacti
 
     @ClassRule
     public static final GdsTypeRule gdsTypeRule = GdsTypeRule.excludes(
-            EmbeddedGDSImpl.EMBEDDED_TYPE_NAME,
-            NativeGDSImpl.NATIVE_TYPE_NAME);
+            EmbeddedGDSFactoryPlugin.EMBEDDED_TYPE_NAME,
+            NativeGDSFactoryPlugin.NATIVE_TYPE_NAME);
 
     @Override
     protected FbDatabase createDatabase() throws SQLException {

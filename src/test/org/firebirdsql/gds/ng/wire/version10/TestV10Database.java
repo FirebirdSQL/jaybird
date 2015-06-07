@@ -25,13 +25,16 @@ import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.TransactionParameterBuffer;
 import org.firebirdsql.gds.impl.GDSServerVersion;
 import org.firebirdsql.gds.impl.TransactionParameterBufferImpl;
-import org.firebirdsql.gds.impl.jni.EmbeddedGDSImpl;
-import org.firebirdsql.gds.impl.jni.NativeGDSImpl;
+import org.firebirdsql.gds.impl.jni.EmbeddedGDSFactoryPlugin;
+import org.firebirdsql.gds.impl.jni.NativeGDSFactoryPlugin;
 import org.firebirdsql.gds.ng.*;
 import org.firebirdsql.gds.ng.wire.*;
 import org.firebirdsql.jdbc.FBSQLException;
 import org.firebirdsql.management.FBManager;
-import org.junit.*;
+import org.junit.ClassRule;
+import org.junit.Ignore;
+import org.junit.Rule;
+import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
 import java.io.File;
@@ -58,8 +61,8 @@ public class TestV10Database {
 
     @ClassRule
     public static final GdsTypeRule gdsTypeRule = GdsTypeRule.excludes(
-            EmbeddedGDSImpl.EMBEDDED_TYPE_NAME,
-            NativeGDSImpl.NATIVE_TYPE_NAME);
+            EmbeddedGDSFactoryPlugin.EMBEDDED_TYPE_NAME,
+            NativeGDSFactoryPlugin.NATIVE_TYPE_NAME);
 
     @Rule
     public final ExpectedException expectedException = ExpectedException.none();

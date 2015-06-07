@@ -18,7 +18,10 @@
  */
 package org.firebirdsql.gds.ng;
 
+import org.firebirdsql.gds.BlobParameterBuffer;
 import org.firebirdsql.gds.ISCConstants;
+import org.firebirdsql.gds.impl.BlobParameterBufferImp;
+import org.firebirdsql.gds.impl.TransactionParameterBufferImpl;
 import org.firebirdsql.gds.ng.listeners.DatabaseListener;
 import org.firebirdsql.gds.ng.listeners.DatabaseListenerDispatcher;
 import org.firebirdsql.gds.ng.listeners.TransactionListener;
@@ -267,6 +270,21 @@ public abstract class AbstractFbDatabase<T extends AbstractConnection<IConnectio
             // do nothing
             break;
         }
+    }
+
+    @Override
+    public BlobParameterBuffer createBlobParameterBuffer() {
+        return new BlobParameterBufferImp();
+    }
+
+    @Override
+    public TransactionParameterBufferImpl createTransactionParameterBuffer() {
+        return new TransactionParameterBufferImpl();
+    }
+
+    @Override
+    public IConnectionProperties getConnectionProperties() {
+        return connection.getAttachProperties().asImmutable();
     }
 
     private class DatabaseInformationProcessor implements InfoProcessor<FbDatabase> {

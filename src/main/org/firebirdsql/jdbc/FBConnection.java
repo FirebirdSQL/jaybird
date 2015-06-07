@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
@@ -21,7 +19,6 @@
 package org.firebirdsql.jdbc;
 
 import org.firebirdsql.gds.DatabaseParameterBuffer;
-import org.firebirdsql.gds.GDS;
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.TransactionParameterBuffer;
 import org.firebirdsql.gds.impl.DatabaseParameterBufferExtension;
@@ -192,16 +189,6 @@ public class FBConnection implements FirebirdConnection {
         return getGDSHelper().getCurrentDatabase();
     }
 
-    /**
-     * Get Firebird API handler (sockets/native/embeded/etc)
-     * @return handler object for internal API calls
-     * @deprecated to be removed/replaced by {@link #getFbDatabase()}
-     */
-    @Deprecated
-    public GDS getInternalAPIHandler() throws SQLException {
-        return getGDSHelper().getInternalAPIHandler();
-    }
-    
     /**
      * Get database parameter buffer for this connection.
      * 

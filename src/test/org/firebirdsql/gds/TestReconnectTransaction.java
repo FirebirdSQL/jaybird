@@ -51,19 +51,11 @@ public class TestReconnectTransaction extends FBJUnit4TestBase {
             + "SELECT RDB$TRANSACTION_ID, RDB$TRANSACTION_DESCRIPTION "
             + "FROM RDB$TRANSACTIONS WHERE RDB$TRANSACTION_STATE = 1";
 
-    private GDS gds;
     private FBTpb tpb;
-    private DatabaseParameterBuffer dpb;
 
     @Before
     public void setUp() throws Exception {
-        gds = GDSFactory.getGDSForType(getGdsType());
-
-        dpb = gds.createDatabaseParameterBuffer();
-        dpb.addArgument(DatabaseParameterBuffer.USER, DB_USER);
-        dpb.addArgument(DatabaseParameterBuffer.PASSWORD, DB_PASSWORD);
-
-        tpb = new FBTpb(FBTpbMapper.getDefaultMapper(gds).getDefaultMapping());
+        tpb = new FBTpb(FBTpbMapper.getDefaultMapper().getDefaultMapping());
     }
 
     private static class DataProvider implements FieldDataProvider {
@@ -111,7 +103,7 @@ public class TestReconnectTransaction extends FBJUnit4TestBase {
 
         try (FbDatabase dbHandle2 = databaseFactory.connect(connectionInfo)) {
             dbHandle2.attach();
-            GDSHelper gdsHelper2 = new GDSHelper(gds, dpb, null, dbHandle2);
+            GDSHelper gdsHelper2 = new GDSHelper(null, dbHandle2);
             FbTransaction trHandle2 = dbHandle2.startTransaction(tpb.getTransactionParameterBuffer());
             gdsHelper2.setCurrentTransaction(trHandle2);
 

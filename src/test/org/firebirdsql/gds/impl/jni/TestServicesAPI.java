@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
@@ -21,6 +19,10 @@
 package org.firebirdsql.gds.impl.jni;
 
 import org.firebirdsql.common.rules.GdsTypeRule;
+import org.firebirdsql.gds.ng.FbDatabaseFactory;
+import org.firebirdsql.gds.ng.FbService;
+import org.firebirdsql.gds.ng.FbServiceProperties;
+import org.firebirdsql.gds.ng.IServiceProperties;
 import org.firebirdsql.logging.Logger;
 import org.firebirdsql.logging.LoggerFactory;
 import org.firebirdsql.jdbc.FBDriver;
@@ -35,6 +37,7 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 /**
@@ -44,7 +47,7 @@ import static org.junit.Assert.assertTrue;
 public class TestServicesAPI {
 
     @ClassRule
-    public static final GdsTypeRule testType = GdsTypeRule.supports(EmbeddedGDSImpl.EMBEDDED_TYPE_NAME);
+    public static final GdsTypeRule testType = GdsTypeRule.supports(EmbeddedGDSFactoryPlugin.EMBEDDED_TYPE_NAME);
 
     private final Logger log = LoggerFactory.getLogger(getClass());
 
@@ -52,13 +55,13 @@ public class TestServicesAPI {
     private String mAbsoluteBackupPath;
     private FBManager fbManager;
     private GDSType gdsType;
-    private GDS gds;
+    private FbDatabaseFactory dbFactory;
 
     @Before
     public void setUp() throws Exception {
         Class.forName(FBDriver.class.getName());
-        gdsType = GDSType.getType(EmbeddedGDSImpl.EMBEDDED_TYPE_NAME);
-        gds = GDSFactory.getGDSForType(gdsType);
+        gdsType = GDSType.getType(EmbeddedGDSFactoryPlugin.EMBEDDED_TYPE_NAME);
+        dbFactory = GDSFactory.getDatabaseFactoryForType(gdsType);
 
         fbManager = new FBManager(gdsType);
 
@@ -79,35 +82,33 @@ public class TestServicesAPI {
     public void tearDown() throws Exception {
         fbManager.dropDatabase(mAbsoluteDatabasePath, "SYSDBA", "masterkey");
         fbManager.stop();
-        fbManager = null;
     }
 
     @Test
-    public void testServicesManagerAttachAndDetach() throws GDSException {
-        final ServiceParameterBuffer serviceParameterBuffer = createServiceParameterBuffer();
-        final IscSvcHandle handle = gds.createIscSvcHandle();
+    public void testServicesManagerAttachAndDetach() throws SQLException {
+        FbService service =  dbFactory.serviceConnect(createServiceProperties());
 
-        assertTrue("Handle should be invalid when created.", handle.isNotValid());
+        assertFalse("Handle should be unattached when created.", service.isAttached());
 
-        gds.iscServiceAttach("service_mgr", handle, serviceParameterBuffer);
+        service.attach();
 
-        assertTrue("Handle should be valid when isc_service_attach returns normally.", handle.isValid());
+        assertTrue("Handle should be attached when isc_service_attach returns normally.", service.isAttached());
 
-        gds.iscServiceDetach(handle);
+        service.close();
 
-        assertTrue("Handle should be invalid when isc_service_detach returns normally.", handle.isNotValid());
+        assertFalse("Handle should be detached when isc_service_detach returns normally.", service.isAttached());
     }
 
     @Test
     public void testBackupAndRestore() throws Exception {
-        IscSvcHandle handle = attachToServiceManager();
-        backupDatabase(handle);
-        detachFromServiceManager(handle);
+        FbService service = attachToServiceManager();
+        backupDatabase(service);
+        detachFromServiceManager(service);
         dropDatabase();
 
-        handle = attachToServiceManager();
-        restoreDatabase(handle);
-        detachFromServiceManager(handle);
+        service = attachToServiceManager();
+        restoreDatabase(service);
+        detachFromServiceManager(service);
 
         connectToDatabase();
     }
@@ -118,10 +119,10 @@ public class TestServicesAPI {
         connection.close();
     }
 
-    private void restoreDatabase(IscSvcHandle handle) throws Exception {
-        startRestore(handle);
+    private void restoreDatabase(FbService service) throws Exception {
+        startRestore(service);
 
-        queryService(handle, "log/restoretest.log");
+        queryService(service, "log/restoretest.log");
 
         assertTrue("Database file doesn't exist after restore !", new File(mAbsoluteDatabasePath).exists());
         if (!new File(mAbsoluteBackupPath).delete()) {
@@ -129,16 +130,16 @@ public class TestServicesAPI {
         }
     }
 
-    private void startRestore(IscSvcHandle handle) throws GDSException {
-        final ServiceRequestBuffer serviceRequestBuffer = gds
-                .createServiceRequestBuffer(ISCConstants.isc_action_svc_restore);
+    private void startRestore(FbService service) throws SQLException {
+        final ServiceRequestBuffer serviceRequestBuffer = service.createServiceRequestBuffer();
+        serviceRequestBuffer.addArgument(ISCConstants.isc_action_svc_restore);
 
         serviceRequestBuffer.addArgument(ISCConstants.isc_spb_verbose);
         serviceRequestBuffer.addArgument(ISCConstants.isc_spb_options, ISCConstants.isc_spb_res_create);
-        serviceRequestBuffer.addArgument(ISCConstants.isc_spb_dbname, mAbsoluteBackupPath);
-        serviceRequestBuffer.addArgument(ISCConstants.isc_spb_bkp_file, mAbsoluteDatabasePath);
+        serviceRequestBuffer.addArgument(ISCConstants.isc_spb_dbname, mAbsoluteBackupPath, service.getEncoding());
+        serviceRequestBuffer.addArgument(ISCConstants.isc_spb_bkp_file, mAbsoluteDatabasePath, service.getEncoding());
 
-        gds.iscServiceStart(handle, serviceRequestBuffer);
+        service.startServiceAction(serviceRequestBuffer);
     }
 
     private void dropDatabase() throws Exception {
@@ -148,28 +149,27 @@ public class TestServicesAPI {
         testFBManager.stop();
     }
 
-    private void backupDatabase(final IscSvcHandle handle) throws Exception {
+    private void backupDatabase(FbService service) throws Exception {
         if (!new File(mAbsoluteBackupPath).delete()) {
             log.debug("Unable to delete file " + mAbsoluteBackupPath);
         }
 
-        startBackup(handle);
+        startBackup(service);
 
-        queryService(handle, "log/backuptest.log");
+        queryService(service, "log/backuptest.log");
 
         assertTrue("Backup file doesn't exist!", new File(mAbsoluteBackupPath).exists());
     }
 
-    private void queryService(final IscSvcHandle handle, String outputFilename) throws Exception {
-        final ServiceRequestBuffer serviceRequestBuffer = gds
-                .createServiceRequestBuffer(ISCConstants.isc_info_svc_to_eof);
-        final byte[] buffer = new byte[1024];
+    private void queryService(FbService service, String outputFilename) throws Exception {
+        final ServiceRequestBuffer serviceRequestBuffer = service.createServiceRequestBuffer();
+        serviceRequestBuffer.addArgument(ISCConstants.isc_info_svc_to_eof);
+
         boolean finished = false;
 
-        final FileOutputStream file = new FileOutputStream(outputFilename);
-        try {
+        try (FileOutputStream file = new FileOutputStream(outputFilename)) {
             while (!finished) {
-                gds.iscServiceQuery(handle, null, serviceRequestBuffer, buffer);
+                byte[] buffer = service.getServiceInfo(null, serviceRequestBuffer, 1024);
                 final ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(buffer);
 
                 // TODO Find out why unused
@@ -185,53 +185,44 @@ public class TestServicesAPI {
                     for (; numberOfBytes >= 0; numberOfBytes--)
                         file.write(byteArrayInputStream.read());
                 }
-
-                file.flush();
             }
-        } finally {
-            file.close();
         }
     }
 
-    private void startBackup(final IscSvcHandle handle) throws GDSException {
-        final ServiceRequestBuffer serviceRequestBuffer = gds
-                .createServiceRequestBuffer(ISCConstants.isc_action_svc_backup);
+    private void startBackup(FbService service) throws SQLException {
+        ServiceRequestBuffer serviceRequestBuffer = service.createServiceRequestBuffer();
+        serviceRequestBuffer.addArgument(ISCConstants.isc_action_svc_backup);
 
         serviceRequestBuffer.addArgument(ISCConstants.isc_spb_verbose);
-        serviceRequestBuffer.addArgument(ISCConstants.isc_spb_dbname, mAbsoluteDatabasePath);
-        serviceRequestBuffer.addArgument(ISCConstants.isc_spb_bkp_file, mAbsoluteBackupPath);
+        serviceRequestBuffer.addArgument(ISCConstants.isc_spb_dbname, mAbsoluteDatabasePath, service.getEncoding());
+        serviceRequestBuffer.addArgument(ISCConstants.isc_spb_bkp_file, mAbsoluteBackupPath, service.getEncoding());
 
-        gds.iscServiceStart(handle, serviceRequestBuffer);
+        service.startServiceAction(serviceRequestBuffer);
     }
 
-    private IscSvcHandle attachToServiceManager() throws GDSException {
-        final ServiceParameterBuffer serviceParameterBuffer = createServiceParameterBuffer();
-        final IscSvcHandle handle = gds.createIscSvcHandle();
+    private FbService attachToServiceManager() throws SQLException {
+        FbService service =  dbFactory.serviceConnect(createServiceProperties());
+        service.attach();
 
-        assertTrue("Handle should be invalid when created.", handle.isNotValid());
+        assertTrue("Handle should be attached when isc_service_attach returns normally.", service.isAttached());
 
-        gds.iscServiceAttach("service_mgr", handle, serviceParameterBuffer);
-
-        assertTrue("Handle should be valid when isc_service_attach returns normally.", handle.isValid());
-
-        return handle;
+        return service;
     }
 
-    private void detachFromServiceManager(IscSvcHandle handle) throws GDSException {
-        if (handle.isNotValid())
+    private void detachFromServiceManager(FbService service) throws SQLException {
+        if (service.isAttached())
             throw new Error("Handle should be valid here");
 
-        gds.iscServiceDetach(handle);
+        service.close();
 
-        assertTrue("Handle should be invalid when isc_service_detach returns normally.", handle.isNotValid());
+        assertFalse("Handle should be invalid when isc_service_detach returns normally.", service.isAttached());
     }
 
-    private ServiceParameterBuffer createServiceParameterBuffer() {
-        final ServiceParameterBuffer returnValue = gds.createServiceParameterBuffer();
+    private IServiceProperties createServiceProperties() {
+        IServiceProperties serviceProperties = new FbServiceProperties();
+        serviceProperties.setUser("SYSDBA");
+        serviceProperties.setPassword("masterkey");
 
-        returnValue.addArgument(ISCConstants.isc_spb_user_name, "SYSDBA");
-        returnValue.addArgument(ISCConstants.isc_spb_password, "masterkey");
-
-        return returnValue;
+        return serviceProperties;
     }
 }

@@ -45,6 +45,8 @@ public final class FbConnectionProperties extends AbstractAttachProperties<IConn
     private boolean columnLabelForName;
     private final DatabaseParameterBuffer extraDatabaseParameters = new DatabaseParameterBufferImp();
 
+    private FbImmutableConnectionProperties immutableConnectionPropertiesCache;
+
     /**
      * Copy constructor for FbConnectionProperties.
      * <p>
@@ -61,6 +63,8 @@ public final class FbConnectionProperties extends AbstractAttachProperties<IConn
             databaseName = src.getDatabaseName();
             connectionDialect = src.getConnectionDialect();
             pageCacheSize = src.getPageCacheSize();
+            resultSetDefaultHoldable = src.isResultSetDefaultHoldable();
+            columnLabelForName = src.isColumnLabelForName();
             for (Parameter parameter : src.getExtraDatabaseParameters()) {
                 parameter.copyTo(extraDatabaseParameters, null);
             }
@@ -81,6 +85,7 @@ public final class FbConnectionProperties extends AbstractAttachProperties<IConn
     @Override
     public void setDatabaseName(String databaseName) {
         this.databaseName = databaseName;
+        dirtied();
     }
 
     @Override
@@ -96,6 +101,7 @@ public final class FbConnectionProperties extends AbstractAttachProperties<IConn
     @Override
     public void setConnectionDialect(short connectionDialect) {
         this.connectionDialect = connectionDialect;
+        dirtied();
     }
 
     @Override
@@ -106,11 +112,13 @@ public final class FbConnectionProperties extends AbstractAttachProperties<IConn
     @Override
     public void setPageCacheSize(int pageCacheSize) {
         this.pageCacheSize = pageCacheSize;
+        dirtied();
     }
 
     @Override
     public void setResultSetDefaultHoldable(final boolean holdable) {
         resultSetDefaultHoldable = holdable;
+        dirtied();
     }
 
     @Override
@@ -121,6 +129,7 @@ public final class FbConnectionProperties extends AbstractAttachProperties<IConn
     @Override
     public void setColumnLabelForName(final boolean columnLabelForName) {
         this.columnLabelForName = columnLabelForName;
+        dirtied();
     }
 
     @Override
@@ -135,7 +144,10 @@ public final class FbConnectionProperties extends AbstractAttachProperties<IConn
 
     @Override
     public IConnectionProperties asImmutable() {
-        return new FbImmutableConnectionProperties(this);
+        if (immutableConnectionPropertiesCache == null) {
+            immutableConnectionPropertiesCache = new FbImmutableConnectionProperties(this);
+        }
+        return immutableConnectionPropertiesCache;
     }
 
     @Override
@@ -199,7 +211,13 @@ public final class FbConnectionProperties extends AbstractAttachProperties<IConn
             default:
                 log.warn(String.format("Unknown or unsupported parameter with type %d added to extra database parameters", parameter.getType()));
                 parameter.copyTo(getExtraDatabaseParameters(), null);
+                dirtied();
             }
         }
+    }
+
+    @Override
+    protected void dirtied() {
+        immutableConnectionPropertiesCache = null;
     }
 }

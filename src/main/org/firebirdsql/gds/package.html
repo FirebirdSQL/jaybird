@@ -11,19 +11,6 @@
 	"InterBase 6 API Guide" published by Borland and released together with
 	the open-sourcing the InterBase code, a predecessor of Firebird.
 	</p>
-
-	<p>
-	All database related operations are performed by an instance of the
-	<a href="GDS.html"><code>org.firebirdsql.gds.GDS</code></a> interface,
-	which simultaneously acts as a factory for all needed data structures.
-	</p>
-	<p>
-	Each database operation defined in the <a href="GDS.html"><code>org.firebirdsql.gds.GDS</code></a>
-	interface throws an instance of <a href="GDSException.html"><code>org.firebirdsql.gds.GDSException</code></a>
-	if database server returned an error for that operation. All constants needed
-	by those operations are defined in a <a href="ISCConstants.html"><code>org.firebirdsql.gds.ISCConstants</code></a>
-	class and are duplicated in corresponding data structures.
-	</p>
 	<p>
 	Please refer to the documentation in the javadoc comments as well as 
 	to the source code for more information.

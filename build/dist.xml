@@ -66,11 +66,6 @@
             <fileset dir=".">
                 <include name="CONTRIBUTING"/>
             </fileset>
-            <!-- TODO: Disabled while org.firebirdsql.gds.ng.* implementation for native isn't done
-            <fileset dir="native">
-                <include name="**/*"/>
-            </fileset>
-            -->
             <zipfileset dir="${build.lib}" prefix="lib">
                 <include name="connector-api-1.5.jar"/>
             </zipfileset>

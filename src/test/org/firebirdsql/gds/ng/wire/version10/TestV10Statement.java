@@ -18,22 +18,18 @@
  */
 package org.firebirdsql.gds.ng.wire.version10;
 
-import org.firebirdsql.common.FBTestProperties;
 import org.firebirdsql.common.rules.GdsTypeRule;
 import org.firebirdsql.encodings.EncodingFactory;
-import org.firebirdsql.gds.impl.jni.EmbeddedGDSImpl;
-import org.firebirdsql.gds.impl.jni.NativeGDSImpl;
+import org.firebirdsql.gds.impl.jni.EmbeddedGDSFactoryPlugin;
+import org.firebirdsql.gds.impl.jni.NativeGDSFactoryPlugin;
 import org.firebirdsql.gds.ng.AbstractStatementTest;
 import org.firebirdsql.gds.ng.FbDatabase;
 import org.firebirdsql.gds.ng.wire.FbWireDatabase;
 import org.firebirdsql.gds.ng.wire.ProtocolCollection;
 import org.firebirdsql.gds.ng.wire.WireDatabaseConnection;
-import org.junit.BeforeClass;
 import org.junit.ClassRule;
 
 import java.sql.SQLException;
-
-import static org.junit.Assume.assumeTrue;
 
 /**
  * Tests for {@link org.firebirdsql.gds.ng.wire.version10.V10Statement}. This test class can
@@ -46,8 +42,8 @@ public class TestV10Statement extends AbstractStatementTest {
 
     @ClassRule
     public static final GdsTypeRule gdsTypeRule = GdsTypeRule.excludes(
-            EmbeddedGDSImpl.EMBEDDED_TYPE_NAME,
-            NativeGDSImpl.NATIVE_TYPE_NAME);
+            EmbeddedGDSFactoryPlugin.EMBEDDED_TYPE_NAME,
+            NativeGDSFactoryPlugin.NATIVE_TYPE_NAME);
 
     protected ProtocolCollection getProtocolCollection() {
         return ProtocolCollection.create(new Version10Descriptor());

@@ -285,4 +285,9 @@ public interface FbDatabase extends FbAttachment {
      *         For errors cancelling the event
      */
     void cancelEvent(EventHandle eventHandle) throws SQLException;
+
+    /**
+     * @return An immutable copy of the connection properties of this database
+     */
+    IConnectionProperties getConnectionProperties();
 }

@@ -18,23 +18,24 @@
  */
 package org.firebirdsql.jdbc;
 
-import java.security.AccessController;
-import java.security.PrivilegedAction;
-import java.sql.*;
-import java.util.*;
-
-import org.firebirdsql.gds.*;
-import org.firebirdsql.gds.impl.AbstractGDS;
+import org.firebirdsql.gds.XSQLVAR;
 import org.firebirdsql.gds.impl.GDSFactory;
 import org.firebirdsql.gds.impl.GDSHelper;
+import org.firebirdsql.gds.impl.GDSType;
 import org.firebirdsql.gds.ng.DefaultDatatypeCoder;
 import org.firebirdsql.gds.ng.fields.RowDescriptor;
 import org.firebirdsql.gds.ng.fields.RowDescriptorBuilder;
 import org.firebirdsql.gds.ng.fields.RowValue;
 import org.firebirdsql.gds.ng.fields.RowValueBuilder;
+import org.firebirdsql.jca.FBManagedConnectionFactory;
 import org.firebirdsql.jdbc.escape.FBEscapedFunctionHelper;
 import org.firebirdsql.logging.Logger;
 import org.firebirdsql.logging.LoggerFactory;
+
+import java.security.AccessController;
+import java.security.PrivilegedAction;
+import java.sql.*;
+import java.util.*;
 
 import static org.firebirdsql.gds.ISCConstants.*;
 
@@ -131,7 +132,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
     private GDSHelper gdsHelper;
     private FBConnection connection;
 
-    protected final Map<String, FBPreparedStatement> statements = new HashMap<String, FBPreparedStatement>();
+    protected final Map<String, FBPreparedStatement> statements = new HashMap<>();
 
     protected FBDatabaseMetaData(GDSHelper gdsHelper) {
         this.gdsHelper = gdsHelper;
@@ -189,9 +190,9 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
      * @exception SQLException if a database access error occurs
      */
     public  String getURL() throws SQLException {
-        AbstractGDS gds = ((AbstractGDS) connection.getInternalAPIHandler());
-
-        return GDSFactory.getJdbcUrl(gds.getType(), connection.mc.getDatabase());
+        // TODO Think of a less complex way to obtain the url
+        GDSType gdsType = ((FBManagedConnectionFactory) connection.mc.getManagedConnectionFactory()).getGDSType();
+        return GDSFactory.getJdbcUrl(gdsType, connection.mc.getDatabase());
     }
 
     /**
@@ -1813,7 +1814,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
         sql += GET_PROCEDURES_END;
 
         // check the original case identifiers first
-        List<String> params = new ArrayList<String>();
+        List<String> params = new ArrayList<>();
         if (!procedureClause.getCondition().equals("")) {
             params.add(procedureClause.getOriginalCaseValue());
         }
@@ -1836,7 +1837,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
                 }
             }
 
-            final List<RowValue> rows = new ArrayList<RowValue>();
+            final List<RowValue> rows = new ArrayList<>();
             final RowValueBuilder valueBuilder = new RowValueBuilder(rowDescriptor);
             do {
                 rows.add(valueBuilder
@@ -2007,7 +2008,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
         sql += GET_PROCEDURE_COLUMNS_END;
 
         // check the original case identifiers first
-        List<String> params = new ArrayList<String>();
+        List<String> params = new ArrayList<>();
         if (!procedureClause.getCondition().equals("")) {
             params.add(procedureClause.getOriginalCaseValue());
         }
@@ -2036,7 +2037,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
                 }
             }
 
-            final List<RowValue> rows = new ArrayList<RowValue>();
+            final List<RowValue> rows = new ArrayList<>();
             final RowValueBuilder valueBuilder = new RowValueBuilder(rowDescriptor);
             do {
                 final short columnType = rs.getShort("COLUMN_TYPE");
@@ -2252,7 +2253,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
             types = ALL_TYPES;
         }
         String sql;
-        List<String> params = new ArrayList<String>();
+        List<String> params = new ArrayList<>();
         if (isAllCondition(tableNamePattern)) {
             sql = GET_TABLES_ALL;
             params.add(getWantsSystemTables(types));
@@ -2343,7 +2344,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
                 .at(0).simple(SQL_VARYING, 31, "TABLE_TYPE", "TABLETYPES").addField()
                 .toRowDescriptor();
 
-        final List<RowValue> rows = new ArrayList<RowValue>(ALL_TYPES.length);
+        final List<RowValue> rows = new ArrayList<>(ALL_TYPES.length);
         for (String ALL_TYPE : ALL_TYPES) {
             rows.add(RowValue.of(rowDescriptor, getBytes(ALL_TYPE)));
         }
@@ -2504,7 +2505,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
         sql += columnClause.getCondition();
         sql += GET_COLUMNS_END;
 
-        List<String> params = new ArrayList<String>();
+        List<String> params = new ArrayList<>();
 
         // check first original case values
         if (!tableClause.getCondition().equals("")) {
@@ -2537,7 +2538,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
                 }
             }
 
-            final List<RowValue> rows = new ArrayList<RowValue>();
+            final List<RowValue> rows = new ArrayList<>();
             final RowValueBuilder valueBuilder = new RowValueBuilder(rowDescriptor);
             do {
                 final short fieldType = rs.getShort("FIELD_TYPE");
@@ -2836,7 +2837,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
 
     private static final Map<String, byte[]> PRIVILEGE_MAPPING;
     static {
-        Map<String, byte[]> tempMapping = new HashMap<String, byte[]>(7);
+        Map<String, byte[]> tempMapping = new HashMap<>(7);
         tempMapping.put("A", getBytes("ALL"));
         tempMapping.put("S", getBytes("SELECT"));
         tempMapping.put("D", getBytes("DELETE"));
@@ -2907,7 +2908,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
         sql += columnClause.getCondition();
         sql += GET_COLUMN_PRIVILEGES_END;
 
-        List<String> params = new ArrayList<String>();
+        List<String> params = new ArrayList<>();
 
         // check the original case first
         table = stripQuotes(stripEscape(table), false);
@@ -3016,7 +3017,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
         sql += GET_TABLE_PRIVILEGES_END;
 
         // check the original case identifiers first
-        List<String> params = new ArrayList<String>();
+        List<String> params = new ArrayList<>();
         if (!tableClause.getCondition().equals("")) {
             params.add(tableClause.getOriginalCaseValue());
         }
@@ -3057,7 +3058,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
 
     protected final FBResultSet processTablePrivileges(final RowDescriptor rowDescriptor, final ResultSet fbTablePrivileges) throws SQLException {
         try {
-            final List<RowValue> rows = new ArrayList<RowValue>();
+            final List<RowValue> rows = new ArrayList<>();
             final RowValueBuilder valueBuilder = new RowValueBuilder(rowDescriptor);
             do {
                 rows.add(valueBuilder
@@ -3304,7 +3305,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
                 .toRowDescriptor();
 
         // check the original case identifiers
-        List<String> params = new ArrayList<String>();
+        List<String> params = new ArrayList<>();
         params.add(stripQuotes(stripEscape(table), false));
 
         ResultSet rs = doQuery(GET_PRIMARY_KEYS, params);
@@ -3323,7 +3324,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
                 }
             }
 
-            final List<RowValue> rows = new ArrayList<RowValue>();
+            final List<RowValue> rows = new ArrayList<>();
             final RowValueBuilder valueBuilder = new RowValueBuilder(rowDescriptor);
             do {
                 rows.add(valueBuilder
@@ -3371,7 +3372,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
 
     private static final Map<String, byte[]> ACTION_MAPPING;
     static {
-        Map<String, byte[]> tempMap = new HashMap<String, byte[]>();
+        Map<String, byte[]> tempMap = new HashMap<>();
         tempMap.put("NO ACTION", IMPORTED_KEY_NO_ACTION);
         tempMap.put("RESTRICT", IMPORTED_KEY_NO_ACTION);
         tempMap.put("CASCADE", IMPORTED_KEY_CASCADE);
@@ -3481,7 +3482,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
         String sql = GET_IMPORTED_KEYS;
 
         // check the original case identifiers first
-        List<String> params = new ArrayList<String>();
+        List<String> params = new ArrayList<>();
         params.add(stripQuotes(stripEscape(table), false));
 
         ResultSet rs = doQuery(sql, params);
@@ -3500,7 +3501,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
                 }
             }
 
-            final List<RowValue> rows = new ArrayList<RowValue>();
+            final List<RowValue> rows = new ArrayList<>();
             final RowValueBuilder valueBuilder = new RowValueBuilder(rowDescriptor);
             do {
                 rows.add(valueBuilder
@@ -3643,7 +3644,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
         String sql = GET_EXPORTED_KEYS;
 
         // check the original case identifiers first
-        List<String> params = new ArrayList<String>();
+        List<String> params = new ArrayList<>();
         params.add(stripQuotes(stripEscape(table), false));
 
         ResultSet rs = doQuery(sql, params);
@@ -3662,7 +3663,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
                 }
             }
 
-            List<RowValue> rows = new ArrayList<RowValue>();
+            List<RowValue> rows = new ArrayList<>();
             final RowValueBuilder valueBuilder = new RowValueBuilder(rowDescriptor);
             do {
                 rows.add(valueBuilder
@@ -3817,7 +3818,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
 
         String sql = GET_CROSS_KEYS;
 
-        final List<String> params = new ArrayList<String>();
+        final List<String> params = new ArrayList<>();
 
         // check the original case first
         params.add(stripQuotes(stripEscape(primaryTable), false));
@@ -3840,7 +3841,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
                 }
             }
 
-            final List<RowValue> rows = new ArrayList<RowValue>();
+            final List<RowValue> rows = new ArrayList<>();
             final RowValueBuilder valueBuilder = new RowValueBuilder(rowDescriptor);
             do {
                 rows.add(valueBuilder
@@ -4156,7 +4157,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
             return new FBResultSet(rowDescriptor, Collections.<RowValue>emptyList());
         }
 
-        List<String> params = new ArrayList<String>();
+        List<String> params = new ArrayList<>();
         params.add(stripQuotes(stripEscape(table), false));
 
         ResultSet rs = doQuery(GET_INDEX_INFO, params);
@@ -4176,7 +4177,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
                 }
             }
 
-            final List<RowValue> rows = new ArrayList<RowValue>();
+            final List<RowValue> rows = new ArrayList<>();
             final RowValueBuilder valueBuilder = new RowValueBuilder(rowDescriptor);
             do {
                 final boolean isNotUnique = rs.getInt("UNIQUE_FLAG") == 0;
@@ -4218,8 +4219,6 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
             rs.close();
         }
     }
-
-    //--------------------------JDBC 2.0-----------------------------
 
     /**
      * Does the database support the given result set type?
@@ -5000,20 +4999,17 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
         if (pattern == null) return null;
         if ((pattern.length() >= 2)
             && (pattern.charAt(0) == '\"')
-            && (pattern.charAt(pattern.length() - 1) == '\"'))
-        {
+            && (pattern.charAt(pattern.length() - 1) == '\"')) {
             return pattern.substring(1, pattern.length() - 1);
         }
-        else {
-            if (uppercase)
-                return pattern.toUpperCase();
-            else
-                return pattern;
+        else if (uppercase) {
+            return pattern.toUpperCase();
         }
+        return pattern;
     }
 
-    public ResultSet getPseudoColumns(String catalog, String schemaPattern,
-            String tableNamePattern, String columnNamePattern) throws SQLException {
+    public ResultSet getPseudoColumns(String catalog, String schemaPattern, String tableNamePattern,
+            String columnNamePattern) throws SQLException {
         // TODO Write implementation
         throw new FBDriverNotCapableException();
     }
@@ -5023,17 +5019,11 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
         return false;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see org.firebirdsql.jdbc.FirebirdDatabaseMetaData#getProcedureSourceCode(java.lang.String)
-     */
-    public String getProcedureSourceCode(String procedureName)
-            throws SQLException {
+    public String getProcedureSourceCode(String procedureName) throws SQLException {
         String sResult = null;
         String sql = "Select RDB$PROCEDURE_SOURCE From RDB$PROCEDURES Where "
                 + "RDB$PROCEDURE_NAME = ?";
-        List<String> params = new ArrayList<String>();
+        List<String> params = new ArrayList<>();
         params.add(procedureName);
         ResultSet rs = doQuery(sql, params);
         if (rs.next()) sResult = rs.getString(1);
@@ -5042,16 +5032,10 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
         return sResult;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see org.firebirdsql.jdbc.FirebirdDatabaseMetaData#getTriggerSourceCode(java.lang.String)
-     */
     public String getTriggerSourceCode(String triggerName) throws SQLException {
         String sResult = null;
-        String sql = "Select RDB$TRIGGER_SOURCE From RDB$TRIGGERS Where "
-                + "RDB$TRIGGER_NAME = ?";
-        List<String> params = new ArrayList<String>();
+        String sql = "Select RDB$TRIGGER_SOURCE From RDB$TRIGGERS Where RDB$TRIGGER_NAME = ?";
+        List<String> params = new ArrayList<>();
         params.add(triggerName);
         ResultSet rs = doQuery(sql, params);
         if (rs.next()) sResult = rs.getString(1);
@@ -5060,16 +5044,10 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
         return sResult;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see org.firebirdsql.jdbc.FirebirdDatabaseMetaData#getViewSourceCode(java.lang.String)
-     */
     public String getViewSourceCode(String viewName) throws SQLException {
         String sResult = null;
-        String sql = "Select RDB$VIEW_SOURCE From RDB$RELATIONS Where "
-                + "RDB$RELATION_NAME = ?";
-        List<String> params = new ArrayList<String>();
+        String sql = "Select RDB$VIEW_SOURCE From RDB$RELATIONS Where RDB$RELATION_NAME = ?";
+        List<String> params = new ArrayList<>();
         params.add(viewName);
         ResultSet rs = doQuery(sql, params);
         if (rs.next()) sResult = rs.getString(1);

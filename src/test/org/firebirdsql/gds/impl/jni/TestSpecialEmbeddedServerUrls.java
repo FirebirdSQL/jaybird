@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
@@ -36,7 +34,7 @@ import java.sql.DriverManager;
 public class TestSpecialEmbeddedServerUrls {
 
     @ClassRule
-    public static final GdsTypeRule testType = GdsTypeRule.supports(EmbeddedGDSImpl.EMBEDDED_TYPE_NAME);
+    public static final GdsTypeRule testType = GdsTypeRule.supports(EmbeddedGDSFactoryPlugin.EMBEDDED_TYPE_NAME);
 
     private String mRelativeDatabasePath;
     private String mAbsoluteDatabasePath;
@@ -46,7 +44,7 @@ public class TestSpecialEmbeddedServerUrls {
     @Before
     public void setUp() throws Exception {
         Class.forName(FBDriver.class.getName());
-        gdsType = GDSType.getType(EmbeddedGDSImpl.EMBEDDED_TYPE_NAME);
+        gdsType = GDSType.getType(EmbeddedGDSFactoryPlugin.EMBEDDED_TYPE_NAME);
         fbManager = new FBManager(gdsType);
 
         fbManager.setServer("localhost");

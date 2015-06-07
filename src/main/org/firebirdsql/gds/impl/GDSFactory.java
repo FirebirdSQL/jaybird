@@ -24,7 +24,6 @@
  */
 package org.firebirdsql.gds.impl;
 
-import org.firebirdsql.gds.GDS;
 import org.firebirdsql.gds.GDSException;
 import org.firebirdsql.gds.ng.FbDatabaseFactory;
 import org.firebirdsql.logging.Logger;
@@ -60,11 +59,11 @@ public class GDSFactory {
         }
     }
 
-    private static final Set<GDSFactoryPlugin> registeredPlugins = new HashSet<GDSFactoryPlugin>();
+    private static final Set<GDSFactoryPlugin> registeredPlugins = new HashSet<>();
 
-    private static final Map<GDSType, GDSFactoryPlugin> typeToPluginMap = new HashMap<GDSType, GDSFactoryPlugin>();
+    private static final Map<GDSType, GDSFactoryPlugin> typeToPluginMap = new HashMap<>();
 
-    private static final TreeMap<String, GDSFactoryPlugin> jdbcUrlToPluginMap = new TreeMap<String, GDSFactoryPlugin>(new ReversedStringComparator());
+    private static final TreeMap<String, GDSFactoryPlugin> jdbcUrlToPluginMap = new TreeMap<>(new ReversedStringComparator());
 
     private static GDSType defaultType;
 
@@ -95,7 +94,7 @@ public class GDSFactory {
      * @return Collection of {@link ClassLoader} instances
      */
     private static List<ClassLoader> classLoadersForLoading() {
-        final List<ClassLoader> classLoaders = new ArrayList<ClassLoader>(2);
+        final List<ClassLoader> classLoaders = new ArrayList<>(2);
         final ClassLoader classLoader = GDSFactory.class.getClassLoader();
         if (classLoader != null) {
             classLoaders.add(classLoader);
@@ -143,15 +142,8 @@ public class GDSFactory {
                 Class<?> clazz = classLoader.loadClass(className);
                 GDSFactoryPlugin plugin = (GDSFactoryPlugin) clazz.newInstance();
                 registerPlugin(plugin);
-            } catch (ClassNotFoundException ex) {
-                if (log != null)
-                    log.error("Can't register plugin" + className, ex);
-            } catch (IllegalAccessException ex) {
-                if (log != null)
-                    log.error("Can't register plugin" + className, ex);
-            } catch(InstantiationException ex) {
-                if (log != null)
-                    log.error("Can't register plugin" + className, ex);
+            } catch (Exception ex) {
+                log.error("Can't register plugin" + className, ex);
             }
         }
     }
@@ -195,33 +187,12 @@ public class GDSFactory {
     }
 
     /**
-     * Get an instance of the default <code>GDS</code> implementation.
-     * 
-     * @return A default <code>GDS</code> instance
-     */
-    public static GDS getDefaultGDS() {
-        return getGDSForType(defaultType);
-    }
-
-    /**
      * Get default GDS type.
      * 
      * @return instance of {@link GDSType}.
      */
     public static GDSType getDefaultGDSType() {
         return defaultType;
-    }
-
-    /**
-     * Get an instance of the specified implemenation of <code>GDS</code>.
-     * 
-     * @param gdsType
-     *            The type of the <code>GDS</code> instance to be returned
-     * @return A <code>GDS</code> implementation of the given type
-     */
-    public static GDS getGDSForType(GDSType gdsType) {
-        if (gdsType == null) gdsType = defaultType;
-        return getPlugin(gdsType).getGDS();
     }
 
     public static FbDatabaseFactory getDatabaseFactoryForType(GDSType gdsType) {
@@ -250,16 +221,13 @@ public class GDSFactory {
      * @param path
      *            database name or path to the database
      * 
-     * @return full connection string that can be passed to
-     *         {@link GDS#iscAttachDatabase(String, org.firebirdsql.gds.IscDbHandle, org.firebirdsql.gds.DatabaseParameterBuffer)}
-     *         method.
+     * @return full connection string
      * 
      * @throws GDSException
      *             if connection string cannot be obtained.
      */
-    public static String getDatabasePath(GDSType gdsType, String server,
-            Integer port, String path) throws GDSException {
-
+    public static String getDatabasePath(GDSType gdsType, String server, Integer port, String path)
+            throws GDSException {
         return getPlugin(gdsType).getDatabasePath(server, port, path);
     }
 

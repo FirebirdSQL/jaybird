@@ -1,6 +1,5 @@
 /*
- * $Id$
- * Firebird Open Source J2ee connector - jdbc driver
+ * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -13,17 +12,16 @@
  * This file was created by members of the firebird development team.
  * All individual contributions remain the Copyright (C) of those
  * individuals.  Contributors to this file are either listed here or
- * can be obtained from a CVS history command.
+ * can be obtained from a source control history command.
  *
  * All rights reserved.
  */
-
 package org.firebirdsql.jdbc;
 
-import org.firebirdsql.gds.GDS;
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.ParameterBufferHelper;
 import org.firebirdsql.gds.TransactionParameterBuffer;
+import org.firebirdsql.gds.impl.TransactionParameterBufferImpl;
 import org.firebirdsql.jca.FBResourceException;
 import org.firebirdsql.util.ObjectUtils;
 
@@ -42,8 +40,8 @@ public class FBTpbMapper implements Serializable, Cloneable {
 
     private static final long serialVersionUID = 1690658870275668176L;
 
-    public static FBTpbMapper getDefaultMapper(GDS gds) {
-        return new FBTpbMapper(gds);
+    public static FBTpbMapper getDefaultMapper() {
+        return new FBTpbMapper();
     }
 
     /**
@@ -142,26 +140,27 @@ public class FBTpbMapper implements Serializable, Cloneable {
     }
 
     // ConcurrentHashMap because changes can - potentially - be made concurrently
-    private Map<Integer, TransactionParameterBuffer> mapping = new ConcurrentHashMap<Integer, TransactionParameterBuffer>();
+    private Map<Integer, TransactionParameterBuffer> mapping = new ConcurrentHashMap<>();
     private int defaultIsolationLevel = Connection.TRANSACTION_READ_COMMITTED;
 
     /**
      * Create instance of this class with the default mapping of JDBC
      * transaction isolation levels to Firebird TPB.
      */
-    public FBTpbMapper(GDS gds) {
+    public FBTpbMapper() {
+        // TODO instance creation should be delegated to FbDatabase or another factory
 
-        TransactionParameterBuffer serializableTpb = gds.newTransactionParameterBuffer();
+        TransactionParameterBuffer serializableTpb = new TransactionParameterBufferImpl();
         serializableTpb.addArgument(ISCConstants.isc_tpb_write);
         serializableTpb.addArgument(ISCConstants.isc_tpb_wait);
         serializableTpb.addArgument(ISCConstants.isc_tpb_consistency);
 
-        TransactionParameterBuffer repeatableReadTpb = gds.newTransactionParameterBuffer();
+        TransactionParameterBuffer repeatableReadTpb = new TransactionParameterBufferImpl();
         repeatableReadTpb.addArgument(ISCConstants.isc_tpb_write);
         repeatableReadTpb.addArgument(ISCConstants.isc_tpb_wait);
         repeatableReadTpb.addArgument(ISCConstants.isc_tpb_concurrency);
 
-        TransactionParameterBuffer readCommittedTpb = gds.newTransactionParameterBuffer();
+        TransactionParameterBuffer readCommittedTpb = new TransactionParameterBufferImpl();
         readCommittedTpb.addArgument(ISCConstants.isc_tpb_write);
         readCommittedTpb.addArgument(ISCConstants.isc_tpb_wait);
         readCommittedTpb.addArgument(ISCConstants.isc_tpb_read_committed);
@@ -176,7 +175,7 @@ public class FBTpbMapper implements Serializable, Cloneable {
      * Create instance of this class for the specified string mapping.
      * 
      * @param stringMapping mapping of JDBC transaction isolation to Firebird
-     * mapping. Keys and values of this map must be strings. Keys can have 
+     * mapping. Keys and values of this map must be strings. Keys can have
      * following values:
      * <ul>
      * <li><code>"TRANSACTION_SERIALIZABLE"</code>
@@ -201,14 +200,14 @@ public class FBTpbMapper implements Serializable, Cloneable {
      * <li><code>"isc_tpb_protected"</code>
      * </ul>
      * It is also allowed to strip "isc_tpb_" prefix from above shown constans.
-     * Meaning of these constants and possible combinations you can find in a 
+     * Meaning of these constants and possible combinations you can find in a
      * documentation.
-     * 
+     *
      * @throws FBResourceException if mapping contains incorrect values.
      */
-    public FBTpbMapper(GDS gds, Map<String, String> stringMapping) throws FBResourceException {
-        this(gds);
-        processMapping(gds, stringMapping);
+    public FBTpbMapper(Map<String, String> stringMapping) throws FBResourceException {
+        this();
+        processMapping(stringMapping);
     }
 
     /**
@@ -216,21 +215,19 @@ public class FBTpbMapper implements Serializable, Cloneable {
      * with values specified in a <code>stringMapping</code>.
      * 
      * @param stringMapping mapping to process.
-     * 
+     *
      * @throws FBResourceException if mapping contains incorrect values.
      */
-    private void processMapping(GDS gds, Map<String, String> stringMapping) throws FBResourceException {
+    private void processMapping(Map<String, String> stringMapping) throws FBResourceException {
         for (Map.Entry<String, String> entry : stringMapping.entrySet()) {
             String jdbcTxIsolation = entry.getKey();
             Integer isolationLevel;
             try {
                 isolationLevel = getTransactionIsolationLevel(jdbcTxIsolation);
             } catch (IllegalArgumentException ex) {
-                throw new FBResourceException(
-                        "Transaction isolation " + jdbcTxIsolation +
-                        " is not supported.");
+                throw new FBResourceException("Transaction isolation " + jdbcTxIsolation + " is not supported.");
             }
-            TransactionParameterBuffer tpb = processMapping(gds, entry.getValue());
+            TransactionParameterBuffer tpb = processMapping(entry.getValue());
             mapping.put(isolationLevel, tpb);
         }
     }
@@ -241,17 +238,15 @@ public class FBTpbMapper implements Serializable, Cloneable {
      * 
      * @param mappingResource name of the resource to load.
      * @param cl class loader that should be used to load specified resource.
-     * 
+     *
      * @throws FBResourceException if resource cannot be loaded or contains
      * incorrect values.
      */
-    public FBTpbMapper(GDS gds, String mappingResource, ClassLoader cl) throws FBResourceException {
-        this(gds);
+    public FBTpbMapper(String mappingResource, ClassLoader cl) throws FBResourceException {
         try {
-            ResourceBundle res = ResourceBundle.getBundle(
-            		mappingResource, Locale.getDefault(), cl);
+            ResourceBundle res = ResourceBundle.getBundle(mappingResource, Locale.getDefault(), cl);
 
-            Map<String, String> mapping = new HashMap<String, String>();
+            Map<String, String> mapping = new HashMap<>();
 
             Enumeration<String> en = res.getKeys();
             while (en.hasMoreElements()) {
@@ -260,11 +255,10 @@ public class FBTpbMapper implements Serializable, Cloneable {
                 mapping.put(key, value);
             }
 
-            processMapping(gds, mapping);
+            processMapping(mapping);
 
         } catch (MissingResourceException mrex) {
-            throw new FBResourceException(
-            		"Cannot load TPB mapping." + mrex.getMessage());
+            throw new FBResourceException("Cannot load TPB mapping." + mrex.getMessage());
         }
     }
 
@@ -280,29 +274,28 @@ public class FBTpbMapper implements Serializable, Cloneable {
      * <code>"TRANSACTION_READ_COMMITTED"</code>.
      * </ul>
      *
-     * @param gds GDS object
      * @param connectionProperties FirebirdConnectionProperties to set transaction state
      * @param info connection parameters passed into a driver.
      *
      * @throws FBResourceException if specified mapping is incorrect.
      */
-    public static void processMapping(GDS gds, FirebirdConnectionProperties connectionProperties, Properties info)
+    public static void processMapping(FirebirdConnectionProperties connectionProperties, Properties info)
             throws FBResourceException {
 
         if (info.containsKey(TRANSACTION_SERIALIZABLE))
             connectionProperties.setTransactionParameters(
                     Connection.TRANSACTION_SERIALIZABLE,
-                    processMapping(gds, info.getProperty(TRANSACTION_SERIALIZABLE)));
+                    processMapping(info.getProperty(TRANSACTION_SERIALIZABLE)));
 
         if (info.containsKey(TRANSACTION_REPEATABLE_READ))
             connectionProperties.setTransactionParameters(
                     Connection.TRANSACTION_REPEATABLE_READ,
-                    processMapping(gds, info.getProperty(TRANSACTION_REPEATABLE_READ)));
+                    processMapping(info.getProperty(TRANSACTION_REPEATABLE_READ)));
 
         if (info.containsKey(TRANSACTION_READ_COMMITTED))
             connectionProperties.setTransactionParameters(
                     Connection.TRANSACTION_READ_COMMITTED,
-                    processMapping(gds, info.getProperty(TRANSACTION_READ_COMMITTED)));
+                    processMapping(info.getProperty(TRANSACTION_READ_COMMITTED)));
     }
 
     /**
@@ -310,14 +303,15 @@ public class FBTpbMapper implements Serializable, Cloneable {
      * values.
      * 
      * @param mapping comma-separated list of keywords.
-     * 
+     *
      * @return set containing values corresponding to the specified keywords.
      * 
      * @throws FBResourceException if mapping contains keyword that is not
      * a TPB parameter.
      */
-    public static TransactionParameterBuffer processMapping(GDS gds, String mapping) throws FBResourceException {
-        TransactionParameterBuffer result = gds.newTransactionParameterBuffer();
+    public static TransactionParameterBuffer processMapping(String mapping) throws FBResourceException {
+        // TODO instance creation should be delegated to FbDatabase
+        TransactionParameterBuffer result = new TransactionParameterBufferImpl();
 
         StringTokenizer st = new StringTokenizer(mapping, ",");
         while (st.hasMoreTokens()) {
@@ -433,12 +427,11 @@ public class FBTpbMapper implements Serializable, Cloneable {
         try {
             FBTpbMapper clone = (FBTpbMapper) super.clone();
 
-            clone.mapping = new ConcurrentHashMap<Integer, TransactionParameterBuffer>(mapping);
+            clone.mapping = new ConcurrentHashMap<>(mapping);
 
             return clone;
         } catch (CloneNotSupportedException ex) {
-            throw new Error("Assertion failure: clone not supported"); // Can't
-                                                                       // happen
+            throw new Error("Assertion failure: clone not supported"); // Can't happen
         }
     }
 }

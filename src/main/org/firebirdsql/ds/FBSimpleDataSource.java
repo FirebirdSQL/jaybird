@@ -1,7 +1,5 @@
 /*
- * $Id$
- * 
- * Firebird Open Source J2ee connector - jdbc driver
+ * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -14,34 +12,28 @@
  * This file was created by members of the firebird development team.
  * All individual contributions remain the Copyright (C) of those
  * individuals.  Contributors to this file are either listed here or
- * can be obtained from a CVS history command.
+ * can be obtained from a source control history command.
  *
  * All rights reserved.
  */
- 
 package org.firebirdsql.ds;
 
-import org.firebirdsql.ds.RootCommonDataSource;
 import org.firebirdsql.gds.DatabaseParameterBuffer;
 import org.firebirdsql.gds.TransactionParameterBuffer;
-import org.firebirdsql.gds.impl.AbstractGDS;
 import org.firebirdsql.gds.impl.GDSFactory;
 import org.firebirdsql.gds.impl.GDSType;
 import org.firebirdsql.jca.FBManagedConnectionFactory;
-
-import java.io.Serializable;
-import java.sql.Connection;
-import javax.sql.DataSource;
-import java.sql.SQLException;
-import javax.naming.Reference;
-import javax.resource.Referenceable;
-import javax.resource.ResourceException;
-
 import org.firebirdsql.jdbc.FBDataSource;
-import org.firebirdsql.jdbc.FBDriverNotCapableException;
 import org.firebirdsql.jdbc.FirebirdConnectionProperties;
 
 import javax.naming.NamingException;
+import javax.naming.Reference;
+import javax.resource.Referenceable;
+import javax.resource.ResourceException;
+import javax.sql.DataSource;
+import java.io.Serializable;
+import java.sql.Connection;
+import java.sql.SQLException;
 
 /**
  * This is a simple implementation of {@link DataSource} interface. Connections
@@ -66,7 +58,7 @@ public class FBSimpleDataSource extends RootCommonDataSource implements DataSour
      * Create instance of this class.
      */
     public FBSimpleDataSource() {
-        this(((AbstractGDS)GDSFactory.getDefaultGDS()).getType());
+        this(GDSFactory.getDefaultGDSType());
     }
 
     /**
@@ -82,7 +74,7 @@ public class FBSimpleDataSource extends RootCommonDataSource implements DataSour
      * @return length of BLOB buffer.
      */
     public Integer getBlobBufferLength() {
-        return Integer.valueOf(mcf.getBlobBufferSize());
+        return mcf.getBlobBufferSize();
     }
     
     /**

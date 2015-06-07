@@ -24,8 +24,8 @@ import org.firebirdsql.encodings.EncodingFactory;
 import org.firebirdsql.gds.ServiceParameterBuffer;
 import org.firebirdsql.gds.ServiceRequestBuffer;
 import org.firebirdsql.gds.impl.GDSServerVersion;
-import org.firebirdsql.gds.impl.jni.EmbeddedGDSImpl;
-import org.firebirdsql.gds.impl.jni.NativeGDSImpl;
+import org.firebirdsql.gds.impl.jni.EmbeddedGDSFactoryPlugin;
+import org.firebirdsql.gds.impl.jni.NativeGDSFactoryPlugin;
 import org.firebirdsql.gds.ng.FbService;
 import org.firebirdsql.gds.ng.FbServiceProperties;
 import org.firebirdsql.gds.ng.wire.FbWireService;
@@ -58,8 +58,8 @@ public class TestV10Service {
 
     @ClassRule
     public static final GdsTypeRule gdsTypeRule = GdsTypeRule.excludes(
-            EmbeddedGDSImpl.EMBEDDED_TYPE_NAME,
-            NativeGDSImpl.NATIVE_TYPE_NAME);
+            EmbeddedGDSFactoryPlugin.EMBEDDED_TYPE_NAME,
+            NativeGDSFactoryPlugin.NATIVE_TYPE_NAME);
 
     @Rule
     public final ExpectedException expectedException = ExpectedException.none();

@@ -30,6 +30,8 @@ public final class FbServiceProperties extends AbstractAttachProperties<IService
 
     private String serviceName = IServiceProperties.DEFAULT_SERVICE_NAME;
 
+    private FbImmutableServiceProperties immutableServicePropertiesCache;
+
     /**
      * Copy constructor for FbServiceProperties.
      * <p>
@@ -60,6 +62,7 @@ public final class FbServiceProperties extends AbstractAttachProperties<IService
     @Override
     public void setServiceName(String serviceName) {
         this.serviceName = serviceName;
+        dirtied();
     }
 
     @Override
@@ -69,11 +72,19 @@ public final class FbServiceProperties extends AbstractAttachProperties<IService
 
     @Override
     public IServiceProperties asImmutable() {
-        return new FbImmutableServiceProperties(this);
+        if (immutableServicePropertiesCache == null) {
+            immutableServicePropertiesCache = new FbImmutableServiceProperties(this);
+        }
+        return immutableServicePropertiesCache;
     }
 
     @Override
     public IServiceProperties asNewMutable() {
         return new FbServiceProperties(this);
+    }
+
+    @Override
+    protected void dirtied() {
+        immutableServicePropertiesCache = null;
     }
 }

@@ -27,8 +27,8 @@ import org.firebirdsql.gds.EventHandle;
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.TransactionParameterBuffer;
 import org.firebirdsql.gds.impl.TransactionParameterBufferImpl;
-import org.firebirdsql.gds.impl.jni.EmbeddedGDSImpl;
-import org.firebirdsql.gds.impl.jni.NativeGDSImpl;
+import org.firebirdsql.gds.impl.jni.EmbeddedGDSFactoryPlugin;
+import org.firebirdsql.gds.impl.jni.NativeGDSFactoryPlugin;
 import org.firebirdsql.gds.impl.wire.XdrOutputStream;
 import org.firebirdsql.gds.ng.*;
 import org.firebirdsql.gds.ng.fields.RowValue;
@@ -58,8 +58,8 @@ public class TestV10EventHandling extends FBJUnit4TestBase {
 
     @ClassRule
     public static final GdsTypeRule gdsTypeRule = GdsTypeRule.excludes(
-            EmbeddedGDSImpl.EMBEDDED_TYPE_NAME,
-            NativeGDSImpl.NATIVE_TYPE_NAME);
+            EmbeddedGDSFactoryPlugin.EMBEDDED_TYPE_NAME,
+            NativeGDSFactoryPlugin.NATIVE_TYPE_NAME);
 
     //@formatter:off
     public static final String TABLE_DEF =

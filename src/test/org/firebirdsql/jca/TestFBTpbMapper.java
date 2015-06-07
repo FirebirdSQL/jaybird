@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
@@ -70,7 +68,7 @@ public class TestFBTpbMapper extends FBJUnit4TestBase {
     @Test
     public void testTpbMapper() throws Exception {
         // TODO Why is this mapper created and then not used?
-        FBTpbMapper mapper = new FBTpbMapper(mcf.getGDS(), TEST_TPB_MAPPING, getClass().getClassLoader());
+        FBTpbMapper mapper = new FBTpbMapper(TEST_TPB_MAPPING, getClass().getClassLoader());
 
         mcf.setTpbMapping(TEST_TPB_MAPPING);
         mcf.setDefaultTransactionIsolation(Connection.TRANSACTION_READ_COMMITTED);

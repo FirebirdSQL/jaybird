@@ -158,16 +158,6 @@ public abstract class AbstractFbWireDatabase extends AbstractFbDatabase<WireData
     }
 
     @Override
-    public BlobParameterBuffer createBlobParameterBuffer() {
-        return new BlobParameterBufferImp();
-    }
-
-    @Override
-    public TransactionParameterBufferImpl createTransactionParameterBuffer() {
-        return new TransactionParameterBufferImpl();
-    }
-
-    @Override
     public final void consumePackets(int numberOfResponses, WarningMessageCallback warningCallback) {
         wireOperations.consumePackets(numberOfResponses, warningCallback);
     }

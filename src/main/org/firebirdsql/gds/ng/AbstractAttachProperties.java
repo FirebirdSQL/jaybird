@@ -46,7 +46,7 @@ public abstract class AbstractAttachProperties<T extends IAttachProperties> impl
      * @param src
      *         Source to copy from
      */
-    public AbstractAttachProperties(IAttachProperties src) {
+    protected AbstractAttachProperties(IAttachProperties src) {
         if (src != null) {
             serverName = src.getServerName();
             portNumber = src.getPortNumber();
@@ -75,6 +75,7 @@ public abstract class AbstractAttachProperties<T extends IAttachProperties> impl
     @Override
     public void setServerName(String serverName) {
         this.serverName = serverName;
+        dirtied();
     }
 
     @Override
@@ -85,6 +86,7 @@ public abstract class AbstractAttachProperties<T extends IAttachProperties> impl
     @Override
     public void setPortNumber(int portNumber) {
         this.portNumber = portNumber;
+        dirtied();
     }
 
     @Override
@@ -95,6 +97,7 @@ public abstract class AbstractAttachProperties<T extends IAttachProperties> impl
     @Override
     public void setUser(String user) {
         this.user = user;
+        dirtied();
     }
 
     @Override
@@ -105,6 +108,7 @@ public abstract class AbstractAttachProperties<T extends IAttachProperties> impl
     @Override
     public void setPassword(String password) {
         this.password = password;
+        dirtied();
     }
 
     @Override
@@ -115,6 +119,7 @@ public abstract class AbstractAttachProperties<T extends IAttachProperties> impl
     @Override
     public void setRoleName(String roleName) {
         this.roleName = roleName;
+        dirtied();
     }
 
     @Override
@@ -125,6 +130,7 @@ public abstract class AbstractAttachProperties<T extends IAttachProperties> impl
     @Override
     public void setCharSet(String charSet) {
         this.charSet = charSet;
+        dirtied();
     }
 
     @Override
@@ -135,6 +141,7 @@ public abstract class AbstractAttachProperties<T extends IAttachProperties> impl
     @Override
     public void setEncoding(String encoding) {
         this.encoding = encoding;
+        dirtied();
     }
 
     @Override
@@ -145,6 +152,7 @@ public abstract class AbstractAttachProperties<T extends IAttachProperties> impl
     @Override
     public void setSocketBufferSize(int socketBufferSize) {
         this.socketBufferSize = socketBufferSize;
+        dirtied();
     }
 
     @Override
@@ -155,6 +163,7 @@ public abstract class AbstractAttachProperties<T extends IAttachProperties> impl
     @Override
     public void setSoTimeout(int soTimeout) {
         this.soTimeout = soTimeout;
+        dirtied();
     }
 
     @Override
@@ -165,5 +174,11 @@ public abstract class AbstractAttachProperties<T extends IAttachProperties> impl
     @Override
     public void setConnectTimeout(int connectTimeout) {
         this.connectTimeout = connectTimeout;
+        dirtied();
     }
+
+    /**
+     * Called by setters if they have been called.
+     */
+    protected abstract void dirtied();
 }

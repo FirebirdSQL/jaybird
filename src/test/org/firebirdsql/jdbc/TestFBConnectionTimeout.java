@@ -1,7 +1,5 @@
 /*
- * $Id$
- *
- * Firebird Open Source JavaEE connector - JDBC driver
+ * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -20,27 +18,26 @@
  */
 package org.firebirdsql.jdbc;
 
-import static org.firebirdsql.common.FBTestProperties.createFBManager;
-import static org.firebirdsql.common.FBTestProperties.defaultDatabaseSetUp;
-import static org.firebirdsql.common.FBTestProperties.defaultDatabaseTearDown;
-import static org.junit.Assert.*;
-import static org.junit.Assume.*;
+import org.firebirdsql.common.FBTestProperties;
+import org.firebirdsql.common.rules.GdsTypeRule;
+import org.firebirdsql.gds.GDSException;
+import org.firebirdsql.gds.impl.GDSFactory;
+import org.firebirdsql.gds.impl.GDSType;
+import org.firebirdsql.gds.impl.jni.EmbeddedGDSFactoryPlugin;
+import org.firebirdsql.gds.impl.jni.NativeGDSFactoryPlugin;
+import org.firebirdsql.management.FBManager;
+import org.junit.ClassRule;
+import org.junit.Ignore;
+import org.junit.Test;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.Properties;
 
-import org.firebirdsql.common.FBTestProperties;
-import org.firebirdsql.gds.GDSException;
-import org.firebirdsql.gds.impl.GDSFactory;
-import org.firebirdsql.gds.impl.GDSType;
-import org.firebirdsql.gds.impl.jni.EmbeddedGDSImpl;
-import org.firebirdsql.gds.impl.jni.NativeGDSImpl;
-import org.firebirdsql.management.FBManager;
-import org.junit.BeforeClass;
-import org.junit.Ignore;
-import org.junit.Test;
+import static org.firebirdsql.common.FBTestProperties.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
 
 /**
  * Tests for connection timeouts.
@@ -50,7 +47,12 @@ import org.junit.Test;
  */
 public class TestFBConnectionTimeout {
     // This test does not extend FBJUnit4TestBase as a lot of these tests don't need an actual database
-    
+
+    @ClassRule
+    public static final GdsTypeRule gdsTypeRule = GdsTypeRule.excludes(
+            EmbeddedGDSFactoryPlugin.EMBEDDED_TYPE_NAME,
+            NativeGDSFactoryPlugin.NATIVE_TYPE_NAME);
+
     /**
      * IP address which does not exist (we simply assume that this site local address does not exist in
      * the network when running the test). This assumption is a lot cheaper than testing various addresses
@@ -61,15 +63,7 @@ public class TestFBConnectionTimeout {
      * Delta for timeout, it is about 100-120 on my machine
      */
     private static final double TIMEOUT_DELTA_MS = 200;
-    
-    @BeforeClass
-    public static void verifyTestType() {
-        // Test won't work for embedded
-        assumeTrue(!FBTestProperties.getGdsType().toString().equals(EmbeddedGDSImpl.EMBEDDED_TYPE_NAME));
-        // Test won't work for for native
-        assumeTrue(!FBTestProperties.getGdsType().toString().equals(NativeGDSImpl.NATIVE_TYPE_NAME));
-    }
-    
+
     /**
      * Test for default connect timeout.
      * <p>
