@@ -19,7 +19,6 @@
 package org.firebirdsql.gds.ng.jna;
 
 import com.sun.jna.Platform;
-import com.sun.jna.Pointer;
 import com.sun.jna.ptr.IntByReference;
 import org.firebirdsql.encodings.EncodingDefinition;
 import org.firebirdsql.gds.*;
@@ -32,17 +31,13 @@ import org.firebirdsql.jdbc.FBSQLException;
 import org.firebirdsql.jna.fbclient.FbClientLibrary;
 import org.firebirdsql.jna.fbclient.ISC_STATUS;
 import org.firebirdsql.jna.fbclient.WinFbClientLibrary;
-import org.firebirdsql.logging.Logger;
-import org.firebirdsql.logging.LoggerFactory;
 
 import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
 import java.sql.SQLException;
 import java.sql.SQLNonTransientException;
 import java.sql.SQLTransientException;
-import java.sql.SQLWarning;
 
-import static org.firebirdsql.gds.ISCConstants.*;
+import static org.firebirdsql.gds.ISCConstants.fb_cancel_abort;
 import static org.firebirdsql.gds.ng.TransactionHelper.checkTransactionActive;
 
 /**
@@ -51,13 +46,11 @@ import static org.firebirdsql.gds.ng.TransactionHelper.checkTransactionActive;
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @since 3.0
  */
-public class JnaDatabase extends AbstractFbDatabase<JnaDatabaseConnection> implements TransactionListener {
+public final class JnaDatabase extends AbstractFbDatabase<JnaDatabaseConnection> implements TransactionListener {
 
     // TODO Find out if there are any exception from JNA that we need to be prepared to handle.
 
-    private static final Logger log = LoggerFactory.getLogger(JnaDatabase.class);
     private static final ParameterConverter PARAMETER_CONVERTER = new JnaParameterConverter();
-    private static final boolean bigEndian = ByteOrder.nativeOrder() == ByteOrder.BIG_ENDIAN;
     public static final int STATUS_VECTOR_SIZE = 20;
     public static final int MAX_STATEMENT_LENGTH = 64 * 1024;
 
@@ -67,15 +60,8 @@ public class JnaDatabase extends AbstractFbDatabase<JnaDatabaseConnection> imple
     private final ISC_STATUS[] statusVector = new ISC_STATUS[STATUS_VECTOR_SIZE];
 
     public JnaDatabase(JnaDatabaseConnection connection) {
-        super(connection, createDatatypeCoder(connection));
+        super(connection, connection.createDatatypeCoder());
         clientLibrary = connection.getClientLibrary();
-    }
-
-    private static DatatypeCoder createDatatypeCoder(JnaDatabaseConnection connection) {
-        if (bigEndian) {
-            return new BigEndianDatatypeCoder(connection.getEncodingFactory());
-        }
-        return new LittleEndianDatatypeCoder(connection.getEncodingFactory());
     }
 
     /**
@@ -126,7 +112,7 @@ public class JnaDatabase extends AbstractFbDatabase<JnaDatabaseConnection> imple
         if (isAttached()) {
             throw new SQLException("Already attached to a database");
         }
-        final byte[] dbName = getEncoding().encodeToCharset(getDatabaseUrl());
+        final byte[] dbName = getEncoding().encodeToCharset(connection.getAttachUrl());
         final byte[] dpbArray = dpb.toBytesWithType();
 
         synchronized (getSynchronizationObject()) {
@@ -398,23 +384,6 @@ public class JnaDatabase extends AbstractFbDatabase<JnaDatabaseConnection> imple
         }
     }
 
-    /**
-     * Builds the database URL for the library.
-     *
-     * @return Database URL
-     */
-    protected String getDatabaseUrl() {
-        StringBuilder sb = new StringBuilder();
-        if (connection.getServerName() != null) {
-            sb.append(connection.getServerName())
-                    .append('/');
-        }
-        sb.append(connection.getPortNumber())
-                .append(':')
-                .append(connection.getAttachObjectName());
-        return sb.toString();
-    }
-
     private void processStatusVector() throws SQLException {
         processStatusVector(statusVector, getDatabaseWarningCallback());
     }
@@ -424,75 +393,7 @@ public class JnaDatabase extends AbstractFbDatabase<JnaDatabaseConnection> imple
         if (warningMessageCallback == null) {
             warningMessageCallback = getDatabaseWarningCallback();
         }
-        boolean debug = log.isDebugEnabled();
-        final FbExceptionBuilder builder = new FbExceptionBuilder();
-        int vectorIndex = 0;
-        processingLoop:
-        while (vectorIndex < statusVector.length) {
-            int arg = statusVector[vectorIndex++].intValue();
-            int errorCode;
-            switch (arg) {
-            case isc_arg_gds:
-                errorCode = statusVector[vectorIndex++].intValue();
-                if (debug) log.debug("readStatusVector arg:isc_arg_gds int: " + errorCode);
-                if (errorCode != 0) {
-                    builder.exception(errorCode);
-                }
-                break;
-            case isc_arg_warning:
-                errorCode = statusVector[vectorIndex++].intValue();
-                if (debug) log.debug("readStatusVector arg:isc_arg_warning int: " + errorCode);
-                if (errorCode != 0) {
-                    builder.warning(errorCode);
-                }
-                break;
-            case isc_arg_interpreted:
-            case isc_arg_string:
-            case isc_arg_sql_state:
-                long stringPointerAddress = statusVector[vectorIndex++].longValue();
-                if (stringPointerAddress == 0L) {
-                    log.warn("Received NULL pointer address for isc_arg_interpreted, isc_arg_string or isc_arg_sql_state");
-                    break processingLoop;
-                }
-                Pointer stringPointer = new Pointer(stringPointerAddress);
-                String stringValue = stringPointer.getString(0, getEncodingDefinition().getJavaEncodingName());
-                if (arg != isc_arg_sql_state) {
-                    if (debug) log.debug("readStatusVector string: " + stringValue);
-                    builder.messageParameter(stringValue);
-                } else {
-                    // TODO Is this actually returned from server?
-                    if (debug) log.debug("readStatusVector sqlstate: " + stringValue);
-                    builder.sqlState(stringValue);
-                }
-                break;
-            case isc_arg_cstring:
-                int stringLength = statusVector[vectorIndex++].intValue();
-                long cStringPointerAddress = statusVector[vectorIndex++].longValue();
-                Pointer cStringPointer = new Pointer(cStringPointerAddress);
-                byte[] stringData = cStringPointer.getByteArray(0, stringLength);
-                String cStringValue = getEncoding().decodeFromCharset(stringData);
-                builder.messageParameter(cStringValue);
-                break;
-            case isc_arg_number:
-                int intValue = statusVector[vectorIndex++].intValue();
-                if (debug) log.debug("readStatusVector arg:isc_arg_number int: " + intValue);
-                builder.messageParameter(intValue);
-                break;
-            case isc_arg_end:
-                break processingLoop;
-            default:
-                int e = statusVector[vectorIndex++].intValue();
-                if (debug) log.debug("readStatusVector arg: " + arg + " int: " + e);
-                builder.messageParameter(e);
-                break;
-            }
-        }
-        SQLException exception = builder.toFlatSQLException();
-        if (exception instanceof SQLWarning) {
-            warningMessageCallback.processWarning((SQLWarning) exception);
-        } else if (exception != null) {
-            throw exception;
-        }
+        connection.processStatusVector(statusVector, warningMessageCallback);
     }
 
     @Override

@@ -20,34 +20,34 @@ package org.firebirdsql.gds.ng.jna;
 
 import org.firebirdsql.encodings.EncodingFactory;
 import org.firebirdsql.encodings.IEncodingFactory;
-import org.firebirdsql.gds.ng.IConnectionProperties;
+import org.firebirdsql.gds.ng.IServiceProperties;
 import org.firebirdsql.jna.fbclient.FbClientLibrary;
 
 import java.sql.SQLException;
 
 /**
- * Class handling the initial setup of the JNA database connection.
+ * Class handling the initial setup of the JNA service connection.
  *
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @since 3.0
  */
-public final class JnaDatabaseConnection extends JnaConnection<IConnectionProperties, JnaDatabase>  {
+public final class JnaServiceConnection  extends JnaConnection<IServiceProperties, JnaService>  {
 
     /**
-     * Creates a JnaDatabaseConnection (without establishing a connection to the server).
+     * Creates a JnaServiceConnection (without establishing a connection to the server).
      *
      * @param clientLibrary
      *         Client library to use
      * @param connectionProperties
      *         Connection properties
      */
-    public JnaDatabaseConnection(FbClientLibrary clientLibrary, IConnectionProperties connectionProperties)
+    public JnaServiceConnection(FbClientLibrary clientLibrary, IServiceProperties connectionProperties)
             throws SQLException {
         this(clientLibrary, connectionProperties, EncodingFactory.getDefaultInstance());
     }
 
     /**
-     * Creates a JnaDatabaseConnection (without establishing a connection to the server).
+     * Creates a JnaServiceConnection (without establishing a connection to the server).
      *
      * @param clientLibrary
      *         Client library to use
@@ -56,7 +56,7 @@ public final class JnaDatabaseConnection extends JnaConnection<IConnectionProper
      * @param encodingFactory
      *         Factory for encoding definitions
      */
-    public JnaDatabaseConnection(FbClientLibrary clientLibrary, IConnectionProperties connectionProperties,
+    public JnaServiceConnection(FbClientLibrary clientLibrary, IServiceProperties connectionProperties,
             IEncodingFactory encodingFactory) throws SQLException {
         super(clientLibrary, connectionProperties, encodingFactory);
     }
@@ -68,7 +68,7 @@ public final class JnaDatabaseConnection extends JnaConnection<IConnectionProper
      * @throws SQLException
      */
     @Override
-    public JnaDatabase identify() throws SQLException {
-        return new JnaDatabase(this);
+    public JnaService identify() throws SQLException {
+        return new JnaService(this);
     }
 }

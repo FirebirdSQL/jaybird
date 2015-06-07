@@ -20,10 +20,13 @@ package org.firebirdsql.gds.ng;
 
 import org.firebirdsql.gds.ServiceParameterBuffer;
 import org.firebirdsql.gds.ServiceRequestBuffer;
+import org.firebirdsql.gds.impl.ServiceParameterBufferImp;
+import org.firebirdsql.gds.impl.ServiceRequestBufferImp;
 import org.firebirdsql.logging.Logger;
 import org.firebirdsql.logging.LoggerFactory;
 
 import java.sql.SQLException;
+import java.sql.SQLWarning;
 
 import static org.firebirdsql.gds.ISCConstants.*;
 import static org.firebirdsql.gds.VaxEncoding.iscVaxInteger2;
@@ -38,6 +41,12 @@ public abstract class AbstractFbService<T extends AbstractConnection<IServicePro
         extends AbstractFbAttachment<T> implements FbService {
 
     private static final Logger log = LoggerFactory.getLogger(AbstractFbService.class);
+    private final WarningMessageCallback serviceWarningCallback = new WarningMessageCallback() {
+        @Override
+        public void processWarning(SQLWarning warning) {
+            // TODO Handle warnings
+        }
+    };
 
     protected AbstractFbService(T connection, DatatypeCoder datatypeCoder) {
         super(connection, datatypeCoder);
@@ -49,6 +58,56 @@ public abstract class AbstractFbService<T extends AbstractConnection<IServicePro
             throws SQLException {
         byte[] responseBuffer = getServiceInfo(serviceParameterBuffer, serviceRequestBuffer, bufferLength);
         return infoProcessor.process(responseBuffer);
+    }
+
+    @Override
+    public ServiceParameterBuffer createServiceParameterBuffer() {
+        return new ServiceParameterBufferImp();
+    }
+
+    @Override
+    public ServiceRequestBuffer createServiceRequestBuffer() {
+        return new ServiceRequestBufferImp();
+    }
+
+    /**
+     * Actual implementation of service detach.
+     * <p>
+     * Implementations of this method should only be called from {@link #close()}, and should <strong>not</strong> notify service
+     * listeners of the service {@link ServiceListener#detaching(FbService)} and
+     * {@link ServiceListener#detached(FbService)} events.
+     * </p>
+     */
+    protected abstract void internalDetach() throws SQLException;
+
+    /**
+     * {@inheritDoc}
+     * <p>
+     * Implementation note: Calls {@link #checkConnected()} and notifies service listeners of the detaching event, then
+     * calls {@link #internalDetach()} and finally notifies service listeners of database detach and removes all listeners.
+     * </p>
+     */
+    @Override
+    public final void close() throws SQLException {
+        // TODO return silently if not connected?
+        checkConnected();
+        synchronized (getSynchronizationObject()) {
+            // TODO Add listeners
+            //serviceListenerDispatcher.detaching(this);
+            try {
+                internalDetach();
+            } finally {
+                //serviceListenerDispatcher.detached(this);
+                //serviceListenerDispatcher.shutdown();
+            }
+        }
+    }
+
+    /**
+     * @return The warning callback for this service.
+     */
+    protected final WarningMessageCallback getServiceWarningCallback() {
+        return serviceWarningCallback;
     }
 
     protected ServiceRequestBuffer getDescribeServiceRequestBuffer() {

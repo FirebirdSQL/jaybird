@@ -33,8 +33,9 @@ import static org.junit.Assert.*;
 
 /**
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @since 3.0
  */
-public class TestJnaConnection {
+public class TestJnaDatabaseConnection {
 
     @Rule
     public final ExpectedException expectedException = ExpectedException.none();
@@ -53,7 +54,7 @@ public class TestJnaConnection {
 
     @Test
     public void construct_clientLibraryNull_IllegalArgument() throws Exception {
-        expectedException.expect(IllegalArgumentException.class);
+        expectedException.expect(NullPointerException.class);
 
         new JnaDatabaseConnection(null, connectionInfo);
     }

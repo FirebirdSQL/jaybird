@@ -18,18 +18,13 @@
  */
 package org.firebirdsql.gds.ng.wire;
 
-import org.firebirdsql.gds.ServiceParameterBuffer;
-import org.firebirdsql.gds.ServiceRequestBuffer;
-import org.firebirdsql.gds.impl.ServiceRequestBufferImp;
 import org.firebirdsql.gds.impl.wire.XdrInputStream;
 import org.firebirdsql.gds.impl.wire.XdrOutputStream;
 import org.firebirdsql.gds.ng.AbstractFbService;
 import org.firebirdsql.gds.ng.DefaultDatatypeCoder;
-import org.firebirdsql.gds.ng.WarningMessageCallback;
 import org.firebirdsql.jdbc.FBSQLException;
 
 import java.sql.SQLException;
-import java.sql.SQLWarning;
 
 import static java.util.Objects.requireNonNull;
 
@@ -44,12 +39,6 @@ public abstract class AbstractFbWireService extends AbstractFbService<WireServic
 
     protected final ProtocolDescriptor protocolDescriptor;
     protected final FbWireOperations wireOperations;
-    private final WarningMessageCallback serviceWarningCallback = new WarningMessageCallback() {
-        @Override
-        public void processWarning(SQLWarning warning) {
-            // TODO Handle warnings
-        }
-    };
 
     /**
      * Creates an AbstractFbWireDatabase instance.
@@ -63,15 +52,8 @@ public abstract class AbstractFbWireService extends AbstractFbService<WireServic
     protected AbstractFbWireService(WireServiceConnection connection, ProtocolDescriptor descriptor) {
         super(connection, new DefaultDatatypeCoder(connection.getEncodingFactory()));
         protocolDescriptor = requireNonNull(descriptor, "parameter descriptor should be non-null");
-        wireOperations = descriptor.createWireOperations(connection, serviceWarningCallback,
+        wireOperations = descriptor.createWireOperations(connection, getServiceWarningCallback(),
                 getSynchronizationObject());
-    }
-
-    /**
-     * @return The warning callback for this service.
-     */
-    protected final WarningMessageCallback getServiceWarningCallback() {
-        return serviceWarningCallback;
     }
 
     @Override
@@ -140,13 +122,4 @@ public abstract class AbstractFbWireService extends AbstractFbService<WireServic
         return connection.getXdrStreamAccess();
     }
 
-    @Override
-    public ServiceParameterBuffer createServiceParameterBuffer() {
-        return null;
-    }
-
-    @Override
-    public ServiceRequestBuffer createServiceRequestBuffer() {
-        return new ServiceRequestBufferImp();
-    }
 }

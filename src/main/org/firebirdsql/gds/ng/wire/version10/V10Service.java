@@ -89,8 +89,7 @@ public class V10Service extends AbstractFbWireService implements FbWireService {
     }
 
     protected void afterAttachActions() throws SQLException {
-        getServiceInfo(null, getDescribeServiceRequestBuffer(), 1024,
-                getServiceInformationProcessor());
+        getServiceInfo(null, getDescribeServiceRequestBuffer(), 1024, getServiceInformationProcessor());
         // During connect and attach the socketTimeout might be set to the connectTimeout, now reset to 'normal' socketTimeout
         connection.resetSocketTimeout();
     }
@@ -114,9 +113,7 @@ public class V10Service extends AbstractFbWireService implements FbWireService {
     }
 
     @Override
-    public void close() throws SQLException {
-        // TODO return silently if not connected?
-        checkConnected();
+    protected void internalDetach() throws SQLException {
         synchronized (getSynchronizationObject()) {
             // TODO Listeners (similar to AbstractFbDatabase#close())?
             try {

@@ -29,7 +29,6 @@ import org.firebirdsql.gds.ng.FbTransaction;
 import org.firebirdsql.gds.ng.TransactionState;
 import org.firebirdsql.jdbc.FBSQLException;
 import org.firebirdsql.management.FBManager;
-import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -70,12 +69,6 @@ public class TestJnaDatabase {
         connectionInfo.setEncoding("NONE");
     }
 
-    @BeforeClass
-    public static void verifyTestType() {
-        // Test is for native
-        // TODO assumeTrue(FBTestProperties.getGdsType().toString().equals(NativeGDSImpl.NATIVE_TYPE_NAME));
-    }
-
     @Test
     public void testBasicAttach() throws Exception {
         FBManager fbManager = createFBManager();
@@ -111,7 +104,7 @@ public class TestJnaDatabase {
     }
 
     @Test
-    public void basicStatusVectorProcessing_wrongLogin() throws Exception {
+     public void basicStatusVectorProcessing_wrongLogin() throws Exception {
         // set invalid password
         connectionInfo.setPassword("abcd");
         try (JnaDatabase db = factory.connect(connectionInfo)) {

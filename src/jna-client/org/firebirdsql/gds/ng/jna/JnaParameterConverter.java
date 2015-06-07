@@ -23,10 +23,13 @@ import org.firebirdsql.encodings.IEncodingFactory;
 import org.firebirdsql.gds.DatabaseParameterBuffer;
 import org.firebirdsql.gds.ServiceParameterBuffer;
 import org.firebirdsql.gds.impl.DatabaseParameterBufferImp;
+import org.firebirdsql.gds.impl.ServiceParameterBufferImp;
 import org.firebirdsql.gds.ng.AbstractParameterConverter;
 import org.firebirdsql.gds.ng.IConnectionProperties;
 import org.firebirdsql.gds.ng.IServiceProperties;
 import org.firebirdsql.gds.ng.ParameterConverter;
+
+import static org.firebirdsql.gds.ISCConstants.isc_spb_current_version;
 
 /**
  * Implementation of {@link org.firebirdsql.gds.ng.ParameterConverter} for JNA.
@@ -53,6 +56,13 @@ public class JnaParameterConverter extends AbstractParameterConverter implements
     @Override
     public ServiceParameterBuffer toServiceParameterBuffer(IServiceProperties serviceProperties,
             IEncodingFactory encodingFactory) {
-        throw new UnsupportedOperationException("Not yet implemented");
+        final ServiceParameterBuffer spb = new ServiceParameterBufferImp();
+        spb.addArgument(isc_spb_current_version);
+        final Encoding stringEncoding = encodingFactory.getDefaultEncoding();
+
+        // Map standard properties
+        populateDefaultProperties(serviceProperties, encodingFactory, spb, stringEncoding);
+
+        return spb;
     }
 }

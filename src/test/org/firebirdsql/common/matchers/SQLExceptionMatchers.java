@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
@@ -129,6 +127,24 @@ public class SQLExceptionMatchers {
      */
     public static Matcher<Exception> fbMessageEquals(int fbErrorCode, String... messageParameters) {
         return message(equalTo(getFbMessage(fbErrorCode, messageParameters)));
+    }
+
+    /**
+     * Convenience factory for matcher that checks a Firebird exception message for an exact prefix match based on its
+     * error code and message parameters.
+     * <p>
+     * This matcher does not check the error code itself, it just constructs and checks the message looked up
+     * with the error code and populated with the parameters.
+     * </p>
+     *
+     * @param fbErrorCode
+     *         The Firebird error code, see {@link org.firebirdsql.gds.ISCConstants}
+     * @param messageParameters
+     *         The message parameters
+     * @return The Matcher
+     */
+    public static Matcher<Exception> fbMessageStartsWith(int fbErrorCode, String... messageParameters) {
+        return message(startsWith(getFbMessage(fbErrorCode, messageParameters)));
     }
 
     /**
