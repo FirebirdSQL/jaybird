@@ -9,10 +9,10 @@
 	<packaging>jar</packaging>
 	<name>Jaybird JDBC Driver</name>
 	<description>JDBC Driver for the Firebird RDBMS</description>
-	<url>http://www.firebirdsql.org/en/development-jdbc-driver/</url>
+	<url>http://www.firebirdsql.org/en/devel-jdbc-driver/</url>
 	<!--
-		Initial check-in was 2001-05-09 by "d_jencks" according to changelog here:
-		http://firebird.cvs.sourceforge.net/viewvc/firebird/client-java/ChangeLog?revision=1.1&view=markup
+		Initial check-in was 2001-05-09 by "d_jencks" according to commit here:
+		https://github.com/FirebirdSQL/jaybird/commit/5e215213f916bc2c46d891da661131e18fb65f14
 	-->
 	<inceptionYear>2001</inceptionYear>
 	<developers>
