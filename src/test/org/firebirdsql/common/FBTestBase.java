@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
@@ -20,80 +18,69 @@
  */
 package org.firebirdsql.common;
 
-import org.firebirdsql.gds.GDSException;
-import org.firebirdsql.gds.ISCConstants;
+import junit.framework.TestCase;
 import org.firebirdsql.gds.impl.GDSType;
 import org.firebirdsql.jca.FBManagedConnectionFactory;
-import org.firebirdsql.jca.InternalConnectionManager;
 import org.firebirdsql.jdbc.FirebirdConnection;
 import org.firebirdsql.logging.Logger;
 import org.firebirdsql.logging.LoggerFactory;
 import org.firebirdsql.management.FBManager;
-import org.firebirdsql.pool.AbstractFBConnectionPoolDataSource;
-import org.firebirdsql.pool.FBPooledDataSourceFactory;
 import org.firebirdsql.pool.FBWrappingDataSource;
 
 import javax.resource.spi.ConnectionManager;
 import javax.sql.PooledConnection;
-import java.sql.*;
-import java.util.HashMap;
-import java.util.Map;
+import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.Properties;
 
-/**
- * Base class for test cases which could be run against more then a single GDS
- * implementation.
- */
-public abstract class FBTestBase extends SimpleFBTestBase {
+import static org.firebirdsql.common.FBTestProperties.*;
 
-    static {
-        try {
-            Class.forName("org.firebirdsql.jdbc.FBDriver");
-        } catch (ClassNotFoundException ex) {
-            throw new ExceptionInInitializerError("No suitable driver.");
-        }
-    }
+/**
+ * Base class for JUnit 3 test cases which could be run against more then one GDS implementation.
+ */
+public abstract class FBTestBase extends TestCase {
 
     protected final Logger log = LoggerFactory.getLogger(getClass());
 
-    protected static final String DB_LC_CTYPE = getProperty("test.db.lc_ctype", "NONE");
+    protected static final String DB_NAME = FBTestProperties.DB_NAME;
+    protected static final String DB_DATASOURCE_URL = FBTestProperties.DB_DATASOURCE_URL;
+    protected static final String DB_USER = FBTestProperties.DB_USER;
+    protected static final String DB_PASSWORD = FBTestProperties.DB_PASSWORD;
+    protected static final String DB_PATH = FBTestProperties.DB_PATH;
+    protected static final String DB_SERVER_URL = FBTestProperties.DB_SERVER_URL;
+    protected static final int DB_SERVER_PORT = FBTestProperties.DB_SERVER_PORT;
 
-    protected final String DB_DATASOURCE_URL = getdbpath(DB_NAME);
+    protected FBManager fbManager = null;
 
     protected FBTestBase(String name) {
         super(name);
     }
 
-    // FACTORY METHODS
-    //
-    // These methods should be used where possible so as to create the objects
-    // bound to the
-    // appropriate GDS implementation.
+    public static String getProperty(String property) {
+        return FBTestProperties.getProperty(property);
+    }
 
-    protected AbstractFBConnectionPoolDataSource createFBConnectionPoolDataSource()
-            throws SQLException {
-        final AbstractFBConnectionPoolDataSource returnValue = FBPooledDataSourceFactory
-                .createFBConnectionPoolDataSource();
+    protected String getDatabasePath() {
+        return FBTestProperties.getDatabasePath();
+    }
 
-        returnValue.setType(getGdsType().toString());
-
-        return returnValue;
+    protected String getdbpath(String name) {
+        return FBTestProperties.getdbpath(name);
     }
 
     protected FBManagedConnectionFactory createFBManagedConnectionFactory() {
-        return new FBManagedConnectionFactory(getGdsType());
+        return FBTestProperties.createFBManagedConnectionFactory();
     }
 
     protected FBManagedConnectionFactory createFBManagedConnectionFactory(
             ConnectionManager cm) {
-        FBManagedConnectionFactory mcf = new FBManagedConnectionFactory(
-                getGdsType());
-        mcf.setDefaultConnectionManager(new InternalConnectionManager());
-        return mcf;
+        return FBTestProperties.createFBManagedConnectionFactory(cm);
     }
 
     protected FBManager createFBManager() {
-        return new FBManager(getGdsType());
+        return FBTestProperties.createFBManager();
     }
 
     protected FBWrappingDataSource createFBWrappingDataSource()
@@ -106,189 +93,76 @@ public abstract class FBTestBase extends SimpleFBTestBase {
     }
 
     protected FirebirdConnection getConnectionViaDriverManager() throws SQLException {
-        return (FirebirdConnection)DriverManager.getConnection(getUrl(),
-            getDefaultPropertiesForConnection());
+        return FBTestProperties.getConnectionViaDriverManager();
     }
 
     protected Properties getDefaultPropertiesForConnection() {
-        final Properties returnValue = new Properties();
-
-        returnValue.setProperty("user", DB_USER);
-        returnValue.setProperty("password", DB_PASSWORD);
-        returnValue.setProperty("lc_ctype", DB_LC_CTYPE);
-
-        return returnValue;
+        return FBTestProperties.getDefaultPropertiesForConnection();
     }
-    
+
     protected void executeCreateTable(Connection connection, String sql) throws SQLException {
-        executeDDL(connection, sql, new int[]{ISCConstants.isc_no_meta_update});
+        DdlHelper.executeCreateTable(connection, sql);
     }
-    
+
     protected void executeDropTable(Connection connection, String sql) throws SQLException {
-        executeDDL(connection, sql, getDropIgnoreErrors(connection));
-    }
-    
-    private int[] getDropIgnoreErrors(Connection connection) throws SQLException {
-        DatabaseMetaData dbmd = connection.getMetaData();
-        if (dbmd.getDatabaseMajorVersion() < 2) {
-            // Firebird 1.5 and earlier do not always return specific error codes
-            return new int[] {ISCConstants.isc_dsql_error, ISCConstants.isc_no_meta_update, ISCConstants.isc_dsql_table_not_found, ISCConstants.isc_dsql_view_not_found};
-        } else {
-            return new int[]{ISCConstants.isc_no_meta_update, ISCConstants.isc_dsql_table_not_found, ISCConstants.isc_dsql_view_not_found};
-        }
+        DdlHelper.executeDropTable(connection, sql);
     }
 
     protected void executeDDL(Connection connection, String sql, int[] ignoreErrors) throws SQLException {
-        try {
-            Statement stmt = connection.createStatement();
-            try {
-                stmt.execute(sql);
-            } finally {
-                stmt.close();
-            }
-        } catch(SQLException ex) {
-            if (ignoreErrors == null || ignoreErrors.length == 0)
-                throw ex;
-            
-            boolean ignoreException = false;
-            
-            int errorCode = ex.getErrorCode();
-            Throwable current = ex;
-            errorcodeloop: do {
-                for (int i = 0; i < ignoreErrors.length; i++) {
-                    if (ignoreErrors[i] == errorCode) {
-                        ignoreException = true;
-                        break errorcodeloop;
-                    }
-                }
-                if (current instanceof GDSException) {
-                    current = ((GDSException)current).getNext();
-                } else {
-                    current = current.getCause();
-                }
-                if (current == null || !(current instanceof GDSException)) {
-                    break;
-                } else {
-                    errorCode = ((GDSException)current).getFbErrorCode();
-                }
-            } while (errorCode != -1);
-            
-            if (!ignoreException)
-                throw ex;
-        }
+        DdlHelper.executeDDL(connection, sql, ignoreErrors);
     }
 
-    // USEFULL PROPERTY GETTERS
-
     protected String getUrl() {
-        return gdsTypeToUrlPrefixMap.get(getGdsType()) + getdbpath(DB_NAME);
+        return FBTestProperties.getUrl();
     }
 
     protected GDSType getGdsType() {
-        final GDSType gdsType = GDSType.getType(getProperty("test.gds_type", "PURE_JAVA"));
-        if (gdsType == null)
-            throw new RuntimeException(
-                    "Unrecoginzed value for 'test.gds_type' property.");
-
-        return gdsType;
+        return FBTestProperties.getGdsType();
     }
-
-    // STANDARD RIG
 
     protected void setUp() throws Exception {
         fbManager = createFBManager();
-
-        if (getGdsType() == GDSType.getType("PURE_JAVA")
-                || getGdsType() == GDSType.getType("NATIVE")
-                || getGdsType() == GDSType.getType("OOREMOTE")) {
-            fbManager.setServer(DB_SERVER_URL);
-            fbManager.setPort(DB_SERVER_PORT);
-        }
-        fbManager.start();
-        fbManager.setForceCreate(true);
-        fbManager.createDatabase(getDatabasePath(), DB_USER, DB_PASSWORD);
+        defaultDatabaseSetUp(fbManager);
     }
 
     protected void tearDown() throws Exception {
-        fbManager.dropDatabase(getDatabasePath(), DB_USER, DB_PASSWORD);
-        fbManager.stop();
+        defaultDatabaseTearDown(fbManager);
         fbManager = null;
     }
 
-    protected FBManager fbManager = null;
-
-    private static final Map gdsTypeToUrlPrefixMap = new HashMap();
-    static {
-        gdsTypeToUrlPrefixMap.put(GDSType.getType("PURE_JAVA"), "jdbc:firebirdsql:");
-        gdsTypeToUrlPrefixMap.put(GDSType.getType("EMBEDDED"), "jdbc:firebirdsql:embedded:");
-        gdsTypeToUrlPrefixMap.put(GDSType.getType("NATIVE"), "jdbc:firebirdsql:native:");
-        gdsTypeToUrlPrefixMap.put(GDSType.getType("ORACLE_MODE"), "jdbc:firebirdsql:oracle:");
-        gdsTypeToUrlPrefixMap.put(GDSType.getType("LOCAL"), "jdbc:firebirdsql:local:");
-        gdsTypeToUrlPrefixMap.put(GDSType.getType("NIO"), "jdbc:firebirdsql:nio:");
-        gdsTypeToUrlPrefixMap.put(GDSType.getType("OOREMOTE"), "jdbc:firebirdsql:oo:");
-    }
-    
     /**
      * Helper method to quietly close statements.
-     * 
+     *
      * @param stmt Statement object
      */
     protected void closeQuietly(Statement stmt) {
-        if (stmt == null) {
-            return;
-        }
-        try {
-            stmt.close();
-        } catch (SQLException ex) {
-            //ignore
-        }
+        JdbcResourceHelper.closeQuietly(stmt);
     }
-    
+
     /**
      * Helper method to quietly close connections.
-     * 
+     *
      * @param con Connection object
      */
     protected void closeQuietly(Connection con) {
-        if (con == null) {
-            return;
-        }
-        try {
-            con.close();
-        } catch (SQLException ex) {
-            //ignore
-        }
+        JdbcResourceHelper.closeQuietly(con);
     }
-    
+
     /**
      * Helper method to quietly close resultsets.
-     * 
+     *
      * @param rs ResultSet object
      */
     protected void closeQuietly(ResultSet rs) {
-        if (rs == null) {
-            return;
-        }
-        try {
-            rs.close();
-        } catch (SQLException ex) {
-            //ignore
-        }
+        JdbcResourceHelper.closeQuietly(rs);
     }
-    
+
     /**
      * Helper method to quietly close pooled connections.
-     * 
+     *
      * @param con PooledConnection object
      */
     protected void closeQuietly(PooledConnection con) {
-        if (con == null) {
-            return;
-        }
-        try {
-            con.close();
-        } catch (SQLException ex) {
-            //ignore
-        }
+        JdbcResourceHelper.closeQuietly(con);
     }
 }
