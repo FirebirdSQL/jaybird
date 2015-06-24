@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source J2ee connector - jdbc driver
+ * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -12,11 +12,10 @@
  * This file was created by members of the firebird development team.
  * All individual contributions remain the Copyright (C) of those
  * individuals.  Contributors to this file are either listed here or
- * can be obtained from a CVS history command.
+ * can be obtained from a source control history command.
  *
  * All rights reserved.
  */
- 
 package org.firebirdsql.jdbc;
 
 import java.io.IOException;
@@ -50,20 +49,18 @@ public class FBConnectionHelper {
     public static final String TRANSACTION_SERIALIZABLE = "TRANSACTION_SERIALIZABLE";
     public static final String TRANSACTION_REPEATABLE_READ = "TRANSACTION_REPEATABLE_READ";
     public static final String TRANSACTION_READ_COMMITTED = "TRANSACTION_READ_COMMITTED";
-    
 
     public static final String DPB_PREFIX = "isc_dpb_";
     public static final String TPB_PREFIX = "isc_tpb_";
 
     public static final String TPB_MAPPING_PROPERTY = "tpb_mapping";
     
-    public static final String ISC_DPB_TYPES_RESOURCE = 
-        "isc_dpb_types.properties";
+    public static final String ISC_DPB_TYPES_RESOURCE = "isc_dpb_types.properties";
 
-    private static final HashMap dpbTypes = new HashMap();
-    private static final HashMap dpbParameterTypes = new HashMap();
+    private static final Map<String, Integer> dpbTypes = new HashMap<String, Integer>();
+    private static final Map<String, Integer> dpbParameterTypes = new HashMap<String, Integer>();
     
-    private static final HashMap tpbTypes = new HashMap();
+    private static final Map<String, Integer> tpbTypes = new HashMap<String, Integer>();
 
     /*
      * Initialize mappings between various GDS constant names and
@@ -74,15 +71,15 @@ public class FBConnectionHelper {
 
         Field[] fields = iscClass.getFields();
 
-        for(int i = 0; i < fields.length; i++) {
-            if (!fields[i].getType().getName().equals("int"))
+        for (Field field : fields) {
+            if (!field.getType().getName().equals("int"))
                 continue;
 
-            String name = fields[i].getName();
+            String name = field.getName();
             Integer value;
             try {
-                value = (Integer)fields[i].get(null);
-            } catch(IllegalAccessException iaex) {
+                value = (Integer) field.get(null);
+            } catch (IllegalAccessException iaex) {
                 continue;
             }
 
@@ -91,14 +88,12 @@ public class FBConnectionHelper {
                 dpbTypes.put(name.substring(DPB_PREFIX.length()), value);
                 // put the full name to tolerate people's mistakes
                 dpbTypes.put(name, value);
-            } else
-            if (name.startsWith(TPB_PREFIX)) {
+            } else if (name.startsWith(TPB_PREFIX)) {
                 // put the correct parameter name
                 tpbTypes.put(name.substring(TPB_PREFIX.length()), value);
                 // put the full name to tolerate people's mistakes
                 tpbTypes.put(name, value);
-            } else
-                continue;
+            }
         }
         
         loadDpbParameterTypes();
@@ -114,7 +109,7 @@ public class FBConnectionHelper {
      * or <code>null</code> if value is not known.
      */
     public static Integer getDpbKey(String name) {
-        return (Integer)dpbTypes.get(name);
+        return dpbTypes.get(name);
     }
     
     /**
@@ -123,61 +118,63 @@ public class FBConnectionHelper {
      * @return instance of {@link Map}, where key is the name of DPB parameter,
      * value is its DPB key.
      */
-    public static Map getDpbMap() {
+    public static Map<String, Integer> getDpbMap() {
         return Collections.unmodifiableMap(dpbTypes);
     }
     
     public static Object parseDpbString(String name, Object value) {
-        
         // for the sake of unification we allow passing boolean, byte and integer
         // types too, we loose some cycles here, but that is called relatively
         // rarely, a tradeoff between code maintainability and CPU cycles.
-        if (value instanceof Boolean || value instanceof Byte || value instanceof Integer)
+        if (value instanceof Boolean || value instanceof Byte || value instanceof Integer) {
             return value;
+        }
         
         // if passed value is not string, throw an exception
-        if (value != null && !(value instanceof String))
+        if (value != null && !(value instanceof String)) {
             throw new ClassCastException(value.getClass().getName());
+        }
         
-        Integer type = (Integer)dpbParameterTypes.get(name);
+        Integer type = dpbParameterTypes.get(name);
         
-        if (type == null)
-            type = new Integer(TYPE_UNKNOWN);
+        if (type == null) {
+            type = TYPE_UNKNOWN;
+        }
         
-        switch(type.intValue()) {
-            case TYPE_BOOLEAN : 
-                return "".equals(value) ? Boolean.TRUE : Boolean.valueOf((String)value);
-            
-            case TYPE_BYTE : 
-                return new Byte((String)value);
-                
-            case TYPE_INT :
-                return new Integer((String)value);
-                
-            case TYPE_STRING : 
+        switch(type) {
+        case TYPE_BOOLEAN :
+            return "".equals(value) ? Boolean.TRUE : Boolean.valueOf((String)value);
+
+        case TYPE_BYTE :
+            return new Byte((String)value);
+
+        case TYPE_INT :
+            return new Integer((String)value);
+
+        case TYPE_STRING :
+            return value;
+
+        case TYPE_UNKNOWN :
+        default :
+            /* set the value of the DPB by probing to convert string
+             * into int or byte value, this method gives very good result
+             * for guessing the method to call from the actual value;
+             * null values and empty strings are assumed to be booleans.
+             */
+            if (value == null || "".equals(value))
+                return Boolean.TRUE;
+
+            try {
+                // try to deal with a value as a byte or int
+                int intValue = Integer.parseInt((String)value);
+                if (intValue < 256)
+                    return (byte) intValue;
+                else
+                    return intValue;
+            } catch (NumberFormatException nfex) {
+                // all else fails: return as is (string)
                 return value;
-                
-            case TYPE_UNKNOWN :
-            default :
-                /* set the value of the DPB by probing to convert string
-                 * into int or byte value, this method gives very good result
-                 * for guessing the method to call from the actual value;
-                 * null values and empty strings are assumed to be booleans.
-                 */
-                if (value == null || "".equals(value))
-                    return Boolean.TRUE;
-            
-                try {
-                    // try to deal with a value as a byte or int
-                    int intValue = Integer.parseInt((String)value);
-                    if (intValue < 256)
-                        return new Byte((byte) intValue);
-                    else
-                        return new Integer(intValue);
-                } catch (NumberFormatException nfex) {
-                    // all else fails: return as is (string)
-                    return value;
-                }
+            }
         }
     }
     
@@ -199,28 +196,23 @@ public class FBConnectionHelper {
      * 
      * @throws FBResourceException if specified mapping is incorrect.
      */
-    public static void processTpbMapping(GDS gds,
-            FirebirdConnectionProperties connectionProperties, Properties info)
+    public static void processTpbMapping(GDS gds, FirebirdConnectionProperties connectionProperties, Properties info)
             throws FBResourceException {
         
         if (info.containsKey(TRANSACTION_SERIALIZABLE))
             connectionProperties.setTransactionParameters(
                     Connection.TRANSACTION_SERIALIZABLE, 
-                    FBTpbMapper.processMapping(gds, 
-                            info.getProperty(TRANSACTION_SERIALIZABLE)));
+                    FBTpbMapper.processMapping(gds, info.getProperty(TRANSACTION_SERIALIZABLE)));
             
         if (info.containsKey(TRANSACTION_REPEATABLE_READ))
             connectionProperties.setTransactionParameters(
                     Connection.TRANSACTION_REPEATABLE_READ, 
-                    FBTpbMapper.processMapping(gds, 
-                            info.getProperty(TRANSACTION_REPEATABLE_READ)));
+                    FBTpbMapper.processMapping(gds, info.getProperty(TRANSACTION_REPEATABLE_READ)));
                 
         if (info.containsKey(TRANSACTION_READ_COMMITTED))
             connectionProperties.setTransactionParameters(
                     Connection.TRANSACTION_READ_COMMITTED, 
-                    FBTpbMapper.processMapping(gds, 
-                            info.getProperty(TRANSACTION_READ_COMMITTED)));
-                
+                    FBTpbMapper.processMapping(gds, info.getProperty(TRANSACTION_READ_COMMITTED)));
     }
     
     /**
@@ -234,7 +226,7 @@ public class FBConnectionHelper {
      * nothing was found.
      */
     public static Integer getTpbParam(String name) {
-        return (Integer)tpbTypes.get(name);
+        return tpbTypes.get(name);
     }
     
     /**
@@ -252,16 +244,18 @@ public class FBConnectionHelper {
     private static Properties loadProperties(String resource) throws IOException {
         ClassLoader cl = FBConnectionHelper.class.getClassLoader();
 
-        InputStream in = null;
+        InputStream in;
 
         // get the stream from the classloader or system classloader
-        if (cl == null)
+        if (cl == null) {
             in = ClassLoader.getSystemResourceAsStream(resource);
-        else
+        } else {
             in = cl.getResourceAsStream(resource);
+        }
 
-        if (in == null) 
+        if (in == null) {
             return null;
+        }
 
         try {
             Properties props = new Properties();
@@ -283,37 +277,31 @@ public class FBConnectionHelper {
             ex.printStackTrace();
             return;
         }
-        
-        for (Iterator iter = props.entrySet().iterator(); iter.hasNext();) {
-            Map.Entry entry = (Map.Entry) iter.next();
-            
-            String key = (String)entry.getKey();
+
+        for (Map.Entry<Object, Object> entry : props.entrySet()) {
+            String key = (String) entry.getKey();
             String shortKey = key.substring(DPB_PREFIX.length());
-            String value = (String)entry.getValue();
-            
+            String value = (String) entry.getValue();
+
             // Remove text intended as comment (which due to the properties format is part of the value)
             int hashIndex = value.indexOf('#');
             if (hashIndex != -1) {
                 value = value.substring(0, hashIndex).trim();
             }
-            
+
             if ("boolean".equals(value)) {
-                dpbParameterTypes.put(key, new Integer(TYPE_BOOLEAN));
-                dpbParameterTypes.put(shortKey, new Integer(TYPE_BOOLEAN));
-            } else
-            if ("byte".equals(value)) {
-                dpbParameterTypes.put(key, new Integer(TYPE_BYTE));
-                dpbParameterTypes.put(shortKey, new Integer(TYPE_BYTE));
-            } else
-            if ("int".equals(value)) {
-                dpbParameterTypes.put(key, new Integer(TYPE_INT));
-                dpbParameterTypes.put(shortKey, new Integer(TYPE_INT));
-            } else
-            if ("string".equals(value)) {
-                dpbParameterTypes.put(key, new Integer(TYPE_STRING));
-                dpbParameterTypes.put(shortKey, new Integer(TYPE_STRING));
-            } else
-                continue;
+                dpbParameterTypes.put(key, TYPE_BOOLEAN);
+                dpbParameterTypes.put(shortKey, TYPE_BOOLEAN);
+            } else if ("byte".equals(value)) {
+                dpbParameterTypes.put(key, TYPE_BYTE);
+                dpbParameterTypes.put(shortKey, TYPE_BYTE);
+            } else if ("int".equals(value)) {
+                dpbParameterTypes.put(key, TYPE_INT);
+                dpbParameterTypes.put(shortKey, TYPE_INT);
+            } else if ("string".equals(value)) {
+                dpbParameterTypes.put(key, TYPE_STRING);
+                dpbParameterTypes.put(shortKey, TYPE_STRING);
+            }
         }
     }
 }
