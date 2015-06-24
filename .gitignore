@@ -10,3 +10,4 @@ classes/
 *.eml
 hs_err_pid*.log
 *.suo
+*.fdb
