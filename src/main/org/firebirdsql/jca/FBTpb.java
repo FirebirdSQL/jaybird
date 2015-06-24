@@ -88,6 +88,30 @@ public class FBTpb implements Serializable {
     public boolean isReadOnly() {
         return transactionParams.hasArgument(TransactionParameterBuffer.READ);
     }
+
+    /**
+     * Set the auto-commit flag on this TPB.
+     *
+     * @param autoCommit
+     *            If <code>true</code>, this TPB will be set to auto_commit,
+     *            otherwise it won't
+     */
+    public void setAutoCommit(boolean autoCommit) {
+        if (autoCommit) {
+            transactionParams.addArgument(TransactionParameterBuffer.AUTOCOMMIT);
+        } else {
+            transactionParams.removeArgument(TransactionParameterBuffer.AUTOCOMMIT);
+        }
+    }
+
+    /**
+     * Determine whether this TPB is set to auto-commit.
+     *
+     * @return <code>true</code> if this TPB is auto-commit, otherwise false
+     */
+    public boolean isAutoCommit() {
+        return transactionParams.hasArgument(TransactionParameterBuffer.AUTOCOMMIT);
+    }
     
     public TransactionParameterBuffer getTransactionParameterBuffer() {
         return transactionParams;

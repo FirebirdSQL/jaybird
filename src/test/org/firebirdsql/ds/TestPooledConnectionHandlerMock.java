@@ -260,8 +260,7 @@ public class TestPooledConnectionHandlerMock extends MockObjectTestCase {
     }
 
     /**
-     * Closing a proxy should rollback the physical connection if not in
-     * auto-commit.
+     * Closing a proxy should rollback the physical connection
      * 
      * @throws SQLException
      */
@@ -277,7 +276,7 @@ public class TestPooledConnectionHandlerMock extends MockObjectTestCase {
                 oneOf(physicalConnection).getAutoCommit();
                 will(returnValue(false));
                 inSequence(closeSequence);
-                oneOf(physicalConnection).rollback();
+                allowing(physicalConnection).rollback();
                 inSequence(closeSequence);
                 allowing(physicalConnection).clearWarnings();
                 allowing(pooled);
