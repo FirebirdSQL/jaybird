@@ -8,3 +8,4 @@ build-local.properties
 classes/
 *.iml
 *.eml
+*.fdb

@@ -71,9 +71,7 @@ public class FBConnection implements FirebirdConnection {
     protected final Set<Statement> activeStatements = Collections.synchronizedSet(new HashSet<Statement>());
     
     private int resultSetHoldability = ResultSet.CLOSE_CURSORS_AT_COMMIT;
-    
-    private boolean autoCommit;
-    
+
     private StoredProcedureMetaData storedProcedureMetaData;
     private FBEscapedParser escapedParser;
 	 
@@ -86,14 +84,13 @@ public class FBConnection implements FirebirdConnection {
     public FBConnection(FBManagedConnection mc) {
         this.mc = mc;
         
-        this.txCoordinator = new InternalTransactionCoordinator();
+        txCoordinator = new InternalTransactionCoordinator(this);
         
         FBConnectionRequestInfo cri = mc.getConnectionRequestInfo();
-        
-        if (cri.hasArgument(DatabaseParameterBufferExtension.RESULT_SET_HOLDABLE))
-            resultSetHoldability = ResultSet.HOLD_CURSORS_OVER_COMMIT;
-        else
-            resultSetHoldability = ResultSet.CLOSE_CURSORS_AT_COMMIT;
+
+        resultSetHoldability = cri.hasArgument(DatabaseParameterBufferExtension.RESULT_SET_HOLDABLE)
+                ? ResultSet.HOLD_CURSORS_OVER_COMMIT
+                : ResultSet.CLOSE_CURSORS_AT_COMMIT;
     }
     
     public FBObjectListener.StatementListener getStatementListener() {
@@ -101,7 +98,7 @@ public class FBConnection implements FirebirdConnection {
     }
     
     public int getHoldability() throws SQLException {
-        return this.resultSetHoldability;
+        return resultSetHoldability;
     }
 
     public void setHoldability(int holdability) throws SQLException {
@@ -199,9 +196,7 @@ public class FBConnection implements FirebirdConnection {
     }
 
     @Deprecated
-	public void setTransactionParameters(int isolationLevel, int[] parameters)
-		throws SQLException {
-        
+	public void setTransactionParameters(int isolationLevel, int[] parameters) throws SQLException {
         TransactionParameterBuffer tpbParams = createTransactionParameterBuffer();
 
         for (int parameter : parameters) {
@@ -220,18 +215,18 @@ public class FBConnection implements FirebirdConnection {
     }
     
     public void setTransactionParameters(int isolationLevel, TransactionParameterBuffer tpb) throws SQLException {
-        if (mc.isManagedEnvironment())
-            throw new FBSQLException("Cannot set transaction parameters " +
-                    "in managed environment.");
+        if (mc.isManagedEnvironment()) {
+            throw new FBSQLException("Cannot set transaction parameters in managed environment.");
+        }
         
         mc.setTransactionParameters(isolationLevel, tpb);
     }
     
     public void setTransactionParameters(TransactionParameterBuffer tpb) throws SQLException {
         try {
-            if (getLocalTransaction().inTransaction())
-                throw new FBSQLException("Cannot set transaction parameters " +
-                        "when transaction is already started.");
+            if (getLocalTransaction().inTransaction()) {
+                throw new FBSQLException("Cannot set transaction parameters when transaction is already started.");
+            }
             
             mc.setTransactionParameters(tpb);
         } catch(ResourceException ex) {
@@ -255,13 +250,8 @@ public class FBConnection implements FirebirdConnection {
      * @exception SQLException if a database access error occurs
      */
     public synchronized Statement createStatement() throws SQLException {
-        return createStatement(
-            ResultSet.TYPE_FORWARD_ONLY, 
-            ResultSet.CONCUR_READ_ONLY,
-            resultSetHoldability
-        );
+        return createStatement(ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY, resultSetHoldability);
     }
-
 
     /**
      * Creates a <code>PreparedStatement</code> object for sending
@@ -292,8 +282,7 @@ public class FBConnection implements FirebirdConnection {
      * pre-compiled statement
      * @exception SQLException if a database access error occurs
      */
-    public synchronized PreparedStatement prepareStatement(String sql)
-    throws SQLException {
+    public synchronized PreparedStatement prepareStatement(String sql) throws SQLException {
         return prepareStatement(sql, ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
     }
 
@@ -313,7 +302,6 @@ public class FBConnection implements FirebirdConnection {
      * direct effect on users; however, it does affect which method
      * throws certain SQLExceptions.
      *
-     *
      * Result sets created using the returned CallableStatement will have
      * forward-only type and read-only concurrency, by default.
      *
@@ -324,10 +312,8 @@ public class FBConnection implements FirebirdConnection {
      * pre-compiled SQL statement
      * @exception SQLException if a database access error occurs
      */
-    public synchronized CallableStatement prepareCall(String sql) 
-    throws SQLException {
-        return prepareCall(sql, 
-                ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
+    public synchronized CallableStatement prepareCall(String sql) throws SQLException {
+        return prepareCall(sql, ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
     }
     
     public synchronized Blob createBlob() throws SQLException {
@@ -372,7 +358,8 @@ public class FBConnection implements FirebirdConnection {
     protected FBEscapedParser getEscapedParser() {
         if (escapedParser == null) {
             DatabaseParameterBuffer dpb = getDatabaseParameterBuffer();
-            EscapeParserMode mode = dpb.hasArgument(DatabaseParameterBufferExtension.USE_STANDARD_UDF) ? EscapeParserMode.USE_STANDARD_UDF
+            EscapeParserMode mode = dpb.hasArgument(DatabaseParameterBufferExtension.USE_STANDARD_UDF)
+                    ? EscapeParserMode.USE_STANDARD_UDF
                     : EscapeParserMode.USE_BUILT_IN;
             escapedParser = new FBEscapedParser(mode);
         }
@@ -404,38 +391,17 @@ public class FBConnection implements FirebirdConnection {
      */
     public synchronized void setAutoCommit(boolean autoCommit) throws SQLException {
         checkValidity();
-        
-        if (this.autoCommit == autoCommit) 
+        if (getAutoCommit() == autoCommit) {
             return;
-        
-        // FIXME : Looks like this is wrong, see also setSavePoint
-        if (autoCommit && mc.inDistributedTransaction()) {
-            throw new FBSQLException("Connection enlisted in distributed transaction", FBSQLException.SQL_STATE_INVALID_TX_STATE);
         }
-        
-        InternalTransactionCoordinator.AbstractTransactionCoordinator coordinator;
-        if (autoCommit)
-            coordinator = new InternalTransactionCoordinator.AutoCommitCoordinator(this, getLocalTransaction());
-        else
-            coordinator = new InternalTransactionCoordinator.LocalTransactionCoordinator(this, getLocalTransaction());
-        
-        txCoordinator.setCoordinator(coordinator);
-        this.autoCommit = autoCommit;
+
+        // FIXME : Behavior in switch might be wrong, see also setSavePoint
+        txCoordinator.switchTransactionCoordinator(autoCommit);
     }
 
     public synchronized void setManagedEnvironment(boolean managedConnection) throws SQLException {
         checkValidity();
-        
-        InternalTransactionCoordinator.AbstractTransactionCoordinator coordinator;
-        if (managedConnection && mc.inDistributedTransaction()) {
-            coordinator = new InternalTransactionCoordinator.ManagedTransactionCoordinator(this);
-            this.autoCommit = false;
-        } else {
-            coordinator = new InternalTransactionCoordinator.AutoCommitCoordinator(this, getLocalTransaction());
-            this.autoCommit = true;
-        }
-         
-        txCoordinator.setCoordinator(coordinator);
+        txCoordinator.setTransactionCoordinator(managedConnection, true);
     }
 
     /**
@@ -446,13 +412,11 @@ public class FBConnection implements FirebirdConnection {
      * @see #setAutoCommit
      */
     public synchronized boolean getAutoCommit() throws SQLException {
-        if (isClosed())
-            throw new FBSQLException("You cannot getAutomcommit on an " +
-                    "unassociated closed connection.");
-
-        return this.autoCommit;
+        if (isClosed()) {
+            throw new FBSQLException("You cannot getAutomcommit on an unassociated closed connection.");
+        }
+        return txCoordinator.getAutoCommit();
     }
-
 
     /**
      * Makes all changes made since the previous
@@ -477,7 +441,6 @@ public class FBConnection implements FirebirdConnection {
         txCoordinator.commit();
         invalidateTransactionLifetimeObjects();
     }
-
 
     /**
      * Drops all changes made since the previous
