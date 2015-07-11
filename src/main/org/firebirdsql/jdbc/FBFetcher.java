@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source J2ee connector - jdbc driver
+ * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -12,11 +12,10 @@
  * This file was created by members of the firebird development team.
  * All individual contributions remain the Copyright (C) of those
  * individuals.  Contributors to this file are either listed here or
- * can be obtained from a CVS history command.
+ * can be obtained from a source control history command.
  *
  * All rights reserved.
  */
-
 package org.firebirdsql.jdbc;
 
 import java.sql.SQLException;
@@ -26,7 +25,7 @@ import java.sql.SQLException;
  */
 interface FBFetcher {
 
-    static final int MAX_FETCH_ROWS = 400;
+    int MAX_FETCH_ROWS = 400;
 	
     /**
      * Move cursor to the rist row.
@@ -99,13 +98,24 @@ interface FBFetcher {
      * @throws SQLException if something went wrong.
      */
     void afterLast() throws SQLException;
-    
+
     /**
      * Close this fetcher and corresponding result set.
+     * <p>
+     * Equivalent to calling {@link #close(CompletionReason)} with {@link CompletionReason#OTHER}.
+     * </p>
      * 
      * @throws SQLException if something went wrong.
      */
     void close() throws SQLException;
+
+    /**
+     * Close this fetcher and corresponding result set.
+     *
+     * @param completionReason Reason for completion
+     * @throws SQLException if something went wrong.
+     */
+    void close(CompletionReason completionReason) throws SQLException;
 
     /**
      * Get row number.

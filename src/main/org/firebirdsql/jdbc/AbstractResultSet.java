@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
@@ -48,7 +46,7 @@ public abstract class AbstractResultSet implements ResultSet, FirebirdResultSet,
 
     protected GDSHelper gdsHelper;
 
-    protected XSQLVAR[] xsqlvars;
+    protected final XSQLVAR[] xsqlvars;
 
     protected byte[][] row;
 
@@ -65,33 +63,24 @@ public abstract class AbstractResultSet implements ResultSet, FirebirdResultSet,
     private SQLWarning firstWarning = null;
      
     private FBField[] fields = null;
-    private java.util.HashMap colNames = new java.util.HashMap();
+    private final Map<String, Integer> colNames;
     
     private String cursorName;
     private FBObjectListener.ResultSetListener listener;
     
-    private int rsType = ResultSet.TYPE_FORWARD_ONLY;
-    private int rsConcurrency = ResultSet.CONCUR_READ_ONLY;
-    private int rsHoldability = ResultSet.CLOSE_CURSORS_AT_COMMIT;
+    private final int rsType;
+    private int rsConcurrency;
+    private final int rsHoldability;
     
-    /* (non-Javadoc)
-     * @see org.firebirdsql.jdbc.FBObjectListener.FetcherListener#allRowsFetched(org.firebirdsql.jdbc.FBFetcher)
-     */
     public void allRowsFetched(FBFetcher fetcher) throws SQLException {
         // notify our listener that all rows were fetched.
         listener.allRowsFetched(this);
     }
     
-    /* (non-Javadoc)
-     * @see org.firebirdsql.jdbc.FBObjectListener.FetcherListener#fetcherClosed(org.firebirdsql.jdbc.FBFetcher)
-     */
     public void fetcherClosed(FBFetcher fetcher) throws SQLException {
-        // ignore, there nothing to do here
+        // ignore, nothing to do here
     }
     
-    /* (non-Javadoc)
-     * @see org.firebirdsql.jdbc.FBObjectListener.FetcherListener#rowChanged(org.firebirdsql.jdbc.FBFetcher, byte[][])
-     */
     public void rowChanged(FBFetcher fetcher, byte[][] newRow) throws SQLException {
         this.row = newRow;
     }
@@ -111,15 +100,20 @@ public abstract class AbstractResultSet implements ResultSet, FirebirdResultSet,
                           int rsType, 
                           int rsConcurrency,
                           int rsHoldability,
-                          boolean cached) 
-    throws SQLException {
+                          boolean cached) throws SQLException {
         
         this.gdsHelper = gdsHelper;
         this.cursorName = fbStatement.getCursorName();
         
         this.listener = listener;
-        
-        this.rsType = rsType;
+
+        if (rsType == ResultSet.TYPE_SCROLL_SENSITIVE) {
+            fbStatement.addWarning(new FBSQLWarning(
+                    "Result set type changed. ResultSet.TYPE_SCROLL_SENSITIVE is not supported."));
+            this.rsType = ResultSet.TYPE_SCROLL_INSENSITIVE;
+        } else {
+            this.rsType = rsType;
+        }
         this.rsConcurrency = rsConcurrency;
         this.rsHoldability = rsHoldability;
         
@@ -134,23 +128,16 @@ public abstract class AbstractResultSet implements ResultSet, FirebirdResultSet,
 
         if (rsType != ResultSet.TYPE_FORWARD_ONLY || metaDataQuery)
             cached = true;
-        
+
+        fields = new FBField[xsqlvars.length];
+        colNames = new HashMap<String, Integer>(xsqlvars.length, 1);
+        prepareVars(cached);
         if (cached) {
-            prepareVars(true);
             fbFetcher = new FBCachedFetcher(gdsHelper,
                     fbStatement.fetchSize, fbStatement.maxRows, stmt, this,
                     rsType == ResultSet.TYPE_FORWARD_ONLY);
         } else {
-            prepareVars(false);
-            
-            if (rsType == ResultSet.TYPE_SCROLL_SENSITIVE) {
-                fbStatement.addWarning(new FBSQLWarning(
-                    "Result set type changed. ResultSet.TYPE_SCROLL_SENSITIVE is not supported."));
-                    
-                this.rsType = ResultSet.TYPE_SCROLL_INSENSITIVE;
-            }
-            
-            if (updatableCursor)  
+            if (updatableCursor)
                 fbFetcher = new FBUpdatableCursorFetcher(gdsHelper,
                         fbStatement, stmt, this, fbStatement.getMaxRows(),
                         fbStatement.getFetchSize());
@@ -164,9 +151,7 @@ public abstract class AbstractResultSet implements ResultSet, FirebirdResultSet,
             try {
                 rowUpdater = new FBRowUpdater(gdsHelper, xsqlvars, this, cached, listener);
             } catch (FBResultSetNotUpdatableException ex) {
-                fbStatement.addWarning(new FBSQLWarning(
-                    "Result set concurrency changed to READ ONLY."));
-
+                fbStatement.addWarning(new FBSQLWarning("Result set concurrency changed to READ ONLY."));
                 this.rsConcurrency = ResultSet.CONCUR_READ_ONLY;
             }
         }
@@ -179,13 +164,16 @@ public abstract class AbstractResultSet implements ResultSet, FirebirdResultSet,
     protected AbstractResultSet(XSQLVAR[] xsqlvars, GDSHelper gdsHelper, ArrayList rows, boolean retrieveBlobs) throws SQLException {
         maxRows = 0;
         fbFetcher = new FBCachedFetcher(rows, this, xsqlvars, gdsHelper, retrieveBlobs);
+        rsType = ResultSet.TYPE_FORWARD_ONLY;
+        rsConcurrency = ResultSet.CONCUR_READ_ONLY;
+        rsHoldability = ResultSet.CLOSE_CURSORS_AT_COMMIT;
         this.xsqlvars = xsqlvars;
+        fields = new FBField[xsqlvars.length];
+        colNames = new HashMap<String, Integer>(xsqlvars.length, 1);
         prepareVars(true);
     }
     
     private void prepareVars(boolean cached) throws SQLException {
-        fields = new FBField[xsqlvars.length];
-        colNames = new HashMap(xsqlvars.length,1);
         for (int i=0; i < xsqlvars.length; i++){
             final int fieldPosition = i;
             
@@ -240,16 +228,17 @@ public abstract class AbstractResultSet implements ResultSet, FirebirdResultSet,
      * @throws SQLException if something wrong happened.
      */
     protected void closeFields() throws SQLException {
+        // TODO See if we can apply completion reason logic (eg no need to close blob on commit)
         wasNullValid = false;
 
         SQLExceptionChainBuilder<SQLException> chain = new SQLExceptionChainBuilder<SQLException>();
         // close current fields, so that resources are freed.
-        for(int i = 0; i < fields.length; i++) {
-        	try {
-        	    fields[i].close();
-        	} catch (SQLException ex) {
-        		chain.append(ex);
-        	}
+        for (FBField field : fields) {
+            try {
+                field.close();
+            } catch (SQLException ex) {
+                chain.append(ex);
+            }
         }
         
         if (chain.hasException()) {
@@ -257,9 +246,6 @@ public abstract class AbstractResultSet implements ResultSet, FirebirdResultSet,
         }
     }
     
-    /* (non-Javadoc)
-     * @see org.firebirdsql.jdbc.Synchronizable#getSynchronizationObject()
-     */
     public Object getSynchronizationObject() throws SQLException {
         return fbStatement.getSynchronizationObject();
     }
@@ -312,8 +298,12 @@ public abstract class AbstractResultSet implements ResultSet, FirebirdResultSet,
     public boolean isClosed() throws SQLException {
         return closed;
     }
-    
+
     void close(boolean notifyListener) throws SQLException {
+        close(notifyListener, CompletionReason.OTHER);
+    }
+    
+    void close(boolean notifyListener, CompletionReason completionReason) throws SQLException {
     	if (isClosed()) return;
     	closed = true;
     	SQLExceptionChainBuilder<SQLException> chain = new SQLExceptionChainBuilder<SQLException>();
@@ -326,7 +316,7 @@ public abstract class AbstractResultSet implements ResultSet, FirebirdResultSet,
         	try {
         		if (fbFetcher != null) {
         			try {
-        			    fbFetcher.close();
+        			    fbFetcher.close(completionReason);
         			} catch (SQLException ex) {
         				chain.append(ex);
         			}
@@ -657,11 +647,8 @@ public abstract class AbstractResultSet implements ResultSet, FirebirdResultSet,
 
         wasNullValid = true;
         // wasNull = field.isNull();
-        if (row != null)
-            wasNull = (row[columnIndex - 1] == null);
-        else
-            wasNull = true;
-        
+        wasNull = row == null || row[columnIndex - 1] == null;
+
         return field;
     }
     
@@ -709,18 +696,16 @@ public abstract class AbstractResultSet implements ResultSet, FirebirdResultSet,
                     FBSQLException.SQL_STATE_INVALID_COLUMN);
         }
 
-        Integer fieldNum = (Integer) colNames.get(columnName);
+        Integer fieldNum = colNames.get(columnName);
         // If it is the first time the columnName is used
         if (fieldNum == null){
-            int colNum = findColumn(columnName);
-            fieldNum = new Integer(colNum);
+            fieldNum = findColumn(columnName);
             colNames.put(columnName, fieldNum);
         }
-        int colNum = fieldNum.intValue();
-        FBField field = rowUpdater != null ? rowUpdater.getField(colNum - 1)
-                : fields[colNum - 1];
+        int colNum = fieldNum;
+        FBField field = rowUpdater != null ? rowUpdater.getField(colNum - 1) : fields[colNum - 1];
         wasNullValid = true;
-        wasNull = (row != null ? row[colNum - 1] == null : true);
+        wasNull = row == null || row[colNum - 1] == null;
         return field;
     }
     

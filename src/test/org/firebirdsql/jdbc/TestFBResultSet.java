@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source J2ee connector - jdbc driver
+ * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -12,7 +12,7 @@
  * This file was created by members of the firebird development team.
  * All individual contributions remain the Copyright (C) of those
  * individuals.  Contributors to this file are either listed here or
- * can be obtained from a CVS history command.
+ * can be obtained from a source control history command.
  *
  * All rights reserved.
  */
@@ -868,7 +868,7 @@ public class TestFBResultSet extends FBTestBase {
             ps.close();
         }
 
-        PreparedStatement stmt = connection.prepareStatement(SELECT_TEST_TABLE, ResultSet.TYPE_SCROLL_INSENSITIVE, 
+        PreparedStatement stmt = connection.prepareStatement(SELECT_TEST_TABLE, ResultSet.TYPE_SCROLL_INSENSITIVE,
                 ResultSet.CONCUR_READ_ONLY, ResultSet.HOLD_CURSORS_OVER_COMMIT);
         Statement stmt2 = connection.createStatement();
         
@@ -1046,8 +1046,7 @@ public class TestFBResultSet extends FBTestBase {
         }
     }
     
-    // TODO Ignored, see JDBC-307 http://tracker.firebirdsql.org/browse/JDBC-307
-    public void _testClosedOnCommit() throws Exception {
+    public void testClosedOnCommit() throws Exception {
     	connection.setAutoCommit(false);
     	Statement stmt = connection.createStatement();
     	try {
@@ -1062,13 +1061,27 @@ public class TestFBResultSet extends FBTestBase {
     	}
     }
 
+    public void testClosedOnRollback() throws Exception {
+        connection.setAutoCommit(false);
+        Statement stmt = connection.createStatement();
+        try {
+            FirebirdResultSet rs = (FirebirdResultSet) stmt.executeQuery("SELECT * FROM RDB$DATABASE");
+            assertEquals("Unexpected holdability", ResultSet.CLOSE_CURSORS_AT_COMMIT, rs.getHoldability());
+            assertFalse("Expected resultset to be open", rs.isClosed());
+
+            connection.rollback();
+            assertTrue("Expected resultset to be closed", rs.isClosed());
+        } finally {
+            stmt.close();
+        }
+    }
+
     public void testUpdatableHoldableResultSet() throws Exception {
 
         connection.setAutoCommit(true);
 
         int recordCount = 10;
-        PreparedStatement ps = connection.prepareStatement("INSERT INTO test_table("
-                + "id, long_str) VALUES (?, ?)");
+        PreparedStatement ps = connection.prepareStatement("INSERT INTO test_table(id, long_str) VALUES (?, ?)");
 
         try {
             for (int i = 0; i < recordCount; i++) {

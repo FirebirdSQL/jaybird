@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
@@ -188,9 +186,13 @@ class FBStatementFetcher implements FBFetcher {
     }
 
     public void close() throws SQLException {
+        close(CompletionReason.OTHER);
+    }
+
+    public void close(CompletionReason completionReason) throws SQLException {
         closed = true;
         try {
-            gdsHelper.closeStatement(this.stmt, false);
+            gdsHelper.closeStatement(this.stmt, false, completionReason.isTransactionEnd());
         } catch(GDSException ex) {
             throw new FBSQLException(ex);
         } finally {

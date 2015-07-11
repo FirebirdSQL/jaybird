@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
@@ -254,7 +252,7 @@ public class TestFBDriver extends FBTestBase {
             ResultSet rs = stmt.executeQuery("SELECT test_value FROM test WHERE id = 1");
 
             assertTrue("Should have at least one row", rs.next());
-            assertTrue("Value should be 1.", rs.getInt(1) == 1);
+            assertEquals("Value should be 1.", 1, rs.getInt(1));
             assertTrue("Should have only one row.", !rs.next());
 
             rs.close();

@@ -1,6 +1,4 @@
  /*
- * $Id$
- *
  * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
@@ -192,7 +190,7 @@ public abstract class AbstractStatement implements FirebirdStatement, Synchroniz
     
     public void completeStatement(CompletionReason reason) throws SQLException {
     	if (currentRs != null && (reason != CompletionReason.COMMIT || currentRs.getHoldability() == ResultSet.CLOSE_CURSORS_AT_COMMIT)) {
-    	    closeResultSet(false);
+    	    closeResultSet(false, reason);
     	}
         
         if (!completed)
@@ -1329,12 +1327,16 @@ public abstract class AbstractStatement implements FirebirdStatement, Synchroniz
     //package level
 
     void closeResultSet(boolean notifyListener) throws SQLException {
+        closeResultSet(notifyListener, CompletionReason.OTHER);
+    }
+
+    void closeResultSet(boolean notifyListener, CompletionReason completionReason) throws SQLException {
         boolean wasCompleted = completed;
         
         try {
             if (currentRs != null) {
                 try {
-                    currentRs.close(notifyListener);
+                    currentRs.close(notifyListener, completionReason);
                 } finally {
                     currentRs = null;
                 }
@@ -1513,24 +1515,9 @@ public abstract class AbstractStatement implements FirebirdStatement, Synchroniz
         if (isClosed())
             throw new FBSQLException("Statement is already closed.", FBSQLException.SQL_STATE_INVALID_STATEMENT_ID);
     }
-    
-    /**
-     * Reasons for statement completion. This is intended for the {@link InternalTransactionCoordinator} to
-     * notify the statement on why it should complete.
-     * <p>
-     * TODO: This is a bit of kludge to fix <a href="http://tracker.firebirdsql.org/browse/JDBC-304">JDBC-304</a> in 2.2.x, might need some more polish for 3.0
-     * </p>
-     * @since 2.2.3
-     */
-    protected enum CompletionReason {
-    	COMMIT,
-    	OTHER;
-    }
 
     /**
      * The current result of a statement.
-     *
-     * @since 3.0
      */
     protected enum StatementResult {
         RESULT_SET {
