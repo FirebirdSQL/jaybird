@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source J2ee connector - jdbc driver
+ * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -12,7 +12,7 @@
  * This file was created by members of the firebird development team.
  * All individual contributions remain the Copyright (C) of those
  * individuals.  Contributors to this file are either listed here or
- * can be obtained from a CVS history command.
+ * can be obtained from a source control history command.
  *
  * All rights reserved.
  */
@@ -21,6 +21,8 @@ package org.firebirdsql.jdbc;
 import org.firebirdsql.common.FBTestBase;
 
 import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.sql.*;
 import java.util.Properties;
@@ -32,7 +34,7 @@ import static org.junit.Assert.assertArrayEquals;
  * Describe class <code>TestFBBlobAccess</code> here.
  *
  * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
- * @version 1.0
+ * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  */
 public class TestFBBlobStream extends FBTestBase {
 
@@ -353,5 +355,94 @@ public class TestFBBlobStream extends FBTestBase {
         } finally {
             stmt.close();
         }
+    }
+
+    /**
+     * Checks if the blob close on commit is done successfully.
+     * <p>
+     * See <a href="http://tracker.firebirdsql.org/browse/JDBC-400">JDBC-400</a>.
+     * </p>
+     */
+    public void testBlobCloseOnCommit() throws Exception {
+        // Add testdata
+        connection.setAutoCommit(false);
+
+        PreparedStatement ps = connection.prepareStatement("INSERT INTO test_blob(id, bin_data) VALUES (?, ?)");
+        try {
+            ps.setInt(1, 1);
+            ps.setBytes(2, testData[0]);
+            ps.executeUpdate();
+        } finally {
+            ps.close();
+        }
+
+        connection.commit();
+
+        Connection localConnection = getConnectionViaDriverManager();
+        try {
+            localConnection.setAutoCommit(false);
+            // Intentionally not closing the created statement, result set and blob
+            PreparedStatement stmt = localConnection.prepareStatement("SELECT bin_data FROM test_blob");
+            ResultSet rs = stmt.executeQuery();
+            assertTrue("Expected at least one row", rs.next());
+            InputStream binaryStream = rs.getBinaryStream(1);
+
+            localConnection.commit();
+            try {
+                //noinspection ResultOfMethodCallIgnored
+                binaryStream.read();
+                fail("read should have triggered and exception");
+            } catch (IOException ex) {
+                assertEquals("Input stream is already closed.", ex.getMessage());
+            }
+        } finally {
+            // This should not trigger an exception
+            localConnection.close();
+        }
+    }
+
+    /**
+     * Checks if the blob close on rollback is done successfully.
+     * <p>
+     * See <a href="http://tracker.firebirdsql.org/browse/JDBC-400">JDBC-400</a>.
+     * </p>
+     */
+    public void testBlobCloseOnRollback() throws Exception {
+        // Add testdata
+        connection.setAutoCommit(false);
+
+        PreparedStatement ps = connection.prepareStatement("INSERT INTO test_blob(id, bin_data) VALUES (?, ?)");
+        try {
+            ps.setInt(1, 1);
+            ps.setBytes(2, testData[0]);
+            ps.executeUpdate();
+        } finally {
+            ps.close();
+        }
+
+        connection.commit();
+
+        Connection localConnection = getConnectionViaDriverManager();
+        try {
+            localConnection.setAutoCommit(false);
+            // Intentionally not closing the created statement, result set and blob
+            PreparedStatement stmt = localConnection.prepareStatement("SELECT bin_data FROM test_blob");
+            ResultSet rs = stmt.executeQuery();
+            assertTrue("Expected at least one row", rs.next());
+            InputStream binaryStream = rs.getBinaryStream(1);
+
+            localConnection.rollback();
+            try {
+                //noinspection ResultOfMethodCallIgnored
+                binaryStream.read();
+                fail("read should have triggered and exception");
+            } catch (IOException ex) {
+                assertEquals("Input stream is already closed.", ex.getMessage());
+            }
+        } finally {
+            // This should not trigger an exception
+            localConnection.close();
+        }
+
     }
 }
