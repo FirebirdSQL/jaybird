@@ -20,20 +20,16 @@ package org.firebirdsql.jdbc;
 
 import org.firebirdsql.jca.FBManagedConnection;
 import org.firebirdsql.jca.FirebirdLocalTransaction;
-import org.firebirdsql.jdbc.FBStatement.CompletionReason;
 import org.firebirdsql.util.SQLExceptionChainBuilder;
 
 import javax.resource.ResourceException;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Iterator;
-import java.util.List;
+import java.util.*;
 
 /**
  * Transaction coordinator for the {@link org.firebirdsql.jdbc.FBConnection} class.
  */
-public class InternalTransactionCoordinator implements FBObjectListener.StatementListener,
+public final class InternalTransactionCoordinator implements FBObjectListener.StatementListener,
         FBObjectListener.BlobListener, Synchronizable {
 
     private final FBConnection connection;
@@ -46,7 +42,7 @@ public class InternalTransactionCoordinator implements FBObjectListener.Statemen
     @Override
     public Object getSynchronizationObject() throws SQLException {
         if (coordinator instanceof AutoCommitCoordinator) {
-            return coordinator.getConnection();
+            return getConnection();
         }
         // TODO Suspicious: using new sync-object every time
         return new Object();
@@ -170,10 +166,26 @@ public class InternalTransactionCoordinator implements FBObjectListener.Statemen
     private void setCoordinator(AbstractTransactionCoordinator coordinator) throws SQLException {
         synchronized (getSynchronizationObject()) {
             if (this.coordinator != null) {
-                // Note: commit is handled in complete statements (except for managed connections)
-                this.coordinator.completeStatements(CompletionReason.COMMIT);
+                SQLExceptionChainBuilder<SQLException> chain = new SQLExceptionChainBuilder<>();
+                try {
+                    this.coordinator.completeStatements(CompletionReason.COMMIT);
+                } catch (SQLException ex) {
+                    chain.append(ex);
+                } finally {
+                    try {
+                        this.coordinator.internalCommit();
+                    } catch (SQLException ex) {
+                        chain.append(ex);
+                    }
+                }
+
+                if (chain.hasException()) {
+                    throw chain.getException();
+                }
+
                 coordinator.setStatements(this.coordinator.getStatements());
             }
+
             this.coordinator = coordinator;
         }
     }
@@ -181,9 +193,9 @@ public class InternalTransactionCoordinator implements FBObjectListener.Statemen
     public abstract static class AbstractTransactionCoordinator implements FBObjectListener.StatementListener,
             FBObjectListener.BlobListener {
         protected FirebirdLocalTransaction localTransaction;
-        protected FBConnection connection;
+        protected final FBConnection connection;
 
-        protected final Collection<FBStatement> statements = new ArrayList<>();
+        protected final Collection<FBStatement> statements = new HashSet<>();
 
         protected AbstractTransactionCoordinator(FBConnection connection, FirebirdLocalTransaction localTransaction) {
             this.localTransaction = localTransaction;
@@ -196,15 +208,15 @@ public class InternalTransactionCoordinator implements FBObjectListener.Statemen
          * @return instance of {@link FBConnection}
          */
         @Override
-        public FBConnection getConnection() throws SQLException {
+        public final FBConnection getConnection() throws SQLException {
             return connection;
         }
 
-        protected Collection<FBStatement> getStatements() {
+        protected final Collection<FBStatement> getStatements() {
             return statements;
         }
 
-        protected void setStatements(Collection<FBStatement> statements) {
+        protected final void setStatements(Collection<FBStatement> statements) {
             this.statements.addAll(statements);
         }
 
@@ -227,16 +239,28 @@ public class InternalTransactionCoordinator implements FBObjectListener.Statemen
             // were not removed in the statement.completeStatement() call
             statements.clear();
 
+            if (chain.hasException()) {
+                throw chain.getException();
+            }
+        }
+
+        final void internalCommit() throws SQLException {
             try {
-                if (localTransaction.inTransaction()) {
+                if (localTransaction != null && localTransaction.inTransaction()) {
                     localTransaction.commit();
                 }
             } catch (ResourceException ex) {
-                chain.append(new FBSQLException(ex));
+                throw new FBSQLException(ex);
             }
+        }
 
-            if (chain.hasException()) {
-                throw chain.getException();
+        final void internalRollback() throws SQLException {
+            try {
+                if (localTransaction != null && localTransaction.inTransaction()) {
+                    localTransaction.rollback();
+                }
+            } catch (ResourceException ex) {
+                throw new FBSQLException(ex);
             }
         }
 
@@ -247,7 +271,7 @@ public class InternalTransactionCoordinator implements FBObjectListener.Statemen
         public abstract void rollback() throws SQLException;
     }
 
-    public static class AutoCommitCoordinator extends AbstractTransactionCoordinator {
+    static class AutoCommitCoordinator extends AbstractTransactionCoordinator {
 
         public AutoCommitCoordinator(FBConnection connection,
                 FirebirdLocalTransaction localTransaction) {
@@ -324,15 +348,14 @@ public class InternalTransactionCoordinator implements FBObjectListener.Statemen
                     localTransaction.rollback();
                 }
             } catch (ResourceException ex) {
+                SQLException sqlException = new FBSQLException(ex);
                 try {
-                    if (localTransaction.inTransaction()) {
-                        localTransaction.rollback();
-                    }
-                } catch (ResourceException ex1) {
-                    throw new FBSQLException(ex1);
+                    internalRollback();
+                } catch (SQLException ex2) {
+                    sqlException.setNextException(ex2);
                 }
 
-                throw new FBSQLException(ex);
+                throw sqlException;
             }
         }
 
@@ -357,7 +380,7 @@ public class InternalTransactionCoordinator implements FBObjectListener.Statemen
         }
     }
 
-    public static class LocalTransactionCoordinator extends AbstractTransactionCoordinator {
+    static class LocalTransactionCoordinator extends AbstractTransactionCoordinator {
 
         public LocalTransactionCoordinator(FBConnection connection, FirebirdLocalTransaction localTransaction) {
             super(connection, localTransaction);
@@ -377,27 +400,26 @@ public class InternalTransactionCoordinator implements FBObjectListener.Statemen
         @Override
         public void commit() throws SQLException {
             try {
-                if (localTransaction.inTransaction()) {
-                    localTransaction.commit();
-                }
-            } catch (ResourceException ex) {
-                throw new FBSQLException(ex);
+                completeStatements(CompletionReason.COMMIT);
+            } finally {
+                internalCommit();
             }
         }
 
         @Override
         public void rollback() throws SQLException {
             try {
-                if (localTransaction.inTransaction()) {
-                    localTransaction.rollback();
-                }
-            } catch (ResourceException ex) {
-                throw new FBSQLException(ex);
+                completeStatements(CompletionReason.ROLLBACK);
+            } finally {
+                internalRollback();
             }
         }
 
         @Override
         public void executionStarted(FBStatement stmt) throws SQLException {
+            if (!statements.contains(stmt)) {
+                statements.add(stmt);
+            }
             ensureTransaction();
         }
 
@@ -409,12 +431,12 @@ public class InternalTransactionCoordinator implements FBObjectListener.Statemen
 
         @Override
         public void statementCompleted(FBStatement stmt) throws SQLException {
-
+            statementCompleted(stmt, true);
         }
 
         @Override
         public void statementCompleted(FBStatement stmt, boolean success) throws SQLException {
-
+            statements.remove(stmt);
         }
 
         @Override
@@ -428,7 +450,7 @@ public class InternalTransactionCoordinator implements FBObjectListener.Statemen
         }
     }
 
-    public static class ManagedTransactionCoordinator extends LocalTransactionCoordinator {
+    static class ManagedTransactionCoordinator extends LocalTransactionCoordinator {
 
         /**
          * Create instance of this class for the specified connection.
@@ -438,29 +460,6 @@ public class InternalTransactionCoordinator implements FBObjectListener.Statemen
          */
         public ManagedTransactionCoordinator(FBConnection connection) {
             super(connection, null);
-        }
-
-        @Override
-        protected void completeStatements(CompletionReason reason) throws SQLException {
-            SQLExceptionChainBuilder<SQLException> chain = new SQLExceptionChainBuilder<>();
-
-            // we have to loop through the array, since the 
-            // statement.completeStatement() call causes the 
-            // ConcurrentModificationException
-            FBStatement[] statementsToComplete = statements.toArray(new FBStatement[statements.size()]);
-            for (FBStatement statement : statementsToComplete) {
-                try {
-                    statement.completeStatement(reason);
-                } catch (SQLException ex) {
-                    chain.append(ex);
-                }
-            }
-
-            statements.clear();
-
-            if (chain.hasException()) {
-                throw chain.getException();
-            }
         }
 
         @Override
@@ -489,13 +488,12 @@ public class InternalTransactionCoordinator implements FBObjectListener.Statemen
         }
     }
 
-    public static class MetaDataTransactionCoordinator extends AbstractTransactionCoordinator {
+    static class MetaDataTransactionCoordinator extends AbstractTransactionCoordinator {
 
-        private InternalTransactionCoordinator tc;
+        private final InternalTransactionCoordinator tc;
 
         public MetaDataTransactionCoordinator(InternalTransactionCoordinator tc) {
             super(tc.connection, tc.connection.getLocalTransaction());
-
             this.tc = tc;
         }
 
@@ -504,6 +502,7 @@ public class InternalTransactionCoordinator implements FBObjectListener.Statemen
          */
         public MetaDataTransactionCoordinator() {
             super(null, null);
+            tc = null;
         }
 
         @Override
@@ -532,7 +531,7 @@ public class InternalTransactionCoordinator implements FBObjectListener.Statemen
         public void statementClosed(FBStatement stmt) throws SQLException {
             if (tc != null) {
                 stmt.completeStatement();
-                tc.coordinator.connection.notifyStatementClosed(stmt);
+                tc.connection.notifyStatementClosed(stmt);
             }
         }
 
@@ -543,35 +542,8 @@ public class InternalTransactionCoordinator implements FBObjectListener.Statemen
 
         @Override
         public void statementCompleted(FBStatement stmt, boolean success) throws SQLException {
-            if (connection == null) {
-                return;
-            }
-
-            if (!connection.getAutoCommit()) {
-                return;
-            }
-
-            // commit in case of auto-commit mode to end the transaction that we started
-            try {
-                if (!localTransaction.inTransaction()) {
-                    return;
-                }
-
-                if (success) {
-                    localTransaction.commit();
-                } else {
-                    localTransaction.rollback();
-                }
-            } catch (ResourceException ex) {
-                try {
-                    if (localTransaction.inTransaction()) {
-                        localTransaction.rollback();
-                    }
-                } catch (ResourceException ex1) {
-                    throw new FBSQLException(ex1);
-                }
-
-                throw new FBSQLException(ex);
+            if (tc != null) {
+                tc.statementCompleted(stmt, success);
             }
         }
 

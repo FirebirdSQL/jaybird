@@ -210,7 +210,7 @@ public class FBStatement implements FirebirdStatement, Synchronizable {
     
     public void completeStatement(CompletionReason reason) throws SQLException {
         if (currentRs != null && (reason != CompletionReason.COMMIT || currentRs.getHoldability() == ResultSet.CLOSE_CURSORS_AT_COMMIT)) {
-            closeResultSet(false);
+            closeResultSet(false, reason);
         }
         
         if (!completed)
@@ -1297,12 +1297,16 @@ public class FBStatement implements FirebirdStatement, Synchronizable {
     //package level
 
     void closeResultSet(boolean notifyListener) throws SQLException {
+        closeResultSet(notifyListener, CompletionReason.OTHER);
+    }
+
+    void closeResultSet(boolean notifyListener, CompletionReason completionReason) throws SQLException {
         boolean wasCompleted = completed;
         
         try {
             if (currentRs != null) {
                 try {
-                    currentRs.close(notifyListener);
+                    currentRs.close(notifyListener, completionReason);
                 } finally {
                     currentRs = null;
                 }
@@ -1569,19 +1573,6 @@ public class FBStatement implements FirebirdStatement, Synchronizable {
      */
     public long executeLargeUpdate(String sql, String[] columnNames) throws SQLException {
         return executeUpdate(sql, columnNames);
-    }
-    
-    /**
-     * Reasons for statement completion. This is intended for the {@link InternalTransactionCoordinator} to
-     * notify the statement on why it should complete.
-     * <p>
-     * TODO: This is a bit of kludge to fix <a href="http://tracker.firebirdsql.org/browse/JDBC-304">JDBC-304</a> in 2.2.x, might need some more polish for 3.0
-     * </p>
-     * @since 2.2.3
-     */
-    protected enum CompletionReason {
-        COMMIT,
-        OTHER
     }
 
     /**

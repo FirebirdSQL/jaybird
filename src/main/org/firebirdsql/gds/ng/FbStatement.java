@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * Public Firebird Java API.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -94,10 +92,25 @@ public interface FbStatement {
     /**
      * Closes the cursor associated with this statement, leaving the
      * statement itself allocated.
+     * <p>
+     * Equivalent to calling {@link #closeCursor(boolean)} with {@code false}.
+     * </p>
      *
      * @throws SQLException
      */
     void closeCursor() throws SQLException;
+
+    /**
+     * Closes the cursor associated with this statement, leaving the statement itself allocated.
+     * <p>
+     * When this method is called in preparation of a commit or rollback (see {@code transactionEnd}), then
+     * implementations may opt to not close the cursor on the server if the server closes the cursor automatically.
+     * </p>
+     *
+     * @param transactionEnd Close is in response to a transaction end.
+     * @throws SQLException
+     */
+    void closeCursor(boolean transactionEnd) throws SQLException;
 
     /**
      * Prepare the statement text.

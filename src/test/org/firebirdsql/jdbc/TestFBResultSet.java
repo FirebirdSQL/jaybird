@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
@@ -1141,21 +1139,29 @@ public class TestFBResultSet extends FBJUnit4TestBase {
 	    }
 	}
     
-    // TODO Ignored, see JDBC-307 http://tracker.firebirdsql.org/browse/JDBC-307
-    @Ignore
     @Test
-    public void _testClosedOnCommit() throws Exception {
+    public void testClosedOnCommit() throws Exception {
         connection.setAutoCommit(false);
-        Statement stmt = connection.createStatement();
-        try {
-            FirebirdResultSet rs = (FirebirdResultSet) stmt.executeQuery("SELECT * FROM RDB$DATABASE");
+        try (Statement stmt = connection.createStatement()) {
+            ResultSet rs = stmt.executeQuery("SELECT * FROM RDB$DATABASE");
             assertEquals("Unexpected holdability", ResultSet.CLOSE_CURSORS_AT_COMMIT, rs.getHoldability());
             assertFalse("Expected resultset to be open", rs.isClosed());
 
             connection.commit();
             assertTrue("Expected resultset to be closed", rs.isClosed());
-        } finally {
-            stmt.close();
+        }
+    }
+
+    @Test
+    public void testClosedOnRollback() throws Exception {
+        connection.setAutoCommit(false);
+        try (Statement stmt = connection.createStatement()) {
+            ResultSet rs = stmt.executeQuery("SELECT * FROM RDB$DATABASE");
+            assertEquals("Unexpected holdability", ResultSet.CLOSE_CURSORS_AT_COMMIT, rs.getHoldability());
+            assertFalse("Expected resultset to be open", rs.isClosed());
+
+            connection.rollback();
+            assertTrue("Expected resultset to be closed", rs.isClosed());
         }
     }
 }

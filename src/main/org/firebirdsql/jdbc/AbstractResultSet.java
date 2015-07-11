@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
@@ -66,7 +64,7 @@ public abstract class AbstractResultSet implements ResultSet, FirebirdResultSet,
     private SQLWarning firstWarning;
 
     private final FBField[] fields;
-    private final java.util.Map<String, Integer> colNames;
+    private final Map<String, Integer> colNames;
 
     private final String cursorName;
     private final FBObjectListener.ResultSetListener listener;
@@ -113,7 +111,7 @@ public abstract class AbstractResultSet implements ResultSet, FirebirdResultSet,
         trimStrings = metaDataQuery;
         rowDescriptor = stmt.getFieldDescriptor();
         fields = new FBField[rowDescriptor.getCount()];
-        colNames = new HashMap<String, Integer>(rowDescriptor.getCount(), 1);
+        colNames = new HashMap<>(rowDescriptor.getCount(), 1);
         this.fbStatement = fbStatement;
 
         if (rsType == ResultSet.TYPE_SCROLL_SENSITIVE) {
@@ -173,7 +171,7 @@ public abstract class AbstractResultSet implements ResultSet, FirebirdResultSet,
         trimStrings = false;
         this.rowDescriptor = rowDescriptor;
         fields = new FBField[rowDescriptor.getCount()];
-        colNames = new HashMap<String, Integer>(rowDescriptor.getCount(), 1);
+        colNames = new HashMap<>(rowDescriptor.getCount(), 1);
         prepareVars(true);
         // TODO Set specific types (see also previous todo)
         rsType = ResultSet.TYPE_FORWARD_ONLY;
@@ -223,7 +221,7 @@ public abstract class AbstractResultSet implements ResultSet, FirebirdResultSet,
         trimStrings = true;
         this.rowDescriptor = rowDescriptor;
         fields = new FBField[rowDescriptor.getCount()];
-        colNames = new HashMap<String, Integer>(rowDescriptor.getCount(), 1);
+        colNames = new HashMap<>(rowDescriptor.getCount(), 1);
         prepareVars(true);
         rsType = ResultSet.TYPE_FORWARD_ONLY;
         rsConcurrency = ResultSet.CONCUR_READ_ONLY;
@@ -289,9 +287,10 @@ public abstract class AbstractResultSet implements ResultSet, FirebirdResultSet,
      * @throws SQLException if something wrong happened.
      */
     protected void closeFields() throws SQLException {
+        // TODO See if we can apply completion reason logic (eg no need to close blob on commit)
         wasNullValid = false;
 
-        SQLExceptionChainBuilder<SQLException> chain = new SQLExceptionChainBuilder<SQLException>();
+        SQLExceptionChainBuilder<SQLException> chain = new SQLExceptionChainBuilder<>();
         // close current fields, so that resources are freed.
         for (FBField field : fields) {
             try {
@@ -361,9 +360,13 @@ public abstract class AbstractResultSet implements ResultSet, FirebirdResultSet,
     }
 
     void close(boolean notifyListener) throws SQLException {
+        close(notifyListener, CompletionReason.OTHER);
+    }
+
+    void close(boolean notifyListener, CompletionReason completionReason) throws SQLException {
         if (isClosed()) return;
         closed = true;
-        SQLExceptionChainBuilder<SQLException> chain = new SQLExceptionChainBuilder<SQLException>();
+        SQLExceptionChainBuilder<SQLException> chain = new SQLExceptionChainBuilder<>();
 
         try {
             closeFields();
@@ -373,7 +376,7 @@ public abstract class AbstractResultSet implements ResultSet, FirebirdResultSet,
             try {
                 if (fbFetcher != null) {
                     try {
-                        fbFetcher.close();
+                        fbFetcher.close(completionReason);
                     } catch (SQLException ex) {
                         chain.append(ex);
                     }
@@ -697,7 +700,7 @@ public abstract class AbstractResultSet implements ResultSet, FirebirdResultSet,
         final FBField field = getField(columnIndex, true);
 
         wasNullValid = true;
-        wasNull = row == null || (row.getFieldValue(columnIndex - 1).getFieldData() == null);
+        wasNull = row == null || row.getFieldValue(columnIndex - 1).getFieldData() == null;
 
         return field;
     }
@@ -754,7 +757,7 @@ public abstract class AbstractResultSet implements ResultSet, FirebirdResultSet,
                 ? rowUpdater.getField(fieldNum - 1)
                 : fields[fieldNum - 1];
         wasNullValid = true;
-        wasNull = (row == null || row.getFieldValue(fieldNum - 1).getFieldData() == null);
+        wasNull = row == null || row.getFieldValue(fieldNum - 1).getFieldData() == null;
         return field;
     }
 

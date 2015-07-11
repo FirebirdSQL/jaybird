@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
@@ -148,11 +146,16 @@ public abstract class AbstractFbStatement implements FbStatement {
 
     @Override
     public final void closeCursor() throws SQLException {
+        closeCursor(false);
+    }
+
+    @Override
+    public final void closeCursor(boolean transactionEnd) throws SQLException {
         synchronized (getSynchronizationObject()) {
             if (!getState().isCursorOpen()) return;
             // TODO do additional checks (see also old implementation and .NET)
             try {
-                if (getType().isTypeWithCursor()) {
+                if (!transactionEnd && getType().isTypeWithCursor()) {
                     free(ISCConstants.DSQL_close);
                 }
                 // TODO Any statement types that cannot be prepared and would need to go to ALLOCATED?
