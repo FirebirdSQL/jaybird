@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
@@ -27,6 +25,8 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.sql.*;
 import java.util.Properties;
 
@@ -52,6 +52,7 @@ public class TestFBBlob extends FBJUnit4TestBase {
     @Rule
     public final ExpectedException expectedException = ExpectedException.none();
 
+    //@formatter:off
     private static final String CREATE_BLOB_TABLE =
             "CREATE TABLE test_blob(" +
             "  id INTEGER, " +
@@ -61,14 +62,12 @@ public class TestFBBlob extends FBJUnit4TestBase {
     private static final String INSERT_BLOB = "INSERT INTO test_blob(id, bin_data) VALUES (?, ?)";
 
     private static final String SELECT_BLOB = "SELECT bin_data FROM test_blob WHERE id = ?";
+    //@formatter:on
 
     @Before
     public void createTestTable() throws SQLException {
-        Connection conn = getConnectionViaDriverManager();
-        try {
+        try (Connection conn = getConnectionViaDriverManager()) {
             executeCreateTable(conn, CREATE_BLOB_TABLE);
-        } finally {
-            conn.close();
         }
     }
 
@@ -428,15 +427,77 @@ public class TestFBBlob extends FBJUnit4TestBase {
         }
     }
 
-    private void populateBlob(Connection conn, byte[] bytes) throws SQLException {
-        PreparedStatement insert = conn.prepareStatement(INSERT_BLOB);
+    /**
+     * Checks if the blob close on commit is done successfully.
+     * <p>
+     * See <a href="http://tracker.firebirdsql.org/browse/JDBC-400">JDBC-400</a>.
+     * </p>
+     */
+    @Test
+    public void testBlobCloseOnCommit() throws Exception {
+        Connection connection = getConnectionViaDriverManager();
+        //noinspection TryFinallyCanBeTryWithResources
         try {
-            insert.setInt(1, 1);
+            populateBlob(connection, new byte[] { 1, 2, 3, 4, 5, 6, 7, 8, 9, 0 });
 
+            connection.setAutoCommit(false);
+
+            // Intentionally not closing the created statement, result set and blob
+            PreparedStatement stmt = connection.prepareStatement("SELECT bin_data FROM test_blob");
+            ResultSet rs = stmt.executeQuery();
+            assertTrue("Expected at least one row", rs.next());
+            InputStream binaryStream = rs.getBinaryStream(1);
+
+            connection.commit();
+
+            expectedException.expect(IOException.class);
+            expectedException.expectMessage("Input stream is already closed.");
+            //noinspection ResultOfMethodCallIgnored
+            binaryStream.read();
+        } finally {
+            // This should not trigger an exception
+            connection.close();
+        }
+    }
+
+    /**
+     * Checks if the blob close on rollback is done successfully.
+     * <p>
+     * See <a href="http://tracker.firebirdsql.org/browse/JDBC-400">JDBC-400</a>.
+     * </p>
+     */
+    @Test
+    public void testBlobCloseOnRollback() throws Exception {
+        Connection connection = getConnectionViaDriverManager();
+        //noinspection TryFinallyCanBeTryWithResources
+        try {
+            populateBlob(connection, new byte[] { 1, 2, 3, 4, 5, 6, 7, 8, 9, 0 });
+
+            connection.setAutoCommit(false);
+
+            // Intentionally not closing the created statement, result set and blob
+            PreparedStatement stmt = connection.prepareStatement("SELECT bin_data FROM test_blob");
+            ResultSet rs = stmt.executeQuery();
+            assertTrue("Expected at least one row", rs.next());
+            InputStream binaryStream = rs.getBinaryStream(1);
+
+            connection.rollback();
+
+            expectedException.expect(IOException.class);
+            expectedException.expectMessage("Input stream is already closed.");
+            //noinspection ResultOfMethodCallIgnored
+            binaryStream.read();
+        } finally {
+            // This should not trigger an exception
+            connection.close();
+        }
+    }
+
+    private void populateBlob(Connection conn, byte[] bytes) throws SQLException {
+        try (PreparedStatement insert = conn.prepareStatement(INSERT_BLOB)) {
+            insert.setInt(1, 1);
             insert.setBytes(2, bytes);
             insert.executeUpdate();
-        } finally {
-            closeQuietly(insert);
         }
     }
 
