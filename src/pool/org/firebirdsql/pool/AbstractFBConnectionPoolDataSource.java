@@ -744,6 +744,17 @@ abstract public class AbstractFBConnectionPoolDataSource extends BasicAbstractCo
     	connectionProperties.setConnectTimeout(connectTimeout);
     }
 
+    @Override
+    public boolean isUseFirebirdAutocommit() {
+        return connectionProperties.isUseFirebirdAutocommit();
+    }
+
+    @Override
+    public void setUseFirebirdAutocommit(boolean useFirebirdAutocommit) {
+        checkNotStarted();
+        connectionProperties.setUseFirebirdAutocommit(useFirebirdAutocommit);
+    }
+
     protected static final String REF_PROPERTIES = "properties";
     protected static final String REF_NON_STANDARD_PROPERTY = "nonStandard";
     

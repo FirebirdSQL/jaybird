@@ -678,6 +678,16 @@ public class FBWrappingDataSource extends RootCommonDataSource implements DataSo
     	getPool().setConnectTimeout(connectTimeout);
     }
 
+    @Override
+    public boolean isUseFirebirdAutocommit() {
+        return getPool().isUseFirebirdAutocommit();
+    }
+
+    @Override
+    public void setUseFirebirdAutocommit(boolean useFirebirdAutocommit) {
+        getPool().setUseFirebirdAutocommit(useFirebirdAutocommit);
+    }
+
     /*
      * JNDI-related code. 
      */

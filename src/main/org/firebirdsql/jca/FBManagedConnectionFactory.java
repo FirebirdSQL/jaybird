@@ -56,8 +56,8 @@ import org.firebirdsql.jdbc.*;
  * @author <a href="mailto:d_jencks@users.sourceforge.net">David Jencks </a>
  */
 
-public class FBManagedConnectionFactory implements ManagedConnectionFactory,
-        Serializable, FirebirdConnectionProperties {
+public class FBManagedConnectionFactory implements ManagedConnectionFactory, FirebirdConnectionProperties,
+        Serializable {
     
     private static final long serialVersionUID = 7500832904323015501L;
 
@@ -392,6 +392,16 @@ public class FBManagedConnectionFactory implements ManagedConnectionFactory,
     
     public void setConnectTimeout(int connectTimeout) {
         connectionProperties.setConnectTimeout(connectTimeout);
+    }
+
+    @Override
+    public boolean isUseFirebirdAutocommit() {
+        return connectionProperties.isUseFirebirdAutocommit();
+    }
+
+    @Override
+    public void setUseFirebirdAutocommit(boolean useFirebirdAutocommit) {
+        connectionProperties.setUseFirebirdAutocommit(useFirebirdAutocommit);
     }
 
     public int hashCode() {
