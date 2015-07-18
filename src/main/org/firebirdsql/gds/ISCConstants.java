@@ -22,21 +22,10 @@
  * OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-
-
-/* The Original Code is the Firebird Java GDS implementation.
- *
- * The Initial Developer of the Original Code is Alejandro Alberola.
- * Portions created by Alejandro Alberola are Copyright (C) 2001
- * Boix i Oltra, S.L. All Rights Reserved.
- *
- */
-
 package org.firebirdsql.gds;
 
 /**
- * The interface <code>GDS</code> has most of the C client interface functions
- * lightly mapped to java, as well as the constants returned from the server..
+ * Constants for Firebird features, parameter blocks and errors.
  *
  * @author <a href="mailto:alberola@users.sourceforge.net">Alejandro Alberola</a>
  * @author <a href="mailto:d_jencks@users.sourceforge.net">David Jencks</a>
@@ -176,6 +165,7 @@ public interface ISCConstants {
     int isc_dpb_octets_as_bytes         = 140;
     int isc_dpb_so_timeout              = 141;
     int isc_dpb_column_label_for_name   = 142;
+    int isc_dpb_use_firebird_autocommit = 143;
     
     /*************************************/
     /* Transaction parameter block stuff */

@@ -380,11 +380,20 @@ public class FBSimpleDataSource extends RootCommonDataSource implements DataSour
     public void setConnectTimeout(int connectTimeout) {
         mcf.setConnectTimeout(connectTimeout);
     }
+
+    @Override
+    public boolean isUseFirebirdAutocommit() {
+        return mcf.isUseFirebirdAutocommit();
+    }
+
+    @Override
+    public void setUseFirebirdAutocommit(boolean useFirebirdAutocommit) {
+        mcf.setUseFirebirdAutocommit(useFirebirdAutocommit);
+    }
     
     /*
      * INTERFACES IMPLEMENTATION
      */
-
 
     /**
      * Get previously set JNDI reference.

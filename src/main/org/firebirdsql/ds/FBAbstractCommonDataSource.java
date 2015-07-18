@@ -385,6 +385,17 @@ public abstract class FBAbstractCommonDataSource extends RootCommonDataSource im
         checkNotStarted();
         connectionProperties.setSoTimeout(soTimeout);
     }
+
+    @Override
+    public boolean isUseFirebirdAutocommit() {
+        return connectionProperties.isUseFirebirdAutocommit();
+    }
+
+    @Override
+    public void setUseFirebirdAutocommit(boolean useFirebirdAutocommit) {
+        checkNotStarted();
+        connectionProperties.setUseFirebirdAutocommit(useFirebirdAutocommit);
+    }
     
     /**
      * Method that allows setting non-standard property in the form "key=value"

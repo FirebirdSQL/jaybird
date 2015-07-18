@@ -52,13 +52,14 @@ public interface DatabaseParameterBufferExtension extends DatabaseParameterBuffe
     int OCTETS_AS_BYTES                 = ISCConstants.isc_dpb_octets_as_bytes;
     int SO_TIMEOUT                      = ISCConstants.isc_dpb_so_timeout;
     int COLUMN_LABEL_FOR_NAME           = ISCConstants.isc_dpb_column_label_for_name;
+    int USE_FIREBIRD_AUTOCOMMIT         = ISCConstants.isc_dpb_use_firebird_autocommit;
     
     /**
      * List of the DPB extensions. This array is used to filter the parameters
      * from the DPB before sending it to Firebird. Any new extension code MUST
      * be listed here.
      */
-    public int[] EXTENSION_PARAMETERS = new int[] {
+    int[] EXTENSION_PARAMETERS = new int[] {
         SOCKET_BUFFER_SIZE,
         BLOB_BUFFER_SIZE, 
         USE_STREAM_BLOBS,
@@ -72,9 +73,9 @@ public interface DatabaseParameterBufferExtension extends DatabaseParameterBuffe
         FILENAME_CHARSET,
         OCTETS_AS_BYTES,
         SO_TIMEOUT,
-        COLUMN_LABEL_FOR_NAME
+        COLUMN_LABEL_FOR_NAME,
+        USE_FIREBIRD_AUTOCOMMIT
     };
-    
 
     /**
      * Remove extension parameters in the newly created deep copy of this class.
