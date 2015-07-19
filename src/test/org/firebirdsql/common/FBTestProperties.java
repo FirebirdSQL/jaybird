@@ -71,6 +71,8 @@ public final class FBTestProperties {
     public static final String DB_LC_CTYPE = getProperty("test.db.lc_ctype", "NONE");
     public static final String DB_DATASOURCE_URL = getdbpath(DB_NAME);
     public static final String GDS_TYPE = getProperty("test.gds_type", "PURE_JAVA");
+    public static final boolean USE_FIREBIRD_AUTOCOMMIT =
+            Boolean.parseBoolean(getProperty("test.use_firebird_autocommit", "false"));
 
     public static String getDatabasePath() {
         return getDatabasePath(DB_NAME);
@@ -108,6 +110,9 @@ public final class FBTestProperties {
         returnValue.setProperty("user", DB_USER);
         returnValue.setProperty("password", DB_PASSWORD);
         returnValue.setProperty("lc_ctype", DB_LC_CTYPE);
+        if (USE_FIREBIRD_AUTOCOMMIT) {
+            returnValue.setProperty("useFirebirdAutocommit", "true");
+        }
 
         return returnValue;
     }

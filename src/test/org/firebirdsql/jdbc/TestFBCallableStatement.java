@@ -591,10 +591,13 @@ public class TestFBCallableStatement extends FBTestBase {
                     // everything is ok
                 }
 
-
                 rs = stmt.executeQuery("SELECT * FROM employee_project");
                 rs.last();
-                assertEquals("Should find 4 records.", 4, rs.getRow());
+                if (((FirebirdConnection) con).isUseFirebirdAutoCommit()) {
+                    assertEquals("Should find 5 records.", 5, rs.getRow());
+                } else {
+                    assertEquals("Should find 4 records.", 4, rs.getRow());
+                }
 
             } finally {
                 stmt.close();

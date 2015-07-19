@@ -33,12 +33,10 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
+import java.util.*;
 
 import org.firebirdsql.jdbc.FBSQLException;
+import org.firebirdsql.jdbc.FirebirdConnection;
 import org.firebirdsql.logging.Logger;
 import org.firebirdsql.logging.LoggerFactory;
 import org.firebirdsql.util.SQLExceptionChainBuilder;
@@ -75,12 +73,12 @@ class PooledConnectionHandler implements InvocationHandler {
 
     private final static Method CONNECTION_PREPARE_STATEMENT_GENKEYS2 = findMethod(
         Connection.class, "prepareStatement", new Class[] {
-            String.class, new int[0].getClass()
+            String.class, int[].class
         });
 
     private final static Method CONNECTION_PREPARE_STATEMENT_GENKEYS3 = findMethod(
         Connection.class, "prepareStatement", new Class[] {
-            String.class, new String[0].getClass()
+            String.class, String[].class
         });
     
     private final static Method CONNECTION_CREATE_STATEMENT = findMethod(
@@ -205,22 +203,22 @@ class PooledConnectionHandler implements InvocationHandler {
 			
             // if object is closed, throw an exception
 			if (closed) { 
-
-                // check whether Connection.isClose() method is called first
-                if (CONNECTION_IS_CLOSED.equals(method))
+                if (CONNECTION_IS_CLOSED.equals(method)) {
                     return Boolean.TRUE;
+                } else if (CONNECTION_CLOSE.equals(method)) {
+                    // Connection close must not throw exception if already closed
+                    return Void.TYPE;
+                }
                 
 			    FBSQLException ex = new FBSQLException(
-				    "Connection " + this + " was closed. " +
-                            "See the attached exception to find the place " +
+				    "Connection " + this + " was closed. See the attached exception to find the place " +
                             "where it was closed");
                 ex.setNextException(closeStackTrace);
                 throw ex;
             }
             
-			if ((owner != null && !owner.isValid(this)))
-			    throw new SQLException(
-				    "This connection owner is not valid anymore.");
+			if (owner != null && !owner.isValid(this))
+			    throw new SQLException("This connection owner is not valid anymore.");
 			
 			// Connection.prepareStatement(...) methods
 			if (method.equals(CONNECTION_PREPARE_STATEMENT)){
@@ -233,24 +231,17 @@ class PooledConnectionHandler implements InvocationHandler {
             } else
             if (method.equals(CONNECTION_PREPARE_STATEMENT2)) {
                 String statement = (String)args[0];
-                Integer resultSetType = (Integer)args[1];
-                Integer resultSetConcurrency = (Integer)args[2];
-                return handlePrepareStatement(
-                    statement, 
-                    resultSetType.intValue(), 
-                    resultSetConcurrency.intValue(),
-                    ResultSet.CLOSE_CURSORS_AT_COMMIT);
+                int resultSetType = (Integer)args[1];
+                int resultSetConcurrency = (Integer)args[2];
+                return handlePrepareStatement(statement, resultSetType, resultSetConcurrency,
+                        ResultSet.CLOSE_CURSORS_AT_COMMIT);
 			} else
             if (method.equals(CONNECTION_PREPARE_STATEMENT3)) {
                 String statement = (String)args[0];
-                Integer resultSetType = (Integer)args[1];
-                Integer resultSetConcurrency = (Integer)args[2];
-                Integer resultSetHoldability = (Integer)args[3];
-                return handlePrepareStatement(
-                    statement, 
-                    resultSetType.intValue(), 
-                    resultSetConcurrency.intValue(),
-                    resultSetHoldability.intValue());
+                int resultSetType = (Integer)args[1];
+                int resultSetConcurrency = (Integer)args[2];
+                int resultSetHoldability = (Integer)args[3];
+                return handlePrepareStatement(statement, resultSetType, resultSetConcurrency, resultSetHoldability);
             } else
             
             // Connection.prepareStatement(...) for generated keys
@@ -259,7 +250,7 @@ class PooledConnectionHandler implements InvocationHandler {
                 String statement = (String)args[0];
                 Integer returnGeneratedKeys = (Integer)args[1];
                 
-                if (returnGeneratedKeys.intValue() == Statement.RETURN_GENERATED_KEYS)
+                if (returnGeneratedKeys == Statement.RETURN_GENERATED_KEYS)
                     return handlePrepareStatement(statement, null, null);
                 else
                     return handlePrepareStatement(
@@ -286,11 +277,9 @@ class PooledConnectionHandler implements InvocationHandler {
                     ResultSet.CONCUR_READ_ONLY);
             } else
             if (method.equals(CONNECTION_CREATE_STATEMENT2)) {
-                Integer resultSetType = (Integer)args[0];
-                Integer resultSetConcurrency = (Integer)args[1];
-                return handleCreateStatement(
-                    resultSetType.intValue(), 
-                    resultSetConcurrency.intValue());
+                int resultSetType = (Integer)args[0];
+                int resultSetConcurrency = (Integer)args[1];
+                return handleCreateStatement(resultSetType, resultSetConcurrency);
             } else
                 
             // Connection lifycycle methods
@@ -369,7 +358,7 @@ class PooledConnectionHandler implements InvocationHandler {
             keyColumns);
     }
     
-    private HashSet openStatements = new HashSet();
+    private Set<StatementHandler> openStatements = new HashSet<StatementHandler>();
     
     /**
      * Handle {@link Connection#createStatement(int, int)} method call.
@@ -410,16 +399,14 @@ class PooledConnectionHandler implements InvocationHandler {
      * @throws SQLException if some error happened during close.
      */
     synchronized void closeOpenStatements() throws SQLException {
-        SQLExceptionChainBuilder chain = new SQLExceptionChainBuilder();
+        SQLExceptionChainBuilder<SQLException> chain = new SQLExceptionChainBuilder<SQLException>();
         
         // Copy to prevent ConcurrentModificationException
-        List copyStatements = new ArrayList(openStatements);
-        for (Iterator iter = copyStatements.iterator(); iter.hasNext();) {
-            StatementHandler handler = (StatementHandler) iter.next();
-            
+        List<StatementHandler> copyStatements = new ArrayList<StatementHandler>(openStatements);
+        for (StatementHandler handler : copyStatements) {
             try {
                 handler.getWrappedObject().close();
-            } catch(SQLException ex) {
+            } catch (SQLException ex) {
                 chain.append(ex);
             }
         }
@@ -451,6 +438,12 @@ class PooledConnectionHandler implements InvocationHandler {
     synchronized void handleConnectionClose(boolean notifyOwner) throws SQLException {
         try {
             closeOpenStatements();
+            if (connection.getAutoCommit() && connection.isWrapperFor(FirebirdConnection.class)
+                    && connection.unwrap(FirebirdConnection.class).isUseFirebirdAutoCommit()) {
+                // Force commit when in Firebird autocommit mode
+                connection.setAutoCommit(false);
+                connection.setAutoCommit(true);
+            }
         } finally {
     		if (owner != null && notifyOwner) {
     			owner.connectionClosed(this);            

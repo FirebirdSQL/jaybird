@@ -23,7 +23,9 @@ package org.firebirdsql.ds;
 import java.sql.Connection;
 import java.sql.SQLException;
 
+import org.firebirdsql.common.FBTestProperties;
 import org.firebirdsql.jdbc.FBSQLException;
+import org.firebirdsql.jdbc.FirebirdConnection;
 import org.jmock.Expectations;
 import org.jmock.Sequence;
 import org.jmock.integration.junit3.MockObjectTestCase;
@@ -47,16 +49,14 @@ public class TestPooledConnectionHandlerMock extends MockObjectTestCase {
      * @throws SQLException
      */
     public void testHandlerClose_IsClosed() throws SQLException {
-        final Connection physicalConnection = mock(Connection.class);
+        final FirebirdConnection physicalConnection = mock(FirebirdConnection.class);
         final FBPooledConnection pooled = mock(FBPooledConnection.class);
         final PooledConnectionHandler handler = new PooledConnectionHandler(physicalConnection,
                 pooled);
 
         checking(new Expectations() {
             {
-                allowing(physicalConnection).getAutoCommit();
-                will(returnValue(true));
-                allowing(physicalConnection).clearWarnings();
+                connectionHandleReleaseExpectations(this, physicalConnection);
                 allowing(pooled).releaseConnectionHandler(handler);
             }
         });
@@ -74,16 +74,14 @@ public class TestPooledConnectionHandlerMock extends MockObjectTestCase {
      * @throws SQLException
      */
     public void testProxyClose_IsClosed() throws SQLException {
-        final Connection physicalConnection = mock(Connection.class);
+        final FirebirdConnection physicalConnection = mock(FirebirdConnection.class);
         final FBPooledConnection pooled = mock(FBPooledConnection.class);
         final PooledConnectionHandler handler = new PooledConnectionHandler(physicalConnection,
                 pooled);
 
         checking(new Expectations() {
             {
-                allowing(physicalConnection).getAutoCommit();
-                will(returnValue(true));
-                allowing(physicalConnection).clearWarnings();
+                connectionHandleReleaseExpectations(this, physicalConnection);
                 allowing(pooled).releaseConnectionHandler(handler);
                 allowing(pooled).fireConnectionClosed();
             }
@@ -102,16 +100,14 @@ public class TestPooledConnectionHandlerMock extends MockObjectTestCase {
      * @throws SQLException
      */
     public void testHandlerClose_NoNotify() throws SQLException {
-        final Connection physicalConnection = mock(Connection.class);
+        final FirebirdConnection physicalConnection = mock(FirebirdConnection.class);
         final FBPooledConnection pooled = mock(FBPooledConnection.class);
         final PooledConnectionHandler handler = new PooledConnectionHandler(physicalConnection,
                 pooled);
 
         checking(new Expectations() {
             {
-                allowing(physicalConnection).getAutoCommit();
-                will(returnValue(true));
-                allowing(physicalConnection).clearWarnings();
+                connectionHandleReleaseExpectations(this, physicalConnection);
                 allowing(pooled).releaseConnectionHandler(handler);
                 never(physicalConnection).close();
                 never(pooled).fireConnectionClosed();
@@ -128,16 +124,14 @@ public class TestPooledConnectionHandlerMock extends MockObjectTestCase {
      * @throws SQLException
      */
     public void testProxyClose_Notify() throws SQLException {
-        final Connection physicalConnection = mock(Connection.class);
+        final FirebirdConnection physicalConnection = mock(FirebirdConnection.class);
         final FBPooledConnection pooled = mock(FBPooledConnection.class);
         final PooledConnectionHandler handler = new PooledConnectionHandler(physicalConnection,
                 pooled);
 
         checking(new Expectations() {
             {
-                allowing(physicalConnection).getAutoCommit();
-                will(returnValue(true));
-                allowing(physicalConnection).clearWarnings();
+                connectionHandleReleaseExpectations(this, physicalConnection);
                 allowing(pooled).releaseConnectionHandler(handler);
                 never(physicalConnection).close();
                 oneOf(pooled).fireConnectionClosed();
@@ -158,16 +152,14 @@ public class TestPooledConnectionHandlerMock extends MockObjectTestCase {
      * @throws SQLException
      */
     public void testClosedHandler_throwsException() throws SQLException {
-        final Connection physicalConnection = mock(Connection.class);
+        final FirebirdConnection physicalConnection = mock(FirebirdConnection.class);
         final FBPooledConnection pooled = mock(FBPooledConnection.class);
         final PooledConnectionHandler handler = new PooledConnectionHandler(physicalConnection,
                 pooled);
 
         checking(new Expectations() {
             {
-                allowing(physicalConnection).getAutoCommit();
-                will(returnValue(true));
-                allowing(physicalConnection).clearWarnings();
+                connectionHandleReleaseExpectations(this, physicalConnection);
                 allowing(pooled).releaseConnectionHandler(handler);
                 allowing(pooled).fireConnectionClosed();
                 never(pooled).fireConnectionError(with(any(SQLException.class)));
@@ -196,16 +188,14 @@ public class TestPooledConnectionHandlerMock extends MockObjectTestCase {
      * @throws SQLException
      */
     public void testClosedProxy_throwsException() throws SQLException {
-        final Connection physicalConnection = mock(Connection.class);
+        final FirebirdConnection physicalConnection = mock(FirebirdConnection.class);
         final FBPooledConnection pooled = mock(FBPooledConnection.class);
         final PooledConnectionHandler handler = new PooledConnectionHandler(physicalConnection,
                 pooled);
 
         checking(new Expectations() {
             {
-                allowing(physicalConnection).getAutoCommit();
-                will(returnValue(true));
-                allowing(physicalConnection).clearWarnings();
+                connectionHandleReleaseExpectations(this, physicalConnection);
                 allowing(pooled).releaseConnectionHandler(handler);
                 allowing(pooled).fireConnectionClosed();
                 never(pooled).fireConnectionError(with(any(SQLException.class)));
@@ -231,7 +221,7 @@ public class TestPooledConnectionHandlerMock extends MockObjectTestCase {
      * @throws SQLException
      */
     public void testException_Notify() throws SQLException {
-        final Connection physicalConnection = mock(Connection.class);
+        final FirebirdConnection physicalConnection = mock(FirebirdConnection.class);
         final FBPooledConnection pooled = mock(FBPooledConnection.class);
         final PooledConnectionHandler handler = new PooledConnectionHandler(physicalConnection,
                 pooled);
@@ -266,7 +256,7 @@ public class TestPooledConnectionHandlerMock extends MockObjectTestCase {
      * @throws SQLException
      */
     public void testCloseNotAutoCommit_rollback() throws SQLException {
-        final Connection physicalConnection = mock(Connection.class);
+        final FirebirdConnection physicalConnection = mock(FirebirdConnection.class);
         final FBPooledConnection pooled = mock(FBPooledConnection.class);
         final PooledConnectionHandler handler = new PooledConnectionHandler(physicalConnection,
                 pooled);
@@ -294,7 +284,7 @@ public class TestPooledConnectionHandlerMock extends MockObjectTestCase {
      * @throws SQLException
      */
     public void testDoubleClose_allowed() throws SQLException {
-        final Connection physicalConnection = mock(Connection.class);
+        final FirebirdConnection physicalConnection = mock(FirebirdConnection.class);
         final FBPooledConnection pooled = mock(FBPooledConnection.class);
         final PooledConnectionHandler handler = new PooledConnectionHandler(physicalConnection,
                 pooled);
@@ -310,5 +300,22 @@ public class TestPooledConnectionHandlerMock extends MockObjectTestCase {
         proxy.close();
         // Expectation: no exception for double close
         proxy.close();
+    }
+
+    private void connectionHandleReleaseExpectations(Expectations expectations, FirebirdConnection physicalConnection)
+            throws SQLException {
+        expectations.allowing(physicalConnection).getAutoCommit();
+        expectations.will(Expectations.returnValue(true));
+        expectations.allowing(physicalConnection).isWrapperFor(FirebirdConnection.class);
+        expectations.will(Expectations.returnValue(true));
+        expectations.allowing(physicalConnection).unwrap(FirebirdConnection.class);
+        expectations.will(Expectations.returnValue(physicalConnection));
+        expectations.allowing(physicalConnection).isUseFirebirdAutoCommit();
+        expectations.will(Expectations.returnValue(FBTestProperties.USE_FIREBIRD_AUTOCOMMIT));
+        if (FBTestProperties.USE_FIREBIRD_AUTOCOMMIT) {
+            expectations.oneOf(physicalConnection).setAutoCommit(false);
+            expectations.oneOf(physicalConnection).setAutoCommit(true);
+        }
+        expectations.allowing(physicalConnection).clearWarnings();
     }
 }

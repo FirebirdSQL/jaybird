@@ -424,7 +424,7 @@ public class TestFBConnectionPoolDataSource extends FBTestBase {
             
             ResultSet rs = stmt.executeQuery("SELECT * FROM rdb$database");
             assertTrue("Should select at least one row.", rs.next());
-            assertTrue("Should have correct statememnt.", rs.getStatement() == stmt);
+            assertTrue("Should have correct statement.", rs.getStatement() == stmt);
             assertTrue("Should select exactly one row.", !rs.next());
             
             // close connection, according to specification
@@ -980,7 +980,7 @@ public class TestFBConnectionPoolDataSource extends FBTestBase {
      */
     public void testConnectionInLoop() throws Exception {
         try {
-            PooledConnection xac = ((ConnectionPoolDataSource) pool).getPooledConnection();
+            PooledConnection xac = pool.getPooledConnection();
             
             try {
                 Connection c = xac.getConnection(); 

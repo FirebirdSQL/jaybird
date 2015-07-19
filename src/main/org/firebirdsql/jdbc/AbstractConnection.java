@@ -54,6 +54,8 @@ import org.firebirdsql.jca.FBManagedConnection;
 import org.firebirdsql.jca.FirebirdLocalTransaction;
 import org.firebirdsql.util.SQLExceptionChainBuilder;
 
+import static org.firebirdsql.gds.impl.DatabaseParameterBufferExtension.USE_FIREBIRD_AUTOCOMMIT;
+
 /**
  * The class <code>AbstractConnection</code> is a handle to a 
  * {@link FBManagedConnection}.
@@ -154,7 +156,7 @@ public abstract class AbstractConnection implements FirebirdConnection {
         
         // iterate through the set, close statements and collect exceptions
         Iterator iter = statements.iterator();
-        SQLExceptionChainBuilder chain = new SQLExceptionChainBuilder();
+        SQLExceptionChainBuilder<SQLException> chain = new SQLExceptionChainBuilder<SQLException>();
         while(iter.hasNext()) {
             try {
                 AbstractStatement stmt = (AbstractStatement)iter.next();
@@ -504,36 +506,24 @@ public abstract class AbstractConnection implements FirebirdConnection {
      */
     public synchronized void close() throws SQLException {
         try {
-            try {
-                freeStatements();
-            } finally {
-
-                if (mc != null) {
-                    // if we are in a transaction started
-                    // automatically because autocommit = false, roll it back.
-
-                    // leave managed transactions alone, they are normally
-                    // committed after the Connection handle is closed.
-
-                    if (!mc.inDistributedTransaction()
-                            && !getAutoCommit()
-                            && getLocalTransaction().inTransaction()) {
-                        try {
-                            txCoordinator.rollback();
-                        } finally {
-                            setAutoCommit(true);
-                        }
+            freeStatements();
+        } finally {
+            if (mc != null) {
+                // leave managed transactions alone, they are normally
+                // committed after the Connection handle is closed.
+                if (!mc.inDistributedTransaction()) {
+                    try {
+                        txCoordinator.handleConnectionClose();
+                    } finally {
+                        setAutoCommit(true);
                     }
-
-                    mc.close(this);
-                    mc = null;
                 }
+
+                mc.close(this);
+                mc = null;
             }
-        } catch (ResourceException ex) {
-            throw new FBSQLException(ex);
         }
     }
-
 
     /**
      * Tests to see if a Connection is closed.
@@ -1558,6 +1548,11 @@ public abstract class AbstractConnection implements FirebirdConnection {
             throw new GDSException(ISCConstants.isc_arg_gds, ISCConstants.isc_req_no_trans);
 
         return mc.getGDSHelper();
+    }
+
+    @Override
+    public boolean isUseFirebirdAutoCommit() {
+        return getDatabaseParameterBuffer().hasArgument(USE_FIREBIRD_AUTOCOMMIT);
     }
     
     protected void finalize() throws Throwable {

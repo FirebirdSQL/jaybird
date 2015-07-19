@@ -1490,6 +1490,9 @@ public abstract class AbstractStatement implements FirebirdStatement, Synchroniz
      * @return The identifier for the given statement's type
      */
     int getStatementType() throws FBSQLException {
+        if (fixedStmt == null) {
+            return 0;
+        }
         populateStatementInfo();
         return fixedStmt.getStatementType();
     }
