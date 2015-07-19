@@ -546,8 +546,7 @@ public class TestFBCallableStatement extends FBJUnit4TestBase {
         executeCreateTable(con, CREATE_EMPLOYEE_PROJECT);
         executeDDL(con, CREATE_PROCEDURE_EMP_INSERT);
 
-        CallableStatement cstmt = con.prepareCall(EXECUTE_PROCEDURE_EMP_INSERT);
-        try {
+        try (CallableStatement cstmt = con.prepareCall(EXECUTE_PROCEDURE_EMP_INSERT)) {
             cstmt.setInt(1, 44);
             cstmt.setString(2, "DGPII");
             cstmt.setString(3, "Smith");
@@ -571,10 +570,7 @@ public class TestFBCallableStatement extends FBJUnit4TestBase {
 
             cstmt.executeBatch();
 
-            Statement stmt = con.createStatement(
-                    ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
-
-            try {
+            try (Statement stmt = con.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY)) {
                 ResultSet rs = stmt.executeQuery("SELECT * FROM employee_project");
                 rs.last();
                 assertEquals("Should find 4 records.", 4, rs.getRow());
@@ -600,12 +596,12 @@ public class TestFBCallableStatement extends FBJUnit4TestBase {
 
                 rs = stmt.executeQuery("SELECT * FROM employee_project");
                 rs.last();
-                assertEquals("Should find 4 records.", 4, rs.getRow());
-            } finally {
-                stmt.close();
+                if (((FirebirdConnection) con).isUseFirebirdAutoCommit()) {
+                    assertEquals("Should find 5 records.", 5, rs.getRow());
+                } else {
+                    assertEquals("Should find 4 records.", 4, rs.getRow());
+                }
             }
-        } finally {
-            cstmt.close();
         }
     }
 

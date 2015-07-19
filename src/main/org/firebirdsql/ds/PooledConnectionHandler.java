@@ -38,6 +38,7 @@ import java.util.List;
 import java.util.Set;
 
 import org.firebirdsql.jdbc.FBSQLException;
+import org.firebirdsql.jdbc.FirebirdConnection;
 import org.firebirdsql.util.SQLExceptionChainBuilder;
 
 /**
@@ -59,7 +60,8 @@ class PooledConnectionHandler implements InvocationHandler {
     protected volatile Connection proxy;
     protected volatile boolean forcedClose;
 
-    private final List<StatementHandler> openStatements = Collections.synchronizedList(new LinkedList<StatementHandler>());
+    private final List<StatementHandler> openStatements =
+            Collections.synchronizedList(new LinkedList<StatementHandler>());
 
     protected PooledConnectionHandler(Connection connection, FBPooledConnection owner) {
         this.connection = connection;
@@ -76,12 +78,12 @@ class PooledConnectionHandler implements InvocationHandler {
         if (method.equals(EQUALS)) {
             // Using parameter proxy (and not field) on purpose as field is
             // nulled after closing
-            return Boolean.valueOf(proxy == args[0]);
+            return proxy == args[0];
         }
         if (method.equals(HASH_CODE)) {
             // Using parameter proxy (and not field) on purpose as field is
             // nulled after closing
-            return Integer.valueOf(System.identityHashCode(proxy));
+            return System.identityHashCode(proxy);
         }
         // Other methods from object
         if (method.getDeclaringClass().equals(Object.class)) {
@@ -94,7 +96,7 @@ class PooledConnectionHandler implements InvocationHandler {
 
         // Methods from Connection
         if (method.equals(CONNECTION_IS_CLOSED)) {
-            return Boolean.valueOf(isClosed());
+            return isClosed();
         }
         if (isClosed() && !method.equals(CONNECTION_CLOSE)) {
             String message = forcedClose ? FORCIBLY_CLOSED_MESSAGE : CLOSED_MESSAGE;
@@ -156,30 +158,44 @@ class PooledConnectionHandler implements InvocationHandler {
      *             if underlying connection threw an exception.
      */
     protected void handleClose(boolean notifyOwner) throws SQLException {
-        SQLExceptionChainBuilder<SQLException> chain = new SQLExceptionChainBuilder<SQLException>();
+        SQLExceptionChainBuilder<SQLException> chain = new SQLExceptionChainBuilder<>();
         try {
             closeStatements();
         } catch (SQLException ex) {
             chain.append(ex);
         }
+
         if (isRollbackAllowed()) {
             try {
                 connection.rollback();
             } catch (SQLException ex) {
                 chain.append(ex);
             }
+        } else if (connection.getAutoCommit() && connection.isWrapperFor(FirebirdConnection.class)
+                && connection.unwrap(FirebirdConnection.class).isUseFirebirdAutoCommit()) {
+            // Force commit when in Firebird autocommit mode
+            try {
+                connection.setAutoCommit(false);
+                connection.setAutoCommit(true);
+            } catch (SQLException ex) {
+                chain.append(ex);
+            }
         }
+
         try {
             connection.clearWarnings();
         } catch (SQLException ex) {
             chain.append(ex);
         }
+
         proxy = null;
         connection = null;
         owner.releaseConnectionHandler(this);
+
         if (notifyOwner) {
             owner.fireConnectionClosed();
         }
+
         if (chain.hasException()) {
             throw chain.getException();
         }
@@ -223,10 +239,10 @@ class PooledConnectionHandler implements InvocationHandler {
     }
 
     protected void closeStatements() throws SQLException {
-        SQLExceptionChainBuilder<SQLException> chain = new SQLExceptionChainBuilder<SQLException>();
+        SQLExceptionChainBuilder<SQLException> chain = new SQLExceptionChainBuilder<>();
         synchronized (openStatements) {
             // Make copy as the StatementHandler close will remove itself from openStatements
-            for (StatementHandler stmt : new ArrayList<StatementHandler>(openStatements)) {
+            for (StatementHandler stmt : new ArrayList<>(openStatements)) {
                 try {
                     stmt.close();
                 } catch (SQLException ex) {
@@ -251,7 +267,7 @@ class PooledConnectionHandler implements InvocationHandler {
     
     private static final Set<String> STATEMENT_CREATION_METHOD_NAMES;
     static {
-        Set<String> temp = new HashSet<String>();
+        Set<String> temp = new HashSet<>();
         temp.add("createStatement");
         temp.add("prepareCall");
         temp.add("prepareStatement");

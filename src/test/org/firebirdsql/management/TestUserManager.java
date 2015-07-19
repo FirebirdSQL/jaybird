@@ -56,6 +56,7 @@ public class TestUserManager extends FBJUnit4TestBase {
     public void ensureTestUserDoesNotExist() throws SQLException {
         Connection connection = getConnectionViaDriverManager();
         try {
+            // TODO this fails with useFirebirdAutocommit=true; looks like dropping user is deferred to real commit
             executeDDL(connection, "DROP USER " + USER_NAME, ISCConstants.isc_gsec_err_rec_not_found);
         } finally {
             closeQuietly(connection);

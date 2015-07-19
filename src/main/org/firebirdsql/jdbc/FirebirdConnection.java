@@ -140,4 +140,9 @@ public interface FirebirdConnection extends Connection {
      */
     void setTransactionParameters(TransactionParameterBuffer tpb) throws SQLException;
 
+    /**
+     * @return {@code true} if this connection is configured to use {@code isc_tpb_autocommit} when in auto commit.
+     */
+    boolean isUseFirebirdAutoCommit();
+
 }

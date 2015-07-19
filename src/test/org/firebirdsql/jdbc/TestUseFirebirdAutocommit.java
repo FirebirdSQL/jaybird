@@ -23,10 +23,14 @@ import org.firebirdsql.common.FBTestProperties;
 import org.firebirdsql.jca.FBManagedConnectionFactory;
 import org.junit.Test;
 
-import java.sql.DriverManager;
-import java.sql.SQLException;
+import java.sql.*;
+import java.util.Properties;
 
+import static org.firebirdsql.common.DdlHelper.executeCreateTable;
+import static org.firebirdsql.common.DdlHelper.executeDDL;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 /**
  * Tests for "use Firebird autocommit" mode.
@@ -74,17 +78,141 @@ public class TestUseFirebirdAutocommit extends FBJUnit4TestBase {
     }
 
     private void checkFirebirdAutocommitValue(String url, boolean expectedUseFirebirdAutocommit) throws SQLException {
-        FBConnection connection = (FBConnection) DriverManager.getConnection(url, FBTestProperties.DB_USER,
-                FBTestProperties.DB_PASSWORD);
-
-        try {
+        try (FBConnection connection = (FBConnection) DriverManager.getConnection(url, FBTestProperties.DB_USER,
+                FBTestProperties.DB_PASSWORD)) {
             FBManagedConnectionFactory managedConnectionFactory = (FBManagedConnectionFactory) connection
                     .getManagedConnection().getManagedConnectionFactory();
             assertEquals("useFirebirdAutocommit",
                     expectedUseFirebirdAutocommit, managedConnectionFactory.isUseFirebirdAutocommit());
-        } finally {
-            connection.close();
         }
+    }
+
+    @Test
+    public void connectionPropertyUseFirebirdAutocommit_fromProperties_valueFalse() throws Exception {
+        Properties properties = FBTestProperties.getDefaultPropertiesForConnection();
+        properties.put("useFirebirdAutocommit", "false");
+        try (FirebirdConnection connection = (FirebirdConnection) DriverManager.getConnection(FBTestProperties.getUrl(),
+                properties)) {
+            assertFalse(connection.isUseFirebirdAutoCommit());
+        }
+    }
+
+    @Test
+    public void connectionPropertyUseFirebirdAutocommit_fromProperties_valueTrue() throws Exception {
+        Properties properties = FBTestProperties.getDefaultPropertiesForConnection();
+        properties.put("useFirebirdAutocommit", "true");
+        try (FirebirdConnection connection = (FirebirdConnection) DriverManager.getConnection(FBTestProperties.getUrl(),
+                properties)) {
+            assertTrue(connection.isUseFirebirdAutoCommit());
+        }
+    }
+
+    /**
+     * Tests if an auto-commit still closes the result set,
+     * <p>
+     * Implementation note: the result set is only closed client-side until the real transaction
+     * is ended.
+     * </p>
+     */
+    @Test
+    public void testResultSetClosedOnOtherStatementExecute() throws Exception {
+        try (FirebirdConnection connection = getFirebirdAutocommitConnection()) {
+            Statement stmt1 = connection.createStatement();
+            Statement stmt2 = connection.createStatement();
+
+            ResultSet rs1 = stmt1.executeQuery("select * from rdb$database");
+            assertFalse("Expected open result set from stmt1", rs1.isClosed());
+
+            ResultSet rs2 = stmt2.executeQuery("select * from rdb$database");
+            assertTrue("Expected closed result set from stmt1", rs1.isClosed());
+            assertFalse("Expected open result set from stmt2", rs2.isClosed());
+        }
+    }
+
+    /**
+     * Transactions with isc_tpb_autocommit commit during a statement execute.
+     * <p>
+     * This test verifies if isc_tpb_autocommit is really used by executing a selectable stored procedure that inserts
+     * on each read.
+     * </p>
+     */
+    @Test
+    public void firebirdAutoCommitCommitsDuringExecution() throws Exception {
+        try (final Connection normalConnection = FBTestProperties.getConnectionViaDriverManager()) {
+            class VerifyInsert {
+                PreparedStatement verifyInsert;
+                int count = 0;
+                int previousCount = -1;
+
+                VerifyInsert() throws SQLException {
+                    verifyInsert = normalConnection.prepareStatement("select count(*) from trackselect");
+                }
+
+                int getCurrentCount() throws SQLException {
+                    normalConnection.commit();
+                    try (ResultSet rs = verifyInsert.executeQuery()) {
+                        rs.next();
+                        return rs.getInt(1);
+                    }
+                }
+
+                void checkCurrentCountLargerThanPrevious() throws SQLException {
+                    count = getCurrentCount();
+                    // Firebird seems to prefetch occasionally, this might give spurious failures so we do
+                    // a more convoluted check then simply count > previousCount
+                    // this also prevents an additional check at the limit of the SP
+                    assertTrue(String.format("%d + 1 should be larger than %d", count, previousCount),
+                            count > 0 && count + 1 > previousCount);
+                    previousCount = count;
+                }
+            }
+            normalConnection.setAutoCommit(false);
+            executeCreateTable(normalConnection, "CREATE TABLE trackselect (insertValue integer)");
+            //@formatter:off
+            executeDDL(normalConnection,
+                    "CREATE PROCEDURE selectInsert " +
+                    "  RETURNS (selected integer) " +
+                    "AS " +
+                    "  DECLARE counter integer; " +
+                    "BEGIN " +
+                    "  counter = 0; " +
+                    "  while (counter < 100) do " +
+                    "  begin " +
+                    "    counter = counter + 1; " +
+                    "    selected = counter; " +
+                    "    insert into trackselect (insertValue) values (:counter); " +
+                    "    suspend; " +
+                    "  end " +
+                    "END");
+            //@formatter:on
+            normalConnection.commit();
+
+            try (FirebirdConnection fbAutocommitConnection = getFirebirdAutocommitConnection()) {
+                assertTrue("Test should be in Firebird autocommit", fbAutocommitConnection.isUseFirebirdAutoCommit());
+                VerifyInsert verifyInsert = new VerifyInsert();
+                Statement selectInsert = fbAutocommitConnection.createStatement();
+                selectInsert.setFetchSize(1);
+                ResultSet rs = selectInsert.executeQuery("select selected from selectInsert");
+                assertEquals(0, verifyInsert.getCurrentCount());
+
+                while (rs.next()) {
+                    verifyInsert.checkCurrentCountLargerThanPrevious();
+                }
+
+                assertEquals("Unexpected nr of items", 100, verifyInsert.getCurrentCount());
+            }
+        }
+    }
+
+    private FirebirdConnection getFirebirdAutocommitConnection() throws SQLException {
+        return (FirebirdConnection) DriverManager.getConnection(
+                FBTestProperties.getUrl(), getFirebirdAutocommitProperties());
+    }
+
+    private static Properties getFirebirdAutocommitProperties() {
+        Properties properties = FBTestProperties.getDefaultPropertiesForConnection();
+        properties.put("useFirebirdAutocommit", "true");
+        return properties;
     }
 
 }

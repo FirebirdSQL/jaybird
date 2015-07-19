@@ -25,6 +25,7 @@ import org.firebirdsql.gds.impl.GDSHelper;
 import org.firebirdsql.gds.ng.FbStatement;
 import org.firebirdsql.gds.ng.SqlCountHolder;
 import org.firebirdsql.gds.ng.StatementState;
+import org.firebirdsql.gds.ng.StatementType;
 import org.firebirdsql.gds.ng.fields.RowDescriptor;
 import org.firebirdsql.gds.ng.fields.RowValue;
 import org.firebirdsql.gds.ng.listeners.StatementListener;
@@ -1459,6 +1460,9 @@ public class FBStatement implements FirebirdStatement, Synchronizable {
      * @return The identifier for the given statement's type
      */
     int getStatementType() throws FBSQLException {
+        if (fbStatement == null) {
+            return StatementType.NONE.getStatementTypeCode();
+        }
         return fbStatement.getType().getStatementTypeCode();
     }
 

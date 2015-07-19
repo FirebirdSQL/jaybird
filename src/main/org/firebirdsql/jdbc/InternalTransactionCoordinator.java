@@ -18,6 +18,8 @@
  */
 package org.firebirdsql.jdbc;
 
+import org.firebirdsql.gds.TransactionParameterBuffer;
+import org.firebirdsql.gds.ng.StatementType;
 import org.firebirdsql.jca.FBManagedConnection;
 import org.firebirdsql.jca.FirebirdLocalTransaction;
 import org.firebirdsql.util.SQLExceptionChainBuilder;
@@ -25,6 +27,8 @@ import org.firebirdsql.util.SQLExceptionChainBuilder;
 import javax.resource.ResourceException;
 import java.sql.SQLException;
 import java.util.*;
+
+import static org.firebirdsql.gds.ISCConstants.isc_tpb_autocommit;
 
 /**
  * Transaction coordinator for the {@link org.firebirdsql.jdbc.FBConnection} class.
@@ -41,7 +45,7 @@ public final class InternalTransactionCoordinator implements FBObjectListener.St
 
     @Override
     public Object getSynchronizationObject() throws SQLException {
-        if (coordinator instanceof AutoCommitCoordinator) {
+        if (coordinator instanceof AutoCommitCoordinator || coordinator instanceof FirebirdAutoCommitCoordinator) {
             return getConnection();
         }
         // TODO Suspicious: using new sync-object every time
@@ -89,7 +93,11 @@ public final class InternalTransactionCoordinator implements FBObjectListener.St
                 throw new SQLException("Connection enlisted in distributed transaction",
                         FBSQLException.SQL_STATE_INVALID_TX_STATE);
             }
-            coordinator = new AutoCommitCoordinator(connection, connection.getLocalTransaction());
+            if (connection.isUseFirebirdAutoCommit()) {
+                coordinator = new FirebirdAutoCommitCoordinator(connection, connection.getLocalTransaction());
+            } else {
+                coordinator = new AutoCommitCoordinator(connection, connection.getLocalTransaction());
+            }
         } else {
             coordinator = new LocalTransactionCoordinator(connection, connection.getLocalTransaction());
         }
@@ -98,7 +106,7 @@ public final class InternalTransactionCoordinator implements FBObjectListener.St
 
     public boolean getAutoCommit() throws SQLException {
         synchronized (getSynchronizationObject()) {
-            return coordinator instanceof AutoCommitCoordinator;
+            return coordinator != null && coordinator.isAutoCommit();
         }
     }
 
@@ -163,6 +171,10 @@ public final class InternalTransactionCoordinator implements FBObjectListener.St
         }
     }
 
+    void handleConnectionClose() throws SQLException {
+        coordinator.handleConnectionClose();
+    }
+
     private void setCoordinator(AbstractTransactionCoordinator coordinator) throws SQLException {
         synchronized (getSynchronizationObject()) {
             if (this.coordinator != null) {
@@ -192,7 +204,7 @@ public final class InternalTransactionCoordinator implements FBObjectListener.St
 
     public abstract static class AbstractTransactionCoordinator implements FBObjectListener.StatementListener,
             FBObjectListener.BlobListener {
-        protected FirebirdLocalTransaction localTransaction;
+        protected final FirebirdLocalTransaction localTransaction;
         protected final FBConnection connection;
 
         protected final Collection<FBStatement> statements = new HashSet<>();
@@ -264,11 +276,41 @@ public final class InternalTransactionCoordinator implements FBObjectListener.St
             }
         }
 
-        public abstract void ensureTransaction() throws SQLException;
+        public void ensureTransaction() throws SQLException {
+            configureFirebirdAutoCommit();
+
+            try {
+                if (!localTransaction.inTransaction()) {
+                    localTransaction.begin();
+                }
+            } catch (ResourceException ex) {
+                throw new FBSQLException(ex);
+            }
+        }
+
+        private void configureFirebirdAutoCommit() throws SQLException {
+            // Handle Firebird autocommit support
+            if (connection.isUseFirebirdAutoCommit()) {
+                TransactionParameterBuffer tpb = connection.getManagedConnection().getTransactionParameters();
+                if (connection.getAutoCommit()) {
+                    if (!tpb.hasArgument(isc_tpb_autocommit)) {
+                        tpb.addArgument(isc_tpb_autocommit);
+                    }
+                } else {
+                    tpb.removeArgument(isc_tpb_autocommit);
+                }
+            }
+        }
 
         public abstract void commit() throws SQLException;
 
         public abstract void rollback() throws SQLException;
+
+        abstract void handleConnectionClose() throws SQLException;
+
+        boolean isAutoCommit() throws SQLException {
+            return false;
+        }
     }
 
     static class AutoCommitCoordinator extends AbstractTransactionCoordinator {
@@ -310,17 +352,6 @@ public final class InternalTransactionCoordinator implements FBObjectListener.St
             }
 
             ensureTransaction();
-        }
-
-        @Override
-        public void ensureTransaction() throws SQLException {
-            try {
-                if (!localTransaction.inTransaction()) {
-                    localTransaction.begin();
-                }
-            } catch (ResourceException ex) {
-                throw new FBSQLException(ex);
-            }
         }
 
         @Override
@@ -378,23 +409,32 @@ public final class InternalTransactionCoordinator implements FBObjectListener.St
         public void rollback() throws SQLException {
             throw new FBSQLException("Calling rollback() in auto-commit mode is not allowed.");
         }
+
+        @Override
+        void handleConnectionClose() throws SQLException {
+            try {
+                if (localTransaction.inTransaction()) {
+                    try {
+                        completeStatements(CompletionReason.COMMIT);
+                    } finally {
+                        internalCommit();
+                    }
+                }
+            } catch (ResourceException e) {
+                throw new FBSQLException(e);
+            }
+        }
+
+        @Override
+        boolean isAutoCommit() {
+            return true;
+        }
     }
 
     static class LocalTransactionCoordinator extends AbstractTransactionCoordinator {
 
         public LocalTransactionCoordinator(FBConnection connection, FirebirdLocalTransaction localTransaction) {
             super(connection, localTransaction);
-        }
-
-        @Override
-        public void ensureTransaction() throws SQLException {
-            try {
-                if (!localTransaction.inTransaction()) {
-                    localTransaction.begin();
-                }
-            } catch (ResourceException ex) {
-                throw new FBSQLException(ex);
-            }
         }
 
         @Override
@@ -412,6 +452,17 @@ public final class InternalTransactionCoordinator implements FBObjectListener.St
                 completeStatements(CompletionReason.ROLLBACK);
             } finally {
                 internalRollback();
+            }
+        }
+
+        @Override
+        void handleConnectionClose() throws SQLException {
+            try {
+                if (localTransaction.inTransaction()) {
+                    rollback();
+                }
+            } catch (ResourceException e) {
+                throw new FBSQLException(e);
             }
         }
 
@@ -447,6 +498,108 @@ public final class InternalTransactionCoordinator implements FBObjectListener.St
         @Override
         public void executionStarted(FirebirdBlob blob) throws SQLException {
             ensureTransaction();
+        }
+    }
+
+    static class FirebirdAutoCommitCoordinator extends LocalTransactionCoordinator {
+
+        public FirebirdAutoCommitCoordinator(FBConnection connection,
+                FirebirdLocalTransaction localTransaction) {
+            super(connection, localTransaction);
+        }
+
+        @Override
+        public void executionStarted(FBStatement stmt) throws SQLException {
+            List<FBStatement> tempList = new ArrayList<>(statements);
+            SQLExceptionChainBuilder<SQLException> chain = new SQLExceptionChainBuilder<>();
+
+            // complete all open statements for the connection (there should be only one anyway)
+            for (Iterator<FBStatement> iter = tempList.iterator(); iter.hasNext(); ) {
+                FBStatement tempStatement = iter.next();
+
+                // enable re-entrancy for the same statement
+                if (tempStatement == stmt) {
+                    iter.remove();
+                    continue;
+                }
+                // Firebird Autocommit doesn't really commit, but we use CompletionReason.COMMIT to get desired behavior
+                // for holdable result sets, and the performance win of not having a server roundtrip to close
+                // the cursor. This might lead to a slight cursor 'leak' until statement or connection close
+                try {
+                    tempStatement.completeStatement(CompletionReason.COMMIT);
+                } catch (SQLException e) {
+                    chain.append(e);
+                }
+            }
+
+            statements.removeAll(tempList);
+            if (chain.hasException()) {
+                throw chain.getException();
+            }
+
+            if (!statements.contains(stmt)) {
+                statements.add(stmt);
+            }
+
+            ensureTransaction();
+        }
+
+        @Override
+        public void statementCompleted(FBStatement stmt, boolean success) throws SQLException {
+            statements.remove(stmt);
+
+            if (stmt.getStatementType() == StatementType.DDL.getStatementTypeCode()) {
+                try {
+                    if (!localTransaction.inTransaction()) {
+                        return;
+                    }
+
+                    if (success) {
+                        localTransaction.commit();
+                    } else {
+                        localTransaction.rollback();
+                    }
+                } catch (ResourceException ex) {
+                    SQLException sqlException = new FBSQLException(ex);
+                    try {
+                        internalRollback();
+                    } catch (SQLException ex2) {
+                        sqlException.setNextException(ex2);
+                    }
+
+                    throw sqlException;
+                }
+            }
+        }
+
+        @Override
+        public void commit() throws SQLException {
+            throw new FBSQLException("Calling commit() in auto-commit mode is not allowed.");
+        }
+
+        @Override
+        public void rollback() throws SQLException {
+            throw new FBSQLException("Calling rollback() in auto-commit mode is not allowed.");
+        }
+
+        @Override
+        void handleConnectionClose() throws SQLException {
+            try {
+                if (localTransaction.inTransaction()) {
+                    try {
+                        completeStatements(CompletionReason.COMMIT);
+                    } finally {
+                        internalCommit();
+                    }
+                }
+            } catch (ResourceException e) {
+                throw new FBSQLException(e);
+            }
+        }
+
+        @Override
+        boolean isAutoCommit() {
+            return true;
         }
     }
 
@@ -486,6 +639,11 @@ public final class InternalTransactionCoordinator implements FBObjectListener.St
         public void executionStarted(FirebirdBlob blob) throws SQLException {
 
         }
+
+        @Override
+        void handleConnectionClose() throws SQLException {
+            // do nothing, we are in a managed environment
+        }
     }
 
     static class MetaDataTransactionCoordinator extends AbstractTransactionCoordinator {
@@ -517,6 +675,11 @@ public final class InternalTransactionCoordinator implements FBObjectListener.St
 
         @Override
         public void rollback() throws SQLException {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        void handleConnectionClose() throws SQLException {
             throw new UnsupportedOperationException();
         }
 
@@ -555,6 +718,10 @@ public final class InternalTransactionCoordinator implements FBObjectListener.St
         @Override
         public void executionStarted(FirebirdBlob blob) throws SQLException {
 
+        }
+
+        boolean isAutoCommit() throws SQLException {
+            return tc.getAutoCommit();
         }
     }
 }
