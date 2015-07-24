@@ -118,7 +118,7 @@ Where to get more information on Jaybird
 
 Apart from this FAQ, you can get additional information from:
 
-* [JaybirdWiki](http://jaybirdwiki.firebirdsql.org/)
+* [Jaybird wiki](https://github.com/FirebirdSQL/jaybird/wiki/)
 * [Jaybird 2.1 Programmers Manual](http://www.firebirdsql.org/file/documentation/drivers_documentation/Jaybird_2_1_JDBC_driver_manual.pdf) (PDF)
 * [Firebird Website: Development, JDBC Driver](http://www.firebirdsql.org/en/devel-jdbc-driver/)
 
