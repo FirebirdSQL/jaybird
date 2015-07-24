@@ -117,6 +117,19 @@ public class TestUseFirebirdAutocommit extends FBJUnit4TestBase {
         }
     }
 
+    @Test
+    public void connectionPropertyUseFirebirdAutocommit_fromProperties_valueEmpty() throws Exception {
+        Properties properties = FBTestProperties.getDefaultPropertiesForConnection();
+        properties.put("useFirebirdAutocommit", "");
+        FirebirdConnection connection = (FirebirdConnection) DriverManager.getConnection(FBTestProperties.getUrl(),
+                properties);
+        try {
+            assertTrue(connection.isUseFirebirdAutoCommit());
+        } finally {
+            connection.close();
+        }
+    }
+
     /**
      * Tests if an auto-commit still closes the result set,
      * <p>
