@@ -11,3 +11,6 @@ classes/
 hs_err_pid*.log
 *.suo
 *.fdb
+.~lock.*
+java_gds.sdf
+**/msvc10/ipch/
