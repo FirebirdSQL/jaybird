@@ -391,7 +391,7 @@ public class TestFBBlobStream extends FBTestBase {
             try {
                 //noinspection ResultOfMethodCallIgnored
                 binaryStream.read();
-                fail("read should have triggered and exception");
+                fail("read should have triggered an exception");
             } catch (IOException ex) {
                 assertEquals("Input stream is already closed.", ex.getMessage());
             }
@@ -435,7 +435,7 @@ public class TestFBBlobStream extends FBTestBase {
             try {
                 //noinspection ResultOfMethodCallIgnored
                 binaryStream.read();
-                fail("read should have triggered and exception");
+                fail("read should have triggered an exception");
             } catch (IOException ex) {
                 assertEquals("Input stream is already closed.", ex.getMessage());
             }
@@ -443,6 +443,31 @@ public class TestFBBlobStream extends FBTestBase {
             // This should not trigger an exception
             localConnection.close();
         }
+    }
 
+    /**
+     * Checks if the blob close on close of the connection is done successfully in auto commit mode.
+     * <p>
+     * See <a href="http://tracker.firebirdsql.org/browse/JDBC-348">JDBC-348</a>.
+     * </p>
+     */
+    public void testBlobCloseOnConnectionClose_inAutoCommit() throws Exception {
+        Connection connection = getConnectionViaDriverManager();
+        OutputStream binaryStream = null;
+        //noinspection TryFinallyCanBeTryWithResources
+        try {
+            FBBlob blob = (FBBlob) connection.createBlob();
+            binaryStream = blob.setBinaryStream(1);
+        } finally {
+            // This should not trigger an exception
+            connection.close();
+        }
+
+        try {
+            binaryStream.write(new byte[] { 1 });
+            fail("read should have triggered an exception");
+        } catch (IOException ex) {
+            assertEquals("Problem writing to FBBlobOutputStream: org.firebirdsql.gds.GDSException: invalid database handle (no active connection)", ex.getMessage());
+        }
     }
 }

@@ -112,8 +112,7 @@ public class FBBlobOutputStream extends OutputStream
 
             }
         } catch (GDSException ge) {
-            throw new IOException("Problem writing to FBBlobOutputStream: "
-                    + ge);
+            throw new IOException("Problem writing to FBBlobOutputStream: " + ge, ge);
         }
     }
 
