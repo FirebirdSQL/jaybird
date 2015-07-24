@@ -110,6 +110,12 @@
 			</roles>
 		</developer>
 	</developers>
+	<contributors>
+		<contributor>
+			<name>Smyatkin-Maxim</name>
+			<url>https://github.com/Smyatkin-Maxim</url>
+		</contributor>
+	</contributors>
 	
 	<licenses>
 		<license>
