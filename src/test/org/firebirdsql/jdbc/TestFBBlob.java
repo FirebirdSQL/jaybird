@@ -27,6 +27,7 @@ import org.junit.rules.ExpectedException;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.sql.*;
 import java.util.Properties;
 
@@ -491,6 +492,29 @@ public class TestFBBlob extends FBJUnit4TestBase {
             // This should not trigger an exception
             connection.close();
         }
+    }
+
+    /**
+     * Checks if the blob close on close of the connection is done successfully in auto commit mode.
+     * <p>
+     * See <a href="http://tracker.firebirdsql.org/browse/JDBC-348">JDBC-348</a>.
+     * </p>
+     */
+    @Test
+    public void testBlobCloseOnConnectionClose_inAutoCommit() throws Exception {
+        Connection connection = getConnectionViaDriverManager();
+        OutputStream binaryStream = null;
+        //noinspection TryFinallyCanBeTryWithResources
+        try {
+            FBBlob blob = (FBBlob) connection.createBlob();
+            binaryStream = blob.setBinaryStream(1);
+        } finally {
+            // This should not trigger an exception
+            connection.close();
+        }
+        expectedException.expect(IOException.class);
+        expectedException.expectMessage("Output stream is already closed.");
+        binaryStream.write(1);
     }
 
     private void populateBlob(Connection conn, byte[] bytes) throws SQLException {

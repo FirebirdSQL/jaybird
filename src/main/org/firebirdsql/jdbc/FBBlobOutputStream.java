@@ -211,7 +211,7 @@ public final class FBBlobOutputStream extends OutputStream implements FirebirdBl
      * @throws IOException When this output stream has been closed.
      */
     private void checkClosed() throws IOException {
-        if (blobHandle == null) {
+        if (blobHandle == null || !blobHandle.isOpen()) {
             throw new IOException("Output stream is already closed.");
         }
     }
