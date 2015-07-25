@@ -47,7 +47,6 @@ public final class JnaService extends AbstractFbService<JnaServiceConnection> {
     public static final int STATUS_VECTOR_SIZE = 20;
 
     private final FbClientLibrary clientLibrary;
-    // TODO Clear on disconnect?
     private final IntByReference handle = new IntByReference(0);
     private final ISC_STATUS[] statusVector = new ISC_STATUS[STATUS_VECTOR_SIZE];
 

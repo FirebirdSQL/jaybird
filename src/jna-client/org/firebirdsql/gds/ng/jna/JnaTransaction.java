@@ -41,7 +41,6 @@ public class JnaTransaction extends AbstractFbTransaction {
 
     private static final Logger log = LoggerFactory.getLogger(JnaTransaction.class);
 
-    // TODO: Clear on commit/rollback?
     private final IntByReference handle;
     private final ISC_STATUS[] statusVector = new ISC_STATUS[JnaDatabase.STATUS_VECTOR_SIZE];
     private final FbClientLibrary clientLibrary;

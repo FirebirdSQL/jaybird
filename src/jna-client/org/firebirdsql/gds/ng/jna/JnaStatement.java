@@ -45,7 +45,6 @@ import static org.firebirdsql.gds.ng.TransactionHelper.checkTransactionActive;
  */
 public class JnaStatement extends AbstractFbStatement {
 
-    // TODO: Clear on close()?
     private final IntByReference handle = new IntByReference(0);
     private JnaDatabase database;
     private final ISC_STATUS[] statusVector = new ISC_STATUS[JnaDatabase.STATUS_VECTOR_SIZE];

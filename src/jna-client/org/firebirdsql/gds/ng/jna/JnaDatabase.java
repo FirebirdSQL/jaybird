@@ -53,7 +53,6 @@ public final class JnaDatabase extends AbstractFbDatabase<JnaDatabaseConnection>
     public static final int MAX_STATEMENT_LENGTH = 64 * 1024;
 
     private final FbClientLibrary clientLibrary;
-    // TODO Clear on disconnect?
     private final IntByReference handle = new IntByReference(0);
     private final ISC_STATUS[] statusVector = new ISC_STATUS[STATUS_VECTOR_SIZE];
 
