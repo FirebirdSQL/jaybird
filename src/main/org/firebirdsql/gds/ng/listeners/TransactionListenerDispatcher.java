@@ -1,6 +1,4 @@
 /*
- * $Id$
- * 
  * Firebird Open Source J2EE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
@@ -22,21 +20,26 @@ package org.firebirdsql.gds.ng.listeners;
 
 import org.firebirdsql.gds.ng.FbTransaction;
 import org.firebirdsql.gds.ng.TransactionState;
+import org.firebirdsql.logging.Logger;
+import org.firebirdsql.logging.LoggerFactory;
 
 /**
  * Dispatcher to maintain and notify other {@link TransactionListener}.
  *
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
- * @since 2.3
+ * @since 3.0
  */
 public class TransactionListenerDispatcher extends AbstractListenerDispatcher<TransactionListener> implements TransactionListener {
+
+    private static final Logger log = LoggerFactory.getLogger(TransactionListenerDispatcher.class);
+
     @Override
     public void transactionStateChanged(FbTransaction transaction, TransactionState newState, TransactionState previousState) {
         for (TransactionListener listener : this) {
             try {
                 listener.transactionStateChanged(transaction, newState, previousState);
             } catch (Exception e) {
-                // Ignore // TODO: log
+                log.error("Error on notify transactionStateChanged to listener " + listener, e);
             }
         }
     }
