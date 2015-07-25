@@ -1,6 +1,4 @@
 /*
- * $Id$
- * 
  * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
@@ -88,6 +86,6 @@ public class AbstractListenerDispatcher<TListener> implements Iterable<TListener
 
     @Override
     public final Iterator<TListener> iterator() {
-        return new ArrayList<TListener>(listeners).iterator();
+        return new ArrayList<>(listeners).iterator();
     }
 }
