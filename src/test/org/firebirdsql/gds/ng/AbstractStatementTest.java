@@ -18,10 +18,7 @@
  */
 package org.firebirdsql.gds.ng;
 
-import org.firebirdsql.common.DdlHelper;
-import org.firebirdsql.common.FBJUnit4TestBase;
-import org.firebirdsql.common.FBTestProperties;
-import org.firebirdsql.common.JdbcResourceHelper;
+import org.firebirdsql.common.*;
 import org.firebirdsql.encodings.Encoding;
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.TransactionParameterBuffer;
@@ -42,6 +39,7 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.SQLNonTransientException;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 import static org.firebirdsql.common.FBTestProperties.DB_PASSWORD;
@@ -61,7 +59,7 @@ import static org.junit.Assume.assumeTrue;
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @since 3.0
  */
-public abstract class AbstractStatementTest extends FBJUnit4TestBase {
+public abstract class AbstractStatementTest {
 
     //@formatter:off
     private static final String CREATE_EXECUTABLE_STORED_PROCEDURE =
@@ -133,6 +131,9 @@ public abstract class AbstractStatementTest extends FBJUnit4TestBase {
 
     @Rule
     public final ExpectedException expectedException = ExpectedException.none();
+
+    @Rule
+    public final UsesDatabase usesDatabase = UsesDatabase.usesDatabase();
 
     protected abstract Class<? extends FbDatabase> getExpectedDatabaseType();
 
@@ -226,7 +227,7 @@ public abstract class AbstractStatementTest extends FBJUnit4TestBase {
         final boolean supportsTableAlias = supportInfo.supportsTableAlias();
 
         List<FieldDescriptor> expectedFields =
-                Arrays.asList(
+                Collections.singletonList(
                         new FieldDescriptor(db.getDatatypeCoder(), ISCConstants.SQL_TEXT | 1, 3, 0,
                                 unicodeFssLengthReported ? 93 : 31, "RDB$CHARACTER_SET_NAME",
                                 supportsTableAlias ? "A" : null, "RDB$CHARACTER_SET_NAME", "RDB$CHARACTER_SETS",
@@ -290,7 +291,7 @@ public abstract class AbstractStatementTest extends FBJUnit4TestBase {
         final RowDescriptor fields = statement.getFieldDescriptor();
         assertNotNull("Fields", fields);
         List<FieldDescriptor> expectedFields =
-                Arrays.asList(
+                Collections.singletonList(
                         new FieldDescriptor(db.getDatatypeCoder(), ISCConstants.SQL_LONG | 1, 0, 0, 4, "OUTVALUE", null,
                                 "OUTVALUE", "INCREMENT", "SYSDBA")
                 );
@@ -299,7 +300,7 @@ public abstract class AbstractStatementTest extends FBJUnit4TestBase {
         final RowDescriptor parameters = statement.getParameterDescriptor();
         assertNotNull("Parameters", parameters);
         List<FieldDescriptor> expectedParameters =
-                Arrays.asList(
+                Collections.singletonList(
                         new FieldDescriptor(db.getDatatypeCoder(), ISCConstants.SQL_LONG | 1, 0, 0, 4, null, null, null,
                                 null, null)
                 );
@@ -337,7 +338,7 @@ public abstract class AbstractStatementTest extends FBJUnit4TestBase {
         final RowDescriptor fields = statement.getFieldDescriptor();
         assertNotNull("Fields", fields);
         List<FieldDescriptor> expectedFields =
-                Arrays.asList(
+                Collections.singletonList(
                         new FieldDescriptor(db.getDatatypeCoder(), ISCConstants.SQL_LONG | 1, 0, 0, 4, "OUTVALUE", null,
                                 "OUTVALUE", "RANGE", "SYSDBA")
                 );
@@ -368,7 +369,7 @@ public abstract class AbstractStatementTest extends FBJUnit4TestBase {
         final RowDescriptor fields = statement.getFieldDescriptor();
         assertNotNull("Fields", fields);
         List<FieldDescriptor> expectedFields =
-                Arrays.asList(
+                Collections.singletonList(
                         new FieldDescriptor(db.getDatatypeCoder(), ISCConstants.SQL_LONG | 1, 0, 0, 4, "THEKEY", null,
                                 "THEKEY", "KEYVALUE", "SYSDBA")
                 );
@@ -377,7 +378,7 @@ public abstract class AbstractStatementTest extends FBJUnit4TestBase {
         final RowDescriptor parameters = statement.getParameterDescriptor();
         assertNotNull("Parameters", parameters);
         List<FieldDescriptor> expectedParameters =
-                Arrays.asList(
+                Collections.singletonList(
                         new FieldDescriptor(db.getDatatypeCoder(), ISCConstants.SQL_VARYING | 1, 0, 0, 5, null, null,
                                 null, null, null)
                 );
@@ -654,21 +655,24 @@ public abstract class AbstractStatementTest extends FBJUnit4TestBase {
             try {
                 statement.close();
             } catch (SQLException ex) {
-                log.debug("Exception on statement close", ex);
+                System.out.println("Exception on statement close");
+                ex.printStackTrace();
             }
         }
         if (transaction != null) {
             try {
                 transaction.commit();
             } catch (SQLException ex) {
-                log.debug("Exception on transaction commit", ex);
+                System.out.println("Exception on transaction commit");
+                ex.printStackTrace();
             }
         }
         if (db != null) {
             try {
                 db.close();
             } catch (SQLException ex) {
-                log.debug("Exception on detach", ex);
+                System.out.println("Exception on detach");
+                ex.printStackTrace();
             }
         }
     }

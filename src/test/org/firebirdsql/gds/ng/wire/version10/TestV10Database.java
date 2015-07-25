@@ -41,7 +41,7 @@ import java.io.File;
 import java.sql.SQLException;
 import java.sql.SQLFeatureNotSupportedException;
 import java.sql.SQLWarning;
-import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 import static org.firebirdsql.common.FBTestProperties.*;
@@ -123,7 +123,7 @@ public class TestV10Database {
         db.getDatabaseWarningCallback().processWarning(warning);
 
         List<SQLWarning> warnings = callback.getWarnings();
-        assertEquals("Unexpected warnings registered or no warnings registered", Arrays.asList(warning), warnings);
+        assertEquals("Unexpected warnings registered or no warnings registered", Collections.singletonList(warning), warnings);
     }
 
     /**
@@ -453,7 +453,7 @@ public class TestV10Database {
         try {
             db.close();
         } catch (SQLException ex) {
-            // ignore (TODO: log)
+            ex.printStackTrace();
         }
     }
 }
