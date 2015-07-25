@@ -21,8 +21,6 @@ package org.firebirdsql.gds.ng.wire;
 import org.firebirdsql.gds.BlobParameterBuffer;
 import org.firebirdsql.gds.EventHandle;
 import org.firebirdsql.gds.EventHandler;
-import org.firebirdsql.gds.impl.BlobParameterBufferImp;
-import org.firebirdsql.gds.impl.TransactionParameterBufferImpl;
 import org.firebirdsql.gds.impl.wire.XdrInputStream;
 import org.firebirdsql.gds.impl.wire.XdrOutputStream;
 import org.firebirdsql.gds.ng.*;
@@ -195,7 +193,6 @@ public abstract class AbstractFbWireDatabase extends AbstractFbDatabase<WireData
      * @throws java.sql.SQLException
      *         For errors establishing the channel, or if the channel already exists.
      */
-    // TODO make protected?
     public abstract FbWireAsynchronousChannel initAsynchronousChannel() throws SQLException;
 
     @Override
