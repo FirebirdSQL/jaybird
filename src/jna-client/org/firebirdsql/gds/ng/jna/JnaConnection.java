@@ -113,7 +113,6 @@ public abstract class JnaConnection<T extends IAttachProperties<T>, C> extends A
                     if (debug) log.debug("readStatusVector string: " + stringValue);
                     builder.messageParameter(stringValue);
                 } else {
-                    // TODO Is this actually returned from server?
                     if (debug) log.debug("readStatusVector sqlstate: " + stringValue);
                     builder.sqlState(stringValue);
                 }
