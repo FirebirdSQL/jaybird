@@ -227,7 +227,6 @@ public class V10Database extends AbstractFbWireDatabase implements FbWireDatabas
                 xdrOut.flush();
 
                 // TODO Read response to op_detach?
-                // TODO closeEventManager() (not yet implemented)
 
                 closeConnection();
             } catch (IOException ex) {

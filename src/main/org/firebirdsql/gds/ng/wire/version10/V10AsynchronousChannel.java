@@ -79,7 +79,7 @@ public class V10AsynchronousChannel implements FbWireAsynchronousChannel {
 
     public V10AsynchronousChannel(FbWireDatabase database) {
         this.database = database;
-        database.addDatabaseListener(new ChannelDatabaseLister());
+        database.addDatabaseListener(new ChannelDatabaseListener());
     }
 
     @Override
@@ -276,7 +276,7 @@ public class V10AsynchronousChannel implements FbWireAsynchronousChannel {
         }
     }
 
-    private class ChannelDatabaseLister extends DefaultDatabaseListener {
+    private class ChannelDatabaseListener extends DefaultDatabaseListener {
 
         @Override
         public void detached(FbDatabase database) {
