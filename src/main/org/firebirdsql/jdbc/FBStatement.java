@@ -19,7 +19,6 @@
 package org.firebirdsql.jdbc;
 
 import org.firebirdsql.gds.DatabaseParameterBuffer;
-import org.firebirdsql.gds.GDSException;
 import org.firebirdsql.gds.impl.DatabaseParameterBufferExtension;
 import org.firebirdsql.gds.impl.GDSHelper;
 import org.firebirdsql.gds.ng.FbStatement;
@@ -559,7 +558,8 @@ public class FBStatement implements FirebirdStatement, Synchronizable {
     public ResultSet getGeneratedKeys() throws SQLException {
         checkValidity();
         if (isGeneratedKeyQuery() && isSingletonResult) {
-            return new FBResultSet(fbStatement.getFieldDescriptor(), Arrays.asList(singletonResult), resultSetListener);
+            return new FBResultSet(fbStatement.getFieldDescriptor(), Collections.singletonList(singletonResult),
+                    resultSetListener);
         }
         return new FBResultSet(RowDescriptor.EMPTY, Collections.<RowValue>emptyList());
     }
@@ -742,11 +742,7 @@ public class FBStatement implements FirebirdStatement, Synchronizable {
      * @exception SQLException if a database access error occurs
      */
     public void cancel() throws  SQLException {
-        try {
-            gdsHelper.cancelOperation();
-        } catch(GDSException ex) {
-            throw new FBSQLException(ex);
-        }
+        gdsHelper.cancelOperation();
     }
 
     /**
@@ -904,7 +900,8 @@ public class FBStatement implements FirebirdStatement, Synchronizable {
                 currentRs = new FBResultSet(gdsHelper, this, fbStatement, resultSetListener, metaDataQuery, rsType,
                         rsConcurrency, rsHoldability, false);
             } else if (singletonResult != null) {
-                currentRs = new FBResultSet(fbStatement.getFieldDescriptor(), Arrays.asList(singletonResult), resultSetListener);
+                currentRs = new FBResultSet(fbStatement.getFieldDescriptor(),
+                        Collections.singletonList(singletonResult), resultSetListener);
             }
             return currentRs;
         }
@@ -1143,7 +1140,7 @@ public class FBStatement implements FirebirdStatement, Synchronizable {
         return rsHoldability;
     }
 
-    private List<String> batchList = new LinkedList<String>();
+    private List<String> batchList = new LinkedList<>();
 
     /**
      * Adds an SQL command to the current batch of commmands for this
@@ -1238,7 +1235,7 @@ public class FBStatement implements FirebirdStatement, Synchronizable {
 
             boolean success = false;
             try {
-            	List<Integer> responses = new LinkedList<Integer>();
+            	List<Integer> responses = new LinkedList<>();
 
                 try {
                     for (String sql : batchList) {

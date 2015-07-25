@@ -56,10 +56,6 @@ public class GDSHelper {
         this.database = database;
     }
 
-    private void notifyListeners(GDSException ex) {
-        listener.errorOccurred(ex);
-    }
-
     private void notifyListeners(SQLException ex) {
         listener.errorOccurred(ex);
     }
@@ -245,13 +241,12 @@ public class GDSHelper {
     /**
      * Cancel the currently running operation.
      */
-    public void cancelOperation() throws GDSException {
-        // TODO rewrite to throw SQLException
+    public void cancelOperation() throws SQLException {
         try {
             database.cancelOperation(ISCConstants.fb_cancel_raise);
         } catch(SQLException ex) {
             notifyListeners(ex);
-            throw new GDSException(ex.getErrorCode(), ex);
+            throw ex;
         }
     }
 
