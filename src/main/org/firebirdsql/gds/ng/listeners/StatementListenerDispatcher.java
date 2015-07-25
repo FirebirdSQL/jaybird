@@ -1,6 +1,4 @@
 /*
- * $Id$
- * 
  * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
@@ -24,6 +22,8 @@ import org.firebirdsql.gds.ng.FbStatement;
 import org.firebirdsql.gds.ng.SqlCountHolder;
 import org.firebirdsql.gds.ng.StatementState;
 import org.firebirdsql.gds.ng.fields.RowValue;
+import org.firebirdsql.logging.Logger;
+import org.firebirdsql.logging.LoggerFactory;
 
 import java.sql.SQLWarning;
 
@@ -35,13 +35,15 @@ import java.sql.SQLWarning;
  */
 public final class StatementListenerDispatcher extends AbstractListenerDispatcher<StatementListener> implements StatementListener {
 
+    private static final Logger log = LoggerFactory.getLogger(StatementListenerDispatcher.class);
+
     @Override
     public void receivedRow(final FbStatement sender, final RowValue rowValue) {
         for (StatementListener listener : this) {
             try {
                 listener.receivedRow(sender, rowValue);
             } catch (Exception e) {
-                // Ignore // TODO: log
+                log.error("Error on notify receivedRow to listener " + listener, e);
             }
         }
     }
@@ -52,7 +54,7 @@ public final class StatementListenerDispatcher extends AbstractListenerDispatche
             try {
                 listener.allRowsFetched(sender);
             } catch (Exception e) {
-                // Ignore // TODO: log
+                log.error("Error on notify allRowsFetched to listener " + listener, e);
             }
         }
     }
@@ -63,7 +65,7 @@ public final class StatementListenerDispatcher extends AbstractListenerDispatche
             try {
                 listener.statementExecuted(sender, hasResultSet, hasSingletonResult);
             } catch (Exception e) {
-                // Ignore // TODO: log
+                log.error("Error on notify statementExecuted to listener " + listener, e);
             }
         }
     }
@@ -74,7 +76,7 @@ public final class StatementListenerDispatcher extends AbstractListenerDispatche
             try {
                 listener.statementStateChanged(sender, newState, previousState);
             } catch (Exception e) {
-                // Ignore // TODO: log
+                log.error("Error on notify statementStateChanged to listener " + listener, e);
             }
         }
     }
@@ -85,7 +87,7 @@ public final class StatementListenerDispatcher extends AbstractListenerDispatche
             try {
                 listener.warningReceived(sender, warning);
             } catch (Exception e) {
-                // Ignore // TODO: log
+                log.error("Error on notify warningReceived to listener " + listener, e);
             }
         }
     }
@@ -96,7 +98,7 @@ public final class StatementListenerDispatcher extends AbstractListenerDispatche
             try {
                 listener.sqlCounts(sender, sqlCounts);
             } catch (Exception e) {
-                // Ignore // TODO: log
+                log.error("Error on notify sqlCounts to listener " + listener, e);
             }
         }
     }
