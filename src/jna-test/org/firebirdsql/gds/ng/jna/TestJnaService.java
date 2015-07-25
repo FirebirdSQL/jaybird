@@ -113,7 +113,7 @@ public class TestJnaService {
 
             expectedException.expect(allOf(
                     isA(SQLException.class),
-                    fbMessageStartsWith(ISCConstants.isc_unavailable))
+                    fbMessageStartsWith(ISCConstants.isc_service_att_err))
             );
 
             service.attach();
