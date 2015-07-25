@@ -319,7 +319,7 @@ public class V10Statement extends AbstractFbWireStatement implements FbWireState
                     throw new FbExceptionBuilder().exception(ISCConstants.isc_net_write_err).cause(ex).toSQLException();
                 }
 
-                final SQLExceptionChainBuilder<SQLException> chain = new SQLExceptionChainBuilder<SQLException>();
+                final SQLExceptionChainBuilder<SQLException> chain = new SQLExceptionChainBuilder<>();
                 try {
                     final boolean hasFields = getFieldDescriptor() != null && getFieldDescriptor().getCount() > 0;
                     final WarningMessageCallback statementWarningCallback = getStatementWarningCallback();
@@ -473,9 +473,9 @@ public class V10Statement extends AbstractFbWireStatement implements FbWireState
             Response response;
             while (!isAllRowsFetched() && (response = getDatabase().readResponse(getStatementWarningCallback())) instanceof FetchResponse) {
                 final FetchResponse fetchResponse = (FetchResponse) response;
-                if (fetchResponse.getCount() > 0 && fetchResponse.getStatus() == WireProtocolConstants.FETCH_OK) {
+                if (fetchResponse.getCount() > 0 && fetchResponse.getStatus() == ISCConstants.FETCH_OK) {
                     queueRowData(readSqlData());
-                } else if (fetchResponse.getStatus() == WireProtocolConstants.FETCH_NO_MORE_ROWS) {
+                } else if (fetchResponse.getStatus() == ISCConstants.FETCH_NO_MORE_ROWS) {
                     setAllRowsFetched(true);
                     getSqlCounts();
                     // Note: we are not explicitly 'closing' the cursor here

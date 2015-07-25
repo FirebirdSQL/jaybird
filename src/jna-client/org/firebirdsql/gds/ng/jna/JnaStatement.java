@@ -24,7 +24,6 @@ import com.sun.jna.Memory;
 import com.sun.jna.ptr.IntByReference;
 import com.sun.jna.ptr.ShortByReference;
 import org.firebirdsql.gds.ISCConstants;
-import org.firebirdsql.gds.impl.wire.WireProtocolConstants;
 import org.firebirdsql.gds.ng.*;
 import org.firebirdsql.gds.ng.fields.*;
 import org.firebirdsql.jna.fbclient.FbClientLibrary;
@@ -336,9 +335,9 @@ public class JnaStatement extends AbstractFbStatement {
                     count++;
 
                     int fetchStatusInt = fetchStatus.intValue();
-                    if (fetchStatusInt == WireProtocolConstants.FETCH_OK) {
+                    if (fetchStatusInt == ISCConstants.FETCH_OK) {
                         queueRowData(toRowValue(getFieldDescriptor(), outXSqlDa));
-                    } else if (fetchStatusInt == WireProtocolConstants.FETCH_NO_MORE_ROWS) {
+                    } else if (fetchStatusInt == ISCConstants.FETCH_NO_MORE_ROWS) {
                         setAllRowsFetched(true);
                         getSqlCounts();
                         // Note: we are not explicitly 'closing' the cursor here

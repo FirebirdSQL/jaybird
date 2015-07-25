@@ -219,9 +219,5 @@ public interface WireProtocolConstants {
     int ptype_out_of_band = 4; // Batch sends w/ out of band notification
     int ptype_lazy_send = 5; // Deferred packets delivery
 
-    // TODO These values are also used in native interface. Move to ISCConstants
-    int FETCH_OK = 0;
-    int FETCH_NO_MORE_ROWS = 100;
-
     int P_REQ_async = 1;
 }
