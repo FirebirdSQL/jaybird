@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
@@ -345,13 +343,13 @@ public abstract class FBField {
      * knows how to perform all necessary type conversions.
      */
     public static FBField createField(FieldDescriptor fieldDescriptor, FieldDataProvider dataProvider, GDSHelper gdsHelper, boolean cached) throws SQLException {
-        final FBField result = FBField.createField(fieldDescriptor, fieldDescriptor.toXSQLVAR(), dataProvider, cached);
+        final FBField result = FBField.createField(fieldDescriptor, dataProvider, cached);
         result.setConnection(gdsHelper);
         return result;
     }
 
-    private static FBField createField(FieldDescriptor fieldDescriptor, XSQLVAR field, FieldDataProvider dataProvider, boolean cached)
-            throws SQLException {
+    private static FBField createField(FieldDescriptor fieldDescriptor, FieldDataProvider dataProvider,
+            boolean cached) throws SQLException {
         // TODO Change isType to 'toJdbcType' and use a switch (if possible)
         if (FBField.isType(fieldDescriptor, Types.SMALLINT)) {
             if (fieldDescriptor.getScale() == 0) {
