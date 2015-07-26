@@ -327,7 +327,7 @@ public class FBEscapedFunctionHelper {
         if (!FUNCTION_MAP.containsKey(functionName)) {
             /* See 13.4.1 of JDBC 4.1 spec:
              * "The escape syntax for scalar functions must only be used to invoke the scalar
-             * functions defined in Appendix D “Scalar Functions". The escape syntax is not
+             * functions defined in Appendix D "Scalar Functions". The escape syntax is not
              * intended to be used to invoke user-defined or vendor specific scalar functions."
              */
             // TODO Consider throwing SQLFeatureNotSupported or a different SQLException
