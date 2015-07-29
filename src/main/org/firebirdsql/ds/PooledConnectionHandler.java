@@ -229,7 +229,7 @@ class PooledConnectionHandler implements InvocationHandler {
         return connection == null || proxy == null;
     }
 
-    protected void statementErrorOccurred(StatementHandler stmtHandler, SQLException sqle) {
+    protected void statementErrorOccurred(@SuppressWarnings("UnusedParameters") StatementHandler stmtHandler, SQLException sqle) {
         // TODO: Log?, forward fatal connection related errors?
         owner.fireConnectionError(sqle);
     }
@@ -247,9 +247,8 @@ class PooledConnectionHandler implements InvocationHandler {
                     stmt.close();
                 } catch (SQLException ex) {
                     chain.append(ex);
-                    // TODO : Log, ignore, something else?
                 } catch (Throwable t) {
-                    // ignore?
+                    // ignore
                 }
             }
             openStatements.clear();

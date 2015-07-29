@@ -76,7 +76,6 @@ public final class FBBlobInputStream extends InputStream implements FirebirdBlob
             try {
                 blobHandle.seek(position, seekMode);
             } catch (SQLException ex) {
-                /** @todo fix this */
                 throw new IOException(ex.getMessage(), ex);
             }
         }
