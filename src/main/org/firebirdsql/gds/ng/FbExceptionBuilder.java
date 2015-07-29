@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
@@ -44,7 +42,7 @@ public final class FbExceptionBuilder {
     private static final String SQLSTATE_FEATURE_NOT_SUPPORTED_PREFIX = "0A";
     private static final String SQLSTATE_SYNTAX_ERROR_PREFIX = "42";
 
-    private final List<ExceptionInformation> exceptionInfo = new ArrayList<ExceptionInformation>();
+    private final List<ExceptionInformation> exceptionInfo = new ArrayList<>();
     private ExceptionInformation current = null;
 
     /**
@@ -171,8 +169,9 @@ public final class FbExceptionBuilder {
      * @see #toFlatSQLException()
      */
     public SQLException toSQLException() {
+        // TODO Also add SQLState + error code as in toFlatSQLException()?
         if (exceptionInfo.isEmpty()) return null;
-        SQLExceptionChainBuilder<SQLException> chain = new SQLExceptionChainBuilder<SQLException>();
+        SQLExceptionChainBuilder<SQLException> chain = new SQLExceptionChainBuilder<>();
         for (ExceptionInformation info : exceptionInfo) {
             chain.append(info.toSQLException());
         }
@@ -193,7 +192,7 @@ public final class FbExceptionBuilder {
      * </p>
      */
     private static final Set<Integer> UNINTERESTING_ERROR_CODES =
-            Collections.unmodifiableSet(new HashSet<Integer>(Arrays.asList(UNINTERESTING_ERROR_CODES_ARR)));
+            Collections.unmodifiableSet(new HashSet<>(Arrays.asList(UNINTERESTING_ERROR_CODES_ARR)));
 
     /**
      * SQLState success is linked to some informational error message, we consider those 'not interesting' either.
@@ -217,7 +216,7 @@ public final class FbExceptionBuilder {
     public SQLException toFlatSQLException() {
         if (exceptionInfo.isEmpty()) return null;
         // We are recording the unflattened state if people need the details
-        SQLExceptionChainBuilder<FBSQLExceptionInfo> chain = new SQLExceptionChainBuilder<FBSQLExceptionInfo>();
+        SQLExceptionChainBuilder<FBSQLExceptionInfo> chain = new SQLExceptionChainBuilder<>();
         StringBuilder fullExceptionMessage = new StringBuilder();
         ExceptionInformation interestingExceptionInfo = null;
 
@@ -308,7 +307,7 @@ public final class FbExceptionBuilder {
 
     private static final class ExceptionInformation {
         private final Type type;
-        private final List<String> messageParameters = new ArrayList<String>();
+        private final List<String> messageParameters = new ArrayList<>();
         private final int errorCode;
         private String sqlState;
         private Throwable cause;
@@ -457,7 +456,7 @@ public final class FbExceptionBuilder {
 
         private final String defaultSQLState;
 
-        private Type(String defaultSQLState) {
+        Type(String defaultSQLState) {
             this.defaultSQLState = defaultSQLState;
         }
 

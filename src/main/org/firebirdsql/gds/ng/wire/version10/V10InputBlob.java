@@ -31,6 +31,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.sql.SQLException;
 
+import static org.firebirdsql.gds.JaybirdErrorCodes.jb_blobGetSegmentNegative;
 import static org.firebirdsql.gds.VaxEncoding.iscVaxInteger2;
 import static org.firebirdsql.gds.impl.wire.WireProtocolConstants.*;
 
@@ -89,8 +90,10 @@ public class V10InputBlob extends AbstractFbWireInputBlob implements FbWireBlob,
     @Override
     public byte[] getSegment(final int sizeRequested) throws SQLException {
         if (sizeRequested <= 0) {
-            // TODO Add SQL State, make non transient?
-            throw new SQLException(String.format("getSegment called with sizeRequested %d, should be > 0", sizeRequested));
+            // TODO make non transient?
+            throw new FbExceptionBuilder().exception(jb_blobGetSegmentNegative)
+                    .messageParameter(sizeRequested)
+                    .toSQLException();
         }
         // TODO Is this actually a real limitation, or are larger sizes possible?
         int actualSize = 2 + Math.min(sizeRequested, getMaximumSegmentSize());

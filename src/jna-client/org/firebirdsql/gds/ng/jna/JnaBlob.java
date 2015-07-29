@@ -35,6 +35,10 @@ import org.firebirdsql.jna.fbclient.ISC_STATUS;
 import java.nio.ByteBuffer;
 import java.sql.SQLException;
 
+import static org.firebirdsql.gds.JaybirdErrorCodes.jb_blobGetSegmentNegative;
+import static org.firebirdsql.gds.JaybirdErrorCodes.jb_blobPutSegmentEmpty;
+import static org.firebirdsql.gds.JaybirdErrorCodes.jb_blobPutSegmentTooLong;
+
 /**
  * Implementation of {@link org.firebirdsql.gds.ng.FbBlob} for native client access.
  *
@@ -128,9 +132,10 @@ public class JnaBlob extends AbstractFbBlob implements FbBlob, DatabaseListener 
     @Override
     public byte[] getSegment(int sizeRequested) throws SQLException {
         if (sizeRequested <= 0) {
-            // TODO Add SQL State, make non transient?
-            throw new SQLException(String.format("getSegment called with sizeRequested %d, should be > 0",
-                    sizeRequested));
+            // TODO make non transient?
+            throw new FbExceptionBuilder().exception(jb_blobGetSegmentNegative)
+                    .messageParameter(sizeRequested)
+                    .toSQLException();
         }
         // TODO Honour request for larger sizes by looping?
         sizeRequested = Math.min(sizeRequested, getMaximumSegmentSize());
@@ -166,14 +171,13 @@ public class JnaBlob extends AbstractFbBlob implements FbBlob, DatabaseListener 
     public void putSegment(byte[] segment) throws SQLException {
         // TODO Handle exceeding max segment size?
         if (segment.length == 0) {
-            // TODO Add SQL State, make non transient?
-            throw new SQLException("putSegment called with zero-length segment, should be > 0");
+            // TODO make non transient?
+            throw new FbExceptionBuilder().exception(jb_blobPutSegmentEmpty).toSQLException();
         }
         // TODO Handle by performing multiple puts? (Wrap in byte buffer, use position to move pointer?)
         if (segment.length > getMaximumSegmentSize()) {
-            // TODO Add SQL State, make non transient?
-            throw new SQLException(String.format("Segment longer than maximum segment size. Received: %d, maximum %d",
-                    segment.length, getMaximumSegmentSize()));
+            // TODO make non transient?
+            throw new FbExceptionBuilder().exception(jb_blobPutSegmentTooLong).toSQLException();
         }
         synchronized (getSynchronizationObject()) {
             checkDatabaseAttached();
