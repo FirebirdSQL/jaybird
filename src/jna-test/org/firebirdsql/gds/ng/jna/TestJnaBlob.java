@@ -197,8 +197,8 @@ public class TestJnaBlob extends BaseTestBlob {
     public void testInputBlobDoubleOpen() throws Exception {
         expectedException.expect(SQLNonTransientException.class);
         expectedException.expect(allOf(
-                errorCodeEquals(ISCConstants.isc_segstr_no_op),
-                fbMessageEquals(ISCConstants.isc_segstr_no_op)
+                errorCodeEquals(ISCConstants.isc_no_segstr_close),
+                fbMessageEquals(ISCConstants.isc_no_segstr_close)
         ));
 
         final int testId = 1;

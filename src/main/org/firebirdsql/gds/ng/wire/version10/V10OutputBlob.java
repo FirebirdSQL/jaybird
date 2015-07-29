@@ -57,7 +57,6 @@ public class V10OutputBlob extends AbstractFbWireOutputBlob implements FbWireBlo
             checkBlobClosed();
 
             if (getBlobId() != FbBlob.NO_BLOB_ID) {
-                // TODO Custom error instead? (eg "Attempting to reopen output blob")
                 throw new FbExceptionBuilder().nonTransientException(ISCConstants.isc_segstr_no_op).toSQLException();
             }
 

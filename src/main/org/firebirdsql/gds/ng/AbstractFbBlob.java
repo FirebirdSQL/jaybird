@@ -242,8 +242,7 @@ public abstract class AbstractFbBlob implements FbBlob, TransactionListener, Dat
      */
     protected void checkBlobClosed() throws SQLException {
         if (isOpen()) {
-            // TODO isc_no_segstr_close instead?
-            throw new FbExceptionBuilder().nonTransientException(ISCConstants.isc_segstr_no_op).toSQLException();
+            throw new FbExceptionBuilder().nonTransientException(ISCConstants.isc_no_segstr_close).toSQLException();
         }
     }
 
@@ -280,8 +279,7 @@ public abstract class AbstractFbBlob implements FbBlob, TransactionListener, Dat
         synchronized (getSynchronizationObject()) {
             checkDatabaseAttached();
             if (getBlobId() == FbBlob.NO_BLOB_ID) {
-                // TODO type, message and state
-                throw new SQLException("No blob id associated with this blob");
+                throw new FbExceptionBuilder().exception(ISCConstants.isc_bad_segstr_id).toSQLException();
             }
             final BlobLengthProcessor blobLengthProcessor = createBlobLengthProcessor();
             return getBlobInfo(blobLengthProcessor.getBlobLengthItems(), 20, blobLengthProcessor);

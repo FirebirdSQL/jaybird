@@ -241,8 +241,8 @@ public class TestV10OutputBlob extends BaseTestV10Blob {
     public void testDoubleOpen() throws Exception {
         expectedException.expect(SQLNonTransientException.class);
         expectedException.expect(allOf(
-                errorCodeEquals(ISCConstants.isc_segstr_no_op),
-                fbMessageEquals(ISCConstants.isc_segstr_no_op)
+                errorCodeEquals(ISCConstants.isc_no_segstr_close),
+                fbMessageEquals(ISCConstants.isc_no_segstr_close)
         ));
 
         try (FbWireDatabase db = createDatabaseConnection()) {

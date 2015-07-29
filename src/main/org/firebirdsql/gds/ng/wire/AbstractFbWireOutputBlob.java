@@ -22,11 +22,11 @@ package org.firebirdsql.gds.ng.wire;
 
 import org.firebirdsql.gds.BlobParameterBuffer;
 import org.firebirdsql.gds.ISCConstants;
+import org.firebirdsql.gds.JaybirdErrorCodes;
 import org.firebirdsql.gds.ng.FbBlob;
 import org.firebirdsql.gds.ng.FbExceptionBuilder;
 
 import java.sql.SQLException;
-import java.sql.SQLNonTransientException;
 
 /**
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
@@ -57,8 +57,7 @@ public abstract class AbstractFbWireOutputBlob extends AbstractFbWireBlob {
     protected final void setBlobId(long blobId) throws SQLException {
         synchronized (getSynchronizationObject()) {
             if (getBlobId() != FbBlob.NO_BLOB_ID) {
-                // TODO SQL State
-                throw new SQLNonTransientException("The blob id is already set");
+                throw new FbExceptionBuilder().nonTransientException(JaybirdErrorCodes.jb_blobIdAlreadySet).toSQLException();
             }
             this.blobId = blobId;
         }

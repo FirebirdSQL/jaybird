@@ -92,7 +92,6 @@ public class JnaBlob extends AbstractFbBlob implements FbBlob, DatabaseListener 
     @Override
     public void open() throws SQLException {
         if (isOutput() && getBlobId() != NO_BLOB_ID) {
-            // TODO Custom error instead? (eg "Attempting to reopen output blob")
             throw new FbExceptionBuilder().nonTransientException(ISCConstants.isc_segstr_no_op).toSQLException();
         }
 
