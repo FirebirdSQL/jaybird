@@ -162,10 +162,12 @@ public interface WireProtocolConstants {
 
     int op_crypt = 96;
     int op_crypt_key_callback = 97;
+    int op_cond_accept = 98;
     
     /* Protocol version constants */
     
     int CONNECT_VERSION2 = 2;
+    int CONNECT_VERSION3 = 3;
     
      /* Protocol 10 includes support for warnings and removes the requirement for
         encoding and decoding status codes */
@@ -210,6 +212,7 @@ public interface WireProtocolConstants {
     int CNCT_plugin_name = 8; // Name of plugin, which generated that data
     int CNCT_login = 9; // Same data as isc_dpb_user_name
     int CNCT_plugin_list = 10; // List of plugins, available on client
+    int CNCT_client_crypt = 11; // Client encyption level (DISABLED/ENABLED/REQUIRED)
     
     // Protocol Types
     // p_acpt_type
