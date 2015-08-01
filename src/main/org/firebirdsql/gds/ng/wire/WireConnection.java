@@ -236,6 +236,31 @@ public abstract class WireConnection<T extends IAttachProperties<T>, C> extends 
             final byte[] hostBytes = getSystemHostName().getBytes();
 
             ByteArrayOutputStream userId = new ByteArrayOutputStream();
+
+            final byte[] loginBytes = attachProperties.getUser().getBytes();
+            userId.write(CNCT_login);
+            int loginLength = Math.min(loginBytes.length, 255);
+            userId.write(loginLength);
+            userId.write(loginBytes, 0, loginLength);
+
+            userId.write(CNCT_plugin_name);
+            final byte[] pluginNameBytes = "Legacy_Auth".getBytes();
+            userId.write(pluginNameBytes.length);
+            userId.write(pluginNameBytes, 0, pluginNameBytes.length);
+
+            userId.write(CNCT_plugin_list);
+            final byte[] pluginListBytes = "Legacy_Auth".getBytes();
+            userId.write(pluginListBytes.length);
+            userId.write(pluginListBytes, 0, pluginListBytes.length);
+
+            userId.write(CNCT_specific_data);
+            final byte[] specificDataBytes = UnixCrypt.crypt(attachProperties.getPassword(), "9z").substring(2, 13).getBytes();
+            userId.write(specificDataBytes.length);
+            userId.write(specificDataBytes, 0, specificDataBytes.length);
+
+            userId.write(CNCT_client_crypt);    // WireCrypt = Disabled
+            userId.write(new byte[]{(byte)4,(byte)0,(byte)0,(byte)0,(byte)0});
+
             userId.write(CNCT_user);
             int userLength = Math.min(userBytes.length, 255);
             userId.write(userLength);
@@ -250,7 +275,7 @@ public abstract class WireConnection<T extends IAttachProperties<T>, C> extends 
 
             xdrOut.writeInt(op_connect);
             xdrOut.writeInt(op_attach);
-            xdrOut.writeInt(CONNECT_VERSION2);
+            xdrOut.writeInt(CONNECT_VERSION3);
             xdrOut.writeInt(arch_generic);
 
             xdrOut.writeString(getAttachObjectName(), getEncoding());
@@ -266,13 +291,21 @@ public abstract class WireConnection<T extends IAttachProperties<T>, C> extends 
             }
 
             xdrOut.flush();
-
-            if (readNextOperation() == op_accept) {
+            final int op_code = readNextOperation();
+            if (op_code == op_accept || op_code == op_cond_accept || op_code == op_accept_data) {
                 protocolVersion = xdrIn.readInt(); // Protocol version
                 protocolArchitecture = xdrIn.readInt(); // Architecture for protocol
                 protocolMinimumType = xdrIn.readInt(); // Minimum type
                 if (protocolVersion < 0) {
                     protocolVersion = (protocolVersion & FB_PROTOCOL_MASK) | FB_PROTOCOL_FLAG;
+                }
+
+                if (op_code == op_cond_accept || op_code == op_accept_data) {
+                    String pluginName = xdrIn.readString(getEncoding());
+                    final int is_authenticated = xdrIn.readInt();
+                    if (pluginName == "Legacy_Auth" && is_authenticated==0) {
+                        throw new SQLException("Unauthorized");
+                    }
                 }
 
                 ProtocolDescriptor descriptor = protocols.getProtocolDescriptor(protocolVersion);
