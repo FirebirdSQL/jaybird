@@ -134,7 +134,7 @@ public class V13Statement extends V12Statement {
         synchronized (getDatabase().getSynchronizationObject()) {
             final XdrInputStream xdrIn = getXdrIn();
             int nullBitsLen = rowDescriptor.getCount() / 8;
-            if (nullBitsLen % 8 != 0) {
+            if (rowDescriptor.getCount() % 8 != 0) {
                 nullBitsLen++;
             }
             byte[] nullBitsBytes = new byte[nullBitsLen];
@@ -196,7 +196,7 @@ public class V13Statement extends V12Statement {
                 }
             }
             int nullBitsLen = fieldValues.getCount() / 8;
-            if (nullBitsLen % 8 != 0) {
+            if (fieldValues.getCount() % 8 != 0) {
                 nullBitsLen++;
             }
             if (nullBitsLen % 4 != 0) {
