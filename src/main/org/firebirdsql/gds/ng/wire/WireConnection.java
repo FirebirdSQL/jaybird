@@ -303,7 +303,7 @@ public abstract class WireConnection<T extends IAttachProperties<T>, C> extends 
                 if (op_code == op_cond_accept || op_code == op_accept_data) {
                     String pluginName = xdrIn.readString(getEncoding());
                     final int is_authenticated = xdrIn.readInt();
-                    if (pluginName == "Legacy_Auth" && is_authenticated==0) {
+                    if (pluginName.equals("Legacy_Auth") && is_authenticated==0) {
                         throw new SQLException("Unauthorized");
                     }
                 }
