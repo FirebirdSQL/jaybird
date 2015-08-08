@@ -21,6 +21,7 @@ package org.firebirdsql.gds.ng.wire;
 import org.firebirdsql.encodings.EncodingFactory;
 import org.firebirdsql.encodings.IEncodingFactory;
 import org.firebirdsql.gds.ISCConstants;
+import org.firebirdsql.gds.impl.wire.WireProtocolConstants;
 import org.firebirdsql.gds.impl.wire.XdrInputStream;
 import org.firebirdsql.gds.impl.wire.XdrOutputStream;
 import org.firebirdsql.gds.ng.AbstractConnection;
@@ -35,6 +36,7 @@ import java.io.Closeable;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.*;
+import java.nio.charset.StandardCharsets;
 import java.security.AccessController;
 import java.security.PrivilegedAction;
 import java.sql.SQLException;
@@ -237,29 +239,42 @@ public abstract class WireConnection<T extends IAttachProperties<T>, C> extends 
 
             ByteArrayOutputStream userId = new ByteArrayOutputStream();
 
-            final byte[] loginBytes = attachProperties.getUser().getBytes();
-            userId.write(CNCT_login);
-            int loginLength = Math.min(loginBytes.length, 255);
-            userId.write(loginLength);
-            userId.write(loginBytes, 0, loginLength);
+            if (attachProperties.getUser() != null) {
+                final byte[] loginBytes = attachProperties.getUser().getBytes(StandardCharsets.UTF_8);
+                userId.write(CNCT_login);
+                int loginLength = Math.min(loginBytes.length, 255);
+                userId.write(loginLength);
+                userId.write(loginBytes, 0, loginLength);
+            }
 
             userId.write(CNCT_plugin_name);
-            final byte[] pluginNameBytes = "Legacy_Auth".getBytes();
+            final byte[] pluginNameBytes = "Legacy_Auth".getBytes(StandardCharsets.UTF_8);
             userId.write(pluginNameBytes.length);
             userId.write(pluginNameBytes, 0, pluginNameBytes.length);
 
             userId.write(CNCT_plugin_list);
-            final byte[] pluginListBytes = "Legacy_Auth".getBytes();
+            final byte[] pluginListBytes = "Legacy_Auth".getBytes(StandardCharsets.UTF_8);
             userId.write(pluginListBytes.length);
             userId.write(pluginListBytes, 0, pluginListBytes.length);
 
-            userId.write(CNCT_specific_data);
-            final byte[] specificDataBytes = UnixCrypt.crypt(attachProperties.getPassword(), "9z").substring(2, 13).getBytes();
-            userId.write(specificDataBytes.length);
-            userId.write(specificDataBytes, 0, specificDataBytes.length);
+            if (attachProperties.getPassword() != null) {
+                final byte[] specificDataBytes = UnixCrypt.crypt(attachProperties.getPassword(), "9z").substring(2, 13).getBytes();
+                int remaining = specificDataBytes.length;
+                int position = 0;
+                int step = 0;
+                while (remaining > 0) {
+                    userId.write(CNCT_specific_data);
+                    int toWrite = Math.min(remaining, 254);
+                    userId.write(toWrite + 1);
+                    userId.write(step++);
+                    userId.write(specificDataBytes, position, toWrite);
+                    remaining -= toWrite;
+                    position += toWrite;
+                }
+            }
 
             userId.write(CNCT_client_crypt);    // WireCrypt = Disabled
-            userId.write(new byte[]{(byte)4,(byte)0,(byte)0,(byte)0,(byte)0});
+            userId.write(new byte[] { (byte) 4, (byte) 0, (byte) 0, (byte) 0, (byte) 0 });
 
             userId.write(CNCT_user);
             int userLength = Math.min(userBytes.length, 255);
@@ -303,7 +318,14 @@ public abstract class WireConnection<T extends IAttachProperties<T>, C> extends 
                 if (op_code == op_cond_accept || op_code == op_accept_data) {
                     String pluginName = xdrIn.readString(getEncoding());
                     final int is_authenticated = xdrIn.readInt();
-                    if (pluginName.equals("Legacy_Auth") && is_authenticated==0) {
+                    String keys = xdrIn.readString(getEncoding());
+                    if (pluginName.equals("Legacy_Auth") && is_authenticated == 0) {
+                        try {
+                            close();
+                        } catch (Exception ex) {
+                            log.debug("Ignoring exception on disconnect in connect phase of protocol", ex);
+                        }
+                        // TODO Use different exception message + check what fbclient does here
                         throw new SQLException("Unauthorized");
                     }
                 }
@@ -318,9 +340,17 @@ public abstract class WireConnection<T extends IAttachProperties<T>, C> extends 
                 return createConnectionHandle(descriptor);
             } else {
                 try {
-                    close();
-                } catch (Exception ex) {
-                    log.debug("Ignoring exception on disconnect in connect phase of protocol", ex);
+                    if (op_code == op_response) {
+                        ProtocolDescriptor protocolDescriptor = protocols.getProtocolDescriptor(WireProtocolConstants.PROTOCOL_VERSION10);
+                        AbstractWireOperations wireOperations = (AbstractWireOperations) protocolDescriptor.createWireOperations(this, null, this);
+                        wireOperations.processResponse(wireOperations.processOperation(op_code));
+                    }
+                } finally {
+                    try {
+                        close();
+                    } catch (Exception ex) {
+                        log.debug("Ignoring exception on disconnect in connect phase of protocol", ex);
+                    }
                 }
                 throw new FbExceptionBuilder().exception(ISCConstants.isc_connect_reject).toSQLException();
             }
