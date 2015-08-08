@@ -1,3 +1,4 @@
 org.firebirdsql.gds.ng.wire.version10.Version10Descriptor
 org.firebirdsql.gds.ng.wire.version11.Version11Descriptor
 org.firebirdsql.gds.ng.wire.version12.Version12Descriptor
+org.firebirdsql.gds.ng.wire.version13.Version13Descriptor

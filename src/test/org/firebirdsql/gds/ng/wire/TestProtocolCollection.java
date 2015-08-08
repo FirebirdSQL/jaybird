@@ -25,6 +25,7 @@ import org.firebirdsql.gds.ng.EmptyProtocolDescriptor;
 import org.firebirdsql.gds.ng.wire.version10.Version10Descriptor;
 import org.firebirdsql.gds.ng.wire.version11.Version11Descriptor;
 import org.firebirdsql.gds.ng.wire.version12.Version12Descriptor;
+import org.firebirdsql.gds.ng.wire.version13.Version13Descriptor;
 import org.junit.Test;
 
 import java.util.Arrays;
@@ -55,7 +56,8 @@ public class TestProtocolCollection {
                 Arrays.<Class<? extends ProtocolDescriptor>>asList(
                         Version10Descriptor.class,
                         Version11Descriptor.class,
-                        Version12Descriptor.class));
+                        Version12Descriptor.class,
+                        Version13Descriptor.class));
     }
 
     /**
