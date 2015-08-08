@@ -193,7 +193,7 @@ public class TestV10EventHandling extends FBJUnit4TestBase {
             establishChannel.start();
             simpleServer.acceptConnection();
             AsynchronousProcessor.getInstance().registerAsynchronousChannel(channel);
-
+            establishChannel.join(500);
             assertTrue("Expected connected channel", channel.isConnected());
 
             final XdrOutputStream out = new XdrOutputStream(simpleServer.getOutputStream());
@@ -204,7 +204,7 @@ public class TestV10EventHandling extends FBJUnit4TestBase {
             out.writeInt(7);
             out.flush();
 
-            Thread.sleep(10);
+            Thread.sleep(500);
 
             List<AsynchronousChannelListener.Event> receivedEvents = listener.getReceivedEvents();
             assertEquals("Unexpected number of events", 1, receivedEvents.size());
@@ -236,7 +236,7 @@ public class TestV10EventHandling extends FBJUnit4TestBase {
             establishChannel.start();
             simpleServer.acceptConnection();
             AsynchronousProcessor.getInstance().registerAsynchronousChannel(channel);
-
+            establishChannel.join(500);
             assertTrue("Expected connected channel", channel.isConnected());
 
             final XdrOutputStream out = new XdrOutputStream(simpleServer.getOutputStream());
@@ -388,14 +388,14 @@ public class TestV10EventHandling extends FBJUnit4TestBase {
             establishChannel.start();
             simpleServer.acceptConnection();
             AsynchronousProcessor.getInstance().registerAsynchronousChannel(channel);
-
+            establishChannel.join(500);
             assertTrue("Expected connected channel", channel.isConnected());
 
             final OutputStream out = simpleServer.getOutputStream();
             out.write(disconnectOperation);
             out.flush();
 
-            Thread.sleep(10);
+            Thread.sleep(500);
 
             assertFalse("Expected disconnected channel", channel.isConnected());
         } finally {
