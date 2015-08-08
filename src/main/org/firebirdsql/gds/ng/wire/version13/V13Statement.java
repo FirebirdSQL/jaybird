@@ -24,14 +24,17 @@ import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.impl.wire.WireProtocolConstants;
 import org.firebirdsql.gds.impl.wire.XdrInputStream;
 import org.firebirdsql.gds.impl.wire.XdrOutputStream;
-import org.firebirdsql.gds.ng.*;
+import org.firebirdsql.gds.ng.FbExceptionBuilder;
+import org.firebirdsql.gds.ng.StatementState;
+import org.firebirdsql.gds.ng.StatementType;
+import org.firebirdsql.gds.ng.WarningMessageCallback;
 import org.firebirdsql.gds.ng.fields.*;
 import org.firebirdsql.gds.ng.wire.FbWireDatabase;
 import org.firebirdsql.gds.ng.wire.version12.V12Statement;
 
-import java.math.BigInteger;
 import java.io.IOException;
 import java.sql.SQLException;
+import java.util.BitSet;
 
 import static org.firebirdsql.gds.ng.TransactionHelper.checkTransactionActive;
 
@@ -133,18 +136,15 @@ public class V13Statement extends V12Statement {
 
         synchronized (getDatabase().getSynchronizationObject()) {
             final XdrInputStream xdrIn = getXdrIn();
-            int nullBitsLen = rowDescriptor.getCount() / 8;
-            if (rowDescriptor.getCount() % 8 != 0) {
-                nullBitsLen++;
-            }
-            byte[] nullBitsBytes = new byte[nullBitsLen];
-            xdrIn.readFully(nullBitsBytes, 0, nullBitsLen);
-            BigInteger nullBits = new BigInteger(nullBitsBytes);
+            final int nullBitsLen = (rowDescriptor.getCount() + 7) / 8;
+            final byte[] nullBitsBytes = xdrIn.readRawBuffer(nullBitsLen);
+            xdrIn.skipPadding(nullBitsLen);
+            final BitSet nullBits = BitSet.valueOf(nullBitsBytes);
 
             for (int idx = 0; idx < rowDescriptor.getCount(); idx++) {
                 final FieldDescriptor fieldDescriptor = rowDescriptor.getFieldDescriptor(idx);
                 final FieldValue fieldValue = rowValue.getFieldValue(idx);
-                if (nullBits.testBit(idx)) {
+                if (nullBits.get(idx)) {
                     fieldValue.setFieldData(null);
                     continue;
                 }
@@ -188,26 +188,24 @@ public class V13Statement extends V12Statement {
             final XdrOutputStream xdrOut = getXdrOut();
             final BlrCalculator blrCalculator = getDatabase().getBlrCalculator();
             // null indicator bitmap
-            BigInteger nullBits = BigInteger.valueOf(0);
+            final BitSet nullBits = new BitSet(fieldValues.getCount());
             for (int idx = 0; idx < fieldValues.getCount(); idx++) {
                 final FieldValue fieldValue = fieldValues.getFieldValue(idx);
-                if (fieldValue.getFieldData() == null) {
-                    nullBits = nullBits.or(BigInteger.valueOf(1 << idx));
-                }
+                nullBits.set(idx, fieldValue.getFieldData() == null);
             }
-            int nullBitsLen = fieldValues.getCount() / 8;
-            if (fieldValues.getCount() % 8 != 0) {
-                nullBitsLen++;
+            final byte[] nullBitsBytes = nullBits.toByteArray(); // Note only amount of bytes necessary for highest bit set
+            xdrOut.write(nullBitsBytes);
+            final int requiredBytes = (rowDescriptor.getCount() + 7) / 8;
+            final int remainingBytes = requiredBytes - nullBitsBytes.length;
+            if (remainingBytes > 0) {
+                xdrOut.write(new byte[remainingBytes]);
             }
-            if (nullBitsLen % 4 != 0) {
-                nullBitsLen += 4 - nullBitsLen % 4;
-            }
-            final byte[] nullBitsBytes = nullBits.toByteArray();
-            xdrOut.write(nullBitsBytes, 0, nullBitsBytes.length);
-            xdrOut.writePadding(nullBitsLen-nullBitsBytes.length, 0x00);
-
+            xdrOut.writeAlignment(requiredBytes);
 
             for (int idx = 0; idx < fieldValues.getCount(); idx++) {
+                if (nullBits.get(idx)) {
+                    continue;
+                }
                 final FieldValue fieldValue = fieldValues.getFieldValue(idx);
                 final FieldDescriptor fieldDescriptor = rowDescriptor.getFieldDescriptor(idx);
 
