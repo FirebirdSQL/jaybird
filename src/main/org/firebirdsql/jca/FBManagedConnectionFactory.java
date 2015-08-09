@@ -804,11 +804,6 @@ public class FBManagedConnectionFactory implements ManagedConnectionFactory, Fir
                 //int nextIntParam = ex.getNext().getIntParam();
 
                 if (sqlError == ISCConstants.isc_no_recon /*&& nextIntParam == ISCConstants.isc_tra_state*/) {
-                    /*String param = ex.getNext().getNext().getNext().getParam();
-                    if ("committed".equals(param))
-                        errorCode = XAException.XA_HEURCOM;
-                    else if ("rolled back".equals(param))
-                        errorCode = XAException.XA_HEURRB;*/
                     if (ex.getMessage().contains("committed")) {
                         errorCode = XAException.XA_HEURCOM;
                     } else if (ex.getMessage().contains("rolled back")) {

@@ -247,7 +247,7 @@ public class TestV10EventHandling extends FBJUnit4TestBase {
             // Flushing partial event to test if processing works as expected
             out.flush();
 
-            Thread.sleep(10);
+            Thread.sleep(500);
 
             List<AsynchronousChannelListener.Event> receivedEvents = listener.getReceivedEvents();
             assertEquals("Unexpected number of events", 0, receivedEvents.size());
@@ -256,7 +256,7 @@ public class TestV10EventHandling extends FBJUnit4TestBase {
             out.writeInt(7);
             out.flush();
 
-            Thread.sleep(10);
+            Thread.sleep(500);
 
             receivedEvents = listener.getReceivedEvents();
             assertEquals("Unexpected number of events", 1, receivedEvents.size());

@@ -119,9 +119,7 @@ public class FBManagedConnection implements ManagedConnection, XAResource, Excep
             database.attach();
 
             gdsHelper = new GDSHelper(this, database);
-        } catch(GDSException ex) {
-            throw new FBResourceException(ex);
-        } catch (SQLException ex) {
+        } catch(GDSException | SQLException ex) {
             throw new FBResourceException(ex);
         }
     }
@@ -187,8 +185,7 @@ public class FBManagedConnection implements ManagedConnection, XAResource, Excep
     
             return fbcri;
         } catch (ClassCastException cce) {
-            throw new FBResourceException(
-                    "Incorrect ConnectionRequestInfo class supplied");
+            throw new FBResourceException("Incorrect ConnectionRequestInfo class supplied");
         }
     }
     
@@ -551,7 +548,7 @@ public class FBManagedConnection implements ManagedConnection, XAResource, Excep
         if (gdsHelper == null)
             return;
         
-        if (gdsHelper.inTransaction()) 
+        if (inTransaction())
             throw new javax.resource.spi.IllegalStateException(
                 "Can't destroy managed connection  with active transaction");
         
@@ -801,11 +798,7 @@ public class FBManagedConnection implements ManagedConnection, XAResource, Excep
 
             stmtHandle2.close();
             trHandle2.commit();
-        } catch (SQLException ex) {
-            if (log != null)
-                log.debug("can't perform query to fetch xids", ex);
-            throw new FBXAException(XAException.XAER_RMFAIL, ex);
-        } catch (ResourceException ex) {
+        } catch (SQLException | ResourceException ex) {
             if (log != null)
                 log.debug("can't perform query to fetch xids", ex);
             throw new FBXAException(XAException.XAER_RMFAIL, ex);
@@ -989,10 +982,8 @@ public class FBManagedConnection implements ManagedConnection, XAResource, Excep
             trHandle2.commit();
 
             return xids.toArray(new FBXid[xids.size()]);
-        } catch (SQLException sqle) {
-            throw new FBXAException("can't perform query to fetch xids", XAException.XAER_RMFAIL, sqle);
-        } catch (ResourceException re) {
-            throw new FBXAException("can't perform query to fetch xids", XAException.XAER_RMFAIL, re);
+        } catch (SQLException | ResourceException e) {
+            throw new FBXAException("can't perform query to fetch xids", XAException.XAER_RMFAIL, e);
         }
     }
 
@@ -1056,10 +1047,8 @@ public class FBManagedConnection implements ManagedConnection, XAResource, Excep
             trHandle2.commit();
 
             return xid;
-        } catch (SQLException sqle) {
-            throw new FBXAException("can't perform query to fetch xids", XAException.XAER_RMFAIL, sqle);
-        } catch (ResourceException re) {
-            throw new FBXAException("can't perform query to fetch xids", XAException.XAER_RMFAIL, re);
+        } catch (SQLException | ResourceException e) {
+            throw new FBXAException("can't perform query to fetch xids", XAException.XAER_RMFAIL, e);
         }
     }
 
@@ -1197,10 +1186,8 @@ public class FBManagedConnection implements ManagedConnection, XAResource, Excep
             
         } catch (GDSException ge) {
             throw new FBXAException(ge.getXAErrorCode(), ge);
-        } catch (SQLException e) {
+        } catch (SQLException | ResourceException e) {
             throw new FBXAException(XAException.XAER_RMERR, e);
-        } catch(ResourceException ex) {
-            throw new FBXAException(XAException.XAER_RMERR, ex);
         }
     }
 

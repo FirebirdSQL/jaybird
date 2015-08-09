@@ -112,8 +112,7 @@ public class GDSHelper {
      *         transaction, <code>false</code> otherwise.
      */
     public boolean inTransaction() {
-        // TODO Check state?
-        return transaction != null;
+        return transaction != null && transaction.getState() == TransactionState.ACTIVE;
     }
 
     /**
