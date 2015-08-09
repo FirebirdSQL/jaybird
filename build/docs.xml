@@ -23,6 +23,11 @@
 
     <target name="buildreleasenotes" depends="init">
         <mkdir dir="${build.documentation}"/>
+        <copy file="${source.documentation}/release_notes.md" tofile="${build.documentation}/release_notes.md" encoding="UTF-8">
+            <filterset>
+                <filter token="VERSION" value="${version.maven}"/>
+            </filterset>
+        </copy>
         <exec executable="${pandoc.app}">
             <arg value="-s"/>
             <arg value="-f"/>
@@ -35,7 +40,7 @@
             <arg value="--email-obfuscation=none"/>
             <arg value="-o"/>
             <arg value="${build.documentation}/release_notes.html"/>
-            <arg value="${source.documentation}/release_notes.md"/>
+            <arg value="${build.documentation}/release_notes.md"/>
         </exec>
     </target>
 </project>

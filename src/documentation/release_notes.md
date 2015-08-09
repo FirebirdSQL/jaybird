@@ -1,5 +1,5 @@
 ---
-title: Jaybird 3.0 (SNAPSHOT) Release Notes
+title: Jaybird @VERSION@ Release Notes
 tags: [jaybird, firebird, jdbc, sql, database, java]
 ...
 
@@ -51,7 +51,7 @@ Jaybird 3.0 is the last version to support Firebird 2.0.
 Supported Java versions
 -----------------------
 
-Jaybird 3.0.0 supports Java 7 (JDBC 4.1) and Java 8 (JDBC 4.2). 
+Jaybird 3.0 supports Java 7 (JDBC 4.1) and Java 8 (JDBC 4.2).
 Support for earlier Java versions has been dropped.
 
 Support for Java 7 might still be dropped before Jaybird 3.0 final release.
