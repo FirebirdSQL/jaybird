@@ -51,7 +51,7 @@
   <!-- =================================================================== -->
   <!-- Creates the distribution                                            -->
   <!-- =================================================================== -->
-  <target name="dist" depends="jars,javadocs,mavenPrepare">
+  <target name="dist" depends="jars,javadocs,buildalldocs,mavenPrepare">
     <mkdir dir="${build.dist}"/>
     <zip zipfile="${build.dist}/${Name}-${version.full}.zip">
       <fileset dir="${build.lib}">
@@ -62,8 +62,7 @@
         <include name="${archive.name.sources}"/>
         <include name="${archive.name.javadoc}"/>
       </fileset>
-      <fileset dir="${module.etc}">
-        <include name="release_notes.pdf"/>
+      <fileset dir="${build.documentation}">
         <include name="release_notes.html"/>
       </fileset>
       <fileset dir="native">

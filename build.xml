@@ -11,6 +11,7 @@
   <!ENTITY archive  SYSTEM "./build/archive.xml">
   <!ENTITY deploy   SYSTEM "./build/deploy.xml">
   <!ENTITY test     SYSTEM "./build/test.xml">
+  <!ENTITY docs     SYSTEM "./build/docs.xml">
   <!ENTITY dist     SYSTEM "./build/dist.xml">
 ]>
        
@@ -21,6 +22,7 @@
 	&archive;
 	&deploy;
 	&test;
+    &docs;
 	&dist;
 </project>
 
