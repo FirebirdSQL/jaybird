@@ -47,8 +47,8 @@ Specification support
 
 Jaybird supports the following specifications:
 
-|Specification|
-|-------------|-----------------------------------
+|Specification|Notes
+|-------------|-----
 | JDBC 4.2    | Driver does not fully support JDBC 4.2 features, but implements large update count methods by calling the normal update count methods, and methods with `SQLType` by calling methods accepting the `java.sql.Types` integer value. Supports new `java.Time` classes with some caveats.
 | JDBC 4.1    | Driver implements all JDBC 4.1 methods added to existing interfaces. The driver explicitly supports `closeOnCompletion`, most other methods introduced with JDBC 4.1 throw `SQLFeatureNotSupportedException`.
 | JDBC 4.0    | Driver implements all JDBC 4.0 interfaces and supports exception chaining.
