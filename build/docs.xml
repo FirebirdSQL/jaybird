@@ -5,8 +5,9 @@
 
     <target name="buildfaq" depends="init">
         <mkdir dir="${build.documentation}"/>
-        <exec executable="${pandoc.app}">
+        <exec executable="${pandoc.app}" dir="${source.documentation}">
             <arg value="-s"/>
+            <arg value="--self-contained"/>
             <arg value="-f"/>
             <arg value="markdown"/>
             <arg value="-t"/>
@@ -15,21 +16,32 @@
             <arg value="-N"/>
             <arg value="--section-divs"/>
             <arg value="--email-obfuscation=none"/>
+            <arg value="--css=faq.css"/>
             <arg value="-o"/>
             <arg value="${build.documentation}/faq.html"/>
-            <arg value="${source.documentation}/faq.md"/>
+            <arg value="faq_metadata.yaml"/>
+            <arg value="faq.md"/>
         </exec>
     </target>
 
     <target name="buildreleasenotes" depends="init">
         <mkdir dir="${build.documentation}"/>
-        <copy file="${source.documentation}/release_notes.md" tofile="${build.documentation}/release_notes.md" encoding="UTF-8">
+        <copy todir="${build.documentation}" encoding="UTF-8">
+            <fileset dir="${source.documentation}">
+                <include name="release_notes*"/>
+            </fileset>
             <filterset>
                 <filter token="VERSION" value="${version.maven}"/>
             </filterset>
         </copy>
-        <exec executable="${pandoc.app}">
+        <copy todir="${build.documentation}">
+            <fileset dir="${source.documentation}">
+                <include name="**/*.png"/>
+            </fileset>
+        </copy>
+        <exec executable="${pandoc.app}" dir="${build.documentation}">
             <arg value="-s"/>
+            <arg value="--self-contained"/>
             <arg value="-f"/>
             <arg value="markdown"/>
             <arg value="-t"/>
@@ -38,9 +50,11 @@
             <arg value="-N"/>
             <arg value="--section-divs"/>
             <arg value="--email-obfuscation=none"/>
+            <arg value="--css=release_notes.css"/>
             <arg value="-o"/>
-            <arg value="${build.documentation}/release_notes.html"/>
-            <arg value="${build.documentation}/release_notes.md"/>
+            <arg value="release_notes.html"/>
+            <arg value="release_notes_metadata.yaml"/>
+            <arg value="release_notes.md"/>
         </exec>
     </target>
 </project>

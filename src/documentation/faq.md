@@ -1,8 +1,3 @@
----
-title: Jaybird Frequently Asked Questions
-tags: [jaybird, firebird, jdbc, sql, database, java]
-...
-
 Jaybird
 =======
 

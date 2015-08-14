@@ -1,8 +1,3 @@
----
-title: Jaybird @VERSION@ Release Notes
-tags: [jaybird, firebird, jdbc, sql, database, java]
-...
-
 WARNING {-}
 =======
 
