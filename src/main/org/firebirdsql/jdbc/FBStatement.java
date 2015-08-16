@@ -1418,7 +1418,8 @@ public class FBStatement implements FirebirdStatement, Synchronizable {
             return connection.nativeSQL(sql);
         } else {
             DatabaseParameterBuffer dpb = gdsHelper.getDatabaseParameterBuffer();
-            EscapeParserMode mode = dpb.hasArgument(DatabaseParameterBufferExtension.USE_STANDARD_UDF) ? EscapeParserMode.USE_STANDARD_UDF
+            EscapeParserMode mode = dpb.hasArgument(DatabaseParameterBufferExtension.USE_STANDARD_UDF)
+                    ? EscapeParserMode.USE_STANDARD_UDF
                     : EscapeParserMode.USE_BUILT_IN;
             return new FBEscapedParser(mode).parse(sql);
         }
@@ -1443,8 +1444,9 @@ public class FBStatement implements FirebirdStatement, Synchronizable {
     public String getLastExecutionPlan() throws SQLException {
         checkValidity();
         
-        if (fbStatement == null)
+        if (fbStatement == null) {
             throw new FBSQLException("No statement was executed, plan cannot be obtained.");
+        }
         
         return getExecutionPlan();
     }
@@ -1456,7 +1458,7 @@ public class FBStatement implements FirebirdStatement, Synchronizable {
      *
      * @return The identifier for the given statement's type
      */
-    int getStatementType() throws FBSQLException {
+    int getStatementType() throws SQLException {
         if (fbStatement == null) {
             return StatementType.NONE.getStatementTypeCode();
         }
@@ -1471,8 +1473,9 @@ public class FBStatement implements FirebirdStatement, Synchronizable {
      * used anymore.
      */
     protected void checkValidity() throws SQLException {
-        if (isClosed())
+        if (isClosed()) {
             throw new FBSQLException("Statement is already closed.", FBSQLException.SQL_STATE_INVALID_STATEMENT_ID);
+        }
     }
 
     // TODO Implement large update count methods below using SqlCountHolder

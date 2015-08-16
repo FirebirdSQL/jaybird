@@ -146,7 +146,7 @@ public class TestFBEscapedCallParser extends TestCase {
         verifyParseSql(procedureCall);
     }
 
-    private void verifyParseSql(FBProcedureCall procedureCall) throws FBSQLException {
+    private void verifyParseSql(FBProcedureCall procedureCall) throws SQLException {
         assertTrue("Should correctly parse call.\n[" + procedureCall.getSQL(false) + "] \n[" + testProcedureCall.getSQL(false) + "]", 
                 testProcedureCall.getSQL(false).equals(procedureCall.getSQL(false)));
     }

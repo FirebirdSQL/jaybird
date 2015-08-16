@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
@@ -140,10 +138,7 @@ public abstract class AbstractPreparedStatement extends FBStatement implements F
             // TODO See http://tracker.firebirdsql.org/browse/JDBC-352
             notifyStatementStarted();
             prepareFixedStatement(sql);
-        } catch (SQLException e) {
-            notifyStatementCompleted(false);
-            throw e;
-        } catch (RuntimeException e) {
+        } catch (SQLException | RuntimeException e) {
             notifyStatementCompleted(false);
             throw e;
         }
@@ -634,8 +629,7 @@ public abstract class AbstractPreparedStatement extends FBStatement implements F
         if (fieldValues == null) return;
 
         // TODO Remove: should be based on FieldValue#isInitialized
-        for (int i = 0; i < isParamSet.length; i++)
-            isParamSet[i] = false;
+        Arrays.fill(isParamSet, false);
 
         for (FieldValue fieldValue : fieldValues) {
             fieldValue.reset();
@@ -818,7 +812,7 @@ public abstract class AbstractPreparedStatement extends FBStatement implements F
     }
 
     // TODO: AbstractCallableStatement adds FBProcedureCall, while AbstractPreparedStatement adds XSQLVAR[]: separate?
-    protected final List<Object> batchList = new LinkedList<Object>();
+    protected final List<Object> batchList = new LinkedList<>();
 
     /**
      * Adds a set of parameters to this <code>PreparedStatement</code>
@@ -925,7 +919,7 @@ public abstract class AbstractPreparedStatement extends FBStatement implements F
             try {
                 notifyStatementStarted();
 
-                List<Integer> results = new ArrayList<Integer>(batchList.size());
+                List<Integer> results = new ArrayList<>(batchList.size());
                 Iterator<Object> iter = batchList.iterator();
 
                 try {
@@ -1312,7 +1306,7 @@ public abstract class AbstractPreparedStatement extends FBStatement implements F
      *
      * @return The identifier for the given statement's type
      */
-    public int getStatementType() throws FBSQLException {
+    public int getStatementType() throws SQLException {
         return super.getStatementType();
     }
 

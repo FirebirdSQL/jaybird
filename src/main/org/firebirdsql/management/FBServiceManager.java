@@ -243,7 +243,10 @@ public class FBServiceManager implements ServiceManager {
      * @throws SQLException
      *         if a database access error occurs or
      *         incorrect parameters are supplied
+     * @deprecated Use {@link #executeServicesOperation(FbService, ServiceRequestBuffer)}.
      */
+    @SuppressWarnings("unused")
+    @Deprecated
     protected void executeServicesOperation(ServiceRequestBuffer srb) throws SQLException {
         try (FbService service = attachServiceManager()) {
             service.startServiceAction(srb);

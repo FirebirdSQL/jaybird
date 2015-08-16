@@ -84,15 +84,20 @@ the fact that other improvements in the Firebird wire protocol (versions 11 and
 implementation of the wire protocol did not lend itself for - easily - 
 supporting multiple protocol versions.
 
-Jaybird 3.0 does not yet provide the new Firebird 3.0 authentication and wire
-encryption. This is planned for Jaybird 3.1, but might be moved into Jaybird 
-3.0 before the final release.
+Jaybird 3.0 does not yet provide the full new Firebird 3.0 authentication and wire
+encryption. This is planned for Jaybird 3.1, but might be moved into Jaybird 3.0 
+before the final release.
 
 The new low-level implementation also means that the old GDS API 
 (`org.firebirdsql.gds.GDS`) has been removed and is no longer available.
 
+Compatibility changes
+---------------------
+
 The changes due to the new protocol implementation and/or JDBC conformance are
 listed below.
+
+*TODO Merge section with Compatibility changes below*
 
 **The list is not yet complete, if you notice a difference in behavior that is
 not listed, please report it as bug.** It might have been a change we forgot to
@@ -144,7 +149,21 @@ document, but it could just as well be an implementation bug.
     
     This change does not mean that there are no Firebird-specific `SQLException`
     sub-classes anymore, but in general we strive to use the standard 
-    exceptions.
+    exceptions where possible.
+
+* Methods with `throws FBSQLException` changed to `throws SQLException`
+    
+    As we are preferring the standard exceptions, the throws clause has been
+    widened to `SQLException`. Note that most methods already had 
+    `throws SQLException`, so the impact is limited. This change specifically 
+    impacts:
+    
+    * `org.firebirdsql.jdbc.FirebirdPreparedStatement`
+        * `getExecutionPlan()`
+        * `getStatementType()`
+    * `org.firebirdsql.management.FBServiceManager`
+        * `executeServicesOperation`
+    * A number of classes/methods internal to the Jaybird implementation
 
 * `org.firebirdsql.gds.GDSException` removed from exception causes.
 
@@ -163,7 +182,7 @@ document, but it could just as well be an implementation bug.
         separating these elements by a linebreak. These elements are now
         separated by a semi-colon and a space.
         
-    * Exception message now reports SQLState and error code. 
+    * Exception message now reports SQLState and error code.
     
     For example, a "Table unknown" (error 335544580) in Jaybird 3.0 has message:
     
@@ -180,6 +199,9 @@ document, but it could just as well be an implementation bug.
     TABLE_NON_EXISTENT\n
     At line 1, column 13
     ~~~
+    
+    The SQLState and error code are currently only include if the exception 
+    was obtained from Firebird server.
 
 * More specific error reported by `SQLException.getErrorCode` and 
   `SQLException.getSQLState`.
@@ -239,6 +261,8 @@ Jaybird 3.0 introduces some changes in compatibility and announces future
 breaking changes.
 
 **Some of the compatibility changes are documented in [What's new in Jaybird 3.0].**
+
+*TODO Merge sections*
 
 Firebird 1.0 and 1.5 no longer supported
 ----------------------------------------

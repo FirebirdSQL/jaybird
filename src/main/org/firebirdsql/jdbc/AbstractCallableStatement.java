@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
@@ -133,7 +131,7 @@ public abstract class AbstractCallableStatement extends FBPreparedStatement impl
             try {
                 notifyStatementStarted();
 
-                List<Integer> results = new ArrayList<Integer>(batchList.size());
+                List<Integer> results = new ArrayList<>(batchList.size());
                 Iterator<Object> iterator = batchList.iterator();
 
                 try {
@@ -194,9 +192,7 @@ public abstract class AbstractCallableStatement extends FBPreparedStatement impl
         for (FBProcedureParam param : procedureCall.getOutputParams()) {
             if (param == null) continue;
 
-            FBField field = resultSet.getField(
-                    procedureCall.mapOutParamIndexToPosition(param.getIndex()),
-                    false);
+            FBField field = resultSet.getField(procedureCall.mapOutParamIndexToPosition(param.getIndex()), false);
             field.setRequiredType(param.getType());
         }
     }
@@ -250,8 +246,9 @@ public abstract class AbstractCallableStatement extends FBPreparedStatement impl
                 prepareFixedStatement(procedureCall.getSQL(isSelectableProcedure()));
                 hasResultSet = internalExecute(!isSelectableProcedure());
 
-                if (hasResultSet)
+                if (hasResultSet) {
                     setRequiredTypes();
+                }
             } finally {
             	if (!hasResultSet) notifyStatementCompleted();
             }
@@ -271,8 +268,7 @@ public abstract class AbstractCallableStatement extends FBPreparedStatement impl
             prepareFixedStatement(procedureCall.getSQL(isSelectableProcedure()));
 
             if (!internalExecute(!isSelectableProcedure()))
-                throw new FBSQLException(
-                        "No resultset for sql",
+                throw new FBSQLException("No resultset for sql",
                         FBSQLException.SQL_STATE_NO_RESULT_SET);
 
             getResultSet();
@@ -330,14 +326,15 @@ public abstract class AbstractCallableStatement extends FBPreparedStatement impl
                 Object value = param.getValue();
                 FBField field = getField(counter);
 
-                if (value == null)
+                if (value == null) {
                     field.setNull();
-                else if (value instanceof WrapperWithCalendar) {
+                } else if (value instanceof WrapperWithCalendar) {
                     setField(field, (WrapperWithCalendar)value);
                 } else if (value instanceof WrapperWithInt) {
                     setField(field, (WrapperWithInt)value);
-                } else
+                } else {
                     field.setObject(value);
+                }
 
                 isParamSet[counter - 1] = true;
             }
@@ -346,8 +343,8 @@ public abstract class AbstractCallableStatement extends FBPreparedStatement impl
         final boolean hasResultSet = super.internalExecute(sendOutParams);
         if (hasResultSet && isSingletonResult) {
             // Safeguarding first row so it will work even if the result set from getResultSet is manipulated
-            singletonRs = new FBResultSet(fbStatement.getFieldDescriptor(), gdsHelper, Arrays.asList(singletonResult),
-                    true);
+            singletonRs = new FBResultSet(fbStatement.getFieldDescriptor(), gdsHelper,
+                    Collections.singletonList(singletonResult), true);
         }
         return hasResultSet;
     }
@@ -585,10 +582,10 @@ public abstract class AbstractCallableStatement extends FBPreparedStatement impl
      * @exception SQLException if a database access error occurs
      * @deprecated
      */
+    @SuppressWarnings("deprecation")
     @Deprecated
     public BigDecimal getBigDecimal(int parameterIndex, int scale) throws SQLException {
         parameterIndex = procedureCall.mapOutParamIndexToPosition(parameterIndex);
-        //noinspection deprecation
         return getAndAssertSingletonResultSet().getBigDecimal(parameterIndex, scale);
     }
 

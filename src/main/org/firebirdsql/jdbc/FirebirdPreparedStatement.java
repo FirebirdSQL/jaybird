@@ -38,63 +38,50 @@ import org.firebirdsql.gds.ISCConstants;
 public interface FirebirdPreparedStatement extends FirebirdStatement, PreparedStatement {
  
     /** A <code>SELECT</code> statement */
-    public static final int TYPE_SELECT = 
-        ISCConstants.isc_info_sql_stmt_select;
+    int TYPE_SELECT = ISCConstants.isc_info_sql_stmt_select;
 
     /** An <code>INSERT</code> statement */
-    public static final int TYPE_INSERT =
-        ISCConstants.isc_info_sql_stmt_insert;
+    int TYPE_INSERT = ISCConstants.isc_info_sql_stmt_insert;
 
     /** An <code>UPDATE</code> statement */
-    public static final int TYPE_UPDATE =
-        ISCConstants.isc_info_sql_stmt_update;
+    int TYPE_UPDATE = ISCConstants.isc_info_sql_stmt_update;
 
     /** A <code>DELETE</code> statement */
-    public static final int TYPE_DELETE =
-        ISCConstants.isc_info_sql_stmt_delete;
+    int TYPE_DELETE = ISCConstants.isc_info_sql_stmt_delete;
 
     /** A DDL statment */
-    public static final int TYPE_DDL =
-        ISCConstants.isc_info_sql_stmt_ddl;
+    int TYPE_DDL = ISCConstants.isc_info_sql_stmt_ddl;
 
     /** A GET SEGMENT statement */
-    public static final int TYPE_GET_SEGMENT =
-        ISCConstants.isc_info_sql_stmt_get_segment;
+    int TYPE_GET_SEGMENT = ISCConstants.isc_info_sql_stmt_get_segment;
 
     /** A PUT SEGMENT statement */
-    public static final int TYPE_PUT_SEGMENT =
-        ISCConstants.isc_info_sql_stmt_put_segment;
+    int TYPE_PUT_SEGMENT = ISCConstants.isc_info_sql_stmt_put_segment;
 
     /** An <code>EXEC PROCEDURE</code> statement */
-    public static final int TYPE_EXEC_PROCEDURE =
-        ISCConstants.isc_info_sql_stmt_exec_procedure;
+    int TYPE_EXEC_PROCEDURE = ISCConstants.isc_info_sql_stmt_exec_procedure;
 
     /** A START TRANSACTION statement */
-    public static final int TYPE_START_TRANS =
-        ISCConstants.isc_info_sql_stmt_start_trans;
+    int TYPE_START_TRANS = ISCConstants.isc_info_sql_stmt_start_trans;
 
     /** A <code>COMMIT</code> statement */
-    public static final int TYPE_COMMIT =
-        ISCConstants.isc_info_sql_stmt_commit;
+    int TYPE_COMMIT = ISCConstants.isc_info_sql_stmt_commit;
 
     /** A <code>ROLLBACK</code> statement */
-    public static final int TYPE_ROLLBACK =
-        ISCConstants.isc_info_sql_stmt_rollback;
+    int TYPE_ROLLBACK = ISCConstants.isc_info_sql_stmt_rollback;
 
     /** A <code>SELECT FOR UPDATE</code> statement */
-    public static final int TYPE_SELECT_FOR_UPDATE =
-        ISCConstants.isc_info_sql_stmt_select_for_upd;
+    int TYPE_SELECT_FOR_UPDATE = ISCConstants.isc_info_sql_stmt_select_for_upd;
 
     /** A <code>SET GENERATOR</code> statement */
-    public static final int TYPE_SET_GENERATOR =
-        ISCConstants.isc_info_sql_stmt_set_generator;
+    int TYPE_SET_GENERATOR = ISCConstants.isc_info_sql_stmt_set_generator;
 
     /**
      * Get the execution plan of this PreparedStatement
      *
      * @return The execution plan of the statement
      */
-    String getExecutionPlan() throws FBSQLException, SQLException;
+    String getExecutionPlan() throws SQLException;
 
     /**
      * Get the statement type of this PreparedStatement.
@@ -103,6 +90,6 @@ public interface FirebirdPreparedStatement extends FirebirdStatement, PreparedSt
      *
      * @return The identifier for the given statement's type
      */
-    int getStatementType() throws FBSQLException;
+    int getStatementType() throws SQLException;
    
 }
