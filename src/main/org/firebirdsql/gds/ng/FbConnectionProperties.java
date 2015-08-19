@@ -208,6 +208,8 @@ public final class FbConnectionProperties extends AbstractAttachProperties<IConn
             case isc_dpb_utf8_filename:
                 // Filter out, handled explicitly in protocol implementation
                 break;
+            case isc_dpb_specific_auth_data:
+                break;
             default:
                 log.warn(String.format("Unknown or unsupported parameter with type %d added to extra database parameters", parameter.getType()));
                 parameter.copyTo(getExtraDatabaseParameters(), null);
