@@ -67,6 +67,7 @@ public abstract class WireConnection<T extends IAttachProperties<T>, C> extends 
     private int protocolArchitecture;
     private int protocolMinimumType;
 
+    private SrpClient srpClient;
     private XdrOutputStream xdrOut;
     private XdrInputStream xdrIn;
     private final XdrStreamAccess streamAccess = new XdrStreamAccess() {
@@ -247,29 +248,47 @@ public abstract class WireConnection<T extends IAttachProperties<T>, C> extends 
                 userId.write(loginBytes, 0, loginLength);
             }
 
+            // TODO: switch Srp or Legacy_Auth by something property.
+//            String pluginName = "Legacy_Auth";
+            String pluginName = "Srp";
+
             userId.write(CNCT_plugin_name);
-            final byte[] pluginNameBytes = "Legacy_Auth".getBytes(StandardCharsets.UTF_8);
+            final byte[] pluginNameBytes = pluginName.getBytes(StandardCharsets.UTF_8);
             userId.write(pluginNameBytes.length);
             userId.write(pluginNameBytes, 0, pluginNameBytes.length);
 
             userId.write(CNCT_plugin_list);
-            final byte[] pluginListBytes = "Legacy_Auth".getBytes(StandardCharsets.UTF_8);
+            final byte[] pluginListBytes = "Srp,Legacy_Auth".getBytes(StandardCharsets.UTF_8);
             userId.write(pluginListBytes.length);
             userId.write(pluginListBytes, 0, pluginListBytes.length);
 
+            byte[] specificDataBytes = null;
             if (attachProperties.getPassword() != null) {
-                final byte[] specificDataBytes = UnixCrypt.crypt(attachProperties.getPassword(), "9z").substring(2, 13).getBytes();
-                int remaining = specificDataBytes.length;
-                int position = 0;
-                int step = 0;
-                while (remaining > 0) {
-                    userId.write(CNCT_specific_data);
-                    int toWrite = Math.min(remaining, 254);
-                    userId.write(toWrite + 1);
-                    userId.write(step++);
-                    userId.write(specificDataBytes, position, toWrite);
-                    remaining -= toWrite;
-                    position += toWrite;
+                switch (pluginName) {
+                case "Legacy_Auth":
+                    specificDataBytes = UnixCrypt.crypt(attachProperties.getPassword(), "9z").substring(2, 13).getBytes();
+
+                    break;
+                case "Srp":
+                    srpClient = new SrpClient();
+                    specificDataBytes = srpClient.getPublicKeyHex().getBytes();
+                    break;
+                }
+
+                if (specificDataBytes != null) {
+                    // write specific data
+                    int remaining = specificDataBytes.length;
+                    int position = 0;
+                    int step = 0;
+                    while (remaining > 0) {
+                        userId.write(CNCT_specific_data);
+                        int toWrite = Math.min(remaining, 254);
+                        userId.write(toWrite + 1);
+                        userId.write(step++);
+                        userId.write(specificDataBytes, position, toWrite);
+                        remaining -= toWrite;
+                        position += toWrite;
+                    }
                 }
             }
 
@@ -316,19 +335,29 @@ public abstract class WireConnection<T extends IAttachProperties<T>, C> extends 
                 }
 
                 if (op_code == op_cond_accept || op_code == op_accept_data) {
-                    String pluginName = xdrIn.readString(getEncoding());
+                    byte[] data = xdrIn.readBuffer();
+                    String acceptPluginName = xdrIn.readString(getEncoding());
                     final int is_authenticated = xdrIn.readInt();
                     String keys = xdrIn.readString(getEncoding());
-                    if (pluginName.equals("Legacy_Auth") && is_authenticated == 0) {
-                        try {
-                            close();
-                        } catch (Exception ex) {
-                            log.debug("Ignoring exception on disconnect in connect phase of protocol", ex);
+                    if (is_authenticated == 0) {
+                        byte[] authData;
+                        if (acceptPluginName.equals("Srp")) {
+                            authData = srpClient.clientProof(attachProperties.getUser(), attachProperties.getPassword(), data);
+                        } else if (acceptPluginName.equals("Legacy_Auth")) {
+                            authData = UnixCrypt.crypt(attachProperties.getPassword(), "9z").substring(2, 13).getBytes();
+                        } else {
+                            try {
+                                close();
+                            } catch (Exception ex) {
+                                log.debug("Ignoring exception on disconnect in connect phase of protocol", ex);
+                            }
+                            // TODO Use different exception message + check what fbclient does here
+                            throw new SQLException("Unauthorized");
                         }
-                        // TODO Use different exception message + check what fbclient does here
-                        throw new SQLException("Unauthorized");
+                        attachProperties.setAuthData(authData);
                     }
                 }
+
 
                 ProtocolDescriptor descriptor = protocols.getProtocolDescriptor(protocolVersion);
                 if (descriptor == null) {

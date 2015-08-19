@@ -146,6 +146,9 @@ public interface ISCConstants {
     int isc_dpb_org_filename            = 76;
     int isc_dpb_utf8_filename           = 77;
     int isc_dpb_ext_call_depth          = 78;
+
+    // Firebird 3.0 constants
+    int isc_dpb_specific_auth_data      = 84;
     
     /*
      * Driver-specific DPB params that will be removed before sending them
