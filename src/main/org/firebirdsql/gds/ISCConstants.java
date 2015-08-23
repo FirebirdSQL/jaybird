@@ -132,7 +132,7 @@ public interface ISCConstants {
     int isc_dpb_gfix_attach             = 66;
     int isc_dpb_gstat_attach            = 67;
     int isc_dpb_set_db_charset          = 68;
-    
+
     // Firebird 2.1 constants
     int isc_dpb_gsec_attach             = 69;
     int isc_dpb_address_path            = 70;
@@ -140,7 +140,7 @@ public interface ISCConstants {
     int isc_dpb_no_db_triggers          = 72;
     int isc_dpb_trusted_auth            = 73;
     int isc_dpb_process_name            = 74;
-    
+
     // Firebird 2.5 constants
     int isc_dpb_trusted_role            = 75;
     int isc_dpb_org_filename            = 76;
@@ -148,8 +148,19 @@ public interface ISCConstants {
     int isc_dpb_ext_call_depth          = 78;
 
     // Firebird 3.0 constants
+    int isc_dpb_auth_block				= 79;
+    int isc_dpb_client_version			= 80;
+    int isc_dpb_remote_protocol			= 81;
+    int isc_dpb_host_name				= 82;
+    int isc_dpb_os_user					= 83;
     int isc_dpb_specific_auth_data      = 84;
-    
+    int isc_dpb_auth_plugin_list		= 85;
+    int isc_dpb_auth_plugin_name		= 86;
+    int isc_dpb_config					= 87;
+    int isc_dpb_nolinger				= 88;
+    int isc_dpb_reset_icu				= 89;
+    int isc_dpb_map_attach              = 90;
+
     /*
      * Driver-specific DPB params that will be removed before sending them
      * to the server. These params influence only client side.
@@ -162,14 +173,14 @@ public interface ISCConstants {
     int isc_dpb_use_standard_udf        = 134;
     int isc_dpb_local_encoding          = 135;
     int isc_dpb_mapping_path            = 136;
-    int isc_dpb_no_result_set_tracking  = 137; 
+    int isc_dpb_no_result_set_tracking  = 137;
     int isc_dpb_result_set_holdable     = 138;
     int isc_dpb_filename_charset        = 139;
     int isc_dpb_octets_as_bytes         = 140;
     int isc_dpb_so_timeout              = 141;
     int isc_dpb_column_label_for_name   = 142;
     int isc_dpb_use_firebird_autocommit = 143;
-    
+
     /*************************************/
     /* Transaction parameter block stuff */
     /*************************************/
@@ -215,12 +226,30 @@ public interface ISCConstants {
     int isc_spb_verbose                 = 107;
     int isc_spb_options                 = 108;
 
+    int isc_spb_address_path            = 109;
+    int isc_spb_process_id              = 110;
+    int isc_spb_trusted_auth			= 111;
+    int isc_spb_process_name            = 112;
+    int isc_spb_trusted_role            = 113;
+    int isc_spb_verbint                 = 114;
+    int isc_spb_auth_block              = 115;
+    int isc_spb_auth_plugin_name        = 116;
+    int isc_spb_auth_plugin_list        = 117;
+    int isc_spb_utf8_filename			= 118;
+    int isc_spb_client_version          = 119;
+    int isc_spb_remote_protocol         = 120;
+    int isc_spb_host_name               = 121;
+    int isc_spb_os_user                 = 122;
+    int isc_spb_config					= 123;
+    int isc_spb_expected_db				= 124;
+
     int isc_spb_connect_timeout         = isc_dpb_connect_timeout;
     int isc_spb_dummy_packet_interval   = isc_dpb_dummy_packet_interval;
     int isc_spb_sql_role_name           = isc_dpb_sql_role_name;
 
-    int isc_spb_specific_auth_data      = 111;
-    
+    // This will not be used in protocol 13, therefore may be reused
+    int isc_spb_specific_auth_data      = isc_spb_trusted_auth;
+
     /*****************************************
      * Parameters for isc_action_svc_nbak    *
      * New with Firebird 2.5
@@ -258,7 +287,7 @@ public interface ISCConstants {
     // RDB$ADMIN mapping - New with Firebird 2.5
     int isc_action_svc_set_mapping  = 27; // Sets RDB$ADMIN auto mapping in security database
     int isc_action_svc_drop_mapping = 28; // Drops RDB$ADMIN auto mapping in security database
-    
+
     /*****************************************
      * Parameters for isc_action_svc_trace   *
      *****************************************/
@@ -266,7 +295,7 @@ public interface ISCConstants {
     int isc_spb_trc_id    = 1; // relevant for stop, suspend and resume
     int isc_spb_trc_name  = 2; // relevant for start
     int isc_spb_trc_cfg   = 3; // relevant for start
-      
+
     /*****************************
      * Service information items *
      *****************************/
@@ -344,7 +373,7 @@ public interface ISCConstants {
     int isc_spb_prp_set_sql_dialect		  = 14;
     int isc_spb_prp_activate			  = 0x0100;
     int isc_spb_prp_db_online			  = 0x0200;
-    
+
     // New shutdown/online modes - New with Firebird 2.5
     int isc_spb_prp_force_shutdown        = 41;
     int isc_spb_prp_attachments_shutdown  = 42;
@@ -530,7 +559,7 @@ public interface ISCConstants {
     /*****************************/
     /* Request information items */
     /*****************************/
-	 
+
     int isc_info_db_id = 4;
     int isc_info_reads = 5;
     int isc_info_writes = 6;
@@ -591,7 +620,7 @@ public interface ISCConstants {
     int isc_info_db_size_in_pages = 64;
 
     /* Values 65-100 unused to avoid conflict with InterBase */
-	
+
     int frb_info_att_charset = 101;
     int isc_info_db_class = 102;
     int isc_info_firebird_version = 103;
@@ -604,7 +633,7 @@ public interface ISCConstants {
     int isc_info_active_tran_count = 110;
     int isc_info_creation_date = 111;
     int fb_info_page_contents = 113;
-    
+
     int isc_info_db_impl_rdb_vms = 1;
     int isc_info_db_impl_rdb_eln = 2;
     int isc_info_db_impl_rdb_eln_dev = 3;
@@ -709,8 +738,8 @@ public interface ISCConstants {
     int RBL_segment          = 2;
     int RBL_eof_pending      = 4;
     int RBL_create           = 8;
-    
-    
+
+
     /**************************/
     /* Blob information items */
     /**************************/
@@ -730,7 +759,7 @@ public interface ISCConstants {
     int isc_info_tra_isolation = 8;
     int isc_info_tra_access = 9;
     int isc_info_tra_lock_timeout = 10;
-    
+
     /****************************************/
     /* Cancel types for fb_cancel_operation */
     /****************************************/
