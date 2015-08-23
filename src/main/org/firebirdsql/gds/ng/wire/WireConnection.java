@@ -292,8 +292,16 @@ public abstract class WireConnection<T extends IAttachProperties<T>, C> extends 
                 }
             }
 
+            // TODO: switch WireCrypt 0:clear 1:encrypt
+            int wire_crypt = 1;
+
             userId.write(CNCT_client_crypt);    // WireCrypt = Disabled
-            userId.write(new byte[] { (byte) 4, (byte) 0, (byte) 0, (byte) 0, (byte) 0 });
+            if (wire_crypt != 0) {
+                userId.write(new byte[] { (byte) 4, (byte) 1, (byte) 0, (byte) 0, (byte) 0 });
+            } else {
+                userId.write(new byte[] { (byte) 4, (byte) 0, (byte) 0, (byte) 0, (byte) 0 });
+            }
+
 
             userId.write(CNCT_user);
             int userLength = Math.min(userBytes.length, 255);
@@ -325,7 +333,7 @@ public abstract class WireConnection<T extends IAttachProperties<T>, C> extends 
             }
 
             xdrOut.flush();
-            final int op_code = readNextOperation();
+            int op_code = readNextOperation();
             if (op_code == op_accept || op_code == op_cond_accept || op_code == op_accept_data) {
                 protocolVersion = xdrIn.readInt(); // Protocol version
                 protocolArchitecture = xdrIn.readInt(); // Architecture for protocol
