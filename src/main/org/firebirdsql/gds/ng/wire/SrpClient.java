@@ -100,9 +100,9 @@ public final class SrpClient {
     }
 
     private static byte[] pad(BigInteger n) {
-        final byte[] bn = n.toByteArray();
+        final byte[] bn = toBigByteArray(n);
         final int start = bn.length > SRP_KEY_SIZE ? bn.length - SRP_KEY_SIZE : 0;
-        return Arrays.copyOfRange(bn, start, SRP_KEY_SIZE+start);
+        return Arrays.copyOfRange(bn, start, bn.length);
     }
 
     private static BigInteger getScramble(BigInteger x, BigInteger y) {
