@@ -18,6 +18,7 @@
  */
 package org.firebirdsql.gds.ng;
 
+import javax.xml.bind.DatatypeConverter;
 import org.firebirdsql.encodings.Encoding;
 import org.firebirdsql.encodings.IEncodingFactory;
 import org.firebirdsql.gds.DatabaseParameterBuffer;
@@ -57,11 +58,14 @@ public abstract class AbstractParameterConverter {
         if (props.getUser() != null) {
             dpb.addArgument(isc_dpb_user_name, props.getUser(), encoding);
         }
-        if (props.getPassword() != null) {
+        if (props.getPassword() != null && props.getAuthData() == null) {
             dpb.addArgument(isc_dpb_password, props.getPassword(), encoding);
         }
         if (props.getRoleName() != null) {
             dpb.addArgument(isc_dpb_sql_role_name, props.getRoleName(), encoding);
+        }
+        if (props.getAuthData() != null) {
+            dpb.addArgument(isc_dpb_specific_auth_data, DatatypeConverter.printHexBinary(props.getAuthData()), encoding);
         }
         dpb.addArgument(isc_dpb_sql_dialect, props.getConnectionDialect());
         if (props.getConnectTimeout() != IConnectionProperties.DEFAULT_CONNECT_TIMEOUT) {
@@ -108,11 +112,14 @@ public abstract class AbstractParameterConverter {
         if (props.getUser() != null) {
             spb.addArgument(isc_spb_user_name, props.getUser(), encoding);
         }
-        if (props.getPassword() != null) {
+        if (props.getPassword() != null && props.getAuthData() == null) {
             spb.addArgument(isc_spb_password, props.getPassword(), encoding);
         }
         if (props.getRoleName() != null) {
             spb.addArgument(isc_spb_sql_role_name, props.getRoleName(), encoding);
+        }
+        if (props.getAuthData() != null) {
+            spb.addArgument(isc_spb_specific_auth_data, DatatypeConverter.printHexBinary(props.getAuthData()), encoding);
         }
         if (props.getConnectTimeout() != IConnectionProperties.DEFAULT_CONNECT_TIMEOUT) {
             spb.addArgument(isc_spb_connect_timeout, props.getConnectTimeout());

@@ -146,6 +146,9 @@ public interface ISCConstants {
     int isc_dpb_org_filename            = 76;
     int isc_dpb_utf8_filename           = 77;
     int isc_dpb_ext_call_depth          = 78;
+
+    // Firebird 3.0 constants
+    int isc_dpb_specific_auth_data      = 84;
     
     /*
      * Driver-specific DPB params that will be removed before sending them
@@ -215,6 +218,8 @@ public interface ISCConstants {
     int isc_spb_connect_timeout         = isc_dpb_connect_timeout;
     int isc_spb_dummy_packet_interval   = isc_dpb_dummy_packet_interval;
     int isc_spb_sql_role_name           = isc_dpb_sql_role_name;
+
+    int isc_spb_specific_auth_data      = 111;
     
     /*****************************************
      * Parameters for isc_action_svc_nbak    *
