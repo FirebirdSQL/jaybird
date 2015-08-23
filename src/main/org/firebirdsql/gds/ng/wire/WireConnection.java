@@ -333,7 +333,7 @@ public abstract class WireConnection<T extends IAttachProperties<T>, C> extends 
             }
 
             xdrOut.flush();
-            int op_code = readNextOperation();
+            final int op_code = readNextOperation();
             if (op_code == op_accept || op_code == op_cond_accept || op_code == op_accept_data) {
                 protocolVersion = xdrIn.readInt(); // Protocol version
                 protocolArchitecture = xdrIn.readInt(); // Architecture for protocol
