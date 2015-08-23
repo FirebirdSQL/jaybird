@@ -65,6 +65,7 @@ public final class XdrOutputStream extends OutputStream {
     }
 
     private final OutputStream out;
+    private Arc4 arc4 = null;
 
     // TODO In a lot of cases the padding written in this class should be NULL_BYTE instead of SPACE_BYTE
 
@@ -106,7 +107,11 @@ public final class XdrOutputStream extends OutputStream {
      *         underlying output stream
      */
     public void writeAlignment(int length) throws IOException {
-        out.write(ZERO_PADDING, 0, (4 - length) & 3);
+        byte[] buffer = Arrays.copyOfRange(ZERO_PADDING, 0, (4 - length) & 3);
+        if (arc4 != null) {
+            arc4.translate(buffer);
+        }
+        out.write(buffer);
     }
 
     /**
@@ -123,14 +128,17 @@ public final class XdrOutputStream extends OutputStream {
     public void writePadding(int length, int padByte) throws IOException {
         final byte[] padding;
         if (padByte == SPACE_BYTE && length <= TEXT_PAD.length) {
-            padding = TEXT_PAD;
+            padding = Arrays.copyOfRange(TEXT_PAD, 0, length);
         } else if (padByte == NULL_BYTE && length <= ZERO_PADDING.length) {
-            padding = ZERO_PADDING;
+            padding = Arrays.copyOfRange(ZERO_PADDING, 0, length);
         } else {
             padding = new byte[length];
             if (padByte != NULL_BYTE) {
                 Arrays.fill(padding, (byte) padByte);
             }
+        }
+        if (arc4 != null) {
+            arc4.translate(padding, 0, length);
         }
         out.write(padding, 0, length);
     }
@@ -236,6 +244,9 @@ public final class XdrOutputStream extends OutputStream {
         buffer[5] = (byte) (v >>> 16);
         buffer[6] = (byte) (v >>> 8);
         buffer[7] = (byte) v;
+        if (arc4 != null) {
+            arc4.translate(buffer, 8);
+        }
         out.write(buffer, 0, 8);
     }
 
@@ -247,10 +258,15 @@ public final class XdrOutputStream extends OutputStream {
      *         underlying output stream
      */
     public void writeInt(int v) throws IOException {
-        out.write((v >>> 24) & 0xFF);
-        out.write((v >>> 16) & 0xFF);
-        out.write((v >>> 8) & 0xFF);
-        out.write(v & 0xFF);
+        final byte[] buffer = writeBuffer;
+        buffer[0] = (byte)((v >>> 24) & 0xFF);
+        buffer[1] = (byte)((v >>> 16) & 0xFF);
+        buffer[2] = (byte)((v >>> 8) & 0xFF);
+        buffer[3] = (byte)(v & 0xFF);
+        if (arc4 != null) {
+            arc4.translate(buffer, 4);
+        }
+        out.write(buffer, 0, 4);
     }
 
     /**
@@ -265,6 +281,9 @@ public final class XdrOutputStream extends OutputStream {
      *         underlying output stream
      */
     public void write(byte[] b, int offset, int len, int pad) throws IOException {
+        if (arc4 != null) {
+            arc4.translate(b, offset, offset+len);
+        }
         out.write(b, offset, len);
         // TODO We shouldn't always pad with spaces
         writePadding(pad, SPACE_BYTE);
@@ -280,6 +299,12 @@ public final class XdrOutputStream extends OutputStream {
      */
     @Override
     public void write(int b) throws IOException {
+        if (arc4 != null) {
+            byte[] buffer = new byte[1];
+            buffer[0] = (byte)b;
+            arc4.translate(buffer);
+            b = buffer[0];
+        }
         out.write(b);
     }
 
@@ -299,6 +324,9 @@ public final class XdrOutputStream extends OutputStream {
      */
     @Override
     public void write(byte b[], int off, int len) throws IOException {
+        if (arc4 != null) {
+            arc4.translate(b, off, off+len);
+        }
         out.write(b, off, len);
     }
 
@@ -322,5 +350,9 @@ public final class XdrOutputStream extends OutputStream {
     @Override
     public void close() throws IOException {
         out.close();
+    }
+
+    public void setArc4Key(byte[] key) {
+        arc4 = new Arc4(key);
     }
 }
