@@ -24,65 +24,73 @@
 // https://github.com/nakagami/pyfirebirdsql/blob/master/firebirdsql/srp.py
 
 package org.firebirdsql.gds.ng.wire;
-import java.util.Arrays;
+
+import org.firebirdsql.gds.VaxEncoding;
+
+import javax.xml.bind.DatatypeConverter;
 import java.math.BigInteger;
-import java.security.SecureRandom;
+import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import javax.xml.bind.DatatypeConverter;
+import java.security.SecureRandom;
+import java.util.Arrays;
 
 /**
  * @author <a href="mailto:nakagami@gmail.com">Hajime Nakagami</a>
  */
-
-
-
 public final class SrpClient {
     private static final int SRP_KEY_SIZE = 128;
     private static final int SRP_SALT_SIZE = 32;
+
     private static final BigInteger N = new BigInteger("E67D2E994B2F900C3F41F08F5BB2627ED0D49EE1FE767A52EFCD565CD6E768812C3E1E9CE8F0A8BEA6CB13CD29DDEBF7A96D4A93B55D488DF099A15C89DCB0640738EB2CBDD9A8F7BAB561AB1B0DC1C6CDABF303264A08D1BCA932D1F1EE428B619D970F342ABA9A65793B8B2F041AE5364350C16F735F56ECBCA87BD57B29E7", 16);
     private static final BigInteger g = new BigInteger("2");
-
     private static final BigInteger k = new BigInteger("1277432915985975349439481660349303019122249719989");
+
+    private static final SecureRandom random = new SecureRandom();
+    private static final byte[] SEPARATOR_BYTES = ":".getBytes(StandardCharsets.UTF_8);
 
     private BigInteger publicKey;   /* A */
     private BigInteger privateKey;  /* a */
     private byte[] sessionKey;      /* K */
 
-
-    private static class KeyPair {
+    static class KeyPair {
         private BigInteger pub, secret;
-        KeyPair(BigInteger pub, BigInteger secret) {
+
+        private KeyPair(BigInteger pub, BigInteger secret) {
             this.pub = pub;
             this.secret = secret;
         }
-        private BigInteger getPublicKey() {
+
+        BigInteger getPublicKey() {
             return pub;
         }
-        private BigInteger getPrivateKey() {
+
+        BigInteger getPrivateKey() {
             return secret;
         }
     }
 
     private static BigInteger fromBigByteArray(byte[] b) {
-        return new BigInteger(DatatypeConverter.printHexBinary(b), 16);
+        return new BigInteger(1, b);
     }
 
     private static byte[] toBigByteArray(BigInteger n) {
         byte[] b = n.toByteArray();
-        int i = 0;
-        while (b[i] == 0)
+        if (b[0] != 0) {
+            return b;
+        }
+        int i = 1;
+        while (b[i] == 0) {
             i++;
+        }
         return Arrays.copyOfRange(b, i, b.length);
     }
 
-    private static byte[] parseHexBinary(String hexString) {
-
+    private static String padHexBinary(String hexString) {
         if (hexString.length() % 2 != 0) {
-            hexString = '0' + hexString;
+            return '0' + hexString;
         }
-
-        return DatatypeConverter.parseHexBinary(hexString);
+        return hexString;
     }
 
     private static byte[] sha1(byte[]... ba) {
@@ -92,17 +100,17 @@ public final class SrpClient {
                 md.update(b);
             }
             return md.digest();
+        } catch (NoSuchAlgorithmException e) {
+            throw new RuntimeException("SHA-1 MessageDigest not available", e);
         }
-        catch(NoSuchAlgorithmException e) {
-            e.printStackTrace();
-        }
-        return null;
     }
 
     private static byte[] pad(BigInteger n) {
         final byte[] bn = toBigByteArray(n);
-        final int start = bn.length > SRP_KEY_SIZE ? bn.length - SRP_KEY_SIZE : 0;
-        return Arrays.copyOfRange(bn, start, bn.length);
+        if (bn.length > SRP_KEY_SIZE) {
+            return Arrays.copyOfRange(bn, bn.length - SRP_KEY_SIZE, bn.length);
+        }
+        return bn;
     }
 
     private static BigInteger getScramble(BigInteger x, BigInteger y) {
@@ -110,27 +118,23 @@ public final class SrpClient {
     }
 
     private static BigInteger getSecret() {
-        byte[] b = new byte[SRP_KEY_SIZE/8];
-        SecureRandom random = new SecureRandom();
-        random.nextBytes(b);
-        return fromBigByteArray(b);
+        return new BigInteger(SRP_KEY_SIZE, random);
     }
 
-    private static byte[] getSalt() {
+    static byte[] getSalt() {
         byte[] b = new byte[SRP_SALT_SIZE];
-        SecureRandom random = new SecureRandom();
         random.nextBytes(b);
         return b;
     }
 
-
     private static BigInteger getUserHash(String user, String password, byte[] salt) {
-        final byte[] hash1 = sha1(user.getBytes(), ":".getBytes(), password.getBytes());
+        final byte[] hash1 = sha1(user.toUpperCase().getBytes(StandardCharsets.UTF_8), SEPARATOR_BYTES,
+                password.getBytes(StandardCharsets.UTF_8));
         final byte[] hash2 = sha1(salt, hash1);
         return fromBigByteArray(hash2);
     }
 
-    private static KeyPair serverSeed(String user, String password, byte[] salt) {
+    static KeyPair serverSeed(String user, String password, byte[] salt) {
         final BigInteger v = g.modPow(getUserHash(user, password, salt), N);
         final BigInteger b = getSecret();
         final BigInteger gb = g.modPow(b, N);
@@ -139,7 +143,8 @@ public final class SrpClient {
         return new KeyPair(B, b);
     }
 
-    private static byte[] getServerSessionKey(String user, String password, byte[] salt, BigInteger A, BigInteger B, BigInteger b) {
+    static byte[] getServerSessionKey(String user, String password, byte[] salt, BigInteger A, BigInteger B,
+            BigInteger b) {
         final BigInteger u = getScramble(A, B);
         final BigInteger v = g.modPow(getUserHash(user, password, salt), N);
         final BigInteger vu = v.modPow(u, N);
@@ -152,10 +157,12 @@ public final class SrpClient {
         privateKey = getSecret();
         publicKey = g.modPow(privateKey, N);
     }
-    private BigInteger getPublicKey() {
+
+    public BigInteger getPublicKey() {
         return publicKey;
     }
-    private BigInteger getPrivateKey() {
+
+    public BigInteger getPrivateKey() {
         return privateKey;
     }
 
@@ -179,44 +186,29 @@ public final class SrpClient {
         final byte[] K = getClientSessionKey(user, password, salt, serverPublicKey);
         final BigInteger n1 = fromBigByteArray(sha1(toBigByteArray(N)));
         final BigInteger n2 = fromBigByteArray(sha1(toBigByteArray(g)));
-        final byte[] M = sha1(toBigByteArray(n1.modPow(n2, N)), toBigByteArray(fromBigByteArray(sha1(user.getBytes()))), salt, toBigByteArray(publicKey), toBigByteArray(serverPublicKey), K);
-
+        final byte[] M = sha1(toBigByteArray(n1.modPow(n2, N)),
+                sha1(user.toUpperCase().getBytes(StandardCharsets.UTF_8)), salt,
+                toBigByteArray(publicKey), toBigByteArray(serverPublicKey), K);
 
         sessionKey = K;
         return M;
     }
 
     public byte[] clientProof(String user, String password, byte[] authData) {
-        int length = (int)authData[0] + (int)authData[1]*256;
+        final int length = VaxEncoding.iscVaxInteger2(authData, 0);
 
-        byte[] salt = Arrays.copyOfRange(authData, 2, length +2);
+        final byte[] salt = Arrays.copyOfRange(authData, 2, length + 2);
 
-        final String hexServerPublicKey = new String(Arrays.copyOfRange(authData, length+4, authData.length));
-        final BigInteger serverPublicKey = fromBigByteArray(parseHexBinary(hexServerPublicKey));
+        final int serverKeyStart = length + 4;
+        final String hexServerPublicKey = new String(authData, serverKeyStart, authData.length - serverKeyStart,
+                StandardCharsets.US_ASCII);
+        final BigInteger serverPublicKey = new BigInteger(padHexBinary(hexServerPublicKey), 16);
 
         return clientProof(user.toUpperCase(), password, salt, serverPublicKey);
     }
 
     public byte[] getSessionKey() {
         return sessionKey;
-    }
-
-    public static void main(String[] arg)
-    {
-        String user = "SYSDBA";
-        String password = "masterkey";
-
-        SrpClient srp = new SrpClient();
-        byte[] salt = getSalt();
-        KeyPair server_key_pair = serverSeed(user, password, salt);
-
-        byte[] serverKey = getServerSessionKey(user, password, salt, srp.getPublicKey(), server_key_pair.getPublicKey(), server_key_pair.getPrivateKey());
-
-        byte[] proof = srp.clientProof(user, password, salt, server_key_pair.getPublicKey());
-
-        byte[] sessionKey = srp.getSessionKey();
-
-        DatatypeConverter.printHexBinary(sessionKey).equals(DatatypeConverter.printHexBinary(serverKey));
     }
 
 }
