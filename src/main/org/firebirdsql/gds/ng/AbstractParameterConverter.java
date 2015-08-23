@@ -119,7 +119,7 @@ public abstract class AbstractParameterConverter {
             spb.addArgument(isc_spb_sql_role_name, props.getRoleName(), encoding);
         }
         if (props.getAuthData() != null) {
-            spb.addArgument(isc_dpb_specific_auth_data, DatatypeConverter.printHexBinary(props.getAuthData()), encoding);
+            spb.addArgument(isc_spb_specific_auth_data, DatatypeConverter.printHexBinary(props.getAuthData()), encoding);
         }
         if (props.getConnectTimeout() != IConnectionProperties.DEFAULT_CONNECT_TIMEOUT) {
             spb.addArgument(isc_spb_connect_timeout, props.getConnectTimeout());

@@ -218,6 +218,8 @@ public interface ISCConstants {
     int isc_spb_connect_timeout         = isc_dpb_connect_timeout;
     int isc_spb_dummy_packet_interval   = isc_dpb_dummy_packet_interval;
     int isc_spb_sql_role_name           = isc_dpb_sql_role_name;
+
+    int isc_spb_specific_auth_data      = 111;
     
     /*****************************************
      * Parameters for isc_action_svc_nbak    *
