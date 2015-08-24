@@ -32,6 +32,13 @@ import java.io.BufferedInputStream;
 import java.io.EOFException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.security.NoSuchAlgorithmException;
+import java.security.InvalidKeyException;
+
+import javax.crypto.Cipher;
+import javax.crypto.spec.SecretKeySpec;
+import javax.crypto.CipherInputStream;
+import javax.crypto.NoSuchPaddingException;
 
 /**
  * <code>XdrInputStream</code> is an input stream for reading in data that
@@ -49,7 +56,6 @@ import java.io.InputStream;
 public final class XdrInputStream {
 
     private InputStream in = null;
-    private Arc4 arc4 = null;
 
     private static final int DEFAULT_BUFFER_SIZE = 16384;
 
@@ -89,9 +95,12 @@ public final class XdrInputStream {
      *         underlying input stream
      */
     public int skipFully(int n) throws IOException {
-        byte[] buffer = new byte[n];
-        readFully(buffer, 0, n);
-        return n;
+        int total = 0;
+        int cur;
+        while (total < n && (cur = (int) in.skip(n - total)) > 0) {
+            total += cur;
+        }
+        return total;
     }
 
     /**
@@ -170,19 +179,6 @@ public final class XdrInputStream {
         int ch4 = in.read();
         if ((ch1 | ch2 | ch3 | ch4) < 0)
             throw new EOFException();
-        if (arc4 != null) {
-            byte[] buf = new byte[4];
-            buf[0] = (byte)ch1;
-            buf[1] = (byte)ch2;
-            buf[2] = (byte)ch3;
-            buf[3] = (byte)ch4;
-            arc4.translate(buf);
-            ch1 = buf[0] < 0 ? buf[0] + 256 : buf[0];
-            ch2 = buf[1] < 0 ? buf[1] + 256 : buf[1];
-            ch3 = buf[2] < 0 ? buf[2] + 256 : buf[2];
-            ch4 = buf[3] < 0 ? buf[3] + 256 : buf[3];
-        }
-
         return ((ch1 << 24) + (ch2 << 16) + (ch3 << 8) + (ch4));
     }
 
@@ -198,14 +194,6 @@ public final class XdrInputStream {
         int ch2 = in.read();
         if ((ch1 | ch2) < 0)
             throw new EOFException();
-        if (arc4 != null) {
-            byte[] buf = new byte[2];
-            buf[0] = (byte)ch1;
-            buf[1] = (byte)ch2;
-            arc4.translate(buf);
-            ch1 = buf[0];
-            ch2 = buf[1];
-        }
         return (ch1 << 8) + (ch2);
     }
 
@@ -230,9 +218,6 @@ public final class XdrInputStream {
                 throw new EOFException();
             n += count;
         }
-        if (arc4 != null) {
-            arc4.translate(b, off, off+len);
-        }
     }
 
     /**
@@ -245,7 +230,10 @@ public final class XdrInputStream {
         in.close();
     }
 
-    public void setArc4Key(byte[] key) {
-        arc4 = new Arc4(key);
+    public void setArc4Key(byte[] key) throws NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException {
+        Cipher rc4 = Cipher.getInstance("ARCFOUR");
+        SecretKeySpec rc4Key = new SecretKeySpec(key, "ARCFOUR");
+        rc4.init(Cipher.ENCRYPT_MODE, rc4Key);
+        in = new CipherInputStream(in, rc4);
     }
 }
