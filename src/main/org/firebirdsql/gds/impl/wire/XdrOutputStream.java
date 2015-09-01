@@ -35,6 +35,13 @@ import java.io.BufferedOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.Arrays;
+import java.security.NoSuchAlgorithmException;
+import java.security.InvalidKeyException;
+
+import javax.crypto.Cipher;
+import javax.crypto.spec.SecretKeySpec;
+import javax.crypto.CipherOutputStream;
+import javax.crypto.NoSuchPaddingException;
 
 /**
  * An <code>XdrOutputStream</code> writes data in XDR format to an
@@ -64,7 +71,7 @@ public final class XdrOutputStream extends OutputStream {
         TEXT_PAD = textPad;
     }
 
-    private final OutputStream out;
+    private OutputStream out;
 
     // TODO In a lot of cases the padding written in this class should be NULL_BYTE instead of SPACE_BYTE
 
@@ -322,5 +329,12 @@ public final class XdrOutputStream extends OutputStream {
     @Override
     public void close() throws IOException {
         out.close();
+    }
+
+    public void setArc4Key(byte[] key) throws NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException {
+        Cipher rc4 = Cipher.getInstance("ARCFOUR");
+        SecretKeySpec rc4Key = new SecretKeySpec(key, "ARCFOUR");
+        rc4.init(Cipher.DECRYPT_MODE, rc4Key);
+        out = new CipherOutputStream(out, rc4);
     }
 }
