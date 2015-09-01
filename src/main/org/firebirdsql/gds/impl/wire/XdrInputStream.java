@@ -230,10 +230,14 @@ public final class XdrInputStream {
         in.close();
     }
 
-    public void setArc4Key(byte[] key) throws NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException {
+    public void setArc4Key(byte[] key) throws IOException, NoSuchAlgorithmException, NoSuchPaddingException,
+            InvalidKeyException {
+        if (in instanceof CipherInputStream) {
+            throw new IOException("Input stream already encrypted");
+        }
         Cipher rc4 = Cipher.getInstance("ARCFOUR");
         SecretKeySpec rc4Key = new SecretKeySpec(key, "ARCFOUR");
-        rc4.init(Cipher.ENCRYPT_MODE, rc4Key);
+        rc4.init(Cipher.DECRYPT_MODE, rc4Key);
         in = new CipherInputStream(in, rc4);
     }
 }

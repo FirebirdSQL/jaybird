@@ -39,6 +39,7 @@ import java.security.NoSuchAlgorithmException;
 import java.security.InvalidKeyException;
 
 import javax.crypto.Cipher;
+import javax.crypto.CipherInputStream;
 import javax.crypto.spec.SecretKeySpec;
 import javax.crypto.CipherOutputStream;
 import javax.crypto.NoSuchPaddingException;
@@ -331,10 +332,14 @@ public final class XdrOutputStream extends OutputStream {
         out.close();
     }
 
-    public void setArc4Key(byte[] key) throws NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException {
+    public void setArc4Key(byte[] key) throws IOException, NoSuchAlgorithmException, NoSuchPaddingException,
+            InvalidKeyException {
+        if (out instanceof CipherOutputStream) {
+            throw new IOException("Output stream already encrypted");
+        }
         Cipher rc4 = Cipher.getInstance("ARCFOUR");
         SecretKeySpec rc4Key = new SecretKeySpec(key, "ARCFOUR");
-        rc4.init(Cipher.DECRYPT_MODE, rc4Key);
+        rc4.init(Cipher.ENCRYPT_MODE, rc4Key);
         out = new CipherOutputStream(out, rc4);
     }
 }
