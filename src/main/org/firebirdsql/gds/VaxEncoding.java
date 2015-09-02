@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
@@ -19,6 +17,9 @@
  * All rights reserved.
  */
 package org.firebirdsql.gds;
+
+import java.io.IOException;
+import java.io.OutputStream;
 
 /**
  * Helper methods for decoding Vax style (little endian) integers as used by Firebird from byte arrays.
@@ -65,6 +66,21 @@ public final class VaxEncoding {
     }
 
     /**
+     * Encodes an integer using vax encoding into the output stream, length prefix is included.
+     *
+     * @param stream Output stream to write
+     * @param value Value to encode
+     * @throws IOException
+     */
+    public static void encodeVaxInteger(OutputStream stream, int value) throws IOException {
+        stream.write(4);
+        stream.write(value);
+        stream.write(value >> 8);
+        stream.write(value >> 16);
+        stream.write(value >> 24);
+    }
+
+    /**
      * Reads Vax style integers from the supplied buffer, starting at {@code startPosition} and reading for
      * {@code length} bytes.
      * <p>
@@ -93,6 +109,25 @@ public final class VaxEncoding {
             shift += 8;
         }
         return value;
+    }
+
+    /**
+     * Encodes a long using vax encoding into the output stream, length prefix is included.
+     *
+     * @param stream Output stream to write
+     * @param value Value to encode
+     * @throws IOException
+     */
+    public static void encodeVaxLong(OutputStream stream, long value) throws IOException {
+        stream.write(8);
+        stream.write((int) value);
+        stream.write((int) (value >> 8));
+        stream.write((int) (value >> 16));
+        stream.write((int) (value >> 24));
+        stream.write((int) (value >> 32));
+        stream.write((int) (value >> 40));
+        stream.write((int) (value >> 48));
+        stream.write((int) (value >> 56));
     }
 
     /**
