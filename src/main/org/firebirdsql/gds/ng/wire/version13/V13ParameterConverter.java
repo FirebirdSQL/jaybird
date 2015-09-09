@@ -24,9 +24,17 @@ import org.firebirdsql.encodings.Encoding;
 import org.firebirdsql.encodings.IEncodingFactory;
 import org.firebirdsql.gds.DatabaseParameterBuffer;
 import org.firebirdsql.gds.ISCConstants;
+import org.firebirdsql.gds.ServiceParameterBuffer;
 import org.firebirdsql.gds.impl.DatabaseParameterBufferImp;
 import org.firebirdsql.gds.ng.IConnectionProperties;
+import org.firebirdsql.gds.ng.IServiceProperties;
+import org.firebirdsql.gds.ng.wire.auth.LegacyAuthenticationPlugin;
+import org.firebirdsql.gds.ng.wire.auth.UnixCrypt;
 import org.firebirdsql.gds.ng.wire.version12.V12ParameterConverter;
+
+import javax.xml.bind.DatatypeConverter;
+
+import static org.firebirdsql.gds.ISCConstants.*;
 
 /**
  * Implementation of {@link org.firebirdsql.gds.ng.ParameterConverter} for the version 13 protocol.
@@ -53,5 +61,35 @@ public class V13ParameterConverter extends V12ParameterConverter {
         populateNonStandardProperties(props, dpb, stringEncoding);
 
         return dpb;
+    }
+
+    @Override
+    protected void populateAuthenticationProperties(final IConnectionProperties props, final IEncodingFactory encodingFactory,
+            final DatabaseParameterBuffer dpb, final Encoding encoding) {
+        if (props.getUser() != null) {
+            dpb.addArgument(isc_dpb_user_name, props.getUser(), encoding);
+        }
+        if (props.getPassword() != null && props.getAuthData() == null) {
+            dpb.addArgument(isc_dpb_password_enc, UnixCrypt.crypt(props.getPassword(),
+                    LegacyAuthenticationPlugin.LEGACY_PASSWORD_SALT).substring(2, 13), encoding);
+        }
+        if (props.getAuthData() != null) {
+            dpb.addArgument(isc_dpb_specific_auth_data, DatatypeConverter.printHexBinary(props.getAuthData()), encoding);
+        }
+    }
+
+    @Override
+    protected void populateAuthenticationProperties(final IServiceProperties props, final IEncodingFactory encodingFactory,
+            final ServiceParameterBuffer spb, final Encoding encoding) {
+        if (props.getUser() != null) {
+            spb.addArgument(isc_spb_user_name, props.getUser(), encoding);
+        }
+        if (props.getPassword() != null) {
+            spb.addArgument(isc_spb_password_enc, UnixCrypt.crypt(props.getPassword(),
+                    LegacyAuthenticationPlugin.LEGACY_PASSWORD_SALT).substring(2, 13), encoding);
+        }
+        if (props.getAuthData() != null) {
+            spb.addArgument(isc_spb_specific_auth_data, DatatypeConverter.printHexBinary(props.getAuthData()), encoding);
+        }
     }
 }

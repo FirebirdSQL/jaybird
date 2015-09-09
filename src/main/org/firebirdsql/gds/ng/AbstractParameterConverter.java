@@ -18,12 +18,13 @@
  */
 package org.firebirdsql.gds.ng;
 
-import javax.xml.bind.DatatypeConverter;
 import org.firebirdsql.encodings.Encoding;
 import org.firebirdsql.encodings.IEncodingFactory;
 import org.firebirdsql.gds.DatabaseParameterBuffer;
 import org.firebirdsql.gds.Parameter;
 import org.firebirdsql.gds.ServiceParameterBuffer;
+import org.firebirdsql.gds.ng.wire.auth.LegacyAuthenticationPlugin;
+import org.firebirdsql.gds.ng.wire.auth.UnixCrypt;
 
 import static org.firebirdsql.gds.ISCConstants.*;
 
@@ -55,21 +56,24 @@ public abstract class AbstractParameterConverter {
         if (props.getPageCacheSize() != IConnectionProperties.DEFAULT_BUFFERS_NUMBER) {
             dpb.addArgument(isc_dpb_num_buffers, props.getPageCacheSize());
         }
-        if (props.getUser() != null) {
-            dpb.addArgument(isc_dpb_user_name, props.getUser(), encoding);
-        }
-        if (props.getPassword() != null && props.getAuthData() == null) {
-            dpb.addArgument(isc_dpb_password, props.getPassword(), encoding);
-        }
+        populateAuthenticationProperties(props, encodingFactory, dpb, encoding);
         if (props.getRoleName() != null) {
             dpb.addArgument(isc_dpb_sql_role_name, props.getRoleName(), encoding);
-        }
-        if (props.getAuthData() != null) {
-            dpb.addArgument(isc_dpb_specific_auth_data, DatatypeConverter.printHexBinary(props.getAuthData()), encoding);
         }
         dpb.addArgument(isc_dpb_sql_dialect, props.getConnectionDialect());
         if (props.getConnectTimeout() != IConnectionProperties.DEFAULT_CONNECT_TIMEOUT) {
             dpb.addArgument(isc_dpb_connect_timeout, props.getConnectTimeout());
+        }
+    }
+
+    protected void populateAuthenticationProperties(final IConnectionProperties props, final IEncodingFactory encodingFactory,
+            final DatabaseParameterBuffer dpb, final Encoding encoding) {
+        if (props.getUser() != null) {
+            dpb.addArgument(isc_dpb_user_name, props.getUser(), encoding);
+        }
+        if (props.getPassword() != null) {
+            dpb.addArgument(isc_dpb_password_enc, UnixCrypt.crypt(props.getPassword(),
+                    LegacyAuthenticationPlugin.LEGACY_PASSWORD_SALT).substring(2, 13), encoding);
         }
     }
 
@@ -109,20 +113,23 @@ public abstract class AbstractParameterConverter {
         // TODO Is there an equivalent to set connection character set for a service
 //        dpb.addArgument(isc_dpb_lc_ctype,
 //                encodingFactory.getDefaultEncodingDefinition().getFirebirdEncodingName(), encoding);
-        if (props.getUser() != null) {
-            spb.addArgument(isc_spb_user_name, props.getUser(), encoding);
-        }
-        if (props.getPassword() != null && props.getAuthData() == null) {
-            spb.addArgument(isc_spb_password, props.getPassword(), encoding);
-        }
+        populateAuthenticationProperties(props, encodingFactory, spb, encoding);
         if (props.getRoleName() != null) {
             spb.addArgument(isc_spb_sql_role_name, props.getRoleName(), encoding);
         }
-        if (props.getAuthData() != null) {
-            spb.addArgument(isc_spb_specific_auth_data, DatatypeConverter.printHexBinary(props.getAuthData()), encoding);
-        }
         if (props.getConnectTimeout() != IConnectionProperties.DEFAULT_CONNECT_TIMEOUT) {
             spb.addArgument(isc_spb_connect_timeout, props.getConnectTimeout());
+        }
+    }
+
+    protected void populateAuthenticationProperties(final IServiceProperties props, final IEncodingFactory encodingFactory,
+            final ServiceParameterBuffer spb, final Encoding encoding) {
+        if (props.getUser() != null) {
+            spb.addArgument(isc_spb_user_name, props.getUser(), encoding);
+        }
+        if (props.getPassword() != null) {
+            spb.addArgument(isc_spb_password_enc, UnixCrypt.crypt(props.getPassword(),
+                    LegacyAuthenticationPlugin.LEGACY_PASSWORD_SALT).substring(2, 13), encoding);
         }
     }
 }

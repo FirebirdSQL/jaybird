@@ -22,14 +22,23 @@
  * OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.firebirdsql.gds.ng.wire;
-
-import org.firebirdsql.gds.ng.FbService;
+package org.firebirdsql.gds.ng.wire.auth;
 
 /**
+ * Service provider interface for authentication plugins.
+ *
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @since 3.0
  */
-public interface FbWireService extends FbService, FbWireAttachment {
+public interface AuthenticationPluginSpi {
 
+    /**
+     * @return Name of the plugin as used by Firebird
+     */
+    String getPluginName();
+
+    /**
+     * @return Plugin instance
+     */
+    AuthenticationPlugin createPlugin();
 }

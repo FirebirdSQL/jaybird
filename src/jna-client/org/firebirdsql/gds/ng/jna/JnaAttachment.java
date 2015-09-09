@@ -22,14 +22,13 @@
  * OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.firebirdsql.gds.ng.wire;
+package org.firebirdsql.gds.ng.jna;
 
-import org.firebirdsql.gds.ng.FbService;
+import org.firebirdsql.gds.ng.FbAttachment;
 
 /**
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @since 3.0
  */
-public interface FbWireService extends FbService, FbWireAttachment {
-
+public interface JnaAttachment extends FbAttachment {
 }

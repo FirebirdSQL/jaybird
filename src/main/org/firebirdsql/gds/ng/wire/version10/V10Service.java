@@ -65,7 +65,7 @@ public class V10Service extends AbstractFbWireService implements FbWireService {
                     throw new FbExceptionBuilder().exception(ISCConstants.isc_net_write_err).cause(e).toSQLException();
                 }
                 try {
-                    processAttachResponse(wireOperations.readGenericResponse(null));
+                    processAttachResponse(readGenericResponse(null));
                 } catch (IOException e) {
                     throw new FbExceptionBuilder().exception(ISCConstants.isc_net_read_err).cause(e).toSQLException();
                 }
@@ -159,7 +159,7 @@ public class V10Service extends AbstractFbWireService implements FbWireService {
                 throw new FbExceptionBuilder().exception(ISCConstants.isc_net_write_err).cause(ex).toSQLException();
             }
             try {
-                GenericResponse genericResponse = wireOperations.readGenericResponse(null);
+                GenericResponse genericResponse = readGenericResponse(null);
                 return genericResponse.getData();
             } catch (IOException ex) {
                 throw new FbExceptionBuilder().exception(ISCConstants.isc_net_read_err).cause(ex).toSQLException();
@@ -183,7 +183,7 @@ public class V10Service extends AbstractFbWireService implements FbWireService {
                 throw new FbExceptionBuilder().exception(ISCConstants.isc_net_write_err).cause(ex).toSQLException();
             }
             try {
-                wireOperations.readGenericResponse(null);
+                readGenericResponse(null);
             } catch (IOException ex) {
                 throw new FbExceptionBuilder().exception(ISCConstants.isc_net_read_err).cause(ex).toSQLException();
             }

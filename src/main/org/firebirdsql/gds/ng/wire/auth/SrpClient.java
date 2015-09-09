@@ -23,9 +23,11 @@
 
 // https://github.com/nakagami/pyfirebirdsql/blob/master/firebirdsql/srp.py
 
-package org.firebirdsql.gds.ng.wire;
+package org.firebirdsql.gds.ng.wire.auth;
 
+import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.VaxEncoding;
+import org.firebirdsql.gds.ng.FbExceptionBuilder;
 
 import javax.xml.bind.DatatypeConverter;
 import java.math.BigInteger;
@@ -33,6 +35,7 @@ import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
+import java.sql.SQLException;
 import java.util.Arrays;
 
 /**
@@ -41,6 +44,7 @@ import java.util.Arrays;
 public final class SrpClient {
     private static final int SRP_KEY_SIZE = 128;
     private static final int SRP_SALT_SIZE = 32;
+    private static final int EXPECTED_AUTH_DATA_LENGTH = (SRP_SALT_SIZE + SRP_KEY_SIZE + 2) * 2;
 
     private static final BigInteger N = new BigInteger("E67D2E994B2F900C3F41F08F5BB2627ED0D49EE1FE767A52EFCD565CD6E768812C3E1E9CE8F0A8BEA6CB13CD29DDEBF7A96D4A93B55D488DF099A15C89DCB0640738EB2CBDD9A8F7BAB561AB1B0DC1C6CDABF303264A08D1BCA932D1F1EE428B619D970F342ABA9A65793B8B2F041AE5364350C16F735F56ECBCA87BD57B29E7", 16);
     private static final BigInteger g = new BigInteger("2");
@@ -178,11 +182,11 @@ public final class SrpClient {
         return sha1(toBigByteArray(sessionSecret));
     }
 
-    public String getPublicKeyHex() {
+    String getPublicKeyHex() {
         return DatatypeConverter.printHexBinary(pad(publicKey));
     }
 
-    public byte[] clientProof(String user, String password, byte[] salt, BigInteger serverPublicKey) {
+    byte[] clientProof(String user, String password, byte[] salt, BigInteger serverPublicKey) {
         final byte[] K = getClientSessionKey(user, password, salt, serverPublicKey);
         final BigInteger n1 = fromBigByteArray(sha1(toBigByteArray(N)));
         final BigInteger n2 = fromBigByteArray(sha1(toBigByteArray(g)));
@@ -194,12 +198,37 @@ public final class SrpClient {
         return M;
     }
 
-    public byte[] clientProof(String user, String password, byte[] authData) {
-        final int length = VaxEncoding.iscVaxInteger2(authData, 0);
+    byte[] clientProof(String user, String password, byte[] authData) throws SQLException {
+        if (authData == null || authData.length == 0) {
+            throw new FbExceptionBuilder().exception(ISCConstants.isc_auth_data).toFlatSQLException();
+        }
+        if (authData.length > EXPECTED_AUTH_DATA_LENGTH) {
+            throw new FbExceptionBuilder().exception(ISCConstants.isc_auth_datalength)
+                    .messageParameter(authData.length)
+                    .messageParameter(EXPECTED_AUTH_DATA_LENGTH)
+                    .messageParameter("data")
+                    .toFlatSQLException();
+        }
 
-        final byte[] salt = Arrays.copyOfRange(authData, 2, length + 2);
+        final int saltLength = VaxEncoding.iscVaxInteger2(authData, 0);
+        if (saltLength > SRP_SALT_SIZE * 2) {
+            throw new FbExceptionBuilder().exception(ISCConstants.isc_auth_datalength)
+                    .messageParameter(saltLength)
+                    .messageParameter(SRP_SALT_SIZE * 2)
+                    .messageParameter("salt")
+                    .toFlatSQLException();
+        }
+        final byte[] salt = Arrays.copyOfRange(authData, 2, saltLength + 2);
 
-        final int serverKeyStart = length + 4;
+        final int keyLength = VaxEncoding.iscVaxInteger2(authData, saltLength + 2);
+        final int serverKeyStart = saltLength + 4;
+        if (authData.length - serverKeyStart != keyLength) {
+            throw new FbExceptionBuilder().exception(ISCConstants.isc_auth_datalength)
+                    .messageParameter(keyLength)
+                    .messageParameter(authData.length - serverKeyStart)
+                    .messageParameter("key")
+                    .toFlatSQLException();
+        }
         final String hexServerPublicKey = new String(authData, serverKeyStart, authData.length - serverKeyStart,
                 StandardCharsets.US_ASCII);
         final BigInteger serverPublicKey = new BigInteger(padHexBinary(hexServerPublicKey), 16);

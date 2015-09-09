@@ -56,7 +56,7 @@ public class TestFBEventManager extends FBJUnit4TestBase {
         + "END";
 
     // Delay to wait after registering an event listener before testing
-    static final int DELAY = 500;
+    static final int DELAY = 600;
 
     @Before
     public void setUp() throws Exception {

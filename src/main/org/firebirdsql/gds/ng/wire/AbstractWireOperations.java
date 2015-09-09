@@ -199,6 +199,7 @@ public abstract class AbstractWireOperations implements FbWireOperations {
         case op_sql_response:
             return new SqlResponse(xdrIn.readInt());
         default:
+            // TODO throw an exception instead
             return null;
         }
     }

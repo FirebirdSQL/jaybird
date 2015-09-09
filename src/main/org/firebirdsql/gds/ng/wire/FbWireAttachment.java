@@ -24,12 +24,35 @@
  */
 package org.firebirdsql.gds.ng.wire;
 
-import org.firebirdsql.gds.ng.FbService;
+import org.firebirdsql.gds.ng.FbAttachment;
+import org.firebirdsql.gds.ng.WarningMessageCallback;
+
+import java.io.IOException;
+import java.sql.SQLException;
 
 /**
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @since 3.0
  */
-public interface FbWireService extends FbService, FbWireAttachment {
+public interface FbWireAttachment extends FbAttachment {
+
+    /**
+     * @return Instance of {@link XdrStreamAccess} for this attachment.
+     */
+    XdrStreamAccess getXdrStreamAccess();
+
+    /**
+     * Convenience method to read a Response to a GenericResponse
+     *
+     * @param callback
+     *         Callback object for warnings, {@code null} for default callback
+     * @return GenericResponse
+     * @throws SQLException
+     *         For errors returned from the server, or when attempting to
+     *         read.
+     * @throws IOException
+     *         For errors reading the response from the connection.
+     */
+    GenericResponse readGenericResponse(WarningMessageCallback callback) throws SQLException, IOException;
 
 }

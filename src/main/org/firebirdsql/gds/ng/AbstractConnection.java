@@ -34,7 +34,7 @@ import java.sql.SQLNonTransientConnectionException;
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @since 3.0
  */
-public abstract class AbstractConnection<T extends IAttachProperties<T>, C> {
+public abstract class AbstractConnection<T extends IAttachProperties<T>, C extends FbAttachment> {
 
     protected final T attachProperties;
     private final EncodingDefinition encodingDefinition;

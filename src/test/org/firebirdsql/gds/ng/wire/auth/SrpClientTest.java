@@ -16,7 +16,7 @@
  *
  * All rights reserved.
  */
-package org.firebirdsql.gds.ng.wire;
+package org.firebirdsql.gds.ng.wire.auth;
 
 import org.junit.Test;
 

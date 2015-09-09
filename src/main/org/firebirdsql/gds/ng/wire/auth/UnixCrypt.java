@@ -21,17 +21,21 @@
  * by Iris Van den Broeke, Daniel Deville
  */
 
-package org.firebirdsql.gds.ng.wire;
+package org.firebirdsql.gds.ng.wire.auth;
 
 /* ------------------------------------------------------------ */
+
+import java.nio.charset.StandardCharsets;
+
 /** Unix Crypt.
  * Implements the one way cryptography used by Unix systems for
  * simple password protection.
  * @version $Id: UnixCrypt.java,v 1.5 2004/10/11 00:28:41 gregwilkins Exp $
  * @author Greg Wilkins (gregw)
  */
-public class UnixCrypt extends Object
-{
+public class UnixCrypt {
+
+    //@formatter:off
 
     /* (mostly) Standard DES Tables from Tom Truscott */
     private static final byte[] IP = {		/* initial permutation */
@@ -153,6 +157,8 @@ public class UnixCrypt extends Object
         (byte)'c',(byte) 'd',(byte) 'e',(byte) 'f',(byte) 'g',(byte) 'h',(byte) 'i',(byte) 'j', 
         (byte)'k',(byte) 'l',(byte) 'm',(byte) 'n',(byte) 'o',(byte) 'p',(byte) 'q',(byte) 'r', 
         (byte)'s',(byte) 't',(byte) 'u',(byte) 'v',(byte) 'w',(byte) 'x',(byte) 'y',(byte) 'z'};
+
+    //@formatter:on
 
     /* =====  Tables that are initialized at run time  ==================== */
 
@@ -456,19 +462,8 @@ public class UnixCrypt extends Object
             rsltblock >>= 6;
         }
 
-        return new String(cryptresult, 0x00, 0, 13);
+        return new String(cryptresult, 0, 13, StandardCharsets.US_ASCII);
     }
 
-    public static void main(String[] arg)
-    {
-        if (arg.length!=2)
-        {
-            System.err.println("Usage - java org.openqa.jetty.util.UnixCrypt <key> <salt>");
-            System.exit(1);
-        }
-
-        System.err.println("Crypt="+crypt(arg[0],arg[1]));
-    }
-    
 }
 

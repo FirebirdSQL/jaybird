@@ -44,7 +44,7 @@ import static org.firebirdsql.gds.ng.TransactionHelper.checkTransactionActive;
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @since 3.0
  */
-public final class JnaDatabase extends AbstractFbDatabase<JnaDatabaseConnection> implements TransactionListener {
+public final class JnaDatabase extends AbstractFbDatabase<JnaDatabaseConnection> implements JnaAttachment, TransactionListener {
 
     // TODO Find out if there are any exception from JNA that we need to be prepared to handle.
 

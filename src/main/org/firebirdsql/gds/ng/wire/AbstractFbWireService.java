@@ -22,8 +22,10 @@ import org.firebirdsql.gds.impl.wire.XdrInputStream;
 import org.firebirdsql.gds.impl.wire.XdrOutputStream;
 import org.firebirdsql.gds.ng.AbstractFbService;
 import org.firebirdsql.gds.ng.DefaultDatatypeCoder;
+import org.firebirdsql.gds.ng.WarningMessageCallback;
 import org.firebirdsql.jdbc.FBSQLException;
 
+import java.io.IOException;
 import java.sql.SQLException;
 
 import static java.util.Objects.requireNonNull;
@@ -115,6 +117,12 @@ public abstract class AbstractFbWireService extends AbstractFbService<WireServic
      */
     protected final XdrOutputStream getXdrOut() throws SQLException {
         return getXdrStreamAccess().getXdrOut();
+    }
+
+    @Override
+    public final GenericResponse readGenericResponse(WarningMessageCallback warningCallback)
+            throws SQLException, IOException {
+        return wireOperations.readGenericResponse(warningCallback);
     }
 
     @Override

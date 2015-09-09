@@ -213,6 +213,13 @@ public interface WireProtocolConstants {
     int CNCT_login = 9; // Same data as isc_dpb_user_name
     int CNCT_plugin_list = 10; // List of plugins, available on client
     int CNCT_client_crypt = 11; // Client encyption level (DISABLED/ENABLED/REQUIRED)
+    int WIRE_CRYPT_DISABLED = 0;
+    int WIRE_CRYPT_ENABLED = 1;
+    int WIRE_CRYPT_REQUIRED = 2;
+
+    int TAG_KEY_TYPE = 0;
+    int TAG_KEY_PLUGINS = 1;
+    int TAG_KNOWN_PLUGINS = 2;
     
     // Protocol Types
     // p_acpt_type

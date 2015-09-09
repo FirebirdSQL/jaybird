@@ -32,7 +32,6 @@ import java.sql.SQLWarning;
 
 import static java.util.Objects.requireNonNull;
 import static org.firebirdsql.gds.ISCConstants.*;
-import static org.firebirdsql.gds.ISCConstants.isc_arg_end;
 
 /**
  * Class handling the initial setup of the JNA connection.
@@ -42,7 +41,8 @@ import static org.firebirdsql.gds.ISCConstants.isc_arg_end;
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @since 3.0
  */
-public abstract class JnaConnection<T extends IAttachProperties<T>, C> extends AbstractConnection<T, C> {
+public abstract class JnaConnection<T extends IAttachProperties<T>, C extends JnaAttachment>
+        extends AbstractConnection<T, C> {
 
     private static final Logger log = LoggerFactory.getLogger(JnaConnection.class);
     private static final boolean bigEndian = ByteOrder.nativeOrder() == ByteOrder.BIG_ENDIAN;

@@ -21,6 +21,7 @@ package org.firebirdsql.gds.ng.wire;
 import org.firebirdsql.encodings.EncodingFactory;
 import org.firebirdsql.encodings.IEncodingFactory;
 import org.firebirdsql.gds.ISCConstants;
+import org.firebirdsql.gds.VaxEncoding;
 import org.firebirdsql.gds.impl.wire.WireProtocolConstants;
 import org.firebirdsql.gds.impl.wire.XdrInputStream;
 import org.firebirdsql.gds.impl.wire.XdrOutputStream;
@@ -28,6 +29,7 @@ import org.firebirdsql.gds.ng.AbstractConnection;
 import org.firebirdsql.gds.ng.FbExceptionBuilder;
 import org.firebirdsql.gds.ng.IAttachProperties;
 import org.firebirdsql.gds.ng.IConnectionProperties;
+import org.firebirdsql.gds.ng.wire.auth.ClientAuthBlock;
 import org.firebirdsql.logging.Logger;
 import org.firebirdsql.logging.LoggerFactory;
 
@@ -36,38 +38,37 @@ import java.io.Closeable;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.*;
-import java.nio.charset.StandardCharsets;
 import java.security.AccessController;
 import java.security.PrivilegedAction;
 import java.sql.SQLException;
 import java.sql.SQLTimeoutException;
+import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
 import static org.firebirdsql.gds.impl.wire.WireProtocolConstants.*;
 
 /**
- * Class managing the TCP/IP connection and initial handshaking with the
- * Firebird server.
+ * Class managing the TCP/IP connection and initial handshaking with the Firebird server.
  *
  * @param <T> Type of attach properties
  * @param <C> Type of connection handle
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @since 3.0
  */
-public abstract class WireConnection<T extends IAttachProperties<T>, C> extends AbstractConnection<T, C>
-        implements Closeable {
+public abstract class WireConnection<T extends IAttachProperties<T>, C extends FbWireAttachment>
+        extends AbstractConnection<T, C> implements Closeable {
 
     // TODO Check if methods currently throwing IOException should throw SQLException instead
 
     private static final Logger log = LoggerFactory.getLogger(WireConnection.class);
 
+    private final ClientAuthBlock clientAuthBlock;
     private Socket socket;
     private ProtocolCollection protocols;
     private int protocolVersion;
     private int protocolArchitecture;
     private int protocolMinimumType;
 
-    private SrpClient srpClient;
     private XdrOutputStream xdrOut;
     private XdrInputStream xdrIn;
     private final XdrStreamAccess streamAccess = new XdrStreamAccess() {
@@ -116,6 +117,7 @@ public abstract class WireConnection<T extends IAttachProperties<T>, C> extends 
             ProtocolCollection protocols) throws SQLException {
         super(attachProperties, encodingFactory);
         this.protocols = protocols;
+        clientAuthBlock = new ClientAuthBlock(this.attachProperties);
     }
 
     public final boolean isConnected() {
@@ -233,75 +235,21 @@ public abstract class WireConnection<T extends IAttachProperties<T>, C> extends 
             xdrIn = new XdrInputStream(socket.getInputStream());
             xdrOut = new XdrOutputStream(socket.getOutputStream());
 
-            // Here we identify the user to the engine. 
+            clientAuthBlock.authenticateStep0();
+
+            // Here we identify the user to the engine.
             // This may or may not be used as login info to a database.
             final byte[] userBytes = getSystemUserName().getBytes();
             final byte[] hostBytes = getSystemHostName().getBytes();
 
             ByteArrayOutputStream userId = new ByteArrayOutputStream();
 
-            if (attachProperties.getUser() != null) {
-                final byte[] loginBytes = attachProperties.getUser().getBytes(StandardCharsets.UTF_8);
-                userId.write(CNCT_login);
-                int loginLength = Math.min(loginBytes.length, 255);
-                userId.write(loginLength);
-                userId.write(loginBytes, 0, loginLength);
-            }
+            clientAuthBlock.writePluginDataTo(userId);
 
-            // TODO: switch Srp or Legacy_Auth by something property.
-//            String pluginName = "Legacy_Auth";
-            String pluginName = "Srp";
-
-            userId.write(CNCT_plugin_name);
-            final byte[] pluginNameBytes = pluginName.getBytes(StandardCharsets.UTF_8);
-            userId.write(pluginNameBytes.length);
-            userId.write(pluginNameBytes, 0, pluginNameBytes.length);
-
-            userId.write(CNCT_plugin_list);
-            final byte[] pluginListBytes = "Srp,Legacy_Auth".getBytes(StandardCharsets.UTF_8);
-            userId.write(pluginListBytes.length);
-            userId.write(pluginListBytes, 0, pluginListBytes.length);
-
-            byte[] specificDataBytes = null;
-            if (attachProperties.getPassword() != null) {
-                switch (pluginName) {
-                case "Legacy_Auth":
-                    specificDataBytes = UnixCrypt.crypt(attachProperties.getPassword(), "9z").substring(2, 13).getBytes();
-
-                    break;
-                case "Srp":
-                    srpClient = new SrpClient();
-                    specificDataBytes = srpClient.getPublicKeyHex().getBytes();
-                    break;
-                }
-
-                if (specificDataBytes != null) {
-                    // write specific data
-                    int remaining = specificDataBytes.length;
-                    int position = 0;
-                    int step = 0;
-                    while (remaining > 0) {
-                        userId.write(CNCT_specific_data);
-                        int toWrite = Math.min(remaining, 254);
-                        userId.write(toWrite + 1);
-                        userId.write(step++);
-                        userId.write(specificDataBytes, position, toWrite);
-                        remaining -= toWrite;
-                        position += toWrite;
-                    }
-                }
-            }
-
-            // TODO: switch WireCrypt 0:clear 1:encrypt
-            int wire_crypt = 1;
-
-            userId.write(CNCT_client_crypt);    // WireCrypt = Disabled
-            if (wire_crypt != 0) {
-                userId.write(new byte[] { (byte) 4, (byte) 1, (byte) 0, (byte) 0, (byte) 0 });
-            } else {
-                userId.write(new byte[] { (byte) 4, (byte) 0, (byte) 0, (byte) 0, (byte) 0 });
-            }
-
+            // TODO Make configurable using connection property
+            int wireCrypt = WIRE_CRYPT_DISABLED;
+            userId.write(CNCT_client_crypt);
+            VaxEncoding.encodeVaxInteger(userId, wireCrypt);
 
             userId.write(CNCT_user);
             int userLength = Math.min(userBytes.length, 255);
@@ -333,8 +281,10 @@ public abstract class WireConnection<T extends IAttachProperties<T>, C> extends 
             }
 
             xdrOut.flush();
-            final int op_code = readNextOperation();
-            if (op_code == op_accept || op_code == op_cond_accept || op_code == op_accept_data) {
+            final int operation = readNextOperation();
+            if (operation == op_accept || operation == op_cond_accept || operation == op_accept_data) {
+                AcceptPacket acceptPacket = new AcceptPacket();
+                acceptPacket.operation = operation;
                 protocolVersion = xdrIn.readInt(); // Protocol version
                 protocolArchitecture = xdrIn.readInt(); // Architecture for protocol
                 protocolMinimumType = xdrIn.readInt(); // Minimum type
@@ -342,30 +292,22 @@ public abstract class WireConnection<T extends IAttachProperties<T>, C> extends 
                     protocolVersion = (protocolVersion & FB_PROTOCOL_MASK) | FB_PROTOCOL_FLAG;
                 }
 
-                if (op_code == op_cond_accept || op_code == op_accept_data) {
-                    byte[] data = xdrIn.readBuffer();
-                    String acceptPluginName = xdrIn.readString(getEncoding());
-                    final int is_authenticated = xdrIn.readInt();
-                    String keys = xdrIn.readString(getEncoding());
-                    if (is_authenticated == 0) {
-                        byte[] authData;
-                        if (acceptPluginName.equals("Srp")) {
-                            authData = srpClient.clientProof(attachProperties.getUser(), attachProperties.getPassword(), data);
-                        } else if (acceptPluginName.equals("Legacy_Auth")) {
-                            authData = UnixCrypt.crypt(attachProperties.getPassword(), "9z").substring(2, 13).getBytes();
-                        } else {
-                            try {
-                                close();
-                            } catch (Exception ex) {
-                                log.debug("Ignoring exception on disconnect in connect phase of protocol", ex);
-                            }
-                            // TODO Use different exception message + check what fbclient does here
-                            throw new SQLException("Unauthorized");
-                        }
-                        attachProperties.setAuthData(authData);
-                    }
-                }
+                if (operation == op_cond_accept || operation == op_accept_data) {
+                    byte[] data = acceptPacket.p_acpt_data = xdrIn.readBuffer();
+                    acceptPacket.p_acpt_plugin = xdrIn.readString(getEncoding());
+                    final int isAuthenticated = xdrIn.readInt();
+                    byte[] serverKeys = acceptPacket.p_acpt_keys = xdrIn.readBuffer();
 
+                    clientAuthBlock.setServerData(data);
+                    clientAuthBlock.setAuthComplete(isAuthenticated == 1);
+                    // TODO Equivalent of port->addServerKeys(&packet->p_acpd.p_acpt_keys);
+                    clientAuthBlock.resetClient(serverKeys);
+
+                    // TODO Temporary workaround:
+                    clientAuthBlock.authenticate();
+                } else {
+                    clientAuthBlock.resetClient(null);
+                }
 
                 ProtocolDescriptor descriptor = protocols.getProtocolDescriptor(protocolVersion);
                 if (descriptor == null) {
@@ -374,13 +316,17 @@ public abstract class WireConnection<T extends IAttachProperties<T>, C> extends 
                                     "Unsupported or unexpected protocol version %d connecting to database %s. Supported version(s): %s",
                                     protocolVersion, getServerName(), protocols.getProtocolVersions()));
                 }
-                return createConnectionHandle(descriptor);
+                C connectionHandle = createConnectionHandle(descriptor);
+                if (operation == op_cond_accept) {
+                    authReceiveResponse(acceptPacket, connectionHandle);
+                }
+                return connectionHandle;
             } else {
                 try {
-                    if (op_code == op_response) {
-                        ProtocolDescriptor protocolDescriptor = protocols.getProtocolDescriptor(WireProtocolConstants.PROTOCOL_VERSION10);
-                        AbstractWireOperations wireOperations = (AbstractWireOperations) protocolDescriptor.createWireOperations(this, null, this);
-                        wireOperations.processResponse(wireOperations.processOperation(op_code));
+                    if (operation == op_response) {
+                        // Handle exception from response
+                        AbstractWireOperations wireOperations = getDefaultWireOperations();
+                        wireOperations.processResponse(wireOperations.processOperation(operation));
                     }
                 } finally {
                     try {
@@ -389,12 +335,120 @@ public abstract class WireConnection<T extends IAttachProperties<T>, C> extends 
                         log.debug("Ignoring exception on disconnect in connect phase of protocol", ex);
                     }
                 }
-                throw new FbExceptionBuilder().exception(ISCConstants.isc_connect_reject).toSQLException();
+                throw new FbExceptionBuilder().exception(ISCConstants.isc_connect_reject).toFlatSQLException();
             }
         } catch (SocketTimeoutException ste) {
-            throw new FbExceptionBuilder().timeoutException(ISCConstants.isc_network_error).messageParameter(getServerName()).cause(ste).toSQLException();
+            throw new FbExceptionBuilder().timeoutException(ISCConstants.isc_network_error)
+                    .messageParameter(getServerName()).cause(ste).toSQLException();
         } catch (IOException ioex) {
-            throw new FbExceptionBuilder().exception(ISCConstants.isc_network_error).messageParameter(getServerName()).cause(ioex).toSQLException();
+            throw new FbExceptionBuilder().exception(ISCConstants.isc_network_error)
+                    .messageParameter(getServerName()).cause(ioex).toSQLException();
+        }
+    }
+
+    private AbstractWireOperations getDefaultWireOperations() {
+        ProtocolDescriptor protocolDescriptor = protocols
+                .getProtocolDescriptor(WireProtocolConstants.PROTOCOL_VERSION10);
+        return (AbstractWireOperations) protocolDescriptor
+                .createWireOperations(this, null, this);
+    }
+
+    private void authReceiveResponse(AcceptPacket acceptPacket, C attachmentHandle) throws IOException, SQLException {
+        assert acceptPacket == null || acceptPacket.operation == op_cond_accept : "Unexpected operation in AcceptPacket";
+        try {
+            while (true) {
+                String pluginName;
+                byte[] data;
+                if (acceptPacket != null) {
+                    data = acceptPacket.p_acpt_data;
+                    pluginName = acceptPacket.p_acpt_plugin;
+                    // TODO: equivalent of port->addServerKeys(&packet->p_acpd.p_acpt_keys);
+                    log.debug(String.format("authReceiveResponse: cond_accept data=%d pluginName=%d '%s'",
+                            data.length, pluginName.length(), pluginName));
+                    // TODO handle compression
+                    acceptPacket = null;
+                } else {
+                    int operation = readNextOperation();
+                    switch (operation) {
+                    case op_trusted_auth:
+                        // TODO Externalize message + sql state
+                        throw new SQLException("Trusted authentication not supported");
+                    case op_cont_auth:
+                        data = xdrIn.readBuffer();
+                        pluginName = xdrIn.readString(getEncoding());
+                        xdrIn.readBuffer(); // p_list (ignore?)
+                        xdrIn.readBuffer(); // p_keys
+                        // TODO equivalent of port->addServerKeys(&packet->p_auth_cont.p_keys);
+                        log.debug(String.format("authReceiveResponse: cont_auth data=%d pluginName=%d '%s'",
+                                data.length, pluginName.length(), pluginName));
+                        break;
+                    case op_cond_accept:
+                        // Note this is the equivalent of handling the acceptPacket != null above
+                        // TODO Can we ignore these?
+                        xdrIn.readInt(); // p_acpt_version
+                        xdrIn.readInt(); // p_acpt_architecture
+                        xdrIn.readInt(); // p_acpt_type
+                        data = xdrIn.readBuffer();
+                        pluginName = xdrIn.readString(getEncoding());
+                        xdrIn.readInt(); // p_acpt_authenticated
+                        xdrIn.readBuffer(); //p_acpt_keys
+                        // TODO: equivalent of port->addServerKeys(&packet->p_acpd.p_acpt_keys);
+                        log.debug(String.format("authReceiveResponse: cond_accept data=%d pluginName=%d '%s'",
+                                data.length, pluginName.length(), pluginName));
+                        break;
+                    case op_crypt:
+                        // TODO Implement crypt
+                        xdrIn.readBuffer(); // p_plugin
+                        xdrIn.readBuffer(); // p_key
+                        AbstractWireOperations wireOperations = getDefaultWireOperations();
+                        GenericResponse afterCrypt = attachmentHandle.readGenericResponse(null);
+                        // TODO First process key from response, then process key from op_crypt
+                        throw new IllegalStateException("Crypt not yet supported");
+                        //break;
+                    default:
+                        // TODO Receives a generic response (in response to what operation?)
+                        GenericResponse response = attachmentHandle.readGenericResponse(null);
+                        throw new IllegalStateException("Unsupported state for operation " + operation);
+                    }
+                }
+
+                if (pluginName != null && pluginName.length() > 0
+                        && Objects.equals(pluginName, clientAuthBlock.getCurrentPluginName())) {
+                    pluginName = null;
+                }
+
+                if (pluginName != null && pluginName.length() > 0) {
+                    if (!clientAuthBlock.switchPlugin(pluginName)) {
+                        break;
+                    }
+                }
+
+                if (!clientAuthBlock.hasPlugin()) {
+                    break;
+                }
+
+                clientAuthBlock.setServerData(data);
+                log.debug(String.format("receiveResponse: authenticate(%s)", clientAuthBlock.getCurrentPluginName()));
+                clientAuthBlock.authenticate();
+
+                if (protocolVersion >= PROTOCOL_VERSION13) {
+                    xdrOut.write(op_cont_auth);
+                    xdrOut.writeBuffer(clientAuthBlock.getClientData()); // p_data
+                    xdrOut.writeString(clientAuthBlock.getCurrentPluginName(), getEncoding()); // p_name
+                    if (clientAuthBlock.isFirstTime()) {
+                        xdrOut.writeString(clientAuthBlock.getPluginNames(), getEncoding()); // p_list
+                        clientAuthBlock.setFirstTime(false);
+                    } else {
+                        xdrOut.writeBuffer(null); // p_list
+                    }
+                    xdrOut.writeBuffer(null); // p_keys
+                    xdrOut.flush();
+                } else {
+                    throw new SQLException("trusted authentication not supported");
+                }
+            }
+        } catch (SQLException ex) {
+            throw new FbExceptionBuilder().exception(ISCConstants.isc_login).cause(ex).toFlatSQLException();
         }
     }
 
@@ -510,5 +564,13 @@ public abstract class WireConnection<T extends IAttachProperties<T>, C> extends 
         final OutputStream outputStream = socket.getOutputStream();
         outputStream.write(data);
         outputStream.flush();
+    }
+
+    // Struct-like class, reduced equivalent of Firebird p_acpd so we can store date for handling op_cond_accept
+    private class AcceptPacket {
+        int operation;
+        byte[] p_acpt_data;
+        String p_acpt_plugin;
+        byte[] p_acpt_keys;
     }
 }

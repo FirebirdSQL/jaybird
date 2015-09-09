@@ -45,7 +45,7 @@ public final class FbWireDatabaseFactory implements FbDatabaseFactory {
         return performConnect(connection);
     }
 
-    private <T extends FbAttachment> T performConnect(WireConnection<?, T> connection) throws SQLException {
+    private <T extends FbWireAttachment> T performConnect(WireConnection<?, T> connection) throws SQLException {
         try {
             connection.socketConnect();
             return connection.identify();

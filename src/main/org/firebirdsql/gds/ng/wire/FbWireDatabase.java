@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * Public Firebird Java API.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -37,13 +35,8 @@ import java.sql.SQLException;
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @since 3.0
  */
-public interface FbWireDatabase extends FbDatabase {
+public interface FbWireDatabase extends FbDatabase, FbWireAttachment {
     // TODO Revise exception usage
-
-    /**
-     * @return Instance of {@link XdrStreamAccess} for this database.
-     */
-    XdrStreamAccess getXdrStreamAccess();
 
     /**
      * Reads the response from the server.
@@ -68,20 +61,6 @@ public interface FbWireDatabase extends FbDatabase {
      * @throws SQLException
      */
     void releaseObject(int operation, int objectId) throws SQLException;
-
-    /**
-     * Convenience method to read a Response to a GenericResponse
-     *
-     * @param callback
-     *         Callback object for warnings, <code>null</code> for default callback
-     * @return GenericResponse
-     * @throws SQLException
-     *         For errors returned from the server, or when attempting to
-     *         read.
-     * @throws IOException
-     *         For errors reading the response from the connection.
-     */
-    GenericResponse readGenericResponse(WarningMessageCallback callback) throws SQLException, IOException;
 
     /**
      * Convenience method to read a Response to a SqlResponse
