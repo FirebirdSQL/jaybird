@@ -64,6 +64,21 @@ public final class FbExceptionBuilder {
     }
 
     /**
+     * Creates an exception builder with the specified error code.
+     * <p>
+     * Equivalent to calling: {@code new FbExceptionBuilder().error(errorCode); }
+     * </p>
+     *
+     * @param errorCode
+     *         The Firebird error code
+     * @return FbExceptionBuilder initalized with the specified error ocde
+     */
+    public static FbExceptionBuilder forException(int errorCode) {
+        final FbExceptionBuilder fbExceptionBuilder = new FbExceptionBuilder();
+        return fbExceptionBuilder.exception(errorCode);
+    }
+
+    /**
      * The (next) exception is a warning.
      *
      * @param errorCode

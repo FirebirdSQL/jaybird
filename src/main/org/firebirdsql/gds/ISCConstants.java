@@ -216,6 +216,7 @@ public interface ISCConstants {
     int isc_spb_version1                = 1;
     int isc_spb_current_version         = 2;
     int isc_spb_version			        = isc_spb_current_version;
+    int isc_spb_version3                = 3;
     int isc_spb_user_name               = isc_dpb_user_name;
     int isc_spb_sys_user_name           = isc_dpb_sys_user_name;
     int isc_spb_sys_user_name_enc       = isc_dpb_sys_user_name_enc;
@@ -225,7 +226,6 @@ public interface ISCConstants {
     int isc_spb_dbname                  = 106;
     int isc_spb_verbose                 = 107;
     int isc_spb_options                 = 108;
-
     int isc_spb_address_path            = 109;
     int isc_spb_process_id              = 110;
     int isc_spb_trusted_auth			= 111;
@@ -255,8 +255,9 @@ public interface ISCConstants {
      * New with Firebird 2.5
      *****************************************/
 
-    int isc_spb_nbk_level = 5;
-    int isc_spb_nbk_file = 6;
+    int isc_spb_nbk_level  = 5;
+    int isc_spb_nbk_file   = 6;
+    int isc_spb_nbk_direct = 7;
     int isc_spb_nbk_no_triggers = 0x01;
 
     /*****************************
@@ -272,9 +273,9 @@ public interface ISCConstants {
     int isc_action_svc_display_user   = 7;	/* Displays a user record from the security database */
     int isc_action_svc_properties     = 8;	/* Sets database properties */
     int isc_action_svc_add_license    = 9;	/* Adds a license to the license file */
-    int isc_action_svc_remove_license =10;	/* Removes a license from the license file */
-    int isc_action_svc_db_stats	      =11;	/* Retrieves database statistics */
-    int isc_action_svc_get_ib_log     =12;	/* Retrieves the InterBase log file from the server */
+    int isc_action_svc_remove_license = 10;	/* Removes a license from the license file */
+    int isc_action_svc_db_stats	      = 11;	/* Retrieves database statistics */
+    int isc_action_svc_get_ib_log     = 12;	/* Retrieves the InterBase log file from the server */
     // NBackup - New with Firebird 2.5
     int isc_action_svc_nbak   		  = 20; // Starts Nbackup
     int isc_action_svc_nrest  		  = 21; // Restores Nbackup
@@ -285,8 +286,11 @@ public interface ISCConstants {
     int isc_action_svc_trace_resume   = 25; // Resumes a trace
     int isc_action_svc_trace_list     = 26; // Lists all trace sessions
     // RDB$ADMIN mapping - New with Firebird 2.5
-    int isc_action_svc_set_mapping  = 27; // Sets RDB$ADMIN auto mapping in security database
-    int isc_action_svc_drop_mapping = 28; // Drops RDB$ADMIN auto mapping in security database
+    int isc_action_svc_set_mapping    = 27; // Sets RDB$ADMIN auto mapping in security database
+    int isc_action_svc_drop_mapping   = 28; // Drops RDB$ADMIN auto mapping in security database
+    // Firebird 3
+    int isc_action_svc_display_user_adm = 29; // Displays user(s) from security database with admin info
+    int isc_action_svc_validate         = 30; // Starts database online validation
 
     /*****************************************
      * Parameters for isc_action_svc_trace   *
@@ -316,9 +320,11 @@ public interface ISCConstants {
     int isc_info_svc_to_eof           =63;	/* Retrieves as much of the server output as will fit in the supplied buffer */
     int isc_info_svc_timeout          =64;	/* Sets / signifies a timeout value for reading service information */
     int isc_info_svc_get_licensed_users =65;	/* Retrieves the number of users licensed for accessing the server */
-    int isc_info_svc_limbo_trans	=66;	/* Retrieve the limbo transactions */
-    int isc_info_svc_running		=67;	/* Checks to see if a service is running on an attachment */
-    int isc_info_svc_get_users		=68;/* Returns the user information from isc_action_svc_display_users */
+    int isc_info_svc_limbo_trans      =66;	/* Retrieve the limbo transactions */
+    int isc_info_svc_running          =67;	/* Checks to see if a service is running on an attachment */
+    int isc_info_svc_get_users        =68;	/* Returns the user information from isc_action_svc_display_users */
+    int isc_info_svc_auth_block       =69;	/* Sets authentication block for service query() call */
+    int isc_info_svc_stdin            =78;	/* Returns maximum size of data, needed as stdin for service */
 
     /******************************************************
      * Parameters for isc_action_{add|delete|modify)_user *
@@ -332,6 +338,7 @@ public interface ISCConstants {
     int isc_spb_sec_firstname        = 10;
     int isc_spb_sec_middlename       = 11;
     int isc_spb_sec_lastname         = 12;
+    int isc_spb_sec_admin            = 13;
 
     /*******************************************************
      * Parameters for isc_action_svc_(add|remove)_license, *
@@ -349,6 +356,8 @@ public interface ISCConstants {
     int isc_spb_bkp_file               =  5;
     int isc_spb_bkp_factor             =  6;
     int isc_spb_bkp_length             =  7;
+    int isc_spb_bkp_skip_data          =  8;
+    int isc_spb_bkp_stat               =  15;
     int isc_spb_bkp_ignore_checksums   =  0x01;
     int isc_spb_bkp_ignore_limbo       =  0x02;
     int isc_spb_bkp_metadata_only      =  0x04;
@@ -356,7 +365,8 @@ public interface ISCConstants {
     int isc_spb_bkp_old_descriptions   =  0x10;
     int isc_spb_bkp_non_transportable  =  0x20;
     int isc_spb_bkp_convert            =  0x40;
-    int isc_spb_bkp_expand		       =  0x80;
+    int isc_spb_bkp_expand             =  0x80;
+    int isc_spb_bkp_no_triggers        =  0x8000;
 
     /********************************************
      * Parameters for isc_action_svc_properties *
@@ -384,7 +394,6 @@ public interface ISCConstants {
     int isc_spb_prp_sm_multi              = 1;
     int isc_spb_prp_sm_single             = 2;
     int isc_spb_prp_sm_full               = 3;
-
 
     /********************************************
      * Parameters for isc_spb_prp_reserve_space *
@@ -443,10 +452,13 @@ public interface ISCConstants {
      * Parameters for isc_action_svc_restore *
      *****************************************/
 
+    int isc_spb_res_skip_data		=   isc_spb_bkp_skip_data;
     int isc_spb_res_buffers			=	9;
     int isc_spb_res_page_size		=	10;
     int isc_spb_res_length			=	11;
     int isc_spb_res_access_mode		=	12;
+    int isc_spb_res_fix_fss_data	=	13;
+    int isc_spb_res_fix_fss_metadata=	14;
     int isc_spb_res_deactivate_idx	=	0x0100;
     int isc_spb_res_no_shadow		=	0x0200;
     int isc_spb_res_no_validity		=	0x0400;
@@ -454,6 +466,16 @@ public interface ISCConstants {
     int isc_spb_res_replace			=	0x1000;
     int isc_spb_res_create			=	0x2000;
     int isc_spb_res_use_all_space	=	0x4000;
+
+    /*****************************************
+     * Parameters for isc_action_svc_validate *
+     *****************************************/
+
+    int isc_spb_val_tab_incl     = 1;  // include filter based on regular expression
+    int isc_spb_val_tab_excl     = 2;  // exclude filter based on regular expression
+    int isc_spb_val_idx_incl     = 3;  // regexp of indices to validate
+    int isc_spb_val_idx_excl     = 4;  // regexp of indices to NOT validate
+    int isc_spb_val_lock_timeout = 5;  // how long to wait for table lock
 
     /******************************************
      * Parameters for isc_spb_res_access_mode  *
@@ -490,6 +512,7 @@ public interface ISCConstants {
     int isc_info_truncated              = 2;
     int isc_info_error                  = 3;
     int isc_info_data_not_ready         = 4;
+    int isc_info_length                 = 126;
     int isc_info_flag_end               = 127;
 
     /*************************/

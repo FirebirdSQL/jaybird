@@ -38,6 +38,7 @@ import java.io.Closeable;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.*;
+import java.nio.charset.StandardCharsets;
 import java.security.AccessController;
 import java.security.PrivilegedAction;
 import java.sql.SQLException;
@@ -50,8 +51,10 @@ import static org.firebirdsql.gds.impl.wire.WireProtocolConstants.*;
 /**
  * Class managing the TCP/IP connection and initial handshaking with the Firebird server.
  *
- * @param <T> Type of attach properties
- * @param <C> Type of connection handle
+ * @param <T>
+ *         Type of attach properties
+ * @param <C>
+ *         Type of connection handle
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @since 3.0
  */
@@ -239,8 +242,8 @@ public abstract class WireConnection<T extends IAttachProperties<T>, C extends F
 
             // Here we identify the user to the engine.
             // This may or may not be used as login info to a database.
-            final byte[] userBytes = getSystemUserName().getBytes();
-            final byte[] hostBytes = getSystemHostName().getBytes();
+            final byte[] userBytes = getSystemUserName().getBytes(StandardCharsets.UTF_8);
+            final byte[] hostBytes = getSystemHostName().getBytes(StandardCharsets.UTF_8);
 
             ByteArrayOutputStream userId = new ByteArrayOutputStream();
 
@@ -455,7 +458,8 @@ public abstract class WireConnection<T extends IAttachProperties<T>, C extends F
     /**
      * Creates the connection handle for this type of connection.
      *
-     * @param protocolDescriptor The protocol descriptor selected by the identify phase
+     * @param protocolDescriptor
+     *         The protocol descriptor selected by the identify phase
      * @return Connection handle
      */
     protected abstract C createConnectionHandle(ProtocolDescriptor protocolDescriptor);

@@ -18,6 +18,7 @@
  */
 package org.firebirdsql.gds.ng.wire.auth;
 
+import org.firebirdsql.gds.ClumpletReader;
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.ng.FbExceptionBuilder;
 import org.firebirdsql.gds.ng.IAttachProperties;
@@ -105,7 +106,7 @@ public final class ClientAuthBlock {
             AuthenticationPlugin plugin = provider.createPlugin();
             log.debug("Trying authentication plugin " + plugin);
             try {
-                switch(plugin.authenticate(this)) {
+                switch (plugin.authenticate(this)) {
                 case AUTH_SUCCESS:
                     // TODO Temporary workaround
                     attachProperties.setAuthData(plugin.getClientData());
@@ -129,20 +130,10 @@ public final class ClientAuthBlock {
                 return;
             }
 
-            // TODO consider implementing a ClumpletReader like in Firebird
-            int currentPosition = 0;
-            while(currentPosition < serverInfo.length && serverInfo[currentPosition++] != TAG_KNOWN_PLUGINS) {
-                int skipLength = serverInfo[currentPosition++];
-                currentPosition += skipLength;
-            }
-            if (currentPosition < serverInfo.length) {
-                // found
-                int dataLength = serverInfo[currentPosition++];
-                if (dataLength > 0) {
-                    String serverPluginNames =
-                            new String(serverInfo, currentPosition, dataLength, StandardCharsets.US_ASCII).trim();
-                    serverPlugins = new HashSet<>(Arrays.asList(serverPluginNames.split("[ \t,;]+")));
-                }
+            ClumpletReader serverList = new ClumpletReader(ClumpletReader.Kind.UnTagged, serverInfo);
+            if (serverList.find(TAG_KNOWN_PLUGINS)) {
+                String serverPluginNames = serverList.getString(StandardCharsets.US_ASCII);
+                serverPlugins = new HashSet<>(Arrays.asList(serverPluginNames.split("[ \t,;]+")));
             }
         }
 

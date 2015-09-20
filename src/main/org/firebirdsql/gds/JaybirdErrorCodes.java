@@ -47,6 +47,8 @@ public interface JaybirdErrorCodes {
     int jb_blobPutSegmentEmpty      = 337248258;
     int jb_blobPutSegmentTooLong    = 337248259;
     int jb_blobIdAlreadySet         = 337248260;
+    int jb_invalidClumpletStructure = 337248261;
+    int jb_clumpletReaderUsageError = 337248262;
 
     @SuppressWarnings("unused")
     int jb_range_end                = 337264639;
