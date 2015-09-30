@@ -28,6 +28,7 @@ import java.util.*;
 import org.firebirdsql.encodings.EncodingFactory;
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.XSQLVAR;
+import org.firebirdsql.gds.impl.DatabaseParameterBufferExtension;
 import org.firebirdsql.gds.impl.GDSHelper;
 
 /**
@@ -398,7 +399,14 @@ public class FBResultSetMetaData implements FirebirdResultSetMetaData {
     public String getCatalogName(int column) throws  SQLException {
         return "";
     }
+    private boolean isOctetsAsBytes() {
 
+        if (connection == null)
+            return false;
+
+        return connection.getDatabaseParameterBuffer().hasArgument(
+            DatabaseParameterBufferExtension.OCTETS_AS_BYTES);
+    }
 
     /**
      * Retrieves the designated column's SQL type.
@@ -442,7 +450,11 @@ public class FBResultSetMetaData implements FirebirdResultSetMetaData {
             case ISCConstants.SQL_TEXT:
                 return Types.CHAR;
             case ISCConstants.SQL_VARYING:
-                return Types.VARCHAR;
+                if (isOctetsAsBytes() && sqlsubtype == 1){
+                    return Types.VARBINARY;
+                }else {
+                    return Types.VARCHAR;
+                }
             case ISCConstants.SQL_TIMESTAMP:
                 return Types.TIMESTAMP;
             case ISCConstants.SQL_TYPE_TIME:
