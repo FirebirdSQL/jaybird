@@ -316,12 +316,26 @@ public class FBTpbMapper implements Serializable, Cloneable {
         StringTokenizer st = new StringTokenizer(mapping, ",");
         while (st.hasMoreTokens()) {
             String token = st.nextToken();
+            Integer argValue = null;
+            if (token.contains("=")) {
+                String[] parts = token.split("=");
+                try {
+                    argValue = Integer.valueOf(parts[1]);
+                } catch (NumberFormatException ex) {
+                    throw new FBResourceException(parts[1] + " is not valid integer value");
+                }
+                token = parts[0];
+            }
             Integer value = ParameterBufferHelper.getTpbParam(token);
             if (value == null)
                 throw new FBResourceException(
                 		"Keyword " + token + " unknown. Please check your mapping.");
 
-            result.addArgument(value);
+            if (argValue == null) {
+                result.addArgument(value);
+            } else {
+                result.addArgument(value, argValue);
+            }
         }
 
         return result;
