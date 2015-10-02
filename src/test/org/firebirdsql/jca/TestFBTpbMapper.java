@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source J2ee connector - jdbc driver
+ * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -12,46 +12,38 @@
  * This file was created by members of the firebird development team.
  * All individual contributions remain the Copyright (C) of those
  * individuals.  Contributors to this file are either listed here or
- * can be obtained from a CVS history command.
+ * can be obtained from a source control history command.
  *
  * All rights reserved.
  */
 package org.firebirdsql.jca;
 
-import org.firebirdsql.common.FBTestBase;
+import org.firebirdsql.common.FBTestProperties;
+import org.firebirdsql.gds.GDS;
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.TransactionParameterBuffer;
+import org.firebirdsql.gds.impl.GDSFactory;
 import org.firebirdsql.jdbc.FBTpbMapper;
+import org.junit.Before;
+import org.junit.Test;
 
 import java.sql.Connection;
 
+import static org.junit.Assert.assertTrue;
+
 /**
- * <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
+ * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
+ * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  */
-public class TestFBTpbMapper extends FBTestBase {
+public class TestFBTpbMapper {
 
     public static final String TEST_TPB_MAPPING = "org.firebirdsql.jca.test_tpb_mapping";
 
-    public TestFBTpbMapper(String string) {
-        super(string);
-    }
+    private GDS gds;
 
-    FBManagedConnectionFactory mcf;
-
-    protected void setUp() throws Exception {
-        super.setUp();
-        mcf = super.createFBManagedConnectionFactory();//new FBManagedConnectionFactory();
-    }
-
-    /**
-     * Test if default isolation level is Connection.TRANSACTION_READ_COMMITTED
-     *
-     * @throws Exception
-     *         if something went wrong.
-     */
-    public void testDefaultIsolationLevel() throws Exception {
-        assertEquals("Default tx isolation level must be READ_COMMITTED",
-                Connection.TRANSACTION_READ_COMMITTED, mcf.getDefaultTransactionIsolation());
+    @Before
+    public void setUp() throws Exception {
+        gds = GDSFactory.getGDSForType(FBTestProperties.getGdsType());
     }
 
     /**
@@ -62,14 +54,10 @@ public class TestFBTpbMapper extends FBTestBase {
      * @throws Exception
      *         if something went wrong.
      */
+    @Test
     public void testTpbMapper() throws Exception {
-        // TODO Why is this mapper created and then not used?
-        FBTpbMapper mapper = new FBTpbMapper(mcf.getGDS(), TEST_TPB_MAPPING, getClass().getClassLoader());
-
-        mcf.setTpbMapping(TEST_TPB_MAPPING);
-        mcf.setDefaultTransactionIsolation(Connection.TRANSACTION_READ_COMMITTED);
-
-        TransactionParameterBuffer tpbValue = mcf.getDefaultTpb().getTransactionParameterBuffer();
+        FBTpbMapper mapper = new FBTpbMapper(gds, TEST_TPB_MAPPING, getClass().getClassLoader());
+        TransactionParameterBuffer tpbValue = mapper.getMapping(Connection.TRANSACTION_READ_COMMITTED);
 
         assertTrue(
                 "READ_COMMITED must be isc_tpb_read_committed+isc_tpb_no_rec_version+isc_tpb_write+isc_tpb_nowait",
@@ -79,9 +67,7 @@ public class TestFBTpbMapper extends FBTestBase {
                         tpbValue.hasArgument(ISCConstants.isc_tpb_nowait)
         );
 
-        mcf.setDefaultTransactionIsolation(Connection.TRANSACTION_REPEATABLE_READ);
-
-        tpbValue = mcf.getDefaultTpb().getTransactionParameterBuffer();
+        tpbValue = mapper.getMapping(Connection.TRANSACTION_REPEATABLE_READ);
 
         assertTrue(
                 "REPEATABLE_READ must be isc_tpb_consistency+isc_tpb_write+isc_tpb_wait",
@@ -90,9 +76,7 @@ public class TestFBTpbMapper extends FBTestBase {
                         tpbValue.hasArgument(ISCConstants.isc_tpb_wait)
         );
 
-        mcf.setDefaultTransactionIsolation(Connection.TRANSACTION_SERIALIZABLE);
-
-        tpbValue = mcf.getDefaultTpb().getTransactionParameterBuffer();
+        tpbValue = mapper.getMapping(Connection.TRANSACTION_SERIALIZABLE);
 
         assertTrue(
                 "SERIALIZABLE must be isc_tpb_concurrency+isc_tpb_write+isc_tpb_wait",
@@ -102,4 +86,20 @@ public class TestFBTpbMapper extends FBTestBase {
         );
     }
 
+    @Test
+    public void testProcessMappingWithLockTimeout() throws Exception {
+        String testMapping = "isc_tpb_read_committed,isc_tpb_no_rec_version,isc_tpb_write,isc_tpb_wait,isc_tpb_lock_timeout=5";
+
+        TransactionParameterBuffer tpbValue = FBTpbMapper.processMapping(gds, testMapping);
+
+        assertTrue(
+                "must be isc_tpb_read_committed+isc_tpb_no_rec_version+isc_tpb_write+isc_tpb_wait,isc_tpb_lock_timeout=5",
+                tpbValue.hasArgument(ISCConstants.isc_tpb_read_committed) &&
+                        tpbValue.hasArgument(ISCConstants.isc_tpb_no_rec_version) &&
+                        tpbValue.hasArgument(ISCConstants.isc_tpb_write) &&
+                        tpbValue.hasArgument(ISCConstants.isc_tpb_wait) &&
+                        tpbValue.hasArgument(ISCConstants.isc_tpb_lock_timeout) &&
+                        tpbValue.getArgumentAsInt(ISCConstants.isc_tpb_lock_timeout) == 5
+        );
+    }
 }
