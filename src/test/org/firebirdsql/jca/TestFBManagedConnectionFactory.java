@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
@@ -23,6 +21,9 @@ package org.firebirdsql.jca;
 import org.junit.Test;
 
 import javax.resource.spi.ManagedConnection;
+import java.sql.Connection;
+
+import static org.junit.Assert.assertEquals;
 
 /**
  * Describe class <code>TestFBManagedConnectionFactory</code> here.
@@ -44,6 +45,17 @@ public class TestFBManagedConnectionFactory extends TestXABase {
         FBManagedConnectionFactory mcf = initMcf();
         ManagedConnection mc = mcf.createManagedConnection(null, null);
         mc.destroy();
+    }
+
+    /**
+     * Test if default isolation level is Connection.TRANSACTION_READ_COMMITTED
+     */
+    @Test
+    public void testDefaultTransactionIsolation() {
+        FBManagedConnectionFactory mcf = initMcf();
+
+        assertEquals("Default tx isolation level must be READ_COMMITTED",
+                Connection.TRANSACTION_READ_COMMITTED, mcf.getDefaultTransactionIsolation());
     }
 }
 
