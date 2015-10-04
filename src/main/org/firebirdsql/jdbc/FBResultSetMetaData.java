@@ -1,7 +1,5 @@
 /*
- * $Id$
- * 
- * Firebird Open Source J2ee connector - jdbc driver
+ * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -14,7 +12,7 @@
  * This file was created by members of the firebird development team.
  * All individual contributions remain the Copyright (C) of those
  * individuals.  Contributors to this file are either listed here or
- * can be obtained from a CVS history command.
+ * can be obtained from a source control history command.
  *
  * All rights reserved.
  */
@@ -26,6 +24,7 @@ import java.sql.Date;
 import java.util.*;
 
 import org.firebirdsql.encodings.EncodingFactory;
+import org.firebirdsql.gds.DatabaseParameterBuffer;
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.XSQLVAR;
 import org.firebirdsql.gds.impl.DatabaseParameterBufferExtension;
@@ -40,9 +39,10 @@ import org.firebirdsql.gds.impl.GDSHelper;
 public class FBResultSetMetaData implements FirebirdResultSetMetaData {
 
     private final XSQLVAR[] xsqlvars;
-    private Map extendedInfo;
+    private Map<FieldKey, ExtendedFieldInfo> extendedInfo;
     private final GDSHelper connection;
     private final ColumnStrategy columnStrategy;
+    private final boolean octetsAsBytes;
 
     /**
      * Creates a new <code>FBResultSetMetaData</code> instance.
@@ -51,26 +51,27 @@ public class FBResultSetMetaData implements FirebirdResultSetMetaData {
      * @param connection a <code>AbstractConnection</code> value
      * @exception SQLException if an error occurs
      *
-     * TODO Need another constructor for metadata from constructed
-     * result set, where we supply the ext field info.
+     * TODO Need another constructor for metadata from constructed result set, where we supply the ext field info.
      */
     protected FBResultSetMetaData(XSQLVAR[] xsqlvars, GDSHelper connection) throws SQLException {
         this.xsqlvars = xsqlvars;
         this.connection = connection;
         
         // Decide how to handle column names and column labels
-        if (connection != null && connection.getDatabaseParameterBuffer().hasArgument(ISCConstants.isc_dpb_column_label_for_name)) {
-            columnStrategy = ColumnStrategy.COLUMN_LABEL_FOR_NAME;
+        if (connection != null) {
+            final DatabaseParameterBuffer dpb = connection.getDatabaseParameterBuffer();
+            columnStrategy = dpb.hasArgument(ISCConstants.isc_dpb_column_label_for_name)
+                    ? ColumnStrategy.COLUMN_LABEL_FOR_NAME
+                    : ColumnStrategy.DEFAULT;
+            octetsAsBytes = dpb.hasArgument(DatabaseParameterBufferExtension.OCTETS_AS_BYTES);
         } else {
             columnStrategy = ColumnStrategy.DEFAULT;
+            octetsAsBytes = false;
         }
     }
 
     private String getIscEncoding() {
-        if (connection != null)
-            return connection.getIscEncoding();
-        else
-            return "NONE";
+        return connection != null ? connection.getIscEncoding() : "NONE";
     }
 
     /**
@@ -78,10 +79,9 @@ public class FBResultSetMetaData implements FirebirdResultSetMetaData {
      *
      * @return the number of columns
      */
-    public  int getColumnCount() {
+    public int getColumnCount() {
         return xsqlvars.length;
     }
-
 
     /**
      * Indicates whether the designated column is automatically numbered, thus read-only.
@@ -89,10 +89,9 @@ public class FBResultSetMetaData implements FirebirdResultSetMetaData {
      * @param column the first column is 1, the second is 2, ...
      * @return <code>true</code> if so; <code>false</code> otherwise
      */
-    public  boolean isAutoIncrement(int column) {
+    public boolean isAutoIncrement(int column) {
         return false;
     }
-
 
     /**
      * Indicates whether a column's case matters.
@@ -101,10 +100,9 @@ public class FBResultSetMetaData implements FirebirdResultSetMetaData {
      * @return <code>true</code> if so; <code>false</code> otherwise
      * @exception SQLException if a database access error occurs
      */
-    public  boolean isCaseSensitive(int column) throws  SQLException {
+    public boolean isCaseSensitive(int column) throws  SQLException {
         return true;
     }
-
 
     /**
      * Indicates whether the designated column can be used in a where clause.
@@ -113,16 +111,11 @@ public class FBResultSetMetaData implements FirebirdResultSetMetaData {
      * @return <code>true</code> if so; <code>false</code> otherwise
      * @exception SQLException if a database access error occurs
      */
-    public  boolean isSearchable(int column) throws  SQLException {
-        if (((getXsqlvar(column).sqltype & ~1) == ISCConstants.SQL_ARRAY)
-            || ((getXsqlvar(column).sqltype & ~1) == ISCConstants.SQL_BLOB)) {
-            return false;
-        }
-        else {
-            return true;
-        }
+    public boolean isSearchable(int column) throws  SQLException {
+        int sqlType = getXsqlvar(column).sqltype & ~1;
+        return !(sqlType == ISCConstants.SQL_ARRAY
+                || sqlType == ISCConstants.SQL_BLOB);
     }
-
 
     /**
      * Indicates whether the designated column is a cash value.
@@ -131,10 +124,9 @@ public class FBResultSetMetaData implements FirebirdResultSetMetaData {
      * @return <code>true</code> if so; <code>false</code> otherwise
      * @exception SQLException if a database access error occurs
      */
-    public  boolean isCurrency(int column) throws  SQLException {
+    public boolean isCurrency(int column) throws  SQLException {
         return false;
     }
-
 
     /**
      * Indicates the nullability of values in the designated column.
@@ -144,33 +136,34 @@ public class FBResultSetMetaData implements FirebirdResultSetMetaData {
      *          <code>columnNullable</code> or <code>columnNullableUnknown</code>
      * @exception SQLException if a database access error occurs
      */
-    public  int isNullable(int column) throws  SQLException {
+    public int isNullable(int column) throws  SQLException {
         if ((getXsqlvar(column).sqltype & 1) == 1) {
-            return columnNullable;
-        }
-        else {
-            return columnNoNulls;
+            return ResultSetMetaData.columnNullable;
+        } else {
+            return ResultSetMetaData.columnNoNulls;
         }
     }
-
 
     /**
      * The constant indicating that a
      * column does not allow <code>NULL</code> values.
      */
-    int columnNoNulls = 0;
+    @Deprecated
+    final int columnNoNulls = ResultSetMetaData.columnNoNulls;
 
     /**
      * The constant indicating that a
      * column allows <code>NULL</code> values.
      */
-    int columnNullable = 1;
+    @Deprecated
+    final int columnNullable = ResultSetMetaData.columnNullable;
 
     /**
      * The constant indicating that the
      * nullability of a column's values is unknown.
      */
-    int columnNullableUnknown = 2;
+    @Deprecated
+    final int columnNullableUnknown = ResultSetMetaData.columnNullableUnknown;
 
     /**
      * Indicates whether values in the designated column are signed numbers.
@@ -179,7 +172,7 @@ public class FBResultSetMetaData implements FirebirdResultSetMetaData {
      * @return <code>true</code> if so; <code>false</code> otherwise
      * @exception SQLException if a database access error occurs
      */
-    public  boolean isSigned(int column) throws  SQLException {
+    public boolean isSigned(int column) throws  SQLException {
         switch (getXsqlvar(column).sqltype & ~1) {
             case ISCConstants.SQL_SHORT:
             case ISCConstants.SQL_LONG:
@@ -193,7 +186,6 @@ public class FBResultSetMetaData implements FirebirdResultSetMetaData {
         }
     }
 
-
     /**
      * Indicates the designated column's normal maximum width in characters.
      *
@@ -202,7 +194,7 @@ public class FBResultSetMetaData implements FirebirdResultSetMetaData {
      *          of the designated column
      * @exception SQLException if a database access error occurs
      */
-    public  int getColumnDisplaySize(int column) throws  SQLException {
+    public int getColumnDisplaySize(int column) throws  SQLException {
         int colType = getColumnType(column);
         switch (colType){
             case Types.DECIMAL:
@@ -218,10 +210,16 @@ public class FBResultSetMetaData implements FirebirdResultSetMetaData {
             case Types.VARCHAR: {
                 XSQLVAR var = getXsqlvar(column);
                 int charset = var.sqlsubtype & 0xFF;
-                int charSetSize = charset == 127 /* CS_dynamic */ ?
+                int charSetSize = charset == ISCConstants.CS_dynamic ?
                     EncodingFactory.getIscEncodingSize(getIscEncoding()) :
                     EncodingFactory.getCharacterSetSize(charset);
                 return var.sqllen / charSetSize;
+            }
+
+            case Types.BINARY:
+            case Types.VARBINARY: {
+                XSQLVAR var = getXsqlvar(column);
+                return var.sqllen;
             }
 
             case Types.FLOAT:
@@ -243,11 +241,9 @@ public class FBResultSetMetaData implements FirebirdResultSetMetaData {
             case Types.BOOLEAN:
                 return 1;
             default:
-
                return 0;
-            }
         }
-
+    }
 
     /**
      * Gets the designated column's suggested title for use in printouts and
@@ -257,10 +253,9 @@ public class FBResultSetMetaData implements FirebirdResultSetMetaData {
      * @return the suggested column title
      * @exception SQLException if a database access error occurs
      */
-    public  String getColumnLabel(int column) throws  SQLException {
+    public String getColumnLabel(int column) throws  SQLException {
         return columnStrategy.getColumnLabel(getXsqlvar(column));
     }
-
 
     /**
      * Get the designated column's name.
@@ -269,7 +264,7 @@ public class FBResultSetMetaData implements FirebirdResultSetMetaData {
      * @return column name
      * @exception SQLException if a database access error occurs
      */
-    public  String getColumnName(int column) throws  SQLException {
+    public String getColumnName(int column) throws  SQLException {
         return columnStrategy.getColumnName(getXsqlvar(column));
     }
 
@@ -289,11 +284,10 @@ public class FBResultSetMetaData implements FirebirdResultSetMetaData {
      * @return schema name or "" if not applicable
      * @exception SQLException if a database access error occurs
      */
-    public  String getSchemaName(int column) throws  SQLException {
+    public String getSchemaName(int column) throws  SQLException {
         //not really implemented
         return "";
     }
-
 
     /**
      * Get the designated column's number of decimal digits.
@@ -302,7 +296,7 @@ public class FBResultSetMetaData implements FirebirdResultSetMetaData {
      * @return precision
      * @exception SQLException if a database access error occurs
      */
-    public  int getPrecision(int column) throws  SQLException {
+    public int getPrecision(int column) throws  SQLException {
         int colType = getColumnType(column);
 
         switch (colType){
@@ -324,6 +318,12 @@ public class FBResultSetMetaData implements FirebirdResultSetMetaData {
                     EncodingFactory.getIscEncodingSize(getIscEncoding()) :
                     EncodingFactory.getCharacterSetSize(charset);
                 return var.sqllen / charSetSize;
+            }
+
+            case Types.BINARY:
+            case Types.VARBINARY: {
+                XSQLVAR var = getXsqlvar(column);
+                return var.sqllen;
             }
 
             case Types.FLOAT:
@@ -346,9 +346,8 @@ public class FBResultSetMetaData implements FirebirdResultSetMetaData {
                 return 1;
             default:
                 return 0;
-            }
         }
-
+    }
 
     /**
      * Gets the designated column's number of digits to right of the decimal point.
@@ -357,10 +356,9 @@ public class FBResultSetMetaData implements FirebirdResultSetMetaData {
      * @return scale
      * @exception SQLException if a database access error occurs
      */
-    public  int getScale(int column) throws  SQLException {
+    public int getScale(int column) throws  SQLException {
         return getXsqlvar(column).sqlscale * (-1);
     }
-
 
     /**
      * Gets the designated column's table name.
@@ -369,7 +367,7 @@ public class FBResultSetMetaData implements FirebirdResultSetMetaData {
      * @return table name or "" if not applicable
      * @exception SQLException if a database access error occurs
      */
-    public  String getTableName(int column) throws  SQLException {
+    public String getTableName(int column) throws  SQLException {
         String result = getXsqlvar(column).relname;
         if (result == null) result = "";
         return result;
@@ -388,7 +386,6 @@ public class FBResultSetMetaData implements FirebirdResultSetMetaData {
         return result;
     }
 
-    
     /**
      * Gets the designated column's table's catalog name.
      *
@@ -399,14 +396,6 @@ public class FBResultSetMetaData implements FirebirdResultSetMetaData {
     public String getCatalogName(int column) throws  SQLException {
         return "";
     }
-    private boolean isOctetsAsBytes() {
-
-        if (connection == null)
-            return false;
-
-        return connection.getDatabaseParameterBuffer().hasArgument(
-            DatabaseParameterBufferExtension.OCTETS_AS_BYTES);
-    }
 
     /**
      * Retrieves the designated column's SQL type.
@@ -416,7 +405,7 @@ public class FBResultSetMetaData implements FirebirdResultSetMetaData {
      * @exception SQLException if a database access error occurs
      * @see Types
      */
-    public  int getColumnType(int column) throws  SQLException {
+    public int getColumnType(int column) throws  SQLException {
         int sqltype = getXsqlvar(column).sqltype & ~1;
         int sqlscale = getXsqlvar(column).sqlscale;
         int sqlsubtype = getXsqlvar(column).sqlsubtype;
@@ -448,11 +437,15 @@ public class FBResultSetMetaData implements FirebirdResultSetMetaData {
             case ISCConstants.SQL_FLOAT:
                 return Types.FLOAT;
             case ISCConstants.SQL_TEXT:
-                return Types.CHAR;
+                if (octetsAsBytes && sqlsubtype == ISCConstants.CS_BINARY){
+                    return Types.BINARY;
+                } else {
+                    return Types.CHAR;
+                }
             case ISCConstants.SQL_VARYING:
-                if (isOctetsAsBytes() && sqlsubtype == 1){
+                if (octetsAsBytes && sqlsubtype == ISCConstants.CS_BINARY){
                     return Types.VARBINARY;
-                }else {
+                } else {
                     return Types.VARCHAR;
                 }
             case ISCConstants.SQL_TIMESTAMP:
@@ -486,7 +479,6 @@ public class FBResultSetMetaData implements FirebirdResultSetMetaData {
         }
     }
 
-
     /**
      * Retrieves the designated column's database-specific type name.
      *
@@ -495,7 +487,7 @@ public class FBResultSetMetaData implements FirebirdResultSetMetaData {
      * a user-defined type, then a fully-qualified type name is returned.
      * @exception SQLException if a database access error occurs
      */
-    public  String getColumnTypeName(int column) throws  SQLException {    	
+    public String getColumnTypeName(int column) throws  SQLException {
         // Must return the same value as DatabaseMetaData getColumns Type_Name
         int sqltype = getXsqlvar(column).sqltype & ~1;
         int sqlscale = getXsqlvar(column).sqlscale;
@@ -561,10 +553,7 @@ public class FBResultSetMetaData implements FirebirdResultSetMetaData {
             default:
                 return "NULL";
         }
-        
     }
-
-
 
     /**
      * Indicates whether the designated column is definitely not writable.
@@ -573,11 +562,10 @@ public class FBResultSetMetaData implements FirebirdResultSetMetaData {
      * @return <code>true</code> if so; <code>false</code> otherwise
      * @exception SQLException if a database access error occurs
      */
-    public  boolean isReadOnly(int column) throws  SQLException {
-        //Need to consider priveleges!!
+    public boolean isReadOnly(int column) throws  SQLException {
+        //Need to consider privileges!!
         return false;
     }
-
 
     /**
      * Indicates whether it is possible for a write on the designated column to succeed.
@@ -586,8 +574,8 @@ public class FBResultSetMetaData implements FirebirdResultSetMetaData {
      * @return <code>true</code> if so; <code>false</code> otherwise
      * @exception SQLException if a database access error occurs
      */
-    public  boolean isWritable(int column) throws  SQLException {
-        //Needs priveleges???
+    public boolean isWritable(int column) throws  SQLException {
+        //Needs privileges???
         return true;
     }
 
@@ -598,11 +586,10 @@ public class FBResultSetMetaData implements FirebirdResultSetMetaData {
      * @return <code>true</code> if so; <code>false</code> otherwise
      * @exception SQLException if a database access error occurs
      */
-    public  boolean isDefinitelyWritable(int column) throws  SQLException {
+    public boolean isDefinitelyWritable(int column) throws  SQLException {
         //Need to consider privileges!!!
         return true;
     }
-
 
     //--------------------------JDBC 2.0-----------------------------------
 
@@ -626,8 +613,13 @@ public class FBResultSetMetaData implements FirebirdResultSetMetaData {
         switch (getXsqlvar(column).sqltype & ~1) {
             
             case ISCConstants.SQL_TEXT:
-            case ISCConstants.SQL_VARYING:
+            case ISCConstants.SQL_VARYING: {
+                XSQLVAR var = getXsqlvar(column);
+                if (octetsAsBytes && var.sqlsubtype == ISCConstants.CS_BINARY) {
+                    return byte[].class.getName();
+                }
                 return String.class.getName();
+            }
             
             case ISCConstants.SQL_SHORT:
             case ISCConstants.SQL_LONG:
@@ -647,10 +639,8 @@ public class FBResultSetMetaData implements FirebirdResultSetMetaData {
                 
                 if (field.sqlsubtype < 0)
                     return Blob.class.getName();
-                
-                if (field.sqlsubtype == 1)
+                else if (field.sqlsubtype == 1)
                     return String.class.getName();
-                
                 else
                     return byte[].class.getName();
 
@@ -683,33 +673,26 @@ public class FBResultSetMetaData implements FirebirdResultSetMetaData {
         }
     }
 
-
     //private methods
 
     private XSQLVAR getXsqlvar(int columnIndex) {
-        //return stmt.getOutSqlda().sqlvar[columnIndex - 1];
         return xsqlvars[columnIndex - 1];
     }
 
-    private ExtendedFieldInfo getExtFieldInfo(int columnIndex)
-        throws SQLException
-    {
-        if (extendedInfo == null)
-        {
+    private ExtendedFieldInfo getExtFieldInfo(int columnIndex) throws SQLException {
+        if (extendedInfo == null) {
             this.extendedInfo = getExtendedFieldInfo(connection);
-        } // end of if ()
+        }
 
         FieldKey key = new FieldKey(
             getXsqlvar(columnIndex).relname,
             getXsqlvar(columnIndex).sqlname);
 
-        return (ExtendedFieldInfo)extendedInfo.get(key);
+        return extendedInfo.get(key);
     }
 
     private int estimatePrecision(int columnIndex) {
         int sqltype = getXsqlvar(columnIndex).sqltype & ~1;
-        // TODO: Why unused?
-        int sqlscale = getXsqlvar(columnIndex).sqlscale;
 
         switch(sqltype) {
             case ISCConstants.SQL_SHORT : return 5;
@@ -719,7 +702,6 @@ public class FBResultSetMetaData implements FirebirdResultSetMetaData {
             default : return 0;
         }
     }
-
 
     private static final String GET_FIELD_INFO = "SELECT "
         + "  RF.RDB$RELATION_NAME as RELATION_NAME"
@@ -746,7 +728,6 @@ public class FBResultSetMetaData implements FirebirdResultSetMetaData {
      * information about fields in a database.
      */
     private static class ExtendedFieldInfo {
-    	// TODO Find out why there are unused fields here
         String relationName;
         String fieldName;
         int fieldLength;
@@ -786,7 +767,6 @@ public class FBResultSetMetaData implements FirebirdResultSetMetaData {
          * class and has equal relation and field names.
          */
         public boolean equals(Object obj) {
-
             if (obj == this) return true;
 
             if (obj == null || !(obj instanceof FieldKey)) return false;
@@ -810,8 +790,6 @@ public class FBResultSetMetaData implements FirebirdResultSetMetaData {
             result = 23 * result + (fieldName != null ? fieldName.hashCode() : 0);
             return result;
         }
-
-
     }
 
     /**
@@ -823,20 +801,17 @@ public class FBResultSetMetaData implements FirebirdResultSetMetaData {
      *
      * @throws SQLException if extended field information cannot be obtained.
      */
-    private Map getExtendedFieldInfo(GDSHelper gdsHelper) throws SQLException {
+    private Map<FieldKey, ExtendedFieldInfo> getExtendedFieldInfo(GDSHelper gdsHelper) throws SQLException {
+        if (gdsHelper == null) return Collections.emptyMap();
 
-        if (gdsHelper == null) return Collections.EMPTY_MAP;
-
-        //
         // Apparently there is a limit in the UNION
-        // It is necesary to split in several querys
+        // It is necessary to split in several queries
         // Although the problem reported with 93 UNION use only 70
-        //
         int pending = xsqlvars.length;
-        HashMap result = new HashMap();
+        Map<FieldKey, ExtendedFieldInfo> result = new HashMap<FieldKey, ExtendedFieldInfo>();
         while (pending > 0){
-            StringBuffer sb = new StringBuffer();
-            ArrayList params = new ArrayList();
+            StringBuilder sb = new StringBuilder();
+            List<String> params = new ArrayList<String>();
 
             int maxLength = (pending>70) ? 70 : pending;
             for (int i = 0; i < maxLength; i++) {
@@ -851,16 +826,15 @@ public class FBResultSetMetaData implements FirebirdResultSetMetaData {
                 params.add(fieldName);
                 params.add(relationName);
 
-                if (i < maxLength - 1)
+                if (i < maxLength - 1) {
                     sb.append("\n").append("UNION").append("\n");
-
+                }
             }
 
             FBDatabaseMetaData metaData = new FBDatabaseMetaData(gdsHelper);
             ResultSet rs = metaData.doQuery(sb.toString(), params);
 
             try {
-
                 while(rs.next()) {
                     ExtendedFieldInfo fieldInfo = new ExtendedFieldInfo();
 
@@ -875,12 +849,9 @@ public class FBResultSetMetaData implements FirebirdResultSetMetaData {
 
                     if (rs.wasNull())
                         fieldInfo.characterLength =
-                            fieldInfo.fieldLength /
-                            EncodingFactory.getCharacterSetSize(fieldInfo.characterSetId);
+                            fieldInfo.fieldLength / EncodingFactory.getCharacterSetSize(fieldInfo.characterSetId);
 
-                    result.put(
-                        new FieldKey(fieldInfo.relationName, fieldInfo.fieldName),
-                        fieldInfo);
+                    result.put(new FieldKey(fieldInfo.relationName, fieldInfo.fieldName), fieldInfo);
                 }
             } finally {
                 rs.close();
