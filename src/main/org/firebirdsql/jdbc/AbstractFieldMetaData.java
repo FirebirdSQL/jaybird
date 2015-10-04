@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
@@ -22,6 +20,7 @@ package org.firebirdsql.jdbc;
 
 import org.firebirdsql.encodings.EncodingFactory;
 import org.firebirdsql.gds.ISCConstants;
+import org.firebirdsql.gds.impl.DatabaseParameterBufferExtension;
 import org.firebirdsql.gds.impl.GDSHelper;
 import org.firebirdsql.gds.ng.fields.FieldDescriptor;
 import org.firebirdsql.gds.ng.fields.RowDescriptor;
@@ -47,10 +46,19 @@ public abstract class AbstractFieldMetaData implements Wrapper {
     private final RowDescriptor rowDescriptor;
     private final GDSHelper gdsHelper;
     private Map<FieldKey, ExtendedFieldInfo> extendedInfo;
+    private final boolean octetsAsBytes;
 
     protected AbstractFieldMetaData(RowDescriptor rowDescriptor, GDSHelper gdsHelper) {
         this.rowDescriptor = rowDescriptor;
         this.gdsHelper = gdsHelper;
+
+        if (gdsHelper != null) {
+            // TODO Define explicit property for octetsAsBytes
+            octetsAsBytes = gdsHelper.getConnectionProperties().getExtraDatabaseParameters()
+                    .hasArgument(DatabaseParameterBufferExtension.OCTETS_AS_BYTES);
+        } else {
+            octetsAsBytes = false;
+        }
     }
 
     @Override
@@ -279,9 +287,17 @@ public abstract class AbstractFieldMetaData implements Wrapper {
         case ISCConstants.SQL_FLOAT:
             return Types.FLOAT;
         case ISCConstants.SQL_TEXT:
-            return Types.CHAR;
+            if (octetsAsBytes && sqlSubtype == ISCConstants.CS_BINARY){
+                return Types.BINARY;
+            } else {
+                return Types.CHAR;
+            }
         case ISCConstants.SQL_VARYING:
-            return Types.VARCHAR;
+            if (octetsAsBytes && sqlSubtype == ISCConstants.CS_BINARY){
+                return Types.VARBINARY;
+            } else {
+                return Types.VARCHAR;
+            }
         case ISCConstants.SQL_TIMESTAMP:
             return Types.TIMESTAMP;
         case ISCConstants.SQL_TYPE_TIME:
@@ -336,10 +352,16 @@ public abstract class AbstractFieldMetaData implements Wrapper {
         case Types.VARCHAR: {
             FieldDescriptor var = getFieldDescriptor(field);
             int charset = var.getSubType() & 0xFF;
-            int charSetSize = charset == 127 /* CS_dynamic */ ?
-                    EncodingFactory.getIscEncodingSize(getIscEncoding()) :
-                    EncodingFactory.getCharacterSetSize(charset);
+            int charSetSize = charset == ISCConstants.CS_dynamic
+                    ? EncodingFactory.getIscEncodingSize(getIscEncoding())
+                    : EncodingFactory.getCharacterSetSize(charset);
             return var.getLength() / charSetSize;
+        }
+
+        case Types.BINARY:
+        case Types.VARBINARY: {
+            FieldDescriptor var = getFieldDescriptor(field);
+            return var.getLength();
         }
 
         case Types.FLOAT:
