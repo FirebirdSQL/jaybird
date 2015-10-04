@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * Public Firebird Java API.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -186,4 +184,9 @@ public interface ParameterBuffer extends Iterable<Parameter> {
      * @see #toBytes()
      */
     byte[] toBytesWithType();
+
+    /**
+     * @return the number of parameters stored.
+     */
+    int size();
 }

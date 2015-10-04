@@ -180,6 +180,11 @@ public abstract class ParameterBufferBase implements ParameterBuffer, Serializab
     }
 
     @Override
+    public int size() {
+        return arguments.size();
+    }
+
+    @Override
     public boolean equals(Object other) {
         if (other == null || !(this.getClass().isAssignableFrom(other.getClass())))
             return false;

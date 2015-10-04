@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
@@ -151,6 +149,11 @@ public class FBConnectionRequestInfo implements DatabaseParameterBufferExtension
     @Override
     public byte[] toBytesWithType() {
         return dpb.toBytesWithType();
+    }
+
+    @Override
+    public int size() {
+        return dpb.size();
     }
 
     public void setUserName(String userName) {

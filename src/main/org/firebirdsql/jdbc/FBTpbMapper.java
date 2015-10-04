@@ -33,7 +33,7 @@ import java.util.concurrent.ConcurrentHashMap;
 /**
  * This class is provides mapping capabilities between standard JDBC
  * transaction isolation level and Firebird Transaction Parameters Block (TPB).
- * 
+ *
  * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
  */
 public class FBTpbMapper implements Serializable, Cloneable {
@@ -72,6 +72,9 @@ public class FBTpbMapper implements Serializable, Cloneable {
      */
     public static final String TRANSACTION_READ_COMMITTED = "TRANSACTION_READ_COMMITTED";
 
+    private static final List<String> ISOLATION_LEVEL_NAMES = Collections.unmodifiableList(Arrays.asList(
+            TRANSACTION_SERIALIZABLE, TRANSACTION_REPEATABLE_READ, TRANSACTION_READ_COMMITTED));
+
     // read uncommitted actually not supported
     /**
      * Dirty reads, non-repeatable reads and phantom reads can occur. This level
@@ -90,9 +93,9 @@ public class FBTpbMapper implements Serializable, Cloneable {
 
     /**
      * Convert transaction isolation level into string.
-     * 
-     * @param isolationLevel transaction isolation level as integer constant.
-     * 
+     *
+     * @param isolationLevel
+     *         transaction isolation level as integer constant.
      * @return corresponding string representation.
      */
     public static String getTransactionIsolationName(int isolationLevel) {
@@ -119,24 +122,26 @@ public class FBTpbMapper implements Serializable, Cloneable {
 
     /**
      * Convert transaction isolation level name into a corresponding constant.
-     * 
-     * @param isolationName name of the transaction isolation.
-     * 
+     *
+     * @param isolationName
+     *         name of the transaction isolation.
      * @return corresponding constant.
      */
     public static int getTransactionIsolationLevel(String isolationName) {
-        if (TRANSACTION_NONE.equals(isolationName))
+        switch (isolationName) {
+        case TRANSACTION_NONE:
             return Connection.TRANSACTION_NONE;
-        else if (TRANSACTION_READ_UNCOMMITTED.equals(isolationName))
+        case TRANSACTION_READ_UNCOMMITTED:
             return Connection.TRANSACTION_READ_UNCOMMITTED;
-        else if (TRANSACTION_READ_COMMITTED.equals(isolationName))
+        case TRANSACTION_READ_COMMITTED:
             return Connection.TRANSACTION_READ_COMMITTED;
-        else if (TRANSACTION_REPEATABLE_READ.equals(isolationName))
+        case TRANSACTION_REPEATABLE_READ:
             return Connection.TRANSACTION_REPEATABLE_READ;
-        else if (TRANSACTION_SERIALIZABLE.equals(isolationName))
+        case TRANSACTION_SERIALIZABLE:
             return Connection.TRANSACTION_SERIALIZABLE;
-        else
+        default:
             throw new IllegalArgumentException("Invalid isolation name.");
+        }
     }
 
     // ConcurrentHashMap because changes can - potentially - be made concurrently
@@ -149,6 +154,7 @@ public class FBTpbMapper implements Serializable, Cloneable {
      */
     public FBTpbMapper() {
         // TODO instance creation should be delegated to FbDatabase or another factory
+        // TODO Should use isc_tpb_mapping.properties
 
         TransactionParameterBuffer serializableTpb = new TransactionParameterBufferImpl();
         serializableTpb.addArgument(ISCConstants.isc_tpb_write);
@@ -173,7 +179,7 @@ public class FBTpbMapper implements Serializable, Cloneable {
 
     /**
      * Create instance of this class for the specified string mapping.
-     * 
+     *
      * @param stringMapping mapping of JDBC transaction isolation to Firebird
      * mapping. Keys and values of this map must be strings. Keys can have
      * following values:
@@ -213,10 +219,11 @@ public class FBTpbMapper implements Serializable, Cloneable {
     /**
      * Process specified string mapping. This method updates default mapping
      * with values specified in a <code>stringMapping</code>.
-     * 
-     * @param stringMapping mapping to process.
      *
-     * @throws FBResourceException if mapping contains incorrect values.
+     * @param stringMapping
+     *         mapping to process.
+     * @throws FBResourceException
+     *         if mapping contains incorrect values.
      */
     private void processMapping(Map<String, String> stringMapping) throws FBResourceException {
         for (Map.Entry<String, String> entry : stringMapping.entrySet()) {
@@ -235,12 +242,14 @@ public class FBTpbMapper implements Serializable, Cloneable {
     /**
      * Create instance of this class and load mapping from the specified
      * resource.
-     * 
-     * @param mappingResource name of the resource to load.
-     * @param cl class loader that should be used to load specified resource.
      *
-     * @throws FBResourceException if resource cannot be loaded or contains
-     * incorrect values.
+     * @param mappingResource
+     *         name of the resource to load.
+     * @param cl
+     *         class loader that should be used to load specified resource.
+     * @throws FBResourceException
+     *         if resource cannot be loaded or contains
+     *         incorrect values.
      */
     public FBTpbMapper(String mappingResource, ClassLoader cl) throws FBResourceException {
         try {
@@ -274,40 +283,34 @@ public class FBTpbMapper implements Serializable, Cloneable {
      * <code>"TRANSACTION_READ_COMMITTED"</code>.
      * </ul>
      *
-     * @param connectionProperties FirebirdConnectionProperties to set transaction state
-     * @param info connection parameters passed into a driver.
-     *
-     * @throws FBResourceException if specified mapping is incorrect.
+     * @param connectionProperties
+     *         FirebirdConnectionProperties to set transaction state
+     * @param info
+     *         connection parameters passed into a driver.
+     * @throws FBResourceException
+     *         if specified mapping is incorrect.
      */
     public static void processMapping(FirebirdConnectionProperties connectionProperties, Properties info)
             throws FBResourceException {
-
-        if (info.containsKey(TRANSACTION_SERIALIZABLE))
+        for (String isolationName : ISOLATION_LEVEL_NAMES) {
+            String property = info.getProperty(isolationName);
+            if (property == null) continue;
             connectionProperties.setTransactionParameters(
-                    Connection.TRANSACTION_SERIALIZABLE,
-                    processMapping(info.getProperty(TRANSACTION_SERIALIZABLE)));
-
-        if (info.containsKey(TRANSACTION_REPEATABLE_READ))
-            connectionProperties.setTransactionParameters(
-                    Connection.TRANSACTION_REPEATABLE_READ,
-                    processMapping(info.getProperty(TRANSACTION_REPEATABLE_READ)));
-
-        if (info.containsKey(TRANSACTION_READ_COMMITTED))
-            connectionProperties.setTransactionParameters(
-                    Connection.TRANSACTION_READ_COMMITTED,
-                    processMapping(info.getProperty(TRANSACTION_READ_COMMITTED)));
+                    getTransactionIsolationLevel(isolationName),
+                    processMapping(property));
+        }
     }
 
     /**
      * Process comma-separated list of keywords and convert them into TPB
      * values.
-     * 
-     * @param mapping comma-separated list of keywords.
      *
+     * @param mapping
+     *         comma-separated list of keywords.
      * @return set containing values corresponding to the specified keywords.
-     * 
-     * @throws FBResourceException if mapping contains keyword that is not
-     * a TPB parameter.
+     * @throws FBResourceException
+     *         if mapping contains keyword that is not
+     *         a TPB parameter.
      */
     public static TransactionParameterBuffer processMapping(String mapping) throws FBResourceException {
         // TODO instance creation should be delegated to FbDatabase
@@ -327,9 +330,9 @@ public class FBTpbMapper implements Serializable, Cloneable {
                 token = parts[0];
             }
             Integer value = ParameterBufferHelper.getTpbParam(token);
-            if (value == null)
-                throw new FBResourceException(
-                		"Keyword " + token + " unknown. Please check your mapping.");
+            if (value == null) {
+                throw new FBResourceException("Keyword " + token + " unknown. Please check your mapping.");
+            }
 
             if (argValue == null) {
                 result.addArgument(value);
@@ -343,65 +346,61 @@ public class FBTpbMapper implements Serializable, Cloneable {
 
     /**
      * Get mapping for the specified transaction isolation level.
-     * 
-     * @param transactionIsolation transaction isolation level.
-     * 
+     *
+     * @param transactionIsolation
+     *         transaction isolation level.
      * @return set with TPB parameters.
-     * 
-     * @throws IllegalArgumentException if specified transaction isolation level
-     * is unknown.
+     * @throws IllegalArgumentException
+     *         if specified transaction isolation level is unknown.
      */
     public TransactionParameterBuffer getMapping(int transactionIsolation) {
-
         switch (transactionIsolation) {
-
         case Connection.TRANSACTION_SERIALIZABLE:
         case Connection.TRANSACTION_REPEATABLE_READ:
         case Connection.TRANSACTION_READ_COMMITTED:
             return mapping.get(transactionIsolation).deepCopy();
 
-            // promote transaction
         case Connection.TRANSACTION_READ_UNCOMMITTED:
+            // promote transaction
             return mapping.get(Connection.TRANSACTION_READ_COMMITTED).deepCopy();
 
         case Connection.TRANSACTION_NONE:
         default:
             throw new IllegalArgumentException(
-            		"Transaction isolation level " + transactionIsolation +
-            		" is not supported.");
+                    "Transaction isolation level " + transactionIsolation + " is not supported.");
         }
     }
 
     /**
      * Set mapping for the specified transaction isolation.
-     * 
-     * @param transactionIsolation transaction isolation level.
-     * @param tpb TPB parameters.
-     * 
-     * @throws IllegalArgumentException if incorrect isolation level is specified.
+     *
+     * @param transactionIsolation
+     *         transaction isolation level.
+     * @param tpb
+     *         TPB parameters.
+     * @throws IllegalArgumentException
+     *         if incorrect isolation level is specified.
      */
     public void setMapping(int transactionIsolation, TransactionParameterBuffer tpb) {
         switch (transactionIsolation) {
-
         case Connection.TRANSACTION_SERIALIZABLE:
         case Connection.TRANSACTION_REPEATABLE_READ:
         case Connection.TRANSACTION_READ_COMMITTED:
-            mapping.put(transactionIsolation, tpb);
+            mapping.put(transactionIsolation, tpb.deepCopy());
             break;
 
         case Connection.TRANSACTION_READ_UNCOMMITTED:
         case Connection.TRANSACTION_NONE:
         default:
             throw new IllegalArgumentException(
-            		"Transaction isolation level " + transactionIsolation +
-            		" is not supported.");
+                    "Transaction isolation level " + transactionIsolation + " is not supported.");
         }
     }
 
     /**
      * Get default mapping. Default mapping represents a TPB mapping for the
      * default transaction isolation level (read committed).
-     * 
+     *
      * @return mapping for the default transaction isolation level.
      */
     public TransactionParameterBuffer getDefaultMapping() {
@@ -413,6 +412,7 @@ public class FBTpbMapper implements Serializable, Cloneable {
     }
 
     public void setDefaultTransactionIsolation(int isolationLevel) {
+        // TODO Check if valid isolation level
         this.defaultIsolationLevel = isolationLevel;
     }
 
@@ -441,7 +441,12 @@ public class FBTpbMapper implements Serializable, Cloneable {
         try {
             FBTpbMapper clone = (FBTpbMapper) super.clone();
 
-            clone.mapping = new ConcurrentHashMap<>(mapping);
+            ConcurrentHashMap<Integer, TransactionParameterBuffer> newMapping = new ConcurrentHashMap<>();
+            for (Map.Entry<Integer, TransactionParameterBuffer> entry : mapping.entrySet()) {
+                newMapping.put(entry.getKey(), entry.getValue().deepCopy());
+            }
+
+            clone.mapping = newMapping;
 
             return clone;
         } catch (CloneNotSupportedException ex) {
