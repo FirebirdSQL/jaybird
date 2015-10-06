@@ -46,7 +46,7 @@ import java.nio.ShortBuffer;
  * @since 3.0
  */
 @SuppressWarnings("UnusedDeclaration")
-public interface FbClientLibrary {
+public interface FbClientLibrary extends com.sun.jna.Library {
 
     /**
      * FbShutdown callback.
