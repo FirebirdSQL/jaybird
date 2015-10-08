@@ -23,8 +23,6 @@ import org.firebirdsql.encodings.IEncodingFactory;
 import org.firebirdsql.gds.DatabaseParameterBuffer;
 import org.firebirdsql.gds.Parameter;
 import org.firebirdsql.gds.ServiceParameterBuffer;
-import org.firebirdsql.gds.ng.wire.auth.LegacyAuthenticationPlugin;
-import org.firebirdsql.gds.ng.wire.auth.UnixCrypt;
 
 import static org.firebirdsql.gds.ISCConstants.*;
 
@@ -66,16 +64,20 @@ public abstract class AbstractParameterConverter {
         }
     }
 
-    protected void populateAuthenticationProperties(final IConnectionProperties props, final IEncodingFactory encodingFactory,
-            final DatabaseParameterBuffer dpb, final Encoding encoding) {
-        if (props.getUser() != null) {
-            dpb.addArgument(isc_dpb_user_name, props.getUser(), encoding);
-        }
-        if (props.getPassword() != null) {
-            dpb.addArgument(isc_dpb_password_enc, UnixCrypt.crypt(props.getPassword(),
-                    LegacyAuthenticationPlugin.LEGACY_PASSWORD_SALT).substring(2, 13), encoding);
-        }
-    }
+    /**
+     * Populates the authentication properties of the DPB.
+     *
+     * @param props
+     *         Properties
+     * @param encodingFactory
+     *         Encoding factory
+     * @param dpb
+     *         Database parameter buffer to populate
+     * @param encoding
+     *         Encoding to use for string properties
+     */
+    protected abstract void populateAuthenticationProperties(IConnectionProperties props,
+            IEncodingFactory encodingFactory, DatabaseParameterBuffer dpb, Encoding encoding);
 
     /**
      * Populates the database parameter buffer with the non-standard properties (in
@@ -122,14 +124,18 @@ public abstract class AbstractParameterConverter {
         }
     }
 
-    protected void populateAuthenticationProperties(final IServiceProperties props, final IEncodingFactory encodingFactory,
-            final ServiceParameterBuffer spb, final Encoding encoding) {
-        if (props.getUser() != null) {
-            spb.addArgument(isc_spb_user_name, props.getUser(), encoding);
-        }
-        if (props.getPassword() != null) {
-            spb.addArgument(isc_spb_password_enc, UnixCrypt.crypt(props.getPassword(),
-                    LegacyAuthenticationPlugin.LEGACY_PASSWORD_SALT).substring(2, 13), encoding);
-        }
-    }
+    /**
+     * Populates the authentication properties of the SPB.
+     *
+     * @param props
+     *         Properties
+     * @param encodingFactory
+     *         Encoding factory
+     * @param spb
+     *         Service parameter buffer to populate
+     * @param encoding
+     *         Encoding to use for string properties
+     */
+    protected abstract void populateAuthenticationProperties(IServiceProperties props, IEncodingFactory encodingFactory,
+            ServiceParameterBuffer spb, Encoding encoding);
 }

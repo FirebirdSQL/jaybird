@@ -29,7 +29,7 @@ import org.firebirdsql.gds.ng.IConnectionProperties;
 import org.firebirdsql.gds.ng.IServiceProperties;
 import org.firebirdsql.gds.ng.ParameterConverter;
 
-import static org.firebirdsql.gds.ISCConstants.isc_spb_current_version;
+import static org.firebirdsql.gds.ISCConstants.*;
 
 /**
  * Implementation of {@link org.firebirdsql.gds.ng.ParameterConverter} for JNA.
@@ -53,6 +53,16 @@ public class JnaParameterConverter extends AbstractParameterConverter implements
         return dpb;
     }
 
+    protected void populateAuthenticationProperties(final IConnectionProperties props,
+            final IEncodingFactory encodingFactory, final DatabaseParameterBuffer dpb, final Encoding encoding) {
+        if (props.getUser() != null) {
+            dpb.addArgument(isc_dpb_user_name, props.getUser(), encoding);
+        }
+        if (props.getPassword() != null) {
+            dpb.addArgument(isc_dpb_password, props.getPassword(), encoding);
+        }
+    }
+
     @Override
     public ServiceParameterBuffer toServiceParameterBuffer(IServiceProperties serviceProperties,
             IEncodingFactory encodingFactory) {
@@ -64,5 +74,16 @@ public class JnaParameterConverter extends AbstractParameterConverter implements
         populateDefaultProperties(serviceProperties, encodingFactory, spb, stringEncoding);
 
         return spb;
+    }
+
+    @Override
+    protected void populateAuthenticationProperties(final IServiceProperties props,
+            final IEncodingFactory encodingFactory, final ServiceParameterBuffer spb, final Encoding encoding) {
+        if (props.getUser() != null) {
+            spb.addArgument(isc_spb_user_name, props.getUser(), encoding);
+        }
+        if (props.getPassword() != null) {
+            spb.addArgument(isc_spb_password, props.getPassword(), encoding);
+        }
     }
 }
