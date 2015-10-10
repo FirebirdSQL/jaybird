@@ -9,3 +9,4 @@ classes/
 *.iml
 *.eml
 *.fdb
+.settings/
