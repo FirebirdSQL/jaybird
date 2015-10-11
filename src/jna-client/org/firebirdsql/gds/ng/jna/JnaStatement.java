@@ -235,7 +235,7 @@ public class JnaStatement extends AbstractFbStatement {
                 } else if (fieldDescriptor.isFbType(ISCConstants.SQL_TEXT)) {
                     // Only send the data we need
                     xSqlVar.sqllen = (short) Math.min(fieldDescriptor.getLength(), fieldData.length);
-                    if (fieldDescriptor.getSubType() != ISCConstants.CS_BINARY){
+                    if (fieldDescriptor.getSubType() != ISCConstants.CS_BINARY) {
                         // Non-binary CHAR field: fill with spaces
                         xSqlVar.sqldata.setMemory(0, xSqlVar.sqllen & 0xff, (byte) ' ');
                     }
@@ -315,6 +315,14 @@ public class JnaStatement extends AbstractFbStatement {
         return row.toRowValue(false);
     }
 
+    /**
+     * {@inheritDoc}
+     * <p>
+     * The JNA implementation ignores the specified {@code fetchSize} to prevent problems with - for example -
+     * positioned updates with named cursors. For the wire protocol that case is handled by the server ignoring the
+     * fetch size. Internally the native fetch will batch a number of records, but the number is outside our control.
+     * </p>
+     */
     @Override
     public void fetchRows(int fetchSize) throws SQLException {
         synchronized (getSynchronizationObject()) {
@@ -326,24 +334,19 @@ public class JnaStatement extends AbstractFbStatement {
 
             final JnaDatabase db = getDatabase();
             synchronized (db.getSynchronizationObject()) {
-                int count = 0;
-                while (!isAllRowsFetched() && count < fetchSize) {
-                    ISC_STATUS fetchStatus = clientLibrary.isc_dsql_fetch(statusVector, handle, outXSqlDa.version,
-                            outXSqlDa);
-                    processStatusVector();
-                    count++;
+                ISC_STATUS fetchStatus = clientLibrary.isc_dsql_fetch(statusVector, handle, outXSqlDa.version,
+                        outXSqlDa);
+                processStatusVector();
 
-                    int fetchStatusInt = fetchStatus.intValue();
-                    if (fetchStatusInt == ISCConstants.FETCH_OK) {
-                        queueRowData(toRowValue(getFieldDescriptor(), outXSqlDa));
-                    } else if (fetchStatusInt == ISCConstants.FETCH_NO_MORE_ROWS) {
-                        setAllRowsFetched(true);
-                        getSqlCounts();
-                        // Note: we are not explicitly 'closing' the cursor here
-                    } else {
-                        // TODO Log, raise exception, or simply 'not possible'?
-                        break;
-                    }
+                int fetchStatusInt = fetchStatus.intValue();
+                if (fetchStatusInt == ISCConstants.FETCH_OK) {
+                    queueRowData(toRowValue(getFieldDescriptor(), outXSqlDa));
+                } else if (fetchStatusInt == ISCConstants.FETCH_NO_MORE_ROWS) {
+                    setAllRowsFetched(true);
+                    getSqlCounts();
+                    // Note: we are not explicitly 'closing' the cursor here
+                } else {
+                    // TODO Log, raise exception, or simply 'not possible'?
                 }
             }
         }

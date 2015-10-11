@@ -114,10 +114,10 @@ public abstract class AbstractStatementTest {
     //@formatter:on
 
     protected final FbConnectionProperties connectionInfo;
-    private final SimpleStatementListener listener = new SimpleStatementListener();
-    private FbDatabase db;
+    protected final SimpleStatementListener listener = new SimpleStatementListener();
+    protected FbDatabase db;
     private FbTransaction transaction;
-    private FbStatement statement;
+    protected FbStatement statement;
 
     {
         connectionInfo = new FbConnectionProperties();
@@ -642,7 +642,7 @@ public abstract class AbstractStatementTest {
         return db.startTransaction(tpb);
     }
 
-    private void allocateStatement() throws SQLException {
+    protected void allocateStatement() throws SQLException {
         if (transaction == null || transaction.getState() != TransactionState.ACTIVE) {
             transaction = getTransaction();
         }
