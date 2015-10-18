@@ -319,19 +319,8 @@ public class FBProcedureCall implements Cloneable {
         boolean firstParam = true;
         sb.append('(');
         for (FBProcedureParam param : inputParams) {
-            if (param == null)
+            if (param == null) {
                 continue;
-
-            // if parameter does not have set value, and is not registered
-            // as output parameter, throw an exception, otherwise, continue
-            // to the next one.
-            if (!param.isValueSet()) {
-                if (param.isParam() &&
-                        outputParams.size() > 0 &&
-                        outputParams.get(param.getPosition()) == null) {
-                    throw new FBSQLException("Value of parameter " + param.getIndex() + " not set and " +
-                            "it was not registered as output parameter.", FBSQLException.SQL_STATE_WRONG_PARAM_NUM);
-                }
             }
 
             if (!firstParam) {
@@ -350,6 +339,30 @@ public class FBProcedureCall implements Cloneable {
         }
 
         return sb.toString();
+    }
+
+    /**
+     * Checks if all parameters have been set.
+     *
+     * @throws SQLException When some parameters don't have values, and are not registered as an out parameter.
+     */
+    public void checkParameters() throws SQLException {
+        for (FBProcedureParam param : inputParams) {
+            if (param == null) {
+                continue;
+            }
+
+            // if parameter does not have set value, and is not registered
+            // as output parameter, throw an exception, otherwise, continue
+            // to the next one.
+            if (!param.isValueSet()) {
+                if (param.isParam()
+                        && outputParams.size() > 0
+                        && outputParams.get(param.getPosition()) == null)
+                    throw new FBSQLException("Value of parameter " + param.getIndex() + " not set and "
+                            + "it was not registered as output parameter.", FBSQLException.SQL_STATE_WRONG_PARAM_NUM);
+            }
+        }
     }
 
     /**

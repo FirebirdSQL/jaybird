@@ -122,6 +122,7 @@ public abstract class AbstractCallableStatement extends FBPreparedStatement impl
     }
 
     public void addBatch() throws SQLException {
+        procedureCall.checkParameters();
         batchList.add(procedureCall.clone());
     }
 
@@ -238,6 +239,7 @@ public abstract class AbstractCallableStatement extends FBPreparedStatement impl
      * @see Statement#execute
      */
     public boolean execute() throws SQLException {
+        procedureCall.checkParameters();
         boolean hasResultSet = false;
         synchronized (getSynchronizationObject()) {
             notifyStatementStarted();
@@ -263,6 +265,7 @@ public abstract class AbstractCallableStatement extends FBPreparedStatement impl
      * the processing is done by superclass.
      */
     public ResultSet executeQuery() throws SQLException {
+        procedureCall.checkParameters();
         synchronized (getSynchronizationObject()) {
             notifyStatementStarted();
             prepareFixedStatement(procedureCall.getSQL(isSelectableProcedure()));
@@ -283,6 +286,7 @@ public abstract class AbstractCallableStatement extends FBPreparedStatement impl
      * the processing is done by superclass.
      */
     public int executeUpdate() throws SQLException {
+        procedureCall.checkParameters();
         synchronized (getSynchronizationObject()) {
             try {
                 notifyStatementStarted();
