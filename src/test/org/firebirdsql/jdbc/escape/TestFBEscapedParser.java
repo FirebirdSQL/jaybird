@@ -21,7 +21,9 @@ package org.firebirdsql.jdbc.escape;
 import static org.junit.Assert.*;
 
 import org.firebirdsql.jdbc.escape.FBEscapedParser.EscapeParserMode;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 
 /**
  * Tests for {@link FBEscapedParser}.
@@ -29,6 +31,9 @@ import org.junit.Test;
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  */
 public class TestFBEscapedParser {
+
+    @Rule
+    public final ExpectedException expectedException = ExpectedException.none();
     
     @Test
     public void testStringWithoutEscapes() throws Exception {
@@ -145,13 +150,13 @@ public class TestFBEscapedParser {
      * Expects exception, as parameter for offset_rows is not supported by driver implementation.
      * </p>
      */
-    @Test(expected=FBSQLParseException.class)
+    @Test
     public void testExtendedLimitEscapeOffsetParameter() throws Exception {
         final FBEscapedParser parser = new FBEscapedParser(EscapeParserMode.USE_BUILT_IN);
         final String input = "SELECT * FROM some_table {limit 10 offset ?}";
+        expectedException.expect(FBSQLParseException.class);
         
         parser.parse(input);
-        fail("Expected parse of limit escape with parameter for offset to fail");
     }
     
     /**
@@ -160,20 +165,20 @@ public class TestFBEscapedParser {
      * Expects exception, as parameter for offset_rows is not supported by driver implementation.
      * </p>
      */
-    @Test(expected=FBSQLParseException.class)
+    @Test
     public void testExtendedLimitEscapeRowsAndOffsetParameter() throws Exception {
         final FBEscapedParser parser = new FBEscapedParser(EscapeParserMode.USE_BUILT_IN);
         final String input = "SELECT * FROM some_table {limit ? offset ?}";
+        expectedException.expect(FBSQLParseException.class);
         
         parser.parse(input);
-        fail("Expected parse of limit escape with parameter for offset to fail");
     }
     
     @Test
     public void testCallEscape() throws Exception {
         final FBEscapedParser parser = new FBEscapedParser(EscapeParserMode.USE_BUILT_IN);
         final String input = "{call FUNCTION(?,?)}";
-        final String expectedOutput = "EXECUTE PROCEDURE FUNCTION(?, ?)";
+        final String expectedOutput = "EXECUTE PROCEDURE FUNCTION(?,?)";
         
         String parseResult = parser.parse(input);
         assertEquals("Unexpected output for {call ..}", expectedOutput, parseResult);
@@ -183,7 +188,7 @@ public class TestFBEscapedParser {
     public void testQuestionmarkCallEscape() throws Exception {
         final FBEscapedParser parser = new FBEscapedParser(EscapeParserMode.USE_BUILT_IN);
         final String input = "{?=call FUNCTION(?,?)}";
-        final String expectedOutput = "EXECUTE PROCEDURE FUNCTION(?, ?, ?)";
+        final String expectedOutput = "EXECUTE PROCEDURE FUNCTION(?,?,?)";
         
         String parseResult = parser.parse(input);
         assertEquals("Unexpected output for {call ..}", expectedOutput, parseResult);
@@ -193,48 +198,48 @@ public class TestFBEscapedParser {
     public void testQuestionmarkCallEscapeExtraWhitespace() throws Exception {
         final FBEscapedParser parser = new FBEscapedParser(EscapeParserMode.USE_BUILT_IN);
         final String input = "{? = call FUNCTION(?,?)}";
-        final String expectedOutput = "EXECUTE PROCEDURE FUNCTION(?, ?, ?)";
+        final String expectedOutput = "EXECUTE PROCEDURE FUNCTION(?,?,?)";
         
         String parseResult = parser.parse(input);
         assertEquals("Unexpected output for {call ..}", expectedOutput, parseResult);
     }
     
-    @Test(expected=FBSQLParseException.class)
+    @Test
     public void testUnsupportedKeyword() throws Exception {
         final FBEscapedParser parser = new FBEscapedParser(EscapeParserMode.USE_BUILT_IN);
         // NOTE: need to include an existent keyword, otherwise string isn't parsed at all
         final String input = "{fn ABS(?)} {doesnotexist xyz}";
+        expectedException.expect(FBSQLParseException.class);
         
         parser.parse(input);
-        fail("Non existent keyword should result in an FBSQLParseException");
     }
     
-    @Test(expected=FBSQLParseException.class)
+    @Test
     public void testTooManyCurlyBraceOpen() throws Exception {
         final FBEscapedParser parser = new FBEscapedParser(EscapeParserMode.USE_BUILT_IN);
         final String input = "{escape '&'";
+        expectedException.expect(FBSQLParseException.class);
         
         parser.parse(input);
-        fail("Too many open curly braces should result in an FBSQLParseException");
     }
     
-    @Test(expected=FBSQLParseException.class)
+    @Test
     public void testTooManyCurlyBraceClose() throws Exception {
         final FBEscapedParser parser = new FBEscapedParser(EscapeParserMode.USE_BUILT_IN);
         final String input = "{escape '&'}}";
+        expectedException.expect(FBSQLParseException.class);
         
         parser.parse(input);
-        fail("Too many close curly braces should result in an FBSQLParseException");
     }
     
-    @Test(expected=FBSQLParseException.class)
+    @Test
     public void testCurlyBraceOpenClose() throws Exception {
         final FBEscapedParser parser = new FBEscapedParser(EscapeParserMode.USE_BUILT_IN);
         // NOTE: need to include an existent keyword, otherwise string isn't parsed at all
         final String input = "{escape '&'} {}";
+        expectedException.expect(FBSQLParseException.class);
         
         parser.parse(input);
-        fail("Too many close curly braces should result in an FBSQLParseException");
     }
     
     @Test

@@ -1,7 +1,5 @@
 /*
- * $Id$
- * 
- * Firebird Open Source J2ee connector - jdbc driver
+ * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -14,11 +12,13 @@
  * This file was created by members of the firebird development team.
  * All individual contributions remain the Copyright (C) of those
  * individuals.  Contributors to this file are either listed here or
- * can be obtained from a CVS history command.
+ * can be obtained from a source control history command.
  *
  * All rights reserved.
  */
 package org.firebirdsql.jdbc.escape;
+
+import org.firebirdsql.jdbc.FBProcedureCall;
 
 import java.sql.SQLException;
 import java.text.BreakIterator;
@@ -26,12 +26,10 @@ import java.util.ArrayDeque;
 import java.util.Deque;
 import java.util.regex.Pattern;
 
-import org.firebirdsql.jdbc.FBProcedureCall;
-
 /**
  * The class <code>FBEscapedParser</code> parses the SQL and converts escaped
  * syntax to native form.
- * 
+ *
  * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @version 1.0
@@ -69,7 +67,7 @@ public final class FBEscapedParser {
 
     /**
      * Creates a parser for JDBC escaped strings.
-     * 
+     *
      * @param mode
      *            One of {@link EscapeParserMode#USE_BUILT_IN} or
      *            {@link EscapeParserMode#USE_STANDARD_UDF}
@@ -85,7 +83,7 @@ public final class FBEscapedParser {
      * followed by the escaped syntax command in regular string constants that
      * are passed as parameters. In this case {@link #parse(String)} will
      * perform complete SQL parsing.
-     * 
+     *
      * @param sql
      *            to test
      * @return <code>true</code> if the <code>sql</code> is suspected to contain
@@ -97,7 +95,7 @@ public final class FBEscapedParser {
 
     /**
      * Converts escaped parts in the passed SQL to native representation.
-     * 
+     *
      * @param sql
      *            to parse
      * @return native form of the <code>sql</code>.
@@ -107,7 +105,7 @@ public final class FBEscapedParser {
 
         ParserState state = ParserState.INITIAL_STATE;
         // Note initialising to 8 as that is the minimum size in Oracle Java, and we (usually) need less than the default of 16
-        final Deque<StringBuilder> bufferStack = new ArrayDeque<StringBuilder>(8);
+        final Deque<StringBuilder> bufferStack = new ArrayDeque<>(8);
         StringBuilder buffer = new StringBuilder(sql.length());
 
         for (int i = 0, n = sql.length(); i < n; i++) {
@@ -158,7 +156,7 @@ public final class FBEscapedParser {
         final int keyStart = iterator.first();
         final int keyEnd = iterator.next();
         keyword.append(escaped, keyStart, keyEnd);
-        
+
         int payloadStart = keyEnd;
         // Remove whitespace before payload
         while (payloadStart < escaped.length() - 1 && escaped.charAt(payloadStart) <= ' ') {
@@ -176,7 +174,7 @@ public final class FBEscapedParser {
      * This method checks the passed parameter to conform the escaped syntax,
      * checks for the unknown keywords and re-formats result according to the
      * Firebird SQL syntax.
-     * 
+     *
      * @param target
      *            Target StringBuilder to append to.
      * @param escaped
@@ -191,45 +189,45 @@ public final class FBEscapedParser {
         //Handle keywords.
         final String keywordStr = keyword.toString().toLowerCase();
         // NOTE: We assume here that all KEYWORD constants are lowercase!
-        if (keywordStr.equals(ESCAPE_CALL_KEYWORD)) {
-            StringBuilder call = new StringBuilder();
-            call.append('{')
-                .append(keyword)
-                .append(' ')
-                .append(payload)
-                .append('}');
+        switch (keywordStr) {
+        case ESCAPE_CALL_KEYWORD:
             // TODO Should we call convertProcedureCall? It leads to inefficient double parsing
-            convertProcedureCall(target, call.toString());
-        } else if (keywordStr.equals(ESCAPE_CALL_KEYWORD3)) {
-            StringBuilder call = new StringBuilder();
-            call.append('{')
-                .append(ESCAPE_CALL_KEYWORD3)
-                .append(payload)
-                .append('}');
+            convertProcedureCall(target, "{" + keyword + ' ' + payload + '}');
+            break;
+        case ESCAPE_CALL_KEYWORD3:
             // TODO Should we call convertProcedureCall? It leads to inefficient double parsing
-            convertProcedureCall(target, call.toString());
-        } else if (keywordStr.equals(ESCAPE_DATE_KEYWORD))
+            convertProcedureCall(target, "{" + ESCAPE_CALL_KEYWORD3 + payload + '}');
+            break;
+        case ESCAPE_DATE_KEYWORD:
             toDateString(target, payload);
-        else if (keywordStr.equals(ESCAPE_ESCAPE_KEYWORD))
+            break;
+        case ESCAPE_ESCAPE_KEYWORD:
             convertEscapeString(target, payload);
-        else if (keywordStr.equals(ESCAPE_FUNCTION_KEYWORD))
+            break;
+        case ESCAPE_FUNCTION_KEYWORD:
             convertEscapedFunction(target, payload);
-        else if (keywordStr.equals(ESCAPE_OUTERJOIN_KEYWORD))
+            break;
+        case ESCAPE_OUTERJOIN_KEYWORD:
             convertOuterJoin(target, payload);
-        else if (keywordStr.equals(ESCAPE_TIME_KEYWORD))
+            break;
+        case ESCAPE_TIME_KEYWORD:
             toTimeString(target, payload);
-        else if (keywordStr.equals(ESCAPE_TIMESTAMP_KEYWORD))
+            break;
+        case ESCAPE_TIMESTAMP_KEYWORD:
             toTimestampString(target, payload);
-        else if (keywordStr.equals(ESCAPE_LIMIT_KEYWORD))
+            break;
+        case ESCAPE_LIMIT_KEYWORD:
             convertLimitString(target, payload);
-        else
+            break;
+        default:
             throw new FBSQLParseException("Unknown keyword " + keywordStr + " for escaped syntax.");
+        }
     }
 
     /**
      * This method converts the 'yyyy-mm-dd' date format into the Firebird
      * understandable format.
-     * 
+     *
      * @param target
      *            Target StringBuilder to append to.
      * @param dateStr
@@ -243,7 +241,7 @@ public final class FBEscapedParser {
     /**
      * This method converts the 'hh:mm:ss' time format into the Firebird
      * understandable format.
-     * 
+     *
      * @param target
      *            Target StringBuilder to append to.
      * @param timeStr
@@ -257,7 +255,7 @@ public final class FBEscapedParser {
     /**
      * This method converts the 'yyyy-mm-dd hh:mm:ss' timestamp format into the
      * Firebird understandable format.
-     * 
+     *
      * @param target
      *            Target StringBuilder to append to.
      * @param timestampStr
@@ -272,7 +270,7 @@ public final class FBEscapedParser {
     /**
      * This methods converts the escaped procedure call syntax into the native
      * procedure call.
-     * 
+     *
      * @param target
      *            Target StringBuilder to append native procedure call to.
      * @param procedureCall
@@ -289,7 +287,7 @@ public final class FBEscapedParser {
      * This method converts the escaped outer join call syntax into the native
      * outer join. Actually, we do not change anything here, since Firebird's
      * syntax is the same.
-     * 
+     *
      * @param target
      *            Target StringBuilder to append to.
      * @param outerJoin
@@ -302,7 +300,7 @@ public final class FBEscapedParser {
     /**
      * Convert the <code>"{escape '...'}"</code> call into the corresponding
      * escape clause for Firebird.
-     * 
+     *
      * @param escapeString
      *            escape string to convert
      */
@@ -324,7 +322,7 @@ public final class FBEscapedParser {
      * This implementation supports a parameter for the value of &lt;rows&gt;,
      * but not for &lt;rows_offset&gt;.
      * </p>
-     * 
+     *
      * @param limitClause
      *            Limit clause
      */
@@ -347,7 +345,7 @@ public final class FBEscapedParser {
     /**
      * This method converts escaped function to a server function call. Actually
      * we do not change anything here, we hope that all UDF are defined.
-     * 
+     *
      * @param target
      *            Target StringBuilder to append to.
      * @param escapedFunction
@@ -480,7 +478,7 @@ public final class FBEscapedParser {
 
         /**
          * Decides on the next ParserState based on the input character.
-         * 
+         *
          * @param inputChar
          *            Input character
          * @return Next state
