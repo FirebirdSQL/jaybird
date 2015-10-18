@@ -322,6 +322,7 @@ public class FBEscapedParser {
     protected String convertProcedureCall(String procedureCall) throws SQLException {
         FBEscapedCallParser tempParser = new FBEscapedCallParser(mode);
         FBProcedureCall call = tempParser.parseCall(procedureCall);
+        call.checkParameters();
         return call.getSQL(false);
     }
 
