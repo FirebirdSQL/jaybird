@@ -96,8 +96,7 @@ public abstract class AbstractStatement implements FirebirdStatement, Synchroniz
                 close();
             }
         }
-        
-        
+
         /* (non-Javadoc)
          * @see org.firebirdsql.jdbc.FBObjectListener.ResultSetListener#allRowsFetched(java.sql.ResultSet)
          */
@@ -120,14 +119,12 @@ public abstract class AbstractStatement implements FirebirdStatement, Synchroniz
                 rs.close();
         }
 
-
         /* (non-Javadoc)
          * @see org.firebirdsql.jdbc.FBObjectListener.ResultSetListener#executionCompleted(org.firebirdsql.jdbc.FirebirdRowUpdater, boolean)
          */
         public void executionCompleted(FirebirdRowUpdater updater, boolean success) throws SQLException {
             notifyStatementCompleted(success);
         }
-
 
         /* (non-Javadoc)
          * @see org.firebirdsql.jdbc.FBObjectListener.ResultSetListener#executionStarted(org.firebirdsql.jdbc.FirebirdRowUpdater)
@@ -180,8 +177,12 @@ public abstract class AbstractStatement implements FirebirdStatement, Synchroniz
     }
     
     protected void finalize() throws Throwable {
-        if (!closed)
-            close();
+        try {
+            if (!closed)
+                close();
+        } finally {
+            super.finalize();
+        }
     }
     
     public void completeStatement() throws SQLException {
@@ -208,15 +209,13 @@ public abstract class AbstractStatement implements FirebirdStatement, Synchroniz
     public ResultSet executeQuery(String sql) throws  SQLException {
         checkValidity();
 
-        Object syncObject = getSynchronizationObject();
-        synchronized(syncObject) {
+        synchronized(getSynchronizationObject()) {
             notifyStatementStarted();
 
             try {
                 if (!internalExecute(sql)) {
-                    throw new FBSQLException(
-                        "Query did not return a result set.",
-                        FBSQLException.SQL_STATE_NO_RESULT_SET);
+                    throw new FBSQLException("Query did not return a result set.",
+                            FBSQLException.SQL_STATE_NO_RESULT_SET);
                 }
 
                 return getResultSet();
@@ -264,8 +263,7 @@ public abstract class AbstractStatement implements FirebirdStatement, Synchroniz
      */
     public int executeUpdate(String sql) throws SQLException {
         checkValidity();
-        Object syncObject = getSynchronizationObject();
-        synchronized (syncObject) {
+        synchronized (getSynchronizationObject()) {
 
             notifyStatementStarted();
             try {
@@ -621,7 +619,6 @@ public abstract class AbstractStatement implements FirebirdStatement, Synchroniz
         return closed;
     }
 
-
     //----------------------------------------------------------------------
 
     /**
@@ -640,7 +637,6 @@ public abstract class AbstractStatement implements FirebirdStatement, Synchroniz
     public int getMaxFieldSize() throws  SQLException {
         return maxFieldSize;
     }
-
 
     /**
      * Sets the limit for the maximum number of bytes in a column to
@@ -663,7 +659,6 @@ public abstract class AbstractStatement implements FirebirdStatement, Synchroniz
             maxFieldSize = max;
     }
 
-
     /**
      * Retrieves the maximum number of rows that a
      * <code>ResultSet</code> object can contain.  If the limit is exceeded, the excess
@@ -676,7 +671,6 @@ public abstract class AbstractStatement implements FirebirdStatement, Synchroniz
         return maxRows;
     }
 
-
     /**
      * Sets the limit for the maximum number of rows that any
      * <code>ResultSet</code> object can contain to the given number.
@@ -687,13 +681,12 @@ public abstract class AbstractStatement implements FirebirdStatement, Synchroniz
      * @exception SQLException if a database access error occurs
      */
     public void setMaxRows(int max) throws  SQLException {
-        if (max<0)
+        if (max < 0)
             throw new FBSQLException("Max rows can't be less than 0",
                     FBSQLException.SQL_STATE_INVALID_ARG_VALUE);
         else
             maxRows = max;
     }
-
 
     /**
      * Sets escape processing on or off.
@@ -711,7 +704,6 @@ public abstract class AbstractStatement implements FirebirdStatement, Synchroniz
         escapedProcessing = enable;
     }
 
-
     /**
      * Retrieves the number of seconds the driver will
      * wait for a <code>Statement</code> object to execute. If the limit is exceeded, a
@@ -723,7 +715,6 @@ public abstract class AbstractStatement implements FirebirdStatement, Synchroniz
     public int getQueryTimeout() throws  SQLException {
         return queryTimeout;
     }
-
 
     /**
      * Sets the number of seconds the driver will
@@ -742,7 +733,6 @@ public abstract class AbstractStatement implements FirebirdStatement, Synchroniz
             queryTimeout = seconds;
     }
 
-
     /**
      * Cancels this <code>Statement</code> object if both the DBMS and
      * driver support aborting an SQL statement.
@@ -758,7 +748,6 @@ public abstract class AbstractStatement implements FirebirdStatement, Synchroniz
             throw new FBSQLException(ex);
         }
     }
-
 
     /**
      * Retrieves the first warning reported by calls on this <code>Statement</code> object.
@@ -779,7 +768,6 @@ public abstract class AbstractStatement implements FirebirdStatement, Synchroniz
         return firstWarning;
     }
 
-
     /**
      * Clears all the warnings reported on this <code>Statement</code>
      * object. After a call to this method,
@@ -792,7 +780,6 @@ public abstract class AbstractStatement implements FirebirdStatement, Synchroniz
     public void clearWarnings() throws  SQLException {
         firstWarning = null;
     }
-
 
     /**
      * Defines the SQL cursor name that will be used by
@@ -1050,7 +1037,6 @@ public abstract class AbstractStatement implements FirebirdStatement, Synchroniz
             throw new FBDriverNotCapableException();
     }
 
-
     /**
      * Retrieves the direction for fetching rows from
      * database tables that is the default for result sets
@@ -1069,7 +1055,6 @@ public abstract class AbstractStatement implements FirebirdStatement, Synchroniz
     public int getFetchDirection() throws  SQLException {
        return ResultSet.FETCH_FORWARD;
     }
-
 
     /**
      * Gives the JDBC driver a hint as to the number of rows that should
@@ -1096,7 +1081,6 @@ public abstract class AbstractStatement implements FirebirdStatement, Synchroniz
             fetchSize = rows;
     }
 
-
     /**
      * Retrieves the number of result set rows that is the default
      * fetch size for result sets
@@ -1115,7 +1099,6 @@ public abstract class AbstractStatement implements FirebirdStatement, Synchroniz
         return fetchSize;
     }
 
-
     /**
      * Retrieves the result set concurrency for <code>ResultSet</code> objects
      * generated by this <code>Statement</code> object.
@@ -1129,7 +1112,6 @@ public abstract class AbstractStatement implements FirebirdStatement, Synchroniz
     public int getResultSetConcurrency() throws  SQLException {
         return rsConcurrency;
     }
-
 
     /**
      * Retrieves the result set type for <code>ResultSet</code> objects
@@ -1173,10 +1155,9 @@ public abstract class AbstractStatement implements FirebirdStatement, Synchroniz
      * @see <a href="package-summary.html#2.0 API">What Is in the JDBC
      *      2.0 API</a>
      */
-    public void addBatch( String sql ) throws  SQLException {
+    public void addBatch(String sql) throws  SQLException {
         batchList.add(sql);
     }
-
 
     /**
      * Makes the set of commands in the current batch empty.
@@ -1191,7 +1172,6 @@ public abstract class AbstractStatement implements FirebirdStatement, Synchroniz
     public void clearBatch() throws  SQLException {
         batchList.clear();
     }
-
 
     /**
      * Submits a batch of commands to the database for execution and
@@ -1247,36 +1227,28 @@ public abstract class AbstractStatement implements FirebirdStatement, Synchroniz
         checkValidity();
 
         if (statementListener.getConnection().getAutoCommit())
-            addWarning(new SQLWarning("Batch updates should be run "
-                    + "with auto-commit disabled.", "1000"));
-
-        Object syncObject = getSynchronizationObject();
+            addWarning(new SQLWarning("Batch updates should be run with auto-commit disabled.", "1000"));
 
         notifyStatementStarted();
-        synchronized (syncObject) {
+        synchronized (getSynchronizationObject()) {
 
             boolean success = false;
             try {
-            	LinkedList responses = new LinkedList();
+            	List<Integer> responses = new ArrayList<Integer>(batchList.size());
 
                 try {
-
-                    Iterator iter = batchList.iterator();
-                    while (iter.hasNext()) {
-                        String sql = (String) iter.next();
+                    for (Object value : batchList) {
+                        String sql = (String) value;
                         try {
                             boolean hasResultSet = internalExecute(sql);
 
                             if (hasResultSet)
-                                throw new BatchUpdateException(
-                                        toArray(responses));
+                                throw new BatchUpdateException(toArray(responses));
                             else
-                                responses.add(new Integer(getUpdateCount()));
+                                responses.add(getUpdateCount());
                         } catch (GDSException ge) {
-
                             throw new BatchUpdateException(ge.getMessage(),
-                                    FBSQLException.SQL_STATE_GENERAL_ERROR, ge
-                                            .getFbErrorCode(),
+                                    FBSQLException.SQL_STATE_GENERAL_ERROR, ge.getFbErrorCode(),
                                     toArray(responses));
                         }
                     }
@@ -1302,16 +1274,14 @@ public abstract class AbstractStatement implements FirebirdStatement, Synchroniz
      * 
      * @return array of int.
      */
-    protected int[] toArray(Collection list) {
+    protected int[] toArray(Collection<Integer> list) {
         int[] result = new int[list.size()];
         int counter = 0;
-        Iterator iter = list.iterator();
-        while(iter.hasNext()) {
-        	result[counter++] = ((Integer)iter.next()).intValue();
+        for (int value : list) {
+        	result[counter++] = value;
         }
         return result;
     }
-
 
     /**
      * Returns the <code>Connection</code> object that produced this 
@@ -1402,14 +1372,9 @@ public abstract class AbstractStatement implements FirebirdStatement, Synchroniz
      * @throws SQLException if translating statement into native code failed.
      */
     protected boolean isExecuteProcedureStatement(String sql) throws SQLException {
-        
         String trimmedSql = nativeSQL(sql).trim();
-        
-        if (trimmedSql.startsWith("EXECUTE"))
-            return true;
-        else
-            return false;
-        
+
+        return trimmedSql.startsWith("EXECUTE");
     }
 
     protected boolean internalExecute(String sql) throws GDSException, SQLException {

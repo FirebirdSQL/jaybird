@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
@@ -40,8 +38,7 @@ import org.firebirdsql.jdbc.field.FBFlushableField.CachedObject;
  * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  */
-public abstract class AbstractPreparedStatement extends AbstractStatement implements
-        FirebirdPreparedStatement {
+public abstract class AbstractPreparedStatement extends AbstractStatement implements FirebirdPreparedStatement {
     
     static final String METHOD_NOT_SUPPORTED = "This method is only supported on Statement and not supported on PreparedStatement and CallableStatement";
 
@@ -174,15 +171,11 @@ public abstract class AbstractPreparedStatement extends AbstractStatement implem
      *                if a database access error occurs
      */
     public ResultSet executeQuery() throws SQLException {
-
-        Object syncObject = getSynchronizationObject();
-        synchronized (syncObject) {
+        synchronized (getSynchronizationObject()) {
             notifyStatementStarted();
 
             if (!internalExecute(isExecuteProcedureStatement))
-                throw new FBSQLException(
-                    "No resultset for sql",
-                    FBSQLException.SQL_STATE_NO_RESULT_SET);
+                throw new FBSQLException("No resultset for sql", FBSQLException.SQL_STATE_NO_RESULT_SET);
 
             return getResultSet();
         }
@@ -199,14 +192,11 @@ public abstract class AbstractPreparedStatement extends AbstractStatement implem
      *                if a database access error occurs
      */
     public int executeUpdate() throws SQLException {
-
-        Object syncObject = getSynchronizationObject();
-        synchronized (syncObject) {
+        synchronized (getSynchronizationObject()) {
             notifyStatementStarted();
             try {
                 if (internalExecute(isExecuteProcedureStatement) && !generatedKeys) {
-                    throw new FBSQLException(
-                            "Update statement returned results.");
+                    throw new FBSQLException("Update statement returned results.");
                 }
 
                 return getUpdateCount();
@@ -255,21 +245,18 @@ public abstract class AbstractPreparedStatement extends AbstractStatement implem
      * @exception SQLException
      *                if a database access error occurs
      */
-    public void setBinaryStream(int parameterIndex, InputStream inputStream,
-            int length) throws SQLException {
+    public void setBinaryStream(int parameterIndex, InputStream inputStream, int length) throws SQLException {
         getField(parameterIndex).setBinaryStream(inputStream, length);
         isParamSet[parameterIndex - 1] = true;
     }
     
-    public void setBinaryStream(int parameterIndex, InputStream x, long length)
-            throws SQLException {
+    public void setBinaryStream(int parameterIndex, InputStream x, long length) throws SQLException {
         if (length > Integer.MAX_VALUE)
             throw new FBDriverNotCapableException("Only length <= Integer.MAX_VALUE supported");
         setBinaryStream(parameterIndex, x, (int)length);
     }
 
-    public void setBinaryStream(int parameterIndex, InputStream x)
-            throws SQLException {
+    public void setBinaryStream(int parameterIndex, InputStream x) throws SQLException {
         throw new FBDriverNotCapableException();
     }
 
@@ -642,8 +629,8 @@ public abstract class AbstractPreparedStatement extends AbstractStatement implem
             isParamSet[i] = false;
 
         XSQLVAR[] xsqlvar = fixedStmt.getInSqlda().sqlvar;
-        for (int i = 0; i < xsqlvar.length; i++) {
-            xsqlvar[i].sqldata = null;
+        for (XSQLVAR aXsqlvar : xsqlvar) {
+            aXsqlvar.sqldata = null;
         }
     }
 
@@ -726,9 +713,7 @@ public abstract class AbstractPreparedStatement extends AbstractStatement implem
      * @see Statement#execute
      */
     public boolean execute() throws SQLException {
-
-        Object syncObject = getSynchronizationObject();
-        synchronized (syncObject) {
+        synchronized (getSynchronizationObject()) {
             notifyStatementStarted();
 
             boolean hasResultSet = internalExecute(isExecuteProcedureStatement);
@@ -752,9 +737,7 @@ public abstract class AbstractPreparedStatement extends AbstractStatement implem
      *             if something went wrong or no result set was available.
      */
     ResultSet executeMetaDataQuery() throws SQLException {
-
-        Object syncObject = getSynchronizationObject();
-        synchronized (syncObject) {
+        synchronized (getSynchronizationObject()) {
             notifyStatementStarted();
 
             boolean hasResultSet = internalExecute(isExecuteProcedureStatement);
@@ -775,12 +758,10 @@ public abstract class AbstractPreparedStatement extends AbstractStatement implem
      * @return <code>true</code> if the statement has more result sets.
      * @throws SQLException
      */
-    protected boolean internalExecute(boolean sendOutParams)
-            throws SQLException {
-
+    protected boolean internalExecute(boolean sendOutParams) throws SQLException {
         boolean canExecute = true;
-        for (int i = 0; i < isParamSet.length; i++) {
-            canExecute = canExecute && isParamSet[i];
+        for (boolean anIsParamSet : isParamSet) {
+            canExecute = canExecute && anIsParamSet;
         }
 
         if (!canExecute)
@@ -833,10 +814,9 @@ public abstract class AbstractPreparedStatement extends AbstractStatement implem
      *      </a>
      */
     public void addBatch() throws SQLException {
-
         boolean allParamsSet = true;
-        for (int i = 0; i < isParamSet.length; i++) {
-            allParamsSet &= isParamSet[i];
+        for (boolean anIsParamSet : isParamSet) {
+            allParamsSet &= anIsParamSet;
         }
 
         if (!allParamsSet) throw new FBSQLException("Not all parameters set.");
@@ -922,14 +902,12 @@ public abstract class AbstractPreparedStatement extends AbstractStatement implem
      *      </a>
      */
     public int[] executeBatch() throws SQLException {
-        Object syncObject = getSynchronizationObject();
-        synchronized (syncObject) {
-
+        synchronized (getSynchronizationObject()) {
             boolean commit = false;
             try {
                 notifyStatementStarted();
 
-                ArrayList results = new ArrayList(batchList.size());
+                List<Integer> results = new ArrayList<Integer>(batchList.size());
                 Iterator iter = batchList.iterator();
 
                 try {
@@ -955,7 +933,7 @@ public abstract class AbstractPreparedStatement extends AbstractStatement implem
 
                             int updateCount = getUpdateCount();
 
-                            results.add(new Integer(updateCount));
+                            results.add(updateCount);
 
                         } catch (SQLException ex) {
                             throw new BatchUpdateException(ex.getMessage(), ex
