@@ -1227,15 +1227,14 @@ public class FBStatement implements FirebirdStatement, Synchronizable {
         currentStatementGeneratedKeys = false;
 
         if (statementListener.getConnection().getAutoCommit())
-            addWarning(new SQLWarning("Batch updates should be run "
-                    + "with auto-commit disabled.", "01000"));
+            addWarning(new SQLWarning("Batch updates should be run with auto-commit disabled.", "01000"));
 
         notifyStatementStarted();
         synchronized (getSynchronizationObject()) {
 
             boolean success = false;
             try {
-            	List<Integer> responses = new LinkedList<>();
+            	List<Integer> responses = new ArrayList<>(batchList.size());
 
                 try {
                     for (String sql : batchList) {
