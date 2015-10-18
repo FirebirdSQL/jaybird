@@ -82,8 +82,8 @@ import org.firebirdsql.jdbc.field.TypeConversionException;
  */
 public abstract class AbstractCallableStatement extends FBPreparedStatement implements CallableStatement, FirebirdCallableStatement {
     
-    static final String NATIVE_CALL_COMMAND = "EXECUTE PROCEDURE";
-    static final String NATIVE_SELECT_COMMAND = "SELECT * FROM";
+    static final String NATIVE_CALL_COMMAND = "EXECUTE PROCEDURE ";
+    static final String NATIVE_SELECT_COMMAND = "SELECT * FROM ";
 
     private ResultSet currentRs;
     private ResultSet singletonRs;

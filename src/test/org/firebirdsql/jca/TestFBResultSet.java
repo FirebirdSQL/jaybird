@@ -381,31 +381,34 @@ public class TestFBResultSet extends TestXABase {
         FBManagedConnectionFactory mcf = initMcf();
         DataSource ds = (DataSource) mcf.createConnectionFactory();
         AbstractConnection c = (AbstractConnection) ds.getConnection();
-        Statement s = c.createStatement();
-        LocalTransaction t = c.getLocalTransaction();
-        t.begin();
         try {
+            Statement s = c.createStatement();
+            LocalTransaction t = c.getLocalTransaction();
+            t.begin();
+            try {
+                s.execute("DROP PROCEDURE testproc");
+            } catch (Exception e) {
+            }
+            t.commit();
+            t.begin();
+            s.execute(CREATE_PROCEDURE);
+            t.commit();
+
+            t.begin();
+            CallableStatement p = c.prepareCall("EXECUTE PROCEDURE testproc(?)");
+            p.setInt(1, 5);
+
+            assertTrue("execute returned false for execute procedure statement", p.execute());
+            assertEquals("wrong answer from sp invocation", 5, p.getInt(1));
+            p.close();
+            t.commit();
+
+            t.begin();
             s.execute("DROP PROCEDURE testproc");
-        } catch (Exception e) {
+            s.close();
+            t.commit();
+        } finally {
+            c.close();
         }
-        t.commit();
-        t.begin();
-        s.execute(CREATE_PROCEDURE);
-        t.commit();
-
-        t.begin();
-        CallableStatement p = c.prepareCall("EXECUTE PROCEDURE testproc(?)");
-        p.setInt(1, 5);
-
-        assertTrue("execute returned false for execute procedure statement", p.execute());
-        assertEquals("wrong answer from sp invocation", 5, p.getInt(1));
-        p.close();
-        t.commit();
-
-        t.begin();
-        s.execute("DROP PROCEDURE testproc");
-        s.close();
-        t.commit();
-        c.close();
     }
 }
