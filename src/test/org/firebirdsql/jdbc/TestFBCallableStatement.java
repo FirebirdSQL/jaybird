@@ -127,6 +127,7 @@ public class TestFBCallableStatement extends FBJUnit4TestBase {
     private static final String EXECUTE_IN_OUT_PROCEDURE = "{call test_out ?}";
     private static final String EXECUTE_SIMPLE_OUT_PROCEDURE_CONST = "EXECUTE PROCEDURE test_out 'test'";
     private static final String EXECUTE_SIMPLE_OUT_PROCEDURE_CONST_WITH_QUESTION = "EXECUTE PROCEDURE test_out 'test?'";
+    private static final String EXECUTE_SIMPLE_OUT_WITH_OUT_PARAM = "EXECUTE PROCEDURE test_out(?, ?)";
 
     private static final String CREATE_PROCEDURE_WITHOUT_PARAMS =
             "CREATE PROCEDURE test_no_params "
@@ -1114,6 +1115,19 @@ public class TestFBCallableStatement extends FBJUnit4TestBase {
             assertTrue("Expected non-empty value", value.trim().length() > 0);
         } finally {
             cs.close();
+        }
+    }
+
+    @Test
+    public void testExecutableProcedureGetMetaDataOutParameterSpecifiedValueNotSet() throws Exception {
+        executeDDL(con, CREATE_SIMPLE_OUT_PROC);
+
+        try (CallableStatement cs = con.prepareCall(EXECUTE_SIMPLE_OUT_WITH_OUT_PARAM)) {
+            cs.registerOutParameter(2, Types.VARCHAR);
+
+            // Calling getParameterMetaData and getMetaData should not throw an exception
+            cs.getParameterMetaData();
+            cs.getMetaData();
         }
     }
 }
