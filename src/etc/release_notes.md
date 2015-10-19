@@ -3,44 +3,41 @@ General Notes
 
 Jaybird is a JCA/JDBC driver suite to connect to Firebird database servers.
 
-This driver is based on both the JCA standard for application server
-connections to enterprise information systems and the well-known JDBC
-standard.
+This driver is based on both the JCA standard for application server connections
+to enterprise information systems and the well-known JDBC standard.
 
-The JCA standard specifies an architecture in which an application
-server can cooperate with a driver so that the application server
-manages transactions, security, and resource pooling, and the driver
-supplies only the connection functionality. While similar to the JDBC
-`XADataSource` concept, the JCA specification is considerably clearer
-on the division of responsibility between the application server and driver.
+The JCA standard specifies an architecture in which an application server can
+cooperate with a driver so that the application server manages transactions,
+security, and resource pooling, and the driver supplies only the connection
+functionality. While similar to the JDBC `XADataSource` concept, the JCA
+specification is considerably clearer on the division of responsibility between
+the application server and driver.
 
 Supported Firebird versions
 ---------------------------
 
 Jaybird @VERSION@ was tested against Firebird 2.1.7, Firebird 2.5.4, and a
-recent Firebird 3 snapshot build (3.0.0.31839), but should also support
-other Firebird versions from 1.0 and up. The Type 2 and embedded server
-JDBC drivers require the appropriate JNI library. Precompiled JNI
-binaries for Win32 and Linux platforms are shipped in the default
-installation, other platforms require porting/building the JNI library
-for that platform.
+recent Firebird 3 snapshot build (3.0.0.32081), but should also support other
+Firebird versions from 1.0 and up. The Type 2 and embedded server JDBC drivers
+require the appropriate JNI library. Precompiled JNI binaries for Windows and
+Linux platforms are shipped in the default installation, other platforms require
+porting/building the JNI library for that platform.
 
 Connecting to Firebird 3 requires some additional configuration, see
 [Jaybird and Firebird 3.0 Beta 2](https://github.com/FirebirdSQL/jaybird/wiki/Jaybird-and-Firebird-3.0-beta-2)
 for details.
 
-This driver does not support InterBase servers due to Firebird-specific
-changes in the protocol and database attachment parameters that are sent
-to the server.
+This driver does not support InterBase servers due to Firebird-specific changes
+in the protocol and database attachment parameters.
 
 Supported Java versions
 -----------------------
 
-Jaybird @VERSION@ supports Java 6 (JDBC 4.0), Java 7 (JDBC 4.1) and Java 8
+Jaybird @VERSION@ supports Java 6 (JDBC 4.0), Java 7 (JDBC 4.1) and Java 8 
 (JDBC 4.2). Support for earlier Java versions has been dropped.
 
-The upcoming Jaybird 3.0 will support Java 7 and 8 (Java 7 support might
-still be dropped depending on the final release date).
+The upcoming Jaybird 3.0 will support Java 7 and 8 (Java 7 support might still
+be dropped depending on the final release date).
 
 Specification support
 ---------------------
@@ -59,42 +56,48 @@ Jaybird supports the following specifications:
 What's new in Jaybird 2.2
 ==========================
 
-Jaybird 2.2 introduces the following new features and fixes:
+Changelog
+---------
 
-Changes and fixes in Jaybird 2.2.9-SNAPSHOT
--------------------------------------------
-
-***This is a pre-release version for testing purposes!***
+### Changes and fixes in Jaybird 2.2.9
 
 The following has been changed or fixed in Jaybird 2.2.9:
 
--   Fixed: Result set of type `CLOSE_CURSORS_AT_COMMIT` isn't correctly
-    closed on commit ([JDBC-307](http://tracker.firebirdsql.org/browse/JDBC-307))\
-    At commit the client side cursor is correctly closed; no explicit close
-    is sent to the server as the commit will take care of this. This change
-    may result in performance degradation if you use a lot of blobs as those
-    are now properly closed again, we will address this in
-    [JDBC-401](http://tracker.firebirdsql.org/browse/JDBC-401) for Jaybird 3.0.
--   New feature (experimental): Use `isc_tpb_autocommit` in auto commit
-    mode ([JDBC-399](http://tracker.firebirdsql.org/browse/JDBC-399))
-    This option is enabled with the connection property
-    `useFirebirdAutocommit`, see [Use `isc_tpb_autocommit` in auto commit
-    mode (experimental)] for further details. Idea and initial
-    implementation provided by [Smyatkin-Maxim](https://github.com/Smyatkin-Maxim).
+-   Fixed: Result set of type `CLOSE_CURSORS_AT_COMMIT` isn't correctly closed
+    on commit ([JDBC-307](http://tracker.firebirdsql.org/browse/JDBC-307))\
+    At commit the client side cursor is correctly closed; no explicit close is
+    sent to the server as the commit will take care of this. This change may
+    result in performance degradation if you use a lot of blobs as those are now
+    properly closed again, we will address this in [JDBC-401](http://tracker.firebirdsql.org/browse/JDBC-401) 
+    for Jaybird 3.0.
+-   Fixed: Open (output) blob in auto-commit prevents connection close. Fixed by
+    fixing *JDBC-307*, see above. ([JDBC-348](http://tracker.firebirdsql.org/browse/JDBC-348)) 
+-   New feature (experimental): Use `isc_tpb_autocommit` in auto commit mode 
+    ([JDBC-399](http://tracker.firebirdsql.org/browse/JDBC-399))\
+    This option is enabled with the connection property `useFirebirdAutocommit`,
+    see [Use `isc_tpb_autocommit` in auto commit mode (experimental)] for
+    further details. Idea and initial implementation provided by [Smyatkin-Maxim](https://github.com/Smyatkin-Maxim).
 -   Fixed: "*Exception. couldn't close blob: org.firebirdsql.gds.GDSException:
     invalid BLOB handle*" on close of connection obtained from DBCP data source.
-    Fixed by fixing *JDBC-307*, see above.
-    ([JDBC-400](http://tracker.firebirdsql.org/browse/JDBC-400))
+    Fixed by fixing *JDBC-307*, see above. ([JDBC-400](http://tracker.firebirdsql.org/browse/JDBC-400))
+-   Fixed: `CallableStatement.getMetaData()` and `getParameterMetaData()` call
+    throws exception when no input parameters provided when out parameter
+    registered ([JDBC-402](http://tracker.firebirdsql.org/browse/JDBC-402))\
+    This changes the error reported when attempting to get metadata of a
+    stored procedure without registering all out parameters. For retrieval of
+    (parameter) metadata it will prepare the statement (potentially with too
+    many parameter placeholders) and leaves error handling to the server.
+-   Change: `ResultSetMetaData` will now report `(VAR)CHAR CHARACTER SET OCTETS`
+    columns as `Types.BINARY` or `Types.VARBINARY` when using 
+    `octetsAsBytes=true` connection property. ([JDBC-408](http://tracker.firebirdsql.org/browse/JDBC-408))
 
 **Known issues in Jaybird 2.2.9**
 
--   Connecting to Firebird 2.5 and earlier with a Firebird 3 `fbclient.dll`
-    may be slow with native connections, see
-    [CORE-4658](http://tracker.firebirdsql.org/browse/CORE-4658). Workaround
-    is to connect to IPv4 address specifically.
+-   Connecting to Firebird 2.5 and earlier with a Firebird 3 `fbclient.dll` may
+    be slow with native connections, see [CORE-4658](http://tracker.firebirdsql.org/browse/CORE-4658).
+    Workaround is to connect to the IPv4 address instead of the hostname.
 
-Changes and fixes in Jaybird 2.2.8
-----------------------------------
+### Changes and fixes in Jaybird 2.2.8
 
 The following has been changed or fixed in Jaybird 2.2.8:
 
@@ -102,8 +105,7 @@ The following has been changed or fixed in Jaybird 2.2.8:
 -   Fixed: LibreOffice doesn't display tables with more than 41 records
     ([JDBC-383](http://tracker.firebirdsql.org/browse/JDBC-383))
 -   Improvement: Don't use Firebird provided IP address for connecting
-    event channel
-    ([JDBC-384](http://tracker.firebirdsql.org/browse/JDBC-384))
+    event channel ([JDBC-384](http://tracker.firebirdsql.org/browse/JDBC-384))
 -   Fixed: `Connection.getMetaData().getColumns` result set contains
     wrong (empty) `COLUMN_DEF` if column type was defined using domain
     ([JDBC-388](http://tracker.firebirdsql.org/browse/JDBC-388))
@@ -124,8 +126,7 @@ The following has been changed or fixed in Jaybird 2.2.8:
     update and delete
     ([JDBC-393](http://tracker.firebirdsql.org/browse/JDBC-393))
 
-Changes and fixes in Jaybird 2.2.7
-----------------------------------
+### Changes and fixes in Jaybird 2.2.7
 
 The following has been changed or fixed in Jaybird 2.2.7:
 
@@ -135,8 +136,7 @@ The following has been changed or fixed in Jaybird 2.2.7:
     This was a regression caused by the changes of
     [JDBC-350](http://tracker.firebirdsql.org/browse/JDBC-350).
 
-Changes and fixes in Jaybird 2.2.6
-----------------------------------
+### Changes and fixes in Jaybird 2.2.6
 
 The following has been changed or fixed in Jaybird 2.2.6:
 
@@ -168,15 +168,13 @@ The following has been changed or fixed in Jaybird 2.2.6:
 -   Fixed: Current method of quoting in `FBRowUpdater` incorrect for
     dialect 1 ([JDBC-372](http://tracker.firebirdsql.org/browse/JDBC-372))
 
-Changes and fixes in Jaybird 2.2.5
-----------------------------------
+### Changes and fixes in Jaybird 2.2.5
 
 The following has been changed or fixed in Jaybird 2.2.5:
 
 -   Fixed: `getCrossReference` broken by changes of
     [JDBC-331](http://tracker.firebirdsql.org/browse/JDBC-331)
-    ([JDBC-335](http://tracker.firebirdsql.org/browse/JDBC-335))</u>
-
+    ([JDBC-335](http://tracker.firebirdsql.org/browse/JDBC-335))
 -   Added: basic support for Java 8 `java.time` in
     `PreparedStatement.setObject()` and `ResultSet.updateObject()`
     ([JDBC-339](http://tracker.firebirdsql.org/browse/JDBC-339))\
@@ -184,14 +182,12 @@ The following has been changed or fixed in Jaybird 2.2.5:
     `java.sql.Timestamp` has been increased from 1 millisecond to the
     maximum Firebird precision of 100 microseconds (or 0.1 millisecond)[^1].
 -   Fixed: Deadlocks and other thread safety issues with classes in
-    `org.firebirdsql.pool`
-    ([JDBC-341](http://tracker.firebirdsql.org/browse/JDBC-341))
+    `org.firebirdsql.pool` ([JDBC-341](http://tracker.firebirdsql.org/browse/JDBC-341))
 
 [^1]: With `java.sql.Timestamp` the 100 microsecond precision is only
     available through `getNanos()` and `setNanos()`
 
-Changes and fixes in Jaybird 2.2.4
-----------------------------------
+### Changes and fixes in Jaybird 2.2.4
 
 The following has been changed or fixed in Jaybird 2.2.4:
 
@@ -241,8 +237,7 @@ The following has been changed or fixed in Jaybird 2.2.4:
     the pattern matching and case sensitivity of metadata methods. See
     [Future changes to Jaybird].
 
-Changes and fixes in Jaybird 2.2.3
-----------------------------------
+### Changes and fixes in Jaybird 2.2.3
 
 The following has been changed or fixed in Jaybird 2.2.3:
 
@@ -268,8 +263,7 @@ The following has been changed or fixed in Jaybird 2.2.3:
     "*Unable to complete network request to host ""*" for further
     investigation ([JDBC-306](http://tracker.firebirdsql.org/browse/JDBC-306))
 
-Changes and fixes in Jaybird 2.2.2
-----------------------------------
+### Changes and fixes in Jaybird 2.2.2
 
 The following has been changed or fixed in Jaybird 2.2.2:
 
@@ -321,8 +315,7 @@ The following has been changed or fixed in Jaybird 2.2.2:
     reverse-resolved to a hostname. Workaround is to add an entry for
     that IP-address to the `/etc/hosts` or `%WINDIR%\System32\Drivers\etc\hosts` file.
 
-Changes and fixes in Jaybird 2.2.1
-----------------------------------
+### Changes and fixes in Jaybird 2.2.1
 
 The following has been changed or fixed in Jaybird 2.2.1:
 
@@ -348,8 +341,7 @@ The following has been changed or fixed in Jaybird 2.2.1:
     not work when Firebird describes the parameter as not nullable
     ([JDBC-271](http://tracker.firebirdsql.org/browse/JDBC-271))
 
-Changes and fixes since Jaybird 2.2.0 beta 1
---------------------------------------------
+### Changes and fixes since Jaybird 2.2.0 beta 1
 
 The following was changed or fixed after the release of Jaybird 2.2.0
 beta 1:
@@ -489,8 +481,8 @@ Jaybird on Maven
 Jaybird @VERSION@ is available on maven, with a separate artifact
 for each supported Java version.
 
-Groupid: `org.firebirdsql.jdbc`, artifactid: `jaybird-jdkXX` (where `XX`
-is `17` or `18`).\
+Groupid: `org.firebirdsql.jdbc`, artifactid: `jaybird-jdkXX` (where `XX` is 
+`16`, `17` or `18`).\
 Version: `@VERSION@`
 
 For example:
@@ -506,9 +498,6 @@ For example:
 When deploying to a JavaEE environment, exclude the `javax.resource`
 `connector-api` dependency as this will be provided by the application
 server.
-
-**The snapshot is available from the sonatype snapshot repository,
-[<https://oss.sonatype.org/content/repositories/snapshots/>](https://oss.sonatype.org/content/repositories/snapshots/).**
 
 Native and Embedded (JNI) 64-bit Windows and Linux support
 ----------------------------------------------------------
@@ -554,13 +543,14 @@ tested.
 
 When using Jaybird with Firebird 3.0, make sure that
 
--   Wire protocol encryption is set to not required (set it to `Enabled` or `Disabled`)
--   Legacy authentication is enabled
+-   Wire protocol encryption is net set to `Required` (set it to `Enabled` or
+    `Disabled`)
+-   Legacy authentication is enabled on server
 -   The user has been created with the legacy usermanager
 
 The new `BOOLEAN` data type is supported
 
-See the [Jaybird Wiki](https://github.com/FirebirdSQL/jaybird/wiki/Jaybird-and-Firebird-3.0-beta-2)
+See the [Jaybird and Firebird 3.0 beta 2](https://github.com/FirebirdSQL/jaybird/wiki/Jaybird-and-Firebird-3.0-beta-2)
 for more details.
 
 Improved support for OpenOffice / LibreOffice Base
@@ -593,144 +583,124 @@ This option is enabled by specifying the connection property
 `useFirebirdAutocommit=true`.
 
 With this option, Jaybird will configure the transaction to use
-`isc_tpb_autocommit` with `autoCommit=true` and not commit itself until
-connection close (or switching to `autoCommit=false`). The exception is
-if the statement was of type `isc_info_sql_stmt_ddl`, in that case
-Jaybird will commit on statement success and rollback on statement
-failure (just like it does for all statements in normal auto commit
-mode). The reason is that Firebird for some DDL commands only executes
-at a real commit boundary and relying on the Firebird auto-commit is
+`isc_tpb_autocommit` with `autoCommit=true`. This means that Firebird server
+will internally commit the transaction after each statement completion. Jaybird 
+itself will not commit until connection close (or switching to 
+`autoCommit=false`). The exception is if the statement was of type 
+`isc_info_sql_stmt_ddl`, in that case Jaybird will commit on statement success
+and rollback on statement failure (just like it does for all statements in
+normal auto commit mode). The reason is that Firebird for some DDL commands only
+executes at a real commit boundary and relying on the Firebird auto-commit is
 insufficient.
 
-On statement completion (as specified in JDBC), result sets will still
-close unless they are holdable over commit. The result set is only
-closed clientside, which means that the cursor remains open server side
-to prevent roundtrips. This may lead to additional resource usage server
-side unless explicitly closed in the code. Note that any open blobs will
-be closed client- and server-side (until this is improved with
-[JDBC-401](http://tracker.firebirdsql.org/browse/JDBC-401)).
+On statement completion (as specified in JDBC), result sets will still close
+unless they are holdable over commit. The result set is only closed client side,
+which means that the cursor remains open server side to prevent roundtrips. This
+may lead to additional resource usage server side unless explicitly closed in
+the code. Note that any open blobs will be closed client- and server-side (until
+this is improved with [JDBC-401](http://tracker.firebirdsql.org/browse/JDBC-401)).
 
-A connection can be interrogated using
-`FirebirdConnection.isUseFirebirdAutocommit()` if it uses
-`isc_tpb_autocommit`.
+A connection can be interrogated using 
+`FirebirdConnection.isUseFirebirdAutocommit()` if it uses `isc_tpb_autocommit`.
 
-If you manually add `isc_tpb_autocommit` to the transaction parameter
-buffer and you enable this option, the `isc_tpb_autocommit` will be
-removed from the TPB if `autoCommit=false`.
+If you manually add `isc_tpb_autocommit` to the transaction parameter buffer and
+you enable this option, the `isc_tpb_autocommit` will be removed from the TPB 
+if `autoCommit=false`.
 
-Support for this option is experimental, and should only be enabled if
-you 1) know what you're doing, and 2) if you really need this feature.
-Internally `isc_tpb_autocommit` uses `commit_retaining`, which means
-that using this feature may increase the transaction gap with associated
-sweep and garbage collection impact.
+Artificial testing with repeated inserts (using a prepared statement) against a
+Firebird server on localhost shows that this leads to a reduction of execution
+time of +/- 7%.
 
-Whether or not this improves performance has yet to be tested. The
-Jaybird test suite does not show a noticeable difference either way, but
-most tests only use a few statements on a single connection.
+Support for this option is experimental, and should only be enabled if you 
+1) know what you're doing, and 2) really need this feature. Internally 
+`isc_tpb_autocommit` uses `commit_retaining`, which means that using this 
+feature may increase the transaction gap with associated sweep and garbage 
+collection impact.
 
 Other fixes and changes
 -----------------------
 
--   Replaced `mini-j2ee.jar` with `connector-api-1.5.jar`: make sure to
-    remove the old `mini-j2ee.jar` from the classpath of
-    your application.
--   Dropped `jaybird-pool` jar from the distribution (all classes are
-    include in the `jaybird` jar and the `jaybird-full` jar)
--   `FBResultSetMetaData#getcolumnName(int)` will now return the
-    original column name (if available) for compliance with the JDBC
-    specification, `getColumnLabel(int)` will still return the alias (or
-    the column name if no alias is defined). See [Compatibility with
-    `com.sun.rowset.*`] for potential problems when using the reference
-    implementation of `CachedRowSet`.Jaybird 2.2.1 introduced the
-    connection property `columnLabelForName` which will revert to the
-    old behavior when set to `true`. Be aware that the old behavior is
-    not JDBC-compliant.
--   `FBDatabaseMetaData` has been updated to include metadata columns
-    defined by JDBC 3.0, 4.0 and 4.1. This also changes the position of
-    `OWNER_NAME` column in the result set of `getTables(..) `as this
-    column is Jaybird-specific and not defined in JDBC.
--   `FBDatabaseMetaData#getIndexInfo(..)` now also returns
-    expression indexes. The `COLUMN_NAME` column will contain the
-    expression (if available).
--   `FBDatabaseMetaData#getIndexInfo(..)` now correctly limits the
-    returned indexes to unique indexes when parameter `unique` is set to
-    `true`.
--   The connection property `octetsAsBytes` can be used to identify
-    fields with `CHARACTER SET OCTETS` as being `(VAR)BINARY` (in
-    `ResultSetMetaData` only)
--   The `getTime(`), `getDate()`, `getTimestamp()` methods which take a
-    `Calendar` object now correctly handle conversions around Daylight
-    Savings Time (DST) changes. Before, the time was first converted to
-    the local JVM timezone, and then to the timezone of the provided
-    `Calendar`, this could lose up to an hour in time. Now the time is
-    converted directly to the timezone of the provided `Calendar`.
-    ([JDBC-154](http://tracker.firebirdsql.org/browse/JDBC-154))
+-   Replaced `mini-j2ee.jar` with `connector-api-1.5.jar`: make sure to remove
+    the old `mini-j2ee.jar` from the classpath of your application.
+-   Dropped `jaybird-pool` jar from the distribution (all classes are included
+    in the `jaybird` jar and the `jaybird-full` jar).
+-   `FBResultSetMetaData#getcolumnName(int)` will now return the original column
+    name (if available) for compliance with the JDBC specification, 
+    `getColumnLabel(int)` will still return the alias (or the column name if no
+    alias is defined). See [Compatibility with `com.sun.rowset.*`] for potential
+    problems when using the reference implementation of `CachedRowSet`.\
+    Jaybird 2.2.1 introduced the connection property `columnLabelForName` which
+    will revert to the old behavior when set to `true`. Be aware that the old
+    behavior is not JDBC-compliant.
+-   `FBDatabaseMetaData` has been updated to include metadata columns defined by
+    JDBC 3.0, 4.0 and 4.1. This also changes the position of `OWNER_NAME` column
+    in the result set of `getTables(..) `as this column is Jaybird-specific and
+    not defined in JDBC.
+-   `FBDatabaseMetaData#getIndexInfo(..)` now also returns expression indexes.
+    The `COLUMN_NAME` column will contain the expression (if available).
+-   `FBDatabaseMetaData#getIndexInfo(..)` now correctly limits the returned
+    indexes to unique indexes when parameter `unique` is set to `true`.
+-   The connection property `octetsAsBytes` can be used to identify fields with
+    `CHARACTER SET OCTETS` as being `(VAR)BINARY` (in `ResultSetMetaData` only).
+-   The `getTime(`), `getDate()`, `getTimestamp()` methods which take a 
+    `Calendar` object now correctly handle conversions around Daylight Savings
+    Time (DST) changes. Before, the time was first converted to the local JVM
+    timezone, and then to the timezone of the provided `Calendar`, this could
+    lose up to an hour in time. Now the time is converted directly to the
+    timezone of the provided `Calendar`. ([JDBC-154](http://tracker.firebirdsql.org/browse/JDBC-154))
 
-A full list of changes is available at:
+A full list of changes is also available at:
 
-Jaybird 2.2.9:
-<http://tracker.firebirdsql.org/secure/ReleaseNote.jspa?projectId=10002&styleName=Text&version=10691>
-
-Jaybird 2.2.8:
-<http://tracker.firebirdsql.org/secure/ReleaseNote.jspa?version=10664&styleName=Text&projectId=10002>
-
-Jaybird 2.2.7:
-<http://tracker.firebirdsql.org/secure/ReleaseNote.jspa?version=10660&styleName=Text&projectId=10002>
-
-Jaybird 2.2.6:
-<http://tracker.firebirdsql.org/secure/ReleaseNote.jspa?version=10588&styleName=Text&projectId=10002>
-
-Jaybird 2.2.5:
-<http://tracker.firebirdsql.org/secure/ReleaseNote.jspa?version=10582&styleName=Text&projectId=10002>
-
-Jaybird 2.2.4:
-<http://tracker.firebirdsql.org/secure/ReleaseNote.jspa?version=10531&styleName=Text&projectId=10002>
-
-Jaybird 2.2.3:
-<http://tracker.firebirdsql.org/secure/ReleaseNote.jspa?version=10510&styleName=Text&projectId=10002>
-
-Jaybird 2.2.2:
-<http://tracker.firebirdsql.org/secure/ReleaseNote.jspa?projectId=10002&styleName=Text&version=10480>
-
-Jaybird 2.2.1:
-<http://tracker.firebirdsql.org/secure/ReleaseNote.jspa?version=10474&styleName=Text&projectId=10002>
-
-Jaybird 2.2.0:
-<http://tracker.firebirdsql.org/secure/ReleaseNote.jspa?version=10053&styleName=Text&projectId=10002>
+-   [Jaybird 2.2.9](http://tracker.firebirdsql.org/secure/ReleaseNote.jspa?projectId=10002&styleName=Text&version=10691)
+-   [Jaybird 2.2.8](http://tracker.firebirdsql.org/secure/ReleaseNote.jspa?version=10664&styleName=Text&projectId=10002)
+-   [Jaybird 2.2.7](http://tracker.firebirdsql.org/secure/ReleaseNote.jspa?version=10660&styleName=Text&projectId=10002)
+-   [Jaybird 2.2.6](http://tracker.firebirdsql.org/secure/ReleaseNote.jspa?version=10588&styleName=Text&projectId=10002)
+-   [Jaybird 2.2.5](http://tracker.firebirdsql.org/secure/ReleaseNote.jspa?version=10582&styleName=Text&projectId=10002)
+-   [Jaybird 2.2.4](http://tracker.firebirdsql.org/secure/ReleaseNote.jspa?version=10531&styleName=Text&projectId=10002)
+-   [Jaybird 2.2.3](http://tracker.firebirdsql.org/secure/ReleaseNote.jspa?version=10510&styleName=Text&projectId=10002)
+-   [Jaybird 2.2.2](http://tracker.firebirdsql.org/secure/ReleaseNote.jspa?projectId=10002&styleName=Text&version=10480)
+-   [Jaybird 2.2.1](http://tracker.firebirdsql.org/secure/ReleaseNote.jspa?version=10474&styleName=Text&projectId=10002)
+-   [Jaybird 2.2.0](http://tracker.firebirdsql.org/secure/ReleaseNote.jspa?version=10053&styleName=Text&projectId=10002)
 
 Compatibility changes
 =====================
 
-Jaybird 2.2 introduces some changes in compatibility and announces
-future breaking changes. The version previously announced as Jaybird 2.3
-will be released as Jaybird 3.0.
+Jaybird 2.2 introduces some changes in compatibility and announces future 
+breaking changes. The version previously announced as Jaybird 2.3 will be 
+released as Jaybird 3.0.
 
 Java support
 ------------
 
-Java 5 support has been dropped starting with Jaybird 2.2.8 as Java 5
-has been on End-Of-Public-Updates[^3]status since October 2009.
+Java 5 support has been dropped starting with Jaybird 2.2.8 as Java 5 has been
+on End-Of-Public-Updates[^3]status since October 2009.
 
 Java 6 support will be dropped for Jaybird 3.0 as Java 6 has been on
-End-Of-Public-Updates status since February 2013. This is a change from
-previous announcements that support would be dropped with Jaybird 3.1.
+End-Of-Public-Updates status since February 2013. This is a change from previous
+announcements that support would be dropped with Jaybird 3.1.
 
-Java 7 support will be dropped for Jaybird 3.1 as Java 7 has been on
-End-Of-Public-Updates status since April 2015. Depending on the release
-of Jaybird 3.0, Java 7 support may already be dropped from Jaybird 3.0.
+Java 7 support will be dropped for Jaybird 3.1 as Java 7 has been on 
+End-Of-Public-Updates status since April 2015. Depending on the release of
+Jaybird 3.0, Java 7 support may already be dropped from Jaybird 3.0.
+
+Java 9 support is expected to be introduced with Jaybird 3.0. There are no plans
+to add Java 9 support to Jaybird 2.2.x, although the driver is expected to
+function if JDBC 4.3 specific features are avoided.
 
 [^3]: See <http://www.oracle.com/technetwork/java/eol-135779.html>
 
 Firebird support
 ----------------
 
-Jaybird 2.2 supports Firebird 1.0 and higher, but is only tested with
-Firebird 2.1, 2.5 and 3.0. With Jaybird 3.0 formal support for Firebird
-1.0 and 1.5 will be dropped. In general this should not impact the use
-of the driver, but might have impact on the availability and use of
-metadata information. This also means that from Jaybird 3.0 bugs that
-only occur with Firebird 1.0 and 1.5 will not be fixed. With Jaybird 3.1
-support for Firebird 2.0 will be dropped.
+Jaybird 2.2 supports Firebird 1.0 and higher, but is only tested with Firebird
+2.1, 2.5 and 3.0. 
+
+Firebird 1.0 and 1.5 support will be dropped with Jaybird 3.0. In general this 
+should not impact the use of the driver, but might have impact on the 
+availability and use of metadata information. This also means that starting with
+Jaybird 3.0, bugs that only occur with Firebird 1.0 and 1.5 will not be fixed.
+
+Firebird 2.0 support will be dropped with Jaybird 3.1.
 
 Important changes to Datasources
 --------------------------------
@@ -825,14 +795,14 @@ instead of a String).
 ### Handling connections without explicit connection character set
 
 When no connection character set has been specified (properties
-`lc_ctype` or `encoding` with Firebird character set, or `charSet `or
+`lc_ctype` or `encoding` with Firebird character set, or `charSet` or
 `localEncoding` with Java character set), Jaybird will currently use the
 `NONE` character set. This means that the Firebird server will return
 the bytes for `(VAR)CHAR` columns as they are stored, while Jaybird will
 convert between bytes and Strings using the local platform encoding.
 
 This default has the potential of corrupting data when switching
-platforms or using the same database with different local encoding, or
+platforms or using the same database with different local encodings, or
 for transliteration errors when the database character set does not
 accept some byte combinations. We are currently discussing changing this
 behavior (see [JDBC-257](http://tracker.firebirdsql.org/browse/JDBC-257)).
@@ -861,9 +831,9 @@ The current implementation of `DatabaseMetaData` methods do not conform
 to the JDBC specification when it comes to case sensitivity and quoted
 object names.
 
-In Jaybird 3.0 meta data methods will no longer do the following:\*
-Remove quotes around object names
+In Jaybird 3.0 meta data methods will no longer do the following:
 
+-   Remove quotes around object names
 -   Trying the uppercase value, when the original parameter value
     failed to produce results
 
@@ -1026,7 +996,7 @@ Corrections/Additions to Release Notes
 --------------------------------------
 
 Please send corrections, suggestions, or additions to these Release
-Notes to to the mailing list at <Firebird-Java@yahoogroups.com>.
+Notes to the mailing list at <Firebird-Java@yahoogroups.com>.
 
 JDBC URL Format
 ===============
