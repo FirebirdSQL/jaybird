@@ -19,17 +19,21 @@
 package org.firebirdsql.gds.ng.wire.auth;
 
 import org.firebirdsql.gds.ClumpletReader;
+import org.firebirdsql.gds.ConnectionParameterBuffer;
 import org.firebirdsql.gds.ISCConstants;
+import org.firebirdsql.gds.ParameterTagMapping;
 import org.firebirdsql.gds.ng.FbExceptionBuilder;
 import org.firebirdsql.gds.ng.IAttachProperties;
 import org.firebirdsql.logging.Logger;
 import org.firebirdsql.logging.LoggerFactory;
 
+import javax.xml.bind.DatatypeConverter;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 import java.sql.SQLException;
 import java.util.*;
+import java.util.regex.Pattern;
 
 import static org.firebirdsql.gds.impl.wire.WireProtocolConstants.*;
 
@@ -47,10 +51,11 @@ public final class ClientAuthBlock {
 
     private static final Logger log = LoggerFactory.getLogger(ClientAuthBlock.class);
 
+    private static final Pattern AUTH_PLUGIN_LIST_SPLIT = Pattern.compile("[ \t,;]+");
+
     private final IAttachProperties<?> attachProperties;
     private LinkedList<AuthenticationPluginSpi> pluginProviders;
-    private Set<String> serverPlugins = Collections.emptySet();
-    private String pluginNames;
+    private final Set<String> serverPlugins = new LinkedHashSet<>();
     private AuthenticationPlugin currentPlugin;
     private boolean authComplete;
     private boolean firstTime = true;
@@ -84,7 +89,7 @@ public final class ClientAuthBlock {
      * @return Comma separated list of available plugins.
      */
     public String getPluginNames() {
-        return pluginNames;
+        return getPluginNames(pluginProviders);
     }
 
     public byte[] getClientData() {
@@ -108,8 +113,6 @@ public final class ClientAuthBlock {
             try {
                 switch (plugin.authenticate(this)) {
                 case AUTH_SUCCESS:
-                    // TODO Temporary workaround
-                    attachProperties.setAuthData(plugin.getClientData());
                 case AUTH_MORE_DATA:
                     currentPlugin = plugin;
                     return;
@@ -124,7 +127,7 @@ public final class ClientAuthBlock {
     }
 
     public void resetClient(byte[] serverInfo) throws SQLException {
-        if (serverInfo != null && serverInfo.length > 0) {
+        if (serverInfo != null) {
             if (currentPlugin != null && currentPlugin.hasServerData()) {
                 // We should not change plugins iterator now
                 return;
@@ -133,7 +136,8 @@ public final class ClientAuthBlock {
             ClumpletReader serverList = new ClumpletReader(ClumpletReader.Kind.UnTagged, serverInfo);
             if (serverList.find(TAG_KNOWN_PLUGINS)) {
                 String serverPluginNames = serverList.getString(StandardCharsets.US_ASCII);
-                serverPlugins = new HashSet<>(Arrays.asList(serverPluginNames.split("[ \t,;]+")));
+                serverPlugins.clear();
+                serverPlugins.addAll(Arrays.asList(AUTH_PLUGIN_LIST_SPLIT.split(serverPluginNames)));
             }
         }
 
@@ -155,8 +159,6 @@ public final class ClientAuthBlock {
             }
             pluginProviders = mergedProviderList;
         }
-
-        pluginNames = getPluginNames(pluginProviders);
     }
 
     public void setServerData(byte[] serverData) {
@@ -202,7 +204,7 @@ public final class ClientAuthBlock {
         final String pluginList = getPluginNames();
         if (pluginList != null) {
             userId.write(CNCT_plugin_list);
-            final byte[] pluginListBytes = "Srp,Legacy_Auth".getBytes(StandardCharsets.UTF_8);
+            final byte[] pluginListBytes = pluginList.getBytes(StandardCharsets.UTF_8);
             userId.write(pluginListBytes.length);
             userId.write(pluginListBytes, 0, pluginListBytes.length);
         }
@@ -239,11 +241,16 @@ public final class ClientAuthBlock {
     }
 
     public boolean switchPlugin(String pluginName) {
-        for (AuthenticationPluginSpi pluginProvider : pluginProviders) {
+        if (hasPlugin() && getCurrentPluginName().equals(pluginName)) {
+            return false;
+        }
+        for (Iterator<AuthenticationPluginSpi> iterator = pluginProviders.iterator(); iterator.hasNext(); ) {
+            AuthenticationPluginSpi pluginProvider = iterator.next();
             if (pluginProvider.getPluginName().equals(pluginName)) {
                 currentPlugin = pluginProvider.createPlugin();
                 return true;
             }
+            iterator.remove();
         }
         return false;
     }
@@ -253,11 +260,65 @@ public final class ClientAuthBlock {
     }
 
     public AuthenticationPlugin.AuthStatus authenticate() throws SQLException {
-        AuthenticationPlugin.AuthStatus authStatus = currentPlugin.authenticate(this);
-        // TODO Temporary workaround for behavior in V13ParameterConverter, needs to be removed
-        if (authStatus == AuthenticationPlugin.AuthStatus.AUTH_SUCCESS) {
-            attachProperties.setAuthData(currentPlugin.getClientData());
+        return currentPlugin.authenticate(this);
+    }
+
+    public void authFillParametersBlock(ConnectionParameterBuffer pb) throws SQLException {
+        Iterator<AuthenticationPluginSpi> providerIterator = pluginProviders.iterator();
+        while (providerIterator.hasNext()) {
+            AuthenticationPluginSpi provider = providerIterator.next();
+            AuthenticationPlugin plugin;
+            if (hasPlugin() && provider.getPluginName().equals(getCurrentPluginName())) {
+                plugin = currentPlugin;
+            } else {
+                plugin = provider.createPlugin();
+            }
+            log.debug("Trying authentication plugin " + plugin);
+            try {
+                switch (plugin.authenticate(this)) {
+                case AUTH_SUCCESS:
+                case AUTH_MORE_DATA:
+                    log.debug("Trying authentication plugin " + plugin + " is OK");
+                    currentPlugin = plugin;
+                    cleanParameterBuffer(pb);
+                    extractDataToParameterBuffer(pb);
+                    return;
+                case AUTH_CONTINUE:
+                    providerIterator.remove();
+                    break;
+                }
+            } catch (SQLException ex) {
+                throw new FbExceptionBuilder().exception(ISCConstants.isc_login).cause(ex).toFlatSQLException();
+            }
+
+            log.debug(String.format("try next plugin, %s skipped", plugin));
         }
-        return authStatus;
+    }
+
+    private void extractDataToParameterBuffer(ConnectionParameterBuffer pb) {
+        byte[] clientData = getClientData();
+        if (clientData == null || clientData.length == 0) {
+            return;
+        }
+        String pluginName = getCurrentPluginName();
+        ParameterTagMapping tagMapping = pb.getTagMapping();
+        if (firstTime) {
+            if (pluginName != null) {
+                pb.addArgument(tagMapping.getAuthPluginNameTag(), pluginName);
+            }
+            pb.addArgument(tagMapping.getAuthPluginListTag(), getPluginNames());
+            firstTime = false;
+            log.debug("first time - added plugName & pluginList");
+        }
+        pb.addArgument(tagMapping.getSpecificAuthDataTag(),
+                DatatypeConverter.printHexBinary(clientData).getBytes(StandardCharsets.US_ASCII));
+        log.debug(String.format("Added %d bytes of spec data with tag isc_dpb_specific_auth_data", clientData.length));
+    }
+
+    private void cleanParameterBuffer(ConnectionParameterBuffer pb) {
+        ParameterTagMapping tagMapping = pb.getTagMapping();
+        pb.removeArgument(tagMapping.getPasswordTag());
+        pb.removeArgument(tagMapping.getEncryptedPasswordTag());
+        pb.removeArgument(tagMapping.getTrustedAuthTag());
     }
 }

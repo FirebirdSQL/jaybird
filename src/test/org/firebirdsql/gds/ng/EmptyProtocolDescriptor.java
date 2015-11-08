@@ -18,7 +18,6 @@
  */
 package org.firebirdsql.gds.ng;
 
-import org.firebirdsql.encodings.IEncodingFactory;
 import org.firebirdsql.gds.BlobParameterBuffer;
 import org.firebirdsql.gds.DatabaseParameterBuffer;
 import org.firebirdsql.gds.ServiceParameterBuffer;
@@ -92,17 +91,15 @@ public class EmptyProtocolDescriptor extends AbstractProtocolDescriptor {
     }
 
     @Override
-    protected ParameterConverter getParameterConverter() {
-        return new ParameterConverter() {
+    protected ParameterConverter<WireDatabaseConnection, WireServiceConnection> getParameterConverter() {
+        return new ParameterConverter<WireDatabaseConnection, WireServiceConnection>() {
             @Override
-            public DatabaseParameterBuffer toDatabaseParameterBuffer(IConnectionProperties connectionProperties,
-                    IEncodingFactory encodingFactory) {
+            public DatabaseParameterBuffer toDatabaseParameterBuffer(WireDatabaseConnection connection) {
                 return null;
             }
 
             @Override
-            public ServiceParameterBuffer toServiceParameterBuffer(IServiceProperties serviceProperties,
-                    IEncodingFactory encodingFactory) {
+            public ServiceParameterBuffer toServiceParameterBuffer(WireServiceConnection connection) {
                 return null;
             }
         };

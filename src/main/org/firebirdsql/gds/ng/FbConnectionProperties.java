@@ -18,6 +18,7 @@
  */
 package org.firebirdsql.gds.ng;
 
+import org.firebirdsql.encodings.EncodingFactory;
 import org.firebirdsql.gds.DatabaseParameterBuffer;
 import org.firebirdsql.gds.Parameter;
 import org.firebirdsql.gds.impl.DatabaseParameterBufferImp;
@@ -43,7 +44,8 @@ public final class FbConnectionProperties extends AbstractAttachProperties<IConn
     private int pageCacheSize;
     private boolean resultSetDefaultHoldable;
     private boolean columnLabelForName;
-    private final DatabaseParameterBuffer extraDatabaseParameters = new DatabaseParameterBufferImp();
+    private final DatabaseParameterBuffer extraDatabaseParameters =
+            new DatabaseParameterBufferImp(EncodingFactory.getDefaultInstance().getDefaultEncoding());
 
     private FbImmutableConnectionProperties immutableConnectionPropertiesCache;
 
@@ -168,7 +170,7 @@ public final class FbConnectionProperties extends AbstractAttachProperties<IConn
     @Deprecated
     public void fromDpb(DatabaseParameterBuffer dpb) {
         for (Parameter parameter : dpb) {
-            switch(parameter.getType()) {
+            switch (parameter.getType()) {
             case isc_dpb_user_name:
                 setUser(parameter.getValueAsString());
                 break;

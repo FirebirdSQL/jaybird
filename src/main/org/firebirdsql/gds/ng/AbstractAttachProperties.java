@@ -31,7 +31,6 @@ public abstract class AbstractAttachProperties<T extends IAttachProperties> impl
     private String user;
     private String password;
     private String roleName;
-    private byte[] authData;
     private String charSet;
     private String encoding;
     private int socketBufferSize = IAttachProperties.DEFAULT_SOCKET_BUFFER_SIZE;
@@ -54,7 +53,6 @@ public abstract class AbstractAttachProperties<T extends IAttachProperties> impl
             user = src.getUser();
             password = src.getPassword();
             roleName = src.getRoleName();
-            authData = src.getAuthData();
             charSet = src.getCharSet();
             encoding = src.getEncoding();
             socketBufferSize = src.getSocketBufferSize();
@@ -121,17 +119,6 @@ public abstract class AbstractAttachProperties<T extends IAttachProperties> impl
     @Override
     public void setRoleName(String roleName) {
         this.roleName = roleName;
-        dirtied();
-    }
-
-    @Override
-    public byte[] getAuthData() {
-        return authData;
-    }
-
-    @Override
-    public void setAuthData(byte[] authData) {
-        this.authData = authData;
         dirtied();
     }
 

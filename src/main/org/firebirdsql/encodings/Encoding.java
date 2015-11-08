@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * Public Firebird Java API.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -73,4 +71,9 @@ public interface Encoding {
      * @return The derived Encoding, or this encoding if {@code translator} is {@code null}
      */
     Encoding withTranslation(CharacterTranslator translator);
+
+    /**
+     * @return The name of the Java character set.
+     */
+    String getCharsetName();
 }

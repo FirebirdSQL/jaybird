@@ -16,27 +16,22 @@
  *
  * All rights reserved.
  */
-package org.firebirdsql.gds.impl;
+package org.firebirdsql.gds;
 
 import org.firebirdsql.encodings.Encoding;
-import org.firebirdsql.gds.ISCConstants;
-import org.firebirdsql.gds.ParameterTagMapping;
-import org.firebirdsql.gds.ServiceParameterBuffer;
 
 /**
- * Implementation of ServiceParameterBuffer.
+ * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  */
-public class ServiceParameterBufferImp extends ParameterBufferBase implements ServiceParameterBuffer {
+public interface ConnectionParameterBuffer extends ParameterBuffer {
 
     /**
-     * Creates an empty service parameter buffer
+     * @return The tag mapping.
      */
-    public ServiceParameterBufferImp(Encoding defaultEncoding) {
-        super(ISCConstants.isc_spb_version, defaultEncoding);
-    }
+    ParameterTagMapping getTagMapping();
 
-    @Override
-    public ParameterTagMapping getTagMapping() {
-        return ParameterTagMapping.SPB;
-    }
+    /**
+     * @return The default encoding of string properties in this parameter buffer.
+     */
+    Encoding getDefaultEncoding();
 }

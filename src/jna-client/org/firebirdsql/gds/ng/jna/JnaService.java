@@ -43,7 +43,7 @@ public final class JnaService extends AbstractFbService<JnaServiceConnection> im
 
     // TODO Find out if there are any exception from JNA that we need to be prepared to handle.
 
-    private static final ParameterConverter PARAMETER_CONVERTER = new JnaParameterConverter();
+    private static final ParameterConverter<?, JnaServiceConnection> PARAMETER_CONVERTER = new JnaParameterConverter();
     public static final int STATUS_VECTOR_SIZE = 20;
 
     private final FbClientLibrary clientLibrary;
@@ -97,8 +97,7 @@ public final class JnaService extends AbstractFbService<JnaServiceConnection> im
         if (isAttached()) {
             throw new SQLException("Already attached to a service");
         }
-        ServiceParameterBuffer spb = PARAMETER_CONVERTER
-                .toServiceParameterBuffer(connection.getAttachProperties(), connection.getEncodingFactory());
+        ServiceParameterBuffer spb = PARAMETER_CONVERTER.toServiceParameterBuffer(connection);
         final byte[] serviceName = getEncoding().encodeToCharset(connection.getAttachUrl());
         final byte[] spbArray = spb.toBytesWithType();
 

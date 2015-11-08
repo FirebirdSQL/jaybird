@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
@@ -20,14 +18,13 @@
  */
 package org.firebirdsql.gds.ng.wire.version11;
 
-import org.firebirdsql.encodings.Encoding;
-import org.firebirdsql.encodings.IEncodingFactory;
 import org.firebirdsql.gds.DatabaseParameterBuffer;
-import org.firebirdsql.gds.ng.IConnectionProperties;
+import org.firebirdsql.gds.ng.wire.WireDatabaseConnection;
 import org.firebirdsql.gds.ng.wire.version10.V10ParameterConverter;
 
 import java.security.AccessController;
 import java.security.PrivilegedAction;
+import java.sql.SQLException;
 
 /**
  * Implementation of {@link org.firebirdsql.gds.ng.ParameterConverter} for the version 11 protocol.
@@ -42,11 +39,10 @@ import java.security.PrivilegedAction;
 public class V11ParameterConverter extends V10ParameterConverter {
 
     @Override
-    protected void populateDefaultProperties(final IConnectionProperties props, final IEncodingFactory encodingFactory,
-            final DatabaseParameterBuffer dpb, final Encoding encoding) {
-        super.populateDefaultProperties(props, encodingFactory, dpb, encoding);
+    protected void populateDefaultProperties(final WireDatabaseConnection connection, final DatabaseParameterBuffer dpb) throws SQLException {
+        super.populateDefaultProperties(connection, dpb);
 
-        addProcessName(dpb, encoding);
+        addProcessName(dpb);
         addProcessId(dpb);
     }
 
@@ -55,13 +51,11 @@ public class V11ParameterConverter extends V10ParameterConverter {
      *
      * @param dpb
      *         Database parameter buffer
-     * @param encoding
-     *         Encoding to use for property
      */
-    protected final void addProcessName(DatabaseParameterBuffer dpb, Encoding encoding) {
+    protected final void addProcessName(DatabaseParameterBuffer dpb) {
         String processName = getSystemPropertyPrivileged("org.firebirdsql.jdbc.processName");
         if (processName != null) {
-            dpb.addArgument(DatabaseParameterBuffer.PROCESS_NAME, processName, encoding);
+            dpb.addArgument(DatabaseParameterBuffer.PROCESS_NAME, processName);
         }
     }
 

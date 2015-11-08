@@ -35,7 +35,7 @@ package org.firebirdsql.gds;
  * way, however this approach is not recommended. Please use instead management
  * API.
  */
-public interface DatabaseParameterBuffer extends ParameterBuffer {
+public interface DatabaseParameterBuffer extends ConnectionParameterBuffer {
 
     //@formatter:off
     int CDD_PATHNAME            = ISCConstants.isc_dpb_cdd_pathname;

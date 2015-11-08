@@ -18,9 +18,10 @@
  */
 package org.firebirdsql.gds.ng;
 
-import org.firebirdsql.encodings.IEncodingFactory;
 import org.firebirdsql.gds.DatabaseParameterBuffer;
 import org.firebirdsql.gds.ServiceParameterBuffer;
+
+import java.sql.SQLException;
 
 /**
  * Provides conversion of parameters (eg from {@link org.firebirdsql.gds.ng.IConnectionProperties} to a
@@ -29,29 +30,25 @@ import org.firebirdsql.gds.ServiceParameterBuffer;
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @since 3.0
  */
-public interface ParameterConverter {
+public interface ParameterConverter<D extends AbstractConnection<IConnectionProperties, ?>, S extends AbstractConnection<IServiceProperties, ?>> {
 
     /**
      * Builds a {@code DatabaseParameterBuffer} from the supplied {code IConnectionProperties}.
      *
-     * @param connectionProperties
-     *         Connection properties
-     * @param encodingFactory
-     *         Encoding factory
+     * @param connection
+     *         Database connection
      * @return Database parameter buffer populated based on the connection properties
+     * @throws SQLException For errors
      */
-    DatabaseParameterBuffer toDatabaseParameterBuffer(IConnectionProperties connectionProperties,
-            IEncodingFactory encodingFactory);
+    DatabaseParameterBuffer toDatabaseParameterBuffer(D connection) throws SQLException;
 
     /**
      * Builds a {@code ServiceParameterBuffer} from the supplied {code IServiceProperties}.
      *
-     * @param serviceProperties
-     *         Service properties
-     * @param encodingFactory
-     *         Encoding factory
+     * @param connection
+     *         Service connection
      * @return Service parameter buffer populated based on the service properties
+     * @throws SQLException For errors
      */
-    ServiceParameterBuffer toServiceParameterBuffer(IServiceProperties serviceProperties,
-            IEncodingFactory encodingFactory);
+    ServiceParameterBuffer toServiceParameterBuffer(S connection) throws SQLException;
 }

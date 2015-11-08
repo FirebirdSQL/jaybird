@@ -20,21 +20,23 @@
  */
 package org.firebirdsql.gds.impl;
 
+import org.firebirdsql.encodings.Encoding;
 import org.firebirdsql.gds.DatabaseParameterBuffer;
 import org.firebirdsql.gds.ISCConstants;
+import org.firebirdsql.gds.ParameterTagMapping;
 
 /**
  * Implementation for DatabaseParameterBuffer.
  */
 public final class DatabaseParameterBufferImp extends ParameterBufferBase implements DatabaseParameterBufferExtension {
 
-    public DatabaseParameterBufferImp() {
-        super(ISCConstants.isc_dpb_version1);
+    public DatabaseParameterBufferImp(Encoding defaultEncoding) {
+        super(ISCConstants.isc_dpb_version1, defaultEncoding);
     }
 
     @Override
     public DatabaseParameterBuffer deepCopy() {
-        final DatabaseParameterBufferImp copy = new DatabaseParameterBufferImp();
+        final DatabaseParameterBufferImp copy = new DatabaseParameterBufferImp(getDefaultEncoding());
 
         // All the Argument sub classes are immutable so to make a 'deep' copy this is all we have to do.
         copy.getArgumentsList().addAll(this.getArgumentsList());
@@ -51,5 +53,10 @@ public final class DatabaseParameterBufferImp extends ParameterBufferBase implem
         }
 
         return copy;
+    }
+
+    @Override
+    public ParameterTagMapping getTagMapping() {
+        return ParameterTagMapping.DPB;
     }
 }

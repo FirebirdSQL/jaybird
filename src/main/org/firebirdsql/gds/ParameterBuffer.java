@@ -58,15 +58,13 @@ public interface ParameterBuffer extends Iterable<Parameter> {
     void addArgument(int argumentType);
 
     /**
-     * Add string argument.
+     * Add string argument with the default encoding.
      *
      * @param argumentType
      *         type of argument.
      * @param value
      *         string value to add.
-     * @deprecated Use {@link #addArgument(int, String, org.firebirdsql.encodings.Encoding)}
      */
-    @Deprecated
     void addArgument(int argumentType, String value);
 
     /**

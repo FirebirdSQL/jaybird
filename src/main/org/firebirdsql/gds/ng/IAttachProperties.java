@@ -121,19 +121,6 @@ public interface IAttachProperties<T extends IAttachProperties> {
      */
     void setRoleName(String roleName);
 
-    // TODO Remove get/setAuthData, and handle using ClientAuthBlock
-
-    /**
-     * @return Authenticaton data to authenticate to the server.
-     */
-    byte[] getAuthData();
-
-    /**
-     * @param authData
-     *         Authentication data to authenticate to the server.
-     */
-    void setAuthData(byte[] authData);
-
     /**
      * @return Java character set for the connection.
      */

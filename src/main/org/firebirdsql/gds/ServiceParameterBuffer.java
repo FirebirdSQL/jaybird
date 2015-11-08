@@ -31,7 +31,7 @@ package org.firebirdsql.gds;
  * Firebird API documentation and specifies the attributes for the  Services API
  * connection.
  */
-public interface ServiceParameterBuffer extends ParameterBuffer {
+public interface ServiceParameterBuffer extends ConnectionParameterBuffer {
 
     //@formatter:off
     int VERSION                 = ISCConstants.isc_spb_version;

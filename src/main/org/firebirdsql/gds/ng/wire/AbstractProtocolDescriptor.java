@@ -23,6 +23,8 @@ import org.firebirdsql.gds.ServiceParameterBuffer;
 import org.firebirdsql.gds.ng.ParameterConverter;
 import org.firebirdsql.util.ObjectUtils;
 
+import java.sql.SQLException;
+
 /**
  * Abstract class to simplify implementation of {@link ProtocolDescriptor}
  *
@@ -108,19 +110,21 @@ public abstract class AbstractProtocolDescriptor implements ProtocolDescriptor {
     }
 
     @Override
-    public final DatabaseParameterBuffer createDatabaseParameterBuffer(WireDatabaseConnection connection) {
+    public final DatabaseParameterBuffer createDatabaseParameterBuffer(WireDatabaseConnection connection)
+            throws SQLException {
         return getParameterConverter()
-                .toDatabaseParameterBuffer(connection.getAttachProperties(), connection.getEncodingFactory());
+                .toDatabaseParameterBuffer(connection);
     }
 
     @Override
-    public final ServiceParameterBuffer createServiceParameterBuffer(WireServiceConnection connection) {
+    public final ServiceParameterBuffer createServiceParameterBuffer(WireServiceConnection connection)
+            throws SQLException {
         return getParameterConverter()
-                .toServiceParameterBuffer(connection.getAttachProperties(), connection.getEncodingFactory());
+                .toServiceParameterBuffer(connection);
     }
 
     /**
      * @return {@code ParameterConverter} for populating the database parameter buffer.
      */
-    protected abstract ParameterConverter getParameterConverter();
+    protected abstract ParameterConverter<WireDatabaseConnection, WireServiceConnection> getParameterConverter();
 }

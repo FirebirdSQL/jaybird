@@ -48,7 +48,7 @@ public final class JnaDatabase extends AbstractFbDatabase<JnaDatabaseConnection>
 
     // TODO Find out if there are any exception from JNA that we need to be prepared to handle.
 
-    private static final ParameterConverter PARAMETER_CONVERTER = new JnaParameterConverter();
+    private static final ParameterConverter<JnaDatabaseConnection, ?> PARAMETER_CONVERTER = new JnaParameterConverter();
     public static final int STATUS_VECTOR_SIZE = 20;
     public static final int MAX_STATEMENT_LENGTH = 64 * 1024;
 
@@ -100,7 +100,7 @@ public final class JnaDatabase extends AbstractFbDatabase<JnaDatabaseConnection>
     @Override
     public void attach() throws SQLException {
         DatabaseParameterBuffer dpb = ((DatabaseParameterBufferExtension) PARAMETER_CONVERTER
-                .toDatabaseParameterBuffer(connection.getAttachProperties(), getEncodingFactory()))
+                .toDatabaseParameterBuffer(connection))
                 .removeExtensionParams();
         attachOrCreate(dpb, false);
     }
@@ -156,7 +156,7 @@ public final class JnaDatabase extends AbstractFbDatabase<JnaDatabaseConnection>
     @Override
     public void createDatabase() throws SQLException {
         DatabaseParameterBuffer dpb = ((DatabaseParameterBufferExtension) PARAMETER_CONVERTER
-                .toDatabaseParameterBuffer(connection.getAttachProperties(), getEncodingFactory()))
+                .toDatabaseParameterBuffer(connection))
                 .removeExtensionParams();
         attachOrCreate(dpb, true);
     }

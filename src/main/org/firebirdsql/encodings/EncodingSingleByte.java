@@ -82,4 +82,9 @@ final class EncodingSingleByte implements Encoding {
         }
         return this;
     }
+
+    @Override
+    public String getCharsetName() {
+        return charset.name();
+    }
 }

@@ -62,7 +62,7 @@ public abstract class AbstractFbService<T extends AbstractConnection<IServicePro
 
     @Override
     public ServiceParameterBuffer createServiceParameterBuffer() {
-        return new ServiceParameterBufferImp();
+        return new ServiceParameterBufferImp(getEncoding());
     }
 
     @Override

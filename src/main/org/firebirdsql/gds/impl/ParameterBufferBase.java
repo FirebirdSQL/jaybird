@@ -19,6 +19,7 @@
 package org.firebirdsql.gds.impl;
 
 import org.firebirdsql.encodings.Encoding;
+import org.firebirdsql.encodings.EncodingFactory;
 import org.firebirdsql.gds.Parameter;
 import org.firebirdsql.gds.ParameterBuffer;
 import org.firebirdsql.gds.impl.argument.*;
@@ -44,14 +45,36 @@ public abstract class ParameterBufferBase implements ParameterBuffer, Serializab
     private final List<Argument> arguments = new ArrayList<>();
 
     private final int type;
+    private final String defaultEncodingName;
+    private transient Encoding defaultEncoding;
+
+    /**
+     * Creates a {@code ParameterBufferBase}.
+     * <p>
+     * This uses a default encoding derived from the system default encoding. You usually want to
+     * use {@link #ParameterBufferBase(int, Encoding)} instead.
+     * </p>
+     *
+     * @param type Firebird type/version code for the parameter buffer
+     */
+    protected ParameterBufferBase(int type) {
+        this(type, EncodingFactory.getDefaultInstance().getDefaultEncoding());
+    }
 
     /**
      * Creates a {@code ParameterBufferBase}.
      *
      * @param type Firebird type/version code for the parameter buffer
+     * @param defaultEncoding Default encoding to use for string arguments
      */
-    protected ParameterBufferBase(int type) {
+    protected ParameterBufferBase(int type, Encoding defaultEncoding) {
         this.type = type;
+        defaultEncodingName = defaultEncoding.getCharsetName();
+        this.defaultEncoding = defaultEncoding;
+    }
+
+    public final Encoding getDefaultEncoding() {
+        return defaultEncoding;
     }
 
     @Override
@@ -61,7 +84,7 @@ public abstract class ParameterBufferBase implements ParameterBuffer, Serializab
 
     @Override
     public void addArgument(int argumentType, String value) {
-        getArgumentsList().add(new StringArgument(argumentType, value));
+        addArgument(argumentType, value, defaultEncoding);
     }
 
     @Override
@@ -216,5 +239,11 @@ public abstract class ParameterBufferBase implements ParameterBuffer, Serializab
         public void write(final XdrOutputStream outputStream) throws IOException {
             writeArgumentsTo(outputStream);
         }
+    }
+
+    private void readObject(java.io.ObjectInputStream in) throws IOException, ClassNotFoundException {
+        in.defaultReadObject();
+
+        defaultEncoding = EncodingFactory.getDefaultInstance().getEncodingForCharsetAlias(defaultEncodingName);
     }
 }

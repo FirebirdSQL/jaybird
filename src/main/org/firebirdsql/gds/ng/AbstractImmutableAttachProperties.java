@@ -32,7 +32,6 @@ public abstract class AbstractImmutableAttachProperties<T extends IAttachPropert
     private final String password;
     private final String roleName;
     private final String charSet;
-    private final byte[] authData;
     private final String encoding;
     private final int socketBufferSize;
     private final int soTimeout;
@@ -54,7 +53,6 @@ public abstract class AbstractImmutableAttachProperties<T extends IAttachPropert
         user = src.getUser();
         password = src.getPassword();
         roleName = src.getRoleName();
-        authData = src.getAuthData();
         charSet = src.getCharSet();
         encoding = src.getEncoding();
         socketBufferSize = src.getSocketBufferSize();
@@ -109,16 +107,6 @@ public abstract class AbstractImmutableAttachProperties<T extends IAttachPropert
 
     @Override
     public void setRoleName(final String roleName) {
-        immutable();
-    }
-
-    @Override
-    public byte[] getAuthData() {
-        return authData;
-    }
-
-    @Override
-    public void setAuthData(final byte[] authData) {
         immutable();
     }
 

@@ -63,6 +63,11 @@ final class EncodingGeneric implements Encoding {
         return new EncodingGenericWithTranslation(translator);
     }
 
+    @Override
+    public String getCharsetName() {
+        return charset.name();
+    }
+
     /**
      * Class for applying {@link EncodingGeneric} with translation.
      */
@@ -109,6 +114,11 @@ final class EncodingGeneric implements Encoding {
         @Override
         public Encoding withTranslation(final CharacterTranslator translator) {
             return EncodingGeneric.this.withTranslation(translator);
+        }
+
+        @Override
+        public String getCharsetName() {
+            return charset.name();
         }
 
         private char[] translate(char[] chars) {

@@ -32,6 +32,8 @@ import org.firebirdsql.gds.ng.TransactionState;
 import org.firebirdsql.gds.ng.WarningMessageCallback;
 import org.firebirdsql.gds.ng.fields.BlrCalculator;
 
+import java.sql.SQLException;
+
 /**
  * Descriptor of protocol information.
  * <p>
@@ -126,7 +128,7 @@ public interface ProtocolDescriptor {
      *         Connection
      * @return DatabaseParameterBuffer implementation
      */
-    DatabaseParameterBuffer createDatabaseParameterBuffer(WireDatabaseConnection connection);
+    DatabaseParameterBuffer createDatabaseParameterBuffer(WireDatabaseConnection connection) throws SQLException;
 
     /**
      * Create {@link ServiceParameterBuffer} implementation and populate it with supported properties for
@@ -136,7 +138,7 @@ public interface ProtocolDescriptor {
      *         Connection
      * @return ServiceParameterBuffer implementation
      */
-    ServiceParameterBuffer createServiceParameterBuffer(WireServiceConnection connection);
+    ServiceParameterBuffer createServiceParameterBuffer(WireServiceConnection connection) throws SQLException;
 
     /**
      * Create {@link BlrCalculator} implementation for this protocol version.

@@ -198,6 +198,8 @@ public class FirebirdSupportInfo {
             return serverVersion.isEqualOrAbove(2, 1);
         case 12:
             return serverVersion.isEqualOrAbove(2, 5);
+        case 13:
+            return serverVersion.isEqualOrAbove(3, 0);
         default:
             return false;
         }

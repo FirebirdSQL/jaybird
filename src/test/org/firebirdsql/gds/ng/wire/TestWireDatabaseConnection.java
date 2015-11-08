@@ -27,6 +27,7 @@ import org.firebirdsql.gds.impl.jni.EmbeddedGDSFactoryPlugin;
 import org.firebirdsql.gds.impl.jni.NativeGDSFactoryPlugin;
 import org.firebirdsql.gds.ng.FbConnectionProperties;
 import org.firebirdsql.gds.ng.wire.version10.Version10Descriptor;
+import org.firebirdsql.gds.ng.wire.version13.Version13Descriptor;
 import org.junit.ClassRule;
 import org.junit.Test;
 
@@ -34,6 +35,7 @@ import java.sql.SQLException;
 import java.sql.SQLTimeoutException;
 
 import static org.junit.Assert.*;
+import static org.junit.Assume.assumeTrue;
 
 /**
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
@@ -115,9 +117,32 @@ public class TestWireDatabaseConnection extends FBJUnit4TestBase {
             assertTrue(gdsConnection.isConnected());
 
             FbWireDatabase database = gdsConnection.identify();
-            
+
             assertEquals("Unexpected FbWireDatabase implementation",
                     org.firebirdsql.gds.ng.wire.version10.V10Database.class, database.getClass());
+            assertEquals("Unexpected architecture", expectedProtocol.getArchitecture(),
+                    gdsConnection.getProtocolArchitecture());
+            assertEquals("Unexpected type", expectedProtocol.getMaximumType(), gdsConnection.getProtocolMinimumType());
+            assertEquals("Unexpected version", expectedProtocol.getVersion(), gdsConnection.getProtocolVersion());
+        }
+    }
+
+    /**
+     * Tests a successful connection identification phase.
+     */
+    @Test
+    public void testIdentifyExistingDb_v13() throws Exception {
+        assumeTrue("Requires protocol v13 support", FBTestProperties.getDefaultSupportInfo().supportsProtocol(13));
+        ProtocolDescriptor expectedProtocol = new Version13Descriptor();
+        try (WireDatabaseConnection gdsConnection = new WireDatabaseConnection(connectionInfo,
+                EncodingFactory.getDefaultInstance(), ProtocolCollection.create(expectedProtocol))) {
+            gdsConnection.socketConnect();
+            assertTrue(gdsConnection.isConnected());
+
+            FbWireDatabase database = gdsConnection.identify();
+
+            assertEquals("Unexpected FbWireDatabase implementation",
+                    org.firebirdsql.gds.ng.wire.version13.V13Database.class, database.getClass());
             assertEquals("Unexpected architecture", expectedProtocol.getArchitecture(),
                     gdsConnection.getProtocolArchitecture());
             assertEquals("Unexpected type", expectedProtocol.getMaximumType(), gdsConnection.getProtocolMinimumType());

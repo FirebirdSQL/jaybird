@@ -18,18 +18,13 @@
  */
 package org.firebirdsql.gds.ng.jna;
 
-import org.firebirdsql.encodings.Encoding;
-import org.firebirdsql.encodings.IEncodingFactory;
-import org.firebirdsql.gds.DatabaseParameterBuffer;
-import org.firebirdsql.gds.ServiceParameterBuffer;
-import org.firebirdsql.gds.impl.DatabaseParameterBufferImp;
-import org.firebirdsql.gds.impl.ServiceParameterBufferImp;
+import org.firebirdsql.gds.ConnectionParameterBuffer;
+import org.firebirdsql.gds.ParameterTagMapping;
+import org.firebirdsql.gds.ng.AbstractConnection;
 import org.firebirdsql.gds.ng.AbstractParameterConverter;
-import org.firebirdsql.gds.ng.IConnectionProperties;
-import org.firebirdsql.gds.ng.IServiceProperties;
-import org.firebirdsql.gds.ng.ParameterConverter;
+import org.firebirdsql.gds.ng.IAttachProperties;
 
-import static org.firebirdsql.gds.ISCConstants.*;
+import java.sql.SQLException;
 
 /**
  * Implementation of {@link org.firebirdsql.gds.ng.ParameterConverter} for JNA.
@@ -37,53 +32,18 @@ import static org.firebirdsql.gds.ISCConstants.*;
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @since 3.0
  */
-public class JnaParameterConverter extends AbstractParameterConverter implements ParameterConverter {
+public class JnaParameterConverter extends AbstractParameterConverter<JnaDatabaseConnection, JnaServiceConnection> {
+
     @Override
-    public DatabaseParameterBuffer toDatabaseParameterBuffer(IConnectionProperties props,
-            IEncodingFactory encodingFactory) {
-        final DatabaseParameterBuffer dpb = new DatabaseParameterBufferImp();
-        final Encoding stringEncoding = encodingFactory.getDefaultEncoding();
-
-        // Map standard properties
-        populateDefaultProperties(props, encodingFactory, dpb, stringEncoding);
-
-        // Map non-standard properties
-        populateNonStandardProperties(props, dpb, stringEncoding);
-
-        return dpb;
-    }
-
-    protected void populateAuthenticationProperties(final IConnectionProperties props,
-            final IEncodingFactory encodingFactory, final DatabaseParameterBuffer dpb, final Encoding encoding) {
+    protected void populateAuthenticationProperties(final AbstractConnection connection,
+            final ConnectionParameterBuffer pb) throws SQLException {
+        IAttachProperties props = connection.getAttachProperties();
+        ParameterTagMapping tagMapping = pb.getTagMapping();
         if (props.getUser() != null) {
-            dpb.addArgument(isc_dpb_user_name, props.getUser(), encoding);
+            pb.addArgument(tagMapping.getUserNameTag(), props.getUser());
         }
         if (props.getPassword() != null) {
-            dpb.addArgument(isc_dpb_password, props.getPassword(), encoding);
-        }
-    }
-
-    @Override
-    public ServiceParameterBuffer toServiceParameterBuffer(IServiceProperties serviceProperties,
-            IEncodingFactory encodingFactory) {
-        final ServiceParameterBuffer spb = new ServiceParameterBufferImp();
-        spb.addArgument(isc_spb_current_version);
-        final Encoding stringEncoding = encodingFactory.getDefaultEncoding();
-
-        // Map standard properties
-        populateDefaultProperties(serviceProperties, encodingFactory, spb, stringEncoding);
-
-        return spb;
-    }
-
-    @Override
-    protected void populateAuthenticationProperties(final IServiceProperties props,
-            final IEncodingFactory encodingFactory, final ServiceParameterBuffer spb, final Encoding encoding) {
-        if (props.getUser() != null) {
-            spb.addArgument(isc_spb_user_name, props.getUser(), encoding);
-        }
-        if (props.getPassword() != null) {
-            spb.addArgument(isc_spb_password, props.getPassword(), encoding);
+            pb.addArgument(tagMapping.getPasswordTag(), props.getPassword());
         }
     }
 }

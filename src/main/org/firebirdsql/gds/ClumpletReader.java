@@ -474,7 +474,7 @@ public class ClumpletReader {
 
     // TODO: Other types in ClumpletReader.cpp not copied
 
-    private boolean isEof() {
+    public boolean isEof() {
         return position >= getBufferLength();
     }
 

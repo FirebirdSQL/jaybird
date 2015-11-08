@@ -21,6 +21,7 @@ package org.firebirdsql.jca;
 import org.firebirdsql.encodings.Encoding;
 import org.firebirdsql.gds.DatabaseParameterBuffer;
 import org.firebirdsql.gds.Parameter;
+import org.firebirdsql.gds.ParameterTagMapping;
 import org.firebirdsql.gds.impl.DatabaseParameterBufferExtension;
 import org.firebirdsql.gds.impl.wire.Xdrable;
 
@@ -180,5 +181,15 @@ public class FBConnectionRequestInfo implements DatabaseParameterBufferExtension
 
     public int hashCode() {
         return dpb.hashCode();
+    }
+
+    @Override
+    public ParameterTagMapping getTagMapping() {
+        return dpb.getTagMapping();
+    }
+
+    @Override
+    public Encoding getDefaultEncoding() {
+        return dpb.getDefaultEncoding();
     }
 }

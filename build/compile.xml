@@ -148,8 +148,19 @@
         <mkdir dir="${build.resources}"/>
         <copy todir="${build.resources}" filtering="no">
             <fileset dir="${source.resources}">
+                <exclude name="org/firebirdsql/version.properties"/>
                 <include name="**/*"/>
             </fileset>
+        </copy>
+        <copy todir="${build.resources}" filtering="yes">
+            <fileset dir="${source.resources}">
+                <include name="org/firebirdsql/version.properties"/>
+            </fileset>
+            <filterset>
+                <filter token="NAME" value="${Name}"/>
+                <filter token="VERSION" value="${version.major}.${version.minor}.${version.revision}"/>
+                <filter token="VERSION_FULL" value="${version.full}"/>
+            </filterset>
         </copy>
     </target>
 

@@ -35,7 +35,7 @@ import java.util.Map;
 public class FBConnectionProperties implements FirebirdConnectionProperties, Serializable, Cloneable {
 
     private static final long serialVersionUID = 611228437520889118L;
-    
+
     public static final String DATABASE_PROPERTY = "database";
     public static final String TYPE_PROPERTY = "type";
     public static final String ISOLATION_PROPERTY = "isolation";
@@ -337,7 +337,7 @@ public class FBConnectionProperties implements FirebirdConnectionProperties, Ser
     public void setSoTimeout(int soTimeout) {
         setIntProperty(SO_TIMEOUT, soTimeout);
     }
-    
+
     @Override
     public int getConnectTimeout() {
         return getIntProperty(CONNECT_TIMEOUT);
@@ -386,9 +386,14 @@ public class FBConnectionProperties implements FirebirdConnectionProperties, Ser
         setNonStandardProperty(keyStr, valueStr);
     }
 
+    /**
+     * @deprecated TODO Usage of this method should be removed or revised as current use of default encoding is not correct.
+     */
+    @Deprecated
     public DatabaseParameterBuffer getDatabaseParameterBuffer() throws SQLException {
         // TODO Instance creation should be done through FbDatabase or database factory?
-        DatabaseParameterBuffer dpb = new DatabaseParameterBufferImp();
+        DatabaseParameterBuffer dpb =
+                new DatabaseParameterBufferImp(EncodingFactory.getDefaultInstance().getDefaultEncoding());
         for (Map.Entry<String, Object> entry : properties.entrySet()) {
             String propertyName = entry.getKey();
             Object value = entry.getValue();

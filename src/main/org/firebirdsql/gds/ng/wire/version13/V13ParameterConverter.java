@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
@@ -20,76 +18,78 @@
  */
 package org.firebirdsql.gds.ng.wire.version13;
 
-import org.firebirdsql.encodings.Encoding;
-import org.firebirdsql.encodings.IEncodingFactory;
-import org.firebirdsql.gds.DatabaseParameterBuffer;
-import org.firebirdsql.gds.ISCConstants;
-import org.firebirdsql.gds.ServiceParameterBuffer;
-import org.firebirdsql.gds.impl.DatabaseParameterBufferImp;
-import org.firebirdsql.gds.ng.IConnectionProperties;
-import org.firebirdsql.gds.ng.IServiceProperties;
-import org.firebirdsql.gds.ng.wire.auth.LegacyAuthenticationPlugin;
-import org.firebirdsql.gds.ng.wire.auth.UnixCrypt;
+import org.firebirdsql.gds.*;
+import org.firebirdsql.gds.ng.AbstractConnection;
+import org.firebirdsql.gds.ng.IAttachProperties;
+import org.firebirdsql.gds.ng.wire.WireConnection;
+import org.firebirdsql.gds.ng.wire.WireDatabaseConnection;
+import org.firebirdsql.gds.ng.wire.WireServiceConnection;
+import org.firebirdsql.gds.ng.wire.auth.ClientAuthBlock;
 import org.firebirdsql.gds.ng.wire.version12.V12ParameterConverter;
 
-import javax.xml.bind.DatatypeConverter;
-
-import static org.firebirdsql.gds.ISCConstants.*;
+import java.sql.SQLException;
+import java.util.ResourceBundle;
 
 /**
  * Implementation of {@link org.firebirdsql.gds.ng.ParameterConverter} for the version 13 protocol.
  * <p>
- * Adds support for {@code isc_dpb_utf8_filename} and encodes all string properties in UTF-8.
+ * Adds support for the new authentication model of the V13 protocol.
  * </p>
  *
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @since 3.0
  */
 public class V13ParameterConverter extends V12ParameterConverter {
-    @Override
-    public DatabaseParameterBuffer toDatabaseParameterBuffer(IConnectionProperties props,
-            IEncodingFactory encodingFactory) {
-        final DatabaseParameterBuffer dpb = new DatabaseParameterBufferImp();
-        final Encoding stringEncoding = encodingFactory.getEncodingForFirebirdName("UTF8");
 
-        dpb.addArgument(ISCConstants.isc_dpb_utf8_filename, 1);
+    private static final String JAYBIRD_VERSION;
 
-        // Map standard properties
-        populateDefaultProperties(props, encodingFactory, dpb, stringEncoding);
-
-        // Map non-standard properties
-        populateNonStandardProperties(props, dpb, stringEncoding);
-
-        return dpb;
+    static {
+        String jaybirdVersion;
+        try {
+            ResourceBundle resourceBundle = ResourceBundle.getBundle("org.firebirdsql.version");
+            jaybirdVersion = resourceBundle.getString("jaybird.version.display");
+        } catch (Exception ex) {
+            // Resource bundle missing, or key missing
+            jaybirdVersion = "Jaybird (version unknown)";
+        }
+        JAYBIRD_VERSION = jaybirdVersion;
     }
 
     @Override
-    protected void populateAuthenticationProperties(final IConnectionProperties props, final IEncodingFactory encodingFactory,
-            final DatabaseParameterBuffer dpb, final Encoding encoding) {
-        if (props.getUser() != null) {
-            dpb.addArgument(isc_dpb_user_name, props.getUser(), encoding);
-        }
-        if (props.getPassword() != null && props.getAuthData() == null) {
-            dpb.addArgument(isc_dpb_password_enc, UnixCrypt.crypt(props.getPassword(),
-                    LegacyAuthenticationPlugin.LEGACY_PASSWORD_SALT).substring(2, 13), encoding);
-        }
-        if (props.getAuthData() != null) {
-            dpb.addArgument(isc_dpb_specific_auth_data, DatatypeConverter.printHexBinary(props.getAuthData()), encoding);
-        }
+    protected void populateDefaultProperties(final WireDatabaseConnection connection,
+            final DatabaseParameterBuffer dpb) throws SQLException {
+        super.populateDefaultProperties(connection, dpb);
+
+        dpb.addArgument(ISCConstants.isc_dpb_client_version, JAYBIRD_VERSION);
     }
 
     @Override
-    protected void populateAuthenticationProperties(final IServiceProperties props, final IEncodingFactory encodingFactory,
-            final ServiceParameterBuffer spb, final Encoding encoding) {
+    protected void populateAuthenticationProperties(final AbstractConnection connection,
+            final ConnectionParameterBuffer pb) throws SQLException {
+        if (!(connection instanceof WireConnection)) {
+            throw new IllegalArgumentException(
+                    "populateAuthenticationProperties should have been called with a WireConnection instance, was "
+                            + connection.getClass().getName());
+        }
+        IAttachProperties props = connection.getAttachProperties();
+        ParameterTagMapping tagMapping = pb.getTagMapping();
         if (props.getUser() != null) {
-            spb.addArgument(isc_spb_user_name, props.getUser(), encoding);
+            pb.addArgument(tagMapping.getUserNameTag(), props.getUser());
         }
-        if (props.getPassword() != null) {
-            spb.addArgument(isc_spb_password_enc, UnixCrypt.crypt(props.getPassword(),
-                    LegacyAuthenticationPlugin.LEGACY_PASSWORD_SALT).substring(2, 13), encoding);
+
+        ClientAuthBlock clientAuthBlock = ((WireConnection) connection).getClientAuthBlock();
+        if (clientAuthBlock.isAuthComplete()) {
+            return;
         }
-        if (props.getAuthData() != null) {
-            spb.addArgument(isc_spb_specific_auth_data, DatatypeConverter.printHexBinary(props.getAuthData()), encoding);
-        }
+
+        clientAuthBlock.authFillParametersBlock(pb);
+    }
+
+    @Override
+    protected void populateDefaultProperties(final WireServiceConnection connection,
+            final ServiceParameterBuffer spb) throws SQLException {
+        super.populateDefaultProperties(connection, spb);
+
+        spb.addArgument(ISCConstants.isc_spb_client_version, JAYBIRD_VERSION);
     }
 }

@@ -20,6 +20,7 @@ package org.firebirdsql.gds.ng.wire;
 
 import org.firebirdsql.encodings.EncodingFactory;
 import org.firebirdsql.encodings.IEncodingFactory;
+import org.firebirdsql.gds.ClumpletReader;
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.VaxEncoding;
 import org.firebirdsql.gds.impl.wire.WireProtocolConstants;
@@ -30,6 +31,7 @@ import org.firebirdsql.gds.ng.FbExceptionBuilder;
 import org.firebirdsql.gds.ng.IAttachProperties;
 import org.firebirdsql.gds.ng.IConnectionProperties;
 import org.firebirdsql.gds.ng.wire.auth.ClientAuthBlock;
+import org.firebirdsql.gds.ng.wire.crypt.KnownServerKey;
 import org.firebirdsql.logging.Logger;
 import org.firebirdsql.logging.LoggerFactory;
 
@@ -43,6 +45,8 @@ import java.security.AccessController;
 import java.security.PrivilegedAction;
 import java.sql.SQLException;
 import java.sql.SQLTimeoutException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
@@ -66,6 +70,7 @@ public abstract class WireConnection<T extends IAttachProperties<T>, C extends F
     private static final Logger log = LoggerFactory.getLogger(WireConnection.class);
 
     private final ClientAuthBlock clientAuthBlock;
+    private final List<KnownServerKey> knownServerKeys = new ArrayList<>();
     private Socket socket;
     private ProtocolCollection protocols;
     private int protocolVersion;
@@ -137,6 +142,10 @@ public abstract class WireConnection<T extends IAttachProperties<T>, C extends F
 
     public final int getProtocolMinimumType() {
         return protocolMinimumType;
+    }
+
+    public final ClientAuthBlock getClientAuthBlock() {
+        return clientAuthBlock;
     }
 
     /**
@@ -238,34 +247,6 @@ public abstract class WireConnection<T extends IAttachProperties<T>, C extends F
             xdrIn = new XdrInputStream(socket.getInputStream());
             xdrOut = new XdrOutputStream(socket.getOutputStream());
 
-            clientAuthBlock.authenticateStep0();
-
-            // Here we identify the user to the engine.
-            // This may or may not be used as login info to a database.
-            final byte[] userBytes = getSystemUserName().getBytes(StandardCharsets.UTF_8);
-            final byte[] hostBytes = getSystemHostName().getBytes(StandardCharsets.UTF_8);
-
-            ByteArrayOutputStream userId = new ByteArrayOutputStream();
-
-            clientAuthBlock.writePluginDataTo(userId);
-
-            // TODO Make configurable using connection property
-            int wireCrypt = WIRE_CRYPT_DISABLED;
-            userId.write(CNCT_client_crypt);
-            VaxEncoding.encodeVaxInteger(userId, wireCrypt);
-
-            userId.write(CNCT_user);
-            int userLength = Math.min(userBytes.length, 255);
-            userId.write(userLength);
-            userId.write(userBytes, 0, userLength);
-
-            userId.write(CNCT_host);
-            int hostLength = Math.min(hostBytes.length, 255);
-            userId.write(hostLength);
-            userId.write(hostBytes, 0, hostLength);
-            userId.write(CNCT_user_verification);
-            userId.write(0);
-
             xdrOut.writeInt(op_connect);
             xdrOut.writeInt(op_attach);
             xdrOut.writeInt(CONNECT_VERSION3);
@@ -273,7 +254,7 @@ public abstract class WireConnection<T extends IAttachProperties<T>, C extends F
 
             xdrOut.writeString(getAttachObjectName(), getEncoding());
             xdrOut.writeInt(protocols.getProtocolCount()); // Count of protocols understood
-            xdrOut.writeBuffer(userId.toByteArray());
+            xdrOut.writeBuffer(createUserIdentificationBlock());
 
             for (ProtocolDescriptor protocol : protocols) {
                 xdrOut.writeInt(protocol.getVersion()); // Protocol version
@@ -303,21 +284,18 @@ public abstract class WireConnection<T extends IAttachProperties<T>, C extends F
 
                     clientAuthBlock.setServerData(data);
                     clientAuthBlock.setAuthComplete(isAuthenticated == 1);
-                    // TODO Equivalent of port->addServerKeys(&packet->p_acpd.p_acpt_keys);
+                    addServerKeys(serverKeys);
                     clientAuthBlock.resetClient(serverKeys);
-
-                    // TODO Temporary workaround:
-                    clientAuthBlock.authenticate();
+                    clientAuthBlock.switchPlugin(acceptPacket.p_acpt_plugin);
                 } else {
                     clientAuthBlock.resetClient(null);
                 }
 
                 ProtocolDescriptor descriptor = protocols.getProtocolDescriptor(protocolVersion);
                 if (descriptor == null) {
-                    throw new SQLException(
-                            String.format(
-                                    "Unsupported or unexpected protocol version %d connecting to database %s. Supported version(s): %s",
-                                    protocolVersion, getServerName(), protocols.getProtocolVersions()));
+                    throw new SQLException(String.format(
+                            "Unsupported or unexpected protocol version %d connecting to database %s. Supported version(s): %s",
+                            protocolVersion, getServerName(), protocols.getProtocolVersions()));
                 }
                 C connectionHandle = createConnectionHandle(descriptor);
                 if (operation == op_cond_accept) {
@@ -349,6 +327,63 @@ public abstract class WireConnection<T extends IAttachProperties<T>, C extends F
         }
     }
 
+    private byte[] createUserIdentificationBlock() throws IOException, SQLException {
+        // Here we identify the user to the engine.
+        // This may or may not be used as login info to a database.
+        final byte[] userBytes = getSystemUserName().getBytes(StandardCharsets.UTF_8);
+        final byte[] hostBytes = getSystemHostName().getBytes(StandardCharsets.UTF_8);
+
+        ByteArrayOutputStream userId = new ByteArrayOutputStream();
+
+        clientAuthBlock.authenticateStep0();
+        clientAuthBlock.writePluginDataTo(userId);
+
+        // TODO Make configurable using connection property
+        int wireCrypt = WIRE_CRYPT_DISABLED;
+        userId.write(CNCT_client_crypt);
+        VaxEncoding.encodeVaxInteger(userId, wireCrypt);
+
+        userId.write(CNCT_user);
+        int userLength = Math.min(userBytes.length, 255);
+        userId.write(userLength);
+        userId.write(userBytes, 0, userLength);
+
+        userId.write(CNCT_host);
+        int hostLength = Math.min(hostBytes.length, 255);
+        userId.write(hostLength);
+        userId.write(hostBytes, 0, hostLength);
+        userId.write(CNCT_user_verification);
+        userId.write(0);
+        return userId.toByteArray();
+    }
+
+    private void addServerKeys(byte[] serverKeys) throws SQLException {
+        final ClumpletReader newKeys = new ClumpletReader(ClumpletReader.Kind.UnTagged, serverKeys);
+        for (newKeys.rewind(); !newKeys.isEof(); newKeys.moveNext()) {
+            if (newKeys.getClumpTag() == TAG_KNOWN_PLUGINS) {
+                continue;
+            }
+
+            int currentTag = newKeys.getClumpTag();
+            if (currentTag != TAG_KEY_TYPE) {
+                throw new SQLException("Unexpected tag type: " + currentTag);
+            }
+            String keyType = newKeys.getString(StandardCharsets.US_ASCII);
+
+            newKeys.moveNext();
+            if (newKeys.isEof()) {
+                break;
+            }
+            currentTag = newKeys.getClumpTag();
+            if (currentTag != TAG_KEY_PLUGINS) {
+                throw new SQLException("Unexpected tag type: " + currentTag);
+            }
+
+            String keyPlugins = newKeys.getString(StandardCharsets.US_ASCII);
+            knownServerKeys.add(new KnownServerKey(keyType, keyPlugins));
+        }
+    }
+
     private AbstractWireOperations getDefaultWireOperations() {
         ProtocolDescriptor protocolDescriptor = protocols
                 .getProtocolDescriptor(WireProtocolConstants.PROTOCOL_VERSION10);
@@ -357,7 +392,8 @@ public abstract class WireConnection<T extends IAttachProperties<T>, C extends F
     }
 
     private void authReceiveResponse(AcceptPacket acceptPacket, C attachmentHandle) throws IOException, SQLException {
-        assert acceptPacket == null || acceptPacket.operation == op_cond_accept : "Unexpected operation in AcceptPacket";
+        assert acceptPacket == null || acceptPacket.operation == op_cond_accept
+                : "Unexpected operation in AcceptPacket";
         try {
             while (true) {
                 String pluginName;
@@ -367,7 +403,7 @@ public abstract class WireConnection<T extends IAttachProperties<T>, C extends F
                     pluginName = acceptPacket.p_acpt_plugin;
                     // TODO: equivalent of port->addServerKeys(&packet->p_acpd.p_acpt_keys);
                     log.debug(String.format("authReceiveResponse: cond_accept data=%d pluginName=%d '%s'",
-                            data.length, pluginName.length(), pluginName));
+                            data.length, pluginName != null ? pluginName.length() : null, pluginName));
                     // TODO handle compression
                     acceptPacket = null;
                 } else {

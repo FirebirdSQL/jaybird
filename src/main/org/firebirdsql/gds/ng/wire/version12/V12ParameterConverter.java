@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
@@ -21,12 +19,16 @@
 package org.firebirdsql.gds.ng.wire.version12;
 
 import org.firebirdsql.encodings.Encoding;
-import org.firebirdsql.encodings.IEncodingFactory;
 import org.firebirdsql.gds.DatabaseParameterBuffer;
 import org.firebirdsql.gds.ISCConstants;
+import org.firebirdsql.gds.ServiceParameterBuffer;
 import org.firebirdsql.gds.impl.DatabaseParameterBufferImp;
-import org.firebirdsql.gds.ng.IConnectionProperties;
+import org.firebirdsql.gds.impl.ServiceParameterBufferImp;
+import org.firebirdsql.gds.ng.wire.WireDatabaseConnection;
+import org.firebirdsql.gds.ng.wire.WireServiceConnection;
 import org.firebirdsql.gds.ng.wire.version11.V11ParameterConverter;
+
+import static org.firebirdsql.gds.ISCConstants.isc_spb_current_version;
 
 /**
  * Implementation of {@link org.firebirdsql.gds.ng.ParameterConverter} for the version 12 protocol.
@@ -38,20 +40,19 @@ import org.firebirdsql.gds.ng.wire.version11.V11ParameterConverter;
  * @since 3.0
  */
 public class V12ParameterConverter extends V11ParameterConverter {
-    @Override
-    public DatabaseParameterBuffer toDatabaseParameterBuffer(IConnectionProperties props,
-            IEncodingFactory encodingFactory) {
-        final DatabaseParameterBuffer dpb = new DatabaseParameterBufferImp();
-        final Encoding stringEncoding = encodingFactory.getEncodingForFirebirdName("UTF8");
 
+    protected DatabaseParameterBuffer createDatabaseParameterBuffer(WireDatabaseConnection connection) {
+        final Encoding stringEncoding = connection.getEncodingFactory().getEncodingForFirebirdName("UTF8");
+        DatabaseParameterBuffer dpb = new DatabaseParameterBufferImp(stringEncoding);
         dpb.addArgument(ISCConstants.isc_dpb_utf8_filename, 1);
-
-        // Map standard properties
-        populateDefaultProperties(props, encodingFactory, dpb, stringEncoding);
-
-        // Map non-standard properties
-        populateNonStandardProperties(props, dpb, stringEncoding);
-
         return dpb;
+    }
+
+    protected ServiceParameterBuffer createServiceParameterBuffer(WireServiceConnection connection) {
+        final Encoding stringEncoding = connection.getEncodingFactory().getEncodingForFirebirdName("UTF8");
+        ServiceParameterBuffer spb = new ServiceParameterBufferImp(stringEncoding);
+        spb.addArgument(isc_spb_current_version);
+        spb.addArgument(ISCConstants.isc_dpb_utf8_filename, 1);
+        return spb;
     }
 }
