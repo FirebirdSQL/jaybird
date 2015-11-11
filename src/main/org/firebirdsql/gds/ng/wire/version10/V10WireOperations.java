@@ -48,7 +48,9 @@ public class V10WireOperations extends AbstractWireOperations {
     @Override
     public void authReceiveResponse(FbWireAttachment.AcceptPacket acceptPacket,
             ProcessAttachCallback processAttachCallback) throws IOException, SQLException {
-        // TODO Externalize + SQL state
-        throw new SQLException("Unsupported or unexpected call to authReceiveResponse");
+        assert acceptPacket == null : "Should not be called with non-null acceptPacket in V12 or earlier";
+        GenericResponse response = readGenericResponse(null);
+        getClientAuthBlock().setAuthComplete(true);
+        processAttachCallback.processAttachResponse(response);
     }
 }

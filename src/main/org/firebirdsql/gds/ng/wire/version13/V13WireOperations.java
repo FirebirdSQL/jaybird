@@ -59,94 +59,92 @@ public class V13WireOperations extends V11WireOperations {
         final XdrInputStream xdrIn = getXdrIn();
         final XdrOutputStream xdrOut = getXdrOut();
         final ClientAuthBlock clientAuthBlock = getClientAuthBlock();
-        try {
-            while (true) {
-                String pluginName;
-                byte[] data;
-                if (acceptPacket != null) {
-                    data = acceptPacket.p_acpt_data;
-                    pluginName = acceptPacket.p_acpt_plugin;
-                    addServerKeys(acceptPacket.p_acpt_keys);
-                    log.debug(String.format("authReceiveResponse: cond_accept data=%d pluginName=%d '%s'",
-                            data.length, pluginName != null ? pluginName.length() : null, pluginName));
-                    // TODO handle compression
-                    acceptPacket = null;
-                } else {
-                    int operation = readNextOperation();
-                    switch (operation) {
-                    case op_trusted_auth:
-                        xdrIn.readBuffer(); // p_trau_data
-                        // TODO Externalize message + sql state
-                        throw new SQLException("Trusted authentication not supported");
-                    case op_cont_auth:
-                        data = xdrIn.readBuffer(); // p_data
-                        pluginName = xdrIn.readString(getEncoding()); //p_name
-                        xdrIn.readBuffer(); // p_list (ignore?)
-                        addServerKeys(xdrIn.readBuffer()); // p_keys
-                        log.debug(String.format("authReceiveResponse: cont_auth data=%d pluginName=%d '%s'",
-                                data.length, pluginName.length(), pluginName));
-                        break;
-                    case op_cond_accept:
-                        // Note this is the equivalent of handling the acceptPacket != null above
-                        xdrIn.readInt(); // p_acpt_version
-                        xdrIn.readInt(); // p_acpt_architecture
-                        xdrIn.readInt(); // p_acpt_type
-                        data = xdrIn.readBuffer(); // p_acpt_data
-                        pluginName = xdrIn.readString(getEncoding()); // p_acpt_plugin
-                        xdrIn.readInt(); // p_acpt_authenticated
-                        addServerKeys(xdrIn.readBuffer()); //p_acpt_keys
-                        log.debug(String.format("authReceiveResponse: cond_accept data=%d pluginName=%d '%s'",
-                                data.length, pluginName.length(), pluginName));
-                        // TODO handle compression
-                        break;
-
-                    default:
-                        GenericResponse response = readGenericResponse(null);
-                        clientAuthBlock.setAuthComplete(true);
-                        processAttachCallback.processAttachResponse(response);
-
-                        // TODO equivalent of cBlock.tryNewKeys(port);
-                        return;
-                    }
-                }
-
-                if (pluginName != null && pluginName.length() > 0
-                        && Objects.equals(pluginName, clientAuthBlock.getCurrentPluginName())) {
-                    pluginName = null;
-                }
-
-                if (pluginName != null && pluginName.length() > 0) {
-                    if (!clientAuthBlock.switchPlugin(pluginName)) {
-                        break;
-                    }
-                }
-
-                if (!clientAuthBlock.hasPlugin()) {
+        while (true) {
+            String pluginName;
+            byte[] data;
+            if (acceptPacket != null) {
+                data = acceptPacket.p_acpt_data;
+                pluginName = acceptPacket.p_acpt_plugin;
+                addServerKeys(acceptPacket.p_acpt_keys);
+                log.debug(String.format("authReceiveResponse: cond_accept data=%d pluginName=%d '%s'",
+                        data.length, pluginName != null ? pluginName.length() : null, pluginName));
+                // TODO handle compression
+                acceptPacket = null;
+            } else {
+                int operation = readNextOperation();
+                switch (operation) {
+                case op_trusted_auth:
+                    xdrIn.readBuffer(); // p_trau_data
+                    // TODO Externalize message + sql state
+                    throw new SQLException("Trusted authentication not supported");
+                case op_cont_auth:
+                    data = xdrIn.readBuffer(); // p_data
+                    pluginName = xdrIn.readString(getEncoding()); //p_name
+                    xdrIn.readBuffer(); // p_list (ignore?)
+                    addServerKeys(xdrIn.readBuffer()); // p_keys
+                    log.debug(String.format("authReceiveResponse: cont_auth data=%d pluginName=%d '%s'",
+                            data.length, pluginName.length(), pluginName));
                     break;
-                }
+                case op_cond_accept:
+                    // Note this is the equivalent of handling the acceptPacket != null above
+                    xdrIn.readInt(); // p_acpt_version
+                    xdrIn.readInt(); // p_acpt_architecture
+                    xdrIn.readInt(); // p_acpt_type
+                    data = xdrIn.readBuffer(); // p_acpt_data
+                    pluginName = xdrIn.readString(getEncoding()); // p_acpt_plugin
+                    xdrIn.readInt(); // p_acpt_authenticated
+                    addServerKeys(xdrIn.readBuffer()); //p_acpt_keys
+                    log.debug(String.format("authReceiveResponse: cond_accept data=%d pluginName=%d '%s'",
+                            data.length, pluginName.length(), pluginName));
+                    // TODO handle compression
+                    break;
 
-                clientAuthBlock.setServerData(data);
-                log.debug(String.format("receiveResponse: authenticate(%s)", clientAuthBlock.getCurrentPluginName()));
-                clientAuthBlock.authenticate();
+                case op_response:
+                    GenericResponse response = (GenericResponse) readOperationResponse(operation, null);
+                    clientAuthBlock.setAuthComplete(true);
+                    processAttachCallback.processAttachResponse(response);
 
-                xdrOut.write(op_cont_auth);
-                // TODO Move to ClientAuthBlock?
-                xdrOut.writeBuffer(clientAuthBlock.getClientData()); // p_data
-                xdrOut.writeString(clientAuthBlock.getCurrentPluginName(), getEncoding()); // p_name
-                if (clientAuthBlock.isFirstTime()) {
-                    xdrOut.writeString(clientAuthBlock.getPluginNames(), getEncoding()); // p_list
-                    clientAuthBlock.setFirstTime(false);
-                } else {
-                    xdrOut.writeBuffer(null); // p_list
+                    // TODO equivalent of cBlock.tryNewKeys(port);
+                    return;
+                default:
+                    throw new SQLException(String.format("Unsupported operation code: %d", operation));
                 }
-                xdrOut.writeBuffer(null); // p_keys
-                xdrOut.flush();
             }
 
-            // If we have exited from the cycle, this mean auth failed
-            throw new FbExceptionBuilder().exception(ISCConstants.isc_login).toFlatSQLException();
-        } catch (SQLException ex) {
-            throw new FbExceptionBuilder().exception(ISCConstants.isc_login).cause(ex).toFlatSQLException();
+            if (pluginName != null && pluginName.length() > 0
+                    && Objects.equals(pluginName, clientAuthBlock.getCurrentPluginName())) {
+                pluginName = null;
+            }
+
+            if (pluginName != null && pluginName.length() > 0) {
+                if (!clientAuthBlock.switchPlugin(pluginName)) {
+                    break;
+                }
+            }
+
+            if (!clientAuthBlock.hasPlugin()) {
+                break;
+            }
+
+            clientAuthBlock.setServerData(data);
+            log.debug(String.format("receiveResponse: authenticate(%s)", clientAuthBlock.getCurrentPluginName()));
+            clientAuthBlock.authenticate();
+
+            xdrOut.write(op_cont_auth);
+            // TODO Move to ClientAuthBlock?
+            xdrOut.writeBuffer(clientAuthBlock.getClientData()); // p_data
+            xdrOut.writeString(clientAuthBlock.getCurrentPluginName(), getEncoding()); // p_name
+            if (clientAuthBlock.isFirstTime()) {
+                xdrOut.writeString(clientAuthBlock.getPluginNames(), getEncoding()); // p_list
+                clientAuthBlock.setFirstTime(false);
+            } else {
+                xdrOut.writeBuffer(null); // p_list
+            }
+            xdrOut.writeBuffer(null); // p_keys
+            xdrOut.flush();
         }
+
+        // If we have exited from the cycle, this mean auth failed
+        throw new FbExceptionBuilder().exception(ISCConstants.isc_login).toFlatSQLException();
     }
 }

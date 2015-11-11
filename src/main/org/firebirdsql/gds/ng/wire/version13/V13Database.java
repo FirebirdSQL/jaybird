@@ -18,10 +18,8 @@
  */
 package org.firebirdsql.gds.ng.wire.version13;
 
-import org.firebirdsql.gds.ng.wire.GenericResponse;
 import org.firebirdsql.gds.ng.wire.ProtocolDescriptor;
 import org.firebirdsql.gds.ng.wire.WireDatabaseConnection;
-import org.firebirdsql.gds.ng.wire.auth.ClientAuthBlock;
 import org.firebirdsql.gds.ng.wire.version12.V12Database;
 
 /**
@@ -30,8 +28,6 @@ import org.firebirdsql.gds.ng.wire.version12.V12Database;
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  */
 public class V13Database extends V12Database {
-
-    private final ClientAuthBlock clientAuthBlock;
 
     /**
      * Creates a V13Database instance.
@@ -45,11 +41,6 @@ public class V13Database extends V12Database {
     protected V13Database(WireDatabaseConnection connection,
             ProtocolDescriptor descriptor) {
         super(connection, descriptor);
-        clientAuthBlock = connection.getClientAuthBlock();
     }
 
-    protected void processAttachOrCreateResponse(GenericResponse genericResponse) {
-        super.processAttachOrCreateResponse(genericResponse);
-        clientAuthBlock.setAuthComplete(true);
-    }
 }

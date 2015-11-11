@@ -148,18 +148,16 @@ public abstract class AbstractWireOperations implements FbWireOperations {
         return response;
     }
 
-    /**
-     * Reads the response from the server.
-     *
-     * @param warningCallback
-     *         Callback object for signalling warnings, <code>null</code> to register warning on the default callback
-     * @return Response
-     * @throws SQLException
-     *         For errors returned from the server, or when attempting to
-     *         read
-     * @throws IOException
-     *         For errors reading the response from the connection.
-     */
+    @Override
+    public final Response readOperationResponse(int operationCode, WarningMessageCallback warningCallback)
+            throws SQLException, IOException {
+        Response response = processOperation(operationCode);
+        processResponseWarnings(response, warningCallback);
+        processResponse(response);
+        return response;
+    }
+
+    @Override
     public final Response readSingleResponse(WarningMessageCallback warningCallback) throws SQLException, IOException {
         Response response = processOperation(readNextOperation());
         processResponseWarnings(response, warningCallback);

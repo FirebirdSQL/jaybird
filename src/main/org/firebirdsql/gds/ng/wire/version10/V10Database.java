@@ -132,7 +132,7 @@ public class V10Database extends AbstractFbWireDatabase implements FbWireDatabas
                     throw new FbExceptionBuilder().exception(ISCConstants.isc_net_write_err).cause(e).toSQLException();
                 }
                 try {
-                    processAttachOrCreateResponse(readGenericResponse(null));
+                    authReceiveResponse(null);
                 } catch (IOException e) {
                     throw new FbExceptionBuilder().exception(ISCConstants.isc_net_read_err).cause(e).toSQLException();
                 }

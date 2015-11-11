@@ -65,6 +65,21 @@ public interface FbWireOperations {
     Response readResponse(WarningMessageCallback callback) throws SQLException, IOException;
 
     /**
+     * Reads the response from the server when the operation code has already been read.
+     *
+     * @param operationCode The operation code
+     * @param callback
+     *         Callback object for warnings, <code>null</code> for default callback
+     * @return {@link Response} read.
+     * @throws SQLException
+     *         For errors returned from the server, or when attempting to read
+     * @throws IOException
+     *         For errors reading the response from the connection.
+     * @see #readResponse(WarningMessageCallback)
+     */
+    Response readOperationResponse(int operationCode, WarningMessageCallback callback) throws SQLException, IOException;
+
+    /**
      * Convenience method to read a Response to a GenericResponse
      *
      * @param callback
