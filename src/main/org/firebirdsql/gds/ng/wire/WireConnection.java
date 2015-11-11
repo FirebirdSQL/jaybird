@@ -47,7 +47,6 @@ import java.sql.SQLException;
 import java.sql.SQLTimeoutException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
 import static org.firebirdsql.gds.impl.wire.WireProtocolConstants.*;
@@ -267,7 +266,7 @@ public abstract class WireConnection<T extends IAttachProperties<T>, C extends F
             xdrOut.flush();
             final int operation = readNextOperation();
             if (operation == op_accept || operation == op_cond_accept || operation == op_accept_data) {
-                AcceptPacket acceptPacket = new AcceptPacket();
+                FbWireAttachment.AcceptPacket acceptPacket = new FbWireAttachment.AcceptPacket();
                 acceptPacket.operation = operation;
                 protocolVersion = xdrIn.readInt(); // Protocol version
                 protocolArchitecture = xdrIn.readInt(); // Architecture for protocol
@@ -299,7 +298,7 @@ public abstract class WireConnection<T extends IAttachProperties<T>, C extends F
                 }
                 C connectionHandle = createConnectionHandle(descriptor);
                 if (operation == op_cond_accept) {
-                    authReceiveResponse(acceptPacket, connectionHandle);
+                   connectionHandle.authReceiveResponse(acceptPacket);
                 }
                 return connectionHandle;
             } else {
@@ -357,7 +356,7 @@ public abstract class WireConnection<T extends IAttachProperties<T>, C extends F
         return userId.toByteArray();
     }
 
-    private void addServerKeys(byte[] serverKeys) throws SQLException {
+    void addServerKeys(byte[] serverKeys) throws SQLException {
         final ClumpletReader newKeys = new ClumpletReader(ClumpletReader.Kind.UnTagged, serverKeys);
         for (newKeys.rewind(); !newKeys.isEof(); newKeys.moveNext()) {
             if (newKeys.getClumpTag() == TAG_KNOWN_PLUGINS) {
@@ -389,106 +388,6 @@ public abstract class WireConnection<T extends IAttachProperties<T>, C extends F
                 .getProtocolDescriptor(WireProtocolConstants.PROTOCOL_VERSION10);
         return (AbstractWireOperations) protocolDescriptor
                 .createWireOperations(this, null, this);
-    }
-
-    private void authReceiveResponse(AcceptPacket acceptPacket, C attachmentHandle) throws IOException, SQLException {
-        assert acceptPacket == null || acceptPacket.operation == op_cond_accept
-                : "Unexpected operation in AcceptPacket";
-        try {
-            while (true) {
-                String pluginName;
-                byte[] data;
-                if (acceptPacket != null) {
-                    data = acceptPacket.p_acpt_data;
-                    pluginName = acceptPacket.p_acpt_plugin;
-                    // TODO: equivalent of port->addServerKeys(&packet->p_acpd.p_acpt_keys);
-                    log.debug(String.format("authReceiveResponse: cond_accept data=%d pluginName=%d '%s'",
-                            data.length, pluginName != null ? pluginName.length() : null, pluginName));
-                    // TODO handle compression
-                    acceptPacket = null;
-                } else {
-                    int operation = readNextOperation();
-                    switch (operation) {
-                    case op_trusted_auth:
-                        // TODO Externalize message + sql state
-                        throw new SQLException("Trusted authentication not supported");
-                    case op_cont_auth:
-                        data = xdrIn.readBuffer();
-                        pluginName = xdrIn.readString(getEncoding());
-                        xdrIn.readBuffer(); // p_list (ignore?)
-                        xdrIn.readBuffer(); // p_keys
-                        // TODO equivalent of port->addServerKeys(&packet->p_auth_cont.p_keys);
-                        log.debug(String.format("authReceiveResponse: cont_auth data=%d pluginName=%d '%s'",
-                                data.length, pluginName.length(), pluginName));
-                        break;
-                    case op_cond_accept:
-                        // Note this is the equivalent of handling the acceptPacket != null above
-                        // TODO Can we ignore these?
-                        xdrIn.readInt(); // p_acpt_version
-                        xdrIn.readInt(); // p_acpt_architecture
-                        xdrIn.readInt(); // p_acpt_type
-                        data = xdrIn.readBuffer();
-                        pluginName = xdrIn.readString(getEncoding());
-                        xdrIn.readInt(); // p_acpt_authenticated
-                        xdrIn.readBuffer(); //p_acpt_keys
-                        // TODO: equivalent of port->addServerKeys(&packet->p_acpd.p_acpt_keys);
-                        log.debug(String.format("authReceiveResponse: cond_accept data=%d pluginName=%d '%s'",
-                                data.length, pluginName.length(), pluginName));
-                        break;
-                    case op_crypt:
-                        // TODO Implement crypt
-                        xdrIn.readBuffer(); // p_plugin
-                        xdrIn.readBuffer(); // p_key
-                        AbstractWireOperations wireOperations = getDefaultWireOperations();
-                        GenericResponse afterCrypt = attachmentHandle.readGenericResponse(null);
-                        // TODO First process key from response, then process key from op_crypt
-                        throw new IllegalStateException("Crypt not yet supported");
-                        //break;
-                    default:
-                        // TODO Receives a generic response (in response to what operation?)
-                        GenericResponse response = attachmentHandle.readGenericResponse(null);
-                        throw new IllegalStateException("Unsupported state for operation " + operation);
-                    }
-                }
-
-                if (pluginName != null && pluginName.length() > 0
-                        && Objects.equals(pluginName, clientAuthBlock.getCurrentPluginName())) {
-                    pluginName = null;
-                }
-
-                if (pluginName != null && pluginName.length() > 0) {
-                    if (!clientAuthBlock.switchPlugin(pluginName)) {
-                        break;
-                    }
-                }
-
-                if (!clientAuthBlock.hasPlugin()) {
-                    break;
-                }
-
-                clientAuthBlock.setServerData(data);
-                log.debug(String.format("receiveResponse: authenticate(%s)", clientAuthBlock.getCurrentPluginName()));
-                clientAuthBlock.authenticate();
-
-                if (protocolVersion >= PROTOCOL_VERSION13) {
-                    xdrOut.write(op_cont_auth);
-                    xdrOut.writeBuffer(clientAuthBlock.getClientData()); // p_data
-                    xdrOut.writeString(clientAuthBlock.getCurrentPluginName(), getEncoding()); // p_name
-                    if (clientAuthBlock.isFirstTime()) {
-                        xdrOut.writeString(clientAuthBlock.getPluginNames(), getEncoding()); // p_list
-                        clientAuthBlock.setFirstTime(false);
-                    } else {
-                        xdrOut.writeBuffer(null); // p_list
-                    }
-                    xdrOut.writeBuffer(null); // p_keys
-                    xdrOut.flush();
-                } else {
-                    throw new SQLException("trusted authentication not supported");
-                }
-            }
-        } catch (SQLException ex) {
-            throw new FbExceptionBuilder().exception(ISCConstants.isc_login).cause(ex).toFlatSQLException();
-        }
     }
 
     /**
@@ -606,11 +505,4 @@ public abstract class WireConnection<T extends IAttachProperties<T>, C extends F
         outputStream.flush();
     }
 
-    // Struct-like class, reduced equivalent of Firebird p_acpd so we can store date for handling op_cond_accept
-    private class AcceptPacket {
-        int operation;
-        byte[] p_acpt_data;
-        String p_acpt_plugin;
-        byte[] p_acpt_keys;
-    }
 }

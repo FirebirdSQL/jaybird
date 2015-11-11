@@ -221,4 +221,14 @@ public class V10Service extends AbstractFbWireService implements FbWireService {
             super.finalize();
         }
     }
+
+    @Override
+    public void authReceiveResponse(AcceptPacket acceptPacket) throws IOException, SQLException {
+        wireOperations.authReceiveResponse(acceptPacket, new FbWireOperations.ProcessAttachCallback() {
+            @Override
+            public void processAttachResponse(GenericResponse response) {
+                V10Service.this.processAttachResponse(response);
+            }
+        });
+    }
 }

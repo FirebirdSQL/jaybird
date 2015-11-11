@@ -169,4 +169,28 @@ public interface FbWireOperations {
      * @see WireConnection#writeDirect(byte[])
      */
     void writeDirect(byte[] data) throws IOException;
+
+    /**
+     * Receive authentication response from the server.
+     * <p>
+     * This method is only relevant for protocol V13 or higher.
+     * </p>
+     *
+     * @param acceptPacket
+     *         Packet with {@code op_cond_accept} data, or {@code null} when the data should be read from the
+     *         connection.
+     * @param processAttachCallback
+     *         Callback for processing the final attach response
+     * @throws IOException
+     *         For errors reading the response from the connection.
+     * @throws SQLException
+     *         For errors returned from the server, or when attempting to
+     *         read.
+     */
+    void authReceiveResponse(FbWireAttachment.AcceptPacket acceptPacket, ProcessAttachCallback processAttachCallback)
+            throws IOException, SQLException;
+
+    interface ProcessAttachCallback {
+        void processAttachResponse(GenericResponse response);
+    }
 }

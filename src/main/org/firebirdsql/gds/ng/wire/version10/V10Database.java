@@ -518,4 +518,14 @@ public class V10Database extends AbstractFbWireDatabase implements FbWireDatabas
     public void enqueueDeferredAction(DeferredAction deferredAction) {
         throw new UnsupportedOperationException("enqueueDeferredAction is not supported in the V10 protocol");
     }
+
+    @Override
+    public void authReceiveResponse(AcceptPacket acceptPacket) throws IOException, SQLException {
+        wireOperations.authReceiveResponse(acceptPacket, new FbWireOperations.ProcessAttachCallback() {
+            @Override
+            public void processAttachResponse(GenericResponse response) {
+                processAttachOrCreateResponse(response);
+            }
+        });
+    }
 }

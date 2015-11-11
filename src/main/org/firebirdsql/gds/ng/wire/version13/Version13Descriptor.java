@@ -28,7 +28,6 @@ import org.firebirdsql.gds.ng.fields.BlrCalculator;
 import org.firebirdsql.gds.ng.wire.*;
 import org.firebirdsql.gds.ng.wire.DefaultBlrCalculator;
 import org.firebirdsql.gds.ng.wire.version10.*;
-import org.firebirdsql.gds.ng.wire.version11.V11WireOperations;
 
 /**
  * The {@link org.firebirdsql.gds.ng.wire.ProtocolDescriptor} for the Firebird version 13 protocol. This version
@@ -91,14 +90,13 @@ public class Version13Descriptor extends AbstractProtocolDescriptor implements P
     }
 
     @Override
-    protected ParameterConverter getParameterConverter() {
+    protected ParameterConverter<WireDatabaseConnection, WireServiceConnection> getParameterConverter() {
         return new V13ParameterConverter();
     }
 
     @Override
     public FbWireOperations createWireOperations(WireConnection<?, ?> connection,
             WarningMessageCallback defaultWarningMessageCallback, Object syncObject) {
-        // TODO Needs V13 version?
-        return new V11WireOperations(connection, defaultWarningMessageCallback, syncObject);
+        return new V13WireOperations(connection, defaultWarningMessageCallback, syncObject);
     }
 }

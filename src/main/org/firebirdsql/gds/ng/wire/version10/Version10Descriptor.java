@@ -97,7 +97,7 @@ public final class Version10Descriptor extends AbstractProtocolDescriptor implem
     }
 
     @Override
-    protected ParameterConverter getParameterConverter() {
+    protected ParameterConverter<WireDatabaseConnection, WireServiceConnection> getParameterConverter() {
         return new V10ParameterConverter();
     }
 }

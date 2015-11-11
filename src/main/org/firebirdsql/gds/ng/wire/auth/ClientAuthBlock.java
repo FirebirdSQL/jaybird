@@ -241,7 +241,7 @@ public final class ClientAuthBlock {
     }
 
     public boolean switchPlugin(String pluginName) {
-        if (hasPlugin() && getCurrentPluginName().equals(pluginName)) {
+        if (hasPlugin() && Objects.equals(getCurrentPluginName(), pluginName)) {
             return false;
         }
         for (Iterator<AuthenticationPluginSpi> iterator = pluginProviders.iterator(); iterator.hasNext(); ) {

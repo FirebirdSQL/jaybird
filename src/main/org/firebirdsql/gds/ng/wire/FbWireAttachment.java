@@ -55,4 +55,30 @@ public interface FbWireAttachment extends FbAttachment {
      */
     GenericResponse readGenericResponse(WarningMessageCallback callback) throws SQLException, IOException;
 
+    /**
+     * Receive authentication response from the server.
+     * <p>
+     * This method is only relevant for protocol V13 or higher.
+     * </p>
+     *
+     * @param acceptPacket
+     *         Packet with {@code op_cond_accept} data, or {@code null} when the data should be read from the
+     *         connection.
+     * @throws IOException
+     *         For errors reading the response from the connection.
+     * @throws SQLException
+     *         For errors returned from the server, or when attempting to
+     *         read.
+     */
+    void authReceiveResponse(AcceptPacket acceptPacket) throws IOException, SQLException;
+
+    /**
+     * Struct-like class, reduced equivalent of Firebird p_acpd so we can store data for handling op_cond_accept.
+     */
+    class AcceptPacket {
+        public int operation;
+        public byte[] p_acpt_data;
+        public String p_acpt_plugin;
+        public byte[] p_acpt_keys;
+    }
 }

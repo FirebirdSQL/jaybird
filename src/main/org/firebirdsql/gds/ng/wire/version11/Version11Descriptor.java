@@ -90,7 +90,7 @@ public final class Version11Descriptor extends AbstractProtocolDescriptor implem
     }
 
     @Override
-    protected ParameterConverter getParameterConverter() {
+    protected ParameterConverter<WireDatabaseConnection, WireServiceConnection> getParameterConverter() {
         return new V11ParameterConverter();
     }
 

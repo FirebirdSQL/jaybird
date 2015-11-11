@@ -24,6 +24,7 @@ import org.firebirdsql.gds.impl.wire.XdrInputStream;
 import org.firebirdsql.gds.impl.wire.XdrOutputStream;
 import org.firebirdsql.gds.ng.FbExceptionBuilder;
 import org.firebirdsql.gds.ng.WarningMessageCallback;
+import org.firebirdsql.gds.ng.wire.auth.ClientAuthBlock;
 import org.firebirdsql.logging.Logger;
 import org.firebirdsql.logging.LoggerFactory;
 
@@ -273,5 +274,13 @@ public abstract class AbstractWireOperations implements FbWireOperations {
 
     protected final Object getSynchronizationObject() {
         return syncObject;
+    }
+
+    protected final void addServerKeys(byte[] serverKeys) throws SQLException {
+        connection.addServerKeys(serverKeys);
+    }
+
+    protected final ClientAuthBlock getClientAuthBlock() {
+        return connection.getClientAuthBlock();
     }
 }

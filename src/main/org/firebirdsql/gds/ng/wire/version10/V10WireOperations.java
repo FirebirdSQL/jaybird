@@ -19,9 +19,10 @@
 package org.firebirdsql.gds.ng.wire.version10;
 
 import org.firebirdsql.gds.ng.WarningMessageCallback;
-import org.firebirdsql.gds.ng.wire.AbstractWireOperations;
-import org.firebirdsql.gds.ng.wire.DeferredAction;
-import org.firebirdsql.gds.ng.wire.WireConnection;
+import org.firebirdsql.gds.ng.wire.*;
+
+import java.io.IOException;
+import java.sql.SQLException;
 
 /**
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
@@ -42,5 +43,12 @@ public class V10WireOperations extends AbstractWireOperations {
     @Override
     public void processDeferredActions() {
         // does nothing in V10 protocol
+    }
+
+    @Override
+    public void authReceiveResponse(FbWireAttachment.AcceptPacket acceptPacket,
+            ProcessAttachCallback processAttachCallback) throws IOException, SQLException {
+        // TODO Externalize + SQL state
+        throw new SQLException("Unsupported or unexpected call to authReceiveResponse");
     }
 }

@@ -91,7 +91,7 @@ public class Version12Descriptor extends AbstractProtocolDescriptor implements P
     }
 
     @Override
-    protected ParameterConverter getParameterConverter() {
+    protected ParameterConverter<WireDatabaseConnection, WireServiceConnection> getParameterConverter() {
         return new V12ParameterConverter();
     }
 

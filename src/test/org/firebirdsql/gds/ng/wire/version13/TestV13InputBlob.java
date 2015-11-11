@@ -18,28 +18,29 @@
  */
 package org.firebirdsql.gds.ng.wire.version13;
 
-import org.firebirdsql.gds.ng.wire.ProtocolDescriptor;
-import org.firebirdsql.gds.ng.wire.WireDatabaseConnection;
-import org.firebirdsql.gds.ng.wire.version12.V12Database;
+import org.firebirdsql.gds.ng.wire.ProtocolCollection;
+import org.firebirdsql.gds.ng.wire.version12.TestV12InputBlob;
+import org.junit.BeforeClass;
+
+import static org.firebirdsql.common.FBTestProperties.getDefaultSupportInfo;
+import static org.junit.Assume.assumeTrue;
 
 /**
- * {@link org.firebirdsql.gds.ng.wire.FbWireDatabase} implementation for the version 13 wire protocol.
+ * Tests for {@link org.firebirdsql.gds.ng.wire.version10.V10InputBlob} in the version 13 protocol
+ * (note: there is no version 13 specific implementation of this class).
  *
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @since 3.0
  */
-public class V13Database extends V12Database {
+public class TestV13InputBlob extends TestV12InputBlob {
 
-    /**
-     * Creates a V13Database instance.
-     *
-     * @param connection
-     *         A WireConnection with an established connection to the server.
-     * @param descriptor
-     *         The ProtocolDescriptor that created this connection (this is
-     *         used for creating further dependent objects).
-     */
-    protected V13Database(WireDatabaseConnection connection,
-            ProtocolDescriptor descriptor) {
-        super(connection, descriptor);
+    @BeforeClass
+    public static void checkDbVersion() {
+        assumeTrue(getDefaultSupportInfo().supportsProtocol(13));
+    }
+
+    @Override
+    protected ProtocolCollection getProtocolCollection() {
+        return ProtocolCollection.create(new Version13Descriptor());
     }
 }
