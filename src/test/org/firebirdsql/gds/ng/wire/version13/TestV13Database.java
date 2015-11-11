@@ -24,8 +24,6 @@ import org.firebirdsql.gds.ng.wire.ProtocolCollection;
 import org.firebirdsql.gds.ng.wire.ProtocolDescriptor;
 import org.firebirdsql.gds.ng.wire.version12.TestV12Database;
 import org.junit.BeforeClass;
-import org.junit.Ignore;
-import org.junit.Test;
 
 import static org.firebirdsql.common.FBTestProperties.getDefaultSupportInfo;
 import static org.junit.Assume.assumeTrue;
@@ -60,9 +58,4 @@ public class TestV13Database extends TestV12Database {
         return V13Database.class;
     }
 
-    @Ignore("Test currently broken for v13")
-    @Test
-    public void testAttach_DoubleAttach() throws Exception {
-        // TODO Fix broken test
-    }
 }
