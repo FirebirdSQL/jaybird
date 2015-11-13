@@ -44,20 +44,30 @@ public class TestV10Transaction extends org.firebirdsql.gds.ng.AbstractTransacti
             EmbeddedGDSFactoryPlugin.EMBEDDED_TYPE_NAME,
             NativeGDSFactoryPlugin.NATIVE_TYPE_NAME);
 
+    private final V10CommonConnectionInfo commonConnectionInfo;
+
+    public TestV10Transaction() {
+        this(new V10CommonConnectionInfo());
+    }
+
+    protected TestV10Transaction(V10CommonConnectionInfo commonConnectionInfo) {
+        this.commonConnectionInfo = commonConnectionInfo;
+    }
+
     @Override
-    protected FbDatabase createDatabase() throws SQLException {
+    protected final FbDatabase createDatabase() throws SQLException {
         WireDatabaseConnection gdsConnection = new WireDatabaseConnection(connectionInfo,
                 EncodingFactory.getDefaultInstance(), getProtocolCollection());
         gdsConnection.socketConnect();
         return gdsConnection.identify();
     }
 
-    protected ProtocolCollection getProtocolCollection() {
-        return ProtocolCollection.create(new Version10Descriptor());
+    protected final ProtocolCollection getProtocolCollection() {
+        return commonConnectionInfo.getProtocolCollection();
     }
 
     @Override
-    protected Class<? extends FbWireDatabase> getExpectedDatabaseType() {
-        return V10Database.class;
+    protected final Class<? extends FbWireDatabase> getExpectedDatabaseType() {
+        return commonConnectionInfo.getExpectedDatabaseType();
     }
 }

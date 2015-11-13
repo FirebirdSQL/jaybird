@@ -45,6 +45,14 @@ import static org.junit.Assert.*;
  */
 public class TestV10InputBlob extends BaseTestV10Blob {
 
+    public TestV10InputBlob() {
+        this(new V10CommonConnectionInfo());
+    }
+
+    protected TestV10InputBlob(V10CommonConnectionInfo commonConnectionInfo) {
+        super(commonConnectionInfo);
+    }
+
     /**
      * Tests retrieval of a blob (what goes in is what comes out).
      */

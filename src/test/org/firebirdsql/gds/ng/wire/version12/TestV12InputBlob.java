@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
@@ -20,7 +18,6 @@
  */
 package org.firebirdsql.gds.ng.wire.version12;
 
-import org.firebirdsql.gds.ng.wire.ProtocolCollection;
 import org.firebirdsql.gds.ng.wire.version11.TestV11InputBlob;
 import org.junit.BeforeClass;
 
@@ -41,8 +38,11 @@ public class TestV12InputBlob extends TestV11InputBlob {
         assumeTrue(getDefaultSupportInfo().supportsProtocol(12));
     }
 
-    @Override
-    protected ProtocolCollection getProtocolCollection() {
-        return ProtocolCollection.create(new Version12Descriptor());
+    public TestV12InputBlob() {
+        this(new V12CommonConnectionInfo());
+    }
+
+    protected TestV12InputBlob(V12CommonConnectionInfo commonConnectionInfo) {
+        super(commonConnectionInfo);
     }
 }

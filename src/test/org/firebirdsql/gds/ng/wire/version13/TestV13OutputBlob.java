@@ -18,7 +18,6 @@
  */
 package org.firebirdsql.gds.ng.wire.version13;
 
-import org.firebirdsql.gds.ng.wire.ProtocolCollection;
 import org.firebirdsql.gds.ng.wire.version12.TestV12OutputBlob;
 import org.junit.BeforeClass;
 
@@ -39,8 +38,11 @@ public class TestV13OutputBlob extends TestV12OutputBlob {
         assumeTrue(getDefaultSupportInfo().supportsProtocol(13));
     }
 
-    @Override
-    protected ProtocolCollection getProtocolCollection() {
-        return ProtocolCollection.create(new Version13Descriptor());
+    public TestV13OutputBlob() {
+        this(new V13CommonConnectionInfo());
+    }
+
+    protected TestV13OutputBlob(V13CommonConnectionInfo commonConnectionInfo) {
+        super(commonConnectionInfo);
     }
 }

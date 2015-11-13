@@ -19,7 +19,6 @@
 package org.firebirdsql.gds.ng.wire.version10;
 
 import org.firebirdsql.common.FBJUnit4TestBase;
-import org.firebirdsql.common.FBTestProperties;
 import org.firebirdsql.common.SimpleServer;
 import org.firebirdsql.common.rules.GdsTypeRule;
 import org.firebirdsql.encodings.EncodingFactory;
@@ -43,8 +42,6 @@ import java.io.OutputStream;
 import java.sql.SQLException;
 import java.util.List;
 
-import static org.firebirdsql.common.FBTestProperties.DB_PASSWORD;
-import static org.firebirdsql.common.FBTestProperties.DB_USER;
 import static org.firebirdsql.gds.impl.wire.WireProtocolConstants.*;
 import static org.junit.Assert.*;
 
@@ -76,35 +73,35 @@ public class TestV10EventHandling extends FBJUnit4TestBase {
             "END";
     //@formatter:on
 
-    protected static final WireDatabaseConnection DUMMY_CONNECTION;
-    static {
-        try {
-            FbConnectionProperties connectionInfo = new FbConnectionProperties();
-            connectionInfo.setEncoding("NONE");
-
-            DUMMY_CONNECTION = new WireDatabaseConnection(connectionInfo);
-        } catch (SQLException e) {
-            throw new ExceptionInInitializerError(e);
-        }
-    }
-
-    private static final ProtocolDescriptor DUMMY_DESCRIPTOR = new Version10Descriptor();
-
-    protected final FbConnectionProperties connectionInfo;
-    private AbstractFbWireDatabase db;
-
-    {
-        connectionInfo = new FbConnectionProperties();
-        connectionInfo.setServerName(FBTestProperties.DB_SERVER_URL);
-        connectionInfo.setPortNumber(FBTestProperties.DB_SERVER_PORT);
-        connectionInfo.setUser(DB_USER);
-        connectionInfo.setPassword(DB_PASSWORD);
-        connectionInfo.setDatabaseName(FBTestProperties.getDatabasePath());
-        connectionInfo.setEncoding("NONE");
-    }
-
     @Rule
     public final ExpectedException expectedException = ExpectedException.none();
+
+    private final V10CommonConnectionInfo commonConnectionInfo;
+    private AbstractFbWireDatabase db;
+
+    public TestV10EventHandling() {
+        this(new V10CommonConnectionInfo());
+    }
+
+    protected TestV10EventHandling(V10CommonConnectionInfo commonConnectionInfo) {
+        this.commonConnectionInfo = commonConnectionInfo;
+    }
+
+    protected final IConnectionProperties getConnectionInfo() {
+        return commonConnectionInfo.getDatabaseConnectionInfo();
+    }
+
+    protected final AbstractFbWireDatabase createDummyDatabase() throws SQLException {
+        return commonConnectionInfo.createDummyDatabase();
+    }
+
+    protected final ProtocolCollection getProtocolCollection() {
+        return commonConnectionInfo.getProtocolCollection();
+    }
+
+    protected final Class<? extends FbWireDatabase> getExpectedDatabaseType() {
+        return commonConnectionInfo.getExpectedDatabaseType();
+    }
 
     @After
     public final void tearDown() throws Exception {
@@ -405,25 +402,13 @@ public class TestV10EventHandling extends FBJUnit4TestBase {
 
 
     private AbstractFbWireDatabase createAndAttachDatabase() throws SQLException {
-        WireDatabaseConnection gdsConnection = new WireDatabaseConnection(connectionInfo,
+        WireDatabaseConnection gdsConnection = new WireDatabaseConnection(getConnectionInfo(),
                 EncodingFactory.getDefaultInstance(), getProtocolCollection());
         gdsConnection.socketConnect();
         final AbstractFbWireDatabase database = (AbstractFbWireDatabase) gdsConnection.identify();
         assertEquals("Unexpected FbWireDatabase implementation", getExpectedDatabaseType(), database.getClass());
         database.attach();
         return database;
-    }
-
-    protected AbstractFbWireDatabase createDummyDatabase() {
-        return new V10Database(DUMMY_CONNECTION, DUMMY_DESCRIPTOR);
-    }
-
-    protected ProtocolCollection getProtocolCollection() {
-        return ProtocolCollection.create(new Version10Descriptor());
-    }
-
-    protected Class<? extends FbWireDatabase> getExpectedDatabaseType() {
-        return V10Database.class;
     }
 
     private FbTransaction getTransaction(FbDatabase db) throws SQLException {

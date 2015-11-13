@@ -20,14 +20,13 @@ package org.firebirdsql.gds.ng.wire.version12;
 
 import org.firebirdsql.encodings.EncodingFactory;
 import org.firebirdsql.gds.ISCConstants;
-import org.firebirdsql.gds.ng.wire.*;
+import org.firebirdsql.gds.ng.wire.FbWireDatabase;
+import org.firebirdsql.gds.ng.wire.WireDatabaseConnection;
 import org.firebirdsql.gds.ng.wire.version11.TestV11Database;
 import org.firebirdsql.management.FBManager;
 import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
-
-import java.sql.SQLException;
 
 import static org.firebirdsql.common.FBTestProperties.*;
 import static org.junit.Assert.assertEquals;
@@ -42,26 +41,17 @@ import static org.junit.Assume.assumeTrue;
  */
 public class TestV12Database extends TestV11Database {
 
-    private static final ProtocolDescriptor DUMMY_DESCRIPTOR = new Version12Descriptor();
-
     @BeforeClass
     public static void checkDbVersion() {
         assumeTrue(getDefaultSupportInfo().supportsProtocol(12));
     }
 
-    @Override
-    protected AbstractFbWireDatabase createDummyDatabase() {
-        return new V12Database(DUMMY_CONNECTION, DUMMY_DESCRIPTOR);
+    public TestV12Database() {
+        this(new V12CommonConnectionInfo());
     }
 
-    @Override
-    protected ProtocolCollection getProtocolCollection() {
-        return ProtocolCollection.create(new Version12Descriptor());
-    }
-
-    @Override
-    protected Class<? extends FbWireDatabase> getExpectedDatabaseType() {
-        return V12Database.class;
+    protected TestV12Database(V12CommonConnectionInfo commonConnectionInfo) {
+        super(commonConnectionInfo);
     }
 
     @Test

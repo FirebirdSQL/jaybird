@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
@@ -20,8 +18,6 @@
  */
 package org.firebirdsql.gds.ng.wire.version11;
 
-import org.firebirdsql.gds.ng.wire.FbWireDatabase;
-import org.firebirdsql.gds.ng.wire.ProtocolCollection;
 import org.firebirdsql.gds.ng.wire.version10.TestV10Statement;
 import org.junit.BeforeClass;
 
@@ -41,14 +37,11 @@ public class TestV11Statement extends TestV10Statement {
         assumeTrue(getDefaultSupportInfo().supportsProtocol(11));
     }
 
-    @Override
-    protected ProtocolCollection getProtocolCollection() {
-        return ProtocolCollection.create(new Version11Descriptor());
+    public TestV11Statement() {
+        this(new V11CommonConnectionInfo());
     }
 
-    @Override
-    protected Class<? extends FbWireDatabase> getExpectedDatabaseType() {
-        return V11Database.class;
+    protected TestV11Statement(V11CommonConnectionInfo commonConnectionInfo) {
+        super(commonConnectionInfo);
     }
-
 }

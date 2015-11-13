@@ -52,6 +52,14 @@ import static org.junit.Assume.assumeTrue;
  */
 public class TestV10OutputBlob extends BaseTestV10Blob {
 
+    public TestV10OutputBlob() {
+        this(new V10CommonConnectionInfo());
+    }
+
+    protected TestV10OutputBlob(V10CommonConnectionInfo commonConnectionInfo) {
+        super(commonConnectionInfo);
+    }
+
     /**
      * Tests storage of a blob (what goes in is what comes out).
      */

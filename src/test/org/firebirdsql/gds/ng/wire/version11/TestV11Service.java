@@ -18,9 +18,7 @@
  */
 package org.firebirdsql.gds.ng.wire.version11;
 
-import org.firebirdsql.gds.ng.wire.*;
 import org.firebirdsql.gds.ng.wire.version10.TestV10Service;
-import org.firebirdsql.gds.ng.wire.version10.V10Service;
 import org.junit.BeforeClass;
 
 import static org.firebirdsql.common.FBTestProperties.getDefaultSupportInfo;
@@ -34,24 +32,16 @@ import static org.junit.Assume.assumeTrue;
  */
 public class TestV11Service extends TestV10Service {
 
-    private static final ProtocolDescriptor DUMMY_DESCRIPTOR = new Version11Descriptor();
-
     @BeforeClass
     public static void checkDbVersion() {
         assumeTrue(getDefaultSupportInfo().supportsProtocol(11));
     }
 
-    protected V10Service createDummyService() {
-        return new V10Service(DUMMY_CONNECTION, DUMMY_DESCRIPTOR);
+    public TestV11Service() {
+        this(new V11CommonConnectionInfo());
     }
 
-    @Override
-    protected ProtocolCollection getProtocolCollection() {
-        return ProtocolCollection.create(new Version11Descriptor());
-    }
-
-    @Override
-    protected Class<? extends FbWireService> getExpectedServiceType() {
-        return V10Service.class;
+    protected TestV11Service(V11CommonConnectionInfo commonConnectionInfo) {
+        super(commonConnectionInfo);
     }
 }

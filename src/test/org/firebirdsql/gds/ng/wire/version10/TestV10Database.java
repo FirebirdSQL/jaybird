@@ -67,46 +67,30 @@ public class TestV10Database {
     @Rule
     public final ExpectedException expectedException = ExpectedException.none();
 
-    protected static final WireDatabaseConnection DUMMY_CONNECTION;
-    static {
-        try {
-            FbConnectionProperties connectionInfo = new FbConnectionProperties();
-            connectionInfo.setEncoding("NONE");
+    private final V10CommonConnectionInfo commonConnectionInfo;
 
-            DUMMY_CONNECTION = new WireDatabaseConnection(connectionInfo);
-        } catch (SQLException e) {
-            throw new ExceptionInInitializerError(e);
-        }
+    public TestV10Database() {
+        this(new V10CommonConnectionInfo());
     }
 
-    private static final ProtocolDescriptor DUMMY_DESCRIPTOR = new Version10Descriptor();
-
-    private final FbConnectionProperties connectionInfo;
-
-    {
-        connectionInfo = new FbConnectionProperties();
-        connectionInfo.setServerName(FBTestProperties.DB_SERVER_URL);
-        connectionInfo.setPortNumber(FBTestProperties.DB_SERVER_PORT);
-        connectionInfo.setUser(DB_USER);
-        connectionInfo.setPassword(DB_PASSWORD);
-        connectionInfo.setDatabaseName(FBTestProperties.getDatabasePath());
-        connectionInfo.setEncoding("NONE");
+    protected TestV10Database(V10CommonConnectionInfo commonConnectionInfo) {
+        this.commonConnectionInfo = commonConnectionInfo;
     }
 
-    protected FbConnectionProperties getConnectionInfo() {
-        return connectionInfo;
+    protected final IConnectionProperties getConnectionInfo() {
+        return commonConnectionInfo.getDatabaseConnectionInfo();
     }
 
-    protected AbstractFbWireDatabase createDummyDatabase() {
-        return new V10Database(DUMMY_CONNECTION, DUMMY_DESCRIPTOR);
+    protected final AbstractFbWireDatabase createDummyDatabase() throws SQLException {
+        return commonConnectionInfo.createDummyDatabase();
     }
 
-    protected ProtocolCollection getProtocolCollection() {
-        return ProtocolCollection.create(new Version10Descriptor());
+    protected final ProtocolCollection getProtocolCollection() {
+        return commonConnectionInfo.getProtocolCollection();
     }
 
-    protected Class<? extends FbWireDatabase> getExpectedDatabaseType() {
-        return V10Database.class;
+    protected final Class<? extends FbWireDatabase> getExpectedDatabaseType() {
+        return commonConnectionInfo.getExpectedDatabaseType();
     }
 
     /**
@@ -266,7 +250,7 @@ public class TestV10Database {
 
     @Test
     public void testDetach_NotConnected() throws Exception {
-        V10Database db = new V10Database(DUMMY_CONNECTION, DUMMY_DESCRIPTOR);
+        AbstractFbWireDatabase db = createDummyDatabase();
 
         expectedException.expect(SQLException.class);
         expectedException.expectMessage(equalTo("No connection established to the database server"));

@@ -18,7 +18,6 @@
  */
 package org.firebirdsql.gds.ng.wire.version13;
 
-import org.firebirdsql.gds.ng.wire.AbstractWireOperations;
 import org.firebirdsql.gds.ng.wire.version12.TestV12WireOperations;
 
 /**
@@ -27,8 +26,11 @@ import org.firebirdsql.gds.ng.wire.version12.TestV12WireOperations;
  */
 public class TestV13WireOperations extends TestV12WireOperations {
 
-    @Override
-    protected AbstractWireOperations createDummyWireOperations() {
-        return new V13WireOperations(DUMMY_CONNECTION, warningCallback, new Object());
+    public TestV13WireOperations() {
+        this(new V13CommonConnectionInfo());
+    }
+
+    protected TestV13WireOperations(V13CommonConnectionInfo commonConnectionInfo) {
+        super(commonConnectionInfo);
     }
 }

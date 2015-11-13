@@ -24,6 +24,7 @@ import org.firebirdsql.common.FBTestProperties;
 import org.firebirdsql.gds.BlobParameterBuffer;
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.TransactionParameterBuffer;
+import org.firebirdsql.gds.impl.TransactionParameterBufferImpl;
 import org.firebirdsql.gds.ng.fields.FieldValue;
 import org.firebirdsql.gds.ng.fields.RowValue;
 import org.firebirdsql.gds.ng.wire.SimpleStatementListener;
@@ -265,8 +266,7 @@ public abstract class BaseTestBlob extends FBJUnit4TestBase {
     protected void populateStreamBlob(int testId, byte[] baseContent, int requiredSize) throws SQLException {
         final byte[] testBytes = generateBlobContent(baseContent, requiredSize);
 
-        final FbDatabase db = createDatabaseConnection();
-        try {
+        try (FbDatabase db = createDatabaseConnection()) {
             listener = new SimpleStatementListener();
             transaction = getTransaction(db);
             try {
@@ -295,8 +295,6 @@ public abstract class BaseTestBlob extends FBJUnit4TestBase {
             } finally {
                 transaction.commit();
             }
-        } finally {
-            db.close();
         }
     }
 
@@ -382,10 +380,8 @@ public abstract class BaseTestBlob extends FBJUnit4TestBase {
         return createFbDatabase(connectionInfo);
     }
 
-    protected abstract TransactionParameterBuffer createTransactionParameterBuffer();
-
     protected final FbTransaction getTransaction(FbDatabase db) throws SQLException {
-        TransactionParameterBuffer tpb = createTransactionParameterBuffer();
+        TransactionParameterBuffer tpb = new TransactionParameterBufferImpl();
         tpb.addArgument(ISCConstants.isc_tpb_read_committed);
         tpb.addArgument(ISCConstants.isc_tpb_rec_version);
         tpb.addArgument(ISCConstants.isc_tpb_write);

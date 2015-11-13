@@ -18,30 +18,26 @@
  */
 package org.firebirdsql.gds.ng.wire.version12;
 
-import org.firebirdsql.gds.ng.wire.version11.TestV11Statement;
-import org.junit.BeforeClass;
-
-import static org.firebirdsql.common.FBTestProperties.getDefaultSupportInfo;
-import static org.junit.Assume.assumeTrue;
+import org.firebirdsql.gds.ng.wire.FbWireDatabase;
+import org.firebirdsql.gds.ng.wire.FbWireService;
+import org.firebirdsql.gds.ng.wire.ProtocolDescriptor;
+import org.firebirdsql.gds.ng.wire.version10.V10Service;
+import org.firebirdsql.gds.ng.wire.version11.V11CommonConnectionInfo;
 
 /**
- * Tests for {@link org.firebirdsql.gds.ng.wire.version12.V12Statement}, reuses test for V11.
+ * Class to contain common connection information shared by the V12 tests.
  *
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @since 3.0
  */
-public class TestV12Statement extends TestV11Statement {
+public class V12CommonConnectionInfo extends V11CommonConnectionInfo {
 
-    @BeforeClass
-    public static void checkDbVersion() {
-        assumeTrue(getDefaultSupportInfo().supportsProtocol(12));
+    V12CommonConnectionInfo() {
+        this(new Version12Descriptor(), V12Database.class, V10Service.class);
     }
 
-    public TestV12Statement() {
-        this(new V12CommonConnectionInfo());
-    }
-
-    protected TestV12Statement(V12CommonConnectionInfo commonConnectionInfo) {
-        super(commonConnectionInfo);
+    public V12CommonConnectionInfo(ProtocolDescriptor protocolDescriptor,
+            Class<? extends FbWireDatabase> expectedDatabaseType, Class<? extends FbWireService> expectedServiceType) {
+        super(protocolDescriptor, expectedDatabaseType, expectedServiceType);
     }
 }

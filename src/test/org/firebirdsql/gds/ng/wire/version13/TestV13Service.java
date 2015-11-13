@@ -18,10 +18,6 @@
  */
 package org.firebirdsql.gds.ng.wire.version13;
 
-import org.firebirdsql.gds.ng.wire.FbWireService;
-import org.firebirdsql.gds.ng.wire.ProtocolCollection;
-import org.firebirdsql.gds.ng.wire.ProtocolDescriptor;
-import org.firebirdsql.gds.ng.wire.version10.V10Service;
 import org.firebirdsql.gds.ng.wire.version12.TestV12Service;
 import org.junit.BeforeClass;
 
@@ -39,24 +35,16 @@ import static org.junit.Assume.assumeTrue;
  */
 public class TestV13Service extends TestV12Service {
 
-    private static final ProtocolDescriptor DUMMY_DESCRIPTOR = new Version13Descriptor();
-
     @BeforeClass
     public static void checkDbVersion() {
         assumeTrue(getDefaultSupportInfo().supportsProtocol(13));
     }
 
-    protected V10Service createDummyService() {
-        return new V10Service(DUMMY_CONNECTION, DUMMY_DESCRIPTOR);
+    public TestV13Service() {
+        this(new V13CommonConnectionInfo());
     }
 
-    @Override
-    protected ProtocolCollection getProtocolCollection() {
-        return ProtocolCollection.create(new Version13Descriptor());
-    }
-
-    @Override
-    protected Class<? extends FbWireService> getExpectedServiceType() {
-        return V10Service.class;
+    protected TestV13Service(V13CommonConnectionInfo commonConnectionInfo) {
+        super(commonConnectionInfo);
     }
 }

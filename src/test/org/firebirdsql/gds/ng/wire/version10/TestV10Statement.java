@@ -45,17 +45,27 @@ public class TestV10Statement extends AbstractStatementTest {
             EmbeddedGDSFactoryPlugin.EMBEDDED_TYPE_NAME,
             NativeGDSFactoryPlugin.NATIVE_TYPE_NAME);
 
-    protected ProtocolCollection getProtocolCollection() {
-        return ProtocolCollection.create(new Version10Descriptor());
+    private final V10CommonConnectionInfo commonConnectionInfo;
+
+    public TestV10Statement() {
+        this(new V10CommonConnectionInfo());
+    }
+
+    protected TestV10Statement(V10CommonConnectionInfo commonConnectionInfo) {
+        this.commonConnectionInfo = commonConnectionInfo;
+    }
+
+    protected final ProtocolCollection getProtocolCollection() {
+        return commonConnectionInfo.getProtocolCollection();
     }
 
     @Override
-    protected Class<? extends FbWireDatabase> getExpectedDatabaseType() {
-        return V10Database.class;
+    protected final Class<? extends FbWireDatabase> getExpectedDatabaseType() {
+        return commonConnectionInfo.getExpectedDatabaseType();
     }
 
     @Override
-    protected FbDatabase createDatabase() throws SQLException {
+    protected final FbDatabase createDatabase() throws SQLException {
         WireDatabaseConnection gdsConnection = new WireDatabaseConnection(connectionInfo,
                 EncodingFactory.getDefaultInstance(), getProtocolCollection());
         gdsConnection.socketConnect();

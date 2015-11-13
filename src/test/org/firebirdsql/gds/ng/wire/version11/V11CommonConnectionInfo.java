@@ -18,31 +18,25 @@
  */
 package org.firebirdsql.gds.ng.wire.version11;
 
-import org.firebirdsql.gds.ng.wire.version10.TestV10Transaction;
-import org.junit.BeforeClass;
-
-import static org.firebirdsql.common.FBTestProperties.getDefaultSupportInfo;
-import static org.junit.Assume.assumeTrue;
+import org.firebirdsql.gds.ng.wire.FbWireDatabase;
+import org.firebirdsql.gds.ng.wire.FbWireService;
+import org.firebirdsql.gds.ng.wire.ProtocolDescriptor;
+import org.firebirdsql.gds.ng.wire.version10.V10CommonConnectionInfo;
+import org.firebirdsql.gds.ng.wire.version10.V10Service;
 
 /**
- * Tests for {@link org.firebirdsql.gds.ng.wire.version10.V10Transaction} in the version 11 protocol
- * (note: there is no version 11 specific implementation of this class).
+ * Class to contain common connection information shared by the V11 tests.
  *
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @since 3.0
  */
-public class TestV11Transaction extends TestV10Transaction {
-
-    @BeforeClass
-    public static void checkDbVersion() {
-        assumeTrue(getDefaultSupportInfo().supportsProtocol(11));
+public class V11CommonConnectionInfo extends V10CommonConnectionInfo {
+    V11CommonConnectionInfo() {
+        this(new Version11Descriptor(), V11Database.class, V10Service.class);
     }
 
-    public TestV11Transaction() {
-        this(new V11CommonConnectionInfo());
-    }
-
-    protected TestV11Transaction(V11CommonConnectionInfo commonConnectionInfo) {
-        super(commonConnectionInfo);
+    public V11CommonConnectionInfo(ProtocolDescriptor protocolDescriptor,
+            Class<? extends FbWireDatabase> expectedDatabaseType, Class<? extends FbWireService> expectedServiceType) {
+        super(protocolDescriptor, expectedDatabaseType, expectedServiceType);
     }
 }

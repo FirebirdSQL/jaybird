@@ -18,7 +18,6 @@
  */
 package org.firebirdsql.gds.ng.wire.version10;
 
-import org.firebirdsql.common.FBTestProperties;
 import org.firebirdsql.common.rules.GdsTypeRule;
 import org.firebirdsql.encodings.EncodingFactory;
 import org.firebirdsql.gds.ServiceParameterBuffer;
@@ -27,11 +26,8 @@ import org.firebirdsql.gds.impl.GDSServerVersion;
 import org.firebirdsql.gds.impl.jni.EmbeddedGDSFactoryPlugin;
 import org.firebirdsql.gds.impl.jni.NativeGDSFactoryPlugin;
 import org.firebirdsql.gds.ng.FbService;
-import org.firebirdsql.gds.ng.FbServiceProperties;
-import org.firebirdsql.gds.ng.wire.FbWireService;
-import org.firebirdsql.gds.ng.wire.ProtocolCollection;
-import org.firebirdsql.gds.ng.wire.ProtocolDescriptor;
-import org.firebirdsql.gds.ng.wire.WireServiceConnection;
+import org.firebirdsql.gds.ng.IServiceProperties;
+import org.firebirdsql.gds.ng.wire.*;
 import org.firebirdsql.management.FBManager;
 import org.firebirdsql.management.FBStatisticsManager;
 import org.junit.ClassRule;
@@ -64,46 +60,30 @@ public class TestV10Service {
     @Rule
     public final ExpectedException expectedException = ExpectedException.none();
 
-    protected static final WireServiceConnection DUMMY_CONNECTION;
+    private final V10CommonConnectionInfo commonConnectionInfo;
 
-    static {
-        try {
-            FbServiceProperties connectionInfo = new FbServiceProperties();
-            connectionInfo.setEncoding("NONE");
-
-            DUMMY_CONNECTION = new WireServiceConnection(connectionInfo);
-        } catch (SQLException e) {
-            throw new ExceptionInInitializerError(e);
-        }
+    public TestV10Service() {
+        this(new V10CommonConnectionInfo());
     }
 
-    private static final ProtocolDescriptor DUMMY_DESCRIPTOR = new Version10Descriptor();
-
-    private final FbServiceProperties connectionInfo;
-
-    {
-        connectionInfo = new FbServiceProperties();
-        connectionInfo.setServerName(FBTestProperties.DB_SERVER_URL);
-        connectionInfo.setPortNumber(FBTestProperties.DB_SERVER_PORT);
-        connectionInfo.setUser(DB_USER);
-        connectionInfo.setPassword(DB_PASSWORD);
-        connectionInfo.setEncoding("NONE");
+    protected TestV10Service(V10CommonConnectionInfo commonConnectionInfo) {
+        this.commonConnectionInfo = commonConnectionInfo;
     }
 
-    protected FbServiceProperties getConnectionInfo() {
-        return connectionInfo;
+    protected final IServiceProperties getConnectionInfo() {
+        return commonConnectionInfo.getServiceConnectionInfo();
     }
 
-    protected V10Service createDummyService() {
-        return new V10Service(DUMMY_CONNECTION, DUMMY_DESCRIPTOR);
+    protected final AbstractFbWireService createDummyService() throws SQLException {
+        return commonConnectionInfo.createDummyService();
     }
 
-    protected ProtocolCollection getProtocolCollection() {
-        return ProtocolCollection.create(new Version10Descriptor());
+    protected final ProtocolCollection getProtocolCollection() {
+        return commonConnectionInfo.getProtocolCollection();
     }
 
-    protected Class<? extends FbWireService> getExpectedServiceType() {
-        return V10Service.class;
+    protected final Class<? extends FbWireService> getExpectedServiceType() {
+        return commonConnectionInfo.getExpectedServiceType();
     }
 
     /**

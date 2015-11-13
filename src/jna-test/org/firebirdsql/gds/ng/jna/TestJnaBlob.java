@@ -20,8 +20,6 @@ package org.firebirdsql.gds.ng.jna;
 
 import org.firebirdsql.gds.BlobParameterBuffer;
 import org.firebirdsql.gds.ISCConstants;
-import org.firebirdsql.gds.TransactionParameterBuffer;
-import org.firebirdsql.gds.impl.TransactionParameterBufferImpl;
 import org.firebirdsql.gds.ng.*;
 import org.firebirdsql.gds.ng.fields.FieldValue;
 import org.firebirdsql.gds.ng.fields.RowValue;
@@ -435,10 +433,5 @@ public class TestJnaBlob extends BaseTestBlob {
     @Override
     protected JnaDatabase createDatabaseConnection() throws SQLException {
         return (JnaDatabase) super.createDatabaseConnection();
-    }
-
-    @Override
-    protected TransactionParameterBuffer createTransactionParameterBuffer() {
-        return new TransactionParameterBufferImpl();
     }
 }

@@ -19,8 +19,6 @@
 package org.firebirdsql.gds.ng.wire.version10;
 
 import org.firebirdsql.encodings.EncodingFactory;
-import org.firebirdsql.gds.TransactionParameterBuffer;
-import org.firebirdsql.gds.impl.TransactionParameterBufferImpl;
 import org.firebirdsql.gds.ng.BaseTestBlob;
 import org.firebirdsql.gds.ng.FbConnectionProperties;
 import org.firebirdsql.gds.ng.FbDatabase;
@@ -36,12 +34,18 @@ import java.sql.SQLException;
  */
 public abstract class BaseTestV10Blob extends BaseTestBlob {
 
-    protected ProtocolCollection getProtocolCollection() {
-        return ProtocolCollection.create(new Version10Descriptor());
+    private final V10CommonConnectionInfo commonConnectionInfo;
+
+    protected BaseTestV10Blob(V10CommonConnectionInfo commonConnectionInfo) {
+        this.commonConnectionInfo = commonConnectionInfo;
+    }
+
+    protected final ProtocolCollection getProtocolCollection() {
+        return commonConnectionInfo.getProtocolCollection();
     }
 
     @Override
-    protected FbDatabase createFbDatabase(FbConnectionProperties connectionInfo) throws SQLException {
+    protected final FbDatabase createFbDatabase(FbConnectionProperties connectionInfo) throws SQLException {
         WireDatabaseConnection gdsConnection = new WireDatabaseConnection(connectionInfo,
                 EncodingFactory.getDefaultInstance(), getProtocolCollection());
         gdsConnection.socketConnect();
@@ -51,12 +55,7 @@ public abstract class BaseTestV10Blob extends BaseTestBlob {
     }
 
     @Override
-    protected FbWireDatabase createDatabaseConnection() throws SQLException {
+    protected final FbWireDatabase createDatabaseConnection() throws SQLException {
         return (FbWireDatabase) super.createDatabaseConnection();
-    }
-
-    @Override
-    protected TransactionParameterBuffer createTransactionParameterBuffer() {
-        return new TransactionParameterBufferImpl();
     }
 }

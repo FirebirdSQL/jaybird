@@ -22,12 +22,10 @@ import org.firebirdsql.common.rules.GdsTypeRule;
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.impl.jni.EmbeddedGDSFactoryPlugin;
 import org.firebirdsql.gds.impl.jni.NativeGDSFactoryPlugin;
-import org.firebirdsql.gds.ng.FbConnectionProperties;
 import org.firebirdsql.gds.ng.FbExceptionBuilder;
 import org.firebirdsql.gds.ng.SimpleWarningMessageCallback;
 import org.firebirdsql.gds.ng.wire.AbstractWireOperations;
 import org.firebirdsql.gds.ng.wire.GenericResponse;
-import org.firebirdsql.gds.ng.wire.WireDatabaseConnection;
 import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
@@ -35,7 +33,7 @@ import org.junit.rules.ExpectedException;
 
 import java.sql.SQLException;
 import java.sql.SQLWarning;
-import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 import static org.hamcrest.CoreMatchers.sameInstance;
@@ -55,22 +53,19 @@ public class TestV10WireOperations {
     @Rule
     public final ExpectedException expectedException = ExpectedException.none();
 
-    protected static final WireDatabaseConnection DUMMY_CONNECTION;
-    static {
-        try {
-            FbConnectionProperties connectionInfo = new FbConnectionProperties();
-            connectionInfo.setEncoding("NONE");
+    protected final SimpleWarningMessageCallback warningCallback = new SimpleWarningMessageCallback();
+    private final V10CommonConnectionInfo commonConnectionInfo;
 
-            DUMMY_CONNECTION = new WireDatabaseConnection(connectionInfo);
-        } catch (SQLException e) {
-            throw new ExceptionInInitializerError(e);
-        }
+    public TestV10WireOperations() {
+        this(new V10CommonConnectionInfo());
     }
 
-    protected final SimpleWarningMessageCallback warningCallback = new SimpleWarningMessageCallback();
+    protected TestV10WireOperations(V10CommonConnectionInfo commonConnectionInfo) {
+        this.commonConnectionInfo = commonConnectionInfo;
+    }
 
-    protected AbstractWireOperations createDummyWireOperations() {
-        return new V10WireOperations(DUMMY_CONNECTION, warningCallback, new Object());
+    protected final AbstractWireOperations createDummyWireOperations() throws SQLException {
+        return commonConnectionInfo.createDummyWireOperations(warningCallback);
     }
 
     /**
@@ -158,6 +153,7 @@ public class TestV10WireOperations {
         wire.processResponseWarnings(genericResponse, null);
 
         List<SQLWarning> warnings = warningCallback.getWarnings();
-        assertEquals("Unexpected warnings registered or no warnings registered", Arrays.asList(warning), warnings);
+        assertEquals("Unexpected warnings registered or no warnings registered", Collections.singletonList(warning),
+                warnings);
     }
 }

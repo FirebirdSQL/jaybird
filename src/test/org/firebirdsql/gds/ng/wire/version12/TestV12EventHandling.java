@@ -18,10 +18,6 @@
  */
 package org.firebirdsql.gds.ng.wire.version12;
 
-import org.firebirdsql.gds.ng.wire.AbstractFbWireDatabase;
-import org.firebirdsql.gds.ng.wire.FbWireDatabase;
-import org.firebirdsql.gds.ng.wire.ProtocolCollection;
-import org.firebirdsql.gds.ng.wire.ProtocolDescriptor;
 import org.firebirdsql.gds.ng.wire.version11.TestV11EventHandling;
 import org.junit.BeforeClass;
 
@@ -36,26 +32,16 @@ import static org.junit.Assume.assumeTrue;
  */
 public class TestV12EventHandling extends TestV11EventHandling {
 
-    private static final ProtocolDescriptor DUMMY_DESCRIPTOR = new Version12Descriptor();
-
     @BeforeClass
     public static void checkDbVersion() {
         assumeTrue(getDefaultSupportInfo().supportsProtocol(12));
     }
 
-    @Override
-    protected AbstractFbWireDatabase createDummyDatabase() {
-        return new V12Database(DUMMY_CONNECTION, DUMMY_DESCRIPTOR);
+    public TestV12EventHandling() {
+        this(new V12CommonConnectionInfo());
     }
 
-    @Override
-    protected ProtocolCollection getProtocolCollection() {
-        return ProtocolCollection.create(new Version12Descriptor());
+    protected TestV12EventHandling(V12CommonConnectionInfo commonConnectionInfo) {
+        super(commonConnectionInfo);
     }
-
-    @Override
-    protected Class<? extends FbWireDatabase> getExpectedDatabaseType() {
-        return V12Database.class;
-    }
-
 }
