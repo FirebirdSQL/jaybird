@@ -16,7 +16,7 @@
  *
  * All rights reserved.
  */
-package org.firebirdsql.common;
+package org.firebirdsql.common.rules;
 
 import org.firebirdsql.management.FBManager;
 import org.junit.rules.ExternalResource;

@@ -19,6 +19,7 @@
 package org.firebirdsql.gds.ng;
 
 import org.firebirdsql.common.*;
+import org.firebirdsql.common.rules.UsesDatabase;
 import org.firebirdsql.encodings.Encoding;
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.TransactionParameterBuffer;
