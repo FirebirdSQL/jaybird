@@ -18,12 +18,12 @@
  */
 package org.firebirdsql.gds.ng.wire.version13;
 
+import org.firebirdsql.common.rules.RequireProtocol;
 import org.firebirdsql.gds.ng.wire.version12.TestV12EventHandling;
 import org.firebirdsql.gds.ng.wire.version12.V12CommonConnectionInfo;
-import org.junit.BeforeClass;
+import org.junit.ClassRule;
 
-import static org.firebirdsql.common.FBTestProperties.getDefaultSupportInfo;
-import static org.junit.Assume.assumeTrue;
+import static org.firebirdsql.common.rules.RequireProtocol.requireProtocolVersion;
 
 /**
  * Tests for events in {@link org.firebirdsql.gds.ng.wire.version13.V13Database}, reuses test for V12.
@@ -33,10 +33,8 @@ import static org.junit.Assume.assumeTrue;
  */
 public class TestV13EventHandling extends TestV12EventHandling {
 
-    @BeforeClass
-    public static void checkDbVersion() {
-        assumeTrue(getDefaultSupportInfo().supportsProtocol(13));
-    }
+    @ClassRule
+    public static final RequireProtocol requireProtocol = requireProtocolVersion(13);
 
     public TestV13EventHandling() {
         this(new V13CommonConnectionInfo());

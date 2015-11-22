@@ -18,20 +18,21 @@
  */
 package org.firebirdsql.gds.ng.wire.version12;
 
+import org.firebirdsql.common.rules.RequireProtocol;
 import org.firebirdsql.encodings.EncodingFactory;
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.ng.wire.FbWireDatabase;
 import org.firebirdsql.gds.ng.wire.WireDatabaseConnection;
 import org.firebirdsql.gds.ng.wire.version11.TestV11Database;
 import org.firebirdsql.management.FBManager;
-import org.junit.BeforeClass;
+import org.junit.ClassRule;
 import org.junit.Ignore;
 import org.junit.Test;
 
 import static org.firebirdsql.common.FBTestProperties.*;
+import static org.firebirdsql.common.rules.RequireProtocol.requireProtocolVersion;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
-import static org.junit.Assume.assumeTrue;
 
 /**
  * Tests for {@link org.firebirdsql.gds.ng.wire.version12.V12Database}, reuses test for V11.
@@ -41,10 +42,8 @@ import static org.junit.Assume.assumeTrue;
  */
 public class TestV12Database extends TestV11Database {
 
-    @BeforeClass
-    public static void checkDbVersion() {
-        assumeTrue(getDefaultSupportInfo().supportsProtocol(12));
-    }
+    @ClassRule
+    public static final RequireProtocol requireProtocol = requireProtocolVersion(12);
 
     public TestV12Database() {
         this(new V12CommonConnectionInfo());

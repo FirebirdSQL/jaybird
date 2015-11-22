@@ -18,11 +18,11 @@
  */
 package org.firebirdsql.gds.ng.wire.version13;
 
+import org.firebirdsql.common.rules.RequireProtocol;
 import org.firebirdsql.gds.ng.wire.version12.TestV12Transaction;
-import org.junit.BeforeClass;
+import org.junit.ClassRule;
 
-import static org.firebirdsql.common.FBTestProperties.getDefaultSupportInfo;
-import static org.junit.Assume.assumeTrue;
+import static org.firebirdsql.common.rules.RequireProtocol.requireProtocolVersion;
 
 /**
  * Tests for {@link org.firebirdsql.gds.ng.wire.version10.V10Transaction} in the version 13 protocol
@@ -32,10 +32,8 @@ import static org.junit.Assume.assumeTrue;
  */
 public class TestV13Transaction extends TestV12Transaction {
 
-    @BeforeClass
-    public static void checkDbVersion() {
-        assumeTrue(getDefaultSupportInfo().supportsProtocol(13));
-    }
+    @ClassRule
+    public static final RequireProtocol requireProtocol = requireProtocolVersion(13);
 
     public TestV13Transaction() {
         this(new V13CommonConnectionInfo());

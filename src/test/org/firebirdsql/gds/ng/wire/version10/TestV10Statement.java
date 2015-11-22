@@ -19,6 +19,7 @@
 package org.firebirdsql.gds.ng.wire.version10;
 
 import org.firebirdsql.common.rules.GdsTypeRule;
+import org.firebirdsql.common.rules.RequireProtocol;
 import org.firebirdsql.encodings.EncodingFactory;
 import org.firebirdsql.gds.impl.jni.EmbeddedGDSFactoryPlugin;
 import org.firebirdsql.gds.impl.jni.NativeGDSFactoryPlugin;
@@ -31,6 +32,8 @@ import org.junit.ClassRule;
 
 import java.sql.SQLException;
 
+import static org.firebirdsql.common.rules.RequireProtocol.requireProtocolVersion;
+
 /**
  * Tests for {@link org.firebirdsql.gds.ng.wire.version10.V10Statement}. This test class can
  * be sub-classed for tests running on newer protocol versions.
@@ -39,6 +42,9 @@ import java.sql.SQLException;
  * @since 3.0
  */
 public class TestV10Statement extends AbstractStatementTest {
+
+    @ClassRule
+    public static final RequireProtocol requireProtocol = requireProtocolVersion(10);
 
     @ClassRule
     public static final GdsTypeRule gdsTypeRule = GdsTypeRule.excludes(

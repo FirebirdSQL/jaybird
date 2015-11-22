@@ -18,6 +18,7 @@
  */
 package org.firebirdsql.gds.ng.wire.version10;
 
+import org.firebirdsql.common.rules.RequireProtocol;
 import org.firebirdsql.gds.BlobParameterBuffer;
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.ng.DatatypeCoder;
@@ -28,12 +29,14 @@ import org.firebirdsql.gds.ng.fields.FieldValue;
 import org.firebirdsql.gds.ng.fields.RowValue;
 import org.firebirdsql.gds.ng.wire.FbWireDatabase;
 import org.firebirdsql.gds.ng.wire.SimpleStatementListener;
+import org.junit.ClassRule;
 import org.junit.Test;
 
 import java.sql.SQLException;
 import java.sql.SQLNonTransientException;
 
 import static org.firebirdsql.common.matchers.SQLExceptionMatchers.*;
+import static org.firebirdsql.common.rules.RequireProtocol.requireProtocolVersion;
 import static org.hamcrest.CoreMatchers.allOf;
 import static org.hamcrest.CoreMatchers.startsWith;
 import static org.junit.Assert.assertFalse;
@@ -51,6 +54,9 @@ import static org.junit.Assume.assumeTrue;
  * @since 3.0
  */
 public class TestV10OutputBlob extends BaseTestV10Blob {
+
+    @ClassRule
+    public static final RequireProtocol requireProtocol = requireProtocolVersion(10);
 
     public TestV10OutputBlob() {
         this(new V10CommonConnectionInfo());

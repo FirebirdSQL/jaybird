@@ -18,11 +18,11 @@
  */
 package org.firebirdsql.gds.ng.wire.version12;
 
+import org.firebirdsql.common.rules.RequireProtocol;
 import org.firebirdsql.gds.ng.wire.version11.TestV11Statement;
-import org.junit.BeforeClass;
+import org.junit.ClassRule;
 
-import static org.firebirdsql.common.FBTestProperties.getDefaultSupportInfo;
-import static org.junit.Assume.assumeTrue;
+import static org.firebirdsql.common.rules.RequireProtocol.requireProtocolVersion;
 
 /**
  * Tests for {@link org.firebirdsql.gds.ng.wire.version12.V12Statement}, reuses test for V11.
@@ -32,10 +32,8 @@ import static org.junit.Assume.assumeTrue;
  */
 public class TestV12Statement extends TestV11Statement {
 
-    @BeforeClass
-    public static void checkDbVersion() {
-        assumeTrue(getDefaultSupportInfo().supportsProtocol(12));
-    }
+    @ClassRule
+    public static final RequireProtocol requireProtocol = requireProtocolVersion(12);
 
     public TestV12Statement() {
         this(new V12CommonConnectionInfo());

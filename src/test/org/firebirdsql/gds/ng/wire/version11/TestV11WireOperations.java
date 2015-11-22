@@ -18,13 +18,20 @@
  */
 package org.firebirdsql.gds.ng.wire.version11;
 
+import org.firebirdsql.common.rules.RequireProtocol;
 import org.firebirdsql.gds.ng.wire.version10.TestV10WireOperations;
+import org.junit.ClassRule;
+
+import static org.firebirdsql.common.rules.RequireProtocol.requireProtocolVersion;
 
 /**
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @since 3.0
  */
 public class TestV11WireOperations extends TestV10WireOperations {
+
+    @ClassRule
+    public static final RequireProtocol requireProtocol = requireProtocolVersion(11);
 
     public TestV11WireOperations() {
         this(new V11CommonConnectionInfo());

@@ -19,6 +19,7 @@
 package org.firebirdsql.gds.ng.wire.version10;
 
 import org.firebirdsql.common.rules.GdsTypeRule;
+import org.firebirdsql.common.rules.RequireProtocol;
 import org.firebirdsql.encodings.EncodingFactory;
 import org.firebirdsql.gds.ServiceParameterBuffer;
 import org.firebirdsql.gds.ServiceRequestBuffer;
@@ -39,6 +40,7 @@ import java.io.ByteArrayOutputStream;
 import java.sql.SQLException;
 
 import static org.firebirdsql.common.FBTestProperties.*;
+import static org.firebirdsql.common.rules.RequireProtocol.requireProtocolVersion;
 import static org.firebirdsql.gds.ISCConstants.*;
 import static org.firebirdsql.gds.VaxEncoding.iscVaxInteger2;
 import static org.hamcrest.CoreMatchers.*;
@@ -51,6 +53,9 @@ import static org.junit.Assert.*;
  * @since 3.0
  */
 public class TestV10Service {
+
+    @ClassRule
+    public static final RequireProtocol requireProtocol = requireProtocolVersion(10);
 
     @ClassRule
     public static final GdsTypeRule gdsTypeRule = GdsTypeRule.excludes(

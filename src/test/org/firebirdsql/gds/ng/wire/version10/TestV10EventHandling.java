@@ -21,6 +21,7 @@ package org.firebirdsql.gds.ng.wire.version10;
 import org.firebirdsql.common.FBJUnit4TestBase;
 import org.firebirdsql.common.SimpleServer;
 import org.firebirdsql.common.rules.GdsTypeRule;
+import org.firebirdsql.common.rules.RequireProtocol;
 import org.firebirdsql.encodings.EncodingFactory;
 import org.firebirdsql.gds.EventHandle;
 import org.firebirdsql.gds.ISCConstants;
@@ -42,6 +43,7 @@ import java.io.OutputStream;
 import java.sql.SQLException;
 import java.util.List;
 
+import static org.firebirdsql.common.rules.RequireProtocol.requireProtocolVersion;
 import static org.firebirdsql.gds.impl.wire.WireProtocolConstants.*;
 import static org.junit.Assert.*;
 
@@ -52,6 +54,9 @@ import static org.junit.Assert.*;
  * @since 3.0
  */
 public class TestV10EventHandling extends FBJUnit4TestBase {
+
+    @ClassRule
+    public static final RequireProtocol requireProtocol = requireProtocolVersion(10);
 
     @ClassRule
     public static final GdsTypeRule gdsTypeRule = GdsTypeRule.excludes(
