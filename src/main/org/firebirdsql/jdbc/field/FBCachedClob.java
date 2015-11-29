@@ -28,6 +28,7 @@ import java.sql.Clob;
 import java.sql.SQLException;
 
 import org.firebirdsql.jdbc.FBCachedBlob;
+import org.firebirdsql.jdbc.FBDriverNotCapableException;
 import org.firebirdsql.jdbc.FBSQLException;
 
 public class FBCachedClob implements Clob {
@@ -76,19 +77,19 @@ public class FBCachedClob implements Clob {
 	}
 
 	public String getSubString(long pos, int length) throws SQLException {
-		throw new FBSQLException("Not implemented");
+		throw new FBDriverNotCapableException();
 	}
 
 	public long length() throws SQLException {
-		throw new FBSQLException("Not implemented");
+		throw new FBDriverNotCapableException();
 	}
 
 	public long position(String searchstr, long start) throws SQLException {
-		throw new FBSQLException("Not implemented");
+		throw new FBDriverNotCapableException();
 	}
 
 	public long position(Clob searchstr, long start) throws SQLException {
-		throw new FBSQLException("Not implemented");
+		throw new FBDriverNotCapableException();
 	}
 
 	public OutputStream setAsciiStream(long pos) throws SQLException {
