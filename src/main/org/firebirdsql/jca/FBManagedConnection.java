@@ -119,7 +119,7 @@ public class FBManagedConnection implements ManagedConnection, XAResource, Excep
             database.attach();
 
             gdsHelper = new GDSHelper(this, database);
-        } catch(GDSException | SQLException ex) {
+        } catch(SQLException ex) {
             throw new FBResourceException(ex);
         }
     }

@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
@@ -22,6 +20,7 @@ package org.firebirdsql.jdbc;
 
 import org.firebirdsql.common.FBJUnit4TestBase;
 import org.firebirdsql.gds.ISCConstants;
+import org.firebirdsql.gds.JaybirdErrorCodes;
 import org.junit.After;
 import org.junit.Rule;
 import org.junit.Test;
@@ -112,57 +111,42 @@ public class TestFBDriver extends FBJUnit4TestBase {
         info.setProperty("isc_dpb_sql_dialect", "1");
 
         connection = DriverManager.getConnection(getUrl(), info);
-        Statement stmt = connection.createStatement();
-        try {
+        try (Statement stmt = connection.createStatement()) {
             // Dialect 1 allows double quotes in strings
             ResultSet rs = stmt.executeQuery("SELECT  cast(\"today\" as date) - 7 FROM rdb$database");
 
             assertTrue("Should have at least one row.", rs.next());
-        } finally {
-            stmt.close();
         }
     }
 
     @Test
     public void testGetSQLState() throws Exception {
         connection = getConnectionViaDriverManager();
-        Statement stmt = connection.createStatement();
-        try {
+        try (Statement stmt = connection.createStatement()) {
             expectedException.expect(SQLSyntaxErrorException.class);
             expectedException.expect(sqlState(is(FBSQLException.SQL_STATE_SYNTAX_ERROR)));
 
             stmt.executeQuery("select * from");
-        } finally {
-            stmt.close();
         }
     }
 
     @Test
     public void testLongRange() throws Exception {
         connection = getConnectionViaDriverManager();
-        Statement s = connection.createStatement();
-        try {
+        try (Statement s = connection.createStatement()) {
             s.execute("CREATE TABLE LONGTEST (LONGID DECIMAL(18) NOT NULL PRIMARY KEY)");
             s.execute("INSERT INTO LONGTEST (LONGID) VALUES (" + Long.MAX_VALUE + ")");
-            ResultSet rs = s.executeQuery("SELECT LONGID FROM LONGTEST");
-            try {
+            try (ResultSet rs = s.executeQuery("SELECT LONGID FROM LONGTEST")) {
                 assertTrue("Should have one row!", rs.next());
                 assertEquals("Retrieved wrong value!", Long.MAX_VALUE, rs.getLong(1));
-            } finally {
-                rs.close();
             }
 
             s.execute("DELETE FROM LONGTEST");
             s.execute("INSERT INTO LONGTEST (LONGID) VALUES (" + Long.MIN_VALUE + ")");
-            rs = s.executeQuery("SELECT LONGID FROM LONGTEST");
-            try {
+            try (ResultSet rs = s.executeQuery("SELECT LONGID FROM LONGTEST")) {
                 assertTrue("Should have one row!", rs.next());
                 assertEquals("Retrieved wrong value!", Long.MIN_VALUE, rs.getLong(1));
-            } finally {
-                rs.close();
             }
-        } finally {
-            s.close();
         }
     }
 
@@ -171,29 +155,21 @@ public class TestFBDriver extends FBJUnit4TestBase {
     @Test
     public void testDate() throws Exception {
         connection = getConnectionViaDriverManager();
-        Statement s = connection.createStatement();
-        try {
+        try (Statement s = connection.createStatement()) {
             s.execute("CREATE TABLE DATETEST (DATEID INTEGER NOT NULL PRIMARY KEY, TESTDATE TIMESTAMP)");
-            PreparedStatement ps = connection.prepareStatement("INSERT INTO DATETEST (DATEID, TESTDATE) VALUES (?,?)");
             Calendar cal = new GregorianCalendar(timeZoneUTC);
             Timestamp x = Timestamp.valueOf("1917-02-17 20:59:31");
-            try {
+
+            try (PreparedStatement ps = connection.prepareStatement("INSERT INTO DATETEST (DATEID, TESTDATE) VALUES (?,?)")) {
                 ps.setInt(1, 1);
                 ps.setTimestamp(2, x, cal);
                 ps.execute();
-            } finally {
-                ps.close();
             }
 
-            ResultSet rs = s.executeQuery("SELECT TESTDATE FROM DATETEST WHERE DATEID=1");
-            try {
+            try (ResultSet rs = s.executeQuery("SELECT TESTDATE FROM DATETEST WHERE DATEID=1")) {
                 assertTrue("Should have one row!", rs.next());
                 assertEquals("Retrieved wrong value!", x, rs.getTimestamp(1, cal));
-            } finally {
-                rs.close();
             }
-        } finally {
-            s.close();
         }
     }
 
@@ -207,29 +183,22 @@ public class TestFBDriver extends FBJUnit4TestBase {
     @Test
     public void testClose() throws Exception {
         connection = getConnectionViaDriverManager();
-        try {
-            Statement stmt = connection.createStatement();
+        try (Statement stmt = connection.createStatement()) {
             stmt.executeUpdate("CREATE TABLE test(id INTEGER, test_value INTEGER)");
             stmt.executeUpdate("INSERT INTO test VALUES (1, 1)");
             connection.setAutoCommit(false);
             stmt.executeUpdate("UPDATE test SET test_value = 2 WHERE id = 1");
-            stmt.close();
         } finally {
             connection.close();
         }
 
         connection = getConnectionViaDriverManager();
-        try {
-            Statement stmt = connection.createStatement();
-            ResultSet rs = stmt.executeQuery("SELECT test_value FROM test WHERE id = 1");
-
-            assertTrue("Should have at least one row", rs.next());
-            assertEquals("Value should be 1.", 1, rs.getInt(1));
-            assertTrue("Should have only one row.", !rs.next());
-
-            rs.close();
-            stmt.executeUpdate("DROP TABLE test");
-            stmt.close();
+        try (Statement stmt = connection.createStatement()) {
+            try (ResultSet rs = stmt.executeQuery("SELECT test_value FROM test WHERE id = 1")) {
+                assertTrue("Should have at least one row", rs.next());
+                assertEquals("Value should be 1.", 1, rs.getInt(1));
+                assertTrue("Should have only one row.", !rs.next());
+            }
         } finally {
             connection.close();
         }
@@ -244,6 +213,21 @@ public class TestFBDriver extends FBJUnit4TestBase {
         connection = driver.connect(getUrl(), props);
 
         assertNotNull("Connection is null", connection);
+    }
+
+    /**
+     * Connection url parsing itself is tested in {@link org.firebirdsql.gds.impl.TestDbAttachInfo}.
+     */
+    @Test
+    public void testInvalidConnectionUrl() throws Exception {
+        Properties props = getDefaultPropertiesForConnection();
+        Driver driver = DriverManager.getDriver("jdbc:firebirdsql://localhost:c:/data/db/test.fdb");
+        expectedException.expect(SQLNonTransientConnectionException.class);
+        expectedException.expect(allOf(
+                errorCodeEquals(JaybirdErrorCodes.jb_invalidConnectionString),
+                message(containsString("Bad port: 'c:' is not a number"))));
+
+        driver.connect("jdbc:firebirdsql://localhost:c:/data/db/test.fdb", props);
     }
 
 }

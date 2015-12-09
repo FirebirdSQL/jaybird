@@ -49,6 +49,7 @@ public interface JaybirdErrorCodes {
     int jb_blobIdAlreadySet         = 337248260;
     int jb_invalidClumpletStructure = 337248261;
     int jb_clumpletReaderUsageError = 337248262;
+    int jb_invalidConnectionString  = 337248263;
 
     @SuppressWarnings("unused")
     int jb_range_end                = 337264639;

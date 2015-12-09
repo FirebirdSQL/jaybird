@@ -1,7 +1,5 @@
 /*
- * $Id$
- * 
- * Firebird Open Source J2ee connector - jdbc driver
+ * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -14,14 +12,17 @@
  * This file was created by members of the firebird development team.
  * All individual contributions remain the Copyright (C) of those
  * individuals.  Contributors to this file are either listed here or
- * can be obtained from a CVS history command.
+ * can be obtained from a source control history command.
  *
  * All rights reserved.
  */
 package org.firebirdsql.gds.impl;
 
 import org.firebirdsql.gds.GDSException;
-import org.firebirdsql.gds.ISCConstants;
+import org.firebirdsql.gds.JaybirdErrorCodes;
+import org.firebirdsql.gds.ng.FbExceptionBuilder;
+
+import java.sql.SQLException;
 
 /**
  * Container for attachment information (ie server, port and filename/alias).
@@ -32,10 +33,13 @@ public class DbAttachInfo {
 	private int port = 3050;
 	private String fileName;
 
-	public DbAttachInfo(String connectInfo) throws GDSException {
-
+	public DbAttachInfo(String connectInfo) throws SQLException {
 		if (connectInfo == null) {
-			throw new GDSException("Connection string missing");
+			throw new FbExceptionBuilder()
+                    .nonTransientConnectionException(JaybirdErrorCodes.jb_invalidConnectionString)
+                    .messageParameter("(null)")
+                    .messageParameter("Connection string is missing")
+                    .toFlatSQLException();
 		}
 
 		// allows standard syntax //host:port/....
@@ -54,19 +58,33 @@ public class DbAttachInfo {
 
 		int sep = connectInfo.indexOf(hostSepChar);
 		if (sep == 0 || sep == connectInfo.length() - 1) {
-			throw new GDSException("Bad connection string: '" + hostSepChar
-					+ "' at beginning or end of:" + connectInfo
-					+ ISCConstants.isc_bad_db_format);
+            throw new FbExceptionBuilder()
+                    .nonTransientConnectionException(JaybirdErrorCodes.jb_invalidConnectionString)
+                    .messageParameter(connectInfo)
+                    .messageParameter("Host separator: '" + hostSepChar + "' at beginning or end")
+                    .toFlatSQLException();
 		} else if (sep > 0) {
 			server = connectInfo.substring(0, sep);
 			fileName = connectInfo.substring(sep + 1);
 			int portSep = server.indexOf(portSepChar);
 			if (portSep == 0 || portSep == server.length() - 1) {
-				throw new GDSException("Bad server string: '" + portSepChar
-						+ "' at beginning or end of: " + server
-						+ ISCConstants.isc_bad_db_format);
+                throw new FbExceptionBuilder()
+                        .nonTransientConnectionException(JaybirdErrorCodes.jb_invalidConnectionString)
+                        .messageParameter(connectInfo)
+                        .messageParameter("Port separator: '" + portSepChar + "' at beginning or end of: " + server)
+                        .toFlatSQLException();
 			} else if (portSep > 0) {
-				port = Integer.parseInt(server.substring(portSep + 1));
+				String portString = server.substring(portSep + 1);
+				try {
+					port = Integer.parseInt(portString);
+				} catch (NumberFormatException e) {
+                    throw new FbExceptionBuilder()
+                            .nonTransientConnectionException(JaybirdErrorCodes.jb_invalidConnectionString)
+                            .messageParameter(connectInfo)
+                            .messageParameter("Bad port: '" + portString + "' is not a number")
+                            .cause(e)
+                            .toFlatSQLException();
+				}
 				server = server.substring(0, portSep);
 			}
 		} else if (sep == -1) {
@@ -83,7 +101,7 @@ public class DbAttachInfo {
 			this.server = server;
 		}
 		if (port != null) {
-			this.port = port.intValue();
+			this.port = port;
 		}
 		this.fileName = fileName;
 	}

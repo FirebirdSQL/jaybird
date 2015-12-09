@@ -133,10 +133,8 @@ public class FBDriver implements FirebirdDriver {
 
             return dataSource.getConnection(mcf.getUserName(), mcf.getPassword());
             
-        } catch(ResourceException resex) {
+        } catch(ResourceException | GDSException resex) {
             throw new FBSQLException(resex);
-        } catch(GDSException ex) {
-            throw new FBSQLException(ex);
         }
     }
 
