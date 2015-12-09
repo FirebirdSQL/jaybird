@@ -118,6 +118,19 @@ public final class FbExceptionBuilder {
     }
 
     /**
+     * Force the next exception to be a {@link java.sql.SQLNonTransientConnectionException}.
+     *
+     * @param errorCode
+     *         The Firebird error code
+     * @return this FbExceptionBuilder
+     * @see #exception(int)
+     */
+    public FbExceptionBuilder nonTransientConnectionException(int errorCode) {
+        setNextExceptionInformation(Type.NON_TRANSIENT_CONNECT, errorCode);
+        return this;
+    }
+
+    /**
      * Adds an integer message parameter for the exception message.
      *
      * @param parameter
@@ -184,7 +197,6 @@ public final class FbExceptionBuilder {
      * @see #toFlatSQLException()
      */
     public SQLException toSQLException() {
-        // TODO Also add SQLState + error code as in toFlatSQLException()?
         if (exceptionInfo.isEmpty()) return null;
         SQLExceptionChainBuilder<SQLException> chain = new SQLExceptionChainBuilder<>();
         for (ExceptionInformation info : exceptionInfo) {
@@ -391,7 +403,8 @@ public final class FbExceptionBuilder {
          * @return SQLException
          */
         SQLException toSQLException() {
-            SQLException result = type.createSQLException(toMessage(), sqlState, errorCode);
+            String message = toMessage() + " [SQLState:" + sqlState + ", ISC error code:" + errorCode + ']';
+            SQLException result = type.createSQLException(message, sqlState, errorCode);
             if (cause != null) {
                 result.initCause(cause);
             }
@@ -466,6 +479,15 @@ public final class FbExceptionBuilder {
             @Override
             public SQLException createSQLException(final String message, final String sqlState, final int errorCode) {
                 return new SQLNonTransientException(message, sqlState, errorCode);
+            }
+        },
+        /**
+         * Force builder to create exception of {@link java.sql.SQLNonTransientConnectionException}
+         */
+        NON_TRANSIENT_CONNECT(FBSQLException.SQL_STATE_CONNECTION_ERROR) {
+            @Override
+            public SQLException createSQLException(final String message, final String sqlState, final int errorCode) {
+                return new SQLNonTransientConnectionException(message, sqlState, errorCode);
             }
         };
 

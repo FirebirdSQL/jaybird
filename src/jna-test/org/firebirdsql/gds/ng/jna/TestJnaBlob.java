@@ -196,7 +196,7 @@ public class TestJnaBlob extends BaseTestBlob {
         expectedException.expect(SQLNonTransientException.class);
         expectedException.expect(allOf(
                 errorCodeEquals(ISCConstants.isc_no_segstr_close),
-                fbMessageEquals(ISCConstants.isc_no_segstr_close)
+                fbMessageStartsWith(ISCConstants.isc_no_segstr_close)
         ));
 
         final int testId = 1;
@@ -370,7 +370,7 @@ public class TestJnaBlob extends BaseTestBlob {
         expectedException.expect(SQLNonTransientException.class);
         expectedException.expect(allOf(
                 errorCodeEquals(ISCConstants.isc_segstr_no_op),
-                fbMessageEquals(ISCConstants.isc_segstr_no_op)
+                fbMessageStartsWith(ISCConstants.isc_segstr_no_op)
         ));
 
         final byte[] baseContent = generateBaseContent();
@@ -408,7 +408,7 @@ public class TestJnaBlob extends BaseTestBlob {
         expectedException.expect(SQLNonTransientException.class);
         expectedException.expect(allOf(
                 errorCodeEquals(ISCConstants.isc_segstr_no_op),
-                fbMessageEquals(ISCConstants.isc_segstr_no_op)
+                fbMessageStartsWith(ISCConstants.isc_segstr_no_op)
         ));
 
         try (JnaDatabase db = createDatabaseConnection()) {

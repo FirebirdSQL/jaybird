@@ -205,7 +205,7 @@ public class TestV10InputBlob extends BaseTestV10Blob {
         expectedException.expect(SQLNonTransientException.class);
         expectedException.expect(allOf(
                 errorCodeEquals(ISCConstants.isc_no_segstr_close),
-                fbMessageEquals(ISCConstants.isc_no_segstr_close)
+                fbMessageStartsWith(ISCConstants.isc_no_segstr_close)
         ));
 
         final int testId = 1;

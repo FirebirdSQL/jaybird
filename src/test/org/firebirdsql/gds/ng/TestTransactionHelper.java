@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
@@ -195,7 +193,7 @@ public class TestTransactionHelper {
         expectedException.expect(allOf(
                 isA(SQLNonTransientException.class),
                 errorCode(equalTo(TEST_ERROR_CODE)),
-                fbMessageEquals(TEST_ERROR_CODE)
+                fbMessageStartsWith(TEST_ERROR_CODE)
         ));
     }
 }

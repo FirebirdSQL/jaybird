@@ -49,7 +49,7 @@ public class GDSExceptionHelperTest {
     @Test
     public void getMessage_FirebirdRange() {
         // Test expectation is tied to the actual error message defined.
-        final String expected = "Invalid parameter to FIRST.  Only integers >= 0 are allowed.";
+        final String expected = "Invalid parameter to FETCH or FIRST. Only integers >= 0 are allowed.";
 
         GDSExceptionHelper.GDSMessage message = GDSExceptionHelper.getMessage(
                 ISCConstants.isc_bad_limit_param);

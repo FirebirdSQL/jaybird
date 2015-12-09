@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
@@ -26,7 +24,6 @@ import org.firebirdsql.gds.ng.listeners.DatabaseListener;
 import org.firebirdsql.gds.ng.listeners.TransactionListener;
 import org.firebirdsql.gds.ng.wire.FbWireDatabase;
 import org.firebirdsql.gds.ng.wire.FbWireTransaction;
-import org.hamcrest.CoreMatchers;
 import org.jmock.Expectations;
 import org.jmock.integration.junit4.JUnitRuleMockery;
 import org.junit.Before;
@@ -39,7 +36,6 @@ import java.sql.SQLNonTransientException;
 
 import static org.firebirdsql.common.matchers.SQLExceptionMatchers.*;
 import static org.hamcrest.CoreMatchers.allOf;
-import static org.hamcrest.CoreMatchers.endsWith;
 import static org.hamcrest.CoreMatchers.startsWith;
 import static org.jmock.Expectations.returnValue;
 import static org.junit.Assert.assertTrue;
@@ -82,7 +78,7 @@ public class TestV10InputBlobMock {
         expectedException.expect(SQLNonTransientException.class);
         expectedException.expect(allOf(
                 errorCodeEquals(ISCConstants.isc_segstr_no_write),
-                fbMessageEquals(ISCConstants.isc_segstr_no_write)
+                fbMessageStartsWith(ISCConstants.isc_segstr_no_write)
         ));
 
         V10InputBlob blob = new V10InputBlob(db, transaction, null, 1);
@@ -99,9 +95,7 @@ public class TestV10InputBlobMock {
         expectedException.expect(SQLException.class);
         //noinspection RedundantTypeArguments
         expectedException.expect(
-                message(CoreMatchers.<String>allOf( /* generic param required for Java 6 */
-                        startsWith("getSegment called with sizeRequested"),
-                        endsWith(", should be > 0"))));
+                message(startsWith("getSegment called with sizeRequested 0, should be > 0")));
 
         V10InputBlob blob = new V10InputBlob(db, transaction, null, 1);
 
@@ -117,9 +111,7 @@ public class TestV10InputBlobMock {
         expectedException.expect(SQLException.class);
         //noinspection RedundantTypeArguments
         expectedException.expect(
-                message(CoreMatchers.<String>allOf( /* generic param required for Java 6 */
-                        startsWith("getSegment called with sizeRequested"),
-                        endsWith(", should be > 0"))));
+                message(startsWith("getSegment called with sizeRequested -1, should be > 0")));
 
         V10InputBlob blob = new V10InputBlob(db, transaction, null, 1);
 
@@ -135,7 +127,7 @@ public class TestV10InputBlobMock {
         expectedException.expect(SQLNonTransientException.class);
         expectedException.expect(allOf(
                 errorCodeEquals(ISCConstants.isc_bad_segstr_handle),
-                fbMessageEquals(ISCConstants.isc_bad_segstr_handle)
+                fbMessageStartsWith(ISCConstants.isc_bad_segstr_handle)
         ));
 
         V10InputBlob blob = new V10InputBlob(db, transaction, null, 1);

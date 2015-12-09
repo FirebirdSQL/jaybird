@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
@@ -36,7 +34,7 @@ import org.junit.rules.ExpectedException;
 import java.sql.SQLNonTransientException;
 
 import static org.firebirdsql.common.matchers.SQLExceptionMatchers.errorCodeEquals;
-import static org.firebirdsql.common.matchers.SQLExceptionMatchers.fbMessageEquals;
+import static org.firebirdsql.common.matchers.SQLExceptionMatchers.fbMessageStartsWith;
 import static org.hamcrest.CoreMatchers.allOf;
 import static org.junit.Assert.assertTrue;
 
@@ -77,7 +75,7 @@ public class TestV10OutputBlobMock {
         expectedException.expect(SQLNonTransientException.class);
         expectedException.expect(allOf(
                 errorCodeEquals(ISCConstants.isc_segstr_no_read),
-                fbMessageEquals(ISCConstants.isc_segstr_no_read)
+                fbMessageStartsWith(ISCConstants.isc_segstr_no_read)
         ));
 
         V10OutputBlob blob = new V10OutputBlob(db, transaction, null);
@@ -94,7 +92,7 @@ public class TestV10OutputBlobMock {
         expectedException.expect(SQLNonTransientException.class);
         expectedException.expect(allOf(
                 errorCodeEquals(ISCConstants.isc_segstr_no_read),
-                fbMessageEquals(ISCConstants.isc_segstr_no_read)
+                fbMessageStartsWith(ISCConstants.isc_segstr_no_read)
         ));
 
         V10OutputBlob blob = new V10OutputBlob(db, transaction, null);

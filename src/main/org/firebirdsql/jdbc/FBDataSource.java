@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
@@ -109,6 +107,7 @@ public class FBDataSource extends RootCommonDataSource implements DataSource, Se
      * @throws SQLException
      *         if a database-access error occurs.
      */
+    @SuppressWarnings("deprecation")
     public Connection getConnection(String username, String password) throws SQLException {
         try {
             //mcf makes a copy for us.
@@ -117,6 +116,12 @@ public class FBDataSource extends RootCommonDataSource implements DataSource, Se
             subjectCri.setPassword(password);
             return (Connection) cm.allocateConnection(mcf, subjectCri);
         } catch (ResourceException re) {
+            if (re.getCause() instanceof SQLException) {
+                throw (SQLException) re.getCause();
+            }
+            if (re.getLinkedException() instanceof SQLException) {
+                throw (SQLException) re.getLinkedException();
+            }
             throw new FBSQLException(re);
         }
     }

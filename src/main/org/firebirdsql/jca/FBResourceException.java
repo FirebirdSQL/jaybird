@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source J2ee connector - jdbc driver
+ * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -12,7 +12,7 @@
  * This file was created by members of the firebird development team.
  * All individual contributions remain the Copyright (C) of those
  * individuals.  Contributors to this file are either listed here or
- * can be obtained from a CVS history command.
+ * can be obtained from a source control history command.
  *
  * All rights reserved.
  */
@@ -21,6 +21,7 @@ package org.firebirdsql.jca;
 import javax.resource.ResourceException;
 import java.io.PrintWriter;
 import java.io.PrintStream;
+import java.sql.SQLException;
 
 /**
  * <code>FBResourceException</code> should be used in places where 
@@ -39,6 +40,7 @@ import java.io.PrintStream;
  * 
  * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
  */
+@SuppressWarnings("deprecation")
 public class FBResourceException extends ResourceException {
     
     public static final String SQL_STATE_GENERAL_ERROR = "HY000";
@@ -74,7 +76,15 @@ public class FBResourceException extends ResourceException {
      */
     public FBResourceException(String reason, Exception original) {
         super(reason, SQL_STATE_GENERAL_ERROR);
+        // Preserve setLinkedException for backwards compatibility
         setLinkedException(original);
+        initCause(original);
+        if (original instanceof SQLException) {
+            SQLException origSql = (SQLException) original;
+            if (origSql.getSQLState() != null) {
+                setErrorCode(origSql.getSQLState());
+            }
+        }
     }
 
     /**
@@ -85,8 +95,7 @@ public class FBResourceException extends ResourceException {
      *        to be linked to
      */
     public FBResourceException(Exception original) {
-        super(original.getMessage(), SQL_STATE_GENERAL_ERROR);
-        setLinkedException(original);
+        this(original.getMessage(), original);
     }
     
     /**
@@ -95,15 +104,24 @@ public class FBResourceException extends ResourceException {
      * @return combined message of this exception and original exception.
      */
     public String getMessage() {
-        String s = super.getMessage();
+        String message = super.getMessage();
+        String causeMessage = null;
 
-        if (getLinkedException() == null)
-            return s;
+        if (getCause() != null) {
+            causeMessage = getCause().getMessage();
+        } else if (getLinkedException() != null) {
+            causeMessage = getLinkedException().getMessage();
+        }
+
+        if (causeMessage == null) {
+            return message;
+        }
             
-        if (s == null)
-            return getLinkedException().getMessage();
+        if (message == null) {
+            return causeMessage;
+        }
             
-        return s + "\nReason: " + getLinkedException().getMessage();
+        return message + "\nReason: " + causeMessage;
     }
 
 
