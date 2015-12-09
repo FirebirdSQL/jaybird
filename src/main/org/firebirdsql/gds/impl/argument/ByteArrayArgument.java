@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
@@ -30,12 +28,13 @@ import java.util.Arrays;
 /**
  * {@link Argument} implementation for byte arrays.
  * <p>
- * This implementation supports byte arrays up to 256 bytes.
+ * This implementation supports byte arrays up to length of the argument type.
  * </p>
  */
 public final class ByteArrayArgument extends Argument {
 
     private final byte[] value;
+    private final ArgumentType argumentType;
 
     /**
      * Initializes an instance of ByteArrayArgument.
@@ -45,13 +44,17 @@ public final class ByteArrayArgument extends Argument {
      * @param value
      *         Byte array with a length up to 255 bytes.
      */
-    public ByteArrayArgument(int type, byte[] value) {
+    public ByteArrayArgument(int type, ArgumentType argumentType, byte[] value) {
         super(type);
+        this.argumentType = argumentType;
+        if (argumentType != ArgumentType.TraditionalDpb && argumentType != ArgumentType.Wide) {
+            throw new IllegalArgumentException("ByteArrayArgument only works for TraditionalDpb or Wide, was: " + argumentType);
+        }
         if (value == null) {
             throw new IllegalArgumentException("byte array value should not be null");
         }
-        if (value.length > 255) {
-            throw new IllegalArgumentException("byte array value should not be longer than 255 bytes, length was " + value.length);
+        if (value.length > argumentType.getMaxLength()) {
+            throw new IllegalArgumentException(String.format("byte array value should not be longer than %d bytes, length was %d", argumentType.getMaxLength(), value.length));
         }
         this.value = value;
     }
@@ -59,25 +62,22 @@ public final class ByteArrayArgument extends Argument {
     @Override
     public void writeTo(OutputStream outputStream) throws IOException {
         outputStream.write(getType());
-        writeLength(value.length, outputStream);
+        argumentType.writeLength(value.length, outputStream);
         outputStream.write(value);
     }
 
     @Override
     public int getLength() {
-        return value.length + 2;
-    }
-
-    protected void writeLength(int length, OutputStream outputStream) throws IOException {
-        outputStream.write(length);
+        return 1 + argumentType.getLengthSize() + value.length ;
     }
 
     @Override
     public int getValueAsInt() {
-        if (value.length == 1)
+        if (value.length == 1) {
             return value[0];
-        else
+        } else {
             throw new UnsupportedOperationException("This method is not supported for byte arrays with length > 1");
+        }
     }
 
     @Override
@@ -87,8 +87,9 @@ public final class ByteArrayArgument extends Argument {
 
     @Override
     public boolean equals(Object other) {
-        if (other == null || !(other instanceof ByteArrayArgument))
+        if (other == null || !(other instanceof ByteArrayArgument)) {
             return false;
+        }
 
         final ByteArrayArgument otherByteArrayArgument = (ByteArrayArgument) other;
 

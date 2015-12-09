@@ -74,6 +74,17 @@ public final class VaxEncoding {
      */
     public static void encodeVaxInteger(OutputStream stream, int value) throws IOException {
         stream.write(4);
+        encodeVaxIntegerWithoutLength(stream, value);
+    }
+
+    /**
+     * Encodes an integer using vax encoding into the output stream, without length prefix.
+     *
+     * @param stream Output stream to write
+     * @param value Value to encode
+     * @throws IOException
+     */
+    public static void encodeVaxIntegerWithoutLength(OutputStream stream, int value) throws IOException {
         stream.write(value);
         stream.write(value >> 8);
         stream.write(value >> 16);
@@ -120,6 +131,17 @@ public final class VaxEncoding {
      */
     public static void encodeVaxLong(OutputStream stream, long value) throws IOException {
         stream.write(8);
+        encodeVaxLongWithoutLength(stream, value);
+    }
+
+    /**
+     * Encodes a long using vax encoding into the output stream, without length prefix.
+     *
+     * @param stream Output stream to write
+     * @param value Value to encode
+     * @throws IOException
+     */
+    private static void encodeVaxLongWithoutLength(OutputStream stream, long value) throws IOException {
         stream.write((int) value);
         stream.write((int) (value >> 8));
         stream.write((int) (value >> 16));
@@ -145,4 +167,15 @@ public final class VaxEncoding {
         return (buffer[startPosition] & 0xff) | ((buffer[startPosition + 1] & 0xff) << 8);
     }
 
+    /**
+     * Encodes an integer using two byte vax encoding into the output stream, without length prefix.
+     *
+     * @param stream Output stream to write
+     * @param value Value to encode
+     * @throws IOException
+     */
+    public static void encodeVaxInteger2WithoutLength(OutputStream stream, int value) throws IOException {
+        stream.write(value);
+        stream.write(value >> 8);
+    }
 }

@@ -44,71 +44,76 @@ public abstract class ParameterBufferBase implements ParameterBuffer, Serializab
 
     private final List<Argument> arguments = new ArrayList<>();
 
-    private final int type;
     private final String defaultEncodingName;
+    private final ParameterBufferMetaData parameterBufferMetaData;
     private transient Encoding defaultEncoding;
 
     /**
      * Creates a {@code ParameterBufferBase}.
      * <p>
      * This uses a default encoding derived from the system default encoding. You usually want to
-     * use {@link #ParameterBufferBase(int, Encoding)} instead.
+     * use {@link #ParameterBufferBase(ParameterBufferMetaData, Encoding)} instead.
      * </p>
      *
-     * @param type Firebird type/version code for the parameter buffer
+     * @param parameterBufferMetaData Metadata for the parameter buffer.
      */
-    protected ParameterBufferBase(int type) {
-        this(type, EncodingFactory.getDefaultInstance().getDefaultEncoding());
+    protected ParameterBufferBase(ParameterBufferMetaData parameterBufferMetaData) {
+        this(parameterBufferMetaData, EncodingFactory.getDefaultInstance().getDefaultEncoding());
     }
 
     /**
      * Creates a {@code ParameterBufferBase}.
      *
-     * @param type Firebird type/version code for the parameter buffer
+     * @param parameterBufferMetaData Metadata for the parameter buffer.
      * @param defaultEncoding Default encoding to use for string arguments
      */
-    protected ParameterBufferBase(int type, Encoding defaultEncoding) {
-        this.type = type;
+    protected ParameterBufferBase(ParameterBufferMetaData parameterBufferMetaData, Encoding defaultEncoding) {
+        this.parameterBufferMetaData = parameterBufferMetaData;
         defaultEncodingName = defaultEncoding.getCharsetName();
         this.defaultEncoding = defaultEncoding;
+        parameterBufferMetaData.addPreamble(this);
     }
 
     public final Encoding getDefaultEncoding() {
         return defaultEncoding;
     }
 
-    @Override
-    public final int getType() {
-        return type;
+    public final ParameterBufferMetaData getParameterBufferMetaData() {
+        return parameterBufferMetaData;
     }
 
     @Override
-    public void addArgument(int argumentType, String value) {
+    public final int getType() {
+        return parameterBufferMetaData.getType();
+    }
+
+    @Override
+    public final void addArgument(int argumentType, String value) {
         addArgument(argumentType, value, defaultEncoding);
     }
 
     @Override
-    public void addArgument(int argumentType, String value, Encoding encoding) {
-        getArgumentsList().add(new StringArgument(argumentType, value, encoding));
+    public final void addArgument(int argumentType, String value, Encoding encoding) {
+        getArgumentsList().add(new StringArgument(argumentType, parameterBufferMetaData.getStringArgumentType(argumentType), value, encoding));
     }
 
     @Override
-    public void addArgument(int argumentType, int value) {
-        getArgumentsList().add(new NumericArgument(argumentType, value));
+    public final void addArgument(int argumentType, int value) {
+        getArgumentsList().add(new NumericArgument(argumentType, parameterBufferMetaData.getIntegerArgumentType(argumentType), value));
     }
 
     @Override
-    public void addArgument(int argumentType) {
+    public final void addArgument(int argumentType) {
         getArgumentsList().add(new SingleItem(argumentType));
     }
 
     @Override
-    public void addArgument(int type, byte[] content) {
-        getArgumentsList().add(new ByteArrayArgument(type, content));
+    public final void addArgument(int type, byte[] content) {
+        getArgumentsList().add(new ByteArrayArgument(type, parameterBufferMetaData.getByteArrayArgumentType(type), content));
     }
 
     @Override
-    public String getArgumentAsString(int type) {
+    public final String getArgumentAsString(int type) {
         final List<Argument> argumentsList = getArgumentsList();
         for (final Argument argument : argumentsList) {
             if (argument.getType() == type) {
@@ -119,7 +124,7 @@ public abstract class ParameterBufferBase implements ParameterBuffer, Serializab
     }
 
     @Override
-    public int getArgumentAsInt(int type) {
+    public final int getArgumentAsInt(int type) {
         final List<Argument> argumentsList = getArgumentsList();
         for (final Argument argument : argumentsList) {
             if (argument.getType() == type) {
@@ -130,7 +135,7 @@ public abstract class ParameterBufferBase implements ParameterBuffer, Serializab
     }
 
     @Override
-    public boolean hasArgument(int type) {
+    public final boolean hasArgument(int type) {
         final List<Argument> argumentsList = getArgumentsList();
         for (final Argument argument : argumentsList) {
             if (argument.getType() == type) return true;
@@ -139,7 +144,7 @@ public abstract class ParameterBufferBase implements ParameterBuffer, Serializab
     }
 
     @Override
-    public void removeArgument(int type) {
+    public final void removeArgument(int type) {
         final List<Argument> argumentsList = getArgumentsList();
         for (int i = 0, n = argumentsList.size(); i < n; i++) {
             final Argument argument = argumentsList.get(i);
@@ -155,18 +160,18 @@ public abstract class ParameterBufferBase implements ParameterBuffer, Serializab
         return new ArrayList<Parameter>(arguments).iterator();
     }
 
-    public void writeArgumentsTo(OutputStream outputStream) throws IOException {
+    public final void writeArgumentsTo(OutputStream outputStream) throws IOException {
         for (final Argument currentArgument : arguments) {
             currentArgument.writeTo(outputStream);
         }
     }
 
     @Override
-    public Xdrable toXdrable() {
+    public final Xdrable toXdrable() {
         return new ParameterBufferXdrable();
     }
 
-    protected int getLength() {
+    protected final int getLength() {
         final List<Argument> argumentsList = getArgumentsList();
         int length = 0;
         for (final Argument currentArgument : argumentsList) {
@@ -180,7 +185,7 @@ public abstract class ParameterBufferBase implements ParameterBuffer, Serializab
     }
 
     @Override
-    public byte[] toBytes() {
+    public final byte[] toBytes() {
         final ByteArrayOutputStream bout = new ByteArrayOutputStream();
         try {
             writeArgumentsTo(bout);
@@ -191,7 +196,7 @@ public abstract class ParameterBufferBase implements ParameterBuffer, Serializab
     }
 
     @Override
-    public byte[] toBytesWithType() {
+    public final byte[] toBytesWithType() {
         final ByteArrayOutputStream bout = new ByteArrayOutputStream();
         try {
             bout.write(getType());
@@ -203,12 +208,12 @@ public abstract class ParameterBufferBase implements ParameterBuffer, Serializab
     }
 
     @Override
-    public int size() {
+    public final int size() {
         return arguments.size();
     }
 
     @Override
-    public boolean equals(Object other) {
+    public final boolean equals(Object other) {
         if (other == null || !(this.getClass().isAssignableFrom(other.getClass())))
             return false;
 
@@ -217,7 +222,7 @@ public abstract class ParameterBufferBase implements ParameterBuffer, Serializab
     }
 
     @Override
-    public int hashCode() {
+    public final int hashCode() {
         return getArgumentsList().hashCode();
     }
 

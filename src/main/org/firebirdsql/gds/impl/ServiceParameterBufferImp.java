@@ -20,8 +20,10 @@ package org.firebirdsql.gds.impl;
 
 import org.firebirdsql.encodings.Encoding;
 import org.firebirdsql.gds.ISCConstants;
+import org.firebirdsql.gds.ParameterBuffer;
 import org.firebirdsql.gds.ParameterTagMapping;
 import org.firebirdsql.gds.ServiceParameterBuffer;
+import org.firebirdsql.gds.impl.argument.ArgumentType;
 
 /**
  * Implementation of ServiceParameterBuffer.
@@ -31,12 +33,88 @@ public class ServiceParameterBufferImp extends ParameterBufferBase implements Se
     /**
      * Creates an empty service parameter buffer
      */
-    public ServiceParameterBufferImp(Encoding defaultEncoding) {
-        super(ISCConstants.isc_spb_version, defaultEncoding);
+    public ServiceParameterBufferImp(SpbMetaData spbMetaData, Encoding defaultEncoding) {
+        super(spbMetaData, defaultEncoding);
     }
 
     @Override
     public ParameterTagMapping getTagMapping() {
         return ParameterTagMapping.SPB;
+    }
+
+    public enum SpbMetaData implements ParameterBufferMetaData {
+
+        // TODO Unsure if we need the versions without _ATTACH
+
+        SPB_VERSION_2_ATTACH(ISCConstants.isc_spb_version) {
+            @Override
+            public void addPreamble(ParameterBuffer parameterBuffer) {
+                parameterBuffer.addArgument(ISCConstants.isc_spb_current_version);
+            }
+
+            @Override
+            public ArgumentType getStringArgumentType(int tag) {
+                return ArgumentType.TraditionalDpb;
+            }
+
+            @Override
+            public ArgumentType getByteArrayArgumentType(int tag) {
+                return ArgumentType.TraditionalDpb;
+            }
+
+            @Override
+            public ArgumentType getIntegerArgumentType(int tag) {
+                return ArgumentType.TraditionalDpb;
+            }
+        },
+        SPB_VERSION_2(ISCConstants.isc_spb_current_version) {
+            // TODO Check if correct and add additional types
+            @Override
+            public ArgumentType getStringArgumentType(int tag) {
+                return ArgumentType.StringSpb;
+            }
+
+            @Override
+            public ArgumentType getByteArrayArgumentType(int tag) {
+                return ArgumentType.StringSpb;
+            }
+
+            @Override
+            public ArgumentType getIntegerArgumentType(int tag) {
+                return ArgumentType.IntSpb;
+            }
+        },
+        SPB_VERSION_3_ATTACH(ISCConstants.isc_spb_version3) {
+            @Override
+            public ArgumentType getStringArgumentType(int tag) {
+                return ArgumentType.Wide;
+            }
+
+            @Override
+            public ArgumentType getByteArrayArgumentType(int tag) {
+                return ArgumentType.Wide;
+            }
+
+            @Override
+            public ArgumentType getIntegerArgumentType(int tag) {
+                return ArgumentType.Wide;
+            }
+        };
+
+        private final int spbVersion;
+
+        SpbMetaData(int spbVersion) {
+            this.spbVersion = spbVersion;
+        }
+
+        @Override
+        public final int getType() {
+            return spbVersion;
+        }
+
+        @Override
+        public void addPreamble(ParameterBuffer parameterBuffer) {
+            // Do nothing
+        }
     }
 }

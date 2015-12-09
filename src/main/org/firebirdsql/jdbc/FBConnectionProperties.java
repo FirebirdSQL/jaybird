@@ -392,8 +392,9 @@ public class FBConnectionProperties implements FirebirdConnectionProperties, Ser
     @Deprecated
     public DatabaseParameterBuffer getDatabaseParameterBuffer() throws SQLException {
         // TODO Instance creation should be done through FbDatabase or database factory?
-        DatabaseParameterBuffer dpb =
-                new DatabaseParameterBufferImp(EncodingFactory.getDefaultInstance().getDefaultEncoding());
+        DatabaseParameterBuffer dpb = new DatabaseParameterBufferImp(
+                DatabaseParameterBufferImp.DpbMetaData.DPB_VERSION_1,
+                EncodingFactory.getDefaultInstance().getDefaultEncoding());
         for (Map.Entry<String, Object> entry : properties.entrySet()) {
             String propertyName = entry.getKey();
             Object value = entry.getValue();

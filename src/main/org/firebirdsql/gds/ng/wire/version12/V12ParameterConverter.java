@@ -28,8 +28,6 @@ import org.firebirdsql.gds.ng.wire.WireDatabaseConnection;
 import org.firebirdsql.gds.ng.wire.WireServiceConnection;
 import org.firebirdsql.gds.ng.wire.version11.V11ParameterConverter;
 
-import static org.firebirdsql.gds.ISCConstants.isc_spb_current_version;
-
 /**
  * Implementation of {@link org.firebirdsql.gds.ng.ParameterConverter} for the version 12 protocol.
  * <p>
@@ -43,15 +41,16 @@ public class V12ParameterConverter extends V11ParameterConverter {
 
     protected DatabaseParameterBuffer createDatabaseParameterBuffer(WireDatabaseConnection connection) {
         final Encoding stringEncoding = connection.getEncodingFactory().getEncodingForFirebirdName("UTF8");
-        DatabaseParameterBuffer dpb = new DatabaseParameterBufferImp(stringEncoding);
+        DatabaseParameterBuffer dpb =
+                new DatabaseParameterBufferImp(DatabaseParameterBufferImp.DpbMetaData.DPB_VERSION_1, stringEncoding);
         dpb.addArgument(ISCConstants.isc_dpb_utf8_filename, 1);
         return dpb;
     }
 
     protected ServiceParameterBuffer createServiceParameterBuffer(WireServiceConnection connection) {
         final Encoding stringEncoding = connection.getEncodingFactory().getEncodingForFirebirdName("UTF8");
-        ServiceParameterBuffer spb = new ServiceParameterBufferImp(stringEncoding);
-        spb.addArgument(isc_spb_current_version);
+        ServiceParameterBuffer spb = new ServiceParameterBufferImp(
+                ServiceParameterBufferImp.SpbMetaData.SPB_VERSION_2_ATTACH, stringEncoding);
         spb.addArgument(ISCConstants.isc_dpb_utf8_filename, 1);
         return spb;
     }

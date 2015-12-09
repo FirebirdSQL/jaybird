@@ -38,15 +38,14 @@ import static org.firebirdsql.gds.ISCConstants.*;
 public abstract class AbstractParameterConverter<D extends AbstractConnection<IConnectionProperties, ?>, S extends AbstractConnection<IServiceProperties, ?>>
         implements ParameterConverter<D, S> {
 
-
     protected DatabaseParameterBuffer createDatabaseParameterBuffer(final D connection) {
-        return new DatabaseParameterBufferImp(connection.getEncoding());
+        return new DatabaseParameterBufferImp(DatabaseParameterBufferImp.DpbMetaData.DPB_VERSION_1,
+                connection.getEncoding());
     }
 
     protected ServiceParameterBuffer createServiceParameterBuffer(final S connection) {
-        final ServiceParameterBuffer spb = new ServiceParameterBufferImp(connection.getEncoding());
-        spb.addArgument(isc_spb_current_version);
-        return spb;
+        return new ServiceParameterBufferImp(ServiceParameterBufferImp.SpbMetaData.SPB_VERSION_2_ATTACH,
+                connection.getEncoding());
     }
 
     @Override

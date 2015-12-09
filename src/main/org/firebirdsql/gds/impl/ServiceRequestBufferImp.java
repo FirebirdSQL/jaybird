@@ -18,14 +18,11 @@
  */
 package org.firebirdsql.gds.impl;
 
-import org.firebirdsql.encodings.Encoding;
 import org.firebirdsql.gds.ISCConstants;
+import org.firebirdsql.gds.ParameterBuffer;
 import org.firebirdsql.gds.ServiceRequestBuffer;
+import org.firebirdsql.gds.impl.argument.ArgumentType;
 import org.firebirdsql.gds.impl.argument.NumericArgument;
-import org.firebirdsql.gds.impl.argument.StringArgument;
-
-import java.io.IOException;
-import java.io.OutputStream;
 
 /**
  * Implementation of ServiceRequestBufferImp.
@@ -36,7 +33,7 @@ public class ServiceRequestBufferImp extends ParameterBufferBase implements Serv
      * Creates an empty service request buffer.
      */
     public ServiceRequestBufferImp() {
-        super(ISCConstants.isc_spb_current_version);
+        super(SrbMetaData.SPB_VERSION_2);
     }
 
     /**
@@ -51,77 +48,45 @@ public class ServiceRequestBufferImp extends ParameterBufferBase implements Serv
     }
 
     @Override
-    public void addArgument(int argumentType, String value) {
-        getArgumentsList().add(new ServiceStringArgument(argumentType, value));
-    }
-
-    @Override
-    public void addArgument(int argumentType, String value, Encoding encoding) {
-        getArgumentsList().add(new ServiceStringArgument(argumentType, value, encoding));
-    }
-
-    @Override
-    public void addArgument(int argumentType, int value) {
-
-        getArgumentsList().add(new NumericArgument(argumentType, value) {
-
-            @Override
-            public int getLength() {
-                return 5;
-            }
-
-            @Override
-            protected void writeValue(OutputStream outputStream, int value) throws IOException {
-                outputStream.write(value);
-                outputStream.write(value >> 8);
-                outputStream.write(value >> 16);
-                outputStream.write(value >> 24);
-            }
-        });
-    }
-
-    @Override
     public void addArgument(int argumentType, byte value) {
-        getArgumentsList().add(new NumericArgument(argumentType, value) {
-
-            @Override
-            public int getLength() {
-                return 2;
-            }
-
-            @Override
-            protected void writeValue(OutputStream outputStream, int value) throws IOException {
-                outputStream.write(value);
-            }
-        });
+        // TODO Handle through metadata behavior
+        getArgumentsList().add(new NumericArgument(argumentType, ArgumentType.ByteSpb, value));
     }
 
-    private static final class ServiceStringArgument extends StringArgument {
+    public enum SrbMetaData implements ParameterBufferMetaData {
+        // TODO Add isc_spb_version3 as well?
+        SPB_VERSION_2(ISCConstants.isc_spb_current_version) {
+            // TODO Check if correct and add additional types
+            @Override
+            public ArgumentType getStringArgumentType(int tag) {
+                return ArgumentType.StringSpb;
+            }
 
-        @Deprecated
-        public ServiceStringArgument(int argumentType, String value) {
-            super(argumentType, value);
-        }
+            @Override
+            public ArgumentType getByteArrayArgumentType(int tag) {
+                return ArgumentType.StringSpb;
+            }
 
-        public ServiceStringArgument(int argumentType, String value, Encoding encoding) {
-            super(argumentType, value, encoding);
+            @Override
+            public ArgumentType getIntegerArgumentType(int tag) {
+                return ArgumentType.IntSpb;
+            }
+        };
+
+        private final int spbVersion;
+
+        SrbMetaData(int spbVersion) {
+            this.spbVersion = spbVersion;
         }
 
         @Override
-        public int getLength() {
-            return super.getLength() + 1;
+        public final int getType() {
+            return spbVersion;
         }
 
         @Override
-        protected void writeLength(int length, OutputStream outputStream) throws IOException {
-            outputStream.write(length);
-            outputStream.write(length >> 8);
-        }
-
-        @Override
-        protected int getMaxSupportedLength() {
-            // TODO Check if this might be signed
-            return 65535;
+        public void addPreamble(ParameterBuffer parameterBuffer) {
+            // Do nothing
         }
     }
 }

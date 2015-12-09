@@ -21,7 +21,9 @@
 package org.firebirdsql.gds.impl;
 
 import org.firebirdsql.gds.ISCConstants;
+import org.firebirdsql.gds.ParameterBuffer;
 import org.firebirdsql.gds.TransactionParameterBuffer;
+import org.firebirdsql.gds.impl.argument.ArgumentType;
 
 /**
  * Implementation of the {@link org.firebirdsql.gds.TransactionParameterBuffer} interface.
@@ -29,7 +31,7 @@ import org.firebirdsql.gds.TransactionParameterBuffer;
 public final class TransactionParameterBufferImpl extends ParameterBufferBase implements TransactionParameterBuffer {
 
     public TransactionParameterBufferImpl() {
-        super(ISCConstants.isc_tpb_version3);
+        super(TpbMetaData.TPB_VERSION_3);
     }
 
     @Override
@@ -41,4 +43,38 @@ public final class TransactionParameterBufferImpl extends ParameterBufferBase im
         return result;
     }
 
+    public enum TpbMetaData implements ParameterBufferMetaData {
+        TPB_VERSION_3(ISCConstants.isc_tpb_version3);
+
+        private final int tpbVersion;
+
+        TpbMetaData(int tpbVersion) {
+            this.tpbVersion = tpbVersion;
+        }
+
+        @Override
+        public int getType() {
+            return tpbVersion;
+        }
+
+        @Override
+        public void addPreamble(ParameterBuffer parameterBuffer) {
+            // Do nothing
+        }
+
+        @Override
+        public ArgumentType getStringArgumentType(int tag) {
+            return ArgumentType.TraditionalDpb;
+        }
+
+        @Override
+        public ArgumentType getByteArrayArgumentType(int tag) {
+            return ArgumentType.TraditionalDpb;
+        }
+
+        @Override
+        public ArgumentType getIntegerArgumentType(int tag) {
+            return ArgumentType.TraditionalDpb;
+        }
+    }
 }

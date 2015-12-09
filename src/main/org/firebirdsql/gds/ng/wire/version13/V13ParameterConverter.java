@@ -18,7 +18,10 @@
  */
 package org.firebirdsql.gds.ng.wire.version13;
 
+import org.firebirdsql.encodings.Encoding;
 import org.firebirdsql.gds.*;
+import org.firebirdsql.gds.impl.DatabaseParameterBufferImp;
+import org.firebirdsql.gds.impl.ServiceParameterBufferImp;
 import org.firebirdsql.gds.ng.AbstractConnection;
 import org.firebirdsql.gds.ng.IAttachProperties;
 import org.firebirdsql.gds.ng.wire.WireConnection;
@@ -53,6 +56,22 @@ public class V13ParameterConverter extends V12ParameterConverter {
             jaybirdVersion = "Jaybird (version unknown)";
         }
         JAYBIRD_VERSION = jaybirdVersion;
+    }
+
+    protected DatabaseParameterBuffer createDatabaseParameterBuffer(WireDatabaseConnection connection) {
+        final Encoding stringEncoding = connection.getEncodingFactory().getEncodingForFirebirdName("UTF8");
+        DatabaseParameterBuffer dpb =
+                new DatabaseParameterBufferImp(DatabaseParameterBufferImp.DpbMetaData.DPB_VERSION_2, stringEncoding);
+        dpb.addArgument(ISCConstants.isc_dpb_utf8_filename, 1);
+        return dpb;
+    }
+
+    protected ServiceParameterBuffer createServiceParameterBuffer(WireServiceConnection connection) {
+        final Encoding stringEncoding = connection.getEncodingFactory().getEncodingForFirebirdName("UTF8");
+        ServiceParameterBuffer spb = new ServiceParameterBufferImp(
+                ServiceParameterBufferImp.SpbMetaData.SPB_VERSION_3_ATTACH, stringEncoding);
+        spb.addArgument(ISCConstants.isc_dpb_utf8_filename, 1);
+        return spb;
     }
 
     @Override

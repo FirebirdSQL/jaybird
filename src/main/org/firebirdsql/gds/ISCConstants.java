@@ -63,6 +63,8 @@ public interface ISCConstants {
     /**********************************/
 
     int isc_dpb_version1                = 1;
+    int isc_dpb_version2                = 2;
+
     int isc_dpb_cdd_pathname            = 1;
     int isc_dpb_allocation              = 2;
     int isc_dpb_journal                 = 3;

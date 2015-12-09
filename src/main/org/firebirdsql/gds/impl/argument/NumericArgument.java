@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
@@ -22,41 +20,56 @@ package org.firebirdsql.gds.impl.argument;
 
 import org.firebirdsql.encodings.Encoding;
 import org.firebirdsql.gds.ParameterBuffer;
+import org.firebirdsql.gds.VaxEncoding;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.util.EnumSet;
 
 /**
  * {@link Argument} implementation for numeric (integer) values
  */
-public class NumericArgument extends Argument {
+public final class NumericArgument extends Argument {
 
+    private static final EnumSet<ArgumentType> SUPPORTED_ARGUMENT_TYPES =
+            EnumSet.of(ArgumentType.TraditionalDpb, ArgumentType.Wide, ArgumentType.IntSpb, ArgumentType.ByteSpb);
+    private final ArgumentType argumentType;
     private final int value;
 
-    public NumericArgument(int type, int value) {
+    public NumericArgument(int type, ArgumentType argumentType, int value) {
         super(type);
+        if (!SUPPORTED_ARGUMENT_TYPES.contains(argumentType)) {
+            throw new IllegalArgumentException("Invalid argument type: " + argumentType);
+        }
+        this.argumentType = argumentType;
         this.value = value;
     }
 
-    public void writeTo(OutputStream outputStream) throws IOException {
+    public void writeTo(final OutputStream outputStream) throws IOException {
         outputStream.write(getType());
         writeValue(outputStream, value);
     }
 
     public int getLength() {
-        return 6;
+        if (argumentType == ArgumentType.ByteSpb) {
+            // 2: 1 for type + 1 for data; no length
+            return 2;
+        }
+        // 5: 1 for type + 4 for data
+        return 5 + argumentType.getLengthSize();
     }
 
-    protected void writeValue(OutputStream outputStream, final int value) throws IOException {
-        outputStream.write(4);
-        outputStream.write(value);
-        outputStream.write(value >> 8);
-        outputStream.write(value >> 16);
-        outputStream.write(value >> 24);
+    protected void writeValue(final OutputStream outputStream, final int value) throws IOException {
+        if (argumentType == ArgumentType.ByteSpb) {
+            outputStream.write(value);
+        } else {
+            argumentType.writeLength(4, outputStream);
+            VaxEncoding.encodeVaxIntegerWithoutLength(outputStream, value);
+        }
     }
 
     @Override
-    public int getValueAsInt() {
+    public final int getValueAsInt() {
         return value;
     }
 
@@ -67,8 +80,9 @@ public class NumericArgument extends Argument {
 
     @Override
     public boolean equals(Object other) {
-        if (other == null || !(other instanceof NumericArgument))
+        if (other == null || !(other instanceof NumericArgument)) {
             return false;
+        }
 
         final NumericArgument otherNumericArgument = (NumericArgument) other;
 

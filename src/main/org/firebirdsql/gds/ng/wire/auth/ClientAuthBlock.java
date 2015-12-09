@@ -142,6 +142,7 @@ public final class ClientAuthBlock {
         }
 
         firstTime = true;
+        currentPlugin = null;
         pluginProviders = new LinkedList<>(getSupportedPluginProviders());
 
         if (!serverPlugins.isEmpty()) {

@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
@@ -23,20 +21,23 @@ package org.firebirdsql.gds.impl;
 import org.firebirdsql.encodings.Encoding;
 import org.firebirdsql.gds.DatabaseParameterBuffer;
 import org.firebirdsql.gds.ISCConstants;
+import org.firebirdsql.gds.ParameterBuffer;
 import org.firebirdsql.gds.ParameterTagMapping;
+import org.firebirdsql.gds.impl.argument.ArgumentType;
 
 /**
  * Implementation for DatabaseParameterBuffer.
  */
 public final class DatabaseParameterBufferImp extends ParameterBufferBase implements DatabaseParameterBufferExtension {
 
-    public DatabaseParameterBufferImp(Encoding defaultEncoding) {
-        super(ISCConstants.isc_dpb_version1, defaultEncoding);
+    public DatabaseParameterBufferImp(DpbMetaData dpbMetaData, Encoding defaultEncoding) {
+        super(dpbMetaData, defaultEncoding);
     }
 
     @Override
     public DatabaseParameterBuffer deepCopy() {
-        final DatabaseParameterBufferImp copy = new DatabaseParameterBufferImp(getDefaultEncoding());
+        final DatabaseParameterBufferImp copy =
+                new DatabaseParameterBufferImp((DpbMetaData) getParameterBufferMetaData(), getDefaultEncoding());
 
         // All the Argument sub classes are immutable so to make a 'deep' copy this is all we have to do.
         copy.getArgumentsList().addAll(this.getArgumentsList());
@@ -58,5 +59,43 @@ public final class DatabaseParameterBufferImp extends ParameterBufferBase implem
     @Override
     public ParameterTagMapping getTagMapping() {
         return ParameterTagMapping.DPB;
+    }
+
+    public enum DpbMetaData implements ParameterBufferMetaData {
+        DPB_VERSION_1(ISCConstants.isc_dpb_version1, ArgumentType.TraditionalDpb),
+        DPB_VERSION_2(ISCConstants.isc_dpb_version2, ArgumentType.Wide);
+
+        private final int dpbVersion;
+        private final ArgumentType argumentType;
+
+        DpbMetaData(int dpbVersion, ArgumentType argumentType) {
+            this.dpbVersion = dpbVersion;
+            this.argumentType = argumentType;
+        }
+
+        @Override
+        public final int getType() {
+            return dpbVersion;
+        }
+
+        @Override
+        public final void addPreamble(ParameterBuffer parameterBuffer) {
+            // Do nothing
+        }
+
+        @Override
+        public final ArgumentType getStringArgumentType(int tag) {
+            return argumentType;
+        }
+
+        @Override
+        public final ArgumentType getByteArrayArgumentType(int tag) {
+            return argumentType;
+        }
+
+        @Override
+        public final ArgumentType getIntegerArgumentType(int tag) {
+            return argumentType;
+        }
     }
 }

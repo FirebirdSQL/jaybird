@@ -130,7 +130,7 @@ public class V13WireOperations extends V11WireOperations {
             log.debug(String.format("receiveResponse: authenticate(%s)", clientAuthBlock.getCurrentPluginName()));
             clientAuthBlock.authenticate();
 
-            xdrOut.write(op_cont_auth);
+            xdrOut.writeInt(op_cont_auth);
             // TODO Move to ClientAuthBlock?
             xdrOut.writeBuffer(clientAuthBlock.getClientData()); // p_data
             xdrOut.writeString(clientAuthBlock.getCurrentPluginName(), getEncoding()); // p_name

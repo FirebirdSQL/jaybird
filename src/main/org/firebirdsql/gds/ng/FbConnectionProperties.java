@@ -44,8 +44,9 @@ public final class FbConnectionProperties extends AbstractAttachProperties<IConn
     private int pageCacheSize;
     private boolean resultSetDefaultHoldable;
     private boolean columnLabelForName;
-    private final DatabaseParameterBuffer extraDatabaseParameters =
-            new DatabaseParameterBufferImp(EncodingFactory.getDefaultInstance().getDefaultEncoding());
+    private final DatabaseParameterBuffer extraDatabaseParameters = new DatabaseParameterBufferImp(
+            DatabaseParameterBufferImp.DpbMetaData.DPB_VERSION_1,
+            EncodingFactory.getDefaultInstance().getDefaultEncoding());
 
     private FbImmutableConnectionProperties immutableConnectionPropertiesCache;
 

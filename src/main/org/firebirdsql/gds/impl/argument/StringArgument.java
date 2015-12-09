@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
@@ -26,23 +24,31 @@ import org.firebirdsql.gds.ParameterBuffer;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.util.EnumSet;
 
 /**
  * {@link Argument} implementation for String values
  */
-public class StringArgument extends Argument {
+public final class StringArgument extends Argument {
 
+    private static final EnumSet<ArgumentType> SUPPORTED_ARGUMENT_TYPES =
+            EnumSet.of(ArgumentType.TraditionalDpb, ArgumentType.Wide, ArgumentType.StringSpb);
     private final String value;
     private final byte[] asBytes;
     private final Encoding encoding;
+    private final ArgumentType argumentType;
 
     @Deprecated
-    public StringArgument(int type, String value) {
-        this(type, value, EncodingFactory.getDefaultInstance().getDefaultEncoding());
+    public StringArgument(int type, ArgumentType argumentType, String value) {
+        this(type, argumentType, value, EncodingFactory.getDefaultInstance().getDefaultEncoding());
     }
 
-    public StringArgument(int type, String value, Encoding encoding) {
+    public StringArgument(int type, ArgumentType argumentType, String value, Encoding encoding) {
         super(type);
+        if (!SUPPORTED_ARGUMENT_TYPES.contains(argumentType)) {
+            throw new IllegalArgumentException("Invalid argument type: " + argumentType);
+        }
+        this.argumentType = argumentType;
         if (encoding == null) {
             throw new IllegalArgumentException("Encoding is required");
         }
@@ -52,28 +58,21 @@ public class StringArgument extends Argument {
         this.value = value;
         asBytes = encoding.encodeToCharset(value);
         this.encoding = encoding;
-        if (asBytes.length > getMaxSupportedLength()) {
-            throw new IllegalArgumentException(String.format("byte array derived from String value should not be longer than %d bytes, length was %d", getMaxSupportedLength(), asBytes.length));
+        if (asBytes.length > argumentType.getMaxLength()) {
+            throw new IllegalArgumentException(String.format("byte array derived from String value should not be longer than %d bytes, length was %d", argumentType.getMaxLength(), asBytes.length));
         }
     }
 
-    /**
-     * @return Maximum supported length of the argument as byte array.
-     */
-    protected int getMaxSupportedLength() {
-        return 255;
-    }
-
     @Override
-    public void writeTo(OutputStream outputStream) throws IOException {
+    public void writeTo(final OutputStream outputStream) throws IOException {
         outputStream.write(getType());
-        writeLength(asBytes.length, outputStream);
+        argumentType.writeLength(asBytes.length, outputStream);
         outputStream.write(asBytes);
     }
 
     @Override
     public int getLength() {
-        return asBytes.length + 2;
+        return 1 + argumentType.getLengthSize() + asBytes.length;
     }
 
     @Override
@@ -91,10 +90,6 @@ public class StringArgument extends Argument {
         buffer.addArgument(getType(), value, stringEncoding != null ? stringEncoding : encoding);
     }
 
-    protected void writeLength(int length, OutputStream outputStream) throws IOException {
-        outputStream.write(length);
-    }
-
     @Override
     public int hashCode() {
         return value.hashCode();
@@ -102,8 +97,9 @@ public class StringArgument extends Argument {
 
     @Override
     public boolean equals(Object other) {
-        if (other == null || !(other instanceof StringArgument))
+        if (other == null || !(other instanceof StringArgument)) {
             return false;
+        }
 
         final StringArgument otherStringArgument = (StringArgument) other;
 

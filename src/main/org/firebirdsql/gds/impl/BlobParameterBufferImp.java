@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
@@ -22,6 +20,8 @@ package org.firebirdsql.gds.impl;
 
 import org.firebirdsql.gds.BlobParameterBuffer;
 import org.firebirdsql.gds.ISCConstants;
+import org.firebirdsql.gds.ParameterBuffer;
+import org.firebirdsql.gds.impl.argument.ArgumentType;
 
 /**
  * Implementation of BlobParameterBuffer.
@@ -29,7 +29,42 @@ import org.firebirdsql.gds.ISCConstants;
 public class BlobParameterBufferImp extends ParameterBufferBase implements BlobParameterBuffer {
 
     public BlobParameterBufferImp() {
-        super(ISCConstants.isc_bpb_version1);
+        super(BpbMetaData.BPB_VERSION_1);
     }
 
+    private enum BpbMetaData implements ParameterBufferMetaData {
+
+        BPB_VERSION_1(ISCConstants.isc_bpb_version1);
+
+        private final int bpbVersion;
+
+        BpbMetaData(int bpbVersion) {
+            this.bpbVersion = bpbVersion;
+        }
+
+        @Override
+        public final int getType() {
+            return bpbVersion;
+        }
+
+        @Override
+        public final void addPreamble(ParameterBuffer parameterBuffer) {
+            // Do nothing
+        }
+
+        @Override
+        public final ArgumentType getStringArgumentType(int tag) {
+            return ArgumentType.TraditionalDpb;
+        }
+
+        @Override
+        public final ArgumentType getByteArrayArgumentType(int tag) {
+            return ArgumentType.TraditionalDpb;
+        }
+
+        @Override
+        public final ArgumentType getIntegerArgumentType(int tag) {
+            return ArgumentType.TraditionalDpb;
+        }
+    }
 }
