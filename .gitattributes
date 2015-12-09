@@ -1,0 +1,22 @@
+* text=auto
+
+*.css           text
+*.df            text
+*.htm           text
+*.html          text
+*.java          text
+*.properties    text
+*.sh            text
+*.txt           text
+*.xml           text
+*.bat           text    eol=crlf
+
+*.class         binary
+*.dll           binary
+*.gif           binary
+*.ico           binary
+*.jar           binary
+*.jpg           binary
+*.jpeg          binary
+*.png           binary
+*.so            binary
