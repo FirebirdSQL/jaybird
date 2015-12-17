@@ -311,6 +311,29 @@ _Unless explicitly indicated, changes also apply to `PreparedStatement` and
   throw an `FBSQLParseException`, previously the escape was removed and the
   function was used as is.
 
+#### PreparedStatement ####
+
+_Unless explicitly indicated, changes also apply to `CallableStatement`_
+
+* Method `setUnicodeStream` now always throws
+  an `SQLFeatureNotSupportedException`. The previous implementation did not
+  conform to the (deprecated) JDBC requirements and instead behaved like
+  `setBinaryStream`.
+
+    For the behavior in Jaybird 2.2 and earlier, use `setBinaryStream`.
+    Otherwise use `setCharacterStream`.
+
+### ResultSet ###
+
+* Methods `getUnicodeStream` now always throw
+  an `SQLFeatureNotSupportedException`. The previous implementation did not
+  conform to the (deprecated) JDBC requirements and instead behaved like
+  `getBinaryStream`.
+
+    For the behavior in Jaybird 2.2 and earlier, use `getBinaryStream`.
+    Otherwise use `getCharacterStream`.
+
+
 **TODO: Add other changes**
 
 Removal of old GDS API

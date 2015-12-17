@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
@@ -54,12 +52,6 @@ public class TestFBLongField extends BaseTestFBField {
     public void testObject() throws SQLException {
         field.setObject(TEST_LONG);
         assertEquals(TEST_LONG, field.getObject());
-    }
-
-    @Test
-    public void testUnicodeStream() throws SQLException {
-        expectedException.expect(TypeConversionException.class);
-        super.testUnicodeStream();
     }
 
     @Test

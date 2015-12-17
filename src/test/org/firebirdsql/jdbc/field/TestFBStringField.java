@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
@@ -89,18 +87,6 @@ public class TestFBStringField extends BaseTestFBField {
     public void testObject() throws SQLException {
         field.setObject(TEST_STRING_SHORT);
         assertEquals("String does not equal to assigned one.", TEST_STRING_SHORT, field.getString().trim());
-    }
-
-    @Test
-    public void testUnicodeStream() throws SQLException {
-        byte[] bytes = TEST_STRING_SHORT.getBytes();
-        field.setUnicodeStream(new ByteArrayInputStream(bytes), bytes.length);
-        String fromStream = new String(readInputStream(field.getUnicodeStream()));
-        assertEquals("ASCII stream values test failure", TEST_STRING_SHORT, fromStream.trim());
-
-        expectedException.expect(java.sql.DataTruncation.class);
-        bytes = TEST_STRING_LONG.getBytes();
-        field.setUnicodeStream(new ByteArrayInputStream(bytes), bytes.length);
     }
 
     @Test

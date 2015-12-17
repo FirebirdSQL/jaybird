@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
@@ -37,6 +35,7 @@ import org.jmock.lib.legacy.ClassImposteriser;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 
 /**
  * Tests for {@link FBNullField}
@@ -51,6 +50,9 @@ public class TestFBNullField {
         context.setImposteriser(ClassImposteriser.INSTANCE);
         context.setThreadingPolicy(new Synchroniser());
     }
+
+    @Rule
+    public final ExpectedException expectedException = ExpectedException.none();
 
     private FieldDataProvider fieldData;
     private FBNullField field;
@@ -310,22 +312,6 @@ public class TestFBNullField {
         
         field.setTimestamp(new java.sql.Timestamp(Calendar.getInstance().getTimeInMillis()),
                 Calendar.getInstance());
-    }
-    
-    @Test
-    public void setUnicodeStreamNull() throws SQLException {
-        setNullExpectations();
-        
-        field.setUnicodeStream(null, 7);
-    }
-    
-    @Test
-    public void setUnicodeStreamNonNull() throws SQLException {
-        setNonNullExpectations();
-        InputStream in = context.mock(InputStream.class);
-        // TODO Read and/or close expectation?
-        
-        field.setUnicodeStream(in, 15);
     }
 
     private void setNullExpectations() {

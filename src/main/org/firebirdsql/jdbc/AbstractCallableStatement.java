@@ -1356,12 +1356,6 @@ public abstract class AbstractCallableStatement extends FBPreparedStatement impl
         procedureCall.getInputParam(parameterIndex).setValue(x);
     }
 
-    @SuppressWarnings("deprecation")
-    @Deprecated
-    public void setUnicodeStream(int parameterIndex, InputStream x, int length) throws SQLException {
-        procedureCall.getInputParam(parameterIndex).setValue(x);
-    }
-
     /**
      * Set the selectability of this stored procedure from RDB$PROCEDURE_TYPE
      * @throws SQLException 

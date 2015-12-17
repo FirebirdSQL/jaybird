@@ -46,6 +46,7 @@ public abstract class AbstractPreparedStatement extends FBStatement implements F
 
     public static final String METHOD_NOT_SUPPORTED =
             "This method is only supported on Statement and not supported on PreparedStatement and CallableStatement";
+    private static final String UNICODE_STREAM_NOT_SUPPORTED = "Unicode stream not supported.";
 
     private final boolean metaDataQuery;
     
@@ -553,36 +554,18 @@ public abstract class AbstractPreparedStatement extends FBStatement implements F
     }
 
     /**
-     * Sets the designated parameter to the given input stream, which will have
-     * the specified number of bytes. When a very large UNICODE value is input
-     * to a <code>LONGVARCHAR</code> parameter, it may be more practical to
-     * send it via a <code>java.io.InputStream</code> object. The data will be
-     * read from the stream as needed until end-of-file is reached. The JDBC
-     * driver will do any necessary conversion from UNICODE to the database char
-     * format. The byte format of the Unicode stream must be Java UTF-8, as
-     * defined in the Java Virtual Machine Specification.
-     * 
-     * <P>
-     * <B>Note: </B> This stream object can either be a standard Java stream
-     * object or your own subclass that implements the standard interface.
-     * 
-     * @param parameterIndex
-     *            the first parameter is 1, the second is 2, ...
-     * @param x
-     *            the java input stream which contains the UNICODE parameter
-     *            value
-     * @param length
-     *            the number of bytes in the stream
-     * @exception SQLException
-     *                if a database access error occurs
+     * Method is no longer supported since Jaybird 3.0.
+     * <p>
+     * For old behavior use {@link #setBinaryStream(int, InputStream, int)}. For JDBC suggested behavior,
+     * use {@link #setCharacterStream(int, Reader, int)}.
+     * </p>
+     *
+     * @throws SQLFeatureNotSupportedException Always
      * @deprecated
-     * 
-     * I really have no idea if there is anything else we should be doing here
      */
     @Deprecated
     public void setUnicodeStream(int parameterIndex, InputStream x, int length) throws SQLException {
-        setBinaryStream(parameterIndex, x, length);
-        isParamSet[parameterIndex - 1] = true;
+        throw new SQLFeatureNotSupportedException(UNICODE_STREAM_NOT_SUPPORTED);
     }
     
     public void setURL(int parameterIndex, URL url) throws SQLException {

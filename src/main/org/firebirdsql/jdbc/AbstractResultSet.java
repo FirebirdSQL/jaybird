@@ -42,6 +42,8 @@ import org.firebirdsql.util.SQLExceptionChainBuilder;
  */
 public abstract class AbstractResultSet implements ResultSet, FirebirdResultSet, Synchronizable, FBObjectListener.FetcherListener {
 
+    private static final String UNICODE_STREAM_NOT_SUPPORTED = "Unicode stream not supported.";
+
     private final FBStatement fbStatement;
     private FBFetcher fbFetcher;
     private FirebirdRowUpdater rowUpdater;
@@ -679,11 +681,18 @@ public abstract class AbstractResultSet implements ResultSet, FirebirdResultSet,
     }
 
     /**
+     * Method is no longer supported since Jaybird 3.0.
+     * <p>
+     * For old behavior use {@link #getBinaryStream(int)}. For JDBC suggested behavior,
+     * use {@link #getCharacterStream(int)}.
+     * </p>
+     *
+     * @throws SQLFeatureNotSupportedException Always
      * @deprecated
      */
     @Deprecated
     public InputStream getUnicodeStream(int columnIndex) throws SQLException {
-        return getField(columnIndex).getUnicodeStream();
+        throw new SQLFeatureNotSupportedException(UNICODE_STREAM_NOT_SUPPORTED);
     }
 
     public Reader getNCharacterStream(int columnIndex) throws SQLException {
@@ -960,17 +969,18 @@ public abstract class AbstractResultSet implements ResultSet, FirebirdResultSet,
     }
 
     /**
-     * Retrieves the value of the designated column in the current row of this
-     * <code>ResultSet</code> object as a unicode <code>InputStream</code>.
+     * Method is no longer supported since Jaybird 3.0.
+     * <p>
+     * For old behavior use {@link #getBinaryStream(String)}. For JDBC suggested behavior,
+     * use {@link #getCharacterStream(String)}.
+     * </p>
      *
-     * @param columnName The SQL name of the column
-     * @return The value as a unicode <code>InputStream</code>
-     * @throws SQLException if the given column cannot be retrieved
+     * @throws SQLFeatureNotSupportedException Always
      * @deprecated
      */
     @Deprecated
     public InputStream getUnicodeStream(String columnName) throws SQLException {
-        return getField(columnName).getUnicodeStream();
+        throw new SQLFeatureNotSupportedException(UNICODE_STREAM_NOT_SUPPORTED);
     }
 
     public Reader getNCharacterStream(String columnLabel) throws SQLException {

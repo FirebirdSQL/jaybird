@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
@@ -295,8 +293,9 @@ public class TestFBBigDecimalField extends BaseJUnit4TestFBField<FBBigDecimalFie
         assertEquals("Unexpected value for getByte()", Byte.MIN_VALUE, field.getByte());
     }
     
-    @Test(expected = TypeConversionException.class)
+    @Test
     public void getByteTooHigh() throws SQLException {
+        expectedException.expect(TypeConversionException.class);
         fieldDescriptor = createIntegerFieldDescriptor(-2);
         field = new FBBigDecimalField(fieldDescriptor, fieldData, Types.NUMERIC);
         toReturnIntegerExpectations((Byte.MAX_VALUE + 1)* 100);
@@ -304,8 +303,9 @@ public class TestFBBigDecimalField extends BaseJUnit4TestFBField<FBBigDecimalFie
         field.getByte();
     }
     
-    @Test(expected = TypeConversionException.class)
+    @Test
     public void getByteTooLow() throws SQLException {
+        expectedException.expect(TypeConversionException.class);
         fieldDescriptor = createIntegerFieldDescriptor(-2);
         field = new FBBigDecimalField(fieldDescriptor, fieldData, Types.NUMERIC);
         toReturnIntegerExpectations((Byte.MIN_VALUE - 1)* 100);
@@ -398,8 +398,9 @@ public class TestFBBigDecimalField extends BaseJUnit4TestFBField<FBBigDecimalFie
         assertEquals("Unexpected value from getInt()", 987654321, field.getInt());
     }
     
-    @Test(expected = TypeConversionException.class)
+    @Test
     public void getIntTooHigh() throws SQLException {
+        expectedException.expect(TypeConversionException.class);
         fieldDescriptor = createLongFieldDescriptor(-2);
         field = new FBBigDecimalField(fieldDescriptor, fieldData, Types.NUMERIC);
         toReturnLongExpectations((Integer.MAX_VALUE + 1L) * 100);
@@ -407,8 +408,9 @@ public class TestFBBigDecimalField extends BaseJUnit4TestFBField<FBBigDecimalFie
         field.getInt();
     }
     
-    @Test(expected = TypeConversionException.class)
+    @Test
     public void getIntTooLow() throws SQLException {
+        expectedException.expect(TypeConversionException.class);
         fieldDescriptor = createLongFieldDescriptor(-2);
         field = new FBBigDecimalField(fieldDescriptor, fieldData, Types.NUMERIC);
         toReturnLongExpectations((Integer.MIN_VALUE - 1L) * 100);
@@ -497,8 +499,9 @@ public class TestFBBigDecimalField extends BaseJUnit4TestFBField<FBBigDecimalFie
         assertEquals("Unexpected value from getShort()", 12345, field.getShort());
     }
     
-    @Test(expected = TypeConversionException.class)
+    @Test
     public void getShortTooHigh() throws SQLException {
+        expectedException.expect(TypeConversionException.class);
         fieldDescriptor = createIntegerFieldDescriptor(-1);
         field = new FBBigDecimalField(fieldDescriptor, fieldData, Types.NUMERIC);
         toReturnIntegerExpectations((Short.MAX_VALUE + 1) * 100);
@@ -506,8 +509,9 @@ public class TestFBBigDecimalField extends BaseJUnit4TestFBField<FBBigDecimalFie
         field.getShort();
     }
     
-    @Test(expected = TypeConversionException.class)
+    @Test
     public void getShortTooLow() throws SQLException {
+        expectedException.expect(TypeConversionException.class);
         fieldDescriptor = createIntegerFieldDescriptor(-1);
         field = new FBBigDecimalField(fieldDescriptor, fieldData, Types.NUMERIC);
         toReturnIntegerExpectations((Short.MIN_VALUE - 1) * 100);
@@ -563,8 +567,9 @@ public class TestFBBigDecimalField extends BaseJUnit4TestFBField<FBBigDecimalFie
         field.setString(null);
     }
     
-    @Test(expected = TypeConversionException.class)
+    @Test
     public void setStringNonNumber() throws SQLException {
+        expectedException.expect(TypeConversionException.class);
         fieldDescriptor = createIntegerFieldDescriptor(-1);
         FBBigDecimalField field = new FBBigDecimalField(fieldDescriptor, fieldData, Types.NUMERIC);
         
@@ -572,8 +577,9 @@ public class TestFBBigDecimalField extends BaseJUnit4TestFBField<FBBigDecimalFie
     }
     
     @SuppressWarnings("unused")
-    @Test(expected = SQLException.class)
+    @Test
     public void constructWithUnsupportedSqlType() throws SQLException {
+        expectedException.expect(SQLException.class);
         rowDescriptorBuilder.setType(ISCConstants.SQL_VARYING);
         fieldDescriptor = rowDescriptorBuilder.toFieldDescriptor();
         new FBBigDecimalField(fieldDescriptor, fieldData, Types.VARCHAR);

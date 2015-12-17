@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
@@ -128,11 +126,6 @@ final class FBNullField extends FBField {
         return null;
     }
 
-    public InputStream getUnicodeStream() throws SQLException {
-        checkNull();
-        return null;
-    }
-
     public InputStream getAsciiStream() throws SQLException {
         checkNull();
         return null;
@@ -218,21 +211,7 @@ final class FBNullField extends FBField {
     // ----- setXXXStream code
 
     public void setAsciiStream(InputStream in, int length) throws SQLException {
-        if (in == null) {
-            setNull();
-            return;
-        }
-        // TODO Do we need to consume and/or close streams?
-        setDummyObject();
-    }
-
-    public void setUnicodeStream(InputStream in, int length) throws SQLException {
-        if (in == null) {
-            setNull();
-            return;
-        }
-        // TODO Do we need to consume and/or close streams?
-        setDummyObject();
+        setBinaryStream(in, length);
     }
 
     public void setBinaryStream(InputStream in, int length) throws SQLException {

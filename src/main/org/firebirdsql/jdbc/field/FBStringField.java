@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
@@ -175,13 +173,7 @@ class FBStringField extends FBField {
         return new ByteArrayInputStream(getFieldData());
     }
     
-    public InputStream getUnicodeStream() throws SQLException {
-        if (isNull()) return null;
-        return getBinaryStream();
-    }
-    
     public InputStream getAsciiStream() throws SQLException {
-        if (isNull()) return null;
         return getBinaryStream();
     }
     
@@ -283,11 +275,7 @@ class FBStringField extends FBField {
     public void setAsciiStream(InputStream in, int length) throws SQLException {
         setBinaryStream(in, length);
     }
-    
-    public void setUnicodeStream(InputStream in, int length) throws SQLException {
-        setBinaryStream(in, length);
-    }
-    
+
     public void setBinaryStream(InputStream in, int length) throws SQLException {
         if (in == null) {
             setNull();

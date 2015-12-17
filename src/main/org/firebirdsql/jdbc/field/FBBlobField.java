@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
@@ -174,10 +172,6 @@ class FBBlobField extends FBField implements FBFlushableField {
         return getDatatypeCoder().decodeString(getBytes(), javaEncoding, mappingPath);
     }
 
-    public InputStream getUnicodeStream() throws SQLException {
-        return getBinaryStream();
-    }
-
     //--- setXXX methods
 
     public void setAsciiStream(InputStream in, int length) throws SQLException {
@@ -252,10 +246,6 @@ class FBBlobField extends FBField implements FBFlushableField {
         }
 
         setBytes(getDatatypeCoder().encodeString(value, javaEncoding, mappingPath));
-    }
-
-    public void setUnicodeStream(InputStream in, int length) throws SQLException {
-        setBinaryStream(in, length);
     }
 
     public void setBlob(FBBlob blob) throws SQLException {

@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
@@ -68,12 +66,6 @@ public class TestFBTimeField extends BaseTestFBField {
     public void testLong() throws SQLException {
         expectedException.expect(TypeConversionException.class);
         super.testLong();
-    }
-
-    @Test
-    public void testUnicodeStream() throws SQLException {
-        expectedException.expect(TypeConversionException.class);
-        super.testUnicodeStream();
     }
 
     @Test

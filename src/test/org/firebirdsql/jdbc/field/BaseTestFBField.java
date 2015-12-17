@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
@@ -42,6 +40,9 @@ import static org.junit.Assert.fail;
 
 /**
  * Describe class <code>BaseTestFBField</code> here.
+ * <p>
+ * TODO Merge with BaseJUnit4TestFBField.
+ * </p>
  * 
  * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
  * @version 1.0
@@ -127,12 +128,6 @@ public abstract class BaseTestFBField {
     public void testAsciiStream() throws SQLException {
         field.setAsciiStream(new ByteArrayInputStream(TEST_BYTES), TEST_BYTES.length);
         assertTrue("ASCII stream values test failure", Arrays.equals(TEST_BYTES, readInputStream(field.getAsciiStream())));
-    }
-
-    @Test
-    public void testUnicodeStream() throws SQLException {
-        field.setUnicodeStream(new ByteArrayInputStream(TEST_BYTES), TEST_BYTES.length);
-        assertTrue("Unicode stream values test failure", Arrays.equals(TEST_BYTES, readInputStream(field.getUnicodeStream())));
     }
 
     @Test

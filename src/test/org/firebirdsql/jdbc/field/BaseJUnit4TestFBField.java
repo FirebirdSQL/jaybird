@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
@@ -33,6 +31,7 @@ import org.jmock.lib.legacy.ClassImposteriser;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 
 import java.io.InputStream;
 import java.io.Reader;
@@ -75,7 +74,8 @@ public abstract class BaseJUnit4TestFBField<T extends FBField, O> {
         context.setThreadingPolicy(new Synchroniser());
     }
 
-    // TODO Convert exception expectation to @Rule (needs to wait until JMock 2.6 is released)
+    @Rule
+    public final ExpectedException expectedException = ExpectedException.none();
 
     protected FieldDataProvider fieldData;
     protected final RowDescriptorBuilder rowDescriptorBuilder =
@@ -98,163 +98,195 @@ public abstract class BaseJUnit4TestFBField<T extends FBField, O> {
         assertEquals("Unexpected value for getAlias()", ALIAS_VALUE, field.getAlias());
     }
 
-    @Test(expected = FBDriverNotCapableException.class)
+    @Test
     public void getArrayNonNull() throws SQLException {
+        expectedException.expect(FBDriverNotCapableException.class);
         field.getArray();
     }
 
-    @Test(expected = TypeConversionException.class)
-    public void getAsciiStreamNonNull() throws SQLException {
+    @Test
+    public void getAsciiStreamNonNull() throws Exception {
+        expectedException.expect(TypeConversionException.class);
         field.getAsciiStream();
     }
 
-    @Test(expected = TypeConversionException.class)
+    @Test
     public void setAsciiStreamNonNull() throws SQLException {
+        expectedException.expect(TypeConversionException.class);
         field.setAsciiStream(context.mock(InputStream.class), 100);
     }
 
-    @Test(expected = TypeConversionException.class)
+    @Test
     public void getBigDecimalNonNull() throws SQLException {
+        expectedException.expect(TypeConversionException.class);
         field.getBigDecimal();
     }
 
-    @Test(expected = TypeConversionException.class)
+    @Test
     public void setBigDecimalNonNull() throws SQLException {
+        expectedException.expect(TypeConversionException.class);
         field.setBigDecimal(BigDecimal.ONE);
     }
 
-    @Test(expected = TypeConversionException.class)
+    @Test
     public void getBigDecimalIntNonNull() throws SQLException {
+        expectedException.expect(TypeConversionException.class);
         field.getBigDecimal(1);
     }
 
-    @Test(expected = TypeConversionException.class)
-    public void getBinaryStreamNonNull() throws SQLException {
+    @Test
+    public void getBinaryStreamNonNull() throws Exception {
+        expectedException.expect(TypeConversionException.class);
         field.getBinaryStream();
     }
 
-    @Test(expected = TypeConversionException.class)
+    @Test
     public void setBinaryStreamNonNull() throws SQLException {
+        expectedException.expect(TypeConversionException.class);
         field.setBinaryStream(context.mock(InputStream.class), 100);
     }
 
-    @Test(expected = TypeConversionException.class)
+    @Test
     public void getBlobNonNull() throws SQLException {
+        expectedException.expect(TypeConversionException.class);
         field.getBlob();
     }
 
-    @Test(expected = TypeConversionException.class)
+    @Test
     public void setBlobNonNull() throws SQLException {
+        expectedException.expect(TypeConversionException.class);
         field.setBlob(context.mock(FBBlob.class));
     }
 
-    @Test(expected = TypeConversionException.class)
+    @Test
     public void getBooleanNonNull() throws SQLException {
+        expectedException.expect(TypeConversionException.class);
         field.getBoolean();
     }
 
-    @Test(expected = TypeConversionException.class)
+    @Test
     public void setBoolean() throws SQLException {
+        expectedException.expect(TypeConversionException.class);
         field.setBoolean(true);
     }
 
-    @Test(expected = TypeConversionException.class)
+    @Test
     public void getByteNonNull() throws SQLException {
+        expectedException.expect(TypeConversionException.class);
         field.getByte();
     }
 
-    @Test(expected = TypeConversionException.class)
+    @Test
     public void setByte() throws SQLException {
+        expectedException.expect(TypeConversionException.class);
         field.setByte((byte)1);
     }
 
-    @Test(expected = TypeConversionException.class)
+    @Test
     public void getBytesNonNull() throws SQLException {
+        expectedException.expect(TypeConversionException.class);
         field.getBytes();
     }
 
-    @Test(expected = TypeConversionException.class)
+    @Test
     public void setBytesNonNull() throws SQLException {
+        expectedException.expect(TypeConversionException.class);
         field.setBytes(new byte[] { 1, 2 });
     }
 
-    @Test(expected = TypeConversionException.class)
-    public void getCharacterStreamNonNull() throws SQLException {
+    @Test
+    public void getCharacterStreamNonNull() throws Exception {
+        expectedException.expect(TypeConversionException.class);
         field.getCharacterStream();
     }
 
-    @Test(expected = TypeConversionException.class)
+    @Test
     public void setCharacterStreamNonNull() throws SQLException {
+        expectedException.expect(TypeConversionException.class);
         field.setCharacterStream(context.mock(Reader.class), 100);
     }
 
-    @Test(expected = TypeConversionException.class)
+    @Test
     public void getClobNonNull() throws SQLException {
+        expectedException.expect(TypeConversionException.class);
         field.getClob();
     }
 
-    @Test(expected = TypeConversionException.class)
+    @Test
     public void setClobNonNull() throws SQLException {
+        expectedException.expect(TypeConversionException.class);
         field.setClob(context.mock(FBClob.class));
     }
 
-    @Test(expected = TypeConversionException.class)
+    @Test
     public void getDateNonNull() throws SQLException {
+        expectedException.expect(TypeConversionException.class);
         field.getDate();
     }
 
-    @Test(expected = TypeConversionException.class)
+    @Test
     public void setDateNonNull() throws SQLException {
+        expectedException.expect(TypeConversionException.class);
         field.setDate(java.sql.Date.valueOf("2012-03-11"));
     }
 
-    @Test(expected = TypeConversionException.class)
+    @Test
     public void getDateCalendarNonNull() throws SQLException {
+        expectedException.expect(TypeConversionException.class);
         field.getDate(Calendar.getInstance());
     }
 
-    @Test(expected = TypeConversionException.class)
+    @Test
     public void setDateCalendarNonNull() throws SQLException {
+        expectedException.expect(TypeConversionException.class);
         field.setDate(java.sql.Date.valueOf("2012-03-11"), Calendar.getInstance());
     }
 
-    @Test(expected = TypeConversionException.class)
+    @Test
     public void getDoubleNonNull() throws SQLException {
+        expectedException.expect(TypeConversionException.class);
         field.getDouble();
     }
 
-    @Test(expected = TypeConversionException.class)
+    @Test
     public void setDouble() throws SQLException {
+        expectedException.expect(TypeConversionException.class);
         field.setDouble(1.0);
     }
 
-    @Test(expected = TypeConversionException.class)
+    @Test
     public void getFloatNonNull() throws SQLException {
+        expectedException.expect(TypeConversionException.class);
         field.getFloat();
     }
 
-    @Test(expected = TypeConversionException.class)
+    @Test
     public void setFloat() throws SQLException {
+        expectedException.expect(TypeConversionException.class);
         field.setFloat(1.0f);
     }
 
-    @Test(expected = TypeConversionException.class)
+    @Test
     public void getIntNonNull() throws SQLException {
+        expectedException.expect(TypeConversionException.class);
         field.getInt();
     }
 
-    @Test(expected = TypeConversionException.class)
+    @Test
     public void setInteger() throws SQLException {
+        expectedException.expect(TypeConversionException.class);
         field.setInteger(1);
     }
 
-    @Test(expected = TypeConversionException.class)
+    @Test
     public void getLongNonNull() throws SQLException {
+        expectedException.expect(TypeConversionException.class);
         field.getLong();
     }
 
-    @Test(expected = TypeConversionException.class)
+    @Test
     public void setLong() throws SQLException {
+        expectedException.expect(TypeConversionException.class);
         field.setLong(1);
     }
 
@@ -276,18 +308,21 @@ public abstract class BaseJUnit4TestFBField<T extends FBField, O> {
         assertEquals("Unexpected value for getName()", NAME_VALUE, field.getName());
     }
 
-    @Test(expected = TypeConversionException.class)
+    @Test
     public void getObjectNonNull() throws SQLException {
+        expectedException.expect(TypeConversionException.class);
         field.getObject();
     }
 
-    @Test(expected = TypeConversionException.class)
+    @Test
     public void setObjectNonNull() throws SQLException {
+        expectedException.expect(TypeConversionException.class);
         field.setObject(getNonNullObject());
     }
 
-    @Test(expected = TypeConversionException.class)
+    @Test
     public void setObjectUnsupportedType() throws SQLException {
+        expectedException.expect(TypeConversionException.class);
         field.setObject(new Object());
     }
 
@@ -298,13 +333,15 @@ public abstract class BaseJUnit4TestFBField<T extends FBField, O> {
         field.setObject(null);
     }
 
-    @Test(expected = FBDriverNotCapableException.class)
+    @Test
     public void getObjectMapNonNull() throws SQLException {
+        expectedException.expect(FBDriverNotCapableException.class);
         field.getObject(new HashMap<String,Class<?>>());
     }
 
-    @Test(expected = FBDriverNotCapableException.class)
+    @Test
     public void getRefNonNull() throws SQLException {
+        expectedException.expect(FBDriverNotCapableException.class);
         field.getRef();
     }
 
@@ -316,74 +353,76 @@ public abstract class BaseJUnit4TestFBField<T extends FBField, O> {
         assertEquals("Unexpected value for getRelationName()", RELATION_NAME_VALUE, field.getRelationName());
     }
 
-    @Test(expected = TypeConversionException.class)
+    @Test
     public void getShortNonNull() throws SQLException {
+        expectedException.expect(TypeConversionException.class);
         field.getShort();
     }
 
-    @Test(expected = TypeConversionException.class)
+    @Test
     public void setShort() throws SQLException {
+        expectedException.expect(TypeConversionException.class);
         field.setShort((short)1);
     }
 
-    @Test(expected = TypeConversionException.class)
+    @Test
     public void getStringNonNull() throws SQLException {
+        expectedException.expect(TypeConversionException.class);
         field.getString();
     }
 
-    @Test(expected = TypeConversionException.class)
+    @Test
     public void setStringNonNull() throws SQLException {
+        expectedException.expect(TypeConversionException.class);
         field.setString("");
     }
 
-    @Test(expected = TypeConversionException.class)
+    @Test
     public void getTimeNonNull() throws SQLException {
+        expectedException.expect(TypeConversionException.class);
         field.getTime();
     }
 
-    @Test(expected = TypeConversionException.class)
+    @Test
     public void setTimeNonNull() throws SQLException {
+        expectedException.expect(TypeConversionException.class);
         field.setTime(java.sql.Time.valueOf("01:00:01"));
     }
 
-    @Test(expected = TypeConversionException.class)
+    @Test
     public void getTimeCalendarNonNull() throws SQLException {
+        expectedException.expect(TypeConversionException.class);
         field.getTime(Calendar.getInstance());
     }
 
-    @Test(expected = TypeConversionException.class)
+    @Test
     public void setTimeCalendarNonNull() throws SQLException {
+        expectedException.expect(TypeConversionException.class);
         field.setTime(java.sql.Time.valueOf("01:00:01"), Calendar.getInstance());
     }
 
-    @Test(expected = TypeConversionException.class)
+    @Test
     public void getTimestampNonNull() throws SQLException {
+        expectedException.expect(TypeConversionException.class);
         field.getTimestamp();
     }
 
-    @Test(expected = TypeConversionException.class)
+    @Test
     public void setTimestampNonNull() throws SQLException {
+        expectedException.expect(TypeConversionException.class);
         field.setTimestamp(new java.sql.Timestamp(Calendar.getInstance().getTimeInMillis()));
     }
 
-    @Test(expected = TypeConversionException.class)
+    @Test
     public void getTimestampCalendarNonNull() throws SQLException {
+        expectedException.expect(TypeConversionException.class);
         field.getTimestamp(Calendar.getInstance());
     }
 
-    @Test(expected = TypeConversionException.class)
+    @Test
     public void setTimestampCalendarNonNull() throws SQLException {
+        expectedException.expect(TypeConversionException.class);
         field.setTimestamp(new java.sql.Timestamp(Calendar.getInstance().getTimeInMillis()), Calendar.getInstance());
-    }
-
-    @Test(expected = TypeConversionException.class)
-    public void getUnicodeStreamNonNull() throws SQLException {
-        field.getUnicodeStream();
-    }
-
-    @Test(expected = TypeConversionException.class)
-    public void setUnicodeStreamNonNull() throws SQLException {
-        field.setUnicodeStream(context.mock(InputStream.class), 100);
     }
 
     @Test

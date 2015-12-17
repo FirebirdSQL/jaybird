@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
@@ -85,8 +83,9 @@ public class TestFBDoubleField extends BaseJUnit4TestFBField<FBDoubleField, Doub
     /**
      * Test at maximum allowed value (Double.MAX_VALUE) plus fraction
      */
-    @Test(expected = TypeConversionException.class)
+    @Test
     public void setBigDecimal_MAX_plus_fraction() throws SQLException {
+        expectedException.expect(TypeConversionException.class);
         BigDecimal testValue = new BigDecimal(Double.MAX_VALUE);
         testValue = testValue.add(testValue.ulp());
         
@@ -106,8 +105,9 @@ public class TestFBDoubleField extends BaseJUnit4TestFBField<FBDoubleField, Doub
     /**
      * Test at minimum allowed value (-1 * Double.MAX_VALUE) minus fraction
      */
-    @Test(expected = TypeConversionException.class)
+    @Test
     public void setBigDecimal_MIN_minus_fraction() throws SQLException {
+        expectedException.expect(TypeConversionException.class);
         BigDecimal testValue = new BigDecimal(-1 * Double.MAX_VALUE);
         testValue = testValue.subtract(testValue.ulp());
         
@@ -212,8 +212,9 @@ public class TestFBDoubleField extends BaseJUnit4TestFBField<FBDoubleField, Doub
     /**
      * Tests getByte with maximum value allowed (Byte.MAX_VALUE) plus a fraction.
      */
-    @Test(expected = TypeConversionException.class)
+    @Test
     public void getByte_MAX_plus_fraction() throws SQLException {
+        expectedException.expect(TypeConversionException.class);
         toReturnDoubleExpectations(Byte.MAX_VALUE + Math.ulp(Byte.MAX_VALUE));
         
         field.getByte();
@@ -232,8 +233,9 @@ public class TestFBDoubleField extends BaseJUnit4TestFBField<FBDoubleField, Doub
     /**
      * Tests getByte with minimum value allowed (Byte.MIN_VALUE) minus a fraction.
      */
-    @Test(expected = TypeConversionException.class)
+    @Test
     public void getByte_MIN_minus_fraction() throws SQLException {
+        expectedException.expect(TypeConversionException.class);
         toReturnDoubleExpectations(Byte.MIN_VALUE - Math.ulp(Byte.MIN_VALUE));
         
         field.getByte();
@@ -306,15 +308,17 @@ public class TestFBDoubleField extends BaseJUnit4TestFBField<FBDoubleField, Doub
         assertEquals("Unexpected value for getFloat", 1247.25898f, field.getFloat(), 0);
     }
     
-    @Test(expected = TypeConversionException.class)
+    @Test
     public void getFloat_OutOfRange_high() throws SQLException {
+        expectedException.expect(TypeConversionException.class);
         toReturnDoubleExpectations(Float.MAX_VALUE + (double)Math.ulp(Float.MAX_VALUE));
         
         field.getFloat();
     }
     
-    @Test(expected = TypeConversionException.class)
+    @Test
     public void getFloat_OutOfRange_low() throws SQLException {
+        expectedException.expect(TypeConversionException.class);
         toReturnDoubleExpectations(-1 * Float.MAX_VALUE - (double)Math.ulp(Float.MAX_VALUE));
         
         field.getFloat();
@@ -380,8 +384,9 @@ public class TestFBDoubleField extends BaseJUnit4TestFBField<FBDoubleField, Doub
     /**
      * Tests value at maximum allowed (Integer.MAX_VALUE) plus a fraction
      */
-    @Test(expected = TypeConversionException.class)
+    @Test
     public void getInt_MAX_plus_fraction() throws SQLException {
+        expectedException.expect(TypeConversionException.class);
         toReturnDoubleExpectations(Integer.MAX_VALUE + Math.ulp(Integer.MAX_VALUE));
         
         field.getInt();
@@ -400,8 +405,9 @@ public class TestFBDoubleField extends BaseJUnit4TestFBField<FBDoubleField, Doub
     /**
      * Tests value at minimum allowed (Integer.MIN_VALUE) minus a fraction
      */
-    @Test(expected = TypeConversionException.class)
+    @Test
     public void getInt_MIN_minus_fraction() throws SQLException {
+        expectedException.expect(TypeConversionException.class);
         toReturnDoubleExpectations(Integer.MIN_VALUE - Math.ulp(Integer.MIN_VALUE));
         
         field.getInt();
@@ -447,8 +453,9 @@ public class TestFBDoubleField extends BaseJUnit4TestFBField<FBDoubleField, Doub
     /**
      * Tests value at maximum allowed (Long.MAX_VALUE) plus a fraction.
      */
-    @Test(expected = TypeConversionException.class)
+    @Test
     public void getLong_MAX_plus_fraction() throws SQLException {
+        expectedException.expect(TypeConversionException.class);
         toReturnDoubleExpectations(Long.MAX_VALUE + Math.ulp(Long.MAX_VALUE));
         
         field.getLong();
@@ -467,8 +474,9 @@ public class TestFBDoubleField extends BaseJUnit4TestFBField<FBDoubleField, Doub
     /**
      * Tests value at minimum allowed (Long.MIN_VALUE) minus a fraction.
      */
-    @Test(expected = TypeConversionException.class)
+    @Test
     public void getLong_MIN_minus_fraction() throws SQLException {
+        expectedException.expect(TypeConversionException.class);
         toReturnDoubleExpectations(Long.MIN_VALUE - Math.ulp(Long.MIN_VALUE));
         
         field.getLong();
@@ -494,7 +502,7 @@ public class TestFBDoubleField extends BaseJUnit4TestFBField<FBDoubleField, Doub
     public void getObjectNonNull() throws SQLException {
         toReturnDoubleExpectations(-1 * Double.MAX_VALUE);
         
-        Double expectedValue = Double.valueOf(-1 * Double.MAX_VALUE);
+        Double expectedValue = -1 * Double.MAX_VALUE;
         assertEquals("Unexpected value for getObject", expectedValue, field.getObject());
     }
     
@@ -502,7 +510,7 @@ public class TestFBDoubleField extends BaseJUnit4TestFBField<FBDoubleField, Doub
     @Override
     public void setObjectNonNull() throws SQLException {
         setDoubleExpectations(-1 * Double.MAX_VALUE);
-        Double setValue = Double.valueOf(-1 * Double.MAX_VALUE);
+        Double setValue = -1 * Double.MAX_VALUE;
         
         field.setObject(setValue);
     }
@@ -535,8 +543,9 @@ public class TestFBDoubleField extends BaseJUnit4TestFBField<FBDoubleField, Doub
      * Tests value at maximum allowed (Short.MAX_VALUE) plus a fraction
      * @throws SQLException
      */
-    @Test(expected = TypeConversionException.class)
+    @Test
     public void getShort_MAX_plus_fraction() throws SQLException {
+        expectedException.expect(TypeConversionException.class);
         toReturnDoubleExpectations(Short.MAX_VALUE + Math.ulp(Short.MAX_VALUE));
         
         field.getShort();
@@ -557,8 +566,9 @@ public class TestFBDoubleField extends BaseJUnit4TestFBField<FBDoubleField, Doub
      * Tests value at minimum allowed (Short.MIN_VALUE) minus a fraction
      * @throws SQLException
      */
-    @Test(expected = TypeConversionException.class)
+    @Test
     public void getShort_MIN_minus_fraction() throws SQLException {
+        expectedException.expect(TypeConversionException.class);
         toReturnDoubleExpectations(Short.MIN_VALUE - Math.ulp(Short.MIN_VALUE));
         
         field.getShort();
@@ -613,13 +623,14 @@ public class TestFBDoubleField extends BaseJUnit4TestFBField<FBDoubleField, Doub
         field.setString(null);
     }
     
-    @Test(expected = TypeConversionException.class)
+    @Test
     public void setString_noDouble() throws SQLException {
+        expectedException.expect(TypeConversionException.class);
         field.setString("no double");
     }
     
     @Override
     protected Double getNonNullObject() {
-        return Double.valueOf(1);
+        return 1d;
     }
 }

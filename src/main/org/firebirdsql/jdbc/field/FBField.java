@@ -58,7 +58,6 @@ public abstract class FBField {
     static final String TIME_CONVERSION_ERROR = "Error converting to time.";
     static final String TIMESTAMP_CONVERSION_ERROR = "Error converting to timestamp.";
     static final String ASCII_STREAM_CONVERSION_ERROR = "Error converting to ascii stream.";
-    static final String UNICODE_STREAM_CONVERSION_ERROR = "Error converting to unicode stream.";
     static final String BINARY_STREAM_CONVERSION_ERROR = "Error converting to binary stream.";
     static final String CHARACTER_STREAM_CONVERSION_ERROR = "Error converting to character stream.";
     static final String BYTES_CONVERSION_ERROR = "Error converting to array of bytes.";
@@ -597,10 +596,6 @@ public abstract class FBField {
         throw new TypeConversionException(FBField.ASCII_STREAM_CONVERSION_ERROR);
     }
 
-    public InputStream getUnicodeStream() throws SQLException {
-        throw new TypeConversionException(FBField.UNICODE_STREAM_CONVERSION_ERROR);
-    }
-
     public InputStream getBinaryStream() throws SQLException {
         throw new TypeConversionException(FBField.BINARY_STREAM_CONVERSION_ERROR);
     }
@@ -741,10 +736,6 @@ public abstract class FBField {
 
     public void setAsciiStream(InputStream in, int length) throws SQLException {
         throw new TypeConversionException(FBField.ASCII_STREAM_CONVERSION_ERROR);
-    }
-
-    public void setUnicodeStream(InputStream in, int length) throws SQLException {
-        throw new TypeConversionException(FBField.UNICODE_STREAM_CONVERSION_ERROR);
     }
 
     public void setBinaryStream(InputStream in, int length) throws SQLException {

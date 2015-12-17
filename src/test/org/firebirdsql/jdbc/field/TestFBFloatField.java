@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
@@ -56,12 +54,6 @@ public class TestFBFloatField extends BaseTestFBField {
 
         //JDBC requires getObject() to return java.lang.Double for float columns
         assertEquals((double) TEST_FLOAT, field.getObject());
-    }
-
-    @Test
-    public void testUnicodeStream() throws SQLException {
-        expectedException.expect(TypeConversionException.class);
-        super.testUnicodeStream();
     }
 
     @Test
