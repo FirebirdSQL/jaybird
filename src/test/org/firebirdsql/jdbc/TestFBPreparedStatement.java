@@ -953,6 +953,35 @@ public class TestFBPreparedStatement extends FBJUnit4TestBase {
         }
     }
 
+    @Ignore("Test case for CORE-5062")
+    @Test
+    public void testCharToUuid() throws Exception {
+        executeCreateTable(con, "create table t_uuid ("
+                + " uuid CHAR(16) CHARACTER SET OCTETS PRIMARY KEY,"
+                + " datavalue integer"
+                + ")");
+        //executeDDL(con, "create index ix_uuid on t_uuid (uuid)");
+        con.close();
+        Properties props = getDefaultPropertiesForConnection();
+        props.remove("lc_ctype");
+        props.setProperty("encoding", "UTF8");
+        con = DriverManager.getConnection(getUrl(), props);
+
+        PreparedStatement pstmt = con.prepareStatement("SELECT datavalue from t_uuid where uuid = char_to_uuid(?)");
+        //PreparedStatement pstmt = con.prepareStatement("SELECT datavalue from t_uuid where uuid = char_to_uuid(cast(? as char(36) character set utf8))");
+        try {
+            System.out.println(((FirebirdPreparedStatement) pstmt).getExecutionPlan());
+
+            pstmt.setString(1, "57F2B8C7-E1D8-4B61-9086-C66D1794F2D9");
+            //pstmt.setBytes(1, "57F2B8C7-E1D8-4B61-9086-C66D1794F2D9".getBytes(StandardCharsets.US_ASCII));
+
+            ResultSet rs = pstmt.executeQuery();
+
+            assertFalse(rs.next());
+        } finally {
+            pstmt.close();
+        }
+    }
 
     // Other closeOnCompletion behavior considered to be sufficiently tested in TestFBStatement
 
