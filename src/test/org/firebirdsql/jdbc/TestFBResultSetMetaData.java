@@ -304,33 +304,8 @@ public class TestFBResultSetMetaData extends FBJUnit4TestBase {
     }
 
     @Test
-    public void octetsCharAndVarchar_noOctetsAsBytes() throws Exception {
+    public void octetsCharAndVarchar() throws Exception {
         Connection con = getConnectionViaDriverManager();
-        try {
-            Statement stmt = con.createStatement();
-            ResultSet rs = stmt.executeQuery("SELECT char_octets_field, varchar_octets_field FROM test_rs_metadata");
-            ResultSetMetaData rsmd = rs.getMetaData();
-
-            assertEquals("Unexpected column type, expected CHAR", Types.CHAR, rsmd.getColumnType(1));
-            assertEquals("Unexpected column precision", 10, rsmd.getPrecision(1));
-            assertEquals("Unexpected column display size", 10, rsmd.getColumnDisplaySize(1));
-            assertEquals("Unexpected column class name", "java.lang.String", rsmd.getColumnClassName(1));
-
-            assertEquals("Unexpected column type, expected VARCHAR", Types.VARCHAR, rsmd.getColumnType(2));
-            assertEquals("Unexpected column precision", 15, rsmd.getPrecision(2));
-            assertEquals("Unexpected column display size", 15, rsmd.getColumnDisplaySize(2));
-            assertEquals("Unexpected column class name", "java.lang.String", rsmd.getColumnClassName(2));
-        } finally {
-            closeQuietly(con);
-        }
-    }
-
-    @Test
-    public void octetsCharAndVarchar_octetsAsBytes() throws Exception {
-        Properties props = getDefaultPropertiesForConnection();
-        props.put("octetsAsBytes", "true");
-
-        Connection con = DriverManager.getConnection(getUrl(), props);
         try {
             Statement stmt = con.createStatement();
             ResultSet rs = stmt.executeQuery("SELECT char_octets_field, varchar_octets_field FROM test_rs_metadata");

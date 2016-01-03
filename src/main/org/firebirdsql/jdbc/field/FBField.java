@@ -174,14 +174,6 @@ public abstract class FBField {
     /**
      * @return <code>true</code> if the field is of type <code>type</code>.
      * TODO write correct ISCConstants.SQL_QUAD support
-     */
-    public static boolean isType(XSQLVAR field, int type) {
-        return isType(field.sqltype, field.sqlsubtype, type);
-    }
-
-    /**
-     * @return <code>true</code> if the field is of type <code>type</code>.
-     * TODO write correct ISCConstants.SQL_QUAD support
      * TODO Consider moving to FieldDescriptor itself
      */
     public static boolean isType(FieldDescriptor field, int jdbcType) {
@@ -229,7 +221,8 @@ public abstract class FBField {
             return jdbcType == Types.SMALLINT;
 
         case ISCConstants.SQL_TEXT:
-            return jdbcType == Types.CHAR;
+            return subType != ISCConstants.CS_BINARY && jdbcType == Types.CHAR
+                    || subType == ISCConstants.CS_BINARY && jdbcType == Types.BINARY;
 
         case ISCConstants.SQL_TIMESTAMP:
             return jdbcType == Types.TIMESTAMP;
@@ -241,7 +234,8 @@ public abstract class FBField {
             return jdbcType == Types.TIME;
 
         case ISCConstants.SQL_VARYING:
-            return jdbcType == Types.VARCHAR;
+            return subType != ISCConstants.CS_BINARY && jdbcType == Types.VARCHAR
+                    || subType == ISCConstants.CS_BINARY && jdbcType == Types.VARBINARY;
 
         case ISCConstants.SQL_NULL:
             return false;
@@ -258,6 +252,7 @@ public abstract class FBField {
      * This method implements the type compatibility matrix from
      * "JDBC(tm): A Java SQL API, version 1.20" whitepaper, page 21.
      */
+    // TODO Use of this method?
     public static boolean isCompatible(XSQLVAR field, int type) {
         // turn off null flag, in this case we're not interested in it.
         final int tempType = field.sqltype & ~1;
@@ -306,8 +301,9 @@ public abstract class FBField {
         case ISCConstants.SQL_VARYING:
             return  (type == Types.CHAR) ||
                     (type == Types.VARCHAR) ||
-                    (type == Types.LONGVARCHAR)
-                    ;
+                    (type == Types.LONGVARCHAR) ||
+                    (type == Types.BINARY) ||
+                    (type == Types.VARBINARY);
 
         case ISCConstants.SQL_TIMESTAMP:
             return  (type == Types.TIMESTAMP) ||
@@ -349,85 +345,62 @@ public abstract class FBField {
 
     private static FBField createField(FieldDescriptor fieldDescriptor, FieldDataProvider dataProvider,
             boolean cached) throws SQLException {
-        // TODO Change isType to 'toJdbcType' and use a switch (if possible)
-        if (FBField.isType(fieldDescriptor, Types.SMALLINT)) {
-            if (fieldDescriptor.getScale() == 0) {
-                return new FBShortField(fieldDescriptor, dataProvider, Types.SMALLINT);
-            } else {
-                return new FBBigDecimalField(fieldDescriptor, dataProvider,
-                        fieldDescriptor.getSubType() == 2 ? Types.DECIMAL : Types.NUMERIC);
-            }
-        } else if (FBField.isType(fieldDescriptor, Types.INTEGER)) {
-            if (fieldDescriptor.getScale() == 0) {
-                return new FBIntegerField(fieldDescriptor, dataProvider, Types.INTEGER);
-            } else {
-                return new FBBigDecimalField(fieldDescriptor, dataProvider,
-                        fieldDescriptor.getSubType() == 2 ? Types.DECIMAL : Types.NUMERIC);
-            }
-        } else if (FBField.isType(fieldDescriptor, Types.BIGINT)) {
-            if (fieldDescriptor.getScale() == 0) {
-                return new FBLongField(fieldDescriptor, dataProvider, Types.BIGINT);
-            } else {
-                return new FBBigDecimalField(fieldDescriptor, dataProvider,
-                        fieldDescriptor.getSubType() == 2 ? Types.DECIMAL : Types.NUMERIC);
-            }
-        } else if (FBField.isType(fieldDescriptor, Types.FLOAT)) {
-            return new FBFloatField(fieldDescriptor, dataProvider, Types.FLOAT);
-        } else if (FBField.isType(fieldDescriptor, Types.DOUBLE)) {
-            return new FBDoubleField(fieldDescriptor, dataProvider, Types.DOUBLE);
-        } else if (FBField.isType(fieldDescriptor, Types.CHAR)) {
+        final int jdbcType = JdbcTypeConverter.toJdbcType(fieldDescriptor);
+        switch (jdbcType) {
+        case Types.SMALLINT:
+            return new FBShortField(fieldDescriptor, dataProvider, jdbcType);
+        case Types.INTEGER:
+            return new FBIntegerField(fieldDescriptor, dataProvider, jdbcType);
+        case Types.BIGINT:
+            return new FBLongField(fieldDescriptor, dataProvider, jdbcType);
+        case Types.NUMERIC:
+        case Types.DECIMAL:
+            return new FBBigDecimalField(fieldDescriptor, dataProvider, jdbcType);
+        case Types.FLOAT:
+            return new FBFloatField(fieldDescriptor, dataProvider, jdbcType);
+        case Types.DOUBLE:
+            return new FBDoubleField(fieldDescriptor, dataProvider, jdbcType);
+        case Types.TIME:
+            return new FBTimeField(fieldDescriptor, dataProvider, jdbcType);
+        case Types.DATE:
+            return new FBDateField(fieldDescriptor, dataProvider, jdbcType);
+        case Types.TIMESTAMP:
+            return new FBTimestampField(fieldDescriptor, dataProvider, jdbcType);
+        case Types.CHAR:
+        case Types.VARCHAR:
             /*
              * TODO: Remove workaround
              * Commented by R.Rokytskyy. Until the bug is fixed in the server
              * we use "workaround" implementation of the string field. Should
              * be replaced with original one as soon as bug is fixed in the
              * engine.
-             * 
-             * return new FBStringField(field, dataProvider, Types.CHAR);
+             *
+             * return new FBStringField(field, dataProvider, jdbcType);
              */
-            return new FBWorkaroundStringField(fieldDescriptor, dataProvider, Types.CHAR);
-        } else if (FBField.isType(fieldDescriptor, Types.VARCHAR)) {
-            /*
-             * TODO: Remove workaround
-             * Commented by R.Rokytskyy. Until the bug is fixed in the server
-             * we use "workaround" implementation of the string field. Should
-             * be replaced with original one as soon as bug is fixed in the
-             * engine.
-             * 
-             * return new FBStringField(field, dataProvider, Types.VARCHAR);
-             */
-            return new FBWorkaroundStringField(fieldDescriptor, dataProvider, Types.VARCHAR);
-        } else if (FBField.isType(fieldDescriptor, Types.DATE)) {
-            return new FBDateField(fieldDescriptor, dataProvider, Types.DATE);
-        } else if (FBField.isType(fieldDescriptor, Types.TIME)) {
-            return new FBTimeField(fieldDescriptor, dataProvider, Types.TIME);
-        } else if (FBField.isType(fieldDescriptor, Types.TIMESTAMP)) {
-            return new FBTimestampField(fieldDescriptor, dataProvider, Types.TIMESTAMP);
-        } else if (FBField.isType(fieldDescriptor, Types.BLOB)) {
+            return new FBWorkaroundStringField(fieldDescriptor, dataProvider, jdbcType);
+        case Types.LONGVARCHAR:
             if (cached) {
-                return new FBCachedBlobField(fieldDescriptor, dataProvider, Types.BLOB);
+                return new FBCachedLongVarCharField(fieldDescriptor, dataProvider, jdbcType);
             } else {
-                return new FBBlobField(fieldDescriptor, dataProvider, Types.BLOB);
+                return new FBLongVarCharField(fieldDescriptor, dataProvider, jdbcType);
             }
-        } else if (FBField.isType(fieldDescriptor, Types.LONGVARBINARY)) {
+        case Types.VARBINARY:
+        case Types.BINARY:
+            return new FBBinaryField(fieldDescriptor, dataProvider, jdbcType);
+        case Types.BLOB:
+        case Types.LONGVARBINARY:
             if (cached) {
-                return new FBCachedBlobField(fieldDescriptor, dataProvider, Types.LONGVARBINARY);
+                return new FBCachedBlobField(fieldDescriptor, dataProvider, jdbcType);
             } else {
-                return new FBBlobField(fieldDescriptor, dataProvider, Types.LONGVARBINARY);
+                return new FBBlobField(fieldDescriptor, dataProvider, jdbcType);
             }
-        } else if (FBField.isType(fieldDescriptor, Types.LONGVARCHAR)) {
-            if (cached) {
-                return new FBCachedLongVarCharField(fieldDescriptor, dataProvider, Types.LONGVARCHAR);
-            } else {
-                return new FBLongVarCharField(fieldDescriptor, dataProvider, Types.LONGVARCHAR);
-            }
-        } else if (FBField.isType(fieldDescriptor, Types.ARRAY)) {
+        case Types.BOOLEAN:
+            return new FBBooleanField(fieldDescriptor, dataProvider, jdbcType);
+        case Types.NULL:
+            return new FBNullField(fieldDescriptor, dataProvider, jdbcType);
+        case Types.ARRAY:
             throw new FBDriverNotCapableException(FBField.SQL_ARRAY_NOT_SUPPORTED);
-        } else if (FBField.isType(fieldDescriptor, Types.BOOLEAN)) {
-            return new FBBooleanField(fieldDescriptor, dataProvider, Types.BOOLEAN);
-        } else if (FBField.isNullType(fieldDescriptor)) {
-            return new FBNullField(fieldDescriptor, dataProvider, Types.NULL);
-        } else {
+        default:
             throw new FBDriverNotCapableException(FBField.SQL_TYPE_NOT_SUPPORTED);
         }
     }
@@ -511,11 +484,6 @@ public abstract class FBField {
         throw new TypeConversionException(FBField.STRING_CONVERSION_ERROR);
     }
 
-    private boolean isOctetsAsBytes() {
-        return gdsHelper != null
-                && gdsHelper.getDatabaseParameterBuffer().hasArgument(DatabaseParameterBufferExtension.OCTETS_AS_BYTES);
-    }
-
     public Object getObject() throws SQLException {
 
         if (isNull()) {
@@ -526,12 +494,7 @@ public abstract class FBField {
         case Types.CHAR:
         case Types.VARCHAR:
         case Types.LONGVARCHAR:
-            // check whether OCTETS should be returned as byte[]
-            if (isOctetsAsBytes() && fieldDescriptor.getSubType() == 1) {
-                return getBytes();
-            } else {
-                return getString();
-            }
+            return getString();
 
         case Types.NUMERIC:
         case Types.DECIMAL:
@@ -788,5 +751,4 @@ public abstract class FBField {
         final DatabaseParameterBuffer dpb = gdsHelper.getDatabaseParameterBuffer();
         return dpb.hasArgument(DatabaseParameterBufferExtension.TIMESTAMP_USES_LOCAL_TIMEZONE);
     }
-
 }

@@ -29,6 +29,7 @@ import org.firebirdsql.gds.ng.fields.RowValue;
 import org.firebirdsql.gds.ng.fields.RowValueBuilder;
 import org.firebirdsql.jca.FBManagedConnectionFactory;
 import org.firebirdsql.jdbc.escape.FBEscapedFunctionHelper;
+import org.firebirdsql.jdbc.field.JdbcTypeConverter;
 import org.firebirdsql.logging.Logger;
 import org.firebirdsql.logging.LoggerFactory;
 
@@ -1866,7 +1867,8 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
         + "F.RDB$NULL_FLAG as NULL_FLAG,"
         + "PP.RDB$DESCRIPTION as REMARKS,"
         + "F.RDB$CHARACTER_LENGTH AS CHAR_LEN,"
-        + "PP.RDB$PARAMETER_NUMBER + 1 AS PARAMETER_NUMBER "
+        + "PP.RDB$PARAMETER_NUMBER + 1 AS PARAMETER_NUMBER,"
+        + "F.RDB$CHARACTER_SET_ID "
         + "from "
         + "RDB$PROCEDURE_PARAMETERS PP,"
         + "RDB$FIELDS F "
@@ -2044,9 +2046,10 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
                 final short fieldType = rs.getShort("FIELD_TYPE");
                 final short fieldSubType = rs.getShort("FIELD_SUB_TYPE");
                 final short fieldScale = rs.getShort("FIELD_SCALE");
+                final int characterSetId = rs.getInt("RDB$CHARACTER_SET_ID");
                 // TODO: Find out what the difference is with NULL_FLAG in RDB$PROCEDURE_PARAMETERS (might be ODS dependent)
                 final short nullFlag = rs.getShort("NULL_FLAG");
-                final int dataType = getDataType(fieldType, fieldSubType, fieldScale);
+                final int dataType = getDataType(fieldType, fieldSubType, fieldScale, characterSetId);
                 valueBuilder
                         .at(2).set(getBytes(rs.getString("PROCEDURE_NAME")))
                         .at(3).set(getBytes(rs.getString("COLUMN_NAME")))
@@ -2075,6 +2078,8 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
                     break;
                 case Types.CHAR:
                 case Types.VARCHAR:
+                case Types.BINARY:
+                case Types.VARBINARY:
                     short charLen = rs.getShort("CHAR_LEN");
                     if (!rs.wasNull()) {
                         valueBuilder.at(7).set(createInt(charLen));
@@ -2367,7 +2372,8 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
             "RF.RDB$FIELD_POSITION + 1 AS FIELD_POSITION," +
             "RF.RDB$NULL_FLAG AS NULL_FLAG," +
             "F.RDB$NULL_FLAG AS SOURCE_NULL_FLAG," +
-            "F.RDB$COMPUTED_BLR AS COMPUTED_BLR " +
+            "F.RDB$COMPUTED_BLR AS COMPUTED_BLR," +
+            "F.RDB$CHARACTER_SET_ID " +
             "FROM RDB$RELATION_FIELDS RF," +
             "RDB$FIELDS F " +
             "WHERE ";
@@ -2544,7 +2550,8 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
                 final short fieldType = rs.getShort("FIELD_TYPE");
                 final short fieldSubType = rs.getShort("FIELD_SUB_TYPE");
                 final short fieldScale = rs.getShort("FIELD_SCALE");
-                final int dataType = getDataType(fieldType, fieldSubType, fieldScale);
+                final int characterSetId = rs.getInt("RDB$CHARACTER_SET_ID");
+                final int dataType = getDataType(fieldType, fieldSubType, fieldScale, characterSetId);
                 valueBuilder
                         .at(2).set(getBytes(rs.getString("RELATION_NAME")))
                         .at(3).set(getBytes(rs.getString("FIELD_NAME")))
@@ -2561,6 +2568,8 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
                     break;
                 case Types.CHAR:
                 case Types.VARCHAR:
+                case Types.BINARY:
+                case Types.VARBINARY:
                     valueBuilder.at(15).set(createInt(rs.getShort("FIELD_LENGTH")));
                     short charLen = rs.getShort("CHAR_LEN");
                     if (!rs.wasNull()) {
@@ -2699,62 +2708,24 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
     private static final int blob_type = 261;
     private static final short boolean_type = 23;
 
-    private static int getDataType(int fieldType, int fieldSubType, int fieldScale) {
-        switch (fieldType) {
-            case smallint_type:
-                if (fieldSubType == SUBTYPE_NUMERIC || (fieldSubType == 0 && fieldScale < 0))
-                    return Types.NUMERIC;
-                else if (fieldSubType == SUBTYPE_DECIMAL)
-                    return Types.DECIMAL;
-                else
-                    return Types.SMALLINT;
-            case integer_type:
-                if (fieldSubType == SUBTYPE_NUMERIC || (fieldSubType == 0 && fieldScale < 0))
-                    return Types.NUMERIC;
-                else if (fieldSubType == SUBTYPE_DECIMAL)
-                    return Types.DECIMAL;
-                else
-                    return Types.INTEGER;
-            case double_type:
-            case d_float_type:
-                return Types.DOUBLE;
-            case float_type:
-                return Types.FLOAT;
-            case char_type:
-                return Types.CHAR;
-            case varchar_type:
-                return Types.VARCHAR;
-            case timestamp_type:
-                return Types.TIMESTAMP;
-            case time_type:
-                return Types.TIME;
-            case date_type:
-                return Types.DATE;
-            case int64_type:
-                if (fieldSubType == SUBTYPE_NUMERIC || (fieldSubType == 0 && fieldScale < 0))
-                    return Types.NUMERIC;
-                else if (fieldSubType == SUBTYPE_DECIMAL)
-                    return Types.DECIMAL;
-                else
-                    return Types.BIGINT;
-            case blob_type:
-                if (fieldSubType < 0)
-                    return Types.BLOB;
-                else if (fieldSubType == 0)
-                    return Types.LONGVARBINARY;
-                else if (fieldSubType == 1)
-                    return Types.LONGVARCHAR;
-                else
-                    return Types.OTHER;
-            case quad_type:
-                return Types.OTHER;
-            case boolean_type:
-                return Types.BOOLEAN;
-            default:
-                return Types.NULL;
+    private static int getDataType(int fieldType, int fieldSubType, int fieldScale, int characterSetId) {
+        // TODO Preserved for backwards compatibility, is this really necessary?
+        if (fieldType == blob_type && fieldSubType > 1) {
+            return Types.OTHER;
         }
+        final int jdbcType = JdbcTypeConverter.fromMetaDataToJdbcType(fieldType, fieldSubType, fieldScale);
+        // Metadata from RDB$ tables does not contain character set in subtype, manual fixup
+        if (characterSetId == CS_BINARY) {
+            if (jdbcType == Types.CHAR) {
+                return Types.BINARY;
+            } else if (jdbcType == Types.VARCHAR) {
+                return Types.VARBINARY;
+            }
+        }
+        return jdbcType;
     }
 
+    // TODO Unify with AbstractFieldMetadata
     private static String getDataTypeName(int sqltype, int sqlsubtype, int sqlscale) {
         switch (sqltype) {
             case smallint_type:
@@ -3078,11 +3049,12 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
 
     private static final String GET_BEST_ROW_IDENT =
             "SELECT " +
-            "CAST(rf.rdb$field_name AS varchar(31)) AS column_name, " +
-            "f.rdb$field_type AS field_type, " +
-            "f.rdb$field_sub_type AS field_sub_type, " +
-            "f.rdb$field_scale AS field_scale, " +
-            "f.rdb$field_precision AS field_precision " +
+            "CAST(rf.rdb$field_name AS varchar(31)) AS column_name," +
+            "f.rdb$field_type AS field_type," +
+            "f.rdb$field_sub_type AS field_sub_type," +
+            "f.rdb$field_scale AS field_scale," +
+            "f.rdb$field_precision AS field_precision," +
+            "f.RDB$CHARACTER_SET_ID " +
             "FROM rdb$relation_constraints rc " +
             "INNER JOIN rdb$index_segments idx ON idx.rdb$index_name = rc.rdb$index_name " +
             "INNER JOIN rdb$relation_fields rf ON rf.rdb$field_name = idx.rdb$field_name " +
@@ -3157,11 +3129,12 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
         }
 
         // if no primary key exists, add RDB$DB_KEY as pseudo-column
+        // TODO Check actual column type of RDB$DB_KEY
         if (rows.size() == 0) {
             rows.add(rowValueBuilder
                     .at(0).set(createShort(scope))
                     .at(1).set(getBytes("RDB$DB_KEY"))
-                    .at(2).set(createShort(getDataType(char_type, 0, 0)))
+                    .at(2).set(createShort(getDataType(char_type, 0, 0, CS_BINARY)))
                     .at(3).set(getBytes(getDataTypeName(char_type, 0, 0)))
                     .at(4).set(createInt(0))
                     .at(6).set(createShort(0))
@@ -3193,10 +3166,11 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
                 short fieldType = rs.getShort("FIELD_TYPE");
                 short fieldSubType = rs.getShort("FIELD_SUB_TYPE");
                 short fieldScale = rs.getShort("FIELD_SCALE");
+                int characterSetId = rs.getInt("RDB$CHARACTER_SET_ID");
                 rows.add(valueBuilder
                         .at(0).set(createShort(scope))
                         .at(1).set(getBytes(rs.getString("COLUMN_NAME")))
-                        .at(2).set(createShort(getDataType(fieldType, fieldSubType, fieldScale)))
+                        .at(2).set(createShort(getDataType(fieldType, fieldSubType, fieldScale, characterSetId)))
                         .at(3).set(getBytes(getDataTypeName(fieldType, fieldSubType, fieldScale)))
                         .at(4).set(createInt(rs.getInt("FIELD_PRECISION")))
                         .at(6).set(createShort(fieldScale))
@@ -3968,6 +3942,18 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
                 null, TYPE_NULLABLE, CASESENSITIVE, TYPE_PRED_NONE, UNSIGNED, FIXEDSCALE, NOTAUTOINC, null,
                 SHORT_ZERO, SHORT_ZERO, createInt(SQL_BLOB), null, RADIX_TEN));
 
+        //VARBINARY=-3
+        rows.add(RowValue.of(rowDescriptor,
+                getBytes("VARCHAR"), createShort(Types.VARBINARY), createInt(32765), null, null, null, TYPE_NULLABLE,
+                CASESENSITIVE, TYPE_SEARCHABLE, UNSIGNED, FIXEDSCALE, NOTAUTOINC, null, SHORT_ZERO, SHORT_ZERO,
+                createInt(SQL_VARYING), null, RADIX_TEN));
+
+        //BINARY=-2
+        rows.add(RowValue.of(rowDescriptor,
+                getBytes("CHAR"), createShort(Types.BINARY), createInt(32767), null, null, null, TYPE_NULLABLE,
+                CASESENSITIVE,  TYPE_SEARCHABLE, UNSIGNED, FIXEDSCALE, NOTAUTOINC, null, SHORT_ZERO, SHORT_ZERO,
+                createInt(SQL_TEXT), null, RADIX_TEN));
+
         //LONGVARCHAR=-1
         rows.add(RowValue.of(rowDescriptor,
                 getBytes("BLOB SUB_TYPE 1"), createShort(Types.LONGVARCHAR), INT_ZERO, null, null,
@@ -4024,6 +4010,14 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
                 FIXEDSCALE, NOTAUTOINC, null, SHORT_ZERO, SHORT_ZERO, createInt(SQL_VARYING), null,
                 RADIX_TEN));
 
+        //BOOLEAN=16
+        if (getDatabaseMajorVersion() >= 3) {
+            rows.add(RowValue.of(rowDescriptor,
+                    getBytes("BOOLEAN"), createShort(Types.BOOLEAN), BOOLEAN_PRECISION,
+                    null, null, null, TYPE_NULLABLE, CASEINSENSITIVE, TYPE_PRED_BASIC, UNSIGNED, FIXEDSCALE,
+                    NOTAUTOINC, null, SHORT_ZERO, SHORT_ZERO, createInt(SQL_BOOLEAN), null, RADIX_BINARY));
+        }
+
         //DATE=91
         rows.add(RowValue.of(rowDescriptor,
                 getBytes("DATE"), createShort(Types.DATE), DATE_PRECISION, null, null, null,
@@ -4053,14 +4047,6 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
                 getBytes("BLOB SUB_TYPE <0 "), createShort(Types.BLOB), INT_ZERO, null, null, null,
                 TYPE_NULLABLE, CASESENSITIVE, TYPE_PRED_NONE, UNSIGNED, FIXEDSCALE, NOTAUTOINC, null, SHORT_ZERO,
                 SHORT_ZERO, createInt(SQL_BLOB), null, RADIX_TEN));
-
-        //BOOLEAN=16
-        if (getDatabaseMajorVersion() >= 3) {
-            rows.add(RowValue.of(rowDescriptor,
-                    getBytes("BOOLEAN"), createShort(Types.BOOLEAN), BOOLEAN_PRECISION,
-                    null, null, null, TYPE_NULLABLE, CASEINSENSITIVE, TYPE_PRED_BASIC, UNSIGNED, FIXEDSCALE,
-                    NOTAUTOINC, null, SHORT_ZERO, SHORT_ZERO, createInt(SQL_BOOLEAN), null, RADIX_BINARY));
-        }
 
         return new FBResultSet(rowDescriptor, rows);
     }

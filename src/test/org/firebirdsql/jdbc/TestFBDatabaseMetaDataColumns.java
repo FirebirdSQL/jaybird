@@ -534,7 +534,7 @@ public class TestFBDatabaseMetaDataColumns extends FBMetaDataTestBase<TestFBData
      */
     public void testChar10_OCTETSColumn() throws Exception {
         Map<ColumnMetaData, Object> validationRules = getDefaultValueValidationRules();
-        validationRules.put(ColumnMetaData.DATA_TYPE, Types.CHAR);
+        validationRules.put(ColumnMetaData.DATA_TYPE, Types.BINARY);
         validationRules.put(ColumnMetaData.TYPE_NAME, "CHAR");
         validationRules.put(ColumnMetaData.COLUMN_SIZE, 10);
         validationRules.put(ColumnMetaData.ORDINAL_POSITION, 23);
@@ -579,7 +579,7 @@ public class TestFBDatabaseMetaDataColumns extends FBMetaDataTestBase<TestFBData
      */
     public void testVarchar10_OCTETSColumn() throws Exception {
         Map<ColumnMetaData, Object> validationRules = getDefaultValueValidationRules();
-        validationRules.put(ColumnMetaData.DATA_TYPE, Types.VARCHAR);
+        validationRules.put(ColumnMetaData.DATA_TYPE, Types.VARBINARY);
         validationRules.put(ColumnMetaData.TYPE_NAME, "VARCHAR");
         validationRules.put(ColumnMetaData.COLUMN_SIZE, 10);
         validationRules.put(ColumnMetaData.ORDINAL_POSITION, 26);

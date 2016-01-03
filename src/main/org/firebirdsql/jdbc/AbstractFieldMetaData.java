@@ -20,10 +20,10 @@ package org.firebirdsql.jdbc;
 
 import org.firebirdsql.encodings.EncodingFactory;
 import org.firebirdsql.gds.ISCConstants;
-import org.firebirdsql.gds.impl.DatabaseParameterBufferExtension;
 import org.firebirdsql.gds.impl.GDSHelper;
 import org.firebirdsql.gds.ng.fields.FieldDescriptor;
 import org.firebirdsql.gds.ng.fields.RowDescriptor;
+import org.firebirdsql.jdbc.field.JdbcTypeConverter;
 
 import java.math.BigDecimal;
 import java.sql.*;
@@ -46,19 +46,10 @@ public abstract class AbstractFieldMetaData implements Wrapper {
     private final RowDescriptor rowDescriptor;
     private final GDSHelper gdsHelper;
     private Map<FieldKey, ExtendedFieldInfo> extendedInfo;
-    private final boolean octetsAsBytes;
 
     protected AbstractFieldMetaData(RowDescriptor rowDescriptor, GDSHelper gdsHelper) {
         this.rowDescriptor = rowDescriptor;
         this.gdsHelper = gdsHelper;
-
-        if (gdsHelper != null) {
-            // TODO Define explicit property for octetsAsBytes
-            octetsAsBytes = gdsHelper.getConnectionProperties().getExtraDatabaseParameters()
-                    .hasArgument(DatabaseParameterBufferExtension.OCTETS_AS_BYTES);
-        } else {
-            octetsAsBytes = false;
-        }
     }
 
     @Override
@@ -255,71 +246,7 @@ public abstract class AbstractFieldMetaData implements Wrapper {
     }
 
     protected int getFieldType(int field) {
-        int sqlType = getFieldDescriptor(field).getType() & ~1;
-        int sqlScale = getFieldDescriptor(field).getScale();
-        int sqlSubtype = getFieldDescriptor(field).getSubType();
-
-        switch (sqlType) {
-        case ISCConstants.SQL_SHORT:
-            if (sqlSubtype == SUBTYPE_NUMERIC || (sqlSubtype == 0 && sqlScale < 0))
-                return Types.NUMERIC;
-            else if (sqlSubtype == SUBTYPE_DECIMAL)
-                return Types.DECIMAL;
-            else
-                return Types.SMALLINT;
-        case ISCConstants.SQL_LONG:
-            if (sqlSubtype == SUBTYPE_NUMERIC || (sqlSubtype == 0 && sqlScale < 0))
-                return Types.NUMERIC;
-            else if (sqlSubtype == SUBTYPE_DECIMAL)
-                return Types.DECIMAL;
-            else
-                return Types.INTEGER;
-        case ISCConstants.SQL_INT64:
-            if (sqlSubtype == SUBTYPE_NUMERIC || (sqlSubtype == 0 && sqlScale < 0))
-                return Types.NUMERIC;
-            else if (sqlSubtype == SUBTYPE_DECIMAL)
-                return Types.DECIMAL;
-            else
-                return Types.BIGINT;
-        case ISCConstants.SQL_DOUBLE:
-        case ISCConstants.SQL_D_FLOAT:
-            return Types.DOUBLE;
-        case ISCConstants.SQL_FLOAT:
-            return Types.FLOAT;
-        case ISCConstants.SQL_TEXT:
-            if (octetsAsBytes && sqlSubtype == ISCConstants.CS_BINARY){
-                return Types.BINARY;
-            } else {
-                return Types.CHAR;
-            }
-        case ISCConstants.SQL_VARYING:
-            if (octetsAsBytes && sqlSubtype == ISCConstants.CS_BINARY){
-                return Types.VARBINARY;
-            } else {
-                return Types.VARCHAR;
-            }
-        case ISCConstants.SQL_TIMESTAMP:
-            return Types.TIMESTAMP;
-        case ISCConstants.SQL_TYPE_TIME:
-            return Types.TIME;
-        case ISCConstants.SQL_TYPE_DATE:
-            return Types.DATE;
-        case ISCConstants.SQL_BLOB:
-            if (sqlSubtype < 0)
-                return Types.BLOB;
-            else if (sqlSubtype == 0 || sqlSubtype > 1)
-                return Types.LONGVARBINARY;
-            else if (sqlSubtype == 1)
-                return Types.LONGVARCHAR;
-            else
-                return Types.OTHER;
-        case ISCConstants.SQL_QUAD:
-            return Types.OTHER;
-        case ISCConstants.SQL_BOOLEAN:
-            return Types.BOOLEAN;
-        default:
-            return Types.NULL;
-        }
+        return JdbcTypeConverter.toJdbcType(getFieldDescriptor(field));
     }
 
     /**

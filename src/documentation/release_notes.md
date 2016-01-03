@@ -132,6 +132,11 @@ Other fixes and changes
     
 * Nested JDBC escapes are now supported ([JDBC-292](http://tracker.firebirdsql.org/browse/JDBC-292))
 
+* `CHAR` and `VARCHAR` columns with character set `OCTETS` are now handled as
+  JDBC type `BINARY` and `VARBINARY`, respectively ([JDBC-240](http://tracker.firebirdsql.org/browse/JDBC-240))
+
+    See also [Character set OCTETS handled as JDBC (VAR)BINARY]
+
 Removal of deprecated classes and packages
 ------------------------------------------
 
@@ -335,6 +340,31 @@ _Unless explicitly indicated, changes also apply to `CallableStatement`_
 
 
 **TODO: Add other changes**
+
+Character set OCTETS handled as JDBC (VAR)BINARY
+------------------------------------------------
+
+Columns of type `CHAR(n) CHARACTER SET OCTETS` and
+`VARCHAR(n) CHARACTER SET OCTETS` are now handled as JDBC type
+`java.sql.Types.BINARY` and `java.sql.Types.VARBINARY`, respectively.
+
+The connection property `octetsAsBytes` no longer has any effect, metadata and
+usage will always be `(VAR)BINARY`.
+
+With this change the getters (on result set/callable statement) and
+setters (prepared/callable statement) and update methods (result set) for columns
+of this type have been restricted to:
+
+* `set/get/updateNull`
+* `get/set/updateBytes`
+* `get/set/updateBinaryStream`
+* `get/set/updateAsciiStream`
+* `get/set/updateString` (using the default encoding or connection encoding)
+* `get/set/updateCharacterStream` (using the default encoding or connection encoding)
+* `get/set/updateObject` (with `String`, `byte[]`, `InputStream`, `Reader`)
+
+Other getters/setters/updaters or object types supported for
+'normal' `(VAR)CHAR` fields are not available.
 
 Removal of old GDS API
 ----------------------

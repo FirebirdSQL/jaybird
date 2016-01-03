@@ -21,6 +21,7 @@ package org.firebirdsql.jdbc.field;
 import org.firebirdsql.encodings.EncodingFactory;
 import org.firebirdsql.gds.impl.GDSHelper;
 import org.firebirdsql.gds.ng.fields.FieldDescriptor;
+import org.firebirdsql.util.IOUtils;
 
 import java.io.*;
 import java.math.BigDecimal;
@@ -282,24 +283,9 @@ class FBStringField extends FBField {
             return;
         }
 
-        if (length > fieldDescriptor.getLength())
-            throw new DataTruncation(-1, true, false, length, fieldDescriptor.getLength());
-
         try {
-            ByteArrayOutputStream out = new ByteArrayOutputStream();
-            byte[] buff = new byte[4096];
-            
-            int counter = 0;
-            int toRead = length;
-            
-            while ((counter = in.read(buff, 0, toRead > buff.length ? buff.length : toRead)) != -1) {
-                out.write(buff, 0, counter);
-                toRead -= counter;
-            }
-            
-            setBytes(out.toByteArray());
-        }
-        catch (IOException ioex) {
+            setBytes(IOUtils.toBytes(in, length));
+        } catch (IOException ioex) {
             throw new TypeConversionException(BINARY_STREAM_CONVERSION_ERROR);
         }
     }
@@ -311,15 +297,8 @@ class FBStringField extends FBField {
         }
 
         try {
-            StringWriter out = new StringWriter();
-            char[] buff = new char[4096];
-            int counter = 0;
-            while ((counter = in.read(buff)) != -1)
-                out.write(buff, 0, counter);
-				String outString = out.toString();
-            setString(outString.substring(0, length));
-        }
-        catch (IOException ioex) {
+            setString(IOUtils.toString(in, length));
+        } catch (IOException ioex) {
             throw new TypeConversionException(CHARACTER_STREAM_CONVERSION_ERROR);
         }
     }
@@ -330,10 +309,11 @@ class FBStringField extends FBField {
             return;
         }
 
-        setFieldData(value);
-
-        if (value.length > fieldDescriptor.getLength())
+        if (value.length > fieldDescriptor.getLength()) {
             throw new DataTruncation(-1, true, false, value.length, fieldDescriptor.getLength());
+        }
+
+        setFieldData(value);
     }
 
     //----- setDate, setTime and setTimestamp code

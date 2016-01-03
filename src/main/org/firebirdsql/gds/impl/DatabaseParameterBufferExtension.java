@@ -49,6 +49,7 @@ public interface DatabaseParameterBufferExtension extends DatabaseParameterBuffe
     int NO_RESULT_SET_TRACKING          = ISCConstants.isc_dpb_no_result_set_tracking;
     int RESULT_SET_HOLDABLE             = ISCConstants.isc_dpb_result_set_holdable;
     int FILENAME_CHARSET                = ISCConstants.isc_dpb_filename_charset;
+    @Deprecated
     int OCTETS_AS_BYTES                 = ISCConstants.isc_dpb_octets_as_bytes;
     int SO_TIMEOUT                      = ISCConstants.isc_dpb_so_timeout;
     int COLUMN_LABEL_FOR_NAME           = ISCConstants.isc_dpb_column_label_for_name;

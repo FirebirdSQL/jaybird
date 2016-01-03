@@ -74,7 +74,9 @@ public class TestFBPreparedStatement extends FBJUnit4TestBase {
             + "FIELD6 VARCHAR(5),"
             + "FIELD7 CHAR(1),"
             + "num_field numeric(9,2),"
-            + "UTFFIELD CHAR(1) CHARACTER SET UTF8"
+            + "UTFFIELD CHAR(1) CHARACTER SET UTF8,"
+            + "CHAR_OCTETS CHAR(15) CHARACTER SET OCTETS,"
+            + "VARCHAR_OCTETS VARCHAR(15) CHARACTER SET OCTETS"
             + ")";
 
     private static final String TEST_STRING = "This is simple test string.";
@@ -973,6 +975,58 @@ public class TestFBPreparedStatement extends FBJUnit4TestBase {
             }
         } finally {
             con.setAutoCommit(true);
+        }
+    }
+
+    @Test
+    public void testCharOctetsInsertAndSelect() throws Exception {
+        checkOctetsInsertAndSelect("CHAR_OCTETS", Types.BINARY);
+    }
+
+    @Test
+    public void testVarCharOctetsInsertAndSelect() throws Exception {
+        checkOctetsInsertAndSelect("VARCHAR_OCTETS", Types.VARBINARY);
+    }
+
+    private void checkOctetsInsertAndSelect(String columName, int jdbcType) throws Exception {
+        executeCreateTable(con, CREATE_TEST_CHARS_TABLE);
+
+        try (PreparedStatement insert = con.prepareStatement(
+                "INSERT INTO TESTTAB(ID, " + columName + ", FIELD1) VALUES (?, ?, ?)")) {
+            ParameterMetaData pmd = insert.getParameterMetaData();
+            assertEquals(jdbcType, pmd.getParameterType(2));
+            final int fieldLength = pmd.getPrecision(2);
+            final byte[] data1 = new byte[fieldLength];
+            final byte[] data2 = new byte[fieldLength - 2];
+            rnd.nextBytes(data1);
+            rnd.nextBytes(data2);
+            final byte[] expectedData2 = jdbcType == Types.BINARY
+                    ? Arrays.copyOf(data2, fieldLength)
+                    : data2;
+
+            insert.setInt(1, 1);
+            insert.setBytes(2, data1);
+            insert.setInt(3, 1);
+            insert.executeUpdate();
+
+            insert.setInt(1, 2);
+            insert.setBytes(2, data2);
+            insert.setInt(3, 2);
+            insert.executeUpdate();
+
+            try (Statement select = con.createStatement();
+                 ResultSet rs = select.executeQuery("SELECT ID, " + columName + " FROM TESTTAB ORDER BY ID")) {
+                ResultSetMetaData rsmd = rs.getMetaData();
+                assertEquals(jdbcType, rsmd.getColumnType(2));
+
+                assertTrue(rs.next());
+                assertEquals(1, rs.getInt(1));
+                assertArrayEquals(data1, rs.getBytes(2));
+
+                assertTrue(rs.next());
+                assertEquals(2, rs.getInt(1));
+                assertArrayEquals(expectedData2, rs.getBytes(2));
+            }
         }
     }
 

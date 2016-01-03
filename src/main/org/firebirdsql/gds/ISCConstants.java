@@ -178,6 +178,7 @@ public interface ISCConstants {
     int isc_dpb_no_result_set_tracking  = 137;
     int isc_dpb_result_set_holdable     = 138;
     int isc_dpb_filename_charset        = 139;
+    @Deprecated
     int isc_dpb_octets_as_bytes         = 140;
     int isc_dpb_so_timeout              = 141;
     int isc_dpb_column_label_for_name   = 142;

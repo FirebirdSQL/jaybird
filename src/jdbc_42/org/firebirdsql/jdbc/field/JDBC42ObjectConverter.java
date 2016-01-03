@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
@@ -83,15 +81,7 @@ public class JDBC42ObjectConverter implements ObjectConverter {
                 field.setString(object.toString());
                 return true;
             }
-        } else if (object instanceof OffsetTime) {
-            switch (field.requiredType) {
-            case Types.CHAR:
-            case Types.VARCHAR:
-            case Types.LONGVARCHAR:
-                field.setString(object.toString());
-                return true;
-            }
-        } else if (object instanceof OffsetDateTime) {
+        } else if (object instanceof OffsetTime || object instanceof OffsetDateTime) {
             switch (field.requiredType) {
             case Types.CHAR:
             case Types.VARCHAR:
