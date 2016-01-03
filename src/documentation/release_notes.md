@@ -59,6 +59,28 @@ Specification support
 
 **TODO: Take and update table from old ODT release notes**
 
+Getting Jaybird 3.0 snapshot
+============================
+
+Occasionally we release a Jaybird 3 snapshot for testing purposes to
+the [Sonatype OSS snapshot repository](https://oss.sonatype.org/content/repositories/snapshots/).
+
+Groupid: `org.firebirdsql.jdbc`,\
+Artifactid: `jaybird-jdkXX` (where `XX` is `17` or `18`).\
+Version: `3.0.0-SNAPSHOT`
+
+For example:
+
+~~~ {.xml}
+<dependency>
+    <groupId>org.firebirdsql.jdbc</groupId>
+    <artifactId>jaybird-jdk18</artifactId>
+    <version>3.0.0-SNAPSHOT</version>
+</dependency>
+~~~
+
+You need to add the Sonatype OSS snapshot repository to your maven repository config or pom.
+
 What's new in Jaybird 3.0
 =========================
 
@@ -81,7 +103,7 @@ version 12.
 
 Firebird 3.0 support is improved with the partial implementation of wire
 protocol 13 and support for the _Srp_ authentication plugin. Version 13 support
-does not yet provde Firebird 3.0 wire encryption and zlib compression. Wire
+does not yet provide Firebird 3.0 wire encryption and zlib compression. Wire
 encryption is planned for Jaybird 3.1, but might be moved into Jaybird 3.0
 before the final release. Support for zlib compression is not planned yet.
 
@@ -330,14 +352,13 @@ _Unless explicitly indicated, changes also apply to `CallableStatement`_
 
 ### ResultSet ###
 
-* Methods `getUnicodeStream` now always throw
+* Method `getUnicodeStream` now always throws
   an `SQLFeatureNotSupportedException`. The previous implementation did not
   conform to the (deprecated) JDBC requirements and instead behaved like
   `getBinaryStream`.
 
     For the behavior in Jaybird 2.2 and earlier, use `getBinaryStream`.
     Otherwise use `getCharacterStream`.
-
 
 **TODO: Add other changes**
 

@@ -30,6 +30,25 @@ For example:
 When deploying to a JavaEE environment, exclude the `javax.resource connector-api`
 dependency as this will be provided by the application server.
 
+### Jaybird 3 snapshot for testing ###
+
+Occasionally we release a Jaybird 3 snapshot for testing purposes to
+the [Sonatype OSS snapshot repository](https://oss.sonatype.org/content/repositories/snapshots/).
+
+Groupid: `org.firebirdsql.jdbc`,\
+Artifactid: `jaybird-jdkXX` (where `XX` is `17` or `18`).\
+Version: `3.0.0-SNAPSHOT`
+
+For example:
+
+~~~ {.xml}
+<dependency>
+    <groupId>org.firebirdsql.jdbc</groupId>
+    <artifactId>jaybird-jdk18</artifactId>
+    <version>3.0.0-SNAPSHOT</version>
+</dependency>
+~~~
+
 Where can I get the sourcecode?
 -------------------------------
 
