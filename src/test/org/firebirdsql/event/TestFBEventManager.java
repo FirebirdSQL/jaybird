@@ -20,6 +20,7 @@ package org.firebirdsql.event;
 
 import org.firebirdsql.common.FBJUnit4TestBase;
 import org.firebirdsql.gds.impl.GDSType;
+import org.firebirdsql.util.Unstable;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -176,6 +177,7 @@ public class TestFBEventManager extends FBJUnit4TestBase {
     }
 
     @Test
+    @Unstable("Performance/timing dependent, may need tweaking DELAY")
     public void testLargeMultiLoad() throws Exception {
         final int THREAD_COUNT = 5;
         final int REP_COUNT = 100;
