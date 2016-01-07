@@ -56,26 +56,32 @@ public class V12Database extends V11Database {
 
     @Override
     public void cancelOperation(int kind) throws SQLException {
-        if (kind == ISCConstants.fb_cancel_abort) {
-            try {
-                // In case of abort we forcibly close the connection
-                closeConnection();
-            } catch (IOException ioe) {
-                throw new SQLNonTransientConnectionException("Connection abort failed", ioe);
+        try {
+            if (kind == ISCConstants.fb_cancel_abort) {
+                try {
+                    // In case of abort we forcibly close the connection
+                    closeConnection();
+                } catch (IOException ioe) {
+                    throw new SQLNonTransientConnectionException("Connection abort failed", ioe);
+                }
+            } else {
+                checkConnected();
+                try {
+                    // We circumvent the normal xdrOut to minimize the chance of interleaved writes
+                    // TODO We may still need to do separate write / read synchronization to ensure this works correctly
+                    final ByteArrayOutputStream out = new ByteArrayOutputStream(8);
+                    final XdrOutputStream xdr = new XdrOutputStream(out, false);
+                    xdr.writeInt(WireProtocolConstants.op_cancel);
+                    xdr.writeInt(kind);
+                    wireOperations.writeDirect(out.toByteArray());
+                } catch (IOException ioe) {
+                    throw new FbExceptionBuilder().exception(ISCConstants.isc_net_write_err).cause(ioe)
+                            .toSQLException();
+                }
             }
-        } else {
-            checkConnected();
-            try {
-                // We circumvent the normal xdrOut to minimize the chance of interleaved writes
-                // TODO We may still need to do separate write / read synchronization to ensure this works correctly
-                final ByteArrayOutputStream out = new ByteArrayOutputStream(8);
-                final XdrOutputStream xdr = new XdrOutputStream(out, false);
-                xdr.writeInt(WireProtocolConstants.op_cancel);
-                xdr.writeInt(kind);
-                wireOperations.writeDirect(out.toByteArray());
-            } catch (IOException ioe) {
-                throw new FbExceptionBuilder().exception(ISCConstants.isc_net_write_err).cause(ioe).toSQLException();
-            }
+        } catch (SQLException ex) {
+            exceptionListenerDispatcher.errorOccurred(ex);
+            throw ex;
         }
     }
 
@@ -84,6 +90,7 @@ public class V12Database extends V11Database {
      * <p>
      * For version 12 always returns the UTF8 encoding.
      * </p>
+     *
      * @see {@link org.firebirdsql.gds.ng.wire.version12.V12ParameterConverter}
      */
     @Override

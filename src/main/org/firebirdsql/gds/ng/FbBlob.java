@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * Public Firebird Java API.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -27,16 +25,23 @@
 package org.firebirdsql.gds.ng;
 
 import org.firebirdsql.gds.ISCConstants;
+import org.firebirdsql.gds.ng.listeners.ExceptionListenable;
 
 import java.sql.SQLException;
 
 /**
+ * Interface for blob operations.
+ * <p>
+ * All methods defined in this interface are required to notify all {@code SQLException} thrown from the methods
+ * defined in this interface.
+ * </p>
+ *
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @since 3.0
  */
-public interface FbBlob {
+public interface FbBlob extends ExceptionListenable {
 
-    static long NO_BLOB_ID = 0;
+    long NO_BLOB_ID = 0;
 
     /**
      * @return The Firebird blob id
@@ -213,7 +218,7 @@ public interface FbBlob {
     /**
      * Seek mode for {@link FbBlob#seek(int, org.firebirdsql.gds.ng.FbBlob.SeekMode)}.
      */
-    public enum SeekMode {
+    enum SeekMode {
         /**
          * Absolute seek from start of blob.
          */
@@ -229,7 +234,7 @@ public interface FbBlob {
 
         final int seekModeId;
 
-        private SeekMode(int seekModeId) {
+        SeekMode(int seekModeId) {
             this.seekModeId = seekModeId;
         }
 

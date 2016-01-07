@@ -56,8 +56,13 @@ public abstract class AbstractFbService<T extends AbstractConnection<IServicePro
     public final <R> R getServiceInfo(ServiceParameterBuffer serviceParameterBuffer,
             ServiceRequestBuffer serviceRequestBuffer, int bufferLength, InfoProcessor<R> infoProcessor)
             throws SQLException {
-        byte[] responseBuffer = getServiceInfo(serviceParameterBuffer, serviceRequestBuffer, bufferLength);
-        return infoProcessor.process(responseBuffer);
+        final byte[] responseBuffer = getServiceInfo(serviceParameterBuffer, serviceRequestBuffer, bufferLength);
+        try {
+            return infoProcessor.process(responseBuffer);
+        } catch (SQLException e) {
+            exceptionListenerDispatcher.errorOccurred(e);
+            throw e;
+        }
     }
 
     @Override
@@ -73,8 +78,8 @@ public abstract class AbstractFbService<T extends AbstractConnection<IServicePro
     /**
      * Actual implementation of service detach.
      * <p>
-     * Implementations of this method should only be called from {@link #close()}, and should <strong>not</strong> notify service
-     * listeners of the service {@link ServiceListener#detaching(FbService)} and
+     * Implementations of this method should only be called from {@link #close()}, and should <strong>not</strong>
+     * notify service listeners of the service {@link ServiceListener#detaching(FbService)} and
      * {@link ServiceListener#detached(FbService)} events.
      * </p>
      */
@@ -84,22 +89,30 @@ public abstract class AbstractFbService<T extends AbstractConnection<IServicePro
      * {@inheritDoc}
      * <p>
      * Implementation note: Calls {@link #checkConnected()} and notifies service listeners of the detaching event, then
-     * calls {@link #internalDetach()} and finally notifies service listeners of database detach and removes all listeners.
+     * calls {@link #internalDetach()} and finally notifies service listeners of database detach and removes all
+     * listeners.
      * </p>
      */
     @Override
     public final void close() throws SQLException {
-        // TODO return silently if not connected?
-        checkConnected();
-        synchronized (getSynchronizationObject()) {
-            // TODO Add listeners
-            //serviceListenerDispatcher.detaching(this);
-            try {
-                internalDetach();
-            } finally {
-                //serviceListenerDispatcher.detached(this);
-                //serviceListenerDispatcher.shutdown();
+        try {
+            // TODO return silently if not connected?
+            checkConnected();
+            synchronized (getSynchronizationObject()) {
+                // TODO Add listeners
+                //serviceListenerDispatcher.detaching(this);
+                try {
+                    internalDetach();
+                } finally {
+                    //serviceListenerDispatcher.detached(this);
+                    //serviceListenerDispatcher.shutdown();
+                }
             }
+        } catch (SQLException e) {
+            exceptionListenerDispatcher.errorOccurred(e);
+            throw e;
+        } finally {
+            exceptionListenerDispatcher.shutdown();
         }
     }
 

@@ -103,7 +103,8 @@ public abstract class AbstractFbWireDatabase extends AbstractFbDatabase<WireData
     protected final void checkConnected() throws SQLException {
         if (!connection.isConnected()) {
             // TODO Update message / externalize
-            throw new SQLException("No connection established to the database server", FBSQLException.SQL_STATE_CONNECTION_CLOSED);
+            throw new SQLException("No connection established to the database server",
+                    FBSQLException.SQL_STATE_CONNECTION_CLOSED);
         }
     }
 
@@ -122,7 +123,8 @@ public abstract class AbstractFbWireDatabase extends AbstractFbDatabase<WireData
         checkConnected();
         if (!isAttached()) {
             // TODO Update message / externalize + Check if SQL State right
-            throw new SQLException("The connection is not attached to a database", FBSQLException.SQL_STATE_CONNECTION_ERROR);
+            throw new SQLException("The connection is not attached to a database",
+                    FBSQLException.SQL_STATE_CONNECTION_ERROR);
         }
     }
 
@@ -144,19 +146,25 @@ public abstract class AbstractFbWireDatabase extends AbstractFbDatabase<WireData
     }
 
     @Override
-    public final FbBlob createBlobForOutput(FbTransaction transaction, BlobParameterBuffer blobParameterBuffer)
-            throws SQLException {
-        return protocolDescriptor.createOutputBlob(this, (FbWireTransaction) transaction, blobParameterBuffer);
+    public final FbBlob createBlobForOutput(FbTransaction transaction, BlobParameterBuffer blobParameterBuffer) {
+        final FbWireBlob outputBlob =
+                protocolDescriptor.createOutputBlob(this, (FbWireTransaction) transaction, blobParameterBuffer);
+        outputBlob.addExceptionListener(exceptionListenerDispatcher);
+        return outputBlob;
     }
 
     @Override
     public final FbBlob createBlobForInput(FbTransaction transaction, BlobParameterBuffer blobParameterBuffer,
-            long blobId) throws SQLException {
-        return protocolDescriptor.createInputBlob(this, (FbWireTransaction) transaction, blobParameterBuffer, blobId);
+            long blobId) {
+        final FbWireBlob inputBlob =
+                protocolDescriptor.createInputBlob(this, (FbWireTransaction) transaction, blobParameterBuffer, blobId);
+        inputBlob.addExceptionListener(exceptionListenerDispatcher);
+        return inputBlob;
     }
 
     @Override
     public final void consumePackets(int numberOfResponses, WarningMessageCallback warningCallback) {
+        // TODO Should consumePackets notify the exception listener or not?
         wireOperations.consumePackets(numberOfResponses, warningCallback);
     }
 
@@ -181,10 +189,15 @@ public abstract class AbstractFbWireDatabase extends AbstractFbDatabase<WireData
     }
 
     public void countEvents(EventHandle eventHandle) throws SQLException {
-        if (!(eventHandle instanceof WireEventHandle))
-            throw new SQLException("Invalid event handle, type: " + eventHandle.getClass().getName());
+        try {
+            if (!(eventHandle instanceof WireEventHandle))
+                throw new SQLException("Invalid event handle, type: " + eventHandle.getClass().getName());
 
-        ((WireEventHandle) eventHandle).calculateCount();
+            ((WireEventHandle) eventHandle).calculateCount();
+        } catch (SQLException e) {
+            exceptionListenerDispatcher.errorOccurred(e);
+            throw e;
+        }
     }
 
     /**

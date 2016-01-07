@@ -23,6 +23,8 @@ package org.firebirdsql.gds.ng;
 import org.firebirdsql.gds.BlobParameterBuffer;
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.ng.listeners.DatabaseListener;
+import org.firebirdsql.gds.ng.listeners.ExceptionListener;
+import org.firebirdsql.gds.ng.listeners.ExceptionListenerDispatcher;
 import org.firebirdsql.gds.ng.listeners.TransactionListener;
 import org.firebirdsql.logging.Logger;
 import org.firebirdsql.logging.LoggerFactory;
@@ -39,6 +41,7 @@ public abstract class AbstractFbBlob implements FbBlob, TransactionListener, Dat
     private static final Logger log = LoggerFactory.getLogger(AbstractFbBlob.class);
 
     private final Object syncObject = new Object();
+    protected final ExceptionListenerDispatcher exceptionListenerDispatcher = new ExceptionListenerDispatcher(this);
     private final BlobParameterBuffer blobParameterBuffer;
     private FbTransaction transaction;
     private FbDatabase database;
@@ -109,15 +112,22 @@ public abstract class AbstractFbBlob implements FbBlob, TransactionListener, Dat
 
     @Override
     public final void close() throws SQLException {
-        synchronized (getSynchronizationObject()) {
-            if (!isOpen()) return;
-            checkDatabaseAttached();
-            checkTransactionActive();
-            try {
-                closeImpl();
-            } finally {
-                setOpen(false);
+        try {
+            synchronized (getSynchronizationObject()) {
+                if (!isOpen()) return;
+                checkDatabaseAttached();
+                checkTransactionActive();
+                try {
+                    closeImpl();
+                } finally {
+                    setOpen(false);
+                }
             }
+        } catch (SQLException e) {
+            exceptionListenerDispatcher.errorOccurred(e);
+            throw e;
+        } finally {
+            exceptionListenerDispatcher.shutdown();
         }
     }
 
@@ -129,14 +139,19 @@ public abstract class AbstractFbBlob implements FbBlob, TransactionListener, Dat
 
     @Override
     public final void cancel() throws SQLException {
-        synchronized (getSynchronizationObject()) {
-            checkDatabaseAttached();
-            checkTransactionActive();
-            try {
-                cancelImpl();
-            } finally {
-                setOpen(false);
+        try {
+            synchronized (getSynchronizationObject()) {
+                checkDatabaseAttached();
+                checkTransactionActive();
+                try {
+                    cancelImpl();
+                } finally {
+                    setOpen(false);
+                }
             }
+        } catch (SQLException e) {
+            exceptionListenerDispatcher.errorOccurred(e);
+            throw e;
         }
     }
 
@@ -152,7 +167,8 @@ public abstract class AbstractFbBlob implements FbBlob, TransactionListener, Dat
     }
 
     @Override
-    public void transactionStateChanged(FbTransaction transaction, TransactionState newState, TransactionState previousState) {
+    public void transactionStateChanged(FbTransaction transaction, TransactionState newState,
+            TransactionState previousState) {
         if (getTransaction() != transaction) {
             transaction.removeTransactionListener(this);
             return;
@@ -271,19 +287,40 @@ public abstract class AbstractFbBlob implements FbBlob, TransactionListener, Dat
     @Override
     public <T> T getBlobInfo(final byte[] requestItems, final int bufferLength, final InfoProcessor<T> infoProcessor)
             throws SQLException {
-        return infoProcessor.process(getBlobInfo(requestItems, bufferLength));
+        final byte[] blobInfo = getBlobInfo(requestItems, bufferLength);
+        try {
+            return infoProcessor.process(blobInfo);
+        } catch (SQLException e) {
+            exceptionListenerDispatcher.errorOccurred(e);
+            throw e;
+        }
     }
 
     @Override
     public long length() throws SQLException {
-        synchronized (getSynchronizationObject()) {
-            checkDatabaseAttached();
-            if (getBlobId() == FbBlob.NO_BLOB_ID) {
-                throw new FbExceptionBuilder().exception(ISCConstants.isc_bad_segstr_id).toSQLException();
+        try {
+            synchronized (getSynchronizationObject()) {
+                checkDatabaseAttached();
+                if (getBlobId() == FbBlob.NO_BLOB_ID) {
+                    throw new FbExceptionBuilder().exception(ISCConstants.isc_bad_segstr_id).toSQLException();
+                }
+                final BlobLengthProcessor blobLengthProcessor = createBlobLengthProcessor();
+                return getBlobInfo(blobLengthProcessor.getBlobLengthItems(), 20, blobLengthProcessor);
             }
-            final BlobLengthProcessor blobLengthProcessor = createBlobLengthProcessor();
-            return getBlobInfo(blobLengthProcessor.getBlobLengthItems(), 20, blobLengthProcessor);
+        } catch (SQLException e) {
+            exceptionListenerDispatcher.errorOccurred(e);
+            throw e;
         }
+    }
+
+    @Override
+    public final void addExceptionListener(ExceptionListener listener) {
+        exceptionListenerDispatcher.addListener(listener);
+    }
+
+    @Override
+    public final void removeExceptionListener(ExceptionListener listener) {
+        exceptionListenerDispatcher.removeListener(listener);
     }
 
     protected final void clearDatabase() {

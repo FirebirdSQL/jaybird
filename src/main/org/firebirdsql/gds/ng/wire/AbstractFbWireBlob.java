@@ -1,6 +1,4 @@
 /*
- * $Id$
- * 
  * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
@@ -98,27 +96,32 @@ public abstract class AbstractFbWireBlob extends AbstractFbBlob implements FbWir
 
     @Override
     public byte[] getBlobInfo(final byte[] requestItems, final int bufferLength) throws SQLException {
-        synchronized (getSynchronizationObject()) {
-            synchronized (getDatabase().getSynchronizationObject()) {
-                try {
-                    final XdrOutputStream xdrOut = getDatabase().getXdrStreamAccess().getXdrOut();
-                    xdrOut.writeInt(WireProtocolConstants.op_info_blob);
-                    xdrOut.writeInt(getHandle());
-                    xdrOut.writeInt(0); // incarnation
-                    xdrOut.writeBuffer(requestItems);
-                    xdrOut.writeInt(bufferLength);
-                    xdrOut.flush();
-                } catch (IOException ex) {
-                    throw new FbExceptionBuilder().exception(ISCConstants.isc_net_write_err).cause(ex).toSQLException();
-                }
-                try {
-                    // TODO: Blob warning callback or just database default?
-                    GenericResponse response = getDatabase().readGenericResponse(null);
-                    return response.getData();
-                } catch (IOException ex) {
-                    throw new FbExceptionBuilder().exception(ISCConstants.isc_net_read_err).cause(ex).toSQLException();
+        try {
+            synchronized (getSynchronizationObject()) {
+                synchronized (getDatabase().getSynchronizationObject()) {
+                    try {
+                        final XdrOutputStream xdrOut = getDatabase().getXdrStreamAccess().getXdrOut();
+                        xdrOut.writeInt(WireProtocolConstants.op_info_blob);
+                        xdrOut.writeInt(getHandle());
+                        xdrOut.writeInt(0); // incarnation
+                        xdrOut.writeBuffer(requestItems);
+                        xdrOut.writeInt(bufferLength);
+                        xdrOut.flush();
+                    } catch (IOException ex) {
+                        throw new FbExceptionBuilder().exception(ISCConstants.isc_net_write_err).cause(ex).toSQLException();
+                    }
+                    try {
+                        // TODO: Blob warning callback or just database default?
+                        GenericResponse response = getDatabase().readGenericResponse(null);
+                        return response.getData();
+                    } catch (IOException ex) {
+                        throw new FbExceptionBuilder().exception(ISCConstants.isc_net_read_err).cause(ex).toSQLException();
+                    }
                 }
             }
+        } catch (SQLException e) {
+            exceptionListenerDispatcher.errorOccurred(e);
+            throw e;
         }
     }
 }

@@ -44,7 +44,8 @@ import static org.firebirdsql.gds.ng.TransactionHelper.checkTransactionActive;
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @since 3.0
  */
-public final class JnaDatabase extends AbstractFbDatabase<JnaDatabaseConnection> implements JnaAttachment, TransactionListener {
+public final class JnaDatabase extends AbstractFbDatabase<JnaDatabaseConnection>
+        implements JnaAttachment, TransactionListener {
 
     // TODO Find out if there are any exception from JNA that we need to be prepared to handle.
 
@@ -72,7 +73,8 @@ public final class JnaDatabase extends AbstractFbDatabase<JnaDatabaseConnection>
     protected void checkConnected() throws SQLException {
         if (!isAttached()) {
             // TODO Update message / externalize
-            throw new SQLException("The connection is not attached to a database", FBSQLException.SQL_STATE_CONNECTION_ERROR);
+            throw new SQLException("The connection is not attached to a database",
+                    FBSQLException.SQL_STATE_CONNECTION_ERROR);
         }
     }
 
@@ -99,10 +101,15 @@ public final class JnaDatabase extends AbstractFbDatabase<JnaDatabaseConnection>
 
     @Override
     public void attach() throws SQLException {
-        DatabaseParameterBuffer dpb = ((DatabaseParameterBufferExtension) PARAMETER_CONVERTER
-                .toDatabaseParameterBuffer(connection))
-                .removeExtensionParams();
-        attachOrCreate(dpb, false);
+        try {
+            final DatabaseParameterBuffer dpb = ((DatabaseParameterBufferExtension) PARAMETER_CONVERTER
+                    .toDatabaseParameterBuffer(connection))
+                    .removeExtensionParams();
+            attachOrCreate(dpb, false);
+        } catch (SQLException e) {
+            exceptionListenerDispatcher.errorOccurred(e);
+            throw e;
+        }
     }
 
     protected void attachOrCreate(final DatabaseParameterBuffer dpb, final boolean create) throws SQLException {
@@ -155,136 +162,182 @@ public final class JnaDatabase extends AbstractFbDatabase<JnaDatabaseConnection>
 
     @Override
     public void createDatabase() throws SQLException {
-        DatabaseParameterBuffer dpb = ((DatabaseParameterBufferExtension) PARAMETER_CONVERTER
-                .toDatabaseParameterBuffer(connection))
-                .removeExtensionParams();
-        attachOrCreate(dpb, true);
+        try {
+            final DatabaseParameterBuffer dpb = ((DatabaseParameterBufferExtension) PARAMETER_CONVERTER
+                    .toDatabaseParameterBuffer(connection))
+                    .removeExtensionParams();
+            attachOrCreate(dpb, true);
+        } catch (SQLException e) {
+            exceptionListenerDispatcher.errorOccurred(e);
+            throw e;
+        }
     }
 
     @Override
     public void dropDatabase() throws SQLException {
-        checkConnected();
-        synchronized (getSynchronizationObject()) {
-            try {
-                clientLibrary.isc_drop_database(statusVector, handle);
-                processStatusVector();
-            } finally {
-                setDetached();
+        try {
+            checkConnected();
+            synchronized (getSynchronizationObject()) {
+                try {
+                    clientLibrary.isc_drop_database(statusVector, handle);
+                    processStatusVector();
+                } finally {
+                    setDetached();
+                }
             }
+        } catch (SQLException e) {
+            exceptionListenerDispatcher.errorOccurred(e);
+            throw e;
         }
     }
 
     @Override
     public void cancelOperation(int kind) throws SQLException {
-        checkConnected();
-        // TODO Test what happens with 2.1 and earlier client library
-        // No synchronization, otherwise cancel will never work; might conflict with sync policy of JNA (TODO: find out)
         try {
-            clientLibrary.fb_cancel_operation(statusVector, handle, (short) kind);
-        } finally {
-            if (kind == fb_cancel_abort) {
-                setDetached();
+            checkConnected();
+            // TODO Test what happens with 2.1 and earlier client library
+            // No synchronization, otherwise cancel will never work; might conflict with sync policy of JNA (TODO: find out)
+            try {
+                clientLibrary.fb_cancel_operation(statusVector, handle, (short) kind);
+            } finally {
+                if (kind == fb_cancel_abort) {
+                    setDetached();
+                }
             }
+        } catch (SQLException e) {
+            exceptionListenerDispatcher.errorOccurred(e);
+            throw e;
         }
     }
 
     @Override
     public JnaTransaction startTransaction(final TransactionParameterBuffer tpb) throws SQLException {
-        checkConnected();
-        final IntByReference transactionHandle = new IntByReference(0);
-        byte[] tpbArray = tpb.toBytesWithType();
-        synchronized (getSynchronizationObject()) {
-            clientLibrary.isc_start_transaction(statusVector, transactionHandle, (short) 1, handle, (short) tpbArray.length, tpbArray);
-            processStatusVector();
+        try {
+            checkConnected();
+            final IntByReference transactionHandle = new IntByReference(0);
+            final byte[] tpbArray = tpb.toBytesWithType();
+            synchronized (getSynchronizationObject()) {
+                clientLibrary.isc_start_transaction(statusVector, transactionHandle, (short) 1, handle,
+                        (short) tpbArray.length, tpbArray);
+                processStatusVector();
 
-            final JnaTransaction transaction = new JnaTransaction(this, transactionHandle, TransactionState.ACTIVE);
-            transactionAdded(transaction);
-            return transaction;
+                final JnaTransaction transaction = new JnaTransaction(this, transactionHandle, TransactionState.ACTIVE);
+                transactionAdded(transaction);
+                return transaction;
+            }
+        } catch (SQLException e) {
+            exceptionListenerDispatcher.errorOccurred(e);
+            throw e;
         }
     }
 
     @Override
     public FbTransaction reconnectTransaction(long transactionId) throws SQLException {
-        checkConnected();
-        byte[] transactionIdBuffer = new byte[4];
-        // Note: This uses an atypical encoding (as this is actually a TPB without a type)
-        for (int i = 0; i < 4; i++) {
-            transactionIdBuffer[i] = (byte) (transactionId >>> (i * 8));
-        }
-        final IntByReference transactionHandle = new IntByReference(0);
-        synchronized (getSynchronizationObject()) {
-            clientLibrary.isc_reconnect_transaction(statusVector, handle, transactionHandle,
-                    (short) transactionIdBuffer.length, transactionIdBuffer);
-            processStatusVector();
+        try {
+            checkConnected();
+            final byte[] transactionIdBuffer = new byte[4];
+            // Note: This uses an atypical encoding (as this is actually a TPB without a type)
+            for (int i = 0; i < 4; i++) {
+                transactionIdBuffer[i] = (byte) (transactionId >>> (i * 8));
+            }
+            final IntByReference transactionHandle = new IntByReference(0);
+            synchronized (getSynchronizationObject()) {
+                clientLibrary.isc_reconnect_transaction(statusVector, handle, transactionHandle,
+                        (short) transactionIdBuffer.length, transactionIdBuffer);
+                processStatusVector();
 
-            final JnaTransaction transaction = new JnaTransaction(this, transactionHandle, TransactionState.PREPARED);
-            transactionAdded(transaction);
-            return transaction;
+                final JnaTransaction transaction =
+                        new JnaTransaction(this, transactionHandle, TransactionState.PREPARED);
+                transactionAdded(transaction);
+                return transaction;
+            }
+        } catch (SQLException e) {
+            exceptionListenerDispatcher.errorOccurred(e);
+            throw e;
         }
     }
 
     @Override
     public JnaStatement createStatement(FbTransaction transaction) throws SQLException {
-        checkConnected();
-        JnaStatement stmt = new JnaStatement(this);
-        stmt.setTransaction(transaction);
-        return stmt;
+        try {
+            checkConnected();
+            final JnaStatement stmt = new JnaStatement(this);
+            stmt.addExceptionListener(exceptionListenerDispatcher);
+            stmt.setTransaction(transaction);
+            return stmt;
+        } catch (SQLException e) {
+            exceptionListenerDispatcher.errorOccurred(e);
+            throw e;
+        }
     }
 
     @Override
-    public FbBlob createBlobForOutput(FbTransaction transaction, BlobParameterBuffer blobParameterBuffer)
-            throws SQLException {
-        return new JnaBlob(this, (JnaTransaction) transaction, blobParameterBuffer);
+    public FbBlob createBlobForOutput(FbTransaction transaction, BlobParameterBuffer blobParameterBuffer) {
+        final JnaBlob jnaBlob = new JnaBlob(this, (JnaTransaction) transaction, blobParameterBuffer);
+        jnaBlob.addExceptionListener(exceptionListenerDispatcher);
+        return jnaBlob;
     }
 
     @Override
-    public FbBlob createBlobForInput(FbTransaction transaction, BlobParameterBuffer blobParameterBuffer,
-            long blobId) throws SQLException {
-        return new JnaBlob(this, (JnaTransaction) transaction, blobParameterBuffer, blobId);
+    public FbBlob createBlobForInput(FbTransaction transaction, BlobParameterBuffer blobParameterBuffer, long blobId) {
+        final JnaBlob jnaBlob = new JnaBlob(this, (JnaTransaction) transaction, blobParameterBuffer, blobId);
+        jnaBlob.addExceptionListener(exceptionListenerDispatcher);
+        return jnaBlob;
     }
 
     @Override
     public byte[] getDatabaseInfo(final byte[] requestItems, final int maxBufferLength) throws SQLException {
-        final ByteBuffer responseBuffer = ByteBuffer.allocateDirect(maxBufferLength);
-        synchronized (getSynchronizationObject()) {
-            clientLibrary.isc_database_info(statusVector, handle, (short) requestItems.length, requestItems,
-                    (short) maxBufferLength, responseBuffer);
-            processStatusVector();
+        try {
+            final ByteBuffer responseBuffer = ByteBuffer.allocateDirect(maxBufferLength);
+            synchronized (getSynchronizationObject()) {
+                clientLibrary.isc_database_info(statusVector, handle, (short) requestItems.length, requestItems,
+                        (short) maxBufferLength, responseBuffer);
+                processStatusVector();
+            }
+            final byte[] responseArray = new byte[maxBufferLength];
+            responseBuffer.get(responseArray);
+            return responseArray;
+        } catch (SQLException e) {
+            exceptionListenerDispatcher.errorOccurred(e);
+            throw e;
         }
-        byte[] responseArray = new byte[maxBufferLength];
-        responseBuffer.get(responseArray);
-        return responseArray;
     }
 
     @Override
     public void executeImmediate(String statementText, FbTransaction transaction) throws SQLException {
         // TODO also implement op_exec_immediate2
-        if (isAttached()) {
-            if (transaction == null) {
+        try {
+            if (isAttached()) {
+                if (transaction == null) {
+                    // TODO SQLState and/or Firebird specific error
+                    throw new SQLException("executeImmediate requires a transaction when attached");
+                } else if (!(transaction instanceof JnaTransaction)) {
+                    // TODO SQLState and/or Firebird specific error
+                    throw new SQLNonTransientException(
+                            String.format("Invalid transaction handle type: %s, expected: %s",
+                            transaction.getClass(), JnaTransaction.class));
+                }
+                checkTransactionActive(transaction);
+            } else if (transaction != null) {
                 // TODO SQLState and/or Firebird specific error
-                throw new SQLException("executeImmediate requires a transaction when attached");
-            } else if (!(transaction instanceof JnaTransaction)) {
-                // TODO SQLState and/or Firebird specific error
-                throw new SQLNonTransientException(String.format("Invalid transaction handle type: %s, expected: %s",
-                        transaction.getClass(), JnaTransaction.class));
+                throw new SQLException("executeImmediate when not attached should have no transaction");
             }
-            checkTransactionActive(transaction);
-        } else if (transaction != null) {
-            // TODO SQLState and/or Firebird specific error
-            throw new SQLException("executeImmediate when not attached should have no transaction");
-        }
 
-        final byte[] statementArray = getEncoding().encodeToCharset(statementText);
-        synchronized (getSynchronizationObject()) {
-            clientLibrary.isc_dsql_execute_immediate(statusVector, handle,
-                    transaction != null ? ((JnaTransaction) transaction).getJnaHandle() : new IntByReference(),
-                    (short) statementArray.length, statementArray, getConnectionDialect(), null);
-            processStatusVector();
+            final byte[] statementArray = getEncoding().encodeToCharset(statementText);
+            synchronized (getSynchronizationObject()) {
+                clientLibrary.isc_dsql_execute_immediate(statusVector, handle,
+                        transaction != null ? ((JnaTransaction) transaction).getJnaHandle() : new IntByReference(),
+                        (short) statementArray.length, statementArray, getConnectionDialect(), null);
+                processStatusVector();
 
-            if (!isAttached()) {
-                setAttached();
-                afterAttachActions();
+                if (!isAttached()) {
+                    setAttached();
+                    afterAttachActions();
+                }
             }
+        } catch (SQLException e) {
+            exceptionListenerDispatcher.errorOccurred(e);
+            throw e;
         }
     }
 
@@ -317,6 +370,7 @@ public final class JnaDatabase extends AbstractFbDatabase<JnaDatabaseConnection>
 
     @Override
     public JnaEventHandle createEventHandle(String eventName, EventHandler eventHandler) throws SQLException {
+        // TODO Any JNA errors we need to track and convert to SQLException here?
         final JnaEventHandle eventHandle = new JnaEventHandle(eventName, eventHandler, getEncoding());
         synchronized (getSynchronizationObject()) {
             int size = clientLibrary.isc_event_block(eventHandle.getEventBuffer(), eventHandle.getResultBuffer(),
@@ -328,46 +382,63 @@ public final class JnaDatabase extends AbstractFbDatabase<JnaDatabaseConnection>
 
     @Override
     public void countEvents(EventHandle eventHandle) throws SQLException {
-        final JnaEventHandle jnaEventHandle = validateEventHandle(eventHandle);
+        try {
+            final JnaEventHandle jnaEventHandle = validateEventHandle(eventHandle);
 
-        synchronized (getSynchronizationObject()) {
-            clientLibrary.isc_event_counts(statusVector, (short) jnaEventHandle.getSize(),
-                    jnaEventHandle.getEventBuffer().getValue(), jnaEventHandle.getResultBuffer().getValue());
+            synchronized (getSynchronizationObject()) {
+                clientLibrary.isc_event_counts(statusVector, (short) jnaEventHandle.getSize(),
+                        jnaEventHandle.getEventBuffer().getValue(), jnaEventHandle.getResultBuffer().getValue());
+            }
+            jnaEventHandle.setEventCount(statusVector[0].intValue());
+        } catch (SQLException e) {
+            exceptionListenerDispatcher.errorOccurred(e);
+            throw e;
         }
-        jnaEventHandle.setEventCount(statusVector[0].intValue());
     }
 
     @Override
     public void queueEvent(EventHandle eventHandle) throws SQLException {
-        checkConnected();
-        final JnaEventHandle jnaEventHandle = validateEventHandle(eventHandle);
+        try {
+            checkConnected();
+            final JnaEventHandle jnaEventHandle = validateEventHandle(eventHandle);
 
-        synchronized (getSynchronizationObject()) {
-            if (Platform.isWindows()) {
-                ((WinFbClientLibrary) clientLibrary).isc_que_events(statusVector, getJnaHandle(), jnaEventHandle.getJnaEventId(),
-                        (short) jnaEventHandle.getSize(), jnaEventHandle.getEventBuffer().getValue(),
-                        (WinFbClientLibrary.IscEventStdCallback) jnaEventHandle.getCallback(), jnaEventHandle.getResultBuffer().getValue());
-            } else {
-                clientLibrary.isc_que_events(statusVector, getJnaHandle(), jnaEventHandle.getJnaEventId(),
-                        (short) jnaEventHandle.getSize(), jnaEventHandle.getEventBuffer().getValue(),
-                        jnaEventHandle.getCallback(), jnaEventHandle.getResultBuffer().getValue());
+            synchronized (getSynchronizationObject()) {
+                if (Platform.isWindows()) {
+                    ((WinFbClientLibrary) clientLibrary).isc_que_events(statusVector, getJnaHandle(),
+                            jnaEventHandle.getJnaEventId(),
+                            (short) jnaEventHandle.getSize(), jnaEventHandle.getEventBuffer().getValue(),
+                            (WinFbClientLibrary.IscEventStdCallback) jnaEventHandle.getCallback(),
+                            jnaEventHandle.getResultBuffer().getValue());
+                } else {
+                    clientLibrary.isc_que_events(statusVector, getJnaHandle(), jnaEventHandle.getJnaEventId(),
+                            (short) jnaEventHandle.getSize(), jnaEventHandle.getEventBuffer().getValue(),
+                            jnaEventHandle.getCallback(), jnaEventHandle.getResultBuffer().getValue());
+                }
+                processStatusVector();
             }
-            processStatusVector();
+        } catch (SQLException e) {
+            exceptionListenerDispatcher.errorOccurred(e);
+            throw e;
         }
     }
 
     @Override
     public void cancelEvent(EventHandle eventHandle) throws SQLException {
-        checkConnected();
-        final JnaEventHandle jnaEventHandle = validateEventHandle(eventHandle);
+        try {
+            checkConnected();
+            final JnaEventHandle jnaEventHandle = validateEventHandle(eventHandle);
 
-        synchronized (getSynchronizationObject()) {
-            try {
-                clientLibrary.isc_cancel_events(statusVector, getJnaHandle(), jnaEventHandle.getJnaEventId());
-                processStatusVector();
-            } finally {
-                jnaEventHandle.releaseMemory(clientLibrary);
+            synchronized (getSynchronizationObject()) {
+                try {
+                    clientLibrary.isc_cancel_events(statusVector, getJnaHandle(), jnaEventHandle.getJnaEventId());
+                    processStatusVector();
+                } finally {
+                    jnaEventHandle.releaseMemory(clientLibrary);
+                }
             }
+        } catch (SQLException e) {
+            exceptionListenerDispatcher.errorOccurred(e);
+            throw e;
         }
     }
 

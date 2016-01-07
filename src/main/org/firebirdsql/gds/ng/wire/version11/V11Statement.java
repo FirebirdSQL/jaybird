@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
@@ -54,47 +52,52 @@ public class V11Statement extends V10Statement {
 
     @Override
     public void prepare(final String statementText) throws SQLException {
-        synchronized (getSynchronizationObject()) {
-            checkTransactionActive(getTransaction());
-            final StatementState currentState = getState();
-            if (!isPrepareAllowed(currentState)) {
-                throw new SQLNonTransientException(String.format("Current statement state (%s) does not allow call to prepare", currentState));
-            }
-            resetAll();
-            final FbWireDatabase db = getDatabase();
-            synchronized (db.getSynchronizationObject()) {
-                int expectedResponseCount = 0;
-                try {
-                    if (currentState == StatementState.NEW) {
-                        sendAllocate();
-                        expectedResponseCount++;
-                    } else {
-                        checkStatementValid();
-                    }
-                    sendPrepare(statementText);
-                    expectedResponseCount++;
-
-                    getXdrOut().flush();
-                } catch (IOException ex) {
-                    switchState(StatementState.ERROR);
-                    throw new FbExceptionBuilder().exception(ISCConstants.isc_net_write_err).cause(ex).toSQLException();
+        try {
+            synchronized (getSynchronizationObject()) {
+                checkTransactionActive(getTransaction());
+                final StatementState currentState = getState();
+                if (!isPrepareAllowed(currentState)) {
+                    throw new SQLNonTransientException(String.format("Current statement state (%s) does not allow call to prepare", currentState));
                 }
-                try {
+                resetAll();
+                final FbWireDatabase db = getDatabase();
+                synchronized (db.getSynchronizationObject()) {
+                    int expectedResponseCount = 0;
                     try {
                         if (currentState == StatementState.NEW) {
-                            expectedResponseCount--;
-                            processAllocateResponse(db.readGenericResponse(getStatementWarningCallback()));
+                            sendAllocate();
+                            expectedResponseCount++;
+                        } else {
+                            checkStatementValid();
                         }
-                        expectedResponseCount--;
-                        processPrepareResponse(db.readGenericResponse(getStatementWarningCallback()));
-                    } finally {
-                        db.consumePackets(expectedResponseCount, getStatementWarningCallback());
+                        sendPrepare(statementText);
+                        expectedResponseCount++;
+
+                        getXdrOut().flush();
+                    } catch (IOException ex) {
+                        switchState(StatementState.ERROR);
+                        throw new FbExceptionBuilder().exception(ISCConstants.isc_net_write_err).cause(ex).toSQLException();
                     }
-                } catch (IOException ex) {
-                    switchState(StatementState.ERROR);
-                    throw new FbExceptionBuilder().exception(ISCConstants.isc_net_read_err).cause(ex).toSQLException();
+                    try {
+                        try {
+                            if (currentState == StatementState.NEW) {
+                                expectedResponseCount--;
+                                processAllocateResponse(db.readGenericResponse(getStatementWarningCallback()));
+                            }
+                            expectedResponseCount--;
+                            processPrepareResponse(db.readGenericResponse(getStatementWarningCallback()));
+                        } finally {
+                            db.consumePackets(expectedResponseCount, getStatementWarningCallback());
+                        }
+                    } catch (IOException ex) {
+                        switchState(StatementState.ERROR);
+                        throw new FbExceptionBuilder().exception(ISCConstants.isc_net_read_err).cause(ex).toSQLException();
+                    }
                 }
             }
+        } catch (SQLException e) {
+            exceptionListenerDispatcher.errorOccurred(e);
+            throw e;
         }
     }
 

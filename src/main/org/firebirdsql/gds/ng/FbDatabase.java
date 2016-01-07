@@ -29,11 +29,17 @@ import org.firebirdsql.gds.EventHandle;
 import org.firebirdsql.gds.EventHandler;
 import org.firebirdsql.gds.TransactionParameterBuffer;
 import org.firebirdsql.gds.ng.listeners.DatabaseListener;
+import org.firebirdsql.gds.ng.listeners.ExceptionListenable;
 
 import java.sql.SQLException;
 
 /**
  * Connection handle to a database.
+ * <p>
+ * All methods defined in this interface are required to notify all {@code SQLException} thrown from the methods
+ * defined in this interface, and those exceptions notified by all {@link ExceptionListenable} implementations created
+ * from them.
+ * </p>
  *
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @since 3.0
@@ -110,9 +116,8 @@ public interface FbDatabase extends FbAttachment {
      * @param blobParameterBuffer
      *         Blob Parameter Buffer
      * @return Instance of {@link FbBlob}
-     * @throws SQLException
      */
-    FbBlob createBlobForOutput(FbTransaction transaction, BlobParameterBuffer blobParameterBuffer) throws SQLException;
+    FbBlob createBlobForOutput(FbTransaction transaction, BlobParameterBuffer blobParameterBuffer);
 
     /**
      * Creates a blob for read access to an existing blob on the server.
@@ -127,13 +132,12 @@ public interface FbDatabase extends FbAttachment {
      * @param blobId
      *         Handle id of the blob
      * @return Instance of {@link FbBlob}
-     * @throws SQLException
      */
-    FbBlob createBlobForInput(FbTransaction transaction, BlobParameterBuffer blobParameterBuffer,
-            long blobId) throws SQLException;
+    FbBlob createBlobForInput(FbTransaction transaction, BlobParameterBuffer blobParameterBuffer, long blobId);
 
     /**
-     * Creates a blob parameter buffer that is usable with {@link #createBlobForInput(FbTransaction, org.firebirdsql.gds.BlobParameterBuffer, long)}
+     * Creates a blob parameter buffer that is usable with {@link #createBlobForInput(FbTransaction,
+     * org.firebirdsql.gds.BlobParameterBuffer, long)}
      * and {@link #createBlobForOutput(FbTransaction, org.firebirdsql.gds.BlobParameterBuffer)} of this instance.
      *
      * @return A blob parameter buffer.
@@ -189,8 +193,8 @@ public interface FbDatabase extends FbAttachment {
      * @param transaction
      *         Transaction (<code>null</code> only allowed if database is not attached!)
      * @throws SQLException
-     *         For errors executing the statement, or if <code>transaction</code> is <code>null</code> when the database
-     *         is attached or not <code>null</code> when the database is not attached
+     *         For errors executing the statement, or if <code>transaction</code> is <code>null</code> when the
+     *         database is attached or not <code>null</code> when the database is not attached
      */
     void executeImmediate(String statementText, FbTransaction transaction) throws SQLException;
 

@@ -21,6 +21,8 @@
 package org.firebirdsql.gds.ng;
 
 import org.firebirdsql.gds.ISCConstants;
+import org.firebirdsql.gds.ng.listeners.ExceptionListener;
+import org.firebirdsql.gds.ng.listeners.ExceptionListenerDispatcher;
 import org.firebirdsql.gds.ng.listeners.TransactionListener;
 import org.firebirdsql.gds.ng.listeners.TransactionListenerDispatcher;
 
@@ -38,7 +40,9 @@ import static org.firebirdsql.gds.VaxEncoding.iscVaxLong;
  */
 public abstract class AbstractFbTransaction implements FbTransaction {
 
-    private static final Set<TransactionState> ALLOWED_INITIAL_STATES = Collections.unmodifiableSet(EnumSet.of(TransactionState.ACTIVE, TransactionState.PREPARED));
+    private static final Set<TransactionState> ALLOWED_INITIAL_STATES = Collections.unmodifiableSet(
+            EnumSet.of(TransactionState.ACTIVE, TransactionState.PREPARED));
+    protected final ExceptionListenerDispatcher exceptionListenerDispatcher = new ExceptionListenerDispatcher(this);
     private final FbDatabase database;
     private final Object syncObject = new Object();
     protected final TransactionListenerDispatcher transactionListenerDispatcher = new TransactionListenerDispatcher();
@@ -101,10 +105,25 @@ public abstract class AbstractFbTransaction implements FbTransaction {
     }
 
     @Override
+    public final void addExceptionListener(ExceptionListener listener) {
+        exceptionListenerDispatcher.addListener(listener);
+    }
+
+    @Override
+    public final void removeExceptionListener(ExceptionListener listener) {
+        exceptionListenerDispatcher.removeListener(listener);
+    }
+
+    @Override
     public <T> T getTransactionInfo(byte[] requestItems, int bufferLength, InfoProcessor<T> infoProcessor)
             throws SQLException {
-        byte[] responseBuffer = getTransactionInfo(requestItems, bufferLength);
-        return infoProcessor.process(responseBuffer);
+        final byte[] responseBuffer = getTransactionInfo(requestItems, bufferLength);
+        try {
+            return infoProcessor.process(responseBuffer);
+        } catch (SQLException e) {
+            exceptionListenerDispatcher.errorOccurred(e);
+            throw e;
+        }
     }
 
     @Override

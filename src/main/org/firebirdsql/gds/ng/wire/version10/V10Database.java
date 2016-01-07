@@ -80,33 +80,48 @@ public class V10Database extends AbstractFbWireDatabase implements FbWireDatabas
 
     @Override
     public void queueEvent(EventHandle eventHandle) throws SQLException {
-        checkAttached();
-        // TODO Move to AbstractFbWireDatabase?
-        synchronized (getSynchronizationObject()) {
-            if (asynchronousChannel == null || !asynchronousChannel.isConnected()) {
-                asynchronousChannel = initAsynchronousChannel();
-                AsynchronousProcessor.getInstance().registerAsynchronousChannel(asynchronousChannel);
+        try {
+            checkAttached();
+            // TODO Move to AbstractFbWireDatabase?
+            synchronized (getSynchronizationObject()) {
+                if (asynchronousChannel == null || !asynchronousChannel.isConnected()) {
+                    asynchronousChannel = initAsynchronousChannel();
+                    AsynchronousProcessor.getInstance().registerAsynchronousChannel(asynchronousChannel);
+                }
+                asynchronousChannel.queueEvent(eventHandle);
             }
-            asynchronousChannel.queueEvent(eventHandle);
+        } catch (SQLException e) {
+            exceptionListenerDispatcher.errorOccurred(e);
+            throw e;
         }
     }
 
     @Override
     public void cancelEvent(EventHandle eventHandle) throws SQLException {
-        checkAttached();
-        synchronized (getSynchronizationObject()) {
-            if (asynchronousChannel == null || !asynchronousChannel.isConnected()) {
-                // TODO SQL state, standard firebird error code?
-                throw new SQLNonTransientException("Asynchronous channel is not connected, cannot cancel event");
+        try {
+            checkAttached();
+            synchronized (getSynchronizationObject()) {
+                if (asynchronousChannel == null || !asynchronousChannel.isConnected()) {
+                    // TODO SQL state, standard firebird error code?
+                    throw new SQLNonTransientException("Asynchronous channel is not connected, cannot cancel event");
+                }
+                asynchronousChannel.cancelEvent(eventHandle);
             }
-            asynchronousChannel.cancelEvent(eventHandle);
+        } catch (SQLException e) {
+            exceptionListenerDispatcher.errorOccurred(e);
+            throw e;
         }
     }
 
     @Override
     public void attach() throws SQLException {
-        final DatabaseParameterBuffer dpb = protocolDescriptor.createDatabaseParameterBuffer(connection);
-        attachOrCreate(dpb, false);
+        try {
+            final DatabaseParameterBuffer dpb = protocolDescriptor.createDatabaseParameterBuffer(connection);
+            attachOrCreate(dpb, false);
+        } catch (SQLException ex) {
+            exceptionListenerDispatcher.errorOccurred(ex);
+            throw ex;
+        }
     }
 
     /**
@@ -182,7 +197,7 @@ public class V10Database extends AbstractFbWireDatabase implements FbWireDatabas
      * @return Encoding
      */
     protected Encoding getFilenameEncoding(DatabaseParameterBuffer dpb) {
-        String filenameCharset = dpb.getArgumentAsString(DatabaseParameterBufferExtension.FILENAME_CHARSET);
+        final String filenameCharset = dpb.getArgumentAsString(DatabaseParameterBufferExtension.FILENAME_CHARSET);
         if (filenameCharset != null) {
             return EncodingFactory.getDefaultInstance().getOrCreateEncodingForCharset(Charset.forName(filenameCharset));
         }
@@ -244,186 +259,232 @@ public class V10Database extends AbstractFbWireDatabase implements FbWireDatabas
 
     @Override
     public void createDatabase() throws SQLException {
-        final DatabaseParameterBuffer dpb = protocolDescriptor.createDatabaseParameterBuffer(connection);
-        attachOrCreate(dpb, true);
+        try {
+            final DatabaseParameterBuffer dpb = protocolDescriptor.createDatabaseParameterBuffer(connection);
+            attachOrCreate(dpb, true);
+        } catch (SQLException ex) {
+            exceptionListenerDispatcher.errorOccurred(ex);
+            throw ex;
+        }
     }
 
     @Override
     public void dropDatabase() throws SQLException {
-        checkAttached();
-        synchronized (getSynchronizationObject()) {
-            try {
+        try {
+            checkAttached();
+            synchronized (getSynchronizationObject()) {
                 try {
-                    final XdrOutputStream xdrOut = getXdrOut();
-                    xdrOut.writeInt(op_drop_database);
-                    xdrOut.writeInt(getHandle());
-                    xdrOut.flush();
-                } catch (IOException ioex) {
-                    throw new FbExceptionBuilder().exception(ISCConstants.isc_net_write_err).cause(ioex).toSQLException();
-                }
-                try {
-                    readResponse(null);
-                } catch (IOException ioex) {
-                    throw new FbExceptionBuilder().exception(ISCConstants.isc_net_read_err).cause(ioex).toSQLException();
-                }
-            } finally {
-                try {
-                    closeConnection();
-                } catch (IOException e) {
-                    log.debug("Ignored exception on connection close in dropDatabase()", e);
+                    try {
+                        final XdrOutputStream xdrOut = getXdrOut();
+                        xdrOut.writeInt(op_drop_database);
+                        xdrOut.writeInt(getHandle());
+                        xdrOut.flush();
+                    } catch (IOException ioex) {
+                        throw new FbExceptionBuilder().exception(ISCConstants.isc_net_write_err).cause(ioex)
+                                .toSQLException();
+                    }
+                    try {
+                        readResponse(null);
+                    } catch (IOException ioex) {
+                        throw new FbExceptionBuilder().exception(ISCConstants.isc_net_read_err).cause(ioex)
+                                .toSQLException();
+                    }
+                } finally {
+                    try {
+                        closeConnection();
+                    } catch (IOException e) {
+                        log.debug("Ignored exception on connection close in dropDatabase()", e);
+                    }
                 }
             }
+        } catch (SQLException ex) {
+            exceptionListenerDispatcher.errorOccurred(ex);
+            throw ex;
         }
     }
 
     @Override
     public FbWireTransaction startTransaction(TransactionParameterBuffer tpb) throws SQLException {
-        checkAttached();
-        synchronized (getSynchronizationObject()) {
-            try {
-                final XdrOutputStream xdrOut = getXdrOut();
-                xdrOut.writeInt(op_transaction);
-                xdrOut.writeInt(getHandle());
-                xdrOut.writeTyped(tpb);
-                xdrOut.flush();
-            } catch (IOException ioex) {
-                throw new FbExceptionBuilder().exception(ISCConstants.isc_net_write_err).cause(ioex).toSQLException();
+        try {
+            checkAttached();
+            synchronized (getSynchronizationObject()) {
+                try {
+                    final XdrOutputStream xdrOut = getXdrOut();
+                    xdrOut.writeInt(op_transaction);
+                    xdrOut.writeInt(getHandle());
+                    xdrOut.writeTyped(tpb);
+                    xdrOut.flush();
+                } catch (IOException ioex) {
+                    throw new FbExceptionBuilder().exception(ISCConstants.isc_net_write_err).cause(ioex)
+                            .toSQLException();
+                }
+                try {
+                    final GenericResponse response = readGenericResponse(null);
+                    final FbWireTransaction transaction = protocolDescriptor.createTransaction(this,
+                            response.getObjectHandle(), TransactionState.ACTIVE);
+                    transactionAdded(transaction);
+                    return transaction;
+                } catch (IOException ioex) {
+                    throw new FbExceptionBuilder().exception(ISCConstants.isc_net_read_err).cause(ioex)
+                            .toSQLException();
+                }
             }
-            try {
-                final GenericResponse response = readGenericResponse(null);
-                final FbWireTransaction transaction = protocolDescriptor.createTransaction(this,
-                        response.getObjectHandle(), TransactionState.ACTIVE);
-                transactionAdded(transaction);
-                return transaction;
-            } catch (IOException ioex) {
-                throw new FbExceptionBuilder().exception(ISCConstants.isc_net_read_err).cause(ioex).toSQLException();
-            }
+        } catch (SQLException ex) {
+            exceptionListenerDispatcher.errorOccurred(ex);
+            throw ex;
         }
-
     }
 
     @Override
     public FbTransaction reconnectTransaction(long transactionId) throws SQLException {
-        checkAttached();
-        synchronized (getSynchronizationObject()) {
-            try {
-                final XdrOutputStream xdrOut = getXdrOut();
-                xdrOut.writeInt(op_reconnect);
-                xdrOut.writeInt(getHandle());
-                // TODO: Only sending integer, why long?
-                byte[] buf = new byte[4];
-                // Note: This uses a atypical encoding (as this is actually a TPB without a type)
-                for (int i = 0; i < 4; i++) {
-                    buf[i] = (byte) (transactionId >>> (i * 8));
+        try {
+            checkAttached();
+            synchronized (getSynchronizationObject()) {
+                try {
+                    final XdrOutputStream xdrOut = getXdrOut();
+                    xdrOut.writeInt(op_reconnect);
+                    xdrOut.writeInt(getHandle());
+                    // TODO: Only sending integer, why long?
+                    final byte[] buf = new byte[4];
+                    // Note: This uses a atypical encoding (as this is actually a TPB without a type)
+                    for (int i = 0; i < 4; i++) {
+                        buf[i] = (byte) (transactionId >>> (i * 8));
+                    }
+                    xdrOut.writeBuffer(buf);
+                    xdrOut.flush();
+                } catch (IOException ioex) {
+                    throw new FbExceptionBuilder().exception(ISCConstants.isc_net_write_err).cause(ioex)
+                            .toSQLException();
                 }
-                xdrOut.writeBuffer(buf);
-                xdrOut.flush();
-            } catch (IOException ioex) {
-                throw new FbExceptionBuilder().exception(ISCConstants.isc_net_write_err).cause(ioex).toSQLException();
-            }
 
-            try {
-                final GenericResponse response = readGenericResponse(null);
-                final FbWireTransaction transaction = protocolDescriptor.createTransaction(this,
-                        response.getObjectHandle(), TransactionState.PREPARED);
-                transactionAdded(transaction);
-                return transaction;
-            } catch (IOException ioex) {
-                throw new FbExceptionBuilder().exception(ISCConstants.isc_net_read_err).cause(ioex).toSQLException();
+                try {
+                    final GenericResponse response = readGenericResponse(null);
+                    final FbWireTransaction transaction = protocolDescriptor.createTransaction(this,
+                            response.getObjectHandle(), TransactionState.PREPARED);
+                    transactionAdded(transaction);
+                    return transaction;
+                } catch (IOException ioex) {
+                    throw new FbExceptionBuilder().exception(ISCConstants.isc_net_read_err).cause(ioex)
+                            .toSQLException();
+                }
             }
+        } catch (SQLException ex) {
+            exceptionListenerDispatcher.errorOccurred(ex);
+            throw ex;
         }
     }
 
     @Override
     public FbStatement createStatement(FbTransaction transaction) throws SQLException {
-        checkAttached();
-        FbStatement stmt = protocolDescriptor.createStatement(this);
-        stmt.setTransaction(transaction);
-        return stmt;
+        try {
+            checkAttached();
+            final FbStatement stmt = protocolDescriptor.createStatement(this);
+            stmt.addExceptionListener(exceptionListenerDispatcher);
+            stmt.setTransaction(transaction);
+            return stmt;
+        } catch (SQLException ex) {
+            exceptionListenerDispatcher.errorOccurred(ex);
+            throw ex;
+        }
     }
 
     @Override
     public void cancelOperation(int kind) throws SQLException {
-        if (kind == ISCConstants.fb_cancel_abort) {
-            try {
-                // In case of abort we forcibly close the connection
-                // TODO We may need to do additional cleanup (eg notify statements so they can close etc)
-                closeConnection();
-            } catch (IOException ioe) {
-                throw new SQLNonTransientConnectionException("Connection abort failed", ioe);
+        try {
+            if (kind == ISCConstants.fb_cancel_abort) {
+                try {
+                    // In case of abort we forcibly close the connection
+                    // TODO We may need to do additional cleanup (eg notify statements so they can close etc)
+                    closeConnection();
+                } catch (IOException ioe) {
+                    throw new SQLNonTransientConnectionException("Connection abort failed", ioe);
+                }
+            } else {
+                throw new SQLFeatureNotSupportedException(
+                        String.format("Cancel Operation isn't supported in this version of the wire protocol (%d).",
+                                protocolDescriptor.getVersion()),
+                        FBDriverNotCapableException.SQL_STATE_FEATURE_NOT_SUPPORTED);
             }
-        } else {
-            throw new SQLFeatureNotSupportedException(
-                    String.format("Cancel Operation isn't supported in this version of the wire protocol (%d).",
-                            protocolDescriptor.getVersion()),
-                    FBDriverNotCapableException.SQL_STATE_FEATURE_NOT_SUPPORTED);
+        } catch (SQLException ex) {
+            exceptionListenerDispatcher.errorOccurred(ex);
+            throw ex;
         }
     }
 
     @Override
     public byte[] getDatabaseInfo(byte[] requestItems, int maxBufferLength) throws SQLException {
         // TODO Write common info request implementation shared for db, sql, transaction and blob?
-        checkAttached();
-        synchronized (getSynchronizationObject()) {
-            try {
-                final XdrOutputStream xdrOut = getXdrOut();
-                xdrOut.writeInt(op_info_database);
-                xdrOut.writeInt(getHandle());
-                xdrOut.writeInt(0); // incarnation
-                xdrOut.writeBuffer(requestItems);
-                xdrOut.writeInt(maxBufferLength);
+        try {
+            checkAttached();
+            synchronized (getSynchronizationObject()) {
+                try {
+                    final XdrOutputStream xdrOut = getXdrOut();
+                    xdrOut.writeInt(op_info_database);
+                    xdrOut.writeInt(getHandle());
+                    xdrOut.writeInt(0); // incarnation
+                    xdrOut.writeBuffer(requestItems);
+                    xdrOut.writeInt(maxBufferLength);
 
-                xdrOut.flush();
-            } catch (IOException ex) {
-                throw new FbExceptionBuilder().exception(ISCConstants.isc_net_write_err).cause(ex).toSQLException();
+                    xdrOut.flush();
+                } catch (IOException ex) {
+                    throw new FbExceptionBuilder().exception(ISCConstants.isc_net_write_err).cause(ex).toSQLException();
+                }
+                try {
+                    final GenericResponse genericResponse = readGenericResponse(null);
+                    return genericResponse.getData();
+                } catch (IOException ex) {
+                    throw new FbExceptionBuilder().exception(ISCConstants.isc_net_read_err).cause(ex).toSQLException();
+                }
             }
-            try {
-                GenericResponse genericResponse = readGenericResponse(null);
-                return genericResponse.getData();
-            } catch (IOException ex) {
-                throw new FbExceptionBuilder().exception(ISCConstants.isc_net_read_err).cause(ex).toSQLException();
-            }
+        } catch (SQLException e) {
+            exceptionListenerDispatcher.errorOccurred(e);
+            throw e;
         }
     }
 
     @Override
     public void executeImmediate(String statementText, FbTransaction transaction) throws SQLException {
         // TODO also implement op_exec_immediate2
-        if (isAttached()) {
-            if (transaction == null) {
-                // TODO SQLState and/or Firebird specific error
-                throw new SQLException("executeImmediate requires a transaction when attached");
-            }
-            checkTransactionActive(transaction);
-        } else if (transaction != null) {
-            // TODO SQLState and/or Firebird specific error
-            throw new SQLException("executeImmediate when not attached should have no transaction");
-        }
-        synchronized (getSynchronizationObject()) {
-            try {
-                final XdrOutputStream xdrOut = getXdrOut();
-                xdrOut.writeInt(op_exec_immediate);
-
-                xdrOut.writeInt(transaction != null ? transaction.getHandle() : 0);
-                xdrOut.writeInt(getHandle());
-                xdrOut.writeInt(getConnectionDialect());
-                xdrOut.writeString(statementText, getEncoding());
-
-                // information request items
-                xdrOut.writeBuffer(null);
-                xdrOut.writeInt(0);
-                getXdrOut().flush();
-            } catch (IOException ex) {
-                throw new FbExceptionBuilder().exception(ISCConstants.isc_net_write_err).cause(ex).toSQLException();
-            }
-            try {
-                if (!isAttached()) {
-                    processAttachOrCreateResponse(readGenericResponse(null));
+        try {
+            if (isAttached()) {
+                if (transaction == null) {
+                    // TODO SQLState and/or Firebird specific error
+                    throw new SQLException("executeImmediate requires a transaction when attached");
                 }
-                readGenericResponse(null);
-            } catch (IOException ex) {
-                throw new FbExceptionBuilder().exception(ISCConstants.isc_net_read_err).cause(ex).toSQLException();
+                checkTransactionActive(transaction);
+            } else if (transaction != null) {
+                // TODO SQLState and/or Firebird specific error
+                throw new SQLException("executeImmediate when not attached should have no transaction");
             }
+            synchronized (getSynchronizationObject()) {
+                try {
+                    final XdrOutputStream xdrOut = getXdrOut();
+                    xdrOut.writeInt(op_exec_immediate);
+
+                    xdrOut.writeInt(transaction != null ? transaction.getHandle() : 0);
+                    xdrOut.writeInt(getHandle());
+                    xdrOut.writeInt(getConnectionDialect());
+                    xdrOut.writeString(statementText, getEncoding());
+
+                    // information request items
+                    xdrOut.writeBuffer(null);
+                    xdrOut.writeInt(0);
+                    getXdrOut().flush();
+                } catch (IOException ex) {
+                    throw new FbExceptionBuilder().exception(ISCConstants.isc_net_write_err).cause(ex).toSQLException();
+                }
+                try {
+                    if (!isAttached()) {
+                        processAttachOrCreateResponse(readGenericResponse(null));
+                    }
+                    readGenericResponse(null);
+                } catch (IOException ex) {
+                    throw new FbExceptionBuilder().exception(ISCConstants.isc_net_read_err).cause(ex).toSQLException();
+                }
+            }
+        } catch (SQLException e) {
+            exceptionListenerDispatcher.errorOccurred(e);
+            throw e;
         }
     }
 
@@ -462,8 +523,7 @@ public class V10Database extends AbstractFbWireDatabase implements FbWireDatabas
                 throw new FbExceptionBuilder().exception(ISCConstants.isc_net_write_err).cause(ex).toSQLException();
             }
             try {
-                GenericResponse response = readGenericResponse(null);
-
+                final GenericResponse response = readGenericResponse(null);
                 auxHandle = response.getObjectHandle();
                 final byte[] data = response.getData();
                 // bytes 0 - 1: sin family (ignore)

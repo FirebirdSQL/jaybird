@@ -59,67 +59,89 @@ public final class JnaService extends AbstractFbService<JnaServiceConnection> im
     protected void checkConnected() throws SQLException {
         if (!isAttached()) {
             // TODO Update message / externalize
-            throw new SQLException("The connection is not attached to a database", FBSQLException.SQL_STATE_CONNECTION_ERROR);
+            throw new SQLException("The connection is not attached to a database",
+                    FBSQLException.SQL_STATE_CONNECTION_ERROR);
         }
     }
 
     @Override
     public byte[] getServiceInfo(ServiceParameterBuffer serviceParameterBuffer,
             ServiceRequestBuffer serviceRequestBuffer, int maxBufferLength) throws SQLException {
-        final byte[] serviceParameterBufferBytes = serviceParameterBuffer == null ? null
-                : serviceParameterBuffer.toBytesWithType();
-        final byte[] serviceRequestBufferBytes = serviceRequestBuffer == null ? null : serviceRequestBuffer.toBytes();
-        final ByteBuffer responseBuffer = ByteBuffer.allocateDirect(maxBufferLength);
-        synchronized (getSynchronizationObject()) {
-            clientLibrary.isc_service_query(statusVector, handle, new IntByReference(0),
-                    (short) (serviceParameterBufferBytes != null ? serviceParameterBufferBytes.length : 0), serviceParameterBufferBytes,
-                    (short) (serviceRequestBufferBytes != null ? serviceRequestBufferBytes.length : 0), serviceRequestBufferBytes,
-                    (short) maxBufferLength, responseBuffer);
-            processStatusVector();
+        try {
+            final byte[] serviceParameterBufferBytes = serviceParameterBuffer == null ? null
+                    : serviceParameterBuffer.toBytesWithType();
+            final byte[] serviceRequestBufferBytes =
+                    serviceRequestBuffer == null ? null : serviceRequestBuffer.toBytes();
+            final ByteBuffer responseBuffer = ByteBuffer.allocateDirect(maxBufferLength);
+            synchronized (getSynchronizationObject()) {
+                clientLibrary.isc_service_query(statusVector, handle, new IntByReference(0),
+                        (short) (serviceParameterBufferBytes != null ? serviceParameterBufferBytes.length
+                                : 0), serviceParameterBufferBytes,
+                        (short) (serviceRequestBufferBytes != null ? serviceRequestBufferBytes.length
+                                : 0), serviceRequestBufferBytes,
+                        (short) maxBufferLength, responseBuffer);
+                processStatusVector();
+            }
+            byte[] responseArray = new byte[maxBufferLength];
+            responseBuffer.get(responseArray);
+            return responseArray;
+        } catch (SQLException e) {
+            exceptionListenerDispatcher.errorOccurred(e);
+            throw e;
         }
-        byte[] responseArray = new byte[maxBufferLength];
-        responseBuffer.get(responseArray);
-        return responseArray;
     }
 
     @Override
     public void startServiceAction(ServiceRequestBuffer serviceRequestBuffer) throws SQLException {
-        final byte[] serviceRequestBufferBytes = serviceRequestBuffer == null ? null : serviceRequestBuffer.toBytes();
-        synchronized (getSynchronizationObject()) {
-            clientLibrary.isc_service_start(statusVector, handle, new IntByReference(0),
-                    (short) (serviceRequestBufferBytes != null ? serviceRequestBufferBytes.length : 0), serviceRequestBufferBytes);
-            processStatusVector();
+        try {
+            final byte[] serviceRequestBufferBytes = serviceRequestBuffer == null
+                    ? null
+                    : serviceRequestBuffer.toBytes();
+            synchronized (getSynchronizationObject()) {
+                clientLibrary.isc_service_start(statusVector, handle, new IntByReference(0),
+                        (short) (serviceRequestBufferBytes != null ? serviceRequestBufferBytes.length : 0),
+                        serviceRequestBufferBytes);
+                processStatusVector();
+            }
+        } catch (SQLException e) {
+            exceptionListenerDispatcher.errorOccurred(e);
+            throw e;
         }
     }
 
     @Override
     public void attach() throws SQLException {
-        if (isAttached()) {
-            throw new SQLException("Already attached to a service");
-        }
-        ServiceParameterBuffer spb = PARAMETER_CONVERTER.toServiceParameterBuffer(connection);
-        final byte[] serviceName = getEncoding().encodeToCharset(connection.getAttachUrl());
-        final byte[] spbArray = spb.toBytesWithType();
-
-        synchronized (getSynchronizationObject()) {
-            try {
-                clientLibrary.isc_service_attach(statusVector, (short) serviceName.length, serviceName, handle,
-                        (short) spbArray.length, spbArray);
-                processStatusVector();
-            } catch (SQLException ex) {
-                safelyDetach();
-                throw ex;
-            } catch (Exception ex) {
-                safelyDetach();
-                // TODO Replace with specific error (eg native client error)
-                throw new FbExceptionBuilder()
-                        .exception(ISCConstants.isc_network_error)
-                        .messageParameter(connection.getServerName())
-                        .cause(ex)
-                        .toSQLException();
+        try {
+            if (isAttached()) {
+                throw new SQLException("Already attached to a service");
             }
-            setAttached();
-            afterAttachActions();
+            final ServiceParameterBuffer spb = PARAMETER_CONVERTER.toServiceParameterBuffer(connection);
+            final byte[] serviceName = getEncoding().encodeToCharset(connection.getAttachUrl());
+            final byte[] spbArray = spb.toBytesWithType();
+
+            synchronized (getSynchronizationObject()) {
+                try {
+                    clientLibrary.isc_service_attach(statusVector, (short) serviceName.length, serviceName, handle,
+                            (short) spbArray.length, spbArray);
+                    processStatusVector();
+                } catch (SQLException ex) {
+                    safelyDetach();
+                    throw ex;
+                } catch (Exception ex) {
+                    safelyDetach();
+                    // TODO Replace with specific error (eg native client error)
+                    throw new FbExceptionBuilder()
+                            .exception(ISCConstants.isc_network_error)
+                            .messageParameter(connection.getServerName())
+                            .cause(ex)
+                            .toSQLException();
+                }
+                setAttached();
+                afterAttachActions();
+            }
+        } catch (SQLException e) {
+            exceptionListenerDispatcher.errorOccurred(e);
+            throw e;
         }
     }
 

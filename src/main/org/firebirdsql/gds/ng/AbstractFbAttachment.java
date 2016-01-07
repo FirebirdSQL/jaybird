@@ -22,6 +22,8 @@ import org.firebirdsql.encodings.Encoding;
 import org.firebirdsql.encodings.IEncodingFactory;
 import org.firebirdsql.gds.impl.GDSServerVersion;
 import org.firebirdsql.gds.impl.GDSServerVersionException;
+import org.firebirdsql.gds.ng.listeners.ExceptionListener;
+import org.firebirdsql.gds.ng.listeners.ExceptionListenerDispatcher;
 import org.firebirdsql.logging.Logger;
 import org.firebirdsql.logging.LoggerFactory;
 
@@ -43,6 +45,7 @@ public abstract class AbstractFbAttachment<T extends AbstractConnection<? extend
 
     private final AtomicBoolean attached = new AtomicBoolean();
     private final Object syncObject = new Object();
+    protected final ExceptionListenerDispatcher exceptionListenerDispatcher = new ExceptionListenerDispatcher(this);
     protected final T connection;
     private final DatatypeCoder datatypeCoder;
     private GDSServerVersion serverVersion;
@@ -71,7 +74,8 @@ public abstract class AbstractFbAttachment<T extends AbstractConnection<? extend
         try {
             serverVersion = GDSServerVersion.parseRawVersion(versionString);
         } catch (GDSServerVersionException e) {
-            log.error(String.format("Received unsupported server version \"%s\", replacing with dummy invalid version ", versionString), e);
+            log.error(String.format("Received unsupported server version \"%s\", replacing with dummy invalid version ",
+                    versionString), e);
             serverVersion = GDSServerVersion.INVALID_VERSION;
         }
         serverVersionInformation = ServerVersionInformation.getForVersion(serverVersion);
@@ -125,6 +129,16 @@ public abstract class AbstractFbAttachment<T extends AbstractConnection<? extend
     @Override
     public final DatatypeCoder getDatatypeCoder() {
         return datatypeCoder;
+    }
+
+    @Override
+    public final void addExceptionListener(ExceptionListener listener) {
+        exceptionListenerDispatcher.addListener(listener);
+    }
+
+    @Override
+    public final void removeExceptionListener(ExceptionListener listener) {
+        exceptionListenerDispatcher.removeListener(listener);
     }
 
     /**

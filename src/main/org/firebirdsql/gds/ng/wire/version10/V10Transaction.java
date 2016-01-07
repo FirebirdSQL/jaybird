@@ -1,6 +1,4 @@
 /*
- * $Id$
- * 
  * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
@@ -101,6 +99,9 @@ public class V10Transaction extends AbstractFbTransaction implements FbWireTrans
                 }
                 switchState(TransactionState.COMMITTED);
             }
+        } catch (SQLException e) {
+            exceptionListenerDispatcher.errorOccurred(e);
+            throw e;
         } finally {
             if (getState() != TransactionState.COMMITTED) {
                 log.warn("Commit not completed", new RuntimeException("Commit not completed"));
@@ -130,6 +131,9 @@ public class V10Transaction extends AbstractFbTransaction implements FbWireTrans
                 }
                 switchState(TransactionState.ROLLED_BACK);
             }
+        } catch (SQLException e) {
+            exceptionListenerDispatcher.errorOccurred(e);
+            throw e;
         } finally {
             if (getState() != TransactionState.ROLLED_BACK) {
                 log.warn("Rollback not completed", new RuntimeException("Rollback not completed"));
@@ -165,6 +169,9 @@ public class V10Transaction extends AbstractFbTransaction implements FbWireTrans
                 }
                 switchState(TransactionState.PREPARED);
             }
+        } catch (SQLException e) {
+            exceptionListenerDispatcher.errorOccurred(e);
+            throw e;
         } finally {
             if (getState() != TransactionState.PREPARED) {
                 log.warn("Prepare not completed", new RuntimeException("Prepare not completed"));
@@ -174,26 +181,31 @@ public class V10Transaction extends AbstractFbTransaction implements FbWireTrans
 
     @Override
     public byte[] getTransactionInfo(byte[] requestItems, int maxBufferLength) throws SQLException {
-        synchronized (getSynchronizationObject()) {
-            synchronized (getDatabase().getSynchronizationObject()) {
-                try {
-                    final XdrOutputStream xdrOut = getXdrOut();
-                    xdrOut.writeInt(op_info_transaction);
-                    xdrOut.writeInt(getHandle());
-                    xdrOut.writeInt(0); // incarnation(?)
-                    xdrOut.writeBuffer(requestItems);
-                    xdrOut.writeInt(maxBufferLength);
-                    xdrOut.flush();
-                } catch (IOException ioex) {
-                    throw new FbExceptionBuilder().exception(ISCConstants.isc_net_write_err).cause(ioex).toSQLException();
-                }
-                try {
-                    GenericResponse genericResponse = getDatabase().readGenericResponse(null);
-                    return genericResponse.getData();
-                } catch (IOException ex) {
-                    throw new FbExceptionBuilder().exception(ISCConstants.isc_net_read_err).cause(ex).toSQLException();
+        try {
+            synchronized (getSynchronizationObject()) {
+                synchronized (getDatabase().getSynchronizationObject()) {
+                    try {
+                        final XdrOutputStream xdrOut = getXdrOut();
+                        xdrOut.writeInt(op_info_transaction);
+                        xdrOut.writeInt(getHandle());
+                        xdrOut.writeInt(0); // incarnation(?)
+                        xdrOut.writeBuffer(requestItems);
+                        xdrOut.writeInt(maxBufferLength);
+                        xdrOut.flush();
+                    } catch (IOException ioex) {
+                        throw new FbExceptionBuilder().exception(ISCConstants.isc_net_write_err).cause(ioex).toSQLException();
+                    }
+                    try {
+                        final GenericResponse genericResponse = getDatabase().readGenericResponse(null);
+                        return genericResponse.getData();
+                    } catch (IOException ex) {
+                        throw new FbExceptionBuilder().exception(ISCConstants.isc_net_read_err).cause(ex).toSQLException();
+                    }
                 }
             }
+        } catch (SQLException e) {
+            exceptionListenerDispatcher.errorOccurred(e);
+            throw e;
         }
     }
 }

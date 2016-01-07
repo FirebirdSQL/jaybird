@@ -26,11 +26,17 @@ package org.firebirdsql.gds.ng;
 
 import org.firebirdsql.gds.ServiceParameterBuffer;
 import org.firebirdsql.gds.ServiceRequestBuffer;
+import org.firebirdsql.gds.ng.listeners.ExceptionListenable;
 
 import java.sql.SQLException;
 
 /**
  * Connection handle to a service.
+ * <p>
+ * All methods defined in this interface are required to notify all {@code SQLException} thrown from the methods
+ * defined in this interface, and those exceptions notified by all {@link ExceptionListenable} implementations created
+ * from them.
+ * </p>
  *
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @since 3.0

@@ -22,9 +22,7 @@ import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.ng.fields.FieldValue;
 import org.firebirdsql.gds.ng.fields.RowDescriptor;
 import org.firebirdsql.gds.ng.fields.RowValue;
-import org.firebirdsql.gds.ng.listeners.StatementListener;
-import org.firebirdsql.gds.ng.listeners.StatementListenerDispatcher;
-import org.firebirdsql.gds.ng.listeners.TransactionListener;
+import org.firebirdsql.gds.ng.listeners.*;
 import org.firebirdsql.jdbc.FBSQLException;
 import org.firebirdsql.logging.Logger;
 import org.firebirdsql.logging.LoggerFactory;
@@ -33,7 +31,9 @@ import java.sql.SQLException;
 import java.sql.SQLNonTransientException;
 import java.sql.SQLTransientException;
 import java.sql.SQLWarning;
+import java.util.Collections;
 import java.util.EnumSet;
+import java.util.Set;
 
 /**
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
@@ -44,7 +44,8 @@ public abstract class AbstractFbStatement implements FbStatement {
     /**
      * Set of states that will be reset to {@link StatementState#PREPARED} on transaction change
      */
-    private static final EnumSet<StatementState> RESET_TO_PREPARED = EnumSet.of(StatementState.EXECUTING, StatementState.CURSOR_OPEN);
+    private static final Set<StatementState> RESET_TO_PREPARED = Collections.unmodifiableSet(
+            EnumSet.of(StatementState.EXECUTING, StatementState.CURSOR_OPEN));
     private static final Logger log = LoggerFactory.getLogger(AbstractFbStatement.class);
 
     private final Object syncObject = new Object();
@@ -55,6 +56,7 @@ public abstract class AbstractFbStatement implements FbStatement {
         }
     };
     protected final StatementListenerDispatcher statementListenerDispatcher = new StatementListenerDispatcher();
+    protected final ExceptionListenerDispatcher exceptionListenerDispatcher = new ExceptionListenerDispatcher(this);
     private volatile boolean allRowsFetched = false;
     private volatile StatementState state = StatementState.NEW;
     private volatile StatementType type = StatementType.NONE;
@@ -127,20 +129,27 @@ public abstract class AbstractFbStatement implements FbStatement {
     @Override
     public void close() throws SQLException {
         if (getState() == StatementState.CLOSED) return;
-        synchronized (getSynchronizationObject()) {
-            // TODO do additional checks (see also old implementation and .NET)
-            try {
-                final StatementState currentState = getState();
-                forceState(StatementState.CLOSING);
-                if (currentState != StatementState.NEW) {
-                    free(ISCConstants.DSQL_drop);
+        try {
+            synchronized (getSynchronizationObject()) {
+                // TODO do additional checks (see also old implementation and .NET)
+                try {
+                    final StatementState currentState = getState();
+                    forceState(StatementState.CLOSING);
+                    if (currentState != StatementState.NEW) {
+                        free(ISCConstants.DSQL_drop);
+                    }
+                } finally {
+                    forceState(StatementState.CLOSED);
+                    setType(StatementType.NONE);
+                    statementListenerDispatcher.shutdown();
+                    setTransaction(null);
                 }
-            } finally {
-                forceState(StatementState.CLOSED);
-                setType(StatementType.NONE);
-                statementListenerDispatcher.shutdown();
-                setTransaction(null);
             }
+        } catch (SQLException e) {
+            exceptionListenerDispatcher.errorOccurred(e);
+            throw e;
+        } finally {
+            exceptionListenerDispatcher.shutdown();
         }
     }
 
@@ -151,20 +160,25 @@ public abstract class AbstractFbStatement implements FbStatement {
 
     @Override
     public final void closeCursor(boolean transactionEnd) throws SQLException {
-        synchronized (getSynchronizationObject()) {
-            if (!getState().isCursorOpen()) return;
-            // TODO do additional checks (see also old implementation and .NET)
-            try {
-                if (!transactionEnd && getType().isTypeWithCursor()) {
-                    free(ISCConstants.DSQL_close);
+        try {
+            synchronized (getSynchronizationObject()) {
+                if (!getState().isCursorOpen()) return;
+                // TODO do additional checks (see also old implementation and .NET)
+                try {
+                    if (!transactionEnd && getType().isTypeWithCursor()) {
+                        free(ISCConstants.DSQL_close);
+                    }
+                    // TODO Any statement types that cannot be prepared and would need to go to ALLOCATED?
+                    switchState(StatementState.PREPARED);
+                } catch (SQLException e) {
+                    // TODO Close in case of exception?
+                    switchState(StatementState.ERROR);
+                    throw e;
                 }
-                // TODO Any statement types that cannot be prepared and would need to go to ALLOCATED?
-                switchState(StatementState.PREPARED);
-            } catch (SQLException e) {
-                // TODO Close in case of exception?
-                switchState(StatementState.ERROR);
-                throw e;
             }
+        } catch (SQLException e) {
+            exceptionListenerDispatcher.errorOccurred(e);
+            throw e;
         }
     }
 
@@ -302,8 +316,8 @@ public abstract class AbstractFbStatement implements FbStatement {
         }
     }
 
-    private static final EnumSet<StatementState> PREPARE_ALLOWED_STATES = EnumSet.of(
-            StatementState.NEW, StatementState.ALLOCATED, StatementState.PREPARED);
+    private static final Set<StatementState> PREPARE_ALLOWED_STATES = Collections.unmodifiableSet(
+            EnumSet.of(StatementState.NEW, StatementState.ALLOCATED, StatementState.PREPARED));
 
     /**
      * Is a call to {@link #prepare(String)} allowed for the supplied {@link StatementState}.
@@ -383,12 +397,17 @@ public abstract class AbstractFbStatement implements FbStatement {
     @Override
     public final <T> T getSqlInfo(final byte[] requestItems, final int bufferLength,
             final InfoProcessor<T> infoProcessor) throws SQLException {
-        return infoProcessor.process(getSqlInfo(requestItems, bufferLength));
+        final byte[] sqlInfo = getSqlInfo(requestItems, bufferLength);
+        try {
+            return infoProcessor.process(sqlInfo);
+        } catch (SQLException e) {
+            exceptionListenerDispatcher.errorOccurred(e);
+            throw e;
+        }
     }
 
     @Override
     public final String getExecutionPlan() throws SQLException {
-        checkStatementValid();
         final ExecutionPlanProcessor processor = createExecutionPlanProcessor();
         return getSqlInfo(processor.getDescribePlanInfoItems(), getDefaultSqlInfoSize(), processor);
     }
@@ -402,11 +421,16 @@ public abstract class AbstractFbStatement implements FbStatement {
 
     @Override
     public SqlCountHolder getSqlCounts() throws SQLException {
-        checkStatementValid();
-        if (getState() == StatementState.CURSOR_OPEN && !isAllRowsFetched()) {
-            // We disallow fetching count when we haven't fetched all rows yet.
-            // TODO SQLState
-            throw new SQLNonTransientException("Cursor still open, fetch all rows or close cursor before fetching SQL counts");
+        try {
+            checkStatementValid();
+            if (getState() == StatementState.CURSOR_OPEN && !isAllRowsFetched()) {
+                // We disallow fetching count when we haven't fetched all rows yet.
+                // TODO SQLState
+                throw new SQLNonTransientException("Cursor still open, fetch all rows or close cursor before fetching SQL counts");
+            }
+        } catch (SQLException e) {
+            exceptionListenerDispatcher.errorOccurred(e);
+            throw e;
         }
         final SqlCountProcessor countProcessor = createSqlCountProcessor();
         // NOTE: implementation of SqlCountProcessor assumes the specified size is sufficient (actual requirement is 49 bytes max) and does not handle truncation
@@ -472,6 +496,16 @@ public abstract class AbstractFbStatement implements FbStatement {
         statementListenerDispatcher.removeListener(statementListener);
     }
 
+    @Override
+    public final void addExceptionListener(ExceptionListener listener) {
+        exceptionListenerDispatcher.addListener(listener);
+    }
+
+    @Override
+    public final void removeExceptionListener(ExceptionListener listener) {
+        exceptionListenerDispatcher.removeListener(listener);
+    }
+
     /**
      * Checks if this statement is not in {@link StatementState#CLOSED}, {@link StatementState#NEW} or {@link StatementState#ERROR},
      * and throws an <code>SQLException</code> if it is.
@@ -528,22 +562,28 @@ public abstract class AbstractFbStatement implements FbStatement {
 
     @Override
     public final void setTransaction(final FbTransaction newTransaction) throws SQLException {
-        if (newTransaction == null || isValidTransactionClass(newTransaction.getClass())) {
-            // TODO Is there a statement or transaction state where we should not be switching transactions?
-            // Probably an error to switch when newTransaction is not null and current state is ERROR, CURSOR_OPEN, EXECUTING, CLOSING or CLOSED
-            synchronized (getSynchronizationObject()) {
-                if (newTransaction == transaction) return;
-                if (transaction != null) {
-                    transaction.removeTransactionListener(getTransactionListener());
+        // TODO Should we really notify the exception listener for errors here?
+        try {
+            if (newTransaction == null || isValidTransactionClass(newTransaction.getClass())) {
+                // TODO Is there a statement or transaction state where we should not be switching transactions?
+                // Probably an error to switch when newTransaction is not null and current state is ERROR, CURSOR_OPEN, EXECUTING, CLOSING or CLOSED
+                synchronized (getSynchronizationObject()) {
+                    if (newTransaction == transaction) return;
+                    if (transaction != null) {
+                        transaction.removeTransactionListener(getTransactionListener());
+                    }
+                    transaction = newTransaction;
+                    if (newTransaction != null) {
+                        newTransaction.addTransactionListener(getTransactionListener());
+                    }
                 }
-                transaction = newTransaction;
-                if (newTransaction != null) {
-                    newTransaction.addTransactionListener(getTransactionListener());
-                }
+            } else {
+                throw new SQLNonTransientException(String.format("Invalid transaction handle type, got \"%s\"", newTransaction.getClass().getName()),
+                        FBSQLException.SQL_STATE_GENERAL_ERROR);
             }
-        } else {
-            throw new SQLNonTransientException(String.format("Invalid transaction handle type, got \"%s\"", newTransaction.getClass().getName()),
-                    FBSQLException.SQL_STATE_GENERAL_ERROR);
+        } catch (SQLNonTransientException e) {
+            exceptionListenerDispatcher.errorOccurred(e);
+            throw e;
         }
     }
 

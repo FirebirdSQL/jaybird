@@ -107,6 +107,7 @@ public abstract class AbstractFbDatabase<T extends AbstractConnection<IConnectio
                 activeTransactions.add(transaction);
             }
             transaction.addTransactionListener(this);
+            transaction.addExceptionListener(exceptionListenerDispatcher);
         }
     }
 
@@ -146,8 +147,8 @@ public abstract class AbstractFbDatabase<T extends AbstractConnection<IConnectio
     /**
      * Actual implementation of database detach.
      * <p>
-     * Implementations of this method should only be called from {@link #close()}, and should <strong>not</strong> notify database
-     * listeners of the database {@link DatabaseListener#detaching(FbDatabase)} and
+     * Implementations of this method should only be called from {@link #close()}, and should <strong>not</strong>
+     * notify database listeners of the database {@link DatabaseListener#detaching(FbDatabase)} and
      * {@link DatabaseListener#detached(FbDatabase)} events.
      * </p>
      */
@@ -157,31 +158,42 @@ public abstract class AbstractFbDatabase<T extends AbstractConnection<IConnectio
      * {@inheritDoc}
      * <p>
      * Implementation note: Calls {@link #checkConnected()} and notifies database listeners of the detaching event, then
-     * calls {@link #internalDetach()} and finally notifies database listeners of database detach and removes all listeners.
+     * calls {@link #internalDetach()} and finally notifies database listeners of database detach and removes all
+     * listeners.
      * </p>
      */
     @Override
     public final void close() throws SQLException {
         // TODO return silently if not connected?
-        checkConnected();
-        synchronized (getSynchronizationObject()) {
-            if (getActiveTransactionCount() > 0) {
-                // Throw open transactions as exception, fbclient doesn't disconnect with outstanding (unprepared) transactions
-                // In the case of wire protocol we could ignore this and simply close, but that would be inconsistent with fbclient
-                // TODO: Rollback transactions; or leave that to the caller?
-                throw new FbExceptionBuilder()
-                        .exception(ISCConstants.isc_open_trans)
-                        .messageParameter(getActiveTransactionCount())
-                        .toSQLException();
-            }
+        try {
+            checkConnected();
+            synchronized (getSynchronizationObject()) {
+                if (getActiveTransactionCount() > 0) {
+                    // Throw open transactions as exception, fbclient doesn't disconnect with outstanding (unprepared)
+                    // transactions
+                    // In the case of wire protocol we could ignore this and simply close, but that would be
+                    // inconsistent with fbclient
+                    // TODO: Rollback transactions; or leave that to the caller?
+                    throw new FbExceptionBuilder()
+                            .exception(ISCConstants.isc_open_trans)
+                            .messageParameter(getActiveTransactionCount())
+                            .toSQLException();
+                }
 
-            databaseListenerDispatcher.detaching(this);
-            try {
-                internalDetach();
-            } finally {
-                databaseListenerDispatcher.detached(this);
-                databaseListenerDispatcher.shutdown();
+                databaseListenerDispatcher.detaching(this);
+                try {
+                    internalDetach();
+                } finally {
+                    databaseListenerDispatcher.detached(this);
+                    databaseListenerDispatcher.shutdown();
+                    exceptionListenerDispatcher.shutdown();
+                }
             }
+        } catch (SQLException ex) {
+            exceptionListenerDispatcher.errorOccurred(ex);
+            throw ex;
+        } finally {
+            exceptionListenerDispatcher.shutdown();
         }
     }
 
@@ -242,8 +254,13 @@ public abstract class AbstractFbDatabase<T extends AbstractConnection<IConnectio
     @Override
     public final <R> R getDatabaseInfo(byte[] requestItems, int bufferLength, InfoProcessor<R> infoProcessor)
             throws SQLException {
-        byte[] responseBuffer = getDatabaseInfo(requestItems, bufferLength);
-        return infoProcessor.process(responseBuffer);
+        final byte[] responseBuffer = getDatabaseInfo(requestItems, bufferLength);
+        try {
+            return infoProcessor.process(responseBuffer);
+        } catch (SQLException ex) {
+            exceptionListenerDispatcher.errorOccurred(ex);
+            throw ex;
+        }
     }
 
     protected byte[] getDescribeDatabaseInfoBlock() {

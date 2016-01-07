@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
@@ -134,10 +132,11 @@ public abstract class AbstractFbWireStatement extends AbstractFbStatement implem
 
     @Override
     public void close() throws SQLException {
-        synchronized (getSynchronizationObject()) {
-            try {
-                super.close();
-            } finally {
+        try {
+            super.close();
+        } finally {
+            // TODO Preferably this should be done elsewhere and AbstractFbStatement.close() should be final
+            synchronized (getSynchronizationObject()) {
                 database = null;
                 blrCache.clear();
             }

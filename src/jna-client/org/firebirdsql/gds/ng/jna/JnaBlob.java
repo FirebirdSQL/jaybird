@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
@@ -91,35 +89,40 @@ public class JnaBlob extends AbstractFbBlob implements FbBlob, DatabaseListener 
 
     @Override
     public void open() throws SQLException {
-        if (isOutput() && getBlobId() != NO_BLOB_ID) {
-            throw new FbExceptionBuilder().nonTransientException(ISCConstants.isc_segstr_no_op).toSQLException();
-        }
-
-        final BlobParameterBuffer blobParameterBuffer = getBlobParameterBuffer();
-        final byte[] bpb;
-        if (blobParameterBuffer != null) {
-            bpb = blobParameterBuffer.toBytesWithType();
-        } else {
-            bpb = new byte[0];
-        }
-        synchronized (getSynchronizationObject()) {
-            checkDatabaseAttached();
-            checkTransactionActive();
-            checkBlobClosed();
-
-            final JnaDatabase db = getDatabase();
-            synchronized (db.getSynchronizationObject()) {
-                if (isOutput()) {
-                    clientLibrary.isc_create_blob2(statusVector, db.getJnaHandle(), getTransaction().getJnaHandle(),
-                            getJnaHandle(), blobId, (short) bpb.length, bpb);
-                } else {
-                    clientLibrary.isc_open_blob2(statusVector, db.getJnaHandle(), getTransaction().getJnaHandle(),
-                            getJnaHandle(), blobId, (short) bpb.length, bpb);
-                }
+        try {
+            if (isOutput() && getBlobId() != NO_BLOB_ID) {
+                throw new FbExceptionBuilder().nonTransientException(ISCConstants.isc_segstr_no_op).toSQLException();
             }
-            processStatusVector();
-            setOpen(true);
-            resetEof();
+
+            final BlobParameterBuffer blobParameterBuffer = getBlobParameterBuffer();
+            final byte[] bpb;
+            if (blobParameterBuffer != null) {
+                bpb = blobParameterBuffer.toBytesWithType();
+            } else {
+                bpb = new byte[0];
+            }
+            synchronized (getSynchronizationObject()) {
+                checkDatabaseAttached();
+                checkTransactionActive();
+                checkBlobClosed();
+
+                final JnaDatabase db = getDatabase();
+                synchronized (db.getSynchronizationObject()) {
+                    if (isOutput()) {
+                        clientLibrary.isc_create_blob2(statusVector, db.getJnaHandle(), getTransaction().getJnaHandle(),
+                                getJnaHandle(), blobId, (short) bpb.length, bpb);
+                    } else {
+                        clientLibrary.isc_open_blob2(statusVector, db.getJnaHandle(), getTransaction().getJnaHandle(),
+                                getJnaHandle(), blobId, (short) bpb.length, bpb);
+                    }
+                }
+                processStatusVector();
+                setOpen(true);
+                resetEof();
+            }
+        } catch (SQLException e) {
+            exceptionListenerDispatcher.errorOccurred(e);
+            throw e;
         }
     }
 
@@ -130,103 +133,123 @@ public class JnaBlob extends AbstractFbBlob implements FbBlob, DatabaseListener 
 
     @Override
     public byte[] getSegment(int sizeRequested) throws SQLException {
-        if (sizeRequested <= 0) {
-            // TODO make non transient?
-            throw new FbExceptionBuilder().exception(jb_blobGetSegmentNegative)
-                    .messageParameter(sizeRequested)
-                    .toSQLException();
-        }
-        // TODO Honour request for larger sizes by looping?
-        sizeRequested = Math.min(sizeRequested, getMaximumSegmentSize());
-        final ByteBuffer responseBuffer = ByteBuffer.allocateDirect(sizeRequested);
-        final ShortByReference actualLength = new ShortByReference();
-        synchronized (getSynchronizationObject()) {
-            checkDatabaseAttached();
-            checkTransactionActive();
-            checkBlobOpen();
-
-            final JnaDatabase db = getDatabase();
-            synchronized (db.getSynchronizationObject()) {
-                clientLibrary.isc_get_segment(statusVector, getJnaHandle(), actualLength, (short) sizeRequested,
-                        responseBuffer);
+        try {
+            if (sizeRequested <= 0) {
+                // TODO make non transient?
+                throw new FbExceptionBuilder().exception(jb_blobGetSegmentNegative)
+                        .messageParameter(sizeRequested)
+                        .toSQLException();
             }
-            final int status = statusVector[1].intValue();
-            // status 0 means: more to come, isc_segment means: buffer was too small, rest will be returned on next call
-            if (!(status == 0 || status == ISCConstants.isc_segment)) {
-                if (status == ISCConstants.isc_segstr_eof) {
-                    setEof();
-                } else {
-                    processStatusVector();
+            // TODO Honour request for larger sizes by looping?
+            sizeRequested = Math.min(sizeRequested, getMaximumSegmentSize());
+            final ByteBuffer responseBuffer = ByteBuffer.allocateDirect(sizeRequested);
+            final ShortByReference actualLength = new ShortByReference();
+            synchronized (getSynchronizationObject()) {
+                checkDatabaseAttached();
+                checkTransactionActive();
+                checkBlobOpen();
+
+                final JnaDatabase db = getDatabase();
+                synchronized (db.getSynchronizationObject()) {
+                    clientLibrary.isc_get_segment(statusVector, getJnaHandle(), actualLength, (short) sizeRequested,
+                            responseBuffer);
+                }
+                final int status = statusVector[1].intValue();
+                // status 0 means: more to come, isc_segment means: buffer was too small, rest will be returned on next call
+                if (!(status == 0 || status == ISCConstants.isc_segment)) {
+                    if (status == ISCConstants.isc_segstr_eof) {
+                        setEof();
+                    } else {
+                        processStatusVector();
+                    }
                 }
             }
+            final int actualLengthInt = ((int) actualLength.getValue()) & 0xFFFF;
+            final byte[] segment = new byte[actualLengthInt];
+            responseBuffer.get(segment);
+            return segment;
+        } catch (SQLException e) {
+            exceptionListenerDispatcher.errorOccurred(e);
+            throw e;
         }
-        final int actualLengthInt = ((int) actualLength.getValue()) & 0xFFFF;
-        final byte[] segment = new byte[actualLengthInt];
-        responseBuffer.get(segment);
-        return segment;
     }
 
     @Override
     public void putSegment(byte[] segment) throws SQLException {
-        // TODO Handle exceeding max segment size?
-        if (segment.length == 0) {
-            // TODO make non transient?
-            throw new FbExceptionBuilder().exception(jb_blobPutSegmentEmpty).toSQLException();
-        }
-        // TODO Handle by performing multiple puts? (Wrap in byte buffer, use position to move pointer?)
-        if (segment.length > getMaximumSegmentSize()) {
-            // TODO make non transient?
-            throw new FbExceptionBuilder().exception(jb_blobPutSegmentTooLong).toSQLException();
-        }
-        synchronized (getSynchronizationObject()) {
-            checkDatabaseAttached();
-            checkTransactionActive();
-            checkBlobOpen();
-
-            final JnaDatabase db = getDatabase();
-            synchronized (db.getSynchronizationObject()) {
-                clientLibrary.isc_put_segment(statusVector, getJnaHandle(), (short) segment.length, segment);
+        try {
+            // TODO Handle exceeding max segment size?
+            if (segment.length == 0) {
+                // TODO make non transient?
+                throw new FbExceptionBuilder().exception(jb_blobPutSegmentEmpty).toSQLException();
             }
-            processStatusVector();
+            // TODO Handle by performing multiple puts? (Wrap in byte buffer, use position to move pointer?)
+            if (segment.length > getMaximumSegmentSize()) {
+                // TODO make non transient?
+                throw new FbExceptionBuilder().exception(jb_blobPutSegmentTooLong).toSQLException();
+            }
+            synchronized (getSynchronizationObject()) {
+                checkDatabaseAttached();
+                checkTransactionActive();
+                checkBlobOpen();
+
+                final JnaDatabase db = getDatabase();
+                synchronized (db.getSynchronizationObject()) {
+                    clientLibrary.isc_put_segment(statusVector, getJnaHandle(), (short) segment.length, segment);
+                }
+                processStatusVector();
+            }
+        } catch (SQLException e) {
+            exceptionListenerDispatcher.errorOccurred(e);
+            throw e;
         }
     }
 
     @Override
     public void seek(int offset, SeekMode seekMode) throws SQLException {
-        synchronized (getSynchronizationObject()) {
-            checkDatabaseAttached();
-            checkTransactionActive();
+        try {
+            synchronized (getSynchronizationObject()) {
+                checkDatabaseAttached();
+                checkTransactionActive();
 
-            final JnaDatabase db = getDatabase();
-            synchronized (db.getSynchronizationObject()) {
-                // result is the current position in the blob (see .NET provider source)
-                // We ignore the result TODO check if useful; not used in wire protocol either
-                IntByReference result = new IntByReference();
-                clientLibrary.isc_seek_blob(statusVector, getJnaHandle(), (short) seekMode.getSeekModeId(), offset,
-                        result);
+                final JnaDatabase db = getDatabase();
+                synchronized (db.getSynchronizationObject()) {
+                    // result is the current position in the blob (see .NET provider source)
+                    // We ignore the result TODO check if useful; not used in wire protocol either
+                    IntByReference result = new IntByReference();
+                    clientLibrary.isc_seek_blob(statusVector, getJnaHandle(), (short) seekMode.getSeekModeId(), offset,
+                            result);
+                }
+                processStatusVector();
             }
-            processStatusVector();
+        } catch (SQLException e) {
+            exceptionListenerDispatcher.errorOccurred(e);
+            throw e;
         }
     }
 
     @Override
     public byte[] getBlobInfo(byte[] requestItems, int bufferLength) throws SQLException {
-        final ByteBuffer responseBuffer = ByteBuffer.allocateDirect(bufferLength);
+        try {
+            final ByteBuffer responseBuffer = ByteBuffer.allocateDirect(bufferLength);
 
-        synchronized (getSynchronizationObject()) {
-            checkDatabaseAttached();
-            final JnaDatabase db = getDatabase();
-            synchronized (db.getSynchronizationObject()) {
-                clientLibrary.isc_blob_info(statusVector, getJnaHandle(),
-                        (short) requestItems.length, requestItems,
-                        (short) bufferLength, responseBuffer);
+            synchronized (getSynchronizationObject()) {
+                checkDatabaseAttached();
+                final JnaDatabase db = getDatabase();
+                synchronized (db.getSynchronizationObject()) {
+                    clientLibrary.isc_blob_info(statusVector, getJnaHandle(),
+                            (short) requestItems.length, requestItems,
+                            (short) bufferLength, responseBuffer);
+                }
+                processStatusVector();
             }
-            processStatusVector();
-        }
 
-        byte[] responseArr = new byte[bufferLength];
-        responseBuffer.get(responseArr);
-        return responseArr;
+            byte[] responseArr = new byte[bufferLength];
+            responseBuffer.get(responseArr);
+            return responseArr;
+        } catch (SQLException e) {
+            exceptionListenerDispatcher.errorOccurred(e);
+            throw e;
+        }
     }
 
     @Override

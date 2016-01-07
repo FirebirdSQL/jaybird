@@ -27,15 +27,22 @@ package org.firebirdsql.gds.ng;
 import org.firebirdsql.encodings.Encoding;
 import org.firebirdsql.encodings.IEncodingFactory;
 import org.firebirdsql.gds.impl.GDSServerVersion;
+import org.firebirdsql.gds.ng.listeners.ExceptionListenable;
 
 import java.sql.SQLException;
 
 /**
  * Connection to a Firebird server (to a database or service).
+ * <p>
+ * All methods defined in this interface and the direct descendants {@link FbDatabase} and {@link FbService} are
+ * required to notify all {@code SQLException} thrown from the methods defined in this interface, and those exceptions
+ * notified by all {@link ExceptionListenable} implementations created from them.
+ * </p>
  *
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @since 3.0
  */
-public interface FbAttachment extends AutoCloseable {
+public interface FbAttachment extends AutoCloseable, ExceptionListenable {
 
     /**
      * Attach to the attachment type.

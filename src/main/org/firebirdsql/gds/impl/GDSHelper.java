@@ -42,22 +42,15 @@ public class GDSHelper {
 
     private boolean registerResultSets;
 
-    private final ExceptionListener listener;
-
     /**
      * Create instance of this class.
      */
-    public GDSHelper(ExceptionListener listener, FbDatabase database) {
+    public GDSHelper(FbDatabase database) {
         // TODO Make explicit property
         this.registerResultSets = !database.getConnectionProperties().getExtraDatabaseParameters()
                 .hasArgument(DatabaseParameterBufferExtension.NO_RESULT_SET_TRACKING);
         
-        this.listener = listener != null ? listener : ExceptionListener.NULL_LISTENER;
         this.database = database;
-    }
-
-    private void notifyListeners(SQLException ex) {
-        listener.errorOccurred(ex);
     }
 
     public synchronized FbTransaction getCurrentTransaction() {
@@ -97,12 +90,7 @@ public class GDSHelper {
      *             if a database access error occurs
      */
     public FbStatement allocateStatement() throws SQLException {
-        try {
-            return database.createStatement(getCurrentTransaction());
-        } catch (SQLException ex) {
-            notifyListeners(ex);
-            throw ex;
-        }
+        return database.createStatement(getCurrentTransaction());
     }
 
     /**
@@ -124,12 +112,7 @@ public class GDSHelper {
      *             if a Firebird-specific error occurs
      */
     public void executeImmediate(String statement) throws SQLException {
-        try {
-            database.executeImmediate(statement, getCurrentTransaction());
-        } catch (SQLException ex) {
-            notifyListeners(ex);
-            throw ex;
-        }
+        database.executeImmediate(statement, getCurrentTransaction());
     }
 
     /**
@@ -145,21 +128,16 @@ public class GDSHelper {
      *             if a Firebird-specific database error occurs
      */
     public FbBlob openBlob(long blob_id, boolean segmented) throws SQLException {
-        try {
-            BlobParameterBuffer blobParameterBuffer = database.createBlobParameterBuffer();
+        BlobParameterBuffer blobParameterBuffer = database.createBlobParameterBuffer();
 
-            blobParameterBuffer.addArgument(BlobParameterBuffer.TYPE,
-                    segmented ? BlobParameterBuffer.TYPE_SEGMENTED
-                            : BlobParameterBuffer.TYPE_STREAM);
+        blobParameterBuffer.addArgument(BlobParameterBuffer.TYPE,
+                segmented ? BlobParameterBuffer.TYPE_SEGMENTED
+                        : BlobParameterBuffer.TYPE_STREAM);
 
-            FbBlob blob = database.createBlobForInput(getCurrentTransaction(), blobParameterBuffer, blob_id);
-            blob.open();
-    
-            return blob;
-        } catch(SQLException ex) {
-            notifyListeners(ex);
-            throw ex;
-        }
+        FbBlob blob = database.createBlobForInput(getCurrentTransaction(), blobParameterBuffer, blob_id);
+        blob.open();
+
+        return blob;
     }
 
     /**
@@ -172,81 +150,46 @@ public class GDSHelper {
      *             if a Firebird-specific database error occurs
      */
     public FbBlob createBlob(boolean segmented) throws SQLException {
-        try {
-            BlobParameterBuffer blobParameterBuffer = database.createBlobParameterBuffer();
+        BlobParameterBuffer blobParameterBuffer = database.createBlobParameterBuffer();
 
-            blobParameterBuffer.addArgument(BlobParameterBuffer.TYPE,
-                    segmented ? BlobParameterBuffer.TYPE_SEGMENTED
-                            : BlobParameterBuffer.TYPE_STREAM);
+        blobParameterBuffer.addArgument(BlobParameterBuffer.TYPE,
+                segmented ? BlobParameterBuffer.TYPE_SEGMENTED
+                        : BlobParameterBuffer.TYPE_STREAM);
 
-            FbBlob blob = database.createBlobForOutput(getCurrentTransaction(), blobParameterBuffer);
-            blob.open();
+        FbBlob blob = database.createBlobForOutput(getCurrentTransaction(), blobParameterBuffer);
+        blob.open();
 
-            return blob;
-        } catch(SQLException ex) {
-            notifyListeners(ex);
-            throw ex;
-        }
+        return blob;
     }
 
     public FbTransaction startTransaction(TransactionParameterBuffer tpb) throws SQLException {
-        try {
-            FbTransaction transaction = database.startTransaction(tpb);
-            setCurrentTransaction(transaction);
-            
-            return transaction;
-        } catch (SQLException e) {
-            notifyListeners(e);
-            throw e;
-        }
+        FbTransaction transaction = database.startTransaction(tpb);
+        setCurrentTransaction(transaction);
+
+        return transaction;
     }
 
     public void prepareTransaction(FbTransaction transaction, byte[] message) throws SQLException {
-        try {
-            transaction.prepare(message);
-        } catch(SQLException ex) {
-            notifyListeners(ex);
-            throw ex;
-        }
+        transaction.prepare(message);
     }
 
     public void commitTransaction(FbTransaction transaction) throws SQLException {
-        try {
-            transaction.commit();
-        } catch (SQLException e) {
-            notifyListeners(e);
-            throw e;
-        }
+        transaction.commit();
     }
 
     public void rollbackTransaction(FbTransaction transaction) throws SQLException {
-        try {
-            transaction.rollback();
-        } catch (SQLException e) {
-            notifyListeners(e);
-            throw e;
-        }
+        transaction.rollback();
     }
     
     public void detachDatabase() throws SQLException {
-        try {
-            database.close();
-        } catch(SQLException ex) {
-            notifyListeners(ex);
-            throw ex;
-        }
+        database.close();
     }
 
     /**
      * Cancel the currently running operation.
      */
     public void cancelOperation() throws SQLException {
-        try {
-            database.cancelOperation(ISCConstants.fb_cancel_raise);
-        } catch(SQLException ex) {
-            notifyListeners(ex);
-            throw ex;
-        }
+        database.cancelOperation(ISCConstants.fb_cancel_raise);
     }
 
     @Deprecated
@@ -378,14 +321,6 @@ public class GDSHelper {
     public List<GDSException> getWarnings() {
         // TODO consider resurrecting?
         throw new UnsupportedOperationException("getWarnings is no longer supported/implemented");
-    }
-
-    /**
-     * Clear warnings for this database connection.
-     */
-    public void clearWarnings() {
-        // TODO Remove or reimplement
-        //if (currentDbHandle != null) currentDbHandle.clearWarnings();
     }
 
 }

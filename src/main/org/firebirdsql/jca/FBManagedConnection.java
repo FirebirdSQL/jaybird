@@ -38,6 +38,7 @@ import org.firebirdsql.gds.ng.*;
 import org.firebirdsql.gds.ng.fields.RowValue;
 import org.firebirdsql.gds.ng.listeners.DefaultDatabaseListener;
 import org.firebirdsql.gds.ng.listeners.DefaultStatementListener;
+import org.firebirdsql.gds.ng.listeners.ExceptionListener;
 import org.firebirdsql.jdbc.*;
 import org.firebirdsql.jdbc.field.FBField;
 import org.firebirdsql.jdbc.field.FieldDataProvider;
@@ -116,46 +117,26 @@ public class FBManagedConnection implements ManagedConnection, XAResource, Excep
 
             database = mcf.getDatabaseFactory().connect(connectionProperties);
             database.addDatabaseListener(new MCDatabaseListener());
+            database.addExceptionListener(this);
             database.attach();
 
-            gdsHelper = new GDSHelper(this, database);
+            gdsHelper = new GDSHelper(database);
         } catch(SQLException ex) {
             throw new FBResourceException(ex);
         }
     }
 
-    /**
-     * Notify GDS container that error occured, if the <code>ex</code> 
-     * represents a "fatal" one
-     * 
-     * @see FatalGDSErrorHelper#isFatal(GDSException)
-     */
-    public void errorOccurred(GDSException ex) {
-        if (log != null) log.trace(ex.getMessage());
-        
-        if (!FatalGDSErrorHelper.isFatal(ex))
-            return;
-        
-        ConnectionEvent event = new ConnectionEvent(
-            FBManagedConnection.this, 
-            ConnectionEvent.CONNECTION_ERROR_OCCURRED, ex);
-        
-        FBManagedConnection.this.notify(
-            connectionErrorOccurredNotifier, event);
-    }
-
-    public void errorOccurred(SQLException ex) {
+    @Override
+    public void errorOccurred(Object source, SQLException ex) {
         if (log != null) log.trace(ex.getMessage());
 
         if (!FatalGDSErrorHelper.isFatal(ex))
             return;
 
-        ConnectionEvent event = new ConnectionEvent(
-                FBManagedConnection.this,
-                ConnectionEvent.CONNECTION_ERROR_OCCURRED, ex);
+        ConnectionEvent event = new ConnectionEvent(FBManagedConnection.this, ConnectionEvent.CONNECTION_ERROR_OCCURRED,
+                ex);
 
-        FBManagedConnection.this.notify(
-                connectionErrorOccurredNotifier, event);
+        FBManagedConnection.this.notify(connectionErrorOccurredNotifier, event);
     }
     
     private FBConnectionRequestInfo getCombinedConnectionRequestInfo(
@@ -754,7 +735,7 @@ public class FBManagedConnection implements ManagedConnection, XAResource, Excep
             FbTransaction trHandle2 = database.startTransaction(tpb.getTransactionParameterBuffer());
             FbStatement stmtHandle2 = database.createStatement(trHandle2);
 
-            GDSHelper gdsHelper2 = new GDSHelper(null, database);
+            GDSHelper gdsHelper2 = new GDSHelper(database);
             gdsHelper2.setCurrentTransaction(trHandle2);
 
             stmtHandle2.prepare(FORGET_FIND_QUERY);
@@ -814,7 +795,7 @@ public class FBManagedConnection implements ManagedConnection, XAResource, Excep
 
             FbStatement stmtHandle2 = database.createStatement(trHandle2);
 
-            GDSHelper gdsHelper2 = new GDSHelper(null, database);
+            GDSHelper gdsHelper2 = new GDSHelper(database);
             gdsHelper2.setCurrentTransaction(trHandle2);
 
             stmtHandle2.prepare(FORGET_DELETE_QUERY + inLimboId);
@@ -943,7 +924,7 @@ public class FBManagedConnection implements ManagedConnection, XAResource, Excep
 
             FbStatement stmtHandle2 = database.createStatement(trHandle2);
 
-            GDSHelper gdsHelper2 = new GDSHelper(null, database);
+            GDSHelper gdsHelper2 = new GDSHelper(database);
             gdsHelper2.setCurrentTransaction(trHandle2);
 
             stmtHandle2.prepare(RECOVERY_QUERY);
@@ -1008,7 +989,7 @@ public class FBManagedConnection implements ManagedConnection, XAResource, Excep
 
             FbStatement stmtHandle2 = database.createStatement(trHandle2);
 
-            GDSHelper gdsHelper2 = new GDSHelper(null, database);
+            GDSHelper gdsHelper2 = new GDSHelper(database);
             gdsHelper2.setCurrentTransaction(trHandle2);
 
             stmtHandle2.prepare(RECOVERY_QUERY_PARAMETRIZED);

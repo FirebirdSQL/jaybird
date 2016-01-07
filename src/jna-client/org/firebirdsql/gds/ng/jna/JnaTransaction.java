@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
@@ -89,6 +87,9 @@ public class JnaTransaction extends AbstractFbTransaction {
                 processStatusVector();
                 switchState(TransactionState.COMMITTED);
             }
+        } catch (SQLException e) {
+            exceptionListenerDispatcher.errorOccurred(e);
+            throw e;
         } finally {
             if (getState() != TransactionState.COMMITTED) {
                 log.warn("Commit not completed", new RuntimeException("Commit not completed"));
@@ -109,6 +110,9 @@ public class JnaTransaction extends AbstractFbTransaction {
                 processStatusVector();
                 switchState(TransactionState.ROLLED_BACK);
             }
+        } catch (SQLException e) {
+            exceptionListenerDispatcher.errorOccurred(e);
+            throw e;
         } finally {
             if (getState() != TransactionState.ROLLED_BACK) {
                 log.warn("Rollback not completed", new RuntimeException("Rollback not completed"));
@@ -134,6 +138,9 @@ public class JnaTransaction extends AbstractFbTransaction {
                 processStatusVector();
                 switchState(TransactionState.PREPARED);
             }
+        } catch (SQLException e) {
+            exceptionListenerDispatcher.errorOccurred(e);
+            throw e;
         } finally {
             if (getState() != TransactionState.PREPARED) {
                 log.warn("Prepare not completed", new RuntimeException("Prepare not completed"));
@@ -143,19 +150,24 @@ public class JnaTransaction extends AbstractFbTransaction {
 
     @Override
     public byte[] getTransactionInfo(byte[] requestItems, int maxBufferLength) throws SQLException {
-        final ByteBuffer responseBuffer = ByteBuffer.allocateDirect(maxBufferLength);
-        synchronized (getSynchronizationObject()) {
-            final JnaDatabase db = getDatabase();
-            db.checkConnected();
-            synchronized (db.getSynchronizationObject()) {
-                clientLibrary.isc_transaction_info(statusVector, handle, (short) requestItems.length, requestItems,
-                        (short) maxBufferLength, responseBuffer);
+        try {
+            final ByteBuffer responseBuffer = ByteBuffer.allocateDirect(maxBufferLength);
+            synchronized (getSynchronizationObject()) {
+                final JnaDatabase db = getDatabase();
+                db.checkConnected();
+                synchronized (db.getSynchronizationObject()) {
+                    clientLibrary.isc_transaction_info(statusVector, handle, (short) requestItems.length, requestItems,
+                            (short) maxBufferLength, responseBuffer);
+                }
+                processStatusVector();
             }
-            processStatusVector();
+            final byte[] responseArray = new byte[maxBufferLength];
+            responseBuffer.get(responseArray);
+            return responseArray;
+        } catch (SQLException e) {
+            exceptionListenerDispatcher.errorOccurred(e);
+            throw e;
         }
-        final byte[] responseArray = new byte[maxBufferLength];
-        responseBuffer.get(responseArray);
-        return responseArray;
     }
 
     private void processStatusVector() throws SQLException {

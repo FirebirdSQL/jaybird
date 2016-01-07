@@ -26,17 +26,22 @@ package org.firebirdsql.gds.ng;
 
 import org.firebirdsql.gds.ng.fields.RowDescriptor;
 import org.firebirdsql.gds.ng.fields.RowValue;
+import org.firebirdsql.gds.ng.listeners.ExceptionListenable;
 import org.firebirdsql.gds.ng.listeners.StatementListener;
 
 import java.sql.SQLException;
 
 /**
  * API for statement handles.
+ * <p>
+ * All methods defined in this interface are required to notify all {@code SQLException} thrown from the methods
+ * defined in this interface.
+ * </p>
  *
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @since 3.0
  */
-public interface FbStatement {
+public interface FbStatement extends ExceptionListenable {
 
     /**
      * @return Transaction currently associated with this statement

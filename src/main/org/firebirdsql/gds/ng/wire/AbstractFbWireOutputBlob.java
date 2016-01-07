@@ -1,6 +1,4 @@
 /*
- * $Id$
- * 
  * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
@@ -70,12 +68,22 @@ public abstract class AbstractFbWireOutputBlob extends AbstractFbWireBlob {
 
     @Override
     public final byte[] getSegment(int sizeRequested) throws SQLException {
-        throw new FbExceptionBuilder().nonTransientException(ISCConstants.isc_segstr_no_read).toSQLException();
+        try {
+            throw new FbExceptionBuilder().nonTransientException(ISCConstants.isc_segstr_no_read).toSQLException();
+        } catch (SQLException e) {
+            exceptionListenerDispatcher.errorOccurred(e);
+            throw e;
+        }
     }
 
     @Override
     public final void seek(int offset, SeekMode seekMode) throws SQLException {
-        // This assumes seeks are not (nor in the future) supported on output blobs
-        throw new FbExceptionBuilder().nonTransientException(ISCConstants.isc_segstr_no_read).toSQLException();
+        try {
+            // This assumes seeks are not (nor in the future) supported on output blobs
+            throw new FbExceptionBuilder().nonTransientException(ISCConstants.isc_segstr_no_read).toSQLException();
+        } catch (SQLException e) {
+            exceptionListenerDispatcher.errorOccurred(e);
+            throw e;
+        }
     }
 }

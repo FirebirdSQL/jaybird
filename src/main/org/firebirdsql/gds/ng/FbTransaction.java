@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * Public Firebird Java API.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,15 +24,22 @@
  */
 package org.firebirdsql.gds.ng;
 
+import org.firebirdsql.gds.ng.listeners.ExceptionListenable;
 import org.firebirdsql.gds.ng.listeners.TransactionListener;
 
 import java.sql.SQLException;
 
 /**
+ * Handle for a transaction.
+ * <p>
+ * All methods defined in this interface are required to notify all {@code SQLException} thrown from the methods
+ * defined in this interface.
+ * </p>
+ *
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @since 3.0
  */
-public interface FbTransaction {
+public interface FbTransaction extends ExceptionListenable {
 
     // TODO Evaluate whether this structure matches with needs for JDBC
 

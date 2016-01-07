@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
@@ -27,34 +25,32 @@ import java.sql.SQLException;
  * <p>
  * TODO: consider deprecating/removal
  * </p>
+ *
+ * @deprecated Use {@link org.firebirdsql.gds.ng.listeners.ExceptionListener}, interface will be removed in 3.1
  */
-public interface ExceptionListener {
+@Deprecated
+public interface ExceptionListener extends org.firebirdsql.gds.ng.listeners.ExceptionListener {
 
     /**
      * Notify about a GDSException.
      *
      * @param ex
      *         error that occurred.
+     * @deprecated this method is never called
      */
     @Deprecated
     void errorOccurred(GDSException ex);
 
     /**
-     * Notify about a SQLException
-     *
-     * @param ex
-     *         error that occurred.
-     */
-    void errorOccurred(SQLException ex);
-
-    /**
      * Listener that does nothing.
      */
-    static final ExceptionListener NULL_LISTENER = new ExceptionListener() {
+    ExceptionListener NULL_LISTENER = new ExceptionListener() {
         @Override
-        public void errorOccurred(GDSException ex) { }
+        public void errorOccurred(GDSException ex) {
+        }
 
         @Override
-        public void errorOccurred(SQLException ex) { }
+        public void errorOccurred(Object source, SQLException ex) {
+        }
     };
 }
