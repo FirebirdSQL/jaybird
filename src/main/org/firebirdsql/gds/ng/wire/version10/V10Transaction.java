@@ -82,21 +82,7 @@ public class V10Transaction extends AbstractFbTransaction implements FbWireTrans
         try {
             synchronized (getSynchronizationObject()) {
                 switchState(TransactionState.COMMITTING);
-                synchronized (getDatabase().getSynchronizationObject()) {
-                    try {
-                        final XdrOutputStream xdrOut = getXdrOut();
-                        xdrOut.writeInt(op_commit);
-                        xdrOut.writeInt(handle);
-                        xdrOut.flush();
-                    } catch (IOException ioex) {
-                        throw new FbExceptionBuilder().exception(ISCConstants.isc_net_write_err).cause(ioex).toSQLException();
-                    }
-                    try {
-                        getDatabase().readResponse(null);
-                    } catch (IOException ioex) {
-                        throw new FbExceptionBuilder().exception(ISCConstants.isc_net_read_err).cause(ioex).toSQLException();
-                    }
-                }
+                finishTransaction(op_commit);
                 switchState(TransactionState.COMMITTED);
             }
         } catch (SQLException e) {
@@ -114,21 +100,7 @@ public class V10Transaction extends AbstractFbTransaction implements FbWireTrans
         try {
             synchronized (getSynchronizationObject()) {
                 switchState(TransactionState.ROLLING_BACK);
-                synchronized (getDatabase().getSynchronizationObject()) {
-                    try {
-                        final XdrOutputStream xdrOut = getXdrOut();
-                        xdrOut.writeInt(op_rollback);
-                        xdrOut.writeInt(handle);
-                        xdrOut.flush();
-                    } catch (IOException ioex) {
-                        throw new FbExceptionBuilder().exception(ISCConstants.isc_net_write_err).cause(ioex).toSQLException();
-                    }
-                    try {
-                        getDatabase().readResponse(null);
-                    } catch (IOException ioex) {
-                        throw new FbExceptionBuilder().exception(ISCConstants.isc_net_read_err).cause(ioex).toSQLException();
-                    }
-                }
+                finishTransaction(op_rollback);
                 switchState(TransactionState.ROLLED_BACK);
             }
         } catch (SQLException e) {
@@ -137,6 +109,26 @@ public class V10Transaction extends AbstractFbTransaction implements FbWireTrans
         } finally {
             if (getState() != TransactionState.ROLLED_BACK) {
                 log.warn("Rollback not completed", new RuntimeException("Rollback not completed"));
+            }
+        }
+    }
+
+    private void finishTransaction(final int commitOrRollback) throws SQLException {
+        assert commitOrRollback == op_commit || commitOrRollback == op_rollback
+                : "Unsupported operation code " + commitOrRollback;
+        synchronized (getDatabase().getSynchronizationObject()) {
+            try {
+                final XdrOutputStream xdrOut = getXdrOut();
+                xdrOut.writeInt(commitOrRollback);
+                xdrOut.writeInt(handle);
+                xdrOut.flush();
+            } catch (IOException ioex) {
+                throw new FbExceptionBuilder().exception(ISCConstants.isc_net_write_err).cause(ioex).toSQLException();
+            }
+            try {
+                getDatabase().readResponse(null);
+            } catch (IOException ioex) {
+                throw new FbExceptionBuilder().exception(ISCConstants.isc_net_read_err).cause(ioex).toSQLException();
             }
         }
     }
