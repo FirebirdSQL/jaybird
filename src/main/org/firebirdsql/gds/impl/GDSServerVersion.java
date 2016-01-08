@@ -185,7 +185,7 @@ public final class GDSServerVersion implements Serializable {
      * @param requiredMajorVersion Required major version
      * @param requiredMinorVersion Required minor version
      * @return <code>true</code> when current major is larger than required, or major is same and minor is equal to or
-     * larger than required</code>
+     * larger than required
      */
     public boolean isEqualOrAbove(int requiredMajorVersion, int requiredMinorVersion) {
         return majorVersion > requiredMajorVersion ||

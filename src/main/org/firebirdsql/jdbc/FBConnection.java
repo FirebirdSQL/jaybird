@@ -143,10 +143,10 @@ public class FBConnection implements FirebirdConnection {
      */
     private void freeStatements() throws SQLException {
         // copy statements to avoid concurrent modification exception
-        List<Statement> statements = new ArrayList<Statement>(activeStatements);
+        List<Statement> statements = new ArrayList<>(activeStatements);
         
         // iterate through the set, close statements and collect exceptions
-        SQLExceptionChainBuilder<SQLException> chain = new SQLExceptionChainBuilder<SQLException>();
+        SQLExceptionChainBuilder<SQLException> chain = new SQLExceptionChainBuilder<>();
         for (Statement stmt : statements) {
             try {
                 stmt.close();
@@ -184,6 +184,7 @@ public class FBConnection implements FirebirdConnection {
      * @throws SQLException
      *         if handle needed to be created and creation failed
      */
+    @Override
     public FbDatabase getFbDatabase() throws SQLException {
         return getGDSHelper().getCurrentDatabase();
     }
@@ -660,14 +661,11 @@ public class FBConnection implements FirebirdConnection {
      * @exception SQLException if a database access error occurs
      */
     public synchronized int getTransactionIsolation() throws SQLException {
-        try 
-        {
+        try {
             return mc.getTransactionIsolation();
-        }
-        catch (ResourceException e)
-        {
+        } catch (ResourceException e) {
             throw new FBSQLException(e);
-        } // end of try-catch
+        }
     }
 
 
@@ -1152,7 +1150,7 @@ public class FBConnection implements FirebirdConnection {
      * @see <a href="package-summary.html#2.0 API">What Is in the JDBC 2.0 API</a>
      */
     public Map<String,Class<?>> getTypeMap() throws SQLException {
-    	return new HashMap<String,Class<?>>();
+    	return new HashMap<>();
     }
 
     /**
@@ -1170,14 +1168,14 @@ public class FBConnection implements FirebirdConnection {
         throw new FBDriverNotCapableException();
     }
 
-    private Set<String> clientInfoPropNames = new HashSet<String>();
+    private Set<String> clientInfoPropNames = new HashSet<>();
     
     /*
      * Savepoint stuff.  
      */
     
     private final AtomicInteger savepointCounter = new AtomicInteger();
-    private final List<FBSavepoint> savepoints = new LinkedList<FBSavepoint>();
+    private final List<FBSavepoint> savepoints = new ArrayList<>();
 
     private int getNextSavepointCounter() {
         return savepointCounter.getAndIncrement();
@@ -1390,13 +1388,10 @@ public class FBConnection implements FirebirdConnection {
         checkClientInfoSupport();
 
         Properties result = new Properties();
-        PreparedStatement stmt = prepareStatement(GET_CLIENT_INFO_SQL);
-        try {
+        try (PreparedStatement stmt = prepareStatement(GET_CLIENT_INFO_SQL)) {
             for (String propName : clientInfoPropNames) {
                 result.put(propName, getClientInfo(stmt, propName));
             }
-        } finally {
-            stmt.close();
         }
     
         return result;
@@ -1406,11 +1401,8 @@ public class FBConnection implements FirebirdConnection {
         checkValidity();
         checkClientInfoSupport();
 
-        PreparedStatement stmt = prepareStatement(GET_CLIENT_INFO_SQL);
-        try {
+        try (PreparedStatement stmt = prepareStatement(GET_CLIENT_INFO_SQL)) {
             return getClientInfo(stmt, name);
-        } finally {
-            stmt.close();
         }
     }
 
@@ -1419,48 +1411,41 @@ public class FBConnection implements FirebirdConnection {
     
         stmt.setString(1, name);
         stmt.setString(2, name);
-    
-        ResultSet rs = stmt.executeQuery();
-        try {
+
+        try (ResultSet rs = stmt.executeQuery()) {
             if (!rs.next())
                 return null;
-    
+
             String sessionContext = rs.getString(1);
             String transactionContext = rs.getString(2);
-    
+
             if (transactionContext != null)
                 return transactionContext;
             else if (sessionContext != null)
                 return sessionContext;
             else
                 return null;
-    
-        } finally {
-            rs.close();
+
         }
     
     }
 
     public void setClientInfo(Properties properties) throws SQLClientInfoException {
-        SQLExceptionChainBuilder<SQLClientInfoException> chain = new SQLExceptionChainBuilder<SQLClientInfoException>();
+        SQLExceptionChainBuilder<SQLClientInfoException> chain = new SQLExceptionChainBuilder<>();
         try {
             checkValidity();
             checkClientInfoSupport();
 
-            PreparedStatement stmt = prepareStatement(SET_CLIENT_INFO_SQL);
-            try {
-    
+            try (PreparedStatement stmt = prepareStatement(SET_CLIENT_INFO_SQL)) {
                 for (String propName : properties.stringPropertyNames()) {
                     String propValue = properties.getProperty(propName);
-    
+
                     try {
                         setClientInfo(stmt, propName, propValue);
                     } catch (SQLClientInfoException ex) {
                         chain.append(ex);
                     }
                 }
-            } finally {
-                stmt.close();
             }
     
         } catch (SQLException ex) {
@@ -1476,13 +1461,9 @@ public class FBConnection implements FirebirdConnection {
             checkValidity();
             checkClientInfoSupport();
 
-            PreparedStatement stmt = prepareStatement(SET_CLIENT_INFO_SQL);
-            try {
+            try (PreparedStatement stmt = prepareStatement(SET_CLIENT_INFO_SQL)) {
                 setClientInfo(stmt, name, value);
-            } finally {
-                stmt.close();
             }
-    
         } catch (SQLException ex) {
             throw new SQLClientInfoException(ex.getMessage(), ex.getSQLState(), null, ex);
         }

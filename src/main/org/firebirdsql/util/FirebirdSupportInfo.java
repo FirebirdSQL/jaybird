@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
@@ -22,23 +20,26 @@ package org.firebirdsql.util;
 
 import org.firebirdsql.gds.impl.GDSServerVersion;
 import org.firebirdsql.gds.ng.FbDatabase;
-import org.firebirdsql.jdbc.FBConnection;
+import org.firebirdsql.jdbc.FirebirdConnection;
 
 import java.sql.SQLException;
 
 /**
- * Helper class that reports if a Firebird version supports a specific feature. Intended as a repository for
- * tests to check their assumptions, or decide on test or application behavior based on functionality support.
+ * Helper class that reports if a Firebird version supports a specific feature.
  * <p>
- * Primary reason for existence of this class is to support version dependent tests in the Jaybird test suite, so
- * feature checks were only added when they were necessary for the test suite. That said: if you miss feature checks,
- * don't hesitate to create an issue in the <a href="http://tracker.firebirdsql.org/browse/JDBC">Jaybird tracker</a>.
+ * Intended as a repository for Jaybird to check for functionality support, or tests to check their assumptions, or
+ * decide on test or application behavior based on functionality support.
+ * <p>
+ * Primary reason for existence of this class is to support version dependent functionality in Jaybird or
+ * version dependent tests in the Jaybird test suite, so feature checks are only added when they are necessary for
+ * Jaybird or the test suite. That said: if you miss feature checks, don't hesitate to create an issue in
+ * the <a href="http://tracker.firebirdsql.org/browse/JDBC">Jaybird tracker</a>.
  * </p>
  *
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @since 3.0
  */
-public class FirebirdSupportInfo {
+public final class FirebirdSupportInfo {
 
     private final GDSServerVersion serverVersion;
 
@@ -50,6 +51,20 @@ public class FirebirdSupportInfo {
             throw new IllegalArgumentException("serverVersion is an invalid version (GDSServerVersion.INVALID_VERSION)");
         }
         this.serverVersion = serverVersion;
+    }
+
+    /**
+     * Check if the major.minor of this version is equal to or larger than the specified version.
+     *
+     * @param majorVersion
+     *         Major version
+     * @param minorVersion
+     *         Minor version
+     * @return {@code true} when current major is larger than required, or major is same and minor is equal to or
+     * larger than required
+     */
+    public boolean isVersionEqualOrAbove(int majorVersion, int minorVersion) {
+        return serverVersion.isEqualOrAbove(majorVersion, minorVersion);
     }
 
     /**
@@ -103,7 +118,8 @@ public class FirebirdSupportInfo {
     /**
      * TODO: Check if this is for all types or only for metadata.
      *
-     * @return <code>true</code> when the length of the field descriptor reports the byte length (max byte per char * char length)
+     * @return <code>true</code> when the length of the field descriptor reports the byte length (max byte per char *
+     * char length)
      */
     public boolean reportsByteLengthInDescriptor() {
         return serverVersion.isEqualOrAbove(1, 5);
@@ -183,8 +199,8 @@ public class FirebirdSupportInfo {
     }
 
     /**
-     * Checks support for protocol versions. The check is limited to those protocol versions supported by Jaybird (10-12
-     * at this time).
+     * Checks support for protocol versions. The check is limited to those protocol versions supported by Jaybird
+     * (10-13 at this time).
      *
      * @param protocolVersion
      *         Protocol version number
@@ -240,19 +256,19 @@ public class FirebirdSupportInfo {
     /**
      * @param connection
      *         A database connection (NOTE: {@link java.sql.Connection} is used, but it must be or unwrap to a
-     *         {@link org.firebirdsql.jdbc.FBConnection}.
+     *         {@link org.firebirdsql.jdbc.FirebirdConnection}.
      * @return FirebirdVersionSupport instance
      * @throws java.lang.IllegalArgumentException
      *         When the provided connection is not an instance of or wrapper for
-     *         {@link org.firebirdsql.jdbc.FBConnection}
+     *         {@link org.firebirdsql.jdbc.FirebirdConnection}
      * @throws java.lang.IllegalStateException
      *         When an SQLException occurs unwrapping the connection, or creating
      *         the {@link org.firebirdsql.util.FirebirdSupportInfo} instance
      */
     public static FirebirdSupportInfo supportInfoFor(java.sql.Connection connection) {
         try {
-            if (connection.isWrapperFor(FBConnection.class)) {
-                return supportInfoFor(connection.unwrap(FBConnection.class).getFbDatabase());
+            if (connection.isWrapperFor(FirebirdConnection.class)) {
+                return supportInfoFor(connection.unwrap(FirebirdConnection.class).getFbDatabase());
             } else {
                 throw new IllegalArgumentException(
                         "connection needs to be (or unwrap to) an org.firebirdsql.jdbc.FBConnection");

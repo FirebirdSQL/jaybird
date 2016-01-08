@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
@@ -21,13 +19,13 @@
 package org.firebirdsql.common;
 
 import org.firebirdsql.gds.ISCConstants;
-import org.firebirdsql.gds.impl.GDSHelper;
-import org.firebirdsql.jdbc.FBConnection;
 
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Arrays;
+
+import static org.firebirdsql.util.FirebirdSupportInfo.supportInfoFor;
 
 /**
  * Helper class for executing DDL while ignoring certain errors.
@@ -50,7 +48,8 @@ public final class DdlHelper {
      *         SQLException for executing statement, except if there error is <code>isc_no_meta_update</code>
      * @see #executeDDL(java.sql.Connection, String, int...)
      */
-    public static void executeCreateTable(Connection connection, String sql) throws SQLException {
+    public static void executeCreateTable(final Connection connection, final String sql) throws SQLException {
+        // TODO May actually need to look for message code 335610093
         DdlHelper.executeDDL(connection, sql, ISCConstants.isc_no_meta_update);
     }
 
@@ -68,18 +67,14 @@ public final class DdlHelper {
      *         <code>ignoreErrors</code>
      * @see org.firebirdsql.gds.ISCConstants
      */
-    public static void executeDDL(Connection connection, String sql, int... ignoreErrors) throws SQLException {
+    public static void executeDDL(final Connection connection, final String sql, final int... ignoreErrors)
+            throws SQLException {
         if (ignoreErrors != null) {
             Arrays.sort(ignoreErrors);
         }
 
-        try {
-            Statement stmt = connection.createStatement();
-            try {
-                stmt.execute(sql);
-            } finally {
-                stmt.close();
-            }
+        try (Statement stmt = connection.createStatement()) {
+            stmt.execute(sql);
         } catch (SQLException ex) {
             if (ignoreErrors == null || ignoreErrors.length == 0)
                 throw ex;
@@ -115,18 +110,17 @@ public final class DdlHelper {
      *         SQLException for executing statement, except for the listed errors.
      * @see #executeDDL(java.sql.Connection, String, int...)
      */
-    public static void executeDropTable(Connection connection, String sql) throws SQLException {
+    public static void executeDropTable(final Connection connection, final String sql) throws SQLException {
         executeDDL(connection, sql, DdlHelper.getDropIgnoreErrors(connection));
     }
 
-    private static int[] getDropIgnoreErrors(Connection connection) throws SQLException {
-        GDSHelper gdsHelper = ((FBConnection) connection).getGDSHelper();
-        if (gdsHelper.compareToVersion(2, 0) < 0) {
+    private static int[] getDropIgnoreErrors(final Connection connection) throws SQLException {
+        if (supportInfoFor(connection).isVersionEqualOrAbove(2, 0)) {
+            return new int[] { ISCConstants.isc_no_meta_update, ISCConstants.isc_dsql_table_not_found,
+                    ISCConstants.isc_dsql_view_not_found };
+        } else {
             // Firebird 1.5 and earlier do not always return specific error codes
             return new int[] { ISCConstants.isc_dsql_error, ISCConstants.isc_no_meta_update,
-                    ISCConstants.isc_dsql_table_not_found, ISCConstants.isc_dsql_view_not_found };
-        } else {
-            return new int[] { ISCConstants.isc_no_meta_update,
                     ISCConstants.isc_dsql_table_not_found, ISCConstants.isc_dsql_view_not_found };
         }
     }

@@ -1,7 +1,5 @@
 /*
- * $Id$
- * 
- * Firebird Open Source J2ee connector - jdbc driver, public Firebird-specific 
+ * Firebird Open Source JavaEE connector - JDBC driver, public Firebird-specific
  * JDBC extensions.
  *
  * Redistribution and use in source and binary forms, with or without 
@@ -33,6 +31,7 @@ import java.sql.SQLException;
 
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.TransactionParameterBuffer;
+import org.firebirdsql.gds.ng.FbDatabase;
 
 /**
  * Extension of {@link Connection} interface providing access to Firebird
@@ -144,5 +143,15 @@ public interface FirebirdConnection extends Connection {
      * @return {@code true} if this connection is configured to use {@code isc_tpb_autocommit} when in auto commit.
      */
     boolean isUseFirebirdAutoCommit();
+
+    /**
+     * Provides access to the low-level connection handle.
+     * <p>
+     * <b>WARNING</b> using this connection handle directly may bring the JDBC connection in an inconsistent state.
+     * </p>
+     *
+     * @return The low-level connection handle.
+     */
+    FbDatabase getFbDatabase() throws SQLException;
 
 }
