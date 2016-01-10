@@ -19,9 +19,12 @@
 package org.firebirdsql.gds.ng.jna;
 
 import org.firebirdsql.common.FBTestProperties;
+import org.firebirdsql.common.rules.GdsTypeRule;
+import org.firebirdsql.gds.impl.jni.NativeGDSFactoryPlugin;
 import org.firebirdsql.gds.ng.FbService;
 import org.firebirdsql.gds.ng.FbServiceProperties;
 import org.firebirdsql.jna.fbclient.FbClientLibrary;
+import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -36,6 +39,10 @@ import static org.junit.Assert.*;
  * @since 3.0
  */
 public class TestJnaServiceConnection {
+
+    // TODO Support embedded
+    @ClassRule
+    public static final GdsTypeRule testType = GdsTypeRule.supports(NativeGDSFactoryPlugin.NATIVE_TYPE_NAME);
 
     @Rule
     public final ExpectedException expectedException = ExpectedException.none();

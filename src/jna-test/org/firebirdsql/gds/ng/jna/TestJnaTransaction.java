@@ -20,9 +20,11 @@
  */
 package org.firebirdsql.gds.ng.jna;
 
+import org.firebirdsql.common.rules.GdsTypeRule;
+import org.firebirdsql.gds.impl.jni.NativeGDSFactoryPlugin;
 import org.firebirdsql.gds.ng.AbstractTransactionTest;
 import org.firebirdsql.gds.ng.FbDatabase;
-import org.junit.BeforeClass;
+import org.junit.ClassRule;
 
 import java.sql.SQLException;
 
@@ -34,13 +36,11 @@ import java.sql.SQLException;
  */
 public class TestJnaTransaction extends AbstractTransactionTest {
 
-    private final FbClientDatabaseFactory factory = new FbClientDatabaseFactory();
+    // TODO Support embedded
+    @ClassRule
+    public static final GdsTypeRule testType = GdsTypeRule.supports(NativeGDSFactoryPlugin.NATIVE_TYPE_NAME);
 
-    @BeforeClass
-    public static void verifyTestType() {
-        // Test is for native
-        // TODO assumeTrue(FBTestProperties.getGdsType().toString().equals(NativeGDSImpl.NATIVE_TYPE_NAME));
-    }
+    private final FbClientDatabaseFactory factory = new FbClientDatabaseFactory();
 
     @Override
     protected FbDatabase createDatabase() throws SQLException {

@@ -20,17 +20,20 @@ package org.firebirdsql.gds.ng.jna;
 
 import org.firebirdsql.common.FBJUnit4TestBase;
 import org.firebirdsql.common.FBTestProperties;
+import org.firebirdsql.common.rules.GdsTypeRule;
 import org.firebirdsql.gds.EventHandle;
 import org.firebirdsql.gds.EventHandler;
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.TransactionParameterBuffer;
 import org.firebirdsql.gds.impl.TransactionParameterBufferImpl;
+import org.firebirdsql.gds.impl.jni.NativeGDSFactoryPlugin;
 import org.firebirdsql.gds.ng.*;
 import org.firebirdsql.gds.ng.fields.RowValue;
 import org.firebirdsql.jna.fbclient.FbClientLibrary;
 import org.firebirdsql.jna.fbclient.ISC_STATUS;
 import org.junit.After;
 import org.junit.BeforeClass;
+import org.junit.ClassRule;
 import org.junit.Test;
 
 import java.sql.SQLException;
@@ -47,6 +50,10 @@ import static org.junit.Assert.assertTrue;
  * @since 3.0
  */
 public class TestJnaEvents extends FBJUnit4TestBase {
+
+    // TODO Support embedded
+    @ClassRule
+    public static final GdsTypeRule testType = GdsTypeRule.supports(NativeGDSFactoryPlugin.NATIVE_TYPE_NAME);
 
     //@formatter:off
     public static final String TABLE_DEF =

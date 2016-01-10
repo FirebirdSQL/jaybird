@@ -20,6 +20,8 @@
  */
 package org.firebirdsql.gds.ng.jna;
 
+import org.firebirdsql.common.rules.GdsTypeRule;
+import org.firebirdsql.gds.impl.jni.NativeGDSFactoryPlugin;
 import org.firebirdsql.gds.ng.AbstractStatementTest;
 import org.firebirdsql.gds.ng.DatatypeCoder;
 import org.firebirdsql.gds.ng.FbDatabase;
@@ -27,6 +29,7 @@ import org.firebirdsql.gds.ng.fields.FieldValue;
 import org.firebirdsql.gds.ng.fields.RowValue;
 import org.firebirdsql.gds.ng.wire.SimpleStatementListener;
 import org.junit.BeforeClass;
+import org.junit.ClassRule;
 import org.junit.Test;
 
 import java.sql.SQLException;
@@ -40,6 +43,10 @@ import static org.junit.Assert.*;
  * @since 3.0
  */
 public class TestJnaStatement extends AbstractStatementTest {
+
+    // TODO Support embedded
+    @ClassRule
+    public static final GdsTypeRule testType = GdsTypeRule.supports(NativeGDSFactoryPlugin.NATIVE_TYPE_NAME);
 
     private final FbClientDatabaseFactory factory = new FbClientDatabaseFactory();
 

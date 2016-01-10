@@ -18,12 +18,15 @@
  */
 package org.firebirdsql.gds.ng.jna;
 
+import org.firebirdsql.common.rules.GdsTypeRule;
 import org.firebirdsql.gds.BlobParameterBuffer;
 import org.firebirdsql.gds.ISCConstants;
+import org.firebirdsql.gds.impl.jni.NativeGDSFactoryPlugin;
 import org.firebirdsql.gds.ng.*;
 import org.firebirdsql.gds.ng.fields.FieldValue;
 import org.firebirdsql.gds.ng.fields.RowValue;
 import org.firebirdsql.gds.ng.wire.SimpleStatementListener;
+import org.junit.ClassRule;
 import org.junit.Test;
 
 import java.io.ByteArrayOutputStream;
@@ -47,6 +50,10 @@ import static org.junit.Assume.assumeTrue;
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  */
 public class TestJnaBlob extends BaseTestBlob {
+
+    // TODO Support embedded
+    @ClassRule
+    public static final GdsTypeRule testType = GdsTypeRule.supports(NativeGDSFactoryPlugin.NATIVE_TYPE_NAME);
 
     private final FbClientDatabaseFactory factory = new FbClientDatabaseFactory();
 

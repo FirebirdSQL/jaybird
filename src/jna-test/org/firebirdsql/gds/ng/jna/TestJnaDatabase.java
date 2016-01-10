@@ -19,16 +19,19 @@
 package org.firebirdsql.gds.ng.jna;
 
 import org.firebirdsql.common.FBTestProperties;
+import org.firebirdsql.common.rules.GdsTypeRule;
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.TransactionParameterBuffer;
 import org.firebirdsql.gds.impl.GDSServerVersion;
 import org.firebirdsql.gds.impl.TransactionParameterBufferImpl;
+import org.firebirdsql.gds.impl.jni.NativeGDSFactoryPlugin;
 import org.firebirdsql.gds.ng.FbConnectionProperties;
 import org.firebirdsql.gds.ng.FbDatabase;
 import org.firebirdsql.gds.ng.FbTransaction;
 import org.firebirdsql.gds.ng.TransactionState;
 import org.firebirdsql.jdbc.FBSQLException;
 import org.firebirdsql.management.FBManager;
+import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -52,6 +55,10 @@ public class TestJnaDatabase {
 
     // TODO Check if tests can be unified with equivalent wire protocol tests
     // TODO Assert in tests need to be checked (and more need to be added)
+
+    // TODO Support embedded
+    @ClassRule
+    public static final GdsTypeRule testType = GdsTypeRule.supports(NativeGDSFactoryPlugin.NATIVE_TYPE_NAME);
 
     @Rule
     public final ExpectedException expectedException = ExpectedException.none();
