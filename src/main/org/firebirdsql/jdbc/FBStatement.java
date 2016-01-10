@@ -35,9 +35,10 @@ import org.firebirdsql.logging.LoggerFactory;
 import java.sql.*;
 import java.util.*;
 
+import static org.firebirdsql.util.FirebirdSupportInfo.supportInfoFor;
+
 /**
  * The object used for executing a static SQL statement and obtaining the results produced by it.
- *
  * <p>
  * Only one <code>ResultSet</code> object  per <code>Statement</code> object
  * can be open at any point in
@@ -159,7 +160,7 @@ public class FBStatement implements FirebirdStatement, Synchronizable {
         this.statementListener = statementListener;
         
         // TODO Find out if connection is actually ever null, because some parts of the code expect it not to be null
-        this.connection = statementListener != null ? 
+        this.connection = statementListener != null ?
                 statementListener.getConnection() : null;
         
         closed = false;
@@ -726,22 +727,18 @@ public class FBStatement implements FirebirdStatement, Synchronizable {
      * @exception SQLException if a database access error occurs
      */
     public void setQueryTimeout(int seconds) throws  SQLException {
-        if (seconds < 0)
-            throw new FBSQLException("Can't set query timeout negative",
-                    FBSQLException.SQL_STATE_INVALID_ARG_VALUE);
-        else
-            queryTimeout = seconds;
+        if (seconds < 0) {
+            throw new FBSQLException("Can't set query timeout negative", FBSQLException.SQL_STATE_INVALID_ARG_VALUE);
+        }
+        queryTimeout = seconds;
     }
 
-    /**
-     * Cancels this <code>Statement</code> object if both the DBMS and
-     * driver support aborting an SQL statement.
-     * This method can be used by one thread to cancel a statement that
-     * is being executed by another thread.
-     *
-     * @exception SQLException if a database access error occurs
-     */
     public void cancel() throws  SQLException {
+        checkValidity();
+        if (!supportInfoFor(connection).supportsCancelOperation()) {
+            throw new SQLFeatureNotSupportedException("Cancel not supported");
+        }
+        // TODO This may be problematic, as it could also cancel something other than this statement
         gdsHelper.cancelOperation();
     }
 
@@ -1468,8 +1465,7 @@ public class FBStatement implements FirebirdStatement, Synchronizable {
      * Check if this statement is valid. This method should be invoked before
      * executing any action which requires a valid connection.
      * 
-     * @throws SQLException if this Statement has been closed and cannot be 
-     * used anymore.
+     * @throws SQLException if this Statement has been closed and cannot be used anymore.
      */
     protected void checkValidity() throws SQLException {
         if (isClosed()) {
