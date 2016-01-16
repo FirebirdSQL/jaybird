@@ -124,23 +124,37 @@ public class V10Service extends AbstractFbWireService implements FbWireService {
         synchronized (getSynchronizationObject()) {
             // TODO Listeners (similar to AbstractFbDatabase#close())?
             try {
-                final XdrOutputStream xdrOut = getXdrOut();
-                if (isAttached()) {
-                    xdrOut.writeInt(op_service_detach);
-                    xdrOut.writeInt(getHandle());
+                try {
+                    final XdrOutputStream xdrOut = getXdrOut();
+                    if (isAttached()) {
+                        xdrOut.writeInt(op_service_detach);
+                        xdrOut.writeInt(getHandle());
+                    }
+                    xdrOut.writeInt(op_disconnect);
+                    xdrOut.flush();
+                } catch (IOException ex) {
+                    throw new FbExceptionBuilder().exception(ISCConstants.isc_net_write_err).cause(ex).toSQLException();
                 }
-                xdrOut.writeInt(op_disconnect);
-                xdrOut.flush();
-
-                // TODO Read response to op_detach?
-                closeConnection();
-            } catch (IOException ex) {
+                if (isAttached()) {
+                    try {
+                        // Consume op_detach response
+                        wireOperations.readResponse(null);
+                    } catch (IOException ex) {
+                        throw new FbExceptionBuilder().exception(ISCConstants.isc_net_read_err).cause(ex).toSQLException();
+                    }
+                }
+                try {
+                    closeConnection();
+                } catch (IOException ex) {
+                    throw new FbExceptionBuilder().exception(ISCConstants.isc_net_write_err).cause(ex).toSQLException();
+                }
+            } catch (SQLException ex) {
                 try {
                     closeConnection();
                 } catch (Exception ex2) {
                     // ignore
                 }
-                throw new FbExceptionBuilder().exception(ISCConstants.isc_net_write_err).cause(ex).toSQLException();
+                throw ex;
             } finally {
                 setDetached();
             }
