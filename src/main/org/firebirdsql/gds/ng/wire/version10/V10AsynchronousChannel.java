@@ -36,6 +36,8 @@ import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
 import java.sql.SQLException;
 import java.sql.SQLNonTransientException;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 import static org.firebirdsql.gds.VaxEncoding.iscVaxInteger;
 import static org.firebirdsql.gds.impl.wire.WireProtocolConstants.*;
@@ -97,16 +99,22 @@ public class V10AsynchronousChannel implements FbWireAsynchronousChannel {
         }
     }
 
+    private final Lock closeLock = new ReentrantLock();
+
     @Override
     public void close() throws SQLException {
         if (!isConnected()) return;
-        channelListenerDispatcher.channelClosing(this);
+        // Lock already held by another close of the channel
+        if (!closeLock.tryLock()) return;
         try {
+            channelListenerDispatcher.channelClosing(this);
             socketChannel.close();
         } catch (IOException ex) {
+            // TODO Jaybird error code
             throw new SQLException("Unable to close asynchronous channel", ex);
         } finally {
             socketChannel = null;
+            closeLock.unlock();
         }
     }
 

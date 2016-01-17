@@ -20,6 +20,9 @@
  */
 package org.firebirdsql.gds.ng.wire;
 
+import org.firebirdsql.logging.Logger;
+import org.firebirdsql.logging.LoggerFactory;
+
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.ClosedChannelException;
@@ -36,6 +39,8 @@ import java.util.*;
  * @since 3.0
  */
 public class AsynchronousProcessor {
+
+    private static final Logger log = LoggerFactory.getLogger(AsynchronousProcessor.class);
 
     /**
      * Initialize on demand holder
@@ -91,7 +96,7 @@ public class AsynchronousProcessor {
         public void channelClosing(FbWireAsynchronousChannel channel) {
             if (!newChannels.remove(channel)) {
                 // TODO Replace with map from channel to selectionkey?
-                for (SelectionKey key : new ArrayList<SelectionKey>(selector.keys())) {
+                for (SelectionKey key : new ArrayList<>(selector.keys())) {
                     if (key.isValid() && key.attachment() == channel) {
                         key.cancel();
                         break;
@@ -139,12 +144,14 @@ public class AsynchronousProcessor {
                     }
                 } catch (IOException ex) {
                     // TODO check necessary handling
+                    log.error("IOException in async event processing", ex);
                 }
             }
             try {
                 selector.close();
             } catch (IOException e) {
-                // ignore // todo log
+                // ignore
+                log.error("IOException closing event selector", e);
             }
         }
 
@@ -171,11 +178,13 @@ public class AsynchronousProcessor {
                     try {
                         channel.close();
                     } catch (SQLException e) {
-                        // ignore // todo log
+                        // ignore
+                        log.error("SQLException closing event channel", e);
                     }
                 }
             } catch (IOException e) {
-                // TODO handle; log
+                // TODO handle
+                log.error("IOException reading from event channel", e);
             }
         }
 
