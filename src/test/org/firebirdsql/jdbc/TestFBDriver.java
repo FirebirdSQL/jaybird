@@ -19,6 +19,8 @@
 package org.firebirdsql.jdbc;
 
 import org.firebirdsql.common.FBTestBase;
+import org.firebirdsql.gds.ISCConstants;
+import org.firebirdsql.gds.TransactionParameterBuffer;
 
 import java.sql.*;
 import java.util.Calendar;
@@ -277,5 +279,43 @@ public class TestFBDriver extends FBTestBase {
         }
     }
 
+    public void testTransactionConfigThroughPropertiesObject() throws Exception {
+        Properties props = getDefaultPropertiesForConnection();
+        // Note that for proper testing this needs to be different from the mapping in isc_tpb_mapping.properties
+        props.setProperty("TRANSACTION_READ_COMMITTED",
+                "isc_tpb_read_committed,isc_tpb_no_rec_version,isc_tpb_write,isc_tpb_nowait");
+        Connection connection = DriverManager.getConnection(getUrl(), props);
+        try {
+            FirebirdConnection fbConnection = connection.unwrap(FirebirdConnection.class);
+            TransactionParameterBuffer tpb =
+                    fbConnection.getTransactionParameters(Connection.TRANSACTION_READ_COMMITTED);
+
+            assertTrue("expected isc_tpb_read_committed", tpb.hasArgument(ISCConstants.isc_tpb_read_committed));
+            assertTrue("expected isc_tpb_no_rec_version", tpb.hasArgument(ISCConstants.isc_tpb_no_rec_version));
+            assertTrue("expected isc_tpb_write", tpb.hasArgument(ISCConstants.isc_tpb_write));
+            assertTrue("expected isc_tpb_nowait", tpb.hasArgument(ISCConstants.isc_tpb_nowait));
+        } finally {
+            connection.close();
+        }
+    }
+
+    public void testTransactionConfigThroughConnectionString() throws Exception {
+        Properties props = getDefaultPropertiesForConnection();
+        // Note that for proper testing this needs to be different from the mapping in isc_tpb_mapping.properties
+        String jdbcUrl = getUrl() + "?TRANSACTION_READ_COMMITTED=isc_tpb_read_committed,isc_tpb_no_rec_version,isc_tpb_write,isc_tpb_nowait";
+        Connection connection = DriverManager.getConnection(jdbcUrl, props);
+        try {
+            FirebirdConnection fbConnection = connection.unwrap(FirebirdConnection.class);
+            TransactionParameterBuffer tpb =
+                    fbConnection.getTransactionParameters(Connection.TRANSACTION_READ_COMMITTED);
+
+            assertTrue("expected isc_tpb_read_committed", tpb.hasArgument(ISCConstants.isc_tpb_read_committed));
+            assertTrue("expected isc_tpb_no_rec_version", tpb.hasArgument(ISCConstants.isc_tpb_no_rec_version));
+            assertTrue("expected isc_tpb_write", tpb.hasArgument(ISCConstants.isc_tpb_write));
+            assertTrue("expected isc_tpb_nowait", tpb.hasArgument(ISCConstants.isc_tpb_nowait));
+        } finally {
+            connection.close();
+        }
+    }
 }
 

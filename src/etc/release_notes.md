@@ -781,7 +781,12 @@ The following interfaces will have some of the methods removed:
     -   `releaseSavepoint(FirebirdSavepoint savepoint)` replace with
         `Connection#releaseSavepoint(Savepoint savepoint)`
 
-If you are still using these interfaces or methods, please change your
+Visibility of the following classes will be reduced as they are implementation
+artifacts and should not be considered API:
+
+- `org.firebirdsql.jdbc.FBDriverPropertyManager` (to package private)
+
+If you are still using these interfaces, classes or methods, please change your
 code to use the JDBC interface or method instead.
 
 ### Handling `(VAR)CHAR CHARACTER SET OCTETS` as `(VAR)BINARY` type

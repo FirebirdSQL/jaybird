@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source J2ee connector - jdbc driver
+ * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -12,27 +12,17 @@
  * This file was created by members of the firebird development team.
  * All individual contributions remain the Copyright (C) of those
  * individuals.  Contributors to this file are either listed here or
- * can be obtained from a CVS history command.
+ * can be obtained from a source control history command.
  *
  * All rights reserved.
  */
-
 package org.firebirdsql.jdbc;
-
-import java.sql.DriverPropertyInfo;
-import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.Enumeration;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.MissingResourceException;
-import java.util.Properties;
-import java.util.ResourceBundle;
-import java.util.StringTokenizer;
 
 import org.firebirdsql.encodings.EncodingFactory;
 
+import java.sql.DriverPropertyInfo;
+import java.sql.SQLException;
+import java.util.*;
 
 /**
  * Manager of the DPB properties.
@@ -61,8 +51,7 @@ public class FBDriverPropertyManager {
         
         private int hashCode;
         
-        public PropertyInfo(String alias, String dpbName, Integer dpbKey,
-                String description) {
+        public PropertyInfo(String alias, String dpbName, Integer dpbKey, String description) {
             this.alias = alias;
             this.dpbName = dpbName;
             this.dpbKey = dpbKey;
@@ -155,6 +144,24 @@ public class FBDriverPropertyManager {
             reversedDpbMap.put(dpbKey, propInfo);
         }
     }
+
+    /**
+     * Normalize the properties. This method resolves the aliases to their
+     * original names. Also it restores the short syntax for the DPB parameters.
+     *
+     * @param url <b>ignored</b>
+     * @param props instance of {@link Properties} containing original properties.
+     *
+     * @return instance of {@link Map} containing the normalized ones.
+     *
+     * @throws SQLException if original properties reference the same DPB
+     * parameter using both alias and original name.
+     * @deprecated Use {@link #normalize(Properties)} instead. Method will be removed in Jaybird 3.0
+     */
+    @Deprecated
+    public static Map<String, String> normalize(String url, Properties props) throws SQLException {
+        return normalize(props);
+    }
     
     /**
      * Normalize the properties. This method resolves the aliases to their
@@ -162,18 +169,15 @@ public class FBDriverPropertyManager {
      * 
      * @param props instance of {@link Properties} containing original properties.
      * 
-     * @return instance of {@link Properties} containing the normalized ones.
+     * @return instance of {@link Map} containing the normalized ones.
      * 
      * @throws SQLException if original properties reference the same DPB 
      * parameter using both alias and original name.
      */
-    public static HashMap normalize(String url, Map props) throws SQLException {
-        
+    public static HashMap normalize(Properties props) throws SQLException {
         HashMap tempProps = new HashMap();
         tempProps.putAll(props);
-        
-        convertUrlParams(url, tempProps);
-        
+
         HashMap result = new HashMap();
         
         for (Iterator iter = tempProps.entrySet().iterator(); iter.hasNext();) {
@@ -240,41 +244,7 @@ public class FBDriverPropertyManager {
         
         return propInfo.dpbName;
     }
-    
-    /**
-     * Extract properties specified as URL parameter into the specified list
-     * of properties.
-     * 
-     * @param url specified URL.
-     * 
-     * @param info instance of {@link Properties} into which values should
-     * be extracted.
-     */
-    private static void convertUrlParams(String url, HashMap info) {
-        if (url == null)
-            return;
-        
-        int iQuestionMark = url.indexOf("?");
 
-        if (iQuestionMark == -1) 
-            return;
-
-        String propString = url.substring(iQuestionMark+1);
-        
-        StringTokenizer st = new StringTokenizer(propString,"&;");
-        while(st.hasMoreTokens()) {
-            String propertyString = st.nextToken();
-            int iIs = propertyString.indexOf("=");
-            if(iIs > -1) {
-                String property = propertyString.substring(0, iIs);
-                String value = propertyString.substring(iIs+1);
-                info.put(property,value);
-            } else {
-                info.put(propertyString, "");
-            }
-        }
-    }
-    
     /**
      * Handle character encoding parameters. This method ensures that both
      * java encoding an client connection encodings are correctly set. 

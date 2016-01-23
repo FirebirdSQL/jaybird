@@ -39,7 +39,7 @@ import org.firebirdsql.logging.LoggerFactory;
  * The Jaybird JDBC Driver implementation for the Firebird database.
  *
  * @author <a href="mailto:d_jencks@users.sourceforge.net">David Jencks</a>
- * @version 1.0
+ * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  */
 public abstract class AbstractDriver implements FirebirdDriver {
 
@@ -91,45 +91,43 @@ public abstract class AbstractDriver implements FirebirdDriver {
      * included in the Properties.
      *
      * @param url the URL of the database to which to connect
-     * @param originalInfo a list of arbitrary string tag/value pairs as
+     * @param info a list of arbitrary string tag/value pairs as
      * connection arguments. Normally at least a "user" and
      * "password" property should be included.
      * @return a <code>Connection</code> object that represents a
      *         connection to the URL
      * @exception SQLException if a database access error occurs
      */
-    public Connection connect(String url, Properties originalInfo) throws SQLException {
+    public Connection connect(String url, final Properties info) throws SQLException {
         if (url == null) {
             throw new SQLException("url is null");
         }
 
         final GDSType type = GDSFactory.getTypeForProtocol(url);
-        
-        if (type == null)
+        if (type == null) {
             return null;
+        }
 
+        final Properties mergedProperties = mergeProperties(url, info);
+        final Map normalizedInfo = FBDriverPropertyManager.normalize(url, mergedProperties);
         try {
-            if (originalInfo == null)
-                originalInfo = new Properties();
-
-            Map normalizedInfo = FBDriverPropertyManager.normalize(url, originalInfo);
-            
             int qMarkIndex = url.indexOf('?');
-            if (qMarkIndex != -1)
+            if (qMarkIndex != -1) {
                 url = url.substring(0, qMarkIndex);
+            }
 
             FBManagedConnectionFactory mcf = new FBManagedConnectionFactory(type);
             
             String databaseURL = GDSFactory.getDatabasePath(type, url);
 
             mcf.setDatabase(databaseURL);
-            for (Iterator iter = normalizedInfo.entrySet().iterator(); iter.hasNext();) {
-                Map.Entry entry = (Map.Entry) iter.next();
-                
-                mcf.setNonStandardProperty((String)entry.getKey(), (String)entry.getValue());
+            for (Object o : normalizedInfo.entrySet()) {
+                Map.Entry entry = (Map.Entry) o;
+
+                mcf.setNonStandardProperty((String) entry.getKey(), (String) entry.getValue());
             }
 
-            FBConnectionHelper.processTpbMapping(mcf.getGDS(), mcf, originalInfo);
+            FBConnectionHelper.processTpbMapping(mcf.getGDS(), mcf, mergedProperties);
             
             mcf = mcf.canonicalize();
 
@@ -178,9 +176,10 @@ public abstract class AbstractDriver implements FirebirdDriver {
     
     public FirebirdConnection connect(FirebirdConnectionProperties properties) throws SQLException {
         GDSType type = GDSType.getType(properties.getType());
-        
-        if (type == null)
-            type = ((AbstractGDS)GDSFactory.getDefaultGDS()).getType();
+        if (type == null) {
+            type = GDSFactory.getDefaultGDS().getType();
+        }
+
         try {
             FBManagedConnectionFactory mcf = new FBManagedConnectionFactory(type);
     
@@ -284,6 +283,65 @@ public abstract class AbstractDriver implements FirebirdDriver {
      */
     public boolean jdbcCompliant() {
         return true;
+    }
+
+
+    /**
+     * Merges the properties from the JDBC URL and properties object.
+     * <p>
+     * If a property is present in both, the property specified in the JDBC url takes precedence.
+     * </p>
+     *
+     * @param jdbcUrl JDBC Url
+     * @param connectionProperties Properties object
+     * @return Map with connection properties
+     */
+    private static Properties mergeProperties(String jdbcUrl, Properties connectionProperties) {
+        Properties mergedProperties = new Properties();
+        if (connectionProperties != null) {
+            for (String propertyName : connectionProperties.stringPropertyNames()) {
+                mergedProperties.setProperty(propertyName, connectionProperties.getProperty(propertyName));
+            }
+        }
+
+        convertUrlParams(jdbcUrl, mergedProperties);
+
+        return mergedProperties;
+    }
+
+    /**
+     * Extract properties specified as URL parameter into the specified map of properties.
+     *
+     * @param url
+     *         specified URL.
+     * @param info
+     *         instance of {@link Map} into which values should
+     *         be extracted.
+     */
+    private static void convertUrlParams(String url, Properties info) {
+        if (url == null) {
+            return;
+        }
+
+        int iQuestionMark = url.indexOf("?");
+        if (iQuestionMark == -1) {
+            return;
+        }
+
+        String propString = url.substring(iQuestionMark + 1);
+
+        StringTokenizer st = new StringTokenizer(propString, "&;");
+        while (st.hasMoreTokens()) {
+            String propertyString = st.nextToken();
+            int iIs = propertyString.indexOf("=");
+            if (iIs > -1) {
+                String property = propertyString.substring(0, iIs);
+                String value = propertyString.substring(iIs + 1);
+                info.setProperty(property, value);
+            } else {
+                info.setProperty(propertyString, "");
+            }
+        }
     }
 }
 
