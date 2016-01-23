@@ -82,6 +82,7 @@ The following has been changed or fixed in Jaybird 2.2.10:
     functioning correctly (for example in `org.hibernate.type.descriptor.java.DataHelper#determineLengthForBufferSizing`).
     These methods now throw `FBDriverNotCapableException` (which is a subclass
     of `SQLFeatureNotSupportedException`).
+-   Fixed: Transaction mapping cannot be configured through JDBC URL ([JDBC-421](http://tracker.firebirdsql.org/browse/JDBC-421))\
 
 **Known issues in Jaybird 2.2.10**
 
