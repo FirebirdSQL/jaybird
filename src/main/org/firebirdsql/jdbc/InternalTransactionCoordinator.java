@@ -238,7 +238,7 @@ public final class InternalTransactionCoordinator implements FBObjectListener.St
             // we have to loop through the array, since the 
             // statement.completeStatement() call causes the 
             // ConcurrentModificationException
-            FBStatement[] statementsToComplete = statements.toArray(new FBStatement[statements.size()]);
+            FBStatement[] statementsToComplete = statements.toArray(new FBStatement[0]);
             for (FBStatement statement : statementsToComplete) {
                 try {
                     statement.completeStatement(reason);

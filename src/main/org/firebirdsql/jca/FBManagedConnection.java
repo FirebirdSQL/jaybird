@@ -962,7 +962,7 @@ public class FBManagedConnection implements ManagedConnection, XAResource, Excep
             stmtHandle2.close();
             trHandle2.commit();
 
-            return xids.toArray(new FBXid[xids.size()]);
+            return xids.toArray(new FBXid[0]);
         } catch (SQLException | ResourceException e) {
             throw new FBXAException("can't perform query to fetch xids", XAException.XAER_RMFAIL, e);
         }

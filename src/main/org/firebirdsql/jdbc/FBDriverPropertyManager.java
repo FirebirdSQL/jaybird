@@ -292,6 +292,6 @@ class FBDriverPropertyManager {
             result.add(driverPropInfo);
         }
         
-        return result.toArray(new DriverPropertyInfo[result.size()]);
+        return result.toArray(new DriverPropertyInfo[0]);
     }
 }

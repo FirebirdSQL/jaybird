@@ -58,7 +58,7 @@ public class V11WireOperations extends V10WireOperations {
         synchronized (getSynchronizationObject()) {
             if (deferredActions.size() == 0) return;
 
-            final DeferredAction[] actions = deferredActions.toArray(new DeferredAction[deferredActions.size()]);
+            final DeferredAction[] actions = deferredActions.toArray(new DeferredAction[0]);
             deferredActions.clear();
             for (DeferredAction action : actions) {
                 try {

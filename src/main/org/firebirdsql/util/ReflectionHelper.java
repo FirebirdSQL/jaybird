@@ -48,7 +48,7 @@ public final class ReflectionHelper {
             Collections.addAll(result, clazz.getInterfaces());
             clazz = clazz.getSuperclass();
         } while(clazz.getSuperclass() != null); // Scan until clazz is Object (so skip Object itself)
-        return result.toArray(new Class<?>[result.size()]);
+        return result.toArray(new Class<?>[0]);
     }
     
     /**

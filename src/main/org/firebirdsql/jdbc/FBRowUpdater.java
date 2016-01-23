@@ -596,7 +596,7 @@ public class FBRowUpdater implements FirebirdRowUpdater {
                 params.add(oldRow.getFieldValue(i).clone());
         }
 
-        stmt.execute(new RowValue(params.toArray(new FieldValue[params.size()])));
+        stmt.execute(new RowValue(params.toArray(new FieldValue[0])));
 
         // TODO think about adding COMMIT RETAIN in the auto-commit mode
     }

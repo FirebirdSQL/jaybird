@@ -56,7 +56,7 @@ public final class ProtocolCollection implements Iterable<ProtocolDescriptor> {
                 supportedProtocols.addAll(loadProtocolsFallback(classLoader));
             }
         }
-        DEFAULT_COLLECTION = create(supportedProtocols.toArray(new ProtocolDescriptor[supportedProtocols.size()]));
+        DEFAULT_COLLECTION = create(supportedProtocols.toArray(new ProtocolDescriptor[0]));
     }
 
     /**
