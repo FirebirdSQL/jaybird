@@ -32,6 +32,7 @@ import org.firebirdsql.jdbc.escape.FBEscapedFunctionHelper;
 import org.firebirdsql.jdbc.field.JdbcTypeConverter;
 import org.firebirdsql.logging.Logger;
 import org.firebirdsql.logging.LoggerFactory;
+import org.firebirdsql.util.FirebirdSupportInfo;
 
 import java.security.AccessController;
 import java.security.PrivilegedAction;
@@ -39,6 +40,7 @@ import java.sql.*;
 import java.util.*;
 
 import static org.firebirdsql.gds.ISCConstants.*;
+import static org.firebirdsql.util.FirebirdSupportInfo.supportInfoFor;
 
 /**
  * Comprehensive information about the database as a whole.
@@ -132,16 +134,19 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
 
     private GDSHelper gdsHelper;
     private FBConnection connection;
+    private final FirebirdSupportInfo firebirdSupportInfo;
 
     protected final Map<String, FBPreparedStatement> statements = new HashMap<>();
 
     protected FBDatabaseMetaData(GDSHelper gdsHelper) {
         this.gdsHelper = gdsHelper;
+        firebirdSupportInfo = supportInfoFor(gdsHelper.getCurrentDatabase());
     }
 
     protected FBDatabaseMetaData(FBConnection c) throws SQLException {
         this.gdsHelper = c.getGDSHelper();
         this.connection = c;
+        firebirdSupportInfo = supportInfoFor(c);
     }
 
     protected void close() {
@@ -4509,7 +4514,8 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
      * @exception SQLException if a database access error occurs
      */
     public boolean supportsGetGeneratedKeys() throws SQLException {
-        return true;
+        return AbstractGeneratedKeysQuery.isGeneratedKeysSupportLoaded()
+                && firebirdSupportInfo.supportsInsertReturning();
     }
 
     /**

@@ -1,7 +1,5 @@
 /*
- * $Id$
- *
- * Firebird Open Source JavaEE connector - JDBC driver
+ * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -33,7 +31,6 @@ import java.util.Set;
 
 import static org.firebirdsql.common.FBTestProperties.getConnectionViaDriverManager;
 import static org.firebirdsql.common.FBTestProperties.getProperty;
-import static org.firebirdsql.common.JdbcResourceHelper.closeQuietly;
 import static org.firebirdsql.util.FirebirdSupportInfo.supportInfoFor;
 import static org.junit.Assert.*;
 
@@ -59,32 +56,28 @@ public class TestFBDatabaseMetaData extends FBJUnit4TestBase {
 
     @After
     public void tearDownConnection() throws SQLException {
-        closeQuietly(connection);
+        connection.close();
         connection = null;
         dmd = null;
     }
 
     @Test
     public void testGetTablesTypesNull() throws Exception {
-        if (log != null) log.info("testGetTablesTypesNull");
         createTable("T1");
 
-        ResultSet rs = dmd.getTables(null, null, "T1", null);
-        try {
+        try (ResultSet rs = dmd.getTables(null, null, "T1", null)) {
             assertTrue("Expected one row in result", rs.next());
             String name = rs.getString(3);
             if (log != null) log.info("table name: " + name);
             assertEquals("Didn't get back the name expected", "T1", name);
             assertFalse("Got more than one table name back!", rs.next());
-        } finally {
-            closeQuietly(rs);
         }
     }
 
     @Test
     public void testGetTableTypes() throws Exception {
-        final Set<String> expected = new HashSet<String>(Arrays.asList(FBDatabaseMetaData.ALL_TYPES));
-        final Set<String> retrieved = new HashSet<String>();
+        final Set<String> expected = new HashSet<>(Arrays.asList(FBDatabaseMetaData.ALL_TYPES));
+        final Set<String> retrieved = new HashSet<>();
 
         ResultSet rs = dmd.getTableTypes();
         while (rs.next()) {
@@ -96,69 +89,49 @@ public class TestFBDatabaseMetaData extends FBJUnit4TestBase {
 
     @Test
     public void testGetTablesTypesSystem() throws Exception {
-        if (log != null) log.info("testGetTablesTypesSystem");
         createTable("T1");
 
-        ResultSet rs = dmd.getTables(null, null, "T1", new String[]{ "SYSTEM TABLE" });
-        try {
+        try (ResultSet rs = dmd.getTables(null, null, "T1", new String[] { "SYSTEM TABLE" })) {
             assertFalse("Expected no tables to be returned (T1 is not a system table)", rs.next());
-        } finally {
-            closeQuietly(rs);
         }
     }
 
     @Test
     public void testGetTablesTypesTable() throws Exception {
-        if (log != null) log.info("testGetTablesTypesTable");
         createTable("T1");
 
-        ResultSet rs = dmd.getTables(null, null, "T1", new String[]{ "TABLE" });
-        try {
+        try (ResultSet rs = dmd.getTables(null, null, "T1", new String[] { "TABLE" })) {
             assertTrue("Expected one result in result set", rs.next());
             String name = rs.getString(3);
             if (log != null) log.info("table name: " + name);
             assertEquals("Didn't get back the name expected", "T1", name);
             assertFalse("Expected only one row in result set", rs.next());
-        } finally {
-            closeQuietly(rs);
         }
     }
 
     @Test
     public void testGetTablesTypesView() throws Exception {
-        if (log != null) log.info("testGetTablesTypesView");
         createTable("T1");
 
-        ResultSet rs = dmd.getTables(null, null, "T1", new String[]{ "VIEW" });
-        try {
+        try (ResultSet rs = dmd.getTables(null, null, "T1", new String[] { "VIEW" })) {
             assertFalse("Expected no result set (table T1 is not a view)", rs.next());
-        } finally {
-            closeQuietly(rs);
         }
     }
 
     @Test
     public void testGetSystemTablesTypesSystem() throws Exception {
-        if (log != null) log.info("testGetSystemTablesTypesSystem");
-
-        ResultSet rs = dmd.getTables(null, null, "RDB$RELATIONS", new String[]{ "SYSTEM TABLE" });
-        try {
+        try (ResultSet rs = dmd.getTables(null, null, "RDB$RELATIONS", new String[] { "SYSTEM TABLE" })) {
             assertTrue("Expected one result in result set", rs.next());
             String name = rs.getString(3);
             if (log != null) log.info("table name: " + name);
             assertEquals("Didn't get back the name expected", "RDB$RELATIONS", name);
             assertFalse("Expected only one row in result set", rs.next());
-        } finally {
-            closeQuietly(rs);
         }
     }
 
     @Test
     public void testGetAllSystemTablesTypesSystem() throws Exception {
-        if (log != null) log.info("testGetAllSystemTablesTypesSystem");
-
-        ResultSet rs = dmd.getTables(null, null, "%", new String[]{ "SYSTEM TABLE" });
-        try {
+        try (ResultSet rs = dmd.getTables(null, null, "%", new String[] { "SYSTEM TABLE" })) {
             int count = 0;
             while (rs.next()) {
                 String name = rs.getString(3);
@@ -187,15 +160,11 @@ public class TestFBDatabaseMetaData extends FBJUnit4TestBase {
             }
 
             assertEquals("# of system tables is not expected count", sysTableCount, count);
-        } finally {
-            closeQuietly(rs);
         }
     }
 
     @Test
     public void testAAStringFunctions() {
-        if (log != null) log.info("testAAStringFunctions");
-
         assertTrue("claims test\\_me has wildcards", FBDatabaseMetaData.hasNoWildcards("test\\_me"));
         assertEquals("strip escape wrong", "test_me", FBDatabaseMetaData.stripEscape("test\\_me"));
         assertEquals("strip quotes wrong", "TEST_ME", FBDatabaseMetaData.stripQuotes("test_me", true));
@@ -204,15 +173,13 @@ public class TestFBDatabaseMetaData extends FBJUnit4TestBase {
 
     @Test
     public void testGetTablesWildcardQuote() throws Exception {
-        if (log != null) log.info("testGetTablesWildcardQuote");
         createTable("test_me");
         createTable("test__me");
         createTable("\"test_ me\"");
         createTable("\"test_ me too\"");
         createTable("\"test_me too\"");
 
-        ResultSet rs = dmd.getTables(null, null, "test%m_", new String[]{ "TABLE" });
-        try {
+        try (ResultSet rs = dmd.getTables(null, null, "test%m_", new String[] { "TABLE" })) {
             int count = 0;
             while (rs.next()) {
                 String name = rs.getString(3);
@@ -221,34 +188,25 @@ public class TestFBDatabaseMetaData extends FBJUnit4TestBase {
                 count++;
             }
             assertEquals("more than two tables found", 2, count);
-        } finally {
-            closeQuietly(rs);
         }
 
-        rs = dmd.getTables(null, null, "test\\_me", new String[]{ "TABLE" });
-        try {
+        try (ResultSet rs = dmd.getTables(null, null, "test\\_me", new String[] { "TABLE" })) {
             assertTrue("Expected one row in result set", rs.next());
             String name = rs.getString(3);
             if (log != null) log.info("table name: " + name);
             assertEquals("wrong name found", "TEST_ME", name);
             assertFalse("Only one row expected in results et", rs.next());
-        } finally {
-            closeQuietly(rs);
         }
 
-        rs = dmd.getTables(null, null, "\"test\\_ me\"", new String[]{ "TABLE" });
-        try {
+        try (ResultSet rs = dmd.getTables(null, null, "\"test\\_ me\"", new String[] { "TABLE" })) {
             assertTrue("Expected on row in result set", rs.next());
             String name = rs.getString(3);
             if (log != null) log.info("table name: " + name);
             assertEquals("wrong name found", "test_ me", name);
             assertFalse("Expected only one row in result set", rs.next());
-        } finally {
-            closeQuietly(rs);
         }
 
-        rs = dmd.getTables(null, null, "\"test\\_ me%\"", new String[]{ "TABLE" });
-        try {
+        try (ResultSet rs = dmd.getTables(null, null, "\"test\\_ me%\"", new String[] { "TABLE" })) {
             int count = 0;
             while (rs.next()) {
                 String name = rs.getString(3);
@@ -257,60 +215,47 @@ public class TestFBDatabaseMetaData extends FBJUnit4TestBase {
                 count++;
             }
             assertEquals("more than one table found", 2, count);
-        } finally {
-            closeQuietly(rs);
         }
 
-        rs = dmd.getTables(null, null, "RDB_RELATIONS", new String[]{ "SYSTEM TABLE" });
-        try {
+        try (ResultSet rs = dmd.getTables(null, null, "RDB_RELATIONS", new String[] { "SYSTEM TABLE" })) {
             assertTrue("Expected one row in resultset", rs.next());
             String name = rs.getString(3);
             if (log != null) log.info("table name: " + name);
             assertEquals("wrong name found", "RDB$RELATIONS", name);
             assertFalse("Expected only one row in resultset", rs.next());
-        } finally {
-            closeQuietly(rs);
         }
     }
 
     @Test
     public void testGetColumnsWildcardQuote() throws Exception {
-        if (log != null) log.info("testGetColumnsWildcardQuote");
         createTable("test_me");
         createTable("test__me");
         createTable("\"test_ me\"");
         createTable("\"test_ me too\"");
         createTable("\"test_me too\"");
 
-        ResultSet rs = dmd.getColumns(null, null, "test%m_", "\"my\\_ column2\"");
-        try {
+        try (ResultSet rs = dmd.getColumns(null, null, "test%m_", "\"my\\_ column2\"")) {
             assertTrue("Expected one row in resultset", rs.next());
             String name = rs.getString(3);
             String column = rs.getString(4);
             if (log != null) log.info("table name: " + name);
             assertTrue("wrong column found: " + column, "my_ column2".equals(column));
             assertFalse("Expected only one row in resultset", rs.next());
-        } finally {
-            closeQuietly(rs);
         }
     }
 
     // test case for JDBC-130, similar to the one above
     @Test
     public void testGetColumnsWildcardQuote2() throws Exception {
-        if (log != null) log.info("testGetColumnsWildcardQuote2");
         createTable("TABLE_A");
         createTable("TABLE_A_B");
 
-        ResultSet rs = dmd.getColumns(null, null, "TABLE_A", "%");
-        try {
-            Set<String> tableNames = new HashSet<String>();
+        try (ResultSet rs = dmd.getColumns(null, null, "TABLE_A", "%")) {
+            Set<String> tableNames = new HashSet<>();
             while (rs.next()) {
                 tableNames.add(rs.getString(3));
             }
             assertEquals("should find one table", 1, tableNames.size());
-        } finally {
-            closeQuietly(rs);
         }
     }
 
@@ -342,12 +287,10 @@ public class TestFBDatabaseMetaData extends FBJUnit4TestBase {
 
     @Test
     public void testGetProcedures() throws Exception {
-        if (log != null) log.info("testGetProcedures");
         createProcedure("testproc1", true);
         createProcedure("testproc2", false);
 
-        ResultSet rs = dmd.getProcedures(null, null, "%");
-        try {
+        try (ResultSet rs = dmd.getProcedures(null, null, "%")) {
             boolean gotproc1 = false;
             boolean gotproc2 = false;
             while (rs.next()) {
@@ -389,13 +332,12 @@ public class TestFBDatabaseMetaData extends FBJUnit4TestBase {
                     gotproc2 = true;
                     assertEquals("result set from getProcedures had wrong procedure type for TESTPROC2 "
                             + "(should be procedureNoResult)", DatabaseMetaData.procedureNoResult, type);
-                } else
+                } else {
                     fail("result set from getProcedures returned unknown procedure " + name);
+                }
             }
             assertTrue("result set from getProcedures did not return procedure testproc1", gotproc1);
             assertTrue("result set from getProcedures did not return procedure testproc2", gotproc2);
-        } finally {
-            closeQuietly(rs);
         }
     }
 
@@ -404,8 +346,7 @@ public class TestFBDatabaseMetaData extends FBJUnit4TestBase {
         createProcedure("testproc1", true);
         createProcedure("testproc2", false);
 
-        ResultSet rs = dmd.getProcedureColumns(null, null, "%", "%");
-        try {
+        try (ResultSet rs = dmd.getProcedureColumns(null, null, "%", "%")) {
             int rownum = 0;
             while (rs.next()) {
                 rownum++;
@@ -459,43 +400,28 @@ public class TestFBDatabaseMetaData extends FBJUnit4TestBase {
                     fail("unexpected field returned from getProcedureColumns.");
                 }
             }
-        } finally {
-            closeQuietly(rs);
         }
     }
 
     @Test
     public void testGetColumnPrivileges() throws Exception {
-        if (log != null) log.info("testGetColumnPrivileges");
-
-        ResultSet rs = dmd.getColumnPrivileges(null, null, "RDB$RELATIONS", "%");
-        try {
+        try (ResultSet rs = dmd.getColumnPrivileges(null, null, "RDB$RELATIONS", "%")) {
             assertNotNull("No result set returned from getColumnPrivileges", rs);
             // TODO Actual test?
-        } finally {
-            closeQuietly(rs);
         }
     }
 
     @Test
     public void testGetTablePrivileges() throws Exception {
-        if (log != null) log.info("testGetTablePrivileges");
-
-        ResultSet rs = dmd.getTablePrivileges(null, null, "%");
-        try {
+        try (ResultSet rs = dmd.getTablePrivileges(null, null, "%")) {
             assertNotNull("No result set returned from getTablePrivileges", rs);
             // TODO Actual test?
-        } finally {
-            closeQuietly(rs);
         }
     }
 
     @Test
     public void testGetTypeInfo() throws Exception {
-        if (log != null) log.info("testGetTypeInfo");
-
-        ResultSet rs = dmd.getTypeInfo();
-        try {
+        try (ResultSet rs = dmd.getTypeInfo()) {
             assertNotNull("No result set returned from getTypeInfo", rs);
             int count = 0;
             StringBuilder out = new StringBuilder();
@@ -512,29 +438,21 @@ public class TestFBDatabaseMetaData extends FBJUnit4TestBase {
             }
             if (log != null) log.info("getTypeInfo returned: " + out);
             assertTrue("Not enough TypeInfo rows fetched: " + count, count >= 15);
-        } finally {
-            closeQuietly(rs);
         }
     }
 
     @Test
     public void testDefaultValue() throws Exception {
-        Statement stmt = connection.createStatement();
-        try {
+        try (Statement stmt = connection.createStatement()) {
             stmt.execute("CREATE TABLE test_default ("
                     + "test_col INTEGER DEFAULT 0 NOT NULL)");
 
-            ResultSet rs = dmd.getColumns(null, "%", "test_default", null);
-            try {
+            try (ResultSet rs = dmd.getColumns(null, "%", "test_default", null)) {
                 assertTrue("Should return at least one row", rs.next());
 
                 String defaultValue = rs.getString("COLUMN_DEF");
                 assertEquals("Default value should be correct.", "0", defaultValue);
-            } finally {
-                closeQuietly(rs);
             }
-        } finally {
-            closeQuietly(stmt);
         }
     }
 
@@ -547,11 +465,8 @@ public class TestFBDatabaseMetaData extends FBJUnit4TestBase {
         String tableName = "PLANILLAS_PREVISION_MANTENIMIEN";
         createTable(tableName);
 
-        ResultSet rs = dmd.getPrimaryKeys(null, null, tableName);
-        try {
+        try (ResultSet rs = dmd.getPrimaryKeys(null, null, tableName)) {
             assertTrue("Should return primary key information", rs.next());
-        } finally {
-            closeQuietly(rs);
         }
     }
 
@@ -564,11 +479,8 @@ public class TestFBDatabaseMetaData extends FBJUnit4TestBase {
         String tableName = "A";
         createTable(tableName);
 
-        ResultSet rs = dmd.getPrimaryKeys(null, null, tableName);
-        try {
+        try (ResultSet rs = dmd.getPrimaryKeys(null, null, tableName)) {
             assertTrue("Should return primary key information", rs.next());
-        } finally {
-            closeQuietly(rs);
         }
     }
 
@@ -581,11 +493,8 @@ public class TestFBDatabaseMetaData extends FBJUnit4TestBase {
         String tableNamePattern = "PLANILLAS_PREVISION_%";
         createTable(tableName);
 
-        ResultSet rs = dmd.getPrimaryKeys(null, null, tableNamePattern);
-        try {
+        try (ResultSet rs = dmd.getPrimaryKeys(null, null, tableNamePattern)) {
             assertFalse("Should not return primary key information", rs.next());
-        } finally {
-            closeQuietly(rs);
         }
 
     }
@@ -609,8 +518,7 @@ public class TestFBDatabaseMetaData extends FBJUnit4TestBase {
     }
 
     private void createProcedure(String procedureName, boolean returnsData) throws Exception {
-        Statement stmt = connection.createStatement();
-        try {
+        try (Statement stmt = connection.createStatement()) {
             if (returnsData) {
 
                 stmt.execute("CREATE PROCEDURE " + procedureName
@@ -631,39 +539,27 @@ public class TestFBDatabaseMetaData extends FBJUnit4TestBase {
                 stmt.execute("CREATE PROCEDURE " + procedureName
                         + " (INP INTEGER) AS BEGIN exit; END");
             }
-        } catch (Exception e) {
-            throw e;
-        } finally {
-            closeQuietly(stmt);
         }
     }
 
     // TODO Test does not actually check results
     @Test
     public void testCatalogsAndSchema() throws Exception {
-
-        ResultSet rs = dmd.getSchemas();
-        try {
+        try (ResultSet rs = dmd.getSchemas()) {
             while (rs.next()) {
                 String sn = rs.getString(1);
                 System.out.println(".getAllTables() schema=" + sn);
             }
-        } finally {
-            closeQuietly(rs);
         }
 
-        rs = dmd.getCatalogs();
-        try {
+        try (ResultSet rs = dmd.getCatalogs()) {
             while (rs.next()) {
                 String sn = rs.getString(1);
                 System.out.println(".getAllTables() catalogs=" + sn);
             }
-        } finally {
-            closeQuietly(rs);
         }
 
-        rs = dmd.getTables(null, null, "%", new String[]{ "TABLE" });
-        try {
+        try (ResultSet rs = dmd.getTables(null, null, "%", new String[] { "TABLE" })) {
             System.out.println(".getAllTables() rs=" + rs);
 
             while (rs.next()) {
@@ -673,8 +569,6 @@ public class TestFBDatabaseMetaData extends FBJUnit4TestBase {
 
                 System.out.println(".getAllTables() found table" + tn + ", type=" + tt + ", remarks=" + remarks);
             }
-        } finally {
-            closeQuietly(rs);
         }
 
     }
@@ -684,23 +578,17 @@ public class TestFBDatabaseMetaData extends FBJUnit4TestBase {
         createTable("best_row_pk");
         createTable("best_row_no_pk", null);
 
-        ResultSet rs = dmd.getBestRowIdentifier("", "", "BEST_ROW_PK", DatabaseMetaData.bestRowSession, true);
-        try {
+        try (ResultSet rs = dmd.getBestRowIdentifier("", "", "BEST_ROW_PK", DatabaseMetaData.bestRowSession, true)) {
             assertTrue("Should have rows", rs.next());
             assertEquals("Column name should be C1", "C1", rs.getString(2));
             assertEquals("Column type should be INTEGER", "INTEGER", rs.getString(4));
             assertFalse("Should have only one row", rs.next());
-        } finally {
-            closeQuietly(rs);
         }
 
-        rs = dmd.getBestRowIdentifier("", "", "BEST_ROW_NO_PK", DatabaseMetaData.bestRowSession, true);
-        try {
+        try (ResultSet rs = dmd.getBestRowIdentifier("", "", "BEST_ROW_NO_PK", DatabaseMetaData.bestRowSession, true)) {
             assertTrue("Should have rows", rs.next());
             assertEquals("Column name should be RDB$DB_KEY", "RDB$DB_KEY", rs.getString(2));
             assertFalse("Should have only one row", rs.next());
-        } finally {
-            closeQuietly(rs);
         }
     }
 
@@ -837,5 +725,11 @@ public class TestFBDatabaseMetaData extends FBJUnit4TestBase {
     public void testDriverVersionInformation() throws Exception {
         String expectedVersion = String.format("%d.%d", dmd.getDriverMajorVersion(), dmd.getDriverMinorVersion());
         assertEquals(expectedVersion, dmd.getDriverVersion());
+    }
+
+    @Test
+    public void testSupportsGetGeneratedKeys() throws Exception {
+        // Note: we are not testing behavior for absence of antlr-runtime
+        assertEquals(supportInfoFor(connection).supportsInsertReturning(), dmd.supportsGetGeneratedKeys());
     }
 }
