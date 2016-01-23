@@ -62,12 +62,9 @@ public class TestFBMaintenanceManager extends FBJUnit4TestBase {
     }
 
     private void createTestTable(String tableDef) throws SQLException {
-        Connection conn = getConnectionViaDriverManager();
-        try {
+        try (Connection conn = getConnectionViaDriverManager()) {
             Statement stmt = conn.createStatement();
             stmt.executeUpdate(tableDef);
-        } finally {
-            conn.close();
         }
     }
 
@@ -168,20 +165,18 @@ public class TestFBMaintenanceManager extends FBJUnit4TestBase {
      */
     @Test
     public void testForcedShutdown() throws Exception {
-        Connection conn = getConnectionViaDriverManager();
-        try {
-            String sql = "SELECT * FROM TEST";
+        try (Connection conn = getConnectionViaDriverManager()) {
             createTestTable();
 
-            Statement stmt = conn.createStatement();
-            stmt.executeQuery(sql);
-            maintenanceManager.shutdownDatabase(MaintenanceManager.SHUTDOWN_FORCE, 0);
+            try (Statement stmt = conn.createStatement()) {
+                String sql = "SELECT * FROM TEST";
+                stmt.executeQuery(sql);
+                maintenanceManager.shutdownDatabase(MaintenanceManager.SHUTDOWN_FORCE, 0);
 
-            expectedException.expect(SQLException.class);
+                expectedException.expect(SQLException.class);
 
-            stmt.executeQuery(sql);
-        } finally {
-            closeQuietly(conn);
+                stmt.executeQuery(sql);
+            }
         }
     }
 

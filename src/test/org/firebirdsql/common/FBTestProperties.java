@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * Firebird Open Source JavaEE connector - JDBC driver
  *
  * Distributable under LGPL license.
@@ -160,7 +158,7 @@ public final class FBTestProperties {
         }
     }
 
-    private static final Map<GDSType, String> gdsTypeToUrlPrefixMap = new HashMap<GDSType, String>();
+    private static final Map<GDSType, String> gdsTypeToUrlPrefixMap = new HashMap<>();
     static {
         gdsTypeToUrlPrefixMap.put(GDSType.getType("PURE_JAVA"), "jdbc:firebirdsql:");
         gdsTypeToUrlPrefixMap.put(GDSType.getType("EMBEDDED"), "jdbc:firebirdsql:embedded:");
@@ -168,6 +166,7 @@ public final class FBTestProperties {
         gdsTypeToUrlPrefixMap.put(GDSType.getType("LOCAL"), "jdbc:firebirdsql:local:");
         gdsTypeToUrlPrefixMap.put(GDSType.getType("OOREMOTE"), "jdbc:firebirdsql:oo:");
 
+        // TODO Replace with an external definition/way to add additional types for third party plugins?
         // Not part of Jaybird:
         gdsTypeToUrlPrefixMap.put(GDSType.getType("ORACLE_MODE"), "jdbc:firebirdsql:oracle:");
         gdsTypeToUrlPrefixMap.put(GDSType.getType("NIO"), "jdbc:firebirdsql:nio:");
@@ -186,11 +185,13 @@ public final class FBTestProperties {
     // bound to the
     // appropriate GDS implementation.
 
+    @SuppressWarnings("unused")
     public static FBManagedConnectionFactory createFBManagedConnectionFactory() {
         return new FBManagedConnectionFactory(getGdsType());
     }
 
-    public static FBManagedConnectionFactory createFBManagedConnectionFactory(ConnectionManager cm) {
+    public static FBManagedConnectionFactory createFBManagedConnectionFactory(
+            @SuppressWarnings("UnusedParameters") ConnectionManager cm) {
         FBManagedConnectionFactory mcf = new FBManagedConnectionFactory(getGdsType());
         mcf.setDefaultConnectionManager(new InternalConnectionManager());
         return mcf;
@@ -241,5 +242,6 @@ public final class FBTestProperties {
     }
 
     private FBTestProperties() {
+        // No instantiation
     }
 }
