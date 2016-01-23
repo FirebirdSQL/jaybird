@@ -278,6 +278,18 @@ public abstract class AbstractFbDatabase<T extends AbstractConnection<IConnectio
         case PREPARED:
             activeTransactions.remove(transaction);
             break;
+        case COMMITTING:
+        case ROLLING_BACK:
+            /* Even if the commit or rollback fails, we no longer consider it an active transaction
+               Introduced as the commit/rollback might fail in a shutdown database (at least in FB 2.1) and a
+               subsequent close wouldn't as there are "active" transactions.
+               This is acceptable as commit/rollback failure should be limited to situations were the database
+               is either inaccessible and the transaction is likely already rolled back or pending rollback by
+               the server, or the transaction was already committed or rolled back.
+            */
+            // TODO "register" transaction as pendingEnd for debugging?
+            activeTransactions.remove(transaction);
+            break;
         case COMMITTED:
         case ROLLED_BACK:
             activeTransactions.remove(transaction);
