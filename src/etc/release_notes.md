@@ -59,6 +59,36 @@ What's new in Jaybird 2.2
 Changelog
 ---------
 
+### Changes and fixes in Jaybird 2.2.10
+
+The following has been changed or fixed in Jaybird 2.2.10:
+
+-   Improvement: Transmit encrypted password (`isc_dpb_password_enc`
+    and `isc_spb_password_enc`) in pure java protocol ([JDBC-406](http://tracker.firebirdsql.org/browse/JDBC-406))\
+    With this change the password is hashed using the UnixCrypt hash. Be aware
+    that this does not really improve security: it only hides the password, but
+    an attacker can still use this hash to gain access to Firebird.
+-   Improvement: Specify `isc_tpb_lock_timeout` in transaction mapping ([JDBC-407](http://tracker.firebirdsql.org/browse/JDBC-407))\
+    This change was already in Jaybird 2.2.9, but not documented.
+-   Fixed: `DatabaseMetaData.supportsGetGeneratedKeys` does not report real
+    availability of generated keys feature ([JDBC-412](http://tracker.firebirdsql.org/browse/JDBC-412))\
+    `DatabaseMetaData.supportsGetGeneratedKeys` will now only report `true` when
+    the statement parser has been loaded (antlr-runtime is on the classpath) and
+    the connected Firebird version supports `INSERT .. RETURNING ..`.
+-   Fixed: `FBCachedClob` throws `SQLException` instead
+    of `SQLFeatureNotSupportedException` ([JDBC-414](http://tracker.firebirdsql.org/browse/JDBC-414))\
+    Some of the optional methods of `Clob` (especially length related) in
+    `FBCachedClob` threw `FBSQLException` which prevents Hibernate from
+    functioning correctly (for example in `org.hibernate.type.descriptor.java.DataHelper#determineLengthForBufferSizing`).
+    These methods now throw `FBDriverNotCapableException` (which is a subclass
+    of `SQLFeatureNotSupportedException`).
+
+**Known issues in Jaybird 2.2.10**
+
+-   Connecting to Firebird 2.5 and earlier with a Firebird 3 `fbclient.dll` may
+    be slow with native connections, see [CORE-4658](http://tracker.firebirdsql.org/browse/CORE-4658).
+    Workaround is to connect to the IPv4 address instead of the hostname.
+
 ### Changes and fixes in Jaybird 2.2.9
 
 The following has been changed or fixed in Jaybird 2.2.9:
@@ -90,12 +120,6 @@ The following has been changed or fixed in Jaybird 2.2.9:
 -   Change: `ResultSetMetaData` will now report `(VAR)CHAR CHARACTER SET OCTETS`
     columns as `Types.BINARY` or `Types.VARBINARY` when using 
     `octetsAsBytes=true` connection property. ([JDBC-408](http://tracker.firebirdsql.org/browse/JDBC-408))
-
-**Known issues in Jaybird 2.2.9**
-
--   Connecting to Firebird 2.5 and earlier with a Firebird 3 `fbclient.dll` may
-    be slow with native connections, see [CORE-4658](http://tracker.firebirdsql.org/browse/CORE-4658).
-    Workaround is to connect to the IPv4 address instead of the hostname.
 
 ### Changes and fixes in Jaybird 2.2.8
 
