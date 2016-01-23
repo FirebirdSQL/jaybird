@@ -443,6 +443,13 @@ the interface duplicated the `java.sql.Savepoint` interface and related methods
 in `java.sql.Connection`. The interface itself remains for potential future
 Firebird-specific extensions.
 
+### Reducing visibility of implementation ###
+
+The following classes, interfaces and/or methods had their visibility reduced as
+they are implementation artifacts, and should not be considered API:
+
+- `org.firebirdsql.jdbc.FBDriverPropertyManager` (to package private)
+
 Breaking changes for Jaybird 3.1
 --------------------------------
 

@@ -21,6 +21,7 @@ package org.firebirdsql.jdbc;
 import org.firebirdsql.common.FBJUnit4TestBase;
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.JaybirdErrorCodes;
+import org.firebirdsql.gds.TransactionParameterBuffer;
 import org.junit.After;
 import org.junit.Rule;
 import org.junit.Test;
@@ -228,6 +229,39 @@ public class TestFBDriver extends FBJUnit4TestBase {
                 message(containsString("Bad port: 'c:' is not a number"))));
 
         driver.connect("jdbc:firebirdsql://localhost:c:/data/db/test.fdb", props);
+    }
+
+    @Test
+    public void testTransactionConfigThroughPropertiesObject() throws Exception {
+        Properties props = getDefaultPropertiesForConnection();
+        // Note that for proper testing this needs to be different from the mapping in isc_tpb_mapping.properties
+        props.setProperty("TRANSACTION_READ_COMMITTED",
+                "isc_tpb_read_committed,isc_tpb_no_rec_version,isc_tpb_write,isc_tpb_nowait");
+        connection = DriverManager.getConnection(getUrl(), props);
+        FirebirdConnection fbConnection = connection.unwrap(FirebirdConnection.class);
+        TransactionParameterBuffer tpb = fbConnection.getTransactionParameters(Connection.TRANSACTION_READ_COMMITTED);
+
+        assertEquals(4, tpb.size());
+        assertTrue("expected isc_tpb_read_committed", tpb.hasArgument(ISCConstants.isc_tpb_read_committed));
+        assertTrue("expected isc_tpb_no_rec_version", tpb.hasArgument(ISCConstants.isc_tpb_no_rec_version));
+        assertTrue("expected isc_tpb_write", tpb.hasArgument(ISCConstants.isc_tpb_write));
+        assertTrue("expected isc_tpb_nowait", tpb.hasArgument(ISCConstants.isc_tpb_nowait));
+    }
+
+    @Test
+    public void testTransactionConfigThroughConnectionString() throws Exception {
+        Properties props = getDefaultPropertiesForConnection();
+        // Note that for proper testing this needs to be different from the mapping in isc_tpb_mapping.properties
+        String jdbcUrl = getUrl() + "?TRANSACTION_READ_COMMITTED=isc_tpb_read_committed,isc_tpb_no_rec_version,isc_tpb_write,isc_tpb_nowait";
+        connection = DriverManager.getConnection(jdbcUrl, props);
+        FirebirdConnection fbConnection = connection.unwrap(FirebirdConnection.class);
+        TransactionParameterBuffer tpb = fbConnection.getTransactionParameters(Connection.TRANSACTION_READ_COMMITTED);
+
+        assertEquals(4, tpb.size());
+        assertTrue("expected isc_tpb_read_committed", tpb.hasArgument(ISCConstants.isc_tpb_read_committed));
+        assertTrue("expected isc_tpb_no_rec_version", tpb.hasArgument(ISCConstants.isc_tpb_no_rec_version));
+        assertTrue("expected isc_tpb_write", tpb.hasArgument(ISCConstants.isc_tpb_write));
+        assertTrue("expected isc_tpb_nowait", tpb.hasArgument(ISCConstants.isc_tpb_nowait));
     }
 
 }

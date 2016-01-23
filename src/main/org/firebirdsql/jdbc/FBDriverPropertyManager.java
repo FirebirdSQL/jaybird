@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source J2ee connector - jdbc driver
+ * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -12,33 +12,24 @@
  * This file was created by members of the firebird development team.
  * All individual contributions remain the Copyright (C) of those
  * individuals.  Contributors to this file are either listed here or
- * can be obtained from a CVS history command.
+ * can be obtained from a source control history command.
  *
  * All rights reserved.
  */
 package org.firebirdsql.jdbc;
 
-import java.sql.DriverPropertyInfo;
-import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Enumeration;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.MissingResourceException;
-import java.util.Properties;
-import java.util.ResourceBundle;
-import java.util.StringTokenizer;
-
 import org.firebirdsql.encodings.EncodingFactory;
 import org.firebirdsql.gds.ParameterBufferHelper;
 import org.firebirdsql.util.ObjectUtils;
 
+import java.sql.DriverPropertyInfo;
+import java.sql.SQLException;
+import java.util.*;
+
 /**
  * Manager of the DPB properties.
  */
-public class FBDriverPropertyManager {
+class FBDriverPropertyManager {
 
     private static final String RES = "driver_property_info";
     
@@ -62,8 +53,7 @@ public class FBDriverPropertyManager {
         
         private final int hashCode;
         
-        public PropertyInfo(String alias, String dpbName, Integer dpbKey,
-                String description) {
+        public PropertyInfo(String alias, String dpbName, Integer dpbKey, String description) {
             this.alias = alias;
             this.dpbName = dpbName;
             this.dpbKey = dpbKey;
@@ -94,8 +84,8 @@ public class FBDriverPropertyManager {
     private static final Map<String, PropertyInfo> dpbMap;
 
     static {
-        final Map<String, PropertyInfo> tempAliases = new HashMap<String, PropertyInfo>();
-        final Map<String, PropertyInfo> tempDpbMap = new HashMap<String, PropertyInfo>();
+        final Map<String, PropertyInfo> tempAliases = new HashMap<>();
+        final Map<String, PropertyInfo> tempDpbMap = new HashMap<>();
         // process aliases and descriptions first
         if (info != null) {
             for (Enumeration<String> en = info.getKeys(); en.hasMoreElements();) {
@@ -149,7 +139,7 @@ public class FBDriverPropertyManager {
         aliases = Collections.unmodifiableMap(tempAliases);
         dpbMap = Collections.unmodifiableMap(tempDpbMap);
     }
-    
+
     /**
      * Normalize the properties. This method resolves the aliases to their
      * original names. Also it restores the short syntax for the DPB parameters.
@@ -161,15 +151,13 @@ public class FBDriverPropertyManager {
      * @throws SQLException if original properties reference the same DPB 
      * parameter using both alias and original name.
      */
-    public static Map<String, String> normalize(String url, Properties props) throws SQLException {
-        Map<String, String> tempProps = new HashMap<String, String>();
+    public static Map<String, String> normalize(Properties props) throws SQLException {
+        Map<String, String> tempProps = new HashMap<>();
         for (String propertyName : props.stringPropertyNames()) {
             tempProps.put(propertyName, props.getProperty(propertyName));
         }
-        
-        convertUrlParams(url, tempProps);
-        
-        Map<String, String> result = new HashMap<String, String>();
+
+        Map<String, String> result = new HashMap<>();
         
         for (Map.Entry<String, String> entry : tempProps.entrySet()) {
             String propName = entry.getKey();
@@ -234,40 +222,6 @@ public class FBDriverPropertyManager {
             return propertyName;
         
         return propInfo.dpbName;
-    }
-    
-    /**
-     * Extract properties specified as URL parameter into the specified list
-     * of properties.
-     * 
-     * @param url specified URL.
-     * 
-     * @param info instance of {@link Map} into which values should
-     * be extracted.
-     */
-    private static void convertUrlParams(String url, Map<String, String> info) {
-        if (url == null)
-            return;
-        
-        int iQuestionMark = url.indexOf("?");
-
-        if (iQuestionMark == -1) 
-            return;
-
-        String propString = url.substring(iQuestionMark+1);
-        
-        StringTokenizer st = new StringTokenizer(propString,"&;");
-        while(st.hasMoreTokens()) {
-            String propertyString = st.nextToken();
-            int iIs = propertyString.indexOf("=");
-            if(iIs > -1) {
-                String property = propertyString.substring(0, iIs);
-                String value = propertyString.substring(iIs+1);
-                info.put(property,value);
-            } else {
-                info.put(propertyString, "");
-            }
-        }
     }
     
     /**
