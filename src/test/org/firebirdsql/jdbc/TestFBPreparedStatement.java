@@ -957,14 +957,15 @@ public class TestFBPreparedStatement extends FBJUnit4TestBase {
     @Test
     public void testCharToUuid() throws Exception {
         executeCreateTable(con, "create table t_uuid ("
-                + " uuid CHAR(16) CHARACTER SET OCTETS PRIMARY KEY,"
+                + " uuid CHAR(16) CHARACTER SET OCTETS,"
                 + " datavalue integer"
                 + ")");
         //executeDDL(con, "create index ix_uuid on t_uuid (uuid)");
+        Statement stmt = con.createStatement();
+        stmt.execute("insert into t_uuid (uuid, datavalue) values (char_to_uuid('57F2B8C7-E1D8-4B61-9086-C66D1794F2D9'), 5)");
         con.close();
         Properties props = getDefaultPropertiesForConnection();
-        props.remove("lc_ctype");
-        props.setProperty("encoding", "UTF8");
+        props.setProperty("lc_ctype", "SJIS_0208");
         con = DriverManager.getConnection(getUrl(), props);
 
         PreparedStatement pstmt = con.prepareStatement("SELECT datavalue from t_uuid where uuid = char_to_uuid(?)");
@@ -977,7 +978,7 @@ public class TestFBPreparedStatement extends FBJUnit4TestBase {
 
             ResultSet rs = pstmt.executeQuery();
 
-            assertFalse(rs.next());
+            assertTrue(rs.next());
         } finally {
             pstmt.close();
         }
