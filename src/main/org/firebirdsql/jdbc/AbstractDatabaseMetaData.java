@@ -5414,7 +5414,8 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
      * @exception SQLException if a database access error occurs 
      */
     public boolean supportsGetGeneratedKeys() throws SQLException {
-        return true;
+        return AbstractGeneratedKeysQuery.isGeneratedKeysSupportLoaded()
+                && gdsHelper.compareToVersion(2, 0) >= 0;
     }
 
     /**

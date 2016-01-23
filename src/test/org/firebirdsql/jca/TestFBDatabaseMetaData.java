@@ -18,7 +18,10 @@
  */
 package org.firebirdsql.jca;
 
-import org.firebirdsql.jdbc.*;
+import org.firebirdsql.jdbc.AbstractConnection;
+import org.firebirdsql.jdbc.AbstractDatabaseMetaData;
+import org.firebirdsql.jdbc.FBDatabaseMetaData;
+import org.firebirdsql.jdbc.FirebirdDatabaseMetaData;
 
 import javax.resource.spi.LocalTransaction;
 import javax.sql.DataSource;
@@ -743,9 +746,14 @@ public class TestFBDatabaseMetaData extends TestXABase {
     }
 
     public void testGetClientInfoProperties() throws Exception {
-        ResultSet rs = ((FBDatabaseMetaData) dmd).getClientInfoProperties();
+        ResultSet rs = dmd.getClientInfoProperties();
 
         // TODO Extend to verify columns as defined in JDBC
         assertFalse("Expected no results for getClientInfoProperties", rs.next());
+    }
+
+    public void testSupportsGetGeneratedKeys() throws Exception {
+        // Note: we are not testing behavior for absence of antlr-runtime
+        assertEquals(c.getGDSHelper().compareToVersion(2, 0) >= 0, dmd.supportsGetGeneratedKeys());
     }
 }

@@ -391,4 +391,17 @@ public abstract class AbstractGeneratedKeysQuery {
     private JaybirdStatementModel parseInsertStatement(String sql) throws ParseException {
         return parser.parseInsertStatement(sql);
     }
+
+    /**
+     * Indicates if generated keys support has been loaded and available for use.
+     * <p>
+     * This method returns {@code false} when the antlr-runtime is not on the classpath or the {@link StatementParser}
+     * implementation could not be loaded for other reasons.
+     * </p>
+     *
+     * @return {@code true} if generated keys can be used in the driver (assuming the Firebird version supports it)
+     */
+    public static boolean isGeneratedKeysSupportLoaded() {
+        return parser != null;
+    }
 }
