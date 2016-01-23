@@ -60,7 +60,7 @@ public interface ServiceParameterBuffer {
      *            The parameter to be set, one of the <code>isc_spb_*</code>
      *            constants from {@link ISCConstants}
      */
-    public void addArgument(int argumentType);
+    void addArgument(int argumentType);
 
     /**
      * Set a <code>String</code> parameter on this
@@ -72,7 +72,7 @@ public interface ServiceParameterBuffer {
      * @param value
      *            The value to set for the given parameter type
      */
-    public void addArgument(int argumentType, String value);
+    void addArgument(int argumentType, String value);
 
     /**
      * Set an <code>int</code> paramter on this
@@ -84,7 +84,7 @@ public interface ServiceParameterBuffer {
      * @param value
      *            The value to set for the given parameter type
      */
-    public void addArgument(int argumentType, int value);
+    void addArgument(int argumentType, int value);
 
     /**
      * Set an <code>byte[]</code> paramter on this
@@ -96,5 +96,32 @@ public interface ServiceParameterBuffer {
      * @param data
      *            The value to set for the given parameter type
      */
-    public void addArgument(int argumentType, byte[] data);
+    void addArgument(int argumentType, byte[] data);
+
+    /**
+     * Remove specified argument.
+     * @param argumentType type of argument to remove.
+     */
+    void removeArgument(int argumentType);
+
+    /**
+     * Get argument as string.
+     * @param argumentType type of argument to find.
+     * @return argument as string or <code>null</code> if nothing found.
+     */
+    String getArgumentAsString(int argumentType);
+
+    /**
+     * Get argument as int.
+     * @param argumentType type of argument to find.
+     * @return argument as string or <code>0</code> if nothing found.
+     */
+    int getArgumentAsInt(int argumentType);
+
+    /**
+     * Check if this parameter buffer has specified argument.
+     * @param argumentType type of argument to find.
+     * @return <code>true</code> if this buffer contains specified argument.
+     */
+    boolean hasArgument(int argumentType);
 }
