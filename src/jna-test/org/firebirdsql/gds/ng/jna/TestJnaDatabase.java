@@ -41,6 +41,7 @@ import java.sql.SQLException;
 
 import static org.firebirdsql.common.FBTestProperties.*;
 import static org.firebirdsql.common.matchers.SQLExceptionMatchers.*;
+import static org.firebirdsql.util.FirebirdSupportInfo.supportInfoFor;
 import static org.hamcrest.CoreMatchers.*;
 import static org.junit.Assert.*;
 import static org.junit.Assume.assumeTrue;
@@ -263,6 +264,7 @@ public class TestJnaDatabase {
             try {
                 db.attach();
                 assumeTrue("expected database attached", db.isAttached());
+                assumeTrue("Test requires cancel support", supportInfoFor(db).supportsCancelOperation());
 
                 db.cancelOperation(ISCConstants.fb_cancel_abort);
 
