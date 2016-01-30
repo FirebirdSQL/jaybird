@@ -34,6 +34,7 @@ import javax.transaction.xa.*;
 import org.firebirdsql.gds.*;
 import org.firebirdsql.gds.impl.DbAttachInfo;
 import org.firebirdsql.gds.impl.GDSHelper;
+import org.firebirdsql.gds.impl.jni.EmbeddedGDSFactoryPlugin;
 import org.firebirdsql.gds.ng.*;
 import org.firebirdsql.gds.ng.fields.RowValue;
 import org.firebirdsql.gds.ng.listeners.DefaultDatabaseListener;
@@ -110,10 +111,15 @@ public class FBManagedConnection implements ManagedConnection, XAResource, Excep
 
             final FbConnectionProperties connectionProperties = new FbConnectionProperties();
             connectionProperties.fromDpb(dpb);
-            final DbAttachInfo dbAttachInfo = new DbAttachInfo(mcf.getDatabase());
-            connectionProperties.setServerName(dbAttachInfo.getServer());
-            connectionProperties.setPortNumber(dbAttachInfo.getPort());
-            connectionProperties.setDatabaseName(dbAttachInfo.getFileName());
+            // TODO Move this logic to the GDSType or database factory?
+            if (!EmbeddedGDSFactoryPlugin.EMBEDDED_TYPE_NAME.equals(mcf.getGDSType().toString())) {
+                final DbAttachInfo dbAttachInfo = new DbAttachInfo(mcf.getDatabase());
+                connectionProperties.setServerName(dbAttachInfo.getServer());
+                connectionProperties.setPortNumber(dbAttachInfo.getPort());
+                connectionProperties.setDatabaseName(dbAttachInfo.getFileName());
+            } else {
+                connectionProperties.setDatabaseName(mcf.getDatabase());
+            }
 
             database = mcf.getDatabaseFactory().connect(connectionProperties);
             database.addDatabaseListener(new MCDatabaseListener());

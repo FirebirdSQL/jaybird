@@ -20,6 +20,7 @@ package org.firebirdsql.gds.impl.jni;
 
 import org.firebirdsql.gds.GDSException;
 import org.firebirdsql.gds.impl.BaseGDSFactoryPlugin;
+import org.firebirdsql.gds.ng.jna.FbEmbeddedDatabaseFactory;
 
 public class EmbeddedGDSFactoryPlugin extends BaseGDSFactoryPlugin {
 
@@ -50,5 +51,11 @@ public class EmbeddedGDSFactoryPlugin extends BaseGDSFactoryPlugin {
     public String getDatabasePath(String server, Integer port, String path)
             throws GDSException {
         return path;
+    }
+
+    @Override
+    public FbEmbeddedDatabaseFactory getDatabaseFactory() {
+        // TODO This needs to change if we are going to release jna-client as a separate jar
+        return FbEmbeddedDatabaseFactory.getInstance();
     }
 }

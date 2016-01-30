@@ -18,9 +18,12 @@
  */
 package org.firebirdsql.gds.ng.wire.version10;
 
+import org.firebirdsql.common.rules.GdsTypeRule;
 import org.firebirdsql.common.rules.RequireProtocol;
 import org.firebirdsql.gds.BlobParameterBuffer;
 import org.firebirdsql.gds.ISCConstants;
+import org.firebirdsql.gds.impl.jni.EmbeddedGDSFactoryPlugin;
+import org.firebirdsql.gds.impl.jni.NativeGDSFactoryPlugin;
 import org.firebirdsql.gds.ng.DatatypeCoder;
 import org.firebirdsql.gds.ng.FbBlob;
 import org.firebirdsql.gds.ng.FbStatement;
@@ -57,6 +60,11 @@ public class TestV10OutputBlob extends BaseTestV10Blob {
 
     @ClassRule
     public static final RequireProtocol requireProtocol = requireProtocolVersion(10);
+
+    @ClassRule
+    public static final GdsTypeRule gdsTypeRule = GdsTypeRule.excludes(
+            EmbeddedGDSFactoryPlugin.EMBEDDED_TYPE_NAME,
+            NativeGDSFactoryPlugin.NATIVE_TYPE_NAME);
 
     public TestV10OutputBlob() {
         this(new V10CommonConnectionInfo());

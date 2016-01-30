@@ -11,8 +11,6 @@ different behavior than previous versions. Read these release notes carefully to
 see if those differences are intentional. Bug reports about undocumented changes
 in behavior are appreciated.
 
-**Current snapshot versions do not support the embedded driver**
-
 General Notes
 =============
 
@@ -30,14 +28,12 @@ the application server and driver.
 Supported Firebird versions
 ---------------------------
 
-Jaybird 3.0 was tested against Firebird ~~2.1.7 and~~ 2.5.5, and recent
-snapshots of Firebird 3, but should also support other Firebird versions 
-from 2.0 and up. Formal support for Firebird 1.x has been dropped (although in
-general we expect the driver to work). The Type 2 ~~and embedded server~~ JDBC 
-drivers use JNA to access the Firebird client ~~or embedded library~~.
+Jaybird 3.0 was tested against Firebird 2.1.7 and 2.5.5, and recent snapshots
+of Firebird 3, but should also support other Firebird versions from 2.0 and up.
+Formal support for Firebird 1.x has been dropped (although in general we expect
+the driver to work). The Type 2 and embedded server JDBC drivers use JNA to
+access the Firebird client or embedded library.
 
-**Current snapshot versions do not support the embedded driver**
- 
 This driver does not support InterBase servers due to Firebird-specific changes
 in the protocol and database attachment parameters that are sent to the server.
 
@@ -168,20 +164,7 @@ See [Removal of deprecated classes, packages and methods] in
 Known Issues
 ============
 
-* Embedded protocol is not working.
-
-    The JNA implementation requires a separate wrapper for embedded, this hasn't
-    been implemented yet.
-
-* Firebird 2.1.x may crash under unknown circumstances.
-
-    Firebird 2.1.7 on Windows intermittently crashes when the native tests are
-    run with the Firebird 2.1.7 `fbclient.dll`. We have not yet pinpointed
-    a cause. Use of the Firebird 2.5.5 `fbclient.dll` seems to solve the
-    problem.
-
-    If you still use Firebird 2.1.x, then use the pure java protocol (which is
-    the default anyway).
+There are currently no known issues.
 
 Compatibility changes
 =====================

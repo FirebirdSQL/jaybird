@@ -21,11 +21,10 @@
 package org.firebirdsql.management;
 
 import org.firebirdsql.common.FBJUnit4TestBase;
+import org.firebirdsql.common.rules.GdsTypeRule;
 import org.firebirdsql.gds.ISCConstants;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.firebirdsql.gds.impl.jni.EmbeddedGDSFactoryPlugin;
+import org.junit.*;
 
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -44,7 +43,10 @@ import static org.junit.Assume.assumeTrue;
  */
 public class TestUserManager extends FBJUnit4TestBase {
 
-    public static final String USER_NAME = "TESTUSER123";
+    @ClassRule
+    public static final GdsTypeRule testType = GdsTypeRule.excludes(EmbeddedGDSFactoryPlugin.EMBEDDED_TYPE_NAME);
+
+    private static final String USER_NAME = "TESTUSER123";
 
     @BeforeClass
     public static void checkDropUserSupport() {

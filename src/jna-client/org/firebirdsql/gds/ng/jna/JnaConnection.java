@@ -36,8 +36,10 @@ import static org.firebirdsql.gds.ISCConstants.*;
 /**
  * Class handling the initial setup of the JNA connection.
  *
- * @param <T> Type of attach properties
- * @param <C> Type of connection handle
+ * @param <T>
+ *         Type of attach properties
+ * @param <C>
+ *         Type of connection handle
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @since 3.0
  */
@@ -57,7 +59,7 @@ public abstract class JnaConnection<T extends IAttachProperties<T>, C extends Jn
      * @param attachProperties
      *         Attach properties
      * @param encodingFactory
-     *         Factory for encoding definitions
+     *         Encoding factory
      */
     protected JnaConnection(FbClientLibrary clientLibrary, T attachProperties, IEncodingFactory encodingFactory)
             throws SQLException {
@@ -163,11 +165,11 @@ public abstract class JnaConnection<T extends IAttachProperties<T>, C extends Jn
         StringBuilder sb = new StringBuilder();
         if (getServerName() != null) {
             sb.append(getServerName())
-                    .append('/');
+                    .append('/')
+                    .append(getPortNumber())
+                    .append(':');
         }
-        sb.append(getPortNumber())
-                .append(':')
-                .append(getAttachObjectName());
+        sb.append(getAttachObjectName());
         return sb.toString();
     }
 }

@@ -31,6 +31,7 @@ import org.firebirdsql.gds.*;
 import org.firebirdsql.gds.impl.GDSFactory;
 import org.firebirdsql.gds.impl.GDSType;
 import org.junit.*;
+import org.junit.rules.TemporaryFolder;
 
 import java.io.*;
 import java.sql.Connection;
@@ -49,6 +50,9 @@ public class TestServicesAPI {
     @ClassRule
     public static final GdsTypeRule testType = GdsTypeRule.supports(EmbeddedGDSFactoryPlugin.EMBEDDED_TYPE_NAME);
 
+    @Rule
+    public final TemporaryFolder temporaryFolder = new TemporaryFolder();
+
     private final Logger log = LoggerFactory.getLogger(getClass());
 
     private String mAbsoluteDatabasePath;
@@ -56,6 +60,7 @@ public class TestServicesAPI {
     private FBManager fbManager;
     private GDSType gdsType;
     private FbDatabaseFactory dbFactory;
+    private File logFolder;
 
     @Before
     public void setUp() throws Exception {
@@ -69,11 +74,12 @@ public class TestServicesAPI {
         fbManager.setPort(5066);
         fbManager.start();
 
-        String mRelativeBackupPath = "db/testES01344.fbk";
-        mAbsoluteBackupPath = new File(".", mRelativeBackupPath).getAbsolutePath();
+        File dbFolder = temporaryFolder.newFolder("db");
+        logFolder = temporaryFolder.newFolder("log");
 
-        String mRelativeDatabasePath = "db/testES01344.fdb";
-        mAbsoluteDatabasePath = new File(".", mRelativeDatabasePath).getAbsolutePath();
+        mAbsoluteBackupPath = new File(dbFolder, "testES01344.fbk").getAbsolutePath();
+
+        mAbsoluteDatabasePath = new File(dbFolder, "testES01344.fdb").getAbsolutePath();
 
         fbManager.createDatabase(mAbsoluteDatabasePath, "SYSDBA", "masterkey");
     }
@@ -101,14 +107,14 @@ public class TestServicesAPI {
 
     @Test
     public void testBackupAndRestore() throws Exception {
-        FbService service = attachToServiceManager();
-        backupDatabase(service);
-        detachFromServiceManager(service);
+        try (FbService service = attachToServiceManager()) {
+            backupDatabase(service);
+        }
         dropDatabase();
 
-        service = attachToServiceManager();
-        restoreDatabase(service);
-        detachFromServiceManager(service);
+        try (FbService service = attachToServiceManager()) {
+            restoreDatabase(service);
+        }
 
         connectToDatabase();
     }
@@ -122,11 +128,11 @@ public class TestServicesAPI {
     private void restoreDatabase(FbService service) throws Exception {
         startRestore(service);
 
-        queryService(service, "log/restoretest.log");
+        queryService(service, new File(logFolder, "restoretest.log").getAbsolutePath());
 
         assertTrue("Database file doesn't exist after restore !", new File(mAbsoluteDatabasePath).exists());
         if (!new File(mAbsoluteBackupPath).delete()) {
-            log.debug("Unable to delete file " + mAbsoluteBackupPath);
+            this.log.debug("Unable to delete file " + mAbsoluteBackupPath);
         }
     }
 
@@ -136,8 +142,8 @@ public class TestServicesAPI {
 
         serviceRequestBuffer.addArgument(ISCConstants.isc_spb_verbose);
         serviceRequestBuffer.addArgument(ISCConstants.isc_spb_options, ISCConstants.isc_spb_res_create);
-        serviceRequestBuffer.addArgument(ISCConstants.isc_spb_dbname, mAbsoluteBackupPath, service.getEncoding());
-        serviceRequestBuffer.addArgument(ISCConstants.isc_spb_bkp_file, mAbsoluteDatabasePath, service.getEncoding());
+        serviceRequestBuffer.addArgument(ISCConstants.isc_spb_dbname, mAbsoluteDatabasePath, service.getEncoding());
+        serviceRequestBuffer.addArgument(ISCConstants.isc_spb_bkp_file, mAbsoluteBackupPath, service.getEncoding());
 
         service.startServiceAction(serviceRequestBuffer);
     }
@@ -156,7 +162,7 @@ public class TestServicesAPI {
 
         startBackup(service);
 
-        queryService(service, "log/backuptest.log");
+        queryService(service, new File(logFolder, "backuptest.log").getAbsolutePath());
 
         assertTrue("Backup file doesn't exist!", new File(mAbsoluteBackupPath).exists());
     }
@@ -207,15 +213,6 @@ public class TestServicesAPI {
         assertTrue("Handle should be attached when isc_service_attach returns normally.", service.isAttached());
 
         return service;
-    }
-
-    private void detachFromServiceManager(FbService service) throws SQLException {
-        if (service.isAttached())
-            throw new Error("Handle should be valid here");
-
-        service.close();
-
-        assertFalse("Handle should be invalid when isc_service_detach returns normally.", service.isAttached());
     }
 
     private IServiceProperties createServiceProperties() {

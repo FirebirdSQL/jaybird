@@ -20,50 +20,36 @@ package org.firebirdsql.gds.ng.jna;
 
 import com.sun.jna.Native;
 import com.sun.jna.Platform;
-import org.firebirdsql.gds.ng.FbDatabaseFactory;
-import org.firebirdsql.gds.ng.IConnectionProperties;
-import org.firebirdsql.gds.ng.IServiceProperties;
 import org.firebirdsql.jna.fbclient.FbClientLibrary;
 import org.firebirdsql.jna.fbclient.WinFbClientLibrary;
-
-import java.sql.SQLException;
 
 /**
  * Implementation of {@link org.firebirdsql.gds.ng.FbDatabaseFactory} for establishing connection using the
  * Firebird native client library.
  * <p>
- * A separate factory is used for embedded (TODO: Add FbEmbeddedDatabaseFactory)
+ * A separate factory is used for embedded: {@link FbEmbeddedDatabaseFactory}.
  * </p>
  *
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @since 3.0
  */
-public class FbClientDatabaseFactory implements FbDatabaseFactory {
+public final class FbClientDatabaseFactory extends AbstractNativeDatabaseFactory {
 
     private static final FbClientDatabaseFactory INSTANCE = new FbClientDatabaseFactory();
 
     @Override
-    public JnaDatabase connect(IConnectionProperties connectionProperties) throws SQLException {
-        final JnaDatabaseConnection jnaDatabaseConnection = new JnaDatabaseConnection(getClientLibrary(),
-                connectionProperties);
-        return jnaDatabaseConnection.identify();
-    }
-
-    @Override
-    public JnaService serviceConnect(IServiceProperties serviceProperties) throws SQLException {
-        final JnaServiceConnection jnaServiceConnection = new JnaServiceConnection(getClientLibrary(),
-                serviceProperties);
-        return jnaServiceConnection.identify();
-    }
-
     protected FbClientLibrary getClientLibrary() {
         return ClientHolder.clientLibrary;
+    }
+
+    public static FbClientDatabaseFactory getInstance() {
+        return INSTANCE;
     }
 
     /**
      * Initialization-on-demand depending on classloading behavior specified in JLS 12.4
      */
-    private static class ClientHolder {
+    private static final class ClientHolder {
 
         private static final FbClientLibrary clientLibrary = initClientLibrary();
 
@@ -78,7 +64,4 @@ public class FbClientDatabaseFactory implements FbDatabaseFactory {
         }
     }
 
-    public static FbClientDatabaseFactory getInstance() {
-        return INSTANCE;
-    }
 }

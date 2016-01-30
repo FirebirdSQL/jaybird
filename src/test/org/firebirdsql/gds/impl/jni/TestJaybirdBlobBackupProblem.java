@@ -38,17 +38,14 @@ import org.firebirdsql.gds.ng.IServiceProperties;
 import org.firebirdsql.logging.Logger;
 import org.firebirdsql.logging.LoggerFactory;
 import org.firebirdsql.management.FBManager;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.ClassRule;
-import org.junit.Test;
+import org.junit.*;
+import org.junit.rules.TemporaryFolder;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.sql.*;
 
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 /**
@@ -99,6 +96,9 @@ public class TestJaybirdBlobBackupProblem {
     @ClassRule
     public static final GdsTypeRule testTypes = GdsTypeRule.supports(EmbeddedGDSFactoryPlugin.EMBEDDED_TYPE_NAME);
 
+    @Rule
+    public final TemporaryFolder temporaryFolder = new TemporaryFolder();
+
     protected final Logger log = LoggerFactory.getLogger(getClass());
 
     private String mAbsoluteDatabasePath = null;
@@ -117,11 +117,11 @@ public class TestJaybirdBlobBackupProblem {
             fbManager.setPort(5066);
             fbManager.start();
 
-            String mRelativeBackupPath = "db/" + "testES01344.fbk";
-            mAbsoluteBackupPath = new File("").getCanonicalPath() + "/" + mRelativeBackupPath;
+            File dbFolder = temporaryFolder.newFolder("db");
 
-            String mRelativeDatabasePath = "db/" + "testES01344.fdb";
-            mAbsoluteDatabasePath = new File("").getCanonicalPath() + "/" + mRelativeDatabasePath;
+            mAbsoluteBackupPath = new File(dbFolder, "testES01344.fbk").getAbsolutePath();
+
+            mAbsoluteDatabasePath = new File(dbFolder, "testES01344.fdb").getAbsolutePath();
 
             fbManager.createDatabase(mAbsoluteDatabasePath, "SYSDBA", "masterkey");
         } catch (Exception e) {
@@ -141,17 +141,17 @@ public class TestJaybirdBlobBackupProblem {
 
     @Test
     public void testBackupOfEmptyDatabase() throws Exception {
-        FbService service = attachToServiceManager();
-        backupDatabase(service, "WithoutBlobData");
-        detachFromServiceManager(service);
+        try (FbService service = attachToServiceManager()) {
+            backupDatabase(service, "WithoutBlobData");
+        }
     }
 
     @Test
     public void testBackupOfBlobDataDatabase() throws Exception {
         writeSomeBlobData();
-        FbService service = attachToServiceManager();
-        backupDatabase(service, "WithBlobData");
-        detachFromServiceManager(service);
+        try (FbService service = attachToServiceManager()) {
+            backupDatabase(service, "WithBlobData");
+        }
     }
 
     private void writeSomeBlobData() throws SQLException {
@@ -186,9 +186,11 @@ public class TestJaybirdBlobBackupProblem {
 
     private void backupDatabase(FbService service, String logFilePostfix) throws Exception {
         new File(mAbsoluteBackupPath).delete();
+        File logFolder = temporaryFolder.newFolder("log");
+        String logfile = logFolder.getCanonicalPath() + "/backuptest_" + logFilePostfix + ".log";
 
         startBackup(service);
-        queryService(service, "log/backuptest_" + logFilePostfix + ".log");
+        queryService(service, logfile);
 
         assertTrue("Backup file doesn't exist", new File(mAbsoluteBackupPath).exists());
     }
@@ -247,15 +249,6 @@ public class TestJaybirdBlobBackupProblem {
         assertTrue("Handle should be attached when isc_service_attach returns normally.", service.isAttached());
 
         return service;
-    }
-
-    private void detachFromServiceManager(FbService service) throws SQLException {
-        if (service.isAttached())
-            throw new Error("Handle should be valid here");
-
-        service.close();
-
-        assertFalse("Handle should be invalid when isc_service_detach returns normally.", service.isAttached());
     }
 
     private IServiceProperties createServiceProperties() {

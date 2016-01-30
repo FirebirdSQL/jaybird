@@ -20,6 +20,7 @@ package org.firebirdsql.gds.impl.oo;
 
 import org.firebirdsql.gds.GDSException;
 import org.firebirdsql.gds.impl.BaseGDSFactoryPlugin;
+import org.firebirdsql.gds.ng.wire.FbWireDatabaseFactory;
 import org.firebirdsql.jdbc.oo.OOConnection;
 
 public class OOGDSFactoryPlugin extends BaseGDSFactoryPlugin {
@@ -66,5 +67,10 @@ public class OOGDSFactoryPlugin extends BaseGDSFactoryPlugin {
         sb.append(':').append(path);
 
         return sb.toString();
+    }
+
+    @Override
+    public FbWireDatabaseFactory getDatabaseFactory() {
+        return FbWireDatabaseFactory.getInstance();
     }
 }

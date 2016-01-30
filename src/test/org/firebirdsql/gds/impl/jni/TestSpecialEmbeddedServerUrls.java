@@ -51,6 +51,8 @@ public class TestSpecialEmbeddedServerUrls {
         fbManager.setPort(5066);
         fbManager.start();
 
+        new File("db").mkdir();
+
         mRelativeDatabasePath = "db/testES01874.fdb";
         mAbsoluteDatabasePath = new File(".", mRelativeDatabasePath).getAbsolutePath();
 
@@ -62,6 +64,8 @@ public class TestSpecialEmbeddedServerUrls {
         fbManager.dropDatabase(mAbsoluteDatabasePath, "SYSDBA", "masterkey");
         fbManager.stop();
         fbManager = null;
+
+        new File("db").delete();
     }
 
     @Test

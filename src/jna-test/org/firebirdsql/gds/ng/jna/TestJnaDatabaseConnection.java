@@ -47,8 +47,8 @@ public class TestJnaDatabaseConnection {
     @Rule
     public final ExpectedException expectedException = ExpectedException.none();
 
+    private final FbClientDatabaseFactory factory = new FbClientDatabaseFactory();
     private final FbConnectionProperties connectionInfo;
-
     {
         connectionInfo = new FbConnectionProperties();
         connectionInfo.setServerName(FBTestProperties.DB_SERVER_URL);
@@ -68,7 +68,6 @@ public class TestJnaDatabaseConnection {
 
     @Test
     public void getClientLibrary_returnsSuppliedLibrary() throws Exception {
-        FbClientDatabaseFactory factory = new FbClientDatabaseFactory();
         final FbClientLibrary clientLibrary = factory.getClientLibrary();
         JnaDatabaseConnection connection = new JnaDatabaseConnection(clientLibrary, connectionInfo);
 
@@ -77,7 +76,6 @@ public class TestJnaDatabaseConnection {
 
     @Test
     public void identify_unconnected() throws Exception {
-        FbClientDatabaseFactory factory = new FbClientDatabaseFactory();
         JnaDatabaseConnection connection = new JnaDatabaseConnection(factory.getClientLibrary(), connectionInfo);
 
         FbDatabase db = connection.identify();
