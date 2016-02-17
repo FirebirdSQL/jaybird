@@ -1498,8 +1498,18 @@ public abstract class AbstractResultSet implements ResultSet, FirebirdResultSet,
      * @see Statement#setFetchDirection
      */
     public void setFetchDirection(int direction) throws SQLException {
-        if (direction != ResultSet.FETCH_FORWARD)
-            throw new FBDriverNotCapableException("Can't set fetch direction");
+        switch (direction) {
+        case ResultSet.FETCH_FORWARD:
+            // Value is always FETCH_FORWARD
+            return;
+        case ResultSet.FETCH_REVERSE:
+        case ResultSet.FETCH_UNKNOWN:
+            // TODO: Documentation suggests that the driver is free to ignore the hint, maybe register as warning instead?
+            throw new FBDriverNotCapableException("Fetch direction other than FETCH_FORWARD not supported");
+        default:
+            throw new SQLException(String.format("Invalid fetchDirection, value %d", direction),
+                    FBSQLException.SQL_STATE_INVALID_ARG_VALUE);
+        }
     }
 
     /**

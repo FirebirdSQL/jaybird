@@ -1035,7 +1035,7 @@ public class FBStatement implements FirebirdStatement, Synchronizable {
         case ResultSet.FETCH_REVERSE:
         case ResultSet.FETCH_UNKNOWN:
             // TODO: Documentation suggests that the driver is free to ignore the hint, maybe register as warning instead?
-            throw new FBDriverNotCapableException();
+            throw new FBDriverNotCapableException("Fetch direction other than FETCH_FORWARD not supported");
         default:
             throw new SQLException(String.format("Invalid fetchDirection, value %d", direction),
                     FBSQLException.SQL_STATE_INVALID_ARG_VALUE);

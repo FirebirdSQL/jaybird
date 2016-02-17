@@ -255,10 +255,10 @@ public abstract class AbstractPreparedStatement extends FBStatement implements F
         isParamSet[parameterIndex - 1] = true;
     }
     
-    public void setBinaryStream(int parameterIndex, InputStream x, long length) throws SQLException {
+    public void setBinaryStream(int parameterIndex, InputStream inputStream, long length) throws SQLException {
         if (length > Integer.MAX_VALUE)
             throw new FBDriverNotCapableException("Only length <= Integer.MAX_VALUE supported");
-        setBinaryStream(parameterIndex, x, (int)length);
+        setBinaryStream(parameterIndex, inputStream, (int)length);
     }
 
     public void setBinaryStream(int parameterIndex, InputStream x)
@@ -1036,7 +1036,11 @@ public abstract class AbstractPreparedStatement extends FBStatement implements F
     }
     
     public void setBlob(int parameterIndex, InputStream inputStream, long length) throws SQLException {
-        throw new FBDriverNotCapableException();
+        if (length > Integer.MAX_VALUE)
+            throw new FBDriverNotCapableException("Only length <= Integer.MAX_VALUE supported");
+        FBBlob blob = new FBBlob(gdsHelper, blobListener);
+        blob.copyStream(inputStream, (int) length);
+        setBlob(parameterIndex, blob);
     }
 
     public void setBlob(int parameterIndex, InputStream inputStream) throws SQLException {

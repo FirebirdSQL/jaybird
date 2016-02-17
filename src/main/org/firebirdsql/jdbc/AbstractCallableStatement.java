@@ -1167,16 +1167,12 @@ public abstract class AbstractCallableStatement extends FBPreparedStatement impl
         throw new FBDriverNotCapableException();
     }
 
-    public void setURL(int parameterIndex, URL x) throws SQLException {
-        throw new FBDriverNotCapableException();
-    }
-
     public void registerOutParameter(int parameterIndex, int sqlType, String typeName) throws SQLException {
         throw new FBDriverNotCapableException();
     }
 
     public ResultSet getGeneratedKeys() throws SQLException {
-        throw new FBDriverNotCapableException();
+        throw new FBDriverNotCapableException("getGeneratedKeys is not supported on CallableStatement");
     }
 
     /**
