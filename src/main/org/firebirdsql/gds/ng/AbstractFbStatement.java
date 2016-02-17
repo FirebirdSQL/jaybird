@@ -507,8 +507,8 @@ public abstract class AbstractFbStatement implements FbStatement {
     }
 
     /**
-     * Checks if this statement is not in {@link StatementState#CLOSED}, {@link StatementState#NEW} or {@link StatementState#ERROR},
-     * and throws an <code>SQLException</code> if it is.
+     * Checks if this statement is not in {@link StatementState#CLOSED}, {@link StatementState#CLOSING},
+     * {@link StatementState#NEW} or {@link StatementState#ERROR}, and throws an <code>SQLException</code> if it is.
      *
      * @throws SQLException
      *         When this statement is closed or in error state.
@@ -519,6 +519,7 @@ public abstract class AbstractFbStatement implements FbStatement {
             // TODO Externalize sqlstate
             // TODO See if there is a firebird error code matching this (isc_cursor_not_open is not exactly the same)
             throw new SQLNonTransientException("Statement not yet allocated", "24000");
+        case CLOSING:
         case CLOSED:
             // TODO Externalize sqlstate
             // TODO See if there is a firebird error code matching this (isc_cursor_not_open is not exactly the same)

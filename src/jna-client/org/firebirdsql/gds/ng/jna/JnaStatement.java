@@ -155,6 +155,7 @@ public class JnaStatement extends AbstractFbStatement {
 
     @Override
     public void execute(RowValue parameters) throws SQLException {
+        final StatementState initialState = getState();
         try {
             synchronized (getSynchronizationObject()) {
                 checkStatementValid();
@@ -202,6 +203,9 @@ public class JnaStatement extends AbstractFbStatement {
                 }
             }
         } catch (SQLException e) {
+            if (getState() != StatementState.ERROR) {
+                switchState(initialState);
+            }
             exceptionListenerDispatcher.errorOccurred(e);
             throw e;
         }

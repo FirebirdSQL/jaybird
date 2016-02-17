@@ -47,6 +47,7 @@ public class V12Statement extends V11Statement {
 
     @Override
     public void execute(final RowValue parameters) throws SQLException {
+        final StatementState initialState = getState();
         try {
             synchronized (getSynchronizationObject()) {
                 checkStatementValid();
@@ -56,8 +57,8 @@ public class V12Statement extends V11Statement {
 
                 final FbWireDatabase db = getDatabase();
                 synchronized (db.getSynchronizationObject()) {
-                    // TODO Which state to switch to when an exception occurs (always ERROR might be wrong, see to do at start of class)
                     switchState(StatementState.EXECUTING);
+
                     final StatementType statementType = getType();
                     int expectedResponseCount = 0;
                     try {
@@ -114,6 +115,9 @@ public class V12Statement extends V11Statement {
                 }
             }
         } catch (SQLException e) {
+            if (getState() != StatementState.ERROR) {
+                switchState(initialState);
+            }
             exceptionListenerDispatcher.errorOccurred(e);
             throw e;
         }

@@ -98,7 +98,7 @@ public abstract class AbstractStatementTest {
 
     private static final String CREATE_KEY_VALUE_TABLE =
             "CREATE TABLE keyvalue ( " +
-            " thekey INTEGER, " +
+            " thekey INTEGER PRIMARY KEY, " +
             " thevalue VARCHAR(5), " +
             " theUTFVarcharValue VARCHAR(5) CHARACTER SET UTF8, " +
             " theUTFCharValue CHAR(5) CHARACTER SET UTF8 " +
@@ -114,12 +114,11 @@ public abstract class AbstractStatementTest {
             "SELECT theUTFVarcharValue, theUTFCharValue FROM keyvalue WHERE thekey = ?";
     //@formatter:on
 
-    protected final FbConnectionProperties connectionInfo;
     protected final SimpleStatementListener listener = new SimpleStatementListener();
     protected FbDatabase db;
     private FbTransaction transaction;
     protected FbStatement statement;
-
+    protected final FbConnectionProperties connectionInfo;
     {
         connectionInfo = new FbConnectionProperties();
         connectionInfo.setServerName(FBTestProperties.DB_SERVER_URL);
@@ -632,6 +631,74 @@ public abstract class AbstractStatementTest {
         char[] spaceChars16 = new char[16];
         Arrays.fill(spaceChars16, ' ');
         assertEquals("Unexpected trailing characters for char", new String(spaceChars16), decodedChar.substring(2));
+    }
+
+    @Test
+    public void testStatementExecuteAfterExecuteError() throws Exception {
+        allocateStatement();
+        statement.prepare("INSERT INTO keyvalue (thekey, thevalue) VALUES (?, ?)");
+
+        FieldValue parameter1 = statement.getParameterDescriptor().getFieldDescriptor(0).createDefaultFieldValue();
+        FieldValue parameter2 = statement.getParameterDescriptor().getFieldDescriptor(1).createDefaultFieldValue();
+        parameter1.setFieldData(db.getDatatypeCoder().encodeInt(4096));
+        parameter2.setFieldData(db.getEncoding().encodeToCharset("test"));
+
+        // Insert value
+        statement.execute(RowValue.of(parameter1, parameter2));
+        try {
+            // Insert value again
+            statement.execute(RowValue.of(parameter1, parameter2));
+            fail("Expected exception");
+        } catch (SQLException e) {
+            // ignore
+        }
+
+        statement.addStatementListener(listener);
+        parameter1.setFieldData(db.getDatatypeCoder().encodeInt(4097));
+
+        // Insert another value
+        statement.execute(RowValue.of(parameter1, parameter2));
+
+        assertNotNull("Expected SQL counts on listener", listener.getSqlCounts());
+        assertEquals("Expected one row to have been inserted", 1, listener.getSqlCounts().getLongInsertCount());
+    }
+
+    @Test
+    public void testStatementPrepareAfterExecuteError() throws Exception {
+        allocateStatement();
+        statement.prepare("INSERT INTO keyvalue (thekey, thevalue) VALUES (?, ?)");
+
+        FieldValue parameter1 = statement.getParameterDescriptor().getFieldDescriptor(0).createDefaultFieldValue();
+        FieldValue parameter2 = statement.getParameterDescriptor().getFieldDescriptor(1).createDefaultFieldValue();
+        parameter1.setFieldData(db.getDatatypeCoder().encodeInt(4096));
+        parameter2.setFieldData(db.getEncoding().encodeToCharset("test"));
+
+        // Insert value
+        statement.execute(RowValue.of(parameter1, parameter2));
+        try {
+            // Insert value again
+            statement.execute(RowValue.of(parameter1, parameter2));
+            fail("Expected exception");
+        } catch (SQLException e) {
+            // ignore
+        }
+
+        statement.prepare("INSERT INTO keyvalue (thekey, theUTFVarcharValue) VALUES (?, ?)");
+        parameter1.setFieldData(db.getDatatypeCoder().encodeInt(4097));
+        statement.execute(RowValue.of(parameter1, parameter2));
+    }
+
+    @Test
+    public void testStatementPrepareAfterPrepareError() throws Exception {
+        allocateStatement();
+        try {
+            // Prepare statement with typo
+            statement.prepare("INSRT INTO keyvalue (thekey, thevalue) VALUES (?, ?)");
+            fail("Expected exception");
+        } catch (SQLException e) {
+            // ignore
+        }
+        statement.prepare("INSERT INTO keyvalue (thekey, thevalue) VALUES (?, ?)");
     }
 
     private FbTransaction getTransaction() throws SQLException {

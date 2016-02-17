@@ -300,6 +300,7 @@ public class V10Statement extends AbstractFbWireStatement implements FbWireState
 
     @Override
     public void execute(final RowValue parameters) throws SQLException {
+        final StatementState initialState = getState();
         try {
             synchronized (getSynchronizationObject()) {
                 checkStatementValid();
@@ -309,8 +310,8 @@ public class V10Statement extends AbstractFbWireStatement implements FbWireState
 
                 final FbWireDatabase db = getDatabase();
                 synchronized (db.getSynchronizationObject()) {
-                    // TODO Which state to switch to when an exception occurs (always ERROR might be wrong, see to do at start of class)
                     switchState(StatementState.EXECUTING);
+
                     final StatementType statementType = getType();
                     final SqlCountProcessor sqlCountProcessor;
                     int expectedResponseCount = 0;
@@ -386,6 +387,9 @@ public class V10Statement extends AbstractFbWireStatement implements FbWireState
                 }
             }
         } catch (SQLException e) {
+            if (getState() != StatementState.ERROR) {
+                switchState(initialState);
+            }
             exceptionListenerDispatcher.errorOccurred(e);
             throw e;
         }
