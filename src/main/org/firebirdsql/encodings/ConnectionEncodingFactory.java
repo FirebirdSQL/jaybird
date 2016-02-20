@@ -27,8 +27,8 @@ import java.sql.SQLException;
  * Implementation of {@link IEncodingFactory} that wraps an {@link EncodingFactory} to
  * override the default encoding.
  * <p>
- * Main use of this class is as a connection specific encoding factory, where the default (fallback) encoding is the connection
- * character set.
+ * Main use of this class is as a connection specific encoding factory, where the default (fallback) encoding is the
+ * connection character set.
  * </p>
  *
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
@@ -43,6 +43,7 @@ class ConnectionEncodingFactory implements IEncodingFactory {
     private final EncodingDefinition octetsEncodingDefinition;
 
     ConnectionEncodingFactory(EncodingFactory factory, EncodingDefinition defaultEncodingDefinition) {
+        assert factory != null && defaultEncodingDefinition != null;
         this.factory = factory;
         this.defaultEncodingDefinition = defaultEncodingDefinition;
         defaultEncoding = defaultEncodingDefinition.getEncoding();
@@ -169,7 +170,8 @@ class ConnectionEncodingFactory implements IEncodingFactory {
 
     @Override
     public IEncodingFactory withDefaultEncodingDefinition(EncodingDefinition encodingDefinition) {
-        return factory.withDefaultEncodingDefinition(encodingDefinition != null ? encodingDefinition : getDefaultEncodingDefinition());
+        return factory.withDefaultEncodingDefinition(
+                encodingDefinition != null ? encodingDefinition : getDefaultEncodingDefinition());
     }
 
     @Override
