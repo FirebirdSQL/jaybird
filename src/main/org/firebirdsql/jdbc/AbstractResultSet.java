@@ -25,7 +25,6 @@ import java.sql.*;
 import java.sql.Date;
 import java.util.*;
 
-import org.firebirdsql.gds.*;
 import org.firebirdsql.gds.impl.GDSHelper;
 import org.firebirdsql.gds.ng.FbStatement;
 import org.firebirdsql.gds.ng.fields.RowDescriptor;
@@ -228,10 +227,6 @@ public abstract class AbstractResultSet implements ResultSet, FirebirdResultSet,
         rsType = ResultSet.TYPE_FORWARD_ONLY;
         rsConcurrency = ResultSet.CONCUR_READ_ONLY;
         rsHoldability = ResultSet.CLOSE_CURSORS_AT_COMMIT;
-    }
-
-    public AbstractResultSet(XSQLVAR[] xsqlvars, List<byte[][]> rows) throws SQLException {
-        throw new UnsupportedOperationException("This constructor needs to be removed");
     }
 
     private void prepareVars(boolean cached) throws SQLException {

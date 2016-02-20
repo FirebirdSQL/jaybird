@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
@@ -58,13 +56,13 @@ public final class EncodingFactory implements IEncodingFactory {
         private static final EncodingFactory DEFAULT_INSTANCE = createInstance();
     }
 
-    private final Map<String, EncodingDefinition> firebirdEncodingToDefinition = new HashMap<String, EncodingDefinition>();
-    private final Map<Integer, EncodingDefinition> firebirdCharacterSetIdToDefinition = new HashMap<Integer, EncodingDefinition>();
-    private final Map<Charset, EncodingDefinition> javaCharsetToDefinition = new HashMap<Charset, EncodingDefinition>();
-    private final Map<String, EncodingDefinition> javaAliasesToDefinition = new HashMap<String, EncodingDefinition>();
+    private final Map<String, EncodingDefinition> firebirdEncodingToDefinition = new HashMap<>();
+    private final Map<Integer, EncodingDefinition> firebirdCharacterSetIdToDefinition = new HashMap<>();
+    private final Map<Charset, EncodingDefinition> javaCharsetToDefinition = new HashMap<>();
+    private final Map<String, EncodingDefinition> javaAliasesToDefinition = new HashMap<>();
     private final Encoding defaultEncoding;
     private final EncodingDefinition defaultEncodingDefinition;
-    private final ConcurrentMap<String, CharacterTranslator> translations = new ConcurrentHashMap<String, CharacterTranslator>();
+    private final ConcurrentMap<String, CharacterTranslator> translations = new ConcurrentHashMap<>();
 
     /**
      * Initializes EncodingFactory by processing the encodingSets using the provided iterator.
@@ -91,6 +89,13 @@ public final class EncodingFactory implements IEncodingFactory {
     @Override
     public Encoding getDefaultEncoding() {
         return defaultEncoding;
+    }
+
+    /**
+     * @return The default encoding of the platform.
+     */
+    public static Encoding getPlatformEncoding() {
+        return getDefaultInstance().getDefaultEncoding();
     }
 
     @Override
@@ -160,19 +165,7 @@ public final class EncodingFactory implements IEncodingFactory {
         return javaCharsetToDefinition.get(charset);
     }
 
-    /**
-     * Gets an {@link org.firebirdsql.encodings.Encoding} for the specified Java character set. If there is no known
-     * encoding for this {@link java.nio.charset.Charset}, or the loaded EncodingDefinition is information-only, then
-     * the fallbackEncoding will be used.
-     *
-     * @param charset
-     *         The Java character set
-     * @param fallbackEncoding
-     *         The Encoding to use as fallback if no encoding is found (usually the connection encoding). If
-     *         <code>null</code>, the defaultEncoding for the JVM is used.
-     * @return Encoding instance (never null)
-     * @see #getOrCreateEncodingForCharset(java.nio.charset.Charset)
-     */
+    @Override
     public Encoding getEncodingForCharset(final Charset charset, final Encoding fallbackEncoding) {
         return returnEncodingOrFallback(getEncodingDefinitionByCharset(charset), fallbackEncoding);
     }
@@ -182,22 +175,7 @@ public final class EncodingFactory implements IEncodingFactory {
         return getEncodingForCharset(charset, null);
     }
 
-    /**
-     * Creates an {@link Encoding} for the specified Java character set. If there is no known encoding for this
-     * charset, then an Encoding instance based on the charset is returned.
-     * <p>
-     * In general the method {@link #getEncodingForCharset(java.nio.charset.Charset, Encoding)} should be used.
-     * </p>
-     * <p>
-     * Don't confuse this method with {@link #getEncodingForCharset(Charset)}, which falls back to the default
-     * encoding.
-     * </p>
-     *
-     * @param charset
-     *         The Java character set
-     * @return Encoding instance (never null)
-     * @see #getEncodingForCharset(java.nio.charset.Charset, Encoding)
-     */
+    @Override
     public Encoding getOrCreateEncodingForCharset(final Charset charset) {
         return getEncodingForCharset(charset, new EncodingGeneric(charset));
     }
@@ -209,9 +187,8 @@ public final class EncodingFactory implements IEncodingFactory {
 
     /**
      * Gets an {@link org.firebirdsql.encodings.Encoding} for the specified Java character set name or alias. If there
-     * is no known encoding for
-     * this name,
-     * or the loaded EncodingDefinition is information-only, then the fallbackEncoding will be used.
+     * is no known encoding for this name, or the loaded EncodingDefinition is information-only, then the
+     * fallbackEncoding will be used.
      *
      * @param charsetAlias
      *         The Java character set name or alias
@@ -300,7 +277,19 @@ public final class EncodingFactory implements IEncodingFactory {
     }
 
     /**
-     * Returns an {@link org.firebirdsql.encodings.ConnectionEncodingFactory} that uses {@link #getDefaultEncodingDefinition()} as the default.
+     * {@inheritDoc}
+     * <p>
+     * This implementation returns an instance of {@link ConnectionEncodingFactory}.
+     * </p>
+     */
+    @Override
+    public IEncodingFactory withDefaultEncodingDefinition(Charset charset) {
+        return new ConnectionEncodingFactory(this, getEncodingDefinitionByCharset(charset));
+    }
+
+    /**
+     * Returns an {@link org.firebirdsql.encodings.ConnectionEncodingFactory} that uses
+     * {@link #getDefaultEncodingDefinition()} as the default.
      *
      * @return IEncodingFactory instance with the specified default.
      */
@@ -418,14 +407,44 @@ public final class EncodingFactory implements IEncodingFactory {
      * @return The default instance of EncodingFactory
      * @see #createInstance()
      */
-    public static EncodingFactory getDefaultInstance() {
+    static EncodingFactory getDefaultInstance() {
         return DefaultEncodingFactory.DEFAULT_INSTANCE;
+    }
+
+    /**
+     * Returns an {@link org.firebirdsql.encodings.IEncodingFactory} that uses {@code encodingDefinition} as the
+     * default.
+     * <p>
+     * Equivalent to calling {@code getDefaultInstance().withDefaultEncodingDefinition(encodingDefinition)}.
+     * </p>
+     *
+     * @param encodingDefinition
+     *         The default encoding to use (or {@code null} for the value of {@link #getDefaultEncoding()}
+     * @return IEncodingFactory instance with the specified default.
+     */
+    public static IEncodingFactory createInstance(EncodingDefinition encodingDefinition) {
+        return getDefaultInstance().withDefaultEncodingDefinition(encodingDefinition);
+    }
+
+    /**
+     * Returns an {@link org.firebirdsql.encodings.IEncodingFactory} that uses an {@link EncodingDefinition} identified
+     * by {@code charSet} as the default.
+     * <p>
+     * Equivalent to calling {@code getDefaultInstance().withDefaultEncodingDefinition(charset)}.
+     * </p>
+     *
+     * @param charset
+     *         The default charset to use.
+     * @return IEncodingFactory instance with the specified default.
+     */
+    public static IEncodingFactory createInstance(Charset charset) {
+        return getDefaultInstance().withDefaultEncodingDefinition(charset);
     }
 
     /**
      * @return A new instance of EncodingFactory
      */
-    public static EncodingFactory createInstance() {
+    private static EncodingFactory createInstance() {
         // Process the encoding sets in descending order
         return new EncodingFactory(loadEncodingSets().descendingIterator());
     }

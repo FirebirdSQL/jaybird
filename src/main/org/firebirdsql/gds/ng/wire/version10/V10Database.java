@@ -19,7 +19,6 @@
 package org.firebirdsql.gds.ng.wire.version10;
 
 import org.firebirdsql.encodings.Encoding;
-import org.firebirdsql.encodings.EncodingFactory;
 import org.firebirdsql.gds.DatabaseParameterBuffer;
 import org.firebirdsql.gds.EventHandle;
 import org.firebirdsql.gds.ISCConstants;
@@ -199,7 +198,7 @@ public class V10Database extends AbstractFbWireDatabase implements FbWireDatabas
     protected Encoding getFilenameEncoding(DatabaseParameterBuffer dpb) {
         final String filenameCharset = dpb.getArgumentAsString(DatabaseParameterBufferExtension.FILENAME_CHARSET);
         if (filenameCharset != null) {
-            return EncodingFactory.getDefaultInstance().getOrCreateEncodingForCharset(Charset.forName(filenameCharset));
+            return getEncodingFactory().getOrCreateEncodingForCharset(Charset.forName(filenameCharset));
         }
         return getEncoding();
     }

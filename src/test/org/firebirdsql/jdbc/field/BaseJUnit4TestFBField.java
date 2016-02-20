@@ -18,6 +18,8 @@
  */
 package org.firebirdsql.jdbc.field;
 
+import org.firebirdsql.encodings.EncodingFactory;
+import org.firebirdsql.gds.ng.DatatypeCoder;
 import org.firebirdsql.gds.ng.DefaultDatatypeCoder;
 import org.firebirdsql.gds.ng.fields.FieldDescriptor;
 import org.firebirdsql.gds.ng.fields.RowDescriptorBuilder;
@@ -36,6 +38,7 @@ import org.junit.rules.ExpectedException;
 import java.io.InputStream;
 import java.io.Reader;
 import java.math.BigDecimal;
+import java.nio.charset.StandardCharsets;
 import java.sql.SQLException;
 import java.util.Calendar;
 import java.util.HashMap;
@@ -67,6 +70,8 @@ public abstract class BaseJUnit4TestFBField<T extends FBField, O> {
     protected static final String ALIAS_VALUE = "aliasvalue";
     protected static final String NAME_VALUE = "namevalue";
     protected static final String RELATION_NAME_VALUE = "relationnamevalue";
+    protected static final DatatypeCoder datatypeCoder =
+            new DefaultDatatypeCoder(EncodingFactory.createInstance(StandardCharsets.UTF_8));
 
     @Rule
     public final JUnitRuleMockery context = new JUnitRuleMockery();
@@ -78,8 +83,7 @@ public abstract class BaseJUnit4TestFBField<T extends FBField, O> {
     public final ExpectedException expectedException = ExpectedException.none();
 
     protected FieldDataProvider fieldData;
-    protected final RowDescriptorBuilder rowDescriptorBuilder =
-            new RowDescriptorBuilder(1, DefaultDatatypeCoder.getDefaultInstance());
+    protected final RowDescriptorBuilder rowDescriptorBuilder = new RowDescriptorBuilder(1, datatypeCoder);
     protected FieldDescriptor fieldDescriptor;
     protected T field;
 

@@ -18,10 +18,11 @@
  */
 package org.firebirdsql.jdbc;
 
-import org.firebirdsql.gds.XSQLVAR;
+import org.firebirdsql.encodings.EncodingFactory;
 import org.firebirdsql.gds.impl.GDSFactory;
 import org.firebirdsql.gds.impl.GDSHelper;
 import org.firebirdsql.gds.impl.GDSType;
+import org.firebirdsql.gds.ng.DatatypeCoder;
 import org.firebirdsql.gds.ng.DefaultDatatypeCoder;
 import org.firebirdsql.gds.ng.fields.RowDescriptor;
 import org.firebirdsql.gds.ng.fields.RowDescriptorBuilder;
@@ -34,6 +35,7 @@ import org.firebirdsql.logging.Logger;
 import org.firebirdsql.logging.LoggerFactory;
 import org.firebirdsql.util.FirebirdSupportInfo;
 
+import java.nio.charset.StandardCharsets;
 import java.security.AccessController;
 import java.security.PrivilegedAction;
 import java.sql.*;
@@ -79,6 +81,9 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
     private static final int SUBTYPE_NUMERIC = 1;
     private static final int SUBTYPE_DECIMAL = 2;
 
+    protected static final DatatypeCoder datatypeCoder =
+            new DefaultDatatypeCoder(EncodingFactory.createInstance(StandardCharsets.UTF_8));
+
     private static final byte[] TRUE_BYTES = getBytes("T");
     private static final byte[] FALSE_BYTES = getBytes("F");
     private static final byte[] YES_BYTES = getBytes("YES");
@@ -91,13 +96,11 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
     private static final byte[] FIXEDSCALE = TRUE_BYTES;
     private static final byte[] VARIABLESCALE = FALSE_BYTES;
     private static final byte[] NOTAUTOINC = FALSE_BYTES;
-    // TODO in implementation short and int are encoded identical, remove distinction?
     private static final byte[] INT_ZERO = createInt(0);
     private static final byte[] SHORT_ZERO = createShort(0);
     private static final byte[] SHORT_ONE = createShort(1);
     private static final byte[] RADIX_BINARY = createInt(2);
     private static final byte[] RADIX_TEN = createInt(10);
-    // TODO in implementation short and int are encoded identical, remove distinction?
     private static final byte[] RADIX_TEN_SHORT = createShort(10);
     private static final byte[] RADIX_BINARY_SHORT = createShort(2);
     private static final byte[] TYPE_PRED_NONE = createShort(DatabaseMetaData.typePredNone);
@@ -1800,7 +1803,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
             procedureNamePattern = "%";
         }
 
-        final RowDescriptor rowDescriptor = new RowDescriptorBuilder(9, DefaultDatatypeCoder.getDefaultInstance())
+        final RowDescriptor rowDescriptor = new RowDescriptorBuilder(9, datatypeCoder)
                 .at(0).simple(SQL_VARYING, 31, "PROCEDURE_CAT", "PROCEDURES").addField()
                 .at(1).simple(SQL_VARYING, 31, "PROCEDURE_SCHEM", "ROCEDURES").addField()
                 .at(2).simple(SQL_VARYING, 31, "PROCEDURE_NAME", "PROCEDURES").addField()
@@ -1982,7 +1985,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
             String columnNamePattern) throws SQLException {
         checkCatalogAndSchema(catalog, schemaPattern);
 
-        final RowDescriptor rowDescriptor = new RowDescriptorBuilder(20, DefaultDatatypeCoder.getDefaultInstance())
+        final RowDescriptor rowDescriptor = new RowDescriptorBuilder(20, datatypeCoder)
                 .at(0).simple(SQL_VARYING, 31, "PROCEDURE_CAT", "COLUMNINFO").addField()
                 .at(1).simple(SQL_VARYING, 31, "PROCEDURE_SCHEM", "COLUMNINFO").addField()
                 .at(2).simple(SQL_VARYING, 31, "PROCEDURE_NAME", "COLUMNINFO").addField()
@@ -2327,7 +2330,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
      * @exception SQLException if a database access error occurs
      */
     public  ResultSet getCatalogs() throws SQLException {
-        final RowDescriptor rowDescriptor = new RowDescriptorBuilder(1, DefaultDatatypeCoder.getDefaultInstance())
+        final RowDescriptor rowDescriptor = new RowDescriptorBuilder(1, datatypeCoder)
                 .at(0).simple(SQL_VARYING, 31, "TABLE_CAT", "TABLECATALOGS").addField()
                 .toRowDescriptor();
 
@@ -2350,7 +2353,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
      * @exception SQLException if a database access error occurs
      */
     public  ResultSet getTableTypes() throws SQLException {
-        final RowDescriptor rowDescriptor = new RowDescriptorBuilder(1, DefaultDatatypeCoder.getDefaultInstance())
+        final RowDescriptor rowDescriptor = new RowDescriptorBuilder(1, datatypeCoder)
                 .at(0).simple(SQL_VARYING, 31, "TABLE_TYPE", "TABLETYPES").addField()
                 .toRowDescriptor();
 
@@ -2480,7 +2483,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
             throws SQLException {
         checkCatalogAndSchema(catalog, schemaPattern);
 
-        final RowDescriptor rowDescriptor = new RowDescriptorBuilder(24, DefaultDatatypeCoder.getDefaultInstance())
+        final RowDescriptor rowDescriptor = new RowDescriptorBuilder(24, datatypeCoder)
                 .at(0).simple(SQL_VARYING, 31, "TABLE_CAT", "COLUMNINFO").addField()
                 .at(1).simple(SQL_VARYING, 31, "TABLE_SCHEM", "COLUMNINFO").addField()
                 .at(2).simple(SQL_VARYING, 31, "TABLE_NAME", "COLUMNINFO").addField()
@@ -2867,7 +2870,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
         String table, String columnNamePattern) throws SQLException {
         checkCatalogAndSchema(catalog, schema);
 
-        final RowDescriptor rowDescriptor = new RowDescriptorBuilder(8, DefaultDatatypeCoder.getDefaultInstance())
+        final RowDescriptor rowDescriptor = new RowDescriptorBuilder(8, datatypeCoder)
                 .at(0).simple(SQL_VARYING, 31, "TABLE_CAT", "COLUMNPRIV").addField()
                 .at(1).simple(SQL_VARYING, 31, "TABLE_SCHEM", "COLUMNPRIV").addField()
                 .at(2).simple(SQL_VARYING, 31, "TABLE_NAME", "COLUMNPRIV").addField()
@@ -3021,7 +3024,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
     }
 
     protected final RowDescriptor buildTablePrivilegeRSMetaData() {
-        return new RowDescriptorBuilder(7, DefaultDatatypeCoder.getDefaultInstance())
+        return new RowDescriptorBuilder(7, datatypeCoder)
                 .at(0).simple(SQL_VARYING, 31, "TABLE_CAT", "TABLEPRIV").addField()
                 .at(1).simple(SQL_VARYING, 31, "TABLE_SCHEM", "TABLEPRIV").addField()
                 .at(2).simple(SQL_VARYING, 31, "TABLE_NAME", "TABLEPRIV").addField()
@@ -3108,7 +3111,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
      */
     public ResultSet getBestRowIdentifier(String catalog, String schema, String table, int scope, boolean nullable)
             throws SQLException {
-        final RowDescriptor rowDescriptor = new RowDescriptorBuilder(8, DefaultDatatypeCoder.getDefaultInstance())
+        final RowDescriptor rowDescriptor = new RowDescriptorBuilder(8, datatypeCoder)
                 .at(0).simple(SQL_SHORT, 0, "SCOPE", "ROWIDENTIFIER").addField()
                 .at(1).simple(SQL_VARYING, 31, "COLUMN_NAME", "ROWIDENTIFIER").addField()
                 .at(2).simple(SQL_SHORT, 0, "DATA_TYPE", "ROWIDENTIFIER").addField()
@@ -3220,7 +3223,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
      * @exception SQLException if a database access error occurs
      */
     public ResultSet getVersionColumns(String catalog, String schema, String table) throws SQLException {
-        final RowDescriptor rowDescriptor = new RowDescriptorBuilder(8, DefaultDatatypeCoder.getDefaultInstance())
+        final RowDescriptor rowDescriptor = new RowDescriptorBuilder(8, datatypeCoder)
                 .at(0).simple(SQL_SHORT, 0, "SCOPE", "VERSIONCOL").addField()
                 .at(1).simple(SQL_VARYING, 31, "COLUMN_NAME", "VERSIONCOL").addField()
                 .at(2).simple(SQL_SHORT, 0, "DATA_TYPE", "VERSIONCOL").addField()
@@ -3274,7 +3277,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
                 String table) throws SQLException {
         checkCatalogAndSchema(catalog, schema);
 
-        RowDescriptor rowDescriptor = new RowDescriptorBuilder(6, DefaultDatatypeCoder.getDefaultInstance())
+        RowDescriptor rowDescriptor = new RowDescriptorBuilder(6, datatypeCoder)
                 .at(0).simple(SQL_VARYING, 31, "TABLE_CAT", "COLUMNINFO").addField()
                 .at(1).simple(SQL_VARYING, 31, "TABLE_SCHEM", "COLUMNINFO").addField()
                 .at(2).simple(SQL_VARYING, 31, "TABLE_NAME", "COLUMNINFO").addField()
@@ -3441,7 +3444,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
     public ResultSet getImportedKeys(String catalog, String schema, String table) throws SQLException {
         checkCatalogAndSchema(catalog, schema);
 
-        final RowDescriptor rowDescriptor = new RowDescriptorBuilder(14, DefaultDatatypeCoder.getDefaultInstance())
+        final RowDescriptor rowDescriptor = new RowDescriptorBuilder(14, datatypeCoder)
                 .at(0).simple(SQL_VARYING, 31, "PKTABLE_CAT", "COLUMNINFO").addField()
                 .at(1).simple(SQL_VARYING, 31, "PKTABLE_SCHEM", "COLUMNINFO").addField()
                 .at(2).simple(SQL_VARYING, 31, "PKTABLE_NAME", "COLUMNINFO").addField()
@@ -3603,7 +3606,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
     public ResultSet getExportedKeys(String catalog, String schema, String table) throws SQLException {
         checkCatalogAndSchema(catalog, schema);
 
-        final RowDescriptor rowDescriptor = new RowDescriptorBuilder(14, DefaultDatatypeCoder.getDefaultInstance())
+        final RowDescriptor rowDescriptor = new RowDescriptorBuilder(14, datatypeCoder)
                 .at(0).simple(SQL_VARYING, 31, "PKTABLE_CAT", "COLUMNINFO").addField()
                 .at(1).simple(SQL_VARYING, 31, "PKTABLE_SCHEM", "COLUMNINFO").addField()
                 .at(2).simple(SQL_VARYING, 31, "PKTABLE_NAME", "COLUMNINFO").addField()
@@ -3778,7 +3781,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
         checkCatalogAndSchema(primaryCatalog, primarySchema);
         checkCatalogAndSchema(foreignCatalog, foreignSchema);
 
-        final RowDescriptor rowDescriptor = new RowDescriptorBuilder(14, DefaultDatatypeCoder.getDefaultInstance())
+        final RowDescriptor rowDescriptor = new RowDescriptorBuilder(14, datatypeCoder)
                 .at(0).simple(SQL_VARYING, 31, "PKTABLE_CAT", "COLUMNINFO").addField()
                 .at(1).simple(SQL_VARYING, 31, "PKTABLE_SCHEM", "COLUMNINFO").addField()
                 .at(2).simple(SQL_VARYING, 31, "PKTABLE_NAME", "COLUMNINFO").addField()
@@ -3851,7 +3854,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
      */
     private static byte[] createShort(int value) {
         assert (value >= Short.MIN_VALUE && value <= Short.MAX_VALUE) : String.format("Value \"%d\" outside range of short", value);
-        return XSQLVAR.shortToBytes((short) value);
+        return datatypeCoder.encodeShort(value);
     }
 
     /**
@@ -3861,7 +3864,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
      * @return encoded byte array representing the value
      */
     private static byte[] createInt(int value) {
-        return XSQLVAR.intToBytes(value);
+        return datatypeCoder.encodeInt(value);
     }
 
     /**
@@ -3911,7 +3914,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
      * @exception SQLException if a database access error occurs
      */
     public  ResultSet getTypeInfo() throws SQLException {
-        final RowDescriptor rowDescriptor = new RowDescriptorBuilder(18, DefaultDatatypeCoder.getDefaultInstance())
+        final RowDescriptor rowDescriptor = new RowDescriptorBuilder(18, datatypeCoder)
                 .at(0).simple(SQL_VARYING, 31, "TYPE_NAME", "TYPEINFO").addField()
                 .at(1).simple(SQL_SHORT, 0, "DATA_TYPE", "TYPEINFO").addField()
                 .at(2).simple(SQL_LONG, 0, "PRECISION", "TYPEINFO").addField()
@@ -3933,7 +3936,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
                 .toRowDescriptor();
 
         //dialect 3 only
-        final List<RowValue> rows = new ArrayList<RowValue>(17);
+        final List<RowValue> rows = new ArrayList<>(17);
 
         //BIGINT=-5
         rows.add(RowValue.of(rowDescriptor,
@@ -4127,7 +4130,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
         boolean unique, boolean approximate) throws SQLException {
         checkCatalogAndSchema(catalog, schema);
 
-        final RowDescriptor rowDescriptor = new RowDescriptorBuilder(13, DefaultDatatypeCoder.getDefaultInstance())
+        final RowDescriptor rowDescriptor = new RowDescriptorBuilder(13, datatypeCoder)
                 .at(0).simple(SQL_VARYING, 31, "TABLE_CAT", "INDEXINFO").addField()
                 .at(1).simple(SQL_VARYING, 31, "TABLE_SCHEM", "INDEXINFO").addField()
                 .at(2).simple(SQL_VARYING, 31, "TABLE_NAME", "INDEXINFO").addField()
@@ -4416,7 +4419,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
      * {@inheritDoc}
      */
     public ResultSet getUDTs(String catalog, String schemaPattern, String typeNamePattern, int[] types) throws SQLException {
-        final RowDescriptor rowDescriptor = new RowDescriptorBuilder(7, DefaultDatatypeCoder.getDefaultInstance())
+        final RowDescriptor rowDescriptor = new RowDescriptorBuilder(7, datatypeCoder)
                 .at(0).simple(SQL_VARYING, 31, "TYPE_CAT", "UDT").addField()
                 .at(1).simple(SQL_VARYING, 31, "TYPE_SCHEM", "UDT").addField()
                 .at(2).simple(SQL_VARYING, 31, "TYPE_NAME", "UDT").addField()
@@ -4448,7 +4451,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
      * {@inheritDoc}
      */
     public ResultSet getAttributes(String catalog, String schemaPattern, String typeNamePattern, String attributeNamePattern) throws SQLException {
-        final RowDescriptor rowDescriptor = new RowDescriptorBuilder(21, DefaultDatatypeCoder.getDefaultInstance())
+        final RowDescriptor rowDescriptor = new RowDescriptorBuilder(21, datatypeCoder)
                 .at(0).simple(SQL_VARYING, 31, "TYPE_CAT", "ATTRIBUTES").addField()
                 .at(1).simple(SQL_VARYING, 31, "TYPE_SCHEM", "ATTRIBUTES").addField()
                 .at(2).simple(SQL_VARYING, 31, "TYPE_NAME", "ATTRIBUTES").addField()
@@ -4524,7 +4527,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
      * {@inheritDoc}
      */
     public ResultSet getSuperTypes(String catalog, String schemaPattern, String tableNamePattern) throws SQLException {
-        final RowDescriptor rowDescriptor = new RowDescriptorBuilder(6, DefaultDatatypeCoder.getDefaultInstance())
+        final RowDescriptor rowDescriptor = new RowDescriptorBuilder(6, datatypeCoder)
                 .at(0).simple(SQL_VARYING, 31, "TYPE_CAT", "SUPERTYPES").addField()
                 .at(1).simple(SQL_VARYING, 31, "TYPE_SCHEM", "SUPERTYPES").addField()
                 .at(2).simple(SQL_VARYING, 31, "TYPE_NAME", "SUPERTYPES").addField()
@@ -4542,7 +4545,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
      * {@inheritDoc}
      */
     public ResultSet getSuperTables(String catalog, String schemaPattern, String tableNamePattern) throws SQLException {
-        final RowDescriptor rowDescriptor = new RowDescriptorBuilder(4, DefaultDatatypeCoder.getDefaultInstance())
+        final RowDescriptor rowDescriptor = new RowDescriptorBuilder(4, datatypeCoder)
                 .at(0).simple(SQL_VARYING, 31, "TABLE_CAT", "SUPERTABLES").addField()
                 .at(1).simple(SQL_VARYING, 31, "TABLE_SCHEM", "SUPERTABLES").addField()
                 .at(2).simple(SQL_VARYING, 31, "TABLE_NAME", "SUPERTABLES").addField()
@@ -4661,7 +4664,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
      */
     public ResultSet getClientInfoProperties() throws SQLException {
         // TODO Return context info?
-        final RowDescriptor rowDescriptor = new RowDescriptorBuilder(4, DefaultDatatypeCoder.getDefaultInstance())
+        final RowDescriptor rowDescriptor = new RowDescriptorBuilder(4, datatypeCoder)
                 .at(0).simple(SQL_VARYING, 31, "NAME", "CLIENTINFO").addField()
                 .at(1).simple(SQL_LONG, 4, "MAX_LEN", "CLIENTINFO").addField()
                 .at(2).simple(SQL_VARYING, 31, "DEFAULT", "CLIENTINFO").addField()
@@ -4767,7 +4770,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
      */
     public ResultSet getFunctionColumns(String catalog, String schemaPattern, String functionNamePattern, String columnNamePattern) throws SQLException {
         // FIXME implement this method to return actual result
-        final RowDescriptor rowDescriptor = new RowDescriptorBuilder(17, DefaultDatatypeCoder.getDefaultInstance())
+        final RowDescriptor rowDescriptor = new RowDescriptorBuilder(17, datatypeCoder)
                 .at(0).simple(SQL_VARYING, 31, "FUNCTION_CAT", "FUNCTION_COLUMNS").addField()
                 .at(1).simple(SQL_VARYING, 31, "FUNCTION_SCHEM", "FUNCTION_COLUMNS").addField()
                 .at(2).simple(SQL_VARYING, 31, "FUNCTION_NAME", "FUNCTION_COLUMNS").addField()
@@ -4840,7 +4843,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
      */
     public ResultSet getFunctions(String catalog, String schemaPattern, String functionNamePattern) throws SQLException {
         // FIXME implement this method to return actual result
-        final RowDescriptor rowDescriptor = new RowDescriptorBuilder(6, DefaultDatatypeCoder.getDefaultInstance())
+        final RowDescriptor rowDescriptor = new RowDescriptorBuilder(6, datatypeCoder)
                 .at(0).simple(SQL_VARYING, 31, "FUNCTION_CAT", "FUNCTIONS").addField()
                 .at(1).simple(SQL_VARYING, 31, "FUNCTION_SCHEM", "FUNCTIONS").addField()
                 .at(2).simple(SQL_VARYING, 31, "FUNCTION_NAME", "FUNCTIONS").addField()
@@ -4877,7 +4880,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
      * @since 1.6
      */
     public ResultSet getSchemas(String catalog, String schemaPattern) throws SQLException {
-        final RowDescriptor rowDescriptor = new RowDescriptorBuilder(2, DefaultDatatypeCoder.getDefaultInstance())
+        final RowDescriptor rowDescriptor = new RowDescriptorBuilder(2, datatypeCoder)
                 .at(0).simple(SQL_VARYING, 31, "TABLE_SCHEM", "TABLESCHEMAS").addField()
                 .at(1).simple(SQL_VARYING, 31, "TABLE_CATALOG", "TABLESCHEMAS").addField()
                 .toRowDescriptor();
@@ -5092,7 +5095,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
     }
 
     protected static byte[] getBytes(String value){
-        return value != null ? value.getBytes(): null;
+        return value != null ? value.getBytes(StandardCharsets.UTF_8): null;
     }
 
     private FBPreparedStatement getStatement(String sql) throws SQLException {

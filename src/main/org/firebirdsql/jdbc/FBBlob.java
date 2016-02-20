@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
@@ -21,6 +19,7 @@
 package org.firebirdsql.jdbc;
 
 import org.firebirdsql.gds.ISCConstants;
+import org.firebirdsql.gds.VaxEncoding;
 import org.firebirdsql.gds.impl.GDSHelper;
 import org.firebirdsql.gds.ng.FbBlob;
 import org.firebirdsql.util.SQLExceptionChainBuilder;
@@ -127,9 +126,9 @@ public class FBBlob implements FirebirdBlob, Synchronizable {
      */
     public void free() throws SQLException {
         synchronized (getSynchronizationObject()) {
-            SQLExceptionChainBuilder<SQLException> chain = new SQLExceptionChainBuilder<SQLException>();
+            SQLExceptionChainBuilder<SQLException> chain = new SQLExceptionChainBuilder<>();
 
-            for (FBBlobInputStream blobIS : new ArrayList<FBBlobInputStream>(inputStreams)) {
+            for (FBBlobInputStream blobIS : new ArrayList<>(inputStreams)) {
                 try {
                     blobIS.close();
                 } catch (IOException ex) {
@@ -219,26 +218,12 @@ public class FBBlob implements FirebirdBlob, Synchronizable {
      *
      * @throws SQLException if length cannot be interpreted.
      */
-    public static long interpretLength(GDSHelper gdsHelper, byte[] info, int position) throws SQLException {
+    long interpretLength(byte[] info, int position) throws SQLException {
         if (info[position] != ISCConstants.isc_info_blob_total_length)
             throw new FBSQLException("Length is not available.");
 
-        int dataLength = gdsHelper.iscVaxInteger(info, position + 1, 2);
-        return gdsHelper.iscVaxLong(info, position + 3, dataLength);
-    }
-
-    /**
-     * Interpret BLOB length from buffer.
-     *
-     * @param info server response.
-     * @param position where to start interpreting.
-     *
-     * @return length of the blob.
-     *
-     * @throws SQLException if length cannot be interpreted.
-     */
-    long interpretLength(byte[] info, int position) throws SQLException {
-        return interpretLength(gdsHelper, info, position);
+        int dataLength = VaxEncoding.iscVaxInteger(info, position + 1, 2);
+        return VaxEncoding.iscVaxLong(info, position + 3, dataLength);
     }
 
     /**
@@ -255,8 +240,8 @@ public class FBBlob implements FirebirdBlob, Synchronizable {
         if (info[0] != ISCConstants.isc_info_blob_type)
             throw new FBSQLException("Cannot determine BLOB type");
 
-        int dataLength = gdsHelper.iscVaxInteger(info, 1, 2);
-        int type = gdsHelper.iscVaxInteger(info, 3, dataLength);
+        int dataLength = VaxEncoding.iscVaxInteger(info, 1, 2);
+        int type = VaxEncoding.iscVaxInteger(info, 3, dataLength);
         return type == ISCConstants.isc_bpb_type_segmented;
     }
 
@@ -409,13 +394,8 @@ public class FBBlob implements FirebirdBlob, Synchronizable {
     }
 
     public void copyBytes(byte[] bytes, int pos, int len) throws SQLException {
-        OutputStream out = setBinaryStream(1);
-        try {
-            try {
-                out.write(bytes, pos, len);
-            } finally {
-                out.close();
-            }
+        try (OutputStream out = setBinaryStream(1)) {
+            out.write(bytes, pos, len);
         } catch (IOException ex) {
             throw new FBSQLException(ex);
         }

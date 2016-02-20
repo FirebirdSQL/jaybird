@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
@@ -110,15 +108,47 @@ public interface IEncodingFactory {
 
     /**
      * Gets an {@link org.firebirdsql.encodings.Encoding} for the specified Java character set. If there is no known
-     * encoding for this {@link
-     * java.nio.charset.Charset}, or the loaded EncodingDefinition is information-only, then the defaultEncoding will be
-     * used.
+     * encoding for this {@link java.nio.charset.Charset}, or the loaded EncodingDefinition is information-only, then
+     * the fallbackEncoding will be used.
+     *
+     * @param charset
+     *         The Java character set
+     * @param fallbackEncoding
+     *         The Encoding to use as fallback if no encoding is found (usually the connection encoding). If
+     *         <code>null</code>, the defaultEncoding for the JVM is used.
+     * @return Encoding instance (never null)
+     * @see #getOrCreateEncodingForCharset(java.nio.charset.Charset)
+     */
+    Encoding getEncodingForCharset(final Charset charset, final Encoding fallbackEncoding);
+
+    /**
+     * Gets an {@link org.firebirdsql.encodings.Encoding} for the specified Java character set. If there is no known
+     * encoding for this {@link java.nio.charset.Charset}, or the loaded EncodingDefinition is information-only, then
+     * the defaultEncoding will be used.
      *
      * @param charset
      *         The Java character set
      * @return Encoding instance (never null)
      */
     Encoding getEncodingForCharset(Charset charset);
+
+    /**
+     * Creates an {@link Encoding} for the specified Java character set. If there is no known encoding for this
+     * charset, then an Encoding instance based on the charset is returned.
+     * <p>
+     * In general the method {@link #getEncodingForCharset(java.nio.charset.Charset, Encoding)} should be used.
+     * </p>
+     * <p>
+     * Don't confuse this method with {@link #getEncodingForCharset(Charset)}, which falls back to the default
+     * encoding.
+     * </p>
+     *
+     * @param charset
+     *         The Java character set
+     * @return Encoding instance (never null)
+     * @see #getEncodingForCharset(java.nio.charset.Charset, Encoding)
+     */
+    Encoding getOrCreateEncodingForCharset(final Charset charset);
 
     /**
      * Looks up the {@link org.firebirdsql.encodings.EncodingDefinition} by the specified Java character set name or
@@ -178,16 +208,28 @@ public interface IEncodingFactory {
      *         Name of the Firebird encoding, or null to defer decision to the java Charset alias
      * @param javaCharsetAlias
      *         Alias of the Java character set, or null to defer decision to the Firebird encoding
-     * @return An EncodingDefinition or null if both parameters are null, no encoding was found or if an exception occurred.
+     * @return An EncodingDefinition or null if both parameters are null, no encoding was found or if an exception
+     * occurred.
      */
     EncodingDefinition getEncodingDefinition(String firebirdEncodingName, String javaCharsetAlias);
 
     /**
-     * Returns an {@link org.firebirdsql.encodings.IEncodingFactory} that uses <code>encodingDefinition</code> as the default.
+     * Returns an {@link org.firebirdsql.encodings.IEncodingFactory} that uses {@code encodingDefinition} as the
+     * default.
      *
      * @param encodingDefinition
-     *         The default encoding to use (or <code>null</code> for the value of {@link #getDefaultEncoding()}
+     *         The default encoding to use (or {@code null} for the value of {@link #getDefaultEncoding()}
      * @return IEncodingFactory instance with the specified default.
      */
     IEncodingFactory withDefaultEncodingDefinition(EncodingDefinition encodingDefinition);
+
+    /**
+     * Returns an {@link org.firebirdsql.encodings.IEncodingFactory} that uses an {@link EncodingDefinition} identified
+     * by {@code charSet} as the default.
+     *
+     * @param charset
+     *         The default charset to use.
+     * @return IEncodingFactory instance with the specified default.
+     */
+    IEncodingFactory withDefaultEncodingDefinition(Charset charset);
 }

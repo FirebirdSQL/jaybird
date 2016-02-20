@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
@@ -24,7 +22,6 @@ import java.sql.DataTruncation;
 import java.sql.SQLException;
 import java.sql.Types;
 
-import org.firebirdsql.gds.XSQLVAR;
 import org.firebirdsql.gds.ng.fields.FieldDescriptor;
 
 /**
@@ -94,7 +91,7 @@ public final class FBWorkaroundStringField extends FBStringField {
             setNull();
             return null;
         }
-        byte[] data = getDatatypeCoder().encodeString(value, javaEncoding, mappingPath);
+        byte[] data = getDatatypeCoder().encodeString(value, encodingDefinition.getEncoding(), mappingPath);
         setFieldData(data);
         return data;
     }   
@@ -115,7 +112,8 @@ public final class FBWorkaroundStringField extends FBStringField {
             return result;
         
         // fix incorrect padding done by the database for multibyte charsets
-        if ((fieldDescriptor.getLength() % bytesPerCharacter) == 0 && result.length() > possibleCharLength)
+        if ((fieldDescriptor.getLength() % encodingDefinition.getMaxBytesPerChar()) == 0
+                && result.length() > possibleCharLength)
             result = result.substring(0, possibleCharLength);
         
         if (trimString)

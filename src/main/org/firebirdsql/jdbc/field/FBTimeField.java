@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
@@ -23,7 +21,6 @@ package org.firebirdsql.jdbc.field;
 import java.sql.Timestamp;
 import java.sql.SQLException;
 import java.util.Calendar;
-import org.firebirdsql.gds.XSQLVAR;
 import org.firebirdsql.gds.ng.fields.FieldDescriptor;
 
 import java.sql.Time;
@@ -44,6 +41,7 @@ final class FBTimeField extends FBField {
         if (isNull()) return null;
         return String.valueOf(getDatatypeCoder().decodeTime(getFieldData()));
     }
+
     public Time getTime(Calendar cal) throws SQLException {
         if (isNull()) return null;
         return getDatatypeCoder().decodeTimeCalendar(getFieldData(), cal);

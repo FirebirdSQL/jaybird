@@ -1,6 +1,4 @@
 /*
- * $Id$
- * 
  * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
@@ -18,33 +16,36 @@
  *
  * All rights reserved.
  */
-package org.firebirdsql.gds;
+package org.firebirdsql.gds.ng;
 
+import org.firebirdsql.encodings.EncodingFactory;
 import org.junit.Test;
 
+import java.nio.charset.StandardCharsets;
 import java.util.concurrent.TimeUnit;
 
 import static org.junit.Assert.assertEquals;
 
 /**
- * Test for internal consistency of encoding and decoding provided by {@link org.firebirdsql.gds.XSQLVAR}.
+ * Test for internal consistency of encoding and decoding provided by {@link org.firebirdsql.gds.ng.DefaultDatatypeCoder}.
  * <p>
  * These tests do not contact a Firebird server (so they don't test the actual correctness/compatibility with Firebird).
  * </p>
  *
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
- * @since 2.2.5
+ * @since 3.0
  */
-public class TestXSQLVAR {
+public class TestDefaultDatatypeCoder {
 
-    private final XSQLVAR xsqlvar = new XSQLVAR();
+    private final DefaultDatatypeCoder datatypeCoder =
+            new DefaultDatatypeCoder(EncodingFactory.createInstance(StandardCharsets.UTF_8));
 
     @Test
     public void testShort() {
         final short testShort = 513;
-        final byte[] shortBytes = xsqlvar.encodeShort(testShort);
+        final byte[] shortBytes = datatypeCoder.encodeShort(testShort);
 
-        final short result = xsqlvar.decodeShort(shortBytes);
+        final short result = datatypeCoder.decodeShort(shortBytes);
 
         assertEquals("Unexpected short", testShort, result);
     }
@@ -52,9 +53,9 @@ public class TestXSQLVAR {
     @Test
     public void testInt() {
         final int testInt = -1405525771;
-        final byte[] intBytes = xsqlvar.encodeInt(testInt);
+        final byte[] intBytes = datatypeCoder.encodeInt(testInt);
 
-        final int result = xsqlvar.decodeInt(intBytes);
+        final int result = datatypeCoder.decodeInt(intBytes);
 
         assertEquals("Unexpected int", testInt, result);
     }
@@ -62,9 +63,9 @@ public class TestXSQLVAR {
     @Test
     public void testLong() {
         final long testLong = Long.MAX_VALUE ^ ((132L << 56) + 513);
-        final byte[] longBytes = xsqlvar.encodeLong(testLong);
+        final byte[] longBytes = datatypeCoder.encodeLong(testLong);
 
-        final long result = xsqlvar.decodeLong(longBytes);
+        final long result = datatypeCoder.decodeLong(longBytes);
 
         assertEquals("Unexpected long", testLong, result);
     }
@@ -81,9 +82,9 @@ public class TestXSQLVAR {
         final java.sql.Timestamp testTimestamp = new java.sql.Timestamp(date.getTime());
         // Make sure minimum Firebird precision (100 microseconds) is set
         testTimestamp.setNanos((int) TimeUnit.MICROSECONDS.toNanos(975100));
-        final byte[] timestampBytes = xsqlvar.encodeTimestamp(testTimestamp);
+        final byte[] timestampBytes = datatypeCoder.encodeTimestamp(testTimestamp);
 
-        final java.sql.Timestamp result = xsqlvar.decodeTimestamp(timestampBytes);
+        final java.sql.Timestamp result = datatypeCoder.decodeTimestamp(timestampBytes);
 
         assertEquals("Unexpected timestamp", testTimestamp, result);
     }
@@ -96,9 +97,9 @@ public class TestXSQLVAR {
     @Test
     public void testTime() {
         final java.sql.Time testTime = java.sql.Time.valueOf("17:23:01");
-        final byte[] timeBytes = xsqlvar.encodeTime(testTime);
+        final byte[] timeBytes = datatypeCoder.encodeTime(testTime);
 
-        final java.sql.Time result = xsqlvar.decodeTime(timeBytes);
+        final java.sql.Time result = datatypeCoder.decodeTime(timeBytes);
 
         assertEquals("Unexpected time", testTime, result);
     }
@@ -106,9 +107,9 @@ public class TestXSQLVAR {
     @Test
     public void testDate() {
         final java.sql.Date testDate = java.sql.Date.valueOf("2014-03-29");
-        final byte[] dateBytes = xsqlvar.encodeDate(testDate);
+        final byte[] dateBytes = datatypeCoder.encodeDate(testDate);
 
-        final java.sql.Date result = xsqlvar.decodeDate(dateBytes);
+        final java.sql.Date result = datatypeCoder.decodeDate(dateBytes);
 
         assertEquals("Unexpected date", testDate, result);
     }
@@ -124,9 +125,9 @@ public class TestXSQLVAR {
     }
 
     private void checkBoolean(final boolean testBoolean) {
-        final byte[] booleanBytes = xsqlvar.encodeBoolean(testBoolean);
+        final byte[] booleanBytes = datatypeCoder.encodeBoolean(testBoolean);
 
-        final boolean result = xsqlvar.decodeBoolean(booleanBytes);
+        final boolean result = datatypeCoder.decodeBoolean(booleanBytes);
 
         assertEquals("Unexpected boolean", testBoolean, result);
     }
@@ -134,33 +135,33 @@ public class TestXSQLVAR {
     // TODO java.time roundtrip tests
 
     /**
-     * Test round trip for {@link XSQLVAR#encodeLocalDateTime(int, int, int, int, int, int, int)} using {@link XSQLVAR#decodeTimestamp(byte[])}.
+     * Test round trip for {@link DefaultDatatypeCoder#encodeLocalDateTime(int, int, int, int, int, int, int)} using {@link DefaultDatatypeCoder#decodeTimestamp(byte[])}.
      */
     @Test
     public void testLocalDateTimeToTimestamp() {
         final java.sql.Timestamp expected = java.sql.Timestamp.valueOf("2013-03-29 17:43:01.9751");
-        final byte[] localDateTimeBytes = xsqlvar.encodeLocalDateTime(2013, 3, 29, 17, 43, 1, (int) TimeUnit.MICROSECONDS.toNanos(975100));
+        final byte[] localDateTimeBytes = datatypeCoder.encodeLocalDateTime(2013, 3, 29, 17, 43, 1, (int) TimeUnit.MICROSECONDS.toNanos(975100));
 
-        final java.sql.Timestamp result = xsqlvar.decodeTimestamp(localDateTimeBytes);
+        final java.sql.Timestamp result = datatypeCoder.decodeTimestamp(localDateTimeBytes);
 
         assertEquals("Unexpected timestamp", expected, result);
     }
 
     /**
-     * Test round trip for {@link XSQLVAR#encodeLocalDate(int, int, int)} using {@link XSQLVAR#decodeDate(byte[])}.
+     * Test round trip for {@link DefaultDatatypeCoder#encodeLocalDate(int, int, int)} using {@link DefaultDatatypeCoder#decodeDate(byte[])}.
      */
     @Test
     public void testLocalDateToDate() {
         final java.sql.Date expected = java.sql.Date.valueOf("2014-03-29");
-        final byte[] localDateBytes = xsqlvar.encodeLocalDate(2014, 3, 29);
+        final byte[] localDateBytes = datatypeCoder.encodeLocalDate(2014, 3, 29);
 
-        final java.sql.Date result = xsqlvar.decodeDate(localDateBytes);
+        final java.sql.Date result = datatypeCoder.decodeDate(localDateBytes);
 
         assertEquals("Unexpected date", expected, result);
     }
 
     /**
-     * Test round trip for {@link XSQLVAR#encodeLocalTime(int, int, int, int) using {@link XSQLVAR#decodeTimestamp(byte[])}
+     * Test round trip for {@link DefaultDatatypeCoder#encodeLocalTime(int, int, int, int) using {@link DefaultDatatypeCoder#decodeTimestamp(byte[])}
      * <p>
      * We test using java.sql.Timestamp so we can check the maximum precision (which is not available through java.sql.Time)
      * </p>
@@ -169,14 +170,14 @@ public class TestXSQLVAR {
     public void testLocalTimeToTimestamp() {
         final java.sql.Timestamp expected = java.sql.Timestamp.valueOf("2014-03-29 17:43:01.9751");
         // We need a date part as well to construct a valid timestamp
-        final byte[] localDateBytes = xsqlvar.encodeLocalDate(2014, 3, 29);
-        final byte[] localTimeBytes = xsqlvar.encodeLocalTime(17, 43, 1, (int) TimeUnit.MICROSECONDS.toNanos(975100));
+        final byte[] localDateBytes = datatypeCoder.encodeLocalDate(2014, 3, 29);
+        final byte[] localTimeBytes = datatypeCoder.encodeLocalTime(17, 43, 1, (int) TimeUnit.MICROSECONDS.toNanos(975100));
 
         final byte[] combinedDateTime = new byte[8];
         System.arraycopy(localDateBytes, 0, combinedDateTime, 0, 4);
         System.arraycopy(localTimeBytes, 0, combinedDateTime, 4, 4);
 
-        final java.sql.Timestamp result = xsqlvar.decodeTimestamp(combinedDateTime);
+        final java.sql.Timestamp result = datatypeCoder.decodeTimestamp(combinedDateTime);
 
         assertEquals("Unexpected timestamp", expected, result);
     }

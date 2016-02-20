@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
@@ -20,7 +18,7 @@
  */
 package org.firebirdsql.gds.ng;
 
-import org.firebirdsql.encodings.EncodingFactory;
+import org.firebirdsql.encodings.Encoding;
 import org.firebirdsql.encodings.IEncodingFactory;
 
 import java.sql.Date;
@@ -45,16 +43,7 @@ import java.util.GregorianCalendar;
  */
 public class DefaultDatatypeCoder implements DatatypeCoder {
 
-    private static final DefaultDatatypeCoder INSTANCE = new DefaultDatatypeCoder(EncodingFactory.getDefaultInstance());
-
     private final IEncodingFactory encodingFactory;
-
-    /**
-     * @return DatatypeCoder with the default {@link org.firebirdsql.encodings.EncodingFactory}.
-     */
-    public static DefaultDatatypeCoder getDefaultInstance() {
-        return INSTANCE;
-    }
 
     public DefaultDatatypeCoder(IEncodingFactory encodingFactory) {
         if (encodingFactory == null) {
@@ -167,10 +156,23 @@ public class DefaultDatatypeCoder implements DatatypeCoder {
     }
 
     @Override
+    public byte[] encodeString(String value, Encoding encoding, String mappingPath) throws SQLException {
+        // TODO mappingPath (or translator) might need to be property of DefaultDataTypeCoder itself, and not handed over at each invocation
+        return encoding
+                .withTranslation(encodingFactory.getCharacterTranslator(mappingPath))
+                .encodeToCharset(value);
+    }
+
+    @Override
     public String decodeString(byte[] value, String javaEncoding, String mappingPath) throws SQLException {
         // TODO mappingPath (or translator) might need to be property of DefaultDataTypeCoder itself, and not handed over at each invocation
-        return encodingFactory
-                .getEncodingForCharsetAlias(javaEncoding)
+        return decodeString(value, encodingFactory.getEncodingForCharsetAlias(javaEncoding), mappingPath);
+    }
+
+    @Override
+    public String decodeString(byte[] value, Encoding encoding, String mappingPath) throws SQLException {
+        // TODO mappingPath (or translator) might need to be property of DefaultDataTypeCoder itself, and not handed over at each invocation
+        return encoding
                 .withTranslation(encodingFactory.getCharacterTranslator(mappingPath))
                 .decodeFromCharset(value);
     }

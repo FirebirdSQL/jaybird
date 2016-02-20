@@ -21,10 +21,12 @@ package org.firebirdsql.jdbc.field;
 import java.io.InputStream;
 import java.io.Reader;
 import java.math.BigDecimal;
+import java.nio.charset.StandardCharsets;
 import java.sql.SQLException;
 import java.sql.Types;
 import java.util.Calendar;
 
+import org.firebirdsql.encodings.EncodingFactory;
 import org.firebirdsql.gds.ng.DefaultDatatypeCoder;
 import org.firebirdsql.gds.ng.fields.FieldDescriptor;
 import org.firebirdsql.gds.ng.fields.RowDescriptorBuilder;
@@ -60,7 +62,7 @@ public class TestFBNullField {
     @Before
     public void setUp() throws Exception {
         fieldData = context.mock(FieldDataProvider.class);
-        FieldDescriptor fieldDescriptor = new RowDescriptorBuilder(1, DefaultDatatypeCoder.getDefaultInstance())
+        FieldDescriptor fieldDescriptor = new RowDescriptorBuilder(1, new DefaultDatatypeCoder(EncodingFactory.createInstance(StandardCharsets.UTF_8)))
                 .toFieldDescriptor();
         field = new FBNullField(fieldDescriptor, fieldData, Types.NULL);
     }

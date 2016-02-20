@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
@@ -173,7 +171,7 @@ public class FBLongVarCharField extends FBStringField implements FBFlushableFiel
         if (data == null)
             return null;
         
-        return getDatatypeCoder().decodeString(data, javaEncoding, mappingPath);
+        return getDatatypeCoder().decodeString(data, encodingDefinition.getEncoding(), mappingPath);
     }
 
     public void setBlob(FBBlob blob) throws SQLException {
@@ -205,7 +203,7 @@ public class FBLongVarCharField extends FBStringField implements FBFlushableFiel
             return;
         }
         
-        setBytes(getDatatypeCoder().encodeString(value, javaEncoding, mappingPath));
+        setBytes(getDatatypeCoder().encodeString(value, encodingDefinition.getEncoding(), mappingPath));
     }
 
     public void setBytes(byte[] value) throws SQLException {
@@ -239,7 +237,7 @@ public class FBLongVarCharField extends FBStringField implements FBFlushableFiel
             copyBinaryStream(this.binaryStream, this.length);
         else
         if (characterStream != null)
-            copyCharacterStream(characterStream, length, javaEncoding);
+            copyCharacterStream(characterStream, length, encodingDefinition.getJavaEncodingName());
         else
         if (bytes != null)
             copyBytes(bytes, length);

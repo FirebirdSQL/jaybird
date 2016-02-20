@@ -22,6 +22,7 @@ import org.firebirdsql.common.BlackholeServer;
 import org.firebirdsql.common.FBJUnit4TestBase;
 import org.firebirdsql.common.FBTestProperties;
 import org.firebirdsql.common.rules.GdsTypeRule;
+import org.firebirdsql.encodings.EncodingDefinition;
 import org.firebirdsql.encodings.EncodingFactory;
 import org.firebirdsql.gds.impl.jni.EmbeddedGDSFactoryPlugin;
 import org.firebirdsql.gds.impl.jni.NativeGDSFactoryPlugin;
@@ -112,7 +113,7 @@ public class TestWireDatabaseConnection extends FBJUnit4TestBase {
     public void testIdentifyExistingDb() throws Exception {
         ProtocolDescriptor expectedProtocol = new Version10Descriptor();
         try (WireDatabaseConnection gdsConnection = new WireDatabaseConnection(connectionInfo,
-                EncodingFactory.getDefaultInstance(), ProtocolCollection.create(expectedProtocol))) {
+                EncodingFactory.createInstance((EncodingDefinition) null), ProtocolCollection.create(expectedProtocol))) {
             gdsConnection.socketConnect();
             assertTrue(gdsConnection.isConnected());
 
@@ -135,7 +136,7 @@ public class TestWireDatabaseConnection extends FBJUnit4TestBase {
         assumeTrue("Requires protocol v13 support", FBTestProperties.getDefaultSupportInfo().supportsProtocol(13));
         ProtocolDescriptor expectedProtocol = new Version13Descriptor();
         try (WireDatabaseConnection gdsConnection = new WireDatabaseConnection(connectionInfo,
-                EncodingFactory.getDefaultInstance(), ProtocolCollection.create(expectedProtocol))) {
+                EncodingFactory.createInstance((EncodingDefinition) null), ProtocolCollection.create(expectedProtocol))) {
             gdsConnection.socketConnect();
             assertTrue(gdsConnection.isConnected());
 

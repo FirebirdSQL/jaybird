@@ -46,7 +46,7 @@ public final class FbConnectionProperties extends AbstractAttachProperties<IConn
     private boolean columnLabelForName;
     private final DatabaseParameterBuffer extraDatabaseParameters = new DatabaseParameterBufferImp(
             DatabaseParameterBufferImp.DpbMetaData.DPB_VERSION_1,
-            EncodingFactory.getDefaultInstance().getDefaultEncoding());
+            EncodingFactory.getPlatformEncoding());
 
     private FbImmutableConnectionProperties immutableConnectionPropertiesCache;
 

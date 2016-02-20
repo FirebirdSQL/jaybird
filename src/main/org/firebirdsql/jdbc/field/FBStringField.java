@@ -18,12 +18,16 @@
  */
 package org.firebirdsql.jdbc.field;
 
-import org.firebirdsql.encodings.EncodingFactory;
+import org.firebirdsql.encodings.EncodingDefinition;
+import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.impl.GDSHelper;
 import org.firebirdsql.gds.ng.fields.FieldDescriptor;
 import org.firebirdsql.util.IOUtils;
 
-import java.io.*;
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.Reader;
 import java.math.BigDecimal;
 import java.sql.*;
 import java.util.Calendar;
@@ -55,15 +59,39 @@ class FBStringField extends FBField {
     static final String SHORT_TRUE_2 = "T";
     static final String SHORT_TRUE_3 = "1";
     
-    protected int possibleCharLength;
-    protected int bytesPerCharacter;
+    protected final int possibleCharLength;
+    protected final EncodingDefinition encodingDefinition;
 
     FBStringField(FieldDescriptor fieldDescriptor, FieldDataProvider dataProvider, int requiredType)
             throws SQLException {
         super(fieldDescriptor, dataProvider, requiredType);
-        
-        bytesPerCharacter = 1;
-        possibleCharLength = fieldDescriptor.getLength() / bytesPerCharacter;
+
+        encodingDefinition = getEncodingDefinition(fieldDescriptor);
+        // TODO This might wreak havoc if field is a FBLongVarcharField
+        possibleCharLength = fieldDescriptor.getLength() / encodingDefinition.getMaxBytesPerChar();
+    }
+
+    protected static EncodingDefinition getEncodingDefinition(FieldDescriptor fieldDescriptor) throws SQLException {
+        // TODO Add compatibility option for old NONE behavior?
+        // Note: characterSetId includes the collation id
+        final int characterSetId;
+        switch (fieldDescriptor.getType() & ~1) {
+        case ISCConstants.SQL_TEXT:
+        case ISCConstants.SQL_VARYING:
+            characterSetId = fieldDescriptor.getSubType();
+            break;
+        case ISCConstants.SQL_BLOB:
+            if (fieldDescriptor.getSubType() == 1) {
+                characterSetId = fieldDescriptor.getScale();
+            } else {
+                characterSetId = ISCConstants.CS_NONE;
+            }
+            break;
+        default:
+            throw new SQLException("Unexpected Firebird data type: " + fieldDescriptor);
+        }
+        return fieldDescriptor.getDatatypeCoder().getEncodingFactory()
+                .getEncodingDefinitionByCharacterSetId(characterSetId);
     }
     
     /**
@@ -72,11 +100,7 @@ class FBStringField extends FBField {
      */
     public void setConnection(GDSHelper gdsHelper) {
         super.setConnection(gdsHelper);
-
-        bytesPerCharacter = EncodingFactory.getIscEncodingSize(iscEncoding);
-        possibleCharLength = fieldDescriptor.getLength() / bytesPerCharacter;
     }
-
 	 
     //----- Math code
 
@@ -164,7 +188,7 @@ class FBStringField extends FBField {
 
     public String getString() throws SQLException {
         if (isNull()) return null;
-        return getDatatypeCoder().decodeString(getFieldData(), javaEncoding, mappingPath);
+        return getDatatypeCoder().decodeString(getFieldData(), encodingDefinition.getEncoding(), mappingPath);
     }
     
     //----- getXXXStream code
@@ -268,7 +292,7 @@ class FBStringField extends FBField {
             setNull();
             return;
         }
-        setFieldData(getDatatypeCoder().encodeString(value, javaEncoding, mappingPath));
+        setFieldData(getDatatypeCoder().encodeString(value, encodingDefinition.getEncoding(), mappingPath));
     }
 
     //----- setXXXStream code

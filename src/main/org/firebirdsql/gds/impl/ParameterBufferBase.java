@@ -19,6 +19,7 @@
 package org.firebirdsql.gds.impl;
 
 import org.firebirdsql.encodings.Encoding;
+import org.firebirdsql.encodings.EncodingDefinition;
 import org.firebirdsql.encodings.EncodingFactory;
 import org.firebirdsql.gds.Parameter;
 import org.firebirdsql.gds.ParameterBuffer;
@@ -58,7 +59,7 @@ public abstract class ParameterBufferBase implements ParameterBuffer, Serializab
      * @param parameterBufferMetaData Metadata for the parameter buffer.
      */
     protected ParameterBufferBase(ParameterBufferMetaData parameterBufferMetaData) {
-        this(parameterBufferMetaData, EncodingFactory.getDefaultInstance().getDefaultEncoding());
+        this(parameterBufferMetaData, EncodingFactory.getPlatformEncoding());
     }
 
     /**
@@ -249,6 +250,7 @@ public abstract class ParameterBufferBase implements ParameterBuffer, Serializab
     private void readObject(java.io.ObjectInputStream in) throws IOException, ClassNotFoundException {
         in.defaultReadObject();
 
-        defaultEncoding = EncodingFactory.getDefaultInstance().getEncodingForCharsetAlias(defaultEncodingName);
+        defaultEncoding = EncodingFactory.createInstance((EncodingDefinition) null)
+                .getEncodingForCharsetAlias(defaultEncodingName);
     }
 }

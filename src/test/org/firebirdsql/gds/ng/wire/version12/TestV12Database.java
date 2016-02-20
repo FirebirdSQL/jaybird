@@ -19,7 +19,6 @@
 package org.firebirdsql.gds.ng.wire.version12;
 
 import org.firebirdsql.common.rules.RequireProtocol;
-import org.firebirdsql.encodings.EncodingFactory;
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.ng.wire.FbWireDatabase;
 import org.firebirdsql.gds.ng.wire.WireDatabaseConnection;
@@ -110,8 +109,7 @@ public class TestV12Database extends TestV11Database {
     private void checkCancelOperationSupported(int kind, String kindName) throws Exception {
         FBManager fbManager = createFBManager();
         defaultDatabaseSetUp(fbManager);
-        try (WireDatabaseConnection gdsConnection = new WireDatabaseConnection(getConnectionInfo(),
-                EncodingFactory.getDefaultInstance(), getProtocolCollection())) {
+        try (WireDatabaseConnection gdsConnection = createConnection()) {
             gdsConnection.socketConnect();
             try (FbWireDatabase db = gdsConnection.identify()) {
                 assertEquals("Unexpected FbWireDatabase implementation", getExpectedDatabaseType(), db.getClass());

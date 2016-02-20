@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
@@ -20,9 +18,8 @@
  */
 package org.firebirdsql.jdbc.oo;
 
-import org.firebirdsql.gds.ISCConstants;
-import org.firebirdsql.gds.XSQLVAR;
 import org.firebirdsql.gds.ng.fields.RowDescriptor;
+import org.firebirdsql.gds.ng.fields.RowDescriptorBuilder;
 import org.firebirdsql.gds.ng.fields.RowValue;
 import org.firebirdsql.jdbc.FBConnection;
 import org.firebirdsql.jdbc.FBDatabaseMetaData;
@@ -34,6 +31,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import static org.firebirdsql.gds.ISCConstants.SQL_VARYING;
+
 public class OODatabaseMetaData extends FBDatabaseMetaData {
 
     public OODatabaseMetaData(FBConnection c) throws SQLException {
@@ -44,14 +43,13 @@ public class OODatabaseMetaData extends FBDatabaseMetaData {
 
     @Override
     public ResultSet getSchemas() throws SQLException {
-        XSQLVAR[] xsqlvars = new XSQLVAR[1];
+        final RowDescriptor rowDescriptor = new RowDescriptorBuilder(2, datatypeCoder)
+                .at(0).simple(SQL_VARYING, 31, "TABLE_SCHEM", "TABLESCHEMAS").addField()
+                .at(1).simple(SQL_VARYING, 31, "TABLE_CATALOG", "TABLESCHEMAS").addField()
+                .toRowDescriptor();
 
-        xsqlvars[0] = new XSQLVAR(ISCConstants.SQL_VARYING, 31, "TABLE_SCHEM", "TABLESCHEMAS");
-
-        List<byte[][]> rows = new ArrayList<byte[][]>(1);
-        rows.add(new byte[][] { getBytes(DEFAULT_SCHEMA) });
-
-        return new FBResultSet(xsqlvars, rows);
+        return new FBResultSet(rowDescriptor,
+                Collections.singletonList(RowValue.of(rowDescriptor, getBytes(DEFAULT_SCHEMA), null)));
     }
 
     @Override
@@ -161,7 +159,7 @@ public class OODatabaseMetaData extends FBDatabaseMetaData {
         sql += GET_TABLE_PRIVILEGES_END_2;
 
         // check the original case identifiers first
-        List<String> params = new ArrayList<String>();
+        List<String> params = new ArrayList<>();
         if (!tableClause1.getCondition().equals("")) {
             params.add(tableClause1.getOriginalCaseValue());
         }

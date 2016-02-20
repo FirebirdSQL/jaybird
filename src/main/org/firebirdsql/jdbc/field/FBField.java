@@ -20,7 +20,6 @@ package org.firebirdsql.jdbc.field;
 
 import org.firebirdsql.gds.DatabaseParameterBuffer;
 import org.firebirdsql.gds.ISCConstants;
-import org.firebirdsql.gds.XSQLVAR;
 import org.firebirdsql.gds.impl.DatabaseParameterBufferExtension;
 import org.firebirdsql.gds.impl.GDSHelper;
 import org.firebirdsql.gds.ng.DatatypeCoder;
@@ -98,8 +97,6 @@ public abstract class FBField {
     protected final FieldDescriptor fieldDescriptor;
     private final FieldDataProvider dataProvider;
     protected GDSHelper gdsHelper;
-    protected String iscEncoding;
-    protected String javaEncoding;
     protected String mappingPath;
     protected int requiredType;
     protected int scale = -1;
@@ -146,17 +143,8 @@ public abstract class FBField {
 
     public void setConnection(GDSHelper gdsHelper) {
         this.gdsHelper = gdsHelper;
-        if (gdsHelper != null) {
-            iscEncoding = gdsHelper.getIscEncoding();
-        }
-
-        if (iscEncoding != null
-                && (iscEncoding.equalsIgnoreCase("NONE") || iscEncoding.equalsIgnoreCase("BINARY"))) {
-            iscEncoding = null;
-        }
 
         if (gdsHelper != null) {
-            javaEncoding = gdsHelper.getJavaEncoding();
             mappingPath = gdsHelper.getMappingPath();
         }
     }
@@ -246,90 +234,6 @@ public abstract class FBField {
         default:
             return false;
         }
-    }
-
-    /**
-     * This method implements the type compatibility matrix from
-     * "JDBC(tm): A Java SQL API, version 1.20" whitepaper, page 21.
-     */
-    // TODO Use of this method?
-    public static boolean isCompatible(XSQLVAR field, int type) {
-        // turn off null flag, in this case we're not interested in it.
-        final int tempType = field.sqltype & ~1;
-        switch (tempType) {
-        // this type does not belong to JDBC v.1.20, but as long as
-        // Firebird supports arrays, lets use them.
-        case ISCConstants.SQL_ARRAY:
-            return type == Types.ARRAY;
-
-            // this type does not belong to JDBC v.1.20, but as long as
-            // Firebird supports arrays, lets use them.
-        case ISCConstants.SQL_BLOB:
-            return  (type == Types.BLOB) ||
-                    (type == Types.BINARY) ||
-                    (type == Types.VARBINARY) ||
-                    (type == Types.LONGVARBINARY) ||
-                    (type == Types.LONGVARCHAR)
-                    ;
-
-            // Unfortunately we do not know the SQL correspondence to these type
-        case ISCConstants.SQL_QUAD:
-        case ISCConstants.SQL_D_FLOAT:
-            return false;
-
-            // currently we do not provide compatibility with CHAR and VARCHAR
-        case ISCConstants.SQL_DOUBLE:
-        case ISCConstants.SQL_FLOAT:
-        case ISCConstants.SQL_INT64:
-        case ISCConstants.SQL_LONG:
-        case ISCConstants.SQL_SHORT:
-        case ISCConstants.SQL_BOOLEAN:
-            return  (type == Types.DOUBLE) ||
-                    (type == Types.FLOAT) ||
-                    (type == Types.REAL) ||
-                    (type == Types.BIGINT) ||
-                    (type == Types.INTEGER) ||
-                    (type == Types.SMALLINT) ||
-                    (type == Types.TINYINT) ||
-                    (type == Types.NUMERIC) ||
-                    (type == Types.DECIMAL) ||
-                    (type == Types.BIT) || // TODO: We don't support BIT
-                    (type == Types.BOOLEAN)
-                    ;
-
-        case ISCConstants.SQL_TEXT:
-        case ISCConstants.SQL_VARYING:
-            return  (type == Types.CHAR) ||
-                    (type == Types.VARCHAR) ||
-                    (type == Types.LONGVARCHAR) ||
-                    (type == Types.BINARY) ||
-                    (type == Types.VARBINARY);
-
-        case ISCConstants.SQL_TIMESTAMP:
-            return  (type == Types.TIMESTAMP) ||
-                    (type == Types.TIME) ||
-                    (type == Types.DATE);
-
-        case ISCConstants.SQL_TYPE_DATE:
-            return  (type == Types.DATE) ||
-                    (type == Types.TIMESTAMP);
-
-        case ISCConstants.SQL_TYPE_TIME:
-            return  (type == Types.TIME) ||
-                    (type == Types.TIMESTAMP);
-
-        case ISCConstants.SQL_NULL:
-            return true;
-
-        default:
-            return false;
-        }
-    }
-
-    public static boolean isNullType(FieldDescriptor fieldDescriptor) {
-        final int tempType = fieldDescriptor.getType() & ~1;
-
-        return tempType == ISCConstants.SQL_NULL;
     }
 
     /**
@@ -564,11 +468,12 @@ public abstract class FBField {
     }
 
     public Reader getCharacterStream() throws SQLException {
+        // TODO Needs to be moved higher, or FBStringField needs to get specific version that handles encoding.
         final InputStream is = getBinaryStream();
         if (is == null) {
             return null;
         } else {
-            return TranslatingReader.getInstance(is, javaEncoding, mappingPath);
+            return TranslatingReader.getInstance(is, getDatatypeCoder().getEncodingFactory().getDefaultEncoding().getCharsetName(), mappingPath);
         }
     }
 

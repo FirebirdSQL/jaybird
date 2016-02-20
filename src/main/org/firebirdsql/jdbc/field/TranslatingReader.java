@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source J2ee connector - jdbc driver
+ * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -12,22 +12,18 @@
  * This file was created by members of the firebird development team.
  * All individual contributions remain the Copyright (C) of those
  * individuals.  Contributors to this file are either listed here or
- * can be obtained from a CVS history command.
+ * can be obtained from a source control history command.
  *
  * All rights reserved.
  */
-
 package org.firebirdsql.jdbc.field;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.UnsupportedEncodingException;
+import java.io.*;
 import java.sql.SQLException;
 
+import org.firebirdsql.encodings.CharacterTranslator;
 import org.firebirdsql.encodings.EncodingFactory;
 import org.firebirdsql.jdbc.FBSQLException;
-
 
 /**
  * Reader that is capable translating characters using the specified mapping.
@@ -37,7 +33,10 @@ import org.firebirdsql.jdbc.FBSQLException;
 class TranslatingReader extends InputStreamReader {
 
     /**
-     * Create instance of this class.
+     * Return a reader instance for the input stream, character set and mapping path.
+     * <p>
+     * This method does not necessarily return a {@link TranslatingReader}.
+     * </p>
      * 
      * @param in input stream from which characters are read.
      * @param charsetName Java character set.
@@ -47,15 +46,20 @@ class TranslatingReader extends InputStreamReader {
      * 
      * @throws SQLException if the specified mapping path is not found.
      */
-    static TranslatingReader getInstance(InputStream in, String charsetName,
-            String mappingPath) throws SQLException {
-        
+    static Reader getInstance(InputStream in, String charsetName, String mappingPath) throws SQLException {
+        final CharacterTranslator mapping = EncodingFactory.getTranslator(mappingPath);
         try {
-            if (charsetName != null)
-                return new TranslatingReader(in, charsetName, mappingPath);
-            else
-                return new TranslatingReader(in, mappingPath);
-            
+            if (charsetName != null) {
+                if (mapping != null) {
+                    return new TranslatingReader(in, charsetName, mapping);
+                }
+                return new InputStreamReader(in, charsetName);
+            } else {
+                if (mapping != null) {
+                    return new TranslatingReader(in, mapping);
+                }
+                return new InputStreamReader(in);
+            }
         } catch(UnsupportedEncodingException ex) {
             throw new FBSQLException("Cannot set character stream because " +
                 "the unsupported encoding is detected in the JVM: " +
@@ -66,47 +70,16 @@ class TranslatingReader extends InputStreamReader {
     
     private char[] charMap;
 
-    /**
-     * Create instance of this class.
-     * 
-     * @param in input stream from which characters are read.
-     * @param charsetName Java character set.
-     * @param mappingPath path to the character mapping.
-     * 
-     * @throws java.io.UnsupportedEncodingException if the specified charset
-     * is not known.
-     * 
-     * @throws SQLException if the specified mapping path is not found.
-     */
-    private TranslatingReader(InputStream in, String charsetName, String mappingPath)
+    private TranslatingReader(InputStream in, String charsetName, CharacterTranslator mapping)
             throws UnsupportedEncodingException, SQLException {
         super(in, charsetName);
-        
-        if (mappingPath != null)
-            charMap = EncodingFactory.getTranslator(mappingPath).getMapping();
-        else
-            charMap = null;
+        charMap = mapping.getMapping();
     }
     
-    /**
-     * Create instance of this class.
-     * 
-     * @param in input stream from which characters are read.
-     * @param mappingPath path to the character mapping.
-     * 
-     * @throws java.io.UnsupportedEncodingException if the specified charset
-     * is not known.
-     * 
-     * @throws SQLException if the specified mapping path is not found.
-     */
-    private TranslatingReader(InputStream in, String mappingPath)
+    private TranslatingReader(InputStream in, CharacterTranslator mapping)
             throws UnsupportedEncodingException, SQLException {
         super(in);
-        
-        if (mappingPath != null)
-            charMap = EncodingFactory.getTranslator(mappingPath).getMapping();
-        else
-            charMap = null;
+        charMap = mapping.getMapping();
     }
 
     public int read() throws IOException {

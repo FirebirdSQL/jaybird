@@ -18,6 +18,7 @@
  */
 package org.firebirdsql.gds.ng.jna;
 
+import org.firebirdsql.encodings.EncodingDefinition;
 import org.firebirdsql.encodings.EncodingFactory;
 import org.firebirdsql.encodings.IEncodingFactory;
 import org.firebirdsql.gds.ng.IServiceProperties;
@@ -43,7 +44,7 @@ public final class JnaServiceConnection  extends JnaConnection<IServicePropertie
      */
     public JnaServiceConnection(FbClientLibrary clientLibrary, IServiceProperties connectionProperties)
             throws SQLException {
-        this(clientLibrary, connectionProperties, EncodingFactory.getDefaultInstance());
+        this(clientLibrary, connectionProperties, EncodingFactory.createInstance((EncodingDefinition) null));
     }
 
     /**

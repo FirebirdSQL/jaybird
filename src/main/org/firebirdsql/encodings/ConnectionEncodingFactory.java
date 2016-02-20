@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
@@ -134,8 +132,18 @@ class ConnectionEncodingFactory implements IEncodingFactory {
     }
 
     @Override
+    public Encoding getEncodingForCharset(Charset charset, Encoding fallbackEncoding) {
+        return factory.getEncodingForCharset(charset, fallbackEncoding);
+    }
+
+    @Override
     public Encoding getEncodingForCharset(final Charset charset) {
         return factory.getEncodingForCharset(charset, getDefaultEncoding());
+    }
+
+    @Override
+    public Encoding getOrCreateEncodingForCharset(Charset charset) {
+        return factory.getOrCreateEncodingForCharset(charset);
     }
 
     @Override
@@ -162,5 +170,10 @@ class ConnectionEncodingFactory implements IEncodingFactory {
     @Override
     public IEncodingFactory withDefaultEncodingDefinition(EncodingDefinition encodingDefinition) {
         return factory.withDefaultEncodingDefinition(encodingDefinition != null ? encodingDefinition : getDefaultEncodingDefinition());
+    }
+
+    @Override
+    public IEncodingFactory withDefaultEncodingDefinition(Charset charset) {
+        return factory.withDefaultEncodingDefinition(charset);
     }
 }

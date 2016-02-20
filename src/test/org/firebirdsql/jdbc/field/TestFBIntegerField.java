@@ -19,7 +19,6 @@
 package org.firebirdsql.jdbc.field;
 
 import org.firebirdsql.gds.ISCConstants;
-import org.firebirdsql.gds.ng.DefaultDatatypeCoder;
 import org.firebirdsql.gds.ng.fields.RowDescriptor;
 import org.firebirdsql.gds.ng.fields.RowDescriptorBuilder;
 import org.junit.Before;
@@ -40,7 +39,7 @@ public class TestFBIntegerField extends BaseTestFBField {
 
     @Before
     public void setUp() throws SQLException {
-        RowDescriptor rowDescriptor = new RowDescriptorBuilder(1, DefaultDatatypeCoder.getDefaultInstance())
+        RowDescriptor rowDescriptor = new RowDescriptorBuilder(1, datatypeCoder)
                 .setFieldIndex(0)
                 .setType(ISCConstants.SQL_LONG)
                 .addField()

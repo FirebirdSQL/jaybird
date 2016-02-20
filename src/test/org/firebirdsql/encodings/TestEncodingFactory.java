@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source J2ee connector - jdbc driver
+ * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -12,7 +12,7 @@
  * This file was created by members of the firebird development team.
  * All individual contributions remain the Copyright (C) of those
  * individuals.  Contributors to this file are either listed here or
- * can be obtained from a CVS history command.
+ * can be obtained from a source control history command.
  *
  * All rights reserved.
  */
@@ -61,13 +61,13 @@ public class TestEncodingFactory {
     @Test
     public void javaCharsetAliasMapping() {
         Charset charset = Charset.forName(JAVA_TEST_CHARSET);
-        Set<String> allJavaAliases = new HashSet<String>();
+        Set<String> allJavaAliases = new HashSet<>();
         allJavaAliases.add(JAVA_TEST_CHARSET);
         // Canonical name is not included in aliases
         allJavaAliases.add(charset.name());
         allJavaAliases.addAll(charset.aliases());
 
-        Set<String> aliasesMatched = new HashSet<String>();
+        Set<String> aliasesMatched = new HashSet<>();
         for (String javaAlias : allJavaAliases) {
             String iscEncoding = EncodingFactory.getDefaultInstance().getEncodingDefinitionByCharsetAlias(javaAlias).getFirebirdEncodingName();
             if (FIREBIRD_TEST_CHARSET.equals(iscEncoding)) {
@@ -384,7 +384,8 @@ public class TestEncodingFactory {
     @Test
      public void testWithDefaultEncodingDefinition_null() {
         final EncodingFactory defaultInstance = EncodingFactory.getDefaultInstance();
-        final IEncodingFactory alternativeInstance = defaultInstance.withDefaultEncodingDefinition(null);
+        final IEncodingFactory alternativeInstance = defaultInstance
+                .withDefaultEncodingDefinition((EncodingDefinition) null);
 
         assertNotNull("Expected non-null instance", alternativeInstance);
         assertSame("Unexpected default encoding", defaultInstance.getDefaultEncoding(), alternativeInstance.getDefaultEncoding());

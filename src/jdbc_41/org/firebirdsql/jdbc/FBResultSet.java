@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
@@ -20,7 +18,6 @@
  */
 package org.firebirdsql.jdbc;
 
-import org.firebirdsql.gds.XSQLVAR;
 import org.firebirdsql.gds.impl.GDSHelper;
 import org.firebirdsql.gds.ng.FbStatement;
 import org.firebirdsql.gds.ng.fields.RowDescriptor;
@@ -60,9 +57,5 @@ public class FBResultSet extends AbstractResultSet {
     public FBResultSet(RowDescriptor rowDescriptor, GDSHelper gdsHelper, List<RowValue> rows, boolean retrieveBlobs)
             throws SQLException {
         super(rowDescriptor, gdsHelper, rows, retrieveBlobs);
-    }
-
-    public FBResultSet(XSQLVAR[] xsqlvars, List<byte[][]> rows) throws SQLException {
-        super(xsqlvars, rows);
     }
 }

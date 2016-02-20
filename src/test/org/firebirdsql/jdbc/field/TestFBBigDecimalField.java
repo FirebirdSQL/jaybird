@@ -19,7 +19,6 @@
 package org.firebirdsql.jdbc.field;
 
 import org.firebirdsql.gds.ISCConstants;
-import org.firebirdsql.gds.ng.DefaultDatatypeCoder;
 import org.firebirdsql.gds.ng.fields.FieldDescriptor;
 import org.firebirdsql.gds.ng.fields.RowDescriptorBuilder;
 import org.junit.Before;
@@ -586,21 +585,21 @@ public class TestFBBigDecimalField extends BaseJUnit4TestFBField<FBBigDecimalFie
     }
 
     private static FieldDescriptor createShortFieldDescriptor(int scale) {
-        return new RowDescriptorBuilder(1, DefaultDatatypeCoder.getDefaultInstance())
+        return new RowDescriptorBuilder(1, datatypeCoder)
                 .setType(ISCConstants.SQL_SHORT)
                 .setScale(scale)
                 .toFieldDescriptor();
     }
 
     private static FieldDescriptor createIntegerFieldDescriptor(int scale) {
-        return new RowDescriptorBuilder(1, DefaultDatatypeCoder.getDefaultInstance())
+        return new RowDescriptorBuilder(1, datatypeCoder)
                 .setType(ISCConstants.SQL_LONG)
                 .setScale(scale)
                 .toFieldDescriptor();
     }
 
     private static FieldDescriptor createLongFieldDescriptor(int scale) {
-        return new RowDescriptorBuilder(1, DefaultDatatypeCoder.getDefaultInstance())
+        return new RowDescriptorBuilder(1, datatypeCoder)
                 .setType(ISCConstants.SQL_INT64)
                 .setScale(scale)
                 .toFieldDescriptor();

@@ -169,7 +169,8 @@ class FBBlobField extends FBField implements FBFlushableField {
 
         if (blob == null) return null;
 
-        return getDatatypeCoder().decodeString(getBytes(), javaEncoding, mappingPath);
+        return getDatatypeCoder().decodeString(getBytes(), getDatatypeCoder().getEncodingFactory().getDefaultEncoding(),
+                mappingPath);
     }
 
     //--- setXXX methods
@@ -200,7 +201,8 @@ class FBBlobField extends FBField implements FBFlushableField {
         if (binaryStream != null)
             copyBinaryStream(binaryStream, length);
         else if (characterStream != null)
-            copyCharacterStream(characterStream, length, javaEncoding);
+            copyCharacterStream(characterStream, length,
+                    getDatatypeCoder().getEncodingFactory().getDefaultEncoding().getCharsetName());
         else if (bytes != null)
             copyBytes(bytes, length);
         else if (blob == null)
@@ -245,7 +247,8 @@ class FBBlobField extends FBField implements FBFlushableField {
             return;
         }
 
-        setBytes(getDatatypeCoder().encodeString(value, javaEncoding, mappingPath));
+        setBytes(getDatatypeCoder().encodeString(value, getDatatypeCoder().getEncodingFactory().getDefaultEncoding(),
+                mappingPath));
     }
 
     public void setBlob(FBBlob blob) throws SQLException {

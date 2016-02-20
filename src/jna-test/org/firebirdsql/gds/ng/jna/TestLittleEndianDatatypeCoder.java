@@ -21,6 +21,8 @@ package org.firebirdsql.gds.ng.jna;
 import org.firebirdsql.encodings.EncodingFactory;
 import org.junit.Test;
 
+import java.nio.charset.StandardCharsets;
+
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 
@@ -33,7 +35,7 @@ import static org.junit.Assert.assertEquals;
 public class TestLittleEndianDatatypeCoder {
 
     private final LittleEndianDatatypeCoder datatypeCoder =
-            new LittleEndianDatatypeCoder(EncodingFactory.getDefaultInstance());
+            new LittleEndianDatatypeCoder(EncodingFactory.createInstance(StandardCharsets.UTF_8));
 
     @Test
     public void encodeShort() {

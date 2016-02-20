@@ -18,6 +18,7 @@
  */
 package org.firebirdsql.gds.ng.wire;
 
+import org.firebirdsql.encodings.EncodingDefinition;
 import org.firebirdsql.encodings.EncodingFactory;
 import org.firebirdsql.encodings.IEncodingFactory;
 import org.firebirdsql.gds.ClumpletReader;
@@ -106,7 +107,8 @@ public abstract class WireConnection<T extends IAttachProperties<T>, C extends F
      *         Attach properties
      */
     protected WireConnection(T attachProperties) throws SQLException {
-        this(attachProperties, EncodingFactory.getDefaultInstance(), ProtocolCollection.getDefaultCollection());
+        this(attachProperties, EncodingFactory.createInstance((EncodingDefinition) null),
+                ProtocolCollection.getDefaultCollection());
     }
 
     /**

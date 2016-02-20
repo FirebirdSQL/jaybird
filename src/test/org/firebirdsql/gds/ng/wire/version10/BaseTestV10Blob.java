@@ -18,6 +18,7 @@
  */
 package org.firebirdsql.gds.ng.wire.version10;
 
+import org.firebirdsql.encodings.EncodingDefinition;
 import org.firebirdsql.encodings.EncodingFactory;
 import org.firebirdsql.gds.ng.BaseTestBlob;
 import org.firebirdsql.gds.ng.FbConnectionProperties;
@@ -47,7 +48,7 @@ public abstract class BaseTestV10Blob extends BaseTestBlob {
     @Override
     protected final FbDatabase createFbDatabase(FbConnectionProperties connectionInfo) throws SQLException {
         WireDatabaseConnection gdsConnection = new WireDatabaseConnection(connectionInfo,
-                EncodingFactory.getDefaultInstance(), getProtocolCollection());
+                EncodingFactory.createInstance((EncodingDefinition) null), getProtocolCollection());
         gdsConnection.socketConnect();
         FbWireDatabase db = gdsConnection.identify();
         db.attach();

@@ -57,7 +57,7 @@ public class TestFBBinaryField extends BaseJUnit4TestFBField<FBBinaryField, byte
     @Override
     public void getCharacterStreamNonNull() throws Exception {
         final byte[] bytes = getRandomBytes();
-        final String expectedString = new String(bytes);
+        final String expectedString = datatypeCoder.getEncodingFactory().getDefaultEncoding().decodeFromCharset(bytes);
         toReturnValueExpectations(bytes);
 
         Reader reader = field.getCharacterStream();
@@ -74,7 +74,7 @@ public class TestFBBinaryField extends BaseJUnit4TestFBField<FBBinaryField, byte
     @Override
     public void getStringNonNull() throws SQLException {
         final byte[] bytes = getRandomBytes();
-        final String expectedString = new String(bytes);
+        final String expectedString = datatypeCoder.getEncodingFactory().getDefaultEncoding().decodeFromCharset(bytes);
         toReturnValueExpectations(bytes);
 
         String value = field.getString();

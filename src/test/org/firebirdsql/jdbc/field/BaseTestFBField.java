@@ -22,12 +22,16 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.sql.Date;
 import java.sql.SQLException;
 import java.sql.Time;
 import java.sql.Timestamp;
 import java.util.Arrays;
 
+import org.firebirdsql.encodings.EncodingFactory;
+import org.firebirdsql.gds.ng.DatatypeCoder;
+import org.firebirdsql.gds.ng.DefaultDatatypeCoder;
 import org.firebirdsql.gds.ng.fields.RowDescriptor;
 import org.firebirdsql.gds.ng.fields.RowValue;
 import org.junit.Rule;
@@ -51,6 +55,9 @@ public abstract class BaseTestFBField {
 
     @Rule
     public final ExpectedException expectedException = ExpectedException.none();
+
+    protected static final DatatypeCoder datatypeCoder =
+            new DefaultDatatypeCoder(EncodingFactory.createInstance(StandardCharsets.UTF_8));
 
     protected FBField field;
     static byte TEST_BYTE = Byte.MAX_VALUE;

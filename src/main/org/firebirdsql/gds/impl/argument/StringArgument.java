@@ -40,7 +40,7 @@ public final class StringArgument extends Argument {
 
     @Deprecated
     public StringArgument(int type, ArgumentType argumentType, String value) {
-        this(type, argumentType, value, EncodingFactory.getDefaultInstance().getDefaultEncoding());
+        this(type, argumentType, value, EncodingFactory.getPlatformEncoding());
     }
 
     public StringArgument(int type, ArgumentType argumentType, String value, Encoding encoding) {

@@ -20,6 +20,7 @@ package org.firebirdsql.gds.ng.wire.version10;
 
 import org.firebirdsql.common.rules.GdsTypeRule;
 import org.firebirdsql.common.rules.RequireProtocol;
+import org.firebirdsql.encodings.EncodingDefinition;
 import org.firebirdsql.encodings.EncodingFactory;
 import org.firebirdsql.gds.ServiceParameterBuffer;
 import org.firebirdsql.gds.ServiceRequestBuffer;
@@ -100,8 +101,7 @@ public class TestV10Service {
      */
     @Test
     public void testBasicAttach() throws Exception {
-        try (WireServiceConnection gdsConnection = new WireServiceConnection(
-                getConnectionInfo(), EncodingFactory.getDefaultInstance(), getProtocolCollection())) {
+        try (WireServiceConnection gdsConnection = createConnection()) {
             gdsConnection.socketConnect();
             try (FbWireService service = gdsConnection.identify()) {
                 assertEquals("Unexpected FbWireService implementation", getExpectedServiceType(), service.getClass());
@@ -125,8 +125,7 @@ public class TestV10Service {
     public void testStartServiceAction() throws Exception {
         FBManager fbManager = createFBManager();
         defaultDatabaseSetUp(fbManager);
-        try (WireServiceConnection gdsConnection = new WireServiceConnection(
-                getConnectionInfo(), EncodingFactory.getDefaultInstance(), getProtocolCollection())) {
+        try (WireServiceConnection gdsConnection = createConnection()) {
             gdsConnection.socketConnect();
             try (FbWireService service = gdsConnection.identify()) {
                 assertEquals("Unexpected FbWireService implementation", getExpectedServiceType(), service.getClass());
@@ -177,5 +176,10 @@ public class TestV10Service {
         } finally {
             defaultDatabaseTearDown(fbManager);
         }
+    }
+
+    private WireServiceConnection createConnection() throws SQLException {
+        return new WireServiceConnection(getConnectionInfo(),
+                EncodingFactory.createInstance((EncodingDefinition) null), getProtocolCollection());
     }
 }

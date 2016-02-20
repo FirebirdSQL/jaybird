@@ -18,6 +18,7 @@
  */
 package org.firebirdsql.jdbc.field;
 
+import org.firebirdsql.encodings.EncodingFactory;
 import org.firebirdsql.gds.ng.DefaultDatatypeCoder;
 import org.firebirdsql.gds.ng.fields.FieldDescriptor;
 import org.firebirdsql.gds.ng.fields.RowDescriptorBuilder;
@@ -25,6 +26,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
+import java.nio.charset.StandardCharsets;
 import java.sql.Types;
 import java.util.Arrays;
 import java.util.Collection;
@@ -46,8 +48,8 @@ import static org.junit.Assume.assumeThat;
 @RunWith(Parameterized.class)
 public class TestJdbcTypeConverter {
 
-    private static final RowDescriptorBuilder rowDescriptorBuilder =
-            new RowDescriptorBuilder(1, DefaultDatatypeCoder.getDefaultInstance());
+    private static final RowDescriptorBuilder rowDescriptorBuilder = new RowDescriptorBuilder(1,
+            new DefaultDatatypeCoder(EncodingFactory.createInstance(StandardCharsets.UTF_8)));
     private final FieldDescriptor fieldDescriptor;
     private final int expectedJdbcType;
     private final int metadataType;

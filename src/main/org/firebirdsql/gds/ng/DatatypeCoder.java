@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
@@ -20,6 +18,7 @@
  */
 package org.firebirdsql.gds.ng;
 
+import org.firebirdsql.encodings.Encoding;
 import org.firebirdsql.encodings.IEncodingFactory;
 
 import java.sql.Date;
@@ -154,6 +153,8 @@ public interface DatatypeCoder {
      */
     byte[] encodeString(String value, String javaEncoding, String mappingPath) throws SQLException;
 
+    byte[] encodeString(String value, Encoding encoding, String mappingPath) throws SQLException;
+
     // TODO Is below method needed?
 //    /**
 //     * Encode a <code>byte</code> array using a given encoding.
@@ -179,6 +180,8 @@ public interface DatatypeCoder {
      *         error occurs during the decoding
      */
     String decodeString(byte[] value, String javaEncoding, String mappingPath) throws SQLException;
+
+    String decodeString(byte[] value, Encoding encoding, String mappingPath) throws SQLException;
 
     /**
      * Encode a <code>Timestamp</code> using a given <code>Calendar</code>.
