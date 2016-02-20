@@ -21,9 +21,9 @@ package org.firebirdsql.gds.ng.wire;
 import org.firebirdsql.gds.DatabaseParameterBuffer;
 import org.firebirdsql.gds.ServiceParameterBuffer;
 import org.firebirdsql.gds.ng.ParameterConverter;
-import org.firebirdsql.util.ObjectUtils;
 
 import java.sql.SQLException;
+import java.util.Objects;
 
 /**
  * Abstract class to simplify implementation of {@link ProtocolDescriptor}
@@ -60,7 +60,7 @@ public abstract class AbstractProtocolDescriptor implements ProtocolDescriptor {
         this.minimumType = minimumType;
         this.maximumType = maximumType;
         this.weight = weight;
-        hashCode = ObjectUtils.hash(version, architecture, minimumType, maximumType, weight);
+        hashCode = Objects.hash(version, architecture, minimumType, maximumType, weight);
     }
 
     @Override

@@ -23,7 +23,6 @@ import org.firebirdsql.gds.ParameterBufferHelper;
 import org.firebirdsql.gds.TransactionParameterBuffer;
 import org.firebirdsql.gds.impl.TransactionParameterBufferImpl;
 import org.firebirdsql.jca.FBResourceException;
-import org.firebirdsql.util.ObjectUtils;
 
 import java.io.Serializable;
 import java.sql.Connection;
@@ -434,7 +433,7 @@ public class FBTpbMapper implements Serializable, Cloneable {
 
     public int hashCode() {
         // TODO both these values are mutable, so potentially unstable hashcode
-        return ObjectUtils.hash(mapping, defaultIsolationLevel);
+        return Objects.hash(mapping, defaultIsolationLevel);
     }
 
     public Object clone() {

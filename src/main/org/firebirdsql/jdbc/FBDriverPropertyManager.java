@@ -20,7 +20,6 @@ package org.firebirdsql.jdbc;
 
 import org.firebirdsql.encodings.EncodingFactory;
 import org.firebirdsql.gds.ParameterBufferHelper;
-import org.firebirdsql.util.ObjectUtils;
 
 import java.sql.DriverPropertyInfo;
 import java.sql.SQLException;
@@ -59,7 +58,7 @@ class FBDriverPropertyManager {
             this.dpbKey = dpbKey;
             this.description = description;
 
-            hashCode = ObjectUtils.hash(alias, dpbName, dpbKey);
+            hashCode = Objects.hash(alias, dpbName, dpbKey);
         }
         
         public int hashCode() {
@@ -72,7 +71,7 @@ class FBDriverPropertyManager {
             
             PropertyInfo that = (PropertyInfo)obj;
             
-            boolean result = ObjectUtils.equals(this.alias, that.alias);
+            boolean result = Objects.equals(this.alias, that.alias);
             result &= this.dpbName.equals(that.dpbName);
             result &= this.dpbKey.equals(that.dpbKey);
             

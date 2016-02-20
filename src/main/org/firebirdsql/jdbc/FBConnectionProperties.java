@@ -24,13 +24,13 @@ import org.firebirdsql.gds.ParameterBufferHelper;
 import org.firebirdsql.gds.TransactionParameterBuffer;
 import org.firebirdsql.gds.impl.DatabaseParameterBufferImp;
 import org.firebirdsql.jca.FBResourceException;
-import org.firebirdsql.util.ObjectUtils;
 
 import java.io.Serializable;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
 public class FBConnectionProperties implements FirebirdConnectionProperties, Serializable, Cloneable {
 
@@ -113,7 +113,7 @@ public class FBConnectionProperties implements FirebirdConnectionProperties, Ser
     }
 
     public int hashCode() {
-        return ObjectUtils.hash(type, database);
+        return Objects.hash(type, database);
     }
 
     public boolean equals(Object obj) {
@@ -128,9 +128,9 @@ public class FBConnectionProperties implements FirebirdConnectionProperties, Ser
         FBConnectionProperties that = (FBConnectionProperties) obj;
 
         boolean result = this.properties.equals(that.properties);
-        result &= ObjectUtils.equals(this.type, that.type);
-        result &= ObjectUtils.equals(this.database, that.database);
-        result &= ObjectUtils.equals(this.tpbMapping, that.tpbMapping);
+        result &= Objects.equals(this.type, that.type);
+        result &= Objects.equals(this.database, that.database);
+        result &= Objects.equals(this.tpbMapping, that.tpbMapping);
         result &= this.defaultTransactionIsolation == that.defaultTransactionIsolation;
         result &= this.customMapping.equals(that.customMapping);
         // If one or both are null we are identical (see also JDBC-249)

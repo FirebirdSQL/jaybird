@@ -26,7 +26,8 @@ package org.firebirdsql.gds.ng.fields;
 
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.ng.DatatypeCoder;
-import org.firebirdsql.util.ObjectUtils;
+
+import java.util.Objects;
 
 /**
  * The class <code>FieldDescriptor</code> contains the column metadata of the XSQLVAR server
@@ -259,11 +260,11 @@ public final class FieldDescriptor {
                 && this.subType == other.subType
                 && this.scale == other.scale
                 && this.length == other.length
-                && ObjectUtils.equals(this.fieldName, other.fieldName)
-                && ObjectUtils.equals(this.tableAlias, other.tableAlias)
-                && ObjectUtils.equals(this.originalName, other.originalName)
-                && ObjectUtils.equals(this.originalTableName, other.originalTableName)
-                && ObjectUtils.equals(this.ownerName, other.ownerName)
+                && Objects.equals(this.fieldName, other.fieldName)
+                && Objects.equals(this.tableAlias, other.tableAlias)
+                && Objects.equals(this.originalName, other.originalName)
+                && Objects.equals(this.originalTableName, other.originalTableName)
+                && Objects.equals(this.ownerName, other.ownerName)
                 && this.datatypeCoder == other.datatypeCoder;
     }
 
@@ -271,7 +272,7 @@ public final class FieldDescriptor {
     public int hashCode() {
         // Depend on immutability to cache hashCode
         if (hash == 0) {
-            hash = ObjectUtils.hash(type, subType, scale, length, fieldName, tableAlias, originalName,
+            hash = Objects.hash(type, subType, scale, length, fieldName, tableAlias, originalName,
                     originalTableName, ownerName);
         }
         return hash;
