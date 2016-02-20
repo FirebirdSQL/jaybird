@@ -732,10 +732,10 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
      * </p>
      */
     public String getNumericFunctions() throws SQLException {
-        return collectionToCommaSeperatedList(FBEscapedFunctionHelper.getSupportedNumericFunctions());
+        return collectionToCommaSeparatedList(FBEscapedFunctionHelper.getSupportedNumericFunctions());
     }
 
-    private static String collectionToCommaSeperatedList(Collection<String> collection) {
+    private static String collectionToCommaSeparatedList(Collection<String> collection) {
         StringBuilder sb = new StringBuilder();
         for (String item : collection) {
             sb.append(item);
@@ -753,7 +753,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
      * </p>
      */
     public String getStringFunctions() throws SQLException {
-        return collectionToCommaSeperatedList(FBEscapedFunctionHelper.getSupportedStringFunctions());
+        return collectionToCommaSeparatedList(FBEscapedFunctionHelper.getSupportedStringFunctions());
     }
 
     /**
@@ -764,7 +764,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
      * </p>
      */
     public String getSystemFunctions() throws SQLException {
-        return collectionToCommaSeperatedList(FBEscapedFunctionHelper.getSupportedSystemFunctions());
+        return collectionToCommaSeparatedList(FBEscapedFunctionHelper.getSupportedSystemFunctions());
     }
 
     /**
@@ -775,7 +775,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
      * </p>
      */
     public String getTimeDateFunctions() throws SQLException {
-        return collectionToCommaSeperatedList(FBEscapedFunctionHelper.getSupportedTimeDateFunctions());
+        return collectionToCommaSeparatedList(FBEscapedFunctionHelper.getSupportedTimeDateFunctions());
     }
 
     /**
