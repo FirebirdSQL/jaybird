@@ -18,6 +18,7 @@
  */
 package org.firebirdsql.gds.impl.argument;
 
+import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.encodings.Encoding;
 import org.firebirdsql.gds.ParameterBuffer;
 
@@ -40,21 +41,25 @@ public final class ByteArrayArgument extends Argument {
      * Initializes an instance of ByteArrayArgument.
      *
      * @param type
-     *         Parameter type
+     *        Parameter type
      * @param value
-     *         Byte array with a length up to 255 bytes.
+     *        Byte array with a length up to 255 bytes.
      */
     public ByteArrayArgument(int type, ArgumentType argumentType, byte[] value) {
         super(type);
         this.argumentType = argumentType;
-        if (argumentType != ArgumentType.TraditionalDpb && argumentType != ArgumentType.Wide) {
-            throw new IllegalArgumentException("ByteArrayArgument only works for TraditionalDpb or Wide, was: " + argumentType);
+        if (argumentType != ArgumentType.TraditionalDpb && argumentType != ArgumentType.Wide
+                && argumentType != ArgumentType.StringSpb) {
+            throw new IllegalArgumentException(
+                    "ByteArrayArgument only works for TraditionalDpb, Wide, or StringSpb was: " + argumentType);
         }
         if (value == null) {
             throw new IllegalArgumentException("byte array value should not be null");
         }
         if (value.length > argumentType.getMaxLength()) {
-            throw new IllegalArgumentException(String.format("byte array value should not be longer than %d bytes, length was %d", argumentType.getMaxLength(), value.length));
+            throw new IllegalArgumentException(
+                    String.format("byte array value should not be longer than %d bytes, length was %d",
+                            argumentType.getMaxLength(), value.length));
         }
         this.value = value;
     }
@@ -68,7 +73,7 @@ public final class ByteArrayArgument extends Argument {
 
     @Override
     public int getLength() {
-        return 1 + argumentType.getLengthSize() + value.length ;
+        return 1 + argumentType.getLengthSize() + value.length;
     }
 
     @Override
@@ -93,7 +98,8 @@ public final class ByteArrayArgument extends Argument {
 
         final ByteArrayArgument otherByteArrayArgument = (ByteArrayArgument) other;
 
-        return this.getType() == otherByteArrayArgument.getType() && Arrays.equals(this.value, otherByteArrayArgument.value);
+        return this.getType() == otherByteArrayArgument.getType()
+                && Arrays.equals(this.value, otherByteArrayArgument.value);
     }
 
     @Override
