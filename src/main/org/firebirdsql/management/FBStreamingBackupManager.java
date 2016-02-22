@@ -50,7 +50,10 @@ public class FBStreamingBackupManager extends FBBackupManagerBase implements Bac
     private BufferedInputStream restoreInputStream = null;
 
     private int backupBufferSize = BUFFER_SIZE * 30; // 30K
-    private final int MAX_RESTORE_CHUNK = Short.MAX_VALUE;
+    private final int MAX_RESTORE_CHUNK = 65532;
+
+    private final int DATA_NOT_READY = 0;
+    private final int END_OF_STREAM = -1;
 
     /**
      * Set the local buffer size to be used when doing a backup. Default is
@@ -110,7 +113,7 @@ public class FBStreamingBackupManager extends FBBackupManagerBase implements Bac
     public void setRestoreInputStream(InputStream restoreStream) {
         restoreInputStream = (restoreStream instanceof BufferedInputStream)
                 ? (BufferedInputStream) restoreStream
-                        : new BufferedInputStream(restoreStream, 128 * MAX_RESTORE_CHUNK);
+                : new BufferedInputStream(restoreStream, 128 * MAX_RESTORE_CHUNK);
     }
 
     public void clearBackupPaths() {
@@ -198,7 +201,7 @@ public class FBStreamingBackupManager extends FBBackupManagerBase implements Bac
 
                 switch (buffer[0]) {
                 case isc_info_svc_to_eof:
-                    if (readOutput(buffer, 0, backupOutputStream) == 0) {
+                    if (readOutput(buffer, 0, backupOutputStream) == END_OF_STREAM) {
                         processing = false;
                     }
                     break;
@@ -234,7 +237,7 @@ public class FBStreamingBackupManager extends FBBackupManagerBase implements Bac
             boolean processing = true;
             boolean sending = true;
 
-            byte[] buffer = new byte[] { 0x00 };
+            byte[] buffer;
 
             while (processing || infoSPB != null) {
                 buffer = service.getServiceInfo(infoSPB, infoSRB, bufferSize);
@@ -277,10 +280,10 @@ public class FBStreamingBackupManager extends FBBackupManagerBase implements Bac
                         int bytesToLog = readOutput(buffer, codePos, currentLogger);
                         codePos += 3;
                         switch (bytesToLog) {
-                        case -1:
+                        case DATA_NOT_READY:
                             ++codePos;
                             break;
-                        case 0:
+                        case END_OF_STREAM:
                             processing = false;
                             break;
                         default:
@@ -306,9 +309,9 @@ public class FBStreamingBackupManager extends FBBackupManagerBase implements Bac
         if (dataLength == 0) {
             switch (buffer[offset + 3]) {
             case isc_info_data_not_ready:
-                return -1;
+                return DATA_NOT_READY;
             case isc_info_end:
-                return 0;
+                return END_OF_STREAM;
             default:
                 throw new SQLException("Unexpected end of stream reached.");
             }
