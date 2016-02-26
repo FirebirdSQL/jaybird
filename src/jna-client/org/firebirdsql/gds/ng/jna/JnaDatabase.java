@@ -44,7 +44,7 @@ import static org.firebirdsql.gds.ng.TransactionHelper.checkTransactionActive;
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @since 3.0
  */
-public final class JnaDatabase extends AbstractFbDatabase<JnaDatabaseConnection>
+public class JnaDatabase extends AbstractFbDatabase<JnaDatabaseConnection>
         implements JnaAttachment, TransactionListener {
 
     // TODO Find out if there are any exception from JNA that we need to be prepared to handle.
@@ -54,8 +54,8 @@ public final class JnaDatabase extends AbstractFbDatabase<JnaDatabaseConnection>
     public static final int MAX_STATEMENT_LENGTH = 64 * 1024;
 
     private final FbClientLibrary clientLibrary;
-    private final IntByReference handle = new IntByReference(0);
-    private final ISC_STATUS[] statusVector = new ISC_STATUS[STATUS_VECTOR_SIZE];
+    protected final IntByReference handle = new IntByReference(0);
+    protected final ISC_STATUS[] statusVector = new ISC_STATUS[STATUS_VECTOR_SIZE];
 
     public JnaDatabase(JnaDatabaseConnection connection) {
         super(connection, connection.createDatatypeCoder());

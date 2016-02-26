@@ -448,7 +448,7 @@ public class FBBlob implements FirebirdBlob, Synchronizable {
         return isNew;
     }
 
-    GDSHelper getGdsHelper() {
+    public GDSHelper getGdsHelper() {
         return gdsHelper;
     }
 

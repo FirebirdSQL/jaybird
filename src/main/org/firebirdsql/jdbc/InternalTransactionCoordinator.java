@@ -175,7 +175,7 @@ public final class InternalTransactionCoordinator implements FBObjectListener.St
         coordinator.handleConnectionClose();
     }
 
-    private void setCoordinator(AbstractTransactionCoordinator coordinator) throws SQLException {
+    public void setCoordinator(AbstractTransactionCoordinator coordinator) throws SQLException {
         synchronized (getSynchronizationObject()) {
             if (this.coordinator != null) {
                 SQLExceptionChainBuilder<SQLException> chain = new SQLExceptionChainBuilder<>();
@@ -431,7 +431,7 @@ public final class InternalTransactionCoordinator implements FBObjectListener.St
         }
     }
 
-    static class LocalTransactionCoordinator extends AbstractTransactionCoordinator {
+    public static class LocalTransactionCoordinator extends AbstractTransactionCoordinator {
 
         public LocalTransactionCoordinator(FBConnection connection, FirebirdLocalTransaction localTransaction) {
             super(connection, localTransaction);
