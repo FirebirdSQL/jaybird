@@ -142,7 +142,7 @@ public class FBConnection implements FirebirdConnection {
      * @throws SQLException if at least one of the active statements failed
      * to close gracefully.
      */
-    private void freeStatements() throws SQLException {
+    protected void freeStatements() throws SQLException {
         // copy statements to avoid concurrent modification exception
         List<Statement> statements = new ArrayList<>(activeStatements);
         

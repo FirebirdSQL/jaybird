@@ -37,7 +37,7 @@ import java.util.List;
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @since 3.0
  */
-public final class FbEmbeddedDatabaseFactory extends AbstractNativeDatabaseFactory {
+public class FbEmbeddedDatabaseFactory extends AbstractNativeDatabaseFactory {
 
     private static final Logger log = LoggerFactory.getLogger(FbEmbeddedDatabaseFactory.class);
     private static final FbEmbeddedDatabaseFactory INSTANCE = new FbEmbeddedDatabaseFactory();

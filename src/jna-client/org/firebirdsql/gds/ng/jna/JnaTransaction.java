@@ -54,7 +54,7 @@ public class JnaTransaction extends AbstractFbTransaction {
      *         Initial transaction state (allowed values are {@link org.firebirdsql.gds.ng.TransactionState#ACTIVE}
      *         and {@link org.firebirdsql.gds.ng.TransactionState#PREPARED}.
      */
-    protected JnaTransaction(JnaDatabase database, IntByReference transactionHandle, TransactionState initialState) {
+    public JnaTransaction(JnaDatabase database, IntByReference transactionHandle, TransactionState initialState) {
         super(initialState, database);
         handle = transactionHandle;
         clientLibrary = database.getClientLibrary();
