@@ -78,10 +78,6 @@ public class FBBackupManager extends FBBackupManagerBase implements BackupManage
         noLimitBackup = true;
     }
 
-    public void addBackupPath(String path) {
-        addBackupPath(path, -1);
-    }
-
     public void addBackupPath(String path, int size) {
         if (noLimitBackup) {
             throw new IllegalArgumentException(
@@ -93,12 +89,6 @@ public class FBBackupManager extends FBBackupManagerBase implements BackupManage
     public void clearBackupPaths() {
         backupPaths.clear();
         noLimitBackup = false;
-    }
-
-    public void setDatabase(String database) {
-        super.setDatabase(database);
-        addRestorePath(database, -1);
-        noLimitRestore = true;
     }
 
     public void backupDatabase(int options) throws SQLException {
