@@ -403,6 +403,11 @@ public class FBConnection implements FirebirdConnection {
         txCoordinator.switchTransactionCoordinator(autoCommit);
     }
 
+    protected synchronized void setTransactionCoordinator(boolean managedConnection, boolean autoCommit) throws SQLException {
+        checkValidity();
+        txCoordinator.setTransactionCoordinator(managedConnection, autoCommit);
+    }
+
     public synchronized void setManagedEnvironment(boolean managedConnection) throws SQLException {
         checkValidity();
         txCoordinator.setTransactionCoordinator(managedConnection, true);
