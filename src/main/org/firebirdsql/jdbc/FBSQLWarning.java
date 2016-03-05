@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source J2ee connector - jdbc driver
+ * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -12,63 +12,64 @@
  * This file was created by members of the firebird development team.
  * All individual contributions remain the Copyright (C) of those
  * individuals.  Contributors to this file are either listed here or
- * can be obtained from a CVS history command.
+ * can be obtained from a source control history command.
  *
  * All rights reserved.
  */
-
 package org.firebirdsql.jdbc;
 
-import java.io.PrintWriter;
-import java.io.PrintStream;
-import java.sql.SQLWarning;
 import org.firebirdsql.gds.GDSException;
 
+import java.io.PrintStream;
+import java.io.PrintWriter;
+import java.sql.SQLWarning;
+
 /**
- * This class is a wrapper for {@link GDSException} instance that is 
+ * This class is a wrapper for {@link GDSException} instance that is
  * warning.
- * 
+ *
  * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
+ * @deprecated To be removed in Jaybird 3.0, replace with {@link SQLWarning}.
  */
+@Deprecated
 public class FBSQLWarning extends SQLWarning {
-    
+
     public static final String SQL_STATE_WARNING = "01000";
-    
+
     private GDSException original;
-    private String message;
-    
+
     /**
      * Create instance of this class.
-     * 
-     * @param original instance of {@link GDSException} that is 
-     * warning 
-     * 
-     * @throws IllegalArgumentException if <code>original.isWarning()</code> 
-     * returns <code>false</code>).
+     *
+     * @param original
+     *         instance of {@link GDSException} that is
+     *         warning
+     * @throws IllegalArgumentException
+     *         if <code>original.isWarning()</code>
+     *         returns <code>false</code>).
      */
     public FBSQLWarning(GDSException original) {
         super(original.getMessage(), SQL_STATE_WARNING);
-            
+
         if (!original.isWarning())
-            throw new IllegalArgumentException(
-                "Only warnings can be wrapped.");
-                
+            throw new IllegalArgumentException("Only warnings can be wrapped.");
+
         this.original = original;
-        this.message = original.getMessage();
     }
-    
+
     /**
      * Create instance of this class for the specified message.
-     * 
-     * @param message message for this warning.
+     *
+     * @param message
+     *         message for this warning.
      */
     public FBSQLWarning(String message) {
         super(message, SQL_STATE_WARNING);
     }
-    
+
     /**
      * Get error code for this warning.
-     * 
+     *
      * @return error code for this warning.
      */
     public int getErrorCode() {
@@ -77,7 +78,7 @@ public class FBSQLWarning extends SQLWarning {
         else
             return 0;
     }
-    
+
     public String getSQLState() {
         if (original != null)
             return original.getSQLState();
@@ -87,14 +88,6 @@ public class FBSQLWarning extends SQLWarning {
 
     public Exception getInternalException() {
         return original;
-    }
-
-    public String getMessage() {
-        return message;
-    }
-
-    public void printStackTrace() {
-        printStackTrace(System.err);
     }
 
     public void printStackTrace(PrintStream s) {
@@ -112,5 +105,5 @@ public class FBSQLWarning extends SQLWarning {
             original.printStackTrace(s);
         }
     }
-    
+
 }

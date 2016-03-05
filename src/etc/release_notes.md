@@ -16,7 +16,7 @@ the application server and driver.
 Supported Firebird versions
 ---------------------------
 
-Jaybird @VERSION@ was tested against Firebird 2.1.7, Firebird 2.5.4, and a
+Jaybird @VERSION@ was tested against Firebird 2.1.7, Firebird 2.5.5, and a
 recent Firebird 3 snapshot build (3.0.0.32081), but should also support other
 Firebird versions from 1.0 and up. The Type 2 and embedded server JDBC drivers
 require the appropriate JNI library. Precompiled JNI binaries for Windows and
@@ -82,7 +82,8 @@ The following has been changed or fixed in Jaybird 2.2.10:
     functioning correctly (for example in `org.hibernate.type.descriptor.java.DataHelper#determineLengthForBufferSizing`).
     These methods now throw `FBDriverNotCapableException` (which is a subclass
     of `SQLFeatureNotSupportedException`).
--   Fixed: Transaction mapping cannot be configured through JDBC URL ([JDBC-421](http://tracker.firebirdsql.org/browse/JDBC-421))\
+-   Fixed: Transaction mapping cannot be configured through JDBC URL ([JDBC-421](http://tracker.firebirdsql.org/browse/JDBC-421))
+-   Fixed: `FBSQLWarning.getMessage()` could return `null` instead of message ([JDBC-423](http://tracker.firebirdsql.org/browse/JDBC-423))
 
 **Known issues in Jaybird 2.2.10**
 
