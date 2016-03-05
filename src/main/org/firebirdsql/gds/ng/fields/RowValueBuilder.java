@@ -27,7 +27,7 @@ package org.firebirdsql.gds.ng.fields;
  * intended for use in tests and classes like {@link org.firebirdsql.jdbc.FBDatabaseMetaData}.
  * </p>
  * <p>
- * Its main advantage over {@link RowValue#of(RowDescriptor, byte[]...)} is that it is clearer to which field
+ * Its main advantage over {@link RowValue#of(RowDescriptor, byte[][])} is that it is clearer to which field
  * the value is assigned, and it sparse population (ie: skipping <code>null</code> values).
  * </p>
  * <p>
@@ -35,7 +35,7 @@ package org.firebirdsql.gds.ng.fields;
  * </p>
  *
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
- * @see org.firebirdsql.gds.ng.fields.RowValue#of(RowDescriptor, byte[]...)
+ * @see org.firebirdsql.gds.ng.fields.RowValue#of(RowDescriptor, byte[][])
  */
 public class RowValueBuilder {
 

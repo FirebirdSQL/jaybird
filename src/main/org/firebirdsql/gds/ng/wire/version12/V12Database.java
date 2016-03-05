@@ -37,6 +37,7 @@ import java.sql.SQLNonTransientConnectionException;
  * {@link org.firebirdsql.gds.ng.wire.FbWireDatabase} implementation for the version 12 wire protocol.
  *
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @since 3.0
  */
 public class V12Database extends V11Database {
 
@@ -91,7 +92,7 @@ public class V12Database extends V11Database {
      * For version 12 always returns the UTF8 encoding.
      * </p>
      *
-     * @see {@link org.firebirdsql.gds.ng.wire.version12.V12ParameterConverter}
+     * @see V12ParameterConverter
      */
     @Override
     protected Encoding getFilenameEncoding(DatabaseParameterBuffer dpb) {

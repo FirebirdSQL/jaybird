@@ -69,7 +69,7 @@ public class AbstractListenerDispatcher<TListener> implements Iterable<TListener
     /**
      * Shuts down this dispatcher and removes all listeners.
      * <p>
-     * After shutdown calls to {@link #addListener(TListener)} are ignored.
+     * After shutdown calls to {@link #addListener(Object)} are ignored.
      * </p>
      */
     public final void shutdown() {

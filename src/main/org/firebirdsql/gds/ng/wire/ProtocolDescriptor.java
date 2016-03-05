@@ -44,8 +44,10 @@ import java.sql.SQLException;
  * Protocol descriptors loaded this way are required to adhere to the following rules:
  * <ul>
  * <li>They provide a no-arg constructor</li>
- * <li>All instances of a specific implementation class created with the no-arg constructor have the same {@link #hashCode()}.</li>
- * <li>All instances of a specific implementation class created with the no-arg constructor are considered equal to each other by the {@link #equals(Object)} implementation</li>
+ * <li>All instances of a specific implementation class created with the no-arg constructor have the
+ * same {@link Object#hashCode()}.</li>
+ * <li>All instances of a specific implementation class created with the no-arg constructor are considered equal to
+ * each other by the {@link Object#equals(Object)} implementation</li>
  * </ul>
  * </p>
  *
