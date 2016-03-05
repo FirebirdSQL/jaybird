@@ -105,6 +105,15 @@ before the final release. Support for zlib compression is not planned yet.
 
 *TODO: Add FB 3 compatibility notes / link to wiki*
 
+Support for protocol version 13 and the SRP authentication was contributed
+by [Hajime Nakagami](https://github.com/nakagami).
+
+### Other Firebird feature support
+
+* Add support for streaming backup and restore ([JDBC-256](http://tracker.firebirdsql.org/browse/JDBC-256))
+
+   This feature was contributed by [Ivan Arabadzhiev](https://github.com/ls4f)
+
 New low-level implementation
 ----------------------------
 
@@ -136,7 +145,7 @@ Other fixes and changes
 
 * Reimplemented character set handling (*TODO: Provide more info?*)
 
-* Improved support of JDBC Escape syntax (`{...}`) and supported functions (*TODO: Provide more info?*) 
+* Improved support of JDBC Escape syntax (`{...}`) and supported functions (*TODO: Provide more info?*)
   ([JDBC-223](http://tracker.firebirdsql.org/browse/JDBC-223))
 
     The escape parser will now only allow the function names defined in
@@ -191,6 +200,8 @@ Exceptions
     This change does not mean that there are no Firebird-specific `SQLException`
     sub-classes anymore, but in general we strive to use the standard
     exceptions where possible.
+
+* Class `FBSQLWarning` has been removed and should be replaced with `SQLWarning`.
 
 * Methods with `throws FBSQLException` changed to `throws SQLException`
 
@@ -446,4 +457,11 @@ will break if we use features introduced in newer versions.
 
 ### Dropping support for Java 7 ###
 
-Jaybird 3.1 will drop support for Java 7.
+Jaybird 3.1 will very likely drop support for Java 7 (this decision is not final yet).
+
+### Removal of deprecated classes, interfaces, and constants ###
+
+The following constants will be removed in Jaybird 3.1
+
+- All `SQL_STATE_*` constants in `FBSQLException`. Use equivalent constants in
+  `SQLStateConstants`.

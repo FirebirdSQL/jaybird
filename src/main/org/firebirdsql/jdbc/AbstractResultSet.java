@@ -25,7 +25,9 @@ import java.sql.*;
 import java.sql.Date;
 import java.util.*;
 
+import org.firebirdsql.gds.JaybirdErrorCodes;
 import org.firebirdsql.gds.impl.GDSHelper;
+import org.firebirdsql.gds.ng.FbExceptionBuilder;
 import org.firebirdsql.gds.ng.FbStatement;
 import org.firebirdsql.gds.ng.fields.RowDescriptor;
 import org.firebirdsql.gds.ng.fields.RowValue;
@@ -116,8 +118,9 @@ public abstract class AbstractResultSet implements ResultSet, FirebirdResultSet,
         this.fbStatement = fbStatement;
 
         if (rsType == ResultSet.TYPE_SCROLL_SENSITIVE) {
-            fbStatement.addWarning(new FBSQLWarning(
-                    "Result set type changed to TYPE_SCROLL_INSENSITIVE. ResultSet.TYPE_SCROLL_SENSITIVE is not supported."));
+            fbStatement.addWarning(FbExceptionBuilder
+                    .forWarning(JaybirdErrorCodes.jb_resultSetTypeDowngradeReasonScrollSensitive)
+                    .toFlatSQLException(SQLWarning.class));
             rsType = ResultSet.TYPE_SCROLL_INSENSITIVE;
         }
 
@@ -140,7 +143,9 @@ public abstract class AbstractResultSet implements ResultSet, FirebirdResultSet,
             try {
                 rowUpdater = new FBRowUpdater(gdsHelper, rowDescriptor, this, cached, listener);
             } catch (FBResultSetNotUpdatableException ex) {
-                fbStatement.addWarning(new FBSQLWarning("Result set concurrency changed to READ ONLY."));
+                fbStatement.addWarning(FbExceptionBuilder
+                        .forException(JaybirdErrorCodes.jb_concurrencyResetReadOnlyReasonNotUpdatable)
+                        .toFlatSQLException(SQLWarning.class));
                 rsConcurrency = ResultSet.CONCUR_READ_ONLY;
             }
         }
@@ -275,7 +280,7 @@ public abstract class AbstractResultSet implements ResultSet, FirebirdResultSet,
      */
     protected void checkOpen() throws SQLException {
         if (isClosed())
-            throw new FBSQLException("The result set is closed", FBSQLException.SQL_STATE_NO_RESULT_SET);
+            throw new FBSQLException("The result set is closed", SQLStateConstants.SQL_STATE_NO_RESULT_SET);
     }
 
     /**
@@ -719,12 +724,12 @@ public abstract class AbstractResultSet implements ResultSet, FirebirdResultSet,
         if (checkRowPosition && row == null && rowUpdater == null)
             throw new FBSQLException(
                     "The resultSet is not in a row, use next",
-                    FBSQLException.SQL_STATE_NO_ROW_AVAIL);
+                    SQLStateConstants.SQL_STATE_NO_ROW_AVAIL);
 
         if (columnIndex > rowDescriptor.getCount())
             throw new FBSQLException(
                     "Invalid column index.",
-                    FBSQLException.SQL_STATE_INVALID_COLUMN);
+                    SQLStateConstants.SQL_STATE_INVALID_COLUMN);
 
         if (rowUpdater != null)
             return rowUpdater.getField(columnIndex - 1);
@@ -743,12 +748,12 @@ public abstract class AbstractResultSet implements ResultSet, FirebirdResultSet,
         if (row == null && rowUpdater == null)
             throw new FBSQLException(
                     "The resultSet is not in a row, use next",
-                    FBSQLException.SQL_STATE_NO_ROW_AVAIL);
+                    SQLStateConstants.SQL_STATE_NO_ROW_AVAIL);
 
         if (columnName == null) {
             throw new FBSQLException(
                     "Column identifier must be not null.",
-                    FBSQLException.SQL_STATE_INVALID_COLUMN);
+                    SQLStateConstants.SQL_STATE_INVALID_COLUMN);
         }
 
         Integer fieldNum = colNames.get(columnName);
@@ -1121,7 +1126,7 @@ public abstract class AbstractResultSet implements ResultSet, FirebirdResultSet,
         if (columnName == null || columnName.equals("")) {
             throw new FBSQLException(
                     "Empty string does not identify column.",
-                    FBSQLException.SQL_STATE_INVALID_COLUMN);
+                    SQLStateConstants.SQL_STATE_INVALID_COLUMN);
         }
         if (columnName.startsWith("\"") && columnName.endsWith("\"")) {
             columnName = columnName.substring(1, columnName.length() - 1);
@@ -1152,7 +1157,7 @@ public abstract class AbstractResultSet implements ResultSet, FirebirdResultSet,
 
         throw new FBSQLException(
                 "Column name " + columnName + " not found in result set.",
-                FBSQLException.SQL_STATE_INVALID_COLUMN);
+                SQLStateConstants.SQL_STATE_INVALID_COLUMN);
     }
 
     //--------------------------JDBC 2.0-----------------------------------
@@ -1503,7 +1508,7 @@ public abstract class AbstractResultSet implements ResultSet, FirebirdResultSet,
             throw new FBDriverNotCapableException("Fetch direction other than FETCH_FORWARD not supported");
         default:
             throw new SQLException(String.format("Invalid fetchDirection, value %d", direction),
-                    FBSQLException.SQL_STATE_INVALID_ARG_VALUE);
+                    SQLStateConstants.SQL_STATE_INVALID_ARG_VALUE);
         }
     }
 
@@ -1542,7 +1547,7 @@ public abstract class AbstractResultSet implements ResultSet, FirebirdResultSet,
         checkOpen();
         if (rows < 0)
             throw new FBSQLException("Can't set negative fetch size.",
-                    FBSQLException.SQL_STATE_INVALID_ARG_VALUE);
+                    SQLStateConstants.SQL_STATE_INVALID_ARG_VALUE);
         else
             fbFetcher.setFetchSize(rows);
     }

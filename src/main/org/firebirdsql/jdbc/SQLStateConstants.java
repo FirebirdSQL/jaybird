@@ -22,39 +22,44 @@
  * OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.firebirdsql.gds;
+package org.firebirdsql.jdbc;
 
 /**
- * Constants for Jaybird specific error codes.
- * <p>
- * The error code of Jaybird use the same scheme as the rest of Firebird error codes. The error codes are not
- * maintained within Firebird, but here and in associated files {@code jaybird_error_msg.properties}
- * and {@code jaybird_error_sqlstates.properties}
- * </p>
- * <p>
- * For error codes, Firebird has reserved facility code {@code 26} for Jaybird. Facility code 26 has error codes in
- * range 337248256 - 337264639. See Firebird {@code src\common\msg_encode.h} for calculation of this range.
- * </p>
+ * Constants with common SQLState values.
  *
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @since 3.0
  */
-public interface JaybirdErrorCodes {
+public final class SQLStateConstants {
 
-    @SuppressWarnings("unused")
-    int jb_range_start              = 337248256;
-    int jb_blobGetSegmentNegative   = 337248257;
-    int jb_blobPutSegmentEmpty      = 337248258;
-    int jb_blobPutSegmentTooLong    = 337248259;
-    int jb_blobIdAlreadySet         = 337248260;
-    int jb_invalidClumpletStructure = 337248261;
-    int jb_clumpletReaderUsageError = 337248262;
-    int jb_invalidConnectionString  = 337248263;
-    int jb_concurrencyResetReadOnlyReasonNotUpdatable    = 337248264;
-    int jb_resultSetTypeUpgradeReasonHoldability         = 337248265;
-    int jb_resultSetTypeDowngradeReasonScrollSensitive   = 337248266;
-    int jb_concurrencyResetReadOnlyReasonStoredProcedure = 337248267;
+    public static final String SQL_STATE_WARNING = "01000";
 
-    @SuppressWarnings("unused")
-    int jb_range_end                = 337264639;
+    public static final String SQL_STATE_INVALID_CONN_ATTR = "01S00";
+    public static final String SQL_STATE_NO_ROW_AVAIL = "01S06";
+
+    public static final String SQL_STATE_GENERAL_ERROR = "HY000";
+    public static final String SQL_STATE_INVALID_COLUMN = "HY002";
+    public static final String SQL_STATE_INVALID_ARG_VALUE = "HY009";
+    public static final String SQL_STATE_INVALID_OPTION_IDENTIFIER = "HY092";
+    public static final String SQL_STATE_INVALID_PARAM_TYPE = "HY105";
+
+    public static final String SQL_STATE_WRONG_PARAM_NUM = "07001";
+    public static final String SQL_STATE_NO_RESULT_SET = "07005";
+    public static final String SQL_STATE_INVALID_CONVERSION = "07006";
+
+    public static final String SQL_STATE_INVALID_TX_STATE = "25000";
+
+    public static final String SQL_STATE_INVALID_STATEMENT_ID = "26000";
+
+    public static final String SQL_STATE_CONNECTION_ERROR = "08000";
+    public static final String SQL_STATE_CONNECTION_CLOSED = "08003";
+    public static final String SQL_STATE_CONNECTION_FAILURE = "08006";
+    public static final String SQL_STATE_CONNECTION_FAILURE_IN_TX = "08007";
+    public static final String SQL_STATE_COMM_LINK_FAILURE = "08S01";
+
+    public static final String SQL_STATE_SYNTAX_ERROR = "42000";
+
+    private SQLStateConstants() {
+        // no instances
+    }
 }

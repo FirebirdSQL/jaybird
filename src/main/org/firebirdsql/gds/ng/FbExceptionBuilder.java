@@ -19,9 +19,8 @@
 package org.firebirdsql.gds.ng;
 
 import org.firebirdsql.gds.GDSExceptionHelper;
-import org.firebirdsql.jdbc.FBSQLException;
 import org.firebirdsql.jdbc.FBSQLExceptionInfo;
-import org.firebirdsql.jdbc.FBSQLWarning;
+import org.firebirdsql.jdbc.SQLStateConstants;
 import org.firebirdsql.util.SQLExceptionChainBuilder;
 
 import java.sql.*;
@@ -71,11 +70,26 @@ public final class FbExceptionBuilder {
      *
      * @param errorCode
      *         The Firebird error code
-     * @return FbExceptionBuilder initalized with the specified error ocde
+     * @return FbExceptionBuilder initialized with the specified error code
      */
     public static FbExceptionBuilder forException(int errorCode) {
         final FbExceptionBuilder fbExceptionBuilder = new FbExceptionBuilder();
         return fbExceptionBuilder.exception(errorCode);
+    }
+
+    /**
+     * Creates an exception builder for a warning with the specified error code.
+     * <p>
+     * Equivalent to calling: {@code new FbExceptionBuilder().warning(errorCode); }
+     * </p>
+     *
+     * @param errorCode
+     *         The Firebird error code
+     * @return FbExceptionBuilder initialized with the specified error code
+     */
+    public static FbExceptionBuilder forWarning(int errorCode) {
+        final FbExceptionBuilder fbExceptionBuilder = new FbExceptionBuilder();
+        return fbExceptionBuilder.warning(errorCode);
     }
 
     /**
@@ -273,7 +287,7 @@ public final class FbExceptionBuilder {
                 .append(']');
 
         /* If the type of the head of the chain is not Type.EXCEPTION we use that, not the type of the interesting
-         * exception info as the head of the chain will been set explicitly to an expected exception type (eg Type.WARNING).
+         * exception info as the head of the chain has been set explicitly to an expected exception type (eg Type.WARNING).
          */
         Type exceptionType = firstExceptionInfo.type != Type.EXCEPTION
                 ? firstExceptionInfo.type
@@ -299,6 +313,22 @@ public final class FbExceptionBuilder {
      */
     public <T extends SQLException> T toSQLException(Class<T> type) throws ClassCastException {
         return type.cast(toSQLException());
+    }
+
+    /**
+     * Converts the builder to the appropriate SQLException instance and casts to the specified type T.
+     *
+     * @param type
+     *         Class of type T
+     * @param <T>
+     *         Expected exception type
+     * @return SQLException of type T
+     * @throws ClassCastException
+     *         If the first exception created with this builder is not of the specified type
+     * @see #toFlatSQLException()
+     */
+    public <T extends SQLException> T toFlatSQLException(Class<T> type) throws ClassCastException {
+        return type.cast(toFlatSQLException());
     }
 
     @Override
@@ -437,7 +467,7 @@ public final class FbExceptionBuilder {
         /**
          * General {@link SQLException}, the actual type is determined by the builder.
          */
-        EXCEPTION(FBSQLException.SQL_STATE_GENERAL_ERROR) {
+        EXCEPTION(SQLStateConstants.SQL_STATE_GENERAL_ERROR) {
             @Override
             public SQLException createSQLException(final String message, final String sqlState, final int errorCode) {
                 // TODO Replace with a list or chain of processors?
@@ -456,7 +486,7 @@ public final class FbExceptionBuilder {
         /**
          * Warning, exception created is of {@link SQLWarning} or a subclass
          */
-        WARNING(FBSQLWarning.SQL_STATE_WARNING) {
+        WARNING(SQLStateConstants.SQL_STATE_WARNING) {
             @Override
             public SQLException createSQLException(final String message, final String sqlState, final int errorCode) {
                 return new SQLWarning(message, sqlState, errorCode);
@@ -466,7 +496,7 @@ public final class FbExceptionBuilder {
          * Force builder to create exception of {@link java.sql.SQLTimeoutException} or subclass
          */
         // TODO Specific default sqlstate for timeout?
-        TIMEOUT(FBSQLException.SQL_STATE_GENERAL_ERROR) {
+        TIMEOUT(SQLStateConstants.SQL_STATE_GENERAL_ERROR) {
             @Override
             public SQLException createSQLException(final String message, final String sqlState, final int errorCode) {
                 return new SQLTimeoutException(message, sqlState, errorCode);
@@ -475,7 +505,7 @@ public final class FbExceptionBuilder {
         /**
          * Force builder to create exception of {@link java.sql.SQLNonTransientException}
          */
-        NON_TRANSIENT(FBSQLException.SQL_STATE_GENERAL_ERROR) {
+        NON_TRANSIENT(SQLStateConstants.SQL_STATE_GENERAL_ERROR) {
             @Override
             public SQLException createSQLException(final String message, final String sqlState, final int errorCode) {
                 return new SQLNonTransientException(message, sqlState, errorCode);
@@ -484,7 +514,7 @@ public final class FbExceptionBuilder {
         /**
          * Force builder to create exception of {@link java.sql.SQLNonTransientConnectionException}
          */
-        NON_TRANSIENT_CONNECT(FBSQLException.SQL_STATE_CONNECTION_ERROR) {
+        NON_TRANSIENT_CONNECT(SQLStateConstants.SQL_STATE_CONNECTION_ERROR) {
             @Override
             public SQLException createSQLException(final String message, final String sqlState, final int errorCode) {
                 return new SQLNonTransientConnectionException(message, sqlState, errorCode);

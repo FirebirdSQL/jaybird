@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source J2ee connector - jdbc driver
+ * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -12,11 +12,10 @@
  * This file was created by members of the firebird development team.
  * All individual contributions remain the Copyright (C) of those
  * individuals.  Contributors to this file are either listed here or
- * can be obtained from a CVS history command.
+ * can be obtained from a source control history command.
  *
  * All rights reserved.
  */
-
 package org.firebirdsql.jdbc;
 
 import java.sql.SQLException;
@@ -31,30 +30,104 @@ public class FBSQLException extends SQLException {
 
     private static final long serialVersionUID = 8157410954186424083L;
 
-    public static final String SQL_STATE_INVALID_CONN_ATTR = "01S00";
-    public static final String SQL_STATE_NO_ROW_AVAIL = "01S06";
+    /**
+     * @deprecated Use constants from {@link SQLStateConstants}. To be removed in 3.1.
+     */
+    @Deprecated
+    public static final String SQL_STATE_INVALID_CONN_ATTR = SQLStateConstants.SQL_STATE_INVALID_CONN_ATTR;
+    /**
+     * @deprecated Use constants from {@link SQLStateConstants}. To be removed in 3.1.
+     */
+    @Deprecated
+    public static final String SQL_STATE_NO_ROW_AVAIL = SQLStateConstants.SQL_STATE_NO_ROW_AVAIL;
 
-    public static final String SQL_STATE_GENERAL_ERROR = "HY000";
-    public static final String SQL_STATE_INVALID_COLUMN = "HY002";
-    public static final String SQL_STATE_INVALID_ARG_VALUE = "HY009";
-    public static final String SQL_STATE_INVALID_OPTION_IDENTIFIER = "HY092";
-    public static final String SQL_STATE_INVALID_PARAM_TYPE = "HY105";
+    /**
+     * @deprecated Use constants from {@link SQLStateConstants}. To be removed in 3.1.
+     */
+    @Deprecated
+    public static final String SQL_STATE_GENERAL_ERROR = SQLStateConstants.SQL_STATE_GENERAL_ERROR;
+    /**
+     * @deprecated Use constants from {@link SQLStateConstants}. To be removed in 3.1.
+     */
+    @Deprecated
+    public static final String SQL_STATE_INVALID_COLUMN = SQLStateConstants.SQL_STATE_INVALID_COLUMN;
+    /**
+     * @deprecated Use constants from {@link SQLStateConstants}. To be removed in 3.1.
+     */
+    @Deprecated
+    public static final String SQL_STATE_INVALID_ARG_VALUE = SQLStateConstants.SQL_STATE_INVALID_ARG_VALUE;
+    /**
+     * @deprecated Use constants from {@link SQLStateConstants}. To be removed in 3.1.
+     */
+    @Deprecated
+    public static final String SQL_STATE_INVALID_OPTION_IDENTIFIER =
+            SQLStateConstants.SQL_STATE_INVALID_OPTION_IDENTIFIER;
+    /**
+     * @deprecated Use constants from {@link SQLStateConstants}. To be removed in 3.1.
+     */
+    @Deprecated
+    public static final String SQL_STATE_INVALID_PARAM_TYPE = SQLStateConstants.SQL_STATE_INVALID_PARAM_TYPE;
 
-    public static final String SQL_STATE_WRONG_PARAM_NUM = "07001";
-    public static final String SQL_STATE_NO_RESULT_SET = "07005";
-    public static final String SQL_STATE_INVALID_CONVERSION = "07006";
+    /**
+     * @deprecated Use constants from {@link SQLStateConstants}. To be removed in 3.1.
+     */
+    @Deprecated
+    public static final String SQL_STATE_WRONG_PARAM_NUM = SQLStateConstants.SQL_STATE_WRONG_PARAM_NUM;
+    /**
+     * @deprecated Use constants from {@link SQLStateConstants}. To be removed in 3.1.
+     */
+    @Deprecated
+    public static final String SQL_STATE_NO_RESULT_SET = SQLStateConstants.SQL_STATE_NO_RESULT_SET;
+    /**
+     * @deprecated Use constants from {@link SQLStateConstants}. To be removed in 3.1.
+     */
+    @Deprecated
+    public static final String SQL_STATE_INVALID_CONVERSION = SQLStateConstants.SQL_STATE_INVALID_CONVERSION;
 
-    public static final String SQL_STATE_INVALID_TX_STATE = "25000";
+    /**
+     * @deprecated Use constants from {@link SQLStateConstants}. To be removed in 3.1.
+     */
+    @Deprecated
+    public static final String SQL_STATE_INVALID_TX_STATE = SQLStateConstants.SQL_STATE_INVALID_TX_STATE;
 
-    public static final String SQL_STATE_INVALID_STATEMENT_ID = "26000";
+    /**
+     * @deprecated Use constants from {@link SQLStateConstants}. To be removed in 3.1.
+     */
+    @Deprecated
+    public static final String SQL_STATE_INVALID_STATEMENT_ID = SQLStateConstants.SQL_STATE_INVALID_STATEMENT_ID;
 
-    public static final String SQL_STATE_CONNECTION_ERROR = "08000";
-    public static final String SQL_STATE_CONNECTION_CLOSED = "08003";
-    public static final String SQL_STATE_CONNECTION_FAILURE = "08006";
-    public static final String SQL_STATE_CONNECTION_FAILURE_IN_TX = "08007";
-    public static final String SQL_STATE_COMM_LINK_FAILURE = "08S01";
+    /**
+     * @deprecated Use constants from {@link SQLStateConstants}. To be removed in 3.1.
+     */
+    @Deprecated
+    public static final String SQL_STATE_CONNECTION_ERROR = SQLStateConstants.SQL_STATE_CONNECTION_ERROR;
+    /**
+     * @deprecated Use constants from {@link SQLStateConstants}. To be removed in 3.1.
+     */
+    @Deprecated
+    public static final String SQL_STATE_CONNECTION_CLOSED = SQLStateConstants.SQL_STATE_CONNECTION_CLOSED;
+    /**
+     * @deprecated Use constants from {@link SQLStateConstants}. To be removed in 3.1.
+     */
+    @Deprecated
+    public static final String SQL_STATE_CONNECTION_FAILURE = SQLStateConstants.SQL_STATE_CONNECTION_FAILURE;
+    /**
+     * @deprecated Use constants from {@link SQLStateConstants}. To be removed in 3.1.
+     */
+    @Deprecated
+    public static final String SQL_STATE_CONNECTION_FAILURE_IN_TX =
+            SQLStateConstants.SQL_STATE_CONNECTION_FAILURE_IN_TX;
+    /**
+     * @deprecated Use constants from {@link SQLStateConstants}. To be removed in 3.1.
+     */
+    @Deprecated
+    public static final String SQL_STATE_COMM_LINK_FAILURE = SQLStateConstants.SQL_STATE_COMM_LINK_FAILURE;
 
-    public static final String SQL_STATE_SYNTAX_ERROR = "42000";
+    /**
+     * @deprecated Use constants from {@link SQLStateConstants}. To be removed in 3.1.
+     */
+    @Deprecated
+    public static final String SQL_STATE_SYNTAX_ERROR = SQLStateConstants.SQL_STATE_SYNTAX_ERROR;
 
     public FBSQLException(Exception ex) {
         this("Exception. " + ex.getMessage());
@@ -71,7 +144,7 @@ public class FBSQLException extends SQLException {
     }
 
     public FBSQLException(String message) {
-        super(message, SQL_STATE_GENERAL_ERROR);
+        super(message, SQLStateConstants.SQL_STATE_GENERAL_ERROR);
     }
 
     /**
@@ -184,6 +257,6 @@ public class FBSQLException extends SQLException {
      *         null.
      */
     public static String defaultSQLStateIfNull(String sqlState) {
-        return sqlState != null ? sqlState : FBSQLException.SQL_STATE_GENERAL_ERROR;
+        return sqlState != null ? sqlState : SQLStateConstants.SQL_STATE_GENERAL_ERROR;
     }
 }
