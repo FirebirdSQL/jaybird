@@ -1,7 +1,5 @@
 /*
- * $Id$
- * 
- * Firebird Open Source J2EE Connector - JDBC Driver
+ * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -14,7 +12,7 @@
  * This file was created by members of the firebird development team.
  * All individual contributions remain the Copyright (C) of those
  * individuals.  Contributors to this file are either listed here or
- * can be obtained from a CVS history command.
+ * can be obtained from a source control history command.
  *
  * All rights reserved.
  */
@@ -29,6 +27,7 @@ import java.sql.Statement;
 
 import org.firebirdsql.jdbc.FBSQLException;
 import org.firebirdsql.jdbc.FirebirdStatement;
+import org.firebirdsql.jdbc.SQLStateConstants;
 
 import static org.firebirdsql.util.ReflectionHelper.*;
 
@@ -72,12 +71,12 @@ class StatementHandler implements InvocationHandler {
         if (method.equals(EQUALS)) {
             // Using parameter proxy (and not field) on purpose as field is
             // nulled after closing
-            return Boolean.valueOf(proxy == args[0]);
+            return proxy == args[0];
         }
         if (method.equals(HASH_CODE)) {
             // Using parameter proxy (and not field) on purpose as field is
             // nulled after closing
-            return Integer.valueOf(System.identityHashCode(proxy));
+            return System.identityHashCode(proxy);
         }
         // Other methods from object
         if (method.getDeclaringClass().equals(Object.class)) {
@@ -90,11 +89,10 @@ class StatementHandler implements InvocationHandler {
 
         // Methods of statement and subinterfaces
         if (method.equals(STATEMENT_IS_CLOSED) || method.equals(FIREBIRDSTATEMENT_IS_CLOSED)) {
-            return Boolean.valueOf(isClosed());
+            return isClosed();
         }
         if (isClosed() && !method.equals(STATEMENT_CLOSE)) {
-            throw new FBSQLException("Statement already closed",
-                    FBSQLException.SQL_STATE_INVALID_STATEMENT_ID);
+            throw new FBSQLException("Statement already closed", SQLStateConstants.SQL_STATE_INVALID_STATEMENT_ID);
         }
         
         try {

@@ -169,7 +169,7 @@ public class FBSQLException extends SQLException {
      *            Exception message
      * @param sqlState
      *            SQL State for this exception. Replaced with
-     *            {@link FBSQLException#SQL_STATE_GENERAL_ERROR} if null
+     *            {@link SQLStateConstants#SQL_STATE_GENERAL_ERROR} if null
      */
     public FBSQLException(String message, String sqlState) {
         super(message, defaultSQLStateIfNull(sqlState));
@@ -253,7 +253,7 @@ public class FBSQLException extends SQLException {
      * @param sqlState
      *            SQL State value (or null)
      * @return The passed sqlState or
-     *         {@link FBSQLException#SQL_STATE_GENERAL_ERROR} if sqlState is
+     *         {@link SQLStateConstants#SQL_STATE_GENERAL_ERROR} if sqlState is
      *         null.
      */
     public static String defaultSQLStateIfNull(String sqlState) {

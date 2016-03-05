@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
@@ -20,7 +18,7 @@
  */
 package org.firebirdsql.gds.ng;
 
-import org.firebirdsql.jdbc.FBSQLException;
+import org.firebirdsql.jdbc.SQLStateConstants;
 
 import java.sql.SQLException;
 import java.sql.SQLNonTransientException;
@@ -48,7 +46,7 @@ public class TransactionHelper {
      */
     public static void checkTransactionActive(final FbTransaction transaction) throws SQLException {
         if (transaction == null || transaction.getState() != TransactionState.ACTIVE) {
-            throw new SQLNonTransientException(NO_TRANSACTION_ACTIVE, FBSQLException.SQL_STATE_INVALID_TX_STATE);
+            throw new SQLNonTransientException(NO_TRANSACTION_ACTIVE, SQLStateConstants.SQL_STATE_INVALID_TX_STATE);
         }
     }
 
@@ -62,7 +60,8 @@ public class TransactionHelper {
      * @throws SQLException
      *         When this statement does not have a transaction, or if that transaction is not active.
      */
-    public static void checkTransactionActive(final FbTransaction transaction, final int fbErrorCode) throws SQLException {
+    public static void checkTransactionActive(final FbTransaction transaction, final int fbErrorCode)
+            throws SQLException {
         if (transaction == null || transaction.getState() != TransactionState.ACTIVE) {
             throw new FbExceptionBuilder().nonTransientException(fbErrorCode).toSQLException();
         }

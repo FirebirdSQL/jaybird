@@ -23,7 +23,7 @@ import org.firebirdsql.gds.ng.fields.FieldValue;
 import org.firebirdsql.gds.ng.fields.RowDescriptor;
 import org.firebirdsql.gds.ng.fields.RowValue;
 import org.firebirdsql.gds.ng.listeners.*;
-import org.firebirdsql.jdbc.FBSQLException;
+import org.firebirdsql.jdbc.SQLStateConstants;
 import org.firebirdsql.logging.Logger;
 import org.firebirdsql.logging.LoggerFactory;
 
@@ -579,8 +579,8 @@ public abstract class AbstractFbStatement implements FbStatement {
                     }
                 }
             } else {
-                throw new SQLNonTransientException(String.format("Invalid transaction handle type, got \"%s\"", newTransaction.getClass().getName()),
-                        FBSQLException.SQL_STATE_GENERAL_ERROR);
+                throw new SQLNonTransientException(String.format("Invalid transaction handle type, got \"%s\"",
+                        newTransaction.getClass().getName()), SQLStateConstants.SQL_STATE_GENERAL_ERROR);
             }
         } catch (SQLNonTransientException e) {
             exceptionListenerDispatcher.errorOccurred(e);

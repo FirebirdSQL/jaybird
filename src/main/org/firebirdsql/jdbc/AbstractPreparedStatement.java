@@ -180,7 +180,7 @@ public abstract class AbstractPreparedStatement extends FBStatement implements F
             notifyStatementStarted();
 
             if (!internalExecute(isExecuteProcedureStatement))  
-                throw new FBSQLException("No resultset for sql", FBSQLException.SQL_STATE_NO_RESULT_SET);
+                throw new FBSQLException("No resultset for sql", SQLStateConstants.SQL_STATE_NO_RESULT_SET);
 
             return getResultSet();
         }
@@ -514,7 +514,7 @@ public abstract class AbstractPreparedStatement extends FBStatement implements F
     protected FBField getField(int columnIndex) throws SQLException {
         checkValidity();
         if (columnIndex > fields.length)
-            throw new FBSQLException("Invalid column index.", FBSQLException.SQL_STATE_INVALID_COLUMN);
+            throw new FBSQLException("Invalid column index.", SQLStateConstants.SQL_STATE_INVALID_COLUMN);
 
         return fields[columnIndex - 1];
     }

@@ -30,8 +30,11 @@ import org.firebirdsql.gds.impl.TransactionParameterBufferImpl;
 import org.firebirdsql.gds.impl.jni.EmbeddedGDSFactoryPlugin;
 import org.firebirdsql.gds.impl.jni.NativeGDSFactoryPlugin;
 import org.firebirdsql.gds.ng.*;
-import org.firebirdsql.gds.ng.wire.*;
-import org.firebirdsql.jdbc.FBSQLException;
+import org.firebirdsql.gds.ng.wire.AbstractFbWireDatabase;
+import org.firebirdsql.gds.ng.wire.FbWireDatabase;
+import org.firebirdsql.gds.ng.wire.ProtocolCollection;
+import org.firebirdsql.gds.ng.wire.WireDatabaseConnection;
+import org.firebirdsql.jdbc.SQLStateConstants;
 import org.firebirdsql.management.FBManager;
 import org.junit.ClassRule;
 import org.junit.Ignore;
@@ -235,7 +238,7 @@ public class TestV10Database {
     public void testDrop_NotAttached() throws Exception {
         expectedException.expect(SQLException.class);
         expectedException.expectMessage(equalTo("The connection is not attached to a database"));
-        expectedException.expect(sqlStateEquals(FBSQLException.SQL_STATE_CONNECTION_ERROR));
+        expectedException.expect(sqlStateEquals(SQLStateConstants.SQL_STATE_CONNECTION_ERROR));
 
         FBManager fbManager = createFBManager();
         defaultDatabaseSetUp(fbManager);
@@ -256,7 +259,7 @@ public class TestV10Database {
 
         expectedException.expect(SQLException.class);
         expectedException.expectMessage(equalTo("No connection established to the database server"));
-        expectedException.expect(sqlStateEquals(FBSQLException.SQL_STATE_CONNECTION_CLOSED));
+        expectedException.expect(sqlStateEquals(SQLStateConstants.SQL_STATE_CONNECTION_CLOSED));
 
         db.close();
     }

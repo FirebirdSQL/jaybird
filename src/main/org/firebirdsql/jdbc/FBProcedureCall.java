@@ -184,7 +184,7 @@ public class FBProcedureCall implements Cloneable {
         if (compatibilityMode) {
             return index;
         } else {
-            throw new FBSQLException("Specified parameter does not exist.", FBSQLException.SQL_STATE_INVALID_COLUMN);
+            throw new FBSQLException("Specified parameter does not exist.", SQLStateConstants.SQL_STATE_INVALID_COLUMN);
         }
     }
 
@@ -299,7 +299,7 @@ public class FBProcedureCall implements Cloneable {
 
         if (param == null || param == NullParam.NULL_PARAM) {
             throw new SQLException("Cannot find parameter with the specified position.",
-                    FBSQLException.SQL_STATE_INVALID_COLUMN);
+                    SQLStateConstants.SQL_STATE_INVALID_COLUMN);
         }
 
         param.setType(type);
@@ -360,7 +360,8 @@ public class FBProcedureCall implements Cloneable {
                         && outputParams.size() > 0
                         && outputParams.get(param.getPosition()) == null)
                     throw new FBSQLException("Value of parameter " + param.getIndex() + " not set and "
-                            + "it was not registered as output parameter.", FBSQLException.SQL_STATE_WRONG_PARAM_NUM);
+                            + "it was not registered as output parameter.",
+                            SQLStateConstants.SQL_STATE_WRONG_PARAM_NUM);
             }
         }
     }
@@ -405,7 +406,7 @@ public class FBProcedureCall implements Cloneable {
 
         public void setValue(Object value) throws SQLException {
             throw new FBSQLException("You cannot set value of an non-existing parameter.",
-                    FBSQLException.SQL_STATE_INVALID_ARG_VALUE);
+                    SQLStateConstants.SQL_STATE_INVALID_ARG_VALUE);
         }
 
     }

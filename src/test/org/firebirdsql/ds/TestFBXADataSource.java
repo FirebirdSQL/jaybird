@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
@@ -20,33 +18,29 @@
  */
 package org.firebirdsql.ds;
 
-import java.sql.Connection;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Savepoint;
-import java.sql.Statement;
-import java.util.ArrayList;
-import java.util.List;
-
-import javax.sql.XAConnection;
-import javax.transaction.xa.XAResource;
-import javax.transaction.xa.Xid;
-
 import org.firebirdsql.common.FBJUnit4TestBase;
 import org.firebirdsql.gds.impl.GDSType;
 import org.firebirdsql.jca.TestXABase.XidImpl;
-import org.firebirdsql.jdbc.FBSQLException;
+import org.firebirdsql.jdbc.SQLStateConstants;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
-import static org.firebirdsql.common.JdbcResourceHelper.*;
+import javax.sql.XAConnection;
+import javax.transaction.xa.XAResource;
+import javax.transaction.xa.Xid;
+import java.sql.*;
+import java.util.ArrayList;
+import java.util.List;
+
 import static org.firebirdsql.common.FBTestProperties.*;
+import static org.firebirdsql.common.JdbcResourceHelper.closeQuietly;
 import static org.firebirdsql.common.matchers.SQLExceptionMatchers.sqlStateEquals;
 import static org.firebirdsql.util.FirebirdSupportInfo.supportInfoFor;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
 
 /**
@@ -60,7 +54,7 @@ public class TestFBXADataSource extends FBJUnit4TestBase {
     @Rule
     public final ExpectedException expectedException = ExpectedException.none();
     
-    private List<XAConnection> connections = new ArrayList<XAConnection>();
+    private List<XAConnection> connections = new ArrayList<>();
 
     protected FBXADataSource ds;
 
@@ -120,15 +114,11 @@ public class TestFBXADataSource extends FBJUnit4TestBase {
         assertEquals("Tx isolation level should be read committed.",
                 Connection.TRANSACTION_READ_COMMITTED, con.getTransactionIsolation());
 
-        Statement stmt = con.createStatement();
-
-        try {
+        try (Statement stmt = con.createStatement()) {
             ResultSet rs = stmt.executeQuery("SELECT cast(1 AS INTEGER) FROM rdb$database");
 
             assertTrue("Should select one row", rs.next());
             assertEquals("Selected value should be 1.", 1, rs.getInt(1));
-        } finally {
-            stmt.close();
         }
         con.close();
         assertTrue("Connection should report as being closed.", con.isClosed());
@@ -141,20 +131,18 @@ public class TestFBXADataSource extends FBJUnit4TestBase {
     public void testInDistributed_setAutoCommit_true_notInAutoCommit() throws Exception {
         XAConnection pc = getXAConnection();
         XAResource xa = pc.getXAResource();
-        Connection con = pc.getConnection();
         Xid xid = new XidImpl();
-        try {
+        try (Connection con = pc.getConnection()) {
             con.setAutoCommit(false);
             xa.start(xid, XAResource.TMNOFLAGS);
 
             expectedException.expect(SQLException.class);
-            expectedException.expect(sqlStateEquals(FBSQLException.SQL_STATE_INVALID_TX_STATE));
+            expectedException.expect(sqlStateEquals(SQLStateConstants.SQL_STATE_INVALID_TX_STATE));
 
             con.setAutoCommit(true);
         } finally {
             xa.end(xid, XAResource.TMSUCCESS);
             xa.rollback(xid);
-            con.close();
         }
     }
 
@@ -165,20 +153,18 @@ public class TestFBXADataSource extends FBJUnit4TestBase {
     public void testInDistributed_setAutoCommit_true_inAutoCommit() throws Exception {
         XAConnection pc = getXAConnection();
         XAResource xa = pc.getXAResource();
-        Connection con = pc.getConnection();
         Xid xid = new XidImpl();
-        try {
+        try (Connection con = pc.getConnection()) {
             con.setAutoCommit(true);
             xa.start(xid, XAResource.TMNOFLAGS);
 
             expectedException.expect(SQLException.class);
-            expectedException.expect(sqlStateEquals(FBSQLException.SQL_STATE_INVALID_TX_STATE));
+            expectedException.expect(sqlStateEquals(SQLStateConstants.SQL_STATE_INVALID_TX_STATE));
 
             con.setAutoCommit(true);
         } finally {
             xa.end(xid, XAResource.TMSUCCESS);
             xa.rollback(xid);
-            con.close();
         }
     }
     
@@ -189,20 +175,18 @@ public class TestFBXADataSource extends FBJUnit4TestBase {
     public void testInDistributed_commit() throws Exception {
         XAConnection pc = getXAConnection();
         XAResource xa = pc.getXAResource();
-        Connection con = pc.getConnection();
         Xid xid = new XidImpl();
-        try {
+        try (Connection con = pc.getConnection()) {
             con.setAutoCommit(false);
             xa.start(xid, XAResource.TMNOFLAGS);
 
             expectedException.expect(SQLException.class);
-            expectedException.expect(sqlStateEquals(FBSQLException.SQL_STATE_INVALID_TX_STATE));
+            expectedException.expect(sqlStateEquals(SQLStateConstants.SQL_STATE_INVALID_TX_STATE));
 
             con.commit();
         } finally {
             xa.end(xid, XAResource.TMSUCCESS);
             xa.rollback(xid);
-            con.close();
         }
     }
     
@@ -213,20 +197,18 @@ public class TestFBXADataSource extends FBJUnit4TestBase {
     public void testInDistributed_rollback() throws Exception {
         XAConnection pc = getXAConnection();
         XAResource xa = pc.getXAResource();
-        Connection con = pc.getConnection();
         Xid xid = new XidImpl();
-        try {
+        try (Connection con = pc.getConnection()) {
             con.setAutoCommit(false);
             xa.start(xid, XAResource.TMNOFLAGS);
 
             expectedException.expect(SQLException.class);
-            expectedException.expect(sqlStateEquals(FBSQLException.SQL_STATE_INVALID_TX_STATE));
+            expectedException.expect(sqlStateEquals(SQLStateConstants.SQL_STATE_INVALID_TX_STATE));
 
             con.rollback();
         } finally {
             xa.end(xid, XAResource.TMSUCCESS);
             xa.rollback(xid);
-            con.close();
         }
     }
     
@@ -237,9 +219,8 @@ public class TestFBXADataSource extends FBJUnit4TestBase {
     public void testInDistributed_rollback_savepoint() throws Exception {
         XAConnection pc = getXAConnection();
         XAResource xa = pc.getXAResource();
-        Connection con = pc.getConnection();
-        assumeTrue("Test requires SAVEPOINT support", supportInfoFor(con).supportsSavepoint());
-        try {
+        try (Connection con = pc.getConnection()) {
+            assumeTrue("Test requires SAVEPOINT support", supportInfoFor(con).supportsSavepoint());
             Xid xid = new XidImpl();
             try {
                 con.setAutoCommit(false);
@@ -248,15 +229,13 @@ public class TestFBXADataSource extends FBJUnit4TestBase {
                 xa.start(xid, XAResource.TMNOFLAGS);
 
                 expectedException.expect(SQLException.class);
-                expectedException.expect(sqlStateEquals(FBSQLException.SQL_STATE_INVALID_TX_STATE));
+                expectedException.expect(sqlStateEquals(SQLStateConstants.SQL_STATE_INVALID_TX_STATE));
 
                 con.rollback(savepoint);
             } finally {
                 xa.end(xid, XAResource.TMSUCCESS);
                 xa.rollback(xid);
             }
-        } finally {
-            con.close();
         }
     }
     
@@ -267,20 +246,18 @@ public class TestFBXADataSource extends FBJUnit4TestBase {
     public void testInDistributed_setSavepoint() throws Exception {
         XAConnection pc = getXAConnection();
         XAResource xa = pc.getXAResource();
-        Connection con = pc.getConnection();
         Xid xid = new XidImpl();
-        try {
+        try (Connection con = pc.getConnection()) {
             con.setAutoCommit(false);
             xa.start(xid, XAResource.TMNOFLAGS);
 
             expectedException.expect(SQLException.class);
-            expectedException.expect(sqlStateEquals(FBSQLException.SQL_STATE_INVALID_TX_STATE));
+            expectedException.expect(sqlStateEquals(SQLStateConstants.SQL_STATE_INVALID_TX_STATE));
 
             con.setSavepoint();
         } finally {
             xa.end(xid, XAResource.TMSUCCESS);
             xa.rollback(xid);
-            con.close();
         }
     }
     
@@ -291,20 +268,18 @@ public class TestFBXADataSource extends FBJUnit4TestBase {
     public void testInDistributed_setSavepoint_named() throws Exception {
         XAConnection pc = getXAConnection();
         XAResource xa = pc.getXAResource();
-        Connection con = pc.getConnection();
         Xid xid = new XidImpl();
-        try {
+        try (Connection con = pc.getConnection()) {
             con.setAutoCommit(false);
             xa.start(xid, XAResource.TMNOFLAGS);
 
             expectedException.expect(SQLException.class);
-            expectedException.expect(sqlStateEquals(FBSQLException.SQL_STATE_INVALID_TX_STATE));
+            expectedException.expect(sqlStateEquals(SQLStateConstants.SQL_STATE_INVALID_TX_STATE));
 
             con.setSavepoint("test_sp");
         } finally {
             xa.end(xid, XAResource.TMSUCCESS);
             xa.rollback(xid);
-            con.close();
         }
     }
     

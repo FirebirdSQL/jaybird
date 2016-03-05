@@ -295,7 +295,7 @@ public class FBBlob implements FirebirdBlob, Synchronizable {
         if (pos > Integer.MAX_VALUE)
             throw new FBSQLException("Blob position is limited to 2^31 - 1 " +
                     "due to isc_seek_blob limitations.",
-                    FBSQLException.SQL_STATE_INVALID_ARG_VALUE);
+                    SQLStateConstants.SQL_STATE_INVALID_ARG_VALUE);
 
         synchronized (getSynchronizationObject()) {
             blobListener.executionStarted(this);
@@ -354,14 +354,12 @@ public class FBBlob implements FirebirdBlob, Synchronizable {
             throw new FBSQLException("OutputStream already open. Only one blob output stream can be open at a time.");
 
         if (pos < 1)
-            throw new FBSQLException(
-                    "You can't start before the beginning of the blob",
-                    FBSQLException.SQL_STATE_INVALID_ARG_VALUE);
+            throw new FBSQLException("You can't start before the beginning of the blob",
+                    SQLStateConstants.SQL_STATE_INVALID_ARG_VALUE);
 
         if (isNew && pos > 1)
-            throw new FBSQLException(
-                    "Previous value was null, you must start at position 1",
-                    FBSQLException.SQL_STATE_INVALID_ARG_VALUE);
+            throw new FBSQLException("Previous value was null, you must start at position 1",
+                    SQLStateConstants.SQL_STATE_INVALID_ARG_VALUE);
 
         blobOut = new FBBlobOutputStream(this);
         if (pos > 1) {

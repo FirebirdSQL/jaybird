@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
@@ -110,7 +108,7 @@ public class TestFBCachedBlob {
         expectedException.expect(allOf(
                 isA(SQLException.class),
                 message(equalTo("Expected value of pos > 0, got 0")),
-                sqlState(equalTo(FBSQLException.SQL_STATE_INVALID_ARG_VALUE))));
+                sqlState(equalTo(SQLStateConstants.SQL_STATE_INVALID_ARG_VALUE))));
 
         blob.getBytes(0, 0);
     }
@@ -128,7 +126,7 @@ public class TestFBCachedBlob {
         expectedException.expect(allOf(
                         isA(SQLException.class),
                         message(equalTo("Expected value of length >= 0, got -1")),
-                        sqlState(equalTo(FBSQLException.SQL_STATE_INVALID_ARG_VALUE)))
+                        sqlState(equalTo(SQLStateConstants.SQL_STATE_INVALID_ARG_VALUE)))
         );
 
         blob.getBytes(1, -1);

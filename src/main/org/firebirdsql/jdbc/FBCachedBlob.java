@@ -86,11 +86,12 @@ public final class FBCachedBlob implements FirebirdBlob, Synchronizable {
      */
     public byte[] getBytes(long pos, int length) throws SQLException {
         if (pos < 1) {
-            throw new SQLException("Expected value of pos > 0, got " + pos, FBSQLException.SQL_STATE_INVALID_ARG_VALUE);
+            throw new SQLException("Expected value of pos > 0, got " + pos,
+                    SQLStateConstants.SQL_STATE_INVALID_ARG_VALUE);
         }
         if (length < 0) {
             throw new SQLException("Expected value of length >= 0, got " + length,
-                    FBSQLException.SQL_STATE_INVALID_ARG_VALUE);
+                    SQLStateConstants.SQL_STATE_INVALID_ARG_VALUE);
         }
         // TODO: Is this correct behavior? Maybe need to throw exception instead
         if (blobData == null) return BYTES_NULL_VALUE;

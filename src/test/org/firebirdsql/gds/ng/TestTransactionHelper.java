@@ -19,7 +19,7 @@
 package org.firebirdsql.gds.ng;
 
 import org.firebirdsql.gds.ISCConstants;
-import org.firebirdsql.jdbc.FBSQLException;
+import org.firebirdsql.jdbc.SQLStateConstants;
 import org.jmock.Expectations;
 import org.jmock.integration.junit4.JUnitRuleMockery;
 import org.junit.Rule;
@@ -185,7 +185,7 @@ public class TestTransactionHelper {
         expectedException.expect(allOf(
                 isA(SQLNonTransientException.class),
                 message(equalTo(TransactionHelper.NO_TRANSACTION_ACTIVE)),
-                sqlState(equalTo(FBSQLException.SQL_STATE_INVALID_TX_STATE))
+                sqlState(equalTo(SQLStateConstants.SQL_STATE_INVALID_TX_STATE))
         ));
     }
 

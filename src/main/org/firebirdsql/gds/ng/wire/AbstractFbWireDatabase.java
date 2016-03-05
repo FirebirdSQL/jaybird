@@ -24,7 +24,7 @@ import org.firebirdsql.gds.EventHandler;
 import org.firebirdsql.gds.impl.wire.XdrInputStream;
 import org.firebirdsql.gds.impl.wire.XdrOutputStream;
 import org.firebirdsql.gds.ng.*;
-import org.firebirdsql.jdbc.FBSQLException;
+import org.firebirdsql.jdbc.SQLStateConstants;
 
 import java.io.IOException;
 import java.sql.SQLException;
@@ -104,7 +104,7 @@ public abstract class AbstractFbWireDatabase extends AbstractFbDatabase<WireData
         if (!connection.isConnected()) {
             // TODO Update message / externalize
             throw new SQLException("No connection established to the database server",
-                    FBSQLException.SQL_STATE_CONNECTION_CLOSED);
+                    SQLStateConstants.SQL_STATE_CONNECTION_CLOSED);
         }
     }
 
@@ -124,7 +124,7 @@ public abstract class AbstractFbWireDatabase extends AbstractFbDatabase<WireData
         if (!isAttached()) {
             // TODO Update message / externalize + Check if SQL State right
             throw new SQLException("The connection is not attached to a database",
-                    FBSQLException.SQL_STATE_CONNECTION_ERROR);
+                    SQLStateConstants.SQL_STATE_CONNECTION_ERROR);
         }
     }
 

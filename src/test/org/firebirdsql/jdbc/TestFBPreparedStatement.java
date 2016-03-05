@@ -258,7 +258,7 @@ public class TestFBPreparedStatement extends FBJUnit4TestBase {
     private void expectStatementOnlyException() {
         expectedException.expect(allOf(
                 isA(SQLException.class),
-                sqlState(equalTo(FBSQLException.SQL_STATE_GENERAL_ERROR)),
+                sqlState(equalTo(SQLStateConstants.SQL_STATE_GENERAL_ERROR)),
                 message(equalTo(FBPreparedStatement.METHOD_NOT_SUPPORTED))
         ));
     }

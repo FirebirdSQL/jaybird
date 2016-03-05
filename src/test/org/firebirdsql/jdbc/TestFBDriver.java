@@ -125,7 +125,7 @@ public class TestFBDriver extends FBJUnit4TestBase {
         connection = getConnectionViaDriverManager();
         try (Statement stmt = connection.createStatement()) {
             expectedException.expect(SQLSyntaxErrorException.class);
-            expectedException.expect(sqlState(is(FBSQLException.SQL_STATE_SYNTAX_ERROR)));
+            expectedException.expect(sqlState(is(SQLStateConstants.SQL_STATE_SYNTAX_ERROR)));
 
             stmt.executeQuery("select * from");
         }

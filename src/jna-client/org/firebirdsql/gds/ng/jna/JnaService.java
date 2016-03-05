@@ -26,7 +26,7 @@ import org.firebirdsql.gds.ng.AbstractFbService;
 import org.firebirdsql.gds.ng.FbExceptionBuilder;
 import org.firebirdsql.gds.ng.ParameterConverter;
 import org.firebirdsql.gds.ng.WarningMessageCallback;
-import org.firebirdsql.jdbc.FBSQLException;
+import org.firebirdsql.jdbc.SQLStateConstants;
 import org.firebirdsql.jna.fbclient.FbClientLibrary;
 import org.firebirdsql.jna.fbclient.ISC_STATUS;
 
@@ -60,7 +60,7 @@ public final class JnaService extends AbstractFbService<JnaServiceConnection> im
         if (!isAttached()) {
             // TODO Update message / externalize
             throw new SQLException("The connection is not attached to a database",
-                    FBSQLException.SQL_STATE_CONNECTION_ERROR);
+                    SQLStateConstants.SQL_STATE_CONNECTION_ERROR);
         }
     }
 

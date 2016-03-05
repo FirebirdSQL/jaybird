@@ -271,7 +271,7 @@ public class TestFBBlob extends FBJUnit4TestBase {
 
             expectedException.expect(allOf(
                     isA(SQLException.class),
-                    sqlState(equalTo(FBSQLException.SQL_STATE_INVALID_ARG_VALUE)),
+                    sqlState(equalTo(SQLStateConstants.SQL_STATE_INVALID_ARG_VALUE)),
                     message(containsString("before the beginning"))
             ));
 
@@ -291,7 +291,7 @@ public class TestFBBlob extends FBJUnit4TestBase {
 
             expectedException.expect(allOf(
                     isA(SQLException.class),
-                    sqlState(equalTo(FBSQLException.SQL_STATE_INVALID_ARG_VALUE)),
+                    sqlState(equalTo(SQLStateConstants.SQL_STATE_INVALID_ARG_VALUE)),
                     message(containsString("must start at position 1"))
             ));
 
@@ -419,7 +419,7 @@ public class TestFBBlob extends FBJUnit4TestBase {
             expectedException.expect(allOf(
                     isA(SQLException.class),
                     message(equalTo("Blob position is limited to 2^31 - 1 due to isc_seek_blob limitations.")),
-                    sqlState(equalTo(FBSQLException.SQL_STATE_INVALID_ARG_VALUE))
+                    sqlState(equalTo(SQLStateConstants.SQL_STATE_INVALID_ARG_VALUE))
             ));
 
             blob.getBytes(Integer.MAX_VALUE + 1L, 4);

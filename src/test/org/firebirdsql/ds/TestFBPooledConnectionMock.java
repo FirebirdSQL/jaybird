@@ -1,7 +1,5 @@
 /*
- * $Id$
- * 
- * Firebird Open Source J2EE Connector - JDBC Driver
+ * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -14,7 +12,7 @@
  * This file was created by members of the firebird development team.
  * All individual contributions remain the Copyright (C) of those
  * individuals.  Contributors to this file are either listed here or
- * can be obtained from a CVS history command.
+ * can be obtained from a source control history command.
  *
  * All rights reserved.
  */
@@ -27,6 +25,7 @@ import javax.sql.ConnectionEvent;
 import javax.sql.ConnectionEventListener;
 
 import org.firebirdsql.jdbc.FBSQLException;
+import org.firebirdsql.jdbc.SQLStateConstants;
 import org.jmock.Expectations;
 import org.jmock.integration.junit4.JUnitRuleMockery;
 import org.junit.Rule;
@@ -242,14 +241,14 @@ public class TestFBPooledConnectionMock {
             {
                 oneOf(physical).setAutoCommit(true);
                 will(throwException(new FBSQLException("Mock Exception",
-                        FBSQLException.SQL_STATE_CONNECTION_FAILURE)));
+                        SQLStateConstants.SQL_STATE_CONNECTION_FAILURE)));
                 oneOf(cel).connectionErrorOccurred(
                         with(new ConnectionEventMatcher(pooled, aNonNull(SQLException.class))));
             }
         });
 
         expectedException.expect(SQLException.class);
-        expectedException.expect(sqlStateEquals(FBSQLException.SQL_STATE_CONNECTION_FAILURE));
+        expectedException.expect(sqlStateEquals(SQLStateConstants.SQL_STATE_CONNECTION_FAILURE));
 
         pooled.getConnection();
     }
@@ -274,7 +273,7 @@ public class TestFBPooledConnectionMock {
         pooled.close();
 
         expectedException.expect(SQLException.class);
-        expectedException.expect(sqlStateEquals(FBSQLException.SQL_STATE_CONNECTION_CLOSED));
+        expectedException.expect(sqlStateEquals(SQLStateConstants.SQL_STATE_CONNECTION_CLOSED));
 
         pooled.getConnection();
     }

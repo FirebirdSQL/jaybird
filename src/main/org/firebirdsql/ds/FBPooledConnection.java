@@ -1,7 +1,5 @@
 /*
- * $Id$
- * 
- * Firebird Open Source J2EE Connector - JDBC Driver
+ * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -14,7 +12,7 @@
  * This file was created by members of the firebird development team.
  * All individual contributions remain the Copyright (C) of those
  * individuals.  Contributors to this file are either listed here or
- * can be obtained from a CVS history command.
+ * can be obtained from a source control history command.
  *
  * All rights reserved.
  */
@@ -33,6 +31,7 @@ import javax.sql.PooledConnection;
 import javax.sql.StatementEventListener;
 
 import org.firebirdsql.jdbc.FBSQLException;
+import org.firebirdsql.jdbc.SQLStateConstants;
 
 /**
  * PooledConnection implementation for {@link FBConnectionPoolDataSource}
@@ -55,7 +54,7 @@ public class FBPooledConnection implements PooledConnection {
     public synchronized Connection getConnection() throws SQLException {
         if (connection == null) {
             FBSQLException ex = new FBSQLException("The PooledConnection has been closed",
-                    FBSQLException.SQL_STATE_CONNECTION_CLOSED);
+                    SQLStateConstants.SQL_STATE_CONNECTION_CLOSED);
             fireFatalConnectionError(ex);
             throw ex;
         }
@@ -128,7 +127,7 @@ public class FBPooledConnection implements PooledConnection {
         // Make a copy to prevent errors when listeners remove themselves
         List<ConnectionEventListener> listeners;
         synchronized (connectionEventListeners) {
-            listeners = new ArrayList<ConnectionEventListener>(connectionEventListeners);
+            listeners = new ArrayList<>(connectionEventListeners);
         }
         for (ConnectionEventListener listener : listeners) {
             listener.connectionErrorOccurred(evt);
@@ -165,8 +164,8 @@ public class FBPooledConnection implements PooledConnection {
             // No SQL State or no class specified, assume it's fatal
             return true;
         }
-        for (int idx = 0; idx < FATAL_SQL_STATE_CLASSES.length; idx++) {
-            if (sqlState.startsWith(FATAL_SQL_STATE_CLASSES[idx])) {
+        for (String FATAL_SQL_STATE_CLASS : FATAL_SQL_STATE_CLASSES) {
+            if (sqlState.startsWith(FATAL_SQL_STATE_CLASS)) {
                 return true;
             }
         }
@@ -195,7 +194,7 @@ public class FBPooledConnection implements PooledConnection {
         // Make a copy to prevent errors when listeners remove themselves
         List<ConnectionEventListener> listeners;
         synchronized (connectionEventListeners) {
-            listeners = new ArrayList<ConnectionEventListener>(connectionEventListeners);
+            listeners = new ArrayList<>(connectionEventListeners);
         }
         for (ConnectionEventListener listener : listeners) {
             listener.connectionClosed(evt);

@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source J2ee connector - jdbc driver
+ * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -12,15 +12,13 @@
  * This file was created by members of the firebird development team.
  * All individual contributions remain the Copyright (C) of those
  * individuals.  Contributors to this file are either listed here or
- * can be obtained from a CVS history command.
+ * can be obtained from a source control history command.
  *
  * All rights reserved.
  */
 package org.firebirdsql.jdbc;
 
 import java.sql.SQLException;
-
-
 
 /**
  * Represents procedure call parameter.
@@ -119,9 +117,8 @@ public class FBProcedureParam implements Cloneable {
      */
     public void setValue(Object value) throws SQLException {
         if (!isParam)
-            throw new FBSQLException(
-                    "Cannot set parameter, since it is constant.",
-                    FBSQLException.SQL_STATE_INVALID_PARAM_TYPE);
+            throw new FBSQLException("Cannot set parameter, since it is constant.",
+                    SQLStateConstants.SQL_STATE_INVALID_PARAM_TYPE);
         
         this.value = value;
         this.valueSet = true;

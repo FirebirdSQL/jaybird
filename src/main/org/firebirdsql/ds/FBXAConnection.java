@@ -1,7 +1,5 @@
 /*
- * $Id$
- * 
- * Firebird Open Source J2EE Connector - JDBC Driver
+ * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -14,7 +12,7 @@
  * This file was created by members of the firebird development team.
  * All individual contributions remain the Copyright (C) of those
  * individuals.  Contributors to this file are either listed here or
- * can be obtained from a CVS history command.
+ * can be obtained from a source control history command.
  *
  * All rights reserved.
  */
@@ -29,6 +27,7 @@ import javax.transaction.xa.XAResource;
 import org.firebirdsql.jca.FBManagedConnection;
 import org.firebirdsql.jdbc.FBConnection;
 import org.firebirdsql.jdbc.FBSQLException;
+import org.firebirdsql.jdbc.SQLStateConstants;
 
 /**
  * XAConnection implementation for {@link FBXADataSource}
@@ -42,7 +41,7 @@ public class FBXAConnection extends FBPooledConnection implements XAConnection {
     
     public FBXAConnection(FBConnection connection) {
         super(connection);
-        mc = new WeakReference<FBManagedConnection>(connection.getManagedConnection());
+        mc = new WeakReference<>(connection.getManagedConnection());
     }
 
     public XAResource getXAResource() throws SQLException {
@@ -66,7 +65,8 @@ public class FBXAConnection extends FBPooledConnection implements XAConnection {
     private FBManagedConnection getManagedConnection() throws SQLException {
         FBManagedConnection managedConnection = mc.get();
         if (managedConnection == null) {
-            throw new FBSQLException("Managed Connection is null, connection unavailable", FBSQLException.SQL_STATE_CONNECTION_CLOSED);
+            throw new FBSQLException("Managed Connection is null, connection unavailable",
+                    SQLStateConstants.SQL_STATE_CONNECTION_CLOSED);
         }
         return managedConnection;
     }

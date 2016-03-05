@@ -21,7 +21,7 @@ package org.firebirdsql.gds.ng;
 import org.firebirdsql.encodings.Encoding;
 import org.firebirdsql.encodings.EncodingDefinition;
 import org.firebirdsql.encodings.IEncodingFactory;
-import org.firebirdsql.jdbc.FBSQLException;
+import org.firebirdsql.jdbc.SQLStateConstants;
 
 import java.sql.SQLException;
 import java.sql.SQLNonTransientConnectionException;
@@ -56,7 +56,7 @@ public abstract class AbstractConnection<T extends IAttachProperties<T>, C exten
                 throw new SQLNonTransientConnectionException(
                         String.format("No valid encoding definition for Firebird encoding %s and/or Java charset %s",
                                 firebirdEncodingName, javaCharsetAlias),
-                        FBSQLException.SQL_STATE_CONNECTION_ERROR);
+                        SQLStateConstants.SQL_STATE_CONNECTION_ERROR);
             }
         }
         encodingDefinition = tempEncodingDefinition;

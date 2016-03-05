@@ -271,8 +271,7 @@ public abstract class AbstractCallableStatement extends FBPreparedStatement impl
             prepareFixedStatement(procedureCall.getSQL(isSelectableProcedure()));
 
             if (!internalExecute(!isSelectableProcedure()))
-                throw new FBSQLException("No resultset for sql",
-                        FBSQLException.SQL_STATE_NO_RESULT_SET);
+                throw new FBSQLException("No resultset for sql", SQLStateConstants.SQL_STATE_NO_RESULT_SET);
 
             getResultSet();
             setRequiredTypes();
@@ -1184,7 +1183,8 @@ public abstract class AbstractCallableStatement extends FBPreparedStatement impl
      */
     protected void assertHasData(ResultSet rs) throws SQLException {
         if (rs == null) {
-            throw new SQLException("Current statement has no data to return.", FBSQLException.SQL_STATE_NO_RESULT_SET);
+            throw new SQLException("Current statement has no data to return.",
+                    SQLStateConstants.SQL_STATE_NO_RESULT_SET);
         }
         // check if we have a row, and try to move to the first position.
         if (rs.getRow() == 0) {
@@ -1195,7 +1195,8 @@ public abstract class AbstractCallableStatement extends FBPreparedStatement impl
 
         // check if we still have no row and throw an exception in this case.
         if (rs.getRow() == 0) {
-            throw new SQLException("Current statement has no data to return.", FBSQLException.SQL_STATE_NO_RESULT_SET);
+            throw new SQLException("Current statement has no data to return.",
+                    SQLStateConstants.SQL_STATE_NO_RESULT_SET);
         }
     }
 

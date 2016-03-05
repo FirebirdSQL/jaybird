@@ -1,7 +1,5 @@
 /*
- * $Id$
- * 
- * Firebird Open Source J2EE Connector - JDBC Driver
+ * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -14,7 +12,7 @@
  * This file was created by members of the firebird development team.
  * All individual contributions remain the Copyright (C) of those
  * individuals.  Contributors to this file are either listed here or
- * can be obtained from a CVS history command.
+ * can be obtained from a source control history command.
  *
  * All rights reserved.
  */
@@ -39,6 +37,7 @@ import java.util.Set;
 
 import org.firebirdsql.jdbc.FBSQLException;
 import org.firebirdsql.jdbc.FirebirdConnection;
+import org.firebirdsql.jdbc.SQLStateConstants;
 import org.firebirdsql.util.SQLExceptionChainBuilder;
 
 /**
@@ -100,7 +99,7 @@ class PooledConnectionHandler implements InvocationHandler {
         }
         if (isClosed() && !method.equals(CONNECTION_CLOSE)) {
             String message = forcedClose ? FORCIBLY_CLOSED_MESSAGE : CLOSED_MESSAGE;
-            throw new FBSQLException(message, FBSQLException.SQL_STATE_CONNECTION_CLOSED);
+            throw new FBSQLException(message, SQLStateConstants.SQL_STATE_CONNECTION_CLOSED);
         }
 
         try {

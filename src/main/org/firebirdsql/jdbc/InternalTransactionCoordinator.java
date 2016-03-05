@@ -91,7 +91,7 @@ public final class InternalTransactionCoordinator implements FBObjectListener.St
         } else if (autoCommit) {
             if (mc.inDistributedTransaction()) {
                 throw new SQLException("Connection enlisted in distributed transaction",
-                        FBSQLException.SQL_STATE_INVALID_TX_STATE);
+                        SQLStateConstants.SQL_STATE_INVALID_TX_STATE);
             }
             if (connection.isUseFirebirdAutoCommit()) {
                 coordinator = new FirebirdAutoCommitCoordinator(connection, connection.getLocalTransaction());

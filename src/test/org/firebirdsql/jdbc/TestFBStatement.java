@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
@@ -131,8 +129,7 @@ public class TestFBStatement extends FBJUnit4TestBase {
     @Test
     public void testNoCloseOnCompletion_StatementOpen_afterImplicitResultSetClose() throws SQLException {
         prepareTestData();
-        FBStatement stmt = (FBStatement)con.createStatement();
-        try {
+        try (FBStatement stmt = (FBStatement) con.createStatement()) {
             stmt.execute(SELECT_DATA);
             ResultSet rs = stmt.getResultSet();
             int count = 0;
@@ -145,8 +142,6 @@ public class TestFBStatement extends FBJUnit4TestBase {
             assertEquals(DATA_ITEMS, count);
             assertTrue("Resultset should be closed (automatically closed after last result read)", rs.isClosed());
             assertFalse("Statement should be open", stmt.isClosed());
-        } finally {
-            stmt.close();
         }
     }
     
@@ -158,19 +153,16 @@ public class TestFBStatement extends FBJUnit4TestBase {
     public void testNoCloseOnCompletion_StatementOpen_afterExplicitResultSetClose() throws SQLException {
         executeCreateTable(con, CREATE_TABLE);
 
-        FBStatement stmt = (FBStatement)con.createStatement();
-        try {
+        try (FBStatement stmt = (FBStatement) con.createStatement()) {
             stmt.execute(SELECT_DATA);
             ResultSet rs = stmt.getResultSet();
             assertFalse("Resultset should be open", rs.isClosed());
             assertFalse("Statement should be open", stmt.isClosed());
-            
+
             rs.close();
 
             assertTrue("Resultset should be closed", rs.isClosed());
             assertFalse("Statement should be open", stmt.isClosed());
-        } finally {
-            stmt.close();
         }
     }
     
@@ -181,8 +173,7 @@ public class TestFBStatement extends FBJUnit4TestBase {
     @Test
     public void testCloseOnCompletion_StatementClosed_afterImplicitResultSetClose() throws SQLException {
         prepareTestData();
-        FBStatement stmt = (FBStatement)con.createStatement();
-        try {
+        try (FBStatement stmt = (FBStatement) con.createStatement()) {
             stmt.execute(SELECT_DATA);
             stmt.closeOnCompletion();
             ResultSet rs = stmt.getResultSet();
@@ -196,8 +187,6 @@ public class TestFBStatement extends FBJUnit4TestBase {
             assertEquals(DATA_ITEMS, count);
             assertTrue("Resultset should be closed (automatically closed after last result read)", rs.isClosed());
             assertTrue("Statement should be closed", stmt.isClosed());
-        } finally {
-            stmt.close();
         }
     }
     
@@ -209,20 +198,17 @@ public class TestFBStatement extends FBJUnit4TestBase {
     public void testCloseOnCompletion_StatementClosed_afterExplicitResultSetClose() throws SQLException {
         executeCreateTable(con, CREATE_TABLE);
 
-        FBStatement stmt = (FBStatement)con.createStatement();
-        try {
+        try (FBStatement stmt = (FBStatement) con.createStatement()) {
             stmt.execute(SELECT_DATA);
             stmt.closeOnCompletion();
             ResultSet rs = stmt.getResultSet();
             assertFalse("Resultset should be open", rs.isClosed());
             assertFalse("Statement should be open", stmt.isClosed());
-            
+
             rs.close();
 
             assertTrue("Resultset should be closed", rs.isClosed());
             assertTrue("Statement should be closed", stmt.isClosed());
-        } finally {
-            stmt.close();
         }
     }
     
@@ -234,14 +220,11 @@ public class TestFBStatement extends FBJUnit4TestBase {
     public void testCloseOnCompletion_StatementOpen_afterNonResultSetQuery() throws SQLException {
         executeCreateTable(con, CREATE_TABLE);
 
-        FBStatement stmt = (FBStatement)con.createStatement();
-        try {
+        try (FBStatement stmt = (FBStatement) con.createStatement()) {
             stmt.closeOnCompletion();
-            stmt.execute("INSERT INTO test(col1) VALUES(" + DATA_ITEMS +")");
-            
+            stmt.execute("INSERT INTO test(col1) VALUES(" + DATA_ITEMS + ")");
+
             assertFalse("Statement should be open", stmt.isClosed());
-        } finally {
-            stmt.close();
         }
     }
 
@@ -255,14 +238,11 @@ public class TestFBStatement extends FBJUnit4TestBase {
     public void testExecuteQuery_NonQuery() throws SQLException {
         executeCreateTable(con, CREATE_TABLE);
 
-        Statement stmt = con.createStatement();
-        try {
+        try (Statement stmt = con.createStatement()) {
             expectedException.expect(SQLException.class);
-            expectedException.expect(sqlStateEquals(FBSQLException.SQL_STATE_NO_RESULT_SET));
+            expectedException.expect(sqlStateEquals(SQLStateConstants.SQL_STATE_NO_RESULT_SET));
 
             stmt.executeQuery("INSERT INTO test(col1) VALUES(6)");
-        } finally {
-            stmt.close();
         }
     }
 
@@ -274,11 +254,8 @@ public class TestFBStatement extends FBJUnit4TestBase {
      */
     @Test
     public void testMaxFieldSize_default() throws SQLException {
-        Statement stmt = con.createStatement();
-        try {
+        try (Statement stmt = con.createStatement()) {
             assertEquals("Unexpected default value for maxFieldSize", 0, stmt.getMaxFieldSize());
-        } finally {
-            stmt.close();
         }
     }
 
@@ -290,14 +267,11 @@ public class TestFBStatement extends FBJUnit4TestBase {
      */
     @Test
     public void testSetMaxFieldSize_negativeValue() throws SQLException {
-        Statement stmt = con.createStatement();
-        try {
+        try (Statement stmt = con.createStatement()) {
             expectedException.expect(SQLException.class);
-            expectedException.expect(sqlStateEquals(FBSQLException.SQL_STATE_INVALID_ARG_VALUE));
+            expectedException.expect(sqlStateEquals(SQLStateConstants.SQL_STATE_INVALID_ARG_VALUE));
 
             stmt.setMaxFieldSize(-1);
-        } finally {
-            stmt.close();
         }
     }
 
@@ -306,14 +280,11 @@ public class TestFBStatement extends FBJUnit4TestBase {
      */
     @Test
     public void testSetMaxFieldSize() throws SQLException {
-        Statement stmt = con.createStatement();
-        try {
+        try (Statement stmt = con.createStatement()) {
             final int maxFieldSize = 513;
             stmt.setMaxFieldSize(maxFieldSize);
 
             assertEquals("Unexpected value for maxFieldSize", maxFieldSize, stmt.getMaxFieldSize());
-        } finally {
-            stmt.close();
         }
     }
 
@@ -325,11 +296,8 @@ public class TestFBStatement extends FBJUnit4TestBase {
      */
     @Test
     public void testMaxRows_default() throws SQLException {
-        Statement stmt = con.createStatement();
-        try {
+        try (Statement stmt = con.createStatement()) {
             assertEquals("Unexpected default value for maxRows", 0, stmt.getMaxRows());
-        } finally {
-            stmt.close();
         }
     }
 
@@ -341,14 +309,11 @@ public class TestFBStatement extends FBJUnit4TestBase {
      */
     @Test
     public void testSetMaxRows_negativeValue() throws SQLException {
-        Statement stmt = con.createStatement();
-        try {
+        try (Statement stmt = con.createStatement()) {
             expectedException.expect(SQLException.class);
-            expectedException.expect(sqlStateEquals(FBSQLException.SQL_STATE_INVALID_ARG_VALUE));
+            expectedException.expect(sqlStateEquals(SQLStateConstants.SQL_STATE_INVALID_ARG_VALUE));
 
             stmt.setMaxRows(-1);
-        } finally {
-            stmt.close();
         }
     }
 
@@ -357,14 +322,11 @@ public class TestFBStatement extends FBJUnit4TestBase {
      */
     @Test
     public void testSetMaxRows() throws SQLException {
-        Statement stmt = con.createStatement();
-        try {
+        try (Statement stmt = con.createStatement()) {
             final int maxRows = 513;
             stmt.setMaxRows(maxRows);
 
             assertEquals("Unexpected value for maxRows", maxRows, stmt.getMaxRows());
-        } finally {
-            stmt.close();
         }
     }
 
@@ -376,21 +338,15 @@ public class TestFBStatement extends FBJUnit4TestBase {
      */
     private void checkMaxRows(int resultSetType, int resultSetConcurrency) throws SQLException {
         prepareTestData();
-        Statement stmt = con.createStatement(resultSetType, resultSetConcurrency);
-        try {
+        try (Statement stmt = con.createStatement(resultSetType, resultSetConcurrency)) {
             stmt.setMaxRows(2);
-            ResultSet rs = stmt.executeQuery(SELECT_DATA);
-            try {
+            try (ResultSet rs = stmt.executeQuery(SELECT_DATA)) {
                 assertTrue("Expected a row", rs.next());
                 assertEquals("Unexpected value for first row", 0, rs.getInt(1));
                 assertTrue("Expected a row", rs.next());
                 assertEquals("Unexpected value for second row", 1, rs.getInt(1));
                 assertFalse("Expected only two rows in ResultSet", rs.next());
-            } finally {
-                rs.close();
             }
-        } finally {
-            stmt.close();
         }
     }
 
@@ -434,11 +390,8 @@ public class TestFBStatement extends FBJUnit4TestBase {
      */
     @Test
     public void testQueryTimeout_default() throws SQLException {
-        Statement stmt = con.createStatement();
-        try {
+        try (Statement stmt = con.createStatement()) {
             assertEquals("Unexpected default value for queryTimeout", 0, stmt.getQueryTimeout());
-        } finally {
-            stmt.close();
         }
     }
 
@@ -450,14 +403,11 @@ public class TestFBStatement extends FBJUnit4TestBase {
      */
     @Test
     public void testSetQueryTimeout_negativeValue() throws SQLException {
-        Statement stmt = con.createStatement();
-        try {
+        try (Statement stmt = con.createStatement()) {
             expectedException.expect(SQLException.class);
-            expectedException.expect(sqlStateEquals(FBSQLException.SQL_STATE_INVALID_ARG_VALUE));
+            expectedException.expect(sqlStateEquals(SQLStateConstants.SQL_STATE_INVALID_ARG_VALUE));
 
             stmt.setQueryTimeout(-1);
-        } finally {
-            stmt.close();
         }
     }
 
@@ -466,14 +416,11 @@ public class TestFBStatement extends FBJUnit4TestBase {
      */
     @Test
     public void testSetQueryTimeout() throws SQLException {
-        Statement stmt = con.createStatement();
-        try {
+        try (Statement stmt = con.createStatement()) {
             final int queryTimeout = 513;
             stmt.setQueryTimeout(queryTimeout);
 
             assertEquals("Unexpected value for queryTimeout", queryTimeout, stmt.getQueryTimeout());
-        } finally {
-            stmt.close();
         }
     }
 
@@ -485,8 +432,7 @@ public class TestFBStatement extends FBJUnit4TestBase {
      */
     @Test
     public void testEscapeProcessingDisabled() throws SQLException {
-        Statement stmt = con.createStatement();
-        try {
+        try (Statement stmt = con.createStatement()) {
             final String testQuery = "SELECT {fn CURDATE} FROM RDB$DATABASE";
             // First test validity of query with escape processing enabled (default)
             ResultSet rs = stmt.executeQuery(testQuery);
@@ -499,8 +445,6 @@ public class TestFBStatement extends FBJUnit4TestBase {
             expectedException.expectMessage(containsString("Column unknown; {FN"));
 
             stmt.executeQuery(testQuery);
-        } finally {
-            stmt.close();
         }
     }
 
@@ -511,15 +455,12 @@ public class TestFBStatement extends FBJUnit4TestBase {
     public void testGetLastExecutionPlan_select() throws SQLException {
         executeCreateTable(con, CREATE_TABLE);
 
-        FirebirdStatement stmt = (FirebirdStatement) con.createStatement();
-        try {
+        try (FirebirdStatement stmt = (FirebirdStatement) con.createStatement()) {
             ResultSet rs = stmt.executeQuery(SELECT_DATA);
             rs.close();
 
             String plan = stmt.getLastExecutionPlan();
             assertThat("Expected non-empty plan", plan, not(isEmptyOrNullString()));
-        } finally {
-            stmt.close();
         }
     }
 
@@ -531,16 +472,13 @@ public class TestFBStatement extends FBJUnit4TestBase {
      */
     @Test
     public void testGetLastExecutionPlan_noStatement() throws SQLException {
-        FirebirdStatement stmt = (FirebirdStatement) con.createStatement();
-        try {
+        try (FirebirdStatement stmt = (FirebirdStatement) con.createStatement()) {
             expectedException.expect(allOf(
                     isA(SQLException.class),
                     message(equalTo("No statement was executed, plan cannot be obtained."))
             ));
 
             stmt.getLastExecutionPlan();
-        } finally {
-            stmt.close();
         }
     }
 
@@ -549,11 +487,8 @@ public class TestFBStatement extends FBJUnit4TestBase {
      */
     @Test
     public void testGetConnection() throws SQLException {
-        Statement stmt = con.createStatement();
-        try {
+        try (Statement stmt = con.createStatement()) {
             assertSame("Unexpected result for getConnection()", con, stmt.getConnection());
-        } finally {
-            stmt.close();
         }
     }
 
@@ -562,14 +497,11 @@ public class TestFBStatement extends FBJUnit4TestBase {
      */
     @Test
     public void testGetConnection_closedStatement() throws SQLException {
-        Statement stmt = con.createStatement();
-        try {
+        try (Statement stmt = con.createStatement()) {
             stmt.close();
             expectedException.expect(fbStatementClosedException());
 
             stmt.getConnection();
-        } finally {
-            stmt.close();
         }
     }
 
@@ -580,8 +512,7 @@ public class TestFBStatement extends FBJUnit4TestBase {
     public void testBatch_Insert() throws SQLException {
         executeCreateTable(con, CREATE_TABLE);
 
-        Statement stmt = con.createStatement();
-        try {
+        try (Statement stmt = con.createStatement()) {
             for (int item = 1; item <= DATA_ITEMS; item++) {
                 stmt.addBatch(String.format("INSERT INTO test(col1) VALUES(%d)", item));
             }
@@ -591,8 +522,7 @@ public class TestFBStatement extends FBJUnit4TestBase {
             Arrays.fill(expectedUpdateCounts, 1);
             assertArrayEquals(expectedUpdateCounts, updateCounts);
 
-            ResultSet rs = stmt.executeQuery(SELECT_DATA);
-            try {
+            try (ResultSet rs = stmt.executeQuery(SELECT_DATA)) {
                 int expectedItem = 0;
                 while (rs.next()) {
                     expectedItem++;
@@ -600,11 +530,7 @@ public class TestFBStatement extends FBJUnit4TestBase {
                     assertEquals("Unexpected data item in SELECT", expectedItem, actualItem);
                 }
                 assertEquals("Unexpected data item in SELECT", DATA_ITEMS, expectedItem);
-            } finally {
-                rs.close();
             }
-        } finally {
-            stmt.close();
         }
     }
 
@@ -613,11 +539,8 @@ public class TestFBStatement extends FBJUnit4TestBase {
      */
     @Test
     public void testGetFetchSize_default() throws SQLException {
-        Statement stmt = con.createStatement();
-        try {
+        try (Statement stmt = con.createStatement()) {
             assertEquals("Default getFetchSize value should be 0", 0, stmt.getFetchSize());
-        } finally {
-            stmt.close();
         }
     }
 
@@ -629,14 +552,11 @@ public class TestFBStatement extends FBJUnit4TestBase {
      */
     @Test
     public void testGetFetchSize_statementClosed() throws SQLException {
-        Statement stmt = con.createStatement();
-        try {
+        try (Statement stmt = con.createStatement()) {
             stmt.close();
             expectedException.expect(fbStatementClosedException());
 
             stmt.setFetchSize(10);
-        } finally {
-            stmt.close();
         }
     }
 
@@ -648,14 +568,11 @@ public class TestFBStatement extends FBJUnit4TestBase {
      */
     @Test
     public void testSetFetchSize() throws SQLException {
-        Statement stmt = con.createStatement();
-        try {
+        try (Statement stmt = con.createStatement()) {
             final int testSize = 132;
             stmt.setFetchSize(testSize);
 
             assertEquals("getFetchSize value should be equal to value set", testSize, stmt.getFetchSize());
-        } finally {
-            stmt.close();
         }
     }
 
@@ -667,14 +584,11 @@ public class TestFBStatement extends FBJUnit4TestBase {
      */
     @Test
     public void testSetFetchSize_statementClosed() throws SQLException {
-        Statement stmt = con.createStatement();
-        try {
+        try (Statement stmt = con.createStatement()) {
             stmt.close();
             expectedException.expect(fbStatementClosedException());
 
             stmt.setFetchSize(10);
-        } finally {
-            stmt.close();
         }
     }
 
@@ -686,16 +600,13 @@ public class TestFBStatement extends FBJUnit4TestBase {
      */
     @Test
     public void testSetFetchSize_negativeValue() throws SQLException {
-        Statement stmt = con.createStatement();
-        try {
+        try (Statement stmt = con.createStatement()) {
             expectedException.expect(allOf(
                     isA(SQLException.class),
-                    sqlState(equalTo(FBSQLException.SQL_STATE_INVALID_ARG_VALUE))
+                    sqlState(equalTo(SQLStateConstants.SQL_STATE_INVALID_ARG_VALUE))
             ));
 
             stmt.setFetchSize(-1);
-        } finally {
-            stmt.close();
         }
     }
 
@@ -707,13 +618,10 @@ public class TestFBStatement extends FBJUnit4TestBase {
      */
     @Test
     public void testSetFetchDirection_Forward() throws SQLException {
-        Statement stmt = con.createStatement();
-        try {
+        try (Statement stmt = con.createStatement()) {
             stmt.setFetchDirection(ResultSet.FETCH_FORWARD);
 
             assertEquals("Unexpected value for fetchDirection", ResultSet.FETCH_FORWARD, stmt.getFetchDirection());
-        } finally {
-            stmt.close();
         }
     }
 
@@ -725,13 +633,10 @@ public class TestFBStatement extends FBJUnit4TestBase {
      */
     @Test
     public void testSetFetchDirection_Reverse() throws SQLException {
-        Statement stmt = con.createStatement();
-        try {
+        try (Statement stmt = con.createStatement()) {
             expectedException.expect(SQLFeatureNotSupportedException.class);
 
             stmt.setFetchDirection(ResultSet.FETCH_REVERSE);
-        } finally {
-            stmt.close();
         }
     }
 
@@ -743,13 +648,10 @@ public class TestFBStatement extends FBJUnit4TestBase {
      */
     @Test
     public void testSetFetchDirection_Unknown() throws SQLException {
-        Statement stmt = con.createStatement();
-        try {
+        try (Statement stmt = con.createStatement()) {
             expectedException.expect(SQLFeatureNotSupportedException.class);
 
             stmt.setFetchDirection(ResultSet.FETCH_UNKNOWN);
-        } finally {
-            stmt.close();
         }
     }
 
@@ -761,18 +663,15 @@ public class TestFBStatement extends FBJUnit4TestBase {
      */
     @Test
     public void testSetFetchDirection_InvalidValue() throws SQLException {
-        Statement stmt = con.createStatement();
-        try {
+        try (Statement stmt = con.createStatement()) {
             expectedException.expect(allOf(
                     isA(SQLException.class),
                     not(isA(SQLFeatureNotSupportedException.class)),
-                    sqlState(equalTo(FBSQLException.SQL_STATE_INVALID_ARG_VALUE))
+                    sqlState(equalTo(SQLStateConstants.SQL_STATE_INVALID_ARG_VALUE))
             ));
 
             //noinspection MagicConstant
             stmt.setFetchDirection(-1);
-        } finally {
-            stmt.close();
         }
     }
 
@@ -797,11 +696,8 @@ public class TestFBStatement extends FBJUnit4TestBase {
      */
     @Test
     public void testIsPoolable_default() throws SQLException {
-        Statement stmt = con.createStatement();
-        try {
+        try (Statement stmt = con.createStatement()) {
             assertFalse("Unexpected value for isPoolable()", stmt.isPoolable());
-        } finally {
-            stmt.close();
         }
     }
 
@@ -825,13 +721,10 @@ public class TestFBStatement extends FBJUnit4TestBase {
      */
     @Test
     public void testSetPoolable_ignored() throws SQLException {
-        Statement stmt = con.createStatement();
-        try {
+        try (Statement stmt = con.createStatement()) {
             stmt.setPoolable(true);
 
             assertFalse("Expected isPoolable() to remain false", stmt.isPoolable());
-        } finally {
-            stmt.close();
         }
     }
 
@@ -856,11 +749,8 @@ public class TestFBStatement extends FBJUnit4TestBase {
      */
     @Test
     public void testIsWrapperFor_FirebirdStatement() throws SQLException {
-        Statement stmt = con.createStatement();
-        try {
+        try (Statement stmt = con.createStatement()) {
             assertTrue("Expected to be wrapper for FirebirdStatement", stmt.isWrapperFor(FirebirdStatement.class));
-        } finally {
-            stmt.close();
         }
     }
 
@@ -870,11 +760,8 @@ public class TestFBStatement extends FBJUnit4TestBase {
      */
     @Test
     public void testIsWrapperFor_ResultSet() throws SQLException {
-        Statement stmt = con.createStatement();
-        try {
+        try (Statement stmt = con.createStatement()) {
             assertFalse("Expected not to be wrapper for ResultSet", stmt.isWrapperFor(ResultSet.class));
-        } finally {
-            stmt.close();
         }
     }
 
@@ -884,16 +771,13 @@ public class TestFBStatement extends FBJUnit4TestBase {
      */
     @Test
     public void testUnwrap_FirebirdStatement() throws SQLException {
-        Statement stmt = con.createStatement();
-        try {
+        try (Statement stmt = con.createStatement()) {
             FirebirdStatement firebirdStatement = stmt.unwrap(FirebirdStatement.class);
 
             assertThat("Unexpected result for unwrap to FirebirdStatement", firebirdStatement, allOf(
                     notNullValue(),
                     sameInstance(stmt)
             ));
-        } finally {
-            stmt.close();
         }
     }
 
@@ -903,16 +787,13 @@ public class TestFBStatement extends FBJUnit4TestBase {
      */
     @Test
     public void testUnwrap_ResultSet() throws SQLException {
-        Statement stmt = con.createStatement();
-        try {
+        try (Statement stmt = con.createStatement()) {
             expectedException.expect(allOf(
                     isA(SQLException.class),
                     message(equalTo("Unable to unwrap to class java.sql.ResultSet"))
             ));
 
             stmt.unwrap(ResultSet.class);
-        } finally {
-            stmt.close();
         }
     }
 
@@ -933,16 +814,13 @@ public class TestFBStatement extends FBJUnit4TestBase {
                 "END");
         //@formatter:on
 
-        Statement stmt = con.createStatement();
-        try {
+        try (Statement stmt = con.createStatement()) {
             expectedException.expect(allOf(
                     isA(SQLException.class),
                     message(containsString("; Custom message; "))
             ));
 
             stmt.execute("EXECUTE PROCEDURE testexception");
-        } finally {
-            stmt.close();
         }
     }
 
@@ -954,8 +832,7 @@ public class TestFBStatement extends FBJUnit4TestBase {
         assumeTrue("Test requires parametrized exceptions", supportInfoFor(con).supportsParametrizedExceptions());
         executeDDL(con, "CREATE EXCEPTION two_param_exception 'Param 1 ''@1'', Param 2 ''@2'''");
 
-        Statement stmt = con.createStatement();
-        try {
+        try (Statement stmt = con.createStatement()) {
             expectedException.expect(allOf(
                     isA(SQLException.class),
                     message(containsString("; Param 1 'value_1', Param 2 'value2'; "))
@@ -969,8 +846,6 @@ public class TestFBStatement extends FBJUnit4TestBase {
                 "END"
             );
             //@formatter:on
-        } finally {
-            stmt.close();
         }
     }
 
@@ -979,8 +854,7 @@ public class TestFBStatement extends FBJUnit4TestBase {
         assumeTrue("Test requires UPDATE .. RETURNING .. support", supportInfoFor(con).supportsUpdateReturning());
         executeDDL(con, CREATE_TABLE);
 
-        Statement stmt = con.createStatement();
-        try {
+        try (Statement stmt = con.createStatement()) {
             boolean isResultSet = stmt.execute("INSERT INTO test(col1) VALUES(5) RETURNING col1");
 
             assertTrue("Expected first result to be a result set", isResultSet);
@@ -998,22 +872,17 @@ public class TestFBStatement extends FBJUnit4TestBase {
             assertFalse("Next result should not be a result set", stmt.getMoreResults());
             assertNull("Expected null result set", stmt.getResultSet());
             assertEquals("Update count should be -1 after second call to getMoreResults", -1, stmt.getUpdateCount());
-        } finally {
-            stmt.close();
         }
     }
 
     private void prepareTestData() throws SQLException {
         executeCreateTable(con, CREATE_TABLE);
 
-        PreparedStatement pstmt = con.prepareStatement(INSERT_DATA);
-        try {
+        try (PreparedStatement pstmt = con.prepareStatement(INSERT_DATA)) {
             for (int i = 0; i < DATA_ITEMS; i++) {
                 pstmt.setInt(1, i);
                 pstmt.executeUpdate();
             }
-        } finally {
-            pstmt.close();
         }
     }
 }

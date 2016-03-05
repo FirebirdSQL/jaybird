@@ -232,9 +232,8 @@ public class FBStatement implements FirebirdStatement, Synchronizable {
         synchronized(getSynchronizationObject()) {
             notifyStatementStarted();
             if (!internalExecute(sql)) {
-                throw new FBSQLException(
-                    "Query did not return a result set.",
-                    FBSQLException.SQL_STATE_NO_RESULT_SET);
+                throw new FBSQLException("Query did not return a result set.",
+                        SQLStateConstants.SQL_STATE_NO_RESULT_SET);
             }
 
             return getResultSet();
@@ -655,7 +654,7 @@ public class FBStatement implements FirebirdStatement, Synchronizable {
     public void setMaxFieldSize(int max) throws  SQLException {
         if (max < 0)
             throw new FBSQLException("Can't set max field size negative",
-                    FBSQLException.SQL_STATE_INVALID_ARG_VALUE);
+                    SQLStateConstants.SQL_STATE_INVALID_ARG_VALUE);
         else
             maxFieldSize = max;
     }
@@ -683,8 +682,7 @@ public class FBStatement implements FirebirdStatement, Synchronizable {
      */
     public void setMaxRows(int max) throws  SQLException {
         if (max < 0)
-            throw new FBSQLException("Max rows can't be less than 0",
-                    FBSQLException.SQL_STATE_INVALID_ARG_VALUE);
+            throw new FBSQLException("Max rows can't be less than 0", SQLStateConstants.SQL_STATE_INVALID_ARG_VALUE);
         else
             maxRows = max;
     }
@@ -728,7 +726,7 @@ public class FBStatement implements FirebirdStatement, Synchronizable {
      */
     public void setQueryTimeout(int seconds) throws  SQLException {
         if (seconds < 0) {
-            throw new FBSQLException("Can't set query timeout negative", FBSQLException.SQL_STATE_INVALID_ARG_VALUE);
+            throw new FBSQLException("Can't set query timeout negative", SQLStateConstants.SQL_STATE_INVALID_ARG_VALUE);
         }
         queryTimeout = seconds;
     }
@@ -1038,7 +1036,7 @@ public class FBStatement implements FirebirdStatement, Synchronizable {
             throw new FBDriverNotCapableException("Fetch direction other than FETCH_FORWARD not supported");
         default:
             throw new SQLException(String.format("Invalid fetchDirection, value %d", direction),
-                    FBSQLException.SQL_STATE_INVALID_ARG_VALUE);
+                    SQLStateConstants.SQL_STATE_INVALID_ARG_VALUE);
         }
     }
 
@@ -1078,8 +1076,7 @@ public class FBStatement implements FirebirdStatement, Synchronizable {
     public void setFetchSize(int rows) throws  SQLException {
         checkValidity();
         if (rows < 0)
-            throw new FBSQLException("Can't set negative fetch size",
-                    FBSQLException.SQL_STATE_INVALID_ARG_VALUE);
+            throw new FBSQLException("Can't set negative fetch size", SQLStateConstants.SQL_STATE_INVALID_ARG_VALUE);
         else
             fetchSize = rows;
     }
@@ -1469,7 +1466,7 @@ public class FBStatement implements FirebirdStatement, Synchronizable {
      */
     protected void checkValidity() throws SQLException {
         if (isClosed()) {
-            throw new FBSQLException("Statement is already closed.", FBSQLException.SQL_STATE_INVALID_STATEMENT_ID);
+            throw new FBSQLException("Statement is already closed.", SQLStateConstants.SQL_STATE_INVALID_STATEMENT_ID);
         }
     }
 
@@ -1497,7 +1494,7 @@ public class FBStatement implements FirebirdStatement, Synchronizable {
         if (max > Integer.MAX_VALUE) {
             addWarning(new SQLWarning(
                     String.format("Implementation limit: maxRows cannot exceed Integer.MAX_VALUE, value was %d, reset to 0", max),
-                    FBSQLException.SQL_STATE_INVALID_ARG_VALUE));
+                    SQLStateConstants.SQL_STATE_INVALID_ARG_VALUE));
             max = 0;
         }
         setMaxRows((int) max);

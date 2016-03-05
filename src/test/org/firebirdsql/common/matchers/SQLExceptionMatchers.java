@@ -20,7 +20,7 @@ package org.firebirdsql.common.matchers;
 
 import org.firebirdsql.gds.GDSExceptionHelper;
 import org.firebirdsql.jdbc.FBPreparedStatement;
-import org.firebirdsql.jdbc.FBSQLException;
+import org.firebirdsql.jdbc.SQLStateConstants;
 import org.hamcrest.FeatureMatcher;
 import org.hamcrest.Matcher;
 
@@ -171,7 +171,7 @@ public class SQLExceptionMatchers {
     public static Matcher<SQLException> fbStatementClosedException() {
         return allOf(
                 isA(SQLException.class),
-                sqlState(equalTo(FBSQLException.SQL_STATE_INVALID_STATEMENT_ID)),
+                sqlState(equalTo(SQLStateConstants.SQL_STATE_INVALID_STATEMENT_ID)),
                 message(equalTo("Statement is already closed."))
         );
     }
@@ -186,7 +186,7 @@ public class SQLExceptionMatchers {
     public static Matcher<SQLException> fbStatementOnlyMethodException() {
         return allOf(
                 isA(SQLException.class),
-                sqlState(equalTo(FBSQLException.SQL_STATE_GENERAL_ERROR)),
+                sqlState(equalTo(SQLStateConstants.SQL_STATE_GENERAL_ERROR)),
                 message(equalTo(FBPreparedStatement.METHOD_NOT_SUPPORTED))
         );
     }

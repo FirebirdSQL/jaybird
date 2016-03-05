@@ -29,7 +29,7 @@ import org.firebirdsql.gds.ng.FbConnectionProperties;
 import org.firebirdsql.gds.ng.FbDatabase;
 import org.firebirdsql.gds.ng.FbTransaction;
 import org.firebirdsql.gds.ng.TransactionState;
-import org.firebirdsql.jdbc.FBSQLException;
+import org.firebirdsql.jdbc.SQLStateConstants;
 import org.firebirdsql.management.FBManager;
 import org.junit.ClassRule;
 import org.junit.Rule;
@@ -180,7 +180,7 @@ public class TestJnaDatabase {
     public void testDrop_NotAttached() throws Exception {
         expectedException.expect(SQLException.class);
         expectedException.expectMessage(equalTo("The connection is not attached to a database"));
-        expectedException.expect(sqlStateEquals(FBSQLException.SQL_STATE_CONNECTION_ERROR));
+        expectedException.expect(sqlStateEquals(SQLStateConstants.SQL_STATE_CONNECTION_ERROR));
 
         FBManager fbManager = createFBManager();
         defaultDatabaseSetUp(fbManager);
@@ -200,7 +200,7 @@ public class TestJnaDatabase {
         // not connected and not attached
         expectedException.expect(SQLException.class);
         expectedException.expectMessage(equalTo("The connection is not attached to a database"));
-        expectedException.expect(sqlStateEquals(FBSQLException.SQL_STATE_CONNECTION_ERROR));
+        expectedException.expect(sqlStateEquals(SQLStateConstants.SQL_STATE_CONNECTION_ERROR));
 
         db.close();
     }

@@ -24,10 +24,7 @@ import org.firebirdsql.gds.impl.DatabaseParameterBufferExtension;
 import org.firebirdsql.gds.impl.GDSHelper;
 import org.firebirdsql.gds.ng.DatatypeCoder;
 import org.firebirdsql.gds.ng.fields.FieldDescriptor;
-import org.firebirdsql.jdbc.FBBlob;
-import org.firebirdsql.jdbc.FBClob;
-import org.firebirdsql.jdbc.FBDriverNotCapableException;
-import org.firebirdsql.jdbc.FBSQLException;
+import org.firebirdsql.jdbc.*;
 
 import java.io.InputStream;
 import java.io.Reader;
@@ -104,7 +101,7 @@ public abstract class FBField {
     FBField(FieldDescriptor fieldDescriptor, FieldDataProvider dataProvider, int requiredType) throws SQLException {
         if (fieldDescriptor == null) {
             throw new FBSQLException("Cannot create FBField instance with fieldDescriptor null.",
-                    FBSQLException.SQL_STATE_INVALID_ARG_VALUE);
+                    SQLStateConstants.SQL_STATE_INVALID_ARG_VALUE);
         }
 
         this.fieldDescriptor = fieldDescriptor;

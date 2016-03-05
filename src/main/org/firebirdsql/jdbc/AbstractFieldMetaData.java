@@ -179,7 +179,7 @@ public abstract class AbstractFieldMetaData implements Wrapper {
             return Object.class.getName();
 
         default:
-            throw new FBSQLException("Unknown SQL type.", FBSQLException.SQL_STATE_INVALID_PARAM_TYPE);
+            throw new FBSQLException("Unknown SQL type.", SQLStateConstants.SQL_STATE_INVALID_PARAM_TYPE);
         }
     }
 
