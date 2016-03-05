@@ -418,13 +418,13 @@ public class TestFBMaintenanceManager extends FBJUnit4TestBase {
         maintenanceManager.killUnavailableShadows();
     }
 
+    @SuppressWarnings("deprecation")
     @Test
     public void testListLimboTransactions() throws Exception {
         final int COUNT_LIMBO = 5;
         createLimboTransaction(COUNT_LIMBO);
         ByteArrayOutputStream byteOut = new ByteArrayOutputStream();
         maintenanceManager.setLogger(byteOut);
-        //noinspection deprecation
         maintenanceManager.listLimboTransactions();
 
         StringTokenizer limboTransactions = new StringTokenizer(byteOut.toString(), "\n");
@@ -474,16 +474,13 @@ public class TestFBMaintenanceManager extends FBJUnit4TestBase {
     }
 
     private void createLimboTransaction(int count) throws Exception {
-        FBConnection conn = (FBConnection) getConnectionViaDriverManager();
-        try {
+        try (FBConnection conn = (FBConnection) getConnectionViaDriverManager()) {
             final FbDatabase fbDatabase = conn.getFbDatabase();
             for (int i = 0; i < count; i++) {
                 TransactionParameterBuffer tpBuf = conn.createTransactionParameterBuffer();
                 FbTransaction transaction = fbDatabase.startTransaction(tpBuf);
                 transaction.prepare(null);
             }
-        } finally {
-            conn.close();
         }
     }
 }
