@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
@@ -20,11 +18,21 @@
  */
 package org.firebirdsql.jdbc;
 
-import org.firebirdsql.common.FBTestBase;
+import org.firebirdsql.common.FBJUnit4TestBase;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
 
 import java.sql.*;
 
-public class TestFBStatement extends FBTestBase {
+import static org.firebirdsql.common.DdlHelper.executeCreateTable;
+import static org.firebirdsql.common.DdlHelper.executeDDL;
+import static org.firebirdsql.common.FBTestProperties.getConnectionViaDriverManager;
+import static org.firebirdsql.common.JdbcResourceHelper.closeQuietly;
+import static org.junit.Assert.*;
+import static org.junit.Assume.assumeTrue;
+
+public class TestFBStatement extends FBJUnit4TestBase {
 
     private Connection con;
 
@@ -33,30 +41,17 @@ public class TestFBStatement extends FBTestBase {
     private static final String INSERT_DATA = "INSERT INTO test(col1) VALUES(?)";
     private static final String SELECT_DATA = "SELECT col1 FROM test ORDER BY col1";
 
-    public TestFBStatement(String name) {
-        super(name);
+    @Before
+    public void setUp() throws Exception {
+        con = getConnectionViaDriverManager();
+
+        executeCreateTable(con, CREATE_TABLE);
+        prepareTestData();
     }
 
-    protected void setUp() throws Exception {
-        super.setUp();
-
-        con = this.getConnectionViaDriverManager();
-
-        try {
-            executeCreateTable(con, CREATE_TABLE);
-            prepareTestData();
-        } finally {
-            closeQuietly(con);
-        }
-        con = this.getConnectionViaDriverManager();
-    }
-
-    protected void tearDown() throws Exception {
-        try {
-            closeQuietly(con);
-        } finally {
-            super.tearDown();
-        }
+    @After
+    public void tearDown() throws Exception {
+        closeQuietly(con);
     }
 
     /**
@@ -64,6 +59,7 @@ public class TestFBStatement extends FBTestBase {
      *
      * @throws SQLException
      */
+    @Test
     public void testDoubleClose() throws SQLException {
         Statement stmt = con.createStatement();
         stmt.close();
@@ -78,11 +74,11 @@ public class TestFBStatement extends FBTestBase {
      *
      * @throws SQLException
      */
+    @Test
     public void testIsCloseOnCompletion_initial() throws SQLException {
         // Cast so it also works under JDBC 3.0 and 4.0
         FBStatement stmt = (FBStatement) con.createStatement();
-        assertFalse("Initial value of isCloseOnCompletion expected to be false",
-                stmt.isCloseOnCompletion());
+        assertFalse("Initial value of isCloseOnCompletion expected to be false", stmt.isCloseOnCompletion());
     }
 
     /**
@@ -94,6 +90,7 @@ public class TestFBStatement extends FBTestBase {
      *
      * @throws SQLException
      */
+    @Test
     public void testIsCloseOnCompletion_afterCloseOnCompletion() throws SQLException {
         // Cast so it also works under JDBC 3.0 and 4.0
         FBStatement stmt = (FBStatement) con.createStatement();
@@ -111,6 +108,7 @@ public class TestFBStatement extends FBTestBase {
      *
      * @throws SQLException
      */
+    @Test
     public void testIsCloseOnCompletion_multipleCloseOnCompletion() throws SQLException {
         // Cast so it also works under JDBC 3.0 and 4.0
         FBStatement stmt = (FBStatement) con.createStatement();
@@ -126,6 +124,7 @@ public class TestFBStatement extends FBTestBase {
      *
      * @throws SQLException
      */
+    @Test
     public void testNoCloseOnCompletion_StatementOpen_afterImplicitResultSetClose() throws SQLException {
         FBStatement stmt = (FBStatement) con.createStatement();
         try {
@@ -153,6 +152,7 @@ public class TestFBStatement extends FBTestBase {
      *
      * @throws SQLException
      */
+    @Test
     public void testNoCloseOnCompletion_StatementOpen_afterExplicitResultSetClose() throws SQLException {
         FBStatement stmt = (FBStatement) con.createStatement();
         try {
@@ -177,6 +177,7 @@ public class TestFBStatement extends FBTestBase {
      *
      * @throws SQLException
      */
+    @Test
     public void testCloseOnCompletion_StatementClosed_afterImplicitResultSetClose() throws SQLException {
         FBStatement stmt = (FBStatement) con.createStatement();
         try {
@@ -205,6 +206,7 @@ public class TestFBStatement extends FBTestBase {
      *
      * @throws SQLException
      */
+    @Test
     public void testCloseOnCompletion_StatementClosed_afterExplicitResultSetClose() throws SQLException {
         FBStatement stmt = (FBStatement) con.createStatement();
         try {
@@ -228,6 +230,7 @@ public class TestFBStatement extends FBTestBase {
      * Test if a executing a query which does not produce a resultset (eg an INSERT without generated keys) will not close the
      * statement.
      */
+    @Test
     public void testCloseOnCompletion_StatementOpen_afterNonResultSetQuery() throws SQLException {
         FBStatement stmt = (FBStatement) con.createStatement();
         try {
@@ -243,21 +246,22 @@ public class TestFBStatement extends FBTestBase {
     /**
      * Tests if Firebird 1.5+ custom exception messages work.
      */
+    @Test
     public void testCustomExceptionMessage() throws Exception {
         final DatabaseMetaData metaData = con.getMetaData();
         final int databaseMajorVersion = metaData.getDatabaseMajorVersion();
         final int databaseMinorVersion = metaData.getDatabaseMinorVersion();
-        assertTrue("Test only works on Firebird 1.5 or higher",
+        assumeTrue("Test only works on Firebird 1.5 or higher",
                 databaseMajorVersion == 1 && databaseMinorVersion >= 5 || databaseMajorVersion > 1);
 
         //@formatter:off
-        executeDDL(con, "CREATE EXCEPTION simple_exception 'Standard message'", new int[0]);
+        executeDDL(con, "CREATE EXCEPTION simple_exception 'Standard message'");
         executeDDL(con,
                 "CREATE PROCEDURE testexception " +
                 "AS " +
                 "BEGIN " +
                 "  EXCEPTION simple_exception 'Custom message';" +
-                "END", new int[0]);
+                "END");
         //@formatter:on
 
         Statement stmt = con.createStatement();
@@ -275,9 +279,10 @@ public class TestFBStatement extends FBTestBase {
     /**
      * Tests if Firebird 3 parametrized exceptions are correctly rendered.
      */
+    @Test
     public void testParametrizedExceptions() throws Exception {
-        assertTrue("Test only works on Firebird 3 or higher", con.getMetaData().getDatabaseMajorVersion() >= 3);
-        executeDDL(con, "CREATE EXCEPTION two_param_exception 'Param 1 ''@1'', Param 2 ''@2'''", new int[0]);
+        assumeTrue("Test only works on Firebird 3 or higher", con.getMetaData().getDatabaseMajorVersion() >= 3);
+        executeDDL(con, "CREATE EXCEPTION two_param_exception 'Param 1 ''@1'', Param 2 ''@2'''");
 
         Statement stmt = con.createStatement();
         try {
@@ -298,11 +303,12 @@ public class TestFBStatement extends FBTestBase {
         }
     }
 
+    @Test
     public void testRetrievingUpdateCountAndResultSet() throws Exception {
         DatabaseMetaData md = con.getMetaData();
         int majorVersion = md.getDatabaseMajorVersion();
         int minorVersion = md.getDatabaseMinorVersion();
-        assertTrue("Test only works on Firebird 2.1 or higher",
+        assumeTrue("Test only works on Firebird 2.1 or higher",
                 majorVersion == 2 && minorVersion >= 1 || majorVersion > 2);
 
         Statement stmt = con.createStatement();

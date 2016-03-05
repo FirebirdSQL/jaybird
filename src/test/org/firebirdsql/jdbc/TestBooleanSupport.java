@@ -1,7 +1,5 @@
 /*
- * $Id$
- *
- * Firebird Open Source J2ee connector - jdbc driver
+ * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -14,22 +12,31 @@
  * This file was created by members of the firebird development team.
  * All individual contributions remain the Copyright (C) of those
  * individuals.  Contributors to this file are either listed here or
- * can be obtained from a CVS history command.
+ * can be obtained from a source control history command.
  *
  * All rights reserved.
  */
 package org.firebirdsql.jdbc;
 
-import org.firebirdsql.common.FBTestBase;
+import org.firebirdsql.common.FBJUnit4TestBase;
+import org.junit.Before;
+import org.junit.Test;
 
 import java.sql.*;
+
+import static org.firebirdsql.common.DdlHelper.executeCreateTable;
+import static org.firebirdsql.common.DdlHelper.executeDropTable;
+import static org.firebirdsql.common.FBTestProperties.getConnectionViaDriverManager;
+import static org.firebirdsql.common.JdbcResourceHelper.closeQuietly;
+import static org.junit.Assert.*;
+import static org.junit.Assume.assumeTrue;
 
 /**
  * Tests the boolean support, which is only available in Firebird 3.0 or higher.
  *
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  */
-public class TestBooleanSupport extends FBTestBase {
+public class TestBooleanSupport extends FBJUnit4TestBase {
 
     private static final String CREATE_TABLE =
             "CREATE TABLE withboolean ( id INTEGER, bool BOOLEAN )";
@@ -45,15 +52,11 @@ public class TestBooleanSupport extends FBTestBase {
             "INSERT INTO withboolean (id, bool) VALUES (2, UNKNOWN)"
     };
 
-    public TestBooleanSupport(String name) {
-        super(name);
-    }
-
-    protected void setUp() throws Exception {
-        super.setUp();
+    @Before
+    public void setUp() throws Exception {
         Connection con = getConnectionViaDriverManager();
         try {
-            assertTrue("Test only works on Firebird 3 or higher", con.getMetaData().getDatabaseMajorVersion() >= 3);
+            assumeTrue("Test only works on Firebird 3 or higher", con.getMetaData().getDatabaseMajorVersion() >= 3);
 
             executeDropTable(con, DROP_TABLE);
             executeCreateTable(con, CREATE_TABLE);
@@ -75,6 +78,7 @@ public class TestBooleanSupport extends FBTestBase {
     /**
      * Test if a simple select returns the right boolean values in the ResultSet.
      */
+    @Test
     public void testSimpleSelect_Values() throws Exception {
         Connection con = getConnectionViaDriverManager();
         Statement stmt = null;
@@ -115,6 +119,7 @@ public class TestBooleanSupport extends FBTestBase {
     /**
      * Tests if the ResultSetMetaData contains the right information on boolean columns.
      */
+    @Test
     public void testSimpleSelect_ResultSetMetaData() throws Exception {
         Connection con = getConnectionViaDriverManager();
         Statement stmt = null;
@@ -137,6 +142,7 @@ public class TestBooleanSupport extends FBTestBase {
     /**
      * Tests if boolean values inserted using a parametrized query are correctly roundtripped in a query.
      */
+    @Test
     public void testParametrizedInsert() throws Exception {
         Connection con = getConnectionViaDriverManager();
         Statement stmt = null;
@@ -198,6 +204,7 @@ public class TestBooleanSupport extends FBTestBase {
     /**
      * Tests if the ParameterMetaData contains the right information on boolean columns.
      */
+    @Test
     public void testParametrizedInsert_ParameterMetaData() throws Exception {
         Connection con = getConnectionViaDriverManager();
         PreparedStatement pstmt = null;
@@ -217,6 +224,7 @@ public class TestBooleanSupport extends FBTestBase {
     /**
      * Test select with condition on a boolean field.
      */
+    @Test
     public void testSelectFieldCondition() throws Exception {
         Connection con = getConnectionViaDriverManager();
         PreparedStatement pstmt = null;
@@ -239,6 +247,7 @@ public class TestBooleanSupport extends FBTestBase {
     /**
      * Test a select with a boolean parameter only (ie <code>WHERE ?"</code>) with value true
      */
+    @Test
     public void testSelect_ConditionOnly_true() throws Exception {
         Connection con = getConnectionViaDriverManager();
         PreparedStatement pstmt = null;
@@ -281,6 +290,7 @@ public class TestBooleanSupport extends FBTestBase {
     /**
      * Test a select with a boolean parameter only (ie <code>WHERE ?"</code>) with value false
      */
+    @Test
     public void testSelect_ConditionOnly_false() throws Exception {
         Connection con = getConnectionViaDriverManager();
         PreparedStatement pstmt = null;
@@ -301,6 +311,7 @@ public class TestBooleanSupport extends FBTestBase {
     /**
      * Test a select with a boolean parameter only (ie <code>WHERE ?"</code>) with value null
      */
+    @Test
     public void testSelect_ConditionOnly_null() throws Exception {
         Connection con = getConnectionViaDriverManager();
         PreparedStatement pstmt = null;
@@ -321,6 +332,7 @@ public class TestBooleanSupport extends FBTestBase {
     /**
      * Tests the value returned by {@link FBDatabaseMetaData#getTypeInfo()} (specifically only for BOOLEAN).
      */
+    @Test
     public void testMetaData_TypeInfo() throws Exception {
         // TODO Create separate test for all typeinfo information
         Connection con = getConnectionViaDriverManager();
@@ -356,6 +368,7 @@ public class TestBooleanSupport extends FBTestBase {
     /**
      * Test {@link FBDatabaseMetaData#getColumns(String, String, String, String)} for a boolean column.
      */
+    @Test
     public void testMetaData_getColumns() throws Exception {
         // TODO Consider moving to TestFBDatabaseMetaDataColumns
         Connection con = getConnectionViaDriverManager();
