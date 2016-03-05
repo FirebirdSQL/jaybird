@@ -1,5 +1,5 @@
- /*
- * Firebird Open Source J2ee connector - jdbc driver
+/*
+ * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -12,7 +12,7 @@
  * This file was created by members of the firebird development team.
  * All individual contributions remain the Copyright (C) of those
  * individuals.  Contributors to this file are either listed here or
- * can be obtained from a CVS history command.
+ * can be obtained from a source control history command.
  *
  * All rights reserved.
  */
@@ -26,122 +26,121 @@ package org.firebirdsql.management;
  */
 public interface FBManagerMBean {
 
-    public void start()
-        throws Exception;
+    void start() throws Exception;
 
-    public void stop()
-        throws Exception;
+    void stop() throws Exception;
 
-    public String getName();
+    String getName();
 
-    public String getState();
+    String getState();
 
-    public void setServer(String host);
+    void setServer(String host);
 
-    public String getServer();
+    String getServer();
 
-    public void setPort(int port);
+    void setPort(int port);
 
-    public int getPort();
+    int getPort();
 
-    public String getFileName();
-    
+    /**
+     * mbean get-set pair for field fileName
+     * Get the value of fileName
+     *
+     * @return value of fileName
+     */
+    String getFileName();
+
     /**
      * Set the value of fileName
-     * @param fileName  Value to assign to fileName
      *
-     * @jmx:managed-attribute
+     * @param fileName
+     *         Value to assign to fileName
      */
-    public void setFileName(final String fileName);
-    
-    
+    void setFileName(final String fileName);
+
     /**
      * mbean get-set pair for field userName
      * Get the value of userName
-     * @return value of userName
      *
-     * @jmx:managed-attribute
+     * @return value of userName
      */
-    public String getUserName();
-    
-    
+    String getUserName();
+
     /**
      * Set the value of userName
-     * @param userName  Value to assign to userName
      *
-     * @jmx:managed-attribute
+     * @param userName
+     *         Value to assign to userName
      */
-    public void setUserName(final String userName);
-    
-    
-    
+    void setUserName(final String userName);
+
     /**
      * mbean get-set pair for field password
      * Get the value of password
-     * @return value of password
      *
-     * @jmx:managed-attribute
+     * @return value of password
      */
-    public String getPassword();
-    
-    
+    String getPassword();
+
     /**
      * Set the value of password
-     * @param password  Value to assign to password
      *
-     * @jmx:managed-attribute
+     * @param password
+     *         Value to assign to password
      */
-    public void setPassword(final String password);
-    
-    
-    
+    void setPassword(final String password);
+
     /**
      * mbean get-set pair for field createOnStart
      * Get the value of createOnStart
-     * @return value of createOnStart
      *
-     * @jmx:managed-attribute
+     * @return value of createOnStart
      */
-    public boolean isCreateOnStart();
-    
+    boolean isCreateOnStart();
+
     /**
      * Set the value of createOnStart
-     * @param createOnStart  Value to assign to createOnStart
      *
-     * @jmx:managed-attribute
+     * @param createOnStart
+     *         Value to assign to createOnStart
      */
-    public void setCreateOnStart(final boolean createOnStart);
-    
-    
-    
-    
+    void setCreateOnStart(final boolean createOnStart);
+
     /**
      * mbean get-set pair for field dropOnStop
      * Get the value of dropOnStop
-     * @return value of dropOnStop
      *
-     * @jmx:managed-attribute
+     * @return value of dropOnStop
      */
-    public boolean isDropOnStop();
-    
-    
+    boolean isDropOnStop();
+
     /**
      * Set the value of dropOnStop
-     * @param dropOnStop  Value to assign to dropOnStop
      *
-     * @jmx:managed-attribute
+     * @param dropOnStop
+     *         Value to assign to dropOnStop
      */
-    public void setDropOnStop(final boolean dropOnStop);   
-    
-    public boolean isForceCreate();
+    void setDropOnStop(final boolean dropOnStop);
 
-    public void setForceCreate(boolean forceCreate);
+    /**
+     * Get the ForceCreate value.
+     *
+     * @return the ForceCreate value.
+     */
+    boolean isForceCreate();
 
-    public void createDatabase (String filename, String user, String password) throws Exception;
+    /**
+     * Set the ForceCreate value.
+     *
+     * @param forceCreate
+     *         The new ForceCreate value.
+     */
+    void setForceCreate(boolean forceCreate);
 
-    public void dropDatabase(String fileName, String user, String password) throws Exception;
-    
-    public boolean isDatabaseExists(String fileName, String user, String password) throws Exception;
+    void createDatabase(String filename, String user, String password) throws Exception;
 
+    void dropDatabase(String fileName, String user, String password) throws Exception;
+
+    boolean isDatabaseExists(String fileName, String user, String password) throws Exception;
 
 }

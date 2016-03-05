@@ -262,7 +262,7 @@ public class FBTraceManager extends FBServiceManager implements TraceManager {
      * @throws FileNotFoundException
      * @throws IOException
      */
-    public String loadConfigurationFromFile(String fileName) throws FileNotFoundException, IOException {
+    public String loadConfigurationFromFile(String fileName) throws IOException {
         StringBuilder sb = new StringBuilder(256);
         String s;
         try (BufferedReader br = new BufferedReader(new FileReader(fileName))) {
@@ -297,9 +297,9 @@ public class FBTraceManager extends FBServiceManager implements TraceManager {
         /**
          * Tries to find the session ID
          *
-         * @param b
-         * @param off
-         * @param len
+         * @param b Byte array
+         * @param off Offset
+         * @param len Length
          */
         private void findSessionId(byte[] b, int off, int len) {
             String sessionStart = new String(b, off, len);

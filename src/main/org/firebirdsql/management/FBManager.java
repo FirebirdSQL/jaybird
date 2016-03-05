@@ -37,7 +37,6 @@ import java.sql.SQLException;
  *
  * @author <a href="mailto:d_jencks@users.sourceforge.net">David Jencks</a>
  * @version 1.0
- * @jmx.mbean
  */
 public class FBManager implements FBManagerMBean {
 
@@ -74,9 +73,7 @@ public class FBManager implements FBManagerMBean {
 
     //Service methods
 
-    /**
-     * @jmx.managed-operation
-     */
+    @Override
     public void start() throws Exception {
         dbFactory = GDSFactory.getDatabaseFactoryForType(type);
         state = STARTED;
@@ -85,9 +82,7 @@ public class FBManager implements FBManagerMBean {
         }
     }
 
-    /**
-     * @jmx.managed-operation
-     */
+    @Override
     public void stop() throws Exception {
         if (isDropOnStop()) {
             dropDatabase(getFileName(), getUserName(), getPassword());
@@ -97,16 +92,12 @@ public class FBManager implements FBManagerMBean {
         state = STOPPED;
     }
 
-    /**
-     * @jmx.managed-attribute
-     */
+    @Override
     public String getState() {
         return state;
     }
 
-    /**
-     * @jmx.managed-attribute
-     */
+    @Override
     public String getName() {
         return "Firebird Database manager";
     }
@@ -114,52 +105,32 @@ public class FBManager implements FBManagerMBean {
     //Firebird specific methods
     //Which server are we connecting to?
 
-    /**
-     * @jmx.managed-attribute
-     */
+    @Override
     public void setServer(final String host) {
         this.host = host;
     }
 
-    /**
-     * @jmx.managed-attribute
-     */
+    @Override
     public String getServer() {
         return host;
     }
 
-    /**
-     * @jmx.managed-attribute
-     */
+    @Override
     public void setPort(int port) {
         this.port = port;
     }
 
-    /**
-     * @jmx.managed-attribute
-     */
+    @Override
     public int getPort() {
         return port != null ? port : DEFAULT_PORT;
     }
 
-    /**
-     * mbean get-set pair for field fileName
-     * Get the value of fileName
-     *
-     * @return value of fileName
-     * @jmx:managed-attribute
-     */
+    @Override
     public String getFileName() {
         return fileName;
     }
 
-    /**
-     * Set the value of fileName
-     *
-     * @param fileName
-     *         Value to assign to fileName
-     * @jmx:managed-attribute
-     */
+    @Override
     public void setFileName(final String fileName) {
         this.fileName = fileName;
     }
@@ -177,46 +148,22 @@ public class FBManager implements FBManagerMBean {
         this.type = gdsType;
     }
 
-    /**
-     * mbean get-set pair for field userName
-     * Get the value of userName
-     *
-     * @return value of userName
-     * @jmx:managed-attribute
-     */
+    @Override
     public String getUserName() {
         return userName;
     }
 
-    /**
-     * Set the value of userName
-     *
-     * @param userName
-     *         Value to assign to userName
-     * @jmx:managed-attribute
-     */
+    @Override
     public void setUserName(final String userName) {
         this.userName = userName;
     }
 
-    /**
-     * mbean get-set pair for field password
-     * Get the value of password
-     *
-     * @return value of password
-     * @jmx:managed-attribute
-     */
+    @Override
     public String getPassword() {
         return password;
     }
 
-    /**
-     * Set the value of password
-     *
-     * @param password
-     *         Value to assign to password
-     * @jmx:managed-attribute
-     */
+    @Override
     public void setPassword(final String password) {
         this.password = password;
     }
@@ -266,46 +213,22 @@ public class FBManager implements FBManagerMBean {
         return pageSize;
     }
 
-    /**
-     * mbean get-set pair for field createOnStart
-     * Get the value of createOnStart
-     *
-     * @return value of createOnStart
-     * @jmx:managed-attribute
-     */
+    @Override
     public boolean isCreateOnStart() {
         return createOnStart;
     }
 
-    /**
-     * Set the value of createOnStart
-     *
-     * @param createOnStart
-     *         Value to assign to createOnStart
-     * @jmx:managed-attribute
-     */
+    @Override
     public void setCreateOnStart(final boolean createOnStart) {
         this.createOnStart = createOnStart;
     }
 
-    /**
-     * mbean get-set pair for field dropOnStop
-     * Get the value of dropOnStop
-     *
-     * @return value of dropOnStop
-     * @jmx:managed-attribute
-     */
+    @Override
     public boolean isDropOnStop() {
         return dropOnStop;
     }
 
-    /**
-     * Set the value of dropOnStop
-     *
-     * @param dropOnStop
-     *         Value to assign to dropOnStop
-     * @jmx:managed-attribute
-     */
+    @Override
     public void setDropOnStop(final boolean dropOnStop) {
         this.dropOnStop = dropOnStop;
     }
@@ -314,8 +237,8 @@ public class FBManager implements FBManagerMBean {
      * Get the ForceCreate value.
      *
      * @return the ForceCreate value.
-     * @jmx:managed-attribute
      */
+    @Override
     public boolean isForceCreate() {
         return forceCreate;
     }
@@ -325,17 +248,15 @@ public class FBManager implements FBManagerMBean {
      *
      * @param forceCreate
      *         The new ForceCreate value.
-     * @jmx:managed-attribute
      */
+    @Override
     public void setForceCreate(boolean forceCreate) {
         this.forceCreate = forceCreate;
     }
 
     //Meaningful management methods
 
-    /**
-     * @jmx.managed-operation
-     */
+    @Override
     public void createDatabase(String fileName, String user, String password) throws Exception {
         try {
             IConnectionProperties connectionProperties = createDefaultConnectionProperties(user, password);
@@ -363,18 +284,16 @@ public class FBManager implements FBManagerMBean {
                 connectionProperties.getExtraDatabaseParameters()
                         .addArgument(ISCConstants.isc_dpb_page_size, getPageSize());
             }
-            FbDatabase db = dbFactory.connect(connectionProperties);
-            db.createDatabase();
-            db.close();
+            try (FbDatabase db = dbFactory.connect(connectionProperties)) {
+                db.createDatabase();
+            }
         } catch (Exception e) {
             log.error("Exception creating database", e);
             throw e;
         }
     }
 
-    /**
-     * @jmx.managed-operation
-     */
+    @Override
     public void dropDatabase(String fileName, String user, String password) throws Exception {
         try {
             IConnectionProperties connectionProperties = createDefaultConnectionProperties(user, password);
@@ -388,6 +307,7 @@ public class FBManager implements FBManagerMBean {
         }
     }
 
+    @Override
     public boolean isDatabaseExists(String fileName, String user, String password) throws Exception {
         try {
             IConnectionProperties connectionProperties = createDefaultConnectionProperties(user, password);
@@ -410,5 +330,3 @@ public class FBManager implements FBManagerMBean {
         return connectionProperties;
     }
 }
-
-
