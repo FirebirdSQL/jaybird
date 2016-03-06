@@ -409,8 +409,7 @@ public class FBConnection implements FirebirdConnection {
     }
 
     public synchronized void setManagedEnvironment(boolean managedConnection) throws SQLException {
-        checkValidity();
-        txCoordinator.setTransactionCoordinator(managedConnection, true);
+        setTransactionCoordinator(managedConnection, true);
     }
 
     /**
