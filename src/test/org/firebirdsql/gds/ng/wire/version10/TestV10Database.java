@@ -21,7 +21,6 @@ package org.firebirdsql.gds.ng.wire.version10;
 import org.firebirdsql.common.FBTestProperties;
 import org.firebirdsql.common.rules.GdsTypeRule;
 import org.firebirdsql.common.rules.RequireProtocol;
-import org.firebirdsql.encodings.EncodingDefinition;
 import org.firebirdsql.encodings.EncodingFactory;
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.TransactionParameterBuffer;
@@ -213,7 +212,7 @@ public class TestV10Database {
 
         File dbFile = new File(connectionProperties.getAttachObjectName());
         try (WireDatabaseConnection gdsConnection = new WireDatabaseConnection(connectionProperties,
-                EncodingFactory.createInstance((EncodingDefinition) null), getProtocolCollection())) {
+                EncodingFactory.getPlatformDefault(), getProtocolCollection())) {
             gdsConnection.socketConnect();
             FbWireDatabase db = gdsConnection.identify();
             assertEquals("Unexpected FbWireDatabase implementation", getExpectedDatabaseType(), db.getClass());
@@ -424,7 +423,7 @@ public class TestV10Database {
 
     protected WireDatabaseConnection createConnection() throws SQLException {
         return new WireDatabaseConnection(getConnectionInfo(),
-                EncodingFactory.createInstance((EncodingDefinition) null), getProtocolCollection());
+                EncodingFactory.getPlatformDefault(), getProtocolCollection());
     }
 
     private FbTransaction getTransaction(FbDatabase db) throws SQLException {

@@ -53,7 +53,13 @@ public final class EncodingFactory implements IEncodingFactory {
      * be loaded/created
      */
     private static class DefaultEncodingFactory {
-        private static final EncodingFactory DEFAULT_INSTANCE = createInstance();
+        private static final EncodingFactory ROOT_ENCODING_FACTORY;
+        private static final IEncodingFactory PLATFORM_DEFAULT_INSTANCE;
+        static {
+            ROOT_ENCODING_FACTORY = createInstance();
+            PLATFORM_DEFAULT_INSTANCE = ROOT_ENCODING_FACTORY
+                    .withDefaultEncodingDefinition();
+        }
     }
 
     private final Map<String, EncodingDefinition> firebirdEncodingToDefinition = new HashMap<>();
@@ -95,7 +101,7 @@ public final class EncodingFactory implements IEncodingFactory {
      * @return The default encoding of the platform.
      */
     public static Encoding getPlatformEncoding() {
-        return getDefaultInstance().getDefaultEncoding();
+        return getRootEncodingFactory().getDefaultEncoding();
     }
 
     @Override
@@ -273,7 +279,10 @@ public final class EncodingFactory implements IEncodingFactory {
      */
     @Override
     public IEncodingFactory withDefaultEncodingDefinition(EncodingDefinition encodingDefinition) {
-        return new ConnectionEncodingFactory(this, encodingDefinition != null && !encodingDefinition.isInformationOnly() ? encodingDefinition : getDefaultEncodingDefinition());
+        return new ConnectionEncodingFactory(this,
+                encodingDefinition != null && !encodingDefinition.isInformationOnly()
+                        ? encodingDefinition
+                        : getDefaultEncodingDefinition());
     }
 
     /**
@@ -303,7 +312,7 @@ public final class EncodingFactory implements IEncodingFactory {
      * @see EncodingSet
      */
     private static NavigableSet<EncodingSet> loadEncodingSets() {
-        final TreeSet<EncodingSet> encodingSets = new TreeSet<EncodingSet>(ENCODING_SET_COMPARATOR);
+        final TreeSet<EncodingSet> encodingSets = new TreeSet<>(ENCODING_SET_COMPARATOR);
         final ServiceLoader<EncodingSet> encodingSetLoader = ServiceLoader.load(EncodingSet.class, EncodingFactory.class.getClassLoader());
         // Load the encoding sets and populate the TreeMap
         for (final EncodingSet encodingSet : encodingSetLoader) {
@@ -402,43 +411,60 @@ public final class EncodingFactory implements IEncodingFactory {
     }
 
     /**
-     * Returns the default instance of EncodingFactory.
+     * Returns the root instance of EncodingFactory.
      *
-     * @return The default instance of EncodingFactory
+     * @return The root instance of EncodingFactory
      * @see #createInstance()
      */
-    static EncodingFactory getDefaultInstance() {
-        return DefaultEncodingFactory.DEFAULT_INSTANCE;
+    static EncodingFactory getRootEncodingFactory() {
+        return DefaultEncodingFactory.ROOT_ENCODING_FACTORY;
+    }
+
+    /**
+     * Returns an instance of {@link IEncodingFactory} with the default encoding set to the platform encoding.
+     *
+     * @return Instance of {@link IEncodingFactory}.
+     */
+    public static IEncodingFactory getPlatformDefault() {
+        return DefaultEncodingFactory.PLATFORM_DEFAULT_INSTANCE;
     }
 
     /**
      * Returns an {@link org.firebirdsql.encodings.IEncodingFactory} that uses {@code encodingDefinition} as the
      * default.
      * <p>
-     * Equivalent to calling {@code getDefaultInstance().withDefaultEncodingDefinition(encodingDefinition)}.
+     * If {@code encodingDefinition} is {@code null} or an information-only encoding, the implementation will
+     * return the cached instance returned by {@link #getPlatformDefault()}.
      * </p>
      *
      * @param encodingDefinition
-     *         The default encoding to use (or {@code null} for the value of {@link #getDefaultEncoding()}
+     *         The default encoding to use (or {@code null} to get {@link #getPlatformDefault()}
      * @return IEncodingFactory instance with the specified default.
      */
     public static IEncodingFactory createInstance(EncodingDefinition encodingDefinition) {
-        return getDefaultInstance().withDefaultEncodingDefinition(encodingDefinition);
+        if (encodingDefinition == null || encodingDefinition.isInformationOnly()) {
+            return getPlatformDefault();
+        }
+        return getRootEncodingFactory().withDefaultEncodingDefinition(encodingDefinition);
     }
 
     /**
-     * Returns an {@link org.firebirdsql.encodings.IEncodingFactory} that uses an {@link EncodingDefinition} identified
+     * Returns an {@link IEncodingFactory} that uses an {@link EncodingDefinition} identified
      * by {@code charSet} as the default.
      * <p>
-     * Equivalent to calling {@code getDefaultInstance().withDefaultEncodingDefinition(charset)}.
+     * If {@code charset} is {@code null}, the implementation will return the cached instance return by
+     * {@link #getPlatformDefault()}.
      * </p>
      *
      * @param charset
-     *         The default charset to use.
+     *         The default charset to use, or {@code null} for {@link #getPlatformDefault()}.
      * @return IEncodingFactory instance with the specified default.
      */
     public static IEncodingFactory createInstance(Charset charset) {
-        return getDefaultInstance().withDefaultEncodingDefinition(charset);
+        if (charset == null) {
+            return getPlatformDefault();
+        }
+        return getRootEncodingFactory().withDefaultEncodingDefinition(charset);
     }
 
     /**
@@ -458,7 +484,7 @@ public final class EncodingFactory implements IEncodingFactory {
      * @return EncodingFactory instance based on the supplied encodingSets.
      */
     public static EncodingFactory createInstance(EncodingSet... encodingSets) {
-        TreeSet<EncodingSet> sortedEncodingSets = new TreeSet<EncodingSet>(ENCODING_SET_COMPARATOR);
+        TreeSet<EncodingSet> sortedEncodingSets = new TreeSet<>(ENCODING_SET_COMPARATOR);
         // Load the encoding sets and populate the TreeMap
         Collections.addAll(sortedEncodingSets, encodingSets);
         // Process the encoding sets in descending order
@@ -477,7 +503,8 @@ public final class EncodingFactory implements IEncodingFactory {
      */
     @Deprecated
     public static int getCharacterSetSize(int characterSetId) {
-        final EncodingDefinition encodingDefinition = getDefaultInstance().getEncodingDefinitionByCharacterSetId(characterSetId);
+        final EncodingDefinition encodingDefinition = getRootEncodingFactory()
+                .getEncodingDefinitionByCharacterSetId(characterSetId);
         return encodingDefinition != null ? encodingDefinition.getMaxBytesPerChar() : 1;
     }
 
@@ -491,7 +518,7 @@ public final class EncodingFactory implements IEncodingFactory {
      */
     @Deprecated
     public static Encoding getEncoding(String javaCharsetAlias) {
-        return getDefaultInstance().getEncodingForCharsetAlias(javaCharsetAlias, null);
+        return getRootEncodingFactory().getEncodingForCharsetAlias(javaCharsetAlias, null);
     }
 
     /**
@@ -505,7 +532,7 @@ public final class EncodingFactory implements IEncodingFactory {
      */
     @Deprecated
     public static Encoding getEncoding(Charset charset) {
-        return getDefaultInstance().getOrCreateEncodingForCharset(charset);
+        return getRootEncodingFactory().getOrCreateEncodingForCharset(charset);
     }
 
     /**
@@ -523,7 +550,7 @@ public final class EncodingFactory implements IEncodingFactory {
     @Deprecated
     @SuppressWarnings("deprecation")
     public static Encoding getEncoding(String encoding, String mappingPath) throws SQLException {
-        EncodingDefinition encodingDefinition = getDefaultInstance().getEncodingDefinitionByCharsetAlias(encoding);
+        EncodingDefinition encodingDefinition = getRootEncodingFactory().getEncodingDefinitionByCharsetAlias(encoding);
         // TODO Express this in terms of other methods of this factory?
 
         Charset charset = null;
@@ -567,7 +594,8 @@ public final class EncodingFactory implements IEncodingFactory {
     @Deprecated
     @SuppressWarnings("deprecation")
     public static String getIscEncoding(String javaCharsetAlias) {
-        final EncodingDefinition encodingDefinition = getDefaultInstance().getEncodingDefinitionByCharsetAlias(javaCharsetAlias);
+        final EncodingDefinition encodingDefinition = getRootEncodingFactory()
+                .getEncodingDefinitionByCharsetAlias(javaCharsetAlias);
         return encodingDefinition != null ? encodingDefinition.getFirebirdEncodingName() : null;
     }
 
@@ -582,7 +610,8 @@ public final class EncodingFactory implements IEncodingFactory {
      */
     @Deprecated
     public static String getIscEncoding(Charset javaCharset) {
-        final EncodingDefinition encodingDefinition = getDefaultInstance().getEncodingDefinitionByCharset(javaCharset);
+        final EncodingDefinition encodingDefinition = getRootEncodingFactory()
+                .getEncodingDefinitionByCharset(javaCharset);
         return encodingDefinition != null ? encodingDefinition.getFirebirdEncodingName() : null;
     }
 
@@ -600,7 +629,8 @@ public final class EncodingFactory implements IEncodingFactory {
         if (iscEncoding == null) {
             return 1;
         }
-        final EncodingDefinition encodingDefinition = getDefaultInstance().getEncodingDefinitionByFirebirdName(iscEncoding);
+        final EncodingDefinition encodingDefinition = getRootEncodingFactory()
+                .getEncodingDefinitionByFirebirdName(iscEncoding);
         return encodingDefinition != null ? encodingDefinition.getMaxBytesPerChar() : 1;
     }
 
@@ -617,7 +647,8 @@ public final class EncodingFactory implements IEncodingFactory {
         if (iscEncoding == null) {
             return null;
         }
-        final EncodingDefinition encodingDefinition = getDefaultInstance().getEncodingDefinitionByFirebirdName(iscEncoding);
+        final EncodingDefinition encodingDefinition = getRootEncodingFactory()
+                .getEncodingDefinitionByFirebirdName(iscEncoding);
 
         // TODO: Test the claim below
         // very important for performance
@@ -642,7 +673,8 @@ public final class EncodingFactory implements IEncodingFactory {
      */
     @Deprecated
     public static String getJavaEncodingForAlias(String javaAlias) {
-        final EncodingDefinition encodingDefinition = getDefaultInstance().getEncodingDefinitionByCharsetAlias(javaAlias);
+        final EncodingDefinition encodingDefinition = getRootEncodingFactory()
+                .getEncodingDefinitionByCharsetAlias(javaAlias);
         // TODO: Test the claim below
         // very important for performance
         // if javaEncoding is the default one, set to null
@@ -664,6 +696,6 @@ public final class EncodingFactory implements IEncodingFactory {
      */
     @Deprecated
     public static CharacterTranslator getTranslator(String mappingPath) throws SQLException {
-        return getDefaultInstance().getCharacterTranslator(mappingPath);
+        return getRootEncodingFactory().getCharacterTranslator(mappingPath);
     }
 }

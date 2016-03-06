@@ -18,6 +18,7 @@
  */
 package org.firebirdsql.jdbc;
 
+import org.firebirdsql.encodings.EncodingDefinition;
 import org.firebirdsql.encodings.EncodingFactory;
 import org.firebirdsql.gds.DatabaseParameterBuffer;
 import org.firebirdsql.gds.ParameterBufferHelper;
@@ -187,18 +188,18 @@ public class FBConnectionProperties implements FirebirdConnectionProperties, Ser
         }
 
         // Normalize the name of the encoding
-        String normalizedCharSet = EncodingFactory.getJavaEncodingForAlias(charSet);
-        if (normalizedCharSet != null) {
-            setStringProperty(LOCAL_ENCODING_PROPERTY, normalizedCharSet);
+        final EncodingDefinition encodingDefinition = EncodingFactory.getPlatformDefault()
+                .getEncodingDefinitionByCharsetAlias(charSet);
+        if (encodingDefinition == null) {
+            return;
         }
+        setStringProperty(LOCAL_ENCODING_PROPERTY, encodingDefinition.getJavaEncodingName());
 
-        String encoding = getStringProperty(ENCODING_PROPERTY);
-        if (encoding != null) {
+        if (getStringProperty(ENCODING_PROPERTY) != null) {
             return;
         }
 
-        encoding = EncodingFactory.getIscEncoding(charSet);
-
+        String encoding = encodingDefinition.getFirebirdEncodingName();
         if (encoding != null) {
             setStringProperty(ENCODING_PROPERTY, encoding);
         }
@@ -209,19 +210,20 @@ public class FBConnectionProperties implements FirebirdConnectionProperties, Ser
     }
 
     public void setEncoding(String encoding) {
-        if (encoding == null)
+        if (encoding == null) {
             return;
-
+        }
         setStringProperty(ENCODING_PROPERTY, encoding);
 
-        String charSet = getStringProperty(LOCAL_ENCODING_PROPERTY);
-        if (charSet != null)
+        if (getStringProperty(LOCAL_ENCODING_PROPERTY) != null) {
             return;
+        }
 
-        charSet = EncodingFactory.getJavaEncoding(encoding);
-
-        if (charSet != null)
-            setStringProperty(LOCAL_ENCODING_PROPERTY, charSet);
+        final EncodingDefinition encodingDefinition = EncodingFactory.getPlatformDefault()
+                .getEncodingDefinitionByFirebirdName(encoding);
+        if (encodingDefinition != null && !encodingDefinition.isInformationOnly()) {
+            setStringProperty(LOCAL_ENCODING_PROPERTY, encodingDefinition.getJavaEncodingName());
+        }
     }
 
     public String getRoleName() {

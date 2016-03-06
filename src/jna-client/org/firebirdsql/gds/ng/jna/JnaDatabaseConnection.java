@@ -44,7 +44,7 @@ public final class JnaDatabaseConnection extends JnaConnection<IConnectionProper
      */
     public JnaDatabaseConnection(FbClientLibrary clientLibrary, IConnectionProperties connectionProperties)
             throws SQLException {
-        this(clientLibrary, connectionProperties, EncodingFactory.createInstance((EncodingDefinition) null));
+        this(clientLibrary, connectionProperties, EncodingFactory.getPlatformDefault());
     }
 
     /**

@@ -20,7 +20,6 @@ package org.firebirdsql.gds.ng.wire.version10;
 
 import org.firebirdsql.common.rules.GdsTypeRule;
 import org.firebirdsql.common.rules.RequireProtocol;
-import org.firebirdsql.encodings.EncodingDefinition;
 import org.firebirdsql.encodings.EncodingFactory;
 import org.firebirdsql.gds.impl.jni.EmbeddedGDSFactoryPlugin;
 import org.firebirdsql.gds.impl.jni.NativeGDSFactoryPlugin;
@@ -64,7 +63,7 @@ public class TestV10Transaction extends org.firebirdsql.gds.ng.AbstractTransacti
     @Override
     protected final FbDatabase createDatabase() throws SQLException {
         WireDatabaseConnection gdsConnection = new WireDatabaseConnection(connectionInfo,
-                EncodingFactory.createInstance((EncodingDefinition) null), getProtocolCollection());
+                EncodingFactory.getPlatformDefault(), getProtocolCollection());
         gdsConnection.socketConnect();
         return gdsConnection.identify();
     }

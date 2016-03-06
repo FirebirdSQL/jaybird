@@ -250,7 +250,6 @@ public abstract class ParameterBufferBase implements ParameterBuffer, Serializab
     private void readObject(java.io.ObjectInputStream in) throws IOException, ClassNotFoundException {
         in.defaultReadObject();
 
-        defaultEncoding = EncodingFactory.createInstance((EncodingDefinition) null)
-                .getEncodingForCharsetAlias(defaultEncodingName);
+        defaultEncoding = EncodingFactory.getPlatformDefault().getEncodingForCharsetAlias(defaultEncodingName);
     }
 }

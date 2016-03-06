@@ -22,7 +22,6 @@ import org.firebirdsql.common.FBJUnit4TestBase;
 import org.firebirdsql.common.SimpleServer;
 import org.firebirdsql.common.rules.GdsTypeRule;
 import org.firebirdsql.common.rules.RequireProtocol;
-import org.firebirdsql.encodings.EncodingDefinition;
 import org.firebirdsql.encodings.EncodingFactory;
 import org.firebirdsql.gds.EventHandle;
 import org.firebirdsql.gds.ISCConstants;
@@ -409,7 +408,7 @@ public class TestV10EventHandling extends FBJUnit4TestBase {
 
     private AbstractFbWireDatabase createAndAttachDatabase() throws SQLException {
         WireDatabaseConnection gdsConnection = new WireDatabaseConnection(getConnectionInfo(),
-                EncodingFactory.createInstance((EncodingDefinition) null), getProtocolCollection());
+                EncodingFactory.getPlatformDefault(), getProtocolCollection());
         gdsConnection.socketConnect();
         final AbstractFbWireDatabase database = (AbstractFbWireDatabase) gdsConnection.identify();
         assertEquals("Unexpected FbWireDatabase implementation", getExpectedDatabaseType(), database.getClass());

@@ -24,6 +24,8 @@ import static org.junit.Assert.*;
 
 public class TestCharacterTranslation {
 
+    private static final IEncodingFactory factory = EncodingFactory.getPlatformDefault();
+
     private byte[] testBytes = new byte[] {
             0x61, 0x62, 0x63
     };
@@ -38,7 +40,7 @@ public class TestCharacterTranslation {
 
     @Test
     public void testOriginal() {
-        Encoding encoding = EncodingFactory.getDefaultInstance().getEncodingForFirebirdName("ISO8859_1");
+        Encoding encoding = factory.getEncodingForFirebirdName("ISO8859_1");
 
         String testStr = encoding.decodeFromCharset(testBytes);
         String checkStr = new String(originalChars);
@@ -48,7 +50,6 @@ public class TestCharacterTranslation {
 
     @Test
     public void testTranslation() throws Exception {
-        final EncodingFactory factory = EncodingFactory.getDefaultInstance();
         Encoding encoding = factory.getEncodingForFirebirdName("ISO8859_1")
                 .withTranslation(factory.getCharacterTranslator("org.firebirdsql.encodings.testTranslation"));
 
@@ -66,7 +67,6 @@ public class TestCharacterTranslation {
 
     @Test
     public void testHPUXTranslations() throws Exception {
-        final IEncodingFactory factory = EncodingFactory.createInstance((EncodingDefinition) null);
         Encoding encoding = factory.getEncodingForCharsetAlias("Cp1252")
                 .withTranslation(factory.getCharacterTranslator("translation.hpux"));
 

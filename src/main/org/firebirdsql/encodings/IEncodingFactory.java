@@ -24,7 +24,7 @@ import java.sql.SQLException;
 /**
  * Interface for the EncodingFactory.
  * <p>
- * Note on naming convention: normally the prefix <code>I</code> for interfaces is avoided in Java, in this particular
+ * Note on naming convention: normally the prefix {@code I} for interfaces is avoided in Java, in this particular
  * case I decided to use it as the concrete class {@link EncodingFactory} is the actual factory and the main access for
  * encoding related information. This interface is used for connection specific factories (eg so the defaultEncoding is
  * the connection character set).
@@ -44,7 +44,7 @@ public interface IEncodingFactory {
      * Returns the {@link EncodingDefinition} for the default platform character set.
      * <p>
      * If the default character set is not supported by Jaybird, an instance of EncodingDefinition should be returned
-     * with Firebird encoding name <code>"NONE"</code>.
+     * with Firebird encoding name {@code "NONE"}.
      * </p>
      *
      * @return The {@link EncodingDefinition} for {@link java.nio.charset.Charset#defaultCharset()}.
@@ -56,7 +56,7 @@ public interface IEncodingFactory {
      *
      * @param firebirdEncodingName
      *         The Firebird encoding name (case insensitive)
-     * @return EncodingDefinition instance or <code>null</code> if the encoding name is unknown
+     * @return EncodingDefinition instance or {@code null} if the encoding name is unknown
      */
     EncodingDefinition getEncodingDefinitionByFirebirdName(String firebirdEncodingName);
 
@@ -74,14 +74,14 @@ public interface IEncodingFactory {
     /**
      * Looks up the {@link org.firebirdsql.encodings.EncodingDefinition} for the specified Firebird character set id.
      * <p>
-     * Implementation should return <code>null</code> for the value {@link org.firebirdsql.gds.ISCConstants#CS_dynamic}
+     * Implementation should return {@code null} for the value {@link org.firebirdsql.gds.ISCConstants#CS_dynamic}
      * (=127), as
      * that is the indicator to use the connection character set, which is unknown to this EncodingFactory.
      * </p>
      *
      * @param firebirdCharacterSetId
      *         Firebird character set id
-     * @return EncodingDefinition instance or <code>null</code> if the character set id is unknown or <code>127</code>
+     * @return EncodingDefinition instance or {@code null} if the character set id is unknown or {@code 127}
      */
     EncodingDefinition getEncodingDefinitionByCharacterSetId(int firebirdCharacterSetId);
 
@@ -102,7 +102,7 @@ public interface IEncodingFactory {
      *
      * @param charset
      *         The Java character set
-     * @return EncodingDefinition instance or <code>null</code> if the character set is not mapped
+     * @return EncodingDefinition instance or {@code null} if the character set is not mapped
      */
     EncodingDefinition getEncodingDefinitionByCharset(Charset charset);
 
@@ -115,7 +115,7 @@ public interface IEncodingFactory {
      *         The Java character set
      * @param fallbackEncoding
      *         The Encoding to use as fallback if no encoding is found (usually the connection encoding). If
-     *         <code>null</code>, the defaultEncoding for the JVM is used.
+     *         {@code null}, the defaultEncoding for the JVM is used.
      * @return Encoding instance (never null)
      * @see #getOrCreateEncodingForCharset(java.nio.charset.Charset)
      */
@@ -156,7 +156,7 @@ public interface IEncodingFactory {
      *
      * @param charsetAlias
      *         Name (or alias) of the Java character set (case insensitive)
-     * @return EncodingDefinition instance or <code>null</code> if the character set name is not mapped
+     * @return EncodingDefinition instance or {@code null} if the character set name is not mapped
      */
     EncodingDefinition getEncodingDefinitionByCharsetAlias(String charsetAlias);
 
@@ -184,9 +184,9 @@ public interface IEncodingFactory {
     /**
      * Gets or creates an {@link EncodingDefinition} for the supplied Firebird encoding and Java charset.
      * <p>
-     * When <code>firebirdEncodingName</code> is not null and <code>javaCharsetAlias</code> is null, then the
+     * When {@code firebirdEncodingName} is not null and {@code javaCharsetAlias} is null, then the
      * encoding definition as returned by {@link #getEncodingDefinitionByFirebirdName(String)} is returned. For the
-     * reverse (<code>firebirdEncodingName</code> is null and <code>javaCharsetAlias</code> isn't), the encoding
+     * reverse ({@code firebirdEncodingName} is null and {@code javaCharsetAlias} isn't), the encoding
      * definition
      * as returned by {@link #getEncodingDefinitionByCharsetAlias(String)} is returned.
      * </p>

@@ -20,7 +20,6 @@ package org.firebirdsql.gds.ng.wire.version10;
 
 import org.firebirdsql.common.rules.GdsTypeRule;
 import org.firebirdsql.common.rules.RequireProtocol;
-import org.firebirdsql.encodings.EncodingDefinition;
 import org.firebirdsql.encodings.EncodingFactory;
 import org.firebirdsql.gds.ServiceParameterBuffer;
 import org.firebirdsql.gds.ServiceRequestBuffer;
@@ -29,7 +28,10 @@ import org.firebirdsql.gds.impl.jni.EmbeddedGDSFactoryPlugin;
 import org.firebirdsql.gds.impl.jni.NativeGDSFactoryPlugin;
 import org.firebirdsql.gds.ng.FbService;
 import org.firebirdsql.gds.ng.IServiceProperties;
-import org.firebirdsql.gds.ng.wire.*;
+import org.firebirdsql.gds.ng.wire.AbstractFbWireService;
+import org.firebirdsql.gds.ng.wire.FbWireService;
+import org.firebirdsql.gds.ng.wire.ProtocolCollection;
+import org.firebirdsql.gds.ng.wire.WireServiceConnection;
 import org.firebirdsql.management.FBManager;
 import org.firebirdsql.management.FBStatisticsManager;
 import org.junit.ClassRule;
@@ -180,6 +182,6 @@ public class TestV10Service {
 
     private WireServiceConnection createConnection() throws SQLException {
         return new WireServiceConnection(getConnectionInfo(),
-                EncodingFactory.createInstance((EncodingDefinition) null), getProtocolCollection());
+                EncodingFactory.getPlatformDefault(), getProtocolCollection());
     }
 }

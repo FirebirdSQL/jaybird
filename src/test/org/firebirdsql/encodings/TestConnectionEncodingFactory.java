@@ -35,7 +35,7 @@ import static org.junit.Assert.assertSame;
  */
 public class TestConnectionEncodingFactory {
 
-    private final EncodingFactory standardFactory = EncodingFactory.getDefaultInstance();
+    private final EncodingFactory standardFactory = EncodingFactory.getRootEncodingFactory();
     // We use US_ASCII as it is unlikely to be a real default on a system, so we know it was correctly applied
     private final EncodingDefinition defaultEncodingDefinition =
             standardFactory.getEncodingDefinitionByCharset(StandardCharsets.US_ASCII);
