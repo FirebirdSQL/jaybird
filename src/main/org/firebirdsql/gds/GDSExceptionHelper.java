@@ -24,14 +24,13 @@
  */
 package org.firebirdsql.gds;
 
+import org.firebirdsql.jdbc.SQLStateConstants;
 import org.firebirdsql.logging.Logger;
 import org.firebirdsql.logging.LoggerFactory;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Properties;
+import java.util.*;
 
 /**
  * This class returns messages for the specified error code.
@@ -48,33 +47,32 @@ import java.util.Properties;
  */
 public class GDSExceptionHelper {
 
-    private static final String SQLSTATE_CLI_GENERIC_ERROR = "HY000";
-
     private static final Logger log = LoggerFactory.getLogger(GDSExceptionHelper.class);
 
     private static final String MESSAGES = "isc_error_msg";
     private static final String JAYBIRD_MESSAGES = "org/firebirdsql/jaybird_error_msg";
     private static final String SQLSTATES = "isc_error_sqlstates";
     private static final String JAYBIRD_SQLSTATES = "org/firebirdsql/jaybird_error_sqlstates";
-    private static final Properties messages;
-    private static final Properties sqlstates;
+    private static final Map<Integer, String> messages;
+    private static final Map<Integer, String> sqlstates;
 
     /**
      * Initializes the messages map.
      */
     static {
         try {
-            messages = loadResource(MESSAGES, JAYBIRD_MESSAGES);
-            sqlstates = loadResource(SQLSTATES, JAYBIRD_SQLSTATES);
+            messages = loadResource(false, MESSAGES, JAYBIRD_MESSAGES);
+            sqlstates = loadResource(true, SQLSTATES, JAYBIRD_SQLSTATES);
         } catch (Exception ex) {
             log.error("Exception in init of GDSExceptionHelper, unable to load error information", ex);
             throw new ExceptionInInitializerError(ex);
         }
     }
 
-    private static Properties loadResource(String... resources) throws Exception {
+    private static Map<Integer, String> loadResource(boolean deduplicate, String... resources) throws Exception {
         Properties properties = new Properties();
         Exception firstException = null;
+        // Load from property files
         for (String resource : resources) {
             String resourceFile = "/" + resource.replace('.', '/') + ".properties";
             try (InputStream in = getResourceAsStream(resourceFile)) {
@@ -90,10 +88,44 @@ public class GDSExceptionHelper {
                 }
             }
         }
+
         if (firstException != null) {
             throw firstException;
         }
-        return properties;
+
+        // Use of HashMap avoids unnecessary synchronization in Properties
+        return asErrorCodeMapping(deduplicate, properties);
+    }
+
+    private static Map<Integer, String> asErrorCodeMapping(boolean deduplicate, Properties properties) {
+        // Convert to hash map and deduplicate values if specified
+        // We are not interning to avoid polluting the string constant pool
+        final Map<String, String> deduplicationMap = deduplicate
+                ? new HashMap<String, String>(128)
+                : Collections.<String, String>emptyMap();
+        final Map<Integer, String> propsAsMap = new HashMap<>(properties.size(), 1);
+
+        for (Object key : properties.keySet()) {
+            if (!(key instanceof String)) continue;
+            try {
+                final String keyString = (String) key;
+                final Integer errorCode = Integer.valueOf(keyString);
+
+                String value = properties.getProperty(keyString);
+                if (deduplicate) {
+                    if (deduplicationMap.containsKey(value)) {
+                        value = deduplicationMap.get(value);
+                    } else {
+                        deduplicationMap.put(value, value);
+                    }
+                }
+
+                propsAsMap.put(errorCode, value);
+            } catch (NumberFormatException e) {
+                log.warn("Key " + key + " is not a number; ignored", e);
+            }
+        }
+        return propsAsMap;
     }
 
     private static InputStream getResourceAsStream(String res) {
@@ -113,8 +145,8 @@ public class GDSExceptionHelper {
      * @return instance of <code>GDSExceptionHelper.GDSMessage</code> class where you can set desired parameters.
      */
     public static GDSMessage getMessage(int code) {
-        return new GDSMessage(messages.getProperty(
-                Integer.toString(code), "No message for code " + code + " found."));
+        final String message = messages.get(code);
+        return new GDSMessage(message != null ? message : "No message for code " + code + " found.");
     }
 
     /**
@@ -125,7 +157,7 @@ public class GDSExceptionHelper {
      * @return SQL state for the Firebird error code, "HY000" if nothing found.
      */
     public static String getSQLState(int code) {
-        return getSQLState(code, SQLSTATE_CLI_GENERIC_ERROR);
+        return getSQLState(code, SQLStateConstants.SQL_STATE_GENERAL_ERROR);
     }
 
     /**
@@ -138,7 +170,8 @@ public class GDSExceptionHelper {
      * @return SQL state for the Firebird error code, or <code>defaultSQLState</code> if nothing found.
      */
     public static String getSQLState(int code, String defaultSQLState) {
-        return sqlstates.getProperty(Integer.toString(code), defaultSQLState);
+        final String sqlState = sqlstates.get(code);
+        return sqlState != null ? sqlState : defaultSQLState;
     }
 
     /**
