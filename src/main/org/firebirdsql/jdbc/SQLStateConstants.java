@@ -48,6 +48,9 @@ public final class SQLStateConstants {
     public static final String SQL_STATE_INVALID_CONVERSION = "07006";
 
     public static final String SQL_STATE_INVALID_TX_STATE = "25000";
+    public static final String SQL_STATE_INVALID_TRANSACTION_STATE = "25S01";
+    public static final String SQL_STATE_TRANSACTION_ACTIVE = "25S02";
+    public static final String SQL_STATE_TRANSACTION_ROLLED_BACK = "25S03";
 
     public static final String SQL_STATE_INVALID_STATEMENT_ID = "26000";
 

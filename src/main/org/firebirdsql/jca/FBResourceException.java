@@ -18,15 +18,16 @@
  */
 package org.firebirdsql.jca;
 
+import org.firebirdsql.jdbc.SQLStateConstants;
+
 import javax.resource.ResourceException;
-import java.io.PrintWriter;
 import java.io.PrintStream;
+import java.io.PrintWriter;
 import java.sql.SQLException;
 
 /**
- * <code>FBResourceException</code> should be used in places where 
- * {@link ResourceException} should be thrown according to the interface
- * specification, but we do not want to loose exception that we caught.
+ * {@code FBResourceException} should be used in places where {@link ResourceException} should be thrown according to
+ * the interface specification, but we do not want to lose the exception that we caught.
  * <p>
  * Example:
  * <pre>
@@ -37,45 +38,53 @@ import java.sql.SQLException;
  *     throw new FBResourceException(gdsex);
  * }
  * </pre>
- * 
+ * </p>
+ *
  * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
  */
 @SuppressWarnings("deprecation")
 public class FBResourceException extends ResourceException {
-    
-    public static final String SQL_STATE_GENERAL_ERROR = "HY000";
-    
+
     /**
-     * Create a new instance of <code>FBResourceException</code> with a given
-     * string message and generic error code.
+     * @deprecated Use constants from {@link SQLStateConstants}. To be removed in 3.1.
+     */
+    @Deprecated
+    public static final String SQL_STATE_GENERAL_ERROR = SQLStateConstants.SQL_STATE_GENERAL_ERROR;
+
+    /**
+     * Create a new instance of {@code FBResourceException} with a given string message and generic error code.
      *
-     * @param reason The string message for the exception
+     * @param reason
+     *         The string message for the exception
      */
     public FBResourceException(String reason) {
-        super(reason, SQL_STATE_GENERAL_ERROR);
+        super(reason, SQLStateConstants.SQL_STATE_GENERAL_ERROR);
     }
 
     /**
-     * Create a new instance of <code>FBResourceException</code> with 
-     * a message and specific error code.
+     * Create a new instance of {@code FBResourceException} with a message and specific error code.
      *
-     * @param reason The string message for the exception
-     * @param errorCode The error code for the cause of the exception
+     * @param reason
+     *         The string message for the exception
+     * @param errorCode
+     *         The error code for the cause of the exception
      */
     public FBResourceException(String reason, String errorCode) {
         super(reason, errorCode);
     }
 
     /**
-     * Create a new instance of <code>FBResourceException</code> with a 
-     * generic error code that is linked to another (sub) exception.
+     * Create a new instance of {@code FBResourceException} with a generic error code that is linked to another
+     * (sub) exception.
      *
-     * @param reason The string message for the exception
-     * @param original The original exception to which this instance is to
-     *        be linked to
+     * @param reason
+     *         The string message for the exception
+     * @param original
+     *         The original exception to which this instance is to
+     *         be linked to
      */
     public FBResourceException(String reason, Exception original) {
-        super(reason, SQL_STATE_GENERAL_ERROR);
+        super(reason, SQLStateConstants.SQL_STATE_GENERAL_ERROR);
         // Preserve setLinkedException for backwards compatibility
         setLinkedException(original);
         initCause(original);
@@ -88,19 +97,20 @@ public class FBResourceException extends ResourceException {
     }
 
     /**
-     * Create a new instance of <code>FBResourceException</code> with a 
-     * generic error code that is linked to another (sub) exception.
+     * Create a new instance of {@code FBResourceException} with a generic error code that is linked to another
+     * (sub) exception.
      *
-     * @param original The original exception to which this instance is
-     *        to be linked to
+     * @param original
+     *         The original exception to which this instance is
+     *         to be linked to
      */
     public FBResourceException(Exception original) {
         this(original.getMessage(), original);
     }
-    
+
     /**
      * Get message of this exception.
-     * 
+     *
      * @return combined message of this exception and original exception.
      */
     public String getMessage() {
@@ -116,27 +126,27 @@ public class FBResourceException extends ResourceException {
         if (causeMessage == null) {
             return message;
         }
-            
+
         if (message == null) {
             return causeMessage;
         }
-            
+
         return message + "\nReason: " + causeMessage;
     }
 
 
     /**
-     * Print the stack trace of this exception to <code>STDERR</code>
+     * Print the stack trace of this exception to {@code STDERR}
      */
     public void printStackTrace() {
         printStackTrace(System.err);
     }
 
     /**
-     * Print the stack trace of this exception to a 
-     * given <code>PrintStream</code>
+     * Print the stack trace of this exception to a given {@code PrintStream}
      *
-     * @param s The <code>PrintStream</code> to which to write the stack trace
+     * @param s
+     *         The {@code PrintStream} to which to write the stack trace
      */
     public void printStackTrace(PrintStream s) {
         super.printStackTrace(s);
@@ -147,10 +157,10 @@ public class FBResourceException extends ResourceException {
     }
 
     /**
-     * Print the stack trace of this exception to a
-     * given <code>PrintWriter</code>
+     * Print the stack trace of this exception to a given {@code PrintWriter}
      *
-     * @param s The <code>PrintWriter</code> to which to write the stack trace
+     * @param s
+     *         The {@code PrintWriter} to which to write the stack trace
      */
     public void printStackTrace(PrintWriter s) {
         super.printStackTrace(s);

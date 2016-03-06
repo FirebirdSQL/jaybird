@@ -463,5 +463,6 @@ Jaybird 3.1 will very likely drop support for Java 7 (this decision is not final
 
 The following constants will be removed in Jaybird 3.1
 
-- All `SQL_STATE_*` constants in `FBSQLException`. Use equivalent constants in
-  `SQLStateConstants`.
+-   All `SQL_STATE_*` constants in `FBSQLException`,
+    `FBResourceTransactionException`, and `FBResourceException` will be removed.
+    Use equivalent constants in `org.firebirdsql.jdbc.SQLStateConstants`.

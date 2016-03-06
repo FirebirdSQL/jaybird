@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
@@ -20,20 +18,25 @@
  */
 package org.firebirdsql.jca;
 
-import javax.resource.ResourceException;
-import javax.resource.spi.*;
-import javax.transaction.xa.*;
-
 import org.firebirdsql.jdbc.FBConnection;
+import org.firebirdsql.jdbc.SQLStateConstants;
 
+import javax.resource.ResourceException;
+import javax.resource.spi.ConnectionEvent;
+import javax.resource.spi.EISSystemException;
+import javax.resource.spi.LocalTransactionException;
+import javax.resource.spi.ResourceAdapterInternalException;
+import javax.transaction.xa.XAException;
+import javax.transaction.xa.XAResource;
+import javax.transaction.xa.Xid;
 import java.sql.SQLException;
 
 /**
- * The class <code>FBLocalTransaction</code> implements LocalTransaction both
+ * The class {@code FBLocalTransaction} implements LocalTransaction both
  * in the cci and spi meanings. A flag is used to distinguish the current
  * functionality. This class works by delegating the operations to the internal
  * implementations of the XAResource functionality in FBManagedConnection.
- * 
+ *
  * @author <a href="mailto:d_jencks@users.sourceforge.net">David Jencks</a>
  * @version 1.0
  */
@@ -78,9 +81,8 @@ public class FBLocalTransaction implements FirebirdLocalTransaction,
 
     /**
      * Get the associated Xid.
-     * 
-     * @return instance of {@link Xid} representing a transaction ID that is
-     *         managed by this local transaction.
+     *
+     * @return instance of {@link Xid} representing a transaction ID that is managed by this local transaction.
      */
     public Xid getXid() {
         return xid;
@@ -100,15 +102,15 @@ public class FBLocalTransaction implements FirebirdLocalTransaction,
 
     /**
      * Begin a local transaction.
-     * 
+     *
      * @throws ResourceException
-     *             generic exception if operation fails
+     *         generic exception if operation fails
      * @throws LocalTransactionException
-     *             error condition related to local transaction management
+     *         error condition related to local transaction management
      * @throws ResourceAdapterInternalException
-     *             error condition internal to resource adapter
+     *         error condition internal to resource adapter
      * @throws EISSystemException
-     *             EIS instance specific error condition
+     *         EIS instance specific error condition
      */
     public void begin() throws ResourceException {
         internalBegin();
@@ -116,15 +118,15 @@ public class FBLocalTransaction implements FirebirdLocalTransaction,
 
     /**
      * Perform the internal operations to begin a local transaction.
-     * 
+     *
      * @throws ResourceException
-     *             generic exception if operation fails
+     *         generic exception if operation fails
      * @throws LocalTransactionException
-     *             error condition related to local transaction management
+     *         error condition related to local transaction management
      * @throws ResourceAdapterInternalException
-     *             error condition internal to resource adapter
+     *         error condition internal to resource adapter
      * @throws EISSystemException
-     *             EIS instance specific error condition
+     *         EIS instance specific error condition
      */
     public void internalBegin() throws ResourceException {
         if (xid != null) {
@@ -133,37 +135,33 @@ public class FBLocalTransaction implements FirebirdLocalTransaction,
             if (mc.isXidActive(xid))
                 throw new FBResourceTransactionException(
                         "Local transaction active: can't begin another",
-                        FBResourceTransactionException.SQL_STATE_TRANSACTION_ACTIVE);
+                        SQLStateConstants.SQL_STATE_TRANSACTION_ACTIVE);
         }
 
         xid = new FBLocalXid();
 
         try {
             mc.internalStart(xid, XAResource.TMNOFLAGS);
-        } catch (XAException ex) {
-            xid = null;
-            throw new FBResourceException(ex);
-        } catch (SQLException ex) {
+        } catch (XAException | SQLException ex) {
             xid = null;
             throw new FBResourceException(ex);
         }
 
         if (beginEvent != null)
-            mc.notify(FBManagedConnection.localTransactionStartedNotifier,
-                beginEvent);
+            mc.notify(FBManagedConnection.localTransactionStartedNotifier, beginEvent);
     }
 
     /**
      * Commit a local transaction.
-     * 
+     *
      * @throws ResourceException
-     *             generic exception if operation fails
+     *         generic exception if operation fails
      * @throws LocalTransactionException
-     *             error condition related to local transaction management
+     *         error condition related to local transaction management
      * @throws ResourceAdapterInternalException
-     *             error condition internal to resource adapter
+     *         error condition internal to resource adapter
      * @throws EISSystemException
-     *             EIS instance specific error condition
+     *         EIS instance specific error condition
      */
     public void commit() throws ResourceException {
         internalCommit();
@@ -171,15 +169,15 @@ public class FBLocalTransaction implements FirebirdLocalTransaction,
 
     /**
      * Perform the internal processing to commit a local transaction.
-     * 
+     *
      * @throws ResourceException
-     *             generic exception if operation fails
+     *         generic exception if operation fails
      * @throws LocalTransactionException
-     *             error condition related to local transaction management
+     *         error condition related to local transaction management
      * @throws ResourceAdapterInternalException
-     *             error condition internal to resource adapter
+     *         error condition internal to resource adapter
      * @throws EISSystemException
-     *             EIS instance specific error condition
+     *         EIS instance specific error condition
      */
     public void internalCommit() throws ResourceException {
 
@@ -202,23 +200,23 @@ public class FBLocalTransaction implements FirebirdLocalTransaction,
             }
             if (commitEvent != null) {
                 mc.notify(
-                    FBManagedConnection.localTransactionCommittedNotifier,
-                    commitEvent);
+                        FBManagedConnection.localTransactionCommittedNotifier,
+                        commitEvent);
             }
         }
     }
 
     /**
      * Rollback a local transaction.
-     * 
-     * @throws ResourceException -
-     *             generic exception if operation fails
-     * @throws LocalTransactionException -
-     *             error condition related to local transaction management
-     * @throws ResourceAdapterInternalException -
-     *             error condition internal to resource adapter
-     * @throws EISSystemException -
-     *             EIS instance specific error condition
+     *
+     * @throws ResourceException
+     *         generic exception if operation fails
+     * @throws LocalTransactionException
+     *         error condition related to local transaction management
+     * @throws ResourceAdapterInternalException
+     *         error condition internal to resource adapter
+     * @throws EISSystemException
+     *         EIS instance specific error condition
      */
     public void rollback() throws ResourceException {
         internalRollback();
@@ -226,15 +224,15 @@ public class FBLocalTransaction implements FirebirdLocalTransaction,
 
     /**
      * Perform the internal processing to rollback a local transaction.
-     * 
-     * @throws ResourceException -
-     *             generic exception if operation fails
-     * @throws LocalTransactionException -
-     *             error condition related to local transaction management
-     * @throws ResourceAdapterInternalException -
-     *             error condition internal to resource adapter
-     * @throws EISSystemException -
-     *             EIS instance specific error condition
+     *
+     * @throws ResourceException
+     *         generic exception if operation fails
+     * @throws LocalTransactionException
+     *         error condition related to local transaction management
+     * @throws ResourceAdapterInternalException
+     *         error condition internal to resource adapter
+     * @throws EISSystemException
+     *         EIS instance specific error condition
      */
     public void internalRollback() throws ResourceException {
 
@@ -247,21 +245,15 @@ public class FBLocalTransaction implements FirebirdLocalTransaction,
         synchronized (mc) {
             try {
                 mc.internalEnd(xid, XAResource.TMSUCCESS); // ??? on flags
-                                                            // --FBManagedConnection
-                                                            // is its own
-                                                            // XAResource
+                                                           // --FBManagedConnection is its own XAResource
                 mc.internalRollback(xid);
-            } catch (XAException ex) {
-                throw new FBResourceTransactionException(ex.getMessage(), ex);
-            } catch (SQLException ex) {
+            } catch (XAException | SQLException ex) {
                 throw new FBResourceTransactionException(ex.getMessage(), ex);
             } finally {
                 xid = null;
             }
             if (rollbackEvent != null) {
-                mc.notify(
-                    FBManagedConnection.localTransactionRolledbackNotifier,
-                    rollbackEvent);
+                mc.notify(FBManagedConnection.localTransactionRolledbackNotifier, rollbackEvent);
             }
         }
     }
@@ -295,9 +287,10 @@ public class FBLocalTransaction implements FirebirdLocalTransaction,
 
         /**
          * Return the format identifier of this transaction.
-         * 
+         * <p>
          * The format identifier augments the global id and specifies how the
          * global id and branch qualifier should be interpreted.
+         * </p>
          */
         public int getFormatId() {
             return formatId;
@@ -307,5 +300,4 @@ public class FBLocalTransaction implements FirebirdLocalTransaction,
             return strValue;
         }
     }
-
 }
