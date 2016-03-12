@@ -29,7 +29,6 @@ import org.firebirdsql.common.FBTestProperties;
 import org.firebirdsql.common.rules.GdsTypeRule;
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.ServiceRequestBuffer;
-import org.firebirdsql.gds.impl.GDSFactory;
 import org.firebirdsql.gds.impl.GDSType;
 import org.firebirdsql.gds.ng.FbDatabaseFactory;
 import org.firebirdsql.gds.ng.FbService;
@@ -109,7 +108,7 @@ public class TestJaybirdBlobBackupProblem {
     @Before
     public void setUp() throws Exception {
         GDSType gdsType = FBTestProperties.getGdsType();
-        dbFactory = GDSFactory.getDatabaseFactoryForType(gdsType);
+        dbFactory = FBTestProperties.getFbDatabaseFactory();
         try {
             fbManager = new FBManager(gdsType);
 

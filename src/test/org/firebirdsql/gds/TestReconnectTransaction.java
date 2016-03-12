@@ -20,7 +20,6 @@ package org.firebirdsql.gds;
 
 import org.firebirdsql.common.FBJUnit4TestBase;
 import org.firebirdsql.common.FBTestProperties;
-import org.firebirdsql.gds.impl.GDSFactory;
 import org.firebirdsql.gds.impl.GDSHelper;
 import org.firebirdsql.gds.ng.*;
 import org.firebirdsql.gds.ng.fields.RowValue;
@@ -37,7 +36,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import static org.firebirdsql.common.FBTestProperties.*;
+import static org.firebirdsql.common.FBTestProperties.DB_PASSWORD;
+import static org.firebirdsql.common.FBTestProperties.DB_USER;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
@@ -92,7 +92,7 @@ public class TestReconnectTransaction extends FBJUnit4TestBase {
         connectionInfo.setDatabaseName(FBTestProperties.getDatabasePath());
         connectionInfo.setEncoding("NONE");
 
-        FbDatabaseFactory databaseFactory = GDSFactory.getDatabaseFactoryForType(getGdsType());
+        FbDatabaseFactory databaseFactory = FBTestProperties.getFbDatabaseFactory();
         try (FbDatabase dbHandle1 = databaseFactory.connect(connectionInfo)) {
             dbHandle1.attach();
             FbTransaction trHandle1 = dbHandle1.startTransaction(tpb.getTransactionParameterBuffer());

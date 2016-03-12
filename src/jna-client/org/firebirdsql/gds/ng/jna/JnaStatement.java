@@ -28,6 +28,8 @@ import org.firebirdsql.jna.fbclient.FbClientLibrary;
 import org.firebirdsql.jna.fbclient.ISC_STATUS;
 import org.firebirdsql.jna.fbclient.XSQLDA;
 import org.firebirdsql.jna.fbclient.XSQLVAR;
+import org.firebirdsql.logging.Logger;
+import org.firebirdsql.logging.LoggerFactory;
 
 import java.nio.ByteBuffer;
 import java.sql.SQLException;
@@ -42,6 +44,8 @@ import static org.firebirdsql.gds.ng.TransactionHelper.checkTransactionActive;
  * @since 3.0
  */
 public class JnaStatement extends AbstractFbStatement {
+
+    private static final Logger log = LoggerFactory.getLogger(JnaStatement.class);
 
     private final IntByReference handle = new IntByReference(0);
     private JnaDatabase database;
@@ -359,7 +363,9 @@ public class JnaStatement extends AbstractFbStatement {
                         getSqlCounts();
                         // Note: we are not explicitly 'closing' the cursor here
                     } else {
-                        // TODO Log, raise exception, or simply 'not possible'?
+                        final String message = "Unexpected fetch status (expected 0 or 100): " + fetchStatusInt;
+                        log.error(message);
+                        throw new SQLException(message);
                     }
                 }
             }

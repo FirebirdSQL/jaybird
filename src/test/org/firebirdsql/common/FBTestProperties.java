@@ -18,7 +18,9 @@
  */
 package org.firebirdsql.common;
 
+import org.firebirdsql.gds.impl.GDSFactory;
 import org.firebirdsql.gds.impl.GDSType;
+import org.firebirdsql.gds.ng.FbDatabaseFactory;
 import org.firebirdsql.jca.FBManagedConnectionFactory;
 import org.firebirdsql.jca.InternalConnectionManager;
 import org.firebirdsql.jdbc.FBDriver;
@@ -184,6 +186,10 @@ public final class FBTestProperties {
     // These methods should be used where possible so as to create the objects
     // bound to the
     // appropriate GDS implementation.
+
+    public static FbDatabaseFactory getFbDatabaseFactory() {
+        return GDSFactory.getDatabaseFactoryForType(getGdsType());
+    }
 
     @SuppressWarnings("unused")
     public static FBManagedConnectionFactory createFBManagedConnectionFactory() {
