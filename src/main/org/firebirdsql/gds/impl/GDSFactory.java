@@ -34,20 +34,19 @@ import java.util.*;
 import java.util.Map.Entry;
 
 /**
- * The class <code>GDSFactory</code> exists to provide a way to obtain objects
+ * The class {@code GDSFactory} exists to provide a way to obtain objects
  * implementing GDS and Clumplet.
- * 
+ *
  * @author <a href="mailto:d_jencks@users.sourceforge.net">David Jencks</a>
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  */
 public class GDSFactory {
 
-    private static Logger log = LoggerFactory.getLogger(GDSFactory.class
-    );
+    private static Logger log = LoggerFactory.getLogger(GDSFactory.class);
 
     /**
      * Class for string comparison in the descendant order. This effectively
-     * puts the most short JDBC URLs at the end of the list, so the correct
+     * puts the shortest JDBC URLs at the end of the list, so the correct
      * default protocol handling can be implemented.
      */
     private static class ReversedStringComparator implements Comparator<String>, Serializable {
@@ -67,7 +66,6 @@ public class GDSFactory {
 
     private static GDSType defaultType;
 
-    // TODO: Replace with explicit initializer from GDSType?
     static {
         // register first all plugins that belong to the same class loader
         // in which this class is loaded
@@ -77,11 +75,11 @@ public class GDSFactory {
                 loadPluginsFromClassLoader(classLoader);
             }
         } catch (Exception ex) {
-            if (log != null) log.error("Can't register plugins ", ex);
+            log.error("Can't register plugins ", ex);
         }
 
         if (jdbcUrlToPluginMap.isEmpty()) {
-            if (log != null) log.warn("No plugins loaded from META-INF/services, falling back to fixed registration of default plugins");
+            log.warn("No plugins loaded from META-INF/services, falling back to fixed registration of default plugins");
             for (ClassLoader classLoader : classLoaders) {
                 loadPluginsFallback(classLoader);
             }
@@ -111,8 +109,9 @@ public class GDSFactory {
 
     /**
      * Load all existing plugins from the specified class loader.
-     * 
-     * @param classLoader instance of {@link ClassLoader}.
+     *
+     * @param classLoader
+     *         instance of {@link ClassLoader}.
      */
     private static void loadPluginsFromClassLoader(ClassLoader classLoader) {
         ServiceLoader<GDSFactoryPlugin> pluginLoader = ServiceLoader.load(GDSFactoryPlugin.class, classLoader);
@@ -153,9 +152,9 @@ public class GDSFactory {
      * plugins, since this happens automatically during initialization of this
      * class. However, there might be a situation when automatic plugin
      * registration does not work.
-     * 
+     *
      * @param plugin
-     *            instance of {@link GDSFactoryPlugin} to register.
+     *         instance of {@link GDSFactoryPlugin} to register.
      */
     public static void registerPlugin(GDSFactoryPlugin plugin) {
         boolean newPlugin = registeredPlugins.add(plugin);
@@ -188,7 +187,7 @@ public class GDSFactory {
 
     /**
      * Get default GDS type.
-     * 
+     *
      * @return instance of {@link GDSType}.
      */
     public static GDSType getDefaultGDSType() {
@@ -204,27 +203,20 @@ public class GDSFactory {
      * Get connection string for the specified server name, port and database
      * name/path. This method delegates call to the factory plugin corresponding
      * to the specified type.
-     * 
+     *
      * @param gdsType
-     *            instance of {@link GDSType} for which connection string should
-     *            be returned.
-     * 
+     *         instance of {@link GDSType} for which connection string should be returned.
      * @param server
-     *            name or IP address of the database server, applies only to IPC
-     *            and TCP connection modes, in other cases should be
-     *            <code>null</code>.
-     * 
+     *         name or IP address of the database server, applies only to IPC and TCP connection modes, in other cases
+     *         should be {@code null}.
      * @param port
-     *            port on which database server opened listening socket, applies
-     *            to TCP connection mode only, may be <code>null</code>.
-     * 
+     *         port on which database server opened listening socket, applies to TCP connection mode only, may be
+     *         {@code null}.
      * @param path
-     *            database name or path to the database
-     * 
+     *         database name or path to the database
      * @return full connection string
-     * 
      * @throws GDSException
-     *             if connection string cannot be obtained.
+     *         if connection string cannot be obtained.
      */
     public static String getDatabasePath(GDSType gdsType, String server, Integer port, String path)
             throws GDSException {
@@ -235,16 +227,14 @@ public class GDSFactory {
      * Get path to the database from the specified JDBC URL. This method finds
      * the appropriate plugin and delegates the call to it. Plugin is
      * responsible for the call execution.
-     * 
+     *
      * @param gdsType
-     *            type of the plugin, to which operation will be delegated to.
+     *         type of the plugin, to which operation will be delegated to.
      * @param jdbcUrl
-     *            JDBC url from which the database path must be extracted.
-     * 
+     *         JDBC url from which the database path must be extracted.
      * @return path to the database specified in the JDBC URL.
-     * 
      * @throws GDSException
-     *             error when database path cannot be extracted.
+     *         error when database path cannot be extracted.
      */
     public static String getDatabasePath(GDSType gdsType, String jdbcUrl)
             throws GDSException {
@@ -253,7 +243,7 @@ public class GDSFactory {
 
     /**
      * Get collection of the supported JDBC protocols.
-     * 
+     *
      * @return set of the supported protocols.
      */
     public static Set<String> getSupportedProtocols() {
@@ -262,12 +252,11 @@ public class GDSFactory {
 
     /**
      * Create JDBC URL for the specified GDS type and database path.
-     * 
+     *
      * @param gdsType
-     *            type of the plugin, to which operation will be delegated to.
+     *         type of the plugin, to which operation will be delegated to.
      * @param databasePath
-     *            path to the database.
-     * 
+     *         path to the database.
      * @return newly created JDBC URL.
      */
     public static String getJdbcUrl(GDSType gdsType, String databasePath) {
@@ -277,10 +266,9 @@ public class GDSFactory {
     /**
      * Get GDS type for the specified JDBC URL. This method finds the plugin
      * corresponding to the specified type and delegates the call to it.
-     * 
+     *
      * @param jdbcUrl
-     *            JDBC URL for which GDS type should be obtained.
-     * 
+     *         JDBC URL for which GDS type should be obtained.
      * @return instance of {@link GDSType}.
      */
     public static GDSType getTypeForProtocol(String jdbcUrl) {
@@ -299,10 +287,9 @@ public class GDSFactory {
      * Get class extending the {@link org.firebirdsql.jdbc.FBConnection}
      * that will be instantiated when new connection is created. This method
      * finds the plugin for the specified type and delegates the call to it.
-     * 
+     *
      * @param gdsType
-     *            instance of {@link GDSType}
-     * 
+     *         instance of {@link GDSType}
      * @return class to instantiate for the database connection.
      */
     public static Class<?> getConnectionClass(GDSType gdsType) {
@@ -311,14 +298,12 @@ public class GDSFactory {
 
     /**
      * Get plugin for the specified GDS type.
-     * 
+     *
      * @param gdsType
-     *            GDS type.
-     * 
+     *         GDS type.
      * @return instance of {@link GDSFactoryPlugin}
-     * 
      * @throws IllegalArgumentException
-     *             if specified type is not known.
+     *         if specified type is not known.
      */
     private static GDSFactoryPlugin getPlugin(GDSType gdsType) {
         GDSFactoryPlugin gdsPlugin = typeToPluginMap.get(gdsType);
