@@ -24,6 +24,7 @@
  */
 package org.firebirdsql.gds.ng.fields;
 
+import org.firebirdsql.encodings.IEncodingFactory;
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.ng.DatatypeCoder;
 
@@ -77,10 +78,10 @@ public final class FieldDescriptor {
      * @param ownerName
      *         Owner of the column
      */
-    public FieldDescriptor(DatatypeCoder datatypeCoder, int type, final int subType, final int scale, int length,
-            final String fieldName,
-            final String tableAlias, String originalName,
-            String originalTableName, final String ownerName) {
+    public FieldDescriptor(final DatatypeCoder datatypeCoder, int type, final int subType, final int scale, int length,
+            final String fieldName, final String tableAlias, final String originalName, final String originalTableName,
+            final String ownerName) {
+        assert datatypeCoder != null : "dataTypeCoder should not be null";
         this.datatypeCoder = datatypeCoder;
         this.type = type;
         this.subType = subType;
@@ -100,6 +101,13 @@ public final class FieldDescriptor {
      */
     public DatatypeCoder getDatatypeCoder() {
         return datatypeCoder;
+    }
+
+    /**
+     * @return The {@link org.firebirdsql.encodings.IEncodingFactory} for the associated connection.
+     */
+    public IEncodingFactory getEncodingFactory() {
+        return datatypeCoder.getEncodingFactory();
     }
 
     /**

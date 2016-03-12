@@ -25,7 +25,7 @@ import java.util.*;
 /**
  * Class responsible for character translation.
  */
-public class CharacterTranslator {
+public final class CharacterTranslator {
 
     /**
      * Default mapping table, provides an "identity" mapping of characters

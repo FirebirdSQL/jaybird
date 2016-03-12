@@ -427,6 +427,11 @@ public class JnaStatement extends AbstractFbStatement {
         }
     }
 
+    @Override
+    public final RowDescriptor emptyRowDescriptor() {
+        return database.emptyRowDescriptor();
+    }
+
     private void processStatusVector() throws SQLException {
         getDatabase().processStatusVector(statusVector, getStatementWarningCallback());
     }

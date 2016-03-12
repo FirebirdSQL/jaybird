@@ -25,7 +25,6 @@ import org.firebirdsql.gds.ng.FbStatement;
 import org.firebirdsql.gds.ng.SqlCountHolder;
 import org.firebirdsql.gds.ng.StatementState;
 import org.firebirdsql.gds.ng.StatementType;
-import org.firebirdsql.gds.ng.fields.RowDescriptor;
 import org.firebirdsql.gds.ng.fields.RowValue;
 import org.firebirdsql.gds.ng.listeners.StatementListener;
 import org.firebirdsql.jdbc.escape.FBEscapedParser;
@@ -561,7 +560,7 @@ public class FBStatement implements FirebirdStatement, Synchronizable {
             return new FBResultSet(fbStatement.getFieldDescriptor(), Collections.singletonList(singletonResult),
                     resultSetListener);
         }
-        return new FBResultSet(RowDescriptor.EMPTY, Collections.<RowValue>emptyList());
+        return new FBResultSet(fbStatement.emptyRowDescriptor(), Collections.<RowValue>emptyList());
     }
 
     /**

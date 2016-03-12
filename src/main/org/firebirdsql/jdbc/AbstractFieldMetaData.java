@@ -18,7 +18,7 @@
  */
 package org.firebirdsql.jdbc;
 
-import org.firebirdsql.encodings.EncodingFactory;
+import org.firebirdsql.encodings.EncodingDefinition;
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.impl.GDSHelper;
 import org.firebirdsql.gds.ng.fields.FieldDescriptor;
@@ -48,6 +48,7 @@ public abstract class AbstractFieldMetaData implements Wrapper {
     private Map<FieldKey, ExtendedFieldInfo> extendedInfo;
 
     protected AbstractFieldMetaData(RowDescriptor rowDescriptor, GDSHelper gdsHelper) {
+        assert rowDescriptor != null : "rowDescriptor is required";
         this.rowDescriptor = rowDescriptor;
         this.gdsHelper = gdsHelper;
     }
@@ -66,10 +67,10 @@ public abstract class AbstractFieldMetaData implements Wrapper {
     }
 
     /**
-     * @return Connection encoding of the database connection
+     * @return The row descriptor.
      */
-    protected final String getIscEncoding() {
-        return gdsHelper != null ? gdsHelper.getIscEncoding() : "NONE";
+    protected final RowDescriptor getRowDescriptor() {
+        return rowDescriptor;
     }
 
     /**
@@ -266,28 +267,27 @@ public abstract class AbstractFieldMetaData implements Wrapper {
      *         if a database access error occurs
      */
     protected final int getPrecisionInternal(int field) throws SQLException {
-        int colType = getFieldType(field);
+        final int colType = getFieldType(field);
 
         switch (colType) {
         case Types.DECIMAL:
         case Types.NUMERIC: {
-            ExtendedFieldInfo fieldInfo = getExtFieldInfo(field);
+            final ExtendedFieldInfo fieldInfo = getExtFieldInfo(field);
             return fieldInfo == null ? estimateFixedPrecision(field) : fieldInfo.fieldPrecision;
         }
 
         case Types.CHAR:
         case Types.VARCHAR: {
-            FieldDescriptor var = getFieldDescriptor(field);
-            int charset = var.getSubType() & 0xFF;
-            int charSetSize = charset == ISCConstants.CS_dynamic
-                    ? EncodingFactory.getIscEncodingSize(getIscEncoding())
-                    : EncodingFactory.getCharacterSetSize(charset);
+            final FieldDescriptor var = getFieldDescriptor(field);
+            final EncodingDefinition encodingDefinition =
+                    var.getEncodingFactory().getEncodingDefinitionByCharacterSetId(var.getSubType());
+            final int charSetSize = encodingDefinition != null ? encodingDefinition.getMaxBytesPerChar() : 1;
             return var.getLength() / charSetSize;
         }
 
         case Types.BINARY:
         case Types.VARBINARY: {
-            FieldDescriptor var = getFieldDescriptor(field);
+            final FieldDescriptor var = getFieldDescriptor(field);
             return var.getLength();
         }
 
@@ -315,7 +315,7 @@ public abstract class AbstractFieldMetaData implements Wrapper {
     }
 
     protected final int estimateFixedPrecision(int fieldIndex) {
-        int sqltype = getFieldDescriptor(fieldIndex).getType() & ~1;
+        final int sqltype = getFieldDescriptor(fieldIndex).getType() & ~1;
         switch (sqltype) {
         case ISCConstants.SQL_SHORT:
             return 4;

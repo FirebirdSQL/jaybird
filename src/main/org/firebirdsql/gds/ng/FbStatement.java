@@ -242,4 +242,9 @@ public interface FbStatement extends ExceptionListenable {
      *         If this statement is closed, TODO: Other reasons (eg cursor open)?
      */
     void setCursorName(String cursorName) throws SQLException;
+
+    /**
+     * @return A potentially cached empty row descriptor for this statement or database.
+     */
+    RowDescriptor emptyRowDescriptor();
 }

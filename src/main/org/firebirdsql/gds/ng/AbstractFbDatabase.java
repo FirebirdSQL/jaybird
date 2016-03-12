@@ -22,6 +22,7 @@ import org.firebirdsql.gds.BlobParameterBuffer;
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.impl.BlobParameterBufferImp;
 import org.firebirdsql.gds.impl.TransactionParameterBufferImpl;
+import org.firebirdsql.gds.ng.fields.RowDescriptor;
 import org.firebirdsql.gds.ng.listeners.DatabaseListener;
 import org.firebirdsql.gds.ng.listeners.DatabaseListenerDispatcher;
 import org.firebirdsql.gds.ng.listeners.TransactionListener;
@@ -73,12 +74,14 @@ public abstract class AbstractFbDatabase<T extends AbstractConnection<IConnectio
             databaseListenerDispatcher.warningReceived(AbstractFbDatabase.this, warning);
         }
     };
+    private final RowDescriptor emptyRowDescriptor;
     private short databaseDialect;
     private int odsMajor;
     private int odsMinor;
 
     protected AbstractFbDatabase(T connection, DatatypeCoder datatypeCoder) {
         super(connection, datatypeCoder);
+        emptyRowDescriptor = RowDescriptor.empty(datatypeCoder);
     }
 
     /**
@@ -314,6 +317,11 @@ public abstract class AbstractFbDatabase<T extends AbstractConnection<IConnectio
     @Override
     public IConnectionProperties getConnectionProperties() {
         return connection.getAttachProperties().asImmutable();
+    }
+
+    @Override
+    public final RowDescriptor emptyRowDescriptor() {
+        return emptyRowDescriptor;
     }
 
     private class DatabaseInformationProcessor implements InfoProcessor<FbDatabase> {

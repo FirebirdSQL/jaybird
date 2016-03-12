@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * Public Firebird Java API.
  *
  * Redistribution and use in source and binary forms, with or without 
@@ -26,13 +24,17 @@
  */
 package org.firebirdsql.gds.ng.fields;
 
+import org.firebirdsql.encodings.IEncodingFactory;
+import org.firebirdsql.gds.ng.DatatypeCoder;
+
 import java.util.*;
 
 /**
- * The class <code>RowDescriptor</code> is a java mapping of the XSQLDA server
- * data structure used to describe the row metadata of one row for input or output.
+ * The class {@code RowDescriptor} is a java mapping of the XSQLDA server data structure used to describe the row
+ * metadata of one row for input or output.
  * <p>
- * RowDescriptor is an immutable, values of a row are maintained separately in a collection of {@link FieldValue} instances.
+ * RowDescriptor is an immutable, values of a row are maintained separately in a collection of {@link FieldValue}
+ * instances.
  * </p>
  *
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
@@ -40,20 +42,38 @@ import java.util.*;
  */
 public final class RowDescriptor implements Iterable<FieldDescriptor> {
 
-    public static final RowDescriptor EMPTY = new RowDescriptor(new FieldDescriptor[0]);
-
+    private static final FieldDescriptor[] NO_DESCRIPTORS = new FieldDescriptor[0];
     private final FieldDescriptor[] fieldDescriptors;
+    private final DatatypeCoder datatypeCoder;
     private int hash;
 
     /**
-     * Creates an instance of <code>RowDescriptor</code> with the supplied array of
+     * Creates an instance of {@code RowDescriptor} with the supplied array of
      * {@link FieldDescriptor} instances.
      *
      * @param fieldDescriptors
      *         The field descriptors (array is cloned before use)
+     * @param datatypeCoder
+     *         The datatype code for the connection that uses this RowDescriptor.
      */
-    private RowDescriptor(final FieldDescriptor[] fieldDescriptors) {
+    private RowDescriptor(final FieldDescriptor[] fieldDescriptors, final DatatypeCoder datatypeCoder) {
+        assert datatypeCoder != null : "dataTypeCoder should not be null";
         this.fieldDescriptors = fieldDescriptors.clone();
+        this.datatypeCoder = datatypeCoder;
+    }
+
+    /**
+     * @return The {@link org.firebirdsql.gds.ng.DatatypeCoder}.
+     */
+    public DatatypeCoder getDatatypeCoder() {
+        return datatypeCoder;
+    }
+
+    /**
+     * @return The {@link org.firebirdsql.encodings.IEncodingFactory}.
+     */
+    public IEncodingFactory getEncodingFactory() {
+        return datatypeCoder.getEncodingFactory();
     }
 
     /**
@@ -70,7 +90,7 @@ public final class RowDescriptor implements Iterable<FieldDescriptor> {
      *         0-based index of the field
      * @return FieldDescriptor
      * @throws java.lang.IndexOutOfBoundsException
-     *         if index is not <code>0 &lt;= index &lt; getCount</code>
+     *         if index is not {@code 0 <= index < getCount}
      */
     public FieldDescriptor getFieldDescriptor(int index) {
         return fieldDescriptors[index];
@@ -84,13 +104,15 @@ public final class RowDescriptor implements Iterable<FieldDescriptor> {
     }
 
     /**
-     * Creates a {@link List} with default {@link FieldValue} instances as returned by {@link FieldDescriptor#createDefaultFieldValue()}.
+     * Creates a {@link List} with default {@link FieldValue} instances as returned by
+     * {@link FieldDescriptor#createDefaultFieldValue()}.
      * <p>
-     * The (0-based) index of the FieldValue in the list corresponds with the (0-based) index of the {@link FieldDescriptor}
-     * within this <code>RowDescriptor</code>.
+     * The (0-based) index of the FieldValue in the list corresponds with the (0-based) index of the
+     * {@link FieldDescriptor} within this {@code RowDescriptor}.
      * </p>
      *
-     * @return Default <code>FieldValue</code> instances for the <code>FieldDescriptor</code> instance contained in this instance.
+     * @return Default {@code FieldValue} instances for the {@code FieldDescriptor} instance contained in this
+     * instance.
      */
     public RowValue createDefaultFieldValues() {
         if (getCount() == 0) return RowValue.EMPTY_ROW_VALUE;
@@ -144,15 +166,29 @@ public final class RowDescriptor implements Iterable<FieldDescriptor> {
     }
 
     /**
-     * Creates an instance of <code>RowDescriptor</code> with the supplied {@link FieldDescriptor} instances.
+     * Creates an instance of {@code RowDescriptor} with the supplied {@link FieldDescriptor} instances.
      *
      * @param fieldDescriptors
      *         The field descriptors (array is cloned before use)
-     * @return <code>RowDescriptor</code> instance
+     * @param datatypeCoder
+     *         he datatype code for the connection that uses this RowDescriptor.
+     * @return {@code RowDescriptor} instance
      */
-    public static RowDescriptor createRowDescriptor(final FieldDescriptor[] fieldDescriptors) {
-        if (fieldDescriptors.length == 0) return EMPTY;
-        return new RowDescriptor(fieldDescriptors);
+    public static RowDescriptor createRowDescriptor(final FieldDescriptor[] fieldDescriptors,
+            DatatypeCoder datatypeCoder) {
+        if (fieldDescriptors.length == 0) return empty(datatypeCoder);
+        return new RowDescriptor(fieldDescriptors, datatypeCoder);
+    }
+
+    /**
+     * Returns an empty row descriptor with the specified datatype coder.
+     *
+     * @param datatypeCoder
+     *         The datatype code for the connection that uses this RowDescriptor.
+     * @return Empty row descriptor
+     */
+    public static RowDescriptor empty(final DatatypeCoder datatypeCoder) {
+        return new RowDescriptor(NO_DESCRIPTORS, datatypeCoder);
     }
 
     /**

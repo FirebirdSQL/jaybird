@@ -692,9 +692,7 @@ public final class EncodingFactory implements IEncodingFactory {
      *         Path of the mapping definition file
      * @return CharacterTranslator or <code>null</code>
      * @throws SQLException
-     * @deprecated Use {@link #getCharacterTranslator(String)}
      */
-    @Deprecated
     public static CharacterTranslator getTranslator(String mappingPath) throws SQLException {
         return getRootEncodingFactory().getCharacterTranslator(mappingPath);
     }

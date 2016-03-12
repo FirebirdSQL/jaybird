@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * Firebird Open Source J2EE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
@@ -254,7 +252,7 @@ public final class StatementInfoProcessor implements InfoProcessor<InfoProcessor
     /**
      * Class for holding values about the statement
      */
-    private static final class StatementInfo implements InfoProcessor.StatementInfo {
+    private final class StatementInfo implements InfoProcessor.StatementInfo {
         private int requestBufferSize;
         private int currentIndex;
         private byte currentItem;
@@ -275,12 +273,12 @@ public final class StatementInfoProcessor implements InfoProcessor<InfoProcessor
 
         @Override
         public RowDescriptor getFields() {
-            return fieldBuilder != null ? fieldBuilder.toRowDescriptor() : RowDescriptor.EMPTY;
+            return fieldBuilder != null ? fieldBuilder.toRowDescriptor() : database.emptyRowDescriptor();
         }
 
         @Override
         public RowDescriptor getParameters() {
-            return parameterBuilder != null ? parameterBuilder.toRowDescriptor() : RowDescriptor.EMPTY;
+            return parameterBuilder != null ? parameterBuilder.toRowDescriptor() : database.emptyRowDescriptor();
         }
     }
 }

@@ -18,7 +18,8 @@
  */
 package org.firebirdsql.jdbc;
 
-import org.firebirdsql.encodings.EncodingFactory;
+import org.firebirdsql.encodings.EncodingDefinition;
+import org.firebirdsql.encodings.IEncodingFactory;
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.impl.GDSHelper;
 import org.firebirdsql.gds.ng.fields.FieldDescriptor;
@@ -38,6 +39,8 @@ import java.util.*;
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  */
 public class FBResultSetMetaData extends AbstractFieldMetaData implements FirebirdResultSetMetaData {
+
+    private static final int ID_UNICODE_FSS = 3;
 
     private final ColumnStrategy columnStrategy;
 
@@ -450,8 +453,9 @@ public class FBResultSetMetaData extends AbstractFieldMetaData implements Firebi
             + ", F.RDB$FIELD_PRECISION as FIELD_PRECISION"
             + ", F.RDB$FIELD_SCALE as FIELD_SCALE"
             + ", F.RDB$FIELD_SUB_TYPE as FIELD_SUB_TYPE"
-            + ", F.RDB$CHARACTER_LENGTH as CHAR_LEN"
             + ", F.RDB$CHARACTER_SET_ID as CHARACTER_SET_ID"
+            + ", F.RDB$SYSTEM_FLAG as SYSTEM_FLAG"
+            + ", F.RDB$CHARACTER_LENGTH as CHAR_LEN"
             + " FROM"
             + "  RDB$RELATION_FIELDS RF "
             + ", RDB$FIELDS F "
@@ -510,11 +514,21 @@ public class FBResultSetMetaData extends AbstractFieldMetaData implements Firebi
                     fieldInfo.fieldScale = rs.getInt("FIELD_SCALE");
                     fieldInfo.fieldSubtype = rs.getInt("FIELD_SUB_TYPE");
                     fieldInfo.characterSetId = rs.getInt("CHARACTER_SET_ID");
+                    boolean systemField = rs.getBoolean("SYSTEM_FLAG");
                     fieldInfo.characterLength = rs.getInt("CHAR_LEN");
 
                     if (rs.wasNull()) {
-                        fieldInfo.characterLength =
-                                fieldInfo.fieldLength / EncodingFactory.getCharacterSetSize(fieldInfo.characterSetId);
+                        if (systemField && fieldInfo.characterSetId == ID_UNICODE_FSS) {
+                            fieldInfo.characterLength = fieldInfo.fieldLength;
+                        } else {
+                            IEncodingFactory encodingFactory = getRowDescriptor().getEncodingFactory();
+                            final EncodingDefinition encodingDefinition =
+                                    encodingFactory.getEncodingDefinitionByCharacterSetId(fieldInfo.characterSetId);
+                            final int charsetSize = encodingDefinition != null
+                                    ? encodingDefinition.getMaxBytesPerChar()
+                                    : 1;
+                            fieldInfo.characterLength = fieldInfo.fieldLength / charsetSize;
+                        }
                     }
 
                     result.put(new FieldKey(fieldInfo.relationName, fieldInfo.fieldName), fieldInfo);

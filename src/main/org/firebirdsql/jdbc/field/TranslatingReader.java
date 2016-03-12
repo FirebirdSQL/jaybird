@@ -30,7 +30,7 @@ import org.firebirdsql.jdbc.FBSQLException;
  * Should be used together with the <code>isc_dpb_mapping_path</code> parameter. 
  * If no mapping path is specified, it behaves as normal {@link java.io.InputStreamReader}.
  */
-class TranslatingReader extends InputStreamReader {
+final class TranslatingReader extends InputStreamReader {
 
     /**
      * Return a reader instance for the input stream, character set and mapping path.
@@ -68,36 +68,42 @@ class TranslatingReader extends InputStreamReader {
         }
     }
     
-    private char[] charMap;
+    private final CharacterTranslator mapping;
 
     private TranslatingReader(InputStream in, String charsetName, CharacterTranslator mapping)
             throws UnsupportedEncodingException, SQLException {
         super(in, charsetName);
-        charMap = mapping.getMapping();
+        assert mapping != null : "mapping is required";
+        this.mapping = mapping;
     }
     
     private TranslatingReader(InputStream in, CharacterTranslator mapping)
             throws UnsupportedEncodingException, SQLException {
         super(in);
-        charMap = mapping.getMapping();
+        assert mapping != null : "mapping is required";
+        this.mapping = mapping;
     }
 
+    @Override
     public int read() throws IOException {
-        if (charMap == null)
-            return super.read();
-        else
-            return charMap[super.read()];
+        final int valueRead = super.read();
+        if (valueRead == -1) {
+            return -1;
+        }
+        return mapping.getMapping((char) super.read());
     }
 
-    public int read(char[] cbuf, int offset, int length) throws IOException {
+    @Override
+    public int read(final char[] cbuf, final int offset, final int length) throws IOException {
         int result = super.read(cbuf, offset, length);
-        
-        if (charMap != null) {
-            for (int i = 0; i < cbuf.length; i++) {
-                cbuf[i] = charMap[cbuf[i]];
-            }
+        if (result == -1) {
+            return -1;
         }
-        
+
+        for (int i = offset; i < offset + result; i++) {
+            cbuf[i] = mapping.getMapping(cbuf[i]);
+        }
+
         return result;
     }
 }

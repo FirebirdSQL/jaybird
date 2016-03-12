@@ -147,4 +147,9 @@ public abstract class AbstractFbWireStatement extends AbstractFbStatement implem
     protected boolean isValidTransactionClass(Class<? extends FbTransaction> transactionClass) {
         return FbWireTransaction.class.isAssignableFrom(transactionClass);
     }
+
+    @Override
+    public final RowDescriptor emptyRowDescriptor() {
+        return database.emptyRowDescriptor();
+    }
 }
