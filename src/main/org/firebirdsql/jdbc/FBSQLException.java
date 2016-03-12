@@ -191,6 +191,7 @@ public class FBSQLException extends SQLException {
      *            ResourceException
      * @return Exception message
      */
+    @SuppressWarnings("ThrowableResultOfMethodCallIgnored")
     private static String createResourceMessage(ResourceException ex) {
         Throwable cause = resolveCause(ex);
         if (cause instanceof GDSException) {
@@ -242,6 +243,7 @@ public class FBSQLException extends SQLException {
      * @return Non-null exception linked to FBResourceException, or the original
      *         (FB)ResourceException.
      */
+    @SuppressWarnings("deprecation")
     private static Throwable resolveCause(ResourceException ex) {
         if (ex instanceof FBResourceException && ex.getLinkedException() != null) {
             return ex.getLinkedException();
