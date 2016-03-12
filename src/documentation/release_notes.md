@@ -459,9 +459,16 @@ will break if we use features introduced in newer versions.
 
 Jaybird 3.1 will very likely drop support for Java 7 (this decision is not final yet).
 
-### Removal of deprecated classes, interfaces, and constants ###
+### Removal of deprecated methods ###
 
-The following constants will be removed in Jaybird 3.1
+The following methods will be removed in Jaybird 3.1:
+
+-   `CharacterTranslator.getMapping()`, use `CharacterTranslator.getMapping(char)`
+    instead.
+
+### Removal of deprecated constants ###
+
+The following constants will be removed in Jaybird 3.1:
 
 -   All `SQL_STATE_*` constants in `FBSQLException`,
     `FBResourceTransactionException`, and `FBResourceException` will be removed.
