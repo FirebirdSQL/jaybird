@@ -21,6 +21,9 @@
 package org.firebirdsql.common.rules;
 
 import org.firebirdsql.common.FBTestProperties;
+import org.firebirdsql.gds.impl.jni.EmbeddedGDSFactoryPlugin;
+import org.firebirdsql.gds.impl.jni.LocalGDSFactoryPlugin;
+import org.firebirdsql.gds.impl.jni.NativeGDSFactoryPlugin;
 import org.hamcrest.Matcher;
 import org.junit.rules.TestRule;
 import org.junit.runner.Description;
@@ -79,7 +82,7 @@ public final class GdsTypeRule implements TestRule {
      * @return Instance
      */
     public static GdsTypeRule supports(String... supportedTypes) {
-        final Set<String> supportedTypesSet = new HashSet<String>(Arrays.asList(supportedTypes));
+        final Set<String> supportedTypesSet = new HashSet<>(Arrays.asList(supportedTypes));
         return new GdsTypeRule(isIn(supportedTypesSet));
     }
 
@@ -90,7 +93,27 @@ public final class GdsTypeRule implements TestRule {
      * @return Instance
      */
     public static GdsTypeRule excludes(String... excludedTypes) {
-        final Set<String> excludedTypesSet = new HashSet<String>(Arrays.asList(excludedTypes));
+        final Set<String> excludedTypesSet = new HashSet<>(Arrays.asList(excludedTypes));
         return new GdsTypeRule(not(isIn(excludedTypesSet)));
+    }
+
+    /**
+     * Creates an instance that supports only all (known) native test types.
+     *
+     * @return Instance
+     */
+    public static GdsTypeRule supportsNativeOnly() {
+        return supports(NativeGDSFactoryPlugin.NATIVE_TYPE_NAME, EmbeddedGDSFactoryPlugin.EMBEDDED_TYPE_NAME,
+                LocalGDSFactoryPlugin.LOCAL_TYPE_NAME);
+    }
+
+    /**
+     * Creates an instance that excludes all (known) native test types.
+     *
+     * @return Instance
+     */
+    public static GdsTypeRule excludesNativeOnly() {
+        return excludes(NativeGDSFactoryPlugin.NATIVE_TYPE_NAME, EmbeddedGDSFactoryPlugin.EMBEDDED_TYPE_NAME,
+                LocalGDSFactoryPlugin.LOCAL_TYPE_NAME);
     }
 }

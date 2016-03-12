@@ -26,13 +26,11 @@ import org.firebirdsql.gds.EventHandler;
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.TransactionParameterBuffer;
 import org.firebirdsql.gds.impl.TransactionParameterBufferImpl;
-import org.firebirdsql.gds.impl.jni.NativeGDSFactoryPlugin;
 import org.firebirdsql.gds.ng.*;
 import org.firebirdsql.gds.ng.fields.RowValue;
 import org.firebirdsql.jna.fbclient.FbClientLibrary;
 import org.firebirdsql.jna.fbclient.ISC_STATUS;
 import org.junit.After;
-import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Test;
 
@@ -51,9 +49,8 @@ import static org.junit.Assert.assertTrue;
  */
 public class TestJnaEvents extends FBJUnit4TestBase {
 
-    // TODO Support embedded
     @ClassRule
-    public static final GdsTypeRule testType = GdsTypeRule.supports(NativeGDSFactoryPlugin.NATIVE_TYPE_NAME);
+    public static final GdsTypeRule testType = GdsTypeRule.supportsNativeOnly();
 
     //@formatter:off
     public static final String TABLE_DEF =
@@ -70,9 +67,9 @@ public class TestJnaEvents extends FBJUnit4TestBase {
             "END";
     //@formatter:on
 
-    private final FbClientDatabaseFactory factory = new FbClientDatabaseFactory();
+    private final AbstractNativeDatabaseFactory factory =
+            (AbstractNativeDatabaseFactory) FBTestProperties.getFbDatabaseFactory();
     private final FbConnectionProperties connectionInfo;
-
     {
         connectionInfo = new FbConnectionProperties();
         connectionInfo.setServerName(FBTestProperties.DB_SERVER_URL);
@@ -84,12 +81,6 @@ public class TestJnaEvents extends FBJUnit4TestBase {
     }
 
     private JnaDatabase db;
-
-    @BeforeClass
-    public static void verifyTestType() {
-        // Test is for native
-        // TODO assumeTrue(FBTestProperties.getGdsType().toString().equals(NativeGDSImpl.NATIVE_TYPE_NAME));
-    }
 
     @After
     public final void tearDown() throws Exception {

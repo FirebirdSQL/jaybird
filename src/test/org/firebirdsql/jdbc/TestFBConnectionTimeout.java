@@ -23,8 +23,6 @@ import org.firebirdsql.common.rules.GdsTypeRule;
 import org.firebirdsql.gds.GDSException;
 import org.firebirdsql.gds.impl.GDSFactory;
 import org.firebirdsql.gds.impl.GDSType;
-import org.firebirdsql.gds.impl.jni.EmbeddedGDSFactoryPlugin;
-import org.firebirdsql.gds.impl.jni.NativeGDSFactoryPlugin;
 import org.firebirdsql.management.FBManager;
 import org.junit.ClassRule;
 import org.junit.Ignore;
@@ -49,9 +47,7 @@ public class TestFBConnectionTimeout {
     // This test does not extend FBJUnit4TestBase as a lot of these tests don't need an actual database
 
     @ClassRule
-    public static final GdsTypeRule gdsTypeRule = GdsTypeRule.excludes(
-            EmbeddedGDSFactoryPlugin.EMBEDDED_TYPE_NAME,
-            NativeGDSFactoryPlugin.NATIVE_TYPE_NAME);
+    public static final GdsTypeRule gdsTypeRule = GdsTypeRule.excludesNativeOnly();
 
     /**
      * IP address which does not exist (we simply assume that this site local address does not exist in

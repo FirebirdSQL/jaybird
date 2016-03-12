@@ -23,8 +23,6 @@ import org.firebirdsql.common.FBJUnit4TestBase;
 import org.firebirdsql.common.FBTestProperties;
 import org.firebirdsql.common.rules.GdsTypeRule;
 import org.firebirdsql.encodings.EncodingFactory;
-import org.firebirdsql.gds.impl.jni.EmbeddedGDSFactoryPlugin;
-import org.firebirdsql.gds.impl.jni.NativeGDSFactoryPlugin;
 import org.firebirdsql.gds.ng.FbConnectionProperties;
 import org.firebirdsql.gds.ng.wire.version10.Version10Descriptor;
 import org.firebirdsql.gds.ng.wire.version13.Version13Descriptor;
@@ -44,9 +42,7 @@ import static org.junit.Assume.assumeTrue;
 public class TestWireDatabaseConnection extends FBJUnit4TestBase {
 
     @ClassRule
-    public static final GdsTypeRule testTypes = GdsTypeRule.excludes(
-            EmbeddedGDSFactoryPlugin.EMBEDDED_TYPE_NAME,
-            NativeGDSFactoryPlugin.NATIVE_TYPE_NAME);
+    public static final GdsTypeRule testTypes = GdsTypeRule.excludesNativeOnly();
 
     /**
      * IP address which does not exist (we simply assume that this site local

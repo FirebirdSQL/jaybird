@@ -24,8 +24,6 @@ import org.firebirdsql.common.rules.GdsTypeRule;
 import org.firebirdsql.common.rules.RequireProtocol;
 import org.firebirdsql.common.rules.UsesDatabase;
 import org.firebirdsql.gds.impl.GDSServerVersion;
-import org.firebirdsql.gds.impl.jni.EmbeddedGDSFactoryPlugin;
-import org.firebirdsql.gds.impl.jni.NativeGDSFactoryPlugin;
 import org.firebirdsql.management.FBServiceManager;
 import org.junit.ClassRule;
 import org.junit.Rule;
@@ -60,9 +58,7 @@ public class TestV13Authentication {
     public static final RequireProtocol requireProtocol = requireProtocolVersion(13);
 
     @ClassRule
-    public static final GdsTypeRule gdsTypeRule = GdsTypeRule.excludes(
-            EmbeddedGDSFactoryPlugin.EMBEDDED_TYPE_NAME,
-            NativeGDSFactoryPlugin.NATIVE_TYPE_NAME);
+    public static final GdsTypeRule gdsTypeRule = GdsTypeRule.excludesNativeOnly();
 
     private final UsesDatabase usesDatabase = UsesDatabase.usesDatabase();
     private final DatabaseUserRule databaseUserRule = DatabaseUserRule.withDatabaseUser();

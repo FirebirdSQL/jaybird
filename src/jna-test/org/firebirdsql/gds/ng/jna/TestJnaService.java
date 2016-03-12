@@ -23,7 +23,6 @@ import org.firebirdsql.common.rules.GdsTypeRule;
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.ServiceRequestBuffer;
 import org.firebirdsql.gds.impl.GDSServerVersion;
-import org.firebirdsql.gds.impl.jni.NativeGDSFactoryPlugin;
 import org.firebirdsql.gds.ng.FbServiceProperties;
 import org.firebirdsql.management.FBManager;
 import org.firebirdsql.management.FBStatisticsManager;
@@ -52,16 +51,15 @@ public class TestJnaService {
 
     // TODO Check if tests can be unified with equivalent wire protocol tests
 
-    // TODO Support embedded
     @ClassRule
-    public static final GdsTypeRule testType = GdsTypeRule.supports(NativeGDSFactoryPlugin.NATIVE_TYPE_NAME);
+    public static final GdsTypeRule testType = GdsTypeRule.supportsNativeOnly();
 
     @Rule
     public final ExpectedException expectedException = ExpectedException.none();
 
-    private final FbClientDatabaseFactory factory = new FbClientDatabaseFactory();
+    private final AbstractNativeDatabaseFactory factory =
+            (AbstractNativeDatabaseFactory) FBTestProperties.getFbDatabaseFactory();
     private final FbServiceProperties connectionInfo;
-
     {
         connectionInfo = new FbServiceProperties();
         connectionInfo.setServerName(FBTestProperties.DB_SERVER_URL);

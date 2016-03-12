@@ -1,21 +1,21 @@
 /*
-* Firebird Open Source J2ee connector - jdbc driver
-*
-* Distributable under LGPL license.
-* You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
-*
-* This program is distributed in the hope that it will be useful,
-* but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-* LGPL License for more details.
-*
-* This file was created by members of the firebird development team.
-* All individual contributions remain the Copyright (C) of those
-* individuals.  Contributors to this file are either listed here or
-* can be obtained from a CVS history command.
-*
-* All rights reserved.
-*/
+ * Firebird Open Source JavaEE Connector - JDBC Driver
+ *
+ * Distributable under LGPL license.
+ * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * LGPL License for more details.
+ *
+ * This file was created by members of the firebird development team.
+ * All individual contributions remain the Copyright (C) of those
+ * individuals.  Contributors to this file are either listed here or
+ * can be obtained from a source control history command.
+ *
+ * All rights reserved.
+ */
 package org.firebirdsql.jca;
 
 import org.junit.Test;
@@ -29,8 +29,6 @@ import java.sql.SQLException;
 import java.sql.Statement;
 
 import static org.firebirdsql.common.FBTestProperties.getConnectionViaDriverManager;
-import static org.firebirdsql.common.FBTestProperties.getGdsType;
-import static org.firebirdsql.common.JdbcResourceHelper.closeQuietly;
 import static org.junit.Assert.*;
 
 /**
@@ -159,30 +157,17 @@ public class TestFBXAResource extends TestXABase {
 
     @Test
     public void testRecover() throws Exception {
-        if ("EMBEDDED".equals(getGdsType().toString()) ||
-                "LOCAL".equals(getGdsType().toString()))
-            fail("This method does not work with JNI-based connections.");
-
-        Connection connection = getConnectionViaDriverManager();
-        try {
-            Statement stmt = connection.createStatement();
+        try (Connection connection = getConnectionViaDriverManager();
+             Statement stmt = connection.createStatement()) {
             try {
-                try {
-                    stmt.execute("DROP TABLE test_reconnect");
-                } catch (SQLException ex) {
-                    // empty
-                }
-
-                stmt.execute("CREATE TABLE test_reconnect(id INTEGER)");
-            } finally {
-                stmt.close();
+                stmt.execute("DROP TABLE test_reconnect");
+            } catch (SQLException ex) {
+                // empty
             }
 
-        } finally {
-            connection.close();
+            stmt.execute("CREATE TABLE test_reconnect(id INTEGER)");
         }
 
-        if (log != null) log.info("testRecover");
         FBManagedConnectionFactory mcf = initMcf();
 
         Xid xid1 = new XidImpl();
@@ -195,11 +180,8 @@ public class TestFBXAResource extends TestXABase {
             xa1.start(xid1, XAResource.TMNOFLAGS);
 
             Connection fbc1 = (Connection) fbmc1.getConnection(null, null);
-            Statement fbstmt1 = fbc1.createStatement();
-            try {
+            try (Statement fbstmt1 = fbc1.createStatement()) {
                 fbstmt1.execute("INSERT INTO test_reconnect(id) VALUES(1)");
-            } finally {
-                fbstmt1.close();
             }
 
             xa1.end(xid1, XAResource.TMSUCCESS);
@@ -241,19 +223,12 @@ public class TestFBXAResource extends TestXABase {
             mc2.destroy();
         }
 
-        connection = getConnectionViaDriverManager();
-        try {
-            Statement stmt = connection.createStatement();
-            try {
-                ResultSet rs = stmt.executeQuery("SELECT * FROM test_reconnect");
-                assertTrue("Should find at least one row.", rs.next());
-                assertEquals("Should read correct value", 1, rs.getInt(1));
-                assertTrue("Should select only one row", !rs.next());
-            } finally {
-                stmt.close();
-            }
-        } finally {
-            connection.close();
+        try (Connection connection = getConnectionViaDriverManager();
+             Statement stmt = connection.createStatement()) {
+            ResultSet rs = stmt.executeQuery("SELECT * FROM test_reconnect");
+            assertTrue("Should find at least one row.", rs.next());
+            assertEquals("Should read correct value", 1, rs.getInt(1));
+            assertTrue("Should select only one row", !rs.next());
         }
     }
 
@@ -275,9 +250,8 @@ public class TestFBXAResource extends TestXABase {
             Xid xid = new XidImpl();
             xa.start(xid, XAResource.TMNOFLAGS);
 
-            Statement stmt1 = con.createStatement();
-            Statement stmt2 = con.createStatement();
-            try {
+            try (Statement stmt1 = con.createStatement();
+                 Statement stmt2 = con.createStatement()) {
                 ResultSet rs1 = stmt1.executeQuery("SELECT RDB$CHARACTER_SET_NAME FROM RDB$CHARACTER_SETS");
                 assertTrue("Expected rs1 row 1", rs1.next());
                 assertNotNull("Expected rs1 value for row 1, column 1", rs1.getString(1));
@@ -294,9 +268,6 @@ public class TestFBXAResource extends TestXABase {
                 xa.end(xid, XAResource.TMSUCCESS);
                 xa.rollback(xid);
                 throw t;
-            } finally {
-                closeQuietly(stmt1);
-                closeQuietly(stmt2);
             }
         } finally {
             mc.destroy();

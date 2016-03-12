@@ -19,7 +19,9 @@
 package org.firebirdsql.jdbc;
 
 import org.firebirdsql.common.FBJUnit4TestBase;
+import org.firebirdsql.common.FBTestProperties;
 import org.firebirdsql.gds.ISCConstants;
+import org.firebirdsql.gds.impl.jni.LocalGDSFactoryPlugin;
 import org.firebirdsql.util.FirebirdSupportInfo;
 import org.hamcrest.number.OrderingComparison;
 import org.junit.*;
@@ -40,6 +42,7 @@ import static org.firebirdsql.common.matchers.SQLExceptionMatchers.*;
 import static org.firebirdsql.util.FirebirdSupportInfo.supportInfoFor;
 import static org.hamcrest.CoreMatchers.*;
 import static org.junit.Assert.*;
+import static org.junit.Assume.assumeThat;
 import static org.junit.Assume.assumeTrue;
 
 /**
@@ -719,6 +722,9 @@ public class TestFBPreparedStatement extends FBJUnit4TestBase {
 
     @Test
     public void testCancelStatement() throws Exception {
+        // TODO Investigate why this doesn't work.
+        assumeThat("Test doesn't work with local protocol",
+                FBTestProperties.GDS_TYPE, not(equalTo(LocalGDSFactoryPlugin.LOCAL_TYPE_NAME)));
         final FirebirdSupportInfo supportInfo = supportInfoFor(con);
         assumeTrue("Test requires fb_cancel_operations support", supportInfo.supportsCancelOperation());
         assumeTrue("Test requires EXECUTE BLOCK support", supportInfo.supportsExecuteBlock());

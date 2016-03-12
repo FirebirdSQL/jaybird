@@ -21,8 +21,6 @@ package org.firebirdsql.gds.ng.wire.version10;
 import org.firebirdsql.common.rules.GdsTypeRule;
 import org.firebirdsql.common.rules.RequireProtocol;
 import org.firebirdsql.encodings.EncodingFactory;
-import org.firebirdsql.gds.impl.jni.EmbeddedGDSFactoryPlugin;
-import org.firebirdsql.gds.impl.jni.NativeGDSFactoryPlugin;
 import org.firebirdsql.gds.ng.FbDatabase;
 import org.firebirdsql.gds.ng.wire.FbWireDatabase;
 import org.firebirdsql.gds.ng.wire.ProtocolCollection;
@@ -46,9 +44,7 @@ public class TestV10Transaction extends org.firebirdsql.gds.ng.AbstractTransacti
     public static final RequireProtocol requireProtocol = requireProtocolVersion(10);
 
     @ClassRule
-    public static final GdsTypeRule gdsTypeRule = GdsTypeRule.excludes(
-            EmbeddedGDSFactoryPlugin.EMBEDDED_TYPE_NAME,
-            NativeGDSFactoryPlugin.NATIVE_TYPE_NAME);
+    public static final GdsTypeRule gdsTypeRule = GdsTypeRule.excludesNativeOnly();
 
     private final V10CommonConnectionInfo commonConnectionInfo;
 

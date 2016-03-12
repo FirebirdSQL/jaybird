@@ -24,8 +24,6 @@ import org.firebirdsql.encodings.EncodingFactory;
 import org.firebirdsql.gds.ServiceParameterBuffer;
 import org.firebirdsql.gds.ServiceRequestBuffer;
 import org.firebirdsql.gds.impl.GDSServerVersion;
-import org.firebirdsql.gds.impl.jni.EmbeddedGDSFactoryPlugin;
-import org.firebirdsql.gds.impl.jni.NativeGDSFactoryPlugin;
 import org.firebirdsql.gds.ng.FbService;
 import org.firebirdsql.gds.ng.IServiceProperties;
 import org.firebirdsql.gds.ng.wire.AbstractFbWireService;
@@ -61,9 +59,7 @@ public class TestV10Service {
     public static final RequireProtocol requireProtocol = requireProtocolVersion(10);
 
     @ClassRule
-    public static final GdsTypeRule gdsTypeRule = GdsTypeRule.excludes(
-            EmbeddedGDSFactoryPlugin.EMBEDDED_TYPE_NAME,
-            NativeGDSFactoryPlugin.NATIVE_TYPE_NAME);
+    public static final GdsTypeRule gdsTypeRule = GdsTypeRule.excludesNativeOnly();
 
     @Rule
     public final ExpectedException expectedException = ExpectedException.none();

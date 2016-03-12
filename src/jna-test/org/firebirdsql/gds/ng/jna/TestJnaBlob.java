@@ -22,9 +22,6 @@ import org.firebirdsql.common.FBTestProperties;
 import org.firebirdsql.common.rules.GdsTypeRule;
 import org.firebirdsql.gds.BlobParameterBuffer;
 import org.firebirdsql.gds.ISCConstants;
-import org.firebirdsql.gds.impl.jni.EmbeddedGDSFactoryPlugin;
-import org.firebirdsql.gds.impl.jni.LocalGDSFactoryPlugin;
-import org.firebirdsql.gds.impl.jni.NativeGDSFactoryPlugin;
 import org.firebirdsql.gds.ng.*;
 import org.firebirdsql.gds.ng.fields.FieldValue;
 import org.firebirdsql.gds.ng.fields.RowValue;
@@ -56,10 +53,7 @@ import static org.junit.Assume.assumeTrue;
 public class TestJnaBlob extends BaseTestBlob {
 
     @ClassRule
-    public static final GdsTypeRule testType = GdsTypeRule.supports(
-            NativeGDSFactoryPlugin.NATIVE_TYPE_NAME,
-            EmbeddedGDSFactoryPlugin.EMBEDDED_TYPE_NAME,
-            LocalGDSFactoryPlugin.LOCAL_TYPE_NAME);
+    public static final GdsTypeRule testType = GdsTypeRule.supportsNativeOnly();
 
     private AbstractNativeDatabaseFactory factory;
 

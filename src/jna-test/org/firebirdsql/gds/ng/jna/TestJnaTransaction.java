@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
@@ -20,8 +18,8 @@
  */
 package org.firebirdsql.gds.ng.jna;
 
+import org.firebirdsql.common.FBTestProperties;
 import org.firebirdsql.common.rules.GdsTypeRule;
-import org.firebirdsql.gds.impl.jni.NativeGDSFactoryPlugin;
 import org.firebirdsql.gds.ng.AbstractTransactionTest;
 import org.firebirdsql.gds.ng.FbDatabase;
 import org.junit.ClassRule;
@@ -36,11 +34,11 @@ import java.sql.SQLException;
  */
 public class TestJnaTransaction extends AbstractTransactionTest {
 
-    // TODO Support embedded
     @ClassRule
-    public static final GdsTypeRule testType = GdsTypeRule.supports(NativeGDSFactoryPlugin.NATIVE_TYPE_NAME);
+    public static final GdsTypeRule testType = GdsTypeRule.supportsNativeOnly();
 
-    private final FbClientDatabaseFactory factory = new FbClientDatabaseFactory();
+    private final AbstractNativeDatabaseFactory factory =
+            (AbstractNativeDatabaseFactory) FBTestProperties.getFbDatabaseFactory();
 
     @Override
     protected FbDatabase createDatabase() throws SQLException {

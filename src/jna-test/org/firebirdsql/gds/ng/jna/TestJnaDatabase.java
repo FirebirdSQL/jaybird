@@ -24,7 +24,8 @@ import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.TransactionParameterBuffer;
 import org.firebirdsql.gds.impl.GDSServerVersion;
 import org.firebirdsql.gds.impl.TransactionParameterBufferImpl;
-import org.firebirdsql.gds.impl.jni.NativeGDSFactoryPlugin;
+import org.firebirdsql.gds.impl.jni.EmbeddedGDSFactoryPlugin;
+import org.firebirdsql.gds.impl.jni.LocalGDSFactoryPlugin;
 import org.firebirdsql.gds.ng.FbConnectionProperties;
 import org.firebirdsql.gds.ng.FbDatabase;
 import org.firebirdsql.gds.ng.FbTransaction;
@@ -44,6 +45,7 @@ import static org.firebirdsql.common.matchers.SQLExceptionMatchers.*;
 import static org.firebirdsql.util.FirebirdSupportInfo.supportInfoFor;
 import static org.hamcrest.CoreMatchers.*;
 import static org.junit.Assert.*;
+import static org.junit.Assume.assumeThat;
 import static org.junit.Assume.assumeTrue;
 
 /**
@@ -57,16 +59,15 @@ public class TestJnaDatabase {
     // TODO Check if tests can be unified with equivalent wire protocol tests
     // TODO Assert in tests need to be checked (and more need to be added)
 
-    // TODO Support embedded
     @ClassRule
-    public static final GdsTypeRule testType = GdsTypeRule.supports(NativeGDSFactoryPlugin.NATIVE_TYPE_NAME);
+    public static final GdsTypeRule testType = GdsTypeRule.supportsNativeOnly();
 
     @Rule
     public final ExpectedException expectedException = ExpectedException.none();
 
-    private final FbClientDatabaseFactory factory = new FbClientDatabaseFactory();
+    private final AbstractNativeDatabaseFactory factory =
+            (AbstractNativeDatabaseFactory) FBTestProperties.getFbDatabaseFactory();
     private final FbConnectionProperties connectionInfo;
-
     {
         connectionInfo = new FbConnectionProperties();
         connectionInfo.setServerName(FBTestProperties.DB_SERVER_URL);
@@ -257,6 +258,12 @@ public class TestJnaDatabase {
 
     @Test
     public void testCancelOperation_abortSupported() throws Exception {
+        // TODO Investigate why this doesn't work.
+        assumeThat("Test doesn't work with local or embedded protocol",
+                FBTestProperties.GDS_TYPE, allOf(
+                        not(equalTo(LocalGDSFactoryPlugin.LOCAL_TYPE_NAME)),
+                        not(equalTo(EmbeddedGDSFactoryPlugin.EMBEDDED_TYPE_NAME))));
+
         FBManager fbManager = createFBManager();
         defaultDatabaseSetUp(fbManager);
         try {
@@ -306,6 +313,7 @@ public class TestJnaDatabase {
         try {
             db.close();
         } catch (SQLException ex) {
+            ex.printStackTrace();
             // ignore
         }
     }

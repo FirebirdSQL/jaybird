@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
@@ -20,15 +18,14 @@
  */
 package org.firebirdsql.gds.ng.jna;
 
+import org.firebirdsql.common.FBTestProperties;
 import org.firebirdsql.common.rules.GdsTypeRule;
-import org.firebirdsql.gds.impl.jni.NativeGDSFactoryPlugin;
 import org.firebirdsql.gds.ng.AbstractStatementTest;
 import org.firebirdsql.gds.ng.DatatypeCoder;
 import org.firebirdsql.gds.ng.FbDatabase;
 import org.firebirdsql.gds.ng.fields.FieldValue;
 import org.firebirdsql.gds.ng.fields.RowValue;
 import org.firebirdsql.gds.ng.wire.SimpleStatementListener;
-import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Test;
 
@@ -44,17 +41,11 @@ import static org.junit.Assert.*;
  */
 public class TestJnaStatement extends AbstractStatementTest {
 
-    // TODO Support embedded
     @ClassRule
-    public static final GdsTypeRule testType = GdsTypeRule.supports(NativeGDSFactoryPlugin.NATIVE_TYPE_NAME);
+    public static final GdsTypeRule testType = GdsTypeRule.supportsNativeOnly();
 
-    private final FbClientDatabaseFactory factory = new FbClientDatabaseFactory();
-
-    @BeforeClass
-    public static void verifyTestType() {
-        // Test is for native
-        // TODO assumeTrue(FBTestProperties.getGdsType().toString().equals(NativeGDSImpl.NATIVE_TYPE_NAME));
-    }
+    private final AbstractNativeDatabaseFactory factory =
+            (AbstractNativeDatabaseFactory) FBTestProperties.getFbDatabaseFactory();
 
     @Override
     protected Class<? extends FbDatabase> getExpectedDatabaseType() {

@@ -21,8 +21,6 @@ package org.firebirdsql.gds.ng.wire.version10;
 import org.firebirdsql.common.rules.GdsTypeRule;
 import org.firebirdsql.common.rules.RequireProtocol;
 import org.firebirdsql.gds.ISCConstants;
-import org.firebirdsql.gds.impl.jni.EmbeddedGDSFactoryPlugin;
-import org.firebirdsql.gds.impl.jni.NativeGDSFactoryPlugin;
 import org.firebirdsql.gds.ng.FbExceptionBuilder;
 import org.firebirdsql.gds.ng.SimpleWarningMessageCallback;
 import org.firebirdsql.gds.ng.wire.AbstractWireOperations;
@@ -51,9 +49,7 @@ public class TestV10WireOperations {
     public static final RequireProtocol requireProtocol = requireProtocolVersion(10);
 
     @ClassRule
-    public static final GdsTypeRule gdsTypeRule = GdsTypeRule.excludes(
-            EmbeddedGDSFactoryPlugin.EMBEDDED_TYPE_NAME,
-            NativeGDSFactoryPlugin.NATIVE_TYPE_NAME);
+    public static final GdsTypeRule gdsTypeRule = GdsTypeRule.excludesNativeOnly();
 
     @Rule
     public final ExpectedException expectedException = ExpectedException.none();
