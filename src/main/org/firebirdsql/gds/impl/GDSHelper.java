@@ -34,7 +34,7 @@ import java.util.List;
  * Helper class for all GDS-related operations.
  */
 public class GDSHelper {
-    
+
     public static final int DEFAULT_BLOB_BUFFER_SIZE = 16 * 1024;
 
     private final FbDatabase database;
@@ -49,7 +49,7 @@ public class GDSHelper {
         // TODO Make explicit property
         this.registerResultSets = !database.getConnectionProperties().getExtraDatabaseParameters()
                 .hasArgument(DatabaseParameterBufferExtension.NO_RESULT_SET_TRACKING);
-        
+
         this.database = database;
     }
 
@@ -87,7 +87,7 @@ public class GDSHelper {
      *
      * @return The new statement handle
      * @throws java.sql.SQLException
-     *             if a database access error occurs
+     *         if a database access error occurs
      */
     public FbStatement allocateStatement() throws SQLException {
         return database.createStatement(getCurrentTransaction());
@@ -95,9 +95,9 @@ public class GDSHelper {
 
     /**
      * Retrieve whether this connection is currently involved in a transaction
-     * 
+     *
      * @return <code>true</code> if this connection is currently in a
-     *         transaction, <code>false</code> otherwise.
+     * transaction, <code>false</code> otherwise.
      */
     public boolean inTransaction() {
         return transaction != null && transaction.getState() == TransactionState.ACTIVE;
@@ -105,11 +105,11 @@ public class GDSHelper {
 
     /**
      * Execute a SQL statement directly with the current connection.
-     * 
+     *
      * @param statement
-     *            The SQL statement to execute
+     *         The SQL statement to execute
      * @throws SQLException
-     *             if a Firebird-specific error occurs
+     *         if a Firebird-specific error occurs
      */
     public void executeImmediate(String statement) throws SQLException {
         database.executeImmediate(statement, getCurrentTransaction());
@@ -118,14 +118,14 @@ public class GDSHelper {
     /**
      * Open a handle to a new blob within the current transaction with the given
      * id.
-     * 
+     *
      * @param blob_id
-     *            The identifier to be given to the blob
+     *         The identifier to be given to the blob
      * @param segmented
-     *            If <code>true</code>, the blob will be segmented, otherwise
-     *            is will be streamed
+     *         If <code>true</code>, the blob will be segmented, otherwise
+     *         is will be streamed
      * @throws SQLException
-     *             if a Firebird-specific database error occurs
+     *         if a Firebird-specific database error occurs
      */
     public FbBlob openBlob(long blob_id, boolean segmented) throws SQLException {
         BlobParameterBuffer blobParameterBuffer = database.createBlobParameterBuffer();
@@ -142,12 +142,11 @@ public class GDSHelper {
 
     /**
      * Create a new blob within the current transaction.
-     * 
+     *
      * @param segmented
-     *            If <code>true</code> the blob will be segmented, otherwise
-     *            it will be streamed
+     *         If <code>true</code> the blob will be segmented, otherwise it will be streamed
      * @throws SQLException
-     *             if a Firebird-specific database error occurs
+     *         if a Firebird-specific database error occurs
      */
     public FbBlob createBlob(boolean segmented) throws SQLException {
         BlobParameterBuffer blobParameterBuffer = database.createBlobParameterBuffer();
@@ -180,7 +179,7 @@ public class GDSHelper {
     public void rollbackTransaction(FbTransaction transaction) throws SQLException {
         transaction.rollback();
     }
-    
+
     public void detachDatabase() throws SQLException {
         database.close();
     }
@@ -192,58 +191,60 @@ public class GDSHelper {
         database.cancelOperation(ISCConstants.fb_cancel_raise);
     }
 
+    /**
+     * @deprecated Use {@link VaxEncoding#iscVaxInteger(byte[], int, int)}. This method will be removed in Jaybird 3.1
+     */
     @Deprecated
     public int iscVaxInteger(byte[] buffer, int pos, int length) {
         return VaxEncoding.iscVaxInteger(buffer, pos, length);
     }
 
+    /**
+     * @deprecated Use {@link VaxEncoding#iscVaxLong(byte[], int, int)}. This method will be removed in Jaybird 3.1
+     */
     @Deprecated
     public long iscVaxLong(byte[] buffer, int pos, int length) {
         return VaxEncoding.iscVaxLong(buffer, pos, length);
     }
 
     // for DatabaseMetaData.
-    
+
     /**
      * Get the name of the database product that we're connected to.
-     * 
+     *
      * @return The database product name (i.e. Firebird or Interbase)
      */
     public String getDatabaseProductName() {
-        /** @todo add check if mc is not null */
         return database.getServerVersion().getServerName();
     }
 
     /**
      * Get the version of the the database that we're connected to
-     * 
+     *
      * @return the database product version
      */
     public String getDatabaseProductVersion() {
-        /** @todo add check if mc is not null */
         return database.getServerVersion().getFullVersion();
     }
 
     /**
      * Get the major version number of the database that we're connected to.
-     * 
+     *
      * @return The major version number of the database
      */
     public int getDatabaseProductMajorVersion() {
-        /** @todo add check if mc is not null */
         return database.getServerVersion().getMajorVersion();
     }
 
     /**
      * Get the minor version number of the database that we're connected to.
-     * 
+     *
      * @return The minor version number of the database
      */
     public int getDatabaseProductMinorVersion() {
-        /** @todo add check if mc is not null */
         return database.getServerVersion().getMinorVersion();
     }
-    
+
     /**
      * Compares the version of this database to the specified major and
      * minor version.
@@ -252,14 +253,13 @@ public class GDSHelper {
      * negative value if the version of this database connection is smaller than
      * the supplied arguments, 0 if they are equal or positive if its bigger.
      * </p>
-     * 
+     *
      * @param major
-     *            Major version to compare
+     *         Major version to compare
      * @param minor
-     *            Minor version to compare
-     * @return a negative integer, zero, or a positive integer as this database
-     *         version is less than, equal to, or greater than the specified
-     *         major and minor version
+     *         Minor version to compare
+     * @return a negative integer, zero, or a positive integer as this database version is less than, equal to,
+     * or greater than the specified major and minor version
      */
     public int compareToVersion(int major, int minor) {
         int differenceMajor = getDatabaseProductMajorVersion() - major;
@@ -271,7 +271,7 @@ public class GDSHelper {
 
     /**
      * Get the database login name of the user that we're connected as.
-     * 
+     *
      * @return The username of the current database user
      */
     public String getUserName() {
@@ -280,7 +280,7 @@ public class GDSHelper {
 
     /**
      * Get the buffer length for blobs for this connection.
-     * 
+     *
      * @return The length of blob buffers
      */
     public int getBlobBufferLength() {
@@ -291,10 +291,10 @@ public class GDSHelper {
         else
             return DEFAULT_BLOB_BUFFER_SIZE;
     }
-    
+
     /**
      * Get the encoding used for this connection.
-     * 
+     *
      * @return The name of the encoding used
      */
     public String getIscEncoding() {
@@ -304,18 +304,17 @@ public class GDSHelper {
     public String getJavaEncoding() {
         return database.getEncodingFactory().getDefaultEncodingDefinition().getJavaEncodingName();
     }
-    
+
     public String getMappingPath() {
         // TODO Add as explicit property on IConnectionProperties
         DatabaseParameterBuffer dpb = database.getConnectionProperties().getExtraDatabaseParameters();
         return dpb.getArgumentAsString(DatabaseParameterBufferExtension.MAPPING_PATH);
     }
-    
+
     /**
      * Get all warnings associated with current connection.
-     * 
-     * @return list of {@link GDSException}instances representing warnings for
-     *         this database connection.
+     *
+     * @return list of {@link GDSException}instances representing warnings for this database connection.
      */
     @Deprecated
     public List<GDSException> getWarnings() {

@@ -465,6 +465,12 @@ The following methods will be removed in Jaybird 3.1:
 
 -   `CharacterTranslator.getMapping()`, use `CharacterTranslator.getMapping(char)`
     instead.
+-   `GDSHelper.iscVaxInteger(byte[] buffer, int pos, int length)` use
+    `VaxEncoding.iscVaxInteger(byte[] buffer, int startPosition, int length)`
+    instead.
+-   `GDSHelper.iscVaxLong(byte[] buffer, int pos, int length)` use
+    `VaxEncoding.iscVaxLong(byte[] buffer, int startPosition, int length)`
+    instead.
 
 ### Removal of deprecated constants ###
 
