@@ -16,8 +16,8 @@ the application server and driver.
 Supported Firebird versions
 ---------------------------
 
-Jaybird @VERSION@ was tested against Firebird 2.1.7, Firebird 2.5.5, and a
-recent Firebird 3 snapshot build (3.0.0.32081), but should also support other
+Jaybird @VERSION@ was tested against Firebird 2.1.7, Firebird 2.5.5, and
+Firebird 3 release candidate 2 (3.0.0.32366), but should also support other
 Firebird versions from 1.0 and up. The Type 2 and embedded server JDBC drivers
 require the appropriate JNI library. Precompiled JNI binaries for Windows and
 Linux platforms are shipped in the default installation, other platforms require
@@ -36,8 +36,7 @@ Supported Java versions
 Jaybird @VERSION@ supports Java 6 (JDBC 4.0), Java 7 (JDBC 4.1) and Java 8 
 (JDBC 4.2). Support for earlier Java versions has been dropped.
 
-The upcoming Jaybird 3.0 will support Java 7 and 8 (Java 7 support might still
-be dropped depending on the final release date).
+The upcoming Jaybird 3.0 will support Java 7 and 8 (and probably 9).
 
 Specification support
 ---------------------
@@ -69,7 +68,8 @@ The following has been changed or fixed in Jaybird 2.2.10:
     that this does not really improve security: it only hides the password, but
     an attacker can still use this hash to gain access to Firebird.
 -   Improvement: Specify `isc_tpb_lock_timeout` in transaction mapping ([JDBC-407](http://tracker.firebirdsql.org/browse/JDBC-407))\
-    This change was already in Jaybird 2.2.9, but not documented.
+    This change was already in Jaybird 2.2.9, but not documented. This
+    improvement was contributed by [Vjacheslav Borisov](https://github.com/slavb18)
 -   Fixed: `DatabaseMetaData.supportsGetGeneratedKeys` does not report real
     availability of generated keys feature ([JDBC-412](http://tracker.firebirdsql.org/browse/JDBC-412))\
     `DatabaseMetaData.supportsGetGeneratedKeys` will now only report `true` when
@@ -677,6 +677,7 @@ Other fixes and changes
 
 A full list of changes is also available at:
 
+-   [Jaybird 2.2.10](http://tracker.firebirdsql.org/secure/ReleaseNote.jspa?projectId=10002&styleName=Text&version=10723)
 -   [Jaybird 2.2.9](http://tracker.firebirdsql.org/secure/ReleaseNote.jspa?projectId=10002&styleName=Text&version=10691)
 -   [Jaybird 2.2.8](http://tracker.firebirdsql.org/secure/ReleaseNote.jspa?version=10664&styleName=Text&projectId=10002)
 -   [Jaybird 2.2.7](http://tracker.firebirdsql.org/secure/ReleaseNote.jspa?version=10660&styleName=Text&projectId=10002)
@@ -706,8 +707,7 @@ End-Of-Public-Updates status since February 2013. This is a change from previous
 announcements that support would be dropped with Jaybird 3.1.
 
 Java 7 support will be dropped for Jaybird 3.1 as Java 7 has been on 
-End-Of-Public-Updates status since April 2015. Depending on the release of
-Jaybird 3.0, Java 7 support may already be dropped from Jaybird 3.0.
+End-Of-Public-Updates status since April 2015.
 
 Java 9 support is expected to be introduced with Jaybird 3.0. There are no plans
 to add Java 9 support to Jaybird 2.2.x, although the driver is expected to
@@ -1099,7 +1099,7 @@ Access to different connections from different threads is however
 allowed. Client library in local mode and embedded server library on
 Linux do not allow multithreaded access to the library. Jaybird provides
 necessary synchronization in Java code, however the mutex is local to
-the classloader that loaded the Jaybird driver*.*
+the classloader that loaded the Jaybird driver.
 
 **Care should be taken when deploying applications in web or application
 servers: put jar files in the main library directory of the web and/or
