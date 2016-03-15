@@ -54,6 +54,10 @@ public interface JaybirdErrorCodes {
     int jb_resultSetTypeUpgradeReasonHoldability         = 337248265;
     int jb_resultSetTypeDowngradeReasonScrollSensitive   = 337248266;
     int jb_concurrencyResetReadOnlyReasonStoredProcedure = 337248267;
+    int jb_errorAsynchronousEventChannelClose            = 337248268;
+    int jb_unableToCancelEventReasonNotConnected         = 337248269;
+    int jb_executeImmediateRequiresTransactionAttached   = 337248270;
+    int jb_executeImmediateRequiresNoTransactionDetached  = 337248271;
 
     @SuppressWarnings("unused")
     int jb_range_end                = 337264639;

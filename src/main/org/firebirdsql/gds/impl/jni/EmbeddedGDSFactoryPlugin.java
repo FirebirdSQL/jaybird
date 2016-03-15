@@ -55,7 +55,6 @@ public class EmbeddedGDSFactoryPlugin extends BaseGDSFactoryPlugin {
 
     @Override
     public FbEmbeddedDatabaseFactory getDatabaseFactory() {
-        // TODO This needs to change if we are going to release jna-client as a separate jar
         return FbEmbeddedDatabaseFactory.getInstance();
     }
 }

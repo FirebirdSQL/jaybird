@@ -91,7 +91,6 @@ public interface StatementListener {
      * @param previousState
      *         The old state of the statement
      */
-    // TODO Replace with (or add) specific events?
     void statementStateChanged(FbStatement sender, StatementState newState, StatementState previousState);
 
     /**

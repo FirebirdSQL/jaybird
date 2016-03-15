@@ -19,10 +19,7 @@
 package org.firebirdsql.gds.ng.wire.version10;
 
 import org.firebirdsql.encodings.Encoding;
-import org.firebirdsql.gds.DatabaseParameterBuffer;
-import org.firebirdsql.gds.EventHandle;
-import org.firebirdsql.gds.ISCConstants;
-import org.firebirdsql.gds.TransactionParameterBuffer;
+import org.firebirdsql.gds.*;
 import org.firebirdsql.gds.impl.DatabaseParameterBufferExtension;
 import org.firebirdsql.gds.impl.wire.XdrOutputStream;
 import org.firebirdsql.gds.ng.FbExceptionBuilder;
@@ -101,8 +98,9 @@ public class V10Database extends AbstractFbWireDatabase implements FbWireDatabas
             checkAttached();
             synchronized (getSynchronizationObject()) {
                 if (asynchronousChannel == null || !asynchronousChannel.isConnected()) {
-                    // TODO SQL state, standard firebird error code?
-                    throw new SQLNonTransientException("Asynchronous channel is not connected, cannot cancel event");
+                    throw new FbExceptionBuilder()
+                            .nonTransientException(JaybirdErrorCodes.jb_unableToCancelEventReasonNotConnected)
+                            .toFlatSQLException();
                 }
                 asynchronousChannel.cancelEvent(eventHandle);
             }
@@ -230,7 +228,7 @@ public class V10Database extends AbstractFbWireDatabase implements FbWireDatabas
 
     @Override
     protected void internalDetach() throws SQLException {
-        // TODO Move to wire operations as it is alsmost identical to service detach?
+        // TODO Move to wire operations as it is almost identical to service detach?
         synchronized (getSynchronizationObject()) {
             try {
                 try {
@@ -461,13 +459,15 @@ public class V10Database extends AbstractFbWireDatabase implements FbWireDatabas
         try {
             if (isAttached()) {
                 if (transaction == null) {
-                    // TODO SQLState and/or Firebird specific error
-                    throw new SQLException("executeImmediate requires a transaction when attached");
+                    throw FbExceptionBuilder
+                            .forException(JaybirdErrorCodes.jb_executeImmediateRequiresTransactionAttached)
+                            .toFlatSQLException();
                 }
                 checkTransactionActive(transaction);
             } else if (transaction != null) {
-                // TODO SQLState and/or Firebird specific error
-                throw new SQLException("executeImmediate when not attached should have no transaction");
+                throw FbExceptionBuilder
+                        .forException(JaybirdErrorCodes.jb_executeImmediateRequiresNoTransactionDetached)
+                        .toFlatSQLException();
             }
             synchronized (getSynchronizationObject()) {
                 try {

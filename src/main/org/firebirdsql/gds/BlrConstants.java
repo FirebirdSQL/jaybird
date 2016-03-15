@@ -28,9 +28,6 @@ package org.firebirdsql.gds;
 
 /**
  * Constants for the blr.
- * <p>
- * TODO: Cleanup (eg remove blr constants not relevant for the wire protocol).
- * </p>
  *
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @since 3.0

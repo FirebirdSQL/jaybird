@@ -20,6 +20,7 @@ package org.firebirdsql.gds.ng.wire.version10;
 
 import org.firebirdsql.gds.EventHandle;
 import org.firebirdsql.gds.ISCConstants;
+import org.firebirdsql.gds.JaybirdErrorCodes;
 import org.firebirdsql.gds.impl.wire.XdrOutputStream;
 import org.firebirdsql.gds.ng.FbDatabase;
 import org.firebirdsql.gds.ng.FbExceptionBuilder;
@@ -110,8 +111,9 @@ public class V10AsynchronousChannel implements FbWireAsynchronousChannel {
             channelListenerDispatcher.channelClosing(this);
             socketChannel.close();
         } catch (IOException ex) {
-            // TODO Jaybird error code
-            throw new SQLException("Unable to close asynchronous channel", ex);
+            throw FbExceptionBuilder.forException(JaybirdErrorCodes.jb_errorAsynchronousEventChannelClose)
+                    .cause(ex)
+                    .toFlatSQLException();
         } finally {
             socketChannel = null;
             closeLock.unlock();

@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
@@ -19,6 +17,9 @@
  * All rights reserved.
  */
 package org.firebirdsql.gds;
+
+import org.firebirdsql.logging.Logger;
+import org.firebirdsql.logging.LoggerFactory;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -39,6 +40,7 @@ import java.util.Properties;
  */
 public class ParameterBufferHelper {
 
+    private static final Logger log = LoggerFactory.getLogger(ParameterBufferHelper.class);
     private static final DpbParameterType UNKNOWN_DPB_TYPE = new DpbParameterType(null, null, DpbValueType.TYPE_UNKNOWN);
 
     public static final String DPB_PREFIX = "isc_dpb_";
@@ -55,8 +57,8 @@ public class ParameterBufferHelper {
      * their values. This operation should be executed only once.
      */
     static {
-        final Map<String, Integer> tempDpbTypes = new HashMap<String, Integer>();
-        final Map<String, Integer> tempTpbTypes = new HashMap<String, Integer>();
+        final Map<String, Integer> tempDpbTypes = new HashMap<>();
+        final Map<String, Integer> tempTpbTypes = new HashMap<>();
         Class<ISCConstants> iscClass = ISCConstants.class;
 
         Field[] fields = iscClass.getFields();
@@ -179,7 +181,7 @@ public class ParameterBufferHelper {
             in = cl.getResourceAsStream(resource);
 
         if (in == null)
-            return null;
+            throw new IOException("Unable to load resource file " + resource);
 
         try {
             Properties props = new Properties();
@@ -198,11 +200,10 @@ public class ParameterBufferHelper {
         try {
             props = loadProperties(ISC_DPB_TYPES_RESOURCE);
         } catch (IOException ex) {
-            // TODO Log, throw error?
-            ex.printStackTrace();
+            log.error("Could not load " + ISC_DPB_TYPES_RESOURCE, ex);
             return Collections.emptyMap();
         }
-        final Map<String, DpbParameterType> tempDpbParameterTypes = new HashMap<String, DpbParameterType>();
+        final Map<String, DpbParameterType> tempDpbParameterTypes = new HashMap<>();
 
         for (Map.Entry<Object, Object> entry : props.entrySet()) {
             String key = (String) entry.getKey();

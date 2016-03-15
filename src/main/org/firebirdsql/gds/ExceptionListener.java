@@ -22,12 +22,10 @@ import java.sql.SQLException;
 
 /**
  * Notification listener for exceptions.
- * <p>
- * TODO: consider deprecating/removal
- * </p>
  *
  * @deprecated Use {@link org.firebirdsql.gds.ng.listeners.ExceptionListener}, interface will be removed in 3.1
  */
+@SuppressWarnings("deprecation")
 @Deprecated
 public interface ExceptionListener extends org.firebirdsql.gds.ng.listeners.ExceptionListener {
 

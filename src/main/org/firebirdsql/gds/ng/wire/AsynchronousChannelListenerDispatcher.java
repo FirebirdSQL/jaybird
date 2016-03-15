@@ -21,6 +21,8 @@
 package org.firebirdsql.gds.ng.wire;
 
 import org.firebirdsql.gds.ng.listeners.AbstractListenerDispatcher;
+import org.firebirdsql.logging.Logger;
+import org.firebirdsql.logging.LoggerFactory;
 
 /**
  * Dispatcher for {@link org.firebirdsql.gds.ng.wire.AsynchronousChannelListener}.
@@ -31,13 +33,15 @@ import org.firebirdsql.gds.ng.listeners.AbstractListenerDispatcher;
 public class AsynchronousChannelListenerDispatcher extends AbstractListenerDispatcher<AsynchronousChannelListener>
         implements AsynchronousChannelListener {
 
+    private static final Logger log = LoggerFactory.getLogger(AsynchronousChannelListenerDispatcher.class);
+
     @Override
     public void channelClosing(FbWireAsynchronousChannel channel) {
         for (AsynchronousChannelListener listener : this) {
             try {
                 listener.channelClosing(channel);
             } catch (Exception ex) {
-                // ignore // TODO: Log
+                log.error("Error on notify channelClosing to listener " + listener, ex);
             }
         }
     }
@@ -48,7 +52,7 @@ public class AsynchronousChannelListenerDispatcher extends AbstractListenerDispa
             try {
                 listener.eventReceived(channel, event);
             } catch (Exception ex) {
-                // ignore // TODO: Log
+                log.error("Error on notify eventReceived to listener " + listener, ex);
             }
         }
     }

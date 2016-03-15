@@ -162,7 +162,7 @@ Other fixes and changes
 * `CHAR` and `VARCHAR` columns with character set `OCTETS` are now handled as
   JDBC type `BINARY` and `VARBINARY`, respectively ([JDBC-240](http://tracker.firebirdsql.org/browse/JDBC-240))
 
-    See also [Character set OCTETS handled as JDBC (VAR)BINARY]
+    See also [Character set OCTETS handled as JDBC (VAR)BINARY].
 
 Removal of deprecated classes and packages
 ------------------------------------------
