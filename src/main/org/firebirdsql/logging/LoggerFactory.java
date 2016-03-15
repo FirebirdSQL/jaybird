@@ -45,11 +45,11 @@ public final class LoggerFactory {
         try {
             // TODO Add system property to documentation
             String sFallbackConsoleLogger = getSystemPropertyPrivileged("org.firebirdsql.jdbc.fallbackConsoleLogger");
-            fallbackConsoleLogger = "true".equals(sFallbackConsoleLogger);
+            fallbackConsoleLogger = "true".equalsIgnoreCase(sFallbackConsoleLogger);
             String sLog4j = getSystemPropertyPrivileged("FBLog4j");
             // TODO Add system property to documentation
             String sUseLog4j = getSystemPropertyPrivileged("org.firebirdsql.jdbc.useLog4j");
-            useLog4j = "true".equals(sLog4j) || "true".equals(sUseLog4j);
+            useLog4j = "true".equalsIgnoreCase(sLog4j) || "true".equalsIgnoreCase(sUseLog4j);
 
             if (useLog4j) {
                 // Detect if we can load log4j
