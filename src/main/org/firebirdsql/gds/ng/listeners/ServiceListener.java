@@ -24,50 +24,49 @@
  */
 package org.firebirdsql.gds.ng.listeners;
 
-import org.firebirdsql.gds.ng.FbDatabase;
+import org.firebirdsql.gds.ng.FbService;
 
 import java.sql.SQLWarning;
 
 /**
- * Listener for database events
+ * Listener for service events.
  *
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @since 3.0
  */
-public interface DatabaseListener {
+public interface ServiceListener {
 
     /**
-     * Called before the {@code database} will be detached.
+     * Called before the {@code service} will be detached.
      * <p>
      * This event is intended for cleanup action, implementer should take care that
      * no exceptions are thrown from this method.
      * </p>
      *
-     * @param database
-     *         The database object that is detaching
+     * @param service
+     *         The service object that is detaching
      */
-    void detaching(FbDatabase database);
+    void detaching(FbService service);
 
     /**
-     * Called when the {@code database} connection has been detached
+     * Called when the {@code service} connection has been detached
      *
-     * @param database
+     * @param service
      *         The database object that was detached
      */
-    void detached(FbDatabase database);
+    void detached(FbService service);
 
     /**
-     * Called when a warning was received for the {@code database} connection.
+     * Called when a warning was received for the {@code service} connection.
      * <p>
      * In implementation it is possible that some warnings are not sent to listeners on the database, but only to
-     * listeners on
-     * specific connection derived objects (like an {@link org.firebirdsql.gds.ng.FbStatement} implementation).
+     * listeners on specific connection derived objects.
      * </p>
      *
-     * @param database
-     *         Database receiving the warning
+     * @param service
+     *         service receiving the warning
      * @param warning
      *         Warning
      */
-    void warningReceived(FbDatabase database, SQLWarning warning);
+    void warningReceived(FbService service, SQLWarning warning);
 }

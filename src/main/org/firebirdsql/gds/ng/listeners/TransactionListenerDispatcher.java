@@ -29,7 +29,8 @@ import org.firebirdsql.logging.LoggerFactory;
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @since 3.0
  */
-public class TransactionListenerDispatcher extends AbstractListenerDispatcher<TransactionListener> implements TransactionListener {
+public final class TransactionListenerDispatcher extends AbstractListenerDispatcher<TransactionListener>
+        implements TransactionListener {
 
     private static final Logger log = LoggerFactory.getLogger(TransactionListenerDispatcher.class);
 

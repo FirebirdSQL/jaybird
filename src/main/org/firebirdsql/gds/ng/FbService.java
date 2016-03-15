@@ -27,6 +27,7 @@ package org.firebirdsql.gds.ng;
 import org.firebirdsql.gds.ServiceParameterBuffer;
 import org.firebirdsql.gds.ServiceRequestBuffer;
 import org.firebirdsql.gds.ng.listeners.ExceptionListenable;
+import org.firebirdsql.gds.ng.listeners.ServiceListener;
 
 import java.sql.SQLException;
 
@@ -110,4 +111,20 @@ public interface FbService extends FbAttachment {
      * @return An empty service request buffer
      */
     ServiceRequestBuffer createServiceRequestBuffer();
+
+    /**
+     * Adds a {@link ServiceListener} instance to this database.
+     *
+     * @param listener
+     *         Database listener
+     */
+    void addServiceListener(ServiceListener listener);
+
+    /**
+     * Removes a {@link ServiceListener} instance from this database.
+     *
+     * @param listener
+     *         Database Listener
+     */
+    void removeServiceListener(ServiceListener listener);
 }

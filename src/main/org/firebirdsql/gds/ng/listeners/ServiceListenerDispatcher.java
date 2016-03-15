@@ -18,39 +18,36 @@
  */
 package org.firebirdsql.gds.ng.listeners;
 
-import org.firebirdsql.gds.ng.FbDatabase;
+import org.firebirdsql.gds.ng.FbService;
 import org.firebirdsql.logging.Logger;
 import org.firebirdsql.logging.LoggerFactory;
 
 import java.sql.SQLWarning;
 
 /**
- * Dispatcher to maintain and notify other {@link DatabaseListener}.
- *
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
- * @since 3.0
  */
-public final class DatabaseListenerDispatcher extends AbstractListenerDispatcher<DatabaseListener>
-        implements DatabaseListener {
+public final class ServiceListenerDispatcher extends AbstractListenerDispatcher<ServiceListener>
+        implements ServiceListener {
 
-    private static final Logger log = LoggerFactory.getLogger(DatabaseListenerDispatcher.class);
+    private static final Logger log = LoggerFactory.getLogger(ServiceListenerDispatcher.class);
 
     @Override
-    public void detaching(FbDatabase database) {
-        for (DatabaseListener listener : this) {
+    public void detaching(FbService service) {
+        for (ServiceListener listener : this) {
             try {
-                listener.detaching(database);
-            } catch (Exception e) {
+                listener.detaching(service);
+            }  catch (Exception e) {
                 log.error("Error on notify detaching to listener " + listener, e);
             }
         }
     }
 
     @Override
-    public void detached(FbDatabase database) {
-        for (DatabaseListener listener : this) {
+    public void detached(FbService service) {
+        for (ServiceListener listener : this) {
             try {
-                listener.detached(database);
+                listener.detached(service);
             } catch (Exception e) {
                 log.error("Error on notify detached to listener " + listener, e);
             }
@@ -58,10 +55,10 @@ public final class DatabaseListenerDispatcher extends AbstractListenerDispatcher
     }
 
     @Override
-    public void warningReceived(FbDatabase database, SQLWarning warning) {
-        for (DatabaseListener listener : this) {
+    public void warningReceived(FbService service, SQLWarning warning) {
+        for (ServiceListener listener : this) {
             try {
-                listener.warningReceived(database, warning);
+                listener.warningReceived(service, warning);
             } catch (Exception e) {
                 log.error("Error on notify warningReceived to listener " + listener, e);
             }

@@ -22,6 +22,8 @@ import org.firebirdsql.gds.ServiceParameterBuffer;
 import org.firebirdsql.gds.ServiceRequestBuffer;
 import org.firebirdsql.gds.impl.ServiceParameterBufferImp;
 import org.firebirdsql.gds.impl.ServiceRequestBufferImp;
+import org.firebirdsql.gds.ng.listeners.ServiceListener;
+import org.firebirdsql.gds.ng.listeners.ServiceListenerDispatcher;
 import org.firebirdsql.logging.Logger;
 import org.firebirdsql.logging.LoggerFactory;
 
@@ -41,10 +43,11 @@ public abstract class AbstractFbService<T extends AbstractConnection<IServicePro
         extends AbstractFbAttachment<T> implements FbService {
 
     private static final Logger log = LoggerFactory.getLogger(AbstractFbService.class);
+    private final ServiceListenerDispatcher serviceListenerDispatcher = new ServiceListenerDispatcher();
     private final WarningMessageCallback serviceWarningCallback = new WarningMessageCallback() {
         @Override
         public void processWarning(SQLWarning warning) {
-            // TODO Handle warnings
+            serviceListenerDispatcher.warningReceived(AbstractFbService.this, warning);
         }
     };
 
@@ -75,6 +78,16 @@ public abstract class AbstractFbService<T extends AbstractConnection<IServicePro
         return new ServiceRequestBufferImp();
     }
 
+    @Override
+    public final void addServiceListener(ServiceListener listener) {
+        serviceListenerDispatcher.addListener(listener);
+    }
+
+    @Override
+    public final void removeServiceListener(ServiceListener listener) {
+        serviceListenerDispatcher.removeListener(listener);
+    }
+
     /**
      * Actual implementation of service detach.
      * <p>
@@ -99,13 +112,12 @@ public abstract class AbstractFbService<T extends AbstractConnection<IServicePro
             // TODO return silently if not connected?
             checkConnected();
             synchronized (getSynchronizationObject()) {
-                // TODO Add listeners
-                //serviceListenerDispatcher.detaching(this);
+                serviceListenerDispatcher.detaching(this);
                 try {
                     internalDetach();
                 } finally {
-                    //serviceListenerDispatcher.detached(this);
-                    //serviceListenerDispatcher.shutdown();
+                    serviceListenerDispatcher.detached(this);
+                    serviceListenerDispatcher.shutdown();
                 }
             }
         } catch (SQLException e) {
