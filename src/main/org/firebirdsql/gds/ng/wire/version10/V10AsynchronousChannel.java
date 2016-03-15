@@ -57,7 +57,7 @@ public class V10AsynchronousChannel implements FbWireAsynchronousChannel {
     private final FbWireDatabase database;
     /*
      * Expecting:
-     * single operation: 1 byte (op_dummy, op_exit, op_disconnect)
+     * single operation: 1 byte (op_dummy, op_exit, op_disconnect, op_void)
      *
      * Normal response:
      * (see processing)
@@ -108,6 +108,7 @@ public class V10AsynchronousChannel implements FbWireAsynchronousChannel {
         // Lock already held by another close of the channel
         if (!closeLock.tryLock()) return;
         try {
+            if (!isConnected()) return;
             channelListenerDispatcher.channelClosing(this);
             socketChannel.close();
         } catch (IOException ex) {
@@ -169,9 +170,14 @@ public class V10AsynchronousChannel implements FbWireAsynchronousChannel {
                         break bufferProcessing;
                     }
                     break;
+                case op_void:
+                    // ignore
+                    break;
                 default:
-                    log.error("Unexpected event operation received: " + operation);
-                    // TODO Close channel?
+                    if (log.isErrorEnabled()) {
+                        log.error("Unexpected event operation received: " + operation + " position " +
+                                eventBuffer.position() + " limit " + eventBuffer.limit());
+                    }
                 }
             }
             eventBuffer.compact();

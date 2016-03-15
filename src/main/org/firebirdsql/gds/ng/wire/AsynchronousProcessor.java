@@ -25,10 +25,7 @@ import org.firebirdsql.logging.LoggerFactory;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.nio.channels.ClosedChannelException;
-import java.nio.channels.SelectionKey;
-import java.nio.channels.Selector;
-import java.nio.channels.SocketChannel;
+import java.nio.channels.*;
 import java.sql.SQLException;
 import java.util.*;
 
@@ -182,6 +179,10 @@ public class AsynchronousProcessor {
                         log.error("SQLException closing event channel", e);
                     }
                 }
+            } catch (AsynchronousCloseException e) {
+                // Channel closed
+                log.debug("AsynchronousCloseException reading from event channel", e);
+                selectionKey.cancel();
             } catch (IOException e) {
                 // TODO handle
                 log.error("IOException reading from event channel", e);
