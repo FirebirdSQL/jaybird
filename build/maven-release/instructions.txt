@@ -35,7 +35,7 @@ Unzip the distribution zips to separate folders (one for each JDK version)
 (you only need to jaybird-<version>.jar, jaybird-<version>-sources.jar and jaybird-<version>-javadoc.jar)
 
 Step 2:
-Prepare the POM file.
+Prepare the POM file (NOTE: first two steps are also done by the mavenPrepare target of the build)
 * Copy the jaybird-example.pom to each JDK folder as jaybird-jdkXX.<version>.pom
 * Modify the POM:
 	- Change artifactId from jaybird-jdkXX to the right jdk version (eg jaybird-jdk17 for Java 7)
@@ -46,7 +46,7 @@ Prepare the POM file.
 * Check if the dependencies are still valid
 
 Step 3:
-TODO: Research if deploying bundled artifacts isn't easier (see 7b on https://docs.sonatype.org/display/Repository/Sonatype+OSS+Maven+Repository+Usage+Guide)
+Deploying bundled artifacts is easier (see 7b on https://docs.sonatype.org/display/Repository/Sonatype+OSS+Maven+Repository+Usage+Guide)
 
 Bundling is easier:
 
@@ -55,6 +55,7 @@ jar -cvf bundle.jar *
 
 Upload according to above link (only works for releases, not for snapshots)
 
+Step 3b (alternative; useful for snapshots)
 Sign and deploy jar-files (replace paths, url and repositoryId as necessary; example deploys to snapshot repository)
 JDK 17:
 mvn gpg:sign-and-deploy-file -DpomFile=Jaybird-2.2.0beta1JDK_1.7\jaybird-jdk17.pom -Dfile=Jaybird-2.2.0beta1JDK_1.7\jaybird-2.2.0.jar -Dsources=Jaybird-2.2.0beta1JDK_1.7\jaybird-2.2.0-sources.jar -Djavadoc=Jaybird-2.2.0beta1JDK_1.7\jaybird-2.2.0-javadoc.jar -Durl=https://oss.sonatype.org/content/repositories/snapshots -DrepositoryId=sonatype-nexus-snapshots
