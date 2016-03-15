@@ -57,7 +57,8 @@ public class TestFBEventManager extends FBJUnit4TestBase {
         + "END";
 
     // Delay to wait after registering an event listener before testing
-    static final int DELAY = 600;
+    private static final int SHORT_DELAY = 100;
+    private static final int LONG_DELAY = 700;
 
     @Before
     public void setUp() throws Exception {
@@ -115,7 +116,7 @@ public class TestFBEventManager extends FBJUnit4TestBase {
         EventWait eventWait = new EventWait("TEST_EVENT_B", 10000);
         Thread waitThread = new Thread(eventWait);
         waitThread.start();
-        Thread.sleep(DELAY);
+        Thread.sleep(SHORT_DELAY);
         executeSql("INSERT INTO TEST VALUES (1)");
         waitThread.join();
         assertEquals(1, eventWait.getEventCount());
@@ -126,7 +127,7 @@ public class TestFBEventManager extends FBJUnit4TestBase {
         EventWait eventWait = new EventWait("TEST_EVENT_A", 0);
         Thread waitThread = new Thread(eventWait);
         waitThread.start();
-        Thread.sleep(DELAY);
+        Thread.sleep(SHORT_DELAY);
         executeSql("INSERT INTO TEST VALUES (2)");
         waitThread.join();
         assertEquals(2, eventWait.getEventCount());
@@ -136,20 +137,22 @@ public class TestFBEventManager extends FBJUnit4TestBase {
     public void testBasicEventMechanism() throws Exception {
         AccumulatingEventListener ael = new AccumulatingEventListener();
         eventManager.addEventListener("TEST_EVENT_B", ael);
-        Thread.sleep(DELAY);
+        Thread.sleep(SHORT_DELAY);
         executeSql("INSERT INTO TEST VALUES (2)");
-        Thread.sleep(DELAY);
+        Thread.sleep(SHORT_DELAY);
         eventManager.removeEventListener("TEST_EVENT_B", ael);
         int totalEvents = ael.getTotalEvents();
         assertEquals("Assert that all events were recorded", 1, totalEvents);
         executeSql("INSERT INTO TEST VALUES (3)");
+        Thread.sleep(SHORT_DELAY);
         assertEquals("No notification for events after removal of listener", 
                 totalEvents, ael.getTotalEvents());
     }
 
     @Test
     public void testAsyncEventsNoEvents() throws Exception {
-        Thread.sleep(DELAY);
+        // TODO Doesn't test anything
+        Thread.sleep(SHORT_DELAY);
         try {
             eventManager.disconnect();
         } finally {
@@ -165,23 +168,23 @@ public class TestFBEventManager extends FBJUnit4TestBase {
         eventManager.addEventListener("TEST_EVENT_B", ael1);
         eventManager.addEventListener("TEST_EVENT_B", ael2);
         eventManager.addEventListener("NOT_REAL_EVENT", ael3);
-        Thread.sleep(DELAY);
+        Thread.sleep(SHORT_DELAY);
         executeSql("INSERT INTO TEST VALUES (4)");
-        Thread.sleep(DELAY);
+        Thread.sleep(SHORT_DELAY);
         eventManager.removeEventListener("TEST_EVENT_B", ael1);
         executeSql("INSERT INTO TEST VALUES (5)");
-        Thread.sleep(DELAY);
+        Thread.sleep(SHORT_DELAY);
         assertEquals(1, ael1.getTotalEvents());
         assertEquals(2, ael2.getTotalEvents());
         assertEquals(0, ael3.getTotalEvents());
     }
 
     @Test
-    @Unstable("Performance/timing dependent, may need tweaking DELAY")
+    @Unstable("Performance/timing dependent, may need tweaking LONG_DELAY")
     public void testLargeMultiLoad() throws Exception {
         final int THREAD_COUNT = 5;
         final int REP_COUNT = 100;
-        Thread[] producerThreads = new Thread[THREAD_COUNT];
+        final Thread[] producerThreads = new Thread[THREAD_COUNT];
         AccumulatingEventListener ael1 = new AccumulatingEventListener();
         AccumulatingEventListener ael2 = new AccumulatingEventListener();
         AccumulatingEventListener ael3 = new AccumulatingEventListener();
@@ -189,17 +192,17 @@ public class TestFBEventManager extends FBJUnit4TestBase {
         eventManager.addEventListener("TEST_EVENT_B", ael2);
         eventManager.addEventListener("TEST_EVENT_A", ael3);
         eventManager.addEventListener("TEST_EVENT_B", ael3);
-        Thread.sleep(DELAY);
+        Thread.sleep(SHORT_DELAY);
         for (int i = 0; i < THREAD_COUNT; i++){
-            Thread t = new EventProducerThread(REP_COUNT);
+            final Thread t = new EventProducerThread(REP_COUNT);
             producerThreads[i] = t;
             t.start();
         }
         for (int i = 0; i < THREAD_COUNT; i++){
-            Thread t = producerThreads[i];
+            final Thread t = producerThreads[i];
             t.join();
         }
-        Thread.sleep(DELAY);
+        Thread.sleep(LONG_DELAY);
         eventManager.removeEventListener("TEST_EVENT_A", ael1);
         eventManager.removeEventListener("TEST_EVENT_B", ael2);
         eventManager.removeEventListener("TEST_EVENT_A", ael3);
@@ -223,11 +226,11 @@ public class TestFBEventManager extends FBJUnit4TestBase {
             }
         };
         eventManager.addEventListener("TEST_EVENT_B", ael);
-        Thread.sleep(DELAY);
+        Thread.sleep(SHORT_DELAY);
         for (int i = 0; i < REP_COUNT; i++){
             executeSql("INSERT INTO TEST VALUES (5)");
         }
-        Thread.sleep(REP_COUNT * 300);
+        Thread.sleep(REP_COUNT * 300 + SHORT_DELAY);
         eventManager.removeEventListener("TEST_EVENT_B", ael);
         assertEquals(REP_COUNT, ael.getTotalEvents());
     }
@@ -280,18 +283,14 @@ public class TestFBEventManager extends FBJUnit4TestBase {
         }
 
         public void run(){
-            try {
-                Connection conn = getConnectionViaDriverManager();
-                PreparedStatement stmt = conn.prepareStatement("INSERT INTO TEST VALUES (?)");
-                try {
-                    for (int i = 0; i < count; i++){
-                        stmt.setInt(1, i);
-                        stmt.execute();
-                    }
-                } finally {
-                    conn.close();
+            try (Connection conn = getConnectionViaDriverManager();
+                 PreparedStatement stmt = conn.prepareStatement("INSERT INTO TEST VALUES (?)")) {
+                for (int i = 0; i < count; i++) {
+                    stmt.setInt(1, i);
+                    stmt.execute();
                 }
-            } catch (Exception e){
+            } catch (Exception e) {
+                e.printStackTrace();
                 throw new RuntimeException(e.getMessage());
             }
         }
