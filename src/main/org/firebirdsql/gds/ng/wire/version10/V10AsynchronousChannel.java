@@ -53,8 +53,6 @@ public class V10AsynchronousChannel implements FbWireAsynchronousChannel {
 
     private static Logger log = LoggerFactory.getLogger(V10AsynchronousChannel.class);
 
-    private final AsynchronousChannelListenerDispatcher channelListenerDispatcher = new AsynchronousChannelListenerDispatcher();
-    private final FbWireDatabase database;
     /*
      * Expecting:
      * single operation: 1 byte (op_dummy, op_exit, op_disconnect, op_void)
@@ -76,7 +74,11 @@ public class V10AsynchronousChannel implements FbWireAsynchronousChannel {
      *
      * Total: 282 per event; allocating 2048 to have sufficient space (TODO: might not be enough for 'normal' response)
      */
-    private final ByteBuffer eventBuffer = ByteBuffer.allocate(2048);
+    private static final int EVENT_BUFFER_SIZE = 2048;
+
+    private final AsynchronousChannelListenerDispatcher channelListenerDispatcher = new AsynchronousChannelListenerDispatcher();
+    private final FbWireDatabase database;
+    private final ByteBuffer eventBuffer = ByteBuffer.allocate(EVENT_BUFFER_SIZE);
     private int auxHandle;
     private SocketChannel socketChannel;
 
@@ -152,9 +154,9 @@ public class V10AsynchronousChannel implements FbWireAsynchronousChannel {
         // TODO We assume the caller has called eventBuffer.flip() is that wise, or should we do that here?
         try {
             bufferProcessing:
-            while (eventBuffer.hasRemaining()) {
+            while (eventBuffer.remaining() >= 4) {
                 eventBuffer.mark();
-                final int operation = eventBuffer.get() & 0xFF;
+                final int operation = eventBuffer.getInt();
                 switch (operation) {
                 case op_dummy:
                     continue;
@@ -170,14 +172,12 @@ public class V10AsynchronousChannel implements FbWireAsynchronousChannel {
                         break bufferProcessing;
                     }
                     break;
-                case op_void:
-                    // ignore
-                    break;
                 default:
                     if (log.isErrorEnabled()) {
                         log.error("Unexpected event operation received: " + operation + " position " +
                                 eventBuffer.position() + " limit " + eventBuffer.limit());
                     }
+                    break;
                 }
             }
             eventBuffer.compact();
@@ -249,6 +249,10 @@ public class V10AsynchronousChannel implements FbWireAsynchronousChannel {
      * and we need to wait for another read.
      */
     private boolean processSingleEvent() {
+        if (eventBuffer.remaining() < 20) {
+            // Not enough data for db handle, buffer length, AST and event id (ignoring space for buffer).
+            return false;
+        }
         try {
             eventBuffer.getInt(); // DB handle (ignore)
             final int bufferLength = eventBuffer.getInt();

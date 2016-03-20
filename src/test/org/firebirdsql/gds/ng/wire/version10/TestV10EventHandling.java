@@ -37,7 +37,6 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
-import java.io.OutputStream;
 import java.sql.SQLException;
 import java.util.List;
 
@@ -60,12 +59,12 @@ public class TestV10EventHandling extends FBJUnit4TestBase {
     public static final GdsTypeRule gdsTypeRule = GdsTypeRule.excludesNativeOnly();
 
     //@formatter:off
-    public static final String TABLE_DEF =
+    private static final String TABLE_DEF =
             "CREATE TABLE TEST (" +
             "     TESTVAL INTEGER NOT NULL" +
             ")";
 
-    public static final String TRIGGER_DEF =
+    private static final String TRIGGER_DEF =
             "CREATE TRIGGER INSERT_TRIG " +
             "     FOR TEST AFTER INSERT " +
             "AS BEGIN " +
@@ -174,8 +173,7 @@ public class TestV10EventHandling extends FBJUnit4TestBase {
     @Test
     public void testAsynchronousDelivery_fullEvent() throws Exception {
         final SimpleChannelListener listener = new SimpleChannelListener();
-        final SimpleServer simpleServer = new SimpleServer();
-        try {
+        try (SimpleServer simpleServer = new SimpleServer()) {
             final FbWireAsynchronousChannel channel = new V10AsynchronousChannel(createDummyDatabase());
             channel.addChannelListener(listener);
             Thread establishChannel = new Thread(new Runnable() {
@@ -195,7 +193,7 @@ public class TestV10EventHandling extends FBJUnit4TestBase {
             assertTrue("Expected connected channel", channel.isConnected());
 
             final XdrOutputStream out = new XdrOutputStream(simpleServer.getOutputStream());
-            out.write(op_event);
+            out.writeInt(op_event);
             out.writeInt(513);
             out.writeBuffer(new byte[] { 1, 3, 69, 86, 84, 3, 0, 0, 0 });
             out.writeLong(0);
@@ -209,16 +207,13 @@ public class TestV10EventHandling extends FBJUnit4TestBase {
             AsynchronousChannelListener.Event event = receivedEvents.get(0);
             assertEquals("Unexpected eventId", 7, event.getEventId());
             assertEquals("Unexpected event count", 3, event.getEventCount());
-        } finally {
-            simpleServer.close();
         }
     }
 
     @Test
     public void testAsynchronousDelivery_partialEvent() throws Exception {
         final SimpleChannelListener listener = new SimpleChannelListener();
-        final SimpleServer simpleServer = new SimpleServer();
-        try {
+        try (SimpleServer simpleServer = new SimpleServer()) {
             final FbWireAsynchronousChannel channel = new V10AsynchronousChannel(createDummyDatabase());
             channel.addChannelListener(listener);
             Thread establishChannel = new Thread(new Runnable() {
@@ -238,8 +233,8 @@ public class TestV10EventHandling extends FBJUnit4TestBase {
             assertTrue("Expected connected channel", channel.isConnected());
 
             final XdrOutputStream out = new XdrOutputStream(simpleServer.getOutputStream());
-            out.write(op_dummy);
-            out.write(op_event);
+            out.writeInt(op_dummy);
+            out.writeInt(op_event);
             out.writeInt(513);
             out.writeBuffer(new byte[] { 1, 3, 69, 86, 84, 3, 0, 0, 0 });
             // Flushing partial event to test if processing works as expected
@@ -261,16 +256,13 @@ public class TestV10EventHandling extends FBJUnit4TestBase {
             AsynchronousChannelListener.Event event = receivedEvents.get(0);
             assertEquals("Unexpected eventId", 7, event.getEventId());
             assertEquals("Unexpected event count", 3, event.getEventCount());
-        } finally {
-            simpleServer.close();
         }
     }
 
     @Test
     public void testAsynchronousDelivery_largeNumberOfEvents() throws Exception {
         final SimpleChannelListener listener = new SimpleChannelListener();
-        final SimpleServer simpleServer = new SimpleServer();
-        try {
+        try (SimpleServer simpleServer = new SimpleServer()) {
             final FbWireAsynchronousChannel channel = new V10AsynchronousChannel(createDummyDatabase());
             channel.addChannelListener(listener);
             Thread establishChannel = new Thread(new Runnable() {
@@ -293,7 +285,7 @@ public class TestV10EventHandling extends FBJUnit4TestBase {
             // Write a large number of events
             final int testEventCount = 1024;
             for (int count = 1; count <= testEventCount; count++) {
-                out.write(op_event);
+                out.writeInt(op_event);
                 out.writeInt(513);
                 out.writeBuffer(new byte[] { 1, 5, 69, 86, 69, 78, 84,
                         (byte) count, (byte) (count >> 8), (byte) (count >> 16), (byte) (count >> 24) });
@@ -313,8 +305,6 @@ public class TestV10EventHandling extends FBJUnit4TestBase {
             AsynchronousChannelListener.Event lastEvent = receivedEvents.get(testEventCount - 1);
             assertEquals("Unexpected eventId", 7, lastEvent.getEventId());
             assertEquals("Unexpected event count", testEventCount, lastEvent.getEventCount());
-        } finally {
-            simpleServer.close();
         }
     }
 
@@ -370,8 +360,7 @@ public class TestV10EventHandling extends FBJUnit4TestBase {
     }
 
     private void checkAsynchronousDisconnection(int disconnectOperation) throws Exception {
-        final SimpleServer simpleServer = new SimpleServer();
-        try {
+        try (SimpleServer simpleServer = new SimpleServer()) {
             final FbWireAsynchronousChannel channel = new V10AsynchronousChannel(createDummyDatabase());
             Thread establishChannel = new Thread(new Runnable() {
                 @Override
@@ -389,18 +378,15 @@ public class TestV10EventHandling extends FBJUnit4TestBase {
             establishChannel.join(500);
             assertTrue("Expected connected channel", channel.isConnected());
 
-            final OutputStream out = simpleServer.getOutputStream();
-            out.write(disconnectOperation);
+            final XdrOutputStream out = new XdrOutputStream(simpleServer.getOutputStream());
+            out.writeInt(disconnectOperation);
             out.flush();
 
             Thread.sleep(500);
 
             assertFalse("Expected disconnected channel", channel.isConnected());
-        } finally {
-            simpleServer.close();
         }
     }
-
 
     private AbstractFbWireDatabase createAndAttachDatabase() throws SQLException {
         WireDatabaseConnection gdsConnection = new WireDatabaseConnection(getConnectionInfo(),

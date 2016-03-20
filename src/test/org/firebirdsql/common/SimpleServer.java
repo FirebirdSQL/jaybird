@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
@@ -32,7 +30,7 @@ import java.net.Socket;
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @since 3.0
  */
-public final class SimpleServer {
+public final class SimpleServer implements AutoCloseable {
 
     private final ServerSocket serverSocket;
     private Socket socket;
@@ -107,10 +105,8 @@ public final class SimpleServer {
      * @throws IOException
      */
     public void close() throws IOException {
-        try {
+        try (ServerSocket refServerSocket = serverSocket){
             closeConnection();
-        } finally {
-            serverSocket.close();
         }
     }
 }
