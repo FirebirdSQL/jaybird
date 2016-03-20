@@ -551,31 +551,36 @@ public class V10Statement extends AbstractFbWireStatement implements FbWireState
             for (int idx = 0; idx < rowDescriptor.getCount(); idx++) {
                 final FieldDescriptor fieldDescriptor = rowDescriptor.getFieldDescriptor(idx);
                 final FieldValue fieldValue = rowValue.getFieldValue(idx);
-                int len = blrCalculator.calculateIoLength(fieldDescriptor);
-                byte[] buffer;
-                if (len == 0) {
-                    // Length specified in response
-                    len = xdrIn.readInt();
-                    buffer = new byte[len];
-                    xdrIn.readFully(buffer, 0, len);
-                    xdrIn.skipPadding(len);
-                } else if (len < 0) {
-                    // Buffer is not padded
-                    buffer = new byte[-len];
-                    xdrIn.readFully(buffer, 0, -len);
-                } else {
-                    // len is incremented in calculateIoLength to avoid value 0 so it must be decremented
-                    len--;
-                    buffer = new byte[len];
-                    xdrIn.readFully(buffer, 0, len);
-                    xdrIn.skipPadding(len);
-                }
-                if (xdrIn.readInt() == -1)
+                final int len = blrCalculator.calculateIoLength(fieldDescriptor);
+                byte[] buffer = readColumnData(xdrIn, len);
+                if (xdrIn.readInt() == NULL_INDICATOR_NULL)
                     buffer = null;
                 fieldValue.setFieldData(buffer);
             }
         }
         return rowValue;
+    }
+
+    protected byte[] readColumnData(XdrInputStream xdrIn, int len) throws IOException {
+        byte[] buffer;
+        if (len == 0) {
+            // Length specified in response
+            len = xdrIn.readInt();
+            buffer = new byte[len];
+            xdrIn.readFully(buffer, 0, len);
+            xdrIn.skipPadding(len);
+        } else if (len < 0) {
+            // Buffer is not padded
+            buffer = new byte[-len];
+            xdrIn.readFully(buffer, 0, -len);
+        } else {
+            // len is incremented in calculateIoLength to avoid value 0 so it must be decremented
+            len--;
+            buffer = new byte[len];
+            xdrIn.readFully(buffer, 0, len);
+            xdrIn.skipPadding(len);
+        }
+        return buffer;
     }
 
     /**
@@ -595,46 +600,50 @@ public class V10Statement extends AbstractFbWireStatement implements FbWireState
             for (int idx = 0; idx < fieldValues.getCount(); idx++) {
                 final FieldValue fieldValue = fieldValues.getFieldValue(idx);
                 final FieldDescriptor fieldDescriptor = rowDescriptor.getFieldDescriptor(idx);
-
-                int len = blrCalculator.calculateIoLength(fieldDescriptor, fieldValue);
+                final int len = blrCalculator.calculateIoLength(fieldDescriptor, fieldValue);
                 final byte[] buffer = fieldValue.getFieldData();
-                final int tempType = fieldDescriptor.getType() & ~1;
-
-                // TODO Correctly pad with 0x00 instead of 0x20 for octets.
-                if (tempType == ISCConstants.SQL_NULL) {
-                    // Nothing to write for SQL_NULL (except null indicator, which happens at end)
-                } else if (len == 0) {
-                    if (buffer != null) {
-                        len = buffer.length;
-                        xdrOut.writeInt(len);
-                        xdrOut.write(buffer, 0, len, (4 - len) & 3);
-                    } else {
-                        xdrOut.writeInt(0);
-                    }
-                } else if (len < 0) {
-                    if (buffer != null) {
-                        xdrOut.write(buffer, 0, -len);
-                    } else {
-                        xdrOut.writePadding(-len, 0x00); // TODO Used to be 0x20, check if use of 0x00 here is correct
-                    }
-                } else {
-                    // decrement length because it was incremented before
-                    // increment happens in BlrCalculator.calculateIoLength
-                    len--;
-                    if (buffer != null) {
-                        final int buflen = buffer.length;
-                        if (buflen >= len) {
-                            xdrOut.write(buffer, 0, len, (4 - len) & 3);
-                        } else {
-                            xdrOut.write(buffer, 0, buflen, 0);
-                            xdrOut.writePadding(len - buflen + ((4 - len) & 3), 0x20);
-                        }
-                    } else {
-                        xdrOut.writePadding(len + ((4 - len) & 3), 0x20);
-                    }
-                }
+                final int fieldType = fieldDescriptor.getType();
+                writeColumnData(xdrOut, len, buffer, fieldType);
                 // sqlind (null indicator)
                 xdrOut.writeInt(buffer != null ? NULL_INDICATOR_NOT_NULL : NULL_INDICATOR_NULL);
+            }
+        }
+    }
+
+    protected void writeColumnData(XdrOutputStream xdrOut, int len, byte[] buffer, int fieldType) throws IOException {
+        final int tempType = fieldType & ~1;
+
+        // TODO Correctly pad with 0x00 instead of 0x20 for octets.
+        if (tempType == ISCConstants.SQL_NULL) {
+            // Nothing to write for SQL_NULL (except null indicator, which happens at end)
+        } else if (len == 0) {
+            if (buffer != null) {
+                len = buffer.length;
+                xdrOut.writeInt(len);
+                xdrOut.write(buffer, 0, len, (4 - len) & 3);
+            } else {
+                xdrOut.writeInt(0);
+            }
+        } else if (len < 0) {
+            if (buffer != null) {
+                xdrOut.write(buffer, 0, -len);
+            } else {
+                xdrOut.writePadding(-len, 0x00); // TODO Used to be 0x20, check if use of 0x00 here is correct
+            }
+        } else {
+            // decrement length because it was incremented before
+            // increment happens in BlrCalculator.calculateIoLength
+            len--;
+            if (buffer != null) {
+                final int buflen = buffer.length;
+                if (buflen >= len) {
+                    xdrOut.write(buffer, 0, len, (4 - len) & 3);
+                } else {
+                    xdrOut.write(buffer, 0, buflen, 0);
+                    xdrOut.writePadding(len - buflen + ((4 - len) & 3), 0x20);
+                }
+            } else {
+                xdrOut.writePadding(len + ((4 - len) & 3), 0x20);
             }
         }
     }
