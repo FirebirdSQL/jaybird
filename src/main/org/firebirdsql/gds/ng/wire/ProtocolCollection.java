@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
@@ -20,6 +18,9 @@
  */
 package org.firebirdsql.gds.ng.wire;
 
+import org.firebirdsql.logging.Logger;
+import org.firebirdsql.logging.LoggerFactory;
+
 import java.util.*;
 
 /**
@@ -33,6 +34,8 @@ import java.util.*;
  * @since 3.0
  */
 public final class ProtocolCollection implements Iterable<ProtocolDescriptor> {
+
+    private static final Logger log = LoggerFactory.getLogger(ProtocolCollection.class);
 
     private final Map<Integer, ProtocolDescriptor> descriptorMap;
     private static final ProtocolCollection DEFAULT_COLLECTION;
@@ -65,7 +68,7 @@ public final class ProtocolCollection implements Iterable<ProtocolDescriptor> {
      * @return Collection of {@link ClassLoader} instances
      */
     private static List<ClassLoader> classLoadersForLoading() {
-        final List<ClassLoader> classLoaders = new ArrayList<ClassLoader>(2);
+        final List<ClassLoader> classLoaders = new ArrayList<>(2);
         final ClassLoader classLoader = ProtocolDescriptor.class.getClassLoader();
         if (classLoader != null) {
             classLoaders.add(classLoader);
@@ -92,25 +95,20 @@ public final class ProtocolCollection implements Iterable<ProtocolDescriptor> {
      * @return List of protocol descriptors
      */
     private static List<ProtocolDescriptor> loadProtocolsFallback(ClassLoader classLoader) {
-        // TODO Make sure all classes from default implementation are included
         String[] protocolClasses = {
                 "org.firebirdsql.gds.ng.wire.version10.Version10Descriptor",
                 "org.firebirdsql.gds.ng.wire.version11.Version11Descriptor",
                 "org.firebirdsql.gds.ng.wire.version12.Version12Descriptor",
                 "org.firebirdsql.gds.ng.wire.version13.Version13Descriptor"
         };
-        final List<ProtocolDescriptor> protocols = new ArrayList<ProtocolDescriptor>(protocolClasses.length);
+        final List<ProtocolDescriptor> protocols = new ArrayList<>(protocolClasses.length);
         for (String className : protocolClasses) {
             try {
                 Class<?> clazz = classLoader.loadClass(className);
                 ProtocolDescriptor protocol = (ProtocolDescriptor) clazz.newInstance();
                 protocols.add(protocol);
-            } catch (ClassNotFoundException e) {
-                // TODO Log
-            } catch (InstantiationException e) {
-                // TODO Log
-            } catch (IllegalAccessException e) {
-                // TODO Log
+            } catch (Exception e) {
+                log.warn(String.format("Unable to load protocol %s in loadProtocolsFallback; skipping", className), e);
             }
         }
         return protocols;
@@ -153,7 +151,7 @@ public final class ProtocolCollection implements Iterable<ProtocolDescriptor> {
      * @return Protocol version numbers
      */
     public List<Integer> getProtocolVersions() {
-        List<Integer> versions = new ArrayList<Integer>();
+        List<Integer> versions = new ArrayList<>();
         for (ProtocolDescriptor descriptor : this) {
             versions.add(descriptor.getVersion());
         }
@@ -175,7 +173,7 @@ public final class ProtocolCollection implements Iterable<ProtocolDescriptor> {
      * @return ProtocolCollection
      */
     public static ProtocolCollection create(ProtocolDescriptor... descriptors) {
-        Map<Integer, ProtocolDescriptor> descriptorMap = new HashMap<Integer, ProtocolDescriptor>();
+        Map<Integer, ProtocolDescriptor> descriptorMap = new HashMap<>();
         for (ProtocolDescriptor descriptor : descriptors) {
             ProtocolDescriptor existingDescriptor = descriptorMap.get(descriptor.getVersion());
             if (existingDescriptor == null || descriptor.getWeight() > existingDescriptor.getWeight()) {

@@ -98,7 +98,6 @@ public class Version12Descriptor extends AbstractProtocolDescriptor implements P
     @Override
     public FbWireOperations createWireOperations(WireConnection<?, ?> connection,
             WarningMessageCallback defaultWarningMessageCallback, Object syncObject) {
-        // TODO Needs V12 version?
         return new V11WireOperations(connection, defaultWarningMessageCallback, syncObject);
     }
 }

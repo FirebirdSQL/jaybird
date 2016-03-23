@@ -198,6 +198,7 @@ public abstract class AbstractWireOperations implements FbWireOperations {
         case op_sql_response:
             return new SqlResponse(xdrIn.readInt());
         default:
+            log.warn(String.format("Unsupported or unexpected operation code %d in processOperation", operation));
             // TODO throw an exception instead
             return null;
         }
@@ -260,7 +261,7 @@ public abstract class AbstractWireOperations implements FbWireOperations {
             } catch (Exception e) {
                 // TODO Wrap in SQLWarning and register on warning callback?
                 // ignoring exceptions
-                log.debug("Exception in consumePackets", e);
+                log.warn("Exception in consumePackets", e);
             }
         }
     }
