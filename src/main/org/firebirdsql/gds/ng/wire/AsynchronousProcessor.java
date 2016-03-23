@@ -169,7 +169,6 @@ public class AsynchronousProcessor {
                 final ByteBuffer eventBuffer = channel.getEventBuffer();
                 int count = socketChannel.read(eventBuffer);
                 if (count > 0) {
-                    eventBuffer.flip();
                     channel.processEventData();
                 } else if (count < 0) {
                     try {

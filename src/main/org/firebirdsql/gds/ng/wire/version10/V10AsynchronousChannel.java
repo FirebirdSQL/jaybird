@@ -72,7 +72,7 @@ public class V10AsynchronousChannel implements FbWireAsynchronousChannel {
      * - 8 bytes AST info
      * - 4 bytes event id
      *
-     * Total: 282 per event; allocating 2048 to have sufficient space (TODO: might not be enough for 'normal' response)
+     * Total: 282 per event; allocating 2048 to have sufficient space
      */
     private static final int EVENT_BUFFER_SIZE = 2048;
 
@@ -151,7 +151,7 @@ public class V10AsynchronousChannel implements FbWireAsynchronousChannel {
 
     @Override
     public void processEventData() {
-        // TODO We assume the caller has called eventBuffer.flip() is that wise, or should we do that here?
+        eventBuffer.flip();
         try {
             bufferProcessing:
             while (eventBuffer.remaining() >= 4) {
