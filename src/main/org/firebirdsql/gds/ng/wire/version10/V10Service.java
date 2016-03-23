@@ -122,7 +122,6 @@ public class V10Service extends AbstractFbWireService implements FbWireService {
     @Override
     protected void internalDetach() throws SQLException {
         synchronized (getSynchronizationObject()) {
-            // TODO Listeners (similar to AbstractFbDatabase#close())?
             try {
                 try {
                     final XdrOutputStream xdrOut = getXdrOut();

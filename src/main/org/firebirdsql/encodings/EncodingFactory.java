@@ -359,7 +359,6 @@ public final class EncodingFactory implements IEncodingFactory {
         // Map firebird encoding and character set id to EncodingDefinition
         firebirdEncodingToDefinition.put(firebirdEncodingName.toLowerCase(), encodingDefinition);
         // We don't check whether the characterSetId is already mapped, as a characterSetId should map to a single Firebird encoding
-        // TODO Consider if wise, we now allow users to accidentally or intentionally mess up the mapping
         firebirdCharacterSetIdToDefinition.put(encodingDefinition.getFirebirdCharacterSetId(), encodingDefinition);
 
         final Charset charset = encodingDefinition.getJavaCharset();

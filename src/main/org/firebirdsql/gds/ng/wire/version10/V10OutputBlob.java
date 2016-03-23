@@ -98,7 +98,6 @@ public class V10OutputBlob extends AbstractFbWireOutputBlob implements FbWireBlo
         try {
             // TODO Handle exceeding max segment size?
             if (segment.length == 0) {
-                // TODO make non transient?
                 throw new FbExceptionBuilder().exception(jb_blobPutSegmentEmpty).toSQLException();
             }
             synchronized (getSynchronizationObject()) {

@@ -74,22 +74,23 @@ public interface IEncodingFactory {
     /**
      * Looks up the {@link org.firebirdsql.encodings.EncodingDefinition} for the specified Firebird character set id.
      * <p>
-     * Implementation should return {@code null} for the value {@link org.firebirdsql.gds.ISCConstants#CS_dynamic}
-     * (=127), as
-     * that is the indicator to use the connection character set, which is unknown to this EncodingFactory.
+     * Implementations that do not know the connection character set should return {@code null} for the
+     * value {@link org.firebirdsql.gds.ISCConstants#CS_dynamic} (= 127), as that is the indicator to use
+     * the connection character set.
      * </p>
      *
      * @param firebirdCharacterSetId
      *         Firebird character set id
-     * @return EncodingDefinition instance or {@code null} if the character set id is unknown or {@code 127}
+     * @return EncodingDefinition instance or {@code null} if the character set id is unknown or {@code 127} and this
+     * implementation doesn't know the connection character set.
      */
     EncodingDefinition getEncodingDefinitionByCharacterSetId(int firebirdCharacterSetId);
 
     /**
      * Gets an {@link org.firebirdsql.encodings.Encoding} for the specified Firebird character set id. If there is no
-     * known encoding for this
-     * character set id (or if it is 127, see {@link #getEncodingDefinitionByCharacterSetId(int)}),
-     * or the loaded EncodingDefinition is information-only, then the defaultEncoding will be used.
+     * known encoding for this character set id (or if it is 127,
+     * see {@link #getEncodingDefinitionByCharacterSetId(int)}), or the loaded EncodingDefinition is information-only,
+     * then the defaultEncoding will be used.
      *
      * @param firebirdCharacterSetId
      *         The Firebird character set id

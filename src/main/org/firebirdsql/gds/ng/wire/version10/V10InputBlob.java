@@ -94,7 +94,6 @@ public class V10InputBlob extends AbstractFbWireInputBlob implements FbWireBlob,
     public byte[] getSegment(final int sizeRequested) throws SQLException {
         try {
             if (sizeRequested <= 0) {
-                // TODO make non transient?
                 throw new FbExceptionBuilder().exception(jb_blobGetSegmentNegative)
                         .messageParameter(sizeRequested)
                         .toSQLException();

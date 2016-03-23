@@ -135,7 +135,6 @@ public class JnaBlob extends AbstractFbBlob implements FbBlob, DatabaseListener 
     public byte[] getSegment(int sizeRequested) throws SQLException {
         try {
             if (sizeRequested <= 0) {
-                // TODO make non transient?
                 throw new FbExceptionBuilder().exception(jb_blobGetSegmentNegative)
                         .messageParameter(sizeRequested)
                         .toSQLException();
@@ -179,12 +178,10 @@ public class JnaBlob extends AbstractFbBlob implements FbBlob, DatabaseListener 
         try {
             // TODO Handle exceeding max segment size?
             if (segment.length == 0) {
-                // TODO make non transient?
                 throw new FbExceptionBuilder().exception(jb_blobPutSegmentEmpty).toSQLException();
             }
             // TODO Handle by performing multiple puts? (Wrap in byte buffer, use position to move pointer?)
             if (segment.length > getMaximumSegmentSize()) {
-                // TODO make non transient?
                 throw new FbExceptionBuilder().exception(jb_blobPutSegmentTooLong).toSQLException();
             }
             synchronized (getSynchronizationObject()) {

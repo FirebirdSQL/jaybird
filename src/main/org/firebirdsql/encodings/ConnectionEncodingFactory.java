@@ -110,7 +110,7 @@ class ConnectionEncodingFactory implements IEncodingFactory {
         default:
             return factory.getEncodingDefinitionByCharacterSetId(firebirdCharacterSetId);
         }
-        // TODO: return the EncodingDefinition of the default encoding if unknown?
+        // TODO: return the EncodingDefinition of the default encoding if unknown, or throw exception?
     }
 
     @Override

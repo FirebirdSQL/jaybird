@@ -63,7 +63,6 @@ public final class FieldValue implements FieldDataProvider, Cloneable {
      *         Is this field in the initialized state
      */
     private FieldValue(final byte[] fieldData, final boolean initialized) {
-        // TODO Defensively copy fieldData?
         this.fieldData = fieldData;
         this.initialized = initialized;
     }

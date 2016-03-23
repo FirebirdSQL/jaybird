@@ -344,7 +344,6 @@ public final class RowDescriptorBuilder {
      * @see #isComplete()
      */
     public RowDescriptor toRowDescriptor() {
-        // TODO Reconsider allowing partial construction?
         // NOTE: The correctness of this depends on the fact that RowDescriptor copies the content of the array
         return RowDescriptor.createRowDescriptor(fieldDescriptors, datatypeCoder);
     }
