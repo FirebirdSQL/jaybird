@@ -232,7 +232,7 @@ public class TestV10Database {
     @Test
     public void testDrop_NotAttached() throws Exception {
         expectedException.expect(SQLException.class);
-        expectedException.expectMessage(equalTo("The connection is not attached to a database"));
+        expectedException.expectMessage(startsWith("The connection is not attached to a database"));
         expectedException.expect(sqlStateEquals(SQLStateConstants.SQL_STATE_CONNECTION_ERROR));
 
         FBManager fbManager = createFBManager();
@@ -253,7 +253,7 @@ public class TestV10Database {
         AbstractFbWireDatabase db = createDummyDatabase();
 
         expectedException.expect(SQLException.class);
-        expectedException.expectMessage(equalTo("No connection established to the database server"));
+        expectedException.expectMessage(startsWith("No connection established to the database server"));
         expectedException.expect(sqlStateEquals(SQLStateConstants.SQL_STATE_CONNECTION_CLOSED));
 
         db.close();

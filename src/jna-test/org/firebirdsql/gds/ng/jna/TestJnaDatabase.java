@@ -180,7 +180,7 @@ public class TestJnaDatabase {
     @Test
     public void testDrop_NotAttached() throws Exception {
         expectedException.expect(SQLException.class);
-        expectedException.expectMessage(equalTo("The connection is not attached to a database"));
+        expectedException.expectMessage(startsWith("The connection is not attached to a database"));
         expectedException.expect(sqlStateEquals(SQLStateConstants.SQL_STATE_CONNECTION_ERROR));
 
         FBManager fbManager = createFBManager();
@@ -200,7 +200,7 @@ public class TestJnaDatabase {
         // Note: the error is different from the one in the pure java implementation as we cannot discern between
         // not connected and not attached
         expectedException.expect(SQLException.class);
-        expectedException.expectMessage(equalTo("The connection is not attached to a database"));
+        expectedException.expectMessage(startsWith("The connection is not attached to a database"));
         expectedException.expect(sqlStateEquals(SQLStateConstants.SQL_STATE_CONNECTION_ERROR));
 
         db.close();

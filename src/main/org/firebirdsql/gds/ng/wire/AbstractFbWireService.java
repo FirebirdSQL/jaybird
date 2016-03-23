@@ -18,12 +18,13 @@
  */
 package org.firebirdsql.gds.ng.wire;
 
+import org.firebirdsql.gds.JaybirdErrorCodes;
 import org.firebirdsql.gds.impl.wire.XdrInputStream;
 import org.firebirdsql.gds.impl.wire.XdrOutputStream;
 import org.firebirdsql.gds.ng.AbstractFbService;
 import org.firebirdsql.gds.ng.DefaultDatatypeCoder;
+import org.firebirdsql.gds.ng.FbExceptionBuilder;
 import org.firebirdsql.gds.ng.WarningMessageCallback;
-import org.firebirdsql.jdbc.SQLStateConstants;
 
 import java.io.IOException;
 import java.sql.SQLException;
@@ -71,9 +72,8 @@ public abstract class AbstractFbWireService extends AbstractFbService<WireServic
      */
     protected final void checkConnected() throws SQLException {
         if (!connection.isConnected()) {
-            // TODO Update message / externalize
-            throw new SQLException("No connection established to the database server",
-                    SQLStateConstants.SQL_STATE_CONNECTION_CLOSED);
+            throw FbExceptionBuilder.forException(JaybirdErrorCodes.jb_notConnectedToServer)
+                    .toFlatSQLException();
         }
     }
 
@@ -91,9 +91,8 @@ public abstract class AbstractFbWireService extends AbstractFbService<WireServic
     protected final void checkAttached() throws SQLException {
         checkConnected();
         if (!isAttached()) {
-            // TODO Update message / externalize + Check if SQL State right
-            throw new SQLException("The connection is not attached to a database",
-                    SQLStateConstants.SQL_STATE_CONNECTION_ERROR);
+            throw FbExceptionBuilder.forException(JaybirdErrorCodes.jb_notAttachedToDatabase)
+                    .toFlatSQLException();
         }
     }
 

@@ -59,6 +59,8 @@ public interface JaybirdErrorCodes {
     int jb_executeImmediateRequiresTransactionAttached   = 337248270;
     int jb_executeImmediateRequiresNoTransactionDetached  = 337248271;
     int jb_receiveTrustedAuth_NotSupported               = 337248272;
+    int jb_notConnectedToServer     = 337248273;
+    int jb_notAttachedToDatabase    = 337248274;
 
     @SuppressWarnings("unused")
     int jb_range_end                = 337264639;
