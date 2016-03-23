@@ -19,6 +19,7 @@
 package org.firebirdsql.gds.ng.wire.version13;
 
 import org.firebirdsql.gds.ISCConstants;
+import org.firebirdsql.gds.JaybirdErrorCodes;
 import org.firebirdsql.gds.impl.wire.XdrInputStream;
 import org.firebirdsql.gds.impl.wire.XdrOutputStream;
 import org.firebirdsql.gds.ng.FbExceptionBuilder;
@@ -75,8 +76,9 @@ public class V13WireOperations extends V11WireOperations {
                 switch (operation) {
                 case op_trusted_auth:
                     xdrIn.readBuffer(); // p_trau_data
-                    // TODO Externalize message + sql state
-                    throw new SQLException("Trusted authentication not supported");
+                    throw new FbExceptionBuilder()
+                            .nonTransientConnectionException(JaybirdErrorCodes.jb_receiveTrustedAuth_NotSupported)
+                            .toFlatSQLException();
                 case op_cont_auth:
                     data = xdrIn.readBuffer(); // p_data
                     pluginName = xdrIn.readString(getEncoding()); //p_name

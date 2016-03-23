@@ -58,6 +58,7 @@ public interface JaybirdErrorCodes {
     int jb_unableToCancelEventReasonNotConnected         = 337248269;
     int jb_executeImmediateRequiresTransactionAttached   = 337248270;
     int jb_executeImmediateRequiresNoTransactionDetached  = 337248271;
+    int jb_receiveTrustedAuth_NotSupported               = 337248272;
 
     @SuppressWarnings("unused")
     int jb_range_end                = 337264639;
