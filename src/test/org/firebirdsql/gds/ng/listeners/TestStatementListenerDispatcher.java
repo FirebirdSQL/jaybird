@@ -86,7 +86,7 @@ public class TestStatementListenerDispatcher {
         final Expectations expectations = new Expectations();
         for (StatementListener currentListener : Arrays.asList(listener, listener2)) {
             expectations.exactly(1).of(currentListener).receivedRow(statement, RowValue.EMPTY_ROW_VALUE);
-            expectations.will(throwException(new Exception()));
+            expectations.will(throwException(new RuntimeException()));
         }
         context.checking(expectations);
 
@@ -117,7 +117,7 @@ public class TestStatementListenerDispatcher {
         final Expectations expectations = new Expectations();
         for (StatementListener currentListener : Arrays.asList(listener, listener2)) {
             expectations.exactly(1).of(currentListener).allRowsFetched(statement);
-            expectations.will(throwException(new Exception()));
+            expectations.will(throwException(new RuntimeException()));
         }
         context.checking(expectations);
 
@@ -148,7 +148,7 @@ public class TestStatementListenerDispatcher {
         final Expectations expectations = new Expectations();
         for (StatementListener currentListener : Arrays.asList(listener, listener2)) {
             expectations.exactly(1).of(currentListener).statementExecuted(statement, true, false);
-            expectations.will(throwException(new Exception()));
+            expectations.will(throwException(new RuntimeException()));
         }
         context.checking(expectations);
 
@@ -179,7 +179,7 @@ public class TestStatementListenerDispatcher {
         final Expectations expectations = new Expectations();
         for (StatementListener currentListener : Arrays.asList(listener, listener2)) {
             expectations.exactly(1).of(currentListener).statementStateChanged(statement, StatementState.CLOSED, StatementState.CLOSING);
-            expectations.will(throwException(new Exception()));
+            expectations.will(throwException(new RuntimeException()));
         }
         context.checking(expectations);
 
@@ -212,7 +212,7 @@ public class TestStatementListenerDispatcher {
         final Expectations expectations = new Expectations();
         for (StatementListener currentListener : Arrays.asList(listener, listener2)) {
             expectations.exactly(1).of(currentListener).warningReceived(statement, warning);
-            expectations.will(throwException(new Exception()));
+            expectations.will(throwException(new RuntimeException()));
         }
         context.checking(expectations);
 
@@ -245,7 +245,7 @@ public class TestStatementListenerDispatcher {
         final Expectations expectations = new Expectations();
         for (StatementListener currentListener : Arrays.asList(listener, listener2)) {
             expectations.exactly(1).of(currentListener).sqlCounts(statement, count);
-            expectations.will(throwException(new Exception()));
+            expectations.will(throwException(new RuntimeException()));
         }
         context.checking(expectations);
 

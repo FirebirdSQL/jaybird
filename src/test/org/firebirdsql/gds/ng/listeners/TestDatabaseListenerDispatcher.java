@@ -85,7 +85,7 @@ public class TestDatabaseListenerDispatcher {
         final Expectations expectations = new Expectations();
         for (DatabaseListener currentListener : Arrays.asList(listener, listener2)) {
             expectations.exactly(1).of(currentListener).detaching(database);
-            expectations.will(throwException(new Exception()));
+            expectations.will(throwException(new RuntimeException()));
         }
         context.checking(expectations);
 
@@ -116,7 +116,7 @@ public class TestDatabaseListenerDispatcher {
         final Expectations expectations = new Expectations();
         for (DatabaseListener currentListener : Arrays.asList(listener, listener2)) {
             expectations.exactly(1).of(currentListener).detached(database);
-            expectations.will(throwException(new Exception()));
+            expectations.will(throwException(new RuntimeException()));
         }
         context.checking(expectations);
 
@@ -149,7 +149,7 @@ public class TestDatabaseListenerDispatcher {
         final Expectations expectations = new Expectations();
         for (DatabaseListener currentListener : Arrays.asList(listener, listener2)) {
             expectations.exactly(1).of(currentListener).warningReceived(database, warning);
-            expectations.will(throwException(new Exception()));
+            expectations.will(throwException(new RuntimeException()));
         }
         context.checking(expectations);
 

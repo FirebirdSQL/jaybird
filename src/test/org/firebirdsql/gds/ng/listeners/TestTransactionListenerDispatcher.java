@@ -83,7 +83,7 @@ public class TestTransactionListenerDispatcher {
         final Expectations expectations = new Expectations();
         for (TransactionListener currentListener : Arrays.asList(listener, listener2)) {
             expectations.exactly(1).of(currentListener).transactionStateChanged(transaction, TransactionState.ROLLING_BACK, TransactionState.COMMITTED);
-            expectations.will(throwException(new Exception()));
+            expectations.will(throwException(new RuntimeException()));
         }
         context.checking(expectations);
 

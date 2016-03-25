@@ -83,7 +83,7 @@ public class TestServiceListenerDispatcher {
         final Expectations expectations = new Expectations();
         for (ServiceListener currentListener : Arrays.asList(listener, listener2)) {
             expectations.exactly(1).of(currentListener).detaching(service);
-            expectations.will(throwException(new Exception()));
+            expectations.will(throwException(new RuntimeException()));
         }
         context.checking(expectations);
 
@@ -114,7 +114,7 @@ public class TestServiceListenerDispatcher {
         final Expectations expectations = new Expectations();
         for (ServiceListener currentListener : Arrays.asList(listener, listener2)) {
             expectations.exactly(1).of(currentListener).detached(service);
-            expectations.will(throwException(new Exception()));
+            expectations.will(throwException(new RuntimeException()));
         }
         context.checking(expectations);
 
@@ -147,7 +147,7 @@ public class TestServiceListenerDispatcher {
         final Expectations expectations = new Expectations();
         for (ServiceListener currentListener : Arrays.asList(listener, listener2)) {
             expectations.exactly(1).of(currentListener).warningReceived(service, warning);
-            expectations.will(throwException(new Exception()));
+            expectations.will(throwException(new RuntimeException()));
         }
         context.checking(expectations);
 
