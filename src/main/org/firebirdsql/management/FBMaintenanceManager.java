@@ -117,9 +117,8 @@ public class FBMaintenanceManager extends FBServiceManager implements Maintenanc
     }
 
     public void setDefaultCacheBuffer(int pageCount) throws SQLException {
-        // TODO: Set to 0 valid as well?
-        if (pageCount < 1) {
-            throw new IllegalArgumentException("page count must be positive");
+        if (pageCount != 0 && pageCount < 50) {
+            throw new IllegalArgumentException("page count must be 0 or >= 50, value was: " + pageCount);
         }
 
         try (FbService service = attachServiceManager()) {

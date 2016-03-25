@@ -1,7 +1,7 @@
 package org.firebirdsql.management;
 
 import org.firebirdsql.common.FBJUnit4TestBase;
-import org.firebirdsql.gds.*;
+import org.firebirdsql.gds.TransactionParameterBuffer;
 import org.firebirdsql.gds.impl.GDSType;
 import org.firebirdsql.gds.ng.FbDatabase;
 import org.firebirdsql.gds.ng.FbTransaction;
@@ -21,7 +21,9 @@ import java.util.StringTokenizer;
 
 import static org.firebirdsql.common.FBTestProperties.*;
 import static org.firebirdsql.common.JdbcResourceHelper.closeQuietly;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assume.assumeTrue;
 
 /**
  * Test the FBMaintenanceManager class
@@ -33,15 +35,17 @@ public class TestFBMaintenanceManager extends FBJUnit4TestBase {
 
     private FBMaintenanceManager maintenanceManager;
 
-    public static final String DEFAULT_TABLE =
+    //@formatter:off
+    private static final String DEFAULT_TABLE =
               "CREATE TABLE TEST ("
             + "     TESTVAL INTEGER NOT NULL"
             + ")";
 
-    public static final String DIALECT3_TABLE =
+    private static final String DIALECT3_TABLE =
               "CREATE TABLE DIALECTTHREE ("
             + "     TESTVAL TIME NOT NULL"
             + ")";
+    // @formatter:on
 
     @Before
     public void setUp() throws Exception {
@@ -125,7 +129,7 @@ public class TestFBMaintenanceManager extends FBJUnit4TestBase {
 
         maintenanceManager.setDatabaseAccessMode(
                 MaintenanceManager.ACCESS_MODE_READ_ONLY
-                    | MaintenanceManager.ACCESS_MODE_READ_WRITE);
+                        | MaintenanceManager.ACCESS_MODE_READ_WRITE);
     }
 
     /**
@@ -223,8 +227,8 @@ public class TestFBMaintenanceManager extends FBJUnit4TestBase {
 
         maintenanceManager.shutdownDatabase(
                 MaintenanceManager.SHUTDOWN_ATTACH
-                    | MaintenanceManager.SHUTDOWN_TRANSACTIONAL
-                    | MaintenanceManager.SHUTDOWN_FORCE,
+                        | MaintenanceManager.SHUTDOWN_TRANSACTIONAL
+                        | MaintenanceManager.SHUTDOWN_FORCE,
                 0);
     }
 
@@ -249,19 +253,57 @@ public class TestFBMaintenanceManager extends FBJUnit4TestBase {
     }
 
     /**
-     * Default cache buffer must be a positive integer
+     * Default cache buffer must not be a negative integer
      */
     @Test
-    public void testSetDefaultCacheBufferBadCount() throws Exception {
+    public void testSetDefaultCacheBufferNegativeCount() throws Exception {
         expectedException.expect(IllegalArgumentException.class);
 
         maintenanceManager.setDefaultCacheBuffer(-1);
     }
 
     @Test
+    public void testSetDefaultCacheBufferTooLow() throws Exception {
+        expectedException.expect(IllegalArgumentException.class);
+
+        maintenanceManager.setDefaultCacheBuffer(49);
+    }
+
+    @Test
     public void testSetDefaultCacheBuffer() throws Exception {
-        // Unfortunately, we can really just run it and see if it fails...
-        maintenanceManager.setDefaultCacheBuffer(2000);
+        assumeTrue("Test needs access to monitoring tables", getDefaultSupportInfo().supportsMonitoringTables());
+
+        final int bufferSize = 50;
+        maintenanceManager.setDefaultCacheBuffer(bufferSize);
+
+        assertBufferSize(bufferSize);
+    }
+
+    @Test
+    public void testSetDefaultCacheBufferZeroResetsValue() throws Exception {
+        final int systemDefaultBuffer;
+        try (Connection connection = getConnectionViaDriverManager();
+             Statement stmt = connection.createStatement();
+             ResultSet rs = stmt.executeQuery("select MON$PAGE_BUFFERS from MON$DATABASE")) {
+            assertTrue(rs.next());
+            systemDefaultBuffer = rs.getInt(1);
+        }
+
+        final int bufferSize = systemDefaultBuffer + 50;
+        maintenanceManager.setDefaultCacheBuffer(bufferSize);
+        assertBufferSize(bufferSize);
+
+        maintenanceManager.setDefaultCacheBuffer(0);
+        assertBufferSize(systemDefaultBuffer);
+    }
+
+    private void assertBufferSize(int bufferSize) throws SQLException {
+        try (Connection connection = getConnectionViaDriverManager();
+             Statement stmt = connection.createStatement();
+             ResultSet rs = stmt.executeQuery("select MON$PAGE_BUFFERS from MON$DATABASE")) {
+            assertTrue(rs.next());
+            assertEquals(bufferSize, rs.getInt(1));
+        }
     }
 
     @Test
@@ -280,7 +322,7 @@ public class TestFBMaintenanceManager extends FBJUnit4TestBase {
 
         maintenanceManager.setPageFill(
                 MaintenanceManager.PAGE_FILL_FULL
-                    | MaintenanceManager.PAGE_FILL_RESERVE);
+                        | MaintenanceManager.PAGE_FILL_RESERVE);
     }
 
     /**
@@ -335,8 +377,8 @@ public class TestFBMaintenanceManager extends FBJUnit4TestBase {
 
         maintenanceManager.validateDatabase(
                 (MaintenanceManager.VALIDATE_READ_ONLY
-                    | MaintenanceManager.VALIDATE_FULL
-                    | MaintenanceManager.VALIDATE_IGNORE_CHECKSUM) * 2);
+                        | MaintenanceManager.VALIDATE_FULL
+                        | MaintenanceManager.VALIDATE_IGNORE_CHECKSUM) * 2);
     }
 
     /**
@@ -348,7 +390,7 @@ public class TestFBMaintenanceManager extends FBJUnit4TestBase {
 
         maintenanceManager.validateDatabase(
                 MaintenanceManager.VALIDATE_READ_ONLY
-                    | MaintenanceManager.VALIDATE_FULL);
+                        | MaintenanceManager.VALIDATE_FULL);
     }
 
     /**
