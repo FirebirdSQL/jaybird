@@ -23,7 +23,6 @@ import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.TransactionParameterBuffer;
 import org.firebirdsql.gds.ng.FbDatabase;
 import org.firebirdsql.jca.FBManagedConnection;
-import org.junit.Before;
 import org.junit.Test;
 
 import java.sql.*;
@@ -52,13 +51,6 @@ public class TestFBConnection extends FBJUnit4TestBase {
     private static final String INSERT_DATA = "INSERT INTO test(col1) VALUES(?)";
     //@formatter:on
 
-    @Before
-    public void setUp() throws Exception {
-        try (Connection connection = getConnectionViaDriverManager()) {
-            executeCreateTable(connection, CREATE_TABLE);
-        }
-    }
-
     /**
      * Test if {@link FirebirdConnection#setTransactionParameters(int, int[])}
      * method works correctly.
@@ -70,6 +62,8 @@ public class TestFBConnection extends FBJUnit4TestBase {
     @Test
     public void testTpbMapping() throws Exception {
         try (Connection conA = getConnectionViaDriverManager()) {
+            executeCreateTable(conA, CREATE_TABLE);
+
             conA.setAutoCommit(false);
 
             PreparedStatement ps = conA.prepareStatement(INSERT_DATA);
@@ -299,11 +293,9 @@ public class TestFBConnection extends FBJUnit4TestBase {
 
     @Test
     public void testWireProtocolCompatibility() throws Exception {
-        String sql = "SELECT max(rdb$format) FROM rdb$formats";
-
         try (Connection connection = getConnectionViaDriverManager();
              Statement stmt = connection.createStatement()) {
-            ResultSet rs = stmt.executeQuery(sql);
+            ResultSet rs = stmt.executeQuery("SELECT max(rdb$format) FROM rdb$formats");
             assertTrue("Should fetch some rows.", rs.next());
         }
     }
@@ -318,7 +310,8 @@ public class TestFBConnection extends FBJUnit4TestBase {
         try (Connection con = DriverManager.getConnection(getUrl(), props)) {
             SQLWarning warnings = con.getWarnings();
             assertNotNull("Expected a warning for not specifying connection characterset", warnings);
-            assertEquals("Unexpected warning message for not specifying connection characterset", FBManagedConnection.WARNING_NO_CHARSET, warnings.getMessage());
+            assertEquals("Unexpected warning message for not specifying connection characterset",
+                    FBManagedConnection.WARNING_NO_CHARSET, warnings.getMessage());
         }
     }
 
