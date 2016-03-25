@@ -236,6 +236,13 @@ public final class FirebirdSupportInfo {
     }
 
     /**
+     * @return {@code true} when monitoring tables are supported.
+     */
+    public boolean supportsMonitoringTables() {
+        return serverVersion.isEqualOrAbove(2, 1);
+    }
+
+    /**
      * @param serverVersion
      *         Server version
      * @return FirebirdVersionSupport instance
