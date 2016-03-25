@@ -2752,7 +2752,12 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
                     return "INTEGER";
             case double_type:
             case d_float_type:
-                return "DOUBLE PRECISION";
+                if (sqlsubtype == SUBTYPE_NUMERIC || (sqlsubtype == 0 && sqlscale < 0))
+                    return "NUMERIC";
+                else if (sqlsubtype == SUBTYPE_DECIMAL)
+                    return "DECIMAL";
+                else
+                    return "DOUBLE PRECISION";
             case float_type:
                 return "FLOAT";
             case char_type:

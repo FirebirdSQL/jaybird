@@ -215,7 +215,12 @@ public abstract class AbstractFieldMetaData implements Wrapper {
                 return "BIGINT";
         case ISCConstants.SQL_DOUBLE:
         case ISCConstants.SQL_D_FLOAT:
-            return "DOUBLE PRECISION";
+            if (sqlSubtype == SUBTYPE_NUMERIC || (sqlSubtype == 0 && sqlScale < 0))
+                return "NUMERIC";
+            else if (sqlSubtype == SUBTYPE_DECIMAL)
+                return "DECIMAL";
+            else
+                return "DOUBLE PRECISION";
         case ISCConstants.SQL_FLOAT:
             return "FLOAT";
         case ISCConstants.SQL_TEXT:

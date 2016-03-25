@@ -84,7 +84,12 @@ public final class JdbcTypeConverter {
                 return Types.BIGINT;
         case ISCConstants.SQL_DOUBLE:
         case ISCConstants.SQL_D_FLOAT:
-            return Types.DOUBLE;
+            if (subtype == SUBTYPE_NUMERIC || (subtype == 0 && scale < 0))
+                return Types.NUMERIC;
+            else if (subtype == SUBTYPE_DECIMAL)
+                return Types.DECIMAL;
+            else
+                return Types.DOUBLE;
         case ISCConstants.SQL_FLOAT:
             return Types.FLOAT;
         case ISCConstants.SQL_TEXT:
