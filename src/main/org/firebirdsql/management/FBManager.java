@@ -332,6 +332,7 @@ public class FBManager implements FBManagerMBean {
             dpb.addArgument(DatabaseParameterBuffer.USER_NAME, user);
             dpb.addArgument(DatabaseParameterBuffer.PASSWORD, password);
             dpb.addArgument(DatabaseParameterBuffer.SET_DB_SQL_DIALECT, dialect);
+            dpb.addArgument(DatabaseParameterBuffer.SQL_DIALECT, dialect);
             gds.iscCreateDatabase(getConnectString(fileName), db, dpb);
             gds.iscDetachDatabase(db);
         } catch (Exception e) {
