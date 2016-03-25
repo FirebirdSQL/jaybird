@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
@@ -77,541 +75,387 @@ public class TestJDBC42JavaTimeConversions extends FBJUnit4TestBase {
     @Test
     public void testLocalDate_ToDateColumn() throws Exception {
         final LocalDate localDate = LocalDate.now();
-        PreparedStatement pstmt = connection.prepareStatement("INSERT INTO javatimetest (ID, aDate) VALUES (1, ?)");
-        try {
+        try (PreparedStatement pstmt = connection.prepareStatement(
+                "INSERT INTO javatimetest (ID, aDate) VALUES (1, ?)")) {
             pstmt.setObject(1, localDate);
             pstmt.execute();
-        } finally {
-            pstmt.close();
         }
 
-        Statement stmt = connection.createStatement();
-        try {
-            ResultSet rs = stmt.executeQuery("SELECT aDate FROM javatimetest WHERE ID = 1");
-            try {
-                assertTrue("Expected a row", rs.next());
-                Date aDate = rs.getDate(1);
-                LocalDate asLocalDate = aDate.toLocalDate();
-                assertEquals("Expected retrieved java.time.LocalDate as DATE to be the same as inserted value", localDate, asLocalDate);
-            } finally {
-                rs.close();
-            }
-        } finally {
-            stmt.close();
+        try (Statement stmt = connection.createStatement();
+             ResultSet rs = stmt.executeQuery("SELECT aDate FROM javatimetest WHERE ID = 1")) {
+            assertTrue("Expected a row", rs.next());
+            Date aDate = rs.getDate(1);
+            LocalDate asLocalDate = aDate.toLocalDate();
+            assertEquals("Expected retrieved java.time.LocalDate as DATE to be the same as inserted value",
+                    localDate, asLocalDate);
         }
     }
 
     @Test
     public void testLocalDate_ToTimeColumn() throws Exception {
-        PreparedStatement pstmt = connection.prepareStatement("INSERT INTO javatimetest (ID, aTime) VALUES (1, ?)");
-        try {
+        try (PreparedStatement pstmt = connection.prepareStatement(
+                "INSERT INTO javatimetest (ID, aTime) VALUES (1, ?)")) {
             final LocalDate localDate = LocalDate.now();
             expectedException.expect(TypeConversionException.class);
 
             pstmt.setObject(1, localDate);
-        } finally {
-            pstmt.close();
         }
     }
 
     @Test
     public void testLocalDate_ToTimestampColumn() throws Exception {
-        PreparedStatement pstmt = connection.prepareStatement("INSERT INTO javatimetest (ID, aTimestamp) VALUES (1, ?)");
-        try {
+        try (PreparedStatement pstmt = connection.prepareStatement(
+                "INSERT INTO javatimetest (ID, aTimestamp) VALUES (1, ?)")) {
             final LocalDate localDate = LocalDate.now();
             expectedException.expect(TypeConversionException.class);
 
             pstmt.setObject(1, localDate);
-        } finally {
-            pstmt.close();
         }
     }
 
     @Test
     public void testLocalDate_ToCharColumn() throws Exception {
         final LocalDate localDate = LocalDate.now();
-        PreparedStatement pstmt = connection.prepareStatement("INSERT INTO javatimetest (ID, aChar) VALUES (1, ?)");
-        try {
+        try (PreparedStatement pstmt = connection.prepareStatement(
+                "INSERT INTO javatimetest (ID, aChar) VALUES (1, ?)")) {
             pstmt.setObject(1, localDate);
             pstmt.execute();
-        } finally {
-            pstmt.close();
         }
 
-        Statement stmt = connection.createStatement();
-        try {
-            ResultSet rs = stmt.executeQuery("SELECT aChar FROM javatimetest WHERE ID = 1");
-            try {
-                assertTrue("Expected a row", rs.next());
-                String aChar = rs.getString(1);
-                assertEquals("Expected retrieved java.time.LocalDate as CHAR to have the same (trimmed) string value as the inserted value",
-                        localDate.toString(), aChar.trim());
-            } finally {
-                rs.close();
-            }
-        } finally {
-            stmt.close();
+        try (Statement stmt = connection.createStatement();
+             ResultSet rs = stmt.executeQuery("SELECT aChar FROM javatimetest WHERE ID = 1")) {
+            assertTrue("Expected a row", rs.next());
+            String aChar = rs.getString(1);
+            assertEquals("Expected retrieved java.time.LocalDate as CHAR to have the same (trimmed) string value as the inserted value",
+                    localDate.toString(), aChar.trim());
         }
     }
 
     @Test
     public void testLocalDate_ToVarCharColumn() throws Exception {
         final LocalDate localDate = LocalDate.now();
-        PreparedStatement pstmt = connection.prepareStatement("INSERT INTO javatimetest (ID, aVarchar) VALUES (1, ?)");
-        try {
+        try (PreparedStatement pstmt = connection.prepareStatement(
+                "INSERT INTO javatimetest (ID, aVarchar) VALUES (1, ?)")) {
             pstmt.setObject(1, localDate);
             pstmt.execute();
-        } finally {
-            pstmt.close();
         }
 
-        Statement stmt = connection.createStatement();
-        try {
-            ResultSet rs = stmt.executeQuery("SELECT aVarchar FROM javatimetest WHERE ID = 1");
-            try {
-                assertTrue("Expected a row", rs.next());
-                String aVarchar = rs.getString(1);
-                assertEquals("Expected retrieved java.time.LocalDate as VARCHAR to have the same string value as the inserted value",
-                        localDate.toString(), aVarchar);
-            } finally {
-                rs.close();
-            }
-        } finally {
-            stmt.close();
+        try (Statement stmt = connection.createStatement();
+             ResultSet rs = stmt.executeQuery("SELECT aVarchar FROM javatimetest WHERE ID = 1")) {
+            assertTrue("Expected a row", rs.next());
+            String aVarchar = rs.getString(1);
+            assertEquals("Expected retrieved java.time.LocalDate as VARCHAR to have the same string value as the inserted value",
+                    localDate.toString(), aVarchar);
         }
     }
 
     @Test
     public void testLocalTime_ToDateColumn() throws Exception {
-        PreparedStatement pstmt = connection.prepareStatement("INSERT INTO javatimetest (ID, aDate) VALUES (1, ?)");
-        try {
+        try (PreparedStatement pstmt = connection.prepareStatement(
+                "INSERT INTO javatimetest (ID, aDate) VALUES (1, ?)")) {
             final LocalTime localTime = LocalTime.now();
             expectedException.expect(TypeConversionException.class);
 
             pstmt.setObject(1, localTime);
-        } finally {
-            pstmt.close();
         }
     }
 
     @Test
     public void testLocalTime_ToTimeColumn() throws Exception {
         final LocalTime localTime = LocalTime.now();
-        PreparedStatement pstmt = connection.prepareStatement("INSERT INTO javatimetest (ID, aTime) VALUES (1, ?)");
-        try {
+        try (PreparedStatement pstmt = connection.prepareStatement(
+                "INSERT INTO javatimetest (ID, aTime) VALUES (1, ?)")) {
             pstmt.setObject(1, localTime);
             pstmt.execute();
-        } finally {
-            pstmt.close();
         }
 
-        Statement stmt = connection.createStatement();
-        try {
-            ResultSet rs = stmt.executeQuery("SELECT aTime FROM javatimetest WHERE ID = 1");
-            try {
-                assertTrue("Expected a row", rs.next());
-                Time aTime = rs.getTime(1);
-                LocalTime asLocalTime = aTime.toLocalTime();
-                // TODO We need to add better support for LocalTime to actually support subsecond precision
-                assertEquals("Expected retrieved java.time.LocalTime as TIME to be the same as inserted value",
-                        localTime.truncatedTo(ChronoUnit.SECONDS), asLocalTime);
-            } finally {
-                rs.close();
-            }
-        } finally {
-            stmt.close();
+        try (Statement stmt = connection.createStatement();
+             ResultSet rs = stmt.executeQuery("SELECT aTime FROM javatimetest WHERE ID = 1")) {
+            assertTrue("Expected a row", rs.next());
+            Time aTime = rs.getTime(1);
+            LocalTime asLocalTime = aTime.toLocalTime();
+            // TODO We need to add better support for LocalTime to actually support subsecond precision
+            assertEquals("Expected retrieved java.time.LocalTime as TIME to be the same as inserted value",
+                    localTime.truncatedTo(ChronoUnit.SECONDS), asLocalTime);
         }
     }
 
     @Test
     public void testLocalTime_ToTimestampColumn() throws Exception {
-        PreparedStatement pstmt = connection.prepareStatement("INSERT INTO javatimetest (ID, aTimestamp) VALUES (1, ?)");
-        try {
+        try (PreparedStatement pstmt = connection.prepareStatement(
+                "INSERT INTO javatimetest (ID, aTimestamp) VALUES (1, ?)")) {
             final LocalTime localTime = LocalTime.now();
             expectedException.expect(TypeConversionException.class);
 
             pstmt.setObject(1, localTime);
-        } finally {
-            pstmt.close();
         }
     }
 
     @Test
     public void testLocalTime_ToCharColumn() throws Exception {
         final LocalTime localTime = LocalTime.now();
-        PreparedStatement pstmt = connection.prepareStatement("INSERT INTO javatimetest (ID, aChar) VALUES (1, ?)");
-        try {
+        try (PreparedStatement pstmt = connection.prepareStatement(
+                "INSERT INTO javatimetest (ID, aChar) VALUES (1, ?)")) {
             pstmt.setObject(1, localTime);
             pstmt.execute();
-        } finally {
-            pstmt.close();
         }
 
-        Statement stmt = connection.createStatement();
-        try {
-            ResultSet rs = stmt.executeQuery("SELECT aChar FROM javatimetest WHERE ID = 1");
-            try {
-                assertTrue("Expected a row", rs.next());
-                String aChar = rs.getString(1);
-                assertEquals("Expected retrieved java.time.LocalTime as CHAR (trimmed) to be the same as toString of inserted value",
-                        localTime.toString(), aChar.trim());
-            } finally {
-                rs.close();
-            }
-        } finally {
-            stmt.close();
+        try (Statement stmt = connection.createStatement();
+             ResultSet rs = stmt.executeQuery("SELECT aChar FROM javatimetest WHERE ID = 1")) {
+            assertTrue("Expected a row", rs.next());
+            String aChar = rs.getString(1);
+            assertEquals("Expected retrieved java.time.LocalTime as CHAR (trimmed) to be the same as toString of inserted value",
+                    localTime.toString(), aChar.trim());
         }
     }
 
     @Test
     public void testLocalTime_ToVarcharColumn() throws Exception {
         final LocalTime localTime = LocalTime.now();
-        PreparedStatement pstmt = connection.prepareStatement("INSERT INTO javatimetest (ID, aVarchar) VALUES (1, ?)");
-        try {
+        try (PreparedStatement pstmt = connection.prepareStatement(
+                "INSERT INTO javatimetest (ID, aVarchar) VALUES (1, ?)")) {
             pstmt.setObject(1, localTime);
             pstmt.execute();
-        } finally {
-            pstmt.close();
         }
 
-        Statement stmt = connection.createStatement();
-        try {
-            ResultSet rs = stmt.executeQuery("SELECT aVarchar FROM javatimetest WHERE ID = 1");
-            try {
-                assertTrue("Expected a row", rs.next());
-                String aVarchar = rs.getString(1);
-                assertEquals("Expected retrieved java.time.LocalTime as VARCHAR to be the same as toString of inserted value",
-                        localTime.toString(), aVarchar);
-            } finally {
-                rs.close();
-            }
-        } finally {
-            stmt.close();
+        try (Statement stmt = connection.createStatement();
+             ResultSet rs = stmt.executeQuery("SELECT aVarchar FROM javatimetest WHERE ID = 1")) {
+            assertTrue("Expected a row", rs.next());
+            String aVarchar = rs.getString(1);
+            assertEquals("Expected retrieved java.time.LocalTime as VARCHAR to be the same as toString of inserted value",
+                    localTime.toString(), aVarchar);
         }
     }
 
     @Test
     public void testLocalDateTime_ToDateColumn() throws Exception {
         final LocalDateTime localDateTime = LocalDateTime.now();
-        PreparedStatement pstmt = connection.prepareStatement("INSERT INTO javatimetest (ID, aDate) VALUES (1, ?)");
-        try {
+        try (PreparedStatement pstmt = connection.prepareStatement(
+                "INSERT INTO javatimetest (ID, aDate) VALUES (1, ?)")) {
             pstmt.setObject(1, localDateTime);
             pstmt.execute();
-        } finally {
-            pstmt.close();
         }
 
-        Statement stmt = connection.createStatement();
-        try {
-            ResultSet rs = stmt.executeQuery("SELECT aDate FROM javatimetest WHERE ID = 1");
-            try {
-                assertTrue("Expected a row", rs.next());
-                Date aDate = rs.getDate(1);
-                LocalDateTime asLocalDateTime = aDate.toLocalDate().atStartOfDay();
-                assertEquals("Expected retrieved java.time.LocalDateTime as DATE to be the same as inserted value truncated to days",
-                        localDateTime.truncatedTo(ChronoUnit.DAYS), asLocalDateTime);
-            } finally {
-                rs.close();
-            }
-        } finally {
-            stmt.close();
+        try (Statement stmt = connection.createStatement();
+             ResultSet rs = stmt.executeQuery("SELECT aDate FROM javatimetest WHERE ID = 1")) {
+            assertTrue("Expected a row", rs.next());
+            Date aDate = rs.getDate(1);
+            LocalDateTime asLocalDateTime = aDate.toLocalDate().atStartOfDay();
+            assertEquals("Expected retrieved java.time.LocalDateTime as DATE to be the same as inserted value truncated to days",
+                    localDateTime.truncatedTo(ChronoUnit.DAYS), asLocalDateTime);
         }
     }
 
     @Test
     public void testLocalDateTime_ToTimeColumn() throws Exception {
         final LocalDateTime localDateTime = LocalDateTime.now();
-        PreparedStatement pstmt = connection.prepareStatement("INSERT INTO javatimetest (ID, aTime) VALUES (1, ?)");
-        try {
+        try (PreparedStatement pstmt = connection.prepareStatement(
+                "INSERT INTO javatimetest (ID, aTime) VALUES (1, ?)")) {
             pstmt.setObject(1, localDateTime);
             pstmt.execute();
-        } finally {
-            pstmt.close();
         }
 
-        Statement stmt = connection.createStatement();
-        try {
-            ResultSet rs = stmt.executeQuery("SELECT aTime FROM javatimetest WHERE ID = 1");
-            try {
-                assertTrue("Expected a row", rs.next());
-                Time aTime = rs.getTime(1);
-                LocalTime asLocalTime = aTime.toLocalTime();
-                // TODO We need to add better support for LocalTime to actually support subsecond precision
-                assertEquals("Expected retrieved java.time.LocalDateTime as TIME to be the same as LocalTime portion of inserted value",
-                        localDateTime.toLocalTime().truncatedTo(ChronoUnit.SECONDS), asLocalTime);
-            } finally {
-                rs.close();
-            }
-        } finally {
-            stmt.close();
+        try (Statement stmt = connection.createStatement();
+             ResultSet rs = stmt.executeQuery("SELECT aTime FROM javatimetest WHERE ID = 1")) {
+            assertTrue("Expected a row", rs.next());
+            Time aTime = rs.getTime(1);
+            LocalTime asLocalTime = aTime.toLocalTime();
+            // TODO We need to add better support for LocalTime to actually support subsecond precision
+            assertEquals("Expected retrieved java.time.LocalDateTime as TIME to be the same as LocalTime portion of inserted value",
+                    localDateTime.toLocalTime().truncatedTo(ChronoUnit.SECONDS), asLocalTime);
         }
     }
 
     @Test
     public void testLocalDateTime_ToTimestampColumn() throws Exception {
         final LocalDateTime localDateTime = LocalDateTime.now();
-        PreparedStatement pstmt = connection.prepareStatement("INSERT INTO javatimetest (ID, aTimestamp) VALUES (1, ?)");
-        try {
+        try (PreparedStatement pstmt = connection.prepareStatement(
+                "INSERT INTO javatimetest (ID, aTimestamp) VALUES (1, ?)")) {
             pstmt.setObject(1, localDateTime);
             pstmt.execute();
-        } finally {
-            pstmt.close();
         }
 
-        Statement stmt = connection.createStatement();
-        try {
-            ResultSet rs = stmt.executeQuery("SELECT aTimestamp FROM javatimetest WHERE ID = 1");
-            try {
-                assertTrue("Expected a row", rs.next());
-                Timestamp aTimestamp = rs.getTimestamp(1);
-                LocalDateTime asLocalDateTime = aTimestamp.toLocalDateTime();
-                assertEquals("Expected retrieved java.time.LocalDateTime as TIMESTAMP to be the same as inserted value",
-                        localDateTime, asLocalDateTime);
-            } finally {
-                rs.close();
-            }
-        } finally {
-            stmt.close();
+        try (Statement stmt = connection.createStatement();
+             ResultSet rs = stmt.executeQuery("SELECT aTimestamp FROM javatimetest WHERE ID = 1")) {
+            assertTrue("Expected a row", rs.next());
+            Timestamp aTimestamp = rs.getTimestamp(1);
+            LocalDateTime asLocalDateTime = aTimestamp.toLocalDateTime();
+            assertEquals("Expected retrieved java.time.LocalDateTime as TIMESTAMP to be the same as inserted value",
+                    localDateTime, asLocalDateTime);
         }
     }
 
     @Test
     public void testLocalDateTime_ToCharColumn() throws Exception {
         final LocalDateTime localDateTime = LocalDateTime.now();
-        PreparedStatement pstmt = connection.prepareStatement("INSERT INTO javatimetest (ID, aChar) VALUES (1, ?)");
-        try {
+        try (PreparedStatement pstmt = connection.prepareStatement(
+                "INSERT INTO javatimetest (ID, aChar) VALUES (1, ?)")) {
             pstmt.setObject(1, localDateTime);
             pstmt.execute();
-        } finally {
-            pstmt.close();
         }
 
-        Statement stmt = connection.createStatement();
-        try {
-            ResultSet rs = stmt.executeQuery("SELECT aChar FROM javatimetest WHERE ID = 1");
-            try {
-                assertTrue("Expected a row", rs.next());
-                String aChar = rs.getString(1);
-                assertEquals("Expected retrieved java.time.LocalDateTime as CHAR (trimmed) to be the same as toString of inserted value",
-                        localDateTime.toString(), aChar.trim());
-            } finally {
-                rs.close();
-            }
-        } finally {
-            stmt.close();
+        try (Statement stmt = connection.createStatement();
+             ResultSet rs = stmt.executeQuery("SELECT aChar FROM javatimetest WHERE ID = 1")) {
+            assertTrue("Expected a row", rs.next());
+            String aChar = rs.getString(1);
+            assertEquals("Expected retrieved java.time.LocalDateTime as CHAR (trimmed) to be the same as toString of inserted value",
+                    localDateTime.toString(), aChar.trim());
         }
     }
 
     @Test
     public void testLocalDateTime_ToVarcharColumn() throws Exception {
         final LocalDateTime localDateTime = LocalDateTime.now();
-        PreparedStatement pstmt = connection.prepareStatement("INSERT INTO javatimetest (ID, aVarchar) VALUES (1, ?)");
-        try {
+        try (PreparedStatement pstmt = connection.prepareStatement(
+                "INSERT INTO javatimetest (ID, aVarchar) VALUES (1, ?)")) {
             pstmt.setObject(1, localDateTime);
             pstmt.execute();
-        } finally {
-            pstmt.close();
         }
 
-        Statement stmt = connection.createStatement();
-        try {
-            ResultSet rs = stmt.executeQuery("SELECT aVarchar FROM javatimetest WHERE ID = 1");
-            try {
-                assertTrue("Expected a row", rs.next());
-                String aVarchar = rs.getString(1);
-                assertEquals("Expected retrieved java.time.LocalDateTime as VARCHAR to be the same as toString of inserted value",
-                        localDateTime.toString(), aVarchar);
-            } finally {
-                rs.close();
-            }
-        } finally {
-            stmt.close();
+        try (Statement stmt = connection.createStatement();
+             ResultSet rs = stmt.executeQuery("SELECT aVarchar FROM javatimetest WHERE ID = 1")) {
+            assertTrue("Expected a row", rs.next());
+            String aVarchar = rs.getString(1);
+            assertEquals("Expected retrieved java.time.LocalDateTime as VARCHAR to be the same as toString of inserted value",
+                    localDateTime.toString(), aVarchar);
         }
     }
 
     @Test
     public void testOffsetTime_ToDateColumn() throws Exception {
-        PreparedStatement pstmt = connection.prepareStatement("INSERT INTO javatimetest (ID, aDate) VALUES (1, ?)");
-        try {
+        try (PreparedStatement pstmt = connection.prepareStatement(
+                "INSERT INTO javatimetest (ID, aDate) VALUES (1, ?)")) {
             final OffsetTime offsetTime = OffsetTime.now();
             expectedException.expect(TypeConversionException.class);
 
             pstmt.setObject(1, offsetTime);
-        } finally {
-            pstmt.close();
         }
     }
 
     @Test
     public void testOffsetTime_ToTimeColumn() throws Exception {
-        PreparedStatement pstmt = connection.prepareStatement("INSERT INTO javatimetest (ID, aTime) VALUES (1, ?)");
-        try {
+        try (PreparedStatement pstmt = connection.prepareStatement(
+                "INSERT INTO javatimetest (ID, aTime) VALUES (1, ?)")) {
             final OffsetTime offsetTime = OffsetTime.now();
             expectedException.expect(TypeConversionException.class);
 
             pstmt.setObject(1, offsetTime);
-        } finally {
-            pstmt.close();
         }
     }
 
     @Test
     public void testOffsetTime_ToTimestampColumn() throws Exception {
-        PreparedStatement pstmt = connection.prepareStatement("INSERT INTO javatimetest (ID, aTimestamp) VALUES (1, ?)");
-        try {
+        try (PreparedStatement pstmt = connection.prepareStatement(
+                "INSERT INTO javatimetest (ID, aTimestamp) VALUES (1, ?)")) {
             final OffsetTime offsetTime = OffsetTime.now();
             expectedException.expect(TypeConversionException.class);
 
             pstmt.setObject(1, offsetTime);
-        } finally {
-            pstmt.close();
         }
     }
 
     @Test
     public void testOffsetTime_ToCharColumn() throws Exception {
         final OffsetTime offsetTime = OffsetTime.now();
-        PreparedStatement pstmt = connection.prepareStatement("INSERT INTO javatimetest (ID, aChar) VALUES (1, ?)");
-        try {
+        try (PreparedStatement pstmt = connection.prepareStatement(
+                "INSERT INTO javatimetest (ID, aChar) VALUES (1, ?)")) {
             pstmt.setObject(1, offsetTime);
             pstmt.execute();
-        } finally {
-            pstmt.close();
         }
 
-        Statement stmt = connection.createStatement();
-        try {
-            ResultSet rs = stmt.executeQuery("SELECT aChar FROM javatimetest WHERE ID = 1");
-            try {
-                assertTrue("Expected a row", rs.next());
-                String aChar = rs.getString(1);
-                assertEquals("Expected retrieved java.time.OffsetTime as CHAR (trimmed) to be the same as toString of inserted value",
-                        offsetTime.toString(), aChar.trim());
-            } finally {
-                rs.close();
-            }
-        } finally {
-            stmt.close();
+        try (Statement stmt = connection.createStatement();
+             ResultSet rs = stmt.executeQuery("SELECT aChar FROM javatimetest WHERE ID = 1")) {
+            assertTrue("Expected a row", rs.next());
+            String aChar = rs.getString(1);
+            assertEquals("Expected retrieved java.time.OffsetTime as CHAR (trimmed) to be the same as toString of inserted value",
+                    offsetTime.toString(), aChar.trim());
         }
     }
 
     @Test
     public void testOffsetTime_ToVarcharColumn() throws Exception {
         final OffsetTime offsetTime = OffsetTime.now();
-        PreparedStatement pstmt = connection.prepareStatement("INSERT INTO javatimetest (ID, aVarchar) VALUES (1, ?)");
-        try {
+        try (PreparedStatement pstmt = connection.prepareStatement(
+                "INSERT INTO javatimetest (ID, aVarchar) VALUES (1, ?)")) {
             pstmt.setObject(1, offsetTime);
             pstmt.execute();
-        } finally {
-            pstmt.close();
         }
 
-        Statement stmt = connection.createStatement();
-        try {
-            ResultSet rs = stmt.executeQuery("SELECT aVarchar FROM javatimetest WHERE ID = 1");
-            try {
-                assertTrue("Expected a row", rs.next());
-                String aVarchar = rs.getString(1);
-                assertEquals("Expected retrieved java.time.OffsetTime as VARCHAR to be the same as toString of inserted value",
-                        offsetTime.toString(), aVarchar);
-            } finally {
-                rs.close();
-            }
-        } finally {
-            stmt.close();
+        try (Statement stmt = connection.createStatement();
+             ResultSet rs = stmt.executeQuery("SELECT aVarchar FROM javatimetest WHERE ID = 1")) {
+            assertTrue("Expected a row", rs.next());
+            String aVarchar = rs.getString(1);
+            assertEquals("Expected retrieved java.time.OffsetTime as VARCHAR to be the same as toString of inserted value",
+                    offsetTime.toString(), aVarchar);
         }
     }
 
     @Test
     public void testOffsetDateTime_ToDateColumn() throws Exception {
-        PreparedStatement pstmt = connection.prepareStatement("INSERT INTO javatimetest (ID, aDate) VALUES (1, ?)");
-        try {
+        try (PreparedStatement pstmt = connection.prepareStatement(
+                "INSERT INTO javatimetest (ID, aDate) VALUES (1, ?)")) {
             final OffsetDateTime offsetDateTime = OffsetDateTime.now();
             expectedException.expect(TypeConversionException.class);
 
             pstmt.setObject(1, offsetDateTime);
-        } finally {
-            pstmt.close();
         }
     }
 
     @Test
     public void testOffsetDateTime_ToTimeColumn() throws Exception {
-        PreparedStatement pstmt = connection.prepareStatement("INSERT INTO javatimetest (ID, aTime) VALUES (1, ?)");
-        try {
+        try (PreparedStatement pstmt = connection.prepareStatement(
+                "INSERT INTO javatimetest (ID, aTime) VALUES (1, ?)")) {
             final OffsetDateTime offsetDateTime = OffsetDateTime.now();
             expectedException.expect(TypeConversionException.class);
 
             pstmt.setObject(1, offsetDateTime);
-        } finally {
-            pstmt.close();
         }
     }
 
     @Test
     public void testOffsetDateTime_ToTimestampColumn() throws Exception {
-        PreparedStatement pstmt = connection.prepareStatement("INSERT INTO javatimetest (ID, aTimestamp) VALUES (1, ?)");
-        try {
+        try (PreparedStatement pstmt = connection.prepareStatement(
+                "INSERT INTO javatimetest (ID, aTimestamp) VALUES (1, ?)")) {
             final OffsetDateTime offsetDateTime = OffsetDateTime.now();
             expectedException.expect(TypeConversionException.class);
 
             pstmt.setObject(1, offsetDateTime);
-        } finally {
-            pstmt.close();
         }
     }
 
     @Test
     public void testOffsetDateTime_ToCharColumn() throws Exception {
         final OffsetDateTime offsetDateTime = OffsetDateTime.now();
-        PreparedStatement pstmt = connection.prepareStatement("INSERT INTO javatimetest (ID, aChar) VALUES (1, ?)");
-        try {
+        try (PreparedStatement pstmt = connection.prepareStatement(
+                "INSERT INTO javatimetest (ID, aChar) VALUES (1, ?)")) {
             pstmt.setObject(1, offsetDateTime);
             pstmt.execute();
-        } finally {
-            pstmt.close();
         }
 
-        Statement stmt = connection.createStatement();
-        try {
-            ResultSet rs = stmt.executeQuery("SELECT aChar FROM javatimetest WHERE ID = 1");
-            try {
-                assertTrue("Expected a row", rs.next());
-                String aChar = rs.getString(1);
-                assertEquals("Expected retrieved java.time.OffsetTime as CHAR (trimmed) to be the same as toString of inserted value",
-                        offsetDateTime.toString(), aChar.trim());
-            } finally {
-                rs.close();
-            }
-        } finally {
-            stmt.close();
+        try (Statement stmt = connection.createStatement();
+             ResultSet rs = stmt.executeQuery("SELECT aChar FROM javatimetest WHERE ID = 1")) {
+            assertTrue("Expected a row", rs.next());
+            String aChar = rs.getString(1);
+            assertEquals("Expected retrieved java.time.OffsetTime as CHAR (trimmed) to be the same as toString of inserted value",
+                    offsetDateTime.toString(), aChar.trim());
         }
     }
 
     @Test
     public void testOffsetDateTime_ToVarcharColumn() throws Exception {
         final OffsetDateTime offsetDateTime = OffsetDateTime.now();
-        PreparedStatement pstmt = connection.prepareStatement("INSERT INTO javatimetest (ID, aVarchar) VALUES (1, ?)");
-        try {
+        try (PreparedStatement pstmt = connection.prepareStatement(
+                "INSERT INTO javatimetest (ID, aVarchar) VALUES (1, ?)")) {
             pstmt.setObject(1, offsetDateTime);
             pstmt.execute();
-        } finally {
-            pstmt.close();
         }
 
-        Statement stmt = connection.createStatement();
-        try {
-            ResultSet rs = stmt.executeQuery("SELECT aVarchar FROM javatimetest WHERE ID = 1");
-            try {
-                assertTrue("Expected a row", rs.next());
-                String aVarchar = rs.getString(1);
-                assertEquals("Expected retrieved java.time.OffsetTime as VARCHAR to be the same as toString of inserted value",
-                        offsetDateTime.toString(), aVarchar);
-            } finally {
-                rs.close();
-            }
-        } finally {
-            stmt.close();
+        try (Statement stmt = connection.createStatement();
+             ResultSet rs = stmt.executeQuery("SELECT aVarchar FROM javatimetest WHERE ID = 1")) {
+            assertTrue("Expected a row", rs.next());
+            String aVarchar = rs.getString(1);
+            assertEquals("Expected retrieved java.time.OffsetTime as VARCHAR to be the same as toString of inserted value",
+                    offsetDateTime.toString(), aVarchar);
         }
     }
 }
