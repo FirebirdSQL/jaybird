@@ -131,9 +131,10 @@ public abstract class TestXABase extends FBJUnit4TestBase {
           try {
              hostName = InetAddress.getLocalHost().getHostName() + "/";
              // Ensure room for 14 digits of serial no.
-             if (hostName.length() > MAXGTRIDSIZE - 15)
+             if (hostName.length() > MAXGTRIDSIZE - 15) {
                 hostName = hostName.substring(0, MAXGTRIDSIZE - 15);
-             hostName = hostName + "/";
+                hostName = hostName + "/";
+             }
           } catch (UnknownHostException e) {
              hostName = "localhost/";
           }
