@@ -35,7 +35,6 @@ import static org.firebirdsql.common.DdlHelper.executeCreateTable;
 import static org.firebirdsql.common.FBTestProperties.getConnectionViaDriverManager;
 import static org.firebirdsql.common.FBTestProperties.getDefaultPropertiesForConnection;
 import static org.firebirdsql.common.FBTestProperties.getUrl;
-import static org.firebirdsql.common.JdbcResourceHelper.closeQuietly;
 import static org.firebirdsql.common.matchers.SQLExceptionMatchers.*;
 import static org.hamcrest.CoreMatchers.*;
 import static org.junit.Assert.assertArrayEquals;
@@ -77,24 +76,18 @@ public class TestFBBlob extends FBJUnit4TestBase {
      */
     @Test
     public void testIsSegmented_segmentedBlob() throws SQLException {
-        Connection conn = getConnection(false);
-        try {
+        try (Connection conn = getConnection(false)) {
             populateBlob(conn, new byte[] { 1, 2, 3, 4, 5 });
 
-            PreparedStatement select = conn.prepareStatement(SELECT_BLOB);
-            select.setInt(1, 1);
-            ResultSet rs = select.executeQuery();
-            try {
-                assertTrue("Expected a row in result set", rs.next());
-                FBBlob blob = (FBBlob) rs.getBlob(1);
-                assertTrue("Expected a segmented blob", blob.isSegmented());
-                blob.free();
-            } finally {
-                closeQuietly(rs);
-                closeQuietly(select);
+            try (PreparedStatement select = conn.prepareStatement(SELECT_BLOB)) {
+                select.setInt(1, 1);
+                try (ResultSet rs = select.executeQuery()) {
+                    assertTrue("Expected a row in result set", rs.next());
+                    FBBlob blob = (FBBlob) rs.getBlob(1);
+                    assertTrue("Expected a segmented blob", blob.isSegmented());
+                    blob.free();
+                }
             }
-        } finally {
-            closeQuietly(conn);
         }
     }
 
@@ -103,24 +96,18 @@ public class TestFBBlob extends FBJUnit4TestBase {
      */
     @Test
     public void testIsSegmented_streamBlob() throws SQLException {
-        Connection conn = getConnection(true);
-        try {
-            populateBlob(conn, new byte[]{ 1, 2, 3, 4, 5 });
+        try (Connection conn = getConnection(true)) {
+            populateBlob(conn, new byte[] { 1, 2, 3, 4, 5 });
 
-            PreparedStatement select = conn.prepareStatement(SELECT_BLOB);
-            select.setInt(1, 1);
-            ResultSet rs = select.executeQuery();
-            try {
-                assertTrue("Expected a row in result set", rs.next());
-                FBBlob blob = (FBBlob) rs.getBlob(1);
-                assertFalse("Expected a stream blob", blob.isSegmented());
-                blob.free();
-            } finally {
-                closeQuietly(rs);
-                closeQuietly(select);
+            try (PreparedStatement select = conn.prepareStatement(SELECT_BLOB)) {
+                select.setInt(1, 1);
+                try (ResultSet rs = select.executeQuery()) {
+                    assertTrue("Expected a row in result set", rs.next());
+                    FBBlob blob = (FBBlob) rs.getBlob(1);
+                    assertFalse("Expected a stream blob", blob.isSegmented());
+                    blob.free();
+                }
             }
-        } finally {
-            closeQuietly(conn);
         }
     }
 
@@ -132,120 +119,93 @@ public class TestFBBlob extends FBJUnit4TestBase {
      */
     @Test
     public void testClose_afterOpeningMultipleIS() throws Exception {
-        Connection conn = getConnectionViaDriverManager();
-        try {
-            populateBlob(conn, new byte[]{ 1, 2, 3, 4, 5 });
-            PreparedStatement select = conn.prepareStatement(SELECT_BLOB);
-            select.setInt(1, 1);
-            ResultSet rs = select.executeQuery();
-            try {
-                assertTrue("Expected a row in result set", rs.next());
-                FBBlob blob = (FBBlob) rs.getBlob(1);
+        try (Connection conn = getConnectionViaDriverManager()) {
+            populateBlob(conn, new byte[] { 1, 2, 3, 4, 5 });
+            try (PreparedStatement select = conn.prepareStatement(SELECT_BLOB)) {
+                select.setInt(1, 1);
+                try (ResultSet rs = select.executeQuery()) {
+                    assertTrue("Expected a row in result set", rs.next());
+                    FBBlob blob = (FBBlob) rs.getBlob(1);
 
-                blob.getBinaryStream();
-                blob.getBinaryStream();
+                    blob.getBinaryStream();
+                    blob.getBinaryStream();
 
-                blob.free();
-            } finally {
-                closeQuietly(rs);
-                closeQuietly(select);
+                    blob.free();
+                }
             }
-        } finally {
-            closeQuietly(conn);
         }
     }
 
     @Test
     public void testPosition_byteArr_long_throwsSQLFeatureNotSupported() throws Exception {
-        Connection conn = getConnectionViaDriverManager();
-        try {
+        try (Connection conn = getConnectionViaDriverManager()) {
             Blob blob = conn.createBlob();
 
             expectedException.expect(SQLFeatureNotSupportedException.class);
 
             blob.position(new byte[] { 1, 2, 3 }, 1);
-        } finally {
-            closeQuietly(conn);
         }
     }
 
     @Test
     public void testPosition_Blob_long_throwsSQLFeatureNotSupported() throws Exception {
-        Connection conn = getConnectionViaDriverManager();
-        try {
+        try (Connection conn = getConnectionViaDriverManager()) {
             Blob blob = conn.createBlob();
             Blob otherBlob = conn.createBlob();
 
             expectedException.expect(SQLFeatureNotSupportedException.class);
 
             blob.position(otherBlob, 1);
-        } finally {
-            closeQuietly(conn);
         }
     }
 
     @Test
     public void testTruncate_long_throwsSQLFeatureNotSupported() throws Exception {
-        Connection conn = getConnectionViaDriverManager();
-        try {
+        try (Connection conn = getConnectionViaDriverManager()) {
             Blob blob = conn.createBlob();
 
             expectedException.expect(SQLFeatureNotSupportedException.class);
 
             blob.truncate(1);
-        } finally {
-            closeQuietly(conn);
         }
     }
 
     @Test
     public void testSetBytes_long_byteArr_throwsSQLFeatureNotSupported() throws Exception {
-        Connection conn = getConnectionViaDriverManager();
-        try {
+        try (Connection conn = getConnectionViaDriverManager()) {
             Blob blob = conn.createBlob();
 
             expectedException.expect(SQLFeatureNotSupportedException.class);
 
             blob.setBytes(1, new byte[] { 1, 2, 3, 4, 5 });
-        } finally {
-            closeQuietly(conn);
         }
     }
 
     @Test
     public void testSetBytes_long_byteArr_int_int_throwsSQLFeatureNotSupported() throws Exception {
-        Connection conn = getConnectionViaDriverManager();
-        try {
+        try (Connection conn = getConnectionViaDriverManager()) {
             Blob blob = conn.createBlob();
 
             expectedException.expect(SQLFeatureNotSupportedException.class);
 
             blob.setBytes(1, new byte[] { 1, 2, 3, 4, 5 }, 1, 2);
-        } finally {
-            closeQuietly(conn);
         }
     }
 
     @Test
     public void testGetBinaryStream_long_long_throwsSQLFeatureNotSupported() throws Exception {
-        Connection conn = getConnectionViaDriverManager();
-        try {
+        try (Connection conn = getConnectionViaDriverManager()) {
             Blob blob = conn.createBlob();
 
             expectedException.expect(SQLFeatureNotSupportedException.class);
 
             blob.getBinaryStream(1, 1);
-        } finally {
-            closeQuietly(conn);
         }
     }
 
     @Test
     public void testSetBinaryStream_calledTwice_throwsSQLException() throws Exception {
-        Connection conn = getConnectionViaDriverManager();
-        // TODO Required because of JDBC-348
-        conn.setAutoCommit(false);
-        try {
+        try (Connection conn = getConnectionViaDriverManager()) {
             Blob blob = conn.createBlob();
 
             blob.setBinaryStream(1);
@@ -256,17 +216,12 @@ public class TestFBBlob extends FBJUnit4TestBase {
             ));
 
             blob.setBinaryStream(1);
-        } finally {
-            closeQuietly(conn);
         }
     }
 
     @Test
     public void testSetBinaryStream_positionZero_throwsSQLException() throws Exception {
-        Connection conn = getConnectionViaDriverManager();
-        // TODO Required because of JDBC-348
-        conn.setAutoCommit(false);
-        try {
+        try (Connection conn = getConnectionViaDriverManager()) {
             Blob blob = conn.createBlob();
 
             expectedException.expect(allOf(
@@ -276,17 +231,12 @@ public class TestFBBlob extends FBJUnit4TestBase {
             ));
 
             blob.setBinaryStream(0);
-        } finally {
-            closeQuietly(conn);
         }
     }
 
     @Test
     public void testSetBinaryStream_positionBeyondStart_newBlob_throwsSQLException() throws Exception {
-        Connection conn = getConnectionViaDriverManager();
-        // TODO Required because of JDBC-348
-        conn.setAutoCommit(false);
-        try {
+        try (Connection conn = getConnectionViaDriverManager()) {
             Blob blob = conn.createBlob();
 
             expectedException.expect(allOf(
@@ -296,39 +246,30 @@ public class TestFBBlob extends FBJUnit4TestBase {
             ));
 
             blob.setBinaryStream(2);
-        } finally {
-            closeQuietly(conn);
         }
     }
 
     @Test
     public void testSetBinaryStream_positionBeyondStart_existingBlob_throwsSQLFeatureNotSupported() throws Exception {
-        Connection conn = getConnectionViaDriverManager();
-        try {
-            populateBlob(conn, new byte[]{ 1, 2, 3, 4, 5 });
-            PreparedStatement select = conn.prepareStatement(SELECT_BLOB);
-            select.setInt(1, 1);
-            ResultSet rs = select.executeQuery();
-            try {
-                assertTrue("Expected a row in result set", rs.next());
-                FBBlob blob = (FBBlob) rs.getBlob(1);
+        try (Connection conn = getConnectionViaDriverManager()) {
+            populateBlob(conn, new byte[] { 1, 2, 3, 4, 5 });
+            try (PreparedStatement select = conn.prepareStatement(SELECT_BLOB)) {
+                select.setInt(1, 1);
+                try (ResultSet rs = select.executeQuery()) {
+                    assertTrue("Expected a row in result set", rs.next());
+                    FBBlob blob = (FBBlob) rs.getBlob(1);
 
-                expectedException.expect(SQLFeatureNotSupportedException.class);
+                    expectedException.expect(SQLFeatureNotSupportedException.class);
 
-                blob.setBinaryStream(2);
-            } finally {
-                closeQuietly(rs);
-                closeQuietly(select);
+                    blob.setBinaryStream(2);
+                }
             }
-        } finally {
-            closeQuietly(conn);
         }
     }
 
     @Test
     public void testGetBlobId_newBlob_throwsSQLException() throws Exception {
-        Connection conn = getConnectionViaDriverManager();
-        try {
+        try (Connection conn = getConnectionViaDriverManager()) {
             FBBlob blob = (FBBlob) conn.createBlob();
 
             expectedException.expect(allOf(
@@ -337,66 +278,52 @@ public class TestFBBlob extends FBJUnit4TestBase {
             ));
 
             blob.getBlobId();
-        } finally {
-            closeQuietly(conn);
         }
     }
 
     @Test
     public void testGetBytes_withOffset_streamBlob() throws Exception {
-        Connection conn = getConnection(true);
-        try {
+        try (Connection conn = getConnection(true)) {
             populateBlob(conn, new byte[] { 1, 2, 3, 4, 5 });
-            PreparedStatement select = conn.prepareStatement(SELECT_BLOB);
-            select.setInt(1, 1);
-            ResultSet rs = select.executeQuery();
-            try {
-                assertTrue("Expected a row in result set", rs.next());
-                FBBlob blob = (FBBlob) rs.getBlob(1);
+            try (PreparedStatement select = conn.prepareStatement(SELECT_BLOB)) {
+                select.setInt(1, 1);
+                try (ResultSet rs = select.executeQuery()) {
+                    assertTrue("Expected a row in result set", rs.next());
+                    FBBlob blob = (FBBlob) rs.getBlob(1);
 
-                byte[] bytes = blob.getBytes(2, 4);
+                    byte[] bytes = blob.getBytes(2, 4);
 
-                assertArrayEquals("Expected array equal to original from index 1", new byte[] { 2, 3, 4, 5 }, bytes);
-            } finally {
-                closeQuietly(rs);
-                closeQuietly(select);
+                    assertArrayEquals("Expected array equal to original from index 1",
+                            new byte[] { 2, 3, 4, 5 }, bytes);
+                }
             }
-        } finally {
-            closeQuietly(conn);
         }
     }
 
     @Test
     public void testGetBytes_withOffset_segmentedBlob_throwsSQLException() throws Exception {
-        Connection conn = getConnection(false);
-        try {
+        try (Connection conn = getConnection(false)) {
             populateBlob(conn, new byte[] { 1, 2, 3, 4, 5 });
-            PreparedStatement select = conn.prepareStatement(SELECT_BLOB);
-            select.setInt(1, 1);
-            ResultSet rs = select.executeQuery();
-            try {
-                assertTrue("Expected a row in result set", rs.next());
-                FBBlob blob = (FBBlob) rs.getBlob(1);
+            try (PreparedStatement select = conn.prepareStatement(SELECT_BLOB)) {
+                select.setInt(1, 1);
+                try (ResultSet rs = select.executeQuery()) {
+                    assertTrue("Expected a row in result set", rs.next());
+                    FBBlob blob = (FBBlob) rs.getBlob(1);
 
-                expectedException.expect(allOf(
-                        isA(SQLException.class),
-                        message(containsString(getFbMessage(ISCConstants.isc_bad_segstr_type)))
-                ));
+                    expectedException.expect(allOf(
+                            isA(SQLException.class),
+                            message(containsString(getFbMessage(ISCConstants.isc_bad_segstr_type)))
+                    ));
 
-                blob.getBytes(2, 4);
-            } finally {
-                closeQuietly(rs);
-                closeQuietly(select);
+                    blob.getBytes(2, 4);
+                }
             }
-        } finally {
-            closeQuietly(conn);
         }
     }
 
     @Test
     public void testGetBytes_positionZero_throwsSQLException() throws Exception {
-        Connection conn = getConnectionViaDriverManager();
-        try {
+        try (Connection conn = getConnectionViaDriverManager()) {
             FBBlob blob = (FBBlob) conn.createBlob();
 
             expectedException.expect(allOf(
@@ -405,15 +332,12 @@ public class TestFBBlob extends FBJUnit4TestBase {
             ));
 
             blob.getBytes(0, 4);
-        } finally {
-            closeQuietly(conn);
         }
     }
 
     @Test
     public void testGetBytes_positionLargerThanMaxIntValue_throwsSQLException() throws Exception {
-        Connection conn = getConnectionViaDriverManager();
-        try {
+        try (Connection conn = getConnectionViaDriverManager()) {
             FBBlob blob = (FBBlob) conn.createBlob();
 
             expectedException.expect(allOf(
@@ -423,8 +347,6 @@ public class TestFBBlob extends FBJUnit4TestBase {
             ));
 
             blob.getBytes(Integer.MAX_VALUE + 1L, 4);
-        } finally {
-            closeQuietly(conn);
         }
     }
 
@@ -437,7 +359,6 @@ public class TestFBBlob extends FBJUnit4TestBase {
     @Test
     public void testBlobCloseOnCommit() throws Exception {
         Connection connection = getConnectionViaDriverManager();
-        //noinspection TryFinallyCanBeTryWithResources
         try {
             populateBlob(connection, new byte[] { 1, 2, 3, 4, 5, 6, 7, 8, 9, 0 });
 
