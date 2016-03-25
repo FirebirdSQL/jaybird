@@ -2996,7 +2996,12 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
                     return Types.INTEGER;
             case double_type:
             case d_float_type:
-                return Types.DOUBLE;
+                if (fieldSubType == 1 || (fieldSubType == 0 && fieldScale < 0))
+                    return Types.NUMERIC;
+                else if (fieldSubType == 2)
+                    return Types.DECIMAL;
+                else
+                    return Types.DOUBLE;
             case float_type:
                 return Types.FLOAT;
             case char_type:
@@ -3052,7 +3057,12 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
                     return "INTEGER";
             case double_type:
             case d_float_type:
-                return "DOUBLE PRECISION";
+                if (sqlsubtype == 1 || (sqlsubtype == 0 && sqlscale < 0))
+                    return "NUMERIC";
+                else if (sqlsubtype == 2)
+                    return "DECIMAL";
+                else
+                    return "DOUBLE PRECISION";
             case float_type:
                 return "FLOAT";
             case char_type:
