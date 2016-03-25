@@ -89,8 +89,10 @@ public class V10Transaction extends AbstractFbTransaction implements FbWireTrans
             exceptionListenerDispatcher.errorOccurred(e);
             throw e;
         } finally {
-            if (getState() != TransactionState.COMMITTED) {
-                log.warn("Commit not completed", new RuntimeException("Commit not completed"));
+            final TransactionState transactionState = getState();
+            if (transactionState != TransactionState.COMMITTED) {
+                log.warn("Commit not completed, state was " + transactionState,
+                        new RuntimeException("Commit not completed"));
             }
         }
     }
@@ -107,8 +109,10 @@ public class V10Transaction extends AbstractFbTransaction implements FbWireTrans
             exceptionListenerDispatcher.errorOccurred(e);
             throw e;
         } finally {
-            if (getState() != TransactionState.ROLLED_BACK) {
-                log.warn("Rollback not completed", new RuntimeException("Rollback not completed"));
+            final TransactionState transactionState = getState();
+            if (transactionState != TransactionState.ROLLED_BACK) {
+                log.warn("Rollback not completed, state was " + transactionState,
+                        new RuntimeException("Rollback not completed"));
             }
         }
     }
