@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
@@ -61,6 +59,7 @@ public class AsynchronousProcessor {
         Thread selectorThread = new Thread(selectorTask, "Jaybird asynchronous processing");
         selectorThread.setDaemon(true);
         selectorThread.start();
+        selectorThread.setUncaughtExceptionHandler(new LogUncaughtException());
     }
 
     /**
@@ -115,7 +114,7 @@ public class AsynchronousProcessor {
 
         @Override
         public void run() {
-            while (running) {
+            while (running && !Thread.currentThread().isInterrupted()) {
                 try {
                     synchronized (newChannels) {
                         for (FbWireAsynchronousChannel channel : newChannels) {
@@ -134,9 +133,7 @@ public class AsynchronousProcessor {
                             selectedKeysIterator.remove();
                             if (!selectionKey.isValid()) continue;
 
-                            if (selectionKey.isReadable()) {
-                                handleReadable(selectionKey);
-                            }
+                            handleReadable(selectionKey);
                         }
                     }
                 } catch (IOException ex) {
@@ -163,6 +160,8 @@ public class AsynchronousProcessor {
 
         private void handleReadable(SelectionKey selectionKey) {
             try {
+                if (!selectionKey.isReadable())
+                    return;
                 SocketChannel socketChannel = (SocketChannel) selectionKey.channel();
                 FbWireAsynchronousChannel channel = (FbWireAsynchronousChannel) selectionKey.attachment();
 
@@ -180,16 +179,27 @@ public class AsynchronousProcessor {
                 }
             } catch (AsynchronousCloseException e) {
                 // Channel closed
-                log.debug("AsynchronousCloseException reading from event channel", e);
+                log.debug("AsynchronousCloseException reading from event channel; cancelling key", e);
                 selectionKey.cancel();
             } catch (IOException e) {
-                // TODO handle
-                log.error("IOException reading from event channel", e);
+                // TODO handle?
+                log.error("IOException reading from event channel; ignored", e);
+            } catch (CancelledKeyException e) {
+                // ignore
+            } catch (Exception e) {
+                log.error("Exception reading from event channel; ignored", e);
             }
         }
 
         private void stop() {
             running = false;
+        }
+    }
+
+    private static class LogUncaughtException implements Thread.UncaughtExceptionHandler {
+        @Override
+        public void uncaughtException(Thread t, Throwable e) {
+            log.error("Jaybird asynchronous processing terminated. Uncaught exception on " + t.getName(), e);
         }
     }
 }
