@@ -1310,11 +1310,6 @@ public class FBStatement implements FirebirdStatement, Synchronizable {
     public void forgetResultSet() { //yuck should be package
         // TODO Use case unclear, find out if this needs to be added to fbStatement somehow
         currentRs = null;
-        /*
-        if (fixedStmt != null) {
-            fixedStmt.clearRows();
-        }
-        */
     }
     
     public ResultSet getCurrentResultSet() throws SQLException {
@@ -1372,17 +1367,10 @@ public class FBStatement implements FirebirdStatement, Synchronizable {
     protected boolean internalExecute(String sql) throws SQLException {
         checkValidity();
 
-        // closeResultSet(false);
         // TODO Consider use/implementation of execute immediate?
         prepareFixedStatement(sql);
         fbStatement.execute(RowValue.EMPTY_ROW_VALUE);
-        /*gdsHelper.executeStatement(fixedStmt, fixedStmt.getStatementType() == ISCConstants.isc_info_sql_stmt_exec_procedure);*/
 
-        // TODO Replace with statement listener
-        /*
-        hasMoreResults = true;
-        isResultSet = fixedStmt.getOutSqlda().sqld > 0;
-        */
         return currentStatementResult == StatementResult.RESULT_SET;
     }
 

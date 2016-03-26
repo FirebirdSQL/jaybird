@@ -102,7 +102,7 @@ public class TestFBPreparedStatementGeneratedKeys extends FBTestGeneratedKeysBas
         assertEquals(FirebirdPreparedStatement.TYPE_EXEC_PROCEDURE, ((FirebirdPreparedStatement) stmt).getStatementType());
 
         stmt.setString(1, TEXT_VALUE);
-        assertTrue("Expected statement to produce a result set", stmt.execute());
+        assertFalse("Expected statement to not produce a result set", stmt.execute());
 
         ResultSet rs = stmt.getGeneratedKeys();
         assertNotNull("Expected a non-null result set from getGeneratedKeys", rs);
@@ -133,7 +133,7 @@ public class TestFBPreparedStatementGeneratedKeys extends FBTestGeneratedKeysBas
         assertEquals(FirebirdPreparedStatement.TYPE_EXEC_PROCEDURE, ((FirebirdPreparedStatement) stmt).getStatementType());
 
         stmt.setString(1, TEXT_VALUE);
-        assertTrue("Expected statement to produce a result set", stmt.execute());
+        assertFalse("Expected statement to not produce a result set", stmt.execute());
 
         ResultSet rs = stmt.getGeneratedKeys();
         assertNotNull("Expected a non-null result set from getGeneratedKeys", rs);
@@ -180,7 +180,7 @@ public class TestFBPreparedStatementGeneratedKeys extends FBTestGeneratedKeysBas
         assertEquals(FirebirdPreparedStatement.TYPE_EXEC_PROCEDURE, ((FirebirdPreparedStatement) stmt).getStatementType());
 
         stmt.setString(1, TEXT_VALUE);
-        assertTrue("Expected statement to produce a result set", stmt.execute());
+        assertFalse("Expected statement to not produce a result set", stmt.execute());
 
         ResultSet rs = stmt.getGeneratedKeys();
         assertNotNull("Expected a non-null result set from getGeneratedKeys", rs);
@@ -209,7 +209,7 @@ public class TestFBPreparedStatementGeneratedKeys extends FBTestGeneratedKeysBas
         assertEquals(FirebirdPreparedStatement.TYPE_EXEC_PROCEDURE, ((FirebirdPreparedStatement) stmt).getStatementType());
 
         stmt.setString(1, TEXT_VALUE);
-        assertTrue("Expected statement to produce a result set", stmt.execute());
+        assertFalse("Expected statement to not produce a result set", stmt.execute());
 
         ResultSet rs = stmt.getGeneratedKeys();
         assertNotNull("Expected a non-null result set from getGeneratedKeys", rs);
@@ -242,7 +242,7 @@ public class TestFBPreparedStatementGeneratedKeys extends FBTestGeneratedKeysBas
         assertEquals(FirebirdPreparedStatement.TYPE_EXEC_PROCEDURE, ((FirebirdPreparedStatement) stmt).getStatementType());
 
         stmt.setString(1, TEXT_VALUE);
-        assertTrue("Expected statement to produce a result set", stmt.execute());
+        assertFalse("Expected statement to not produce a result set", stmt.execute());
 
         ResultSet rs = stmt.getGeneratedKeys();
         assertNotNull("Expected a non-null result set from getGeneratedKeys", rs);

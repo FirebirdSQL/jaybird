@@ -758,14 +758,8 @@ public abstract class AbstractPreparedStatement extends FBStatement implements F
             flushFields();
 
             try {
-                // TODO: add a statement listener for controlling information exchange
-                // TODO Is this still correct in light of the listener in FBStatement
                 fbStatement.execute(fieldValues);
-                boolean hasResultSet = fbStatement.getFieldDescriptor().getCount() > 0;
-                currentStatementResult = hasResultSet
-                        ? StatementResult.RESULT_SET
-                        : StatementResult.UPDATE_COUNT;
-                return hasResultSet;
+                return currentStatementResult == StatementResult.RESULT_SET;
             } catch (SQLException e) {
                 currentStatementResult = StatementResult.NO_MORE_RESULTS;
                 throw e;
