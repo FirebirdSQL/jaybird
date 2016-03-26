@@ -184,9 +184,6 @@ public class FBServiceManager implements ServiceManager {
     }
 
     public FbService attachServiceManager() throws SQLException {
-        // TODO: Do we need to add dummy packet interval support for the service attachment
-//        serviceParameterBuffer.addArgument(
-//                ISCConstants.isc_spb_dummy_packet_interval, new byte[] { 120, 10, 0, 0 });
         FbService fbService = dbFactory.serviceConnect(serviceProperties);
         fbService.attach();
         return fbService;

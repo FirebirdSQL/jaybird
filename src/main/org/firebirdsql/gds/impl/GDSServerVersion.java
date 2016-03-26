@@ -42,9 +42,7 @@ import java.util.regex.Pattern;
  * </p>
  */
 public final class GDSServerVersion implements Serializable {
-    
-    // TODO Document why this class is serializable (or remove it)
-    
+
     private static final long serialVersionUID = -3401092369588765195L;
 
     public static final String TYPE_PRODUCTION = "V";

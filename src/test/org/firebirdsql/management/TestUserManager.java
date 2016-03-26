@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
@@ -31,7 +29,6 @@ import java.sql.SQLException;
 
 import static org.firebirdsql.common.DdlHelper.executeDDL;
 import static org.firebirdsql.common.FBTestProperties.*;
-import static org.firebirdsql.common.JdbcResourceHelper.closeQuietly;
 import static org.junit.Assert.*;
 import static org.junit.Assume.assumeTrue;
 
@@ -56,12 +53,8 @@ public class TestUserManager extends FBJUnit4TestBase {
     @Before
     @After
     public void ensureTestUserDoesNotExist() throws SQLException {
-        Connection connection = getConnectionViaDriverManager();
-        try {
-            // TODO this fails with useFirebirdAutocommit=true; looks like dropping user is deferred to real commit
+        try (Connection connection = getConnectionViaDriverManager()) {
             executeDDL(connection, "DROP USER " + USER_NAME, ISCConstants.isc_gsec_err_rec_not_found);
-        } finally {
-            closeQuietly(connection);
         }
     }
 

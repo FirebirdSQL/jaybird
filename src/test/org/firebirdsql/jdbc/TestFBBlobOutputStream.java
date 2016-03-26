@@ -53,10 +53,8 @@ public class TestFBBlobOutputStream extends FBJUnit4TestBase {
     private Connection conn;
     private FBBlobOutputStream stream;
 
-    public void initDefault() throws Exception {
+    private void initDefault() throws Exception {
         conn = getConnectionViaDriverManager();
-        // TODO Required because of JDBC-348
-        conn.setAutoCommit(false);
         FBBlob blob = (FBBlob) conn.createBlob();
         stream = (FBBlobOutputStream) blob.setBinaryStream(1);
     }

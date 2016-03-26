@@ -19,7 +19,7 @@ import static org.firebirdsql.gds.VaxEncoding.iscVaxInteger;
 import static org.firebirdsql.gds.VaxEncoding.iscVaxInteger2;
 
 /**
- * TODO: This test assumes it is run against localhost 
+ * This test assumes it is run against localhost
  */
 public class TestBackupManager extends FBTestBase {
         

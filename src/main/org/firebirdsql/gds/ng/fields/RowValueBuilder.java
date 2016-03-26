@@ -30,9 +30,6 @@ package org.firebirdsql.gds.ng.fields;
  * Its main advantage over {@link RowValue#of(RowDescriptor, byte[][])} is that it is clearer to which field
  * the value is assigned, and it sparse population (ie: skipping <code>null</code> values).
  * </p>
- * <p>
- * TODO: Add convenience methods for constructing based on objects
- * </p>
  *
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @see org.firebirdsql.gds.ng.fields.RowValue#of(RowDescriptor, byte[][])

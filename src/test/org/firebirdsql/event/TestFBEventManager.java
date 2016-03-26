@@ -150,17 +150,6 @@ public class TestFBEventManager extends FBJUnit4TestBase {
     }
 
     @Test
-    public void testAsyncEventsNoEvents() throws Exception {
-        // TODO Doesn't test anything
-        Thread.sleep(SHORT_DELAY);
-        try {
-            eventManager.disconnect();
-        } finally {
-            eventManagerDisconnected = true;
-        }
-    }
-
-    @Test
     public void testMultipleListenersOnOneEvent() throws Exception {
         AccumulatingEventListener ael1 = new AccumulatingEventListener();
         AccumulatingEventListener ael2 = new AccumulatingEventListener();
