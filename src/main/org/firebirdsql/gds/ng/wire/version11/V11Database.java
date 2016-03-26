@@ -57,9 +57,6 @@ public class V11Database extends V10Database {
         wireOperations.enqueueDeferredAction(deferredAction);
     }
 
-    // TODO Implement trusted auth?
-    // NOTE: Not implementing trusted auth for the time being. It seems to be harder than is worth the effort.
-
     @Override
     public void releaseObject(int operation, int objectId) throws SQLException {
         checkAttached();

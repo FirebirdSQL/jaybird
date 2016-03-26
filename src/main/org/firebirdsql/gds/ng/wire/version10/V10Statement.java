@@ -628,7 +628,7 @@ public class V10Statement extends AbstractFbWireStatement implements FbWireState
             if (buffer != null) {
                 xdrOut.write(buffer, 0, -len);
             } else {
-                xdrOut.writePadding(-len, 0x00); // TODO Used to be 0x20, check if use of 0x00 here is correct
+                xdrOut.writePadding(-len, 0x00);
             }
         } else {
             // decrement length because it was incremented before

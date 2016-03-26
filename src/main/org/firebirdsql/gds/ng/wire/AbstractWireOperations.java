@@ -20,6 +20,7 @@ package org.firebirdsql.gds.ng.wire;
 
 import org.firebirdsql.encodings.Encoding;
 import org.firebirdsql.gds.ISCConstants;
+import org.firebirdsql.gds.JaybirdErrorCodes;
 import org.firebirdsql.gds.impl.wire.XdrInputStream;
 import org.firebirdsql.gds.impl.wire.XdrOutputStream;
 import org.firebirdsql.gds.ng.FbExceptionBuilder;
@@ -198,9 +199,10 @@ public abstract class AbstractWireOperations implements FbWireOperations {
         case op_sql_response:
             return new SqlResponse(xdrIn.readInt());
         default:
-            log.warn(String.format("Unsupported or unexpected operation code %d in processOperation", operation));
-            // TODO throw an exception instead
-            return null;
+            throw new FbExceptionBuilder().nonTransientException(JaybirdErrorCodes.jb_unexpectedOperationCode)
+                    .messageParameter(operation)
+                    .messageParameter("processOperation")
+                    .toFlatSQLException();
         }
     }
 
