@@ -109,7 +109,6 @@ public abstract class AbstractFbService<T extends AbstractConnection<IServicePro
     @Override
     public final void close() throws SQLException {
         try {
-            // TODO return silently if not connected?
             checkConnected();
             synchronized (getSynchronizationObject()) {
                 serviceListenerDispatcher.detaching(this);

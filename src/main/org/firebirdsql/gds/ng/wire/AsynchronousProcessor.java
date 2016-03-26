@@ -58,8 +58,8 @@ public class AsynchronousProcessor {
         }
         Thread selectorThread = new Thread(selectorTask, "Jaybird asynchronous processing");
         selectorThread.setDaemon(true);
-        selectorThread.start();
         selectorThread.setUncaughtExceptionHandler(new LogUncaughtException());
+        selectorThread.start();
     }
 
     /**

@@ -192,7 +192,6 @@ public abstract class AbstractFbWireDatabase extends AbstractFbDatabase<WireData
     public final void queueEvent(EventHandle eventHandle) throws SQLException {
         try {
             checkAttached();
-            // TODO Move to AbstractFbWireDatabase?
             synchronized (getSynchronizationObject()) {
                 if (asynchronousChannel == null || !asynchronousChannel.isConnected()) {
                     asynchronousChannel = initAsynchronousChannel();

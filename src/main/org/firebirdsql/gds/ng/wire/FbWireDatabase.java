@@ -36,7 +36,6 @@ import java.sql.SQLException;
  * @since 3.0
  */
 public interface FbWireDatabase extends FbDatabase, FbWireAttachment {
-    // TODO Revise exception usage
 
     /**
      * Reads the response from the server.
@@ -52,7 +51,7 @@ public interface FbWireDatabase extends FbDatabase, FbWireAttachment {
     Response readResponse(WarningMessageCallback callback) throws SQLException, IOException;
 
     /**
-     * Release object. TODO Review usage
+     * Release object.
      *
      * @param operation
      *         Operation

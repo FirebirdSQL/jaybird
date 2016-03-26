@@ -29,9 +29,6 @@ import java.util.Calendar;
 
 /**
  * Interface defining the encoding and decoding for Firebird (numerical) data types.
- * <p>
- * TODO: access the connection encoding factory through this interface?
- * </p>
  *
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @since 3.0

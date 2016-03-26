@@ -138,9 +138,6 @@ public abstract class AbstractParameterConverter<D extends AbstractConnection<IC
      *         For errors generating authentication information
      */
     protected void populateDefaultProperties(final S connection, final ServiceParameterBuffer spb) throws SQLException {
-        // TODO Is there an equivalent to set connection character set for a service
-//        dpb.addArgument(isc_dpb_lc_ctype,
-//                encodingFactory.getDefaultEncodingDefinition().getFirebirdEncodingName(), encoding);
         populateAuthenticationProperties(connection, spb);
         IServiceProperties props = connection.getAttachProperties();
         if (props.getRoleName() != null) {

@@ -41,8 +41,6 @@ import java.sql.SQLException;
  */
 public interface FbTransaction extends ExceptionListenable {
 
-    // TODO Evaluate whether this structure matches with needs for JDBC
-
     /**
      * @return Current transaction state
      */

@@ -167,7 +167,6 @@ public abstract class AbstractFbDatabase<T extends AbstractConnection<IConnectio
      */
     @Override
     public final void close() throws SQLException {
-        // TODO return silently if not connected?
         try {
             checkConnected();
             synchronized (getSynchronizationObject()) {
@@ -176,7 +175,6 @@ public abstract class AbstractFbDatabase<T extends AbstractConnection<IConnectio
                     // transactions
                     // In the case of wire protocol we could ignore this and simply close, but that would be
                     // inconsistent with fbclient
-                    // TODO: Rollback transactions; or leave that to the caller?
                     throw new FbExceptionBuilder()
                             .exception(ISCConstants.isc_open_trans)
                             .messageParameter(getActiveTransactionCount())
