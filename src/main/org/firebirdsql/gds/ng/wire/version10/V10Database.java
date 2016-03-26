@@ -19,7 +19,10 @@
 package org.firebirdsql.gds.ng.wire.version10;
 
 import org.firebirdsql.encodings.Encoding;
-import org.firebirdsql.gds.*;
+import org.firebirdsql.gds.DatabaseParameterBuffer;
+import org.firebirdsql.gds.ISCConstants;
+import org.firebirdsql.gds.JaybirdErrorCodes;
+import org.firebirdsql.gds.TransactionParameterBuffer;
 import org.firebirdsql.gds.impl.DatabaseParameterBufferExtension;
 import org.firebirdsql.gds.impl.wire.XdrOutputStream;
 import org.firebirdsql.gds.ng.FbExceptionBuilder;
@@ -37,7 +40,6 @@ import java.nio.charset.Charset;
 import java.sql.SQLException;
 import java.sql.SQLFeatureNotSupportedException;
 import java.sql.SQLNonTransientConnectionException;
-import java.sql.SQLNonTransientException;
 
 import static org.firebirdsql.gds.impl.wire.WireProtocolConstants.*;
 import static org.firebirdsql.gds.ng.TransactionHelper.checkTransactionActive;
@@ -54,7 +56,6 @@ public class V10Database extends AbstractFbWireDatabase implements FbWireDatabas
 
     private int handle;
     private BlrCalculator blrCalculator;
-    private FbWireAsynchronousChannel asynchronousChannel;
 
     /**
      * Creates a V10Database instance.
@@ -70,48 +71,12 @@ public class V10Database extends AbstractFbWireDatabase implements FbWireDatabas
     }
 
     @Override
-    public int getHandle() {
+    public final int getHandle() {
         return handle;
     }
 
     @Override
-    public void queueEvent(EventHandle eventHandle) throws SQLException {
-        try {
-            checkAttached();
-            // TODO Move to AbstractFbWireDatabase?
-            synchronized (getSynchronizationObject()) {
-                if (asynchronousChannel == null || !asynchronousChannel.isConnected()) {
-                    asynchronousChannel = initAsynchronousChannel();
-                    AsynchronousProcessor.getInstance().registerAsynchronousChannel(asynchronousChannel);
-                }
-                asynchronousChannel.queueEvent(eventHandle);
-            }
-        } catch (SQLException e) {
-            exceptionListenerDispatcher.errorOccurred(e);
-            throw e;
-        }
-    }
-
-    @Override
-    public void cancelEvent(EventHandle eventHandle) throws SQLException {
-        try {
-            checkAttached();
-            synchronized (getSynchronizationObject()) {
-                if (asynchronousChannel == null || !asynchronousChannel.isConnected()) {
-                    throw new FbExceptionBuilder()
-                            .nonTransientException(JaybirdErrorCodes.jb_unableToCancelEventReasonNotConnected)
-                            .toFlatSQLException();
-                }
-                asynchronousChannel.cancelEvent(eventHandle);
-            }
-        } catch (SQLException e) {
-            exceptionListenerDispatcher.errorOccurred(e);
-            throw e;
-        }
-    }
-
-    @Override
-    public void attach() throws SQLException {
+    public final void attach() throws SQLException {
         try {
             final DatabaseParameterBuffer dpb = protocolDescriptor.createDatabaseParameterBuffer(connection);
             attachOrCreate(dpb, false);
@@ -130,7 +95,7 @@ public class V10Database extends AbstractFbWireDatabase implements FbWireDatabas
      * @throws SQLException
      *         For errors during attach or create
      */
-    protected void attachOrCreate(DatabaseParameterBuffer dpb, boolean create) throws SQLException {
+    protected final void attachOrCreate(DatabaseParameterBuffer dpb, boolean create) throws SQLException {
         checkConnected();
         if (isAttached()) {
             throw new SQLException("Already attached to a database");
@@ -170,7 +135,7 @@ public class V10Database extends AbstractFbWireDatabase implements FbWireDatabas
      * @throws IOException
      *         For errors writing to the connection
      */
-    protected void sendAttachOrCreateToBuffer(DatabaseParameterBuffer dpb, boolean create)
+    protected final void sendAttachOrCreateToBuffer(DatabaseParameterBuffer dpb, boolean create)
             throws SQLException, IOException {
         final int operation = create ? op_create : op_attach;
         final XdrOutputStream xdrOut = getXdrOut();
@@ -207,7 +172,7 @@ public class V10Database extends AbstractFbWireDatabase implements FbWireDatabas
      * @param genericResponse
      *         GenericResponse received from the server.
      */
-    protected void processAttachOrCreateResponse(GenericResponse genericResponse) {
+    protected final void processAttachOrCreateResponse(GenericResponse genericResponse) {
         handle = genericResponse.getObjectHandle();
     }
 
@@ -220,14 +185,14 @@ public class V10Database extends AbstractFbWireDatabase implements FbWireDatabas
      * @throws SQLException
      *         For errors reading or writing database information.
      */
-    protected void afterAttachActions() throws SQLException {
+    protected final void afterAttachActions() throws SQLException {
         getDatabaseInfo(getDescribeDatabaseInfoBlock(), 1024, getDatabaseInformationProcessor());
         // During connect and attach the socketTimeout might be set to the connectTimeout, now reset to 'normal' socketTimeout
         connection.resetSocketTimeout();
     }
 
     @Override
-    protected void internalDetach() throws SQLException {
+    protected final void internalDetach() throws SQLException {
         // TODO Move to wire operations as it is almost identical to service detach?
         synchronized (getSynchronizationObject()) {
             try {
@@ -269,7 +234,7 @@ public class V10Database extends AbstractFbWireDatabase implements FbWireDatabas
     }
 
     @Override
-    public void createDatabase() throws SQLException {
+    public final void createDatabase() throws SQLException {
         try {
             final DatabaseParameterBuffer dpb = protocolDescriptor.createDatabaseParameterBuffer(connection);
             attachOrCreate(dpb, true);
@@ -280,7 +245,7 @@ public class V10Database extends AbstractFbWireDatabase implements FbWireDatabas
     }
 
     @Override
-    public void dropDatabase() throws SQLException {
+    public final void dropDatabase() throws SQLException {
         try {
             checkAttached();
             synchronized (getSynchronizationObject()) {
@@ -315,7 +280,7 @@ public class V10Database extends AbstractFbWireDatabase implements FbWireDatabas
     }
 
     @Override
-    public FbWireTransaction startTransaction(TransactionParameterBuffer tpb) throws SQLException {
+    public final FbWireTransaction startTransaction(TransactionParameterBuffer tpb) throws SQLException {
         try {
             checkAttached();
             synchronized (getSynchronizationObject()) {
@@ -347,7 +312,7 @@ public class V10Database extends AbstractFbWireDatabase implements FbWireDatabas
     }
 
     @Override
-    public FbTransaction reconnectTransaction(long transactionId) throws SQLException {
+    public final FbTransaction reconnectTransaction(long transactionId) throws SQLException {
         try {
             checkAttached();
             synchronized (getSynchronizationObject()) {
@@ -357,7 +322,7 @@ public class V10Database extends AbstractFbWireDatabase implements FbWireDatabas
                     xdrOut.writeInt(getHandle());
                     // TODO: Only sending integer, why long?
                     final byte[] buf = new byte[4];
-                    // Note: This uses a atypical encoding (as this is actually a TPB without a type)
+                    // Note: This uses an atypical encoding (as this is actually a TPB without a type)
                     for (int i = 0; i < 4; i++) {
                         buf[i] = (byte) (transactionId >>> (i * 8));
                     }
@@ -386,7 +351,7 @@ public class V10Database extends AbstractFbWireDatabase implements FbWireDatabas
     }
 
     @Override
-    public FbStatement createStatement(FbTransaction transaction) throws SQLException {
+    public final FbStatement createStatement(FbTransaction transaction) throws SQLException {
         try {
             checkAttached();
             final FbStatement stmt = protocolDescriptor.createStatement(this);
@@ -423,7 +388,7 @@ public class V10Database extends AbstractFbWireDatabase implements FbWireDatabas
     }
 
     @Override
-    public byte[] getDatabaseInfo(byte[] requestItems, int maxBufferLength) throws SQLException {
+    public final byte[] getDatabaseInfo(byte[] requestItems, int maxBufferLength) throws SQLException {
         // TODO Write common info request implementation shared for db, sql, transaction and blob?
         try {
             checkAttached();
@@ -454,7 +419,7 @@ public class V10Database extends AbstractFbWireDatabase implements FbWireDatabas
     }
 
     @Override
-    public void executeImmediate(String statementText, FbTransaction transaction) throws SQLException {
+    public final void executeImmediate(String statementText, FbTransaction transaction) throws SQLException {
         // TODO also implement op_exec_immediate2
         try {
             if (isAttached()) {
@@ -520,7 +485,7 @@ public class V10Database extends AbstractFbWireDatabase implements FbWireDatabas
     }
 
     @Override
-    public FbWireAsynchronousChannel initAsynchronousChannel() throws SQLException {
+    public final FbWireAsynchronousChannel initAsynchronousChannel() throws SQLException {
         checkAttached();
         final int auxHandle;
         final int port;
@@ -564,9 +529,10 @@ public class V10Database extends AbstractFbWireDatabase implements FbWireDatabas
      * @throws SQLException
      *         If the database connection is not available
      */
-    protected void doReleaseObjectPacket(int operation, int objectId) throws IOException, SQLException {
-        getXdrOut().writeInt(operation);
-        getXdrOut().writeInt(objectId);
+    protected final void doReleaseObjectPacket(int operation, int objectId) throws IOException, SQLException {
+        final XdrOutputStream xdrOut = getXdrOut();
+        xdrOut.writeInt(operation);
+        xdrOut.writeInt(objectId);
     }
 
     /**
@@ -575,12 +541,12 @@ public class V10Database extends AbstractFbWireDatabase implements FbWireDatabas
      * @param response
      *         The response object
      */
-    protected void processReleaseObjectResponse(@SuppressWarnings("UnusedParameters") Response response) {
+    protected final void processReleaseObjectResponse(@SuppressWarnings("UnusedParameters") Response response) {
         // Do nothing
     }
 
     @Override
-    public BlrCalculator getBlrCalculator() {
+    public final BlrCalculator getBlrCalculator() {
         if (blrCalculator == null) {
             blrCalculator = protocolDescriptor.createBlrCalculator(this);
         }
@@ -593,7 +559,7 @@ public class V10Database extends AbstractFbWireDatabase implements FbWireDatabas
     }
 
     @Override
-    public void authReceiveResponse(AcceptPacket acceptPacket) throws IOException, SQLException {
+    public final void authReceiveResponse(AcceptPacket acceptPacket) throws IOException, SQLException {
         wireOperations.authReceiveResponse(acceptPacket, new FbWireOperations.ProcessAttachCallback() {
             @Override
             public void processAttachResponse(GenericResponse response) {

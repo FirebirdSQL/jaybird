@@ -42,6 +42,7 @@ public abstract class AbstractFbWireDatabase extends AbstractFbDatabase<WireData
 
     protected final ProtocolDescriptor protocolDescriptor;
     protected final FbWireOperations wireOperations;
+    private FbWireAsynchronousChannel asynchronousChannel;
 
     /**
      * Creates an AbstractFbWireDatabase instance.
@@ -182,11 +183,48 @@ public abstract class AbstractFbWireDatabase extends AbstractFbDatabase<WireData
         return wireOperations.readResponse(warningCallback);
     }
 
-    public EventHandle createEventHandle(String eventName, EventHandler eventHandler) {
+    @Override
+    public final EventHandle createEventHandle(String eventName, EventHandler eventHandler) {
         return new WireEventHandle(eventName, eventHandler, getEncoding());
     }
 
-    public void countEvents(EventHandle eventHandle) throws SQLException {
+    @Override
+    public final void queueEvent(EventHandle eventHandle) throws SQLException {
+        try {
+            checkAttached();
+            // TODO Move to AbstractFbWireDatabase?
+            synchronized (getSynchronizationObject()) {
+                if (asynchronousChannel == null || !asynchronousChannel.isConnected()) {
+                    asynchronousChannel = initAsynchronousChannel();
+                    AsynchronousProcessor.getInstance().registerAsynchronousChannel(asynchronousChannel);
+                }
+                asynchronousChannel.queueEvent(eventHandle);
+            }
+        } catch (SQLException e) {
+            exceptionListenerDispatcher.errorOccurred(e);
+            throw e;
+        }
+    }
+
+    @Override
+    public final void cancelEvent(EventHandle eventHandle) throws SQLException {
+        try {
+            checkAttached();
+            synchronized (getSynchronizationObject()) {
+                if (asynchronousChannel == null || !asynchronousChannel.isConnected()) {
+                    throw new FbExceptionBuilder()
+                            .nonTransientException(JaybirdErrorCodes.jb_unableToCancelEventReasonNotConnected)
+                            .toFlatSQLException();
+                }
+                asynchronousChannel.cancelEvent(eventHandle);
+            }
+        } catch (SQLException e) {
+            exceptionListenerDispatcher.errorOccurred(e);
+            throw e;
+        }
+    }
+
+    public final void countEvents(EventHandle eventHandle) throws SQLException {
         try {
             if (!(eventHandle instanceof WireEventHandle))
                 throw new SQLException("Invalid event handle, type: " + eventHandle.getClass().getName());
