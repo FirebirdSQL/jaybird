@@ -22,6 +22,7 @@ import com.sun.jna.Memory;
 import com.sun.jna.ptr.IntByReference;
 import com.sun.jna.ptr.ShortByReference;
 import org.firebirdsql.gds.ISCConstants;
+import org.firebirdsql.gds.JaybirdErrorCodes;
 import org.firebirdsql.gds.ng.*;
 import org.firebirdsql.gds.ng.fields.*;
 import org.firebirdsql.jna.fbclient.FbClientLibrary;
@@ -115,9 +116,10 @@ public class JnaStatement extends AbstractFbStatement {
         try {
             final byte[] statementArray = getDatabase().getEncoding().encodeToCharset(statementText);
             if (statementArray.length > JnaDatabase.MAX_STATEMENT_LENGTH) {
-                // TODO Message + sqlstate
-                throw new SQLException(String.format("Implementation limit exceeded, maximum statement length is %d bytes",
-                        JnaDatabase.MAX_STATEMENT_LENGTH));
+                throw FbExceptionBuilder.forException(JaybirdErrorCodes.jb_maxStatementLengthExceeded)
+                        .messageParameter(JnaDatabase.MAX_STATEMENT_LENGTH)
+                        .messageParameter(statementArray.length)
+                        .toFlatSQLException();
             }
             synchronized (getSynchronizationObject()) {
                 checkTransactionActive(getTransaction());

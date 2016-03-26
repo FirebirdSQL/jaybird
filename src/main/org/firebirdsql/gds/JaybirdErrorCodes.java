@@ -61,6 +61,7 @@ public interface JaybirdErrorCodes {
     int jb_receiveTrustedAuth_NotSupported               = 337248272;
     int jb_notConnectedToServer     = 337248273;
     int jb_notAttachedToDatabase    = 337248274;
+    int jb_maxStatementLengthExceeded                    = 337248275;
 
     @SuppressWarnings("unused")
     int jb_range_end                = 337264639;
