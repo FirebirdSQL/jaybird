@@ -279,8 +279,6 @@ public abstract class AbstractStatementTest {
         assertEquals("Unexpected select count", listener.getRows().size(), listener.getSqlCounts().getLongSelectCount());
     }
 
-    // TODO Test with executable stored procedure
-
     @Test
     public void test_PrepareExecutableStoredProcedure() throws Exception {
         allocateStatement();

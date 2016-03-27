@@ -253,7 +253,6 @@ public class ParameterBufferHelper {
                 try {
                     // try to deal with a value as a byte or int
                     int intValue = Integer.parseInt(value);
-                    // TODO Find out if this is intentional
                     if (intValue < 256)
                         return (byte) intValue;
                     else

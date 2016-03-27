@@ -35,6 +35,7 @@ import org.firebirdsql.gds.*;
 import org.firebirdsql.gds.impl.DbAttachInfo;
 import org.firebirdsql.gds.impl.GDSHelper;
 import org.firebirdsql.gds.impl.jni.EmbeddedGDSFactoryPlugin;
+import org.firebirdsql.gds.impl.jni.LocalGDSFactoryPlugin;
 import org.firebirdsql.gds.ng.*;
 import org.firebirdsql.gds.ng.fields.RowValue;
 import org.firebirdsql.gds.ng.listeners.DefaultDatabaseListener;
@@ -66,7 +67,7 @@ public class FBManagedConnection implements ManagedConnection, XAResource, Excep
     private final List<ConnectionEventListener> connectionEventListeners = new CopyOnWriteArrayList<>();
     // TODO Review synchronization of connectionHandles (especially in blocks like in disassociateConnections, setConnectionSharing etc)
     private final List<FBConnection> connectionHandles = Collections.synchronizedList(new ArrayList<FBConnection>());
-    // TODO This is a bit of hack to be able to get attach warnings into the FBConnection that is created later.
+    // This is a bit of hack to be able to get attach warnings into the FBConnection that is created later.
     private SQLWarning unnotifiedWarnings;
 
     private int timeout = 0;
@@ -112,7 +113,9 @@ public class FBManagedConnection implements ManagedConnection, XAResource, Excep
             final FbConnectionProperties connectionProperties = new FbConnectionProperties();
             connectionProperties.fromDpb(dpb);
             // TODO Move this logic to the GDSType or database factory?
-            if (!EmbeddedGDSFactoryPlugin.EMBEDDED_TYPE_NAME.equals(mcf.getGDSType().toString())) {
+            final String gdsTypeName = mcf.getGDSType().toString();
+            if (!(EmbeddedGDSFactoryPlugin.EMBEDDED_TYPE_NAME.equals(gdsTypeName)
+                    || LocalGDSFactoryPlugin.LOCAL_TYPE_NAME.equals(gdsTypeName))) {
                 final DbAttachInfo dbAttachInfo = new DbAttachInfo(mcf.getDatabase());
                 connectionProperties.setServerName(dbAttachInfo.getServer());
                 connectionProperties.setPortNumber(dbAttachInfo.getPort());
@@ -145,8 +148,7 @@ public class FBManagedConnection implements ManagedConnection, XAResource, Excep
         FBManagedConnection.this.notify(connectionErrorOccurredNotifier, event);
     }
     
-    private FBConnectionRequestInfo getCombinedConnectionRequestInfo(
-            Subject subject, ConnectionRequestInfo cri)
+    private FBConnectionRequestInfo getCombinedConnectionRequestInfo(Subject subject, ConnectionRequestInfo cri)
             throws ResourceException {
         if (cri == null) {
             cri = mcf.getDefaultConnectionRequestInfo();
@@ -155,7 +157,7 @@ public class FBManagedConnection implements ManagedConnection, XAResource, Excep
             FBConnectionRequestInfo fbcri = (FBConnectionRequestInfo) cri;
             if (subject != null) {
                 // see connector spec, section 8.2.6, contract for
-                // ManagedConnectinFactory, option A.
+                // ManagedConnectionFactory, option A.
                 for (Object cred : subject.getPrivateCredentials()) {
                     if (cred instanceof PasswordCredential
                             && mcf.equals(((PasswordCredential) cred)
@@ -386,8 +388,7 @@ public class FBManagedConnection implements ManagedConnection, XAResource, Excep
             abstractConnection.setManagedConnection(this);
             connectionHandles.add(abstractConnection);
         } catch (ClassCastException cce) {
-            throw new FBResourceException(
-                    "invalid connection supplied to associateConnection.", cce);
+            throw new FBResourceException("invalid connection supplied to associateConnection.", cce);
         }
     }
 
@@ -737,7 +738,7 @@ public class FBManagedConnection implements ManagedConnection, XAResource, Excep
 
         try {
             // find XID
-            // TODO: Is there a reason why this pieace of code can't use the JDBC Statement class?
+            // TODO: Is there a reason why this piece of code can't use the JDBC Statement class?
             FbTransaction trHandle2 = database.startTransaction(tpb.getTransactionParameterBuffer());
             FbStatement stmtHandle2 = database.createStatement(trHandle2);
 
