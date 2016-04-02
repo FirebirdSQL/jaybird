@@ -91,8 +91,8 @@ Firebird support
 Support for Firebird 1.0 and 1.5 has been dropped. See [Firebird 1.0 and 1.5 no
 longer supported] for details.
 
-Firebird 2.0 support is improved with the implementation of wire protocol
-version 11. (_TODO: Or was v11 Firebird 2.1?_)
+Firebird 2.1 support is improved with the implementation of wire protocol
+version 11.
 
 Firebird 2.5 support is improved with the implementation of wire protocol
 version 12.
@@ -110,9 +110,9 @@ by [Hajime Nakagami](https://github.com/nakagami).
 
 ### Other Firebird feature support
 
-* Add support for streaming backup and restore ([JDBC-256](http://tracker.firebirdsql.org/browse/JDBC-256))
+*   Add support for streaming backup and restore ([JDBC-256](http://tracker.firebirdsql.org/browse/JDBC-256))
 
-   This feature was contributed by [Ivan Arabadzhiev](https://github.com/ls4f)
+    This feature was contributed by [Ivan Arabadzhiev](https://github.com/ls4f)
 
 New low-level implementation
 ----------------------------
@@ -201,7 +201,7 @@ Exceptions
     sub-classes anymore, but in general we strive to use the standard
     exceptions where possible.
 
-* Class `FBSQLWarning` has been removed and should be replaced with `SQLWarning`.
+* Class `FBSQLWarning` has been removed and has been replaced with `SQLWarning`.
 
 * Methods with `throws FBSQLException` changed to `throws SQLException`
 
