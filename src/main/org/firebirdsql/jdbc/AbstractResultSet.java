@@ -648,8 +648,15 @@ public abstract class AbstractResultSet implements ResultSet, FirebirdResultSet,
             return getField(columnIndex).getString();
     }
 
+    /**
+     * {@inheritDoc}
+     * <p>
+     * Implementation note: This method behaves exactly the same as {@link #getString(int)}.
+     * </p>
+     */
+    @Override
     public String getNString(int columnIndex) throws SQLException {
-        throw new FBDriverNotCapableException();
+        return getString(columnIndex);
     }
 
     /**
@@ -695,8 +702,15 @@ public abstract class AbstractResultSet implements ResultSet, FirebirdResultSet,
         throw new SQLFeatureNotSupportedException(UNICODE_STREAM_NOT_SUPPORTED);
     }
 
+    /**
+     * {@inheritDoc}
+     * <p>
+     * Implementation note: This method behaves exactly the same as {@link #getCharacterStream(int)}.
+     * </p>
+     */
+    @Override
     public Reader getNCharacterStream(int columnIndex) throws SQLException {
-        throw new FBDriverNotCapableException();
+        return getCharacterStream(columnIndex);
     }
 
     /**
@@ -806,8 +820,15 @@ public abstract class AbstractResultSet implements ResultSet, FirebirdResultSet,
             return getField(columnName).getString();
     }
 
+    /**
+     * {@inheritDoc}
+     * <p>
+     * Implementation note: This method behaves exactly the same as {@link #getString(String)}.
+     * </p>
+     */
+    @Override
     public String getNString(String columnLabel) throws SQLException {
-        throw new FBDriverNotCapableException();
+        return getString(columnLabel);
     }
 
     /**
@@ -983,8 +1004,15 @@ public abstract class AbstractResultSet implements ResultSet, FirebirdResultSet,
         throw new SQLFeatureNotSupportedException(UNICODE_STREAM_NOT_SUPPORTED);
     }
 
+    /**
+     * {@inheritDoc}
+     * <p>
+     * Implementation note: This method behaves exactly the same as {@link #getCharacterStream(String)}.
+     * </p>
+     */
+    @Override
     public Reader getNCharacterStream(String columnLabel) throws SQLException {
-        throw new FBDriverNotCapableException();
+        return getCharacterStream(columnLabel);
     }
 
     /**
@@ -2321,14 +2349,26 @@ public abstract class AbstractResultSet implements ResultSet, FirebirdResultSet,
         getField(columnName).setString(x);
     }
 
-    public void updateNString(int columnIndex, String string)
-            throws SQLException {
-        throw new FBDriverNotCapableException();
+    /**
+     * {@inheritDoc}
+     * <p>
+     * Implementation note: This method behaves exactly the same as {@link #updateString(int, String)}.
+     * </p>
+     */
+    @Override
+    public void updateNString(int columnIndex, String string) throws SQLException {
+        updateString(columnIndex, string);
     }
 
-    public void updateNString(String columnLabel, String string)
-            throws SQLException {
-        throw new FBDriverNotCapableException();
+    /**
+     * {@inheritDoc}
+     * <p>
+     * Implementation note: This method behaves exactly the same as {@link #updateString(String, String)}.
+     * </p>
+     */
+    @Override
+    public void updateNString(String columnLabel, String string) throws SQLException {
+        updateString(columnLabel, string);
     }
 
     /**
@@ -2523,20 +2563,48 @@ public abstract class AbstractResultSet implements ResultSet, FirebirdResultSet,
         throw new FBDriverNotCapableException();
     }
 
+    /**
+     * {@inheritDoc}
+     * <p>
+     * Implementation note: This method behaves exactly the same as {@link #updateCharacterStream(int, Reader, long)}.
+     * </p>
+     */
+    @Override
     public void updateNCharacterStream(int columnIndex, Reader x, long length) throws SQLException {
-        throw new FBDriverNotCapableException();
+        updateCharacterStream(columnIndex, x, length);
     }
 
+    /**
+     * {@inheritDoc}
+     * <p>
+     * Implementation note: This method behaves exactly the same as {@link #updateCharacterStream(int, Reader)}.
+     * </p>
+     */
+    @Override
     public void updateNCharacterStream(int columnIndex, Reader x) throws SQLException {
-        throw new FBDriverNotCapableException();
+        updateCharacterStream(columnIndex, x);
     }
 
+    /**
+     * {@inheritDoc}
+     * <p>
+     * Implementation note: This method behaves exactly the same as {@link #updateClob(String, Reader, long)}.
+     * </p>
+     */
+    @Override
     public void updateNCharacterStream(String columnLabel, Reader reader, long length) throws SQLException {
-        throw new FBDriverNotCapableException();
+        updateCharacterStream(columnLabel, reader, length);
     }
 
+    /**
+     * {@inheritDoc}
+     * <p>
+     * Implementation note: This method behaves exactly the same as {@link #updateCharacterStream(String, Reader)}.
+     * </p>
+     */
+    @Override
     public void updateNCharacterStream(String columnLabel, Reader reader) throws SQLException {
-        throw new FBDriverNotCapableException();
+        updateCharacterStream(columnLabel, reader);
     }
 
     /**
@@ -3221,12 +3289,26 @@ public abstract class AbstractResultSet implements ResultSet, FirebirdResultSet,
         throw new FBDriverNotCapableException();
     }
 
+    /**
+     * {@inheritDoc}
+     * <p>
+     * Implementation note: This method behaves exactly the same as {@link #getClob(int)}.
+     * </p>
+     */
+    @Override
     public NClob getNClob(int columnIndex) throws SQLException {
-        throw new FBDriverNotCapableException();
+        return (NClob) getClob(columnIndex);
     }
 
+    /**
+     * {@inheritDoc}
+     * <p>
+     * Implementation note: This method behaves exactly the same as {@link #getClob(String)}.
+     * </p>
+     */
+    @Override
     public NClob getNClob(String columnLabel) throws SQLException {
-        throw new FBDriverNotCapableException();
+        return (NClob) getClob(columnLabel);
     }
 
     public RowId getRowId(int columnIndex) throws SQLException {
@@ -3245,31 +3327,70 @@ public abstract class AbstractResultSet implements ResultSet, FirebirdResultSet,
         throw new FBDriverNotCapableException();
     }
 
+    /**
+     * {@inheritDoc}
+     * <p>
+     * Implementation note: This method behaves exactly the same as {@link #updateClob(int, Clob)}.
+     * </p>
+     */
+    @Override
     public void updateNClob(int columnIndex, NClob clob) throws SQLException {
-        throw new FBDriverNotCapableException();
+        updateClob(columnIndex, clob);
     }
 
-    public void updateNClob(int columnIndex, Reader reader, long length)
-            throws SQLException {
-        throw new FBDriverNotCapableException();
+    /**
+     * {@inheritDoc}
+     * <p>
+     * Implementation note: This method behaves exactly the same as {@link #updateClob(int, Reader, long)}.
+     * </p>
+     */
+    @Override
+    public void updateNClob(int columnIndex, Reader reader, long length) throws SQLException {
+        updateClob(columnIndex, reader, length);
     }
 
+    /**
+     * {@inheritDoc}
+     * <p>
+     * Implementation note: This method behaves exactly the same as {@link #updateClob(int, Reader)}.
+     * </p>
+     */
+    @Override
     public void updateNClob(int columnIndex, Reader reader) throws SQLException {
-        throw new FBDriverNotCapableException();
+        updateClob(columnIndex, reader);
     }
 
+    /**
+     * {@inheritDoc}
+     * <p>
+     * Implementation note: This method behaves exactly the same as {@link #updateClob(String, Clob)}.
+     * </p>
+     */
+    @Override
     public void updateNClob(String columnLabel, NClob clob) throws SQLException {
-        throw new FBDriverNotCapableException();
+        updateClob(columnLabel, clob);
     }
 
-    public void updateNClob(String columnLabel, Reader reader, long length)
-            throws SQLException {
-        throw new FBDriverNotCapableException();
+    /**
+     * {@inheritDoc}
+     * <p>
+     * Implementation note: This method behaves exactly the same as {@link #updateClob(int, Reader, long)}.
+     * </p>
+     */
+    @Override
+    public void updateNClob(String columnLabel, Reader reader, long length) throws SQLException {
+        updateClob(columnLabel, reader, length);
     }
 
-    public void updateNClob(String columnLabel, Reader reader)
-            throws SQLException {
-        throw new FBDriverNotCapableException();
+    /**
+     * {@inheritDoc}
+     * <p>
+     * Implementation note: This method behaves exactly the same as {@link #updateClob(String, Reader)}.
+     * </p>
+     */
+    @Override
+    public void updateNClob(String columnLabel, Reader reader) throws SQLException {
+        updateClob(columnLabel, reader);
     }
 
     public void updateRowId(int columnIndex, RowId x) throws SQLException {

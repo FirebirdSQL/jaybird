@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
@@ -20,16 +18,16 @@
  */
 package org.firebirdsql.jdbc;
 
-import java.io.*;
-import java.sql.*;
-import java.util.Properties;
-
 import org.firebirdsql.common.DdlHelper;
 import org.firebirdsql.common.FBJUnit4TestBase;
 import org.firebirdsql.common.JdbcResourceHelper;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+
+import java.io.*;
+import java.sql.*;
+import java.util.Properties;
 
 import static org.firebirdsql.common.FBTestProperties.*;
 import static org.junit.Assert.*;
@@ -82,71 +80,88 @@ public class TestFBClob extends FBJUnit4TestBase {
     public void testSimpleGetAsciiStream() throws SQLException {
         final String TEST_VALUE = "TEST_VALUE";
         addTestValues(con, 1, TEST_VALUE, PLAIN_BLOB);
-        String clobValue;
-        Statement stmt = con.createStatement();
 
-        ResultSet resultSet = stmt.executeQuery("SELECT " + PLAIN_BLOB + " FROM test_clob");
-        resultSet.next();
-        Clob clob = resultSet.getClob(1);
-        InputStream inputStream = clob.getAsciiStream();
-        clobValue = slurpString(inputStream);
+        try (Statement stmt = con.createStatement();
+             ResultSet resultSet = stmt.executeQuery("SELECT " + PLAIN_BLOB + " FROM test_clob")) {
+            resultSet.next();
+            Clob clob = resultSet.getClob(1);
+            InputStream inputStream = clob.getAsciiStream();
+            String clobValue = slurpString(inputStream);
 
-        assertEquals(TEST_VALUE, clobValue);
+            assertEquals(TEST_VALUE, clobValue);
+        }
     }
 
     @Test
     public void testNullClob() throws SQLException {
         addTestValues(con, 1, null, PLAIN_BLOB);
-        Statement stmt = con.createStatement();
-        ResultSet resultSet = stmt.executeQuery("SELECT " + PLAIN_BLOB + " FROM test_clob");
-        resultSet.next();
-        Clob clob = resultSet.getClob(1);
+        try (Statement stmt = con.createStatement();
+             ResultSet resultSet = stmt.executeQuery("SELECT " + PLAIN_BLOB + " FROM test_clob")) {
+            resultSet.next();
+            Clob clob = resultSet.getClob(1);
 
-        assertNull(clob);
+            assertNull(clob);
+        }
     }
 
     @Test
     public void testCachedNullClob() throws SQLException {
         addTestValues(con, 1, null, PLAIN_BLOB);
-        PreparedStatement stmt = con.prepareStatement("SELECT " + PLAIN_BLOB + " FROM test_clob",
+        try (PreparedStatement stmt = con.prepareStatement("SELECT " + PLAIN_BLOB + " FROM test_clob",
                 ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY, ResultSet.HOLD_CURSORS_OVER_COMMIT);
-        ResultSet resultSet = stmt.executeQuery();
-        resultSet.next();
-        Clob clob = resultSet.getClob(1);
-        assertNull(clob);
+             ResultSet resultSet = stmt.executeQuery()) {
+            resultSet.next();
+            Clob clob = resultSet.getClob(1);
+            assertNull(clob);
+        }
     }
 
     @Test
     public void testSimpleGetCharacterStream() throws Exception {
         final String TEST_VALUE = "TEST_STRING";
         addTestValues(con, 1, TEST_VALUE, PLAIN_BLOB);
-        Statement stmt = con.createStatement();
-        String clobValue;
-        ResultSet resultSet = stmt.executeQuery("SELECT " + PLAIN_BLOB + " FROM test_clob");
-        resultSet.next();
-        Clob clob = resultSet.getClob(1);
-        clobValue = slurpString(clob.getCharacterStream());
+        try (Statement stmt = con.createStatement();
+             ResultSet resultSet = stmt.executeQuery("SELECT " + PLAIN_BLOB + " FROM test_clob")) {
+            resultSet.next();
+            Clob clob = resultSet.getClob(1);
+            String clobValue = slurpString(clob.getCharacterStream());
 
-        assertEquals(TEST_VALUE, clobValue);
+            assertEquals(TEST_VALUE, clobValue);
+        }
+    }
+
+    @Test
+    public void testSimpleGetCharacterStreamAsNClob() throws Exception {
+        final String TEST_VALUE = "TEST_STRING";
+        addTestValues(con, 1, TEST_VALUE, PLAIN_BLOB);
+        try (Statement stmt = con.createStatement();
+             ResultSet resultSet = stmt.executeQuery("SELECT " + PLAIN_BLOB + " FROM test_clob")) {
+            resultSet.next();
+            NClob clob = resultSet.getNClob(1);
+            String clobValue = slurpString(clob.getCharacterStream());
+
+            assertEquals(TEST_VALUE, clobValue);
+        }
     }
 
     @Test
     public void testGetSubString() throws SQLException {
         final String TEST_VALUE = "TEST_STRING";
         addTestValues(con, 1, TEST_VALUE, PLAIN_BLOB);
-        Statement stmt = con.createStatement();
-        ResultSet resultSet = stmt.executeQuery("SELECT " + PLAIN_BLOB + " FROM test_clob");
-        resultSet.next();
-        Clob clob = resultSet.getClob(1);
+        try (Statement stmt = con.createStatement();
+             ResultSet resultSet = stmt.executeQuery("SELECT " + PLAIN_BLOB + " FROM test_clob")) {
+            resultSet.next();
+            Clob clob = resultSet.getClob(1);
 
-        for (int start = 1; start <= TEST_VALUE.length(); start++) {
-            for (int length = 0; length <= TEST_VALUE.length() - (start - 1); length++) {
-                String clobValue = clob.getSubString(start, length);
-                assertEquals(TEST_VALUE.substring(start - 1, start - 1 + length), clobValue);
+            for (int start = 1; start <= TEST_VALUE.length(); start++) {
+                for (int length = 0; length <= TEST_VALUE.length() - (start - 1); length++) {
+                    String clobValue = clob.getSubString(start, length);
+                    assertEquals(TEST_VALUE.substring(start - 1, start - 1 + length), clobValue);
+                }
             }
+            assertEquals(TEST_VALUE, clob.getSubString(1, TEST_VALUE.length() * 2));
+            assertEquals("", clob.getSubString(1, 0));
         }
-        assertEquals(TEST_VALUE, clob.getSubString(1, TEST_VALUE.length() * 2));
-        assertEquals("", clob.getSubString(1, 0));
     }
 
     @Test
@@ -191,15 +206,12 @@ public class TestFBClob extends FBJUnit4TestBase {
 
     private void runMultibyteReadTest(String testString, String fbEncoding, String colName, String javaEncoding)
             throws Exception {
-        Connection con = getEncodedConnection(fbEncoding);
-        try {
-        insertStringBytesViaBlobWithEncoding(con, testString, colName, javaEncoding);
-        char[] buffer = readClobViaCharacterStream(con, colName, testString.length());
-        String outputString = new String(buffer);
+        try (Connection con = getEncodedConnection(fbEncoding)) {
+            insertStringBytesViaBlobWithEncoding(con, testString, colName, javaEncoding);
+            char[] buffer = readClobViaCharacterStream(con, colName, testString.length());
+            String outputString = new String(buffer);
 
-        assertEquals(testString, outputString);
-        } finally {
-            JdbcResourceHelper.closeQuietly(con);
+            assertEquals(testString, outputString);
         }
     }
 
@@ -255,140 +267,147 @@ public class TestFBClob extends FBJUnit4TestBase {
 
     @Test
     public void testWriteClobUsingReader() throws Exception {
-        Connection con = getEncodedConnection("ISO8859_1");
-        try {
-            PreparedStatement insertStmt = con.prepareStatement("INSERT INTO test_clob (" + TEXT_BLOB + ") VALUES (?)");
-
-            insertStmt.setClob(1, new StringReader(LATIN1_TEST_STRING));
-            insertStmt.execute();
-            insertStmt.close();
-
-            PreparedStatement selStatement = con.prepareStatement("SELECT " + TEXT_BLOB + " FROM test_clob");
-            ResultSet rs = selStatement.executeQuery();
-
-            if (rs.next()) {
-                String result = rs.getString(1);
-                assertEquals("Unexpected value for clob roundtrip", LATIN1_TEST_STRING, result);
-            } else {
-                fail("Expected a row");
+        try (Connection con = getEncodedConnection("ISO8859_1")) {
+            try (PreparedStatement insertStmt = con.prepareStatement(
+                    "INSERT INTO test_clob (" + TEXT_BLOB + ") VALUES (?)")) {
+                insertStmt.setClob(1, new StringReader(LATIN1_TEST_STRING));
+                insertStmt.execute();
             }
-        } finally {
-            JdbcResourceHelper.closeQuietly(con);
+
+            try (PreparedStatement selStatement = con.prepareStatement("SELECT " + TEXT_BLOB + " FROM test_clob");
+                 ResultSet rs = selStatement.executeQuery()) {
+                if (rs.next()) {
+                    String result = rs.getString(1);
+                    assertEquals("Unexpected value for clob roundtrip", LATIN1_TEST_STRING, result);
+                } else {
+                    fail("Expected a row");
+                }
+            }
+        }
+    }
+
+    @Test
+    public void testWriteClobUsingReaderAsNClob() throws Exception {
+        try (Connection con = getEncodedConnection("ISO8859_1")) {
+            try (PreparedStatement insertStmt = con.prepareStatement(
+                    "INSERT INTO test_clob (" + TEXT_BLOB + ") VALUES (?)")) {
+                insertStmt.setNClob(1, new StringReader(LATIN1_TEST_STRING));
+                insertStmt.execute();
+            }
+
+            try (PreparedStatement selStatement = con.prepareStatement("SELECT " + TEXT_BLOB + " FROM test_clob");
+                 ResultSet rs = selStatement.executeQuery()) {
+                if (rs.next()) {
+                    String result = rs.getString(1);
+                    assertEquals("Unexpected value for clob roundtrip", LATIN1_TEST_STRING, result);
+                } else {
+                    fail("Expected a row");
+                }
+            }
         }
     }
 
     @Test
     public void testWriteClobUsingNonFBClob() throws Exception {
-        Connection con = getEncodedConnection("ISO8859_1");
-        try {
-            PreparedStatement insertStmt = con.prepareStatement("INSERT INTO test_clob (" + TEXT_BLOB + ") VALUES (?)");
-
-            insertStmt.setClob(1, new StringClob(LATIN1_TEST_STRING));
-            insertStmt.execute();
-            insertStmt.close();
-
-            PreparedStatement selStatement = con.prepareStatement("SELECT " + TEXT_BLOB + " FROM test_clob");
-            ResultSet rs = selStatement.executeQuery();
-
-            if (rs.next()) {
-                String result = rs.getString(1);
-                assertEquals("Unexpected value for clob roundtrip", LATIN1_TEST_STRING, result);
-            } else {
-                fail("Expected a row");
+        try (Connection con = getEncodedConnection("ISO8859_1")) {
+            try (PreparedStatement insertStmt = con.prepareStatement(
+                    "INSERT INTO test_clob (" + TEXT_BLOB + ") VALUES (?)")) {
+                insertStmt.setClob(1, new StringClob(LATIN1_TEST_STRING));
+                insertStmt.execute();
             }
-        } finally {
-            JdbcResourceHelper.closeQuietly(con);
+
+            try (PreparedStatement selStatement = con.prepareStatement("SELECT " + TEXT_BLOB + " FROM test_clob");
+                 ResultSet rs = selStatement.executeQuery()) {
+                if (rs.next()) {
+                    String result = rs.getString(1);
+                    assertEquals("Unexpected value for clob roundtrip", LATIN1_TEST_STRING, result);
+                } else {
+                    fail("Expected a row");
+                }
+            }
         }
     }
 
     private void runHoldableClobTest(String colName, String testString, String javaEncoding, String fbEncoding)
             throws Exception {
-
-        Connection con = getEncodedConnection(fbEncoding);
-        try {
+        Clob clob;
+        try (Connection con = getEncodedConnection(fbEncoding)) {
             insertStringBytesViaBlobWithEncoding(con, testString, colName, javaEncoding);
-            PreparedStatement stmt = con.prepareStatement("SELECT " + colName + " FROM test_clob",
+
+            try (PreparedStatement stmt = con.prepareStatement("SELECT " + colName + " FROM test_clob",
                     ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY, ResultSet.HOLD_CURSORS_OVER_COMMIT);
-            ResultSet resultSet = stmt.executeQuery();
-            resultSet.next();
-            Clob clob = resultSet.getClob(1);
-            resultSet.close();
-            stmt.close();
-            con.close();
-
-            Reader reader = clob.getCharacterStream();
-            char[] buffer = new char[testString.length()];
-            reader.read(buffer);
-            reader.close();
-
-            assertEquals(testString, new String(buffer));
-        } finally {
-            JdbcResourceHelper.closeQuietly(con);
+                 ResultSet resultSet = stmt.executeQuery()) {
+                resultSet.next();
+                clob = resultSet.getClob(1);
+            }
         }
+
+        char[] buffer = new char[testString.length()];
+        try (Reader reader = clob.getCharacterStream()) {
+            reader.read(buffer);
+        }
+
+        assertEquals(testString, new String(buffer));
     }
 
     private void runMultibyteWriteTest(String testString, String fbEncoding, String colName, String javaEncoding)
             throws Exception {
-
-        Connection con = getEncodedConnection(fbEncoding);
-        try {
+        try (Connection con = getEncodedConnection(fbEncoding)) {
             insertStringViaClobCharacterStream(con, testString, colName);
 
             String selectString = readStringViaGetBytes(con, colName, javaEncoding);
 
             assertEquals(testString, selectString);
-        } finally {
-            JdbcResourceHelper.closeQuietly(con);
         }
     }
 
     private String readStringViaGetBytes(Connection con, String colName, String javaEncoding) throws SQLException,
             UnsupportedEncodingException {
-        PreparedStatement selectStmt = con.prepareStatement("SELECT " + colName + " FROM test_clob");
-        ResultSet resultSet = selectStmt.executeQuery();
-        resultSet.next();
-        byte[] byteBuffer = resultSet.getBytes(1);
-        String selectString = new String(byteBuffer, javaEncoding);
-        resultSet.close();
-        selectStmt.close();
-        return selectString;
+        try (PreparedStatement selectStmt = con.prepareStatement("SELECT " + colName + " FROM test_clob");
+             ResultSet resultSet = selectStmt.executeQuery()) {
+            resultSet.next();
+            byte[] byteBuffer = resultSet.getBytes(1);
+            return new String(byteBuffer, javaEncoding);
+        }
     }
 
     private void insertStringViaClobCharacterStream(Connection con, String testString, String colName)
             throws SQLException, IOException {
-        PreparedStatement insertStmt = con.prepareStatement("INSERT INTO test_clob (" + colName + ") VALUES (?)");
-        Clob insertClob = con.createClob();
-        Writer writer = insertClob.setCharacterStream(1);
-        writer.write(testString.toCharArray());
-        writer.close();
-        insertStmt.setClob(1, insertClob);
-        insertStmt.execute();
+        try (PreparedStatement insertStmt = con.prepareStatement(
+                "INSERT INTO test_clob (" + colName + ") VALUES (?)")) {
+            Clob insertClob = con.createClob();
+            try (Writer writer = insertClob.setCharacterStream(1)) {
+                writer.write(testString.toCharArray());
+            }
+            insertStmt.setClob(1, insertClob);
+            insertStmt.execute();
+        }
     }
 
     private char[] readClobViaCharacterStream(Connection con, String colName, int expectedLength) throws SQLException,
             IOException {
-        PreparedStatement selectStmt = con.prepareStatement("SELECT " + colName + " FROM test_clob");
-        ResultSet resultSet = selectStmt.executeQuery();
-        resultSet.next();
+        try (PreparedStatement selectStmt = con.prepareStatement("SELECT " + colName + " FROM test_clob")) {
+            ResultSet resultSet = selectStmt.executeQuery();
+            resultSet.next();
 
-        Clob clob = resultSet.getClob(1);
-        Reader reader = clob.getCharacterStream();
-        char[] buffer = new char[expectedLength];
-        reader.read(buffer);
-        reader.close();
-        selectStmt.close();
-        return buffer;
+            Clob clob = resultSet.getClob(1);
+            try (Reader reader = clob.getCharacterStream()) {
+                char[] buffer = new char[expectedLength];
+                reader.read(buffer);
+                return buffer;
+            }
+        }
     }
 
     private void insertStringBytesViaBlobWithEncoding(Connection con, String insertString, String colName,
             String javaEncoding) throws Exception {
-        PreparedStatement insertStmt = con.prepareStatement("INSERT INTO test_clob (" + colName + ") VALUES (?)");
+        try (PreparedStatement insertStmt = con.prepareStatement(
+                "INSERT INTO test_clob (" + colName + ") VALUES (?)")) {
+            byte[] bytes = insertString.getBytes(javaEncoding);
+            insertStmt.setBytes(1, bytes);
 
-        byte[] bytes = insertString.getBytes(javaEncoding);
-        insertStmt.setBytes(1, bytes);
-
-        insertStmt.execute();
-        insertStmt.close();
+            insertStmt.execute();
+        }
     }
 
     private FBConnection getEncodedConnection(String encoding) throws SQLException {
@@ -419,13 +438,11 @@ public class TestFBClob extends FBJUnit4TestBase {
     }
 
     private void addTestValues(Connection con, int id, String value, String colName) throws SQLException {
-        PreparedStatement stmt = con.prepareStatement("INSERT INTO test_clob (id, " + colName + ") VALUES (?, ?)");
-        try {
+        try (PreparedStatement stmt = con.prepareStatement(
+                "INSERT INTO test_clob (id, " + colName + ") VALUES (?, ?)")) {
             stmt.setInt(1, id);
             stmt.setString(2, value);
             stmt.execute();
-        } finally {
-            stmt.close();
         }
     }
 }

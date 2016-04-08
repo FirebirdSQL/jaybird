@@ -344,7 +344,25 @@ _Unless explicitly indicated, changes also apply to `CallableStatement`_
     For the behavior in Jaybird 2.2 and earlier, use `setBinaryStream`.
     Otherwise use `setCharacterStream`.
 
-### ResultSet ###
+* Methods `setNString`, `setNClob`, and `setNCharacterStream` will now behave
+  as their counterpart without `N` (ie `setString`, `setClob`, and
+  `setCharacterStream`)
+
+    This implementation is not compliant with the JDBC requirements for
+    `NVARCHAR/NCHAR/NCLOB` support, it is only provided for compatibility
+    purposes.
+
+#### CallableStatement ####
+
+* Methods `getNString`, `getNClob`, and `getNCharacterStream` will now behave
+  as their counterpart without `N` (ie `getString`, `getClob`, and
+  `getCharacterStream`)
+
+    This implementation is not compliant with the JDBC requirements for
+    `NVARCHAR/NCHAR/NCLOB` support, it is only provided for compatibility
+    purposes.
+
+#### ResultSet ####
 
 * Method `getUnicodeStream` now always throws
   an `SQLFeatureNotSupportedException`. The previous implementation did not
@@ -353,6 +371,24 @@ _Unless explicitly indicated, changes also apply to `CallableStatement`_
 
     For the behavior in Jaybird 2.2 and earlier, use `getBinaryStream`.
     Otherwise use `getCharacterStream`.
+
+* Methods `getNString`, `updateNString`, `getNClob`, `updateNClob`,
+  `getNCharacterStream`, and `updateNCharacterStream` will now behave as their
+  counterpart without `N` (ie `getString`, `updateString`, `getClob`,
+  `updateClob`, `getCharacterStream`, and `updateCharacterStream`)
+
+    This implementation is not compliant with the JDBC requirements for
+    `NVARCHAR/NCHAR/NCLOB` support, it is only provided for compatibility
+    purposes.
+
+### Clob ###
+
+* The `Clob` implementations of the driver now also implement `NClob` so they
+  can be returned from `getNClob`.
+
+    This implementation is not compliant with the JDBC requirements for
+    `NVARCHAR/NCHAR/NCLOB` support, it is only provided for compatibility
+    purposes.
 
 **TODO: Add other changes**
 

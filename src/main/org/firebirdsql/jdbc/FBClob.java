@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source J2ee connector - jdbc driver
+ * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -12,7 +12,7 @@
  * This file was created by members of the firebird development team.
  * All individual contributions remain the Copyright (C) of those
  * individuals.  Contributors to this file are either listed here or
- * can be obtained from a CVS history command.
+ * can be obtained from a source control history command.
  *
  * All rights reserved.
  */
@@ -27,6 +27,7 @@ import java.io.Reader;
 import java.io.UnsupportedEncodingException;
 import java.io.Writer;
 import java.sql.Clob;
+import java.sql.NClob;
 import java.sql.SQLException;
 
 /**
@@ -34,18 +35,23 @@ import java.sql.SQLException;
  * CLOB is a built-in type that stores a Character Large Object as a column
  * value in a row of a database table. <b>CLOBS are not currently supported by
  * the Jaybird driver</b>.
- * 
+ * <p>
  * The Clob interface provides methods for getting the length of an SQL CLOB
  * (Character Large Object) value, for materializing a CLOB value on the client,
  * and for searching for a substring or CLOB object within a CLOB value. Methods
  * in the interfaces ResultSet, CallableStatement, and PreparedStatement, such
  * as getClob and setClob allow a programmer to access an SQL CLOB value. In
  * addition, this interface has methods for updating a CLOB value.
+ * </p>
+ * <p>
+ * This class also implements {@link NClob} so it can be used with the {@code set/get/updateNClob} methods
+ * transparently. It technically does not conform to the JDBC requirements for {@code NClob}.
+ * </p>
  * 
  * @author <a href="mailto:d_jencks@users.sourceforge.net">David Jencks</a>
  * @version 1.0
  */
-public class FBClob implements Clob {
+public class FBClob implements Clob, NClob {
 
 	private final FBBlob wrappedBlob;
 

@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
@@ -103,21 +101,17 @@ public class TestResultSetDialect1 extends FBJUnit4TestBase {
     public void testUpdateRow() throws Exception {
         createTestData(1);
 
-        Statement stmt = connection.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_UPDATABLE);
-        try {
-            ResultSet rs1 = stmt.executeQuery(SELECT_TEST_TABLE);
-            assertTrue("Expected a row", rs1.next());
-            rs1.updateString(2, "newString1");
-            rs1.updateRow();
+        try (Statement stmt = connection.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_UPDATABLE)) {
+            try (ResultSet rs1 = stmt.executeQuery(SELECT_TEST_TABLE)) {
+                assertTrue("Expected a row", rs1.next());
+                rs1.updateString(2, "newString1");
+                rs1.updateRow();
+            }
 
-            rs1.close();
-
-            ResultSet rs2 = stmt.executeQuery(SELECT_TEST_TABLE);
-            assertTrue("Expected a row", rs2.next());
-            assertEquals("newString1", rs2.getString(2));
-            rs2.close();
-        } finally {
-            stmt.close();
+            try (ResultSet rs2 = stmt.executeQuery(SELECT_TEST_TABLE)) {
+                assertTrue("Expected a row", rs2.next());
+                assertEquals("newString1", rs2.getString(2));
+            }
         }
     }
 
@@ -132,22 +126,18 @@ public class TestResultSetDialect1 extends FBJUnit4TestBase {
     public void testInsertRow() throws Exception {
         createTestData(1);
 
-        Statement stmt = connection.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_UPDATABLE);
-        try {
-            ResultSet rs1 = stmt.executeQuery(SELECT_TEST_TABLE);
-            rs1.moveToInsertRow();
-            rs1.updateInt(1, 2);
-            rs1.updateString(2, "newString2");
-            rs1.insertRow();
+        try (Statement stmt = connection.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_UPDATABLE)) {
+            try (ResultSet rs1 = stmt.executeQuery(SELECT_TEST_TABLE)) {
+                rs1.moveToInsertRow();
+                rs1.updateInt(1, 2);
+                rs1.updateString(2, "newString2");
+                rs1.insertRow();
+            }
 
-            rs1.close();
-
-            ResultSet rs2 = stmt.executeQuery(SELECT_TEST_TABLE + " WHERE id = 2");
-            assertTrue("Expected a row", rs2.next());
-            assertEquals("newString2", rs2.getString(2));
-            rs2.close();
-        } finally {
-            stmt.close();
+            try (ResultSet rs2 = stmt.executeQuery(SELECT_TEST_TABLE + " WHERE id = 2")) {
+                assertTrue("Expected a row", rs2.next());
+                assertEquals("newString2", rs2.getString(2));
+            }
         }
     }
 
@@ -162,33 +152,26 @@ public class TestResultSetDialect1 extends FBJUnit4TestBase {
     public void testDeleteRow() throws Exception {
         createTestData(1);
 
-        Statement stmt = connection.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_UPDATABLE);
-        try {
-            ResultSet rs1 = stmt.executeQuery(SELECT_TEST_TABLE);
-            assertTrue("Expected a row", rs1.next());
-            rs1.deleteRow();
+        try (Statement stmt = connection.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_UPDATABLE)) {
+            try (ResultSet rs1 = stmt.executeQuery(SELECT_TEST_TABLE)) {
+                assertTrue("Expected a row", rs1.next());
+                rs1.deleteRow();
+            }
 
-            rs1.close();
-
-            ResultSet rs2 = stmt.executeQuery(SELECT_TEST_TABLE);
-            assertFalse("Expected no row", rs2.next());
-            rs2.close();
-        } finally {
-            stmt.close();
+            try (ResultSet rs2 = stmt.executeQuery(SELECT_TEST_TABLE)) {
+                assertFalse("Expected no row", rs2.next());
+            }
         }
     }
 
     private void createTestData(int recordCount) throws Exception {
         connection.setAutoCommit(false);
-        PreparedStatement ps = connection.prepareStatement(INSERT_INTO_TABLE_STATEMENT);
-        try {
+        try (PreparedStatement ps = connection.prepareStatement(INSERT_INTO_TABLE_STATEMENT)) {
             for (int i = 0; i < recordCount; i++) {
                 ps.setInt(1, i);
                 ps.setString(2, "oldString" + i);
                 ps.executeUpdate();
             }
-        } finally {
-            ps.close();
         }
         connection.setAutoCommit(true);
     }

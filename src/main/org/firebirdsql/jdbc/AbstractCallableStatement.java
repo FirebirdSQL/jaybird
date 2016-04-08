@@ -1034,20 +1034,48 @@ public abstract class AbstractCallableStatement extends FBPreparedStatement impl
         throw new FBDriverNotCapableException();
     }
 
+    /**
+     * {@inheritDoc}
+     * <p>
+     * Implementation note: This method behaves exactly the same as {@link #setCharacterStream(String, Reader, long)}.
+     * </p>
+     */
+    @Override
     public void setNCharacterStream(String parameterName, Reader value, long length) throws SQLException {
-        throw new FBDriverNotCapableException();
+        setCharacterStream(parameterName, value, length);
     }
 
+    /**
+     * {@inheritDoc}
+     * <p>
+     * Implementation note: This method behaves exactly the same as {@link #setCharacterStream(String, Reader)}.
+     * </p>
+     */
+    @Override
     public void setNCharacterStream(String parameterName, Reader value) throws SQLException {
-        throw new FBDriverNotCapableException();
+        setCharacterStream(parameterName, value);
     }
 
+    /**
+     * {@inheritDoc}
+     * <p>
+     * Implementation note: This method behaves exactly the same as {@link #setClob(String, Reader, long)}.
+     * </p>
+     */
+    @Override
     public void setNClob(String parameterName, Reader reader, long length) throws SQLException {
-        throw new FBDriverNotCapableException();
+        setClob(parameterName, reader, length);
     }
 
+    /**
+     * {@inheritDoc}
+     * <p>
+     * Implementation note: This method behaves exactly the same as {@link #setClob(String, Reader)}.
+     * </p>
+     */
+    @Override
     public void setNClob(String parameterName, Reader reader) throws SQLException {
-        throw new FBDriverNotCapableException();
+        setClob(parameterName, reader);
     }
 
     public void setNString(String parameterName, String value) throws SQLException {
@@ -1399,8 +1427,15 @@ public abstract class AbstractCallableStatement extends FBPreparedStatement impl
         return getSQLXML(findOutParameter(parameterName));
     }
 
+    /**
+     * {@inheritDoc}
+     * <p>
+     * Implementation note: This method behaves exactly the same as {@link #setClob(String, Clob)}.
+     * </p>
+     */
+    @Override
     public void setNClob(String parameterName, NClob value) throws SQLException {
-        throw new FBDriverNotCapableException();
+        setClob(parameterName, value);
     }
 
     public void setRowId(String parameterName, RowId x) throws SQLException {

@@ -29,6 +29,7 @@ import java.io.Reader;
 import java.io.StringReader;
 import java.io.Writer;
 import java.sql.Clob;
+import java.sql.NClob;
 import java.sql.SQLException;
 
 /**
@@ -36,7 +37,7 @@ import java.sql.SQLException;
  *
  * @author Steve Ebersole
  */
-class StringClob implements Clob {
+class StringClob implements Clob, NClob {
 	private final String value;
 
 	public StringClob(String value) {

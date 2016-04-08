@@ -571,28 +571,60 @@ public abstract class AbstractPreparedStatement extends FBStatement implements F
     public void setURL(int parameterIndex, URL url) throws SQLException {
         throw new FBDriverNotCapableException();
     }
-    
+
+    /**
+     * {@inheritDoc}
+     * <p>
+     * Implementation note: This method behaves exactly the same as {@link #setCharacterStream(int, Reader, long)}.
+     * </p>
+     */
+    @Override
     public void setNCharacterStream(int parameterIndex, Reader value, long length) throws SQLException {
-        throw new FBDriverNotCapableException();
+        setCharacterStream(parameterIndex, value, length);
     }
 
-    public void setNCharacterStream(int parameterIndex, Reader value)
-            throws SQLException {
-        throw new FBDriverNotCapableException();
+    /**
+     * {@inheritDoc}
+     * <p>
+     * Implementation note: This method behaves exactly the same as {@link #setCharacterStream(int, Reader)}.
+     * </p>
+     */
+    @Override
+    public void setNCharacterStream(int parameterIndex, Reader value) throws SQLException {
+        setCharacterStream(parameterIndex, value);
     }
 
-    public void setNClob(int parameterIndex, Reader reader, long length)
-            throws SQLException {
-        throw new FBDriverNotCapableException();
+    /**
+     * {@inheritDoc}
+     * <p>
+     * Implementation note: This method behaves exactly the same as {@link #setClob(int, Reader, long)}.
+     * </p>
+     */
+    @Override
+    public void setNClob(int parameterIndex, Reader reader, long length) throws SQLException {
+        setClob(parameterIndex, reader, length);
     }
 
+    /**
+     * {@inheritDoc}
+     * <p>
+     * Implementation note: This method behaves exactly the same as {@link #setClob(int, Reader)}.
+     * </p>
+     */
+    @Override
     public void setNClob(int parameterIndex, Reader reader) throws SQLException {
-        throw new FBDriverNotCapableException();
+        setClob(parameterIndex, reader);
     }
 
-    public void setNString(int parameterIndex, String value)
-            throws SQLException {
-        throw new FBDriverNotCapableException();
+    /**
+     * {@inheritDoc}
+     * <p>
+     * Implementation note: This method behaves exactly the same as {@link #setString(int, String)}.
+     * </p>
+     */
+    @Override
+    public void setNString(int parameterIndex, String value) throws SQLException {
+        setString(parameterIndex, value);
     }
 
     /**
@@ -1294,9 +1326,16 @@ public abstract class AbstractPreparedStatement extends FBStatement implements F
     public ParameterMetaData getParameterMetaData() throws SQLException {
         return getFirebirdParameterMetaData();
     }
-    
+
+    /**
+     * {@inheritDoc}
+     * <p>
+     * Implementation note: This method behaves exactly the same as {@link #setClob(int, Clob)}.
+     * </p>
+     */
+    @Override
     public void setNClob(int parameterIndex, NClob value) throws SQLException {
-        throw new FBDriverNotCapableException();
+        setClob(parameterIndex, value);
     }
 
     public void setRowId(int parameterIndex, RowId x) throws SQLException {
