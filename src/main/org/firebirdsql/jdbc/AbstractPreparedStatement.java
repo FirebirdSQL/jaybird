@@ -261,8 +261,7 @@ public abstract class AbstractPreparedStatement extends FBStatement implements F
         setBinaryStream(parameterIndex, inputStream, (int)length);
     }
 
-    public void setBinaryStream(int parameterIndex, InputStream x)
-            throws SQLException {
+    public void setBinaryStream(int parameterIndex, InputStream x) throws SQLException {
         throw new FBDriverNotCapableException();
     }
 
@@ -569,7 +568,7 @@ public abstract class AbstractPreparedStatement extends FBStatement implements F
     }
     
     public void setURL(int parameterIndex, URL url) throws SQLException {
-        throw new FBDriverNotCapableException();
+        throw new FBDriverNotCapableException("Type URL not supported");
     }
 
     /**
@@ -1031,7 +1030,7 @@ public abstract class AbstractPreparedStatement extends FBStatement implements F
      *      </a>
      */
     public void setRef(int i, Ref x) throws SQLException {
-        throw new FBDriverNotCapableException();
+        throw new FBDriverNotCapableException("Type REF not supported");
     }
 
     /**
@@ -1126,7 +1125,7 @@ public abstract class AbstractPreparedStatement extends FBStatement implements F
      *      </a>
      */
     public void setArray(int i, Array x) throws SQLException {
-        throw new FBDriverNotCapableException();
+        throw new FBDriverNotCapableException("Type ARRAY not yet supported");
     }
 
     /**
@@ -1339,11 +1338,11 @@ public abstract class AbstractPreparedStatement extends FBStatement implements F
     }
 
     public void setRowId(int parameterIndex, RowId x) throws SQLException {
-        throw new FBDriverNotCapableException();
+        throw new FBDriverNotCapableException("Type ROWID not yet supported");
     }
 
     public void setSQLXML(int parameterIndex, SQLXML xmlObject) throws SQLException {
-        throw new FBDriverNotCapableException();
+        throw new FBDriverNotCapableException("Type SQLXML not supported");
     }
     
     // Methods not allowed to be used on PreparedStatement and CallableStatement

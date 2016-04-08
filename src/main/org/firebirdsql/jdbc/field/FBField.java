@@ -507,7 +507,7 @@ public abstract class FBField {
     }
 
     public Ref getRef() throws SQLException {
-        throw new FBDriverNotCapableException();
+        throw new FBDriverNotCapableException("Type REF not supported");
     }
 
     public Clob getClob() throws SQLException {
@@ -515,7 +515,7 @@ public abstract class FBField {
     }
 
     public Array getArray() throws SQLException {
-        throw new FBDriverNotCapableException();
+        throw new FBDriverNotCapableException("Type ARRAY not yet supported");
     }
 
     // --- setters

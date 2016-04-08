@@ -71,7 +71,7 @@ public class FBClob implements Clob, NClob {
 	 * @see <a href="package-summary.html#2.0 API">What Is in the JDBC 2.0 API</a>
 	 */
 	public long length() throws SQLException {
-		throw new FBDriverNotCapableException();
+		throw new FBDriverNotCapableException("Cannot determine length for CLOB");
 	}
 
 	/**
@@ -107,27 +107,22 @@ public class FBClob implements Clob, NClob {
 	 * @see <a href="package-summary.html#2.0 API">What Is in the JDBC 2.0 API</a>
 	 */
 	public String getSubString(long pos, int length) throws SQLException {
-		Reader reader = getCharacterStream();
-        try {
-            try {
-                long toSkip = pos - 1; // 1-based index
-                while (toSkip > 0) {
-                    toSkip -= reader.skip(toSkip);
-                }
-                int n;
-                char[] buffer = new char[Math.min(length, 1024)];
-                StringBuilder sb = new StringBuilder(length);
-                while (length > 0 && (n = reader.read(buffer, 0, Math.min(length, buffer.length))) != -1) {
-                    sb.append(buffer, 0, n);
-                    length -= n;
-                }
-                return sb.toString();
-            } finally {
-                reader.close();
-            }
-        } catch (IOException e) {
-            throw new FBSQLException(e);
-        }
+		try (Reader reader = getCharacterStream()) {
+			long toSkip = pos - 1; // 1-based index
+			while (toSkip > 0) {
+				toSkip -= reader.skip(toSkip);
+			}
+			int n;
+			char[] buffer = new char[Math.min(length, 1024)];
+			StringBuilder sb = new StringBuilder(length);
+			while (length > 0 && (n = reader.read(buffer, 0, Math.min(length, buffer.length))) != -1) {
+				sb.append(buffer, 0, n);
+				length -= n;
+			}
+			return sb.toString();
+		} catch (IOException e) {
+			throw new FBSQLException(e);
+		}
 	}
 
 	/**

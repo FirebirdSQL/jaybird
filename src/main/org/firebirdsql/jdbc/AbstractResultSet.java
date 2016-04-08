@@ -2492,32 +2492,20 @@ public abstract class AbstractResultSet implements ResultSet, FirebirdResultSet,
     }
 
     public void updateAsciiStream(int columnIndex, InputStream x) throws SQLException {
+        // TODO Write implementation
         throw new FBDriverNotCapableException();
     }
 
     public void updateAsciiStream(String columnLabel, InputStream x, long length) throws SQLException {
+        // TODO Write implementation
         throw new FBDriverNotCapableException();
     }
 
     public void updateAsciiStream(String columnLabel, InputStream x) throws SQLException {
+        // TODO Write implementation
         throw new FBDriverNotCapableException();
     }
 
-    /**
-     * Updates the designated column with a binary stream value.
-     * The <code>updateXXX</code> methods are used to update column values in the
-     * current row or the insert row.  The <code>updateXXX</code> methods do not
-     * update the underlying database; instead the <code>updateRow</code> or
-     * <code>insertRow</code> methods are called to update the database.
-     *
-     * @param columnName the name of the column
-     * @param x the new column value
-     * @param length the length of the stream
-     * @exception SQLException if a database access error occurs
-     * @since 1.2
-     * @see <a href="package-summary.html#2.0 API">What Is in the JDBC
-     *      2.0 API</a>
-     */
     public void updateBinaryStream(String columnName, InputStream x, int length) throws SQLException {
         if (rowUpdater == null)
             throw new FBResultSetNotUpdatableException();
@@ -2548,18 +2536,22 @@ public abstract class AbstractResultSet implements ResultSet, FirebirdResultSet,
     }
 
     public void updateCharacterStream(int columnIndex, Reader x, long length) throws SQLException {
+        // TODO Write implementation
         throw new FBDriverNotCapableException();
     }
 
     public void updateCharacterStream(int columnIndex, Reader x) throws SQLException {
+        // TODO Write implementation
         throw new FBDriverNotCapableException();
     }
 
     public void updateCharacterStream(String columnLabel, Reader reader, long length) throws SQLException {
+        // TODO Write implementation
         throw new FBDriverNotCapableException();
     }
 
     public void updateCharacterStream(String columnLabel, Reader reader) throws SQLException {
+        // TODO Write implementation
         throw new FBDriverNotCapableException();
     }
 
@@ -2607,24 +2599,6 @@ public abstract class AbstractResultSet implements ResultSet, FirebirdResultSet,
         updateCharacterStream(columnLabel, reader);
     }
 
-    /**
-     * Updates the designated column with an <code>Object</code> value.
-     * The <code>updateXXX</code> methods are used to update column values in the
-     * current row or the insert row.  The <code>updateXXX</code> methods do not
-     * update the underlying database; instead the <code>updateRow</code> or
-     * <code>insertRow</code> methods are called to update the database.
-     *
-     * @param columnName the name of the column
-     * @param x the new column value
-     * @param scale for <code>java.sql.Types.DECIMA</code>
-     *  or <code>java.sql.Types.NUMERIC</code> types,
-     *  this is the number of digits after the decimal point.  For all other
-     *  types this value will be ignored.
-     * @exception SQLException if a database access error occurs
-     * @since 1.2
-     * @see <a href="package-summary.html#2.0 API">What Is in the JDBC
-     *      2.0 API</a>
-     */
     public void updateObject(String columnName, Object x, int scale) throws SQLException {
         if (rowUpdater == null)
             throw new FBResultSetNotUpdatableException();
@@ -2632,20 +2606,6 @@ public abstract class AbstractResultSet implements ResultSet, FirebirdResultSet,
         getField(columnName).setObject(x);
     }
 
-    /**
-     * Updates the designated column with an <code>Object</code> value.
-     * The <code>updateXXX</code> methods are used to update column values in the
-     * current row or the insert row.  The <code>updateXXX</code> methods do not
-     * update the underlying database; instead the <code>updateRow</code> or
-     * <code>insertRow</code> methods are called to update the database.
-     *
-     * @param columnName the name of the column
-     * @param x the new column value
-     * @exception SQLException if a database access error occurs
-     * @since 1.2
-     * @see <a href="package-summary.html#2.0 API">What Is in the JDBC
-     *      2.0 API</a>
-     */
     public void updateObject(String columnName, Object x) throws SQLException {
         if (rowUpdater == null)
             throw new FBResultSetNotUpdatableException();
@@ -3128,28 +3088,12 @@ public abstract class AbstractResultSet implements ResultSet, FirebirdResultSet,
         return getField(columnName).getTimestamp(cal);
     }
 
-    //jdbc 3 methods
-
-    /**
-     * <b>This operation is not supported</b>
-     *
-     * @param param1 <description>
-     * @return <description>
-     * @exception java.sql.SQLException <description>
-     */
     public URL getURL(int param1) throws SQLException {
-        throw new FBDriverNotCapableException();
+        throw new FBDriverNotCapableException("Type URL not supported");
     }
 
-    /**
-     * <b>This operation is not supported</b>
-     *
-     * @param param1 <description>
-     * @return <description>
-     * @exception java.sql.SQLException <description>
-     */
     public URL getURL(String param1) throws SQLException {
-        throw new FBDriverNotCapableException();
+        throw new FBDriverNotCapableException("Type URL not supported");
     }
 
     public <T> T getObject(int columnIndex, Class<T> type) throws SQLException {
@@ -3162,26 +3106,12 @@ public abstract class AbstractResultSet implements ResultSet, FirebirdResultSet,
         throw new FBDriverNotCapableException();
     }
 
-    /**
-     * <b>This operation is not supported</b>
-     *
-     * @param param1 <description>
-     * @param param2 <description>
-     * @exception java.sql.SQLException <description>
-     */
     public void updateRef(int param1, Ref param2) throws SQLException {
-        throw new FBDriverNotCapableException();
+        throw new FBDriverNotCapableException("Type REF not supported");
     }
 
-    /**
-     * <b>This operation is not supported</b>
-     *
-     * @param param1 <description>
-     * @param param2 <description>
-     * @exception java.sql.SQLException <description>
-     */
     public void updateRef(String param1, Ref param2) throws SQLException {
-        throw new FBDriverNotCapableException();
+        throw new FBDriverNotCapableException("Type REF not supported");
     }
 
     /**
@@ -3192,6 +3122,7 @@ public abstract class AbstractResultSet implements ResultSet, FirebirdResultSet,
      * @exception java.sql.SQLException <description>
      */
     public void updateBlob(int param1, Blob param2) throws SQLException {
+        // TODO Write implementation
         throw new FBDriverNotCapableException();
     }
 
@@ -3203,26 +3134,27 @@ public abstract class AbstractResultSet implements ResultSet, FirebirdResultSet,
      * @exception java.sql.SQLException <description>
      */
     public void updateBlob(String param1, Blob param2) throws SQLException {
+        // TODO Write implementation
         throw new FBDriverNotCapableException();
     }
 
-    public void updateBlob(int columnIndex, InputStream inputStream, long length)
-            throws SQLException {
+    public void updateBlob(int columnIndex, InputStream inputStream, long length) throws SQLException {
+        // TODO Write implementation
         throw new FBDriverNotCapableException();
     }
 
-    public void updateBlob(int columnIndex, InputStream inputStream)
-            throws SQLException {
+    public void updateBlob(int columnIndex, InputStream inputStream) throws SQLException {
+        // TODO Write implementation
         throw new FBDriverNotCapableException();
     }
 
-    public void updateBlob(String columnLabel, InputStream inputStream,
-            long length) throws SQLException {
+    public void updateBlob(String columnLabel, InputStream inputStream, long length) throws SQLException {
+        // TODO Write implementation
         throw new FBDriverNotCapableException();
     }
 
-    public void updateBlob(String columnLabel, InputStream inputStream)
-            throws SQLException {
+    public void updateBlob(String columnLabel, InputStream inputStream) throws SQLException {
+        // TODO Write implementation
         throw new FBDriverNotCapableException();
     }
 
@@ -3234,6 +3166,7 @@ public abstract class AbstractResultSet implements ResultSet, FirebirdResultSet,
      * @exception java.sql.SQLException <description>
      */
     public void updateClob(int param1, Clob param2) throws SQLException {
+        // TODO Write implementation
         throw new FBDriverNotCapableException();
     }
 
@@ -3245,48 +3178,36 @@ public abstract class AbstractResultSet implements ResultSet, FirebirdResultSet,
      * @exception java.sql.SQLException <description>
      */
     public void updateClob(String param1, Clob param2) throws SQLException {
+        // TODO Write implementation
         throw new FBDriverNotCapableException();
     }
 
-    public void updateClob(int columnIndex, Reader reader, long length)
-            throws SQLException {
+    public void updateClob(int columnIndex, Reader reader, long length) throws SQLException {
+        // TODO Write implementation
         throw new FBDriverNotCapableException();
     }
 
     public void updateClob(int columnIndex, Reader reader) throws SQLException {
+        // TODO Write implementation
         throw new FBDriverNotCapableException();
     }
 
-    public void updateClob(String columnLabel, Reader reader, long length)
-            throws SQLException {
+    public void updateClob(String columnLabel, Reader reader, long length) throws SQLException {
+        // TODO Write implementation
         throw new FBDriverNotCapableException();
     }
 
-    public void updateClob(String columnLabel, Reader reader)
-            throws SQLException {
+    public void updateClob(String columnLabel, Reader reader) throws SQLException {
+        // TODO Write implementation
         throw new FBDriverNotCapableException();
     }
 
-    /**
-     * <b>This operation is not supported</b>
-     *
-     * @param param1 <description>
-     * @param param2 <description>
-     * @exception java.sql.SQLException <description>
-     */
     public void updateArray(int param1, Array param2) throws SQLException {
-        throw new FBDriverNotCapableException();
+        throw new FBDriverNotCapableException("Type ARRAY not yet supported");
     }
 
-    /**
-     * <b>This operation is not supported</b>
-     *
-     * @param param1 <description>
-     * @param param2 <description>
-     * @exception java.sql.SQLException <description>
-     */
     public void updateArray(String param1, Array param2) throws SQLException {
-        throw new FBDriverNotCapableException();
+        throw new FBDriverNotCapableException("Type ARRAY not yet supported");
     }
 
     /**
@@ -3312,19 +3233,19 @@ public abstract class AbstractResultSet implements ResultSet, FirebirdResultSet,
     }
 
     public RowId getRowId(int columnIndex) throws SQLException {
-        throw new FBDriverNotCapableException();
+        throw new FBDriverNotCapableException("Type ROWID not yet supported");
     }
 
     public RowId getRowId(String columnLabel) throws SQLException {
-        throw new FBDriverNotCapableException();
+        throw new FBDriverNotCapableException("Type ROWID not yet supported");
     }
 
     public SQLXML getSQLXML(int columnIndex) throws SQLException {
-        throw new FBDriverNotCapableException();
+        throw new FBDriverNotCapableException("Type SQLXML not supported");
     }
 
     public SQLXML getSQLXML(String columnLabel) throws SQLException {
-        throw new FBDriverNotCapableException();
+        throw new FBDriverNotCapableException("Type SQLXML not supported");
     }
 
     /**
@@ -3394,21 +3315,19 @@ public abstract class AbstractResultSet implements ResultSet, FirebirdResultSet,
     }
 
     public void updateRowId(int columnIndex, RowId x) throws SQLException {
-        throw new FBDriverNotCapableException();
+        throw new FBDriverNotCapableException("Type ROWID not yet supported");
     }
 
     public void updateRowId(String columnLabel, RowId x) throws SQLException {
-        throw new FBDriverNotCapableException();
+        throw new FBDriverNotCapableException("Type ROWID not yet supported");
     }
 
-    public void updateSQLXML(int columnIndex, SQLXML xmlObject)
-            throws SQLException {
-        throw new FBDriverNotCapableException();
+    public void updateSQLXML(int columnIndex, SQLXML xmlObject) throws SQLException {
+        throw new FBDriverNotCapableException("Type SQLXML not supported");
     }
 
-    public void updateSQLXML(String columnLabel, SQLXML xmlObject)
-            throws SQLException {
-        throw new FBDriverNotCapableException();
+    public void updateSQLXML(String columnLabel, SQLXML xmlObject) throws SQLException {
+        throw new FBDriverNotCapableException("Type SQLXML not supported");
     }
 
     public String getExecutionPlan() throws SQLException {

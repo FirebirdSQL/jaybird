@@ -329,14 +329,12 @@ public class FBConnection implements FirebirdConnection {
         return new FBClob(blob);
     }
     
-    public Struct createStruct(String typeName, Object[] attributes)
-            throws SQLException {
-        throw new FBDriverNotCapableException();
+    public Struct createStruct(String typeName, Object[] attributes) throws SQLException {
+        throw new FBDriverNotCapableException("Type STRUCT not supported");
     }
     
-    public Array createArrayOf(String typeName, Object[] elements)
-            throws SQLException {
-        throw new FBDriverNotCapableException();
+    public Array createArrayOf(String typeName, Object[] elements) throws SQLException {
+        throw new FBDriverNotCapableException("Type ARRAY not yet supported");
     }
 
     /**
@@ -1171,17 +1169,6 @@ public class FBConnection implements FirebirdConnection {
     	return new HashMap<>();
     }
 
-    /**
-     * Installs the given type map as the type map for
-     * this connection.  The type map will be used for the
-     * custom mapping of SQL structured types and distinct types.
-     *
-     * @param map the <code>java.util.Map</code> object to install
-     *        as the replacement for this <code>Connection</code>
-     *        object's default type map
-     * @since 1.2
-     * @see <a href="package-summary.html#2.0 API">What Is in the JDBC 2.0 API</a>
-     */
     public void setTypeMap(Map<String,Class<?>> map) throws SQLException {
         throw new FBDriverNotCapableException();
     }
@@ -1359,13 +1346,19 @@ public class FBConnection implements FirebirdConnection {
 			 firstWarning.setNextWarning(warning);
 		 }
 	 }
-     
+
+    /**
+     * {@inheritDoc}
+     * <p>
+     * Implementation note: This method behaves exactly the same as {@link #createClob()}.
+     * </p>
+     */
     public NClob createNClob() throws SQLException {
-        throw new FBDriverNotCapableException();
+        return (NClob) createClob();
     }
 
     public SQLXML createSQLXML() throws SQLException {
-        throw new FBDriverNotCapableException();
+        throw new FBDriverNotCapableException("Type SQLXML not supported");
     }
 
     public GDSHelper getGDSHelper() throws SQLException {

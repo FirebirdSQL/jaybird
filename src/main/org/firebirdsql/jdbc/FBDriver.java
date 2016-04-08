@@ -285,7 +285,7 @@ public class FBDriver implements FirebirdDriver {
     }
 
     public java.util.logging.Logger getParentLogger() throws SQLFeatureNotSupportedException {
-        throw new FBDriverNotCapableException();
+        throw new FBDriverNotCapableException("Method getParentLogger() not supported");
     }
 
     /**

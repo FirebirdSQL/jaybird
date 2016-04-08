@@ -92,7 +92,7 @@ public class FBCachedClob implements Clob, NClob {
 	}
 
 	public long length() throws SQLException {
-		throw new FBDriverNotCapableException();
+		throw new FBDriverNotCapableException("Cannot determine length for CLOB");
 	}
 
 	public long position(String searchstr, long start) throws SQLException {

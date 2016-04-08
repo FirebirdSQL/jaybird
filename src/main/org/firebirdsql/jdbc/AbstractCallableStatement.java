@@ -71,7 +71,8 @@ import org.firebirdsql.jdbc.field.TypeConversionException;
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  */
 public abstract class AbstractCallableStatement extends FBPreparedStatement implements CallableStatement, FirebirdCallableStatement {
-    
+
+    static final String SET_BY_STRING_NOT_SUPPORTED = "Setting parameters by name is not supported";
     static final String NATIVE_CALL_COMMAND = "EXECUTE PROCEDURE ";
     static final String NATIVE_SELECT_COMMAND = "SELECT * FROM ";
 
@@ -987,51 +988,51 @@ public abstract class AbstractCallableStatement extends FBPreparedStatement impl
     }
 
     public void setAsciiStream(String parameterName, InputStream x, long length) throws SQLException {
-        throw new FBDriverNotCapableException();
+        throw new FBDriverNotCapableException(SET_BY_STRING_NOT_SUPPORTED);
     }
 
     public void setAsciiStream(String parameterName, InputStream x) throws SQLException {
-        throw new FBDriverNotCapableException();
+        throw new FBDriverNotCapableException(SET_BY_STRING_NOT_SUPPORTED);
     }
 
     public void setBinaryStream(String parameterName, InputStream x, long length) throws SQLException {
-        throw new FBDriverNotCapableException();
+        throw new FBDriverNotCapableException(SET_BY_STRING_NOT_SUPPORTED);
     }
 
     public void setBinaryStream(String parameterName, InputStream x) throws SQLException {
-        throw new FBDriverNotCapableException();
+        throw new FBDriverNotCapableException(SET_BY_STRING_NOT_SUPPORTED);
     }
 
     public void setBlob(String parameterName, Blob x) throws SQLException {
-        throw new FBDriverNotCapableException();
+        throw new FBDriverNotCapableException(SET_BY_STRING_NOT_SUPPORTED);
     }
 
     public void setBlob(String parameterName, InputStream inputStream, long length) throws SQLException {
-        throw new FBDriverNotCapableException();
+        throw new FBDriverNotCapableException(SET_BY_STRING_NOT_SUPPORTED);
     }
 
     public void setBlob(String parameterName, InputStream inputStream) throws SQLException {
-        throw new FBDriverNotCapableException();
+        throw new FBDriverNotCapableException(SET_BY_STRING_NOT_SUPPORTED);
     }
 
     public void setCharacterStream(String parameterName, Reader reader, long length) throws SQLException {
-        throw new FBDriverNotCapableException();
+        throw new FBDriverNotCapableException(SET_BY_STRING_NOT_SUPPORTED);
     }
 
     public void setCharacterStream(String parameterName, Reader reader) throws SQLException {
-        throw new FBDriverNotCapableException();
+        throw new FBDriverNotCapableException(SET_BY_STRING_NOT_SUPPORTED);
     }
 
     public void setClob(String parameterName, Clob x) throws SQLException {
-        throw new FBDriverNotCapableException();
+        throw new FBDriverNotCapableException(SET_BY_STRING_NOT_SUPPORTED);
     }
 
     public void setClob(String parameterName, Reader reader, long length) throws SQLException {
-        throw new FBDriverNotCapableException();
+        throw new FBDriverNotCapableException(SET_BY_STRING_NOT_SUPPORTED);
     }
 
     public void setClob(String parameterName, Reader reader) throws SQLException {
-        throw new FBDriverNotCapableException();
+        throw new FBDriverNotCapableException(SET_BY_STRING_NOT_SUPPORTED);
     }
 
     /**
@@ -1078,123 +1079,130 @@ public abstract class AbstractCallableStatement extends FBPreparedStatement impl
         setClob(parameterName, reader);
     }
 
+    /**
+     * {@inheritDoc}
+     * <p>
+     * Implementation note: This method behaves exactly the same as {@link #setString(String, String)}.
+     * </p>
+     */
     public void setNString(String parameterName, String value) throws SQLException {
-        throw new FBDriverNotCapableException();
+        setString(parameterName, value);
     }
 
     public void registerOutParameter(String param1, int param2) throws SQLException {
-        throw new FBDriverNotCapableException();
+        throw new FBDriverNotCapableException(SET_BY_STRING_NOT_SUPPORTED);
     }
 
     public void registerOutParameter(String param1, int param2, int param3) throws SQLException {
-        throw new FBDriverNotCapableException();
+        throw new FBDriverNotCapableException(SET_BY_STRING_NOT_SUPPORTED);
     }
 
     public void registerOutParameter(String param1, int param2, String param3) throws SQLException {
-        throw new FBDriverNotCapableException();
+        throw new FBDriverNotCapableException(SET_BY_STRING_NOT_SUPPORTED);
     }
 
     public void setURL(String param1, URL param2) throws SQLException {
-        throw new FBDriverNotCapableException();
+        throw new FBDriverNotCapableException(SET_BY_STRING_NOT_SUPPORTED);
     }
 
     public void setNull(String param1, int param2) throws SQLException {
-        throw new FBDriverNotCapableException();
+        throw new FBDriverNotCapableException(SET_BY_STRING_NOT_SUPPORTED);
     }
 
     public void setBoolean(String param1, boolean param2) throws SQLException {
-        throw new FBDriverNotCapableException();
+        throw new FBDriverNotCapableException(SET_BY_STRING_NOT_SUPPORTED);
     }
 
     public void setByte(String param1, byte param2) throws SQLException {
-        throw new FBDriverNotCapableException();
+        throw new FBDriverNotCapableException(SET_BY_STRING_NOT_SUPPORTED);
     }
 
     public void setShort(String param1, short param2) throws SQLException {
-        throw new FBDriverNotCapableException();
+        throw new FBDriverNotCapableException(SET_BY_STRING_NOT_SUPPORTED);
     }
 
     public void setInt(String param1, int param2) throws SQLException {
-        throw new FBDriverNotCapableException();
+        throw new FBDriverNotCapableException(SET_BY_STRING_NOT_SUPPORTED);
     }
 
     public void setLong(String param1, long param2) throws SQLException {
-        throw new FBDriverNotCapableException();
+        throw new FBDriverNotCapableException(SET_BY_STRING_NOT_SUPPORTED);
     }
 
     public void setFloat(String param1, float param2) throws SQLException {
-        throw new FBDriverNotCapableException();
+        throw new FBDriverNotCapableException(SET_BY_STRING_NOT_SUPPORTED);
     }
 
     public void setDouble(String param1, double param2) throws SQLException {
-        throw new FBDriverNotCapableException();
+        throw new FBDriverNotCapableException(SET_BY_STRING_NOT_SUPPORTED);
     }
 
     public void setBigDecimal(String param1, BigDecimal param2) throws SQLException {
-        throw new FBDriverNotCapableException();
+        throw new FBDriverNotCapableException(SET_BY_STRING_NOT_SUPPORTED);
     }
 
     public void setString(String param1, String param2) throws SQLException {
-        throw new FBDriverNotCapableException();
+        throw new FBDriverNotCapableException(SET_BY_STRING_NOT_SUPPORTED);
     }
 
     public void setBytes(String param1, byte[] param2) throws SQLException {
-        throw new FBDriverNotCapableException();
+        throw new FBDriverNotCapableException(SET_BY_STRING_NOT_SUPPORTED);
     }
 
     public void setDate(String param1, Date param2) throws SQLException {
-        throw new FBDriverNotCapableException();
+        throw new FBDriverNotCapableException(SET_BY_STRING_NOT_SUPPORTED);
     }
 
     public void setTime(String param1, Time param2) throws SQLException {
-        throw new FBDriverNotCapableException();
+        throw new FBDriverNotCapableException(SET_BY_STRING_NOT_SUPPORTED);
     }
 
     public void setTimestamp(String param1, Timestamp param2) throws SQLException {
-        throw new FBDriverNotCapableException();
+        throw new FBDriverNotCapableException(SET_BY_STRING_NOT_SUPPORTED);
     }
 
     public void setAsciiStream(String param1, InputStream param2, int param3) throws SQLException {
-        throw new FBDriverNotCapableException();
+        throw new FBDriverNotCapableException(SET_BY_STRING_NOT_SUPPORTED);
     }
 
     public void setBinaryStream(String param1, InputStream param2, int param3) throws SQLException {
-        throw new FBDriverNotCapableException();
+        throw new FBDriverNotCapableException(SET_BY_STRING_NOT_SUPPORTED);
     }
 
     public void setObject(String param1, Object param2, int param3, int param4) throws SQLException {
-        throw new FBDriverNotCapableException();
+        throw new FBDriverNotCapableException(SET_BY_STRING_NOT_SUPPORTED);
     }
 
     public void setObject(String param1, Object param2, int param3) throws SQLException {
-        throw new FBDriverNotCapableException();
+        throw new FBDriverNotCapableException(SET_BY_STRING_NOT_SUPPORTED);
     }
 
     public void setObject(String param1, Object param2) throws SQLException {
-        throw new FBDriverNotCapableException();
+        throw new FBDriverNotCapableException(SET_BY_STRING_NOT_SUPPORTED);
     }
 
     public void setCharacterStream(String param1, Reader param2, int param3) throws SQLException {
-        throw new FBDriverNotCapableException();
+        throw new FBDriverNotCapableException(SET_BY_STRING_NOT_SUPPORTED);
     }
 
     public void setDate(String param1, Date param2, Calendar param3) throws SQLException {
-        throw new FBDriverNotCapableException();
+        throw new FBDriverNotCapableException(SET_BY_STRING_NOT_SUPPORTED);
     }
 
     public void setTime(String param1, Time param2, Calendar param3) throws SQLException {
-        throw new FBDriverNotCapableException();
+        throw new FBDriverNotCapableException(SET_BY_STRING_NOT_SUPPORTED);
     }
 
     public void setTimestamp(String param1, Timestamp param2, Calendar param3) throws SQLException {
-        throw new FBDriverNotCapableException();
+        throw new FBDriverNotCapableException(SET_BY_STRING_NOT_SUPPORTED);
     }
 
     public void setNull(String param1, int param2, String param3) throws SQLException {
-        throw new FBDriverNotCapableException();
+        throw new FBDriverNotCapableException(SET_BY_STRING_NOT_SUPPORTED);
     }
 
     public void registerOutParameter(int parameterIndex, int sqlType, String typeName) throws SQLException {
+        // TODO Can we implement this, how?
         throw new FBDriverNotCapableException();
     }
 
@@ -1439,11 +1447,11 @@ public abstract class AbstractCallableStatement extends FBPreparedStatement impl
     }
 
     public void setRowId(String parameterName, RowId x) throws SQLException {
-        throw new FBDriverNotCapableException();
+        throw new FBDriverNotCapableException("Type ROWID not yet supported");
     }
 
     public void setSQLXML(String parameterName, SQLXML xmlObject) throws SQLException {
-        throw new FBDriverNotCapableException();
+        throw new FBDriverNotCapableException("Type SQLXML not supported");
     }
 
     private static class WrapperWithCalendar {

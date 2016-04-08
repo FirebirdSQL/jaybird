@@ -20,7 +20,6 @@ package org.firebirdsql.jdbc;
 
 import java.sql.SQLFeatureNotSupportedException;
 
-
 /**
  * Tell that driver is not able to serve the request due to missing capabilities.
  * 
