@@ -31,7 +31,7 @@ import org.firebirdsql.gds.ng.FbTransaction;
 import org.firebirdsql.gds.ng.TransactionState;
 import org.firebirdsql.gds.ng.fields.BlrCalculator;
 import org.firebirdsql.gds.ng.wire.*;
-import org.firebirdsql.jdbc.FBDriverNotCapableException;
+import org.firebirdsql.jdbc.SQLStateConstants;
 import org.firebirdsql.logging.Logger;
 import org.firebirdsql.logging.LoggerFactory;
 
@@ -379,7 +379,7 @@ public class V10Database extends AbstractFbWireDatabase implements FbWireDatabas
                 throw new SQLFeatureNotSupportedException(
                         String.format("Cancel Operation isn't supported in this version of the wire protocol (%d).",
                                 protocolDescriptor.getVersion()),
-                        FBDriverNotCapableException.SQL_STATE_FEATURE_NOT_SUPPORTED);
+                        SQLStateConstants.SQL_STATE_FEATURE_NOT_SUPPORTED);
             }
         } catch (SQLException ex) {
             exceptionListenerDispatcher.errorOccurred(ex);

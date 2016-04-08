@@ -27,7 +27,11 @@ import java.sql.SQLFeatureNotSupportedException;
  * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
  */
 public class FBDriverNotCapableException extends SQLFeatureNotSupportedException {
-    public static final String SQL_STATE_FEATURE_NOT_SUPPORTED = "0A000";
+	/**
+	 * @deprecated Use constants from {@link SQLStateConstants}. To be removed in 3.1.
+	 */
+	@Deprecated
+    public static final String SQL_STATE_FEATURE_NOT_SUPPORTED = SQLStateConstants.SQL_STATE_FEATURE_NOT_SUPPORTED;
 
 	/**
      * Create instance of this class for the specified reason.
@@ -35,7 +39,7 @@ public class FBDriverNotCapableException extends SQLFeatureNotSupportedException
 	 * @param reason reason that will be displayed.
 	 */
 	public FBDriverNotCapableException(String reason) {
-		super(reason, SQL_STATE_FEATURE_NOT_SUPPORTED);
+		super(reason, SQLStateConstants.SQL_STATE_FEATURE_NOT_SUPPORTED);
 	}
 
 	/**

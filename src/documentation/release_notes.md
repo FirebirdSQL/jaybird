@@ -513,5 +513,6 @@ The following methods will be removed in Jaybird 3.1:
 The following constants will be removed in Jaybird 3.1:
 
 -   All `SQL_STATE_*` constants in `FBSQLException`,
-    `FBResourceTransactionException`, and `FBResourceException` will be removed.
-    Use equivalent constants in `org.firebirdsql.jdbc.SQLStateConstants`.
+    `FBResourceTransactionException`, `FBResourceException`, and
+    `FBDriverNotCapableException` will be removed. Use equivalent constants in
+    `org.firebirdsql.jdbc.SQLStateConstants`.

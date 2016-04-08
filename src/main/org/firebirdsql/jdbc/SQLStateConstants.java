@@ -37,6 +37,8 @@ public final class SQLStateConstants {
     public static final String SQL_STATE_INVALID_CONN_ATTR = "01S00";
     public static final String SQL_STATE_NO_ROW_AVAIL = "01S06";
 
+    public static final String SQL_STATE_FEATURE_NOT_SUPPORTED = "0A000";
+
     public static final String SQL_STATE_GENERAL_ERROR = "HY000";
     public static final String SQL_STATE_INVALID_COLUMN = "HY002";
     public static final String SQL_STATE_INVALID_ARG_VALUE = "HY009";
