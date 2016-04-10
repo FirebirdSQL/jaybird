@@ -35,6 +35,18 @@ import java.io.OutputStream;
 public interface ServiceManager {
 
     /**
+     * Sets the encoding used for encoding or decoding string values.
+     * <p>
+     * If not set (or null), defaults to the value of system property {@code file.encoding}/
+     * </p>
+     *
+     * @param charSet Java charset name.
+     */
+    void setCharSet(String charSet);
+
+    String getCharSet();
+
+    /**
      * Sets the username for the connection to the service manager.
      *
      * @param user

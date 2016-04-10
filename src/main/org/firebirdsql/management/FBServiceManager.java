@@ -79,18 +79,12 @@ public class FBServiceManager implements ServiceManager {
         dbFactory = GDSFactory.getDatabaseFactoryForType(gdsType);
     }
 
-    /**
-     * Sets the encoding used for encoding or decoding string values.
-     * <p>
-     * If not set (or null), defaults to the value of system property {@code file.encoding}/
-     * </p>
-     *
-     * @param charSet Java charset name.
-     */
+    @Override
     public void setCharSet(String charSet) {
         serviceProperties.setCharSet(charSet);
     }
 
+    @Override
     public String getCharSet() {
         return serviceProperties.getCharSet();
     }
