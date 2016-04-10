@@ -203,6 +203,7 @@ public abstract class FBBackupManagerBase extends FBServiceManager implements Ba
      *
      * @param pageSize
      *        The page size to be used in a restored database, one of 1024, 2048, 4196, 8192 or 16384
+     * @see PageSizeConstants
      */
     public void setRestorePageSize(int pageSize) {
         if (pageSize != 1024 && pageSize != 2048
@@ -272,7 +273,7 @@ public abstract class FBBackupManagerBase extends FBServiceManager implements Ba
         restoreSPB.addArgument(isc_spb_res_access_mode,
                 (byte) (restoreReadOnly
                         ? isc_spb_res_am_readonly
-                                : isc_spb_res_am_readwrite));
+                        : isc_spb_res_am_readwrite));
 
         if (verbose) {
             restoreSPB.addArgument(isc_spb_verbose);
@@ -282,7 +283,7 @@ public abstract class FBBackupManagerBase extends FBServiceManager implements Ba
                 && (options & RESTORE_REPLACE) != RESTORE_REPLACE) {
             options |= restoreReplace
                     ? RESTORE_REPLACE
-                            : RESTORE_CREATE;
+                    : RESTORE_CREATE;
         }
 
         restoreSPB.addArgument(isc_spb_options, options);

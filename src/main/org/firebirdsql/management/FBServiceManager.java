@@ -80,6 +80,22 @@ public class FBServiceManager implements ServiceManager {
     }
 
     /**
+     * Sets the encoding used for encoding or decoding string values.
+     * <p>
+     * If not set (or null), defaults to the value of system property {@code file.encoding}/
+     * </p>
+     *
+     * @param charSet Java charset name.
+     */
+    public void setCharSet(String charSet) {
+        serviceProperties.setCharSet(charSet);
+    }
+
+    public String getCharSet() {
+        return serviceProperties.getCharSet();
+    }
+
+    /**
      * Set the name of the user that performs the operation.
      *
      * @param user

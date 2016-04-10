@@ -70,7 +70,7 @@ public class V13ParameterConverter extends V12ParameterConverter {
         final Encoding stringEncoding = connection.getEncodingFactory().getEncodingForFirebirdName("UTF8");
         ServiceParameterBuffer spb = new ServiceParameterBufferImp(
                 ServiceParameterBufferImp.SpbMetaData.SPB_VERSION_3_ATTACH, stringEncoding);
-        spb.addArgument(ISCConstants.isc_dpb_utf8_filename, 1);
+        spb.addArgument(ISCConstants.isc_spb_utf8_filename, 1);
         return spb;
     }
 

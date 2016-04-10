@@ -196,6 +196,7 @@ public class FBManager implements FBManagerMBean {
      * @param pageSize
      *         The page size to be used in a restored database,
      *         one of 1024, 2048, 4196, 8192 or 16384
+     * @see PageSizeConstants
      */
     public void setPageSize(int pageSize) {
         if (pageSize != 1024 && pageSize != 2048

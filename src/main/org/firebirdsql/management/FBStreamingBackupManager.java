@@ -25,9 +25,6 @@ import org.firebirdsql.gds.ng.FbService;
 
 import java.io.IOException;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
 import java.util.Arrays;
 import java.io.OutputStream;
 import java.io.InputStream;
@@ -155,6 +152,7 @@ public class FBStreamingBackupManager extends FBBackupManagerBase implements Bac
      *
      * @param pageSize
      *        The page size to be used in a restored database, one of 4196, 8192 or 16384
+     * @see PageSizeConstants
      */
     @Override
     public void setRestorePageSize(int pageSize) {
