@@ -58,6 +58,19 @@ What's new in Jaybird 2.2
 Changelog
 ---------
 
+### Changes and fixes in Jaybird 2.2.11
+
+The following has been changed or fixed in Jaybird 2.2.11:
+
+-   Fixed: `ResultSet.getObject()` returns `byte[]` instead of `String` for
+    `BLOB SUB_TYPE 1` when using `octetsAsBytes` ([JDBC-431](http://tracker.firebirdsql.org/browse/JDBC-431))
+
+**Known issues in Jaybird 2.2.11**
+
+-   Connecting to Firebird 2.5 and earlier with a Firebird 3 `fbclient.dll` may
+    be slow with native connections, see [CORE-4658](http://tracker.firebirdsql.org/browse/CORE-4658).
+    Workaround is to connect to the IPv4 address instead of the hostname.
+
 ### Changes and fixes in Jaybird 2.2.10
 
 The following has been changed or fixed in Jaybird 2.2.10:
@@ -84,12 +97,6 @@ The following has been changed or fixed in Jaybird 2.2.10:
     of `SQLFeatureNotSupportedException`).
 -   Fixed: Transaction mapping cannot be configured through JDBC URL ([JDBC-421](http://tracker.firebirdsql.org/browse/JDBC-421))
 -   Fixed: `FBSQLWarning.getMessage()` could return `null` instead of message ([JDBC-423](http://tracker.firebirdsql.org/browse/JDBC-423))
-
-**Known issues in Jaybird 2.2.10**
-
--   Connecting to Firebird 2.5 and earlier with a Firebird 3 `fbclient.dll` may
-    be slow with native connections, see [CORE-4658](http://tracker.firebirdsql.org/browse/CORE-4658).
-    Workaround is to connect to the IPv4 address instead of the hostname.
 
 ### Changes and fixes in Jaybird 2.2.9
 

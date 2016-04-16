@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source J2ee connector - jdbc driver
+ * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -12,11 +12,10 @@
  * This file was created by members of the firebird development team.
  * All individual contributions remain the Copyright (C) of those
  * individuals.  Contributors to this file are either listed here or
- * can be obtained from a CVS history command.
+ * can be obtained from a source control history command.
  *
  * All rights reserved.
  */
-
 package org.firebirdsql.jdbc.field;
 
 import org.firebirdsql.gds.DatabaseParameterBuffer;
@@ -572,13 +571,13 @@ public abstract class FBField {
         switch (requiredType) {
             case Types.CHAR :
             case Types.VARCHAR :
-            case Types.LONGVARCHAR :
                 // check whether OCTETS should be returned as byte[]
                 if (isOctetsAsBytes() && field.sqlsubtype == 1)
                     return getBytes();
                 else
                     return getString();
-                
+            case Types.LONGVARCHAR :
+                return getString();
             case Types.NUMERIC :
             case Types.DECIMAL :
                 if (scale == -1)
@@ -588,22 +587,22 @@ public abstract class FBField {
                 
             case Types.BIT :
             case Types.BOOLEAN : 
-                    return Boolean.valueOf(getBoolean());
+                    return getBoolean();
                 
             case Types.TINYINT :
             case Types.SMALLINT :
             case Types.INTEGER :
-                return new Integer(getInt());
+                return getInt();
                 
             case Types.BIGINT :
-                return new Long(getLong());
+                return getLong();
                 
             case Types.REAL :
-                return new Float(getFloat());
+                return getFloat();
                 
             case Types.FLOAT :
             case Types.DOUBLE :
-                return new Double(getDouble());
+                return getDouble();
                 
             case Types.BINARY :
             case Types.VARBINARY :
