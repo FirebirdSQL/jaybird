@@ -137,7 +137,8 @@ public class TestBackupManager extends FBJUnit4TestBase {
      */
     @Test
     public void testValidPageSizes() {
-        final int[] pageSizes = { 1024, 2048, 4096, 8192, 16384 };
+        final int[] pageSizes = { PageSizeConstants.SIZE_1K, PageSizeConstants.SIZE_2K, PageSizeConstants.SIZE_4K,
+                PageSizeConstants.SIZE_8K, PageSizeConstants.SIZE_16K };
         for (int pageSize : pageSizes) {
             backupManager.setRestorePageSize(pageSize);
         }

@@ -18,12 +18,14 @@
  */
 package org.firebirdsql.common.rules;
 
+import org.firebirdsql.common.FBTestProperties;
 import org.firebirdsql.management.FBManager;
 import org.junit.rules.ExternalResource;
 
-import static org.firebirdsql.common.FBTestProperties.createFBManager;
-import static org.firebirdsql.common.FBTestProperties.defaultDatabaseSetUp;
-import static org.firebirdsql.common.FBTestProperties.defaultDatabaseTearDown;
+import java.util.ArrayList;
+import java.util.List;
+
+import static org.firebirdsql.common.FBTestProperties.*;
 
 /**
  * JUnit rule that creates and deletes a database.
@@ -33,10 +35,13 @@ import static org.firebirdsql.common.FBTestProperties.defaultDatabaseTearDown;
  */
 public final class UsesDatabase extends ExternalResource {
 
+    private final boolean initialCreate;
     private FBManager fbManager = null;
+    private final List<String> databasesToDrop = new ArrayList<>();
 
-    private UsesDatabase() {
+    private UsesDatabase(boolean initialCreate) {
         // No outside instantiation
+        this.initialCreate = initialCreate;
     }
 
     /**
@@ -45,6 +50,11 @@ public final class UsesDatabase extends ExternalResource {
     @Override
     protected void before() throws Exception {
         fbManager = createFBManager();
+        if (initialCreate) createDefaultDatabase();
+    }
+
+    public void createDefaultDatabase() throws Exception {
+        addDatabase(getDatabasePath());
         defaultDatabaseSetUp(fbManager);
     }
 
@@ -54,11 +64,35 @@ public final class UsesDatabase extends ExternalResource {
     @Override
     protected void after() {
         try {
-            defaultDatabaseTearDown(fbManager);
-            fbManager = null;
+            for (String databasePath : databasesToDrop) {
+                try {
+                    fbManager.dropDatabase(databasePath, FBTestProperties.DB_USER, FBTestProperties.DB_PASSWORD);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
         } catch (Exception ex){
             ex.printStackTrace();
+        } finally {
+            try {
+                fbManager.stop();
+            } catch (Exception ex) {
+                ex.printStackTrace();
+            }
+            fbManager = null;
         }
+    }
+
+    /**
+     * Add a database path to be dropped when this rule completes.
+     * <p>
+     * Primary use case is cleaning up extra databases created in a test.
+     * </p>
+     *
+     * @param databasePath Database path
+     */
+    public void addDatabase(String databasePath) {
+        databasesToDrop.add(databasePath);
     }
 
     // TODO Consider implementing a way to have a non-standard initialization (eg as in TestResultSetDialect1)
@@ -69,6 +103,18 @@ public final class UsesDatabase extends ExternalResource {
      * @return a UsesDatabase rule
      */
     public static UsesDatabase usesDatabase() {
-        return new UsesDatabase();
+        return new UsesDatabase(true);
+    }
+
+    /**
+     * Creates a rule that doesn't create an initial database.
+     * <p>
+     * Call {@link #createDefaultDatabase()} to create the default database.
+     * </p>
+     *
+     * @return a UsesDatabase rule
+     */
+    public static UsesDatabase noDatabase() {
+        return new UsesDatabase(false);
     }
 }
