@@ -138,8 +138,8 @@ public class FBTraceManager extends FBServiceManager implements TraceManager {
     private ServiceRequestBuffer getTraceSPB(FbService service, int action, String traceSessionName,
             String configuration) throws SQLException {
         ServiceRequestBuffer traceSPB = getTraceSPB(service, action);
-        traceSPB.addArgument(isc_spb_trc_name, traceSessionName, service.getEncoding());
-        traceSPB.addArgument(isc_spb_trc_cfg, configuration, service.getEncoding());
+        traceSPB.addArgument(isc_spb_trc_name, traceSessionName);
+        traceSPB.addArgument(isc_spb_trc_cfg, configuration);
         return traceSPB;
     }
 

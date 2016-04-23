@@ -140,7 +140,7 @@ public class TestJnaService {
 
             ServiceRequestBuffer actionSrb = service.createServiceRequestBuffer();
             actionSrb.addArgument(isc_action_svc_db_stats);
-            actionSrb.addArgument(isc_spb_dbname, getDatabasePath(), service.getEncoding());
+            actionSrb.addArgument(isc_spb_dbname, getDatabasePath());
             actionSrb.addArgument(isc_spb_options, isc_spb_sts_hdr_pages);
 
             service.startServiceAction(actionSrb);

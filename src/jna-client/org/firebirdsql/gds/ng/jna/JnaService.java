@@ -23,6 +23,8 @@ import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.JaybirdErrorCodes;
 import org.firebirdsql.gds.ServiceParameterBuffer;
 import org.firebirdsql.gds.ServiceRequestBuffer;
+import org.firebirdsql.gds.impl.ServiceParameterBufferImp;
+import org.firebirdsql.gds.impl.ServiceRequestBufferImp;
 import org.firebirdsql.gds.ng.AbstractFbService;
 import org.firebirdsql.gds.ng.FbExceptionBuilder;
 import org.firebirdsql.gds.ng.ParameterConverter;
@@ -53,6 +55,18 @@ public final class JnaService extends AbstractFbService<JnaServiceConnection> im
     public JnaService(JnaServiceConnection connection) {
         super(connection, connection.createDatatypeCoder());
         clientLibrary = connection.getClientLibrary();
+    }
+
+    @Override
+    public ServiceParameterBuffer createServiceParameterBuffer() {
+        // TODO When Firebird 3, use UTF-8; implement similar mechanism as ProtocolDescriptor of wire?
+        return new ServiceParameterBufferImp(ServiceParameterBufferImp.SpbMetaData.SPB_VERSION_2, getEncoding());
+    }
+
+    @Override
+    public ServiceRequestBuffer createServiceRequestBuffer() {
+        // TODO When Firebird 3, use UTF-8; implement similar mechanism as ProtocolDescriptor of wire?
+        return new ServiceRequestBufferImp(ServiceRequestBufferImp.SrbMetaData.SRB_VERSION_2, getEncoding());
     }
 
     @Override

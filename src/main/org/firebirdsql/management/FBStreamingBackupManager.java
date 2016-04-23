@@ -170,7 +170,7 @@ public class FBStreamingBackupManager extends FBBackupManagerBase implements Bac
      *        The buffer to be used during the backup operation
      */
     protected void addBackupsToBackupRequestBuffer(FbService service, ServiceRequestBuffer backupSPB) {
-        backupSPB.addArgument(isc_spb_bkp_file, "stdout", service.getEncoding());
+        backupSPB.addArgument(isc_spb_bkp_file, "stdout");
     }
 
     /**
@@ -180,7 +180,7 @@ public class FBStreamingBackupManager extends FBBackupManagerBase implements Bac
      *        The buffer to be used during the restore operation
      */
     protected void addBackupsToRestoreRequestBuffer(FbService service, ServiceRequestBuffer restoreSPB) {
-        restoreSPB.addArgument(isc_spb_bkp_file, "stdin", service.getEncoding());
+        restoreSPB.addArgument(isc_spb_bkp_file, "stdin");
     }
 
     private void executeServiceBackupOperation(FbService service, ServiceRequestBuffer srb) throws SQLException {

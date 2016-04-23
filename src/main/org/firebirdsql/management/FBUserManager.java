@@ -140,19 +140,19 @@ public class FBUserManager extends FBServiceManager implements UserManager {
         srb.addArgument(action);
 
         if (user.getUserName() != null) {
-            srb.addArgument(isc_spb_sec_username, user.getUserName(), service.getEncoding());
+            srb.addArgument(isc_spb_sec_username, user.getUserName());
         }
         if (user.getPassword() != null) {
-            srb.addArgument(isc_spb_sec_password, user.getPassword(), service.getEncoding());
+            srb.addArgument(isc_spb_sec_password, user.getPassword());
         }
         if (user.getFirstName() != null) {
-            srb.addArgument(isc_spb_sec_firstname, user.getFirstName(), service.getEncoding());
+            srb.addArgument(isc_spb_sec_firstname, user.getFirstName());
         }
         if (user.getMiddleName() != null) {
-            srb.addArgument(isc_spb_sec_middlename, user.getMiddleName(), service.getEncoding());
+            srb.addArgument(isc_spb_sec_middlename, user.getMiddleName());
         }
         if (user.getLastName() != null) {
-            srb.addArgument(isc_spb_sec_lastname, user.getLastName(), service.getEncoding());
+            srb.addArgument(isc_spb_sec_lastname, user.getLastName());
         }
         if (user.getUserId() != -1) {
             srb.addArgument(isc_spb_sec_userid, user.getUserId());

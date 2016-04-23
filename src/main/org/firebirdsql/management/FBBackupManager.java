@@ -114,7 +114,7 @@ public class FBBackupManager extends FBBackupManagerBase implements BackupManage
         for (Iterator<PathSizeStruct> iter = backupPaths.iterator(); iter.hasNext();) {
             PathSizeStruct pathSize = iter.next();
 
-            backupSPB.addArgument(isc_spb_bkp_file, pathSize.getPath(), service.getEncoding());
+            backupSPB.addArgument(isc_spb_bkp_file, pathSize.getPath());
 
             if (iter.hasNext() && pathSize.getSize() == -1) {
                 throw new SQLException("No size specified for a backup file " + pathSize.getPath());
@@ -134,7 +134,7 @@ public class FBBackupManager extends FBBackupManagerBase implements BackupManage
      */
     protected void addBackupsToRestoreRequestBuffer(FbService service, ServiceRequestBuffer restoreSPB) {
         for (PathSizeStruct pathSize : backupPaths) {
-            restoreSPB.addArgument(isc_spb_bkp_file, pathSize.getPath(), service.getEncoding());
+            restoreSPB.addArgument(isc_spb_bkp_file, pathSize.getPath());
         }
     }
 }

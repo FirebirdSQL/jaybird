@@ -18,6 +18,7 @@
  */
 package org.firebirdsql.gds.impl;
 
+import org.firebirdsql.encodings.Encoding;
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.ParameterBuffer;
 import org.firebirdsql.gds.ServiceRequestBuffer;
@@ -31,9 +32,15 @@ public class ServiceRequestBufferImp extends ParameterBufferBase implements Serv
 
     /**
      * Creates an empty service request buffer.
+     * @deprecated Use {@link #ServiceRequestBufferImp(SrbMetaData, Encoding)}, will be removed in Jaybird 3.1
      */
+    @Deprecated
     public ServiceRequestBufferImp() {
-        super(SrbMetaData.SPB_VERSION_2);
+        super(SrbMetaData.SRB_VERSION_2);
+    }
+
+    public ServiceRequestBufferImp(SrbMetaData srbMetaData, Encoding encoding) {
+        super(srbMetaData, encoding);
     }
 
     /**
@@ -41,9 +48,11 @@ public class ServiceRequestBufferImp extends ParameterBufferBase implements Serv
      *
      * @param taskIdentifier
      *         Service request task
+     * @deprecated Use {@link #ServiceRequestBufferImp(SrbMetaData, Encoding)}, will be removed in Jaybird 3.1
      */
+    @Deprecated
     public ServiceRequestBufferImp(int taskIdentifier) {
-        this();
+        super(SrbMetaData.SRB_VERSION_2);
         addArgument(taskIdentifier);
     }
 
@@ -55,7 +64,7 @@ public class ServiceRequestBufferImp extends ParameterBufferBase implements Serv
 
     public enum SrbMetaData implements ParameterBufferMetaData {
         // TODO Add isc_spb_version3 as well?
-        SPB_VERSION_2(ISCConstants.isc_spb_current_version) {
+        SRB_VERSION_2(ISCConstants.isc_spb_current_version) {
             // TODO Check if correct and add additional types
             @Override
             public ArgumentType getStringArgumentType(int tag) {

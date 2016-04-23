@@ -56,7 +56,7 @@ public class V10Service extends AbstractFbWireService implements FbWireService {
             if (isAttached()) {
                 throw new SQLException("Already attached to a service");
             }
-            final ServiceParameterBuffer spb = protocolDescriptor.createServiceParameterBuffer(connection);
+            final ServiceParameterBuffer spb = protocolDescriptor.createAttachServiceParameterBuffer(connection);
             synchronized (getSynchronizationObject()) {
                 try {
                     try {

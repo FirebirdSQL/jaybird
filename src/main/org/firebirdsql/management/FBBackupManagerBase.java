@@ -158,7 +158,7 @@ public abstract class FBBackupManagerBase extends FBServiceManager implements Ba
     protected ServiceRequestBuffer getBackupSRB(FbService service, int options) throws SQLException {
         ServiceRequestBuffer backupSPB = service.createServiceRequestBuffer();
         backupSPB.addArgument(isc_action_svc_backup);
-        backupSPB.addArgument(isc_spb_dbname, getDatabase(), service.getEncoding());
+        backupSPB.addArgument(isc_spb_dbname, getDatabase());
         addBackupsToBackupRequestBuffer(service, backupSPB);
 
         if (verboseBackup()) {
@@ -253,7 +253,7 @@ public abstract class FBBackupManagerBase extends FBServiceManager implements Ba
         for (Iterator<PathSizeStruct> iter = restorePaths.iterator(); iter.hasNext();) {
             PathSizeStruct pathSize = iter.next();
 
-            restoreSPB.addArgument(isc_spb_dbname, pathSize.getPath(), service.getEncoding());
+            restoreSPB.addArgument(isc_spb_dbname, pathSize.getPath());
 
             if (iter.hasNext() && pathSize.getSize() != -1) {
                 restoreSPB.addArgument(isc_spb_res_length, pathSize.getSize());

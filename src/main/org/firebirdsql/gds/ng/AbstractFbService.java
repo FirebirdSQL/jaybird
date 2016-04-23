@@ -20,8 +20,6 @@ package org.firebirdsql.gds.ng;
 
 import org.firebirdsql.gds.ServiceParameterBuffer;
 import org.firebirdsql.gds.ServiceRequestBuffer;
-import org.firebirdsql.gds.impl.ServiceParameterBufferImp;
-import org.firebirdsql.gds.impl.ServiceRequestBufferImp;
 import org.firebirdsql.gds.ng.listeners.ServiceListener;
 import org.firebirdsql.gds.ng.listeners.ServiceListenerDispatcher;
 import org.firebirdsql.logging.Logger;
@@ -66,16 +64,6 @@ public abstract class AbstractFbService<T extends AbstractConnection<IServicePro
             exceptionListenerDispatcher.errorOccurred(e);
             throw e;
         }
-    }
-
-    @Override
-    public ServiceParameterBuffer createServiceParameterBuffer() {
-        return new ServiceParameterBufferImp(ServiceParameterBufferImp.SpbMetaData.SPB_VERSION_2, getEncoding());
-    }
-
-    @Override
-    public ServiceRequestBuffer createServiceRequestBuffer() {
-        return new ServiceRequestBufferImp();
     }
 
     @Override

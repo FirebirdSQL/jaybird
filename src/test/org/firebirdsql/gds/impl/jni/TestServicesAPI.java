@@ -142,8 +142,8 @@ public class TestServicesAPI {
 
         serviceRequestBuffer.addArgument(ISCConstants.isc_spb_verbose);
         serviceRequestBuffer.addArgument(ISCConstants.isc_spb_options, ISCConstants.isc_spb_res_create);
-        serviceRequestBuffer.addArgument(ISCConstants.isc_spb_dbname, mAbsoluteDatabasePath, service.getEncoding());
-        serviceRequestBuffer.addArgument(ISCConstants.isc_spb_bkp_file, mAbsoluteBackupPath, service.getEncoding());
+        serviceRequestBuffer.addArgument(ISCConstants.isc_spb_dbname, mAbsoluteDatabasePath);
+        serviceRequestBuffer.addArgument(ISCConstants.isc_spb_bkp_file, mAbsoluteBackupPath);
 
         service.startServiceAction(serviceRequestBuffer);
     }
@@ -200,8 +200,8 @@ public class TestServicesAPI {
         serviceRequestBuffer.addArgument(ISCConstants.isc_action_svc_backup);
 
         serviceRequestBuffer.addArgument(ISCConstants.isc_spb_verbose);
-        serviceRequestBuffer.addArgument(ISCConstants.isc_spb_dbname, mAbsoluteDatabasePath, service.getEncoding());
-        serviceRequestBuffer.addArgument(ISCConstants.isc_spb_bkp_file, mAbsoluteBackupPath, service.getEncoding());
+        serviceRequestBuffer.addArgument(ISCConstants.isc_spb_dbname, mAbsoluteDatabasePath);
+        serviceRequestBuffer.addArgument(ISCConstants.isc_spb_bkp_file, mAbsoluteBackupPath);
 
         service.startServiceAction(serviceRequestBuffer);
     }

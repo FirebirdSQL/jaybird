@@ -18,15 +18,19 @@
  */
 package org.firebirdsql.gds.ng.wire.version13;
 
+import org.firebirdsql.encodings.Encoding;
 import org.firebirdsql.gds.BlobParameterBuffer;
 import org.firebirdsql.gds.ISCConstants;
+import org.firebirdsql.gds.ServiceParameterBuffer;
+import org.firebirdsql.gds.ServiceRequestBuffer;
+import org.firebirdsql.gds.impl.ServiceParameterBufferImp;
+import org.firebirdsql.gds.impl.ServiceRequestBufferImp;
 import org.firebirdsql.gds.impl.wire.WireProtocolConstants;
 import org.firebirdsql.gds.ng.ParameterConverter;
 import org.firebirdsql.gds.ng.TransactionState;
 import org.firebirdsql.gds.ng.WarningMessageCallback;
 import org.firebirdsql.gds.ng.fields.BlrCalculator;
 import org.firebirdsql.gds.ng.wire.*;
-import org.firebirdsql.gds.ng.wire.DefaultBlrCalculator;
 import org.firebirdsql.gds.ng.wire.version10.*;
 
 /**
@@ -36,7 +40,7 @@ import org.firebirdsql.gds.ng.wire.version10.*;
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @since 3.0
  */
-public class Version13Descriptor extends AbstractProtocolDescriptor implements ProtocolDescriptor {
+public final class Version13Descriptor extends AbstractProtocolDescriptor implements ProtocolDescriptor {
 
     public Version13Descriptor() {
         super(
@@ -55,6 +59,21 @@ public class Version13Descriptor extends AbstractProtocolDescriptor implements P
     @Override
     public FbWireService createService(WireServiceConnection connection) {
         return new V10Service(connection, this);
+    }
+
+    @Override
+    public ServiceParameterBuffer createServiceParameterBuffer(final WireServiceConnection connection) {
+        final Encoding stringEncoding = connection.getEncodingFactory().getEncodingForFirebirdName("UTF8");
+        // TODO Version 3?
+        return new ServiceParameterBufferImp(ServiceParameterBufferImp.SpbMetaData.SPB_VERSION_2,
+                stringEncoding);
+    }
+
+    @Override
+    public ServiceRequestBuffer createServiceRequestBuffer(final WireServiceConnection connection) {
+        final Encoding stringEncoding = connection.getEncodingFactory().getEncodingForFirebirdName("UTF8");
+        // TODO Version 3?
+        return new ServiceRequestBufferImp(ServiceRequestBufferImp.SrbMetaData.SRB_VERSION_2, stringEncoding);
     }
 
     @Override

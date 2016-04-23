@@ -20,6 +20,10 @@ package org.firebirdsql.gds.ng.wire.version12;
 
 import org.firebirdsql.gds.BlobParameterBuffer;
 import org.firebirdsql.gds.ISCConstants;
+import org.firebirdsql.gds.ServiceParameterBuffer;
+import org.firebirdsql.gds.ServiceRequestBuffer;
+import org.firebirdsql.gds.impl.ServiceParameterBufferImp;
+import org.firebirdsql.gds.impl.ServiceRequestBufferImp;
 import org.firebirdsql.gds.impl.wire.WireProtocolConstants;
 import org.firebirdsql.gds.ng.ParameterConverter;
 import org.firebirdsql.gds.ng.TransactionState;
@@ -37,7 +41,7 @@ import org.firebirdsql.gds.ng.wire.version11.V11WireOperations;
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @since 3.0
  */
-public class Version12Descriptor extends AbstractProtocolDescriptor implements ProtocolDescriptor {
+public final class Version12Descriptor extends AbstractProtocolDescriptor implements ProtocolDescriptor {
 
     public Version12Descriptor() {
         super(
@@ -56,6 +60,17 @@ public class Version12Descriptor extends AbstractProtocolDescriptor implements P
     @Override
     public FbWireService createService(WireServiceConnection connection) {
         return new V10Service(connection, this);
+    }
+
+    @Override
+    public ServiceParameterBuffer createServiceParameterBuffer(final WireServiceConnection connection) {
+        return new ServiceParameterBufferImp(ServiceParameterBufferImp.SpbMetaData.SPB_VERSION_2,
+                connection.getEncoding());
+    }
+
+    @Override
+    public ServiceRequestBuffer createServiceRequestBuffer(final WireServiceConnection connection) {
+        return new ServiceRequestBufferImp(ServiceRequestBufferImp.SrbMetaData.SRB_VERSION_2, connection.getEncoding());
     }
 
     @Override

@@ -21,6 +21,7 @@ package org.firebirdsql.gds.ng;
 import org.firebirdsql.gds.BlobParameterBuffer;
 import org.firebirdsql.gds.DatabaseParameterBuffer;
 import org.firebirdsql.gds.ServiceParameterBuffer;
+import org.firebirdsql.gds.ServiceRequestBuffer;
 import org.firebirdsql.gds.ng.fields.BlrCalculator;
 import org.firebirdsql.gds.ng.wire.*;
 
@@ -48,6 +49,16 @@ public class EmptyProtocolDescriptor extends AbstractProtocolDescriptor {
 
     @Override
     public FbWireService createService(WireServiceConnection connection) {
+        return null;
+    }
+
+    @Override
+    public ServiceParameterBuffer createServiceParameterBuffer(final WireServiceConnection connection) {
+        return null;
+    }
+
+    @Override
+    public ServiceRequestBuffer createServiceRequestBuffer(final WireServiceConnection connection) {
         return null;
     }
 

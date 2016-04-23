@@ -235,8 +235,8 @@ public class TestJaybirdBlobBackupProblem {
         serviceRequestBuffer.addArgument(ISCConstants.isc_action_svc_backup);
 
         serviceRequestBuffer.addArgument(ISCConstants.isc_spb_verbose);
-        serviceRequestBuffer.addArgument(ISCConstants.isc_spb_dbname, mAbsoluteDatabasePath, service.getEncoding());
-        serviceRequestBuffer.addArgument(ISCConstants.isc_spb_bkp_file, mAbsoluteBackupPath, service.getEncoding());
+        serviceRequestBuffer.addArgument(ISCConstants.isc_spb_dbname, mAbsoluteDatabasePath);
+        serviceRequestBuffer.addArgument(ISCConstants.isc_spb_bkp_file, mAbsoluteBackupPath);
 
         service.startServiceAction(serviceRequestBuffer);
     }

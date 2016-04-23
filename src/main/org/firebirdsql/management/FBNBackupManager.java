@@ -99,13 +99,13 @@ public class FBNBackupManager extends FBServiceManager implements NBackupManager
     private ServiceRequestBuffer getBackupSRB(FbService service) throws SQLException {
         ServiceRequestBuffer backupSPB = service.createServiceRequestBuffer();
         backupSPB.addArgument(isc_action_svc_nbak);
-        backupSPB.addArgument(isc_spb_dbname, getDatabase(), service.getEncoding());
+        backupSPB.addArgument(isc_spb_dbname, getDatabase());
         if (backupFiles.size() == 0) {
             throw new SQLException("No backup file specified");
         }
         String backupFile = backupFiles.get(0);
 
-        backupSPB.addArgument(isc_spb_nbk_file, backupFile, service.getEncoding());
+        backupSPB.addArgument(isc_spb_nbk_file, backupFile);
         backupSPB.addArgument(isc_spb_nbk_level, backupLevel);
         if (noDBTriggers) {
             backupSPB.addArgument(isc_spb_options, isc_spb_nbk_no_triggers);
@@ -131,13 +131,13 @@ public class FBNBackupManager extends FBServiceManager implements NBackupManager
     private ServiceRequestBuffer getRestoreSRB(FbService service) throws SQLException {
         ServiceRequestBuffer restoreSPB = service.createServiceRequestBuffer();
         restoreSPB.addArgument(isc_action_svc_nrest);
-        restoreSPB.addArgument(isc_spb_dbname, getDatabase(), service.getEncoding());
+        restoreSPB.addArgument(isc_spb_dbname, getDatabase());
 
         if (backupFiles.size() == 0) {
             throw new SQLException("No backup file specified");
         }
         for (String backupFile : backupFiles) {
-            restoreSPB.addArgument(isc_spb_nbk_file, backupFile, service.getEncoding());
+            restoreSPB.addArgument(isc_spb_nbk_file, backupFile);
         }
 
         return restoreSPB;

@@ -19,6 +19,8 @@
 package org.firebirdsql.gds.ng.wire;
 
 import org.firebirdsql.gds.JaybirdErrorCodes;
+import org.firebirdsql.gds.ServiceParameterBuffer;
+import org.firebirdsql.gds.ServiceRequestBuffer;
 import org.firebirdsql.gds.impl.wire.XdrInputStream;
 import org.firebirdsql.gds.impl.wire.XdrOutputStream;
 import org.firebirdsql.gds.ng.AbstractFbService;
@@ -57,6 +59,16 @@ public abstract class AbstractFbWireService extends AbstractFbService<WireServic
         protocolDescriptor = requireNonNull(descriptor, "parameter descriptor should be non-null");
         wireOperations = descriptor.createWireOperations(connection, getServiceWarningCallback(),
                 getSynchronizationObject());
+    }
+
+    @Override
+    public final ServiceParameterBuffer createServiceParameterBuffer() {
+        return protocolDescriptor.createServiceParameterBuffer(connection);
+    }
+
+    @Override
+    public final ServiceRequestBuffer createServiceRequestBuffer() {
+        return protocolDescriptor.createServiceRequestBuffer(connection);
     }
 
     @Override

@@ -276,7 +276,7 @@ public class FBServiceManager implements ServiceManager {
         ServiceRequestBuffer srb = service.createServiceRequestBuffer();
         srb.addArgument(operation);
         if (getDatabase() != null) {
-            srb.addArgument(isc_spb_dbname, getDatabase(), service.getEncoding());
+            srb.addArgument(isc_spb_dbname, getDatabase());
         }
         srb.addArgument(isc_spb_options, options);
         return srb;

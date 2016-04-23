@@ -18,6 +18,7 @@
  */
 package org.firebirdsql.management;
 
+import org.firebirdsql.common.rules.RequireProtocol;
 import org.firebirdsql.common.rules.UsesDatabase;
 import org.firebirdsql.gds.impl.GDSType;
 import org.junit.Before;
@@ -46,7 +47,9 @@ public class TestFBStreamingBackupManager {
     private final UsesDatabase usesDatabase = UsesDatabase.noDatabase();
 
     @Rule
-    public final RuleChain ruleChain = RuleChain.outerRule(temporaryFolder).around(usesDatabase);
+    public final RuleChain ruleChain = RuleChain.outerRule(RequireProtocol.requireProtocolVersion(12))
+            .around(temporaryFolder)
+            .around(usesDatabase);
 
     @Rule
     public final ExpectedException expectedException = ExpectedException.none();

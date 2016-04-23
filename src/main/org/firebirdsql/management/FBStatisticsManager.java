@@ -122,7 +122,7 @@ public class FBStatisticsManager extends FBServiceManager implements StatisticsM
 
         try (FbService service = attachServiceManager()) {
             ServiceRequestBuffer srb = createStatsSRB(service, isc_spb_sts_table);
-            srb.addArgument(isc_spb_command_line, commandLine.toString(), service.getEncoding());
+            srb.addArgument(isc_spb_command_line, commandLine.toString());
             executeServicesOperation(service, srb);
         }
     }

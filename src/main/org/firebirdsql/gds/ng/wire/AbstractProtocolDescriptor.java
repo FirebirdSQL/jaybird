@@ -117,7 +117,7 @@ public abstract class AbstractProtocolDescriptor implements ProtocolDescriptor {
     }
 
     @Override
-    public final ServiceParameterBuffer createServiceParameterBuffer(WireServiceConnection connection)
+    public final ServiceParameterBuffer createAttachServiceParameterBuffer(WireServiceConnection connection)
             throws SQLException {
         return getParameterConverter()
                 .toServiceParameterBuffer(connection);

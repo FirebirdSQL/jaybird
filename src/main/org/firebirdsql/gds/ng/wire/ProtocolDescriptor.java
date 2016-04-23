@@ -27,6 +27,7 @@ package org.firebirdsql.gds.ng.wire;
 import org.firebirdsql.gds.BlobParameterBuffer;
 import org.firebirdsql.gds.DatabaseParameterBuffer;
 import org.firebirdsql.gds.ServiceParameterBuffer;
+import org.firebirdsql.gds.ServiceRequestBuffer;
 import org.firebirdsql.gds.ng.FbTransaction;
 import org.firebirdsql.gds.ng.TransactionState;
 import org.firebirdsql.gds.ng.WarningMessageCallback;
@@ -37,8 +38,8 @@ import java.sql.SQLException;
 /**
  * Descriptor of protocol information.
  * <p>
- * The driver maintains a list of default protocol descriptors that are loaded using a {@link java.util.ServiceLoader} from
- * the file {@code META-INF/services/org.firebirdsql.gds.ng.wire.ProtocolDescriptor}
+ * The driver maintains a list of default protocol descriptors that are loaded using a {@link java.util.ServiceLoader}
+ * from the file {@code META-INF/services/org.firebirdsql.gds.ng.wire.ProtocolDescriptor}
  * </p>
  * <p>
  * Protocol descriptors loaded this way are required to adhere to the following rules:
@@ -133,14 +134,28 @@ public interface ProtocolDescriptor {
     DatabaseParameterBuffer createDatabaseParameterBuffer(WireDatabaseConnection connection) throws SQLException;
 
     /**
-     * Create {@link ServiceParameterBuffer} implementation and populate it with supported properties for
+     * Create an attach {@link ServiceParameterBuffer} implementation and populate it with supported properties for
      * this protocol version.
+     *
+     * @param connection
+     *         Connection
+     * @return ServiceParameterBuffer implementation for attach
+     */
+    ServiceParameterBuffer createAttachServiceParameterBuffer(WireServiceConnection connection) throws SQLException;
+
+    /**
+     * Creates a normal {@link ServiceParameterBuffer}.
      *
      * @param connection
      *         Connection
      * @return ServiceParameterBuffer implementation
      */
-    ServiceParameterBuffer createServiceParameterBuffer(WireServiceConnection connection) throws SQLException;
+    ServiceParameterBuffer createServiceParameterBuffer(WireServiceConnection connection);
+
+    /**
+     * @return An empty service request buffer
+     */
+    ServiceRequestBuffer createServiceRequestBuffer(WireServiceConnection connection);
 
     /**
      * Create {@link BlrCalculator} implementation for this protocol version.
@@ -193,9 +208,12 @@ public interface ProtocolDescriptor {
     /**
      * Create an {@link FbWireOperations} implementation for this protocol version.
      *
-     * @param connection WireConnection instance
-     * @param defaultWarningMessageCallback Default warning message callback
-     * @param syncObject Object to use for synchronization
+     * @param connection
+     *         WireConnection instance
+     * @param defaultWarningMessageCallback
+     *         Default warning message callback
+     * @param syncObject
+     *         Object to use for synchronization
      * @return Wire operations implementation
      */
     FbWireOperations createWireOperations(WireConnection<?, ?> connection,
