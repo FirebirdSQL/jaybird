@@ -36,11 +36,11 @@ package org.firebirdsql.management;
 @SuppressWarnings("unused")
 public final class PageSizeConstants {
 
-    public final int SIZE_1K = 1024;
-    public final int SIZE_2K = 2 * SIZE_1K;
-    public final int SIZE_4K = 4 * SIZE_1K;
-    public final int SIZE_8K = 8 * SIZE_1K;
-    public final int SIZE_16K = 16 * SIZE_1K;
+    public static final int SIZE_1K = 1024;
+    public static final int SIZE_2K = 2 * SIZE_1K;
+    public static final int SIZE_4K = 4 * SIZE_1K;
+    public static final int SIZE_8K = 8 * SIZE_1K;
+    public static final int SIZE_16K = 16 * SIZE_1K;
 
     private PageSizeConstants() {
         // No instantiation
