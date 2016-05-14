@@ -398,4 +398,16 @@ public class TestFBConnection extends FBJUnit4TestBase {
             System.clearProperty("org.firebirdsql.jdbc.pid");
         }
     }
+
+    @Test
+    public void testConnectionsViaDriverManagerAreDistinct() throws Exception {
+        try (Connection connection1 = getConnectionViaDriverManager();
+             Connection connection2 = getConnectionViaDriverManager()) {
+             assertNotSame(connection1, connection2);
+
+            connection1.close();
+            assertTrue(connection1.isClosed());
+            assertFalse(connection2.isClosed());
+        }
+    }
 }
