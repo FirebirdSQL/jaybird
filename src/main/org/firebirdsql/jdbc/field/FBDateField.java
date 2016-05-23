@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
@@ -20,6 +18,7 @@
  */
 package org.firebirdsql.jdbc.field;
 
+import org.firebirdsql.gds.ng.DatatypeCoder;
 import org.firebirdsql.gds.ng.fields.FieldDescriptor;
 
 import java.sql.Date;
@@ -43,25 +42,27 @@ final class FBDateField extends FBField {
         if (isNull()) return null;
         return new java.sql.Timestamp(getDatatypeCoder().decodeDateCalendar(getFieldData(), cal).getTime());
     }
+
     public Timestamp getTimestamp() throws SQLException {
         if (isNull()) return null;
         return new Timestamp(getDate().getTime());
     }
+
     public Date getDate(Calendar cal) throws SQLException {
         if (isNull()) return null;
         return getDatatypeCoder().decodeDateCalendar(getFieldData(), cal);
     }
+
     public Date getDate() throws SQLException {
         if (isNull()) return null;
         return getDatatypeCoder().decodeDate(getFieldData());
     }
+
     public String getString() throws SQLException {
         if (isNull()) return null;
         return getDatatypeCoder().decodeDate(getFieldData()).toString();
     }
-    
-    //--- setXXX methods
-	 
+
     public void setString(String value) throws SQLException {
         if (value == null) {
             setNull();
@@ -70,14 +71,16 @@ final class FBDateField extends FBField {
 
         setDate(Date.valueOf(value));
     }
+
     public void setTimestamp(Timestamp value, Calendar cal) throws SQLException {
         if (value == null) {
             setNull();
             return;
         }
 
-        setFieldData(getDatatypeCoder().encodeDateCalendar(new java.sql.Date(value.getTime()),cal));
+        setFieldData(getDatatypeCoder().encodeDateCalendar(new java.sql.Date(value.getTime()), cal));
     }
+
     public void setTimestamp(Timestamp value) throws SQLException {
         if (value == null) {
             setNull();
@@ -86,6 +89,7 @@ final class FBDateField extends FBField {
 
         setDate(new Date(value.getTime()));
     }
+
     public void setDate(Date value, Calendar cal) throws SQLException {
         if (value == null) {
             setNull();
@@ -94,6 +98,7 @@ final class FBDateField extends FBField {
 
         setFieldData(getDatatypeCoder().encodeDateCalendar(value, cal));
     }
+
     public void setDate(Date value) throws SQLException {
         if (value == null) {
             setNull();
@@ -101,5 +106,20 @@ final class FBDateField extends FBField {
         }
 
         setFieldData(getDatatypeCoder().encodeDate(value));
+    }
+
+    @Override
+    public DatatypeCoder.RawDateTimeStruct getRawDateTimeStruct() throws SQLException {
+        if (isNull()) return null;
+        return getDatatypeCoder().decodeDateRaw(getFieldData());
+    }
+
+    @Override
+    public void setRawDateTimeStruct(DatatypeCoder.RawDateTimeStruct raw) throws SQLException {
+        if (raw == null) {
+            setNull();
+            return;
+        }
+        setFieldData(getDatatypeCoder().encodeDateRaw(raw));
     }
 }

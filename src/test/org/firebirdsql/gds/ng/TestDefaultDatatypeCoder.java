@@ -22,6 +22,8 @@ import org.firebirdsql.encodings.EncodingFactory;
 import org.junit.Test;
 
 import java.nio.charset.StandardCharsets;
+import java.util.Calendar;
+import java.util.TimeZone;
 import java.util.concurrent.TimeUnit;
 
 import static org.junit.Assert.assertEquals;
@@ -178,6 +180,58 @@ public class TestDefaultDatatypeCoder {
         System.arraycopy(localTimeBytes, 0, combinedDateTime, 4, 4);
 
         final java.sql.Timestamp result = datatypeCoder.decodeTimestamp(combinedDateTime);
+
+        assertEquals("Unexpected timestamp", expected, result);
+    }
+
+    /**
+     * Test round trip for timestamp conversion timezone.
+     */
+    @Test
+    public void testTimestampRoundtrip() {
+        final java.sql.Timestamp expected = java.sql.Timestamp.valueOf("2013-03-29 17:43:01.9751");
+        final byte[] dateTimeBytes = datatypeCoder.encodeTimestamp(expected);
+
+        final java.sql.Timestamp result = datatypeCoder.decodeTimestamp(dateTimeBytes);
+
+        assertEquals("Unexpected timestamp", expected, result);
+    }
+
+    /**
+     * Test round trip for timestamp conversion with timezone.
+     */
+    @Test
+    public void testTimestampRoundtripWithCalendar() {
+        // Note we test with the assumption that we are not in timezone America/New_York
+        TimeZone timeZone = TimeZone.getTimeZone("America/New_York");
+        Calendar calendar = Calendar.getInstance(timeZone);
+        final java.sql.Timestamp expected = java.sql.Timestamp.valueOf("2013-03-29 17:43:01.9751");
+        final byte[] dateTimeBytes = datatypeCoder.encodeTimestampCalendar(expected, calendar);
+
+        final java.sql.Timestamp result = datatypeCoder.decodeTimestampCalendar(dateTimeBytes, calendar);
+
+        assertEquals("Unexpected timestamp", expected, result);
+    }
+
+    @Test
+    public void testTimeRoundtrip() {
+        final java.sql.Time expected = java.sql.Time.valueOf("17:43:01");
+        final byte[] timeBytes = datatypeCoder.encodeTime(expected);
+
+        final java.sql.Time result = datatypeCoder.decodeTime(timeBytes);
+
+        assertEquals("Unexpected timestamp", expected, result);
+    }
+
+    @Test
+    public void testTimeRoundtripWithCalendar() {
+        // Note we test with the assumption that we are not in timezone America/New_York
+        TimeZone timeZone = TimeZone.getTimeZone("America/New_York");
+        Calendar calendar = Calendar.getInstance(timeZone);
+        final java.sql.Time expected = java.sql.Time.valueOf("17:43:01");
+        final byte[] timeBytes = datatypeCoder.encodeTimeCalendar(expected, calendar);
+
+        final java.sql.Time result = datatypeCoder.decodeTimeCalendar(timeBytes, calendar);
 
         assertEquals("Unexpected timestamp", expected, result);
     }

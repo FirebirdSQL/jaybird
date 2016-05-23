@@ -21,6 +21,8 @@ package org.firebirdsql.jdbc.field;
 import java.sql.Timestamp;
 import java.sql.SQLException;
 import java.util.Calendar;
+
+import org.firebirdsql.gds.ng.DatatypeCoder;
 import org.firebirdsql.gds.ng.fields.FieldDescriptor;
 
 import java.sql.Time;
@@ -69,7 +71,13 @@ final class FBTimeField extends FBField {
             setNull();
             return;
         }
-        setTime(Time.valueOf(value));
+        try {
+            setTime(Time.valueOf(value));
+        } catch (RuntimeException e) {
+            final TypeConversionException conversionException = new TypeConversionException(TIME_CONVERSION_ERROR);
+            conversionException.initCause(e);
+            throw conversionException;
+        }
     }
 
     public void setTimestamp(Timestamp value, Calendar cal) throws SQLException {
@@ -104,5 +112,20 @@ final class FBTimeField extends FBField {
         }
 
         setFieldData(getDatatypeCoder().encodeTime(value));
+    }
+
+    @Override
+    public DatatypeCoder.RawDateTimeStruct getRawDateTimeStruct() throws SQLException {
+        if (isNull()) return null;
+        return getDatatypeCoder().decodeTimeRaw(getFieldData());
+    }
+
+    @Override
+    public void setRawDateTimeStruct(DatatypeCoder.RawDateTimeStruct raw) throws SQLException {
+        if (raw == null) {
+            setNull();
+            return;
+        }
+        setFieldData(getDatatypeCoder().encodeTimeRaw(raw));
     }
 }

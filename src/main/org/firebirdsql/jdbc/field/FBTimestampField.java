@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
@@ -20,6 +18,7 @@
  */
 package org.firebirdsql.jdbc.field;
 
+import org.firebirdsql.gds.ng.DatatypeCoder;
 import org.firebirdsql.gds.ng.fields.FieldDescriptor;
 
 import java.sql.Date;
@@ -35,7 +34,7 @@ import java.util.Calendar;
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  */
 class FBTimestampField extends FBField {
-    
+
     FBTimestampField(FieldDescriptor fieldDescriptor, FieldDataProvider dataProvider, int requiredType)
             throws SQLException {
         super(fieldDescriptor, dataProvider, requiredType);
@@ -46,37 +45,42 @@ class FBTimestampField extends FBField {
 
         return String.valueOf(getDatatypeCoder().decodeTimestamp(getFieldData()));
     }
+
     public Date getDate(Calendar cal) throws SQLException {
         if (isNull()) return null;
 
-        return new java.sql.Date(getDatatypeCoder().decodeTimestampCalendar(getFieldData(),cal).getTime());
+        return new java.sql.Date(getDatatypeCoder().decodeTimestampCalendar(getFieldData(), cal).getTime());
     }
+
     public Date getDate() throws SQLException {
         if (isNull()) return null;
 
         return new Date(getTimestamp().getTime());
     }
+
     public Time getTime(Calendar cal) throws SQLException {
         if (isNull()) return null;
 
         return new java.sql.Time(getDatatypeCoder().decodeTimestampCalendar(getFieldData(), cal).getTime());
     }
+
     public Time getTime() throws SQLException {
         if (isNull()) return null;
 
         return new Time(getTimestamp().getTime());
     }
+
     public Timestamp getTimestamp(Calendar cal) throws SQLException {
         if (isNull()) return null;
-		  
+
         return getDatatypeCoder().decodeTimestampCalendar(getFieldData(), cal);
     }
+
     public Timestamp getTimestamp() throws SQLException {
         if (isNull()) return null;
 
         return getDatatypeCoder().decodeTimestamp(getFieldData());
     }
-    //--- setXXX methods
 
     public void setString(String value) throws SQLException {
         if (value == null) {
@@ -86,6 +90,7 @@ class FBTimestampField extends FBField {
 
         setTimestamp(Timestamp.valueOf(value));
     }
+
     public void setDate(Date value, Calendar cal) throws SQLException {
         if (value == null) {
             setNull();
@@ -94,6 +99,7 @@ class FBTimestampField extends FBField {
 
         setFieldData(getDatatypeCoder().encodeTimestampCalendar(new java.sql.Timestamp(value.getTime()), cal));
     }
+
     public void setDate(Date value) throws SQLException {
         if (value == null) {
             setNull();
@@ -102,6 +108,7 @@ class FBTimestampField extends FBField {
 
         setTimestamp(new Timestamp(value.getTime()));
     }
+
     public void setTime(Time value, Calendar cal) throws SQLException {
         if (value == null) {
             setNull();
@@ -110,6 +117,7 @@ class FBTimestampField extends FBField {
 
         setFieldData(getDatatypeCoder().encodeTimestampCalendar(new java.sql.Timestamp(value.getTime()), cal));
     }
+
     public void setTime(Time value) throws SQLException {
         if (value == null) {
             setNull();
@@ -118,6 +126,7 @@ class FBTimestampField extends FBField {
 
         setTimestamp(new Timestamp(value.getTime()));
     }
+
     public void setTimestamp(Timestamp value, Calendar cal) throws SQLException {
         if (value == null) {
             setNull();
@@ -126,6 +135,7 @@ class FBTimestampField extends FBField {
 
         setFieldData(getDatatypeCoder().encodeTimestampCalendar(value, cal));
     }
+
     public void setTimestamp(Timestamp value) throws SQLException {
         if (value == null) {
             setNull();
@@ -133,5 +143,20 @@ class FBTimestampField extends FBField {
         }
 
         setFieldData(getDatatypeCoder().encodeTimestamp(value));
+    }
+
+    @Override
+    public DatatypeCoder.RawDateTimeStruct getRawDateTimeStruct() throws SQLException {
+        if (isNull()) return null;
+        return getDatatypeCoder().decodeTimestampRaw(getFieldData());
+    }
+
+    @Override
+    public void setRawDateTimeStruct(DatatypeCoder.RawDateTimeStruct raw) throws SQLException {
+        if (raw == null) {
+            setNull();
+            return;
+        }
+        setFieldData(getDatatypeCoder().encodeTimestampRaw(raw));
     }
 }

@@ -18,6 +18,7 @@
  */
 package org.firebirdsql.jdbc.field;
 
+import org.firebirdsql.encodings.Encoding;
 import org.firebirdsql.encodings.EncodingFactory;
 import org.firebirdsql.gds.ng.DatatypeCoder;
 import org.firebirdsql.gds.ng.DefaultDatatypeCoder;
@@ -39,9 +40,12 @@ import java.io.InputStream;
 import java.io.Reader;
 import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
-import java.sql.SQLException;
+import java.sql.*;
 import java.util.Calendar;
 import java.util.HashMap;
+import java.util.SimpleTimeZone;
+import java.util.TimeZone;
+import java.util.concurrent.TimeUnit;
 
 import static org.junit.Assert.*;
 
@@ -115,7 +119,7 @@ public abstract class BaseJUnit4TestFBField<T extends FBField, O> {
     }
 
     @Test
-    public void setAsciiStreamNonNull() throws SQLException {
+    public void setAsciiStreamNonNull() throws Exception {
         expectedException.expect(TypeConversionException.class);
         field.setAsciiStream(context.mock(InputStream.class), 100);
     }
@@ -124,6 +128,12 @@ public abstract class BaseJUnit4TestFBField<T extends FBField, O> {
     public void getBigDecimalNonNull() throws SQLException {
         expectedException.expect(TypeConversionException.class);
         field.getBigDecimal();
+    }
+
+    @Test
+    public void getObject_BigDecimal() throws SQLException {
+        expectedException.expect(TypeConversionException.class);
+        field.getObject(BigDecimal.class);
     }
 
     @Test
@@ -145,7 +155,13 @@ public abstract class BaseJUnit4TestFBField<T extends FBField, O> {
     }
 
     @Test
-    public void setBinaryStreamNonNull() throws SQLException {
+    public void getObject_InputStream() throws Exception {
+        expectedException.expect(TypeConversionException.class);
+        field.getObject(InputStream.class);
+    }
+
+    @Test
+    public void setBinaryStreamNonNull() throws Exception {
         expectedException.expect(TypeConversionException.class);
         field.setBinaryStream(context.mock(InputStream.class), 100);
     }
@@ -154,6 +170,18 @@ public abstract class BaseJUnit4TestFBField<T extends FBField, O> {
     public void getBlobNonNull() throws SQLException {
         expectedException.expect(TypeConversionException.class);
         field.getBlob();
+    }
+
+    @Test
+    public void getObject_Blob() throws SQLException {
+        expectedException.expect(TypeConversionException.class);
+        field.getObject(Blob.class);
+    }
+
+    @Test
+    public void getObject_FirebirdBlob() throws SQLException {
+        expectedException.expect(TypeConversionException.class);
+        field.getObject(Blob.class);
     }
 
     @Test
@@ -169,6 +197,13 @@ public abstract class BaseJUnit4TestFBField<T extends FBField, O> {
     }
 
     @Test
+    public void getObject_Boolean() throws SQLException {
+        ignoringFieldData();
+        expectedException.expect(TypeConversionException.class);
+        field.getObject(Boolean.class);
+    }
+
+    @Test
     public void setBoolean() throws SQLException {
         expectedException.expect(TypeConversionException.class);
         field.setBoolean(true);
@@ -178,6 +213,13 @@ public abstract class BaseJUnit4TestFBField<T extends FBField, O> {
     public void getByteNonNull() throws SQLException {
         expectedException.expect(TypeConversionException.class);
         field.getByte();
+    }
+
+    @Test
+    public void getObject_Byte() throws SQLException {
+        ignoringFieldData();
+        expectedException.expect(TypeConversionException.class);
+        field.getObject(Byte.class);
     }
 
     @Test
@@ -193,6 +235,12 @@ public abstract class BaseJUnit4TestFBField<T extends FBField, O> {
     }
 
     @Test
+    public void getObject_byteArray() throws SQLException {
+        expectedException.expect(TypeConversionException.class);
+        field.getObject(byte[].class);
+    }
+
+    @Test
     public void setBytesNonNull() throws SQLException {
         expectedException.expect(TypeConversionException.class);
         field.setBytes(new byte[] { 1, 2 });
@@ -205,7 +253,13 @@ public abstract class BaseJUnit4TestFBField<T extends FBField, O> {
     }
 
     @Test
-    public void setCharacterStreamNonNull() throws SQLException {
+    public void getObject_Reader() throws Exception {
+        expectedException.expect(TypeConversionException.class);
+        field.getObject(Reader.class);
+    }
+
+    @Test
+    public void setCharacterStreamNonNull() throws Exception {
         expectedException.expect(TypeConversionException.class);
         field.setCharacterStream(context.mock(Reader.class), 100);
     }
@@ -214,6 +268,18 @@ public abstract class BaseJUnit4TestFBField<T extends FBField, O> {
     public void getClobNonNull() throws SQLException {
         expectedException.expect(TypeConversionException.class);
         field.getClob();
+    }
+
+    @Test
+    public void getObject_Clob() throws SQLException {
+        expectedException.expect(TypeConversionException.class);
+        field.getObject(Clob.class);
+    }
+
+    @Test
+    public void getObject_NClob() throws SQLException {
+        expectedException.expect(TypeConversionException.class);
+        field.getObject(NClob.class);
     }
 
     @Test
@@ -226,6 +292,12 @@ public abstract class BaseJUnit4TestFBField<T extends FBField, O> {
     public void getDateNonNull() throws SQLException {
         expectedException.expect(TypeConversionException.class);
         field.getDate();
+    }
+
+    @Test
+    public void getObject_java_sql_Date() throws SQLException {
+        expectedException.expect(TypeConversionException.class);
+        field.getObject(java.sql.Date.class);
     }
 
     @Test
@@ -253,6 +325,13 @@ public abstract class BaseJUnit4TestFBField<T extends FBField, O> {
     }
 
     @Test
+    public void getObject_Double() throws SQLException {
+        ignoringFieldData();
+        expectedException.expect(TypeConversionException.class);
+        field.getObject(Double.class);
+    }
+
+    @Test
     public void setDouble() throws SQLException {
         expectedException.expect(TypeConversionException.class);
         field.setDouble(1.0);
@@ -262,6 +341,13 @@ public abstract class BaseJUnit4TestFBField<T extends FBField, O> {
     public void getFloatNonNull() throws SQLException {
         expectedException.expect(TypeConversionException.class);
         field.getFloat();
+    }
+
+    @Test
+    public void getObject_Float() throws SQLException {
+        ignoringFieldData();
+        expectedException.expect(TypeConversionException.class);
+        field.getObject(Float.class);
     }
 
     @Test
@@ -277,6 +363,13 @@ public abstract class BaseJUnit4TestFBField<T extends FBField, O> {
     }
 
     @Test
+    public void getObject_Integer() throws SQLException {
+        ignoringFieldData();
+        expectedException.expect(TypeConversionException.class);
+        field.getObject(Integer.class);
+    }
+
+    @Test
     public void setInteger() throws SQLException {
         expectedException.expect(TypeConversionException.class);
         field.setInteger(1);
@@ -286,6 +379,13 @@ public abstract class BaseJUnit4TestFBField<T extends FBField, O> {
     public void getLongNonNull() throws SQLException {
         expectedException.expect(TypeConversionException.class);
         field.getLong();
+    }
+
+    @Test
+    public void getObject_Long() throws SQLException {
+        ignoringFieldData();
+        expectedException.expect(TypeConversionException.class);
+        field.getObject(Long.class);
     }
 
     @Test
@@ -364,6 +464,13 @@ public abstract class BaseJUnit4TestFBField<T extends FBField, O> {
     }
 
     @Test
+    public void getObject_Short() throws SQLException {
+        ignoringFieldData();
+        expectedException.expect(TypeConversionException.class);
+        field.getObject(Short.class);
+    }
+
+    @Test
     public void setShort() throws SQLException {
         expectedException.expect(TypeConversionException.class);
         field.setShort((short)1);
@@ -376,6 +483,12 @@ public abstract class BaseJUnit4TestFBField<T extends FBField, O> {
     }
 
     @Test
+    public void getObject_String() throws SQLException {
+        expectedException.expect(TypeConversionException.class);
+        field.getObject(String.class);
+    }
+
+    @Test
     public void setStringNonNull() throws SQLException {
         expectedException.expect(TypeConversionException.class);
         field.setString("");
@@ -385,6 +498,12 @@ public abstract class BaseJUnit4TestFBField<T extends FBField, O> {
     public void getTimeNonNull() throws SQLException {
         expectedException.expect(TypeConversionException.class);
         field.getTime();
+    }
+
+    @Test
+    public void getObject_java_sql_Time() throws SQLException {
+        expectedException.expect(TypeConversionException.class);
+        field.getObject(java.sql.Time.class);
     }
 
     @Test
@@ -412,6 +531,25 @@ public abstract class BaseJUnit4TestFBField<T extends FBField, O> {
     }
 
     @Test
+    public void getObject_java_sql_Timestamp() throws SQLException {
+        expectedException.expect(TypeConversionException.class);
+        field.getObject(java.sql.Timestamp.class);
+    }
+
+    @Test
+    public void getObject_java_util_Date() throws SQLException {
+        expectedException.expect(TypeConversionException.class);
+        field.getObject(java.util.Date.class);
+    }
+
+    @Test
+    public void getObject_Calendar() throws SQLException {
+        ignoringFieldData();
+        expectedException.expect(TypeConversionException.class);
+        field.getObject(Calendar.class);
+    }
+
+    @Test
     public void setTimestampNonNull() throws SQLException {
         expectedException.expect(TypeConversionException.class);
         field.setTimestamp(new java.sql.Timestamp(Calendar.getInstance().getTimeInMillis()));
@@ -430,6 +568,31 @@ public abstract class BaseJUnit4TestFBField<T extends FBField, O> {
     }
 
     @Test
+    public void getRawDateTimeStructNonNull() throws SQLException {
+        expectedException.expect(TypeConversionException.class);
+        field.getRawDateTimeStruct();
+    }
+
+    @Test
+    public void getObject_RawDateTimeStruct() throws SQLException {
+        expectedException.expect(TypeConversionException.class);
+
+        field.getObject(DatatypeCoder.RawDateTimeStruct.class);
+    }
+
+    @Test
+    public void setRawDateTimeStructNonNull() throws SQLException {
+        expectedException.expect(TypeConversionException.class);
+        field.setRawDateTimeStruct(new DatatypeCoder.RawDateTimeStruct());
+    }
+
+    @Test
+    public void setObject_RawDateTimeStruct() throws SQLException {
+        expectedException.expect(TypeConversionException.class);
+        field.setObject(new DatatypeCoder.RawDateTimeStruct());
+    }
+
+    @Test
     public void isNull_nullValue() throws SQLException {
         toReturnNullExpectations();
 
@@ -442,6 +605,12 @@ public abstract class BaseJUnit4TestFBField<T extends FBField, O> {
         toReturnValueExpectations(new byte[0]);
 
         assertFalse("Expected isNull() to return false for non-null-field", field.isNull());
+    }
+
+    @Test
+    public void getObject_TypeNull() throws SQLException {
+        expectedException.expect(SQLException.class);
+        field.getObject((Class<?>) null);
     }
 
     /**
@@ -502,10 +671,26 @@ public abstract class BaseJUnit4TestFBField<T extends FBField, O> {
     }
 
     /**
+     * Expectations for setting fieldData to a specific float value.
+     * @param value Float value that is expected to be set
+     */
+    protected final void setFloatExpectations(final float value) {
+        setValueExpectations(fieldDescriptor.getDatatypeCoder().encodeFloat(value));
+    }
+
+    /**
+     * Expectations to return a specific float value from fieldData.
+     * @param value Float value to return
+     */
+    protected final void toReturnFloatExpectations(final float value) {
+        toReturnValueExpectations(fieldDescriptor.getDatatypeCoder().encodeFloat(value));
+    }
+
+    /**
      * Expectations for setting fieldData to a specific short value.
      * @param value Short value that is expected to be set
      */
-    protected final void setShortExpectations(final short value) {
+    protected final void setShortExpectations(final int value) {
         setValueExpectations(fieldDescriptor.getDatatypeCoder().encodeShort(value));
     }
 
@@ -513,7 +698,7 @@ public abstract class BaseJUnit4TestFBField<T extends FBField, O> {
      * Expectations to return a specific short value from fieldData.
      * @param value Short value to return
      */
-    protected final void toReturnShortExpectations(final short value) {
+    protected final void toReturnShortExpectations(final int value) {
         toReturnValueExpectations(fieldDescriptor.getDatatypeCoder().encodeShort(value));
     }
 
@@ -583,6 +768,22 @@ public abstract class BaseJUnit4TestFBField<T extends FBField, O> {
         toReturnValueExpectations(fieldDescriptor.getDatatypeCoder().encodeDateCalendar(value, calendar));
     }
 
+    protected final void toReturnTimeExpectations(final java.sql.Time value) {
+        toReturnValueExpectations(fieldDescriptor.getDatatypeCoder().encodeTime(value));
+    }
+
+    protected final void setTimeExpectations(final java.sql.Time value) {
+        setValueExpectations(fieldDescriptor.getDatatypeCoder().encodeTime(value));
+    }
+
+    protected final void toReturnTimestampExpectations(final java.sql.Timestamp value) {
+        toReturnValueExpectations(fieldDescriptor.getDatatypeCoder().encodeTimestamp(value));
+    }
+
+    protected final void setTimestampExpectations(final java.sql.Timestamp value) {
+        setValueExpectations(fieldDescriptor.getDatatypeCoder().encodeTimestamp(value));
+    }
+
     /**
      * Expectations to return a specific boolean value from fieldData.
      * @param value Boolean value to return
@@ -597,5 +798,37 @@ public abstract class BaseJUnit4TestFBField<T extends FBField, O> {
      */
     protected final void setBooleanExpectations(final boolean value) {
         setValueExpectations(fieldDescriptor.getDatatypeCoder().encodeBoolean(value));
+    }
+
+    /**
+     * Expectations to return a specific String value from fieldData.
+     * @param value String value to return
+     * @param encoding Encoding to use
+     */
+    protected final void toReturnStringExpectations(final String value, Encoding encoding) throws SQLException {
+        toReturnValueExpectations(fieldDescriptor.getDatatypeCoder().encodeString(value, encoding, null));
+    }
+
+    /**
+     * Expectations for setting fieldData to a specific String value.
+     * @param value String value that is expected to be set
+     * @param encoding Encoding to use
+     */
+    protected final void setStringExpectations(final String value, Encoding encoding) throws SQLException {
+        setValueExpectations(fieldDescriptor.getDatatypeCoder().encodeString(value, encoding, null));
+    }
+
+    protected void ignoringFieldData() {
+        context.checking(new Expectations() {{
+            ignoring(fieldData);
+        }});
+    }
+
+    protected TimeZone getOneHourBehindTimeZone() {
+        TimeZone defaultZone = TimeZone.getDefault();
+        int defaultOffset = defaultZone.getRawOffset();
+        int oneHourbehind = defaultOffset - (int) TimeUnit.MILLISECONDS.convert(1, TimeUnit.HOURS);
+
+        return new SimpleTimeZone(oneHourbehind, "JAYBIRD_TEST");
     }
 }

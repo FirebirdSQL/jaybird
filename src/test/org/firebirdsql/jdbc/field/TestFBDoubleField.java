@@ -54,12 +54,29 @@ public class TestFBDoubleField extends BaseJUnit4TestFBField<FBDoubleField, Doub
         BigDecimal expectedValue = new BigDecimal(1.34578);
         assertEquals("Unexpected value for getBigDecimal", expectedValue, field.getBigDecimal());
     }
+
+    @Test
+    @Override
+    public void getObject_BigDecimal() throws SQLException {
+        toReturnDoubleExpectations(1.34578);
+
+        BigDecimal expectedValue = new BigDecimal(1.34578);
+        assertEquals("Unexpected value for getObject(BigDecimal.class)",
+                expectedValue, field.getObject(BigDecimal.class));
+    }
     
     @Test
     public void getBigDecimalNull() throws SQLException {
         toReturnNullExpectations();
 
         assertNull("Expected null result", field.getBigDecimal());
+    }
+
+    @Test
+    public void getObject_BigDecimalNull() throws SQLException {
+        toReturnNullExpectations();
+
+        assertNull("Expected null result for getObject(BigDecimal.class)", field.getObject(BigDecimal.class));
     }
     
     @Test
@@ -135,8 +152,16 @@ public class TestFBDoubleField extends BaseJUnit4TestFBField<FBDoubleField, Doub
     @Override
     public void getBooleanNonNull() throws SQLException {
         toReturnDoubleExpectations(1);
-        
+
         assertTrue("Expected true for getBoolean with field value 1", field.getBoolean());
+    }
+
+    @Test
+    @Override
+    public void getObject_Boolean() throws SQLException {
+        toReturnDoubleExpectations(1);
+
+        assertTrue("Expected true for getObject(Boolean.class) with field value 1", field.getObject(Boolean.class));
     }
     
     /**
@@ -165,6 +190,13 @@ public class TestFBDoubleField extends BaseJUnit4TestFBField<FBDoubleField, Doub
         toReturnNullExpectations();
         
         assertFalse("Expected false for getBoolean with field value null", field.getBoolean());
+    }
+
+    @Test
+    public void getObject_BooleanNull() throws SQLException {
+        toReturnNullExpectations();
+
+        assertNull("Expected null for getObject(Boolean.class)", field.getObject(Boolean.class));
     }
     
     /**
@@ -197,6 +229,14 @@ public class TestFBDoubleField extends BaseJUnit4TestFBField<FBDoubleField, Doub
         toReturnDoubleExpectations(114.123);
         
         assertEquals("Unexpected value for getByte", 114, field.getByte());
+    }
+
+    @Test
+    @Override
+    public void getObject_Byte() throws SQLException {
+        toReturnDoubleExpectations(114.123);
+
+        assertEquals("Unexpected value for getObject(Byte.class)", 114, (byte) field.getObject(Byte.class));
     }
     
     /**
@@ -247,6 +287,13 @@ public class TestFBDoubleField extends BaseJUnit4TestFBField<FBDoubleField, Doub
         
         assertEquals("Unexpected value for getByte for null", 0, field.getByte());
     }
+
+    @Test
+    public void getObject_ByteNull() throws SQLException {
+        toReturnNullExpectations();
+
+        assertNull("Expected null for getObject(Byte.class)", field.getObject(Byte.class));
+    }
     
     @Test
     @Override
@@ -263,12 +310,27 @@ public class TestFBDoubleField extends BaseJUnit4TestFBField<FBDoubleField, Doub
         
         assertEquals("Unexpected value for getDouble", 1.34578, field.getDouble(), 0);
     }
+
+    @Test
+    @Override
+    public void getObject_Double() throws SQLException {
+        toReturnDoubleExpectations(1.34578);
+
+        assertEquals("Unexpected value for getObject(Double.class)", 1.34578, field.getObject(Double.class), 0);
+    }
     
     @Test
     public void getDoubleNull() throws SQLException {
         toReturnNullExpectations();
         
         assertEquals("Unexpected value for getDouble for null", 0, field.getDouble(), 0);
+    }
+
+    @Test
+    public void getObject_DoubleNull() throws SQLException {
+        toReturnNullExpectations();
+
+        assertNull("Expected null for getObject(Double.class)", field.getObject(Double.class));
     }
     
     @Test
@@ -307,6 +369,14 @@ public class TestFBDoubleField extends BaseJUnit4TestFBField<FBDoubleField, Doub
         
         assertEquals("Unexpected value for getFloat", 1247.25898f, field.getFloat(), 0);
     }
+
+    @Test
+    @Override
+    public void getObject_Float() throws SQLException {
+        toReturnDoubleExpectations(1247.25898);
+
+        assertEquals("Unexpected value for getObject(Float.class)", 1247.25898f, field.getObject(Float.class), 0);
+    }
     
     @Test
     public void getFloat_OutOfRange_high() throws SQLException {
@@ -330,6 +400,13 @@ public class TestFBDoubleField extends BaseJUnit4TestFBField<FBDoubleField, Doub
         
         assertEquals("Unexpected value for getFloat for null", 0, field.getFloat(), 0);
     }
+
+    @Test
+    public void getObject_FloatNull() throws SQLException {
+        toReturnNullExpectations();
+
+        assertNull("Expected null for getObject(Float.class)", field.getObject(Float.class));
+    }
     
     @Test
     @Override
@@ -343,7 +420,7 @@ public class TestFBDoubleField extends BaseJUnit4TestFBField<FBDoubleField, Doub
     public void setFloat_NaN() throws SQLException {
         setDoubleExpectations(Double.NaN);
         
-        field.setDouble(Float.NaN);
+        field.setFloat(Float.NaN);
     }
     
     @Test
@@ -369,6 +446,14 @@ public class TestFBDoubleField extends BaseJUnit4TestFBField<FBDoubleField, Doub
         toReturnDoubleExpectations(124578.124578);
         
         assertEquals("Unexpected value for getInt", 124578, field.getInt());
+    }
+
+    @Test
+    @Override
+    public void getObject_Integer() throws SQLException {
+        toReturnDoubleExpectations(124578.124578);
+
+        assertEquals("Unexpected value for getObject(Integer.class)", 124578, (int) field.getObject(Integer.class));
     }
     
     /**
@@ -417,7 +502,14 @@ public class TestFBDoubleField extends BaseJUnit4TestFBField<FBDoubleField, Doub
     public void getIntNull() throws SQLException {
         toReturnNullExpectations();
         
-        assertEquals("Unexepected value for getInt for null", 0, field.getInt());
+        assertEquals("Unexpected value for getInt for null", 0, field.getInt());
+    }
+
+    @Test
+    public void getObject_IntegerNull() throws SQLException {
+        toReturnNullExpectations();
+
+        assertNull("Expected null for getObject(Integer.class)", field.getObject(Integer.class));
     }
     
     @Test
@@ -438,6 +530,15 @@ public class TestFBDoubleField extends BaseJUnit4TestFBField<FBDoubleField, Doub
         
         long expectedValue = (long)(2.132457 * Integer.MAX_VALUE);
         assertEquals("Unexpected value for getLong", expectedValue, field.getLong());
+    }
+
+    @Test
+    @Override
+    public void getObject_Long() throws SQLException {
+        toReturnDoubleExpectations(2.132457 * Integer.MAX_VALUE);
+
+        long expectedValue = (long)(2.132457 * Integer.MAX_VALUE);
+        assertEquals("Unexpected value for getLong", expectedValue, (long) field.getObject(Long.class));
     }
     
     /**
@@ -488,6 +589,13 @@ public class TestFBDoubleField extends BaseJUnit4TestFBField<FBDoubleField, Doub
         
         assertEquals("Unexpected value for getLong for null", 0, field.getLong());
     }
+
+    @Test
+    public void getObject_LongNull() throws SQLException {
+        toReturnNullExpectations();
+
+        assertNull("Expected null for getObject(Long.class)", field.getObject(Long.class));
+    }
     
     @Test
     @Override
@@ -526,6 +634,14 @@ public class TestFBDoubleField extends BaseJUnit4TestFBField<FBDoubleField, Doub
         toReturnDoubleExpectations(-14578.124);
         
         assertEquals("Unexpected value for getShort", -14578, field.getShort());
+    }
+
+    @Test
+    @Override
+    public void getObject_Short() throws SQLException {
+        toReturnDoubleExpectations(-14578.124);
+
+        assertEquals("Unexpected value for getShort", -14578, (short) field.getObject(Short.class));
     }
     
     /**
@@ -580,6 +696,13 @@ public class TestFBDoubleField extends BaseJUnit4TestFBField<FBDoubleField, Doub
         
         assertEquals("Unexpected value for getShort for null", 0, field.getShort());
     }
+
+    @Test
+    public void getObject_ShortNull() throws SQLException {
+        toReturnNullExpectations();
+
+        assertNull("Expected null for getObject(Short.class)", field.getObject(Short.class));
+    }
     
     @Test
     @Override
@@ -597,12 +720,28 @@ public class TestFBDoubleField extends BaseJUnit4TestFBField<FBDoubleField, Doub
         String expectedValue = String.valueOf(-14578.124);
         assertEquals("Unexpected value for getString", expectedValue, field.getString());
     }
+
+    @Test
+    @Override
+    public void getObject_String() throws SQLException {
+        toReturnDoubleExpectations(-14578.124);
+
+        String expectedValue = String.valueOf(-14578.124);
+        assertEquals("Unexpected value for getString", expectedValue, field.getObject(String.class));
+    }
     
     @Test
     public void getStringNull() throws SQLException {
         toReturnNullExpectations();
         
         assertNull("Unexpected value for getString for null", field.getString());
+    }
+
+    @Test
+    public void getObject_StringNull() throws SQLException {
+        toReturnNullExpectations();
+
+        assertNull("Expected null for getObject(String.class)", field.getObject(String.class));
     }
     
     /**

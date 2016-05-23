@@ -3096,14 +3096,14 @@ public abstract class AbstractResultSet implements ResultSet, FirebirdResultSet,
         throw new FBDriverNotCapableException("Type URL not supported");
     }
 
+    @Override
     public <T> T getObject(int columnIndex, Class<T> type) throws SQLException {
-        // TODO Write implementation
-        throw new FBDriverNotCapableException();
+        return getField(columnIndex).getObject(type);
     }
 
+    @Override
     public <T> T getObject(String columnLabel, Class<T> type) throws SQLException {
-        // TODO Write implementation
-        throw new FBDriverNotCapableException();
+        return getField(columnLabel).getObject(type);
     }
 
     public void updateRef(int param1, Ref param2) throws SQLException {

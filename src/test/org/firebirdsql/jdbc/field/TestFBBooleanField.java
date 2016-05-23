@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
@@ -28,9 +26,7 @@ import java.math.BigDecimal;
 import java.sql.SQLException;
 import java.sql.Types;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 /**
  * Test for boolean fields. Note that boolean fields are only supported in Firebird 3.0 or higher.
@@ -55,6 +51,15 @@ public class TestFBBooleanField extends BaseJUnit4TestFBField<FBBooleanField, Bo
         toReturnBooleanExpectations(true);
 
         assertEquals("Unexpected value for getBigDecimal",  BigDecimal.ONE, field.getBigDecimal());
+    }
+
+    @Test
+    @Override
+    public void getObject_BigDecimal() throws SQLException {
+        toReturnBooleanExpectations(true);
+
+        assertEquals("Unexpected value for getObject(BigDecimal.class)",
+                BigDecimal.ONE, field.getObject(BigDecimal.class));
     }
 
     @Test
@@ -89,6 +94,14 @@ public class TestFBBooleanField extends BaseJUnit4TestFBField<FBBooleanField, Bo
     }
 
     @Test
+    @Override
+    public void getObject_Boolean() throws SQLException {
+        toReturnBooleanExpectations(true);
+
+        assertTrue("Unexpected value for getObject(Boolean.class)", field.getObject(Boolean.class));
+    }
+
+    @Test
     public void getBooleanNonNull_false() throws SQLException {
         toReturnBooleanExpectations(false);
 
@@ -100,6 +113,13 @@ public class TestFBBooleanField extends BaseJUnit4TestFBField<FBBooleanField, Bo
         toReturnNullExpectations();
 
         assertFalse("Unexpected value for getBoolean", field.getBoolean());
+    }
+
+    @Test
+    public void getObject_BooleanNull() throws SQLException {
+        toReturnNullExpectations();
+
+        assertNull("Expected null for getObject(Boolean.class)", field.getObject(Boolean.class));
     }
 
     @Test
@@ -120,6 +140,14 @@ public class TestFBBooleanField extends BaseJUnit4TestFBField<FBBooleanField, Bo
 
     @Test
     @Override
+    public void getObject_Byte() throws SQLException {
+        toReturnBooleanExpectations(true);
+
+        assertEquals("Unexpected value for getObject(Byte.class)", 1, (byte) field.getObject(Byte.class));
+    }
+
+    @Test
+    @Override
     public void setByte() throws SQLException {
         setBooleanExpectations(true);
 
@@ -132,6 +160,14 @@ public class TestFBBooleanField extends BaseJUnit4TestFBField<FBBooleanField, Bo
         toReturnBooleanExpectations(true);
 
         assertEquals("Unexpected value for getDouble", 1.0, field.getDouble(), 0.0);
+    }
+
+    @Test
+    @Override
+    public void getObject_Double() throws SQLException {
+        toReturnBooleanExpectations(true);
+
+        assertEquals("Unexpected value for getObject(Double.class)", 1.0, field.getObject(Double.class), 0.0);
     }
 
     @Test
@@ -152,6 +188,14 @@ public class TestFBBooleanField extends BaseJUnit4TestFBField<FBBooleanField, Bo
 
     @Test
     @Override
+    public void getObject_Float() throws SQLException {
+        toReturnBooleanExpectations(false);
+
+        assertEquals("Unexpected value for getObject(Float.class)", 0.0, field.getObject(Float.class), 0.0);
+    }
+
+    @Test
+    @Override
     public void setFloat() throws SQLException {
         setBooleanExpectations(true);
 
@@ -168,6 +212,14 @@ public class TestFBBooleanField extends BaseJUnit4TestFBField<FBBooleanField, Bo
 
     @Test
     @Override
+    public void getObject_Integer() throws SQLException {
+        toReturnBooleanExpectations(true);
+
+        assertEquals("Unexpected value for getInt", 1, (int) field.getObject(Integer.class));
+    }
+
+    @Test
+    @Override
     public void setInteger() throws SQLException {
         setBooleanExpectations(false);
 
@@ -180,6 +232,14 @@ public class TestFBBooleanField extends BaseJUnit4TestFBField<FBBooleanField, Bo
         toReturnBooleanExpectations(false);
 
         assertEquals("Unexpected value for getLong", 0L, field.getLong());
+    }
+
+    @Test
+    @Override
+    public void getObject_Long() throws SQLException {
+        toReturnBooleanExpectations(false);
+
+        assertEquals("Unexpected value for getLong", 0L, (long) field.getObject(Long.class));
     }
 
     @Test
@@ -223,6 +283,14 @@ public class TestFBBooleanField extends BaseJUnit4TestFBField<FBBooleanField, Bo
 
     @Test
     @Override
+    public void getObject_Short() throws SQLException {
+        toReturnBooleanExpectations(true);
+
+        assertEquals("Unexpected value for getShort", 1, (short) field.getObject(Short.class));
+    }
+
+    @Test
+    @Override
     public void setShort() throws SQLException {
         setBooleanExpectations(false);
 
@@ -242,6 +310,14 @@ public class TestFBBooleanField extends BaseJUnit4TestFBField<FBBooleanField, Bo
         toReturnBooleanExpectations(true);
 
         assertEquals("Unexpected value for getString", "true", field.getString());
+    }
+
+    @Test
+    @Override
+    public void getObject_String() throws SQLException {
+        toReturnBooleanExpectations(false);
+
+        assertEquals("Unexpected value for getString", "false", field.getObject(String.class));
     }
 
      @Test

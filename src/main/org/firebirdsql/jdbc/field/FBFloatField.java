@@ -143,11 +143,16 @@ final class FBFloatField extends FBField {
 
     public void setDouble(double value) throws SQLException {
         // check if value is within bounds
-        // TODO: Shouldn't we just overflow to +/-INF?
-        if (value > MAX_FLOAT_VALUE || value < MIN_FLOAT_VALUE)
+        if (value == Double.NEGATIVE_INFINITY) {
+            setFloat(Float.NEGATIVE_INFINITY);
+        } else if (value == Double.POSITIVE_INFINITY) {
+            setFloat(Float.POSITIVE_INFINITY);
+        } else if (value > MAX_FLOAT_VALUE || value < MIN_FLOAT_VALUE) {
+            // TODO: Shouldn't we just overflow to +/-INF?
             throw new TypeConversionException(FLOAT_CONVERSION_ERROR + " " + value);
-
-        setFloat((float) value);
+        } else {
+            setFloat((float) value);
+        }
     }
 
     public void setLong(long value) throws SQLException {

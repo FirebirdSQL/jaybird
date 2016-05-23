@@ -1,6 +1,4 @@
 /*
- * $Id$
- * 
  * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
@@ -19,6 +17,9 @@
  * All rights reserved.
  */
 package org.firebirdsql.jdbc.field;
+
+import java.sql.SQLException;
+import java.sql.SQLNonTransientException;
 
 /**
  * Provides a default implementation of {@link org.firebirdsql.jdbc.field.ObjectConverter}.
@@ -39,5 +40,10 @@ public final class DefaultObjectConverter implements ObjectConverter {
     @Override
     public boolean setObject(FBField field, Object object) throws java.sql.SQLException {
         return false;
+    }
+
+    @Override
+    public <T> T getObject(FBField field, Class<T> type) throws SQLException {
+        throw new SQLNonTransientException("Unsupported conversion requested for field " + field.getName() + " requested type: " + type.getName());
     }
 }

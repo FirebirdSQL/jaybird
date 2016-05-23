@@ -45,7 +45,7 @@ public final class IOUtils {
     }
 
     public static String toString(final Reader in, final int length) throws IOException {
-        final StringWriter out = new StringWriter(length);
+        final StringWriter out = new StringWriter();
         final char[] buff = new char[Math.min(4096, length)];
         int counter;
         int toRead = length;

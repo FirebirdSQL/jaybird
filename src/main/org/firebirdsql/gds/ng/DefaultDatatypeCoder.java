@@ -203,6 +203,11 @@ public class DefaultDatatypeCoder implements DatatypeCoder {
     }
 
     @Override
+    public byte[] encodeTimestampRaw(RawDateTimeStruct raw) {
+        return new datetime(raw).toTimestampBytes();
+    }
+
+    @Override
     public byte[] encodeTimestampCalendar(Timestamp value, Calendar c) {
 
         /* note, we cannot simply pass millis to the database, because
@@ -213,15 +218,7 @@ public class DefaultDatatypeCoder implements DatatypeCoder {
          * of 100 nano-seconds since midnight" (NOTE: It is actually 100 microseconds!)
          */
         datetime d = new datetime(value, c);
-
-        byte[] date = d.toDateBytes();
-        byte[] time = d.toTimeBytes();
-
-        byte[] result = new byte[8];
-        System.arraycopy(date, 0, result, 0, 4);
-        System.arraycopy(time, 0, result, 4, 4);
-
-        return result;
+        return d.toTimestampBytes();
     }
 
     @Override
@@ -243,26 +240,19 @@ public class DefaultDatatypeCoder implements DatatypeCoder {
     }
 
     @Override
-    public Timestamp decodeTimestamp(byte[] byte_int) {
-        return decodeTimestampCalendar(byte_int, new GregorianCalendar());
+    public Timestamp decodeTimestamp(byte[] byte_long) {
+        return decodeTimestampCalendar(byte_long, new GregorianCalendar());
     }
 
     @Override
-    public Timestamp decodeTimestampCalendar(byte[] byte_int, Calendar c) {
-        if (byte_int.length != 8)
-            throw new IllegalArgumentException("Bad parameter to decode");
+    public RawDateTimeStruct decodeTimestampRaw(byte[] byte_long) {
+        datetime d = fromLongBytes(byte_long);
+        return d.getRaw();
+    }
 
-        /* we have to extract time and date correctly
-         * see encodeTimestamp(...) for explanations
-         */
-
-        byte[] date = new byte[4];
-        byte[] time = new byte[4];
-
-        System.arraycopy(byte_int, 0, date, 0, 4);
-        System.arraycopy(byte_int, 4, time, 0, 4);
-
-        datetime d = new datetime(date, time);
+    @Override
+    public Timestamp decodeTimestampCalendar(byte[] byte_long, Calendar c) {
+        datetime d = fromLongBytes(byte_long);
         return d.toTimestamp(c);
     }
 
@@ -282,6 +272,11 @@ public class DefaultDatatypeCoder implements DatatypeCoder {
     @Override
     public byte[] encodeTime(Time d) {
         return encodeTimeCalendar(d, new GregorianCalendar());
+    }
+
+    @Override
+    public byte[] encodeTimeRaw(RawDateTimeStruct raw) {
+        return new datetime(raw).toTimeBytes();
     }
 
     @Override
@@ -309,6 +304,12 @@ public class DefaultDatatypeCoder implements DatatypeCoder {
     }
 
     @Override
+    public RawDateTimeStruct decodeTimeRaw(byte[] int_byte) {
+        datetime d = new datetime(null, int_byte);
+        return d.getRaw();
+    }
+
+    @Override
     public Time decodeTimeCalendar(byte[] int_byte, Calendar c) {
         datetime dt = new datetime(null, int_byte);
         return dt.toTime(c);
@@ -330,6 +331,11 @@ public class DefaultDatatypeCoder implements DatatypeCoder {
     }
 
     @Override
+    public byte[] encodeDateRaw(RawDateTimeStruct raw) {
+        return new datetime(raw).toDateBytes();
+    }
+
+    @Override
     public byte[] encodeDateCalendar(Date d, Calendar c) {
         datetime dt = new datetime(d, c);
         return dt.toDateBytes();
@@ -348,6 +354,12 @@ public class DefaultDatatypeCoder implements DatatypeCoder {
     @Override
     public Date decodeDate(byte[] byte_int) {
         return decodeDateCalendar(byte_int, new GregorianCalendar());
+    }
+
+    @Override
+    public RawDateTimeStruct decodeDateRaw(byte[] byte_int) {
+        datetime d = new datetime(byte_int, null);
+        return d.getRaw();
     }
 
     @Override
@@ -381,14 +393,7 @@ public class DefaultDatatypeCoder implements DatatypeCoder {
     @Override
     public byte[] encodeLocalDateTime(int year, int month, int day, int hour, int minute, int second, int nanos) {
         datetime dt = new datetime(year, month, day, hour, minute, second, nanos);
-        byte[] date = dt.toDateBytes();
-        byte[] time = dt.toTimeBytes();
-
-        byte[] result = new byte[8];
-        System.arraycopy(date, 0, result, 0, 4);
-        System.arraycopy(time, 0, result, 4, 4);
-
-        return result;
+        return dt.toTimestampBytes();
     }
 
     @Override
@@ -396,69 +401,73 @@ public class DefaultDatatypeCoder implements DatatypeCoder {
         return encodingFactory;
     }
 
+    private datetime fromLongBytes(byte[] byte_long) {
+        if (byte_long.length != 8) {
+            throw new IllegalArgumentException("Bad parameter to decode, require byte array of length 8");
+        }
+
+        // we have to extract time and date correctly see encodeTimestamp(...) for explanations
+
+        byte[] date = new byte[4];
+        byte[] time = new byte[4];
+
+        System.arraycopy(byte_long, 0, date, 0, 4);
+        System.arraycopy(byte_long, 4, time, 0, 4);
+
+        return new datetime(date, time);
+    }
+
     /**
      * Helper Class to encode/decode times/dates
      */
     private class datetime {
 
-        private static final int NANOSECONDS_PER_FRACTION = 100 * 1000;
-        private static final int FRACTIONS_PER_MILLISECOND = 10;
-        private static final int FRACTIONS_PER_SECOND = 1000 * FRACTIONS_PER_MILLISECOND;
-        private static final int FRACTIONS_PER_MINUTE = 60 * FRACTIONS_PER_SECOND;
-        private static final int FRACTIONS_PER_HOUR = 60 * FRACTIONS_PER_MINUTE;
-
-        int year;
-        int month;
-        int day;
-        int hour;
-        int minute;
-        int second;
-        int fractions; // Sub-second precision in 100 microseconds
+        private RawDateTimeStruct raw = new RawDateTimeStruct();
 
         datetime(int year, int month, int day, int hour, int minute, int second, int nanos) {
-            this.year = year;
-            this.month = month;
-            this.day = day;
-            this.hour = hour;
-            this.minute = minute;
-            this.second = second;
-            fractions = (nanos / NANOSECONDS_PER_FRACTION) % FRACTIONS_PER_SECOND;
+            raw.year = year;
+            raw.month = month;
+            raw.day = day;
+            raw.hour = hour;
+            raw.minute = minute;
+            raw.second = second;
+            raw.fractions = (nanos / NANOSECONDS_PER_FRACTION) % FRACTIONS_PER_SECOND;
         }
 
         datetime(Timestamp value, Calendar cOrig) {
             Calendar c = (Calendar) cOrig.clone();
             c.setTime(value);
-            year = c.get(Calendar.YEAR);
-            month = c.get(Calendar.MONTH) + 1;
-            day = c.get(Calendar.DAY_OF_MONTH);
-            hour = c.get(Calendar.HOUR_OF_DAY);
-            minute = c.get(Calendar.MINUTE);
-            second = c.get(Calendar.SECOND);
-            fractions = value.getNanos() / NANOSECONDS_PER_FRACTION;
+            raw.year = c.get(Calendar.YEAR);
+            raw.month = c.get(Calendar.MONTH) + 1;
+            raw.day = c.get(Calendar.DAY_OF_MONTH);
+            raw.hour = c.get(Calendar.HOUR_OF_DAY);
+            raw.minute = c.get(Calendar.MINUTE);
+            raw.second = c.get(Calendar.SECOND);
+            raw.fractions = value.getNanos() / NANOSECONDS_PER_FRACTION;
         }
 
         datetime(Date value, Calendar cOrig) {
             Calendar c = (Calendar) cOrig.clone();
             c.setTime(value);
-            year = c.get(Calendar.YEAR);
-            month = c.get(Calendar.MONTH) + 1;
-            day = c.get(Calendar.DAY_OF_MONTH);
-            hour = 0;
-            minute = 0;
-            second = 0;
-            fractions = 0;
+            raw.year = c.get(Calendar.YEAR);
+            raw.month = c.get(Calendar.MONTH) + 1;
+            raw.day = c.get(Calendar.DAY_OF_MONTH);
+            raw.hour = 0;
+            raw.minute = 0;
+            raw.second = 0;
+            raw.fractions = 0;
         }
 
         datetime(Time value, Calendar cOrig) {
             Calendar c = (Calendar) cOrig.clone();
             c.setTime(value);
-            year = 0;
-            month = 0;
-            day = 0;
-            hour = c.get(Calendar.HOUR_OF_DAY);
-            minute = c.get(Calendar.MINUTE);
-            second = c.get(Calendar.SECOND);
-            fractions = c.get(Calendar.MILLISECOND) * FRACTIONS_PER_MILLISECOND;
+            raw.year = 0;
+            raw.month = 0;
+            raw.day = 0;
+            raw.hour = c.get(Calendar.HOUR_OF_DAY);
+            raw.minute = c.get(Calendar.MINUTE);
+            raw.second = c.get(Calendar.SECOND);
+            raw.fractions = c.get(Calendar.MILLISECOND) * FRACTIONS_PER_MILLISECOND;
         }
 
         datetime(byte[] date, byte[] time) {
@@ -469,48 +478,59 @@ public class DefaultDatatypeCoder implements DatatypeCoder {
                 sql_date -= 1721119 - 2400001;
                 century = (4 * sql_date - 1) / 146097;
                 sql_date = 4 * sql_date - 1 - 146097 * century;
-                day = sql_date / 4;
+                raw.day = sql_date / 4;
 
-                sql_date = (4 * day + 3) / 1461;
-                day = 4 * day + 3 - 1461 * sql_date;
-                day = (day + 4) / 4;
+                sql_date = (4 * raw.day + 3) / 1461;
+                raw.day = 4 * raw.day + 3 - 1461 * sql_date;
+                raw.day = (raw.day + 4) / 4;
 
-                month = (5 * day - 3) / 153;
-                day = 5 * day - 3 - 153 * month;
-                day = (day + 5) / 5;
+                raw.month = (5 * raw.day - 3) / 153;
+                raw.day = 5 * raw.day - 3 - 153 * raw.month;
+                raw.day = (raw.day + 5) / 5;
 
-                year = 100 * century + sql_date;
+                raw.year = 100 * century + sql_date;
 
-                if (month < 10) {
-                    month += 3;
+                if (raw.month < 10) {
+                    raw.month += 3;
                 } else {
-                    month -= 9;
-                    year += 1;
+                    raw.month -= 9;
+                    raw.year += 1;
                 }
             }
             if (time != null) {
                 int fractionsInDay = decodeInt(time);
-                hour = fractionsInDay / FRACTIONS_PER_HOUR;
-                fractionsInDay -= hour * FRACTIONS_PER_HOUR;
-                minute = fractionsInDay / FRACTIONS_PER_MINUTE;
-                fractionsInDay -= minute * FRACTIONS_PER_MINUTE;
-                second = fractionsInDay / FRACTIONS_PER_SECOND;
-                fractions = fractionsInDay - second * FRACTIONS_PER_SECOND;
+                raw.hour = fractionsInDay / FRACTIONS_PER_HOUR;
+                fractionsInDay -= raw.hour * FRACTIONS_PER_HOUR;
+                raw.minute = fractionsInDay / FRACTIONS_PER_MINUTE;
+                fractionsInDay -= raw.minute * FRACTIONS_PER_MINUTE;
+                raw.second = fractionsInDay / FRACTIONS_PER_SECOND;
+                raw.fractions = fractionsInDay - raw.second * FRACTIONS_PER_SECOND;
             }
+        }
+
+        datetime(RawDateTimeStruct raw) {
+            this.raw = new RawDateTimeStruct(raw);
+        }
+
+        /**
+         * @return A copy of the raw data time struct contained in this datetime.
+         */
+        RawDateTimeStruct getRaw() {
+            return new RawDateTimeStruct(raw);
         }
 
         byte[] toTimeBytes() {
             int fractionsInDay =
-                    hour * FRACTIONS_PER_HOUR
-                            + minute * FRACTIONS_PER_MINUTE
-                            + second * FRACTIONS_PER_SECOND
-                            + fractions;
+                    raw.hour * FRACTIONS_PER_HOUR
+                            + raw.minute * FRACTIONS_PER_MINUTE
+                            + raw.second * FRACTIONS_PER_SECOND
+                            + raw.fractions;
             return encodeInt(fractionsInDay);
         }
 
         byte[] toDateBytes() {
-            int cpMonth = month;
-            int cpYear = year;
+            int cpMonth = raw.month;
+            int cpYear = raw.year;
             int c, ya;
 
             if (cpMonth > 2) {
@@ -526,8 +546,19 @@ public class DefaultDatatypeCoder implements DatatypeCoder {
             int value = ((146097 * c) / 4 +
                     (1461 * ya) / 4 +
                     (153 * cpMonth + 2) / 5 +
-                    day + 1721119 - 2400001);
+                    raw.day + 1721119 - 2400001);
             return encodeInt(value);
+        }
+
+        byte[] toTimestampBytes() {
+            byte[] date = toDateBytes();
+            byte[] time = toTimeBytes();
+
+            byte[] result = new byte[8];
+            System.arraycopy(date, 0, result, 0, 4);
+            System.arraycopy(time, 0, result, 4, 4);
+
+            return result;
         }
 
         Time toTime(Calendar cOrig) {
@@ -535,36 +566,36 @@ public class DefaultDatatypeCoder implements DatatypeCoder {
             c.set(Calendar.YEAR, 1970);
             c.set(Calendar.MONTH, Calendar.JANUARY);
             c.set(Calendar.DAY_OF_MONTH, 1);
-            c.set(Calendar.HOUR_OF_DAY, hour);
-            c.set(Calendar.MINUTE, minute);
-            c.set(Calendar.SECOND, second);
-            c.set(Calendar.MILLISECOND, fractions / FRACTIONS_PER_MILLISECOND);
-            return new Time(c.getTime().getTime());
+            c.set(Calendar.HOUR_OF_DAY, raw.hour);
+            c.set(Calendar.MINUTE, raw.minute);
+            c.set(Calendar.SECOND, raw.second);
+            c.set(Calendar.MILLISECOND, raw.fractions / FRACTIONS_PER_MILLISECOND);
+            return new Time(c.getTimeInMillis());
         }
 
         Timestamp toTimestamp(Calendar cOrig) {
             Calendar c = (Calendar) cOrig.clone();
-            c.set(Calendar.YEAR, year);
-            c.set(Calendar.MONTH, month - 1);
-            c.set(Calendar.DAY_OF_MONTH, day);
-            c.set(Calendar.HOUR_OF_DAY, hour);
-            c.set(Calendar.MINUTE, minute);
-            c.set(Calendar.SECOND, second);
-            Timestamp timestamp = new Timestamp(c.getTime().getTime());
-            timestamp.setNanos(fractions * NANOSECONDS_PER_FRACTION);
+            c.set(Calendar.YEAR, raw.year);
+            c.set(Calendar.MONTH, raw.month - 1);
+            c.set(Calendar.DAY_OF_MONTH, raw.day);
+            c.set(Calendar.HOUR_OF_DAY, raw.hour);
+            c.set(Calendar.MINUTE, raw.minute);
+            c.set(Calendar.SECOND, raw.second);
+            Timestamp timestamp = new Timestamp(c.getTimeInMillis());
+            timestamp.setNanos(raw.fractions * NANOSECONDS_PER_FRACTION);
             return timestamp;
         }
 
         Date toDate(Calendar cOrig) {
             Calendar c = (Calendar) cOrig.clone();
-            c.set(Calendar.YEAR, year);
-            c.set(Calendar.MONTH, month - 1);
-            c.set(Calendar.DAY_OF_MONTH, day);
+            c.set(Calendar.YEAR, raw.year);
+            c.set(Calendar.MONTH, raw.month - 1);
+            c.set(Calendar.DAY_OF_MONTH, raw.day);
             c.set(Calendar.HOUR_OF_DAY, 0);
             c.set(Calendar.MINUTE, 0);
             c.set(Calendar.SECOND, 0);
             c.set(Calendar.MILLISECOND, 0);
-            return new Date(c.getTime().getTime());
+            return new Date(c.getTimeInMillis());
         }
     }
 }

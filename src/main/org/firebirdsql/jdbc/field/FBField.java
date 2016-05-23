@@ -31,6 +31,7 @@ import java.io.Reader;
 import java.math.BigDecimal;
 import java.sql.*;
 import java.util.Calendar;
+import java.util.GregorianCalendar;
 import java.util.Map;
 
 /**
@@ -456,6 +457,63 @@ public abstract class FBField {
         throw new FBDriverNotCapableException();
     }
 
+    @SuppressWarnings("unchecked")
+    public <T> T getObject(Class<T> type) throws SQLException {
+        if (type == null) {
+            throw new SQLNonTransientException("getObject called with type null");
+        }
+        switch (type.getName()) {
+        case "java.lang.Boolean":
+            return isNull() ? null : (T) Boolean.valueOf(getBoolean());
+        case "java.lang.Byte":
+            return isNull() ? null : (T) Byte.valueOf(getByte());
+        case "java.lang.Short":
+            return isNull() ? null : (T) Short.valueOf(getShort());
+        case "java.lang.Integer":
+            return isNull() ? null : (T) Integer.valueOf(getInt());
+        case "java.lang.Long":
+            return isNull() ? null : (T) Long.valueOf(getLong());
+        case "java.lang.Float":
+            return isNull() ? null : (T) Float.valueOf(getFloat());
+        case "java.lang.Double":
+            return isNull() ? null : (T) Double.valueOf(getDouble());
+        case "java.math.BigDecimal":
+            return (T) getBigDecimal();
+        case "java.lang.String":
+            return (T) getString();
+        case "[B": // byte[]
+            return (T) getBytes();
+        case "java.sql.Date":
+            return (T) getDate();
+        case "java.util.Date":
+        case "java.sql.Timestamp":
+            return (T) getTimestamp();
+        case "java.sql.Time":
+            return (T) getTime();
+        case "java.util.Calendar":
+            if (isNull()) {
+                return null;
+            } else {
+                Calendar calendar = GregorianCalendar.getInstance();
+                calendar.setTimeInMillis(getTimestamp().getTime());
+                return (T) calendar;
+            }
+        case "java.sql.Clob":
+        case "java.sql.NClob":
+            return (T) getClob();
+        case "java.sql.Blob":
+        case "org.firebirdsql.jdbc.FirebirdBlob":
+            return (T) getBlob();
+        case "java.io.InputStream":
+            return (T) getBinaryStream();
+        case "java.io.Reader":
+            return (T) getCharacterStream();
+        case "org.firebirdsql.gds.ng.DatatypeCoder$RawDateTimeStruct":
+            return (T) getRawDateTimeStruct();
+        }
+        return getObjectConverter().getObject(this, type);
+    }
+
     public InputStream getAsciiStream() throws SQLException {
         throw new TypeConversionException(FBField.ASCII_STREAM_CONVERSION_ERROR);
     }
@@ -594,6 +652,8 @@ public abstract class FBField {
             setTime((Time) value);
         } else if (value instanceof Timestamp) {
             setTimestamp((Timestamp) value);
+        } else if (value instanceof DatatypeCoder.RawDateTimeStruct) {
+            setRawDateTimeStruct((DatatypeCoder.RawDateTimeStruct) value);
         } else if (!getObjectConverter().setObject(this, value)) {
             throw new TypeConversionException(FBField.OBJECT_CONVERSION_ERROR);
         }
@@ -645,6 +705,14 @@ public abstract class FBField {
 
     public void setClob(FBClob clob) throws SQLException {
         throw new TypeConversionException(FBField.CLOB_CONVERSION_ERROR);
+    }
+
+    public DatatypeCoder.RawDateTimeStruct getRawDateTimeStruct() throws SQLException {
+        throw new TypeConversionException(FBField.TIMESTAMP_CONVERSION_ERROR);
+    }
+
+    public void setRawDateTimeStruct(DatatypeCoder.RawDateTimeStruct raw) throws SQLException {
+        throw new TypeConversionException(FBField.TIMESTAMP_CONVERSION_ERROR);
     }
 
     protected boolean isInvertTimeZone() {

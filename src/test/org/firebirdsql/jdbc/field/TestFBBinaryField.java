@@ -72,12 +72,41 @@ public class TestFBBinaryField extends BaseJUnit4TestFBField<FBBinaryField, byte
 
     @Test
     @Override
+    public void getObject_Reader() throws Exception {
+        final byte[] bytes = getRandomBytes();
+        final String expectedString = datatypeCoder.getEncodingFactory().getDefaultEncoding().decodeFromCharset(bytes);
+        toReturnValueExpectations(bytes);
+
+        Reader reader = field.getObject(Reader.class);
+        StringBuilder stringBuilder = new StringBuilder();
+        int characterValue;
+        while ((characterValue = reader.read()) != -1) {
+            stringBuilder.append((char) characterValue);
+        }
+
+        assertEquals(expectedString, stringBuilder.toString());
+    }
+
+    @Test
+    @Override
     public void getStringNonNull() throws SQLException {
         final byte[] bytes = getRandomBytes();
         final String expectedString = datatypeCoder.getEncodingFactory().getDefaultEncoding().decodeFromCharset(bytes);
         toReturnValueExpectations(bytes);
 
         String value = field.getString();
+
+        assertEquals(expectedString, value);
+    }
+
+    @Test
+    @Override
+    public void getObject_String() throws SQLException {
+        final byte[] bytes = getRandomBytes();
+        final String expectedString = datatypeCoder.getEncodingFactory().getDefaultEncoding().decodeFromCharset(bytes);
+        toReturnValueExpectations(bytes);
+
+        String value = field.getObject(String.class);
 
         assertEquals(expectedString, value);
     }
@@ -120,6 +149,17 @@ public class TestFBBinaryField extends BaseJUnit4TestFBField<FBBinaryField, byte
         toReturnValueExpectations(bytes);
 
         InputStream stream = field.getBinaryStream();
+
+        assertArrayEquals(bytes, streamToBytes(stream));
+    }
+
+    @Test
+    @Override
+    public void getObject_InputStream() throws Exception {
+        final byte[] bytes = getRandomBytes();
+        toReturnValueExpectations(bytes);
+
+        InputStream stream = field.getObject(InputStream.class);
 
         assertArrayEquals(bytes, streamToBytes(stream));
     }
@@ -189,6 +229,18 @@ public class TestFBBinaryField extends BaseJUnit4TestFBField<FBBinaryField, byte
         toReturnValueExpectations(bytes);
 
         byte[] value = field.getBytes();
+
+        assertArrayEquals(bytes, value);
+        assertNotSame("Expected a clone of the bytes", bytes, value);
+    }
+
+    @Test
+    @Override
+    public void getObject_byteArray() throws SQLException {
+        final byte[] bytes = getRandomBytes();
+        toReturnValueExpectations(bytes);
+
+        byte[] value = field.getObject(byte[].class);
 
         assertArrayEquals(bytes, value);
         assertNotSame("Expected a clone of the bytes", bytes, value);

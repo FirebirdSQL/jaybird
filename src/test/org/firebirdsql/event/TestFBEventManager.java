@@ -191,7 +191,7 @@ public class TestFBEventManager extends FBJUnit4TestBase {
             final Thread t = producerThreads[i];
             t.join();
         }
-        Thread.sleep(LONG_DELAY);
+        Thread.sleep(2 * LONG_DELAY);
         eventManager.removeEventListener("TEST_EVENT_A", ael1);
         eventManager.removeEventListener("TEST_EVENT_B", ael2);
         eventManager.removeEventListener("TEST_EVENT_A", ael3);
