@@ -127,13 +127,15 @@ public abstract class AbstractCallableStatement extends FBPreparedStatement impl
         batchList.add(procedureCall.clone());
     }
 
-    public int[] executeBatch() throws SQLException {
+    @Override
+    protected List<Long> executeBatchInternal() throws SQLException {
+        checkValidity();
         synchronized (getSynchronizationObject()) {
             boolean success = false;
             try {
                 notifyStatementStarted();
 
-                List<Integer> results = new ArrayList<>(batchList.size());
+                List<Long> results = new ArrayList<>(batchList.size());
                 Iterator<Object> iterator = batchList.iterator();
 
                 try {
@@ -145,10 +147,10 @@ public abstract class AbstractCallableStatement extends FBPreparedStatement impl
                     }
 
                     success = true;
-                    return toArray(results);
+                    return results;
                 } catch (SQLException ex) {
-                    throw new BatchUpdateException(ex.getMessage(), ex.getSQLState(), ex.getErrorCode(),
-                            toArray(results), ex);
+                    throw jdbcVersionSupport.createBatchUpdateException(ex.getMessage(), ex.getSQLState(),
+                            ex.getErrorCode(), toLargeArray(results), ex);
                 } finally {
                     clearBatch();
                 }
@@ -158,16 +160,15 @@ public abstract class AbstractCallableStatement extends FBPreparedStatement impl
         }
     }
     
-    private void executeSingleForBatch(List<Integer> results) throws SQLException {
-        /*
-         * TODO: array given to BatchUpdateException might not be JDBC-compliant
-         * (should set Statement.EXECUTE_FAILED and throwing it right away
-         * instead of continuing may fail intention)
-         */
-        if (internalExecute(!isSelectableProcedure()))
-            throw new BatchUpdateException(toArray(results));
+    private void executeSingleForBatch(List<Long> results) throws SQLException {
+        if (internalExecute(!isSelectableProcedure())) {
+            // TODO SQL state
+            throw jdbcVersionSupport.createBatchUpdateException(
+                    "Statements executed as batch should not produce a result set",
+                    SQLStateConstants.SQL_STATE_GENERAL_ERROR, 0, toLargeArray(results), null);
+        }
 
-        results.add(getUpdateCount());
+        results.add(getLargeUpdateCount());
     }
 
     public void setSelectableProcedure(boolean selectableProcedure) {

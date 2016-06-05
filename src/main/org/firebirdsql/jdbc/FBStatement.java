@@ -57,6 +57,8 @@ import static org.firebirdsql.util.FirebirdSupportInfo.supportInfoFor;
 public class FBStatement implements FirebirdStatement, Synchronizable {
 
     private static final org.firebirdsql.logging.Logger log = LoggerFactory.getLogger(FBStatement.class);
+    protected static final JdbcVersionSupport jdbcVersionSupport =
+            JdbcVersionSupportHolder.INSTANCE.getJdbcVersionSupport();
     
     protected final GDSHelper gdsHelper;
     protected final FBObjectListener.StatementListener statementListener;
@@ -1161,7 +1163,7 @@ public class FBStatement implements FirebirdStatement, Synchronizable {
      * @see <a href="package-summary.html#2.0 API">What Is in the JDBC
      *      2.0 API</a>
      */
-    public void clearBatch() throws  SQLException {
+    public void clearBatch() throws SQLException {
         batchList.clear();
     }
 
@@ -1215,38 +1217,33 @@ public class FBStatement implements FirebirdStatement, Synchronizable {
      * @see <a href="package-summary.html#2.0 API">What Is in the JDBC
      *      2.0 API</a>
      */
-    public int[] executeBatch() throws SQLException {
+    public final int[] executeBatch() throws SQLException {
+        if (statementListener.getConnection().getAutoCommit()) {
+            addWarning(new SQLWarning("Batch updates should be run with auto-commit disabled.", "01000"));
+        }
+
+        return toArray(executeBatchInternal());
+    }
+
+    protected List<Long> executeBatchInternal() throws SQLException {
         checkValidity();
         currentStatementGeneratedKeys = false;
 
-        if (statementListener.getConnection().getAutoCommit())
-            addWarning(new SQLWarning("Batch updates should be run with auto-commit disabled.", "01000"));
-
         notifyStatementStarted();
         synchronized (getSynchronizationObject()) {
-
             boolean success = false;
             try {
-            	List<Integer> responses = new ArrayList<>(batchList.size());
-
+                List<Long> responses = new ArrayList<>(batchList.size());
                 try {
                     for (String sql : batchList) {
-                        try {
-                            boolean hasResultSet = internalExecute(sql);
-                            if (hasResultSet)
-                                throw new BatchUpdateException(toArray(responses));
-                            else
-                                responses.add(getUpdateCount());
-                        } catch (SQLException e) {
-                            throw new BatchUpdateException(e.getMessage(), e.getSQLState(), e.getErrorCode(),
-                                    toArray(responses));
-                        }
+                        executeSingleForBatch(responses, sql);
                     }
 
                     success = true;
-
-                    return toArray(responses);
-
+                    return responses;
+                } catch (SQLException e) {
+                    throw jdbcVersionSupport.createBatchUpdateException(e.getMessage(), e.getSQLState(),
+                            e.getErrorCode(), toLargeArray(responses), e);
                 } finally {
                     clearBatch();
                 }
@@ -1255,20 +1252,48 @@ public class FBStatement implements FirebirdStatement, Synchronizable {
             }
         }
     }
-    
+
+    private void executeSingleForBatch(List<Long> responses, String sql) throws SQLException {
+        if (internalExecute(sql)) {
+            // TODO SQL state?
+            throw jdbcVersionSupport.createBatchUpdateException(
+                    "Statements executed as batch should not produce a result set",
+                    SQLStateConstants.SQL_STATE_GENERAL_ERROR, 0, toLargeArray(responses), null);
+        } else {
+            responses.add(getLargeUpdateCount());
+        }
+    }
+
     /**
-     * Convert collection of {@link Integer} elements into array of int.
+     * Convert collection of {@link Long} update counts into array of int.
      * 
-     * @param list
+     * @param updateCounts
      *            collection of integer elements.
      * 
      * @return array of int.
      */
-    protected int[] toArray(Collection<Integer> list) {
-        int[] result = new int[list.size()];
+    protected int[] toArray(Collection<Long> updateCounts) {
+        int[] result = new int[updateCounts.size()];
         int counter = 0;
-        for (Integer value : list) {
-        	result[counter++] = value;
+        for (long value : updateCounts) {
+        	result[counter++] = (int) value;
+        }
+        return result;
+    }
+
+    /**
+     * Convert collection of {@link Integer} update counts into array of int.
+     *
+     * @param updateCounts
+     *            collection of integer elements.
+     *
+     * @return array of int.
+     */
+    protected long[] toLargeArray(Collection<Long> updateCounts) {
+        long[] result = new long[updateCounts.size()];
+        int counter = 0;
+        for (long value : updateCounts) {
+            result[counter++] = value;
         }
         return result;
     }
@@ -1457,17 +1482,17 @@ public class FBStatement implements FirebirdStatement, Synchronizable {
         }
     }
 
-    // TODO Implement large update count methods below using SqlCountHolder
-
-    /**
-     * {@inheritDoc}
-     * <p>
-     * Jaybird does not support large update counts, the return value of this method is the same as
-     * {@link #getUpdateCount()}.
-     * </p>
-     */
     public long getLargeUpdateCount() throws SQLException {
-        return getUpdateCount();
+        checkValidity();
+
+        if (currentStatementResult != StatementResult.UPDATE_COUNT) {
+            return -1;
+        }
+        populateSqlCounts();
+        final long insCount = sqlCountHolder.getLongInsertCount();
+        final long updCount = sqlCountHolder.getLongUpdateCount();
+        final long delCount = sqlCountHolder.getLongDeleteCount();
+        return Math.max(Math.max(insCount, updCount), delCount);
     }
 
     /**
@@ -1498,64 +1523,32 @@ public class FBStatement implements FirebirdStatement, Synchronizable {
         return getMaxRows();
     }
 
-    /**
-     * {@inheritDoc}
-     * <p>
-     * Jaybird does not support update counts exceeding {@link Integer#MAX_VALUE}, this method calls
-     * {@link #executeBatch()} and converts the int-array to a long-array.
-     * </p>
-     */
-    public long[] executeLargeBatch() throws SQLException {
-        int[] updateCountsInt = executeBatch();
-        long[] updateCountsLong = new long[updateCountsInt.length];
-        for (int i = 0; i < updateCountsInt.length; i++) {
-            updateCountsLong[i] = updateCountsInt[i];
+    public final long[] executeLargeBatch() throws SQLException {
+        if (statementListener.getConnection().getAutoCommit()) {
+            addWarning(new SQLWarning("Batch updates should be run with auto-commit disabled.", "01000"));
         }
-        return updateCountsLong;
+
+        return toLargeArray(executeBatchInternal());
     }
 
-    /**
-     * {@inheritDoc}
-     * <p>
-     * Jaybird does not support update counts exceeding {@link Integer#MAX_VALUE}, this method calls
-     * {@link #executeUpdate(String)}.
-     * </p>
-     */
-    public long executeLargeUpdate(String sql) throws SQLException {
-        return executeUpdate(sql);
+    public final long executeLargeUpdate(String sql) throws SQLException {
+        executeUpdate(sql);
+        return getLargeUpdateCount();
     }
 
-    /**
-     * {@inheritDoc}
-     * <p>
-     * Jaybird does not support update counts exceeding {@link Integer#MAX_VALUE}, this method calls
-     * {@link #executeUpdate(String,int)}.
-     * </p>
-     */
-    public long executeLargeUpdate(String sql, int autoGeneratedKeys) throws SQLException {
-        return executeUpdate(sql, autoGeneratedKeys);
+    public final long executeLargeUpdate(String sql, int autoGeneratedKeys) throws SQLException {
+        executeUpdate(sql, autoGeneratedKeys);
+        return getLargeUpdateCount();
     }
 
-    /**
-     * {@inheritDoc}
-     * <p>
-     * Jaybird does not support update counts exceeding {@link Integer#MAX_VALUE}, this method calls
-     * {@link #executeUpdate(String,int[])}.
-     * </p>
-     */
-    public long executeLargeUpdate(String sql, int[] columnIndexes) throws SQLException {
-        return executeUpdate(sql, columnIndexes);
+    public final long executeLargeUpdate(String sql, int[] columnIndexes) throws SQLException {
+        executeUpdate(sql, columnIndexes);
+        return getLargeUpdateCount();
     }
 
-    /**
-     * {@inheritDoc}
-     * <p>
-     * Jaybird does not support update counts exceeding {@link Integer#MAX_VALUE}, this method calls
-     * {@link #executeUpdate(String,String[])}.
-     * </p>
-     */
-    public long executeLargeUpdate(String sql, String[] columnNames) throws SQLException {
-        return executeUpdate(sql, columnNames);
+    public final long executeLargeUpdate(String sql, String[] columnNames) throws SQLException {
+        executeUpdate(sql, columnNames);
+        return getLargeUpdateCount();
     }
 
     /**

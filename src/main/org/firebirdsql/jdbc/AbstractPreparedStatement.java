@@ -868,58 +868,8 @@ public abstract class AbstractPreparedStatement extends FBStatement implements F
         batchList.clear();
     }
 
-    /**
-     * Submits a batch of commands to the database for execution and if all
-     * commands execute successfully, returns an array of update counts. The
-     * <code>int</code> elements of the array that is returned are ordered to
-     * correspond to the commands in the batch, which are ordered according to
-     * the order in which they were added to the batch. The elements in the
-     * array returned by the method <code>executeBatch</code> may be one of
-     * the following:
-     * <OL>
-     * <LI>A number greater than or equal to zero -- indicates that the command
-     * was processed successfully and is an update count giving the number of
-     * rows in the database that were affected by the command's execution
-     * <LI>A value of <code>-2</code>-- indicates that the command was
-     * processed successfully but that the number of rows affected is unknown
-     * <P>
-     * If one of the commands in a batch update fails to execute properly, this
-     * method throws a <code>BatchUpdateException</code>, and a JDBC driver
-     * may or may not continue to process the remaining commands in the batch.
-     * However, the driver's behavior must be consistent with a particular DBMS,
-     * either always continuing to process commands or never continuing to
-     * process commands. If the driver continues processing after a failure, the
-     * array returned by the method
-     * <code>BatchUpdateException.getUpdateCounts</code> will contain as many
-     * elements as there are commands in the batch, and at least one of the
-     * elements will be the following:
-     * <P>
-     * <LI>A value of <code>-3</code>-- indicates that the command failed to
-     * execute successfully and occurs only if a driver continues to process
-     * commands after a command fails
-     * </OL>
-     * <P>
-     * A driver is not required to implement this method. The possible
-     * implementations and return values have been modified in the Java 2 SDK,
-     * Standard Edition, version 1.3 to accommodate the option of continuing to
-     * proccess commands in a batch update after a
-     * <code>BatchUpdateException</code> obejct has been thrown.
-     * 
-     * @return an array of update counts containing one element for each command
-     *         in the batch. The elements of the array are ordered according to
-     *         the order in which commands were added to the batch.
-     * @exception SQLException
-     *                if a database access error occurs or the driver does not
-     *                support batch statements. Throws
-     *                {@link java.sql.BatchUpdateException}(a subclass of
-     *                <code>SQLException</code>) if one of the commands sent
-     *                to the database fails to execute properly or attempts to
-     *                return a result set.
-     * @since 1.3
-     * @see <a href="package-summary.html#2.0 API">What Is in the JDBC 2.0 API
-     *      </a>
-     */
-    public int[] executeBatch() throws SQLException {
+    @Override
+    protected List<Long> executeBatchInternal() throws SQLException {
         checkValidity();
         synchronized (getSynchronizationObject()) {
 
@@ -927,45 +877,23 @@ public abstract class AbstractPreparedStatement extends FBStatement implements F
             try {
                 notifyStatementStarted();
 
-                List<Integer> results = new ArrayList<>(batchList.size());
+                List<Long> results = new ArrayList<>(batchList.size());
                 Iterator<Object> iter = batchList.iterator();
 
                 try {
                     while (iter.hasNext()) {
                         RowValue data = (RowValue) iter.next();
 
-                        for (int i = 0; i < fieldValues.getCount(); i++) {
-                            FieldValue fieldValue = fieldValues.getFieldValue(i);
-                            fieldValue.reset();
-
-                            FBField field = getField(i + 1);
-                            if (field instanceof FBFlushableField) {
-                                // Explicitly set to null to ensure initialized property set to true
-                                fieldValue.setFieldData(null);
-                                ((FBFlushableField) field).setCachedObject((CachedObject) data.getFieldValue(i).getCachedObject());
-                            } else {
-                                fieldValue.setFieldData(data.getFieldValue(i).getFieldData());
-                            }
-                            isParamSet[i] = true;
-                        }
-
-                        try {
-                            if (internalExecute(isExecuteProcedureStatement))
-                                throw new BatchUpdateException(toArray(results));
-
-                            results.add(getUpdateCount());
-
-                        } catch (SQLException ex) {
-                            throw new BatchUpdateException(ex.getMessage(), ex
-                                    .getSQLState(), ex.getErrorCode(),
-                                    toArray(results));
-                        }
+                        executeSingleForBatch(data, results);
                     }
 
                     commit = true;
 
-                    return toArray(results);
+                    return results;
 
+                } catch (SQLException ex) {
+                    throw jdbcVersionSupport.createBatchUpdateException(ex.getMessage(), ex.getSQLState(),
+                            ex.getErrorCode(), toLargeArray(results), ex);
                 } finally {
                     clearBatch();
                 }
@@ -973,6 +901,32 @@ public abstract class AbstractPreparedStatement extends FBStatement implements F
                 notifyStatementCompleted(commit);
             }
         }
+    }
+
+    private void executeSingleForBatch(RowValue data, List<Long> results) throws SQLException {
+        for (int i = 0; i < fieldValues.getCount(); i++) {
+            FieldValue fieldValue = fieldValues.getFieldValue(i);
+            fieldValue.reset();
+
+            FBField field = getField(i + 1);
+            if (field instanceof FBFlushableField) {
+                // Explicitly set to null to ensure initialized property set to true
+                fieldValue.setFieldData(null);
+                ((FBFlushableField) field).setCachedObject((CachedObject) data.getFieldValue(i).getCachedObject());
+            } else {
+                fieldValue.setFieldData(data.getFieldValue(i).getFieldData());
+            }
+            isParamSet[i] = true;
+        }
+
+        if (internalExecute(isExecuteProcedureStatement)) {
+            // TODO SQL state
+            throw jdbcVersionSupport.createBatchUpdateException(
+                    "Statements executed as batch should not produce a result set",
+                    SQLStateConstants.SQL_STATE_GENERAL_ERROR, 0, toLargeArray(results), null);
+        }
+
+        results.add(getLargeUpdateCount());
     }
 
     /**
@@ -1399,14 +1353,8 @@ public abstract class AbstractPreparedStatement extends FBStatement implements F
 
     // TODO Implement large update count method below using SqlCountHolder
 
-    /**
-     * {@inheritDoc}
-     * <p>
-     * Jaybird does not support update counts exceeding {@link Integer#MAX_VALUE}, this method calls
-     * {@link #executeUpdate()}.
-     * </p>
-     */
     public long executeLargeUpdate() throws SQLException {
-        return executeUpdate();
+        executeUpdate();
+        return getLargeUpdateCount();
     }
 }
