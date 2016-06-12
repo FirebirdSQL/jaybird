@@ -39,7 +39,7 @@ import java.sql.SQLException;
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @since 3.0
  */
-public interface FbBlob extends ExceptionListenable {
+public interface FbBlob extends ExceptionListenable, AutoCloseable {
 
     long NO_BLOB_ID = 0;
 

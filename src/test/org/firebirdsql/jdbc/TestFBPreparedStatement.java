@@ -30,6 +30,7 @@ import org.junit.rules.ExpectedException;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.math.BigDecimal;
+import java.nio.charset.StandardCharsets;
 import java.sql.*;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -56,14 +57,16 @@ public class TestFBPreparedStatement extends FBJUnit4TestBase {
 
     private static final Random rnd = new Random();
 
+    //@formatter:off
     private static final String CREATE_GENERATOR = "CREATE GENERATOR test_generator";
 
     private static final String CREATE_TEST_BLOB_TABLE =
               "CREATE TABLE test_blob ("
-            + "  ID INTEGER, "
-            + "  OBJ_DATA BLOB, "
-            + "  TS_FIELD TIMESTAMP, "
-            + "  T_FIELD TIME "
+            + "  ID INTEGER,"
+            + "  OBJ_DATA BLOB,"
+            + "  CLOB_DATA BLOB SUB_TYPE TEXT,"
+            + "  TS_FIELD TIMESTAMP,"
+            + "  T_FIELD TIME"
             + ")";
 
     private static final String CREATE_TEST_CHARS_TABLE =
@@ -89,6 +92,7 @@ public class TestFBPreparedStatement extends FBJUnit4TestBase {
     private static final String CREATE_TABLE = "CREATE TABLE test ( col1 INTEGER )";
     private static final String INSERT_DATA = "INSERT INTO test(col1) VALUES(?)";
     private static final String SELECT_DATA = "SELECT col1 FROM test ORDER BY col1";
+    //@formatter:on
 
     private Connection con;
 
@@ -976,6 +980,94 @@ public class TestFBPreparedStatement extends FBJUnit4TestBase {
                     byte[] data = rs.getBytes(2);
 
                     assertArrayEquals(String.format("Unexpected blob data for id %d", id), expectedData.get(id), data);
+                }
+                assertEquals("Unexpected number of blobs in table", 2, count);
+            }
+        } finally {
+            con.setAutoCommit(true);
+        }
+    }
+
+    /**
+     * Tests multiple batch executions in a row when using clobs created from a stream
+     * <p>
+     * See <a href="http://tracker.firebirdsql.org/browse/JDBC-433">JDBC-433</a>
+     * </p>
+     */
+    @Test
+    public void testRepeatedBatchExecutionWithClobFromBinaryStream() throws Exception {
+        executeCreateTable(con, CREATE_TEST_BLOB_TABLE);
+        con.setAutoCommit(false);
+        List<byte[]> expectedData = new ArrayList<>();
+        try {
+            // Execute two separate batches inserting a random blob
+            try (PreparedStatement insert = con.prepareStatement("INSERT INTO test_blob (id, clob_data) VALUES (?,?)")) {
+                for (int i = 0; i < 2; i++) {
+                    byte[] testData = new byte[50];
+                    rnd.nextBytes(testData);
+                    expectedData.add(testData.clone());
+                    insert.setInt(1, i);
+                    InputStream in = new ByteArrayInputStream(testData);
+                    insert.setBinaryStream(2, in, testData.length);
+                    insert.addBatch();
+                    insert.executeBatch();
+                }
+            }
+
+            // Check if the stored data matches the retrieved data
+            try (Statement select = con.createStatement();
+                 ResultSet rs = select.executeQuery("SELECT id, clob_data FROM test_blob ORDER BY id")) {
+                int count = 0;
+                while (rs.next()) {
+                    count++;
+                    int id = rs.getInt(1);
+                    byte[] data = rs.getBytes(2);
+
+                    assertArrayEquals(String.format("Unexpected blob data for id %d", id), expectedData.get(id), data);
+                }
+                assertEquals("Unexpected number of blobs in table", 2, count);
+            }
+        } finally {
+            con.setAutoCommit(true);
+        }
+    }
+
+    /**
+     * Tests multiple batch executions in a row when using clobs created from a String
+     * <p>
+     * See <a href="http://tracker.firebirdsql.org/browse/JDBC-433">JDBC-433</a>
+     * </p>
+     */
+    @Test
+    public void testRepeatedBatchExecutionWithClobFromString() throws Exception {
+        executeCreateTable(con, CREATE_TEST_BLOB_TABLE);
+        con.setAutoCommit(false);
+        List<String> expectedData = new ArrayList<>();
+        try {
+            // Execute two separate batches inserting a random blob
+            try (PreparedStatement insert = con.prepareStatement("INSERT INTO test_blob (id, clob_data) VALUES (?,?)")) {
+                for (int i = 0; i < 2; i++) {
+                    byte[] testData = new byte[50];
+                    rnd.nextBytes(testData);
+                    String testString = new String(testData, "Cp1252");
+                    expectedData.add(testString);
+                    insert.setInt(1, i);
+                    insert.setString(2, testString);
+                    insert.addBatch();
+                    insert.executeBatch();
+                }
+            }
+
+            // Check if the stored data matches the retrieved data
+            try (Statement select = con.createStatement();
+                 ResultSet rs = select.executeQuery("SELECT id, clob_data FROM test_blob ORDER BY id")) {
+                int count = 0;
+                while (rs.next()) {
+                    count++;
+                    int id = rs.getInt(1);
+                    String data = rs.getString(2);
+
+                    assertEquals(String.format("Unexpected blob data for id %d", id), expectedData.get(id), data);
                 }
                 assertEquals("Unexpected number of blobs in table", 2, count);
             }

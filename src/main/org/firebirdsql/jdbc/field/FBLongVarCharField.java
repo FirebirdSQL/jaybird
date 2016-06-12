@@ -21,7 +21,6 @@ package org.firebirdsql.jdbc.field;
 import org.firebirdsql.gds.ng.fields.FieldDescriptor;
 import org.firebirdsql.jdbc.FBBlob;
 import org.firebirdsql.jdbc.FBClob;
-import org.firebirdsql.jdbc.FBSQLException;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -39,7 +38,9 @@ import java.sql.SQLException;
  * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  */
-public class FBLongVarCharField extends FBStringField implements FBFlushableField{
+public class FBLongVarCharField extends FBStringField implements FBFlushableField {
+
+    // TODO Reduce duplication with FBBlobField
 
     private static final int BUFF_SIZE = 4096;
     
@@ -58,27 +59,23 @@ public class FBLongVarCharField extends FBStringField implements FBFlushableFiel
     
     public void close() throws SQLException {
         try {
-            if (blob != null) 
-                blob.free();
+            if (blob != null) blob.free();
         } finally {
             // forget this blob instance, resource waste
             // but simplifies our life. BLOB handle will be
             // released by a server automatically later
 
             blob = null;
-            this.bytes = null;
-            this.binaryStream = null;
-            this.characterStream = null;
-            this.length = 0;
+            bytes = null;
+            binaryStream = null;
+            characterStream = null;
+            length = 0;
         }
     }
     
     public Blob getBlob() throws SQLException {
-        if (blob != null)
-            return blob;
-        
-        if (isNull())
-            return null;
+        if (blob != null) return blob;
+        if (isNull()) return null;
 
         blob = new FBBlob(gdsHelper, getDatatypeCoder().decodeLong(getFieldData()));
         return blob;
@@ -86,95 +83,66 @@ public class FBLongVarCharField extends FBStringField implements FBFlushableFiel
     
     public Clob getClob() throws SQLException {
     	FBBlob blob = (FBBlob) getBlob();
-    	
-    	if (blob == null){
-    		return null;
-    	}
-    	
+    	if (blob == null) return null;
     	return new FBClob(blob);
     }
     
     public InputStream getBinaryStream() throws SQLException {
         Blob blob = getBlob();
-
-        if (blob == null)
-            return null;
-
+        if (blob == null) return null;
         return blob.getBinaryStream();
     }
     
     public byte[] getBytes() throws SQLException {
+        final Blob blob = getBlob();
+        if (blob == null) return null;
 
-        Blob blob = getBlob();
+        try (final InputStream in = blob.getBinaryStream()) {
+            if (in == null) return null;
+            final ByteArrayOutputStream bout = new ByteArrayOutputStream();
 
-        if (blob == null)
-            return null;
-
-        InputStream in = blob.getBinaryStream();
-
-        if (in == null)
-            return null;
-
-        ByteArrayOutputStream bout = new ByteArrayOutputStream();
-
-        // copy stream data
-        byte[] buff = new byte[BUFF_SIZE];
-        int counter;
-        try {
+            final byte[] buff = new byte[BUFF_SIZE];
+            int counter;
             while((counter = in.read(buff)) != -1) {
                 bout.write(buff, 0, counter);
             }
+            return bout.toByteArray();
         } catch(IOException ioex) {
             throw new TypeConversionException(BYTES_CONVERSION_ERROR + " " + ioex.getMessage());
-        } finally {
-            try {
-                in.close();
-            } catch(IOException ioex) {
-                throw new FBSQLException(ioex);
-            }
-
-            try {
-                bout.close();
-            } catch(IOException ioex) {
-                throw new FBSQLException(ioex);
-            }
         }
-
-        return bout.toByteArray();
     }
 
     public byte[] getCachedData() throws SQLException {
-        if (isNull()) {
-            return bytes;
-        }
-
+        if (isNull()) return bytes;
         return getBytes();
     }
     
     public FBFlushableField.CachedObject getCachedObject() throws SQLException {
-        if (isNull())
-            return new FBFlushableField.CachedObject(bytes, binaryStream, characterStream, length);
-        
-        return new CachedObject(getBytes(), null, null, 0);
+        if (isNull()) {
+            return new CachedObject(bytes, binaryStream, characterStream, length);
+        }
+
+        final byte[] bytes = getBytes();
+        return new CachedObject(bytes, null, null, bytes.length);
     }
     
     public void setCachedObject(FBFlushableField.CachedObject cachedObject) throws SQLException {
-        this.bytes = cachedObject.bytes;
-        this.binaryStream = cachedObject.binaryStream;
-        this.characterStream = cachedObject.characterStream;
-        this.length = cachedObject.length;
+        bytes = cachedObject.bytes;
+        binaryStream = cachedObject.binaryStream;
+        characterStream = cachedObject.characterStream;
+        length = cachedObject.length;
     }
 
     public String getString() throws SQLException {
         byte[] data = getBytes();
-        
-        if (data == null)
-            return null;
+        if (data == null) return null;
         
         return getDatatypeCoder().decodeString(data, encodingDefinition.getEncoding(), mappingPath);
     }
 
     public void setBlob(FBBlob blob) throws SQLException {
+        // setNull() to reset field to empty state
+        setNull();
         setFieldData(getDatatypeCoder().encodeLong(blob.getBlobId()));
         this.blob = blob;
     }
@@ -185,74 +153,74 @@ public class FBLongVarCharField extends FBStringField implements FBFlushableFiel
     }
 
     public void setCharacterStream(Reader in, int length) throws SQLException {
-        if (in == null) {
-            setNull();
-            return;
+        // setNull() to reset field to empty state
+        setNull();
+        if (in != null) {
+            this.characterStream = in;
+            this.length = length;
         }
-        
-        this.binaryStream = null;
-        this.characterStream = in;
-        this.bytes = null;
-        this.length = length;
     }
 
     public void setString(String value) throws SQLException {
-        
-        if (value == null) {
-            setNull();
-            return;
+        // setNull() to reset field to empty state
+        setNull();
+        if (value != null) {
+            setBytes(getDatatypeCoder().encodeString(value, encodingDefinition.getEncoding(), mappingPath));
         }
-        
-        setBytes(getDatatypeCoder().encodeString(value, encodingDefinition.getEncoding(), mappingPath));
     }
 
     public void setBytes(byte[] value) throws SQLException {
-
-        if (value == null) {
-            setNull();
-            return;
+        // setNull() to reset field to empty state
+        setNull();
+        if (value != null) {
+            this.bytes = value;
+            this.length = value.length;
         }
-        
-        this.binaryStream = null;
-        this.characterStream = null;
-        this.bytes = value;
-        this.length = value.length;
     }
 
     public void setBinaryStream(InputStream in, int length) throws SQLException {
-        
-        if (in == null) {
-            setNull();
-            return;
+        // setNull() to reset field to empty state
+        setNull();
+        if (in != null) {
+            this.binaryStream = in;
+            this.length = length;
         }
-            
-        this.binaryStream = in;
-        this.characterStream = null;
-        this.bytes = null;
-        this.length = length;
     }
 
     public void flushCachedData() throws SQLException {
-        if (binaryStream != null)
+        if (binaryStream != null) {
             copyBinaryStream(this.binaryStream, this.length);
-        else
-        if (characterStream != null)
+        } else if (characterStream != null) {
             copyCharacterStream(characterStream, length, encodingDefinition.getJavaEncodingName());
-        else
-        if (bytes != null)
+        } else if (bytes != null) {
             copyBytes(bytes, length);
-        else
-        if (blob == null)
+        } else if (blob == null) {
             setNull();
+        }
         
         this.characterStream = null;
         this.binaryStream = null;
         this.bytes = null;
         this.length = 0;
     }
+
+    @Override
+    public void setNull() {
+        super.setNull();
+        try {
+            if (blob != null) blob.free();
+        } catch (SQLException e) {
+            //ignore
+        } finally {
+            blob = null;
+            binaryStream = null;
+            characterStream = null;
+            bytes = null;
+            length = 0;
+        }
+    }
     
     private void copyBinaryStream(InputStream in, int length) throws SQLException {
-        
         FBBlob blob =  new FBBlob(gdsHelper);
         blob.copyStream(in, length);
         setFieldData(getDatatypeCoder().encodeLong(blob.getBlobId()));
