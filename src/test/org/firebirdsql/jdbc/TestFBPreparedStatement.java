@@ -51,17 +51,18 @@ public class TestFBPreparedStatement extends FBJUnit4TestBase {
     private static final Random rnd = new Random();
 
     //@formatter:off
-    public static final String CREATE_GENERATOR = "CREATE GENERATOR test_generator";
+    private static final String CREATE_GENERATOR = "CREATE GENERATOR test_generator";
 
-    public static final String CREATE_TEST_BLOB_TABLE = 
+    private static final String CREATE_TEST_BLOB_TABLE =
             "CREATE TABLE test_blob ("
-            + "  ID INTEGER, "
-            + "  OBJ_DATA BLOB, "
-            + "  TS_FIELD TIMESTAMP, "
-            + "  T_FIELD TIME "
+            + "  ID INTEGER,"
+            + "  OBJ_DATA BLOB,"
+            + "  CLOB_DATA BLOB SUB_TYPE TEXT,"
+            + "  TS_FIELD TIMESTAMP,"
+            + "  T_FIELD TIME"
             + ")";
 
-    public static final String CREATE_TEST_CHARS_TABLE = 
+    private static final String CREATE_TEST_CHARS_TABLE =
             "CREATE TABLE TESTTAB ("
             + "ID INTEGER, "
             + "FIELD1 VARCHAR(10) NOT NULL PRIMARY KEY,"
@@ -74,18 +75,18 @@ public class TestFBPreparedStatement extends FBJUnit4TestBase {
             + "num_field numeric(9,2)"
             + ")";
 
-    public static final String CREATE_UNRECOGNIZED_TR_TABLE = 
+    private static final String CREATE_UNRECOGNIZED_TR_TABLE =
             "CREATE TABLE t1("
             + "  c1 CHAR(2) CHARACTER SET ASCII NOT NULL, " 
             + "  c2 BLOB SUB_TYPE TEXT CHARACTER SET ASCII NOT NULL "
             + ")";
 
-    public static final String ADD_CONSTRAINT_T1_C1 = "ALTER TABLE t1 ADD CONSTRAINT t1_c1 PRIMARY KEY (c1)";
+    private static final String ADD_CONSTRAINT_T1_C1 = "ALTER TABLE t1 ADD CONSTRAINT t1_c1 PRIMARY KEY (c1)";
 
-    public static final String INIT_T1 = "INSERT INTO t1 VALUES ('XX', 'no more bugs')";
+    private static final String INIT_T1 = "INSERT INTO t1 VALUES ('XX', 'no more bugs')";
 
-    public static final String TEST_STRING = "This is simple test string.";
-    public static final String ANOTHER_TEST_STRING = "Another test string.";
+    private static final String TEST_STRING = "This is simple test string.";
+    private static final String ANOTHER_TEST_STRING = "Another test string.";
 
     private static final int DATA_ITEMS = 5;
     private static final String CREATE_TABLE = "CREATE TABLE test ( col1 INTEGER )";
@@ -908,7 +909,7 @@ public class TestFBPreparedStatement extends FBJUnit4TestBase {
      * </p>
      */
     @Test
-    public void testRepeatedBatchExecutionWithBlob() throws Exception {
+    public void testRepeatedBatchExecutionWithBlobFromStream() throws Exception {
         con.setAutoCommit(false);
         List<byte[]> expectedData = new ArrayList<byte[]>();
         try {
@@ -939,6 +940,110 @@ public class TestFBPreparedStatement extends FBJUnit4TestBase {
                         byte[] data = rs.getBytes(2);
 
                         assertArrayEquals(String.format("Unexpected blob data for id %d", id),
+                                expectedData.get(id), data);
+                    }
+                    assertEquals("Unexpected number of blobs in table", 2, count);
+                } finally {
+                    closeQuietly(rs);
+                }
+            } finally {
+                closeQuietly(select);
+            }
+        } finally {
+            con.setAutoCommit(true);
+        }
+    }
+
+    /**
+     * Tests multiple batch executions in a row when using clobs, but using a binary stream.
+     * <p>
+     * See <a href="http://tracker.firebirdsql.org/browse/JDBC-433">JDBC-433</a>
+     * </p>
+     */
+    @Test
+    public void testRepeatedBatchExecutionWithClobFromBinaryStream() throws Exception {
+        con.setAutoCommit(false);
+        List<byte[]> expectedData = new ArrayList<byte[]>();
+        try {
+            PreparedStatement insert = con.prepareStatement("INSERT INTO test_blob (id, clob_data) VALUES (?,?)");
+            try {
+                for (int i = 0; i < 2; i++) {
+                    byte[] testData = new byte[50];
+                    rnd.nextBytes(testData);
+                    expectedData.add(testData.clone());
+                    insert.setInt(1, i);
+                    InputStream in = new ByteArrayInputStream(testData);
+                    insert.setBinaryStream(2, in, testData.length);
+                    insert.addBatch();
+                    insert.executeBatch();
+                }
+            } finally {
+                closeQuietly(insert);
+            }
+
+            Statement select = con.createStatement();
+            try {
+                ResultSet rs = select.executeQuery("SELECT id, clob_data FROM test_blob ORDER BY id");
+                try {
+                    int count = 0;
+                    while (rs.next()) {
+                        count++;
+                        int id = rs.getInt(1);
+                        byte[] data = rs.getBytes(2);
+
+                        assertArrayEquals(String.format("Unexpected blob data for id %d", id),
+                                expectedData.get(id), data);
+                    }
+                    assertEquals("Unexpected number of blobs in table", 2, count);
+                } finally {
+                    closeQuietly(rs);
+                }
+            } finally {
+                closeQuietly(select);
+            }
+        } finally {
+            con.setAutoCommit(true);
+        }
+    }
+
+    /**
+     * Tests multiple batch executions in a row when using clobs from a string.
+     * <p>
+     * See <a href="http://tracker.firebirdsql.org/browse/JDBC-433">JDBC-433</a>
+     * </p>
+     */
+    @Test
+    public void testRepeatedBatchExecutionWithClobFromString() throws Exception {
+        con.setAutoCommit(false);
+        List<String> expectedData = new ArrayList<String>();
+        try {
+            PreparedStatement insert = con.prepareStatement("INSERT INTO test_blob (id, clob_data) VALUES (?,?)");
+            try {
+                for (int i = 0; i < 2; i++) {
+                    byte[] testData = new byte[50];
+                    rnd.nextBytes(testData);
+                    String testString = new String(testData, "Cp1252");
+                    expectedData.add(testString);
+                    insert.setInt(1, i);
+                    insert.setString(2, testString);
+                    insert.addBatch();
+                    insert.executeBatch();
+                }
+            } finally {
+                closeQuietly(insert);
+            }
+
+            Statement select = con.createStatement();
+            try {
+                ResultSet rs = select.executeQuery("SELECT id, clob_data FROM test_blob ORDER BY id");
+                try {
+                    int count = 0;
+                    while (rs.next()) {
+                        count++;
+                        int id = rs.getInt(1);
+                        String data = rs.getString(2);
+
+                        assertEquals(String.format("Unexpected blob data for id %d", id),
                                 expectedData.get(id), data);
                     }
                     assertEquals("Unexpected number of blobs in table", 2, count);

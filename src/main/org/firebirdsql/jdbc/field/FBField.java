@@ -187,7 +187,7 @@ public abstract class FBField {
      * Constructs an exception with appropriate message.
      * @todo add XSQLVAR type into the message
      */
-    static Throwable createException(String message) {
+    static SQLException createException(String message) {
         return new TypeConversionException(message);
     }
     
