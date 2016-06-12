@@ -288,6 +288,7 @@ final class FBBigDecimalField extends FBField {
             case ISCConstants.SQL_INT64:
                 return LONG;
             default:
+                // TODO Handle type double (dialect 1)
                 // TODO Throw exception
                 return null;
             }
