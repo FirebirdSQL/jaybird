@@ -822,6 +822,15 @@ artifacts and should not be considered API:
 If you are still using these interfaces, classes or methods, please change your
 code to use the JDBC interface or method instead.
 
+In `FBMaintenanceManager` the following changes will be made:
+
+- `getLimboTransactions()` will return `long[]` instead of `int[]`
+- `limboTransactionsAsList()` will return `List<Long>` instead of `List<Integer>`
+- `getLimboTransactionsAsLong()` (introduced in 2.2.11) will be removed in favor of `getLimboTransactions()`
+- `limboTransactionsAsLongList` (introduced in 2.2.11) will be removed in favor of `limboTransactionsAsList`
+
+These methods were previously not defined in the `MaintenanceManager` interface.
+
 ### Handling `(VAR)CHAR CHARACTER SET OCTETS` as `(VAR)BINARY` type
 
 From Jaybird 3.0 on `(VAR)CHAR CHARACTER SET OCTETS` will be considered

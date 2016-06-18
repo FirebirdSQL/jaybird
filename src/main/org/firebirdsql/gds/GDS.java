@@ -648,6 +648,20 @@ public interface GDS {
      */
     int iscVaxInteger(byte[] buffer, int pos, int length);
 
+    /**
+     * Retrieve an long value from a sequence of bytes.
+     *
+     * @param buffer
+     *            The byte array from which the integer is to be retrieved
+     * @param pos
+     *            The offset starting position from which to start retrieving
+     *            byte values
+     * @param length
+     *            The number of bytes to use in retrieving the long value.
+     * @return The long value retrieved from the bytes
+     */
+    long iscVaxLong(byte[] buffer, int pos, int length);
+
     // -----------------------------------------------
     // Blob methods
     // -----------------------------------------------

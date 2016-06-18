@@ -22,7 +22,6 @@
  * OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-
 package org.firebirdsql.gds;
 
 /**
@@ -299,6 +298,25 @@ public interface ServiceRequestBuffer {
      *            The value to set for the given parameter
      */
     public void addArgument(int argumentType, int value);
+
+    /**
+     * Set an <code>long</code> parameter on this <code>ServiceRequestBuffer</code>.
+     * <p>
+     * Note that most argumentTypes will be handled as if they are called with {@link #addArgument(int, int)}, except
+     * for a small number of argument types:
+     * <ul>
+     *     <li>{@link ISCConstants#isc_spb_rpr_commit_trans_64}</li>
+     *     <li>{@link ISCConstants#isc_spb_rpr_rollback_trans_64}</li>
+     *     <li>{@link ISCConstants#isc_spb_rpr_recover_two_phase_64}</li>
+     * </ul>
+     * </p>
+     *
+     * @param argumentType
+     *            The parameter to be set
+     * @param value
+     *            The value to set for the given parameter
+     */
+    public void addArgument(int argumentType, long value);
 
     /**
      * Set a <code>byte</code> parameter on this

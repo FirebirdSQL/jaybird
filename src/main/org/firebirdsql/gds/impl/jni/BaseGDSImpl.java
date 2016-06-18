@@ -1,7 +1,5 @@
 /*
- * $Id$
- * 
- * Firebird Open Source J2ee connector - jdbc driver
+ * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -14,7 +12,7 @@
  * This file was created by members of the firebird development team.
  * All individual contributions remain the Copyright (C) of those
  * individuals.  Contributors to this file are either listed here or
- * can be obtained from a CVS history command.
+ * can be obtained from a source control history command.
  *
  * All rights reserved.
  */
@@ -771,9 +769,18 @@ public abstract class BaseGDSImpl extends AbstractGDS {
         validateHandle(db_handle);
         isc_tr_handle_impl tr = validateHandle(tr_handle);
         
-        byte[] buffer = new byte[4];
-        for (int i = 0; i < 4; i++){
-            buffer[i] = (byte)(transactionId >>> (i * 8));
+        byte[] buffer;
+        if (transactionId <= 0xffffffffL) {
+            buffer = new byte[4];
+            for (int i = 0; i < 4; i++) {
+                buffer[i] = (byte) (transactionId >>> (i * 8));
+            }
+        } else {
+            // assuming this is FB 3, because FB 2.5 and lower only have 31 bits tx ids; might fail if this path is triggered on FB 2.5 and lower
+            buffer = new byte[8];
+            for (int i = 0; i < 8; i++) {
+                buffer[i] = (byte) (transactionId >>> (i * 8));
+            }
         }
 
         synchronized (db_handle) {
@@ -946,6 +953,21 @@ public abstract class BaseGDSImpl extends AbstractGDS {
         int i = pos;
         while (--length >= 0) {
             value += (buffer[i++] & 0xff) << shift;
+            shift += 8;
+        }
+        return value;
+    }
+
+    public long iscVaxLong(byte[] buffer, int pos, int length) {
+        if (length > 8) {
+            return 0;
+        }
+        long value = 0;
+        int shift = 0;
+
+        int index = pos;
+        while (--length >= 0) {
+            value += (buffer[index++] & 0xffL) << shift;
             shift += 8;
         }
         return value;

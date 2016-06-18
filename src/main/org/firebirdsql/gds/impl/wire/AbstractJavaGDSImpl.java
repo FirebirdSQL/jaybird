@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
@@ -810,9 +808,18 @@ public abstract class AbstractJavaGDSImpl extends AbstractGDS implements GDS {
 
 				// TODO check if sending db handle is needed, most likely not
 				db.out.writeInt(db.getRdbId());
-				byte[] buf = new byte[4];
-				for (int i = 0; i < 4; i++) {
-					buf[i] = (byte) (transactionId >>> (i * 8));
+				final byte[] buf;
+				if (transactionId <= 0xffffffffL) {
+					buf = new byte[4];
+					for (int i = 0; i < 4; i++) {
+						buf[i] = (byte) (transactionId >>> (i * 8));
+					}
+				} else {
+					// assuming this is FB 3, because FB 2.5 and lower only have 31 bits tx ids; might fail if this path is triggered on FB 2.5 and lower
+					buf = new byte[8];
+					for (int i = 0; i < 8; i++) {
+						buf[i] = (byte) (transactionId >>> (i * 8));
+					}
 				}
 				db.out.writeBuffer(buf);
 				db.out.flush();
@@ -1609,6 +1616,21 @@ public abstract class AbstractJavaGDSImpl extends AbstractGDS implements GDS {
 		int i = pos;
 		while (--length >= 0) {
 			value += (buffer[i++] & 0xff) << shift;
+			shift += 8;
+		}
+		return value;
+	}
+
+	public long iscVaxLong(byte[] buffer, int pos, int length) {
+		if (length > 8) {
+			return 0;
+		}
+		long value = 0;
+		int shift = 0;
+
+		int index = pos;
+		while (--length >= 0) {
+			value += (buffer[index++] & 0xffL) << shift;
 			shift += 8;
 		}
 		return value;

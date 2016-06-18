@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source J2EE Connector - JDBC Driver
+ * Firebird Open Source JavaEE Connector - JDBC Driver
  * 
  * Copyright (C) All Rights Reserved.
  * 
@@ -39,7 +39,7 @@
 package org.firebirdsql.management;
 
 import java.sql.SQLException;
-import java.util.LinkedList;
+import java.util.ArrayList;
 import java.util.List;
 
 import org.firebirdsql.gds.GDSException;
@@ -47,6 +47,7 @@ import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.ServiceRequestBuffer;
 import org.firebirdsql.gds.impl.GDSType;
 import org.firebirdsql.jdbc.FBSQLException;
+import org.firebirdsql.util.NumericHelper;
 
 import java.io.OutputStream;
 import java.io.PrintStream;
@@ -71,10 +72,9 @@ import java.io.ByteArrayOutputStream;
  *
  * @author <a href="mailto:gab_reid@users.sourceforge.net">Gabriel Reid</a>
  * @author <a href="mailto:tsteinmaurer@users.sourceforge.net">Thomas Steinmaurer</a>
+ * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  */
-public class FBMaintenanceManager extends FBServiceManager 
-                                implements MaintenanceManager {
-
+public class FBMaintenanceManager extends FBServiceManager implements MaintenanceManager {
 
     /**
      * Create a new instance of <code>FBMaintenanceManager</code> based on
@@ -446,16 +446,36 @@ public class FBMaintenanceManager extends FBServiceManager
      */
     public void listLimboTransactions() throws SQLException {
         PrintStream ps = new PrintStream(getLogger());
-        for (Integer trId : limboTransactionsAsList()) {
+        for (Long trId : limboTransactionsAsLongList()) {
             ps.print(trId + "\n");
         }
     }
-    
+
+    /**
+     * @deprecated Will return {@code List<Long>} in 3.0
+     */
+    @Deprecated
     public List<Integer> limboTransactionsAsList() throws SQLException {
+        List<Long> transactionList = limboTransactionsAsLongList();
+        List<Integer> transactionAsInt = new ArrayList<Integer>(transactionList.size());
+        for (long trId : transactionList) {
+            if (trId > 0xffffffffL) {
+                throw new SQLException("Integer overflow for transaction id %d, use getLimboTransactionsAsLong()");
+            }
+            transactionAsInt.add((int) trId);
+        }
+        return transactionAsInt;
+    }
+
+    /**
+     * @deprecated Will be renamed to {@link #limboTransactionsAsList()} in 3.0
+     */
+    @Deprecated
+    public List<Long> limboTransactionsAsLongList() throws SQLException {
         // See also fbscvmgr.cpp method printInfo
         OutputStream saveOut = getLogger();
         try {
-            List<Integer> result = new LinkedList<Integer>();
+            List<Long> result = new ArrayList<Long>();
             ByteArrayOutputStream out = new ByteArrayOutputStream();
             setLogger(out);
             executeRepairOperation(ISCConstants.isc_spb_rpr_list_limbo_trans);
@@ -465,14 +485,25 @@ public class FBMaintenanceManager extends FBServiceManager
             while (idx < output.length) {
                 switch (output[idx++]) {
                 case ISCConstants.isc_spb_single_tra_id:
-                case ISCConstants.isc_spb_multi_tra_id:
-                    int trId = getGds().iscVaxInteger(output, idx, 4);
+                case ISCConstants.isc_spb_multi_tra_id: {
+                    long trId = getGds().iscVaxLong(output, idx, 4);
                     idx += 4;
-                    result.add(Integer.valueOf(trId));
+                    result.add(trId);
                     break;
+                }
+                case ISCConstants.isc_spb_single_tra_id_64:
+                case ISCConstants.isc_spb_multi_tra_id_64: {
+                    long trId = getGds().iscVaxLong(output, idx, 8);
+                    idx += 8;
+                    result.add(trId);
+                    break;
+                }
                 // Information items we will ignore for now
                 case ISCConstants.isc_spb_tra_id:
                     idx += 4;
+                    break;
+                case ISCConstants.isc_spb_tra_id_64:
+                    idx += 8;
                     break;
                 case ISCConstants.isc_spb_tra_state:
                 case ISCConstants.isc_spb_tra_advise:
@@ -497,47 +528,77 @@ public class FBMaintenanceManager extends FBServiceManager
             setLogger(saveOut);
         }
     }
-    
+
+    /**
+     * @deprecated Will return {@code long[]} in 3.0
+     */
+    @Deprecated
     public int[] getLimboTransactions() throws SQLException {
         List<Integer> limboTransactions = limboTransactionsAsList();
         int[] trans = new int[limboTransactions.size()];
         int idx = 0;
-        for (Integer trId : limboTransactions) {
-            trans[idx++] = trId.intValue();
+        for (int trId : limboTransactions) {
+            trans[idx++] = trId;
         }
         return trans;
     }
 
     /**
-     * Commit a limbo transaction based on its ID.
-     *
-     * @param transactionId The ID of the limbo transaction to be committed
-     * @throws SQLException if a database access error occurs or the 
-     *         given transaction ID is not valid
+     * @deprecated Will be renamed to {@link #getLimboTransactions()} in 3.0
      */
-    public void commitTransaction(int transactionId) throws SQLException {
+    @Deprecated
+    public long[] getLimboTransactionsAsLong() throws SQLException {
+        List<Long> limboTransactions = limboTransactionsAsLongList();
+        long[] trans = new long[limboTransactions.size()];
+        int idx = 0;
+        for (Long trId : limboTransactions) {
+            trans[idx++] = trId;
+        }
+        return trans;
+    }
+
+    @Deprecated
+    @Override
+    public void commitTransaction(final int transactionId) throws SQLException {
+        handleTransaction(transactionId, ISCConstants.isc_spb_rpr_commit_trans);
+    }
+
+    @Override
+    public void commitTransaction(final long transactionId) throws SQLException {
+        handleTransaction(transactionId,
+                ISCConstants.isc_spb_rpr_commit_trans, ISCConstants.isc_spb_rpr_commit_trans_64);
+    }
+
+    @Deprecated
+    @Override
+    public void rollbackTransaction(final int transactionId) throws SQLException {
+        handleTransaction(transactionId, ISCConstants.isc_spb_rpr_rollback_trans);
+    }
+
+    @Override
+    public void rollbackTransaction(final long transactionId) throws SQLException {
+        handleTransaction(transactionId,
+                ISCConstants.isc_spb_rpr_rollback_trans, ISCConstants.isc_spb_rpr_rollback_trans_64);
+    }
+
+    private void handleTransaction(final int transactionId, final int action) throws SQLException {
         ServiceRequestBuffer srb = createDefaultRepairSRB();
-        srb.addArgument(ISCConstants.isc_spb_rpr_commit_trans, transactionId);
+        srb.addArgument(action, transactionId);
         executeServicesOperation(srb);
     }
 
-    /**
-     * Rollback a limbo transaction based on its ID.
-     *
-     * @param transactionId The ID of the limbo transaction to be rolled back
-     * @throws SQLException if a database access error occurs or the
-     *         given transaction ID is not valid
-     */
-    public void rollbackTransaction(int transactionId) throws SQLException {
+    private void handleTransaction(final long transactionId, final int action32bit, final int action64bit)
+            throws SQLException {
+        if (transactionId < 0) {
+            throw new SQLException("Only positive transactionIds are supported");
+        }
         ServiceRequestBuffer srb = createDefaultRepairSRB();
-        srb.addArgument(
-                ISCConstants.isc_spb_rpr_rollback_trans, 
-                transactionId);
+        final boolean is32Bit = NumericHelper.fitsUnsigned32BitInteger(transactionId);
+        srb.addArgument(is32Bit ? action32bit : action64bit, transactionId);
         executeServicesOperation(srb);
     }
 
-
-    //----------- Private imlementation methods --------------------
+    //----------- Private implementation methods --------------------
     
     /**
      * Execute a isc_spb_rpr_* (repair) services operation.

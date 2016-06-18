@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source J2ee connector - jdbc driver
+ * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -12,7 +12,7 @@
  * This file was created by members of the firebird development team.
  * All individual contributions remain the Copyright (C) of those
  * individuals.  Contributors to this file are either listed here or
- * can be obtained from a CVS history command.
+ * can be obtained from a source control history command.
  *
  * All rights reserved.
  */
@@ -21,6 +21,7 @@ package org.firebirdsql.gds.impl.wire;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 
+import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.ServiceRequestBuffer;
 
 /**
@@ -46,23 +47,18 @@ class ServiceRequestBufferImp extends ParameterBufferBase implements
     public void addArgument(int argumentType, String value) {
         getArgumentsList().add(new StringArgument(argumentType, value) {
 
-            /* (non-Javadoc)
-             * @see org.firebirdsql.jgds.ParameterBufferBase.StringArgument#getLength()
-             */
             @Override
             int getLength() {
                 return super.getLength() + 1;
             }
             
-            protected void writeLength(int length,
-                    XdrOutputStream outputStream) throws IOException {
+            protected void writeLength(int length, XdrOutputStream outputStream) throws IOException {
                 outputStream.write(length);
                 outputStream.write(length >> 8);
             }
         });
     }
 
-    
     @Override
     public void addArgument(int argumentType, int value) {
 
@@ -74,14 +70,43 @@ class ServiceRequestBufferImp extends ParameterBufferBase implements
             }
             
             @Override
-            protected void writeValue(XdrOutputStream outputStream, int value)
-                    throws IOException {
+            protected void writeValue(XdrOutputStream outputStream, int value) throws IOException {
                 outputStream.write(value);
                 outputStream.write(value>>8);
                 outputStream.write(value>>16);
                 outputStream.write(value>>24);
             }
         });
+    }
+
+    @Override
+    public void addArgument(int argumentType, long value) {
+        boolean isBigIntSpb = argumentType == ISCConstants.isc_spb_rpr_commit_trans_64
+                || argumentType == ISCConstants.isc_spb_rpr_rollback_trans_64
+                || argumentType == ISCConstants.isc_spb_rpr_recover_two_phase_64;
+        if (isBigIntSpb) {
+            getArgumentsList().add(new BigIntArgument(argumentType, value) {
+
+                @Override
+                int getLength() {
+                    return 9;
+                }
+
+                @Override
+                protected void writeValue(XdrOutputStream outputStream, long value) throws IOException {
+                    outputStream.write((int) value);
+                    outputStream.write((int) (value >> 8));
+                    outputStream.write((int) (value >> 16));
+                    outputStream.write((int) (value >> 24));
+                    outputStream.write((int) (value >> 32));
+                    outputStream.write((int) (value >> 40));
+                    outputStream.write((int) (value >> 48));
+                    outputStream.write((int) (value >> 56));
+                }
+            });
+        } else {
+            addArgument(argumentType, (int) value);
+        }
     }
     
     public void addArgument(int argumentType, byte value){
@@ -93,8 +118,7 @@ class ServiceRequestBufferImp extends ParameterBufferBase implements
             }
             
             @Override
-            protected void writeValue(XdrOutputStream outputStream, int value)
-                    throws IOException {
+            protected void writeValue(XdrOutputStream outputStream, int value) throws IOException {
                 outputStream.write(value);
             }
         });

@@ -159,6 +159,21 @@ public class GDSHelper {
         }
     }
 
+    public long getTransactionIdLong(IscTrHandle trHandle) throws GDSException {
+        try {
+            byte[] trInfo = gds.iscTransactionInformation(
+                    trHandle, new byte[] { ISCConstants.isc_info_tra_id }, 32);
+            if (trInfo.length < 3 || trInfo[0] != ISCConstants.isc_info_tra_id) {
+                throw new GDSException("Unexpected response buffer");
+            }
+            int length = gds.iscVaxInteger(trInfo, 1, 2);
+            return gds.iscVaxLong(trInfo, 3, length);
+        } catch (GDSException ex) {
+            notifyListeners(ex);
+            throw ex;
+        }
+    }
+
     /**
      * Prepare an SQL string for execution (within the database server) in the
      * context of a statement handle.
