@@ -39,13 +39,14 @@ public final class VaxEncoding {
      * <p>
      * This method is useful for lengths up to 4 bytes (ie normal Java integers ({@code int}). For larger lengths it
      * will return {@code 0}. Use {@link #iscVaxLong(byte[], int, int)} for reading values with length up to 8 bytes.
-     * For decoding 2 byte integers, use {@link #iscVaxInteger2(byte[], int)}.
+     * For decoding 2 byte integers, use {@link #iscVaxInteger2(byte[], int)} for optimal performance.
      * </p>
      *
      * @param buffer
      *         The byte array from which the integer is to be retrieved
      * @param startPosition
      *         The offset starting position from which to start retrieving byte values
+     * @param length number of bytes to read
      * @return The integer value retrieved from the bytes
      * @see #iscVaxLong(byte[], int, int)
      * @see #iscVaxInteger2(byte[], int)
@@ -103,8 +104,9 @@ public final class VaxEncoding {
      *         The byte array from which the integer is to be retrieved
      * @param startPosition
      *         The offset starting position from which to start retrieving byte values
+     * @param length number of bytes to read
      * @return The integer value retrieved from the bytes
-     * @see #iscVaxLong(byte[], int, int)
+     * @see #iscVaxInteger(byte[], int, int)
      * @see #iscVaxInteger2(byte[], int)
      */
     public static long iscVaxLong(final byte[] buffer, final int startPosition, int length) {
@@ -141,7 +143,7 @@ public final class VaxEncoding {
      * @param value Value to encode
      * @throws IOException
      */
-    private static void encodeVaxLongWithoutLength(OutputStream stream, long value) throws IOException {
+    public static void encodeVaxLongWithoutLength(OutputStream stream, long value) throws IOException {
         stream.write((int) value);
         stream.write((int) (value >> 8));
         stream.write((int) (value >> 16));

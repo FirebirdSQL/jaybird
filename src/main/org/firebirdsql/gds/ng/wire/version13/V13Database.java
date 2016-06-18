@@ -18,9 +18,13 @@
  */
 package org.firebirdsql.gds.ng.wire.version13;
 
+import org.firebirdsql.gds.VaxEncoding;
 import org.firebirdsql.gds.ng.wire.ProtocolDescriptor;
 import org.firebirdsql.gds.ng.wire.WireDatabaseConnection;
 import org.firebirdsql.gds.ng.wire.version12.V12Database;
+
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 
 /**
  * {@link org.firebirdsql.gds.ng.wire.FbWireDatabase} implementation for the version 13 wire protocol.
@@ -41,6 +45,17 @@ public class V13Database extends V12Database {
     protected V13Database(WireDatabaseConnection connection,
             ProtocolDescriptor descriptor) {
         super(connection, descriptor);
+    }
+
+    @Override
+    protected byte[] getTransactionIdBuffer(long transactionId) {
+        ByteArrayOutputStream bos = new ByteArrayOutputStream(8);
+        try {
+            VaxEncoding.encodeVaxLongWithoutLength(bos, (int) transactionId);
+        } catch (IOException e) {
+            // ignored: won't happen with a ByteArrayOutputStream
+        }
+        return bos.toByteArray();
     }
 
 }

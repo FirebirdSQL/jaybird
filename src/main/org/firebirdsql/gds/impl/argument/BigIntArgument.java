@@ -27,20 +27,22 @@ import java.io.OutputStream;
 import java.util.EnumSet;
 
 /**
- * {@link Argument} implementation for numeric (integer) values
+ * {@link Argument} implementation for bigint (long) values.
+ * @since 3.0
  */
-public final class NumericArgument extends Argument {
+public final class BigIntArgument extends Argument {
 
     private static final EnumSet<ArgumentType> SUPPORTED_ARGUMENT_TYPES =
-            EnumSet.of(ArgumentType.TraditionalDpb, ArgumentType.Wide, ArgumentType.IntSpb, ArgumentType.ByteSpb);
+            EnumSet.of(ArgumentType.TraditionalDpb, ArgumentType.Wide, ArgumentType.IntSpb, ArgumentType.BigIntSpb);
     private final ArgumentType argumentType;
-    private final int value;
+    private final long value;
 
-    public NumericArgument(int type, ArgumentType argumentType, int value) {
+    public BigIntArgument(int type, ArgumentType argumentType, long value) {
         super(type);
         if (!SUPPORTED_ARGUMENT_TYPES.contains(argumentType)) {
             throw new IllegalArgumentException("Invalid argument type: " + argumentType);
         }
+        // TODO Check if value fits if it is an IntSpb?
         this.argumentType = argumentType;
         this.value = value;
     }
@@ -51,26 +53,24 @@ public final class NumericArgument extends Argument {
     }
 
     public int getLength() {
-        if (argumentType == ArgumentType.ByteSpb) {
-            // 2: 1 for type + 1 for data; no length
-            return 2;
+        switch (argumentType) {
+        case IntSpb:
+            // 5: 1 for type + 4 for data
+            return 5 + argumentType.getLengthSize();
+        default:
+            // 9: 1 for type + 8 for data
+            return 9 + argumentType.getLengthSize();
         }
-        // 5: 1 for type + 4 for data
-        return 5 + argumentType.getLengthSize();
     }
 
-    protected void writeValue(final OutputStream outputStream, final int value) throws IOException {
-        if (argumentType == ArgumentType.ByteSpb) {
-            outputStream.write(value);
-        } else {
+    protected void writeValue(final OutputStream outputStream, final long value) throws IOException {
+        if (argumentType == ArgumentType.IntSpb) {
             argumentType.writeLength(4, outputStream);
-            VaxEncoding.encodeVaxIntegerWithoutLength(outputStream, value);
+            VaxEncoding.encodeVaxIntegerWithoutLength(outputStream, (int) value);
+        } else {
+            argumentType.writeLength(8, outputStream);
+            VaxEncoding.encodeVaxLongWithoutLength(outputStream, value);
         }
-    }
-
-    @Override
-    public final int getValueAsInt() {
-        return value;
     }
 
     @Override
@@ -85,20 +85,19 @@ public final class NumericArgument extends Argument {
 
     @Override
     public boolean equals(Object other) {
-        if (other == null || !(other instanceof NumericArgument)) {
+        if (other == null || !(other instanceof BigIntArgument)) {
             return false;
         }
 
-        final NumericArgument otherNumericArgument = (NumericArgument) other;
+        final BigIntArgument otherBigIntArgument = (BigIntArgument) other;
 
-        return this.getType() == otherNumericArgument.getType() && this.value == otherNumericArgument.value;
+        return this.getType() == otherBigIntArgument.getType() && this.value == otherBigIntArgument.value;
     }
 
     @Override
     public int hashCode() {
-        int result = 23;
-        result = 41 * result + getType();
-        result = 41 * result + value;
+        int result = 41 * 23 + getType();
+        result = 41 * result + (int) (this.value ^ (this.value >>> 32));
         return result;
     }
 }

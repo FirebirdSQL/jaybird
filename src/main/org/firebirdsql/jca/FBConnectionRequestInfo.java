@@ -80,6 +80,11 @@ public class FBConnectionRequestInfo implements DatabaseParameterBufferExtension
     }
 
     @Override
+    public void addArgument(int argumentType, long value) {
+        dpb.addArgument(argumentType, value);
+    }
+
+    @Override
     public void addArgument(int argumentType, String value) {
         dpb.addArgument(argumentType, value);
     }

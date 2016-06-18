@@ -82,6 +82,22 @@ public enum ArgumentType {
             VaxEncoding.encodeVaxInteger2WithoutLength(outputStream, length);
         }
     },
+    BigIntSpb {
+        @Override
+        public int getLengthSize() {
+            return 0;
+        }
+
+        @Override
+        public int getMaxLength() {
+            return 8;
+        }
+
+        @Override
+        public void writeLength(int length, OutputStream outputStream) throws IOException {
+            // Do nothing; no length encoding
+        }
+    },
     IntSpb {
         @Override
         public int getLengthSize() {

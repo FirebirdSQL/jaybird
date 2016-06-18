@@ -19,10 +19,7 @@
 package org.firebirdsql.gds.ng.wire.version10;
 
 import org.firebirdsql.encodings.Encoding;
-import org.firebirdsql.gds.DatabaseParameterBuffer;
-import org.firebirdsql.gds.ISCConstants;
-import org.firebirdsql.gds.JaybirdErrorCodes;
-import org.firebirdsql.gds.TransactionParameterBuffer;
+import org.firebirdsql.gds.*;
 import org.firebirdsql.gds.impl.DatabaseParameterBufferExtension;
 import org.firebirdsql.gds.impl.wire.XdrOutputStream;
 import org.firebirdsql.gds.ng.FbExceptionBuilder;
@@ -35,6 +32,7 @@ import org.firebirdsql.jdbc.SQLStateConstants;
 import org.firebirdsql.logging.Logger;
 import org.firebirdsql.logging.LoggerFactory;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.sql.SQLException;
@@ -320,13 +318,8 @@ public class V10Database extends AbstractFbWireDatabase implements FbWireDatabas
                     final XdrOutputStream xdrOut = getXdrOut();
                     xdrOut.writeInt(op_reconnect);
                     xdrOut.writeInt(getHandle());
-                    // TODO: Only sending integer, why long?
-                    final byte[] buf = new byte[4];
-                    // Note: This uses an atypical encoding (as this is actually a TPB without a type)
-                    for (int i = 0; i < 4; i++) {
-                        buf[i] = (byte) (transactionId >>> (i * 8));
-                    }
-                    xdrOut.writeBuffer(buf);
+                    final byte[] transactionIdBuffer = getTransactionIdBuffer(transactionId);
+                    xdrOut.writeBuffer(transactionIdBuffer);
                     xdrOut.flush();
                 } catch (IOException ioex) {
                     throw new FbExceptionBuilder().exception(ISCConstants.isc_net_write_err).cause(ioex)
@@ -348,6 +341,16 @@ public class V10Database extends AbstractFbWireDatabase implements FbWireDatabas
             exceptionListenerDispatcher.errorOccurred(ex);
             throw ex;
         }
+    }
+
+    protected byte[] getTransactionIdBuffer(long transactionId) {
+        ByteArrayOutputStream bos = new ByteArrayOutputStream(4);
+        try {
+            VaxEncoding.encodeVaxIntegerWithoutLength(bos, (int) transactionId);
+        } catch (IOException e) {
+            // ignored: won't happen with a ByteArrayOutputStream
+        }
+        return bos.toByteArray();
     }
 
     @Override

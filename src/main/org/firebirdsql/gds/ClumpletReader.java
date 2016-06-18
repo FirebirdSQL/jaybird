@@ -175,6 +175,10 @@ public class ClumpletReader {
                 case isc_spb_rpr_rollback_trans:
                 case isc_spb_rpr_recover_two_phase:
                     return ClumpletType.IntSpb;
+                case isc_spb_rpr_commit_trans_64:
+                case isc_spb_rpr_rollback_trans_64:
+                case isc_spb_rpr_recover_two_phase_64:
+                    return ClumpletType.BigIntSpb;
                 }
                 throw invalidStructure("unknown parameter for repair");
             case isc_action_svc_add_user:
@@ -340,6 +344,11 @@ public class ClumpletReader {
         // Used in SPB for 4-byte integers
         case IntSpb:
             dataSize = 4;
+            break;
+
+        // Used in SPB for 8-byte integers
+        case BigIntSpb:
+            dataSize = 8;
             break;
 
         // Used in SPB for single byte
@@ -517,6 +526,7 @@ public class ClumpletReader {
         SingleTpb,
         StringSpb,
         IntSpb,
+        BigIntSpb,
         ByteSpb,
         Wide
     }

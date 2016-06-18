@@ -279,6 +279,7 @@ public interface ISCConstants {
     int isc_action_svc_remove_license = 10;	/* Removes a license from the license file */
     int isc_action_svc_db_stats	      = 11;	/* Retrieves database statistics */
     int isc_action_svc_get_ib_log     = 12;	/* Retrieves the InterBase log file from the server */
+    int isc_action_svc_get_fb_log     = 12;	/* Retrieves the Firebird log file from the server */
     // NBackup - New with Firebird 2.5
     int isc_action_svc_nbak   		  = 20; // Starts Nbackup
     int isc_action_svc_nrest  		  = 21; // Restores Nbackup
@@ -426,8 +427,8 @@ public interface ISCConstants {
     int isc_spb_rpr_commit_trans	=	15;
     int isc_spb_rpr_rollback_trans	=	34;
     int isc_spb_rpr_recover_two_phase=	17;
-    int isc_spb_tra_id				 =  18;
-    int isc_spb_single_tra_id		 =  19;
+    int isc_spb_tra_id				=   18;
+    int isc_spb_single_tra_id		=   19;
     int isc_spb_multi_tra_id		=	20;
     int isc_spb_tra_state			=	21;
     int isc_spb_tra_state_limbo		=	22;
@@ -441,6 +442,12 @@ public interface ISCConstants {
     int isc_spb_tra_advise_commit	=	30;
     int isc_spb_tra_advise_rollback	=	31;
     int isc_spb_tra_advise_unknown	=	33;
+    int isc_spb_tra_id_64			=	46;
+    int isc_spb_single_tra_id_64	=	47;
+    int isc_spb_multi_tra_id_64		=	48;
+    int isc_spb_rpr_commit_trans_64	=	49;
+    int isc_spb_rpr_rollback_trans_64		=50;
+    int isc_spb_rpr_recover_two_phase_64	=51;
 
     int isc_spb_rpr_validate_db		=	0x01;
     int isc_spb_rpr_sweep_db		=	0x02;
@@ -450,6 +457,7 @@ public interface ISCConstants {
     int isc_spb_rpr_ignore_checksum	=	0x20;
     int isc_spb_rpr_kill_shadows	=	0x40;
     int isc_spb_rpr_full			=	0x80;
+    int isc_spb_rpr_icu				= 0x0800;
 
     /*****************************************
      * Parameters for isc_action_svc_restore *
@@ -506,6 +514,7 @@ public interface ISCConstants {
     int isc_spb_sts_record_versions = 0x20;
     int isc_spb_sts_table       =   0x40;
     int isc_spb_sts_nocreation  =   0x80;
+    int isc_spb_sts_encryption	=  0x100;
 
     /****************************/
     /* Common, structural codes */

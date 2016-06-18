@@ -78,7 +78,14 @@ public class ServiceRequestBufferImp extends ParameterBufferBase implements Serv
 
             @Override
             public ArgumentType getIntegerArgumentType(int tag) {
-                return ArgumentType.IntSpb;
+                switch (tag) {
+                case ISCConstants.isc_spb_rpr_commit_trans_64:
+                case ISCConstants.isc_spb_rpr_rollback_trans_64:
+                case ISCConstants.isc_spb_rpr_recover_two_phase_64:
+                    return ArgumentType.BigIntSpb;
+                default:
+                    return ArgumentType.IntSpb;
+                }
             }
         };
 

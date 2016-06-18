@@ -477,13 +477,13 @@ public class TestFBMaintenanceManager extends FBJUnit4TestBase {
     public void testGetLimboTransactions() throws Exception {
         final int COUNT_LIMBO = 5;
         createLimboTransaction(COUNT_LIMBO);
-        int[] limboTransactions = maintenanceManager.getLimboTransactions();
+        long[] limboTransactions = maintenanceManager.getLimboTransactions();
         assertEquals(COUNT_LIMBO, limboTransactions.length);
     }
 
     @Test
     public void testRollbackLimboTransaction() throws Exception {
-        List<Integer> limboTransactions = maintenanceManager.limboTransactionsAsList();
+        List<Long> limboTransactions = maintenanceManager.limboTransactionsAsList();
         assertEquals(0, limboTransactions.size());
 
         createLimboTransaction(3);
@@ -491,7 +491,7 @@ public class TestFBMaintenanceManager extends FBJUnit4TestBase {
         limboTransactions = maintenanceManager.limboTransactionsAsList();
         assertEquals(3, limboTransactions.size());
 
-        int trId = limboTransactions.get(0);
+        long trId = limboTransactions.get(0);
         maintenanceManager.rollbackTransaction(trId);
 
         limboTransactions = maintenanceManager.limboTransactionsAsList();
@@ -499,8 +499,25 @@ public class TestFBMaintenanceManager extends FBJUnit4TestBase {
     }
 
     @Test
+    public void testRollbackLimboTransactionAsInt() throws Exception {
+        long[] limboTransactions = maintenanceManager.getLimboTransactions();
+        assertEquals(0, limboTransactions.length);
+
+        createLimboTransaction(3);
+
+        limboTransactions = maintenanceManager.getLimboTransactions();
+        assertEquals(3, limboTransactions.length);
+
+        int trId = (int) limboTransactions[0];
+        maintenanceManager.rollbackTransaction(trId);
+
+        limboTransactions = maintenanceManager.getLimboTransactions();
+        assertEquals(2, limboTransactions.length);
+    }
+
+    @Test
     public void testCommitLimboTransaction() throws Exception {
-        List<Integer> limboTransactions = maintenanceManager.limboTransactionsAsList();
+        List<Long> limboTransactions = maintenanceManager.limboTransactionsAsList();
         assertEquals(0, limboTransactions.size());
 
         createLimboTransaction(3);
@@ -508,11 +525,28 @@ public class TestFBMaintenanceManager extends FBJUnit4TestBase {
         limboTransactions = maintenanceManager.limboTransactionsAsList();
         assertEquals(3, limboTransactions.size());
 
-        int trId = limboTransactions.get(0);
+        long trId = limboTransactions.get(0);
         maintenanceManager.commitTransaction(trId);
 
         limboTransactions = maintenanceManager.limboTransactionsAsList();
         assertEquals(2, limboTransactions.size());
+    }
+
+    @Test
+    public void testCommitLimboTransactionAsInt() throws Exception {
+        long[] limboTransactions = maintenanceManager.getLimboTransactions();
+        assertEquals(0, limboTransactions.length);
+
+        createLimboTransaction(3);
+
+        limboTransactions = maintenanceManager.getLimboTransactions();
+        assertEquals(3, limboTransactions.length);
+
+        int trId = (int)limboTransactions[0];
+        maintenanceManager.commitTransaction(trId);
+
+        limboTransactions = maintenanceManager.getLimboTransactions();
+        assertEquals(2, limboTransactions.length);
     }
 
     private void createLimboTransaction(int count) throws Exception {

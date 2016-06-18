@@ -66,6 +66,18 @@ public interface Parameter {
      */
     int getValueAsInt();
 
+
+    /**
+     * The value of the parameter as long.
+     * <p>
+     * The implementation may throw a RuntimeException if the parameter isn't a long (or shouldn't be used as a
+     * long).
+     * </p>
+     *
+     * @return The value as long
+     */
+    long getValueAsLong();
+
     /**
      * Copies this argument into the supplied buffer, uses the supplied {@code Encoding} for string arguments.
      * <p>

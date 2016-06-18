@@ -50,7 +50,7 @@ public abstract class Argument implements Parameter, Serializable {
      */
     @Override
     public String getValueAsString() {
-        throw new RuntimeException("Cannot get the value for this argument type as a string");
+        throw new UnsupportedOperationException("Cannot get the value for this argument type as a string");
     }
 
     /**
@@ -58,7 +58,15 @@ public abstract class Argument implements Parameter, Serializable {
      */
     @Override
     public int getValueAsInt() {
-        throw new RuntimeException("Cannot get the value of this argument type as int");
+        throw new UnsupportedOperationException("Cannot get the value of this argument type as int");
+    }
+
+    /**
+     * @return The value as long
+     */
+    @Override
+    public long getValueAsLong() {
+        throw new UnsupportedOperationException("Cannot get the value of this argument type as long");
     }
 
     /**

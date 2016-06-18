@@ -480,6 +480,17 @@ they are implementation artifacts, and should not be considered API:
 
 - `org.firebirdsql.jdbc.FBDriverPropertyManager` (to package private)
 
+### FBMaintenanceManager ###
+
+In `FBMaintenanceManager` the following changes have been made:
+
+- `getLimboTransactions()` will return `long[]` instead of `int[]`
+- `limboTransactionsAsList()` will return `List<Long>` instead of `List<Integer>`
+- `getLimboTransactionsAsLong()` (introduced in 2.2.11) will be removed in favor of `getLimboTransactions()`
+- `limboTransactionsAsLongList` (introduced in 2.2.11) will be removed in favor of `limboTransactionsAsList`
+
+These methods were previously not defined in the `MaintenanceManager` interface.
+
 Breaking changes for Jaybird 3.1
 --------------------------------
 
@@ -507,6 +518,10 @@ The following methods will be removed in Jaybird 3.1:
 -   `GDSHelper.iscVaxLong(byte[] buffer, int pos, int length)` use
     `VaxEncoding.iscVaxLong(byte[] buffer, int startPosition, int length)`
     instead.
+-   `MaintenaceManager.commitTransaction(int transactionId)`, use
+    `MaintenanceManager.commitTransaction(long transactionId)` instead.
+-   `MaintenaceManager.rollbackTransaction(int transactionId)`, use
+    `MaintenanceManager.rollbackTransaction(long transactionId)` instead.
 
 ### Removal of deprecated constants ###
 

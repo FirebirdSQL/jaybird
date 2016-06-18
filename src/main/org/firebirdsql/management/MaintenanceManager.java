@@ -441,20 +441,23 @@ public interface MaintenanceManager extends ServiceManager {
     void listLimboTransactions() throws SQLException;
 
     /**
-     * Retrieve the ID of each limbo transaction as a List of Integer objects.
+     * Retrieve the ID of each limbo transaction as a List of Long objects.
      *
      * @throws SQLException
      *         if a database access error occurs
      */
-    List<Integer> limboTransactionsAsList() throws SQLException;
+    List<Long> limboTransactionsAsList() throws SQLException;
 
     /**
-     * Retrieve the ID of each limbo transaction as an array of ints.
+     * Retrieve the ID of each limbo transaction as an array of longs.
+     * <p>
+     * In Firebird 3, transactions are (unsigned) 48 bit longs.
+     * </p>
      *
      * @throws SQLException
      *         if a database access error occurs
      */
-    int[] getLimboTransactions() throws SQLException;
+    long[] getLimboTransactions() throws SQLException;
 
     /**
      * Commit a limbo transaction based on its ID.
@@ -463,8 +466,25 @@ public interface MaintenanceManager extends ServiceManager {
      *         The ID of the limbo transaction to be committed
      * @throws SQLException
      *         if a database access error occurs or the given transaction ID is not valid
+     * @deprecated Use {@link #commitTransaction(long)}. This method wil be removed in Jaybird 3.1.
      */
+    @Deprecated
     void commitTransaction(int transactionId) throws SQLException;
+
+    /**
+     * Commit a limbo transaction based on its ID.
+     * <p>
+     * The transaction id is expected to be a positive long. If you have a negative {@code int}, either call the
+     * - deprecated - {@link #commitTransaction(int)}, or convert the int to an unsigned long
+     * using {@link org.firebirdsql.util.NumericHelper#toUnsignedLong(int)}
+     * </p>
+     *
+     * @param transactionId
+     *         The ID of the limbo transaction to be committed (must be {@code > 0})
+     * @throws SQLException
+     *         if a database access error occurs or the given transaction ID is not valid
+     */
+    void commitTransaction(long transactionId) throws SQLException;
 
     /**
      * Rollback a limbo transaction based on its ID.
@@ -473,6 +493,23 @@ public interface MaintenanceManager extends ServiceManager {
      *         The ID of the limbo transaction to be rolled back
      * @throws SQLException
      *         if a database access error occurs or the given transaction ID is not valid
+     * @deprecated Use {@link #rollbackTransaction(long)}. This method wil be removed in Jaybird 3.1.
      */
+    @Deprecated
     void rollbackTransaction(int transactionId) throws SQLException;
+
+    /**
+     * Rollback a limbo transaction based on its ID.
+     * <p>
+     * The transaction id is expected to be a positive long. If you have a negative {@code int}, either call the
+     * - deprecated - {@link #rollbackTransaction(int)}, or convert the int to an unsigned long
+     * using {@link org.firebirdsql.util.NumericHelper#toUnsignedLong(int)}
+     * </p>
+     *
+     * @param transactionId
+     *         The ID of the limbo transaction to be rolled back (must be {@code > 0})
+     * @throws SQLException
+     *         if a database access error occurs or the given transaction ID is not valid
+     */
+    void rollbackTransaction(long transactionId) throws SQLException;
 }

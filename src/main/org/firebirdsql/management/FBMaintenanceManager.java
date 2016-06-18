@@ -28,6 +28,7 @@ import org.firebirdsql.gds.ServiceRequestBuffer;
 import org.firebirdsql.gds.impl.GDSType;
 import org.firebirdsql.gds.ng.FbExceptionBuilder;
 import org.firebirdsql.gds.ng.FbService;
+import org.firebirdsql.util.NumericHelper;
 
 import java.io.ByteArrayOutputStream;
 import java.io.OutputStream;
@@ -37,8 +38,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static org.firebirdsql.gds.ISCConstants.*;
-import static org.firebirdsql.gds.VaxEncoding.iscVaxInteger;
 import static org.firebirdsql.gds.VaxEncoding.iscVaxInteger2;
+import static org.firebirdsql.gds.VaxEncoding.iscVaxLong;
 
 /**
  * The <code>FBMaintenanceManager</code> class is responsible for replicating the functionality provided by
@@ -271,81 +272,121 @@ public class FBMaintenanceManager extends FBServiceManager implements Maintenanc
 
     @Deprecated
     public void listLimboTransactions() throws SQLException {
-        PrintStream ps = new PrintStream(getLogger());
-        for (Integer trId : limboTransactionsAsList()) {
+        final PrintStream ps = new PrintStream(getLogger());
+        for (Long trId : limboTransactionsAsList()) {
             ps.print(trId + "\n");
         }
     }
 
-    public List<Integer> limboTransactionsAsList() throws SQLException {
+    public List<Long> limboTransactionsAsList() throws SQLException {
         // See also fbscvmgr.cpp method printInfo
-        OutputStream saveOut = getLogger();
+        final OutputStream saveOut = getLogger();
+        final List<Long> result = new ArrayList<>();
+        final ByteArrayOutputStream out = new ByteArrayOutputStream();
+        final byte[] output;
         try {
-            List<Integer> result = new ArrayList<>();
-            ByteArrayOutputStream out = new ByteArrayOutputStream();
             setLogger(out);
             executeRepairOperation(isc_spb_rpr_list_limbo_trans);
-            byte output[] = out.toByteArray();
-
-            int idx = 0;
-            while (idx < output.length) {
-                switch (output[idx++]) {
-                case isc_spb_single_tra_id:
-                case isc_spb_multi_tra_id:
-                    int trId = iscVaxInteger(output, idx, 4);
-                    idx += 4;
-                    result.add(trId);
-                    break;
-                // Information items we will ignore for now
-                case isc_spb_tra_id:
-                    idx += 4;
-                    break;
-                case isc_spb_tra_state:
-                case isc_spb_tra_advise:
-                    idx++;
-                    break;
-                case isc_spb_tra_host_site:
-                case isc_spb_tra_remote_site:
-                case isc_spb_tra_db_path:
-                    int length = iscVaxInteger2(output, idx);
-                    idx += 2;
-                    idx += length;
-                    break;
-                default:
-                    throw new FbExceptionBuilder()
-                            .exception(isc_fbsvcmgr_info_err)
-                            .messageParameter(output[idx - 1] & 0xFF)
-                            .toSQLException();
-                }
-            }
-            return result;
+            output = out.toByteArray();
         } finally {
             setLogger(saveOut);
         }
+
+        int idx = 0;
+        while (idx < output.length) {
+            switch (output[idx++]) {
+            case isc_spb_single_tra_id:
+            case isc_spb_multi_tra_id: {
+                long trId = iscVaxLong(output, idx, 4);
+                idx += 4;
+                result.add(trId);
+                break;
+            }
+            case isc_spb_single_tra_id_64:
+            case isc_spb_multi_tra_id_64: {
+                long trId = iscVaxLong(output, idx, 8);
+                idx += 8;
+                result.add(trId);
+                break;
+            }
+            // Information items we will ignore for now
+            case isc_spb_tra_id:
+                idx += 4;
+                break;
+            case isc_spb_tra_id_64:
+                idx += 8;
+                break;
+            case isc_spb_tra_state:
+            case isc_spb_tra_advise:
+                idx++;
+                break;
+            case isc_spb_tra_host_site:
+            case isc_spb_tra_remote_site:
+            case isc_spb_tra_db_path:
+                int length = iscVaxInteger2(output, idx);
+                idx += 2;
+                idx += length;
+                break;
+            default:
+                throw new FbExceptionBuilder()
+                        .exception(isc_fbsvcmgr_info_err)
+                        .messageParameter(output[idx - 1] & 0xFF)
+                        .toSQLException();
+            }
+        }
+        return result;
     }
 
-    public int[] getLimboTransactions() throws SQLException {
-        List<Integer> limboTransactions = limboTransactionsAsList();
-        int[] trans = new int[limboTransactions.size()];
+    @Override
+    public long[] getLimboTransactions() throws SQLException {
+        final List<Long> limboTransactions = limboTransactionsAsList();
+        final long[] trans = new long[limboTransactions.size()];
         int idx = 0;
-        for (Integer trId : limboTransactions) {
+        for (long trId : limboTransactions) {
             trans[idx++] = trId;
         }
         return trans;
     }
 
-    public void commitTransaction(int transactionId) throws SQLException {
+    @Deprecated
+    @Override
+    public void commitTransaction(final int transactionId) throws SQLException {
+        handleTransaction(transactionId, isc_spb_rpr_commit_trans);
+    }
+
+    @Override
+    public void commitTransaction(final long transactionId) throws SQLException {
+        handleTransaction(transactionId, isc_spb_rpr_commit_trans, isc_spb_rpr_commit_trans_64);
+    }
+
+    @Deprecated
+    @Override
+    public void rollbackTransaction(final int transactionId) throws SQLException {
+        handleTransaction(transactionId, isc_spb_rpr_rollback_trans);
+    }
+
+    @Override
+    public void rollbackTransaction(final long transactionId) throws SQLException {
+        handleTransaction(transactionId, isc_spb_rpr_rollback_trans, isc_spb_rpr_rollback_trans_64);
+    }
+
+    private void handleTransaction(final int transactionId, final int action) throws SQLException {
         try (FbService service = attachServiceManager()) {
             ServiceRequestBuffer srb = createDefaultRepairSRB(service);
-            srb.addArgument(isc_spb_rpr_commit_trans, transactionId);
+            srb.addArgument(action, transactionId);
             executeServicesOperation(service, srb);
         }
     }
 
-    public void rollbackTransaction(int transactionId) throws SQLException {
+    private void handleTransaction(final long transactionId, final int action32bit, final int action64bit)
+            throws SQLException {
+        if (transactionId < 0) {
+            throw new SQLException("Only positive transactionIds are supported");
+        }
+        final boolean is32Bit = NumericHelper.fitsUnsigned32BitInteger(transactionId);
         try (FbService service = attachServiceManager()) {
             ServiceRequestBuffer srb = createDefaultRepairSRB(service);
-            srb.addArgument(isc_spb_rpr_rollback_trans, transactionId);
+            srb.addArgument(is32Bit ? action32bit : action64bit, transactionId);
             executeServicesOperation(service, srb);
         }
     }
