@@ -64,6 +64,10 @@ The following has been changed or fixed in Jaybird 2.2.11:
 
 -   Fixed: `ResultSet.getObject()` returns `byte[]` instead of `String` for
     `BLOB SUB_TYPE 1` when using `octetsAsBytes` ([JDBC-431](http://tracker.firebirdsql.org/browse/JDBC-431))
+-   Improvement: Support Firebird 3 48-bit transaction ids. ([JDBC-432](http://tracker.firebirdsql.org/browse/JDBC-432))\
+    Note that `FBMaintenanceManager.commit/rollbackTransaction(long)` with
+    longer than 32 bit transaction ids require Firebird 3.0.1 because of
+    [CORE-5224](http://tracker.firebirdsql.org/browse/CORE-5224).
 
 **Known issues in Jaybird 2.2.11**
 
