@@ -63,6 +63,8 @@ public class TestV10InputBlobMock {
         db = context.mock(FbWireDatabase.class);
         transaction = context.mock(FbWireTransaction.class);
         context.checking(new Expectations() {{
+            allowing(db).getSynchronizationObject();
+            will(returnValue(new Object()));
             allowing(transaction).addTransactionListener(with(any(TransactionListener.class)));
             allowing(db).addDatabaseListener(with(any(DatabaseListener.class)));
         }});

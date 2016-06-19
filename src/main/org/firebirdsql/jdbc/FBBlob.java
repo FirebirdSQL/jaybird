@@ -103,8 +103,8 @@ public class FBBlob implements FirebirdBlob, Synchronizable {
         this(c, blob_id, null);
     }
 
-    public Object getSynchronizationObject() {
-        return gdsHelper;
+    public final Object getSynchronizationObject() {
+        return gdsHelper.getSynchronizationObject();
     }
 
     /**

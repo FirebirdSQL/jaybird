@@ -16,26 +16,33 @@
  *
  * All rights reserved.
  */
-package org.firebirdsql.jdbc;
+package org.firebirdsql.gds.ng;
+
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
- * Provides synchronization object. Instances implementing this interface
- * provide objects that are later used in <code>synchronized</code> block:
- * <pre>
- * Object syncObject = someSynchronizable.getSynchronizationObject();
- * synchronized(syncObject) {
- *     // do something...
- * }
- * </pre>
- * 
- * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
+ * Object for synchronization that has an id that might be helpful during debugging.
+ *
+ * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @since 3.0
  */
-public interface Synchronizable {
-    
-    /**
-     * Get synchronization object.
-     * 
-     * @return object, cannot be <code>null</code>.
-     */
-    Object getSynchronizationObject();
+public final class SyncObject {
+
+    private static final AtomicInteger counter = new AtomicInteger();
+
+    private final int id;
+
+    public SyncObject() {
+        id = counter.getAndIncrement();
+    }
+
+    @Override
+    public int hashCode() {
+        return id;
+    }
+
+    @Override
+    public String toString() {
+        return "SyncObject[" + id + "]";
+    }
 }

@@ -187,7 +187,7 @@ public class FBLocalTransaction implements FirebirdLocalTransaction,
         // transaction
         if (xid == null) return;
 
-        synchronized (mc) {
+        synchronized (mc.getSynchronizationObject()) {
             try {
                 mc.internalEnd(xid, XAResource.TMSUCCESS);
                 mc.internalCommit(xid, true);
@@ -199,9 +199,7 @@ public class FBLocalTransaction implements FirebirdLocalTransaction,
                 xid = null;
             }
             if (commitEvent != null) {
-                mc.notify(
-                        FBManagedConnection.localTransactionCommittedNotifier,
-                        commitEvent);
+                mc.notify(FBManagedConnection.localTransactionCommittedNotifier, commitEvent);
             }
         }
     }
@@ -242,7 +240,7 @@ public class FBLocalTransaction implements FirebirdLocalTransaction,
         // transaction
         if (xid == null) return;
 
-        synchronized (mc) {
+        synchronized (mc.getSynchronizationObject()) {
             try {
                 mc.internalEnd(xid, XAResource.TMSUCCESS); // ??? on flags
                                                            // --FBManagedConnection is its own XAResource

@@ -60,32 +60,30 @@ public class V10OutputBlob extends AbstractFbWireOutputBlob implements FbWireBlo
                 }
 
                 final FbWireDatabase database = getDatabase();
-                synchronized (database.getSynchronizationObject()) {
-                    try {
-                        final XdrOutputStream xdrOut = database.getXdrStreamAccess().getXdrOut();
-                        final BlobParameterBuffer blobParameterBuffer = getBlobParameterBuffer();
-                        if (blobParameterBuffer == null) {
-                            xdrOut.writeInt(op_create_blob);
-                        } else {
-                            xdrOut.writeInt(op_create_blob2);
-                            xdrOut.writeTyped(blobParameterBuffer);
-                        }
-                        xdrOut.writeInt(getTransaction().getHandle());
-                        xdrOut.writeLong(FbBlob.NO_BLOB_ID);
-                        xdrOut.flush();
-                    } catch (IOException e) {
-                        throw new FbExceptionBuilder().exception(ISCConstants.isc_net_write_err).cause(e).toSQLException();
+                try {
+                    final XdrOutputStream xdrOut = database.getXdrStreamAccess().getXdrOut();
+                    final BlobParameterBuffer blobParameterBuffer = getBlobParameterBuffer();
+                    if (blobParameterBuffer == null) {
+                        xdrOut.writeInt(op_create_blob);
+                    } else {
+                        xdrOut.writeInt(op_create_blob2);
+                        xdrOut.writeTyped(blobParameterBuffer);
                     }
-                    try {
-                        final GenericResponse genericResponse = database.readGenericResponse(null);
-                        setHandle(genericResponse.getObjectHandle());
-                        setBlobId(genericResponse.getBlobId());
-                        setOpen(true);
-                    } catch (IOException e) {
-                        throw new FbExceptionBuilder().exception(ISCConstants.isc_net_read_err).cause(e).toSQLException();
-                    }
-                    // TODO Request information on the blob?
+                    xdrOut.writeInt(getTransaction().getHandle());
+                    xdrOut.writeLong(FbBlob.NO_BLOB_ID);
+                    xdrOut.flush();
+                } catch (IOException e) {
+                    throw new FbExceptionBuilder().exception(ISCConstants.isc_net_write_err).cause(e).toSQLException();
                 }
+                try {
+                    final GenericResponse genericResponse = database.readGenericResponse(null);
+                    setHandle(genericResponse.getObjectHandle());
+                    setBlobId(genericResponse.getBlobId());
+                    setOpen(true);
+                } catch (IOException e) {
+                    throw new FbExceptionBuilder().exception(ISCConstants.isc_net_read_err).cause(e).toSQLException();
+                }
+                // TODO Request information on the blob?
             }
         } catch (SQLException e) {
             exceptionListenerDispatcher.errorOccurred(e);
@@ -106,23 +104,21 @@ public class V10OutputBlob extends AbstractFbWireOutputBlob implements FbWireBlo
                 checkBlobOpen();
 
                 final FbWireDatabase database = getDatabase();
-                synchronized (database.getSynchronizationObject()) {
-                    try {
-                        final XdrOutputStream xdrOut = database.getXdrStreamAccess().getXdrOut();
-                        // TODO Using op_batch_segments over op_put_segment doesn't seem to provide a real benefit in current implementation (see XdrOutputStream)
-                        // TODO Is there any actual benefit possible, like sending multiple segments of maximum size?
-                        xdrOut.writeInt(op_batch_segments);
-                        xdrOut.writeInt(getHandle());
-                        xdrOut.writeBlobBuffer(segment);
-                        xdrOut.flush();
-                    } catch (IOException e) {
-                        throw new FbExceptionBuilder().exception(ISCConstants.isc_net_write_err).cause(e).toSQLException();
-                    }
-                    try {
-                        database.readResponse(null);
-                    } catch (IOException e) {
-                        throw new FbExceptionBuilder().exception(ISCConstants.isc_net_read_err).cause(e).toSQLException();
-                    }
+                try {
+                    final XdrOutputStream xdrOut = database.getXdrStreamAccess().getXdrOut();
+                    // TODO Using op_batch_segments over op_put_segment doesn't seem to provide a real benefit in current implementation (see XdrOutputStream)
+                    // TODO Is there any actual benefit possible, like sending multiple segments of maximum size?
+                    xdrOut.writeInt(op_batch_segments);
+                    xdrOut.writeInt(getHandle());
+                    xdrOut.writeBlobBuffer(segment);
+                    xdrOut.flush();
+                } catch (IOException e) {
+                    throw new FbExceptionBuilder().exception(ISCConstants.isc_net_write_err).cause(e).toSQLException();
+                }
+                try {
+                    database.readResponse(null);
+                } catch (IOException e) {
+                    throw new FbExceptionBuilder().exception(ISCConstants.isc_net_read_err).cause(e).toSQLException();
                 }
             }
         } catch (SQLException e) {

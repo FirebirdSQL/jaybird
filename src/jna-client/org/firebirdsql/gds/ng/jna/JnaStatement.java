@@ -56,6 +56,7 @@ public class JnaStatement extends AbstractFbStatement {
     private XSQLDA outXSqlDa;
 
     public JnaStatement(JnaDatabase database) {
+        super(database.getSynchronizationObject());
         this.database = database;
         clientLibrary = database.getClientLibrary();
     }
@@ -81,10 +82,7 @@ public class JnaStatement extends AbstractFbStatement {
     @Override
     protected void free(int option) throws SQLException {
         synchronized (getSynchronizationObject()) {
-            final JnaDatabase db = getDatabase();
-            synchronized (db.getSynchronizationObject()) {
-                clientLibrary.isc_dsql_free_statement(statusVector, handle, (short) option);
-            }
+            clientLibrary.isc_dsql_free_statement(statusVector, handle, (short) option);
             processStatusVector();
             // Reset statement information
             reset(option == ISCConstants.DSQL_drop);
@@ -128,29 +126,28 @@ public class JnaStatement extends AbstractFbStatement {
                     throw new SQLNonTransientException(String.format("Current statement state (%s) does not allow call to prepare", currentState));
                 }
                 resetAll();
+
                 final JnaDatabase db = getDatabase();
-                synchronized (db.getSynchronizationObject()) {
-                    if (currentState == StatementState.NEW) {
-                        clientLibrary.isc_dsql_allocate_statement(statusVector, db.getJnaHandle(), handle);
-                        processStatusVector();
-                        setAllRowsFetched(false);
-                        switchState(StatementState.ALLOCATED);
-                        setType(StatementType.NONE);
-                    } else {
-                        checkStatementValid();
-                    }
-
-                    // Information in tempXSqlDa is ignored, as we are retrieving more detailed information using getSqlInfo
-                    final XSQLDA tempXSqlDa = new XSQLDA();
-                    clientLibrary.isc_dsql_prepare(statusVector, getTransaction().getJnaHandle(), handle,
-                            (short) statementArray.length, statementArray, db.getConnectionDialect(), tempXSqlDa);
+                if (currentState == StatementState.NEW) {
+                    clientLibrary.isc_dsql_allocate_statement(statusVector, db.getJnaHandle(), handle);
                     processStatusVector();
-
-                    final byte[] statementInfoRequestItems = getStatementInfoRequestItems();
-                    final int responseLength = getDefaultSqlInfoSize();
-                    byte[] statementInfo = getSqlInfo(statementInfoRequestItems, responseLength);
-                    parseStatementInfo(statementInfo);
+                    setAllRowsFetched(false);
+                    switchState(StatementState.ALLOCATED);
+                    setType(StatementType.NONE);
+                } else {
+                    checkStatementValid();
                 }
+
+                // Information in tempXSqlDa is ignored, as we are retrieving more detailed information using getSqlInfo
+                final XSQLDA tempXSqlDa = new XSQLDA();
+                clientLibrary.isc_dsql_prepare(statusVector, getTransaction().getJnaHandle(), handle,
+                        (short) statementArray.length, statementArray, db.getConnectionDialect(), tempXSqlDa);
+                processStatusVector();
+
+                final byte[] statementInfoRequestItems = getStatementInfoRequestItems();
+                final int responseLength = getDefaultSqlInfoSize();
+                byte[] statementInfo = getSqlInfo(statementInfoRequestItems, responseLength);
+                parseStatementInfo(statementInfo);
                 switchState(StatementState.PREPARED);
             }
         } catch (SQLException e) {
@@ -169,43 +166,40 @@ public class JnaStatement extends AbstractFbStatement {
                 validateParameters(parameters);
                 reset(false);
 
-                final JnaDatabase db = getDatabase();
-                synchronized (db.getSynchronizationObject()) {
-                    switchState(StatementState.EXECUTING);
+                switchState(StatementState.EXECUTING);
 
-                    setXSqlDaData(inXSqlDa, getParameterDescriptor(), parameters);
-                    final StatementType statementType = getType();
-                    if (statementType.isTypeWithSingletonResult()) {
-                        clientLibrary.isc_dsql_execute2(statusVector, getTransaction().getJnaHandle(), handle,
-                                inXSqlDa.version, inXSqlDa, outXSqlDa);
-                    } else {
-                        clientLibrary.isc_dsql_execute(statusVector, getTransaction().getJnaHandle(), handle,
-                                inXSqlDa.version, inXSqlDa);
-                    }
-                    processStatusVector();
+                setXSqlDaData(inXSqlDa, getParameterDescriptor(), parameters);
+                final StatementType statementType = getType();
+                if (statementType.isTypeWithSingletonResult()) {
+                    clientLibrary.isc_dsql_execute2(statusVector, getTransaction().getJnaHandle(), handle,
+                            inXSqlDa.version, inXSqlDa, outXSqlDa);
+                } else {
+                    clientLibrary.isc_dsql_execute(statusVector, getTransaction().getJnaHandle(), handle,
+                            inXSqlDa.version, inXSqlDa);
+                }
+                processStatusVector();
 
-                    final boolean hasFields = getFieldDescriptor() != null && getFieldDescriptor().getCount() > 0;
-                    if (statementType.isTypeWithSingletonResult()) {
-                        /* A type with a singleton result (ie an execute procedure), doesn't actually have a
-                         * result set that will be fetched, instead we have a singleton result if we have fields
-                         */
-                        statementListenerDispatcher.statementExecuted(this, false, hasFields);
-                        if (hasFields) {
-                            queueRowData(toRowValue(getFieldDescriptor(), outXSqlDa));
-                            setAllRowsFetched(true);
-                        }
-                    } else {
-                        // A normal execute is never a singleton result (even if it only produces a single result)
-                        statementListenerDispatcher.statementExecuted(this, hasFields, false);
+                final boolean hasFields = getFieldDescriptor() != null && getFieldDescriptor().getCount() > 0;
+                if (statementType.isTypeWithSingletonResult()) {
+                    /* A type with a singleton result (ie an execute procedure), doesn't actually have a
+                     * result set that will be fetched, instead we have a singleton result if we have fields
+                     */
+                    statementListenerDispatcher.statementExecuted(this, false, hasFields);
+                    if (hasFields) {
+                        queueRowData(toRowValue(getFieldDescriptor(), outXSqlDa));
+                        setAllRowsFetched(true);
                     }
+                } else {
+                    // A normal execute is never a singleton result (even if it only produces a single result)
+                    statementListenerDispatcher.statementExecuted(this, hasFields, false);
+                }
 
-                    if (!statementType.isTypeWithCursor() && statementType.isTypeWithUpdateCounts()) {
-                        getSqlCounts();
-                    }
+                if (!statementType.isTypeWithCursor() && statementType.isTypeWithUpdateCounts()) {
+                    getSqlCounts();
+                }
 
-                    if (getState() != StatementState.ERROR) {
-                        switchState(statementType.isTypeWithCursor() ? StatementState.CURSOR_OPEN : StatementState.PREPARED);
-                    }
+                if (getState() != StatementState.ERROR) {
+                    switchState(statementType.isTypeWithCursor() ? StatementState.CURSOR_OPEN : StatementState.PREPARED);
                 }
             }
         } catch (SQLException e) {
@@ -351,24 +345,21 @@ public class JnaStatement extends AbstractFbStatement {
                 }
                 if (isAllRowsFetched()) return;
 
-                final JnaDatabase db = getDatabase();
-                synchronized (db.getSynchronizationObject()) {
-                    final ISC_STATUS fetchStatus = clientLibrary.isc_dsql_fetch(statusVector, handle, outXSqlDa.version,
-                            outXSqlDa);
-                    processStatusVector();
+                final ISC_STATUS fetchStatus = clientLibrary.isc_dsql_fetch(statusVector, handle, outXSqlDa.version,
+                        outXSqlDa);
+                processStatusVector();
 
-                    int fetchStatusInt = fetchStatus.intValue();
-                    if (fetchStatusInt == ISCConstants.FETCH_OK) {
-                        queueRowData(toRowValue(getFieldDescriptor(), outXSqlDa));
-                    } else if (fetchStatusInt == ISCConstants.FETCH_NO_MORE_ROWS) {
-                        setAllRowsFetched(true);
-                        getSqlCounts();
-                        // Note: we are not explicitly 'closing' the cursor here
-                    } else {
-                        final String message = "Unexpected fetch status (expected 0 or 100): " + fetchStatusInt;
-                        log.error(message);
-                        throw new SQLException(message);
-                    }
+                int fetchStatusInt = fetchStatus.intValue();
+                if (fetchStatusInt == ISCConstants.FETCH_OK) {
+                    queueRowData(toRowValue(getFieldDescriptor(), outXSqlDa));
+                } else if (fetchStatusInt == ISCConstants.FETCH_NO_MORE_ROWS) {
+                    setAllRowsFetched(true);
+                    getSqlCounts();
+                    // Note: we are not explicitly 'closing' the cursor here
+                } else {
+                    final String message = "Unexpected fetch status (expected 0 or 100): " + fetchStatusInt;
+                    log.error(message);
+                    throw new SQLException(message);
                 }
             }
         } catch (SQLException e) {
@@ -384,12 +375,9 @@ public class JnaStatement extends AbstractFbStatement {
 
             synchronized (getSynchronizationObject()) {
                 checkStatementValid();
-                final JnaDatabase db = getDatabase();
-                synchronized (db.getSynchronizationObject()) {
-                    clientLibrary.isc_dsql_sql_info(statusVector, handle,
-                            (short) requestItems.length, requestItems,
-                            (short) bufferLength, responseBuffer);
-                }
+                clientLibrary.isc_dsql_sql_info(statusVector, handle,
+                        (short) requestItems.length, requestItems,
+                        (short) bufferLength, responseBuffer);
                 processStatusVector();
             }
 
@@ -420,13 +408,11 @@ public class JnaStatement extends AbstractFbStatement {
             synchronized (getSynchronizationObject()) {
                 checkStatementValid();
                 final JnaDatabase db = getDatabase();
-                synchronized (db.getSynchronizationObject()) {
-                    clientLibrary.isc_dsql_set_cursor_name(statusVector, handle,
-                            // Null termination is needed due to a quirk of the protocol
-                            db.getEncoding().encodeToCharset(cursorName + '\0'),
-                            // Cursor type
-                            (short) 0);
-                }
+                clientLibrary.isc_dsql_set_cursor_name(statusVector, handle,
+                        // Null termination is needed due to a quirk of the protocol
+                        db.getEncoding().encodeToCharset(cursorName + '\0'),
+                        // Cursor type
+                        (short) 0);
                 processStatusVector();
             }
         } catch (SQLException e) {

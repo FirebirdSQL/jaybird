@@ -81,9 +81,7 @@ public class JnaTransaction extends AbstractFbTransaction {
                 final JnaDatabase db = getDatabase();
                 db.checkConnected();
                 switchState(TransactionState.COMMITTING);
-                synchronized (db.getSynchronizationObject()) {
-                    clientLibrary.isc_commit_transaction(statusVector, handle);
-                }
+                clientLibrary.isc_commit_transaction(statusVector, handle);
                 processStatusVector();
                 switchState(TransactionState.COMMITTED);
             }
@@ -106,9 +104,7 @@ public class JnaTransaction extends AbstractFbTransaction {
                 final JnaDatabase db = getDatabase();
                 db.checkConnected();
                 switchState(TransactionState.ROLLING_BACK);
-                synchronized (db.getSynchronizationObject()) {
-                    clientLibrary.isc_rollback_transaction(statusVector, handle);
-                }
+                clientLibrary.isc_rollback_transaction(statusVector, handle);
                 processStatusVector();
                 switchState(TransactionState.ROLLED_BACK);
             }
@@ -126,18 +122,17 @@ public class JnaTransaction extends AbstractFbTransaction {
 
     @Override
     public void prepare(byte[] recoveryInformation) throws SQLException {
+        boolean noRecoveryInfo = recoveryInformation == null || recoveryInformation.length == 0;
         try {
             synchronized (getSynchronizationObject()) {
                 final JnaDatabase db = getDatabase();
                 db.checkConnected();
                 switchState(TransactionState.PREPARING);
-                synchronized (db.getSynchronizationObject()) {
-                    if (recoveryInformation == null || recoveryInformation.length == 0) {
-                        clientLibrary.isc_prepare_transaction(statusVector, handle);
-                    } else {
-                        clientLibrary.isc_prepare_transaction2(statusVector, handle, (short) recoveryInformation.length,
-                                recoveryInformation);
-                    }
+                if (noRecoveryInfo) {
+                    clientLibrary.isc_prepare_transaction(statusVector, handle);
+                } else {
+                    clientLibrary.isc_prepare_transaction2(statusVector, handle, (short) recoveryInformation.length,
+                            recoveryInformation);
                 }
                 processStatusVector();
                 switchState(TransactionState.PREPARED);
@@ -159,10 +154,8 @@ public class JnaTransaction extends AbstractFbTransaction {
             synchronized (getSynchronizationObject()) {
                 final JnaDatabase db = getDatabase();
                 db.checkConnected();
-                synchronized (db.getSynchronizationObject()) {
-                    clientLibrary.isc_transaction_info(statusVector, handle, (short) requestItems.length, requestItems,
-                            (short) maxBufferLength, responseBuffer);
-                }
+                clientLibrary.isc_transaction_info(statusVector, handle, (short) requestItems.length, requestItems,
+                        (short) maxBufferLength, responseBuffer);
                 processStatusVector();
             }
             final byte[] responseArray = new byte[maxBufferLength];

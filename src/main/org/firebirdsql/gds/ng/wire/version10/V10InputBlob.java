@@ -57,32 +57,30 @@ public class V10InputBlob extends AbstractFbWireInputBlob implements FbWireBlob,
                 checkBlobClosed();
 
                 final FbWireDatabase database = getDatabase();
-                synchronized (database.getSynchronizationObject()) {
-                    try {
-                        final XdrOutputStream xdrOut = database.getXdrStreamAccess().getXdrOut();
-                        final BlobParameterBuffer blobParameterBuffer = getBlobParameterBuffer();
-                        if (blobParameterBuffer == null) {
-                            xdrOut.writeInt(op_open_blob);
-                        } else {
-                            xdrOut.writeInt(op_open_blob2);
-                            xdrOut.writeTyped(blobParameterBuffer);
-                        }
-                        xdrOut.writeInt(getTransaction().getHandle());
-                        xdrOut.writeLong(getBlobId());
-                        xdrOut.flush();
-                    } catch (IOException e) {
-                        throw new FbExceptionBuilder().exception(ISCConstants.isc_net_write_err).cause(e).toSQLException();
+                try {
+                    final XdrOutputStream xdrOut = database.getXdrStreamAccess().getXdrOut();
+                    final BlobParameterBuffer blobParameterBuffer = getBlobParameterBuffer();
+                    if (blobParameterBuffer == null) {
+                        xdrOut.writeInt(op_open_blob);
+                    } else {
+                        xdrOut.writeInt(op_open_blob2);
+                        xdrOut.writeTyped(blobParameterBuffer);
                     }
-                    try {
-                        final GenericResponse genericResponse = database.readGenericResponse(null);
-                        setHandle(genericResponse.getObjectHandle());
-                        setOpen(true);
-                        resetEof();
-                    } catch (IOException e) {
-                        throw new FbExceptionBuilder().exception(ISCConstants.isc_net_read_err).cause(e).toSQLException();
-                    }
-                    // TODO Request information on the blob?
+                    xdrOut.writeInt(getTransaction().getHandle());
+                    xdrOut.writeLong(getBlobId());
+                    xdrOut.flush();
+                } catch (IOException e) {
+                    throw new FbExceptionBuilder().exception(ISCConstants.isc_net_write_err).cause(e).toSQLException();
                 }
+                try {
+                    final GenericResponse genericResponse = database.readGenericResponse(null);
+                    setHandle(genericResponse.getObjectHandle());
+                    setOpen(true);
+                    resetEof();
+                } catch (IOException e) {
+                    throw new FbExceptionBuilder().exception(ISCConstants.isc_net_read_err).cause(e).toSQLException();
+                }
+                // TODO Request information on the blob?
             }
         } catch (SQLException e) {
             exceptionListenerDispatcher.errorOccurred(e);
@@ -107,27 +105,25 @@ public class V10InputBlob extends AbstractFbWireInputBlob implements FbWireBlob,
 
                 final GenericResponse response;
                 final FbWireDatabase database = getDatabase();
-                synchronized (database.getSynchronizationObject()) {
-                    try {
-                        final XdrOutputStream xdrOut = database.getXdrStreamAccess().getXdrOut();
-                        xdrOut.writeInt(op_get_segment);
-                        xdrOut.writeInt(getHandle());
-                        xdrOut.writeInt(actualSize);
-                        xdrOut.writeInt(0); // length of segment send buffer (always 0 in get)
-                        xdrOut.flush();
-                    } catch (IOException e) {
-                        throw new FbExceptionBuilder().exception(ISCConstants.isc_net_write_err).cause(e).toSQLException();
+                try {
+                    final XdrOutputStream xdrOut = database.getXdrStreamAccess().getXdrOut();
+                    xdrOut.writeInt(op_get_segment);
+                    xdrOut.writeInt(getHandle());
+                    xdrOut.writeInt(actualSize);
+                    xdrOut.writeInt(0); // length of segment send buffer (always 0 in get)
+                    xdrOut.flush();
+                } catch (IOException e) {
+                    throw new FbExceptionBuilder().exception(ISCConstants.isc_net_write_err).cause(e).toSQLException();
+                }
+                try {
+                    response = database.readGenericResponse(null);
+                    // TODO Meaning of 2
+                    if (response.getObjectHandle() == 2) {
+                        // TODO what if I seek on a stream blob?
+                        setEof();
                     }
-                    try {
-                        response = database.readGenericResponse(null);
-                        // TODO Meaning of 2
-                        if (response.getObjectHandle() == 2) {
-                            // TODO what if I seek on a stream blob?
-                            setEof();
-                        }
-                    } catch (IOException e) {
-                        throw new FbExceptionBuilder().exception(ISCConstants.isc_net_read_err).cause(e).toSQLException();
-                    }
+                } catch (IOException e) {
+                    throw new FbExceptionBuilder().exception(ISCConstants.isc_net_read_err).cause(e).toSQLException();
                 }
 
                 final byte[] responseBuffer = response.getData();
@@ -159,23 +155,21 @@ public class V10InputBlob extends AbstractFbWireInputBlob implements FbWireBlob,
                 checkTransactionActive();
 
                 final FbWireDatabase database = getDatabase();
-                synchronized (database.getSynchronizationObject()) {
-                    try {
-                        final XdrOutputStream xdrOut = database.getXdrStreamAccess().getXdrOut();
-                        xdrOut.writeInt(op_seek_blob);
-                        xdrOut.writeInt(getHandle());
-                        xdrOut.writeInt(seekMode.getSeekModeId());
-                        xdrOut.writeInt(offset);
-                        xdrOut.flush();
-                    } catch (IOException e) {
-                        throw new FbExceptionBuilder().exception(ISCConstants.isc_net_write_err).cause(e).toSQLException();
-                    }
-                    try {
-                        database.readResponse(null);
-                        // object handle in response is the current position in the blob (see .NET provider source)
-                    } catch (IOException e) {
-                        throw new FbExceptionBuilder().exception(ISCConstants.isc_net_read_err).cause(e).toSQLException();
-                    }
+                try {
+                    final XdrOutputStream xdrOut = database.getXdrStreamAccess().getXdrOut();
+                    xdrOut.writeInt(op_seek_blob);
+                    xdrOut.writeInt(getHandle());
+                    xdrOut.writeInt(seekMode.getSeekModeId());
+                    xdrOut.writeInt(offset);
+                    xdrOut.flush();
+                } catch (IOException e) {
+                    throw new FbExceptionBuilder().exception(ISCConstants.isc_net_write_err).cause(e).toSQLException();
+                }
+                try {
+                    database.readResponse(null);
+                    // object handle in response is the current position in the blob (see .NET provider source)
+                } catch (IOException e) {
+                    throw new FbExceptionBuilder().exception(ISCConstants.isc_net_read_err).cause(e).toSQLException();
                 }
             }
         } catch (SQLException e) {

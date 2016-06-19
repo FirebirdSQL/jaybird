@@ -60,20 +60,18 @@ public class V10Statement extends AbstractFbWireStatement implements FbWireState
         try {
             synchronized (getSynchronizationObject()) {
                 checkStatementValid();
-                synchronized (getDatabase().getSynchronizationObject()) {
-                    try {
-                        sendInfoSql(requestItems, bufferLength);
-                        getXdrOut().flush();
-                    } catch (IOException ex) {
-                        switchState(StatementState.ERROR);
-                        throw new FbExceptionBuilder().exception(ISCConstants.isc_net_write_err).cause(ex).toSQLException();
-                    }
-                    try {
-                        return processInfoSqlResponse(getDatabase().readGenericResponse(getStatementWarningCallback()));
-                    } catch (IOException ex) {
-                        switchState(StatementState.ERROR);
-                        throw new FbExceptionBuilder().exception(ISCConstants.isc_net_read_err).cause(ex).toSQLException();
-                    }
+                try {
+                    sendInfoSql(requestItems, bufferLength);
+                    getXdrOut().flush();
+                } catch (IOException ex) {
+                    switchState(StatementState.ERROR);
+                    throw new FbExceptionBuilder().exception(ISCConstants.isc_net_write_err).cause(ex).toSQLException();
+                }
+                try {
+                    return processInfoSqlResponse(getDatabase().readGenericResponse(getStatementWarningCallback()));
+                } catch (IOException ex) {
+                    switchState(StatementState.ERROR);
+                    throw new FbExceptionBuilder().exception(ISCConstants.isc_net_read_err).cause(ex).toSQLException();
                 }
             }
         } catch (SQLException e) {
@@ -93,14 +91,12 @@ public class V10Statement extends AbstractFbWireStatement implements FbWireState
      * @throws SQLException
      */
     protected void sendInfoSql(final byte[] requestItems, final int bufferLength) throws IOException, SQLException {
-        synchronized (getDatabase().getSynchronizationObject()) {
-            final XdrOutputStream xdrOut = getXdrOut();
-            xdrOut.writeInt(WireProtocolConstants.op_info_sql);
-            xdrOut.writeInt(getHandle());
-            xdrOut.writeInt(0); // incarnation
-            xdrOut.writeBuffer(requestItems);
-            xdrOut.writeInt(bufferLength);
-        }
+        final XdrOutputStream xdrOut = getXdrOut();
+        xdrOut.writeInt(WireProtocolConstants.op_info_sql);
+        xdrOut.writeInt(getHandle());
+        xdrOut.writeInt(0); // incarnation
+        xdrOut.writeBuffer(requestItems);
+        xdrOut.writeInt(bufferLength);
     }
 
     /**
@@ -117,20 +113,18 @@ public class V10Statement extends AbstractFbWireStatement implements FbWireState
     @Override
     protected void free(final int option) throws SQLException {
         synchronized (getSynchronizationObject()) {
-            synchronized (getDatabase().getSynchronizationObject()) {
-                try {
-                    doFreePacket(option);
-                    getXdrOut().flush();
-                } catch (IOException ex) {
-                    switchState(StatementState.ERROR);
-                    throw new FbExceptionBuilder().exception(ISCConstants.isc_net_write_err).cause(ex).toSQLException();
-                }
-                try {
-                    processFreeResponse(getDatabase().readResponse(getStatementWarningCallback()));
-                } catch (IOException ex) {
-                    switchState(StatementState.ERROR);
-                    throw new FbExceptionBuilder().exception(ISCConstants.isc_net_read_err).cause(ex).toSQLException();
-                }
+            try {
+                doFreePacket(option);
+                getXdrOut().flush();
+            } catch (IOException ex) {
+                switchState(StatementState.ERROR);
+                throw new FbExceptionBuilder().exception(ISCConstants.isc_net_write_err).cause(ex).toSQLException();
+            }
+            try {
+                processFreeResponse(getDatabase().readResponse(getStatementWarningCallback()));
+            } catch (IOException ex) {
+                switchState(StatementState.ERROR);
+                throw new FbExceptionBuilder().exception(ISCConstants.isc_net_read_err).cause(ex).toSQLException();
             }
         }
     }
@@ -143,12 +137,10 @@ public class V10Statement extends AbstractFbWireStatement implements FbWireState
      * @throws SQLException
      */
     protected void doFreePacket(int option) throws SQLException, IOException {
-        synchronized (getDatabase().getSynchronizationObject()) {
-            sendFree(option);
+        sendFree(option);
 
-            // Reset statement information
-            reset(option == ISCConstants.DSQL_drop);
-        }
+        // Reset statement information
+        reset(option == ISCConstants.DSQL_drop);
     }
 
     /**
@@ -160,12 +152,10 @@ public class V10Statement extends AbstractFbWireStatement implements FbWireState
      * @throws SQLException
      */
     protected void sendFree(int option) throws IOException, SQLException {
-        synchronized (getDatabase().getSynchronizationObject()) {
-            final XdrOutputStream xdrOut = getXdrOut();
-            xdrOut.writeInt(WireProtocolConstants.op_free_statement);
-            xdrOut.writeInt(getHandle());
-            xdrOut.writeInt(option);
-        }
+        final XdrOutputStream xdrOut = getXdrOut();
+        xdrOut.writeInt(WireProtocolConstants.op_free_statement);
+        xdrOut.writeInt(getHandle());
+        xdrOut.writeInt(option);
     }
 
     /**
@@ -188,39 +178,38 @@ public class V10Statement extends AbstractFbWireStatement implements FbWireState
                     throw new SQLNonTransientException(String.format("Current statement state (%s) does not allow call to prepare", currentState));
                 }
                 resetAll();
-                final FbWireDatabase db = getDatabase();
-                synchronized (db.getSynchronizationObject()) {
-                    if (currentState == StatementState.NEW) {
-                        try {
-                            sendAllocate();
-                            getXdrOut().flush();
-                        } catch (IOException ex) {
-                            switchState(StatementState.ERROR);
-                            throw new FbExceptionBuilder().exception(ISCConstants.isc_net_write_err).cause(ex).toSQLException();
-                        }
-                        try {
-                            processAllocateResponse(db.readGenericResponse(getStatementWarningCallback()));
-                        } catch (IOException ex) {
-                            switchState(StatementState.ERROR);
-                            throw new FbExceptionBuilder().exception(ISCConstants.isc_net_read_err).cause(ex).toSQLException();
-                        }
-                    } else {
-                        checkStatementValid();
-                    }
 
+                final FbWireDatabase db = getDatabase();
+                if (currentState == StatementState.NEW) {
                     try {
-                        sendPrepare(statementText);
+                        sendAllocate();
                         getXdrOut().flush();
                     } catch (IOException ex) {
                         switchState(StatementState.ERROR);
                         throw new FbExceptionBuilder().exception(ISCConstants.isc_net_write_err).cause(ex).toSQLException();
                     }
                     try {
-                        processPrepareResponse(db.readGenericResponse(getStatementWarningCallback()));
+                        processAllocateResponse(db.readGenericResponse(getStatementWarningCallback()));
                     } catch (IOException ex) {
                         switchState(StatementState.ERROR);
                         throw new FbExceptionBuilder().exception(ISCConstants.isc_net_read_err).cause(ex).toSQLException();
                     }
+                } else {
+                    checkStatementValid();
+                }
+
+                try {
+                    sendPrepare(statementText);
+                    getXdrOut().flush();
+                } catch (IOException ex) {
+                    switchState(StatementState.ERROR);
+                    throw new FbExceptionBuilder().exception(ISCConstants.isc_net_write_err).cause(ex).toSQLException();
+                }
+                try {
+                    processPrepareResponse(db.readGenericResponse(getStatementWarningCallback()));
+                } catch (IOException ex) {
+                    switchState(StatementState.ERROR);
+                    throw new FbExceptionBuilder().exception(ISCConstants.isc_net_read_err).cause(ex).toSQLException();
                 }
             }
         } catch (SQLException e) {
@@ -238,16 +227,14 @@ public class V10Statement extends AbstractFbWireStatement implements FbWireState
      * @throws IOException
      */
     protected void sendPrepare(final String statementText) throws SQLException, IOException {
-        synchronized (getDatabase().getSynchronizationObject()) {
-            final XdrOutputStream xdrOut = getXdrOut();
-            xdrOut.writeInt(WireProtocolConstants.op_prepare_statement);
-            xdrOut.writeInt(getTransaction().getHandle());
-            xdrOut.writeInt(getHandle());
-            xdrOut.writeInt(getDatabase().getConnectionDialect());
-            xdrOut.writeString(statementText, getDatabase().getEncoding());
-            xdrOut.writeBuffer(getStatementInfoRequestItems());
-            xdrOut.writeInt(getDefaultSqlInfoSize());
-        }
+        final XdrOutputStream xdrOut = getXdrOut();
+        xdrOut.writeInt(WireProtocolConstants.op_prepare_statement);
+        xdrOut.writeInt(getTransaction().getHandle());
+        xdrOut.writeInt(getHandle());
+        xdrOut.writeInt(getDatabase().getConnectionDialect());
+        xdrOut.writeString(statementText, getDatabase().getEncoding());
+        xdrOut.writeBuffer(getStatementInfoRequestItems());
+        xdrOut.writeInt(getDefaultSqlInfoSize());
     }
 
     /**
@@ -258,10 +245,8 @@ public class V10Statement extends AbstractFbWireStatement implements FbWireState
      * @throws SQLException
      */
     protected void processPrepareResponse(final GenericResponse genericResponse) throws SQLException {
-        synchronized (getDatabase().getSynchronizationObject()) {
-            parseStatementInfo(genericResponse.getData());
-            switchState(StatementState.PREPARED);
-        }
+        parseStatementInfo(genericResponse.getData());
+        switchState(StatementState.PREPARED);
     }
 
     public void setCursorName(String cursorName) throws SQLException {
@@ -270,26 +255,24 @@ public class V10Statement extends AbstractFbWireStatement implements FbWireState
                 checkStatementValid();
                 // TODO Check other statement states?
 
-                synchronized (getDatabase().getSynchronizationObject()) {
-                    try {
-                        final XdrOutputStream xdrOut = getXdrOut();
-                        xdrOut.writeInt(WireProtocolConstants.op_set_cursor);
-                        xdrOut.writeInt(getHandle());
-                        // Null termination is needed due to a quirk of the protocol
-                        xdrOut.writeString(cursorName + '\0', getDatabase().getEncoding());
-                        xdrOut.writeInt(0); // Cursor type
-                        xdrOut.flush();
-                    } catch (IOException ex) {
-                        switchState(StatementState.ERROR);
-                        throw new FbExceptionBuilder().exception(ISCConstants.isc_net_write_err).cause(ex).toSQLException();
-                    }
-                    try {
-                        // TODO Do we need to do anything else with this response?
-                        getDatabase().readGenericResponse(getStatementWarningCallback());
-                    } catch (IOException ex) {
-                        switchState(StatementState.ERROR);
-                        throw new FbExceptionBuilder().exception(ISCConstants.isc_net_read_err).cause(ex).toSQLException();
-                    }
+                try {
+                    final XdrOutputStream xdrOut = getXdrOut();
+                    xdrOut.writeInt(WireProtocolConstants.op_set_cursor);
+                    xdrOut.writeInt(getHandle());
+                    // Null termination is needed due to a quirk of the protocol
+                    xdrOut.writeString(cursorName + '\0', getDatabase().getEncoding());
+                    xdrOut.writeInt(0); // Cursor type
+                    xdrOut.flush();
+                } catch (IOException ex) {
+                    switchState(StatementState.ERROR);
+                    throw new FbExceptionBuilder().exception(ISCConstants.isc_net_write_err).cause(ex).toSQLException();
+                }
+                try {
+                    // TODO Do we need to do anything else with this response?
+                    getDatabase().readGenericResponse(getStatementWarningCallback());
+                } catch (IOException ex) {
+                    switchState(StatementState.ERROR);
+                    throw new FbExceptionBuilder().exception(ISCConstants.isc_net_read_err).cause(ex).toSQLException();
                 }
             }
         } catch (SQLException e) {
@@ -308,82 +291,80 @@ public class V10Statement extends AbstractFbWireStatement implements FbWireState
                 validateParameters(parameters);
                 reset(false);
 
-                final FbWireDatabase db = getDatabase();
-                synchronized (db.getSynchronizationObject()) {
-                    switchState(StatementState.EXECUTING);
+                switchState(StatementState.EXECUTING);
 
-                    final StatementType statementType = getType();
-                    final SqlCountProcessor sqlCountProcessor;
-                    int expectedResponseCount = 0;
-                    try {
-                        if (statementType.isTypeWithSingletonResult()) {
-                            expectedResponseCount++;
-                        }
-                        sendExecute(statementType.isTypeWithSingletonResult() ? WireProtocolConstants.op_execute2 : WireProtocolConstants.op_execute, parameters);
+                final StatementType statementType = getType();
+                final SqlCountProcessor sqlCountProcessor;
+                int expectedResponseCount = 0;
+                try {
+                    if (statementType.isTypeWithSingletonResult()) {
                         expectedResponseCount++;
-                        if (!statementType.isTypeWithCursor() && statementType.isTypeWithUpdateCounts()) {
-                            sqlCountProcessor = createSqlCountProcessor();
-                            sendInfoSql(sqlCountProcessor.getRecordCountInfoItems(), getDefaultSqlInfoSize());
-                            expectedResponseCount++;
-                        } else {
-                            sqlCountProcessor = null;
-                        }
-                        getXdrOut().flush();
-                    } catch (IOException ex) {
-                        switchState(StatementState.ERROR);
-                        throw new FbExceptionBuilder().exception(ISCConstants.isc_net_write_err).cause(ex).toSQLException();
                     }
+                    sendExecute(statementType.isTypeWithSingletonResult() ? WireProtocolConstants.op_execute2 : WireProtocolConstants.op_execute, parameters);
+                    expectedResponseCount++;
+                    if (!statementType.isTypeWithCursor() && statementType.isTypeWithUpdateCounts()) {
+                        sqlCountProcessor = createSqlCountProcessor();
+                        sendInfoSql(sqlCountProcessor.getRecordCountInfoItems(), getDefaultSqlInfoSize());
+                        expectedResponseCount++;
+                    } else {
+                        sqlCountProcessor = null;
+                    }
+                    getXdrOut().flush();
+                } catch (IOException ex) {
+                    switchState(StatementState.ERROR);
+                    throw new FbExceptionBuilder().exception(ISCConstants.isc_net_write_err).cause(ex).toSQLException();
+                }
 
-                    final SQLExceptionChainBuilder<SQLException> chain = new SQLExceptionChainBuilder<>();
+                final SQLExceptionChainBuilder<SQLException> chain = new SQLExceptionChainBuilder<>();
+                try {
+                    final boolean hasFields = getFieldDescriptor() != null && getFieldDescriptor().getCount() > 0;
+                    final WarningMessageCallback statementWarningCallback = getStatementWarningCallback();
+
+                    final FbWireDatabase db = getDatabase();
                     try {
-                        final boolean hasFields = getFieldDescriptor() != null && getFieldDescriptor().getCount() > 0;
-                        final WarningMessageCallback statementWarningCallback = getStatementWarningCallback();
-
                         try {
-                            try {
-                                if (statementType.isTypeWithSingletonResult()) {
-                                    /* A type with a singleton result (ie an execute procedure), doesn't actually have a
-                                     * result set that will be fetched, instead we have a singleton result if we have fields
-                                     */
-                                    statementListenerDispatcher.statementExecuted(this, false, hasFields);
-                                    expectedResponseCount--;
-                                    processExecuteSingletonResponse(db.readSqlResponse(statementWarningCallback));
-                                    if (hasFields) {
-                                        setAllRowsFetched(true);
-                                    }
-                                } else {
-                                    // A normal execute is never a singleton result (even if it only produces a single result)
-                                    statementListenerDispatcher.statementExecuted(this, hasFields, false);
-                                }
+                            if (statementType.isTypeWithSingletonResult()) {
+                                /* A type with a singleton result (ie an execute procedure), doesn't actually have a
+                                 * result set that will be fetched, instead we have a singleton result if we have fields
+                                 */
+                                statementListenerDispatcher.statementExecuted(this, false, hasFields);
                                 expectedResponseCount--;
-                                processExecuteResponse(db.readGenericResponse(statementWarningCallback));
+                                processExecuteSingletonResponse(db.readSqlResponse(statementWarningCallback));
+                                if (hasFields) {
+                                    setAllRowsFetched(true);
+                                }
+                            } else {
+                                // A normal execute is never a singleton result (even if it only produces a single result)
+                                statementListenerDispatcher.statementExecuted(this, hasFields, false);
+                            }
+                            expectedResponseCount--;
+                            processExecuteResponse(db.readGenericResponse(statementWarningCallback));
+                        } catch (SQLException ex) {
+                            chain.append(ex);
+                        }
+
+                        if (sqlCountProcessor != null) {
+                            try {
+                                expectedResponseCount--;
+                                statementListenerDispatcher.sqlCounts(this, sqlCountProcessor.process(processInfoSqlResponse(db.readGenericResponse(statementWarningCallback))));
                             } catch (SQLException ex) {
                                 chain.append(ex);
                             }
-
-                            if (sqlCountProcessor != null) {
-                                try {
-                                    expectedResponseCount--;
-                                    statementListenerDispatcher.sqlCounts(this, sqlCountProcessor.process(processInfoSqlResponse(db.readGenericResponse(statementWarningCallback))));
-                                } catch (SQLException ex) {
-                                    chain.append(ex);
-                                }
-                            }
-                        } finally {
-                            db.consumePackets(expectedResponseCount, getStatementWarningCallback());
                         }
-
-                        if (chain.hasException()) {
-                            throw chain.getException();
-                        }
-
-                        if (getState() != StatementState.ERROR) {
-                            switchState(statementType.isTypeWithCursor() ? StatementState.CURSOR_OPEN : StatementState.PREPARED);
-                        }
-                    } catch (IOException ex) {
-                        switchState(StatementState.ERROR);
-                        throw new FbExceptionBuilder().exception(ISCConstants.isc_net_read_err).cause(ex).toSQLException();
+                    } finally {
+                        db.consumePackets(expectedResponseCount, getStatementWarningCallback());
                     }
+
+                    if (chain.hasException()) {
+                        throw chain.getException();
+                    }
+
+                    if (getState() != StatementState.ERROR) {
+                        switchState(statementType.isTypeWithCursor() ? StatementState.CURSOR_OPEN : StatementState.PREPARED);
+                    }
+                } catch (IOException ex) {
+                    switchState(StatementState.ERROR);
+                    throw new FbExceptionBuilder().exception(ISCConstants.isc_net_read_err).cause(ex).toSQLException();
                 }
             }
         } catch (SQLException e) {
@@ -407,29 +388,27 @@ public class V10Statement extends AbstractFbWireStatement implements FbWireState
      */
     protected void sendExecute(final int operation, final RowValue parameters) throws IOException, SQLException {
         assert operation == WireProtocolConstants.op_execute || operation == WireProtocolConstants.op_execute2 : "Needs to be called with operation op_execute or op_execute2";
-        synchronized (getDatabase().getSynchronizationObject()) {
-            final XdrOutputStream xdrOut = getXdrOut();
-            xdrOut.writeInt(operation);
-            xdrOut.writeInt(getHandle());
-            xdrOut.writeInt(getTransaction().getHandle());
+        final XdrOutputStream xdrOut = getXdrOut();
+        xdrOut.writeInt(operation);
+        xdrOut.writeInt(getHandle());
+        xdrOut.writeInt(getTransaction().getHandle());
 
-            if (parameters != null && parameters.getCount() > 0) {
-                final RowDescriptor parameterDescriptor = getParameterDescriptor();
-                xdrOut.writeBuffer(calculateBlr(parameterDescriptor, parameters));
-                xdrOut.writeInt(0); // message number = in_message_type
-                xdrOut.writeInt(1); // Number of messages
-                writeSqlData(parameterDescriptor, parameters);
-            } else {
-                xdrOut.writeBuffer(null);
-                xdrOut.writeInt(0); // message number = in_message_type
-                xdrOut.writeInt(0); // Number of messages
-            }
+        if (parameters != null && parameters.getCount() > 0) {
+            final RowDescriptor parameterDescriptor = getParameterDescriptor();
+            xdrOut.writeBuffer(calculateBlr(parameterDescriptor, parameters));
+            xdrOut.writeInt(0); // message number = in_message_type
+            xdrOut.writeInt(1); // Number of messages
+            writeSqlData(parameterDescriptor, parameters);
+        } else {
+            xdrOut.writeBuffer(null);
+            xdrOut.writeInt(0); // message number = in_message_type
+            xdrOut.writeInt(0); // Number of messages
+        }
 
-            if (operation == WireProtocolConstants.op_execute2) {
-                final RowDescriptor fieldDescriptor = getFieldDescriptor();
-                xdrOut.writeBuffer(fieldDescriptor != null && fieldDescriptor.getCount() > 0 ? calculateBlr(fieldDescriptor) : null);
-                xdrOut.writeInt(0); // out_message_number = out_message_type
-            }
+        if (operation == WireProtocolConstants.op_execute2) {
+            final RowDescriptor fieldDescriptor = getFieldDescriptor();
+            xdrOut.writeBuffer(fieldDescriptor != null && fieldDescriptor.getCount() > 0 ? calculateBlr(fieldDescriptor) : null);
+            xdrOut.writeInt(0); // out_message_number = out_message_type
         }
     }
 
@@ -467,20 +446,18 @@ public class V10Statement extends AbstractFbWireStatement implements FbWireState
                 }
                 if (isAllRowsFetched()) return;
 
-                synchronized (getDatabase().getSynchronizationObject()) {
-                    try {
-                        sendFetch(fetchSize);
-                        getXdrOut().flush();
-                    } catch (IOException ex) {
-                        switchState(StatementState.ERROR);
-                        throw new FbExceptionBuilder().exception(ISCConstants.isc_net_write_err).cause(ex).toSQLException();
-                    }
-                    try {
-                        processFetchResponse();
-                    } catch (IOException ex) {
-                        switchState(StatementState.ERROR);
-                        throw new FbExceptionBuilder().exception(ISCConstants.isc_net_read_err).cause(ex).toSQLException();
-                    }
+                try {
+                    sendFetch(fetchSize);
+                    getXdrOut().flush();
+                } catch (IOException ex) {
+                    switchState(StatementState.ERROR);
+                    throw new FbExceptionBuilder().exception(ISCConstants.isc_net_write_err).cause(ex).toSQLException();
+                }
+                try {
+                    processFetchResponse();
+                } catch (IOException ex) {
+                    switchState(StatementState.ERROR);
+                    throw new FbExceptionBuilder().exception(ISCConstants.isc_net_read_err).cause(ex).toSQLException();
                 }
             }
         } catch (SQLException e) {
@@ -496,23 +473,21 @@ public class V10Statement extends AbstractFbWireStatement implements FbWireState
      * @throws SQLException
      */
     protected void processFetchResponse() throws IOException, SQLException {
-        synchronized (getDatabase().getSynchronizationObject()) {
-            Response response;
-            while (!isAllRowsFetched() && (response = getDatabase().readResponse(getStatementWarningCallback())) instanceof FetchResponse) {
-                final FetchResponse fetchResponse = (FetchResponse) response;
-                if (fetchResponse.getCount() > 0 && fetchResponse.getStatus() == ISCConstants.FETCH_OK) {
-                    queueRowData(readSqlData());
-                } else if (fetchResponse.getStatus() == ISCConstants.FETCH_NO_MORE_ROWS) {
-                    setAllRowsFetched(true);
-                    getSqlCounts();
-                    // Note: we are not explicitly 'closing' the cursor here
-                } else {
-                    // TODO Log, raise exception, or simply 'not possible'?
-                    break;
-                }
+        Response response;
+        while (!isAllRowsFetched() && (response = getDatabase().readResponse(getStatementWarningCallback())) instanceof FetchResponse) {
+            final FetchResponse fetchResponse = (FetchResponse) response;
+            if (fetchResponse.getCount() > 0 && fetchResponse.getStatus() == ISCConstants.FETCH_OK) {
+                queueRowData(readSqlData());
+            } else if (fetchResponse.getStatus() == ISCConstants.FETCH_NO_MORE_ROWS) {
+                setAllRowsFetched(true);
+                getSqlCounts();
+                // Note: we are not explicitly 'closing' the cursor here
+            } else {
+                // TODO Log, raise exception, or simply 'not possible'?
+                break;
             }
-            // TODO Handle other response type?
         }
+        // TODO Handle other response type?
     }
 
     /**
@@ -523,14 +498,12 @@ public class V10Statement extends AbstractFbWireStatement implements FbWireState
      * @throws IOException
      */
     protected void sendFetch(int fetchSize) throws SQLException, IOException {
-        synchronized (getDatabase().getSynchronizationObject()) {
-            final XdrOutputStream xdrOut = getXdrOut();
-            xdrOut.writeInt(WireProtocolConstants.op_fetch);
-            xdrOut.writeInt(getHandle());
-            xdrOut.writeBuffer(calculateBlr(getFieldDescriptor()));
-            xdrOut.writeInt(0); // out_message_number = out_message_type
-            xdrOut.writeInt(fetchSize); // fetch size
-        }
+        final XdrOutputStream xdrOut = getXdrOut();
+        xdrOut.writeInt(WireProtocolConstants.op_fetch);
+        xdrOut.writeInt(getHandle());
+        xdrOut.writeBuffer(calculateBlr(getFieldDescriptor()));
+        xdrOut.writeInt(0); // out_message_number = out_message_type
+        xdrOut.writeInt(fetchSize); // fetch size
     }
 
     /**
@@ -545,18 +518,16 @@ public class V10Statement extends AbstractFbWireStatement implements FbWireState
         final RowValue rowValue = rowDescriptor.createDefaultFieldValues();
         final BlrCalculator blrCalculator = getDatabase().getBlrCalculator();
 
-        synchronized (getDatabase().getSynchronizationObject()) {
-            final XdrInputStream xdrIn = getXdrIn();
+        final XdrInputStream xdrIn = getXdrIn();
 
-            for (int idx = 0; idx < rowDescriptor.getCount(); idx++) {
-                final FieldDescriptor fieldDescriptor = rowDescriptor.getFieldDescriptor(idx);
-                final FieldValue fieldValue = rowValue.getFieldValue(idx);
-                final int len = blrCalculator.calculateIoLength(fieldDescriptor);
-                byte[] buffer = readColumnData(xdrIn, len);
-                if (xdrIn.readInt() == NULL_INDICATOR_NULL)
-                    buffer = null;
-                fieldValue.setFieldData(buffer);
-            }
+        for (int idx = 0; idx < rowDescriptor.getCount(); idx++) {
+            final FieldDescriptor fieldDescriptor = rowDescriptor.getFieldDescriptor(idx);
+            final FieldValue fieldValue = rowValue.getFieldValue(idx);
+            final int len = blrCalculator.calculateIoLength(fieldDescriptor);
+            byte[] buffer = readColumnData(xdrIn, len);
+            if (xdrIn.readInt() == NULL_INDICATOR_NULL)
+                buffer = null;
+            fieldValue.setFieldData(buffer);
         }
         return rowValue;
     }
@@ -594,19 +565,17 @@ public class V10Statement extends AbstractFbWireStatement implements FbWireState
      *         if an error occurs while writing to the underlying output stream
      */
     protected void writeSqlData(final RowDescriptor rowDescriptor, final RowValue fieldValues) throws IOException, SQLException {
-        synchronized (getDatabase().getSynchronizationObject()) {
-            final XdrOutputStream xdrOut = getXdrOut();
-            final BlrCalculator blrCalculator = getDatabase().getBlrCalculator();
-            for (int idx = 0; idx < fieldValues.getCount(); idx++) {
-                final FieldValue fieldValue = fieldValues.getFieldValue(idx);
-                final FieldDescriptor fieldDescriptor = rowDescriptor.getFieldDescriptor(idx);
-                final int len = blrCalculator.calculateIoLength(fieldDescriptor, fieldValue);
-                final byte[] buffer = fieldValue.getFieldData();
-                final int fieldType = fieldDescriptor.getType();
-                writeColumnData(xdrOut, len, buffer, fieldType);
-                // sqlind (null indicator)
-                xdrOut.writeInt(buffer != null ? NULL_INDICATOR_NOT_NULL : NULL_INDICATOR_NULL);
-            }
+        final XdrOutputStream xdrOut = getXdrOut();
+        final BlrCalculator blrCalculator = getDatabase().getBlrCalculator();
+        for (int idx = 0; idx < fieldValues.getCount(); idx++) {
+            final FieldValue fieldValue = fieldValues.getFieldValue(idx);
+            final FieldDescriptor fieldDescriptor = rowDescriptor.getFieldDescriptor(idx);
+            final int len = blrCalculator.calculateIoLength(fieldDescriptor, fieldValue);
+            final byte[] buffer = fieldValue.getFieldData();
+            final int fieldType = fieldDescriptor.getType();
+            writeColumnData(xdrOut, len, buffer, fieldType);
+            // sqlind (null indicator)
+            xdrOut.writeInt(buffer != null ? NULL_INDICATOR_NOT_NULL : NULL_INDICATOR_NULL);
         }
     }
 
@@ -655,11 +624,9 @@ public class V10Statement extends AbstractFbWireStatement implements FbWireState
      * @throws IOException
      */
     protected void sendAllocate() throws SQLException, IOException {
-        synchronized (getDatabase().getSynchronizationObject()) {
-            final XdrOutputStream xdrOut = getXdrOut();
-            xdrOut.writeInt(WireProtocolConstants.op_allocate_statement);
-            xdrOut.writeInt(getDatabase().getHandle());
-        }
+        final XdrOutputStream xdrOut = getXdrOut();
+        xdrOut.writeInt(WireProtocolConstants.op_allocate_statement);
+        xdrOut.writeInt(getDatabase().getHandle());
     }
 
     /**

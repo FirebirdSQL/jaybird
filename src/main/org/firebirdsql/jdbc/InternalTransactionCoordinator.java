@@ -44,12 +44,8 @@ public final class InternalTransactionCoordinator implements FBObjectListener.St
     }
 
     @Override
-    public Object getSynchronizationObject() throws SQLException {
-        if (coordinator instanceof AutoCommitCoordinator || coordinator instanceof FirebirdAutoCommitCoordinator) {
-            return getConnection();
-        }
-        // TODO Suspicious: using new sync-object every time
-        return new Object();
+    public final Object getSynchronizationObject() {
+        return connection.getSynchronizationObject();
     }
 
     /**
@@ -118,7 +114,7 @@ public final class InternalTransactionCoordinator implements FBObjectListener.St
     }
 
     @Override
-    public FBConnection getConnection() throws SQLException {
+    public final FBConnection getConnection() throws SQLException {
         return connection;
     }
 

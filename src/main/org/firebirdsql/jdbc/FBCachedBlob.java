@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
@@ -20,6 +18,8 @@
  */
 package org.firebirdsql.jdbc;
 
+import org.firebirdsql.gds.ng.SyncObject;
+
 import java.sql.SQLException;
 import java.sql.Blob;
 import java.io.*;
@@ -33,7 +33,7 @@ public final class FBCachedBlob implements FirebirdBlob, Synchronizable {
     private static final InputStream STREAM_NULL_VALUE = null;
     static final String BLOB_READ_ONLY = "Cached blob is read-only";
 
-    private final Object syncObject = new Object();
+    private final Object syncObject = new SyncObject();
 
     private byte[] blobData;
 
@@ -172,7 +172,7 @@ public final class FBCachedBlob implements FirebirdBlob, Synchronizable {
         throw new FBDriverNotCapableException();
     }
 
-    public Object getSynchronizationObject() throws SQLException {
+    public final Object getSynchronizationObject() {
         return syncObject;
     }
 

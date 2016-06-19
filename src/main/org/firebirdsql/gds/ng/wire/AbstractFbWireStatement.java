@@ -42,6 +42,7 @@ public abstract class AbstractFbWireStatement extends AbstractFbStatement implem
     private FbWireDatabase database;
 
     public AbstractFbWireStatement(FbWireDatabase database) {
+        super(database.getSynchronizationObject());
         this.database = database;
     }
 

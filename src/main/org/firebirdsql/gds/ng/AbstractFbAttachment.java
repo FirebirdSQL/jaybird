@@ -44,7 +44,7 @@ public abstract class AbstractFbAttachment<T extends AbstractConnection<? extend
     private static final Logger log = LoggerFactory.getLogger(AbstractFbAttachment.class);
 
     private final AtomicBoolean attached = new AtomicBoolean();
-    private final Object syncObject = new Object();
+    private final Object syncObject = new SyncObject();
     protected final ExceptionListenerDispatcher exceptionListenerDispatcher = new ExceptionListenerDispatcher(this);
     protected final T connection;
     private final DatatypeCoder datatypeCoder;

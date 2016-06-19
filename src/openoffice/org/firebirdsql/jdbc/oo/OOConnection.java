@@ -55,9 +55,12 @@ public class OOConnection extends FBConnection {
         addWarning(new SQLWarning(message));
     }
 
-    public synchronized DatabaseMetaData getMetaData() throws SQLException {
-        if (metaData == null) metaData = new OODatabaseMetaData(this);
-        return metaData;
+    @Override
+    public DatabaseMetaData getMetaData() throws SQLException {
+        synchronized (getSynchronizationObject()) {
+            if (metaData == null) metaData = new OODatabaseMetaData(this);
+            return metaData;
+        }
     }
 
 }

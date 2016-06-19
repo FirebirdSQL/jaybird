@@ -109,9 +109,7 @@ class FBBlobField extends FBField implements FBFlushableField {
 
         final long blobId = getDatatypeCoder().decodeLong(blobIdBuffer);
         synchronized (((Synchronizable) getBlob()).getSynchronizationObject()) {
-            final FbBlob blobHandle = gdsHelper.openBlob(blobId, FBBlob.SEGMENTED);
-
-            try {
+            try (FbBlob blobHandle = gdsHelper.openBlob(blobId, FBBlob.SEGMENTED)) {
                 final int blobLength = (int) blobHandle.length();
                 final int bufferLength = gdsHelper.getBlobBufferLength();
                 final byte[] resultBuffer = new byte[blobLength];
@@ -131,9 +129,6 @@ class FBBlobField extends FBField implements FBFlushableField {
                 }
 
                 return resultBuffer;
-
-            } finally {
-                blobHandle.close();
             }
         }
     }

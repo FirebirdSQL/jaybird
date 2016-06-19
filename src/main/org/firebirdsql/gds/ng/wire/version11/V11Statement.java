@@ -60,39 +60,39 @@ public class V11Statement extends V10Statement {
                     throw new SQLNonTransientException(String.format("Current statement state (%s) does not allow call to prepare", currentState));
                 }
                 resetAll();
-                final FbWireDatabase db = getDatabase();
-                synchronized (db.getSynchronizationObject()) {
-                    int expectedResponseCount = 0;
+
+                int expectedResponseCount = 0;
+                try {
+                    if (currentState == StatementState.NEW) {
+                        sendAllocate();
+                        expectedResponseCount++;
+                    } else {
+                        checkStatementValid();
+                    }
+                    sendPrepare(statementText);
+                    expectedResponseCount++;
+
+                    getXdrOut().flush();
+                } catch (IOException ex) {
+                    switchState(StatementState.ERROR);
+                    throw new FbExceptionBuilder().exception(ISCConstants.isc_net_write_err).cause(ex).toSQLException();
+                }
+
+                try {
+                    final FbWireDatabase db = getDatabase();
                     try {
                         if (currentState == StatementState.NEW) {
-                            sendAllocate();
-                            expectedResponseCount++;
-                        } else {
-                            checkStatementValid();
-                        }
-                        sendPrepare(statementText);
-                        expectedResponseCount++;
-
-                        getXdrOut().flush();
-                    } catch (IOException ex) {
-                        switchState(StatementState.ERROR);
-                        throw new FbExceptionBuilder().exception(ISCConstants.isc_net_write_err).cause(ex).toSQLException();
-                    }
-                    try {
-                        try {
-                            if (currentState == StatementState.NEW) {
-                                expectedResponseCount--;
-                                processAllocateResponse(db.readGenericResponse(getStatementWarningCallback()));
-                            }
                             expectedResponseCount--;
-                            processPrepareResponse(db.readGenericResponse(getStatementWarningCallback()));
-                        } finally {
-                            db.consumePackets(expectedResponseCount, getStatementWarningCallback());
+                            processAllocateResponse(db.readGenericResponse(getStatementWarningCallback()));
                         }
-                    } catch (IOException ex) {
-                        switchState(StatementState.ERROR);
-                        throw new FbExceptionBuilder().exception(ISCConstants.isc_net_read_err).cause(ex).toSQLException();
+                        expectedResponseCount--;
+                        processPrepareResponse(db.readGenericResponse(getStatementWarningCallback()));
+                    } finally {
+                        db.consumePackets(expectedResponseCount, getStatementWarningCallback());
                     }
+                } catch (IOException ex) {
+                    switchState(StatementState.ERROR);
+                    throw new FbExceptionBuilder().exception(ISCConstants.isc_net_read_err).cause(ex).toSQLException();
                 }
             }
         } catch (SQLException e) {
@@ -104,24 +104,22 @@ public class V11Statement extends V10Statement {
     @Override
     protected void free(final int option) throws SQLException {
         synchronized (getSynchronizationObject()) {
-            synchronized (getDatabase().getSynchronizationObject()) {
-                try {
-                    doFreePacket(option);
-                    // intentionally no flush
-                    getDatabase().enqueueDeferredAction(new DeferredAction() {
-                        @Override
-                        public void processResponse(Response response) {
-                            processFreeResponse(response);
-                        }
-                        @Override
-                        public WarningMessageCallback getWarningMessageCallback() {
-                            return getStatementWarningCallback();
-                        }
-                    });
-                } catch (IOException ex) {
-                    switchState(StatementState.ERROR);
-                    throw new FbExceptionBuilder().exception(ISCConstants.isc_net_write_err).cause(ex).toSQLException();
-                }
+            try {
+                doFreePacket(option);
+                // intentionally no flush
+                getDatabase().enqueueDeferredAction(new DeferredAction() {
+                    @Override
+                    public void processResponse(Response response) {
+                        processFreeResponse(response);
+                    }
+                    @Override
+                    public WarningMessageCallback getWarningMessageCallback() {
+                        return getStatementWarningCallback();
+                    }
+                });
+            } catch (IOException ex) {
+                switchState(StatementState.ERROR);
+                throw new FbExceptionBuilder().exception(ISCConstants.isc_net_write_err).cause(ex).toSQLException();
             }
         }
     }

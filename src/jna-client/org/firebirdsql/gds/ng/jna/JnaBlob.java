@@ -107,14 +107,12 @@ public class JnaBlob extends AbstractFbBlob implements FbBlob, DatabaseListener 
                 checkBlobClosed();
 
                 final JnaDatabase db = getDatabase();
-                synchronized (db.getSynchronizationObject()) {
-                    if (isOutput()) {
-                        clientLibrary.isc_create_blob2(statusVector, db.getJnaHandle(), getTransaction().getJnaHandle(),
-                                getJnaHandle(), blobId, (short) bpb.length, bpb);
-                    } else {
-                        clientLibrary.isc_open_blob2(statusVector, db.getJnaHandle(), getTransaction().getJnaHandle(),
-                                getJnaHandle(), blobId, (short) bpb.length, bpb);
-                    }
+                if (isOutput()) {
+                    clientLibrary.isc_create_blob2(statusVector, db.getJnaHandle(), getTransaction().getJnaHandle(),
+                            getJnaHandle(), blobId, (short) bpb.length, bpb);
+                } else {
+                    clientLibrary.isc_open_blob2(statusVector, db.getJnaHandle(), getTransaction().getJnaHandle(),
+                            getJnaHandle(), blobId, (short) bpb.length, bpb);
                 }
                 processStatusVector();
                 setOpen(true);
@@ -148,11 +146,8 @@ public class JnaBlob extends AbstractFbBlob implements FbBlob, DatabaseListener 
                 checkTransactionActive();
                 checkBlobOpen();
 
-                final JnaDatabase db = getDatabase();
-                synchronized (db.getSynchronizationObject()) {
-                    clientLibrary.isc_get_segment(statusVector, getJnaHandle(), actualLength, (short) sizeRequested,
-                            responseBuffer);
-                }
+                clientLibrary.isc_get_segment(statusVector, getJnaHandle(), actualLength, (short) sizeRequested,
+                        responseBuffer);
                 final int status = statusVector[1].intValue();
                 // status 0 means: more to come, isc_segment means: buffer was too small, rest will be returned on next call
                 if (!(status == 0 || status == ISCConstants.isc_segment)) {
@@ -189,10 +184,7 @@ public class JnaBlob extends AbstractFbBlob implements FbBlob, DatabaseListener 
                 checkTransactionActive();
                 checkBlobOpen();
 
-                final JnaDatabase db = getDatabase();
-                synchronized (db.getSynchronizationObject()) {
-                    clientLibrary.isc_put_segment(statusVector, getJnaHandle(), (short) segment.length, segment);
-                }
+                clientLibrary.isc_put_segment(statusVector, getJnaHandle(), (short) segment.length, segment);
                 processStatusVector();
             }
         } catch (SQLException e) {
@@ -208,14 +200,11 @@ public class JnaBlob extends AbstractFbBlob implements FbBlob, DatabaseListener 
                 checkDatabaseAttached();
                 checkTransactionActive();
 
-                final JnaDatabase db = getDatabase();
-                synchronized (db.getSynchronizationObject()) {
-                    // result is the current position in the blob (see .NET provider source)
-                    // We ignore the result TODO check if useful; not used in wire protocol either
-                    IntByReference result = new IntByReference();
-                    clientLibrary.isc_seek_blob(statusVector, getJnaHandle(), (short) seekMode.getSeekModeId(), offset,
-                            result);
-                }
+                // result is the current position in the blob (see .NET provider source)
+                // We ignore the result TODO check if useful; not used in wire protocol either
+                IntByReference result = new IntByReference();
+                clientLibrary.isc_seek_blob(statusVector, getJnaHandle(), (short) seekMode.getSeekModeId(), offset,
+                        result);
                 processStatusVector();
             }
         } catch (SQLException e) {
@@ -231,12 +220,9 @@ public class JnaBlob extends AbstractFbBlob implements FbBlob, DatabaseListener 
 
             synchronized (getSynchronizationObject()) {
                 checkDatabaseAttached();
-                final JnaDatabase db = getDatabase();
-                synchronized (db.getSynchronizationObject()) {
-                    clientLibrary.isc_blob_info(statusVector, getJnaHandle(),
-                            (short) requestItems.length, requestItems,
-                            (short) bufferLength, responseBuffer);
-                }
+                clientLibrary.isc_blob_info(statusVector, getJnaHandle(),
+                        (short) requestItems.length, requestItems,
+                        (short) bufferLength, responseBuffer);
                 processStatusVector();
             }
 
@@ -252,10 +238,7 @@ public class JnaBlob extends AbstractFbBlob implements FbBlob, DatabaseListener 
     @Override
     protected void closeImpl() throws SQLException {
         synchronized (getSynchronizationObject()) {
-            final JnaDatabase db = getDatabase();
-            synchronized (db.getSynchronizationObject()) {
-                clientLibrary.isc_close_blob(statusVector, getJnaHandle());
-            }
+            clientLibrary.isc_close_blob(statusVector, getJnaHandle());
             processStatusVector();
         }
     }
@@ -263,10 +246,7 @@ public class JnaBlob extends AbstractFbBlob implements FbBlob, DatabaseListener 
     @Override
     protected void cancelImpl() throws SQLException {
         synchronized (getSynchronizationObject()) {
-            final JnaDatabase db = getDatabase();
-            synchronized (db.getSynchronizationObject()) {
-                clientLibrary.isc_cancel_blob(statusVector, getJnaHandle());
-            }
+            clientLibrary.isc_cancel_blob(statusVector, getJnaHandle());
             processStatusVector();
         }
     }

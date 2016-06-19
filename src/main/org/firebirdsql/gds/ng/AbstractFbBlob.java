@@ -40,7 +40,7 @@ public abstract class AbstractFbBlob implements FbBlob, TransactionListener, Dat
 
     private static final Logger log = LoggerFactory.getLogger(AbstractFbBlob.class);
 
-    private final Object syncObject = new Object();
+    private final Object syncObject;
     protected final ExceptionListenerDispatcher exceptionListenerDispatcher = new ExceptionListenerDispatcher(this);
     private final BlobParameterBuffer blobParameterBuffer;
     private FbTransaction transaction;
@@ -49,6 +49,7 @@ public abstract class AbstractFbBlob implements FbBlob, TransactionListener, Dat
     private boolean eof;
 
     protected AbstractFbBlob(FbDatabase database, FbTransaction transaction, BlobParameterBuffer blobParameterBuffer) {
+        this.syncObject = database.getSynchronizationObject();
         this.database = database;
         this.transaction = transaction;
         this.blobParameterBuffer = blobParameterBuffer;

@@ -26,6 +26,7 @@ package org.firebirdsql.gds.impl;
 
 import org.firebirdsql.gds.*;
 import org.firebirdsql.gds.ng.*;
+import org.firebirdsql.jdbc.Synchronizable;
 
 import java.sql.SQLException;
 import java.util.List;
@@ -33,11 +34,12 @@ import java.util.List;
 /**
  * Helper class for all GDS-related operations.
  */
-public class GDSHelper {
+public final class GDSHelper implements Synchronizable {
 
     public static final int DEFAULT_BLOB_BUFFER_SIZE = 16 * 1024;
 
     private final FbDatabase database;
+    private final Object syncObject;
     private FbTransaction transaction;
 
     private boolean registerResultSets;
@@ -51,15 +53,19 @@ public class GDSHelper {
                 .hasArgument(DatabaseParameterBufferExtension.NO_RESULT_SET_TRACKING);
 
         this.database = database;
+        syncObject = database.getSynchronizationObject();
     }
 
-    public synchronized FbTransaction getCurrentTransaction() {
-        return transaction;
+    public FbTransaction getCurrentTransaction() {
+        synchronized (database.getSynchronizationObject()) {
+            return transaction;
+        }
     }
 
-    public synchronized void setCurrentTransaction(FbTransaction transaction) {
-        this.transaction = transaction;
-        notifyAll();
+    public void setCurrentTransaction(FbTransaction transaction) {
+        synchronized (database.getSynchronizationObject()) {
+            this.transaction = transaction;
+        }
     }
 
     public FbDatabase getCurrentDatabase() {
@@ -322,4 +328,8 @@ public class GDSHelper {
         throw new UnsupportedOperationException("getWarnings is no longer supported/implemented");
     }
 
+    @Override
+    public Object getSynchronizationObject() {
+        return syncObject;
+    }
 }

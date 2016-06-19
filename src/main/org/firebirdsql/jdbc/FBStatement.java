@@ -61,6 +61,7 @@ public class FBStatement implements FirebirdStatement, Synchronizable {
             JdbcVersionSupportHolder.INSTANCE.getJdbcVersionSupport();
     
     protected final GDSHelper gdsHelper;
+    private final Object syncObject;
     protected final FBObjectListener.StatementListener statementListener;
 
     protected FbStatement fbStatement;
@@ -153,6 +154,7 @@ public class FBStatement implements FirebirdStatement, Synchronizable {
 
     protected FBStatement(GDSHelper c, int rsType, int rsConcurrency, int rsHoldability, FBObjectListener.StatementListener statementListener) throws SQLException {
         this.gdsHelper = c;
+        syncObject = c.getSynchronizationObject();
         
         this.rsConcurrency = rsConcurrency;
         this.rsType = rsType;
@@ -161,8 +163,7 @@ public class FBStatement implements FirebirdStatement, Synchronizable {
         this.statementListener = statementListener;
         
         // TODO Find out if connection is actually ever null, because some parts of the code expect it not to be null
-        this.connection = statementListener != null ?
-                statementListener.getConnection() : null;
+        this.connection = statementListener != null ? statementListener.getConnection() : null;
         
         closed = false;
     }
@@ -178,22 +179,8 @@ public class FBStatement implements FirebirdStatement, Synchronizable {
         return !closed && !INVALID_STATEMENT_STATES.contains(fbStatement.getState());
     }
     
-    /**
-     * Get synchronization object for this statement object.
-     * 
-     * @return object that will be used for synchronization.
-     * 
-     * @throws SQLException if something went wrong.
-     */
-    public Object getSynchronizationObject() throws SQLException {
-        // TODO: Has potential race condition
-        if (connection == null)
-            return this;
-        
-        if (connection.getAutoCommit()) 
-            return connection;
-        else
-            return this;
+    public final Object getSynchronizationObject() {
+        return syncObject;
     }
 
     @Override

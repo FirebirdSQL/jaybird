@@ -308,7 +308,7 @@ public abstract class AbstractResultSet implements ResultSet, FirebirdResultSet,
     }
 
     @Override
-    public Object getSynchronizationObject() throws SQLException {
+    public final Object getSynchronizationObject() {
         return fbStatement.getSynchronizationObject();
     }
 

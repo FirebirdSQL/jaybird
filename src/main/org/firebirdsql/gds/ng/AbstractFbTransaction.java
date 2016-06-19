@@ -44,7 +44,7 @@ public abstract class AbstractFbTransaction implements FbTransaction {
             EnumSet.of(TransactionState.ACTIVE, TransactionState.PREPARED));
     protected final ExceptionListenerDispatcher exceptionListenerDispatcher = new ExceptionListenerDispatcher(this);
     private final FbDatabase database;
-    private final Object syncObject = new Object();
+    private final Object syncObject;
     protected final TransactionListenerDispatcher transactionListenerDispatcher = new TransactionListenerDispatcher();
     private volatile TransactionState state = TransactionState.ACTIVE;
 
@@ -61,6 +61,7 @@ public abstract class AbstractFbTransaction implements FbTransaction {
         if (!ALLOWED_INITIAL_STATES.contains(initialState)) {
             throw new IllegalArgumentException(String.format("Illegal initial transaction state: %s, allowed states are: %s", initialState, ALLOWED_INITIAL_STATES));
         }
+        this.syncObject = database.getSynchronizationObject();
         this.state = initialState;
         this.database = database;
     }

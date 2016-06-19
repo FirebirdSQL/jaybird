@@ -48,7 +48,7 @@ public abstract class AbstractFbStatement implements FbStatement {
             EnumSet.of(StatementState.EXECUTING, StatementState.CURSOR_OPEN));
     private static final Logger log = LoggerFactory.getLogger(AbstractFbStatement.class);
 
-    private final Object syncObject = new Object();
+    private final Object syncObject;
     private final WarningMessageCallback warningCallback = new WarningMessageCallback() {
         @Override
         public void processWarning(SQLWarning warning) {
@@ -99,6 +99,10 @@ public abstract class AbstractFbStatement implements FbStatement {
             }
         }
     };
+
+    protected AbstractFbStatement(Object syncObject) {
+        this.syncObject = syncObject;
+    }
 
     /**
      * Gets the {@link TransactionListener} instance for this statement.

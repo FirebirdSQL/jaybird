@@ -56,7 +56,7 @@ import org.firebirdsql.util.SQLExceptionChainBuilder;
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @version 1.0
  */
-public class FBManagedConnection implements ManagedConnection, XAResource, ExceptionListener {
+public class FBManagedConnection implements ManagedConnection, XAResource, ExceptionListener, Synchronizable {
 
     public static final String WARNING_NO_CHARSET = "WARNING: No connection characterset specified (property lc_ctype, encoding, charSet or localEncoding), defaulting to characterset NONE";
 
@@ -76,6 +76,7 @@ public class FBManagedConnection implements ManagedConnection, XAResource, Excep
     
     private GDSHelper gdsHelper;
     private final FbDatabase database;
+    private final Object syncObject;
 
     private final FBConnectionRequestInfo cri;
     private FBTpb tpb;
@@ -128,6 +129,7 @@ public class FBManagedConnection implements ManagedConnection, XAResource, Excep
             database.addDatabaseListener(new MCDatabaseListener());
             database.addExceptionListener(this);
             database.attach();
+            syncObject = database.getSynchronizationObject();
 
             gdsHelper = new GDSHelper(database);
         } catch(SQLException ex) {
@@ -1038,6 +1040,11 @@ public class FBManagedConnection implements ManagedConnection, XAResource, Excep
         } catch (SQLException | ResourceException e) {
             throw new FBXAException("can't perform query to fetch xids", XAException.XAER_RMFAIL, e);
         }
+    }
+
+    @Override
+    public final Object getSynchronizationObject() {
+        return syncObject;
     }
 
     private static class DataProvider extends DefaultStatementListener implements FieldDataProvider {

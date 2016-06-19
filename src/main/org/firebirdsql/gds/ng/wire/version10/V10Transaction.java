@@ -120,20 +120,18 @@ public class V10Transaction extends AbstractFbTransaction implements FbWireTrans
     private void finishTransaction(final int commitOrRollback) throws SQLException {
         assert commitOrRollback == op_commit || commitOrRollback == op_rollback
                 : "Unsupported operation code " + commitOrRollback;
-        synchronized (getDatabase().getSynchronizationObject()) {
-            try {
-                final XdrOutputStream xdrOut = getXdrOut();
-                xdrOut.writeInt(commitOrRollback);
-                xdrOut.writeInt(handle);
-                xdrOut.flush();
-            } catch (IOException ioex) {
-                throw new FbExceptionBuilder().exception(ISCConstants.isc_net_write_err).cause(ioex).toSQLException();
-            }
-            try {
-                getDatabase().readResponse(null);
-            } catch (IOException ioex) {
-                throw new FbExceptionBuilder().exception(ISCConstants.isc_net_read_err).cause(ioex).toSQLException();
-            }
+        try {
+            final XdrOutputStream xdrOut = getXdrOut();
+            xdrOut.writeInt(commitOrRollback);
+            xdrOut.writeInt(handle);
+            xdrOut.flush();
+        } catch (IOException ioex) {
+            throw new FbExceptionBuilder().exception(ISCConstants.isc_net_write_err).cause(ioex).toSQLException();
+        }
+        try {
+            getDatabase().readResponse(null);
+        } catch (IOException ioex) {
+            throw new FbExceptionBuilder().exception(ISCConstants.isc_net_read_err).cause(ioex).toSQLException();
         }
     }
 
@@ -142,26 +140,24 @@ public class V10Transaction extends AbstractFbTransaction implements FbWireTrans
         try {
             synchronized (getSynchronizationObject()) {
                 switchState(TransactionState.PREPARING);
-                synchronized (getDatabase().getSynchronizationObject()) {
-                    try {
-                        final XdrOutputStream xdrOut = getXdrOut();
-                        if (recoveryInformation != null) {
-                            xdrOut.writeInt(op_prepare2);
-                            xdrOut.writeInt(handle);
-                            xdrOut.writeBuffer(recoveryInformation);
-                        } else {
-                            xdrOut.writeInt(op_prepare);
-                            xdrOut.writeInt(handle);
-                        }
-                        xdrOut.flush();
-                    } catch (IOException ioex) {
-                        throw new FbExceptionBuilder().exception(ISCConstants.isc_net_write_err).cause(ioex).toSQLException();
+                try {
+                    final XdrOutputStream xdrOut = getXdrOut();
+                    if (recoveryInformation != null) {
+                        xdrOut.writeInt(op_prepare2);
+                        xdrOut.writeInt(handle);
+                        xdrOut.writeBuffer(recoveryInformation);
+                    } else {
+                        xdrOut.writeInt(op_prepare);
+                        xdrOut.writeInt(handle);
                     }
-                    try {
-                        getDatabase().readResponse(null);
-                    } catch (IOException ioex) {
-                        throw new FbExceptionBuilder().exception(ISCConstants.isc_net_read_err).cause(ioex).toSQLException();
-                    }
+                    xdrOut.flush();
+                } catch (IOException ioex) {
+                    throw new FbExceptionBuilder().exception(ISCConstants.isc_net_write_err).cause(ioex).toSQLException();
+                }
+                try {
+                    getDatabase().readResponse(null);
+                } catch (IOException ioex) {
+                    throw new FbExceptionBuilder().exception(ISCConstants.isc_net_read_err).cause(ioex).toSQLException();
                 }
                 switchState(TransactionState.PREPARED);
             }
@@ -179,24 +175,22 @@ public class V10Transaction extends AbstractFbTransaction implements FbWireTrans
     public byte[] getTransactionInfo(byte[] requestItems, int maxBufferLength) throws SQLException {
         try {
             synchronized (getSynchronizationObject()) {
-                synchronized (getDatabase().getSynchronizationObject()) {
-                    try {
-                        final XdrOutputStream xdrOut = getXdrOut();
-                        xdrOut.writeInt(op_info_transaction);
-                        xdrOut.writeInt(getHandle());
-                        xdrOut.writeInt(0); // incarnation(?)
-                        xdrOut.writeBuffer(requestItems);
-                        xdrOut.writeInt(maxBufferLength);
-                        xdrOut.flush();
-                    } catch (IOException ioex) {
-                        throw new FbExceptionBuilder().exception(ISCConstants.isc_net_write_err).cause(ioex).toSQLException();
-                    }
-                    try {
-                        final GenericResponse genericResponse = getDatabase().readGenericResponse(null);
-                        return genericResponse.getData();
-                    } catch (IOException ex) {
-                        throw new FbExceptionBuilder().exception(ISCConstants.isc_net_read_err).cause(ex).toSQLException();
-                    }
+                try {
+                    final XdrOutputStream xdrOut = getXdrOut();
+                    xdrOut.writeInt(op_info_transaction);
+                    xdrOut.writeInt(getHandle());
+                    xdrOut.writeInt(0); // incarnation(?)
+                    xdrOut.writeBuffer(requestItems);
+                    xdrOut.writeInt(maxBufferLength);
+                    xdrOut.flush();
+                } catch (IOException ioex) {
+                    throw new FbExceptionBuilder().exception(ISCConstants.isc_net_write_err).cause(ioex).toSQLException();
+                }
+                try {
+                    final GenericResponse genericResponse = getDatabase().readGenericResponse(null);
+                    return genericResponse.getData();
+                } catch (IOException ex) {
+                    throw new FbExceptionBuilder().exception(ISCConstants.isc_net_read_err).cause(ex).toSQLException();
                 }
             }
         } catch (SQLException e) {
