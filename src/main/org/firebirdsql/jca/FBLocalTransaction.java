@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source J2ee connector - jdbc driver
+ * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -12,11 +12,10 @@
  * This file was created by members of the firebird development team.
  * All individual contributions remain the Copyright (C) of those
  * individuals.  Contributors to this file are either listed here or
- * can be obtained from a CVS history command.
+ * can be obtained from a source control history command.
  *
  * All rights reserved.
  */
-
 package org.firebirdsql.jca;
 
 import javax.resource.ResourceException;
@@ -187,7 +186,7 @@ public class FBLocalTransaction implements FirebirdLocalTransaction,
         // transaction
         if (xid == null) return;
 
-        synchronized (mc) {
+        synchronized (mc.getSynchronizationObject()) {
             try {
                 mc.internalEnd(xid, XAResource.TMSUCCESS);
                 mc.internalCommit(xid, true);
@@ -242,7 +241,7 @@ public class FBLocalTransaction implements FirebirdLocalTransaction,
         // transaction
         if (xid == null) return;
 
-        synchronized (mc) {
+        synchronized (mc.getSynchronizationObject()) {
             try {
                 mc.internalEnd(xid, XAResource.TMSUCCESS); // ??? on flags
                                                             // --FBManagedConnection

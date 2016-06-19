@@ -1,3 +1,21 @@
+/*
+ * Firebird Open Source JavaEE Connector - JDBC Driver
+ *
+ * Distributable under LGPL license.
+ * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * LGPL License for more details.
+ *
+ * This file was created by members of the firebird development team.
+ * All individual contributions remain the Copyright (C) of those
+ * individuals.  Contributors to this file are either listed here or
+ * can be obtained from a source control history command.
+ *
+ * All rights reserved.
+ */
 package org.firebirdsql.jdbc;
 
 import java.io.*;
@@ -28,10 +46,8 @@ public class FBBlobInputStream extends InputStream
         
         if (owner.isNew) 
             throw new FBSQLException("You can't read a new blob");
-        
-        Object syncObject = owner.getSynchronizationObject();
-        
-        synchronized(syncObject) {
+
+        synchronized(owner.getSynchronizationObject()) {
             try {
                 blobHandle = owner.gdsHelper.openBlob(owner.blob_id, FBBlob.SEGMENTED);
             } catch (GDSException ge) {
@@ -49,10 +65,7 @@ public class FBBlobInputStream extends InputStream
     }
 
     public void seek(int position, int seekMode) throws IOException {
-        
-        Object syncObject = owner.getSynchronizationObject();
-        
-        synchronized(syncObject) {
+        synchronized(owner.getSynchronizationObject()) {
             checkClosed();
             try {
                 owner.gdsHelper.seekBlob(blobHandle, position, seekMode);
@@ -64,10 +77,7 @@ public class FBBlobInputStream extends InputStream
     }
     
     public long length() throws IOException {
-        
-        Object syncObject = owner.getSynchronizationObject();
-        
-        synchronized(syncObject) {
+        synchronized(owner.getSynchronizationObject()) {
             checkClosed();
             try {
                 byte[] info = owner.gdsHelper.getBlobInfo(
@@ -83,9 +93,7 @@ public class FBBlobInputStream extends InputStream
     }
 
     public int available() throws IOException {
-        
-        Object syncObject = owner.getSynchronizationObject();
-        synchronized(syncObject) {
+        synchronized(owner.getSynchronizationObject()) {
             checkClosed();
             if (buffer == null) {
                 if (blobHandle.isEof()) {
@@ -159,10 +167,7 @@ public class FBBlobInputStream extends InputStream
     }
 
     public void close() throws IOException {
-        
-        Object syncObject = owner.getSynchronizationObject();
-        
-        synchronized(syncObject) {
+        synchronized(owner.getSynchronizationObject()) {
             if (blobHandle != null) {
                 try {
                     owner.gdsHelper.closeBlob(blobHandle);

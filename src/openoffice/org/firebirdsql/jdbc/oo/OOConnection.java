@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
@@ -57,13 +55,15 @@ public class OOConnection extends FBConnection {
         addWarning(new SQLWarning(message));
     }
 
-    public synchronized DatabaseMetaData getMetaData() throws SQLException {
-        try {
-            if (metaData == null) metaData = new OODatabaseMetaData(this);
+    public DatabaseMetaData getMetaData() throws SQLException {
+        synchronized (getSynchronizationObject()) {
+            try {
+                if (metaData == null) metaData = new OODatabaseMetaData(this);
 
-            return metaData;
-        } catch (GDSException ex) {
-            throw new FBSQLException(ex);
+                return metaData;
+            } catch (GDSException ex) {
+                throw new FBSQLException(ex);
+            }
         }
     }
 }

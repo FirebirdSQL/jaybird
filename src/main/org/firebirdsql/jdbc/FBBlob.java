@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source J2ee connector - jdbc driver
+ * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -12,11 +12,10 @@
  * This file was created by members of the firebird development team.
  * All individual contributions remain the Copyright (C) of those
  * individuals.  Contributors to this file are either listed here or
- * can be obtained from a CVS history command.
+ * can be obtained from a source control history command.
  *
  * All rights reserved.
  */
-
 package org.firebirdsql.jdbc;
 
 
@@ -121,8 +120,8 @@ public class FBBlob implements FirebirdBlob, Synchronizable {
         this(c, blob_id, null);
     }
 
-    public Object getSynchronizationObject() {
-        return gdsHelper;
+    public final Object getSynchronizationObject() {
+        return gdsHelper.getSynchronizationObject();
     }
 
     /**
@@ -132,9 +131,7 @@ public class FBBlob implements FirebirdBlob, Synchronizable {
      * when closed.
      */
     public void close() throws IOException {
-        Object syncObject = getSynchronizationObject();
-        synchronized(syncObject) {
-
+        synchronized(getSynchronizationObject()) {
             IOException error = null;
             
             Iterator i = inputStreams.iterator();
@@ -211,10 +208,7 @@ public class FBBlob implements FirebirdBlob, Synchronizable {
      * @throws SQLException if something went wrong.
      */
     public byte[] getInfo(byte[] items, int buffer_length) throws SQLException {
-        
-        Object syncObject = getSynchronizationObject();
-        
-        synchronized(syncObject) {
+        synchronized(getSynchronizationObject()) {
             try {
                 if (blobListener != null)
                     blobListener.executionStarted(this);
@@ -355,9 +349,8 @@ public class FBBlob implements FirebirdBlob, Synchronizable {
             throw new FBSQLException("Blob position is limited to 2^31 - 1 " + 
                 "due to isc_seek_blob limitations.",
                 FBSQLException.SQL_STATE_INVALID_ARG_VALUE);
-        
-        Object syncObject = getSynchronizationObject();
-        synchronized(syncObject) {
+
+        synchronized(getSynchronizationObject()) {
             if (blobListener != null)
                 blobListener.executionStarted(this);
             
@@ -398,9 +391,7 @@ public class FBBlob implements FirebirdBlob, Synchronizable {
    * @see <a href="package-summary.html#2.0 API">What Is in the JDBC 2.0 API</a>
    */
     public InputStream getBinaryStream () throws SQLException {
-        
-        Object syncObject = getSynchronizationObject();
-        synchronized(syncObject) {
+        synchronized(getSynchronizationObject()) {
             FBBlobInputStream blobstream = new FBBlobInputStream(this);
             inputStreams.add(blobstream);
             return blobstream;

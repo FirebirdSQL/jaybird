@@ -37,18 +37,16 @@ public final class InternalTransactionCoordinator implements FBObjectListener.St
         FBObjectListener.BlobListener, Synchronizable {
 
     private final AbstractConnection connection;
+    private final Object syncObject;
     private AbstractTransactionCoordinator coordinator;
 
     InternalTransactionCoordinator(AbstractConnection connection) {
         this.connection = connection;
+        syncObject = connection.getSynchronizationObject();
     }
 
-    public Object getSynchronizationObject() throws SQLException {
-        if (coordinator instanceof AutoCommitCoordinator || coordinator instanceof FirebirdAutoCommitCoordinator) {
-            return getConnection();
-        }
-        // TODO Suspicious: using new sync-object every time
-        return new Object();
+    public final Object getSynchronizationObject() {
+        return syncObject;
     }
 
     /**

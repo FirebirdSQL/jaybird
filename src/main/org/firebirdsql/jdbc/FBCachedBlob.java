@@ -1,31 +1,44 @@
+/*
+ * Firebird Open Source JavaEE Connector - JDBC Driver
+ *
+ * Distributable under LGPL license.
+ * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * LGPL License for more details.
+ *
+ * This file was created by members of the firebird development team.
+ * All individual contributions remain the Copyright (C) of those
+ * individuals.  Contributors to this file are either listed here or
+ * can be obtained from a source control history command.
+ *
+ * All rights reserved.
+ */
 package org.firebirdsql.jdbc;
 
 import java.sql.SQLException;
 import java.sql.Blob;
 import java.io.*;
 
-
 /**
  * This class represents a cached blob field.
  */
 public class FBCachedBlob implements FirebirdBlob, Synchronizable {
 
-    static final byte[] BYTES_NULL_VALUE = null;
+    private static final byte[] BYTES_NULL_VALUE = null;
 
-    static final InputStream STREAM_NULL_VALUE = null;
+    private static final InputStream STREAM_NULL_VALUE = null;
+
+    private final Object syncObject = new Object();
 
     private byte[] blobData;
 
-    /* (non-Javadoc)
-     * @see org.firebirdsql.jdbc.FirebirdBlob#detach()
-     */
     public FirebirdBlob detach() throws SQLException {
         return this;
     }
-    
-    /* (non-Javadoc)
-     * @see org.firebirdsql.jdbc.FirebirdBlob#isSegmented()
-     */
+
     public boolean isSegmented() throws SQLException {
         return false;
     }
@@ -137,8 +150,8 @@ public class FBCachedBlob implements FirebirdBlob, Synchronizable {
         throw new FBDriverNotCapableException();
     }
 
-    public Object getSynchronizationObject() throws SQLException {
-        return new Object();
+    public final Object getSynchronizationObject() {
+        return syncObject;
     }
 
     public void free() throws SQLException {

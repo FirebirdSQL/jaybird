@@ -45,6 +45,7 @@ import org.firebirdsql.gds.impl.*;
 public abstract class AbstractStatement implements FirebirdStatement, Synchronizable {
     
     protected GDSHelper gdsHelper;
+    private final Object syncObject;
     protected FBObjectListener.StatementListener statementListener;
 
     protected AbstractIscStmtHandle fixedStmt;
@@ -136,6 +137,7 @@ public abstract class AbstractStatement implements FirebirdStatement, Synchroniz
 
     protected AbstractStatement(GDSHelper c, int rsType, int rsConcurrency, int rsHoldability, FBObjectListener.StatementListener statementListener) throws SQLException {
         this.gdsHelper = c;
+        syncObject = c.getSynchronizationObject();
         
         this.rsConcurrency = rsConcurrency;
         this.rsType = rsType;
@@ -157,23 +159,8 @@ public abstract class AbstractStatement implements FirebirdStatement, Synchroniz
         return !closed && (fixedStmt == null || fixedStmt.isValid());
     }
     
-    /**
-     * Get synchronization object for this statement object.
-     * 
-     * @return object that will be used for synchronization.
-     * 
-     * @throws SQLException if something went wrong.
-     */
-    public Object getSynchronizationObject() throws SQLException {
-        // TODO: Has potential race condition
-        
-        if (connection == null)
-            return this;
-        
-        if (connection.getAutoCommit()) 
-            return connection;
-        else
-            return this;
+    public final Object getSynchronizationObject() {
+        return syncObject;
     }
     
     protected void finalize() throws Throwable {

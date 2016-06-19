@@ -246,7 +246,7 @@ public abstract class AbstractResultSet implements ResultSet, FirebirdResultSet,
         }
     }
     
-    public Object getSynchronizationObject() throws SQLException {
+    public final Object getSynchronizationObject() {
         return fbStatement.getSynchronizationObject();
     }
     

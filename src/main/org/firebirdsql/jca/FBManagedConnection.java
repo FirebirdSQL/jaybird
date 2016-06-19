@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source J2ee connector - jdbc driver
+ * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -12,7 +12,7 @@
  * This file was created by members of the firebird development team.
  * All individual contributions remain the Copyright (C) of those
  * individuals.  Contributors to this file are either listed here or
- * can be obtained from a CVS history command.
+ * can be obtained from a source control history command.
  *
  * All rights reserved.
  */
@@ -48,7 +48,7 @@ import org.firebirdsql.util.SQLExceptionChainBuilder;
  * @author <a href="mailto:d_jencks@users.sourceforge.net">David Jencks </a>
  * @version 1.0
  */
-public class FBManagedConnection implements ManagedConnection, XAResource, GDSHelperErrorListener {
+public class FBManagedConnection implements ManagedConnection, XAResource, GDSHelperErrorListener, Synchronizable {
 
     public static final String WARNING_NO_CHARSET = "WARNING: No connection characterset specified (property lc_ctype, encoding, charSet or localEncoding), defaulting to characterset NONE";
 
@@ -1081,6 +1081,11 @@ public class FBManagedConnection implements ManagedConnection, XAResource, GDSHe
         } catch (ResourceException re) {
             throw new FBXAException("can't perform query to fetch xids", XAException.XAER_RMFAIL, re);
         }
+    }
+
+    @Override
+    public final Object getSynchronizationObject() {
+        return dbHandle;
     }
 
     private static class DataProvider implements FieldDataProvider {
