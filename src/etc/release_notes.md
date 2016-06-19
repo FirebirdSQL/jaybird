@@ -68,6 +68,14 @@ The following has been changed or fixed in Jaybird 2.2.11:
     Note that `FBMaintenanceManager.commit/rollbackTransaction(long)` with
     longer than 32 bit transaction ids require Firebird 3.0.1 because of
     [CORE-5224](http://tracker.firebirdsql.org/browse/CORE-5224).
+-   Changed locking to coarser blocks with - as far as possible - a single lock
+    object per connection for all connection-derived objects ([JDBC-435](http://tracker.firebirdsql.org/browse/JDBC-435))
+
+    This should prevent deadlocks on concurrent access as in some cases locks
+    were obtained in different orders (eg (statement, connection), and
+    (connection, statement)). The downside is reduced concurrency, but as using
+    a connection from multiple threads concurrently is discouraged anyway, that
+    is an acceptable price to pay.
 
 **Known issues in Jaybird 2.2.11**
 
