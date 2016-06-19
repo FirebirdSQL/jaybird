@@ -166,16 +166,20 @@ public class FBConnection implements FirebirdConnection, Synchronizable {
      * @param mc The FBManagedConnection around which this connection is based
      */
     public void setManagedConnection(FBManagedConnection mc) {
-        //close any prepared statements we may have executed.
-        if (this.mc != mc && metaData != null) {
-            metaData.close();
-            metaData = null;
+        synchronized (getSynchronizationObject()) {
+            //close any prepared statements we may have executed.
+            if (this.mc != mc && metaData != null) {
+                metaData.close();
+                metaData = null;
+            }
+            this.mc = mc;
         }
-        this.mc = mc;
     }
     
     public FBManagedConnection getManagedConnection() {
-        return mc;
+        synchronized (getSynchronizationObject()) {
+            return mc;
+        }
     }
 
     /**

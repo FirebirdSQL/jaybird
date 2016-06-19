@@ -141,12 +141,12 @@ See [Compatibility changes] for details.
 Other fixes and changes
 -----------------------
 
-* Fix: IP-address is reversed on big-endian platforms ([JDBC-98](http://tracker.firebirdsql.org/browse/JDBC-98))
+*   Fix: IP-address is reversed on big-endian platforms ([JDBC-98](http://tracker.firebirdsql.org/browse/JDBC-98))
 
-* Reimplemented character set handling (*TODO: Provide more info?*)
+*   Reimplemented character set handling (*TODO: Provide more info?*)
 
-* Improved support of JDBC Escape syntax (`{...}`) and supported functions (*TODO: Provide more info?*)
-  ([JDBC-223](http://tracker.firebirdsql.org/browse/JDBC-223))
+*   Improved support of JDBC Escape syntax (`{...}`) and supported functions (*TODO: Provide more info?*)
+    ([JDBC-223](http://tracker.firebirdsql.org/browse/JDBC-223))
 
     The escape parser will now only allow the function names defined in
     Appendix D of the JDBC specification (4.1 for now). For unsupported
@@ -157,12 +157,21 @@ Other fixes and changes
     `getNumericFunctions`, `getStringFunctions`, `getSystemFunctions` and 
     `getTimeDateFunctions`.
     
-* Nested JDBC escapes are now supported ([JDBC-292](http://tracker.firebirdsql.org/browse/JDBC-292))
+*   Nested JDBC escapes are now supported ([JDBC-292](http://tracker.firebirdsql.org/browse/JDBC-292))
 
-* `CHAR` and `VARCHAR` columns with character set `OCTETS` are now handled as
-  JDBC type `BINARY` and `VARBINARY`, respectively ([JDBC-240](http://tracker.firebirdsql.org/browse/JDBC-240))
+*   `CHAR` and `VARCHAR` columns with character set `OCTETS` are now handled as
+    JDBC type `BINARY` and `VARBINARY`, respectively ([JDBC-240](http://tracker.firebirdsql.org/browse/JDBC-240))
 
     See also [Character set OCTETS handled as JDBC (VAR)BINARY].
+
+*   Changed locking to coarser blocks with - as far as possible - a single lock
+    object per connection for all connection-derived objects ([JDBC-435](http://tracker.firebirdsql.org/browse/JDBC-435))
+
+    This should prevent deadlocks on concurrent access as in some cases locks
+    were obtained in different orders (eg (statement, connection), and
+    (connection, statement)). The downside is reduced concurrency, but as using
+    a connection from multiple threads concurrently is discouraged anyway, that
+    is an acceptable price to pay.
 
 Removal of deprecated classes and packages
 ------------------------------------------
