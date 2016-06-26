@@ -12,4 +12,4 @@ The JCA standard specifies an architecture in which an application server can co
 - [Wiki](https://github.com/FirebirdSQL/jaybird/wiki)
 - [FAQ](src/documentation/faq.md)
 - [Release notes](src/documentation/release_notes.md)
-- [How to contribute](CONTRIBUTING)
+- [How to contribute](CONTRIBUTING.md)

@@ -64,7 +64,7 @@
                 <include name="release_notes.html"/>
             </fileset>
             <fileset dir=".">
-                <include name="CONTRIBUTING"/>
+                <include name="CONTRIBUTING.md"/>
             </fileset>
             <zipfileset dir="${build.lib}" prefix="lib">
                 <include name="connector-api-1.5.jar"/>

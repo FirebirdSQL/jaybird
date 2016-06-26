@@ -179,8 +179,8 @@ You can report bugs in the Firebird bug tracker, project
 
 When reporting bugs, please provide a minimal, but complete reproduction,
 including databases and sourcecode to reproduce the problem. Patches to fix bugs
-are also appreciated. Make sure the patch is against a recent trunk version of
-the code.
+are also appreciated. Make sure the patch is against a recent master version of
+the code. You can also fork the jaybird repository and create pull requests.
 
 JDBC URLs (`java.sql.DriverManager`)
 ====================================
