@@ -1,7 +1,6 @@
 
 package org.firebirdsql.encodings.xml;
 
-import javax.annotation.Generated;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
@@ -37,29 +36,21 @@ import javax.xml.bind.annotation.XmlValue;
 @XmlType(name = "EncodingDefinitionType", propOrder = {
     "value"
 })
-@Generated(value = "com.sun.tools.internal.xjc.Driver", date = "2015-02-07T01:31:12+01:00", comments = "JAXB RI v2.2.4-2")
 public class EncodingDefinitionType {
 
     @XmlValue
-    @Generated(value = "com.sun.tools.internal.xjc.Driver", date = "2015-02-07T01:31:12+01:00", comments = "JAXB RI v2.2.4-2")
     protected String value;
     @XmlAttribute(name = "firebirdName", required = true)
-    @Generated(value = "com.sun.tools.internal.xjc.Driver", date = "2015-02-07T01:31:12+01:00", comments = "JAXB RI v2.2.4-2")
     protected String firebirdName;
     @XmlAttribute(name = "javaName")
-    @Generated(value = "com.sun.tools.internal.xjc.Driver", date = "2015-02-07T01:31:12+01:00", comments = "JAXB RI v2.2.4-2")
     protected String javaName;
     @XmlAttribute(name = "characterSetId", required = true)
-    @Generated(value = "com.sun.tools.internal.xjc.Driver", date = "2015-02-07T01:31:12+01:00", comments = "JAXB RI v2.2.4-2")
     protected int characterSetId;
     @XmlAttribute(name = "maxBytesPerCharacter")
-    @Generated(value = "com.sun.tools.internal.xjc.Driver", date = "2015-02-07T01:31:12+01:00", comments = "JAXB RI v2.2.4-2")
     protected Integer maxBytesPerCharacter;
     @XmlAttribute(name = "encodingDefinitionImplementation")
-    @Generated(value = "com.sun.tools.internal.xjc.Driver", date = "2015-02-07T01:31:12+01:00", comments = "JAXB RI v2.2.4-2")
     protected String encodingDefinitionImplementation;
     @XmlAttribute(name = "firebirdOnly")
-    @Generated(value = "com.sun.tools.internal.xjc.Driver", date = "2015-02-07T01:31:12+01:00", comments = "JAXB RI v2.2.4-2")
     protected Boolean firebirdOnly;
 
     /**
@@ -70,7 +61,6 @@ public class EncodingDefinitionType {
      *     {@link String }
      *     
      */
-    @Generated(value = "com.sun.tools.internal.xjc.Driver", date = "2015-02-07T01:31:12+01:00", comments = "JAXB RI v2.2.4-2")
     public String getValue() {
         return value;
     }
@@ -83,7 +73,6 @@ public class EncodingDefinitionType {
      *     {@link String }
      *     
      */
-    @Generated(value = "com.sun.tools.internal.xjc.Driver", date = "2015-02-07T01:31:12+01:00", comments = "JAXB RI v2.2.4-2")
     public void setValue(String value) {
         this.value = value;
     }
@@ -96,7 +85,6 @@ public class EncodingDefinitionType {
      *     {@link String }
      *     
      */
-    @Generated(value = "com.sun.tools.internal.xjc.Driver", date = "2015-02-07T01:31:12+01:00", comments = "JAXB RI v2.2.4-2")
     public String getFirebirdName() {
         return firebirdName;
     }
@@ -109,7 +97,6 @@ public class EncodingDefinitionType {
      *     {@link String }
      *     
      */
-    @Generated(value = "com.sun.tools.internal.xjc.Driver", date = "2015-02-07T01:31:12+01:00", comments = "JAXB RI v2.2.4-2")
     public void setFirebirdName(String value) {
         this.firebirdName = value;
     }
@@ -122,7 +109,6 @@ public class EncodingDefinitionType {
      *     {@link String }
      *     
      */
-    @Generated(value = "com.sun.tools.internal.xjc.Driver", date = "2015-02-07T01:31:12+01:00", comments = "JAXB RI v2.2.4-2")
     public String getJavaName() {
         return javaName;
     }
@@ -135,7 +121,6 @@ public class EncodingDefinitionType {
      *     {@link String }
      *     
      */
-    @Generated(value = "com.sun.tools.internal.xjc.Driver", date = "2015-02-07T01:31:12+01:00", comments = "JAXB RI v2.2.4-2")
     public void setJavaName(String value) {
         this.javaName = value;
     }
@@ -144,7 +129,6 @@ public class EncodingDefinitionType {
      * Gets the value of the characterSetId property.
      * 
      */
-    @Generated(value = "com.sun.tools.internal.xjc.Driver", date = "2015-02-07T01:31:12+01:00", comments = "JAXB RI v2.2.4-2")
     public int getCharacterSetId() {
         return characterSetId;
     }
@@ -153,7 +137,6 @@ public class EncodingDefinitionType {
      * Sets the value of the characterSetId property.
      * 
      */
-    @Generated(value = "com.sun.tools.internal.xjc.Driver", date = "2015-02-07T01:31:12+01:00", comments = "JAXB RI v2.2.4-2")
     public void setCharacterSetId(int value) {
         this.characterSetId = value;
     }
@@ -166,7 +149,6 @@ public class EncodingDefinitionType {
      *     {@link Integer }
      *     
      */
-    @Generated(value = "com.sun.tools.internal.xjc.Driver", date = "2015-02-07T01:31:12+01:00", comments = "JAXB RI v2.2.4-2")
     public int getMaxBytesPerCharacter() {
         if (maxBytesPerCharacter == null) {
             return  1;
@@ -183,7 +165,6 @@ public class EncodingDefinitionType {
      *     {@link Integer }
      *     
      */
-    @Generated(value = "com.sun.tools.internal.xjc.Driver", date = "2015-02-07T01:31:12+01:00", comments = "JAXB RI v2.2.4-2")
     public void setMaxBytesPerCharacter(Integer value) {
         this.maxBytesPerCharacter = value;
     }
@@ -196,7 +177,6 @@ public class EncodingDefinitionType {
      *     {@link String }
      *     
      */
-    @Generated(value = "com.sun.tools.internal.xjc.Driver", date = "2015-02-07T01:31:12+01:00", comments = "JAXB RI v2.2.4-2")
     public String getEncodingDefinitionImplementation() {
         return encodingDefinitionImplementation;
     }
@@ -209,7 +189,6 @@ public class EncodingDefinitionType {
      *     {@link String }
      *     
      */
-    @Generated(value = "com.sun.tools.internal.xjc.Driver", date = "2015-02-07T01:31:12+01:00", comments = "JAXB RI v2.2.4-2")
     public void setEncodingDefinitionImplementation(String value) {
         this.encodingDefinitionImplementation = value;
     }
@@ -222,7 +201,6 @@ public class EncodingDefinitionType {
      *     {@link Boolean }
      *     
      */
-    @Generated(value = "com.sun.tools.internal.xjc.Driver", date = "2015-02-07T01:31:12+01:00", comments = "JAXB RI v2.2.4-2")
     public boolean isFirebirdOnly() {
         if (firebirdOnly == null) {
             return false;
@@ -239,7 +217,6 @@ public class EncodingDefinitionType {
      *     {@link Boolean }
      *     
      */
-    @Generated(value = "com.sun.tools.internal.xjc.Driver", date = "2015-02-07T01:31:12+01:00", comments = "JAXB RI v2.2.4-2")
     public void setFirebirdOnly(Boolean value) {
         this.firebirdOnly = value;
     }

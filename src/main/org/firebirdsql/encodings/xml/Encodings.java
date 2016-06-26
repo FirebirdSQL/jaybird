@@ -3,7 +3,6 @@ package org.firebirdsql.encodings.xml;
 
 import java.util.ArrayList;
 import java.util.List;
-import javax.annotation.Generated;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
@@ -34,10 +33,8 @@ import javax.xml.bind.annotation.XmlType;
     "encodingDefinition"
 })
 @XmlRootElement(name = "encodings")
-@Generated(value = "com.sun.tools.internal.xjc.Driver", date = "2015-02-07T01:31:12+01:00", comments = "JAXB RI v2.2.4-2")
 public class Encodings {
 
-    @Generated(value = "com.sun.tools.internal.xjc.Driver", date = "2015-02-07T01:31:12+01:00", comments = "JAXB RI v2.2.4-2")
     protected List<EncodingDefinitionType> encodingDefinition;
 
     /**
@@ -62,7 +59,6 @@ public class Encodings {
      * 
      * 
      */
-    @Generated(value = "com.sun.tools.internal.xjc.Driver", date = "2015-02-07T01:31:12+01:00", comments = "JAXB RI v2.2.4-2")
     public List<EncodingDefinitionType> getEncodingDefinition() {
         if (encodingDefinition == null) {
             encodingDefinition = new ArrayList<EncodingDefinitionType>();
