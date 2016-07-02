@@ -1,8 +1,5 @@
 output/
-build_15.bat
-build_16.bat
-build_17.bat
-build_18.bat
+build_*.bat
 .idea/
 build-local.properties
 classes/

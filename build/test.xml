@@ -23,7 +23,8 @@
                timeout="${junit.timeout}"
                jvm="${junit.jvm}">
 
-            <jvmarg value="${junit.jvm.options}"/>
+            <jvmarg line="${junit.jvm.options}"/>
+            <jvmarg line="${java.module.arg}"/>
             <sysproperty key="jbosstest.deploy.dir" file="${build.lib}"/>
             <sysproperty key="log4j.properties" file="${build.resources}/log4j.properties"/>
             <sysproperty key="test.db.dir" value="${test.db.dir}"/>
@@ -85,7 +86,8 @@
                timeout="${junit.timeout}"
                jvm="${junit.jvm}">
 
-            <jvmarg value="${junit.jvm.options}"/>
+            <jvmarg line="${junit.jvm.options}"/>
+            <jvmarg line="${java.module.arg}"/>
             <sysproperty key="jbosstest.deploy.dir" file="${build.lib}"/>
             <sysproperty key="log4j.properties" file="${build.resources}/log4j.properties"/>
             <sysproperty key="test.db.dir" value="${test.db.dir}"/>
@@ -154,7 +156,8 @@
                timeout="${junit.timeout}"
                jvm="${junit.jvm}">
 
-            <jvmarg value="${junit.jvm.options}"/>
+            <jvmarg line="${junit.jvm.options}"/>
+            <jvmarg line="${java.module.arg}"/>
             <sysproperty key="jbosstest.deploy.dir" file="${build.lib}"/>
             <sysproperty key="log4j.properties" file="${build.resources}/log4j.properties"/>
             <sysproperty key="test.db.dir" value="${test.db.dir}"/>
@@ -221,7 +224,8 @@
                timeout="${junit.timeout}"
                jvm="${junit.jvm}">
 
-            <jvmarg value="${junit.jvm.options}"/>
+            <jvmarg line="${junit.jvm.options}"/>
+            <jvmarg line="${java.module.arg}"/>
             <sysproperty key="jbosstest.deploy.dir" file="${build.lib}"/>
             <sysproperty key="log4j.properties" file="${build.resources}/log4j.properties"/>
             <sysproperty key="test.db.dir" value="${test.db.dir}"/>
@@ -272,7 +276,8 @@
                timeout="${junit.timeout}"
                jvm="${junit.jvm}">
 
-            <jvmarg value="${junit.jvm.options}"/>
+            <jvmarg line="${junit.jvm.options}"/>
+            <jvmarg line="${java.module.arg}"/>
             <sysproperty key="jbosstest.deploy.dir" file="${build.lib}"/>
             <sysproperty key="log4j.properties" file="${build.resources}/log4j.properties"/>
             <sysproperty key="test.db.dir" value="${test.db.dir}"/>
@@ -322,7 +327,8 @@
                timeout="${junit.timeout}"
                jvm="${junit.jvm}">
 
-            <jvmarg value="${junit.jvm.options}"/>
+            <jvmarg line="${junit.jvm.options}"/>
+            <j line="${java.module.arg}"/>
             <sysproperty key="jbosstest.deploy.dir" file="${build.lib}"/>
             <sysproperty key="log4j.properties" file="${build.resources}/log4j.properties"/>
             <sysproperty key="test.db.dir" value="${test.db.dir}"/>

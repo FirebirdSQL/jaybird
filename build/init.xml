@@ -1,6 +1,7 @@
 <?xml version="1.0"?>
 <project name="init">
     <target name="init">
+        <echo message="${ant.java.version}"/>
         <!-- External build properties
              All properties can be overridden by adding them to build-local.properties
         -->
@@ -19,7 +20,10 @@
             <equals arg1="${ant.java.version}" arg2="1.7"/>
         </condition>
         <condition property="maven.jdkversion" value="jdk17">
-            <equals arg1="${ant.java.version}" arg2="1.7"/>
+            <istrue value="${jdk1.7}"/>
+        </condition>
+        <condition property="javac.level" value="1.7">
+            <istrue value="${jdk1.7}"/>
         </condition>
 
         <!-- Java 8 specific properties -->
@@ -27,15 +31,37 @@
             <equals arg1="${ant.java.version}" arg2="1.8"/>
         </condition>
         <condition property="maven.jdkversion" value="jdk18">
-            <equals arg1="${ant.java.version}" arg2="1.8"/>
+            <istrue value="${jdk1.8}"/>
+        </condition>
+        <condition property="javac.level" value="1.8">
+            <istrue value="${jdk1.8}"/>
+        </condition>
+
+        <!-- Java 9 specific properties -->
+        <condition property="jdk9" value="true">
+            <equals arg1="${ant.java.version}" arg2="1.9"/>
+        </condition>
+        <condition property="maven.jdkversion" value="jdk9">
+            <istrue value="${jdk9}"/>
+        </condition>
+        <condition property="javac.level" value="9">
+            <istrue value="${jdk9}"/>
+        </condition>
+
+        <condition property="java.module.arg" value="-addmods java.xml.bind" else="">
+            <istrue value="${jdk9}"/>
         </condition>
 
         <condition property="jdbc.41" value="true">
-            <equals arg1="${ant.java.version}" arg2="1.7"/>
+            <istrue value="${jdk1.7}"/>
         </condition>
 
         <condition property="jdbc.42" value="true">
-            <equals arg1="${ant.java.version}" arg2="1.8"/>
+            <or>
+                <istrue value="${jdk1.8}"/>
+                <!-- temp fix TODO remove -->
+                <istrue value="${jdk9}"/>
+            </or>
         </condition>
 
         <property name="Name" value="Jaybird"/>
@@ -52,10 +78,13 @@
         <!-- Manifest version info -->
         <property name="specification.title" value="JSR 221 JDBC API"/>
         <condition property="specification.version" value="4.1">
-            <isset property="jdk1.7"/>
+            <istrue value="${jdk1.7}"/>
         </condition>
         <condition property="specification.version" value="4.2">
-            <isset property="jdk1.8"/>
+            <istrue value="${jdk1.8}"/>
+        </condition>
+        <condition property="specification.version" value="4.3">
+            <istrue value="${jdk9}"/>
         </condition>
         <property name="specification.vendor" value="Oracle Corporation"/>
 
@@ -145,7 +174,7 @@
         <property name="junit.timeout" value="600000"/>
         <!-- 10 minutes -->
         <property name="junit.jvm" value="java"/>
-        <property name="junit.jvm.options" value="-Ddummy"/>
+        <property name="junit.jvm.options" value=""/>
 
         <property name="junit.formatter.type" value="xml"/>
         <property name="junit.formatter.usefile" value="true"/>

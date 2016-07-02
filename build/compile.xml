@@ -16,14 +16,15 @@
         <mkdir dir="${build.examples}"/>
         <javac srcdir="${source.examples}"
                destdir="${build.examples}"
-               target="${ant.java.version}"
-               source="${ant.java.version}"
+               target="${javac.level}"
+               source="${javac.level}"
                debug="on"
                deprecation="on"
                optimize="on"
                includes="*"
                excludes="**/temp*"
                 >
+            <compilerarg line="${java.module.arg}"/>
             <classpath refid="javac.examples.classpath"/>
         </javac>
     </target>
@@ -40,7 +41,7 @@
         </path>
     </target>
 
-    <target name="set-openoffice-src-14" unless="jdk1.3">
+    <target name="set-openoffice-src-14">
         <echo message="OpenOffice support"/>
         <path id="source.java.openoffice">
             <pathelement path="${source.openoffice}"/>
@@ -64,14 +65,15 @@
         </copy>
 
         <javac destdir="${build.classes}"
-               target="${ant.java.version}"
-               source="${ant.java.version}"
+               target="${javac.level}"
+               source="${javac.level}"
                debug="on"
                deprecation="on"
                optimize="on"
                includes="org/**"
                excludes="**/temp*"
                 >
+            <compilerarg line="${java.module.arg}"/>
             <classpath refid="javac.driver.classpath"/>
             <src path="${source.java}"/>
             <src path="${source.jna-client}"/>
@@ -95,14 +97,15 @@
         <mkdir dir="${build.test}"/>
         <javac
                 destdir="${build.test}"
-                target="${ant.java.version}"
-                source="${ant.java.version}"
+                target="${javac.level}"
+                source="${javac.level}"
                 debug="on"
                 deprecation="on"
                 optimize="on"
                 includes="org/**"
                 excludes="**/temp* **/hibernate/*"
                 >
+            <compilerarg line="${java.module.arg}"/>
             <classpath refid="javac.test.classpath"/>
             <src path="${source.test}"/>
             <src path="${source.test.jna}"/>
