@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
@@ -31,9 +29,12 @@ import java.util.List;
 import java.util.Map;
 
 import org.firebirdsql.jdbc.MetaDataValidator.MetaDataInfo;
+import org.junit.Test;
 
 import static org.firebirdsql.common.JdbcResourceHelper.*;
 import static org.firebirdsql.util.FirebirdSupportInfo.supportInfoFor;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 
 /**
  * Tests for {@link FBDatabaseMetaData} for procedure columns related metadata.
@@ -45,8 +46,8 @@ public class TestFBDatabaseMetaDataProcedureColumns extends FBMetaDataTestBase<T
     // TODO This test will need to be expanded with version dependent features 
     // (eg TYPE OF <domain> (2.1), TYPE OF COLUMN <table.column> (2.5), NOT NULL (2.1), DEFAULT <value> (2.0)
 
-    public TestFBDatabaseMetaDataProcedureColumns(String name) {
-        super(name, ProcedureColumnMetaData.class);
+    public TestFBDatabaseMetaDataProcedureColumns() {
+        super(ProcedureColumnMetaData.class);
     }
     
     public static final String CREATE_NORMAL_PROC_NO_ARG_NO_RETURN =
@@ -94,7 +95,7 @@ public class TestFBDatabaseMetaDataProcedureColumns extends FBMetaDataTestBase<T
 
     @Override
     protected List<String> getCreateStatements() {
-        List<String> statements = new ArrayList<String>();
+        List<String> statements = new ArrayList<>();
         statements.addAll(Arrays.asList(
                 CREATE_NORMAL_PROC_NO_ARG_NO_RETURN,
                 CREATE_NORMAL_PROC_NO_RETURN,
@@ -110,32 +111,29 @@ public class TestFBDatabaseMetaDataProcedureColumns extends FBMetaDataTestBase<T
      * Tests the ordinal positions and types for the metadata columns of
      * getProcedureColumns().
      */
+    @Test
     public void testProcedureColumnsMetaDataColumns() throws Exception {
-        ResultSet procedureColumns = dbmd.getProcedureColumns(null, null, null, null);
-        try {
+        try (ResultSet procedureColumns = dbmd.getProcedureColumns(null, null, "doesnotexist", "%")) {
             validateResultSetColumns(procedureColumns);
-        } finally {
-            closeQuietly(procedureColumns);
         }
     }
     
     /**
      * Tests getProcedureColumn with proc_no_arg_no_return, expecting empty ResultSet.
      */
+    @Test
     public void testProcedureColumns_noArg_noReturn() throws Exception {
-        ResultSet procedureColumns = dbmd.getProcedureColumns(null, null, "proc_no_arg_no_return", null);
-        try {
+        try (ResultSet procedureColumns = dbmd.getProcedureColumns(null, null, "proc_no_arg_no_return", "%")) {
             assertFalse("Expected empty resultset for procedure with arguments or return values", procedureColumns.next());
-        } finally {
-            closeQuietly(procedureColumns);
         }
     }
     
     /**
-     * Tests getProcedureColumn with normal_proc_no_return using columnPattern null, expecting resultset with all defined rows.
+     * Tests getProcedureColumn with normal_proc_no_return using all columnPattern, expecting resultset with all defined rows.
      */
-    public void testProcedureColumns_normalProc_noReturn_columnNull() throws Exception {
-        List<Map<ProcedureColumnMetaData, Object>> expectedColumns = new ArrayList<Map<ProcedureColumnMetaData, Object>>(2);
+    @Test
+    public void testProcedureColumns_normalProc_noReturn_allPattern() throws Exception {
+        List<Map<ProcedureColumnMetaData, Object>> expectedColumns = new ArrayList<>(2);
         Map<ProcedureColumnMetaData, Object> column = getDefaultValueValidationRules();
         column.put(ProcedureColumnMetaData.PROCEDURE_NAME, "NORMAL_PROC_NO_RETURN");
         column.put(ProcedureColumnMetaData.COLUMN_NAME, "PARAM1");
@@ -161,15 +159,16 @@ public class TestFBDatabaseMetaDataProcedureColumns extends FBMetaDataTestBase<T
         column.put(ProcedureColumnMetaData.SPECIFIC_NAME, column.get(ProcedureColumnMetaData.PROCEDURE_NAME));
         expectedColumns.add(column);
         
-        ResultSet procedureColumns = dbmd.getProcedureColumns(null, null, "normal_proc_no_return", null);
+        ResultSet procedureColumns = dbmd.getProcedureColumns(null, null, "NORMAL_PROC_NO_RETURN", "%");
         validate(procedureColumns, expectedColumns);        
     }
-    
+
     /**
      * Tests getProcedureColumn with normal_proc_with_return using columnPattern all (%) string, expecting resultset with all defined rows.
      */
+    @Test
     public void testProcedureColumns_normalProc_withReturn_allPattern() throws Exception {
-        List<Map<ProcedureColumnMetaData, Object>> expectedColumns = new ArrayList<Map<ProcedureColumnMetaData, Object>>(7);
+        List<Map<ProcedureColumnMetaData, Object>> expectedColumns = new ArrayList<>(7);
         Map<ProcedureColumnMetaData, Object> column = getDefaultValueValidationRules();
         // TODO Having result columns first might be against JDBC spec
         // TODO Describing result columns as procedureColumnOut might be against JDBC spec
@@ -256,15 +255,16 @@ public class TestFBDatabaseMetaDataProcedureColumns extends FBMetaDataTestBase<T
         column.put(ProcedureColumnMetaData.SPECIFIC_NAME, column.get(ProcedureColumnMetaData.PROCEDURE_NAME));
         expectedColumns.add(column);
         
-        ResultSet procedureColumns = dbmd.getProcedureColumns(null, null, "normal_proc_with_return", "%");
+        ResultSet procedureColumns = dbmd.getProcedureColumns(null, null, "NORMAL_PROC_WITH_RETURN", "%");
         validate(procedureColumns, expectedColumns); 
     }
     
     /**
-     * Tests getProcedureColumn with quoted_proc_no_return using columnPattern null, expecting resultset with all defined rows.
+     * Tests getProcedureColumn with quoted_proc_no_return using all columnPattern, expecting result set with all defined rows.
      */
-    public void testProcedureColumns_quotedProc_noReturn_columnNull() throws Exception {
-        List<Map<ProcedureColumnMetaData, Object>> expectedColumns = new ArrayList<Map<ProcedureColumnMetaData, Object>>(1);
+    @Test
+    public void testProcedureColumns_quotedProc_noReturn_allPattern() throws Exception {
+        List<Map<ProcedureColumnMetaData, Object>> expectedColumns = new ArrayList<>(1);
         Map<ProcedureColumnMetaData, Object> column = getDefaultValueValidationRules();
         column.put(ProcedureColumnMetaData.PROCEDURE_NAME, "quoted_proc_no_return");
         column.put(ProcedureColumnMetaData.COLUMN_NAME, "PARAM1");
@@ -278,7 +278,7 @@ public class TestFBDatabaseMetaDataProcedureColumns extends FBMetaDataTestBase<T
         column.put(ProcedureColumnMetaData.SPECIFIC_NAME, column.get(ProcedureColumnMetaData.PROCEDURE_NAME));
         expectedColumns.add(column);
         
-        ResultSet procedureColumns = dbmd.getProcedureColumns(null, null, "\"quoted_proc_no_return\"", null);
+        ResultSet procedureColumns = dbmd.getProcedureColumns(null, null, "quoted_proc_no_return", "%");
         validate(procedureColumns, expectedColumns);        
     }
     
@@ -303,7 +303,7 @@ public class TestFBDatabaseMetaDataProcedureColumns extends FBMetaDataTestBase<T
     
     private static final Map<ProcedureColumnMetaData, Object> DEFAULT_COLUMN_VALUES;
     static {
-        Map<ProcedureColumnMetaData, Object> defaults = new EnumMap<ProcedureColumnMetaData, Object>(ProcedureColumnMetaData.class);
+        Map<ProcedureColumnMetaData, Object> defaults = new EnumMap<>(ProcedureColumnMetaData.class);
         defaults.put(ProcedureColumnMetaData.PROCEDURE_CAT, null);
         defaults.put(ProcedureColumnMetaData.PROCEDURE_SCHEM, null);
         defaults.put(ProcedureColumnMetaData.SCALE, null);
@@ -321,7 +321,7 @@ public class TestFBDatabaseMetaDataProcedureColumns extends FBMetaDataTestBase<T
 
     @Override
     protected Map<ProcedureColumnMetaData, Object> getDefaultValueValidationRules() throws Exception {
-        return new EnumMap<ProcedureColumnMetaData, Object>(DEFAULT_COLUMN_VALUES);
+        return new EnumMap<>(DEFAULT_COLUMN_VALUES);
     }
     
     /**
@@ -353,7 +353,7 @@ public class TestFBDatabaseMetaDataProcedureColumns extends FBMetaDataTestBase<T
         private final int position;
         private final Class<?> columnClass;
 
-        private ProcedureColumnMetaData(int position, Class<?> columnClass) {
+        ProcedureColumnMetaData(int position, Class<?> columnClass) {
             this.position = position;
             this.columnClass = columnClass;
         }
@@ -367,7 +367,7 @@ public class TestFBDatabaseMetaDataProcedureColumns extends FBMetaDataTestBase<T
         }
 
         public MetaDataValidator<?> getValidator() {
-            return new MetaDataValidator<ProcedureColumnMetaData>(this);
+            return new MetaDataValidator<>(this);
         }
     }
 }

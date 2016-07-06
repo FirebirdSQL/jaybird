@@ -1,7 +1,5 @@
 /*
- * $Id$
- * 
- * Firebird Open Source J2ee connector - jdbc driver
+ * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -14,11 +12,16 @@
  * This file was created by members of the firebird development team.
  * All individual contributions remain the Copyright (C) of those
  * individuals.  Contributors to this file are either listed here or
- * can be obtained from a CVS history command.
+ * can be obtained from a source control history command.
  *
  * All rights reserved.
  */
 package org.firebirdsql.jdbc;
+
+import org.firebirdsql.common.FBJUnit4TestBase;
+import org.firebirdsql.jdbc.MetaDataValidator.MetaDataInfo;
+import org.junit.After;
+import org.junit.Before;
 
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
@@ -29,11 +32,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.firebirdsql.common.FBTestBase;
-import org.firebirdsql.jdbc.MetaDataValidator.MetaDataInfo;
-
-import static org.firebirdsql.common.DdlHelper.*;
-import static org.firebirdsql.common.JdbcResourceHelper.*;
+import static org.firebirdsql.common.DdlHelper.executeCreateTable;
+import static org.firebirdsql.common.FBTestProperties.getConnectionViaDriverManager;
+import static org.firebirdsql.common.JdbcResourceHelper.closeQuietly;
 
 /**
  * Base test class for testing and validating the various DatabaseMetaData
@@ -44,29 +45,26 @@ import static org.firebirdsql.common.JdbcResourceHelper.*;
  * @param <T>
  *            Enum containing the metadata columns to be validated.
  */
-public abstract class FBMetaDataTestBase<T extends Enum<T> & MetaDataInfo> extends FBTestBase {
+public abstract class FBMetaDataTestBase<T extends Enum<T> & MetaDataInfo> extends FBJUnit4TestBase {
 
     private Class<T> metaDataInfoClass;
 
     /**
      * Constructor for FBMetaDataTestBase.
      * 
-     * @param name
-     *            Name of the test (provided by JUnit)
      * @param metaDataInfoClass
      *            Class of the enum containing the metadata columns
      */
-    protected FBMetaDataTestBase(String name, Class<T> metaDataInfoClass) {
-        super(name);
+    protected FBMetaDataTestBase(Class<T> metaDataInfoClass) {
         this.metaDataInfoClass = metaDataInfoClass;
     }
 
     protected Connection con;
     protected DatabaseMetaData dbmd;
 
-    protected final void setUp() throws Exception {
+    @Before
+    public final void setUp() throws Exception {
         try {
-            super.setUp();
             con = getConnectionViaDriverManager();
             for (String createStatement : getCreateStatements()) {
                 executeCreateTable(con, createStatement);
@@ -80,12 +78,12 @@ public abstract class FBMetaDataTestBase<T extends Enum<T> & MetaDataInfo> exten
         }
     }
 
-    protected final void tearDown() throws Exception {
+    @After
+    public final void tearDown() throws Exception {
         try {
             additionalTeardown();
         } finally {
             closeQuietly(con);
-            super.tearDown();
         }
     }
 

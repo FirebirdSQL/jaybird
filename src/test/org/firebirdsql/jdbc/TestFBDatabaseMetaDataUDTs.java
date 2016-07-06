@@ -1,7 +1,5 @@
 /*
- * $Id$
- * 
- * Firebird Open Source J2ee connector - jdbc driver
+ * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -14,20 +12,19 @@
  * This file was created by members of the firebird development team.
  * All individual contributions remain the Copyright (C) of those
  * individuals.  Contributors to this file are either listed here or
- * can be obtained from a CVS history command.
+ * can be obtained from a source control history command.
  *
  * All rights reserved.
  */
 package org.firebirdsql.jdbc;
 
+import org.firebirdsql.jdbc.MetaDataValidator.MetaDataInfo;
+import org.junit.Test;
+
 import java.sql.ResultSet;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-
-import org.firebirdsql.jdbc.MetaDataValidator.MetaDataInfo;
-
-import static org.firebirdsql.common.JdbcResourceHelper.*;
 
 /**
  * Tests for {@link FBDatabaseMetaData} for UDT related metadata.
@@ -36,8 +33,8 @@ import static org.firebirdsql.common.JdbcResourceHelper.*;
  */
 public class TestFBDatabaseMetaDataUDTs extends FBMetaDataTestBase<TestFBDatabaseMetaDataUDTs.UDTMetaData> {
 
-    public TestFBDatabaseMetaDataUDTs(String name) {
-        super(name, UDTMetaData.class);
+    public TestFBDatabaseMetaDataUDTs() {
+        super(UDTMetaData.class);
     }
 
     @Override
@@ -53,12 +50,10 @@ public class TestFBDatabaseMetaDataUDTs extends FBMetaDataTestBase<TestFBDatabas
     /**
      * Tests the ordinal positions and types for the metadata columns of getUDTs().
      */
+    @Test
     public void testUDTMetaDataColumns() throws Exception {
-        ResultSet udts = dbmd.getUDTs(null, null, null, null);
-        try {
+        try (ResultSet udts = dbmd.getUDTs(null, null, null, null)) {
             validateResultSetColumns(udts);
-        } finally {
-            closeQuietly(udts);
         }
     }
     
@@ -80,7 +75,7 @@ public class TestFBDatabaseMetaDataUDTs extends FBMetaDataTestBase<TestFBDatabas
         private final int position;
         private final Class<?> columnClass;
 
-        private UDTMetaData(int position, Class<?> columnClass) {
+        UDTMetaData(int position, Class<?> columnClass) {
             this.position = position;
             this.columnClass = columnClass;
         }
@@ -94,7 +89,7 @@ public class TestFBDatabaseMetaDataUDTs extends FBMetaDataTestBase<TestFBDatabas
         }
 
         public MetaDataValidator<?> getValidator() {
-            return new MetaDataValidator<UDTMetaData>(this);
+            return new MetaDataValidator<>(this);
         }
         
     }

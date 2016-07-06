@@ -169,8 +169,11 @@ public class FBConnection implements FirebirdConnection, Synchronizable {
         synchronized (getSynchronizationObject()) {
             //close any prepared statements we may have executed.
             if (this.mc != mc && metaData != null) {
-                metaData.close();
-                metaData = null;
+                try {
+                    metaData.close();
+                } finally {
+                    metaData = null;
+                }
             }
             this.mc = mc;
         }
@@ -513,7 +516,9 @@ public class FBConnection implements FirebirdConnection, Synchronizable {
         synchronized (getSynchronizationObject()) {
             try {
                 freeStatements();
+                if (metaData != null) metaData.close();
             } finally {
+                metaData = null;
                 if (mc != null) {
                     // leave managed transactions alone, they are normally
                     // committed after the Connection handle is closed.

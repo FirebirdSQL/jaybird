@@ -146,7 +146,7 @@ public class TestGeneratedKeysQuery {
         context.checking(new Expectations() {
             {
                 // Metadata for table in query will be retrieved
-                oneOf(dbMetadata).getColumns(null, null, "GENERATED_KEYS_TBL", null);
+                oneOf(dbMetadata).getColumns(null, null, "GENERATED\\_KEYS\\_TBL", null);
                 will(returnValue(columnRs));
                 // We want to return three columns, so for next() three return true, fourth returns false
                 exactly(4).of(columnRs).next();
@@ -283,7 +283,7 @@ public class TestGeneratedKeysQuery {
         context.checking(new Expectations() {
             {
                 // Metadata for table in query will be retrieved
-                oneOf(dbMetadata).getColumns(null, null, "GENERATED_KEYS_TBL", null);
+                oneOf(dbMetadata).getColumns(null, null, "GENERATED\\_KEYS\\_TBL", null);
                 will(returnValue(columnRs));
                 // We want to return three columns, so for next() three return true, fourth returns false
                 exactly(4).of(columnRs).next();
@@ -341,7 +341,7 @@ public class TestGeneratedKeysQuery {
         context.checking(new Expectations() {
             {
                 // Metadata for table in query will be retrieved
-                oneOf(dbMetadata).getColumns(null, null, "GENERATED_KEYS_TBL", null);
+                oneOf(dbMetadata).getColumns(null, null, "GENERATED\\_KEYS\\_TBL", null);
                 will(returnValue(columnRs));
                 // We want to return three columns, so for next() three return true, fourth returns false
                 exactly(4).of(columnRs).next();
@@ -399,7 +399,7 @@ public class TestGeneratedKeysQuery {
         context.checking(new Expectations() {
             {
                 // Metadata for table in query will be retrieved
-                oneOf(dbMetadata).getColumns(null, null, "GENERATED_KEYS_TBL", null);
+                oneOf(dbMetadata).getColumns(null, null, "GENERATED\\_KEYS\\_TBL", null);
                 will(returnValue(columnRs));
                 // We want to return three columns, so for next() three return true, fourth returns false
                 exactly(4).of(columnRs).next();

@@ -887,9 +887,10 @@ public class TestFBResultSet extends FBJUnit4TestBase {
 
         try (Statement stmt = connection.createStatement(ResultSet.TYPE_SCROLL_SENSITIVE, ResultSet.CONCUR_UPDATABLE);
              ResultSet rs = stmt.executeQuery("SELECT * FROM test_table")) {
-            ResultSet bestRowId = connection.getMetaData().getBestRowIdentifier(null, null, "test_table", 1, false);
-            assertTrue("Should have row ID", bestRowId.next());
-            bestRowId.close();
+            try (ResultSet bestRowId = connection.getMetaData().getBestRowIdentifier(null, null, "TEST_TABLE", 1,
+                    false)) {
+                assertTrue("Should have row ID", bestRowId.next());
+            }
 
             rs.next();
         } catch (SQLException ex) {

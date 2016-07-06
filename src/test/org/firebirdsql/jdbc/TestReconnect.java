@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source J2ee connector - jdbc driver
+ * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -12,7 +12,7 @@
  * This file was created by members of the firebird development team.
  * All individual contributions remain the Copyright (C) of those
  * individuals.  Contributors to this file are either listed here or
- * can be obtained from a CVS history command.
+ * can be obtained from a source control history command.
  *
  * All rights reserved.
  */
@@ -20,24 +20,18 @@ package org.firebirdsql.jdbc;
 
 import org.firebirdsql.common.FBTestBase;
 
-import java.sql.Connection;
-import java.sql.DatabaseMetaData;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.ResultSetMetaData;
-import java.sql.SQLException;
-import java.sql.Statement;
+import java.sql.*;
 import java.util.Random;
 
 /**
  * Describe class <code>TestReconnect</code> here.
- * 
+ *
  * @author Stephan Perktold
  * @version 1.0
  */
 public class TestReconnect extends FBTestBase {
 
-    private static final int TABLE_COUNT	= 10;
+    private static final int TABLE_COUNT = 10;
 
     private Connection con;
 
@@ -45,21 +39,18 @@ public class TestReconnect extends FBTestBase {
         super(testName);
     }
 
-    private static String getTableName(int no)
-    {
+    private static String getTableName(int no) {
         return "TEST" + no;
     }
 
-    private void execute(String sql) throws SQLException
-    {
+    private void execute(String sql) throws SQLException {
         Statement stmt = con.createStatement();
         try {
             stmt.executeUpdate(sql);
             Statement stmt2 = stmt;
             stmt = null;
             stmt2.close();
-        }
-        catch (SQLException e) {
+        } catch (SQLException e) {
             if (log != null) {
                 log.info("Error executing:");
                 log.info(sql);
@@ -67,21 +58,18 @@ public class TestReconnect extends FBTestBase {
             if (stmt != null) {
                 try {
                     stmt.close();
-                }
-                catch (Exception ignore) {
+                } catch (Exception ignore) {
                 }
             }
             throw e;
         }
     }
 
-    private void execute(String sql, boolean retryOnError) throws SQLException
-    {
+    private void execute(String sql, boolean retryOnError) throws SQLException {
         if (retryOnError) {
             try {
                 execute(sql);
-            }
-            catch (SQLException e) {
+            } catch (SQLException e) {
                 // Workaround for the well-known "object in use" error
                 // (see release notes of Firebird 1.5)
                 if (log != null) {
@@ -141,13 +129,11 @@ public class TestReconnect extends FBTestBase {
                 //"Suspend Checker Thread" prio=10 tid=0x8f2d80 nid=0x1d8 runnable
                 // ---------
             }
-        }
-        else
+        } else
             execute(sql);
     }
 
-    private boolean tableExists(String tableName) throws SQLException
-    {
+    private boolean tableExists(String tableName) throws SQLException {
         boolean exists = false;
         ResultSet rs = con.getMetaData().getTables(null, null, tableName, null);
         if (rs != null) {
@@ -157,8 +143,7 @@ public class TestReconnect extends FBTestBase {
         return exists;
     }
 
-    private void dropTestTables() throws SQLException
-    {
+    private void dropTestTables() throws SQLException {
         if (log != null)
             log.info("Dropping test tables ...");
         if (!con.getAutoCommit())
@@ -170,8 +155,7 @@ public class TestReconnect extends FBTestBase {
         }
     }
 
-    private void createTestTables() throws SQLException
-    {
+    private void createTestTables() throws SQLException {
         if (log != null)
             log.info("Creating test tables ...");
         if (!con.getAutoCommit())
@@ -183,11 +167,11 @@ public class TestReconnect extends FBTestBase {
             sql.append("CREATE TABLE ");
             sql.append(table);
             sql.append(" (\n" +
-                       "ID INTEGER NOT NULL,\n" +
-                       "NR INTEGER NOT NULL,\n" +
-                       "X1 VARCHAR(50),\n" +
-                       "X2 VARCHAR(50),\n" +
-                       "X3 VARCHAR(50),\n");
+                    "ID INTEGER NOT NULL,\n" +
+                    "NR INTEGER NOT NULL,\n" +
+                    "X1 VARCHAR(50),\n" +
+                    "X2 VARCHAR(50),\n" +
+                    "X3 VARCHAR(50),\n");
             if (i > 1) {
                 sql.append("ID_");
                 sql.append(getTableName(i - 1));
@@ -216,8 +200,7 @@ public class TestReconnect extends FBTestBase {
         }
     }
 
-    private void alterForeignKeys(boolean cascade) throws SQLException
-    {
+    private void alterForeignKeys(boolean cascade) throws SQLException {
         if (log != null)
             log.info("Altering foreign keys ...");
         if (!con.getAutoCommit())
@@ -248,8 +231,7 @@ public class TestReconnect extends FBTestBase {
         }
     }
 
-    private void populateTestTables(int rowCount) throws SQLException
-    {
+    private void populateTestTables(int rowCount) throws SQLException {
         if (con.getAutoCommit())
             con.setAutoCommit(false);
         if (log != null)
@@ -285,8 +267,7 @@ public class TestReconnect extends FBTestBase {
         }
     }
 
-    private void readResult(String title, ResultSet rs, boolean print) throws SQLException
-    {
+    private void readResult(String title, ResultSet rs, boolean print) throws SQLException {
         ResultSetMetaData md = rs.getMetaData();
         int cols = md.getColumnCount();
         if (print) {
@@ -309,11 +290,11 @@ public class TestReconnect extends FBTestBase {
             StringBuilder sb = new StringBuilder();
             for (int i = 1; i <= cols; i++) {
                 String value = rs.getString(i);
-                        
+
                 if (i > 1)
                     sb.append('\t');
                 sb.append(value);
-                        
+
             }
             if (log != null)
                 log.info(sb);
@@ -321,8 +302,7 @@ public class TestReconnect extends FBTestBase {
         rs.close();
     }
 
-    private void readMetaData() throws SQLException
-    {
+    private void readMetaData() throws SQLException {
         if (log != null)
             log.info("Reading meta data ...");
         DatabaseMetaData md = con.getMetaData();
@@ -337,15 +317,13 @@ public class TestReconnect extends FBTestBase {
         }
     }
 
-    private void openConnection() throws SQLException
-    {
+    private void openConnection() throws SQLException {
         con = this.getConnectionViaDriverManager();
         con.setAutoCommit(true);
         con.setTransactionIsolation(Connection.TRANSACTION_READ_COMMITTED);
     }
 
-    public void testReconnect() throws Exception
-    {
+    public void testReconnect() throws Exception {
         try {
             openConnection();
             dropTestTables();
@@ -361,14 +339,12 @@ public class TestReconnect extends FBTestBase {
             Connection con2 = con;
             con = null;
             con2.close();
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             if (con != null) {
                 try {
                     if (!con.isClosed())
                         con.close();
-                }
-                catch (Exception ignore) {
+                } catch (Exception ignore) {
                 }
             }
             throw e;

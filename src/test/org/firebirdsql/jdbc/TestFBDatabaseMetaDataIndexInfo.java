@@ -1,7 +1,5 @@
 /*
- * $Id$
- * 
- * Firebird Open Source J2ee connector - jdbc driver
+ * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -14,7 +12,7 @@
  * This file was created by members of the firebird development team.
  * All individual contributions remain the Copyright (C) of those
  * individuals.  Contributors to this file are either listed here or
- * can be obtained from a CVS history command.
+ * can be obtained from a source control history command.
  *
  * All rights reserved.
  */
@@ -30,8 +28,10 @@ import java.util.List;
 import java.util.Map;
 
 import org.firebirdsql.jdbc.MetaDataValidator.MetaDataInfo;
+import org.junit.Test;
 
 import static org.firebirdsql.common.JdbcResourceHelper.*;
+import static org.junit.Assert.assertEquals;
 
 /**
  * Tests for {@link FBDatabaseMetaData} for index info related metadata.
@@ -40,8 +40,8 @@ import static org.firebirdsql.common.JdbcResourceHelper.*;
  */
 public class TestFBDatabaseMetaDataIndexInfo extends FBMetaDataTestBase<TestFBDatabaseMetaDataIndexInfo.IndexInfoMetaData> {
     
-    public TestFBDatabaseMetaDataIndexInfo(String name) {
-        super(name, IndexInfoMetaData.class);
+    public TestFBDatabaseMetaDataIndexInfo() {
+        super(IndexInfoMetaData.class);
     }
     
     public static final String CREATE_INDEX_TEST_TABLE_1 =
@@ -101,12 +101,10 @@ public class TestFBDatabaseMetaDataIndexInfo extends FBMetaDataTestBase<TestFBDa
      * Tests the ordinal positions and types for the metadata columns of
      * getIndexInfo().
      */
+    @Test
     public void testIndexInfoMetaDataColumns() throws Exception {
-        ResultSet indexInfo = dbmd.getIndexInfo(null, null, null, false, true);
-        try {
+        try (ResultSet indexInfo = dbmd.getIndexInfo(null, null, "doesnotexist", false, true)) {
             validateResultSetColumns(indexInfo);
-        } finally {
-            closeQuietly(indexInfo);
         }
     }
     
@@ -117,8 +115,9 @@ public class TestFBDatabaseMetaDataIndexInfo extends FBMetaDataTestBase<TestFBDa
      * Secondary: uses lowercase name of the table and approximate false
      * </p>
      */
+    @Test
     public void testIndexInfo_table1_all() throws Exception {
-        List<Map<IndexInfoMetaData, Object>> expectedIndexInfo = new ArrayList<Map<IndexInfoMetaData, Object>>(5);
+        List<Map<IndexInfoMetaData, Object>> expectedIndexInfo = new ArrayList<>(5);
         String tableName = "INDEX_TEST_TABLE_1";
         expectedIndexInfo.add(createRule(tableName, true, "CMP_IDX_TEST_TABLE_1", "(UPPER(column1))", 1, true));
         expectedIndexInfo.add(createRule(tableName, true, "IDX_ASC_IDX_TBL_1_COLUMN2", "COLUMN2", 1, true));
@@ -126,7 +125,7 @@ public class TestFBDatabaseMetaDataIndexInfo extends FBMetaDataTestBase<TestFBDa
         expectedIndexInfo.add(createRule(tableName, false, "UQ_COMP_IDX_TBL1", "(column2 + column3)", 1, true));
         expectedIndexInfo.add(createRule(tableName, false, "UQ_IDX_TEST_1_COLUMN3", "COLUMN3", 1, true));
         
-        ResultSet indexInfo = dbmd.getIndexInfo(null, null, "index_test_table_1", false, false);
+        ResultSet indexInfo = dbmd.getIndexInfo(null, null, "INDEX_TEST_TABLE_1", false, false);
         validate(indexInfo, expectedIndexInfo);
     }
     
@@ -136,8 +135,9 @@ public class TestFBDatabaseMetaDataIndexInfo extends FBMetaDataTestBase<TestFBDa
      * Secondary: uses uppercase name of the table and approximate true
      * </p>
      */
+    @Test
     public void testIndexInfo_table1_unique() throws Exception {
-        List<Map<IndexInfoMetaData, Object>> expectedIndexInfo = new ArrayList<Map<IndexInfoMetaData, Object>>(3);
+        List<Map<IndexInfoMetaData, Object>> expectedIndexInfo = new ArrayList<>(3);
         String tableName = "INDEX_TEST_TABLE_1";
         expectedIndexInfo.add(createRule(tableName, false, "PK_IDX_TEST_1_ID", "ID", 1, true));
         expectedIndexInfo.add(createRule(tableName, false, "UQ_COMP_IDX_TBL1", "(column2 + column3)", 1, true));
@@ -154,8 +154,9 @@ public class TestFBDatabaseMetaDataIndexInfo extends FBMetaDataTestBase<TestFBDa
      * Secondary: uses uppercase name of the table and approximate true
      * </p>
      */
+    @Test
     public void testIndexInfo_table2_all() throws Exception {
-        List<Map<IndexInfoMetaData, Object>> expectedIndexInfo = new ArrayList<Map<IndexInfoMetaData, Object>>(8);
+        List<Map<IndexInfoMetaData, Object>> expectedIndexInfo = new ArrayList<>(8);
         String tableName = "INDEX_TEST_TABLE_2";
         expectedIndexInfo.add(createRule(tableName, true, "CMP_IDX_DESC_TEST_TABLE2", "(UPPER(column1))", 1, false));
         expectedIndexInfo.add(createRule(tableName, true, "FK_IDX_TEST_2_COLUMN2_TEST_1", "COLUMN2", 1, true));
@@ -177,14 +178,15 @@ public class TestFBDatabaseMetaDataIndexInfo extends FBMetaDataTestBase<TestFBDa
      * Secondary: uses lowercase name of the table and approximate false
      * </p>
      */
+    @Test
     public void testIndexInfo_table2_unique() throws Exception {
-        List<Map<IndexInfoMetaData, Object>> expectedIndexInfo = new ArrayList<Map<IndexInfoMetaData, Object>>(8);
+        List<Map<IndexInfoMetaData, Object>> expectedIndexInfo = new ArrayList<>(8);
         String tableName = "INDEX_TEST_TABLE_2";
         expectedIndexInfo.add(createRule(tableName, false, "PK_IDX_TEST_2_ID", "ID", 1, true));
         expectedIndexInfo.add(createRule(tableName, false, "UQ_DESC_IDX_TBL2_COL3_COL2", "COLUMN3", 1, false));
         expectedIndexInfo.add(createRule(tableName, false, "UQ_DESC_IDX_TBL2_COL3_COL2", "COLUMN2", 2, false));
         
-        ResultSet indexInfo = dbmd.getIndexInfo(null, null, "index_test_table_2", true, false);
+        ResultSet indexInfo = dbmd.getIndexInfo(null, null, "INDEX_TEST_TABLE_2", true, false);
         validate(indexInfo, expectedIndexInfo);
     }
     
@@ -201,6 +203,7 @@ public class TestFBDatabaseMetaDataIndexInfo extends FBMetaDataTestBase<TestFBDa
                 }
                 columnCount++;
             }
+            assertEquals("Unexpected number of columns", expectedIndexInfo.size(), columnCount);
         } finally {
             closeQuietly(indexInfo);
         }
@@ -220,7 +223,7 @@ public class TestFBDatabaseMetaDataIndexInfo extends FBMetaDataTestBase<TestFBDa
     
     private static final Map<IndexInfoMetaData, Object> DEFAULT_COLUMN_VALUES;
     static {
-        Map<IndexInfoMetaData, Object> defaults = new EnumMap<IndexInfoMetaData, Object>(IndexInfoMetaData.class);
+        Map<IndexInfoMetaData, Object> defaults = new EnumMap<>(IndexInfoMetaData.class);
         defaults.put(IndexInfoMetaData.TABLE_CAT, null);
         defaults.put(IndexInfoMetaData.TABLE_SCHEM, null);
         defaults.put(IndexInfoMetaData.INDEX_QUALIFIER, null);
@@ -233,7 +236,7 @@ public class TestFBDatabaseMetaDataIndexInfo extends FBMetaDataTestBase<TestFBDa
 
     @Override
     protected Map<IndexInfoMetaData, Object> getDefaultValueValidationRules() throws Exception {
-        return new EnumMap<IndexInfoMetaData, Object>(DEFAULT_COLUMN_VALUES);
+        return new EnumMap<>(DEFAULT_COLUMN_VALUES);
     }
 
     /**
@@ -258,7 +261,7 @@ public class TestFBDatabaseMetaDataIndexInfo extends FBMetaDataTestBase<TestFBDa
         private final int position;
         private final Class<?> columnClass;
 
-        private IndexInfoMetaData(int position, Class<?> columnClass) {
+        IndexInfoMetaData(int position, Class<?> columnClass) {
             this.position = position;
             this.columnClass = columnClass;
         }
@@ -272,7 +275,7 @@ public class TestFBDatabaseMetaDataIndexInfo extends FBMetaDataTestBase<TestFBDa
         }
 
         public MetaDataValidator<?> getValidator() {
-            return new MetaDataValidator<IndexInfoMetaData>(this);
+            return new MetaDataValidator<>(this);
         }
     }
 }

@@ -155,13 +155,12 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
     protected void close() {
         try {
             for (FBStatement stmt : statements.values()) {
-                if (!stmt.isClosed())
-                    stmt.close();
+                stmt.close();
             }
+        } catch (SQLException e) {
+           log.warn("error in DatabaseMetaData.close", e);
+        } finally {
             statements.clear();
-        }
-        catch (SQLException e) {
-           if (log!=null) log.warn("error in DatabaseMetaData.close", e);
         }
     }
 
@@ -1400,7 +1399,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
      * @exception SQLException if a database access error occurs
      */
     public  boolean supportsOpenStatementsAcrossCommit() throws SQLException {
-        return true;//commit retaining only.
+        return true;
     }
 
     /**
@@ -1411,7 +1410,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
      * @exception SQLException if a database access error occurs
      */
     public  boolean supportsOpenStatementsAcrossRollback() throws SQLException {
-        return true;//commit retaining only.
+        return true;
     }
 
     //----------------------------------------------------------------------
@@ -1428,7 +1427,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
      * @exception SQLException if a database access error occurs
      */
     public  int getMaxBinaryLiteralLength() throws SQLException {
-        return 0;//anyone know for sure?
+        return 0; // TODO 32764 Test (assumed on length/2 and max string literal length)
     }
 
     /**
@@ -1439,7 +1438,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
      * @exception SQLException if a database access error occurs
      */
     public  int getMaxCharLiteralLength() throws SQLException {
-        return 32767;
+        return 32765;
     }
 
     /**
@@ -1699,10 +1698,10 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
     public boolean supportsTransactionIsolationLevel(int level) throws SQLException {
         switch (level) {
             case Connection.TRANSACTION_NONE: return false;
-            case Connection.TRANSACTION_READ_COMMITTED: return true;//true soon
+            case Connection.TRANSACTION_READ_COMMITTED: return true;
             case Connection.TRANSACTION_READ_UNCOMMITTED: return false;
-            case Connection.TRANSACTION_REPEATABLE_READ: return true;//??
-            case Connection.TRANSACTION_SERIALIZABLE: return true;//????
+            case Connection.TRANSACTION_REPEATABLE_READ: return true;
+            case Connection.TRANSACTION_SERIALIZABLE: return true;
             default: return false;
         }
     }
@@ -1794,15 +1793,8 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
      * @exception SQLException if a database access error occurs
      * @see #getSearchStringEscape
      */
-    public ResultSet getProcedures(String catalog, String schemaPattern,
-            String procedureNamePattern) throws SQLException {
-        checkCatalogAndSchema(catalog, schemaPattern);
-
-        // TODO null or "" are not according to spec
-        if (procedureNamePattern == null || procedureNamePattern.equals("")) {
-            procedureNamePattern = "%";
-        }
-
+    public ResultSet getProcedures(String catalog, String schemaPattern, String procedureNamePattern)
+            throws SQLException {
         final RowDescriptor rowDescriptor = new RowDescriptorBuilder(9, datatypeCoder)
                 .at(0).simple(SQL_VARYING, 31, "PROCEDURE_CAT", "PROCEDURES").addField()
                 .at(1).simple(SQL_VARYING, 31, "PROCEDURE_SCHEM", "ROCEDURES").addField()
@@ -1822,44 +1814,27 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
         sql += procedureClause.getCondition();
         sql += GET_PROCEDURES_END;
 
-        // check the original case identifiers first
-        List<String> params = new ArrayList<>();
-        if (!procedureClause.getCondition().equals("")) {
-            params.add(procedureClause.getOriginalCaseValue());
-        }
+        List<String> params = procedureClause.hasCondition()
+                ? Collections.singletonList(procedureClause.getValue())
+                : Collections.<String>emptyList();
 
-        ResultSet rs = doQuery(sql, params);
-        try {
-            // if nothing found, check the uppercased identifiers
+        try (ResultSet rs = doQuery(sql, params)) {
             if (!rs.next()) {
-                rs.close();
-                params.clear();
-                if (!procedureClause.getCondition().equals("")) {
-                    params.add(procedureClause.getValue());
-                }
-
-                rs = doQuery(sql, params);
-
-                // if nothing found, return an empty result set
-                if (!rs.next()) {
-                    return new FBResultSet(rowDescriptor, Collections.<RowValue>emptyList());
-                }
+                return new FBResultSet(rowDescriptor, Collections.<RowValue>emptyList());
             }
 
             final List<RowValue> rows = new ArrayList<>();
             final RowValueBuilder valueBuilder = new RowValueBuilder(rowDescriptor);
             do {
                 rows.add(valueBuilder
-                                .at(2).set(getBytes(rs.getString("PROCEDURE_NAME")))
-                                .at(6).set(getBytes(rs.getString("REMARKS")))
-                                .at(7).set(rs.getShort("PROCEDURE_TYPE") == 0 ? PROCEDURE_NO_RESULT : PROCEDURE_RETURNS_RESULT)
-                                .at(8).set(valueBuilder.get(2))
-                                .toRowValue(true)
+                        .at(2).set(getBytes(rs.getString("PROCEDURE_NAME")))
+                        .at(6).set(getBytes(rs.getString("REMARKS")))
+                        .at(7).set(rs.getShort("PROCEDURE_TYPE") == 0 ? PROCEDURE_NO_RESULT : PROCEDURE_RETURNS_RESULT)
+                        .at(8).set(valueBuilder.get(2))
+                        .toRowValue(true)
                 );
             } while (rs.next());
             return new FBResultSet(rowDescriptor, rows);
-        } finally {
-            rs.close();
         }
     }
 
@@ -1979,12 +1954,8 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
      * @exception SQLException if a database access error occurs
      * @see #getSearchStringEscape
      */
-    public ResultSet getProcedureColumns(String catalog,
-            String schemaPattern,
-            String procedureNamePattern,
+    public ResultSet getProcedureColumns(String catalog, String schemaPattern, String procedureNamePattern,
             String columnNamePattern) throws SQLException {
-        checkCatalogAndSchema(catalog, schemaPattern);
-
         final RowDescriptor rowDescriptor = new RowDescriptorBuilder(20, datatypeCoder)
                 .at(0).simple(SQL_VARYING, 31, "PROCEDURE_CAT", "COLUMNINFO").addField()
                 .at(1).simple(SQL_VARYING, 31, "PROCEDURE_SCHEM", "COLUMNINFO").addField()
@@ -2017,34 +1988,18 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
         sql += columnClause.getCondition();
         sql += GET_PROCEDURE_COLUMNS_END;
 
-        // check the original case identifiers first
-        List<String> params = new ArrayList<>();
-        if (!procedureClause.getCondition().equals("")) {
-            params.add(procedureClause.getOriginalCaseValue());
+        List<String> params = new ArrayList<>(2);
+        if (procedureClause.hasCondition()) {
+            params.add(procedureClause.getValue());
         }
-        if (!columnClause.getCondition().equals("")) {
-            params.add(columnClause.getOriginalCaseValue());
+        if (columnClause.hasCondition()) {
+            params.add(columnClause.getValue());
         }
 
-        ResultSet rs = doQuery(sql, params);
-        try {
-            // if nothing found, check the uppercased identifiers
+        try (ResultSet rs = doQuery(sql, params)) {
+            // if nothing found, return an empty result set
             if (!rs.next()) {
-                rs.close();
-                params.clear();
-                if (!procedureClause.getCondition().equals("")) {
-                    params.add(procedureClause.getValue());
-                }
-                if (!columnClause.getCondition().equals("")) {
-                    params.add(columnClause.getValue());
-                }
-
-                rs = doQuery(sql, params);
-
-                // if nothing found, return an empty result set
-                if (!rs.next()) {
-                    return new FBResultSet(rowDescriptor, Collections.<RowValue>emptyList());
-                }
+                return new FBResultSet(rowDescriptor, Collections.<RowValue>emptyList());
             }
 
             final List<RowValue> rows = new ArrayList<>();
@@ -2135,8 +2090,6 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
                 rows.add(valueBuilder.toRowValue(true));
             } while (rs.next());
             return new FBResultSet(rowDescriptor, rows);
-        } finally {
-            rs.close();
         }
     }
 
@@ -2254,40 +2207,34 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
      * @exception SQLException if a database access error occurs
      * @see #getSearchStringEscape
      */
-    public ResultSet getTables(String catalog, String schemaPattern,
-        String tableNamePattern, String types[]) throws SQLException {
-
-        // TODO null or "" are invalid according to JDBC spec
-        if (tableNamePattern == null || "".equals(tableNamePattern))
-            tableNamePattern = "%";
-
-        checkCatalogAndSchema(catalog, schemaPattern);
+    public ResultSet getTables(String catalog, String schemaPattern, String tableNamePattern, String types[])
+            throws SQLException {
         if (types == null) {
             types = ALL_TYPES;
         }
         String sql;
-        List<String> params = new ArrayList<>();
+        List<String> params;
         if (isAllCondition(tableNamePattern)) {
             sql = GET_TABLES_ALL;
+            params = new ArrayList<>(3);
             params.add(getWantsSystemTables(types));
             params.add(getWantsTables(types));
             params.add(getWantsViews(types));
-        }
-        else if (hasNoWildcards(tableNamePattern)) {
-            tableNamePattern = stripQuotes(stripEscape(tableNamePattern), true);
+        } else if (hasNoWildcards(tableNamePattern)) {
+            tableNamePattern = stripEscape(tableNamePattern);
             sql = GET_TABLES_EXACT;
+            params = new ArrayList<>(6);
             params.add(getWantsSystemTables(types));
             params.add(tableNamePattern);
             params.add(getWantsTables(types));
             params.add(tableNamePattern);
             params.add(getWantsViews(types));
             params.add(tableNamePattern);
-        }
-        else {
-            // TODO Usages of 1) uppercase and 2) SPACES_31 + % might be wrong
+        } else {
             // See also comment in Clause for explanation
-            tableNamePattern = stripQuotes(tableNamePattern, true) + SPACES_15 + "%";
+            tableNamePattern = tableNamePattern + SPACES_15 + "%";
             sql = GET_TABLES_LIKE;
+            params = new ArrayList<>(6);
             params.add(getWantsSystemTables(types));
             params.add(tableNamePattern);
             params.add(getWantsTables(types));
@@ -2481,8 +2428,6 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
      */
     public ResultSet getColumns(String catalog, String schemaPattern, String tableNamePattern, String columnNamePattern)
             throws SQLException {
-        checkCatalogAndSchema(catalog, schemaPattern);
-
         final RowDescriptor rowDescriptor = new RowDescriptorBuilder(24, datatypeCoder)
                 .at(0).simple(SQL_VARYING, 31, "TABLE_CAT", "COLUMNINFO").addField()
                 .at(1).simple(SQL_VARYING, 31, "TABLE_SCHEM", "COLUMNINFO").addField()
@@ -2519,37 +2464,17 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
         sql += columnClause.getCondition();
         sql += GET_COLUMNS_END;
 
-        List<String> params = new ArrayList<>();
-
-        // check first original case values
-        if (!tableClause.getCondition().equals("")) {
-            params.add(tableClause.getOriginalCaseValue());
+        List<String> params = new ArrayList<>(2);
+        if (tableClause.hasCondition()) {
+            params.add(tableClause.getValue());
         }
-        if (!columnClause.getCondition().equals("")) {
-            params.add(columnClause.getOriginalCaseValue());
+        if (columnClause.hasCondition()) {
+            params.add(columnClause.getValue());
         }
 
-        ResultSet rs = doQuery(sql, params);
-        try {
-            // if no direct match happened, check the uppercased match
+        try (ResultSet rs = doQuery(sql, params)) {
             if (!rs.next()) {
-                rs.close();
-                params.clear();
-                if (!tableClause.getCondition().equals("")) {
-                    params.add(tableClause.getValue());
-                }
-                if (!columnClause.getCondition().equals("")) {
-                    params.add(columnClause.getValue());
-                }
-                rs = doQuery(sql, params);
-
-                // open the second result set and check whether we have rows
-                // if no rows are available, we have to exit now, otherwise the
-                // following do/while loop will throw SQLException that the
-                // result set is not positioned on a row
-                if (!rs.next()) {
-                    return new FBResultSet(rowDescriptor, Collections.<RowValue>emptyList());
-                }
+                return new FBResultSet(rowDescriptor, Collections.<RowValue>emptyList());
             }
 
             final List<RowValue> rows = new ArrayList<>();
@@ -2626,8 +2551,8 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
                 final short nullFlag = rs.getShort("NULL_FLAG");
                 final short sourceNullFlag = rs.getShort("SOURCE_NULL_FLAG");
                 valueBuilder.at(10).set(nullFlag == 1 || sourceNullFlag == 1
-                                ? COLUMN_NO_NULLS
-                                : COLUMN_NULLABLE)
+                        ? COLUMN_NO_NULLS
+                        : COLUMN_NULLABLE)
                         .at(11).set(getBytes(rs.getString("REMARKS")));
 
                 String column_def = rs.getString("DEFAULT_SOURCE");
@@ -2675,8 +2600,6 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
                 rows.add(valueBuilder.toRowValue(true));
             } while (rs.next());
             return new FBResultSet(rowDescriptor, rows);
-        } finally {
-            rs.close();
         }
     }
 
@@ -2871,10 +2794,8 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
      * @exception SQLException if a database access error occurs
      * @see #getSearchStringEscape
      */
-    public ResultSet getColumnPrivileges(String catalog, String schema,
-        String table, String columnNamePattern) throws SQLException {
-        checkCatalogAndSchema(catalog, schema);
-
+    public ResultSet getColumnPrivileges(String catalog, String schema, String table, String columnNamePattern)
+            throws SQLException {
         final RowDescriptor rowDescriptor = new RowDescriptorBuilder(8, datatypeCoder)
                 .at(0).simple(SQL_VARYING, 31, "TABLE_CAT", "COLUMNPRIV").addField()
                 .at(1).simple(SQL_VARYING, 31, "TABLE_SCHEM", "COLUMNPRIV").addField()
@@ -2892,35 +2813,19 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
         sql += columnClause.getCondition();
         sql += GET_COLUMN_PRIVILEGES_END;
 
-        List<String> params = new ArrayList<>();
-
-        // check the original case first
-        table = stripQuotes(stripEscape(table), false);
+        List<String> params = new ArrayList<>(2);
         params.add(table);
-        if (!columnClause.getCondition().equals("")) {
-            params.add(columnClause.getOriginalCaseValue());
+        if (columnClause.hasCondition()) {
+            params.add(columnClause.getValue());
         }
 
-        ResultSet rs = doQuery(sql, params);
-        try {
-            // if nothing was found, check the uppercased identifiers
+        try (ResultSet rs = doQuery(sql, params)) {
+            // return empty result set
             if (!rs.next()) {
-                rs.close();
-                params.clear();
-                if (!columnClause.getCondition().equals("")) {
-                    params.add(stripQuotes(stripEscape(table), true));
-                    params.add(columnClause.getValue());
-                }
-
-                rs = doQuery(sql, params);
-
-                // return empty result set
-                if (!rs.next()) {
-                    return new FBResultSet(rowDescriptor, Collections.<RowValue>emptyList());
-                }
+                return new FBResultSet(rowDescriptor, Collections.<RowValue>emptyList());
             }
 
-            final List<RowValue> rows = new ArrayList<RowValue>();
+            final List<RowValue> rows = new ArrayList<>();
             final RowValueBuilder valueBuilder = new RowValueBuilder(rowDescriptor);
             do {
                 rows.add(valueBuilder
@@ -2934,8 +2839,6 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
                 );
             } while (rs.next());
             return new FBResultSet(rowDescriptor, rows);
-        } finally {
-            rs.close();
         }
     }
 
@@ -2987,11 +2890,8 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
      * @exception SQLException if a database access error occurs
      * @see #getSearchStringEscape
      */
-    public ResultSet getTablePrivileges(String catalog, String schemaPattern,
-                String tableNamePattern) throws SQLException {
-        checkCatalogAndSchema(catalog, schemaPattern);
-        tableNamePattern = stripQuotes(stripEscape(tableNamePattern), true);
-
+    public ResultSet getTablePrivileges(String catalog, String schemaPattern, String tableNamePattern)
+            throws SQLException {
         final RowDescriptor rowDescriptor = buildTablePrivilegeRSMetaData();
 
         Clause tableClause = new Clause("RDB$RELATION_NAME", tableNamePattern);
@@ -3000,32 +2900,18 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
         sql += tableClause.getCondition();
         sql += GET_TABLE_PRIVILEGES_END;
 
-        // check the original case identifiers first
-        List<String> params = new ArrayList<>();
-        if (!tableClause.getCondition().equals("")) {
-            params.add(tableClause.getOriginalCaseValue());
-        }
+        List<String> params = tableClause.hasCondition()
+                ? Collections.singletonList(tableClause.getValue())
+                : Collections.<String>emptyList();
 
-        ResultSet rs = doQuery(sql, params);
-
-        // if nothing found, check the uppercased identifiers
-        if (!rs.next()) {
-            rs.close();
-            params.clear();
-            if (!tableClause.getCondition().equals("")) {
-                params.add(tableClause.getValue());
-            }
-
-            rs = doQuery(sql, params);
-
+        try (ResultSet rs = doQuery(sql, params)) {
             // if nothing found, return an empty result set
             if (!rs.next()) {
-                rs.close();
                 return new FBResultSet(rowDescriptor, Collections.<RowValue>emptyList());
             }
-        }
 
-        return processTablePrivileges(rowDescriptor, rs);
+            return processTablePrivileges(rowDescriptor, rs);
+        }
     }
 
     protected final RowDescriptor buildTablePrivilegeRSMetaData() {
@@ -3041,23 +2927,19 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
     }
 
     protected final FBResultSet processTablePrivileges(final RowDescriptor rowDescriptor, final ResultSet fbTablePrivileges) throws SQLException {
-        try {
-            final List<RowValue> rows = new ArrayList<>();
-            final RowValueBuilder valueBuilder = new RowValueBuilder(rowDescriptor);
-            do {
-                rows.add(valueBuilder
-                        .at(2).set(getBytes(fbTablePrivileges.getString("TABLE_NAME")))
-                        .at(3).set(getBytes(fbTablePrivileges.getString("GRANTOR")))
-                        .at(4).set(getBytes(fbTablePrivileges.getString("GRANTEE")))
-                        .at(5).set(mapPrivilege(fbTablePrivileges.getString("PRIVILEGE")))
-                        .at(6).set(fbTablePrivileges.getShort("IS_GRANTABLE") == 0 ? NO_BYTES : YES_BYTES)
-                        .toRowValue(true)
-                );
-            } while (fbTablePrivileges.next());
-            return new FBResultSet(rowDescriptor, rows);
-        } finally {
-            fbTablePrivileges.close();
-        }
+        final List<RowValue> rows = new ArrayList<>();
+        final RowValueBuilder valueBuilder = new RowValueBuilder(rowDescriptor);
+        do {
+            rows.add(valueBuilder
+                    .at(2).set(getBytes(fbTablePrivileges.getString("TABLE_NAME")))
+                    .at(3).set(getBytes(fbTablePrivileges.getString("GRANTOR")))
+                    .at(4).set(getBytes(fbTablePrivileges.getString("GRANTEE")))
+                    .at(5).set(mapPrivilege(fbTablePrivileges.getString("PRIVILEGE")))
+                    .at(6).set(fbTablePrivileges.getShort("IS_GRANTABLE") == 0 ? NO_BYTES : YES_BYTES)
+                    .toRowValue(true)
+            );
+        } while (fbTablePrivileges.next());
+        return new FBResultSet(rowDescriptor, rows);
     }
 
     private static final String GET_BEST_ROW_IDENT =
@@ -3127,18 +3009,15 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
                 .at(7).simple(SQL_SHORT, 0, "PSEUDO_COLUMN", "ROWIDENTIFIER").addField()
                 .toRowDescriptor();
 
-        ResultSet tables = null;
-        List<RowValue> rows = null;
+        List<RowValue> rows;
         final RowValueBuilder rowValueBuilder = new RowValueBuilder(rowDescriptor);
-        try {
-            // Check if table exists, need to escape as getTables takes a pattern
-            String quoteLikeTable = table != null ? table.replaceAll("([_%])", "\\\\$1") : null;
-            tables = getTables(catalog, schema, quoteLikeTable, null);
-            if (!tables.next())
+        // Check if table exists, need to escape as getTables takes a pattern
+        String quoteLikeTable = escapeWildcards(table);
+        try (ResultSet tables = getTables(catalog, schema, quoteLikeTable, null)) {
+            if (!tables.next()) {
                 return new FBResultSet(rowDescriptor, Collections.<RowValue>emptyList());
+            }
             rows = getPrimaryKeyIdentifier(tables.getString(3), scope, rowValueBuilder);
-        } finally {
-            if (tables != null) tables.close();
         }
 
         // if no primary key exists, add RDB$DB_KEY as pseudo-column
@@ -3172,9 +3051,8 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
      * @throws SQLException if something went wrong.
      */
     private List<RowValue> getPrimaryKeyIdentifier(String table, int scope, final RowValueBuilder valueBuilder) throws SQLException {
-        ResultSet rs = doQuery(GET_BEST_ROW_IDENT, Arrays.asList(table));
-        try {
-            final List<RowValue> rows = new ArrayList<RowValue>();
+        try (ResultSet rs = doQuery(GET_BEST_ROW_IDENT, Collections.singletonList(table))) {
+            final List<RowValue> rows = new ArrayList<>();
             while (rs.next()) {
                 short fieldType = rs.getShort("FIELD_TYPE");
                 short fieldSubType = rs.getShort("FIELD_SUB_TYPE");
@@ -3192,8 +3070,6 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
                 );
             }
             return rows;
-        } finally {
-            rs.close();
         }
     }
 
@@ -3228,6 +3104,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
      * @exception SQLException if a database access error occurs
      */
     public ResultSet getVersionColumns(String catalog, String schema, String table) throws SQLException {
+        // TODO Return FB 3 RDB$RECORD_VERSION
         final RowDescriptor rowDescriptor = new RowDescriptorBuilder(8, datatypeCoder)
                 .at(0).simple(SQL_SHORT, 0, "SCOPE", "VERSIONCOL").addField()
                 .at(1).simple(SQL_VARYING, 31, "COLUMN_NAME", "VERSIONCOL").addField()
@@ -3278,10 +3155,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
      * @return <code>ResultSet</code> - each row is a primary key column description
      * @exception SQLException if a database access error occurs
      */
-    public ResultSet getPrimaryKeys(String catalog, String schema,
-                String table) throws SQLException {
-        checkCatalogAndSchema(catalog, schema);
-
+    public ResultSet getPrimaryKeys(String catalog, String schema, String table) throws SQLException {
         RowDescriptor rowDescriptor = new RowDescriptorBuilder(6, datatypeCoder)
                 .at(0).simple(SQL_VARYING, 31, "TABLE_CAT", "COLUMNINFO").addField()
                 .at(1).simple(SQL_VARYING, 31, "TABLE_SCHEM", "COLUMNINFO").addField()
@@ -3291,24 +3165,12 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
                 .at(5).simple(SQL_VARYING, 31, "PK_NAME", "COLUMNINFO").addField()
                 .toRowDescriptor();
 
-        // check the original case identifiers
-        List<String> params = new ArrayList<>();
-        params.add(stripQuotes(stripEscape(table), false));
+        List<String> params = Collections.singletonList(table);
 
-        ResultSet rs = doQuery(GET_PRIMARY_KEYS, params);
-        try {
-            // if nothing found, check the uppercased identifier
+        try (ResultSet rs = doQuery(GET_PRIMARY_KEYS, params)) {
+            // if nothing found, return empty result set
             if (!rs.next()) {
-                rs.close();
-                params.clear();
-                params.add(stripQuotes(stripEscape(table), true));
-
-                rs = doQuery(GET_PRIMARY_KEYS, params);
-
-                // if nothing found, return empty result set
-                if (!rs.next()) {
-                    return new FBResultSet(rowDescriptor, Collections.<RowValue>emptyList());
-                }
+                return new FBResultSet(rowDescriptor, Collections.<RowValue>emptyList());
             }
 
             final List<RowValue> rows = new ArrayList<>();
@@ -3323,8 +3185,6 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
                 );
             } while (rs.next());
             return new FBResultSet(rowDescriptor, rows);
-        } finally {
-            rs.close();
         }
     }
 
@@ -3447,8 +3307,6 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
      * @see #getExportedKeys
      */
     public ResultSet getImportedKeys(String catalog, String schema, String table) throws SQLException {
-        checkCatalogAndSchema(catalog, schema);
-
         final RowDescriptor rowDescriptor = new RowDescriptorBuilder(14, datatypeCoder)
                 .at(0).simple(SQL_VARYING, 31, "PKTABLE_CAT", "COLUMNINFO").addField()
                 .at(1).simple(SQL_VARYING, 31, "PKTABLE_SCHEM", "COLUMNINFO").addField()
@@ -3466,26 +3324,12 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
                 .at(13).simple(SQL_SHORT, 0, "DEFERRABILITY", "COLUMNINFO").addField()
                 .toRowDescriptor();
 
-        String sql = GET_IMPORTED_KEYS;
+        List<String> params = Collections.singletonList(table);
 
-        // check the original case identifiers first
-        List<String> params = new ArrayList<>();
-        params.add(stripQuotes(stripEscape(table), false));
-
-        ResultSet rs = doQuery(sql, params);
-        try {
-            // if nothing found, check the uppercased identifiers
+        try (ResultSet rs = doQuery(GET_IMPORTED_KEYS, params)) {
+            // if nothing found, return an empty result set
             if (!rs.next()) {
-                rs.close();
-                params.clear();
-                params.add(stripQuotes(stripEscape(table), true));
-
-                rs = doQuery(sql, params);
-
-                // if nothing found, return an empty result set
-                if (!rs.next()) {
-                    return new FBResultSet(rowDescriptor, Collections.<RowValue>emptyList());
-                }
+                return new FBResultSet(rowDescriptor, Collections.<RowValue>emptyList());
             }
 
             final List<RowValue> rows = new ArrayList<>();
@@ -3506,8 +3350,6 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
                 );
             } while (rs.next());
             return new FBResultSet(rowDescriptor, rows);
-        } finally {
-            rs.close();
         }
     }
 
@@ -3609,8 +3451,6 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
      * @see #getImportedKeys
      */
     public ResultSet getExportedKeys(String catalog, String schema, String table) throws SQLException {
-        checkCatalogAndSchema(catalog, schema);
-
         final RowDescriptor rowDescriptor = new RowDescriptorBuilder(14, datatypeCoder)
                 .at(0).simple(SQL_VARYING, 31, "PKTABLE_CAT", "COLUMNINFO").addField()
                 .at(1).simple(SQL_VARYING, 31, "PKTABLE_SCHEM", "COLUMNINFO").addField()
@@ -3628,26 +3468,12 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
                 .at(13).simple(SQL_SHORT, 0, "DEFERRABILITY", "COLUMNINFO").addField()
                 .toRowDescriptor();
 
-        String sql = GET_EXPORTED_KEYS;
+        List<String> params = Collections.singletonList(table);
 
-        // check the original case identifiers first
-        List<String> params = new ArrayList<>();
-        params.add(stripQuotes(stripEscape(table), false));
-
-        ResultSet rs = doQuery(sql, params);
-        try {
-            // if nothing found, check the uppercased identifiers
+        try (ResultSet rs = doQuery(GET_EXPORTED_KEYS, params)) {
+            // if nothing found, return an empty result set
             if (!rs.next()) {
-                rs.close();
-                params.clear();
-                params.add(stripQuotes(stripEscape(table), true));
-
-                rs = doQuery(sql, params);
-
-                // if nothing found, return an empty result set
-                if (!rs.next()) {
-                    return new FBResultSet(rowDescriptor, Collections.<RowValue>emptyList());
-                }
+                return new FBResultSet(rowDescriptor, Collections.<RowValue>emptyList());
             }
 
             List<RowValue> rows = new ArrayList<>();
@@ -3668,8 +3494,6 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
                 );
             } while (rs.next());
             return new FBResultSet(rowDescriptor, rows);
-        } finally {
-            rs.close();
         }
     }
 
@@ -3781,11 +3605,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
      */
     public ResultSet getCrossReference(
             String primaryCatalog, String primarySchema, String primaryTable,
-            String foreignCatalog, String foreignSchema, String foreignTable
-            ) throws SQLException {
-        checkCatalogAndSchema(primaryCatalog, primarySchema);
-        checkCatalogAndSchema(foreignCatalog, foreignSchema);
-
+            String foreignCatalog, String foreignSchema, String foreignTable) throws SQLException {
         final RowDescriptor rowDescriptor = new RowDescriptorBuilder(14, datatypeCoder)
                 .at(0).simple(SQL_VARYING, 31, "PKTABLE_CAT", "COLUMNINFO").addField()
                 .at(1).simple(SQL_VARYING, 31, "PKTABLE_SCHEM", "COLUMNINFO").addField()
@@ -3803,29 +3623,12 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
                 .at(13).simple(SQL_SHORT, 0, "DEFERRABILITY", "COLUMNINFO").addField()
                 .toRowDescriptor();
 
-        String sql = GET_CROSS_KEYS;
+        final List<String> params = Arrays.asList(primaryTable, foreignTable);
 
-        final List<String> params = new ArrayList<>();
-
-        // check the original case first
-        params.add(stripQuotes(stripEscape(primaryTable), false));
-        params.add(stripQuotes(stripEscape(foreignTable), false));
-
-        ResultSet rs = doQuery(sql, params);
-        try {
-            // if nothing found, check the uppercased identifiers
+        try (ResultSet rs = doQuery(GET_CROSS_KEYS, params)) {
+            // return empty result set if nothing found
             if (!rs.next()) {
-                rs.close();
-                params.clear();
-                params.add(stripQuotes(stripEscape(primaryTable), true));
-                params.add(stripQuotes(stripEscape(foreignTable), true));
-
-                rs = doQuery(sql, params);
-
-                // return empty result set if nothing found
-                if (!rs.next()) {
-                    return new FBResultSet(rowDescriptor, Collections.<RowValue>emptyList());
-                }
+                return new FBResultSet(rowDescriptor, Collections.<RowValue>emptyList());
             }
 
             final List<RowValue> rows = new ArrayList<>();
@@ -3846,8 +3649,6 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
                 );
             } while (rs.next());
             return new FBResultSet(rowDescriptor, rows);
-        } finally {
-            rs.close();
         }
     }
 
@@ -4131,10 +3932,8 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
      * @return <code>ResultSet</code> - each row is an index column description
      * @exception SQLException if a database access error occurs
      */
-    public ResultSet getIndexInfo(String catalog, String schema, String table,
-        boolean unique, boolean approximate) throws SQLException {
-        checkCatalogAndSchema(catalog, schema);
-
+    public ResultSet getIndexInfo(String catalog, String schema, String table, boolean unique, boolean approximate)
+            throws SQLException {
         final RowDescriptor rowDescriptor = new RowDescriptorBuilder(13, datatypeCoder)
                 .at(0).simple(SQL_VARYING, 31, "TABLE_CAT", "INDEXINFO").addField()
                 .at(1).simple(SQL_VARYING, 31, "TABLE_SCHEM", "INDEXINFO").addField()
@@ -4152,28 +3951,11 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
                 .at(12).simple(SQL_VARYING, 31, "FILTER_CONDITION", "INDEXINFO").addField()
                 .toRowDescriptor();
 
-        if (table == null) {
-            return new FBResultSet(rowDescriptor, Collections.<RowValue>emptyList());
-        }
+        List<String> params = Collections.singletonList(table);
 
-        List<String> params = new ArrayList<>();
-        params.add(stripQuotes(stripEscape(table), false));
-
-        ResultSet rs = doQuery(GET_INDEX_INFO, params);
-        try {
-            // if no direct match happened, check the uppercased match
+        try (ResultSet rs = doQuery(GET_INDEX_INFO, params)) {
             if (!rs.next()) {
-                rs.close();
-                params.set(0, stripQuotes(stripEscape(table), true));
-                rs = doQuery(GET_INDEX_INFO, params);
-
-                // open the second result set and check whether we have rows
-                // if no rows are available, we have to exit now, otherwise the
-                // following do/while loop will throw SQLException that the
-                // result set is not positioned on a row
-                if (!rs.next()) {
-                    return new FBResultSet(rowDescriptor, Collections.<RowValue>emptyList());
-                }
+                return new FBResultSet(rowDescriptor, Collections.<RowValue>emptyList());
             }
 
             final List<RowValue> rows = new ArrayList<>();
@@ -4214,8 +3996,6 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
                 rows.add(valueBuilder.toRowValue(true));
             } while (rs.next());
             return new FBResultSet(rowDescriptor, rows);
-        } finally {
-            rs.close();
         }
     }
 
@@ -4455,7 +4235,8 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
      *
      * {@inheritDoc}
      */
-    public ResultSet getAttributes(String catalog, String schemaPattern, String typeNamePattern, String attributeNamePattern) throws SQLException {
+    public ResultSet getAttributes(String catalog, String schemaPattern, String typeNamePattern,
+            String attributeNamePattern) throws SQLException {
         final RowDescriptor rowDescriptor = new RowDescriptorBuilder(21, datatypeCoder)
                 .at(0).simple(SQL_VARYING, 31, "TYPE_CAT", "ATTRIBUTES").addField()
                 .at(1).simple(SQL_VARYING, 31, "TYPE_SCHEM", "ATTRIBUTES").addField()
@@ -4490,7 +4271,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
      * @exception SQLException if a database access error occurs
      */
     public boolean supportsSavepoints() throws SQLException {
-        return gdsHelper.compareToVersion(1, 5) >= 0;
+        return firebirdSupportInfo.supportsSavepoint();
     }
 
     /**
@@ -4773,7 +4554,8 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
      * @see #getSearchStringEscape
      * @since 1.6
      */
-    public ResultSet getFunctionColumns(String catalog, String schemaPattern, String functionNamePattern, String columnNamePattern) throws SQLException {
+    public ResultSet getFunctionColumns(String catalog, String schemaPattern, String functionNamePattern,
+            String columnNamePattern) throws SQLException {
         // FIXME implement this method to return actual result
         final RowDescriptor rowDescriptor = new RowDescriptorBuilder(17, datatypeCoder)
                 .at(0).simple(SQL_VARYING, 31, "FUNCTION_CAT", "FUNCTION_COLUMNS").addField()
@@ -4846,7 +4628,8 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
      * @see #getSearchStringEscape
      * @since 1.6
      */
-    public ResultSet getFunctions(String catalog, String schemaPattern, String functionNamePattern) throws SQLException {
+    public ResultSet getFunctions(String catalog, String schemaPattern, String functionNamePattern)
+            throws SQLException {
         // FIXME implement this method to return actual result
         final RowDescriptor rowDescriptor = new RowDescriptorBuilder(6, datatypeCoder)
                 .at(0).simple(SQL_VARYING, 31, "FUNCTION_CAT", "FUNCTIONS").addField()
@@ -4905,7 +4688,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
     }
 
     protected static boolean isAllCondition(String pattern) {
-        return "%".equals(pattern);
+        return pattern == null || "%".equals(pattern);
     }
 
     /**
@@ -4917,29 +4700,19 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
      *         <code>false</code> otherwise
      */
     public static boolean hasNoWildcards(String pattern) {
-        if (pattern == null)
-            return true;
+        if (pattern == null) return true;
 
-        int scannedTo = 0;
-        int pos;
-        while ((pos = pattern.indexOf('%', scannedTo)) < pattern.length()) {
-            if (pos == -1) {
-                break;
-            }
-            if ((pos == 0) || (pattern.charAt(pos - 1) != '\\')) {
+        for (int pos = 0; pos < pattern.length(); pos++) {
+            char ch = pattern.charAt(pos);
+            if (ch == '_' || ch == '%') {
                 return false;
+            } else if (ch == '\\' && pos < pattern.length() - 1) {
+                char nextCh = pattern.charAt(pos + 1);
+                if (nextCh == '\\' || nextCh == '%' || nextCh == '_') {
+                    // We were an escape, skip next character
+                    pos += 1;
+                }
             }
-            scannedTo = ++pos;
-        }
-        scannedTo = 0;
-        while ((pos = pattern.indexOf('_', scannedTo)) < pattern.length()) {
-            if (pos == -1) {
-                break;
-            }
-            if ((pos == 0) || (pattern.charAt(pos - 1) != '\\')) {
-                return false;
-            }
-            scannedTo = ++pos;
         }
         return true;
     }
@@ -4954,11 +4727,26 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
         if (pattern == null) return null;
         StringBuilder stripped = new StringBuilder(pattern.length());
         for (int pos = 0; pos < pattern.length(); pos++) {
-            if (pattern.charAt(pos) != '\\') {
-                stripped.append(pattern.charAt(pos));
+            char ch = pattern.charAt(pos);
+            if (ch != '\\') {
+                stripped.append(ch);
+            } else if (pos < pattern.length() - 1 && pattern.charAt(pos + 1) == '\\') {
+                // We are an escape for a backslash, append backslash and skip next position
+                stripped.append('\\');
+                pos += 1;
             }
         }
         return stripped.toString();
+    }
+
+    /**
+     * Escapes the like wildcards and escape ({@code \_%} in the provided search string with a {@code \}.
+     *
+     * @param objectName Object name to escape (not {@code null}).
+     * @return Object name with wildcards escaped.
+     */
+    public static String escapeWildcards(String objectName) {
+        return objectName != null ? objectName.replaceAll("([\\\\_%])", "\\\\$1") : null;
     }
 
     protected String getWantsSystemTables(String[] types) {
@@ -4986,26 +4774,6 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
             }
         }
         return "F";
-    }
-
-    /**
-     * Strips a leading and trailing quote (double or single) from a string.
-     *
-     * @param pattern the string to be stripped
-     * @return a copy of <code>pattern</code> with leading and trailing quote
-     * removed
-     */
-    public static String stripQuotes(String pattern, boolean uppercase) {
-        if (pattern == null) return null;
-        if ((pattern.length() >= 2)
-            && (pattern.charAt(0) == '\"')
-            && (pattern.charAt(pattern.length() - 1) == '\"')) {
-            return pattern.substring(1, pattern.length() - 1);
-        }
-        else if (uppercase) {
-            return pattern.toUpperCase();
-        }
-        return pattern;
     }
 
     public ResultSet getPseudoColumns(String catalog, String schemaPattern, String tableNamePattern,
@@ -5056,32 +4824,22 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
         return sResult;
     }
 
-    protected void checkCatalogAndSchema(String catalog, String schema) throws SQLException {
-        /* 
-         * we ignore incorrect catalog and schema specification as 
-         * suggested by Thomas Kellerer in JDBC Forum 
-        */
-    }
-
     protected static final class Clause {
         private final String condition;
         private final String value;
-        private final String originalCaseValue;
 
-        public Clause (String columnName, String pattern) {
-            if (pattern == null || isAllCondition(pattern)) {
+        public Clause(String columnName, String pattern) {
+            if (isAllCondition(pattern)) {
                 condition = "";
                 value = null;
-                originalCaseValue = null;
             } else if (hasNoWildcards(pattern)) {
-                value = stripQuotes(stripEscape(pattern), true);
-                originalCaseValue = stripQuotes(stripEscape(pattern), false);
+                value = stripEscape(pattern);
+                // We are casting to VARCHAR(40) to accommodate slightly larger object names
                 condition = "CAST(" + columnName + " AS VARCHAR(40)) = ? and ";
             } else {
                 // We are padding the column with 31 spaces to accommodate arguments longer than the actual column length.
                 // The argument itself is padded with 15 spaces and a % to prevent false positives, this allows 15 character longer patterns
-                value = stripQuotes(pattern, true) + SPACES_15 + "%";
-                originalCaseValue = stripQuotes(pattern, false) + SPACES_15 + "%";
+                value = pattern + SPACES_15 + "%";
                 condition = columnName + " || '" + SPACES_31 + "' like ? escape '\\' and ";
             }
         }
@@ -5094,8 +4852,8 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
             return value;
         }
 
-        public String getOriginalCaseValue() {
-            return originalCaseValue;
+        public boolean hasCondition() {
+            return !condition.isEmpty();
         }
     }
 

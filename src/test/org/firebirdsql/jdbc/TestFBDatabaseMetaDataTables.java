@@ -1,7 +1,5 @@
 /*
- * $Id$
- * 
- * Firebird Open Source J2ee connector - jdbc driver
+ * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -14,24 +12,19 @@
  * This file was created by members of the firebird development team.
  * All individual contributions remain the Copyright (C) of those
  * individuals.  Contributors to this file are either listed here or
- * can be obtained from a CVS history command.
+ * can be obtained from a source control history command.
  *
  * All rights reserved.
  */
 package org.firebirdsql.jdbc;
 
-import java.sql.ResultSet;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.EnumMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
 import org.firebirdsql.jdbc.MetaDataValidator.MetaDataInfo;
+import org.junit.Test;
 
-import static org.firebirdsql.common.JdbcResourceHelper.*;
+import java.sql.ResultSet;
+import java.util.*;
+
+import static org.junit.Assert.*;
 
 /**
  * Tests for {@link FBDatabaseMetaData} for table related metadata.
@@ -45,8 +38,8 @@ public class TestFBDatabaseMetaDataTables extends FBMetaDataTestBase<TestFBDatab
     private static final String TABLE = "TABLE";
     private static final String SYSTEM_TABLE = "SYSTEM TABLE";
 
-    public TestFBDatabaseMetaDataTables(String name) {
-        super(name, TableMetaData.class);
+    public TestFBDatabaseMetaDataTables() {
+        super(TableMetaData.class);
     }
     
     public static final String CREATE_NORMAL_TABLE =
@@ -87,12 +80,10 @@ public class TestFBDatabaseMetaDataTables extends FBMetaDataTestBase<TestFBDatab
      * Tests the ordinal positions and types for the metadata columns of
      * getTables().
      */
+    @Test
     public void testTableMetaDataColumns() throws Exception {
-        ResultSet tables = dbmd.getTables(null, null, null, null);
-        try {
+        try (ResultSet tables = dbmd.getTables(null, null, "doesnotexist", null)) {
             validateResultSetColumns(tables);
-        } finally {
-            closeQuietly(tables);
         }
     }
 
@@ -100,6 +91,7 @@ public class TestFBDatabaseMetaDataTables extends FBMetaDataTestBase<TestFBDatab
      * Tests getTables() with tableName null and types null, expecting all
      * tables of all types to be returned.
      */
+    @Test
     public void testTableMetaData_everything_tableName_null_types_null() throws Exception {
         validateTableMetaData_everything(null, null);
     }
@@ -108,30 +100,16 @@ public class TestFBDatabaseMetaDataTables extends FBMetaDataTestBase<TestFBDatab
      * Tests getTables() with tableName null and types all (supported) types,
      * expecting all tables of all types to be returned.
      */
+    @Test
     public void testTableMetaData_everything_tableName_null_allTypes() throws Exception {
         validateTableMetaData_everything(null, new String[] { SYSTEM_TABLE, TABLE, VIEW });
-    }
-
-    /**
-     * Tests getTables() with tableName empty string and types null, expecting
-     * all tables of all types to be returned.
-     */
-    public void testTableMetaData_everything_tableName_empty_types_null() throws Exception {
-        validateTableMetaData_everything("", null);
-    }
-
-    /**
-     * Tests getTables() with tableName empty string and types all (supported)
-     * types, expecting all tables of all types to be returned.
-     */
-    public void testTableMetaData_everything_tableName_empty_types_allTypes() throws Exception {
-        validateTableMetaData_everything("", new String[] { SYSTEM_TABLE, TABLE, VIEW });
     }
 
     /**
      * Tests getTables() with tableName all pattern (%) and types null,
      * expecting all tables of all types to be returned.
      */
+    @Test
     public void testTableMetaData_everything_tableName_allPattern_types_null() throws Exception {
         validateTableMetaData_everything("%", null);
     }
@@ -147,18 +125,16 @@ public class TestFBDatabaseMetaDataTables extends FBMetaDataTestBase<TestFBDatab
      *            Array of types to retrieve
      */
     private void validateTableMetaData_everything(String tableNamePattern, String[] types) throws Exception {
-        ResultSet tables = dbmd.getTables(null, null, tableNamePattern, types);
-        // TODO: Should quoted table names be returned quoted?
         // Expected user tables + a selection of expected system tables (some that existed in Firebird 1.0)
         // TODO Add test for order?
-        Set<String> expectedTables = new HashSet<String>(Arrays.asList("TEST_NORMAL_TABLE",
+        Set<String> expectedTables = new HashSet<>(Arrays.asList("TEST_NORMAL_TABLE",
                 "test_quoted_normal_table", "TEST_NORMAL_VIEW", "test_quoted_normal_view",
                 "RDB$FIELDS", "RDB$GENERATORS", "RDB$ROLES", "RDB$DATABASE", "RDB$TRIGGERS"));
-        try {
+        try (ResultSet tables = dbmd.getTables(null, null, tableNamePattern, types)) {
             while (tables.next()) {
                 String tableName = tables.getString(TableMetaData.TABLE_NAME.name());
                 Map<TableMetaData, Object> rules = getDefaultValueValidationRules();
-                assertTrue("TABLE_NAME is not allowed to be null or empty", 
+                assertTrue("TABLE_NAME is not allowed to be null or empty",
                         tableName != null && tableName.length() > 0);
                 expectedTables.remove(tableName);
 
@@ -178,8 +154,6 @@ public class TestFBDatabaseMetaDataTables extends FBMetaDataTestBase<TestFBDatab
 
             assertTrue("getTables() did not return some expected tables: " + expectedTables,
                     expectedTables.isEmpty());
-        } finally {
-            closeQuietly(tables);
         }
     }
 
@@ -190,19 +164,9 @@ public class TestFBDatabaseMetaDataTables extends FBMetaDataTestBase<TestFBDatab
      * This method only checks the existence of a subset of the system tables
      * <p>
      */
+    @Test
     public void testTableMetaData_allSystemTables_tableName_null() throws Exception {
         validateTableMetaData_allSystemTables(null);
-    }
-
-    /**
-     * Tests getTables with tableName empty and types SYSTEM TABLES, expecting
-     * only system tables to be returned.
-     * <p>
-     * This method only checks the existence of a subset of the system tables
-     * <p>
-     */
-    public void testTableMetaData_allSystemTables_tableName_empty() throws Exception {
-        validateTableMetaData_allSystemTables("");
     }
 
     /**
@@ -212,33 +176,30 @@ public class TestFBDatabaseMetaDataTables extends FBMetaDataTestBase<TestFBDatab
      * This method only checks the existence of a subset of the system tables
      * <p>
      */
+    @Test
     public void testTableMetaData_allSystemTables_tableName_allPattern() throws Exception {
         validateTableMetaData_allSystemTables("%");
     }
 
     /**
-     * Helper method for test methods that retrieve table metadata of all system
-     * tables.
+     * Helper method for test methods that retrieve table metadata of all system tables.
      * 
      * @param tableNamePattern
-     *            Pattern for the tableName (should be null, "", "%" only for
-     *            this test)
+     *            Pattern for the tableName (should be null or"%" only for this test)
      */
     private void validateTableMetaData_allSystemTables(String tableNamePattern) throws Exception {
-        ResultSet tables = dbmd.getTables(null, null, tableNamePattern,
-                new String[] { SYSTEM_TABLE });
         // Expected selection of expected system tables (some that existed in Firebird 1.0); we don't check all system tables
-        Set<String> expectedTables = new HashSet<String>(Arrays.asList("RDB$FIELDS", "RDB$GENERATORS",
+        Set<String> expectedTables = new HashSet<>(Arrays.asList("RDB$FIELDS", "RDB$GENERATORS",
                 "RDB$ROLES", "RDB$DATABASE", "RDB$TRIGGERS"));
         Map<TableMetaData, Object> rules = getDefaultValueValidationRules();
         rules.put(TableMetaData.TABLE_TYPE, SYSTEM_TABLE);
-        try {
+        try (ResultSet tables = dbmd.getTables(null, null, tableNamePattern, new String[] { SYSTEM_TABLE })) {
             while (tables.next()) {
                 String tableName = tables.getString(TableMetaData.TABLE_NAME.name());
-                assertTrue("TABLE_NAME is not allowed to be null or empty", 
+                assertTrue("TABLE_NAME is not allowed to be null or empty",
                         tableName != null && tableName.length() > 0);
                 expectedTables.remove(tableName);
-                
+
                 if (!(tableName.startsWith("RDB$") || tableName.startsWith("MON$") || tableName.startsWith("SEC$"))) {
                     fail("Only expect tablenames starting with RDB$ or MON$, retrieved " + tableName);
                 }
@@ -246,70 +207,55 @@ public class TestFBDatabaseMetaDataTables extends FBMetaDataTestBase<TestFBDatab
                 validateRowValues(tables, rules);
             }
 
-            assertTrue("getTables() did not return some expected tables: " + expectedTables,
-                    expectedTables.isEmpty());
-        } finally {
-            closeQuietly(tables);
+            assertTrue("getTables() did not return some expected tables: " + expectedTables, expectedTables.isEmpty());
         }
     }
 
     /**
-     * Tests getTables with tableName null and types SYSTEM TABLES, expecting
-     * only system tables to be returned.
+     * Tests getTables with tableName null and types TABLE, expecting
+     * only normal tables to be returned.
      * <p>
-     * This method only checks the existence of a subset of the system tables
+     * This method only checks the existence of a subset of the normal tables
      * <p>
      */
+    @Test
     public void testTableMetaData_allNormalTables_tableName_null() throws Exception {
         validateTableMetaData_allNormalTables(null);
     }
 
     /**
-     * Tests getTables with tableName empty and types SYSTEM TABLES, expecting
-     * only system tables to be returned.
+     * Tests getTables with tableName all pattern (%) and types TABLE,
+     * expecting only normal tables to be returned.
      * <p>
-     * This method only checks the existence of a subset of the system tables
-     * <p>
-     */
-    public void testTableMetaData_allNormalTables_tableName_empty() throws Exception {
-        validateTableMetaData_allNormalTables("");
-    }
-
-    /**
-     * Tests getTables with tableName all pattern (%) and types SYSTEM TABLES,
-     * expecting only system tables to be returned.
-     * <p>
-     * This method only checks the existence of a subset of the system tables
+     * This method only checks the existence of a subset of the normal tables
      * <p>
      */
+    @Test
     public void testTableMetaData_allNormalTables_tableName_allPattern() throws Exception {
         validateTableMetaData_allNormalTables("%");
     }
 
     /**
-     * Helper method for test methods that retrieve table metadata of all normal
-     * tables.
+     * Helper method for test methods that retrieve table metadata of all normal tables.
      * 
      * @param tableNamePattern
-     *            Pattern for the tableName (should be null, "", "%" only for
-     *            this test)
+     *            Pattern for the tableName (should be null, or "%" only for this test)
      */
     private void validateTableMetaData_allNormalTables(String tableNamePattern) throws Exception {
-        ResultSet tables = dbmd.getTables(null, null, tableNamePattern, new String[] { TABLE });
         // TODO: Should quoted table names be returned quoted?
         // Expected normal tables
-        Set<String> expectedTables = new HashSet<String>(Arrays.asList("TEST_NORMAL_TABLE",
+        Set<String> expectedTables = new HashSet<>(Arrays.asList("TEST_NORMAL_TABLE",
                 "test_quoted_normal_table"));
-        Set<String> retrievedTables = new HashSet<String>();
+        Set<String> retrievedTables = new HashSet<>();
         Map<TableMetaData, Object> rules = getDefaultValueValidationRules();
         rules.put(TableMetaData.TABLE_TYPE, TABLE);
-        try {
+        try (ResultSet tables = dbmd.getTables(null, null, tableNamePattern, new String[] { TABLE })) {
             while (tables.next()) {
                 String tableName = tables.getString(TableMetaData.TABLE_NAME.name());
                 assertTrue("TABLE_NAME is not allowed to be null or empty",
                         tableName != null && tableName.length() > 0);
                 retrievedTables.add(tableName);
-                
+
                 if ((tableName.startsWith("RDB$") || tableName.startsWith("MON$"))) {
                     fail("Only expect normal tables, not starting with RDB$ or MON$, retrieved " + tableName);
                 }
@@ -317,67 +263,53 @@ public class TestFBDatabaseMetaDataTables extends FBMetaDataTestBase<TestFBDatab
                 validateRowValues(tables, rules);
             }
 
-            assertEquals("getTables() did not return expected tables: ", 
+            assertEquals("getTables() did not return expected tables: ",
                     expectedTables, retrievedTables);
-        } finally {
-            closeQuietly(tables);
         }
     }
 
     /**
-     * Tests getTables with tableName null and types SYSTEM TABLES, expecting
-     * only system tables to be returned.
+     * Tests getTables with tableName null and types VIEW, expecting
+     * only views to be returned.
      * <p>
-     * This method only checks the existence of a subset of the system tables
+     * This method only checks the existence of a subset of the views
      * <p>
      */
+    @Test
     public void testTableMetaData_allViews_tableName_null() throws Exception {
         validateTableMetaData_allViews(null);
     }
 
     /**
-     * Tests getTables with tableName empty and types SYSTEM TABLES, expecting
-     * only system tables to be returned.
+     * Tests getTables with tableName all pattern (%) and types VIEW,
+     * expecting only views to be returned.
      * <p>
-     * This method only checks the existence of a subset of the system tables
-     * <p>
-     */
-    public void testTableMetaData_allViews_tableName_empty() throws Exception {
-        validateTableMetaData_allViews("");
-    }
-
-    /**
-     * Tests getTables with tableName all pattern (%) and types SYSTEM TABLES,
-     * expecting only system tables to be returned.
-     * <p>
-     * This method only checks the existence of a subset of the system tables
+     * This method only checks the existence of a subset of the views
      * <p>
      */
+    @Test
     public void testTableMetaData_allViews_tableName_allPattern() throws Exception {
         validateTableMetaData_allViews("%");
     }
 
     /**
-     * Helper method for test methods that retrieve table metadata of all view
-     * tables.
+     * Helper method for test methods that retrieve table metadata of all view tables.
      * 
      * @param tableNamePattern
-     *            Pattern for the tableName (should be null, "", "%" only for
-     *            this test)
+     *            Pattern for the tableName (should be null or "%" only for this test)
      */
     private void validateTableMetaData_allViews(String tableNamePattern) throws Exception {
-        ResultSet tables = dbmd.getTables(null, null, tableNamePattern, new String[] { VIEW });
         // TODO: Should quoted table names be returned quoted?
         // Expected normal tables
-        Set<String> expectedTables = new HashSet<String>(Arrays.asList("TEST_NORMAL_VIEW",
+        Set<String> expectedTables = new HashSet<>(Arrays.asList("TEST_NORMAL_VIEW",
                 "test_quoted_normal_view"));
-        Set<String> retrievedTables = new HashSet<String>();
+        Set<String> retrievedTables = new HashSet<>();
         Map<TableMetaData, Object> rules = getDefaultValueValidationRules();
         rules.put(TableMetaData.TABLE_TYPE, VIEW);
-        try {
+        try (ResultSet tables = dbmd.getTables(null, null, tableNamePattern, new String[] { VIEW })) {
             while (tables.next()) {
                 String tableName = tables.getString(TableMetaData.TABLE_NAME.name());
-                assertTrue("TABLE_NAME is not allowed to be null or empty", 
+                assertTrue("TABLE_NAME is not allowed to be null or empty",
                         tableName != null && tableName.length() > 0);
                 retrievedTables.add(tableName);
 
@@ -388,10 +320,8 @@ public class TestFBDatabaseMetaDataTables extends FBMetaDataTestBase<TestFBDatab
                 validateRowValues(tables, rules);
             }
 
-            assertEquals("getTables() did not return expected tables: ", 
+            assertEquals("getTables() did not return expected tables: ",
                     expectedTables, retrievedTables);
-        } finally {
-            closeQuietly(tables);
         }
     }
 
@@ -399,18 +329,20 @@ public class TestFBDatabaseMetaDataTables extends FBMetaDataTestBase<TestFBDatab
      * Tests getTables retrieving normal table that was created unquoted using
      * its lower case name with types null.
      */
+    @Test
     public void testTableMetaData_NormalUnquotedTable_lowercase_typesNull() throws Exception {
         Map<TableMetaData, Object> validationRules = getDefaultValueValidationRules();
         validationRules.put(TableMetaData.TABLE_TYPE, TABLE);
         validationRules.put(TableMetaData.TABLE_NAME, "TEST_NORMAL_TABLE");
 
-        validateTableMetaDataSingleRow("test_normal_table", null, validationRules);
+        validateTableMetaDataSingleRow("TEST_NORMAL_TABLE", null, validationRules);
     }
 
     /**
      * Tests getTables retrieving normal table that was created unquoted using
      * its upper case name with types TABLE.
      */
+    @Test
     public void testTableMetaData_NormalUnquotedTable_uppercase_typesTABLE() throws Exception {
         Map<TableMetaData, Object> validationRules = getDefaultValueValidationRules();
         validationRules.put(TableMetaData.TABLE_TYPE, TABLE);
@@ -423,20 +355,13 @@ public class TestFBDatabaseMetaDataTables extends FBMetaDataTestBase<TestFBDatab
      * Tests getTables retrieving normal table that was created quoted using its
      * normal case name with all types.
      */
+    @Test
     public void testTableMetaData_NormalQuotedTable_AllTypes() throws Exception {
         Map<TableMetaData, Object> validationRules = getDefaultValueValidationRules();
         validationRules.put(TableMetaData.TABLE_TYPE, TABLE);
         validationRules.put(TableMetaData.TABLE_NAME, "test_quoted_normal_table");
 
-        /*
-         * TODO: Might break spec:
-         * "tableNamePattern - a table name pattern; must match the table name as it is stored in the database"
-         * Firebird stores the quoted name unquoted in its orignal case. On
-         * the other hand, all related metadata methods specifically talk about
-         * quoted versus unquoted and case insensitive
-         */
-        // validateTableMetaDataSingleRow("test_quoted_normal_table", new String[] { SYSTEM_TABLE, TABLE, VIEW }, validationRules);
-        validateTableMetaDataSingleRow("\"test_quoted_normal_table\"", new String[] { SYSTEM_TABLE, TABLE, VIEW }, validationRules);
+        validateTableMetaDataSingleRow("test_quoted_normal_table", new String[] { SYSTEM_TABLE, TABLE, VIEW }, validationRules);
     }
 
     /**
@@ -454,13 +379,10 @@ public class TestFBDatabaseMetaDataTables extends FBMetaDataTestBase<TestFBDatab
             Map<TableMetaData, Object> validationRules) throws Exception {
         
         checkValidationRulesComplete(validationRules);
-        ResultSet tables = dbmd.getTables(null, null, tableNamePattern, types);
-        try {
+        try (ResultSet tables = dbmd.getTables(null, null, tableNamePattern, types)) {
             assertTrue("Expected row in table metadata", tables.next());
             validateRowValues(tables, validationRules);
-            assertFalse("Expected only one row in resultset", tables.next());
-        } finally {
-            closeQuietly(tables);
+            assertFalse("Expected only one row in result set", tables.next());
         }
     }
 
@@ -468,6 +390,7 @@ public class TestFBDatabaseMetaDataTables extends FBMetaDataTestBase<TestFBDatab
      * Tests getTables retrieving views, specifying the name of a normal table:
      * expecting empty resultset
      */
+    @Test
     public void testTableMetaData_NormalUnquotedTable_typesVIEW() throws Exception {
         validateTableMetaDataNoRow("test_normal_table", new String[] { VIEW });
     }
@@ -476,6 +399,7 @@ public class TestFBDatabaseMetaDataTables extends FBMetaDataTestBase<TestFBDatab
      * Tests getTables retrieving normal tables, specifying the name of a system
      * table: expecting empty resultset
      */
+    @Test
     public void testTableMetaData_SystemTable_typesTABLE() throws Exception {
         validateTableMetaDataNoRow("RDB$DATABASE", new String[] { TABLE });
     }
@@ -484,6 +408,7 @@ public class TestFBDatabaseMetaDataTables extends FBMetaDataTestBase<TestFBDatab
      * Tests getTables retrieving system tables, specifying the name of a view:
      * expecting empty resultset
      */
+    @Test
     public void testTableMetaData_UnquotedView_typesSYSTEM() throws Exception {
         validateTableMetaDataNoRow("test_normal_view", new String[] { SYSTEM_TABLE });
     }
@@ -498,12 +423,9 @@ public class TestFBDatabaseMetaDataTables extends FBMetaDataTestBase<TestFBDatab
      *            Table types to request
      */
     private void validateTableMetaDataNoRow(String tableNamePattern, String[] types) throws Exception {
-        ResultSet tables = dbmd.getTables(null, null, tableNamePattern, types);
-        try {
+        try (ResultSet tables = dbmd.getTables(null, null, tableNamePattern, types)) {
             assertFalse(String.format("Expected empty resultset for requesting %s with types %s",
                     tableNamePattern, Arrays.toString(types)), tables.next());
-        } finally {
-            closeQuietly(tables);
         }
     }
     
@@ -511,8 +433,7 @@ public class TestFBDatabaseMetaDataTables extends FBMetaDataTestBase<TestFBDatab
 
     private static final Map<TableMetaData, Object> DEFAULT_COLUMN_VALUES;
     static {
-        Map<TableMetaData, Object> defaults = new EnumMap<TableMetaData, Object>(
-                TableMetaData.class);
+        Map<TableMetaData, Object> defaults = new EnumMap<>(TableMetaData.class);
         defaults.put(TableMetaData.TABLE_CAT, null);
         defaults.put(TableMetaData.TABLE_SCHEM, null);
         defaults.put(TableMetaData.REMARKS, null);
@@ -528,7 +449,7 @@ public class TestFBDatabaseMetaDataTables extends FBMetaDataTestBase<TestFBDatab
     }
 
     protected Map<TableMetaData, Object> getDefaultValueValidationRules() throws Exception {
-        return new EnumMap<TableMetaData, Object>(DEFAULT_COLUMN_VALUES);
+        return new EnumMap<>(DEFAULT_COLUMN_VALUES);
     }
 
     /**
@@ -551,7 +472,7 @@ public class TestFBDatabaseMetaDataTables extends FBMetaDataTestBase<TestFBDatab
         private final int position;
         private final Class<?> columnClass;
 
-        private TableMetaData(int position, Class<?> columnClass) {
+        TableMetaData(int position, Class<?> columnClass) {
             this.position = position;
             this.columnClass = columnClass;
         }
@@ -565,7 +486,7 @@ public class TestFBDatabaseMetaDataTables extends FBMetaDataTestBase<TestFBDatab
         }
 
         public MetaDataValidator<?> getValidator() {
-            return new MetaDataValidator<TableMetaData>(this);
+            return new MetaDataValidator<>(this);
         }
     }
 }

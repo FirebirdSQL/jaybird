@@ -399,6 +399,67 @@ _Unless explicitly indicated, changes also apply to `CallableStatement`_
     `NVARCHAR/NCHAR/NCLOB` support, it is only provided for compatibility
     purposes.
 
+### DatabaseMetaData ###
+
+The `java.sql.DatabaseMetaData` implementation has been changed to follow the
+JDBC requirements for object name pattern or object name parameters (referred to
+as _patterns_ in the rest of this section).
+
+These changes affect all methods that accept one or more pattern or name
+parameters and return a `ResultSet`. This includes, but is not limited to,
+`getTables` and `getColumns`.
+
+In Firebird unquoted object names are stored upper case, while quoted object
+names are stored as is. The JDBC specification states that the pattern must
+match the object name as stored in the database. This means the pattern should
+be case sensitive.
+
+The changes made are as follows:
+
+*   `null` will always be interpreted as `"%"` (before this rule was applied
+    inconsistently)
+*   Empty string will no longer match (ie they are no longer interpreted as
+    `"%"`) unless explicitly allowed by the method javadoc (usually only the
+    `catalogPattern` and `schemaPattern`, which are always ignored by Jaybird)
+*   Double quotes around a pattern will no longer be stripped
+*   The driver will no longer try the uppercase variant of the provided
+    pattern(s) if the original value(s) did not yield a result
+*   Object name parameters that are not patterns (as indicated by the absence of
+    `Pattern` in the parameter name) will no longer have backslashes removed
+
+Review your `DatabaseMetaData` usage and make the following changes:
+
+*   Empty string parameters: replace with `"%"` (or `null`)
+*   Double quotes around patterns: remove the double quotes
+*   Casing of patterns should be reviewed for correctness
+*   Non-pattern parameters containing `\` should be reviewed for correctness
+
+Some examples:
+
+~~~ {.sql}
+CREATE TABLE tablename ( -- tablename is stored as TABLENAME in metadata!
+   column1 INTEGER,
+   "column2" INTEGER
+);
+~~~
+
+In Jaybird 2.2 using `getColumns(null, null, "tablename", "column%")` returns
+`COLUMN1`(!). In Jaybird 3.0 this produces **no rows** as `tablename` does not
+match `TABLENAME`.
+
+Changing the query to `getColumns(null, null, "TABLENAME", "column%")` in
+Jaybird 2.2 and 3.0 produces only one row (`column2`), as `COLUMN1` does not
+match `column%`.
+
+In Jaybird 2.2 using `getColumns(null, null, "\"TABLENAME\"", "column%")`
+returns `column2`, in Jaybird 3.0 this produces **no rows** as quotes are no
+longer stripped.
+
+In Jaybird 2.2 using `getColumns(null, null, "TABLENAME", "")` returns all
+columns of the table, in Jaybird 3.0 this produces **no rows** as empty string
+does not match any column. Instead, you should use
+`getColumns(null, null, "TABLENAME", "%")`.
+
 **TODO: Add other changes**
 
 Character set OCTETS handled as JDBC (VAR)BINARY

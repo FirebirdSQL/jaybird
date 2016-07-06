@@ -35,6 +35,8 @@ import static org.firebirdsql.gds.ISCConstants.SQL_VARYING;
 
 public class OODatabaseMetaData extends FBDatabaseMetaData {
 
+    // TODO Review metadata methods use of toUpperCase
+
     public OODatabaseMetaData(FBConnection c) throws SQLException {
         super(c);
     }
@@ -139,13 +141,8 @@ public class OODatabaseMetaData extends FBDatabaseMetaData {
             "ORDER BY 3, 6";
 
     @Override
-    public ResultSet getTablePrivileges(String catalog, String schemaPattern,
-            String tableNamePattern) throws SQLException {
-        if (DEFAULT_SCHEMA.equals(schemaPattern)) schemaPattern = null;
-
-        checkCatalogAndSchema(catalog, schemaPattern);
-        tableNamePattern = stripQuotes(stripEscape(tableNamePattern), true);
-
+    public ResultSet getTablePrivileges(String catalog, String schemaPattern, String tableNamePattern)
+            throws SQLException {
         final RowDescriptor rowDescriptor = buildTablePrivilegeRSMetaData();
 
         Clause tableClause1 = new Clause("RDB$RELATION_NAME", tableNamePattern);
@@ -158,34 +155,21 @@ public class OODatabaseMetaData extends FBDatabaseMetaData {
         sql += tableClause2.getCondition();
         sql += GET_TABLE_PRIVILEGES_END_2;
 
-        // check the original case identifiers first
-        List<String> params = new ArrayList<>();
-        if (!tableClause1.getCondition().equals("")) {
-            params.add(tableClause1.getOriginalCaseValue());
+        List<String> params = new ArrayList<>(2);
+        if (tableClause1.hasCondition()) {
+            params.add(tableClause1.getValue());
         }
-        if (!tableClause2.getCondition().equals("")) {
-            params.add(tableClause2.getOriginalCaseValue());
+        if (tableClause2.hasCondition()) {
+            params.add(tableClause2.getValue());
         }
 
-        ResultSet rs = doQuery(sql, params);
-
-        // if nothing found, check the uppercased identifiers
-        if (!rs.next()) {
-            params.clear();
-            if (!tableClause1.getCondition().equals("")) {
-                params.add(tableClause1.getValue());
-            }
-            if (!tableClause2.getCondition().equals("")) {
-                params.add(tableClause2.getValue());
-            }
-
-            rs = doQuery(sql, params);
-
+        try (ResultSet rs = doQuery(sql, params)) {
             // if nothing found, return an empty result set
-            if (!rs.next())
+            if (!rs.next()) {
                 return new FBResultSet(rowDescriptor, Collections.<RowValue>emptyList());
-        }
+            }
 
-        return processTablePrivileges(rowDescriptor, rs);
+            return processTablePrivileges(rowDescriptor, rs);
+        }
     }
 }

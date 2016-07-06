@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
@@ -181,7 +179,7 @@ public class FBRowUpdater implements FirebirdRowUpdater {
     }
 
     public void close() throws SQLException {
-        SQLExceptionChainBuilder<SQLException> chain = new SQLExceptionChainBuilder<SQLException>();
+        SQLExceptionChainBuilder<SQLException> chain = new SQLExceptionChainBuilder<>();
         deallocateStatement(selectStatement, chain);
         deallocateStatement(insertStatement, chain);
         deallocateStatement(updateStatement, chain);
@@ -232,10 +230,8 @@ public class FBRowUpdater implements FirebirdRowUpdater {
         // loop through the "best row identifiers" and set appropriate flags.
         FBDatabaseMetaData metaData = new FBDatabaseMetaData(gdsHelper);
 
-        ResultSet bestRowIdentifier = metaData.getBestRowIdentifier(
-                "", "", tableName, DatabaseMetaData.bestRowSession, true);
-
-        try {
+        try (ResultSet bestRowIdentifier = metaData.getBestRowIdentifier("", "", tableName,
+                DatabaseMetaData.bestRowSession, true)) {
             int[] result = new int[rowDescriptor.getCount()];
             boolean hasParams = false;
             while (bestRowIdentifier.next()) {
@@ -272,8 +268,6 @@ public class FBRowUpdater implements FirebirdRowUpdater {
                                 "found.");
 
             return result;
-        } finally {
-            bestRowIdentifier.close();
         }
     }
 
@@ -575,7 +569,7 @@ public class FBRowUpdater implements FirebirdRowUpdater {
 
         stmt.prepare(sql);
 
-        List<FieldValue> params = new ArrayList<FieldValue>();
+        List<FieldValue> params = new ArrayList<>();
 
         if (statementType == UPDATE_STATEMENT_TYPE) {
             for (int i = 0; i < rowDescriptor.getCount(); i++) {
@@ -654,7 +648,7 @@ public class FBRowUpdater implements FirebirdRowUpdater {
     }
 
     private static class RowListener extends DefaultStatementListener {
-        private final List<RowValue> rows = new ArrayList<RowValue>();
+        private final List<RowValue> rows = new ArrayList<>();
 
         @Override
         public void receivedRow(FbStatement sender, RowValue rowValue) {

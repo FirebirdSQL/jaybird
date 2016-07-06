@@ -164,11 +164,26 @@ public class TestFBDatabaseMetaData extends FBJUnit4TestBase {
     }
 
     @Test
-    public void testAAStringFunctions() {
+    public void testHasNoWildcards() {
         assertTrue("claims test\\_me has wildcards", FBDatabaseMetaData.hasNoWildcards("test\\_me"));
+        assertTrue("claims test\\%me has wildcards", FBDatabaseMetaData.hasNoWildcards("test\\%me"));
+        assertFalse("claims test\\\\%me has no wildcards", FBDatabaseMetaData.hasNoWildcards("test\\\\%me"));
+        assertFalse("claims test_me has no wildcards", FBDatabaseMetaData.hasNoWildcards("test_me"));
+        assertFalse("claims test%me has no wildcards", FBDatabaseMetaData.hasNoWildcards("test%me"));
+    }
+
+    @Test
+    public void testStripEscape() {
         assertEquals("strip escape wrong", "test_me", FBDatabaseMetaData.stripEscape("test\\_me"));
-        assertEquals("strip quotes wrong", "TEST_ME", FBDatabaseMetaData.stripQuotes("test_me", true));
-        assertEquals("strip quotes wrong", "test_me", FBDatabaseMetaData.stripQuotes("\"test_me\"", false));
+        assertEquals("strip escape wrong", "test\\me", FBDatabaseMetaData.stripEscape("test\\\\me"));
+        assertEquals("strip escape wrong", "test\\_me", FBDatabaseMetaData.stripEscape("test\\\\\\_me"));
+    }
+
+    @Test
+    public void testEscapeWildcards() {
+        assertEquals("escape wildcard incorrect", "test\\\\me", FBDatabaseMetaData.escapeWildcards("test\\me"));
+        assertEquals("escape wildcard incorrect", "test\\%me", FBDatabaseMetaData.escapeWildcards("test%me"));
+        assertEquals("escape wildcard incorrect", "test\\_me", FBDatabaseMetaData.escapeWildcards("test_me"));
     }
 
     @Test
@@ -179,7 +194,7 @@ public class TestFBDatabaseMetaData extends FBJUnit4TestBase {
         createTable("\"test_ me too\"");
         createTable("\"test_me too\"");
 
-        try (ResultSet rs = dmd.getTables(null, null, "test%m_", new String[] { "TABLE" })) {
+        try (ResultSet rs = dmd.getTables(null, null, "TEST%M_", new String[] { "TABLE" })) {
             int count = 0;
             while (rs.next()) {
                 String name = rs.getString(3);
@@ -190,7 +205,7 @@ public class TestFBDatabaseMetaData extends FBJUnit4TestBase {
             assertEquals("more than two tables found", 2, count);
         }
 
-        try (ResultSet rs = dmd.getTables(null, null, "test\\_me", new String[] { "TABLE" })) {
+        try (ResultSet rs = dmd.getTables(null, null, "TEST\\_ME", new String[] { "TABLE" })) {
             assertTrue("Expected one row in result set", rs.next());
             String name = rs.getString(3);
             if (log != null) log.info("table name: " + name);
@@ -198,7 +213,7 @@ public class TestFBDatabaseMetaData extends FBJUnit4TestBase {
             assertFalse("Only one row expected in results et", rs.next());
         }
 
-        try (ResultSet rs = dmd.getTables(null, null, "\"test\\_ me\"", new String[] { "TABLE" })) {
+        try (ResultSet rs = dmd.getTables(null, null, "test\\_ me", new String[] { "TABLE" })) {
             assertTrue("Expected on row in result set", rs.next());
             String name = rs.getString(3);
             if (log != null) log.info("table name: " + name);
@@ -206,7 +221,7 @@ public class TestFBDatabaseMetaData extends FBJUnit4TestBase {
             assertFalse("Expected only one row in result set", rs.next());
         }
 
-        try (ResultSet rs = dmd.getTables(null, null, "\"test\\_ me%\"", new String[] { "TABLE" })) {
+        try (ResultSet rs = dmd.getTables(null, null, "test\\_ me%", new String[] { "TABLE" })) {
             int count = 0;
             while (rs.next()) {
                 String name = rs.getString(3);
@@ -234,7 +249,7 @@ public class TestFBDatabaseMetaData extends FBJUnit4TestBase {
         createTable("\"test_ me too\"");
         createTable("\"test_me too\"");
 
-        try (ResultSet rs = dmd.getColumns(null, null, "test%m_", "\"my\\_ column2\"")) {
+        try (ResultSet rs = dmd.getColumns(null, null, "test%m_", "my\\_ column2")) {
             assertTrue("Expected one row in resultset", rs.next());
             String name = rs.getString(3);
             String column = rs.getString(4);
@@ -447,7 +462,7 @@ public class TestFBDatabaseMetaData extends FBJUnit4TestBase {
             stmt.execute("CREATE TABLE test_default ("
                     + "test_col INTEGER DEFAULT 0 NOT NULL)");
 
-            try (ResultSet rs = dmd.getColumns(null, "%", "test_default", null)) {
+            try (ResultSet rs = dmd.getColumns(null, "%", "TEST_DEFAULT", null)) {
                 assertTrue("Should return at least one row", rs.next());
 
                 String defaultValue = rs.getString("COLUMN_DEF");

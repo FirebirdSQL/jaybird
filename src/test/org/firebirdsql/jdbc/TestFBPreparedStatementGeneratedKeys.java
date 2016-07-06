@@ -49,6 +49,8 @@ public class TestFBPreparedStatementGeneratedKeys extends FBTestGeneratedKeysBas
     @Rule
     public final ExpectedException expectedException = ExpectedException.none();
 
+    // TODO Add test cases with quoted and unquoted object names
+
     private static final String TEXT_VALUE = "Some text to insert";
     private static final String TEST_INSERT_QUERY = "INSERT INTO TABLE_WITH_TRIGGER(TEXT) VALUES (?)";
     private Connection con;

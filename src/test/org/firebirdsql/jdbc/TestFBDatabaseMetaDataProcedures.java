@@ -1,7 +1,5 @@
 /*
- * $Id$
- * 
- * Firebird Open Source J2ee connector - jdbc driver
+ * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -14,24 +12,21 @@
  * This file was created by members of the firebird development team.
  * All individual contributions remain the Copyright (C) of those
  * individuals.  Contributors to this file are either listed here or
- * can be obtained from a CVS history command.
+ * can be obtained from a source control history command.
  *
  * All rights reserved.
  */
 package org.firebirdsql.jdbc;
 
+import org.firebirdsql.jdbc.MetaDataValidator.MetaDataInfo;
+import org.junit.Test;
+
 import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.EnumMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
-import org.firebirdsql.jdbc.MetaDataValidator.MetaDataInfo;
-
-import static org.firebirdsql.common.JdbcResourceHelper.*;
+import static org.firebirdsql.common.JdbcResourceHelper.closeQuietly;
+import static org.junit.Assert.assertEquals;
 
 /**
  * Tests for {@link FBDatabaseMetaData} for procedure related metadata.
@@ -41,8 +36,8 @@ import static org.firebirdsql.common.JdbcResourceHelper.*;
 public class TestFBDatabaseMetaDataProcedures extends
         FBMetaDataTestBase<TestFBDatabaseMetaDataProcedures.ProcedureMetaData> {
 
-    public TestFBDatabaseMetaDataProcedures(String name) {
-        super(name, ProcedureMetaData.class);
+    public TestFBDatabaseMetaDataProcedures() {
+        super(ProcedureMetaData.class);
     }
 
     public static final String CREATE_NORMAL_PROC_NO_RETURN = 
@@ -78,7 +73,7 @@ public class TestFBDatabaseMetaDataProcedures extends
 
     @Override
     protected List<String> getCreateStatements() {
-        List<String> createDDL = new LinkedList<String>();
+        List<String> createDDL = new ArrayList<>();
         for (ProcedureTestData testData : ProcedureTestData.values()) {
             createDDL.addAll(testData.getCreateDDL());
         }
@@ -89,32 +84,25 @@ public class TestFBDatabaseMetaDataProcedures extends
      * Tests the ordinal positions and types for the metadata columns of
      * getProcedures().
      */
+    @Test
     public void testProcedureMetaDataColumns() throws Exception {
-        ResultSet procedures = dbmd.getProcedures(null, null, null);
-        try {
+        try (ResultSet procedures = dbmd.getProcedures(null, null, "doesnotexist")) {
             validateResultSetColumns(procedures);
-        } finally {
-            closeQuietly(procedures);
         }
     }
 
     /**
      * Tests getProcedures() with procedureName null, expecting all procedures to be returned.
      */
+    @Test
     public void testProcedureMetaData_all_procedureName_null() throws Exception {
         validateProcedureMetaData_everything(null);
     }
-    
-    /**
-     * Tests getProcedures() with procedureName empty, expecting all procedures to be returned.
-     */
-    public void testProcedureMetaData_all_procedureName_empty() throws Exception {
-        validateProcedureMetaData_everything("");
-    }
-    
+
     /**
      * Tests getProcedures() with procedureName all pattern (%), expecting all procedures to be returned.
      */
+    @Test
     public void testProcedureMetaData_all_procedureName_allPattern() throws Exception {
         validateProcedureMetaData_everything("%");
     }
@@ -135,8 +123,10 @@ public class TestFBDatabaseMetaDataProcedures extends
     /**
      * Tests getProcedures with specific procedure name, expecting only that specific procedure to be returned.
      */
+    @Test
     public void testProcedureMetaData_specificProcedure() throws Exception {
-        List<ProcedureTestData> expectedProcedures = Arrays.asList(ProcedureTestData.NORMAL_PROC_WITH_RETURN);
+        List<ProcedureTestData> expectedProcedures =
+                Collections.singletonList(ProcedureTestData.NORMAL_PROC_WITH_RETURN);
         ResultSet procedures = dbmd.getProcedures(null, null, expectedProcedures.get(0).getName());
         validateProcedures(procedures, expectedProcedures);
     }
@@ -144,8 +134,9 @@ public class TestFBDatabaseMetaDataProcedures extends
     /**
      * Tests getProcedures with specific procedure name (quoted), expecting only that specific procedure to be returned.
      */
+    @Test
     public void testProcedureMetaData_specificProcedureQuoted() throws Exception {
-        List<ProcedureTestData> expectedProcedures = Arrays.asList(ProcedureTestData.QUOTED_PROC_NO_RETURN);
+        List<ProcedureTestData> expectedProcedures = Collections.singletonList(ProcedureTestData.QUOTED_PROC_NO_RETURN);
         ResultSet procedures = dbmd.getProcedures(null, null, expectedProcedures.get(0).getName());
         validateProcedures(procedures, expectedProcedures);
     }
@@ -178,8 +169,7 @@ public class TestFBDatabaseMetaDataProcedures extends
 
     private static final Map<ProcedureMetaData, Object> DEFAULT_COLUMN_VALUES;
     static {
-        Map<ProcedureMetaData, Object> defaults = new EnumMap<ProcedureMetaData, Object>(
-                ProcedureMetaData.class);
+        Map<ProcedureMetaData, Object> defaults = new EnumMap<>(ProcedureMetaData.class);
         defaults.put(ProcedureMetaData.PROCEDURE_CAT, null);
         defaults.put(ProcedureMetaData.PROCEDURE_SCHEM, null);
         defaults.put(ProcedureMetaData.FUTURE1, null);
@@ -192,7 +182,7 @@ public class TestFBDatabaseMetaDataProcedures extends
 
     @Override
     protected Map<ProcedureMetaData, Object> getDefaultValueValidationRules() throws Exception {
-        return new EnumMap<ProcedureMetaData, Object>(DEFAULT_COLUMN_VALUES);
+        return new EnumMap<>(DEFAULT_COLUMN_VALUES);
     }
 
     /**
@@ -213,7 +203,7 @@ public class TestFBDatabaseMetaDataProcedures extends
         private final int position;
         private final Class<?> columnClass;
 
-        private ProcedureMetaData(int position, Class<?> columnClass) {
+        ProcedureMetaData(int position, Class<?> columnClass) {
             this.position = position;
             this.columnClass = columnClass;
         }
@@ -227,13 +217,13 @@ public class TestFBDatabaseMetaDataProcedures extends
         }
 
         public MetaDataValidator<?> getValidator() {
-            return new MetaDataValidator<ProcedureMetaData>(this);
+            return new MetaDataValidator<>(this);
         }
     }
 
     private enum ProcedureTestData {
-        NORMAL_PROC_NO_RETURN("normal_proc_no_return", 
-                Arrays.asList(CREATE_NORMAL_PROC_NO_RETURN)) {
+        NORMAL_PROC_NO_RETURN("normal_proc_no_return",
+                Collections.singletonList(CREATE_NORMAL_PROC_NO_RETURN)) {
 
             @Override
             Map<ProcedureMetaData, Object> getSpecificValidationRules(Map<ProcedureMetaData, Object> rules) {
@@ -243,7 +233,7 @@ public class TestFBDatabaseMetaDataProcedures extends
                 return rules;
             }
         },
-        NORMAL_PROC_WITH_RETURN("normal_proc_with_return", 
+        NORMAL_PROC_WITH_RETURN("NORMAL_PROC_WITH_RETURN",
                 Arrays.asList(CREATE_NORMAL_PROC_WITH_RETURN, ADD_COMMENT_ON_NORMAL_PROC_WITH_RETURN)) {
 
             @Override
@@ -256,8 +246,8 @@ public class TestFBDatabaseMetaDataProcedures extends
             }
         
         },
-        QUOTED_PROC_NO_RETURN("\"quoted_proc_no_return\"",
-                Arrays.asList(CREATE_QUOTED_PROC_NO_RETURN)) {
+        QUOTED_PROC_NO_RETURN("quoted_proc_no_return",
+                Collections.singletonList(CREATE_QUOTED_PROC_NO_RETURN)) {
 
             @Override
             Map<ProcedureMetaData, Object> getSpecificValidationRules(Map<ProcedureMetaData, Object> rules) {
@@ -272,7 +262,7 @@ public class TestFBDatabaseMetaDataProcedures extends
         private final String originalProcedureName;
         private final List<String> createDDL;
 
-        private ProcedureTestData(String originalProcedureName, List<String> createDDL) {
+        ProcedureTestData(String originalProcedureName, List<String> createDDL) {
             this.originalProcedureName = originalProcedureName;
             this.createDDL = createDDL;
         }

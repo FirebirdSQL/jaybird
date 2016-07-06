@@ -40,6 +40,8 @@ import org.firebirdsql.logging.LoggerFactory;
  */
 public abstract class AbstractGeneratedKeysQuery {
 
+    // TODO Add caching for column info
+
     private static final Logger logger = LoggerFactory.getLogger(AbstractGeneratedKeysQuery.class);
     private static final int QUERY_TYPE_KEEP_UNMODIFIED = 1;
     private static final int QUERY_TYPE_ADD_ALL_COLUMNS = 2;
@@ -308,7 +310,7 @@ public abstract class AbstractGeneratedKeysQuery {
     private void addAllColumns() throws SQLException {
         DatabaseMetaData metaData = getDatabaseMetaData();
         List<String> columns = new ArrayList<>();
-        try (ResultSet rs = metaData.getColumns(null, null, statementModel.getTableName(), null)) {
+        try (ResultSet rs = metaData.getColumns(null, null, normalizeObjectName(statementModel.getTableName()), null)) {
             while (rs.next()) {
                 // Need to quote columns for mixed case columns
                 columns.add('"' + rs.getString(IDX_COLUMN_NAME) + '"');
@@ -329,7 +331,7 @@ public abstract class AbstractGeneratedKeysQuery {
         DatabaseMetaData metaData = getDatabaseMetaData();
         Arrays.sort(columnIndexes);
         List<String> columns = new ArrayList<>();
-        try (ResultSet rs = metaData.getColumns(null, null, statementModel.getTableName(), null)) {
+        try (ResultSet rs = metaData.getColumns(null, null, normalizeObjectName(statementModel.getTableName()), null)) {
             while (rs.next()) {
                 if (Arrays.binarySearch(columnIndexes, rs.getInt(IDX_ORDINAL_POSITION)) >= 0) {
                     // Need to quote columns for mixed case columns
@@ -339,6 +341,26 @@ public abstract class AbstractGeneratedKeysQuery {
         }
         columnNames = columns.toArray(new String[0]);
         addReturningClause();
+    }
+
+    /**
+     * Normalizes an object name from the parser.
+     * <p>
+     * Like-wildcard characters are escaped, and unquoted identifiers are uppercased, and quoted identifiers are
+     * returned with the quotes stripped.
+     * </p>
+     *
+     * @param objectName Object name
+     * @return Normalized object name
+     */
+    private String normalizeObjectName(String objectName) {
+        if (objectName == null) return null;
+        objectName = objectName.trim();
+        objectName = FBDatabaseMetaData.escapeWildcards(objectName);
+        if (objectName.length() > 2 && objectName.charAt(0) == '"' && objectName.charAt(objectName.length() - 1) == '"') {
+            return objectName.substring(1, objectName.length() - 1);
+        }
+        return objectName.toUpperCase();
     }
 
     /**
