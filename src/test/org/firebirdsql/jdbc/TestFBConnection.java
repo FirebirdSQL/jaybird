@@ -19,13 +19,18 @@
 package org.firebirdsql.jdbc;
 
 import org.firebirdsql.common.FBJUnit4TestBase;
+import org.firebirdsql.common.FBTestProperties;
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.TransactionParameterBuffer;
+import org.firebirdsql.gds.impl.oo.OOGDSFactoryPlugin;
+import org.firebirdsql.gds.impl.wire.WireGDSFactoryPlugin;
 import org.firebirdsql.gds.ng.FbDatabase;
 import org.firebirdsql.jca.FBManagedConnection;
 import org.junit.Test;
 
 import java.sql.*;
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.Properties;
 
 import static org.firebirdsql.common.DdlHelper.executeCreateTable;
@@ -360,6 +365,7 @@ public class TestFBConnection extends FBJUnit4TestBase {
     @Test
     public void testProcessIdThroughConnectionProperty() throws Exception {
         assumeTrue("Test requires monitoring tables", getDefaultSupportInfo().supportsMonitoringTables());
+        assumeTrue("Test only works in pure java", Arrays.asList(WireGDSFactoryPlugin.PURE_JAVA_TYPE_NAME, OOGDSFactoryPlugin.TYPE_NAME).contains(FBTestProperties.GDS_TYPE));
         final Properties props = getDefaultPropertiesForConnection();
         final int processId = 5843;
         props.setProperty("processId", String.valueOf(processId));
@@ -376,6 +382,7 @@ public class TestFBConnection extends FBJUnit4TestBase {
     @Test
     public void testProcessAndIdThroughConnectionPropertyTakesPrecedence() throws Exception {
         assumeTrue("Test requires monitoring tables", getDefaultSupportInfo().supportsMonitoringTables());
+        assumeTrue("Test only works in pure java", Arrays.asList(WireGDSFactoryPlugin.PURE_JAVA_TYPE_NAME, OOGDSFactoryPlugin.TYPE_NAME).contains(FBTestProperties.GDS_TYPE));
         final Properties props = getDefaultPropertiesForConnection();
         final String processNameThroughConnection = "Process name in connection property";
         props.setProperty("processName", processNameThroughConnection);
