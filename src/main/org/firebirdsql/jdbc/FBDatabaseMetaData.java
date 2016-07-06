@@ -4864,26 +4864,24 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
     private FBPreparedStatement getStatement(String sql) throws SQLException {
         FBPreparedStatement s = statements.get(sql);
 
-        if (s != null && s.isClosed()) {
-            statements.remove(sql);
-            s = null;
+        if (s != null) {
+            if (s.isClosed()) {
+                statements.remove(sql);
+            } else {
+                return s;
+            }
         }
-
-        if (s != null)
-            return s;
 
         if (connection == null) {
             InternalTransactionCoordinator.MetaDataTransactionCoordinator metaDataTransactionCoordinator =
                 new InternalTransactionCoordinator.MetaDataTransactionCoordinator();
 
-            s = new FBPreparedStatement(gdsHelper, sql,
-                    ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY,
-                    ResultSet.CLOSE_CURSORS_AT_COMMIT,
-                    metaDataTransactionCoordinator, metaDataTransactionCoordinator,
+            s = new FBPreparedStatement(gdsHelper, sql, ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY,
+                    ResultSet.CLOSE_CURSORS_AT_COMMIT, metaDataTransactionCoordinator, metaDataTransactionCoordinator,
                     true, true, false);
         } else {
-            s = (FBPreparedStatement)connection.prepareMetaDataStatement(
-                sql, ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
+            s = (FBPreparedStatement)connection.prepareMetaDataStatement(sql, ResultSet.TYPE_SCROLL_INSENSITIVE,
+                    ResultSet.CONCUR_READ_ONLY);
         }
 
         statements.put(sql, s);
