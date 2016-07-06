@@ -50,6 +50,7 @@ public class JnaBlob extends AbstractFbBlob implements FbBlob, DatabaseListener 
     private final IntByReference jnaHandle = new IntByReference(0);
     private final ISC_STATUS[] statusVector = new ISC_STATUS[JnaDatabase.STATUS_VECTOR_SIZE];
     private final FbClientLibrary clientLibrary;
+    private ByteBuffer byteBuffer;
 
     public JnaBlob(JnaDatabase database, JnaTransaction transaction, BlobParameterBuffer blobParameterBuffer) {
         this(database, transaction, blobParameterBuffer, NO_BLOB_ID);
@@ -139,12 +140,13 @@ public class JnaBlob extends AbstractFbBlob implements FbBlob, DatabaseListener 
             }
             // TODO Honour request for larger sizes by looping?
             sizeRequested = Math.min(sizeRequested, getMaximumSegmentSize());
-            final ByteBuffer responseBuffer = ByteBuffer.allocateDirect(sizeRequested);
+            final ByteBuffer responseBuffer;
             final ShortByReference actualLength = new ShortByReference();
             synchronized (getSynchronizationObject()) {
                 checkDatabaseAttached();
                 checkTransactionActive();
                 checkBlobOpen();
+                responseBuffer = getByteBuffer(sizeRequested);
 
                 clientLibrary.isc_get_segment(statusVector, getJnaHandle(), actualLength, (short) sizeRequested,
                         responseBuffer);
@@ -216,9 +218,9 @@ public class JnaBlob extends AbstractFbBlob implements FbBlob, DatabaseListener 
     @Override
     public byte[] getBlobInfo(byte[] requestItems, int bufferLength) throws SQLException {
         try {
-            final ByteBuffer responseBuffer = ByteBuffer.allocateDirect(bufferLength);
-
+            final ByteBuffer responseBuffer;
             synchronized (getSynchronizationObject()) {
+                responseBuffer = getByteBuffer(bufferLength);
                 checkDatabaseAttached();
                 clientLibrary.isc_blob_info(statusVector, getJnaHandle(),
                         (short) requestItems.length, requestItems,
@@ -238,20 +240,37 @@ public class JnaBlob extends AbstractFbBlob implements FbBlob, DatabaseListener 
     @Override
     protected void closeImpl() throws SQLException {
         synchronized (getSynchronizationObject()) {
-            clientLibrary.isc_close_blob(statusVector, getJnaHandle());
-            processStatusVector();
+            try {
+                clientLibrary.isc_close_blob(statusVector, getJnaHandle());
+                processStatusVector();
+            } finally {
+                byteBuffer = null;
+            }
         }
     }
 
     @Override
     protected void cancelImpl() throws SQLException {
         synchronized (getSynchronizationObject()) {
-            clientLibrary.isc_cancel_blob(statusVector, getJnaHandle());
-            processStatusVector();
+            try {
+                clientLibrary.isc_cancel_blob(statusVector, getJnaHandle());
+                processStatusVector();
+            } finally {
+                byteBuffer = null;
+            }
         }
     }
 
     private void processStatusVector() throws SQLException {
         getDatabase().processStatusVector(statusVector, null);
+    }
+
+    private ByteBuffer getByteBuffer(int requiredSize) {
+        if (byteBuffer == null || byteBuffer.capacity() < requiredSize) {
+            byteBuffer = ByteBuffer.allocateDirect(requiredSize);
+        } else {
+            byteBuffer.clear();
+        }
+        return byteBuffer;
     }
 }
