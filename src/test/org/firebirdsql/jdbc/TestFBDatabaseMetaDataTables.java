@@ -18,13 +18,13 @@
  */
 package org.firebirdsql.jdbc;
 
-import org.firebirdsql.common.FBTestProperties;
 import org.firebirdsql.jdbc.MetaDataValidator.MetaDataInfo;
 import org.junit.Test;
 
 import java.sql.ResultSet;
 import java.util.*;
 
+import static org.firebirdsql.common.FBTestProperties.getDefaultSupportInfo;
 import static org.junit.Assert.*;
 import static org.junit.Assume.assumeTrue;
 
@@ -90,7 +90,7 @@ public class TestFBDatabaseMetaDataTables extends FBMetaDataTestBase<TestFBDatab
                 CREATE_QUOTED_NORMAL_TABLE,
                 CREATE_NORMAL_VIEW,
                 CREATE_QUOTED_NORMAL_VIEW));
-        if (FBTestProperties.getDefaultSupportInfo().supportsGlobalTemporaryTables()) {
+        if (getDefaultSupportInfo().supportsGlobalTemporaryTables()) {
             createStatements.add(CREATE_GTT_ON_COMMIT_DELETE);
             createStatements.add(CREATE_GTT_ON_COMMIT_PRESERVE);
         }
@@ -150,8 +150,11 @@ public class TestFBDatabaseMetaDataTables extends FBMetaDataTestBase<TestFBDatab
         // TODO Add test for order?
         Set<String> expectedTables = new HashSet<>(Arrays.asList("TEST_NORMAL_TABLE",
                 "test_quoted_normal_table", "TEST_NORMAL_VIEW", "test_quoted_normal_view",
-                "RDB$FIELDS", "RDB$GENERATORS", "RDB$ROLES", "RDB$DATABASE", "RDB$TRIGGERS",
-                "TEST_GTT_ON_COMMIT_DELETE", "TEST_GTT_ON_COMMIT_PRESERVE"));
+                "RDB$FIELDS", "RDB$GENERATORS", "RDB$ROLES", "RDB$DATABASE", "RDB$TRIGGERS"));
+        if (getDefaultSupportInfo().supportsGlobalTemporaryTables()) {
+            expectedTables.add("TEST_GTT_ON_COMMIT_DELETE");
+            expectedTables.add("TEST_GTT_ON_COMMIT_PRESERVE");
+        }
         try (ResultSet tables = dbmd.getTables(null, null, tableNamePattern, types)) {
             while (tables.next()) {
                 String tableName = tables.getString(TableMetaData.TABLE_NAME.name());
@@ -425,7 +428,7 @@ public class TestFBDatabaseMetaDataTables extends FBMetaDataTestBase<TestFBDatab
     @Test
     public void testTableMetaData_globalTemporaryTables() throws Exception {
         assumeTrue("Requires global temporary table support",
-                FBTestProperties.getDefaultSupportInfo().supportsGlobalTemporaryTables());
+                getDefaultSupportInfo().supportsGlobalTemporaryTables());
 
         Set<String> expectedGtt = new HashSet<>(Arrays.asList("TEST_GTT_ON_COMMIT_DELETE", "TEST_GTT_ON_COMMIT_PRESERVE"));
         Set<String> retrievedTables = new HashSet<>();
@@ -448,7 +451,7 @@ public class TestFBDatabaseMetaDataTables extends FBMetaDataTestBase<TestFBDatab
     @Test
     public void testTableMetaData_exceptSystemTable_sorted() throws Exception {
         List<String> expectedTables = new ArrayList<>();
-        if (FBTestProperties.getDefaultSupportInfo().supportsGlobalTemporaryTables()) {
+        if (getDefaultSupportInfo().supportsGlobalTemporaryTables()) {
             expectedTables.add("TEST_GTT_ON_COMMIT_DELETE");
             expectedTables.add("TEST_GTT_ON_COMMIT_PRESERVE");
         }

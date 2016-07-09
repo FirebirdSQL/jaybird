@@ -30,6 +30,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 import static org.firebirdsql.common.FBTestProperties.getConnectionViaDriverManager;
+import static org.firebirdsql.common.FBTestProperties.getDefaultSupportInfo;
 import static org.firebirdsql.common.FBTestProperties.getProperty;
 import static org.firebirdsql.util.FirebirdSupportInfo.supportInfoFor;
 import static org.junit.Assert.*;
@@ -76,7 +77,10 @@ public class TestFBDatabaseMetaData extends FBJUnit4TestBase {
 
     @Test
     public void testGetTableTypes() throws Exception {
-        final Set<String> expected = new HashSet<>(Arrays.asList(FBDatabaseMetaData.ALL_TYPES_2_5));
+        final Set<String> expected = new HashSet<>(Arrays.asList(
+                getDefaultSupportInfo().supportsGlobalTemporaryTables()
+                        ? FBDatabaseMetaData.ALL_TYPES_2_5
+                        : FBDatabaseMetaData.ALL_TYPES_2_1));
         final Set<String> retrieved = new HashSet<>();
 
         ResultSet rs = dmd.getTableTypes();
