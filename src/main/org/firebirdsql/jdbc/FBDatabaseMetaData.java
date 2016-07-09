@@ -2093,72 +2093,19 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
         }
     }
 
-    // TODO: Include GLOBAL TEMPORARY
     public static final String TABLE = "TABLE";
     public static final String SYSTEM_TABLE = "SYSTEM TABLE";
     public static final String VIEW = "VIEW";
-    public static final String[] ALL_TYPES = {TABLE, SYSTEM_TABLE, VIEW};
-
-    private static final String TABLE_COLUMNS_FORMAT =
-            " select cast(null as varchar(31)) as TABLE_CAT,"
-            + "cast(null as varchar(31)) as TABLE_SCHEM,"
-            + "cast(RDB$RELATION_NAME as varchar(31)) as TABLE_NAME,"
-            + "cast('%s' as varchar(31)) as TABLE_TYPE,"
-            + "RDB$DESCRIPTION as REMARKS,"
-            + "cast(null as varchar(31)) as TYPE_CAT,"
-            + "cast(null as varchar(31)) as TYPE_SCHEM,"
-            + "cast(null as varchar(31)) as TYPE_NAME,"
-            + "cast(null as varchar(31)) as SELF_REFERENCING_COL_NAME,"
-            + "cast(null as varchar(31)) as REF_GENERATION,"
-            + "cast(RDB$OWNER_NAME as varchar(31)) as OWNER_NAME "
-            + "from RDB$RELATIONS";
-
-    private static final String TABLE_COLUMNS_SYSTEM =
-            String.format(TABLE_COLUMNS_FORMAT, SYSTEM_TABLE);
-
-    private static final String TABLE_COLUMNS_NORMAL =
-            String.format(TABLE_COLUMNS_FORMAT, TABLE);
-
-    private static final String TABLE_COLUMNS_VIEW =
-            String.format(TABLE_COLUMNS_FORMAT, VIEW);
-
-    private static final String GET_TABLES_ALL =
-          TABLE_COLUMNS_SYSTEM
-        + " where ? = 'T' and RDB$SYSTEM_FLAG = 1 and RDB$VIEW_SOURCE is null"
-        + " union"
-        + TABLE_COLUMNS_NORMAL
-        + " where ? = 'T' and RDB$SYSTEM_FLAG = 0 and RDB$VIEW_SOURCE is null"
-        + " union"
-        + TABLE_COLUMNS_VIEW
-        + " where ? = 'T' and RDB$VIEW_SOURCE is not null "
-        + " order by 3 ";
-
-    private static final String GET_TABLES_EXACT =
-          TABLE_COLUMNS_SYSTEM
-        + " where ? = 'T' and RDB$SYSTEM_FLAG = 1 and RDB$VIEW_SOURCE is null"
-        + " and ? = RDB$RELATION_NAME"
-        + " union"
-        + TABLE_COLUMNS_NORMAL
-        + " where ? = 'T' and RDB$SYSTEM_FLAG = 0 and RDB$VIEW_SOURCE is null"
-        + " and ? = RDB$RELATION_NAME"
-        + " union"
-        + TABLE_COLUMNS_VIEW
-        + " where ? = 'T' and RDB$VIEW_SOURCE is not null"
-        + " and ? = RDB$RELATION_NAME";
-
-    private static final String GET_TABLES_LIKE =
-          TABLE_COLUMNS_SYSTEM
-        + " where ? = 'T' and RDB$SYSTEM_FLAG = 1 and RDB$VIEW_SOURCE is null"
-        + " and RDB$RELATION_NAME || '" + SPACES_31 + "' like ? escape '\\'"
-        + " union"
-        + TABLE_COLUMNS_NORMAL
-        + " where ? = 'T' and RDB$SYSTEM_FLAG = 0 and RDB$VIEW_SOURCE is null"
-        + " and RDB$RELATION_NAME || '" + SPACES_31 + "' like ? escape '\\'"
-        + " union"
-        + TABLE_COLUMNS_VIEW
-        + " where ? = 'T' and RDB$VIEW_SOURCE is not null"
-        + " and RDB$RELATION_NAME || '" + SPACES_31 + "' like ? escape '\\' "
-        + " order by 3 ";
+    public static final String GLOBAL_TEMPORARY = "GLOBAL TEMPORARY";
+    /**
+     * Table types supported for Firebird 2.5 and up (will also work with 2.1 and earlier though)
+     */
+    public static final String[] ALL_TYPES_2_5 = {TABLE, SYSTEM_TABLE, VIEW, GLOBAL_TEMPORARY};
+    /**
+     * Table types supported for Firebird 2.1 and lower
+     */
+    public static final String[] ALL_TYPES_2_1 = {TABLE, SYSTEM_TABLE, VIEW};
+    public static final String[] ALL_TYPES = ALL_TYPES_2_5;
 
     /**
      * Retrieves a description of the tables available in the given catalog.
@@ -2169,22 +2116,21 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
      * <P>
      * Each table description has the following columns:
      *  <OL>
-     *  <LI><B>TABLE_CAT</B> String => table catalog (may be <code>null</code>)
-     *  <LI><B>TABLE_SCHEM</B> String => table schema (may be <code>null</code>)
-     *  <LI><B>TABLE_NAME</B> String => table name
-     *  <LI><B>TABLE_TYPE</B> String => table type.  Typical types are "TABLE",
-     *          "VIEW", "SYSTEM TABLE", "GLOBAL TEMPORARY",
-     *          "LOCAL TEMPORARY", "ALIAS", "SYNONYM".
-     *  <LI><B>REMARKS</B> String => explanatory comment on the table
-     *  <LI><B>TYPE_CAT</B> String => the types catalog (may be <code>null</code>)
-     *  <LI><B>TYPE_SCHEM</B> String => the types schema (may be <code>null</code>)
-     *  <LI><B>TYPE_NAME</B> String => type name (may be <code>null</code>)
-     *  <LI><B>SELF_REFERENCING_COL_NAME</B> String => name of the designated
+     *  <LI><B>TABLE_CAT</B> String {@code =>} table catalog (may be <code>null</code>)
+     *  <LI><B>TABLE_SCHEM</B> String {@code =>} table schema (may be <code>null</code>)
+     *  <LI><B>TABLE_NAME</B> String {@code =>} table name
+     *  <LI><B>TABLE_TYPE</B> String {@code =>} table type.  Typical types are "TABLE",
+     *                  "VIEW", "SYSTEM TABLE", "GLOBAL TEMPORARY",
+     *                  "LOCAL TEMPORARY", "ALIAS", "SYNONYM".
+     *  <LI><B>REMARKS</B> String {@code =>} explanatory comment on the table
+     *  <LI><B>TYPE_CAT</B> String {@code =>} the types catalog (may be <code>null</code>)
+     *  <LI><B>TYPE_SCHEM</B> String {@code =>} the types schema (may be <code>null</code>)
+     *  <LI><B>TYPE_NAME</B> String {@code =>} type name (may be <code>null</code>)
+     *  <LI><B>SELF_REFERENCING_COL_NAME</B> String {@code =>} name of the designated
      *                  "identifier" column of a typed table (may be <code>null</code>)
-     *  <LI><B>REF_GENERATION</B> String => specifies how values in
+     *  <LI><B>REF_GENERATION</B> String {@code =>} specifies how values in
      *                  SELF_REFERENCING_COL_NAME are created. Values are
      *                  "SYSTEM", "USER", "DERIVED". (may be <code>null</code>)
-     *  <LI><B>OWNER_NAME</B> String => Username of the owner of the table (Jaybird-specific)
      *  </OL>
      *
      * <P><B>Note:</B> Some databases may not return information for
@@ -2209,20 +2155,178 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
      */
     public ResultSet getTables(String catalog, String schemaPattern, String tableNamePattern, String types[])
             throws SQLException {
+        if (hasGlobalTemporaryTables()) {
+            return getTables_2_5(tableNamePattern, types);
+        } else {
+            return getTables_2_1(tableNamePattern, types);
+        }
+    }
+
+    private static final String GET_TABLE_ORDER_BY = " order by 4, 3";
+
+    //@formatter:off
+    private static final String TABLE_COLUMNS_2_5 =
+            " select cast(null as varchar(31)) as TABLE_CAT,"
+            + "cast(null as varchar(31)) as TABLE_SCHEM,"
+            + "cast(RDB$RELATION_NAME as varchar(31)) as TABLE_NAME,"
+            + "cast(case"
+            + "  when rdb$relation_type = 0 then case when RDB$SYSTEM_FLAG = 1 then '" + SYSTEM_TABLE + "' else '" + TABLE + "' end"
+            + "  when rdb$relation_type = 1 then '" + VIEW + "'"
+            + "  when rdb$relation_type = 2 then '" + TABLE + "'" // external table; assume as normal table
+            + "  when rdb$relation_type = 3 then '" + SYSTEM_TABLE + "'" // virtual (monitoring) table: assume system
+            + "  when rdb$relation_type in (4, 5) then '" + GLOBAL_TEMPORARY + "'"
+            + "end as varchar(31)) as TABLE_TYPE,"
+            + "RDB$DESCRIPTION as REMARKS,"
+            + "cast(null as varchar(31)) as TYPE_CAT,"
+            + "cast(null as varchar(31)) as TYPE_SCHEM,"
+            + "cast(null as varchar(31)) as TYPE_NAME,"
+            + "cast(null as varchar(31)) as SELF_REFERENCING_COL_NAME,"
+            + "cast(null as varchar(31)) as REF_GENERATION,"
+            + "cast(RDB$OWNER_NAME as varchar(31)) as OWNER_NAME "
+            + "from RDB$RELATIONS ";
+
+    /**
+     * Implementation of {@link #getTables(String, String, String, String[])} for Firebird 2.5 and up.
+     */
+    private ResultSet getTables_2_5(String tableNamePattern, String[] types) throws SQLException {
         if (types == null) {
-            types = ALL_TYPES;
+            types = ALL_TYPES_2_5;
+        }
+
+        Clause nameClause = new Clause("RDB$RELATION_NAME", tableNamePattern);
+        String sql = TABLE_COLUMNS_2_5;
+        List<String> params;
+        if (nameClause.hasCondition()) {
+            sql = sql + " where " + nameClause.getCondition();
+            params = Collections.singletonList(nameClause.getValue());
+        } else {
+            params = Collections.emptyList();
+        }
+        Set<String> typeSet = new HashSet<>(Arrays.asList(types));
+
+        if (!typeSet.containsAll(Arrays.asList(ALL_TYPES_2_5))) {
+            // Only construct conditions when we don't query for all
+            StringBuilder typeCondition = new StringBuilder(112);
+            if (typeSet.contains(SYSTEM_TABLE) && typeSet.contains(TABLE)) {
+                typeCondition.append(" rdb$relation_type in (0, 2, 3) ");
+            } else if (typeSet.contains(SYSTEM_TABLE)) {
+                typeCondition.append(" rdb$relation_type in (0, 3) and rdb$system_flag = 1 "); // We assume that external tables are never system and that virtual tables are always system
+            } else if (typeSet.contains(TABLE)) {
+                typeCondition.append(" rdb$relation_type in (0, 2) and rdb$system_flag = 0 "); // We assume that external tables are never system and that virtual tables are always system
+            }
+
+            if (typeSet.contains(VIEW)) {
+                if (typeCondition.length() > 0) {
+                    typeCondition.append(" or ");
+                }
+                typeCondition.append(" rdb$relation_type = 1 "); // We assume (but don't check) that views are never system
+            }
+
+            if (typeSet.contains(GLOBAL_TEMPORARY)) {
+                if (typeCondition.length() > 0) {
+                    typeCondition.append(" or ");
+                }
+                typeCondition.append(" rdb$relation_type in (4, 5) ");
+            }
+
+            if (typeCondition.length() == 0) {
+                // Requested types are unknown, query nothing
+                typeCondition.append(" 1 = 0 ");
+            }
+
+            sql = sql + (nameClause.hasCondition() ?  " (" + typeCondition + ") " : " where " + typeCondition + " ");
+        } else if (nameClause.hasCondition()) {
+            // Clause condition always ends in "and"
+            sql += " 1=1 ";
+        }
+
+        sql = sql + GET_TABLE_ORDER_BY;
+
+        return doQuery(sql, params);
+    }
+
+    //@formatter:off
+    private static final String TABLE_COLUMNS_FORMAT_2_1 =
+            " select cast(null as varchar(31)) as TABLE_CAT,"
+            + "cast(null as varchar(31)) as TABLE_SCHEM,"
+            + "cast(RDB$RELATION_NAME as varchar(31)) as TABLE_NAME,"
+            + "cast('%s' as varchar(31)) as TABLE_TYPE,"
+            + "RDB$DESCRIPTION as REMARKS,"
+            + "cast(null as varchar(31)) as TYPE_CAT,"
+            + "cast(null as varchar(31)) as TYPE_SCHEM,"
+            + "cast(null as varchar(31)) as TYPE_NAME,"
+            + "cast(null as varchar(31)) as SELF_REFERENCING_COL_NAME,"
+            + "cast(null as varchar(31)) as REF_GENERATION,"
+            + "cast(RDB$OWNER_NAME as varchar(31)) as OWNER_NAME "
+            + "from RDB$RELATIONS ";
+
+    private static final String TABLE_COLUMNS_SYSTEM_2_1 =
+            String.format(TABLE_COLUMNS_FORMAT_2_1, SYSTEM_TABLE);
+
+    private static final String TABLE_COLUMNS_NORMAL =
+            String.format(TABLE_COLUMNS_FORMAT_2_1, TABLE);
+
+    private static final String TABLE_COLUMNS_VIEW =
+            String.format(TABLE_COLUMNS_FORMAT_2_1, VIEW);
+
+    private static final String GET_TABLES_ALL_2_1 =
+            TABLE_COLUMNS_SYSTEM_2_1
+            + " where ? = 'T' and RDB$SYSTEM_FLAG = 1 and RDB$VIEW_SOURCE is null"
+            + " union"
+            + TABLE_COLUMNS_NORMAL
+            + " where ? = 'T' and RDB$SYSTEM_FLAG = 0 and RDB$VIEW_SOURCE is null"
+            + " union"
+            + TABLE_COLUMNS_VIEW
+            + " where ? = 'T' and RDB$VIEW_SOURCE is not null "
+            + GET_TABLE_ORDER_BY;
+
+    private static final String GET_TABLES_EXACT_2_1 =
+            TABLE_COLUMNS_SYSTEM_2_1
+            + " where ? = 'T' and RDB$SYSTEM_FLAG = 1 and RDB$VIEW_SOURCE is null"
+            + " and cast(RDB$RELATION_NAME as varchar(40)) = ? "
+            + " union"
+            + TABLE_COLUMNS_NORMAL
+            + " where ? = 'T' and RDB$SYSTEM_FLAG = 0 and RDB$VIEW_SOURCE is null"
+            + " and cast(RDB$RELATION_NAME as varchar(40)) = ? "
+            + " union"
+            + TABLE_COLUMNS_VIEW
+            + " where ? = 'T' and RDB$VIEW_SOURCE is not null"
+            + " and cast(RDB$RELATION_NAME as varchar(40)) = ? "
+            + GET_TABLE_ORDER_BY;
+
+    private static final String GET_TABLES_LIKE_2_1 =
+            TABLE_COLUMNS_SYSTEM_2_1
+            + " where ? = 'T' and RDB$SYSTEM_FLAG = 1 and RDB$VIEW_SOURCE is null"
+            + " and RDB$RELATION_NAME || '" + SPACES_31 + "' like ? escape '\\'"
+            + " union"
+            + TABLE_COLUMNS_NORMAL
+            + " where ? = 'T' and RDB$SYSTEM_FLAG = 0 and RDB$VIEW_SOURCE is null"
+            + " and RDB$RELATION_NAME || '" + SPACES_31 + "' like ? escape '\\'"
+            + " union"
+            + TABLE_COLUMNS_VIEW
+            + " where ? = 'T' and RDB$VIEW_SOURCE is not null"
+            + " and RDB$RELATION_NAME || '" + SPACES_31 + "' like ? escape '\\' "
+            + GET_TABLE_ORDER_BY;
+    //@formatter:on
+
+    /**
+     * Implementation of {@link #getTables(String, String, String, String[])} for Firebird 2.1 and lower.
+     */
+    private ResultSet getTables_2_1(String tableNamePattern, String[] types) throws SQLException {
+        if (types == null) {
+            types = ALL_TYPES_2_1;
         }
         String sql;
         List<String> params;
         if (isAllCondition(tableNamePattern)) {
-            sql = GET_TABLES_ALL;
+            sql = GET_TABLES_ALL_2_1;
             params = new ArrayList<>(3);
             params.add(getWantsSystemTables(types));
             params.add(getWantsTables(types));
             params.add(getWantsViews(types));
         } else if (hasNoWildcards(tableNamePattern)) {
             tableNamePattern = stripEscape(tableNamePattern);
-            sql = GET_TABLES_EXACT;
+            sql = GET_TABLES_EXACT_2_1;
             params = new ArrayList<>(6);
             params.add(getWantsSystemTables(types));
             params.add(tableNamePattern);
@@ -2233,7 +2337,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
         } else {
             // See also comment in Clause for explanation
             tableNamePattern = tableNamePattern + SPACES_15 + "%";
-            sql = GET_TABLES_LIKE;
+            sql = GET_TABLES_LIKE_2_1;
             params = new ArrayList<>(6);
             params.add(getWantsSystemTables(types));
             params.add(tableNamePattern);
@@ -2304,12 +2408,20 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
                 .at(0).simple(SQL_VARYING, 31, "TABLE_TYPE", "TABLETYPES").addField()
                 .toRowDescriptor();
 
-        final List<RowValue> rows = new ArrayList<>(ALL_TYPES.length);
-        for (String ALL_TYPE : ALL_TYPES) {
-            rows.add(RowValue.of(rowDescriptor, getBytes(ALL_TYPE)));
+        final String[] types = hasGlobalTemporaryTables()
+                ? ALL_TYPES_2_5
+                : ALL_TYPES_2_1;
+
+        final List<RowValue> rows = new ArrayList<>(types.length);
+        for (String type : types) {
+            rows.add(RowValue.of(rowDescriptor, getBytes(type)));
         }
 
         return new FBResultSet(rowDescriptor, rows);
+    }
+
+    private boolean hasGlobalTemporaryTables() throws SQLException {
+        return getOdsMajorVersion() == 11 && getOdsMinorVersion() >= 2 || getOdsMajorVersion() > 11;
     }
 
     private static final String GET_COLUMNS_START =

@@ -18,6 +18,7 @@
  */
 package org.firebirdsql.jdbc;
 
+import org.firebirdsql.common.FBTestProperties;
 import org.firebirdsql.jdbc.MetaDataValidator.MetaDataInfo;
 import org.junit.Test;
 
@@ -25,6 +26,7 @@ import java.sql.ResultSet;
 import java.util.*;
 
 import static org.junit.Assert.*;
+import static org.junit.Assume.assumeTrue;
 
 /**
  * Tests for {@link FBDatabaseMetaData} for table related metadata.
@@ -33,10 +35,11 @@ import static org.junit.Assert.*;
  */
 public class TestFBDatabaseMetaDataTables extends FBMetaDataTestBase<TestFBDatabaseMetaDataTables.TableMetaData> {
 
-    // Valid values for TABLE_TYPE (separate from those defined in AbstractDatabaseMetaData for testing)
+    // Valid values for TABLE_TYPE (separate from those defined in FBDatabaseMetaData for testing)
     private static final String VIEW = "VIEW";
     private static final String TABLE = "TABLE";
     private static final String SYSTEM_TABLE = "SYSTEM TABLE";
+    private static final String GLOBAL_TEMPORARY = "GLOBAL TEMPORARY";
 
     public TestFBDatabaseMetaDataTables() {
         super(TableMetaData.class);
@@ -67,13 +70,31 @@ public class TestFBDatabaseMetaDataTables extends FBMetaDataTestBase<TestFBDatab
             "SELECT t1.id, t1.varchar_field, t2.varchar_field " + 
             "FROM test_normal_table t1 " + 
             "INNER JOIN \"test_quoted_normal_table\" t2 ON t1.id = t2.id";
+
+    public static final String CREATE_GTT_ON_COMMIT_DELETE =
+            "create global temporary table test_gtt_on_commit_delete (" +
+            "    id INTEGER PRIMARY KEY," +
+            "    varchar_field VARCHAR(100)" +
+            ") on commit delete rows";
+
+    public static final String CREATE_GTT_ON_COMMIT_PRESERVE =
+            "create global temporary table test_gtt_on_commit_preserve (" +
+            "    id INTEGER PRIMARY KEY," +
+            "    varchar_field VARCHAR(100)" +
+            ") on commit delete rows";
     
     protected List<String> getCreateStatements() {
-        return Arrays.asList(
+        List<String> createStatements = new ArrayList<>();
+        createStatements.addAll(Arrays.asList(
                 CREATE_NORMAL_TABLE,
                 CREATE_QUOTED_NORMAL_TABLE,
                 CREATE_NORMAL_VIEW,
-                CREATE_QUOTED_NORMAL_VIEW);
+                CREATE_QUOTED_NORMAL_VIEW));
+        if (FBTestProperties.getDefaultSupportInfo().supportsGlobalTemporaryTables()) {
+            createStatements.add(CREATE_GTT_ON_COMMIT_DELETE);
+            createStatements.add(CREATE_GTT_ON_COMMIT_PRESERVE);
+        }
+        return createStatements;
     }
 
     /**
@@ -102,7 +123,7 @@ public class TestFBDatabaseMetaDataTables extends FBMetaDataTestBase<TestFBDatab
      */
     @Test
     public void testTableMetaData_everything_tableName_null_allTypes() throws Exception {
-        validateTableMetaData_everything(null, new String[] { SYSTEM_TABLE, TABLE, VIEW });
+        validateTableMetaData_everything(null, new String[] { SYSTEM_TABLE, TABLE, VIEW, GLOBAL_TEMPORARY });
     }
 
     /**
@@ -129,7 +150,8 @@ public class TestFBDatabaseMetaDataTables extends FBMetaDataTestBase<TestFBDatab
         // TODO Add test for order?
         Set<String> expectedTables = new HashSet<>(Arrays.asList("TEST_NORMAL_TABLE",
                 "test_quoted_normal_table", "TEST_NORMAL_VIEW", "test_quoted_normal_view",
-                "RDB$FIELDS", "RDB$GENERATORS", "RDB$ROLES", "RDB$DATABASE", "RDB$TRIGGERS"));
+                "RDB$FIELDS", "RDB$GENERATORS", "RDB$ROLES", "RDB$DATABASE", "RDB$TRIGGERS",
+                "TEST_GTT_ON_COMMIT_DELETE", "TEST_GTT_ON_COMMIT_PRESERVE"));
         try (ResultSet tables = dbmd.getTables(null, null, tableNamePattern, types)) {
             while (tables.next()) {
                 String tableName = tables.getString(TableMetaData.TABLE_NAME.name());
@@ -138,16 +160,7 @@ public class TestFBDatabaseMetaDataTables extends FBMetaDataTestBase<TestFBDatab
                         tableName != null && tableName.length() > 0);
                 expectedTables.remove(tableName);
 
-                if (tableName.startsWith("RDB$") || tableName.startsWith("MON$") || tableName.startsWith("SEC$")) {
-                    rules.put(TableMetaData.TABLE_TYPE, SYSTEM_TABLE);
-                } else if (tableName.equals("TEST_NORMAL_TABLE") || tableName.equals("test_quoted_normal_table")) {
-                    rules.put(TableMetaData.TABLE_TYPE, TABLE);
-                } else if (tableName.equals("TEST_NORMAL_VIEW") || tableName.equals("test_quoted_normal_view")) {
-                    rules.put(TableMetaData.TABLE_TYPE, VIEW);
-                } else {
-                    // Make sure we don't accidentally miss a table
-                    fail("Unexpected TABLE_NAME: " + tableName);
-                }
+                updateTableRules(tableName, rules);
 
                 validateRowValues(tables, rules);
             }
@@ -242,9 +255,7 @@ public class TestFBDatabaseMetaDataTables extends FBMetaDataTestBase<TestFBDatab
      *            Pattern for the tableName (should be null, or "%" only for this test)
      */
     private void validateTableMetaData_allNormalTables(String tableNamePattern) throws Exception {
-        // TODO: Should quoted table names be returned quoted?
-        // Expected normal tables
-        Set<String> expectedTables = new HashSet<>(Arrays.asList("TEST_NORMAL_TABLE",
+        Set<String> expectedNormalTables = new HashSet<>(Arrays.asList("TEST_NORMAL_TABLE",
                 "test_quoted_normal_table"));
         Set<String> retrievedTables = new HashSet<>();
         Map<TableMetaData, Object> rules = getDefaultValueValidationRules();
@@ -264,7 +275,7 @@ public class TestFBDatabaseMetaDataTables extends FBMetaDataTestBase<TestFBDatab
             }
 
             assertEquals("getTables() did not return expected tables: ",
-                    expectedTables, retrievedTables);
+                    expectedNormalTables, retrievedTables);
         }
     }
 
@@ -299,10 +310,7 @@ public class TestFBDatabaseMetaDataTables extends FBMetaDataTestBase<TestFBDatab
      *            Pattern for the tableName (should be null or "%" only for this test)
      */
     private void validateTableMetaData_allViews(String tableNamePattern) throws Exception {
-        // TODO: Should quoted table names be returned quoted?
-        // Expected normal tables
-        Set<String> expectedTables = new HashSet<>(Arrays.asList("TEST_NORMAL_VIEW",
-                "test_quoted_normal_view"));
+        Set<String> expectedViews = new HashSet<>(Arrays.asList("TEST_NORMAL_VIEW", "test_quoted_normal_view"));
         Set<String> retrievedTables = new HashSet<>();
         Map<TableMetaData, Object> rules = getDefaultValueValidationRules();
         rules.put(TableMetaData.TABLE_TYPE, VIEW);
@@ -321,7 +329,7 @@ public class TestFBDatabaseMetaDataTables extends FBMetaDataTestBase<TestFBDatab
             }
 
             assertEquals("getTables() did not return expected tables: ",
-                    expectedTables, retrievedTables);
+                    expectedViews, retrievedTables);
         }
     }
 
@@ -413,6 +421,57 @@ public class TestFBDatabaseMetaDataTables extends FBMetaDataTestBase<TestFBDatab
         validateTableMetaDataNoRow("test_normal_view", new String[] { SYSTEM_TABLE });
     }
 
+
+    @Test
+    public void testTableMetaData_globalTemporaryTables() throws Exception {
+        assumeTrue("Requires global temporary table support",
+                FBTestProperties.getDefaultSupportInfo().supportsGlobalTemporaryTables());
+
+        Set<String> expectedGtt = new HashSet<>(Arrays.asList("TEST_GTT_ON_COMMIT_DELETE", "TEST_GTT_ON_COMMIT_PRESERVE"));
+        Set<String> retrievedTables = new HashSet<>();
+        Map<TableMetaData, Object> rules = getDefaultValueValidationRules();
+        rules.put(TableMetaData.TABLE_TYPE, GLOBAL_TEMPORARY);
+        try (ResultSet tables = dbmd.getTables(null, null, null, new String[] { GLOBAL_TEMPORARY })) {
+            while (tables.next()) {
+                String tableName = tables.getString(TableMetaData.TABLE_NAME.name());
+                assertTrue("TABLE_NAME is not allowed to be null or empty",
+                        tableName != null && tableName.length() > 0);
+                retrievedTables.add(tableName);
+
+                validateRowValues(tables, rules);
+            }
+
+            assertEquals("getTables() did not return expected tables: ", expectedGtt, retrievedTables);
+        }
+    }
+
+    @Test
+    public void testTableMetaData_exceptSystemTable_sorted() throws Exception {
+        List<String> expectedTables = new ArrayList<>();
+        if (FBTestProperties.getDefaultSupportInfo().supportsGlobalTemporaryTables()) {
+            expectedTables.add("TEST_GTT_ON_COMMIT_DELETE");
+            expectedTables.add("TEST_GTT_ON_COMMIT_PRESERVE");
+        }
+        expectedTables.add("TEST_NORMAL_TABLE");
+        expectedTables.add("test_quoted_normal_table");
+        expectedTables.add("TEST_NORMAL_VIEW");
+        expectedTables.add("test_quoted_normal_view");
+        int indexExpected = 0;
+        try (ResultSet tables = dbmd.getTables(null, null, "%", new String[] { TABLE, VIEW, GLOBAL_TEMPORARY })) {
+            while (tables.next()) {
+                assertTrue("More tables than expected", indexExpected < expectedTables.size());
+                String expectedTableName = expectedTables.get(indexExpected++);
+
+                Map<TableMetaData, Object> rules = getDefaultValueValidationRules();
+                updateTableRules(expectedTableName, rules);
+
+                validateRowValues(tables, rules);
+            }
+
+            assertEquals("getTables() did not return some expected tables", expectedTables.size(), indexExpected);
+        }
+    }
+
     /**
      * Helper method for test methods that retrieve metadata expecting no
      * results.
@@ -424,8 +483,24 @@ public class TestFBDatabaseMetaDataTables extends FBMetaDataTestBase<TestFBDatab
      */
     private void validateTableMetaDataNoRow(String tableNamePattern, String[] types) throws Exception {
         try (ResultSet tables = dbmd.getTables(null, null, tableNamePattern, types)) {
-            assertFalse(String.format("Expected empty resultset for requesting %s with types %s",
+            assertFalse(String.format("Expected empty result set for requesting %s with types %s",
                     tableNamePattern, Arrays.toString(types)), tables.next());
+        }
+    }
+
+    private void updateTableRules(String tableName, Map<TableMetaData, Object> rules) {
+        rules.put(TableMetaData.TABLE_NAME, tableName);
+        if (tableName.startsWith("RDB$") || tableName.startsWith("MON$") || tableName.startsWith("SEC$")) {
+            rules.put(TableMetaData.TABLE_TYPE, SYSTEM_TABLE);
+        } else if (tableName.equals("TEST_NORMAL_TABLE") || tableName.equals("test_quoted_normal_table")) {
+            rules.put(TableMetaData.TABLE_TYPE, TABLE);
+        } else if (tableName.equals("TEST_NORMAL_VIEW") || tableName.equals("test_quoted_normal_view")) {
+            rules.put(TableMetaData.TABLE_TYPE, VIEW);
+        } else if (tableName.startsWith("TEST_GTT")) {
+            rules.put(TableMetaData.TABLE_TYPE, GLOBAL_TEMPORARY);
+        } else {
+            // Make sure we don't accidentally miss a table
+            fail("Unexpected TABLE_NAME: " + tableName);
         }
     }
     

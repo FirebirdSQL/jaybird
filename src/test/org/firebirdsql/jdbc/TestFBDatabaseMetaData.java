@@ -76,7 +76,7 @@ public class TestFBDatabaseMetaData extends FBJUnit4TestBase {
 
     @Test
     public void testGetTableTypes() throws Exception {
-        final Set<String> expected = new HashSet<>(Arrays.asList(FBDatabaseMetaData.ALL_TYPES));
+        final Set<String> expected = new HashSet<>(Arrays.asList(FBDatabaseMetaData.ALL_TYPES_2_5));
         final Set<String> retrieved = new HashSet<>();
 
         ResultSet rs = dmd.getTableTypes();

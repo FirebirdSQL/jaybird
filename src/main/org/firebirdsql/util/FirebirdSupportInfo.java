@@ -243,6 +243,13 @@ public final class FirebirdSupportInfo {
     }
 
     /**
+     * @return {@code true} when global temporary tables (GTTs) are supported.
+     */
+    public boolean supportsGlobalTemporaryTables() {
+        return serverVersion.isEqualOrAbove(2, 5);
+    }
+
+    /**
      * @param serverVersion
      *         Server version
      * @return FirebirdVersionSupport instance

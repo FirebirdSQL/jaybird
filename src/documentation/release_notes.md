@@ -401,6 +401,8 @@ _Unless explicitly indicated, changes also apply to `CallableStatement`_
 
 ### DatabaseMetaData ###
 
+#### Pattern parameters ####
+
 The `java.sql.DatabaseMetaData` implementation has been changed to follow the
 JDBC requirements for object name pattern or object name parameters (referred to
 as _patterns_ in the rest of this section).
@@ -421,7 +423,8 @@ The changes made are as follows:
 *   Empty string will no longer match (ie they are no longer interpreted as
     `"%"`) unless explicitly allowed by the method javadoc (usually only the
     `catalogPattern` and `schemaPattern`, which are always ignored by Jaybird)
-*   Double quotes around a pattern will no longer be stripped
+*   Double quotes around a pattern will no longer be stripped, and therefor will
+    now never match existing object names
 *   The driver will no longer try the uppercase variant of the provided
     pattern(s) if the original value(s) did not yield a result
 *   Object name parameters that are not patterns (as indicated by the absence of
@@ -459,6 +462,17 @@ In Jaybird 2.2 using `getColumns(null, null, "TABLENAME", "")` returns all
 columns of the table, in Jaybird 3.0 this produces **no rows** as empty string
 does not match any column. Instead, you should use
 `getColumns(null, null, "TABLENAME", "%")`.
+
+#### getTables ####
+
+Apart from the change described above, the following has changed for `getTables`
+
+*   The result set is now sorted by `TABLE_TYPE` and then by `TABLE_NAME` as
+    required by the JDBC API doc, previously we only only sorted on
+    `TABLE_NAME`.
+*   Support for table type `"GLOBAL TEMPORARY"` added for databases with
+    ODS 11.2 or higher (Firebird 2.5 or higher). In previous versions,
+    the global temporary tables were reported as normal tables (type `"TABLE"`)
 
 **TODO: Add other changes**
 
