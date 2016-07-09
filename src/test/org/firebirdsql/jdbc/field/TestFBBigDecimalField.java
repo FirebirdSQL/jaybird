@@ -83,17 +83,15 @@ public class TestFBBigDecimalField extends BaseJUnit4TestFBField<FBBigDecimalFie
     }
     
     @Test
-    @Ignore
+    @Ignore("Ignored in favor of more specific tests")
     @Override
     public void getBigDecimalNonNull() throws SQLException {
-        // Ignore in favor of more specific tests
     }
     
     @Test
-    @Ignore
+    @Ignore("Ignored in favor of more specific tests")
     @Override
     public void getBigDecimalIntNonNull() throws SQLException {
-        // TODO: Implement test for getBigDecimal(int)
     }
     
     @Test 
@@ -127,10 +125,9 @@ public class TestFBBigDecimalField extends BaseJUnit4TestFBField<FBBigDecimalFie
     }
     
     @Test
-    @Ignore
+    @Ignore("Ignored in favor of more specific tests")
     @Override
     public void setBigDecimalNonNull() throws SQLException {
-        // Ignore in favor of more specific tests
     }
     
     @Test
@@ -245,10 +242,9 @@ public class TestFBBigDecimalField extends BaseJUnit4TestFBField<FBBigDecimalFie
     }
     
     @Test
-    @Ignore
+    @Ignore("Ignored in favor of more specific tests")
     @Override
     public void getBooleanNonNull() throws SQLException {
-        // Ignore in favor of more specific tests
     }
 
     @Test
@@ -293,10 +289,9 @@ public class TestFBBigDecimalField extends BaseJUnit4TestFBField<FBBigDecimalFie
     }
     
     @Test
-    @Ignore
+    @Ignore("Ignored in favor of more specific tests")
     @Override
     public void setBoolean() throws SQLException {
-        // Ignore in favor of more specific tests
     }
     
     @Test

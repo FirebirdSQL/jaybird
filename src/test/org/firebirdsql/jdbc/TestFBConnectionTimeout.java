@@ -62,12 +62,9 @@ public class TestFBConnectionTimeout {
 
     /**
      * Test for default connect timeout.
-     * <p>
-     * This test is ignored by default, as it is OS dependent (eg on Windows 8 it is 20 seconds).  
-     * </p>
      */
     @Test
-    @Ignore
+    @Ignore("This test is ignored by default, as it is OS dependent (eg on Windows 8 it is 20 seconds).")
     public void defaultConnectTimeout() {
         // Ensure default timeout is used
         DriverManager.setLoginTimeout(0);

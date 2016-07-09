@@ -18,7 +18,10 @@
  */
 package org.firebirdsql.jdbc.field;
 
-import static org.junit.Assert.*;
+import org.firebirdsql.gds.ISCConstants;
+import org.firebirdsql.gds.ng.DatatypeCoder;
+import org.junit.Before;
+import org.junit.Test;
 
 import java.sql.Date;
 import java.sql.SQLException;
@@ -26,11 +29,8 @@ import java.sql.Timestamp;
 import java.sql.Types;
 import java.util.Calendar;
 
-import org.firebirdsql.gds.ISCConstants;
-import org.firebirdsql.gds.ng.DatatypeCoder;
-import org.junit.Before;
-import org.junit.Ignore;
-import org.junit.Test;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 
 /**
  * Tests for {@link FBDateField}
@@ -166,7 +166,6 @@ public class TestFBDateField extends BaseJUnit4TestFBField<FBDateField, java.sql
     }
     
     @Test
-    @Ignore
     @Override
     public void getObjectNonNull() throws SQLException {
         toReturnTestSqlDateExpectations();
@@ -175,7 +174,6 @@ public class TestFBDateField extends BaseJUnit4TestFBField<FBDateField, java.sql
     }
     
     @Test
-    @Ignore
     @Override
     public void setObjectNonNull() throws SQLException {
         setTestSqlDateExpectations();
