@@ -313,7 +313,7 @@ public abstract class AbstractGeneratedKeysQuery {
         try (ResultSet rs = metaData.getColumns(null, null, normalizeObjectName(statementModel.getTableName()), null)) {
             while (rs.next()) {
                 // Need to quote columns for mixed case columns
-                columns.add('"' + rs.getString(IDX_COLUMN_NAME) + '"');
+                columns.add(quoteObjectName(rs.getString(IDX_COLUMN_NAME)));
             }
         }
         columnNames = columns.toArray(new String[0]);
@@ -335,7 +335,7 @@ public abstract class AbstractGeneratedKeysQuery {
             while (rs.next()) {
                 if (Arrays.binarySearch(columnIndexes, rs.getInt(IDX_ORDINAL_POSITION)) >= 0) {
                     // Need to quote columns for mixed case columns
-                    columns.add('"' + rs.getString(IDX_COLUMN_NAME) + '"');
+                    columns.add(quoteObjectName(rs.getString(IDX_COLUMN_NAME)));
                 }
             }
         }
@@ -347,7 +347,7 @@ public abstract class AbstractGeneratedKeysQuery {
      * Normalizes an object name from the parser.
      * <p>
      * Like-wildcard characters are escaped, and unquoted identifiers are uppercased, and quoted identifiers are
-     * returned with the quotes stripped.
+     * returned with the quotes stripped and double double quotes replaced by a single double quote.
      * </p>
      *
      * @param objectName Object name
@@ -358,9 +358,15 @@ public abstract class AbstractGeneratedKeysQuery {
         objectName = objectName.trim();
         objectName = FBDatabaseMetaData.escapeWildcards(objectName);
         if (objectName.length() > 2 && objectName.charAt(0) == '"' && objectName.charAt(objectName.length() - 1) == '"') {
-            return objectName.substring(1, objectName.length() - 1);
+            return objectName.substring(1, objectName.length() - 1).replaceAll("\"\"", "\"");
         }
         return objectName.toUpperCase();
+    }
+
+    private String quoteObjectName(String objectName) {
+        if (objectName == null) return null;
+        objectName = objectName.trim();
+        return '"' + objectName.replaceAll("\"", "\"\"") + '"';
     }
 
     /**
