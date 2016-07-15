@@ -827,6 +827,8 @@ public class TestFBDatabaseMetaDataColumns extends FBMetaDataTestBase<TestFBData
         defaults.put(ColumnMetaData.SOURCE_DATA_TYPE, null);
         defaults.put(ColumnMetaData.IS_AUTOINCREMENT, "NO");
         defaults.put(ColumnMetaData.IS_GENERATEDCOLUMN, "NO");
+        defaults.put(ColumnMetaData.JB_IS_IDENTITY, "NO");
+        defaults.put(ColumnMetaData.JB_IDENTITY_TYPE, null);
 
         DEFAULT_COLUMN_VALUES = Collections.unmodifiableMap(defaults);
     }
@@ -886,7 +888,9 @@ public class TestFBDatabaseMetaDataColumns extends FBMetaDataTestBase<TestFBData
         SCOPE_TABLE(21, String.class), 
         SOURCE_DATA_TYPE(22, Short.class), 
         IS_AUTOINCREMENT(23, String.class), 
-        IS_GENERATEDCOLUMN(24,String.class);
+        IS_GENERATEDCOLUMN(24,String.class),
+        JB_IS_IDENTITY(25,String.class),
+        JB_IDENTITY_TYPE(26,String.class);
 
         private final int position;
         private final Class<?> columnClass;

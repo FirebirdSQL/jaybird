@@ -257,6 +257,13 @@ public final class FirebirdSupportInfo {
     }
 
     /**
+     * @return {@code true} when identity columns are supported.
+     */
+    public boolean supportsIdentityColumns() {
+        return serverVersion.isEqualOrAbove(3, 0);
+    }
+
+    /**
      * @param serverVersion
      *         Server version
      * @return FirebirdVersionSupport instance
