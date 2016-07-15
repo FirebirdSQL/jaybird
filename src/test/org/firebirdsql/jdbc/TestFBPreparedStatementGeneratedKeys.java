@@ -28,9 +28,9 @@ import org.junit.rules.ExpectedException;
 import java.sql.*;
 
 import static org.firebirdsql.common.FBTestProperties.getConnectionViaDriverManager;
+import static org.firebirdsql.common.FBTestProperties.getDefaultSupportInfo;
 import static org.firebirdsql.common.JdbcResourceHelper.closeQuietly;
 import static org.firebirdsql.common.matchers.SQLExceptionMatchers.*;
-import static org.firebirdsql.util.FirebirdSupportInfo.supportInfoFor;
 import static org.hamcrest.CoreMatchers.*;
 import static org.junit.Assert.*;
 import static org.junit.Assume.assumeTrue;
@@ -57,8 +57,8 @@ public class TestFBPreparedStatementGeneratedKeys extends FBTestGeneratedKeysBas
 
     @Before
     public void setUpConnection() throws SQLException {
+        assumeTrue("Test requires support for INSERT ... RETURNING ...", getDefaultSupportInfo().supportsInsertReturning());
         con = getConnectionViaDriverManager();
-        assumeTrue("Test requires support for INSERT ... RETURNING ...", supportInfoFor(con).supportsInsertReturning());
     }
 
     @After
@@ -82,6 +82,9 @@ public class TestFBPreparedStatementGeneratedKeys extends FBTestGeneratedKeysBas
 
         ResultSet rs = stmt.getGeneratedKeys();
         assertNotNull("Expected a non-null result set from getGeneratedKeys", rs);
+
+        assertEquals("Update count should be directly available", 1, stmt.getUpdateCount());
+        assertFalse("Generated keys result set should be open", rs.isClosed());
 
         ResultSetMetaData metaData = rs.getMetaData();
         assertEquals("Expected result set without columns", 0, metaData.getColumnCount());
@@ -108,6 +111,9 @@ public class TestFBPreparedStatementGeneratedKeys extends FBTestGeneratedKeysBas
 
         ResultSet rs = stmt.getGeneratedKeys();
         assertNotNull("Expected a non-null result set from getGeneratedKeys", rs);
+
+        assertEquals("Update count should be directly available", 1, stmt.getUpdateCount());
+        assertFalse("Generated keys result set should be open", rs.isClosed());
 
         ResultSetMetaData metaData = rs.getMetaData();
         assertEquals("Expected result set with 3 columns", 3, metaData.getColumnCount());
@@ -139,6 +145,9 @@ public class TestFBPreparedStatementGeneratedKeys extends FBTestGeneratedKeysBas
 
         ResultSet rs = stmt.getGeneratedKeys();
         assertNotNull("Expected a non-null result set from getGeneratedKeys", rs);
+
+        assertEquals("Update count should be directly available", 1, stmt.getUpdateCount());
+        assertFalse("Generated keys result set should be open", rs.isClosed());
 
         ResultSetMetaData metaData = rs.getMetaData();
         assertEquals("Expected result set with 1 column", 1, metaData.getColumnCount());
@@ -187,6 +196,9 @@ public class TestFBPreparedStatementGeneratedKeys extends FBTestGeneratedKeysBas
         ResultSet rs = stmt.getGeneratedKeys();
         assertNotNull("Expected a non-null result set from getGeneratedKeys", rs);
 
+        assertEquals("Update count should be directly available", 1, stmt.getUpdateCount());
+        assertFalse("Generated keys result set should be open", rs.isClosed());
+
         ResultSetMetaData metaData = rs.getMetaData();
         assertEquals("Expected result set with 1 column", 1, metaData.getColumnCount());
         assertEquals("Unexpected first column", "ID", metaData.getColumnName(1));
@@ -215,6 +227,9 @@ public class TestFBPreparedStatementGeneratedKeys extends FBTestGeneratedKeysBas
 
         ResultSet rs = stmt.getGeneratedKeys();
         assertNotNull("Expected a non-null result set from getGeneratedKeys", rs);
+
+        assertEquals("Update count should be directly available", 1, stmt.getUpdateCount());
+        assertFalse("Generated keys result set should be open", rs.isClosed());
 
         ResultSetMetaData metaData = rs.getMetaData();
         assertEquals("Expected result set with 2 column", 2, metaData.getColumnCount());
@@ -248,6 +263,9 @@ public class TestFBPreparedStatementGeneratedKeys extends FBTestGeneratedKeysBas
 
         ResultSet rs = stmt.getGeneratedKeys();
         assertNotNull("Expected a non-null result set from getGeneratedKeys", rs);
+
+        assertEquals("Update count should be directly available", 1, stmt.getUpdateCount());
+        assertFalse("Generated keys result set should be open", rs.isClosed());
 
         ResultSetMetaData metaData = rs.getMetaData();
         assertEquals("Expected result set with 1 column", 1, metaData.getColumnCount());
