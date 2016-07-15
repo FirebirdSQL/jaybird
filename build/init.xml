@@ -215,7 +215,7 @@
             <path refid="javac.j2ee.classpath"/>
             <pathelement location="${build.j2ee}"/>
             <pathelement location="${module.thirdparty}/log4j-core.jar"/>
-            <pathelement location="${module.thirdparty}/antlr-runtime-3.4.jar"/>
+            <pathelement location="${module.thirdparty}/antlr-runtime-4.5.3.jar"/>
             <pathelement location="${module.thirdparty}/jna-4.2.1.jar"/>
         </path>
 

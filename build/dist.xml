@@ -72,7 +72,7 @@
             </zipfileset>
             <zipfileset dir="${module.thirdparty}" prefix="lib">
                 <include name="log4j-core.jar"/>
-                <include name="antlr-runtime-3.4.jar"/>
+                <include name="antlr-runtime-4.5.3.jar"/>
             </zipfileset>
             <zipfileset dir="${source.examples}" prefix="examples">
                 <include name="*"/>

@@ -18,10 +18,12 @@
  */
 package org.firebirdsql.jdbc.parser;
 
-import org.antlr.runtime.CharStream;
-import org.antlr.runtime.CommonTokenStream;
-import org.junit.Ignore;
+import org.antlr.v4.runtime.ANTLRInputStream;
+import org.antlr.v4.runtime.CharStream;
+import org.antlr.v4.runtime.CommonTokenStream;
 import org.junit.Test;
+
+import java.util.Collections;
 
 import static org.hamcrest.Matchers.hasItem;
 import static org.junit.Assert.*;
@@ -31,7 +33,7 @@ public class TestGrammar {
 	// TODO Add more testcases for grammar
 
     protected JaybirdSqlParser createParser(String testString) {
-        CharStream stream = new CaseInsensitiveStream(testString);
+        CharStream stream = new ANTLRInputStream(testString);
         
         JaybirdSqlLexer lexer = new JaybirdSqlLexer(stream);
         CommonTokenStream tokenStream = new CommonTokenStream(lexer);
@@ -92,7 +94,6 @@ public class TestGrammar {
     }
 
     @Test
-    @Ignore("See JDBC-394")
     public void insertIntoSelect_withReturning() throws Exception {
         JaybirdSqlParser parser = createParser("Insert Into someTable Select * From anotherTable returning id");
 
@@ -102,19 +103,20 @@ public class TestGrammar {
         assertEquals("Unexpected statement type", JaybirdStatementModel.INSERT_TYPE, statementModel.getStatementType());
         assertEquals("someTable", statementModel.getTableName());
         assertTrue("Statement should have returning", statementModel.hasReturning());
+        assertThat("Should contain column id", statementModel.getReturningColumns(), hasItem("id"));
     }
 
     @Test
     public void insertWithCase() throws Exception {
         JaybirdSqlParser parser = createParser(
                 "Insert Into someTable ( col1, col2) values((case when a = 1 Then 2 else 3 end), 2)");
-        
+
         parser.statement();
 
         JaybirdStatementModel statementModel = parser.getStatementModel();
         assertEquals("Unexpected statement type", JaybirdStatementModel.INSERT_TYPE, statementModel.getStatementType());
         assertEquals("someTable", statementModel.getTableName());
-        assertTrue(parser.getMismatchCount() > 0);
+        assertTrue(parser.getNumberOfSyntaxErrors() > 0);
         assertFalse("Statement should have no returning", statementModel.hasReturning());
     }
 
@@ -149,13 +151,13 @@ public class TestGrammar {
     public void update() throws Exception {
         JaybirdSqlParser parser = createParser(
                 "Update someTable Set col1 = 25, col2 = 'abc' Where 1=0");
-        
+
         parser.statement();
 
         JaybirdStatementModel statementModel = parser.getStatementModel();
         assertEquals("Unexpected statement type", JaybirdStatementModel.UPDATE_TYPE, statementModel.getStatementType());
         assertEquals("someTable", statementModel.getTableName());
-        assertEquals(0, parser.getMismatchCount());
+        assertEquals(1, parser.getNumberOfSyntaxErrors());
     }
 
     @Test
@@ -168,7 +170,7 @@ public class TestGrammar {
         JaybirdStatementModel statementModel = parser.getStatementModel();
         assertEquals("Unexpected statement type", JaybirdStatementModel.UPDATE_TYPE, statementModel.getStatementType());
         assertEquals("\"someTable\"", statementModel.getTableName());
-        assertEquals(0, parser.getMismatchCount());
+        assertEquals("Expected one syntax error as WHERE clause is not in syntax", 1, parser.getNumberOfSyntaxErrors());
     }
 
     @Test
@@ -181,8 +183,9 @@ public class TestGrammar {
         JaybirdStatementModel statementModel = parser.getStatementModel();
         assertEquals("Unexpected statement type", JaybirdStatementModel.UPDATE_TYPE, statementModel.getStatementType());
         assertEquals("someTable", statementModel.getTableName());
-        assertEquals(0, parser.getMismatchCount());
         assertTrue("Statement should have returning", statementModel.hasReturning());
+        assertEquals(Collections.singletonList("col3"), statementModel.getReturningColumns());
+        assertEquals("Expected one syntax error as WHERE clause is not in syntax", 1, parser.getNumberOfSyntaxErrors());
     }
 
     @Test
@@ -195,7 +198,7 @@ public class TestGrammar {
         JaybirdStatementModel statementModel = parser.getStatementModel();
         assertEquals("Unexpected statement type", JaybirdStatementModel.DELETE_TYPE, statementModel.getStatementType());
         assertEquals("someTable", statementModel.getTableName());
-        assertEquals(0, parser.getMismatchCount());
+        assertEquals(0, parser.getNumberOfSyntaxErrors());
     }
 
     @Test
@@ -207,7 +210,7 @@ public class TestGrammar {
         JaybirdStatementModel statementModel = parser.getStatementModel();
         assertEquals("Unexpected statement type", JaybirdStatementModel.DELETE_TYPE, statementModel.getStatementType());
         assertEquals("\"someTable\"", statementModel.getTableName());
-        assertEquals(0, parser.getMismatchCount());
+        assertEquals(0, parser.getNumberOfSyntaxErrors());
     }
 
     @Test
@@ -219,8 +222,23 @@ public class TestGrammar {
         JaybirdStatementModel statementModel = parser.getStatementModel();
         assertEquals("Unexpected statement type", JaybirdStatementModel.DELETE_TYPE, statementModel.getStatementType());
         assertEquals("someTable", statementModel.getTableName());
-        assertEquals(0, parser.getMismatchCount());
         assertTrue("Statement should have returning", statementModel.hasReturning());
+        assertEquals(Collections.singletonList("col3"), statementModel.getReturningColumns());
+        assertEquals(0, parser.getNumberOfSyntaxErrors());
+    }
+
+    @Test
+    public void delete_withWhere_withReturning() throws Exception {
+        JaybirdSqlParser parser = createParser("Delete From someTable where 1 = 1 Returning col3");
+
+        parser.statement();
+
+        JaybirdStatementModel statementModel = parser.getStatementModel();
+        assertEquals("Unexpected statement type", JaybirdStatementModel.DELETE_TYPE, statementModel.getStatementType());
+        assertEquals("someTable", statementModel.getTableName());
+        assertTrue("Statement should have returning", statementModel.hasReturning());
+        assertEquals(Collections.singletonList("col3"), statementModel.getReturningColumns());
+        assertEquals(0, parser.getNumberOfSyntaxErrors());
     }
 
     @Test
@@ -230,7 +248,7 @@ public class TestGrammar {
         parser.statement();
 
         JaybirdStatementModel statementModel = parser.getStatementModel();
-        assertEquals("Expected default statement type (0)", 0, statementModel.getStatementType());
+        assertEquals("Expected default statement type (0)", JaybirdStatementModel.UNDETECTED_TYPE, statementModel.getStatementType());
         assertNull("Expected no table name", statementModel.getTableName());
     }
 }

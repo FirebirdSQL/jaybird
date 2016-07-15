@@ -52,7 +52,7 @@ public abstract class AbstractGeneratedKeysQuery {
     private static final int IDX_ORDINAL_POSITION = 17;
 
     private static final String GENERATED_KEYS_FUNCTIONALITY_NOT_AVAILABLE =
-            "Generated keys functionality not available, most likely cause: ANTLR-Runtime not available on classpath";
+            "Generated keys functionality not available, most likely cause: antlr-runtime not available on classpath";
 
     private static final StatementParser parser;
     static {
@@ -61,7 +61,7 @@ public abstract class AbstractGeneratedKeysQuery {
         try {
             temp = (StatementParser)Class.forName("org.firebirdsql.jdbc.parser.StatementParserImpl").newInstance();
         } catch (Throwable ex) {
-            // Unable to load class of parser implementation, antlr-runtime not in path
+            // Unable to load class of parser implementation, antlr4-runtime not in path
             Logger log = LoggerFactory.getLogger(AbstractGeneratedKeysQuery.class);
             if (log != null) {
                 log.error("Unable to load generated key parser. " + GENERATED_KEYS_FUNCTIONALITY_NOT_AVAILABLE , ex);

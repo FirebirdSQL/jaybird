@@ -18,9 +18,10 @@
  */
 package org.firebirdsql.jdbc.parser;
 
-import org.antlr.runtime.CharStream;
-import org.antlr.runtime.CommonTokenStream;
-import org.antlr.runtime.RecognitionException;
+import org.antlr.v4.runtime.ANTLRInputStream;
+import org.antlr.v4.runtime.CharStream;
+import org.antlr.v4.runtime.CommonTokenStream;
+import org.antlr.v4.runtime.RecognitionException;
 
 /**
  * Concrete implementation for accessing the parser. This is intended to shield the rest of Jaybird from
@@ -33,11 +34,12 @@ public class StatementParserImpl implements StatementParser {
 
     public JaybirdStatementModel parseInsertStatement(String sql) throws ParseException {
         try {
-            CharStream stream = new CaseInsensitiveStream(sql);
+            CharStream stream = new ANTLRInputStream(sql);
             JaybirdSqlLexer lexer = new JaybirdSqlLexer(stream);
             CommonTokenStream tokenStream = new CommonTokenStream(lexer);
             
             JaybirdSqlParser parser = new JaybirdSqlParser(tokenStream);
+            parser.getErrorListeners().clear();
             parser.statement();
 
             JaybirdStatementModel statementModel = parser.getStatementModel();

@@ -138,6 +138,15 @@ Jaybird 3.0 contains a number of changes that might break existing applications.
 
 See [Compatibility changes] for details.
 
+### ANTLR 4 runtime ###
+
+The generated keys functionality now requires ANTLR 4.5. Make sure to replace
+`antlr-runtime-3.4.jar` with the `antlr-runtime-4.5.3.jar` included in the 
+distribution zip. If you use maven this will happen automatically.
+
+As previously: if the ANTLR4 runtime is not on the classpath, then the generated
+keys functionality will not be available.
+
 Other fixes and changes
 -----------------------
 
