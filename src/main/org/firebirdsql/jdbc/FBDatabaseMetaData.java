@@ -3853,8 +3853,12 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
                 .at(17).simple(SQL_LONG, 0, "NUM_PREC_RADIX", "TYPEINFO").addField()
                 .toRowDescriptor();
 
+        final byte[] blobTypePred = firebirdSupportInfo.supportsFullSearchableBlobs()
+                ? TYPE_SEARCHABLE
+                : TYPE_PRED_BASIC;
+
         //dialect 3 only
-        final List<RowValue> rows = new ArrayList<>(17);
+        final List<RowValue> rows = new ArrayList<>(19);
 
         //BIGINT=-5
         rows.add(RowValue.of(rowDescriptor,
@@ -3864,8 +3868,8 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
 
         //LONGVARBINARY=-4
         rows.add(RowValue.of(rowDescriptor,
-                getBytes("BLOB SUB_TYPE 0"), createShort(Types.LONGVARBINARY), INT_ZERO, null, null,
-                null, TYPE_NULLABLE, CASESENSITIVE, TYPE_PRED_NONE, UNSIGNED, FIXEDSCALE, NOTAUTOINC, null,
+                getBytes("BLOB SUB_TYPE BINARY"), createShort(Types.LONGVARBINARY), INT_ZERO, null, null,
+                null, TYPE_NULLABLE, CASESENSITIVE, blobTypePred, UNSIGNED, FIXEDSCALE, NOTAUTOINC, null,
                 SHORT_ZERO, SHORT_ZERO, createInt(SQL_BLOB), null, RADIX_TEN));
 
         //VARBINARY=-3
@@ -3882,8 +3886,8 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
 
         //LONGVARCHAR=-1
         rows.add(RowValue.of(rowDescriptor,
-                getBytes("BLOB SUB_TYPE 1"), createShort(Types.LONGVARCHAR), INT_ZERO, null, null,
-                null, TYPE_NULLABLE, CASESENSITIVE, TYPE_PRED_NONE, UNSIGNED, FIXEDSCALE, NOTAUTOINC, null,
+                getBytes("BLOB SUB_TYPE TEXT"), createShort(Types.LONGVARCHAR), INT_ZERO, null, null,
+                null, TYPE_NULLABLE, CASESENSITIVE, blobTypePred, UNSIGNED, FIXEDSCALE, NOTAUTOINC, null,
                 SHORT_ZERO, SHORT_ZERO, createInt(SQL_BLOB), null, RADIX_TEN));
 
         //CHAR=1
@@ -3969,6 +3973,8 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
                 createInt(SQL_ARRAY), null, RADIX_TEN));
 
         //BLOB=2004
+        // Should we split this into all negative blob types currently known in the DB?
+        // Blob is potentially searchable with like, etc, acting as if it isn't.
         rows.add(RowValue.of(rowDescriptor,
                 getBytes("BLOB SUB_TYPE <0 "), createShort(Types.BLOB), INT_ZERO, null, null, null,
                 TYPE_NULLABLE, CASESENSITIVE, TYPE_PRED_NONE, UNSIGNED, FIXEDSCALE, NOTAUTOINC, null, SHORT_ZERO,

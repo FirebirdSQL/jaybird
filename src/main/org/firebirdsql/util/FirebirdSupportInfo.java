@@ -250,6 +250,13 @@ public final class FirebirdSupportInfo {
     }
 
     /**
+     * @return {@code true} when blobs are fully searchable (eg using `LIKE`).
+     */
+    public boolean supportsFullSearchableBlobs() {
+        return serverVersion.isEqualOrAbove(2, 1);
+    }
+
+    /**
      * @param serverVersion
      *         Server version
      * @return FirebirdVersionSupport instance
