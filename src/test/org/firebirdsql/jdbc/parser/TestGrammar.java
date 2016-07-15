@@ -157,7 +157,6 @@ public class TestGrammar {
         JaybirdStatementModel statementModel = parser.getStatementModel();
         assertEquals("Unexpected statement type", JaybirdStatementModel.UPDATE_TYPE, statementModel.getStatementType());
         assertEquals("someTable", statementModel.getTableName());
-        assertEquals(1, parser.getNumberOfSyntaxErrors());
     }
 
     @Test
@@ -170,7 +169,6 @@ public class TestGrammar {
         JaybirdStatementModel statementModel = parser.getStatementModel();
         assertEquals("Unexpected statement type", JaybirdStatementModel.UPDATE_TYPE, statementModel.getStatementType());
         assertEquals("\"someTable\"", statementModel.getTableName());
-        assertEquals("Expected one syntax error as WHERE clause is not in syntax", 1, parser.getNumberOfSyntaxErrors());
     }
 
     @Test
@@ -185,7 +183,6 @@ public class TestGrammar {
         assertEquals("someTable", statementModel.getTableName());
         assertTrue("Statement should have returning", statementModel.hasReturning());
         assertEquals(Collections.singletonList("col3"), statementModel.getReturningColumns());
-        assertEquals("Expected one syntax error as WHERE clause is not in syntax", 1, parser.getNumberOfSyntaxErrors());
     }
 
     @Test
