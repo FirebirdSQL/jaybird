@@ -2454,7 +2454,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
     private static final String GET_COLUMNS_START =
             GET_COLUMNS_COMMON +
             "'NO' AS IS_IDENTITY," +
-            "CAST(NULL AS VARCHAR(10)) AS JB_IDENTITY_TYPE" +
+            "CAST(NULL AS VARCHAR(10)) AS JB_IDENTITY_TYPE " +
             "FROM RDB$RELATION_FIELDS RF," +
             "RDB$FIELDS F " +
             "WHERE ";
