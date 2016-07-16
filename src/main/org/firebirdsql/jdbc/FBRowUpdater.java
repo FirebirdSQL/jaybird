@@ -503,10 +503,10 @@ public class FBRowUpdater implements FirebirdRowUpdater {
 
                     List<RowValue> rows = rowListener.getRows();
                     if (rows.size() == 0)
-                        throw new FBSQLException("No rows could be fetched.");
+                        throw new SQLException("No rows could be fetched.");
 
                     if (rows.size() > 1)
-                        throw new FBSQLException("More then one row fetched.");
+                        throw new SQLException("More then one row fetched.");
 
                     setRow(rows.get(0));
                 } finally {
@@ -522,18 +522,13 @@ public class FBRowUpdater implements FirebirdRowUpdater {
     }
 
     private void executeStatement(int statementType, FbStatement stmt) throws SQLException {
-        // TODO Replace or leave to check within statement?
-        /*
-        if (!stmt.isValid())
-            throw new FBSQLException("Corresponding connection is not valid.",
-                    FBSQLException.SQL_STATE_CONNECTION_FAILURE_IN_TX);
-        */
+        if (inInsertRow && statementType != INSERT_STATEMENT_TYPE) {
+            throw new SQLException("Only insertRow() is allowed when result set is positioned on insert row.");
+        }
 
-        if (inInsertRow && statementType != INSERT_STATEMENT_TYPE)
-            throw new FBSQLException("Only insertRow() is allowed when result set is positioned on insert row.");
-
-        if (statementType != INSERT_STATEMENT_TYPE && oldRow == null)
-            throw new FBSQLException("Result set is not positioned on a row.");
+        if (statementType != INSERT_STATEMENT_TYPE && oldRow == null) {
+            throw new SQLException("Result set is not positioned on a row.");
+        }
 
         // we have to flush before constructing the parameters
         // since flushable field can update the value, which
@@ -580,14 +575,16 @@ public class FBRowUpdater implements FirebirdRowUpdater {
         }
 
         for (int i = 0; i < rowDescriptor.getCount(); i++) {
-            if (parameterMask[i] == PARAMETER_UNUSED && statementType != INSERT_STATEMENT_TYPE)
+            if (parameterMask[i] == PARAMETER_UNUSED && statementType != INSERT_STATEMENT_TYPE) {
                 continue;
-            else if (!updatedFlags[i] && statementType == INSERT_STATEMENT_TYPE)
+            } else if (!updatedFlags[i] && statementType == INSERT_STATEMENT_TYPE) {
                 continue;
-            if (statementType == INSERT_STATEMENT_TYPE)
+            }
+            if (statementType == INSERT_STATEMENT_TYPE) {
                 params.add(insertRow.getFieldValue(i).clone());
-            else
+            } else {
                 params.add(oldRow.getFieldValue(i).clone());
+            }
         }
 
         stmt.execute(new RowValue(params.toArray(new FieldValue[0])));

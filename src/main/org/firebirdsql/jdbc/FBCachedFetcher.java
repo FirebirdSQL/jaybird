@@ -29,6 +29,7 @@ import org.firebirdsql.jdbc.field.FBFlushableField;
 import org.firebirdsql.jdbc.field.FieldDataProvider;
 
 import java.sql.SQLException;
+import java.sql.SQLNonTransientException;
 import java.sql.Types;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -102,7 +103,7 @@ class FBCachedFetcher implements FBFetcher {
     FBCachedFetcher(List<RowValue> rows, FBObjectListener.FetcherListener fetcherListener, RowDescriptor rowDescriptor,
             GDSHelper gdsHelper, boolean retrieveBlobs) throws SQLException {
         assert retrieveBlobs && rowDescriptor != null && gdsHelper != null || !retrieveBlobs : "Need non-null rowDescriptor and gdsHelper for retrieving blobs";
-        this.rows = new ArrayList<RowValue>(rows);
+        this.rows = new ArrayList<>(rows);
         this.fetcherListener = fetcherListener;
         forwardOnly = false;
         if (retrieveBlobs) {
@@ -187,11 +188,11 @@ class FBCachedFetcher implements FBFetcher {
 
     @Override
     public boolean previous() throws SQLException {
-        if (forwardOnly)
-            throw new FBDriverNotCapableException("Result set is TYPE_FORWARD_ONLY");
+        checkScrollable();
 
-        if (isEmpty())
+        if (isEmpty()) {
             return false;
+        }
 
         rowNum--;
 
@@ -210,24 +211,23 @@ class FBCachedFetcher implements FBFetcher {
 
     @Override
     public boolean absolute(int row) throws SQLException {
-        if (forwardOnly)
-            throw new FBDriverNotCapableException("Result set is TYPE_FORWARD_ONLY");
-
         return absolute(row, false);
     }
 
     private boolean absolute(int row, boolean internal) throws SQLException {
-        if (forwardOnly && !internal)
-            throw new FBDriverNotCapableException("Result set is TYPE_FORWARD_ONLY");
+        checkScrollable();
 
-        if (row < 0)
+        if (row < 0) {
             row = rows.size() + row + 1;
+        }
 
-        if (row == 0 && !internal)
-            throw new FBSQLException("You cannot position to row 0 with absolute() method.");
+        if (row == 0 && !internal) {
+            throw new SQLException("You cannot position to row 0 with absolute() method.");
+        }
 
-        if (isEmpty())
+        if (isEmpty()) {
             return false;
+        }
 
         rowNum = row;
 
@@ -252,25 +252,16 @@ class FBCachedFetcher implements FBFetcher {
 
     @Override
     public boolean first() throws SQLException {
-        if (forwardOnly)
-            throw new FBDriverNotCapableException("Result set is TYPE_FORWARD_ONLY");
-
         return absolute(1, true);
     }
 
     @Override
     public boolean last() throws SQLException {
-        if (forwardOnly)
-            throw new FBDriverNotCapableException("Result set is TYPE_FORWARD_ONLY");
-
         return absolute(-1, true);
     }
 
     @Override
     public boolean relative(int row) throws SQLException {
-        if (forwardOnly)
-            throw new FBDriverNotCapableException("Result set is TYPE_FORWARD_ONLY");
-
         return absolute(rowNum + row, true);
     }
 
@@ -372,7 +363,7 @@ class FBCachedFetcher implements FBFetcher {
     }
 
     private static final class RowListener extends DefaultStatementListener {
-        private final List<RowValue> rows = new ArrayList<RowValue>();
+        private final List<RowValue> rows = new ArrayList<>();
         private boolean allRowsFetched = false;
 
         @Override
@@ -398,6 +389,16 @@ class FBCachedFetcher implements FBFetcher {
          */
         public int size() {
             return rows.size();
+        }
+    }
+
+    /**
+     * Checks if the result set is scrollable, otherwise throws an {@code SQLException}.
+     * @throws SQLException If the result set is {@code TYPE_FORWARD_ONLY}.
+     */
+    private void checkScrollable() throws SQLException {
+        if (forwardOnly) {
+            throw new SQLNonTransientException("Result set is TYPE_FORWARD_ONLY");
         }
     }
 }

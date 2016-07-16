@@ -135,6 +135,7 @@ public abstract class AbstractResultSet implements ResultSet, FirebirdResultSet,
             fbFetcher = new FBUpdatableCursorFetcher(gdsHelper, fbStatement, stmt, this, fbStatement.getMaxRows(),
                     fbStatement.getFetchSize());
         } else {
+            assert rsType == ResultSet.TYPE_FORWARD_ONLY : "Expected TYPE_FORWARD_ONLY";
             fbFetcher = new FBStatementFetcher(gdsHelper, fbStatement, stmt, this, fbStatement.getMaxRows(),
                     fbStatement.getFetchSize());
         }
@@ -258,8 +259,9 @@ public abstract class AbstractResultSet implements ResultSet, FirebirdResultSet,
      * must be called after each change in cursor position.
      */
     private void notifyRowUpdater() throws SQLException {
-        if (rowUpdater != null)
+        if (rowUpdater != null) {
             rowUpdater.setRow(row);
+        }
     }
 
     /**
@@ -279,8 +281,9 @@ public abstract class AbstractResultSet implements ResultSet, FirebirdResultSet,
      *         if ResultSet is closed.
      */
     protected void checkOpen() throws SQLException {
-        if (isClosed())
-            throw new FBSQLException("The result set is closed", SQLStateConstants.SQL_STATE_NO_RESULT_SET);
+        if (isClosed()) {
+            throw new SQLException("The result set is closed", SQLStateConstants.SQL_STATE_NO_RESULT_SET);
+        }
     }
 
     /**
@@ -424,10 +427,10 @@ public abstract class AbstractResultSet implements ResultSet, FirebirdResultSet,
      */
     public boolean wasNull() throws SQLException {
         if (!wasNullValid) {
-            throw new FBSQLException("Look at a column before testing null.");
+            throw new SQLException("Look at a column before testing null.");
         }
         if (row == null) {
-            throw new FBSQLException("No row available for wasNull.");
+            throw new SQLException("No row available for wasNull.");
         }
         return wasNull;
     }
@@ -732,23 +735,21 @@ public abstract class AbstractResultSet implements ResultSet, FirebirdResultSet,
      * Factory method for the field access objects
      */
     public FBField getField(int columnIndex, boolean checkRowPosition) throws SQLException {
-        if (isClosed())
-            throw new FBSQLException("The resultSet is closed");
+        checkOpen();
 
-        if (checkRowPosition && row == null && rowUpdater == null)
-            throw new FBSQLException(
-                    "The resultSet is not in a row, use next",
-                    SQLStateConstants.SQL_STATE_NO_ROW_AVAIL);
+        if (checkRowPosition && row == null && rowUpdater == null) {
+            throw new SQLException("The resultSet is not in a row, use next", SQLStateConstants.SQL_STATE_NO_ROW_AVAIL);
+        }
 
-        if (columnIndex > rowDescriptor.getCount())
-            throw new FBSQLException(
-                    "Invalid column index.",
-                    SQLStateConstants.SQL_STATE_INVALID_COLUMN);
+        if (columnIndex > rowDescriptor.getCount()) {
+            throw new SQLException("Invalid column index.", SQLStateConstants.SQL_STATE_INVALID_COLUMN);
+        }
 
-        if (rowUpdater != null)
+        if (rowUpdater != null) {
             return rowUpdater.getField(columnIndex - 1);
-        else
+        } else {
             return fields[columnIndex - 1];
+        }
     }
 
     /**
@@ -759,15 +760,12 @@ public abstract class AbstractResultSet implements ResultSet, FirebirdResultSet,
      */
     public FBField getField(String columnName) throws SQLException {
         checkOpen();
-        if (row == null && rowUpdater == null)
-            throw new FBSQLException(
-                    "The resultSet is not in a row, use next",
-                    SQLStateConstants.SQL_STATE_NO_ROW_AVAIL);
+        if (row == null && rowUpdater == null) {
+            throw new SQLException("The result set is not in a row, use next", SQLStateConstants.SQL_STATE_NO_ROW_AVAIL);
+        }
 
         if (columnName == null) {
-            throw new FBSQLException(
-                    "Column identifier must be not null.",
-                    SQLStateConstants.SQL_STATE_INVALID_COLUMN);
+            throw new SQLException("Column identifier must be not null.", SQLStateConstants.SQL_STATE_INVALID_COLUMN);
         }
 
         Integer fieldNum = colNames.get(columnName);
@@ -1152,9 +1150,7 @@ public abstract class AbstractResultSet implements ResultSet, FirebirdResultSet,
     // the first instance of the column will be returned
     public int findColumn(String columnName) throws SQLException {
         if (columnName == null || columnName.equals("")) {
-            throw new FBSQLException(
-                    "Empty string does not identify column.",
-                    SQLStateConstants.SQL_STATE_INVALID_COLUMN);
+            throw new SQLException("Empty string does not identify column.", SQLStateConstants.SQL_STATE_INVALID_COLUMN);
         }
         if (columnName.startsWith("\"") && columnName.endsWith("\"")) {
             columnName = columnName.substring(1, columnName.length() - 1);
@@ -1183,8 +1179,7 @@ public abstract class AbstractResultSet implements ResultSet, FirebirdResultSet,
             }
         }
 
-        throw new FBSQLException(
-                "Column name " + columnName + " not found in result set.",
+        throw new SQLException("Column name " + columnName + " not found in result set.",
                 SQLStateConstants.SQL_STATE_INVALID_COLUMN);
     }
 
@@ -1573,11 +1568,10 @@ public abstract class AbstractResultSet implements ResultSet, FirebirdResultSet,
      */
     public void setFetchSize(int rows) throws SQLException {
         checkOpen();
-        if (rows < 0)
-            throw new FBSQLException("Can't set negative fetch size.",
-                    SQLStateConstants.SQL_STATE_INVALID_ARG_VALUE);
-        else
-            fbFetcher.setFetchSize(rows);
+        if (rows < 0) {
+            throw new SQLException("Can't set negative fetch size.", SQLStateConstants.SQL_STATE_INVALID_ARG_VALUE);
+        }
+        fbFetcher.setFetchSize(rows);
     }
 
     /**
@@ -1661,10 +1655,8 @@ public abstract class AbstractResultSet implements ResultSet, FirebirdResultSet,
      *      2.0 API</a>
      */
     public boolean rowUpdated() throws SQLException {
-        if (rowUpdater != null)
-            return rowUpdater.rowUpdated();
-        else
-            throw new FBResultSetNotUpdatableException();
+        checkUpdatable();
+        return rowUpdater.rowUpdated();
     }
 
     /**
@@ -1682,10 +1674,8 @@ public abstract class AbstractResultSet implements ResultSet, FirebirdResultSet,
      *      2.0 API</a>
      */
     public boolean rowInserted() throws SQLException {
-        if (rowUpdater != null)
-            return rowUpdater.rowUpdated();
-        else
-            throw new FBResultSetNotUpdatableException();
+        checkUpdatable();
+        return rowUpdater.rowUpdated();
     }
 
     /**
@@ -1704,10 +1694,19 @@ public abstract class AbstractResultSet implements ResultSet, FirebirdResultSet,
      *      2.0 API</a>
      */
     public boolean rowDeleted() throws SQLException {
-        if (rowUpdater != null)
-            return rowUpdater.rowUpdated();
-        else
+        checkUpdatable();
+        return rowUpdater.rowUpdated();
+    }
+
+    /**
+     * Checks if the result set is updatable, throwing {@link FBResultSetNotUpdatableException} otherwise.
+     *
+     * @throws FBResultSetNotUpdatableException When this result set is not updatable
+     */
+    private void checkUpdatable() throws FBResultSetNotUpdatableException {
+        if (rowUpdater == null) {
             throw new FBResultSetNotUpdatableException();
+        }
     }
 
     /**
@@ -1725,9 +1724,7 @@ public abstract class AbstractResultSet implements ResultSet, FirebirdResultSet,
      *      2.0 API</a>
      */
     public void updateNull(int columnIndex) throws SQLException {
-        if (rowUpdater == null)
-            throw new FBResultSetNotUpdatableException();
-
+        checkUpdatable();
         getField(columnIndex).setNull();
     }
 
@@ -1746,9 +1743,7 @@ public abstract class AbstractResultSet implements ResultSet, FirebirdResultSet,
      *      2.0 API</a>
      */
     public void updateBoolean(int columnIndex, boolean x) throws SQLException {
-        if (rowUpdater == null)
-            throw new FBResultSetNotUpdatableException();
-
+        checkUpdatable();
         getField(columnIndex).setBoolean(x);
     }
 
@@ -1768,9 +1763,7 @@ public abstract class AbstractResultSet implements ResultSet, FirebirdResultSet,
      *      2.0 API</a>
      */
     public void updateByte(int columnIndex, byte x) throws SQLException {
-        if (rowUpdater == null)
-            throw new FBResultSetNotUpdatableException();
-
+        checkUpdatable();
         getField(columnIndex).setByte(x);
     }
 
@@ -1789,9 +1782,7 @@ public abstract class AbstractResultSet implements ResultSet, FirebirdResultSet,
      *      2.0 API</a>
      */
     public void updateShort(int columnIndex, short x) throws SQLException {
-        if (rowUpdater == null)
-            throw new FBResultSetNotUpdatableException();
-
+        checkUpdatable();
         getField(columnIndex).setShort(x);
     }
 
@@ -1810,9 +1801,7 @@ public abstract class AbstractResultSet implements ResultSet, FirebirdResultSet,
      *      2.0 API</a>
      */
     public void updateInt(int columnIndex, int x) throws SQLException {
-        if (rowUpdater == null)
-            throw new FBResultSetNotUpdatableException();
-
+        checkUpdatable();
         getField(columnIndex).setInteger(x);
     }
 
@@ -1831,9 +1820,7 @@ public abstract class AbstractResultSet implements ResultSet, FirebirdResultSet,
      *      2.0 API</a>
      */
     public void updateLong(int columnIndex, long x) throws SQLException {
-        if (rowUpdater == null)
-            throw new FBResultSetNotUpdatableException();
-
+        checkUpdatable();
         getField(columnIndex).setLong(x);
     }
 
@@ -1852,9 +1839,7 @@ public abstract class AbstractResultSet implements ResultSet, FirebirdResultSet,
      *      2.0 API</a>
      */
     public void updateFloat(int columnIndex, float x) throws SQLException {
-        if (rowUpdater == null)
-            throw new FBResultSetNotUpdatableException();
-
+        checkUpdatable();
         getField(columnIndex).setFloat(x);
     }
 
@@ -1873,9 +1858,7 @@ public abstract class AbstractResultSet implements ResultSet, FirebirdResultSet,
      *      2.0 API</a>
      */
     public void updateDouble(int columnIndex, double x) throws SQLException {
-        if (rowUpdater == null)
-            throw new FBResultSetNotUpdatableException();
-
+        checkUpdatable();
         getField(columnIndex).setDouble(x);
     }
 
@@ -1895,9 +1878,7 @@ public abstract class AbstractResultSet implements ResultSet, FirebirdResultSet,
      *      2.0 API</a>
      */
     public void updateBigDecimal(int columnIndex, BigDecimal x) throws SQLException {
-        if (rowUpdater == null)
-            throw new FBResultSetNotUpdatableException();
-
+        checkUpdatable();
         getField(columnIndex).setBigDecimal(x);
     }
 
@@ -1916,9 +1897,7 @@ public abstract class AbstractResultSet implements ResultSet, FirebirdResultSet,
      *      2.0 API</a>
      */
     public void updateString(int columnIndex, String x) throws SQLException {
-        if (rowUpdater == null)
-            throw new FBResultSetNotUpdatableException();
-
+        checkUpdatable();
         getField(columnIndex).setString(x);
     }
 
@@ -1937,9 +1916,7 @@ public abstract class AbstractResultSet implements ResultSet, FirebirdResultSet,
      *      2.0 API</a>
      */
     public void updateBytes(int columnIndex, byte x[]) throws SQLException {
-        if (rowUpdater == null)
-            throw new FBResultSetNotUpdatableException();
-
+        checkUpdatable();
         getField(columnIndex).setBytes(x);
     }
 
@@ -1958,9 +1935,7 @@ public abstract class AbstractResultSet implements ResultSet, FirebirdResultSet,
      *      2.0 API</a>
      */
     public void updateDate(int columnIndex, Date x) throws SQLException {
-        if (rowUpdater == null)
-            throw new FBResultSetNotUpdatableException();
-
+        checkUpdatable();
         getField(columnIndex).setDate(x);
     }
 
@@ -1979,9 +1954,7 @@ public abstract class AbstractResultSet implements ResultSet, FirebirdResultSet,
      *      2.0 API</a>
      */
     public void updateTime(int columnIndex, Time x) throws SQLException {
-        if (rowUpdater == null)
-            throw new FBResultSetNotUpdatableException();
-
+        checkUpdatable();
         getField(columnIndex).setTime(x);
     }
 
@@ -2001,9 +1974,7 @@ public abstract class AbstractResultSet implements ResultSet, FirebirdResultSet,
      *      2.0 API</a>
      */
     public void updateTimestamp(int columnIndex, Timestamp x) throws SQLException {
-        if (rowUpdater == null)
-            throw new FBResultSetNotUpdatableException();
-
+        checkUpdatable();
         getField(columnIndex).setTimestamp(x);
     }
 
@@ -2023,9 +1994,7 @@ public abstract class AbstractResultSet implements ResultSet, FirebirdResultSet,
      *      2.0 API</a>
      */
     public void updateAsciiStream(int columnIndex, InputStream x, int length) throws SQLException {
-        if (rowUpdater == null)
-            throw new FBResultSetNotUpdatableException();
-
+        checkUpdatable();
         getField(columnIndex).setAsciiStream(x, length);
     }
 
@@ -2045,29 +2014,23 @@ public abstract class AbstractResultSet implements ResultSet, FirebirdResultSet,
      *      2.0 API</a>
      */
     public void updateBinaryStream(int columnIndex, InputStream x, int length) throws SQLException {
-        if (rowUpdater == null)
-            throw new FBResultSetNotUpdatableException();
-
+        checkUpdatable();
         getField(columnIndex).setBinaryStream(x, length);
     }
 
-    public void updateBinaryStream(int columnIndex, InputStream x, long length)
-            throws SQLException {
+    public void updateBinaryStream(int columnIndex, InputStream x, long length) throws SQLException {
         throw new FBDriverNotCapableException();
     }
 
-    public void updateBinaryStream(int columnIndex, InputStream x)
-            throws SQLException {
+    public void updateBinaryStream(int columnIndex, InputStream x) throws SQLException {
         throw new FBDriverNotCapableException();
     }
 
-    public void updateBinaryStream(String columnLabel, InputStream x,
-            long length) throws SQLException {
+    public void updateBinaryStream(String columnLabel, InputStream x, long length) throws SQLException {
         throw new FBDriverNotCapableException();
     }
 
-    public void updateBinaryStream(String columnLabel, InputStream x)
-            throws SQLException {
+    public void updateBinaryStream(String columnLabel, InputStream x) throws SQLException {
         throw new FBDriverNotCapableException();
     }
 
@@ -2087,9 +2050,7 @@ public abstract class AbstractResultSet implements ResultSet, FirebirdResultSet,
      *      2.0 API</a>
      */
     public void updateCharacterStream(int columnIndex, Reader x, int length) throws SQLException {
-        if (rowUpdater == null)
-            throw new FBResultSetNotUpdatableException();
-
+        checkUpdatable();
         getField(columnIndex).setCharacterStream(x, length);
     }
 
@@ -2112,9 +2073,7 @@ public abstract class AbstractResultSet implements ResultSet, FirebirdResultSet,
      *      2.0 API</a>
      */
     public void updateObject(int columnIndex, Object x, int scale) throws SQLException {
-        if (rowUpdater == null)
-            throw new FBResultSetNotUpdatableException();
-
+        checkUpdatable();
         getField(columnIndex).setObject(x);
     }
 
@@ -2133,9 +2092,7 @@ public abstract class AbstractResultSet implements ResultSet, FirebirdResultSet,
      *      2.0 API</a>
      */
     public void updateObject(int columnIndex, Object x) throws SQLException {
-        if (rowUpdater == null)
-            throw new FBResultSetNotUpdatableException();
-
+        checkUpdatable();
         getField(columnIndex).setObject(x);
     }
 
@@ -2153,9 +2110,7 @@ public abstract class AbstractResultSet implements ResultSet, FirebirdResultSet,
      *      2.0 API</a>
      */
     public void updateNull(String columnName) throws SQLException {
-        if (rowUpdater == null)
-            throw new FBResultSetNotUpdatableException();
-
+        checkUpdatable();
         getField(columnName).setNull();
     }
 
@@ -2174,9 +2129,7 @@ public abstract class AbstractResultSet implements ResultSet, FirebirdResultSet,
      *      2.0 API</a>
      */
     public void updateBoolean(String columnName, boolean x) throws SQLException {
-        if (rowUpdater == null)
-            throw new FBResultSetNotUpdatableException();
-
+        checkUpdatable();
         getField(columnName).setBoolean(x);
     }
 
@@ -2195,9 +2148,7 @@ public abstract class AbstractResultSet implements ResultSet, FirebirdResultSet,
      *      2.0 API</a>
      */
     public void updateByte(String columnName, byte x) throws SQLException {
-        if (rowUpdater == null)
-            throw new FBResultSetNotUpdatableException();
-
+        checkUpdatable();
         getField(columnName).setByte(x);
     }
 
@@ -2216,9 +2167,7 @@ public abstract class AbstractResultSet implements ResultSet, FirebirdResultSet,
      *      2.0 API</a>
      */
     public void updateShort(String columnName, short x) throws SQLException {
-        if (rowUpdater == null)
-            throw new FBResultSetNotUpdatableException();
-
+        checkUpdatable();
         getField(columnName).setShort(x);
     }
 
@@ -2237,9 +2186,7 @@ public abstract class AbstractResultSet implements ResultSet, FirebirdResultSet,
      *      2.0 API</a>
      */
     public void updateInt(String columnName, int x) throws SQLException {
-        if (rowUpdater == null)
-            throw new FBResultSetNotUpdatableException();
-
+        checkUpdatable();
         getField(columnName).setInteger(x);
     }
 
@@ -2258,9 +2205,7 @@ public abstract class AbstractResultSet implements ResultSet, FirebirdResultSet,
      *      2.0 API</a>
      */
     public void updateLong(String columnName, long x) throws SQLException {
-        if (rowUpdater == null)
-            throw new FBResultSetNotUpdatableException();
-
+        checkUpdatable();
         getField(columnName).setLong(x);
     }
 
@@ -2279,9 +2224,7 @@ public abstract class AbstractResultSet implements ResultSet, FirebirdResultSet,
      *      2.0 API</a>
      */
     public void updateFloat(String columnName, float x) throws SQLException {
-        if (rowUpdater == null)
-            throw new FBResultSetNotUpdatableException();
-
+        checkUpdatable();
         getField(columnName).setFloat(x);
     }
 
@@ -2300,9 +2243,7 @@ public abstract class AbstractResultSet implements ResultSet, FirebirdResultSet,
      *      2.0 API</a>
      */
     public void updateDouble(String columnName, double x) throws SQLException {
-        if (rowUpdater == null)
-            throw new FBResultSetNotUpdatableException();
-
+        checkUpdatable();
         getField(columnName).setDouble(x);
     }
 
@@ -2322,9 +2263,7 @@ public abstract class AbstractResultSet implements ResultSet, FirebirdResultSet,
      *      2.0 API</a>
      */
     public void updateBigDecimal(String columnName, BigDecimal x) throws SQLException {
-        if (rowUpdater == null)
-            throw new FBResultSetNotUpdatableException();
-
+        checkUpdatable();
         getField(columnName).setBigDecimal(x);
     }
 
@@ -2343,9 +2282,7 @@ public abstract class AbstractResultSet implements ResultSet, FirebirdResultSet,
      *      2.0 API</a>
      */
     public void updateString(String columnName, String x) throws SQLException {
-        if (rowUpdater == null)
-            throw new FBResultSetNotUpdatableException();
-
+        checkUpdatable();
         getField(columnName).setString(x);
     }
 
@@ -2395,9 +2332,7 @@ public abstract class AbstractResultSet implements ResultSet, FirebirdResultSet,
      *      2.0 API</a>
      */
     public void updateBytes(String columnName, byte x[]) throws SQLException {
-        if (rowUpdater == null)
-            throw new FBResultSetNotUpdatableException();
-
+        checkUpdatable();
         getField(columnName).setBytes(x);
     }
 
@@ -2416,9 +2351,7 @@ public abstract class AbstractResultSet implements ResultSet, FirebirdResultSet,
      *      2.0 API</a>
      */
     public void updateDate(String columnName, Date x) throws SQLException {
-        if (rowUpdater == null)
-            throw new FBResultSetNotUpdatableException();
-
+        checkUpdatable();
         getField(columnName).setDate(x);
     }
 
@@ -2437,9 +2370,7 @@ public abstract class AbstractResultSet implements ResultSet, FirebirdResultSet,
      *      2.0 API</a>
      */
     public void updateTime(String columnName, Time x) throws SQLException {
-        if (rowUpdater == null)
-            throw new FBResultSetNotUpdatableException();
-
+        checkUpdatable();
         getField(columnName).setTime(x);
     }
 
@@ -2459,9 +2390,7 @@ public abstract class AbstractResultSet implements ResultSet, FirebirdResultSet,
      *      2.0 API</a>
      */
     public void updateTimestamp(String columnName, Timestamp x) throws SQLException {
-        if (rowUpdater == null)
-            throw new FBResultSetNotUpdatableException();
-
+        checkUpdatable();
         getField(columnName).setTimestamp(x);
     }
 
@@ -2481,13 +2410,12 @@ public abstract class AbstractResultSet implements ResultSet, FirebirdResultSet,
      *      2.0 API</a>
      */
     public void updateAsciiStream(String columnName, InputStream x, int length) throws SQLException {
-        if (rowUpdater == null)
-            throw new FBResultSetNotUpdatableException();
-
+        checkUpdatable();
         getField(columnName).setAsciiStream(x, length);
     }
 
     public void updateAsciiStream(int columnIndex, InputStream x, long length) throws SQLException {
+        // TODO Write implementation
         throw new FBDriverNotCapableException();
     }
 
@@ -2507,9 +2435,7 @@ public abstract class AbstractResultSet implements ResultSet, FirebirdResultSet,
     }
 
     public void updateBinaryStream(String columnName, InputStream x, int length) throws SQLException {
-        if (rowUpdater == null)
-            throw new FBResultSetNotUpdatableException();
-
+        checkUpdatable();
         getField(columnName).setBinaryStream(x, length);
     }
 
@@ -2529,9 +2455,7 @@ public abstract class AbstractResultSet implements ResultSet, FirebirdResultSet,
      *      2.0 API</a>
      */
     public void updateCharacterStream(String columnName, Reader reader, int length) throws SQLException {
-        if (rowUpdater == null)
-            throw new FBResultSetNotUpdatableException();
-
+        checkUpdatable();
         getField(columnName).setCharacterStream(reader, length);
     }
 
@@ -2600,16 +2524,12 @@ public abstract class AbstractResultSet implements ResultSet, FirebirdResultSet,
     }
 
     public void updateObject(String columnName, Object x, int scale) throws SQLException {
-        if (rowUpdater == null)
-            throw new FBResultSetNotUpdatableException();
-
+        checkUpdatable();
         getField(columnName).setObject(x);
     }
 
     public void updateObject(String columnName, Object x) throws SQLException {
-        if (rowUpdater == null)
-            throw new FBResultSetNotUpdatableException();
-
+        checkUpdatable();
         getField(columnName).setObject(x);
     }
 
@@ -2627,12 +2547,11 @@ public abstract class AbstractResultSet implements ResultSet, FirebirdResultSet,
      *      2.0 API</a>
      */
     public void insertRow() throws SQLException {
-        if (rowUpdater != null) {
-            rowUpdater.insertRow();
-            fbFetcher.insertRow(rowUpdater.getInsertRow());
-            notifyRowUpdater();
-        } else
-            throw new FBResultSetNotUpdatableException();
+        checkUpdatable();
+
+        rowUpdater.insertRow();
+        fbFetcher.insertRow(rowUpdater.getInsertRow());
+        notifyRowUpdater();
     }
 
     /**
@@ -2647,12 +2566,11 @@ public abstract class AbstractResultSet implements ResultSet, FirebirdResultSet,
      *      2.0 API</a>
      */
     public void updateRow() throws SQLException {
-        if (rowUpdater != null) {
-            rowUpdater.updateRow();
-            fbFetcher.updateRow(rowUpdater.getNewRow());
-            notifyRowUpdater();
-        } else
-            throw new FBResultSetNotUpdatableException();
+        checkUpdatable();
+
+        rowUpdater.updateRow();
+        fbFetcher.updateRow(rowUpdater.getNewRow());
+        notifyRowUpdater();
     }
 
     /**
@@ -2667,12 +2585,11 @@ public abstract class AbstractResultSet implements ResultSet, FirebirdResultSet,
      *      2.0 API</a>
      */
     public void deleteRow() throws SQLException {
-        if (rowUpdater != null) {
-            rowUpdater.deleteRow();
-            fbFetcher.deleteRow();
-            notifyRowUpdater();
-        } else
-            throw new FBResultSetNotUpdatableException();
+        checkUpdatable();
+
+        rowUpdater.deleteRow();
+        fbFetcher.deleteRow();
+        notifyRowUpdater();
     }
 
     /**
@@ -2703,14 +2620,13 @@ public abstract class AbstractResultSet implements ResultSet, FirebirdResultSet,
      *      2.0 API</a>
      */
     public void refreshRow() throws SQLException {
-        if (rowUpdater != null) {
-            rowUpdater.refreshRow();
-            fbFetcher.updateRow(rowUpdater.getOldRow());
+        checkUpdatable();
 
-            // this is excessive, but we do this to keep the code uniform
-            notifyRowUpdater();
-        } else
-            throw new FBResultSetNotUpdatableException();
+        rowUpdater.refreshRow();
+        fbFetcher.updateRow(rowUpdater.getOldRow());
+
+        // this is excessive, but we do this to keep the code uniform
+        notifyRowUpdater();
     }
 
     /**
@@ -2730,10 +2646,8 @@ public abstract class AbstractResultSet implements ResultSet, FirebirdResultSet,
      *      2.0 API</a>
      */
     public void cancelRowUpdates() throws SQLException {
-        if (rowUpdater != null)
-            rowUpdater.cancelRowUpdates();
-        else
-            throw new FBResultSetNotUpdatableException();
+        checkUpdatable();
+        rowUpdater.cancelRowUpdates();
     }
 
     /**
@@ -2760,10 +2674,8 @@ public abstract class AbstractResultSet implements ResultSet, FirebirdResultSet,
      *      2.0 API</a>
      */
     public void moveToInsertRow() throws SQLException {
-        if (rowUpdater != null)
-            rowUpdater.moveToInsertRow();
-        else
-            throw new FBResultSetNotUpdatableException();
+        checkUpdatable();
+        rowUpdater.moveToInsertRow();
     }
 
     /**
@@ -2778,10 +2690,8 @@ public abstract class AbstractResultSet implements ResultSet, FirebirdResultSet,
      *      2.0 API</a>
      */
     public void moveToCurrentRow() throws SQLException {
-        if (rowUpdater != null)
-            rowUpdater.moveToCurrentRow();
-        else
-            throw new FBResultSetNotUpdatableException();
+        checkUpdatable();
+        rowUpdater.moveToCurrentRow();
     }
 
     /**
