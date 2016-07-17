@@ -88,7 +88,7 @@ public class FBCachedClob implements Clob, NClob {
 	}
 
 	public String getSubString(long pos, int length) throws SQLException {
-		throw new FBDriverNotCapableException();
+		throw new FBDriverNotCapableException("Method getSubstring(long, int) is not supported");
 	}
 
 	public long length() throws SQLException {
@@ -96,11 +96,11 @@ public class FBCachedClob implements Clob, NClob {
 	}
 
 	public long position(String searchstr, long start) throws SQLException {
-		throw new FBDriverNotCapableException();
+		throw new FBDriverNotCapableException("Method position(String, long) is not supported");
 	}
 
 	public long position(Clob searchstr, long start) throws SQLException {
-		throw new FBDriverNotCapableException();
+		throw new FBDriverNotCapableException("Method position(Clob, long) is not supported");
 	}
 
 	public OutputStream setAsciiStream(long pos) throws SQLException {

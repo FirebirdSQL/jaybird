@@ -159,7 +159,7 @@ public class FBBlob implements FirebirdBlob, Synchronizable {
      * @since 1.6
      */
     public InputStream getBinaryStream(long pos, long length) throws SQLException {
-        throw new FBDriverNotCapableException();
+        throw new FBDriverNotCapableException("Method getBinaryStream(long, long) is not supported");
     }
 
     /**

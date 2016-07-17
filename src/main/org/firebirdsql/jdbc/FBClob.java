@@ -84,7 +84,7 @@ public class FBClob implements Clob, NClob {
 	 *                this operation is not supported
 	 */
 	public void truncate(long param1) throws SQLException {
-		throw new FBDriverNotCapableException();
+		throw new FBDriverNotCapableException("Method truncate(long) is not supported");
 	}
 
 	/**
@@ -189,7 +189,7 @@ public class FBClob implements Clob, NClob {
 	 * @see <a href="package-summary.html#2.0 API">What Is in the JDBC 2.0 API</a>
 	 */
 	public long position(String searchstr, long start) throws SQLException {
-		throw new FBDriverNotCapableException();
+		throw new FBDriverNotCapableException("Method position(String, long) is not supported");
 	}
 
 	/**
@@ -212,7 +212,7 @@ public class FBClob implements Clob, NClob {
 	 * @see <a href="package-summary.html#2.0 API">What Is in the JDBC 2.0 API</a>
 	 */
 	public long position(Clob searchstr, long start) throws SQLException {
-		throw new FBDriverNotCapableException();
+		throw new FBDriverNotCapableException("Method position(Clob, long) is not supported");
 	}
 
     /**
@@ -232,7 +232,7 @@ public class FBClob implements Clob, NClob {
      * </p>
      */
 	public int setString(long pos, String str, int offset, int len) throws SQLException {
-        throw new FBDriverNotCapableException();
+        throw new FBDriverNotCapableException("Method setString(long, String, int, int) is not supported");
 	}
 
 	/**

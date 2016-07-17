@@ -109,7 +109,7 @@ public final class FBCachedBlob implements FirebirdBlob, Synchronizable {
      *             always, not yet implemented.
      */
     public long position(byte[] pattern, long start) throws SQLException {
-        throw new FBDriverNotCapableException();
+        throw new FBDriverNotCapableException("Method Method position(byte[], long) is not supported");
     }
 
     /**
@@ -119,7 +119,7 @@ public final class FBCachedBlob implements FirebirdBlob, Synchronizable {
      *             always, not yet implemented.
      */
     public long position(Blob pattern, long start) throws SQLException {
-        throw new FBDriverNotCapableException();
+        throw new FBDriverNotCapableException("Method position(Blob, long) is not supported");
     }
 
     public InputStream getBinaryStream() throws SQLException {
@@ -129,7 +129,7 @@ public final class FBCachedBlob implements FirebirdBlob, Synchronizable {
     }
 
     public InputStream getBinaryStream(long pos, long length) throws SQLException {
-        throw new FBDriverNotCapableException();
+        throw new FBDriverNotCapableException("Method getBinaryStream(long, long) is not supported");
     }
 
     /**
@@ -169,7 +169,7 @@ public final class FBCachedBlob implements FirebirdBlob, Synchronizable {
      *             always, truncate is not relevant in cached state.
      */
     public void truncate(long length) throws SQLException {
-        throw new FBDriverNotCapableException();
+        throw new FBDriverNotCapableException("Method truncate(long) is not supported");
     }
 
     public final Object getSynchronizationObject() {
