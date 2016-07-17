@@ -35,9 +35,9 @@ public interface FBFlushableField {
         public byte[] bytes;
         public InputStream binaryStream;
         public Reader characterStream;
-        public int length;
+        public long length;
 
-        public CachedObject(byte[] bytes, InputStream binaryStream, Reader characterStream, int length) {
+        public CachedObject(byte[] bytes, InputStream binaryStream, Reader characterStream, long length) {
             this.bytes = bytes;
             this.binaryStream = binaryStream;
             this.characterStream = characterStream;

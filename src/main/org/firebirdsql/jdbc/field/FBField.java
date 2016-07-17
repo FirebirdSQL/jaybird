@@ -54,7 +54,6 @@ public abstract class FBField {
     static final String DATE_CONVERSION_ERROR = "Error converting to date.";
     static final String TIME_CONVERSION_ERROR = "Error converting to time.";
     static final String TIMESTAMP_CONVERSION_ERROR = "Error converting to timestamp.";
-    static final String ASCII_STREAM_CONVERSION_ERROR = "Error converting to ascii stream.";
     static final String BINARY_STREAM_CONVERSION_ERROR = "Error converting to binary stream.";
     static final String CHARACTER_STREAM_CONVERSION_ERROR = "Error converting to character stream.";
     static final String BYTES_CONVERSION_ERROR = "Error converting to array of bytes.";
@@ -514,10 +513,6 @@ public abstract class FBField {
         return getObjectConverter().getObject(this, type);
     }
 
-    public InputStream getAsciiStream() throws SQLException {
-        throw new TypeConversionException(FBField.ASCII_STREAM_CONVERSION_ERROR);
-    }
-
     public InputStream getBinaryStream() throws SQLException {
         throw new TypeConversionException(FBField.BINARY_STREAM_CONVERSION_ERROR);
     }
@@ -626,8 +621,12 @@ public abstract class FBField {
             if (value instanceof FBBlob) {
                 setBlob((FBBlob) value);
             } else {
-                setBinaryStream(((Blob) value).getBinaryStream(), (int) ((Blob) value).length());
+                setBinaryStream(((Blob) value).getBinaryStream());
             }
+        } else if (value instanceof InputStream) {
+            setBinaryStream((InputStream) value);
+        } else if (value instanceof Reader) {
+            setCharacterStream((Reader) value);
         } else if (value instanceof Boolean) {
             setBoolean((Boolean) value);
         } else if (value instanceof Byte) {
@@ -659,16 +658,28 @@ public abstract class FBField {
         }
     }
 
-    public void setAsciiStream(InputStream in, int length) throws SQLException {
-        throw new TypeConversionException(FBField.ASCII_STREAM_CONVERSION_ERROR);
-    }
-
-    public void setBinaryStream(InputStream in, int length) throws SQLException {
+    public void setBinaryStream(InputStream in, long length) throws SQLException {
         throw new TypeConversionException(FBField.BINARY_STREAM_CONVERSION_ERROR);
     }
 
-    public void setCharacterStream(Reader in, int length) throws SQLException {
-        throw new TypeConversionException(FBField.ASCII_STREAM_CONVERSION_ERROR);
+    public final void setBinaryStream(InputStream in) throws SQLException {
+        setBinaryStream(in, -1L);
+    }
+
+    public final void setBinaryStream(InputStream in, int length) throws SQLException {
+        setBinaryStream(in, (long) length);
+    }
+
+    public void setCharacterStream(Reader in, long length) throws SQLException {
+        throw new TypeConversionException(FBField.CHARACTER_STREAM_CONVERSION_ERROR);
+    }
+
+    public final void setCharacterStream(Reader in) throws SQLException {
+        setCharacterStream(in, -1L);
+    }
+
+    public final void setCharacterStream(Reader in, int length) throws SQLException {
+        setCharacterStream(in, (long) length);
     }
 
     public void setBytes(byte[] value) throws SQLException {

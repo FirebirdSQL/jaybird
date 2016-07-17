@@ -83,38 +83,7 @@ public class TestFBStringField extends BaseJUnit4TestFBField<FBStringField, Stri
         */
     }
 
-    @Test
-    @Override
-    public void getAsciiStreamNonNull() throws Exception {
-        toReturnStringExpectations(TEST_STRING_SHORT, encoding);
-        String fromStream = new String(IOUtils.toBytes(field.getAsciiStream(), Integer.MAX_VALUE));
-        assertEquals("ASCII stream values test failure", TEST_STRING_SHORT, fromStream.trim());
-    }
-
-    @Test
-    public void getAsciiStreamNull() throws Exception {
-        toReturnNullExpectations();
-
-        assertNull("Expected null ascii stream", field.getAsciiStream());
-    }
-
-    @Test
-    @Override
-    public void setAsciiStreamNonNull() throws Exception {
-        setStringExpectations(TEST_STRING_SHORT, encoding);
-        byte[] bytes = TEST_STRING_SHORT.getBytes();
-
-        field.setAsciiStream(new ByteArrayInputStream(bytes), bytes.length);
-    }
-
-    @Test
-    public void setAsciiStream_tooLong() throws Exception {
-        expectedException.expect(java.sql.DataTruncation.class);
-        byte[] bytes = TEST_STRING_LONG.getBytes();
-        field.setAsciiStream(new ByteArrayInputStream(bytes), bytes.length);
-    }
-
-    @Test
+   @Test
     public void getBigDecimalNull() throws SQLException {
         toReturnNullExpectations();
 

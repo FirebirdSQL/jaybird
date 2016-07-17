@@ -70,22 +70,6 @@ public class TestFBNullField {
     // TODO Investigate necessity to test getters, it looks like FBNullField is only used for parameters and never for ResultSet columns
     
     @Test
-    public void setAsciiStreamNull() throws SQLException {
-        setNullExpectations();
-        
-        field.setAsciiStream(null, 7);
-    }
-    
-    @Test
-    public void setAsciiStreanNonNull() throws SQLException {
-        setNonNullExpectations();
-        InputStream in = context.mock(InputStream.class);
-        // TODO Read and/or close expectation?
-        
-        field.setAsciiStream(in, 15);
-    }
-    
-    @Test
     public void setBigDecimalNull() throws SQLException {
         setNullExpectations();
         

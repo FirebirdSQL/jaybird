@@ -87,38 +87,36 @@ public class FBBinaryField extends FBField {
     }
 
     @Override
-    public void setBinaryStream(InputStream in, int length) throws SQLException {
+    public void setBinaryStream(InputStream in, long length) throws SQLException {
         if (in == null) {
             setNull();
             return;
         }
 
+        if (length > fieldDescriptor.getLength()) {
+            throw new DataTruncation(-1, true, false, (int) length, fieldDescriptor.getLength());
+        }
+
         try {
-            setBytes(IOUtils.toBytes(in, length));
+            setBytes(IOUtils.toBytes(in, (int) length));
         } catch (IOException ioex) {
             throw new TypeConversionException(BINARY_STREAM_CONVERSION_ERROR);
         }
     }
 
     @Override
-    public InputStream getAsciiStream() throws SQLException {
-        return getBinaryStream();
-    }
-
-    @Override
-    public void setAsciiStream(InputStream in, int length) throws SQLException {
-        setBinaryStream(in, length);
-    }
-
-    @Override
-    public void setCharacterStream(Reader in, int length) throws SQLException {
+    public void setCharacterStream(Reader in, long length) throws SQLException {
         if (in == null) {
             setNull();
             return;
         }
 
+        if (length > fieldDescriptor.getLength()) {
+            throw new DataTruncation(-1, true, false, (int) length, fieldDescriptor.getLength());
+        }
+
         try {
-            setString(IOUtils.toString(in, length));
+            setString(IOUtils.toString(in, (int) length));
         } catch (IOException ioex) {
             throw new TypeConversionException(CHARACTER_STREAM_CONVERSION_ERROR);
         }

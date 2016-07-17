@@ -126,11 +126,6 @@ final class FBNullField extends FBField {
         return null;
     }
 
-    public InputStream getAsciiStream() throws SQLException {
-        checkNull();
-        return null;
-    }
-
     public byte[] getBytes() throws SQLException {
         checkNull();
         return null;
@@ -210,11 +205,7 @@ final class FBNullField extends FBField {
 
     // ----- setXXXStream code
 
-    public void setAsciiStream(InputStream in, int length) throws SQLException {
-        setBinaryStream(in, length);
-    }
-
-    public void setBinaryStream(InputStream in, int length) throws SQLException {
+    public void setBinaryStream(InputStream in, long length) throws SQLException {
         if (in == null) {
             setNull();
             return;
@@ -223,7 +214,7 @@ final class FBNullField extends FBField {
         setDummyObject();
     }
 
-    public void setCharacterStream(Reader in, int length) throws SQLException {
+    public void setCharacterStream(Reader in, long length) throws SQLException {
         if (in == null) {
             setNull();
             return;

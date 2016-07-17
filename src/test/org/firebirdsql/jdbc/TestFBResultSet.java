@@ -25,6 +25,8 @@ import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 
+import java.io.ByteArrayInputStream;
+import java.io.StringReader;
 import java.sql.*;
 import java.util.Properties;
 import java.util.Random;
@@ -47,12 +49,13 @@ public class TestFBResultSet extends FBJUnit4TestBase {
 
     public static final String CREATE_TABLE_STATEMENT =
         "CREATE TABLE test_table(" +
-        "  id INTEGER NOT NULL PRIMARY KEY, " +
-        "  str VARCHAR(10), " +
-        "  long_str VARCHAR(255), " +
-        "  very_long_str VARCHAR(20000), " +
-        "  blob_str BLOB SUB_TYPE 1, " +
-        "  \"CamelStr\" VARCHAR(255)" +
+        "  id INTEGER NOT NULL PRIMARY KEY," +
+        "  str VARCHAR(10)," +
+        "  long_str VARCHAR(255)," +
+        "  very_long_str VARCHAR(20000)," +
+        "  blob_str BLOB SUB_TYPE TEXT," +
+        "  \"CamelStr\" VARCHAR(255)," +
+        "  blob_bin BLOB SUB_TYPE BINARY" +
         ")";
     
     public static final String SELECT_TEST_TABLE =
@@ -1023,6 +1026,102 @@ public class TestFBResultSet extends FBJUnit4TestBase {
 
             connection.rollback();
             assertTrue("Expected resultset to be closed", rs.isClosed());
+        }
+    }
+
+    @Test
+    public void testUpdatableBinaryStream() throws Exception {
+        executeCreateTable(connection, CREATE_TABLE_STATEMENT);
+
+        try (Statement stmt = connection.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_UPDATABLE)) {
+            stmt.executeUpdate("insert into test_table(id, blob_bin) values (1, null)");
+
+            byte[] value = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 };
+            connection.setAutoCommit(false);
+            try (ResultSet rs = stmt.executeQuery("select id, blob_bin from test_table")) {
+                assertTrue(rs.next());
+                ByteArrayInputStream bais = new ByteArrayInputStream(value);
+                rs.updateBinaryStream(2, bais);
+                rs.updateRow();
+            }
+
+            try (ResultSet rs = stmt.executeQuery("select id, blob_bin from test_table")) {
+                assertTrue(rs.next());
+
+                assertArrayEquals(value, rs.getBytes(2));
+            }
+        }
+    }
+
+    @Test
+    public void testUpdatableBinaryStream_intLength() throws Exception {
+        executeCreateTable(connection, CREATE_TABLE_STATEMENT);
+
+        try (Statement stmt = connection.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_UPDATABLE)) {
+            stmt.executeUpdate("insert into test_table(id, blob_bin) values (1, null)");
+
+            byte[] value = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 };
+            connection.setAutoCommit(false);
+            try (ResultSet rs = stmt.executeQuery("select id, blob_bin from test_table")) {
+                assertTrue(rs.next());
+                ByteArrayInputStream bais = new ByteArrayInputStream(value);
+                rs.updateBinaryStream(2, bais, 5);
+                rs.updateRow();
+            }
+
+            try (ResultSet rs = stmt.executeQuery("select id, blob_bin from test_table")) {
+                assertTrue(rs.next());
+
+                assertArrayEquals(new byte[] { 1, 2, 3, 4, 5 }, rs.getBytes(2));
+            }
+        }
+    }
+
+    @Test
+    public void testUpdatableCharacterStream() throws Exception {
+        executeCreateTable(connection, CREATE_TABLE_STATEMENT);
+
+        try (Statement stmt = connection.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_UPDATABLE)) {
+            stmt.executeUpdate("insert into test_table(id, blob_str) values (1, null)");
+
+            String value = "String for testing";
+            connection.setAutoCommit(false);
+            try (ResultSet rs = stmt.executeQuery("select id, blob_str from test_table")) {
+                assertTrue(rs.next());
+                StringReader stringReader = new StringReader(value);
+                rs.updateCharacterStream(2, stringReader);
+                rs.updateRow();
+            }
+
+            try (ResultSet rs = stmt.executeQuery("select id, blob_str from test_table")) {
+                assertTrue(rs.next());
+
+                assertEquals(value, rs.getString(2));
+            }
+        }
+    }
+
+    @Test
+    public void testUpdatableCharacterStream_intLength() throws Exception {
+        executeCreateTable(connection, CREATE_TABLE_STATEMENT);
+
+        try (Statement stmt = connection.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_UPDATABLE)) {
+            stmt.executeUpdate("insert into test_table(id, blob_str) values (1, null)");
+
+            String value = "String for testing";
+            connection.setAutoCommit(false);
+            try (ResultSet rs = stmt.executeQuery("select id, blob_str from test_table")) {
+                assertTrue(rs.next());
+                StringReader stringReader = new StringReader(value);
+                rs.updateCharacterStream(2, stringReader, 6);
+                rs.updateRow();
+            }
+
+            try (ResultSet rs = stmt.executeQuery("select id, blob_str from test_table")) {
+                assertTrue(rs.next());
+
+                assertEquals("String", rs.getString(2));
+            }
         }
     }
 }

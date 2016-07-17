@@ -113,18 +113,6 @@ public abstract class BaseJUnit4TestFBField<T extends FBField, O> {
     }
 
     @Test
-    public void getAsciiStreamNonNull() throws Exception {
-        expectedException.expect(TypeConversionException.class);
-        field.getAsciiStream();
-    }
-
-    @Test
-    public void setAsciiStreamNonNull() throws Exception {
-        expectedException.expect(TypeConversionException.class);
-        field.setAsciiStream(context.mock(InputStream.class), 100);
-    }
-
-    @Test
     public void getBigDecimalNonNull() throws SQLException {
         expectedException.expect(TypeConversionException.class);
         field.getBigDecimal();

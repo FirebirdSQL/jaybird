@@ -335,8 +335,8 @@ public abstract class AbstractCallableStatement extends FBPreparedStatement impl
                     field.setNull();
                 } else if (value instanceof WrapperWithCalendar) {
                     setField(field, (WrapperWithCalendar)value);
-                } else if (value instanceof WrapperWithInt) {
-                    setField(field, (WrapperWithInt)value);
+                } else if (value instanceof WrapperWithLong) {
+                    setField(field, (WrapperWithLong)value);
                 } else {
                     field.setObject(value);
                 }
@@ -354,20 +354,21 @@ public abstract class AbstractCallableStatement extends FBPreparedStatement impl
         return hasResultSet;
     }
 
-    private void setField(FBField field, WrapperWithInt value) throws SQLException {
+    private void setField(FBField field, WrapperWithLong value) throws SQLException {
         Object obj = value.getValue();
 
         if (obj == null) {
             field.setNull();
         } else {
-            int intValue = value.getIntValue();
+            long longValue = value.getLongValue();
 
-            if (obj instanceof InputStream)
-                field.setBinaryStream((InputStream) obj, intValue);
-            else if (obj instanceof Reader)
-                field.setCharacterStream((Reader) obj, intValue);
-            else
+            if (obj instanceof InputStream) {
+                field.setBinaryStream((InputStream) obj, longValue);
+            } else if (obj instanceof Reader) {
+                field.setCharacterStream((Reader) obj, longValue);
+            } else {
                 throw new TypeConversionException("Cannot convert type " + obj.getClass().getName());
+            }
         }
     }
 
@@ -1290,12 +1291,27 @@ public abstract class AbstractCallableStatement extends FBPreparedStatement impl
     }
 
     public void setBinaryStream(int parameterIndex, InputStream inputStream, int length) throws SQLException {
-        procedureCall.getInputParam(parameterIndex).setValue(
-                new WrapperWithInt(inputStream, length));
+        procedureCall.getInputParam(parameterIndex).setValue(new WrapperWithLong(inputStream, length));
+    }
+
+    public void setBinaryStream(int parameterIndex, InputStream inputStream, long length) throws SQLException {
+        procedureCall.getInputParam(parameterIndex).setValue(new WrapperWithLong(inputStream, length));
+    }
+
+    public void setBinaryStream(int parameterIndex, InputStream inputStream) throws SQLException {
+        procedureCall.getInputParam(parameterIndex).setValue(inputStream);
     }
 
     public void setBlob(int parameterIndex, Blob blob) throws SQLException {
         procedureCall.getInputParam(parameterIndex).setValue(blob);
+    }
+
+    public void setBlob(int parameterIndex, InputStream inputStream, long length) throws SQLException {
+        procedureCall.getInputParam(parameterIndex).setValue(new WrapperWithLong(inputStream, length));
+    }
+
+    public void setBlob(int parameterIndex, InputStream inputStream) throws SQLException {
+        procedureCall.getInputParam(parameterIndex).setValue(inputStream);
     }
 
     public void setBoolean(int parameterIndex, boolean x) throws SQLException {
@@ -1311,11 +1327,27 @@ public abstract class AbstractCallableStatement extends FBPreparedStatement impl
     }
 
     public void setCharacterStream(int parameterIndex, Reader reader, int length) throws SQLException {
-        procedureCall.getInputParam(parameterIndex).setValue(new WrapperWithInt(reader, length));
+        procedureCall.getInputParam(parameterIndex).setValue(new WrapperWithLong(reader, length));
+    }
+
+    public void setCharacterStream(int parameterIndex, Reader reader, long length) throws SQLException {
+        procedureCall.getInputParam(parameterIndex).setValue(new WrapperWithLong(reader, length));
+    }
+
+    public void setCharacterStream(int parameterIndex, Reader reader) throws SQLException {
+        procedureCall.getInputParam(parameterIndex).setValue(reader);
     }
 
     public void setClob(int parameterIndex, Clob x) throws SQLException {
         procedureCall.getInputParam(parameterIndex).setValue(x);
+    }
+
+    public void setClob(int parameterIndex, Reader reader, long length) throws SQLException {
+        procedureCall.getInputParam(parameterIndex).setValue(new WrapperWithLong(reader, length));
+    }
+
+    public void setClob(int parameterIndex, Reader reader) throws SQLException {
+        procedureCall.getInputParam(parameterIndex).setValue(reader);
     }
 
     public void setDate(int parameterIndex, java.sql.Date x, Calendar cal) throws SQLException {
@@ -1473,21 +1505,21 @@ public abstract class AbstractCallableStatement extends FBPreparedStatement impl
         }
     }
 
-    private static class WrapperWithInt {
+    private static class WrapperWithLong {
         private final Object value;
-        private final int intValue;
+        private final long longValue;
 
-        private WrapperWithInt(Object value, int intValue) {
+        private WrapperWithLong(Object value, long longValue) {
             this.value = value;
-            this.intValue = intValue;
+            this.longValue = longValue;
         }
 
         private Object getValue() {
             return value;
         }
 
-        private int getIntValue() {
-            return intValue;
+        private long getLongValue() {
+            return longValue;
         }
     }
 

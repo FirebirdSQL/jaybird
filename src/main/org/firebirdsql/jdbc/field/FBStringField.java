@@ -22,6 +22,7 @@ import org.firebirdsql.encodings.EncodingDefinition;
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.impl.GDSHelper;
 import org.firebirdsql.gds.ng.fields.FieldDescriptor;
+import org.firebirdsql.jdbc.FBDriverNotCapableException;
 import org.firebirdsql.util.IOUtils;
 
 import java.io.ByteArrayInputStream;
@@ -148,7 +149,7 @@ class FBStringField extends FBField {
     public BigDecimal getBigDecimal() throws SQLException {
         if (isNull()) return null;
 
-        /**@todo check what exceptions can be thrown here */
+        /*@todo check what exceptions can be thrown here */
         return new BigDecimal(getString().trim());
     }
     
@@ -196,10 +197,6 @@ class FBStringField extends FBField {
     public InputStream getBinaryStream() throws SQLException {
         if (isNull()) return null;
         return new ByteArrayInputStream(getFieldData());
-    }
-    
-    public InputStream getAsciiStream() throws SQLException {
-        return getBinaryStream();
     }
     
     public byte[] getBytes() throws SQLException {
@@ -297,31 +294,37 @@ class FBStringField extends FBField {
 
     //----- setXXXStream code
 
-    public void setAsciiStream(InputStream in, int length) throws SQLException {
-        setBinaryStream(in, length);
-    }
-
-    public void setBinaryStream(InputStream in, int length) throws SQLException {
+    public void setBinaryStream(InputStream in, long length) throws SQLException {
         if (in == null) {
             setNull();
             return;
         }
 
+        // TODO More specific value
+        if (length > Integer.MAX_VALUE) {
+            throw new FBDriverNotCapableException("Only length <= Integer.MAX_VALUE supported");
+        }
+
         try {
-            setBytes(IOUtils.toBytes(in, length));
+            setBytes(IOUtils.toBytes(in, (int) length));
         } catch (IOException ioex) {
             throw new TypeConversionException(BINARY_STREAM_CONVERSION_ERROR);
         }
     }
     
-    public void setCharacterStream(Reader in, int length) throws SQLException {
+    public void setCharacterStream(Reader in, long length) throws SQLException {
         if (in == null) {
             setNull();
             return;
         }
 
+        // TODO More specific value
+        if (length > Integer.MAX_VALUE) {
+            throw new FBDriverNotCapableException("Only length <= Integer.MAX_VALUE supported");
+        }
+
         try {
-            setString(IOUtils.toString(in, length));
+            setString(IOUtils.toString(in, (int) length));
         } catch (IOException ioex) {
             throw new TypeConversionException(CHARACTER_STREAM_CONVERSION_ERROR);
         }

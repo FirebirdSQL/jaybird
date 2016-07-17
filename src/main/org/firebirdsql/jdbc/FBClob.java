@@ -291,19 +291,41 @@ public class FBClob implements Clob, NClob {
 		}
 	}
 
+	/**
+	 * Copy data from a character stream into this Blob.
+	 * <p>
+	 * Calling with length {@code -1} is equivalent to calling {@link #copyCharacterStream(Reader)}.
+	 * </p>
+	 *
+	 * @param characterStream the source of data to copy
+	 * @param length The maximum number of bytes to copy, or {@code -1} to read the whole stream
+	 */
+	public void copyCharacterStream(Reader characterStream, long length) throws SQLException {
+		if (length == -1L) {
+			copyCharacterStream(characterStream);
+			return;
+		}
+        try (Writer writer = setCharacterStream(1)) {
+            int chunk;
+            final char[] buffer = new char[1024];
+            while (length > 0 && (chunk = characterStream.read(buffer)) != -1) {
+                writer.write(buffer, 0, chunk);
+                length -= chunk;
+            }
+        } catch (IOException ioe) {
+            throw new SQLException(ioe);
+        }
+	}
+
 	public void copyCharacterStream(Reader characterStream) throws SQLException {
-		Writer writer = setCharacterStream(1);
-		try {
+		try (Writer writer = setCharacterStream(1)) {
 			int chunk;
 			final char[] buffer = new char[1024];
-
-			while ((chunk = characterStream.read(buffer)) != -1)
-				writer.write(buffer, 0, chunk);
-
-			writer.flush();
-			writer.close();
+			while ((chunk = characterStream.read(buffer)) != -1) {
+                writer.write(buffer, 0, chunk);
+            }
 		} catch (IOException ioe) {
-			throw new FBSQLException(ioe);
+			throw new SQLException(ioe);
 		}
 	}
 

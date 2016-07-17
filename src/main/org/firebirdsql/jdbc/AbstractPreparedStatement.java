@@ -233,36 +233,22 @@ public abstract class AbstractPreparedStatement extends FBStatement implements F
         isParamSet[parameterIndex - 1] = true;
     }
 
-    /**
-     * Sets the designated parameter to the given input stream, which will have
-     * the specified number of bytes.
-     * 
-     * <P>
-     * <B>Note: </B> This stream object can either be a standard Java stream
-     * object or your own subclass that implements the standard interface.
-     * 
-     * @param parameterIndex
-     *            the first parameter is 1, the second is 2, ...
-     * @param inputStream
-     *            the Java input stream
-     * @param length
-     *            the number of bytes in the stream
-     * @exception SQLException
-     *                if a database access error occurs
-     */
+    @Override
     public void setBinaryStream(int parameterIndex, InputStream inputStream, int length) throws SQLException {
         getField(parameterIndex).setBinaryStream(inputStream, length);
         isParamSet[parameterIndex - 1] = true;
     }
-    
+
+    @Override
     public void setBinaryStream(int parameterIndex, InputStream inputStream, long length) throws SQLException {
-        if (length > Integer.MAX_VALUE)
-            throw new FBDriverNotCapableException("Only length <= Integer.MAX_VALUE supported");
-        setBinaryStream(parameterIndex, inputStream, (int)length);
+        getField(parameterIndex).setBinaryStream(inputStream, length);
+        isParamSet[parameterIndex - 1] = true;
     }
 
-    public void setBinaryStream(int parameterIndex, InputStream x) throws SQLException {
-        throw new FBDriverNotCapableException();
+    @Override
+    public void setBinaryStream(int parameterIndex, InputStream inputStream) throws SQLException {
+        getField(parameterIndex).setBinaryStream(inputStream);
+        isParamSet[parameterIndex - 1] = true;
     }
 
     /**
@@ -512,8 +498,9 @@ public abstract class AbstractPreparedStatement extends FBStatement implements F
      */
     protected FBField getField(int columnIndex) throws SQLException {
         checkValidity();
-        if (columnIndex > fields.length)
-            throw new FBSQLException("Invalid column index.", SQLStateConstants.SQL_STATE_INVALID_COLUMN);
+        if (columnIndex > fields.length) {
+            throw new SQLException("Invalid column index: " + columnIndex, SQLStateConstants.SQL_STATE_INVALID_COLUMN);
+        }
 
         return fields[columnIndex - 1];
     }
@@ -539,16 +526,18 @@ public abstract class AbstractPreparedStatement extends FBStatement implements F
      * @exception SQLException
      *                if a database access error occurs
      */
-    public void setAsciiStream(int parameterIndex, InputStream x, int length) throws SQLException {
-        setBinaryStream(parameterIndex, x, length);
-    }
-    
-    public void setAsciiStream(int parameterIndex, InputStream x, long length) throws SQLException {
+    @Override
+    public final void setAsciiStream(int parameterIndex, InputStream x, int length) throws SQLException {
         setBinaryStream(parameterIndex, x, length);
     }
 
-    public void setAsciiStream(int parameterIndex, InputStream x)
-            throws SQLException {
+    @Override
+    public final void setAsciiStream(int parameterIndex, InputStream x, long length) throws SQLException {
+        setBinaryStream(parameterIndex, x, length);
+    }
+
+    @Override
+    public final void setAsciiStream(int parameterIndex, InputStream x) throws SQLException {
         setBinaryStream(parameterIndex, x);
     }
 
@@ -929,44 +918,22 @@ public abstract class AbstractPreparedStatement extends FBStatement implements F
         results.add(getLargeUpdateCount());
     }
 
-    /**
-     * Sets the designated parameter to the given <code>Reader</code> object,
-     * which is the given number of characters long. When a very large UNICODE
-     * value is input to a <code>LONGVARCHAR</code> parameter, it may be more
-     * practical to send it via a <code>java.io.Reader</code> object. The data
-     * will be read from the stream as needed until end-of-file is reached. The
-     * JDBC driver will do any necessary conversion from UNICODE to the database
-     * char format.
-     * 
-     * <P>
-     * <B>Note: </B> This stream object can either be a standard Java stream
-     * object or your own subclass that implements the standard interface.
-     * 
-     * @param parameterIndex
-     *            the first parameter is 1, the second is 2, ...
-     * @param reader
-     *            the java reader which contains the UNICODE data
-     * @param length
-     *            the number of characters in the stream
-     * @exception SQLException
-     *                if a database access error occurs
-     * @since 1.2
-     * @see <a href="package-summary.html#2.0 API">What Is in the JDBC 2.0 API
-     *      </a>
-     */
+    @Override
     public void setCharacterStream(int parameterIndex, Reader reader, int length) throws SQLException {
         getField(parameterIndex).setCharacterStream(reader, length);
         isParamSet[parameterIndex - 1] = true;
     }
-    
+
+    @Override
     public void setCharacterStream(int parameterIndex, Reader reader, long length) throws SQLException {
-        if (length > Integer.MAX_VALUE)
-            throw new FBDriverNotCapableException("Only length <= Integer.MAX_VALUE supported");
-        setCharacterStream(parameterIndex, reader, (int)length);
+        getField(parameterIndex).setCharacterStream(reader, length);
+        isParamSet[parameterIndex - 1] = true;
     }
 
+    @Override
     public void setCharacterStream(int parameterIndex, Reader reader) throws SQLException {
-        throw new FBDriverNotCapableException();
+        getField(parameterIndex).setCharacterStream(reader);
+        isParamSet[parameterIndex - 1] = true;
     }
     
     /**
@@ -1001,10 +968,10 @@ public abstract class AbstractPreparedStatement extends FBStatement implements F
      * @see <a href="package-summary.html#2.0 API">What Is in the JDBC 2.0 API
      *      </a>
      */
+    @Override
     public void setBlob(int parameterIndex, Blob blob) throws SQLException {
-        // if the passed BLOB is not instance of our class, copy its content
-        // into the our BLOB
-        if (!(blob instanceof FBBlob)) {
+        // if the passed BLOB is not instance of our class, copy its content into the our BLOB
+        if (blob != null && !(blob instanceof FBBlob)) {
             FBBlob fbb = new FBBlob(gdsHelper, blobListener);
             fbb.copyStream(blob.getBinaryStream());
             blob = fbb;
@@ -1013,15 +980,15 @@ public abstract class AbstractPreparedStatement extends FBStatement implements F
         getField(parameterIndex).setBlob((FBBlob) blob);
         isParamSet[parameterIndex - 1] = true;
     }
-    
+
+    @Override
     public void setBlob(int parameterIndex, InputStream inputStream, long length) throws SQLException {
-        if (length > Integer.MAX_VALUE)
-            throw new FBDriverNotCapableException("Only length <= Integer.MAX_VALUE supported");
         FBBlob blob = new FBBlob(gdsHelper, blobListener);
-        blob.copyStream(inputStream, (int) length);
+        blob.copyStream(inputStream, length);
         setBlob(parameterIndex, blob);
     }
 
+    @Override
     public void setBlob(int parameterIndex, InputStream inputStream) throws SQLException {
         FBBlob blob = new FBBlob(gdsHelper, blobListener);
         blob.copyStream(inputStream);
@@ -1040,9 +1007,9 @@ public abstract class AbstractPreparedStatement extends FBStatement implements F
      *                if a database access error occurs
      * @since 1.2
      */
+    @Override
     public void setClob(int parameterIndex, Clob clob) throws SQLException {
-        // if the passed BLOB is not instance of our class, copy its content
-        // into the our BLOB
+        // if the passed BLOB is not instance of our class, copy its content into the our BLOB
         if (!(clob instanceof FBClob)) {
             FBClob fbc = new FBClob(new FBBlob(gdsHelper, blobListener));
             fbc.copyCharacterStream(clob.getCharacterStream());
@@ -1052,11 +1019,15 @@ public abstract class AbstractPreparedStatement extends FBStatement implements F
         getField(parameterIndex).setClob((FBClob) clob);
         isParamSet[parameterIndex - 1] = true;
     }
-    
+
+    @Override
     public void setClob(int parameterIndex, Reader reader, long length) throws SQLException {
-        throw new FBDriverNotCapableException();
+        FBClob clob = new FBClob(new FBBlob(gdsHelper, blobListener));
+        clob.copyCharacterStream(reader, length);
+        setClob(parameterIndex, clob);
     }
 
+    @Override
     public void setClob(int parameterIndex, Reader reader) throws SQLException {
         FBClob clob = new FBClob(new FBBlob(gdsHelper, blobListener));
         clob.copyCharacterStream(reader);
@@ -1350,8 +1321,6 @@ public abstract class AbstractPreparedStatement extends FBStatement implements F
     public boolean execute(String sql, String[] columnNames) throws SQLException {
         throw new FBSQLException(METHOD_NOT_SUPPORTED);
     }
-
-    // TODO Implement large update count method below using SqlCountHolder
 
     public long executeLargeUpdate() throws SQLException {
         executeUpdate();

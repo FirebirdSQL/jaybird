@@ -431,83 +431,114 @@ public class FBBlob implements FirebirdBlob, Synchronizable {
     }
 
     /**
-     * Copy the contents of an <code>InputStream</code> into this Blob.
+     * Copy the contents of an {@code InputStream} into this Blob.
+     * <p>
+     * Calling with length {@code -1} is equivalent to calling {@link #copyStream(InputStream)}, and will copy
+     * the whole stream.
+     * </p>
      *
      * @param inputStream the stream from which data will be copied
-     * @param length The maximum number of bytes to read from the InputStream
+     * @param length The maximum number of bytes to read from the InputStream, {@code -1} to read whole stream
      * @throws SQLException if a database access error occurs
      */
-    public void copyStream(InputStream inputStream, int length) throws SQLException {
-        OutputStream os = setBinaryStream(1);
-        try {
-            final byte[] buffer = new byte[Math.min(bufferLength, length)];
+    public void copyStream(InputStream inputStream, long length) throws SQLException {
+        if (length == -1L) {
+            copyStream(inputStream);
+            return;
+        }
+        try (OutputStream os = setBinaryStream(1)) {
+            final byte[] buffer = new byte[(int) Math.min(bufferLength, length)];
             int chunk;
-            while (length > 0 && (chunk = inputStream.read(buffer, 0, Math.min(buffer.length, length))) != -1) {
+            while (length > 0 && (chunk = inputStream.read(buffer, 0, (int) Math.min(buffer.length, length))) != -1) {
                 os.write(buffer, 0, chunk);
                 length -= chunk;
             }
-            os.flush();
-            os.close();
         } catch (IOException ioe) {
-            throw new FBSQLException(ioe);
+            throw new SQLException(ioe);
         }
     }
 
     /**
      * Copy the contents of an <code>InputStream</code> into this Blob. Unlike
-     * the {@link #copyStream(InputStream, int)} method, this one copies bytes
+     * the {@link #copyStream(InputStream, long)} method, this one copies bytes
      * until the EOF is reached.
      *
      * @param inputStream the stream from which data will be copied
      * @throws SQLException if a database access error occurs
      */
     public void copyStream(InputStream inputStream) throws SQLException {
-        OutputStream os = setBinaryStream(1);
-        try {
+        try (OutputStream os = setBinaryStream(1)) {
             final byte[] buffer = new byte[bufferLength];
             int chunk;
-            while ((chunk = inputStream.read(buffer)) != -1)
+            while ((chunk = inputStream.read(buffer)) != -1) {
                 os.write(buffer, 0, chunk);
-
-            os.flush();
-            os.close();
+            }
         } catch (IOException ioe) {
-            throw new FBSQLException(ioe);
+            throw new SQLException(ioe);
         }
     }
 
     /**
      * Copy data from a character stream into this Blob.
+     * <p>
+     * Calling with length {@code -1} is equivalent to calling {@link #copyCharacterStream(Reader, String)}.
+     * </p>
      *
-     * @param inputStream the source of data to copy
-     * @param length The maximum number of bytes to copy
+     * @param reader the source of data to copy
+     * @param length The maximum number of bytes to copy, or {@code -1} to read the whole stream
      * @param encoding The encoding used in the character stream
      */
-    public void copyCharacterStream(Reader inputStream, int length, String encoding) throws SQLException {
-        try {
-            OutputStream os = setBinaryStream(1);
-            OutputStreamWriter osw = encoding != null
-                    ? new OutputStreamWriter(os, encoding)
-                    : new OutputStreamWriter(os);
+    public void copyCharacterStream(Reader reader, long length, String encoding) throws SQLException {
+        if (length == -1L) {
+            copyCharacterStream(reader, encoding);
+            return;
+        }
+        try (OutputStream os = setBinaryStream(1);
+             OutputStreamWriter osw = encoding != null
+                     ? new OutputStreamWriter(os, encoding)
+                     : new OutputStreamWriter(os)) {
 
-            final char[] buffer = new char[Math.min(bufferLength, length)];
+            final char[] buffer = new char[(int) Math.min(bufferLength, length)];
             int chunk;
-            try {
-                while (length > 0 && (chunk = inputStream.read(buffer, 0, Math.min(buffer.length, length))) != -1) {
-                    osw.write(buffer, 0, chunk);
-                    length -= chunk;
-                }
-            } finally {
-                osw.flush();
-                osw.close();
+            while (length > 0 && (chunk = reader.read(buffer, 0, (int) Math.min(buffer.length, length))) != -1) {
+                osw.write(buffer, 0, chunk);
+                length -= chunk;
             }
         } catch (UnsupportedEncodingException ex) {
-            throw new FBSQLException("Cannot set character stream because " +
+            throw new SQLException("Cannot set character stream because " +
                     "the encoding '" + encoding + "' is unsupported in the JVM. " +
                     "Please report this to the driver developers."
             );
         } catch (IOException ioe) {
-            throw new FBSQLException(ioe);
+            throw new SQLException(ioe);
+        }
+    }
+
+    /**
+     * Copy data from a character stream into this Blob. Unlike
+     * the {@link #copyCharacterStream(Reader, long, String)} )} method, this one copies bytes
+     * until the EOF is reached.
+     *
+     * @param reader the source of data to copy
+     * @param encoding The encoding used in the character stream
+     */
+    public void copyCharacterStream(Reader reader, String encoding) throws SQLException {
+        try (OutputStream os = setBinaryStream(1);
+             OutputStreamWriter osw = encoding != null
+                ? new OutputStreamWriter(os, encoding)
+                : new OutputStreamWriter(os)) {
+            final char[] buffer = new char[bufferLength];
+            int chunk;
+            while ((chunk = reader.read(buffer, 0, buffer.length)) != -1) {
+                osw.write(buffer, 0, chunk);
+            }
+        } catch (UnsupportedEncodingException ex) {
+            throw new SQLException("Cannot set character stream because " +
+                    "the encoding '" + encoding + "' is unsupported in the JVM. " +
+                    "Please report this to the driver developers."
+            );
+        } catch (IOException ioe) {
+            throw new SQLException(ioe);
         }
     }
 }

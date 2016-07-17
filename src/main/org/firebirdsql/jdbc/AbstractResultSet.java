@@ -447,8 +447,9 @@ public abstract class AbstractResultSet implements ResultSet, FirebirdResultSet,
      * @throws SQLException if this parameter cannot be retrieved as an ASCII
      * stream
      */
-    public InputStream getAsciiStream(int columnIndex) throws SQLException {
-        return getField(columnIndex).getAsciiStream();
+    @Override
+    public final InputStream getAsciiStream(int columnIndex) throws SQLException {
+        return getBinaryStream(columnIndex);
     }
 
     /**
@@ -738,11 +739,11 @@ public abstract class AbstractResultSet implements ResultSet, FirebirdResultSet,
         checkOpen();
 
         if (checkRowPosition && row == null && rowUpdater == null) {
-            throw new SQLException("The resultSet is not in a row, use next", SQLStateConstants.SQL_STATE_NO_ROW_AVAIL);
+            throw new SQLException("The result set is not in a row, use next", SQLStateConstants.SQL_STATE_NO_ROW_AVAIL);
         }
 
         if (columnIndex > rowDescriptor.getCount()) {
-            throw new SQLException("Invalid column index.", SQLStateConstants.SQL_STATE_INVALID_COLUMN);
+            throw new SQLException("Invalid column index: " + columnIndex, SQLStateConstants.SQL_STATE_INVALID_COLUMN);
         }
 
         if (rowUpdater != null) {
@@ -983,8 +984,9 @@ public abstract class AbstractResultSet implements ResultSet, FirebirdResultSet,
      * @return The value as an <code>InputStream</code>
      * @throws SQLException if the given column cannot be retrieved
      */
-    public InputStream getAsciiStream(String columnName) throws SQLException {
-        return getField(columnName).getAsciiStream();
+    @Override
+    public final InputStream getAsciiStream(String columnName) throws SQLException {
+        return getBinaryStream(columnName);
     }
 
     /**
@@ -1978,80 +1980,40 @@ public abstract class AbstractResultSet implements ResultSet, FirebirdResultSet,
         getField(columnIndex).setTimestamp(x);
     }
 
-    /**
-     * Updates the designated column with an ascii stream value.
-     * The <code>updateXXX</code> methods are used to update column values in the
-     * current row or the insert row.  The <code>updateXXX</code> methods do not
-     * update the underlying database; instead the <code>updateRow</code> or
-     * <code>insertRow</code> methods are called to update the database.
-     *
-     * @param columnIndex the first column is 1, the second is 2, ...
-     * @param x the new column value
-     * @param length the length of the stream
-     * @exception SQLException if a database access error occurs
-     * @since 1.2
-     * @see <a href="package-summary.html#2.0 API">What Is in the JDBC
-     *      2.0 API</a>
-     */
-    public void updateAsciiStream(int columnIndex, InputStream x, int length) throws SQLException {
-        checkUpdatable();
-        getField(columnIndex).setAsciiStream(x, length);
-    }
-
-    /**
-     * Updates the designated column with a binary stream value.
-     * The <code>updateXXX</code> methods are used to update column values in the
-     * current row or the insert row.  The <code>updateXXX</code> methods do not
-     * update the underlying database; instead the <code>updateRow</code> or
-     * <code>insertRow</code> methods are called to update the database.
-     *
-     * @param columnIndex the first column is 1, the second is 2, ...
-     * @param x the new column value
-     * @param length the length of the stream
-     * @exception SQLException if a database access error occurs
-     * @since 1.2
-     * @see <a href="package-summary.html#2.0 API">What Is in the JDBC
-     *      2.0 API</a>
-     */
+    @Override
     public void updateBinaryStream(int columnIndex, InputStream x, int length) throws SQLException {
         checkUpdatable();
         getField(columnIndex).setBinaryStream(x, length);
     }
 
+    @Override
     public void updateBinaryStream(int columnIndex, InputStream x, long length) throws SQLException {
-        throw new FBDriverNotCapableException();
-    }
-
-    public void updateBinaryStream(int columnIndex, InputStream x) throws SQLException {
-        throw new FBDriverNotCapableException();
-    }
-
-    public void updateBinaryStream(String columnLabel, InputStream x, long length) throws SQLException {
-        throw new FBDriverNotCapableException();
-    }
-
-    public void updateBinaryStream(String columnLabel, InputStream x) throws SQLException {
-        throw new FBDriverNotCapableException();
-    }
-
-    /**
-     * Updates the designated column with a character stream value.
-     * The <code>updateXXX</code> methods are used to update column values in the
-     * current row or the insert row.  The <code>updateXXX</code> methods do not
-     * update the underlying database; instead the <code>updateRow</code> or
-     * <code>insertRow</code> methods are called to update the database.
-     *
-     * @param columnIndex the first column is 1, the second is 2, ...
-     * @param x the new column value
-     * @param length the length of the stream
-     * @exception SQLException if a database access error occurs
-     * @since 1.2
-     * @see <a href="package-summary.html#2.0 API">What Is in the JDBC
-     *      2.0 API</a>
-     */
-    public void updateCharacterStream(int columnIndex, Reader x, int length) throws SQLException {
         checkUpdatable();
-        getField(columnIndex).setCharacterStream(x, length);
+        getField(columnIndex).setBinaryStream(x, length);
+    }
+
+    @Override
+    public void updateBinaryStream(int columnIndex, InputStream x) throws SQLException {
+        checkUpdatable();
+        getField(columnIndex).setBinaryStream(x);
+    }
+
+    @Override
+    public void updateBinaryStream(String columnName, InputStream x, int length) throws SQLException {
+        checkUpdatable();
+        getField(columnName).setBinaryStream(x, length);
+    }
+
+    @Override
+    public void updateBinaryStream(String columnLabel, InputStream x, long length) throws SQLException {
+        checkUpdatable();
+        getField(columnLabel).setBinaryStream(x, length);
+    }
+
+    @Override
+    public void updateBinaryStream(String columnLabel, InputStream x) throws SQLException {
+        checkUpdatable();
+        getField(columnLabel).setBinaryStream(x);
     }
 
     /**
@@ -2394,89 +2356,70 @@ public abstract class AbstractResultSet implements ResultSet, FirebirdResultSet,
         getField(columnName).setTimestamp(x);
     }
 
-    /**
-     * Updates the designated column with an ascii stream value.
-     * The <code>updateXXX</code> methods are used to update column values in the
-     * current row or the insert row.  The <code>updateXXX</code> methods do not
-     * update the underlying database; instead the <code>updateRow</code> or
-     * <code>insertRow</code> methods are called to update the database.
-     *
-     * @param columnName the name of the column
-     * @param x the new column value
-     * @param length the length of the stream
-     * @exception SQLException if a database access error occurs
-     * @since 1.2
-     * @see <a href="package-summary.html#2.0 API">What Is in the JDBC
-     *      2.0 API</a>
-     */
-    public void updateAsciiStream(String columnName, InputStream x, int length) throws SQLException {
+    @Override
+    public final void updateAsciiStream(int columnIndex, InputStream x, int length) throws SQLException {
+        updateBinaryStream(columnIndex, x, length);
+    }
+
+    @Override
+    public final void updateAsciiStream(String columnName, InputStream x, int length) throws SQLException {
+        updateBinaryStream(columnName, x, length);
+    }
+
+    @Override
+    public final void updateAsciiStream(int columnIndex, InputStream x, long length) throws SQLException {
+        updateBinaryStream(columnIndex, x, length);
+    }
+
+    @Override
+    public final void updateAsciiStream(int columnIndex, InputStream x) throws SQLException {
+        updateBinaryStream(columnIndex, x);
+    }
+
+    @Override
+    public final void updateAsciiStream(String columnLabel, InputStream x, long length) throws SQLException {
+        updateBinaryStream(columnLabel, x, length);
+    }
+
+    @Override
+    public final void updateAsciiStream(String columnLabel, InputStream x) throws SQLException {
+        updateBinaryStream(columnLabel, x);
+    }
+
+    @Override
+    public void updateCharacterStream(int columnIndex, Reader x, int length) throws SQLException {
         checkUpdatable();
-        getField(columnName).setAsciiStream(x, length);
+        getField(columnIndex).setCharacterStream(x, length);
     }
 
-    public void updateAsciiStream(int columnIndex, InputStream x, long length) throws SQLException {
-        // TODO Write implementation
-        throw new FBDriverNotCapableException();
-    }
-
-    public void updateAsciiStream(int columnIndex, InputStream x) throws SQLException {
-        // TODO Write implementation
-        throw new FBDriverNotCapableException();
-    }
-
-    public void updateAsciiStream(String columnLabel, InputStream x, long length) throws SQLException {
-        // TODO Write implementation
-        throw new FBDriverNotCapableException();
-    }
-
-    public void updateAsciiStream(String columnLabel, InputStream x) throws SQLException {
-        // TODO Write implementation
-        throw new FBDriverNotCapableException();
-    }
-
-    public void updateBinaryStream(String columnName, InputStream x, int length) throws SQLException {
+    @Override
+    public void updateCharacterStream(int columnIndex, Reader x, long length) throws SQLException {
         checkUpdatable();
-        getField(columnName).setBinaryStream(x, length);
+        getField(columnIndex).setCharacterStream(x, length);
     }
 
-    /**
-     * Updates the designated column with a character stream value.
-     * The <code>updateXXX</code> methods are used to update column values in the
-     * current row or the insert row.  The <code>updateXXX</code> methods do not
-     * update the underlying database; instead the <code>updateRow</code> or
-     * <code>insertRow</code> methods are called to update the database.
-     *
-     * @param columnName the name of the column
-     * @param reader the new column value
-     * @param length the length of the stream
-     * @exception SQLException if a database access error occurs
-     * @since 1.2
-     * @see <a href="package-summary.html#2.0 API">What Is in the JDBC
-     *      2.0 API</a>
-     */
+    @Override
+    public void updateCharacterStream(int columnIndex, Reader x) throws SQLException {
+        checkUpdatable();
+        getField(columnIndex).setCharacterStream(x);
+    }
+
+    @Override
     public void updateCharacterStream(String columnName, Reader reader, int length) throws SQLException {
         checkUpdatable();
         getField(columnName).setCharacterStream(reader, length);
     }
 
-    public void updateCharacterStream(int columnIndex, Reader x, long length) throws SQLException {
-        // TODO Write implementation
-        throw new FBDriverNotCapableException();
-    }
-
-    public void updateCharacterStream(int columnIndex, Reader x) throws SQLException {
-        // TODO Write implementation
-        throw new FBDriverNotCapableException();
-    }
-
+    @Override
     public void updateCharacterStream(String columnLabel, Reader reader, long length) throws SQLException {
-        // TODO Write implementation
-        throw new FBDriverNotCapableException();
+        checkUpdatable();
+        getField(columnLabel).setCharacterStream(reader, length);
     }
 
+    @Override
     public void updateCharacterStream(String columnLabel, Reader reader) throws SQLException {
-        // TODO Write implementation
-        throw new FBDriverNotCapableException();
+        checkUpdatable();
+        getField(columnLabel).setCharacterStream(reader);
     }
 
     /**
@@ -3024,92 +2967,102 @@ public abstract class AbstractResultSet implements ResultSet, FirebirdResultSet,
         throw new FBDriverNotCapableException("Type REF not supported");
     }
 
-    /**
-     * <b>This operation is not supported</b>
-     *
-     * @param param1 <description>
-     * @param param2 <description>
-     * @exception java.sql.SQLException <description>
-     */
-    public void updateBlob(int param1, Blob param2) throws SQLException {
-        // TODO Write implementation
-        throw new FBDriverNotCapableException();
+    @Override
+    public void updateBlob(int columnIndex, Blob blob) throws SQLException {
+        checkUpdatable();
+        getField(columnIndex).setBlob(asFBBlob(blob));
     }
 
-    /**
-     * <b>This operation is not supported</b>
-     *
-     * @param param1 <description>
-     * @param param2 <description>
-     * @exception java.sql.SQLException <description>
-     */
-    public void updateBlob(String param1, Blob param2) throws SQLException {
-        // TODO Write implementation
-        throw new FBDriverNotCapableException();
+    private FBBlob asFBBlob(Blob blob) throws SQLException {
+        // if the passed BLOB is not instance of our class, copy its content into the our BLOB
+        if (blob == null) {
+            return null;
+        }
+        if (blob instanceof FBBlob) {
+            return (FBBlob) blob;
+        }
+        FBBlob fbb = new FBBlob(gdsHelper);
+        fbb.copyStream(blob.getBinaryStream());
+        return fbb;
     }
 
+    @Override
+    public void updateBlob(String columnLabel, Blob blob) throws SQLException {
+        checkUpdatable();
+        getField(columnLabel).setBlob(asFBBlob(blob));
+    }
+
+    @Override
     public void updateBlob(int columnIndex, InputStream inputStream, long length) throws SQLException {
-        // TODO Write implementation
-        throw new FBDriverNotCapableException();
+        checkUpdatable();
+        getField(columnIndex).setBinaryStream(inputStream, length);
     }
 
+    @Override
     public void updateBlob(int columnIndex, InputStream inputStream) throws SQLException {
-        // TODO Write implementation
-        throw new FBDriverNotCapableException();
+        checkUpdatable();
+        getField(columnIndex).setBinaryStream(inputStream);
     }
 
+    @Override
     public void updateBlob(String columnLabel, InputStream inputStream, long length) throws SQLException {
-        // TODO Write implementation
-        throw new FBDriverNotCapableException();
+        checkUpdatable();
+        getField(columnLabel).setBinaryStream(inputStream, length);
     }
 
+    @Override
     public void updateBlob(String columnLabel, InputStream inputStream) throws SQLException {
-        // TODO Write implementation
-        throw new FBDriverNotCapableException();
+        checkUpdatable();
+        getField(columnLabel).setBinaryStream(inputStream);
     }
 
-    /**
-     * <b>This operation is not supported</b>
-     *
-     * @param param1 <description>
-     * @param param2 <description>
-     * @exception java.sql.SQLException <description>
-     */
-    public void updateClob(int param1, Clob param2) throws SQLException {
-        // TODO Write implementation
-        throw new FBDriverNotCapableException();
+    @Override
+    public void updateClob(int columnIndex, java.sql.Clob clob) throws SQLException {
+        checkUpdatable();
+        getField(columnIndex).setClob(asFBClob(clob));
     }
 
-    /**
-     * <b>This operation is not supported</b>
-     *
-     * @param param1 <description>
-     * @param param2 <description>
-     * @exception java.sql.SQLException <description>
-     */
-    public void updateClob(String param1, Clob param2) throws SQLException {
-        // TODO Write implementation
-        throw new FBDriverNotCapableException();
+    private FBClob asFBClob(Clob clob) throws SQLException {
+        // if the passed BLOB is not instance of our class, copy its content into the our BLOB
+        if (clob == null) {
+            return null;
+        }
+        if (clob instanceof FBClob) {
+            return (FBClob) clob;
+        }
+        FBClob fbc = new FBClob(new FBBlob(gdsHelper));
+        fbc.copyCharacterStream(clob.getCharacterStream());
+        return fbc;
     }
 
+    @Override
+    public void updateClob(String columnLabel, Clob clob) throws SQLException {
+        checkUpdatable();
+        getField(columnLabel).setClob(asFBClob(clob));
+    }
+
+    @Override
     public void updateClob(int columnIndex, Reader reader, long length) throws SQLException {
-        // TODO Write implementation
-        throw new FBDriverNotCapableException();
+        checkUpdatable();
+        getField(columnIndex).setCharacterStream(reader, length);
     }
 
+    @Override
     public void updateClob(int columnIndex, Reader reader) throws SQLException {
-        // TODO Write implementation
-        throw new FBDriverNotCapableException();
+        checkUpdatable();
+        getField(columnIndex).setCharacterStream(reader);
     }
 
+    @Override
     public void updateClob(String columnLabel, Reader reader, long length) throws SQLException {
-        // TODO Write implementation
-        throw new FBDriverNotCapableException();
+        checkUpdatable();
+        getField(columnLabel).setCharacterStream(reader, length);
     }
 
+    @Override
     public void updateClob(String columnLabel, Reader reader) throws SQLException {
-        // TODO Write implementation
-        throw new FBDriverNotCapableException();
+        checkUpdatable();
+        getField(columnLabel).setCharacterStream(reader);
     }
 
     public void updateArray(int param1, Array param2) throws SQLException {

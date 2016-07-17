@@ -123,27 +123,6 @@ public class TestFBBinaryField extends BaseJUnit4TestFBField<FBBinaryField, byte
 
     @Test
     @Override
-    public void getAsciiStreamNonNull() throws Exception {
-        final byte[] bytes = getRandomBytes();
-        toReturnValueExpectations(bytes);
-
-        InputStream stream = field.getAsciiStream();
-
-        assertArrayEquals(bytes, streamToBytes(stream));
-    }
-
-    @Test
-    @Override
-    public void setAsciiStreamNonNull() throws SQLException {
-        final byte[] bytes = getRandomBytes();
-        setValueExpectations(bytes);
-        InputStream stream = new ByteArrayInputStream(bytes);
-
-        field.setAsciiStream(stream, FIELD_LENGTH);
-    }
-
-    @Test
-    @Override
     public void getBinaryStreamNonNull() throws Exception {
         final byte[] bytes = getRandomBytes();
         toReturnValueExpectations(bytes);

@@ -47,7 +47,7 @@ public class FBLongVarCharField extends FBStringField implements FBFlushableFiel
     private FBBlob blob;
 
     // Rather then hold cached data in the XSQLDAVar we will hold it in here.
-    private int length;
+    private long length;
     private byte[] bytes;
     private InputStream binaryStream;
     private Reader characterStream;
@@ -56,7 +56,8 @@ public class FBLongVarCharField extends FBStringField implements FBFlushableFiel
             throws SQLException {
         super(fieldDescriptor, dataProvider, requiredType);
     }
-    
+
+    @Override
     public void close() throws SQLException {
         try {
             if (blob != null) blob.free();
@@ -72,7 +73,8 @@ public class FBLongVarCharField extends FBStringField implements FBFlushableFiel
             length = 0;
         }
     }
-    
+
+    @Override
     public Blob getBlob() throws SQLException {
         if (blob != null) return blob;
         if (isNull()) return null;
@@ -80,19 +82,22 @@ public class FBLongVarCharField extends FBStringField implements FBFlushableFiel
         blob = new FBBlob(gdsHelper, getDatatypeCoder().decodeLong(getFieldData()));
         return blob;
     }
-    
+
+    @Override
     public Clob getClob() throws SQLException {
     	FBBlob blob = (FBBlob) getBlob();
     	if (blob == null) return null;
     	return new FBClob(blob);
     }
-    
+
+    @Override
     public InputStream getBinaryStream() throws SQLException {
         Blob blob = getBlob();
         if (blob == null) return null;
         return blob.getBinaryStream();
     }
-    
+
+    @Override
     public byte[] getBytes() throws SQLException {
         final Blob blob = getBlob();
         if (blob == null) return null;
@@ -112,11 +117,13 @@ public class FBLongVarCharField extends FBStringField implements FBFlushableFiel
         }
     }
 
+    @Override
     public byte[] getCachedData() throws SQLException {
         if (isNull()) return bytes;
         return getBytes();
     }
-    
+
+    @Override
     public FBFlushableField.CachedObject getCachedObject() throws SQLException {
         if (isNull()) {
             return new CachedObject(bytes, binaryStream, characterStream, length);
@@ -125,7 +132,8 @@ public class FBLongVarCharField extends FBStringField implements FBFlushableFiel
         final byte[] bytes = getBytes();
         return new CachedObject(bytes, null, null, bytes.length);
     }
-    
+
+    @Override
     public void setCachedObject(FBFlushableField.CachedObject cachedObject) throws SQLException {
         bytes = cachedObject.bytes;
         binaryStream = cachedObject.binaryStream;
@@ -133,6 +141,7 @@ public class FBLongVarCharField extends FBStringField implements FBFlushableFiel
         length = cachedObject.length;
     }
 
+    @Override
     public String getString() throws SQLException {
         byte[] data = getBytes();
         if (data == null) return null;
@@ -140,19 +149,22 @@ public class FBLongVarCharField extends FBStringField implements FBFlushableFiel
         return getDatatypeCoder().decodeString(data, encodingDefinition.getEncoding(), mappingPath);
     }
 
+    @Override
     public void setBlob(FBBlob blob) throws SQLException {
         // setNull() to reset field to empty state
         setNull();
         setFieldData(getDatatypeCoder().encodeLong(blob.getBlobId()));
         this.blob = blob;
     }
-    
+
+    @Override
     public void setClob(FBClob clob) throws SQLException {
     	FBBlob blob = clob.getWrappedBlob();
     	setBlob(blob);
     }
 
-    public void setCharacterStream(Reader in, int length) throws SQLException {
+    @Override
+    public void setCharacterStream(Reader in, long length) throws SQLException {
         // setNull() to reset field to empty state
         setNull();
         if (in != null) {
@@ -161,6 +173,7 @@ public class FBLongVarCharField extends FBStringField implements FBFlushableFiel
         }
     }
 
+    @Override
     public void setString(String value) throws SQLException {
         // setNull() to reset field to empty state
         setNull();
@@ -169,6 +182,7 @@ public class FBLongVarCharField extends FBStringField implements FBFlushableFiel
         }
     }
 
+    @Override
     public void setBytes(byte[] value) throws SQLException {
         // setNull() to reset field to empty state
         setNull();
@@ -178,7 +192,8 @@ public class FBLongVarCharField extends FBStringField implements FBFlushableFiel
         }
     }
 
-    public void setBinaryStream(InputStream in, int length) throws SQLException {
+    @Override
+    public void setBinaryStream(InputStream in, long length) throws SQLException {
         // setNull() to reset field to empty state
         setNull();
         if (in != null) {
@@ -187,13 +202,14 @@ public class FBLongVarCharField extends FBStringField implements FBFlushableFiel
         }
     }
 
+    @Override
     public void flushCachedData() throws SQLException {
         if (binaryStream != null) {
             copyBinaryStream(this.binaryStream, this.length);
         } else if (characterStream != null) {
             copyCharacterStream(characterStream, length, encodingDefinition.getJavaEncodingName());
         } else if (bytes != null) {
-            copyBytes(bytes, length);
+            copyBytes(bytes, (int) length);
         } else if (blob == null) {
             setNull();
         }
@@ -220,13 +236,13 @@ public class FBLongVarCharField extends FBStringField implements FBFlushableFiel
         }
     }
     
-    private void copyBinaryStream(InputStream in, int length) throws SQLException {
+    private void copyBinaryStream(InputStream in, long length) throws SQLException {
         FBBlob blob =  new FBBlob(gdsHelper);
         blob.copyStream(in, length);
         setFieldData(getDatatypeCoder().encodeLong(blob.getBlobId()));
     }
 
-    private void copyCharacterStream(Reader in, int length, String encoding) throws SQLException {
+    private void copyCharacterStream(Reader in, long length, String encoding) throws SQLException {
         FBBlob blob =  new FBBlob(gdsHelper);
         blob.copyCharacterStream(in, length, encoding);
         setFieldData(getDatatypeCoder().encodeLong(blob.getBlobId()));

@@ -39,7 +39,7 @@ import java.sql.SQLException;
 class FBBlobField extends FBField implements FBFlushableField {
 
     private FBBlob blob;
-    private int length;
+    private long length;
     private InputStream binaryStream;
     private Reader characterStream;
     private byte[] bytes;
@@ -48,6 +48,7 @@ class FBBlobField extends FBField implements FBFlushableField {
         super(fieldDescriptor, dataProvider, requiredType);
     }
 
+    @Override
     public void close() throws SQLException {
         try {
             if (blob != null) blob.free();
@@ -62,6 +63,7 @@ class FBBlobField extends FBField implements FBFlushableField {
         }
     }
 
+    @Override
     public Blob getBlob() throws SQLException {
         if (blob != null) return blob;
         final byte[] bytes = getFieldData();
@@ -73,33 +75,23 @@ class FBBlobField extends FBField implements FBFlushableField {
         return blob;
     }
 
+    @Override
     public Clob getClob() throws SQLException {
         FBBlob blob = (FBBlob) getBlob();
         if (blob == null) return null;
         return new FBClob(blob);
     }
 
-    public InputStream getAsciiStream() throws SQLException {
-        return getBinaryStream();
-    }
-
+    @Override
     public InputStream getBinaryStream() throws SQLException {
-        // getBinaryStream() is not defined for BLOB types, only for BINARY
-        if (fieldDescriptor.getSubType() < 0)
-            throw new TypeConversionException(BINARY_STREAM_CONVERSION_ERROR);
-
         Blob blob = getBlob();
         if (blob == null) return null;
 
         return blob.getBinaryStream();
     }
 
+    @Override
     public byte[] getBytes() throws SQLException {
-        // getBytes() is not defined for BLOB types, only for BINARY
-//        if (field.sqlsubtype < 0)
-//            throw (SQLException)createException(
-//                BYTES_CONVERSION_ERROR);
-
         return getBytesInternal();
     }
 
@@ -133,6 +125,7 @@ class FBBlobField extends FBField implements FBFlushableField {
         }
     }
 
+    @Override
     public byte[] getCachedData() throws SQLException {
         if (isNull()) {
             return bytes;
@@ -140,12 +133,15 @@ class FBBlobField extends FBField implements FBFlushableField {
         return getBytesInternal();
     }
 
+    @Override
     public FBFlushableField.CachedObject getCachedObject() throws SQLException {
         if (isNull())
             return new FBFlushableField.CachedObject(bytes, binaryStream, characterStream, length);
-        return new CachedObject(getBytesInternal(), null, null, 0);
+        final byte[] bytes = getBytesInternal();
+        return new CachedObject(bytes, null, null, bytes.length);
     }
 
+    @Override
     public void setCachedObject(FBFlushableField.CachedObject cachedObject) throws SQLException {
         // setNull() to reset field to empty state
         setNull();
@@ -155,6 +151,7 @@ class FBBlobField extends FBField implements FBFlushableField {
         length = cachedObject.length;
     }
 
+    @Override
     public String getString() throws SQLException {
         // getString() is not defined for BLOB fields, only for BINARY
         if (fieldDescriptor.getSubType() < 0)
@@ -170,11 +167,8 @@ class FBBlobField extends FBField implements FBFlushableField {
 
     //--- setXXX methods
 
-    public void setAsciiStream(InputStream in, int length) throws SQLException {
-        setBinaryStream(in, length);
-    }
-
-    public void setCharacterStream(Reader in, int length) throws SQLException {
+    @Override
+    public void setCharacterStream(Reader in, long length) throws SQLException {
         // setNull() to reset field to empty state
         setNull();
         if (in != null) {
@@ -183,7 +177,8 @@ class FBBlobField extends FBField implements FBFlushableField {
         }
     }
 
-    public void setBinaryStream(InputStream in, int length) throws SQLException {
+    @Override
+    public void setBinaryStream(InputStream in, long length) throws SQLException {
         // setNull() to reset field to empty state
         setNull();
         if (in != null) {
@@ -192,16 +187,18 @@ class FBBlobField extends FBField implements FBFlushableField {
         }
     }
 
+    @Override
     public void flushCachedData() throws SQLException {
-        if (binaryStream != null)
+        if (binaryStream != null) {
             copyBinaryStream(binaryStream, length);
-        else if (characterStream != null)
+        } else if (characterStream != null) {
             copyCharacterStream(characterStream, length,
                     getDatatypeCoder().getEncodingFactory().getDefaultEncoding().getCharsetName());
-        else if (bytes != null)
-            copyBytes(bytes, length);
-        else if (blob == null)
+        } else if (bytes != null) {
+            copyBytes(bytes, (int) length);
+        } else if (blob == null) {
             setNull();
+        }
 
         this.characterStream = null;
         this.binaryStream = null;
@@ -209,13 +206,13 @@ class FBBlobField extends FBField implements FBFlushableField {
         this.length = 0;
     }
 
-    private void copyBinaryStream(InputStream in, int length) throws SQLException {
+    private void copyBinaryStream(InputStream in, long length) throws SQLException {
         FBBlob blob = new FBBlob(gdsHelper);
         blob.copyStream(in, length);
         setFieldData(getDatatypeCoder().encodeLong(blob.getBlobId()));
     }
 
-    private void copyCharacterStream(Reader in, int length, String encoding) throws SQLException {
+    private void copyCharacterStream(Reader in, long length, String encoding) throws SQLException {
         FBBlob blob = new FBBlob(gdsHelper);
         blob.copyCharacterStream(in, length, encoding);
         setFieldData(getDatatypeCoder().encodeLong(blob.getBlobId()));
@@ -227,6 +224,7 @@ class FBBlobField extends FBField implements FBFlushableField {
         setFieldData(getDatatypeCoder().encodeLong(blob.getBlobId()));
     }
 
+    @Override
     public void setBytes(byte[] value) throws SQLException {
         // setNull() to reset field to empty state
         setNull();
@@ -236,6 +234,7 @@ class FBBlobField extends FBField implements FBFlushableField {
         }
     }
 
+    @Override
     public void setString(String value) throws SQLException {
         if (value == null) {
             setNull();
@@ -246,6 +245,7 @@ class FBBlobField extends FBField implements FBFlushableField {
                 mappingPath));
     }
 
+    @Override
     public void setBlob(FBBlob blob) throws SQLException {
         // setNull() to reset field to empty state
         setNull();
@@ -253,11 +253,13 @@ class FBBlobField extends FBField implements FBFlushableField {
         this.blob = blob;
     }
 
+    @Override
     public void setClob(FBClob clob) throws SQLException {
         FBBlob blob = clob.getWrappedBlob();
         setBlob(blob);
     }
 
+    @Override
     public void setNull() {
         super.setNull();
         try {
