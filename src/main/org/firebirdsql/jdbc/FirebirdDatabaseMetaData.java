@@ -45,8 +45,7 @@ public interface FirebirdDatabaseMetaData extends DatabaseMetaData {
      * @throws SQLException
      *             if specified procedure cannot be found.
      */
-    public String getProcedureSourceCode(String procedureName)
-            throws SQLException;
+    String getProcedureSourceCode(String procedureName) throws SQLException;
 
     /**
      * Get the source of a trigger.
@@ -57,7 +56,7 @@ public interface FirebirdDatabaseMetaData extends DatabaseMetaData {
      * @throws SQLException
      *             if specified trigger cannot be found.
      */
-    public String getTriggerSourceCode(String triggerName) throws SQLException;
+    String getTriggerSourceCode(String triggerName) throws SQLException;
 
     /**
      * Get the source of a view.
@@ -68,7 +67,7 @@ public interface FirebirdDatabaseMetaData extends DatabaseMetaData {
      * @throws SQLException
      *             if specified view cannot be found.
      */
-    public String getViewSourceCode(String viewName) throws SQLException;
+    String getViewSourceCode(String viewName) throws SQLException;
     
     /**
      * Get the major version of the ODS (On-Disk Structure) of the database.
@@ -85,5 +84,25 @@ public interface FirebirdDatabaseMetaData extends DatabaseMetaData {
      * @exception SQLException if a database access error occurs
      */
     int getOdsMinorVersion() throws SQLException;
-    
+
+    /**
+     * Get the dialect of the database.
+     *
+     * @return The dialect of the database
+     * @throws SQLException if a database access error occurs
+     * @see #getConnectionDialect()
+     */
+    int getDatabaseDialect() throws SQLException;
+
+    /**
+     * Get the dialect of the connection.
+     * <p>
+     * The connection dialect may be different from the database dialect.
+     * </p>
+     *
+     * @return The dialect of the connection
+     * @throws SQLException if a database access error occurs
+     * @see #getDatabaseDialect()
+     */
+    int getConnectionDialect() throws SQLException;
 }

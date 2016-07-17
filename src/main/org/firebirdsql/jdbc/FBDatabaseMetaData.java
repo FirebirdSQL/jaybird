@@ -4529,41 +4529,34 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
         return ResultSet.CLOSE_CURSORS_AT_COMMIT;
     }
 
-    /**
-     * Get the major version number of the database.
-     *
-     * @return The major version number
-     * @exception SQLException if a database access error occurs
-     */
+    @Override
     public int getDatabaseMajorVersion() throws SQLException {
         return gdsHelper.getDatabaseProductMajorVersion();
     }
 
-    /**
-     * Get the minor version number of the database.
-     * @return The minor version number
-     * @exception SQLException if a database access error occurs
-     */
+    @Override
     public int getDatabaseMinorVersion() throws SQLException {
         return gdsHelper.getDatabaseProductMinorVersion();
     }
 
-    /**
-     * Get the major version of the ODS (On-Disk Structure) of the database.
-     * @return The major version number
-     * @exception SQLException if a database access error occurs
-     */
+    @Override
     public int getOdsMajorVersion() throws SQLException {
         return gdsHelper.getCurrentDatabase().getOdsMajor();
     }
 
-    /**
-     * Get the minor version of the ODS (On-Disk Structure) of the database.
-     * @return The minor version number
-     * @exception SQLException if a database access error occurs
-     */
+    @Override
     public int getOdsMinorVersion() throws SQLException {
     	return gdsHelper.getCurrentDatabase().getOdsMinor();
+    }
+
+    @Override
+    public int getDatabaseDialect() throws SQLException {
+        return gdsHelper.getCurrentDatabase().getDatabaseDialect();
+    }
+
+    @Override
+    public int getConnectionDialect() throws SQLException {
+        return gdsHelper.getCurrentDatabase().getConnectionDialect();
     }
 
     /**
