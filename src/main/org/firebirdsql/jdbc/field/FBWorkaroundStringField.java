@@ -70,11 +70,14 @@ public final class FBWorkaroundStringField extends FBStringField {
         byte[] data = setStringForced(value);
 
         if (value == null) return;
-        
+
+        assert data != null : "Expected non-null data here";
         if (data.length > fieldDescriptor.getLength() && !isSystemTable(fieldDescriptor.getOriginalTableName())) {
             // special handling for the LIKE ? queries with CHAR(1) fields
-            if (!(value.length() <= fieldDescriptor.getLength() + 2 && (value.charAt(0) == '%' || value.charAt(value.length() - 1) == '%')))
-                throw new DataTruncation(-1, true, false, data.length, fieldDescriptor.getLength());
+            if (!(value.length() <= fieldDescriptor.getLength() + 2
+                    && (value.charAt(0) == '%' || value.charAt(value.length() - 1) == '%')))
+                throw new DataTruncation(fieldDescriptor.getPosition() + 1, true, false, data.length,
+                        fieldDescriptor.getLength());
         }
     }    
     
@@ -171,9 +174,9 @@ public final class FBWorkaroundStringField extends FBStringField {
      */
     private boolean isSystemTable(String tableName) {
         boolean result = false;
-        
-        for (int i = 0; i < SYSTEM_TABLES.length; i++) {
-            if (SYSTEM_TABLES[i].equals(tableName)) {
+
+        for (String systemTable : SYSTEM_TABLES) {
+            if (systemTable.equals(tableName)) {
                 result = true;
                 break;
             }

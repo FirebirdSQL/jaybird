@@ -262,8 +262,8 @@ public final class RowDescriptorBuilder {
      * @return FieldDescriptor
      */
     public FieldDescriptor toFieldDescriptor() {
-        return new FieldDescriptor(datatypeCoder, type, subType, scale, length, fieldName, tableAlias, originalName,
-                originalTableName, ownerName);
+        return new FieldDescriptor(currentFieldIndex, datatypeCoder, type, subType, scale, length, fieldName,
+                tableAlias, originalName, originalTableName, ownerName);
     }
 
     /**

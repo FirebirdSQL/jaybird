@@ -74,7 +74,8 @@ public class FBBinaryField extends FBField {
         }
 
         if (value.length > fieldDescriptor.getLength()) {
-            throw new DataTruncation(-1, true, false, value.length, fieldDescriptor.getLength());
+            throw new DataTruncation(fieldDescriptor.getPosition() + 1, true, false, value.length,
+                    fieldDescriptor.getLength());
         }
 
         setFieldData(value);
@@ -94,7 +95,8 @@ public class FBBinaryField extends FBField {
         }
 
         if (length > fieldDescriptor.getLength()) {
-            throw new DataTruncation(-1, true, false, (int) length, fieldDescriptor.getLength());
+            throw new DataTruncation(fieldDescriptor.getPosition() + 1, true, false, (int) length,
+                    fieldDescriptor.getLength());
         }
 
         try {
@@ -112,7 +114,8 @@ public class FBBinaryField extends FBField {
         }
 
         if (length > fieldDescriptor.getLength()) {
-            throw new DataTruncation(-1, true, false, (int) length, fieldDescriptor.getLength());
+            throw new DataTruncation(fieldDescriptor.getPosition() + 1, true, false, (int) length,
+                    fieldDescriptor.getLength());
         }
 
         try {

@@ -43,20 +43,21 @@ public class TestRowDescriptorBuilder {
     private static final List<FieldDescriptor> TEST_FIELD_DESCRIPTORS;
     static {
         List<FieldDescriptor> fields = new ArrayList<>();
-        fields.add(new FieldDescriptor(datatypeCoder, 1, 1, 1, 1, "1", "1", "1", "1", "1"));
-        fields.add(new FieldDescriptor(datatypeCoder, 2, 2, 2, 2, "2", "2", "2", "2", "2"));
-        fields.add(new FieldDescriptor(datatypeCoder, 3, 3, 3, 3, "3", "3", "3", "3", "3"));
+        fields.add(new FieldDescriptor(0, datatypeCoder, 1, 1, 1, 1, "1", "1", "1", "1", "1"));
+        fields.add(new FieldDescriptor(1, datatypeCoder, 2, 2, 2, 2, "2", "2", "2", "2", "2"));
+        fields.add(new FieldDescriptor(2, datatypeCoder, 3, 3, 3, 3, "3", "3", "3", "3", "3"));
 
         TEST_FIELD_DESCRIPTORS = Collections.unmodifiableList(fields);
     }
 
-    private static final FieldDescriptor SOURCE = new FieldDescriptor(datatypeCoder, 1, 2, 3, 4, "5", "6", "7", "8", "9");
+    private static final FieldDescriptor SOURCE = new FieldDescriptor(-1, datatypeCoder, 1, 2, 3, 4, "5", "6", "7", "8", "9");
 
     @Test
     public void testEmptyField() {
         FieldDescriptor descriptor = new RowDescriptorBuilder(0, datatypeCoder)
                 .toFieldDescriptor();
 
+        assertEquals("Unexpected Position", 0, descriptor.getPosition());
         assertEquals("Unexpected Type", 0, descriptor.getType());
         assertEquals("Unexpected SubType", 0, descriptor.getSubType());
         assertEquals("Unexpected Scale", 0, descriptor.getScale());
@@ -83,6 +84,7 @@ public class TestRowDescriptorBuilder {
                         .setOwnerName("9")
                         .toFieldDescriptor();
 
+        assertEquals("Unexpected Position", 0, descriptor.getPosition());
         assertEquals("Unexpected Type", 1, descriptor.getType());
         assertEquals("Unexpected SubType", 2, descriptor.getSubType());
         assertEquals("Unexpected Scale", 3, descriptor.getScale());
@@ -100,6 +102,7 @@ public class TestRowDescriptorBuilder {
                 .copyFieldFrom(SOURCE)
                 .toFieldDescriptor();
 
+        assertEquals("Unexpected Position", 0, fieldDescriptor.getPosition());
         assertEquals("Unexpected Type", 1, fieldDescriptor.getType());
         assertEquals("Unexpected SubType", 2, fieldDescriptor.getSubType());
         assertEquals("Unexpected Scale", 3, fieldDescriptor.getScale());
@@ -118,6 +121,7 @@ public class TestRowDescriptorBuilder {
                 .resetField()
                 .toFieldDescriptor();
 
+        assertEquals("Unexpected Position", 0, fieldDescriptor.getPosition());
         assertEquals("Unexpected Type", 0, fieldDescriptor.getType());
         assertEquals("Unexpected SubType", 0, fieldDescriptor.getSubType());
         assertEquals("Unexpected Scale", 0, fieldDescriptor.getScale());
@@ -169,11 +173,13 @@ public class TestRowDescriptorBuilder {
 
         assertEquals("Unexpected count of fields in RowDescriptor", 2, descriptor.getCount());
         FieldDescriptor field1 = descriptor.getFieldDescriptor(0);
+        assertEquals("Field1.getPosition()", 0, field1.getPosition());
         assertEquals("Field1.getType()", 1, field1.getType());
         assertEquals("Field1.getSubType()", 1, field1.getSubType());
         assertEquals("Field1.getFieldName()", "Field1", field1.getFieldName());
         assertEquals("Field1.getTableAlias()", "Alias1", field1.getTableAlias());
         FieldDescriptor field2 = descriptor.getFieldDescriptor(1);
+        assertEquals("Field2.getPosition()", 1, field2.getPosition());
         assertEquals("Field2.getType()", 2, field2.getType());
         assertEquals("Field2.getSubType()", 0, field2.getSubType());
         assertEquals("Field2.getFieldName()", "Field2", field2.getFieldName());
@@ -202,11 +208,13 @@ public class TestRowDescriptorBuilder {
 
         assertEquals("Unexpected count of fields in RowDescriptor", 2, descriptor.getCount());
         FieldDescriptor field1 = descriptor.getFieldDescriptor(1);
+        assertEquals("Field1.getPosition()", 1, field1.getPosition());
         assertEquals("Field1.getType()", 1, field1.getType());
         assertEquals("Field1.getSubType()", 1, field1.getSubType());
         assertEquals("Field1.getFieldName()", "Field1", field1.getFieldName());
         assertEquals("Field1.getTableAlias()", "Alias1", field1.getTableAlias());
         FieldDescriptor field2 = descriptor.getFieldDescriptor(0);
+        assertEquals("Field2.getPosition()", 0, field2.getPosition());
         assertEquals("Field2.getType()", 2, field2.getType());
         assertEquals("Field2.getSubType()", 0, field2.getSubType());
         assertEquals("Field2.getFieldName()", "Field2", field2.getFieldName());

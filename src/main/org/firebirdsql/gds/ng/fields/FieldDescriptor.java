@@ -34,14 +34,16 @@ import java.util.Objects;
  * The class <code>FieldDescriptor</code> contains the column metadata of the XSQLVAR server
  * data structure used to describe one column for input or output.
  * <p>
- * FieldDescriptor is an immutable type, the value of a field is maintained separately in an instance of {@link FieldValue}.
+ * FieldDescriptor is an immutable type, the value of a field is maintained separately in an instance of {@link
+ * FieldValue}.
  * </p>
  *
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
- * @version 2.3
+ * @version 3.0
  */
 public final class FieldDescriptor {
 
+    private final int position;
     private final DatatypeCoder datatypeCoder;
     private final int type;
     private final int subType;
@@ -57,6 +59,8 @@ public final class FieldDescriptor {
     /**
      * Constructor for metadata FieldDescriptor.
      *
+     * @param position
+     *         Position of this field (0-based), or {@code -1} if position is not known (eg for test code)
      * @param datatypeCoder
      *         Instance of DatatypeCoder to use when decoding column data
      * @param type
@@ -76,12 +80,14 @@ public final class FieldDescriptor {
      * @param originalTableName
      *         Column original table
      * @param ownerName
-     *         Owner of the column
+     *         Owner of the column/table
      */
-    public FieldDescriptor(final DatatypeCoder datatypeCoder, int type, final int subType, final int scale, int length,
+    public FieldDescriptor(int position, final DatatypeCoder datatypeCoder, int type, final int subType,
+            final int scale, int length,
             final String fieldName, final String tableAlias, final String originalName, final String originalTableName,
             final String ownerName) {
         assert datatypeCoder != null : "dataTypeCoder should not be null";
+        this.position = position;
         this.datatypeCoder = datatypeCoder;
         this.type = type;
         this.subType = subType;
@@ -94,6 +100,13 @@ public final class FieldDescriptor {
         this.originalName = originalName;
         this.originalTableName = originalTableName;
         this.ownerName = ownerName;
+    }
+
+    /**
+     * @return The 0-based position of this field (or {@code -1})
+     */
+    public int getPosition() {
+        return position;
     }
 
     /**
@@ -187,7 +200,8 @@ public final class FieldDescriptor {
      * set to {@code 0}.
      * </p>
      *
-     * @param fbType One of the {@code SQL_} data type identifier values
+     * @param fbType
+     *         One of the {@code SQL_} data type identifier values
      * @return {@code true} if the type is the same as the type of this field
      */
     public boolean isFbType(int fbType) {
@@ -246,7 +260,8 @@ public final class FieldDescriptor {
 
     StringBuilder appendFieldDescriptor(final StringBuilder sb) {
         sb.append("FieldDescriptor:[")
-                .append("FieldName=").append(getFieldName())
+                .append("Position=").append(getPosition())
+                .append(",FieldName=").append(getFieldName())
                 .append(",TableAlias=").append(getTableAlias())
                 .append(",Type=").append(getType())
                 .append(",SubType=").append(getSubType())
@@ -264,7 +279,8 @@ public final class FieldDescriptor {
         if (this == obj) return true;
         if (!(obj instanceof FieldDescriptor)) return false;
         FieldDescriptor other = (FieldDescriptor) obj;
-        return this.type == other.type
+        return this.position == other.position
+                && this.type == other.type
                 && this.subType == other.subType
                 && this.scale == other.scale
                 && this.length == other.length
@@ -280,7 +296,7 @@ public final class FieldDescriptor {
     public int hashCode() {
         // Depend on immutability to cache hashCode
         if (hash == 0) {
-            hash = Objects.hash(type, subType, scale, length, fieldName, tableAlias, originalName,
+            hash = Objects.hash(position, type, subType, scale, length, fieldName, tableAlias, originalName,
                     originalTableName, ownerName);
         }
         return hash;

@@ -337,7 +337,8 @@ class FBStringField extends FBField {
         }
 
         if (value.length > fieldDescriptor.getLength()) {
-            throw new DataTruncation(-1, true, false, value.length, fieldDescriptor.getLength());
+            throw new DataTruncation(fieldDescriptor.getPosition() + 1, true, false, value.length,
+                    fieldDescriptor.getLength());
         }
 
         setFieldData(value);
