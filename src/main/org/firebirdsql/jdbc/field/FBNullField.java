@@ -205,7 +205,8 @@ final class FBNullField extends FBField {
 
     // ----- setXXXStream code
 
-    public void setBinaryStream(InputStream in, long length) throws SQLException {
+    @Override
+    protected void setBinaryStreamInternal(InputStream in, long length) throws SQLException {
         if (in == null) {
             setNull();
             return;
@@ -214,7 +215,8 @@ final class FBNullField extends FBField {
         setDummyObject();
     }
 
-    public void setCharacterStream(Reader in, long length) throws SQLException {
+    @Override
+    protected void setCharacterStreamInternal(Reader in, long length) throws SQLException {
         if (in == null) {
             setNull();
             return;

@@ -294,7 +294,8 @@ class FBStringField extends FBField {
 
     //----- setXXXStream code
 
-    public void setBinaryStream(InputStream in, long length) throws SQLException {
+    @Override
+    protected void setBinaryStreamInternal(InputStream in, long length) throws SQLException {
         if (in == null) {
             setNull();
             return;
@@ -311,8 +312,9 @@ class FBStringField extends FBField {
             throw new TypeConversionException(BINARY_STREAM_CONVERSION_ERROR);
         }
     }
-    
-    public void setCharacterStream(Reader in, long length) throws SQLException {
+
+    @Override
+    protected void setCharacterStreamInternal(Reader in, long length) throws SQLException {
         if (in == null) {
             setNull();
             return;

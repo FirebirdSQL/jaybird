@@ -168,7 +168,7 @@ class FBBlobField extends FBField implements FBFlushableField {
     //--- setXXX methods
 
     @Override
-    public void setCharacterStream(Reader in, long length) throws SQLException {
+    protected void setCharacterStreamInternal(Reader in, long length) throws SQLException {
         // setNull() to reset field to empty state
         setNull();
         if (in != null) {
@@ -178,7 +178,7 @@ class FBBlobField extends FBField implements FBFlushableField {
     }
 
     @Override
-    public void setBinaryStream(InputStream in, long length) throws SQLException {
+    protected void setBinaryStreamInternal(InputStream in, long length) throws SQLException {
         // setNull() to reset field to empty state
         setNull();
         if (in != null) {

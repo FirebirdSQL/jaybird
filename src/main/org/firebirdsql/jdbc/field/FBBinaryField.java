@@ -88,7 +88,7 @@ public class FBBinaryField extends FBField {
     }
 
     @Override
-    public void setBinaryStream(InputStream in, long length) throws SQLException {
+    protected void setBinaryStreamInternal(InputStream in, long length) throws SQLException {
         if (in == null) {
             setNull();
             return;
@@ -107,7 +107,7 @@ public class FBBinaryField extends FBField {
     }
 
     @Override
-    public void setCharacterStream(Reader in, long length) throws SQLException {
+    protected void setCharacterStreamInternal(Reader in, long length) throws SQLException {
         if (in == null) {
             setNull();
             return;

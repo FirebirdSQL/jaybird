@@ -658,24 +658,38 @@ public abstract class FBField {
         }
     }
 
-    public void setBinaryStream(InputStream in, long length) throws SQLException {
+    protected void setBinaryStreamInternal(InputStream in, long length) throws SQLException {
+        throw new TypeConversionException(FBField.BINARY_STREAM_CONVERSION_ERROR);
+    }
+
+    public final void setBinaryStream(InputStream in, long length) throws SQLException {
+        if (length < 0) {
+            throw new SQLNonTransientException("Length needs to be >= 0, was: " + length);
+        }
         throw new TypeConversionException(FBField.BINARY_STREAM_CONVERSION_ERROR);
     }
 
     public final void setBinaryStream(InputStream in) throws SQLException {
-        setBinaryStream(in, -1L);
+        setBinaryStreamInternal(in, -1L);
     }
 
     public final void setBinaryStream(InputStream in, int length) throws SQLException {
         setBinaryStream(in, (long) length);
     }
 
-    public void setCharacterStream(Reader in, long length) throws SQLException {
+    protected void setCharacterStreamInternal(Reader in, long length) throws SQLException {
         throw new TypeConversionException(FBField.CHARACTER_STREAM_CONVERSION_ERROR);
     }
 
+    public final void setCharacterStream(Reader in, long length) throws SQLException {
+        if (length < 0) {
+            throw new SQLNonTransientException("Length needs to be >= 0, was: " + length);
+        }
+        setCharacterStreamInternal(in, length);
+    }
+
     public final void setCharacterStream(Reader in) throws SQLException {
-        setCharacterStream(in, -1L);
+        setCharacterStreamInternal(in, -1L);
     }
 
     public final void setCharacterStream(Reader in, int length) throws SQLException {
