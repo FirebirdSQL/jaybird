@@ -5093,12 +5093,15 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
     private static final int JDBC_MAJOR_VERSION = 4;
     private static final int JDBC_MINOR_VERSION;
     static {
-        // JDK 1.6 (or lower): JDBC 4.0
-        int tempVersion = 0;
+        // JDK 1.7 (or lower): JDBC 4.1
+        int tempVersion = 1;
         try {
             String javaImplementation = getSystemPropertyPrivileged("java.specification.version");
             if (javaImplementation != null) {
-                if ("1.8".compareTo(javaImplementation) <= 0) {
+                if ("9".compareTo(javaImplementation) <= 0) {
+                    // JDK 9 or higher: JDBC 4.3
+                    tempVersion = 3;
+                } else if ("1.8".compareTo(javaImplementation) <= 0) {
                     // JDK 1.8 or higher: JDBC 4.2
                     tempVersion = 2;
                 } else if ("1.7".compareTo(javaImplementation) <= 0) {

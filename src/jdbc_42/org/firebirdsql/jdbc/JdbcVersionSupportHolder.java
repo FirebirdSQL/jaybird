@@ -21,7 +21,7 @@ package org.firebirdsql.jdbc;
 /**
  * Holder for the instance of {@link org.firebirdsql.jdbc.JdbcVersionSupport} to use.
  * <p>
- * This implementation is for JDBC 4.2.
+ * This implementation is for JDBC 4.2 (and 4.3 for now).
  * </p>
  *
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
