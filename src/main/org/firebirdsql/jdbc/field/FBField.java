@@ -666,7 +666,7 @@ public abstract class FBField {
         if (length < 0) {
             throw new SQLNonTransientException("Length needs to be >= 0, was: " + length);
         }
-        throw new TypeConversionException(FBField.BINARY_STREAM_CONVERSION_ERROR);
+        setBinaryStreamInternal(in, length);
     }
 
     public final void setBinaryStream(InputStream in) throws SQLException {
