@@ -45,14 +45,21 @@ public final class LoggerFactory {
     public static final String LOGGER_IMPLEMENTATION_PROP = "org.firebirdsql.jdbc.loggerImplementation";
 
     static {
-        // TODO Add system properties to documentation
-        String sForceConsoleLogger = getSystemPropertyPrivileged(FORCE_CONSOLE_LOGGER_PROP);
-        String sDisableLogging = getSystemPropertyPrivileged(DISABLE_LOGGING_PROP);
-        String sLoggerImplementation = getSystemPropertyPrivileged(LOGGER_IMPLEMENTATION_PROP);
-        boolean bForceConsoleLogger = "true".equalsIgnoreCase(sForceConsoleLogger);
-        boolean bDisableLogging = "true".equalsIgnoreCase(sDisableLogging);
+        LoggerCreator tempLoggerCreator = JulLoggerCreator.INSTANCE;
+        try {
+            String sForceConsoleLogger = getSystemPropertyPrivileged(FORCE_CONSOLE_LOGGER_PROP);
+            String sDisableLogging = getSystemPropertyPrivileged(DISABLE_LOGGING_PROP);
+            String sLoggerImplementation = getSystemPropertyPrivileged(LOGGER_IMPLEMENTATION_PROP);
+            boolean bForceConsoleLogger = "true".equalsIgnoreCase(sForceConsoleLogger);
+            boolean bDisableLogging = "true".equalsIgnoreCase(sDisableLogging);
 
-        loggerCreator = getLoggerCreator(sLoggerImplementation, bForceConsoleLogger, bDisableLogging);
+            tempLoggerCreator = getLoggerCreator(sLoggerImplementation, bForceConsoleLogger, bDisableLogging);
+        } catch (Exception e) {
+            // JulLoggerCreator will be used
+            e.printStackTrace();
+        } finally {
+            loggerCreator = tempLoggerCreator;
+        }
     }
 
     private LoggerFactory() {
@@ -85,7 +92,7 @@ public final class LoggerFactory {
         }
 
         if (loggerImplementationClassName == null || JulLogger.class.getName().equals(loggerImplementationClassName)) {
-            return new JulLoggerCreator();
+            return JulLoggerCreator.INSTANCE;
         }
 
         try {
@@ -101,6 +108,9 @@ public final class LoggerFactory {
     }
 
     private static class JulLoggerCreator implements LoggerCreator {
+
+        private static JulLoggerCreator INSTANCE = new JulLoggerCreator();
+
         @Override
         public Logger createLogger(String name) {
             return new JulLogger(name);
