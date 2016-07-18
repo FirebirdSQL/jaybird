@@ -875,6 +875,41 @@ public class TestFBStatement extends FBJUnit4TestBase {
         }
     }
 
+    @Test
+    public void testEnquoteLiteral() throws Exception {
+        // Only testing dialect 3
+        try (FBStatement stmt = (FBStatement) con.createStatement()) {
+            assertEquals("No quotes", "'no quotes'", stmt.enquoteLiteral("no quotes"));
+            assertEquals("With quotes", "'with''quotes'", stmt.enquoteLiteral("with'quotes"));
+        }
+    }
+
+    @Test
+    public void testIsSimpleIdentifier() throws Exception {
+        // Only testing dialect 3
+        try (FBStatement stmt = (FBStatement) con.createStatement()) {
+            assertTrue("Simple$Identifier_", stmt.isSimpleIdentifier("Simple$Identifier_"));
+            assertFalse("1Simple$Identifier_", stmt.isSimpleIdentifier("1Simple$Identifier_"));
+            assertFalse("", stmt.isSimpleIdentifier(""));
+            assertTrue("A234567890123456789012345678901", stmt.isSimpleIdentifier("A234567890123456789012345678901"));
+            assertFalse("A2345678901234567890123456789012", stmt.isSimpleIdentifier("A2345678901234567890123456789012"));
+        }
+    }
+
+    @Test
+    public void testEnquoteIdentifier() throws Exception {
+        // Only testing dialect 3
+        try (FBStatement stmt = (FBStatement) con.createStatement()) {
+            assertEquals("simple, alwaysQuote:false",
+                    "simple$identifier_", stmt.enquoteIdentifier("simple$identifier_", false));
+            assertEquals("simple, alwaysQuote:true",
+                    "\"simple$identifier_\"", stmt.enquoteIdentifier("simple$identifier_", true));
+            assertEquals("already quoted", "\"already quoted\"", stmt.enquoteIdentifier("\"already quoted\"", false));
+            assertEquals("needs quotes", "\"has space\"", stmt.enquoteIdentifier("has space", false));
+            assertEquals("needs quotes", "\"has\"\"quote\"", stmt.enquoteIdentifier("has\"quote", false));
+        }
+    }
+
     private void prepareTestData() throws SQLException {
         executeCreateTable(con, CREATE_TABLE);
 

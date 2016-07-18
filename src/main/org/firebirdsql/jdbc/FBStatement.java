@@ -33,6 +33,7 @@ import org.firebirdsql.logging.LoggerFactory;
 
 import java.sql.*;
 import java.util.*;
+import java.util.regex.Pattern;
 
 import static org.firebirdsql.util.FirebirdSupportInfo.supportInfoFor;
 
@@ -1536,6 +1537,86 @@ public class FBStatement implements FirebirdStatement, Synchronizable {
     public final long executeLargeUpdate(String sql, String[] columnNames) throws SQLException {
         executeUpdate(sql, columnNames);
         return getLargeUpdateCount();
+    }
+
+    /**
+     * Returns a {@code String} enclosed in single quotes. Any occurrence of a single quote within the string will be
+     * replaced by two single quotes.
+     * <p>
+     * For a dialect 3 database, this will behave exactly like the JDBC 4.3 default implementation. For a
+     * dialect 1 database this will quote literals with double quotes and escape double quotes by doubling.
+     * </p>
+     *
+     * @param val a character string
+     * @return A string enclosed by single quotes with every single quote
+     * converted to two single quotes
+     * @throws NullPointerException if val is {@code null}
+     * @throws SQLException if a database access error occurs
+     */
+    public String enquoteLiteral(String val)  throws SQLException {
+        if (gdsHelper.getCurrentDatabase().getDatabaseDialect() == 1) {
+            return '"' + val.replace("\"", "\"\"") + '"';
+        }
+        return "'" + val.replace("'", "''") +  "'";
+    }
+
+    /**
+     * @see #enquoteLiteral(String)
+     */
+    public String enquoteNCharLiteral(String val)  throws SQLException {
+        return enquoteLiteral(val);
+    }
+
+    private static final Pattern SIMPLE_IDENTIFIER_PATTERN = Pattern.compile("[\\p{Alpha}][\\p{Alnum}_$]*");
+
+    /**
+     * Returns a SQL identifier. If {@code identifier} is a simple SQL identifier:
+     * <ul>
+     * <li>Return the original value if {@code alwaysQuote} is
+     * {@code false}</li>
+     * <li>Return a delimited identifier if {@code alwaysQuote} is
+     * {@code true}</li>
+     * </ul>
+     *
+     * @param identifier a SQL identifier
+     * @param alwaysQuote indicates if a simple SQL identifier should be
+     * returned as a quoted identifier
+     * @return A simple SQL identifier or a delimited identifier
+     * @throws SQLException if identifier is not a valid identifier
+     * @throws SQLFeatureNotSupportedException if the datasource does not support
+     * delimited identifiers (ie: a dialect 1 database)
+     * @throws NullPointerException if identifier is {@code null}
+     */
+    public String enquoteIdentifier(String identifier, boolean alwaysQuote) throws SQLException {
+        int len = identifier.length();
+        if (len < 1 || len > getConnection().getMetaData().getMaxColumnNameLength()) {
+            throw new SQLException("Invalid name");
+        }
+        if (!alwaysQuote && SIMPLE_IDENTIFIER_PATTERN.matcher(identifier).matches()) {
+            return identifier;
+        }
+        if (gdsHelper.getCurrentDatabase().getDatabaseDialect() == 1) {
+            throw new SQLFeatureNotSupportedException("Quoted identifiers not supported in dialect 1");
+        }
+        if (identifier.matches("^\".+\"$")) {
+            // We assume double quotes are already properly escaped within
+            return identifier;
+        }
+        return "\"" + identifier.replace("\"", "\"\"") + "\"";
+    }
+
+    /**
+     * Retrieves whether {@code identifier} is a simple SQL identifier.
+     *
+     * @param identifier a SQL identifier
+     * @return  true if  a simple SQL identifier, false otherwise
+     * @throws NullPointerException if identifier is {@code null}
+     * @throws SQLException if a database access error occurs
+     */
+    public boolean isSimpleIdentifier(String identifier) throws SQLException {
+        int len = identifier.length();
+        return len >= 1 && len <= getConnection().getMetaData().getMaxColumnNameLength()
+                && SIMPLE_IDENTIFIER_PATTERN.matcher(identifier).matches();
     }
 
     /**
