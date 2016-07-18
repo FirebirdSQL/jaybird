@@ -590,7 +590,7 @@ public class FBManagedConnectionFactory implements ManagedConnectionFactory, Fir
      *             resource adapter related error condition
      */
     public void setLogWriter(PrintWriter out) throws ResourceException {
-        // ignore - we're using log4j
+        // ignore - we are using alternative logging
     }
 
     /**
@@ -608,7 +608,7 @@ public class FBManagedConnectionFactory implements ManagedConnectionFactory, Fir
      *             generic exception
      */
     public PrintWriter getLogWriter() {
-        return null;// we're using log4j
+        return null;// we are using alternative logging
     }
 
     // Serialization support

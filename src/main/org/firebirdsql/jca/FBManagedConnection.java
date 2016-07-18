@@ -311,7 +311,7 @@ public class FBManagedConnection implements ManagedConnection, XAResource, Excep
      *             resource adapter related error condition
      */
     public void setLogWriter(PrintWriter out) {
-        // ignore, we are using log4j.
+        // ignore, we are using alternative logging
     }
 
     /**
@@ -334,7 +334,7 @@ public class FBManagedConnection implements ManagedConnection, XAResource, Excep
      *             generic exception if operation fails
      */
     public PrintWriter getLogWriter() {
-        return null;// we are using log4j.
+        return null;// we are using alternative logging
     }
 
     /**

@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
@@ -28,7 +26,7 @@ package org.firebirdsql.logging;
 final class ConsoleLogger implements Logger {
     
     private static final boolean debugEnabled = false;
-    private static final boolean traceEnabled = true;
+    private static final boolean traceEnabled = false;
     private static final boolean infoEnabled = true;
     private static final boolean warnEnabled = true;
     private static final boolean errEnabled = true;
@@ -42,10 +40,6 @@ final class ConsoleLogger implements Logger {
             this.name = name;
         else
             this.name = name.substring(lastPoint + 1);
-    }
-    
-    public boolean isDebugEnabled() {
-        return debugEnabled;
     }
     
     private void out(Object message, Throwable t) {
@@ -63,81 +57,107 @@ final class ConsoleLogger implements Logger {
                 t.printStackTrace(System.err);
         }
     }
-    
-    public void debug(Object message) {
+
+    @Override
+    public boolean isDebugEnabled() {
+        return debugEnabled;
+    }
+
+    @Override
+    public void debug(String message) {
         debug(message, null);
     }
-    
-    public void debug(Object message, Throwable t) {
+
+    @Override
+    public void debug(String message, Throwable t) {
         if (isDebugEnabled()) {
             out(message, t);
         }
     }
-    
+
+    @Override
     public boolean isTraceEnabled() {
         return traceEnabled;
     }
 
-    public void trace(Object message, Throwable t) {
+    @Override
+    public void trace(String message) {
+        trace(message, null);
+    }
+
+    @Override
+    public void trace(String message, Throwable t) {
         if (isTraceEnabled()) {
             out(message, t);
         }
     }
 
-    public void trace(Object message) {
-        trace(message, null);
-    }
-
+    @Override
     public boolean isInfoEnabled() {
         return infoEnabled;
     }
-    
-    public void info(Object message) {
-        info(message, null);
+
+    @Override
+    public void info(String message) {
+         info(message, null);
     }
-    
-    public void info(Object message, Throwable t) {
-        if (isInfoEnabled())
+
+    @Override
+    public void info(String message, Throwable t) {
+        if (isInfoEnabled()) {
             out(message, t);
+        }
     }
-    
+
+    @Override
     public boolean isWarnEnabled() {
         return warnEnabled;
     }
-    
-    public void warn(Object message) {
-        warn(message, null);
+
+    @Override
+    public void warn(String message) {
+         warn(message, null);
     }
-    
-    public void warn(Object message, Throwable t) {
-        if (isWarnEnabled())
+
+    @Override
+    public void warn(String message, Throwable t) {
+        if (isWarnEnabled()) {
             err(message, t);
+        }
     }
-    
+
+    @Override
     public boolean isErrorEnabled() {
         return errEnabled;
     }
-    
-    public void error(Object message) {
+
+    @Override
+    public void error(String message) {
         error(message, null);
     }
-    
-    public void error(Object message, Throwable t) {
-        if (isErrorEnabled())
+
+    @Override
+    public void error(String message, Throwable t) {
+        if (isErrorEnabled()) {
             err(message, t);
+        }
     }
-    
+
+    @Override
     public boolean isFatalEnabled() {
         return fatalEnabled;
     }
-    
-    public void fatal(Object message) {
-        fatal(message, null);
+
+    @Override
+    public void fatal(String message) {
+         fatal(message, null);
     }
-    
-    public void fatal(Object message, Throwable t) {
-        if (isFatalEnabled())
+
+    @Override
+    public void fatal(String message, Throwable t) {
+        if (isFatalEnabled()) {
             err(message, t);
+        }
     }
 
 }

@@ -131,6 +131,65 @@ supporting multiple protocol versions.
 The new low-level implementation also means that the old GDS API 
 (`org.firebirdsql.gds.GDS`) has been removed and is no longer available.
 
+Support for java.util.logging added
+-----------------------------------
+
+We have added support for `java.util.logging`, and made it the default logging
+implementation.
+
+We have applied the following mapping for the log levels:
+
+* `Logger.trace`: `Level.FINER`
+* `Logger.debug`: `Level.FINE`
+* `Logger.info`: `Level.INFO`
+* `Logger.warn`: `Level.WARNING`
+* `Logger.error`: `Level.SEVERE`
+* `Logger.fatal`: `Level.SEVERE`
+
+We have also added some options to control logging behavior:
+
+*   System property `org.firebirdsql.jdbc.disableLogging` with value `true`
+    will disable logging entirely.
+*   System property `org.firebirdsql.jdbc.forceConsoleLogger` with value `true`
+    will force logging to the `System.out` for info and lower and `System.err` 
+    for warn and above (`debug` and `trace` are disabled in the implementation).
+*   System property `org.firebirdsql.jdbc.loggerImplementation` to specify an
+    alternative implementation of the interface `org.firebirdsql.logging.Logger`.
+    
+    This implementation must be public and must have a public constructor with
+    a single `String` argument for the logger name. See also 
+    [Support for log4j 1.x removed] for an example.
+    
+    The `org.firebirdsql.logging.Logger` interface is volatile and might change 
+    in future minor releases (but not point/bugfix releases).
+
+Support for log4j 1.x removed
+-----------------------------
+
+Support for Log4J 1.x has been removed. If you really need it, you can implement
+the interface `org.firebirdsql.logging.Logger` with a public constructor 
+accepting a single `String` parameter (the logger name).
+
+To instruct Jaybird to use this logger implementation, specify the system 
+property `org.firebirdsql.jdbc.loggerImplementation` with the class name.
+
+Say you have created the following implementation
+
+``` {.java}
+package org.example.jaybird.logging;
+
+public class Log4jLogger implements org.firebirdsql.logging.Logger {
+    public Log4jLogger(String name) {
+        // create the logger    
+    }
+    // implementation of interface
+}
+```
+
+You will need to specify:
+
+    -Dorg.firebirdsql.jdbc.loggerImplementation=org.example.jaybird.logging.Log4jLogger
+
 Potentially breaking changes
 ----------------------------
 
@@ -224,6 +283,14 @@ listed below.
 **The list is not yet complete, if you notice a difference in behavior that is
 not listed, please report it as bug.** It might have been a change we forgot to
 document, but it could just as well be an implementation bug.
+
+Logging
+-------
+
+Support for log4j has been removed, we now default to `java.util.logging`. The
+previous default was no logging.
+
+See also [Support for java.util.logging added] and [Support for log4j 1.x removed].
 
 Exceptions
 ----------

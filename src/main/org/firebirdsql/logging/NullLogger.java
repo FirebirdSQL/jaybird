@@ -24,68 +24,87 @@ package org.firebirdsql.logging;
  * Implementation of {@link Logger} that doesn't do anything and reports all loglevels as disabled.
  *
  * @author <a href="mailto:brodsom@users.sourceforge.net">Blas Rodriguez Somoza</a>
+ * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @version 1.0
  */
 final class NullLogger implements Logger{
 
+	@Override
 	public boolean isDebugEnabled() {
 		return false;
 	}
-	
-	public void debug(Object message) {
+
+	@Override
+	public void debug(String message) {
 	}
-	
-	public void debug(Object message, Throwable t) {
+
+	@Override
+	public void debug(String message, Throwable t) {
 	}
-	
-    public boolean isTraceEnabled() {
+
+	@Override
+	public boolean isTraceEnabled() {
         return false;
     }
 
-    public void trace(Object message, Throwable t) {
-    }
+	@Override
+	public void trace(String message) {
+	}
 
-    public void trace(Object message) {
-    }
+	@Override
+	public void trace(String message, Throwable t) {
+	}
 
-    public boolean isInfoEnabled() {
+	@Override
+	public boolean isInfoEnabled() {
 		return false;
 	}
-	
-	public void info(Object message) {
+
+	@Override
+	public void info(String message) {
 	}
-	
-	public void info(Object message, Throwable t) {
+
+	@Override
+	public void info(String message, Throwable t) {
 	}
-	
+
+	@Override
 	public boolean isWarnEnabled() {
 		return false;
 	}
-	
-	public void warn(Object message) {
+
+	@Override
+	public void warn(String message) {
 	}
-	
-	public void warn(Object message, Throwable t) {
+
+	@Override
+	public void warn(String message, Throwable t) {
 	}
-	
+
+	@Override
 	public boolean isErrorEnabled() {
 		return false;
 	}
-	
-	public void error(Object message) {
+
+	@Override
+	public void error(String message) {
 	}
-	
-	public void error(Object message, Throwable t) {
+
+	@Override
+	public void error(String message, Throwable t) {
 	}
-	
+
+	@Override
 	public boolean isFatalEnabled() {
 		return false;
 	}
-	
-	public void fatal(Object message) {
+
+	@Override
+	public void fatal(String message) {
 	}
-	
-	public void fatal(Object message, Throwable t) {
+
+	@Override
+	public void fatal(String message, Throwable t) {
 	}
-	
+
 }

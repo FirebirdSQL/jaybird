@@ -20,6 +20,7 @@
  */
 package org.firebirdsql.logging;
 
+import java.lang.reflect.Constructor;
 import java.security.AccessController;
 import java.security.PrivilegedAction;
 
@@ -27,45 +28,31 @@ import java.security.PrivilegedAction;
  * Factory for Logger instances
  * 
  * @author <a href="mailto:brodsom@users.sourceforge.net">Blas Rodriguez Somoza</a>
+ * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @version 1.0
  */
 public final class LoggerFactory {
 
-    private static final boolean forceConsoleLogger;
     /**
      * NullLogger to use for all getLogger requests if no logging is configured
      */
     private static final Logger NULL_LOGGER = new NullLogger();
 
-    private static final boolean log4j;
+    private static final LoggerCreator loggerCreator;
+
+    public static final String FORCE_CONSOLE_LOGGER_PROP = "org.firebirdsql.jdbc.forceConsoleLogger";
+    public static final String DISABLE_LOGGING_PROP = "org.firebirdsql.jdbc.disableLogging";
+    public static final String LOGGER_IMPLEMENTATION_PROP = "org.firebirdsql.jdbc.loggerImplementation";
 
     static {
-        boolean useLog4j = false;
-        boolean fallbackConsoleLogger = false;
-        try {
-            // TODO Add system property to documentation
-            String sFallbackConsoleLogger = getSystemPropertyPrivileged("org.firebirdsql.jdbc.fallbackConsoleLogger");
-            fallbackConsoleLogger = "true".equalsIgnoreCase(sFallbackConsoleLogger);
-            String sLog4j = getSystemPropertyPrivileged("FBLog4j");
-            // TODO Add system property to documentation
-            String sUseLog4j = getSystemPropertyPrivileged("org.firebirdsql.jdbc.useLog4j");
-            useLog4j = "true".equalsIgnoreCase(sLog4j) || "true".equalsIgnoreCase(sUseLog4j);
+        // TODO Add system properties to documentation
+        String sForceConsoleLogger = getSystemPropertyPrivileged(FORCE_CONSOLE_LOGGER_PROP);
+        String sDisableLogging = getSystemPropertyPrivileged(DISABLE_LOGGING_PROP);
+        String sLoggerImplementation = getSystemPropertyPrivileged(LOGGER_IMPLEMENTATION_PROP);
+        boolean bForceConsoleLogger = "true".equalsIgnoreCase(sForceConsoleLogger);
+        boolean bDisableLogging = "true".equalsIgnoreCase(sDisableLogging);
 
-            if (useLog4j) {
-                // Detect if we can load log4j
-                try {
-                    Class.forName("org.apache.log4j.Category");
-                    useLog4j = true;
-                } catch (ClassNotFoundException cnfe) {
-                    useLog4j = false;
-                }
-            }
-        } catch (Exception ex) {
-            useLog4j = false;
-        } finally {
-            forceConsoleLogger = fallbackConsoleLogger;
-            log4j = useLog4j;
-        }
+        loggerCreator = getLoggerCreator(sLoggerImplementation, bForceConsoleLogger, bDisableLogging);
     }
 
     private LoggerFactory() {
@@ -73,23 +60,89 @@ public final class LoggerFactory {
     }
 
     public static Logger getLogger(String name) {
-        if (log4j) {
-            return new Log4jLogger(name);
-        } else if (forceConsoleLogger) {
-            return new ConsoleLogger(name);
-        }
-        return NULL_LOGGER;
+        return loggerCreator.createLogger(name);
     }
 
     public static Logger getLogger(Class<?> clazz) {
         return getLogger(clazz.getName());
     }
-    
+
     private static String getSystemPropertyPrivileged(final String propertyName) {
         return AccessController.doPrivileged(new PrivilegedAction<String>() {
             public String run() {
                 return System.getProperty(propertyName);
             }
         });
+    }
+
+    private static LoggerCreator getLoggerCreator(String loggerImplementationClassName, boolean forceConsoleLogger, boolean disableLogging) {
+        if (disableLogging) {
+            return new NullLoggerCreator();
+        }
+
+        if (forceConsoleLogger || ConsoleLogger.class.getName().equals(loggerImplementationClassName)) {
+            return new ConsoleLoggerCreator();
+        }
+
+        if (loggerImplementationClassName == null || JulLogger.class.getName().equals(loggerImplementationClassName)) {
+            return new JulLoggerCreator();
+        }
+
+        try {
+            return new ReflectionLoggerCreator(loggerImplementationClassName);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return new JulLoggerCreator();
+        }
+    }
+
+    private interface LoggerCreator {
+        Logger createLogger(String name);
+    }
+
+    private static class JulLoggerCreator implements LoggerCreator {
+        @Override
+        public Logger createLogger(String name) {
+            return new JulLogger(name);
+        }
+    }
+
+    private static class NullLoggerCreator implements LoggerCreator {
+        @Override
+        public Logger createLogger(String name) {
+            return NULL_LOGGER;
+        }
+    }
+
+    private static class ConsoleLoggerCreator implements LoggerCreator {
+        @Override
+        public Logger createLogger(String name) {
+            return new ConsoleLogger(name);
+        }
+    }
+
+    private static class ReflectionLoggerCreator implements LoggerCreator {
+
+        private final Class<? extends Logger> loggerClass;
+        private final Constructor<? extends Logger> loggerConstructor;
+
+        ReflectionLoggerCreator(String loggerImplementationClassName) throws ClassNotFoundException, NoSuchMethodException {
+            Class<?> loggerClassCandidate = Class.forName(loggerImplementationClassName);
+            if (!Logger.class.isAssignableFrom(loggerClassCandidate)) {
+                throw new IllegalArgumentException(loggerImplementationClassName + " does not implement org.firebirdsql.logging.Logger");
+            }
+            loggerClass = (Class<? extends Logger>) loggerClassCandidate;
+            loggerConstructor = loggerClass.getConstructor(String.class);
+        }
+
+        @Override
+        public Logger createLogger(String name) {
+            try {
+                return loggerConstructor.newInstance(name);
+            } catch (Exception e) {
+                e.printStackTrace();
+                return NULL_LOGGER;
+            }
+        }
     }
 }

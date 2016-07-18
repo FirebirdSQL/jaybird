@@ -124,11 +124,10 @@ public final class JnaEventHandle extends AbstractEventHandle {
             LOG.debug("Event handle not allocated");
         }
         synchronized (JnaEventHandle.class) {
-            StringBuilder sb = new StringBuilder();
-            sb.append("Event Buffer ").append(getEventName()).append(':')
-                    .append(getEventBuffer().getValue().dump(0, size))
-                    .append("Result Buffer ").append(getEventName()).append(':')
-                    .append(getResultBuffer().getValue().dump(0, size));
+            String sb = "Event Buffer " + getEventName() + ':' +
+                    getEventBuffer().getValue().dump(0, size) +
+                    "Result Buffer " + getEventName() + ':' +
+                    getResultBuffer().getValue().dump(0, size);
             LOG.debug(sb);
         }
     }

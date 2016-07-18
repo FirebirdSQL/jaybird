@@ -26,7 +26,6 @@
             <jvmarg line="${junit.jvm.options}"/>
             <jvmarg line="${java.module.arg}"/>
             <sysproperty key="jbosstest.deploy.dir" file="${build.lib}"/>
-            <sysproperty key="log4j.properties" file="${build.resources}/log4j.properties"/>
             <sysproperty key="test.db.dir" value="${test.db.dir}"/>
             <sysproperty key="test.db.host" value="${test.db.host}"/>
             <sysproperty key="test.db.port" value="${test.db.port}"/>
@@ -89,7 +88,6 @@
             <jvmarg line="${junit.jvm.options}"/>
             <jvmarg line="${java.module.arg}"/>
             <sysproperty key="jbosstest.deploy.dir" file="${build.lib}"/>
-            <sysproperty key="log4j.properties" file="${build.resources}/log4j.properties"/>
             <sysproperty key="test.db.dir" value="${test.db.dir}"/>
             <sysproperty key="test.db.host" value="${test.db.host}"/>
             <sysproperty key="test.db.port" value="${test.db.port}"/>
@@ -159,7 +157,6 @@
             <jvmarg line="${junit.jvm.options}"/>
             <jvmarg line="${java.module.arg}"/>
             <sysproperty key="jbosstest.deploy.dir" file="${build.lib}"/>
-            <sysproperty key="log4j.properties" file="${build.resources}/log4j.properties"/>
             <sysproperty key="test.db.dir" value="${test.db.dir}"/>
             <sysproperty key="test.db.host" value="${test.db.host}"/>
             <sysproperty key="test.db.port" value="${test.db.port}"/>
@@ -227,7 +224,6 @@
             <jvmarg line="${junit.jvm.options}"/>
             <jvmarg line="${java.module.arg}"/>
             <sysproperty key="jbosstest.deploy.dir" file="${build.lib}"/>
-            <sysproperty key="log4j.properties" file="${build.resources}/log4j.properties"/>
             <sysproperty key="test.db.dir" value="${test.db.dir}"/>
             <sysproperty key="test.db.host" value="${test.db.host}"/>
             <sysproperty key="test.db.port" value="${test.db.port}"/>
@@ -279,7 +275,6 @@
             <jvmarg line="${junit.jvm.options}"/>
             <jvmarg line="${java.module.arg}"/>
             <sysproperty key="jbosstest.deploy.dir" file="${build.lib}"/>
-            <sysproperty key="log4j.properties" file="${build.resources}/log4j.properties"/>
             <sysproperty key="test.db.dir" value="${test.db.dir}"/>
             <sysproperty key="test.db.host" value="${test.db.host}"/>
             <sysproperty key="test.db.port" value="${test.db.port}"/>
@@ -330,7 +325,6 @@
             <jvmarg line="${junit.jvm.options}"/>
             <j line="${java.module.arg}"/>
             <sysproperty key="jbosstest.deploy.dir" file="${build.lib}"/>
-            <sysproperty key="log4j.properties" file="${build.resources}/log4j.properties"/>
             <sysproperty key="test.db.dir" value="${test.db.dir}"/>
             <sysproperty key="test.db.host" value="${test.db.host}"/>
             <sysproperty key="test.db.port" value="${test.db.port}"/>

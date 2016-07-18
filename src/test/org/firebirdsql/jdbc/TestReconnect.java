@@ -72,19 +72,14 @@ public class TestReconnect extends FBTestBase {
             } catch (SQLException e) {
                 // Workaround for the well-known "object in use" error
                 // (see release notes of Firebird 1.5)
-                if (log != null) {
-                    log.info(e);
-                    log.info("Retrying after reconnecting ...");
-                }
+                log.info("Retrying after reconnecting ...", e);
                 boolean oldAutoCommit = con.getAutoCommit();
                 con.close();
                 openConnection();
                 if (con.getAutoCommit() != oldAutoCommit)
                     con.setAutoCommit(oldAutoCommit);
-                if (log != null) {
-                    log.info("reexecuting sql-statement on new connection:");
-                    log.info(sql);
-                }
+                log.info("reexecuting sql-statement on new connection:");
+                log.info(sql);
                 execute(sql);
                 // Here the program hangs (see socketRead), and
                 // pressing ctrl-break I get the following output:
@@ -156,8 +151,7 @@ public class TestReconnect extends FBTestBase {
     }
 
     private void createTestTables() throws SQLException {
-        if (log != null)
-            log.info("Creating test tables ...");
+        log.info("Creating test tables ...");
         if (!con.getAutoCommit())
             con.setAutoCommit(true);
 
@@ -186,56 +180,37 @@ public class TestReconnect extends FBTestBase {
         for (int i = 2; i <= TABLE_COUNT; i++) {
             String thisTable = getTableName(i);
             String refTable = getTableName(i - 1);
-            StringBuilder sql = new StringBuilder(100);
-            sql.append("ALTER TABLE ");
-            sql.append(thisTable);
-            sql.append(" ADD CONSTRAINT FK_");
-            sql.append(refTable);
-            sql.append(" FOREIGN KEY (ID_");
-            sql.append(refTable);
-            sql.append(") REFERENCES ");
-            sql.append(refTable);
-            sql.append(" (ID)");
-            execute(sql.toString(), true);
+            String sql = "ALTER TABLE " + thisTable +
+                    " ADD CONSTRAINT FK_" + refTable +
+                    " FOREIGN KEY (ID_" + refTable + ") REFERENCES " + refTable + " (ID)";
+            execute(sql, true);
         }
     }
 
     private void alterForeignKeys(boolean cascade) throws SQLException {
-        if (log != null)
-            log.info("Altering foreign keys ...");
+        log.info("Altering foreign keys ...");
         if (!con.getAutoCommit())
             con.setAutoCommit(true);
         // add FOREIGN KEY's
         for (int i = 2; i <= TABLE_COUNT; i++) {
             String thisTable = getTableName(i);
             String refTable = getTableName(i - 1);
-            StringBuilder sql = new StringBuilder(100);
-            sql.append("ALTER TABLE ");
-            sql.append(thisTable);
-            sql.append(" DROP CONSTRAINT FK_");
-            sql.append(refTable);
-            execute(sql.toString(), true);
+            String sql = "ALTER TABLE " + thisTable +
+                    " DROP CONSTRAINT FK_" + refTable;
+            execute(sql, true);
 
-            sql.replace(0, sql.length(), "ALTER TABLE ");
-            sql.append(thisTable);
-            sql.append(" ADD CONSTRAINT FK_");
-            sql.append(refTable);
-            sql.append(" FOREIGN KEY (ID_");
-            sql.append(refTable);
-            sql.append(") REFERENCES ");
-            sql.append(refTable);
-            sql.append(" (ID)");
-            if (cascade)
-                sql.append(" ON DELETE CASCADE");
-            execute(sql.toString(), true);
+            String sql2 = "ALTER TABLE " + thisTable +
+                    " ADD CONSTRAINT FK_" + refTable +
+                    " FOREIGN KEY (ID_" + refTable + ") REFERENCES " + refTable + " (ID)" +
+                    (cascade ? " ON DELETE CASCADE" : "");
+            execute(sql2, true);
         }
     }
 
     private void populateTestTables(int rowCount) throws SQLException {
         if (con.getAutoCommit())
             con.setAutoCommit(false);
-        if (log != null)
-            log.info("Populating test tables ...");
+        log.info("Populating test tables ...");
         Random random = new Random();
         for (int i = 1; i <= TABLE_COUNT; i++) {
             StringBuilder sql = new StringBuilder(100);
@@ -271,20 +246,16 @@ public class TestReconnect extends FBTestBase {
         ResultSetMetaData md = rs.getMetaData();
         int cols = md.getColumnCount();
         if (print) {
-            if (log != null) {
-                log.info(title);
-                log.info("-------------------------------------------------------------------------------");
-            }
+            log.info(title);
+            log.info("-------------------------------------------------------------------------------");
             StringBuilder sb = new StringBuilder();
             for (int i = 1; i <= cols; i++) {
                 if (i > 1)
                     sb.append('\t');
                 sb.append(md.getColumnLabel(i));
             }
-            if (log != null) {
-                log.info(sb.toString());
-                log.info("-------------------------------------------------------------------------------");
-            }
+            log.info(sb.toString());
+            log.info("-------------------------------------------------------------------------------");
         }
         while (rs.next()) {
             StringBuilder sb = new StringBuilder();
@@ -296,15 +267,13 @@ public class TestReconnect extends FBTestBase {
                 sb.append(value);
 
             }
-            if (log != null)
-                log.info(sb);
+            log.info(sb.toString());
         }
         rs.close();
     }
 
     private void readMetaData() throws SQLException {
-        if (log != null)
-            log.info("Reading meta data ...");
+        log.info("Reading meta data ...");
         DatabaseMetaData md = con.getMetaData();
         for (int i = 1; i <= TABLE_COUNT; i++) {
             String tableName = getTableName(i);
