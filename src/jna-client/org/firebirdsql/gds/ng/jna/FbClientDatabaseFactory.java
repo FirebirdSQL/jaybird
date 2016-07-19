@@ -59,7 +59,8 @@ public final class FbClientDatabaseFactory extends AbstractNativeDatabaseFactory
             } else {
                 // TODO Validate if correct
                 com.sun.jna.Library library = (com.sun.jna.Library) Native.loadLibrary("fbclient", FbClientLibrary.class);
-                return (FbClientLibrary) Native.synchronizedLibrary(library);
+                //return (FbClientLibrary) Native.synchronizedLibrary(library);
+                return (FbClientLibrary) library;
             }
         }
     }
