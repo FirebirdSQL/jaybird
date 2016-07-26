@@ -8,8 +8,9 @@ this version is **unstable** and **not ready for production**.
 The protocol implementation has been fundamentally rewritten and changes have
 been made for stricter JDBC conformance. As a result the driver might exhibit
 different behavior than previous versions. Read these release notes carefully to
-see if those differences are intentional. Bug reports about undocumented changes
-in behavior are appreciated.
+see if those differences are intentional. 
+
+Bug reports about undocumented changes in behavior are appreciated.
 
 General Notes
 =============
@@ -28,8 +29,9 @@ the application server and driver.
 Supported Firebird versions
 ---------------------------
 
-Jaybird 3.0 was tested against Firebird 2.1.7 and 2.5.5, and recent snapshots
-of Firebird 3, but should also support other Firebird versions from 2.0 and up.
+Jaybird 3.0 was tested against Firebird 2.5.6, and 3.0.0, but should also 
+support other Firebird versions from 2.0 and up.
+
 Formal support for Firebird 1.x has been dropped (although in general we expect
 the driver to work). The Type 2 and embedded server JDBC drivers use JNA to
 access the Firebird client or embedded library.
@@ -45,8 +47,7 @@ Supported Java versions
 Jaybird 3.0 supports Java 7 (JDBC 4.1) and Java 8 (JDBC 4.2).
 Support for earlier Java versions has been dropped.
 
-Support for Java 9 (JDBC 4.3) is planned, but implementation has not yet
-started.
+Support for Java 9 (JDBC 4.3) is planned, but not yet finished.
 
 Jaybird 3.0 is the last version to support Java 7.
 
@@ -83,7 +84,30 @@ What's new in Jaybird 3.0
 Java support
 ------------
 
+### Java 6 ###
+
 Support for Java 6 has been dropped.
+
+### Java 7 and 8 ###
+
+The driver supports Java 7 and 8 and provides improved support for JDBC 4.2
+features.
+
+The improved support includes
+
+-   Support for `java.time` in `set/getObject`
+-   Support for `getObject(int/String, Class<?>)`
+-   Support for `setBinaryStream`/`setCharacterStream` with no length or 
+    (long) length beyond `Integer.MAX_VALUE`
+-   Support for large update counts (but not `setLargeMaxRows`)
+
+### Java 9 ###
+
+Jaybird currently does not formally support Java 9 (JDBC 4.3), although some of
+the JDBC 4.3 features have been implemented. 
+
+You can use the Java 8 driver under Java 9, it is necessary to add the
+`java.xml.bind` module using `-addmods java.xml.bind`.
 
 Firebird support
 ----------------
@@ -97,18 +121,19 @@ version 11.
 Firebird 2.5 support is improved with the implementation of wire protocol
 version 12.
 
-Firebird 3.0 support is improved with the partial implementation of wire
+Firebird 3.0 support is improved with the (partial) implementation of wire
 protocol 13 and support for the _Srp_ authentication plugin. Version 13 support
 does not yet provide Firebird 3.0 wire encryption and zlib compression. Wire
-encryption is planned for Jaybird 3.1, but might be moved into Jaybird 3.0
-before the final release. Support for zlib compression is not planned yet.
+encryption is planned for Jaybird 3.1. Support for zlib compression is not 
+planned yet.
 
-*TODO: Add FB 3 compatibility notes / link to wiki*
+See also [Jaybird and Firebird 3](https://github.com/FirebirdSQL/jaybird/wiki/Jaybird-and-Firebird-3)
+on the wiki.
 
 Support for protocol version 13 and the SRP authentication was contributed
 by [Hajime Nakagami](https://github.com/nakagami).
 
-### Other Firebird feature support
+### Other Firebird feature support ###
 
 *   Add support for streaming backup and restore ([JDBC-256](http://tracker.firebirdsql.org/browse/JDBC-256))
 
@@ -123,13 +148,17 @@ conformance.
 
 The rewrite of the low-level implementation was prompted by the new
 authentication (and wire encryption) in Firebird 3.0 (protocol version 13), and
-the fact that other improvements in the Firebird wire protocol (versions 11 and
-12) were not yet available in the pure Java implementation in Jaybird. The old
-implementation of the wire protocol did not lend itself for - easily - 
+the fact that other improvements in the Firebird wire protocol (versions 11 
+and 12) were not yet available in the pure Java implementation in Jaybird. The
+old implementation of the wire protocol did not lend itself for - easily - 
 supporting multiple protocol versions.
 
 The new low-level implementation also means that the old GDS API 
 (`org.firebirdsql.gds.GDS`) has been removed and is no longer available.
+
+For the native, local and embedded support the use of 
+`jaybirdxx.dll`/`libjaybirdxx.so` is no longer necessary. For more details, see
+[Type 2 (native) and embedded driver].
 
 Support for java.util.logging added
 -----------------------------------
@@ -150,9 +179,11 @@ We have also added some options to control logging behavior:
 
 *   System property `org.firebirdsql.jdbc.disableLogging` with value `true`
     will disable logging entirely.
+    
 *   System property `org.firebirdsql.jdbc.forceConsoleLogger` with value `true`
     will force logging to the `System.out` for info and lower and `System.err` 
     for warn and above (`debug` and `trace` are disabled in the implementation).
+    
 *   System property `org.firebirdsql.jdbc.loggerImplementation` to specify an
     alternative implementation of the interface `org.firebirdsql.logging.Logger`.
     
@@ -195,7 +226,7 @@ Potentially breaking changes
 
 Jaybird 3.0 contains a number of changes that might break existing applications.
 
-See [Compatibility changes] for details.
+See also [Compatibility changes] for details.
 
 ### ANTLR 4 runtime ###
 
@@ -203,15 +234,27 @@ The generated keys functionality now requires ANTLR 4.5. Make sure to replace
 `antlr-runtime-3.4.jar` with the `antlr-runtime-4.5.3.jar` included in the 
 distribution zip. If you use maven this will happen automatically.
 
-As previously: if the ANTLR4 runtime is not on the classpath, then the generated
-keys functionality will not be available.
+As in previous versions: if the ANTLR runtime is not on the classpath, then 
+the generated keys functionality will not be available.
+
+### Handling of character set OCTETS ###
+
+Columns of type `CHAR` and `VARCHAR` with character set `OCTETS` are now handled
+as JDBC type `BINARY` and `VARBINARY`, respectively ([JDBC-240](http://tracker.firebirdsql.org/browse/JDBC-240))
+
+See also [Character set OCTETS handled as JDBC (VAR)BINARY].
+
+### Changes to character set handling ###
+
+We reimplemented the character set handling in Jaybird which may lead to
+different behavior, especially when using `NONE` as the connection character set.
+
+See also [Character set handling].
 
 Other fixes and changes
 -----------------------
 
 *   Fix: IP-address is reversed on big-endian platforms ([JDBC-98](http://tracker.firebirdsql.org/browse/JDBC-98))
-
-*   Reimplemented character set handling (*TODO: Provide more info?*)
 
 *   Improved support of JDBC Escape syntax (`{...}`) and supported functions (*TODO: Provide more info?*)
     ([JDBC-223](http://tracker.firebirdsql.org/browse/JDBC-223))
@@ -226,11 +269,6 @@ Other fixes and changes
     `getTimeDateFunctions`.
     
 *   Nested JDBC escapes are now supported ([JDBC-292](http://tracker.firebirdsql.org/browse/JDBC-292))
-
-*   `CHAR` and `VARCHAR` columns with character set `OCTETS` are now handled as
-    JDBC type `BINARY` and `VARBINARY`, respectively ([JDBC-240](http://tracker.firebirdsql.org/browse/JDBC-240))
-
-    See also [Character set OCTETS handled as JDBC (VAR)BINARY].
 
 *   Changed locking to coarser blocks with - as far as possible - a single lock
     object per connection for all connection-derived objects ([JDBC-435](http://tracker.firebirdsql.org/browse/JDBC-435))
@@ -247,7 +285,7 @@ Other fixes and changes
 *   Added Jaybird-specific columns `JB_IS_IDENTITY` and `JB_IDENTITY_TYPE` to 
     `DatabaseMetaData.getColumns` to report the type of identity column ([JDBC-322](http://tracker.firebirdsql.org/browse/JDBC-322))
     
-    `JB_IS_IDENTITY` has either `YES` or `NO` as possible value and can be used
+    `JB_IS_IDENTITY` has either `YES` or `NO` as possible values and can be used
      to check if the column is really an identity column.
 
     Possible values for `JB_IDENTITY_TYPE` are:
@@ -259,6 +297,8 @@ Other fixes and changes
     
     You should always retrieve these columns by name, as their position will 
     change when the JDBC specification adds new columns.
+
+*   Added field index to `DataTruncation` exceptions ([JDBC-405](http://tracker.firebirdsql.org/browse/JDBC-405))
 
 Removal of deprecated classes and packages
 ------------------------------------------
@@ -284,6 +324,83 @@ listed below.
 not listed, please report it as bug.** It might have been a change we forgot to
 document, but it could just as well be an implementation bug.
 
+Character set handling
+----------------------
+
+### Character set OCTETS handled as JDBC (VAR)BINARY ###
+
+Columns of type `CHAR(n) CHARACTER SET OCTETS` and
+`VARCHAR(n) CHARACTER SET OCTETS` are now handled as JDBC type
+`java.sql.Types.BINARY` and `java.sql.Types.VARBINARY`, respectively.
+
+The connection property `octetsAsBytes` no longer has any effect, metadata and
+usage will always be `(VAR)BINARY`.
+
+With this change the getters (on result set/callable statement) and
+setters (prepared/callable statement) and update methods (result set) for columns
+of this type have been restricted to:
+
+* `set/get/updateNull`
+* `get/set/updateBytes`
+* `get/set/updateBinaryStream`
+* `get/set/updateAsciiStream`
+* `get/set/updateString` (using the default encoding or connection encoding)
+* `get/set/updateCharacterStream` (using the default encoding or connection encoding)
+* `get/set/updateObject` (with `String`, `byte[]`, `InputStream`, `Reader`)
+
+Other getters/setters/updaters or object types supported for
+'normal' `(VAR)CHAR` fields are not available.
+
+### Connection character set NONE ###
+
+Jaybird will now use the `(VAR)CHAR` or `BLOB SUB_TYPE TEXT` character set
+information for decoding. This means that when using connection character set 
+`NONE` that columns that have an explicit character set will be decoded and
+encoded using that character set instead of the platform default encoding (or 
+explicitly specified Java character set when specifying both `encoding=NONE` 
+**and** `charSet=<some java charset>`).
+
+This may lead to unexpected character conversions if - for example - you have 
+always been reading and writing `Cp1251` data from a `WIN1252` column: it will
+now be read as `Cp1252`. You will need to convert the column and data to the 
+right character set.
+
+### Connection rejected without an explicit character set ###
+
+If no explicit character set has been set, Jaybird 3.0 will reject the 
+connection with an `SQLNonTransientConnectionException` with message 
+_"Connection rejected: No connection character set specified (property lc_ctype,
+encoding, charSet or localEncoding). Please specify a connection character set 
+(eg property charSet=utf-8) or consult the Jaybird documentation for more 
+information."_ ([JDBC-446](http://tracker.firebirdsql.org/browse/JDBC-446))
+
+In Jaybird 2.2 and earlier, Jaybird would default to connection character set 
+`NONE` if no character set had been specified (through `lc_ctype`/`encoding` 
+and/or `charSet`/`localEncoding`). This can result in incorrect character set
+handling when the database is used from different locales.
+
+To address this change, explicitly set the connection character set using
+one of the following options:
+
+*   Use connection property `encoding` (or `lc_ctype`) with Firebird character
+    set names. 
+    
+    Use `encoding=NONE` for the 'old' default behavior (with some caveats, see 
+    other sections).
+
+*   Use connection property `charSet` (or `localEncoding`) with Java character
+    set names.
+
+*   By providing a default character set with system property 
+    `org.firebirdsql.jdbc.defaultConnectionEncoding`. Jaybird will apply the
+    specified character set as the default when none is specified.
+    
+    This property only supports Firebird character set names. The property must
+    be set on start up (or at least before Jaybird-related classes get loaded). 
+
+    Use `-Dorg.firebirdsql.jdbc.defaultConnectionEncoding=NONE` to revert to the
+    old behavior (with some caveats, see other sections).
+
 Logging
 -------
 
@@ -295,7 +412,7 @@ See also [Support for java.util.logging added] and [Support for log4j 1.x remove
 Exceptions
 ----------
 
-* `FBSQLException` and sub-classes replaced with actual `java.sql.*` exceptions.
+*   `FBSQLException` and sub-classes replaced with actual `java.sql.*` exceptions.
 
     Over time the JDBC exception hierarchy has become more complicated with more
     specific exceptions. It was easier to use the `java.sql` exception-
@@ -305,9 +422,9 @@ Exceptions
     sub-classes anymore, but in general we strive to use the standard
     exceptions where possible.
 
-* Class `FBSQLWarning` has been removed and has been replaced with `SQLWarning`.
+*   Class `FBSQLWarning` has been removed and has been replaced with `SQLWarning`.
 
-* Methods with `throws FBSQLException` changed to `throws SQLException`
+*   Methods with `throws FBSQLException` changed to `throws SQLException`
 
     As we are preferring the standard exceptions, the throws clause has been
     widened to `SQLException`. Note that most methods already had
@@ -321,7 +438,7 @@ Exceptions
         * `executeServicesOperation`
     * A number of classes/methods internal to the Jaybird implementation
 
-* `org.firebirdsql.gds.GDSException` removed from exception causes.
+*   `org.firebirdsql.gds.GDSException` has been removed from exception causes.
 
     The new low-level implementation throws `java.sql.SQLException` classes
     eliminating the need for `GDSException` (which was usually set as the
@@ -329,16 +446,17 @@ Exceptions
     have been replaced by `org.firebirdsql.jdbc.FBSQLExceptionInfo` to
     report exception message elements and their error codes.
 
-* Exception message format changed:
-    * Exception message elements are now separated by semi-colon, not by
-      linebreak.
+*   Exception message format changed:
+   
+    *   Exception message elements are now separated by semi-colon, not by
+        linebreak.
 
         Errors reported by Firebird can consist of multiple elements. In Jaybird
         2.2 and earlier the final exception message was constructed by
         separating these elements by a linebreak. These elements are now
         separated by a semi-colon and a space.
 
-    * Exception message now reports SQLState and error code.
+    *   Exception message now reports SQLState and error code.
 
     For example, a "Table unknown" (error 335544580) in Jaybird 3.0 has message:
 
@@ -361,8 +479,8 @@ Exceptions
     Firebird). Some parts of the code construct an `SQLException` directly,
     those messages do not contain the SQLState and error code in the message.
 
-* More specific error reported by `SQLException.getErrorCode` and
-  `SQLException.getSQLState`.
+*   More specific error reported by `SQLException.getErrorCode` and
+    `SQLException.getSQLState`.
 
     In previous versions a large class of errors always reported error 335544569
     ("Dynamic SQL Error" or `isc_dsql_error`) with SQLState 42000, Jaybird now
@@ -398,7 +516,7 @@ specification.
 _Unless explicitly indicated, changes also apply to `PreparedStatement` and
 `CallableStatement`_
 
-* Generated keys `ResultSet` only available through `getGeneratedKeys`.
+*   Generated keys `ResultSet` only available through `getGeneratedKeys`.
 
     The generated keys `ResultSet` from a statement is no longer available
     through `getResultSet`, but only through `getGeneratedKeys` as the JDBC
@@ -422,7 +540,7 @@ _Unless explicitly indicated, changes also apply to `PreparedStatement` and
     This change does not apply to executing `INSERT ... RETURNING ...` as a
     normal statement.
 
-* Update count immediately available after executing generated keys queries.
+*   Update count immediately available after executing generated keys queries.
 
     Previously the update count of a generated keys query was only available
     after calling `getMoreResults` followed by a call to `getUpdateCount`. This
@@ -571,31 +689,6 @@ Apart from the change described above, the following has changed for `getTables`
 
 **TODO: Add other changes**
 
-Character set OCTETS handled as JDBC (VAR)BINARY
-------------------------------------------------
-
-Columns of type `CHAR(n) CHARACTER SET OCTETS` and
-`VARCHAR(n) CHARACTER SET OCTETS` are now handled as JDBC type
-`java.sql.Types.BINARY` and `java.sql.Types.VARBINARY`, respectively.
-
-The connection property `octetsAsBytes` no longer has any effect, metadata and
-usage will always be `(VAR)BINARY`.
-
-With this change the getters (on result set/callable statement) and
-setters (prepared/callable statement) and update methods (result set) for columns
-of this type have been restricted to:
-
-* `set/get/updateNull`
-* `get/set/updateBytes`
-* `get/set/updateBinaryStream`
-* `get/set/updateAsciiStream`
-* `get/set/updateString` (using the default encoding or connection encoding)
-* `get/set/updateCharacterStream` (using the default encoding or connection encoding)
-* `get/set/updateObject` (with `String`, `byte[]`, `InputStream`, `Reader`)
-
-Other getters/setters/updaters or object types supported for
-'normal' `(VAR)CHAR` fields are not available.
-
 Removal of old GDS API
 ----------------------
 
@@ -612,12 +705,29 @@ management classes.
 Type 2 (native) and embedded driver
 -----------------------------------
 
-Jaybird no longer needs a `jaybirdxx.dll` or `jaybirdxx.so` for the Type 2 and 
-embedded driver. Jaybird now uses JNA to access the client library.
+Jaybird no longer needs a `jaybirdxx.dll` or `libjaybirdxx.so` for the Type 2 
+and embedded driver. Jaybird now uses JNA to access the client library.
 
 If you want to use the Type 2 driver, or Firebird embedded, then you need to
-include the `jna-x.x.x.jar` on the classpath. The `fbclient.dll`, `fbembed.dll`, 
-`libfbclient.so`, or `libfbembed.so` need to be on the path.
+include the `jna-4.2.2.jar` on the classpath.
+
+When using Maven, you need to specify the dependency on JNA yourself, as we 
+don't depend on it by default:
+
+``` {.xml}
+<dependency>
+    <groupId>net.java.dev.jna</groupId>
+    <artifactId>jna</artifactId>
+    <version>4.2.2</version>
+</dependency>
+```
+
+The `fbclient.dll`, `fbembed.dll`, `libfbclient.so`, or `libfbembed.so` need to
+be on the path, or the location needs to be specified in the system property 
+`jna.library.path`.
+
+In the future we may provided JNA-compatible jars that provide the native
+libraries of a specific Firebird version.
 
 **TODO: May need further documentation**
 
@@ -665,8 +775,10 @@ In `FBMaintenanceManager` the following changes have been made:
 
 - `getLimboTransactions()` will return `long[]` instead of `int[]`
 - `limboTransactionsAsList()` will return `List<Long>` instead of `List<Integer>`
-- `getLimboTransactionsAsLong()` (introduced in 2.2.11) will be removed in favor of `getLimboTransactions()`
-- `limboTransactionsAsLongList` (introduced in 2.2.11) will be removed in favor of `limboTransactionsAsList`
+- `getLimboTransactionsAsLong()` (introduced in 2.2.11) has been removed in 
+  favor of `getLimboTransactions()`
+- `limboTransactionsAsLongList` (introduced in 2.2.11) has been removed in favor
+  of `limboTransactionsAsList`
 
 These methods were previously not defined in the `MaintenanceManager` interface.
 
