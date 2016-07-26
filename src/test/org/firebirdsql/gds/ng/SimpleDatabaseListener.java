@@ -1,6 +1,4 @@
 /*
- * $Id$
- * 
  * Firebird Open Source J2EE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
@@ -31,7 +29,7 @@ import java.util.List;
  * Implementation of {@link DatabaseListener} for testing purposes.
  *
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
- * @since 2.3
+ * @since 3.0
  */
 public class SimpleDatabaseListener implements DatabaseListener {
 
@@ -40,7 +38,7 @@ public class SimpleDatabaseListener implements DatabaseListener {
     private boolean detached = false;
 
     public List<SQLWarning> getWarnings() {
-        return new ArrayList<SQLWarning>(warnings);
+        return new ArrayList<>(warnings);
     }
 
     public void clear() {

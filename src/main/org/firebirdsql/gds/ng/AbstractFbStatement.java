@@ -167,7 +167,6 @@ public abstract class AbstractFbStatement implements FbStatement {
         try {
             synchronized (getSynchronizationObject()) {
                 if (!getState().isCursorOpen()) return;
-                // TODO do additional checks (see also old implementation and .NET)
                 try {
                     if (!transactionEnd && getType().isTypeWithCursor()) {
                         free(ISCConstants.DSQL_close);
@@ -447,7 +446,7 @@ public abstract class AbstractFbStatement implements FbStatement {
      * @return New instance of {@link SqlCountProcessor} (or subclass) for this statement.
      */
     protected SqlCountProcessor createSqlCountProcessor() {
-        return new SqlCountProcessor(this);
+        return new SqlCountProcessor();
     }
 
     /**

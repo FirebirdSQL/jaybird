@@ -1,6 +1,4 @@
 /*
- * $Id$
- * 
  * Firebird Open Source J2EE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
@@ -30,7 +28,7 @@ import static org.firebirdsql.gds.VaxEncoding.iscVaxInteger2;
  * InfoProcessor to retrieve the (normal) execution plan of a statement.
  *
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
- * @since 2.3
+ * @since 3.0
  */
 public class ExecutionPlanProcessor implements InfoProcessor<String> {
 
@@ -57,6 +55,7 @@ public class ExecutionPlanProcessor implements InfoProcessor<String> {
         if (buffer[0] == ISCConstants.isc_info_truncated) {
             buffer = statement.getSqlInfo(getDescribePlanInfoItems(), statement.getMaxSqlInfoSize());
             if (buffer[0] == ISCConstants.isc_info_truncated) {
+                // TODO Throw truncation exception instead
                 return null;
             }
         }

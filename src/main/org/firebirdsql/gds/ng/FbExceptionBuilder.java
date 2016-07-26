@@ -73,8 +73,7 @@ public final class FbExceptionBuilder {
      * @return FbExceptionBuilder initialized with the specified error code
      */
     public static FbExceptionBuilder forException(int errorCode) {
-        final FbExceptionBuilder fbExceptionBuilder = new FbExceptionBuilder();
-        return fbExceptionBuilder.exception(errorCode);
+        return new FbExceptionBuilder().exception(errorCode);
     }
 
     /**
@@ -88,8 +87,7 @@ public final class FbExceptionBuilder {
      * @return FbExceptionBuilder initialized with the specified error code
      */
     public static FbExceptionBuilder forWarning(int errorCode) {
-        final FbExceptionBuilder fbExceptionBuilder = new FbExceptionBuilder();
-        return fbExceptionBuilder.warning(errorCode);
+        return new FbExceptionBuilder().warning(errorCode);
     }
 
     /**

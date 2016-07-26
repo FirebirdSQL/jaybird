@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * Public Firebird Java API.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -28,9 +26,9 @@ package org.firebirdsql.gds.ng.wire;
 
 /**
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
- * @since 2.3
+ * @since 3.0
  */
-public class SqlResponse implements Response {
+public final class SqlResponse implements Response {
 
     private final int count;
     

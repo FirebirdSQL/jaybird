@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * Public Firebird Java API.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -37,7 +35,7 @@ import java.sql.SQLException;
  * @param <T>
  *         Type of the result of the {@link #process(byte[])} method.
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
- * @since 2.3
+ * @since 3.0
  */
 public interface InfoProcessor<T> {
 
@@ -57,7 +55,7 @@ public interface InfoProcessor<T> {
      * Interface for information on a statement.
      *
      * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
-     * @since 2.3
+     * @since 3.0
      */
     interface StatementInfo {
         /**

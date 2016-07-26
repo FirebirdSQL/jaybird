@@ -1,7 +1,5 @@
 /*
- * $Id$
- * 
- * Firebird Open Source J2EE Connector - JDBC Driver
+ * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -14,7 +12,7 @@
  * This file was created by members of the firebird development team.
  * All individual contributions remain the Copyright (C) of those
  * individuals.  Contributors to this file are either listed here or
- * can be obtained from a CVS history command.
+ * can be obtained from a source control history command.
  *
  * All rights reserved.
  */
@@ -31,20 +29,14 @@ import static org.firebirdsql.gds.VaxEncoding.iscVaxLong;
  * Info processor for retrieving affected record count.
  *
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
- * @since 2.3
+ * @since 3.0
  */
-public class SqlCountProcessor implements InfoProcessor<SqlCountHolder> {
+public final class SqlCountProcessor implements InfoProcessor<SqlCountHolder> {
 
     private static final byte[] RECORD_COUNT_INFO_ITEMS = {
             ISCConstants.isc_info_sql_records,
             ISCConstants.isc_info_end
     };
-
-    private final FbStatement statement;
-
-    public SqlCountProcessor(FbStatement statement) {
-        this.statement = statement;
-    }
 
     @Override
     public SqlCountHolder process(byte[] infoResponse) throws SQLException {
@@ -76,20 +68,23 @@ public class SqlCountProcessor implements InfoProcessor<SqlCountHolder> {
                     deleteCount = count;
                     break;
                 default:
-                    // TODO Log, throw exception?
-                    break;
+                    throw FbExceptionBuilder.forException(ISCConstants.isc_infunk)
+                            .messageParameter(t)
+                            .toSQLException();
                 }
                 pos += countLength;
             }
             return new SqlCountHolder(updateCount, deleteCount, insertCount, selectCount);
-            // TODO Handle isc_info_truncated, or do we simply assume we always use a sufficiently large buffer?
+            // NOTE: we assume we always use a sufficiently large buffer
         } else if (infoResponse[0] == ISCConstants.isc_info_end) {
             // TODO Check necessity of checking this, seems to happen with DDL
             // TODO Return all -1 instead?
             return new SqlCountHolder(0, 0, 0, 0);
         } else {
             // TODO SQL state, better error?
-            throw new FbExceptionBuilder().exception(ISCConstants.isc_infunk).toSQLException();
+            throw FbExceptionBuilder.forException(ISCConstants.isc_infunk)
+                    .messageParameter(infoResponse[0])
+                    .toSQLException();
         }
     }
 

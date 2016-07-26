@@ -14,7 +14,7 @@ import static org.junit.Assert.fail;
  * Tests for {@link FBSimpleDataSource}
  *
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
- * @since 2.3
+ * @since 3.0
  */
 public class TestFBSimpleDataSource extends FBJUnit4TestBase {
 

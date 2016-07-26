@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
@@ -27,10 +25,6 @@ import java.util.NoSuchElementException;
  * Collection of {@link FieldValue}. Usually a row or set of parameters.
  * <p>
  * A <code>RowValue</code> itself is unmodifiable, but the {@link FieldValue} elements it contains are modifiable!
- * </p>
- * <p>
- * The RowValues does not give access to the {@link RowDescriptor}, but individual
- * {@link FieldValue} elements provide their own {@link FieldDescriptor}.
  * </p>
  *
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
@@ -145,7 +139,7 @@ public final class RowValue implements Iterable<FieldValue> {
     /**
      * Iterator implementation to iterate over the internal array
      */
-    private class RowValuesIterator implements Iterator<FieldValue> {
+    private final class RowValuesIterator implements Iterator<FieldValue> {
 
         private int index = 0;
 

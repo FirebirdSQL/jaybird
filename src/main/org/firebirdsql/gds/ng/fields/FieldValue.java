@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
@@ -24,9 +22,6 @@ import org.firebirdsql.jdbc.field.FieldDataProvider;
 
 /**
  * Holder object for the value of a (statement) parameter or result set field.
- * <p>
- * TODO: Consider revision, see for example .NET provider where DbValue stores the (decoded) object instead of the encoded byte array
- * </p>
  *
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @since 3.0

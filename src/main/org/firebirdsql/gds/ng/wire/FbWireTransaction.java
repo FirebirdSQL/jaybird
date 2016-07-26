@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * Public Firebird Java API.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -32,7 +30,7 @@ import org.firebirdsql.gds.ng.FbTransaction;
  * Interface for transactions created for the wire protocol implementation.
  *
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
- * @since 2.3
+ * @since 3.0
  */
 public interface FbWireTransaction extends FbTransaction {
 }
