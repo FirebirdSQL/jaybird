@@ -3,38 +3,37 @@
  * 
  * Copyright InterBase Software Corporation, 1998. Written by
  * com.inprise.interbase.interclient.r&d.PaulOstler :-)
- * 
+ *
  * Code was modified by Roman Rokytskyy to show that Firebird JCA-JDBC driver
  * does not introduce additional complexity in normal driver usage scenario.
- * 
+ *
  * A small application to demonstrate basic, but not necessarily simple, JDBC
  * features.
- * 
+ *
  * Note: you will need to hardwire the path to your copy of employee.fdb as well
  * as supply a user/password in the code below at the beginning of method
  * main().
  */
 public class DriverExample {
-    private static final String URL_DEFAULT = "jdbc:firebirdsql://localhost:3050/c:/database/employee.fdb";
+    private static final String URL_DEFAULT = "jdbc:firebirdsql://localhost:3050/employee";
     private static final String USER_DEFAULT = "sysdba";
     private static final String PASSWORD_DEFAULT = "masterkey";
     
     private static final int REGISTER_CLASS_FOR_NAME = 1;
     private static final int REGISTER_PROPERTIES = 2;
     private static final int REGISTER_JDBC4 = 3;
-    
+
     private static final int CONNECT_DRIVERMANAGER = 1;
     private static final int CONNECT_DRIVER = 2;
 
     /**
-     * Make a connection to an employee.fdb on your local machine, and
-     * demonstrate basic JDBC features.
+     * Make a connection to an employee.fdb on your local machine, and demonstrate basic JDBC features.
      * <p>
      * On the commandline a JDBC-url, username and password can be passed,
      * otherwise defaults are used.
+     * </p>
      */
     public static void main(String args[]) throws Exception {
-        
         /* If localhost is not recognized, try using your local machine's name
          * or the loopback IP address 127.0.0.1 in place of localhost.
          * 
@@ -43,10 +42,13 @@ public class DriverExample {
          * Pure Java / Type 4:
          * jdbc:firebirdsql://<host>[:<port>]/<alias-or-path-to-db>
          * NOTE: On linux <alias-or-path-to-db> MUST include the root /
+         *
          * Alternative URL format:
          * jdbc:firebirdsql:<host>[/port]:<alias-or-path-to-db>
+         *
          * Alternative prefix:
          * jdbc:firebirdsql:java:
+         *
          * Prefixes specifically for OpenOffice / LibreOffice Base:
          * jdbc:firebirdsql:oo:
          * jdbc:firebird:oo:
@@ -68,10 +70,10 @@ public class DriverExample {
          * 
          * Examples:
          * Connecting to employee.fdb on localhost using the type4 driver with UTF8:
-         * jdbc:firebirdsql://localhost/C:/database/employee.fdb?lc_ctype=UTF8
+         * jdbc:firebirdsql://localhost/employee?lc_ctype=UTF8
          * 
-         * Connecting to dialect1.fdb using native with WIN1252 and resultset tracking disabled:
-         * jdbc:firebirdsql://localhost/C:/database/dialect1.fdb?dialect=1&lc_ctype=WIN1252&noResultSetTracking
+         * Connecting to dialect1.fdb using native with WIN1252 and using Firebird-autocommit
+         * jdbc:firebirdsql://localhost/C:/database/dialect1.fdb?dialect=1&lc_ctype=WIN1252&useFirebirdAutocommit=true
          */
         String databaseURL = args.length == 0 ? URL_DEFAULT : args[0];
         String user = args.length < 2 ? USER_DEFAULT : args[1];
@@ -81,8 +83,11 @@ public class DriverExample {
          * We're defining them outside the scope of the try block because
          * they need to be visible in a finally clause which will be used
          * to close everything when we are done.
+         *
+         * The example shown is not a best practice: for normal JDBC code one should
+         * use try-with-resources to scope and automatically close JDBC resources
          */
-        java.sql.Driver driver = null;
+        java.sql.Driver driver;
         java.sql.Connection con = null;
         java.sql.Statement stmt = null;
         java.sql.ResultSet rs = null;
@@ -95,7 +100,7 @@ public class DriverExample {
              * Demonstrate the different methods to register the 
              * Firebird JCA-JDBC driver with the driver manager
              */
-            int registrationAlternative = REGISTER_CLASS_FOR_NAME;
+            int registrationAlternative = REGISTER_JDBC4;
             switch (registrationAlternative) {
 
             case REGISTER_CLASS_FOR_NAME:
@@ -137,19 +142,24 @@ public class DriverExample {
                 java.util.Properties sysProps = System.getProperties();
                 StringBuilder drivers = new StringBuilder("org.firebirdsql.jdbc.FBDriver");
                 String oldDrivers = sysProps.getProperty("jdbc.drivers");
-                if (oldDrivers != null)
+                if (oldDrivers != null) {
                     drivers.append(':').append(oldDrivers);
+                }
                 sysProps.put("jdbc.drivers", drivers.toString());
                 System.setProperties(sysProps);
                 break;
 
             case REGISTER_JDBC4:
-                /* From JDBC 4.0 (Java 6), drivers are required to have a file
+                /* Starting with JDBC 4.0 (Java 6), drivers are required to have a file
                  * /META-INF/services/java.sql.Driver with the 
                  * classname(s) of the drivers.
                  * 
                  * The DriverManager will automatically load all drivers,
                  * so there is no need to explicitly load the driver.
+                 *
+                 * There are cases where a driver still needs to be loaded explicitly,
+                 * for example in tomcat, if the driver is not loaded with tomcat itself,
+                 * but with a specific web application
                  */
                 break;
             }
@@ -169,7 +179,7 @@ public class DriverExample {
             }
 
             /* Now that Firebird JCA-JDBC driver is registered with the DriverManager,
-             * try to get a connection to an employee.fdb database on this local
+             * try to get a connection to an employee database on this local
              * machine using one of two alternatives for obtaining connections
              */
             int connectionAlternative = CONNECT_DRIVERMANAGER;
@@ -194,6 +204,8 @@ public class DriverExample {
                 /* If you're working with a particular driver, which may or may not be 
                  * registered, you can get a connection directly from it, bypassing the
                  * DriverManager
+                 *
+                 * This is not a best practice
                  */
                 try {
                     java.util.Properties connectionProperties = new java.util.Properties();
@@ -226,17 +238,18 @@ public class DriverExample {
                 java.sql.DatabaseMetaData dbMetaData = con.getMetaData();
 
                 // Ok, let's query a driver/database capability
-                if (dbMetaData.supportsTransactions())
+                if (dbMetaData.supportsTransactions()) {
                     System.out.println("Transactions are supported.");
-                else
+                } else {
                     System.out.println("Transactions are not supported.");
+                }
 
                 // What are the views defined on this database?
-                java.sql.ResultSet tables = dbMetaData.getTables(null, null, "%", new String[] { "VIEW" });
-                while (tables.next()) {
-                    System.out.println(tables.getString("TABLE_NAME") + " is a view.");
+                try (java.sql.ResultSet tables = dbMetaData.getTables(null, null, "%", new String[] { "VIEW" })) {
+                    while (tables.next()) {
+                        System.out.println(tables.getString("TABLE_NAME") + " is a view.");
+                    }
                 }
-                tables.close();
             } catch (java.sql.SQLException e) {
                 System.out.println("Unable to extract database meta data.");
                 showSQLException(e);
@@ -285,16 +298,15 @@ public class DriverExample {
                 showSQLException(e);
             }
 
-            // Ok, lets step thru the results of the query...
+            // Ok, lets step through the results of the query...
             try {
                 System.out.println("Here are the employee's whose salary < $50,000");
                 while (rs.next()) {
                     System.out.println(rs.getString("full_name"));
                 }
             } catch (java.sql.SQLException e) {
-                System.out.println("Unable to step thru results of query");
+                System.out.println("Unable to step through results of query");
                 showSQLException(e);
-                return;
             }
         } finally {
             System.out.println("Closing database resources and rolling back any changes we made to the database.");
@@ -306,7 +318,7 @@ public class DriverExample {
             } catch (java.sql.SQLException e) {
                 showSQLException(e);
             }
-            
+
             try {
                 if (stmt != null)
                     stmt.close();

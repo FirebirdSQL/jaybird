@@ -18,72 +18,51 @@
 // The DriverManager, Driver, and DriverPropertyInfo interfaces
 // may be deprecated in the future.
 
-public final class DataSourceExample
-{
-  static public void main (String args[]) throws Exception
-  {
-    // Create an Firebird data source manually;
-    
-	org.firebirdsql.ds.FBSimpleDataSource dataSource = 
-        new org.firebirdsql.ds.FBSimpleDataSource();
+public final class DataSourceExample {
+    static public void main(String args[]) throws Exception {
+        // Create a Firebird data source manually;
+        org.firebirdsql.ds.FBSimpleDataSource dataSource = new org.firebirdsql.ds.FBSimpleDataSource();
 
-    // Set the standard properties
-    dataSource.setDatabase ("localhost/3050:c:/database/test_charset.fdb");
-    dataSource.setDescription ("An example database of employees");
+        // Set connect through the employee alias
+        // The 'database' property is the JDBC url without the jdbc:firebirdsql: prefix
+        dataSource.setDatabase("//localhost:3050/employee");
 
-	/*
-	 * Following properties were not deleted in order to show differences 
-	 * between InterClient 2.01 data source implementation and Firebird one.
-	 */
-	
-    //dataSource.setDataSourceName ("Employee");
-    //dataSource.setPortNumber (3060);
-    //dataSource.setNetworkProtocol ("jdbc:interbase:");
-    //dataSource.setRoleName (null);
-    
-    // Set the non-standard properties
-    //dataSource.setCharSet (interbase.interclient.CharacterEncodings.NONE);
-    //dataSource.setSuggestedCachePages (0);
-    //dataSource.setSweepOnConnect (false);
-	
-    // this some kind of equivalent to dataSource.setNetworkProtocol(String)
-    // possible values are "type4", "type2" and "embedded".
-	dataSource.setType("TYPE4");
-    
-    // SQL Role can be set like this:
-    // 
-    // dataSource.setRoleName("USER");
-    
-    // Character encoding for the connection is set to NONE
-    dataSource.setEncoding("ISO8859_1");
-    
-    // other non-standard properties do not have setters
-    // you can pass any DPB parameter
-    //
-    // dataSource.setNonStandardProperty("isc_dpb_sweep", null);
-    // dataSource.setNonStandardProperty("isc_dpb_num_buffers", "75");
-	
-    // Connect to the Firebird DataSource
-    try {
-      dataSource.setLoginTimeout (10);
-      java.sql.Connection c = dataSource.getConnection ("sysdba", "masterkey");
-      
-      java.sql.Statement stmt = c.createStatement();
-      java.sql.ResultSet rs = stmt.executeQuery("SELECT * FROM test_charset");
-      while(rs.next())
-          System.out.println("a1 = " + rs.getString(1) + ", a2 = " + rs.getString(2));
-          
-      stmt.close();
-      
-      // At this point, there is no implicit driver instance
-      // registered with the driver manager!
-      System.out.println ("got connection");
-      c.close ();
+        // PURE_JAVE is the default, other options include NATIVE, EMBEDDED and LOCAL
+        dataSource.setType("PURE_JAVA");
+
+        dataSource.setUserName("sysdba");
+        dataSource.setPassword("masterkey");
+
+        // SQL Role can be set like this:
+        //
+        // dataSource.setRoleName("USER");
+
+        // Default character encoding for the connection is set to NONE
+        dataSource.setEncoding("UTF8");
+
+        // Alternatively, you can use the Java encoding
+        //dataSource.setCharSet("utf-8");
+
+        // other non-standard properties do not have setters; you can pass any DPB parameter
+        //
+        // dataSource.setNonStandardProperty("isc_dpb_sweep", null);
+        // dataSource.setNonStandardProperty("isc_dpb_num_buffers", "75");
+
+        dataSource.setLoginTimeout(10);
+
+        // Connect to the Firebird DataSource
+        try (java.sql.Connection c = dataSource.getConnection()) {
+            System.out.println("got connection");
+
+            try (java.sql.Statement stmt = c.createStatement();
+                 java.sql.ResultSet rs = stmt.executeQuery("select cust_no, customer from customer")) {
+                while (rs.next()) {
+                    System.out.println("cust_no = " + rs.getString(1) + ", customer = " + rs.getString(2));
+                }
+            }
+        } catch (java.sql.SQLException e) {
+            e.printStackTrace();
+        }
     }
-    catch (java.sql.SQLException e) {
-		e.printStackTrace();
-      System.out.println ("sql exception: " + e.getMessage ());
-    }
-  }
 }
 			  
