@@ -19,6 +19,7 @@
 package org.firebirdsql.gds.ng.listeners;
 
 import java.util.*;
+import java.util.concurrent.CopyOnWriteArraySet;
 
 /**
  * Dispatcher to maintain a list of listeners of type <code>TListener</code>
@@ -29,7 +30,7 @@ import java.util.*;
  */
 public class AbstractListenerDispatcher<TListener> implements Iterable<TListener> {
 
-    private final Set<TListener> listeners = Collections.synchronizedSet(new HashSet<TListener>());
+    private final Set<TListener> listeners = new CopyOnWriteArraySet<>();
     private volatile boolean shutdown = false;
 
     /**
@@ -86,6 +87,6 @@ public class AbstractListenerDispatcher<TListener> implements Iterable<TListener
 
     @Override
     public final Iterator<TListener> iterator() {
-        return new ArrayList<>(listeners).iterator();
+        return listeners.iterator();
     }
 }

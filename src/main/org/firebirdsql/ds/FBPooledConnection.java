@@ -20,10 +20,8 @@ package org.firebirdsql.ds;
 
 import java.sql.Connection;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.LinkedList;
 import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 import javax.sql.ConnectionEvent;
 import javax.sql.ConnectionEventListener;
@@ -41,8 +39,7 @@ import org.firebirdsql.jdbc.SQLStateConstants;
  */
 public class FBPooledConnection implements PooledConnection {
 
-    private final List<ConnectionEventListener> connectionEventListeners = 
-            Collections.synchronizedList(new LinkedList<ConnectionEventListener>());
+    private final List<ConnectionEventListener> connectionEventListeners = new CopyOnWriteArrayList<>();
 
     protected Connection connection;
     protected volatile PooledConnectionHandler handler;
@@ -124,12 +121,7 @@ public class FBPooledConnection implements PooledConnection {
      */
     protected void fireFatalConnectionError(SQLException ex) {
         ConnectionEvent evt = new ConnectionEvent(this, ex);
-        // Make a copy to prevent errors when listeners remove themselves
-        List<ConnectionEventListener> listeners;
-        synchronized (connectionEventListeners) {
-            listeners = new ArrayList<>(connectionEventListeners);
-        }
-        for (ConnectionEventListener listener : listeners) {
+        for (ConnectionEventListener listener : connectionEventListeners) {
             listener.connectionErrorOccurred(evt);
         }
     }
@@ -191,12 +183,7 @@ public class FBPooledConnection implements PooledConnection {
      */
     protected void fireConnectionClosed() {
         ConnectionEvent evt = new ConnectionEvent(this);
-        // Make a copy to prevent errors when listeners remove themselves
-        List<ConnectionEventListener> listeners;
-        synchronized (connectionEventListeners) {
-            listeners = new ArrayList<>(connectionEventListeners);
-        }
-        for (ConnectionEventListener listener : listeners) {
+        for (ConnectionEventListener listener : connectionEventListeners) {
             listener.connectionClosed(evt);
         }
     }

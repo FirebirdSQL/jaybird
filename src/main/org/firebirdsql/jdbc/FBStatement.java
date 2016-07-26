@@ -1123,7 +1123,7 @@ public class FBStatement implements FirebirdStatement, Synchronizable {
         return rsHoldability;
     }
 
-    private List<String> batchList = new LinkedList<>();
+    private List<String> batchList = new ArrayList<>();
 
     /**
      * Adds an SQL command to the current batch of commmands for this

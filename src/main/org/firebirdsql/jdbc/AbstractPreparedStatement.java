@@ -808,8 +808,8 @@ public abstract class AbstractPreparedStatement extends FBStatement implements F
         }
     }
 
-    // TODO: AbstractCallableStatement adds FBProcedureCall, while AbstractPreparedStatement adds XSQLVAR[]: separate?
-    protected final List<Object> batchList = new LinkedList<>();
+    // TODO: AbstractCallableStatement adds FBProcedureCall, while AbstractPreparedStatement adds RowValue: separate?
+    protected final List<Object> batchList = new ArrayList<>();
 
     /**
      * Adds a set of parameters to this <code>PreparedStatement</code>
