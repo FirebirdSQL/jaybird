@@ -178,6 +178,11 @@ public class DriverExample {
                 return;
             }
 
+            java.util.Properties connectionProperties = new java.util.Properties();
+            connectionProperties.put("user", user);
+            connectionProperties.put("password", password);
+            connectionProperties.put("lc_ctype", "WIN1251");
+
             /* Now that Firebird JCA-JDBC driver is registered with the DriverManager,
              * try to get a connection to an employee database on this local
              * machine using one of two alternatives for obtaining connections
@@ -190,7 +195,7 @@ public class DriverExample {
                  * the right driver for you based on the jdbc subprotocol.
                  */
                 try {
-                    con = java.sql.DriverManager.getConnection(databaseURL, user, password);
+                    con = java.sql.DriverManager.getConnection(databaseURL, connectionProperties);
                     System.out.println("Connection established.");
                 } catch (java.sql.SQLException e) {
                     e.printStackTrace();
@@ -208,10 +213,6 @@ public class DriverExample {
                  * This is not a best practice
                  */
                 try {
-                    java.util.Properties connectionProperties = new java.util.Properties();
-                    connectionProperties.put("user", user);
-                    connectionProperties.put("password", password);
-                    connectionProperties.put("lc_ctype", "WIN1251");
                     con = driver.connect(databaseURL, connectionProperties);
                     System.out.println("Connection established.");
                 } catch (java.sql.SQLException e) {

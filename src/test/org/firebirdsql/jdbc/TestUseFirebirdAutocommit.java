@@ -45,7 +45,7 @@ public class TestUseFirebirdAutocommit extends FBJUnit4TestBase {
      */
     @Test
     public void connectionPropertyUseFirebirdAutocommit_notSpecified() throws Exception {
-        String url = FBTestProperties.getUrl();
+        String url = FBTestProperties.getUrl() + "?encoding=NONE";
         checkFirebirdAutocommitValue(url, false);
     }
 
@@ -54,7 +54,7 @@ public class TestUseFirebirdAutocommit extends FBJUnit4TestBase {
      */
     @Test
     public void connectionPropertyUseFirebirdAutocommit_fromUrl_valueFalse() throws Exception {
-        String url = FBTestProperties.getUrl() + "?useFirebirdAutocommit=false";
+        String url = FBTestProperties.getUrl() + "?encoding=NONE&useFirebirdAutocommit=false";
         checkFirebirdAutocommitValue(url, false);
     }
 
@@ -63,7 +63,7 @@ public class TestUseFirebirdAutocommit extends FBJUnit4TestBase {
      */
     @Test
     public void connectionPropertyUseFirebirdAutocommit_fromUrl_noValue() throws Exception {
-        String url = FBTestProperties.getUrl() + "?useFirebirdAutocommit";
+        String url = FBTestProperties.getUrl() + "?encoding=NONE&useFirebirdAutocommit";
         checkFirebirdAutocommitValue(url, true);
     }
 
@@ -73,7 +73,7 @@ public class TestUseFirebirdAutocommit extends FBJUnit4TestBase {
      */
     @Test
     public void connectionPropertyUseFirebirdAutocommit_fromUrl_valueTrue() throws Exception {
-        String url = FBTestProperties.getUrl() + "?useFirebirdAutocommit=true";
+        String url = FBTestProperties.getUrl() + "?encoding=NONE&useFirebirdAutocommit=true";
         checkFirebirdAutocommitValue(url, true);
     }
 

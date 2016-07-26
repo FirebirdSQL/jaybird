@@ -20,6 +20,8 @@ package org.firebirdsql.jca;
 
 import java.io.ByteArrayInputStream;
 import java.io.PrintWriter;
+import java.security.AccessController;
+import java.security.PrivilegedAction;
 import java.sql.*;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -58,7 +60,21 @@ import org.firebirdsql.util.SQLExceptionChainBuilder;
  */
 public class FBManagedConnection implements ManagedConnection, XAResource, ExceptionListener, Synchronizable {
 
-    public static final String WARNING_NO_CHARSET = "WARNING: No connection characterset specified (property lc_ctype, encoding, charSet or localEncoding), defaulting to characterset NONE";
+    private static final String DEFAULT_ENCODING;
+    static {
+        String encoding = null;
+        try {
+            encoding = getSystemPropertyPrivileged("org.firebirdsql.jdbc.defaultConnectionEncoding");
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            DEFAULT_ENCODING = encoding;
+        }
+    }
+
+    public static final String WARNING_NO_CHARSET = "WARNING: No connection character set specified (property lc_ctype, encoding, charSet or localEncoding), defaulting to character set " + DEFAULT_ENCODING;
+    public static final String ERROR_NO_CHARSET = "Connection rejected: No connection character set specified (property lc_ctype, encoding, charSet or localEncoding). "
+            + "Please specify a connection character set (eg property charSet=utf-8) or consult the Jaybird documentation for more information.";
 
     private static final Logger log = LoggerFactory.getLogger(FBManagedConnection.class);
 
@@ -99,11 +115,12 @@ public class FBManagedConnection implements ManagedConnection, XAResource, Excep
         try {
             DatabaseParameterBuffer dpb = this.cri.getDpb();
 
-            // TODO Add at lower level in database?
             if (dpb.getArgumentAsString(DatabaseParameterBuffer.LC_CTYPE) == null) {
-                if (log != null) {
-                    log.warn(WARNING_NO_CHARSET);
+                if (DEFAULT_ENCODING == null) {
+                    throw new SQLNonTransientConnectionException(ERROR_NO_CHARSET,
+                            SQLStateConstants.SQL_STATE_CONNECTION_ERROR) ;
                 }
+                log.warn(WARNING_NO_CHARSET);
                 notifyWarning(new SQLWarning(WARNING_NO_CHARSET));
             }
             
@@ -1435,6 +1452,14 @@ public class FBManagedConnection implements ManagedConnection, XAResource, Excep
         for (FBConnection connection : new ArrayList<>(connectionHandles)) {
             connection.addWarning(warning);
         }
+    }
+
+    private static String getSystemPropertyPrivileged(final String propertyName) {
+        return AccessController.doPrivileged(new PrivilegedAction<String>() {
+            public String run() {
+                return System.getProperty(propertyName);
+            }
+        });
     }
 
     /**

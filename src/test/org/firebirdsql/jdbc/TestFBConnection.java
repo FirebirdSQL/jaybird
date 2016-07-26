@@ -26,17 +26,22 @@ import org.firebirdsql.gds.impl.oo.OOGDSFactoryPlugin;
 import org.firebirdsql.gds.impl.wire.WireGDSFactoryPlugin;
 import org.firebirdsql.gds.ng.FbDatabase;
 import org.firebirdsql.jca.FBManagedConnection;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 
 import java.sql.*;
 import java.util.Arrays;
-import java.util.HashSet;
 import java.util.Properties;
 
 import static org.firebirdsql.common.DdlHelper.executeCreateTable;
 import static org.firebirdsql.common.FBTestProperties.*;
+import static org.firebirdsql.common.matchers.SQLExceptionMatchers.errorCodeEquals;
 import static org.firebirdsql.util.FirebirdSupportInfo.supportInfoFor;
+import static org.hamcrest.CoreMatchers.notNullValue;
+import static org.hamcrest.CoreMatchers.nullValue;
 import static org.junit.Assert.*;
+import static org.junit.Assume.assumeThat;
 import static org.junit.Assume.assumeTrue;
 
 /**
@@ -46,6 +51,9 @@ import static org.junit.Assume.assumeTrue;
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  */
 public class TestFBConnection extends FBJUnit4TestBase {
+
+    @Rule
+    public final ExpectedException expectedException = ExpectedException.none();
 
     //@formatter:off
     private static final String CREATE_TABLE =
@@ -110,12 +118,11 @@ public class TestFBConnection extends FBJUnit4TestBase {
                      Statement stmtB = conB.createStatement()) {
 
                     stmtA.execute("UPDATE test SET col1 = 2");
-                    try {
-                        stmtB.execute("UPDATE test SET col1 = 3");
-                        fail("Should notify about a deadlock.");
-                    } catch (SQLException ex) {
-                        // everything is fine
-                    }
+
+                    expectedException.expect(SQLException.class);
+                    expectedException.reportMissingExceptionWithMessage("Should notify about a deadlock.");
+
+                    stmtB.execute("UPDATE test SET col1 = 3");
                 }
             }
         }
@@ -214,12 +221,10 @@ public class TestFBConnection extends FBJUnit4TestBase {
                     anotherStmt.execute("INSERT INTO test_lock VALUES(1)");
                 }
 
-                try {
-                    stmt.execute("INSERT INTO test_lock VALUES(2)");
-                    fail("Should throw an error because of lock conflict.");
-                } catch (SQLException ex) {
-                    assertEquals(ISCConstants.isc_lock_conflict, ex.getErrorCode());
-                }
+                expectedException.expect(errorCodeEquals(ISCConstants.isc_lock_conflict));
+                expectedException.reportMissingExceptionWithMessage("Should throw an error because of lock conflict.");
+
+                stmt.execute("INSERT INTO test_lock VALUES(2)");
             }
         } catch (SQLException ex) {
             ex.printStackTrace();
@@ -306,27 +311,67 @@ public class TestFBConnection extends FBJUnit4TestBase {
     }
 
     /**
-     * Test if not explicitly specifying a connection characterset results in a warning on the connection.
+     * Test if not explicitly specifying a connection character set results in a warning on the connection when
+     * system property {@code org.firebirdsql.jdbc.defaultConnectionEncoding} has been set.
+     *
+     * @see #testNoCharactersetException()
      */
     @Test
     public void testNoCharactersetWarning() throws Exception {
+        String defaultConnectionEncoding = System.getProperty("org.firebirdsql.jdbc.defaultConnectionEncoding");
+        assumeThat("Test only works if org.firebirdsql.jdbc.defaultConnectionEncoding has been specified",
+                defaultConnectionEncoding, notNullValue());
         Properties props = getDefaultPropertiesForConnection();
         props.remove("lc_ctype");
         try (Connection con = DriverManager.getConnection(getUrl(), props)) {
             SQLWarning warnings = con.getWarnings();
-            assertNotNull("Expected a warning for not specifying connection characterset", warnings);
-            assertEquals("Unexpected warning message for not specifying connection characterset",
+            assertNotNull("Expected a warning for not specifying connection character set", warnings);
+            assertEquals("Unexpected warning message for not specifying connection character set",
                     FBManagedConnection.WARNING_NO_CHARSET, warnings.getMessage());
         }
     }
 
     /**
-     * Test if explicitly specifying a connection characterset does not add a warning on the connection.
+     * Test if not explicitly specifying a connection character set results in an exception on the connection when
+     * system property {@code org.firebirdsql.jdbc.defaultConnectionEncoding} has not been set.
+     *
+     * @see #testNoCharactersetWarning()
      */
     @Test
-    public void testCharactersetNoWarning() throws Exception {
+    public void testNoCharactersetException() throws Exception {
+        String defaultConnectionEncoding = System.getProperty("org.firebirdsql.jdbc.defaultConnectionEncoding");
+        assumeThat("Test only works if org.firebirdsql.jdbc.defaultConnectionEncoding has not been specified",
+                defaultConnectionEncoding, nullValue());
+        Properties props = getDefaultPropertiesForConnection();
+        props.remove("lc_ctype");
+        expectedException.expect(SQLNonTransientConnectionException.class);
+        expectedException.expectMessage(FBManagedConnection.ERROR_NO_CHARSET);
+
+        DriverManager.getConnection(getUrl(), props);
+    }
+
+    /**
+     * Test if explicitly specifying a connection character set does not add a warning (or exception) on the connection.
+     */
+    @Test
+    public void testCharactersetFirebirdNoWarning() throws Exception {
         Properties props = getDefaultPropertiesForConnection();
         props.setProperty("lc_ctype", "WIN1252");
+
+        try (Connection con = DriverManager.getConnection(getUrl(), props)) {
+            SQLWarning warnings = con.getWarnings();
+            assertNull("Expected no warning when specifying connection characterset", warnings);
+        }
+    }
+
+    /**
+     * Test if explicitly specifying a connection character set does not add a warning (or exception) on the connection.
+     */
+    @Test
+    public void testCharactersetJavaNoWarning() throws Exception {
+        Properties props = getDefaultPropertiesForConnection();
+        props.remove("lc_ctype");
+        props.setProperty("charSet", "Cp1252");
 
         try (Connection con = DriverManager.getConnection(getUrl(), props)) {
             SQLWarning warnings = con.getWarnings();

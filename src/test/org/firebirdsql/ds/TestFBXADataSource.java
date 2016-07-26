@@ -70,6 +70,7 @@ public class TestFBXADataSource extends FBJUnit4TestBase {
         newDs.setDatabaseName(getDatabasePath());
         newDs.setUser(DB_USER);
         newDs.setPassword(DB_PASSWORD);
+        newDs.setEncoding(DB_LC_CTYPE);
 
         ds = newDs;
     }
