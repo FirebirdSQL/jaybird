@@ -5,6 +5,8 @@ This driver is based on both the JCA standard for application server connections
 
 The JCA standard specifies an architecture in which an application server can cooperate with a driver so that the application server manages transactions, security, and resource pooling, and the driver supplies only the connection functionality. While similar to the JDBC XADataSource concept, the JCA specification is considerably clearer on the division of responsibility between the application server and driver.
 
+[![MavenCentral](https://maven-badges.herokuapp.com/maven-central/org.firebirdsql.jdbc/jaybird-jdk18/badge.svg)](https://maven-badges.herokuapp.com/maven-central/org.firebirdsql.jdbc/jaybird-jdk18/)
+
 ## Resources
 
 - [Downloads](http://www.firebirdsql.org/en/jdbc-driver/)
