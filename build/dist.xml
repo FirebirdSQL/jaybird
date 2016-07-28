@@ -13,7 +13,7 @@
                  extdirs="${module.thirdparty}"
                  additionalparam="${javadoc.additionalparam}"
                  excludepackagenames="${excludedPackages}"
-                 bottom="Copyright &#169; 2001-2015 Jaybird (Firebird JDBC/JCA) team. All rights reserved.">
+                 bottom="Copyright &#169; 2001-2016 Jaybird (Firebird JDBC/JCA) team. All rights reserved.">
             <arg line="${java.module.arg}"/>
             <classpath refid="javac.driver.classpath"/>
             <sourcepath>
