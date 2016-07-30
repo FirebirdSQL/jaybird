@@ -44,7 +44,7 @@ Specification support
 Jaybird supports the following specifications:
 
 |Specification|Notes
-|-------------|-----
+|-------------|----------------------------------------------------------------
 | JDBC 4.2    | Driver does not fully support JDBC 4.2 features, but implements large update count methods by calling the normal update count methods, and methods with `SQLType` by calling methods accepting the `java.sql.Types` integer value. Supports new `java.Time` classes with some caveats.
 | JDBC 4.1    | Driver implements all JDBC 4.1 methods added to existing interfaces. The driver explicitly supports `closeOnCompletion`, most other methods introduced with JDBC 4.1 throw `SQLFeatureNotSupportedException`.
 | JDBC 4.0    | Driver implements all JDBC 4.0 interfaces and supports exception chaining.
@@ -62,15 +62,22 @@ Changelog
 
 The following has been changed or fixed in Jaybird 2.2.11:
 
+-   Fixed: Dialect 1, `NUMERIC(15,2)` and `DatabaseMetadata.getColumn` returns
+    `0` for `DECIMAL_DIGITS` ([JDBC-426](http://tracker.firebirdsql.org/browse/JDBC-426)
+-   Updated error messages from latest Firebird 3 to add missing messages 
+    ([JDBC-428](http://tracker.firebirdsql.org/browse/JDBC-428))
 -   Fixed: `ResultSet.getObject()` returns `byte[]` instead of `String` for
     `BLOB SUB_TYPE 1` when using `octetsAsBytes` ([JDBC-431](http://tracker.firebirdsql.org/browse/JDBC-431))
 -   Improvement: Support Firebird 3 48-bit transaction ids. ([JDBC-432](http://tracker.firebirdsql.org/browse/JDBC-432))\
     Note that `FBMaintenanceManager.commit/rollbackTransaction(long)` with
     longer than 32 bit transaction ids require Firebird 3.0.1 because of
     [CORE-5224](http://tracker.firebirdsql.org/browse/CORE-5224).
+-   Fixed: Batch insert with `setBinaryStream` inserts an empty `BLOB SUB_TYPE TEXT`
+    ([JDBC-433](http://tracker.firebirdsql.org/browse/JDBC-433))\
+    This is the same issue as JDBC-312 that was fixed in Jaybird 2.2.4 for 
+    `BLOB SUB_TYPE BINARY`.
 -   Changed locking to coarser blocks with - as far as possible - a single lock
-    object per connection for all connection-derived objects ([JDBC-435](http://tracker.firebirdsql.org/browse/JDBC-435))
-
+    object per connection for all connection-derived objects ([JDBC-435](http://tracker.firebirdsql.org/browse/JDBC-435))\
     This should prevent deadlocks on concurrent access as in some cases locks
     were obtained in different orders (eg (statement, connection), and
     (connection, statement)). The downside is reduced concurrency, but as using
@@ -588,14 +595,14 @@ tested.
 
 When using Jaybird with Firebird 3.0, make sure that
 
--   Wire protocol encryption is net set to `Required` (set it to `Enabled` or
+-   Wire protocol encryption is not set to `Required` (set it to `Enabled` or
     `Disabled`)
 -   Legacy authentication is enabled on server
 -   The user has been created with the legacy usermanager
 
 The new `BOOLEAN` data type is supported
 
-See the [Jaybird and Firebird 3.0 beta 2](https://github.com/FirebirdSQL/jaybird/wiki/Jaybird-and-Firebird-3.0-beta-2)
+See [Jaybird and Firebird 3](https://github.com/FirebirdSQL/jaybird/wiki/Jaybird-and-Firebird-3)
 for more details.
 
 Improved support for OpenOffice / LibreOffice Base
@@ -696,6 +703,7 @@ Other fixes and changes
 
 A full list of changes is also available at:
 
+-   [Jaybird 2.2.11](http://tracker.firebirdsql.org/secure/ReleaseNote.jspa?projectId=10002&styleName=Text&version=10751)
 -   [Jaybird 2.2.10](http://tracker.firebirdsql.org/secure/ReleaseNote.jspa?projectId=10002&styleName=Text&version=10723)
 -   [Jaybird 2.2.9](http://tracker.firebirdsql.org/secure/ReleaseNote.jspa?projectId=10002&styleName=Text&version=10691)
 -   [Jaybird 2.2.8](http://tracker.firebirdsql.org/secure/ReleaseNote.jspa?version=10664&styleName=Text&projectId=10002)
@@ -845,11 +853,13 @@ These methods were previously not defined in the `MaintenanceManager` interface.
 
 ### Handling `(VAR)CHAR CHARACTER SET OCTETS` as `(VAR)BINARY` type
 
-From Jaybird 3.0 on `(VAR)CHAR CHARACTER SET OCTETS` will be considered
-to be of `java.sql.Types` type `(VAR)BINARY`. This should not impact
-normal use of methods like `get/setString()`, but will impact the
-metadata and the type of object returned by `getObject()` (a byte array
-instead of a String).
+From Jaybird 3.0 on `(VAR)CHAR CHARACTER SET OCTETS` will be considered to be of
+`java.sql.Types` type `(VAR)BINARY`. This should not impact normal use of 
+methods like `get/setString()`, but will impact the metadata and the type of 
+object returned by `getObject()` (a byte array instead of a String).
+
+The connection property `octetsAsBytes` will no longer have an effect in 
+Jaybird 3.
 
 ### Handling connections without explicit connection character set
 
@@ -863,12 +873,14 @@ convert between bytes and Strings using the local platform encoding.
 This default has the potential of corrupting data when switching
 platforms or using the same database with different local encodings, or
 for transliteration errors when the database character set does not
-accept some byte combinations. We are currently discussing changing this
-behavior (see [JDBC-257](http://tracker.firebirdsql.org/browse/JDBC-257)).
-We haven't decided on the exact changes yet, but most likely the next
-version of Jaybird will refuse to connect without an explicit connection
-character set. For the time being, Jaybird will log a warning and add a
-warning on the `Connection` when no explicit character set was specified.
+accept some byte combinations.
+
+Jaybird 3 will reject a connection if no explicit character set has been 
+specified (see [JDBC-257](http://tracker.firebirdsql.org/browse/JDBC-257) and
+[JDBC-446](http://tracker.firebirdsql.org/browse/JDBC-446)).
+
+For the time being, Jaybird 2.2 will log a warning and add a warning on 
+the `Connection` when no explicit character set was specified.
 
 Review your use of the connection character sets and change it if you
 are not specifying it explicitly. Be aware that changing this may
@@ -880,9 +892,8 @@ string or connection properties.
 
 ### Replacement or upgrade of logging library
 
-Logging in Jaybird 3.0 will be changed. We will probably switch to
-`java.util.logging`, but we are also considering slf4j, or upgrading
-Log4J to version 2.x.
+Logging in Jaybird 3.0 will be changed. Support for Log4J will be removed and we
+will switch to `java.util.logging`.
 
 ### Stricter JDBC compliance for `DatabaseMetaData` methods
 
@@ -1323,8 +1334,8 @@ safe from the legal point of view. All classes belong to
 The table below shows all JDBC extensions present in Jaybird with a
 driver version in which the extension was introduced.
 
-|Interface                     |Since|Method name                                                                     |Description
-|------------------------------|-----|--------------------------------------------------------------------------------|-----------
+|Interface                     |Since|Method name                             |Description
+|------------------------------|-----|----------------------------------------|-----------------------------------------
 |`FirebirdDriver`              |2.0  |`newConnectionProperties()`             |Create new instance of `FirebirdConnectionProperties` interface that can be used to set connection properties programmatically.
 |                              |     |`connect(FirebirdConnectionProperties)` |Connect to the Firebird database using the specified connection properties.
 |`FirebirdConnectionProperties`|2.0  |                                        |see [JDBC connection properties] section for more details.
@@ -1365,30 +1376,30 @@ from this data source. Commonly used parameters have the corresponding
 getter and setter methods, the rest of the Database Parameters Block
 parameters can be set using `setNonStandardProperty` setter method.
 
-|Property          |Getter|Setter|Description
-|------------------|:----:|:----:|-----------
-|`database`        |+     |+     |(**deprecated**) Path to the database in the format `[host/port:]<database>`. This property is not specified in the JDBC standard. Use the the standard defined `serverName`, `portNumber` and `databaseName` instead.
-|`serverName`      |+     |+     |Hostname or IP address of the Firebird server
-|`portNumber`      |+     |+     |Portnumber of the Firebird server
-|`databaseName`    |+     |+     |Database alias or full-path
-|`type`            |+     |+     |Type of the driver to use. Possible values are: `PURE_JAVA` or `TYPE4` for type 4 JDBC driver, `NATIVE` or `TYPE2` for type 2 JDBC driver, `EMBEDDED` for using embedded version of the Firebird.
-|`blobBufferSize`  |+     |+     |Size of the buffer used to transfer blob content. Maximum value is 64k-1.
-|`socketBufferSize`|+     |+     |Size of the socket buffer. Needed on some Linux machines to fix performance degradation.
-|`buffersNumber`   |+     |+     |Number of cache buffers (in database pages) that will be allocated for the connection. Makes sense for ClassicServer only.
-|`charSet`         |+     |+     |Character set for the connection. Similar to `encoding` property, but accepts Java names instead of Firebird ones.
-|`encoding`        |+     |+     |Character encoding for the connection. See Firebird documentation for more information.
-|`useTranslation`  |+     |+     |Path to the properties file containing character translation map.
-|`password`        |+     |+     |Corresponding password.
-|`roleName`        |+     |+     |SQL role to use.
-|`userName`        |+     |+     |Name of the user that will be used by default.
-|`useStreamBlobs`  |+     |+     |Boolean flag tells driver whether stream blobs should be created by the driver, by default false. Stream blobs allow `seek` operation to be called.
-|`useStandardUdf`  |+     |+     |Boolean flag tells driver to assume that standard UDFs are defined in the database. This extends the set of functions available via escaped function calls. This does not affect non-escaped use of functions.
+|Property           |Getter|Setter|Description
+|-------------------|:----:|:----:|--------------------------------------------
+|`database`         |+     |+     |(**deprecated**) Path to the database in the format `[host/port:]<database>`. This property is not specified in the JDBC standard. Use the the standard defined `serverName`, `portNumber` and `databaseName` instead.
+|`serverName`       |+     |+     |Hostname or IP address of the Firebird server
+|`portNumber`       |+     |+     |Portnumber of the Firebird server
+|`databaseName`     |+     |+     |Database alias or full-path
+|`type`             |+     |+     |Type of the driver to use. Possible values are: `PURE_JAVA` or `TYPE4` for type 4 JDBC driver, `NATIVE` or `TYPE2` for type 2 JDBC driver, `EMBEDDED` for using embedded version of the Firebird.
+|`blobBufferSize`   |+     |+     |Size of the buffer used to transfer blob content. Maximum value is 64k-1.
+|`socketBufferSize` |+     |+     |Size of the socket buffer. Needed on some Linux machines to fix performance degradation.
+|`buffersNumber`    |+     |+     |Number of cache buffers (in database pages) that will be allocated for the connection. Makes sense for ClassicServer only.
+|`charSet`          |+     |+     |Character set for the connection. Similar to `encoding` property, but accepts Java names instead of Firebird ones.
+|`encoding`         |+     |+     |Character encoding for the connection. See Firebird documentation for more information.
+|`useTranslation`   |+     |+     |Path to the properties file containing character translation map.
+|`password`         |+     |+     |Corresponding password.
+|`roleName`         |+     |+     |SQL role to use.
+|`userName`         |+     |+     |Name of the user that will be used by default.
+|`useStreamBlobs`   |+     |+     |Boolean flag tells driver whether stream blobs should be created by the driver, by default false. Stream blobs allow `seek` operation to be called.
+|`useStandardUdf`   |+     |+     |Boolean flag tells driver to assume that standard UDFs are defined in the database. This extends the set of functions available via escaped function calls. This does not affect non-escaped use of functions.
 |`defaultResultSetHoldable`|+     |+     |Boolean flag tells driver to construct the default result set to be holdable. This prevents it from closing in auto-commit mode if another statement is executed over the same connection.
-|`tpbMapping`      |+     |+     |TPB mapping for different transaction isolation modes.
-|`defaultIsolation`|+     |+     |Default transaction isolation level. All newly created connections will have this isolation level. One of: `TRANSACTION_READ_COMMITTED`, `TRANSACTION_REPEATABLE_READ`, `TRANSACTION_SERIALIZABLE`
+|`tpbMapping`       |+     |+     |TPB mapping for different transaction isolation modes.
+|`defaultIsolation` |+     |+     |Default transaction isolation level. All newly created connections will have this isolation level. One of: `TRANSACTION_READ_COMMITTED`, `TRANSACTION_REPEATABLE_READ`, `TRANSACTION_SERIALIZABLE`
 |`defaultTransactionIsolation`|+     |+     |Integer value from `java.sql.Connection` interface corresponding to the transaction isolation level specified in isolation property.
 |`nonStandardProperty`|      |      |Allows to set any valid connection property that does not have corresponding setter method. Two setters are available: `setNonStandardProperty(String)` method takes only one parameter in form `propertyName[=propertyValue]`, this allows setting non-standard parameters using configuration files. `setNonStandardProperty(String, String)` takes property name as first parameter, and its value as the second parameter.
-|`connectTimeout`  |+     |+     |The connect timeout in seconds. For the Java wire protocol detects unreachable hosts, for JNI (native protocol) only defines a timeout during the `op_accept` phase after connecting to the server.
+|`connectTimeout`   |+     |+     |The connect timeout in seconds. For the Java wire protocol detects unreachable hosts, for JNI (native protocol) only defines a timeout during the `op_accept` phase after connecting to the server.
 |`useFirebirdAutocommit`|+     |+     |(**experimental**) When enabled Jaybird does not commit on JDBC auto-commit boundaries, but instead relies on the `isc_tpb_autocommit` feature of Firebird.
 
 JDBC Compatibility
@@ -1656,7 +1667,7 @@ Jaybird connection pooling classes belong to the `org.firebirdsql.pool.*`
 package. Description of some connection pool classes:
 
 |Class                           |Description
-|--------------------------------|-----------
+|--------------------------------|---------------------------------------------
 |`AbstractConnectionPool`        |Base class for all connection pools. Can be used for implementing custom pools, not necessarily for JDBC connections.
 |`BasicAbstractConnectionPool`   |Subclass of `AbstractConnectionPool`, implements `javax.sql.ConnectionPoolDataSource` interface. Also provides some basic properties (minimum and maximum number of connections, blocking and idle timeout, etc) and code to handle JNDI-related issues.
 |`DriverConnectionPoolDataSource`|Implementation of `javax.sql.ConnectionPoolDataSource` for arbitrary JDBC drivers, uses `java.sql.DriverManager` to obtain connections, can be used as JNDI object factory.
@@ -1686,12 +1697,12 @@ Class provides following configuration properties:
 This group contains properties defined in the JDBC specification and
 should be standard to all connection pools.
 
-|Property        |Getter|Setter|Description
-|----------------|:----:|:----:|-----------
-|`maxIdleTime`   |+     |+     |Maximum time in milliseconds after which idle connection in the pool is closed.
-|`maxPoolSize`   |+     |+     |Maximum number of open physical connections.
-|`minPoolSize`   |+     |+     |Minimum number of open physical connections. If value is greater than 0, corresponding number of connections will be opened when first connection is obtained.
-|`maxStatements` |+     |+     |Maximum size of prepared statement pool. If 0, statement pooling is switched off. When application requests more statements than can be kept in pool, Jaybird will allow creating that statements, however closing them would not return them back to the pool, but rather immediately release the resources.
+|Property           |Getter|Setter|Description
+|-------------------|:----:|:----:|--------------------------------------------
+|`maxIdleTime`      |+     |+     |Maximum time in milliseconds after which idle connection in the pool is closed.
+|`maxPoolSize`      |+     |+     |Maximum number of open physical connections.
+|`minPoolSize`      |+     |+     |Minimum number of open physical connections. If value is greater than 0, corresponding number of connections will be opened when first connection is obtained.
+|`maxStatements`    |+     |+     |Maximum size of prepared statement pool. If 0, statement pooling is switched off. When application requests more statements than can be kept in pool, Jaybird will allow creating that statements, however closing them would not return them back to the pool, but rather immediately release the resources.
 
 ### Pool Properties
 
@@ -1699,7 +1710,7 @@ This group of properties are specific to the Jaybird implementation of
 the connection pooling classes.
 
 |Property           |Getter|Setter|Description
-|-------------------|:----:|:----:|-----------
+|-------------------|:----:|:----:|--------------------------------------------
 |`blockingTimeout`  |+     |+     |Maximum time in milliseconds during which application can be blocked waiting for a connection from the pool. If no free connection can be obtained, exception is thrown.
 |`retryInterval`    |+     |+     |Period in which pool will try to obtain new connection while blocking the application.
 |`pooling`          |+     |+     |Allows to switch connection pooling off.
@@ -1712,12 +1723,12 @@ the connection pooling classes.
 This group contains read-only properties that provide information about
 the state of the pool.
 
-|Property         |Getter|Setter|Description
-|-----------------|:----:|:----:|-----------
-|`freeSize`       |+     |-     |Tells how many free connections are in the pool. Value is between 0 and `totalSize`.
-|`workingSize`    |+     |-     |Tells how many connections were taken from the pool and are currently used in the application.
-|`totalSize`      |+     |-     |Total size of open connection. At the pool creation – 0, after obtaining first connection – between `minPoolSize` and `maxPoolSize`.
-|`connectionCount`|+     |-     |(**Deprecated**). Same as `freeSize`.
+|Property           |Getter|Setter|Description
+|-------------------|:----:|:----:|--------------------------------------------
+|`freeSize`         |+     |-     |Tells how many free connections are in the pool. Value is between 0 and `totalSize`.
+|`workingSize`      |+     |-     |Tells how many connections were taken from the pool and are currently used in the application.
+|`totalSize`        |+     |-     |Total size of open connection. At the pool creation – 0, after obtaining first connection – between `minPoolSize` and `maxPoolSize`.
+|`connectionCount`  |+     |-     |(**Deprecated**). Same as `freeSize`.
 
 `org.firebirdsql.pool.FBWrappingDataSource`
 -------------------------------------------
@@ -1739,7 +1750,7 @@ are set to `true`.
 ### List of properties
 
 |Property name         |Description
-|----------------------|-----------
+|----------------------|-------------------------------------------------------
 |`FBLog4j`             |Enables logging inside driver. This is the essential property, if it is not present or set to `false`, no debug information is available.\
                         When it is set to `true`, pool automatically prints the following information:\
 						-   When physical connection is added to the pool – `DEBUG`\
