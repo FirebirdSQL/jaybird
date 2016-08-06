@@ -55,7 +55,7 @@ public final class GDSServerVersion implements Serializable {
     public static final GDSServerVersion INVALID_VERSION = new GDSServerVersion("INVALID", "", "", "", 0, 0, 0, 0, "", "");
 
     private static final Pattern VERSION_PATTERN = 
-    	Pattern.compile("((\\w{2})-(\\w)(\\d+)\\.(\\d+)\\.(\\d+)\\.(\\d+)) ([^-,]+)(?:[-,](.*))?");
+        Pattern.compile("((\\w{2})-(\\w)(\\d+)\\.(\\d+)\\.(\\d+)\\.(\\d+)(-dev)?) ([^-,]+)(?:[-,](.*))?");
     
     private static final int FULL_VERSION_IDX = 1;
     private static final int PLATFORM_IDX = 2;
@@ -64,8 +64,8 @@ public final class GDSServerVersion implements Serializable {
     private static final int MINOR_IDX = 5;
     private static final int VARIANT_IDX = 6;
     private static final int BUILD_IDX = 7;
-    private static final int SERVER_NAME_IDX = 8;
-    private static final int EXTENDED_INFO_IDX = 9;    
+    private static final int SERVER_NAME_IDX = 9;
+    private static final int EXTENDED_INFO_IDX = 10;
 
     private final String rawStr;
     
