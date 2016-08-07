@@ -69,7 +69,7 @@
     <property name="version.major" value="2"/>
     <property name="version.minor" value="2"/>
     <property name="version.revision" value="11"/>
-    <property name="version.tag.maven" value="-SNAPSHOT"/>
+    <property name="version.tag.maven" value=""/>
     <property name="version.tag" value="${version.tag.maven}-"/>
     <property name="version.name" value="JDK_${ant.java.version}"/>
 
