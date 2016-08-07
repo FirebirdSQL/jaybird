@@ -16,12 +16,12 @@ the application server and driver.
 Supported Firebird versions
 ---------------------------
 
-Jaybird @VERSION@ was tested against Firebird 2.1.7, Firebird 2.5.5, and
-Firebird 3 release candidate 2 (3.0.0.32366), but should also support other
-Firebird versions from 1.0 and up. The Type 2 and embedded server JDBC drivers
-require the appropriate JNI library. Precompiled JNI binaries for Windows and
-Linux platforms are shipped in the default installation, other platforms require
-porting/building the JNI library for that platform.
+Jaybird @VERSION@ was tested against Firebird 2.1.7, Firebird 2.5.6, and
+Firebird 3 (3.0.0.32483), but should also support other Firebird versions from
+1.0 and up. The Type 2 and embedded server JDBC drivers require the appropriate
+JNI library. Precompiled JNI binaries for Windows and Linux platforms are 
+shipped in the default installation, other platforms require porting/building 
+the JNI library for that platform.
 
 Connecting to Firebird 3 requires some additional configuration, see
 [Jaybird and Firebird 3.0 Beta 2](https://github.com/FirebirdSQL/jaybird/wiki/Jaybird-and-Firebird-3.0-beta-2)
@@ -70,7 +70,7 @@ The following has been changed or fixed in Jaybird 2.2.11:
     `BLOB SUB_TYPE 1` when using `octetsAsBytes` ([JDBC-431](http://tracker.firebirdsql.org/browse/JDBC-431))
 -   Improvement: Support Firebird 3 48-bit transaction ids. ([JDBC-432](http://tracker.firebirdsql.org/browse/JDBC-432))\
     Note that `FBMaintenanceManager.commit/rollbackTransaction(long)` with
-    longer than 32 bit transaction ids require Firebird 3.0.1 because of
+    longer than 32 bit transaction ids requires Firebird 3.0.1 because of
     [CORE-5224](http://tracker.firebirdsql.org/browse/CORE-5224).
 -   Fixed: Batch insert with `setBinaryStream` inserts an empty `BLOB SUB_TYPE TEXT`
     ([JDBC-433](http://tracker.firebirdsql.org/browse/JDBC-433))\
