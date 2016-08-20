@@ -147,7 +147,7 @@ releases, and provide Firebird client libraries as Maven dependencies as well.
 You can download the latest versions from <http://www.firebirdsql.org/en/jdbc-driver/>
 
 At minimum Jaybird 3.0 requires `jaybird-3.0.0-alpha-1.jar` and 
-`connector-api-1.5.jar`. You can also use `jaybird-3.0.0-alpha-1-full.jar` as it
+`connector-api-1.5.jar`. You can also use `jaybird-full-3.0.0-alpha-1.jar` as it
 includes the connector-api files.
 
 If you deploy your application to a Java EE application server, then you must 
