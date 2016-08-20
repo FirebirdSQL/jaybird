@@ -703,7 +703,7 @@ _Unless explicitly indicated, changes also apply to `PreparedStatement` and
     now throw an `FBSQLParseException`, previously the escape was removed and 
     the function was used as is.
 
-#### PreparedStatement ####
+### PreparedStatement ###
 
 _Unless explicitly indicated, changes also apply to `CallableStatement`_
 
@@ -723,7 +723,7 @@ _Unless explicitly indicated, changes also apply to `CallableStatement`_
     `NVARCHAR/NCHAR/NCLOB` support, it is only provided for compatibility
     purposes.
 
-#### CallableStatement ####
+### CallableStatement ###
 
 *   Methods `getNString`, `getNClob`, and `getNCharacterStream` will now behave
     as their counterpart without `N` (ie `getString`, `getClob`, and
@@ -733,7 +733,7 @@ _Unless explicitly indicated, changes also apply to `CallableStatement`_
     `NVARCHAR/NCHAR/NCLOB` support, it is only provided for compatibility
     purposes.
 
-#### ResultSet ####
+### ResultSet ###
 
 *   Method `getUnicodeStream` now always throws
     an `SQLFeatureNotSupportedException`. The previous implementation did not
