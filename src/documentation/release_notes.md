@@ -26,6 +26,19 @@ functionality. While similar to the JDBC XADataSource concept, the JCA
 specification is considerably clearer on the division of responsibility between
 the application server and driver.
 
+About this version
+------------------
+
+Jaybird 3.0 is a big change from Jaybird 2.2 and earlier. We have rewritten the
+entire low-level implementation to be able to support protocol improvements in 
+newer Firebird versions, we have made changes with a stricter interpretation of 
+the JDBC requirements, and we have removed some parts that were either obsolete 
+or not functioning correctly.
+
+We recommend that you do not consider Jaybird 3.0 a drop-in replacement for 
+Jaybird 2.2, and study these release notes carefully. Test your product with
+Jaybird 3.0 before using it in production.
+
 Supported Firebird versions
 ---------------------------
 
@@ -44,20 +57,112 @@ Jaybird 3.0 is the last version to support Firebird 2.0.
 Supported Java versions
 -----------------------
 
-Jaybird 3.0 supports Java 7 (JDBC 4.1) and Java 8 (JDBC 4.2).
-Support for earlier Java versions has been dropped.
+Jaybird 3.0 supports Java 7 (JDBC 4.1) and Java 8 (JDBC 4.2). Support for 
+earlier Java versions has been dropped.
 
-Support for Java 9 (JDBC 4.3) is planned, but not yet finished.
+Rudimentary support for Java 9 (JDBC 4.3) is available using the Java 8 version,
+but real module support will not be available until Jaybird 3.1.
 
 Jaybird 3.0 is the last version to support Java 7.
 
 Specification support
 ---------------------
 
-**TODO: Take and update table from old ODT release notes**
+Jaybird supports the following specifications:
 
-Getting Jaybird 3.0 snapshot
-============================
+|Specification|Notes
+|-------------|----------------------------------------------------------------
+| JDBC 4.3    | Driver implements all JDBC 4.3 methods for features supported by Firebird; Java 9 supported using the Java 8 driver.
+| JDBC 4.2    | Driver implements all JDBC 4.2 methods for features supported by Firebird.
+| JDBC 4.1    | Driver implements all JDBC 4.1 methods for features supported by Firebird.
+| JDBC 4.0    | Driver implements all JDBC 4.0 interfaces and supports exception chaining.
+| JCA 1.0     | Jaybird provides implementation of `javax.resource.spi.ManagedConnectionFactory` and related interfaces. CCI interfaces are not supported. Although Jaybird depends on the JCA 1.5 classes, JCA 1.5 compatibility is currently not guaranteed.
+| JTA 1.0.1   | Driver provides an implementation of `javax.transaction.xa.XAResource` interface via JCA framework and `XADataSource` implementation.
+| JMX 1.2     | Jaybird provides a MBean to manage Firebird servers and installed databases via JMX agent.
+
+Getting Jaybird 3.0
+===================
+
+Jaybird 3.0-alpha-1
+-------------------
+
+### Maven ###
+
+Jaybird 3.0 Alpha 1 is available from Maven central:
+
+Groupid: `org.firebirdsql.jdbc`,\  
+Artifactid: `jaybird-jdkXX` (where `XX` is `17` or `18`).\  
+Version: `3.0.0-alpha-1`
+
+For example:
+
+~~~ {.xml}
+<dependency>
+    <groupId>org.firebirdsql.jdbc</groupId>
+    <artifactId>jaybird-jdk18</artifactId>
+    <version>3.0.0-alpha-1</version>
+</dependency>
+~~~
+
+If your application is deployed to a Java EE application server, you will need to
+exclude the `javax.resource:connector-api` dependency, and add it as a provided 
+dependency:
+
+~~~ {.xml}
+<dependency>
+    <groupId>org.firebirdsql.jdbc</groupId>
+    <artifactId>jaybird-jdk18</artifactId>
+    <version>3.0.0-alpha-1</version>
+    <exclusions>
+        <exclusion>
+            <groupId>javax.resource</groupId>
+            <artifactId>connector-api</artifactId>
+        </exclusion>
+    </exclusions>
+</dependency>
+<dependency>
+    <groupId>javax.resource</groupId>
+    <artifactId>connector-api</artifactId>
+    <version>1.5</version>
+    <scope>provided</scope>
+</dependency>
+~~~
+
+If you want to use Type 2 support (native, local or embedded), you need to 
+explicitly include JNA 4.2.2 as a dependency:
+
+~~~ {.xml}
+<dependency>
+    <groupId>net.java.dev.jna</groupId>
+    <artifactId>jna</artifactId>
+    <version>4.2.2</version>
+</dependency>
+~~~
+
+We plan to make native and embedded support a separate library in future 
+releases, and provide Firebird client libraries as Maven dependencies as well.
+
+### Download ###
+
+You can download the latest versions from <http://www.firebirdsql.org/en/jdbc-driver/>
+
+At minimum Jaybird 3.0 requires `jaybird-3.0.0-alpha-1.jar` and 
+`connector-api-1.5.jar`. You can also use `jaybird-3.0.0-alpha-1-full.jar` as it
+includes the connector-api files.
+
+If you deploy your application to a Java EE application server, then you must 
+use `jaybird-3.0.0-alpha-1.jar` (not `-full`!), and **not** include 
+`connector-api-1.5.jar` as this dependency will be provided by your application 
+server.
+
+For `getGeneratedKeys` support you will need to include 
+`antlr-runtime-4.5.3.jar` on your classpath.
+
+For native, local or embedded support, you will need to include `jna-4.2.2.jar` 
+on your classpath.
+
+Snapshot versions
+-----------------
 
 Occasionally we release a Jaybird 3 snapshot for testing purposes to
 the [Sonatype OSS snapshot repository](https://oss.sonatype.org/content/repositories/snapshots/).
@@ -77,6 +182,42 @@ For example:
 ~~~
 
 You need to add the Sonatype OSS snapshot repository to your maven repository config or pom.
+
+Upgrading from Jaybird 2.2 to Jaybird 3.0
+=========================================
+
+Maven
+-----
+
+Upgrade the version of the dependency to 3.0.0-alpha-1. If you use native or 
+embedded, you will also need to remove the `.dll` or `.so`, see the next 
+section.
+
+For more detailed instructions, see also the information on Maven in
+[Getting Jaybird 3.0]. 
+
+Manual install
+--------------
+
+If you manage your dependencies manually, you need to do the following:
+
+1.  Replace the Jaybird library 2.2 with the 3.0
+    - `jaybird-2.2.x.jar` with `jaybird-3.0.0-alpha-1.jar` 
+    - `jaybird-2.2.x-full.jar` with `jaybird-3.0.0-full-alpha-1.jar`
+
+2.  If installed, remove `antlr-runtime-3.4.jar` and replace it with 
+    `antlr-runtime-4.5.3.jar`. This library is necessary for `getGeneratedKeys`
+    support.
+  
+3.  If you use native (or embedded) you can remove the native library: 
+    - `jaybird22.dll`, 
+    - `libjaybird22.so`, 
+    - `jaybird22_x64.jar` or
+    - `libjaybird22_x64.so`
+    
+    Instead you need to add `jna-4.2.2.jar` to the classpath of your 
+    application. This library is necessary for native, local and embedded 
+    support.
 
 What's new in Jaybird 3.0
 =========================
@@ -106,7 +247,7 @@ The improved support includes
 Jaybird currently does not formally support Java 9 (JDBC 4.3), although some of
 the JDBC 4.3 features have been implemented. 
 
-You can use the Java 8 driver under Java 9, it is necessary to add the
+You can use the Java 8 driver under Java 9, but it is necessary to add the
 `java.xml.bind` module using `-addmods java.xml.bind`.
 
 Firebird support
@@ -227,6 +368,13 @@ Potentially breaking changes
 Jaybird 3.0 contains a number of changes that might break existing applications.
 
 See also [Compatibility changes] for details.
+
+### Specifying connection character set is now required ###
+
+Jaybird 3.0 requires you to specify the connection character set by either
+specifying `encoding=<firebird encoding>` or `charSet=<Java encoding>`.
+
+For more information see: [Connection rejected without an explicit character set]
 
 ### ANTLR 4 runtime ###
 
@@ -422,7 +570,7 @@ Exceptions
     sub-classes anymore, but in general we strive to use the standard
     exceptions where possible.
 
-*   Class `FBSQLWarning` has been removed and has been replaced with `SQLWarning`.
+*   Class `FBSQLWarning` has been removed and replaced with `SQLWarning`.
 
 *   Methods with `throws FBSQLException` changed to `throws SQLException`
 
@@ -477,7 +625,8 @@ Exceptions
     The SQLState and error code are only included in the message if the exception
     is constructed using `FbExceptionBuilder` (for example errors received from
     Firebird). Some parts of the code construct an `SQLException` directly,
-    those messages do not contain the SQLState and error code in the message.
+    those messages do not contain the SQLState and error code in the message. We
+    strive to improve that in future versions.
 
 *   More specific error reported by `SQLException.getErrorCode` and
     `SQLException.getSQLState`.
@@ -550,25 +699,25 @@ _Unless explicitly indicated, changes also apply to `PreparedStatement` and
 
     For the definition of generated keys queries see [the previous item](#generated-query-types).
 
-* Use of function escapes (`{fn ...}`) not defined in the JDBC standard will now
-  throw an `FBSQLParseException`, previously the escape was removed and the
-  function was used as is.
+*   Use of function escapes (`{fn ...}`) not defined in the JDBC standard will 
+    now throw an `FBSQLParseException`, previously the escape was removed and 
+    the function was used as is.
 
 #### PreparedStatement ####
 
 _Unless explicitly indicated, changes also apply to `CallableStatement`_
 
-* Method `setUnicodeStream` now always throws
-  an `SQLFeatureNotSupportedException`. The previous implementation did not
-  conform to the (deprecated) JDBC requirements and instead behaved like
-  `setBinaryStream`.
+*   Method `setUnicodeStream` now always throws
+    an `SQLFeatureNotSupportedException`. The previous implementation did not
+    conform to the (deprecated) JDBC requirements and instead behaved like
+    `setBinaryStream`.
 
     For the behavior in Jaybird 2.2 and earlier, use `setBinaryStream`.
     Otherwise use `setCharacterStream`.
 
-* Methods `setNString`, `setNClob`, and `setNCharacterStream` will now behave
-  as their counterpart without `N` (ie `setString`, `setClob`, and
-  `setCharacterStream`)
+*   Methods `setNString`, `setNClob`, and `setNCharacterStream` will now behave
+    as their counterpart without `N` (ie `setString`, `setClob`, and
+    `setCharacterStream`)
 
     This implementation is not compliant with the JDBC requirements for
     `NVARCHAR/NCHAR/NCLOB` support, it is only provided for compatibility
@@ -576,9 +725,9 @@ _Unless explicitly indicated, changes also apply to `CallableStatement`_
 
 #### CallableStatement ####
 
-* Methods `getNString`, `getNClob`, and `getNCharacterStream` will now behave
-  as their counterpart without `N` (ie `getString`, `getClob`, and
-  `getCharacterStream`)
+*   Methods `getNString`, `getNClob`, and `getNCharacterStream` will now behave
+    as their counterpart without `N` (ie `getString`, `getClob`, and
+    `getCharacterStream`)
 
     This implementation is not compliant with the JDBC requirements for
     `NVARCHAR/NCHAR/NCLOB` support, it is only provided for compatibility
@@ -586,18 +735,18 @@ _Unless explicitly indicated, changes also apply to `CallableStatement`_
 
 #### ResultSet ####
 
-* Method `getUnicodeStream` now always throws
-  an `SQLFeatureNotSupportedException`. The previous implementation did not
-  conform to the (deprecated) JDBC requirements and instead behaved like
-  `getBinaryStream`.
+*   Method `getUnicodeStream` now always throws
+    an `SQLFeatureNotSupportedException`. The previous implementation did not
+    conform to the (deprecated) JDBC requirements and instead behaved like
+    `getBinaryStream`.
 
     For the behavior in Jaybird 2.2 and earlier, use `getBinaryStream`.
     Otherwise use `getCharacterStream`.
 
-* Methods `getNString`, `updateNString`, `getNClob`, `updateNClob`,
-  `getNCharacterStream`, and `updateNCharacterStream` will now behave as their
-  counterpart without `N` (ie `getString`, `updateString`, `getClob`,
-  `updateClob`, `getCharacterStream`, and `updateCharacterStream`)
+*   Methods `getNString`, `updateNString`, `getNClob`, `updateNClob`,
+    `getNCharacterStream`, and `updateNCharacterStream` will now behave as their
+    counterpart without `N` (ie `getString`, `updateString`, `getClob`,
+    `updateClob`, `getCharacterStream`, and `updateCharacterStream`)
 
     This implementation is not compliant with the JDBC requirements for
     `NVARCHAR/NCHAR/NCLOB` support, it is only provided for compatibility
@@ -605,8 +754,8 @@ _Unless explicitly indicated, changes also apply to `CallableStatement`_
 
 ### Clob ###
 
-* The `Clob` implementations of the driver now also implement `NClob` so they
-  can be returned from `getNClob`.
+*   The `Clob` implementations of the driver now also implement `NClob` so they
+    can be returned from `getNClob`.
 
     This implementation is not compliant with the JDBC requirements for
     `NVARCHAR/NCHAR/NCLOB` support, it is only provided for compatibility
@@ -653,9 +802,9 @@ Review your `DatabaseMetaData` usage and make the following changes:
 Some examples:
 
 ~~~ {.sql}
-CREATE TABLE tablename ( -- tablename is stored as TABLENAME in metadata!
-   column1 INTEGER,
-   "column2" INTEGER
+CREATE TABLE tablename ( -- tablename is stored as TABLENAME in metadata
+   column1 INTEGER,      -- column1 is stored as COLUMN1 in metadata
+   "column2" INTEGER     -- "column2" is stored as column2 in metadata
 );
 ~~~
 
@@ -726,8 +875,9 @@ The `fbclient.dll`, `fbembed.dll`, `libfbclient.so`, or `libfbembed.so` need to
 be on the path, or the location needs to be specified in the system property 
 `jna.library.path`.
 
-In the future we may provided JNA-compatible jars that provide the native
-libraries of a specific Firebird version.
+In the future we will move the Type 2 support to a separate library and provide 
+JNA-compatible jars that provide the native libraries of a specific Firebird 
+version.
 
 **TODO: May need further documentation**
 
@@ -741,12 +891,12 @@ removed completely, with the exception of
 `org.firebirdsql.pool.FBSimpleDataSource`. This class has been moved to
 `org.firebirdsql.ds.FBSimpleDataSource`. A subclass with the same name is kept
 in `org.firebirdsql.pool` for backwards compatibility. This subclass will be
-removed in future versions of Jaybird.
+removed in Jaybird 3.1.
 
 With this change, there are no `javax.sql.DataSource` implementations in Jaybird
 that provide connection pooling (the `javax.sql.ConnectionPoolDataSource`
 implementations are for use by a connection pool and not a connection pool
-themselves). Either use the connection pool provided by your Application Server,
+themselves). Either use the connection pool provided by your application server,
 or use a third-party connection pool like c3p0, Apache DBCP or HikariCP.
 
 The class `org.firebirdsql.jca.FBXADataSource` has been removed as well. Its
