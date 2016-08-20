@@ -11,8 +11,8 @@ Where do I get Jaybird?
 Jaybird is available on maven (since version 2.2.0), with a separate artifact
 for each supported Java version.
 
-Groupid: `org.firebirdsql.jdbc`,\  
-Artifactid: `jaybird-jdkXX` (where `XX` is `16`, `17` or `18`).\  
+Groupid: `org.firebirdsql.jdbc`,\
+Artifactid: `jaybird-jdkXX` (where `XX` is `16`, `17` or `18`).\
 Version: `2.2.11`
 
 For example:
@@ -32,8 +32,8 @@ dependency as this will be provided by the application server.
 
 Jaybird 3.0 Alpha 1 is available from Maven central:
 
-Groupid: `org.firebirdsql.jdbc`,\  
-Artifactid: `jaybird-jdkXX` (where `XX` is `17` or `18`).\  
+Groupid: `org.firebirdsql.jdbc`,\
+Artifactid: `jaybird-jdkXX` (where `XX` is `17` or `18`).\
 Version: `3.0.0-alpha-1`
 
 For example:

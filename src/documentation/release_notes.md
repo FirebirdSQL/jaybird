@@ -90,8 +90,8 @@ Jaybird 3.0-alpha-1
 
 Jaybird 3.0 Alpha 1 is available from Maven central:
 
-Groupid: `org.firebirdsql.jdbc`,\  
-Artifactid: `jaybird-jdkXX` (where `XX` is `17` or `18`).\  
+Groupid: `org.firebirdsql.jdbc`,\
+Artifactid: `jaybird-jdkXX` (where `XX` is `17` or `18`).\
 Version: `3.0.0-alpha-1`
 
 For example:
@@ -203,7 +203,7 @@ If you manage your dependencies manually, you need to do the following:
 
 1.  Replace the Jaybird library 2.2 with the 3.0
     - `jaybird-2.2.x.jar` with `jaybird-3.0.0-alpha-1.jar` 
-    - `jaybird-2.2.x-full.jar` with `jaybird-3.0.0-full-alpha-1.jar`
+    - `jaybird-full-2.2.x.jar` with `jaybird-full-3.0.0-alpha-1.jar`
 
 2.  If installed, remove `antlr-runtime-3.4.jar` and replace it with 
     `antlr-runtime-4.5.3.jar`. This library is necessary for `getGeneratedKeys`
