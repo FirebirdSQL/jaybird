@@ -10,7 +10,9 @@ been made for stricter JDBC conformance. As a result the driver might exhibit
 different behavior than previous versions. Read these release notes carefully to
 see if those differences are intentional. 
 
-Bug reports about undocumented changes in behavior are appreciated.
+Bug reports about undocumented changes in behavior are appreciated. Feedback can
+be sent to the Firebird-java mailing list or reported on the issue tracker
+<http://tracker.firebirdsql.org/browse/JDBC>.
 
 General Notes
 =============
@@ -31,9 +33,9 @@ About this version
 
 Jaybird 3.0 is a big change from Jaybird 2.2 and earlier. We have rewritten the
 entire low-level implementation to be able to support protocol improvements in 
-newer Firebird versions, we have made changes with a stricter interpretation of 
-the JDBC requirements, and we have removed some parts that were either obsolete 
-or not functioning correctly.
+newer Firebird versions, made changes with a stricter interpretation of the JDBC 
+requirements, and removed some parts that were either obsolete or not 
+functioning correctly.
 
 We recommend that you do not consider Jaybird 3.0 a drop-in replacement for 
 Jaybird 2.2, and study these release notes carefully. Test your product with
