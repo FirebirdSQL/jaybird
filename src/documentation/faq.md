@@ -395,3 +395,29 @@ connection pooling, we suggest you use third-party libraries like:
 * [HikariCP](http://brettwooldridge.github.io/HikariCP/)
 * [c3p0](http://www.mchange.com/projects/c3p0/)
 * [Apache DBCP](http://commons.apache.org/proper/commons-dbcp/)
+
+Compatibility notes
+===================
+
+Wildfly
+-------
+
+When you use Jaybird 3 in Wildfly (or JBoss), you will need to add the module 
+`javax.xml.bind.api` to your module to get it to work.
+
+The minimal `module.xml` to use Jaybird 3 under Wildfly is:
+
+``` {.xml}
+<?xml version="1.0" encoding="UTF-8"?>
+<module xmlns="urn:jboss:module:1.0" name="org.firebirdsql">
+  <resources>
+    <resource-root path="jaybird-3.0.x.jar"/>
+  </resources>
+  <dependencies>
+    <module name="javax.api"/>
+    <module name="javax.transaction.api"/>
+    <module name="javax.resource.api"/>
+    <module name="javax.xml.bind.api"/> <!-- Add this -->
+  </dependencies>
+</module>
+```

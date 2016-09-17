@@ -220,6 +220,31 @@ If you manage your dependencies manually, you need to do the following:
     Instead you need to add `jna-4.2.2.jar` to the classpath of your 
     application. This library is necessary for native, local and embedded 
     support.
+    
+Gotcha's
+--------
+
+### Wildfly ###
+
+When you use Jaybird 3 in Wildfly (or JBoss), you will need to add the module 
+`javax.xml.bind.api` to your module to get it to work.
+
+The minimal `module.xml` to use Jaybird 3 under Wildfly is:
+
+``` {.xml}
+<?xml version="1.0" encoding="UTF-8"?>
+<module xmlns="urn:jboss:module:1.0" name="org.firebirdsql">
+  <resources>
+    <resource-root path="jaybird-3.0.x.jar"/>
+  </resources>
+  <dependencies>
+    <module name="javax.api"/>
+    <module name="javax.transaction.api"/>
+    <module name="javax.resource.api"/>
+    <module name="javax.xml.bind.api"/> <!-- Add this -->
+  </dependencies>
+</module>
+```
 
 What's new in Jaybird 3.0
 =========================
