@@ -58,12 +58,28 @@ What's new in Jaybird 2.2
 Changelog
 ---------
 
+### Changes and fixes in Jaybird 2.2.12
+
+The following has been changed or fixed in Jaybird 2.2.12:
+
+-   Fixed: `ResultSetMetaData` reports precision `0` for computed columns in 
+    Firebird 2.5 and earlier ([JDBC-450](http://tracker.firebirdsql.org/browse/JDBC-450))\
+    If Firebird reports precision `0`, Jaybird will now estimate it to be 
+    precision 19 (not 18). This will be improved in Jaybird 3 to report 18.
+
+**Known issues in Jaybird 2.2.12**
+
+-   Connecting to Firebird 2.5 and earlier with a Firebird 3 `fbclient.dll` may
+    be slow with native connections, see [CORE-4658](http://tracker.firebirdsql.org/browse/CORE-4658).
+    Workaround is to connect to the IPv4 address instead of the hostname.
+
+
 ### Changes and fixes in Jaybird 2.2.11
 
 The following has been changed or fixed in Jaybird 2.2.11:
 
 -   Fixed: Dialect 1, `NUMERIC(15,2)` and `DatabaseMetadata.getColumn` returns
-    `0` for `DECIMAL_DIGITS` ([JDBC-426](http://tracker.firebirdsql.org/browse/JDBC-426)
+    `0` for `DECIMAL_DIGITS` ([JDBC-426](http://tracker.firebirdsql.org/browse/JDBC-426))
 -   Updated error messages from latest Firebird 3 to add missing messages 
     ([JDBC-428](http://tracker.firebirdsql.org/browse/JDBC-428))
 -   Fixed: `ResultSet.getObject()` returns `byte[]` instead of `String` for
@@ -83,12 +99,6 @@ The following has been changed or fixed in Jaybird 2.2.11:
     (connection, statement)). The downside is reduced concurrency, but as using
     a connection from multiple threads concurrently is discouraged anyway, that
     is an acceptable price to pay.
-
-**Known issues in Jaybird 2.2.11**
-
--   Connecting to Firebird 2.5 and earlier with a Firebird 3 `fbclient.dll` may
-    be slow with native connections, see [CORE-4658](http://tracker.firebirdsql.org/browse/CORE-4658).
-    Workaround is to connect to the IPv4 address instead of the hostname.
 
 ### Changes and fixes in Jaybird 2.2.10
 

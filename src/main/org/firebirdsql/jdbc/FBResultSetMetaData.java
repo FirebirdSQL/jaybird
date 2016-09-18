@@ -200,10 +200,9 @@ public class FBResultSetMetaData implements FirebirdResultSetMetaData {
             case Types.DECIMAL:
             case Types.NUMERIC: {
                 ExtendedFieldInfo fieldInfo = getExtFieldInfo(column);
-                if (fieldInfo == null)
-                    return estimatePrecision(column);
-                else
-                    return fieldInfo.fieldPrecision;
+                return fieldInfo == null || fieldInfo.fieldPrecision == 0
+                        ? estimatePrecision(column)
+                        : fieldInfo.fieldPrecision;
             }
 
             case Types.CHAR:
@@ -304,10 +303,9 @@ public class FBResultSetMetaData implements FirebirdResultSetMetaData {
             case Types.DECIMAL:
             case Types.NUMERIC: {
                 ExtendedFieldInfo fieldInfo = getExtFieldInfo(column);
-                if (fieldInfo == null)
-                    return estimatePrecision(column);
-                else
-                    return fieldInfo.fieldPrecision;
+                return fieldInfo == null || fieldInfo.fieldPrecision == 0
+                        ? estimatePrecision(column)
+                        : fieldInfo.fieldPrecision;
             }
 
             case Types.CHAR:
