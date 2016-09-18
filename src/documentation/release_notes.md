@@ -959,6 +959,15 @@ In `FBMaintenanceManager` the following changes have been made:
 
 These methods were previously not defined in the `MaintenanceManager` interface.
 
+Miscellaneous
+-------------
+
+-   In some cases `ResultSetMetaData.getPrecision` will estimate the precision.
+    In Jaybird 2.2 and earlier the estimate used for `NUMERIC` and `DECIMAL` was
+    `19`, this has been revised to the more correct value of `18`.
+-   `ResultSetMetaData.getColumnDisplaySize` was revised to take into account 
+    space for sign and decimal separator for numeric types.
+
 Breaking changes for Jaybird 3.1
 --------------------------------
 
