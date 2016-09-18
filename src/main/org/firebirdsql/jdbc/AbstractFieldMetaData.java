@@ -278,7 +278,9 @@ public abstract class AbstractFieldMetaData implements Wrapper {
         case Types.DECIMAL:
         case Types.NUMERIC: {
             final ExtendedFieldInfo fieldInfo = getExtFieldInfo(field);
-            return fieldInfo == null ? estimateFixedPrecision(field) : fieldInfo.fieldPrecision;
+            return fieldInfo == null || fieldInfo.fieldPrecision == 0
+                    ? estimateFixedPrecision(field)
+                    : fieldInfo.fieldPrecision;
         }
 
         case Types.CHAR:

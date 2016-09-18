@@ -42,7 +42,7 @@ import static org.junit.Assert.fail;
 public class TestFBResultSetMetaData extends FBJUnit4TestBase {
 
     //@formatter:off
-    public static String CREATE_TABLE = 
+    private static final String CREATE_TABLE =
         "CREATE TABLE test_rs_metadata (" + 
         "  id INTEGER NOT NULL PRIMARY KEY, " +
         "  simple_field VARCHAR(60) CHARACTER SET WIN1250, " +
@@ -52,16 +52,17 @@ public class TestFBResultSetMetaData extends FBJUnit4TestBase {
         "  int_field NUMERIC(8, 2), " +
         "  short_field NUMERIC(4, 2), " +
         "  char_octets_field CHAR(10) CHARACTER SET OCTETS, " +
-        "  varchar_octets_field VARCHAR(15) CHARACTER SET OCTETS " +
+        "  varchar_octets_field VARCHAR(15) CHARACTER SET OCTETS, " +
+        "  calculated_field computed by (int_field + short_field) " +
         ")";
         
-    public static final String TEST_QUERY = 
+    private static final String TEST_QUERY =
         "SELECT " + 
         "simple_field, two_byte_field, three_byte_field, " + 
         "long_field, int_field, short_field " + 
         "FROM test_rs_metadata";
     
-    public static final String TEST_QUERY2 = 
+    private static final String TEST_QUERY2 =
         "SELECT * from RDB$DATABASE";
     //@formatter:on
     
@@ -102,7 +103,7 @@ public class TestFBResultSetMetaData extends FBJUnit4TestBase {
         props.put("lc_ctype", "UNICODE_FSS");
 
         try (Connection connection = DriverManager.getConnection(getUrl(), props)) {
-            FBDatabaseMetaData dmd = (FBDatabaseMetaData) connection.getMetaData();
+            DatabaseMetaData dmd = connection.getMetaData();
             int firebirdVersion = dmd.getDatabaseMajorVersion();
 
             Statement stmt = connection.createStatement();
@@ -274,6 +275,19 @@ public class TestFBResultSetMetaData extends FBJUnit4TestBase {
             assertEquals("Unexpected column precision", 15, rsmd.getPrecision(2));
             assertEquals("Unexpected column display size", 15, rsmd.getColumnDisplaySize(2));
             assertEquals("Unexpected column class name", "[B", rsmd.getColumnClassName(2));
+        }
+    }
+
+    @Test
+    public void precisionOfCalculatedField() throws Exception {
+        try (Connection connection = getConnectionViaDriverManager()) {
+            Statement stmt = connection.createStatement();
+            ResultSet rs = stmt.executeQuery("SELECT calculated_field FROM test_rs_metadata");
+            ResultSetMetaData rsmd = rs.getMetaData();
+
+            // For Firebird 2.5 and earlier we estimate
+            assertEquals("Unexpected column precision", 18, rsmd.getPrecision(1));
+            assertEquals("Unexpected column display size", 18 + 2, rsmd.getColumnDisplaySize(1));
         }
     }
 }
