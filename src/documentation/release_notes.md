@@ -3,7 +3,7 @@ WARNING {-}
 
 Jaybird 3.0 is still in development. This version is provided for testing
 purposes only. We'd appreciate your feedback, but we'd like to emphasize that
-this version is **unstable** and **not ready for production**.
+this version is **not intended for production**.
 
 The protocol implementation has been fundamentally rewritten and changes have
 been made for stricter JDBC conformance. As a result the driver might exhibit
@@ -54,7 +54,7 @@ access the Firebird client or embedded library.
 This driver does not support InterBase servers due to Firebird-specific changes
 in the protocol and database attachment parameters that are sent to the server.
 
-Jaybird 3.0 is the last version to support Firebird 2.0.
+Jaybird 3.0 is the last version to support Firebird 2.0 and 2.1.
 
 Supported Java versions
 -----------------------
@@ -973,11 +973,11 @@ Breaking changes for Jaybird 3.1
 
 With Jaybird 3.1 the following breaking changes will be introduced.
 
-### Dropping support for Firebird 2.0 ###
+### Dropping support for Firebird 2.0 and 2.1 ###
 
-Jaybird 3.1 will drop support for Firebird 2.0. In general we expect the driver
-to remain functional, but chances are certain metadata (eg `DatabaseMetaData`)
-will break if we use features introduced in newer versions.
+Jaybird 3.1 will drop support for Firebird 2.0 and 2.1. In general we expect the
+driver to remain functional, but chances are certain metadata (eg 
+`DatabaseMetaData`) will break if we use features introduced in newer versions.
 
 ### Dropping support for Java 7 ###
 
