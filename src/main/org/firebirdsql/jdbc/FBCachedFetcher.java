@@ -221,10 +221,6 @@ class FBCachedFetcher implements FBFetcher {
             row = rows.size() + row + 1;
         }
 
-        if (row == 0 && !internal) {
-            throw new SQLException("You cannot position to row 0 with absolute() method.");
-        }
-
         if (isEmpty()) {
             return false;
         }
@@ -398,7 +394,7 @@ class FBCachedFetcher implements FBFetcher {
      */
     private void checkScrollable() throws SQLException {
         if (forwardOnly) {
-            throw new SQLNonTransientException("Result set is TYPE_FORWARD_ONLY");
+            throw new SQLNonTransientException(NOT_SUPPORTED_ON_TYPE_FORWARD_ONLY);
         }
     }
 }

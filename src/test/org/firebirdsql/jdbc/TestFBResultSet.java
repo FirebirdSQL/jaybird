@@ -337,6 +337,59 @@ public class TestFBResultSet extends FBJUnit4TestBase {
     }
 
     /**
+     * Test {@link ResultSet#absolute(int)} cursor scrolling in case of ResultSet.TEST_SCROLL_INSENSITIVE.
+     */
+    @Test
+    public void testScrollInsensitive_Absolute() throws Exception {
+        executeCreateTable(connection, CREATE_TABLE_STATEMENT);
+        final int recordCount = 10;
+
+        try (PreparedStatement ps = connection.prepareStatement(INSERT_INTO_TABLE_STATEMENT)) {
+            for (int i = 0; i < recordCount; i++) {
+                ps.setInt(1, i);
+                ps.setInt(2, i);
+                ps.executeUpdate();
+            }
+        }
+
+        connection.setAutoCommit(false);
+
+        try (Statement stmt = connection.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY)) {
+            ResultSet rs = stmt.executeQuery("SELECT id, str FROM test_table");
+            assertTrue("Should be before first", rs.isBeforeFirst());
+            assertFalse("Should not be after last", rs.isAfterLast());
+
+            assertTrue("Position 1 is in result set", rs.absolute(1));
+            assertEquals(0, rs.getInt(1));
+            assertFalse("Should not be before first", rs.isBeforeFirst());
+            assertFalse("Should not be after last", rs.isAfterLast());
+
+            assertFalse("Position 0 is outside result set", rs.absolute(0));
+            assertFalse("Position 11 is outside result set", rs.absolute(11));
+            assertFalse("Should not be before first", rs.isBeforeFirst());
+            assertTrue("Should be after last", rs.isAfterLast());
+
+            assertTrue("Position 10 is inside result set", rs.absolute(10));
+            assertFalse("Should not be before first", rs.isBeforeFirst());
+            assertFalse("Should not be after last", rs.isAfterLast());
+            assertEquals(9, rs.getInt(1));
+
+            assertFalse("Position 15 is outside result set", rs.absolute(15));
+            assertFalse("Should not be before first", rs.isBeforeFirst());
+            assertTrue("Should be after last", rs.isAfterLast());
+
+            assertTrue("Position -1 is inside result set", rs.absolute(-1));
+            assertFalse("Should not be before first", rs.isBeforeFirst());
+            assertFalse("Should not be after last", rs.isAfterLast());
+            assertEquals(9, rs.getInt(1));
+
+            assertFalse("Position -11 is outside result set", rs.absolute(-11));
+            assertTrue("Should be before first", rs.isBeforeFirst());
+            assertFalse("Should not be after last", rs.isAfterLast());
+        }
+    }
+
+    /**
      * This test case tries to reproduce a NPE reported in Firebird-Java group
      * by vmdd_tech after Jaybird 1.5 beta 1 release.
      *
