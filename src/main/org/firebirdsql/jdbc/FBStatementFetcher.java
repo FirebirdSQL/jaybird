@@ -123,31 +123,31 @@ class FBStatementFetcher implements FBFetcher {
     }
 
     public boolean absolute(int row) throws SQLException {
-        throw new FBDriverNotCapableException();
+        throw new FBDriverNotCapableException(NOT_SUPPORTED_ON_TYPE_FORWARD_ONLY);
     }
 
     public boolean first() throws SQLException {
-        throw new FBDriverNotCapableException();
+        throw new FBDriverNotCapableException(NOT_SUPPORTED_ON_TYPE_FORWARD_ONLY);
     }
 
     public boolean last() throws SQLException {
-        throw new FBDriverNotCapableException();
+        throw new FBDriverNotCapableException(NOT_SUPPORTED_ON_TYPE_FORWARD_ONLY);
     }
 
     public boolean previous() throws SQLException {
-        throw new FBDriverNotCapableException();
+        throw new FBDriverNotCapableException(NOT_SUPPORTED_ON_TYPE_FORWARD_ONLY);
     }
 
     public boolean relative(int row) throws SQLException {
-        throw new FBDriverNotCapableException();
+        throw new FBDriverNotCapableException(NOT_SUPPORTED_ON_TYPE_FORWARD_ONLY);
     }
 
     public void beforeFirst() throws SQLException {
-        throw new FBDriverNotCapableException();
+        throw new FBDriverNotCapableException(NOT_SUPPORTED_ON_TYPE_FORWARD_ONLY);
     }
 
     public void afterLast() throws SQLException {
-        throw new FBDriverNotCapableException();
+        throw new FBDriverNotCapableException(NOT_SUPPORTED_ON_TYPE_FORWARD_ONLY);
     }
 
     public void fetch() throws SQLException {

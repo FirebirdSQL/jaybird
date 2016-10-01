@@ -1334,6 +1334,9 @@ public abstract class AbstractResultSet implements ResultSet, FirebirdResultSet,
      * cursor on the last row; calling the method <code>absolute(-2)</code>
      * moves the cursor to the next-to-last row, and so on.
      *
+     * <p>If the row number specified is zero, the cursor is moved to
+     * before the first row.
+     *
      * <p>An attempt to position the cursor beyond the first/last row in
      * the result set leaves the cursor before the first row or after
      * the last row.
@@ -1342,14 +1345,21 @@ public abstract class AbstractResultSet implements ResultSet, FirebirdResultSet,
      * as calling <code>first()</code>. Calling <code>absolute(-1)</code>
      * is the same as calling <code>last()</code>.
      *
-     * @return <code>true</code> if the cursor is on the result set;
-     * <code>false</code> otherwise
+     * @param row the number of the row to which the cursor should move.
+     *        A value of zero indicates that the cursor will be positioned
+     *        before the first row; a positive number indicates the row number
+     *        counting from the beginning of the result set; a negative number
+     *        indicates the row number counting from the end of the result set
+     * @return <code>true</code> if the cursor is moved to a position in this
+     * <code>ResultSet</code> object;
+     * <code>false</code> if the cursor is before the first row or after the
+     * last row
      * @exception SQLException if a database access error
-     * occurs, the row is <code>0</code>, or the result set type is
-     * <code>TYPE_FORWARD_ONLY</code>
+     * occurs; this method is called on a closed result set
+     * or the result set type is <code>TYPE_FORWARD_ONLY</code>
+     * @exception SQLFeatureNotSupportedException if the JDBC driver does not support
+     * this method
      * @since 1.2
-     * @see <a href="package-summary.html#2.0 API">What Is in the JDBC
-     *      2.0 API</a>
      */
     public boolean absolute( int row ) throws  SQLException {
         checkCursorMove();

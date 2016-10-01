@@ -27,14 +27,14 @@ import java.util.Random;
 public class TestFBResultSet extends FBTestBase {
 
     //@formatter:off
-    public static final String SELECT_STATEMENT =
+    private static final String SELECT_STATEMENT =
         "SELECT " +
         "  1 AS col1," +
         "  2 AS \"col1\"," +
         "  3 AS \"Col1\""  +
         "FROM rdb$database";
         
-    public static final String CREATE_TABLE_STATEMENT =
+    private static final String CREATE_TABLE_STATEMENT =
         "CREATE TABLE test_table(" +
         "  id INTEGER NOT NULL PRIMARY KEY, " +
         "  str VARCHAR(10), " +
@@ -44,10 +44,10 @@ public class TestFBResultSet extends FBTestBase {
         "  \"CamelStr\" VARCHAR(255)" +
         ")";
     
-    public static final String SELECT_TEST_TABLE =
+    private static final String SELECT_TEST_TABLE =
         "SELECT id, str FROM test_table";
 
-    public static final String CREATE_TABLE_STATEMENT2 =
+    private static final String CREATE_TABLE_STATEMENT2 =
         "CREATE TABLE test_table2(" +
         "  id INTEGER NOT NULL, " +
         "  str VARCHAR(10), " +
@@ -57,7 +57,7 @@ public class TestFBResultSet extends FBTestBase {
         "  \"CamelStr\" VARCHAR(255)" +
         ")";
 
-    public static final String CREATE_VIEW_STATEMENT =
+    private static final String CREATE_VIEW_STATEMENT =
         "CREATE VIEW test_empty_string_view(marker, id, empty_char) " +
         "  AS  " +
         "  SELECT " +
@@ -67,24 +67,24 @@ public class TestFBResultSet extends FBTestBase {
         "  FROM " +
         "    test_table";
 
-    public static final String CREATE_SUBSTR_FUNCTION =
+    private static final String CREATE_SUBSTR_FUNCTION =
         "DECLARE EXTERNAL FUNCTION substr " +
         "  CSTRING(80), SMALLINT, SMALLINT " +
         "RETURNS CSTRING(80) FREE_IT " +
         "ENTRY_POINT 'IB_UDF_substr' MODULE_NAME 'ib_udf'";
 
-    public static final String SELECT_FROM_VIEW_STATEMENT =
+    private static final String SELECT_FROM_VIEW_STATEMENT =
         "SELECT * FROM test_empty_string_view";
     
-    public static final String INSERT_INTO_TABLE_STATEMENT =
+    private static final String INSERT_INTO_TABLE_STATEMENT =
         "INSERT INTO test_table (id, str) VALUES(?, ?)";
     
-    public static final String INSERT_LONG_STR_STATEMENT =
+    private static final String INSERT_LONG_STR_STATEMENT =
         "INSERT INTO test_table (id, long_str) VALUES(?, ?)";
         
-    public static final String CURSOR_NAME = "some_cursor";
+    private static final String CURSOR_NAME = "some_cursor";
         
-    public static final String UPDATE_TABLE_STATEMENT =
+    private static final String UPDATE_TABLE_STATEMENT =
         "UPDATE test_table SET str = ? WHERE CURRENT OF " + CURSOR_NAME;
     //@formatter:on
 
@@ -360,6 +360,65 @@ public class TestFBResultSet extends FBTestBase {
                 // everything is fine
             }
             assertTrue("ResultSet.next() should return false.", !rs.next());
+        } finally {
+            stmt.close();
+        }
+    }
+
+    /**
+     * Test {@link ResultSet#absolute(int)} cursor scrolling in case of ResultSet.TEST_SCROLL_INSENSITIVE.
+     */
+    public void testScrollInsensitive_Absolute() throws Exception {
+        final int recordCount = 10;
+
+        PreparedStatement ps = connection.prepareStatement(INSERT_INTO_TABLE_STATEMENT);
+
+        try {
+            for(int i = 0; i < recordCount; i++) {
+                ps.setInt(1, i);
+                ps.setInt(2, i);
+                ps.executeUpdate();
+            }
+        } finally {
+            ps.close();
+        }
+
+        connection.setAutoCommit(false);
+
+        Statement stmt = connection.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
+
+        try {
+            ResultSet rs = stmt.executeQuery("SELECT id, str FROM test_table");
+            assertTrue("Should be before first", rs.isBeforeFirst());
+            assertFalse("Should not be after last", rs.isAfterLast());
+
+            assertTrue("Position 1 is in result set", rs.absolute(1));
+            assertEquals(0, rs.getInt(1));
+            assertFalse("Should not be before first", rs.isBeforeFirst());
+            assertFalse("Should not be after last", rs.isAfterLast());
+
+            assertFalse("Position 0 is outside result set", rs.absolute(0));
+            assertFalse("Position 11 is outside result set", rs.absolute(11));
+            assertFalse("Should not be before first", rs.isBeforeFirst());
+            assertTrue("Should be after last", rs.isAfterLast());
+
+            assertTrue("Position 10 is inside result set", rs.absolute(10));
+            assertFalse("Should not be before first", rs.isBeforeFirst());
+            assertFalse("Should not be after last", rs.isAfterLast());
+            assertEquals(9, rs.getInt(1));
+
+            assertFalse("Position 15 is outside result set", rs.absolute(15));
+            assertFalse("Should not be before first", rs.isBeforeFirst());
+            assertTrue("Should be after last", rs.isAfterLast());
+
+            assertTrue("Position -1 is inside result set", rs.absolute(-1));
+            assertFalse("Should not be before first", rs.isBeforeFirst());
+            assertFalse("Should not be after last", rs.isAfterLast());
+            assertEquals(9, rs.getInt(1));
+
+            assertFalse("Position -11 is outside result set", rs.absolute(-11));
+            assertTrue("Should be before first", rs.isBeforeFirst());
+            assertFalse("Should not be after last", rs.isAfterLast());
         } finally {
             stmt.close();
         }
