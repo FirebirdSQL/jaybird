@@ -70,14 +70,15 @@ The following has been changed or fixed in Jaybird 2.2.12:
     the generated keys options will now throw an `FBDriverNotCapableException`,
     instead of an unclear `BatchUpdateException` on `executeBatch`. ([JDBC-451](http://tracker.firebirdsql.org/browse/JDBC-451))\
     Support for batch execution on a prepared statement with `getGeneratedKeys` 
-    support will be added in Jaybird 3.0 (see [JDBC-452](http://tracker.firebirdsql.org/browse/JDBC-452).
+    support will be added in Jaybird 3.0 (see [JDBC-452](http://tracker.firebirdsql.org/browse/JDBC-452)).
+-   Fixed: `ResultSet.absolute(0)` should not throw an exception, but position
+    the result set before the first row ([JDBC-453](http://tracker.firebirdsql.org/browse/JDBC-453))
 
 **Known issues in Jaybird 2.2.12**
 
 -   Connecting to Firebird 2.5 and earlier with a Firebird 3 `fbclient.dll` may
     be slow with native connections, see [CORE-4658](http://tracker.firebirdsql.org/browse/CORE-4658).
     Workaround is to connect to the IPv4 address instead of the hostname.
-
 
 ### Changes and fixes in Jaybird 2.2.11
 
