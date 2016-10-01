@@ -18,21 +18,27 @@
  */
 package org.firebirdsql.jdbc;
 
-import java.io.*;
-import java.math.*;
-import java.net.URL;
-import java.sql.*;
-import java.sql.Date;
-import java.util.*;
-
 import org.firebirdsql.gds.impl.GDSHelper;
+import org.firebirdsql.gds.ng.FbStatement;
 import org.firebirdsql.gds.ng.StatementType;
 import org.firebirdsql.gds.ng.fields.FieldDescriptor;
 import org.firebirdsql.gds.ng.fields.FieldValue;
 import org.firebirdsql.gds.ng.fields.RowDescriptor;
 import org.firebirdsql.gds.ng.fields.RowValue;
-import org.firebirdsql.jdbc.field.*;
+import org.firebirdsql.gds.ng.listeners.DefaultStatementListener;
+import org.firebirdsql.jdbc.field.FBField;
+import org.firebirdsql.jdbc.field.FBFlushableField;
 import org.firebirdsql.jdbc.field.FBFlushableField.CachedObject;
+import org.firebirdsql.jdbc.field.FBWorkaroundStringField;
+import org.firebirdsql.jdbc.field.FieldDataProvider;
+
+import java.io.InputStream;
+import java.io.Reader;
+import java.math.BigDecimal;
+import java.net.URL;
+import java.sql.*;
+import java.sql.Date;
+import java.util.*;
 
 /**
  * Implementation of {@link java.sql.PreparedStatement}interface. This class
@@ -861,13 +867,20 @@ public abstract class AbstractPreparedStatement extends FBStatement implements F
     protected List<Long> executeBatchInternal() throws SQLException {
         checkValidity();
         synchronized (getSynchronizationObject()) {
-
+            final BatchStatementListener batchStatementListener;
             boolean commit = false;
             try {
                 notifyStatementStarted();
 
-                List<Long> results = new ArrayList<>(batchList.size());
-                Iterator<Object> iter = batchList.iterator();
+                final int size = batchList.size();
+                if (generatedKeys) {
+                    batchStatementListener = new BatchStatementListener(size);
+                    fbStatement.addStatementListener(batchStatementListener);
+                } else {
+                    batchStatementListener = null;
+                }
+                final List<Long> results = new ArrayList<>(size);
+                final Iterator<Object> iter = batchList.iterator();
 
                 try {
                     while (iter.hasNext()) {
@@ -884,6 +897,11 @@ public abstract class AbstractPreparedStatement extends FBStatement implements F
                     throw jdbcVersionSupport.createBatchUpdateException(ex.getMessage(), ex.getSQLState(),
                             ex.getErrorCode(), toLargeArray(results), ex);
                 } finally {
+                    if (generatedKeys) {
+                        fbStatement.removeStatementListener(batchStatementListener);
+                        specialResult.clear();
+                        specialResult.addAll(batchStatementListener.getRows());
+                    }
                     clearBatch();
                 }
             } finally {
@@ -1325,5 +1343,23 @@ public abstract class AbstractPreparedStatement extends FBStatement implements F
     public long executeLargeUpdate() throws SQLException {
         executeUpdate();
         return getLargeUpdateCount();
+    }
+
+    private static class BatchStatementListener extends DefaultStatementListener {
+
+        private final List<RowValue> rows;
+
+        private BatchStatementListener(int expectedSize) {
+            rows = new ArrayList<>(expectedSize);
+        }
+
+        @Override
+        public void receivedRow(FbStatement sender, RowValue rowValue) {
+            rows.add(rowValue);
+        }
+
+        public List<RowValue> getRows() {
+            return new ArrayList<>(rows);
+        }
     }
 }

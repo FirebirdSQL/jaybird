@@ -84,7 +84,8 @@ public class FBStatement implements FirebirdStatement, Synchronizable {
 
     // Singleton result indicates it is a stored procedure or [INSERT | UPDATE | DELETE] ... RETURNING ...
     protected boolean isSingletonResult;
-    protected RowValue singletonResult;
+    // Used for singleton or batch results for getGeneratedKeys, and singleton results of stored procedures
+    protected final List<RowValue> specialResult = new LinkedList<>();
 
     protected int maxRows;	 
     protected int fetchSize;
@@ -547,7 +548,7 @@ public class FBStatement implements FirebirdStatement, Synchronizable {
     public ResultSet getGeneratedKeys() throws SQLException {
         checkValidity();
         if (isGeneratedKeyQuery() && isSingletonResult) {
-            return new FBResultSet(fbStatement.getFieldDescriptor(), Collections.singletonList(singletonResult),
+            return new FBResultSet(fbStatement.getFieldDescriptor(), new ArrayList<>(specialResult),
                     resultSetListener);
         }
         return new FBResultSet(fbStatement.emptyRowDescriptor(), Collections.<RowValue>emptyList());
@@ -883,9 +884,9 @@ public class FBStatement implements FirebirdStatement, Synchronizable {
             if (!isSingletonResult) {
                 currentRs = new FBResultSet(gdsHelper, this, fbStatement, resultSetListener, metaDataQuery, rsType,
                         rsConcurrency, rsHoldability, false);
-            } else if (singletonResult != null) {
+            } else if (!specialResult.isEmpty()) {
                 currentRs = new FBResultSet(fbStatement.getFieldDescriptor(),
-                        Collections.singletonList(singletonResult), resultSetListener);
+                        new ArrayList<>(specialResult), resultSetListener);
             }
             return currentRs;
         }
@@ -1664,7 +1665,8 @@ public class FBStatement implements FirebirdStatement, Synchronizable {
             if (!isValidSender(sender)) return;
             // TODO May need extra condition to distinguish between singleton result of EXECUTE PROCEDURE and INSERT ... RETURNING ...
             if (isSingletonResult) {
-                singletonResult = rowValue;
+                specialResult.clear();
+                specialResult.add(rowValue);
             }
         }
 
@@ -1692,7 +1694,7 @@ public class FBStatement implements FirebirdStatement, Synchronizable {
                 // TODO Evaluate correct changes when state goes to prepared
                 break;
             case EXECUTING:
-                singletonResult = null;
+                specialResult.clear();
                 sqlCountHolder = null;
                 currentStatementResult = StatementResult.NO_MORE_RESULTS;
                 isSingletonResult = false;

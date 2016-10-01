@@ -129,6 +129,41 @@ public class TestFBPreparedStatementGeneratedKeys extends FBTestGeneratedKeysBas
         closeQuietly(stmt);
     }
 
+    @Test
+    public void testReturnGeneratedKeysWithBatchExecution() throws Exception {
+        try (PreparedStatement stmt = con.prepareStatement(TEST_INSERT_QUERY, Statement.RETURN_GENERATED_KEYS)) {
+            stmt.setString(1, TEXT_VALUE + "1");
+            stmt.addBatch();
+            stmt.setString(1, TEXT_VALUE + "2");
+            stmt.addBatch();
+            stmt.setString(1, TEXT_VALUE + "3");
+            stmt.addBatch();
+
+            int[] updateCounts = stmt.executeBatch();
+            assertArrayEquals("update counts", new int[] { 1, 1, 1 }, updateCounts);
+
+            try (ResultSet rs = stmt.getGeneratedKeys()) {
+                for (int i = 1; i <= 3; i++) {
+                    assertTrue("Expected row " + i, rs.next());
+                    assertEquals("Unexpected value", 512 + i, rs.getInt(1));
+                    assertEquals("Unexpected value", TEXT_VALUE + i, rs.getString(2));
+                }
+                assertFalse("Expected no more rows", rs.next());
+            }
+
+            stmt.setString(1, TEXT_VALUE);
+            stmt.executeUpdate();
+
+            // Checking that generated keys result set of a normal execute doesn't contain the rows from executeBatch
+            try (ResultSet rs = stmt.getGeneratedKeys()) {
+                assertTrue("Expected row", rs.next());
+                assertEquals("Unexpected value", 512 + 4, rs.getInt(1));
+                assertEquals("Unexpected value", TEXT_VALUE, rs.getString(2));
+                assertFalse("Expected no more rows", rs.next());
+            }
+        }
+    }
+
     /**
      * Test for PreparedStatement created through {@link FBConnection#prepareStatement(String, int)} with {@link Statement#RETURN_GENERATED_KEYS} with an INSERT which already has a RETURNING clause.
      * <p>

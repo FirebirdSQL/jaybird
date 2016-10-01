@@ -435,7 +435,7 @@ Other fixes and changes
     ([JDBC-223](http://tracker.firebirdsql.org/browse/JDBC-223))
 
     The escape parser will now only allow the function names defined in
-    Appendix D of the JDBC specification (4.1 for now). For unsupported
+    Appendix D of the JDBC specification (4.2 for now). For unsupported
     functions or functions not listed in Appendix D a `FBSQLParseException` will
     be thrown.
     
@@ -474,6 +474,9 @@ Other fixes and changes
     change when the JDBC specification adds new columns.
 
 *   Added field index to `DataTruncation` exceptions ([JDBC-405](http://tracker.firebirdsql.org/browse/JDBC-405))
+
+*   Added support for `getGeneratedKeys` for batch execution of prepared 
+    statements ([JDBC-452](http://tracker.firebirdsql.org/browse/JDBC-452))
 
 Removal of deprecated classes and packages
 ------------------------------------------

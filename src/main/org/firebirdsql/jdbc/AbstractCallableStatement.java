@@ -349,7 +349,7 @@ public abstract class AbstractCallableStatement extends FBPreparedStatement impl
         if (hasResultSet && isSingletonResult) {
             // Safeguarding first row so it will work even if the result set from getResultSet is manipulated
             singletonRs = new FBResultSet(fbStatement.getFieldDescriptor(), gdsHelper,
-                    Collections.singletonList(singletonResult), true);
+                    new ArrayList<>(specialResult), true);
         }
         return hasResultSet;
     }
