@@ -66,6 +66,11 @@ The following has been changed or fixed in Jaybird 2.2.12:
     Firebird 2.5 and earlier ([JDBC-450](http://tracker.firebirdsql.org/browse/JDBC-450))\
     If Firebird reports precision `0`, Jaybird will now estimate it to be 
     precision 19 (not 18). This will be improved in Jaybird 3 to report 18.
+-   Calling `addBatch()` or `executeBatch()` on a statement prepared with one of
+    the generated keys options will now throw an `FBDriverNotCapableException`,
+    instead of an unclear `BatchUpdateException` on `executeBatch`. ([JDBC-451](http://tracker.firebirdsql.org/browse/JDBC-451))\
+    Support for batch execution on a prepared statement with `getGeneratedKeys` 
+    support will be added in Jaybird 3.0 (see [JDBC-452](http://tracker.firebirdsql.org/browse/JDBC-452).
 
 **Known issues in Jaybird 2.2.12**
 
