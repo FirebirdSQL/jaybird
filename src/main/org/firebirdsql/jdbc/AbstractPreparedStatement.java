@@ -32,7 +32,7 @@ import org.firebirdsql.jdbc.field.FBFlushableField.CachedObject;
 
 /**
  * Implementation of {@link java.sql.PreparedStatement}interface. This class
- * contains all methods from the JDBC 2.0 specification.
+ * contains all methods from the JDBC 3.0 specification.
  * 
  * @author <a href="mailto:d_jencks@users.sourceforge.net">David Jencks</a>
  * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
@@ -41,6 +41,8 @@ import org.firebirdsql.jdbc.field.FBFlushableField.CachedObject;
 public abstract class AbstractPreparedStatement extends AbstractStatement implements FirebirdPreparedStatement {
     
     static final String METHOD_NOT_SUPPORTED = "This method is only supported on Statement and not supported on PreparedStatement and CallableStatement";
+    static final String BATCH_GENERATED_KEYS_NOT_SUPPORTED =
+            "The statement was prepared for retrieving generated keys, batch execution not supported (will be supported in Jaybird 3.0)";
 
     private boolean metaDataQuery;
 
@@ -814,6 +816,9 @@ public abstract class AbstractPreparedStatement extends AbstractStatement implem
      *      </a>
      */
     public void addBatch() throws SQLException {
+        if (generatedKeys) {
+            throw new FBDriverNotCapableException(BATCH_GENERATED_KEYS_NOT_SUPPORTED);
+        }
         boolean allParamsSet = true;
         for (boolean anIsParamSet : isParamSet) {
             allParamsSet &= anIsParamSet;
@@ -902,6 +907,9 @@ public abstract class AbstractPreparedStatement extends AbstractStatement implem
      *      </a>
      */
     public int[] executeBatch() throws SQLException {
+        if (generatedKeys) {
+            throw new FBDriverNotCapableException(BATCH_GENERATED_KEYS_NOT_SUPPORTED);
+        }
         synchronized (getSynchronizationObject()) {
             boolean commit = false;
             try {

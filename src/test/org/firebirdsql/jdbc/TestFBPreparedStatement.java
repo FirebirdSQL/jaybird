@@ -1089,6 +1089,36 @@ public class TestFBPreparedStatement extends FBJUnit4TestBase {
         }
     }
 
+    @Test
+    public void testAddBatchThrowsExceptionWhenGeneratedKeysSet() throws Exception {
+        PreparedStatement insert = con.prepareStatement("INSERT INTO test_blob (id, clob_data) VALUES (?,?)", Statement.RETURN_GENERATED_KEYS);
+        try {
+            String testString = "content";
+            insert.setInt(1, 1);
+            insert.setString(2, testString);
+
+            expectedException.expect(FBDriverNotCapableException.class);
+            expectedException.expectMessage(FBPreparedStatement.BATCH_GENERATED_KEYS_NOT_SUPPORTED);
+
+            insert.addBatch();
+        } finally {
+            closeQuietly(insert);
+        }
+    }
+
+    @Test
+    public void testExecuteBatchThrowsExceptionWhenGeneratedKeysSet() throws Exception {
+        PreparedStatement insert = con.prepareStatement("INSERT INTO test_blob (id, clob_data) VALUES (?,?)", Statement.RETURN_GENERATED_KEYS);
+        try {
+            expectedException.expect(FBDriverNotCapableException.class);
+            expectedException.expectMessage(FBPreparedStatement.BATCH_GENERATED_KEYS_NOT_SUPPORTED);
+
+            insert.executeBatch();
+        } finally {
+            closeQuietly(insert);
+        }
+    }
+
     // Other closeOnCompletion behavior considered to be sufficiently tested in TestFBStatement
 
     private void prepareTestData() throws SQLException {
