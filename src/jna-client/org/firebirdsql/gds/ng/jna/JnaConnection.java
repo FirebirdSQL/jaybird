@@ -164,8 +164,13 @@ public abstract class JnaConnection<T extends IAttachProperties<T>, C extends Jn
     public String getAttachUrl() {
         StringBuilder sb = new StringBuilder();
         if (getServerName() != null) {
-            sb.append(getServerName())
-                    .append('/')
+            boolean ipv6 = getServerName().indexOf(':') != -1;
+            if (ipv6) {
+                sb.append('[').append(getServerName()).append(']');
+            } else {
+                sb.append(getServerName());
+            }
+            sb.append('/')
                     .append(getPortNumber())
                     .append(':');
         }

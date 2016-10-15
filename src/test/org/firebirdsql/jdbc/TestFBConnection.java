@@ -22,6 +22,7 @@ import org.firebirdsql.common.FBJUnit4TestBase;
 import org.firebirdsql.common.FBTestProperties;
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.TransactionParameterBuffer;
+import org.firebirdsql.gds.impl.jni.NativeGDSFactoryPlugin;
 import org.firebirdsql.gds.impl.oo.OOGDSFactoryPlugin;
 import org.firebirdsql.gds.impl.wire.WireGDSFactoryPlugin;
 import org.firebirdsql.gds.ng.FbDatabase;
@@ -460,6 +461,23 @@ public class TestFBConnection extends FBJUnit4TestBase {
             connection1.close();
             assertTrue(connection1.isClosed());
             assertFalse(connection2.isClosed());
+        }
+    }
+
+    @Test
+    public void testIPv6AddressHandling() throws Exception {
+        assumeTrue("Firebird 3 or higher required for IPv6 testing", getDefaultSupportInfo().isVersionEqualOrAbove(3, 0));
+        try (Connection connection = DriverManager.getConnection("jdbc:firebirdsql://[::1]/" + getDatabasePath() + "?charSet=utf-8", DB_USER, DB_PASSWORD)) {
+            assertTrue(connection.isValid(0));
+        }
+    }
+
+    @Test
+    public void testIPv6AddressHandling_native() throws Exception {
+        assumeTrue("Firebird 3 or higher required for IPv6 testing", getDefaultSupportInfo().isVersionEqualOrAbove(3, 0));
+        assumeTrue("Test only works for native", NativeGDSFactoryPlugin.NATIVE_TYPE_NAME.equals(FBTestProperties.GDS_TYPE));
+        try (Connection connection = DriverManager.getConnection("jdbc:firebirdsql:native://[::1]/" + getDatabasePath() + "?charSet=utf-8", DB_USER, DB_PASSWORD)) {
+            assertTrue(connection.isValid(0));
         }
     }
 }

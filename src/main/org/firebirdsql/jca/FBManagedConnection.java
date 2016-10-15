@@ -134,7 +134,7 @@ public class FBManagedConnection implements ManagedConnection, XAResource, Excep
             final String gdsTypeName = mcf.getGDSType().toString();
             if (!(EmbeddedGDSFactoryPlugin.EMBEDDED_TYPE_NAME.equals(gdsTypeName)
                     || LocalGDSFactoryPlugin.LOCAL_TYPE_NAME.equals(gdsTypeName))) {
-                final DbAttachInfo dbAttachInfo = new DbAttachInfo(mcf.getDatabase());
+                final DbAttachInfo dbAttachInfo = DbAttachInfo.parseConnectString(mcf.getDatabase());
                 connectionProperties.setServerName(dbAttachInfo.getServer());
                 connectionProperties.setPortNumber(dbAttachInfo.getPort());
                 connectionProperties.setDatabaseName(dbAttachInfo.getFileName());

@@ -44,7 +44,7 @@ public class TestDbAttachInfo {
 
     @Test
     public void shouldParseNewFormat_full() throws Exception {
-        DbAttachInfo dbAttachInfo = new DbAttachInfo("//myserver.here:13050/path/to/db");
+        DbAttachInfo dbAttachInfo = DbAttachInfo.parseConnectString("//myserver.here:13050/path/to/db");
 
         assertEquals("myserver.here", dbAttachInfo.getServer());
         assertEquals(13050, dbAttachInfo.getPort());
@@ -53,7 +53,7 @@ public class TestDbAttachInfo {
 
     @Test
     public void shouldParseNewFormat_noPort() throws Exception {
-        DbAttachInfo dbAttachInfo = new DbAttachInfo("//myserver.here/path/to/db");
+        DbAttachInfo dbAttachInfo = DbAttachInfo.parseConnectString("//myserver.here/path/to/db");
 
         assertEquals("myserver.here", dbAttachInfo.getServer());
         assertEquals(3050, dbAttachInfo.getPort());
@@ -62,7 +62,7 @@ public class TestDbAttachInfo {
 
     @Test
     public void shouldParseOldFormat_full() throws Exception {
-        DbAttachInfo dbAttachInfo = new DbAttachInfo("myserver.here/13050:path/to/db");
+        DbAttachInfo dbAttachInfo = DbAttachInfo.parseConnectString("myserver.here/13050:path/to/db");
 
         assertEquals("myserver.here", dbAttachInfo.getServer());
         assertEquals(13050, dbAttachInfo.getPort());
@@ -71,7 +71,7 @@ public class TestDbAttachInfo {
 
     @Test
     public void shouldParseOldFormat_noPort() throws Exception {
-        DbAttachInfo dbAttachInfo = new DbAttachInfo("myserver.here:path/to/db");
+        DbAttachInfo dbAttachInfo = DbAttachInfo.parseConnectString("myserver.here:path/to/db");
 
         assertEquals("myserver.here", dbAttachInfo.getServer());
         assertEquals(3050, dbAttachInfo.getPort());
@@ -80,11 +80,29 @@ public class TestDbAttachInfo {
 
     @Test
     public void shouldParseFileOnly() throws Exception {
-        DbAttachInfo dbAttachInfo = new DbAttachInfo("/path/to/db");
+        DbAttachInfo dbAttachInfo = DbAttachInfo.parseConnectString("/path/to/db");
 
         assertEquals("localhost", dbAttachInfo.getServer());
         assertEquals(3050, dbAttachInfo.getPort());
         assertEquals("/path/to/db", dbAttachInfo.getFileName());
+    }
+
+    @Test
+    public void shouldParseIPv6_noPort() throws Exception {
+        DbAttachInfo dbAttachInfo = DbAttachInfo.parseConnectString("//[::1]/path/to/db");
+
+        assertEquals("::1", dbAttachInfo.getServer());
+        assertEquals(3050, dbAttachInfo.getPort());
+        assertEquals("path/to/db", dbAttachInfo.getFileName());
+    }
+
+    @Test
+    public void shouldParseIPv6_withPort() throws Exception {
+        DbAttachInfo dbAttachInfo = DbAttachInfo.parseConnectString("//[::192.9.5.5]:13050/path/to/db");
+
+        assertEquals("::192.9.5.5", dbAttachInfo.getServer());
+        assertEquals(13050, dbAttachInfo.getPort());
+        assertEquals("path/to/db", dbAttachInfo.getFileName());
     }
 
     @Test
@@ -122,6 +140,21 @@ public class TestDbAttachInfo {
     }
 
     @Test
+    public void testInvalidConnectionUrl_newFormat_missingDatabaseName() throws Exception {
+        checkInvalidUrl("//localhost", "null or empty database name in connection string");
+    }
+
+    @Test
+    public void testInvalidConnectionUrl_ipv6_unclosed() throws Exception {
+        checkInvalidUrl("//[::1/c:/data/db/test.fdb", "IPv6 address expected, missing closing ']'");
+    }
+
+    @Test
+    public void testInvalidConnectionUrl_ipv6_invalidTokensAfterAddress() throws Exception {
+        checkInvalidUrl("//[::1]xyz/c:/data/db/test.fdb", "Unexpected tokens 'xyz' after IPv6 address");
+    }
+
+    @Test
     public void testInvalidConnectionUrl_null() throws Exception {
         checkInvalidUrl(null, "Connection string is missing");
     }
@@ -132,7 +165,7 @@ public class TestDbAttachInfo {
                 errorCodeEquals(JaybirdErrorCodes.jb_invalidConnectionString),
                 message(containsString(expectedExceptionMessageSubString))));
 
-        new DbAttachInfo(invalidUrl);
+        DbAttachInfo.parseConnectString(invalidUrl);
     }
 
 }

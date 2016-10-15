@@ -389,6 +389,27 @@ You will need to specify:
 
     -Dorg.firebirdsql.jdbc.loggerImplementation=org.example.jaybird.logging.Log4jLogger
 
+IPv6 address literal support in connection string
+-------------------------------------------------
+
+Added support for IPv6 address literals in the connection string. This is only
+supported for the modern-style connection URLs, using the [RFC2732](http://www.faqs.org/rfcs/rfc2732.html) format:
+
+* `jdbc:firebirdsql://[<ipv6-address>]/<path-or-alias>`
+* `jdbc:firebirdsql://[<ipv6-address>]:<port>/<path-or-alias>`
+
+Examples:
+
+```
+jdbc:firebirdsql://[::1]/employee
+jdbc:firebirdsql://[::192.9.5.5]:3050/employee
+jdbc:firebirdsql://[1080::8:800:200C:417A]/employee
+```
+etc
+
+IPv6 literals are not supported in the legacy URL format (the 
+`<host>[/port]:<path-or-alias>` format).
+
 Potentially breaking changes
 ----------------------------
 
