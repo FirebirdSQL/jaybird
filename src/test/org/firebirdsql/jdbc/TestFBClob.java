@@ -26,6 +26,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.sql.*;
 import java.util.Properties;
 
@@ -36,28 +37,37 @@ public class TestFBClob extends FBJUnit4TestBase {
 
     private static final String PLAIN_BLOB = "plain_blob";
     private static final String TEXT_BLOB = "text_blob";
+    private static final String UTF8_BLOB = "utf8_blob";
+    private static final String ISO8859_1_BLOB = "iso8859_1_blob";
 
-    public static final String CREATE_TABLE =
+    private static final String CREATE_TABLE =
             "CREATE TABLE test_clob(" +
                     "  id INTEGER, " +
                     TEXT_BLOB + " BLOB SUB_TYPE TEXT, " +
-                    PLAIN_BLOB + " BLOB )";
+                    PLAIN_BLOB + " BLOB, " +
+                    UTF8_BLOB + " BLOB SUB_TYPE TEXT CHARACTER SET UTF8, " +
+                    ISO8859_1_BLOB + " BLOB SUB_TYPE TEXT CHARACTER SET ISO8859_1 )";
 
-    public static final byte[] LATIN1_BYTES = new byte[] { (byte) 0xC8,
+    private static final byte[] LATIN1_BYTES = new byte[] { (byte) 0xC8,
             (byte) 0xC9, (byte) 0xCA, (byte) 0xCB };
 
-    public static final byte[] CP1251_BYTES = new byte[] { (byte) 0xf2,
+    private static final byte[] CP1251_BYTES = new byte[] { (byte) 0xf2,
             (byte) 0xe5, (byte) 0xf1, (byte) 0xf2, (byte) 0xee, (byte) 0xe2,
             (byte) 0xe0, (byte) 0x20, (byte) 0xf1, (byte) 0xf2, (byte) 0xf0,
             (byte) 0xb3, (byte) 0xf7, (byte) 0xea, (byte) 0xe0 };
 
-    public static final String LATIN1_TEST_STRING;
-    public static final String CP1251_TEST_STRING;
+    private static final byte[] UTF8_BYTES;
+
+    private static final String LATIN1_TEST_STRING;
+    private static final String CP1251_TEST_STRING;
+    private static final String UTF8_TEST_STRING =
+            "\u16a0\u16a1\u16a2\u16a3\u16a4\u16a5\u16a6\u16a7\u16a8\u16a9\u16aa\u16ab\u16ac\u16ad\u16ae\u16af";
 
     static {
         try {
-            LATIN1_TEST_STRING = new String(LATIN1_BYTES, "ISO-8859-1");
+            LATIN1_TEST_STRING = new String(LATIN1_BYTES, StandardCharsets.ISO_8859_1);
             CP1251_TEST_STRING = new String(CP1251_BYTES, "Cp1251");
+            UTF8_BYTES = UTF8_TEST_STRING.getBytes(StandardCharsets.UTF_8);
         } catch (UnsupportedEncodingException e) {
             throw new ExceptionInInitializerError(e);
         }
@@ -325,6 +335,42 @@ public class TestFBClob extends FBJUnit4TestBase {
                     fail("Expected a row");
                 }
             }
+        }
+    }
+
+    @Test
+    public void testReadClob_utf8_win1252() throws Exception {
+        try (Connection con = getEncodedConnection("UTF8");
+             PreparedStatement pstmt = con.prepareStatement("insert into test_clob (id, " + UTF8_BLOB + ") values (1, ?)")) {
+            pstmt.setBytes(1, LATIN1_TEST_STRING.getBytes(StandardCharsets.UTF_8));
+            pstmt.executeUpdate();
+            pstmt.setString(1, "A");
+            pstmt.executeUpdate();
+        }
+
+        try (Connection con = getEncodedConnection("WIN1252");
+             Statement stmt = con.createStatement();
+             ResultSet rs = stmt.executeQuery("select " + UTF8_BLOB + " from test_clob where id = 1")) {
+            assertTrue(rs.next());
+            assertEquals(LATIN1_TEST_STRING, rs.getString(1));
+        }
+    }
+
+    @Test
+    public void testReadClob_utf8_none() throws Exception {
+        try (Connection con = getEncodedConnection("UTF8");
+             PreparedStatement pstmt = con.prepareStatement("insert into test_clob (id, " + UTF8_BLOB + ") values (1, ?)")) {
+            pstmt.setBytes(1, UTF8_BYTES);
+            pstmt.executeUpdate();
+            pstmt.setString(1, "A");
+            pstmt.executeUpdate();
+        }
+
+        try (Connection con = getEncodedConnection("NONE");
+             Statement stmt = con.createStatement();
+             ResultSet rs = stmt.executeQuery("select " + UTF8_BLOB + " from test_clob where id = 1")) {
+            assertTrue(rs.next());
+            assertEquals(UTF8_TEST_STRING, rs.getString(1));
         }
     }
 
