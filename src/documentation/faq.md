@@ -236,6 +236,10 @@ implementation of the Firebird wire-protocol. This is best suited for
 client-server applications with dedicated database server. Port can be omitted
 (default value is `3050`), host name must be present.
 
+The `<host>` part is either the hostname, the IPv4 address, or the IPv6 address 
+in brackets (eg `[::1]`). Use of IPv6 address literals is only supported in 
+Jaybird 3 or newer with Firebird 3 or newer.
+
 The `<database>` part should be replaced with the database alias or the path to
 the database. In general it is advisable to use database aliases instead of the
 path of the database file as it hides implementation details like file locations
@@ -247,9 +251,11 @@ port!):
 
     jdbc:firebirdsql://host:port//opt/firebird/db.fdb
 
-Deprecated, but still supported alternative URL format:
+Deprecated, but still supported legacy URL format:
 
     jdbc:firebirdsql:host[/port]:<database>
+
+The legacy URL format does not support IPv6 address literals.
 
 Open Office/Libre Office (Pure Java)
 ------------------------------------
@@ -262,6 +268,12 @@ specifications) a separate subprotocol is used:
 
 Native (using Firebird client library)
 --------------------------------------
+
+Default URL format:
+
+    jdbc:firebirdsql:native://host[:port]/<database>
+
+Legacy URL format:
 
     jdbc:firebirdsql:native:host[/port]:<database>
 
@@ -296,7 +308,7 @@ How much of JDBC is supported by Jaybird?
 **WARNING** The information in this section is not 100% up-to-date
 
 Jaybird 3 follows the JDBC 4.3 specification with some features and methods not
-implemented as they aren't supported by Firebird.
+implemented as they are not supported by Firebird.
 
 Implemented features:
 
@@ -314,7 +326,7 @@ Implemented features:
   parameter block settings.
 * JMX mbean for database management (so far just database create and drop).
 
-What parts of JDBC are NOT supported by JayBird?
+What parts of JDBC are NOT supported by Jaybird?
 ------------------------------------------------
 
 **WARNING** The information in this section is outdated
