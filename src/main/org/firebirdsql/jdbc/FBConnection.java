@@ -513,10 +513,13 @@ public class FBConnection implements FirebirdConnection, Synchronizable {
      * @exception SQLException if a database access error occurs
      */
     public void close() throws SQLException {
+        SQLExceptionChainBuilder<SQLException> chainBuilder = new SQLExceptionChainBuilder<>();
         synchronized (getSynchronizationObject()) {
             try {
                 freeStatements();
                 if (metaData != null) metaData.close();
+            } catch (SQLException e) {
+                chainBuilder.append(e);
             } finally {
                 metaData = null;
                 if (mc != null) {
@@ -525,14 +528,25 @@ public class FBConnection implements FirebirdConnection, Synchronizable {
                     if (!mc.inDistributedTransaction()) {
                         try {
                             txCoordinator.handleConnectionClose();
+                        } catch (SQLException e) {
+                            chainBuilder.append(e);
                         } finally {
-                            setAutoCommit(true);
+                            try {
+                                setAutoCommit(true);
+                            } catch (SQLException e) {
+                                if (!SQLStateConstants.SQL_STATE_CONNECTION_CLOSED.equals(e.getSQLState())) {
+                                    chainBuilder.append(e);
+                                }
+                            }
                         }
                     }
 
                     mc.close(this);
                     mc = null;
                 }
+            }
+            if (chainBuilder.hasException()) {
+                throw chainBuilder.getException();
             }
         }
     }
