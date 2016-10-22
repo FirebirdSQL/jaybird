@@ -31,6 +31,7 @@ import java.io.InputStream;
 import java.io.Reader;
 import java.io.StringReader;
 import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.sql.SQLException;
 import java.sql.Time;
 import java.sql.Types;
@@ -671,6 +672,31 @@ public class TestFBStringField extends BaseJUnit4TestFBField<FBStringField, Stri
         Calendar calendar = Calendar.getInstance(getOneHourBehindTimeZone());
 
         field.setTimestamp(java.sql.Timestamp.valueOf("2016-05-02 10:57:01"), calendar);
+    }
+
+    @Test
+    @Override
+    public void getObject_BigInteger() throws SQLException {
+        toReturnStringExpectations("10", encoding);
+
+        assertEquals("Unexpected value for getObject(BigInteger.class)",
+                BigInteger.TEN, field.getObject(BigInteger.class));
+    }
+
+    @Test
+    public void getObject_BigInteger_notANumber() throws SQLException {
+        toReturnStringExpectations("xyz", encoding);
+        expectedException.expect(TypeConversionException.class);
+
+        field.getObject(BigInteger.class);
+    }
+
+    @Test
+    @Override
+    public void setObject_BigInteger() throws SQLException {
+        setStringExpectations("10", encoding);
+
+        field.setObject(BigInteger.TEN);
     }
 
     @Override

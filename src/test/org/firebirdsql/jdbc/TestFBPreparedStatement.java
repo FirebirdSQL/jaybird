@@ -30,7 +30,7 @@ import org.junit.rules.ExpectedException;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.math.BigDecimal;
-import java.nio.charset.StandardCharsets;
+import java.math.BigInteger;
 import java.sql.*;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -83,6 +83,12 @@ public class TestFBPreparedStatement extends FBJUnit4TestBase {
             + "UTFFIELD CHAR(1) CHARACTER SET UTF8,"
             + "CHAR_OCTETS CHAR(15) CHARACTER SET OCTETS,"
             + "VARCHAR_OCTETS VARCHAR(15) CHARACTER SET OCTETS"
+            + ")";
+
+    private static final String CREATE_TEST_BIG_INTEGER_TABLE =
+              "create table test_big_integer ("
+            + "bigintfield bigint,"
+            + "varcharfield varchar(255)"
             + ")";
 
     private static final String TEST_STRING = "This is simple test string.";
@@ -530,8 +536,6 @@ public class TestFBPreparedStatement extends FBJUnit4TestBase {
     /**
      * Test if failure in setting the parameter leaves the driver in correct
      * state (i.e. "not all params were set").
-     *
-     * @throws Exception
      */
     @Test
     public void testBindParameter() throws Exception {
@@ -562,8 +566,6 @@ public class TestFBPreparedStatement extends FBJUnit4TestBase {
     /**
      * Test if failure in setting the parameter leaves the driver in correct
      * state (i.e. "not all params were set").
-     *
-     * @throws Exception
      */
     @Test
     @Ignore("Currently not working as expected due to implementation change (or bug in original implementation/expectation)")
@@ -850,8 +852,6 @@ public class TestFBPreparedStatement extends FBJUnit4TestBase {
 
     /**
      * Closing a statement twice should not result in an Exception.
-     *
-     * @throws SQLException
      */
     @Test
     public void testDoubleClose() throws SQLException {
@@ -866,8 +866,6 @@ public class TestFBPreparedStatement extends FBJUnit4TestBase {
      * <p>
      * JDBC 4.1 feature
      * </p>
-     *
-     * @throws SQLException
      */
     @Test
     public void testCloseOnCompletion_StatementClosed_afterImplicitResultSetClose() throws SQLException {
@@ -892,13 +890,13 @@ public class TestFBPreparedStatement extends FBJUnit4TestBase {
         }
     }
 
+    // Other closeOnCompletion behavior considered to be sufficiently tested in TestFBStatement
+
     /**
      * Tests insertion of a single character into a single character field on a UTF8 connection.
      * <p>
      * See JDBC-234 for rationale of this test.
      * </p>
-     *
-     * @throws Exception
      */
     @Test
     public void testInsertSingleCharOnUTF8() throws Exception {
@@ -930,8 +928,6 @@ public class TestFBPreparedStatement extends FBJUnit4TestBase {
      * <p>
      * See JDBC-271 for rationale of this test.
      * </p>
-     *
-     * @throws Exception
      */
     @Test
     public void testNullParameterWithCast() throws Exception {
@@ -1128,7 +1124,28 @@ public class TestFBPreparedStatement extends FBJUnit4TestBase {
         }
     }
 
-    // Other closeOnCompletion behavior considered to be sufficiently tested in TestFBStatement
+    @Test
+    public void testSetBigIntegerParameters() throws Exception {
+        executeCreateTable(con, CREATE_TEST_BIG_INTEGER_TABLE);
+        final String testBigIntegerValueString = "1" + Long.MAX_VALUE;
+        try (PreparedStatement pstmt = con.prepareStatement(
+                "insert into test_big_integer(bigintfield, varcharfield) values (?, ?)")) {
+            pstmt.setObject(1, BigInteger.ONE);
+            pstmt.setObject(2, new BigInteger(testBigIntegerValueString));
+            pstmt.executeUpdate();
+        }
+
+        try (PreparedStatement pstmt = con.prepareStatement("select bigintfield, varcharfield from test_big_integer");
+             ResultSet rs = pstmt.executeQuery()) {
+            assertTrue("Expected a row", rs.next());
+            assertEquals("Unexpected value for bigintfield", 1, rs.getLong("bigintfield"));
+            assertEquals("Unexpected value for bigintfield as BigInteger",
+                    BigInteger.ONE, rs.getObject("bigintfield", BigInteger.class));
+            assertEquals("Unexpected value for varcharfield", testBigIntegerValueString, rs.getString("varcharfield"));
+            assertEquals("Unexpected value for varcharfield as BigInteger",
+                    new BigInteger(testBigIntegerValueString), rs.getObject("varcharfield", BigInteger.class));
+        }
+    }
 
     private void prepareTestData() throws SQLException {
         con.setAutoCommit(false);

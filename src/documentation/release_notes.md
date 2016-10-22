@@ -258,12 +258,13 @@ Support for Java 6 has been dropped.
 
 ### Java 7 and 8 ###
 
-The driver supports Java 7 and 8 and provides improved support for JDBC 4.2
-features.
+The driver supports Java 7 and 8 and provides improved support for JDBC 4.1 and
+JDBC 4.2 features.
 
 The improved support includes
 
--   Support for `java.time` in `set/getObject`
+-   Support for `java.time` in `set/get/updateObject`
+-   Support for `java.math.BigInteger` in `set/get/updateObject`
 -   Support for `getObject(int/String, Class<?>)`
 -   Support for `setBinaryStream`/`setCharacterStream` with no length or 
     (long) length beyond `Integer.MAX_VALUE`

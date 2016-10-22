@@ -29,6 +29,7 @@ import org.firebirdsql.jdbc.*;
 import java.io.InputStream;
 import java.io.Reader;
 import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.sql.*;
 import java.util.Calendar;
 import java.util.GregorianCalendar;
@@ -48,6 +49,7 @@ public abstract class FBField {
     static final String FLOAT_CONVERSION_ERROR = "Error converting to float.";
     static final String DOUBLE_CONVERSION_ERROR = "Error converting to double.";
     static final String BIGDECIMAL_CONVERSION_ERROR = "Error converting to big decimal.";
+    static final String BIG_INTEGER_CONVERSION_ERROR = "Error converting to BigInteger.";
     static final String BOOLEAN_CONVERSION_ERROR = "Error converting to boolean.";
     static final String STRING_CONVERSION_ERROR = "Error converting to string.";
     static final String OBJECT_CONVERSION_ERROR = "Error converting to object.";
@@ -478,6 +480,8 @@ public abstract class FBField {
             return isNull() ? null : (T) Double.valueOf(getDouble());
         case "java.math.BigDecimal":
             return (T) getBigDecimal();
+        case "java.math.BigInteger":
+            return (T) getBigInteger();
         case "java.lang.String":
             return (T) getString();
         case "[B": // byte[]
@@ -571,6 +575,10 @@ public abstract class FBField {
         throw new FBDriverNotCapableException("Type ARRAY not yet supported");
     }
 
+    public BigInteger getBigInteger() throws SQLException {
+        throw new TypeConversionException(FBField.BIG_INTEGER_CONVERSION_ERROR);
+    }
+
     // --- setters
 
     public void setByte(byte value) throws SQLException {
@@ -607,6 +615,10 @@ public abstract class FBField {
 
     public void setString(String value) throws SQLException {
         throw new TypeConversionException(FBField.STRING_CONVERSION_ERROR);
+    }
+
+    public void setBigInteger(BigInteger value) throws SQLException {
+        throw new TypeConversionException(FBField.BIG_INTEGER_CONVERSION_ERROR);
     }
 
     public void setObject(Object value) throws SQLException {
@@ -653,6 +665,8 @@ public abstract class FBField {
             setTimestamp((Timestamp) value);
         } else if (value instanceof DatatypeCoder.RawDateTimeStruct) {
             setRawDateTimeStruct((DatatypeCoder.RawDateTimeStruct) value);
+        } else if (value instanceof BigInteger) {
+            setBigInteger((BigInteger) value);
         } else if (!getObjectConverter().setObject(this, value)) {
             throw new TypeConversionException(FBField.OBJECT_CONVERSION_ERROR);
         }

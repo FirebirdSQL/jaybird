@@ -39,6 +39,7 @@ import org.junit.rules.ExpectedException;
 import java.io.InputStream;
 import java.io.Reader;
 import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
 import java.sql.*;
 import java.util.Calendar;
@@ -382,9 +383,6 @@ public abstract class BaseJUnit4TestFBField<T extends FBField, O> {
         field.setLong(1);
     }
 
-    /**
-     * @throws SQLException
-     */
     @Test
     public void setNull() throws SQLException {
         setNullExpectations();
@@ -392,9 +390,6 @@ public abstract class BaseJUnit4TestFBField<T extends FBField, O> {
         field.setNull();
     }
 
-    /**
-     * @throws SQLException
-     */
     @Test
     public void getName() throws SQLException {
         assertEquals("Unexpected value for getName()", NAME_VALUE, field.getName());
@@ -437,9 +432,6 @@ public abstract class BaseJUnit4TestFBField<T extends FBField, O> {
         field.getRef();
     }
 
-    /**
-     * @throws SQLException
-     */
     @Test
     public void getRelationName() throws SQLException {
         assertEquals("Unexpected value for getRelationName()", RELATION_NAME_VALUE, field.getRelationName());
@@ -578,6 +570,20 @@ public abstract class BaseJUnit4TestFBField<T extends FBField, O> {
     public void setObject_RawDateTimeStruct() throws SQLException {
         expectedException.expect(TypeConversionException.class);
         field.setObject(new DatatypeCoder.RawDateTimeStruct());
+    }
+
+    @Test
+    public void getObject_BigInteger() throws SQLException {
+        expectedException.expect(TypeConversionException.class);
+
+        field.getObject(BigInteger.class);
+    }
+
+    @Test
+    public void setObject_BigInteger() throws SQLException {
+        expectedException.expect(TypeConversionException.class);
+
+        field.setObject(BigInteger.ONE);
     }
 
     @Test

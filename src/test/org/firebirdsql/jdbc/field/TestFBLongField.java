@@ -24,6 +24,7 @@ import org.junit.Ignore;
 import org.junit.Test;
 
 import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.sql.SQLException;
 import java.sql.Types;
 
@@ -652,7 +653,6 @@ public class TestFBLongField extends BaseJUnit4TestFBField<FBLongField, Long> {
 
     /**
      * Tests value at maximum allowed (Short.MAX_VALUE).
-     * @throws SQLException
      */
     @Test
     public void getShort_MAX() throws SQLException {
@@ -663,7 +663,6 @@ public class TestFBLongField extends BaseJUnit4TestFBField<FBLongField, Long> {
 
     /**
      * Tests value at maximum allowed (Short.MAX_VALUE) plus one
-     * @throws SQLException
      */
     @Test
     public void getShort_MAX_plus_one() throws SQLException {
@@ -675,7 +674,6 @@ public class TestFBLongField extends BaseJUnit4TestFBField<FBLongField, Long> {
 
     /**
      * Tests value at minimum allowed (Short.MIN_VALUE).
-     * @throws SQLException
      */
     @Test
     public void getShort_MIN() throws SQLException {
@@ -686,7 +684,6 @@ public class TestFBLongField extends BaseJUnit4TestFBField<FBLongField, Long> {
 
     /**
      * Tests value at minimum allowed (Short.MIN_VALUE) minus one
-     * @throws SQLException
      */
     @Test
     public void getShort_MIN_minus_one() throws SQLException {
@@ -772,6 +769,66 @@ public class TestFBLongField extends BaseJUnit4TestFBField<FBLongField, Long> {
     public void setString_noLong() throws SQLException {
         expectedException.expect(TypeConversionException.class);
         field.setString("no long");
+    }
+
+    @Test
+    @Override
+    public void getObject_BigInteger() throws SQLException {
+        final long testValue = -14578;
+        toReturnLongExpectations(testValue);
+
+        assertEquals("Unexpected value for getObject(BigInteger.class)",
+                BigInteger.valueOf(testValue), field.getObject(BigInteger.class));
+    }
+
+    @Test
+    public void getObject_BigInteger_null() throws SQLException {
+        toReturnNullExpectations();
+
+        assertNull("Unexpected value for getObject(BigInteger.class)", field.getObject(BigInteger.class));
+    }
+
+    @Test
+    @Override
+    public void setObject_BigInteger() throws SQLException {
+        setLongExpectations(10);
+
+        field.setObject(BigInteger.TEN);
+    }
+
+    @Test
+    public void setObject_BigInteger_MAX() throws SQLException {
+        setLongExpectations(Long.MAX_VALUE);
+
+        field.setObject(BigInteger.valueOf(Long.MAX_VALUE));
+    }
+
+    @Test
+    public void setObject_BigInteger_MAX_plus_1() throws SQLException {
+        expectedException.expect(TypeConversionException.class);
+
+        field.setObject(BigInteger.valueOf(Long.MAX_VALUE).add(BigInteger.ONE));
+    }
+
+    @Test
+    public void setObject_BigInteger_MIN() throws SQLException {
+        setLongExpectations(Long.MIN_VALUE);
+
+        field.setObject(BigInteger.valueOf(Long.MIN_VALUE));
+    }
+
+    @Test
+    public void setObject_BigInteger_MIN_minus_1() throws SQLException {
+        expectedException.expect(TypeConversionException.class);
+
+        field.setObject(BigInteger.valueOf(Long.MIN_VALUE).subtract(BigInteger.ONE));
+    }
+
+    @Test
+    public void setBigInteger_null() throws SQLException {
+        setNullExpectations();
+
+        field.setBigInteger(null);
     }
 
     @Override
