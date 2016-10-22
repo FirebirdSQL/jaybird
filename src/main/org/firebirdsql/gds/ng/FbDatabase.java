@@ -63,9 +63,27 @@ public interface FbDatabase extends FbAttachment {
 
     /**
      * Cancels the current operation.
+     * <p>
+     * The cancellation types are:
+     * <dl>
+     *     <dt>{@link org.firebirdsql.gds.ISCConstants#fb_cancel_disable}</dt>
+     *     <dd>disables execution of fb_cancel_raise requests for the specified attachment. It can be useful when your0
+     *     program is executing critical operations, such as cleanup, for example.</dd>
+     *     <dt>{@link org.firebirdsql.gds.ISCConstants#fb_cancel_enable}</dt>
+     *     <dd>re-enables delivery of a cancel execution that was previously disabled. The 'cancel' state is effective
+     *     by default, being initialized when the attachment is created.</dd>
+     *     <dt>{@link org.firebirdsql.gds.ISCConstants#fb_cancel_raise}</dt>
+     *     <dd>cancels any activity related to the database handle. The effect will be that, as soon as possible, the
+     *     engine will try to stop the running request and return an exception to the caller</dd>
+     *     <dt>{@link org.firebirdsql.gds.ISCConstants#fb_cancel_abort}</dt>
+     *     <dd>forcibly close client side of connection. Useful if you need to close a connection urgently. All active
+     *     transactions will be rolled back by the server. 'Success' is always returned to the application. Use with
+     *     care!</dd>
+     * </dl>
+     * </p>
      *
      * @param kind
-     *         TODO Document parameter kind of cancelOperation
+     *         Cancellation type
      * @throws SQLException
      *         For errors cancelling, or if the cancel operation is not supported.
      */
