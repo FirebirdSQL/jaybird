@@ -4,29 +4,12 @@
     <!-- Compiles the source code                                            -->
     <!-- =================================================================== -->
     <target name="compile"
-            depends="compile-j2ee, compile-driver, compile-tests, compile-etc, compile-examples, compile-resources, compile-stylesheets"/>
+            depends="compile-j2ee, compile-driver, compile-tests, compile-etc, compile-resources, compile-stylesheets"/>
 
     <!-- calling this unjar a compile is stretching the truth a bit-->
     <target name="compile-j2ee" depends="init">
         <mkdir dir="${build.j2ee}"/>
         <unjar src="${module.thirdparty}/connector-api-1.5.jar" dest="${build.j2ee}"/>
-    </target>
-
-    <target name="compile-examples">
-        <mkdir dir="${build.examples}"/>
-        <javac srcdir="${source.examples}"
-               destdir="${build.examples}"
-               target="${javac.level}"
-               source="${javac.level}"
-               debug="on"
-               deprecation="on"
-               optimize="on"
-               includes="*"
-               excludes="**/temp*"
-                >
-            <compilerarg line="${java.module.arg}"/>
-            <classpath refid="javac.examples.classpath"/>
-        </javac>
     </target>
 
     <target name="set-jdbc-41-src" if="jdbc.41">

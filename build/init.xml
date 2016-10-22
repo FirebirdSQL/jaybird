@@ -114,7 +114,6 @@
         <property name="module.tools" value="${module.root}/lib"/>
         <property name="module.thirdparty" value="${module.source}/lib"/>
         <property name="module.etc" value="${module.source}/etc"/>
-        <property name="module.examples" value="${module.root}/examples"/>
 
         <!-- Where source files live -->
         <property name="source.java" value="${module.source}/main"/>
@@ -123,7 +122,6 @@
         <property name="source.jdbc.42" value="${module.source}/jdbc_42"/>
         <property name="source.jna-client" value="${module.source}/jna-client"/>
         <property name="source.etc" value="${module.source}/etc"/>
-        <property name="source.examples" value="${module.examples}"/>
         <property name="source.resources" value="${module.source}/resources"/>
         <property name="source.stylesheets" value="${module.source}/stylesheets"/>
         <property name="source.test" value="${module.source}/test"/>
@@ -140,7 +138,6 @@
         <property name="build.test" value="${module.output}/test"/>
         <property name="build.lib" value="${module.output}/lib"/>
         <property name="build.api" value="${module.output}/api"/>
-        <property name="build.examples" value="${module.output}/examples"/>
         <property name="build.etc" value="${module.output}/etc"/>
         <property name="build.bin" value="${module.output}/bin"/>
         <property name="build.docs" value="${module.output}/docs"/>
@@ -225,11 +222,6 @@
             <pathelement location="${module.thirdparty}/fscontext.jar"/>
             <pathelement location="${module.thirdparty}/providerutil.jar"/>
             <fileset dir="${lib_test.dir}" includes="*.jar"/>
-        </path>
-
-        <path id="javac.examples.classpath">
-            <path refid="javac.driver.classpath"/>
-            <pathelement location="${build.classes}"/>
         </path>
 
         <!--
