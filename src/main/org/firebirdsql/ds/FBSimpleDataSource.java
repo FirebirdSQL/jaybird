@@ -84,7 +84,7 @@ public class FBSimpleDataSource extends RootCommonDataSource implements DataSour
      * @param length new length of the BLOB buffer.
      */
     public void setBlobBufferLength(Integer length) {
-        mcf.setBlobBufferSize(length.intValue());
+        mcf.setBlobBufferSize(length);
     }
     
     
@@ -93,7 +93,7 @@ public class FBSimpleDataSource extends RootCommonDataSource implements DataSour
      * Get name of the database. 
      * 
      * @return database name, value is equal to the part of full JDBC URL without
-     * the <code>jdbc:firebirdsql:</code> part.
+     * the {@code jdbc:firebirdsql:} part.
      * 
      * @deprecated use {@link #getDatabase} instead for the sake of naming
      * compatibility.
@@ -106,8 +106,8 @@ public class FBSimpleDataSource extends RootCommonDataSource implements DataSour
     /**
      * Set database name.
      * 
-     * @param name connection URL without <code>"jdbc:firebirdsql:"</code>
-     * prefix (<code>"//localhost:3050/c:/database/employee.gdb"</code>) for
+     * @param name connection URL without {@code "jdbc:firebirdsql:"}
+     * prefix ({@code "//localhost:3050/c:/database/employee.fdb"}) for
      * example).
      * 
      * @deprecated use {@link #setDatabase(String)} instead for the sake of 
@@ -122,7 +122,7 @@ public class FBSimpleDataSource extends RootCommonDataSource implements DataSour
      * Get name of the database. 
      * 
      * @return database name, value is equal to the part of full JDBC URL without
-     * the <code>jdbc:firebirdsql:</code> part.
+     * the {@code jdbc:firebirdsql:} part.
      */
     public String getDatabase() {
         return mcf.getDatabase();
@@ -131,8 +131,8 @@ public class FBSimpleDataSource extends RootCommonDataSource implements DataSour
     /**
      * Set database name.
      * 
-     * @param name connection URL without <code>"jdbc:firebirdsql:"</code>
-     * prefix (<code>"//localhost:3050/c:/database/employee.gdb"</code>) for
+     * @param name connection URL without {@code "jdbc:firebirdsql:"}
+     * prefix ({@code "//localhost:3050/c:/database/employee.fdb"}) for
      * example).
      */
     public void setDatabase(String name) {
