@@ -24,6 +24,7 @@ import org.junit.Ignore;
 import org.junit.Test;
 
 import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.sql.SQLException;
 import java.sql.Types;
 
@@ -636,7 +637,6 @@ public class TestFBIntegerField extends BaseJUnit4TestFBField<FBIntegerField, In
 
     /**
      * Tests value at maximum allowed (Short.MAX_VALUE).
-     * @throws SQLException
      */
     @Test
     public void getShort_MAX() throws SQLException {
@@ -647,7 +647,6 @@ public class TestFBIntegerField extends BaseJUnit4TestFBField<FBIntegerField, In
 
     /**
      * Tests value at maximum allowed (Short.MAX_VALUE) plus one
-     * @throws SQLException
      */
     @Test
     public void getShort_MAX_plus_one() throws SQLException {
@@ -659,7 +658,6 @@ public class TestFBIntegerField extends BaseJUnit4TestFBField<FBIntegerField, In
 
     /**
      * Tests value at minimum allowed (Short.MIN_VALUE).
-     * @throws SQLException
      */
     @Test
     public void getShort_MIN() throws SQLException {
@@ -670,7 +668,6 @@ public class TestFBIntegerField extends BaseJUnit4TestFBField<FBIntegerField, In
 
     /**
      * Tests value at minimum allowed (Short.MIN_VALUE) minus one
-     * @throws SQLException
      */
     @Test
     public void getShort_MIN_minus_one() throws SQLException {
@@ -756,6 +753,66 @@ public class TestFBIntegerField extends BaseJUnit4TestFBField<FBIntegerField, In
     public void setString_noInteger() throws SQLException {
         expectedException.expect(TypeConversionException.class);
         field.setString("no integer");
+    }
+
+    @Test
+    @Override
+    public void getObject_BigInteger() throws SQLException {
+        final int testValue = -14578;
+        toReturnIntegerExpectations(testValue);
+
+        assertEquals("Unexpected value for getObject(BigInteger.class)",
+                BigInteger.valueOf(testValue), field.getObject(BigInteger.class));
+    }
+
+    @Test
+    public void getObject_BigInteger_null() throws SQLException {
+        toReturnNullExpectations();
+
+        assertNull("Unexpected value for getObject(BigInteger.class)", field.getObject(BigInteger.class));
+    }
+
+    @Test
+    @Override
+    public void setObject_BigInteger() throws SQLException {
+        setIntegerExpectations(10);
+
+        field.setObject(BigInteger.TEN);
+    }
+
+    @Test
+    public void setObject_BigInteger_MAX() throws SQLException {
+        setIntegerExpectations(Integer.MAX_VALUE);
+
+        field.setObject(BigInteger.valueOf(Integer.MAX_VALUE));
+    }
+
+    @Test
+    public void setObject_BigInteger_MAX_plus_1() throws SQLException {
+        expectedException.expect(TypeConversionException.class);
+
+        field.setObject(BigInteger.valueOf(Integer.MAX_VALUE).add(BigInteger.ONE));
+    }
+
+    @Test
+    public void setObject_BigInteger_MIN() throws SQLException {
+        setIntegerExpectations(Integer.MIN_VALUE);
+
+        field.setObject(BigInteger.valueOf(Integer.MIN_VALUE));
+    }
+
+    @Test
+    public void setObject_BigInteger_MIN_minus_1() throws SQLException {
+        expectedException.expect(TypeConversionException.class);
+
+        field.setObject(BigInteger.valueOf(Integer.MIN_VALUE).subtract(BigInteger.ONE));
+    }
+
+    @Test
+    public void setBigInteger_null() throws SQLException {
+        setNullExpectations();
+
+        field.setBigInteger(null);
     }
 
     @Override
