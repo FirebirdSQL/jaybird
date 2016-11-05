@@ -85,16 +85,16 @@ Jaybird supports the following specifications:
 Getting Jaybird 3.0
 ===================
 
-Jaybird 3.0-alpha-1
+Jaybird @VERSION@
 -------------------
 
 ### Maven ###
 
-Jaybird 3.0 Alpha 1 is available from Maven central:
+Jaybird @VERSION@ is available from Maven central:
 
 Groupid: `org.firebirdsql.jdbc`,\
 Artifactid: `jaybird-jdkXX` (where `XX` is `17` or `18`).\
-Version: `3.0.0-alpha-1`
+Version: `@VERSION@`
 
 For example:
 
@@ -102,7 +102,7 @@ For example:
 <dependency>
     <groupId>org.firebirdsql.jdbc</groupId>
     <artifactId>jaybird-jdk18</artifactId>
-    <version>3.0.0-alpha-1</version>
+    <version>@VERSION@</version>
 </dependency>
 ~~~
 
@@ -114,7 +114,7 @@ dependency:
 <dependency>
     <groupId>org.firebirdsql.jdbc</groupId>
     <artifactId>jaybird-jdk18</artifactId>
-    <version>3.0.0-alpha-1</version>
+    <version>@VERSION@</version>
     <exclusions>
         <exclusion>
             <groupId>javax.resource</groupId>
@@ -148,12 +148,12 @@ releases, and provide Firebird client libraries as Maven dependencies as well.
 
 You can download the latest versions from <http://www.firebirdsql.org/en/jdbc-driver/>
 
-At minimum Jaybird 3.0 requires `jaybird-3.0.0-alpha-1.jar` and 
-`connector-api-1.5.jar`. You can also use `jaybird-full-3.0.0-alpha-1.jar` as it
+At minimum Jaybird 3.0 requires `jaybird-@VERSION@.jar` and 
+`connector-api-1.5.jar`. You can also use `jaybird-full-@VERSION@.jar` as it
 includes the connector-api files.
 
 If you deploy your application to a Java EE application server, then you must 
-use `jaybird-3.0.0-alpha-1.jar` (not `-full`!), and **not** include 
+use `jaybird-@VERSION@.jar` (not `-full`!), and **not** include 
 `connector-api-1.5.jar` as this dependency will be provided by your application 
 server.
 
@@ -163,37 +163,15 @@ For `getGeneratedKeys` support you will need to include
 For native, local or embedded support, you will need to include `jna-4.2.2.jar` 
 on your classpath.
 
-Snapshot versions
------------------
-
-Occasionally we release a Jaybird 3 snapshot for testing purposes to
-the [Sonatype OSS snapshot repository](https://oss.sonatype.org/content/repositories/snapshots/).
-
-Groupid: `org.firebirdsql.jdbc`,\
-Artifactid: `jaybird-jdkXX` (where `XX` is `17` or `18`).\
-Version: `3.0.0-SNAPSHOT`
-
-For example:
-
-~~~ {.xml}
-<dependency>
-    <groupId>org.firebirdsql.jdbc</groupId>
-    <artifactId>jaybird-jdk18</artifactId>
-    <version>3.0.0-SNAPSHOT</version>
-</dependency>
-~~~
-
-You need to add the Sonatype OSS snapshot repository to your maven repository config or pom.
-
 Upgrading from Jaybird 2.2 to Jaybird 3.0
 =========================================
 
 Maven
 -----
 
-Upgrade the version of the dependency to 3.0.0-alpha-1. If you use native or 
-embedded, you will also need to remove the `.dll` or `.so`, see the next 
-section.
+Upgrade the version of the dependency to @VERSION@. If you use native or 
+embedded, you will no longer need the `jaybird22.dll` or `libjaybird22.so`, see
+the next section.
 
 For more detailed instructions, see also the information on Maven in
 [Getting Jaybird 3.0]. 
@@ -204,8 +182,8 @@ Manual install
 If you manage your dependencies manually, you need to do the following:
 
 1.  Replace the Jaybird library 2.2 with the 3.0
-    - `jaybird-2.2.x.jar` with `jaybird-3.0.0-alpha-1.jar` 
-    - `jaybird-full-2.2.x.jar` with `jaybird-full-3.0.0-alpha-1.jar`
+    - `jaybird-2.2.x.jar` with `jaybird-@VERSION@.jar` 
+    - `jaybird-full-2.2.x.jar` with `jaybird-full-@VERSION@.jar`
 
 2.  If installed, remove `antlr-runtime-3.4.jar` and replace it with 
     `antlr-runtime-4.5.3.jar`. This library is necessary for `getGeneratedKeys`
@@ -516,7 +494,9 @@ See [Removal of deprecated classes, packages and methods] in
 Known Issues
 ============
 
-There are currently no known issues.
+-   Firebird 3.0.1 doesn't correctly support `BOOLEAN` parameters, see [CORE-5367](http://tracker.firebirdsql.org/browse/CORE-5367)
+
+    Either use Firebird 3.0.0 or 3.0.2 (when available).
 
 Compatibility changes
 =====================
@@ -527,7 +507,7 @@ breaking changes.
 The changes due to the new protocol implementation and/or JDBC conformance are
 listed below.
 
-**The list is not yet complete, if you notice a difference in behavior that is
+**The list might not be complete, if you notice a difference in behavior that is
 not listed, please report it as bug.** It might have been a change we forgot to
 document, but it could just as well be an implementation bug.
 
@@ -843,7 +823,8 @@ The changes made are as follows:
     inconsistently)
 *   Empty string will no longer match (ie they are no longer interpreted as
     `"%"`) unless explicitly allowed by the method javadoc (usually only the
-    `catalogPattern` and `schemaPattern`, which are always ignored by Jaybird)
+    `catalogPattern` and `schemaPattern`, which are always ignored by Jaybird as
+    Firebird currently doesn't support this)
 *   Double quotes around a pattern will no longer be stripped, and therefor will
     now never match existing object names
 *   The driver will no longer try the uppercase variant of the provided
@@ -1021,6 +1002,9 @@ The following methods will be removed in Jaybird 3.1:
 
 -   `CharacterTranslator.getMapping()`, use `CharacterTranslator.getMapping(char)`
     instead.
+    
+    Complete removal of the character translation support is also being considered.
+    
 -   `GDSHelper.iscVaxInteger(byte[] buffer, int pos, int length)` use
     `VaxEncoding.iscVaxInteger(byte[] buffer, int startPosition, int length)`
     instead.
