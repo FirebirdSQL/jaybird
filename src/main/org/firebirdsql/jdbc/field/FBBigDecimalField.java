@@ -126,6 +126,13 @@ final class FBBigDecimalField extends FBField {
         return fieldDataSize.decode(fieldDescriptor, getFieldData());
     }
 
+    @Override
+    public BigInteger getBigInteger() throws SQLException {
+        BigDecimal value = getBigDecimal();
+        if (value == null) return null;
+        return value.toBigInteger();
+    }
+
     //--- setXXX methods
 
     public void setBoolean(boolean value) throws SQLException {
@@ -176,6 +183,16 @@ final class FBBigDecimalField extends FBField {
         }
 
         setFieldData(fieldDataSize.encode(fieldDescriptor, value));
+    }
+
+    @Override
+    public void setBigInteger(BigInteger value) throws SQLException {
+        if (value == null) {
+            setNull();
+            return;
+        }
+
+        setBigDecimal(new BigDecimal(value));
     }
 
     /**
@@ -252,7 +269,6 @@ final class FBBigDecimalField extends FBField {
          * @param value
          *         BigDecimal instance
          * @return encoded data
-         * @throws SQLException
          */
         protected abstract byte[] encode(final FieldDescriptor fieldDescriptor,
                 final BigDecimal value) throws SQLException;

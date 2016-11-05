@@ -751,6 +751,79 @@ public class TestFBBigDecimalField extends BaseJUnit4TestFBField<FBBigDecimalFie
         
         field.setString("NotANumber");
     }
+
+    @Test
+    @Override
+    public void getObject_BigInteger() throws SQLException {
+        fieldDescriptor = createLongFieldDescriptor(-2);
+        field = new FBBigDecimalField(fieldDescriptor, fieldData, Types.NUMERIC);
+        toReturnLongExpectations(456789123);
+
+        assertEquals("Unexpected value for getObject(BigInteger.class)",
+                BigInteger.valueOf(4567891), field.getObject(BigInteger.class));
+    }
+
+    @Test
+    public void getObject_BigInteger_null() throws SQLException {
+        toReturnNullExpectations();
+
+        assertNull("Unexpected value for getObject(BigInteger.class)", field.getObject(BigInteger.class));
+    }
+
+    @Test
+    @Override
+    public void setObject_BigInteger() throws SQLException {
+        fieldDescriptor = createLongFieldDescriptor(0);
+        field = new FBBigDecimalField(fieldDescriptor, fieldData, Types.NUMERIC);
+        setLongExpectations(10);
+
+        field.setObject(BigInteger.TEN);
+    }
+
+    @Test
+    public void setObject_BigInteger_MAX() throws SQLException {
+        fieldDescriptor = createLongFieldDescriptor(0);
+        field = new FBBigDecimalField(fieldDescriptor, fieldData, Types.NUMERIC);
+        setLongExpectations(Long.MAX_VALUE);
+
+        field.setObject(BigInteger.valueOf(Long.MAX_VALUE));
+    }
+
+    @Test
+    public void setObject_BigInteger_MAX_plus_1() throws SQLException {
+        fieldDescriptor = createLongFieldDescriptor(0);
+        field = new FBBigDecimalField(fieldDescriptor, fieldData, Types.NUMERIC);
+        expectedException.expect(TypeConversionException.class);
+
+        field.setObject(BigInteger.valueOf(Long.MAX_VALUE).add(BigInteger.ONE));
+    }
+
+    @Test
+    public void setObject_BigInteger_MIN() throws SQLException {
+        fieldDescriptor = createLongFieldDescriptor(0);
+        field = new FBBigDecimalField(fieldDescriptor, fieldData, Types.NUMERIC);
+        setLongExpectations(Long.MIN_VALUE);
+
+        field.setObject(BigInteger.valueOf(Long.MIN_VALUE));
+    }
+
+    @Test
+    public void setObject_BigInteger_MIN_minus_1() throws SQLException {
+        fieldDescriptor = createLongFieldDescriptor(0);
+        field = new FBBigDecimalField(fieldDescriptor, fieldData, Types.NUMERIC);
+        expectedException.expect(TypeConversionException.class);
+
+        field.setObject(BigInteger.valueOf(Long.MIN_VALUE).subtract(BigInteger.ONE));
+    }
+
+    @Test
+    public void setBigInteger_null() throws SQLException {
+        fieldDescriptor = createLongFieldDescriptor(0);
+        field = new FBBigDecimalField(fieldDescriptor, fieldData, Types.NUMERIC);
+        setNullExpectations();
+
+        field.setBigInteger(null);
+    }
     
     @SuppressWarnings("unused")
     @Test
