@@ -265,6 +265,13 @@ The improved support includes
 
 -   Support for `java.time` in `set/get/updateObject`
 -   Support for `java.math.BigInteger` in `set/get/updateObject`
+
+    Contrary to the support required by JDBC (`BIGINT`, `VARCHAR` and 
+    `LONGVARCHAR`), we also support it for `SMALLINT`, `INTEGER`, `NUMERIC` and 
+    `DECIMAL`). In the case of numeric and decimal, the value will be rounded
+    for non-zero decimal fractions using the logic applied by 
+    `BigDecimal.toBigInteger()`.
+
 -   Support for `getObject(int/String, Class<?>)`
 -   Support for `setBinaryStream`/`setCharacterStream` with no length or 
     (long) length beyond `Integer.MAX_VALUE`
