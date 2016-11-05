@@ -221,11 +221,13 @@ including databases and sourcecode to reproduce the problem. Patches to fix bugs
 are also appreciated. Make sure the patch is against a recent master version of
 the code. You can also fork the jaybird repository and create pull requests.
 
-JDBC URLs (`java.sql.DriverManager`)
-====================================
+Connecting to Firebird
+======================
 
-Pure Java (default)
--------------------
+JDBC URLs (`java.sql.DriverManager`)
+------------------------------------
+
+### Pure Java (default)
 
 Default URL format:
 
@@ -257,8 +259,7 @@ Deprecated, but still supported legacy URL format:
 
 The legacy URL format does not support IPv6 address literals.
 
-Open Office/Libre Office (Pure Java)
-------------------------------------
+### Open Office/Libre Office (Pure Java)
 
 Jaybird can be used together with OpenOffice and Libre Office Base. To address
 some compatibility issues (and differences in interpretation of JDBC
@@ -266,8 +267,7 @@ specifications) a separate subprotocol is used:
 
     jdbc:firebirdsql:oo://host[:port]/<database>
 
-Native (using Firebird client library)
---------------------------------------
+### Native (using Firebird client library)
 
 Default URL format:
 
@@ -289,8 +289,7 @@ will not use socket communication, but rather access database directly. Requires
 correct installation of the client library and - for Jaybird 2.2 or earlier - 
 the Jaybird native library, or - for Jaybird 3.0 - the JNA jar file.
 
-Embedded Server
----------------
+### Embedded Server
 
     jdbc:firebirdsql:embedded:<database>
 
@@ -298,6 +297,46 @@ Similar to the Firebird client library, however `fbembed.dll` on Windows and
 `libfbembed.so` on Linux are used. Requires correctly installed and configured
 Firebird embedded library and - for Jaybird 2.2 or earlier - the Jaybird native
 library, or - for Jaybird 3.0 - the JNA jar file.
+
+How can I solve the error "Connection rejected: No connection character set specified"
+--------------------------------------------------------------------------------------
+
+If no explicit character set has been set, Jaybird 3.0 will reject the 
+connection with an `SQLNonTransientConnectionException` with message 
+_"Connection rejected: No connection character set specified (property lc_ctype,
+encoding, charSet or localEncoding). Please specify a connection character set 
+(eg property charSet=utf-8) or consult the Jaybird documentation for more 
+information."_ ([JDBC-446](http://tracker.firebirdsql.org/browse/JDBC-446))
+
+In Jaybird 2.2 and earlier, Jaybird would default to connection character set 
+`NONE` if no character set had been specified (through `lc_ctype`/`encoding` 
+and/or `charSet`/`localEncoding`). This can result in incorrect character set
+handling when the database is used from different locales.
+
+To prevent potential data-corruption, we no longer allow connecting without an
+explicit connection character set.
+
+To address this, explicitly set the connection character set using one of the 
+following options:
+
+*   Use connection property `encoding` (or `lc_ctype`) with Firebird character
+    set names. 
+    
+    Use `encoding=NONE` for the 'old' default behavior (with some caveats, see 
+    other sections).
+
+*   Use connection property `charSet` (or `localEncoding`) with Java character
+    set names.
+
+*   By providing a default character set with system property 
+    `org.firebirdsql.jdbc.defaultConnectionEncoding`. Jaybird will apply the
+    specified character set as the default when none is specified.
+    
+    This property only supports Firebird character set names. The property must
+    be set on start up (or at least before Jaybird-related classes get loaded). 
+
+    Use `-Dorg.firebirdsql.jdbc.defaultConnectionEncoding=NONE` to revert to the
+    old behavior (with some caveats, see the Jaybird 3 release notes).
 
 JDBC Support
 ============
