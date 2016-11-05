@@ -272,14 +272,13 @@ public class GDSFactory {
      * @return instance of {@link GDSType}.
      */
     public static GDSType getTypeForProtocol(String jdbcUrl) {
-        // TODO use TreeMap functionality to locate protocol (eg using floorKey() or ceilingKey())?
         for (Entry<String, GDSFactoryPlugin> entry : jdbcUrlToPluginMap.entrySet()) {
             String jdbcProtocol = entry.getKey();
 
-            if (jdbcUrl.startsWith(jdbcProtocol))
+            if (jdbcUrl.startsWith(jdbcProtocol)) {
                 return GDSType.getType(entry.getValue().getTypeName());
+            }
         }
-
         return null;
     }
 
@@ -307,8 +306,9 @@ public class GDSFactory {
      */
     private static GDSFactoryPlugin getPlugin(GDSType gdsType) {
         GDSFactoryPlugin gdsPlugin = typeToPluginMap.get(gdsType);
-        if (gdsPlugin == null)
+        if (gdsPlugin == null) {
             throw new IllegalArgumentException("Specified GDS type " + gdsType + " is unknown.");
+        }
         return gdsPlugin;
     }
 }

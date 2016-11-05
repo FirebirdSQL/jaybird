@@ -180,15 +180,13 @@ public interface FirebirdConnectionProperties {
     void setTimestampUsesLocalTimezone(boolean timestampUsesLocalTimezone);
 
     /**
-     * @return name of the user that will be used when connecting to the
-     * database.
+     * @return name of the user that will be used when connecting to the database.
      */
     String getUserName();
 
     /**
      * @param userName
-     *         name of the user that will be used when connecting to the
-     *         database.
+     *         name of the user that will be used when connecting to the database.
      */
     void setUserName(String userName);
 

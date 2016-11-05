@@ -137,10 +137,13 @@ public class FBPooledConnection implements PooledConnection {
      *            The exception
      */
     protected void fireConnectionError(SQLException ex) {
-        // TODO Do we need to walk over Exception chain to check if it wraps a fatal SQLException?
-        String sqlState = ex.getSQLState();
-        if (isFatalState(sqlState)) {
-            fireFatalConnectionError(ex);
+        SQLException currentException = ex;
+        while (currentException != null) {
+            String sqlState = currentException.getSQLState();
+            if (isFatalState(sqlState)) {
+                fireFatalConnectionError(ex);
+            }
+            currentException = ex.getNextException();
         }
     }
 
@@ -156,8 +159,8 @@ public class FBPooledConnection implements PooledConnection {
             // No SQL State or no class specified, assume it's fatal
             return true;
         }
-        for (String FATAL_SQL_STATE_CLASS : FATAL_SQL_STATE_CLASSES) {
-            if (sqlState.startsWith(FATAL_SQL_STATE_CLASS)) {
+        for (String fatalSqlStateClass : FATAL_SQL_STATE_CLASSES) {
+            if (sqlState.startsWith(fatalSqlStateClass)) {
                 return true;
             }
         }

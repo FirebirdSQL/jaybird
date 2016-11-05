@@ -222,9 +222,15 @@ public abstract class WireConnection<T extends IAttachProperties<T>, C extends F
 
             socket.connect(new InetSocketAddress(getServerName(), getPortNumber()), socketConnectTimeout);
         } catch (SocketTimeoutException ste) {
-            throw new FbExceptionBuilder().timeoutException(ISCConstants.isc_network_error).messageParameter(getServerName()).cause(ste).toSQLException();
+            throw new FbExceptionBuilder().timeoutException(ISCConstants.isc_network_error)
+                    .messageParameter(getServerName())
+                    .cause(ste)
+                    .toSQLException();
         } catch (IOException ioex) {
-            throw new FbExceptionBuilder().exception(ISCConstants.isc_network_error).messageParameter(getServerName()).cause(ioex).toSQLException();
+            throw new FbExceptionBuilder().nonTransientConnectionException(ISCConstants.isc_network_error)
+                    .messageParameter(getServerName())
+                    .cause(ioex)
+                    .toSQLException();
         }
     }
 

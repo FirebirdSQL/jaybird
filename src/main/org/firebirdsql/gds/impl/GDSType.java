@@ -33,18 +33,11 @@ import java.util.Map;
  */
 public final class GDSType implements Serializable {
     
-    private final static Map<String, GDSType> typeMap = new HashMap<String, GDSType>();
+    private static final Map<String, GDSType> typeMap = new HashMap<>();
 
-    // Getter for the typeMap variable, please note that static initializer of
-    // the GDSFactory class will access the registerType(String) method
-    private static Map<String, GDSType> getTypeMap() {
-        return typeMap;
-    }
-    
     // DO NOT REMOVE: needed to initiate static initialization of the GDSFactory
     @SuppressWarnings("unused")
     private static final GDSFactory factory = new GDSFactory();
-    
     
     /**
      * Factory method for instances of this class. There's only three possible
@@ -69,10 +62,11 @@ public final class GDSType implements Serializable {
      * string representation or <code>null</code> if no match could be found. 
      */
     public static GDSType getType(String type) {
-        if (type == null)
+        if (type == null) {
             return null;
+        }
             
-        return getTypeMap().get(type.toUpperCase());
+        return typeMap.get(type.toUpperCase());
     }
     
     /**
@@ -85,11 +79,10 @@ public final class GDSType implements Serializable {
      * name.
      */
     static GDSType registerType(String typeName) {
-        Map<String, GDSType> typeMap = getTypeMap();
-        
         synchronized(typeMap) {
-            if (typeMap.containsKey(typeName))
+            if (typeMap.containsKey(typeName)) {
                 return typeMap.get(typeName);
+            }
             
             GDSType type = new GDSType(typeName);
             typeMap.put(typeName, type);

@@ -26,38 +26,51 @@ public class WireGDSFactoryPlugin extends BaseGDSFactoryPlugin {
 
     public static final String PURE_JAVA_TYPE_NAME = "PURE_JAVA";
     private static final String[] TYPE_ALIASES = new String[] { "TYPE4" };
-    private static final String[] JDBC_PROTOCOLS = new String[] { "jdbc:firebirdsql:java:", "jdbc:firebirdsql:" };
+    private static final String DEFAULT_PROTOCOL = "jdbc:firebirdsql:";
+    private static final String[] JDBC_PROTOCOLS = new String[] { "jdbc:firebirdsql:java:", DEFAULT_PROTOCOL };
 
+    @Override
     public String getPluginName() {
         return "Pure Java GDS implementation.";
     }
 
+    @Override
     public String getTypeName() {
         return PURE_JAVA_TYPE_NAME;
     }
 
+    @Override
     public String[] getTypeAliases() {
         return TYPE_ALIASES;
     }
 
+    @Override
     public String[] getSupportedProtocols() {
         return JDBC_PROTOCOLS;
     }
 
-    public String getDatabasePath(String server, Integer port, String path) throws GDSException {
-        if (server == null)
-            throw new GDSException("Server name/address is required " +
-                    "for pure Java implementation.");
+    @Override
+    public String getDefaultProtocol() {
+        return "jdbc:firebirdsql:";
+    }
 
-        if (path == null)
+    @Override
+    public String getDatabasePath(String server, Integer port, String path) throws GDSException {
+        if (server == null) {
+            throw new GDSException("Server name/address is required for pure Java implementation.");
+        }
+
+        if (path == null) {
             throw new GDSException("Database name/path is required.");
+        }
 
         StringBuilder sb = new StringBuilder();
 
         sb.append("//");
         sb.append(server);
-        if (port != null)
+        if (port != null) {
             sb.append(':').append(port.intValue());
+        }
 
         sb.append('/').append(path);
 

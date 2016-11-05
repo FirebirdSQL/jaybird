@@ -110,7 +110,6 @@ class ConnectionEncodingFactory implements IEncodingFactory {
         default:
             return factory.getEncodingDefinitionByCharacterSetId(firebirdCharacterSetId);
         }
-        // TODO: return the EncodingDefinition of the default encoding if unknown, or throw exception?
     }
 
     @Override
@@ -164,7 +163,6 @@ class ConnectionEncodingFactory implements IEncodingFactory {
 
     @Override
     public EncodingDefinition getEncodingDefinition(final String firebirdEncodingName, final String javaCharsetAlias) {
-        // TODO Consider returning getDefaultEncodingDefinition() if null
         return factory.getEncodingDefinition(firebirdEncodingName, javaCharsetAlias);
     }
 

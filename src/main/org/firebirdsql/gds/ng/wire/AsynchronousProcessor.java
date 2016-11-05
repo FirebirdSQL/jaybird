@@ -160,8 +160,9 @@ public class AsynchronousProcessor {
 
         private void handleReadable(SelectionKey selectionKey) {
             try {
-                if (!selectionKey.isReadable())
+                if (!selectionKey.isReadable()) {
                     return;
+                }
                 SocketChannel socketChannel = (SocketChannel) selectionKey.channel();
                 FbWireAsynchronousChannel channel = (FbWireAsynchronousChannel) selectionKey.attachment();
 

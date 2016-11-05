@@ -31,15 +31,18 @@ import org.firebirdsql.jdbc.FBConnection;
  * @since 3.0
  */
 public abstract class BaseGDSFactoryPlugin implements GDSFactoryPlugin {
-    
+
+    @Override
     public Class<?> getConnectionClass() {
         return FBConnection.class;
     }
 
+    @Override
     public String getDefaultProtocol() {
         return getSupportedProtocols()[0];
     }
 
+    @Override
     public String getDatabasePath(String jdbcUrl) throws GDSException {
         String[] protocols = getSupportedProtocols();
         for (String protocol : protocols) {
@@ -50,16 +53,13 @@ public abstract class BaseGDSFactoryPlugin implements GDSFactoryPlugin {
         throw new IllegalArgumentException("Incorrect JDBC protocol handling: " + jdbcUrl);
     }
 
-    public int hashCode() {
+    @Override
+    public final int hashCode() {
         return getTypeName().hashCode();
     }
-    
-    public boolean equals(Object obj) {
-        if (obj == null)
-            return false;
-        if (obj == this) 
-            return true;
-        
-        return getClass().equals(obj.getClass());
+
+    @Override
+    public final boolean equals(Object obj) {
+        return obj != null && (obj == this || getClass().equals(obj.getClass()));
     }
 }

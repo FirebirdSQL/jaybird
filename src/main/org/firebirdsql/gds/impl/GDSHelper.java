@@ -29,7 +29,6 @@ import org.firebirdsql.gds.ng.*;
 import org.firebirdsql.jdbc.Synchronizable;
 
 import java.sql.SQLException;
-import java.util.List;
 
 /**
  * Helper class for all GDS-related operations.
@@ -315,17 +314,6 @@ public final class GDSHelper implements Synchronizable {
         // TODO Add as explicit property on IConnectionProperties
         DatabaseParameterBuffer dpb = database.getConnectionProperties().getExtraDatabaseParameters();
         return dpb.getArgumentAsString(DatabaseParameterBufferExtension.MAPPING_PATH);
-    }
-
-    /**
-     * Get all warnings associated with current connection.
-     *
-     * @return list of {@link GDSException}instances representing warnings for this database connection.
-     */
-    @Deprecated
-    public List<GDSException> getWarnings() {
-        // TODO consider resurrecting?
-        throw new UnsupportedOperationException("getWarnings is no longer supported/implemented");
     }
 
     @Override
