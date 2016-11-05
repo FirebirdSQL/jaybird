@@ -30,11 +30,11 @@ dependency as this will be provided by the application server.
 
 #### Jaybird 3.0 for testing ####
 
-Jaybird 3.0 Alpha 1 is available from Maven central:
+Jaybird 3.0 Beta 1 is available from Maven central:
 
 Groupid: `org.firebirdsql.jdbc`,\
 Artifactid: `jaybird-jdkXX` (where `XX` is `17` or `18`).\
-Version: `3.0.0-alpha-1`
+Version: `3.0.0-beta-1`
 
 For example:
 
@@ -42,7 +42,7 @@ For example:
 <dependency>
     <groupId>org.firebirdsql.jdbc</groupId>
     <artifactId>jaybird-jdk18</artifactId>
-    <version>3.0.0-alpha-1</version>
+    <version>3.0.0-beta-1</version>
 </dependency>
 ~~~
 
@@ -54,7 +54,7 @@ dependency:
 <dependency>
     <groupId>org.firebirdsql.jdbc</groupId>
     <artifactId>jaybird-jdk18</artifactId>
-    <version>3.0.0-alpha-1</version>
+    <version>3.0.0-beta-1</version>
     <exclusions>
         <exclusion>
             <groupId>javax.resource</groupId>
@@ -355,10 +355,6 @@ implemented:
 
 Excluding the unsupported features, the following methods are not yet implemented:
 
-* `java.sql.CallableStatement`
-    * `registerOutParameter(int parameterIndex, int sqlType)`
-    * `registerOutParameter(int parameterIndex, int sqlType, int scale)`
-    * `wasNull()`
 * `java.sql.Blob`
     * `length()`
     * `getBytes(long pos, int length)`
