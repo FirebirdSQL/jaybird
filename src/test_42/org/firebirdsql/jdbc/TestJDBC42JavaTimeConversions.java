@@ -29,6 +29,8 @@ import org.junit.rules.ExpectedException;
 import java.sql.*;
 import java.time.*;
 import java.time.temporal.ChronoUnit;
+import java.time.temporal.Temporal;
+import java.time.temporal.TemporalUnit;
 
 import static org.firebirdsql.common.DdlHelper.executeCreateTable;
 import static org.firebirdsql.common.FBTestProperties.getConnectionViaDriverManager;
@@ -249,7 +251,7 @@ public class TestJDBC42JavaTimeConversions extends FBJUnit4TestBase {
             assertTrue("Expected a row", rs.next());
             LocalTime asLocalTime = rs.getObject(1, LocalTime.class);
             assertEquals("Expected retrieved java.time.LocalTime as TIME to be the same as inserted value",
-                    localTime, asLocalTime);
+                    localTime.truncatedTo(MaxFbTimePrecision.INSTANCE), asLocalTime);
         }
     }
 
@@ -406,7 +408,8 @@ public class TestJDBC42JavaTimeConversions extends FBJUnit4TestBase {
             assertTrue("Expected a row", rs.next());
             LocalDateTime asLocalDateTime = rs.getObject(1, LocalDateTime.class);
             assertEquals("Expected retrieved java.time.LocalDateTime as TIME to be the same as LocalTime portion of inserted value",
-                    localDateTime.toLocalTime().atDate(LocalDate.of(1970, 1, 1)), asLocalDateTime);
+                    localDateTime.truncatedTo(MaxFbTimePrecision.INSTANCE).toLocalTime().atDate(LocalDate.of(1970, 1, 1)),
+                    asLocalDateTime);
         }
     }
 
@@ -425,7 +428,7 @@ public class TestJDBC42JavaTimeConversions extends FBJUnit4TestBase {
             Timestamp aTimestamp = rs.getTimestamp(1);
             LocalDateTime asLocalDateTime = aTimestamp.toLocalDateTime();
             assertEquals("Expected retrieved java.time.LocalDateTime as TIMESTAMP to be the same as inserted value",
-                    localDateTime, asLocalDateTime);
+                    localDateTime.truncatedTo(MaxFbTimePrecision.INSTANCE), asLocalDateTime);
         }
     }
 
@@ -443,7 +446,7 @@ public class TestJDBC42JavaTimeConversions extends FBJUnit4TestBase {
             assertTrue("Expected a row", rs.next());
             LocalDateTime asLocalDateTime = rs.getObject(1, LocalDateTime.class);
             assertEquals("Expected retrieved java.time.LocalDateTime as TIMESTAMP to be the same as inserted value",
-                    localDateTime, asLocalDateTime);
+                    localDateTime.truncatedTo(MaxFbTimePrecision.INSTANCE), asLocalDateTime);
         }
     }
 
@@ -726,6 +729,48 @@ public class TestJDBC42JavaTimeConversions extends FBJUnit4TestBase {
             OffsetDateTime asOffsetDateTime = rs.getObject(1, OffsetDateTime.class);
             assertEquals("Expected retrieved java.time.OffsetDateTime as VARCHAR to be the same as inserted value",
                     offsetDateTime, asOffsetDateTime);
+        }
+    }
+
+    private static final class MaxFbTimePrecision implements TemporalUnit {
+
+        private static final Duration PRECISION_DURATION = Duration.ofNanos(100_000);
+        private static final MaxFbTimePrecision INSTANCE = new MaxFbTimePrecision();
+
+        @Override
+        public Duration getDuration() {
+            return PRECISION_DURATION;
+        }
+
+        @Override
+        public boolean isDurationEstimated() {
+            return false;
+        }
+
+        @Override
+        public boolean isDateBased() {
+            return false;
+        }
+
+        @Override
+        public boolean isTimeBased() {
+            return true;
+        }
+
+        @Override
+        public boolean isSupportedBy(Temporal temporal) {
+            return temporal.isSupported(this);
+        }
+
+        @SuppressWarnings("unchecked")
+        @Override
+        public <R extends Temporal> R addTo(R temporal, long amount) {
+            return (R) temporal.plus(amount, this);
+        }
+
+        @Override
+        public long between(Temporal temporal1Inclusive, Temporal temporal2Exclusive) {
+            return temporal1Inclusive.until(temporal2Exclusive, this);
         }
     }
 }
