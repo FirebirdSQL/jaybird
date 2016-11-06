@@ -48,7 +48,7 @@
             <istrue value="${jdk9}"/>
         </condition>
 
-        <condition property="java.module.arg" value="-addmods java.xml.bind" else="">
+        <condition property="java.module.arg" value="--add-modules java.xml.bind" else="">
             <istrue value="${jdk9}"/>
         </condition>
 

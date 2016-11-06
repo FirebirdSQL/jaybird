@@ -261,7 +261,7 @@ Jaybird currently does not formally support Java 9 (JDBC 4.3), although some of
 the JDBC 4.3 features have been implemented. 
 
 You can use the Java 8 driver under Java 9, but it is necessary to add the
-`java.xml.bind` module using `-addmods java.xml.bind`.
+`java.xml.bind` module using `--add-modules java.xml.bind`.
 
 Firebird support
 ----------------
