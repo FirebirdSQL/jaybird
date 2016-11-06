@@ -498,6 +498,9 @@ Known Issues
 
     Either use Firebird 3.0.0 or 3.0.2 (when available).
 
+-   Native / embedded support under Java 9 is very slow. This is still under 
+    investigation [JDBC-459](http://tracker.firebirdsql.org/browse/JDBC-459)
+
 Compatibility changes
 =====================
 
