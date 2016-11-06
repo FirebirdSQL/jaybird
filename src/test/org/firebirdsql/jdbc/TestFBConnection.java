@@ -41,6 +41,7 @@ import static org.firebirdsql.common.matchers.SQLExceptionMatchers.errorCodeEqua
 import static org.firebirdsql.util.FirebirdSupportInfo.supportInfoFor;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.CoreMatchers.nullValue;
+import static org.hamcrest.Matchers.isIn;
 import static org.junit.Assert.*;
 import static org.junit.Assume.assumeThat;
 import static org.junit.Assume.assumeTrue;
@@ -466,6 +467,8 @@ public class TestFBConnection extends FBJUnit4TestBase {
 
     @Test
     public void testIPv6AddressHandling() throws Exception {
+        assumeThat("Test only works for pure java", FBTestProperties.GDS_TYPE,
+                isIn(Arrays.asList(WireGDSFactoryPlugin.PURE_JAVA_TYPE_NAME, OOGDSFactoryPlugin.TYPE_NAME)));
         assumeTrue("Firebird 3 or higher required for IPv6 testing", getDefaultSupportInfo().isVersionEqualOrAbove(3, 0));
         try (Connection connection = DriverManager.getConnection("jdbc:firebirdsql://[::1]/" + getDatabasePath() + "?charSet=utf-8", DB_USER, DB_PASSWORD)) {
             assertTrue(connection.isValid(0));

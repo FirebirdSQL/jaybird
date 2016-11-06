@@ -120,7 +120,7 @@ public class TestServicesAPI {
     }
 
     private void connectToDatabase() throws SQLException {
-        Connection connection = DriverManager.getConnection("jdbc:firebirdsql:embedded:" + mAbsoluteDatabasePath,
+        Connection connection = DriverManager.getConnection("jdbc:firebirdsql:embedded:" + mAbsoluteDatabasePath + "?encoding=NONE",
                 "SYSDBA", "masterkey");
         connection.close();
     }

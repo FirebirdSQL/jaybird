@@ -93,6 +93,7 @@
             <sysproperty key="test.db.port" value="${test.db.port}"/>
             <sysproperty key="test.db.lc_ctype" value="${test.db.lc_ctype}"/>
             <sysproperty key="test.gds_type" value="NATIVE"/>
+            <sysproperty key="jna.library.path" value="${test.jna.library.path}"/>
 
             <classpath>
                 <!-- pathelement location="${build.classes}"/ -->
@@ -162,6 +163,7 @@
             <sysproperty key="test.db.port" value="${test.db.port}"/>
             <sysproperty key="test.db.lc_ctype" value="${test.db.lc_ctype}"/>
             <sysproperty key="test.gds_type" value="EMBEDDED"/>
+            <sysproperty key="jna.library.path" value="${test.jna.library.path}"/>
 
             <classpath>
                 <!-- pathelement location="${build.classes}"/ -->

@@ -154,7 +154,7 @@ public class TestJaybirdBlobBackupProblem {
     }
 
     private void writeSomeBlobData() throws SQLException {
-        try (Connection connection = DriverManager.getConnection("jdbc:firebirdsql:embedded:" + mAbsoluteDatabasePath,
+        try (Connection connection = DriverManager.getConnection("jdbc:firebirdsql:embedded:" + mAbsoluteDatabasePath + "?encoding=NONE",
                 "SYSDBA", "masterkey")) {
             createTheTable(connection);
             writeTheData(connection);
