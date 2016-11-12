@@ -498,8 +498,11 @@ Known Issues
 
     Either use Firebird 3.0.0 or 3.0.2 (when available).
 
--   Native / embedded support under Java 9 is very slow. This is still under 
-    investigation [JDBC-459](http://tracker.firebirdsql.org/browse/JDBC-459)
+-   Using a native connection with a Firebird 3 client library to a Firebird 2.5
+    or older server may be slow to connect. The workaround is to specify the
+    IPv4 address instead of the host name in the connection string.
+    
+    This is caused by [CORE-4658](http://tracker.firebirdsql.org/browse/CORE-4658)
 
 Compatibility changes
 =====================
