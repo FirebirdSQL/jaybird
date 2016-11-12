@@ -1,7 +1,7 @@
 WARNING {-}
 =======
 
-Jaybird 3.0 is still in development. This version is provided for testing
+Jaybird 3 is still in development. This version is provided for testing
 purposes only. We'd appreciate your feedback, but we'd like to emphasize that
 this version is **not intended for production**.
 
@@ -438,7 +438,7 @@ Other fixes and changes
 
 *   Fix: IP-address is reversed on big-endian platforms ([JDBC-98](http://tracker.firebirdsql.org/browse/JDBC-98))
 
-*   Improved support of JDBC Escape syntax (`{...}`) and supported functions (*TODO: Provide more info?*)
+*   Improved support of JDBC Escape syntax (`{...}`) and supported functions
     ([JDBC-223](http://tracker.firebirdsql.org/browse/JDBC-223))
 
     The escape parser will now only allow the function names defined in
@@ -494,7 +494,7 @@ See [Removal of deprecated classes, packages and methods] in
 Known Issues
 ============
 
--   Firebird 3.0.1 doesn't correctly support `BOOLEAN` parameters, see [CORE-5367](http://tracker.firebirdsql.org/browse/CORE-5367)
+-   Firebird 3.0.1 does not correctly support `BOOLEAN` parameters, see [CORE-5367](http://tracker.firebirdsql.org/browse/CORE-5367)
 
     Either use Firebird 3.0.0 or 3.0.2 (when available).
 
@@ -545,9 +545,9 @@ Other getters/setters/updaters or object types supported for
 
 Jaybird will now use the `(VAR)CHAR` or `BLOB SUB_TYPE TEXT` character set
 information for decoding. This means that when using connection character set 
-`NONE` that columns that have an explicit character set will be decoded and
-encoded using that character set instead of the platform default encoding (or 
-explicitly specified Java character set when specifying both `encoding=NONE` 
+`NONE` that columns which have an explicit character set will be decoded and
+encoded using that character set instead of using the platform default encoding
+(or explicitly specified Java character set when specifying both `encoding=NONE` 
 **and** `charSet=<some java charset>`).
 
 This may lead to unexpected character conversions if - for example - you have 
@@ -572,18 +572,19 @@ handling when the database is used from different locales.
 To address this change, explicitly set the connection character set using
 one of the following options:
 
-*   Use connection property `encoding` (or `lc_ctype`) with Firebird character
-    set names. 
+*   Use connection property `encoding` (or `lc_ctype`) with a Firebird character
+    set name. 
     
     Use `encoding=NONE` for the 'old' default behavior (with some caveats, see 
     other sections).
 
-*   Use connection property `charSet` (or `localEncoding`) with Java character
-    set names.
+*   Use connection property `charSet` (or `localEncoding`) with a Java character
+    set name.
 
 *   By providing a default character set with system property 
     `org.firebirdsql.jdbc.defaultConnectionEncoding`. Jaybird will apply the
-    specified character set as the default when none is specified.
+    specified character set as the default when no character set is specified
+    in the connection properties.
     
     This property only supports Firebird character set names. The property must
     be set on start up (or at least before Jaybird-related classes get loaded). 
@@ -594,8 +595,8 @@ one of the following options:
 Logging
 -------
 
-Support for log4j has been removed, we now default to `java.util.logging`. The
-previous default was no logging.
+Support for log4j has been removed, and we now default to `java.util.logging`.
+The previous default was no logging.
 
 See also [Support for java.util.logging added] and [Support for log4j 1.x removed].
 
@@ -610,7 +611,7 @@ Exceptions
 
     This change does not mean that there are no Firebird-specific `SQLException`
     sub-classes anymore, but in general we strive to use the standard
-    exceptions where possible.
+    exceptions where possible. 
 
 *   Class `FBSQLWarning` has been removed and replaced with `SQLWarning`.
 
@@ -676,6 +677,13 @@ Exceptions
     In previous versions a large class of errors always reported error 335544569
     ("Dynamic SQL Error" or `isc_dsql_error`) with SQLState 42000, Jaybird now
     tries to find a more specific error code (and SQLState) in the status vector.
+    
+*   Added Jaybird specific error codes for some exceptions. The error code range
+    `337248256` - `337264639` has been reserved by the Firebird project for use 
+    by Jaybird.
+    
+    We will migrate more Jaybird-specific exceptions to these error codes in
+    future versions.
 
 Firebird 1.0 and 1.5 no longer supported
 ----------------------------------------
@@ -707,7 +715,7 @@ specification.
 _Unless explicitly indicated, changes also apply to `PreparedStatement` and
 `CallableStatement`_
 
-*   Generated keys `ResultSet` only available through `getGeneratedKeys`.
+*   Generated keys `ResultSet` is only available through `getGeneratedKeys`.
 
     The generated keys `ResultSet` from a statement is no longer available
     through `getResultSet`, but only through `getGeneratedKeys` as the JDBC
@@ -879,8 +887,6 @@ Apart from the change described above, the following has changed for `getTables`
     ODS 11.2 or higher (Firebird 2.5 or higher). In previous versions,
     the global temporary tables were reported as normal tables (type `"TABLE"`)
 
-**TODO: Add other changes**
-
 Removal of old GDS API
 ----------------------
 
@@ -922,8 +928,6 @@ In the future we will move the Type 2 support to a separate library and provide
 JNA-compatible jars that provide the native libraries of a specific Firebird 
 version.
 
-**TODO: May need further documentation**
-
 Removal of deprecated classes, packages and methods
 ---------------------------------------------------
 
@@ -940,7 +944,8 @@ With this change, there are no `javax.sql.DataSource` implementations in Jaybird
 that provide connection pooling (the `javax.sql.ConnectionPoolDataSource`
 implementations are for use by a connection pool and not a connection pool
 themselves). Either use the connection pool provided by your application server,
-or use a third-party connection pool like c3p0, Apache DBCP or HikariCP.
+or use a third-party connection pool like [c3p0](http://www.mchange.com/projects/c3p0/), 
+[Apache DBCP](https://commons.apache.org/proper/commons-dbcp/) or [HikariCP](https://brettwooldridge.github.io/HikariCP/).
 
 The class `org.firebirdsql.jca.FBXADataSource` has been removed as well. Its
 replacement is `org.firebirdsql.ds.FBXADataSource` (which was introduced in
@@ -1006,7 +1011,9 @@ The following methods will be removed in Jaybird 3.1:
 -   `CharacterTranslator.getMapping()`, use `CharacterTranslator.getMapping(char)`
     instead.
     
-    Complete removal of the character translation support is also being considered.
+    Complete removal of the character translation support is also being
+    considered, as similar effects can be achieved by a custom encoding 
+    implementation.
     
 -   `GDSHelper.iscVaxInteger(byte[] buffer, int pos, int length)` use
     `VaxEncoding.iscVaxInteger(byte[] buffer, int startPosition, int length)`
