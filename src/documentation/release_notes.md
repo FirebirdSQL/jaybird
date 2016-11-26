@@ -224,6 +224,17 @@ The minimal `module.xml` to use Jaybird 3 under Wildfly is:
 </module>
 ```
 
+Jaybird 3.0.x changelog
+=======================
+
+Changes in Jaybird 3.0.0-beta-2
+-------------------------------
+
+The following has been changed or fixed since Jaybird 3.0.0-beta-1
+
+-   Fixed: Authentication with legacy auth users fails when Firebird 3 uses
+    `AuthServer = Legacy_Auth` [JDBC-460](http://tracker.firebirdsql.org/browse/JDBC-460)
+
 What's new in Jaybird 3.0
 =========================
 
