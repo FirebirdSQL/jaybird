@@ -27,7 +27,6 @@ import org.firebirdsql.gds.ng.IAttachProperties;
 import org.firebirdsql.logging.Logger;
 import org.firebirdsql.logging.LoggerFactory;
 
-import javax.xml.bind.DatatypeConverter;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
@@ -311,8 +310,7 @@ public final class ClientAuthBlock {
             firstTime = false;
             log.debug("first time - added plugName & pluginList");
         }
-        pb.addArgument(tagMapping.getSpecificAuthDataTag(),
-                DatatypeConverter.printHexBinary(clientData).getBytes(StandardCharsets.US_ASCII));
+        pb.addArgument(tagMapping.getSpecificAuthDataTag(), clientData);
         log.debug(String.format("Added %d bytes of spec data with tag isc_dpb_specific_auth_data", clientData.length));
     }
 
