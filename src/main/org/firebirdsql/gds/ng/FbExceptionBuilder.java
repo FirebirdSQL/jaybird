@@ -204,12 +204,15 @@ public final class FbExceptionBuilder {
      * as this applies some heuristics to get more specific error codes and flattens the message into a single
      * exception.
      * </p>
+     * <p>
+     * If {@link #isEmpty()} returns {@code false}, then this will throw an {@link IllegalStateException}.
+     * </p>
      *
      * @return SQLException object
      * @see #toFlatSQLException()
      */
     public SQLException toSQLException() {
-        if (exceptionInfo.isEmpty()) return null;
+        checkNonEmpty();
         SQLExceptionChainBuilder<SQLException> chain = new SQLExceptionChainBuilder<>();
         for (ExceptionInformation info : exceptionInfo) {
             chain.append(info.toSQLException());
@@ -248,12 +251,15 @@ public final class FbExceptionBuilder {
      * which contains the separate items obtained from the status vector. These items are chained together using
      * the SQLException chain.
      * </p>
+     * <p>
+     * If {@link #isEmpty()} returns {@code false}, then this will throw an {@link IllegalStateException}.
+     * </p>
      *
      * @return SQLException object
      * @see org.firebirdsql.jdbc.FBSQLExceptionInfo
      */
     public SQLException toFlatSQLException() {
-        if (exceptionInfo.isEmpty()) return null;
+        checkNonEmpty();
         // We are recording the unflattened state if people need the details
         SQLExceptionChainBuilder<FBSQLExceptionInfo> chain = new SQLExceptionChainBuilder<>();
         StringBuilder fullExceptionMessage = new StringBuilder();
@@ -296,6 +302,12 @@ public final class FbExceptionBuilder {
         return exception;
     }
 
+    private void checkNonEmpty() {
+        if (isEmpty()) {
+            throw new IllegalArgumentException("No information available to build an SQLException");
+        }
+    }
+
     /**
      * Converts the builder to the appropriate SQLException instance (optionally with a chain of additional
      * exceptions) and casts to the specified type T.
@@ -327,6 +339,13 @@ public final class FbExceptionBuilder {
      */
     public <T extends SQLException> T toFlatSQLException(Class<T> type) throws ClassCastException {
         return type.cast(toFlatSQLException());
+    }
+
+    /**
+     * @return {@code true} if this builder contains exception information, {@code false} otherwise
+     */
+    public boolean isEmpty() {
+        return exceptionInfo.isEmpty();
     }
 
     @Override

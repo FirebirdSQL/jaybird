@@ -129,6 +129,9 @@ public abstract class AbstractWireOperations implements FbWireOperations {
                     builder.messageParameter(intValue);
                     break;
                 case isc_arg_end:
+                    if (builder.isEmpty()) {
+                        return null;
+                    }
                     return builder.toFlatSQLException();
                 default:
                     int e = xdrIn.readInt();
@@ -169,7 +172,7 @@ public abstract class AbstractWireOperations implements FbWireOperations {
      * Reads the next operation. Forwards call to {@link WireConnection#readNextOperation()}.
      *
      * @return next operation
-     * @throws java.io.IOException
+     * @throws java.io.IOException For errors reading the operation from the connection
      */
     public final int readNextOperation() throws IOException {
         synchronized (syncObject) {

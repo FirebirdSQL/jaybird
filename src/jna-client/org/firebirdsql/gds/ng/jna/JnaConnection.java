@@ -141,11 +141,14 @@ public abstract class JnaConnection<T extends IAttachProperties<T>, C extends Jn
                 break;
             }
         }
-        SQLException exception = builder.toFlatSQLException();
-        if (exception instanceof SQLWarning) {
-            warningMessageCallback.processWarning((SQLWarning) exception);
-        } else if (exception != null) {
-            throw exception;
+
+        if (!builder.isEmpty()) {
+            SQLException exception = builder.toFlatSQLException();
+            if (exception instanceof SQLWarning) {
+                warningMessageCallback.processWarning((SQLWarning) exception);
+            } else {
+                throw exception;
+            }
         }
     }
 

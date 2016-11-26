@@ -311,11 +311,32 @@ public class TestFbExceptionBuilder {
         builder.messageParameter("");
     }
 
+    @Test
+    public void toSQLException_empty_throwsIllegalState() {
+        expectIllegalStateForEmptyBuilder();
+
+        FbExceptionBuilder builder = new FbExceptionBuilder();
+        builder.toSQLException();
+    }
+
+    @Test
+    public void toFlatSQLException_empty_throwsIllegalState() {
+        expectIllegalStateForEmptyBuilder();
+
+        FbExceptionBuilder builder = new FbExceptionBuilder();
+        builder.toFlatSQLException();
+    }
+
     /**
      * Helper method to set the expected exception for an uninitialized exception type.
      */
     private void expectIllegalStateForUninitializedExceptionType() {
         exceptionRule.expect(IllegalStateException.class);
         exceptionRule.expectMessage("FbExceptionBuilder requires call to warning() or exception() first");
+    }
+
+    private void expectIllegalStateForEmptyBuilder() {
+        exceptionRule.expect(IllegalStateException.class);
+        exceptionRule.expectMessage("No information available to build an SQLException");
     }
 }
