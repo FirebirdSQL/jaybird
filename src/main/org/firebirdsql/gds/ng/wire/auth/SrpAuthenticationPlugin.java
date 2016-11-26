@@ -23,6 +23,7 @@ import org.firebirdsql.gds.ng.FbExceptionBuilder;
 import org.firebirdsql.logging.Logger;
 import org.firebirdsql.logging.LoggerFactory;
 
+import javax.xml.bind.DatatypeConverter;
 import java.nio.charset.StandardCharsets;
 import java.sql.SQLException;
 
@@ -63,7 +64,8 @@ public class SrpAuthenticationPlugin implements AuthenticationPlugin {
         }
 
         log.debug("SRP phase 2");
-        clientData = srpClient.clientProof(clientAuthBlock.getLogin(), clientAuthBlock.getPassword(), serverData);
+        clientData = toHex(srpClient.clientProof(clientAuthBlock.getLogin(), clientAuthBlock.getPassword(), serverData))
+                .getBytes(StandardCharsets.US_ASCII);
         // TODO store key as in the Firebird sources?
         return AuthStatus.AUTH_SUCCESS;
     }
@@ -86,5 +88,9 @@ public class SrpAuthenticationPlugin implements AuthenticationPlugin {
     @Override
     public String toString() {
         return getClass().getSimpleName() + " : " + getName();
+    }
+
+    private static String toHex(byte[] bytes) {
+        return DatatypeConverter.printHexBinary(bytes);
     }
 }

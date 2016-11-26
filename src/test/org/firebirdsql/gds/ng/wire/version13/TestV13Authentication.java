@@ -111,4 +111,28 @@ public class TestV13Authentication {
                 notNullValue(),
                 not(equalTo(GDSServerVersion.INVALID_VERSION))));
     }
+
+    /**
+     * This test assumes that the Firebird 3 config for {@code UserManager} contains {@code Srp}.
+     * <p>
+     * Replicates the test of {@link org.firebirdsql.management.TestFBServiceManager#testGetServerVersion()}.
+     * </p>
+     */
+    @Test
+    public void authenticateServiceUsingSrpAuth() throws Exception {
+        final String username = "srpauth";
+        final String password = "srp";
+        databaseUserRule.createUser(username, password, "Srp");
+        final FBServiceManager fbServiceManager = new FBServiceManager(FBTestProperties.getGdsType());
+        fbServiceManager.setHost(FBTestProperties.DB_SERVER_URL);
+        fbServiceManager.setPort(FBTestProperties.DB_SERVER_PORT);
+        fbServiceManager.setUser(username);
+        fbServiceManager.setPassword(password);
+
+        final GDSServerVersion serverVersion = fbServiceManager.getServerVersion();
+
+        assertThat(serverVersion, allOf(
+                notNullValue(),
+                not(equalTo(GDSServerVersion.INVALID_VERSION))));
+    }
 }
