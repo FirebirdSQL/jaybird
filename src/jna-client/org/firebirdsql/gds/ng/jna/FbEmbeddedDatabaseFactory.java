@@ -26,6 +26,7 @@ import org.firebirdsql.jna.fbclient.WinFbClientLibrary;
 import org.firebirdsql.logging.Logger;
 import org.firebirdsql.logging.LoggerFactory;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -71,7 +72,7 @@ public class FbEmbeddedDatabaseFactory extends AbstractNativeDatabaseFactory {
         private static final FbClientLibrary clientLibrary = initClientLibrary();
 
         private static FbClientLibrary initClientLibrary() {
-            Throwable firstThrowable = null;
+            final List<Throwable> throwables = new ArrayList<>();
             for (String libraryName : LIBRARIES_TO_TRY) {
                 try {
                     if (Platform.isWindows()) {
@@ -80,13 +81,17 @@ public class FbEmbeddedDatabaseFactory extends AbstractNativeDatabaseFactory {
                         return (FbClientLibrary) Native.loadLibrary(libraryName, FbClientLibrary.class);
                     }
                 } catch (UnsatisfiedLinkError e) {
-                    log.error("Loading " + libraryName + " failed", e);
-                    if (firstThrowable == null) firstThrowable = e;
+                    throwables.add(e);
+                    log.debug("Attempt to load " + libraryName + " failed", e);
                     // continue with next
                 }
             }
-            assert firstThrowable != null;
-            throw new ExceptionInInitializerError(firstThrowable);
+            assert throwables.size() == LIBRARIES_TO_TRY.size();
+            log.error("Could not load any of the libraries in " + LIBRARIES_TO_TRY + ":");
+            for (int idx = 0; idx < LIBRARIES_TO_TRY.size(); idx++) {
+                log.error("Loading " + LIBRARIES_TO_TRY.get(idx) + " failed", throwables.get(idx));
+            }
+            throw new ExceptionInInitializerError(throwables.get(0));
         }
     }
 
