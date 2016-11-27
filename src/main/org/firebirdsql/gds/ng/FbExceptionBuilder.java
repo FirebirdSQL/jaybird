@@ -304,7 +304,7 @@ public final class FbExceptionBuilder {
 
     private void checkNonEmpty() {
         if (isEmpty()) {
-            throw new IllegalArgumentException("No information available to build an SQLException");
+            throw new IllegalStateException("No information available to build an SQLException");
         }
     }
 
