@@ -114,6 +114,8 @@ public class TestJnaDatabase {
 
     @Test
      public void basicStatusVectorProcessing_wrongLogin() throws Exception {
+        assumeThat("Embedded on windows does not use authentication",
+                FBTestProperties.GDS_TYPE, is(not(EmbeddedGDSFactoryPlugin.EMBEDDED_TYPE_NAME)));
         // set invalid password
         connectionInfo.setPassword("abcd");
         try (JnaDatabase db = factory.connect(connectionInfo)) {
