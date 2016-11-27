@@ -234,6 +234,9 @@ The following has been changed or fixed since Jaybird 3.0.0-beta-1
 
 -   Fixed: Authentication with legacy auth users fails when Firebird 3 uses
     `AuthServer = Legacy_Auth` [JDBC-460](http://tracker.firebirdsql.org/browse/JDBC-460)
+-   Fixed: `jna-4.2.2.jar` was not included in the distribution zip [JDBC-461](http://tracker.firebirdsql.org/browse/JDBC-461)
+-   Changed logging of Embedded library to only log on error if none of the
+    libraries could be loaded.
 
 What's new in Jaybird 3.0
 =========================

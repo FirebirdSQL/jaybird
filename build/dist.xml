@@ -73,6 +73,9 @@
             <zipfileset dir="${module.thirdparty}" prefix="lib">
                 <include name="antlr-runtime-4.5.3.jar"/>
             </zipfileset>
+            <zipfileset dir="${module.thirdparty}" prefix="lib">
+                <include name="jna-4.2.2.jar"/>
+            </zipfileset>
             <zipfileset dir="${build.documentation}" prefix="docs">
                 <include name="faq.html"/>
             </zipfileset>
