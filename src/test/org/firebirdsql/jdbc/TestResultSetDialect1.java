@@ -20,41 +20,48 @@
  */
 package org.firebirdsql.jdbc;
 
-import org.firebirdsql.common.FBTestBase;
+import org.firebirdsql.common.DdlHelper;
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.impl.GDSType;
+import org.firebirdsql.management.FBManager;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
 
+import java.math.BigDecimal;
 import java.sql.*;
 import java.util.Properties;
 
+import static org.firebirdsql.common.FBTestProperties.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+
 /**
- * Tests for updatable result sets with a dialect 1 database.
+ * Tests for result set behavior with a dialect 1 database.
  *
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @since 2.2
  */
-public class TestResultSetDialect1 extends FBTestBase {
+public class TestResultSetDialect1 {
 
     //@formatter:off
-    public static final String CREATE_TABLE_STATEMENT =
+    private static final String CREATE_TABLE_STATEMENT =
             "CREATE TABLE test_table(" +
             "  id INTEGER NOT NULL PRIMARY KEY, " +
             "  str VARCHAR(10) " +
             ")";
 
-    public static final String SELECT_TEST_TABLE = "SELECT id, str FROM test_table";
+    private static final String SELECT_TEST_TABLE = "SELECT id, str FROM test_table";
 
-    public static final String INSERT_INTO_TABLE_STATEMENT = "INSERT INTO test_table (id, str) VALUES(?, ?)";
+    private static final String INSERT_INTO_TABLE_STATEMENT = "INSERT INTO test_table (id, str) VALUES(?, ?)";
     //@formatter:on
 
+    private FBManager fbManager;
     private Connection connection;
 
-    public TestResultSetDialect1(String name) {
-        super(name);
-    }
-
-    @Override
-    protected void setUp() throws Exception {
+    @Before
+    public void basicSetUp() throws Exception {
         fbManager = createFBManager();
 
         if (getGdsType() == GDSType.getType("PURE_JAVA")
@@ -70,12 +77,10 @@ public class TestResultSetDialect1 extends FBTestBase {
         final Properties properties = getDefaultPropertiesForConnection();
         properties.setProperty("sql_dialect", String.valueOf(ISCConstants.SQL_DIALECT_V5));
         connection = DriverManager.getConnection(getUrl(), properties);
-
-        executeCreateTable(connection, CREATE_TABLE_STATEMENT);
     }
 
-    @Override
-    protected void tearDown() throws Exception {
+    @After
+    public void tearDown() throws Exception {
         try {
             connection.close();
         } finally {
@@ -92,6 +97,7 @@ public class TestResultSetDialect1 extends FBTestBase {
      * happen in dialect 1.
      * </p>
      */
+    @Test
     public void testUpdateRow() throws Exception {
         createTestData(1);
 
@@ -120,6 +126,7 @@ public class TestResultSetDialect1 extends FBTestBase {
      * happen in dialect 1.
      * </p>
      */
+    @Test
     public void testInsertRow() throws Exception {
         createTestData(1);
 
@@ -149,6 +156,7 @@ public class TestResultSetDialect1 extends FBTestBase {
      * happen in dialect 1.
      * </p>
      */
+    @Test
     public void testDeleteRow() throws Exception {
         createTestData(1);
 
@@ -168,7 +176,22 @@ public class TestResultSetDialect1 extends FBTestBase {
         }
     }
 
+    @Test
+    public void testLargeNumeric()throws Exception {
+        DdlHelper.executeCreateTable(connection, "create table testnumeric (id integer primary key, numericvalue numeric(18,2))");
+        Statement stmt = connection.createStatement();
+        try {
+            stmt.executeUpdate("insert into testnumeric(id, numericvalue) values(1, 34.01)");
+            ResultSet rs = stmt.executeQuery("select * from testnumeric");
+            assertTrue("Expected a row", rs.next());
+            assertEquals(new BigDecimal("34.01"), rs.getBigDecimal("numericvalue"));
+        } finally {
+            stmt.close();
+        }
+    }
+
     private void createTestData(int recordCount) throws Exception {
+        DdlHelper.executeCreateTable(connection, CREATE_TABLE_STATEMENT);
         connection.setAutoCommit(false);
         PreparedStatement ps = connection.prepareStatement(INSERT_INTO_TABLE_STATEMENT);
         try {

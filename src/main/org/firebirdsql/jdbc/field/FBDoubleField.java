@@ -125,14 +125,6 @@ class FBDoubleField extends FBField {
         return result;
     }
     
-    /*
-    public Object getObject() throws SQLException {
-        if (getFieldData()==null) return OBJECT_NULL_VALUE;
-
-        return new Double(field.decodeDouble(getFieldData()));
-    }
-    */
-    
     public boolean getBoolean() throws SQLException {
         if (getFieldData()==null) return BOOLEAN_NULL_VALUE;
 
