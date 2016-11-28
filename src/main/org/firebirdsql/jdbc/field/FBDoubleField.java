@@ -109,28 +109,13 @@ class FBDoubleField extends FBField {
     public double getDouble() throws SQLException {
         if (isNull()) return DOUBLE_NULL_VALUE;
 
-        double result = getDatatypeCoder().decodeDouble(getFieldData());
-        
-        // TODO Is this even possible? Wouldn't it be seen as a FBBigDecimalField ?
-        // TODO Mismatch with all other getters
-        if (fieldDescriptor.getScale() != 0) {
-            BigDecimal tempValue = new BigDecimal(result);
-            tempValue = tempValue.setScale(Math.abs(fieldDescriptor.getScale()), BigDecimal.ROUND_HALF_EVEN);
-            result = tempValue.doubleValue();
-        }
-        
-        return result;
+        return getDatatypeCoder().decodeDouble(getFieldData());
     }
     
     public BigDecimal getBigDecimal() throws SQLException {
         if (isNull()) return null;
 
-        BigDecimal result = new BigDecimal(getDatatypeCoder().decodeDouble(getFieldData()));
-        // TODO Is this even possible? Wouldn't it be seen as a FBBigDecimalField ?
-        if (fieldDescriptor.getScale() != 0)
-            result = result.setScale(Math.abs(fieldDescriptor.getScale()), BigDecimal.ROUND_HALF_EVEN);
-        
-        return result;
+        return new BigDecimal(getDatatypeCoder().decodeDouble(getFieldData()));
     }
 
     public boolean getBoolean() throws SQLException {

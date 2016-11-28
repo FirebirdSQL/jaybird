@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
@@ -43,6 +41,9 @@ final class FBBigDecimalField extends FBField {
 
     private static final BigInteger MAX_LONG = BigInteger.valueOf(Long.MAX_VALUE);
     private static final BigInteger MIN_LONG = BigInteger.valueOf(Long.MIN_VALUE);
+
+    private static final BigDecimal BD_MAX_DOUBLE = new BigDecimal(MAX_DOUBLE_VALUE);
+    private static final BigDecimal BD_MIN_DOUBLE = new BigDecimal(MIN_DOUBLE_VALUE);
 
     private final FieldDataSize fieldDataSize;
 
@@ -248,6 +249,23 @@ final class FBBigDecimalField extends FBField {
                 }
                 return fieldDescriptor.getDatatypeCoder().encodeLong(unscaledValue.longValue());
             }
+        },
+        DOUBLE {
+            @Override
+            protected BigDecimal decode(FieldDescriptor fieldDescriptor, byte[] fieldData) {
+                BigDecimal value = new BigDecimal(fieldDescriptor.getDatatypeCoder().decodeDouble(fieldData));
+                return value.setScale(Math.abs(fieldDescriptor.getScale()), BigDecimal.ROUND_HALF_EVEN);
+            }
+
+            @Override
+            protected byte[] encode(FieldDescriptor fieldDescriptor, BigDecimal value) throws SQLException {
+                // check if value is within bounds
+                if (value.compareTo(BD_MAX_DOUBLE) > 0 ||
+                        value.compareTo(BD_MIN_DOUBLE) < 0)
+                    throw new TypeConversionException(DOUBLE_CONVERSION_ERROR + " " + value);
+
+                return fieldDescriptor.getDatatypeCoder().encodeDouble(value.doubleValue());
+            }
         };
 
         /**
@@ -303,8 +321,9 @@ final class FBBigDecimalField extends FBField {
                 return INTEGER;
             case ISCConstants.SQL_INT64:
                 return LONG;
+            case ISCConstants.SQL_DOUBLE:
+                return DOUBLE;
             default:
-                // TODO Handle type double (dialect 1)
                 // TODO Throw exception
                 return null;
             }
