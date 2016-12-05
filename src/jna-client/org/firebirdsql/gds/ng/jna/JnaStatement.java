@@ -140,6 +140,7 @@ public class JnaStatement extends AbstractFbStatement {
 
                 // Information in tempXSqlDa is ignored, as we are retrieving more detailed information using getSqlInfo
                 final XSQLDA tempXSqlDa = new XSQLDA();
+                tempXSqlDa.setAutoRead(false);
                 clientLibrary.isc_dsql_prepare(statusVector, getTransaction().getJnaHandle(), handle,
                         (short) statementArray.length, statementArray, db.getConnectionDialect(), tempXSqlDa);
                 processStatusVector();
@@ -212,7 +213,7 @@ public class JnaStatement extends AbstractFbStatement {
     }
 
     /**
-     * Creates and populates a XSQLDA from the row descriptor and parameter values.
+     * Populates an XSQLDA from the row descriptor and parameter values.
      *
      * @param xSqlDa
      *         XSQLDA
@@ -242,11 +243,13 @@ public class JnaStatement extends AbstractFbStatement {
                 if (fieldDescriptor.isVarying()) {
                     // Only send the data we need
                     xSqlVar.sqllen = (short) Math.min(fieldDescriptor.getLength(), fieldData.length);
+                    xSqlVar.writeField("sqllen");
                     xSqlVar.sqldata.setShort(0, (short) fieldData.length);
                     bufferOffset = 2;
                 } else if (fieldDescriptor.isFbType(ISCConstants.SQL_TEXT)) {
                     // Only send the data we need
                     xSqlVar.sqllen = (short) Math.min(fieldDescriptor.getLength(), fieldData.length);
+                    xSqlVar.writeField("sqllen");
                     if (fieldDescriptor.getSubType() != ISCConstants.CS_BINARY) {
                         // Non-binary CHAR field: fill with spaces
                         xSqlVar.sqldata.setMemory(0, xSqlVar.sqllen & 0xff, (byte) ' ');
@@ -267,28 +270,38 @@ public class JnaStatement extends AbstractFbStatement {
     protected XSQLDA allocateXSqlDa(RowDescriptor rowDescriptor) {
         if (rowDescriptor == null || rowDescriptor.getCount() == 0) {
             final XSQLDA xSqlDa = new XSQLDA(1);
+            xSqlDa.setAutoSynch(false);
             xSqlDa.sqld = xSqlDa.sqln = 0;
+            xSqlDa.write();
             return xSqlDa;
         }
         final XSQLDA xSqlDa = new XSQLDA(rowDescriptor.getCount());
+        xSqlDa.setAutoSynch(false);
 
         for (int idx = 0; idx < rowDescriptor.getCount(); idx++) {
             final FieldDescriptor fieldDescriptor = rowDescriptor.getFieldDescriptor(idx);
             final XSQLVAR xSqlVar = xSqlDa.sqlvar[idx];
 
-            xSqlVar.sqltype = (short) (fieldDescriptor.getType() | 1); // Always make nullable
-            xSqlVar.sqlsubtype = (short) fieldDescriptor.getSubType();
-            xSqlVar.sqlscale = (short) fieldDescriptor.getScale();
-            xSqlVar.sqllen = (short) fieldDescriptor.getLength();
-            xSqlVar.sqlind = new ShortByReference();
-
-            final int requiredDataSize = fieldDescriptor.isVarying()
-                    ? fieldDescriptor.getLength() + 3 // 2 bytes for length, 1 byte for nul terminator
-                    : fieldDescriptor.getLength() + 1; // 1 byte for nul terminator
-
-            xSqlVar.sqldata = new Memory(requiredDataSize);
+            populateXSqlVar(fieldDescriptor, xSqlVar);
         }
+        xSqlDa.write();
         return xSqlDa;
+    }
+
+    private void populateXSqlVar(FieldDescriptor fieldDescriptor, XSQLVAR xSqlVar) {
+        xSqlVar.setAutoSynch(false);
+        xSqlVar.sqltype = (short) (fieldDescriptor.getType() | 1); // Always make nullable
+        xSqlVar.sqlsubtype = (short) fieldDescriptor.getSubType();
+        xSqlVar.sqlscale = (short) fieldDescriptor.getScale();
+        xSqlVar.sqllen = (short) fieldDescriptor.getLength();
+        xSqlVar.sqlind = new ShortByReference();
+
+        final int requiredDataSize = fieldDescriptor.isVarying()
+                ? fieldDescriptor.getLength() + 3 // 2 bytes for length, 1 byte for nul terminator
+                : fieldDescriptor.getLength() + 1; // 1 byte for nul terminator
+
+        xSqlVar.sqldata = new Memory(requiredDataSize);
+        xSqlVar.write();
     }
 
     /**
