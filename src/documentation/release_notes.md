@@ -237,6 +237,7 @@ The following has been changed or fixed since Jaybird 3.0.0-beta-1
 -   Fixed: `jna-4.2.2.jar` was not included in the distribution zip [JDBC-461](http://tracker.firebirdsql.org/browse/JDBC-461)
 -   Changed logging of Embedded library to only log on error if none of the
     libraries could be loaded.
+-   Fixed: native protocol is 20x-30x slower than Jaybird 2.2 native [JDBC-463](http://tracker.firebirdsql.org/browse/JDBC-463)
 
 What's new in Jaybird 3.0
 =========================
