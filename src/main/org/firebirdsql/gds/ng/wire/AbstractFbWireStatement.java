@@ -89,9 +89,7 @@ public abstract class AbstractFbWireStatement extends AbstractFbStatement implem
     }
 
     protected final void setHandle(int handle) {
-        synchronized (getSynchronizationObject()) {
-            this.handle = handle;
-        }
+        this.handle = handle;
     }
 
     /**

@@ -248,9 +248,7 @@ public abstract class AbstractFbStatement implements FbStatement {
      *         New type
      */
     protected void setType(StatementType type) {
-        synchronized (getSynchronizationObject()) {
-            this.type = type;
-        }
+        this.type = type;
     }
 
     /**
@@ -274,9 +272,7 @@ public abstract class AbstractFbStatement implements FbStatement {
      *         <code>true</code>: all rows fetched, <code>false</code> not all rows fetched.
      */
     protected final void setAllRowsFetched(boolean allRowsFetched) {
-        synchronized (getSynchronizationObject()) {
-            this.allRowsFetched = allRowsFetched;
-        }
+        this.allRowsFetched = allRowsFetched;
         if (allRowsFetched) {
             statementListenerDispatcher.allRowsFetched(this);
         }
@@ -345,9 +341,7 @@ public abstract class AbstractFbStatement implements FbStatement {
      *         Parameter descriptor
      */
     protected void setParameterDescriptor(RowDescriptor parameterDescriptor) {
-        synchronized (getSynchronizationObject()) {
-            this.parameterDescriptor = parameterDescriptor;
-        }
+        this.parameterDescriptor = parameterDescriptor;
     }
 
     @Override
@@ -362,9 +356,7 @@ public abstract class AbstractFbStatement implements FbStatement {
      *         Field descriptor
      */
     protected void setFieldDescriptor(RowDescriptor fieldDescriptor) {
-        synchronized (getSynchronizationObject()) {
-            this.fieldDescriptor = fieldDescriptor;
-        }
+        this.fieldDescriptor = fieldDescriptor;
     }
 
     /**
