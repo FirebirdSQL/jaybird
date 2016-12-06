@@ -41,13 +41,14 @@ public class FBPooledConnection implements PooledConnection {
 
     private final List<ConnectionEventListener> connectionEventListeners = new CopyOnWriteArrayList<>();
 
-    protected Connection connection;
-    protected volatile PooledConnectionHandler handler;
+    private Connection connection;
+    private PooledConnectionHandler handler;
 
     protected FBPooledConnection(Connection connection) {
         this.connection = connection;
     }
 
+    @Override
     public synchronized Connection getConnection() throws SQLException {
         if (connection == null) {
             FBSQLException ex = new FBSQLException("The PooledConnection has been closed",
@@ -59,17 +60,17 @@ public class FBPooledConnection implements PooledConnection {
             if (handler != null) {
                 handler.close();
             }
-            resetConnection();
+            resetConnection(connection);
         } catch (SQLException ex) {
             fireFatalConnectionError(ex);
             throw ex;
         }
-        handler = createConnectionHandler();
+        handler = createConnectionHandler(connection);
 
         return handler.getProxy();
     }
-    
-    protected void resetConnection() throws SQLException {
+
+    protected void resetConnection(Connection connection) throws SQLException {
         connection.setAutoCommit(true);
     }
 
@@ -78,13 +79,15 @@ public class FBPooledConnection implements PooledConnection {
      * <p>
      * Subclasses may override this method to return their own subclass of PooledConnectionHandler.
      * </p>
-     * 
+     *
+     * @param connection Connection
      * @return PooledConnectionHandler
      */
-    protected PooledConnectionHandler createConnectionHandler() {
+    protected PooledConnectionHandler createConnectionHandler(Connection connection) {
         return new PooledConnectionHandler(connection, this);
     }
 
+    @Override
     public synchronized void close() throws SQLException {
     	SQLException receivedException = null;
         if (handler != null) {

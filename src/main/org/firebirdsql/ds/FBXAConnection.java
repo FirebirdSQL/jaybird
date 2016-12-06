@@ -19,6 +19,7 @@
 package org.firebirdsql.ds;
 
 import java.lang.ref.WeakReference;
+import java.sql.Connection;
 import java.sql.SQLException;
 
 import javax.sql.XAConnection;
@@ -37,24 +38,27 @@ import org.firebirdsql.jdbc.SQLStateConstants;
  */
 public class FBXAConnection extends FBPooledConnection implements XAConnection {
     
-    private WeakReference<FBManagedConnection> mc;
+    private final WeakReference<FBManagedConnection> mc;
     
     public FBXAConnection(FBConnection connection) {
         super(connection);
         mc = new WeakReference<>(connection.getManagedConnection());
     }
 
+    @Override
     public XAResource getXAResource() throws SQLException {
         return getManagedConnection().getXAResource();
     }
-    
-    protected void resetConnection() throws SQLException {
-        if(!inDistributedTransaction()) {
+
+    @Override
+    protected void resetConnection(Connection connection) throws SQLException {
+        if (!inDistributedTransaction()) {
             connection.setAutoCommit(true);
         }
     }
-    
-    protected PooledConnectionHandler createConnectionHandler() {
+
+    @Override
+    protected PooledConnectionHandler createConnectionHandler(Connection connection) {
         return new XAConnectionHandler(connection, this);
     }
     
