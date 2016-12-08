@@ -21,6 +21,7 @@ package org.firebirdsql.jdbc;
 import org.firebirdsql.common.DdlHelper;
 import org.firebirdsql.common.FBJUnit4TestBase;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import javax.sql.rowset.CachedRowSet;
@@ -48,7 +49,7 @@ public class TestFBResultSetMetaData extends FBJUnit4TestBase {
         "  simple_field VARCHAR(60) CHARACTER SET WIN1250, " +
         "  two_byte_field VARCHAR(60) CHARACTER SET BIG_5, " +
         "  three_byte_field VARCHAR(60) CHARACTER SET UNICODE_FSS, " +
-        "  long_field NUMERIC(15,2), " +
+        "  long_field NUMERIC(15, 2), " +
         "  int_field NUMERIC(8, 2), " +
         "  short_field NUMERIC(4, 2), " +
         "  char_octets_field CHAR(10) CHARACTER SET OCTETS, " +
@@ -288,6 +289,22 @@ public class TestFBResultSetMetaData extends FBJUnit4TestBase {
             // For Firebird 2.5 and earlier we estimate
             assertEquals("Unexpected column precision", 18, rsmd.getPrecision(1));
             assertEquals("Unexpected column display size", 18 + 2, rsmd.getColumnDisplaySize(1));
+        }
+    }
+
+    @Ignore("JDBC-464")
+    @Test
+    public void getPrecisionOfNumericColumnWithoutActiveTransaction() throws Exception {
+        try (Connection connection = getConnectionViaDriverManager()) {
+            connection.setAutoCommit(false);
+            Statement stmt = connection.createStatement();
+            ResultSet rs = stmt.executeQuery("SELECT long_field FROM test_rs_metadata");
+            ResultSetMetaData rsmd = rs.getMetaData();
+
+            connection.commit();
+
+            // Will throw exception in current versions, but should work
+            assertEquals(15, rsmd.getPrecision(1));
         }
     }
 }
