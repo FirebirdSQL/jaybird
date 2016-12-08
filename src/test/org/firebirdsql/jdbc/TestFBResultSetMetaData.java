@@ -21,6 +21,7 @@ package org.firebirdsql.jdbc;
 import com.sun.rowset.CachedRowSetImpl;
 import org.firebirdsql.common.FBJUnit4TestBase;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import javax.sql.rowset.CachedRowSet;
@@ -341,6 +342,25 @@ public class TestFBResultSetMetaData extends FBJUnit4TestBase {
             int expectedPrecision = firebirdVersion >= 3 ? 18 : 19;
             assertEquals("Unexpected column precision", expectedPrecision, rsmd.getPrecision(1));
             assertEquals("Unexpected column display size", expectedPrecision, rsmd.getColumnDisplaySize(1));
+        } finally {
+            connection.close();
+        }
+    }
+
+    @Ignore("JDBC-464")
+    @Test
+    public void getPrecisionOfNumericColumnWithoutActiveTransaction() throws Exception {
+        Connection connection = getConnectionViaDriverManager();
+        try {
+            connection.setAutoCommit(false);
+            Statement stmt = connection.createStatement();
+            ResultSet rs = stmt.executeQuery("SELECT long_field FROM test_rs_metadata");
+            ResultSetMetaData rsmd = rs.getMetaData();
+
+            connection.commit();
+
+            // Will throw exception in current versions, but should work
+            assertEquals(15, rsmd.getPrecision(1));
         } finally {
             connection.close();
         }
