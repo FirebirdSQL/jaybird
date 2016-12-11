@@ -645,11 +645,11 @@ public class FBManagedConnection implements ManagedConnection, XAResource, Excep
             // TODO Equivalent or handled by listeners?
             //committingTr.forgetResultSets();
 
-            getGDSHelper().commitTransaction(committingTr);
+            committingTr.commit();
         } catch (SQLException ge) {
             if (gdsHelper != null) {
                 try {
-                    gdsHelper.rollbackTransaction(committingTr);
+                    committingTr.rollback();
                 } catch (SQLException ge2) {
                     if (log != null) log.debug("Exception rolling back failed tx: ", ge2);
                 }
@@ -890,11 +890,11 @@ public class FBManagedConnection implements ManagedConnection, XAResource, Excep
             }
             byte[] message = fbxid.toBytes();
 
-            getGDSHelper().prepareTransaction(committingTr, message);
+            committingTr.prepare(message);
         } catch (SQLException ge) {
             try {
                 if (gdsHelper != null) {
-                    gdsHelper.rollbackTransaction(committingTr);
+                    committingTr.rollback();
                 } else if (log != null) {
                     log.warn("Unable to rollback failed tx, connection closed or lost");
                 }
@@ -1128,7 +1128,7 @@ public class FBManagedConnection implements ManagedConnection, XAResource, Excep
             // TODO Equivalent needed or handled by listeners?
             //committingTr.forgetResultSets();
             try {
-                getGDSHelper().rollbackTransaction(committingTr);
+                committingTr.rollback();
             } finally {
                 xidMap.remove(xid);
                 preparedXid.remove(xid);

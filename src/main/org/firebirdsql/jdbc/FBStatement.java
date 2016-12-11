@@ -98,7 +98,7 @@ public class FBStatement implements FirebirdStatement, Synchronizable {
     private final int rsHoldability;
     
     private final FBObjectListener.ResultSetListener resultSetListener = new RSListener();
-    private final FBConnection connection;
+    protected final FBConnection connection;
 
     /**
      * Listener for the result sets.
@@ -882,7 +882,7 @@ public class FBStatement implements FirebirdStatement, Synchronizable {
         // TODO Behavior might not be correct for callable statement implementation
         if (!isGeneratedKeyQuery() && currentStatementResult == StatementResult.RESULT_SET) {
             if (!isSingletonResult) {
-                currentRs = new FBResultSet(gdsHelper, this, fbStatement, resultSetListener, metaDataQuery, rsType,
+                currentRs = new FBResultSet(connection, this, fbStatement, resultSetListener, metaDataQuery, rsType,
                         rsConcurrency, rsHoldability, false);
             } else if (!specialResult.isEmpty()) {
                 currentRs = new FBResultSet(fbStatement.getFieldDescriptor(),
@@ -1207,7 +1207,7 @@ public class FBStatement implements FirebirdStatement, Synchronizable {
      *      2.0 API</a>
      */
     public final int[] executeBatch() throws SQLException {
-        if (statementListener.getConnection().getAutoCommit()) {
+        if (connection.getAutoCommit()) {
             addWarning(new SQLWarning("Batch updates should be run with auto-commit disabled.", "01000"));
         }
 
@@ -1513,7 +1513,7 @@ public class FBStatement implements FirebirdStatement, Synchronizable {
     }
 
     public final long[] executeLargeBatch() throws SQLException {
-        if (statementListener.getConnection().getAutoCommit()) {
+        if (connection.getAutoCommit()) {
             addWarning(new SQLWarning("Batch updates should be run with auto-commit disabled.", "01000"));
         }
 

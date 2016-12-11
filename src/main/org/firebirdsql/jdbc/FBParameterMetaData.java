@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
@@ -20,7 +18,6 @@
  */
 package org.firebirdsql.jdbc;
 
-import org.firebirdsql.gds.impl.GDSHelper;
 import org.firebirdsql.gds.ng.fields.RowDescriptor;
 
 import java.sql.ParameterMetaData;
@@ -44,11 +41,11 @@ public class FBParameterMetaData extends AbstractFieldMetaData implements Firebi
      * @param rowDescriptor
      *         a row descriptor
      * @param connection
-     *         a <code>AbstractConnection</code> value
+     *         a <code>FBConnection</code> value
      * @throws SQLException
      *         if an error occurs
      */
-    protected FBParameterMetaData(RowDescriptor rowDescriptor, GDSHelper connection) throws SQLException {
+    protected FBParameterMetaData(RowDescriptor rowDescriptor, FBConnection connection) throws SQLException {
         super(rowDescriptor, connection);
     }
 
@@ -215,7 +212,7 @@ public class FBParameterMetaData extends AbstractFieldMetaData implements Firebi
      * </p>
      */
     @Override
-    protected Map<FieldKey, ExtendedFieldInfo> getExtendedFieldInfo(GDSHelper gdsHelper) throws SQLException {
+    protected Map<FieldKey, ExtendedFieldInfo> getExtendedFieldInfo(FBConnection connection) throws SQLException {
         return Collections.emptyMap();
     }
 }

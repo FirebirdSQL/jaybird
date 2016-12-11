@@ -119,7 +119,7 @@ public abstract class AbstractCallableStatement extends FBPreparedStatement impl
             prepareFixedStatement(procedureCall.getSQL(isSelectableProcedure()));
         }
 
-        return new FBParameterMetaData(fbStatement.getParameterDescriptor(), gdsHelper);
+        return new FBParameterMetaData(fbStatement.getParameterDescriptor(), connection);
     }
 
     public void addBatch() throws SQLException {
@@ -348,7 +348,7 @@ public abstract class AbstractCallableStatement extends FBPreparedStatement impl
         final boolean hasResultSet = super.internalExecute(sendOutParams);
         if (hasResultSet && isSingletonResult) {
             // Safeguarding first row so it will work even if the result set from getResultSet is manipulated
-            singletonRs = new FBResultSet(fbStatement.getFieldDescriptor(), gdsHelper,
+            singletonRs = new FBResultSet(fbStatement.getFieldDescriptor(), connection,
                     new ArrayList<>(specialResult), true);
         }
         return hasResultSet;

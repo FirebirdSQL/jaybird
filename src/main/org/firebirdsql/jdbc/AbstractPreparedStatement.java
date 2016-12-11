@@ -218,7 +218,7 @@ public abstract class AbstractPreparedStatement extends FBStatement implements F
     }
 
     public FirebirdParameterMetaData getFirebirdParameterMetaData() throws SQLException {
-        return new FBParameterMetaData(fbStatement.getParameterDescriptor(), gdsHelper);
+        return new FBParameterMetaData(fbStatement.getParameterDescriptor(), connection);
     }
 
     /**
@@ -1097,7 +1097,7 @@ public abstract class AbstractPreparedStatement extends FBStatement implements F
      */
     public ResultSetMetaData getMetaData() throws SQLException {
         checkValidity();
-        return new FBResultSetMetaData(fbStatement.getFieldDescriptor(), gdsHelper);
+        return new FBResultSetMetaData(fbStatement.getFieldDescriptor(), connection);
     }
 
     /**

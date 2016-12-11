@@ -173,18 +173,6 @@ public final class GDSHelper implements Synchronizable {
         return transaction;
     }
 
-    public void prepareTransaction(FbTransaction transaction, byte[] message) throws SQLException {
-        transaction.prepare(message);
-    }
-
-    public void commitTransaction(FbTransaction transaction) throws SQLException {
-        transaction.commit();
-    }
-
-    public void rollbackTransaction(FbTransaction transaction) throws SQLException {
-        transaction.rollback();
-    }
-
     public void detachDatabase() throws SQLException {
         database.close();
     }

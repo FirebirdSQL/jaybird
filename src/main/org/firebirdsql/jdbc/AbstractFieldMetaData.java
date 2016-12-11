@@ -20,7 +20,6 @@ package org.firebirdsql.jdbc;
 
 import org.firebirdsql.encodings.EncodingDefinition;
 import org.firebirdsql.gds.ISCConstants;
-import org.firebirdsql.gds.impl.GDSHelper;
 import org.firebirdsql.gds.ng.fields.FieldDescriptor;
 import org.firebirdsql.gds.ng.fields.RowDescriptor;
 import org.firebirdsql.jdbc.field.JdbcTypeConverter;
@@ -44,13 +43,13 @@ public abstract class AbstractFieldMetaData implements Wrapper {
     private static final int SUBTYPE_DECIMAL = 2;
 
     private final RowDescriptor rowDescriptor;
-    private final GDSHelper gdsHelper;
+    private final FBConnection connection;
     private Map<FieldKey, ExtendedFieldInfo> extendedInfo;
 
-    protected AbstractFieldMetaData(RowDescriptor rowDescriptor, GDSHelper gdsHelper) {
+    protected AbstractFieldMetaData(RowDescriptor rowDescriptor, FBConnection connection) {
         assert rowDescriptor != null : "rowDescriptor is required";
         this.rowDescriptor = rowDescriptor;
-        this.gdsHelper = gdsHelper;
+        this.connection = connection;
     }
 
     @Override
@@ -339,7 +338,7 @@ public abstract class AbstractFieldMetaData implements Wrapper {
 
     protected final ExtendedFieldInfo getExtFieldInfo(int columnIndex) throws SQLException {
         if (extendedInfo == null) {
-            extendedInfo = getExtendedFieldInfo(gdsHelper);
+            extendedInfo = getExtendedFieldInfo(connection);
         }
 
         FieldKey key = new FieldKey(
@@ -358,7 +357,7 @@ public abstract class AbstractFieldMetaData implements Wrapper {
      * @throws SQLException
      *         if a database error occurs while obtaining extended field information.
      */
-    protected abstract Map<FieldKey, ExtendedFieldInfo> getExtendedFieldInfo(GDSHelper gdsHelper) throws SQLException;
+    protected abstract Map<FieldKey, ExtendedFieldInfo> getExtendedFieldInfo(FBConnection connection) throws SQLException;
 
     /**
      * This class is an old-fashion data structure that stores additional

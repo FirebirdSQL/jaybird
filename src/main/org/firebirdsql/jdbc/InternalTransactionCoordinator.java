@@ -651,14 +651,6 @@ public final class InternalTransactionCoordinator implements FBObjectListener.St
             this.tc = tc;
         }
 
-        /**
-         * Create coordinator for the unspecified connection.
-         */
-        public MetaDataTransactionCoordinator() {
-            super(null, null);
-            tc = null;
-        }
-
         @Override
         public void ensureTransaction() throws SQLException {
             throw new UnsupportedOperationException();
@@ -681,17 +673,12 @@ public final class InternalTransactionCoordinator implements FBObjectListener.St
 
         @Override
         public void executionStarted(FBStatement stmt) throws SQLException {
-            if (tc != null) {
-                tc.ensureTransaction();
-            }
+            tc.ensureTransaction();
         }
 
         @Override
         public void statementClosed(FBStatement stmt) throws SQLException {
-            if (tc != null) {
-                stmt.completeStatement();
-                tc.connection.notifyStatementClosed(stmt);
-            }
+            stmt.completeStatement();
         }
 
         @Override
@@ -701,9 +688,7 @@ public final class InternalTransactionCoordinator implements FBObjectListener.St
 
         @Override
         public void statementCompleted(FBStatement stmt, boolean success) throws SQLException {
-            if (tc != null) {
-                tc.statementCompleted(stmt, success);
-            }
+
         }
 
         @Override

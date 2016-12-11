@@ -18,7 +18,6 @@
  */
 package org.firebirdsql.jdbc;
 
-import org.firebirdsql.gds.impl.GDSHelper;
 import org.firebirdsql.gds.ng.FbStatement;
 import org.firebirdsql.gds.ng.fields.RowDescriptor;
 import org.firebirdsql.gds.ng.fields.RowValue;
@@ -40,10 +39,10 @@ import java.util.List;
  */
 public class FBResultSet extends AbstractResultSet {
 
-    public FBResultSet(GDSHelper gdsHelper, FBStatement fbStatement, FbStatement stmt,
+    public FBResultSet(FBConnection connection, FBStatement fbStatement, FbStatement stmt,
             FBObjectListener.ResultSetListener listener, boolean metaDataQuery, int rsType, int rsConcurrency,
             int rsHoldability, boolean cached) throws SQLException {
-        super(gdsHelper, fbStatement, stmt, listener, metaDataQuery, rsType, rsConcurrency, rsHoldability, cached);
+        super(connection, fbStatement, stmt, listener, metaDataQuery, rsType, rsConcurrency, rsHoldability, cached);
     }
 
     public FBResultSet(RowDescriptor rowDescriptor, List<RowValue> rows, FBObjectListener.ResultSetListener listener)
@@ -55,9 +54,9 @@ public class FBResultSet extends AbstractResultSet {
         super(rowDescriptor, rows);
     }
 
-    public FBResultSet(RowDescriptor rowDescriptor, GDSHelper gdsHelper, List<RowValue> rows, boolean retrieveBlobs)
+    public FBResultSet(RowDescriptor rowDescriptor, FBConnection connection, List<RowValue> rows, boolean retrieveBlobs)
             throws SQLException {
-        super(rowDescriptor, gdsHelper, rows, retrieveBlobs);
+        super(rowDescriptor, connection, rows, retrieveBlobs);
     }
 
     /**

@@ -49,6 +49,7 @@ public abstract class AbstractResultSet implements ResultSet, FirebirdResultSet,
     private FBFetcher fbFetcher;
     private FirebirdRowUpdater rowUpdater;
 
+    protected final FBConnection connection;
     protected final GDSHelper gdsHelper;
 
     protected final RowDescriptor rowDescriptor;
@@ -93,12 +94,8 @@ public abstract class AbstractResultSet implements ResultSet, FirebirdResultSet,
 
     /**
      * Creates a new <code>FBResultSet</code> instance.
-     *
-     * @param gdsHelper a <code>AbstractConnection</code> value
-     * @param fbStatement a <code>AbstractStatement</code> value
-     * @param stmt an <code>isc_stmt_handle</code> value
      */
-    public AbstractResultSet(GDSHelper gdsHelper,
+    public AbstractResultSet(FBConnection connection,
             FBStatement fbStatement,
             FbStatement stmt,
             FBObjectListener.ResultSetListener listener,
@@ -108,7 +105,8 @@ public abstract class AbstractResultSet implements ResultSet, FirebirdResultSet,
             int rsHoldability,
             boolean cached)
             throws SQLException {
-        this.gdsHelper = gdsHelper;
+        this.connection = connection;
+        this.gdsHelper = connection != null ? connection.getGDSHelper() : null;
         cursorName = fbStatement.getCursorName();
         this.listener = listener != null ? listener : FBObjectListener.NoActionResultSetListener.instance();
         trimStrings = metaDataQuery;
@@ -142,7 +140,7 @@ public abstract class AbstractResultSet implements ResultSet, FirebirdResultSet,
 
         if (rsConcurrency == ResultSet.CONCUR_UPDATABLE) {
             try {
-                rowUpdater = new FBRowUpdater(gdsHelper, rowDescriptor, this, cached, listener);
+                rowUpdater = new FBRowUpdater(connection, rowDescriptor, this, cached, listener);
             } catch (FBResultSetNotUpdatableException ex) {
                 fbStatement.addWarning(FbExceptionBuilder
                         .forException(JaybirdErrorCodes.jb_concurrencyResetReadOnlyReasonNotUpdatable)
@@ -170,6 +168,7 @@ public abstract class AbstractResultSet implements ResultSet, FirebirdResultSet,
      */
     public AbstractResultSet(RowDescriptor rowDescriptor, List<RowValue> rows, FBObjectListener.ResultSetListener listener) throws SQLException {
         // TODO Evaluate if we need to share more implementation with constructor above
+        connection = null;
         gdsHelper = null;
         fbStatement = null;
         this.listener = listener != null ? listener : FBObjectListener.NoActionResultSetListener.instance();
@@ -213,14 +212,15 @@ public abstract class AbstractResultSet implements ResultSet, FirebirdResultSet,
      * </p>
      *
      * @param rowDescriptor Column definition
-     * @param gdsHelper GDS Helper (cannot be null when {@code retrieveBlobs} is {@code true}
+     * @param connection Connection (cannot be null when {@code retrieveBlobs} is {@code true}
      * @param rows Row data
      * @param retrieveBlobs {@code true} retrieves the blob data
      * @throws SQLException
      */
-    public AbstractResultSet(RowDescriptor rowDescriptor, GDSHelper gdsHelper, List<RowValue> rows,
+    public AbstractResultSet(RowDescriptor rowDescriptor, FBConnection connection, List<RowValue> rows,
             boolean retrieveBlobs) throws SQLException {
-        this.gdsHelper = gdsHelper;
+        this.connection = connection;
+        this.gdsHelper = connection != null ? connection.getGDSHelper() : null;
         fbStatement = null;
         listener = FBObjectListener.NoActionResultSetListener.instance();
         cursorName = null;
@@ -1104,7 +1104,7 @@ public abstract class AbstractResultSet implements ResultSet, FirebirdResultSet,
      * this result set is constructed in code.
      */
     public ResultSetMetaData getMetaData() throws SQLException {
-        return new FBResultSetMetaData(rowDescriptor, gdsHelper);
+        return new FBResultSetMetaData(rowDescriptor, connection);
     }
 
     /**

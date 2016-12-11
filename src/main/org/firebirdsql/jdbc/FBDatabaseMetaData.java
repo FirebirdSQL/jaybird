@@ -141,11 +141,6 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
 
     protected final Map<String, FBPreparedStatement> statements = new HashMap<>();
 
-    protected FBDatabaseMetaData(GDSHelper gdsHelper) {
-        this.gdsHelper = gdsHelper;
-        firebirdSupportInfo = supportInfoFor(gdsHelper.getCurrentDatabase());
-    }
-
     protected FBDatabaseMetaData(FBConnection c) throws SQLException {
         this.gdsHelper = c.getGDSHelper();
         this.connection = c;
@@ -4949,9 +4944,9 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
                 + "RDB$PROCEDURE_NAME = ?";
         List<String> params = new ArrayList<>();
         params.add(procedureName);
-        ResultSet rs = doQuery(sql, params);
-        if (rs.next()) sResult = rs.getString(1);
-        rs.close();
+        try (ResultSet rs = doQuery(sql, params)) {
+            if (rs.next()) sResult = rs.getString(1);
+        }
 
         return sResult;
     }
@@ -4961,9 +4956,9 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
         String sql = "Select RDB$TRIGGER_SOURCE From RDB$TRIGGERS Where RDB$TRIGGER_NAME = ?";
         List<String> params = new ArrayList<>();
         params.add(triggerName);
-        ResultSet rs = doQuery(sql, params);
-        if (rs.next()) sResult = rs.getString(1);
-        rs.close();
+        try (ResultSet rs = doQuery(sql, params)) {
+            if (rs.next()) sResult = rs.getString(1);
+        }
 
         return sResult;
     }
@@ -4973,9 +4968,9 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
         String sql = "Select RDB$VIEW_SOURCE From RDB$RELATIONS Where RDB$RELATION_NAME = ?";
         List<String> params = new ArrayList<>();
         params.add(viewName);
-        ResultSet rs = doQuery(sql, params);
-        if (rs.next()) sResult = rs.getString(1);
-        rs.close();
+        try (ResultSet rs = doQuery(sql, params)) {
+            if (rs.next()) sResult = rs.getString(1);
+        }
 
         return sResult;
     }
@@ -5017,7 +5012,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
         return value != null ? value.getBytes(StandardCharsets.UTF_8): null;
     }
 
-    private FBPreparedStatement getStatement(String sql) throws SQLException {
+    private FBPreparedStatement getStatement(String sql, boolean standalone) throws SQLException {
         FBPreparedStatement s = statements.get(sql);
 
         if (s != null) {
@@ -5028,19 +5023,16 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
             }
         }
 
-        if (connection == null) {
-            InternalTransactionCoordinator.MetaDataTransactionCoordinator metaDataTransactionCoordinator =
-                new InternalTransactionCoordinator.MetaDataTransactionCoordinator();
+        InternalTransactionCoordinator.MetaDataTransactionCoordinator metaDataTransactionCoordinator =
+            new InternalTransactionCoordinator.MetaDataTransactionCoordinator(connection.txCoordinator);
 
-            s = new FBPreparedStatement(gdsHelper, sql, ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY,
-                    ResultSet.CLOSE_CURSORS_AT_COMMIT, metaDataTransactionCoordinator, metaDataTransactionCoordinator,
-                    true, true, false);
-        } else {
-            s = (FBPreparedStatement)connection.prepareMetaDataStatement(sql, ResultSet.TYPE_SCROLL_INSENSITIVE,
-                    ResultSet.CONCUR_READ_ONLY);
+        s = new FBPreparedStatement(gdsHelper, sql, ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY,
+                ResultSet.CLOSE_CURSORS_AT_COMMIT, metaDataTransactionCoordinator, metaDataTransactionCoordinator,
+                true, standalone, false);
+
+        if (!standalone) {
+            statements.put(sql, s);
         }
-
-        statements.put(sql, s);
 
         return s;
     }
@@ -5055,10 +5047,24 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
      * @throws SQLException
      *             if a database access error occurs
      */
-    protected ResultSet doQuery(String sql, List<String> params)
-            throws SQLException {
+    protected ResultSet doQuery(String sql, List<String> params) throws SQLException {
+        return doQuery(sql, params, false);
+    }
 
-        FBPreparedStatement s = getStatement(sql);
+    /**
+     * Execute an sql query with a given set of parameters.
+     *
+     * @param sql
+     *            The sql statement to be used for the query
+     * @param params
+     *            The parameters to be used in the query
+     * @param standalone
+     *            The query to be executed is a standalone query (should not be cached and be closed asap)
+     * @throws SQLException
+     *             if a database access error occurs
+     */
+    protected ResultSet doQuery(String sql, List<String> params, boolean standalone) throws SQLException {
+        FBPreparedStatement s = getStatement(sql, standalone);
 
         for (int i = 0; i < params.size(); i++)
             s.setStringForced(i + 1, params.get(i));

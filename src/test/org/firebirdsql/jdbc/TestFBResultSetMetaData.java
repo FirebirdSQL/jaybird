@@ -21,7 +21,6 @@ package org.firebirdsql.jdbc;
 import org.firebirdsql.common.DdlHelper;
 import org.firebirdsql.common.FBJUnit4TestBase;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import javax.sql.rowset.CachedRowSet;
@@ -292,7 +291,6 @@ public class TestFBResultSetMetaData extends FBJUnit4TestBase {
         }
     }
 
-    @Ignore("JDBC-464")
     @Test
     public void getPrecisionOfNumericColumnWithoutActiveTransaction() throws Exception {
         try (Connection connection = getConnectionViaDriverManager()) {

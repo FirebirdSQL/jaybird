@@ -50,22 +50,30 @@ public class FBResultSetMetaData extends AbstractFieldMetaData implements Firebi
      * @param rowDescriptor
      *         a row descriptor
      * @param connection
-     *         a <code>AbstractConnection</code> value
+     *         a <code>FBConnection</code> value
      * @throws SQLException
      *         if an error occurs
      *         <p/>
      *         TODO Need another constructor for metadata from constructed
      *         result set, where we supply the ext field info.
      */
-    protected FBResultSetMetaData(RowDescriptor rowDescriptor, GDSHelper connection) throws SQLException {
+    protected FBResultSetMetaData(RowDescriptor rowDescriptor, FBConnection connection) throws SQLException {
         super(rowDescriptor, connection);
 
         // Decide how to handle column names and column labels
-        if (connection != null && connection.getConnectionProperties().isColumnLabelForName()) {
+        if (isColumnLabelForName(connection)) {
             columnStrategy = ColumnStrategy.COLUMN_LABEL_FOR_NAME;
         } else {
             columnStrategy = ColumnStrategy.DEFAULT;
         }
+    }
+
+    private static boolean isColumnLabelForName(FBConnection connection) throws SQLException {
+        if (connection == null) {
+            return false;
+        }
+        GDSHelper gdsHelper = connection.getGDSHelper();
+        return gdsHelper != null && gdsHelper.getConnectionProperties().isColumnLabelForName();
     }
 
     /**
@@ -468,20 +476,20 @@ public class FBResultSetMetaData extends AbstractFieldMetaData implements Firebi
     //@formatter:on
 
     @Override
-    protected Map<FieldKey, ExtendedFieldInfo> getExtendedFieldInfo(GDSHelper gdsHelper) throws SQLException {
-        if (gdsHelper == null) return Collections.emptyMap();
+    protected Map<FieldKey, ExtendedFieldInfo> getExtendedFieldInfo(FBConnection connection) throws SQLException {
+        if (connection == null) return Collections.emptyMap();
 
         // Apparently there is a limit in the UNION
         // It is necessary to split in several queries
         // Although the problem reported with 93 UNION use only 70
         int pending = getFieldCount();
         Map<FieldKey, ExtendedFieldInfo> result = new HashMap<>();
-        final FBDatabaseMetaData metaData = new FBDatabaseMetaData(gdsHelper);
+        final FBDatabaseMetaData metaData = (FBDatabaseMetaData) connection.getMetaData();
         while (pending > 0) {
             StringBuilder sb = new StringBuilder();
-            List<String> params = new ArrayList<>();
 
             int maxLength = Math.min(pending, 70);
+            List<String> params = new ArrayList<>(2 * maxLength);
             for (int i = 1; i <= maxLength; i++) {
 
                 String relationName = getFieldDescriptor(i).getOriginalTableName();
@@ -503,7 +511,7 @@ public class FBResultSetMetaData extends AbstractFieldMetaData implements Firebi
 
             if (sb.length() == 0) continue;
 
-            try (ResultSet rs = metaData.doQuery(sb.toString(), params)) {
+            try (ResultSet rs = metaData.doQuery(sb.toString(), params, true)) {
                 while (rs.next()) {
                     ExtendedFieldInfo fieldInfo = new ExtendedFieldInfo();
 
@@ -534,6 +542,7 @@ public class FBResultSetMetaData extends AbstractFieldMetaData implements Firebi
                     result.put(new FieldKey(fieldInfo.relationName, fieldInfo.fieldName), fieldInfo);
                 }
             }
+            params.clear();
         }
         return result;
     }
