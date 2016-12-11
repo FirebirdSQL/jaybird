@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
@@ -61,6 +59,7 @@ public class FBRowUpdater implements FirebirdRowUpdater  {
     private static final int PARAMETER_USED = 1;
     private static final int PARAMETER_DBKEY = 2;
 
+    private final AbstractConnection connection;
     private final GDSHelper gdsHelper;
     private final Synchronizable syncProvider;
     private final XSQLVAR[] xsqlvars;
@@ -85,19 +84,24 @@ public class FBRowUpdater implements FirebirdRowUpdater  {
     private boolean closed;
     private boolean processing;
     
-    public FBRowUpdater(GDSHelper connection, XSQLVAR[] xsqlvars, 
+    public FBRowUpdater(AbstractConnection connection, XSQLVAR[] xsqlvars,
             Synchronizable syncProvider, boolean cached, 
             FBObjectListener.ResultSetListener rsListener) throws SQLException {
         
         this.rsListener = rsListener;
-        
-        this.gdsHelper = connection;
+
+        this.connection = connection;
+        try {
+            this.gdsHelper = connection.getGDSHelper();
+        } catch (GDSException e) {
+            throw new FBSQLException(e);
+        }
         this.syncProvider = syncProvider;
         
         this.xsqlvars = new XSQLVAR[xsqlvars.length];
         this.fields = new FBField[xsqlvars.length];
 
-        quoteStrategy = QuoteStrategy.forDialect(connection.getDialect());
+        quoteStrategy = QuoteStrategy.forDialect(gdsHelper.getDialect());
         
         for (int i = 0; i < xsqlvars.length; i++) {
             XSQLVAR xsqlvar = xsqlvars[i].deepCopy();
@@ -134,7 +138,7 @@ public class FBRowUpdater implements FirebirdRowUpdater  {
 
             };
 
-            fields[i] = FBField.createField(this.xsqlvars[i], dataProvider, connection, cached);
+            fields[i] = FBField.createField(this.xsqlvars[i], dataProvider, gdsHelper, cached);
         }
         
         // find the table name (there can be only one table per result set)
@@ -224,8 +228,8 @@ public class FBRowUpdater implements FirebirdRowUpdater  {
      */
     private int[] getParameterMask() throws SQLException {
         // loop through the "best row identifiers" and set appropriate flags.
-        FBDatabaseMetaData metaData = new FBDatabaseMetaData(gdsHelper);
-        
+        FBDatabaseMetaData metaData = (FBDatabaseMetaData) connection.getMetaData();
+
         ResultSet bestRowIdentifier = metaData.getBestRowIdentifier(
             "", "", tableName, DatabaseMetaData.bestRowSession, true);
 
@@ -265,8 +269,7 @@ public class FBRowUpdater implements FirebirdRowUpdater  {
             
             if (!hasParams)
                 throw new FBResultSetNotUpdatableException(
-                    "No columns that can be used in WHERE clause could be " +
-                    "found.");
+                    "No columns that can be used in WHERE clause could be found.");
             
             return result;
         } finally {

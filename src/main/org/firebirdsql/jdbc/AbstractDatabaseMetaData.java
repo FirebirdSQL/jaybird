@@ -1,7 +1,5 @@
 /*
- * $Id$
- * 
- * Firebird Open Source J2ee connector - jdbc driver
+ * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -14,7 +12,7 @@
  * This file was created by members of the firebird development team.
  * All individual contributions remain the Copyright (C) of those
  * individuals.  Contributors to this file are either listed here or
- * can be obtained from a CVS history command.
+ * can be obtained from a source control history command.
  *
  * All rights reserved.
  */
@@ -65,10 +63,6 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
 
     HashMap statements = new HashMap();
 
-    protected AbstractDatabaseMetaData(GDSHelper gdsHelper) {
-        this.gdsHelper = gdsHelper;
-    }
-    
     protected AbstractDatabaseMetaData(AbstractConnection c) throws GDSException {
         this.gdsHelper = c.getGDSHelper();
         this.connection = c;
@@ -6155,10 +6149,8 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
             return null;
     }
     
-    private AbstractPreparedStatement getStatement(String sql) throws SQLException {
-        
-        AbstractPreparedStatement s = 
-            (AbstractPreparedStatement)statements.get(sql);
+    private AbstractPreparedStatement getStatement(String sql, boolean standalone) throws SQLException {
+        AbstractPreparedStatement s = (AbstractPreparedStatement) statements.get(sql);
         
         if (s != null && s.isClosed()) {
             statements.remove(sql);
@@ -6168,23 +6160,34 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
         if (s != null) 
             return s;
         
-        if (connection == null) {
-            InternalTransactionCoordinator.MetaDataTransactionCoordinator metaDataTransactionCoordinator = 
-                new InternalTransactionCoordinator.MetaDataTransactionCoordinator();
-            
-            s = FBStatementFactory.createPreparedStatement(gdsHelper, sql,
-                    ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY,
-                    ResultSet.CLOSE_CURSORS_AT_COMMIT, 
-                    metaDataTransactionCoordinator, metaDataTransactionCoordinator,
-                    true, true, false);
-        } else {
-            s = (AbstractPreparedStatement)connection.prepareMetaDataStatement(
-                sql, ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
+        InternalTransactionCoordinator.MetaDataTransactionCoordinator metaDataTransactionCoordinator =
+            new InternalTransactionCoordinator.MetaDataTransactionCoordinator(connection.txCoordinator);
+
+        s = FBStatementFactory.createPreparedStatement(gdsHelper, sql,
+                ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY,
+                ResultSet.CLOSE_CURSORS_AT_COMMIT,
+                metaDataTransactionCoordinator, metaDataTransactionCoordinator,
+                true, standalone, false);
+
+        if (!standalone) {
+            statements.put(sql, s);
         }
-            
-        statements.put(sql, s);
         
         return s;
+    }
+
+    /**
+     * Execute an sql query with a given set of parameters.
+     *
+     * @param sql
+     *            The sql statement to be used for the query
+     * @param params
+     *            The parameters to be used in the query
+     * @throws SQLException
+     *             if a database access error occurs
+     */
+    public ResultSet doQuery(String sql, List params) throws SQLException {
+        return doQuery(sql, params, false);
     }
 
     /**
@@ -6194,13 +6197,13 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
      *            The sql statement to be used for the query
      * @param params
      *            The parameters to be used in the query
+     * @param standalone
+     *            The query to be executed is a standalone query (should not be cached and be closed asap)
      * @throws SQLException
      *             if a database access error occurs
      */
-    public ResultSet doQuery(String sql, List params)
-            throws SQLException {
-        
-        AbstractPreparedStatement s = getStatement(sql);
+    public ResultSet doQuery(String sql, List params, boolean standalone) throws SQLException {
+        AbstractPreparedStatement s = getStatement(sql, standalone);
         
         for (int i = 0; i < params.size(); i++)
             s.setStringForced(i + 1, (String) params.get(i));

@@ -1131,8 +1131,7 @@ public abstract class AbstractPreparedStatement extends AbstractStatement implem
      *      </a>
      */
     public ResultSetMetaData getMetaData() throws SQLException {
-        return new FBResultSetMetaData(fixedStmt.getOutSqlda().sqlvar,
-                gdsHelper);
+        return new FBResultSetMetaData(fixedStmt.getOutSqlda().sqlvar, connection);
     }
 
     /**

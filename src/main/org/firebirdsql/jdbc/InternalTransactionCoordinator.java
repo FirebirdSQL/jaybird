@@ -623,14 +623,6 @@ public final class InternalTransactionCoordinator implements FBObjectListener.St
             this.tc = tc;
         }
 
-        /**
-         * Create coordinator for the unspecified connection.
-         */
-        public MetaDataTransactionCoordinator() {
-            super(null, null);
-            tc = null;
-        }
-
         @Override
         public void ensureTransaction() throws SQLException {
             throw new UnsupportedOperationException();
@@ -650,16 +642,11 @@ public final class InternalTransactionCoordinator implements FBObjectListener.St
         }
 
         public void executionStarted(AbstractStatement stmt) throws SQLException {
-            if (tc != null) {
-                tc.ensureTransaction();
-            }
+            tc.ensureTransaction();
         }
 
         public void statementClosed(AbstractStatement stmt) throws SQLException {
-            if (tc != null) {
-                stmt.completeStatement();
-                tc.connection.notifyStatementClosed(stmt);
-            }
+            stmt.completeStatement();
         }
 
         public void statementCompleted(AbstractStatement stmt) throws SQLException {
@@ -667,9 +654,7 @@ public final class InternalTransactionCoordinator implements FBObjectListener.St
         }
 
         public void statementCompleted(AbstractStatement stmt, boolean success) throws SQLException {
-            if (tc != null) {
-                tc.statementCompleted(stmt, success);
-            }
+
         }
 
         public void executionCompleted(FirebirdBlob blob) throws SQLException {

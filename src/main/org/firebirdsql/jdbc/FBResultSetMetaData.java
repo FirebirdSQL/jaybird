@@ -18,17 +18,16 @@
  */
 package org.firebirdsql.jdbc;
 
-import java.math.BigDecimal;
-import java.sql.*;
-import java.sql.Date;
-import java.util.*;
-
 import org.firebirdsql.encodings.EncodingFactory;
 import org.firebirdsql.gds.DatabaseParameterBuffer;
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.XSQLVAR;
 import org.firebirdsql.gds.impl.DatabaseParameterBufferExtension;
-import org.firebirdsql.gds.impl.GDSHelper;
+
+import java.math.BigDecimal;
+import java.sql.*;
+import java.sql.Date;
+import java.util.*;
 
 /**
  * Implementation of {@link java.sql.ResultSetMetaData} interface.
@@ -40,7 +39,7 @@ public class FBResultSetMetaData implements FirebirdResultSetMetaData {
 
     private final XSQLVAR[] xsqlvars;
     private Map<FieldKey, ExtendedFieldInfo> extendedInfo;
-    private final GDSHelper connection;
+    private final AbstractConnection connection;
     private final ColumnStrategy columnStrategy;
     private final boolean octetsAsBytes;
 
@@ -53,7 +52,7 @@ public class FBResultSetMetaData implements FirebirdResultSetMetaData {
      *
      * TODO Need another constructor for metadata from constructed result set, where we supply the ext field info.
      */
-    protected FBResultSetMetaData(XSQLVAR[] xsqlvars, GDSHelper connection) throws SQLException {
+    protected FBResultSetMetaData(XSQLVAR[] xsqlvars, AbstractConnection connection) throws SQLException {
         this.xsqlvars = xsqlvars;
         this.connection = connection;
         
@@ -70,7 +69,7 @@ public class FBResultSetMetaData implements FirebirdResultSetMetaData {
         }
     }
 
-    private String getIscEncoding() {
+    private String getIscEncoding() throws SQLException {
         return connection != null ? connection.getIscEncoding() : "NONE";
     }
 
@@ -799,19 +798,20 @@ public class FBResultSetMetaData implements FirebirdResultSetMetaData {
      *
      * @throws SQLException if extended field information cannot be obtained.
      */
-    private Map<FieldKey, ExtendedFieldInfo> getExtendedFieldInfo(GDSHelper gdsHelper) throws SQLException {
-        if (gdsHelper == null) return Collections.emptyMap();
+    private Map<FieldKey, ExtendedFieldInfo> getExtendedFieldInfo(AbstractConnection connection) throws SQLException {
+        if (connection == null) return Collections.emptyMap();
 
         // Apparently there is a limit in the UNION
         // It is necessary to split in several queries
         // Although the problem reported with 93 UNION use only 70
         int pending = xsqlvars.length;
         Map<FieldKey, ExtendedFieldInfo> result = new HashMap<FieldKey, ExtendedFieldInfo>();
-        while (pending > 0){
+        FBDatabaseMetaData metaData = (FBDatabaseMetaData) connection.getMetaData();
+        while (pending > 0) {
             StringBuilder sb = new StringBuilder();
-            List<String> params = new ArrayList<String>();
 
-            int maxLength = (pending>70) ? 70 : pending;
+            int maxLength = (pending > 70) ? 70 : pending;
+            List<String> params = new ArrayList<String>(2 * maxLength);
             for (int i = 0; i < maxLength; i++) {
 
                 String relationName = xsqlvars[i].relname;
@@ -829,11 +829,10 @@ public class FBResultSetMetaData implements FirebirdResultSetMetaData {
                 }
             }
 
-            FBDatabaseMetaData metaData = new FBDatabaseMetaData(gdsHelper);
-            ResultSet rs = metaData.doQuery(sb.toString(), params);
+            ResultSet rs = metaData.doQuery(sb.toString(), params, true);
 
             try {
-                while(rs.next()) {
+                while (rs.next()) {
                     ExtendedFieldInfo fieldInfo = new ExtendedFieldInfo();
 
                     fieldInfo.relationName = rs.getString("RELATION_NAME");

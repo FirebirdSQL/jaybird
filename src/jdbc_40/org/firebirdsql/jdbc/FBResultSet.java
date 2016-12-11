@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
@@ -38,12 +36,12 @@ import org.firebirdsql.jdbc.FBObjectListener.ResultSetListener;
  */
 public class FBResultSet extends AbstractResultSet {
 
-    public FBResultSet(GDSHelper gdsHelper, AbstractStatement fbStatement,
+    public FBResultSet(AbstractConnection connection, AbstractStatement fbStatement,
             AbstractIscStmtHandle stmt, ResultSetListener listener,
             boolean metaDataQuery, int rsType, int rsConcurrency,
             int rsHoldability, boolean cached) throws SQLException {
         
-        super(gdsHelper, fbStatement, stmt, listener, metaDataQuery, rsType,
+        super(connection, fbStatement, stmt, listener, metaDataQuery, rsType,
                 rsConcurrency, rsHoldability, cached);
     }
 

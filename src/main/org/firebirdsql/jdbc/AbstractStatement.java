@@ -1,4 +1,4 @@
- /*
+/*
  * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
@@ -74,7 +74,7 @@ public abstract class AbstractStatement implements FirebirdStatement, Synchroniz
     
     private FBObjectListener.ResultSetListener resultSetListener = new RSListener();
 
-    private AbstractConnection connection;
+    protected AbstractConnection connection;
 
     /**
      * Listener for the result sets.
@@ -878,7 +878,7 @@ public abstract class AbstractStatement implements FirebirdStatement, Synchroniz
         }
 
         if (currentStatementResult == StatementResult.RESULT_SET) {
-            currentRs = new FBResultSet(gdsHelper, this, fixedStmt,
+            currentRs = new FBResultSet(connection, this, fixedStmt,
                     resultSetListener, metaDataQuery, rsType, rsConcurrency,
                     rsHoldability, false);
 

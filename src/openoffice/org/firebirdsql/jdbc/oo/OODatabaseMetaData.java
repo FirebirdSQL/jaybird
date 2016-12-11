@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
@@ -23,7 +21,6 @@ package org.firebirdsql.jdbc.oo;
 import org.firebirdsql.gds.GDSException;
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.XSQLVAR;
-import org.firebirdsql.gds.impl.GDSHelper;
 import org.firebirdsql.jdbc.AbstractConnection;
 import org.firebirdsql.jdbc.FBDatabaseMetaData;
 import org.firebirdsql.jdbc.FBResultSet;
@@ -36,10 +33,6 @@ public class OODatabaseMetaData extends FBDatabaseMetaData {
 
     public OODatabaseMetaData(AbstractConnection c) throws GDSException {
         super(c);
-    }
-
-    public OODatabaseMetaData(GDSHelper gdsHelper) {
-        super(gdsHelper);
     }
 
     private static final String DEFAULT_SCHEMA = "DEFAULT";

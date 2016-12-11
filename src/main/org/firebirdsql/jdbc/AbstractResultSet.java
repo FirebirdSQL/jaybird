@@ -18,18 +18,23 @@
  */
 package org.firebirdsql.jdbc;
 
-import java.io.*;
-import java.math.*;
-import java.net.*;
-import java.sql.*;
-import java.sql.Date;
-import java.util.*;
-
-import org.firebirdsql.gds.*;
+import org.firebirdsql.gds.GDSException;
+import org.firebirdsql.gds.XSQLVAR;
 import org.firebirdsql.gds.impl.AbstractIscStmtHandle;
 import org.firebirdsql.gds.impl.GDSHelper;
-import org.firebirdsql.jdbc.field.*;
+import org.firebirdsql.jdbc.field.FBField;
+import org.firebirdsql.jdbc.field.FieldDataProvider;
 import org.firebirdsql.util.SQLExceptionChainBuilder;
+
+import java.io.InputStream;
+import java.io.Reader;
+import java.math.BigDecimal;
+import java.net.URL;
+import java.sql.*;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Implementation of {@link ResultSet} interface.
@@ -44,6 +49,7 @@ public abstract class AbstractResultSet implements ResultSet, FirebirdResultSet,
     private FBFetcher fbFetcher;
     private FirebirdRowUpdater rowUpdater;
 
+    protected AbstractConnection connection;
     protected GDSHelper gdsHelper;
 
     protected final XSQLVAR[] xsqlvars;
@@ -88,11 +94,11 @@ public abstract class AbstractResultSet implements ResultSet, FirebirdResultSet,
 	/**
      * Creates a new <code>FBResultSet</code> instance.
      *
-     * @param gdsHelper a <code>AbstractConnection</code> value
+     * @param connection a <code>AbstractConnection</code> value
      * @param fbStatement a <code>AbstractStatement</code> value
      * @param stmt an <code>isc_stmt_handle</code> value
      */
-    protected AbstractResultSet(GDSHelper gdsHelper, 
+    protected AbstractResultSet(AbstractConnection connection,
                           AbstractStatement fbStatement, 
                           AbstractIscStmtHandle stmt, 
                           FBObjectListener.ResultSetListener listener,
@@ -101,8 +107,12 @@ public abstract class AbstractResultSet implements ResultSet, FirebirdResultSet,
                           int rsConcurrency,
                           int rsHoldability,
                           boolean cached) throws SQLException {
-        
-        this.gdsHelper = gdsHelper;
+        this.connection = connection;
+        try {
+            gdsHelper = connection != null ? connection.getGDSHelper() : null;
+        } catch (GDSException e) {
+            throw new FBSQLException(e);
+        }
         this.cursorName = fbStatement.getCursorName();
         
         this.listener = listener;
@@ -149,7 +159,7 @@ public abstract class AbstractResultSet implements ResultSet, FirebirdResultSet,
         
         if (rsConcurrency == ResultSet.CONCUR_UPDATABLE) {
             try {
-                rowUpdater = new FBRowUpdater(gdsHelper, xsqlvars, this, cached, listener);
+                rowUpdater = new FBRowUpdater(connection, xsqlvars, this, cached, listener);
             } catch (FBResultSetNotUpdatableException ex) {
                 fbStatement.addWarning(new FBSQLWarning("Result set concurrency changed to READ ONLY."));
                 this.rsConcurrency = ResultSet.CONCUR_READ_ONLY;
@@ -1012,7 +1022,7 @@ public abstract class AbstractResultSet implements ResultSet, FirebirdResultSet,
      * this result set is constructed in code.
      */
     public ResultSetMetaData getMetaData() throws  SQLException {
-        return new FBResultSetMetaData(xsqlvars, gdsHelper);
+        return new FBResultSetMetaData(xsqlvars, connection);
     }
 
     /**
