@@ -61,26 +61,25 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
     private GDSHelper gdsHelper;
     private AbstractConnection connection;
 
-    HashMap statements = new HashMap();
+    private final Map<String, AbstractPreparedStatement> statements = new HashMap<String, AbstractPreparedStatement>();
 
     protected AbstractDatabaseMetaData(AbstractConnection c) throws GDSException {
         this.gdsHelper = c.getGDSHelper();
         this.connection = c;
     }
 
-    protected void close() {
-        try {
-            Iterator i = statements.values().iterator();
-            while(i.hasNext()) {
-                AbstractStatement stmt = (AbstractPreparedStatement)i.next();
-                if (!stmt.isClosed())
+    @Override
+    public void close() {
+        for (AbstractPreparedStatement stmt : new ArrayList<AbstractPreparedStatement>(statements.values())) {
+            if (!stmt.isClosed()) {
+                try {
                     stmt.close();
+                } catch (SQLException e) {
+                    log.warn("error in DatabaseMetaData.close", e);
+                }
             }
-            statements.clear();
         }
-        catch (SQLException e) {
-           if (log!=null) log.warn("error in DatabaseMetaData.close", e);
-        }
+        statements.clear();
     }
 
     //----------------------------------------------------------------------
@@ -6150,7 +6149,7 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
     }
     
     private AbstractPreparedStatement getStatement(String sql, boolean standalone) throws SQLException {
-        AbstractPreparedStatement s = (AbstractPreparedStatement) statements.get(sql);
+        AbstractPreparedStatement s = statements.get(sql);
         
         if (s != null && s.isClosed()) {
             statements.remove(sql);

@@ -34,6 +34,7 @@ import java.sql.SQLException;
  * 
  * @author <a href="mailto:mirommail@web.de">Michael Romankiewicz</a>
  */
+@SuppressWarnings("unused")
 public interface FirebirdDatabaseMetaData extends DatabaseMetaData {
     
     /**
@@ -45,8 +46,7 @@ public interface FirebirdDatabaseMetaData extends DatabaseMetaData {
      * @throws SQLException
      *             if specified procedure cannot be found.
      */
-    public String getProcedureSourceCode(String procedureName)
-            throws SQLException;
+    String getProcedureSourceCode(String procedureName) throws SQLException;
 
     /**
      * Get the source of a trigger.
@@ -57,7 +57,7 @@ public interface FirebirdDatabaseMetaData extends DatabaseMetaData {
      * @throws SQLException
      *             if specified trigger cannot be found.
      */
-    public String getTriggerSourceCode(String triggerName) throws SQLException;
+    String getTriggerSourceCode(String triggerName) throws SQLException;
 
     /**
      * Get the source of a view.
@@ -68,26 +68,7 @@ public interface FirebirdDatabaseMetaData extends DatabaseMetaData {
      * @throws SQLException
      *             if specified view cannot be found.
      */
-    public String getViewSourceCode(String viewName) throws SQLException;
-    
-    
-    // ---- Backported for JDK 1.3 compatibility ----
-    
-    /**
-     * Retrieves the major version number of the underlying database.
-     *
-     * @return the underlying database's major version
-     * @throws SQLException if a database access error occurs
-     */
-    int getDatabaseMajorVersion() throws SQLException;
-
-    /**
-     * Retrieves the minor version number of the underlying database.
-     *
-     * @return underlying database's minor version
-     * @throws SQLException if a database access error occurs
-     */
-    int getDatabaseMinorVersion() throws SQLException;
+    String getViewSourceCode(String viewName) throws SQLException;
     
     /**
      * Get the major version of the ODS (On-Disk Structure) of the database.
@@ -104,5 +85,12 @@ public interface FirebirdDatabaseMetaData extends DatabaseMetaData {
      * @exception SQLException if a database access error occurs
      */
     int getOdsMinorVersion() throws SQLException;
-    
+
+    /**
+     * Closes any cached metadata statements held by this database metadata implementation.
+     * <p>
+     * The database metadata object itself remains usable. Exceptions during statement close are logged and suppressed.
+     * </p>
+     */
+    void close();
 }
