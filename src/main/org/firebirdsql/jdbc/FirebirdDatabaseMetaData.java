@@ -34,6 +34,7 @@ import java.sql.SQLException;
  * 
  * @author <a href="mailto:mirommail@web.de">Michael Romankiewicz</a>
  */
+@SuppressWarnings("unused")
 public interface FirebirdDatabaseMetaData extends DatabaseMetaData {
     
     /**
@@ -105,4 +106,12 @@ public interface FirebirdDatabaseMetaData extends DatabaseMetaData {
      * @see #getDatabaseDialect()
      */
     int getConnectionDialect() throws SQLException;
+
+    /**
+     * Closes any cached metadata statements held by this database metadata implementation.
+     * <p>
+     * The database metadata object itself remains usable. Exceptions during statement close are logged and suppressed.
+     * </p>
+     */
+    void close();
 }

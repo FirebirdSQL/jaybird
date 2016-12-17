@@ -238,6 +238,10 @@ The following has been changed or fixed since Jaybird 3.0.0-beta-1
 -   Changed logging of Embedded library to only log on error if none of the
     libraries could be loaded.
 -   Fixed: native protocol is 20x-30x slower than Jaybird 2.2 native [JDBC-463](http://tracker.firebirdsql.org/browse/JDBC-463)
+-   Fixed: `ResultSetMetaData.getPrecision` of a numeric column when no 
+    transaction is active throws an SQLException ([JDBC-464](http://tracker.firebirdsql.org/browse/JDBC-464))\
+    As part of this fix, the handling of queries executed by `FBDatabaseMetaData` 
+    has been changed. Most metadata queries are now kept prepared for reuse.
 
 What's new in Jaybird 3.0
 =========================

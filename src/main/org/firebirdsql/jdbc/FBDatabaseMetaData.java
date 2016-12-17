@@ -147,13 +147,16 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
         firebirdSupportInfo = supportInfoFor(c);
     }
 
-    protected void close() {
+    @Override
+    public void close() {
         try {
-            for (FBStatement stmt : statements.values()) {
-                stmt.close();
+            for (FBStatement stmt : new ArrayList<>(statements.values())) {
+                try {
+                    stmt.close();
+                } catch (SQLException e) {
+                   log.warn("error in DatabaseMetaData.close", e);
+                }
             }
-        } catch (SQLException e) {
-           log.warn("error in DatabaseMetaData.close", e);
         } finally {
             statements.clear();
         }
