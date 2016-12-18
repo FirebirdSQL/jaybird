@@ -16,7 +16,7 @@ the application server and driver.
 Supported Firebird versions
 ---------------------------
 
-Jaybird @VERSION@ was tested against Firebird 2.1.7, Firebird 2.5.6, and
+Jaybird @VERSION@ was tested against Firebird 2.5.6, and 
 Firebird 3 (3.0.0.32483), but should also support other Firebird versions from
 1.0 and up. The Type 2 and embedded server JDBC drivers require the appropriate
 JNI library. Precompiled JNI binaries for Windows and Linux platforms are 
@@ -82,7 +82,8 @@ The following has been changed or fixed in Jaybird 2.2.12:
 
 -   Connecting to Firebird 2.5 and earlier with a Firebird 3 `fbclient.dll` may
     be slow with native connections, see [CORE-4658](http://tracker.firebirdsql.org/browse/CORE-4658).
-    Workaround is to connect to the IPv4 address instead of the hostname.
+    Workaround is to connect to the IPv4 address instead of the hostname, or to
+    use a Firebird 2.5 or earlier `fbclient.dll`.
 
 ### Changes and fixes in Jaybird 2.2.11
 
@@ -723,6 +724,7 @@ Other fixes and changes
 
 A full list of changes is also available at:
 
+-   [Jaybird 2.2.12](http://tracker.firebirdsql.org/secure/ReleaseNote.jspa?version=10781&styleName=Text&projectId=10002)
 -   [Jaybird 2.2.11](http://tracker.firebirdsql.org/secure/ReleaseNote.jspa?projectId=10002&styleName=Text&version=10751)
 -   [Jaybird 2.2.10](http://tracker.firebirdsql.org/secure/ReleaseNote.jspa?projectId=10002&styleName=Text&version=10723)
 -   [Jaybird 2.2.9](http://tracker.firebirdsql.org/secure/ReleaseNote.jspa?projectId=10002&styleName=Text&version=10691)
