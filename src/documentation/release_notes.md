@@ -213,7 +213,7 @@ The minimal `module.xml` to use Jaybird 3 under Wildfly is:
 <?xml version="1.0" encoding="UTF-8"?>
 <module xmlns="urn:jboss:module:1.0" name="org.firebirdsql">
   <resources>
-    <resource-root path="jaybird-3.0.x.jar"/>
+    <resource-root path="jaybird-@VERSION@.jar"/>
   </resources>
   <dependencies>
     <module name="javax.api"/>
@@ -519,7 +519,8 @@ Known Issues
 
 -   Using a native connection with a Firebird 3 client library to a Firebird 2.5
     or older server may be slow to connect. The workaround is to specify the
-    IPv4 address instead of the host name in the connection string.
+    IPv4 address instead of the host name in the connection string, or to use a
+    Firebird 2.5 or earlier `fbclient.dll`.
     
     This is caused by [CORE-4658](http://tracker.firebirdsql.org/browse/CORE-4658)
 
