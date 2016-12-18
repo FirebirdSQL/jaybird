@@ -233,11 +233,11 @@ Changes in Jaybird 3.0.0-beta-2
 The following has been changed or fixed since Jaybird 3.0.0-beta-1
 
 -   Fixed: Authentication with legacy auth users fails when Firebird 3 uses
-    `AuthServer = Legacy_Auth` [JDBC-460](http://tracker.firebirdsql.org/browse/JDBC-460)
--   Fixed: `jna-4.2.2.jar` was not included in the distribution zip [JDBC-461](http://tracker.firebirdsql.org/browse/JDBC-461)
+    `AuthServer = Legacy_Auth` ([JDBC-460](http://tracker.firebirdsql.org/browse/JDBC-460))
+-   Fixed: `jna-4.2.2.jar` was not included in the distribution zip ([JDBC-461](http://tracker.firebirdsql.org/browse/JDBC-461))
 -   Changed logging of Embedded library to only log on error if none of the
     libraries could be loaded.
--   Fixed: native protocol is 20x-30x slower than Jaybird 2.2 native [JDBC-463](http://tracker.firebirdsql.org/browse/JDBC-463)
+-   Fixed: native protocol is 20x-30x slower than Jaybird 2.2 native ([JDBC-463](http://tracker.firebirdsql.org/browse/JDBC-463))
 -   Fixed: `ResultSetMetaData.getPrecision` of a numeric column when no 
     transaction is active throws an SQLException ([JDBC-464](http://tracker.firebirdsql.org/browse/JDBC-464))\
     As part of this fix, the handling of queries executed by `FBDatabaseMetaData` 
