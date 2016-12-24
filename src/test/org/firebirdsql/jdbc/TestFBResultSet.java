@@ -19,6 +19,8 @@
 package org.firebirdsql.jdbc;
 
 import org.firebirdsql.common.FBTestBase;
+import org.firebirdsql.gds.GDSException;
+import org.firebirdsql.gds.ISCConstants;
 
 import java.sql.*;
 import java.util.Properties;
@@ -1178,4 +1180,43 @@ public class TestFBResultSet extends FBTestBase {
             stmt.close();
         }
     }
+
+    public void testGetMetaDataThrowsSQLExceptionAfterClose() throws Exception {
+        Statement stmt = connection.createStatement();
+        try {
+            ResultSet rs;
+            rs = stmt.executeQuery("SELECT * FROM RDB$DATABASE");
+            assertFalse("Expected result set to be open", rs.isClosed());
+            rs.close();
+
+            assertTrue("Expected result set to be closed", rs.isClosed());
+
+            try {
+                rs.getMetaData();
+                fail("should have thrown SQLException");
+            } catch (SQLException e) {
+                // expected
+            }
+        } finally {
+            stmt.close();
+        }
+    }
+
+    public void testGetMetaDataThrowsSQLExceptionAfterConnectionClose() throws Exception {
+        Statement stmt = connection.createStatement();
+        ResultSet rs;
+        rs = stmt.executeQuery("SELECT * FROM RDB$DATABASE");
+        assertFalse("Expected result set to be open", rs.isClosed());
+        connection.close();
+
+        assertTrue("Expected result set to be closed", rs.isClosed());
+
+        try {
+            rs.getMetaData();
+            fail("should have thrown SQLException");
+        } catch (SQLException e) {
+            // expected
+        }
+    }
+
 }
