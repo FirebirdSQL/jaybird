@@ -20,10 +20,8 @@ package org.firebirdsql.jdbc;
 
 import org.firebirdsql.common.FBJUnit4TestBase;
 import org.firebirdsql.gds.ISCConstants;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Ignore;
-import org.junit.Test;
+import org.junit.*;
+import org.junit.rules.ExpectedException;
 
 import java.io.ByteArrayInputStream;
 import java.io.StringReader;
@@ -35,19 +33,20 @@ import static org.firebirdsql.common.DdlHelper.executeCreateTable;
 import static org.firebirdsql.common.DdlHelper.executeDDL;
 import static org.firebirdsql.common.FBTestProperties.*;
 import static org.firebirdsql.common.JdbcResourceHelper.closeQuietly;
+import static org.firebirdsql.common.matchers.SQLExceptionMatchers.sqlStateEquals;
 import static org.junit.Assert.*;
 
 public class TestFBResultSet extends FBJUnit4TestBase {
 
     //@formatter:off
-    public static final String SELECT_STATEMENT =
+    private static final String SELECT_STATEMENT =
         "SELECT " +
         "  1 AS col1," +
         "  2 AS \"col1\"," +
         "  3 AS \"Col1\""  +
         "FROM rdb$database";
 
-    public static final String CREATE_TABLE_STATEMENT =
+    private static final String CREATE_TABLE_STATEMENT =
         "CREATE TABLE test_table(" +
         "  id INTEGER NOT NULL PRIMARY KEY," +
         "  str VARCHAR(10)," +
@@ -57,11 +56,11 @@ public class TestFBResultSet extends FBJUnit4TestBase {
         "  \"CamelStr\" VARCHAR(255)," +
         "  blob_bin BLOB SUB_TYPE BINARY" +
         ")";
-    
-    public static final String SELECT_TEST_TABLE =
+
+    private static final String SELECT_TEST_TABLE =
         "SELECT id, str FROM test_table";
 
-    public static final String CREATE_TABLE_STATEMENT2 =
+    private static final String CREATE_TABLE_STATEMENT2 =
         "CREATE TABLE test_table2(" +
         "  id INTEGER NOT NULL, " +
         "  str VARCHAR(10), " +
@@ -71,7 +70,7 @@ public class TestFBResultSet extends FBJUnit4TestBase {
         "  \"CamelStr\" VARCHAR(255)" +
         ")";
 
-    public static final String CREATE_VIEW_STATEMENT =
+    private static final String CREATE_VIEW_STATEMENT =
         "CREATE VIEW test_empty_string_view(marker, id, empty_char) " +
         "  AS  " +
         "  SELECT " +
@@ -81,26 +80,29 @@ public class TestFBResultSet extends FBJUnit4TestBase {
         "  FROM " +
         "    test_table";
 
-    public static final String CREATE_SUBSTR_FUNCTION =
+    private static final String CREATE_SUBSTR_FUNCTION =
         "DECLARE EXTERNAL FUNCTION substr " +
         "  CSTRING(80), SMALLINT, SMALLINT " +
         "RETURNS CSTRING(80) FREE_IT " +
         "ENTRY_POINT 'IB_UDF_substr' MODULE_NAME 'ib_udf'";
 
-    public static final String SELECT_FROM_VIEW_STATEMENT =
+    private static final String SELECT_FROM_VIEW_STATEMENT =
         "SELECT * FROM test_empty_string_view";
 
-    public static final String INSERT_INTO_TABLE_STATEMENT =
+    private static final String INSERT_INTO_TABLE_STATEMENT =
         "INSERT INTO test_table (id, str) VALUES(?, ?)";
 
-    public static final String INSERT_LONG_STR_STATEMENT =
+    private static final String INSERT_LONG_STR_STATEMENT =
         "INSERT INTO test_table (id, long_str) VALUES(?, ?)";
 
-    public static final String CURSOR_NAME = "some_cursor";
+    private static final String CURSOR_NAME = "some_cursor";
 
-    public static final String UPDATE_TABLE_STATEMENT =
+    private static final String UPDATE_TABLE_STATEMENT =
         "UPDATE test_table SET str = ? WHERE CURRENT OF " + CURSOR_NAME;
     //@formatter:on
+
+    @Rule
+    public final ExpectedException expectedException = ExpectedException.none();
 
     protected Connection connection;
 
@@ -429,7 +431,7 @@ public class TestFBResultSet extends FBJUnit4TestBase {
                         && !ex.getMessage().contains("string truncation")) throw ex;
                 // it is ok as well, since substr is declared as CSTRING(80)
                 // and truncation error happens
-                System.out.println("First query generated exception" + ex.getMessage());
+                System.out.println("First query generated exception " + ex.getMessage());
             }
 
             try (ResultSet rs = stmt.executeQuery(query)) {
@@ -441,7 +443,7 @@ public class TestFBResultSet extends FBJUnit4TestBase {
                         && !ex.getMessage().contains("string truncation")) throw ex;
                 // it is ok as well, since substr is declared as CSTRING(80)
                 // and truncation error happens
-                System.out.println("Second query generated exception" + ex.getMessage());
+                System.out.println("Second query generated exception " + ex.getMessage());
             }
         }
     }
@@ -1176,5 +1178,38 @@ public class TestFBResultSet extends FBJUnit4TestBase {
                 assertEquals("String", rs.getString(2));
             }
         }
+    }
+
+    @Test
+    public void testGetMetaDataThrowsSQLExceptionAfterClose() throws Exception {
+        try (Statement stmt = connection.createStatement()) {
+            ResultSet rs;
+            rs = stmt.executeQuery("SELECT * FROM RDB$DATABASE");
+            assertFalse("Expected result set to be open", rs.isClosed());
+            rs.close();
+
+            assertTrue("Expected result set to be closed", rs.isClosed());
+
+            expectedException.expect(SQLException.class);
+            expectedException.expect(sqlStateEquals(SQLStateConstants.SQL_STATE_NO_RESULT_SET));
+
+            rs.getMetaData();
+        }
+    }
+
+    @Test
+    public void testGetMetaDataThrowsSQLExceptionAfterConnectionClose() throws Exception {
+        Statement stmt = connection.createStatement();
+        ResultSet rs;
+        rs = stmt.executeQuery("SELECT * FROM RDB$DATABASE");
+        assertFalse("Expected result set to be open", rs.isClosed());
+        connection.close();
+
+        assertTrue("Expected result set to be closed", rs.isClosed());
+
+        expectedException.expect(SQLException.class);
+        expectedException.expect(sqlStateEquals(SQLStateConstants.SQL_STATE_NO_RESULT_SET));
+
+        rs.getMetaData();
     }
 }

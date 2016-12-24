@@ -1093,17 +1093,8 @@ public abstract class AbstractResultSet implements ResultSet, FirebirdResultSet,
         return cursorName;
     }
 
-    /**
-     * Retrieves the  number, types and properties of
-     * this <code>ResultSet</code> object's columns.
-     *
-     * @return the description of this <code>ResultSet</code> object's columns
-     * @exception SQLException if a database access error occurs
-     *
-     * TODO we need another way of specifying the exended metadata if
-     * this result set is constructed in code.
-     */
     public ResultSetMetaData getMetaData() throws SQLException {
+        checkOpen();
         return new FBResultSetMetaData(rowDescriptor, connection);
     }
 
