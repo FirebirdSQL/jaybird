@@ -129,18 +129,20 @@ public abstract class AbstractPreparedStatement extends AbstractStatement implem
         this.standaloneStatement = standaloneStatement;
         this.generatedKeys = generatedKeys;
 
-        try {
-            notifyStatementStarted();
-            prepareFixedStatement(sql, true);
-        } catch (GDSException ge) {
-            notifyStatementCompleted(false);
-            throw new FBSQLException(ge);
-        } catch (SQLException sqle) {
-            notifyStatementCompleted(false);
-            throw sqle;
-        } catch (RuntimeException e) {
-            notifyStatementCompleted(false);
-            throw e;
+        synchronized (c.getSynchronizationObject()) {
+            try {
+                notifyStatementStarted();
+                prepareFixedStatement(sql, true);
+            } catch (GDSException ge) {
+                notifyStatementCompleted(false);
+                throw new FBSQLException(ge);
+            } catch (SQLException sqle) {
+                notifyStatementCompleted(false);
+                throw sqle;
+            } catch (RuntimeException e) {
+                notifyStatementCompleted(false);
+                throw e;
+            }
         }
     }
     

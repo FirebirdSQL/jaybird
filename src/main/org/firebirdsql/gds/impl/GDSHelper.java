@@ -143,7 +143,9 @@ public final class GDSHelper implements Synchronizable {
      * transaction, <code>false</code> otherwise.
      */
     public boolean inTransaction() {
-        return currentTr != null;
+        synchronized (getSynchronizationObject()) {
+            return currentTr != null;
+        }
     }
 
     public int getTransactionId(IscTrHandle trHandle)
