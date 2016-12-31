@@ -105,7 +105,9 @@ public final class GDSHelper implements Synchronizable {
      * transaction, <code>false</code> otherwise.
      */
     public boolean inTransaction() {
-        return transaction != null && transaction.getState() == TransactionState.ACTIVE;
+        synchronized (getSynchronizationObject()) {
+            return transaction != null && transaction.getState() == TransactionState.ACTIVE;
+        }
     }
 
     /**

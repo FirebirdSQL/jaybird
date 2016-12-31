@@ -140,14 +140,16 @@ public abstract class AbstractPreparedStatement extends FBStatement implements F
         this.metaDataQuery = metaDataQuery;
         this.standaloneStatement = standaloneStatement;
         this.generatedKeys = generatedKeys;
-        
-        try {
-            // TODO See http://tracker.firebirdsql.org/browse/JDBC-352
-            notifyStatementStarted();
-            prepareFixedStatement(sql);
-        } catch (SQLException | RuntimeException e) {
-            notifyStatementCompleted(false);
-            throw e;
+
+        synchronized (c.getSynchronizationObject()) {
+            try {
+                // TODO See http://tracker.firebirdsql.org/browse/JDBC-352
+                notifyStatementStarted();
+                prepareFixedStatement(sql);
+            } catch (SQLException | RuntimeException e) {
+                notifyStatementCompleted(false);
+                throw e;
+            }
         }
     }
     
