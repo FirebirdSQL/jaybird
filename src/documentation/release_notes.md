@@ -588,8 +588,8 @@ encoding, charSet or localEncoding). Please specify a connection character set
 information."_ ([JDBC-446](http://tracker.firebirdsql.org/browse/JDBC-446))
 
 In Jaybird 2.2 and earlier, Jaybird would default to connection character set 
-`NONE` if no character set had been specified (through `lc_ctype`/`encoding` 
-and/or `charSet`/`localEncoding`). This can result in incorrect character set
+`NONE` if no character set had been specified (through `encoding` 
+and/or `charSet`). This can result in incorrect character set
 handling when the database is used from different locales.
 
 To address this change, explicitly set the connection character set using
@@ -598,13 +598,17 @@ one of the following options:
 *   Use connection property `encoding` (or `lc_ctype`) with a Firebird character
     set name. 
     
-    Use `encoding=NONE` for the 'old' default behavior (with some caveats, see 
+    Use `encoding=NONE` for the old default behavior (with some caveats, see 
     other sections).
 
 *   Use connection property `charSet` (or `localEncoding`) with a Java character
     set name.
+    
+*   Use a combination of `encoding` and `charSet`, if you want to reinterpret a 
+    Firebird character set in a Java character set other than the default 
+    mapping.
 
-*   By providing a default character set with system property 
+*   By providing a default Firebird character set with system property 
     `org.firebirdsql.jdbc.defaultConnectionEncoding`. Jaybird will apply the
     specified character set as the default when no character set is specified
     in the connection properties.
@@ -636,7 +640,7 @@ Exceptions
     sub-classes anymore, but in general we strive to use the standard
     exceptions where possible. 
 
-*   Class `FBSQLWarning` has been removed and replaced with `SQLWarning`.
+*   Class `FBSQLWarning` has been removed and replaced with `java.sql.SQLWarning`.
 
 *   Methods with `throws FBSQLException` changed to `throws SQLException`
 
@@ -1044,9 +1048,9 @@ The following methods will be removed in Jaybird 3.1:
 -   `GDSHelper.iscVaxLong(byte[] buffer, int pos, int length)` use
     `VaxEncoding.iscVaxLong(byte[] buffer, int startPosition, int length)`
     instead.
--   `MaintenaceManager.commitTransaction(int transactionId)`, use
+-   `MaintenanceManager.commitTransaction(int transactionId)`, use
     `MaintenanceManager.commitTransaction(long transactionId)` instead.
--   `MaintenaceManager.rollbackTransaction(int transactionId)`, use
+-   `MaintenanceManager.rollbackTransaction(int transactionId)`, use
     `MaintenanceManager.rollbackTransaction(long transactionId)` instead.
 
 ### Removal of deprecated constants ###
