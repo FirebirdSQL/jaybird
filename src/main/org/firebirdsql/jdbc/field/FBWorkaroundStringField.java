@@ -36,7 +36,7 @@ import org.firebirdsql.gds.XSQLVAR;
  * is connected with the character set of the field as defined lengh * maximum
  * number of bytes per character in that encoding. However this does not work
  * for system tables which have defined length 31, character set UNICODE_FSS and
- * maximum allowed length of 31 (instead of 31 * 3 = 63).
+ * maximum allowed length of 31 (instead of 31 * 3 = 63). TODO: Changed with FB4, check
  * <p>
  * Until this bug is fixed in the engine we will simply check if field belongs 
  * to the system table and do not throw data truncation error locally. 

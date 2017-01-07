@@ -161,15 +161,17 @@ public class TestFBDatabaseMetaData extends TestXABase {
         FirebirdDatabaseMetaData metaData = (FirebirdDatabaseMetaData) c.getMetaData();
         final int databaseMajorVersion = metaData.getDatabaseMajorVersion();
         final int databaseMinorVersion = metaData.getDatabaseMinorVersion();
-        if (databaseMajorVersion < 2)
+        if (databaseMajorVersion < 2) {
             sysTableCount = 32;
-        else if (databaseMajorVersion == 2 && databaseMinorVersion == 0)
+        } else if (databaseMajorVersion == 2 && databaseMinorVersion == 0) {
             sysTableCount = 33;
-        else if (databaseMajorVersion == 2 && databaseMinorVersion == 1)
+        } else if (databaseMajorVersion == 2 && databaseMinorVersion == 1) {
             sysTableCount = 40;
-        else if (databaseMajorVersion == 2 && databaseMinorVersion == 5)
+        } else if (databaseMajorVersion == 2 && databaseMinorVersion == 5) {
             sysTableCount = 42;
-        else if (databaseMajorVersion == 3 && databaseMinorVersion == 0) {
+        } else if (databaseMajorVersion == 3 && databaseMinorVersion == 0) {
+            sysTableCount = 50;
+        } else if (databaseMajorVersion == 4 && databaseMinorVersion == 0) {
             sysTableCount = 50;
         } else {
             fail(String.format("Unsupported database server version %d.%d for this test case: found table count %d", databaseMajorVersion, databaseMinorVersion, count));

@@ -105,7 +105,7 @@ public class TestBackupManager extends FBTestBase {
     public void testSetBadPageSize() {
         try {
             backupManager.setRestorePageSize(4000);
-            fail("Page size must be one of 1024, 2048, 4196, 8192 or 16384)");
+            fail("Page size must be one of 1024, 2048, 4196, 8192, 16384, 32768)");
         } catch (IllegalArgumentException e) {
             // Ignore
         }
@@ -116,7 +116,7 @@ public class TestBackupManager extends FBTestBase {
      * Tests the valid page sizes expected to be accepted by the BackupManager
      */
     public void testValidPageSizes() {
-        final int[] pageSizes = {1024, 2048, 4096, 8192, 16384};
+        final int[] pageSizes = {1024, 2048, 4096, 8192, 16384, 32768};
         for (int pageSize : pageSizes) {
             backupManager.setRestorePageSize(pageSize);
         }

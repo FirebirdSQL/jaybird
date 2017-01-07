@@ -57,6 +57,9 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
     private final static Logger log = LoggerFactory.getLogger(FBDatabaseMetaData.class,false);
     private static final String SPACES_31 = "                               "; // 31 spaces
     private static final String SPACES_15 = "               "; // 15 spaces
+    private static final int OBJECT_NAME_LENGTH_BEFORE_V4_0 = 31;
+    private static final int OBJECT_NAME_LENGTH_V4_0 = 63;
+    protected static final int OBJECT_NAME_LENGTH = OBJECT_NAME_LENGTH_V4_0;
 
     private GDSHelper gdsHelper;
     private AbstractConnection connection;
@@ -1463,7 +1466,11 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
      * @exception SQLException if a database access error occurs
      */
     public  int getMaxColumnNameLength() throws SQLException {
-        return 31;
+        if (gdsHelper.compareToVersion(4, 0) < 0) {
+            return OBJECT_NAME_LENGTH_BEFORE_V4_0;
+        } else {
+            return OBJECT_NAME_LENGTH_V4_0;
+        }
     }
 
     /**
@@ -1579,7 +1586,11 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
      * @exception SQLException if a database access error occurs
      */
     public  int getMaxProcedureNameLength() throws SQLException {
-        return 31;
+        if (gdsHelper.compareToVersion(4, 0) < 0) {
+            return OBJECT_NAME_LENGTH_BEFORE_V4_0;
+        } else {
+            return OBJECT_NAME_LENGTH_V4_0;
+        }
     }
 
     /**
@@ -1649,7 +1660,11 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
      * @exception SQLException if a database access error occurs
      */
     public  int getMaxTableNameLength() throws SQLException {
-        return 31;
+        if (gdsHelper.compareToVersion(4, 0) < 0) {
+            return OBJECT_NAME_LENGTH_BEFORE_V4_0;
+        } else {
+            return OBJECT_NAME_LENGTH_V4_0;
+        }
     }
 
     /**
@@ -1763,7 +1778,7 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
     }
 
     private static final String GET_PROCEDURES_START = "select "
-        + "cast(RDB$PROCEDURE_NAME as varchar(31)) as PROCEDURE_NAME,"
+        + "cast(RDB$PROCEDURE_NAME as varchar(" + OBJECT_NAME_LENGTH + ")) as PROCEDURE_NAME,"
         + "RDB$DESCRIPTION as REMARKS,"
         + "RDB$PROCEDURE_OUTPUTS as PROCEDURE_TYPE "
         + "from "
@@ -1818,19 +1833,19 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
 
         xsqlvars[0] = new XSQLVAR();
         xsqlvars[0].sqltype = ISCConstants.SQL_VARYING;
-        xsqlvars[0].sqllen = 31;
+        xsqlvars[0].sqllen = OBJECT_NAME_LENGTH;
         xsqlvars[0].sqlname = "PROCEDURE_CAT";
         xsqlvars[0].relname = "RDB$PROCEDURES";
 
         xsqlvars[1] = new XSQLVAR();
         xsqlvars[1].sqltype = ISCConstants.SQL_VARYING;
-        xsqlvars[1].sqllen = 31;
+        xsqlvars[1].sqllen = OBJECT_NAME_LENGTH;
         xsqlvars[1].sqlname = "PROCEDURE_SCHEM";
         xsqlvars[1].relname = "RDB$PROCEDURES";
 
         xsqlvars[2] = new XSQLVAR();
         xsqlvars[2].sqltype = ISCConstants.SQL_VARYING;
-        xsqlvars[2].sqllen = 31;
+        xsqlvars[2].sqllen = OBJECT_NAME_LENGTH;
         xsqlvars[2].sqlname = "PROCEDURE_NAME";
         xsqlvars[2].relname = "RDB$PROCEDURES";
 
@@ -1865,7 +1880,7 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
         
         xsqlvars[8] = new XSQLVAR();
         xsqlvars[8].sqltype = ISCConstants.SQL_VARYING;
-        xsqlvars[8].sqllen = 31;
+        xsqlvars[8].sqllen = OBJECT_NAME_LENGTH;
         xsqlvars[8].sqlname = "SPECIFIC_NAME";
         xsqlvars[8].relname = "RDB$PROCEDURES";
 
@@ -1921,8 +1936,8 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
 
 
     private static final String GET_PROCEDURE_COLUMNS_START = "select "
-        + "cast(PP.RDB$PROCEDURE_NAME as varchar(31)) as PROCEDURE_NAME,"
-        + "cast(PP.RDB$PARAMETER_NAME as varchar(31)) as COLUMN_NAME,"
+        + "cast(PP.RDB$PROCEDURE_NAME as varchar(" + OBJECT_NAME_LENGTH + ")) as PROCEDURE_NAME,"
+        + "cast(PP.RDB$PARAMETER_NAME as varchar(" + OBJECT_NAME_LENGTH + ")) as COLUMN_NAME,"
         + "PP.RDB$PARAMETER_TYPE as COLUMN_TYPE,"
         + "F.RDB$FIELD_TYPE as FIELD_TYPE,"
         + "F.RDB$FIELD_SUB_TYPE as FIELD_SUB_TYPE,"
@@ -2045,25 +2060,25 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
 
         xsqlvars[0] = new XSQLVAR();
         xsqlvars[0].sqltype = ISCConstants.SQL_VARYING;
-        xsqlvars[0].sqllen = 31;
+        xsqlvars[0].sqllen = OBJECT_NAME_LENGTH;
         xsqlvars[0].sqlname = "PROCEDURE_CAT";
         xsqlvars[0].relname = "COLUMNINFO";
 
         xsqlvars[1] = new XSQLVAR();
         xsqlvars[1].sqltype = ISCConstants.SQL_VARYING;
-        xsqlvars[1].sqllen = 31;
+        xsqlvars[1].sqllen = OBJECT_NAME_LENGTH;
         xsqlvars[1].sqlname = "PROCEDURE_SCHEM";
         xsqlvars[1].relname = "COLUMNINFO";
 
         xsqlvars[2] = new XSQLVAR();
         xsqlvars[2].sqltype = ISCConstants.SQL_VARYING;
-        xsqlvars[2].sqllen = 31;
+        xsqlvars[2].sqllen = OBJECT_NAME_LENGTH;
         xsqlvars[2].sqlname = "PROCEDURE_NAME";
         xsqlvars[2].relname = "COLUMNINFO";
 
         xsqlvars[3] = new XSQLVAR();
         xsqlvars[3].sqltype = ISCConstants.SQL_VARYING;
-        xsqlvars[3].sqllen = 31;
+        xsqlvars[3].sqllen = OBJECT_NAME_LENGTH;
         xsqlvars[3].sqlname = "COLUMN_NAME";
         xsqlvars[3].relname = "COLUMNINFO";
 
@@ -2079,7 +2094,7 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
 
         xsqlvars[6] = new XSQLVAR();
         xsqlvars[6].sqltype = ISCConstants.SQL_VARYING;
-        xsqlvars[6].sqllen = 31;
+        xsqlvars[6].sqllen = OBJECT_NAME_LENGTH;
         xsqlvars[6].sqlname = "TYPE_NAME";
         xsqlvars[6].relname = "COLUMNINFO";
 
@@ -2148,7 +2163,7 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
         
         xsqlvars[19] = new XSQLVAR();
         xsqlvars[19].sqltype = ISCConstants.SQL_VARYING;
-        xsqlvars[19].sqllen = 31;
+        xsqlvars[19].sqllen = OBJECT_NAME_LENGTH;
         xsqlvars[19].sqlname = "SPECIFIC_NAME";
         xsqlvars[19].relname = "COLUMNINFO";
 
@@ -2297,17 +2312,17 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
     public static final String[] ALL_TYPES = {TABLE, SYSTEM_TABLE, VIEW};
     
     private static final String TABLE_COLUMNS_FORMAT =
-              " select cast(null as varchar(31)) as TABLE_CAT,"
-            + "cast(null as varchar(31)) as TABLE_SCHEM,"
-            + "cast(RDB$RELATION_NAME as varchar(31)) as TABLE_NAME,"
+              " select cast(null as varchar(" + OBJECT_NAME_LENGTH + ")) as TABLE_CAT,"
+            + "cast(null as varchar(" + OBJECT_NAME_LENGTH + ")) as TABLE_SCHEM,"
+            + "cast(RDB$RELATION_NAME as varchar(" + OBJECT_NAME_LENGTH + ")) as TABLE_NAME,"
             + "cast('%s' as varchar(31)) as TABLE_TYPE,"
             + "RDB$DESCRIPTION as REMARKS,"
-            + "cast(null as varchar(31)) as TYPE_CAT,"
-            + "cast(null as varchar(31)) as TYPE_SCHEM,"
+            + "cast(null as varchar(" + OBJECT_NAME_LENGTH + ")) as TYPE_CAT,"
+            + "cast(null as varchar(" + OBJECT_NAME_LENGTH + ")) as TYPE_SCHEM,"
             + "cast(null as varchar(31)) as TYPE_NAME,"
-            + "cast(null as varchar(31)) as SELF_REFERENCING_COL_NAME,"
+            + "cast(null as varchar(" + OBJECT_NAME_LENGTH + ")) as SELF_REFERENCING_COL_NAME,"
             + "cast(null as varchar(31)) as REF_GENERATION,"
-            + "cast(RDB$OWNER_NAME as varchar(31)) as OWNER_NAME "
+            + "cast(RDB$OWNER_NAME as varchar(" + OBJECT_NAME_LENGTH + ")) as OWNER_NAME "
             + "from RDB$RELATIONS";
     
     private static final String TABLE_COLUMNS_SYSTEM =
@@ -2483,7 +2498,7 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
 
         xsqlvars[0] = new XSQLVAR();
         xsqlvars[0].sqltype = ISCConstants.SQL_VARYING;
-        xsqlvars[0].sqllen = 31;
+        xsqlvars[0].sqllen = OBJECT_NAME_LENGTH;
         xsqlvars[0].sqlname = "TABLE_CAT";
         xsqlvars[0].relname = "TABLECATALOGS";
 
@@ -2524,8 +2539,8 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
     }
 
     private static final String GET_COLUMNS_START = 
-            "SELECT cast(RF.RDB$RELATION_NAME as varchar(31)) AS RELATION_NAME," +
-    		"cast(RF.RDB$FIELD_NAME as varchar(31)) AS FIELD_NAME," +
+            "SELECT cast(RF.RDB$RELATION_NAME as varchar(" + OBJECT_NAME_LENGTH + ")) AS RELATION_NAME," +
+    		"cast(RF.RDB$FIELD_NAME as varchar(" + OBJECT_NAME_LENGTH + ")) AS FIELD_NAME," +
     		"F.RDB$FIELD_TYPE AS FIELD_TYPE," +
     		"F.RDB$FIELD_SUB_TYPE AS FIELD_SUB_TYPE," +
     		"F.RDB$FIELD_PRECISION AS FIELD_PRECISION," +
@@ -2644,25 +2659,25 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
 
         xsqlvars[0] = new XSQLVAR();
         xsqlvars[0].sqltype = ISCConstants.SQL_VARYING;
-        xsqlvars[0].sqllen = 31;
+        xsqlvars[0].sqllen = OBJECT_NAME_LENGTH;
         xsqlvars[0].sqlname = "TABLE_CAT";
         xsqlvars[0].relname = "COLUMNINFO";
 
         xsqlvars[1] = new XSQLVAR();
         xsqlvars[1].sqltype = ISCConstants.SQL_VARYING;
-        xsqlvars[1].sqllen = 31;
+        xsqlvars[1].sqllen = OBJECT_NAME_LENGTH;
         xsqlvars[1].sqlname = "TABLE_SCHEM";
         xsqlvars[1].relname = "COLUMNINFO";
 
         xsqlvars[2] = new XSQLVAR();
         xsqlvars[2].sqltype = ISCConstants.SQL_VARYING;
-        xsqlvars[2].sqllen = 31;
+        xsqlvars[2].sqllen = OBJECT_NAME_LENGTH;
         xsqlvars[2].sqlname = "TABLE_NAME";
         xsqlvars[2].relname = "COLUMNINFO";
 
         xsqlvars[3] = new XSQLVAR();
         xsqlvars[3].sqltype = ISCConstants.SQL_VARYING;
-        xsqlvars[3].sqllen = 31;
+        xsqlvars[3].sqllen = OBJECT_NAME_LENGTH;
         xsqlvars[3].sqlname = "COLUMN_NAME";
         xsqlvars[3].relname = "COLUMNINFO";
 
@@ -2742,7 +2757,7 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
         
         xsqlvars[18] = new XSQLVAR();
         xsqlvars[18].sqltype = ISCConstants.SQL_VARYING;
-        xsqlvars[18].sqllen = 31;
+        xsqlvars[18].sqllen = OBJECT_NAME_LENGTH;
         if (getJDBCMajorVersion() > 4 || getJDBCMajorVersion() == 4 && getJDBCMinorVersion() >= 1) {
             xsqlvars[18].sqlname = "SCOPE_CATALOG";
         } else {
@@ -2752,13 +2767,13 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
         
         xsqlvars[19] = new XSQLVAR();
         xsqlvars[19].sqltype = ISCConstants.SQL_VARYING;
-        xsqlvars[19].sqllen = 31;
+        xsqlvars[19].sqllen = OBJECT_NAME_LENGTH;
         xsqlvars[19].sqlname = "SCOPE_SCHEMA";
         xsqlvars[19].relname = "COLUMNINFO";
         
         xsqlvars[20] = new XSQLVAR();
         xsqlvars[20].sqltype = ISCConstants.SQL_VARYING;
-        xsqlvars[20].sqllen = 31;
+        xsqlvars[20].sqllen = OBJECT_NAME_LENGTH;
         xsqlvars[20].sqlname = "SCOPE_TABLE";
         xsqlvars[20].relname = "COLUMNINFO";
         
@@ -3096,10 +3111,10 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
     private static final String GET_COLUMN_PRIVILEGES_START = "select "
         /*+ "null as TABLE_CAT,"
         + "null as TABLE_SCHEM,"*/
-        + "cast(RF.RDB$RELATION_NAME as varchar(31)) as TABLE_NAME,"
-        + "cast(RF.RDB$FIELD_NAME as varchar(31)) as COLUMN_NAME,"
-        + "cast(UP.RDB$GRANTOR as varchar(31)) as GRANTOR,"
-        + "cast(UP.RDB$USER as varchar(31)) as GRANTEE,"
+        + "cast(RF.RDB$RELATION_NAME as varchar(" + OBJECT_NAME_LENGTH + ")) as TABLE_NAME,"
+        + "cast(RF.RDB$FIELD_NAME as varchar(" + OBJECT_NAME_LENGTH + ")) as COLUMN_NAME,"
+        + "cast(UP.RDB$GRANTOR as varchar(" + OBJECT_NAME_LENGTH + ")) as GRANTOR,"
+        + "cast(UP.RDB$USER as varchar(" + OBJECT_NAME_LENGTH + ")) as GRANTEE,"
         + "cast(UP.RDB$PRIVILEGE as varchar(6)) as PRIVILEGE,"
         + "UP.RDB$GRANT_OPTION as IS_GRANTABLE "
         + "from "
@@ -3111,7 +3126,7 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
         + "RF.RDB$FIELD_SOURCE = F.RDB$FIELD_NAME  and "
         + "(UP.RDB$FIELD_NAME is null or "
         + "UP.RDB$FIELD_NAME = RF.RDB$FIELD_NAME) and "
-        + "CAST(UP.RDB$RELATION_NAME AS VARCHAR(40)) = ? and ((";
+        + "CAST(UP.RDB$RELATION_NAME AS VARCHAR(" + (OBJECT_NAME_LENGTH + 10) + ")) = ? and ((";
     private static final String GET_COLUMN_PRIVILEGES_END = " UP.RDB$OBJECT_TYPE = 0) or "
         + "(RF.RDB$FIELD_NAME is null and UP.RDB$OBJECT_TYPE = 0)) "
         + "order by 2,5 ";
@@ -3153,37 +3168,37 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
 
         xsqlvars[0] = new XSQLVAR();
         xsqlvars[0].sqltype = ISCConstants.SQL_VARYING;
-        xsqlvars[0].sqllen = 31;
+        xsqlvars[0].sqllen = OBJECT_NAME_LENGTH;
         xsqlvars[0].sqlname = "TABLE_CAT";
         xsqlvars[0].relname = "COLUMNPRIV";
 
         xsqlvars[1] = new XSQLVAR();
         xsqlvars[1].sqltype = ISCConstants.SQL_VARYING;
-        xsqlvars[1].sqllen = 31;
+        xsqlvars[1].sqllen = OBJECT_NAME_LENGTH;
         xsqlvars[1].sqlname = "TABLE_SCHEM";
         xsqlvars[1].relname = "COLUMNPRIV";
 
         xsqlvars[2] = new XSQLVAR();
         xsqlvars[2].sqltype = ISCConstants.SQL_VARYING;
-        xsqlvars[2].sqllen = 31;
+        xsqlvars[2].sqllen = OBJECT_NAME_LENGTH;
         xsqlvars[2].sqlname = "TABLE_NAME";
         xsqlvars[2].relname = "COLUMNPRIV";
 
         xsqlvars[3] = new XSQLVAR();
         xsqlvars[3].sqltype = ISCConstants.SQL_VARYING;
-        xsqlvars[3].sqllen = 31;
+        xsqlvars[3].sqllen = OBJECT_NAME_LENGTH;
         xsqlvars[3].sqlname = "COLUMN_NAME";
         xsqlvars[3].relname = "COLUMNPRIV";
 
         xsqlvars[4] = new XSQLVAR();
         xsqlvars[4].sqltype = ISCConstants.SQL_VARYING;
-        xsqlvars[4].sqllen = 31;
+        xsqlvars[4].sqllen = OBJECT_NAME_LENGTH;
         xsqlvars[4].sqlname = "GRANTOR";
         xsqlvars[4].relname = "COLUMNPRIV";
 
         xsqlvars[5] = new XSQLVAR();
         xsqlvars[5].sqltype = ISCConstants.SQL_VARYING;
-        xsqlvars[5].sqllen = 31;
+        xsqlvars[5].sqllen = OBJECT_NAME_LENGTH;
         xsqlvars[5].sqlname = "GRANTEE";
         xsqlvars[5].relname = "COLUMNPRIV";
 
@@ -3270,9 +3285,9 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
     private static final String GET_TABLE_PRIVILEGES_START = "select "
         /*+ " null as TABLE_CAT, "
         + " null as TABLE_SCHEM,"*/
-        + "cast(RDB$RELATION_NAME as varchar(31)) as TABLE_NAME,"
-        + "cast(RDB$GRANTOR as varchar(31)) as GRANTOR,"
-        + "cast(RDB$USER as varchar(31)) as GRANTEE,"
+        + "cast(RDB$RELATION_NAME as varchar(" + OBJECT_NAME_LENGTH + ")) as TABLE_NAME,"
+        + "cast(RDB$GRANTOR as varchar(" + OBJECT_NAME_LENGTH + ")) as GRANTOR,"
+        + "cast(RDB$USER as varchar(" + OBJECT_NAME_LENGTH + ")) as GRANTEE,"
         + "cast(RDB$PRIVILEGE as varchar(6)) as PRIVILEGE,"
         + "RDB$GRANT_OPTION as IS_GRANTABLE "
         + "from"
@@ -3358,31 +3373,31 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
 
         xsqlvars[0] = new XSQLVAR();
         xsqlvars[0].sqltype = ISCConstants.SQL_VARYING;
-        xsqlvars[0].sqllen = 31;
+        xsqlvars[0].sqllen = OBJECT_NAME_LENGTH;
         xsqlvars[0].sqlname = "TABLE_CAT";
         xsqlvars[0].relname = "TABLEPRIV";
 
         xsqlvars[1] = new XSQLVAR();
         xsqlvars[1].sqltype = ISCConstants.SQL_VARYING;
-        xsqlvars[1].sqllen = 31;
+        xsqlvars[1].sqllen = OBJECT_NAME_LENGTH;
         xsqlvars[1].sqlname = "TABLE_SCHEM";
         xsqlvars[1].relname = "TABLEPRIV";
 
         xsqlvars[2] = new XSQLVAR();
         xsqlvars[2].sqltype = ISCConstants.SQL_VARYING;
-        xsqlvars[2].sqllen = 31;
+        xsqlvars[2].sqllen = OBJECT_NAME_LENGTH;
         xsqlvars[2].sqlname = "TABLE_NAME";
         xsqlvars[2].relname = "TABLEPRIV";
 
         xsqlvars[3] = new XSQLVAR();
         xsqlvars[3].sqltype = ISCConstants.SQL_VARYING;
-        xsqlvars[3].sqllen = 31;
+        xsqlvars[3].sqllen = OBJECT_NAME_LENGTH;
         xsqlvars[3].sqlname = "GRANTOR";
         xsqlvars[3].relname = "TABLEPRIV";
 
         xsqlvars[4] = new XSQLVAR();
         xsqlvars[4].sqltype = ISCConstants.SQL_VARYING;
-        xsqlvars[4].sqllen = 31;
+        xsqlvars[4].sqllen = OBJECT_NAME_LENGTH;
         xsqlvars[4].sqlname = "GRANTEE";
         xsqlvars[4].relname = "TABLEPRIV";
 
@@ -3440,7 +3455,7 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
 
     private static final String GET_BEST_ROW_IDENT =
             "SELECT " +
-            "CAST(rf.rdb$field_name AS varchar(31)) AS column_name, " +
+            "CAST(rf.rdb$field_name AS varchar(" + OBJECT_NAME_LENGTH + ")) AS column_name, " +
             "f.rdb$field_type AS field_type, " +
             "f.rdb$field_sub_type AS field_sub_type, " +
             "f.rdb$field_scale AS field_scale, " +
@@ -3451,7 +3466,7 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
             "    AND rf.rdb$relation_name = rc.rdb$relation_name " +
             "INNER JOIN rdb$fields f ON f.rdb$field_name = rf.rdb$field_source " +
             "WHERE " +
-            "CAST(rc.rdb$relation_name AS VARCHAR(40)) = ? " +
+            "CAST(rc.rdb$relation_name AS VARCHAR(" + (OBJECT_NAME_LENGTH + 10) + ")) = ? " +
             "AND rc.rdb$constraint_type = 'PRIMARY KEY'";
 
     /**
@@ -3502,7 +3517,7 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
 
         xsqlvars[1] = new XSQLVAR();
         xsqlvars[1].sqltype = ISCConstants.SQL_VARYING;
-        xsqlvars[1].sqllen = 31;
+        xsqlvars[1].sqllen = OBJECT_NAME_LENGTH;
         xsqlvars[1].sqlname = "COLUMN_NAME";
         xsqlvars[1].relname = "ROWIDENTIFIER";
 
@@ -3644,7 +3659,7 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
 
         xsqlvars[1] = new XSQLVAR();
         xsqlvars[1].sqltype = ISCConstants.SQL_VARYING;
-        xsqlvars[1].sqllen = 31;
+        xsqlvars[1].sqllen = OBJECT_NAME_LENGTH;
         xsqlvars[1].sqlname = "COLUMN_NAME";
         xsqlvars[1].relname = "VERSIONCOL";
 
@@ -3688,14 +3703,14 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
     private static final String GET_PRIMARY_KEYS = "select "
         /*+ " null as TABLE_CAT, "
         + " null as TABLE_SCHEM, "*/
-        + "cast(RC.RDB$RELATION_NAME as varchar(31)) as TABLE_NAME,"
-        + "cast(ISGMT.RDB$FIELD_NAME as varchar(31)) as COLUMN_NAME,"
+        + "cast(RC.RDB$RELATION_NAME as varchar(" + OBJECT_NAME_LENGTH + ")) as TABLE_NAME,"
+        + "cast(ISGMT.RDB$FIELD_NAME as varchar(" + OBJECT_NAME_LENGTH + ")) as COLUMN_NAME,"
         + "CAST((ISGMT.RDB$FIELD_POSITION + 1) as SMALLINT) as KEY_SEQ,"
-        + "cast(RC.RDB$CONSTRAINT_NAME as varchar(31)) as PK_NAME "
+        + "cast(RC.RDB$CONSTRAINT_NAME as varchar(" + OBJECT_NAME_LENGTH + ")) as PK_NAME "
         + "from "
         + "RDB$RELATION_CONSTRAINTS RC "
         + "INNER JOIN RDB$INDEX_SEGMENTS ISGMT ON RC.RDB$INDEX_NAME = ISGMT.RDB$INDEX_NAME "
-        + "where CAST(RC.RDB$RELATION_NAME AS VARCHAR(40)) = ? and "
+        + "where CAST(RC.RDB$RELATION_NAME AS VARCHAR(" + (OBJECT_NAME_LENGTH + 10) + ")) = ? and "
         + "RC.RDB$CONSTRAINT_TYPE = 'PRIMARY KEY' "
         + "order by ISGMT.RDB$FIELD_NAME ";
 
@@ -3729,25 +3744,25 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
 
         xsqlvars[0] = new XSQLVAR();
         xsqlvars[0].sqltype = ISCConstants.SQL_VARYING;
-        xsqlvars[0].sqllen = 31;
+        xsqlvars[0].sqllen = OBJECT_NAME_LENGTH;
         xsqlvars[0].sqlname = "TABLE_CAT";
         xsqlvars[0].relname = "COLUMNINFO";
 
         xsqlvars[1] = new XSQLVAR();
         xsqlvars[1].sqltype = ISCConstants.SQL_VARYING;
-        xsqlvars[1].sqllen = 31;
+        xsqlvars[1].sqllen = OBJECT_NAME_LENGTH;
         xsqlvars[1].sqlname = "TABLE_SCHEM";
         xsqlvars[1].relname = "COLUMNINFO";
 
         xsqlvars[2] = new XSQLVAR();
         xsqlvars[2].sqltype = ISCConstants.SQL_VARYING;
-        xsqlvars[2].sqllen = 31;
+        xsqlvars[2].sqllen = OBJECT_NAME_LENGTH;
         xsqlvars[2].sqlname = "TABLE_NAME";
         xsqlvars[2].relname = "COLUMNINFO";
 
         xsqlvars[3] = new XSQLVAR();
         xsqlvars[3].sqltype = ISCConstants.SQL_VARYING;
-        xsqlvars[3].sqllen = 31;
+        xsqlvars[3].sqllen = OBJECT_NAME_LENGTH;
         xsqlvars[3].sqlname = "COLUMN_NAME";
         xsqlvars[3].relname = "COLUMNINFO";
 
@@ -3758,7 +3773,7 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
 
         xsqlvars[5] = new XSQLVAR();
         xsqlvars[5].sqltype = ISCConstants.SQL_VARYING;
-        xsqlvars[5].sqllen = 31;
+        xsqlvars[5].sqllen = OBJECT_NAME_LENGTH;
         xsqlvars[5].sqlname = "PK_NAME";
         xsqlvars[5].relname = "COLUMNINFO";
 
@@ -3799,17 +3814,17 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
     private static final String GET_IMPORTED_KEYS = "select "
     /*+" null as PKTABLE_CAT "
     +" ,null as PKTABLE_SCHEM "*/
-    +"cast(PK.RDB$RELATION_NAME as varchar(31)) as PKTABLE_NAME"
-    +",cast(ISP.RDB$FIELD_NAME as varchar(31)) as PKCOLUMN_NAME"
+    +"cast(PK.RDB$RELATION_NAME as varchar(" + OBJECT_NAME_LENGTH + ")) as PKTABLE_NAME"
+    +",cast(ISP.RDB$FIELD_NAME as varchar(" + OBJECT_NAME_LENGTH + ")) as PKCOLUMN_NAME"
     /*+" ,null as FKTABLE_CAT "
     +" ,null as FKTABLE_SCHEM "*/
-    +",cast(FK.RDB$RELATION_NAME as varchar(31)) as FKTABLE_NAME"
-    +",cast(ISF.RDB$FIELD_NAME as varchar(31)) as FKCOLUMN_NAME"
+    +",cast(FK.RDB$RELATION_NAME as varchar(" + OBJECT_NAME_LENGTH + ")) as FKTABLE_NAME"
+    +",cast(ISF.RDB$FIELD_NAME as varchar(" + OBJECT_NAME_LENGTH + ")) as FKCOLUMN_NAME"
     +",CAST((ISP.RDB$FIELD_POSITION + 1) as SMALLINT) as KEY_SEQ"
     +",cast(RC.RDB$UPDATE_RULE as varchar(11)) as UPDATE_RULE"
     +",cast(RC.RDB$DELETE_RULE as varchar(11)) as DELETE_RULE"
-    +",cast(PK.RDB$CONSTRAINT_NAME as varchar(31)) as PK_NAME"
-    +",cast(FK.RDB$CONSTRAINT_NAME as varchar(31)) as FK_NAME "
+    +",cast(PK.RDB$CONSTRAINT_NAME as varchar(" + OBJECT_NAME_LENGTH + ")) as PK_NAME"
+    +",cast(FK.RDB$CONSTRAINT_NAME as varchar(" + OBJECT_NAME_LENGTH + ")) as FK_NAME "
     /*+" ,null as DEFERRABILITY "*/
     +"from "
     +"RDB$RELATION_CONSTRAINTS PK"
@@ -3817,7 +3832,7 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
     +",RDB$REF_CONSTRAINTS RC"
     +",RDB$INDEX_SEGMENTS ISP"
     +",RDB$INDEX_SEGMENTS ISF "
-    +"WHERE CAST(FK.RDB$RELATION_NAME AS VARCHAR(40)) = ? and "
+    +"WHERE CAST(FK.RDB$RELATION_NAME AS VARCHAR(" + (OBJECT_NAME_LENGTH + 10) + ")) = ? and "
     +" FK.RDB$CONSTRAINT_NAME = RC.RDB$CONSTRAINT_NAME "
     +"and PK.RDB$CONSTRAINT_NAME = RC.RDB$CONST_NAME_UQ "
     +"and ISP.RDB$INDEX_NAME = PK.RDB$INDEX_NAME "
@@ -3901,49 +3916,49 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
 
         xsqlvars[0] = new XSQLVAR();
         xsqlvars[0].sqltype = ISCConstants.SQL_VARYING;
-        xsqlvars[0].sqllen = 31;
+        xsqlvars[0].sqllen = OBJECT_NAME_LENGTH;
         xsqlvars[0].sqlname = "PKTABLE_CAT";
         xsqlvars[0].relname = "COLUMNINFO";
 
         xsqlvars[1] = new XSQLVAR();
         xsqlvars[1].sqltype = ISCConstants.SQL_VARYING;
-        xsqlvars[1].sqllen = 31;
+        xsqlvars[1].sqllen = OBJECT_NAME_LENGTH;
         xsqlvars[1].sqlname = "PKTABLE_SCHEM";
         xsqlvars[1].relname = "COLUMNINFO";
 
         xsqlvars[2] = new XSQLVAR();
         xsqlvars[2].sqltype = ISCConstants.SQL_VARYING;
-        xsqlvars[2].sqllen = 31;
+        xsqlvars[2].sqllen = OBJECT_NAME_LENGTH;
         xsqlvars[2].sqlname = "PKTABLE_NAME";
         xsqlvars[2].relname = "COLUMNINFO";
 
         xsqlvars[3] = new XSQLVAR();
         xsqlvars[3].sqltype = ISCConstants.SQL_VARYING;
-        xsqlvars[3].sqllen = 31;
+        xsqlvars[3].sqllen = OBJECT_NAME_LENGTH;
         xsqlvars[3].sqlname = "PKCOLUMN_NAME";
         xsqlvars[3].relname = "COLUMNINFO";
 
         xsqlvars[4] = new XSQLVAR();
         xsqlvars[4].sqltype = ISCConstants.SQL_VARYING;
-        xsqlvars[4].sqllen = 31;
+        xsqlvars[4].sqllen = OBJECT_NAME_LENGTH;
         xsqlvars[4].sqlname = "FKTABLE_CAT";
         xsqlvars[4].relname = "COLUMNINFO";
 
         xsqlvars[5] = new XSQLVAR();
         xsqlvars[5].sqltype = ISCConstants.SQL_VARYING;
-        xsqlvars[5].sqllen = 31;
+        xsqlvars[5].sqllen = OBJECT_NAME_LENGTH;
         xsqlvars[5].sqlname = "FKTABLE_SCHEM";
         xsqlvars[5].relname = "COLUMNINFO";
 
         xsqlvars[6] = new XSQLVAR();
         xsqlvars[6].sqltype = ISCConstants.SQL_VARYING;
-        xsqlvars[6].sqllen = 31;
+        xsqlvars[6].sqllen = OBJECT_NAME_LENGTH;
         xsqlvars[6].sqlname = "FKTABLE_NAME";
         xsqlvars[6].relname = "COLUMNINFO";
 
         xsqlvars[7] = new XSQLVAR();
         xsqlvars[7].sqltype = ISCConstants.SQL_VARYING;
-        xsqlvars[7].sqllen = 31;
+        xsqlvars[7].sqllen = OBJECT_NAME_LENGTH;
         xsqlvars[7].sqlname = "FKCOLUMN_NAME";
         xsqlvars[7].relname = "COLUMNINFO";
 
@@ -3964,13 +3979,13 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
 
         xsqlvars[11] = new XSQLVAR();
         xsqlvars[11].sqltype = ISCConstants.SQL_VARYING;
-        xsqlvars[11].sqllen = 31;
+        xsqlvars[11].sqllen = OBJECT_NAME_LENGTH;
         xsqlvars[11].sqlname = "FK_NAME";
         xsqlvars[11].relname = "COLUMNINFO";
 
         xsqlvars[12] = new XSQLVAR();
         xsqlvars[12].sqltype = ISCConstants.SQL_VARYING;
-        xsqlvars[12].sqllen = 31;
+        xsqlvars[12].sqllen = OBJECT_NAME_LENGTH;
         xsqlvars[12].sqlname = "PK_NAME";
         xsqlvars[12].relname = "COLUMNINFO";
 
@@ -4042,17 +4057,17 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
     private static final String GET_EXPORTED_KEYS = "select "
     /*+" null as PKTABLE_CAT "
     +" ,null as PKTABLE_SCHEM "*/
-    +"cast(PK.RDB$RELATION_NAME as varchar(31)) as PKTABLE_NAME"
-    +",cast(ISP.RDB$FIELD_NAME as varchar(31)) as PKCOLUMN_NAME"
+    +"cast(PK.RDB$RELATION_NAME as varchar(" + OBJECT_NAME_LENGTH + ")) as PKTABLE_NAME"
+    +",cast(ISP.RDB$FIELD_NAME as varchar(" + OBJECT_NAME_LENGTH + ")) as PKCOLUMN_NAME"
     /*+" ,null as FKTABLE_CAT "
     +" ,null as FKTABLE_SCHEM "*/
-    +",cast(FK.RDB$RELATION_NAME as varchar(31)) as FKTABLE_NAME"
-    +",cast(ISF.RDB$FIELD_NAME as varchar(31)) as FKCOLUMN_NAME"
+    +",cast(FK.RDB$RELATION_NAME as varchar(" + OBJECT_NAME_LENGTH + ")) as FKTABLE_NAME"
+    +",cast(ISF.RDB$FIELD_NAME as varchar(" + OBJECT_NAME_LENGTH + ")) as FKCOLUMN_NAME"
     +",CAST((ISP.RDB$FIELD_POSITION + 1) as SMALLINT) as KEY_SEQ"
     +",cast(RC.RDB$UPDATE_RULE as varchar(11)) as UPDATE_RULE"
     +",cast(RC.RDB$DELETE_RULE as varchar(11)) as DELETE_RULE"
-    +",cast(PK.RDB$CONSTRAINT_NAME as varchar(31)) as PK_NAME"
-    +",cast(FK.RDB$CONSTRAINT_NAME as varchar(31)) as FK_NAME "
+    +",cast(PK.RDB$CONSTRAINT_NAME as varchar(" + OBJECT_NAME_LENGTH + ")) as PK_NAME"
+    +",cast(FK.RDB$CONSTRAINT_NAME as varchar(" + OBJECT_NAME_LENGTH + ")) as FK_NAME "
     /*+" ,null as DEFERRABILITY "*/
     +"from "
     +"RDB$RELATION_CONSTRAINTS PK"
@@ -4060,7 +4075,7 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
     +",RDB$REF_CONSTRAINTS RC"
     +",RDB$INDEX_SEGMENTS ISP"
     +",RDB$INDEX_SEGMENTS ISF "
-    +"WHERE CAST(PK.RDB$RELATION_NAME AS VARCHAR(40)) = ? "
+    +"WHERE CAST(PK.RDB$RELATION_NAME AS VARCHAR(" + (OBJECT_NAME_LENGTH + 10) + ")) = ? "
     +"and FK.RDB$CONSTRAINT_NAME = RC.RDB$CONSTRAINT_NAME "
     +"and PK.RDB$CONSTRAINT_NAME = RC.RDB$CONST_NAME_UQ "
     +"and ISP.RDB$INDEX_NAME = PK.RDB$INDEX_NAME "
@@ -4144,49 +4159,49 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
 
         xsqlvars[0] = new XSQLVAR();
         xsqlvars[0].sqltype = ISCConstants.SQL_VARYING;
-        xsqlvars[0].sqllen = 31;
+        xsqlvars[0].sqllen = OBJECT_NAME_LENGTH;
         xsqlvars[0].sqlname = "PKTABLE_CAT";
         xsqlvars[0].relname = "COLUMNINFO";
 
         xsqlvars[1] = new XSQLVAR();
         xsqlvars[1].sqltype = ISCConstants.SQL_VARYING;
-        xsqlvars[1].sqllen = 31;
+        xsqlvars[1].sqllen = OBJECT_NAME_LENGTH;
         xsqlvars[1].sqlname = "PKTABLE_SCHEM";
         xsqlvars[1].relname = "COLUMNINFO";
 
         xsqlvars[2] = new XSQLVAR();
         xsqlvars[2].sqltype = ISCConstants.SQL_VARYING;
-        xsqlvars[2].sqllen = 31;
+        xsqlvars[2].sqllen = OBJECT_NAME_LENGTH;
         xsqlvars[2].sqlname = "PKTABLE_NAME";
         xsqlvars[2].relname = "COLUMNINFO";
 
         xsqlvars[3] = new XSQLVAR();
         xsqlvars[3].sqltype = ISCConstants.SQL_VARYING;
-        xsqlvars[3].sqllen = 31;
+        xsqlvars[3].sqllen = OBJECT_NAME_LENGTH;
         xsqlvars[3].sqlname = "PKCOLUMN_NAME";
         xsqlvars[3].relname = "COLUMNINFO";
 
         xsqlvars[4] = new XSQLVAR();
         xsqlvars[4].sqltype = ISCConstants.SQL_VARYING;
-        xsqlvars[4].sqllen = 31;
+        xsqlvars[4].sqllen = OBJECT_NAME_LENGTH;
         xsqlvars[4].sqlname = "FKTABLE_CAT";
         xsqlvars[4].relname = "COLUMNINFO";
 
         xsqlvars[5] = new XSQLVAR();
         xsqlvars[5].sqltype = ISCConstants.SQL_VARYING;
-        xsqlvars[5].sqllen = 31;
+        xsqlvars[5].sqllen = OBJECT_NAME_LENGTH;
         xsqlvars[5].sqlname = "FKTABLE_SCHEM";
         xsqlvars[5].relname = "COLUMNINFO";
 
         xsqlvars[6] = new XSQLVAR();
         xsqlvars[6].sqltype = ISCConstants.SQL_VARYING;
-        xsqlvars[6].sqllen = 31;
+        xsqlvars[6].sqllen = OBJECT_NAME_LENGTH;
         xsqlvars[6].sqlname = "FKTABLE_NAME";
         xsqlvars[6].relname = "COLUMNINFO";
 
         xsqlvars[7] = new XSQLVAR();
         xsqlvars[7].sqltype = ISCConstants.SQL_VARYING;
-        xsqlvars[7].sqllen = 31;
+        xsqlvars[7].sqllen = OBJECT_NAME_LENGTH;
         xsqlvars[7].sqlname = "FKCOLUMN_NAME";
         xsqlvars[7].relname = "COLUMNINFO";
 
@@ -4207,13 +4222,13 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
 
         xsqlvars[11] = new XSQLVAR();
         xsqlvars[11].sqltype = ISCConstants.SQL_VARYING;
-        xsqlvars[11].sqllen = 31;
+        xsqlvars[11].sqllen = OBJECT_NAME_LENGTH;
         xsqlvars[11].sqlname = "FK_NAME";
         xsqlvars[11].relname = "COLUMNINFO";
 
         xsqlvars[12] = new XSQLVAR();
         xsqlvars[12].sqltype = ISCConstants.SQL_VARYING;
-        xsqlvars[12].sqllen = 31;
+        xsqlvars[12].sqllen = OBJECT_NAME_LENGTH;
         xsqlvars[12].sqlname = "PK_NAME";
         xsqlvars[12].relname = "COLUMNINFO";
 
@@ -4286,17 +4301,17 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
     private static final String GET_CROSS_KEYS = "select "
     /*+" null as PKTABLE_CAT "
     +" ,null as PKTABLE_SCHEM "*/
-    +"cast(PK.RDB$RELATION_NAME as varchar(31)) as PKTABLE_NAME"
-    +",cast(ISP.RDB$FIELD_NAME as varchar(31)) as PKCOLUMN_NAME"
+    +"cast(PK.RDB$RELATION_NAME as varchar(" + OBJECT_NAME_LENGTH + ")) as PKTABLE_NAME"
+    +",cast(ISP.RDB$FIELD_NAME as varchar(" + OBJECT_NAME_LENGTH + ")) as PKCOLUMN_NAME"
     /*+" ,null as FKTABLE_CAT "
     +" ,null as FKTABLE_SCHEM "*/
-    +",cast(FK.RDB$RELATION_NAME as varchar(31)) as FKTABLE_NAME"
-    +",cast(ISF.RDB$FIELD_NAME as varchar(31)) as FKCOLUMN_NAME"
+    +",cast(FK.RDB$RELATION_NAME as varchar(" + OBJECT_NAME_LENGTH + ")) as FKTABLE_NAME"
+    +",cast(ISF.RDB$FIELD_NAME as varchar(" + OBJECT_NAME_LENGTH + ")) as FKCOLUMN_NAME"
     +",CAST((ISP.RDB$FIELD_POSITION + 1) as SMALLINT) as KEY_SEQ"
     +",cast(RC.RDB$UPDATE_RULE as varchar(11)) as UPDATE_RULE"
     +",cast(RC.RDB$DELETE_RULE as varchar(11)) as DELETE_RULE"
-    +",cast(PK.RDB$CONSTRAINT_NAME as varchar(31)) as PK_NAME"
-    +",cast(FK.RDB$CONSTRAINT_NAME as varchar(31)) as FK_NAME"
+    +",cast(PK.RDB$CONSTRAINT_NAME as varchar(" + OBJECT_NAME_LENGTH + ")) as PK_NAME"
+    +",cast(FK.RDB$CONSTRAINT_NAME as varchar(" + OBJECT_NAME_LENGTH + ")) as FK_NAME"
     /*+" ,null as DEFERRABILITY "*/
     +" from "
     +"RDB$RELATION_CONSTRAINTS PK"
@@ -4304,8 +4319,8 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
     +",RDB$REF_CONSTRAINTS RC"
     +",RDB$INDEX_SEGMENTS ISP"
     +",RDB$INDEX_SEGMENTS ISF "
-    +"WHERE CAST(PK.RDB$RELATION_NAME AS VARCHAR(40)) = ? and "
-    +"CAST(FK.RDB$RELATION_NAME AS VARCHAR(40)) = ? and "
+    +"WHERE CAST(PK.RDB$RELATION_NAME AS VARCHAR(" + (OBJECT_NAME_LENGTH + 10) +")) = ? and "
+    +"CAST(FK.RDB$RELATION_NAME AS VARCHAR(" + (OBJECT_NAME_LENGTH + 10) + ")) = ? and "
     +" FK.RDB$CONSTRAINT_NAME = RC.RDB$CONSTRAINT_NAME "
     +"and PK.RDB$CONSTRAINT_NAME = RC.RDB$CONST_NAME_UQ "
     +"and ISP.RDB$INDEX_NAME = PK.RDB$INDEX_NAME "
@@ -4400,49 +4415,49 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
 
         xsqlvars[0] = new XSQLVAR();
         xsqlvars[0].sqltype = ISCConstants.SQL_VARYING;
-        xsqlvars[0].sqllen = 31;
+        xsqlvars[0].sqllen = OBJECT_NAME_LENGTH;
         xsqlvars[0].sqlname = "PKTABLE_CAT";
         xsqlvars[0].relname = "COLUMNINFO";
 
         xsqlvars[1] = new XSQLVAR();
         xsqlvars[1].sqltype = ISCConstants.SQL_VARYING;
-        xsqlvars[1].sqllen = 31;
+        xsqlvars[1].sqllen = OBJECT_NAME_LENGTH;
         xsqlvars[1].sqlname = "PKTABLE_SCHEM";
         xsqlvars[1].relname = "COLUMNINFO";
 
         xsqlvars[2] = new XSQLVAR();
         xsqlvars[2].sqltype = ISCConstants.SQL_VARYING;
-        xsqlvars[2].sqllen = 31;
+        xsqlvars[2].sqllen = OBJECT_NAME_LENGTH;
         xsqlvars[2].sqlname = "PKTABLE_NAME";
         xsqlvars[2].relname = "COLUMNINFO";
 
         xsqlvars[3] = new XSQLVAR();
         xsqlvars[3].sqltype = ISCConstants.SQL_VARYING;
-        xsqlvars[3].sqllen = 31;
+        xsqlvars[3].sqllen = OBJECT_NAME_LENGTH;
         xsqlvars[3].sqlname = "PKCOLUMN_NAME";
         xsqlvars[3].relname = "COLUMNINFO";
 
         xsqlvars[4] = new XSQLVAR();
         xsqlvars[4].sqltype = ISCConstants.SQL_VARYING;
-        xsqlvars[4].sqllen = 31;
+        xsqlvars[4].sqllen = OBJECT_NAME_LENGTH;
         xsqlvars[4].sqlname = "FKTABLE_CAT";
         xsqlvars[4].relname = "COLUMNINFO";
 
         xsqlvars[5] = new XSQLVAR();
         xsqlvars[5].sqltype = ISCConstants.SQL_VARYING;
-        xsqlvars[5].sqllen = 31;
+        xsqlvars[5].sqllen = OBJECT_NAME_LENGTH;
         xsqlvars[5].sqlname = "FKTABLE_SCHEM";
         xsqlvars[5].relname = "COLUMNINFO";
 
         xsqlvars[6] = new XSQLVAR();
         xsqlvars[6].sqltype = ISCConstants.SQL_VARYING;
-        xsqlvars[6].sqllen = 31;
+        xsqlvars[6].sqllen = OBJECT_NAME_LENGTH;
         xsqlvars[6].sqlname = "FKTABLE_NAME";
         xsqlvars[6].relname = "COLUMNINFO";
 
         xsqlvars[7] = new XSQLVAR();
         xsqlvars[7].sqltype = ISCConstants.SQL_VARYING;
-        xsqlvars[7].sqllen = 31;
+        xsqlvars[7].sqllen = OBJECT_NAME_LENGTH;
         xsqlvars[7].sqlname = "FKCOLUMN_NAME";
         xsqlvars[7].relname = "COLUMNINFO";
 
@@ -4463,13 +4478,13 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
 
         xsqlvars[11] = new XSQLVAR();
         xsqlvars[11].sqltype = ISCConstants.SQL_VARYING;
-        xsqlvars[11].sqllen = 31;
+        xsqlvars[11].sqllen = OBJECT_NAME_LENGTH;
         xsqlvars[11].sqlname = "FK_NAME";
         xsqlvars[11].relname = "COLUMNINFO";
 
         xsqlvars[12] = new XSQLVAR();
         xsqlvars[12].sqltype = ISCConstants.SQL_VARYING;
-        xsqlvars[12].sqllen = 31;
+        xsqlvars[12].sqllen = OBJECT_NAME_LENGTH;
         xsqlvars[12].sqlname = "PK_NAME";
         xsqlvars[12].relname = "COLUMNINFO";
 
@@ -4833,18 +4848,18 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
     }
 
     private static final String GET_INDEX_INFO = "SELECT "
-        + "cast(ind.RDB$RELATION_NAME as varchar(31)) AS TABLE_NAME"
+        + "cast(ind.RDB$RELATION_NAME as varchar(" + OBJECT_NAME_LENGTH + ")) AS TABLE_NAME"
         + ",ind.RDB$UNIQUE_FLAG AS UNIQUE_FLAG"
-        + ",cast(ind.RDB$INDEX_NAME as varchar(31)) as INDEX_NAME"
+        + ",cast(ind.RDB$INDEX_NAME as varchar(" + OBJECT_NAME_LENGTH + ")) as INDEX_NAME"
         + ",ise.rdb$field_position + 1 as ORDINAL_POSITION"
-        + ",cast(ise.rdb$field_name as varchar(31)) as COLUMN_NAME"
+        + ",cast(ise.rdb$field_name as varchar(" + OBJECT_NAME_LENGTH + ")) as COLUMN_NAME"
         + ",ind.RDB$EXPRESSION_SOURCE as EXPRESSION_SOURCE"
         + ",ind.RDB$INDEX_TYPE as ASC_OR_DESC "
         + "FROM "
         + "rdb$indices ind "
         + "LEFT JOIN rdb$index_segments ise ON ind.rdb$index_name = ise.rdb$index_name "
         + "WHERE "
-        + "CAST(ind.rdb$relation_name AS VARCHAR(40)) = ? "
+        + "CAST(ind.rdb$relation_name AS VARCHAR(" + (OBJECT_NAME_LENGTH + 10) + ")) = ? "
         + "ORDER BY 2, 3, 4"
         ;
 
@@ -4908,19 +4923,19 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
 
         xsqlvars[0] = new XSQLVAR();
         xsqlvars[0].sqltype = ISCConstants.SQL_VARYING;
-        xsqlvars[0].sqllen = 31;
+        xsqlvars[0].sqllen = OBJECT_NAME_LENGTH;
         xsqlvars[0].sqlname = "TABLE_CAT";
         xsqlvars[0].relname = "INDEXINFO";
 
         xsqlvars[1] = new XSQLVAR();
         xsqlvars[1].sqltype = ISCConstants.SQL_VARYING;
-        xsqlvars[1].sqllen = 31;
+        xsqlvars[1].sqllen = OBJECT_NAME_LENGTH;
         xsqlvars[1].sqlname = "TABLE_SCHEM";
         xsqlvars[1].relname = "INDEXINFO";
 
         xsqlvars[2] = new XSQLVAR();
         xsqlvars[2].sqltype = ISCConstants.SQL_VARYING;
-        xsqlvars[2].sqllen = 31;
+        xsqlvars[2].sqllen = OBJECT_NAME_LENGTH;
         xsqlvars[2].sqlname = "TABLE_NAME";
         xsqlvars[2].relname = "INDEXINFO";
 
@@ -4932,13 +4947,13 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
 
         xsqlvars[4] = new XSQLVAR();
         xsqlvars[4].sqltype = ISCConstants.SQL_VARYING;
-        xsqlvars[4].sqllen = 31;
+        xsqlvars[4].sqllen = OBJECT_NAME_LENGTH;
         xsqlvars[4].sqlname = "INDEX_QUALIFIER";
         xsqlvars[4].relname = "INDEXINFO";
 
         xsqlvars[5] = new XSQLVAR();
         xsqlvars[5].sqltype = ISCConstants.SQL_VARYING;
-        xsqlvars[5].sqllen = 31;
+        xsqlvars[5].sqllen = OBJECT_NAME_LENGTH;
         xsqlvars[5].sqlname = "INDEX_NAME";
         xsqlvars[5].relname = "INDEXINFO";
 
@@ -4954,7 +4969,7 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
 
         xsqlvars[8] = new XSQLVAR();
         xsqlvars[8].sqltype = ISCConstants.SQL_VARYING;
-        xsqlvars[8].sqllen = 31;
+        xsqlvars[8].sqllen = OBJECT_NAME_LENGTH;
         xsqlvars[8].sqlname = "COLUMN_NAME";
         xsqlvars[8].relname = "INDEXINFO";
 
@@ -5308,13 +5323,13 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
 
         xsqlvars[0] = new XSQLVAR();
         xsqlvars[0].sqltype = ISCConstants.SQL_VARYING;
-        xsqlvars[0].sqllen = 31;
+        xsqlvars[0].sqllen = OBJECT_NAME_LENGTH;
         xsqlvars[0].sqlname = "TYPE_CAT";
         xsqlvars[0].relname = "UDT";
 
         xsqlvars[1] = new XSQLVAR();
         xsqlvars[1].sqltype = ISCConstants.SQL_VARYING;
-        xsqlvars[1].sqllen = 31;
+        xsqlvars[1].sqllen = OBJECT_NAME_LENGTH;
         xsqlvars[1].sqlname = "TYPE_SCHEM";
         xsqlvars[1].relname = "UDT";
 
@@ -5468,13 +5483,13 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
 
         xsqlvars[0] = new XSQLVAR();
         xsqlvars[0].sqltype = ISCConstants.SQL_VARYING;
-        xsqlvars[0].sqllen = 31;
+        xsqlvars[0].sqllen = OBJECT_NAME_LENGTH;
         xsqlvars[0].sqlname = "TYPE_CAT";
         xsqlvars[0].relname = "SUPERTYPES";
 
         xsqlvars[1] = new XSQLVAR();
         xsqlvars[1].sqltype = ISCConstants.SQL_VARYING;
-        xsqlvars[1].sqllen = 31;
+        xsqlvars[1].sqllen = OBJECT_NAME_LENGTH;
         xsqlvars[1].sqlname = "TYPE_SCHEM";
         xsqlvars[1].relname = "SUPERTYPES";
 
@@ -5486,13 +5501,13 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
 
         xsqlvars[3] = new XSQLVAR();
         xsqlvars[3].sqltype = ISCConstants.SQL_VARYING;
-        xsqlvars[3].sqllen = 31;
+        xsqlvars[3].sqllen = OBJECT_NAME_LENGTH;
         xsqlvars[3].sqlname = "SUPERTYPE_CAT";
         xsqlvars[3].relname = "SUPERTYPES";
 
         xsqlvars[4] = new XSQLVAR();
         xsqlvars[4].sqltype = ISCConstants.SQL_VARYING;
-        xsqlvars[4].sqllen = 31;
+        xsqlvars[4].sqllen = OBJECT_NAME_LENGTH;
         xsqlvars[4].sqlname = "SUPERTYPE_SCHEM";
         xsqlvars[4].relname = "SUPERTYPES";
 
@@ -5549,25 +5564,25 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
 
         xsqlvars[0] = new XSQLVAR();
         xsqlvars[0].sqltype = ISCConstants.SQL_VARYING;
-        xsqlvars[0].sqllen = 31;
+        xsqlvars[0].sqllen = OBJECT_NAME_LENGTH;
         xsqlvars[0].sqlname = "TABLE_CAT";
         xsqlvars[0].relname = "SUPERTABLES";
 
         xsqlvars[1] = new XSQLVAR();
         xsqlvars[1].sqltype = ISCConstants.SQL_VARYING;
-        xsqlvars[1].sqllen = 31;
+        xsqlvars[1].sqllen = OBJECT_NAME_LENGTH;
         xsqlvars[1].sqlname = "TABLE_SCHEM";
         xsqlvars[1].relname = "SUPERTABLES";
 
         xsqlvars[2] = new XSQLVAR();
         xsqlvars[2].sqltype = ISCConstants.SQL_VARYING;
-        xsqlvars[2].sqllen = 31;
+        xsqlvars[2].sqllen = OBJECT_NAME_LENGTH;
         xsqlvars[2].sqlname = "TABLE_NAME";
         xsqlvars[2].relname = "SUPERTABLES";
 
         xsqlvars[3] = new XSQLVAR();
         xsqlvars[3].sqltype = ISCConstants.SQL_VARYING;
-        xsqlvars[3].sqllen = 31;
+        xsqlvars[3].sqllen = OBJECT_NAME_LENGTH;
         xsqlvars[3].sqlname = "SUPERTABLE_NAME";
         xsqlvars[3].relname = "SUPERTABLES";
 
@@ -5895,13 +5910,13 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
 
         xsqlvars[0] = new XSQLVAR();
         xsqlvars[0].sqltype = ISCConstants.SQL_VARYING;
-        xsqlvars[0].sqllen = 31;
+        xsqlvars[0].sqllen = OBJECT_NAME_LENGTH;
         xsqlvars[0].sqlname = "TABLE_SCHEM";
         xsqlvars[0].relname = "TABLESCHEMAS";
         
         xsqlvars[1] = new XSQLVAR();
         xsqlvars[1].sqltype = ISCConstants.SQL_VARYING;
-        xsqlvars[1].sqllen = 31;
+        xsqlvars[1].sqllen = OBJECT_NAME_LENGTH;
         xsqlvars[1].sqlname = "TABLE_CATALOG";
         xsqlvars[1].relname = "TABLESCHEMAS";
 
@@ -6117,7 +6132,7 @@ public abstract class AbstractDatabaseMetaData implements FirebirdDatabaseMetaDa
             else if (hasNoWildcards(pattern)) {
                 value = stripQuotes(stripEscape(pattern), true);
                 originalCaseValue = stripQuotes(stripEscape(pattern), false);
-                condition = "CAST(" + columnName + " AS VARCHAR(40)) = ? and ";
+                condition = "CAST(" + columnName + " AS VARCHAR(" + (OBJECT_NAME_LENGTH + 10) + ")) = ? and ";
             }
             else {
                 // We are padding the column with 31 spaces to accommodate arguments longer than the actual column length.

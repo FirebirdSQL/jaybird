@@ -295,9 +295,9 @@ public class FBBackupManager extends FBServiceManager implements BackupManager {
      */
     public void setRestorePageSize(int pageSize) {
         if (pageSize != 1024 && pageSize != 2048 
-                && pageSize != 4096 && pageSize != 8192 && pageSize != 16384){
+                && pageSize != 4096 && pageSize != 8192 && pageSize != 16384 && pageSize != 32768){
             throw new IllegalArgumentException(
-                    "Page size must be one of 1024, 2048, 4096, 8192 or 16384");
+                    "Page size must be one of 1024, 2048, 4096, 8192, 16384 or 32768");
         }
         this.restorePageSize = pageSize;
     }

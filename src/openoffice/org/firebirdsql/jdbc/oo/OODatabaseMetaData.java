@@ -42,7 +42,7 @@ public class OODatabaseMetaData extends FBDatabaseMetaData {
 
         xsqlvars[0] = new XSQLVAR();
         xsqlvars[0].sqltype = ISCConstants.SQL_VARYING;
-        xsqlvars[0].sqllen = 31;
+        xsqlvars[0].sqllen = OBJECT_NAME_LENGTH;
         xsqlvars[0].sqlname = "TABLE_SCHEM";
         xsqlvars[0].relname = "TABLESCHEMAS";
 

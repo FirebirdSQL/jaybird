@@ -845,24 +845,11 @@ public class TestFBEncodings extends FBTestBase {
                         "klmnopqrst" +
                         "uvwxyz____" +
                         "0123456789" +
-                        
-                        "0123456789" +
-                        "abcdefghij" +
-                        "klmnopqrst" +
-                        "uvwxyz____" +
-                        "0123456789" +
-
-                        "0123456789" +
-                        "abcdefghij" +
-                        "klmnopqrst" +
-                        "uvwxyz____" +
-                        "0123456789" +
-                        
                         "')");
 
                 ResultSet rs = stmt.executeQuery("EXECUTE BLOCK RETURNS ( "
                         + "STR VARCHAR(3) CHARACTER SET UNICODE_FSS) " 
-                		+ "AS BEGIN   STR = 'abcde';   SUSPEND; "
+                		+ "AS BEGIN   STR = 'abc';   SUSPEND; "
                         + "END ");
 
                 rs.next();
