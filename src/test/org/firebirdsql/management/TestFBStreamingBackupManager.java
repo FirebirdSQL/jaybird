@@ -57,8 +57,6 @@ public class TestFBStreamingBackupManager {
     private File tempFolder;
     private FBStreamingBackupManager backupManager;
 
-    private static final String TEST_TABLE = "CREATE TABLE TEST (A INT)";
-
     @Before
     public void setUp() throws Exception {
         tempFolder = temporaryFolder.newFolder();

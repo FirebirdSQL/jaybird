@@ -41,6 +41,10 @@ public final class PageSizeConstants {
     public static final int SIZE_4K = 4 * SIZE_1K;
     public static final int SIZE_8K = 8 * SIZE_1K;
     public static final int SIZE_16K = 16 * SIZE_1K;
+    /**
+     * Firebird 4 or higher
+     */
+    public static final int SIZE_32K = 32 * SIZE_1K;
 
     private PageSizeConstants() {
         // No instantiation

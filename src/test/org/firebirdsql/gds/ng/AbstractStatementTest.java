@@ -168,18 +168,19 @@ public abstract class AbstractStatementTest {
         final RowDescriptor fields = statement.getFieldDescriptor();
         assertNotNull("Fields", fields);
         final FirebirdSupportInfo supportInfo = supportInfoFor(db);
+        final int metadataCharSetId = supportInfo.reportedMetadataCharacterSetId();
         List<FieldDescriptor> expectedFields =
                 Arrays.asList(
                         new FieldDescriptor(0, db.getDatatypeCoder(), ISCConstants.SQL_BLOB | 1, 1,
-                                supportInfo.reportsBlobCharSetInDescriptor() ? 3 : 0, 8, "Description", null,
+                                supportInfo.reportsBlobCharSetInDescriptor() ? metadataCharSetId : 0, 8, "Description", null,
                                 "RDB$DESCRIPTION", "RDB$DATABASE", "SYSDBA"),
                         new FieldDescriptor(1, db.getDatatypeCoder(), ISCConstants.SQL_SHORT | 1, 0, 0, 2,
                                 "RDB$RELATION_ID", null, "RDB$RELATION_ID", "RDB$DATABASE", "SYSDBA"),
-                        new FieldDescriptor(2, db.getDatatypeCoder(), ISCConstants.SQL_TEXT | 1, 3, 0,
-                                supportInfo.reportsByteLengthInDescriptor() ? 93 : 31, "RDB$SECURITY_CLASS", null,
+                        new FieldDescriptor(2, db.getDatatypeCoder(), ISCConstants.SQL_TEXT | 1, metadataCharSetId, 0,
+                                supportInfo.maxReportedIdentifierLengthBytes(), "RDB$SECURITY_CLASS", null,
                                 "RDB$SECURITY_CLASS", "RDB$DATABASE", "SYSDBA"),
-                        new FieldDescriptor(3, db.getDatatypeCoder(), ISCConstants.SQL_TEXT | 1, 3, 0,
-                                supportInfo.reportsByteLengthInDescriptor() ? 93 : 31, "RDB$CHARACTER_SET_NAME", null,
+                        new FieldDescriptor(3, db.getDatatypeCoder(), ISCConstants.SQL_TEXT | 1, metadataCharSetId, 0,
+                                supportInfo.maxReportedIdentifierLengthBytes(), "RDB$CHARACTER_SET_NAME", null,
                                 "RDB$CHARACTER_SET_NAME", "RDB$DATABASE", "SYSDBA")
                 );
         assertEquals("Unexpected values for fields", expectedFields, fields.getFieldDescriptors());
@@ -223,13 +224,13 @@ public abstract class AbstractStatementTest {
         final RowDescriptor fields = statement.getFieldDescriptor();
         assertNotNull("Fields", fields);
         final FirebirdSupportInfo supportInfo = supportInfoFor(db);
-        final boolean unicodeFssLengthReported = supportInfo.reportsByteLengthInDescriptor();
         final boolean supportsTableAlias = supportInfo.supportsTableAlias();
+        final int metadataCharSetId = supportInfo.reportedMetadataCharacterSetId();
 
         List<FieldDescriptor> expectedFields =
                 Collections.singletonList(
-                        new FieldDescriptor(0, db.getDatatypeCoder(), ISCConstants.SQL_TEXT | 1, 3, 0,
-                                unicodeFssLengthReported ? 93 : 31, "RDB$CHARACTER_SET_NAME",
+                        new FieldDescriptor(0, db.getDatatypeCoder(), ISCConstants.SQL_TEXT | 1, metadataCharSetId, 0,
+                                supportInfo.maxReportedIdentifierLengthBytes(), "RDB$CHARACTER_SET_NAME",
                                 supportsTableAlias ? "A" : null, "RDB$CHARACTER_SET_NAME", "RDB$CHARACTER_SETS",
                                 "SYSDBA")
                 );

@@ -1147,6 +1147,25 @@ public class TestFBPreparedStatement extends FBJUnit4TestBase {
         }
     }
 
+    // See JDBC-472; TODO this test doesn't reproduce the issue
+    @Test
+    public void testExecuteProcedureWithoutReturnValues() throws Exception {
+        executeDDL(con, "create procedure no_return(value1 int, value2 int) "
+                + "as "
+                + "declare variable value3 int; "
+                + "begin"
+                + "  value3 = value1 + value2;"
+                + "end");
+
+        try (PreparedStatement pstmt = con.prepareStatement("execute procedure no_return(?, ?)")) {
+//            for (int cnt = 0; cnt < 100; cnt++) {
+                pstmt.setInt(1, 1);
+                pstmt.setInt(2, 2);
+                pstmt.executeUpdate();
+//            }
+        }
+    }
+
     private void prepareTestData() throws SQLException {
         con.setAutoCommit(false);
         try (PreparedStatement pstmt = con.prepareStatement(INSERT_DATA)) {

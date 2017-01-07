@@ -21,6 +21,7 @@ package org.firebirdsql.util;
 import org.firebirdsql.gds.impl.GDSServerVersion;
 import org.firebirdsql.gds.ng.FbDatabase;
 import org.firebirdsql.jdbc.FirebirdConnection;
+import org.firebirdsql.management.PageSizeConstants;
 
 import java.sql.SQLException;
 
@@ -261,6 +262,78 @@ public final class FirebirdSupportInfo {
      */
     public boolean supportsIdentityColumns() {
         return serverVersion.isEqualOrAbove(3, 0);
+    }
+
+    /**
+     * @return The maximum number of characters in an identifier.
+     */
+    public int maxIdentifierLengthCharacters() {
+        if (serverVersion.isEqualOrAbove(4, 0)) {
+            // Technically this is configurable
+            return 63;
+        } else {
+            return 31;
+        }
+    }
+
+    /**
+     * @return The maximum number of bytes in an identifier.
+     * @see #maxReportedIdentifierLengthBytes()
+     */
+    public int maxIdentifierLengthBytes() {
+        if (serverVersion.isEqualOrAbove(4, 0)) {
+            // Technically this is configurable
+            return 4 * 63;
+        } else {
+            // Firebird 3 and below
+            return 31;
+        }
+    }
+
+    /**
+     * @return The maximum number of bytes reported in parameter metadata for an identifier
+     * @see #maxIdentifierLengthBytes()
+     */
+    public int maxReportedIdentifierLengthBytes() {
+        if (serverVersion.isEqualOrAbove(4, 0)) {
+            // Technically this is configurable
+            return 4 * 63;
+        } else if (reportsByteLengthInDescriptor()) {
+            // Firebird 1.5 ... 3 use unicode_fss and report 3 * identifier length, but actually store max 31 bytes(!)
+            return 3 * 63;
+        } else {
+            return 31;
+        }
+    }
+
+    /**
+     * @return The character set id of system metadata
+     */
+    public int reportedMetadataCharacterSetId() {
+        if (serverVersion.isEqualOrAbove(4, 0)) {
+            return 4; // UTF8
+        } else {
+            return 3; // UNICODE_FSS
+        }
+    }
+
+    public boolean supportsPageSize(int pageSize) {
+        switch (pageSize) {
+        case PageSizeConstants.SIZE_1K:
+            return !serverVersion.isEqualOrAbove(2, 1);
+        case PageSizeConstants.SIZE_2K:
+            return !serverVersion.isEqualOrAbove(2, 1);
+        case PageSizeConstants.SIZE_4K:
+            return true;
+        case PageSizeConstants.SIZE_8K:
+            return true;
+        case PageSizeConstants.SIZE_16K:
+            // TODO check
+            return serverVersion.isEqualOrAbove(2, 0);
+        case PageSizeConstants.SIZE_32K:
+            return serverVersion.isEqualOrAbove(4, 0);
+        }
+        return false;
     }
 
     /**

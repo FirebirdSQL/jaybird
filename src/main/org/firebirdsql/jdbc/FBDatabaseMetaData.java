@@ -73,6 +73,9 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
     private final static Logger log = LoggerFactory.getLogger(FBDatabaseMetaData.class);
     private static final String SPACES_31 = "                               "; // 31 spaces
     private static final String SPACES_15 = "               "; // 15 spaces
+    private static final int OBJECT_NAME_LENGTH_BEFORE_V4_0 = 31;
+    private static final int OBJECT_NAME_LENGTH_V4_0 = 63;
+    private static final int OBJECT_NAME_LENGTH = OBJECT_NAME_LENGTH_V4_0;
 
     private static final int DRIVER_MAJOR_VERSION = 3;
     private static final int DRIVER_MINOR_VERSION = 0;
@@ -1446,8 +1449,12 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
      *      a result of zero means that there is no limit or the limit is not known
      * @exception SQLException if a database access error occurs
      */
-    public  int getMaxColumnNameLength() throws SQLException {
-        return 31;
+    public int getMaxColumnNameLength() throws SQLException {
+        if (gdsHelper.compareToVersion(4, 0) < 0) {
+            return OBJECT_NAME_LENGTH_BEFORE_V4_0;
+        } else {
+            return OBJECT_NAME_LENGTH_V4_0;
+        }
     }
 
     /**
@@ -1563,7 +1570,11 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
      * @exception SQLException if a database access error occurs
      */
     public  int getMaxProcedureNameLength() throws SQLException {
-        return 31;
+        if (gdsHelper.compareToVersion(4, 0) < 0) {
+            return OBJECT_NAME_LENGTH_BEFORE_V4_0;
+        } else {
+            return OBJECT_NAME_LENGTH_V4_0;
+        }
     }
 
     /**
@@ -1634,7 +1645,11 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
      * @exception SQLException if a database access error occurs
      */
     public  int getMaxTableNameLength() throws SQLException {
-        return 31;
+        if (gdsHelper.compareToVersion(4, 0) < 0) {
+            return OBJECT_NAME_LENGTH_BEFORE_V4_0;
+        } else {
+            return OBJECT_NAME_LENGTH_V4_0;
+        }
     }
 
     /**
@@ -1748,7 +1763,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
     }
 
     private static final String GET_PROCEDURES_START = "select "
-        + "cast(RDB$PROCEDURE_NAME as varchar(31)) as PROCEDURE_NAME,"
+        + "cast(RDB$PROCEDURE_NAME as varchar(" + OBJECT_NAME_LENGTH + ")) as PROCEDURE_NAME,"
         + "RDB$DESCRIPTION as REMARKS,"
         + "RDB$PROCEDURE_OUTPUTS as PROCEDURE_TYPE "
         + "from "
@@ -1794,16 +1809,16 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
     public ResultSet getProcedures(String catalog, String schemaPattern, String procedureNamePattern)
             throws SQLException {
         final RowDescriptor rowDescriptor = new RowDescriptorBuilder(9, datatypeCoder)
-                .at(0).simple(SQL_VARYING, 31, "PROCEDURE_CAT", "PROCEDURES").addField()
-                .at(1).simple(SQL_VARYING, 31, "PROCEDURE_SCHEM", "ROCEDURES").addField()
-                .at(2).simple(SQL_VARYING, 31, "PROCEDURE_NAME", "PROCEDURES").addField()
+                .at(0).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "PROCEDURE_CAT", "PROCEDURES").addField()
+                .at(1).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "PROCEDURE_SCHEM", "ROCEDURES").addField()
+                .at(2).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "PROCEDURE_NAME", "PROCEDURES").addField()
                 .at(3).simple(SQL_VARYING, 31, "FUTURE1", "PROCEDURES").addField()
                 .at(4).simple(SQL_VARYING, 31, "FUTURE2", "PROCEDURES").addField()
                 .at(5).simple(SQL_VARYING, 31, "FUTURE3", "PROCEDURES").addField()
                 // Field in Firebird is actually a blob, using Integer.MAX_VALUE for length
                 .at(6).simple(SQL_VARYING, Integer.MAX_VALUE, "REMARKS", "PROCEDURES").addField() // TODO: Check if setting this to Integer.MAX_VALUE doesn't lead to problems elsewhere
                 .at(7).simple(SQL_SHORT, 0, "PROCEDURE_TYPE", "PROCEDURES").addField()
-                .at(8).simple(SQL_VARYING, 31, "SPECIFIC_NAME", "PROCEDURES").addField()
+                .at(8).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "SPECIFIC_NAME", "PROCEDURES").addField()
                 .toRowDescriptor();
 
         Clause procedureClause = new Clause("RDB$PROCEDURE_NAME", procedureNamePattern);
@@ -1837,8 +1852,8 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
     }
 
     private static final String GET_PROCEDURE_COLUMNS_START = "select "
-        + "cast(PP.RDB$PROCEDURE_NAME as varchar(31)) as PROCEDURE_NAME,"
-        + "cast(PP.RDB$PARAMETER_NAME as varchar(31)) as COLUMN_NAME,"
+        + "cast(PP.RDB$PROCEDURE_NAME as varchar(" + OBJECT_NAME_LENGTH + ")) as PROCEDURE_NAME,"
+        + "cast(PP.RDB$PARAMETER_NAME as varchar(" + OBJECT_NAME_LENGTH + ")) as COLUMN_NAME,"
         + "PP.RDB$PARAMETER_TYPE as COLUMN_TYPE,"
         + "F.RDB$FIELD_TYPE as FIELD_TYPE,"
         + "F.RDB$FIELD_SUB_TYPE as FIELD_SUB_TYPE,"
@@ -1955,10 +1970,10 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
     public ResultSet getProcedureColumns(String catalog, String schemaPattern, String procedureNamePattern,
             String columnNamePattern) throws SQLException {
         final RowDescriptor rowDescriptor = new RowDescriptorBuilder(20, datatypeCoder)
-                .at(0).simple(SQL_VARYING, 31, "PROCEDURE_CAT", "COLUMNINFO").addField()
-                .at(1).simple(SQL_VARYING, 31, "PROCEDURE_SCHEM", "COLUMNINFO").addField()
-                .at(2).simple(SQL_VARYING, 31, "PROCEDURE_NAME", "COLUMNINFO").addField()
-                .at(3).simple(SQL_VARYING, 31, "COLUMN_NAME", "COLUMNINFO").addField()
+                .at(0).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "PROCEDURE_CAT", "COLUMNINFO").addField()
+                .at(1).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "PROCEDURE_SCHEM", "COLUMNINFO").addField()
+                .at(2).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "PROCEDURE_NAME", "COLUMNINFO").addField()
+                .at(3).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "COLUMN_NAME", "COLUMNINFO").addField()
                 .at(4).simple(SQL_SHORT, 0, "COLUMN_TYPE", "COLUMNINFO").addField()
                 .at(5).simple(SQL_LONG, 0, "DATA_TYPE", "COLUMNINFO").addField()
                 .at(6).simple(SQL_VARYING, 31, "TYPE_NAME", "COLUMNINFO").addField()
@@ -1975,7 +1990,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
                 .at(16).simple(SQL_LONG, 0, "CHAR_OCTET_LENGTH", "COLUMNINFO").addField()
                 .at(17).simple(SQL_LONG, 0, "ORDINAL_POSITION", "COLUMNINFO").addField()
                 .at(18).simple(SQL_VARYING, 3, "IS_NULLABLE", "COLUMNINFO").addField()
-                .at(19).simple(SQL_VARYING, 31, "SPECIFIC_NAME", "COLUMNINFO").addField()
+                .at(19).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "SPECIFIC_NAME", "COLUMNINFO").addField()
                 .toRowDescriptor();
 
         Clause procedureClause = new Clause("PP.RDB$PROCEDURE_NAME", procedureNamePattern);
@@ -2164,9 +2179,9 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
 
     //@formatter:off
     private static final String TABLE_COLUMNS_2_5 =
-            " select cast(null as varchar(31)) as TABLE_CAT,"
-            + "cast(null as varchar(31)) as TABLE_SCHEM,"
-            + "cast(RDB$RELATION_NAME as varchar(31)) as TABLE_NAME,"
+            " select cast(null as varchar(" + OBJECT_NAME_LENGTH + ")) as TABLE_CAT,"
+            + "cast(null as varchar(" + OBJECT_NAME_LENGTH + ")) as TABLE_SCHEM,"
+            + "cast(RDB$RELATION_NAME as varchar(" + OBJECT_NAME_LENGTH + ")) as TABLE_NAME,"
             + "cast(case"
             + "  when rdb$relation_type = 0 then case when RDB$SYSTEM_FLAG = 1 then '" + SYSTEM_TABLE + "' else '" + TABLE + "' end"
             + "  when rdb$relation_type = 1 then '" + VIEW + "'"
@@ -2175,12 +2190,12 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
             + "  when rdb$relation_type in (4, 5) then '" + GLOBAL_TEMPORARY + "'"
             + "end as varchar(31)) as TABLE_TYPE,"
             + "RDB$DESCRIPTION as REMARKS,"
-            + "cast(null as varchar(31)) as TYPE_CAT,"
-            + "cast(null as varchar(31)) as TYPE_SCHEM,"
+            + "cast(null as varchar(" + OBJECT_NAME_LENGTH + ")) as TYPE_CAT,"
+            + "cast(null as varchar(" + OBJECT_NAME_LENGTH + ")) as TYPE_SCHEM,"
             + "cast(null as varchar(31)) as TYPE_NAME,"
-            + "cast(null as varchar(31)) as SELF_REFERENCING_COL_NAME,"
+            + "cast(null as varchar(" + OBJECT_NAME_LENGTH + ")) as SELF_REFERENCING_COL_NAME,"
             + "cast(null as varchar(31)) as REF_GENERATION,"
-            + "cast(RDB$OWNER_NAME as varchar(31)) as OWNER_NAME "
+            + "cast(RDB$OWNER_NAME as varchar(" + OBJECT_NAME_LENGTH + ")) as OWNER_NAME "
             + "from RDB$RELATIONS ";
 
     /**
@@ -2245,17 +2260,17 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
 
     //@formatter:off
     private static final String TABLE_COLUMNS_FORMAT_2_1 =
-            " select cast(null as varchar(31)) as TABLE_CAT,"
-            + "cast(null as varchar(31)) as TABLE_SCHEM,"
-            + "cast(RDB$RELATION_NAME as varchar(31)) as TABLE_NAME,"
+            " select cast(null as varchar(" + OBJECT_NAME_LENGTH + ")) as TABLE_CAT,"
+            + "cast(null as varchar(" + OBJECT_NAME_LENGTH + ")) as TABLE_SCHEM,"
+            + "cast(RDB$RELATION_NAME as varchar(" + OBJECT_NAME_LENGTH + ")) as TABLE_NAME,"
             + "cast('%s' as varchar(31)) as TABLE_TYPE,"
             + "RDB$DESCRIPTION as REMARKS,"
-            + "cast(null as varchar(31)) as TYPE_CAT,"
-            + "cast(null as varchar(31)) as TYPE_SCHEM,"
+            + "cast(null as varchar(" + OBJECT_NAME_LENGTH + ")) as TYPE_CAT,"
+            + "cast(null as varchar(" + OBJECT_NAME_LENGTH + ")) as TYPE_SCHEM,"
             + "cast(null as varchar(31)) as TYPE_NAME,"
-            + "cast(null as varchar(31)) as SELF_REFERENCING_COL_NAME,"
+            + "cast(null as varchar(" + OBJECT_NAME_LENGTH + ")) as SELF_REFERENCING_COL_NAME,"
             + "cast(null as varchar(31)) as REF_GENERATION,"
-            + "cast(RDB$OWNER_NAME as varchar(31)) as OWNER_NAME "
+            + "cast(RDB$OWNER_NAME as varchar(" + OBJECT_NAME_LENGTH + ")) as OWNER_NAME "
             + "from RDB$RELATIONS ";
 
     private static final String TABLE_COLUMNS_SYSTEM_2_1 =
@@ -2281,15 +2296,15 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
     private static final String GET_TABLES_EXACT_2_1 =
             TABLE_COLUMNS_SYSTEM_2_1
             + " where ? = 'T' and RDB$SYSTEM_FLAG = 1 and RDB$VIEW_SOURCE is null"
-            + " and cast(RDB$RELATION_NAME as varchar(40)) = ? "
+            + " and cast(RDB$RELATION_NAME as varchar(" + (OBJECT_NAME_LENGTH + 10) + ")) = ? "
             + " union"
             + TABLE_COLUMNS_NORMAL
             + " where ? = 'T' and RDB$SYSTEM_FLAG = 0 and RDB$VIEW_SOURCE is null"
-            + " and cast(RDB$RELATION_NAME as varchar(40)) = ? "
+            + " and cast(RDB$RELATION_NAME as varchar(" + (OBJECT_NAME_LENGTH + 10) + ")) = ? "
             + " union"
             + TABLE_COLUMNS_VIEW
             + " where ? = 'T' and RDB$VIEW_SOURCE is not null"
-            + " and cast(RDB$RELATION_NAME as varchar(40)) = ? "
+            + " and cast(RDB$RELATION_NAME as varchar(" + (OBJECT_NAME_LENGTH + 10) + ")) = ? "
             + GET_TABLE_ORDER_BY;
 
     private static final String GET_TABLES_LIKE_2_1 =
@@ -2380,7 +2395,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
      */
     public  ResultSet getCatalogs() throws SQLException {
         final RowDescriptor rowDescriptor = new RowDescriptorBuilder(1, datatypeCoder)
-                .at(0).simple(SQL_VARYING, 31, "TABLE_CAT", "TABLECATALOGS").addField()
+                .at(0).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "TABLE_CAT", "TABLECATALOGS").addField()
                 .toRowDescriptor();
 
         return new FBResultSet(rowDescriptor, Collections.<RowValue>emptyList());
@@ -2424,8 +2439,8 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
 
     //@formatter:off
     private static final String GET_COLUMNS_COMMON =
-            "SELECT cast(RF.RDB$RELATION_NAME as varchar(31)) AS RELATION_NAME," +
-            "cast(RF.RDB$FIELD_NAME as varchar(31)) AS FIELD_NAME," +
+            "SELECT cast(RF.RDB$RELATION_NAME as varchar(" + OBJECT_NAME_LENGTH + ")) AS RELATION_NAME," +
+            "cast(RF.RDB$FIELD_NAME as varchar(" + OBJECT_NAME_LENGTH + ")) AS FIELD_NAME," +
             "F.RDB$FIELD_TYPE AS FIELD_TYPE," +
             "F.RDB$FIELD_SUB_TYPE AS FIELD_SUB_TYPE," +
             "F.RDB$FIELD_PRECISION AS FIELD_PRECISION," +
@@ -2567,10 +2582,10 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
     public ResultSet getColumns(String catalog, String schemaPattern, String tableNamePattern, String columnNamePattern)
             throws SQLException {
         final RowDescriptor rowDescriptor = new RowDescriptorBuilder(26, datatypeCoder)
-                .at(0).simple(SQL_VARYING, 31, "TABLE_CAT", "COLUMNINFO").addField()
-                .at(1).simple(SQL_VARYING, 31, "TABLE_SCHEM", "COLUMNINFO").addField()
-                .at(2).simple(SQL_VARYING, 31, "TABLE_NAME", "COLUMNINFO").addField()
-                .at(3).simple(SQL_VARYING, 31, "COLUMN_NAME", "COLUMNINFO").addField()
+                .at(0).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "TABLE_CAT", "COLUMNINFO").addField()
+                .at(1).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "TABLE_SCHEM", "COLUMNINFO").addField()
+                .at(2).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "TABLE_NAME", "COLUMNINFO").addField()
+                .at(3).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "COLUMN_NAME", "COLUMNINFO").addField()
                 .at(4).simple(SQL_LONG, 0, "DATA_TYPE", "COLUMNINFO").addField()
                 .at(5).simple(SQL_VARYING | 1, 31, "TYPE_NAME", "COLUMNINFO").addField()
                 .at(6).simple(SQL_LONG, 0, "COLUMN_SIZE", "COLUMNINFO").addField()
@@ -2586,9 +2601,9 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
                 .at(15).simple(SQL_LONG, 0, "CHAR_OCTET_LENGTH", "COLUMNINFO").addField()
                 .at(16).simple(SQL_LONG, 0, "ORDINAL_POSITION", "COLUMNINFO").addField()
                 .at(17).simple(SQL_VARYING, 3, "IS_NULLABLE", "COLUMNINFO").addField()
-                .at(18).simple(SQL_VARYING, 31, getScopeCatalogColumnName(), "COLUMNINFO").addField()
-                .at(19).simple(SQL_VARYING, 31, "SCOPE_SCHEMA", "COLUMNINFO").addField()
-                .at(20).simple(SQL_VARYING, 31, "SCOPE_TABLE", "COLUMNINFO").addField()
+                .at(18).simple(SQL_VARYING, OBJECT_NAME_LENGTH, getScopeCatalogColumnName(), "COLUMNINFO").addField()
+                .at(19).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "SCOPE_SCHEMA", "COLUMNINFO").addField()
+                .at(20).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "SCOPE_TABLE", "COLUMNINFO").addField()
                 .at(21).simple(SQL_SHORT, 0, "SOURCE_DATA_TYPE", "COLUMNINFO").addField()
                 .at(22).simple(SQL_VARYING, 3, "IS_AUTOINCREMENT", "COLUMNINFO").addField()
                 .at(23).simple(SQL_VARYING, 3, "IS_GENERATEDCOLUMN", "COLUMNINFO").addField()
@@ -2877,10 +2892,10 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
     private static final String GET_COLUMN_PRIVILEGES_START = "select "
         /*+ "null as TABLE_CAT,"
         + "null as TABLE_SCHEM,"*/
-        + "cast(RF.RDB$RELATION_NAME as varchar(31)) as TABLE_NAME,"
-        + "cast(RF.RDB$FIELD_NAME as varchar(31)) as COLUMN_NAME,"
-        + "cast(UP.RDB$GRANTOR as varchar(31)) as GRANTOR,"
-        + "cast(UP.RDB$USER as varchar(31)) as GRANTEE,"
+        + "cast(RF.RDB$RELATION_NAME as varchar(" + OBJECT_NAME_LENGTH + ")) as TABLE_NAME,"
+        + "cast(RF.RDB$FIELD_NAME as varchar(" + OBJECT_NAME_LENGTH + ")) as COLUMN_NAME,"
+        + "cast(UP.RDB$GRANTOR as varchar(" + OBJECT_NAME_LENGTH + ")) as GRANTOR,"
+        + "cast(UP.RDB$USER as varchar(" + OBJECT_NAME_LENGTH + ")) as GRANTEE,"
         + "cast(UP.RDB$PRIVILEGE as varchar(6)) as PRIVILEGE,"
         + "UP.RDB$GRANT_OPTION as IS_GRANTABLE "
         + "from "
@@ -2892,7 +2907,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
         + "RF.RDB$FIELD_SOURCE = F.RDB$FIELD_NAME  and "
         + "(UP.RDB$FIELD_NAME is null or "
         + "UP.RDB$FIELD_NAME = RF.RDB$FIELD_NAME) and "
-        + "CAST(UP.RDB$RELATION_NAME AS VARCHAR(40)) = ? and ((";
+        + "CAST(UP.RDB$RELATION_NAME AS VARCHAR(" + (OBJECT_NAME_LENGTH + 10) + ")) = ? and ((";
     private static final String GET_COLUMN_PRIVILEGES_END = " UP.RDB$OBJECT_TYPE = 0) or "
         + "(RF.RDB$FIELD_NAME is null and UP.RDB$OBJECT_TYPE = 0)) "
         + "order by 2,5 ";
@@ -2952,12 +2967,12 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
     public ResultSet getColumnPrivileges(String catalog, String schema, String table, String columnNamePattern)
             throws SQLException {
         final RowDescriptor rowDescriptor = new RowDescriptorBuilder(8, datatypeCoder)
-                .at(0).simple(SQL_VARYING, 31, "TABLE_CAT", "COLUMNPRIV").addField()
-                .at(1).simple(SQL_VARYING, 31, "TABLE_SCHEM", "COLUMNPRIV").addField()
-                .at(2).simple(SQL_VARYING, 31, "TABLE_NAME", "COLUMNPRIV").addField()
-                .at(3).simple(SQL_VARYING, 31, "COLUMN_NAME", "COLUMNPRIV").addField()
-                .at(4).simple(SQL_VARYING, 31, "GRANTOR", "COLUMNPRIV").addField()
-                .at(5).simple(SQL_VARYING, 31, "GRANTEE", "COLUMNPRIV").addField()
+                .at(0).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "TABLE_CAT", "COLUMNPRIV").addField()
+                .at(1).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "TABLE_SCHEM", "COLUMNPRIV").addField()
+                .at(2).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "TABLE_NAME", "COLUMNPRIV").addField()
+                .at(3).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "COLUMN_NAME", "COLUMNPRIV").addField()
+                .at(4).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "GRANTOR", "COLUMNPRIV").addField()
+                .at(5).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "GRANTEE", "COLUMNPRIV").addField()
                 .at(6).simple(SQL_VARYING, 31, "PRIVILEGE", "COLUMNPRIV").addField()
                 .at(7).simple(SQL_VARYING, 31, "IS_GRANTABLE", "COLUMNPRIV").addField()
                 .toRowDescriptor();
@@ -3000,9 +3015,9 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
     private static final String GET_TABLE_PRIVILEGES_START = "select "
         /*+ " null as TABLE_CAT, "
         + " null as TABLE_SCHEM,"*/
-        + "cast(RDB$RELATION_NAME as varchar(31)) as TABLE_NAME,"
-        + "cast(RDB$GRANTOR as varchar(31)) as GRANTOR,"
-        + "cast(RDB$USER as varchar(31)) as GRANTEE,"
+        + "cast(RDB$RELATION_NAME as varchar(" + OBJECT_NAME_LENGTH + ")) as TABLE_NAME,"
+        + "cast(RDB$GRANTOR as varchar(" + OBJECT_NAME_LENGTH + ")) as GRANTOR,"
+        + "cast(RDB$USER as varchar(" + OBJECT_NAME_LENGTH + ")) as GRANTEE,"
         + "cast(RDB$PRIVILEGE as varchar(6)) as PRIVILEGE,"
         + "RDB$GRANT_OPTION as IS_GRANTABLE "
         + "from"
@@ -3071,11 +3086,11 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
 
     protected final RowDescriptor buildTablePrivilegeRSMetaData() {
         return new RowDescriptorBuilder(7, datatypeCoder)
-                .at(0).simple(SQL_VARYING, 31, "TABLE_CAT", "TABLEPRIV").addField()
-                .at(1).simple(SQL_VARYING, 31, "TABLE_SCHEM", "TABLEPRIV").addField()
-                .at(2).simple(SQL_VARYING, 31, "TABLE_NAME", "TABLEPRIV").addField()
-                .at(3).simple(SQL_VARYING, 31, "GRANTOR", "TABLEPRIV").addField()
-                .at(4).simple(SQL_VARYING, 31, "GRANTEE", "TABLEPRIV").addField()
+                .at(0).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "TABLE_CAT", "TABLEPRIV").addField()
+                .at(1).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "TABLE_SCHEM", "TABLEPRIV").addField()
+                .at(2).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "TABLE_NAME", "TABLEPRIV").addField()
+                .at(3).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "GRANTOR", "TABLEPRIV").addField()
+                .at(4).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "GRANTEE", "TABLEPRIV").addField()
                 .at(5).simple(SQL_VARYING, 31, "PRIVILEGE", "TABLEPRIV").addField()
                 .at(6).simple(SQL_VARYING, 31, "IS_GRANTABLE", "TABLEPRIV").addField()
                 .toRowDescriptor();
@@ -3099,7 +3114,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
 
     private static final String GET_BEST_ROW_IDENT =
             "SELECT " +
-            "CAST(rf.rdb$field_name AS varchar(31)) AS column_name," +
+            "CAST(rf.rdb$field_name AS varchar(" + OBJECT_NAME_LENGTH + ")) AS column_name," +
             "f.rdb$field_type AS field_type," +
             "f.rdb$field_sub_type AS field_sub_type," +
             "f.rdb$field_scale AS field_scale," +
@@ -3111,7 +3126,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
             "    AND rf.rdb$relation_name = rc.rdb$relation_name " +
             "INNER JOIN rdb$fields f ON f.rdb$field_name = rf.rdb$field_source " +
             "WHERE " +
-            "CAST(rc.rdb$relation_name AS VARCHAR(40)) = ? " +
+            "CAST(rc.rdb$relation_name AS VARCHAR(" + (OBJECT_NAME_LENGTH + 10) + ")) = ? " +
             "AND rc.rdb$constraint_type = 'PRIMARY KEY'";
 
     /**
@@ -3155,7 +3170,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
             throws SQLException {
         final RowDescriptor rowDescriptor = new RowDescriptorBuilder(8, datatypeCoder)
                 .at(0).simple(SQL_SHORT, 0, "SCOPE", "ROWIDENTIFIER").addField()
-                .at(1).simple(SQL_VARYING, 31, "COLUMN_NAME", "ROWIDENTIFIER").addField()
+                .at(1).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "COLUMN_NAME", "ROWIDENTIFIER").addField()
                 .at(2).simple(SQL_SHORT, 0, "DATA_TYPE", "ROWIDENTIFIER").addField()
                 .at(3).simple(SQL_VARYING, 31, "TYPE_NAME", "ROWIDENTIFIER").addField()
                 .at(4).simple(SQL_LONG, 0, "COLUMN_SIZE", "ROWIDENTIFIER").addField()
@@ -3262,7 +3277,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
         // TODO Return FB 3 RDB$RECORD_VERSION
         final RowDescriptor rowDescriptor = new RowDescriptorBuilder(8, datatypeCoder)
                 .at(0).simple(SQL_SHORT, 0, "SCOPE", "VERSIONCOL").addField()
-                .at(1).simple(SQL_VARYING, 31, "COLUMN_NAME", "VERSIONCOL").addField()
+                .at(1).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "COLUMN_NAME", "VERSIONCOL").addField()
                 .at(2).simple(SQL_SHORT, 0, "DATA_TYPE", "VERSIONCOL").addField()
                 .at(3).simple(SQL_VARYING, 31, "TYPE_NAME", "VERSIONCOL").addField()
                 .at(4).simple(SQL_LONG, 0, "COLUMN_SIZE", "VERSIONCOL").addField()
@@ -3277,14 +3292,14 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
     private static final String GET_PRIMARY_KEYS = "select "
         /*+ " null as TABLE_CAT, "
         + " null as TABLE_SCHEM, "*/
-        + "cast(RC.RDB$RELATION_NAME as varchar(31)) as TABLE_NAME,"
-        + "cast(ISGMT.RDB$FIELD_NAME as varchar(31)) as COLUMN_NAME,"
+        + "cast(RC.RDB$RELATION_NAME as varchar(" + OBJECT_NAME_LENGTH + ")) as TABLE_NAME,"
+        + "cast(ISGMT.RDB$FIELD_NAME as varchar(" + OBJECT_NAME_LENGTH + ")) as COLUMN_NAME,"
         + "CAST((ISGMT.RDB$FIELD_POSITION + 1) as SMALLINT) as KEY_SEQ,"
-        + "cast(RC.RDB$CONSTRAINT_NAME as varchar(31)) as PK_NAME "
+        + "cast(RC.RDB$CONSTRAINT_NAME as varchar(" + OBJECT_NAME_LENGTH + ")) as PK_NAME "
         + "from "
         + "RDB$RELATION_CONSTRAINTS RC "
         + "INNER JOIN RDB$INDEX_SEGMENTS ISGMT ON RC.RDB$INDEX_NAME = ISGMT.RDB$INDEX_NAME "
-        + "where CAST(RC.RDB$RELATION_NAME AS VARCHAR(40)) = ? and "
+        + "where CAST(RC.RDB$RELATION_NAME AS VARCHAR(" + (OBJECT_NAME_LENGTH + 10) + ")) = ? and "
         + "RC.RDB$CONSTRAINT_TYPE = 'PRIMARY KEY' "
         + "order by ISGMT.RDB$FIELD_NAME ";
 
@@ -3312,12 +3327,12 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
      */
     public ResultSet getPrimaryKeys(String catalog, String schema, String table) throws SQLException {
         RowDescriptor rowDescriptor = new RowDescriptorBuilder(6, datatypeCoder)
-                .at(0).simple(SQL_VARYING, 31, "TABLE_CAT", "COLUMNINFO").addField()
-                .at(1).simple(SQL_VARYING, 31, "TABLE_SCHEM", "COLUMNINFO").addField()
-                .at(2).simple(SQL_VARYING, 31, "TABLE_NAME", "COLUMNINFO").addField()
-                .at(3).simple(SQL_VARYING, 31, "COLUMN_NAME", "COLUMNINFO").addField()
+                .at(0).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "TABLE_CAT", "COLUMNINFO").addField()
+                .at(1).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "TABLE_SCHEM", "COLUMNINFO").addField()
+                .at(2).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "TABLE_NAME", "COLUMNINFO").addField()
+                .at(3).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "COLUMN_NAME", "COLUMNINFO").addField()
                 .at(4).simple(SQL_SHORT, 0, "KEY_SEQ", "COLUMNINFO").addField()
-                .at(5).simple(SQL_VARYING, 31, "PK_NAME", "COLUMNINFO").addField()
+                .at(5).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "PK_NAME", "COLUMNINFO").addField()
                 .toRowDescriptor();
 
         List<String> params = Collections.singletonList(table);
@@ -3346,17 +3361,17 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
     private static final String GET_IMPORTED_KEYS = "select "
     /*+" null as PKTABLE_CAT "
     +" ,null as PKTABLE_SCHEM "*/
-    +"cast(PK.RDB$RELATION_NAME as varchar(31)) as PKTABLE_NAME"
-    +",cast(ISP.RDB$FIELD_NAME as varchar(31)) as PKCOLUMN_NAME"
+    +"cast(PK.RDB$RELATION_NAME as varchar(" + OBJECT_NAME_LENGTH + ")) as PKTABLE_NAME"
+    +",cast(ISP.RDB$FIELD_NAME as varchar(" + OBJECT_NAME_LENGTH + ")) as PKCOLUMN_NAME"
     /*+" ,null as FKTABLE_CAT "
     +" ,null as FKTABLE_SCHEM "*/
-    +",cast(FK.RDB$RELATION_NAME as varchar(31)) as FKTABLE_NAME"
-    +",cast(ISF.RDB$FIELD_NAME as varchar(31)) as FKCOLUMN_NAME"
+    +",cast(FK.RDB$RELATION_NAME as varchar(" + OBJECT_NAME_LENGTH + ")) as FKTABLE_NAME"
+    +",cast(ISF.RDB$FIELD_NAME as varchar(" + OBJECT_NAME_LENGTH + ")) as FKCOLUMN_NAME"
     +",CAST((ISP.RDB$FIELD_POSITION + 1) as SMALLINT) as KEY_SEQ"
     +",cast(RC.RDB$UPDATE_RULE as varchar(11)) as UPDATE_RULE"
     +",cast(RC.RDB$DELETE_RULE as varchar(11)) as DELETE_RULE"
-    +",cast(PK.RDB$CONSTRAINT_NAME as varchar(31)) as PK_NAME"
-    +",cast(FK.RDB$CONSTRAINT_NAME as varchar(31)) as FK_NAME "
+    +",cast(PK.RDB$CONSTRAINT_NAME as varchar(" + OBJECT_NAME_LENGTH + ")) as PK_NAME"
+    +",cast(FK.RDB$CONSTRAINT_NAME as varchar(" + OBJECT_NAME_LENGTH + ")) as FK_NAME "
     /*+" ,null as DEFERRABILITY "*/
     +"from "
     +"RDB$RELATION_CONSTRAINTS PK"
@@ -3364,7 +3379,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
     +",RDB$REF_CONSTRAINTS RC"
     +",RDB$INDEX_SEGMENTS ISP"
     +",RDB$INDEX_SEGMENTS ISF "
-    +"WHERE CAST(FK.RDB$RELATION_NAME AS VARCHAR(40)) = ? and "
+    +"WHERE CAST(FK.RDB$RELATION_NAME AS VARCHAR(" + (OBJECT_NAME_LENGTH + 10) + ")) = ? and "
     +" FK.RDB$CONSTRAINT_NAME = RC.RDB$CONSTRAINT_NAME "
     +"and PK.RDB$CONSTRAINT_NAME = RC.RDB$CONST_NAME_UQ "
     +"and ISP.RDB$INDEX_NAME = PK.RDB$INDEX_NAME "
@@ -3463,19 +3478,19 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
      */
     public ResultSet getImportedKeys(String catalog, String schema, String table) throws SQLException {
         final RowDescriptor rowDescriptor = new RowDescriptorBuilder(14, datatypeCoder)
-                .at(0).simple(SQL_VARYING, 31, "PKTABLE_CAT", "COLUMNINFO").addField()
-                .at(1).simple(SQL_VARYING, 31, "PKTABLE_SCHEM", "COLUMNINFO").addField()
-                .at(2).simple(SQL_VARYING, 31, "PKTABLE_NAME", "COLUMNINFO").addField()
-                .at(3).simple(SQL_VARYING, 31, "PKCOLUMN_NAME", "COLUMNINFO").addField()
-                .at(4).simple(SQL_VARYING, 31, "FKTABLE_CAT", "COLUMNINFO").addField()
-                .at(5).simple(SQL_VARYING, 31, "FKTABLE_SCHEM", "COLUMNINFO").addField()
-                .at(6).simple(SQL_VARYING, 31, "FKTABLE_NAME", "COLUMNINFO").addField()
-                .at(7).simple(SQL_VARYING, 31, "FKCOLUMN_NAME", "COLUMNINFO").addField()
+                .at(0).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "PKTABLE_CAT", "COLUMNINFO").addField()
+                .at(1).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "PKTABLE_SCHEM", "COLUMNINFO").addField()
+                .at(2).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "PKTABLE_NAME", "COLUMNINFO").addField()
+                .at(3).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "PKCOLUMN_NAME", "COLUMNINFO").addField()
+                .at(4).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "FKTABLE_CAT", "COLUMNINFO").addField()
+                .at(5).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "FKTABLE_SCHEM", "COLUMNINFO").addField()
+                .at(6).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "FKTABLE_NAME", "COLUMNINFO").addField()
+                .at(7).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "FKCOLUMN_NAME", "COLUMNINFO").addField()
                 .at(8).simple(SQL_SHORT, 0, "KEY_SEQ", "COLUMNINFO").addField()
                 .at(9).simple(SQL_SHORT, 0, "UPDATE_RULE", "COLUMNINFO").addField()
                 .at(10).simple(SQL_SHORT, 0, "DELETE_RULE", "COLUMNINFO").addField()
-                .at(11).simple(SQL_VARYING, 31, "FK_NAME", "COLUMNINFO").addField()
-                .at(12).simple(SQL_VARYING, 31, "PK_NAME", "COLUMNINFO").addField()
+                .at(11).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "FK_NAME", "COLUMNINFO").addField()
+                .at(12).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "PK_NAME", "COLUMNINFO").addField()
                 .at(13).simple(SQL_SHORT, 0, "DEFERRABILITY", "COLUMNINFO").addField()
                 .toRowDescriptor();
 
@@ -3511,17 +3526,17 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
     private static final String GET_EXPORTED_KEYS = "select "
     /*+" null as PKTABLE_CAT "
     +" ,null as PKTABLE_SCHEM "*/
-    +"cast(PK.RDB$RELATION_NAME as varchar(31)) as PKTABLE_NAME"
-    +",cast(ISP.RDB$FIELD_NAME as varchar(31)) as PKCOLUMN_NAME"
+    +"cast(PK.RDB$RELATION_NAME as varchar(" + OBJECT_NAME_LENGTH + ")) as PKTABLE_NAME"
+    +",cast(ISP.RDB$FIELD_NAME as varchar(" + OBJECT_NAME_LENGTH + ")) as PKCOLUMN_NAME"
     /*+" ,null as FKTABLE_CAT "
     +" ,null as FKTABLE_SCHEM "*/
-    +",cast(FK.RDB$RELATION_NAME as varchar(31)) as FKTABLE_NAME"
-    +",cast(ISF.RDB$FIELD_NAME as varchar(31)) as FKCOLUMN_NAME"
+    +",cast(FK.RDB$RELATION_NAME as varchar(" + OBJECT_NAME_LENGTH + ")) as FKTABLE_NAME"
+    +",cast(ISF.RDB$FIELD_NAME as varchar(" + OBJECT_NAME_LENGTH + ")) as FKCOLUMN_NAME"
     +",CAST((ISP.RDB$FIELD_POSITION + 1) as SMALLINT) as KEY_SEQ"
     +",cast(RC.RDB$UPDATE_RULE as varchar(11)) as UPDATE_RULE"
     +",cast(RC.RDB$DELETE_RULE as varchar(11)) as DELETE_RULE"
-    +",cast(PK.RDB$CONSTRAINT_NAME as varchar(31)) as PK_NAME"
-    +",cast(FK.RDB$CONSTRAINT_NAME as varchar(31)) as FK_NAME "
+    +",cast(PK.RDB$CONSTRAINT_NAME as varchar(" + OBJECT_NAME_LENGTH + ")) as PK_NAME"
+    +",cast(FK.RDB$CONSTRAINT_NAME as varchar(" + OBJECT_NAME_LENGTH + ")) as FK_NAME "
     /*+" ,null as DEFERRABILITY "*/
     +"from "
     +"RDB$RELATION_CONSTRAINTS PK"
@@ -3529,7 +3544,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
     +",RDB$REF_CONSTRAINTS RC"
     +",RDB$INDEX_SEGMENTS ISP"
     +",RDB$INDEX_SEGMENTS ISF "
-    +"WHERE CAST(PK.RDB$RELATION_NAME AS VARCHAR(40)) = ? "
+    +"WHERE CAST(PK.RDB$RELATION_NAME AS VARCHAR(" + (OBJECT_NAME_LENGTH + 10) + ")) = ? "
     +"and FK.RDB$CONSTRAINT_NAME = RC.RDB$CONSTRAINT_NAME "
     +"and PK.RDB$CONSTRAINT_NAME = RC.RDB$CONST_NAME_UQ "
     +"and ISP.RDB$INDEX_NAME = PK.RDB$INDEX_NAME "
@@ -3607,19 +3622,19 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
      */
     public ResultSet getExportedKeys(String catalog, String schema, String table) throws SQLException {
         final RowDescriptor rowDescriptor = new RowDescriptorBuilder(14, datatypeCoder)
-                .at(0).simple(SQL_VARYING, 31, "PKTABLE_CAT", "COLUMNINFO").addField()
-                .at(1).simple(SQL_VARYING, 31, "PKTABLE_SCHEM", "COLUMNINFO").addField()
-                .at(2).simple(SQL_VARYING, 31, "PKTABLE_NAME", "COLUMNINFO").addField()
-                .at(3).simple(SQL_VARYING, 31, "PKCOLUMN_NAME", "COLUMNINFO").addField()
-                .at(4).simple(SQL_VARYING, 31, "FKTABLE_CAT", "COLUMNINFO").addField()
-                .at(5).simple(SQL_VARYING, 31, "FKTABLE_SCHEM", "COLUMNINFO").addField()
-                .at(6).simple(SQL_VARYING, 31, "FKTABLE_NAME", "COLUMNINFO").addField()
-                .at(7).simple(SQL_VARYING, 31, "FKCOLUMN_NAME", "COLUMNINFO").addField()
+                .at(0).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "PKTABLE_CAT", "COLUMNINFO").addField()
+                .at(1).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "PKTABLE_SCHEM", "COLUMNINFO").addField()
+                .at(2).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "PKTABLE_NAME", "COLUMNINFO").addField()
+                .at(3).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "PKCOLUMN_NAME", "COLUMNINFO").addField()
+                .at(4).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "FKTABLE_CAT", "COLUMNINFO").addField()
+                .at(5).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "FKTABLE_SCHEM", "COLUMNINFO").addField()
+                .at(6).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "FKTABLE_NAME", "COLUMNINFO").addField()
+                .at(7).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "FKCOLUMN_NAME", "COLUMNINFO").addField()
                 .at(8).simple(SQL_SHORT, 0, "KEY_SEQ", "COLUMNINFO").addField()
                 .at(9).simple(SQL_SHORT, 0, "UPDATE_RULE", "COLUMNINFO").addField()
                 .at(10).simple(SQL_SHORT, 0, "DELETE_RULE", "COLUMNINFO").addField()
-                .at(11).simple(SQL_VARYING, 31, "FK_NAME", "COLUMNINFO").addField()
-                .at(12).simple(SQL_VARYING, 31, "PK_NAME", "COLUMNINFO").addField()
+                .at(11).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "FK_NAME", "COLUMNINFO").addField()
+                .at(12).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "PK_NAME", "COLUMNINFO").addField()
                 .at(13).simple(SQL_SHORT, 0, "DEFERRABILITY", "COLUMNINFO").addField()
                 .toRowDescriptor();
 
@@ -3655,17 +3670,17 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
     private static final String GET_CROSS_KEYS = "select "
     /*+" null as PKTABLE_CAT "
     +" ,null as PKTABLE_SCHEM "*/
-    +"cast(PK.RDB$RELATION_NAME as varchar(31)) as PKTABLE_NAME"
-    +",cast(ISP.RDB$FIELD_NAME as varchar(31)) as PKCOLUMN_NAME"
+    +"cast(PK.RDB$RELATION_NAME as varchar(" + OBJECT_NAME_LENGTH + ")) as PKTABLE_NAME"
+    +",cast(ISP.RDB$FIELD_NAME as varchar(" + OBJECT_NAME_LENGTH + ")) as PKCOLUMN_NAME"
     /*+" ,null as FKTABLE_CAT "
     +" ,null as FKTABLE_SCHEM "*/
-    +",cast(FK.RDB$RELATION_NAME as varchar(31)) as FKTABLE_NAME"
-    +",cast(ISF.RDB$FIELD_NAME as varchar(31)) as FKCOLUMN_NAME"
+    +",cast(FK.RDB$RELATION_NAME as varchar(" + OBJECT_NAME_LENGTH + ")) as FKTABLE_NAME"
+    +",cast(ISF.RDB$FIELD_NAME as varchar(" + OBJECT_NAME_LENGTH + ")) as FKCOLUMN_NAME"
     +",CAST((ISP.RDB$FIELD_POSITION + 1) as SMALLINT) as KEY_SEQ"
     +",cast(RC.RDB$UPDATE_RULE as varchar(11)) as UPDATE_RULE"
     +",cast(RC.RDB$DELETE_RULE as varchar(11)) as DELETE_RULE"
-    +",cast(PK.RDB$CONSTRAINT_NAME as varchar(31)) as PK_NAME"
-    +",cast(FK.RDB$CONSTRAINT_NAME as varchar(31)) as FK_NAME"
+    +",cast(PK.RDB$CONSTRAINT_NAME as varchar(" + OBJECT_NAME_LENGTH + ")) as PK_NAME"
+    +",cast(FK.RDB$CONSTRAINT_NAME as varchar(" + OBJECT_NAME_LENGTH + ")) as FK_NAME"
     /*+" ,null as DEFERRABILITY "*/
     +" from "
     +"RDB$RELATION_CONSTRAINTS PK"
@@ -3673,8 +3688,8 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
     +",RDB$REF_CONSTRAINTS RC"
     +",RDB$INDEX_SEGMENTS ISP"
     +",RDB$INDEX_SEGMENTS ISF "
-    +"WHERE CAST(PK.RDB$RELATION_NAME AS VARCHAR(40)) = ? and "
-    +"CAST(FK.RDB$RELATION_NAME AS VARCHAR(40)) = ? and "
+    +"WHERE CAST(PK.RDB$RELATION_NAME AS VARCHAR(" + (OBJECT_NAME_LENGTH + 10) + ")) = ? and "
+    +"CAST(FK.RDB$RELATION_NAME AS VARCHAR(" + (OBJECT_NAME_LENGTH + 10) +")) = ? and "
     +" FK.RDB$CONSTRAINT_NAME = RC.RDB$CONSTRAINT_NAME "
     +"and PK.RDB$CONSTRAINT_NAME = RC.RDB$CONST_NAME_UQ "
     +"and ISP.RDB$INDEX_NAME = PK.RDB$INDEX_NAME "
@@ -3762,19 +3777,19 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
             String primaryCatalog, String primarySchema, String primaryTable,
             String foreignCatalog, String foreignSchema, String foreignTable) throws SQLException {
         final RowDescriptor rowDescriptor = new RowDescriptorBuilder(14, datatypeCoder)
-                .at(0).simple(SQL_VARYING, 31, "PKTABLE_CAT", "COLUMNINFO").addField()
-                .at(1).simple(SQL_VARYING, 31, "PKTABLE_SCHEM", "COLUMNINFO").addField()
-                .at(2).simple(SQL_VARYING, 31, "PKTABLE_NAME", "COLUMNINFO").addField()
-                .at(3).simple(SQL_VARYING, 31, "PKCOLUMN_NAME", "COLUMNINFO").addField()
-                .at(4).simple(SQL_VARYING, 31, "FKTABLE_CAT", "COLUMNINFO").addField()
-                .at(5).simple(SQL_VARYING, 31, "FKTABLE_SCHEM", "COLUMNINFO").addField()
-                .at(6).simple(SQL_VARYING, 31, "FKTABLE_NAME", "COLUMNINFO").addField()
-                .at(7).simple(SQL_VARYING, 31, "FKCOLUMN_NAME", "COLUMNINFO").addField()
+                .at(0).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "PKTABLE_CAT", "COLUMNINFO").addField()
+                .at(1).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "PKTABLE_SCHEM", "COLUMNINFO").addField()
+                .at(2).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "PKTABLE_NAME", "COLUMNINFO").addField()
+                .at(3).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "PKCOLUMN_NAME", "COLUMNINFO").addField()
+                .at(4).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "FKTABLE_CAT", "COLUMNINFO").addField()
+                .at(5).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "FKTABLE_SCHEM", "COLUMNINFO").addField()
+                .at(6).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "FKTABLE_NAME", "COLUMNINFO").addField()
+                .at(7).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "FKCOLUMN_NAME", "COLUMNINFO").addField()
                 .at(8).simple(SQL_SHORT, 0, "KEY_SEQ", "COLUMNINFO").addField()
                 .at(9).simple(SQL_SHORT, 0, "UPDATE_RULE", "COLUMNINFO").addField()
                 .at(10).simple(SQL_SHORT, 0, "DELETE_RULE", "COLUMNINFO").addField()
-                .at(11).simple(SQL_VARYING, 31, "FK_NAME", "COLUMNINFO").addField()
-                .at(12).simple(SQL_VARYING, 31, "PK_NAME", "COLUMNINFO").addField()
+                .at(11).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "FK_NAME", "COLUMNINFO").addField()
+                .at(12).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "PK_NAME", "COLUMNINFO").addField()
                 .at(13).simple(SQL_SHORT, 0, "DEFERRABILITY", "COLUMNINFO").addField()
                 .toRowDescriptor();
 
@@ -4027,18 +4042,18 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
     }
 
     private static final String GET_INDEX_INFO = "SELECT "
-        + "cast(ind.RDB$RELATION_NAME as varchar(31)) AS TABLE_NAME"
+        + "cast(ind.RDB$RELATION_NAME as varchar(" + OBJECT_NAME_LENGTH + ")) AS TABLE_NAME"
         + ",ind.RDB$UNIQUE_FLAG AS UNIQUE_FLAG"
-        + ",cast(ind.RDB$INDEX_NAME as varchar(31)) as INDEX_NAME"
+        + ",cast(ind.RDB$INDEX_NAME as varchar(" + OBJECT_NAME_LENGTH + ")) as INDEX_NAME"
         + ",ise.rdb$field_position + 1 as ORDINAL_POSITION"
-        + ",cast(ise.rdb$field_name as varchar(31)) as COLUMN_NAME"
+        + ",cast(ise.rdb$field_name as varchar(" + OBJECT_NAME_LENGTH + ")) as COLUMN_NAME"
         + ",ind.RDB$EXPRESSION_SOURCE as EXPRESSION_SOURCE"
         + ",ind.RDB$INDEX_TYPE as ASC_OR_DESC "
         + "FROM "
         + "rdb$indices ind "
         + "LEFT JOIN rdb$index_segments ise ON ind.rdb$index_name = ise.rdb$index_name "
         + "WHERE "
-        + "CAST(ind.rdb$relation_name AS VARCHAR(40)) = ? "
+        + "CAST(ind.rdb$relation_name AS VARCHAR(" + (OBJECT_NAME_LENGTH + 10) + ")) = ? "
         + "ORDER BY 2, 3, 4";
 
     /**
@@ -4096,12 +4111,12 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
     public ResultSet getIndexInfo(String catalog, String schema, String table, boolean unique, boolean approximate)
             throws SQLException {
         final RowDescriptor rowDescriptor = new RowDescriptorBuilder(13, datatypeCoder)
-                .at(0).simple(SQL_VARYING, 31, "TABLE_CAT", "INDEXINFO").addField()
-                .at(1).simple(SQL_VARYING, 31, "TABLE_SCHEM", "INDEXINFO").addField()
-                .at(2).simple(SQL_VARYING, 31, "TABLE_NAME", "INDEXINFO").addField()
+                .at(0).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "TABLE_CAT", "INDEXINFO").addField()
+                .at(1).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "TABLE_SCHEM", "INDEXINFO").addField()
+                .at(2).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "TABLE_NAME", "INDEXINFO").addField()
                 .at(3).simple(SQL_TEXT, 1, "NON_UNIQUE", "INDEXINFO").addField()
-                .at(4).simple(SQL_VARYING, 31, "INDEX_QUALIFIER", "INDEXINFO").addField()
-                .at(5).simple(SQL_VARYING, 31, "INDEX_NAME", "INDEXINFO").addField()
+                .at(4).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "INDEX_QUALIFIER", "INDEXINFO").addField()
+                .at(5).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "INDEX_NAME", "INDEXINFO").addField()
                 .at(6).simple(SQL_SHORT, 0, "TYPE", "INDEXINFO").addField()
                 .at(7).simple(SQL_SHORT, 0, "ORDINAL_POSITION", "INDEXINFO").addField()
                 // Field with EXPRESSION_SOURCE (used for expression indexes) in Firebird is actually a blob, using Integer.MAX_VALUE for length
@@ -4366,8 +4381,8 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
      */
     public ResultSet getUDTs(String catalog, String schemaPattern, String typeNamePattern, int[] types) throws SQLException {
         final RowDescriptor rowDescriptor = new RowDescriptorBuilder(7, datatypeCoder)
-                .at(0).simple(SQL_VARYING, 31, "TYPE_CAT", "UDT").addField()
-                .at(1).simple(SQL_VARYING, 31, "TYPE_SCHEM", "UDT").addField()
+                .at(0).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "TYPE_CAT", "UDT").addField()
+                .at(1).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "TYPE_SCHEM", "UDT").addField()
                 .at(2).simple(SQL_VARYING, 31, "TYPE_NAME", "UDT").addField()
                 .at(3).simple(SQL_VARYING, 31, "CLASS_NAME", "UDT").addField()
                 .at(4).simple(SQL_LONG, 0, "DATA_TYPE", "UDT").addField()
@@ -4399,8 +4414,8 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
     public ResultSet getAttributes(String catalog, String schemaPattern, String typeNamePattern,
             String attributeNamePattern) throws SQLException {
         final RowDescriptor rowDescriptor = new RowDescriptorBuilder(21, datatypeCoder)
-                .at(0).simple(SQL_VARYING, 31, "TYPE_CAT", "ATTRIBUTES").addField()
-                .at(1).simple(SQL_VARYING, 31, "TYPE_SCHEM", "ATTRIBUTES").addField()
+                .at(0).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "TYPE_CAT", "ATTRIBUTES").addField()
+                .at(1).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "TYPE_SCHEM", "ATTRIBUTES").addField()
                 .at(2).simple(SQL_VARYING, 31, "TYPE_NAME", "ATTRIBUTES").addField()
                 .at(3).simple(SQL_VARYING, 31, "ATTR_NAME", "ATTRIBUTES").addField()
                 .at(4).simple(SQL_LONG, 0, "DATA_TYPE", "ATTRIBUTES").addField()
@@ -4416,9 +4431,9 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
                 .at(14).simple(SQL_LONG, 0, "CHAR_OCTET_LENGTH", "ATTRIBUTES").addField()
                 .at(15).simple(SQL_SHORT, 0, "ORDINAL_POSITION", "ATTRIBUTES").addField()
                 .at(16).simple(SQL_VARYING, 31, "IS_NULLABLE", "ATTRIBUTES").addField()
-                .at(17).simple(SQL_VARYING, 31, "SCOPE_CATALOG", "ATTRIBUTES").addField()
-                .at(18).simple(SQL_VARYING, 31, "SCOPE_SCHEMA", "ATTRIBUTES").addField()
-                .at(19).simple(SQL_VARYING, 31, "SCOPE_TABLE", "ATTRIBUTES").addField()
+                .at(17).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "SCOPE_CATALOG", "ATTRIBUTES").addField()
+                .at(18).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "SCOPE_SCHEMA", "ATTRIBUTES").addField()
+                .at(19).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "SCOPE_TABLE", "ATTRIBUTES").addField()
                 .at(20).simple(SQL_SHORT, 0, "SOURCE_DATA_TYPE", "ATTRIBUTES").addField()
                 .toRowDescriptor();
 
@@ -4475,11 +4490,11 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
      */
     public ResultSet getSuperTypes(String catalog, String schemaPattern, String tableNamePattern) throws SQLException {
         final RowDescriptor rowDescriptor = new RowDescriptorBuilder(6, datatypeCoder)
-                .at(0).simple(SQL_VARYING, 31, "TYPE_CAT", "SUPERTYPES").addField()
-                .at(1).simple(SQL_VARYING, 31, "TYPE_SCHEM", "SUPERTYPES").addField()
+                .at(0).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "TYPE_CAT", "SUPERTYPES").addField()
+                .at(1).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "TYPE_SCHEM", "SUPERTYPES").addField()
                 .at(2).simple(SQL_VARYING, 31, "TYPE_NAME", "SUPERTYPES").addField()
-                .at(3).simple(SQL_VARYING, 31, "SUPERTYPE_CAT", "SUPERTYPES").addField()
-                .at(4).simple(SQL_VARYING, 31, "SUPERTYPE_SCHEM", "SUPERTYPES").addField()
+                .at(3).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "SUPERTYPE_CAT", "SUPERTYPES").addField()
+                .at(4).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "SUPERTYPE_SCHEM", "SUPERTYPES").addField()
                 .at(5).simple(SQL_VARYING, 31, "SUPERTYPE_NAME", "SUPERTYPES").addField()
                 .toRowDescriptor();
 
@@ -4493,10 +4508,10 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
      */
     public ResultSet getSuperTables(String catalog, String schemaPattern, String tableNamePattern) throws SQLException {
         final RowDescriptor rowDescriptor = new RowDescriptorBuilder(4, datatypeCoder)
-                .at(0).simple(SQL_VARYING, 31, "TABLE_CAT", "SUPERTABLES").addField()
-                .at(1).simple(SQL_VARYING, 31, "TABLE_SCHEM", "SUPERTABLES").addField()
-                .at(2).simple(SQL_VARYING, 31, "TABLE_NAME", "SUPERTABLES").addField()
-                .at(3).simple(SQL_VARYING, 31, "SUPERTABLE_NAME", "SUPERTABLES").addField()
+                .at(0).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "TABLE_CAT", "SUPERTABLES").addField()
+                .at(1).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "TABLE_SCHEM", "SUPERTABLES").addField()
+                .at(2).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "TABLE_NAME", "SUPERTABLES").addField()
+                .at(3).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "SUPERTABLE_NAME", "SUPERTABLES").addField()
                 .toRowDescriptor();
 
         return new FBResultSet(rowDescriptor, Collections.<RowValue>emptyList());
@@ -4712,10 +4727,10 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
             String columnNamePattern) throws SQLException {
         // FIXME implement this method to return actual result
         final RowDescriptor rowDescriptor = new RowDescriptorBuilder(17, datatypeCoder)
-                .at(0).simple(SQL_VARYING, 31, "FUNCTION_CAT", "FUNCTION_COLUMNS").addField()
-                .at(1).simple(SQL_VARYING, 31, "FUNCTION_SCHEM", "FUNCTION_COLUMNS").addField()
-                .at(2).simple(SQL_VARYING, 31, "FUNCTION_NAME", "FUNCTION_COLUMNS").addField()
-                .at(3).simple(SQL_VARYING, 31, "COLUMN_NAME", "FUNCTION_COLUMNS").addField()
+                .at(0).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "FUNCTION_CAT", "FUNCTION_COLUMNS").addField()
+                .at(1).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "FUNCTION_SCHEM", "FUNCTION_COLUMNS").addField()
+                .at(2).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "FUNCTION_NAME", "FUNCTION_COLUMNS").addField()
+                .at(3).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "COLUMN_NAME", "FUNCTION_COLUMNS").addField()
                 .at(4).simple(SQL_SHORT, 0, "COLUMN_TYPE", "FUNCTION_COLUMNS").addField()
                 .at(5).simple(SQL_LONG, 0, "DATA_TYPE", "FUNCTION_COLUMNS").addField()
                 .at(6).simple(SQL_VARYING, 31, "TYPE_NAME", "FUNCTION_COLUMNS").addField()
@@ -4728,7 +4743,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
                 .at(13).simple(SQL_LONG, 0, "CHAR_OCTET_LENGTH", "FUNCTION_COLUMNS").addField()
                 .at(14).simple(SQL_LONG, 0, "ORDINAL_POSITION", "FUNCTION_COLUMNS").addField()
                 .at(15).simple(SQL_VARYING, 31, "IS_NULLABLE", "FUNCTION_COLUMNS").addField()
-                .at(16).simple(SQL_VARYING, 31, "SPECIFIC_NAME", "FUNCTION_COLUMNS").addField()
+                .at(16).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "SPECIFIC_NAME", "FUNCTION_COLUMNS").addField()
                 .toRowDescriptor();
 
         return new FBResultSet(rowDescriptor, Collections.<RowValue>emptyList());
@@ -4786,12 +4801,12 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
             throws SQLException {
         // FIXME implement this method to return actual result
         final RowDescriptor rowDescriptor = new RowDescriptorBuilder(6, datatypeCoder)
-                .at(0).simple(SQL_VARYING, 31, "FUNCTION_CAT", "FUNCTIONS").addField()
-                .at(1).simple(SQL_VARYING, 31, "FUNCTION_SCHEM", "FUNCTIONS").addField()
-                .at(2).simple(SQL_VARYING, 31, "FUNCTION_NAME", "FUNCTIONS").addField()
+                .at(0).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "FUNCTION_CAT", "FUNCTIONS").addField()
+                .at(1).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "FUNCTION_SCHEM", "FUNCTIONS").addField()
+                .at(2).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "FUNCTION_NAME", "FUNCTIONS").addField()
                 .at(3).simple(SQL_VARYING, 80, "REMARKS", "FUNCTIONS").addField()
                 .at(4).simple(SQL_SHORT, 0, "FUNCTION_TYPE", "FUNCTIONS").addField()
-                .at(5).simple(SQL_VARYING, 31, "SPECIFIC_NAME", "FUNCTIONS").addField()
+                .at(5).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "SPECIFIC_NAME", "FUNCTIONS").addField()
                 .toRowDescriptor();
 
         return new FBResultSet(rowDescriptor, Collections.<RowValue>emptyList());
@@ -4823,8 +4838,8 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
      */
     public ResultSet getSchemas(String catalog, String schemaPattern) throws SQLException {
         final RowDescriptor rowDescriptor = new RowDescriptorBuilder(2, datatypeCoder)
-                .at(0).simple(SQL_VARYING, 31, "TABLE_SCHEM", "TABLESCHEMAS").addField()
-                .at(1).simple(SQL_VARYING, 31, "TABLE_CATALOG", "TABLESCHEMAS").addField()
+                .at(0).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "TABLE_SCHEM", "TABLESCHEMAS").addField()
+                .at(1).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "TABLE_CATALOG", "TABLESCHEMAS").addField()
                 .toRowDescriptor();
 
         return new FBResultSet(rowDescriptor, Collections.<RowValue>emptyList());
@@ -4988,8 +5003,8 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
                 value = null;
             } else if (hasNoWildcards(pattern)) {
                 value = stripEscape(pattern);
-                // We are casting to VARCHAR(40) to accommodate slightly larger object names
-                condition = "CAST(" + columnName + " AS VARCHAR(40)) = ? and ";
+                // We are casting to VARCHAR( max object length + 10) to accommodate slightly larger object names
+                condition = "CAST(" + columnName + " AS VARCHAR(" + (OBJECT_NAME_LENGTH + 10) + ")) = ? and ";
             } else {
                 // We are padding the column with 31 spaces to accommodate arguments longer than the actual column length.
                 // The argument itself is padded with 15 spaces and a % to prevent false positives, this allows 15 character longer patterns

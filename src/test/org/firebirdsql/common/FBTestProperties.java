@@ -181,6 +181,18 @@ public final class FBTestProperties {
         return gdsTypeToUrlPrefixMap.get(getGdsType()) + getdbpath(DB_NAME);
     }
 
+    /**
+     * @param dbPath  Absolute path of the database
+     * @return JDBC URL (without parameters) for this testrun
+     */
+    public static String getUrl(String dbPath) {
+        if ("EMBEDDED".equalsIgnoreCase(GDS_TYPE) || "LOCAL".equalsIgnoreCase(GDS_TYPE)) {
+            return gdsTypeToUrlPrefixMap.get(getGdsType()) + dbPath;
+        } else {
+            return gdsTypeToUrlPrefixMap.get(getGdsType()) + DB_SERVER_URL + "/" + DB_SERVER_PORT + ":" + dbPath;
+        }
+    }
+
     // FACTORY METHODS
     //
     // These methods should be used where possible so as to create the objects

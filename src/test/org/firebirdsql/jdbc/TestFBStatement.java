@@ -22,6 +22,7 @@ import java.sql.*;
 import java.util.Arrays;
 
 import org.firebirdsql.common.FBJUnit4TestBase;
+import org.firebirdsql.util.FirebirdSupportInfo;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
@@ -30,6 +31,7 @@ import org.junit.rules.ExpectedException;
 
 import static org.firebirdsql.common.DdlHelper.*;
 import static org.firebirdsql.common.FBTestProperties.getConnectionViaDriverManager;
+import static org.firebirdsql.common.FBTestProperties.getDefaultSupportInfo;
 import static org.firebirdsql.common.JdbcResourceHelper.*;
 import static org.firebirdsql.common.matchers.SQLExceptionMatchers.*;
 import static org.firebirdsql.util.FirebirdSupportInfo.supportInfoFor;
@@ -892,7 +894,13 @@ public class TestFBStatement extends FBJUnit4TestBase {
             assertFalse("1Simple$Identifier_", stmt.isSimpleIdentifier("1Simple$Identifier_"));
             assertFalse("", stmt.isSimpleIdentifier(""));
             assertTrue("A234567890123456789012345678901", stmt.isSimpleIdentifier("A234567890123456789012345678901"));
-            assertFalse("A2345678901234567890123456789012", stmt.isSimpleIdentifier("A2345678901234567890123456789012"));
+            FirebirdSupportInfo supportInfo = getDefaultSupportInfo();
+
+            String maxLengthIdentifier = generateIdentifier(supportInfo.maxIdentifierLengthCharacters());
+            assertTrue(maxLengthIdentifier, stmt.isSimpleIdentifier(maxLengthIdentifier));
+
+            String tooLongIdentifier = generateIdentifier(supportInfo.maxIdentifierLengthCharacters() + 1);
+            assertFalse(tooLongIdentifier, stmt.isSimpleIdentifier(tooLongIdentifier));
         }
     }
 
@@ -919,5 +927,15 @@ public class TestFBStatement extends FBJUnit4TestBase {
                 pstmt.executeUpdate();
             }
         }
+    }
+
+    private static String generateIdentifier(final int length) {
+        StringBuilder sb = new StringBuilder(length);
+        int tempLength = length;
+        while (tempLength-- > 0) {
+            sb.append('a');
+        }
+        assert sb.length() == length;
+        return sb.toString();
     }
 }

@@ -114,8 +114,10 @@ public class TestFBResultSetMetaData extends FBJUnit4TestBase {
 
             if (firebirdVersion == 1)
                 assertEquals("RDB$SECURITY_CLASS must have display size 10 ", 10, columnDisplaySize);
-            else if (firebirdVersion >= 2)
+            else if (firebirdVersion >= 2 && firebirdVersion < 4)
                 assertEquals("RDB$SECURITY_CLASS must have display size 31 ", 31, columnDisplaySize);
+            else if (firebirdVersion >= 4)
+                assertEquals("RDB$SECURITY_CLASS must have display size 63 ", 63, columnDisplaySize);
             else
                 fail("Unknown Firebird version, not clear what to compare.");
 
@@ -123,8 +125,10 @@ public class TestFBResultSetMetaData extends FBJUnit4TestBase {
 
             if (firebirdVersion == 1)
                 assertEquals("RDB$CHARACTER_SET_NAME must have display size 10 ", 10, columnDisplaySize2);
-            else if (firebirdVersion >= 2)
+            else if (firebirdVersion >= 2 && firebirdVersion < 4)
                 assertEquals("RDB$CHARACTER_SET_NAME must have display size 31 ", 31, columnDisplaySize2);
+            else if (firebirdVersion >= 4)
+                assertEquals("RDB$CHARACTER_SET_NAME must have display size 63 ", 63, columnDisplaySize2);
             else
                 fail("Unknown Firebird version, not clear what to compare.");
 
