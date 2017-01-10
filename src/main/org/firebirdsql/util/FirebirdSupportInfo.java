@@ -300,7 +300,7 @@ public final class FirebirdSupportInfo {
             return 4 * 63;
         } else if (reportsByteLengthInDescriptor()) {
             // Firebird 1.5 ... 3 use unicode_fss and report 3 * identifier length, but actually store max 31 bytes(!)
-            return 3 * 63;
+            return 3 * 31;
         } else {
             return 31;
         }
