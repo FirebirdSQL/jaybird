@@ -26,6 +26,7 @@ import org.firebirdsql.gds.impl.jni.NativeGDSFactoryPlugin;
 import org.firebirdsql.gds.impl.oo.OOGDSFactoryPlugin;
 import org.firebirdsql.gds.impl.wire.WireGDSFactoryPlugin;
 import org.firebirdsql.gds.ng.FbDatabase;
+import org.firebirdsql.gds.ng.IConnectionProperties;
 import org.firebirdsql.jca.FBManagedConnection;
 import org.junit.Rule;
 import org.junit.Test;
@@ -39,7 +40,6 @@ import static org.firebirdsql.common.DdlHelper.executeCreateTable;
 import static org.firebirdsql.common.FBTestProperties.*;
 import static org.firebirdsql.common.matchers.SQLExceptionMatchers.errorCodeEquals;
 import static org.firebirdsql.util.FirebirdSupportInfo.supportInfoFor;
-import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.Matchers.isIn;
 import static org.junit.Assert.*;
@@ -316,20 +316,29 @@ public class TestFBConnection extends FBJUnit4TestBase {
      * Test if not explicitly specifying a connection character set results in a warning on the connection when
      * system property {@code org.firebirdsql.jdbc.defaultConnectionEncoding} has been set.
      *
-     * @see #testNoCharactersetException()
+     * @see #testNoCharacterSetExceptionWithoutDefaultConnectionEncoding()
      */
     @Test
-    public void testNoCharactersetWarning() throws Exception {
+    public void testNoCharacterSetWarningWithDefaultConnectionEncoding() throws Exception {
         String defaultConnectionEncoding = System.getProperty("org.firebirdsql.jdbc.defaultConnectionEncoding");
-        assumeThat("Test only works if org.firebirdsql.jdbc.defaultConnectionEncoding has been specified",
-                defaultConnectionEncoding, notNullValue());
-        Properties props = getDefaultPropertiesForConnection();
-        props.remove("lc_ctype");
-        try (Connection con = DriverManager.getConnection(getUrl(), props)) {
-            SQLWarning warnings = con.getWarnings();
-            assertNotNull("Expected a warning for not specifying connection character set", warnings);
-            assertEquals("Unexpected warning message for not specifying connection character set",
-                    FBManagedConnection.WARNING_NO_CHARSET, warnings.getMessage());
+        assumeThat("Test only works if org.firebirdsql.jdbc.defaultConnectionEncoding has not been specified",
+                defaultConnectionEncoding, nullValue());
+
+        try {
+            System.setProperty("org.firebirdsql.jdbc.defaultConnectionEncoding", "WIN1252");
+            Properties props = getDefaultPropertiesForConnection();
+            props.remove("lc_ctype");
+            try (Connection con = DriverManager.getConnection(getUrl(), props)) {
+                SQLWarning warnings = con.getWarnings();
+                assertNotNull("Expected a warning for not specifying connection character set", warnings);
+                assertEquals("Unexpected warning message for not specifying connection character set",
+                        FBManagedConnection.WARNING_NO_CHARSET + "WIN1252", warnings.getMessage());
+                IConnectionProperties connectionProperties =
+                        con.unwrap(FirebirdConnection.class).getFbDatabase().getConnectionProperties();
+                assertEquals("Unexpected connection encoding", "WIN1252", connectionProperties.getEncoding());
+            }
+        } finally {
+            System.clearProperty("org.firebirdsql.jdbc.defaultConnectionEncoding");
         }
     }
 
@@ -337,10 +346,10 @@ public class TestFBConnection extends FBJUnit4TestBase {
      * Test if not explicitly specifying a connection character set results in an exception on the connection when
      * system property {@code org.firebirdsql.jdbc.defaultConnectionEncoding} has not been set.
      *
-     * @see #testNoCharactersetWarning()
+     * @see #testNoCharacterSetWarningWithDefaultConnectionEncoding()
      */
     @Test
-    public void testNoCharactersetException() throws Exception {
+    public void testNoCharacterSetExceptionWithoutDefaultConnectionEncoding() throws Exception {
         String defaultConnectionEncoding = System.getProperty("org.firebirdsql.jdbc.defaultConnectionEncoding");
         assumeThat("Test only works if org.firebirdsql.jdbc.defaultConnectionEncoding has not been specified",
                 defaultConnectionEncoding, nullValue());
@@ -356,13 +365,16 @@ public class TestFBConnection extends FBJUnit4TestBase {
      * Test if explicitly specifying a connection character set does not add a warning (or exception) on the connection.
      */
     @Test
-    public void testCharactersetFirebirdNoWarning() throws Exception {
+    public void testCharacterSetFirebirdNoWarning() throws Exception {
         Properties props = getDefaultPropertiesForConnection();
         props.setProperty("lc_ctype", "WIN1252");
 
         try (Connection con = DriverManager.getConnection(getUrl(), props)) {
             SQLWarning warnings = con.getWarnings();
-            assertNull("Expected no warning when specifying connection characterset", warnings);
+            assertNull("Expected no warning when specifying connection character set", warnings);
+            IConnectionProperties connectionProperties =
+                    con.unwrap(FirebirdConnection.class).getFbDatabase().getConnectionProperties();
+            assertEquals("Unexpected connection encoding", "WIN1252", connectionProperties.getEncoding());
         }
     }
 
@@ -370,14 +382,17 @@ public class TestFBConnection extends FBJUnit4TestBase {
      * Test if explicitly specifying a connection character set does not add a warning (or exception) on the connection.
      */
     @Test
-    public void testCharactersetJavaNoWarning() throws Exception {
+    public void testCharacterSetJavaNoWarning() throws Exception {
         Properties props = getDefaultPropertiesForConnection();
         props.remove("lc_ctype");
-        props.setProperty("charSet", "Cp1252");
+        props.setProperty("charSet", "Cp1254");
 
         try (Connection con = DriverManager.getConnection(getUrl(), props)) {
             SQLWarning warnings = con.getWarnings();
-            assertNull("Expected no warning when specifying connection characterset", warnings);
+            assertNull("Expected no warning when specifying connection character set", warnings);
+            IConnectionProperties connectionProperties =
+                    con.unwrap(FirebirdConnection.class).getFbDatabase().getConnectionProperties();
+            assertEquals("Unexpected connection encoding", "WIN1254", connectionProperties.getEncoding());
         }
     }
 

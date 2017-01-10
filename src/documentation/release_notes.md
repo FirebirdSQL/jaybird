@@ -227,6 +227,18 @@ The minimal `module.xml` to use Jaybird 3 under Wildfly is:
 Jaybird 3.0.x changelog
 =======================
 
+Changes in Jaybird 3.0.0-beta-3?
+-------------------------------
+
+The following has been changed or fixed since Jaybird 3.0.0-beta-2
+
+-   Fixed: specifying `org.firebirdsql.jdbc.defaultConnectionEncoding` does not
+    set connection character set ([JDBC-473](http://tracker.firebirdsql.org/browse/JDBC-473))
+    
+    As part of this fix we also removed the need to have the system property set
+    before Jaybird was loaded. It will now be queried dynamically for each
+    connection without a connection character set.
+
 Changes in Jaybird 3.0.0-beta-2
 -------------------------------
 
@@ -592,6 +604,9 @@ In Jaybird 2.2 and earlier, Jaybird would default to connection character set
 and/or `charSet`). This can result in incorrect character set
 handling when the database is used from different locales.
 
+To prevent potential data-corruption, we no longer allow connecting without an
+explicit connection character set.
+
 To address this change, explicitly set the connection character set using
 one of the following options:
 
@@ -613,8 +628,7 @@ one of the following options:
     specified character set as the default when no character set is specified
     in the connection properties.
     
-    This property only supports Firebird character set names. The property must
-    be set on start up (or at least before Jaybird-related classes get loaded). 
+    This property only supports Firebird character set names.
 
     Use `-Dorg.firebirdsql.jdbc.defaultConnectionEncoding=NONE` to revert to the
     old behavior (with some caveats, see other sections).

@@ -60,19 +60,7 @@ import org.firebirdsql.util.SQLExceptionChainBuilder;
  */
 public class FBManagedConnection implements ManagedConnection, XAResource, ExceptionListener, Synchronizable {
 
-    private static final String DEFAULT_ENCODING;
-    static {
-        String encoding = null;
-        try {
-            encoding = getSystemPropertyPrivileged("org.firebirdsql.jdbc.defaultConnectionEncoding");
-        } catch (Exception e) {
-            e.printStackTrace();
-        } finally {
-            DEFAULT_ENCODING = encoding;
-        }
-    }
-
-    public static final String WARNING_NO_CHARSET = "WARNING: No connection character set specified (property lc_ctype, encoding, charSet or localEncoding), defaulting to character set " + DEFAULT_ENCODING;
+    public static final String WARNING_NO_CHARSET = "WARNING: No connection character set specified (property lc_ctype, encoding, charSet or localEncoding), defaulting to character set ";
     public static final String ERROR_NO_CHARSET = "Connection rejected: No connection character set specified (property lc_ctype, encoding, charSet or localEncoding). "
             + "Please specify a connection character set (eg property charSet=utf-8) or consult the Jaybird documentation for more information.";
 
@@ -116,12 +104,16 @@ public class FBManagedConnection implements ManagedConnection, XAResource, Excep
             DatabaseParameterBuffer dpb = this.cri.getDpb();
 
             if (dpb.getArgumentAsString(DatabaseParameterBuffer.LC_CTYPE) == null) {
-                if (DEFAULT_ENCODING == null) {
+                String defaultEncoding = getDefaultConnectionEncoding();
+                if (defaultEncoding == null) {
                     throw new SQLNonTransientConnectionException(ERROR_NO_CHARSET,
                             SQLStateConstants.SQL_STATE_CONNECTION_ERROR) ;
                 }
-                log.warn(WARNING_NO_CHARSET);
-                notifyWarning(new SQLWarning(WARNING_NO_CHARSET));
+                dpb.addArgument(DatabaseParameterBuffer.LC_CTYPE, defaultEncoding);
+
+                String warningMessage = WARNING_NO_CHARSET + defaultEncoding;
+                log.warn(warningMessage);
+                notifyWarning(new SQLWarning(warningMessage));
             }
             
             if (!dpb.hasArgument(DatabaseParameterBuffer.CONNECT_TIMEOUT) && DriverManager.getLoginTimeout() > 0) {
@@ -1452,6 +1444,15 @@ public class FBManagedConnection implements ManagedConnection, XAResource, Excep
         for (FBConnection connection : new ArrayList<>(connectionHandles)) {
             connection.addWarning(warning);
         }
+    }
+
+    private static String getDefaultConnectionEncoding() {
+        try {
+            return getSystemPropertyPrivileged("org.firebirdsql.jdbc.defaultConnectionEncoding");
+        } catch (Exception e) {
+            log.error("Exception obtaining default connection encoding", e);
+        }
+        return null;
     }
 
     private static String getSystemPropertyPrivileged(final String propertyName) {
