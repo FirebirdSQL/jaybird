@@ -74,7 +74,6 @@ public enum StatementType {
         }
         @Override
         public boolean isTypeWithUpdateCounts() {
-            // TODO: Not sure
             return true;
         }
     },

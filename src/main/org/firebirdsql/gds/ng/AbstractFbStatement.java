@@ -598,4 +598,19 @@ public abstract class AbstractFbStatement implements FbStatement {
         setFieldDescriptor(statementInfo.getFields());
         setParameterDescriptor(statementInfo.getParameters());
     }
+
+    /**
+     * @return {@code true} if this is a stored procedure (or other singleton result producing statement) with at least 1 output field
+     */
+    protected final boolean hasSingletonResult() {
+        return getType().isTypeWithSingletonResult() && hasFields();
+    }
+
+    /**
+     * @return {@code true} if this statement has at least one output field (either singleton or result set)
+     */
+    protected final boolean hasFields() {
+        RowDescriptor fieldDescriptor = getFieldDescriptor();
+        return fieldDescriptor != null && fieldDescriptor.getCount() > 0;
+    }
 }

@@ -171,7 +171,8 @@ public class JnaStatement extends AbstractFbStatement {
 
                 setXSqlDaData(inXSqlDa, getParameterDescriptor(), parameters);
                 final StatementType statementType = getType();
-                if (statementType.isTypeWithSingletonResult()) {
+                final boolean hasSingletonResult = hasSingletonResult();
+                if (hasSingletonResult) {
                     clientLibrary.isc_dsql_execute2(statusVector, getTransaction().getJnaHandle(), handle,
                             inXSqlDa.version, inXSqlDa, outXSqlDa);
                 } else {
@@ -180,19 +181,16 @@ public class JnaStatement extends AbstractFbStatement {
                 }
                 processStatusVector();
 
-                final boolean hasFields = getFieldDescriptor() != null && getFieldDescriptor().getCount() > 0;
-                if (statementType.isTypeWithSingletonResult()) {
-                    /* A type with a singleton result (ie an execute procedure), doesn't actually have a
-                     * result set that will be fetched, instead we have a singleton result if we have fields
+                if (hasSingletonResult) {
+                    /* A type with a singleton result (ie an execute procedure with return fields), doesn't actually
+                     * have a result set that will be fetched, instead we have a singleton result if we have fields
                      */
-                    statementListenerDispatcher.statementExecuted(this, false, hasFields);
-                    if (hasFields) {
-                        queueRowData(toRowValue(getFieldDescriptor(), outXSqlDa));
-                        setAllRowsFetched(true);
-                    }
+                    statementListenerDispatcher.statementExecuted(this, false, true);
+                    queueRowData(toRowValue(getFieldDescriptor(), outXSqlDa));
+                    setAllRowsFetched(true);
                 } else {
                     // A normal execute is never a singleton result (even if it only produces a single result)
-                    statementListenerDispatcher.statementExecuted(this, hasFields, false);
+                    statementListenerDispatcher.statementExecuted(this, hasFields(), false);
                 }
 
                 if (!statementType.isTypeWithCursor() && statementType.isTypeWithUpdateCounts()) {

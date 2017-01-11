@@ -58,12 +58,14 @@ public class V12Statement extends V11Statement {
                 switchState(StatementState.EXECUTING);
 
                 final StatementType statementType = getType();
+                final boolean hasSingletonResult = hasSingletonResult();
                 int expectedResponseCount = 0;
                 try {
-                    if (statementType.isTypeWithSingletonResult()) {
+                    if (hasSingletonResult) {
                         expectedResponseCount++;
                     }
-                    sendExecute(statementType.isTypeWithSingletonResult() ? WireProtocolConstants.op_execute2 : WireProtocolConstants.op_execute, parameters);
+                    sendExecute(hasSingletonResult ? WireProtocolConstants.op_execute2 : WireProtocolConstants.op_execute,
+                            parameters);
                     expectedResponseCount++;
                     getXdrOut().flush();
                 } catch (IOException ex) {
@@ -73,23 +75,20 @@ public class V12Statement extends V11Statement {
 
                 final WarningMessageCallback statementWarningCallback = getStatementWarningCallback();
                 try {
-                    final boolean hasFields = getFieldDescriptor() != null && getFieldDescriptor().getCount() > 0;
                     final FbWireDatabase db = getDatabase();
                     try {
-                        if (statementType.isTypeWithSingletonResult()) {
-                            /* A type with a singleton result (ie an execute procedure), doesn't actually have a
-                             * result set that will be fetched, instead we have a singleton result if we have fields
+                        if (hasSingletonResult) {
+                            /* A type with a singleton result (ie an execute procedure with return fields), doesn't actually
+                             * have a result set that will be fetched, instead we have a singleton result if we have fields
                              */
-                            statementListenerDispatcher.statementExecuted(this, false, hasFields);
+                            statementListenerDispatcher.statementExecuted(this, false, true);
                             expectedResponseCount--;
                             processExecuteSingletonResponse(db.readSqlResponse(statementWarningCallback));
                             // TODO Do we need to set expectedResponseCount to 0 and exit if we get a cancelled error?
-                            if (hasFields) {
-                                setAllRowsFetched(true);
-                            }
+                            setAllRowsFetched(true);
                         } else {
                             // A normal execute is never a singleton result (even if it only produces a single result)
-                            statementListenerDispatcher.statementExecuted(this, hasFields, false);
+                            statementListenerDispatcher.statementExecuted(this, hasFields(), false);
                         }
                         expectedResponseCount--;
                         processExecuteResponse(db.readGenericResponse(statementWarningCallback));

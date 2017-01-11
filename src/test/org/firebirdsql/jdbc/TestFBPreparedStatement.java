@@ -1150,19 +1150,126 @@ public class TestFBPreparedStatement extends FBJUnit4TestBase {
     // See JDBC-472; TODO this test doesn't reproduce the issue
     @Test
     public void testExecuteProcedureWithoutReturnValues() throws Exception {
-        executeDDL(con, "create procedure no_return(value1 int, value2 int) "
-                + "as "
-                + "declare variable value3 int; "
-                + "begin"
-                + "  value3 = value1 + value2;"
-                + "end");
+        executeDDL(con, "recreate table example_table (\n"
+                + "  id integer primary key,\n"
+                + "  example_date date\n"
+                + ")");
+        executeDDL(con, "recreate table another_example_table (\n"
+                + "  ex_id integer,\n"
+                + "  example_date varchar(100)\n"
+                + ")");
+        executeDDL(con, "recreate table example_table_2 (\n"
+                + "  id integer,\n"
+                + "  example_date date\n"
+                + ")");
+        executeDDL(con, "CREATE OR ALTER PROCEDURE EXAMPLE_PROCEDURE(\n"
+                + "    EX_ID integer)\n"
+                + "AS\n"
+                + "DECLARE VARIABLE EX_BL integer;\n"
+                + "declare variable EXAMPLE_DATE date;\n"
+                + "declare variable EXAMPLE_DATE_2 date;\n"
+                + "  /* ... (declaring other variables) */\n"
+                + "BEGIN\n"
+                + "\n"
+                + "  ex_bl = 0;"
+                + "  /*\n"
+                + "  RECOVERING INFORMATION\n"
+                + "  */\n"
+                + "  SELECT\n"
+                + "    /* SELECTING SOME FIELDS */\n"
+                + "    COALESCE(EXAMPLE_DATE - 1, CURRENT_DATE)\n"
+                + "  FROM\n"
+                + "    EXAMPLE_TABLE\n"
+                + "  WHERE\n"
+                + "    ID = :EX_ID\n"
+                + "  INTO\n"
+                + "    /* SAME AS TABLE FIELD NAMES */\n"
+                + "    EXAMPLE_DATE_2;\n"
+                + "\n"
+                + "  IF (EX_BL = 1) THEN\n"
+                + "    DELETE FROM ANOTHER_EXAMPLE_TABLE WHERE EX_ID = :EX_ID;\n"
+                + "  ELSE\n"
+                + "  BEGIN\n"
+                + "    /*\n"
+                + "    ANOTHER SELECT\n"
+                + "    */\n"
+                + "    SELECT FIRST 1\n"
+                + "      example_date\n"
+                + "    FROM\n"
+                + "      ANOTHER_EXAMPLE_TABLE\n"
+                + "    WHERE\n"
+                + "      EX_ID = :EX_ID\n"
+                + "    ORDER BY\n"
+                + "      EXAMPLE_DATE\n"
+                + "    INTO\n"
+                + "      example_date_2;\n"
+                + "     /* ALIASES */\n"
+                + "\n"
+                + "    IF (example_date_2 is null or example_date_2 < current_date) THEN\n"
+                + "    BEGIN\n"
+                + "      EXAMPLE_DATE = EXAMPLE_DATE_2;\n"
+                + "      WHILE (example_date < current_date) DO\n"
+                + "      BEGIN\n"
+                + "        INSERT INTO EXAMPLE_TABLE_2 (\n"
+                + "          id,\n"
+                + "          example_date)\n"
+                + "        VALUES (\n"
+                + "          :EX_ID,\n"
+                + "          :example_date);\n"
+                + "        EXAMPLE_DATE = EXAMPLE_DATE + 1;\n"
+                + "      END\n"
+                + "    END\n"
+                + "\n"
+                + "    SELECT FIRST 1\n"
+                + "      example_date\n"
+                + "    FROM\n"
+                + "      EXAMPLE_TABLE_2\n"
+                + "    WHERE\n"
+                + "      ID = :EX_ID\n"
+                + "    ORDER BY\n"
+                + "      EXAMPLE_DATE DESC\n"
+                + "    INTO\n"
+                + "      example_date_2;\n"
+                + "\n"
+                + "    IF (example_date_2 is null or example_date_2 < current_date) THEN\n"
+                + "    BEGIN\n"
+                + "      EXAMPLE_DATE = EXAMPLE_DATE_2;\n"
+                + "      WHILE (example_date < current_date) DO\n"
+                + "      BEGIN\n"
+                + "        INSERT INTO EXAMPLE_TABLE_2 (\n"
+                + "          id,\n"
+                + "         example_date)\n"
+                + "        VALUES (\n"
+                + "          :EX_ID,\n"
+                + "          :example_date);\n"
+                + "        EXAMPLE_DATE = EXAMPLE_DATE + 1;\n"
+                + "      END\n"
+                + "    END\n"
+                + "\n"
+                + "    DELETE FROM\n"
+                + "      EXAMPLE_TABLE_2\n"
+                + "    WHERE\n"
+                + "      (ID = :EX_ID) AND\n"
+                + "      ((EXAMPLE_DATE < current_date - 5) OR (EXAMPLE_DATE > current_date));\n"
+                + "  END\n"
+                + "\n"
+                + "END");
 
-        try (PreparedStatement pstmt = con.prepareStatement("execute procedure no_return(?, ?)")) {
+        try (Statement stmt = con.createStatement()) {
+            stmt.executeUpdate("insert into example_table(id, example_date) values (1, current_date - 5)");
+        }
+
+        con.setAutoCommit(false);
+
+        try (PreparedStatement pstmt = con.prepareStatement("execute procedure EXAMPLE_PROCEDURE(?)")) {
 //            for (int cnt = 0; cnt < 100; cnt++) {
                 pstmt.setInt(1, 1);
-                pstmt.setInt(2, 2);
                 pstmt.executeUpdate();
 //            }
+            con.commit();
+        } catch (SQLException e) {
+            con.rollback();
+            throw e;
         }
     }
 
