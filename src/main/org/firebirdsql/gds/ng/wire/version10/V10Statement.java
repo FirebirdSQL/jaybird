@@ -22,14 +22,19 @@ import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.impl.wire.WireProtocolConstants;
 import org.firebirdsql.gds.impl.wire.XdrInputStream;
 import org.firebirdsql.gds.impl.wire.XdrOutputStream;
-import org.firebirdsql.gds.ng.*;
+import org.firebirdsql.gds.ng.FbExceptionBuilder;
+import org.firebirdsql.gds.ng.StatementState;
+import org.firebirdsql.gds.ng.StatementType;
+import org.firebirdsql.gds.ng.WarningMessageCallback;
 import org.firebirdsql.gds.ng.fields.*;
 import org.firebirdsql.gds.ng.wire.*;
-import org.firebirdsql.util.SQLExceptionChainBuilder;
+import org.firebirdsql.logging.Logger;
+import org.firebirdsql.logging.LoggerFactory;
 
 import java.io.IOException;
 import java.sql.SQLException;
 import java.sql.SQLNonTransientException;
+import java.sql.SQLWarning;
 
 import static org.firebirdsql.gds.ng.TransactionHelper.checkTransactionActive;
 
@@ -44,6 +49,8 @@ public class V10Statement extends AbstractFbWireStatement implements FbWireState
 
     private static final int NULL_INDICATOR_NOT_NULL = 0;
     private static final int NULL_INDICATOR_NULL = -1;
+
+    private static final Logger log = LoggerFactory.getLogger(V10Statement.class);
 
     /**
      * Creates a new instance of V10Statement for the specified database.
@@ -294,67 +301,56 @@ public class V10Statement extends AbstractFbWireStatement implements FbWireState
                 switchState(StatementState.EXECUTING);
 
                 final StatementType statementType = getType();
-                final SqlCountProcessor sqlCountProcessor;
                 final boolean hasSingletonResult = hasSingletonResult();
                 int expectedResponseCount = 0;
                 try {
                     if (hasSingletonResult) {
                         expectedResponseCount++;
                     }
-                    sendExecute(hasSingletonResult ? WireProtocolConstants.op_execute2 : WireProtocolConstants.op_execute, parameters);
+                    sendExecute(hasSingletonResult
+                                    ? WireProtocolConstants.op_execute2
+                                    : WireProtocolConstants.op_execute,
+                            parameters);
                     expectedResponseCount++;
-                    if (!statementType.isTypeWithCursor() && statementType.isTypeWithUpdateCounts()) {
-                        sqlCountProcessor = createSqlCountProcessor();
-                        sendInfoSql(sqlCountProcessor.getRecordCountInfoItems(), getDefaultSqlInfoSize());
-                        expectedResponseCount++;
-                    } else {
-                        sqlCountProcessor = null;
-                    }
                     getXdrOut().flush();
                 } catch (IOException ex) {
                     switchState(StatementState.ERROR);
                     throw new FbExceptionBuilder().exception(ISCConstants.isc_net_write_err).cause(ex).toSQLException();
                 }
 
-                final SQLExceptionChainBuilder<SQLException> chain = new SQLExceptionChainBuilder<>();
+                final WarningMessageCallback statementWarningCallback = getStatementWarningCallback();
                 try {
-                    final WarningMessageCallback statementWarningCallback = getStatementWarningCallback();
-
                     final FbWireDatabase db = getDatabase();
                     try {
-                        try {
-                            if (hasSingletonResult) {
-                                /* A type with a singleton result (ie an execute procedure with return fields), doesn't actually
-                                 * have a result set that will be fetched, instead we have a singleton result if we have fields
-                                 */
-                                statementListenerDispatcher.statementExecuted(this, false, true);
+                        expectedResponseCount--;
+                        Response response = db.readResponse(statementWarningCallback);
+                        if (hasSingletonResult) {
+                            /* A type with a singleton result (ie an execute procedure with return fields), doesn't actually
+                             * have a result set that will be fetched, instead we have a singleton result if we have fields
+                             */
+                            statementListenerDispatcher.statementExecuted(this, false, true);
+                            if (response instanceof SqlResponse) {
+                                processExecuteSingletonResponse((SqlResponse) response);
                                 expectedResponseCount--;
-                                processExecuteSingletonResponse(db.readSqlResponse(statementWarningCallback));
-                                setAllRowsFetched(true);
+                                response = db.readResponse(statementWarningCallback);
                             } else {
-                                // A normal execute is never a singleton result (even if it only produces a single result)
-                                statementListenerDispatcher.statementExecuted(this, hasFields(), false);
+                                // We didn't get an op_sql_response first, something is iffy, maybe cancellation or very low level problem?
+                                // We don't expect any more responses after this
+                                expectedResponseCount = 0;
+                                SQLWarning sqlWarning = new SQLWarning("Expected an SqlResponse, instead received a " + response.getClass().getName());
+                                log.warn(sqlWarning.getMessage(), sqlWarning);
+                                statementWarningCallback.processWarning(sqlWarning);
                             }
-                            expectedResponseCount--;
-                            processExecuteResponse(db.readGenericResponse(statementWarningCallback));
-                        } catch (SQLException ex) {
-                            chain.append(ex);
+                            setAllRowsFetched(true);
+                        } else {
+                            // A normal execute is never a singleton result (even if it only produces a single result)
+                            statementListenerDispatcher.statementExecuted(this, hasFields(), false);
                         }
 
-                        if (sqlCountProcessor != null) {
-                            try {
-                                expectedResponseCount--;
-                                statementListenerDispatcher.sqlCounts(this, sqlCountProcessor.process(processInfoSqlResponse(db.readGenericResponse(statementWarningCallback))));
-                            } catch (SQLException ex) {
-                                chain.append(ex);
-                            }
-                        }
+                        // This should always be a GenericResponse, otherwise something went fundamentally wrong anyway
+                        processExecuteResponse((GenericResponse) response);
                     } finally {
                         db.consumePackets(expectedResponseCount, getStatementWarningCallback());
-                    }
-
-                    if (chain.hasException()) {
-                        throw chain.getException();
                     }
 
                     if (getState() != StatementState.ERROR) {
@@ -363,6 +359,13 @@ public class V10Statement extends AbstractFbWireStatement implements FbWireState
                 } catch (IOException ex) {
                     switchState(StatementState.ERROR);
                     throw new FbExceptionBuilder().exception(ISCConstants.isc_net_read_err).cause(ex).toSQLException();
+                }
+
+                /* We need to split retrieving update counts from the actual execute
+                 * otherwise a cancel will not work. For simplicity, we already do this in V10, and not just in V12
+                 */
+                if (!statementType.isTypeWithCursor() && statementType.isTypeWithUpdateCounts()) {
+                    getSqlCounts();
                 }
             }
         } catch (SQLException e) {

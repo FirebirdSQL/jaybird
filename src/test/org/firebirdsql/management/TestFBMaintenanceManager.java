@@ -281,6 +281,8 @@ public class TestFBMaintenanceManager extends FBJUnit4TestBase {
 
     @Test
     public void testSetDefaultCacheBufferZeroResetsValue() throws Exception {
+        assumeTrue("Test needs access to monitoring tables", getDefaultSupportInfo().supportsMonitoringTables());
+
         final int systemDefaultBuffer;
         try (Connection connection = getConnectionViaDriverManager();
              Statement stmt = connection.createStatement();

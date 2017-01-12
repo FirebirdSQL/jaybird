@@ -112,8 +112,7 @@ public final class FirebirdSupportInfo {
      * @return <code>true</code> when the blob character set is reported in the scale of the field descriptor
      */
     public boolean reportsBlobCharSetInDescriptor() {
-        // TODO Check if this is the right version
-        return serverVersion.isEqualOrAbove(1, 5);
+        return serverVersion.isEqualOrAbove(2, 1);
     }
 
     /**

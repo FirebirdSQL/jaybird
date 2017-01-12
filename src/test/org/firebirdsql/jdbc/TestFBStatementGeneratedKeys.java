@@ -165,6 +165,8 @@ public class TestFBStatementGeneratedKeys extends FBTestGeneratedKeysBase {
      */
     @Test
     public void testExecute_UPDATE_with_WHERE_returnGeneratedKeys() throws Exception {
+        assumeTrue("Test needs UPDATE .. RETURNING support", getDefaultSupportInfo().supportsUpdateReturning());
+
         Statement stmt = con.createStatement();
         // Add row
         stmt.executeUpdate(TEST_INSERT_QUERY);

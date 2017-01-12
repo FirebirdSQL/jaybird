@@ -18,17 +18,8 @@
  */
 package org.firebirdsql.gds.ng.wire.version12;
 
-import org.firebirdsql.gds.ISCConstants;
-import org.firebirdsql.gds.impl.wire.WireProtocolConstants;
-import org.firebirdsql.gds.ng.*;
-import org.firebirdsql.gds.ng.fields.RowValue;
 import org.firebirdsql.gds.ng.wire.FbWireDatabase;
 import org.firebirdsql.gds.ng.wire.version11.V11Statement;
-
-import java.io.IOException;
-import java.sql.SQLException;
-
-import static org.firebirdsql.gds.ng.TransactionHelper.checkTransactionActive;
 
 /**
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
@@ -36,7 +27,7 @@ import static org.firebirdsql.gds.ng.TransactionHelper.checkTransactionActive;
 public class V12Statement extends V11Statement {
 
     /**
-     * Creates a new instance of V11Statement for the specified database.
+     * Creates a new instance of V12Statement for the specified database.
      *
      * @param database
      *         FbWireDatabase implementation
@@ -45,78 +36,4 @@ public class V12Statement extends V11Statement {
         super(database);
     }
 
-    @Override
-    public void execute(final RowValue parameters) throws SQLException {
-        final StatementState initialState = getState();
-        try {
-            synchronized (getSynchronizationObject()) {
-                checkStatementValid();
-                checkTransactionActive(getTransaction());
-                validateParameters(parameters);
-                reset(false);
-
-                switchState(StatementState.EXECUTING);
-
-                final StatementType statementType = getType();
-                final boolean hasSingletonResult = hasSingletonResult();
-                int expectedResponseCount = 0;
-                try {
-                    if (hasSingletonResult) {
-                        expectedResponseCount++;
-                    }
-                    sendExecute(hasSingletonResult ? WireProtocolConstants.op_execute2 : WireProtocolConstants.op_execute,
-                            parameters);
-                    expectedResponseCount++;
-                    getXdrOut().flush();
-                } catch (IOException ex) {
-                    switchState(StatementState.ERROR);
-                    throw new FbExceptionBuilder().exception(ISCConstants.isc_net_write_err).cause(ex).toSQLException();
-                }
-
-                final WarningMessageCallback statementWarningCallback = getStatementWarningCallback();
-                try {
-                    final FbWireDatabase db = getDatabase();
-                    try {
-                        if (hasSingletonResult) {
-                            /* A type with a singleton result (ie an execute procedure with return fields), doesn't actually
-                             * have a result set that will be fetched, instead we have a singleton result if we have fields
-                             */
-                            statementListenerDispatcher.statementExecuted(this, false, true);
-                            expectedResponseCount--;
-                            processExecuteSingletonResponse(db.readSqlResponse(statementWarningCallback));
-                            // TODO Do we need to set expectedResponseCount to 0 and exit if we get a cancelled error?
-                            setAllRowsFetched(true);
-                        } else {
-                            // A normal execute is never a singleton result (even if it only produces a single result)
-                            statementListenerDispatcher.statementExecuted(this, hasFields(), false);
-                        }
-                        expectedResponseCount--;
-                        processExecuteResponse(db.readGenericResponse(statementWarningCallback));
-                    } finally {
-                        db.consumePackets(expectedResponseCount, getStatementWarningCallback());
-                    }
-
-                    if (getState() != StatementState.ERROR) {
-                        switchState(statementType.isTypeWithCursor() ? StatementState.CURSOR_OPEN : StatementState.PREPARED);
-                    }
-                } catch (IOException ex) {
-                    switchState(StatementState.ERROR);
-                    throw new FbExceptionBuilder().exception(ISCConstants.isc_net_read_err).cause(ex).toSQLException();
-                }
-
-                    /* Note contrary to V10 (and V11) we need to split retrieving update counts from the actual execute
-                     * otherwise a cancel will not work.
-                     */
-                if (!statementType.isTypeWithCursor() && statementType.isTypeWithUpdateCounts()) {
-                    getSqlCounts();
-                }
-            }
-        } catch (SQLException e) {
-            if (getState() != StatementState.ERROR) {
-                switchState(initialState);
-            }
-            exceptionListenerDispatcher.errorOccurred(e);
-            throw e;
-        }
-    }
 }
