@@ -119,8 +119,7 @@ license that allows any kind of use of that source code. Jaybird should be
 viewed as an implementation of that interfaces and the LGPL section for dynamic
 linking is applicable in this case.
 
-Which version of the LGPL applies?
-----------------------------------
+### Which version of the LGPL applies? ###
 
 Current releases of Jaybird do not explicitly specify an LGPL version. This
 means that you can choose which version applies. Future versions of Jaybird may
@@ -129,7 +128,7 @@ specify an explicit version, or be released under a different license.
 Which Java versions are supported?
 ----------------------------------
 
-Jaybird 3.0 supports Java 7 and 8 and as rudimentary support for Java 9.
+Jaybird 3.0 supports Java 7 and 8 and has rudimentary support for Java 9.
 
 Jaybird 2.2 supports Java 6, 7 and 8. 
 
@@ -147,8 +146,8 @@ Which Firebird versions are supported?
 
 Jaybird 3.0 supports Firebird versions 2.0 and higher.
 
-Jaybird 3.0 is the last version to support Firebird 2.0. Future versions of
-Jaybird are not guaranteed to work with version 2.0 and earlier.
+Jaybird 3.0 is the last version to support Firebird 2.0 and 2.1. Future versions
+of Jaybird are not guaranteed to work with version 2.1 and earlier.
 
 Jaybird 2.2 supports all Firebird versions 1.0 and higher. Jaybird 2.2.4 added
 support for new features of Firebird 3 (eg `BOOLEAN` support).
