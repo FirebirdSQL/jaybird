@@ -37,6 +37,7 @@ import org.firebirdsql.pool.AbstractDriverConnectionPoolDataSource;
  * @author <a href="mailto:sjardine@users.sourceforge.net">Steve Jardine</a>
  * @deprecated Use {@link org.firebirdsql.ds.FBConnectionPoolDataSource}
  */
+@Deprecated
 public class DriverConnectionPoolDataSource extends
         AbstractDriverConnectionPoolDataSource implements ObjectFactory {
 

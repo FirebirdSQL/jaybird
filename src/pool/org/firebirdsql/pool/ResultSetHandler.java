@@ -35,6 +35,7 @@ import java.sql.Statement;
  * 
  * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
  */
+@Deprecated
 public class ResultSetHandler implements InvocationHandler {
     
     private final static Method RESULT_SET_GET_STATEMENT = findMethod(

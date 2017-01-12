@@ -35,6 +35,7 @@ import org.firebirdsql.logging.Logger;
  * 
  * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
  */
+@Deprecated
 public abstract class AbstractConnectionPool extends RootCommonDataSource implements PooledObjectListener {
         
     /**

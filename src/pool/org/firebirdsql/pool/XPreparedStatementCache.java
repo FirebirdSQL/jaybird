@@ -34,6 +34,7 @@ import org.firebirdsql.util.SQLExceptionChainBuilder;
  * 
  * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
  */
+@Deprecated
 class XPreparedStatementCache {
     
     private static final boolean CACHE_PREPARED_STATEMENTS = true;

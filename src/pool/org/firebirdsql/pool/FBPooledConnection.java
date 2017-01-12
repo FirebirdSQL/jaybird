@@ -40,6 +40,7 @@ import org.firebirdsql.jdbc.FirebirdStatement;
  *  
  * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
  */
+@Deprecated
 class FBPooledConnection extends PingablePooledConnection
     implements XAConnection 
 {

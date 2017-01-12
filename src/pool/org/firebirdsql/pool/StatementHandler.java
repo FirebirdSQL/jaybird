@@ -35,6 +35,7 @@ import java.sql.Statement;
  * 
  * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
  */
+@Deprecated
 public class StatementHandler implements InvocationHandler {
     
     private static final Method STATEMENT_CLOSE = 

@@ -149,6 +149,7 @@ import org.firebirdsql.jdbc.FirebirdConnectionProperties;
  * 
  * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
  */
+@Deprecated
 public interface FirebirdPool extends FirebirdConnectionProperties, ConnectionPoolConfiguration {
     
     void restart();

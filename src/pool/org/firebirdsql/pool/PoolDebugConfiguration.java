@@ -22,6 +22,7 @@ package org.firebirdsql.pool;
 /**
  * Debug configuration of the pool. 
  */
+@Deprecated
 public class PoolDebugConfiguration {
 
     public final static boolean LOG_DEBUG_INFO;

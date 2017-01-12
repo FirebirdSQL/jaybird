@@ -28,6 +28,7 @@ import org.firebirdsql.jdbc.FBSQLException;
  * 
  * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
  */
+@Deprecated
 public class ObjectCloseTraceException extends FBSQLException {
 
     /**

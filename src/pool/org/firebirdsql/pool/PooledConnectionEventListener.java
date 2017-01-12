@@ -27,6 +27,7 @@ import javax.sql.ConnectionEventListener;
  *  
  * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
  */
+@Deprecated
 public interface PooledConnectionEventListener extends ConnectionEventListener {
 
     /**

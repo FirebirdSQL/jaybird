@@ -27,6 +27,7 @@ package org.firebirdsql.pool;
  * 
  * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
  */
+@Deprecated
 public interface ConnectionPoolConfiguration {
 	
 	/**

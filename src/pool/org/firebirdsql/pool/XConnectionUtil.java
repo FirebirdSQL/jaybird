@@ -25,6 +25,7 @@ import java.io.IOException;
  * 
  * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
  */
+@Deprecated
 public class XConnectionUtil {
 
     /**

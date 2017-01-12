@@ -30,6 +30,7 @@ import java.util.Arrays;
  * concurrency, holdability or list of generated keys for INSERT statements and
  * can be used as a key in the hash table (cache).
  */
+@Deprecated
 public class XPreparedStatementModel {
 
     private String sql;

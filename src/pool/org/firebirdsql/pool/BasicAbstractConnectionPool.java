@@ -36,6 +36,7 @@ import javax.sql.PooledConnection;
  * 
  * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
  */
+@Deprecated
 public abstract class BasicAbstractConnectionPool 
     extends AbstractConnectionPool 
     implements ConnectionPoolConfiguration, ConnectionPoolDataSource,

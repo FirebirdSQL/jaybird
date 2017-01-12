@@ -35,6 +35,7 @@ import java.util.concurrent.atomic.AtomicReference;
  * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  */
+@Deprecated
 final class PooledConnectionQueue {
 
     private static final boolean LOG_DEBUG_INFO = PoolDebugConfiguration.LOG_DEBUG_INFO;

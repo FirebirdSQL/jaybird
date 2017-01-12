@@ -37,6 +37,7 @@ import org.firebirdsql.logging.LoggerFactory;
  * 
  * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
  */
+@Deprecated
 abstract public class AbstractDriverConnectionPoolDataSource extends BasicAbstractConnectionPool 
     implements ConnectionPoolDataSource, PooledConnectionEventListener {
 

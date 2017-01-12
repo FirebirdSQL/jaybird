@@ -26,6 +26,7 @@ import java.sql.*;
  * 
  * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
  */
+@Deprecated
 interface XConnectionManager {
     
 	/**

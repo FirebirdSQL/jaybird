@@ -25,6 +25,7 @@ import java.sql.Connection;
  *
  * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
  */
+@Deprecated
 public class FBPoolingDefaults {
 
     public static final int DEFAULT_IDLE_TIMEOUT = Integer.MAX_VALUE / 1000;

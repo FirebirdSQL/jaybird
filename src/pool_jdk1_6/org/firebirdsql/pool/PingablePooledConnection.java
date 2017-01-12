@@ -5,6 +5,7 @@ import java.sql.SQLException;
 
 import javax.sql.StatementEventListener;
 
+@Deprecated
 public class PingablePooledConnection extends AbstractPingablePooledConnection {
 
 	protected PingablePooledConnection(Connection connection,

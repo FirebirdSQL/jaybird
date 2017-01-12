@@ -44,7 +44,11 @@ import org.firebirdsql.pool.FBWrappingDataSource;
  * This class also acts as an object factory for the JNDI de-referencing.
  * 
  * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
+ * @deprecated {@code AppServerDataSource} will be removed in Jaybird 3; depending on your needs switch to
+ * {@link org.firebirdsql.ds.FBConnectionPoolDataSource}, {@link org.firebirdsql.ds.FBSimpleDataSource} or
+ * a third party connection pool library
  */
+@Deprecated
 public class AppServerDataSource extends RootCommonDataSource implements DataSource, Referenceable,
         Serializable, ObjectFactory {
 

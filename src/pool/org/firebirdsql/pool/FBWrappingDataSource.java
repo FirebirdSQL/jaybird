@@ -153,7 +153,9 @@ import org.firebirdsql.jdbc.FBDriverNotCapableException;
  * </ul>
  * 
  * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
+ * @deprecated {@code FBWrappingDataSource} will be removed in Jaybird 3; consider migrating to a third party connection pool
  */
+@Deprecated
 public class FBWrappingDataSource extends RootCommonDataSource implements DataSource, 
     ObjectFactory, Referenceable, Serializable, FirebirdPool {
 

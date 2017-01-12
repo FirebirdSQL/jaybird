@@ -47,6 +47,7 @@ import org.firebirdsql.util.SQLExceptionChainBuilder;
  * 
  * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
  */
+@Deprecated
 class PooledConnectionHandler implements InvocationHandler {
 	
 	private static final boolean LOG_REENTRANT_ACCESS = PoolDebugConfiguration.DEBUG_REENTRANT;

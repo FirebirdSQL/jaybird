@@ -800,7 +800,7 @@ Their replacement classes are:
 
 -   `org.firebirdsql.ds.FBConnectionPoolDataSource`
 -   `org.firebirdsql.ds.FBXADataSource`
--   `org.firebirdsql.pool.FBSimpleDataSource` (a normal `DataSource`)
+-   `org.firebirdsql.ds.FBSimpleDataSource` (a normal `DataSource`)
 
 We strongly urge you to switch to these new implementations if you are
 using these classes in an application server. The bugs are described in

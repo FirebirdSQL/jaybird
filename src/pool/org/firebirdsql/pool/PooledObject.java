@@ -23,6 +23,7 @@ package org.firebirdsql.pool;
  * 
  * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
  */
+@Deprecated
 public interface PooledObject {
 
     final long INSTANT_IN_USE = -1L;

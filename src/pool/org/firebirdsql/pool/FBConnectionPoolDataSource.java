@@ -36,6 +36,7 @@ import javax.naming.spi.ObjectFactory;
  * @author <a href="mailto:sjardine@users.sourceforge.net">Steve Jardine</a>
  * @deprecated Use {@link org.firebirdsql.ds.FBConnectionPoolDataSource}
  */
+@Deprecated
 public class FBConnectionPoolDataSource extends
         AbstractFBConnectionPoolDataSource implements ObjectFactory {
 

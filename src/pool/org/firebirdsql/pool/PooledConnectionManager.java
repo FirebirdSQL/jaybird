@@ -27,6 +27,7 @@ import java.sql.SQLException;
  *
  * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
  */
+@Deprecated
 public interface PooledConnectionManager {
 
     /**

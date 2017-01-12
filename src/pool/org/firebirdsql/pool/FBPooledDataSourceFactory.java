@@ -37,6 +37,7 @@ import org.firebirdsql.logging.LoggerFactory;
  * 
  * @author <a href="mailto:sjardine@users.sourceforge.net">Steven Jardine </a>
  */
+@Deprecated
 public class FBPooledDataSourceFactory {
 
     private static Logger log = LoggerFactory.getLogger(FBPooledDataSourceFactory.class, false);

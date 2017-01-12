@@ -25,6 +25,7 @@ import java.util.EventObject;
  * 
  * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
  */
+@Deprecated
 public class PooledObjectEvent extends EventObject {
     
     private boolean connectionDeallocated;

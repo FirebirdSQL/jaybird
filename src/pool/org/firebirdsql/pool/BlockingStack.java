@@ -27,6 +27,7 @@ package org.firebirdsql.pool;
  * @author <a href="mailto:sjardine@users.sourceforge.net">Steven Jardine </a>
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  */
+@Deprecated
 public final class BlockingStack {
 
 	/**
