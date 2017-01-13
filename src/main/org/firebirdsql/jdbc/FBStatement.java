@@ -1381,7 +1381,6 @@ public class FBStatement implements FirebirdStatement, Synchronizable {
     protected boolean internalExecute(String sql) throws SQLException {
         checkValidity();
 
-        // TODO Consider use/implementation of execute immediate?
         prepareFixedStatement(sql);
         fbStatement.execute(RowValue.EMPTY_ROW_VALUE);
 
