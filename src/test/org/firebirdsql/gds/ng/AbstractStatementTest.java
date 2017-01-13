@@ -18,7 +18,8 @@
  */
 package org.firebirdsql.gds.ng;
 
-import org.firebirdsql.common.*;
+import org.firebirdsql.common.DdlHelper;
+import org.firebirdsql.common.FBTestProperties;
 import org.firebirdsql.common.rules.UsesDatabase;
 import org.firebirdsql.encodings.Encoding;
 import org.firebirdsql.gds.ISCConstants;
@@ -139,13 +140,10 @@ public abstract class AbstractStatementTest {
 
     @Before
     public final void setUp() throws Exception {
-        Connection con = FBTestProperties.getConnectionViaDriverManager();
-        try {
+        try (Connection con = FBTestProperties.getConnectionViaDriverManager()) {
             DdlHelper.executeDDL(con, CREATE_EXECUTABLE_STORED_PROCEDURE);
             DdlHelper.executeDDL(con, CREATE_SELECTABLE_STORED_PROCEDURE);
             DdlHelper.executeCreateTable(con, CREATE_KEY_VALUE_TABLE);
-        } finally {
-            JdbcResourceHelper.closeQuietly(con);
         }
 
         db = createDatabase();
@@ -700,6 +698,45 @@ public abstract class AbstractStatementTest {
         statement.prepare("INSERT INTO keyvalue (thekey, thevalue) VALUES (?, ?)");
     }
 
+    @Test
+    public void testStatementPrepareLongObjectNames() throws Exception {
+        assumeTrue("Test requires 63 character identifier support",
+                supportInfoFor(db).maxIdentifierLengthCharacters() >= 63);
+
+        String tableName = generateIdentifier('A', 63);
+        String column1 = generateIdentifier('B', 63);
+        String column2 = generateIdentifier('C', 63);
+        try (Connection con = FBTestProperties.getConnectionViaDriverManager()) {
+            DdlHelper.executeCreateTable(con,
+                    "create table " + tableName + " (" + column1 + " varchar(10) character set UTF8, " + column2 + " varchar(20) character set UTF8)");
+        }
+
+        allocateStatement();
+        statement.prepare(
+                "SELECT " + column1 + ", " + column2 + " FROM " + tableName + " where " + column1 + " = ?");
+
+        assertEquals("Unexpected StatementType", StatementType.SELECT, statement.getType());
+
+        final RowDescriptor fields = statement.getFieldDescriptor();
+        assertNotNull("Fields", fields);
+        List<FieldDescriptor> expectedFields =
+                Arrays.asList(
+                        new FieldDescriptor(0, db.getDatatypeCoder(), ISCConstants.SQL_VARYING | 1, 4,
+                                0, 40, column1, null, column1, tableName, "SYSDBA"),
+                        new FieldDescriptor(1, db.getDatatypeCoder(), ISCConstants.SQL_VARYING | 1, 4,
+                                0, 80, column2, null, column2, tableName, "SYSDBA")
+                );
+        assertEquals("Unexpected values for fields", expectedFields, fields.getFieldDescriptors());
+        RowDescriptor parameters = statement.getParameterDescriptor();
+        assertNotNull("Parameters", parameters);
+
+        List<FieldDescriptor> expectedParameters =
+                Collections.singletonList(
+                        new FieldDescriptor(0, db.getDatatypeCoder(), ISCConstants.SQL_VARYING | 1, 4,
+                                0, 40, null, null, null, null, null));
+        assertEquals("Unexpected values for parameters", expectedParameters, parameters.getFieldDescriptors());
+    }
+
     private FbTransaction getTransaction() throws SQLException {
         TransactionParameterBuffer tpb = new TransactionParameterBufferImpl();
         tpb.addArgument(ISCConstants.isc_tpb_read_committed);
@@ -742,5 +779,15 @@ public abstract class AbstractStatementTest {
                 ex.printStackTrace();
             }
         }
+    }
+
+    protected static String generateIdentifier(final char identifierChar,final int length) {
+        StringBuilder sb = new StringBuilder(length);
+        int tempLength = length;
+        while (tempLength-- > 0) {
+            sb.append(identifierChar);
+        }
+        assert sb.length() == length;
+        return sb.toString();
     }
 }
