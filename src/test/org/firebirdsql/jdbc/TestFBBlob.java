@@ -359,6 +359,7 @@ public class TestFBBlob extends FBJUnit4TestBase {
     @Test
     public void testBlobCloseOnCommit() throws Exception {
         Connection connection = getConnectionViaDriverManager();
+        //noinspection TryFinallyCanBeTryWithResources
         try {
             populateBlob(connection, new byte[] { 1, 2, 3, 4, 5, 6, 7, 8, 9, 0 });
 
@@ -424,7 +425,7 @@ public class TestFBBlob extends FBJUnit4TestBase {
     @Test
     public void testBlobCloseOnConnectionClose_inAutoCommit() throws Exception {
         Connection connection = getConnectionViaDriverManager();
-        OutputStream binaryStream = null;
+        OutputStream binaryStream;
         //noinspection TryFinallyCanBeTryWithResources
         try {
             FBBlob blob = (FBBlob) connection.createBlob();

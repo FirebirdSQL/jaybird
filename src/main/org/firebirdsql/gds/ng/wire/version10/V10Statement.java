@@ -598,7 +598,7 @@ public class V10Statement extends AbstractFbWireStatement implements FbWireState
             if (buffer != null) {
                 xdrOut.write(buffer, 0, -len);
             } else {
-                xdrOut.writePadding(-len, 0x00);
+                xdrOut.writeZeroPadding(-len);
             }
         } else {
             // decrement length because it was incremented before
@@ -610,10 +610,10 @@ public class V10Statement extends AbstractFbWireStatement implements FbWireState
                     xdrOut.write(buffer, 0, len, (4 - len) & 3);
                 } else {
                     xdrOut.write(buffer, 0, buflen, 0);
-                    xdrOut.writePadding(len - buflen + ((4 - len) & 3), 0x20);
+                    xdrOut.writeSpacePadding(len - buflen + ((4 - len) & 3));
                 }
             } else {
-                xdrOut.writePadding(len + ((4 - len) & 3), 0x20);
+                xdrOut.writeSpacePadding(len + ((4 - len) & 3));
             }
         }
     }

@@ -30,6 +30,7 @@ import java.io.IOException;
 import java.sql.SQLException;
 
 import static org.firebirdsql.gds.JaybirdErrorCodes.jb_blobPutSegmentEmpty;
+import static org.firebirdsql.gds.JaybirdErrorCodes.jb_blobPutSegmentTooLong;
 import static org.firebirdsql.gds.impl.wire.WireProtocolConstants.*;
 
 /**
@@ -94,9 +95,12 @@ public class V10OutputBlob extends AbstractFbWireOutputBlob implements FbWireBlo
     @Override
     public void putSegment(byte[] segment) throws SQLException {
         try {
-            // TODO Handle exceeding max segment size?
             if (segment.length == 0) {
                 throw new FbExceptionBuilder().exception(jb_blobPutSegmentEmpty).toSQLException();
+            }
+            // TODO Handle by performing multiple puts?
+            if (segment.length > getMaximumSegmentSize()) {
+                throw new FbExceptionBuilder().exception(jb_blobPutSegmentTooLong).toSQLException();
             }
             synchronized (getSynchronizationObject()) {
                 checkDatabaseAttached();
@@ -106,11 +110,10 @@ public class V10OutputBlob extends AbstractFbWireOutputBlob implements FbWireBlo
                 final FbWireDatabase database = getDatabase();
                 try {
                     final XdrOutputStream xdrOut = database.getXdrStreamAccess().getXdrOut();
-                    // TODO Using op_batch_segments over op_put_segment doesn't seem to provide a real benefit in current implementation (see XdrOutputStream)
-                    // TODO Is there any actual benefit possible, like sending multiple segments of maximum size?
-                    xdrOut.writeInt(op_batch_segments);
+                    xdrOut.writeInt(op_put_segment);
                     xdrOut.writeInt(getHandle());
-                    xdrOut.writeBlobBuffer(segment);
+                    xdrOut.writeInt(segment.length);
+                    xdrOut.writeBuffer(segment);
                     xdrOut.flush();
                 } catch (IOException e) {
                     throw new FbExceptionBuilder().exception(ISCConstants.isc_net_write_err).cause(e).toSQLException();

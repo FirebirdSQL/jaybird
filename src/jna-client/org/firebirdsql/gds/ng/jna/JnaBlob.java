@@ -173,7 +173,6 @@ public class JnaBlob extends AbstractFbBlob implements FbBlob, DatabaseListener 
     @Override
     public void putSegment(byte[] segment) throws SQLException {
         try {
-            // TODO Handle exceeding max segment size?
             if (segment.length == 0) {
                 throw new FbExceptionBuilder().exception(jb_blobPutSegmentEmpty).toSQLException();
             }

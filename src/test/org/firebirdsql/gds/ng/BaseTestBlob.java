@@ -346,19 +346,14 @@ public abstract class BaseTestBlob extends FBJUnit4TestBase {
      * @throws SQLException
      */
     protected boolean validateBlob(int id, byte[] baseContent, int requiredSize) throws SQLException {
-        Connection con = getConnectionViaDriverManager();
-        CallableStatement cstmt = null;
-        try {
-            cstmt = con.prepareCall(EXECUTE_CHECK_BINARY_BLOB);
+        try (Connection con = getConnectionViaDriverManager();
+            CallableStatement cstmt = con.prepareCall(EXECUTE_CHECK_BINARY_BLOB)) {
             cstmt.setInt(1, id);
             cstmt.setBytes(2, baseContent);
             cstmt.setInt(3, requiredSize);
 
             cstmt.execute();
             return cstmt.getBoolean(1);
-        } finally {
-            closeQuietly(cstmt);
-            closeQuietly(con);
         }
     }
 

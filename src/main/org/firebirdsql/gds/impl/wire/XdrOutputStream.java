@@ -28,20 +28,17 @@ package org.firebirdsql.gds.impl.wire;
 import org.firebirdsql.encodings.Encoding;
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.ParameterBuffer;
-import org.firebirdsql.logging.Logger;
-import org.firebirdsql.logging.LoggerFactory;
 
+import javax.crypto.Cipher;
+import javax.crypto.CipherOutputStream;
+import javax.crypto.NoSuchPaddingException;
+import javax.crypto.spec.SecretKeySpec;
 import java.io.BufferedOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.util.Arrays;
-import java.security.NoSuchAlgorithmException;
 import java.security.InvalidKeyException;
-
-import javax.crypto.Cipher;
-import javax.crypto.spec.SecretKeySpec;
-import javax.crypto.CipherOutputStream;
-import javax.crypto.NoSuchPaddingException;
+import java.security.NoSuchAlgorithmException;
+import java.util.Arrays;
 
 /**
  * An <code>XdrOutputStream</code> writes data in XDR format to an
@@ -59,17 +56,12 @@ public final class XdrOutputStream extends OutputStream {
 
     private static final int BUF_SIZE = 32767;
 
-    private static final Logger log = LoggerFactory.getLogger(XdrOutputStream.class);
-    private static final byte[] TEXT_PAD;
-    private static final byte[] ZERO_PADDING = new byte[3];
     public static final int SPACE_BYTE = 0x20;
     public static final int NULL_BYTE = 0x0;
-    static {
-        // fill the padding with blanks
-        byte[] textPad = new byte[BUF_SIZE];
-        Arrays.fill(textPad, (byte) SPACE_BYTE);
-        TEXT_PAD = textPad;
-    }
+    private static final int TEXT_PAD_LENGTH = BUF_SIZE;
+    private static final byte[] TEXT_PAD = createPadding(BUF_SIZE, SPACE_BYTE);
+    private static final int ZERO_PAD_LENGTH = 3;
+    private static final byte[] ZERO_PADDING = new byte[ZERO_PAD_LENGTH];
 
     private OutputStream out;
 
@@ -117,15 +109,43 @@ public final class XdrOutputStream extends OutputStream {
     }
 
     /**
+     * Writes zero padding of the specified length
+     *
+     * @param length Length to write
+     * @throws IOException if an error occurs while writing to the underlying output stream
+     * @see #writePadding(int, int)
+     */
+    public void writeZeroPadding(int length) throws IOException {
+        byte[] padding = length <= ZERO_PAD_LENGTH ? ZERO_PADDING : new byte[length];
+        out.write(padding, 0, length);
+    }
+
+    /**
+     * Writes space ({@code 0x20}) padding of the specified length
+     *
+     * @param length Length to write
+     * @throws IOException if an error occurs while writing to the underlying output stream
+     * @see #writePadding(int, int)
+     */
+    public void writeSpacePadding(int length) throws IOException {
+        byte[] padding = length <= TEXT_PAD_LENGTH ? TEXT_PAD : createPadding(length, SPACE_BYTE);
+        out.write(padding, 0, length);
+    }
+
+    /**
      * Writes padding for the specified length of the specified padding byte.
+     * <p>
+     * Prefer using the more specific {@link #writeZeroPadding(int)} and {@link #writeZeroPadding(int)}.
+     * </p>
      *
      * @param length
      *         Length of padding to write
      * @param padByte
      *         Padding byte to use
      * @throws IOException
-     *         if an error occurs while writing to the
-     *         underlying output stream
+     *         if an error occurs while writing to the underlying output stream
+     * @see #writeSpacePadding(int)
+     * @see #writeZeroPadding(int)
      */
     public void writePadding(int length, int padByte) throws IOException {
         final byte[] padding;
@@ -134,12 +154,22 @@ public final class XdrOutputStream extends OutputStream {
         } else if (padByte == NULL_BYTE && length <= ZERO_PADDING.length) {
             padding = ZERO_PADDING;
         } else {
-            padding = new byte[length];
-            if (padByte != NULL_BYTE) {
-                Arrays.fill(padding, (byte) padByte);
-            }
+            padding = createPadding(length, (byte) padByte);
         }
         out.write(padding, 0, length);
+    }
+
+    /**
+     * Creates a padding array.
+     *
+     * @param length Length of array
+     * @param padByte Byte value for filling the array
+     * @return Array filled with {@code padByte}
+     */
+    private static byte[] createPadding(int length, int padByte) {
+        byte[] padding = new byte[length];
+        Arrays.fill(padding, (byte) padByte);
+        return padding;
     }
 
     /**
@@ -158,29 +188,6 @@ public final class XdrOutputStream extends OutputStream {
             writeInt(len);
             write(buffer, 0, len, (4 - len) & 3);
         }
-    }
-
-    /**
-     * Write a blob buffer to the underlying output stream in XDR format.
-     *
-     * @param buffer A <code>byte</code> array containing the blob
-     * @throws IOException if an error occurs while writing to the
-     *         underlying output stream
-     */
-    public void writeBlobBuffer(byte[] buffer) throws IOException {
-        int len = buffer.length; // 2 for short for buffer length
-        if (log != null && log.isDebugEnabled()) log.debug("writeBlobBuffer len: " + len);
-        if (len > Short.MAX_VALUE) {
-            throw new IOException(""); //Need a value???
-        }
-        // TODO This is probably wrong. It looks like op_batch_segments allows for writing multiple segments up to 2^64 (or 2^63 - 1?) in length (including all segment sizes)
-        // writeLong(len + 2); // This works as well instead of 2 * writeInt(len + 2); below
-        writeInt(len + 2);
-        writeInt(len + 2); //bizarre but true! three copies of the length
-        write(len & 0xff);
-        write((len >> 8) & 0xff);
-        // TODO 4 - len + 2 or 4 - (len + 2) ?
-        write(buffer, 0, len, ((4 - len + 2) & 3));
     }
 
     /**
@@ -274,7 +281,7 @@ public final class XdrOutputStream extends OutputStream {
     public void write(byte[] b, int offset, int len, int pad) throws IOException {
         out.write(b, offset, len);
         // TODO We shouldn't always pad with spaces
-        writePadding(pad, SPACE_BYTE);
+        writeSpacePadding(pad);
     }
 
     /**
