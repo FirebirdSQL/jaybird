@@ -20,6 +20,7 @@ package org.firebirdsql.jdbc;
 
 import org.firebirdsql.common.FBJUnit4TestBase;
 import org.firebirdsql.gds.ISCConstants;
+import org.firebirdsql.gds.JaybirdErrorCodes;
 import org.junit.*;
 import org.junit.rules.ExpectedException;
 
@@ -33,7 +34,10 @@ import static org.firebirdsql.common.DdlHelper.executeCreateTable;
 import static org.firebirdsql.common.DdlHelper.executeDDL;
 import static org.firebirdsql.common.FBTestProperties.*;
 import static org.firebirdsql.common.JdbcResourceHelper.closeQuietly;
+import static org.firebirdsql.common.matchers.SQLExceptionMatchers.fbMessageStartsWith;
 import static org.firebirdsql.common.matchers.SQLExceptionMatchers.sqlStateEquals;
+import static org.hamcrest.CoreMatchers.allOf;
+import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.junit.Assert.*;
 
 public class TestFBResultSet extends FBJUnit4TestBase {
@@ -785,6 +789,23 @@ public class TestFBResultSet extends FBJUnit4TestBase {
                     counter++;
                 }
             }
+        }
+    }
+
+    @Test
+    public void testUpdatableStatementResultSetDowngradeToReadOnlyWhenQueryNotUpdatable() throws Exception {
+        executeCreateTable(connection, CREATE_TABLE_STATEMENT);
+        executeCreateTable(connection, CREATE_TABLE_STATEMENT2);
+
+        try (Statement stmt = connection.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_UPDATABLE);
+             ResultSet rs = stmt.executeQuery("select * from test_table t1 left join test_table2 t2 on t1.id = t2.id")) {
+
+            SQLWarning warning = stmt.getWarnings();
+            assertThat(warning, allOf(
+                    notNullValue(),
+                    fbMessageStartsWith(JaybirdErrorCodes.jb_concurrencyResetReadOnlyReasonNotUpdatable)));
+
+            assertEquals("Expected downgrade to CONCUR_READ_ONLY", ResultSet.CONCUR_READ_ONLY, rs.getConcurrency());
         }
     }
 

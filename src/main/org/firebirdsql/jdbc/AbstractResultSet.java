@@ -143,7 +143,7 @@ public abstract class AbstractResultSet implements ResultSet, FirebirdResultSet,
                 rowUpdater = new FBRowUpdater(connection, rowDescriptor, this, cached, listener);
             } catch (FBResultSetNotUpdatableException ex) {
                 fbStatement.addWarning(FbExceptionBuilder
-                        .forException(JaybirdErrorCodes.jb_concurrencyResetReadOnlyReasonNotUpdatable)
+                        .forWarning(JaybirdErrorCodes.jb_concurrencyResetReadOnlyReasonNotUpdatable)
                         .toFlatSQLException(SQLWarning.class));
                 rsConcurrency = ResultSet.CONCUR_READ_ONLY;
             }
