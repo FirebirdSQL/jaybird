@@ -394,9 +394,11 @@ public class JnaDatabase extends AbstractFbDatabase<JnaDatabaseConnection>
         // TODO Any JNA errors we need to track and convert to SQLException here?
         final JnaEventHandle eventHandle = new JnaEventHandle(eventName, eventHandler, getEncoding());
         synchronized (getSynchronizationObject()) {
-            int size = clientLibrary.isc_event_block(eventHandle.getEventBuffer(), eventHandle.getResultBuffer(),
-                    (short) 1, eventHandle.getEventNameMemory());
-            eventHandle.setSize(size);
+            synchronized (eventHandle) {
+                int size = clientLibrary.isc_event_block(eventHandle.getEventBuffer(), eventHandle.getResultBuffer(),
+                        (short) 1, eventHandle.getEventNameMemory());
+                eventHandle.setSize(size);
+            }
         }
         return eventHandle;
     }
@@ -407,8 +409,10 @@ public class JnaDatabase extends AbstractFbDatabase<JnaDatabaseConnection>
             final JnaEventHandle jnaEventHandle = validateEventHandle(eventHandle);
 
             synchronized (getSynchronizationObject()) {
-                clientLibrary.isc_event_counts(statusVector, (short) jnaEventHandle.getSize(),
-                        jnaEventHandle.getEventBuffer().getValue(), jnaEventHandle.getResultBuffer().getValue());
+                synchronized (jnaEventHandle) {
+                    clientLibrary.isc_event_counts(statusVector, (short) jnaEventHandle.getSize(),
+                            jnaEventHandle.getEventBuffer().getValue(), jnaEventHandle.getResultBuffer().getValue());
+                }
             }
             jnaEventHandle.setEventCount(statusVector[0].intValue());
         } catch (SQLException e) {
@@ -424,16 +428,18 @@ public class JnaDatabase extends AbstractFbDatabase<JnaDatabaseConnection>
             final JnaEventHandle jnaEventHandle = validateEventHandle(eventHandle);
 
             synchronized (getSynchronizationObject()) {
-                if (Platform.isWindows()) {
-                    ((WinFbClientLibrary) clientLibrary).isc_que_events(statusVector, getJnaHandle(),
-                            jnaEventHandle.getJnaEventId(),
-                            (short) jnaEventHandle.getSize(), jnaEventHandle.getEventBuffer().getValue(),
-                            (WinFbClientLibrary.IscEventStdCallback) jnaEventHandle.getCallback(),
-                            jnaEventHandle.getResultBuffer().getValue());
-                } else {
-                    clientLibrary.isc_que_events(statusVector, getJnaHandle(), jnaEventHandle.getJnaEventId(),
-                            (short) jnaEventHandle.getSize(), jnaEventHandle.getEventBuffer().getValue(),
-                            jnaEventHandle.getCallback(), jnaEventHandle.getResultBuffer().getValue());
+                synchronized (jnaEventHandle) {
+                    if (Platform.isWindows()) {
+                        ((WinFbClientLibrary) clientLibrary).isc_que_events(statusVector, getJnaHandle(),
+                                jnaEventHandle.getJnaEventId(),
+                                (short) jnaEventHandle.getSize(), jnaEventHandle.getEventBuffer().getValue(),
+                                (WinFbClientLibrary.IscEventStdCallback) jnaEventHandle.getCallback(),
+                                jnaEventHandle.getResultBuffer().getValue());
+                    } else {
+                        clientLibrary.isc_que_events(statusVector, getJnaHandle(), jnaEventHandle.getJnaEventId(),
+                                (short) jnaEventHandle.getSize(), jnaEventHandle.getEventBuffer().getValue(),
+                                jnaEventHandle.getCallback(), jnaEventHandle.getResultBuffer().getValue());
+                    }
                 }
                 processStatusVector();
             }
@@ -450,11 +456,13 @@ public class JnaDatabase extends AbstractFbDatabase<JnaDatabaseConnection>
             final JnaEventHandle jnaEventHandle = validateEventHandle(eventHandle);
 
             synchronized (getSynchronizationObject()) {
-                try {
-                    clientLibrary.isc_cancel_events(statusVector, getJnaHandle(), jnaEventHandle.getJnaEventId());
-                    processStatusVector();
-                } finally {
-                    jnaEventHandle.releaseMemory(clientLibrary);
+                synchronized (jnaEventHandle) {
+                    try {
+                        clientLibrary.isc_cancel_events(statusVector, getJnaHandle(), jnaEventHandle.getJnaEventId());
+                        processStatusVector();
+                    } finally {
+                        jnaEventHandle.releaseMemory(clientLibrary);
+                    }
                 }
             }
         } catch (SQLException e) {

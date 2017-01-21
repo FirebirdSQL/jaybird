@@ -20,7 +20,7 @@ package org.firebirdsql.gds.ng.wire;
 
 import org.firebirdsql.encodings.Encoding;
 import org.firebirdsql.gds.EventHandler;
-import org.firebirdsql.gds.impl.wire.XdrOutputStream;
+import org.firebirdsql.gds.VaxEncoding;
 import org.firebirdsql.gds.ng.AbstractEventHandle;
 
 import java.io.ByteArrayOutputStream;
@@ -72,9 +72,12 @@ public final class WireEventHandle extends AbstractEventHandle implements Asynch
     /**
      * Generates a new local id for this event.
      */
-    public synchronized int assignNewLocalId() {
-        localId = localEventId.incrementAndGet();
-        return localId;
+    public int assignNewLocalId() {
+        final int newLocalId = localEventId.incrementAndGet();
+        synchronized (this) {
+            localId = newLocalId;
+            return localId;
+        }
     }
 
     /**
@@ -85,17 +88,16 @@ public final class WireEventHandle extends AbstractEventHandle implements Asynch
     }
 
     public byte[] toByteArray() throws IOException {
-        ByteArrayOutputStream byteOut = new ByteArrayOutputStream();
-        XdrOutputStream xdr = new XdrOutputStream(byteOut, false);
+        ByteArrayOutputStream byteOut = new ByteArrayOutputStream(2 + eventNameBytes.length + 4);
 
-        xdr.write(1); // Event version
-        xdr.write(eventNameBytes.length);
-        xdr.write(eventNameBytes);
-        final int currentInternalCount = internalCount;
-        for (int shift = 0; shift <= 24; shift += 8) {
-            // Write count as VAX integer
-            xdr.write((currentInternalCount >> shift) & 0xff);
+        byteOut.write(1); // Event version
+        byteOut.write(eventNameBytes.length);
+        byteOut.write(eventNameBytes);
+        final int currentInternalCount;
+        synchronized (this) {
+            currentInternalCount = internalCount;
         }
+        VaxEncoding.encodeVaxIntegerWithoutLength(byteOut, currentInternalCount);
 
         return byteOut.toByteArray();
     }
@@ -110,8 +112,9 @@ public final class WireEventHandle extends AbstractEventHandle implements Asynch
         if (event.getEventId() != getLocalId()) return;
 
         channel.removeChannelListener(this);
+        final int newCount = event.getEventCount();
         synchronized (this) {
-            internalCount = event.getEventCount();
+            internalCount = newCount;
         }
         onEventOccurred();
     }
