@@ -19,6 +19,8 @@
 package org.firebirdsql.jdbc.field;
 
 import org.firebirdsql.gds.ISCConstants;
+import org.firebirdsql.gds.JaybirdErrorCodes;
+import org.firebirdsql.gds.ng.FbExceptionBuilder;
 import org.firebirdsql.gds.ng.fields.FieldDescriptor;
 
 import java.math.BigDecimal;
@@ -51,9 +53,6 @@ final class FBBigDecimalField extends FBField {
             throws SQLException {
         super(fieldDescriptor, dataProvider, requiredType);
         fieldDataSize = FieldDataSize.getFieldDataSize(fieldDescriptor);
-        if (fieldDataSize == null) {
-            throw new SQLException("FBBigDecimal, unsupported field sqltype: " + fieldDescriptor.getType());
-        }
     }
 
     public boolean getBoolean() throws SQLException {
@@ -197,7 +196,7 @@ final class FBBigDecimalField extends FBField {
     }
 
     /**
-     * Enum for handling the different fielddata sizes of NUMERIC/DECIMAL fields.
+     * Enum for handling the different field data sizes of NUMERIC/DECIMAL fields.
      *
      * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
      */
@@ -311,9 +310,10 @@ final class FBBigDecimalField extends FBField {
          *
          * @param fieldDescriptor
          *         Field descriptor
-         * @return FieldDataSize for the field, or null if none match
+         * @return FieldDataSize for the field
+         * @throws SQLException For unsupported field types
          */
-        protected static FieldDataSize getFieldDataSize(FieldDescriptor fieldDescriptor) {
+        protected static FieldDataSize getFieldDataSize(FieldDescriptor fieldDescriptor) throws SQLException {
             switch (fieldDescriptor.getType() & ~1) {
             case ISCConstants.SQL_SHORT:
                 return SHORT;
@@ -324,8 +324,9 @@ final class FBBigDecimalField extends FBField {
             case ISCConstants.SQL_DOUBLE:
                 return DOUBLE;
             default:
-                // TODO Throw exception
-                return null;
+                throw FbExceptionBuilder.forException(JaybirdErrorCodes.jb_unsupportedFieldType)
+                        .messageParameter(fieldDescriptor.getType())
+                        .toFlatSQLException();
             }
         }
     }

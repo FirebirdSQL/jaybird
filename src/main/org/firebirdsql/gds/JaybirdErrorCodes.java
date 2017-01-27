@@ -63,6 +63,7 @@ public interface JaybirdErrorCodes {
     int jb_notAttachedToDatabase    = 337248274;
     int jb_maxStatementLengthExceeded                    = 337248275;
     int jb_unexpectedOperationCode  = 337248276;
+    int jb_unsupportedFieldType     = 337248277;
 
     @SuppressWarnings("unused")
     int jb_range_end                = 337264639;
