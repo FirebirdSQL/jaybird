@@ -1621,7 +1621,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
      * @exception SQLException if a database access error occurs
      */
     public  int getMaxStatementLength() throws SQLException {
-        // TODO 2GB for Firebird 3 (test if we don't need to change anything else to support this)
+        // TODO 10MB (or 2GB?) for Firebird 3 (test if we don't need to change anything else to support this)
         return 65536;
     }
 
@@ -1816,7 +1816,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
                 .at(4).simple(SQL_VARYING, 31, "FUTURE2", "PROCEDURES").addField()
                 .at(5).simple(SQL_VARYING, 31, "FUTURE3", "PROCEDURES").addField()
                 // Field in Firebird is actually a blob, using Integer.MAX_VALUE for length
-                .at(6).simple(SQL_VARYING, Integer.MAX_VALUE, "REMARKS", "PROCEDURES").addField() // TODO: Check if setting this to Integer.MAX_VALUE doesn't lead to problems elsewhere
+                .at(6).simple(SQL_VARYING, Integer.MAX_VALUE, "REMARKS", "PROCEDURES").addField()
                 .at(7).simple(SQL_SHORT, 0, "PROCEDURE_TYPE", "PROCEDURES").addField()
                 .at(8).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "SPECIFIC_NAME", "PROCEDURES").addField()
                 .toRowDescriptor();
@@ -1983,7 +1983,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
                 .at(10).simple(SQL_SHORT, 0, "RADIX", "COLUMNINFO").addField()
                 .at(11).simple(SQL_SHORT, 0, "NULLABLE", "COLUMNINFO").addField()
                 // Field in Firebird is actually a blob, using Integer.MAX_VALUE for length
-                .at(12).simple(SQL_VARYING, Integer.MAX_VALUE, "REMARKS", "COLUMNINFO").addField() // TODO: Check if setting this to Integer.MAX_VALUE doesn't lead to problems elsewhere
+                .at(12).simple(SQL_VARYING, Integer.MAX_VALUE, "REMARKS", "COLUMNINFO").addField()
                 .at(13).simple(SQL_VARYING, 31, "COLUMN_DEF", "COLUMNINFO").addField()
                 .at(14).simple(SQL_LONG, 0, "SQL_DATA_TYPE", "COLUMNINFO").addField()
                 .at(15).simple(SQL_LONG, 0, "SQL_DATETIME_SUB", "COLUMNINFO").addField()
@@ -2594,7 +2594,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
                 .at(9).simple(SQL_LONG, 0, "NUM_PREC_RADIX", "COLUMNINFO").addField()
                 .at(10).simple(SQL_LONG, 0, "NULLABLE", "COLUMNINFO").addField()
                 // Field in Firebird is actually a blob, using Integer.MAX_VALUE for length
-                .at(11).simple(SQL_VARYING | 1, Integer.MAX_VALUE, "REMARKS", "COLUMNINFO").addField() // TODO Check if use of Integer.MAX_VALUE doesn't lead to problem elsewhere
+                .at(11).simple(SQL_VARYING | 1, Integer.MAX_VALUE, "REMARKS", "COLUMNINFO").addField()
                 .at(12).simple(SQL_VARYING | 1, 31, "COLUMN_DEF", "COLUMNINFO").addField()
                 .at(13).simple(SQL_LONG, 0, "SQL_DATA_TYPE", "COLUMNINFO").addField()
                 .at(14).simple(SQL_LONG, 0, "SQL_DATETIME_SUB", "COLUMNINFO").addField()
@@ -4120,7 +4120,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
                 .at(6).simple(SQL_SHORT, 0, "TYPE", "INDEXINFO").addField()
                 .at(7).simple(SQL_SHORT, 0, "ORDINAL_POSITION", "INDEXINFO").addField()
                 // Field with EXPRESSION_SOURCE (used for expression indexes) in Firebird is actually a blob, using Integer.MAX_VALUE for length
-                .at(8).simple(SQL_VARYING, Integer.MAX_VALUE, "COLUMN_NAME", "INDEXINFO").addField() // TODO Check if use of Integer.MAX_VALUE here leads to problems elsewhere
+                .at(8).simple(SQL_VARYING, Integer.MAX_VALUE, "COLUMN_NAME", "INDEXINFO").addField()
                 .at(9).simple(SQL_VARYING, 31, "ASC_OR_DESC", "INDEXINFO").addField()
                 .at(10).simple(SQL_LONG, 0, "CARDINALITY", "INDEXINFO").addField()
                 .at(11).simple(SQL_LONG, 0, "PAGES", "INDEXINFO").addField()

@@ -83,15 +83,6 @@ class FBStatementFetcher implements FBFetcher {
             isLast = false;
             isAfterLast = false;
             allRowsFetched = false;
-
-            // stored procedures
-            // TODO Need to add handling (probably to FBStatement) for EXECUTE PROCEDURE singleton result
-            /*
-            if (stmt.isAllRowsFetched()) {
-                rowsArray = stmt.getRows();
-                size = stmt.size();
-            }
-            */
         }
     }
 

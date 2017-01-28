@@ -59,7 +59,6 @@ class FBCachedFetcher implements FBFetcher {
             fetchSize = MAX_FETCH_ROWS;
         this.fetchSize = fetchSize;
 
-        // TODO Check handling (probably in FBStatement) for EXECUTE PROCEDURE singleton result
         RowListener rowListener = new RowListener();
         stmt_handle.addStatementListener(rowListener);
         try {

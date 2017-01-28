@@ -135,8 +135,7 @@ public final class StatementInfoProcessor implements InfoProcessor<InfoProcessor
      *         StatementInfo
      */
     private void handleDescriptors(final StatementInfo info) throws SQLException {
-        // Skipping isc_info_sql_num_variables item
-        // TODO Check if it is isc_info_sql_num_variables?
+        // Skipping isc_info_sql_num_variables/isc_info_sql_describe_vars item
         info.currentIndex++;
         int descriptorCount = readIntValue(info);
         if (descriptorCount == 0) {

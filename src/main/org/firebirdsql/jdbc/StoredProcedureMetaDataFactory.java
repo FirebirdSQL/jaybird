@@ -81,22 +81,15 @@ class DefaultCallableStatementMetaData implements StoredProcedureMetaData {
         loadSelectableProcedureNames(connection);
     }
 
-    private void loadSelectableProcedureNames(Connection connection)
-            throws SQLException {
-        Statement stmt = connection.createStatement();
-        try {
+    private void loadSelectableProcedureNames(Connection connection) throws SQLException {
+        try (Statement stmt = connection.createStatement()) {
             // TODO Replace with looking for specific procedure
             String sql = "SELECT RDB$PROCEDURE_NAME FROM RDB$PROCEDURES WHERE RDB$PROCEDURE_TYPE = 1";
-            ResultSet resultSet = stmt.executeQuery(sql);
-            try {
+            try (ResultSet resultSet = stmt.executeQuery(sql)) {
                 while (resultSet.next()) {
                     selectableProcedureNames.add(resultSet.getString(1).trim().toUpperCase());
                 }
-            } finally {
-                resultSet.close();
             }
-        } finally {
-            stmt.close();
         }
     }
 

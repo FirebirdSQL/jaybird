@@ -148,7 +148,7 @@ public class FBManagedConnection implements ManagedConnection, XAResource, Excep
 
     @Override
     public void errorOccurred(Object source, SQLException ex) {
-        if (log != null) log.trace(ex.getMessage());
+        log.trace(ex.getMessage());
 
         if (!FatalGDSErrorHelper.isFatal(ex))
             return;
@@ -569,8 +569,7 @@ public class FBManagedConnection implements ManagedConnection, XAResource, Excep
      * @return the XAResource
      */
     public XAResource getXAResource() {
-        if (log != null)
-            log.debug("XAResource requested from FBManagedConnection");
+        log.debug("XAResource requested from FBManagedConnection");
         return this;
     }
 
@@ -616,7 +615,7 @@ public class FBManagedConnection implements ManagedConnection, XAResource, Excep
      *                if an error occurs
      */
     void internalCommit(Xid xid, boolean onePhase) throws XAException {
-        if (log != null) log.trace("Commit called: " + xid);
+        if (log.isTraceEnabled()) log.trace("Commit called: " + xid);
         FbTransaction committingTr = xidMap.get(xid);
         
         // check that prepare has NOT been called when onePhase = true
@@ -634,18 +633,15 @@ public class FBManagedConnection implements ManagedConnection, XAResource, Excep
             if (committingTr == getGDSHelper().getCurrentTransaction())
                 throw new FBXAException("Commit called with non-ended xid", XAException.XAER_PROTO);
 
-            // TODO Equivalent or handled by listeners?
-            //committingTr.forgetResultSets();
-
             committingTr.commit();
         } catch (SQLException ge) {
             if (gdsHelper != null) {
                 try {
                     committingTr.rollback();
                 } catch (SQLException ge2) {
-                    if (log != null) log.debug("Exception rolling back failed tx: ", ge2);
+                    log.debug("Exception rolling back failed tx: ", ge2);
                 }
-            } else if (log != null) {
+            } else {
                 log.warn("Unable to rollback failed tx, connection closed or lost");
             }
             throw new FBXAException(ge.getMessage(), XAException.XAER_RMERR, ge);
@@ -700,7 +696,7 @@ public class FBManagedConnection implements ManagedConnection, XAResource, Excep
      *                if an error occurs
      */
     void internalEnd(Xid xid, int flags) throws XAException, SQLException {
-        if (log != null) log.debug("End called: " + xid);
+        if (log.isDebugEnabled()) log.debug("End called: " + xid);
         FbTransaction endingTr = xidMap.get(xid);
         
         if (endingTr == null)
@@ -788,8 +784,7 @@ public class FBManagedConnection implements ManagedConnection, XAResource, Excep
                         break;
                     }
                 } catch(FBIncorrectXidException ex) {
-                    if (log != null)
-                        log.warn("incorrect XID format in RDB$TRANSACTIONS where RDB$TRANSACTION_ID=" + inLimboTxId, ex);
+                    log.warn("incorrect XID format in RDB$TRANSACTIONS where RDB$TRANSACTION_ID=" + inLimboTxId, ex);
                 }
 
                 row++;
@@ -798,8 +793,7 @@ public class FBManagedConnection implements ManagedConnection, XAResource, Excep
             stmtHandle2.close();
             trHandle2.commit();
         } catch (SQLException | ResourceException ex) {
-            if (log != null)
-                log.debug("can't perform query to fetch xids", ex);
+            log.debug("can't perform query to fetch xids", ex);
             throw new FBXAException(XAException.XAER_RMFAIL, ex);
         }
 
@@ -866,7 +860,7 @@ public class FBManagedConnection implements ManagedConnection, XAResource, Excep
     }
 
     int internalPrepare(Xid xid) throws FBXAException {
-        if (log != null) log.trace("prepare called: " + xid);
+        if (log.isTraceEnabled()) log.trace("prepare called: " + xid);
         FbTransaction committingTr = xidMap.get(xid);
         if (committingTr == null)
             throw new FBXAException("Prepare called with unknown transaction", XAException.XAER_NOTA);
@@ -887,17 +881,16 @@ public class FBManagedConnection implements ManagedConnection, XAResource, Excep
             try {
                 if (gdsHelper != null) {
                     committingTr.rollback();
-                } else if (log != null) {
+                } else {
                     log.warn("Unable to rollback failed tx, connection closed or lost");
                 }
             } catch (SQLException ge2) {
-                if (log != null)
-                    log.debug("Exception rolling back failed tx: ", ge2);
+                log.debug("Exception rolling back failed tx: ", ge2);
             } finally {
                 xidMap.remove(xid);
-            } 
-            
-            if (log != null) log.warn("error in prepare", ge);
+            }
+
+            log.warn("error in prepare", ge);
             throw new FBXAException(XAException.XAER_RMERR, ge);
         }
 
@@ -970,8 +963,7 @@ public class FBManagedConnection implements ManagedConnection, XAResource, Excep
                     FBXid xid = new FBXid(new ByteArrayInputStream(inLimboMessage), inLimboTxId);
                     xids.add(xid);
                 } catch(FBIncorrectXidException ex) {
-                    if (log != null)
-                        log.warn("ignoring XID stored with invalid format in RDB$TRANSACTIONS for RDB$TRANSACTION_ID=" + inLimboTxId);
+                    log.warn("ignoring XID stored with invalid format in RDB$TRANSACTIONS for RDB$TRANSACTION_ID=" + inLimboTxId);
                 }
 
                 row++;
@@ -1037,8 +1029,7 @@ public class FBManagedConnection implements ManagedConnection, XAResource, Excep
                 try {
                     xid = new FBXid(new ByteArrayInputStream(inLimboMessage), inLimboTxId);
                 } catch(FBIncorrectXidException ex) {
-                    if (log != null)
-                        log.warn("ignoring XID stored with invalid format in RDB$TRANSACTIONS for RDB$TRANSACTION_ID=" + inLimboTxId);
+                    log.warn("ignoring XID stored with invalid format in RDB$TRANSACTIONS for RDB$TRANSACTION_ID=" + inLimboTxId);
                 }
             }
 
@@ -1107,7 +1098,7 @@ public class FBManagedConnection implements ManagedConnection, XAResource, Excep
     }
 
     void internalRollback(Xid xid) throws XAException {
-        if (log != null) log.trace("rollback called: " + xid);
+        if (log.isTraceEnabled()) log.trace("rollback called: " + xid);
         FbTransaction committingTr = xidMap.get(xid);
         if (committingTr == null) {
             throw new FBXAException ("Rollback called with unknown transaction: " + xid);
@@ -1117,8 +1108,6 @@ public class FBManagedConnection implements ManagedConnection, XAResource, Excep
             if (committingTr == getGDSHelper().getCurrentTransaction())
                 throw new FBXAException("Rollback called with non-ended xid", XAException.XAER_PROTO);
 
-            // TODO Equivalent needed or handled by listeners?
-            //committingTr.forgetResultSets();
             try {
                 committingTr.rollback();
             } finally {
@@ -1126,7 +1115,7 @@ public class FBManagedConnection implements ManagedConnection, XAResource, Excep
                 preparedXid.remove(xid);
             }
         } catch (SQLException ge) {
-            if (log != null) log.debug("Exception in rollback", ge);
+            log.debug("Exception in rollback", ge);
             throw new FBXAException(ge.getMessage(), XAException.XAER_RMERR, ge);
         }
     }
@@ -1209,7 +1198,7 @@ public class FBManagedConnection implements ManagedConnection, XAResource, Excep
      * @throws SQLException
      */
     public void internalStart(Xid id, int flags) throws XAException, SQLException {
-        if (log != null) log.trace("start called: " + id);
+        if (log.isTraceEnabled()) log.trace("start called: " + id);
 
         if (getGDSHelper().getCurrentTransaction() != null)
             throw new FBXAException("Transaction already started", XAException.XAER_PROTO);

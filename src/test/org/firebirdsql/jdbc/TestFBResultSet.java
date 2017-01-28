@@ -1294,66 +1294,62 @@ public class TestFBResultSet extends FBJUnit4TestBase {
 
     @Test
     public void testSetFetchDirection_Reverse_onForwardOnlyThrowsException() throws SQLException {
-        try (Statement stmt = connection.createStatement()) {
-            try (ResultSet rs = stmt.executeQuery("SELECT * FROM RDB$DATABASE")) {
-                expectedException.expect(allOf(
-                        instanceOf(SQLNonTransientException.class),
-                        fbMessageStartsWith(JaybirdErrorCodes.jb_operationNotAllowedOnForwardOnly)));
+        try (Statement stmt = connection.createStatement();
+             ResultSet rs = stmt.executeQuery("SELECT * FROM RDB$DATABASE")) {
+            expectedException.expect(allOf(
+                    instanceOf(SQLNonTransientException.class),
+                    fbMessageStartsWith(JaybirdErrorCodes.jb_operationNotAllowedOnForwardOnly)));
 
-                rs.setFetchDirection(ResultSet.FETCH_REVERSE);
-            }
+            rs.setFetchDirection(ResultSet.FETCH_REVERSE);
         }
     }
 
     @Test
     public void testSetFetchDirection_Reverse_onScrollable() throws SQLException {
-        try (Statement stmt = connection.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY)) {
-            try (ResultSet rs = stmt.executeQuery("SELECT * FROM RDB$DATABASE")) {
-                rs.setFetchDirection(ResultSet.FETCH_REVERSE);
+        try (Statement stmt = connection.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
+             ResultSet rs = stmt.executeQuery("SELECT * FROM RDB$DATABASE")) {
+            rs.setFetchDirection(ResultSet.FETCH_REVERSE);
 
-                assertEquals("Unexpected fetch direction", ResultSet.FETCH_REVERSE, rs.getFetchDirection());
-            }
+            assertEquals("Unexpected fetch direction", ResultSet.FETCH_REVERSE, rs.getFetchDirection());
         }
     }
 
     @Test
     public void testSetFetchDirection_Unknown_onForwardOnlyThrowsException() throws SQLException {
-        try (Statement stmt = connection.createStatement()) {
-            try (ResultSet rs = stmt.executeQuery("SELECT * FROM RDB$DATABASE")) {
-                expectedException.expect(allOf(
-                        instanceOf(SQLNonTransientException.class),
-                        fbMessageStartsWith(JaybirdErrorCodes.jb_operationNotAllowedOnForwardOnly)));
+        try (Statement stmt = connection.createStatement();
+             ResultSet rs = stmt.executeQuery("SELECT * FROM RDB$DATABASE")) {
+            expectedException.expect(allOf(
+                    instanceOf(SQLNonTransientException.class),
+                    fbMessageStartsWith(JaybirdErrorCodes.jb_operationNotAllowedOnForwardOnly)));
 
-                rs.setFetchDirection(ResultSet.FETCH_UNKNOWN);
-            }
+            rs.setFetchDirection(ResultSet.FETCH_UNKNOWN);
         }
     }
 
     @Test
     public void testSetFetchDirection_Unknown_onScrollable() throws SQLException {
-        try (Statement stmt = connection.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY)) {
-            try (ResultSet rs = stmt.executeQuery("SELECT * FROM RDB$DATABASE")) {
-                rs.setFetchDirection(ResultSet.FETCH_UNKNOWN);
+        try (Statement stmt = connection.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
+             ResultSet rs = stmt.executeQuery("SELECT * FROM RDB$DATABASE")) {
+            rs.setFetchDirection(ResultSet.FETCH_UNKNOWN);
 
-                assertEquals("Unexpected fetch direction", ResultSet.FETCH_UNKNOWN, rs.getFetchDirection());
-            }
+            assertEquals("Unexpected fetch direction", ResultSet.FETCH_UNKNOWN, rs.getFetchDirection());
         }
     }
 
     @Test
     public void testSetFetchDirection_InvalidValue() throws SQLException {
-        try (Statement stmt = connection.createStatement()) {
-            try (ResultSet rs = stmt.executeQuery("SELECT * FROM RDB$DATABASE")) {
-                expectedException.expect(allOf(
-                        isA(SQLException.class),
-                        not(isA(SQLFeatureNotSupportedException.class)),
-                        fbMessageStartsWith(JaybirdErrorCodes.jb_invalidFetchDirection, "-1"),
-                        sqlState(equalTo("HY106"))
-                ));
+        try (Statement stmt = connection.createStatement();
+             ResultSet rs = stmt.executeQuery("SELECT * FROM RDB$DATABASE")) {
+            expectedException.expect(allOf(
+                    isA(SQLException.class),
+                    not(isA(SQLFeatureNotSupportedException.class)),
+                    fbMessageStartsWith(JaybirdErrorCodes.jb_invalidFetchDirection, "-1"),
+                    sqlState(equalTo("HY106"))
+            ));
 
-                //noinspection MagicConstant
-                rs.setFetchDirection(-1);
-            }
+            //noinspection MagicConstant
+            rs.setFetchDirection(-1);
         }
     }
+
 }

@@ -178,12 +178,9 @@ public class FBBlob implements FirebirdBlob, Synchronizable {
         synchronized (getSynchronizationObject()) {
             blobListener.executionStarted(this);
             try {
-                FbBlob blob = gdsHelper.openBlob(blob_id, SEGMENTED);
-                try {
+                // TODO Does it make sense to close blob here?
+                try (FbBlob blob = gdsHelper.openBlob(blob_id, SEGMENTED)) {
                     return blob.getBlobInfo(items, buffer_length);
-                } finally {
-                    // TODO Does it make sense to close blob here?
-                    blob.close();
                 }
             } finally {
                 blobListener.executionCompleted(this);
