@@ -27,8 +27,6 @@ import java.sql.SQLException;
  */
 interface FBFetcher {
 
-    String NOT_SUPPORTED_ON_TYPE_FORWARD_ONLY = "This operation is not supported on a TYPE_FORWARD_ONLY result set";
-
     int MAX_FETCH_ROWS = 400;
 	
     /**

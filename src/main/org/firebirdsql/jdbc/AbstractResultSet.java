@@ -76,6 +76,7 @@ public abstract class AbstractResultSet implements ResultSet, FirebirdResultSet,
     private final int rsType;
     private final int rsConcurrency;
     private final int rsHoldability;
+    private int fetchDirection = ResultSet.FETCH_FORWARD;
 
     @Override
     public void allRowsFetched(FBFetcher fetcher) throws SQLException {
@@ -151,6 +152,7 @@ public abstract class AbstractResultSet implements ResultSet, FirebirdResultSet,
         this.rsType = rsType;
         this.rsConcurrency = rsConcurrency;
         this.rsHoldability = rsHoldability;
+        this.fetchDirection = fbStatement.getFetchDirection();
     }
 
     /**
@@ -283,6 +285,19 @@ public abstract class AbstractResultSet implements ResultSet, FirebirdResultSet,
     protected void checkOpen() throws SQLException {
         if (isClosed()) {
             throw new SQLException("The result set is closed", SQLStateConstants.SQL_STATE_NO_RESULT_SET);
+        }
+    }
+
+    /**
+     * Checks if the result set is scrollable
+     *
+     * @throws SQLException
+     *         if ResultSet is not scrollable
+     */
+    protected void checkScrollable() throws SQLException {
+        if (rsType == ResultSet.TYPE_FORWARD_ONLY) {
+            throw new FbExceptionBuilder().nonTransientException(JaybirdErrorCodes.jb_operationNotAllowedOnForwardOnly)
+                    .toFlatSQLException();
         }
     }
 
@@ -1507,49 +1522,29 @@ public abstract class AbstractResultSet implements ResultSet, FirebirdResultSet,
     // Properties
     //---------------------------------------------------------------------
 
-    /**
-     * Gives a hint as to the direction in which the rows in this
-     * <code>ResultSet</code> object will be processed.
-     * The initial value is determined by the
-     * <code>Statement</code> object
-     * that produced this <code>ResultSet</code> object.
-     * The fetch direction may be changed at any time.
-     *
-     * @exception SQLException if a database access error occurs or
-     * the result set type is <code>TYPE_FORWARD_ONLY</code> and the fetch
-     * direction is not <code>FETCH_FORWARD</code>
-     * @since 1.2
-     * @see <a href="package-summary.html#2.0 API">What Is in the JDBC
-     *      2.0 API</a>
-     * @see Statement#setFetchDirection
-     */
+    @Override
     public void setFetchDirection(int direction) throws SQLException {
+        checkOpen();
         switch (direction) {
         case ResultSet.FETCH_FORWARD:
-            // Value is always FETCH_FORWARD
-            return;
+            fetchDirection = direction;
+            break;
         case ResultSet.FETCH_REVERSE:
         case ResultSet.FETCH_UNKNOWN:
-            // TODO: Documentation suggests that the driver is free to ignore the hint, maybe register as warning instead?
-            throw new FBDriverNotCapableException("Fetch direction other than FETCH_FORWARD not supported");
+            checkScrollable();
+            fetchDirection = direction;
+            break;
         default:
-            throw new SQLException(String.format("Invalid fetchDirection, value %d", direction),
-                    SQLStateConstants.SQL_STATE_INVALID_ARG_VALUE);
+            throw FbExceptionBuilder.forException(JaybirdErrorCodes.jb_invalidFetchDirection)
+                    .messageParameter(direction)
+                    .toFlatSQLException();
         }
     }
 
-    /**
-     * Returns the fetch direction for this
-     * <code>ResultSet</code> object.
-     *
-     * @return the current fetch direction for this <code>ResultSet</code> object
-     * @exception SQLException if a database access error occurs
-     * @since 1.2
-     * @see <a href="package-summary.html#2.0 API">What Is in the JDBC
-     *      2.0 API</a>
-     */
+    @Override
     public int getFetchDirection() throws SQLException {
-        return ResultSet.FETCH_FORWARD;
+        checkOpen();
+        return fetchDirection;
     }
 
     /**

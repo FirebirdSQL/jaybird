@@ -18,7 +18,9 @@
  */
 package org.firebirdsql.jdbc;
 
+import org.firebirdsql.gds.JaybirdErrorCodes;
 import org.firebirdsql.gds.impl.GDSHelper;
+import org.firebirdsql.gds.ng.FbExceptionBuilder;
 import org.firebirdsql.gds.ng.FbStatement;
 import org.firebirdsql.gds.ng.fields.FieldDescriptor;
 import org.firebirdsql.gds.ng.fields.RowDescriptor;
@@ -29,7 +31,6 @@ import org.firebirdsql.jdbc.field.FBFlushableField;
 import org.firebirdsql.jdbc.field.FieldDataProvider;
 
 import java.sql.SQLException;
-import java.sql.SQLNonTransientException;
 import java.sql.Types;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -394,7 +395,8 @@ class FBCachedFetcher implements FBFetcher {
      */
     private void checkScrollable() throws SQLException {
         if (forwardOnly) {
-            throw new SQLNonTransientException(NOT_SUPPORTED_ON_TYPE_FORWARD_ONLY);
+            throw new FbExceptionBuilder().nonTransientException(JaybirdErrorCodes.jb_operationNotAllowedOnForwardOnly)
+                    .toFlatSQLException();
         }
     }
 }

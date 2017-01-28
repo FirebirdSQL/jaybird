@@ -57,13 +57,15 @@ public interface JaybirdErrorCodes {
     int jb_errorAsynchronousEventChannelClose            = 337248268;
     int jb_unableToCancelEventReasonNotConnected         = 337248269;
     int jb_executeImmediateRequiresTransactionAttached   = 337248270;
-    int jb_executeImmediateRequiresNoTransactionDetached  = 337248271;
+    int jb_executeImmediateRequiresNoTransactionDetached = 337248271;
     int jb_receiveTrustedAuth_NotSupported               = 337248272;
     int jb_notConnectedToServer     = 337248273;
     int jb_notAttachedToDatabase    = 337248274;
     int jb_maxStatementLengthExceeded                    = 337248275;
     int jb_unexpectedOperationCode  = 337248276;
     int jb_unsupportedFieldType     = 337248277;
+    int jb_invalidFetchDirection    = 337248278;
+    int jb_operationNotAllowedOnForwardOnly              = 337248279;
 
     @SuppressWarnings("unused")
     int jb_range_end                = 337264639;

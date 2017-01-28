@@ -22,6 +22,7 @@ import java.sql.*;
 import java.util.Arrays;
 
 import org.firebirdsql.common.FBJUnit4TestBase;
+import org.firebirdsql.gds.JaybirdErrorCodes;
 import org.firebirdsql.util.FirebirdSupportInfo;
 import org.junit.After;
 import org.junit.Before;
@@ -612,12 +613,13 @@ public class TestFBStatement extends FBJUnit4TestBase {
         }
     }
 
-    /**
-     * Test calling {@link org.firebirdsql.jdbc.FBStatement#setFetchDirection(int)} with {@link ResultSet#FETCH_FORWARD}.
-     * <p>
-     * No exception, {@link FBStatement#getFetchDirection()} returns {@link ResultSet#FETCH_FORWARD}
-     * </p>
-     */
+    @Test
+    public void testGetFetchDirection_DefaultForward() throws SQLException {
+        try (Statement stmt = con.createStatement()) {
+            assertEquals("Unexpected value for fetchDirection", ResultSet.FETCH_FORWARD, stmt.getFetchDirection());
+        }
+    }
+
     @Test
     public void testSetFetchDirection_Forward() throws SQLException {
         try (Statement stmt = con.createStatement()) {
@@ -627,49 +629,32 @@ public class TestFBStatement extends FBJUnit4TestBase {
         }
     }
 
-    /**
-     * Test calling {@link org.firebirdsql.jdbc.FBStatement#setFetchDirection(int)} with {@link ResultSet#FETCH_REVERSE}.
-     * <p>
-     * Exception: SQLFeatureNotSupportedException
-     * </p>
-     */
     @Test
     public void testSetFetchDirection_Reverse() throws SQLException {
         try (Statement stmt = con.createStatement()) {
-            expectedException.expect(SQLFeatureNotSupportedException.class);
-
             stmt.setFetchDirection(ResultSet.FETCH_REVERSE);
+
+            assertEquals("Unexpected value for fetchDirection", ResultSet.FETCH_REVERSE, stmt.getFetchDirection());
         }
     }
 
-    /**
-     * Test calling {@link org.firebirdsql.jdbc.FBStatement#setFetchDirection(int)} with {@link ResultSet#FETCH_UNKNOWN}.
-     * <p>
-     * Exception: SQLFeatureNotSupportedException
-     * </p>
-     */
     @Test
     public void testSetFetchDirection_Unknown() throws SQLException {
         try (Statement stmt = con.createStatement()) {
-            expectedException.expect(SQLFeatureNotSupportedException.class);
-
             stmt.setFetchDirection(ResultSet.FETCH_UNKNOWN);
+
+            assertEquals("Unexpected value for fetchDirection", ResultSet.FETCH_UNKNOWN, stmt.getFetchDirection());
         }
     }
 
-    /**
-     * Test calling {@link org.firebirdsql.jdbc.FBStatement#setFetchDirection(int)} with an invalid value.
-     * <p>
-     * Exception: SQLException
-     * </p>
-     */
     @Test
     public void testSetFetchDirection_InvalidValue() throws SQLException {
         try (Statement stmt = con.createStatement()) {
             expectedException.expect(allOf(
                     isA(SQLException.class),
                     not(isA(SQLFeatureNotSupportedException.class)),
-                    sqlState(equalTo(SQLStateConstants.SQL_STATE_INVALID_ARG_VALUE))
+                    fbMessageStartsWith(JaybirdErrorCodes.jb_invalidFetchDirection, "-1"),
+                    sqlState(equalTo("HY106"))
             ));
 
             //noinspection MagicConstant
@@ -677,20 +662,22 @@ public class TestFBStatement extends FBJUnit4TestBase {
         }
     }
 
-    /**
-     * Test calling {@link org.firebirdsql.jdbc.FBStatement#setFetchDirection(int)} with {@link ResultSet#FETCH_FORWARD}
-     * on a closed statement.
-     * <p>
-     * Exception: SQLException statement closed.
-     * </p>
-     */
     @Test
-    public void testSetFetchDirection_statementClosed() throws SQLException {
+    public void testSetFetchDirection_statementClosed_throwsException() throws SQLException {
         Statement stmt = con.createStatement();
         stmt.close();
         expectedException.expect(fbStatementClosedException());
 
         stmt.setFetchDirection(ResultSet.FETCH_FORWARD);
+    }
+
+    @Test
+    public void testGetFetchDirection_statementClosed_throwsException() throws SQLException {
+        Statement stmt = con.createStatement();
+        stmt.close();
+        expectedException.expect(fbStatementClosedException());
+
+        stmt.getFetchDirection();
     }
 
     /**

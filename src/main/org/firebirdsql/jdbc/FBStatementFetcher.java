@@ -18,13 +18,14 @@
  */
 package org.firebirdsql.jdbc;
 
+import org.firebirdsql.gds.JaybirdErrorCodes;
 import org.firebirdsql.gds.impl.GDSHelper;
+import org.firebirdsql.gds.ng.FbExceptionBuilder;
 import org.firebirdsql.gds.ng.FbStatement;
 import org.firebirdsql.gds.ng.fields.RowValue;
 import org.firebirdsql.gds.ng.listeners.DefaultStatementListener;
 
 import java.sql.SQLException;
-import java.sql.SQLNonTransientException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -113,6 +114,7 @@ class FBStatementFetcher implements FBFetcher {
         }
     }
 
+    @Override
     public boolean next() throws SQLException {
         if (!wasFetched) fetch();
 
@@ -146,32 +148,44 @@ class FBStatementFetcher implements FBFetcher {
         }
     }
 
+    @Override
     public boolean absolute(int row) throws SQLException {
-        throw new SQLNonTransientException(NOT_SUPPORTED_ON_TYPE_FORWARD_ONLY);
+        notScrollable();
+        return false;
     }
 
+    @Override
     public boolean first() throws SQLException {
-        throw new SQLNonTransientException(NOT_SUPPORTED_ON_TYPE_FORWARD_ONLY);
+        notScrollable();
+        return false;
     }
 
+    @Override
     public boolean last() throws SQLException {
-        throw new SQLNonTransientException(NOT_SUPPORTED_ON_TYPE_FORWARD_ONLY);
+        notScrollable();
+        return false;
     }
 
+    @Override
     public boolean previous() throws SQLException {
-        throw new SQLNonTransientException(NOT_SUPPORTED_ON_TYPE_FORWARD_ONLY);
+        notScrollable();
+        return false;
     }
 
+    @Override
     public boolean relative(int row) throws SQLException {
-        throw new SQLNonTransientException(NOT_SUPPORTED_ON_TYPE_FORWARD_ONLY);
+        notScrollable();
+        return false;
     }
 
+    @Override
     public void beforeFirst() throws SQLException {
-        throw new SQLNonTransientException(NOT_SUPPORTED_ON_TYPE_FORWARD_ONLY);
+        notScrollable();
     }
 
+    @Override
     public void afterLast() throws SQLException {
-        throw new SQLNonTransientException(NOT_SUPPORTED_ON_TYPE_FORWARD_ONLY);
+        notScrollable();
     }
 
     public void fetch() throws SQLException {
@@ -306,6 +320,11 @@ class FBStatementFetcher implements FBFetcher {
     @Override
     public int getFetchSize() {
         return fetchSize;
+    }
+
+    private void notScrollable() throws SQLException {
+        throw new FbExceptionBuilder().nonTransientException(JaybirdErrorCodes.jb_operationNotAllowedOnForwardOnly)
+                .toFlatSQLException();
     }
 
     private class RowListener extends DefaultStatementListener {
