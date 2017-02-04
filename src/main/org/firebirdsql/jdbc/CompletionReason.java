@@ -26,7 +26,7 @@ package org.firebirdsql.jdbc;
  * </p>
  * @since 2.2.3
  */
-enum CompletionReason {
+public enum CompletionReason {
     COMMIT {
         @Override
         boolean isTransactionEnd() {
