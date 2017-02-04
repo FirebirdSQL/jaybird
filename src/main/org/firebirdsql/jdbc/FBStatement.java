@@ -31,6 +31,7 @@ import org.firebirdsql.logging.LoggerFactory;
 
 import java.sql.*;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Pattern;
 
 import static org.firebirdsql.util.FirebirdSupportInfo.supportInfoFor;
@@ -58,7 +59,10 @@ public class FBStatement implements FirebirdStatement, Synchronizable {
     private static final org.firebirdsql.logging.Logger log = LoggerFactory.getLogger(FBStatement.class);
     protected static final JdbcVersionSupport jdbcVersionSupport =
             JdbcVersionSupportHolder.INSTANCE.getJdbcVersionSupport();
-    
+
+    private static final AtomicInteger STATEMENT_ID_GENERATOR = new AtomicInteger();
+
+    private final int localStatementId = STATEMENT_ID_GENERATOR.incrementAndGet();
     protected final GDSHelper gdsHelper;
     private final Object syncObject;
     protected final FBObjectListener.StatementListener statementListener;
@@ -1583,6 +1587,21 @@ public class FBStatement implements FirebirdStatement, Synchronizable {
         int len = identifier.length();
         return len >= 1 && len <= getConnection().getMetaData().getMaxColumnNameLength()
                 && SIMPLE_IDENTIFIER_PATTERN.matcher(identifier).matches();
+    }
+
+    @Override
+    public final int hashCode() {
+        return localStatementId;
+    }
+
+    @Override
+    public boolean equals(Object other) {
+        if (!(other instanceof FBStatement)) {
+            return false;
+        }
+
+        FBStatement otherStmt = (FBStatement) other;
+        return this.localStatementId == otherStmt.localStatementId;
     }
 
     /**

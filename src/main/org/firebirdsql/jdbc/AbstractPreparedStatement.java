@@ -1347,6 +1347,15 @@ public abstract class AbstractPreparedStatement extends FBStatement implements F
         return getLargeUpdateCount();
     }
 
+    @Override
+    public boolean equals(Object other) {
+        if (!(other instanceof AbstractPreparedStatement)) {
+            return false;
+        }
+
+        return super.equals(other);
+    }
+
     private static class BatchStatementListener extends DefaultStatementListener {
 
         private final List<RowValue> rows;
