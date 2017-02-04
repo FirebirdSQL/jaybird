@@ -48,7 +48,6 @@ public abstract class AbstractConnection<T extends IAttachProperties<T>, C exten
         EncodingDefinition tempEncodingDefinition = encodingFactory.getEncodingDefinition(firebirdEncodingName, javaCharsetAlias);
         if (tempEncodingDefinition == null || tempEncodingDefinition.isInformationOnly()) {
             if (firebirdEncodingName == null && javaCharsetAlias == null) {
-                // TODO Signal warning?
                 // TODO Use the default encoding (and its matching Firebird encoding) instead of NONE
                 tempEncodingDefinition = encodingFactory.getEncodingDefinition("NONE", null);
             } else {

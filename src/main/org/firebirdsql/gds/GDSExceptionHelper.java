@@ -252,7 +252,6 @@ public class GDSExceptionHelper {
          */
         public String toString() {
             String message = template;
-            // TODO Use MessageFormat?
             for (int i = 0; i < params.length; i++) {
                 String param = "{" + i + "}";
                 int pos = message.indexOf(param);

@@ -148,19 +148,6 @@ public interface DatatypeCoder {
 
     byte[] encodeString(String value, Encoding encoding, String mappingPath) throws SQLException;
 
-    // TODO Is below method needed?
-//    /**
-//     * Encode a {@code byte} array using a given encoding.
-//     *
-//     * @param value The {@code byte} array to be encoded
-//     * @param encoding The encoding to use in the encoding process
-//     * @param mappingPath The character mapping path to be used in the encoding
-//     * @return The value of {@code value} encoded using the given encoding
-//     * @throws java.sql.SQLException if the given encoding cannot be found, or an error
-//     *         occurs during the encoding
-//     */
-//    byte[] encodeString(byte[] value, String encoding, String mappingPath)throws SQLException;
-
     /**
      * Decode an encoded {@code byte} array into a {@code String} using a given encoding.
      *

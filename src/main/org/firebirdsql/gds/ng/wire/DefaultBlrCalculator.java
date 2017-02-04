@@ -97,7 +97,6 @@ public class DefaultBlrCalculator implements BlrCalculator {
         final ByteArrayOutputStream bout = new ByteArrayOutputStream(approximateSize);
         final int parameterCount = 2 * fieldCount; // 1 actual field, 1 null descriptor (?)
 
-        // TODO Previous Jaybird implementation always wrote blr_version5
         bout.write(dialect <= 1 ? blr_version4 : blr_version5);
         bout.write(blr_begin);
         bout.write(blr_message);

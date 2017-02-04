@@ -77,7 +77,7 @@ public final class SqlCountProcessor implements InfoProcessor<SqlCountHolder> {
             return new SqlCountHolder(updateCount, deleteCount, insertCount, selectCount);
             // NOTE: we assume we always use a sufficiently large buffer
         } else if (infoResponse[0] == ISCConstants.isc_info_end) {
-            // TODO Check necessity of checking this, seems to happen with DDL
+            // Happens with statement types that don't have update counts, etc (eg DDL)
             // TODO Return all -1 instead?
             return new SqlCountHolder(0, 0, 0, 0);
         } else {
