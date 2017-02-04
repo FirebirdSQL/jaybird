@@ -20,6 +20,7 @@ package org.firebirdsql.jdbc;
 
 import java.sql.*;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.firebirdsql.gds.*;
 import org.firebirdsql.gds.impl.*;
@@ -43,7 +44,11 @@ import org.firebirdsql.gds.impl.*;
  * @author <a href="mailto:d_jencks@users.sourceforge.net">David Jencks</a>
  */
 public abstract class AbstractStatement implements FirebirdStatement, Synchronizable {
-    
+
+    private static final AtomicInteger STATEMENT_ID_GENERATOR = new AtomicInteger();
+
+    private final int localStatementId = STATEMENT_ID_GENERATOR.incrementAndGet();
+
     protected GDSHelper gdsHelper;
     private final Object syncObject;
     protected FBObjectListener.StatementListener statementListener;
@@ -1469,6 +1474,21 @@ public abstract class AbstractStatement implements FirebirdStatement, Synchroniz
     protected void checkValidity() throws SQLException {
         if (isClosed())
             throw new FBSQLException("Statement is already closed.", FBSQLException.SQL_STATE_INVALID_STATEMENT_ID);
+    }
+
+    @Override
+    public final int hashCode() {
+        return localStatementId;
+    }
+
+    @Override
+    public boolean equals(Object other) {
+        if (!(other instanceof AbstractStatement)) {
+            return false;
+        }
+
+        AbstractStatement otherStmt = (AbstractStatement) other;
+        return this.localStatementId == otherStmt.localStatementId;
     }
 
     /**

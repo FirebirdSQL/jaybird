@@ -1382,4 +1382,13 @@ public abstract class AbstractPreparedStatement extends AbstractStatement implem
     public boolean execute(String sql, String[] columnNames) throws SQLException {
         throw new FBSQLException(METHOD_NOT_SUPPORTED);
     }
+
+    @Override
+    public boolean equals(Object other) {
+        if (!(other instanceof AbstractPreparedStatement)) {
+            return false;
+        }
+
+        return super.equals(other);
+    }
 }
