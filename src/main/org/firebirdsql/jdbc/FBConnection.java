@@ -32,6 +32,8 @@ import org.firebirdsql.jca.FBManagedConnection;
 import org.firebirdsql.jca.FirebirdLocalTransaction;
 import org.firebirdsql.jdbc.escape.FBEscapedParser;
 import org.firebirdsql.jdbc.escape.FBEscapedParser.EscapeParserMode;
+import org.firebirdsql.logging.Logger;
+import org.firebirdsql.logging.LoggerFactory;
 import org.firebirdsql.util.SQLExceptionChainBuilder;
 
 import javax.resource.ResourceException;
@@ -50,6 +52,8 @@ import static org.firebirdsql.gds.impl.DatabaseParameterBufferExtension.USE_FIRE
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  */
 public class FBConnection implements FirebirdConnection, Synchronizable {
+
+    private static final Logger log = LoggerFactory.getLogger(FBConnection.class);
 
     private static final String GET_CLIENT_INFO_SQL = "SELECT "
                 + "    rdb$get_context('USER_SESSION', ?) session_context "
@@ -101,13 +105,17 @@ public class FBConnection implements FirebirdConnection, Synchronizable {
     }
     
     public int getHoldability() throws SQLException {
-        checkValidity();
-        return resultSetHoldability;
+        synchronized (getSynchronizationObject()) {
+            checkValidity();
+            return resultSetHoldability;
+        }
     }
 
     public void setHoldability(int holdability) throws SQLException {
-        checkValidity();
-        this.resultSetHoldability = holdability;
+        synchronized (getSynchronizationObject()) {
+            checkValidity();
+            this.resultSetHoldability = holdability;
+        }
     }
 
     /**
@@ -205,7 +213,7 @@ public class FBConnection implements FirebirdConnection, Synchronizable {
      * @return instance of {@link DatabaseParameterBuffer}.
      */
     public DatabaseParameterBuffer getDatabaseParameterBuffer() {
-        return mc.getConnectionRequestInfo().getDpb();
+        return mc != null ? mc.getConnectionRequestInfo().getDpb() : null;
     }
 
     @Deprecated
@@ -538,6 +546,9 @@ public class FBConnection implements FirebirdConnection, Synchronizable {
     public void close() throws SQLException {
         SQLExceptionChainBuilder<SQLException> chainBuilder = new SQLExceptionChainBuilder<>();
         synchronized (getSynchronizationObject()) {
+            if (log.isTraceEnabled()) {
+                log.trace("Connection closed requested at", new RuntimeException("Connection close logging"));
+            }
             try {
                 freeStatements();
                 if (metaData != null) metaData.close();
@@ -568,9 +579,9 @@ public class FBConnection implements FirebirdConnection, Synchronizable {
                     mc = null;
                 }
             }
-            if (chainBuilder.hasException()) {
-                throw chainBuilder.getException();
-            }
+        }
+        if (chainBuilder.hasException()) {
+            throw chainBuilder.getException();
         }
     }
 
@@ -1480,7 +1491,8 @@ public class FBConnection implements FirebirdConnection, Synchronizable {
 
     @Override
     public boolean isUseFirebirdAutoCommit() {
-        return getDatabaseParameterBuffer().hasArgument(USE_FIREBIRD_AUTOCOMMIT);
+        DatabaseParameterBuffer dpb = getDatabaseParameterBuffer();
+        return dpb != null && dpb.hasArgument(USE_FIREBIRD_AUTOCOMMIT);
     }
     
     protected void finalize() throws Throwable {

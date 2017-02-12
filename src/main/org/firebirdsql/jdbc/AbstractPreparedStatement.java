@@ -183,8 +183,8 @@ public abstract class AbstractPreparedStatement extends FBStatement implements F
      */
     @Override
     public ResultSet executeQuery() throws SQLException {
-        checkValidity();
         synchronized (getSynchronizationObject()) {
+            checkValidity();
             notifyStatementStarted();
 
             if (!internalExecute(isExecuteProcedureStatement))  
@@ -205,8 +205,8 @@ public abstract class AbstractPreparedStatement extends FBStatement implements F
      *                if a database access error occurs
      */
     public int executeUpdate() throws SQLException {
-        checkValidity();
         synchronized (getSynchronizationObject()) {
+            checkValidity();
             notifyStatementStarted();
             try {
                 if (internalExecute(isExecuteProcedureStatement) && !generatedKeys) {
@@ -724,8 +724,8 @@ public abstract class AbstractPreparedStatement extends FBStatement implements F
      * @see Statement#execute
      */
     public boolean execute() throws SQLException {
-        checkValidity();
         synchronized (getSynchronizationObject()) {
+            checkValidity();
             notifyStatementStarted();
             
             boolean hasResultSet = internalExecute(isExecuteProcedureStatement);
@@ -749,8 +749,8 @@ public abstract class AbstractPreparedStatement extends FBStatement implements F
      *             if something went wrong or no result set was available.
      */
     ResultSet executeMetaDataQuery() throws SQLException {
-        checkValidity();
         synchronized (getSynchronizationObject()) {
+            checkValidity();
             notifyStatementStarted();
 
             boolean hasResultSet = internalExecute(isExecuteProcedureStatement);
@@ -867,8 +867,8 @@ public abstract class AbstractPreparedStatement extends FBStatement implements F
 
     @Override
     protected List<Long> executeBatchInternal() throws SQLException {
-        checkValidity();
         synchronized (getSynchronizationObject()) {
+            checkValidity();
             final BatchStatementListener batchStatementListener;
             boolean commit = false;
             try {
