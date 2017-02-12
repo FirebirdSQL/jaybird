@@ -239,6 +239,9 @@ The following has been changed or fixed since Jaybird 3.0.0-beta-2
     before Jaybird was loaded. It will now be queried dynamically for each
     connection without a connection character set.
 
+-   Improved: Calling `Blob.setBytes` and `Clob.getString` is now supported for 
+    position `1`, on a new blob. ([JDBC-478](http://tracker.firebirdsql.org/browse/JDBC-478))
+
 Changes in Jaybird 3.0.0-beta-2
 -------------------------------
 

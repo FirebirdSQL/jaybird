@@ -341,7 +341,12 @@ public class FBBlob implements FirebirdBlob, Synchronizable {
     }
 
     public int setBytes(long pos, byte[] bytes, int offset, int len) throws SQLException {
-        throw new FBDriverNotCapableException("Method setBytes(long, byte[], int, int) is not supported");
+        try (OutputStream out = setBinaryStream(pos)) {
+            out.write(bytes, offset, len);
+            return len;
+        } catch (IOException e) {
+            throw new SQLException("IOException writing bytes to blob", e);
+        }
     }
 
     public OutputStream setBinaryStream(long pos) throws SQLException {

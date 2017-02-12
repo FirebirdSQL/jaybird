@@ -173,22 +173,46 @@ public class TestFBBlob extends FBJUnit4TestBase {
     @Test
     public void testSetBytes_long_byteArr_throwsSQLFeatureNotSupported() throws Exception {
         try (Connection conn = getConnectionViaDriverManager()) {
-            Blob blob = conn.createBlob();
+            try (PreparedStatement pstmt = conn.prepareStatement(INSERT_BLOB)) {
+                pstmt.setInt(1, 1);
+                Blob blob = conn.createBlob();
+                blob.setBytes(1, new byte[] { 1, 2, 3, 4, 5 });
+                pstmt.setBlob(2, blob);
+                pstmt.executeUpdate();
+            }
 
-            expectedException.expect(SQLFeatureNotSupportedException.class);
+            try (PreparedStatement pstmt = conn.prepareStatement(SELECT_BLOB)) {
+                pstmt.setInt(1, 1);
 
-            blob.setBytes(1, new byte[] { 1, 2, 3, 4, 5 });
+                try (ResultSet rs = pstmt.executeQuery()) {
+                    assertTrue("Expected a row", rs.next());
+
+                    assertArrayEquals("Unexpected blob value", new byte[] { 1, 2, 3, 4, 5 }, rs.getBytes(1));
+                }
+            }
         }
     }
 
     @Test
     public void testSetBytes_long_byteArr_int_int_throwsSQLFeatureNotSupported() throws Exception {
         try (Connection conn = getConnectionViaDriverManager()) {
-            Blob blob = conn.createBlob();
+            try (PreparedStatement pstmt = conn.prepareStatement(INSERT_BLOB)) {
+                pstmt.setInt(1, 1);
+                Blob blob = conn.createBlob();
+                blob.setBytes(1, new byte[] { 1, 2, 3, 4, 5 }, 1, 3);
+                pstmt.setBlob(2, blob);
+                pstmt.executeUpdate();
+            }
 
-            expectedException.expect(SQLFeatureNotSupportedException.class);
+            try (PreparedStatement pstmt = conn.prepareStatement(SELECT_BLOB)) {
+                pstmt.setInt(1, 1);
 
-            blob.setBytes(1, new byte[] { 1, 2, 3, 4, 5 }, 1, 2);
+                try (ResultSet rs = pstmt.executeQuery()) {
+                    assertTrue("Expected a row", rs.next());
+
+                    assertArrayEquals("Unexpected blob value", new byte[] { 2, 3, 4 }, rs.getBytes(1));
+                }
+            }
         }
     }
 

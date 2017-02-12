@@ -232,7 +232,12 @@ public class FBClob implements Clob, NClob {
      * </p>
      */
 	public int setString(long pos, String str, int offset, int len) throws SQLException {
-        throw new FBDriverNotCapableException("Method setString(long, String, int, int) is not supported");
+        try (Writer charStream = setCharacterStream(pos)) {
+        	charStream.write(str, offset, len);
+        	return len;
+		} catch (IOException e) {
+			throw new SQLException("IOException writing string to blob", e);
+		}
 	}
 
 	/**
