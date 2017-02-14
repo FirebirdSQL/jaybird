@@ -471,7 +471,13 @@ public final class EncodingFactory implements IEncodingFactory {
      */
     private static EncodingFactory createInstance() {
         // Process the encoding sets in descending order
-        return new EncodingFactory(loadEncodingSets().descendingIterator());
+        NavigableSet<EncodingSet> encodingSets = loadEncodingSets();
+        if (encodingSets.isEmpty()) {
+            log.warn("No encoding sets were loaded. Make sure at least one valid /META-INF/services/org.firebirdsql.encodings.EncodingSet "
+                    + "exists on the classpath (it is normally part of the jaybird jar-file). Falling back to default definition.");
+            encodingSets.add(new DefaultEncodingSet());
+        }
+        return new EncodingFactory(encodingSets.descendingIterator());
     }
 
     /**
