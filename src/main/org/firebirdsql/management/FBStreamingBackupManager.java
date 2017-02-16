@@ -209,6 +209,8 @@ public class FBStreamingBackupManager extends FBBackupManagerBase implements Bac
                 case isc_info_end:
                     processing = false;
                     break;
+                default:
+                    throw new SQLException("Unexpected response from service.");
                 }
             }
         } catch (IOException ioe) {
@@ -293,7 +295,7 @@ public class FBStreamingBackupManager extends FBBackupManagerBase implements Bac
                     case isc_info_end:
                         break;
                     default:
-                        throw new SQLException("Unexpected response from service. ");
+                        throw new SQLException("Unexpected response from service.");
                     }
                 }
             }
