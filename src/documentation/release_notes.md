@@ -227,7 +227,7 @@ The minimal `module.xml` to use Jaybird 3 under Wildfly is:
 Jaybird 3.0.x changelog
 =======================
 
-Changes in Jaybird 3.0.0-beta-3?
+Changes in Jaybird 3.0.0-beta-3
 -------------------------------
 
 The following has been changed or fixed since Jaybird 3.0.0-beta-2
@@ -296,6 +296,10 @@ the JDBC 4.3 features have been implemented.
 
 You can use the Java 8 driver under Java 9, but it is necessary to add the
 `java.xml.bind` module using `--add-modules java.xml.bind`.
+
+Jaybird cannot be fully tested under Java 9 at this moment, as some of our tests
+fail due to recent changes, that prevent JMock (or specifically cglib) from
+dynamically generating classes.
 
 Firebird support
 ----------------
