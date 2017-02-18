@@ -143,11 +143,13 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
     private final FirebirdSupportInfo firebirdSupportInfo;
 
     protected final Map<String, FBPreparedStatement> statements = new HashMap<>();
+    private final FirebirdVersionMetaData versionMetaData;
 
     protected FBDatabaseMetaData(FBConnection c) throws SQLException {
         this.gdsHelper = c.getGDSHelper();
         this.connection = c;
         firebirdSupportInfo = supportInfoFor(c);
+        versionMetaData = FirebirdVersionMetaData.getVersionMetaDataFor(c);
     }
 
     @Override
@@ -472,259 +474,9 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
         return "\"";
     }
 
-    /**
-     * Describe constant <code>fbSQLKeywords</code> here.
-     * Derived from firebird2/src/dsql/keywords.cpp.
-     * Exclusions from list of sql-92 keywords in SQL Instant Reference,
-     * Martin Gruber (1993) Sybex.
-     * TODO Review list of keywords
-     */
-    private final static String fbSQLKeywords =
-    //"ACTION," +
-    "ACTIVE," +
-    //"ADD," +
-    "ADMIN," +
-    "AFTER," +
-    //"ALL," +
-    //"ALTER," +
-    //"AND," +
-    //"ANY," +
-    //"AS," +
-    //"ASC," +    /* Alias of ASCENDING */
-    "ASCENDING," +
-    //"AT," +
-    "AUTO," +
-    //"AVG," +
-    "BASE_NAME," +
-    "BEFORE," +
-    //"BEGIN," +
-    //"BETWEEN," +
-    "BIGINT," +
-    "BLOB," +
-    "BREAK," +
-    //"BY," +
-    "CACHE," +
-    //"CASCADE," +
-    //"CASE," +
-    //"CAST," +
-    //"CHAR," +
-    //"CHARACTER," +
-    //"CHECK," +
-    "CHECK_POINT_LENGTH," +
-    //"COALESCE," +
-    //"COLLATE," +
-    //"COLUMN," +
-    //"COMMIT," +
-    //"COMMITTED," +
-    "COMPUTED," +
-    "CONDITIONAL," +
-    "CONNECTION_ID," +
-    //"CONSTRAINT," +
-    "CONTAINING," +
-    //"COUNT," +
-    //"CREATE," +
-    "CSTRING," +
-    //"CURRENT," +
-    //"CURRENT_DATE," +
-    "CURRENT_ROLE," +
-    //"CURRENT_TIME," +
-    //"CURRENT_TIMESTAMP," +
-    //"CURRENT_USER," +
-    //"CURSOR," +
-    "DATABASE," +
-    //"DATE," +
-    //"DAY," +
-    "DEBUG," +
-    //"DEC," +
-    //"DECIMAL," +
-    //"DECLARE," +
-    //"DEFAULT," +
-    //"DELETE," +
-    //"DESC," +    /* Alias of DESCENDING */
-    "DESCENDING," +
-    //"DESCRIPTOR," +
-    //"DISTINCT," +
-    "DO," +
-    //"DOMAIN," +
-    //"DOUBLE," +
-    //"DROP," +
-    //"ELSE," +
-    //"END," +
-    "ENTRY_POINT," +
-    //"ESCAPE," +
-    //"EXCEPTION," +
-    //"EXECUTE," +
-    //"EXISTS," +
-    "EXIT," +
-    //"EXTERNAL," +
-    //"EXTRACT," +
-    "FILE," +
-    "FILTER," +
-    //"FIRST," +
-    //"FLOAT," +
-    //"FOR," +
-    //"FOREIGN," +
-    "FREE_IT," +
-    //"FROM," +
-    //"FULL," +
-    "FUNCTION," +
-    "GDSCODE," +
-    "GENERATOR," +
-    "GEN_ID," +
-    //"GRANT," +
-    //"GROUP," +
-    "GROUP_COMMIT_WAIT_TIME," +
-    //"HAVING," +
-    //"HOUR," +
-    "IF," +
-    //"IN," +
-    "INACTIVE," +
-    "INDEX," +
-    //"INNER," +
-    "INPUT_TYPE," +
-    //"INSERT," +
-    //"INT," +
-    //"INTEGER," +
-    //"INTO," +
-    //"IS," +
-    //"ISOLATION," +
-    //"JOIN," +
-    //"KEY," +
-    //"LAST," +
-    //"LEFT," +
-    //"LENGTH," +
-    //"LEVEL," +
-    //"LIKE," +
-    "LOGFILE," +
-    "LOG_BUFFER_SIZE," +
-    "LONG," +
-    "MANUAL," +
-    //"MAX," +
-    "MAXIMUM_SEGMENT," +
-    "MERGE," +
-    "MESSAGE," +
-    //"MIN," +
-    //"MINUTE," +
-    "MODULE_NAME," +
-    //"MONTH," +
-    //"NAMES," +
-    //"NATIONAL," +
-    //"NATURAL," +
-    //"NCHAR," +
-    //"NO," +
-    //"NOT," +
-    //"NULLIF," +
-    //"NULL," +
-    "NULLS," +
-    "LOCK," +
-    //"NUMERIC," +
-    "NUM_LOG_BUFFERS," +
-    //"OF," +
-    //"ON," +
-    //"ONLY," +
-    //"OPTION," +
-    //"OR," +
-    //"ORDER," +
-    //"OUTER," +
-    "OUTPUT_TYPE," +
-    "OVERFLOW," +
-    "PAGE," +
-    "PAGES," +
-    "PAGE_SIZE," +
-    "PARAMETER," +
-    "PASSWORD," +
-    "PLAN," +
-    //"POSITION," +
-    "POST_EVENT," +
-    //"PRECISION," +
-    //"PRIMARY," +
-    //"PRIVILEGES," +
-    //"PROCEDURE," +
-    "PROTECTED," +
-    "RAW_PARTITIONS," +
-    "RDB$DB_KEY," +
-    //"READ," +
-    //"REAL," +
-    "RECORD_VERSION," +
-    "RECREATE," +
-    //"REFERENCES," +
-    "RESERV," +    /* Alias of RESERVING */
-    "RESERVING," +
-    //"RESTRICT," +
-    "RETAIN," +
-    "RETURNING_VALUES," +
-    "RETURNS," +
-    //"REVOKE," +
-    //"RIGHT," +
-    "ROLE," +
-    //"ROLLBACK," +
-    "ROWS_AFFECTED," +
-    "SAVEPOINT," +
-    //"SCHEMA," +    /* Alias of DATABASE */
-    //"SECOND," +
-    "SEGMENT," +
-    //"SELECT," +
-    //"SET," +
-    "SHADOW," +
-    "SHARED," +
-    "SINGULAR," +
-    //"SIZE," +
-    "SKIP," +
-    //"SMALLINT," +
-    "SNAPSHOT," +
-    //"SOME," +
-    "SORT," +
-    //"SQLCODE," +
-    "STABILITY," +
-    "STARTING," +
-    "STARTS," +    /* Alias of STARTING */
-    "STATISTICS," +
-    //"SUBSTRING," +
-    "SUB_TYPE," +
-    //"SUM," +
-    "SUSPEND," +
-    //"TABLE," +
-    //"THEN," +
-    //"TIME," +
-    //"TIMESTAMP," +
-    //"TO," +
-    //"TRANSACTION," +
-    "TRANSACTION_ID," +
-    "TRIGGER," +
-    //"TYPE," +
-    //"UNCOMMITTED," +
-    //"UNION," +
-    //"UNIQUE," +
-    //"UPDATE," +
-    //"UPPER," +
-    //"USER," +
-    //"USING," +
-    //"VALUE," +
-    //"VALUES," +
-    //"VARCHAR," +
-    "VARIABLE," +
-    //"VARYING," +
-    //"VIEW," +
-    "WAIT," +
-    "WEEKDAY," +
-    //"WHEN," +
-    //"WHERE," +
-    "WHILE," +
-    //"WITH," +
-    //"WORK," +
-    //"WRITE," +
-    //"YEAR," +
-    "YEARDAY";
-
-    /**
-     * Gets a comma-separated list of all a database's SQL keywords
-     * that are NOT also SQL92 keywords.
-     *
-     * @return the list
-     * @exception SQLException if a database access error occurs
-     */
+    @Override
     public  String getSQLKeywords() throws SQLException {
-        return fbSQLKeywords;
+        return versionMetaData.getSqlKeywords();
     }
 
     /**
@@ -2118,6 +1870,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
      * Table types supported for Firebird 2.1 and lower
      */
     public static final String[] ALL_TYPES_2_1 = {TABLE, SYSTEM_TABLE, VIEW};
+    @SuppressWarnings("unused")
     public static final String[] ALL_TYPES = ALL_TYPES_2_5;
 
     /**
@@ -5122,6 +4875,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
         try {
             String javaImplementation = getSystemPropertyPrivileged("java.specification.version");
             if (javaImplementation != null) {
+                // TODO Convert to double and use that for comparison, check below won't work for Java 10
                 if ("9".compareTo(javaImplementation) <= 0) {
                     // JDK 9 or higher: JDBC 4.3
                     tempVersion = 3;
